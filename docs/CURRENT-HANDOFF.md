@@ -34,7 +34,7 @@ Recorded during repository initialization on 2026-07-13:
 
 ## Next decision
 
-Claude should first review `docs/superpowers/plans/2026-07-13-babyora-analysis-and-action-summary.md` and `docs/superpowers/plans/2026-07-13-babyora-consolidated-revision-plan.md`. Together they lock 0–24 months, legacy safety containment first, one avatar identity, sitting/standing poses, outermost visible garments only, 24 target composites, NOK 1,000 direct generation budget, and the five-parent North-Star gate. This is still planning; no app-code implementation is authorized.
+Claude should first review `docs/superpowers/plans/2026-07-13-babyora-analysis-and-action-summary.md` and `docs/superpowers/plans/2026-07-13-babyora-consolidated-revision-plan.md`. Together they lock 0–24 months, legacy safety containment first, one avatar identity, sitting/standing poses, outermost visible garments only, 24 target composites, NOK 1,000 direct generation budget, the five-parent North-Star gate, and the required model/effort for every implementation package. This is still planning; no app-code implementation is authorized.
 
 After that review, choose and explicitly approve the first implementation package. The recommended first code package remains fresh baseline verification, legacy safety containment, and a green working platform before recommendation-facing redesign.
 

@@ -8,6 +8,8 @@
 
 **Tech Stack:** Git diff/status, Vitest, Playwright, product-audit tooling, Supabase local tests/advisors, native iOS/Android builds, structured Markdown evidence.
 
+**Execution model:** Use Sonnet 5 High for ordinary task and UI verification. Use Fable 5 Extra for safety engine, RLS/auth, migration, entitlement, calibration, scheduler/privacy and final cross-domain release review; Opus 4.8 Extra is the fallback. The verifier must run in a fresh context and cannot be the implementing session. Medium effort cannot grant PASS, and a lower-capability model cannot waive an Extra review.
+
 ## Global Constraints
 
 - “Looks correct”, “tests should pass”, and implementation summaries are not evidence.
@@ -102,14 +104,14 @@ PASS is forbidden when any acceptance criterion or required command is missing, 
 | Work | Implementer | Independent verifier |
 |---|---|---|
 | UI and ordinary tests | Sonnet 5 High | New Sonnet 5 High session |
-| Visual signature/90+ audit | Sonnet 5 High | Fable 5 High if paid credits approved; otherwise Opus 4.8 Extra or new Sonnet session plus human screenshot review |
+| Visual signature/90+ audit | Sonnet 5 High | Fable 5 Extra if paid credits are approved; otherwise Opus 4.8 Extra plus human screenshot review |
 | Supabase schema/RLS/invitations | Fable 5 Extra | Opus 4.8 Extra in a fresh session |
 | RevenueCat entitlement | Fable 5 Extra | Opus 4.8 Extra in a fresh session |
 | Calibration/safety engine | Fable 5 Extra | Opus 4.8 Extra plus full guardrail matrix |
 | Notification scheduler/privacy | Fable 5 Extra | Opus 4.8 Extra plus payload inspection |
 | Native widgets | Sonnet 5 High | Fresh Sonnet 5 High plus physical-device review |
 
-If the preferred model is unavailable or paid credits are not approved, use a fresh Sonnet 5 High session and add explicit human review for security/visual conclusions. Never let the original implementation conversation act as the independent verifier.
+For ordinary UI work, an unavailable preferred verifier may be replaced by a fresh Sonnet 5 High session plus explicit human screenshot review. For safety, RLS/auth, migration, entitlement, calibration or scheduler/privacy, use Opus 4.8 Extra when Fable 5 Extra is unavailable or paid use is not approved; if neither Extra option is available, stop the package. Never let the original implementation conversation act as the independent verifier.
 
 ## 4. Visual verification gate
 

@@ -37,6 +37,34 @@
 | **R11 Varsler og widgets** | Meningsfulle endringer, dedupe, privat snapshot og native flater | Payload-, DST-, stale-, deeplink- og fysisk enhetsbevis |
 | **R12 Release** | Audit, beta, tilgjengelighet, ytelse, personvern og capability-review | Ingen åpne P0/P1; 90+ støttes av bruker- og enhetsbevis |
 
+## Modell- og effortmatrise
+
+Dette er styrende ruting for implementeringen. Kontroller tilgjengelige modellnavn med `/model` før hver arbeidsøkt. Dersom et navn ikke finnes i den aktuelle kontoen, skal Claude ikke gjette eller stille ned en sikkerhetskritisk oppgave; bruk angitt fallback eller stopp og rapporter manglende kapasitet.
+
+| Pakke/arbeid | Primærmodell | Effort | Separat kontroll |
+|---|---|---|---|
+| R0 dokumentasjon, kjente énfilrettinger og ren formatering | **Sonnet 5** | **Medium** | Ingen ekstra modell når endringen er rent mekanisk |
+| R1 baseline, tester, evidens og R3 mekanisk lint/CI | **Sonnet 5** | **High** | Fresh-context Sonnet 5 High ved atferdsrisiko |
+| R2 legacy safety containment | **Fable 5** | **Extra** | Uavhengig Fable 5 Extra; Opus 4.8 Extra er fallback |
+| R4 North-Star-prototyper og vanlig designimplementering | **Sonnet 5** | **High** | Fable 5 Extra for kritisk tverrflate-/tillitsreview |
+| R5 kanoniske kontrakter og R6 Motor V2 | **Fable 5** | **Extra** | Uavhengig Fable 5 Extra eller Opus 4.8 Extra før kohortaktivering |
+| R7 UI, komponenter, copy, tilgjengelighet og ordinære tester | **Sonnet 5** | **High** | Fable 5 Extra bare ved sikkerhet, auth, billing eller to dokumenterte mislykkede forsøk |
+| R8 avatarproduksjon | **Nano Banana Pro** for bilder; **Sonnet 5** for manifest/integrasjon | Edit-chain; **High** for kode/QA | Menneskelig assetkontroll og fresh-context Sonnet 5 High |
+| R9 Supabase, RLS, auth, invitasjoner, migrering og entitlement | **Fable 5** | **Extra** | To-nøkkel-review med separat Fable 5 Extra eller Opus 4.8 Extra |
+| R10 kalibreringsalgoritme og safety-integrasjon | **Fable 5** | **Extra** | Uavhengig Extra-review mot full guardrailmatrise |
+| R11 significance/scheduler/backend | **Fable 5** | **Extra** | Separat privacy/security-review |
+| R11 preferanse-UI, deeplinks og native widgets | **Sonnet 5** | **High** | Fysisk enhetsverifikasjon i fresh context |
+| R12 samlet releaseverifikasjon | **Sonnet 5** | **High** | Fable 5 Extra eller Opus 4.8 Extra for endelig safety/security-review |
+
+Regler:
+
+- **Medium** brukes bare til dokumentasjon, formatering, kjente testoppdateringer eller avgrensede énfilrettinger.
+- **High** er standard for produktkode, UI, tilgjengelighet, tester og mekaniske refaktorer.
+- **Extra** er obligatorisk for motor/safety, RLS/auth, migrering, entitlement, kalibrering og serverstyrte varsler.
+- **Opus 4.8 Extra** er fallback når Fable 5 ikke er tilgjengelig eller betalt Fable-bruk ikke er godkjent. Hvis heller ikke denne er tilgjengelig, stopp den høyrisiko pakken.
+- Max-effort brukes ikke som standard. Det krever en navngitt blokkering og eksplisitt eiergodkjenning.
+- Implementerende økt kan aldri gi sin egen endelige PASS på safety, RLS, entitlement eller kalibrering.
+
 ## 3. Kanoniske kontrakter
 
 ### RecommendationView

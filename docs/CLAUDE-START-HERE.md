@@ -12,6 +12,7 @@ This file is the authoritative entry point when the repository is opened from an
 - The existing design system is evolved, not replaced with a generic redesign.
 - Engine 2.0 v1 is limited to ages 0-24 months. Ages 25-71 are deferred to a later product phase. Synthetic materials are valid functional options alongside wool, cotton, fleece, shell fabrics, and relevant blends.
 - No wardrobe-registration requirement, child-photo analysis, generic AI chat, social feed, or affiliate marketplace is part of the approved core direction.
+- Model routing is mandatory: Sonnet 5 Medium for mechanical documentation, Sonnet 5 High for ordinary product/UI work, and Fable 5 Extra for safety, Motor V2, RLS/auth, entitlement, calibration and server scheduling. Opus 4.8 Extra is the approved fallback; high-risk work is not silently downgraded.
 
 ## Naming and identity
 

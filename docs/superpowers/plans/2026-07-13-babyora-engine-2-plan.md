@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript, React 19, Vite, Vitest, ESLint, localStorage, existing PostHog wrapper, existing Supabase plan.
 
+**Execution model:** Use Fable 5 with Extra effort for Task 0A and Tasks 1–17. Sonnet 5 High is allowed for Task 0 baseline evidence and Task 0B mechanical lint work only. Every safety boundary, domain-contract package, shadow decision and cohort gate requires a separate Fable 5 Extra review; Opus 4.8 Extra is the fallback when Fable is unavailable or paid usage is not approved. Do not downgrade Motor V2 or safety work to Sonnet merely to continue.
+
 **Product references:**
 
 - `docs/superpowers/specs/2026-07-13-babyora-engine-2-design.md`
