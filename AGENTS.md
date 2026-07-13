@@ -11,8 +11,9 @@
 
 - Free: today at one fixed home location.
 - Plus: future, everywhere, and shared with family.
-- The current naming finalist is `Vaerni`; it is a working name pending pronunciation, trademark, domain, and handle checks.
-- `Babyora`, `Klarune`, and `Uteklar` are not approved as the final public name.
+- The v1 child and recommendation scope is 0-24 months. Older ages are deferred.
+- `Vaerni` is rejected. The public name remains an open decision gate.
+- `Babyora`, `Klarune`, `Uteklar`, and `Vaerni` are not approved as the final public name.
 - The selected logo direction is `Protected core` / `Beskyttet kjerne`; keep the symbol name-neutral until the naming gate is complete.
 
 ## Change policy

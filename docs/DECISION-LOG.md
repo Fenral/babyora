@@ -24,9 +24,9 @@ This log records current product decisions that override older exploratory mater
 
 ### Engine 2.0 scope
 
-**Decision:** Plan outdoor recommendations for ages 0-71 months. Treat synthetic materials and blends as valid functional choices, not exceptions. Keep the current engine available while V2 is validated in parallel.
+**Decision:** Limit the first release and Engine 2.0 v1 to ages 0-24 months. Ages 25-71 are deferred to a later product phase. Treat synthetic materials and blends as valid functional choices, not exceptions. Keep the current engine available while V2 is validated in parallel.
 
-**Reason:** Material performance, activity, weather protection, age, and situation matter more than a wool-versus-cotton binary. Expanding age support safely requires explicit contracts, scenario testing, shadow comparison, and controlled activation.
+**Reason:** The narrower age scope reduces recommendation, safety, footwear, activity, and avatar complexity while the core product is proven. Material performance, activity, weather protection, age, and situation still matter more than a wool-versus-cotton binary.
 
 ### Design system
 
@@ -42,9 +42,21 @@ This log records current product decisions that override older exploratory mater
 
 ### Name
 
-**Decision:** Remove Klarune from the final shortlist. Use **Vaerni** as the current working finalist, not as a legally cleared public name.
+**Decision:** Remove Klarune and Vaerni from the final shortlist. The public name remains open; Babyora is an internal working name only.
 
-**Reason:** Vaerni better combines subtle weather/protection associations, Nordic character, international expansion, and product breadth. Risks remain around pronunciation, spelling, and an existing Swedish performing-arts use; those risks require validation.
+**Reason:** Vaerni did not create a natural enough association with clothing when spoken. A new name must pass pronunciation, association, trademark, domain, app-store, and handle gates before approval.
+
+### Avatar scope and production model
+
+**Decision:** Keep the baby as a central identity element. For the 0-24 month first release, use one child identity with two locked poses: sitting for 0-11 months and standing for 12-24 months. The image has no weather, stroller, sleep, or activity context. It shows only the outermost visible clothing and accessories; hidden underlayers remain in the canonical garment list and explanation.
+
+**Decision:** Use the existing Nano Banana Pro soft-3D/clay avatar and sequential edit-chain workflow. Do not build a rigged or runtime-modular 2.5D avatar for v1.
+
+**Decision:** Plan for 24 approved composite images: 12 per pose. Six base warmth states, warm-weather headwear variants, distinct rain/wind shells, and visible strong-wind accessories form the controlled visual matrix. Sixteen images is the technical minimum; 24 is the production target. Exact footwear remains governed by the engine's under-9, 9-15, and 16+ month rules without requiring a third body pose.
+
+**Decision:** Direct image-generation spend is capped at NOK 1,000 for this asset phase. The owner and AI workflow provide art direction, prompting, selection, and QA; no external studio cost is assumed.
+
+**Reason:** The existing avatar already establishes product identity. Restricting the system to two master poses, outermost visible garments, and canonical states avoids combinatorial asset growth while preserving visual truth and premium consistency.
 
 ### Logo
 

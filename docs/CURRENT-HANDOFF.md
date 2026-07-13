@@ -10,15 +10,17 @@
 - 90+ design specification and visual-signature direction.
 - Plans for Engine 2.0, UI, family sharing, personal calibration, notifications/widgets, and verification.
 - Cost-free Instagram launch plan.
-- Name exploration through Klarune and onward to Vaerni as the current working finalist.
+- Name exploration through Klarune and Vaerni; both are rejected and the public name is open.
 - Protected-core logo concept and initial SVG/PNG assets.
 - Private GitHub continuity workflow defined.
+- Full re-analysis and prioritized action summary, including the constrained avatar production direction.
 
 ## Not completed or not approved
 
-- Vaerni has not passed formal trademark, domain, handle, pronunciation, or write-back validation.
+- No public product name is approved. Vaerni is rejected.
 - The logo symbol and wordmark are not final production identity assets.
 - External professional review of safety-sensitive recommendation scenarios is outstanding.
+- Older Engine 2.0 documents still contain a 0-71 month expansion and must be revised to the newly locked 0-24 month v1 boundary before implementation.
 - No implementation phase has been authorized by the repository setup itself.
 
 ## Repository baseline verification
@@ -32,7 +34,9 @@ Recorded during repository initialization on 2026-07-13:
 
 ## Next decision
 
-Choose and explicitly approve the first implementation package after Claude or another implementer has read the required documents and reported contradictions. The master plan currently places baseline verification and Engine 2.0 contracts before recommendation-facing UI changes.
+Claude should first review `docs/superpowers/plans/2026-07-13-babyora-analysis-and-action-summary.md`, including the newly locked avatar scope: one identity, sitting and standing poses, outermost visible garments only, 24 target composites, and NOK 1,000 direct generation budget. This is still planning; no app-code implementation is authorized.
+
+After that review, choose and explicitly approve the first implementation package. The recommended first code package remains fresh baseline verification, legacy safety containment, and a green working platform before recommendation-facing redesign.
 
 ## Opening from another device
 
