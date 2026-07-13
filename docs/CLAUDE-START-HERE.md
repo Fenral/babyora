@@ -28,11 +28,12 @@ When files disagree, use this order:
 1. `AGENTS.md`
 2. This file
 3. `docs/DECISION-LOG.md`
-4. `docs/CURRENT-HANDOFF.md`
-5. Approved plans in `docs/superpowers/plans/`
-6. Approved specifications in `docs/superpowers/specs/`
-7. Other active documents in `docs/`
-8. Archived Codex outputs in `docs/archive/codex-2026-07-13/`
+4. `docs/CONVERSATION-CONTEXT.md`
+5. `docs/CURRENT-HANDOFF.md`
+6. Approved plans in `docs/superpowers/plans/`
+7. Approved specifications in `docs/superpowers/specs/`
+8. Other active documents in `docs/`
+9. Archived Codex outputs in `docs/archive/codex-2026-07-13/`
 
 Older files may still use Babyora or Klarune. That historical wording does not override the current naming status above.
 
@@ -40,13 +41,14 @@ Older files may still use Babyora or Klarune. That historical wording does not o
 
 1. `docs/CURRENT-HANDOFF.md`
 2. `docs/DECISION-LOG.md`
-3. `docs/superpowers/plans/2026-07-13-babyora-90-plus-master-plan.md`
-4. `docs/superpowers/plans/2026-07-13-babyora-engine-2-plan.md`
-5. `docs/superpowers/plans/2026-07-13-babyora-ui-90-plus-plan.md`
-6. `docs/superpowers/plans/2026-07-13-babyora-family-sync-plan.md`
-7. `docs/superpowers/plans/2026-07-13-babyora-personal-calibration-plan.md`
-8. `docs/superpowers/plans/2026-07-13-babyora-notifications-widgets-plan.md`
-9. `docs/superpowers/plans/2026-07-13-babyora-verification-protocol.md`
+3. `docs/CONVERSATION-CONTEXT.md`
+4. `docs/superpowers/plans/2026-07-13-babyora-90-plus-master-plan.md`
+5. `docs/superpowers/plans/2026-07-13-babyora-engine-2-plan.md`
+6. `docs/superpowers/plans/2026-07-13-babyora-ui-90-plus-plan.md`
+7. `docs/superpowers/plans/2026-07-13-babyora-family-sync-plan.md`
+8. `docs/superpowers/plans/2026-07-13-babyora-personal-calibration-plan.md`
+9. `docs/superpowers/plans/2026-07-13-babyora-notifications-widgets-plan.md`
+10. `docs/superpowers/plans/2026-07-13-babyora-verification-protocol.md`
 
 Before implementing, summarize the current direction, identify contradictions, and ask the owner to confirm the first implementation package. Do not interpret repository access as permission to code.
 
@@ -65,4 +67,3 @@ Before changing anything, report:
 
 Do not modify code until I explicitly approve the implementation package.
 ```
-
