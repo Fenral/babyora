@@ -8,12 +8,15 @@
 
 **Tech Stack:** TypeScript/Vitest, Supabase Edge Functions/scheduled jobs, platform push provider, Capacitor local/push notifications, WidgetKit, Android AppWidget, native shared storage.
 
+**Revised scope:** proactive surfaces support the 0–24-month v1 contract only. They consume the same safe semantic fingerprint as Home and Outfit. Push/widget payloads never contain generated avatar assets, hidden layer imagery, or a second recommendation implementation.
+
 ## Global Constraints
 
 - Apply `2026-07-13-babyora-verification-protocol.md`; scheduler/privacy and native widget tasks require independent review and physical-device evidence.
 - Maximum one dressing-change notification per child per six hours and three non-security notifications per household per day.
 - Quiet hours, timezone, permission, category, significance, entitlement, dedupe, and current membership are checked before delivery.
 - Widget and push payloads contain no identifiers, date of birth, coordinates, feedback history, or account details.
+- Server evaluation rejects unsupported 25+ profiles and records a categorical suppression reason; it never fabricates a fallback recommendation.
 - **Execution model:** Use Fable 5 Extra for Tasks 1 (significance/security contract) and 3 (server scheduler/delivery). Use Sonnet 5 High for preference UI, deep links, widget contract, native iOS/Android work, and release evidence. If Fable is unavailable or paid usage is not approved, use Opus 4.8 Extra.
 
 ---
@@ -27,6 +30,7 @@
 - [ ] Write tests for raw 1°C change ignored, garment added/removed, rain/wind/UV protection, warmth-band change, changed calibration, unchanged fingerprint, combined actions, and stable dedupe key.
 - [ ] Create `notification_preferences`, `device_tokens`, and `notification_deliveries` with RLS, expiry/revocation, category checks, and dedupe unique index.
 - [ ] Implement semantic comparison using ordered garment categories and structured recommendation reasons; never notify solely because a weather number changed.
+- [ ] Treat a changed `AvatarStateKey` as presentation evidence only; notification significance remains based on the canonical recommendation fingerprint and structured actions.
 - [ ] Run focused/SQL tests; commit `feat: define meaningful Babyora notification changes`.
 
 ### Task 2: Device registration and preference UX

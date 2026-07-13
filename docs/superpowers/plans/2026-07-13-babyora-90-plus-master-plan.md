@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Deliver a material-aware recommendation engine for outdoor clothing from 0–71 months, every current Babyora page at 90+ quality, production-ready family sharing, bounded personal calibration, meaningful notifications, and native widgets.
+**Goal:** Deliver a safe material-aware recommendation engine for ages 0–24 months, an immediate and truthful daily clothing decision, every enabled Babyora page at 90+ quality, the approved two-pose avatar system, production-ready family sharing, bounded personal calibration, meaningful notifications, and native widgets.
 
-**Architecture:** Five independently testable implementation plans share typed contracts for structured recommendations, fingerprints, household capabilities, and privacy-minimized snapshots. Motor 2.0 is built beside the legacy engine and must stabilize `RecommendationV2` before the UI, calibration and proactive surfaces integrate it. Work proceeds through release gates; a capability is never marketed or enabled until its safety review, authorization, errors, analytics, native behavior, and tests are complete.
+**Architecture:** The independently testable implementation plans share typed contracts for structured recommendations, fingerprints, household capabilities, and privacy-minimized snapshots. Motor 2.0 is built beside the legacy engine and must stabilize `RecommendationV2` before the UI, calibration and proactive surfaces integrate it. Work proceeds through release gates; a capability is never marketed or enabled until its safety review, authorization, errors, analytics, native behavior, and tests are complete.
 
 **Tech Stack:** React 19, TypeScript 6, Vite 8, Zustand, Capacitor 8, Vitest, Playwright, Supabase Auth/Postgres/RLS/Edge Functions, RevenueCat, PostHog EU, WidgetKit, Android AppWidget.
 
@@ -12,15 +12,18 @@
 
 - Free = `i dag hjemme`; Plus = `fremover, overalt og sammen — personlig tilpasset`.
 - Safety-critical current recommendations, TOG, Warm or Cold, and the simple morning reminder remain free.
-- User-facing terminology is `plagg`, `Babyora`, and `Babyora Plus`; internal layer logic remains internal.
-- Outdoor recommendations support `0–71` months. Ages `72+` are explicitly unsupported; TOG/sleep remains a separate `0–24`-month product.
+- User-facing terminology is `plagg`, `Babyora`, and `Babyora Plus`; `Babyora` remains an internal working name until the naming gate passes, and internal layer logic remains internal.
+- Outdoor recommendations and TOG/sleep support `0–24` months in v1. Ages `25+` are explicitly unsupported and deferred.
 - `best_for_conditions`, `prefer_wool`, and `avoid_wool` are free per-child settings. Synthetics are first-class functional alternatives; no material choice is a moral ranking.
 - Preserve the current navy/plum, mint, peach, temperature-reactive, tactile instrument design system.
+- The clothing decision is the primary visual instrument: roughly 60% clothing, 25% atmosphere, and 15% numeric precision. A temperature control may be distinctive without dominating Home or the product identity.
+- Keep one child identity with sitting 0–11 and standing 12–24 master poses. Avatar assets show only outermost visible clothing/accessories, never hidden underlayers or weather/activity context.
+- Use verified Nano Banana Pro edit-chain composites for v1: target 24 approved images, hard direct-generation budget NOK 1,000, no rigged/runtime 2.5D.
 - No continuous tracking, child-photo judgment, wardrobe-photo ingestion, generic AI chat, affiliate marketplace, or opaque calibration model.
 - Never expose service-role credentials in the client; enable RLS on every exposed Supabase table.
 - Never send name, date of birth, coordinates, household ID, feedback history, or account data to PostHog or push payloads.
 - Every interactive target is at least 44 × 44 points and supports reduced motion, text scaling, and assistive technology.
-- Before implementation, work in a git-backed copy/worktree. The inspected repository has no `.git`; do not initialize or replace version control without user approval.
+- Before implementation, work in the existing git-backed repository/worktree. Record the branch and commit; never assume an old note claiming `.git` is absent is still current.
 - Baseline commands: `npm test`, `npm run build`, `npm run lint`, and `npm run audit:test`. Existing lint debt is recorded separately; no task may add a lint failure.
 
 ## Claude Code model and effort routing
@@ -52,13 +55,14 @@ Rules:
 ## Plan map and shared interfaces
 
 1. `2026-07-13-babyora-verification-protocol.md` governs every task and package; no other plan can declare itself complete without its independent PASS evidence.
-2. `2026-07-13-babyora-engine-2-plan.md` produces structured age, situation, thermal intent, material and garment contracts, a tested legacy adapter, shadow comparison and cohort feature flags.
-3. `2026-07-13-babyora-ui-90-plus-plan.md` produces the four-tab shell, semantic capability map, canonical `RecommendationView`, all revised page families, and truthful paywalls. Its fingerprint must use Motor 2.0 semantics rather than translated garment strings.
-4. `2026-07-13-babyora-family-sync-plan.md` produces authentication, household repositories, RLS, roles, invitations, migration/sync, and verified household entitlements.
-5. `2026-07-13-babyora-personal-calibration-plan.md` produces append-only feedback, deterministic `deriveCalibration()`, evidence review, and `ThermalIntent` integration.
-6. `2026-07-13-babyora-notifications-widgets-plan.md` produces significance evaluation, device registration, server scheduling, deep links, and widget snapshot v2/native surfaces.
+2. `2026-07-13-babyora-consolidated-revision-plan.md` defines the current scope, revised dependency order, avatar production boundary, and superseded assumptions.
+3. `2026-07-13-babyora-engine-2-plan.md` produces structured 0–24-month age, situation, thermal intent, material and garment contracts, a tested legacy adapter, shadow comparison and cohort feature flags.
+4. `2026-07-13-babyora-ui-90-plus-plan.md` produces the four-tab shell, semantic capability map, canonical `RecommendationView`, `AvatarStateKey`, all revised page families, and truthful paywalls. Its fingerprint must use Motor 2.0 semantics rather than translated garment strings.
+5. `2026-07-13-babyora-family-sync-plan.md` produces authentication, household repositories, RLS, roles, invitations, migration/sync, and verified household entitlements.
+6. `2026-07-13-babyora-personal-calibration-plan.md` produces append-only feedback, deterministic `deriveCalibration()`, evidence review, and `ThermalIntent` integration.
+7. `2026-07-13-babyora-notifications-widgets-plan.md` produces significance evaluation, device registration, server scheduling, deep links, and widget snapshot v2/native surfaces.
 
-Shared contracts created by Plan 1:
+Shared contracts established by the canonical contract package and consumed by all detailed plans:
 
 ```ts
 export type Capability =
@@ -87,6 +91,7 @@ export type RecommendationView = {
   summary: string;
   explanation: string[];
   fingerprint: string;
+  avatarStateKey: AvatarStateKey | null;
 };
 ```
 
@@ -97,8 +102,15 @@ export type RecommendationView = {
 - [ ] Record `node --version`, `npm --version`, dependency lock hash, baseline test/build/lint/audit outputs, and current screenshots in `docs/superpowers/evidence/90-plus-baseline.md`.
 - [ ] Confirm the execution copy is git-backed and clean; if not, stop before code changes and obtain user direction.
 - [ ] Commit only the baseline evidence: `docs: record Babyora 90+ baseline`.
-- [ ] Execute Motor 2.0 Task 0B as a separate mechanical commit; require test, audit, lint and build to pass before behavior work.
+- [ ] Execute Motor 2.0 Task 0A as a separate safety-containment commit. Prove overrides, calibration, ownership substitutions and UI swaps cannot bypass a final legacy safety pass.
+- [ ] Execute Motor 2.0 Task 0B as a separate mechanical commit; require test, audit, lint and build to pass before Motor V2 or redesign work.
 - [ ] Install the verification protocol as a mandatory execution instruction and create the task/package evidence directories.
+
+### Gate 0.5 — North-Star design decision
+
+- [ ] Prototype three directions for Hjem → Antrekk → Plan → Paywall using the same real recommendation fixtures, both avatar poses, and required failure/accessibility states.
+- [ ] Test with five representative parents before production assets or redesign code.
+- [ ] Require median comprehension ≤5 seconds, correct outfit/reason recall from all five parents, no critical/high trust issue, and explicit owner approval of one direction.
 
 ### Gate 1 — Motor 2.0 foundation
 
@@ -106,13 +118,15 @@ export type RecommendationView = {
 - [ ] Automate all 36 gold scenarios and every existing safety guardrail.
 - [ ] Verify the adapter keeps all current consumers working and all-flags-off rollback uses the untouched legacy motor.
 - [ ] Resolve every shadow difference as equivalent, expected improvement, reviewed legacy defect, or blocker.
-- [ ] Keep toddler and preschool display flags off until their scenario packets are externally signed.
+- [ ] Keep the 12–24-month display cohort off until its scenario packet is externally signed. Do not create or market 25+ cohorts in v1.
 
 ### Gate 2 — UI and product foundation
 
 - [ ] Execute every task in the UI 90+ plan.
 - [ ] Require an independent structured PASS for every task before the next task starts.
 - [ ] Verify current recommendations remain complete when `isPlus=false`, `isAuthenticated=false`, and location permission is denied.
+- [ ] Verify Home shows the final verified outermost outfit immediately; hidden layers remain in the ordered list and never appear through the avatar's outerwear.
+- [ ] Produce no more than 24 verified avatar composites only after Gate 0.5 and the canonical `AvatarStateKey` contract pass.
 - [ ] Run the 13-page deterministic audit; no page may regress below baseline and the package target is 90+ for every implemented page.
 - [ ] Do not enable family/calibration/notification marketing yet.
 
@@ -146,10 +160,12 @@ export type RecommendationView = {
 
 ## Dependency order
 
-Motor 2.0 contracts, adapter, shadow comparison and safety review precede the canonical recommendation UI. Non-recommendation visual foundation work may proceed after Gate 0, but it must not invent a competing recommendation model.
+Legacy safety containment precedes Motor 2.0. Motor 2.0 contracts, adapter, shadow comparison and safety review precede recommendation-facing production UI. Prototype work may proceed after the baseline as a separate approved design task, but production assets and redesign code wait for the North-Star gate and must not invent a competing recommendation model.
 
 ```text
-Git/baseline -> Motor 2.0 contracts + adapter -> shadow/expert review -> canonical UI
+Git/baseline -> legacy safety containment -> green platform -> North-Star gate
+                                                            |
+                                                            +-> Motor 2.0 contracts + adapter -> shadow/expert review -> canonical UI -> avatar assets
                                                             |
                                                             +-> household/auth -> calibration
                                                             +-> notifications/widgets after stable fingerprint
@@ -169,8 +185,9 @@ The UI plan can ship its non-recommendation foundation independently. Household/
 
 | Master specification area | Implemented by |
 |---|---|
-| Age 0–71, situations, functional materials, structured catalog, safety, adapter and shadow rollout | Motor 2.0 Tasks 1–17 |
-| Visual system, modern glass temperature instrument, dressing sequence, textile stack, typography, controls, illustration consistency | UI Tasks 3–4, especially Task 3A |
+| Age 0–24, situations, functional materials, structured catalog, final safety, adapter and shadow rollout | Motor 2.0 Tasks 0A and 1–17 |
+| Protective morning instrument, supporting temperature control, final outer-outfit avatar, textile list, typography, controls, illustration consistency | UI Tasks 2–4, especially Tasks 3A and 4 |
+| Two master poses, 24-state maximum, Nano Banana Pro edit-chain production, asset truth and fallback | Consolidated revision plan §4; UI Tasks 2 and 4; verification protocol §4 |
 | Four-root instrument dock and haptic grammar | UI Tasks 3 and 3A |
 | Free/Plus capability and pricing rules | UI Tasks 1 and 7; Family Task 6 |
 | All 13 existing page families and new Plus surfaces | UI Tasks 4–8; Family Task 7; Calibration Task 4; Notifications Task 2 |

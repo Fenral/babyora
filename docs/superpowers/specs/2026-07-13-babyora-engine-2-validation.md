@@ -40,9 +40,7 @@ Kildene støtter prinsippene. Bare en faglig scenariogjennomgang kan godkjenne B
 |---|---:|---|---|---|
 | `newborn` | 0–5 | Vogn, bæresele, våken ute | Søvn inne | Aktiv lek, rolig ute, blandet dag |
 | `mobile_baby` | 6–11 | Vogn, bæresele, våken ute | Aktiv lek, søvn inne | Rolig ute, blandet dag |
-| `young_toddler` | 12–23 | Aktiv lek, vogn, blandet dag | Rolig ute, søvn inne | Bæresele og våken-lite-bevegelse som standardvalg |
-| `toddler` | 24–35 | Aktiv lek, vogn, blandet dag | Rolig ute | Bæresele, søvn i Motor 2.0 |
-| `preschool` | 36–71 | Aktiv lek, rolig ute, blandet dag | Ingen nødvendig i første versjon | Vogn, bæresele, søvn i Motor 2.0 |
+| `young_toddler` | 12–24 | Aktiv lek, vogn, blandet dag | Rolig ute, søvn inne, bæresele etter eksplisitt valg | Våken-lite-bevegelse som standardvalg |
 
 Produktgrensene beskriver ikke utviklingsmilepæler. UI kan senere støtte en eksplisitt mobilitetsinnstilling, men første Motor 2.0-versjon bruker situasjonen forelderen velger og avviser ugyldige kombinasjoner.
 
@@ -72,7 +70,7 @@ Hver grense testes på begge sider. Eksakte temperaturgrenser beholdes først fr
 
 | Område | Verdier som minst skal testes |
 |---|---|
-| Alder | `-1`, `0`, `5`, `6`, `11`, `12`, `23`, `24`, `35`, `36`, `71`, `72` måneder |
+| Alder | `-1`, `0`, `5`, `6`, `8`, `9`, `11`, `12`, `15`, `16`, `23`, `24`, `25` måneder |
 | Temperaturbånd | Én hundredel under, nøyaktig på og én hundredel over hver eksisterende grense |
 | Vind | Ingen vind, eksisterende modifikatorgrense på begge sider og sterk vind |
 | Nedbør | `0`, eksisterende lett-regn-grense på begge sider og kraftig nedbør |
@@ -101,29 +99,29 @@ Tabellen definerer forventede egenskaper, ikke endelig markedsføringstekst. Hve
 | G10 | Ung smårolling aktiv kulde | 15 mnd, aktiv lek, 0 °C | Mindre isolasjon enn G09, men samme nødvendige værbeskyttelse. |
 | G11 | Ung smårolling blandet barnehagedag | 20 mnd, blandet dag, +7 °C, skiftende | Robust kombinasjon og forklaring av hva som kan tas av/på. |
 | G12 | Ung smårolling varm og våt | 22 mnd, aktiv, +18 °C, regn | Lett base og regnbeskyttelse uten tungt mellomlag. |
-| G13 | Smårolling aktiv høst | 30 mnd, aktiv lek, +9 °C, tørt | Todelt/heldress etter rolle; aktivitet reduserer varme. |
-| G14 | Smårolling rolig høst | 30 mnd, rolig ute, +9 °C, tørt | Minst like mye isolasjon som G13. |
-| G15 | Smårolling blandet regndag | 30 mnd, blandet dag, +6 °C, regn | Fuktrobust base/mellomlag og vanntett skall. |
-| G16 | Smårolling vogn ved behov | 35 mnd, vogn, +3 °C | Gyldig, stillesittende anbefaling; ikke identisk med aktiv lek. |
-| G17 | Førskolebarn aktiv vinter | 48 mnd, aktiv lek, −5 °C, tørt | Aktivitetstilpasset isolasjon, vind-/kuldevakt. |
-| G18 | Førskolebarn rolig vinter | 48 mnd, rolig ute, −5 °C, tørt | Minst like varmt som G17. |
-| G19 | Førskolebarn våt vinter | 54 mnd, blandet dag, −1 °C, vått | Fuktrobust isolasjon og vanntett skall. |
-| G20 | Førskolebarn varm sommer | 60 mnd, aktiv, +24 °C, sol | Minimal varme, solbeskyttelse og væske-/pausecopy uten ulltvang. |
-| G21 | Øvre støttet alder | 71 mnd, blandet dag, +5 °C | Gyldig `preschool`-anbefaling. |
-| G22 | Ustøttet alder | 72 mnd, valgfri utendørssituasjon | `unsupported_age`, ingen anbefaling. |
+| G13 | Øvre alder aktiv høst | 24 mnd, aktiv lek, +9 °C, tørt | Aktivitetstilpasset isolasjon og aldersriktig todelt/heldress. |
+| G14 | Øvre alder rolig høst | 24 mnd, rolig ute, +9 °C, tørt | Minst like mye isolasjon som G13. |
+| G15 | Øvre alder blandet regndag | 24 mnd, blandet dag, +6 °C, regn | Fuktrobust base/mellomlag og vanntett skall. |
+| G16 | Øvre alder vogn ved behov | 24 mnd, vogn, +3 °C | Gyldig stillesittende anbefaling; ikke identisk med aktiv lek. |
+| G17 | Før skogrensen | 8 mnd, våken ute, +8 °C | Ingen ordinære sko; varme sokker/dekkede føtter når relevant. |
+| G18 | Over første skogrense | 9 mnd, våken ute, +8 °C | Mykt aldersriktig fottøy uten å anta stabil gange. |
+| G19 | Siste myke fottøygruppe | 15 mnd, aktiv lek, 0 °C | Tøffel-/myk skobeskyttelse og relevant vinterdekning. |
+| G20 | Første ordinære skogruppe | 16 mnd, aktiv lek, 0 °C | Ordinært aldersriktig vinterfottøy kan velges. |
+| G21 | Øvre støttet alder | 24 mnd, blandet dag, +5 °C | Gyldig `young_toddler`-anbefaling. |
+| G22 | Ustøttet alder | 25 mnd, valgfri utendørssituasjon | `unsupported_age`, ingen anbefaling. |
 | G23 | Ullfri kulde | 18 mnd, vogn, −4 °C, `avoid_wool` | Syntetisk base/fleece; null ullvarianter. |
-| G24 | Ullfri aktiv regndag | 42 mnd, aktiv, +6 °C, regn, `avoid_wool` | Fukttransporterende syntet + fleece ved behov + skall. |
+| G24 | Ullfri aktiv regndag | 20 mnd, aktiv, +6 °C, regn, `avoid_wool` | Fukttransporterende syntet + fleece ved behov + skall. |
 | G25 | Ullpreferanse kaldt/tørt | 18 mnd, vogn, −4 °C, `prefer_wool` | Ull rangeres i base/mellomlag, men funksjonelt ytterlag beholdes. |
-| G26 | Ullpreferanse vått ytterlag | 42 mnd, blandet, +5 °C, regn, `prefer_wool` | Ull kan brukes under; skall og eventuell syntetisk isolasjon overstyrer preferansen. |
-| G27 | Balansert aktiv og svett | 48 mnd, aktiv, +8 °C, høy fukt | Syntet/lett ull rangeres etter fukttransport; bomull ikke standard. |
-| G28 | Balansert varm og rolig | 48 mnd, rolig, +21 °C, tørt | Lett bomull er gyldig alternativ; ingen moralsk materialrangering. |
+| G26 | Ullpreferanse vått ytterlag | 20 mnd, blandet, +5 °C, regn, `prefer_wool` | Ull kan brukes under; skall og eventuell syntetisk isolasjon overstyrer preferansen. |
+| G27 | Balansert aktiv og svett | 20 mnd, aktiv, +8 °C, høy fukt | Syntet/lett ull rangeres etter fukttransport; bomull ikke standard. |
+| G28 | Balansert varm og rolig | 20 mnd, rolig, +21 °C, tørt | Lett bomull er gyldig alternativ; ingen moralsk materialrangering. |
 | G29 | Bilstol etter tur | 12 mnd, +1 °C, bilstolkontekst | Ingen tykk dress under selene; trygg alternativ løsning beskrives. |
 | G30 | Kalibrering mot varmere | 20 mnd, kaldt, kalibrering `+1` | Maks ett varmetrinn; sikkerhetsregler kjøres etterpå. |
 | G31 | Kalibrering mot kjøligere | 20 mnd, mildt, kalibrering `-1` | Maks ett varmetrinn; nødvendig skall/sol/kuldesikring fjernes ikke. |
 | G32 | Ekstrem varme spedbarn | 5 mnd, vogn, ekstremt varmt | `HIGH`/`CRITICAL` etter eksisterende policy; pause/skygge fremfor flere plagg. |
 | G33 | Ekstrem kulde spedbarn | 5 mnd, vogn, ekstrem kulde | `HIGH`/`CRITICAL`, eksponeringsbegrensning; antrekk alene fremstilles ikke som tilstrekkelig. |
 | G34 | Manglende illustrasjon | Gyldig anbefaling med ny syntetvariant | Nøytralt ikon og korrekt tekst; aldri feil ullillustrasjon. |
-| G35 | Ugyldig situasjon | 60 mnd, bæresele | `invalid_situation_for_age`, ingen gjetting/fallback til aktiv lek. |
+| G35 | Ugyldig situasjon | 24 mnd, våken-lite-bevegelse | `invalid_situation_for_age`, ingen gjetting/fallback til aktiv lek. |
 | G36 | Determinisme | Samme komplette input kjøres 100 ganger | Identisk semantisk resultat og fingerprint hver gang. |
 
 ## 8. Globale motorinvarianter
@@ -150,7 +148,7 @@ Shadow-sammenligning skal skille mellom:
 - `needs_review`: uforklart tap/tillegg av varme, skall, utstyr eller alvorlighet;
 - `legacy_bug_preserved`: dagens resultat er kjent feil og må ikke kopieres ukritisk.
 
-For 0–23 måneder kreves:
+For 0–24 måneder kreves:
 
 - alle eksisterende 222 tester fortsatt grønne;
 - alle eksisterende guardrail-scenarioer kartlagt til V2;
@@ -165,24 +163,24 @@ Fagpersonen får en eksport med én side per gullscenario:
 - termisk behov før materialvalg;
 - valgt plaggrolle og materialfamilie;
 - sikkerhetsflagg og norsk tekst;
-- forskjell fra dagens motor for 0–23 måneder;
+- forskjell fra dagens motor for 0–24 måneder;
 - felt for `approved`, `approved_with_copy_change` eller `rejected`;
 - begrunnelse og fagpersonens navn/dato/signatur.
 
-Status før ekstern gjennomgang er **ikke signert** for alle scenarioer. Det er ærlig nåtilstand og betyr at `engine_v2_toddler` og `engine_v2_preschool` skal forbli av.
+Status før ekstern gjennomgang er **ikke signert** for alle scenarioer. Det er ærlig nåtilstand og betyr at både `engine_v2_infant` og `engine_v2_young_toddler` skal forbli av.
 
 ## 11. Lanseringsporter
 
-| Port | Infant 0–23 | Toddler 24–35 | Preschool 36–71 |
-|---|:---:|:---:|:---:|
-| Typecheck/build/test/audit/lint grønt | Kreves | Kreves | Kreves |
-| Alle relevante gullscenarioer automatisert | Kreves | Kreves | Kreves |
-| Eksisterende guardrails består | Kreves | Kreves | Kreves |
-| Faglig scenario-signatur | Kreves før produksjon | Kreves | Kreves |
-| Korrekte illustrasjoner eller nøytrale fallbackikoner | Kreves | Kreves | Kreves |
-| Shadow-sammenligning uten uforklarte avvik | Kreves | Kreves | Kreves |
-| Fysisk enhet og tilgjengelighetskontroll | Kreves | Kreves | Kreves |
-| Dokumentert rollback | Kreves | Kreves | Kreves |
+| Port | Infant 0–11 | Young toddler 12–24 |
+|---|:---:|:---:|
+| Typecheck/build/test/audit/lint grønt | Kreves | Kreves |
+| Alle relevante gullscenarioer automatisert | Kreves | Kreves |
+| Eksisterende guardrails består | Kreves | Kreves |
+| Faglig scenario-signatur | Kreves før produksjon | Kreves |
+| Korrekte illustrasjoner eller nøytrale fallbackikoner | Kreves | Kreves |
+| Shadow-sammenligning uten uforklarte avvik | Kreves | Kreves |
+| Fysisk enhet og tilgjengelighetskontroll | Kreves | Kreves |
+| Dokumentert rollback til contained legacy | Kreves | Kreves |
 
 Ingen poengscore eller visuelt mål på 90+ kan overstyre disse portene.
 

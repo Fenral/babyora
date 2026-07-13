@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make the free daily answer immediate and internally consistent, establish the four-tab product structure, and raise all 13 current page families to 90+.
+**Goal:** Make the free daily clothing decision immediate and internally consistent, establish the four-tab product structure, implement the approved two-pose outer-outfit avatar contract, and raise every enabled page family to 90+.
 
 **Architecture:** Add pure typed UI contracts before changing screens. Motor 2.0 is the canonical structured recommendation and safety source; derive one `RecommendationView` for every visual consumer, and centralize capability decisions so UI does not scatter `isPremium` checks. Until a cohort is enabled, consume the tested Motor 2.0 legacy adapter or untouched legacy result according to feature flags.
 
@@ -14,6 +14,10 @@
 - Apply `2026-07-13-babyora-verification-protocol.md`; every task requires a fresh-context structured PASS before it is complete.
 - No backend dependency is required for this plan; signed-out/local mode remains fully functional.
 - Recommendation-facing Tasks 2, 4 and 5 depend on Motor 2.0 contracts, fingerprint and adapter. Navigation, tokens and non-recommendation surfaces may proceed independently after the baseline gate.
+- Production UI work follows the five-parent North-Star gate. Prototype code/assets are not production authorization.
+- v1 supports ages 0–24 only. Use sitting 0–11 and standing 12–24 avatar poses; no 25+ UI, copy, fixture or capability claim.
+- The avatar shows only the final outermost visible outfit/accessories. Hidden base and middle garments remain in the ordered list and are never crossfaded through outerwear.
+- Avatar asset production is capped at 24 approved composites and NOK 1,000 direct generation spend; no runtime 2.5D.
 - Bottom navigation appears only on Hjem, Planlegg, Guide, and Familie roots.
 - **Execution model:** Sonnet 5 with High effort for all tasks. Medium is allowed only for documentation or a known one-file test/copy fix. Escalate to Fable 5 Extra only after two evidenced failures or when a change crosses into authorization, billing, or shared-data architecture.
 
@@ -58,12 +62,14 @@ export function decideAccess(capability: Capability, c: AccessContext): AccessDe
 
 **Files:** Create `src/lib/recommendation/view.ts`, `src/lib/recommendation/fingerprint.ts` and tests; modify `src/lib/outfit-state.ts`, `src/lib/widget/snapshot.ts` later only through these interfaces.
 
-**Interfaces:** Produces `buildRecommendationView(rec: RecommendationV2)`. The fingerprint is consumed from Motor 2.0 and must not be recalculated from translated garment labels.
+**Interfaces:** Produces `buildRecommendationView(rec: RecommendationV2)`. The fingerprint is consumed from Motor 2.0 and must not be recalculated from translated garment labels. A separate pure `deriveAvatarStateKey()` maps only visible outer state to a verified asset.
 
 - [ ] Write failing tests asserting garment count counts visible garments rather than layer categories, order follows `innerst → mellomlag → yttertoy → ekstra → utstyr`, and equal semantic inputs have equal fingerprints regardless of object key order.
 - [ ] Run focused tests; expect module-not-found failure.
 - [ ] Implement deterministic normalization and hash using Web Crypto where available with a stable synchronous FNV-1a fallback for tests; include activity, temperature band, ordered visible garments, situation flags, and calibration value—never child identity.
-- [ ] Return `{ recommendation, garmentCount, orderedGarments, summary, explanation, fingerprint }`; make Home, Outfit, future rows, widget, and notifications consume it instead of recounting independently.
+- [ ] Define `AvatarStateKey` from pose, outer body garment, headwear, hands, neck and relevant footwear. Exclude hidden base/middle layers, child identity and weather context.
+- [ ] Return `{ recommendation, garmentCount, orderedGarments, summary, explanation, fingerprint, avatarStateKey }`; make Home, Outfit, future rows, widget, and notifications consume it instead of recounting independently.
+- [ ] Test that an unknown/unverified avatar key yields `null` and a neutral fallback, never nearest-neighbour asset guessing.
 - [ ] Run engine, summary, visibility, and new view tests; expect pass.
 - [ ] Commit `feat: add canonical recommendation presentation`.
 
@@ -80,7 +86,7 @@ export function decideAccess(capability: Capability, c: AccessContext): AccessDe
 - [ ] Run tests, keyboard navigation, reduced-motion screenshot, and build; expect pass.
 - [ ] Commit `feat: establish Babyora four-tab shell`.
 
-### Task 3A: Visual signature primitives and temperature instrument
+### Task 3A: Protective morning primitives and supporting temperature instrument
 
 **Files:** Create `src/components/instrument/TemperatureInstrument.tsx`, `InstrumentReadout.tsx`, `InstrumentDock.tsx`, `src/components/instrument/__tests__/TemperatureInstrument.test.tsx`; modify `src/styles/design-tokens.css`, `src/styles/motion-grammar.ts`, `src/screens/FinnAntrekkScreen.tsx`; add deterministic screenshot fixtures.
 
@@ -109,7 +115,8 @@ export type TemperatureInstrumentProps = {
 - [ ] Write failing tests for whole-degree snapping, ± controls, pointer/keyboard/switch access, 44-point hit target, threshold-only impact callback, min/max bounds, large text, and reduced motion.
 - [ ] Run `npx vitest run src/components/instrument/__tests__/TemperatureInstrument.test.tsx`; expect module-not-found failure.
 - [ ] Add the exact semantic aliases from the visual-signature spec using existing `--surface-elevated`, `--accent-cta`, `--layer-bg-kald`, `--layer-bg-mild`, and `--layer-bg-varm`; introduce no duplicate colors.
-- [ ] Implement the 300–360 pt modern glass instrument: inset channel, two controlled highlights, continuous temperature column, engraved whole-degree scale, 5° major ticks, 10° labels, and left-side garment thresholds.
+- [ ] Implement the temperature instrument as a focused Find Outfit control, not the product's dominant Home identity. Preserve numeric precision and rule thresholds while keeping the clothing result visually primary.
+- [ ] Use the smallest height that passes the 390 × 844 result-first fixture; 300–360 pt is a maximum exploration range, not a mandatory size.
 - [ ] Make the column/atmosphere follow continuously while recommendations settle after 120–180 ms or at a threshold; fire a distinct haptic only when the recommendation fingerprint changes.
 - [ ] Replace the generic Find Outfit temperature slider while preserving exact numeric input, weather defaults, and wind/rain controls.
 - [ ] Implement `InstrumentDock` as the restrained root navigation surface: filled active icon, visible label, quiet mint pool, one highlight, one canvas shadow, no outlined glass pill.
@@ -118,16 +125,19 @@ export type TemperatureInstrumentProps = {
 
 ### Task 4: Immediate Home and truthful Outfit
 
-**Files:** Modify `src/screens/HjemScreen.tsx`, `src/screens/PaakledningScreen.tsx`, `src/components/AtmosphereBackground.tsx`, `src/components/PlaggDetailSheet.tsx`; create `src/components/outfit/DressingSequence.tsx`, `GarmentStack.tsx` and tests; add focused Playwright screenshots.
+**Files:** Modify `src/screens/HjemScreen.tsx`, `src/screens/PaakledningScreen.tsx`, `src/components/AtmosphereBackground.tsx`, `src/components/PlaggDetailSheet.tsx`; create `src/components/outfit/VerifiedAvatarComposite.tsx`, `AvatarStateResolver.ts`, `GarmentStack.tsx` and tests; add focused Playwright screenshots.
 
-**Interfaces:** Both screens consume the same `RecommendationView`; avatar asset selection consumes the same ordered garments or uses an explicitly neutral fallback.
+**Interfaces:** Both screens consume the same `RecommendationView`; avatar selection consumes only `avatarStateKey` and an approved manifest of up to 24 composites or uses an explicitly neutral fallback.
 
 - [ ] Write failing tests for automatic Home answer, “Se detaljer”, plagg count, next meaningful change, cached/offline label, and identical Home/Outfit fingerprint.
 - [ ] Implement stable loading/cached/error/location-fallback states and remove the mandatory tap before seeing the answer.
 - [ ] Make Outfit use “Rekkefølge · innerst først”, compact high-count layouts, consequences for garment swaps, and a calm 44-point close control.
-- [ ] Implement the verified dressing sequence in inner/middle/outer/accessory order, capped at 900 ms total and 180–240 ms per state; fall back to a neutral avatar when no truthful composite exists.
+- [ ] Render the verified final outermost outfit immediately. Dressing order is communicated by the static “innerst først” list; do not animate hidden underlayers onto or through the final outer garment.
+- [ ] Crossfade only between two verified final composites after a meaningful visible-state change, 180–240 ms; reduced motion swaps immediately.
+- [ ] Select the sitting pose for 0–11 months and standing pose for 12–24 months. Use engine footwear rules without creating a third body pose.
 - [ ] Replace generic garment cards with one overlapping textile stack; lift only the active row and keep texture confined to thumbnails/category tabs.
 - [ ] Verify temperature atmosphere uses perceived temperature and remains readable at coldest/hottest fixtures.
+- [ ] Verify no weather, stroller, sleep, or activity context is baked into avatar images and no unverified composite is displayed.
 - [ ] Run focused tests, `npm test`, Playwright screenshots at 390 × 844, and audit prepare/finalize; expect no regression.
 - [ ] Commit `feat: make daily outfit immediate and consistent`.
 
@@ -177,4 +187,6 @@ export type TemperatureInstrumentProps = {
 - [ ] Run `npm test`, `npm run build`, `npm run lint`, and `npm run audit:test`; record exact pass/fail counts and distinguish pre-existing lint debt.
 - [ ] Score every page with the same rubric; fix the lowest scoring actionable issue and rerun until each enabled page reaches 90+.
 - [ ] Complete manual text-scaling, VoiceOver/TalkBack, thumb-zone, and physical haptic checks.
+- [ ] Validate the avatar manifest: maximum 24 production composites, one locked child identity with two poses, exact `AvatarStateKey` mapping, 2K source, optimized mobile export, anatomy/material/alpha review, and direct spend log ≤ NOK 1,000.
+- [ ] Repeat the five-parent comprehension check against the implemented core journey; require median ≤5 seconds and correct outfit/reason recall from all five.
 - [ ] Commit `docs: record Babyora UI 90 plus evidence`.

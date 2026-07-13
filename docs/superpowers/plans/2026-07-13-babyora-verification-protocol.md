@@ -16,6 +16,7 @@
 - The verifier reports first and does not edit code in the same pass.
 - Any FAIL reopens the task; fixes require a new complete verification run.
 - No critical/high finding may be accepted silently.
+- No production UI or avatar asset package may bypass the five-parent North-Star gate defined in the consolidated revision plan.
 
 ---
 
@@ -121,6 +122,19 @@ For every changed screen/component:
 - [ ] Run the same 1–100 rubric and attach category scores plus concrete deductions.
 - [ ] Require ≥90 overall and no critical/high issue before the surface passes.
 - [ ] Require human review for generated assets, anatomy, garment identity, and subjective brand fit.
+- [ ] For Home/Outfit, verify the clothing decision is visually primary (target balance: 60% clothing, 25% atmosphere, 15% precision) and a temperature instrument does not dominate the daily answer.
+- [ ] Repeat a five-parent comprehension test: median understood answer ≤5 seconds, all five can repeat the outfit and main reason, and no participant mistakes the avatar for decorative/contextual storytelling.
+
+### 4.1 Avatar asset verification
+
+- [ ] Verify exactly one child identity and two master poses: sitting 0–11 and standing 12–24 months.
+- [ ] Verify the production manifest contains no more than 24 composites and every file maps one-to-one to a documented `AvatarStateKey`.
+- [ ] Verify images contain no weather, stroller, sleep, activity, text, controls, or contextual scene.
+- [ ] Verify only outermost visible body clothing and visible accessories appear; hidden underlayers remain list-only.
+- [ ] Inspect face/identity, anatomy, hands/feet, garment silhouette, material, closures, hodeplagg, hands, neck, footwear, alpha edges, shared light/shadow and mobile crop.
+- [ ] Confirm unknown keys produce a neutral fallback and never nearest-match guessing.
+- [ ] Confirm 2K sources, optimized mobile WebP/AVIF outputs, asset-size budget, and visual regression screenshots.
+- [ ] Attach the direct-generation spend log and require total ≤ NOK 1,000. Cost compliance never excuses a failed visual-truth check; reduce the matrix to the 16-state minimum instead.
 
 ## 5. Security and data verification gate
 

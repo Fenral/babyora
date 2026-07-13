@@ -2,7 +2,7 @@
 
 > **For Claude Code:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task by task. Use `superpowers:test-driven-development` for every behavior change and `superpowers:verification-before-completion` before claiming a phase complete.
 
-**Goal:** Replace the wool-first, infant-optimized recommendation model with a deterministic, material-aware engine for outdoor clothing from 0–71 months, while preserving existing production behavior through a tested adapter and staged feature flags.
+**Goal:** Replace the wool-first recommendation model with a deterministic, material-aware engine for outdoor clothing from 0–24 months, while first containing known legacy post-safety mutation risks and then preserving safe production behavior through a tested adapter and staged feature flags.
 
 **Architecture:** Build Motor 2.0 beside `src/lib/wool-layers`. It derives an age/situation-aware `ThermalIntent`, resolves materials and structured garment variants, applies safety after calibration, emits `RecommendationV2`, and adapts that result to the current `Recommendation` shape. Roll out first in shadow mode, then by age stage. Do not rewrite screens until the engine contracts and regressions are green.
 
@@ -26,6 +26,8 @@
 6. Do not gate material preference, valid situations or safety explanations behind Plus.
 7. Use neutral fallback icons when a material-specific illustration does not exist.
 8. One task equals one reviewable commit. If Git is not available, stop rather than simulating commit history.
+9. Reject ages 25+ in v1. Do not implement toddler/preschool cohorts from superseded 0–71-month drafts.
+10. A safe rollback means the contained legacy path from Task 0A, never the pre-containment legacy path.
 
 ## Task 0: Establish a protected baseline
 
@@ -45,7 +47,7 @@ git branch --show-current
 git rev-parse --show-toplevel
 ```
 
-Expected: all commands identify the intended Babyora repository. In the reviewed copy on 13 July 2026, `.git` was absent. If it is still absent, stop and ask the owner to open the original Git repository or explicitly approve `git init`.
+Expected: all commands identify the intended `Fenral/babyora` repository and current branch/commit. The repository is now git-backed; stop if a different or unexplained working copy is open.
 
 **Step 2: Record the baseline**
 
@@ -70,6 +72,42 @@ git commit -m "docs: record engine 2 baseline"
 ```
 
 Do not stage source or script files in this commit.
+
+## Task 0A: Contain legacy post-safety mutations
+
+**Files:**
+
+- Create: `src/lib/wool-layers/finalize-safety.ts`
+- Create: `src/lib/wool-layers/__tests__/finalize-safety.test.ts`
+- Modify: `src/lib/wool-layers/recommend.ts`
+- Modify: `src/screens/HjemScreen.tsx`
+- Modify only if required by the failing matrix: `src/lib/garments/ownership-override.ts`
+- Create: `docs/superpowers/evidence/legacy-safety-containment.md`
+
+**Step 1: Prove the current gap with failing tests**
+
+Add named cases showing that category overrides, child calibration, ownership substitution and session/UI swaps cannot reintroduce a combination removed by conflicts, soft blocks or hard safety. Include car-seat insulated outerwear, sleep headwear/blanket, stacked stroller insulation, weather-protection preservation and calibration bounds.
+
+Run the focused matrix and capture the expected failures against the current ordering.
+
+**Step 2: Establish one finalization boundary**
+
+All post-recommendation mutations must pass through one pure finalizer after the last allowed change. The finalizer applies the approved conflict, soft-block and hard-safety semantics without changing temperature thresholds or unrelated recommendations. Screens may request a swap; they may not construct a trusted final `Recommendation` by mapping arrays locally.
+
+**Step 3: Prove safe rollback and stable behavior**
+
+- Existing recommendations remain byte/semantic equivalent except where the new tests prove an unsafe post-safety mutation.
+- All legacy consumers use the contained path.
+- Motor V2 all-flags-off rollback selects this contained legacy path.
+- A fresh independent reviewer checks the full diff and guardrail matrix.
+
+**Step 4: Verify and commit**
+
+Run focused tests, all existing guardrails, `npm test`, `npm run audit:test`, `npm run build`, and lint delta. Record exact evidence and commit only this safety package:
+
+```powershell
+git commit -m "fix(safety): contain post-recommendation mutations"
+```
 
 ## Task 0B: Make the known lint baseline green
 
@@ -123,13 +161,13 @@ import { describe, expect, it } from 'vitest';
 import { validateRecommendInputV2 } from '../validation.js';
 
 describe('Motor 2.0 input validation', () => {
-  it.each([-1, 72])('rejects unsupported age %s', (ageMonths) => {
+  it.each([-1, 25])('rejects unsupported age %s', (ageMonths) => {
     expect(() => validateRecommendInputV2(validInput({ ageMonths })))
       .toThrowError(expect.objectContaining({ code: 'unsupported_age' }));
   });
 
-  it('rejects carrier for preschool', () => {
-    expect(() => validateRecommendInputV2(validInput({ ageMonths: 48, situation: 'carrier' })))
+  it('rejects an invalid low-mobility situation for the oldest supported stage', () => {
+    expect(() => validateRecommendInputV2(validInput({ ageMonths: 24, situation: 'awake_low_mobility' })))
       .toThrowError(expect.objectContaining({ code: 'invalid_situation_for_age' }));
   });
 });
@@ -190,8 +228,7 @@ git commit -m "feat(engine-v2): define domain contracts"
 ```ts
 it.each([
   [0, 'newborn'], [5, 'newborn'], [6, 'mobile_baby'], [11, 'mobile_baby'],
-  [12, 'young_toddler'], [23, 'young_toddler'], [24, 'toddler'], [35, 'toddler'],
-  [36, 'preschool'], [71, 'preschool'],
+  [12, 'young_toddler'], [23, 'young_toddler'], [24, 'young_toddler'],
 ] as const)('%s months maps to %s', (age, expected) => {
   expect(ageStageFor(age)).toBe(expected);
 });
@@ -207,14 +244,12 @@ Run the focused test and confirm missing implementations fail.
 
 ```ts
 export function ageStageFor(ageMonths: number): AgeStage {
-  if (!Number.isFinite(ageMonths) || ageMonths < 0 || ageMonths >= 72) {
-    throw new EngineV2Error('unsupported_age', 'Motor 2.0 supports ages 0–71 months');
+  if (!Number.isFinite(ageMonths) || ageMonths < 0 || ageMonths >= 25) {
+    throw new EngineV2Error('unsupported_age', 'Motor 2.0 v1 supports ages 0–24 months');
   }
   if (ageMonths < 6) return 'newborn';
   if (ageMonths < 12) return 'mobile_baby';
-  if (ageMonths < 24) return 'young_toddler';
-  if (ageMonths < 36) return 'toddler';
-  return 'preschool';
+  return 'young_toddler';
 }
 ```
 
@@ -262,7 +297,7 @@ Run: `npx vitest run src/lib/clothing-engine-v2/__tests__/catalog.test.ts`
 
 **Step 3: Add the minimum catalog**
 
-Start with generic concepts needed by all 36 gold scenarios. Model function separately from wording:
+Start with generic concepts needed by all 36 revised 0–24-month gold scenarios. Model function separately from wording:
 
 ```ts
 {
@@ -429,8 +464,8 @@ git commit -m "feat(engine-v2): resolve functional material choices"
 
 ```ts
 it('selects only variants valid for the age stage', () => {
-  const result = resolveGarments(intent({ ageStage: 'preschool' }), policy());
-  expect(result.every((item) => item.variant.validAgeStages.includes('preschool'))).toBe(true);
+  const result = resolveGarments(intent({ ageStage: 'young_toddler' }), policy());
+  expect(result.every((item) => item.variant.validAgeStages.includes('young_toddler'))).toBe(true);
 });
 
 it('keeps stroller rain cover as equipment, not a garment', () => {
@@ -534,7 +569,7 @@ Run copy lint tests, all tests, lint and build. Commit.
 
 **Step 1: Add all gold fixtures**
 
-Represent every G01–G36 scenario with complete input and expected semantic constraints.
+Represent every revised G01–G36 0–24-month scenario with complete input and expected semantic constraints.
 
 ```ts
 export const GOLD_SCENARIOS: GoldScenario[] = [{
@@ -622,7 +657,7 @@ it('never displays a shadow result', () => {
 
 **Step 2: Implement local constants and typed comparison**
 
-Flags: `engine_v2_shadow`, `engine_v2_infant`, `engine_v2_toddler`, `engine_v2_preschool`. Classify comparisons as `equivalent`, `expected_improvement`, `needs_review`, or `legacy_bug_preserved`.
+Flags: `engine_v2_shadow`, `engine_v2_infant`, and `engine_v2_young_toddler`. Classify comparisons as `equivalent`, `expected_improvement`, `needs_review`, or `legacy_bug_preserved`.
 
 **Step 3: Add rollback test**
 
@@ -773,7 +808,7 @@ git commit -m "docs(engine-v2): generate expert review packet"
 
 **Step 1: Keep all display flags off until external signoff**
 
-`engine_v2_shadow` may run in demo/test. Infant, toddler and preschool display flags remain false.
+`engine_v2_shadow` may run in demo/test. Infant and young-toddler display flags remain false.
 
 **Step 2: Review every shadow difference**
 
@@ -799,7 +834,7 @@ Then perform physical-device, reduced-motion, screen-reader, large-text, offline
 
 **Step 5: Activate one cohort only**
 
-Enable `engine_v2_infant` first. Toddler and preschool require their own evidence and commits. Never enable all cohorts in one change.
+Enable `engine_v2_infant` first. The 12–24-month `engine_v2_young_toddler` cohort requires its own evidence and commit. Never enable both display cohorts in one change.
 
 **Step 6: Commit**
 
@@ -817,7 +852,7 @@ Motor 2.0 is not done merely because tests pass. A cohort is done only when:
 - Git and rollback are verified;
 - all baseline and V2 tests, audit, lint and build pass;
 - all relevant gold scenarios are automated;
-- existing 0–23-month safety guardrails remain green;
+- existing and revised 0–24-month safety guardrails remain green;
 - no unexplained shadow differences remain;
 - material constraints and age boundaries are proven;
 - the expert packet is signed for that cohort;

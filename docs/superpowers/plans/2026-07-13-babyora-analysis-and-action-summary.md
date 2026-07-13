@@ -16,7 +16,7 @@ Det viktigste tekniske funnet er en **P0-sikkerhetsrisiko**: overrides, kalibrer
 
 **Navnestatus:** Vaerni er avvist. Babyora er kun internt arbeidsnavn. Offentlig navn og wordmark forblir en åpen beslutningsport.
 
-**Aldersstatus:** Første produkt- og motorversjon er avgrenset til 0-24 måneder. Tidligere planer om 0-71 måneder er ikke lenger styrende og må revideres før implementering.
+**Aldersstatus:** Første produkt- og motorversjon er avgrenset til 0-24 måneder. De tidligere 0-71-planene er nå revidert; alderen 25-71 måneder er utsatt og ligger utenfor aktiv implementeringsscope.
 
 ## Scorebilde
 

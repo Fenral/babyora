@@ -4,7 +4,7 @@
 
 ## 1. Beslutning
 
-Babyora skal kunne gi påkledningsråd fra fødsel til skolestart. Det validerte området er `0–71` måneder. Fra og med `72` måneder skal motoren avvise anbefaling med en tydelig `unsupported_age`-feil. Søvn/TOG forblir et separat spedbarnsprodukt validert for `0–24` måneder; utvidelsen til skolestart gjelder utendørs påkledning.
+Babyora v1 skal gi påkledningsråd for `0–24` måneder. Fra og med `25` måneder skal Motor 2.0 v1 avvise anbefaling med en tydelig `unsupported_age`-feil. Utvidelse til eldre barn er utsatt til en separat produkt- og fagfase og skal ikke ligge latent i v1-kontrakter eller markedsføring.
 
 Motoren skal ikke lenger være ullstyrt. Den skal først beregne funksjonelle behov og deretter velge konkrete plagg og materialer. Ull, syntetisk fukttransporterende undertøy, fleece, bomull, skall, syntetisk isolasjon, dun og blandingsmaterialer er legitime alternativer med forskjellige roller.
 
@@ -23,7 +23,7 @@ Korrekt råd for dagens situasjon, alle nødvendige aktivitetsvalg og materialal
 
 ## 3. Mål
 
-1. Støtte utendørs anbefalinger for `0–71` måneder.
+1. Støtte utendørs anbefalinger for `0–24` måneder.
 2. Skille termisk behov fra konkrete plagg og materialer.
 3. Gi syntetiske materialer en fullverdig, faglig korrekt rolle.
 4. Bevare dagens sikkerhetsregler og testede adferd for `0–24` måneder.
@@ -40,7 +40,7 @@ Korrekt råd for dagens situasjon, alle nødvendige aktivitetsvalg og materialal
 - Ingen automatisk diagnose av allergi, eksem eller medisinske tilstander.
 - Ingen utvidelse av TOG/sovepose til barn over 24 måneder i denne pakken.
 - Ingen maskinlæringsmodell eller generativ AI i anbefalingsmotoren.
-- Ingen skolebarnsmodus fra 72 måneder.
+- Ingen anbefalinger for 25+ måneder i v1.
 
 ## 5. Dagens tilstand
 
@@ -58,9 +58,7 @@ Dagens pipeline `base → modifiers → conflicts → soft blocks → safety →
 export type AgeStage =
   | 'newborn'          // 0–5 mnd
   | 'mobile_baby'      // 6–11 mnd
-  | 'young_toddler'    // 12–23 mnd
-  | 'toddler'          // 24–35 mnd
-  | 'preschool';       // 36–71 mnd
+  | 'young_toddler';   // 12–24 mnd
 
 export function ageStageFor(ageMonths: number): AgeStage;
 ```
@@ -71,9 +69,7 @@ Grensene er produktgrenser, ikke påstander om individuell utvikling. Motoren br
 |---|---|---|---|
 | 0–5 mnd | Body, bukse, heldress | Mest stille | Vogn, bæresele, våken ute |
 | 6–11 mnd | Body/sett, heldress | Ruller/krabber | Vogn, bæresele, våken ute |
-| 12–23 mnd | Sett eller todelt | Går/veksler | Aktiv lek, vogn, blandet dag |
-| 24–35 mnd | Todelt, dress | Aktiv | Aktiv lek, rolig ute, blandet dag, vogn ved behov |
-| 36–71 mnd | Undertøy/overdel/bukse | Aktiv og selvhjulpen | Aktiv lek, rolig ute, blandet dag |
+| 12–24 mnd | Sett eller todelt | Går/veksler | Aktiv lek, vogn, rolig ute og blandet dag |
 
 `canRoll` beholdes for spedbarnssikkerhet. Det påvirker ikke aldersstadiet.
 
@@ -101,19 +97,19 @@ export type SituationProfile = {
 
 Tilgjengelighet:
 
-| Situasjon | 0–5 | 6–11 | 12–23 | 24–35 | 36–71 |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Vogn | Ja | Ja | Ja | Ja | Nei |
-| Bæresele | Ja | Ja | Ja | Nei | Nei |
-| Våken, lite bevegelse | Ja | Ja | Nei | Nei | Nei |
-| Aktiv lek | Nei | Ja | Ja | Ja | Ja |
-| Rolig ute | Nei | Nei | Ja | Ja | Ja |
-| Blandet dag | Nei | Nei | Ja | Ja | Ja |
-| Søvn inne | Ja | Ja | Ja | Ikke del av Motor 2.0 | Ikke del av Motor 2.0 |
+| Situasjon | 0–5 | 6–11 | 12–24 |
+|---|:---:|:---:|:---:|
+| Vogn | Ja | Ja | Ja |
+| Bæresele | Ja | Ja | Etter eksplisitt valg |
+| Våken, lite bevegelse | Ja | Ja | Nei |
+| Aktiv lek | Nei | Ja | Ja |
+| Rolig ute | Nei | Nei | Ja |
+| Blandet dag | Nei | Nei | Ja |
+| Søvn inne | Ja | Ja | Ja |
 
 UI skal bare vise gyldige valg. Direkte eller migrert input med ugyldig kombinasjon gir `invalid_situation_for_age`; motoren skal ikke gjette.
 
-`indoor_sleep` er kun gyldig for `newborn`, `mobile_baby` og `young_toddler`. For barn fra 24 måneder kan Guide fortsatt vise generelt søvninnhold, men dette innholdet skal ikke kalle Motor 2.0 eller fremstilles som en individuell TOG-anbefaling.
+`indoor_sleep` er gyldig for alle tre v1-stadier, men søvn/TOG presenteres som et separat verktøy med egne sikkerhets- og copyporter.
 
 ## 8. Materialmodell
 
@@ -306,8 +302,7 @@ Trykk åpner de tre alternativene med én setning hver. Standard er allerede val
 Situasjonsvalgene er aldersadaptive:
 
 - 0–11 mnd: `I vogn`, `I bæresele`, `Våken ute`.
-- 12–35 mnd: `Aktiv lek`, `I vogn`, `Blandet dag`.
-- 36–71 mnd: `Aktiv lek`, `Rolig ute`, `Blandet dag`.
+- 12–24 mnd: `Aktiv lek`, `I vogn`, `Blandet dag`.
 
 Maks tre valg vises. Gyldige sekundærvalg kan ligge under `Flere situasjoner`.
 
@@ -352,7 +347,7 @@ Ingen forklaring skal bruke absolutte ord som `alltid trygg`, `perfekt` eller `g
 
 | Feil | Adferd |
 |---|---|
-| Alder 72+ måneder | Ingen anbefaling; forklar at råd foreløpig gjelder til skolestart. |
+| Alder 25+ måneder | Ingen anbefaling; forklar at v1 foreløpig gjelder til og med 24 måneder. |
 | Ugyldig situasjon for alder | UI ber om nytt valg; motoren gjetter ikke. |
 | Ukjent materialpreferanse | Valideringsfeil i utvikling; trygg fallback til `best_for_conditions` ved migrert lagring. |
 | Ingen gyldig ullfri variant | Returner tydelig `unresolved_material_constraint`; aldri skjul ull i labelen. |
@@ -375,9 +370,8 @@ Forbudt innhold: navn, fødselsdato, eksakt alder, koordinater, by, konto-ID, hu
 ## 19. Utrulling
 
 1. `engine_v2_shadow`: Motor 2.0 kjører i test/demo og sammenlignes med dagens motor; dagens svar vises.
-2. `engine_v2_infant`: Motor 2.0 vises for 0–23 måneder etter regresjonsport.
-3. `engine_v2_toddler`: 24–35 måneder aktiveres etter faglig scenariogodkjenning.
-4. `engine_v2_preschool`: 36–71 måneder aktiveres etter faglig scenariogodkjenning og egne plaggillustrasjoner/fallbacks.
+2. `engine_v2_infant`: Motor 2.0 vises for 0–11 måneder etter regresjonsport.
+3. `engine_v2_young_toddler`: 12–24 måneder aktiveres etter egen faglig scenariogodkjenning.
 5. Dagens motor fjernes først når alle porter, forbrukere og rollback-testen består.
 
 Feature flags skal være lokale konstanter i første fase og flyttes til prosjektets valgte feature-flag-løsning senere. Flagg skal ikke brukes til å skjule manglende sikkerhetstester.
@@ -399,7 +393,7 @@ Faglig status per scenario er `approved`, `approved_with_copy_change` eller `rej
 
 ## 21. Akseptansekriterier
 
-- `0–71` måneder er eneste godkjente utendørsområde.
+- `0–24` måneder er eneste godkjente utendørsområde i v1; 25+ avvises eksplisitt.
 - Alle aldersgrenser har tosidige boundary-tester.
 - Ugyldige situasjoner avvises deterministisk.
 - `avoid_wool` produserer ingen ullvariant.
@@ -440,6 +434,6 @@ Git + baseline
 Følgende krever handling utenfor repoet:
 
 1. Navn/varemerke og domene må kontrolleres før offentlig navnebytte.
-2. En relevant fagperson må signere scenariomatrisen før aldersgruppene 24–35 og 36–71 aktiveres.
+2. En relevant fagperson må signere scenariomatrisen separat før 0–11- og 12–24-månederskohortene aktiveres.
 3. Fysiske iOS-/Android-enheter må brukes for haptikk, widget og tilgjengelighetskontroll.
-4. Nye illustrasjoner må visuelt godkjennes før de erstatter nøytrale fallback-ikoner.
+4. Nye illustrasjoner og avatar-kompositter må visuelt godkjennes mot assetmanifestet før de erstatter nøytrale fallback-ikoner.

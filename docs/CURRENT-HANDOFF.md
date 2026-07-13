@@ -14,13 +14,13 @@
 - Protected-core logo concept and initial SVG/PNG assets.
 - Private GitHub continuity workflow defined.
 - Full re-analysis and prioritized action summary, including the constrained avatar production direction.
+- Consolidated revision plan plus revised master, Motor V2, UI, family, calibration, notifications/widget, verification and governing design specifications.
 
 ## Not completed or not approved
 
 - No public product name is approved. Vaerni is rejected.
 - The logo symbol and wordmark are not final production identity assets.
 - External professional review of safety-sensitive recommendation scenarios is outstanding.
-- Older Engine 2.0 documents still contain a 0-71 month expansion and must be revised to the newly locked 0-24 month v1 boundary before implementation.
 - No implementation phase has been authorized by the repository setup itself.
 
 ## Repository baseline verification
@@ -34,7 +34,7 @@ Recorded during repository initialization on 2026-07-13:
 
 ## Next decision
 
-Claude should first review `docs/superpowers/plans/2026-07-13-babyora-analysis-and-action-summary.md`, including the newly locked avatar scope: one identity, sitting and standing poses, outermost visible garments only, 24 target composites, and NOK 1,000 direct generation budget. This is still planning; no app-code implementation is authorized.
+Claude should first review `docs/superpowers/plans/2026-07-13-babyora-analysis-and-action-summary.md` and `docs/superpowers/plans/2026-07-13-babyora-consolidated-revision-plan.md`. Together they lock 0–24 months, legacy safety containment first, one avatar identity, sitting/standing poses, outermost visible garments only, 24 target composites, NOK 1,000 direct generation budget, and the five-parent North-Star gate. This is still planning; no app-code implementation is authorized.
 
 After that review, choose and explicitly approve the first implementation package. The recommended first code package remains fresh baseline verification, legacy safety containment, and a green working platform before recommendation-facing redesign.
 

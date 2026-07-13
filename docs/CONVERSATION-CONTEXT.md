@@ -5,6 +5,16 @@
 
 This is a structured continuity summary, not a verbatim transcript. Current decisions are governed by `AGENTS.md`, `docs/CLAUDE-START-HERE.md`, and `docs/DECISION-LOG.md` in that order.
 
+## Current revision — 13 July 2026
+
+- Vaerni is rejected; the public name remains open and Babyora is an internal working name.
+- v1 and Motor V2 are reduced from the earlier 0–71-month ambition to **0–24 months**.
+- The baby remains the primary identity element, with one identity and two poses: sitting 0–11 and standing 12–24 months.
+- Avatar images contain no contextual scene and show only outermost visible clothes/accessories. Hidden layers remain in the ordered list.
+- v1 uses up to 24 verified Nano Banana Pro edit-chain composites within NOK 1,000; no rigged/runtime 2.5D.
+- The clothing decision—not a large thermometer—is the main visual instrument.
+- Implementation order begins with fresh baseline, legacy safety containment and a green platform, then a five-parent North-Star gate before redesign/assets.
+
 ## 1. Starting problem
 
 The original product question was how Babyora could remain genuinely useful for free while creating a natural reason to pay. The central conclusion was that the app did not primarily need more features; it needed a clearer premium story.
@@ -45,7 +55,7 @@ The product should ask parents for as little maintenance as possible.
 
 User-facing language should use **plagg** rather than requiring users to understand technical layer terminology. The ordered list communicates dressing sequence intuitively. The engine can retain internal concepts such as inner layer, mid layer, outer layer, accessory, body region, insulation, moisture behavior, wind protection, and precipitation protection.
 
-Engine 2.0 planning expands outdoor guidance through 71 months. Synthetic garments are not considered inherently wrong. Wool, cotton, fleece, shell materials, down, synthetics, and blends are evaluated by function, weather, activity, age, and situation. An optional preference may favor wool or avoid it, but safety and valid alternatives remain available to free users.
+Engine 2.0 v1 covers 0–24 months. The earlier expansion through 71 months is deferred. Synthetic garments are not considered inherently wrong. Wool, cotton, fleece, shell materials, down, synthetics, and blends are evaluated by function, weather, activity, age, and situation. An optional preference may favor wool or avoid it, but safety and valid alternatives remain available to free users.
 
 Engine 2.0 is planned alongside the current engine, with contracts, scenario tests, adapter comparison, shadow mode, professional review of safety-sensitive cases, and cohort-by-cohort activation.
 
@@ -100,7 +110,7 @@ The product was initially called Babyora. The naming brief changed to an interna
 
 `Klarune` was explored and initially documented as a leader. It was later removed because of potential Klarna similarity, ambiguous pronunciation, and a rune/fantasy association that could dominate the intended meaning.
 
-The current working finalist is **Vaerni**. It is intended to suggest weather, protection, care, and Nordic character without using `æ`, `ø`, or `å`. It is not legally or commercially cleared. Remaining gates include pronunciation, write-back spelling, trademarks, domains, app stores, and social handles. An existing Swedish performing-arts project with the same name must be considered during validation.
+**Vaerni was explored and rejected.** Its spoken association with clothing did not feel natural enough. No public name is approved. A future candidate must pass pronunciation, association, write-back spelling, trademark, domain, app-store and social-handle gates.
 
 ## 10. Logo direction
 
@@ -129,9 +139,10 @@ Meaningful planning or implementation milestones should update the decision log 
 
 ## 13. Open planning gates
 
-- Validate or replace Vaerni before public identity work.
+- Find and validate a new public name before public identity work.
 - Decide when the first implementation phase begins; repository access alone is not permission.
-- Review document contradictions and confirm the first package in the master plan.
+- Confirm the first implementation package: fresh baseline, legacy safety containment and green platform.
+- Approve one North-Star direction through the five-parent gate before production avatar assets or redesign code.
 - Obtain external professional review for the safety-sensitive recommendation scenarios.
 - Complete production logo/wordmark only after the naming gate.
 - Perform physical-device and accessibility verification during implementation.
@@ -139,7 +150,7 @@ Meaningful planning or implementation milestones should update the decision log 
 ## 14. Prompt for continuing planning
 
 ```text
-We are continuing the Babyora/Vaerni product-planning process from another device.
+We are continuing the Babyora product-planning process from another device. Babyora is an internal working name; Vaerni is rejected.
 
 Read these files completely and in order:
 1. AGENTS.md
@@ -147,6 +158,8 @@ Read these files completely and in order:
 3. docs/DECISION-LOG.md
 4. docs/CONVERSATION-CONTEXT.md
 5. docs/CURRENT-HANDOFF.md
+6. docs/superpowers/plans/2026-07-13-babyora-analysis-and-action-summary.md
+7. docs/superpowers/plans/2026-07-13-babyora-consolidated-revision-plan.md
 
 Then summarize:
 - the current product and commercial direction;

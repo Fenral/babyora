@@ -1,4 +1,4 @@
-# Start here: Babyora / Vaerni
+# Start here: Babyora (working name)
 
 **Updated:** 2026-07-13  
 **Status:** Planning is ready for review. Implementation is not authorized by this document.
@@ -42,13 +42,14 @@ Older files may still use Babyora or Klarune. That historical wording does not o
 2. `docs/DECISION-LOG.md`
 3. `docs/CONVERSATION-CONTEXT.md`
 4. `docs/superpowers/plans/2026-07-13-babyora-analysis-and-action-summary.md`
-5. `docs/superpowers/plans/2026-07-13-babyora-90-plus-master-plan.md`
-6. `docs/superpowers/plans/2026-07-13-babyora-engine-2-plan.md`
-7. `docs/superpowers/plans/2026-07-13-babyora-ui-90-plus-plan.md`
-8. `docs/superpowers/plans/2026-07-13-babyora-family-sync-plan.md`
-9. `docs/superpowers/plans/2026-07-13-babyora-personal-calibration-plan.md`
-10. `docs/superpowers/plans/2026-07-13-babyora-notifications-widgets-plan.md`
-11. `docs/superpowers/plans/2026-07-13-babyora-verification-protocol.md`
+5. `docs/superpowers/plans/2026-07-13-babyora-consolidated-revision-plan.md`
+6. `docs/superpowers/plans/2026-07-13-babyora-90-plus-master-plan.md`
+7. `docs/superpowers/plans/2026-07-13-babyora-engine-2-plan.md`
+8. `docs/superpowers/plans/2026-07-13-babyora-ui-90-plus-plan.md`
+9. `docs/superpowers/plans/2026-07-13-babyora-family-sync-plan.md`
+10. `docs/superpowers/plans/2026-07-13-babyora-personal-calibration-plan.md`
+11. `docs/superpowers/plans/2026-07-13-babyora-notifications-widgets-plan.md`
+12. `docs/superpowers/plans/2026-07-13-babyora-verification-protocol.md`
 
 Before implementing, summarize the current direction, identify contradictions, and ask the owner to confirm the first implementation package. Do not interpret repository access as permission to code.
 

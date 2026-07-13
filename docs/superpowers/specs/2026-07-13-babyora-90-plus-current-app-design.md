@@ -1,9 +1,11 @@
 # Babyora 90+ — Master Product and Experience Design
 
 **Date:** 2026-07-13  
-**Status:** Approved direction; written specification awaiting user review  
+**Status:** Revised direction; governed by the consolidated revision plan
 **Scope:** The 13 audited page families plus the complete Plus system for family, personal calibration, smart notifications, and widgets  
 **Baseline:** Weighted product score 73.3/100
+
+**Revision boundary:** v1 is 0–24 months. The clothing decision and verified two-pose avatar are primary; temperature is supporting precision. Avatar images show only outermost visible garments/accessories, use no contextual scene, and are limited to 24 Nano Banana Pro edit-chain composites within NOK 1,000. Older text implying a layer-by-layer avatar or 25+ support is superseded.
 
 ## 1. Goal
 
@@ -25,7 +27,7 @@ The project is complete only when:
 3. The rendered app, repository behavior, product copy, and entitlement rules agree.
 4. The complete and safe recommendation for today at home remains free.
 5. Safety-critical guidance is not gated.
-6. The avatar, garment count, garment list, dressing order, weather, and explanation use the same recommendation state.
+6. The final outer-outfit avatar, garment count, full innerst-first list, weather, and explanation use the same recommendation state and fingerprint.
 7. All existing tests and production builds pass; no new lint failures are introduced.
 8. Navigation, touch targets, reduced motion, contrast, loading, empty, offline, and denied-permission states are verified.
 9. Haptics are checked on a physical iPhone and Android device before interaction quality receives a final 90+ score.
@@ -145,9 +147,11 @@ Use two coordinated families:
 
 ### Functional imagery
 
-- soft 3D baby and garments;
+- one soft-3D/clay child identity with sitting 0–11 and standing 12–24 master poses;
 - consistent camera angle, scale, lighting direction, material, and shadow;
-- generated from the same recommendation state as the garment list;
+- no weather, stroller, sleep, or activity scene in the avatar image;
+- generated from the visible outer-state key derived from the same recommendation as the full garment list;
+- hidden base/middle layers remain in the list and are not shown through the outer garment;
 - no decorative garment that contradicts the recommendation.
 
 ### Knowledge imagery
@@ -158,7 +162,7 @@ Use two coordinated families:
 - no watercolor family that appears to belong to a separate product;
 - no emoji avatar as a primary profile illustration.
 
-Nano Banana Pro may be used to create missing assets after an asset brief is approved from this specification. Generated assets are inspected for garment accuracy, anatomy, visual consistency, licensing suitability, and transparent-background quality before integration. Google Image is used for research references, not for copying or shipping unlicensed artwork.
+Nano Banana Pro is the approved v1 avatar production method after the North-Star and asset brief gates. Use sequential edits from the locked masters, maximum 24 approved composites and NOK 1,000 direct generation spend. Generated assets are inspected for garment accuracy, anatomy, identity, material, visual consistency, licensing suitability, mobile crop/compression, and transparent-background quality before integration. Google Image is used for research references, not for copying or shipping unlicensed artwork.
 
 ## 6. Navigation design
 
@@ -292,6 +296,8 @@ Goal: first personalized outfit before any broad Plus request.
 Goal: answer the daily question without a tap.
 
 - Render the dressed baby automatically when weather and recommendation are ready.
+- Select the sitting pose for 0–11 months and standing pose for 12–24 months.
+- Show only the verified final outermost outfit; never delay the answer with a hidden-layer dressing animation.
 - Show a concise summary such as “8 plagg · ull, fleece og vinterdress”.
 - Change the CTA from “See today's outfit” to “See details”.
 - Keep situation selection before the summary when it changes correctness.
@@ -304,10 +310,11 @@ Goal: answer the daily question without a tap.
 Goal: preserve the signature visual while improving speed and truth.
 
 - Use **plagg**, never an exposed “lag count”.
-- The visual orbit, avatar, summary, and list share one recommendation object.
+- The visible garment accents, avatar, summary, and list share one recommendation object and `AvatarStateKey`.
 - Keep the correctly dressed avatar and compact the orbit when garment count is high.
 - Show a short summary before the detailed sequence.
 - Use “Rekkefølge · innerst først”.
+- Keep hidden layers in the ordered list; the avatar remains on the final outer outfit when a hidden garment row is focused.
 - Group optional accessories without implying they are stacked layers.
 - Make the list denser while preserving 44-point rows.
 - Keep garment alternatives and explain the consequence of each swap.
@@ -498,7 +505,7 @@ One canonical recommendation state drives:
 3. situation/activity;
 4. garment list and order;
 5. garment count;
-6. avatar outfit;
+6. verified visible `AvatarStateKey` and final outer-outfit asset;
 7. summary and explanation;
 8. future comparison.
 
@@ -823,6 +830,7 @@ The functions are fully planned here; packages are an execution and release-cont
 - four-tab navigation and haptic grammar;
 - updated 13 page families, with Soon replacing My Wardrobe;
 - coordinated functional and knowledge illustration sets;
+- two locked avatar masters and at most 24 verified outer-outfit composites with documented mapping, cost and fallback;
 - truthful outcome-led paywall;
 - Supabase identity, household, role, invitation, RLS, migration, sync, export, and deletion design;
 - household-sponsored RevenueCat entitlement design;

@@ -1,14 +1,14 @@
-# Babyora Visual Signature — Modern Heirloom Instrument
+# Babyora Visual Signature — Protective Morning Instrument
 
 **Date:** 2026-07-13  
-**Status:** Approved direction; incorporated into implementation plans  
+**Status:** Revised direction; incorporated into implementation plans
 **Relationship:** Extends `2026-07-13-babyora-90-plus-current-app-design.md`; it does not replace Babyora's design system
 
 ## 1. Design decision
 
-Babyora becomes a **modern heirloom instrument**: 70% precise analog instrument, 30% textile warmth.
+Babyora becomes a **protective morning instrument**: approximately 60% clothing decision, 25% weather atmosphere, and 15% numeric precision.
 
-The app should feel like a trusted object a parent reaches for every morning—not a generic card-based app, a nostalgic thermometer replica, or a playful baby game. Glass, engraved scales, controlled light, and physical depth communicate precision. Wool, softly rounded garments, peach warmth, and tactile shadows keep the product humane.
+The app should feel like a trusted object a parent reaches for every morning—not a generic card-based app, a nostalgic thermometer replica, or a playful baby game. The correctly dressed child and ordered garment answer communicate the decision first. Controlled glass, scales and data light support precision where they improve understanding; they do not become the brand's dominant subject.
 
 The existing identity remains:
 
@@ -23,7 +23,7 @@ The existing identity remains:
 
 ## 2. Visual laws
 
-1. **One instrument per screen.** A screen may have one dominant physical metaphor; supporting UI stays calm.
+1. **One decision per screen.** A screen may have one dominant physical metaphor, but Home's dominant object is the clothing decision and verified avatar—not a thermometer.
 2. **Physical depth must explain hierarchy.** Highlights, glass, inset tracks, and shadows indicate affordance or state—not decoration.
 3. **Texture is local, not wallpaper.** Textile texture belongs on garments and selected knowledge assets; text surfaces remain clean.
 4. **Numbers remain exact.** Temperature, time, wind, and precipitation retain units and tabular alignment.
@@ -36,11 +36,11 @@ The existing identity remains:
 
 ### Purpose
 
-Replace the generic horizontal slider in Find Outfit with Babyora's most recognizable control: a modern vertical glass thermometer.
+Replace the generic horizontal slider in Find Outfit with a recognizable, precise temperature control that supports the clothing decision.
 
 ### Anatomy
 
-- Height: 300–360 pt on a 390 × 844 screen; width: 84–104 pt including scale.
+- Height: responsive, with 300–360 pt as an upper exploration range on a 390 × 844 screen. The result and primary action must remain visible; reduce the instrument when necessary.
 - Central glass tube: translucent dark glass with a fine inner highlight and deep inset channel.
 - Reservoir: softly flattened bulb, not a cartoon circle.
 - Temperature column: continuous cold-blue → muted neutral → peach/rust interpolation.
@@ -74,25 +74,24 @@ Replace the generic horizontal slider in Find Outfit with Babyora's most recogni
 
 The thermometer is not photorealistic. Use two glass highlights, one inset shadow, and a controlled column glow. No metallic frame, vintage typography, decorative mercury warning, or faux aging.
 
-## 4. Signature component 2 — Dressing sequence
+## 4. Signature component 2 — Verified outer-outfit avatar
 
 ### Purpose
 
-Make the unique value—what goes on, and in which order—understandable before reading a list.
+Make the unique value—the final visible outfit—understandable immediately, while the adjacent list explains what goes on innerst first.
 
 ### Behavior
 
-- The avatar begins in the stable base state already available from cache.
-- On a new recommendation, garments transition in dressing order: inner garment, middle garment, outer garment, accessories.
-- Each step uses a 180–240 ms focus transition: garment thumbnail sharpens, avatar crossfades to the corresponding verified composite, then the sequence advances.
-- Total automatic sequence is capped at 900 ms. It never makes a returning user wait to read the answer.
-- Tapping a garment row focuses the matching avatar state and garment object.
-- If a verified composite is unavailable, the avatar remains neutral and garments appear beside it; Babyora never displays a contradictory outfit.
+- Use one child identity with two locked master poses: sitting for 0–11 months and standing for 12–24 months.
+- Render the verified final outermost outfit immediately. Hidden base and middle layers are never shown through or animated onto the final outer garment.
+- Dressing order remains explicit in the garment list. Tapping a row focuses its list/thumbnail explanation without replacing the final avatar with a hidden-layer fiction.
+- Crossfade between verified final composites only when the visible outfit changes, using 180–240 ms.
+- If a verified composite is unavailable, the avatar becomes explicitly neutral and the canonical list remains the truth; Babyora never guesses a near match.
 - Reduced motion shows the final state instantly.
 
 ### Visual treatment
 
-Garments sit on subtle orbital anchors around the avatar only when space permits. More than five visible garments collapses accessories into a grouped object rather than shrinking everything. Shadows share one light source and never float at inconsistent depths.
+Only visible outer garments/accessories may sit on subtle orbital anchors around the avatar when space permits. Hidden underlayers remain in the list. More than five listed garments collapses secondary thumbnails rather than shrinking the avatar. Shadows share one light source and never float at inconsistent depths.
 
 ## 5. Signature component 3 — Textile garment stack
 
@@ -212,16 +211,18 @@ Order for a temperature-driven change:
 2. atmosphere interpolates over 220–320 ms;
 3. instrument value settles;
 4. threshold haptic fires only if the recommendation changes;
-5. garment stack/verified avatar crossfades over 180–240 ms;
+5. verified final avatar crossfades over 180–240 ms only when its visible-state key changes;
 6. reason copy fades in last.
 
 No transition exceeds 900 ms for the full sequence or 360 ms for an individual UI transition, except the optional one-time paywall demonstration. Reduced motion resolves directly to the final state. Haptic feedback is never the only indicator.
 
 ## 14. Asset requirements
 
-- Create one high-resolution design reference for the thermometer, dressing sequence, care circle, and widget before production assets.
-- Functional assets use transparent backgrounds, the same camera angle, upper-left light, and verified garment identity.
-- Nano Banana Pro may generate exploration and missing garment/knowledge assets, but production selection requires anatomy, material, silhouette, transparency, and outfit-truth review.
+- Create one high-resolution design reference for the temperature control, two avatar poses, care circle, and widget before production assets.
+- Functional avatar assets use no contextual scene, a consistent camera/scale, upper-left light, shared ground shadow, and verified visible garment identity.
+- Use the existing Nano Banana Pro soft-3D/clay identity through sequential edit chains. Do not redraw the child from scratch between states.
+- Production is capped at 24 approved avatar composites (12 per pose) and NOK 1,000 direct generation spend. If quality cannot be preserved, reduce to the 16-state truthful minimum rather than adding lower-quality images.
+- Production selection requires anatomy, identity, material, silhouette, transparency, mobile crop, compression, and exact `AvatarStateKey` review.
 - Google Image is research reference only; no unlicensed image ships.
 - Do not rasterize text, scales, controls, focus states, or dynamic temperature columns into generated images.
 
@@ -229,9 +230,9 @@ No transition exceeds 900 ms for the full sequence or 360 ms for an individual U
 
 The visual-signature work is complete only when:
 
-1. A user can identify the temperature control as Babyora without seeing the logo.
+1. A user can identify Babyora's clothing decision and avatar treatment without seeing the logo; the temperature control remains recognizable in Find Outfit.
 2. The thermometer remains precise and usable with touch, keyboard/switch control, large text, reduced motion, and without haptics.
-3. The avatar and garment stack never contradict the canonical recommendation.
+3. The final outer-outfit avatar and garment list never contradict the canonical recommendation; hidden underlayers are not rendered on the avatar.
 4. Plan shows decisions rather than repeated forecast cards.
 5. Family conveys shared care without implying tracking.
 6. Widget communicates freshness and never exposes prohibited data.

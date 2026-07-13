@@ -10,12 +10,16 @@ Motor 2.0 adds the free per-child field `materialPreference` with allowed values
 
 **Tech Stack:** Supabase JS, Postgres migrations/RLS, Supabase Edge Functions, React/Zustand, RevenueCat, Vitest, Supabase local test stack.
 
+**Revised scope:** v1 child profiles support 0–24 months only. Family sync stores canonical profile/recommendation data, not generated avatar binaries or a full wardrobe inventory. Avatar state is derived locally from the shared safe recommendation and the approved manifest; 25+ expansion is deferred.
+
 ## Global Constraints
 
 - Apply the master plan constraints and current official Supabase documentation at implementation time.
 - Apply `2026-07-13-babyora-verification-protocol.md`; RLS, invitations, migration, and entitlement require independent two-key review.
 - RLS is enabled in the same migration as every exposed table; no service-role key enters Vite/client code.
 - Owner + six active invited members; pending invitations reserve a seat for seven days.
+- Reject or visibly defer child ages 25+ in v1 across local migration, server validation and family profile UI; never silently coerce an unsupported age.
+- Do not add wardrobe registration as a prerequisite for family recommendations or sync.
 - **Execution model:** Use Sonnet 5 High for Tasks 1, 3, 4, and 7. Use Fable 5 Extra for Tasks 2 (schema/RLS), 5 (secure invitations), and 6 (RevenueCat household sponsorship). If Fable is unavailable or paid usage is not approved, use Opus 4.8 Extra.
 
 ---
@@ -38,6 +42,7 @@ Motor 2.0 adds the free per-child field `materialPreference` with allowed values
 
 - [ ] Write pgTAP/local SQL tests first: cross-household SELECT/UPDATE denied, caregiver cannot edit child, guardian can edit child, read-only cannot submit feedback, revoked member sees nothing, last owner cannot be removed.
 - [ ] Create `profiles`, `households`, `household_members`, `household_invites`, `children`, `places`, and `household_entitlements` with UUID PKs, UTC timestamps, checks, unique active membership, and indexes on every RLS predicate.
+- [ ] Constrain v1 child age/date-derived age to the supported 0–24-month recommendation boundary while preserving a recoverable path if older local data exists; do not delete unsupported profiles silently.
 - [ ] Add `is_household_member(household_id)` and `has_household_role(household_id, roles[])` as tightly scoped stable SQL helpers; do not use client-writable metadata.
 - [ ] Enable RLS and add separate SELECT/INSERT/UPDATE/DELETE policies with both `USING` and `WITH CHECK` where required.
 - [ ] Run `supabase db reset` and SQL tests; inspect security/performance advisors; commit `feat: add household schema and row level security`.
@@ -60,6 +65,7 @@ Motor 2.0 adds the free per-child field `materialPreference` with allowed values
 
 - [ ] Write tests for anonymous mode, migration preview, create/join/merge/keep-separate choices, duplicate-name non-merge, mid-transaction failure, idempotent retry, offline queue replay, conflict prompt, and delete tombstone propagation.
 - [ ] Implement explicit migration phases `preview → confirm → upload → verify → bindLocalIds`; retain a recoverable local snapshot until verified sync.
+- [ ] Flag 25+ local profiles as unsupported/deferred during preview and keep them recoverable without enabling recommendations.
 - [ ] Keep feedback append-only; use last-write-with-conflict-prompt for materially changed profile fields.
 - [ ] Show `lokal`, `synkroniserer`, `frakoblet`, `konflikt`, or `oppdatert` state without blocking the current recommendation.
 - [ ] Run repository tests offline and against local Supabase; commit `feat: migrate and sync Babyora family data safely`.

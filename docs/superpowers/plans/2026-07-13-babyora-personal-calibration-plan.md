@@ -8,12 +8,15 @@
 
 **Tech Stack:** TypeScript/Vitest, Motor 2.0 contracts, Supabase Postgres/RLS, React.
 
+**Revised scope:** Calibration applies only to supported 0–24-month recommendations. It changes thermal intent before final safety, then produces a new canonical fingerprint and visible avatar-state key. It never selects an avatar asset directly or invents a visual combination.
+
 ## Global Constraints
 
 - Apply `2026-07-13-babyora-verification-protocol.md`; algorithm and engine integration require fresh-context review plus the full guardrail matrix.
 - One response never changes a recommendation.
 - Minimum three usable observations and two comparable contexts; five observations are required for strong confidence.
 - Calibration never removes required weather protection or overrides safety.
+- Calibration and every feedback-driven mutation must pass the final safety boundary introduced by Motor Task 0A.
 - No free text, photo, precise location, or clinical claim is stored.
 - **Execution model:** Use Sonnet 5 High for Tasks 1, 4, and 5. Use Fable 5 Extra for Tasks 2 (calibration algorithm) and 3 (safety-engine integration). If Fable is unavailable or paid usage is not approved, use Opus 4.8 Extra.
 
@@ -49,6 +52,7 @@
 - [ ] Write failing tests proving `-1|0|1` changes thermal warmth by at most one bounded step, precipitation/wind/UV/equipment needs remain, and safety output is identical or safer after calibration.
 - [ ] Apply calibration to `ThermalIntent` before material/garment resolution and final `safety.ts`; record a structured explanation key in the recommendation.
 - [ ] Include the applied offset—not the child identity—in the recommendation fingerprint.
+- [ ] Re-derive `AvatarStateKey` only after the calibrated recommendation passes final safety; use `null` when no approved visible composite exists.
 - [ ] Run the full Motor 2.0 gold matrix, existing wool-layers matrix and guardrail suite; commit `feat: apply calibration beneath Babyora safety rules`.
 
 ### Task 4: Feedback and evidence UX
