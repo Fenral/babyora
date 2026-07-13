@@ -1,0 +1,189 @@
+{
+  "nav": {
+    "home": "Hjem",
+    "plan": "Plan",
+    "guide": "Guide",
+    "settings": "Innstillinger"
+  },
+  "activity": {
+    "vogn": "Vogn",
+    "baeresele": "Bæresele",
+    "utelek": "Utelek",
+    "soevn": "Søvn",
+    "groupLabel": "Aktivitet"
+  },
+  "layerCategory": {
+    "innerst": "Innerst",
+    "mellomlag": "Mellomlag",
+    "yttertoy": "Yttertøy",
+    "ekstra": "Ekstra"
+  },
+  "common": {
+    "next": "Neste",
+    "back": "Tilbake",
+    "save": "Lagre",
+    "cancel": "Avbryt",
+    "edit": "Rediger",
+    "delete": "Slett",
+    "loading": "Laster…",
+    "tryAgain": "Prøv igjen"
+  },
+  "guide": {
+    "title": "Utforsk påkledning",
+    "intro": "Dra på slidere for å se hva Babyora anbefaler ved ulike forhold.",
+    "temperatureLabel": "Temperatur",
+    "indoorTemperatureLabel": "Romtemperatur",
+    "ageLabel": "Alder i måneder",
+    "windLabel": "Vindstyrke",
+    "rainLabel": "Nedbør",
+    "outputHeading": "Anbefaling",
+    "outputEmpty": "Velg en aktivitet for å se anbefaling.",
+    "modifiersHeading": "Værforhold",
+    "tipsHeading": "Bra å vite",
+    "tip": {
+      "neckTest": {
+        "title": "Nakketesten",
+        "body": "Stikk to fingre ned i halskragen på barnet. Varm og tørr nakke = passe. Klam og svett = for varmt. Kald = for lite på."
+      },
+      "wool": {
+        "title": "Hvorfor ull?",
+        "body": "Ull holder varmen selv når det er fuktig, og den lar huden puste. For de minste er ull ofte tryggere enn bomull eller syntetisk."
+      },
+      "newborn": {
+        "title": "Spedbarn under 3 måneder",
+        "body": "Spedbarn regulerer temperatur dårlig. Maks 30 minutter ute i kuldegrader. Sjekk nakke/rygg ofte."
+      },
+      "disclaimer": {
+        "title": "Husk",
+        "body": "Babyora er en guide, ikke en fasit. Du kjenner barnet ditt best. Ved bekymring, kontakt helsestasjon eller lege."
+      }
+    },
+    "wind": {
+      "calm": "Lett bris.",
+      "windproofRecommended": "Vindtett anbefales.",
+      "gale": "Kuling — hold barnet skjermet.",
+      "storm": "Sterk vind. Vurder å bli inne."
+    },
+    "rain": {
+      "dry": "Tørt.",
+      "drizzle": "Lett yr.",
+      "moderate": "Moderat regn — regntrekk over vogna.",
+      "heavy": "Kraftig regn."
+    }
+  },
+  "ageWarning": {
+    "title": "Babyora er optimert for 0–2 år",
+    "body": "Du kan fortsatt bruke appen, men anbefalingene er mest presise for de minste."
+  },
+  "settings": {
+    "language": "Språk",
+    "languageDescription": "Velg språk for appen.",
+    "languageOption": {
+      "no": "Norsk",
+      "en": "English",
+      "sv": "Svenska",
+      "da": "Dansk",
+      "de": "Deutsch"
+    }
+  },
+  "home": {
+    "title": "Dagens påkledning for {{name}}",
+    "loading": "Henter vær for {{city}}…",
+    "error": "Klarte ikke hente vær.",
+    "tempAria": "{{temp}} grader, føles som {{feels}}",
+    "feelsLike": "Føles som {{feels}}°",
+    "layerCountAria": "{{count}} lag anbefalt",
+    "layerSuffix": "lag",
+    "weatherSection": "Vær i dag",
+    "weatherNowGroup": "Vær akkurat nå",
+    "feelsTile": "Føles",
+    "breezeTile": "Bris",
+    "weatherTile": "Vær",
+    "windAria": "Bris {{wind}} meter per sekund",
+    "conditionAria": "Vær: {{condition}}",
+    "feelsAria": "Føles som {{temp}} grader",
+    "activityChanged": "Anbefaling oppdatert for {{activity}}: {{count}} lag",
+    "todayHourLabel": "Dagen i dag",
+    "tripHourLabel": "Lag på turen",
+    "todayHourWindow": " for kl 08, 12, 16 og 20",
+    "todayHourWindowToTomorrow": " fra kl 08 i dag til kl 20 i morgen",
+    "tomorrowHourWindow": " for kl 08, 12, 16 og 20 i morgen",
+    "openDetails": "Trykk for detaljer."
+  },
+  "plan": {
+    "title": "Plan",
+    "loading": "Henter varsel for {{city}}…",
+    "error": "Klarte ikke hente varsel. Prøv igjen senere.",
+    "emptyDays": "Ingen dager tilgjengelig.",
+    "daysListLabel": "Værprognose neste {{count}} dager",
+    "showAllDays": "Vis alle {{count}} dager",
+    "showFewerDays": "Vis kun {{count}} dager",
+    "footer": "Vær fra met.no. Anbefaling er basert på dagens kaldeste tidspunkt.",
+    "dayStripeAria": "{{weekday}}, {{tempMin}} til {{tempMax}} grader, vind {{wind}} meter per sekund, {{layers}} lag anbefalt",
+    "layersShort": "{{count}} lag"
+  },
+  "notes": {
+    "common": {
+      "neckCheck": "Kjenn på nakken med to fingre — varm og tørr betyr passe."
+    },
+    "sleep": {
+      "warmRoom": "Soverommet er varmt — luft litt eller velg tynnere sovepose.",
+      "coolRoom": "Soverommet er kjølig — sett gjerne opp varmen et hakk.",
+      "safeSleep": "Sovepose er tryggest. Ingen løse tepper eller puter i sengen.",
+      "newbornBackSleep": "Den minste sover trygt på rygg. Stikk innom og sjekk nakken nå og da."
+    },
+    "rain": {
+      "heavy": "Det høljer ned — kanskje en kortere tur eller helt overbygd vogn?",
+      "drizzle": "Lett yr — kalesjen holder som regel. Kjenn etter om det blir vått."
+    },
+    "wind": {
+      "strong": "Det blåser friskt — beskytt ansiktet, og hold turen kort."
+    },
+    "humidCold": "Fuktig kulde føles kaldere enn det termometeret sier — ett ekstra lag er smart.",
+    "newborn": {
+      "thermoregulation": "Den minste regulerer varme dårlig — sjekk nakke og rygg ofte.",
+      "coldShortTrip": "Hold turen kort i kulda — maks en halvtime. Smør fet krem på kinnene.",
+      "coldWindWait": "Vind og kulde er hardt for de minste — vurder å vente til vinden løyer.",
+      "heatTolerance": "Spedbarn tåler varme dårlig — kort utetid og skygge er viktigst.",
+      "coldLimit": "Spedbarn under 3 mnd: maks 30 min ute i kuldegrader. Sjekk nakke og rygg ofte."
+    },
+    "stroller": {
+      "noBlanket": "Aldri teppe over kalesjen — det blir en varmefelle.",
+      "warmPouchBlanket": "Bruk enten varmepose eller teppe, ikke begge — det blir fort for varmt.",
+      "mildShade": "Mild dag i vogn — søk skygge og kjenn på nakken nå og da.",
+      "sunTent": "Sol og vogn = teltvarme. Et luftig solseil er bedre.",
+      "outdoorSleepFrost": "Utesov i frost: sjekk innom hvert halvtime. Varmepose dun alene er ikke alltid nok."
+    },
+    "carrier": {
+      "noDownInside": "Du varmer barnet med kroppen din — unngå dun helt innerst, det blir klamt.",
+      "insideJacket": "Barnet er innenfor jakka — du holder varmen, hopp yttertøyet."
+    },
+    "outdoorPlay": {
+      "coldKindergarten": "Skikkelig kaldt — sjekk hva barnehagen anbefaler for ute-lek i dag.",
+      "coldBreakLayer": "Når dere tar pause: legg på et ekstra lag. Barn kjøler seg fort."
+    },
+    "cold": {
+      "frostCream": "Smør litt fet krem på kinnene en halvtime før dere går ut.",
+      "frostWindCheck": "Følg med på kinn og ører underveis — hvite flekker er tegn på at det fryser.",
+      "longTripBreak": "Lang tur i kulda — planlegg en innendørs pause for å varme opp."
+    },
+    "sun": {
+      "youngShade": "Solen er fin, men hold den minste i skygge. Solkrem venter til etter 6 måneder.",
+      "olderHatSunscreen": "Solhatt og solkrem på det som vises. Sjekk UV — fjell og snø kan overraske.",
+      "uvHigh": "Solen er sterk i dag — hold dere i skygge mellom 11 og 15."
+    },
+    "safety": {
+      "carSeatThickSuit": "I bilstolen: ta av den tykke dressen, stram selen, legg dressen over som teppe."
+    },
+    "heat": {
+      "extreme": "Veldig varmt i dag — aldri alene i bilen, masse å drikke, mye skygge."
+    },
+    "peak": {
+      "overheating79mo": "Barn på 7–9 mnd produserer mest kroppsvarme. Bruk færre lag enn vanlig, sjekk nakken ofte."
+    },
+    "research": {
+      "overheatingPeak": "Barn på 7–9 mnd produserer mest kroppsvarme. Bruk færre lag enn vanlig, sjekk nakken ofte.",
+      "newbornColdLimit": "Spedbarn under 3 mnd: maks 30 min ute i kuldegrader. Sjekk nakke og rygg ofte."
+    }
+  }
+}

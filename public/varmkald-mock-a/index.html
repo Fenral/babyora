@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390, initial-scale=1, viewport-fit=cover">
+<title>Babyora · Varm/kald · Mock A (kompakt + skannbar)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Warm-grey canvas */
+  --bg-canvas:#DBD8D2;
+  --bg-canvas-soft:#E5E2DC;
+  --bg-canvas-deep:#CFCBC2;
+
+  /* Warm orange (CTA + perfect-state) */
+  --warm-orange:#FF6B35;
+  --warm-orange-700:#D8521F;
+  --warm-orange-100:#FFE3D6;
+
+  /* Terracotta (highlight neck pin) */
+  --terracotta-500:#C0632F;
+  --terracotta-700:#A9492A;
+
+  /* Status accents */
+  --status-warm:#E87A4D;     /* for varm */
+  --status-perfect:#FF6B35;  /* perfekt */
+  --status-cold:#6B8FB5;     /* for kald */
+
+  --ink-900:#2B2B2B;
+  --ink-700:#5A514C;
+  --ink-500:#928981;
+  --ink-300:#C5BFB8;
+
+  --hairline:rgba(43,43,43,.08);
+  --hairline-strong:rgba(43,43,43,.14);
+
+  --card-bg:#FFFFFF;
+  --card-shadow:0 1px 2px rgba(43,37,34,.04),0 6px 14px rgba(43,37,34,.06);
+
+  --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+  --font-serif:'DM Serif Display',Georgia,serif;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#1a1a1a;font-family:var(--font-sans);}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;color:var(--ink-900);}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+/* iPhone-frame 390×844 */
+.frame{
+  position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5), 0 0 0 12px #1f1f1f, 0 0 0 13px #333;
+  background:var(--bg-canvas);
+}
+.notch{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:124px;height:34px;background:#0a0a0a;border-radius:0 0 22px 22px;z-index:50;
+}
+.status-bar{
+  position:absolute;top:0;left:0;right:0;height:44px;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 32px 0;font-size:14px;font-weight:600;color:var(--ink-900);
+  letter-spacing:.2px;
+}
+.status-bar .right{display:flex;align-items:center;gap:5px;}
+.status-bar svg{width:14px;height:10px;}
+
+/* Screen */
+.screen{
+  position:relative;height:100%;width:100%;
+  display:flex;flex-direction:column;
+  font-family:var(--font-sans);color:var(--ink-900);
+  background:
+    radial-gradient(140% 38% at 50% -6%, rgba(255,255,255,.55), rgba(255,255,255,0) 55%),
+    linear-gradient(180deg, #E6E2DB 0%, var(--bg-canvas) 35%, var(--bg-canvas) 100%);
+  padding-top:env(safe-area-inset-top, 44px);
+  padding-bottom:env(safe-area-inset-bottom, 24px);
+}
+
+/* Topbar — compact */
+.topbar{
+  position:relative;z-index:5;flex:none;
+  padding:6px 16px 10px;
+  display:flex;align-items:center;gap:10px;
+  margin-top:8px;
+}
+.back-btn{
+  width:40px;height:40px;flex:none;border-radius:11px;
+  background:rgba(255,255,255,.6);border:1px solid var(--hairline);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  color:var(--ink-900);
+  transition:transform 120ms cubic-bezier(.2,.7,.3,1), background 120ms;
+}
+.back-btn:active{transform:scale(.96);background:rgba(255,255,255,.85);}
+.topbar h1{
+  font-family:var(--font-sans);
+  font-size:18px;font-weight:700;letter-spacing:-.3px;
+  margin:0;color:var(--ink-900);flex:1;
+}
+
+/* Scroll */
+.scroll{
+  position:relative;z-index:2;flex:1;min-height:0;
+  overflow-y:auto;overflow-x:hidden;
+  padding:0 16px 16px;
+  display:flex;flex-direction:column;gap:14px;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Hero card — body diagram (Tonal-inspired) */
+.hero{
+  position:relative;
+  background:var(--card-bg);
+  border:1px solid var(--hairline);
+  border-radius:22px;
+  padding:16px 16px 14px;
+  box-shadow:var(--card-shadow);
+  display:flex;gap:14px;align-items:center;
+}
+.hero-figure{
+  position:relative;
+  width:96px;height:128px;flex:none;
+}
+/* Baby body silhouette built with CSS — no asset dependency */
+.body-head{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(180deg, #E8E2D9 0%, #D6CFC2 100%);
+  border:1px solid rgba(43,43,43,.10);
+}
+.body-torso{
+  position:absolute;top:42px;left:50%;transform:translateX(-50%);
+  width:80px;height:84px;border-radius:34px 34px 30px 30px;
+  background:linear-gradient(180deg, #E8E2D9 0%, #D2CABD 100%);
+  border:1px solid rgba(43,43,43,.10);
+}
+/* Neck highlight pin */
+.neck-pin{
+  position:absolute;top:46px;left:50%;transform:translateX(-50%);
+  width:46px;height:14px;border-radius:999px;
+  background:rgba(255,107,53,.20);
+  border:1.5px solid var(--warm-orange);
+  animation:pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.35);}
+  50%{box-shadow:0 0 0 8px rgba(255,107,53,0);}
+}
+@media (prefers-reduced-motion: reduce){
+  .neck-pin{animation:none;}
+}
+/* Label line + tag */
+.neck-callout{
+  position:absolute;top:42px;right:-58px;
+  display:flex;align-items:center;gap:6px;
+}
+.neck-callout .line{
+  width:24px;height:1.5px;background:var(--warm-orange);
+}
+.neck-callout .tag{
+  font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--warm-orange-700);
+}
+.hero-text{flex:1;min-width:0;}
+.hero-eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--warm-orange-700);margin:0 0 4px;
+}
+.hero-title{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:22px;line-height:1.1;letter-spacing:-.4px;
+  color:var(--ink-900);margin:0 0 6px;
+}
+.hero-sub{
+  font-size:13px;line-height:1.4;font-weight:500;
+  color:var(--ink-700);margin:0;
+}
+
+/* Section heading */
+.section-heading{
+  display:flex;align-items:center;gap:10px;
+  padding:2px 4px;margin-top:2px;
+}
+.section-heading h2{
+  font-size:11px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;
+  color:var(--ink-500);margin:0;
+}
+.section-heading .rule{
+  flex:1;height:1px;background:var(--hairline);
+}
+
+/* Status list — grouped card w/ hairline dividers (V2 winning pattern) */
+.status-card{
+  background:var(--card-bg);
+  border:1px solid var(--hairline);
+  border-radius:18px;
+  box-shadow:var(--card-shadow);
+  overflow:hidden;
+}
+.status-row{
+  display:flex;align-items:center;gap:13px;
+  padding:13px 14px;
+  width:100%;border:0;background:transparent;text-align:left;
+  cursor:pointer;
+  font-family:inherit;color:inherit;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  transition:background 120ms;
+}
+.status-row:active{background:rgba(43,43,43,.04);}
+.status-row + .status-row{
+  border-top:1px solid var(--hairline);
+}
+.status-num{
+  width:24px;height:24px;flex:none;
+  border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;letter-spacing:.2px;
+  color:var(--ink-700);
+  background:var(--bg-canvas-soft);
+  border:1px solid var(--hairline);
+}
+.status-icon{
+  width:38px;height:38px;flex:none;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+}
+.status-icon svg{width:20px;height:20px;}
+.status-row[data-key="warm"] .status-icon{background:rgba(232,122,77,.14);color:var(--status-warm);}
+.status-row[data-key="perfect"] .status-icon{background:rgba(255,107,53,.16);color:var(--warm-orange);}
+.status-row[data-key="cold"] .status-icon{background:rgba(107,143,181,.14);color:var(--status-cold);}
+
+.status-text{flex:1;min-width:0;}
+.status-title{
+  display:flex;align-items:center;gap:8px;
+  font-size:15px;font-weight:600;color:var(--ink-900);
+  margin:0 0 2px;letter-spacing:-.2px;
+}
+.status-title .dot{
+  width:7px;height:7px;border-radius:50%;flex:none;
+}
+.status-row[data-key="warm"] .dot{background:var(--status-warm);}
+.status-row[data-key="perfect"] .dot{background:var(--warm-orange);}
+.status-row[data-key="cold"] .dot{background:var(--status-cold);}
+.status-body{
+  font-size:12.5px;font-weight:500;line-height:1.35;
+  color:var(--ink-700);margin:0;
+}
+.status-action{
+  flex:none;font-size:11px;font-weight:700;letter-spacing:.4px;
+  color:var(--ink-500);text-transform:uppercase;
+  padding:4px 8px;border-radius:6px;
+  background:var(--bg-canvas-soft);border:1px solid var(--hairline);
+  white-space:nowrap;
+}
+.status-row[data-key="perfect"] .status-action{
+  color:var(--warm-orange-700);background:var(--warm-orange-100);border-color:rgba(216,82,31,.2);
+}
+
+/* Footnote card */
+.footnote{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:11px 13px;border-radius:14px;
+  background:rgba(255,255,255,.55);
+  border:1px solid var(--hairline);
+}
+.footnote svg{flex:none;width:18px;height:18px;color:var(--ink-500);margin-top:1px;}
+.footnote p{
+  margin:0;font-size:12px;line-height:1.4;font-weight:500;
+  color:var(--ink-700);
+}
+
+/* CTA */
+.cta-bar{
+  flex:none;padding:8px 16px 14px;
+  background:linear-gradient(180deg, rgba(219,216,210,0) 0%, var(--bg-canvas) 24%);
+}
+.cta{
+  width:100%;height:52px;border-radius:14px;border:0;
+  background:var(--warm-orange);
+  color:#FFFFFF;
+  font-family:inherit;font-size:16px;font-weight:700;letter-spacing:-.1px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  cursor:pointer;
+  box-shadow:0 1px 2px rgba(216,82,31,.18), 0 8px 18px rgba(216,82,31,.28);
+  transition:transform 120ms cubic-bezier(.2,.7,.3,1), background 120ms;
+  -webkit-tap-highlight-color:transparent;
+}
+.cta:active{transform:scale(.985);background:var(--warm-orange-700);}
+.cta:focus-visible{outline:3px solid rgba(255,107,53,.35);outline-offset:3px;}
+
+/* Home indicator */
+.home-indicator{
+  position:absolute;left:50%;bottom:8px;transform:translateX(-50%);
+  width:134px;height:5px;border-radius:3px;background:rgba(43,43,43,.35);z-index:30;
+}
+
+/* Focus */
+.back-btn:focus-visible,.status-row:focus-visible{
+  outline:3px solid rgba(255,107,53,.35);outline-offset:2px;
+}
+</style>
+</head>
+<body>
+  <div class="frame" role="img" aria-label="Babyora Varm eller kald — Mock A">
+    <div class="notch" aria-hidden="true"></div>
+    <div class="status-bar" aria-hidden="true">
+      <span>9:41</span>
+      <span class="right">
+        <svg viewBox="0 0 18 12" fill="currentColor" aria-hidden="true"><rect x="0" y="6" width="3" height="6" rx="1"/><rect x="5" y="3" width="3" height="9" rx="1"/><rect x="10" y="0" width="3" height="12" rx="1"/></svg>
+        <svg viewBox="0 0 16 12" fill="currentColor" aria-hidden="true"><path d="M8 11.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3.2-2.7a4.5 4.5 0 0 1 6.4 0l1-1a6 6 0 0 0-8.4 0l1 1zm-2.6-2.6a8 8 0 0 1 11.6 0l1-1a9.5 9.5 0 0 0-13.6 0l1 1z"/></svg>
+        <svg viewBox="0 0 26 12" fill="none" aria-hidden="true"><rect x="0.5" y="0.5" width="22" height="11" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="18" height="8" rx="1.5" fill="currentColor"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="currentColor"/></svg>
+      </span>
+    </div>
+
+    <main class="screen" aria-labelledby="page-title">
+      <h1 id="page-title" class="sr-only">Varm eller kald — sjekkliste for foreldre</h1>
+
+      <header class="topbar">
+        <button type="button" class="back-btn" aria-label="Tilbake">
+          <svg width="9" height="15" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M7 1L1 7l6 6"/>
+          </svg>
+        </button>
+        <h1 aria-hidden="true">Varm eller kald?</h1>
+      </header>
+
+      <div class="scroll">
+
+        <!-- HERO: body diagram with neck-pin callout -->
+        <section class="hero" aria-label="Kjenn på babyens nakke">
+          <div class="hero-figure" aria-hidden="true">
+            <div class="body-head"></div>
+            <div class="body-torso"></div>
+            <div class="neck-pin"></div>
+            <div class="neck-callout">
+              <span class="line"></span>
+              <span class="tag">Nakke</span>
+            </div>
+          </div>
+          <div class="hero-text">
+            <p class="hero-eyebrow">2-finger-test</p>
+            <h2 class="hero-title">Kjenn nakken</h2>
+            <p class="hero-sub">Stikk to fingre under genseren bak i nakken — ikke hender eller føtter.</p>
+          </div>
+        </section>
+
+        <!-- SECTION HEADING -->
+        <div class="section-heading" role="presentation">
+          <h2 id="status-heading">Tre mulige signaler</h2>
+          <span class="rule" aria-hidden="true"></span>
+        </div>
+
+        <!-- STATUS LIST — grouped card w/ hairline dividers -->
+        <ul role="list" class="status-card" aria-labelledby="status-heading">
+
+          <li>
+            <button type="button" class="status-row" data-key="warm" aria-label="For varm — svett eller fuktig nakke, ta av et lag">
+              <span class="status-num" aria-hidden="true">1</span>
+              <span class="status-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 4a2 2 0 0 0-4 0v9.5a4 4 0 1 0 4 0V4z"/>
+                  <path d="M12 4v9.5"/>
+                </svg>
+              </span>
+              <span class="status-text">
+                <span class="status-title"><span class="dot" aria-hidden="true"></span>For varm</span>
+                <span class="status-body">Svett eller fuktig nakke</span>
+              </span>
+              <span class="status-action" aria-hidden="true">Ta av</span>
+            </button>
+          </li>
+
+          <li>
+            <button type="button" class="status-row" data-key="perfect" aria-label="Perfekt — nakken er lun og tørr, alt stemmer">
+              <span class="status-num" aria-hidden="true">2</span>
+              <span class="status-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12.5l4.5 4.5L19 7"/>
+                </svg>
+              </span>
+              <span class="status-text">
+                <span class="status-title"><span class="dot" aria-hidden="true"></span>Perfekt</span>
+                <span class="status-body">Lun og tørr nakke</span>
+              </span>
+              <span class="status-action" aria-hidden="true">Behold</span>
+            </button>
+          </li>
+
+          <li>
+            <button type="button" class="status-row" data-key="cold" aria-label="For kald — kjølig nakke, legg til et lag">
+              <span class="status-num" aria-hidden="true">3</span>
+              <span class="status-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3v18"/>
+                  <path d="M5 7l14 10M19 7L5 17"/>
+                  <path d="M12 3l-2 2M12 3l2 2M12 21l-2-2M12 21l2-2"/>
+                </svg>
+              </span>
+              <span class="status-text">
+                <span class="status-title"><span class="dot" aria-hidden="true"></span>For kald</span>
+                <span class="status-body">Kjølig eller kald nakke</span>
+              </span>
+              <span class="status-action" aria-hidden="true">Legg til</span>
+            </button>
+          </li>
+        </ul>
+
+        <!-- Footnote -->
+        <div class="footnote" role="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 8v4M12 16h.01"/>
+          </svg>
+          <p>Kalde hender og føtter er normalt og betyr <strong>ikke</strong> at barnet fryser.</p>
+        </div>
+
+      </div>
+
+      <div class="cta-bar">
+        <button type="button" class="cta" aria-label="Ferdig — tilbake til oversikt">
+          Ferdig
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
+        </button>
+      </div>
+    </main>
+
+    <div class="home-indicator" aria-hidden="true"></div>
+  </div>
+</body>
+</html>

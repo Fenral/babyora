@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Babyora TOG-guiden — Mock A</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      /* Brand */
+      --bg: #DBD8D2;
+      --bg-deep: #CFCBC3;
+      --ink: #1F1D1B;
+      --ink-2: #4A4845;
+      --muted: #8A8783;
+      --line: rgba(31, 29, 27, 0.10);
+      --line-soft: rgba(31, 29, 27, 0.06);
+      --surface: #F5F3EE;
+      --surface-2: #ECE9E2;
+      --orange: #FF6B35;
+      --orange-deep: #E85A24;
+      --orange-soft: rgba(255, 107, 53, 0.10);
+
+      --sans: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --serif: 'DM Serif Display', 'Times New Roman', serif;
+
+      --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #E8E5DF;
+      font-family: var(--sans);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Phone frame for desktop preview, full-bleed on real iPhone */
+    .stage {
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .phone {
+      width: 390px;
+      min-height: 844px;
+      background: var(--bg);
+      border-radius: 44px;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 30px 80px rgba(31, 29, 27, 0.18),
+        0 8px 20px rgba(31, 29, 27, 0.08);
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+    }
+    @media (max-width: 430px) {
+      .stage { padding: 0; align-items: stretch; }
+      .phone {
+        width: 100%;
+        min-height: 100dvh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* Screen */
+    .screen {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 844px;
+      padding-top: max(54px, env(safe-area-inset-top));
+      padding-bottom: 0;
+    }
+    @media (max-width: 430px) {
+      .screen { min-height: 100dvh; }
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0);
+      white-space: nowrap; border: 0;
+    }
+
+    /* Topbar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 16px 14px;
+    }
+    .back {
+      width: 40px; height: 40px;
+      flex: none;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      color: var(--ink);
+    }
+    .back:focus-visible {
+      outline: 2px solid var(--orange);
+      outline-offset: 2px;
+    }
+    .crumb {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* Scroll body */
+    .body {
+      flex: 1;
+      padding: 0 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* Hero — temp + TOG */
+    .hero {
+      padding: 18px 4px 0;
+    }
+    .hero-label {
+      font-family: var(--sans);
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 10px;
+    }
+    .hero-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .hero-temp {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 64px;
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+    .hero-temp .deg {
+      font-family: var(--serif);
+      color: var(--muted);
+      margin-left: 2px;
+    }
+    .hero-tog {
+      text-align: right;
+    }
+    .hero-tog-num {
+      font-family: var(--serif);
+      font-size: 44px;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      color: var(--orange-deep);
+      font-variant-numeric: tabular-nums;
+    }
+    .hero-tog-unit {
+      display: block;
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    .hero-zone {
+      margin: 10px 0 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-2);
+    }
+
+    /* Slider — Kino-inspired tick scale */
+    .slider {
+      padding: 4px 2px 0;
+    }
+    .slider-wrap {
+      position: relative;
+      height: 56px;
+    }
+    .ticks {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2px;
+      pointer-events: none;
+    }
+    .tick {
+      width: 1px;
+      height: 14px;
+      background: rgba(31,29,27,0.25);
+      border-radius: 1px;
+    }
+    .tick.major {
+      height: 22px;
+      width: 1.5px;
+      background: rgba(31,29,27,0.45);
+    }
+    .track {
+      position: absolute;
+      left: 0; right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(
+        90deg,
+        #8FB0C8 0%,
+        #B9C2BD 38%,
+        #E0C8A6 66%,
+        #FF6B35 100%
+      );
+      opacity: 0.85;
+    }
+    .thumb {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #FFF;
+      border: 3px solid var(--orange);
+      box-shadow: 0 2px 8px rgba(31,29,27,0.20);
+      pointer-events: none;
+      transition: left 140ms var(--ease);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .thumb { transition: none; }
+    }
+    .range {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .range:focus-visible + .thumb,
+    .range:focus-visible {
+      outline: none;
+    }
+    .range:focus-visible ~ .thumb {
+      box-shadow:
+        0 0 0 4px rgba(255, 107, 53, 0.30),
+        0 2px 8px rgba(31,29,27,0.20);
+    }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 6px 2px 0;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .scale-labels span.active {
+      color: var(--orange-deep);
+    }
+
+    /* Section heading */
+    .section-eyebrow {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: 0 2px 10px;
+    }
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0;
+    }
+    .eyebrow-meta {
+      font-family: var(--serif);
+      font-size: 14px;
+      color: var(--ink-2);
+    }
+
+    /* Grouped list — V2 Påkledning principle */
+    .list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      background: var(--surface);
+      border-radius: 18px;
+      border: 1px solid var(--line-soft);
+      overflow: hidden;
+    }
+    .list li {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      position: relative;
+    }
+    .list li + li::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 64px;
+      right: 14px;
+      height: 1px;
+      background: var(--line);
+    }
+    .thumb-img {
+      width: 40px;
+      height: 40px;
+      flex: none;
+      border-radius: 12px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .thumb-img img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      display: block;
+    }
+    .thumb-img .emoji {
+      font-size: 22px;
+      line-height: 1;
+    }
+    .row-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .row-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      color: var(--ink);
+    }
+    .row-sub {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .row-badge {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      background: var(--surface-2);
+      padding: 4px 8px;
+      border-radius: 6px;
+      flex: none;
+    }
+
+    /* Safety callout */
+    .safety {
+      display: flex;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--orange-soft);
+      border: 1px solid rgba(255, 107, 53, 0.22);
+    }
+    .safety svg {
+      flex: none;
+      color: var(--orange-deep);
+      margin-top: 1px;
+    }
+    .safety p {
+      margin: 0;
+      font-size: 12.5px;
+      line-height: 1.45;
+      font-weight: 500;
+      color: var(--ink-2);
+    }
+    .safety p strong {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    /* Sticky CTA */
+    .cta-wrap {
+      position: sticky;
+      bottom: 0;
+      left: 0; right: 0;
+      padding: 14px 20px max(18px, env(safe-area-inset-bottom));
+      background: linear-gradient(
+        180deg,
+        rgba(219, 216, 210, 0) 0%,
+        rgba(219, 216, 210, 0.92) 30%,
+        var(--bg) 60%
+      );
+      margin-top: auto;
+    }
+    .cta {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 54px;
+      border: none;
+      border-radius: 16px;
+      background: var(--orange);
+      color: #FFF;
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.005em;
+      cursor: pointer;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.25) inset,
+        0 8px 20px rgba(255, 107, 53, 0.30);
+      transition: transform 120ms var(--ease), background 120ms var(--ease);
+    }
+    .cta:hover { background: var(--orange-deep); }
+    .cta:active { transform: scale(0.985); }
+    .cta:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) {
+      .cta { transition: none; }
+      .cta:active { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="phone">
+      <main class="screen" aria-labelledby="tog-h1">
+        <h1 id="tog-h1" class="sr-only">TOG-guiden</h1>
+
+        <!-- Topbar -->
+        <div class="topbar">
+          <button class="back" type="button" aria-label="Tilbake">
+            <svg width="9" height="15" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M7 1L1 7l6 6" />
+            </svg>
+          </button>
+          <span class="crumb">TOG-guiden</span>
+        </div>
+
+        <div class="body">
+
+          <!-- Hero: temp + tog -->
+          <section class="hero" aria-label="Anbefaling for valgt romtemperatur">
+            <p class="hero-label">Romtemperatur</p>
+            <div class="hero-row">
+              <div class="hero-temp" aria-live="polite">
+                <span id="temp-val">20</span><span class="deg">°</span>
+              </div>
+              <div class="hero-tog">
+                <div class="hero-tog-num" aria-live="polite">
+                  <span id="tog-val">2.5</span>
+                </div>
+                <span class="hero-tog-unit">TOG anbefalt</span>
+              </div>
+            </div>
+            <p class="hero-zone" id="zone-text">Komfortsone for 18–21°</p>
+          </section>
+
+          <!-- Slider -->
+          <section class="slider" aria-labelledby="slider-label">
+            <span id="slider-label" class="sr-only">Velg romtemperatur</span>
+            <div class="slider-wrap">
+              <div class="track" aria-hidden="true"></div>
+              <div class="ticks" aria-hidden="true">
+                <span class="tick major"></span>
+                <span class="tick"></span>
+                <span class="tick major"></span>
+                <span class="tick"></span>
+                <span class="tick major"></span>
+                <span class="tick"></span>
+                <span class="tick major"></span>
+                <span class="tick"></span>
+                <span class="tick major"></span>
+              </div>
+              <input
+                class="range"
+                id="range"
+                type="range"
+                min="16" max="24" step="1" value="20"
+                aria-labelledby="slider-label"
+                aria-valuetext="20 grader celsius, anbefalt 2.5 TOG"
+              />
+              <div class="thumb" id="thumb" aria-hidden="true" style="left: 50%;"></div>
+            </div>
+            <div class="scale-labels" aria-hidden="true">
+              <span id="lab-kjolig">16° Kjølig</span>
+              <span id="lab-lun" class="active">20° Lun</span>
+              <span id="lab-varmt">24° Varmt</span>
+            </div>
+          </section>
+
+          <!-- Slik kler du på — grouped list -->
+          <section aria-labelledby="kleder-label">
+            <div class="section-eyebrow">
+              <h2 id="kleder-label" class="eyebrow">Slik kler du på</h2>
+              <span class="eyebrow-meta"><span id="layer-count">2</span> lag</span>
+            </div>
+            <ul class="list" role="list" id="layer-list">
+              <!-- filled by JS -->
+            </ul>
+          </section>
+
+          <!-- Safety -->
+          <aside class="safety" role="note" aria-label="Sikkerhet">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 8h.01M11 12h1v4h1" />
+            </svg>
+            <p><strong>Ingen dyne eller løse tepper</strong> i sengen sammen med sovepose.</p>
+          </aside>
+
+          <!-- Sticky CTA -->
+          <div class="cta-wrap">
+            <button class="cta" type="button">
+              Bruk denne anbefalingen
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Recommendation table — mirrors src/screens/TogGuideScreen.tsx
+    const TABLE = {
+      16: { tog: '3.5', zone: 'Komfortsone for ≤17°', layers: [
+        { img: 'langermet-body.png', title: 'Bomullsbody, lang arm', sub: 'Innerst', badge: 'Lag 1' },
+        { img: 'tynn-pyjamas.png', title: 'Tynn pysjamas', sub: 'Bomull', badge: 'Lag 2' },
+        { img: 'sovepose-3-5-tog.png', title: 'Sovepose 3.5 TOG', sub: 'Ytterst', badge: 'Lag 3' },
+      ]},
+      17: { tog: '3.5', zone: 'Komfortsone for ≤17°', layers: [
+        { img: 'langermet-body.png', title: 'Bomullsbody, lang arm', sub: 'Innerst', badge: 'Lag 1' },
+        { img: 'tynn-pyjamas.png', title: 'Tynn pysjamas', sub: 'Bomull', badge: 'Lag 2' },
+        { img: 'sovepose-3-5-tog.png', title: 'Sovepose 3.5 TOG', sub: 'Ytterst', badge: 'Lag 3' },
+      ]},
+      18: { tog: '2.5', zone: 'Komfortsone for 18–19°', layers: [
+        { img: 'langermet-body.png', title: 'Bomullsbody, lang arm', sub: 'Innerst', badge: 'Lag 1' },
+        { img: 'sovepose-2-5-tog.png', title: 'Sovepose 2.5 TOG', sub: 'Ytterst', badge: 'Lag 2' },
+      ]},
+      19: { tog: '2.5', zone: 'Komfortsone for 18–19°', layers: [
+        { img: 'langermet-body.png', title: 'Bomullsbody, lang arm', sub: 'Innerst', badge: 'Lag 1' },
+        { img: 'sovepose-2-5-tog.png', title: 'Sovepose 2.5 TOG', sub: 'Ytterst', badge: 'Lag 2' },
+      ]},
+      20: { tog: '2.5', zone: 'Komfortsone for 18–21°', layers: [
+        { img: 'kortermet-body.png', title: 'Bomullsbody, kort arm', sub: 'Innerst', badge: 'Lag 1' },
+        { img: 'sovepose-2-5-tog.png', title: 'Sovepose 2.5 TOG', sub: 'Ytterst', badge: 'Lag 2' },
+      ]},
+      21: { tog: '2.5', zone: 'Komfortsone for 18–21°', layers: [
+        { img: 'kortermet-body.png', title: 'Bomullsbody, kort arm', sub: 'Innerst', badge: 'Lag 1' },
+        { img: 'sovepose-2-5-tog.png', title: 'Sovepose 2.5 TOG', sub: 'Ytterst', badge: 'Lag 2' },
+      ]},
+      22: { tog: '1.0', zone: 'Komfortsone for 22–23°', layers: [
+        { img: 'kortermet-body.png', title: 'Bomullsbody, kort arm', sub: 'Innerst', badge: 'Lag 1' },
+        { img: 'sovepose-1-0-tog.png', title: 'Sovepose 1.0 TOG', sub: 'Ytterst', badge: 'Lag 2' },
+      ]},
+      23: { tog: '1.0', zone: 'Komfortsone for 22–23°', layers: [
+        { img: 'kortermet-body.png', title: 'Bomullsbody, kort arm', sub: 'Innerst', badge: 'Lag 1' },
+        { img: 'sovepose-1-0-tog.png', title: 'Sovepose 1.0 TOG', sub: 'Ytterst', badge: 'Lag 2' },
+      ]},
+      24: { tog: '0.5', zone: 'Komfortsone for ≥24°', layers: [
+        { img: 'kortermet-body.png', title: 'Bomullsbody, kort arm', sub: 'Innerst', badge: 'Lag 1' },
+        { img: 'sovepose-0-5-tog.png', title: 'Sovepose 0.5 TOG', sub: 'Ytterst', badge: 'Lag 2' },
+      ]},
+    };
+
+    const range = document.getElementById('range');
+    const thumb = document.getElementById('thumb');
+    const tempVal = document.getElementById('temp-val');
+    const togVal = document.getElementById('tog-val');
+    const zoneText = document.getElementById('zone-text');
+    const layerCount = document.getElementById('layer-count');
+    const layerList = document.getElementById('layer-list');
+    const labKjolig = document.getElementById('lab-kjolig');
+    const labLun = document.getElementById('lab-lun');
+    const labVarmt = document.getElementById('lab-varmt');
+
+    function render(t) {
+      const rec = TABLE[t];
+      tempVal.textContent = t;
+      togVal.textContent = rec.tog;
+      zoneText.textContent = rec.zone;
+      layerCount.textContent = rec.layers.length;
+      range.setAttribute(
+        'aria-valuetext',
+        `${t} grader celsius, anbefalt ${rec.tog} TOG`
+      );
+
+      // Thumb position
+      const pct = ((t - 16) / (24 - 16)) * 100;
+      thumb.style.left = pct + '%';
+
+      // Active label
+      [labKjolig, labLun, labVarmt].forEach(el => el.classList.remove('active'));
+      if (t <= 17) labKjolig.classList.add('active');
+      else if (t >= 23) labVarmt.classList.add('active');
+      else labLun.classList.add('active');
+
+      // Layer list
+      layerList.innerHTML = '';
+      rec.layers.forEach((layer, idx) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span class="thumb-img" aria-hidden="true">
+            <img
+              src="/illustrations/garments/${layer.img}"
+              alt=""
+              onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'\u{1F9F8}'}))"
+            />
+          </span>
+          <span class="row-main">
+            <span class="row-title">${layer.title}</span>
+            <span class="row-sub">${layer.sub}</span>
+          </span>
+          <span class="row-badge">${layer.badge}</span>
+        `;
+        layerList.appendChild(li);
+      });
+    }
+
+    range.addEventListener('input', e => render(Number(e.target.value)));
+    render(20);
+  </script>
+</body>
+</html>

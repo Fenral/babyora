@@ -1,0 +1,49 @@
+{
+  "claude": {
+    "id": "ull-bukse",
+    "dbString": "ull-bukse",
+    "kategori": "mellomlag",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Komplett oppføring i garment-info.ts: what (l.96) + when (l.97) + dedikert whyForGarment-gren (l.369–371, ikke fallback). Tone og lengde matcher søsken-plagg i mellomlag (ull-mellomlag, ull-jakke). Trekk: when sier 'Vinterhalvåret som mellomlag under yttertøy', men what-teksten ('Strikket ullbukse med strikk i livet. Varmer beina godt.') er litt tynnere enn søsken og when stemmer ikke fullt med faktisk seleksjon (se mål 4 — plagget velges allerede i kjølig 5–9 °C utelek uten yttertøy i base)."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes på public/illustrations/garments/ull-bukse.png. db-strengen 'ull-bukse' mappes korrekt til id 'ull-bukse' i garment-illustrations.ts (l.37), under riktig mellomlag-seksjon. Navn/mapping er konsistent og plausibelt (selve visuelle dommen tas av Fable 5 + Claude)."
+    },
+    "seleksjon": {
+      "score": 20,
+      "trace": "baseTable-treff for 'ull-bukse': (1) utelek.kjolig (feels 5–9 °C), mellomlag ['ull-jakke','ull-bukse'] — tables.ts l.205. (2) vogn.streng_frost (feels −15..−8 °C), mellomlag ['ull-jakke','ull-bukse'] — l.62. (3) vogn.ekstrem (feels < −15 °C), mellomlag ['ull-jakke','ull-bukse'] — l.68–69. IKKE i baeresele, soevn eller utelek/vogn-bånd kald/frost/varm/mild. Modifiers: ingen modifier i modifiers.ts legger til eller fjerner 'ull-bukse' direkte (fotvarmer-regelen l.486–518 rører kun sko/sokker; spedbarn-regelen l.247 legger 'ekstra ull-lag', ikke ull-bukse). softBlocks SB-2 (l.79–92) kan kappe lag ved overskridelse, men prioriterer å fjerne dunteppe/varmepose lett/tynt teppe FØR mellomlag, så ull-bukse beholdes normalt. conflicts/safety rører ikke ull-bukse. Pediatrisk: ullbukse som benisolasjon i mellomlag er forsvarlig — ull regulerer fukt (merino-kids, aap-healthychildren, capital-area-peds dekker kald-lag-prinsipp). Ingen overoppheting/SIDS/kvelning/frost-risiko knyttet til et beinplagg i mellomlag. Ingen helse-spørsmål utenfor de 11 kildene — ikke behov for web-søk.",
+      "kilder": [],
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig og kildedekket. Men det er en temperatur-DISKONTINUITET verdt å merke: ull-bukse velges i utelek ved kjølig (5–9 °C), forsvinner i kald (0–4 °C) og frost (−7..0 °C) der mellomlaget kun er 'ull-mellomlag' (overdel) + vinterdress, og dukker så opp igjen kun i vogn ved streng_frost/ekstrem. Beina får altså eksplisitt ullbukse-lag i mildt kjølig, men IKKE i den kaldere mellomsonen for utelek — der antas vinterdress alene å dekke beina. Det er en bevisst design-logikk (vinterdress isolerer beina), men hullet er asymmetrisk og kan virke inkonsistent."
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "whyForGarment-grenen (l.370) 'Strikket ullbukse varmer beina ekstra ved ${feels} °C — bomullsbukse alene blir for kaldt' er temperatur-nøytral og holder på tvers av alle treff-bånd — OK. MEN when-teksten (l.97) 'Vinterhalvåret som mellomlag under yttertøy' driver med faktisk seleksjon på to punkter: (a) plagget velges allerede ved kjølig 5–9 °C i utelek — det er sen-høst/tidlig-vinter, ikke nødvendigvis 'vinterhalvåret' i streng forstand; (b) i utelek.kjolig finnes INGEN yttertøy i base-tabellen (kun vindtett skall hvis vind ≥5 m/s + feels <10 °C via modifiers l.170), så 'under yttertøy' stemmer ikke for det laveste/første treff-båndet. Drift er moderat, ikke direkte villedende for påkledning (foreldre tar uansett på ullbukse + ull-jakke), men teksten antyder snevrere bruk enn motoren faktisk gjør."
+    },
+    "alternativer": {
+      "score": 10,
+      "kommentar": "Riktig håndtert: alternatives.ts (l.76–84) har 'fleecebukse' som alternativ til 'ull-bukse', parallelt med ull-mellomlag→fleecedress og ull-jakke→fleecejakke. Dette er det korrekte ull↔fleece-byttet for et mellomlag-beinplagg. itemName matcher eksakt baseTable-strengen 'ull-bukse'. Ingen manglende alternativ."
+    },
+    "total": 84,
+    "verdikt": "Solid mellomlag-plagg. Komplett struktur, korrekt mapping + PNG, forsvarlig og kildedekket seleksjon, og riktig fleece-alternativ. Hovedsvakheten er en tekst↔logikk-drift i when ('vinterhalvåret / under yttertøy') som ikke matcher det laveste seleksjons-båndet (kjølig 5–9 °C utelek, uten yttertøy i base), pluss en asymmetrisk temperatur-diskontinuitet der ullbukse velges i kjølig men ikke i kald/frost utelek. Ingen sikkerhetsproblemer. Godkjent, mindre tekstjustering anbefales.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "kilde": "tables.ts l.205 vs garment-info.ts l.97",
+        "beskrivelse": "when-teksten 'Vinterhalvåret som mellomlag under yttertøy' driver med faktisk seleksjon: ull-bukse velges først i utelek.kjolig (5–9 °C), som er kjølig sen-høst, og i det båndet finnes ingen yttertøy i base-tabellen (kun ull-jakke + ull-bukse som mellomlag; vindtett skall legges kun til ved vind ≥5 m/s). 'Under yttertøy' er derfor feil for det laveste treff-båndet.",
+        "forslag": "Vurder å justere when til f.eks. 'Fra kjølige høstdager (ca 5–9 °C) og gjennom vinteren — som ekstra beinvarme i mellomlaget' for å dekke både kjølig-utelek-treffet og de kalde vogn-båndene uten å feilaktig forutsette yttertøy."
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "kilde": "tables.ts l.205, l.62, l.68–69 (utelek.kjolig vs utelek.kald/frost)",
+        "beskrivelse": "Temperatur-diskontinuitet: ull-bukse velges eksplisitt i utelek.kjolig (5–9 °C) og igjen i vogn streng_frost/ekstrem (≤ −8 °C), men IKKE i utelek-båndene kald (0–4 °C) og frost (−7..0 °C) imellom, der beina antas dekket av vinterdress alene. Beinisolasjons-laget er dermed asymmetrisk på tvers av temperatur.",
+        "forslag": "Bekreft med helsesøster at vinterdress alene gir nok beinvarme i utelek kald/frost (0 til −7 °C) uten ullbukse, gitt at ullbukse anses nødvendig allerede ved 5–9 °C. Hvis ikke bevisst, vurder å legge ull-bukse i utelek.kald/frost for konsistent beindekning. Rør ikke terskler uten medisinsk gjennomgang."
+      }
+    ]
+  },
+  "fable": null
+}

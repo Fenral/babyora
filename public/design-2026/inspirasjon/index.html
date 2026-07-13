@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Babyora — Element-inspirasjon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #DBD8D2;
+    --ink: #2B2522;
+    --ink-soft: #6B6560;
+    --card-bg: #FBF8F4;
+    --card-border: #E5E1DA;
+    --accent: #C0632F;
+    --accent-soft: #E8A57A;
+    --success: #6B8E4E;
+    --warn: #C99A3B;
+    --danger: #B04A3A;
+    --sky: #7A9AB5;
+    --serif: 'DM Serif Display', Georgia, serif;
+    --sans: 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
+    --radius-sm: 6px;
+    --radius: 12px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 1px 2px rgba(43,37,34,0.04), 0 1px 3px rgba(43,37,34,0.06);
+    --shadow-md: 0 4px 12px rgba(43,37,34,0.08);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--ink);
+    color: var(--card-bg);
+    padding: 12px 20px;
+    text-decoration: none;
+    border-radius: 0 0 var(--radius) 0;
+    z-index: 1000;
+    font-weight: 600;
+  }
+  .skip-link:focus { top: 0; }
+
+  header.page-header {
+    padding: clamp(48px, 8vw, 96px) clamp(24px, 5vw, 64px) clamp(32px, 5vw, 56px);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  header.page-header .kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0 0 16px;
+  }
+  header.page-header h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(40px, 6vw, 72px);
+    line-height: 1.05;
+    margin: 0 0 24px;
+    letter-spacing: -0.01em;
+  }
+  header.page-header p {
+    max-width: 640px;
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  nav.filter-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(219, 216, 210, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 12px clamp(24px, 5vw, 64px);
+  }
+  .filter-tablist {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4px 0;
+  }
+  .filter-tablist::-webkit-scrollbar { display: none; }
+  .filter-tab {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s ease;
+  }
+  .filter-tab:hover {
+    background: var(--card-bg);
+    color: var(--ink);
+  }
+  .filter-tab[aria-selected="true"] {
+    background: var(--ink);
+    color: var(--card-bg);
+    border-color: var(--ink);
+  }
+  .filter-tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px clamp(24px, 5vw, 64px) 96px;
+  }
+
+  section.category {
+    margin-bottom: 72px;
+    scroll-margin-top: 80px;
+  }
+  section.category.is-hidden { display: none; }
+
+  .category-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .category-header .category-num {
+    font-family: var(--serif);
+    font-size: 14px;
+    color: var(--accent);
+    margin: 0 0 4px;
+  }
+  .category-header h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(28px, 3.5vw, 40px);
+    margin: 0 0 8px;
+    line-height: 1.15;
+    letter-spacing: -0.005em;
+  }
+  .category-header p {
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 560px;
+    font-size: 15px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 900px) {
+    .card-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  article.element-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  article.element-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .mockup {
+    width: 100%;
+    height: 160px;
+    background: #F1EEE8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .mockup svg { display: block; }
+
+  .card-body {
+    padding: 16px 18px 18px;
+  }
+  .source {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink);
+    margin: 0 0 2px;
+  }
+  .element-type {
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 10px;
+  }
+  .use-line {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ink);
+    margin: 0;
+    padding-top: 10px;
+    border-top: 1px dashed var(--card-border);
+  }
+  .use-line strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ---------------- Reusable mockup styles ---------------- */
+  .m-bg-cream { background: #F5EFE5; }
+  .m-bg-warm { background: #EDE4D6; }
+  .m-bg-dark { background: #1D1A17; }
+  .m-bg-cool { background: #E6EBEE; }
+  .m-bg-ink { background: #2B2522; }
+  .m-bg-nordic { background: #E9E9E5; }
+  .m-bg-black { background: #0B0B0C; }
+
+  /* Instrument gauge tick numbers style */
+  .tick-num { font: 600 8px var(--sans); fill: #2B2522; }
+  .gauge-val { font: 400 22px var(--serif); fill: #2B2522; }
+  .gauge-unit { font: 500 8px var(--sans); fill: #6B6560; letter-spacing: 0.14em; text-transform: uppercase; }
+
+  /* Watch/ring stroke defaults */
+  .ring-bg { stroke: #D6D0C6; }
+  .ring-fg { stroke: var(--accent); }
+
+  /* Editorial card labels */
+  .editorial-serif { font: 400 12px var(--serif); fill: #2B2522; }
+  .editorial-sans { font: 500 8px var(--sans); fill: #6B6560; letter-spacing: 0.14em; text-transform: uppercase; }
+
+  /* Yr rows */
+  .yr-row { font: 500 9px var(--sans); fill: #2B2522; }
+
+  footer.page-footer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px clamp(24px, 5vw, 64px) 64px;
+    color: var(--ink-soft);
+    font-size: 13px;
+    border-top: 1px solid var(--card-border);
+  }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Hopp til hovedinnhold</a>
+
+<header class="page-header">
+  <p class="kicker">Babyora · Design 2026 · Referansebibliotek</p>
+  <h1>Element-inspirasjon</h1>
+  <p>Konkrete del-elementer fra andre apper og produkter som kan gi ideer til Babyora: gauge-designs, anbefalings-kort, glanceable widgets, og redaksjonelle flater. Ingen ekte varemerker — bare stil-referanser gjenskapt i CSS og SVG.</p>
+</header>
+
+<nav class="filter-nav" aria-label="Filter etter kategori">
+  <div class="filter-tablist" role="tablist">
+    <button role="tab" class="filter-tab" data-filter="all" aria-selected="true">Alle</button>
+    <button role="tab" class="filter-tab" data-filter="instrument" aria-selected="false">Instrument</button>
+    <button role="tab" class="filter-tab" data-filter="context" aria-selected="false">Kontekstuell</button>
+    <button role="tab" class="filter-tab" data-filter="editorial" aria-selected="false">Editorial</button>
+    <button role="tab" class="filter-tab" data-filter="glanceable" aria-selected="false">Glanceable</button>
+    <button role="tab" class="filter-tab" data-filter="nordic" aria-selected="false">Nordisk</button>
+    <button role="tab" class="filter-tab" data-filter="rules" aria-selected="false">Regelmotor</button>
+    <button role="tab" class="filter-tab" data-filter="parenting" aria-selected="false">Post-AI parenting</button>
+    <button role="tab" class="filter-tab" data-filter="comfort" aria-selected="false">Komfort</button>
+  </div>
+</nav>
+
+<main id="main">
+
+  <!-- ============ 1. INSTRUMENT ============ -->
+  <section class="category" data-cat="instrument" id="instrument">
+    <div class="category-header">
+      <p class="category-num">01</p>
+      <h2>Instrument-metafor</h2>
+      <p>Gauge, dial, ring — analogen som gjør data lesbar på ett blikk. Grunnmetaforen for Babyora-anbefalingen.</p>
+    </div>
+    <div class="card-grid">
+
+      <article class="element-card">
+        <div class="mockup m-bg-cream">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Radial gauge med tallverdi">
+            <path d="M 40 130 A 80 80 0 0 1 200 130" fill="none" stroke="#D6D0C6" stroke-width="10" stroke-linecap="round"/>
+            <path d="M 40 130 A 80 80 0 0 1 168 66" fill="none" stroke="#C0632F" stroke-width="10" stroke-linecap="round"/>
+            <text x="52" y="150" class="tick-num">0</text>
+            <text x="115" y="60" class="tick-num" text-anchor="middle">50</text>
+            <text x="188" y="150" class="tick-num" text-anchor="end">100</text>
+            <text x="120" y="118" class="gauge-val" text-anchor="middle">74</text>
+            <text x="120" y="134" class="gauge-unit" text-anchor="middle">STRAIN</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: TrackMan</p>
+          <p class="element-type">Radial gauge</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Hovedanbefalings-dial som viser lag-antall som en pyntet analog verdi.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-warm">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Ring-metrikk med prosent">
+            <circle cx="120" cy="80" r="52" fill="none" stroke="#D6D0C6" stroke-width="10"/>
+            <circle cx="120" cy="80" r="52" fill="none" stroke="#6B8E4E" stroke-width="10" stroke-linecap="round"
+                    stroke-dasharray="326" stroke-dashoffset="98" transform="rotate(-90 120 80)"/>
+            <text x="120" y="80" class="gauge-val" text-anchor="middle">70%</text>
+            <text x="120" y="98" class="gauge-unit" text-anchor="middle">RECOVERY</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Whoop</p>
+          <p class="element-type">Strain-ring med state</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Komfortnivå (0-100%) med grønn/gul/rød state-color i stedet for tall.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-dark">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Analog klokke med data-overlay">
+            <circle cx="120" cy="80" r="60" fill="none" stroke="#3A362F" stroke-width="1"/>
+            <circle cx="120" cy="80" r="54" fill="none" stroke="#5E574C" stroke-width="1"/>
+            <g stroke="#8C8377" stroke-width="1.5" stroke-linecap="round">
+              <line x1="120" y1="24" x2="120" y2="32"/>
+              <line x1="176" y1="80" x2="168" y2="80"/>
+              <line x1="120" y1="136" x2="120" y2="128"/>
+              <line x1="64" y1="80" x2="72" y2="80"/>
+            </g>
+            <line x1="120" y1="80" x2="120" y2="40" stroke="#E8A57A" stroke-width="2" stroke-linecap="round"/>
+            <line x1="120" y1="80" x2="152" y2="80" stroke="#F5EFE5" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="120" cy="80" r="3" fill="#C0632F"/>
+            <text x="120" y="110" style="font: 600 9px var(--sans); fill: #E8A57A; letter-spacing: 0.14em;" text-anchor="middle">7°C · SKY</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Garmin</p>
+          <p class="element-type">Analog klokke m/ data-overlay</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Klokke-metafor for daglig rytme: nå kl. 07 = ute-tid = 3 lag.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-ink">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Dot-progress ring">
+            <g transform="translate(120 80)">
+              <g stroke="#3A362F" stroke-width="1" fill="none">
+                <circle r="56"/>
+              </g>
+              <g fill="#C0632F">
+                <circle cx="0" cy="-56" r="4"/>
+                <circle cx="27" cy="-49" r="4"/>
+                <circle cx="48" cy="-29" r="4"/>
+                <circle cx="56" cy="0" r="4"/>
+                <circle cx="48" cy="29" r="4"/>
+              </g>
+              <g fill="#5E574C">
+                <circle cx="27" cy="49" r="4"/>
+                <circle cx="0" cy="56" r="4"/>
+                <circle cx="-27" cy="49" r="4"/>
+                <circle cx="-48" cy="29" r="4"/>
+                <circle cx="-56" cy="0" r="4"/>
+                <circle cx="-48" cy="-29" r="4"/>
+                <circle cx="-27" cy="-49" r="4"/>
+              </g>
+              <text y="4" style="font: 400 20px var(--serif); fill: #F5EFE5;" text-anchor="middle">83</text>
+              <text y="20" style="font: 500 7px var(--sans); fill: #8C8377; letter-spacing: 0.14em;" text-anchor="middle">READINESS</text>
+            </g>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Oura</p>
+          <p class="element-type">Dot-progress ring</p>
+          <p class="use-line"><strong>Til Babyora:</strong> 12-timers-varsel — hver time = én dot som fylles etter hvert som dagen skrider.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-cool">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Termostat rundt dial">
+            <circle cx="120" cy="80" r="62" fill="#FBF8F4" stroke="#D6D0C6" stroke-width="1"/>
+            <path d="M 78 122 A 60 60 0 1 1 162 122" fill="none" stroke="#E5E1DA" stroke-width="4" stroke-linecap="round"/>
+            <path d="M 78 122 A 60 60 0 0 1 130 40" fill="none" stroke="#C0632F" stroke-width="4" stroke-linecap="round"/>
+            <text x="120" y="82" style="font: 400 34px var(--serif); fill: #2B2522;" text-anchor="middle">21°</text>
+            <text x="120" y="102" class="gauge-unit" text-anchor="middle">HEATING</text>
+            <circle cx="130" cy="40" r="5" fill="#C0632F" stroke="#FBF8F4" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Nest</p>
+          <p class="element-type">Termostat rundt dial</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Store, sentrert tall som anker — omgivelsestemp som primær visning.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ 2. CONTEXTUAL RECOMMENDATION ============ -->
+  <section class="category" data-cat="context" id="context">
+    <div class="category-header">
+      <p class="category-num">02</p>
+      <h2>Kontekstuell anbefaling</h2>
+      <p>«Her er hva du bør gjøre nå» — situasjons-basert innhold som løser hva-nå-friksjonen.</p>
+    </div>
+    <div class="card-grid">
+
+      <article class="element-card">
+        <div class="mockup m-bg-cream">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Outfit-of-the-day-kort">
+            <rect x="20" y="16" width="200" height="128" rx="10" fill="#FBF8F4" stroke="#E5E1DA"/>
+            <rect x="34" y="30" width="52" height="60" rx="6" fill="#EDE4D6"/>
+            <rect x="94" y="30" width="52" height="60" rx="6" fill="#D6C4A8"/>
+            <rect x="154" y="30" width="52" height="60" rx="6" fill="#B89B75"/>
+            <text x="34" y="112" class="editorial-serif">Outfit for today</text>
+            <text x="34" y="128" class="editorial-sans">3 items · 12°C</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Whering</p>
+          <p class="element-type">Outfit for today-card</p>
+          <p class="use-line"><strong>Til Babyora:</strong> «Lag for dagen» — tre plagg som thumbs, tydelig tallteller på antall lag.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-warm">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Oppskrifts-kort">
+            <rect x="24" y="18" width="192" height="124" rx="12" fill="#FBF8F4" stroke="#E5E1DA"/>
+            <rect x="24" y="18" width="192" height="70" rx="12" fill="#C99A3B"/>
+            <text x="40" y="106" class="editorial-serif">What to make tonight</text>
+            <text x="40" y="122" class="editorial-sans">20 min · pantry match</text>
+            <circle cx="196" cy="30" r="10" fill="#FBF8F4"/>
+            <text x="196" y="34" style="font: 600 10px var(--sans); fill: #C0632F;" text-anchor="middle">★</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Yummly</p>
+          <p class="element-type">What-to-make-recipe-card</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Foto-hero + kort tittel + parameter-linje («3 lag · frisk vind»).</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-dark">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Daily-mix cover">
+            <rect x="60" y="16" width="120" height="120" rx="4" fill="#5E574C"/>
+            <rect x="60" y="16" width="120" height="120" rx="4" fill="url(#dmgrad)"/>
+            <defs>
+              <linearGradient id="dmgrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#C0632F"/>
+                <stop offset="1" stop-color="#6B4A2F"/>
+              </linearGradient>
+            </defs>
+            <text x="120" y="72" style="font: 400 14px var(--serif); fill: #F5EFE5;" text-anchor="middle">Daily Mix</text>
+            <text x="120" y="94" style="font: 700 34px var(--sans); fill: #F5EFE5;" text-anchor="middle">01</text>
+            <text x="120" y="118" style="font: 500 8px var(--sans); fill: #F5EFE5; letter-spacing: 0.2em;" text-anchor="middle">MADE FOR YOU</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Spotify</p>
+          <p class="element-type">Daily Mix cover</p>
+          <p class="use-line"><strong>Til Babyora:</strong> «Dagens antrekk 01» — nummerert seriemetafor gir det gjentakelses-kraft.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-cream">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Wishlist-tile">
+            <rect x="24" y="18" width="192" height="124" rx="10" fill="#FBF8F4" stroke="#E5E1DA"/>
+            <rect x="24" y="18" width="192" height="84" rx="10" fill="#E8A57A"/>
+            <path d="M 24 90 Q 100 60 216 88 L 216 102 L 24 102 Z" fill="#F5EFE5"/>
+            <text x="40" y="122" class="editorial-serif">Autumn escapes</text>
+            <text x="40" y="136" class="editorial-sans">32 stays saved</text>
+            <path d="M 196 34 l 6 -6 6 6 -6 12 z" fill="#FBF8F4" opacity="0.9"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Airbnb</p>
+          <p class="element-type">Smart Wishlist tile</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Lagre-antrekk-samlinger: «Høst-favoritter · 7 lagret».</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-warm">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Path-node">
+            <path d="M 30 80 Q 70 30 120 80 T 210 80" fill="none" stroke="#D6C4A8" stroke-width="3" stroke-dasharray="4 6"/>
+            <circle cx="30" cy="80" r="14" fill="#6B8E4E"/>
+            <circle cx="120" cy="80" r="20" fill="#C0632F" stroke="#FBF8F4" stroke-width="3"/>
+            <circle cx="210" cy="80" r="12" fill="#D6D0C6"/>
+            <text x="30" y="84" style="font: 700 10px var(--sans); fill: #FBF8F4;" text-anchor="middle">✓</text>
+            <text x="120" y="86" style="font: 700 12px var(--sans); fill: #FBF8F4;" text-anchor="middle">2</text>
+            <text x="120" y="120" class="editorial-serif" text-anchor="middle">Today</text>
+            <text x="120" y="134" class="editorial-sans" text-anchor="middle">STREAK · 12 DAYS</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Duolingo</p>
+          <p class="element-type">Daily path-node</p>
+          <p class="use-line"><strong>Til Babyora:</strong> «Uke-sti» av påkledninger — reise-metafor på tvers av dager.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ 3. EDITORIAL WARM-NEUTRAL ============ -->
+  <section class="category" data-cat="editorial" id="editorial">
+    <div class="category-header">
+      <p class="category-num">03</p>
+      <h2>Editorial + warm-neutral</h2>
+      <p>Rolige palletter, sjenerøs plass, serifer. Slik unngår Babyora AI-slop-følelsen.</p>
+    </div>
+    <div class="card-grid">
+
+      <article class="element-card">
+        <div class="mockup m-bg-cream">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Aesop-lignende produkt-tile">
+            <rect x="0" y="0" width="240" height="160" fill="#F5EFE5"/>
+            <rect x="80" y="24" width="80" height="100" rx="4" fill="#EDE4D6"/>
+            <rect x="106" y="42" width="28" height="72" rx="4" fill="#8C7B6A"/>
+            <rect x="112" y="52" width="16" height="18" fill="#F5EFE5"/>
+            <text x="120" y="140" class="editorial-serif" text-anchor="middle">Parsley Seed</text>
+            <text x="120" y="152" class="editorial-sans" text-anchor="middle">FACIAL CLEANSER</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Aesop</p>
+          <p class="element-type">Product-tile, warm cream + serif</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Produkttile-look for plagg-kort. Rikelig marg, sentrert komposisjon.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-warm">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Magasin-forside">
+            <rect x="0" y="0" width="240" height="160" fill="#EDE4D6"/>
+            <rect x="20" y="18" width="130" height="80" fill="#B89B75"/>
+            <text x="160" y="30" style="font: 400 12px var(--serif); fill: #2B2522;">Kinfolk</text>
+            <text x="160" y="44" style="font: 500 6px var(--sans); fill: #6B6560; letter-spacing: 0.16em;">ISSUE 47</text>
+            <line x1="160" y1="52" x2="220" y2="52" stroke="#B89B75" stroke-width="0.6"/>
+            <text x="160" y="72" style="font: 400 9px var(--serif); fill: #2B2522;">On rest</text>
+            <text x="160" y="86" style="font: 400 9px var(--serif); fill: #2B2522;">Slow rooms</text>
+            <text x="160" y="100" style="font: 400 9px var(--serif); fill: #2B2522;">Winter light</text>
+            <text x="20" y="118" style="font: 400 26px var(--serif); fill: #2B2522;">Calm</text>
+            <text x="20" y="140" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.2em;">A GUIDE TO LIVING WELL</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Kinfolk</p>
+          <p class="element-type">Magasin-forside, asymmetrisk grid</p>
+          <p class="use-line"><strong>Til Babyora:</strong> To-kolonne info: stort foto + hairline-liste med råd på siden.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-cream">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Supplement pill-detail">
+            <rect x="0" y="0" width="240" height="160" fill="#F5EFE5"/>
+            <ellipse cx="120" cy="80" rx="60" ry="20" fill="#E8A57A" opacity="0.4"/>
+            <ellipse cx="120" cy="80" rx="20" ry="10" fill="#C0632F"/>
+            <ellipse cx="120" cy="76" rx="10" ry="4" fill="#E8A57A" opacity="0.7"/>
+            <text x="20" y="26" style="font: 500 8px var(--sans); fill: #6B6560; letter-spacing: 0.16em;">DAILY</text>
+            <text x="20" y="44" style="font: 400 16px var(--serif); fill: #2B2522;">Essential.</text>
+            <text x="220" y="146" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.14em;" text-anchor="end">14 CAPSULES</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Ritual</p>
+          <p class="element-type">Supplement pill-detail</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Enkelt sentrert objekt med masse air rundt. Anti-info-tetthet.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-warm">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Smykke-produktshot">
+            <rect x="0" y="0" width="240" height="160" fill="#EDE4D6"/>
+            <circle cx="120" cy="80" r="42" fill="none" stroke="#B89B75" stroke-width="2"/>
+            <circle cx="120" cy="42" r="4" fill="#C0632F"/>
+            <text x="120" y="126" style="font: 400 11px var(--serif); fill: #2B2522;" text-anchor="middle">Halo Fine</text>
+            <text x="120" y="142" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.2em;" text-anchor="middle">14K · $284</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Aether</p>
+          <p class="element-type">Produktshot m/ silhuett</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Silhuett-baby med lag som ringer rundt — ren, symbolsk metafor.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-cream">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Editorial spread">
+            <rect x="0" y="0" width="240" height="160" fill="#F5EFE5"/>
+            <line x1="120" y1="10" x2="120" y2="150" stroke="#D6C4A8" stroke-width="0.6"/>
+            <rect x="14" y="20" width="94" height="60" fill="#B89B75"/>
+            <text x="14" y="94" style="font: 400 14px var(--serif); fill: #2B2522;">Room</text>
+            <text x="14" y="110" style="font: 400 14px var(--serif); fill: #2B2522;">for one.</text>
+            <text x="130" y="30" style="font: 500 6px var(--sans); fill: #6B6560; letter-spacing: 0.2em;">FOLIO 12</text>
+            <line x1="130" y1="36" x2="220" y2="36" stroke="#D6C4A8" stroke-width="0.4"/>
+            <text x="130" y="52" style="font: 400 8px var(--serif); fill: #2B2522;">A small apartment in</text>
+            <text x="130" y="64" style="font: 400 8px var(--serif); fill: #2B2522;">central Milan proves</text>
+            <text x="130" y="76" style="font: 400 8px var(--serif); fill: #2B2522;">that scale is a state</text>
+            <text x="130" y="88" style="font: 400 8px var(--serif); fill: #2B2522;">of mind, not sqm.</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Apartamento</p>
+          <p class="element-type">Editorial spread</p>
+          <p class="use-line"><strong>Til Babyora:</strong> To-siders artikkel-utsnitt for lærings-innhold (varmelære, materialer).</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ 4. GLANCEABLE ============ -->
+  <section class="category" data-cat="glanceable" id="glanceable">
+    <div class="category-header">
+      <p class="category-num">04</p>
+      <h2>Glanceable / 5-sekunders</h2>
+      <p>Widget-språket. Der Babyora bør leve på låseskjermen: bare det essensielle.</p>
+    </div>
+    <div class="card-grid">
+
+      <article class="element-card">
+        <div class="mockup m-bg-black">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Lockscreen-widget">
+            <rect x="60" y="24" width="120" height="112" rx="18" fill="rgba(255,255,255,0.14)"/>
+            <text x="80" y="52" style="font: 500 8px var(--sans); fill: #E5E1DA; letter-spacing: 0.16em;">OSLO</text>
+            <text x="80" y="84" style="font: 400 34px var(--serif); fill: #F5EFE5;">7°</text>
+            <text x="80" y="106" style="font: 500 9px var(--sans); fill: #E5E1DA;">Cloudy · H 9° L 3°</text>
+            <circle cx="160" cy="60" r="12" fill="#F5EFE5"/>
+            <circle cx="152" cy="62" r="12" fill="#0B0B0C"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: iOS lock screen</p>
+          <p class="element-type">Weather-widget</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Frosted glass + stor tallverdi + high/low på én linje. Widget-format.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-black">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Apple watch complication">
+            <circle cx="120" cy="80" r="70" fill="#0B0B0C" stroke="#3A362F" stroke-width="1"/>
+            <circle cx="120" cy="80" r="60" fill="none" stroke="#3A362F" stroke-width="0.8"/>
+            <path d="M 120 30 A 50 50 0 1 1 87 100" fill="none" stroke="#C0632F" stroke-width="6" stroke-linecap="round"/>
+            <text x="120" y="80" style="font: 500 8px var(--sans); fill: #8C8377; letter-spacing: 0.14em;" text-anchor="middle">LAYERS</text>
+            <text x="120" y="102" style="font: 400 26px var(--serif); fill: #F5EFE5;" text-anchor="middle">3</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Apple Watch</p>
+          <p class="element-type">Complication</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Watch-complication med bare «3 lag». 1-sek-metrikk.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-cream">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Habit-checkmark grid">
+            <rect x="0" y="0" width="240" height="160" fill="#F5EFE5"/>
+            <text x="120" y="30" style="font: 400 14px var(--serif); fill: #2B2522;" text-anchor="middle">Dress · June</text>
+            <g transform="translate(30 46)">
+              <g fill="#C0632F">
+                <rect x="0" y="0" width="20" height="20" rx="4"/>
+                <rect x="30" y="0" width="20" height="20" rx="4"/>
+                <rect x="60" y="0" width="20" height="20" rx="4"/>
+                <rect x="90" y="0" width="20" height="20" rx="4"/>
+                <rect x="120" y="0" width="20" height="20" rx="4"/>
+                <rect x="150" y="0" width="20" height="20" rx="4"/>
+                <rect x="180" y="0" width="20" height="20" rx="4"/>
+              </g>
+              <g fill="#C0632F">
+                <rect x="0" y="30" width="20" height="20" rx="4"/>
+                <rect x="30" y="30" width="20" height="20" rx="4"/>
+                <rect x="60" y="30" width="20" height="20" rx="4"/>
+                <rect x="90" y="30" width="20" height="20" rx="4"/>
+                <rect x="120" y="30" width="20" height="20" rx="4"/>
+              </g>
+              <g fill="#D6C4A8" opacity="0.5">
+                <rect x="150" y="30" width="20" height="20" rx="4"/>
+                <rect x="180" y="30" width="20" height="20" rx="4"/>
+              </g>
+            </g>
+            <text x="120" y="130" style="font: 500 8px var(--sans); fill: #6B6560; letter-spacing: 0.16em;" text-anchor="middle">12 DAY STREAK</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Streaks</p>
+          <p class="element-type">Habit-checkmark grid</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Månedsvisning av bruk — bygger vane uten å presse.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-ink">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Meditation timer">
+            <circle cx="120" cy="80" r="46" fill="none" stroke="#3A362F" stroke-width="2"/>
+            <circle cx="120" cy="80" r="46" fill="none" stroke="#E8A57A" stroke-width="2" stroke-linecap="round"
+                    stroke-dasharray="289" stroke-dashoffset="72" transform="rotate(-90 120 80)"/>
+            <text x="120" y="76" style="font: 400 18px var(--serif); fill: #F5EFE5;" text-anchor="middle">4:12</text>
+            <text x="120" y="94" style="font: 500 7px var(--sans); fill: #8C8377; letter-spacing: 0.16em;" text-anchor="middle">BREATHING</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Wave</p>
+          <p class="element-type">Meditation timer</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Countdown til neste værsjekk (12t) — myk animasjon, lav intensitet.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-warm">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Sparkline">
+            <rect x="0" y="0" width="240" height="160" fill="#EDE4D6"/>
+            <text x="20" y="30" style="font: 500 8px var(--sans); fill: #6B6560; letter-spacing: 0.16em;">7-DAY TEMP</text>
+            <text x="20" y="54" style="font: 400 22px var(--serif); fill: #2B2522;">7°</text>
+            <text x="60" y="54" style="font: 500 9px var(--sans); fill: #C0632F;">↑ 2°</text>
+            <path d="M 20 120 L 55 100 L 90 108 L 125 88 L 160 92 L 195 76 L 220 80"
+                  fill="none" stroke="#C0632F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="220" cy="80" r="3" fill="#C0632F"/>
+            <text x="220" y="150" style="font: 500 7px var(--sans); fill: #6B6560;" text-anchor="end">MON — SUN</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Weather Line</p>
+          <p class="element-type">Sparkline</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Uke-trend for lag-antall som sparkline — sees på 1 sek.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ 5. NORDIC MINIMALISM ============ -->
+  <section class="category" data-cat="nordic" id="nordic">
+    <div class="category-header">
+      <p class="category-num">05</p>
+      <h2>Nordisk minimalisme</h2>
+      <p>Hjemlig DNA. Klar informasjon, hairline-linjer, ordentlig typografi. Ikke amerikansk-glossy.</p>
+    </div>
+    <div class="card-grid">
+
+      <article class="element-card">
+        <div class="mockup m-bg-nordic">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Yr værliste">
+            <rect x="0" y="0" width="240" height="160" fill="#E9E9E5"/>
+            <text x="20" y="26" style="font: 500 8px var(--sans); fill: #6B6560; letter-spacing: 0.2em;">OSLO · I DAG</text>
+            <g transform="translate(20 44)">
+              <text x="0" y="12" class="yr-row">07</text>
+              <circle cx="50" cy="8" r="6" fill="#7A9AB5"/>
+              <text x="100" y="12" class="yr-row">6°</text>
+              <text x="140" y="12" class="yr-row" fill="#4A7FB8">3 mm</text>
+              <text x="190" y="12" class="yr-row" fill="#6B6560">5 m/s</text>
+            </g>
+            <g transform="translate(20 66)">
+              <text x="0" y="12" class="yr-row">10</text>
+              <circle cx="50" cy="8" r="6" fill="#B0B8BE"/>
+              <text x="100" y="12" class="yr-row">8°</text>
+              <text x="140" y="12" class="yr-row" fill="#6B6560">–</text>
+              <text x="190" y="12" class="yr-row" fill="#6B6560">3 m/s</text>
+            </g>
+            <g transform="translate(20 88)">
+              <text x="0" y="12" class="yr-row">13</text>
+              <circle cx="50" cy="8" r="6" fill="#F5C449"/>
+              <text x="100" y="12" class="yr-row">11°</text>
+              <text x="140" y="12" class="yr-row" fill="#6B6560">–</text>
+              <text x="190" y="12" class="yr-row" fill="#6B6560">2 m/s</text>
+            </g>
+            <g transform="translate(20 110)">
+              <text x="0" y="12" class="yr-row">16</text>
+              <circle cx="50" cy="8" r="6" fill="#7A9AB5"/>
+              <text x="100" y="12" class="yr-row">9°</text>
+              <text x="140" y="12" class="yr-row" fill="#4A7FB8">1 mm</text>
+              <text x="190" y="12" class="yr-row" fill="#6B6560">4 m/s</text>
+            </g>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Yr.no</p>
+          <p class="element-type">Værliste</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Time-for-time-tabell for lag-anbefaling gjennom dagen.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup" style="background:#FBF8F4;">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Portfolio hairline">
+            <rect x="0" y="0" width="240" height="160" fill="#FBF8F4"/>
+            <line x1="20" y1="30" x2="220" y2="30" stroke="#2B2522" stroke-width="0.5"/>
+            <text x="20" y="50" style="font: 400 12px var(--serif); fill: #2B2522;">Snøhetta</text>
+            <text x="220" y="50" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.14em;" text-anchor="end">EST. 1989</text>
+            <line x1="20" y1="60" x2="220" y2="60" stroke="#D6D0C6" stroke-width="0.5"/>
+            <text x="20" y="86" style="font: 400 18px var(--serif); fill: #2B2522;">Opera</text>
+            <text x="20" y="106" style="font: 400 18px var(--serif); fill: #2B2522;">Powerhouse</text>
+            <text x="20" y="126" style="font: 400 18px var(--serif); fill: #2B2522;">Under</text>
+            <line x1="20" y1="140" x2="220" y2="140" stroke="#2B2522" stroke-width="0.5"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Snøhetta</p>
+          <p class="element-type">Portfolio-hairline</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Prosjekt-liste som ren serif-typografi + tynne strekstruk mellom.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup" style="background:#FF5B24;">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Vipps hjem-tile">
+            <rect x="0" y="0" width="240" height="160" fill="#FF5B24"/>
+            <rect x="30" y="30" width="180" height="100" rx="12" fill="#FBF8F4"/>
+            <text x="46" y="56" style="font: 500 8px var(--sans); fill: #6B6560; letter-spacing: 0.16em;">TILGJENGELIG</text>
+            <text x="46" y="88" style="font: 700 26px var(--sans); fill: #2B2522;">2 341 kr</text>
+            <line x1="46" y1="100" x2="194" y2="100" stroke="#E5E1DA" stroke-width="0.8"/>
+            <text x="46" y="118" style="font: 500 9px var(--sans); fill: #6B6560;">Send</text>
+            <text x="120" y="118" style="font: 500 9px var(--sans); fill: #6B6560;" text-anchor="middle">Be om</text>
+            <text x="194" y="118" style="font: 500 9px var(--sans); fill: #FF5B24;" text-anchor="end">Historikk</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Vipps</p>
+          <p class="element-type">Hjem-tile</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Én stor tall + 3 handlings-lenker under — kjent norsk mønster.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-nordic">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Product-thumb">
+            <rect x="0" y="0" width="240" height="160" fill="#E9E9E5"/>
+            <rect x="60" y="20" width="120" height="90" fill="#FBF8F4"/>
+            <rect x="90" y="35" width="60" height="70" fill="#5E574C"/>
+            <text x="60" y="130" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.16em;">STUDIO NICHOLSON</text>
+            <text x="60" y="144" style="font: 400 10px var(--serif); fill: #2B2522;">Peninsula shirt · £245</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Studio Nicholson</p>
+          <p class="element-type">Produkt-thumb</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Plagg-thumbs på nøytral bakgrunn — små caps-labels, ingen sale-stickers.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup" style="background:#FBF8F4;">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Fargepalett">
+            <g transform="translate(20 30)">
+              <rect x="0" y="0" width="200" height="24" fill="#C0632F"/>
+              <rect x="0" y="24" width="200" height="24" fill="#6B8E4E"/>
+              <rect x="0" y="48" width="200" height="24" fill="#F5C449"/>
+              <rect x="0" y="72" width="200" height="24" fill="#7A9AB5"/>
+              <rect x="0" y="96" width="200" height="4" fill="#2B2522"/>
+            </g>
+            <text x="20" y="20" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.2em;">HAY · CORE PALETTE</text>
+            <text x="220" y="146" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.14em;" text-anchor="end">04 COLOURS</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: HAY</p>
+          <p class="element-type">Fargepalett-vise</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Presenter Babyoras plagg-farger som HAY-swatch-vise. Salgbar.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ 6. RULES ENGINE ============ -->
+  <section class="category" data-cat="rules" id="rules">
+    <div class="category-header">
+      <p class="category-num">06</p>
+      <h2>Regelmotor-UI</h2>
+      <p>Deterministiske råd. Ikke AI-tåke — synlige regler og parametere.</p>
+    </div>
+    <div class="card-grid">
+
+      <article class="element-card">
+        <div class="mockup" style="background:#FBF8F4;">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Database-visning">
+            <rect x="0" y="0" width="240" height="160" fill="#FBF8F4"/>
+            <g style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.14em;">
+              <text x="14" y="24">RULE</text>
+              <text x="130" y="24">TEMP</text>
+              <text x="185" y="24">LAG</text>
+            </g>
+            <line x1="14" y1="30" x2="226" y2="30" stroke="#E5E1DA"/>
+            <g style="font: 500 9px var(--sans); fill: #2B2522;">
+              <text x="14" y="52">Kald morgen</text>
+              <text x="130" y="52">≤ 5°C</text>
+              <text x="185" y="52">4</text>
+              <text x="14" y="76">Kjølig</text>
+              <text x="130" y="76">6–12°C</text>
+              <text x="185" y="76">3</text>
+              <text x="14" y="100">Mildt</text>
+              <text x="130" y="100">13–18°C</text>
+              <text x="185" y="100">2</text>
+              <text x="14" y="124">Varmt</text>
+              <text x="130" y="124">&gt; 18°C</text>
+              <text x="185" y="124">1</text>
+            </g>
+            <line x1="14" y1="58" x2="226" y2="58" stroke="#F1EEE8"/>
+            <line x1="14" y1="82" x2="226" y2="82" stroke="#F1EEE8"/>
+            <line x1="14" y1="106" x2="226" y2="106" stroke="#F1EEE8"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Notion</p>
+          <p class="element-type">Database-view</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Regel-tabell som brukeren kan justere — full transparens.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup" style="background:#F5F2ED;">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Block-composition">
+            <rect x="20" y="20" width="200" height="24" rx="6" fill="#FBF8F4" stroke="#E5E1DA"/>
+            <circle cx="34" cy="32" r="4" fill="#C0632F"/>
+            <text x="46" y="36" style="font: 500 9px var(--sans); fill: #2B2522;">Temp under 10°C</text>
+            <rect x="20" y="52" width="200" height="24" rx="6" fill="#FBF8F4" stroke="#E5E1DA"/>
+            <circle cx="34" cy="64" r="4" fill="#6B8E4E"/>
+            <text x="46" y="68" style="font: 500 9px var(--sans); fill: #2B2522;">Vind &gt; 5 m/s</text>
+            <rect x="20" y="84" width="200" height="24" rx="6" fill="#FBF8F4" stroke="#E5E1DA"/>
+            <circle cx="34" cy="96" r="4" fill="#F5C449"/>
+            <text x="46" y="100" style="font: 500 9px var(--sans); fill: #2B2522;">Baby sover ute</text>
+            <text x="120" y="132" style="font: 400 10px var(--serif); fill: #2B2522;" text-anchor="middle">→ 4 lag</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Craft.do</p>
+          <p class="element-type">Block-composition</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Regel-blocks som stables til beslutning. Åpner for advanced-mode.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-cream">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Trail suggestion">
+            <rect x="20" y="18" width="200" height="124" rx="10" fill="#FBF8F4" stroke="#E5E1DA"/>
+            <path d="M 20 68 Q 80 40 130 60 T 220 50 L 220 18 L 20 18 Z" fill="#7A9AB5" opacity="0.28"/>
+            <path d="M 20 68 Q 80 40 130 60 T 220 50" fill="none" stroke="#C0632F" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <text x="36" y="94" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.14em;">FOR TODAY</text>
+            <text x="36" y="114" style="font: 400 14px var(--serif); fill: #2B2522;">Windy trail loop</text>
+            <text x="36" y="132" style="font: 500 9px var(--sans); fill: #6B6560;">6.2 km · easy · 1.5h</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: AllTrails</p>
+          <p class="element-type">Trail-for-today suggestion</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Kart-top + parameter-linje — brukes for tur-plan m/ påkledning.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-warm">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="XP-path">
+            <path d="M 30 130 L 60 100 L 90 120 L 120 80 L 150 100 L 180 60 L 210 80" fill="none" stroke="#D6C4A8" stroke-width="4"/>
+            <circle cx="30" cy="130" r="8" fill="#6B8E4E"/>
+            <circle cx="60" cy="100" r="8" fill="#6B8E4E"/>
+            <circle cx="90" cy="120" r="8" fill="#C0632F"/>
+            <circle cx="120" cy="80" r="10" fill="#FBF8F4" stroke="#C0632F" stroke-width="2"/>
+            <circle cx="150" cy="100" r="6" fill="#D6D0C6"/>
+            <circle cx="180" cy="60" r="6" fill="#D6D0C6"/>
+            <circle cx="210" cy="80" r="6" fill="#D6D0C6"/>
+            <text x="120" y="42" style="font: 400 10px var(--serif); fill: #2B2522;" text-anchor="middle">+120 XP</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Duolingo</p>
+          <p class="element-type">XP-path</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Progresjon på tvers av barnets alder — myke belønninger uten gaming.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup" style="background:#FBF8F4;">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Filter-panel">
+            <text x="20" y="24" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.16em;">FILTERS</text>
+            <line x1="20" y1="30" x2="220" y2="30" stroke="#E5E1DA"/>
+            <text x="20" y="52" style="font: 500 9px var(--sans); fill: #2B2522;">Under 12°C</text>
+            <rect x="180" y="42" width="30" height="16" rx="8" fill="#C0632F"/>
+            <circle cx="204" cy="50" r="6" fill="#FBF8F4"/>
+            <text x="20" y="82" style="font: 500 9px var(--sans); fill: #2B2522;">Vind alert</text>
+            <rect x="180" y="72" width="30" height="16" rx="8" fill="#C0632F"/>
+            <circle cx="204" cy="80" r="6" fill="#FBF8F4"/>
+            <text x="20" y="112" style="font: 500 9px var(--sans); fill: #2B2522;">Sover ute</text>
+            <rect x="180" y="102" width="30" height="16" rx="8" fill="#D6D0C6"/>
+            <circle cx="186" cy="110" r="6" fill="#FBF8F4"/>
+            <text x="20" y="142" style="font: 500 7px var(--sans); fill: #6B6560;">2 aktive</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Airbnb</p>
+          <p class="element-type">Filter-panel</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Toggle-liste for regel-aktivering — «bruk vind i beregning: på».</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ 7. POST-AI-SLOP PARENTING ============ -->
+  <section class="category" data-cat="parenting" id="parenting">
+    <div class="category-header">
+      <p class="category-num">07</p>
+      <h2>Post-AI-slop parenting</h2>
+      <p>Nye foreldre-apper som ser premium ut — ikke stock-photo + rundet-hjørne-slop.</p>
+    </div>
+    <div class="card-grid">
+
+      <article class="element-card">
+        <div class="mockup" style="background:#EDE4D6;">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Photo-hero">
+            <rect x="0" y="0" width="240" height="160" fill="#EDE4D6"/>
+            <rect x="0" y="0" width="240" height="90" fill="#B89B75"/>
+            <path d="M 0 90 Q 60 60 120 80 T 240 70 L 240 0 L 0 0 Z" fill="#8C7B6A" opacity="0.6"/>
+            <text x="20" y="120" style="font: 400 14px var(--serif); fill: #2B2522;">A gentle start.</text>
+            <text x="20" y="140" style="font: 500 8px var(--sans); fill: #6B6560; letter-spacing: 0.16em;">FIRST 90 DAYS · GUIDED</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Hers</p>
+          <p class="element-type">Photo-hero (uskarpt bilde-tone)</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Hero-foto med tekst-overlay — tone er hovedbeskjeden.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-cream">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Supplement-pack">
+            <rect x="0" y="0" width="240" height="160" fill="#F5EFE5"/>
+            <rect x="70" y="30" width="100" height="100" rx="6" fill="#F5C449"/>
+            <rect x="82" y="42" width="76" height="76" rx="4" fill="#FBF8F4"/>
+            <text x="120" y="82" style="font: 400 11px var(--serif); fill: #2B2522;" text-anchor="middle">Ro</text>
+            <text x="120" y="98" style="font: 500 6px var(--sans); fill: #6B6560; letter-spacing: 0.2em;" text-anchor="middle">NEW MOM · MONTH 01</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Ro</p>
+          <p class="element-type">Månedskasse-mock</p>
+          <p class="use-line"><strong>Til Babyora:</strong> «Utstyrspakke for måned 4» — kurert onboarding-startsett.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup" style="background:#FFE9E1;">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Community-card">
+            <rect x="20" y="18" width="200" height="124" rx="10" fill="#FBF8F4" stroke="#E5E1DA"/>
+            <circle cx="42" cy="40" r="10" fill="#E8A57A"/>
+            <circle cx="58" cy="40" r="10" fill="#B89B75"/>
+            <circle cx="74" cy="40" r="10" fill="#6B8E4E"/>
+            <text x="92" y="44" style="font: 500 9px var(--sans); fill: #2B2522;">3 moms nearby</text>
+            <text x="34" y="76" style="font: 400 13px var(--serif); fill: #2B2522;">Layering babies</text>
+            <text x="34" y="94" style="font: 500 9px var(--sans); fill: #6B6560;">in Oslo winter</text>
+            <rect x="34" y="108" width="80" height="22" rx="11" fill="#C0632F"/>
+            <text x="74" y="123" style="font: 500 9px var(--sans); fill: #FBF8F4;" text-anchor="middle">Join · 42</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Peanut</p>
+          <p class="element-type">Community-card</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Foreldre-fora rundt konkret tema (påkledning) med lokal linse.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-warm">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Sleep-recommendation">
+            <rect x="20" y="18" width="200" height="124" rx="10" fill="#FBF8F4" stroke="#E5E1DA"/>
+            <path d="M 34 74 Q 44 62 54 74 T 74 74 M 44 66 Q 54 54 64 66" fill="none" stroke="#7A9AB5" stroke-width="2" stroke-linecap="round"/>
+            <text x="98" y="52" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.16em;">NEXT WINDOW</text>
+            <text x="98" y="76" style="font: 400 18px var(--serif); fill: #2B2522;">19:12</text>
+            <text x="98" y="94" style="font: 500 9px var(--sans); fill: #C0632F;">Sleep · 1h 20m</text>
+            <line x1="34" y1="110" x2="204" y2="110" stroke="#E5E1DA"/>
+            <text x="34" y="128" style="font: 500 8px var(--sans); fill: #6B6560;">Log wake-up</text>
+            <text x="204" y="128" style="font: 500 8px var(--sans); fill: #C0632F;" text-anchor="end">Start &rarr;</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Huckleberry</p>
+          <p class="element-type">Sleep-recommendation-card</p>
+          <p class="use-line"><strong>Til Babyora:</strong> «Neste vær-sjekk 19:12» — proaktiv nudge, ikke bare passivt data.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-ink">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Cradlewise dashboard">
+            <rect x="20" y="18" width="200" height="124" rx="12" fill="#1D1A17"/>
+            <text x="34" y="42" style="font: 500 7px var(--sans); fill: #8C8377; letter-spacing: 0.16em;">TONIGHT</text>
+            <text x="34" y="72" style="font: 400 24px var(--serif); fill: #F5EFE5;">21°C</text>
+            <text x="34" y="90" style="font: 500 9px var(--sans); fill: #E8A57A;">Ideal sleep temp</text>
+            <g transform="translate(140 46)">
+              <circle r="24" fill="none" stroke="#3A362F" stroke-width="4"/>
+              <circle r="24" fill="none" stroke="#6B8E4E" stroke-width="4" stroke-dasharray="150" stroke-dashoffset="30" transform="rotate(-90)"/>
+              <text y="4" style="font: 500 10px var(--sans); fill: #F5EFE5;" text-anchor="middle">80%</text>
+            </g>
+            <line x1="34" y1="106" x2="204" y2="106" stroke="#3A362F"/>
+            <text x="34" y="126" style="font: 500 7px var(--sans); fill: #8C8377; letter-spacing: 0.14em;">2 LAYERS · MERINO BASE</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Cradlewise</p>
+          <p class="element-type">Dashboard, mørkt</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Natt-modus av hovedskjermen — dempet, sparer batteri, lav lysstyrke.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ 8. COMFORT ============ -->
+  <section class="category" data-cat="comfort" id="comfort">
+    <div class="category-header">
+      <p class="category-num">08</p>
+      <h2>Komfort / kropps-temperatur</h2>
+      <p>De nærmeste referansene: apper der målet er å regulere temperatur.</p>
+    </div>
+    <div class="card-grid">
+
+      <article class="element-card">
+        <div class="mockup" style="background:#EFEBE5;">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Termostat setpoint">
+            <circle cx="120" cy="80" r="66" fill="#FBF8F4" stroke="#D6D0C6" stroke-width="1.5"/>
+            <g stroke="#B89B75" stroke-width="1">
+              <line x1="120" y1="20" x2="120" y2="28"/>
+              <line x1="180" y1="80" x2="172" y2="80"/>
+              <line x1="120" y1="140" x2="120" y2="132"/>
+              <line x1="60" y1="80" x2="68" y2="80"/>
+            </g>
+            <text x="120" y="86" style="font: 400 34px var(--serif); fill: #2B2522;" text-anchor="middle">21</text>
+            <text x="152" y="76" style="font: 400 12px var(--serif); fill: #2B2522;">°</text>
+            <text x="120" y="106" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.2em;" text-anchor="middle">HEAT · SET</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Nest</p>
+          <p class="element-type">Setpoint-dial</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Roommet-inne-tempjustering — juster manuelt hvis appen bommer.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-ink">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Sleep-report">
+            <text x="24" y="30" style="font: 500 7px var(--sans); fill: #8C8377; letter-spacing: 0.16em;">SLEEP · TUE</text>
+            <text x="24" y="56" style="font: 400 22px var(--serif); fill: #F5EFE5;">7h 42m</text>
+            <text x="24" y="76" style="font: 500 9px var(--sans); fill: #6B8E4E;">Optimal</text>
+            <g transform="translate(24 90)">
+              <rect x="0" y="0" width="30" height="14" fill="#7A9AB5" opacity="0.4"/>
+              <rect x="30" y="0" width="60" height="14" fill="#7A9AB5" opacity="0.7"/>
+              <rect x="90" y="0" width="30" height="14" fill="#C0632F" opacity="0.7"/>
+              <rect x="120" y="0" width="50" height="14" fill="#7A9AB5" opacity="0.7"/>
+              <rect x="170" y="0" width="42" height="14" fill="#7A9AB5" opacity="0.4"/>
+            </g>
+            <g style="font: 500 6px var(--sans); fill: #8C8377; letter-spacing: 0.14em;" transform="translate(24 118)">
+              <text x="0" y="0">AWAKE</text>
+              <text x="50" y="0">LIGHT</text>
+              <text x="100" y="0">REM</text>
+              <text x="150" y="0">DEEP</text>
+            </g>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Oura</p>
+          <p class="element-type">Sleep-report-card</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Stacked-bar for temperatur-variasjon gjennom dagen.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup m-bg-black">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Eight sleep dashboard">
+            <rect x="20" y="20" width="200" height="60" rx="6" fill="#1D1A17"/>
+            <text x="34" y="42" style="font: 500 6px var(--sans); fill: #8C8377; letter-spacing: 0.14em;">POD 3</text>
+            <text x="34" y="66" style="font: 400 18px var(--serif); fill: #F5EFE5;">18°C  →  22°C</text>
+            <rect x="194" y="34" width="18" height="34" rx="4" fill="#C0632F"/>
+            <rect x="20" y="88" width="96" height="50" rx="6" fill="#1D1A17"/>
+            <text x="34" y="108" style="font: 500 6px var(--sans); fill: #8C8377; letter-spacing: 0.14em;">HRV</text>
+            <text x="34" y="126" style="font: 400 14px var(--serif); fill: #F5EFE5;">54ms</text>
+            <rect x="124" y="88" width="96" height="50" rx="6" fill="#1D1A17"/>
+            <text x="138" y="108" style="font: 500 6px var(--sans); fill: #8C8377; letter-spacing: 0.14em;">RECOVERY</text>
+            <text x="138" y="126" style="font: 400 14px var(--serif); fill: #F5EFE5;">83</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Eight Sleep</p>
+          <p class="element-type">Grid-dashboard</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Tre-tile grid: nåværende temp / trend / anbefaling.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup" style="background:#E6EBEE;">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Climate slider">
+            <text x="20" y="30" style="font: 500 7px var(--sans); fill: #6B6560; letter-spacing: 0.16em;">CLIMATE</text>
+            <text x="220" y="30" style="font: 500 9px var(--sans); fill: #2B2522;" text-anchor="end">21°C</text>
+            <rect x="20" y="52" width="200" height="6" rx="3" fill="#D6D0C6"/>
+            <rect x="20" y="52" width="120" height="6" rx="3" fill="#C0632F"/>
+            <circle cx="140" cy="55" r="10" fill="#FBF8F4" stroke="#C0632F" stroke-width="2"/>
+            <g style="font: 500 7px var(--sans); fill: #6B6560;">
+              <text x="20" y="80">Cool</text>
+              <text x="220" y="80" text-anchor="end">Warm</text>
+            </g>
+            <line x1="20" y1="102" x2="220" y2="102" stroke="#D6D0C6"/>
+            <text x="20" y="124" style="font: 500 8px var(--sans); fill: #2B2522;">Suggested</text>
+            <text x="220" y="124" style="font: 500 8px var(--sans); fill: #C0632F;" text-anchor="end">20.5°C</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Cove</p>
+          <p class="element-type">Climate-slider</p>
+          <p class="use-line"><strong>Til Babyora:</strong> Slider + «suggested»-verdi under — kan overstyre uten drama.</p>
+        </div>
+      </article>
+
+      <article class="element-card">
+        <div class="mockup" style="background:#F5F2ED;">
+          <svg viewBox="0 0 240 160" width="240" height="160" role="img" aria-label="Home-tile grid">
+            <rect x="20" y="18" width="94" height="60" rx="10" fill="#FBF8F4" stroke="#E5E1DA"/>
+            <circle cx="38" cy="36" r="7" fill="#C0632F"/>
+            <text x="34" y="66" style="font: 500 8px var(--sans); fill: #2B2522;">Nursery</text>
+            <text x="102" y="66" style="font: 500 8px var(--sans); fill: #6B6560;" text-anchor="end">21°</text>
+
+            <rect x="126" y="18" width="94" height="60" rx="10" fill="#FBF8F4" stroke="#E5E1DA"/>
+            <circle cx="144" cy="36" r="7" fill="#7A9AB5"/>
+            <text x="140" y="66" style="font: 500 8px var(--sans); fill: #2B2522;">Outside</text>
+            <text x="208" y="66" style="font: 500 8px var(--sans); fill: #6B6560;" text-anchor="end">7°</text>
+
+            <rect x="20" y="86" width="200" height="56" rx="10" fill="#2B2522"/>
+            <text x="36" y="108" style="font: 500 7px var(--sans); fill: #8C8377; letter-spacing: 0.16em;">FAVORITE SCENE</text>
+            <text x="36" y="130" style="font: 400 12px var(--serif); fill: #F5EFE5;">Bedtime</text>
+            <text x="204" y="122" style="font: 500 10px var(--sans); fill: #E8A57A;" text-anchor="end">▶</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <p class="source">Referanse: Apple Home</p>
+          <p class="element-type">Home-tile grid</p>
+          <p class="use-line"><strong>Til Babyora:</strong> «Rom for rom»-tiles: barnerom-temp + ute-temp side ved side.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+</main>
+
+<footer class="page-footer">
+  <p>Babyora Design 2026. Alle mini-mockups er stil-rekonstruksjoner i CSS/SVG. Ingen ekte varemerker gjengitt. Referanser er kun tekst-labels.</p>
+</footer>
+
+<script>
+  (function () {
+    var tabs = document.querySelectorAll('.filter-tab');
+    var sections = document.querySelectorAll('section.category');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var filter = tab.getAttribute('data-filter');
+        tabs.forEach(function (t) { t.setAttribute('aria-selected', t === tab ? 'true' : 'false'); });
+        sections.forEach(function (section) {
+          if (filter === 'all' || section.getAttribute('data-cat') === filter) {
+            section.classList.remove('is-hidden');
+          } else {
+            section.classList.add('is-hidden');
+          }
+        });
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

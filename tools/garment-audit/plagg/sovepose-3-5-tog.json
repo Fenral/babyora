@@ -1,0 +1,57 @@
+{
+  "claude": {
+    "id": "sovepose-3-5-tog",
+    "dbString": "sovepose 3.5 TOG",
+    "kategori": "ekstra-sovn",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Har komplett what+when i garment-info.ts (linje 269-272): what='Tykkeste sovepose (3.5 TOG) — for kalde rom.', when='Romtemperatur under 14 °C.'. Tone og lengde matcher søsken-soveposene (0.5/1.0/2.5/3.0-3.5 TOG) — samme korte mønster. Ikke en dedikert whyForGarment-gren: håndteres av den generiske id.startsWith('sovepose-')-grenen (linje 318-320) som alle soveposer deler. Det er funksjonelt riktig (samme begrunnelse passer alle TOG-nivå), men ikke en plagg-spesifikk gren. Trekk for manglende dedikert gren + 'under 14 °C' som ikke matcher noen faktisk engine-terskel (se mål 4)."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG funnet: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\sovepose-3-5-tog.png. db-strengen 'sovepose 3.5 TOG' er korrekt mappet til id 'sovepose-3-5-tog' i garment-illustrations.ts linje 93, og matcher eksakt strengen i tables.ts (soevn-bånd kald/frost/streng_frost/ekstrem). Navn/mapping er plausibelt og konsistent. Visuell dom utsatt til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 24,
+      "kommentar": "Seleksjon er pediatrisk forsvarlig og godt sikret. Plagget velges kun i kalde soverom (<5 °C i base, opp til <16 °C tillatt). Den kritiske beskyttelsen er CK-3 i conflicts.ts: maxTOGForRoom() tillater 3.5 TOG kun ved romtemp <16 °C, og nedjusterer automatisk (2.5 ved 16-20, 1.0 ved 21-23, 0.5 ved 24-25, fjernes helt ved >=26 °C). Dette forhindrer overoppheting/SIDS, i tråd med Lullaby Trust TOG-chart (LT-TOG) og AAP-2022. HB-1 fjerner hodeplagg, HB-2 fjerner tepper, HB-3 hindrer dobbel sovepose, HB-10 fjerner snorer — alle CRITICAL. Sovepose-først-prinsippet (ingen løse tepper) er korrekt forankret i AAP-2022/NHS/CDC-NICHD. Eneste lille svakhet: 3.5 TOG er kalibrert mot UK/AU-kilder (Lullaby Trust, ErgoPouch, HALO); for et faktisk norsk soverom <5 °C er det ekstremt kaldt og uvanlig — men anbefalingen er konservativ (varmere bag i kaldere rom) og dermed trygg. Ingen helsefarlig kontekst funnet; ingen web-søk nødvendig.",
+      "score_note": "trace under",
+      "trace": "ROOT: baseTable.soevn (tables.ts linje 144-187). 'sovepose 3.5 TOG' ligger i kategori 'ekstra' i 4 bånd: kald (0-4 °C, linje 167-171), frost (-7..-0, 172-176), streng_frost (177-181), ekstrem (182-186). Siden soevn tolker tempC som ROMtemperatur (linje 130-143), er kald-båndet (<5 °C rom) det eneste realistiske; frost/streng_frost/ekstrem er bevisst konservative duplikater for urealistiske rom-valg. Fullt antrekk i kald-bånd: langermet ullbody + ullsokker (innerst) + ull-pyjamas (mellomlag) + sovepose 3.5 TOG (ekstra). MODIFIERS (modifiers.ts linje 89-140): soevn hopper alle ute-modifikatorer; legger kun til neckCheck + safeSleep + coolRoom-note (<16 °C) + evt newbornBackSleep. Ingen lag-endring av soveposen. CONFLICTS (conflicts.ts): CK-3 (linje 96-119) er den styrende — kapper TOG mot maxTOGForRoom(romtemp): <16->3.5, 16-17->2.5, 18-20->2.5, 21-23->1.0, 24-25->0.5, >=26->fjernes. CK-4 fjerner hodeplagg, CK-1 fjerner teppe, CK-8 erstatter pyjamas v/>21 °C. SOFTBLOCKS (softBlocks.ts): SB-3 forcer minimal v/>=24 °C (kortermet body + 0.5 TOG) eller >=26 (kun body). SAFETY (safety.ts): HB-3 dedupe sovepose, HB-2 fjerner teppe, HB-1 fjerner hodeplagg — alle CRITICAL. Nettoresultat: 3.5 TOG overlever KUN ved romtemp <16 °C; ved varmere rom byttes/fjernes den automatisk.",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 17,
+      "kommentar": "DRIFT funnet mellom when-tekst og faktisk seleksjon. when sier 'Romtemperatur under 14 °C', men: (1) baseTable.soevn velger først 3.5 TOG i kald-båndet som starter <5 °C (kjolig-båndet 5-9 °C bruker 2.5 TOG, mild 10-15 °C bruker 2.5 TOG) — så base-logikken introduserer aldri 3.5 TOG mellom 5 og 14 °C; (2) CK-3 sin maxTOGForRoom tillater 3.5 TOG ved alt <16 °C. Tallet '14' samsvarer med INGEN faktisk engine-terskel (relevante terskler er 5 og 16). Søsken-plagget sovepose-3-0-3-5-tog sier 'under 16 °C' og sovepose-2-5-tog sier '16-18 °C' — så 3.5-TOG-teksten ('under 14') overlapper forvirrende med 3.0-3.5-teksten ('under 16') og lar gapet 14-16 °C være tvetydig. whyForGarment-grenen ('TOG-nivået matcher romtemperaturen rundt X °C') er derimot korrekt og trygg fordi den siterer faktisk feelsLike og CK-3 sikrer matchen. Drift er villedende for VALG av riktig bag, men ikke farlig (feiler mot for varm bag i et kaldt rom). Severity medium, ikke hoy, siden CK-3 uansett nedjusterer ved varmere rom."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "sovepose 3.5 TOG har INGEN oppføring i ITEM_ALTERNATIVES (alternatives.ts). Det finnes presedens: 'sovepose 1.0 TOG' har et tykkelse-trinn-alternativ ('sovepose 0.5 TOG', linje 126-134). Et naturlig og nyttig alternativ for 3.5 TOG ville vært nedtrinnet 'sovepose 3.0–3.5 TOG' eller '2.5 TOG' — slik at foreldre med rom akkurat over terskelen ser et lavere-TOG-valg (overoppheting er den dyrere feilen enn å fryse). Mangelen er medium, ikke kritisk, fordi CK-3 uansett tvangsnedjusterer TOG ved varmere rom — men et synlig alternativ ville styrket foreldrenes forståelse. Ull↔fleece/dun↔syntet er ikke relevant for sovepose (TOG er den meningsfulle aksen)."
+    },
+    "total": 85,
+    "verdikt": "Trygt og godt sikret plagg (CK-3 + HB-1/2/3/10 dekker overoppheting/SIDS/kvelning/strangulering solid). Hovedproblemet er tekst-drift: when-teksten 'under 14 °C' matcher ingen faktisk engine-terskel (relevante er <5 °C i base og <16 °C i CK-3) og overlapper forvirrende med søster-plagget sovepose-3.0-3.5 ('under 16 °C'). Sekundært mangler et tykkelse-trinn-alternativ som søsken 1.0 TOG har. Ingen helsefarlige funn.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "kilde": "tables.ts linje 144-187 (baseTable.soevn) + conflicts.ts linje 48-55/96-119 (CK-3 maxTOGForRoom)",
+        "beskrivelse": "when-tekst sier 'Romtemperatur under 14 °C', men baseTable introduserer 3.5 TOG først i kald-båndet (<5 °C rom; kjolig 5-9 °C og mild 10-15 °C bruker 2.5 TOG), og CK-3 tillater 3.5 TOG ved alt <16 °C. Tallet 14 samsvarer med ingen faktisk engine-terskel og overlapper forvirrende med søster-plagget sovepose-3-0-3-5-tog ('under 16 °C').",
+        "forslag": "Endre when til 'Romtemperatur under 16 °C' for å matche CK-3-terskelen og være konsistent med 3.0-3.5-søsteren, ELLER differensier de to bag-tekstene tydeligere (f.eks. 3.0-3.5 = 'kjølige rom 14-16 °C', 3.5 = 'kalde rom under 14 °C') og legg en tilsvarende kjolig/kald-terskel-distinksjon inn så base-tabellen faktisk skiller dem. NB: rør ikke selve TOG-tersklene i maxTOGForRoom — kun teksten."
+      },
+      {
+        "severity": "medium",
+        "mal": 5,
+        "kilde": "alternatives.ts linje 126-134 (presedens: sovepose 1.0 TOG har 0.5 TOG-alternativ)",
+        "beskrivelse": "sovepose 3.5 TOG har ingen oppføring i ITEM_ALTERNATIVES, til tross for at sovepose 1.0 TOG har et tykkelse-trinn-alternativ. Foreldre ser dermed ikke et lavere-TOG-valg for rom akkurat over terskelen, der overoppheting er den dyrere feilen.",
+        "forslag": "Legg til en ITEM_ALTERNATIVES-oppføring for 'sovepose 3.5 TOG' med nedtrinn-alternativ 'sovepose 3.0–3.5 TOG' (eller '2.5 TOG'), med whenKey/whyPrimaryKey i samme i18n-mønster som sovepose05-oppføringen. Begrunn primær (3.5) med kaldt rom, alternativ med rom nær øvre terskel."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "kilde": "garment-info.ts linje 308-331 (whyForGarment soevn-gren)",
+        "beskrivelse": "Plagget har ikke en dedikert whyForGarment-gren; det deler den generiske id.startsWith('sovepose-')-grenen med alle andre soveposer. Funksjonelt korrekt, men ikke plagg-spesifikt.",
+        "forslag": "Valgfritt: behold delt gren (begrunnelsen er identisk-passende for alle TOG-nivå). Hvis differensiering ønskes senere, kan grenen nevne at 3.5 TOG er det varmeste trinnet og krever ekstra nakke-sjekk."
+      }
+    ]
+  },
+  "fable": null
+}

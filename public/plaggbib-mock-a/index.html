@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Plaggbiblioteket — Mock A · Babyora</title>
+
+  <!-- Fonts: DM Serif for editorial temp/meta · Schibsted Grotesk for UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ─── Tokens ─────────────────────────────────────────────────────────── */
+    :root {
+      /* Brand */
+      --bg-canvas:        #DBD8D2;     /* warm-grey base                     */
+      --bg-elevated:      #F2EFE9;     /* card / row tint                    */
+      --bg-row-alt:       #E8E4DD;     /* hairline-divider companion          */
+      --ink-900:          #1F1B17;
+      --ink-700:          #3B342C;
+      --ink-500:          #6B6258;
+      --ink-400:          #8C8378;
+      --ink-300:          #B0A89D;
+      --hairline:         rgba(31,27,23,.08);
+      --hairline-strong:  rgba(31,27,23,.14);
+
+      /* Warm orange CTA + accents */
+      --orange-700:       #C44A1C;
+      --orange-600:       #E25A24;
+      --orange-500:       #FF6B35;
+      --orange-200:       #FFD8C5;
+      --orange-50:        #FFF1E9;
+
+      /* Material accents (filter dots) */
+      --wool:             #8A6B3B;     /* ull                                */
+      --cotton:           #6F8B72;     /* bomull                             */
+      --waterproof:       #3F6A8E;     /* vanntett                           */
+
+      /* Type */
+      --font-serif:       'DM Serif Display', 'Times New Roman', serif;
+      --font-sans:        'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+      /* Motion */
+      --ease:             cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      color: var(--ink-900);
+      background: #0a0a0a;                /* outside-of-phone neutral        */
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      padding: 24px 12px 40px;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* ─── iPhone 390 × 844 frame (mock chrome) ───────────────────────────── */
+    .device {
+      width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      background: var(--bg-canvas);
+      box-shadow:
+        0 0 0 10px #111,
+        0 0 0 12px #2a2a2a,
+        0 30px 80px rgba(0,0,0,.5);
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+    }
+
+    /* iOS-status bar mock */
+    .status-bar {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 54px;
+      padding: 16px 32px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink-900);
+      z-index: 50;
+      pointer-events: none;
+    }
+    .status-bar .right {
+      display: flex; gap: 6px; align-items: center;
+    }
+
+    /* Dynamic-island spacer */
+    .island {
+      position: absolute;
+      top: 11px; left: 50%;
+      transform: translateX(-50%);
+      width: 124px; height: 36px;
+      background: #111;
+      border-radius: 999px;
+      z-index: 60;
+    }
+
+    /* ─── Screen ──────────────────────────────────────────────────────────── */
+    main.screen {
+      position: absolute;
+      inset: 0;
+      padding-top: max(env(safe-area-inset-top, 0px), 54px);
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 18px);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-canvas);
+      overflow: hidden;
+    }
+
+    /* sr-only */
+    .sr-only {
+      position: absolute !important;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* ─── Header ─────────────────────────────────────────────────────────── */
+    .topbar {
+      flex: none;
+      padding: 4px 18px 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .back-btn {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid var(--hairline);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+      color: var(--ink-900);
+      transition: background 120ms var(--ease), transform 120ms var(--ease);
+    }
+    .back-btn:active { background: rgba(255,255,255,.85); transform: scale(.96); }
+    .back-btn:focus-visible {
+      outline: 2px solid var(--orange-500);
+      outline-offset: 2px;
+    }
+
+    .eyebrow {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .eyebrow-meta {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--ink-500);
+      letter-spacing: .1px;
+      line-height: 1.1;
+    }
+    .eyebrow-meta .dot {
+      display: inline-block;
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: var(--ink-400);
+      vertical-align: middle;
+      margin: 0 6px;
+    }
+    .topbar-action {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid transparent;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+      color: var(--ink-700);
+    }
+    .topbar-action:active { background: rgba(255,255,255,.4); }
+
+    /* ─── Display title (editorial) ──────────────────────────────────────── */
+    .display {
+      flex: none;
+      padding: 2px 20px 8px;
+    }
+    .display h2 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 32px;
+      line-height: 1.05;
+      letter-spacing: -.5px;
+      margin: 0;
+      color: var(--ink-900);
+    }
+    .display .count {
+      display: inline-block;
+      margin-left: 8px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-400);
+      vertical-align: 8px;
+      letter-spacing: .2px;
+    }
+
+    /* ─── Search ─────────────────────────────────────────────────────────── */
+    .search-wrap {
+      flex: none;
+      padding: 8px 16px 6px;
+    }
+    .search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid var(--hairline);
+      min-height: 44px;
+    }
+    .search input {
+      flex: 1;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      font: 500 14.5px var(--font-sans);
+      color: var(--ink-900);
+      min-width: 0;
+    }
+    .search input::placeholder { color: var(--ink-400); font-weight: 500; }
+    .search .kbd {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 6px;
+      border-radius: 6px;
+      background: rgba(31,27,23,.06);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-500);
+    }
+
+    /* ─── Filter chip row ────────────────────────────────────────────────── */
+    nav.filters {
+      flex: none;
+      padding: 8px 0 10px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+    }
+    nav.filters::-webkit-scrollbar { display: none; }
+
+    nav.filters ul {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px;
+      margin: 0;
+      list-style: none;
+      width: max-content;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.5);
+      border: 1px solid var(--hairline);
+      font: 500 13px var(--font-sans);
+      color: var(--ink-700);
+      cursor: pointer;
+      min-height: 32px;
+      white-space: nowrap;
+      transition: background 120ms var(--ease), color 120ms var(--ease), border-color 120ms var(--ease);
+    }
+    .chip:active { background: rgba(255,255,255,.85); }
+    .chip[aria-pressed="true"] {
+      background: var(--ink-900);
+      color: #fff;
+      border-color: var(--ink-900);
+    }
+    .chip .swatch {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--ink-300);
+    }
+    .chip[data-mat="ull"]      .swatch { background: var(--wool); }
+    .chip[data-mat="bomull"]   .swatch { background: var(--cotton); }
+    .chip[data-mat="vanntett"] .swatch { background: var(--waterproof); }
+    .chip[aria-pressed="true"] .swatch { box-shadow: 0 0 0 2px rgba(255,255,255,.25); }
+
+    /* ─── Section header (group label) ───────────────────────────────────── */
+    .group-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 14px 18px 6px;
+    }
+    .group-head h3 {
+      font: 600 11px var(--font-sans);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--ink-500);
+      margin: 0;
+    }
+    .group-head .group-count {
+      font: 500 11px var(--font-sans);
+      letter-spacing: .4px;
+      color: var(--ink-400);
+    }
+
+    /* ─── Scroll area ────────────────────────────────────────────────────── */
+    .scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .scroll::-webkit-scrollbar { display: none; }
+    .scroll { scrollbar-width: none; }
+
+    /* ─── 2-col grid with hairline divider (GOAT-pattern) ────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border-top: 1px solid var(--hairline);
+    }
+    .grid li {
+      border-right: 1px solid var(--hairline);
+      border-bottom: 1px solid var(--hairline);
+      background: var(--bg-canvas);
+    }
+    .grid li:nth-child(2n) { border-right: 0; }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      padding: 12px 12px 14px;
+      background: transparent;
+      border: 0;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      color: inherit;
+      transition: background 120ms var(--ease);
+    }
+    .card:active { background: rgba(255,255,255,.5); }
+    .card:focus-visible {
+      outline: 2px solid var(--orange-500);
+      outline-offset: -3px;
+      border-radius: 4px;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 30px;
+    }
+    .card-title {
+      font: 600 14px var(--font-sans);
+      line-height: 1.25;
+      letter-spacing: -.1px;
+      color: var(--ink-900);
+      margin: 0;
+      /* clamp to 2 lines */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .tog-pill {
+      flex: none;
+      font: 600 10.5px var(--font-sans);
+      letter-spacing: .3px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: var(--orange-50);
+      color: var(--orange-700);
+      border: 1px solid var(--orange-200);
+      white-space: nowrap;
+    }
+    .tog-pill.cool {
+      background: rgba(63,106,142,.10);
+      color: #2A4D6A;
+      border-color: rgba(63,106,142,.22);
+    }
+    .tog-pill.warm {
+      background: rgba(138,107,59,.12);
+      color: #6B4F25;
+      border-color: rgba(138,107,59,.28);
+    }
+
+    .thumb {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      margin: 10px 0 12px;
+      border-radius: 14px;
+      background:
+        radial-gradient(120% 80% at 50% 18%, rgba(255,255,255,.85), rgba(255,255,255,0) 70%),
+        linear-gradient(180deg, #F2EFE9 0%, #E8E4DD 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--hairline);
+    }
+    .thumb img {
+      width: 78%;
+      height: 78%;
+      object-fit: contain;
+      display: block;
+    }
+    /* emoji fallback */
+    .thumb .emoji {
+      font-size: 56px;
+      line-height: 1;
+      filter: drop-shadow(0 4px 10px rgba(31,27,23,.08));
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font: 500 12px var(--font-sans);
+      color: var(--ink-500);
+      letter-spacing: .1px;
+    }
+    .mat-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--ink-300);
+      flex: none;
+    }
+    .mat-dot.ull      { background: var(--wool); }
+    .mat-dot.bomull   { background: var(--cotton); }
+    .mat-dot.vanntett { background: var(--waterproof); }
+
+    .card-meta .sep {
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      background: var(--ink-300);
+    }
+    .card-meta .size {
+      font-weight: 500;
+      color: var(--ink-400);
+    }
+
+    /* ─── Floating CTA: Legg til plagg ───────────────────────────────────── */
+    .fab-wrap {
+      position: absolute;
+      left: 0; right: 0;
+      bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+      display: flex;
+      justify-content: center;
+      padding: 0 20px;
+      z-index: 40;
+      pointer-events: none;
+    }
+    .fab {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 22px 14px 18px;
+      border-radius: 999px;
+      background: var(--orange-500);
+      color: #fff;
+      font: 600 15px var(--font-sans);
+      letter-spacing: .1px;
+      border: 0;
+      cursor: pointer;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.4) inset,
+        0 8px 22px rgba(255,107,53,.42),
+        0 2px 4px rgba(31,27,23,.12);
+      transition: transform 140ms var(--ease), box-shadow 140ms var(--ease);
+    }
+    .fab:active {
+      transform: translateY(1px) scale(.985);
+      box-shadow:
+        0 0 0 rgba(255,255,255,.4) inset,
+        0 4px 12px rgba(255,107,53,.36);
+    }
+    .fab:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 3px;
+      box-shadow:
+        0 0 0 4px var(--orange-500),
+        0 8px 22px rgba(255,107,53,.42);
+    }
+    .fab svg { display: block; }
+
+    /* fade-mask above FAB so list doesn't run hard into button */
+    .scroll-fade {
+      position: absolute;
+      left: 0; right: 0;
+      bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+      height: 96px;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(219,216,210,0) 0%, var(--bg-canvas) 70%);
+      z-index: 30;
+    }
+
+    /* ─── Reduced motion ─────────────────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="device" aria-label="iPhone 390 × 844 mock">
+    <div class="island" aria-hidden="true"></div>
+
+    <div class="status-bar" aria-hidden="true">
+      <span>9:41</span>
+      <span class="right">
+        <!-- signal -->
+        <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0"  y="6" width="3" height="5" rx="1"/><rect x="4"  y="4" width="3" height="7" rx="1"/><rect x="8"  y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg>
+        <!-- wifi -->
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 11l2.2-2.8a3 3 0 0 0-4.4 0L8 11Zm0-4.2c1.6 0 3 .6 4 1.6l1.7-2.1A8.5 8.5 0 0 0 8 4.3c-2.2 0-4.2.8-5.7 2L4 8.4a5.7 5.7 0 0 1 4-1.6Zm0-4.3c2.7 0 5.2 1 7 2.7L16.7 3A11.4 11.4 0 0 0 8 0 11.4 11.4 0 0 0-.7 3L1 5.2A10 10 0 0 1 8 2.5Z"/></svg>
+        <!-- battery -->
+        <svg width="26" height="11" viewBox="0 0 26 11" fill="none"><rect x=".5" y=".5" width="22" height="10" rx="2.5" stroke="currentColor"/><rect x="23.5" y="3.5" width="1.5" height="4" rx=".7" fill="currentColor"/><rect x="2"  y="2"  width="19" height="7" rx="1.3" fill="currentColor"/></svg>
+      </span>
+    </div>
+
+    <main class="screen" aria-labelledby="plaggbib-h1">
+      <h1 id="plaggbib-h1" class="sr-only">Plaggbiblioteket</h1>
+
+      <!-- Top bar -->
+      <div class="topbar">
+        <button class="back-btn" type="button" aria-label="Tilbake">
+          <svg width="9" height="15" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M7 1L1 7l6 6"/>
+          </svg>
+        </button>
+
+        <div class="eyebrow">
+          <span class="eyebrow-meta">
+            <em>Oslo</em><span class="dot"></span><em>12°, lett vind</em><span class="dot"></span><em>49 plagg</em>
+          </span>
+        </div>
+
+        <button class="topbar-action" type="button" aria-label="Sorter">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 6h13M3 12h9M3 18h5"/>
+            <path d="M18 9V3m0 0-3 3m3-3 3 3"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Editorial display title -->
+      <header class="display">
+        <h2>Plaggbiblioteket <span class="count">49</span></h2>
+      </header>
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <div class="search" role="search">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(31,27,23,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="M20 20l-3.5-3.5"/>
+          </svg>
+          <input type="search" placeholder="Søk i plagg" aria-label="Søk i plagg" autocomplete="off" spellcheck="false" inputmode="search" enterkeyhint="search" />
+          <span class="kbd" aria-hidden="true">⌘K</span>
+        </div>
+      </div>
+
+      <!-- Filter chips (scroll-x) -->
+      <nav class="filters" aria-label="Filtrer plagg">
+        <ul role="list">
+          <li><button class="chip" type="button" aria-pressed="true">Alle</button></li>
+          <li><button class="chip" type="button" aria-pressed="false" data-mat="ull"><span class="swatch" aria-hidden="true"></span>Ull</button></li>
+          <li><button class="chip" type="button" aria-pressed="false" data-mat="bomull"><span class="swatch" aria-hidden="true"></span>Bomull</button></li>
+          <li><button class="chip" type="button" aria-pressed="false" data-mat="vanntett"><span class="swatch" aria-hidden="true"></span>Vanntett</button></li>
+          <li><button class="chip" type="button" aria-pressed="false">Mellomlag</button></li>
+          <li><button class="chip" type="button" aria-pressed="false">Sove</button></li>
+          <li><button class="chip" type="button" aria-pressed="false">Vinter</button></li>
+        </ul>
+      </nav>
+
+      <!-- Scroll list -->
+      <div class="scroll">
+
+        <!-- GROUP 1: Innerlag -->
+        <div class="group-head">
+          <h3>Innerlag</h3>
+          <span class="group-count">8 plagg</span>
+        </div>
+        <ul class="grid" role="list" aria-label="Innerlag">
+          <li>
+            <button class="card" type="button" aria-label="Langermet ullbody, ull, str 80, 1.6 TOG">
+              <div class="card-top">
+                <p class="card-title">Langermet ullbody</p>
+                <span class="tog-pill warm">1.6 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/langermet-ullbody.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'🧣'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot ull" aria-hidden="true"></span>
+                <span>Ull</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="card" type="button" aria-label="Kortermet body, bomull, str 80, 0.8 TOG">
+              <div class="card-top">
+                <p class="card-title">Kortermet body</p>
+                <span class="tog-pill cool">0.8 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/kortermet-body.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'👕'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot bomull" aria-hidden="true"></span>
+                <span>Bomull</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="card" type="button" aria-label="Tynn ullbody langermet, ull, str 80, 1.0 TOG">
+              <div class="card-top">
+                <p class="card-title">Tynn ullbody, langermet</p>
+                <span class="tog-pill warm">1.0 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/langermet-ullbody-tynn.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'👶'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot ull" aria-hidden="true"></span>
+                <span>Ull</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="card" type="button" aria-label="Langermet body, bomull, str 80, 0.9 TOG">
+              <div class="card-top">
+                <p class="card-title">Langermet body</p>
+                <span class="tog-pill cool">0.9 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/langermet-body.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'🧦'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot bomull" aria-hidden="true"></span>
+                <span>Bomull</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+        </ul>
+
+        <!-- GROUP 2: Mellomlag -->
+        <div class="group-head">
+          <h3>Mellomlag</h3>
+          <span class="group-count">5 plagg</span>
+        </div>
+        <ul class="grid" role="list" aria-label="Mellomlag">
+          <li>
+            <button class="card" type="button" aria-label="Ull mellomlag, tykt, ull, str 80, 2.4 TOG">
+              <div class="card-top">
+                <p class="card-title">Ull mellomlag, tykt</p>
+                <span class="tog-pill">2.4 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/ull-mellomlag-tykt.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'🧥'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot ull" aria-hidden="true"></span>
+                <span>Ull</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="card" type="button" aria-label="Tynn ull-mellomlag, ull, str 80, 1.4 TOG">
+              <div class="card-top">
+                <p class="card-title">Tynn ull-mellomlag</p>
+                <span class="tog-pill warm">1.4 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/tynn-ull-mellomlag.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'🥼'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot ull" aria-hidden="true"></span>
+                <span>Ull</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="card" type="button" aria-label="Ullsett, tynt, ull, str 80, 1.8 TOG">
+              <div class="card-top">
+                <p class="card-title">Ullsett, tynt</p>
+                <span class="tog-pill warm">1.8 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/ullsett-tynt.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'🧶'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot ull" aria-hidden="true"></span>
+                <span>Ull</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="card" type="button" aria-label="Ullsett, tykt, ull, str 80, 2.6 TOG">
+              <div class="card-top">
+                <p class="card-title">Ullsett, tykt</p>
+                <span class="tog-pill">2.6 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/ullsett-tykt.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'🐑'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot ull" aria-hidden="true"></span>
+                <span>Ull</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+        </ul>
+
+        <!-- GROUP 3: Ytterlag -->
+        <div class="group-head">
+          <h3>Ytterlag</h3>
+          <span class="group-count">4 plagg</span>
+        </div>
+        <ul class="grid" role="list" aria-label="Ytterlag">
+          <li>
+            <button class="card" type="button" aria-label="Vindtett skall, vanntett, str 80, 0.6 TOG">
+              <div class="card-top">
+                <p class="card-title">Vindtett skall</p>
+                <span class="tog-pill cool">0.6 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/vindtett-skall.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'🧥'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot vanntett" aria-hidden="true"></span>
+                <span>Vanntett</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="card" type="button" aria-label="Regntøy skall, vanntett, str 80, 0.5 TOG">
+              <div class="card-top">
+                <p class="card-title">Regntøy skall</p>
+                <span class="tog-pill cool">0.5 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/regntoy-skall.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'🌧'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot vanntett" aria-hidden="true"></span>
+                <span>Vanntett</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="card" type="button" aria-label="Kjøredress, ull og skall, str 80, 3.2 TOG">
+              <div class="card-top">
+                <p class="card-title">Kjøredress</p>
+                <span class="tog-pill">3.2 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/kjoredress.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'🧸'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot vanntett" aria-hidden="true"></span>
+                <span>Skall + ull</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="card" type="button" aria-label="Lett kjøredress, str 80, 2.0 TOG">
+              <div class="card-top">
+                <p class="card-title">Lett kjøredress</p>
+                <span class="tog-pill warm">2.0 TOG</span>
+              </div>
+              <div class="thumb"><img src="/illustrations/garments/lett-kjoredress.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'emoji',textContent:'🧸'}))"/></div>
+              <div class="card-meta">
+                <span class="mat-dot ull" aria-hidden="true"></span>
+                <span>Ull + skall</span>
+                <span class="sep" aria-hidden="true"></span>
+                <span class="size">str 80</span>
+              </div>
+            </button>
+          </li>
+        </ul>
+
+        <!-- Bottom padding so siste rad ikke krasjer i FAB -->
+        <div style="height: 120px;" aria-hidden="true"></div>
+      </div>
+
+      <div class="scroll-fade" aria-hidden="true"></div>
+
+      <!-- Floating CTA -->
+      <div class="fab-wrap">
+        <button class="fab" type="button" aria-label="Legg til nytt plagg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span>Legg til plagg</span>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Lightweight chip toggle — only single-select for this static mock
+    (function () {
+      const chips = document.querySelectorAll('.chip');
+      chips.forEach((c) => {
+        c.addEventListener('click', () => {
+          chips.forEach((x) => x.setAttribute('aria-pressed', 'false'));
+          c.setAttribute('aria-pressed', 'true');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

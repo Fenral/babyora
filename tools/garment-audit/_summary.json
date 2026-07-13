@@ -1,0 +1,240 @@
+{
+  "summary": {
+    "plagg": 60,
+    "snittTotal": "85.3",
+    "snittPerMaal": {
+      "struktur": "17.6",
+      "utseende": "19.0",
+      "seleksjon": "21.5",
+      "tekstLogikk": "19.3",
+      "alternativer": "8.0"
+    },
+    "funnCounts": {
+      "kritisk": 0,
+      "hoy": 24,
+      "medium": 36,
+      "lav": 117
+    },
+    "lavesteTotal": [
+      {
+        "id": "tynt-teppe",
+        "total": 67
+      },
+      {
+        "id": "sovepose-2-5-tog",
+        "total": 70
+      },
+      {
+        "id": "vinterkjoredress",
+        "total": 71
+      },
+      {
+        "id": "sovepose-3-0-3-5-tog",
+        "total": 74
+      },
+      {
+        "id": "to-ullsett",
+        "total": 75
+      },
+      {
+        "id": "sovepose-1-0-tog",
+        "total": 77
+      },
+      {
+        "id": "sauekinn-i-vogn",
+        "total": 78
+      },
+      {
+        "id": "tynn-pyjamas",
+        "total": 80
+      },
+      {
+        "id": "pyjamas",
+        "total": 80
+      },
+      {
+        "id": "bleie",
+        "total": 81
+      },
+      {
+        "id": "ansiktskrem",
+        "total": 81
+      },
+      {
+        "id": "lett-bukse",
+        "total": 82
+      }
+    ]
+  },
+  "kritisk": [],
+  "hoy": [
+    {
+      "id": "langermet-ullbody",
+      "mal": 4,
+      "beskrivelse": "Tekst-drift: garment-info.ts `when` (linje 35) sier 'Hele aret — alene paa varme dager, eller som forste lag under mellomlag og yttertoy.' Men baseTable velger ALDRI full 'langermet ullbody' alene i varme/tropiske band — der brukes 'kortermet ullbody' eller den tynne varianten 'langermet ullbody tynn'. Full ullbody velges kun i bæresele.mild (10-15 C) og soevn ved kalde rom (<=4 C). 'Alene paa varme dager' kan villede en forelder til aa kle barnet for varmt.",
+      "forslag": "Endre `when` til aa speile faktisk seleksjon, f.eks.: 'Forste lag i baeresele paa milde dager (ca 10-15 C), og som inner lag under pyjamas/sovepose ved kalde soverom. Paa varme dager: velg heller tynn ullbody eller kortermet.' Roer ALDRI selve baseTable-tersklene — kun teksten justeres.",
+      "kilde": "aap-healthychildren (one-layer-more-than-adult); baseTable baeresele.mild + soevn.kald"
+    },
+    {
+      "id": "ullsett-tynt",
+      "mal": 4,
+      "beskrivelse": "`when` sier 'Ute fra ca 8-14 grader' men baseTable velger plagget fra 0 grader (baeresele.kald) til ~15.9 grader (mild-bandets topp). Nedre kant (0-7.9) og ovre kant (15-15.9) er utenfor oppgitt tekst. Andre setnings-ledd 'som lag under yttertoy i kjolige forhold' redder kjolig-bandet, men ikke baeresele.kald (0-4.9 grader).",
+      "forslag": "Juster `when` til a speile reelt spenn, f.eks. 'Ute fra ca 0-16 grader avhengig av aktivitet — alene i mildt vaer, eller som lag under yttertoy i kjolig/kald baeresele.' Ror ALDRI selve terskel-tallene i tables.ts; kun tekst-justering.",
+      "kilde": "garment-info.ts linje 43 vs tables.ts (baeresele.kald linje 100, mild/kjolig-band)"
+    },
+    {
+      "id": "to-ullsett",
+      "mal": 4,
+      "beskrivelse": "when-teksten ('Streng frost og lavere') antyder at to ullsett brukes fra streng_frost-bandet (-15 til -8 grader), men CK-6 i conflicts.ts nedgraderer plagget til 'ullsett tykt' for alt varmere enn -15 grader, og CK-6-meldingen sier selv 'forbeholdt ekstrem frost (<=-15 grader)'. Teksten kan villede foreldre til a tro dobbel ull-base er riktig allerede ved -8 til -14 grader.",
+      "forslag": "Juster when-teksten til a matche faktisk terskel, f.eks. 'Kun ved ekstrem frost (-15 grader og kaldere) — nar enkel ull ikke holder.' Ror IKKE selve -15-terskelen i CK-6; kun teksten skal endres for a stemme med logikken.",
+      "kilde": "conflicts.ts CK-6 (linje 139-149); bandForTemp tables.ts (linje 16-17)"
+    },
+    {
+      "id": "lett-bukse",
+      "mal": 4,
+      "beskrivelse": "Tekst-drift: 'when' sier 'Milde sommerdager og tidlig høst', men baseTable velger lett-bukse KUN i 'varm'-båndet (16-21 °C felt-temp), ikke i 'mild'-båndet (10-15 °C, der ullsett velges i stedet). Ordet 'mild' kolliderer med systemets eget band-navn og 'tidlig høst' i Norge ligger typisk under 16 °C. Risiko: forelder kler barnet i ren bomullsbukse på en 11-14 °C dag der appen egentlig ville anbefalt ullsett.",
+      "forslag": "Endre 'when'-teksten til å speile faktisk seleksjon, f.eks.: 'Varme dager ute fra ca 16 °C — som lett underdel når det ikke er behov for ull-isolasjon.' Unngå systemordet 'mild' og 'tidlig høst' siden de impliserer kjøligere bånd. (Tekst-endring kun, ingen terskler røres.)",
+      "kilde": "Intern: tables.ts bandForTemp l.10-11 + baseTable.utelek.varm l.195"
+    },
+    {
+      "id": "tynn-bukse",
+      "mal": 4,
+      "beskrivelse": "when-teksten sier 'Som mellomlag paa milde dager med yttertoy.' men ingen av de tre seleksjons-cellene (vogn.varm, baeresele.varm, baeresele.mild) inneholder yttertoy-lag. Plagget velges dessuten i baade varm-baandet (16-21 C) og mild-baandet (10-15 C), ikke kun 'milde dager'. Dette villeder forelderen til aa tro at et ytre skall hoerer med.",
+      "forslag": "Endre when til noe som: 'Som mellomlag i milde til varme forhold (ca 10-21 C) i vogn eller baeresele — vanligvis uten yttertoy.' (Roer ALDRI tabell-terskler; kun teksten justeres.)",
+      "kilde": "tables.ts vogn.varm/baeresele.varm/baeresele.mild vs garment-info.ts linje 76-77"
+    },
+    {
+      "id": "ull-jakke",
+      "mal": 4,
+      "beskrivelse": "Drift mellom when-tekst og seleksjon: garment-info.ts:93 sier ull-jakke brukes 'alene på milde høstdager', men trace viser at plagget aldri velges i mild-båndet (10-15 °C). Warmeste faktiske treff er utelek/kjolig (5-9 °C feels), og der aldri alene (alltid med ull-bukse, + vindtett skall ved vind). Alle andre treff er frost og kaldere under skall. 'Alene på milde høstdager' kan føre til underkledning.",
+      "forslag": "Endre when til å speile faktisk bruk, f.eks.: 'Som ekstra isolasjons-mellomlag under skall i kjølig til streng frost — sjelden alene.' (Tall/terskler skal ikke endres, kun teksten.)",
+      "kilde": "aap-healthychildren"
+    },
+    {
+      "id": "tynn-pyjamas",
+      "mal": 4,
+      "beskrivelse": "when-teksten driver mot faktisk seleksjon: garment-info.ts L101 sier 'Varme rom (>22 °C) i kombinasjon med sovepose lett', men baseTable.soevn.varm (tables.ts L152-156) velger tynn-pyjamas ved romtemp 16-21 °C sammen med sovepose 2.5 TOG. Ved >22 °C gir motoren i stedet kortermet body + 1.0 TOG, og CK-8 (conflicts.ts L155-172) fjerner pyjamas helt over 21 °C. when sier altså nær det motsatte av motorens oppførsel — både feil temp-vindu og feil sovepose-TOG.",
+      "forslag": "Endre when til å speile trace, f.eks.: 'Milde soverom (ca 16-21 °C) som mellomlag under sovepose 2.5 TOG.' Rør ikke tallene i tables.ts/conflicts.ts — kun info-teksten skal justeres for å matche motoren.",
+      "kilde": "halo-tog (TOG vs romtemp), tables.ts soevn-kommentar L132-142"
+    },
+    {
+      "id": "pyjamas",
+      "mal": 4,
+      "beskrivelse": "when-tekst i garment-info.ts (L105) sier 'Romtemperatur 18-21 grC med sovepose ca 1.0 TOG', men baseTable.soevn velger pyjamas ved romtemp 5-15 grC (mild+kjolig) med sovepose 2.5 TOG. Ved 18-21 grC velges faktisk tynn-pyjamas, ikke pyjamas. Teksten beskriver et varmere rom og lettere sovepose enn motoren bruker -> forelder kan underforberede barnet for kjoligere rom.",
+      "forslag": "Endre when-teksten til aa matche faktisk band, f.eks.: 'Romtemperatur 5-15 grC (kjolig til mildt rom) som mellomlag under sovepose 2.5 TOG.' (RØR IKKE tabell-tall -- kun tekst.)",
+      "kilde": "halo-tog (TOG per romtemp); ergopouch-guide (2.5 TOG-trinn); kommentar i tables.ts L135-138"
+    },
+    {
+      "id": "ull-pyjamas",
+      "mal": 4,
+      "beskrivelse": "Drift mellom when-tekst og baseTable: garment-info.ts linje 109 sier ull-pyjamas brukes ved 'Kjølige rom (<18 °C)', men tabellen velger den faktisk kun i bånd under 5 °C (kald/frost/streng_frost/ekstrem). Ved 5-17 °C rom gir motoren vanlig 'pyjamas'. Teksten overdriver bruksområdet med ~13 grader og kan villede foreldre til for varmt nattøy ved milde rom.",
+      "forslag": "Juster when-teksten til å matche faktisk bånd-grense, f.eks. 'Kalde soverom (under ca 5 °C) — sjelden nødvendig i et normalt oppvarmet rom.' Rør ikke selve terskelen i tables.ts; kun teksten skal kalibreres.",
+      "kilde": "tables.ts soevn-bånd linje 144-187 + garment-info.ts linje 109"
+    },
+    {
+      "id": "kjoredress",
+      "mal": 4,
+      "beskrivelse": "when-teksten i garment-info.ts (linje 119) sier 'Kjølige dager i vogn fra ca 0-8 °C', men baseTable velger kjøredress i vogn kun i kjolig-båndet 5-9 °C (feelsLikeC>=5 && <10). 0-4 °C (kald-bånd) bruker vinterkjøredress. Teksten lover dermed dekning ned til 0 °C som motoren ikke gir, og overlapper feilaktig vinterkjøredress sitt temperaturrevir.",
+      "forslag": "Endre when til å matche trace, f.eks. 'Kjølige dager i vogn fra ca 5-9 °C, eller i bæresele ned mot frost.' Rør ALDRI selve tersklene i tables.ts — kun teksten skal justeres til å speile motoren.",
+      "kilde": "tables.ts baseTable.vogn.kjolig + bandForTemp (kjolig: 5-9 °C); garment-info.ts linje 119"
+    },
+    {
+      "id": "vinterkjoredress",
+      "mal": 2,
+      "beskrivelse": "PNG-illustrasjonsfila public/illustrations/garments/vinterkjoredress.png finnes ikke. Mappen inneholder 28+ andre plagg-PNG-er, men verken vinterkjoredress.png eller vinterkjoredress-isolert.png. UI vil vise placeholder/broken image for et kjerne-vinterplagg.",
+      "forslag": "Generer og legg inn vinterkjoredress.png (og vinterkjoredress-isolert.png) i samme stil/oppløsning som kjoredress.png og lett-kjoredress.png. Mapping i garment-illustrations.ts er allerede korrekt, så kun fila mangler.",
+      "kilde": "public/illustrations/garments/ (filliste) + garment-illustrations.ts L46-47"
+    },
+    {
+      "id": "vinterkjoredress",
+      "mal": 4,
+      "beskrivelse": "when-teksten ('Frost-dager i vogn fra ca −5 til 0 °C') matcher ikke faktisk seleksjon. baseTable velger vinterkjøredress i vogn fra kald-båndet (0 til +4°C) til og med frost-båndet (−1 til −7°C). Teksten underdriver både varm ende (+4°C) og kald ende (−7°C), og kan villede foreldre om når plagget faktisk anbefales.",
+      "forslag": "Juster when til å reflektere reell vogn-seleksjon, f.eks. 'Kalde til frost-dager i vogn, ca −7 til +4 °C.' RØR IKKE tabell-tersklene — kun teksten skal stemmes av mot bandForTemp/baseTable.",
+      "kilde": "garment-info.ts L123 vs tables.ts L51 (vogn.kald) + L57 (vogn.frost) + bandForTemp L13-15"
+    },
+    {
+      "id": "vinterdress-isolert",
+      "mal": 4,
+      "beskrivelse": "`when`-teksten i garment-info.ts (linje 135) sier 'Lek ute under −10 °C', men baseTable (tables.ts linje 223) velger 'vinterdress isolert' allerede fra streng_frost-båndet som starter ved −7 °C (bandForTemp: feelsLikeC >= -15). Faktisk anbefalingsgrense er ca −7 °C, ikke −10. En forelder kan dermed vente for lenge med isolert dress og la barnet være underkledd i −7..−10 °C aktiv utelek.",
+      "forslag": "Juster `when`-teksten til å speile faktisk båndgrense, f.eks. 'Lek ute under ca −7 °C (streng frost).' eller 'Lek ute i streng frost, fra ca −7 °C og kaldere.' — slik at teksten matcher boundaryen mot søster-plagget vinterdress. RØR IKKE selve terskelen i tables.ts.",
+      "kilde": "Intern konsistens baseTable utelek/streng_frost (tables.ts) vs garment-info.ts when"
+    },
+    {
+      "id": "lue-tynn",
+      "mal": 4,
+      "beskrivelse": "DRIFT tekst↔logikk: `when` i garment-info.ts (linje 153) sier 'Milde dager fra ca 8-14 °C', men baseTable velger 'lue tynn' i mild (10-15 °C) OG varm (16-21 °C) for vogn og bæresele. Øvre grense i teksten (14 °C) ligger ~7 °C under reell seleksjon (21 °C). Nedre grense (8 °C) treffer kjolig-båndet der motoren faktisk velger vanlig 'lue', ikke lue-tynn.",
+      "forslag": "Oppdater `when` til å matche faktisk bånd, f.eks. 'Milde til varme dager, ca 10-21 °C — særlig i vogn og bæresele.' Eventuelt smalne baseTable-grensene hvis 21 °C anses for varmt for lue.",
+      "kilde": "tables.ts (vogn.varm/mild, baeresele.mild, utelek.mild) vs garment-info.ts linje 151-154"
+    },
+    {
+      "id": "votter-tynne",
+      "mal": 2,
+      "beskrivelse": "PNG-illustrasjon mangler: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\votter-tynne.png finnes ikke (Glob 0 treff), mens db->id-mapping og info-oppforing eksisterer. Plagget far ingen illustrasjon i UI.",
+      "forslag": "Generer votter-tynne.png i samme stil/format som soesken-PNGene i public/illustrations/garments/ (Fable 5 + Claude visuell pass).",
+      "kilde": "garment-illustrations.ts linje 62 (mapping finnes) + manglende fil"
+    },
+    {
+      "id": "vintersko",
+      "mal": 4,
+      "beskrivelse": "when-teksten i garment-info.ts (linje 211) sier 'Frost-dager med utelek', men trace viser at 'vintersko' kun velges i kald-båndet 0-4 °C (feels-like over frysepunktet). Det egentlige frost-båndet (-7 til 0 °C) bruker 'vintersko isolerte'. Teksten villeder foreldre til å tro uisolerte vintersko er for minusgrader, der appen faktisk anbefaler isolerte — risiko for underkledde føtter hvis foreldre handler på teksten.",
+      "forslag": "Endre when til å beskrive det faktiske vinduet, f.eks. 'Kjølige til kalde dager (ca 0-5 °C) med utelek på vått eller frossent underlag. For minusgrader: bruk isolerte vintersko.' (Tall er forslag — bekreft mot bandForTemp-tersklene; rør ikke selve tersklene.)",
+      "kilde": "Trace: baseTable.utelek.kald (0-4 °C) vs baseTable.utelek.frost (-7-0 °C, vintersko isolerte) i tables.ts"
+    },
+    {
+      "id": "vintersko-isolerte",
+      "mal": 4,
+      "beskrivelse": "when-teksten ('Under -10 °C eller lang tid utendørs i snø.') drifter ~10 °C fra faktisk seleksjon. baseTable.utelek velger 'vintersko isolerte' allerede i frost-båndet, som per bandForTemp er feels -7 til <0 °C (tables.ts L218), ikke under -10. En forelder kan tro at vanlige vintersko holder i frost-bånd-vær og underkle barnets føtter, med frostskade-risiko.",
+      "forslag": "Juster when-teksten i garment-info.ts til å matche seleksjonen, f.eks. 'Frost og kaldere (fra ca -1 °C) ved utelek, eller lang tid utendørs i snø.' Rør IKKE tersklene i bandForTemp/baseTable — kun tekst.",
+      "kilde": "tables.ts bandForTemp L8-18 + baseTable.utelek L214-231; garment-info.ts L215"
+    },
+    {
+      "id": "tynt-teppe",
+      "mal": 4,
+      "beskrivelse": "Tekst ↔ logikk-drift med SIDS-relevans: when ('Varme dager i vogn — som lett tildekking') og whyForGarment ('komfort i vogn uten å bygge varme på en mild dag') anbefaler teppe-tildekking i vogn, men motoren selekterer plagget kun ved feels ≥22 °C (vogn × tropisk) og fjerner det der ALLTID via HB-8 som CRITICAL varmefelle. Teksten kan få forelder til å tro det er trygt å legge teppe over barnet i vogn på varme dager — stikk i strid med notes.stroller.noBlanket og HB-8.",
+      "forslag": "Omformuler when/whyForGarment til å fraråde teppe over/i lukket kalesje på varme dager og presisere at det kun er aktuelt som lett underlag/komfort utenfor varmefelle-situasjoner; legg til samme sikkerhets-formaning som dunteppe/saueskinn har ('aldri over kalesjen'). Endre IKKE temperatur-terskler.",
+      "kilde": "LT-PRAM (Lullaby Trust — Don't cover the pram); Pediatrics-Pram. Se også safety.ts HB-8 (linje 229-248) og notes.stroller.noBlanket i modifiers.ts (linje 257)."
+    },
+    {
+      "id": "tynt-teppe",
+      "mal": 3,
+      "beskrivelse": "Seleksjons-selvmotsigelse / dødt plagg: baseTable.vogn.tropisk (tables.ts:29) er den eneste tilstanden 'tynt teppe' velges (feels ≥22 °C), men HB-8 (PRAM_COVER_RE, safety.ts:55) fjerner det i nøyaktig samme tilstand (activity=vogn && feels≥22). Plagget genereres og slettes umiddelbart i hvert mulig tilfelle — effektivt uoppnåelig. Eksisterende test engine.test.ts:117 bekrefter fjerningen ved 24 °C.",
+      "forslag": "Fjern 'tynt teppe' fra baseTable.vogn.tropisk slik at base-anbefalingen ikke foreslår et plagg som hard safety alltid forbyr i samme kontekst — eller flytt det til en kontekst der HB-8 ikke trigges (f.eks. ikke-vogn). Ikke endre HB-8-terskelen (22 °C er pediatrisk korrekt).",
+      "kilde": "Intern konsistens: tables.ts:27-30 vs safety.ts:229-248; LT-PRAM / Pediatrics-Pram for at fjerningen er medisinsk korrekt."
+    },
+    {
+      "id": "sauekinn-i-vogn",
+      "mal": 3,
+      "beskrivelse": "Motoren velger 'saueskinn i vogn' i alle fire kuldebånd (kald/frost/streng_frost/ekstrem) i baseTable.vogn uten alders-gate eller håndhevd sikkerhets-flagg. Babyer sover ofte i vogn, og myke saueskinn-underlag er en dokumentert SIDS-/suffokasjons-risiko for spedbarn. Verken conflicts.ts, softBlocks.ts eller safety.ts har en regel som matcher 'saueskinn' (PRAM_COVER_RE/BLANKET_RE treffer kun teppe/dunteppe/pledd). `when`-teksten har en delvis caveat for <4 mnd, men den er kun tekst, ikke håndhevet.",
+      "forslag": "Vurder et soft-block/safety-flagg (uten å endre temperatur-terskler) som ved child.ageMonths under en aldersgrense, eller canRoll-status, enten fjerner saueskinn fra vogn-output eller hever en HIGH-note om at spedbarn ikke skal ligge/sove på saueskinn i vogn. Behold plagget for eldre barn.",
+      "kilde": "CPSC 1999 (soft bedding); NICHD Safe to Sleep; AAP HealthyChildren — https://www.cpsc.gov/Newsroom/News-Releases/1999/Recommendations-Revised-To-Prevent-Infant-Deaths-from-Soft-Bedding ; https://safetosleep.nichd.nih.gov/reduce-risk/safe-sleep-environment"
+    },
+    {
+      "id": "regntrekk",
+      "mal": 3,
+      "beskrivelse": "regntrekk omgaar overoppheting-vakten HB-8. safety.ts:55 definerer PRAM_COVER_RE = /(dunteppe|tynt teppe|teppe over kalesje|dekke over kalesje|kalesje-dekke)/i som IKKE inkluderer 'regntrekk'. HB-8 (safety.ts:229-248) fjerner pram-cover + flagger CRITICAL overoppheting ved aktivitet vogn og feels-like >=22 grader, men siden regntrekk ikke matcher regexen, overlever den i varmt vaer. Et gjennomsiktig regntrekk over kalesjen hindrer luftsirkulasjon og er en kjent varmefelle (Lullaby Trust kobler det til SIDS - samme mekanisme som teppe-dekket regelen siterer 4-15 grader stigning innen 60 min).",
+      "forslag": "Foreslaa for menneske/helsesoker: utvid PRAM_COVER_RE (eller legg til egen REGNTREKK_VARME-regel) slik at regntrekk ved feels-like >=22 grader trigger en overoppheting-advarsel (ikke noedvendigvis full fjerning, siden regnet er reelt, men minst en CRITICAL/HIGH-note om ventilasjon/forkortet tur). Ror ikke 22-grader-terskelen - kun utvid hvilke items den fanger.",
+      "kilde": "Lullaby Trust via madeformums.com/news/why-covering-your-babys-pram-with-a-blanket-could-put-their-life-at-risk/ ; onlinefirstaid.com/dangerous-cover-your-pram/ ; eksisterende kilde LT-PRAM/Pediatrics-Pram i safety.ts HB-8"
+    },
+    {
+      "id": "sovepose-1-0-tog",
+      "mal": 4,
+      "beskrivelse": "when-teksten i garment-info.ts (L259) sier 'Romtemperatur 18–21 °C', men baseTable.soevn velger 'sovepose 1.0 TOG' kun i tropisk-båndet (22–27 °C), og CK-3/SB-3 innsnevrer reelt vindu til 22–23 °C. Ved 18–21 °C velger motoren faktisk 2.5 TOG (varm-band). Teksten peker 4 grader for kaldt og kan få forelder til å velge for tynn sovepose i et 18–21 °C-rom.",
+      "forslag": "Rett when-strengen til å matche faktisk seleksjon, f.eks. 'Romtemperatur 22–23 °C (ned til 0.5 TOG fra 24 °C).' Hold tallet konsistent med tropisk-båndet + CK-3 maxTOGForRoom. Rør ikke selve tersklene i tables.ts/conflicts.ts.",
+      "kilde": "LT-TOG (Lullaby Trust TOG-guide), ErgoPouch what-to-wear (4-trinn 0.2/1.0/2.5/3.5)"
+    },
+    {
+      "id": "sovepose-2-5-tog",
+      "mal": 4,
+      "beskrivelse": "when-tekst sier 'Romtemperatur 16-18 °C', men baseTable.soevn velger 2.5 TOG i mild (10-15 °C) og kjolig (5-9 °C) i tillegg til varm (16-21 °C). Effektivt leverings-vindu er ~5-20 °C, ikke 16-18 °C. Forelder som leser teksten får feil mental modell og kan bruke en for tynn sovepose i et kjølig rom.",
+      "forslag": "Oppdater when-teksten til å reflektere det faktiske vinduet og standarden, f.eks. 'Romtemperatur ca 16-20 °C. I kjøligere rom (under 16 °C) velg heller 3.5 TOG.' Tall i tabellen røres ikke — kun teksten justeres til å stemme med seleksjon + LT-TOG.",
+      "kilde": "halo-tog + ergopouch-guide (sources.ts); https://www.lullabytrust.org.uk/safer-sleep-advice/baby-room-temperature/"
+    },
+    {
+      "id": "sovepose-2-5-tog",
+      "mal": 3,
+      "beskrivelse": "baseTable.soevn velger 'sovepose 2.5 TOG' i romtemp-bånd ned til 5 °C (mild 10-15 °C, kjolig 5-9 °C). Pediatrisk standard (Lullaby Trust / NHS, LT-TOG) plasserer 2.5 TOG ved 16-20 °C og anbefaler 3.5 TOG under ~16 °C. Resultatet er under-isolering i kjølige rom. CK-3 kapper kun TOG nedover (overoppheting) og har ingen minimums-TOG-floor, så 2.5 TOG passerer urørt ved f.eks. 6 °C romtemp.",
+      "forslag": "Vurder å endre mild/kjolig-båndene i baseTable.soevn til 3.5 TOG (slik kald-båndet allerede gjør), ELLER legg til en CK-3-speilende minimums-TOG-regel som hever 2.5 -> 3.5 når romtemp < 16 °C. Avvik dokumenteres som funn; tall/terskler endres ikke av auditør.",
+      "kilde": "https://childsleepspecialist.co.uk/blog/sleeping-bag-tog-guide/ ; https://www.motherandbaby.com/baby/sleep/baby-sleeping-bag-guide/"
+    }
+  ]
+}

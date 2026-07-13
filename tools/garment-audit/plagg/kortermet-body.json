@@ -1,0 +1,125 @@
+{
+  "claude": {
+    "id": "kortermet-body",
+    "dbString": "kortermet body",
+    "kategori": "innerst",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Har komplett what + when i garment-info.ts (linje 21-24), og en dedikert whyForGarment-gren (ikke fallback) som deler kode med langermet-body på linje 337-339. Tone/lengde matcher søsken-plagg i innerst-kategorien godt. Trekk: `when`-teksten 'tynt grunnlag under andre plagg innendørs' beskriver en lagdelings-bruk som motoren faktisk ikke produserer (se tekstLogikk-funnet), og whyForGarment-grenen er delt med langermet-body slik at den ikke skiller på arm-lengde. Strukturelt finnes alt, men formuleringen er ikke skreddersydd det heter-only-bruksmønsteret."
+    },
+    "utseende": {
+      "score": 18,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet funnet: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\kortermet-body.png. Mapping er korrekt og robust: BÅDE 'kortermet body' (tables.ts vogn/baeresele.ekstrem_varme + soevn.tropisk + CK/SB-injeksjoner) OG 'lett kortermet body (valgfritt)' (soevn.ekstrem_varme) peker til id 'kortermet-body' (garment-illustrations.ts linje 14-15). Filnavn/id-plausibilitet er god. Selve visuell dom gjøres av Fable 5 + Claude senere."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "kortermet body velges utelukkende i de varmeste kontekstene, noe som er pediatrisk forsvarlig: tynn kortermet body som eneste/minste plagg i ekstrem varme er korrekt for å unngå varmestress/overoppheting. Sleep-TOG-koblingen (tropisk → body + 1.0 TOG, justert ned av CK-3/SB-3 ved ≥24/≥26 °C) er kalibrert mot Lullaby Trust TOG + AAP-2022 (LT-TOG, AAP-2022). Overopphetings-/SIDS-laget (HB-1..HB-8, CK-3, SB-3) er solid dekket av de 11 kildene (HALO-tog, halo overheating-tegn, pmc-12386404 heat-thermoregulation). Ingen uavklart helse-spørsmål som krevde web-søk — alle heter-relaterte valg er innenfor eksisterende kilde-dekning. Trekk: kildelista mangler en eksplisitt kilde for at KORTERMET (eksponerte armer) i sterk sol ≥28 °C kombineres med solkrem-/skygge-noter; modifier gir riktignok solhatt + skygge-note, men eksponert hud i UV er en sol-eksponering motoren ikke flagger spesifikt for body-plagget.",
+      "trace": "tables.ts: (1) vogn.ekstrem_varme (feels >=28) innerst=['kortermet body'] + ekstra=['solhatt']; (2) baeresele.ekstrem_varme (>=28) innerst=['kortermet body'] + ekstra=['solhatt']; (3) soevn.tropisk (rom 22-27) innerst=['kortermet body'] + ekstra=['sovepose 1.0 TOG']; (4) soevn.ekstrem_varme (>=28) via 'lett kortermet body (valgfritt)' -> samme id. Injeksjoner: conflicts.ts CK-3 (soevn, rom>=26 => sovepose fjernet, melding 'kortermet body alene'), CK-8 (soevn, rom>21, hoy-TOG+pyjamas => pyjamas erstattet med 'kortermet body'); softBlocks.ts SB-3 (soevn rom>=26 force innerst=['kortermet body'] alene; rom>=24 => 'kortermet body' + sovepose 0.5 TOG). modifiers.ts soevn-gren legger ikke til/fjerner body. Netto: kun heter-kontekster >=22-28 C, aldri kald-baand.",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 17,
+      "kommentar": "Drift mellom tekst og faktisk seleksjon. (1) when-teksten (garment-info.ts:23) sier 'Brukes ved varme dager eller som tynt grunnlag under andre plagg innendørs' — men trace viser at plagget ALDRI lagdeles under andre plagg: i ekstrem_varme er det standalone + solhatt, i soevn.tropisk er det body + sovepose (sovepose lagdeles ikke 'over' body slik annet tøy). Formuleringen 'under andre plagg' antyder en kald-/lagdelings-bruk som ikke finnes. (2) whyForGarment-grenen (linje 337-339) sier 'Tynt bomullsbody som inner lag — holder huden tørr og forhindrer at andre lag klister seg' — 'andre lag' impliserer igjen en flerlags-kontekst, men i 3 av 4 seleksjons-tilfeller (ekstrem_varme vogn/baeresele/SB-3-soevn) er det ingen 'andre lag'. Grenen er delt med langermet-body og er derfor generisk lagdelings-språk, ikke heter-spesifikt. Dette villeder ikke til feil/farlig pakledning (kortermet body er trygt der det velges), men den begrunner plagget med feil rasjonale (lagdeling) i stedet for det reelle (minimere varme i ekstrem hete) — derfor medium, ikke hoy."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "kortermet body har ingen oppforing i alternatives.ts. Et reelt og pedagogisk nyttig alternativ ville vaert ull-trinnet: 'kortermet ullbody' (id finnes, mappet, har egen info) — ull-mot-huden regulerer fukt/varme bedre enn bomull selv i hete, noe merino-kids- og merino-fukt-kildene stotter, og det er Babyora sitt uttalte brand-DNA ('ull-forst'). I dag tilbys bomulls-bodyen i ekstrem_varme uten a peke pa at en tynn kortermet ullbody er et likeverdig/bedre svette-regulerende valg. Ikke kritisk (bomull er trygt i hete), men et opplagt ull<->bomull-trinn som mangler. Trekk 2 poeng."
+    },
+    "total": 83,
+    "verdikt": "Solid plagg med korrekt og trygt seleksjons-mønster (kun heter-kontekster), bekreftet PNG og robust mapping. Hovedsvakheten er tekst↔logikk-drift: både `when` og `whyForGarment` begrunner plagget med lagdeling/'under andre plagg', mens motoren faktisk velger det som minimalt standalone-plagg i ekstrem varme. Anbefalt: skreddersy heter-spesifikk tekst og legg til kortermet ullbody som alternativ. Ingen medisinske avvik — alle helse-relaterte valg er innenfor eksisterende kilde-dekning.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "whyForGarment-grenen (garment-info.ts:337-339) er delt mellom kortermet-body og langermet-body og bruker lagdelings-rasjonale ('inner lag', 'forhindrer at andre lag klister seg'). Men trace viser at kortermet body i 3 av 4 seleksjons-tilfeller (vogn/baeresele.ekstrem_varme, soevn SB-3) velges som standalone minimal-plagg uten andre lag. Begrunnelsen matcher ikke den faktiske heter-konteksten.",
+        "forslag": "Splitt whyForGarment for kortermet-body fra langermet-body. Heter-spesifikk tekst, f.eks.: 'Tynnest mulig bomullsbody — minimerer varme ved hoy temperatur slik at {childName} ikke overopphetes. Sjekk nakken ofte.'",
+        "kilde": "halo-tog (overopphetings-tegn), pmc-12386404 (heat thermoregulation)"
+      },
+      {
+        "severity": "medium",
+        "mal": 1,
+        "beskrivelse": "when-teksten (garment-info.ts:23) 'Brukes ved varme dager eller som tynt grunnlag under andre plagg innendørs' antyder lagdelings-/kald-bruk. Motoren velger plagget kun ved feels >=28 C ute og rom 22-27 C sov — aldri lagdelt under andre plagg.",
+        "forslag": "Juster when til a speile heter-only-mønsteret, f.eks.: 'Brukes i sterk varme (>=28 C ute) eller varme soverom (22-27 C) — som eneste eller minste lag for a unnga overoppheting.'",
+        "kilde": "tables.ts (vogn/baeresele.ekstrem_varme, soevn.tropisk)"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen alternativ-oppforing i alternatives.ts for kortermet body. Det opplagte ull-trinnet 'kortermet ullbody' (eksisterer som id + info) tilbys ikke som svette-regulerende alternativ, til tross for Babyora sitt 'ull-forst'-brand-DNA.",
+        "forslag": "Legg til ITEM_ALTERNATIVES-oppforing for 'kortermet body' med alternativ 'kortermet ullbody' (whenKey/whyPrimaryKey i i18n). Ull regulerer fukt bedre enn bomull selv i hete.",
+        "kilde": "merino-kids (ull-fukt-fordeler)"
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "I vogn/baeresele.ekstrem_varme (>=28 C, ofte sterk sol) er armene eksponert med kortermet body. Modifier gir solhatt + skygge-note generelt, men det finnes ingen plagg-spesifikk flagging av UV-eksponering pa naken hud ved valg av kortermet (vs langermet) body i sol.",
+        "forslag": "Vurder en note som kobler kortermet-valg i sol >=28 C til skygge/solkrem (>6 mnd) for eksponerte armer. Ingen tall-endring — kun supplerende note.",
+        "kilde": "aap-healthychildren (sol/spedbarn-skygge)"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 16,
+      "kommentar": "Alle tre felt (hva/når/hvorfor) er utfylt og språklig klare. Svakheten er at «hvorfor» er merket dynamisk, men kun forklarer lag-rollen («forhindrer at andre lag klistrer seg») — i motorens dominerende kontekst (standalone i hete) gir den ingen forklaring. En dynamisk tekst som ikke varierer med konteksten den faktisk vises i, er strukturelt ufullstendig."
+    },
+    "utseende": {
+      "score": 17,
+      "kommentar": "Bildet viser korrekt plagg: kortermet body med konvolutt-hals og tre trykknapper mellom beina — kategorien «innerst» er visuelt troverdig. Rent, uten åpenbare AI-artefakter. To mindre trekk: stoffet ser tykt og glatt ut (nesten interlock/render-aktig), som matcher dårlig med «lett bomull» i tekst, og fargen er blek rosa, som kan oppfattes kjønnet hvis resten av app-biblioteket er nøytralt. Sjekk stil-konsistens mot øvrige plagg-illustrasjoner."
+    },
+    "seleksjon": {
+      "score": 19,
+      "kommentar": "Standalone body + solhatt ved føles ≥28 °C er pediatrisk korrekt, og SB-3-injeksjon i varme soverom er fornuftig. Hovedinnvendingen — som førsteanalysen IKKE fanget — er søvn-regelen 22-27 °C med 1.0 TOG: standard TOG-veiledning (f.eks. Grobag/Lullaby Trust-praksis) anbefaler 0.2-0.5 TOG eller ingen pose over ca. 24 °C. Body + 1.0 TOG ved 26-27 °C gir reell overopphetingsrisiko hos spedbarn. Spennet bør deles: 22-24 °C → 1.0 TOG, 24-27 °C → 0.5 TOG eller body alene (som SB-3 delvis allerede gjør — reglene overlapper inkonsistent)."
+    },
+    "tekstLogikk": {
+      "score": 17,
+      "kommentar": "Driften er reell, men førsteanalysen overdriver den for «når»-feltet: «Brukes ved varme dager eller…» leder faktisk med motorens primærbruk. Den konkrete driften er (a) andre halvdel av «når» («tynt grunnlag under andre plagg innendørs») beskriver en seleksjon som aldri forekommer i tracen, og (b) hele «hvorfor»-feltet beskriver lag-funksjon i en motor som nesten utelukkende bruker plagget standalone. Brukeren som ser body + solhatt ved 30 °C får en forklaring om «andre lag» som ikke finnes."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Førsteanalysens forslag om «kortermet ullbody» er svakt: i kontekstene plagget faktisk velges (≥28 °C ekstrem varme) er tynn bomull/bambus standard anbefaling, ikke ull. Det mer relevante manglende alternativet er ermeløs body/singlet — vanlig i norske barnehager og hjem ved hetebølge. Sekundært: langermet ullbody hører hjemme i kalde kontekster, men det er utenfor dette plaggets seleksjonsrom."
+    },
+    "total": 76,
+    "verdikt": "Godkjent med forbehold — solid plagg-definisjon og riktig illustrasjon, men søvn-TOG-spennet må strammes inn før dette kan kalles pediatrisk trygt i øvre temperaturområde, og «hvorfor»-teksten må gjøres kontekst-følsom.",
+    "uenig_med_claude": "Delvis uenig på tre punkter: (1) Claude overser det viktigste funnet — 1.0 TOG + body ved 26-27 °C bryter med etablert TOG-veiledning og er et høyere alvorlighetsnivå enn all tekst-drift; totalscore 83 er derfor for snill. (2) Tekst↔logikk-driften er mildere enn fremstilt for «når»-feltet, som faktisk leder med korrekt standalone-bruk. (3) «Kortermet ullbody» er feil alternativ for hetekontekster — ermeløs body er det reelle hullet. UV-funnet (eksponerte armer ≥28 °C) er derimot riktig og beholdes.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 3,
+        "beskrivelse": "Søvnregel kombinerer kortermet body med sovepose 1.0 TOG i hele spennet 22-27 °C. Over ca. 24 °C anbefaler standard TOG-veiledning 0.2-0.5 TOG eller ingen pose; 1.0 TOG ved 26-27 °C gir overopphetingsrisiko hos barn 0-3 år.",
+        "forslag": "Splitt regelen: 22-24 °C → body + 1.0 TOG; 24-27 °C → body + 0.5 TOG eller body alene. Harmoniser med SB-3 slik at reglene ikke gir motstridende output i 24-26 °C-vinduet."
+      },
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "«Hvorfor»-teksten forklarer utelukkende lag-funksjon, men motoren bruker plagget nesten kun standalone i hete. Dynamisk felt som ikke matcher visningskonteksten.",
+        "forslag": "Lag to «hvorfor»-varianter: hete-standalone og lag-variant for søvn under sovepose. Velg variant basert på trace-kontekst."
+      },
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "«Når»-feltets andre halvdel («tynt grunnlag under andre plagg innendørs») beskriver en bruk som aldri forekommer i motorens seleksjon.",
+        "forslag": "Enten fjern lag-påstanden fra «når», eller utvid motoren slik at kortermet body faktisk kan velges som inner lag i milde innekontekster (18-22 °C)."
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "Ved ≥28 °C velges body som eneste plagg med eksponerte armer, kun med solhatt — ingen plagg-spesifikk UV-note for vogn/bæresele utendørs.",
+        "forslag": "Legg til kontekstnote ved utendørs hete-seleksjon: skygge/vognskjerming og solkrem på eksponerte armer for barn over 6 mnd."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Manglende alternativ er ermeløs body (singlet) for ekstrem varme — ikke kortermet ullbody.",
+        "forslag": "Legg til «ermeløs body» som alternativ i hete-kontekster."
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonens stoff fremstår tykt/glatt og fargen blek rosa — mulig mismatch mot «lett bomull» og mot nøytral fargeprofil i resten av biblioteket.",
+        "forslag": "Vurder re-render med synlig tynn jersey-tekstur og nøytral farge (offwhite/natur) hvis øvrige plagg er kjønnsnøytrale."
+      }
+    ]
+  }
+}

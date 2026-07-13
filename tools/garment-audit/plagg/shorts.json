@@ -1,0 +1,49 @@
+{
+  "claude": {
+    "id": "shorts",
+    "dbString": "shorts",
+    "kategori": "innerst",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Har komplett what + when i garment-info.ts (linje 57-60): what='Bomullsshorts med strikk i livet. Lett og bevegelses-vennlig.', when='Sommervarme dager med utelek eller turer.' Tone og lengde matcher soesken-plagg i innerst-kategorien (t-skjorte, lett-bukse). Det finnes en dedikert whyForGarment-gren (IKKE fallback): linje 343-345 grupperer 't-skjorte'/'shorts'/'lett-bukse' med konkret begrunnelse. Liten anmerkning: shorts deler whyForGarment-gren med to andre plagg (felles streng), saa teksten er ikke 100% shorts-spesifikk (nevner 'bomulls-plagg' generisk), men det er konsistent med soesken-moenster. Trekk 2 for delt/generisk why-tekst."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\shorts.png. db-strengen 'shorts' er korrekt mappet til id 'shorts' i garment-illustrations.ts (linje 24: 'shorts': 'shorts'). Navn/mapping er fullt plausibelt og 1:1. Kan ikke vurdere selve den visuelle kvaliteten (gjoeres av Fable 5 + Claude senere)."
+    },
+    "seleksjon": {
+      "score": 25,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig. Shorts velges KUN i varme baand (>=22 grader feels-like) for utelek. Bare bein ved 22+ grader er fornuftig for aa unngaa overoppheting (stoettet av PMC-12386404 om metabolic heat peak 7-9 mnd, og HALO/HowToDressBaby neck-test-praksis). Sol-eksponering paa bare bein dekkes av eksisterende sol-modifier (modifiers.ts pkt 10, fyrer sol-note ved >=10 grader + klarvaer; pkt 7 i sb om <6 mnd skygge). Ingen frost/SIDS/kvelnings-kontekst beroeres. Ingen helse-gap som kildene ikke dekker -> ingen web-soek noedvendig.",
+      "kilder": [],
+      "trace": "shorts forekommer i baseTable utelek-aktivitet i to baand: (1) 'tropisk' (feels-like 22-27 grader, tables.ts linje 191) som innerst sammen med t-skjorte; (2) 'ekstrem_varme' (feels-like >=28 grader, tables.ts linje 233) som innerst sammen med t-skjorte. Ingen andre aktiviteter (vogn/baeresele/soevn) bruker shorts. INGEN modifier i modifiers.ts legger til eller fjerner shorts: fottoey-justering (pkt 17, linje 486-518) roerer kun sko/sandaler/toefler, ikke shorts. conflicts.ts/softBlocks.ts/safety.ts har ingen regel som matcher shorts (ingen regex treffer 'shorts'). SB-2 max-lag (>=16 grader -> 6 items) trimmer ikke shorts siden tropisk utelek kun har ~4 items totalt. Netto: shorts ende-selekteres uendret for utelek ved feels-like >=22 grader."
+    },
+    "tekstLogikk": {
+      "score": 25,
+      "kommentar": "Full samsvar mellom tekst og faktiske forhold fra trace. when='Sommervarme dager med utelek eller turer' stemmer presist med baseTable som kun velger shorts for utelek ved >=22 grader. whyForGarment-grenen (garment-info.ts linje 343-345): 'Lett bomulls-plagg — minimerer varme ved X grader saa barnet ikke svetter under utelek' matcher eksakt seleksjons-betingelsene (varmt vaer + utelek + overoppheting-fokus). Ingen drift: ingen kald-baand-seleksjon, ingen temperatur-konflikt mellom tekst og tabell. Bruker villedes ikke."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "Ingen alternativ-oppfoering for 'shorts' i alternatives.ts. Eksisterende alternativer fokuserer paa isolasjons-plagg (ull->fleece, tykkelse-trinn) der valg faktisk betyr noe. For shorts kunne 'lett bukse' tilbys som alternativ ved sterk UV/sol for aa dekke bare bein (UV-indeks >=6 fyrer sol-note i modifiers pkt 10), men dette er en mindre, valgfri forbedring — ikke et ekte ull<->fleece eller dun<->syntet gap. Shorts har genuint begrenset alternativ-behov i et ull-foerst-system. Trekk 2 for manglende 'lett bukse'-alternativ ved hoey UV."
+    },
+    "total": 96,
+    "verdikt": "Shorts er et solid, lavrisiko varmevaer-plagg med komplett info-oppfoering, korrekt PNG-mapping, forsvarlig seleksjon (kun utelek >=22 grader) og full tekst<->logikk-samsvar. Ingen kritiske eller hoye funn. Eneste forbedringer er kosmetiske: delt/generisk whyForGarment-tekst og et manglende valgfritt 'lett bukse'-alternativ ved sterk UV. Total 96/100.",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "whyForGarment-grenen for shorts (garment-info.ts linje 343-345) deles med t-skjorte og lett-bukse via en felles streng ('Lett bomulls-plagg...'). Teksten er derfor ikke shorts-spesifikk og nevner ikke bare bein / bevegelsesfrihet eksplisitt.",
+        "forslag": "Vurder en egen shorts-gren som nevner bare bein og bevegelse, men hold den kort og verifiser at den ikke introduserer drift mot seleksjonsbaandene (>=22 grader, utelek). Ikke paakrevd — naavaerende tekst er korrekt.",
+        "kilde": "garment-info.ts whyForGarment linje 343-345"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "alternatives.ts mangler en oppfoering for 'shorts'. Ved sterk UV (uvIndex >=6 fyrer sol-note i modifiers.ts pkt 10) kan dekkede bein vaere oenskelig, men shorts tilbyr ingen alternativ-toggle.",
+        "forslag": "Vurder aa legge til 'lett bukse' som alternativ for shorts (whenKey: solrik dag / hoey UV der bare bein boer dekkes; whyPrimary: shorts gir best kjoeling i varmen). Lav prioritet — overoppheting er primaer-risiko i de aktuelle baandene, og sol-noten dekker allerede skygge-raad.",
+        "kilde": "alternatives.ts ITEM_ALTERNATIVES; modifiers.ts sol-modifier pkt 10 (linje 366-393)"
+      }
+    ]
+  },
+  "fable": null
+}

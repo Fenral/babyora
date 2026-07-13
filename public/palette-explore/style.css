@@ -1,0 +1,464 @@
+/* ============================================================
+   Palette Explore — Babyora 4-palett-mock
+   Hvert .mock-frame får tokens injected via [data-palette]-
+   attributtet. Layout er identisk på tvers; kun farger varierer.
+   ============================================================ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  background: #1A1A1A;
+  color: #E5E5E5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  background: #FAF8F5;
+  color: #14181F;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  z-index: 100;
+}
+.skip-link:focus { top: 16px; }
+
+/* ============================================================
+   Top-nav: jump-links mellom de 4 mockene
+   ============================================================ */
+.palette-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(20, 20, 20, 0.96);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.palette-nav__h {
+  font: 700 16px/1 'DM Serif Display', Georgia, serif;
+  color: #FAF8F5;
+  margin-right: 24px;
+  letter-spacing: -.01em;
+}
+.palette-nav__link {
+  color: #E5E5E5;
+  text-decoration: none;
+  font: 500 13px/1 'Instrument Sans', sans-serif;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  transition: background 150ms;
+}
+.palette-nav__link:hover,
+.palette-nav__link:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+  outline: 2px solid #D8741E;
+  outline-offset: 2px;
+}
+
+.demo-banner {
+  background: rgba(216, 116, 30, 0.12);
+  border-bottom: 1px solid rgba(216, 116, 30, 0.30);
+  padding: 12px 24px;
+  font: 500 13px/1.5 'Instrument Sans', sans-serif;
+  color: #FAF8F5;
+  text-align: center;
+}
+
+/* ============================================================
+   2×2 grid av mock-kort
+   ============================================================ */
+main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+@media (max-width: 1000px) {
+  .palette-grid { grid-template-columns: 1fr; }
+}
+
+.palette-card {
+  background: #232323;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.palette-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.palette-card__h {
+  font: 700 22px/1.1 'DM Serif Display', Georgia, serif;
+  color: #FAF8F5;
+  letter-spacing: -.01em;
+}
+.palette-card__sub {
+  font: 500 13px/1.3 'Instrument Sans', sans-serif;
+  color: #A3A3A3;
+}
+.palette-card__mood {
+  font: 500 13px/1.5 'Instrument Sans', sans-serif;
+  color: #C7C7C7;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 10px 14px;
+  border-radius: 10px;
+  border-left: 2px solid rgba(216, 116, 30, 0.5);
+}
+
+/* Tokens-strip — visuell rad over swatches */
+.tokens-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tokens-strip__swatch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 60px;
+}
+.tokens-strip__chip {
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+.tokens-strip__label {
+  font: 500 10px/1.2 'Instrument Sans', sans-serif;
+  color: #999;
+  text-align: center;
+  letter-spacing: -.005em;
+}
+
+/* Kontrast-tabell */
+.contrast-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 500 12px/1.4 'Instrument Sans', sans-serif;
+  color: #D5D5D5;
+}
+.contrast-table caption {
+  text-align: left;
+  font: 600 12px/1 'Instrument Sans', sans-serif;
+  color: #A3A3A3;
+  padding-bottom: 8px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.contrast-table th,
+.contrast-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.contrast-table th {
+  font-weight: 600;
+  color: #999;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.contrast-table .pass {
+  color: #6DCB76;
+  font-weight: 600;
+}
+.contrast-table .ui-ok {
+  color: #C7C779;
+  font-weight: 600;
+}
+
+/* ============================================================
+   Mock-frame — replikat av Babyora Hjem-skjerm
+   Tokens kommer fra [data-palette]-blokkene under
+   ============================================================ */
+.mock-frame {
+  background: var(--paper);
+  border-radius: 22px;
+  padding: 24px 22px 18px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  font-family: 'Instrument Sans', system-ui, sans-serif;
+  color: var(--ink);
+  overflow: hidden;
+}
+
+.mock-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.mock-identity__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--paper-elev);
+  border: 1.5px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.mock-identity__avatar img {
+  width: 50px;
+  height: 56px;
+  object-fit: contain;
+}
+.mock-identity__h {
+  font: 700 30px/1 'DM Serif Display', Georgia, serif;
+  color: var(--accent-deep);
+  letter-spacing: -.015em;
+}
+.mock-identity__date {
+  font: 600 10px/1 'Instrument Sans', sans-serif;
+  color: var(--mute);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.mock-weather {
+  background: var(--paper-elev);
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.mock-weather__temp {
+  font: 700 22px/1 'Instrument Sans', sans-serif;
+  color: var(--accent-deep);
+  font-feature-settings: "tnum";
+}
+.mock-weather__cond {
+  font: 600 13px/1.3 'Instrument Sans', sans-serif;
+  color: var(--ink);
+}
+.mock-weather__meta {
+  font: 500 11px/1.3 'Instrument Sans', sans-serif;
+  color: var(--mute);
+}
+
+.mock-why {
+  font: 500 13px/1.5 'Instrument Sans', sans-serif;
+  color: var(--ink);
+  margin: 8px 0 14px;
+  letter-spacing: -.005em;
+}
+.mock-why strong {
+  color: var(--accent-deep);
+  font-weight: 700;
+}
+
+.mock-avatar-stage {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 12px;
+  position: relative;
+}
+.mock-avatar-stage__img {
+  width: 200px;
+  height: 220px;
+  object-fit: contain;
+  pointer-events: none;
+}
+/* 3 pin-merker absolutt-positionert over avataret */
+.mock-pin {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 12px/1 'Instrument Sans', sans-serif;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+.mock-pin--1 { top: 38%; left: 50%; transform: translate(-50%, -50%); }
+.mock-pin--2 { top: 56%; left: 67%; transform: translate(-50%, -50%); }
+.mock-pin--3 { top: 16%; left: 30%; transform: translate(-50%, -50%); }
+
+.mock-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.mock-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  font: 500 12px/1.2 'Instrument Sans', sans-serif;
+  color: var(--ink);
+}
+.mock-chip__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: var(--accent-tint);
+  border: 1px solid var(--hair);
+  color: var(--accent-deep);
+  border-radius: 50%;
+  font: 700 10px/1 'Instrument Sans', sans-serif;
+}
+
+.mock-peel {
+  background: var(--paper-elev);
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  gap: 2px;
+  margin-bottom: 14px;
+}
+.mock-peel__seg {
+  flex: 1;
+  padding: 8px 6px;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  font: 500 11px/1.2 'Instrument Sans', sans-serif;
+  color: var(--ink);
+  text-align: center;
+  cursor: default;
+}
+.mock-peel__seg--active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.mock-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 auto;
+  padding: 9px 18px;
+  border: 1.5px solid var(--accent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent-deep);
+  font: 600 13px/1 'Instrument Sans', sans-serif;
+  cursor: default;
+}
+.mock-cta-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   Palette token-blokker
+   ============================================================ */
+
+[data-palette="court-clay"] {
+  --paper: oklch(0.985 0.005 60);
+  --paper-elev: oklch(0.96 0.008 50);
+  --ink: oklch(0.18 0.015 250);
+  --mute: oklch(0.50 0.010 50);
+  --accent: oklch(0.66 0.150 50);
+  --accent-deep: oklch(0.38 0.100 38);
+  --accent-tint: oklch(0.94 0.025 50);
+  --hair: oklch(0.88 0.008 50);
+}
+
+[data-palette="skogsvandrer"] {
+  --paper: oklch(0.985 0.006 100);
+  --paper-elev: oklch(0.96 0.012 100);
+  --ink: oklch(0.20 0.020 140);
+  --mute: oklch(0.50 0.015 130);
+  --accent: oklch(0.65 0.130 95);
+  --accent-deep: oklch(0.40 0.080 130);
+  --accent-tint: oklch(0.94 0.025 130);
+  --hair: oklch(0.88 0.012 130);
+}
+
+[data-palette="instrument"] {
+  --paper: oklch(0.94 0.012 80);
+  --paper-elev: oklch(0.90 0.018 80);
+  --ink: oklch(0.20 0.005 260);
+  --mute: oklch(0.42 0.008 80);
+  --accent: oklch(0.62 0.140 85);
+  --accent-deep: oklch(0.40 0.090 75);
+  --accent-tint: oklch(0.86 0.030 80);
+  --hair: oklch(0.82 0.012 80);
+}
+
+[data-palette="plomme"] {
+  --paper: oklch(0.985 0.005 340);
+  --paper-elev: oklch(0.96 0.010 340);
+  --ink: oklch(0.20 0.012 280);
+  --mute: oklch(0.48 0.012 340);
+  --accent: oklch(0.55 0.130 350);
+  --accent-deep: oklch(0.35 0.100 350);
+  --accent-tint: oklch(0.94 0.025 350);
+  --hair: oklch(0.88 0.010 340);
+}
+
+/* E — Søvnro: powder blue (232°) + cool bone + clay-warm hair (50°).
+   Kjølig blå hovedaccent, varm clay-hint i hair-fargen som
+   anker for å unngå klinisk-medisinsk inntrykk. */
+[data-palette="sovnro"] {
+  --paper: oklch(0.985 0.005 230);
+  --paper-elev: oklch(0.96 0.012 230);
+  --ink: oklch(0.20 0.012 250);
+  --mute: oklch(0.50 0.010 230);
+  --accent: oklch(0.65 0.120 232);
+  --accent-deep: oklch(0.40 0.090 232);
+  --accent-tint: oklch(0.94 0.025 232);
+  --hair: oklch(0.88 0.020 50);
+}
+
+footer {
+  max-width: 1440px;
+  margin: 24px auto 48px;
+  padding: 0 24px;
+  color: #888;
+  font: 500 12px/1.6 'Instrument Sans', sans-serif;
+}
+footer a { color: #D8741E; }

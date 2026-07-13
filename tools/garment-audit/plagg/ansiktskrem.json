@@ -1,0 +1,49 @@
+{
+  "claude": {
+    "id": "ansiktskrem",
+    "dbString": "ansiktskrem",
+    "kategori": "ekstra-hud",
+    "struktur": {
+      "score": 16,
+      "kommentar": "Har komplett what+when i garment-info.ts (linje 275-278). what: 'Fet ansiktskrem som beskytter huden mot frost og vind.' when: 'Bruk en halvtime før utetur i frost. Reduserer risiko for frostskader.' Dedikert whyForGarment-gren finnes (linje 482-484), ikke fallback - bruker frost-flagg for å variere 'frost'/'vær'. Tone/lengde er konsistent med søsken. MEN: ansiktskrem er eneste plagg i kategorien 'ekstra-hud' (ingen søsken å sammenligne mønster mot), og det er et ikke-plagg (topisk produkt) som tvinges inn i en plagg-struktur designet for tøy-lag - what/when passer formatet, men 'huden' har ingen reell lag-modell. Trekker 4 for at when-teksten sier generisk 'frost' mens faktisk seleksjon er begrenset til streng_frost/ekstrem (se mål 4)."
+    },
+    "utseende": {
+      "score": 18,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet å eksistere på public/illustrations/garments/ansiktskrem.png (Test-Path True). db-strengen 'ansiktskrem' er mappet 1:1 til id 'ansiktskrem' i garment-illustrations.ts (linje 96), og GarmentId-oppføring finnes i garment-info.ts. Navn/mapping er plausibelt og entydig (ingen kollisjon/fallback). Kan ikke vurdere selve den visuelle kvaliteten - overlatt til Fable 5 + Claude. Trekker 2 fordi en krem-tube er konseptuelt vanskelig å illustrere konsistent med tøy-plaggene i samme sett (visuell verifikasjon utestående)."
+    },
+    "seleksjon": {
+      "score": 20,
+      "trace": "baseTable-treff for 'ansiktskrem': (1) vogn.streng_frost [bandForTemp: feels -15..-7], (2) vogn.ekstrem [feels < -15], (3) baeresele.ekstrem [feels < -15], (4) utelek.ekstrem [feels < -15]. IKKE i frost-båndet (-7..0) for noen aktivitet, og IKKE i soevn (innendørs). Modifiers: INGEN modifier legger til eller fjerner selve laget 'ansiktskrem'. modifiers.ts pusher KUN tekst-noter om fet krem: note #9 'notes.cold.frostCream' ved feels <= -5, note #5b 'notes.newborn.coldShortTrip' (<3 mnd + <0) sier 'Smør fet krem på kinnene'. conflicts/softBlocks/safety rører aldri ansiktskrem (ingen regex matcher det). Netto: laget vises kun ved feels <= -15 (alle aktiviteter) + vogn allerede fra -7.",
+      "kilder": [],
+      "kommentar": "Pediatrisk forsvarlig. Topisk fet krem på eksponert hud i streng frost støttes av Capital Area Pediatrics ('capital-area-peds') og AAP HealthyChildren ('aap-healthychildren') som dekker kuldevær-påkledning og frostskade-forebygging. Ingen overoppheting/SIDS/kvelnings-risiko da dette er et topisk produkt, ikke et isolasjonslag - reiser ingen helsefare kildene ikke dekker. Ingen web-søk nødvendig. Seleksjonen er konservativ (kun streng_frost+) og trygg."
+    },
+    "tekstLogikk": {
+      "score": 19,
+      "kommentar": "whyForGarment-grenen (linje 482-484) bruker frost = feelsLikeC < 0 og sier 'frost' når <0, 'vær' ellers - siden laget faktisk kun vises ved feels <= -15 (resp. -7 i vogn), vil grenen ALLTID treffe 'frost'-tilfellet, så den dynamiske teksten er korrekt i praksis. DRIFT funnet i 'when'-teksten: den sier generisk 'i frost', men baseTable velger plagget kun i streng_frost (<=-7) og ekstrem (<-15) - aldri i frost-båndet (-7..0). Samtidig anbefaler tekst-noten (modifiers #9) fet krem verbalt allerede fra feels <= -5. Konsekvens: en forelder på f.eks. -8 C utelek ser IKKE krem-chippen (utelek krever <-15), men note-systemet sier 'smør fet krem'. Plagg-seleksjon og krem-note er ikke synkronisert på tvers av terskler. Dette villeder ikke til feil/farlig påkledning (krem er additivt og trygt), men skaper inkonsistens mellom chip og note. Mild drift, ikke severity hoy."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "Ingen alternativ-oppføring for 'ansiktskrem' i alternatives.ts, og det er RIKTIG: alternativ-systemet er bygget for ull<->fleece / dun<->syntet / tykkelse-trinn på tøy-lag, ikke for topiske hudprodukter. Det finnes ikke et meningsfullt lag-alternativ (f.eks. vaselin vs. fet krem ville vært en produkt-anbefaling, ikke et tøy-trinn). Trekker 2 fordi man kunne argumentert for en liten kontekst-note om vannfri/fet krem vs. vannbasert (vannbasert krem kan faktisk ØKE frostskade-risiko da vannet fryser) - dette er en reell pediatrisk nyanse verdt en note, men ikke et 'alternativ' i systemets forstand."
+    },
+    "total": 81,
+    "verdikt": "Solid og trygt. ansiktskrem er korrekt mappet, har komplett info + dedikert why-gren, PNG finnes, og seleksjonen (kun streng_frost/ekstrem) er pediatrisk konservativ og forsvarlig mot kildene. Hovedsvakheten er en terskel-desynkronisering: plagg-chippen vises kun ved feels <= -15 (utelek/baeresele) mens krem-NOTEN anbefales verbalt allerede fra <= -5, og 'when'-teksten sier generisk 'frost'. Ingen sikkerhetsrisiko, men inkonsistent signalgivning. Anbefalt finjustering av terskel-samsvar, ikke tall-endring av selve seleksjonen.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "Terskel-desynkronisering: 'ansiktskrem' som LAG vises kun ved feels <= -15 for utelek/baeresele (ekstrem-bånd) og fra <= -7 for vogn (streng_frost), mens fet-krem-NOTEN (modifiers.ts #9 'notes.cold.frostCream') anbefales verbalt allerede fra feels <= -5. En forelder på -8 til -10 C utelek får tekst-noten 'smør fet krem' men ser ikke krem-chippen i antrekket. 'when'-teksten i garment-info.ts sier dessuten generisk 'i frost' (som dekker -7..0), mens laget aldri velges i frost-båndet.",
+        "forslag": "Vurder å enten (a) legge 'ansiktskrem' inn i frost-båndet (vogn/utelek/baeresele) slik at chip-seleksjon matcher krem-noten ved <= -5/-7, ELLER (b) presisere 'when'-teksten til 'streng frost (under -7/-15 C)' så teksten ikke lover bredere bruk enn motoren leverer. IKKE endre tall uten helsesøster-godkjenning - dette er en konsistens-justering, presenteres som forslag.",
+        "kilde": "capital-area-peds (outdoor-exposure-grenser per alder); aap-healthychildren (kuldevær-påkledning)"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen note skiller mellom fet/vannfri krem og vannbasert krem. Vannbasert ansiktskrem i streng frost kan faktisk ØKE frostskade-risiko fordi vanninnholdet fryser på huden. what-teksten sier 'Fet ansiktskrem' men why-grenen og frost-note sier bare 'fet krem' uten å advare mot vannbaserte produkter.",
+        "forslag": "Vurder en kort kontekst-note (i samme stil som eksisterende sikkerhets-noter) om at kremen skal være FET/vannfri, ikke vannbasert, i kuldegrader. Dette er en informasjons-note, ikke et alternatives.ts-alternativ.",
+        "kilde": "capital-area-peds (frostskade-forebygging i kuldevær)"
+      }
+    ]
+  },
+  "fable": null
+}

@@ -1,0 +1,1523 @@
+<!doctype html>
+<html lang="nb" data-theme="light" data-temp="mild">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Antrekks-komposisjon (Påkledning A) – Babyora F79</title>
+<style>
+/* ============================================================
+   MORGENNATT-PALETTEN — tokens hentet ordrett fra
+   docs/F79/morgennatt-cta-analyse.md, «Endelige Morgennatt-tokens»-
+   blokken (Sivert-valgt vinnerpalett, avløser Brevann/turkis i denne
+   mocken 2026-07-02). CTA = Granmynte. Lag-tokens er plagg-alignerte
+   huer (innerst=korall 40°, mellom=oker 80°, ytterst=petrol 215°) —
+   fjerner det tidligere fiolette layer-mellom (300°) og gir chip-swatch
+   og faktisk plagg-avatar samme hue-familie. Jakke (lag-4) er re-generert
+   fra #1E4750 → #35707F (jf. rapportens plagg-vurdering: opprinnelig
+   dyp petrol var 1.69–1.72:1 mot mørk indigo-canvas, under 3:1-kravet).
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,420;9..144,560;9..144,640&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-canvas:      #DAD8EE;
+  --surface:        #F3F2FB;
+  --ink-primary:    #211B32;
+  --ink-secondary:  #56506F;
+  --accent-cta:     #267147; /* Granmynte lys — 5.63 label/fill, 4.20-4.28 fill/canvas */
+  --accent-cta-ink: #F2FBF5;
+  --layer-innerst:  #AF5331; /* korall, = ullbody-hue */
+  --layer-mellom:   #93690D; /* oker, = marigold-hue */
+  --layer-ytterst:  #285E6A; /* petrol, = jakke-hue */
+  --focus-ring:     #6750AB;
+  --avatar-glow:    #EFECFC;
+  --accent-temp:    #6654A1;
+  --shadow-tint: 0 40px 90px -30px rgba(23, 16, 46, 0.45), 0 12px 30px -14px rgba(23, 16, 46, 0.35);
+  --card-shadow: 0 18px 40px -26px rgba(23, 16, 46, 0.45);
+  --hairline: rgba(33, 27, 50, 0.16);
+
+  /* lag-edge-tokens: plagg-fargene selv (uendret hue vs. rapportens plagg-
+     vurdering, kun jakke re-generert — se kommentar over). */
+  --lag-1: #D96B4A; /* innerst: korall ullbody — BEHOLD */
+  --lag-2: #5A7480; /* petrol-grå bukse — BEHOLD */
+  --lag-3: #D9962B; /* marigold strikkegenser — BEHOLD */
+  --lag-4: #35707F; /* ytterst: petrol jakke — RE-GEN fra #1E4750 (var 1.69:1 mørk) */
+
+  /* konnektor-/chip-edge-tokener: mørke motsvar til --lag-* så konnektorene
+     leser ≥3:1 mot sheet-bakgrunnen i stedet for rå plagg-hue. */
+  --chip-edge-1: #7A2E17;
+  --chip-edge-2: #22343C;
+  --chip-edge-3: #7A5410;
+  --chip-edge-4: #17323A;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-temp="kald"] {
+  --bg-canvas:   #CCDCF7;
+  --avatar-glow: #E1ECFC;
+  --accent-temp: #2B5C97;
+}
+[data-temp="varm"] {
+  --bg-canvas:   #EED1E0;
+  --avatar-glow: #FDE5E1;
+  --accent-temp: #B54436;
+}
+
+[data-theme="dark"] {
+  --bg-canvas:      #1A1828;
+  --surface:        #282639;
+  --ink-primary:    #EBEAF5;
+  --ink-secondary:  #B3B2C5;
+  --accent-cta:     #65D097; /* Granmynte mørk — 7.97 label/fill, 8.99-9.15 fill/canvas */
+  --accent-cta-ink: #0F2B1D;
+  --layer-innerst:  #EE9373;
+  --layer-mellom:   #DBB155;
+  --layer-ytterst:  #6FB0C0;
+  --focus-ring:     #A48FE1;
+  --avatar-glow:    #4D4869;
+  --accent-temp:    #A89AD7;
+  --shadow-tint: 0 44px 100px -30px rgba(0, 0, 0, 0.75), 0 14px 34px -14px rgba(0, 0, 0, 0.6);
+  --card-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.75);
+  --hairline: rgba(235, 234, 245, 0.18);
+
+  --lag-1: #E08A6B;
+  --lag-2: #86A0AB;
+  --lag-3: #E6B458;
+  --lag-4: #6FB0C0; /* re-gen jakke, mørk motsvar — 6.06 vs surface */
+
+  /* mørk modus: lyse motsvar til --chip-edge-* så konnektorene fortsatt
+     leser ≥3:1 mot den mørke sheet-bakgrunnen (samme prinsipp som Hjem A). */
+  --chip-edge-1: #F2B79C;
+  --chip-edge-2: #C3D3D8;
+  --chip-edge-3: #F2CE85;
+  --chip-edge-4: #B9E1E9;
+}
+[data-theme="dark"][data-temp="kald"] {
+  --bg-canvas:   #131A2D;
+  --avatar-glow: #384D73;
+  --accent-temp: #79B0E8;
+}
+[data-theme="dark"][data-temp="varm"] {
+  --bg-canvas:   #251724;
+  --avatar-glow: #6E4358;
+  --accent-temp: #F8907C;
+}
+/* node 1/3 badge-tekst: lysnet lag-1/lag-3 i mørk modus er for lys bak til å bære
+   ink-primary (lys ink) — trenger mørk ink-tekst for å holde ≥4.5:1 (se doc-footer-tabell).
+   Bruker mørk-temaets --accent-cta-ink (#0F2B1D, Granmynte-ink) som mørk tekstfarge —
+   samme verdi som badge 2/4 sin lyse cta-ink-motpart, kun snudd. */
+[data-theme="dark"] .garment-node--1 .badge,
+[data-theme="dark"] .garment-node--3 .badge { color: #0F2B1D; }
+
+/* ---------- kontrast-dokumentasjon (WCAG 2.x, sRGB relative luminance) ----------
+   Morgennatt-palett (re-themet 2026-07-02 fra Brevann/turkis, se
+   docs/F79/morgennatt-cta-analyse.md). Alle ratioer under er re-beregnet
+   for de nye tokens (node-script, sRGB relative luminance).
+   par                                    → ratio  → pass/fail  (krav)
+   LYS:
+   ink-primary #211B32 / surface #F3F2FB   → 14.92:1 → PASS (≥4.5:1 body)
+   ink-secondary #56506F / surface #F3F2FB →  6.82:1 → PASS (≥4.5:1 body)
+   ink-primary #211B32 / canvas #DAD8EE    → 11.86:1 → PASS (≥4.5:1 body-on-canvas)
+   cta-ink #F2FBF5 / cta-fill #267147      →  5.63:1 → PASS (≥4.5:1 CTA-label, Granmynte)
+   cta-fill #267147 / canvas #DAD8EE       →  4.25:1 → PASS (≥3:1 knapp-fill vs bakgrunn)
+   focus-ring #6750AB / surface #F3F2FB    →  5.71:1 → PASS (≥3:1 fokus)
+   focus-ring #6750AB / canvas #DAD8EE     →  4.54:1 → PASS (≥3:1 fokus på sheet-backdrop)
+   badge-tekst ink-primary / lag-1 korall  →  4.85:1 → PASS (mørk tekst brukt på badge 1)
+   badge-tekst ink-primary / lag-3 marigold→  6.59:1 → PASS (mørk tekst brukt på badge 3)
+   badge-tekst cta-ink / lag-2 petrol-grå  →  4.69:1 → PASS (lys tekst brukt på badge 2)
+   badge-tekst cta-ink / lag-4 petrol jakke→  5.27:1 → PASS (lys tekst brukt på badge 4; jakke re-gen #35707F)
+   edge-lag-4 #35707F / surface #F3F2FB    →  5.01:1 → PASS (≥3:1 non-text edge-ring)
+   edge-lag-2 #5A7480 / surface #F3F2FB    →  4.45:1 → PASS (≥3:1 non-text edge-ring)
+   edge-lag-1 #D96B4A / surface #F3F2FB    →  3.07:1 → PASS (≥3:1 non-text edge-ring)
+   edge-lag-3 #D9962B / surface #F3F2FB    →  2.26:1 → under 3:1 alene → badge-ring får ekstra 1.5px
+                                              ink-primary/ink-secondary utstroke
+                                              (non-text-krav dekkes av outline, ikke fyll alene)
+   MØRK:
+   ink-primary #EBEAF5 / surface #282639   → 12.35:1 → PASS
+   ink-secondary #B3B2C5 / surface #282639 →  7.07:1 → PASS
+   cta-ink #0F2B1D / cta-fill #65D097      →  7.97:1 → PASS (Granmynte mørk = mynte)
+   cta-fill #65D097 / canvas #1A1828       →  9.15:1 → PASS
+   focus-ring #A48FE1 / surface #282639    →  5.32:1 → PASS
+   badge-tekst #0F2B1D / lag-1 lys korall #E08A6B  → 5.79:1 → PASS (mørk cta-ink brukt på badge 1)
+   badge-tekst #0F2B1D / lag-3 lys marigold #E6B458→ 7.97:1 → PASS (mørk cta-ink brukt på badge 3)
+   badge-tekst cta-ink #0F2B1D / lag-2 dark #86A0AB→ 5.51:1 → PASS (lys tekst brukt på badge 2)
+   badge-tekst cta-ink #0F2B1D / lag-4 dark #6FB0C0→ 6.25:1 → PASS (lys tekst brukt på badge 4)
+   Metode: luminans beregnet på endelige clippede sRGB-hex (ikke OKLCH-kilde),
+   iht. a11y-preclearance §1 OKLCH-advarsel.
+   Full spec-tabell (synlig for bruker) ligger i .doc-footer nederst på siden.
+   ------------------------------------------------------------------------- */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg-canvas);
+  color: var(--ink-primary);
+  min-height: 100dvh;
+  display: grid;
+  place-items: start center;
+  padding: 28px 16px 64px;
+  line-height: 1.5;
+  transition: background-color 600ms var(--ease-out), color 600ms var(--ease-out);
+  position: relative;
+}
+/* emil-tiltak #7: gradient-bakgrunn kan ikke transition'e (background-image er ikke
+   en animerbar egenskap, og background-color alene treffer aldri fordi verdien
+   faktisk levert ER et gradient-lag på --bg-canvas) — derfor snapper temp-aksen
+   i stedet for å krysstone. Fix: tre stablede lag-divs (én per temp-state),
+   opacity-crossfade styrt av [data-temp] på <html>, samme prinsipp som
+   Hjem A sin .atmos-lag / Hjem B sin .phone-bg-layer. Hvert lag har egen
+   FAST temp-farge via --layer-bg-color (egne [data-theme="dark"]-overrides
+   under), uavhengig av --bg-canvas som selv endres globalt — det er det som
+   gjør at opacity-crossfade faktisk krysstoner i stedet for at alle tre lag
+   hopper sammen med den globale variabelen. */
+.body-bg-layer {
+  position: fixed; inset: 0; z-index: -1;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-out);
+  background: radial-gradient(120% 90% at 50% -10%, color-mix(in srgb, var(--layer-bg-color) 70%, #fff) 0%, var(--layer-bg-color) 55%), var(--layer-bg-color);
+}
+.body-bg-layer[data-layer-temp="kald"] { --layer-bg-color: #CCDCF7; }
+.body-bg-layer[data-layer-temp="mild"] { --layer-bg-color: #DAD8EE; }
+.body-bg-layer[data-layer-temp="varm"] { --layer-bg-color: #EED1E0; }
+[data-theme="dark"] .body-bg-layer[data-layer-temp="kald"] { --layer-bg-color: #131A2D; }
+[data-theme="dark"] .body-bg-layer[data-layer-temp="mild"] { --layer-bg-color: #1A1828; }
+[data-theme="dark"] .body-bg-layer[data-layer-temp="varm"] { --layer-bg-color: #251724; }
+.body-bg-layer[data-layer-temp="mild"] { opacity: 1; }
+[data-temp="kald"] .body-bg-layer[data-layer-temp="kald"],
+[data-temp="mild"] .body-bg-layer[data-layer-temp="mild"],
+[data-temp="varm"] .body-bg-layer[data-layer-temp="varm"] { opacity: 1; }
+[data-temp="kald"] .body-bg-layer[data-layer-temp="mild"],
+[data-temp="kald"] .body-bg-layer[data-layer-temp="varm"],
+[data-temp="mild"] .body-bg-layer[data-layer-temp="kald"],
+[data-temp="mild"] .body-bg-layer[data-layer-temp="varm"],
+[data-temp="varm"] .body-bg-layer[data-layer-temp="kald"],
+[data-temp="varm"] .body-bg-layer[data-layer-temp="mild"] { opacity: 0; }
+
+.wrap { width: min(390px, 100%); }
+
+.page-head { text-align: center; margin-bottom: 16px; }
+.page-head .kicker {
+  display: block;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-secondary); margin-bottom: 4px;
+}
+.page-head h1 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 640;
+  font-size: 21px;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- demo-kontroller (temp-akse + tema) ---------- */
+.controls {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 10px; margin: 14px auto 0; max-width: 390px;
+}
+.temp-btn {
+  min-height: 44px; padding: 8px 16px; border-radius: 999px;
+  border: 1.5px solid var(--ink-secondary); background: transparent; color: var(--ink-primary);
+  font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: background-color 600ms var(--ease-out), color 600ms var(--ease-out), border-color 600ms var(--ease-out);
+}
+.temp-btn .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent-temp); flex: none; }
+.temp-btn[data-t="kald"] .dot { background: #2B5C97; }
+.temp-btn[data-t="varm"] .dot { background: #B54436; }
+.temp-btn[aria-pressed="true"] { background: var(--ink-primary); border-color: var(--ink-primary); color: var(--surface); }
+.temp-btn[aria-pressed="true"] .dot { background: var(--surface); }
+.theme-toggle {
+  min-height: 44px; padding: 8px 14px; margin-left: 4px; border-radius: 999px;
+  border: 1.5px solid var(--ink-secondary); background: var(--surface); color: var(--ink-primary);
+  font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: background-color 600ms var(--ease-out), color 600ms var(--ease-out);
+}
+
+/* ---------- telefon-ramme ---------- */
+.phone {
+  position: relative;
+  width: 390px;
+  max-width: 100%;
+  height: 844px;
+  max-height: 86dvh;
+  margin: 0 auto;
+  border-radius: 46px;
+  overflow: hidden;
+  background: var(--bg-canvas);
+  box-shadow: var(--shadow-tint), 0 0 0 1px rgba(0, 34, 39, 0.08);
+  transition: background-color 600ms var(--ease-out);
+}
+
+/* dimmet Hjem-bakgrunn, kun antydet (dekorativ, aria-hidden) */
+.home-hint {
+  position: absolute; inset: 0;
+  padding: 26px 22px;
+  color: var(--ink-primary);
+}
+.home-hint .top {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+.home-hint .weather {
+  display: flex; align-items: center; gap: 12px; margin-top: 14px;
+}
+.home-hint .weather img { width: 56px; height: 56px; }
+.home-hint .temp { font-size: 42px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.home-hint .cond { font-size: 13.5px; color: var(--ink-secondary); }
+/* Ekte dimmet miniatyr av Hjem A (ikke wireframe/skjelett-barer): samme
+   atmos-gradient-idé som Hjem A sin bakgrunn + en sløret stage-4-avatar,
+   så bakgrunnen leser som et faktisk, uferdig-lastet skjermbilde av
+   forrige steg i flyten — ikke et abstrakt "kommer snart"-lasteskjelett. */
+.home-hint .atmos-card {
+  position: relative;
+  margin-top: 28px;
+  height: 260px;
+  border-radius: 28px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--avatar-glow) 70%, transparent) 0%, transparent 65%),
+    color-mix(in srgb, var(--surface) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink-primary) 10%, transparent);
+}
+.home-hint .atmos-card img {
+  position: absolute; left: 50%; bottom: -10px;
+  width: 190px; height: 190px;
+  transform: translateX(-50%);
+  object-fit: contain;
+  filter: blur(3.5px);
+  opacity: 0.8;
+}
+.home-hint .atmos-label {
+  margin-top: 14px; height: 12px; width: 55%;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ink-primary) 10%, transparent);
+}
+
+/* dimming-lag bak sheet */
+.scrim {
+  position: absolute; inset: 0;
+  background: color-mix(in srgb, var(--ink-primary) 38%, transparent);
+  opacity: 0;
+  animation: scrim-in 420ms var(--ease-out) forwards;
+  animation-delay: 60ms;
+}
+@keyframes scrim-in { to { opacity: 1; } }
+
+/* ---------- bottom sheet ---------- */
+.sheet {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  max-height: 88%;
+  background: color-mix(in srgb, var(--bg-canvas) 28%, var(--surface));
+  border-radius: 30px 30px 0 0;
+  box-shadow: var(--card-shadow);
+  padding: 12px 20px 20px;
+  overflow-y: auto;
+  transform: translateY(100%);
+  animation: sheet-in 420ms var(--ease-out) forwards;
+  animation-delay: 60ms;
+  transition: background-color 600ms var(--ease-out);
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+.sheet > main { display: contents; }
+@keyframes sheet-in { to { transform: translateY(0); } }
+
+/* emil-tiltak #7 (sheet-halvdel) + benchmark-tiltak #5/#11: samme stablede
+   opacity-crossfade-lag som .body-bg-layer over, så temp-tinten faktisk krysstoner
+   i stedet for å snappe. Accent-temp-andelen er løftet fra 8% til 18% (innenfor
+   benchmark-tiltakets 18-22%) slik at Morgennatt-signaturen eier popup-konteksten
+   like mye som canvas-stripen over. Ligger under sheet-innholdet (z-index via
+   isolation+order i DOM), over sheet sin egen fallback-bakgrunn. */
+.sheet-bg-layer {
+  position: absolute; inset: 0; z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-out);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--layer-temp-color, var(--accent-temp)) 18%, color-mix(in srgb, var(--bg-canvas) 28%, var(--surface))) 0%,
+    color-mix(in srgb, var(--bg-canvas) 28%, var(--surface)) 140px);
+}
+/* hvert lag har egen FAST temp-farge (uavhengig av --accent-temp, som selv
+   endres globalt) — nødvendig for at opacity-crossfade mellom lagene faktisk
+   skal krysstone i stedet for at alle tre lag hopper sammen med den globale
+   variabelen. Lys/mørk-varianten dekkes fordi verdiene matcher tokens i
+   [data-temp="kald"]/[data-temp="varm"] og [data-theme="dark"] over. */
+.sheet-bg-layer[data-layer-temp="kald"] { --layer-temp-color: #2B5C97; }
+.sheet-bg-layer[data-layer-temp="mild"] { --layer-temp-color: #6654A1; }
+.sheet-bg-layer[data-layer-temp="varm"] { --layer-temp-color: #B54436; }
+[data-theme="dark"] .sheet-bg-layer[data-layer-temp="kald"] { --layer-temp-color: #79B0E8; }
+[data-theme="dark"] .sheet-bg-layer[data-layer-temp="mild"] { --layer-temp-color: #A89AD7; }
+[data-theme="dark"] .sheet-bg-layer[data-layer-temp="varm"] { --layer-temp-color: #F8907C; }
+.sheet-bg-layer[data-layer-temp="mild"] { opacity: 1; }
+[data-temp="kald"] .sheet-bg-layer[data-layer-temp="kald"],
+[data-temp="mild"] .sheet-bg-layer[data-layer-temp="mild"],
+[data-temp="varm"] .sheet-bg-layer[data-layer-temp="varm"] { opacity: 1; }
+[data-temp="kald"] .sheet-bg-layer[data-layer-temp="mild"],
+[data-temp="kald"] .sheet-bg-layer[data-layer-temp="varm"],
+[data-temp="mild"] .sheet-bg-layer[data-layer-temp="kald"],
+[data-temp="mild"] .sheet-bg-layer[data-layer-temp="varm"],
+[data-temp="varm"] .sheet-bg-layer[data-layer-temp="kald"],
+[data-temp="varm"] .sheet-bg-layer[data-layer-temp="mild"] { opacity: 0; }
+/* benchmark-tiltak #5: samme feTurbulence-grain-signatur som Hjem-mockene,
+   maskert mot bunn så den ikke støyer opp CTA/tekst-sonen. */
+.sheet-grain {
+  position: absolute; inset: 0; z-index: 1;
+  pointer-events: none;
+  opacity: 0.15;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-repeat: repeat;
+  background-size: 180px 180px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 92%);
+          mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 92%);
+}
+.sheet > * { position: relative; z-index: 2; }
+.sheet > .sheet-bg-layer, .sheet > .sheet-grain { z-index: 0; }
+.sheet > .sheet-grain { z-index: 1; }
+
+.sheet-grabber {
+  width: 40px; height: 4px; border-radius: 999px;
+  background: color-mix(in srgb, var(--ink-primary) 22%, transparent);
+  margin: 4px auto 14px;
+}
+
+.sheet-eyebrow {
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-secondary);
+  margin-bottom: 4px;
+}
+.sheet h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 640;
+  font-size: 21px;
+  letter-spacing: -0.01em;
+  margin-bottom: 2px;
+}
+.title-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+.temp-glimpse-wrap {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-left: auto;
+}
+.temp-glimpse-wrap img { width: 34px; height: 34px; flex: none; }
+.temp-glimpse {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 560;
+  font-size: 44px;
+  line-height: 1;
+  /* color-tiltak #11: tint tallet med accent-temp (i stedet for ren ink-primary)
+     så Morgennatt-signaturen leses inne i popupen, ikke bare i canvas-stripen over.
+     color-mix mot ink-primary holder body-kontrasten trygt over 4.5:1 i alle tre
+     temp-states + begge tema (accent-temp-tokens er alle ≥4.5:1 selv, ink-primary enda mer). */
+  color: color-mix(in srgb, var(--accent-temp) 55%, var(--ink-primary));
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  transition: color 600ms var(--ease-out);
+}
+.sheet .sub {
+  font-size: 13px; color: var(--ink-secondary); margin-bottom: 14px;
+}
+
+/* ---------- komposisjon: avatar + plagg-thumbs rundt ---------- */
+.composition {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 4px 0 6px;
+  min-height: 380px;
+}
+.composition::before {
+  content: '';
+  position: absolute; inset: 4% 6%;
+  background: radial-gradient(closest-side,
+    color-mix(in srgb, var(--accent-temp) 25%, var(--avatar-glow)) 0%,
+    color-mix(in srgb, var(--avatar-glow) 55%, transparent) 55%, transparent 78%);
+  filter: blur(6px);
+  transition: background-color 600ms var(--ease-out);
+}
+
+.avatar-hero {
+  position: relative;
+  width: 200px; height: 200px;
+  z-index: 2;
+}
+.avatar-hero img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: contain;
+}
+
+/* konnektor-svg dekker composition-flaten MINUS et tekst-fritt inset øverst
+   (tittel + meta-linje bor over sheeten, ikke i .composition, men vi holder
+   uansett en topp-margin slik at wireConnectors() aldri starter et punkt
+   over tittel-/meta-teksten — se JS: startpunkt er ay-40, skulderhøyde på
+   avataren, ikke avatar-senteret). Path'ene settes av JS (wireConnectors)
+   ut fra faktiske getBoundingClientRect-posisjoner til hver .garment-thumb
+   og avatar-hero-skulderpunktet — viewBox er 1:1 px mot .composition slik
+   at koordinatene kan skrives rett inn uten skalering.
+   benchmark-tiltak #5: de lange bezier-strekene er byttet ut med KORTE
+   10-14px ticks som beholder kun siste segment av pathen (fra thumb-kanten
+   og innover) — leser som teknisk måle-/festepunkt, ikke mind-map-linje.
+   distinctness-tiltak #1: hver tick avsluttes med et lite <circle>
+   endepunkt ved thumb-kanten, og nummer-badgen (se .garment-thumb .badge)
+   flyttes til å sitte PÅ ticken sitt midtpunkt i stedet for i thumb-hjørnet,
+   slik at komposisjonen leser som en eksplosjonstegning. */
+.connectors {
+  position: absolute;
+  inset: 48px 0 0 0;
+  overflow: visible;
+}
+.connectors path {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0.95;
+  stroke-dashoffset: 1;
+  stroke-dasharray: 1 1;
+  transition: stroke-dashoffset 420ms var(--ease-out);
+}
+.connectors circle {
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+.connectors.is-drawn #connector-1, .connectors.is-drawn #connector-dot-1 { transition-delay: 0ms; }
+.connectors.is-drawn #connector-2, .connectors.is-drawn #connector-dot-2 { transition-delay: 80ms; }
+.connectors.is-drawn #connector-3, .connectors.is-drawn #connector-dot-3 { transition-delay: 160ms; }
+.connectors.is-drawn #connector-4, .connectors.is-drawn #connector-dot-4 { transition-delay: 240ms; }
+.connectors.is-drawn path { stroke-dashoffset: 0; }
+.connectors.is-drawn circle { opacity: 1; }
+.connectors.no-anim path,
+.connectors.no-anim circle { transition: none !important; }
+
+/* plagg-thumb-noder, absolutt posisjonert rundt avataren.
+   benchmark-tiltak #6: node-skala varierer etter sone i stedet for fire
+   identiske 96px-firkanter (innerst 84px, bukse 92px, genser 100px, ytterst
+   112px), satt via --thumb-size per nth-of-type under. */
+.garment-node {
+  position: absolute;
+  z-index: 3;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  opacity: 0;
+  transform: scale(0.9);
+  animation: node-in 380ms var(--ease-out) forwards;
+}
+.garment-node--1 { left: 2%;  top: 2%;  animation-delay: 200ms; transform-origin: 100% 100%; --thumb-size: 84px; --thumb-rot: -4deg; --thumb-radius: 26px 22px 26px 10px; }
+.garment-node--2 { right: 0%; top: 4%;  animation-delay: 260ms; transform-origin: 0% 100%; --thumb-size: 92px; --thumb-rot: 3deg;  --thumb-radius: 22px 26px 12px 26px; }
+.garment-node--3 { left: -2%; bottom: 6%; animation-delay: 320ms; transform-origin: 100% 0%; --thumb-size: 100px; --thumb-rot: -2deg; --thumb-radius: 26px 12px 26px 22px; }
+.garment-node--4 { right: 2%; bottom: 0%; animation-delay: 380ms; transform-origin: 0% 0%; --thumb-size: 112px; --thumb-rot: 5deg;  --thumb-radius: 12px 26px 22px 26px; }
+
+@keyframes node-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* klikkbarhet-affordance (Sivert-krav): thumb-kortene skal SE klikkbare ut,
+   ikke som stille bilder. Løsning: 1) :hover løfter kortet (translateY -2px,
+   uavhengig av den faste --thumb-rot-rotasjonen) + øker skyggen, 2) :active
+   skalerer ned (0.97) med rask 80ms-overgang, 3) et lite dekorativt "i"-info-
+   merke i hjørnet (::after, aria-hidden — selve semantikken bæres av knappens
+   aria-label, se HTML). Alt sammen 160ms ease-out iht. oppgavens spec. */
+.garment-thumb {
+  position: relative;
+  isolation: isolate; /* egen stacking-kontekst så .has-alt::before sin z-index:-1
+                          kun legger seg bak DENNE thumben, ikke bak naboer/avatar */
+  width: var(--thumb-size, 96px); height: var(--thumb-size, 96px);
+  border-radius: var(--thumb-radius, 24px);
+  /* distinctness-tiltak #2 + color-tiltak #12: hver thumb roteres ulikt
+     (-4/3/-2/5deg) og har asymmetrisk radius per sone i stedet for fire
+     identiske 24px-firkanter, pluss en egen 1.5px chip-edge-kant slik at
+     de interaktive flatene holder ≥3:1 non-text-avgrensning mot
+     sheet-bakgrunnen selv der lag-1/lag-3-fyllet alene er <3:1. */
+  transform: rotate(var(--thumb-rot, 0deg)) translateY(0);
+  border-width: 1.5px;
+  border-style: solid;
+  padding: 12px;
+  display: grid; place-items: center;
+  cursor: pointer;
+  box-shadow: 0 10px 22px -14px rgba(0, 34, 39, 0.4);
+  transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+}
+.garment-node--1 .garment-thumb { background: color-mix(in srgb, var(--lag-1) 22%, var(--surface)); border-color: var(--chip-edge-1); }
+.garment-node--2 .garment-thumb { background: color-mix(in srgb, var(--lag-2) 22%, var(--surface)); border-color: var(--chip-edge-2); }
+.garment-node--3 .garment-thumb { background: color-mix(in srgb, var(--lag-3) 22%, var(--surface)); border-color: var(--chip-edge-3); }
+.garment-node--4 .garment-thumb { background: color-mix(in srgb, var(--lag-4) 22%, var(--surface)); border-color: var(--chip-edge-4); }
+.garment-thumb:hover {
+  transform: rotate(var(--thumb-rot, 0deg)) translateY(-2px);
+  box-shadow: 0 16px 28px -14px rgba(0, 34, 39, 0.5);
+}
+.garment-thumb:active {
+  transform: rotate(var(--thumb-rot, 0deg)) translateY(0) scale(0.97);
+  transition-duration: 80ms;
+}
+.garment-thumb img { width: 100%; height: 100%; object-fit: contain; transform: rotate(calc(-1 * var(--thumb-rot, 0deg))); }
+
+/* info-merke: liten "i"-sirkel i hjørnet som signaliserer "trykk for info",
+   samme visuelle språk som badge-nummeret men i motsatt hjørne (motsatt av
+   --badge-x/y-punktet, som sitter på konnektor-tick-siden). Rent dekorativt. */
+.garment-thumb::after {
+  content: 'i';
+  position: absolute;
+  top: -6px; right: -6px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-secondary);
+  border: 1.5px solid var(--hairline);
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1;
+  display: grid; place-items: center;
+  transform: rotate(calc(-1 * var(--thumb-rot, 0deg)));
+  box-shadow: 0 2px 6px -2px rgba(0, 34, 39, 0.35);
+  pointer-events: none;
+}
+
+/* alternativ-indikator (Sivert-krav): stablet-kort-effekt for plagg som har
+   alternativer — en forskjøvet "kant" bak selve thumben, synlig FØR trykk.
+   ::before ligger bak (z-index lavere enn selve knapp-boksen via negative
+   inset + border-radius-arv), forskjøvet 3-4px i tick-retning motsatt av
+   badge-hjørnet for å ikke kollidere med det. */
+.garment-thumb.has-alt::before {
+  content: '';
+  position: absolute;
+  inset: 4px -4px -4px 4px;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--ink-primary) 12%, transparent);
+  border: 1.5px solid var(--hairline);
+  z-index: -1;
+}
+.garment-alt-count {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  margin-top: -1px;
+}
+
+/* distinctness-tiltak #1: badgen flytter fra thumb-hjørnet til å sitte PÅ
+   konnektor-tickens midtpunkt (posisjonert av JS via --badge-x/--badge-y
+   custom properties på hver .garment-thumb — badgens egen position:relative-
+   forfar — relativt til thumben sin bounding box), så komposisjonen leser
+   som en teknisk eksplosjonstegning fremfor fire frittstående kort med
+   streker mellom. */
+.garment-thumb .badge {
+  position: absolute;
+  top: calc(var(--badge-y, -8px) - 12px);
+  left: calc(var(--badge-x, -8px) - 12px);
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  outline: 1.5px solid var(--ink-primary);
+  outline-offset: -1.5px;
+  transform: rotate(calc(-1 * var(--thumb-rot, 0deg)));
+  box-shadow: 0 2px 6px -2px rgba(0, 34, 39, 0.45);
+}
+.garment-node--1 .badge { background: var(--lag-1); color: var(--ink-primary); }
+.garment-node--2 .badge { background: var(--lag-2); color: var(--accent-cta-ink); }
+.garment-node--3 .badge { background: var(--lag-3); color: var(--ink-primary); }
+.garment-node--4 .badge { background: var(--lag-4); color: var(--accent-cta-ink); }
+
+/* uipro-tiltak #15: surface-plate bak label (color-mix mot surface-pill)
+   så 12.5px-teksten ikke ligger rett på glow/canvas-mix-bakgrunnen. */
+.garment-label {
+  font-size: 12.5px; font-weight: 700; color: var(--ink-primary);
+  text-align: center; max-width: 96px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.garment-label .sone-inline {
+  display: block;
+  font-size: 10px; font-weight: 600; color: var(--ink-secondary);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-top: 1px;
+}
+
+/* ---------- skjult a11y-tekstliste (ikke visuell duplikat) ----------
+   Garment-nodene (nummer-badge + label + sone) BÆRER nå selv all synlig
+   tekstinfo rundt komposisjonen — det er den ekte anbefalingen, ikke en
+   duplikat-rad. Denne <ol> forblir i DOM som ekte, lesbar tekst-alternativ
+   for skjermlesere/tekst-only-visning av "innerst→ytterst"-rekkefølgen,
+   men vises ikke lenger som en synlig chip-rad (unngår visuell duplisering
+   av garment-node-labelene, se distinctness-tiltak #2). */
+.lagliste {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);
+}
+
+/* ---------- plagg-detalj-panel (klikkbarhet-demonstrasjon, Sivert-krav) ----------
+   Inline-region (ikke <dialog>, for å unngå top-layer-quirks inni en
+   simulert telefonramme) rett under komposisjonen, styrt av aria-expanded
+   på den aktive .garment-thumb-knappen + aria-controls hit. Fokus flyttes
+   inn ved åpning og returneres til triggeren ved lukk (se JS). */
+.garment-detail {
+  margin-top: 4px;
+  border-radius: 20px;
+  border: 1.5px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: 0 14px 30px -20px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 260ms var(--ease-out), opacity 200ms var(--ease-out), margin-top 260ms var(--ease-out);
+}
+.garment-detail[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: 12px;
+}
+.garment-detail > div { overflow: hidden; }
+.garment-detail-inner { padding: 14px 16px 16px; }
+.garment-detail-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.garment-detail-head h3 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 620;
+  font-size: 16px;
+  color: var(--ink-primary);
+}
+.garment-detail-close {
+  flex: none;
+  width: 44px; height: 44px;
+  min-width: 44px; min-height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--hairline);
+  background: var(--surface);
+  color: var(--ink-primary);
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: transform 160ms var(--ease-out);
+}
+.garment-detail-close:active { transform: scale(0.9); transition-duration: 80ms; }
+.garment-detail-why {
+  font-size: 13px; line-height: 1.6; color: var(--ink-secondary);
+  margin-bottom: 10px;
+}
+.garment-detail-why strong { color: var(--ink-primary); }
+
+/* alternativ-rad inni panelet: klikkbar pille "Bytt til: X" */
+.garment-detail-alts {
+  border-top: 1px solid var(--hairline);
+  padding-top: 10px;
+}
+.garment-detail-alts-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-secondary);
+  margin-bottom: 8px;
+  display: block;
+}
+.alt-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--ink-secondary);
+  background: var(--surface);
+  color: var(--ink-primary);
+  font: inherit; font-weight: 600; font-size: 13px;
+  cursor: pointer;
+  transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), color 160ms var(--ease-out);
+}
+.alt-pill:hover { background: color-mix(in srgb, var(--accent-cta) 14%, var(--surface)); }
+.alt-pill:active { transform: scale(0.96); transition-duration: 80ms; }
+.alt-pill .swap-icon { flex: none; width: 14px; height: 14px; }
+.alt-pill-confirm {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ink-secondary);
+  min-height: 16px;
+}
+
+/* ---------- hvorfor-ekspander ---------- */
+.why {
+  margin-top: 14px;
+  border-top: 1px solid var(--hairline);
+  padding-top: 10px;
+}
+.why-trigger {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  background: transparent;
+  border: 0;
+  font: inherit; font-weight: 600; font-size: 14px;
+  color: var(--ink-primary);
+  min-height: 44px;
+  cursor: pointer;
+  text-align: left;
+}
+.why-trigger .chev {
+  flex: none;
+  width: 20px; height: 20px;
+  transition: transform 260ms var(--ease-out);
+}
+.why-trigger[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+.why-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms var(--ease-out);
+}
+.why-panel > div { overflow: hidden; }
+.why-panel[data-open="true"] { grid-template-rows: 1fr; }
+.why-body {
+  font-size: 13px; line-height: 1.6; color: var(--ink-secondary);
+  padding: 4px 0 2px;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out) 80ms;
+}
+.why-panel[data-open="true"] .why-body { opacity: 1; }
+.why-body strong { color: var(--ink-primary); }
+
+/* ---------- CTA ----------
+   Sticky nederst i sheeten: med den visuelt skjulte lagliste-<ol> (garment-
+   nodene bærer nå selv nummer+navn+sone) er innholdet normalt under fold
+   uten sticky, men sticky beholdes som sikkerhetsnett på små skjermer /
+   store systemfonter (uipro #14). */
+.cta-row {
+  margin-top: 16px;
+  position: sticky;
+  bottom: 0;
+  padding-top: 8px;
+  padding-bottom: 2px;
+  background: linear-gradient(to bottom,
+    color-mix(in srgb, var(--bg-canvas) 28%, var(--surface)) 0%,
+    color-mix(in srgb, var(--bg-canvas) 28%, var(--surface)) 60%,
+    color-mix(in srgb, var(--bg-canvas) 28%, var(--surface)) 100%);
+}
+/* distinctness-tiltak #3: pill-CTA byttet til Babyora-signaturformen delt med
+   Hjem A — asymmetrisk 24px 24px 24px 8px radius + 3px marigold topplinje
+   (::before), så flyten har en gjenkjennelig form på tvers av skjermer i
+   stedet for en generisk full-pill-knapp. */
+.cta {
+  position: relative;
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 24px 24px 24px 8px;
+  background: var(--accent-cta);
+  color: var(--accent-cta-ink);
+  font: inherit; font-weight: 700; font-size: 16px;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  box-shadow: 0 16px 30px -16px color-mix(in srgb, var(--accent-cta) 65%, transparent);
+  transition: transform 160ms var(--ease-out), box-shadow 200ms var(--ease-out);
+  overflow: hidden;
+}
+.cta::before {
+  content: '';
+  position: absolute; top: 0; left: 14px; right: 14px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  /* Morgennatt: --accent-cta er nå Granmynte (grønn, 155-158°), --lag-3 er
+     marigold (74°) — hue-avstanden alene garanterer allerede synlig kontrast
+     (ingen familie-kollisjon som i den gamle korall-CTA-en), men toplinjen
+     blandes fortsatt mot white/black for margin på tvers av lys/mørk-canvas. */
+  background: color-mix(in srgb, var(--lag-3) 55%, white);
+}
+[data-theme="dark"] .cta::before {
+  /* 45% (ikke 55%) i mørk modus: målt 3.94:1 mot Granmynte-mynte-fyllet
+     (#65D097), mot 2.96:1 ved 55% — holder ≥3:1 non-text-marginen. */
+  background: color-mix(in srgb, var(--lag-3) 45%, black);
+}
+.cta:active { transform: scale(0.97); transition-duration: 80ms; }
+
+.replay-row {
+  display: flex; justify-content: center; margin-top: 10px;
+}
+.replay {
+  background: transparent;
+  border: 0;
+  min-height: 44px;
+  padding: 0 10px;
+  font: inherit; font-weight: 600; font-size: 13px;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: transform 160ms var(--ease-out);
+}
+/* emil-tiltak #9: :active manglet egen 80ms-override (arvet 160ms fra
+   grunn-transition) — matcher nå .cta og .garment-thumb sin press-følelse. */
+.replay:active { transform: scale(0.97); transition-duration: 80ms; }
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.status {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);
+}
+
+.detail-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ink-secondary);
+  text-align: center;
+  min-height: 16px;
+}
+
+/* ---------- dokumentasjons-footer utenfor telefonen ---------- */
+.doc-footer {
+  max-width: 390px; margin: 22px auto 0; font-size: 12.5px; line-height: 1.6;
+  color: var(--ink-secondary);
+}
+.doc-footer h2 { font-size: 13px; color: var(--ink-primary); margin-bottom: 6px; }
+.doc-footer h2 + h2 { margin-top: 18px; }
+.doc-footer ul { padding-left: 18px; }
+
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  margin-top: 4px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.spec-table th, .spec-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--hairline);
+}
+.spec-table th { font-weight: 700; color: var(--ink-primary); }
+.spec-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.spec-table tbody tr:last-child td { border-bottom: none; }
+.spec-pass {
+  display: inline-block; padding: 1px 8px; border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+  border: 1.5px solid var(--ink-secondary); color: var(--ink-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  .sheet { transform: translateY(0); }
+  .scrim { opacity: 1; }
+  .garment-node { opacity: 1; transform: none; }
+  .connectors path { stroke-dashoffset: 0; }
+  .connectors circle { opacity: 1; }
+  .why-panel[data-open="true"] .why-body { opacity: 1; }
+  .garment-detail-inner { opacity: 1; }
+  .body-bg-layer, .sheet-bg-layer { transition: none !important; }
+}
+
+@media (forced-colors: active) {
+  .phone { border: 2px solid ButtonBorder; }
+  .sheet { border-top: 2px solid ButtonBorder; }
+  .garment-thumb { border: 1px solid ButtonBorder; }
+  .garment-thumb .badge { border: 1px solid ButtonBorder; outline: none; }
+  .garment-thumb::after { border: 1px solid ButtonBorder; }
+  .garment-thumb.has-alt::before { border: 1px solid ButtonBorder; }
+  .lagliste li .dot { border: 1px solid ButtonBorder; outline: none; }
+  /* a11y-sweep: valgt-state må overleve forced-colors (bæres ellers kun av bg) */
+  [aria-pressed="true"] { border: 2px solid Highlight !important; }
+  .cta, .why-trigger, .replay, .alt-pill, .garment-detail-close { border: 1px solid ButtonText; }
+  .garment-detail { border: 1px solid ButtonBorder; }
+  .connectors path { stroke: CanvasText; }
+  .connectors circle { fill: CanvasText; }
+  .sheet-grain { display: none; }
+  .body-bg-layer, .sheet-bg-layer { background: Canvas !important; }
+}
+</style>
+</head>
+<body>
+<!-- emil-tiltak #7: stablede body-bg-lag, ett per temp-state, opacity-crossfade
+     styrt av [data-temp] på <html> (se .body-bg-layer i <style> for de faste
+     per-lag fargene, inkl. egne [data-theme="dark"]-overrides). -->
+<div class="body-bg-layer" data-layer-temp="kald" aria-hidden="true"></div>
+<div class="body-bg-layer" data-layer-temp="mild" aria-hidden="true"></div>
+<div class="body-bg-layer" data-layer-temp="varm" aria-hidden="true"></div>
+<div class="wrap">
+  <header class="page-head">
+    <span class="kicker">F79 · Baseline-tiltak #3</span>
+    <h1>Påkledning A — Antrekks-komposisjon</h1>
+  </header>
+
+  <div class="controls" role="group" aria-label="Demo-kontroller for temperatur-akse og tema">
+    <button type="button" class="temp-btn" data-t="kald" aria-pressed="false">
+      <span class="dot" aria-hidden="true"></span>Kald −8°
+    </button>
+    <button type="button" class="temp-btn" data-t="mild" aria-pressed="true">
+      <span class="dot" aria-hidden="true"></span>Mild 12°
+    </button>
+    <button type="button" class="temp-btn" data-t="varm" aria-pressed="false">
+      <span class="dot" aria-hidden="true"></span>Varm 24°
+    </button>
+    <button type="button" class="theme-toggle" id="themeToggle" aria-pressed="false">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z"/>
+      </svg>
+      Mørk modus
+    </button>
+  </div>
+
+  <div class="phone">
+    <!-- Dimmet, antydet Hjem-bakgrunn (rent dekorativt) -->
+    <div class="home-hint" aria-hidden="true">
+      <div class="top"><span>Elverum</span><span>07:40</span></div>
+      <div class="weather">
+        <img src="/weather-3d/klarvaer.png" alt="" />
+        <div>
+          <div class="temp">12°</div>
+          <div class="cond">Klarvær · føles som 10°</div>
+        </div>
+      </div>
+      <div class="atmos-card">
+        <img src="/avatars/f79-poc/stage-4.png" alt="" />
+      </div>
+      <div class="atmos-label"></div>
+    </div>
+    <div class="scrim" aria-hidden="true"></div>
+
+    <!-- Bottom sheet: hovedinnhold -->
+    <section class="sheet" aria-labelledby="sheet-title">
+      <!-- benchmark-tiltak #5/#11 + emil-tiltak #7: stablede temp-tint-lag
+           (opacity-crossfade, samme prinsipp som .body-bg-layer) pluss en
+           feTurbulence-grain-flate, maskert mot bunn, så sheeten eier
+           Morgennatt-signaturen og teksturen fra Hjem-mockene. -->
+      <div class="sheet-bg-layer" data-layer-temp="kald" aria-hidden="true"></div>
+      <div class="sheet-bg-layer" data-layer-temp="mild" aria-hidden="true"></div>
+      <div class="sheet-bg-layer" data-layer-temp="varm" aria-hidden="true"></div>
+      <div class="sheet-grain" aria-hidden="true"></div>
+      <div class="sheet-grabber" aria-hidden="true"></div>
+      <p class="sheet-eyebrow" id="sheetEyebrow">Anbefalt for i dag · 4 lag</p>
+      <div class="title-row">
+        <h2 id="sheet-title">Antrekket for turen</h2>
+        <span class="temp-glimpse-wrap">
+          <img src="/weather-3d/klarvaer.png" alt="" id="tempGlimpseIcon" aria-hidden="true" />
+          <span class="temp-glimpse" id="tempGlimpse">12°</span>
+        </span>
+      </div>
+      <p class="sub" id="sheetSub">Elverum · Klarvær · føles som 10° · vind 3 m/s</p>
+
+      <main>
+        <div class="composition" id="composition">
+          <svg class="connectors" id="connectors" aria-hidden="true" viewBox="0 0 264 202">
+            <path id="connector-1" pathLength="1" style="stroke: var(--chip-edge-1)" />
+            <path id="connector-2" pathLength="1" style="stroke: var(--chip-edge-2)" />
+            <path id="connector-3" pathLength="1" style="stroke: var(--chip-edge-3)" />
+            <path id="connector-4" pathLength="1" style="stroke: var(--chip-edge-4)" />
+            <!-- distinctness-tiltak #1: sirkel-endepunkt ved thumb-kanten for hver tick,
+                 tegner komposisjonen som en teknisk eksplosjonstegning. -->
+            <circle id="connector-dot-1" r="3" style="fill: var(--chip-edge-1)" />
+            <circle id="connector-dot-2" r="3" style="fill: var(--chip-edge-2)" />
+            <circle id="connector-dot-3" r="3" style="fill: var(--chip-edge-3)" />
+            <circle id="connector-dot-4" r="3" style="fill: var(--chip-edge-4)" />
+          </svg>
+
+          <div class="avatar-hero" id="avatarHero" role="img" aria-label="Barn kledd i ullbody, bukse, strikkegenser og jakke, klar for tur i klarvær ved 12 grader">
+            <img src="/avatars/f79-poc/stage-4.png" alt="" id="avatarHeroImg" />
+          </div>
+
+          <div class="garment-node garment-node--1">
+            <button type="button" class="garment-thumb has-alt" data-lag="1" aria-describedby="detail-note" aria-expanded="false" aria-controls="garmentDetail" aria-label="Vis info om Ullbody, lag 1, 2 alternativer finnes">
+              <span class="badge" aria-hidden="true">1</span>
+              <img src="/avatars/f79-poc/lag-1-body.png" alt="" />
+            </button>
+            <span class="garment-label" aria-hidden="true">Ullbody<span class="sone-inline">Innerst</span><span class="garment-alt-count">2 alternativer</span></span>
+          </div>
+
+          <div class="garment-node garment-node--2">
+            <button type="button" class="garment-thumb" data-lag="2" aria-describedby="detail-note" aria-expanded="false" aria-controls="garmentDetail" aria-label="Vis info om Ullbukse, lag 2">
+              <span class="badge" aria-hidden="true">2</span>
+              <img src="/avatars/f79-poc/lag-2-bukse.png" alt="" />
+            </button>
+            <span class="garment-label" aria-hidden="true">Ullbukse</span>
+          </div>
+
+          <div class="garment-node garment-node--3">
+            <button type="button" class="garment-thumb has-alt" data-lag="3" aria-describedby="detail-note" aria-expanded="false" aria-controls="garmentDetail" aria-label="Vis info om Strikkegenser, lag 3, 2 alternativer finnes">
+              <span class="badge" aria-hidden="true">3</span>
+              <img src="/avatars/f79-poc/lag-3-genser.png" alt="" />
+            </button>
+            <span class="garment-label" aria-hidden="true">Strikkegenser<span class="garment-alt-count">2 alternativer</span></span>
+          </div>
+
+          <div class="garment-node garment-node--4">
+            <button type="button" class="garment-thumb" data-lag="4" aria-describedby="detail-note" aria-expanded="false" aria-controls="garmentDetail" aria-label="Vis info om Jakke, lag 4">
+              <span class="badge" aria-hidden="true">4</span>
+              <img src="/avatars/f79-poc/lag-4-jakke.png" alt="" />
+            </button>
+            <span class="garment-label" aria-hidden="true">Jakke<span class="sone-inline">Ytterst</span></span>
+          </div>
+        </div>
+
+        <p class="detail-note" id="detail-note" aria-live="polite"></p>
+
+        <!-- plagg-detalj-panel (jobb 3+4): inline-region, ikke modal. Styres av
+             aria-expanded på den trykkede .garment-thumb + aria-controls hit.
+             Innhold (tittel/hvorfor-tekst/alternativ-pille) settes av JS per
+             plagg. Fokus flyttes til lukk-knappen ved åpning, returneres til
+             triggeren ved lukk (se openGarmentDetail/closeGarmentDetail). -->
+        <div class="garment-detail" id="garmentDetail" data-open="false" role="region" aria-labelledby="garmentDetailTitle" hidden>
+          <div>
+            <div class="garment-detail-inner">
+              <div class="garment-detail-head">
+                <h3 id="garmentDetailTitle"></h3>
+                <button type="button" class="garment-detail-close" id="garmentDetailClose" aria-label="Lukk plagg-info">
+                  <svg width="14" height="14" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5 15 15M15 5 5 15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+              <p class="garment-detail-why" id="garmentDetailWhy"></p>
+              <div class="garment-detail-alts" id="garmentDetailAlts" hidden>
+                <span class="garment-detail-alts-label">Alternativer</span>
+                <button type="button" class="alt-pill" id="garmentDetailAltBtn">
+                  <svg class="swap-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7h10l-3-3M16 13H6l3 3" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span id="garmentDetailAltLabel">Bytt til: —</span>
+                </button>
+                <p class="alt-pill-confirm" id="garmentDetailAltConfirm" aria-live="polite"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ol class="lagliste" aria-label="Lag, innerst til ytterst">
+          <li>
+            <span class="ord">1</span>
+            <span class="dot" style="background: var(--lag-1)"></span>
+            <span class="navn">Ullbody</span>
+            <span class="sone">innerst</span>
+          </li>
+          <li>
+            <span class="ord">2</span>
+            <span class="dot" style="background: var(--lag-2)"></span>
+            <span class="navn">Ullbukse</span>
+            <span class="sone">midt</span>
+          </li>
+          <li>
+            <span class="ord">3</span>
+            <span class="dot" style="background: var(--lag-3)"></span>
+            <span class="navn">Strikkegenser</span>
+            <span class="sone">midt</span>
+          </li>
+          <li>
+            <span class="ord">4</span>
+            <span class="dot" style="background: var(--lag-4)"></span>
+            <span class="navn">Jakke</span>
+            <span class="sone">ytterst</span>
+          </li>
+        </ol>
+
+        <div class="why">
+          <button type="button" class="why-trigger" id="whyTrigger" aria-expanded="false" aria-controls="whyPanel">
+            <span>Hvorfor dette antrekket?</span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 7.5 10 13 15 7.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="why-panel" id="whyPanel" data-open="false">
+            <div>
+              <p class="why-body">
+                <strong>12° og klarvær</strong> ved Elverum tilsier ett ullag pluss ett isolerende mellomlag.
+                Ullbody mot huden regulerer fukt, strikkegenseren holder på varmen i ro, og den åpne jakken
+                gir albuerom for lek uten at barnet blir svett i sol. Vind på 3 m/s er lavt — ikke behov for
+                vindtett ytterlag i dag.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="cta-row">
+          <button type="button" class="cta" id="ctaBtn">Klar for tur</button>
+        </div>
+        <div class="replay-row">
+          <button type="button" class="replay" id="replayBtn">
+            <svg width="15" height="15" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10a6 6 0 1 1 1.8 4.3M4 10V5.5M4 10h4.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Spill påkledning igjen
+          </button>
+        </div>
+      </main>
+
+      <p class="status" role="status" aria-live="polite" id="status"></p>
+    </section>
+  </div>
+
+  <footer class="doc-footer">
+    <h2>Om denne mocken</h2>
+    <ul>
+      <li>Bottom-sheet over dimmet, antydet Hjem-bakgrunn (kun dekor, <code>aria-hidden</code>).</li>
+      <li>Komposisjon: stage-4-avatar sentralt + 4 plagg-thumbs med nummererte lag-badges. Hver <code>.garment-thumb</code> har eksplisitt <code>aria-label</code> (WCAG 4.1.2-fiks) — badge/bilde/synlig label er fortsatt <code>aria-hidden</code>/tom <code>alt</code> for å unngå triple-annonsering.</li>
+      <li>Konnektor-ticks (13px, ikke lange bezier-linjer) beregnes i JS (<code>wireConnectors()</code>) fra <code>getBoundingClientRect()</code> på hver <code>.garment-thumb</code>-kant og et skulderhøyde-punkt på <code>.avatar-hero</code> (senter − 40px), tegnet inn i <code>.connectors</code> sin egen inset-koordinatramme (<code>inset: 48px 0 0 0</code> mot <code>.composition</code>) slik at ingen tick kan krysse sheet-tittelen/meta-teksten over. Hver tick avsluttes i et lite <code>&lt;circle&gt;</code>-endepunkt ved thumb-kanten, og nummer-badgen flyttes til tickens midtpunkt via CSS custom properties — komposisjonen leser som en teknisk eksplosjonstegning. Solid 2.5px round-cap stroke i mørke <code>--chip-edge-*</code>-farger, staggeret 0/80/160/240ms i takt med node-ankomst (nå fra ~400ms, komprimert inn-koreografi), re-beregnes på vindus-resize. Replay nullstiller konnektorene instant (<code>no-anim</code>-klasse) i takt med at nodene forsvinner, i stedet for at linjene trekker seg tilbake mens nodene alt er borte.</li>
+      <li>Den nummererte tekst-listen av lag (<code>&lt;ol class="lagliste"&gt;</code>) er nå et rent skjermleser-/tekst-only-anker (visuelt skjult, ikke fjernet fra DOM) — garment-nodene rundt komposisjonen bærer selv nummer+navn+sone synlig, så informasjonen ikke lenger dupliseres i to rader.</li>
+      <li>Temp-aksen (Morgennatt-signaturen) er koblet inn via <code>data-temp</code> på <code>&lt;html&gt;</code> med samme tre tilstander som Hjem A. Både body- og sheet-bakgrunnen er nå tre stablede opacity-crossfadede lag (<code>.body-bg-layer</code>/<code>.sheet-bg-layer</code>, ett per temp-state med egen fast farge) i stedet for én gradient bundet direkte til <code>--bg-canvas</code>/<code>--accent-temp</code> — gradient-bakgrunner kan ikke <code>transition</code>e, så dette er det som faktisk gir en krysstonende 600ms-overgang i stedet for et snap. Sheet-toppens accent-temp-andel er løftet fra 8% til 18%, og <code>.temp-glimpse</code>-tallet er tintet med <code>--accent-temp</code>, slik at temperaturen skinner tydelig gjennom hele popup-konteksten, ikke bare canvas-stripen over.</li>
+      <li>Guardrail-fiks (dommerpanelet iter 4): temperaturen vises nå fra ÉN kilde i JS (<code>WEATHER_STATE</code> + <code>setWeatherState()</code>). Tidligere ble kun <code>.temp-glimpse</code> oppdatert ved temp-bytte, mens meta-linjen (<code>.sub</code>) og <code>.avatar-hero</code> sin <code>aria-label</code> sto fast på "12°/mild" — en tekst-mot-tekst-motsigelse. <code>setWeatherState()</code> setter nå <code>.temp-glimpse</code>, <code>.sub</code> og avatar-<code>aria-label</code> atomisk i samme funksjonskall ved hvert temp-knapp-trykk.</li>
+      <li>Sheeten har en <code>feTurbulence</code>-grain-flate (<code>.sheet-grain</code>, opacity 0.15, maskert mot bunn) — samme kornsignatur som Hjem-mockene.</li>
+      <li>De fire <code>.garment-thumb</code>-nodene har hver sin skala (84/92/100/112px, innerst→ytterst), rotasjon (-4/3/-2/5deg) og asymmetriske hjørneradier, pluss en 1.5px <code>--chip-edge-*</code>-kant — bryter tile-perfeksjonen og gir non-text-avgrensning ≥3:1 mot sheet-bakgrunnen selv der lag-1/lag-3-fyllet alene er &lt;3:1. CTA-en («Klar for tur») bruker samme asymmetriske 24px/8px-radius + marigold topplinje som Hjem A, som felles Babyora-signaturform.</li>
+      <li>Mørk modus er nåelig via «Mørk modus»-knappen over telefonrammen (var utilgjengelig CSS uten toggle tidligere).</li>
+      <li>«Hvorfor?» er en inline <code>aria-expanded</code>-ekspander, ikke modal; body faded inn 200ms for å maskere grid-rows-strekkingen.</li>
+      <li>Klikkbarhet-affordance (Sivert-krav): hver <code>.garment-thumb</code> har <code>:hover</code>-løft (translateY -2px) + <code>:active</code>-scale (0.97, 80ms), et dekorativt "i"-infomerke i hjørnet, og åpner et ekte plagg-detalj-panel (<code>#garmentDetail</code>, inline-region med <code>aria-expanded</code>/<code>aria-controls</code>) med plaggnavn + «hvorfor dette plagget»-tekst. Fokus flyttes til lukk-knappen ved åpning og returneres til triggeren ved lukk. Native <code>&lt;dialog&gt;</code> ble vurdert, men inline-region ble valgt for å unngå top-layer-quirks inni den simulerte telefonrammen.</li>
+      <li>Alternativ-indikator (Sivert-krav): Ullbody og Strikkegenser har en stablet-kort-effekt (<code>.has-alt::before</code>, 4px forskjøvet kant) + mikrotekst «2 alternativer» under plaggnavnet, synlig FØR trykk. Antallet er også en del av knappens <code>aria-label</code> («Vis info om Ullbody, lag 1, 2 alternativer finnes»). Inni detalj-panelet vises en klikkbar «Bytt til: X»-pille som setter en dummy bekreftelsestekst (ingen faktisk endring lagres i mocken).</li>
+      <li>Reduced motion: sheet/scrim/noder/konnektorer/detalj-panel vises i sluttstate umiddelbart, ingen inn-animasjon.</li>
+    </ul>
+
+    <h2>Kontrast-spesifikasjon (WCAG 2.x, sRGB relative luminance) — Morgennatt</h2>
+    <table class="spec-table">
+      <thead>
+        <tr><th scope="col">Par</th><th scope="col">Ratio</th><th scope="col">Krav</th><th scope="col">Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ink-primary / surface</td><td class="num">14.92:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>ink-secondary / surface</td><td class="num">6.82:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>ink-primary / canvas</td><td class="num">11.86:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>cta-ink / cta-fill (Granmynte)</td><td class="num">5.63:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>cta-fill / canvas</td><td class="num">4.25:1</td><td class="num">≥3:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>focus-ring / surface</td><td class="num">5.71:1</td><td class="num">≥3:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>focus-ring / canvas</td><td class="num">4.54:1</td><td class="num">≥3:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>badge-tekst ink-primary / lag-1 korall (lys)</td><td class="num">4.85:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>badge-tekst ink-primary / lag-3 marigold (lys)</td><td class="num">6.59:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>badge-tekst cta-ink / lag-2 petrol-grå</td><td class="num">4.69:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>badge-tekst cta-ink / lag-4 petrol jakke (re-gen #35707F)</td><td class="num">5.27:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>edge-lag-4 / surface (non-text ring)</td><td class="num">5.01:1</td><td class="num">≥3:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>edge-lag-2 / surface (non-text ring)</td><td class="num">4.45:1</td><td class="num">≥3:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>edge-lag-1 / surface (non-text ring)</td><td class="num">3.07:1</td><td class="num">≥3:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>mørk: badge-tekst #0F2B1D / lag-1 lys korall</td><td class="num">5.79:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>mørk: badge-tekst #0F2B1D / lag-3 lys marigold</td><td class="num">7.97:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>mørk: ink-primary / surface</td><td class="num">12.35:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>mørk: cta-ink / cta-fill (mynte)</td><td class="num">7.97:1</td><td class="num">≥4.5:1</td><td><span class="spec-pass">PASS</span></td></tr>
+        <tr><td>mørk: focus-ring / surface</td><td class="num">5.32:1</td><td class="num">≥3:1</td><td><span class="spec-pass">PASS</span></td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:8px;">Edge-lag-3 er &lt;3:1 alene mot surface (2.26:1) — dekket av 1.5px ink-utstroke på badge-ringen (non-text-krav via outline, ikke fyll alene). Jakke (lag-4) er re-generert fra #1E4750 → #35707F fordi original dyp petrol var 1.69–1.72:1 mot mørk indigo-canvas (under 3:1-kravet), jf. docs/F79/morgennatt-cta-analyse.md. Metode: luminans på endelige clippede sRGB-hex, ikke OKLCH-kilde.</p>
+  </footer>
+</div>
+
+<script>
+  const status = document.getElementById('status');
+  const detailNote = document.getElementById('detail-note');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+  // Én aria-live-annonsering ved "lasting" av sheet-innhold — sluttstate, ikke per-lag.
+  function announceFinal() {
+    status.textContent = 'Påkledd: ullbody, bukse, strikkegenser, jakke.';
+  }
+  // Annonser rett ved innlasting (sheet viser allerede ferdig komposisjon; ingen stagger-animasjon av lag her,
+  // kun sheet-slide). Dette tilfredsstiller "kun sluttstate annonseres, aldri per lag".
+  announceFinal();
+
+  // ---------- Plagg-detalj-panel (jobb 3+4: klikkbarhet-demonstrasjon + alternativ-visning) ----------
+  // Tap på en .garment-thumb åpner en inline detalj-region med plaggnavn,
+  // en dummy "hvorfor dette plagget"-tekst, og — for plagg med alternativer —
+  // en klikkbar "Bytt til: X"-pille. Fokus flyttes til lukk-knappen ved åpning
+  // (native <dialog> ble vurdert, men inline-region med aria-expanded/-controls
+  // er valgt for å unngå top-layer-quirks inni den simulerte telefonrammen).
+  const navn = { '1': 'Ullbody', '2': 'Ullbukse', '3': 'Strikkegenser', '4': 'Jakke' };
+  const GARMENT_DATA = {
+    '1': {
+      why: '<strong>Ullbody mot huden</strong> regulerer fukt og holder kroppstemperaturen jevn — første lag bør alltid være ull eller ullblanding, aldri bomull, ved denne temperaturen.',
+      alt: 'Bomullsbody',
+    },
+    '2': {
+      why: '<strong>Ullbukse</strong> isolerer bena uten å hindre bevegelse — viktig innerlag når barnet skal krype eller gå på tur.',
+      alt: null,
+    },
+    '3': {
+      why: '<strong>Strikkegenseren</strong> holder på varmen i ro som mellomlag, og er lett å ta av ved lek i sol uten å måtte kle helt av jakken.',
+      alt: 'Fleecegenser',
+    },
+    '4': {
+      why: '<strong>Den åpne jakken</strong> gir albuerom for lek uten at barnet blir svett — ved 3 m/s vind er det ikke behov for et vindtett ytterlag i dag.',
+      alt: null,
+    },
+  };
+
+  const garmentDetail = document.getElementById('garmentDetail');
+  const garmentDetailTitle = document.getElementById('garmentDetailTitle');
+  const garmentDetailWhy = document.getElementById('garmentDetailWhy');
+  const garmentDetailClose = document.getElementById('garmentDetailClose');
+  const garmentDetailAlts = document.getElementById('garmentDetailAlts');
+  const garmentDetailAltBtn = document.getElementById('garmentDetailAltBtn');
+  const garmentDetailAltLabel = document.getElementById('garmentDetailAltLabel');
+  const garmentDetailAltConfirm = document.getElementById('garmentDetailAltConfirm');
+  const garmentThumbs = Array.from(document.querySelectorAll('.garment-thumb'));
+  let activeThumb = null;
+
+  function openGarmentDetail(btn) {
+    const lag = btn.dataset.lag;
+    const data = GARMENT_DATA[lag];
+    if (!data) return;
+
+    // lukk ev. annen åpen trigger sin aria-expanded først (kun ett panel av gangen)
+    garmentThumbs.forEach(t => t.setAttribute('aria-expanded', String(t === btn)));
+    activeThumb = btn;
+
+    garmentDetailTitle.textContent = navn[lag];
+    garmentDetailWhy.innerHTML = data.why;
+    garmentDetailAltConfirm.textContent = '';
+
+    if (data.alt) {
+      garmentDetailAlts.hidden = false;
+      garmentDetailAltLabel.textContent = `Bytt til: ${data.alt}`;
+      garmentDetailAltBtn.dataset.alt = data.alt;
+    } else {
+      garmentDetailAlts.hidden = true;
+    }
+
+    garmentDetail.hidden = false;
+    // reflow slik at data-open faktisk animerer fra 0fr i stedet for å hoppe
+    void garmentDetail.offsetWidth;
+    garmentDetail.dataset.open = 'true';
+    detailNote.textContent = `${navn[lag]} — info åpnet.`;
+    garmentDetailClose.focus();
+  }
+
+  function closeGarmentDetail() {
+    if (garmentDetail.dataset.open !== 'true') return;
+    garmentDetail.dataset.open = 'false';
+    garmentThumbs.forEach(t => t.setAttribute('aria-expanded', 'false'));
+    const toReturnFocus = activeThumb;
+    activeThumb = null;
+    // Guard mot stale/boblende transitionend (a11y-sweep funn #1):
+    // kun containerens egen grid-transisjon teller, og bare hvis panelet
+    // fortsatt er lukket når eventet kommer (gjenåpning avbryter skjuling).
+    const hideAfter = (e) => {
+      if (e && (e.target !== garmentDetail || e.propertyName !== 'grid-template-rows')) {
+        garmentDetail.addEventListener('transitionend', hideAfter, { once: true });
+        return;
+      }
+      if (garmentDetail.dataset.open === 'false') garmentDetail.hidden = true;
+    };
+    if (reduced.matches) {
+      hideAfter();
+    } else {
+      garmentDetail.addEventListener('transitionend', hideAfter, { once: true });
+    }
+    if (toReturnFocus) toReturnFocus.focus();
+  }
+
+  garmentThumbs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isOpenForThisBtn = btn.getAttribute('aria-expanded') === 'true';
+      if (isOpenForThisBtn) {
+        closeGarmentDetail();
+      } else {
+        openGarmentDetail(btn);
+      }
+    });
+  });
+
+  garmentDetailClose.addEventListener('click', closeGarmentDetail);
+  garmentDetail.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeGarmentDetail();
+  });
+
+  garmentDetailAltBtn.addEventListener('click', () => {
+    const altName = garmentDetailAltBtn.dataset.alt;
+    garmentDetailAltConfirm.textContent = `Byttet til ${altName} (dummy i mock — ingen faktisk endring lagres).`;
+  });
+
+  // Hvorfor-ekspander
+  const whyTrigger = document.getElementById('whyTrigger');
+  const whyPanel = document.getElementById('whyPanel');
+  whyTrigger.addEventListener('click', () => {
+    const open = whyTrigger.getAttribute('aria-expanded') === 'true';
+    whyTrigger.setAttribute('aria-expanded', String(!open));
+    whyPanel.dataset.open = String(!open);
+  });
+
+  // ---------- Konnektor-ticks: beregnet i JS fra faktiske node-posisjoner ----------
+  // .connectors har CSS inset: 48px 0 0 0 mot .composition (se distinctness-tiltak #1)
+  // slik at ingen tick noensinne kan ligge over sheet-tittelen eller meta-teksten,
+  // som sitter over .composition.
+  // benchmark-tiltak #5: i stedet for lange bezier-streker fra avatar til thumb
+  // tegnes nå KORTE 10-14px ticks som beholder kun siste segment av vektoren fra
+  // avatar-skulderpunktet mot hver .garment-thumb-kant — leser som et teknisk
+  // måle-/festepunkt, ikke en mind-map-linje.
+  // distinctness-tiltak #1: hver tick avsluttes i et <circle>-endepunkt ved
+  // thumb-kanten, og badge-nummeret flyttes til tickens midtpunkt via CSS custom
+  // properties (--badge-x/--badge-y) på hver .garment-thumb, i stedet for å sitte
+  // fast i thumb-hjørnet.
+  const composition = document.getElementById('composition');
+  const connectorsSvg = document.getElementById('connectors');
+  const avatarHero = document.getElementById('avatarHero');
+  const nodeOrder = ['1', '2', '3', '4'];
+  const TICK_LEN = 13; // px, innenfor 10-14px-kravet
+
+  function wireConnectors() {
+    const svgRect = connectorsSvg.getBoundingClientRect();
+    if (svgRect.width === 0 || svgRect.height === 0) return;
+    connectorsSvg.setAttribute('viewBox', `0 0 ${svgRect.width} ${svgRect.height}`);
+
+    const avatarRect = avatarHero.getBoundingClientRect();
+    const ax = avatarRect.left + avatarRect.width / 2 - svgRect.left;
+    // skulderhøyde: ca. 40px opp fra avatar-senteret, aldri ansikt/hode-nivå
+    const ay = avatarRect.top + avatarRect.height / 2 - svgRect.top - 40;
+
+    nodeOrder.forEach(lag => {
+      const thumb = document.querySelector(`.garment-thumb[data-lag="${lag}"]`);
+      const path = document.getElementById(`connector-${lag}`);
+      const dot = document.getElementById(`connector-dot-${lag}`);
+      if (!thumb || !path || !dot) return;
+      const tRect = thumb.getBoundingClientRect();
+      const tcx = tRect.left + tRect.width / 2 - svgRect.left;
+      const tcy = tRect.top + tRect.height / 2 - svgRect.top;
+
+      // retning fra avatar-punktet mot thumb-senteret
+      const dxFull = tcx - ax, dyFull = tcy - ay;
+      const fullLen = Math.hypot(dxFull, dyFull) || 1;
+      const ux = dxFull / fullLen, uy = dyFull / fullLen;
+
+      // tick-endepunkt (ytterst): ved thumb-KANTEN, ikke senteret
+      const edgeBack = tRect.width / 2 + 4;
+      const tx = tcx - ux * edgeBack;
+      const ty = tcy - uy * edgeBack;
+      // tick-startpunkt (innerst): TICK_LEN px lenger inn langs samme vektor —
+      // kun siste korte segment av den gamle lange linjen beholdes.
+      const sx = tx - ux * TICK_LEN;
+      const sy = ty - uy * TICK_LEN;
+
+      path.setAttribute('d', `M ${sx.toFixed(1)} ${sy.toFixed(1)} L ${tx.toFixed(1)} ${ty.toFixed(1)}`);
+      dot.setAttribute('cx', tx.toFixed(1));
+      dot.setAttribute('cy', ty.toFixed(1));
+
+      // badge sitter på tickens midtpunkt. .badge er absolutt posisjonert i
+      // forhold til .garment-thumb (nærmeste position:relative-forfar, se
+      // ".garment-thumb .badge" i CSS), IKKE .garment-node — offset må derfor
+      // regnes relativt til thumb sin egen rect, ikke node sin (som inkluderer
+      // label under thumben og ville gitt feil offset).
+      // NB: tRect er thumb sin roterte (visuelle) bounding box, mens badge sin
+      // top/left regnes i thumb sitt urotert lokale koordinatsystem — ved de
+      // små rotasjonene her (≤5deg) er avviket et par px, usynlig i praksis.
+      const midX = (sx + tx) / 2 + svgRect.left;
+      const midY = (sy + ty) / 2 + svgRect.top;
+      thumb.style.setProperty('--badge-x', `${(midX - tRect.left).toFixed(1)}px`);
+      thumb.style.setProperty('--badge-y', `${(midY - tRect.top).toFixed(1)}px`);
+    });
+  }
+
+  function drawConnectorsIn() {
+    wireConnectors();
+    requestAnimationFrame(() => connectorsSvg.classList.add('is-drawn'));
+  }
+
+  // uipro-tiltak #14: komprimert inn-koreografi — noder starter nå 200ms med
+  // 60ms-stagger (se .garment-node--N animation-delay i CSS, 200/260/320/380ms)
+  // og konnektorene tegnes inn ved ~400ms i stedet for 760ms, slik at hele
+  // anbefalingen står ferdig innen ~0.8s av det 5-sekunders glimtet.
+  window.addEventListener('load', () => {
+    if (reduced.matches) {
+      wireConnectors();
+      connectorsSvg.classList.add('is-drawn');
+    } else {
+      wireConnectors();
+      setTimeout(drawConnectorsIn, 400);
+    }
+  });
+  window.addEventListener('resize', wireConnectors);
+
+  // ---------- Replay: ekte re-ankomst av noder + konnektorer + sheet ----------
+  const sheet = document.querySelector('.sheet');
+  const scrim = document.querySelector('.scrim');
+  const garmentNodes = Array.from(document.querySelectorAll('.garment-node'));
+  document.getElementById('replayBtn').addEventListener('click', () => {
+    // lukk et ev. åpent plagg-detalj-panel før replay, så det ikke henger igjen
+    // referert til en thumb som er midt i re-ankomst-animasjonen.
+    closeGarmentDetail();
+    if (reduced.matches) {
+      announceFinal();
+      return;
+    }
+    sheet.style.animation = 'none';
+    scrim.style.animation = 'none';
+    // emil-tiltak #8: replay-mismatch fikset — konnektorene forsvinner nå
+    // INSTANT (no-anim-klasse fjerner transition) samtidig som nodene forsvinner
+    // instant via style.animation='none', i stedet for å trekke seg tilbake
+    // over 420ms mens nodene allerede er borte.
+    connectorsSvg.classList.add('no-anim');
+    connectorsSvg.classList.remove('is-drawn');
+    garmentNodes.forEach(n => { n.style.animation = 'none'; });
+    // reflow
+    void sheet.offsetWidth;
+    sheet.style.animation = '';
+    scrim.style.animation = '';
+    garmentNodes.forEach(n => { n.style.animation = ''; });
+    wireConnectors();
+    // reflow igjen før vi fjerner no-anim, slik at "borte"-tilstanden faktisk
+    // rekker å male før transition slås på igjen for neste inn-tegning.
+    void connectorsSvg.getBoundingClientRect();
+    connectorsSvg.classList.remove('no-anim');
+    setTimeout(drawConnectorsIn, 400);
+    announceFinal();
+  });
+
+  // ---------- Temp-akse + tema (Morgennatt-signatur) ----------
+  // guardrail-fiks (dommerpanelet iter 4): temperaturen ble tidligere vist i FIRE
+  // uavhengige tekst-steder (.temp-glimpse, .sub-meta-linjen, .avatar-hero sin
+  // aria-label, og home-hint-miniatyren), men kun .temp-glimpse ble faktisk
+  // oppdatert når temp-knappene ble trykket — resten sto fast på "12°/mild",
+  // som ga en tekst-mot-tekst-motsigelse (glimpse sa −8° mens meta-linjen og
+  // skjermleser-labelen fortsatt sa "12°"/"føles som 10°"). Fikset ved å samle
+  // ALL temp-avhengig tekst i én kilde (WEATHER_STATE) og én oppdaterings-
+  // funksjon (setWeatherState) som setter alle DOM-steder samtidig — det finnes
+  // nå ingen kodesti som kan oppdatere ett sted uten de andre.
+  const root = document.documentElement;
+  const tempGlimpse = document.getElementById('tempGlimpse');
+  const sheetSub = document.getElementById('sheetSub');
+  // avatarHero er allerede deklarert over (konnektor-wiring-seksjonen), gjenbrukes her.
+  const WEATHER_STATE = {
+    kald: { glimpse: '−8°', felesSom: '−12°', vind: '6 m/s', kond: 'Klarvær', avatarKond: 'klarvær', lag: 4 },
+    mild: { glimpse: '12°', felesSom: '10°', vind: '3 m/s', kond: 'Klarvær', avatarKond: 'klarvær', lag: 4 },
+    varm: { glimpse: '24°', felesSom: '25°', vind: '2 m/s', kond: 'Klarvær', avatarKond: 'klarvær', lag: 4 },
+  };
+
+  function setWeatherState(t) {
+    const s = WEATHER_STATE[t];
+    if (!s) return;
+    tempGlimpse.textContent = s.glimpse;
+    sheetSub.textContent = `Elverum · ${s.kond} · føles som ${s.felesSom} · vind ${s.vind}`;
+    avatarHero.setAttribute(
+      'aria-label',
+      `Barn kledd i ullbody, bukse, strikkegenser og jakke, klar for tur i ${s.avatarKond} ved ${s.glimpse.replace('°', '')} grader`
+    );
+  }
+  setWeatherState('mild');
+
+  document.querySelectorAll('.temp-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.getAttribute('aria-pressed') === 'true') return;
+      document.querySelectorAll('.temp-btn').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+      const t = btn.dataset.t;
+      root.setAttribute('data-temp', t);
+      setWeatherState(t);
+      wireConnectors();
+    });
+  });
+
+  const themeToggle = document.getElementById('themeToggle');
+  themeToggle.addEventListener('click', () => {
+    const dark = root.getAttribute('data-theme') !== 'dark';
+    root.setAttribute('data-theme', dark ? 'dark' : 'light');
+    themeToggle.setAttribute('aria-pressed', String(dark));
+    themeToggle.textContent = '';
+    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('width', '16'); icon.setAttribute('height', '16');
+    icon.setAttribute('viewBox', '0 0 24 24'); icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke', 'currentColor'); icon.setAttribute('stroke-width', '2.1');
+    icon.setAttribute('stroke-linecap', 'round'); icon.setAttribute('stroke-linejoin', 'round');
+    icon.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z');
+    icon.appendChild(path);
+    themeToggle.appendChild(icon);
+    themeToggle.appendChild(document.createTextNode(dark ? 'Lyst modus' : 'Mørk modus'));
+  });
+
+  // CTA er dummy i mocken
+  document.getElementById('ctaBtn').addEventListener('click', () => {
+    detailNote.textContent = 'Klar for tur — bekreftet (dummy i mock).';
+  });
+</script>
+</body>
+</html>

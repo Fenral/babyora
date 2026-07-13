@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Påkledning · 3 vinner-mocks · sammenligning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F0E0D;
+  --bg-card:#1A1816;
+  --bg-card-2:#211F1C;
+  --ink:#EEE9E1;
+  --ink-soft:#B8B0A4;
+  --ink-mute:#7D7468;
+  --accent:#E85A1F;
+  --terracotta:#C0632F;
+  --pro:#5E8C6A;
+  --con:#946018;
+  --hairline:rgba(238,233,225,.08);
+  --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+  --font-serif:'DM Serif Display',Georgia,serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font-sans);}
+body{min-height:100vh;}
+
+header{
+  padding:36px 28px 18px;
+  border-bottom:1px solid var(--hairline);
+  max-width:1600px;margin:0 auto;
+}
+header .eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--ink-mute);margin:0 0 8px;
+}
+header h1{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:40px;line-height:1.05;letter-spacing:-.5px;
+  margin:0 0 12px;color:var(--ink);
+}
+header .lede{
+  font-size:15px;line-height:1.55;max-width:740px;
+  color:var(--ink-soft);
+  margin:0 0 6px;
+}
+header .meta{
+  display:flex;flex-wrap:wrap;gap:14px;
+  margin-top:18px;font-size:12px;color:var(--ink-mute);
+}
+header .meta b{color:var(--ink-soft);font-weight:600;}
+
+main{max-width:1600px;margin:0 auto;padding:28px;}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:24px;
+  margin-bottom:48px;
+}
+
+.col{
+  background:var(--bg-card);
+  border:1px solid var(--hairline);
+  border-radius:20px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.col-head{
+  padding:18px 20px 14px;
+  border-bottom:1px solid var(--hairline);
+}
+.col-head .tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;
+  color:var(--accent);margin-bottom:8px;
+}
+.col-head .tag .dot{
+  width:6px;height:6px;border-radius:50%;background:var(--accent);
+}
+.col-head h2{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:22px;letter-spacing:-.3px;line-height:1.15;
+  margin:0 0 4px;color:var(--ink);
+}
+.col-head .strat{
+  font-size:13px;color:var(--ink-soft);line-height:1.45;
+}
+.col-frame{
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:18px;background:var(--bg-card-2);
+  border-bottom:1px solid var(--hairline);
+}
+.col-frame iframe{
+  width:434px;height:888px;
+  border:none;border-radius:24px;
+  background:#222;
+  display:block;
+  transform:scale(.78);transform-origin:top center;
+  margin-bottom:-200px;
+}
+.col-body{padding:18px 20px 20px;}
+.col-body .open-link{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:10px;
+  background:var(--accent);color:#fff;
+  text-decoration:none;
+  font-size:13px;font-weight:600;letter-spacing:.1px;
+  transition:background 140ms ease, transform 120ms ease;
+}
+.col-body .open-link:hover{background:#B83F12;}
+.col-body .open-link:active{transform:translateY(1px);}
+.col-body .strat-bullets{
+  list-style:none;padding:0;margin:14px 0 0;
+  display:flex;flex-direction:column;gap:7px;
+}
+.col-body .strat-bullets li{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:12.5px;color:var(--ink-soft);line-height:1.45;
+}
+.col-body .strat-bullets li::before{
+  content:"";width:5px;height:5px;border-radius:50%;
+  background:var(--terracotta);flex:none;margin-top:7px;
+}
+
+/* Scoring table */
+.section-title{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:26px;letter-spacing:-.3px;
+  margin:0 0 6px;color:var(--ink);
+}
+.section-sub{
+  font-size:13px;color:var(--ink-soft);
+  margin:0 0 18px;line-height:1.5;max-width:740px;
+}
+
+.table-wrap{
+  overflow-x:auto;border:1px solid var(--hairline);
+  border-radius:16px;background:var(--bg-card);
+  margin-bottom:36px;
+}
+table{
+  width:100%;border-collapse:collapse;font-size:13px;
+  color:var(--ink);
+}
+thead th{
+  text-align:left;
+  padding:14px 16px;
+  background:var(--bg-card-2);
+  font-size:10.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--ink-mute);
+  border-bottom:1px solid var(--hairline);white-space:nowrap;
+}
+thead th.num{text-align:right;}
+tbody td{
+  padding:13px 16px;border-bottom:1px solid var(--hairline);
+  vertical-align:top;
+}
+tbody tr:last-child td{border-bottom:none;}
+tbody td.cat{
+  font-weight:600;color:var(--ink);
+  white-space:nowrap;
+}
+tbody td.num{
+  text-align:right;font-variant-numeric:tabular-nums;
+  font-weight:600;
+}
+.score{
+  display:inline-flex;align-items:center;justify-content:flex-end;gap:8px;
+}
+.score .bar{
+  width:50px;height:6px;border-radius:3px;background:rgba(238,233,225,.08);overflow:hidden;
+}
+.score .bar .fill{
+  height:100%;background:var(--accent);border-radius:3px;
+}
+tbody tr.total td{
+  background:var(--bg-card-2);
+  font-weight:700;font-size:14px;color:var(--ink);
+  border-top:1px solid var(--hairline);
+}
+.winner-pill{
+  display:inline-block;
+  padding:2px 8px;border-radius:6px;
+  background:rgba(232,90,31,.15);color:var(--accent);
+  font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  margin-left:8px;vertical-align:middle;
+}
+
+/* Notes */
+.notes{
+  max-width:740px;
+  font-size:13px;color:var(--ink-soft);line-height:1.6;
+}
+.notes p{margin:0 0 12px;}
+.notes a{color:var(--accent);text-decoration:none;}
+.notes a:hover{text-decoration:underline;}
+
+footer{
+  padding:36px 28px;border-top:1px solid var(--hairline);
+  font-size:11px;color:var(--ink-mute);letter-spacing:.3px;
+  text-align:center;
+}
+
+@media (max-width:1280px){
+  .grid{grid-template-columns:1fr;}
+  .col-frame iframe{transform:scale(.9);margin-bottom:-90px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Påkledning-loop · final synthesis</p>
+  <h1>3 vinner-mocks: hvilken retning skal Klemeg gå?</h1>
+  <p class="lede">
+    Etter 3 runder med /impeccable, /emil-design-eng, /ui-ux-pro-max, /color-expert,
+    /frontend-design og /redesign-existing-projects ble det aldri full konvergens.
+    I stedet krystalliserte tre distinkte vinner-retninger seg. Velg én å gå videre med — eller plukk biter på tvers.
+  </p>
+  <div class="meta">
+    <span><b>Iter:</b> 3 runder, snitt 72.67 → 71.67 → 75.67</span>
+    <span><b>Konvergens:</b> nei (5+ runder regel kicker inn)</span>
+    <span><b>Dato:</b> 2026-06-25</span>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+
+    <article class="col">
+      <div class="col-head">
+        <div class="tag"><span class="dot"></span>Retning A · Anatomisk ro</div>
+        <h2>V1 — Stack uten støy</h2>
+        <p class="strat">Behold anatomisk plagg-stack. Fjern rail, connector-linjer og legend.
+          ÉN lag-koding (anchor-dot). Lag-info lever i sheet ved tap.</p>
+      </div>
+      <div class="col-frame">
+        <iframe src="v1/index.html" title="V1 Anatomisk ro" loading="lazy"></iframe>
+      </div>
+      <div class="col-body">
+        <a class="open-link" href="v1/index.html" target="_blank" rel="noopener">
+          Åpne V1 i full størrelse
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l6-6M5 5h6v6"/></svg>
+        </a>
+        <ul class="strat-bullets">
+          <li>4 → 1 lag-koding (kun anchor-dot på selve plagget)</li>
+          <li>Subtil vertikal kropp-akse forsterker anatomi-metaforen</li>
+          <li>CSS-variabler styrer plagg-størrelse + overlap</li>
+          <li>Ikke-destruktiv swap (behold original, render via activeKey)</li>
+          <li>ÉN primær footer-handling + ekstern Tilbakestill når avvik</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="col">
+      <div class="col-head">
+        <div class="tag"><span class="dot"></span>Retning B · Skannbar liste</div>
+        <h2>V2 — Liste m/ kategori-grupper</h2>
+        <p class="strat">Bytt anatomisk stack mot rad-basert liste, gruppert per lag.
+          Mini-stack-preview på toppen for helhetsforståelse. Skalerer trivielt 3–7 lag.</p>
+      </div>
+      <div class="col-frame">
+        <iframe src="v2/index.html" title="V2 Skannbar liste" loading="lazy"></iframe>
+      </div>
+      <div class="col-body">
+        <a class="open-link" href="v2/index.html" target="_blank" rel="noopener">
+          Åpne V2 i full størrelse
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l6-6M5 5h6v6"/></svg>
+        </a>
+        <ul class="strat-bullets">
+          <li>Kategori-gruppe-overskrift erstatter rail + connector</li>
+          <li>3-pkt mini-stack-preview gir anatomisk helhet uten støy</li>
+          <li>Material + vekt synlig direkte i rad (mindre tap-pengevinning)</li>
+          <li>"Endret"-badge på rad når plagg avviker fra original</li>
+          <li>Skalerbar til 7+ plagg uten layout-bråk</li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="col">
+      <div class="col-head">
+        <div class="tag"><span class="dot"></span>Retning C · Stack + rail</div>
+        <h2>V3 — Datadrevet rail-connector</h2>
+        <p class="strat">Best av iter-3: faktisk anatomisk stack med dynamisk SVG-connector
+          fra plagg til rail-cap. Kategori-label kun via rail-cap (kollapser row-name + legend).</p>
+      </div>
+      <div class="col-frame">
+        <iframe src="v3/index.html" title="V3 Datadrevet stack" loading="lazy"></iframe>
+      </div>
+      <div class="col-body">
+        <a class="open-link" href="v3/index.html" target="_blank" rel="noopener">
+          Åpne V3 i full størrelse
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l6-6M5 5h6v6"/></svg>
+        </a>
+        <ul class="strat-bullets">
+          <li>SVG-connector tegnes fra faktiske anchor-koord (ResizeObserver)</li>
+          <li>4 → 2 lag-koding (anchor-dot + rail-cap, mistet row-name + legend)</li>
+          <li>OKLCH-kalibrert hue-spread 60-70° for distinkte lag-farger</li>
+          <li>CTA-orange shiftet fra #FF6B35 → #E85A1F (skilt fra ytterst)</li>
+          <li>Datadrevet plagg-størrelse via --w/--h/--overlap custom properties</li>
+        </ul>
+      </div>
+    </article>
+
+  </div>
+
+  <h2 class="section-title">Skill-scoring per retning</h2>
+  <p class="section-sub">
+    Estimerte scores basert på iter-3-pattern (sist målte runde) projisert mot endringene
+    i hver vinner-mock. Snitt-scoren reflekterer hvilken retning som best adresserer
+    de gjentakende kritikk-punktene (lag-koding-støy, dual-primary CTA, hardkodet layout).
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Skill</th>
+          <th>Hva den vektlegger</th>
+          <th class="num">V1 Anatomisk</th>
+          <th class="num">V2 Liste</th>
+          <th class="num">V3 Stack+rail</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cat">/impeccable</td>
+          <td>Hierarki, kognitiv last, anti-pattern</td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:84%"></span></span>84</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:82%"></span></span>82</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:78%"></span></span>78</span></td>
+        </tr>
+        <tr>
+          <td class="cat">/emil-design-eng</td>
+          <td>UI-polish, animation, "details that delight"</td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:80%"></span></span>80</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:72%"></span></span>72</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:82%"></span></span>82</span></td>
+        </tr>
+        <tr>
+          <td class="cat">/ui-ux-pro-max</td>
+          <td>Klare interaksjonsmodeller, sheet/list-patterns</td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:76%"></span></span>76</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:88%"></span></span>88</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:74%"></span></span>74</span></td>
+        </tr>
+        <tr>
+          <td class="cat">/color-expert</td>
+          <td>OKLCH, kontrast, lag-farge-distinksjon</td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:78%"></span></span>78</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:80%"></span></span>80</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:82%"></span></span>82</span></td>
+        </tr>
+        <tr>
+          <td class="cat">/frontend-design</td>
+          <td>Code-arkitektur, data-driven layout, refactor</td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:78%"></span></span>78</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:86%"></span></span>86</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:80%"></span></span>80</span></td>
+        </tr>
+        <tr>
+          <td class="cat">/redesign-existing-projects</td>
+          <td>Skala fra 3 til 7 lag, ekstremvær-edgecases</td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:74%"></span></span>74</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:90%"></span></span>90</span></td>
+          <td class="num"><span class="score"><span class="bar"><span class="fill" style="width:76%"></span></span>76</span></td>
+        </tr>
+        <tr class="total">
+          <td>Snitt</td>
+          <td>Vektet skill-konsensus</td>
+          <td class="num">78.3</td>
+          <td class="num">83.0 <span class="winner-pill">Høyest snitt</span></td>
+          <td class="num">78.7</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section-title">Hvilken bør du velge?</h2>
+  <div class="notes">
+    <p>
+      <b style="color:var(--ink)">V2 (Liste)</b> scorer høyest hos /ui-ux-pro-max, /frontend-design og
+      /redesign-existing-projects fordi den eliminerer hele lag-koding-konflikten ved å bruke
+      kategori-overskrifter som primær orden. Skalerer trivielt fra 3 til 7+ lag.
+      Tap: mister noe av den emosjonelle "kledd-på-Liv"-stemningen.
+    </p>
+    <p>
+      <b style="color:var(--ink)">V1 (Anatomisk ro)</b> beholder den emosjonelle anatomi-metaforen som er
+      Klemegs identitet, men dropper alt det /impeccable og /emil-design-eng kalte støy.
+      Sannsynligvis beste valg hvis Sivert prioriterer merke-signatur.
+    </p>
+    <p>
+      <b style="color:var(--ink)">V3 (Stack + rail)</b> er den fullstendige iter-3-pakken med datadrevet
+      connector. Mest informasjonsrik, men også mest visuell støy. Trolig best for
+      ekspert-bruker-modus eller power-user-fane senere.
+    </p>
+    <p>
+      Se <a href="../../../docs/paakledning-loop/SLUTTRAPPORT.md">SLUTTRAPPORT.md</a>
+      for komplett tiltak-liste per retning, manglende assets og tidsestimat for prod-port.
+    </p>
+  </div>
+
+</main>
+
+<footer>
+  Påkledning-loop final synthesis — generert 2026-06-25 ·
+  3 vinner-mocks etter 3 iter-runder uten konvergens
+</footer>
+
+</body>
+</html>

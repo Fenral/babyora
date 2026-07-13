@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Babyora — Brutalist Mono v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: oklch(0.98 0 0);
+    --ink: oklch(0.10 0 0);
+    --ink-2: oklch(0.32 0 0);
+    --ink-3: oklch(0.55 0 0);
+    --line: oklch(0.10 0 0);
+    --line-soft: oklch(0.86 0 0);
+    --hot: oklch(0.55 0.20 25);
+    --hot-ink: oklch(0.98 0 0);
+    --paper: oklch(0.96 0 0);
+    --paper-2: oklch(0.93 0 0);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper-2); }
+  body {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--ink);
+    font-feature-settings: "tnum" 1, "ss01" 1, "cv11" 1;
+    font-variant-numeric: tabular-nums;
+    min-height: 100vh;
+    line-height: 1.35;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 8px 12px;
+    z-index: 999;
+  }
+  .skip-link:focus { left: 8px; top: 8px; }
+
+  /* ============ PAGE FRAME ============ */
+  .stage {
+    min-height: 100vh;
+    padding: 40px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .stage-head {
+    width: 100%;
+    max-width: 920px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 16px;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 12px;
+  }
+  .stage-head h1 {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .stage-head .meta {
+    font-size: 11px;
+    color: var(--ink-2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .stage-head .meta b { color: var(--hot); font-weight: 700; }
+
+  .phones {
+    display: grid;
+    grid-template-columns: repeat(2, 390px);
+    gap: 48px;
+    justify-content: center;
+  }
+  @media (max-width: 900px) {
+    .phones { grid-template-columns: 1fr; gap: 56px; }
+    .stage { padding: 24px 12px 60px; }
+  }
+
+  .phone-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .phone-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    border: 1px solid var(--ink);
+    padding: 4px 10px;
+    background: var(--bg);
+  }
+
+  /* ============ PHONE FRAME ============ */
+  .phone {
+    width: 390px;
+    height: 844px;
+    border-radius: 47px;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+    border: 1.5px solid var(--ink);
+    box-shadow:
+      0 1px 0 0 rgba(0,0,0,0.04),
+      0 14px 0 -8px rgba(0,0,0,0.06),
+      0 30px 60px -20px rgba(0,0,0,0.25);
+  }
+  .phone::before {
+    /* dynamic island */
+    content: "";
+    position: absolute;
+    top: 11px; left: 50%;
+    transform: translateX(-50%);
+    width: 120px; height: 34px;
+    background: var(--ink);
+    border-radius: 20px;
+    z-index: 50;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  /* ============ STATUS BAR ============ */
+  .status {
+    height: 54px;
+    padding: 18px 28px 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    z-index: 5;
+  }
+  .status .right { display: flex; gap: 6px; align-items: center; }
+  .status svg { display: block; }
+
+  /* ============ APP HEADER ============ */
+  .appbar {
+    padding: 12px 20px 14px;
+    border-bottom: 1px solid var(--ink);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .brand-mark {
+    width: 14px; height: 14px;
+    background: var(--ink);
+    position: relative;
+  }
+  .brand-mark::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    background: var(--hot);
+  }
+  .child-tag {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    border: 1px solid var(--ink);
+    padding: 3px 8px;
+  }
+  .child-tag b { color: var(--ink); font-weight: 700; }
+
+  /* ============ MAIN ============ */
+  main {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 92px; /* tabbar */
+    background: var(--bg);
+  }
+  main::-webkit-scrollbar { display: none; }
+
+  /* shared spec rows */
+  .spec {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    border-bottom: 1px dashed var(--line-soft);
+    padding: 10px 20px;
+    font-size: 12px;
+  }
+  .spec dt {
+    color: var(--ink-3);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 10px;
+    align-self: center;
+  }
+  .spec dd {
+    font-weight: 500;
+    color: var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .spec dd .num {
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: -0.01em;
+  }
+  .spec dd .unit {
+    color: var(--ink-3);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+  }
+
+  /* ============ HOME SCREEN ============ */
+  .hero {
+    padding: 18px 20px 8px;
+    display: grid;
+    grid-template-columns: 1fr 96px;
+    gap: 16px;
+    align-items: end;
+    border-bottom: 1px solid var(--ink);
+  }
+  .hero .loc-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 4px;
+  }
+  .hero h2 {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .hero h2 .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--hot);
+    margin-left: 6px;
+    transform: translateY(-12px);
+  }
+  .hero .now {
+    margin-top: 12px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero .now .t {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+  }
+  .hero .now .deg {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink-3);
+  }
+  .hero .desc {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    margin-top: 6px;
+  }
+
+  /* child avatar (simple SVG) */
+  .avatar {
+    width: 96px; height: 96px;
+    border: 1.5px solid var(--ink);
+    background: var(--paper);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .avatar::after {
+    content: "LIV / 02Y";
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+
+  /* meta grid */
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--ink);
+  }
+  .meta-grid div {
+    padding: 12px 14px;
+    border-right: 1px dashed var(--line-soft);
+  }
+  .meta-grid div:last-child { border-right: 0; }
+  .meta-grid .lbl {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 4px;
+  }
+  .meta-grid .val {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .meta-grid .val small {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--ink-3);
+    margin-left: 2px;
+  }
+
+  /* toggle */
+  .toggle-block {
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .toggle-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 8px;
+  }
+  .toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1.5px solid var(--ink);
+  }
+  .toggle button {
+    appearance: none;
+    background: var(--bg);
+    border: 0;
+    padding: 12px 8px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+    cursor: pointer;
+    border-right: 1.5px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .toggle button:last-child { border-right: 0; }
+  .toggle button[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .toggle .dot {
+    width: 7px; height: 7px;
+    background: currentColor;
+    display: inline-block;
+  }
+
+  /* recommendation card */
+  .reco {
+    margin: 16px 20px 10px;
+    border: 1.5px solid var(--ink);
+    background: var(--bg);
+    position: relative;
+  }
+  .reco .head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1.5px solid var(--ink);
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .reco .head .id {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .reco .head .stamp {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: var(--bg);
+    opacity: 0.7;
+  }
+  .reco .body {
+    padding: 14px 14px 10px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+  .reco .layers-num {
+    font-size: 84px;
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    line-height: 0.85;
+  }
+  .reco .layers-num span {
+    font-size: 18px;
+    vertical-align: top;
+    margin-left: 4px;
+    color: var(--ink-3);
+  }
+  .reco .copy {
+    text-align: right;
+  }
+  .reco .copy .k {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .reco .copy .v {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--hot);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .reco .note {
+    border-top: 1px dashed var(--line-soft);
+    padding: 8px 14px;
+    font-size: 11px;
+    color: var(--ink-2);
+  }
+  .reco .note b { color: var(--ink); font-weight: 700; }
+
+  /* primary cta */
+  .cta {
+    margin: 14px 20px 18px;
+    display: block;
+    width: calc(100% - 40px);
+    background: var(--ink);
+    color: var(--bg);
+    border: 1.5px solid var(--ink);
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 16px 16px;
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    text-decoration: none;
+    text-align: left;
+  }
+  .cta .arrow {
+    font-weight: 800;
+    letter-spacing: 0;
+  }
+
+  /* layer list mini */
+  .layers {
+    margin: 0 20px 18px;
+    border-top: 1px solid var(--ink);
+  }
+  .layer {
+    display: grid;
+    grid-template-columns: 18px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    font-size: 12px;
+  }
+  .layer .n {
+    font-weight: 800;
+    color: var(--hot);
+    font-size: 11px;
+  }
+  .layer .nm {
+    letter-spacing: 0.02em;
+  }
+  .layer .nm small {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-top: 2px;
+  }
+  .layer .tag {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    border: 1px solid var(--line-soft);
+    padding: 2px 6px;
+  }
+
+  /* ============ WEEK / I DAG SCREEN ============ */
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--ink);
+    background: var(--bg);
+  }
+  .tabs a {
+    text-decoration: none;
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    border-right: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .tabs a:last-child { border-right: 0; }
+  .tabs a.active {
+    background: var(--bg);
+    color: var(--ink);
+    position: relative;
+  }
+  .tabs a.active::after {
+    content: "";
+    position: absolute;
+    left: 12px; right: 12px; bottom: -1px;
+    height: 3px;
+    background: var(--hot);
+  }
+
+  .week-head {
+    padding: 14px 20px 8px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    border-bottom: 1px solid var(--ink);
+  }
+  .week-head .k {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .week-head h2 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-top: 2px;
+  }
+  .week-head .rng {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    border: 1px solid var(--ink);
+    padding: 4px 8px;
+  }
+
+  /* table */
+  .week-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 12px;
+  }
+  .week-table thead th {
+    text-align: left;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 700;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .week-table thead th:nth-child(3),
+  .week-table thead th:nth-child(4) { text-align: right; }
+  .week-table tbody td {
+    padding: 11px 12px;
+    border-bottom: 1px dashed var(--line-soft);
+    vertical-align: middle;
+  }
+  .week-table tbody tr:nth-child(odd) td { background: var(--paper); }
+  .week-table tbody tr.now td {
+    background: oklch(0.55 0.20 25 / 0.08);
+    border-bottom: 1px solid var(--hot);
+  }
+  .week-table .when {
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: -0.01em;
+  }
+  .week-table .when small {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--ink-3);
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+  .week-table .sym {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .week-table .sym .gly {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--ink);
+    background: var(--bg);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .gly.sun { border-radius: 50%; background: oklch(0.92 0.10 90); }
+  .gly.cloud { border-radius: 4px; background: var(--paper-2); }
+  .gly.cloud::before {
+    content:""; position: absolute; inset: 3px 2px 2px 3px;
+    background: var(--bg);
+    border-radius: 3px;
+  }
+  .gly.rain { background: var(--ink); }
+  .gly.rain::after {
+    content:""; position: absolute; left: 4px; bottom: 1px; width: 2px; height: 6px;
+    background: var(--hot);
+  }
+  .gly.partly { background: linear-gradient(135deg, oklch(0.92 0.10 90) 50%, var(--paper-2) 50%); }
+  .week-table .temp {
+    text-align: right;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: -0.01em;
+  }
+  .week-table .temp .unit {
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+    margin-left: 2px;
+  }
+  .week-table .layers-cell {
+    text-align: right;
+    font-weight: 800;
+    color: var(--hot);
+    font-size: 14px;
+  }
+  .week-table .layers-cell small {
+    color: var(--ink-3);
+    font-weight: 500;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-left: 3px;
+  }
+  .week-table .now-marker {
+    display: inline-block;
+    background: var(--hot);
+    color: var(--hot-ink);
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    padding: 2px 5px;
+    margin-left: 6px;
+    text-transform: uppercase;
+    font-weight: 800;
+  }
+
+  .footnote {
+    padding: 12px 20px 18px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+    border-top: 1px solid var(--ink);
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+  .footnote b { color: var(--ink); font-weight: 700; }
+
+  /* ============ BOTTOM TAB BAR ============ */
+  .tabbar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 86px;
+    padding: 10px 8px 28px;
+    background: var(--bg);
+    border-top: 1.5px solid var(--ink);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    z-index: 20;
+  }
+  .tabbar a {
+    text-decoration: none;
+    color: var(--ink-3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding-top: 4px;
+  }
+  .tabbar a .ic {
+    width: 22px; height: 22px;
+    border: 1.5px solid currentColor;
+    position: relative;
+  }
+  .tabbar a .ic.home::after {
+    content: "";
+    position: absolute;
+    left: 4px; right: 4px; bottom: 0; top: 8px;
+    background: currentColor;
+  }
+  .tabbar a .ic.week {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1px;
+    background: currentColor;
+  }
+  .tabbar a .ic.week::before {
+    content: ""; background: var(--bg);
+  }
+  .tabbar a .ic.guide {
+    border-radius: 50%;
+  }
+  .tabbar a .ic.guide::after {
+    content: "?";
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: currentColor;
+    font-family: inherit;
+  }
+  .tabbar a .ic.set::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+  }
+  .tabbar a.active { color: var(--ink); }
+  .tabbar a.active .ic { border-color: var(--ink); }
+  .tabbar a.active::before {
+    content: "";
+    width: 18px; height: 3px;
+    background: var(--hot);
+    margin-bottom: 2px;
+    position: absolute;
+    top: 0;
+  }
+  .tabbar a {
+    position: relative;
+  }
+
+  /* home indicator */
+  .home-ind {
+    position: absolute;
+    bottom: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 134px; height: 5px;
+    background: var(--ink);
+    border-radius: 3px;
+    z-index: 25;
+    opacity: 0.85;
+  }
+
+  /* ============ FOOTER STAGE NOTE ============ */
+  .stage-foot {
+    width: 100%;
+    max-width: 920px;
+    border-top: 1px solid var(--ink);
+    padding-top: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .stage-foot b { color: var(--ink); font-weight: 700; }
+  .stage-foot .hot { color: var(--hot); }
+
+  /* focus visible */
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--hot);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-home">Hopp til innhold</a>
+
+<div class="stage">
+  <header class="stage-head" role="banner">
+    <h1>Babyora — V1 Brutalist Mono / Hjem + Uke</h1>
+    <div class="meta">REV <b>0001</b> · OKLCH · JetBrains Mono · 390×844</div>
+  </header>
+
+  <section class="phones" aria-label="Mockup skjermer">
+
+    <!-- ============================================ -->
+    <!-- ============ HOME SCREEN ================== -->
+    <!-- ============================================ -->
+    <div class="phone-wrap">
+      <span class="phone-label">01 / Hjem</span>
+      <div class="phone" role="img" aria-label="iPhone-mockup som viser Hjem-skjermen i Babyora">
+        <div class="screen">
+
+          <!-- Status bar -->
+          <div class="status" aria-hidden="true">
+            <span>14:23</span>
+            <span class="right">
+              <!-- signal -->
+              <svg width="18" height="11" viewBox="0 0 18 11" fill="none">
+                <rect x="0" y="7" width="3" height="4" fill="currentColor"/>
+                <rect x="5" y="5" width="3" height="6" fill="currentColor"/>
+                <rect x="10" y="3" width="3" height="8" fill="currentColor"/>
+                <rect x="15" y="0" width="3" height="11" fill="currentColor"/>
+              </svg>
+              <!-- wifi -->
+              <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
+                <path d="M8 11l2-2a2.83 2.83 0 0 0-4 0l2 2z" fill="currentColor"/>
+                <path d="M3.3 6.3l1.4 1.4a4.66 4.66 0 0 1 6.6 0l1.4-1.4a6.66 6.66 0 0 0-9.4 0z" fill="currentColor"/>
+                <path d="M0 3l1.5 1.5a9.16 9.16 0 0 1 13 0L16 3a11.16 11.16 0 0 0-16 0z" fill="currentColor"/>
+              </svg>
+              <!-- battery -->
+              <svg width="26" height="12" viewBox="0 0 26 12" fill="none">
+                <rect x="0.5" y="0.5" width="22" height="11" rx="2.5" stroke="currentColor"/>
+                <rect x="2" y="2" width="16" height="8" rx="1" fill="currentColor"/>
+                <rect x="24" y="4" width="2" height="4" rx="1" fill="currentColor"/>
+              </svg>
+            </span>
+          </div>
+
+          <!-- App bar -->
+          <header class="appbar">
+            <div class="brand"><span class="brand-mark" aria-hidden="true"></span> Babyora</div>
+            <div class="child-tag">Barn / <b>Liv</b> · 02Y</div>
+          </header>
+
+          <main id="main-home" tabindex="-1">
+
+            <!-- Hero: location + temp + avatar -->
+            <section class="hero" aria-label="Vær og sted">
+              <div>
+                <div class="loc-label">Sted // 61.88N 11.56E</div>
+                <h2>Elverum<span class="dot" aria-hidden="true"></span></h2>
+                <div class="now">
+                  <span class="t">18°</span>
+                  <span class="deg">/ FØLES 18°</span>
+                </div>
+                <div class="desc">Variert · Vind 3.1 m/s NV</div>
+              </div>
+              <!-- avatar SVG -->
+              <div class="avatar" aria-label="Avatar av Liv">
+                <svg viewBox="0 0 64 64" width="62" height="62" aria-hidden="true">
+                  <rect x="0" y="0" width="64" height="64" fill="none"/>
+                  <!-- head -->
+                  <circle cx="32" cy="24" r="11" fill="none" stroke="oklch(0.10 0 0)" stroke-width="2"/>
+                  <!-- hair tuft -->
+                  <path d="M22 18 Q32 6 42 18" fill="none" stroke="oklch(0.10 0 0)" stroke-width="2"/>
+                  <!-- body -->
+                  <path d="M16 60 Q16 40 32 40 Q48 40 48 60" fill="none" stroke="oklch(0.10 0 0)" stroke-width="2"/>
+                  <!-- accent dot (cheek) -->
+                  <circle cx="38" cy="26" r="1.6" fill="oklch(0.55 0.20 25)"/>
+                  <circle cx="26" cy="26" r="1.6" fill="oklch(0.55 0.20 25)"/>
+                  <!-- mouth -->
+                  <path d="M28 30 Q32 33 36 30" fill="none" stroke="oklch(0.10 0 0)" stroke-width="1.5" stroke-linecap="square"/>
+                </svg>
+              </div>
+            </section>
+
+            <!-- meta grid -->
+            <div class="meta-grid" role="group" aria-label="Vær-detaljer">
+              <div>
+                <div class="lbl">Vind</div>
+                <div class="val">3.1<small> m/s</small></div>
+              </div>
+              <div>
+                <div class="lbl">Fukt</div>
+                <div class="val">62<small>%</small></div>
+              </div>
+              <div>
+                <div class="lbl">UV</div>
+                <div class="val">3<small>/11</small></div>
+              </div>
+            </div>
+
+            <!-- activity toggle -->
+            <section class="toggle-block" aria-label="Aktivitet">
+              <div class="toggle-label">Aktivitet // velg modus</div>
+              <div class="toggle" role="tablist">
+                <button type="button" role="tab" aria-pressed="true" aria-selected="true">
+                  <span class="dot" aria-hidden="true"></span> Utenfor vogn
+                </button>
+                <button type="button" role="tab" aria-pressed="false" aria-selected="false">
+                  I vogn
+                </button>
+              </div>
+            </section>
+
+            <!-- recommendation -->
+            <section class="reco" aria-label="Anbefaling">
+              <div class="head">
+                <span class="id">REC // 18°C · ACT:OUT</span>
+                <span class="stamp">14:23:07</span>
+              </div>
+              <div class="body">
+                <div class="layers-num">3<span>LAG</span></div>
+                <div class="copy">
+                  <div class="k">Status</div>
+                  <div class="v">Mot kulda</div>
+                </div>
+              </div>
+              <div class="note">
+                Lett bris fra NV. Variert sky. <b>Mellomlag anbefalt</b> for Liv ved opphold &gt; 45 min.
+              </div>
+            </section>
+
+            <!-- layer mini list -->
+            <ol class="layers" aria-label="Anbefalte lag">
+              <li class="layer">
+                <span class="n">01</span>
+                <span class="nm">Ullbody<small>Merino · 160 g/m²</small></span>
+                <span class="tag">Innerst</span>
+              </li>
+              <li class="layer">
+                <span class="n">02</span>
+                <span class="nm">Bukse + genser<small>Bomullsmiks</small></span>
+                <span class="tag">Mellom</span>
+              </li>
+              <li class="layer">
+                <span class="n">03</span>
+                <span class="nm">Vindjakke<small>Skall · vindtett</small></span>
+                <span class="tag">Ytterst</span>
+              </li>
+            </ol>
+
+            <!-- CTA -->
+            <a class="cta" href="#" role="button" aria-label="Se påkledning for Liv">
+              <span>Se påkledning</span>
+              <span class="arrow" aria-hidden="true">→</span>
+            </a>
+
+          </main>
+
+          <!-- bottom tab bar -->
+          <nav class="tabbar" aria-label="Hovednavigasjon">
+            <a href="#main-home" class="active" aria-current="page">
+              <span class="ic home" aria-hidden="true"></span>Hjem
+            </a>
+            <a href="#main-week">
+              <span class="ic week" aria-hidden="true"></span>Uke
+            </a>
+            <a href="#">
+              <span class="ic guide" aria-hidden="true"></span>Guide
+            </a>
+            <a href="#">
+              <span class="ic set" aria-hidden="true"></span>Innst.
+            </a>
+          </nav>
+          <span class="home-ind" aria-hidden="true"></span>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============================================ -->
+    <!-- ============ WEEK SCREEN ================== -->
+    <!-- ============================================ -->
+    <div class="phone-wrap">
+      <span class="phone-label">02 / Uke</span>
+      <div class="phone" role="img" aria-label="iPhone-mockup som viser Uke-skjermen i Babyora">
+        <div class="screen">
+
+          <!-- status -->
+          <div class="status" aria-hidden="true">
+            <span>14:23</span>
+            <span class="right">
+              <svg width="18" height="11" viewBox="0 0 18 11" fill="none">
+                <rect x="0" y="7" width="3" height="4" fill="currentColor"/>
+                <rect x="5" y="5" width="3" height="6" fill="currentColor"/>
+                <rect x="10" y="3" width="3" height="8" fill="currentColor"/>
+                <rect x="15" y="0" width="3" height="11" fill="currentColor"/>
+              </svg>
+              <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
+                <path d="M8 11l2-2a2.83 2.83 0 0 0-4 0l2 2z" fill="currentColor"/>
+                <path d="M3.3 6.3l1.4 1.4a4.66 4.66 0 0 1 6.6 0l1.4-1.4a6.66 6.66 0 0 0-9.4 0z" fill="currentColor"/>
+                <path d="M0 3l1.5 1.5a9.16 9.16 0 0 1 13 0L16 3a11.16 11.16 0 0 0-16 0z" fill="currentColor"/>
+              </svg>
+              <svg width="26" height="12" viewBox="0 0 26 12" fill="none">
+                <rect x="0.5" y="0.5" width="22" height="11" rx="2.5" stroke="currentColor"/>
+                <rect x="2" y="2" width="16" height="8" rx="1" fill="currentColor"/>
+                <rect x="24" y="4" width="2" height="4" rx="1" fill="currentColor"/>
+              </svg>
+            </span>
+          </div>
+
+          <header class="appbar">
+            <div class="brand"><span class="brand-mark" aria-hidden="true"></span> Babyora</div>
+            <div class="child-tag">Barn / <b>Liv</b> · 02Y</div>
+          </header>
+
+          <!-- tabs -->
+          <nav class="tabs" aria-label="Tidsperspektiv">
+            <a href="#i-dag" class="active" aria-current="page">I dag</a>
+            <a href="#uke">Uke</a>
+          </nav>
+
+          <main id="main-week" tabindex="-1">
+
+            <section class="week-head">
+              <div>
+                <div class="k">Prognose // Elverum</div>
+                <h2>Tirsdag 30.06</h2>
+              </div>
+              <div class="rng">06:00 → 22:00</div>
+            </section>
+
+            <table class="week-table" aria-label="Time for time prognose med lag-anbefaling">
+              <thead>
+                <tr>
+                  <th scope="col">Tid</th>
+                  <th scope="col">Vær</th>
+                  <th scope="col">Temp</th>
+                  <th scope="col">Lag</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="when">08:00<small>MOR</small></td>
+                  <td><span class="sym"><span class="gly partly" aria-hidden="true"></span>Variert</span></td>
+                  <td class="temp">14<span class="unit">°C</span></td>
+                  <td class="layers-cell">3<small>LAG</small></td>
+                </tr>
+                <tr>
+                  <td class="when">11:00<small>FORM</small></td>
+                  <td><span class="sym"><span class="gly sun" aria-hidden="true"></span>Sol</span></td>
+                  <td class="temp">17<span class="unit">°C</span></td>
+                  <td class="layers-cell">3<small>LAG</small></td>
+                </tr>
+                <tr class="now">
+                  <td class="when">14:00<small>NÅ<span class="now-marker">14:23</span></small></td>
+                  <td><span class="sym"><span class="gly partly" aria-hidden="true"></span>Variert</span></td>
+                  <td class="temp">18<span class="unit">°C</span></td>
+                  <td class="layers-cell">3<small>LAG</small></td>
+                </tr>
+                <tr>
+                  <td class="when">16:00<small>ETT</small></td>
+                  <td><span class="sym"><span class="gly cloud" aria-hidden="true"></span>Skyet</span></td>
+                  <td class="temp">17<span class="unit">°C</span></td>
+                  <td class="layers-cell">3<small>LAG</small></td>
+                </tr>
+                <tr>
+                  <td class="when">18:00<small>KVE</small></td>
+                  <td><span class="sym"><span class="gly cloud" aria-hidden="true"></span>Skyet</span></td>
+                  <td class="temp">15<span class="unit">°C</span></td>
+                  <td class="layers-cell">3<small>LAG</small></td>
+                </tr>
+                <tr>
+                  <td class="when">20:00<small>KVE</small></td>
+                  <td><span class="sym"><span class="gly rain" aria-hidden="true"></span>Lett regn</span></td>
+                  <td class="temp">12<span class="unit">°C</span></td>
+                  <td class="layers-cell">4<small>LAG</small></td>
+                </tr>
+                <tr>
+                  <td class="when">22:00<small>NAT</small></td>
+                  <td><span class="sym"><span class="gly rain" aria-hidden="true"></span>Regn</span></td>
+                  <td class="temp">10<span class="unit">°C</span></td>
+                  <td class="layers-cell">4<small>LAG</small></td>
+                </tr>
+                <tr>
+                  <td class="when">06:00<small>+1D</small></td>
+                  <td><span class="sym"><span class="gly cloud" aria-hidden="true"></span>Skyet</span></td>
+                  <td class="temp">09<span class="unit">°C</span></td>
+                  <td class="layers-cell">4<small>LAG</small></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="footnote">
+              <div>Kilde <b>met.no</b> · oppdatert <b>14:21</b></div>
+              <div>Δ <span style="color:var(--hot)">+1 lag</span> 20:00</div>
+            </div>
+
+          </main>
+
+          <nav class="tabbar" aria-label="Hovednavigasjon">
+            <a href="#main-home">
+              <span class="ic home" aria-hidden="true"></span>Hjem
+            </a>
+            <a href="#main-week" class="active" aria-current="page">
+              <span class="ic week" aria-hidden="true"></span>Uke
+            </a>
+            <a href="#">
+              <span class="ic guide" aria-hidden="true"></span>Guide
+            </a>
+            <a href="#">
+              <span class="ic set" aria-hidden="true"></span>Innst.
+            </a>
+          </nav>
+          <span class="home-ind" aria-hidden="true"></span>
+
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <footer class="stage-foot" role="contentinfo">
+    <div>System // <b>Brutalist Mono</b></div>
+    <div>Palette // <span class="hot">oklch(0.55 0.20 25)</span> · ink · paper</div>
+    <div>Type // <b>JetBrains Mono</b> · tabular</div>
+  </footer>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f5f6f4">
+<title>Babyora — Nordic Hush</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     NORDIC HUSH — Babyora
+     Empty-fjord aesthetic. Air, not motion.
+     ============================================================ */
+
+  :root{
+    /* Palette */
+    --overcast-sky: oklch(0.97 0.003 215);
+    --overcast-veil: oklch(0.945 0.004 215);
+    --granite-ink:  oklch(0.15 0.005 215);
+    --granite-soft: oklch(0.35 0.008 215);
+    --granite-mist: oklch(0.62 0.010 215);
+    --hairline:     oklch(0.85 0.006 215);
+    --fjord-blue:   oklch(0.55 0.04 215);
+
+    /* Type */
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    --font-display: 'Cormorant Garamond', 'GT Sectra Display', 'Times New Roman', serif;
+
+    /* Geometry — golden ratio anchors */
+    --phi: 1.618;
+    --phone-w: 390px;
+    --phone-h: 844px;
+
+    /* Tracking */
+    --tracking-label: 0.18em;
+    --tracking-micro: 0.22em;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+
+  body{
+    font-family: var(--font-body);
+    font-weight: 300;
+    color: var(--granite-ink);
+    background: var(--overcast-sky);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 56px 24px 80px;
+    gap: 56px;
+  }
+
+  /* Skip link */
+  .skip-link{
+    position: absolute;
+    left: -9999px;
+    top: 12px;
+    background: var(--granite-ink);
+    color: var(--overcast-sky);
+    padding: 8px 14px;
+    font-size: 12px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .skip-link:focus{ left: 12px; z-index: 1000; }
+
+  /* Page header (out-of-phone) */
+  .page-header{
+    width: 100%;
+    max-width: 880px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 18px;
+  }
+  .page-header h1{
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-style: italic;
+    font-size: 30px;
+    letter-spacing: -0.01em;
+    color: var(--granite-ink);
+  }
+  .page-header .meta{
+    font-size: 10px;
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+  }
+
+  /* ============================================================
+     STAGE — both phones side by side, stacked on mobile
+     ============================================================ */
+  .stage{
+    width: 100%;
+    max-width: 920px;
+    display: grid;
+    grid-template-columns: repeat(2, var(--phone-w));
+    justify-content: center;
+    gap: 64px;
+    align-items: start;
+  }
+
+  @media (max-width: 880px){
+    .stage{
+      grid-template-columns: 1fr;
+      gap: 80px;
+      justify-items: center;
+    }
+    body{ padding: 32px 16px 56px; }
+  }
+
+  /* ============================================================
+     PHONE FRAME
+     ============================================================ */
+  .phone{
+    width: var(--phone-w);
+    height: var(--phone-h);
+    background: var(--overcast-sky);
+    border-radius: 47px;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.6) inset,
+      0 0 0 1px oklch(0.85 0.005 215),
+      0 0 0 8px oklch(0.92 0.004 215),
+      0 30px 60px -20px oklch(0.55 0.02 215 / 0.18),
+      0 60px 120px -40px oklch(0.45 0.02 215 / 0.22);
+    isolation: isolate;
+  }
+
+  .phone-label{
+    position: absolute;
+    top: -28px;
+    left: 8px;
+    font-size: 10px;
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+  }
+
+  /* Status bar */
+  .status-bar{
+    height: 47px;
+    padding: 17px 30px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--granite-ink);
+    letter-spacing: -0.01em;
+  }
+  .status-bar .icons{
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .status-bar svg{ display: block; }
+
+  /* Safe area inset top — Dynamic Island shim */
+  .island{
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 33px;
+    background: oklch(0.05 0.005 215);
+    border-radius: 20px;
+    z-index: 5;
+  }
+
+  /* App canvas */
+  .app{
+    height: calc(100% - 47px);
+    padding: 8px 24px 100px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ============================================================
+     TOP MASTHEAD — brand + place
+     ============================================================ */
+  .masthead{
+    padding: 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .brand{
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-style: italic;
+    font-size: 17px;
+    letter-spacing: -0.005em;
+    color: var(--granite-ink);
+  }
+  .brand .dot{
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--fjord-blue);
+    margin-left: 6px;
+    vertical-align: middle;
+    transform: translateY(-3px);
+  }
+  .place{
+    font-size: 10px;
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+  }
+
+  /* ============================================================
+     HJEM — empty fjord
+     ============================================================ */
+
+  /* Greeting eyebrow */
+  .eyebrow{
+    margin-top: 38px;
+    font-size: 10px;
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+  }
+
+  .greeting{
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1.15;
+    color: var(--granite-ink);
+    margin-top: 6px;
+    letter-spacing: -0.01em;
+  }
+
+  /* The carved temperature — antiqua numeral */
+  .temp-stage{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-top: 8px;
+  }
+  .temp-stage::before{
+    /* hairline at golden ratio */
+    content: "";
+    position: absolute;
+    left: -24px;
+    right: -24px;
+    top: 38.2%;
+    height: 1px;
+    background: var(--hairline);
+  }
+
+  .temp-numeral{
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 188px;
+    line-height: 0.88;
+    color: var(--granite-ink);
+    letter-spacing: -0.04em;
+    position: relative;
+  }
+  .temp-numeral .deg{
+    font-size: 56px;
+    vertical-align: top;
+    margin-left: 4px;
+    color: var(--granite-soft);
+    font-weight: 300;
+  }
+
+  .temp-caption{
+    margin-top: 18px;
+    font-size: 11px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+    text-align: center;
+  }
+  .temp-caption .sep{ margin: 0 10px; color: var(--hairline); }
+
+  /* Avatar — child as single silhouette glyph */
+  .avatar-row{
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .avatar{
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--overcast-veil);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--hairline);
+    flex-shrink: 0;
+  }
+  .avatar svg{ display: block; }
+  .avatar-meta{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .avatar-name{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--granite-ink);
+    letter-spacing: -0.01em;
+  }
+  .avatar-sub{
+    font-size: 10px;
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+  }
+
+  /* Activity toggle — minimal segmented control */
+  .toggle{
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .toggle button{
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 14px 0;
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.4s ease;
+  }
+  .toggle button[aria-pressed="true"]{
+    color: var(--granite-ink);
+  }
+  .toggle button[aria-pressed="true"]::after{
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -1px;
+    width: 28px;
+    height: 1px;
+    background: var(--fjord-blue);
+  }
+
+  /* Recommendation block */
+  .recommendation{
+    margin-top: 28px;
+    text-align: left;
+  }
+  .recommendation .label{
+    font-size: 10px;
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+  }
+  .recommendation .verse{
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.25;
+    color: var(--granite-ink);
+    margin-top: 8px;
+    letter-spacing: -0.005em;
+    max-width: 24ch;
+  }
+
+  /* Primary CTA — typography-led, no shadow */
+  .cta{
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 0 14px;
+    border-top: 1px solid var(--granite-ink);
+    color: var(--granite-ink);
+    text-decoration: none;
+    font-family: var(--font-body);
+    font-size: 12px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .cta .arrow{
+    width: 28px;
+    height: 1px;
+    background: var(--granite-ink);
+    position: relative;
+  }
+  .cta .arrow::after{
+    content: "";
+    position: absolute;
+    right: 0;
+    top: -3px;
+    width: 7px;
+    height: 7px;
+    border-top: 1px solid var(--granite-ink);
+    border-right: 1px solid var(--granite-ink);
+    transform: rotate(45deg);
+    transform-origin: right center;
+  }
+
+  /* ============================================================
+     UKE — quiet ledger
+     ============================================================ */
+  .week-tabs{
+    margin-top: 38px;
+    display: flex;
+    gap: 28px;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 0;
+  }
+  .week-tabs button{
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0 0 12px;
+    font-family: var(--font-body);
+    font-size: 11px;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+    cursor: pointer;
+    position: relative;
+  }
+  .week-tabs button[aria-selected="true"]{
+    color: var(--granite-ink);
+    font-weight: 500;
+  }
+  .week-tabs button[aria-selected="true"]::after{
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: var(--fjord-blue);
+  }
+
+  .week-heading{
+    margin-top: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .week-heading .title{
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-style: italic;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+  .week-heading .week-num{
+    font-family: var(--font-display);
+    font-size: 32px;
+    color: var(--granite-soft);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .week-heading .week-num .small{
+    font-family: var(--font-body);
+    font-size: 9px;
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+    margin-right: 6px;
+    vertical-align: top;
+    font-style: normal;
+  }
+
+  /* Column header */
+  .col-head{
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: 36px 1fr 28px 36px;
+    gap: 0;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--granite-ink);
+    font-size: 9px;
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+  }
+  .col-head .c-right{ text-align: right; }
+  .col-head .c-center{ text-align: center; }
+
+  /* Week rows */
+  .week-list{
+    list-style: none;
+    flex: 1;
+    overflow: hidden;
+  }
+  .week-row{
+    display: grid;
+    grid-template-columns: 36px 1fr 28px 36px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--hairline);
+    color: var(--granite-ink);
+  }
+  .week-row:last-child{ border-bottom: 0; }
+
+  .week-row.today{
+    color: var(--granite-ink);
+    position: relative;
+  }
+  .week-row.today::before{
+    content: "";
+    position: absolute;
+    left: -24px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--fjord-blue);
+  }
+
+  .row-day{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--granite-soft);
+  }
+  .week-row.today .row-day{ color: var(--granite-ink); }
+  .row-label{
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--granite-soft);
+    letter-spacing: -0.005em;
+  }
+  .week-row.today .row-label{ color: var(--granite-ink); font-weight: 400; }
+
+  .row-weather{
+    display: flex;
+    justify-content: center;
+    color: var(--granite-mist);
+  }
+  .week-row.today .row-weather{ color: var(--granite-soft); }
+  .row-weather svg{ display: block; }
+
+  .row-temp{
+    font-family: var(--font-display);
+    font-size: 18px;
+    text-align: right;
+    color: var(--granite-ink);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .row-temp .small{
+    font-size: 10px;
+    color: var(--granite-mist);
+    margin-left: 1px;
+  }
+
+  /* Layers footer in week */
+  .week-footer{
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--granite-ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .week-footer .lbl{
+    font-size: 9px;
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+  }
+  .week-footer .val{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--granite-ink);
+  }
+
+  /* ============================================================
+     TAB BAR — bottom
+     ============================================================ */
+  .tab-bar{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 24px 28px;
+    background: linear-gradient(to top, var(--overcast-sky) 70%, oklch(0.97 0.003 215 / 0));
+    border-top: 1px solid var(--hairline);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .tab-bar a{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: var(--granite-mist);
+    font-size: 9px;
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    padding: 6px 0 0;
+  }
+  .tab-bar a.active{ color: var(--granite-ink); }
+  .tab-bar a.active svg{ stroke: var(--granite-ink); }
+  .tab-bar svg{ stroke: var(--granite-mist); width: 22px; height: 22px; stroke-width: 1; fill: none; }
+
+  /* iOS home indicator */
+  .home-indicator{
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 134px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--granite-ink);
+    opacity: 0.9;
+    z-index: 10;
+  }
+
+  /* ============================================================
+     ACCESSIBILITY: focus rings
+     ============================================================ */
+  button:focus-visible, a:focus-visible{
+    outline: 1px solid var(--fjord-blue);
+    outline-offset: 4px;
+  }
+
+  /* Footer caption (out-of-phone) */
+  .page-foot{
+    width: 100%;
+    max-width: 880px;
+    border-top: 1px solid var(--hairline);
+    padding-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    letter-spacing: var(--tracking-micro);
+    text-transform: uppercase;
+    color: var(--granite-mist);
+  }
+</style>
+</head>
+<body>
+
+<a href="#hjem" class="skip-link">Hopp til innhold</a>
+
+<header class="page-header" role="banner">
+  <h1>Nordic Hush</h1>
+  <div class="meta">Babyora &nbsp;·&nbsp; v9 &nbsp;·&nbsp; Mock</div>
+</header>
+
+<div class="stage">
+
+  <!-- =========================================================
+       PHONE 1 — HJEM
+       ========================================================= -->
+  <article class="phone" aria-label="Hjem-skjerm" id="hjem">
+    <span class="phone-label">Hjem</span>
+
+    <div class="island" aria-hidden="true"></div>
+
+    <div class="status-bar" aria-hidden="true">
+      <span class="time">14:23</span>
+      <span class="icons">
+        <!-- signal -->
+        <svg width="18" height="10" viewBox="0 0 18 10" fill="none">
+          <rect x="0" y="7" width="3" height="3" rx="0.5" fill="currentColor"/>
+          <rect x="5" y="5" width="3" height="5" rx="0.5" fill="currentColor"/>
+          <rect x="10" y="2" width="3" height="8" rx="0.5" fill="currentColor"/>
+          <rect x="15" y="0" width="3" height="10" rx="0.5" fill="currentColor" opacity="0.4"/>
+        </svg>
+        <!-- wifi -->
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
+          <path d="M8 10.5a1 1 0 100-2 1 1 0 000 2z" fill="currentColor"/>
+          <path d="M2 4.5a8 8 0 0112 0M4.5 7a4.5 4.5 0 017 0" stroke="currentColor" stroke-width="1" stroke-linecap="round" fill="none"/>
+        </svg>
+        <!-- battery -->
+        <svg width="26" height="12" viewBox="0 0 26 12" fill="none">
+          <rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke="currentColor" fill="none"/>
+          <rect x="2" y="2" width="17" height="8" rx="1.5" fill="currentColor"/>
+          <rect x="23.5" y="4" width="2" height="4" rx="1" fill="currentColor"/>
+        </svg>
+      </span>
+    </div>
+
+    <main class="app">
+      <div class="masthead">
+        <div class="brand">Babyora<span class="dot" aria-hidden="true"></span></div>
+        <div class="place">Elverum &nbsp;·&nbsp; 60°N</div>
+      </div>
+
+      <p class="eyebrow">I dag, mandag</p>
+      <h2 class="greeting">Stille morgen<br>over skogen.</h2>
+
+      <section class="temp-stage" aria-label="Værforhold">
+        <div class="temp-numeral" aria-label="18 grader">18<span class="deg">°</span></div>
+        <div class="temp-caption">
+          Variert
+          <span class="sep">/</span>
+          Føles 18°
+          <span class="sep">/</span>
+          3.1 m/s
+        </div>
+      </section>
+
+      <div class="avatar-row">
+        <div class="avatar" aria-hidden="true">
+          <!-- Single contemplative child silhouette -->
+          <svg width="22" height="26" viewBox="0 0 22 26" fill="none">
+            <circle cx="11" cy="7" r="4.5" stroke="#2a2e30" stroke-width="1" fill="none"/>
+            <path d="M3 25c0-5 3.5-9 8-9s8 4 8 9" stroke="#2a2e30" stroke-width="1" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="avatar-meta">
+          <span class="avatar-name">Liv</span>
+          <span class="avatar-sub">14 måneder &nbsp;·&nbsp; 9.2 kg</span>
+        </div>
+      </div>
+
+      <div class="toggle" role="group" aria-label="Aktivitet">
+        <button type="button" aria-pressed="true">Utenfor vogn</button>
+        <button type="button" aria-pressed="false">I vogn</button>
+      </div>
+
+      <section class="recommendation" aria-label="Anbefaling">
+        <p class="label">Anbefaling</p>
+        <p class="verse">Tre lag mot kulda — ull innerst, ull i midten, vindjakke ytterst.</p>
+      </section>
+
+      <a href="#paakledning" class="cta">
+        <span>Se påkledning</span>
+        <span class="arrow" aria-hidden="true"></span>
+      </a>
+    </main>
+
+    <nav class="tab-bar" aria-label="Hovednavigasjon">
+      <a href="#hjem" class="active" aria-current="page">
+        <svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 01-1 1h-4v-6h-6v6H5a1 1 0 01-1-1v-9z"/></svg>
+        Hjem
+      </a>
+      <a href="#uke">
+        <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
+        Uke
+      </a>
+      <a href="#guide">
+        <svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h10l4 4v14a1 1 0 01-1 1H6a2 2 0 01-2-2V5z"/><path d="M9 11h6M9 15h6M9 7h3"/></svg>
+        Guide
+      </a>
+      <a href="#innstillinger">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+        Innstillinger
+      </a>
+    </nav>
+
+    <div class="home-indicator" aria-hidden="true"></div>
+  </article>
+
+  <!-- =========================================================
+       PHONE 2 — UKE
+       ========================================================= -->
+  <article class="phone" aria-label="Uke-skjerm" id="uke">
+    <span class="phone-label">Uke</span>
+
+    <div class="island" aria-hidden="true"></div>
+
+    <div class="status-bar" aria-hidden="true">
+      <span class="time">14:23</span>
+      <span class="icons">
+        <svg width="18" height="10" viewBox="0 0 18 10" fill="none">
+          <rect x="0" y="7" width="3" height="3" rx="0.5" fill="currentColor"/>
+          <rect x="5" y="5" width="3" height="5" rx="0.5" fill="currentColor"/>
+          <rect x="10" y="2" width="3" height="8" rx="0.5" fill="currentColor"/>
+          <rect x="15" y="0" width="3" height="10" rx="0.5" fill="currentColor" opacity="0.4"/>
+        </svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
+          <path d="M8 10.5a1 1 0 100-2 1 1 0 000 2z" fill="currentColor"/>
+          <path d="M2 4.5a8 8 0 0112 0M4.5 7a4.5 4.5 0 017 0" stroke="currentColor" stroke-width="1" stroke-linecap="round" fill="none"/>
+        </svg>
+        <svg width="26" height="12" viewBox="0 0 26 12" fill="none">
+          <rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke="currentColor" fill="none"/>
+          <rect x="2" y="2" width="17" height="8" rx="1.5" fill="currentColor"/>
+          <rect x="23.5" y="4" width="2" height="4" rx="1" fill="currentColor"/>
+        </svg>
+      </span>
+    </div>
+
+    <main class="app">
+      <div class="masthead">
+        <div class="brand">Babyora<span class="dot" aria-hidden="true"></span></div>
+        <div class="place">Elverum &nbsp;·&nbsp; 60°N</div>
+      </div>
+
+      <div class="week-tabs" role="tablist" aria-label="Tidshorisont">
+        <button type="button" role="tab" aria-selected="false">I dag</button>
+        <button type="button" role="tab" aria-selected="true">Uke</button>
+      </div>
+
+      <div class="week-heading">
+        <span class="title">Sjuendene<br>juni.</span>
+        <span class="week-num"><span class="small">Uke</span>27</span>
+      </div>
+
+      <div class="col-head" aria-hidden="true">
+        <span>Dag</span>
+        <span></span>
+        <span class="c-center">Vær</span>
+        <span class="c-right">Lag</span>
+      </div>
+
+      <ol class="week-list" aria-label="Ukens dager">
+        <li class="week-row today">
+          <span class="row-day">Ma</span>
+          <span class="row-label">I dag</span>
+          <span class="row-weather" aria-label="Variert">
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+              <circle cx="6" cy="6" r="3" stroke="currentColor" stroke-width="1"/>
+              <path d="M5 11c0-1.7 1.6-3 3.5-3s3.5 1.3 3.5 3M7 14h8" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="row-temp">18<span class="small">°</span></span>
+        </li>
+        <li class="week-row">
+          <span class="row-day">Ti</span>
+          <span class="row-label">Tirsdag</span>
+          <span class="row-weather" aria-label="Sol">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1"/>
+              <path d="M8 1.5v1.5M8 13v1.5M1.5 8h1.5M13 8h1.5M3.2 3.2l1 1M11.8 11.8l1 1M3.2 12.8l1-1M11.8 4.2l1-1" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="row-temp">21<span class="small">°</span></span>
+        </li>
+        <li class="week-row">
+          <span class="row-day">On</span>
+          <span class="row-label">Onsdag</span>
+          <span class="row-weather" aria-label="Sol">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1"/>
+              <path d="M8 1.5v1.5M8 13v1.5M1.5 8h1.5M13 8h1.5M3.2 3.2l1 1M11.8 11.8l1 1M3.2 12.8l1-1M11.8 4.2l1-1" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="row-temp">23<span class="small">°</span></span>
+        </li>
+        <li class="week-row">
+          <span class="row-day">To</span>
+          <span class="row-label">Torsdag</span>
+          <span class="row-weather" aria-label="Lett regn">
+            <svg width="18" height="16" viewBox="0 0 18 16" fill="none">
+              <path d="M4 9a4 4 0 118 0h1.5a2.5 2.5 0 010 5h-9a2.5 2.5 0 010-5z" stroke="currentColor" stroke-width="1" fill="none"/>
+              <path d="M6 15l-1 1.5M10 15l-1 1.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="row-temp">16<span class="small">°</span></span>
+        </li>
+        <li class="week-row">
+          <span class="row-day">Fr</span>
+          <span class="row-label">Fredag</span>
+          <span class="row-weather" aria-label="Regn">
+            <svg width="18" height="16" viewBox="0 0 18 16" fill="none">
+              <path d="M4 9a4 4 0 118 0h1.5a2.5 2.5 0 010 5h-9a2.5 2.5 0 010-5z" stroke="currentColor" stroke-width="1" fill="none"/>
+              <path d="M5 15l-1 1.5M9 15l-1 1.5M13 15l-1 1.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="row-temp">14<span class="small">°</span></span>
+        </li>
+        <li class="week-row">
+          <span class="row-day">Lø</span>
+          <span class="row-label">Lørdag</span>
+          <span class="row-weather" aria-label="Variert">
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+              <circle cx="6" cy="6" r="3" stroke="currentColor" stroke-width="1"/>
+              <path d="M5 11c0-1.7 1.6-3 3.5-3s3.5 1.3 3.5 3M7 14h8" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="row-temp">17<span class="small">°</span></span>
+        </li>
+        <li class="week-row">
+          <span class="row-day">Sø</span>
+          <span class="row-label">Søndag</span>
+          <span class="row-weather" aria-label="Sol">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1"/>
+              <path d="M8 1.5v1.5M8 13v1.5M1.5 8h1.5M13 8h1.5M3.2 3.2l1 1M11.8 11.8l1 1M3.2 12.8l1-1M11.8 4.2l1-1" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="row-temp">20<span class="small">°</span></span>
+        </li>
+      </ol>
+
+      <div class="week-footer">
+        <span class="lbl">Snitt lag denne uken</span>
+        <span class="val">2,7 lag</span>
+      </div>
+    </main>
+
+    <nav class="tab-bar" aria-label="Hovednavigasjon">
+      <a href="#hjem">
+        <svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 01-1 1h-4v-6h-6v6H5a1 1 0 01-1-1v-9z"/></svg>
+        Hjem
+      </a>
+      <a href="#uke" class="active" aria-current="page">
+        <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>
+        Uke
+      </a>
+      <a href="#guide">
+        <svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h10l4 4v14a1 1 0 01-1 1H6a2 2 0 01-2-2V5z"/><path d="M9 11h6M9 15h6M9 7h3"/></svg>
+        Guide
+      </a>
+      <a href="#innstillinger">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+        Innstillinger
+      </a>
+    </nav>
+
+    <div class="home-indicator" aria-hidden="true"></div>
+  </article>
+
+</div>
+
+<footer class="page-foot">
+  <span>v9 — Nordic Hush</span>
+  <span>Air, not motion.</span>
+</footer>
+
+</body>
+</html>

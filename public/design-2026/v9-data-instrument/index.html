@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Babyora — Data Instrument (v9)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Palette */
+    --bg: oklch(0.08 0.005 220);
+    --bg-elev: oklch(0.115 0.006 220);
+    --bg-elev-2: oklch(0.145 0.007 220);
+    --line: oklch(0.22 0.008 220);
+    --line-soft: oklch(0.18 0.008 220);
+    --ink: oklch(0.95 0.005 220);
+    --ink-dim: oklch(0.72 0.008 220);
+    --ink-mute: oklch(0.52 0.010 220);
+    --ink-faint: oklch(0.38 0.010 220);
+    --lime: oklch(0.78 0.18 145);
+    --lime-deep: oklch(0.65 0.20 145);
+    --lime-dim: oklch(0.45 0.14 145);
+    --warn: oklch(0.78 0.16 70);
+    --cold: oklch(0.78 0.14 230);
+
+    /* Type */
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(ellipse at top, oklch(0.13 0.012 220) 0%, oklch(0.06 0.005 220) 60%) fixed;
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 48px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+  }
+
+  /* Skip link */
+  .skip {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--lime);
+    color: var(--bg);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-weight: 600;
+  }
+  .skip:focus { left: 16px; top: 16px; z-index: 9999; }
+
+  /* Top legend */
+  .legend {
+    max-width: 880px;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 20px;
+  }
+  .legend h1 {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin: 0 0 6px;
+  }
+  .legend .lede {
+    font-family: var(--sans);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .legend .meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-mute);
+    text-align: right;
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+  }
+  .legend .meta .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--lime);
+    border-radius: 50%;
+    margin-right: 8px;
+    box-shadow: 0 0 12px var(--lime);
+    vertical-align: middle;
+  }
+
+  /* Stage */
+  .stage {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 48px;
+    align-items: start;
+    justify-content: center;
+  }
+  @media (max-width: 900px) {
+    .stage { grid-template-columns: 1fr; gap: 64px; }
+  }
+
+  .frame-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .frame-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .frame-label::before {
+    content: "";
+    width: 24px; height: 1px;
+    background: var(--line);
+  }
+  .frame-label::after {
+    content: "";
+    width: 24px; height: 1px;
+    background: var(--line);
+  }
+
+  /* iPhone frame */
+  .phone {
+    width: 390px;
+    height: 844px;
+    border-radius: 47px;
+    background: oklch(0.05 0.005 220);
+    padding: 6px;
+    box-shadow:
+      0 0 0 2px oklch(0.16 0.006 220),
+      0 0 0 3px oklch(0.04 0.005 220),
+      0 30px 60px -20px oklch(0 0 0 / 0.6),
+      0 60px 120px -30px oklch(0 0 0 / 0.5);
+    position: relative;
+  }
+  .phone::after {
+    /* Side button */
+    content: "";
+    position: absolute;
+    right: -2px;
+    top: 180px;
+    width: 4px;
+    height: 90px;
+    background: oklch(0.16 0.006 220);
+    border-radius: 0 2px 2px 0;
+  }
+  .screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 42px;
+    background: var(--bg);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 47px;
+    padding: 14px 32px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .status-bar .notch {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 110px;
+    height: 32px;
+    background: oklch(0.04 0.005 220);
+    border-radius: 20px;
+  }
+  .status-right { display: flex; align-items: center; gap: 6px; }
+  .icon-signal, .icon-wifi, .icon-batt { display: inline-flex; align-items: center; }
+  .icon-signal svg, .icon-wifi svg, .icon-batt svg { display: block; }
+
+  /* Main scroll area */
+  .scroll {
+    flex: 1;
+    overflow: hidden;
+    padding: 0 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* Top brand row */
+  .brand-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 6px;
+  }
+  .brand {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.32em;
+    color: var(--ink);
+  }
+  .brand .b-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    background: var(--lime);
+    border-radius: 50%;
+    margin-right: 8px;
+    box-shadow: 0 0 8px var(--lime-deep);
+    vertical-align: 1px;
+  }
+  .brand-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.12em;
+  }
+
+  /* Section header */
+  .sect-h {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .sect-h .id { color: var(--ink-mute); }
+  .sect-h .val { color: var(--ink-dim); font-weight: 500; }
+
+  /* Location/weather block */
+  .loc-block {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: -4px;
+  }
+  .loc-name {
+    font-family: var(--sans);
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .loc-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 8px;
+    letter-spacing: 0.06em;
+  }
+  .loc-sub .live {
+    color: var(--lime);
+    font-weight: 600;
+  }
+  .loc-sub .live::before {
+    content: "";
+    display: inline-block;
+    width: 5px; height: 5px;
+    background: var(--lime);
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: 1px;
+    box-shadow: 0 0 6px var(--lime);
+  }
+  .temp-block {
+    text-align: right;
+    font-family: var(--mono);
+    line-height: 1;
+  }
+  .temp-block .big {
+    font-size: 52px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.04em;
+  }
+  .temp-block .unit {
+    font-size: 24px;
+    color: var(--ink-dim);
+    font-weight: 500;
+  }
+  .temp-block .delta {
+    font-size: 11px;
+    color: var(--lime);
+    margin-top: 4px;
+    letter-spacing: 0.06em;
+  }
+
+  /* Metrics row */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line-soft);
+    border-top: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+    padding: 0;
+  }
+  .metric {
+    background: var(--bg);
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .metric .label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .metric .value {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .metric .value .u {
+    font-size: 11px;
+    color: var(--ink-mute);
+    font-weight: 500;
+    margin-left: 3px;
+  }
+  .metric .spark {
+    height: 12px;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+  }
+  .metric .spark .bar {
+    flex: 1;
+    background: var(--lime-dim);
+    border-radius: 1px;
+  }
+
+  /* Child telemetry block */
+  .child {
+    border: 1px solid var(--line-soft);
+    border-radius: 14px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 14px;
+    align-items: center;
+    background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg) 100%);
+  }
+  .avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: var(--bg-elev-2);
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar svg { display: block; }
+  .avatar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 35%, oklch(0.20 0.020 145 / 0.4), transparent 60%);
+    pointer-events: none;
+  }
+  .child-info { display: flex; flex-direction: column; gap: 6px; }
+  .child-name {
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .child-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    padding: 4px 7px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--ink-dim);
+    background: var(--bg);
+  }
+  .tag.lime {
+    color: var(--lime);
+    border-color: var(--lime-dim);
+    background: oklch(0.15 0.04 145 / 0.3);
+  }
+  .child-status {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .child-status b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* Activity toggle */
+  .toggle {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 4px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    background: var(--bg-elev);
+  }
+  .toggle .opt {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 10px 8px;
+    border-radius: 7px;
+    color: var(--ink-mute);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: all 0.15s;
+  }
+  .toggle .opt.on {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .toggle .opt span {
+    display: block;
+    font-size: 8px;
+    letter-spacing: 0.16em;
+    color: inherit;
+    opacity: 0.6;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* Recommendation core */
+  .reco {
+    border: 1px solid var(--lime-dim);
+    border-radius: 14px;
+    padding: 16px 16px 14px;
+    background:
+      linear-gradient(180deg, oklch(0.16 0.06 145 / 0.25) 0%, oklch(0.10 0.02 145 / 0.10) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .reco::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--lime), transparent);
+  }
+  .reco-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .reco-head .ttl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: var(--lime);
+    font-weight: 600;
+  }
+  .reco-head .conf {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.06em;
+  }
+  .reco-head .conf b { color: var(--ink); font-weight: 600; }
+  .reco-value {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .reco-value .num {
+    font-family: var(--mono);
+    font-size: 72px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+  }
+  .reco-value .word {
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink-dim);
+    letter-spacing: -0.005em;
+  }
+  .reco-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
+  }
+  .reco-sub b { color: var(--ink-dim); font-weight: 600; }
+
+  /* Layer breakdown bars */
+  .layers {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .layer-row {
+    display: grid;
+    grid-template-columns: 14px 70px 1fr 32px;
+    gap: 10px;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+  .layer-row .n {
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  .layer-row .name {
+    color: var(--ink-dim);
+    letter-spacing: 0.04em;
+  }
+  .layer-row .bar {
+    height: 4px;
+    background: var(--line-soft);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .layer-row .bar i {
+    display: block;
+    height: 100%;
+    background: var(--lime);
+    border-radius: 2px;
+  }
+  .layer-row .w {
+    color: var(--ink);
+    text-align: right;
+    font-weight: 600;
+  }
+
+  /* CTA */
+  .cta {
+    width: 100%;
+    border: none;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cta:hover { background: var(--lime); }
+  .cta .arrow { font-family: var(--mono); }
+
+  /* Bottom tab bar */
+  .tabbar {
+    height: 88px;
+    flex-shrink: 0;
+    border-top: 1px solid var(--line-soft);
+    background: oklch(0.07 0.005 220);
+    padding: 8px 12px 28px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border: none;
+    background: transparent;
+    padding: 6px 0;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .tab svg { display: block; }
+  .tab.active { color: var(--lime); }
+  .tab.active svg { stroke: var(--lime); }
+  .tab .ind {
+    width: 16px;
+    height: 2px;
+    background: transparent;
+    border-radius: 1px;
+  }
+  .tab.active .ind { background: var(--lime); box-shadow: 0 0 6px var(--lime-deep); }
+
+  /* === UKE SCREEN === */
+  .uke-tabs {
+    display: flex;
+    gap: 4px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 4px;
+    background: var(--bg-elev);
+  }
+  .uke-tabs .ut {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 10px 8px;
+    border-radius: 7px;
+    color: var(--ink-mute);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+  }
+  .uke-tabs .ut.on {
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  /* Chart panel */
+  .chart-panel {
+    border: 1px solid var(--line-soft);
+    border-radius: 14px;
+    padding: 14px;
+    background: var(--bg-elev);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .chart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .chart-head .lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .chart-head .rng {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .chart {
+    height: 96px;
+    position: relative;
+  }
+  .chart svg { display: block; width: 100%; height: 100%; }
+  .chart-legend {
+    display: flex;
+    gap: 14px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line-soft);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .chart-legend .k {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chart-legend .sw {
+    width: 8px; height: 2px; background: var(--lime); border-radius: 1px;
+  }
+  .chart-legend .sw.dim { background: var(--line); }
+
+  /* Hour rows */
+  .hours {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--line-soft);
+  }
+  .hour {
+    display: grid;
+    grid-template-columns: 52px 28px 1fr 56px 50px;
+    gap: 10px;
+    align-items: center;
+    padding: 11px 4px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .hour.now {
+    background:
+      linear-gradient(90deg, oklch(0.15 0.06 145 / 0.18) 0%, transparent 100%);
+    margin: 0 -4px;
+    padding-left: 8px;
+    padding-right: 4px;
+    border-left: 2px solid var(--lime);
+  }
+  .hour .t {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+  .hour.now .t { color: var(--lime); }
+  .hour .sym {
+    width: 24px; height: 24px;
+    display: grid; place-items: center;
+    color: var(--ink-dim);
+  }
+  .hour .desc {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--ink-dim);
+    font-weight: 500;
+  }
+  .hour .desc .sub {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    margin-top: 2px;
+    letter-spacing: 0.06em;
+  }
+  .hour .temp {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    text-align: right;
+    letter-spacing: -0.01em;
+  }
+  .hour .temp .u {
+    font-size: 10px;
+    color: var(--ink-mute);
+    font-weight: 500;
+  }
+  .hour .layers-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-end;
+  }
+  .hour .lcount {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0;
+  }
+  .hour .lcount .lbl {
+    font-size: 9px;
+    color: var(--ink-mute);
+    letter-spacing: 0.14em;
+    font-weight: 500;
+    margin-left: 2px;
+  }
+  .hour .layer-stack {
+    display: flex;
+    gap: 2px;
+  }
+  .hour .layer-stack i {
+    width: 8px;
+    height: 3px;
+    background: var(--lime);
+    border-radius: 1px;
+  }
+  .hour .layer-stack i.off { background: var(--line); }
+
+  /* Summary band */
+  .summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .summary > div {
+    padding: 12px 14px;
+  }
+  .summary > div + div {
+    border-left: 1px solid var(--line-soft);
+  }
+  .summary .lbl {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  .summary .v {
+    font-family: var(--mono);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .summary .v .u {
+    font-size: 11px;
+    color: var(--ink-mute);
+    font-weight: 500;
+    margin-left: 3px;
+  }
+  .summary .delta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-mute);
+    margin-top: 4px;
+    letter-spacing: 0.04em;
+  }
+  .summary .delta.lime { color: var(--lime); }
+  .summary .delta.warn { color: var(--warn); }
+
+  /* Footer instrument tag */
+  .footer-tag {
+    max-width: 880px;
+    width: 100%;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .footer-tag .right { color: var(--ink-faint); }
+
+  /* Scroll content scoped trim */
+  .scroll::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+  <a class="skip" href="#hjem">Hopp til innhold</a>
+
+  <header class="legend" role="banner">
+    <div>
+      <h1>Babyora &middot; Mock v9 / Data Instrument</h1>
+      <p class="lede">Hjem &amp; Uke — performance-instrument for utendørsfamilier.</p>
+    </div>
+    <div class="meta">
+      <span class="dot"></span>LIVE TELEMETRY<br />
+      LOC.ELVERUM &middot; 60.88&deg; N<br />
+      SAMPLE 14:23:08 CET
+    </div>
+  </header>
+
+  <section class="stage" aria-label="App-mocks">
+
+    <!-- =============================================================== -->
+    <!-- HJEM                                                              -->
+    <!-- =============================================================== -->
+    <article class="frame-wrap">
+      <div class="frame-label">Screen 01 / Hjem</div>
+      <div class="phone" aria-label="iPhone-mock som viser Hjem-skjermen">
+        <div class="screen" id="hjem">
+          <!-- Status bar -->
+          <div class="status-bar" aria-hidden="true">
+            <div class="notch"></div>
+            <span>14:23</span>
+            <div class="status-right">
+              <span class="icon-signal">
+                <svg width="18" height="11" viewBox="0 0 18 11" fill="none"><rect x="0" y="7" width="3" height="4" rx="0.5" fill="currentColor"/><rect x="5" y="5" width="3" height="6" rx="0.5" fill="currentColor"/><rect x="10" y="2" width="3" height="9" rx="0.5" fill="currentColor"/><rect x="15" y="0" width="3" height="11" rx="0.5" fill="currentColor" opacity="0.4"/></svg>
+              </span>
+              <span class="icon-wifi">
+                <svg width="16" height="11" viewBox="0 0 16 11" fill="none"><path d="M8 10.5c.7 0 1.3-.6 1.3-1.3S8.7 7.9 8 7.9s-1.3.6-1.3 1.3S7.3 10.5 8 10.5z" fill="currentColor"/><path d="M5 6.8a4.2 4.2 0 016 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M2.6 4.2a7.6 7.6 0 0110.8 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M0.5 1.8a10.5 10.5 0 0115 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              </span>
+              <span class="icon-batt">
+                <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="2.5" stroke="currentColor" opacity="0.5"/><rect x="2" y="2" width="17" height="8" rx="1" fill="currentColor"/><rect x="23.5" y="4" width="1.5" height="4" rx="0.6" fill="currentColor" opacity="0.5"/></svg>
+              </span>
+            </div>
+          </div>
+
+          <main class="scroll" role="main" aria-label="Hjem-innhold">
+
+            <div class="brand-row">
+              <div class="brand"><span class="b-dot"></span>BABYORA</div>
+              <div class="brand-meta">ONS 30.06 / W26</div>
+            </div>
+
+            <!-- Location + temperature -->
+            <div class="sect-h" role="presentation">
+              <span class="id">// LOCATION_01</span>
+              <span class="val">SYNC 14:23:08</span>
+            </div>
+            <section class="loc-block" aria-label="Sted og v&aelig;r">
+              <div>
+                <div class="loc-name">Elverum</div>
+                <div class="loc-sub"><span class="live">LIVE</span> &middot; Variert &middot; vind 3.1 m/s</div>
+              </div>
+              <div class="temp-block">
+                <span class="big">18</span><span class="unit">&deg;C</span>
+                <div class="delta">FEELS 18.0&deg;C</div>
+              </div>
+            </section>
+
+            <!-- Metric strip -->
+            <section class="metrics" aria-label="Telemetri">
+              <div class="metric">
+                <div class="label">Vind</div>
+                <div class="value">3.1<span class="u">m/s</span></div>
+                <div class="spark" aria-hidden="true">
+                  <i class="bar" style="height:30%"></i>
+                  <i class="bar" style="height:45%"></i>
+                  <i class="bar" style="height:38%"></i>
+                  <i class="bar" style="height:60%"></i>
+                  <i class="bar" style="height:52%"></i>
+                  <i class="bar" style="height:70%"></i>
+                  <i class="bar" style="height:64%"></i>
+                  <i class="bar" style="height:55%"></i>
+                </div>
+              </div>
+              <div class="metric">
+                <div class="label">Fukt</div>
+                <div class="value">64<span class="u">%</span></div>
+                <div class="spark" aria-hidden="true">
+                  <i class="bar" style="height:55%"></i>
+                  <i class="bar" style="height:62%"></i>
+                  <i class="bar" style="height:58%"></i>
+                  <i class="bar" style="height:70%"></i>
+                  <i class="bar" style="height:66%"></i>
+                  <i class="bar" style="height:60%"></i>
+                  <i class="bar" style="height:64%"></i>
+                  <i class="bar" style="height:68%"></i>
+                </div>
+              </div>
+              <div class="metric">
+                <div class="label">UV</div>
+                <div class="value">4.2<span class="u">idx</span></div>
+                <div class="spark" aria-hidden="true">
+                  <i class="bar" style="height:15%"></i>
+                  <i class="bar" style="height:28%"></i>
+                  <i class="bar" style="height:50%"></i>
+                  <i class="bar" style="height:75%"></i>
+                  <i class="bar" style="height:90%"></i>
+                  <i class="bar" style="height:80%"></i>
+                  <i class="bar" style="height:55%"></i>
+                  <i class="bar" style="height:35%"></i>
+                </div>
+              </div>
+            </section>
+
+            <!-- Child + activity -->
+            <div class="sect-h" role="presentation">
+              <span class="id">// SUBJECT_01</span>
+              <span class="val">AGE 14 MO &middot; 11.2 KG</span>
+            </div>
+            <section class="child" aria-label="Barn-profil">
+              <div class="avatar" aria-hidden="true">
+                <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+                  <!-- hood -->
+                  <path d="M21 6c-7 0-12 5-12 12v6c0 7 5 11 12 11s12-4 12-11v-6c0-7-5-12-12-12z" fill="oklch(0.78 0.18 145)" opacity="0.85"/>
+                  <!-- face -->
+                  <ellipse cx="21" cy="23" rx="9" ry="10" fill="oklch(0.92 0.02 60)"/>
+                  <!-- eyes -->
+                  <circle cx="17.5" cy="23" r="1.1" fill="oklch(0.10 0.005 220)"/>
+                  <circle cx="24.5" cy="23" r="1.1" fill="oklch(0.10 0.005 220)"/>
+                  <!-- cheeks -->
+                  <circle cx="15.5" cy="26" r="1.8" fill="oklch(0.78 0.10 30)" opacity="0.5"/>
+                  <circle cx="26.5" cy="26" r="1.8" fill="oklch(0.78 0.10 30)" opacity="0.5"/>
+                  <!-- mouth -->
+                  <path d="M19 27.5c.7.6 2.6.6 4 0" stroke="oklch(0.30 0.05 30)" stroke-width="1" stroke-linecap="round" fill="none"/>
+                </svg>
+              </div>
+              <div class="child-info">
+                <div class="child-name">Liv</div>
+                <div class="child-tags">
+                  <span class="tag lime">AKTIV</span>
+                  <span class="tag">14 mo</span>
+                  <span class="tag">SOMATOTYP 2</span>
+                </div>
+                <div class="child-status">Status: <b>klar for utetid</b></div>
+              </div>
+            </section>
+
+            <!-- Activity toggle -->
+            <div class="sect-h" role="presentation">
+              <span class="id">// ACTIVITY_MODE</span>
+              <span class="val">SELECTED 1/2</span>
+            </div>
+            <div class="toggle" role="tablist" aria-label="Aktivitet">
+              <button class="opt on" role="tab" aria-selected="true">
+                Utenfor vogn
+                <span>HIGH MOTION</span>
+              </button>
+              <button class="opt" role="tab" aria-selected="false">
+                I vogn
+                <span>LOW MOTION</span>
+              </button>
+            </div>
+
+            <!-- Recommendation -->
+            <div class="sect-h" role="presentation">
+              <span class="id">// PRESCRIPTION</span>
+              <span class="val">MODEL V4.2 / OK</span>
+            </div>
+            <section class="reco" aria-label="Anbefalt p&aring;kledning">
+              <div class="reco-head">
+                <div class="ttl">P&Aring;KLEDNING / 3 LAG</div>
+                <div class="conf">CONF <b>94%</b></div>
+              </div>
+              <div class="reco-value">
+                <div class="num">3</div>
+                <div class="word">lag mot kj&oslash;ling</div>
+              </div>
+              <div class="reco-sub">M&aring;l-temp <b>33.5&deg;C</b> &middot; clo <b>1.42</b> &middot; mod <b>+0</b></div>
+
+              <div class="layers" aria-label="Lag-stack">
+                <div class="layer-row">
+                  <span class="n">L1</span>
+                  <span class="name">Ull-body</span>
+                  <span class="bar"><i style="width:34%"></i></span>
+                  <span class="w">34%</span>
+                </div>
+                <div class="layer-row">
+                  <span class="n">L2</span>
+                  <span class="name">Mellomlag</span>
+                  <span class="bar"><i style="width:42%"></i></span>
+                  <span class="w">42%</span>
+                </div>
+                <div class="layer-row">
+                  <span class="n">L3</span>
+                  <span class="name">Vindjakke</span>
+                  <span class="bar"><i style="width:24%"></i></span>
+                  <span class="w">24%</span>
+                </div>
+              </div>
+
+              <button class="cta" type="button" aria-label="Se full p&aring;kledning">
+                <span>Se p&aring;kledning</span>
+                <span class="arrow">&rarr;</span>
+              </button>
+            </section>
+
+          </main>
+
+          <!-- Tab bar -->
+          <nav class="tabbar" role="navigation" aria-label="Hovedmeny">
+            <a href="#hjem" class="tab active">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5L10 3l7 5.5V16a1 1 0 01-1 1h-3v-5H7v5H4a1 1 0 01-1-1V8.5z"/></svg>
+              <span>Hjem</span>
+              <span class="ind"></span>
+            </a>
+            <a href="#uke" class="tab">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="13" rx="1.5"/><path d="M3 8h14M7 4V2M13 4V2"/></svg>
+              <span>Uke</span>
+              <span class="ind"></span>
+            </a>
+            <a href="#guide" class="tab">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h9l3 3v11a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M6 9h8M6 12h8M6 15h5"/></svg>
+              <span>Guide</span>
+              <span class="ind"></span>
+            </a>
+            <a href="#settings" class="tab">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M16.4 11.5l1.2 1c.3.3.4.7.2 1.1l-1 1.7c-.2.4-.6.6-1 .5l-1.5-.4a6 6 0 01-1.7 1l-.3 1.5c-.1.4-.4.7-.8.7h-2c-.4 0-.7-.3-.8-.7l-.3-1.5a6 6 0 01-1.7-1l-1.5.4c-.4.1-.8-.1-1-.5l-1-1.7c-.2-.4-.1-.8.2-1.1l1.2-1a6 6 0 010-2l-1.2-1c-.3-.3-.4-.7-.2-1.1l1-1.7c.2-.4.6-.6 1-.5l1.5.4a6 6 0 011.7-1l.3-1.5c.1-.4.4-.7.8-.7h2c.4 0 .7.3.8.7l.3 1.5c.6.2 1.2.6 1.7 1l1.5-.4c.4-.1.8.1 1 .5l1 1.7c.2.4.1.8-.2 1.1l-1.2 1a6 6 0 010 2z"/></svg>
+              <span>Innst.</span>
+              <span class="ind"></span>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </article>
+
+    <!-- =============================================================== -->
+    <!-- UKE                                                               -->
+    <!-- =============================================================== -->
+    <article class="frame-wrap">
+      <div class="frame-label">Screen 02 / Uke</div>
+      <div class="phone" aria-label="iPhone-mock som viser Uke-skjermen">
+        <div class="screen" id="uke">
+          <!-- Status bar -->
+          <div class="status-bar" aria-hidden="true">
+            <div class="notch"></div>
+            <span>14:23</span>
+            <div class="status-right">
+              <span class="icon-signal">
+                <svg width="18" height="11" viewBox="0 0 18 11" fill="none"><rect x="0" y="7" width="3" height="4" rx="0.5" fill="currentColor"/><rect x="5" y="5" width="3" height="6" rx="0.5" fill="currentColor"/><rect x="10" y="2" width="3" height="9" rx="0.5" fill="currentColor"/><rect x="15" y="0" width="3" height="11" rx="0.5" fill="currentColor" opacity="0.4"/></svg>
+              </span>
+              <span class="icon-wifi">
+                <svg width="16" height="11" viewBox="0 0 16 11" fill="none"><path d="M8 10.5c.7 0 1.3-.6 1.3-1.3S8.7 7.9 8 7.9s-1.3.6-1.3 1.3S7.3 10.5 8 10.5z" fill="currentColor"/><path d="M5 6.8a4.2 4.2 0 016 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M2.6 4.2a7.6 7.6 0 0110.8 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M0.5 1.8a10.5 10.5 0 0115 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              </span>
+              <span class="icon-batt">
+                <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="2.5" stroke="currentColor" opacity="0.5"/><rect x="2" y="2" width="17" height="8" rx="1" fill="currentColor"/><rect x="23.5" y="4" width="1.5" height="4" rx="0.6" fill="currentColor" opacity="0.5"/></svg>
+              </span>
+            </div>
+          </div>
+
+          <main class="scroll" role="main" aria-label="Uke-innhold">
+
+            <div class="brand-row">
+              <div class="brand"><span class="b-dot"></span>BABYORA</div>
+              <div class="brand-meta">W26 / 28.06 &ndash; 04.07</div>
+            </div>
+
+            <div class="sect-h" role="presentation">
+              <span class="id">// TIMELINE</span>
+              <span class="val">SCOPE 2/2</span>
+            </div>
+
+            <div class="uke-tabs" role="tablist" aria-label="Tidsrom">
+              <button class="ut on" role="tab" aria-selected="true">I dag</button>
+              <button class="ut" role="tab" aria-selected="false">Uke</button>
+            </div>
+
+            <!-- Chart -->
+            <section class="chart-panel" aria-label="Temperatur-trend">
+              <div class="chart-head">
+                <div class="lbl">TEMP &middot; F&Oslash;LES SOM</div>
+                <div class="rng">06 &mdash; 22</div>
+              </div>
+              <div class="chart" aria-hidden="true">
+                <svg viewBox="0 0 320 96" preserveAspectRatio="none">
+                  <!-- gridlines -->
+                  <line x1="0" y1="20" x2="320" y2="20" stroke="oklch(0.18 0.008 220)" stroke-width="0.5" stroke-dasharray="2 3"/>
+                  <line x1="0" y1="48" x2="320" y2="48" stroke="oklch(0.18 0.008 220)" stroke-width="0.5" stroke-dasharray="2 3"/>
+                  <line x1="0" y1="76" x2="320" y2="76" stroke="oklch(0.18 0.008 220)" stroke-width="0.5" stroke-dasharray="2 3"/>
+
+                  <!-- actual line - real temp -->
+                  <path d="M0,72 L40,68 L80,58 L120,42 L160,28 L200,22 L240,30 L280,46 L320,60"
+                        stroke="oklch(0.78 0.18 145)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- feels-like dotted -->
+                  <path d="M0,76 L40,74 L80,64 L120,48 L160,32 L200,26 L240,36 L280,52 L320,66"
+                        stroke="oklch(0.45 0.14 145)" stroke-width="1" fill="none" stroke-dasharray="2 3" stroke-linecap="round"/>
+
+                  <!-- now marker -->
+                  <line x1="160" y1="0" x2="160" y2="96" stroke="oklch(0.78 0.18 145)" stroke-width="0.6" stroke-dasharray="1 2" opacity="0.6"/>
+                  <circle cx="160" cy="28" r="3.5" fill="oklch(0.08 0.005 220)" stroke="oklch(0.78 0.18 145)" stroke-width="1.6"/>
+                  <text x="164" y="20" font-family="JetBrains Mono" font-size="9" font-weight="700" fill="oklch(0.78 0.18 145)">14:00</text>
+
+                  <!-- area subtle -->
+                  <path d="M0,72 L40,68 L80,58 L120,42 L160,28 L200,22 L240,30 L280,46 L320,60 L320,96 L0,96 Z"
+                        fill="oklch(0.78 0.18 145)" opacity="0.06"/>
+                </svg>
+              </div>
+              <div class="chart-legend">
+                <span class="k"><span class="sw"></span>M&aring;lt</span>
+                <span class="k"><span class="sw dim"></span>F&oslash;les som</span>
+                <span class="k" style="margin-left:auto;color:oklch(0.78 0.18 145);font-weight:600">PEAK 21&deg;C / 18:00</span>
+              </div>
+            </section>
+
+            <!-- Hourly -->
+            <div class="sect-h" role="presentation">
+              <span class="id">// HOURS</span>
+              <span class="val">8 ROWS &middot; 2H STEP</span>
+            </div>
+
+            <section class="hours" aria-label="Time for time">
+              <div class="hour">
+                <span class="t">08:00</span>
+                <span class="sym" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10" cy="10" r="3.2"/><path d="M10 2v1.6M10 16.4V18M2 10h1.6M16.4 10H18M4.5 4.5l1.1 1.1M14.4 14.4l1.1 1.1M4.5 15.5l1.1-1.1M14.4 5.6l1.1-1.1" stroke-linecap="round"/></svg>
+                </span>
+                <span class="desc">Klart<span class="sub">SW 1.2 m/s</span></span>
+                <span class="temp">12<span class="u">&deg;</span></span>
+                <span class="layers-mini">
+                  <span class="lcount">4<span class="lbl">LAG</span></span>
+                  <span class="layer-stack" aria-hidden="true"><i></i><i></i><i></i><i></i><i class="off"></i></span>
+                </span>
+              </div>
+
+              <div class="hour">
+                <span class="t">10:00</span>
+                <span class="sym" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10" cy="10" r="3.6"/><path d="M10 1.5v2M10 16.5V18.5M1.5 10h2M16.5 10h2" stroke-linecap="round"/></svg>
+                </span>
+                <span class="desc">Sol<span class="sub">SW 2.0 m/s</span></span>
+                <span class="temp">15<span class="u">&deg;</span></span>
+                <span class="layers-mini">
+                  <span class="lcount">3<span class="lbl">LAG</span></span>
+                  <span class="layer-stack" aria-hidden="true"><i></i><i></i><i></i><i class="off"></i><i class="off"></i></span>
+                </span>
+              </div>
+
+              <div class="hour">
+                <span class="t">12:00</span>
+                <span class="sym" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 13c-1.5 0-2.5-1-2.5-2.5S3.5 8 5 8c.2-2 1.9-3.5 4-3.5 1.9 0 3.5 1.2 4 3 1.7 0 3 1.3 3 3s-1.3 3-3 3H5z" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="desc">Lett skyet<span class="sub">SW 2.6 m/s</span></span>
+                <span class="temp">17<span class="u">&deg;</span></span>
+                <span class="layers-mini">
+                  <span class="lcount">3<span class="lbl">LAG</span></span>
+                  <span class="layer-stack" aria-hidden="true"><i></i><i></i><i></i><i class="off"></i><i class="off"></i></span>
+                </span>
+              </div>
+
+              <div class="hour now">
+                <span class="t">14:00</span>
+                <span class="sym" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="13" cy="8" r="2.8"/><path d="M5 14c-1.5 0-2.5-1-2.5-2.5S3.5 9 5 9c.2-1.7 1.6-3 3.5-3"  stroke-linejoin="round"/><path d="M13 3v1.5M18 8h-1.5" stroke-linecap="round"/></svg>
+                </span>
+                <span class="desc">Variert &middot; n&aring;<span class="sub">SW 3.1 m/s</span></span>
+                <span class="temp">18<span class="u">&deg;</span></span>
+                <span class="layers-mini">
+                  <span class="lcount">3<span class="lbl">LAG</span></span>
+                  <span class="layer-stack" aria-hidden="true"><i></i><i></i><i></i><i class="off"></i><i class="off"></i></span>
+                </span>
+              </div>
+
+              <div class="hour">
+                <span class="t">16:00</span>
+                <span class="sym" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="13" cy="8" r="2.8"/><path d="M5 14c-1.5 0-2.5-1-2.5-2.5S3.5 9 5 9c.2-1.7 1.6-3 3.5-3"  stroke-linejoin="round"/></svg>
+                </span>
+                <span class="desc">Delvis sky<span class="sub">SW 3.4 m/s</span></span>
+                <span class="temp">20<span class="u">&deg;</span></span>
+                <span class="layers-mini">
+                  <span class="lcount">2<span class="lbl">LAG</span></span>
+                  <span class="layer-stack" aria-hidden="true"><i></i><i></i><i class="off"></i><i class="off"></i><i class="off"></i></span>
+                </span>
+              </div>
+
+              <div class="hour">
+                <span class="t">18:00</span>
+                <span class="sym" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10" cy="10" r="3.6"/><path d="M10 1.5v2M10 16.5V18.5M1.5 10h2M16.5 10h2M4 4l1.4 1.4M14.6 14.6L16 16" stroke-linecap="round"/></svg>
+                </span>
+                <span class="desc">Sol &middot; vind opp<span class="sub">SW 4.2 m/s</span></span>
+                <span class="temp">21<span class="u">&deg;</span></span>
+                <span class="layers-mini">
+                  <span class="lcount">3<span class="lbl">LAG</span></span>
+                  <span class="layer-stack" aria-hidden="true"><i></i><i></i><i></i><i class="off"></i><i class="off"></i></span>
+                </span>
+              </div>
+
+              <div class="hour">
+                <span class="t">20:00</span>
+                <span class="sym" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 11a5 5 0 11-5-9 6 6 0 005 9z" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="desc">Skumring<span class="sub">SW 2.9 m/s</span></span>
+                <span class="temp">17<span class="u">&deg;</span></span>
+                <span class="layers-mini">
+                  <span class="lcount">3<span class="lbl">LAG</span></span>
+                  <span class="layer-stack" aria-hidden="true"><i></i><i></i><i></i><i class="off"></i><i class="off"></i></span>
+                </span>
+              </div>
+
+              <div class="hour">
+                <span class="t">22:00</span>
+                <span class="sym" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 11a5 5 0 11-5-9 6 6 0 005 9z" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="desc">Natt &middot; kj&oslash;lig<span class="sub">SW 1.8 m/s</span></span>
+                <span class="temp">13<span class="u">&deg;</span></span>
+                <span class="layers-mini">
+                  <span class="lcount">4<span class="lbl">LAG</span></span>
+                  <span class="layer-stack" aria-hidden="true"><i></i><i></i><i></i><i></i><i class="off"></i></span>
+                </span>
+              </div>
+            </section>
+
+            <!-- Summary -->
+            <div class="sect-h" role="presentation">
+              <span class="id">// DAY_SUMMARY</span>
+              <span class="val">2026-06-30</span>
+            </div>
+            <section class="summary" aria-label="Dagssammendrag">
+              <div>
+                <div class="lbl">SNITT-TEMP</div>
+                <div class="v">16.6<span class="u">&deg;C</span></div>
+                <div class="delta lime">+2.1 vs i g&aring;r</div>
+              </div>
+              <div>
+                <div class="lbl">SNITT-LAG</div>
+                <div class="v">3.1<span class="u">lag</span></div>
+                <div class="delta warn">vind &uarr; ettermiddag</div>
+              </div>
+            </section>
+
+          </main>
+
+          <!-- Tab bar -->
+          <nav class="tabbar" role="navigation" aria-label="Hovedmeny">
+            <a href="#hjem" class="tab">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5L10 3l7 5.5V16a1 1 0 01-1 1h-3v-5H7v5H4a1 1 0 01-1-1V8.5z"/></svg>
+              <span>Hjem</span>
+              <span class="ind"></span>
+            </a>
+            <a href="#uke" class="tab active">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="13" rx="1.5"/><path d="M3 8h14M7 4V2M13 4V2"/></svg>
+              <span>Uke</span>
+              <span class="ind"></span>
+            </a>
+            <a href="#guide" class="tab">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h9l3 3v11a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M6 9h8M6 12h8M6 15h5"/></svg>
+              <span>Guide</span>
+              <span class="ind"></span>
+            </a>
+            <a href="#settings" class="tab">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="2.5"/><path d="M16.4 11.5l1.2 1c.3.3.4.7.2 1.1l-1 1.7c-.2.4-.6.6-1 .5l-1.5-.4a6 6 0 01-1.7 1l-.3 1.5c-.1.4-.4.7-.8.7h-2c-.4 0-.7-.3-.8-.7l-.3-1.5a6 6 0 01-1.7-1l-1.5.4c-.4.1-.8-.1-1-.5l-1-1.7c-.2-.4-.1-.8.2-1.1l1.2-1a6 6 0 010-2l-1.2-1c-.3-.3-.4-.7-.2-1.1l1-1.7c.2-.4.6-.6 1-.5l1.5.4a6 6 0 011.7-1l.3-1.5c.1-.4.4-.7.8-.7h2c.4 0 .7.3.8.7l.3 1.5c.6.2 1.2.6 1.7 1l1.5-.4c.4-.1.8.1 1 .5l1 1.7c.2.4.1.8-.2 1.1l-1.2 1a6 6 0 010 2z"/></svg>
+              <span>Innst.</span>
+              <span class="ind"></span>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <footer class="footer-tag" role="contentinfo">
+    <span>BABYORA &middot; MOCK V9 / DATA INSTRUMENT</span>
+    <span class="right">Build 09 &middot; 2026-06-30</span>
+  </footer>
+
+</body>
+</html>

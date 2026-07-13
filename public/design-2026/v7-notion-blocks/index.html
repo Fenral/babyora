@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#ffffff" />
+<title>Babyora — Notion Blocks (v7)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ------------------------------------------------------------------
+     v7 — NOTION BLOCKS
+     Babyora hjem + uke som dratte/droppbare blokker
+     Palette: hvit base, dyp ink, varm grå block-bg
+     ------------------------------------------------------------------ */
+  :root {
+    --bg: oklch(1.0 0 0);
+    --ink: oklch(0.18 0.005 250);
+    --ink-2: oklch(0.36 0.008 250);
+    --ink-3: oklch(0.58 0.01 250);
+    --block: oklch(0.965 0.006 60);          /* varm grå block-bg, mildt skift mot 30deg */
+    --block-2: oklch(0.945 0.012 40);
+    --block-3: oklch(0.92 0.018 30);
+    --line: oklch(0.9 0.005 250);
+    --line-2: oklch(0.84 0.006 250);
+    --accent: oklch(0.55 0.04 30);           /* warm-gray accent (varmegrå) */
+    --accent-ink: oklch(0.28 0.03 30);
+    --pill: oklch(0.98 0.003 250);
+    --shadow-frame: 0 30px 60px -20px oklch(0 0 0 / 0.30), 0 12px 30px -8px oklch(0 0 0 / 0.18);
+    --shadow-block: 0 1px 0 oklch(0 0 0 / 0.04), 0 1px 2px oklch(0 0 0 / 0.04);
+    --r-frame: 47px;
+    --r-block: 10px;
+    --r-pill: 999px;
+    --safe-top: 54px;
+    --safe-bot: 34px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 600px at 20% 0%, oklch(0.97 0.01 60) 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 100%, oklch(0.96 0.014 30) 0%, transparent 55%),
+      oklch(0.985 0.003 250);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  a.skip {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--ink);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    z-index: 9999;
+  }
+  a.skip:focus { left: 12px; top: 12px; }
+
+  /* ---------- Page chrome ---------- */
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+  }
+  .page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 12px 22px;
+    padding: 0 6px 22px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 34px;
+  }
+  .crumbs {
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .crumbs strong { color: var(--ink); font-weight: 600; letter-spacing: 0.02em; }
+  .page-title {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .page-title em {
+    font-style: normal;
+    color: var(--ink-3);
+    font-weight: 400;
+  }
+  .page-sub {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--ink-3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .page-sub .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: oklch(0.65 0.18 145);
+    box-shadow: 0 0 0 3px oklch(0.65 0.18 145 / 0.18);
+  }
+
+  /* ---------- Phone-stage ---------- */
+  .stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: start;
+    justify-items: center;
+  }
+  @media (max-width: 900px) {
+    .stage { grid-template-columns: 1fr; gap: 48px; }
+    .page-head { gap: 8px; }
+    .page-sub { margin-left: 0; }
+  }
+
+  .phone-wrap {
+    width: 100%;
+    max-width: 430px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .phone-label {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .phone-label::before, .phone-label::after {
+    content: "";
+    width: 28px; height: 1px;
+    background: var(--line-2);
+  }
+
+  /* ---------- iPhone-frame ---------- */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: var(--r-frame);
+    border: 1px solid oklch(0.88 0.006 250);
+    box-shadow: var(--shadow-frame), inset 0 0 0 6px oklch(0.13 0.008 250);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  /* dynamic island */
+  .phone::before {
+    content: "";
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 32px;
+    background: oklch(0.08 0.004 250);
+    border-radius: 22px;
+    z-index: 30;
+  }
+
+  /* status bar */
+  .status {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: var(--safe-top);
+    padding: 18px 28px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    z-index: 25;
+    pointer-events: none;
+  }
+  .status .time { font-variant-numeric: tabular-nums; }
+  .status .icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .status svg { display: block; }
+
+  /* main content area */
+  .screen {
+    flex: 1 1 auto;
+    padding: calc(var(--safe-top) + 4px) 18px calc(var(--safe-bot) + 78px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ---------- Block primitives (Notion-style) ---------- */
+  .block {
+    position: relative;
+    background: var(--block);
+    border: 1px solid var(--line);
+    border-radius: var(--r-block);
+    padding: 12px 14px 12px 30px;
+    box-shadow: var(--shadow-block);
+  }
+  /* drag handle (dots) — appears på alle block-rader */
+  .block::before {
+    content: "";
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 18px;
+    background-image:
+      radial-gradient(circle, var(--ink-3) 1.1px, transparent 1.4px),
+      radial-gradient(circle, var(--ink-3) 1.1px, transparent 1.4px),
+      radial-gradient(circle, var(--ink-3) 1.1px, transparent 1.4px),
+      radial-gradient(circle, var(--ink-3) 1.1px, transparent 1.4px),
+      radial-gradient(circle, var(--ink-3) 1.1px, transparent 1.4px),
+      radial-gradient(circle, var(--ink-3) 1.1px, transparent 1.4px);
+    background-position:
+      0 0, 4px 0,
+      0 6px, 4px 6px,
+      0 12px, 4px 12px;
+    background-repeat: no-repeat;
+    background-size: 5px 5px;
+    opacity: 0.45;
+  }
+  /* "+" knapp som hover-cue */
+  .block::after {
+    content: "+";
+    position: absolute;
+    left: -2px;
+    top: 50%;
+    transform: translate(-100%, -50%);
+    color: var(--ink-3);
+    font-size: 14px;
+    opacity: 0;
+  }
+
+  .block--tight { padding: 10px 12px 10px 30px; }
+  .block--plain { background: transparent; border: none; box-shadow: none; padding-left: 30px; padding-right: 4px; }
+  .block--plain::before { left: 9px; }
+
+  .block-eyebrow {
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  /* ---------- Brand-block ---------- */
+  .brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px 8px 30px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin-top: 4px;
+  }
+  .brand::before { opacity: 0.32; }
+  .brand-name {
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.015em;
+  }
+  .brand-name span {
+    display: inline-block;
+    width: 7px; height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 7px;
+    transform: translateY(-1px);
+  }
+  .brand-meta {
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .brand-meta .kbd {
+    font-family: "Inter", monospace;
+    font-size: 10px;
+    padding: 2px 5px;
+    border: 1px solid var(--line-2);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--ink-2);
+  }
+
+  /* ---------- Hjem: Sted + vær (mixed-density row) ---------- */
+  .row-place {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .b-place {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .b-place-name {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .b-place-sub {
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .b-place-sub .now {
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+
+  .b-weather {
+    background: var(--block-2);
+    min-width: 124px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .b-weather-temp {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .b-weather-temp .deg {
+    font-size: 28px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .b-weather-temp .unit {
+    font-size: 12px;
+    color: var(--ink-3);
+    font-weight: 500;
+  }
+  .b-weather-cond {
+    font-size: 11px;
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+  .b-weather-feel {
+    font-size: 10.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.01em;
+  }
+
+  /* ---------- Hjem: Avatar / barn-blokk ---------- */
+  .b-child {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    background: var(--block);
+  }
+  .child-avatar {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    background:
+      radial-gradient(circle at 50% 38%, oklch(0.96 0.02 60) 0%, oklch(0.9 0.04 50) 70%);
+    border: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .child-avatar svg { display: block; width: 100%; height: 100%; }
+  .child-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .child-name {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .child-meta {
+    font-size: 11px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .child-badge {
+    font-size: 10.5px;
+    padding: 4px 9px;
+    border-radius: var(--r-pill);
+    background: var(--bg);
+    border: 1px solid var(--line-2);
+    color: var(--ink-2);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  /* ---------- Toggle-blokk (Utenfor vogn / I vogn) ---------- */
+  .b-toggle {
+    background: var(--block);
+  }
+  .toggle-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 3px;
+    margin-top: 6px;
+  }
+  .toggle-item {
+    text-align: center;
+    padding: 9px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 6px;
+    color: var(--ink-2);
+    letter-spacing: 0.005em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .toggle-item.on {
+    background: var(--ink);
+    color: var(--bg);
+    font-weight: 600;
+  }
+  .toggle-item .ico { font-size: 13px; }
+  .toggle-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .toggle-label .lbl { font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
+  .toggle-label .hint { font-size: 10.5px; color: var(--ink-3); }
+
+  /* ---------- Anbefaling (callout-block) ---------- */
+  .b-callout {
+    background: var(--ink);
+    color: oklch(0.98 0 0);
+    border: 1px solid var(--ink);
+    padding: 14px 14px 14px 30px;
+  }
+  .b-callout::before {
+    background-image:
+      radial-gradient(circle, oklch(0.7 0 0) 1.1px, transparent 1.4px),
+      radial-gradient(circle, oklch(0.7 0 0) 1.1px, transparent 1.4px),
+      radial-gradient(circle, oklch(0.7 0 0) 1.1px, transparent 1.4px),
+      radial-gradient(circle, oklch(0.7 0 0) 1.1px, transparent 1.4px),
+      radial-gradient(circle, oklch(0.7 0 0) 1.1px, transparent 1.4px),
+      radial-gradient(circle, oklch(0.7 0 0) 1.1px, transparent 1.4px);
+    background-position:
+      0 0, 4px 0,
+      0 6px, 4px 6px,
+      0 12px, 4px 12px;
+    background-repeat: no-repeat;
+    background-size: 5px 5px;
+    opacity: 0.55;
+  }
+  .callout-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .callout-top .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: oklch(0.72 0.02 60);
+    font-weight: 500;
+  }
+  .callout-top .tag {
+    font-size: 10px;
+    background: oklch(1 0 0 / 0.1);
+    border: 1px solid oklch(1 0 0 / 0.15);
+    color: oklch(0.92 0 0);
+    padding: 2px 7px;
+    border-radius: var(--r-pill);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .callout-title {
+    font-size: 20px;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+  .callout-title em {
+    font-style: normal;
+    color: oklch(0.78 0.04 30);
+    font-weight: 600;
+  }
+  .callout-sub {
+    font-size: 12px;
+    color: oklch(0.78 0.005 250);
+    line-height: 1.45;
+  }
+
+  /* ---------- Lag-chip-row (under callout, inline pre-CTA) ---------- */
+  .b-layers {
+    background: var(--block);
+    padding: 10px 12px 10px 30px;
+  }
+  .layers-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .layer-chip {
+    font-size: 10.5px;
+    padding: 4px 9px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--ink-2);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.005em;
+  }
+  .layer-chip .num {
+    font-size: 9.5px;
+    color: var(--ink-3);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Primary CTA-block ---------- */
+  .b-cta {
+    background: oklch(0.97 0.012 60);
+    border: 1px solid var(--line-2);
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .cta-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 13px 16px;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    margin-top: 4px;
+  }
+  .cta-button .arr {
+    display: inline-flex;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: oklch(1 0 0 / 0.14);
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+  .cta-hint {
+    font-size: 10.5px;
+    color: var(--ink-3);
+    letter-spacing: 0.02em;
+  }
+
+  /* ---------- UKE: tab-row + dag-blokker ---------- */
+  .week-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    background: var(--block);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    margin-bottom: 6px;
+  }
+  .week-tab {
+    flex: 1;
+    text-align: center;
+    padding: 9px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-2);
+    letter-spacing: 0.005em;
+  }
+  .week-tab.on {
+    background: var(--bg);
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: 0 1px 2px oklch(0 0 0 / 0.06), 0 0 0 1px var(--line);
+  }
+
+  .week-eyebrow-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 4px;
+    margin: 6px 0 2px;
+  }
+  .week-eyebrow {
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+  }
+  .week-eyebrow .num {
+    color: var(--ink-2);
+    font-weight: 600;
+  }
+
+  .b-row {
+    display: grid;
+    grid-template-columns: 46px 26px 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px 9px 30px;
+  }
+  .b-row .when {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .b-row .when small {
+    display: block;
+    font-size: 10px;
+    color: var(--ink-3);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+  .b-row .sym {
+    width: 26px; height: 26px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .b-row .cond {
+    font-size: 12px;
+    color: var(--ink-2);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .b-row .cond .feel {
+    color: var(--ink-3);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+  .b-row .temp {
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .b-row .layers {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 3px 8px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: var(--r-pill);
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .b-row.row-cold .layers { background: oklch(0.4 0.12 245); }
+  .b-row.row-mild .layers { background: oklch(0.42 0.06 30); }
+  .b-row.row-warm .layers { background: oklch(0.55 0.13 65); color: var(--ink); }
+  .b-row.row-now {
+    background: var(--block-3);
+    border-color: oklch(0.86 0.02 30);
+  }
+  .b-row.row-now::before { opacity: 0.6; }
+
+  /* divider-block i Uke (mixed-density) */
+  .b-divider {
+    padding: 4px 12px 4px 30px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: var(--ink-3);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .b-divider::before { opacity: 0.3; }
+  .b-divider .line {
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* summary-block i uke (mixed-density: H1-style summary etter rader) */
+  .b-summary {
+    background: var(--block-2);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    padding: 12px 14px 12px 30px;
+  }
+  .sum-cell { display: flex; flex-direction: column; gap: 2px; padding-right: 8px; border-right: 1px solid var(--line); }
+  .sum-cell:last-child { border-right: none; padding-right: 0; padding-left: 8px; }
+  .sum-cell:nth-child(2) { padding-left: 8px; }
+  .sum-cell .k {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+  }
+  .sum-cell .v {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .sum-cell .v small {
+    font-size: 10px;
+    color: var(--ink-3);
+    font-weight: 500;
+    margin-left: 2px;
+    letter-spacing: 0;
+  }
+
+  /* ---------- Bottom tab-bar ---------- */
+  .tabbar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: calc(var(--safe-bot) + 64px);
+    padding: 8px 18px var(--safe-bot);
+    background: oklch(1 0 0 / 0.86);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    z-index: 20;
+  }
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 4px 0 2px;
+    color: var(--ink-3);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  .tab svg { display: block; }
+  .tab.on { color: var(--ink); font-weight: 600; }
+  .tab.on .ico-bg {
+    background: oklch(0.94 0.012 60);
+    border-radius: 8px;
+    padding: 4px 10px;
+  }
+  .ico-bg { padding: 4px 10px; }
+  .home-indicator {
+    position: absolute;
+    bottom: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 134px; height: 5px;
+    border-radius: 3px;
+    background: var(--ink);
+    z-index: 30;
+  }
+
+  /* ---------- Stage footer (designer-context, ikke en del av app) ---------- */
+  .stage-foot {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 18px;
+    padding: 14px 6px 0;
+    border-top: 1px dashed var(--line);
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.02em;
+  }
+  .stage-foot .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .stage-foot .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch {
+    width: 11px; height: 11px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+<a href="#main" class="skip">Hopp til hovedinnhold</a>
+
+<div class="page">
+  <header class="page-head" role="banner">
+    <p class="crumbs"><strong>Babyora</strong> &nbsp;/&nbsp; Mock v7 &nbsp;/&nbsp; Notion Blocks</p>
+    <h1 class="page-title">Hjem + Uke <em>— interchangeable blocks for cognitive overload</em></h1>
+    <div class="page-sub"><span class="dot" aria-hidden="true"></span> Static preview · 390 × 844</div>
+  </header>
+
+  <main id="main" class="stage" role="main">
+
+    <!-- ====================================================== -->
+    <!-- ============== HJEM-skjerm ============================ -->
+    <!-- ====================================================== -->
+    <section class="phone-wrap" aria-label="Hjem-skjerm">
+      <div class="phone" role="img" aria-label="iPhone-mockup som viser Babyora Hjem">
+
+        <!-- Status bar -->
+        <div class="status" aria-hidden="true">
+          <span class="time">14:23</span>
+          <span class="icons">
+            <!-- signal -->
+            <svg width="18" height="11" viewBox="0 0 18 11" fill="none">
+              <rect x="0"  y="7" width="3" height="4" rx="0.6" fill="currentColor"/>
+              <rect x="5"  y="5" width="3" height="6" rx="0.6" fill="currentColor"/>
+              <rect x="10" y="2" width="3" height="9" rx="0.6" fill="currentColor"/>
+              <rect x="15" y="0" width="3" height="11" rx="0.6" fill="currentColor"/>
+            </svg>
+            <!-- wifi -->
+            <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
+              <path d="M8 10.2a1.1 1.1 0 100-2.2 1.1 1.1 0 000 2.2z" fill="currentColor"/>
+              <path d="M3.3 6.4a6.6 6.6 0 019.4 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+              <path d="M.6 3.6a10.6 10.6 0 0114.8 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+            </svg>
+            <!-- battery -->
+            <svg width="26" height="12" viewBox="0 0 26 12" fill="none">
+              <rect x="0.5" y="0.5" width="22" height="11" rx="2.6" stroke="currentColor" fill="none"/>
+              <rect x="24" y="4" width="1.6" height="4" rx="0.8" fill="currentColor"/>
+              <rect x="2.2" y="2.2" width="17" height="7.6" rx="1.4" fill="currentColor"/>
+            </svg>
+          </span>
+        </div>
+
+        <!-- Screen content (blocks) -->
+        <div class="screen">
+
+          <!-- Brand-block -->
+          <div class="block brand" role="region" aria-label="App-merke">
+            <div class="brand-name"><span aria-hidden="true"></span>Babyora</div>
+            <div class="brand-meta">
+              <span>Hjem</span>
+              <span class="kbd">⌘1</span>
+            </div>
+          </div>
+
+          <!-- Sted + vær (mixed density) -->
+          <div class="row-place">
+            <div class="block b-place">
+              <div class="block-eyebrow">Sted</div>
+              <div class="b-place-name">Elverum</div>
+              <div class="b-place-sub"><span class="now">Nå</span> · oppdatert 14:21</div>
+            </div>
+            <div class="block b-weather">
+              <div class="block-eyebrow">Vær</div>
+              <div class="b-weather-temp">
+                <span class="deg">18°</span>
+                <span class="unit">/ føles 18°</span>
+              </div>
+              <div class="b-weather-cond">Variert</div>
+              <div class="b-weather-feel">3,1 m/s · S-vind</div>
+            </div>
+          </div>
+
+          <!-- Barn-blokk -->
+          <div class="block b-child">
+            <div class="child-avatar" aria-hidden="true">
+              <!-- Simpel SVG av barn -->
+              <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <radialGradient id="cheek" cx="50%" cy="60%" r="50%">
+                    <stop offset="0%" stop-color="oklch(0.85 0.07 30)" stop-opacity="0.7"/>
+                    <stop offset="100%" stop-color="oklch(0.85 0.07 30)" stop-opacity="0"/>
+                  </radialGradient>
+                </defs>
+                <!-- body / hettegenser -->
+                <path d="M8 52c2-10 9-15 20-15s18 5 20 15z" fill="oklch(0.55 0.04 30)"/>
+                <!-- ansikt -->
+                <circle cx="28" cy="26" r="13" fill="oklch(0.9 0.04 50)"/>
+                <!-- hette -->
+                <path d="M14 24c2-9 7-13 14-13s12 4 14 13c-3-3-7-5-14-5s-11 2-14 5z" fill="oklch(0.55 0.04 30)"/>
+                <!-- kinn -->
+                <circle cx="22" cy="29" r="3" fill="url(#cheek)"/>
+                <circle cx="34" cy="29" r="3" fill="url(#cheek)"/>
+                <!-- øyne -->
+                <circle cx="23.5" cy="25" r="1.3" fill="oklch(0.18 0.005 250)"/>
+                <circle cx="32.5" cy="25" r="1.3" fill="oklch(0.18 0.005 250)"/>
+                <!-- smil -->
+                <path d="M25 31.5q3 2 6 0" stroke="oklch(0.18 0.005 250)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="child-info">
+              <div class="child-name">Liv</div>
+              <div class="child-meta">14 mnd · 76 cm</div>
+            </div>
+            <div class="child-badge">Aktiv profil</div>
+          </div>
+
+          <!-- Aktivitet-toggle -->
+          <div class="block b-toggle">
+            <div class="toggle-label">
+              <span class="lbl">Aktivitet</span>
+              <span class="hint">Endrer lag-beregning</span>
+            </div>
+            <div class="toggle-row" role="tablist" aria-label="Velg aktivitet">
+              <div class="toggle-item on" role="tab" aria-selected="true">
+                <span class="ico" aria-hidden="true">▲</span> Utenfor vogn
+              </div>
+              <div class="toggle-item" role="tab" aria-selected="false">
+                <span class="ico" aria-hidden="true">◐</span> I vogn
+              </div>
+            </div>
+          </div>
+
+          <!-- Callout / anbefaling -->
+          <div class="block b-callout" role="region" aria-label="Påkledningsforslag">
+            <div class="callout-top">
+              <span class="eyebrow">Anbefaling</span>
+              <span class="tag">Mild dag</span>
+            </div>
+            <p class="callout-title">3 lag — <em>komfortabel kropps&shy;temperatur</em></p>
+            <p class="callout-sub">Bygd fra vær, alder og aktivitet. Justér lag manuelt om Liv føles varm eller kald.</p>
+          </div>
+
+          <!-- Lag-chip-rad -->
+          <div class="block b-layers">
+            <div class="block-eyebrow">Lag</div>
+            <div class="layers-row" aria-label="Anbefalte lag">
+              <span class="layer-chip"><span class="num">01</span> Ull body</span>
+              <span class="layer-chip"><span class="num">02</span> Bukse + genser</span>
+              <span class="layer-chip"><span class="num">03</span> Tynn jakke</span>
+            </div>
+          </div>
+
+          <!-- CTA-block -->
+          <div class="block b-cta">
+            <div class="cta-hint">Tap for å se hele settet</div>
+            <a class="cta-button" href="#" role="button" aria-label="Se påkledning">
+              Se påkledning
+              <span class="arr" aria-hidden="true">→</span>
+            </a>
+          </div>
+
+        </div>
+
+        <!-- Bottom nav -->
+        <nav class="tabbar" role="navigation" aria-label="Hovedmeny">
+          <a href="#" class="tab on" aria-current="page">
+            <span class="ico-bg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M3 11l9-7 9 7v9a2 2 0 01-2 2h-4v-6h-6v6H5a2 2 0 01-2-2v-9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </span>
+            Hjem
+          </a>
+          <a href="#week" class="tab">
+            <span class="ico-bg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3.5" y="5" width="17" height="15" rx="2.4" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+            Uke
+          </a>
+          <a href="#" class="tab">
+            <span class="ico-bg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 5h11a3 3 0 013 3v11H8a3 3 0 01-3-3V5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M9 9h7M9 13h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+            Guide
+          </a>
+          <a href="#" class="tab">
+            <span class="ico-bg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M19.4 14.2l1.6 1.2-2 3.4-2-.6a7.6 7.6 0 01-1.6.9l-.4 2h-4l-.4-2a7.6 7.6 0 01-1.6-.9l-2 .6-2-3.4 1.6-1.2a7.6 7.6 0 010-1.8L4.6 9.8l2-3.4 2 .6a7.6 7.6 0 011.6-.9l.4-2h4l.4 2c.55.24 1.08.55 1.6.9l2-.6 2 3.4-1.6 1.2a7.6 7.6 0 010 1.8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </span>
+            Innstillinger
+          </a>
+        </nav>
+
+        <div class="home-indicator" aria-hidden="true"></div>
+      </div>
+      <div class="phone-label">Hjem</div>
+    </section>
+
+    <!-- ====================================================== -->
+    <!-- ============== UKE-skjerm ============================ -->
+    <!-- ====================================================== -->
+    <section class="phone-wrap" id="week" aria-label="Uke-skjerm">
+      <div class="phone" role="img" aria-label="iPhone-mockup som viser Babyora Uke">
+
+        <!-- Status bar -->
+        <div class="status" aria-hidden="true">
+          <span class="time">14:23</span>
+          <span class="icons">
+            <svg width="18" height="11" viewBox="0 0 18 11" fill="none">
+              <rect x="0"  y="7" width="3" height="4" rx="0.6" fill="currentColor"/>
+              <rect x="5"  y="5" width="3" height="6" rx="0.6" fill="currentColor"/>
+              <rect x="10" y="2" width="3" height="9" rx="0.6" fill="currentColor"/>
+              <rect x="15" y="0" width="3" height="11" rx="0.6" fill="currentColor"/>
+            </svg>
+            <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
+              <path d="M8 10.2a1.1 1.1 0 100-2.2 1.1 1.1 0 000 2.2z" fill="currentColor"/>
+              <path d="M3.3 6.4a6.6 6.6 0 019.4 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+              <path d="M.6 3.6a10.6 10.6 0 0114.8 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+            </svg>
+            <svg width="26" height="12" viewBox="0 0 26 12" fill="none">
+              <rect x="0.5" y="0.5" width="22" height="11" rx="2.6" stroke="currentColor" fill="none"/>
+              <rect x="24" y="4" width="1.6" height="4" rx="0.8" fill="currentColor"/>
+              <rect x="2.2" y="2.2" width="17" height="7.6" rx="1.4" fill="currentColor"/>
+            </svg>
+          </span>
+        </div>
+
+        <div class="screen">
+
+          <!-- Brand-block -->
+          <div class="block brand">
+            <div class="brand-name"><span aria-hidden="true"></span>Babyora · Liv</div>
+            <div class="brand-meta">
+              <span>Uke 27</span>
+              <span class="kbd">⌘2</span>
+            </div>
+          </div>
+
+          <!-- Tab-row (I dag / Uke) -->
+          <div class="block block--plain" style="padding-right:0;">
+            <div class="week-tabs" role="tablist" aria-label="Tidsperiode">
+              <div class="week-tab" role="tab" aria-selected="false">I dag</div>
+              <div class="week-tab on" role="tab" aria-selected="true">Uke</div>
+            </div>
+          </div>
+
+          <!-- Eyebrow rad -->
+          <div class="week-eyebrow-row">
+            <span class="week-eyebrow">Mandag 29.06 — <span class="num">i dag</span></span>
+            <span class="week-eyebrow">Lag</span>
+          </div>
+
+          <!-- Time-rader, dag 1 -->
+          <div class="block b-row row-now row-mild" aria-label="08:00 — kjølig morgen">
+            <div class="when">08:00<small>Morgen</small></div>
+            <div class="sym" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M6 16h11a4 4 0 100-8 6 6 0 00-11.6 1.8A3.5 3.5 0 006 16z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="cond">Lettskyet <span class="feel">· føles 13°</span></div>
+            <div class="temp">14°</div>
+            <div class="layers">3 lag</div>
+          </div>
+
+          <div class="block b-row row-warm" aria-label="12:00 — varmest">
+            <div class="when">12:00<small>Lunsj</small></div>
+            <div class="sym" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="cond">Sol <span class="feel">· føles 19°</span></div>
+            <div class="temp">19°</div>
+            <div class="layers">2 lag</div>
+          </div>
+
+          <div class="block b-row row-mild" aria-label="16:00">
+            <div class="when">16:00<small>Etterm.</small></div>
+            <div class="sym" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M6 16h11a4 4 0 100-8 6 6 0 00-11.6 1.8A3.5 3.5 0 006 16z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M9 19l-1 2M13 19l-1 2M17 19l-1 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="cond">Regnbyger <span class="feel">· føles 15°</span></div>
+            <div class="temp">16°</div>
+            <div class="layers">3 lag</div>
+          </div>
+
+          <div class="block b-row row-cold" aria-label="20:00 — kjøligere kveld">
+            <div class="when">20:00<small>Kveld</small></div>
+            <div class="sym" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M19 13a7 7 0 11-8-8 5 5 0 008 8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </div>
+            <div class="cond">Klart <span class="feel">· føles 11°</span></div>
+            <div class="temp">12°</div>
+            <div class="layers">4 lag</div>
+          </div>
+
+          <!-- Divider-block (mixed density) -->
+          <div class="block b-divider">
+            <span>Resten av uka</span>
+            <span class="line" aria-hidden="true"></span>
+            <span>Snitt</span>
+          </div>
+
+          <!-- Dag-rader -->
+          <div class="block b-row row-mild" aria-label="Tirsdag">
+            <div class="when">Tir<small>30.06</small></div>
+            <div class="sym" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M6 16h11a4 4 0 100-8 6 6 0 00-11.6 1.8A3.5 3.5 0 006 16z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="cond">Variert <span class="feel">· lett bris</span></div>
+            <div class="temp">17°</div>
+            <div class="layers">3 lag</div>
+          </div>
+
+          <div class="block b-row row-warm" aria-label="Onsdag">
+            <div class="when">Ons<small>01.07</small></div>
+            <div class="sym" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="cond">Sol <span class="feel">· tørt</span></div>
+            <div class="temp">22°</div>
+            <div class="layers">2 lag</div>
+          </div>
+
+          <div class="block b-row row-cold" aria-label="Torsdag">
+            <div class="when">Tor<small>02.07</small></div>
+            <div class="sym" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M6 16h11a4 4 0 100-8 6 6 0 00-11.6 1.8A3.5 3.5 0 006 16z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M9 19l-1 2M13 19l-1 2M17 19l-1 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="cond">Regn hele dagen <span class="feel">· 6 m/s</span></div>
+            <div class="temp">11°</div>
+            <div class="layers">4 lag</div>
+          </div>
+
+          <!-- Summary block (mixed density H1) -->
+          <div class="block b-summary" aria-label="Uke-oppsummering">
+            <div class="sum-cell">
+              <span class="k">Snitt °C</span>
+              <span class="v">16<small>°</small></span>
+            </div>
+            <div class="sum-cell">
+              <span class="k">Snitt lag</span>
+              <span class="v">3,1</span>
+            </div>
+            <div class="sum-cell">
+              <span class="k">Regndager</span>
+              <span class="v">2<small>/7</small></span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Bottom nav -->
+        <nav class="tabbar" role="navigation" aria-label="Hovedmeny">
+          <a href="#" class="tab">
+            <span class="ico-bg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M3 11l9-7 9 7v9a2 2 0 01-2 2h-4v-6h-6v6H5a2 2 0 01-2-2v-9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </span>
+            Hjem
+          </a>
+          <a href="#week" class="tab on" aria-current="page">
+            <span class="ico-bg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3.5" y="5" width="17" height="15" rx="2.4" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+            Uke
+          </a>
+          <a href="#" class="tab">
+            <span class="ico-bg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 5h11a3 3 0 013 3v11H8a3 3 0 01-3-3V5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path d="M9 9h7M9 13h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+            Guide
+          </a>
+          <a href="#" class="tab">
+            <span class="ico-bg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M19.4 14.2l1.6 1.2-2 3.4-2-.6a7.6 7.6 0 01-1.6.9l-.4 2h-4l-.4-2a7.6 7.6 0 01-1.6-.9l-2 .6-2-3.4 1.6-1.2a7.6 7.6 0 010-1.8L4.6 9.8l2-3.4 2 .6a7.6 7.6 0 011.6-.9l.4-2h4l.4 2c.55.24 1.08.55 1.6.9l2-.6 2 3.4-1.6 1.2a7.6 7.6 0 010 1.8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </span>
+            Innstillinger
+          </a>
+        </nav>
+
+        <div class="home-indicator" aria-hidden="true"></div>
+      </div>
+      <div class="phone-label">Uke</div>
+    </section>
+
+    <footer class="stage-foot">
+      <div class="legend" aria-label="Palett">
+        <span><span class="swatch" style="background: oklch(1.0 0 0)"></span> base</span>
+        <span><span class="swatch" style="background: oklch(0.18 0.005 250)"></span> ink</span>
+        <span><span class="swatch" style="background: oklch(0.965 0.006 60)"></span> block</span>
+        <span><span class="swatch" style="background: oklch(0.55 0.04 30)"></span> warm-gray accent</span>
+      </div>
+      <div>Inter 400 / 500 / 600 · DNA: interchangeable blocks</div>
+    </footer>
+
+  </main>
+</div>
+
+</body>
+</html>

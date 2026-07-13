@@ -1,0 +1,53 @@
+{
+  "claude": {
+    "id": "votter-dun",
+    "dbString": "votter dun",
+    "kategori": "ekstra-hender",
+    "struktur": {
+      "score": 19,
+      "kommentar": "Komplett info-oppføring i garment-info.ts (linje 181-184): what='Dun-fylte votter for maksimal varme.' + when='Streng frost og under −15 °C.'. Tone/lengde matcher søsken i samme kategori (votter-tynne, votter, votter-tykke, vindvotter-skall) presist - kort what + kort when. Dedikert whyForGarment-gren finnes (linje 426-428), IKKE fallback: 'Dunvotter — maks varme for hender i streng frost ved ${feels} °C.' Trekker 1 poeng fordi when-formuleringen er litt smalere enn faktisk seleksjonsbånd (se tekstLogikk)."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes på public/illustrations/garments/votter-dun.png. db-strengen 'votter dun' er korrekt mappet til id 'votter-dun' i garment-illustrations.ts (linje 65), under riktig 'Ekstra · hender'-blokk. Navn/mapping er konsistent med de andre votte-variantene (votter-tynne/votter/votter-tykke). Visuell dom utsatt til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 24,
+      "kommentar": "Pediatrisk forsvarlig: votter-dun velges KUN i de to kaldeste båndene (streng_frost ≤-15..-8 og ekstrem <-15). Maks isolasjon på ekstremiteter i streng frost er korrekt - hender/fingre er høyrisiko for frostskade og 'cold hands' er et anerkjent kuldetegn (halo-tog keyFinding). SB-8 frostskade-note (feels ≤ -10, exposure >30 min, ≥3 mnd) gir riktig sikkerhetsnett som overlapper hele votter-dun-båndet. Ingen overopphetings-/SIDS-/kvelningsrisiko: votter er ute-plagg, brukes ikke i soevn-tabellen. Ingen modifier legger til/fjerner votter-dun feilaktig. Trekker 1 poeng: kildene (sources.ts) er tynne på konkrete pediatriske ekstremitets-frost-terskler for 0-3 år - de fleste er TOG/sleep- eller varme-orienterte; kun capital-area-peds og aap-healthychildren dekker outdoor cold-exposure generelt, ikke spesifikt mitten-isolasjon.",
+      "score_note": "ok",
+      "trace": "bandForTemp: streng_frost = -15..-8 °C, ekstrem = <-15 °C. baseTable-treff for 'votter dun': (1) vogn/streng_frost linje 64; (2) vogn/ekstrem linje 70; (3) baeresele/ekstrem linje 121; (4) utelek/ekstrem linje 230. IKKE i utelek/streng_frost (linje 224 bruker 'votter tykke') eller baeresele/streng_frost (linje 115 'votter tykke'). modifiers.ts: ingen add/remove av 'votter dun'; eneste votte-modifier er vindvotter-skall ved windMs≥8 & feels<0 (linje 182-183). conflicts.ts/softBlocks.ts: ingen regel fjerner votter-dun; SB-8 (softBlocks linje 179-190) legger frostskade-sjekk-note ved feels ≤-10. Netto: votter-dun aktiv fra ca -15 °C og kaldere (i vogn fra streng_frost-bånd, dvs. allerede ved -15..-8; i baeresele/utelek først <-15).",
+      "kilder": [
+        "https://www.capitalareapediatrics.com/blog/dressing-your-child-for-cold-weather-in-virginia-a-parent-s-guide",
+        "https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Dressing-Your-Newborn.aspx"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 21,
+      "kommentar": "whyForGarment-grenen ('maks varme for hender i streng frost ved ${feels} °C') stemmer presist med trace: plagget velges i streng_frost + ekstrem. MEN when-teksten 'Streng frost og under −15 °C' har en mild drift: I vogn-tabellen velges votter-dun allerede i streng_frost-båndet som STARTER ved -15 og strekker seg OPP til -8 °C (linje 64). Formuleringen 'under −15 °C' antyder at plagget først kommer inn ved kaldere enn -15, mens det i praksis tilbys fra ca -15 °C og varmere (-15..-8) i vogn. Driften er konservativ/i sikker retning (foreslår mer varme enn strengt nødvendig, ikke mindre) og villeder ikke til underkledning, derfor severity lav, ikke hoy. Forslag: presiser when til 'Streng frost, fra ca −15 °C og kaldere' for å matche vogn-båndet."
+    },
+    "alternativer": {
+      "score": 10,
+      "kommentar": "Korrekt alternativ allerede definert: alternatives.ts (linje 95-104) lar 'votter tykke' ha 'votter dun' som tykkelse-trinn-alternativ (votterDun.when/whyPrimary). Dette er den riktige ull↔dun / tykkelse-trinn-relasjonen. Det finnes ingen meningsfull syntet-vs-dun- eller ull-vs-fleece-variant som mangler for votter-dun selv (dun ER allerede topp-trinnet). Ingen flere alternativer trengs."
+    },
+    "total": 94,
+    "verdikt": "GODKJENT med ett mindre tekst-funn. votter-dun er strukturelt komplett, korrekt illustrasjons-mappet (PNG finnes), og pediatrisk forsvarlig seleksjon (kun i streng_frost + ekstrem, dekket av SB-8 frostskade-sjekk). Eneste avvik er en mild, konservativ drift mellom when-tekst ('under −15 °C') og faktisk vogn-seleksjonsbånd (fra ca −15 °C / streng_frost −15..−8). Alternativ-kobling (votter tykke → votter dun) er riktig. Anbefaler kun en presiseringsformulering av when, ingen tall/terskel-endring.",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "when-tekst i garment-info.ts (linje 183) sier 'Streng frost og under −15 °C', men baseTable velger votter-dun allerede i vogn/streng_frost-båndet (linje 64), som dekker −15 til −8 °C. Plagget tilbys altså fra ca −15 °C og varmere i vogn, ikke kun 'under −15'. Drift er i konservativ/sikker retning (mer varme), villeder ikke til underkledning.",
+        "forslag": "Presiser when til f.eks. 'Streng frost — fra ca −15 °C og kaldere.' for å matche streng_frost-båndets startpunkt. Rør ikke selve temperatur-terskelen i bandForTemp.",
+        "kilde": "tables.ts bandForTemp (streng_frost = -15..-8) + baseTable vogn/streng_frost linje 64"
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "sources.ts (11 kilder) gir ingen plagg-spesifikk pediatrisk dekning for ekstremitets-/hånd-isolasjon eller konkrete frost-terskler for hender hos 0-3 år; kildene er primært TOG/sleep- og varme-orienterte. Seleksjonen er forsvarlig via generell cold-exposure-logikk (SB-8) + capital-area-peds/AAP, men sporbarheten til mitten-spesifikk evidens er svak.",
+        "forslag": "Vurder å legge til én pediatrisk kilde om frostskade-risiko på ekstremiteter hos småbarn (f.eks. AAP/Healthychildren winter-safety) for å styrke citation-sporet bak votter-dun og vindvotter-skall. Ingen logikk-endring nødvendig nå.",
+        "kilde": "https://www.healthychildren.org/English/safety-prevention/all-around/Pages/Winter-Safety.aspx"
+      }
+    ]
+  },
+  "fable": null
+}

@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Babyora — Finn antrekk · Mock B</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =========================================================
+       Babyora · Finn antrekk · Mock B
+       Visual + romslig. Inspirert av Mobbin "wizard form with
+       chip selectors and recommendation card" — store chips med
+       symbol, ekte plagg-illustrasjoner som primær visuell anker,
+       generøse aktivitets-tiles, og en stor recommendation-card
+       der hvert lag har sitt eget plagg-bilde (ikke bare nummer).
+       Motsatt av Mock A's tette skannbarhet — her får hvert
+       element pusterom og hierarki.
+       ========================================================= */
+
+    :root {
+      /* Brand */
+      --warm-grey: #DBD8D2;
+      --warm-grey-2: #E8E4DD;
+      --warm-grey-3: #F1EEE8;
+      --warm-grey-4: #F7F4EE;
+      --warm-orange: #FF6B35;
+      --warm-orange-deep: #E2541E;
+      --warm-orange-soft: #FFE6D8;
+      --terracotta: #C0632F;
+      --terracotta-tint: rgba(192, 99, 47, 0.12);
+      --ink-900: #1F1B16;
+      --ink-700: #4A433B;
+      --ink-500: rgba(31, 27, 22, 0.56);
+      --ink-300: rgba(31, 27, 22, 0.18);
+      --hairline: rgba(31, 27, 22, 0.08);
+      --card: #FFFFFF;
+
+      /* Type */
+      --font-serif: 'DM Serif Display', Georgia, serif;
+      --font-sans: 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+      /* Motion */
+      --ease-standard: cubic-bezier(.2,.7,.2,1);
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #2B2723;
+      font-family: var(--font-sans);
+      color: var(--ink-900);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* A11y */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* =========================================================
+       Phone frame (390 × 844) — preview-shell
+       ========================================================= */
+    .stage {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .phone {
+      position: relative;
+      width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      background: var(--warm-grey);
+      overflow: hidden;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.04) inset,
+        0 40px 80px -20px rgba(0,0,0,0.55),
+        0 12px 30px -10px rgba(0,0,0,0.4);
+      isolation: isolate;
+    }
+
+    /* iOS-style dynamic island */
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 11px; left: 50%;
+      transform: translateX(-50%);
+      width: 124px; height: 35px;
+      background: #0B0907;
+      border-radius: 22px;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    /* Status bar */
+    .status {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink-900);
+      z-index: 40;
+      pointer-events: none;
+    }
+    .status .right { display: flex; align-items: center; gap: 6px; opacity: 0.88; }
+    .status svg { display: block; }
+
+    /* =========================================================
+       Screen
+       ========================================================= */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding-top: calc(54px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(0px + env(safe-area-inset-bottom, 0px));
+      background:
+        radial-gradient(140% 50% at 50% -10%, rgba(255,255,255,0.7), rgba(255,255,255,0) 60%),
+        linear-gradient(180deg, #EFEAE1 0%, var(--warm-grey-2) 38%, #D6D2C9 100%);
+    }
+
+    /* ---- Topbar ---- */
+    .topbar {
+      flex: none;
+      padding: 8px 20px 6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back {
+      flex: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.65);
+      border: 1px solid rgba(31,27,22,0.07);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-900);
+      cursor: pointer;
+      transition: transform 160ms var(--ease-standard);
+      -webkit-tap-highlight-color: transparent;
+      padding: 0;
+    }
+    .back:active { transform: scale(0.95); }
+    .back:focus-visible {
+      outline: 2px solid var(--warm-orange);
+      outline-offset: 2px;
+    }
+
+    .topbar-meta {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .topbar-meta .eyebrow {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      color: var(--ink-500);
+      line-height: 1;
+      margin: 0 0 2px;
+    }
+    .topbar-meta .title {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 22px;
+      line-height: 1.05;
+      letter-spacing: -0.5px;
+      color: var(--ink-900);
+      margin: 0;
+    }
+
+    /* ---- Scroll container ---- */
+    .scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 20px 20px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .scroll::-webkit-scrollbar { display: none; }
+
+    /* ---- Wizard step (eyebrow + label, with serif accent) ---- */
+    .step {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .step-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 2px;
+    }
+    .step-head .num {
+      font-family: var(--font-sans);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--ink-500);
+    }
+    .step-head .num strong {
+      color: var(--warm-orange-deep);
+      font-weight: 700;
+    }
+    .step-head h2 {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 22px;
+      line-height: 1.1;
+      letter-spacing: -0.2px;
+      color: var(--ink-900);
+      margin: 0;
+    }
+
+    /* ---- Weather chips (2×2, with symbol + temp) ---- */
+    .chip-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .chip {
+      position: relative;
+      width: 100%;
+      min-height: 84px;
+      padding: 14px 14px 12px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.7);
+      border: 1.5px solid rgba(31,27,22,0.06);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      text-align: left;
+      color: var(--ink-900);
+      font: inherit;
+      transition:
+        background 160ms var(--ease-standard),
+        border-color 160ms var(--ease-standard),
+        transform 160ms var(--ease-standard);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .chip:active { transform: scale(0.985); }
+    .chip:focus-visible {
+      outline: 2px solid var(--warm-orange);
+      outline-offset: 2px;
+    }
+    .chip[aria-pressed="true"] {
+      background: linear-gradient(180deg, #FFFFFF 0%, var(--warm-orange-soft) 100%);
+      border-color: rgba(226, 84, 30, 0.4);
+      box-shadow:
+        0 1px 2px rgba(226, 84, 30, 0.08),
+        0 8px 18px -10px rgba(226, 84, 30, 0.4);
+    }
+
+    .chip .sym {
+      flex: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: var(--warm-grey-4);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-700);
+      transition: background 160ms var(--ease-standard), color 160ms var(--ease-standard);
+    }
+    .chip[aria-pressed="true"] .sym {
+      background: rgba(255,255,255,0.85);
+      color: var(--warm-orange-deep);
+    }
+    .chip .chip-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+    }
+    .chip .chip-label {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.1px;
+      color: var(--ink-900);
+      line-height: 1.15;
+    }
+    .chip .chip-temp {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 14px;
+      color: var(--ink-500);
+      line-height: 1.1;
+    }
+    .chip[aria-pressed="true"] .chip-temp { color: var(--warm-orange-deep); }
+
+    /* ---- Activity tiles (2×2, larger, icon-forward) ---- */
+    .tile-grid {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .tile {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 0.78;
+      padding: 16px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.78) 100%);
+      border: 1.5px solid rgba(31,27,22,0.05);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
+      cursor: pointer;
+      text-align: left;
+      color: var(--ink-900);
+      font: inherit;
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.04),
+        0 10px 22px -12px rgba(31,27,22,0.14);
+      transition:
+        background 160ms var(--ease-standard),
+        border-color 160ms var(--ease-standard),
+        box-shadow 160ms var(--ease-standard),
+        transform 160ms var(--ease-standard);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tile:active { transform: scale(0.985); }
+    .tile:focus-visible {
+      outline: 2px solid var(--warm-orange);
+      outline-offset: 2px;
+    }
+    .tile[aria-pressed="true"] {
+      background: linear-gradient(180deg, #FFFFFF 0%, var(--warm-orange-soft) 100%);
+      border-color: rgba(226, 84, 30, 0.42);
+      box-shadow:
+        0 1px 2px rgba(226, 84, 30, 0.1),
+        0 14px 28px -14px rgba(226, 84, 30, 0.42);
+    }
+
+    .tile .tile-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: var(--warm-grey-4);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-700);
+      transition: background 160ms var(--ease-standard), color 160ms var(--ease-standard);
+    }
+    .tile[aria-pressed="true"] .tile-icon {
+      background: rgba(255,255,255,0.85);
+      color: var(--warm-orange-deep);
+    }
+
+    .tile .tile-label {
+      font-family: var(--font-sans);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.15px;
+      color: var(--ink-900);
+      line-height: 1.15;
+    }
+    .tile .tile-sub {
+      margin-top: 2px;
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 13px;
+      color: var(--ink-500);
+      line-height: 1.2;
+    }
+    .tile[aria-pressed="true"] .tile-sub { color: var(--warm-orange-deep); }
+
+    .tile .tile-foot {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ---- Recommendation card — large, visual ---- */
+    .reco {
+      position: relative;
+      border-radius: 28px;
+      background:
+        radial-gradient(120% 60% at 80% 0%, rgba(255,255,255,0.85), rgba(255,255,255,0) 60%),
+        linear-gradient(180deg, #FFFFFF 0%, var(--warm-grey-4) 100%);
+      border: 1px solid var(--hairline);
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.05),
+        0 20px 40px -20px rgba(31,27,22,0.22);
+      overflow: hidden;
+    }
+
+    .reco-head {
+      padding: 18px 20px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      border-bottom: 1px solid var(--hairline);
+      background:
+        linear-gradient(135deg, var(--warm-orange) 0%, var(--warm-orange-deep) 100%);
+      color: #FFF;
+    }
+    .reco-head .reco-eyebrow {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 12.5px;
+      letter-spacing: 0.3px;
+      color: rgba(255,255,255,0.82);
+      margin: 0 0 2px;
+      line-height: 1;
+    }
+    .reco-head .reco-title {
+      font-family: var(--font-sans);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+      margin: 0;
+    }
+    .reco-head .reco-meta {
+      margin-left: auto;
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      font-size: 13px;
+      font-weight: 600;
+      color: #FFF;
+      letter-spacing: -0.1px;
+    }
+    .reco-head .reco-meta .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #FFF;
+      opacity: 0.85;
+    }
+
+    .layer-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      counter-reset: layer;
+    }
+
+    .layer {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+    }
+    .layer + .layer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 92px;
+      right: 20px;
+      height: 1px;
+      background: var(--hairline);
+    }
+
+    .layer .layer-thumb {
+      flex: none;
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      background: var(--warm-grey-4);
+      border: 1px solid rgba(31,27,22,0.05);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(31,27,22,0.04) inset;
+    }
+    .layer .layer-thumb img {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      display: block;
+    }
+    .layer .layer-thumb .fallback {
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .layer .layer-body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .layer .layer-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .layer .layer-num {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--terracotta);
+      background: var(--terracotta-tint);
+      padding: 3px 8px;
+      border-radius: 999px;
+      line-height: 1;
+    }
+    .layer .layer-name {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 15px;
+      color: var(--ink-700);
+      line-height: 1;
+    }
+    .layer .layer-items {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.1px;
+      color: var(--ink-900);
+      line-height: 1.3;
+    }
+
+    .reco-foot {
+      padding: 14px 20px 18px;
+      border-top: 1px solid var(--hairline);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--warm-grey-4);
+    }
+    .reco-foot .why {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 13px;
+      color: var(--ink-500);
+      line-height: 1.3;
+      max-width: 22ch;
+    }
+    .reco-foot .save {
+      flex: none;
+      appearance: none;
+      border: none;
+      background: var(--ink-900);
+      color: #FFF;
+      padding: 12px 18px;
+      border-radius: 999px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.1px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 160ms var(--ease-standard), background 160ms var(--ease-standard);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .save:active { transform: scale(0.97); }
+    .save:focus-visible {
+      outline: 2px solid var(--warm-orange);
+      outline-offset: 2px;
+    }
+    .save:hover { background: #000; }
+
+    /* Home indicator */
+    .home-indicator {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      border-radius: 3px;
+      background: rgba(31,27,22,0.55);
+      z-index: 60;
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+      .chip:active,
+      .tile:active,
+      .save:active,
+      .back:active { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="phone" role="presentation">
+
+      <!-- iOS status bar -->
+      <div class="status" aria-hidden="true">
+        <span>9:41</span>
+        <span class="right">
+          <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="6" rx="0.5"/><rect x="9" y="2.5" width="3" height="8.5" rx="0.5"/><rect x="13.5" y="0" width="3" height="11" rx="0.5"/></svg>
+          <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor"><path d="M7.5 1.2c2.9 0 5.5 1.1 7.5 2.9l-1.5 1.5c-1.6-1.5-3.7-2.4-6-2.4S3.1 4.1 1.5 5.6L0 4.1C2 2.3 4.6 1.2 7.5 1.2zm0 3.6c1.9 0 3.7.7 5 1.9L11 8.2c-1-.9-2.2-1.4-3.5-1.4s-2.5.5-3.5 1.4L2.5 6.7c1.3-1.2 3.1-1.9 5-1.9zm0 3.6c.9 0 1.7.3 2.4.9L7.5 11 5.1 9.3c.7-.6 1.5-.9 2.4-.9z"/></svg>
+          <svg width="27" height="11" viewBox="0 0 27 11" fill="none"><rect x="0.5" y="0.5" width="22" height="10" rx="2.5" stroke="currentColor" stroke-opacity="0.45"/><rect x="2" y="2" width="19" height="7" rx="1.5" fill="currentColor"/><rect x="23.5" y="3.5" width="2" height="4" rx="1" fill="currentColor" fill-opacity="0.45"/></svg>
+        </span>
+      </div>
+
+      <!-- Screen -->
+      <main class="screen" aria-labelledby="finn-title">
+
+        <!-- Topbar -->
+        <header class="topbar">
+          <button class="back" type="button" aria-label="Tilbake">
+            <svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M8 1L2 8l6 7"/>
+            </svg>
+          </button>
+          <div class="topbar-meta">
+            <p class="eyebrow">For Lo · 14 mnd</p>
+            <h1 class="title" id="finn-title">Finn antrekk</h1>
+          </div>
+        </header>
+
+        <!-- Scrollable wizard + reco -->
+        <div class="scroll">
+
+          <!-- STEG 1 · Vær -->
+          <section class="step" aria-labelledby="step-vaer">
+            <div class="step-head">
+              <span class="num"><strong>Steg 1</strong> · av 2</span>
+              <h2 id="step-vaer">Hvordan er været?</h2>
+            </div>
+            <ul class="chip-grid" role="list">
+
+              <li>
+                <button class="chip" type="button" aria-pressed="true" aria-label="Klarvær, minus 4 grader">
+                  <span class="sym" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="4"/>
+                      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                    </svg>
+                  </span>
+                  <span class="chip-copy">
+                    <span class="chip-label">Klarvær</span>
+                    <span class="chip-temp">−4°</span>
+                  </span>
+                </button>
+              </li>
+
+              <li>
+                <button class="chip" type="button" aria-pressed="false" aria-label="Skyet, 4 grader">
+                  <span class="sym" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 17h11a4 4 0 0 0 .5-7.97A6 6 0 0 0 6 11a4 4 0 0 0 0 6z"/>
+                    </svg>
+                  </span>
+                  <span class="chip-copy">
+                    <span class="chip-label">Skyet</span>
+                    <span class="chip-temp">4°</span>
+                  </span>
+                </button>
+              </li>
+
+              <li>
+                <button class="chip" type="button" aria-pressed="false" aria-label="Snø, minus 3 grader">
+                  <span class="sym" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 14h11a4 4 0 0 0 .5-7.97A6 6 0 0 0 6 8a4 4 0 0 0 0 6z"/>
+                      <path d="M9 19l.01 0M13 19l.01 0M17 19l.01 0M11 22l.01 0M15 22l.01 0"/>
+                    </svg>
+                  </span>
+                  <span class="chip-copy">
+                    <span class="chip-label">Snø</span>
+                    <span class="chip-temp">−3°</span>
+                  </span>
+                </button>
+              </li>
+
+              <li>
+                <button class="chip" type="button" aria-pressed="false" aria-label="Regn, 6 grader">
+                  <span class="sym" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 14h11a4 4 0 0 0 .5-7.97A6 6 0 0 0 6 8a4 4 0 0 0 0 6z"/>
+                      <path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3"/>
+                    </svg>
+                  </span>
+                  <span class="chip-copy">
+                    <span class="chip-label">Regn</span>
+                    <span class="chip-temp">6°</span>
+                  </span>
+                </button>
+              </li>
+
+            </ul>
+          </section>
+
+          <!-- STEG 2 · Aktivitet -->
+          <section class="step" aria-labelledby="step-akt">
+            <div class="step-head">
+              <span class="num"><strong>Steg 2</strong> · av 2</span>
+              <h2 id="step-akt">Hva skal dere gjøre?</h2>
+            </div>
+            <ul class="tile-grid" role="list">
+
+              <li>
+                <button class="tile" type="button" aria-pressed="true" aria-label="Tur">
+                  <span class="tile-icon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="14" cy="4" r="1.6"/>
+                      <path d="M13 4l-2 5h4l-3 11"/>
+                    </svg>
+                  </span>
+                  <div class="tile-foot">
+                    <div class="tile-label">Tur</div>
+                    <div class="tile-sub">aktiv · ute</div>
+                  </div>
+                </button>
+              </li>
+
+              <li>
+                <button class="tile" type="button" aria-pressed="false" aria-label="I vogn">
+                  <span class="tile-icon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 5h3l2 9h8l2-6H8"/>
+                      <circle cx="9" cy="19" r="1.6"/>
+                      <circle cx="17" cy="19" r="1.6"/>
+                    </svg>
+                  </span>
+                  <div class="tile-foot">
+                    <div class="tile-label">I vogn</div>
+                    <div class="tile-sub">stille · ute</div>
+                  </div>
+                </button>
+              </li>
+
+              <li>
+                <button class="tile" type="button" aria-pressed="false" aria-label="Lek ute">
+                  <span class="tile-icon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="8"/>
+                      <path d="M12 4v8l5 3"/>
+                    </svg>
+                  </span>
+                  <div class="tile-foot">
+                    <div class="tile-label">Lek ute</div>
+                    <div class="tile-sub">aktiv · varierende</div>
+                  </div>
+                </button>
+              </li>
+
+              <li>
+                <button class="tile" type="button" aria-pressed="false" aria-label="Sovetur">
+                  <span class="tile-icon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 12.5a8 8 0 1 0 9-9 6.2 6.2 0 0 1-9 9z"/>
+                    </svg>
+                  </span>
+                  <div class="tile-foot">
+                    <div class="tile-label">Sovetur</div>
+                    <div class="tile-sub">stille · ute</div>
+                  </div>
+                </button>
+              </li>
+
+            </ul>
+          </section>
+
+          <!-- ANBEFALT ANTREKK · recommendation card -->
+          <section class="reco" aria-labelledby="reco-title">
+            <header class="reco-head">
+              <div>
+                <p class="reco-eyebrow">Anbefalt for tur · −4°</p>
+                <h2 class="reco-title" id="reco-title">3 lag · ull</h2>
+              </div>
+              <span class="reco-meta" aria-label="Klarvær">
+                <span class="dot" aria-hidden="true"></span>
+                Klarvær
+              </span>
+            </header>
+
+            <ol class="layer-list" role="list">
+
+              <li class="layer">
+                <span class="layer-thumb" aria-hidden="true">
+                  <img src="../illustrations/garments/langermet-ullbody.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'👕',className:'fallback'}))" />
+                </span>
+                <div class="layer-body">
+                  <div class="layer-meta">
+                    <span class="layer-num">Lag 1</span>
+                    <span class="layer-name">Innerst</span>
+                  </div>
+                  <div class="layer-items">Langermet ullbody</div>
+                </div>
+              </li>
+
+              <li class="layer">
+                <span class="layer-thumb" aria-hidden="true">
+                  <img src="../illustrations/garments/ull-mellomlag.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧶',className:'fallback'}))" />
+                </span>
+                <div class="layer-body">
+                  <div class="layer-meta">
+                    <span class="layer-num">Lag 2</span>
+                    <span class="layer-name">Mellomlag</span>
+                  </div>
+                  <div class="layer-items">Ull mellomlag, ullsokker</div>
+                </div>
+              </li>
+
+              <li class="layer">
+                <span class="layer-thumb" aria-hidden="true">
+                  <img src="../illustrations/garments/vinterdress.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧥',className:'fallback'}))" />
+                </span>
+                <div class="layer-body">
+                  <div class="layer-meta">
+                    <span class="layer-num">Lag 3</span>
+                    <span class="layer-name">Ytterst</span>
+                  </div>
+                  <div class="layer-items">Vinterdress, lue m/ull, votter</div>
+                </div>
+              </li>
+
+            </ol>
+
+            <footer class="reco-foot">
+              <p class="why">Holder Lo varm og tørr i klart vintervær.</p>
+              <button class="save" type="button" aria-label="Lagre antrekk">
+                Lagre
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M5 12l5 5L20 7"/>
+                </svg>
+              </button>
+            </footer>
+          </section>
+
+        </div>
+
+      </main>
+
+      <!-- iOS home indicator -->
+      <div class="home-indicator" aria-hidden="true"></div>
+    </div>
+  </div>
+</body>
+</html>

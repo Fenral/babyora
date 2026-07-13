@@ -1,0 +1,59 @@
+{
+  "claude": {
+    "id": "sovepose-3-0-3-5-tog",
+    "dbString": "sovepose 3.0–3.5 TOG",
+    "kategori": "ekstra-sovn",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Komplett info-oppføring finnes i garment-info.ts (linje 265-268): what = 'Tykk sovepose (3.0–3.5 TOG) for kjølige soverom.', when = 'Romtemperatur under 16 °C.' Tone/lengde/mønster matcher søsken i ekstra-søvn-gruppen (0.5/1.0/2.5/3.5 TOG) perfekt — kort what + 'Romtemperatur …'-when. whyForGarment har IKKE en dedikert id-gren, men plagget treffer den generiske sovepose-grenen (id.startsWith('sovepose-')) i soevn-blokken (linje 318-320), som gir en meningsfull, TOG-spesifikk begrunnelse — altså IKKE fallback. Det er pediatrisk korrekt og likebehandlet med alle andre soveposer (ingen sovepose har egen gren). Trekker 3 poeng fordi when-teksten ('under 16 °C') ikke matcher hva engine faktisk velger ved den temperaturen (se mål 4)."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\sovepose-3-0-3-5-tog.png. Mapping i garment-illustrations.ts (linje 92) er korrekt: db-streng 'sovepose 3.0–3.5 TOG' (med ekte en-dash –, ikke bindestrek) → id 'sovepose-3-0-3-5-tog'. TogGuideScreen.tsx bruker eksakt samme db-streng og id, så oppslaget treffer. Navnet er plausibelt og konsistent med søsken-filene (sovepose-0-5-tog, sovepose-1-0-tog, sovepose-2-5-tog, sovepose-3-5-tog). Kan ikke bedømme selve bildet visuelt — overlatt til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 13,
+      "kommentar": "Plagget velges ALDRI av recommend()-motoren. Det vises kun i den statiske TOG-guide-tabellen (TogGuideScreen.tsx linje 41-46) som referanse-informasjon, koblet til romtemp 'Under 16 °C' med underlag 'langermet ullbody + ullsokker + pyjamas'. Pediatrisk er 3.0–3.5 TOG for rom under 16 °C i samsvar med Lullaby Trust / ErgoPouch TOG-praksis (kilder LT-TOG, ergopouch-guide, halo-tog) — ingen overopphetings-/SIDS-/kvelnings-risiko ved denne temp×TOG-kombinasjonen, så ingen kritisk flagg. Trekk fordi det er en reell intern inkonsistens: motoren tilbyr aldri 3.0–3.5-trinnet, kun et hopp fra 2.5 (16-18 °C) rett til 3.5 (under 14-16 °C), mens guide-skjermen presenterer 3.0–3.5 som et eget anbefalt trinn ved <16 °C. Bruker som leser guiden vil lete etter et produkt motoren aldri foreslår.",
+      "trace": "baseTable.soevn: ingen band velger 'sovepose 3.0–3.5 TOG'. Bånd-mapping: tropisk(22-27)→1.0, varm/mild/kjolig(5-21)→2.5, kald/frost/streng_frost/ekstrem(<5 som romtemp)→3.5. CK-3 (conflicts.ts) downgrade gir kun 'sovepose {maxAllowed} TOG' = 0.5/1.0/2.5 — aldri 3.0–3.5. maxTOGForRoom(): <16 °C → 3.5, så ingen oppgradering til 3.0–3.5 heller. Konklusjon: db-strengen 'sovepose 3.0–3.5 TOG' er kun produsert av den statiske TOG_ENTRIES-listen i TogGuideScreen.tsx, ikke av engine-pipelinen (tables→modifiers→conflicts→softBlocks→safety).",
+      "kilder": [
+        "https://www.lullabytrust.org.uk/safer-sleep-advice/baby-room-temperature/",
+        "https://www.ergopouch.com/pages/what-to-wear-guide"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "when-tekst og whyForGarment er internt konsistente og medisinsk forsvarlige, MEN det finnes drift mot engine-virkeligheten. garment-info when = 'Romtemperatur under 16 °C' og TogGuideScreen roomRange = 'Under 16 °C' — disse to stemmer overens med hverandre. whyForGarment-grenen ('TOG-nivået matcher romtemperaturen rundt {feels} °C') er korrekt og villeder ikke. Driften: garment-info når-tekst for sovepose-3-5-tog sier 'under 14 °C', og sovepose-2-5-tog sier '16-18 °C'. 3.0–3.5 TOG dekker dermed nominelt vinduet 14-16 °C, men baseTable hopper rett fra 2.5 TOG (kjolig-band, 5-9 °C romtemp via bandForTemp) til 3.5 TOG (kald-band, 0-4 °C). Engine-kommentaren i tables.ts (linje 134-142) nevner aldri 3.0–3.5-trinnet. Ingen brukervillende påkledningsfeil (3.0-3.5 vs 3.5 er marginal varmeforskjell, ikke en helserisiko), derfor ikke severity hoy — men teksten lover et trinn motoren ikke leverer."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "alternatives.ts har INGEN oppføring for 'sovepose 3.0–3.5 TOG'. Den eneste sovepose-alternativ-oppføringen er 'sovepose 1.0 TOG' → 'sovepose 0.5 TOG' (linje 126-134). Et naturlig tykkelse-trinn-alternativ ville vært 'sovepose 3.0–3.5 TOG' ↔ 'sovepose 2.5 TOG' (ned ved mildere rom) eller ↔ 'sovepose 3.5 TOG' (opp ved kaldere rom), parallelt med eksisterende mønster. Trekker lite fordi getAlternatives() matcher på eksakt item-streng fra tables.ts, og siden denne strengen aldri produseres av engine, vil et alternativ-oppslag aldri trigges i den faktiske anbefalings-flyten — alternativet ville kun vært relevant om plagget faktisk ble valgt. Lav prioritet, men konsistens-messig burde trinnet hatt et alternativ på linje med sovepose 1.0."
+    },
+    "total": 74,
+    "verdikt": "Solid info-oppføring, korrekt PNG-mapping og pediatrisk forsvarlig TOG×romtemp-kobling. Hovedsvakheten er strukturell: 'sovepose 3.0–3.5 TOG' eksisterer kun i den statiske TOG-guide-skjermen og produseres ALDRI av anbefalings-motoren (tables/conflicts hopper 2.5→3.5). Ingen sikkerhetskritiske funn. Total 74/100.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 3,
+        "beskrivelse": "Db-strengen 'sovepose 3.0–3.5 TOG' velges aldri av recommend()-pipelinen. baseTable.soevn bruker kun 1.0/2.5/3.5 TOG; CK-3-downgrade gir kun 0.5/1.0/2.5; maxTOGForRoom() går rett til 3.5 under 16 °C. Plagget lever bare i den statiske TOG_ENTRIES-tabellen i TogGuideScreen.tsx. Resultat: guiden presenterer et anbefalt TOG-trinn motoren aldri faktisk foreslår — intern inkonsistens som kan forvirre foreldre som leter etter produktet.",
+        "forslag": "Enten (a) la engine kunne velge dette trinnet ved et eget romtemp-vindu (f.eks. 14-16 °C) ved å splitte baseTable-bandene og oppdatere maxTOGForRoom, eller (b) hvis 3.0–3.5 bevisst kun skal være en guide-rad, dokumenter eksplisitt at det er info-only og ikke en engine-output, slik at audit/QA ikke tolker det som dødt plagg. IKKE endre tall/terskler uten helsesøster-godkjenning.",
+        "kilde": "tables.ts (soevn-band), conflicts.ts (maxTOGForRoom/CK-3), TogGuideScreen.tsx (TOG_ENTRIES)"
+      },
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "when-teksten + TOG-guidens roomRange dekker '14-16 °C'-vinduet (mellom 2.5 TOG 'under 16/16-18' og 3.5 TOG 'under 14'), men baseTable har ingen romtemp-band som lander på dette trinnet — motoren hopper fra 2.5 TOG (kjolig) til 3.5 TOG (kald). Teksten lover dermed et mellomtrinn som ikke finnes i selve anbefalingen.",
+        "forslag": "Juster når-teksten til å matche faktisk engine-atferd (f.eks. presiser at 3.0–3.5 er et produkt-valg foreldre kan ta selv, ikke et auto-anbefalt trinn), eller innfør et tilsvarende band i engine. Behold tallene; dette er en tekst/dokumentasjons-justering.",
+        "kilde": "garment-info.ts:266-267, TogGuideScreen.tsx:41-46, tables.ts:130-142"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "alternatives.ts mangler tykkelse-trinn-alternativ for 'sovepose 3.0–3.5 TOG'. Søsteren 'sovepose 1.0 TOG' har et 0.5-alternativ; et parallelt ned/opp-alternativ (2.5 ↔ 3.0–3.5 ↔ 3.5) ville vært konsistent.",
+        "forslag": "Legg til en ITEM_ALTERNATIVES-oppføring for 'sovepose 3.0–3.5 TOG' med 'sovepose 2.5 TOG' (mildere rom) og/eller 'sovepose 3.5 TOG' (kaldere rom) som alternativer, med tilhørende i18n-keys. Lav prioritet siden strengen ikke produseres av engine i dag.",
+        "kilde": "alternatives.ts:44-145"
+      }
+    ]
+  },
+  "fable": null
+}

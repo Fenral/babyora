@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#E8E1D8" />
+  <title>Plaggbibliotek – Mock B (visuell)</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─────────────────────────────────────────────────────────────────
+       Babyora design tokens — warm grey + DM Serif + warm orange
+       ───────────────────────────────────────────────────────────── */
+    :root {
+      /* Surface */
+      --bg-canvas: #E8E1D8;
+      --bg-warm-1: #F1ECE3;
+      --bg-warm-2: #E0D6C7;
+      --bg-card: #FBF8F2;
+
+      /* Ink */
+      --ink-900: #1F1B16;
+      --ink-800: #2B2B2B;
+      --ink-600: #5F564E;
+      --ink-500: #8A7F78;
+      --ink-400: #B3A89F;
+
+      /* Warm orange (terracotta) */
+      --terra-50:  #FBEFE7;
+      --terra-100: #F6DCC9;
+      --terra-300: #E2A073;
+      --terra-500: #C0632F;
+      --terra-600: #B4502E;
+      --terra-700: #8A3A1F;
+
+      /* Material accents (product chips) */
+      --wool:     #B98456;
+      --cotton:   #C9C2B4;
+      --water:    #5E8FA6;
+
+      /* Fonts */
+      --font-sans:  'Schibsted Grotesk', -apple-system, system-ui, sans-serif;
+      --font-serif: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+
+      /* Motion */
+      --ease: cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #d8d3cb;
+      font-family: var(--font-sans);
+      color: var(--ink-800);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       Page chrome — iPhone 15 Pro frame (393×852)
+       ───────────────────────────────────────────────────────────── */
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 56px;
+      gap: 24px;
+      background:
+        radial-gradient(120% 60% at 50% 0%, #ece5da 0%, #d8d3cb 60%, #c6c1b9 100%);
+    }
+
+    .page-meta {
+      max-width: 393px;
+      text-align: center;
+      color: #5b544c;
+    }
+    .page-meta h1 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      margin: 0 0 6px;
+      color: var(--ink-900);
+      letter-spacing: -0.2px;
+    }
+    .page-meta p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #6b6259;
+    }
+
+    .iphone {
+      width: 393px;
+      height: 852px;
+      border-radius: 55px;
+      padding: 13px;
+      background:
+        linear-gradient(180deg, #1d1d1f 0%, #2a2a2c 50%, #1d1d1f 100%);
+      box-shadow:
+        0 0 0 1.5px #3a3a3c,
+        0 40px 80px -20px rgba(20, 18, 16, 0.45),
+        0 18px 44px -16px rgba(20, 18, 16, 0.3),
+        inset 0 0 0 0.5px rgba(255,255,255,0.06);
+      position: relative;
+      flex: none;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 43px;
+      overflow: hidden;
+      position: relative;
+      background: var(--bg-canvas);
+      isolation: isolate;
+      /* Provide safe-area constants for visual parity in browser */
+      --safe-top: 54px;
+      --safe-bottom: 34px;
+    }
+
+    /* Status bar */
+    .status-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 54px;
+      padding: 18px 32px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink-900);
+      z-index: 50;
+      pointer-events: none;
+    }
+    .status-bar .right { display: flex; align-items: center; gap: 6px; }
+    .dynamic-island {
+      position: absolute;
+      top: 11px; left: 50%;
+      transform: translateX(-50%);
+      width: 124px;
+      height: 37px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 60;
+    }
+
+    /* Home indicator */
+    .home-indicator {
+      position: absolute;
+      bottom: 8px; left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      border-radius: 100px;
+      background: var(--ink-900);
+      opacity: 0.65;
+      z-index: 60;
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       Mock B screen — spacious, visual, premium
+       ───────────────────────────────────────────────────────────── */
+    main.screen-content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+      background:
+        radial-gradient(120% 44% at 50% -8%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%),
+        linear-gradient(180deg, #F1ECE3 0%, #E8E1D8 38%, #DDD3C5 100%);
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Header — generous breathing room, serif title */
+    .header {
+      flex: none;
+      position: relative;
+      z-index: 3;
+      padding: 18px 22px 8px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .header .left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+    .back-btn {
+      width: 44px;
+      height: 44px;
+      flex: none;
+      border: none;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.04),
+        inset 0 0 0 1px rgba(31,27,22,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--ink-900);
+      touch-action: manipulation;
+      margin-bottom: 10px;
+    }
+    .back-btn:focus-visible {
+      outline: 2px solid var(--terra-600);
+      outline-offset: 2px;
+    }
+
+    .eyebrow {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--terra-600);
+      margin: 0;
+    }
+    .title {
+      font-family: var(--font-serif);
+      font-size: 32px;
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: -0.6px;
+      color: var(--ink-900);
+      margin: 0;
+    }
+    .subtitle {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--ink-600);
+      margin: 4px 0 0;
+      letter-spacing: -0.1px;
+    }
+
+    .count-pill {
+      flex: none;
+      align-self: flex-end;
+      margin-top: 54px;
+      padding: 7px 12px 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.55);
+      box-shadow: inset 0 0 0 1px rgba(31,27,22,0.06);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-600);
+      letter-spacing: -0.05px;
+    }
+    .count-pill .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--terra-500);
+      box-shadow: 0 0 0 3px rgba(192,99,47,0.18);
+    }
+
+    /* Scroll area — open and spacious */
+    .scroll {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px 22px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .scroll::-webkit-scrollbar { display: none; }
+
+    /* Search — taller, softer, with icon and shortcut hint */
+    .search {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.62);
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.04),
+        inset 0 0 0 1px rgba(31,27,22,0.06);
+      min-height: 52px;
+    }
+    .search .icon { flex: none; color: var(--ink-500); }
+    .search input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink-800);
+      padding: 0;
+      min-width: 0;
+    }
+    .search input::placeholder { color: var(--ink-500); }
+    .search .kbd {
+      flex: none;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-500);
+      padding: 4px 8px;
+      border-radius: 7px;
+      background: rgba(31,27,22,0.05);
+    }
+
+    /* Filter chips — chunky pill row, scrolls horizontally if needed */
+    .filters {
+      display: flex;
+      gap: 9px;
+      list-style: none;
+      margin: 0;
+      padding: 2px 0;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+    }
+    .filters::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: none;
+      scroll-snap-align: start;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(31,27,22,0.08);
+      background: rgba(255,255,255,0.55);
+      color: var(--ink-600);
+      font: inherit;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: -0.1px;
+      transition: background 140ms var(--ease), color 140ms var(--ease), border-color 140ms var(--ease);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 38px;
+    }
+    .chip .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      flex: none;
+    }
+    .chip[aria-pressed="true"] {
+      background: var(--terra-700);
+      color: #FFF7EF;
+      border-color: var(--terra-700);
+      font-weight: 600;
+    }
+    .chip[aria-pressed="true"] .swatch {
+      background: #FFF7EF;
+    }
+    .chip:focus-visible {
+      outline: 2px solid var(--terra-600);
+      outline-offset: 2px;
+    }
+
+    /* Section header above grid */
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 2px 2px 0;
+    }
+    .section-head h2 {
+      font-family: var(--font-serif);
+      font-size: 19px;
+      font-weight: 400;
+      letter-spacing: -0.2px;
+      color: var(--ink-900);
+      margin: 0;
+    }
+    .section-head .sort {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--ink-500);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
+    /* Grid — 2-col, large image-led cards, generous spacing */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .card {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      background: var(--bg-card);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.05),
+        0 10px 26px -12px rgba(31,27,22,0.18);
+      border: 1px solid rgba(31,27,22,0.04);
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+      color: inherit;
+      padding: 0;
+      transition: transform 160ms var(--ease), box-shadow 160ms var(--ease);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .card:focus-visible {
+      outline: 2px solid var(--terra-600);
+      outline-offset: 3px;
+    }
+    .card:active {
+      transform: scale(0.985) translateY(1px);
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.04),
+        0 4px 10px -6px rgba(31,27,22,0.12);
+    }
+
+    .hero {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1.05;
+      background: linear-gradient(160deg, #F6EEDF 0%, #ECDFC8 100%);
+      overflow: hidden;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .hero.warm {
+      background: linear-gradient(160deg, #F6E2CD 0%, #ECC9A6 100%);
+    }
+    .hero.sand {
+      background: linear-gradient(160deg, #F1E7D2 0%, #E0D0B0 100%);
+    }
+    .hero.cool {
+      background: linear-gradient(160deg, #E6E9E2 0%, #C9D2C7 100%);
+    }
+    .hero.dusty {
+      background: linear-gradient(160deg, #EFE4DA 0%, #D8C3B0 100%);
+    }
+    .hero.olive {
+      background: linear-gradient(160deg, #ECECDB 0%, #C8C7AC 100%);
+    }
+    .hero.rose {
+      background: linear-gradient(160deg, #F5E4DC 0%, #E1BCA9 100%);
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(80% 50% at 50% -10%, rgba(255,255,255,0.5), transparent 70%);
+      pointer-events: none;
+    }
+
+    .badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: rgba(31,27,22,0.78);
+      color: #FFF7EF;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 2;
+    }
+    .badge.material {
+      background: rgba(255,247,239,0.84);
+      color: var(--terra-700);
+    }
+
+    .fav {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: rgba(255,247,239,0.85);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--ink-600);
+      box-shadow: 0 1px 4px rgba(31,27,22,0.1);
+      z-index: 2;
+    }
+    .fav.active { color: var(--terra-600); }
+
+    /* Garment SVG (illustration) */
+    .garment {
+      width: 78%;
+      height: auto;
+      margin-bottom: 14px;
+      filter: drop-shadow(0 6px 14px rgba(31,27,22,0.12));
+      position: relative;
+      z-index: 1;
+    }
+
+    .meta {
+      padding: 12px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .meta .name {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--ink-900);
+      letter-spacing: -0.15px;
+      line-height: 1.25;
+    }
+    .meta .sub {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-500);
+      letter-spacing: -0.05px;
+    }
+    .meta .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-600);
+      background: rgba(31,27,22,0.05);
+      padding: 4px 8px;
+      border-radius: 999px;
+      letter-spacing: -0.05px;
+    }
+    .tag .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--wool);
+    }
+    .tag.cotton .dot { background: var(--cotton); box-shadow: inset 0 0 0 0.5px rgba(31,27,22,0.18); }
+    .tag.water  .dot { background: var(--water); }
+
+    /* Featured row — premium "spotlight" pair */
+    .featured {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .featured-card {
+      position: relative;
+      border-radius: 26px;
+      padding: 22px 22px 22px 24px;
+      background:
+        radial-gradient(120% 100% at 100% 0%, rgba(255,247,239,0.55), transparent 60%),
+        linear-gradient(135deg, #2D2520 0%, #4A3A2E 60%, #5C4634 100%);
+      color: #F4ECDD;
+      overflow: hidden;
+      isolation: isolate;
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.1),
+        0 16px 32px -14px rgba(31,27,22,0.4);
+    }
+    .featured-card .featured-text {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+    }
+    .featured-card .eyebrow-light {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--terra-300);
+      margin: 0;
+    }
+    .featured-card h3 {
+      font-family: var(--font-serif);
+      font-size: 21px;
+      font-weight: 400;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+      margin: 0;
+      color: #F4ECDD;
+    }
+    .featured-card p {
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: rgba(244,236,221,0.7);
+      margin: 0;
+    }
+    .featured-card .cta {
+      align-self: flex-start;
+      margin-top: 4px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: var(--terra-500);
+      color: #FFF7EF;
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: -0.05px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .featured-card .featured-art {
+      flex: none;
+      width: 108px;
+      aspect-ratio: 1 / 1.15;
+      border-radius: 18px;
+      background:
+        linear-gradient(160deg, #F2D2A8 0%, #C68347 100%);
+      box-shadow: inset 0 0 0 1px rgba(255,247,239,0.18);
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .featured-card .featured-art svg {
+      width: 78%;
+      height: auto;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25));
+    }
+    .featured-card::after {
+      content: '';
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 180px;
+      height: 180px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(192,99,47,0.28), transparent 70%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Accessibility */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .plaggbib-focus:focus { outline: none; }
+    .plaggbib-focus:focus-visible {
+      outline: 2px solid var(--terra-600);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition: none !important;
+        animation: none !important;
+      }
+      .card:active { transform: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="page-meta">
+    <h1>Plaggbibliotek — Mock B</h1>
+    <p>Visuell, romslig variant. Inspirert av premium product-library-mønstre (større bilder, tone-on-tone hero, generøs spacing, serif-titler).</p>
+  </header>
+
+  <!-- iPhone 15 Pro frame -->
+  <div class="iphone" aria-hidden="false">
+    <div class="screen">
+
+      <!-- iOS chrome -->
+      <div class="dynamic-island" aria-hidden="true"></div>
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span class="right">
+          <!-- signal -->
+          <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0"  y="7" width="3" height="4" rx="0.6"/><rect x="4.5" y="5" width="3" height="6" rx="0.6"/><rect x="9"  y="3" width="3" height="8" rx="0.6"/><rect x="13.5" y="0" width="3" height="11" rx="0.6"/></svg>
+          <!-- wifi -->
+          <svg width="15" height="11" viewBox="0 0 15 11" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1 4.2 a10 10 0 0 1 13 0"/><path d="M3.2 6.4 a7 7 0 0 1 8.6 0"/><path d="M5.5 8.7 a3.6 3.6 0 0 1 4 0"/><circle cx="7.5" cy="10" r="0.7" fill="currentColor"/></svg>
+          <!-- battery -->
+          <svg width="25" height="11" viewBox="0 0 25 11" fill="none"><rect x="0.5" y="0.5" width="21" height="10" rx="2.5" stroke="currentColor"/><rect x="2"   y="2"   width="18" height="7"  rx="1.5" fill="currentColor"/><rect x="22"  y="3.5" width="1.5" height="4" rx="0.7" fill="currentColor"/></svg>
+        </span>
+      </div>
+
+      <main class="screen-content" aria-labelledby="plaggbib-title">
+
+        <!-- Header -->
+        <header class="header">
+          <div class="left">
+            <button type="button" class="back-btn plaggbib-focus" aria-label="Tilbake">
+              <svg width="10" height="16" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M7 1L1 7l6 6" />
+              </svg>
+            </button>
+            <p class="eyebrow">Bibliotek</p>
+            <h1 id="plaggbib-title" class="title">Plagg<br/>biblioteket</h1>
+            <p class="subtitle">Bla i alle ull-, bomulls- og yttertøy-plagg vi har data på.</p>
+          </div>
+          <span class="count-pill" aria-label="63 plagg totalt">
+            <span class="dot" aria-hidden="true"></span>
+            63 plagg
+          </span>
+        </header>
+
+        <!-- Scroll -->
+        <div class="scroll">
+
+          <!-- Search -->
+          <div role="search" class="search">
+            <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" />
+            </svg>
+            <input type="search" placeholder="Søk etter plagg eller materiale" aria-label="Søk i plagg" />
+            <span class="kbd" aria-hidden="true">⌘K</span>
+          </div>
+
+          <!-- Filter chips -->
+          <nav aria-label="Filtrer plagg">
+            <ul class="filters" role="list">
+              <li><button type="button" class="chip plaggbib-focus" aria-pressed="true">Alle</button></li>
+              <li><button type="button" class="chip plaggbib-focus" aria-pressed="false"><span class="swatch" style="background: var(--wool)"></span>Ull</button></li>
+              <li><button type="button" class="chip plaggbib-focus" aria-pressed="false"><span class="swatch" style="background: var(--cotton); box-shadow: inset 0 0 0 0.5px rgba(31,27,22,0.18);"></span>Bomull</button></li>
+              <li><button type="button" class="chip plaggbib-focus" aria-pressed="false"><span class="swatch" style="background: var(--water)"></span>Vanntett</button></li>
+              <li><button type="button" class="chip plaggbib-focus" aria-pressed="false">Innerlag</button></li>
+              <li><button type="button" class="chip plaggbib-focus" aria-pressed="false">Yttertøy</button></li>
+            </ul>
+          </nav>
+
+          <!-- Featured spotlight card -->
+          <article class="featured-card" aria-labelledby="featured-title">
+            <div class="featured-text">
+              <p class="eyebrow-light">Mest brukt 0–24 mnd</p>
+              <h3 id="featured-title">Langermet ullbody</h3>
+              <p>Den mest brukte base-en i Norge. Temperatur-regulerer mot huden — hele året.</p>
+              <button type="button" class="cta plaggbib-focus">
+                Utforsk
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h10M7 2l4 4-4 4"/></svg>
+              </button>
+            </div>
+            <div class="featured-art" aria-hidden="true">
+              <!-- Body silhouette -->
+              <svg viewBox="0 0 64 80" fill="none">
+                <!-- shoulder/torso -->
+                <path d="M16 14 C 16 8, 22 6, 32 6 C 42 6, 48 8, 48 14 L 56 22 L 52 32 L 48 30 L 48 56 C 48 60, 46 62, 42 62 L 22 62 C 18 62, 16 60, 16 56 L 16 30 L 12 32 L 8 22 Z" fill="#F4ECDD"/>
+                <!-- leg openings -->
+                <path d="M20 62 L 18 76 L 28 76 L 30 62 Z" fill="#F4ECDD"/>
+                <path d="M34 62 L 36 76 L 46 76 L 44 62 Z" fill="#F4ECDD"/>
+                <!-- snap line -->
+                <path d="M30 62 L 34 62 M 30 66 L 34 66 M 30 70 L 34 70" stroke="#B98456" stroke-width="0.8" stroke-linecap="round"/>
+                <!-- subtle texture -->
+                <path d="M22 24 C 28 22, 36 22, 42 24" stroke="#E2D2B6" stroke-width="0.6" stroke-linecap="round" fill="none"/>
+              </svg>
+            </div>
+          </article>
+
+          <!-- Section head -->
+          <div class="section-head">
+            <h2>Alle plagg</h2>
+            <button type="button" class="sort" aria-label="Sorter">
+              Nyeste
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>
+            </button>
+          </div>
+
+          <!-- 2-col grid -->
+          <ul class="grid" role="list">
+
+            <!-- Card 1: Kortermet ullbody -->
+            <li>
+              <button type="button" class="card plaggbib-focus" aria-label="Kortermet ullbody, ull, innerlag">
+                <div class="hero warm">
+                  <span class="badge material">Ull</span>
+                  <button type="button" class="fav active" aria-label="Fjern fra favoritter" onclick="event.stopPropagation();">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9C.7 8.7 2.5 5 6 5c2 0 3.5 1.2 4.5 2.5 1-1.3 2.5-2.5 4.5-2.5 3.5 0 5.3 3.7 3.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                  </button>
+                  <svg class="garment" viewBox="0 0 64 70" fill="none" aria-hidden="true">
+                    <path d="M16 14 C 16 9, 21 7, 32 7 C 43 7, 48 9, 48 14 L 54 18 L 50 26 L 47 24 L 47 50 C 47 54, 45 56, 41 56 L 23 56 C 19 56, 17 54, 17 50 L 17 24 L 14 26 L 10 18 Z" fill="#FBF8F2"/>
+                    <path d="M21 56 L 20 66 L 27 66 L 28 56 Z" fill="#FBF8F2"/>
+                    <path d="M36 56 L 37 66 L 44 66 L 43 56 Z" fill="#FBF8F2"/>
+                    <path d="M30 56 H 34 M 30 60 H 34" stroke="#B98456" stroke-width="0.7" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="meta">
+                  <span class="name">Kortermet ullbody</span>
+                  <span class="sub">Innerlag · 0–24 mnd</span>
+                  <div class="row">
+                    <span class="tag"><span class="dot"></span>Merinoull</span>
+                  </div>
+                </div>
+              </button>
+            </li>
+
+            <!-- Card 2: Kjøredress -->
+            <li>
+              <button type="button" class="card plaggbib-focus" aria-label="Kjøredress, vanntett, yttertøy">
+                <div class="hero cool">
+                  <span class="badge">Yttertøy</span>
+                  <button type="button" class="fav" aria-label="Legg til favoritter" onclick="event.stopPropagation();">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9C.7 8.7 2.5 5 6 5c2 0 3.5 1.2 4.5 2.5 1-1.3 2.5-2.5 4.5-2.5 3.5 0 5.3 3.7 3.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                  </button>
+                  <svg class="garment" viewBox="0 0 64 80" fill="none" aria-hidden="true">
+                    <!-- hood -->
+                    <ellipse cx="32" cy="12" rx="11" ry="9" fill="#4A6C7E"/>
+                    <!-- body -->
+                    <path d="M14 22 L 22 18 L 32 22 L 42 18 L 50 22 L 52 50 C 52 54, 50 56, 46 56 L 18 56 C 14 56, 12 54, 12 50 Z" fill="#5E8FA6"/>
+                    <!-- legs -->
+                    <path d="M16 56 L 18 76 L 30 76 L 30 56 Z" fill="#5E8FA6"/>
+                    <path d="M34 56 L 34 76 L 46 76 L 48 56 Z" fill="#5E8FA6"/>
+                    <!-- zipper -->
+                    <line x1="32" y1="22" x2="32" y2="56" stroke="#2D4654" stroke-width="0.8"/>
+                    <!-- highlight -->
+                    <path d="M20 26 L 22 50" stroke="rgba(255,255,255,0.18)" stroke-width="1.4" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="meta">
+                  <span class="name">Kjøredress</span>
+                  <span class="sub">Yttertøy · ned til −7 °C</span>
+                  <div class="row">
+                    <span class="tag water"><span class="dot"></span>Vanntett</span>
+                  </div>
+                </div>
+              </button>
+            </li>
+
+            <!-- Card 3: Ull-mellomlag -->
+            <li>
+              <button type="button" class="card plaggbib-focus" aria-label="Ull-mellomlag, ull, mellomlag">
+                <div class="hero sand">
+                  <span class="badge material">Ull</span>
+                  <button type="button" class="fav" aria-label="Legg til favoritter" onclick="event.stopPropagation();">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9C.7 8.7 2.5 5 6 5c2 0 3.5 1.2 4.5 2.5 1-1.3 2.5-2.5 4.5-2.5 3.5 0 5.3 3.7 3.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                  </button>
+                  <svg class="garment" viewBox="0 0 64 70" fill="none" aria-hidden="true">
+                    <!-- collar -->
+                    <path d="M26 10 Q 32 6, 38 10 L 38 16 Q 32 13, 26 16 Z" fill="#B98456"/>
+                    <!-- body -->
+                    <path d="M16 14 L 22 12 L 26 14 L 26 16 Q 32 13, 38 16 L 38 14 L 42 12 L 48 14 L 54 22 L 50 30 L 47 28 L 47 56 C 47 60, 45 62, 41 62 L 23 62 C 19 62, 17 60, 17 56 L 17 28 L 14 30 L 10 22 Z" fill="#C99368"/>
+                    <!-- ribbed cuffs -->
+                    <path d="M10 22 L 12 24 M 14 30 L 16 32" stroke="#9A6B40" stroke-width="0.5"/>
+                    <!-- texture -->
+                    <path d="M22 30 H 42 M 22 38 H 42 M 22 46 H 42" stroke="#9A6B40" stroke-width="0.4" stroke-dasharray="1 2" opacity="0.5"/>
+                  </svg>
+                </div>
+                <div class="meta">
+                  <span class="name">Ull-mellomlag</span>
+                  <span class="sub">Mellomlag · 0–24 mnd</span>
+                  <div class="row">
+                    <span class="tag"><span class="dot"></span>Merinoull</span>
+                  </div>
+                </div>
+              </button>
+            </li>
+
+            <!-- Card 4: Ull-pyjamas -->
+            <li>
+              <button type="button" class="card plaggbib-focus" aria-label="Ull-pyjamas, ull, innerlag">
+                <div class="hero rose">
+                  <span class="badge material">Ull</span>
+                  <button type="button" class="fav" aria-label="Legg til favoritter" onclick="event.stopPropagation();">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9C.7 8.7 2.5 5 6 5c2 0 3.5 1.2 4.5 2.5 1-1.3 2.5-2.5 4.5-2.5 3.5 0 5.3 3.7 3.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                  </button>
+                  <svg class="garment" viewBox="0 0 64 80" fill="none" aria-hidden="true">
+                    <!-- one-piece pyjamas with feet -->
+                    <path d="M18 14 C 18 9, 23 7, 32 7 C 41 7, 46 9, 46 14 L 52 18 L 49 26 L 46 24 L 46 44 L 48 76 L 36 76 L 34 50 L 30 50 L 28 76 L 16 76 L 18 44 L 18 24 L 15 26 L 12 18 Z" fill="#D9A696"/>
+                    <!-- buttons -->
+                    <circle cx="32" cy="20" r="0.9" fill="#8C5742"/>
+                    <circle cx="32" cy="26" r="0.9" fill="#8C5742"/>
+                    <circle cx="32" cy="32" r="0.9" fill="#8C5742"/>
+                    <!-- texture -->
+                    <path d="M20 36 H 44 M 20 42 H 44" stroke="#B47D6C" stroke-width="0.4" opacity="0.5"/>
+                  </svg>
+                </div>
+                <div class="meta">
+                  <span class="name">Ull-pyjamas</span>
+                  <span class="sub">Søvn · 0–24 mnd</span>
+                  <div class="row">
+                    <span class="tag"><span class="dot"></span>Merinoull</span>
+                  </div>
+                </div>
+              </button>
+            </li>
+
+            <!-- Card 5: Ullsokker -->
+            <li>
+              <button type="button" class="card plaggbib-focus" aria-label="Ullsokker, ull, innerlag">
+                <div class="hero olive">
+                  <span class="badge material">Ull</span>
+                  <button type="button" class="fav" aria-label="Legg til favoritter" onclick="event.stopPropagation();">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9C.7 8.7 2.5 5 6 5c2 0 3.5 1.2 4.5 2.5 1-1.3 2.5-2.5 4.5-2.5 3.5 0 5.3 3.7 3.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                  </button>
+                  <svg class="garment" viewBox="0 0 64 70" fill="none" aria-hidden="true">
+                    <!-- two socks crossed -->
+                    <path d="M20 8 L 30 8 L 32 36 L 42 40 L 44 50 L 28 50 L 24 36 Z" fill="#A8A972" transform="rotate(-8 32 30)"/>
+                    <path d="M34 14 L 44 14 L 46 42 L 56 46 L 58 56 L 42 56 L 38 42 Z" fill="#8E8E58" transform="rotate(10 44 36)"/>
+                    <!-- cuff lines -->
+                    <path d="M18 12 L 32 12" stroke="#5D5C30" stroke-width="0.4" transform="rotate(-8 32 30)"/>
+                    <path d="M32 18 L 46 18" stroke="#5D5C30" stroke-width="0.4" transform="rotate(10 44 36)"/>
+                  </svg>
+                </div>
+                <div class="meta">
+                  <span class="name">Ullsokker</span>
+                  <span class="sub">Innerlag · 0–9 mnd</span>
+                  <div class="row">
+                    <span class="tag"><span class="dot"></span>Merinoull</span>
+                  </div>
+                </div>
+              </button>
+            </li>
+
+            <!-- Card 6: Bomulls-body -->
+            <li>
+              <button type="button" class="card plaggbib-focus" aria-label="Langermet body, bomull, innerlag">
+                <div class="hero dusty">
+                  <span class="badge material">Bomull</span>
+                  <button type="button" class="fav" aria-label="Legg til favoritter" onclick="event.stopPropagation();">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9C.7 8.7 2.5 5 6 5c2 0 3.5 1.2 4.5 2.5 1-1.3 2.5-2.5 4.5-2.5 3.5 0 5.3 3.7 3.5 7-2.5 4.5-9.5 9-9.5 9z"/></svg>
+                  </button>
+                  <svg class="garment" viewBox="0 0 64 78" fill="none" aria-hidden="true">
+                    <path d="M16 14 C 16 9, 21 7, 32 7 C 43 7, 48 9, 48 14 L 58 24 L 54 32 L 47 28 L 47 56 C 47 60, 45 62, 41 62 L 23 62 C 19 62, 17 60, 17 56 L 17 28 L 10 32 L 6 24 Z" fill="#F4ECE0"/>
+                    <path d="M21 62 L 20 74 L 27 74 L 28 62 Z" fill="#F4ECE0"/>
+                    <path d="M36 62 L 37 74 L 44 74 L 43 62 Z" fill="#F4ECE0"/>
+                    <!-- cute pattern dots -->
+                    <circle cx="26" cy="36" r="0.9" fill="#C9C2B4"/>
+                    <circle cx="32" cy="42" r="0.9" fill="#C9C2B4"/>
+                    <circle cx="38" cy="36" r="0.9" fill="#C9C2B4"/>
+                    <circle cx="32" cy="50" r="0.9" fill="#C9C2B4"/>
+                  </svg>
+                </div>
+                <div class="meta">
+                  <span class="name">Langermet body</span>
+                  <span class="sub">Innerlag · 0–24 mnd</span>
+                  <div class="row">
+                    <span class="tag cotton"><span class="dot"></span>Bomull</span>
+                  </div>
+                </div>
+              </button>
+            </li>
+
+          </ul>
+
+          <!-- bottom safe-area spacer -->
+          <div style="height: 8px;"></div>
+
+        </div>
+
+      </main>
+
+      <div class="home-indicator" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <footer class="page-meta" style="max-width: 393px;">
+    <p style="margin:0; font-size:12px; color:#6b6259;">
+      <strong style="color:#2b2622;">Mock B</strong> — Visuell &amp; romslig. Større bilder, serif-tittel, spotlight-card, chunky chips, generøs spacing.
+      Sammenlign med Mock A som er kompakt og funksjonell.
+    </p>
+  </footer>
+
+  <script>
+    // Filter chip toggling (visual only)
+    document.querySelectorAll('.chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
+        chip.setAttribute('aria-pressed', 'true');
+      });
+    });
+
+    // Favorite toggling
+    document.querySelectorAll('.fav').forEach((fav) => {
+      fav.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fav.classList.toggle('active');
+        const isActive = fav.classList.contains('active');
+        fav.setAttribute('aria-label', isActive ? 'Fjern fra favoritter' : 'Legg til favoritter');
+        const svg = fav.querySelector('svg');
+        if (svg) {
+          if (isActive) {
+            svg.setAttribute('fill', 'currentColor');
+            svg.removeAttribute('stroke');
+            svg.removeAttribute('stroke-width');
+          } else {
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('stroke', 'currentColor');
+            svg.setAttribute('stroke-width', '2');
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

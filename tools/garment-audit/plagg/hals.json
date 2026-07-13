@@ -1,0 +1,59 @@
+{
+  "claude": {
+    "id": "hals",
+    "dbString": "hals",
+    "kategori": "ekstra-hals",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Plagget har komplett info-oppføring i garment-info.ts (linje 191-194): what = 'Halsvarmer / buff som dekker nakke og munn ved behov.' og when = 'Vind og kulde — eller når jakkekanten alene ikke er nok.'. Det finnes en dedikert whyForGarment-gren (linje 434-436, id === 'hals'), IKKE fallback — bra. Tonen matcher søsken i kategorien (eneste søsken i ekstra-hals er 'balaklava', som ligger i hodeplagg-blokken). Liten svakhet: when-teksten er mindre temperatur-presis enn søsken-plagg (votter/lue oppgir konkrete °C-bånd; hals oppgir kun 'Vind og kulde'). Siden seleksjonen faktisk er sterkt temp-/vind-betinget (frost-bånd + vind ≥5/≥8 m/s) burde when speile dette mer eksplisitt. Ingen hoy-severity her — oppføringen finnes og er komplett."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\hals.png (også speilet i dist/). db-strengen 'hals' er mappet til id 'hals' i garment-illustrations.ts linje 69 ('hals': 'hals') — 1:1, plausibelt og konsistent med øvrige mappinger. Filnavn-konvensjon (kebab av id) er fulgt. Selve visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 20,
+      "trace": "BASETABLE (tables.ts): 'hals' ligger DIREKTE i 'ekstra'-kategorien for følgende aktivitet × temp-bånd: vogn=frost (linje 58, feels -7..0); baeresele=frost+streng_frost+ekstrem (linje 109,115,121); utelek=frost+streng_frost+ekstrem (linje 218,224,230). IKKE i 'kald'-båndet (0..5) for noen aktivitet, og ALDRI i soevn (soevn har ingen hals i noe bånd). bandForTemp: frost=-7..0, streng_frost=-15..-7, ekstrem=<-15. MODIFIERS (modifiers.ts): (a) linje 168-176: ved windMs ≥5 OG feelsLikeC <5 → addItem 'hals' (alle ute-aktiviteter). (b) linje 178-180: ved windMs ≥8 → addItem 'hals' UAVHENGIG av temperatur og aktivitet. VIKTIG: soevn-grenen returnerer tidlig (linje 137-139) FØR vind-modifikatorene, så hals kan ALDRI legges til under søvn — ingen SIDS/strangulerings-sti i seng. Pediatrisk vurdering mot 11 kilder: bruk av halsvarmer i frost/vind ute er forsvarlig (kilder bekrefter lag-på-lag + head/neck heat-loss, f.eks. merino-kids, slumbersac, capital-area-peds). Kildene dekker IKKE eksplisitt kvelnings-/strangulerings-risiko ved løs buff rundt nakke i bæresele i mildt vær — se funn. Ingen frost-/SIDS-fare i seleksjonen som sådan; modifier (b) i varmt vær er en overoppheting-/komfort-flagg, ikke akutt fare.",
+      "kilder": [
+        "https://www.healthychildren.org/English/safety-prevention/at-home/Pages/Strangulation-Prevention.aspx",
+        "https://www.rospa.com/home-safety/advice/product/scarves-and-cords"
+      ],
+      "kommentar": "Tracen er presis og fullstendig. Seleksjons-stedene er pediatrisk forsvarlige i frost/streng frost/ekstrem. To web-søk gjort for å dekke kvelnings-spørsmål kildene mangler (løs buff/halsplagg rundt babys nakke) — generelle barnesikkerhets-kilder fraråder løse halsplagg/snorer nær luftvei på små barn. Hovedproblemet er ikke et farlig kuldevalg, men modifier (b) som tilbyr hals i varmt vær (se tekst↔logikk)."
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "when ('Vind og kulde — eller når jakkekanten alene ikke er nok.') og whyForGarment ('Halsvarmer dekker området der jakkekanten slipper kald luft inn. Spesielt viktig ved [N m/s vind / kald luft].') stemmer godt med MESTEPARTEN av tracen: frost-bånd-seleksjon (kulde) og vind ≥5 m/s med feels <5 (vind+kulde). DRIFT: modifiers.ts linje 178-180 legger til 'hals' ved windMs ≥8 UAVHENGIG av temperatur. Det betyr at ved feels 20 °C (varm/tropisk) + 8 m/s vind får barnet anbefalt en halsvarmer som dekker 'nakke og munn' — her er det INGEN kulde, så when-teksten ('Vind og kulde') villeder lett: plagget tilbys på rent vind-grunnlag i varmt vær. whyForGarment redder seg delvis ('Spesielt viktig ved N m/s vind') men premisset 'jakkekanten slipper kald luft inn' gir ikke mening ved 20 °C. Dette er moderat drift (ikke kuldefarlig, men feilrettet påkledning + komfort/overoppheting-risiko i bæresele), derav medium-funn snarere enn hoy. Anbefaling: enten temp-tak på windMs≥8-grenen, eller juster when til å nevne at sterk vind alene kan utløse plagget."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "hals har ingen oppføring i alternatives.ts. Et reelt alternativ kunne vært ull-buff ↔ fleece-buff (samme akse som de eksisterende ull↔fleece-parene for mellomlag/jakke/bukse), siden brand-DNA er 'ull-først' og fleece er et legitimt rimeligere/raskt-tørkende alternativ. Det er derfor en liten konsistens-mangel at hals ikke har et ull→fleece-alternativ slik mellomlag-familien har. Likevel er hals et lite ekstra-plagg med marginal beslutnings-verdi, så fraværet er ikke kritisk — derfor høy delscore men ikke full. Ingen feil-aktig alternativ er listet (det er bare ikke listet)."
+    },
+    "total": 82,
+    "verdikt": "GODKJENT MED MERKNADER — Plagget 'hals' er strukturelt komplett (what/when + dedikert whyForGarment), PNG finnes og er korrekt mappet, og seleksjonen er pediatrisk forsvarlig i frost/vind ute (aldri i søvn). Hovedfunn: (1) medium tekst↔logikk-drift — windMs≥8 legger til hals uavhengig av temperatur, så when ('Vind og kulde') villeder ved varmt+vindfullt vær; (2) medium sikkerhets-/dekningsgap — kildene dekker ikke kvelnings-/strangulerings-risiko ved løs buff rundt babys nakke i bæresele; (3) lav konsistens-mangel — mangler ull→fleece-alternativ som søsken-plaggene har. Ingen kritiske eller hoy-severity-funn.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "kilde": "tables.ts / modifiers.ts trace + garment-info.ts linje 193",
+        "beskrivelse": "modifiers.ts linje 178-180 legger til 'hals' ved windMs ≥8 m/s UAVHENGIG av temperatur og aktivitet. Ved feels-like 20 °C (varm/tropisk-bånd) + 8 m/s vind får barnet dermed anbefalt en halsvarmer som dekker 'nakke og munn', mens when-teksten sier 'Vind og kulde'. Det er ingen kulde i denne situasjonen — teksten villeder, og i bæresele kan en buff over munn/nakke i mildt vær gi unødig varme/overoppheting.",
+        "forslag": "Enten: legg et temp-tak på windMs≥8-grenen (f.eks. kun feels < ~10 °C), slik at hals ikke tilbys i varmt vær på rent vind-grunnlag. Eller: oppdater when-teksten i garment-info.ts til eksplisitt å nevne at sterk vind alene kan utløse plagget. RØR IKKE terskel-tallene uten helsesøster-validering — dette er en tekst-/regel-konsistens-merknad, ikke en medisinsk endring."
+      },
+      {
+        "severity": "medium",
+        "mal": 3,
+        "kilde": "safety.ts HB-10 (STRANGULATION_RE) + manglende kilde-dekning i sources.ts",
+        "beskrivelse": "HB-10 (strangulerings-vern) trigger kun ved activity==='soevn' og matcher regex /(snor|drawstring|løs hals|løs buff|hette med snor)/i — det rene item-navnet 'hals' matcher IKKE 'løs hals'. Hals legges aldri til i søvn (soevn returnerer før modifierene), så det er ikke en aktiv seng-fare. MEN ingen av de 11 kildene i sources.ts dekker eksplisitt kvelnings-/strangulerings-hensyn ved en løs buff/halsvarmer rundt nakke/munn på spedbarn i bæresele (der ansikt/luftvei er nær stoffet).",
+        "forslag": "Legg til en barnesikkerhets-kilde om løse halsplagg/snorer nær babys luftvei (f.eks. AAP strangulation-prevention eller RoSPA scarves-guidance) og knytt den til hals-oppføringen, slik at whyForGarment kan minne om at buffen skal sitte løst og ikke dekke munn på den minste i bæresele. Ingen tall-endring."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "kilde": "alternatives.ts (ITEM_ALTERNATIVES)",
+        "beskrivelse": "hals har ingen oppføring i alternatives.ts, mens søsken på mellomlag-aksen (tynn ull-mellomlag, ull-mellomlag, ull-jakke, ull-bukse) alle har et ull→fleece-alternativ. En ull-buff har et naturlig fleece-buff-alternativ langs samme akse.",
+        "forslag": "Vurder å legge til en ITEM_ALTERNATIVES-oppføring for 'hals' med alternativet 'fleece-buff' (whenKey/whyPrimaryKey i samme i18n-mønster), for konsistens med ull-først-paradigmet. Lav prioritet — hals er et lite ekstra-plagg med marginal beslutnings-verdi."
+      }
+    ]
+  },
+  "fable": null
+}

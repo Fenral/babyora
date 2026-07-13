@@ -1,0 +1,105 @@
+{
+  "claude": {
+    "id": "ull-jakke",
+    "dbString": "ull-jakke",
+    "kategori": "mellomlag",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Har komplett what+when i garment-info.ts (linje 91-94) og en dedikert whyForGarment-gren (linje 366-368, ikke fallback). Tone/lengde matcher søsken-plagg i mellomlag (tynn-bukse, ull-mellomlag, ull-bukse). To svakheter: (1) whyForGarment-grenen er generisk og refererer ikke feels-temp slik nesten alle søsken gjør (f.eks. ull-bukse: 'ekstra ved feels °C', ull-mellomlag-tykt: 'ved feels °C'); ull-jakke sier kun 'regulere temperatur underveis'. (2) what-teksten nevner glidelås som hovedpoeng, men ingen seleksjons-kontekst sier at glidelås faktisk utnyttes. Strukturelt solid, derav 17."
+    },
+    "utseende": {
+      "score": 18,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/ull-jakke.png. Mappingen i garment-illustrations.ts er korrekt og 1:1: db-streng 'ull-jakke' (linje 36) -> id 'ull-jakke', og garmentPng bygger riktig sti. Filnavn = id = dbString, ingen kollisjon eller fallback-gjenbruk. Mapping-plausibilitet er høy. Selve visuell dom gjøres senere av Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 21,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig. ull-jakke brukes konsekvent som ekstra isolasjons-mellomlag i kalde/frost-bånd ALLTID under et skall (vinterkjøredress / vinterdress) der det fungerer som luft-fangende isolasjon — i tråd med lag-på-lag-prinsippet og merino-kids/AAP-kildene om ull mot fukt. CK-6 og SB-2 sikrer at lag-stabling ikke overoppheter. Eneste 'alene'-eksponering er utelek/kjolig (5-9 °C feels), der vindtett skall legges til ved vind>=5+feels<10. Ingen overoppheting-/SIDS-/kvelnings-/frost-fare introdusert av dette plagget spesifikt. Trekk for at 'alene'-bruken teksten lover ikke faktisk forekommer i kald nok kontekst (se tekstLogikk). Kildene dekker spørsmålet uten behov for web-søk.",
+      "trace": "baseTable-treff for 'ull-jakke': (A) vogn.frost [-7..0 feels] mellomlag ['ull-mellomlag','ull-jakke']; (B) vogn.streng_frost [-15..-7] mellomlag ['ull-jakke','ull-bukse']; (C) vogn.ekstrem [<-15] samme som streng_frost; (D) baeresele.streng_frost [-15..-7] mellomlag ['ull-mellomlag','ull-jakke']; (E) baeresele.ekstrem [<-15] mellomlag ['ull-jakke']; (F) utelek.kjolig [5..10 feels] mellomlag ['ull-jakke','ull-bukse']. Båndgrenser fra bandForTemp() i tables.ts. Modifier-effekter: ingen modifier i modifiers.ts ADDER eller FJERNER ull-jakke direkte. Indirekte: SB-2 (max-lag) fjerner kun dunteppe/varmepose-lett/tynt-teppe, ikke ull-jakke; SB-4 (baeresele+innerJakke) bytter 'tykt/tykke/isolert' i mellomlag til 'tynn' men ull-jakke har ikke disse ordene -> uberørt; CK-9/SB-4 berører barnejakke, ikke ull-jakke. baeresele.streng_frost+ekstrem: hvis innerJakke=true og feels<10 tømmes yttertøy-laget (modifiers linje 305-307) slik at ull-jakke da effektivt blir ytterste lag under foreldrejakka — fortsatt forsvarlig (forelder varmer). Konklusjon: aktivt valgt i kjolig(utelek), frost/streng_frost/ekstrem(vogn), streng_frost/ekstrem(baeresele).",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "Konkret drift mellom when-tekst og faktisk seleksjon. when (garment-info.ts:93): 'Som mellomlag under skall eller alene på milde høstdager.' Trace viser at ull-jakke ALDRI velges i mild-båndet (10-15 °C) — det warmeste treffet er utelek/kjolig (5-9 °C feels), og DER er det aldri alene (kombineres med ull-bukse, og vindtett skall legges på ved vind). Alle øvrige treff er frost og kaldere (vogn/baeresele), alltid under vinterkjøredress/-dress. 'Alene på milde høstdager' kan villede foreldre til underkledning fordi engine reelt kun bruker plagget i kald/frost-kontekst. whyForGarment-grenen ('regulere temperatur underveis i {act}') er ikke direkte feil — glidelås-regulering gjelder — men den er kontekstløs og bekrefter ikke at dette er et kuldeplagg. Stemmer derfor delvis, men 'alene på milde høstdager'-løftet driver mot for lite tøy = severity hoy."
+    },
+    "alternativer": {
+      "score": 10,
+      "kommentar": "Eksisterende alternativ er korrekt og komplett: ITEM_ALTERNATIVES har 'ull-jakke' -> 'fleecejakke' (alternatives.ts:65-74), riktig ull<->fleece-trinn i tråd med brand-DNA (ull først, fleece som valid alternativ). itemName matcher db-strengen 'ull-jakke' eksakt (case-sensitive match-krav oppfylt). Ingen manglende tykkelse-trinn er nødvendig her — ull-mellomlag-tykt finnes som separat plagg for ekstra varme. Fullt dekket."
+    },
+    "total": 84,
+    "verdikt": "Solid mellomlags-plagg med korrekt PNG-mapping, forsvarlig seleksjon (alltid lag-på-lag i frost/kjølig, ingen overoppheting/SIDS-fare introdusert) og riktig fleece-alternativ. Hovedfeilen er tekst-drift: when-teksten lover bruk 'alene på milde høstdager' som engine aldri faktisk gjør (warmeste treff er kjolig 5-9 °C, alltid sammen med ull-bukse/skall) — dette kan villede mot underkledning og bør rettes. Sekundært: whyForGarment-grenen er svakere/mer kontekstløs enn søsken-plagg. Ingen kritiske helse-funn.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "Drift mellom when-tekst og seleksjon: garment-info.ts:93 sier ull-jakke brukes 'alene på milde høstdager', men trace viser at plagget aldri velges i mild-båndet (10-15 °C). Warmeste faktiske treff er utelek/kjolig (5-9 °C feels), og der aldri alene (alltid med ull-bukse, + vindtett skall ved vind). Alle andre treff er frost og kaldere under skall. 'Alene på milde høstdager' kan føre til underkledning.",
+        "forslag": "Endre when til å speile faktisk bruk, f.eks.: 'Som ekstra isolasjons-mellomlag under skall i kjølig til streng frost — sjelden alene.' (Tall/terskler skal ikke endres, kun teksten.)",
+        "kilde": "aap-healthychildren"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "whyForGarment-grenen for ull-jakke (garment-info.ts:366-368) er generisk og refererer ikke feels-temperatur, i motsetning til nesten alle søsken-mellomlag (ull-bukse, ull-mellomlag-tykt, tynn-ull-mellomlag bruker alle {feels}). Den forklarer ikke at dette er et kulde-/lag-på-lag-plagg.",
+        "forslag": "Legg til feels-kontekst og kulde-rolle i grenen, f.eks.: 'Ull-jakke gir et ekstra isolasjons-lag ved {feels} °C; glidelåsen gjør det enkelt å lufte underveis i {act}.' Ingen logikk-/terskel-endring.",
+        "kilde": "merino-kids"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 17,
+      "kommentar": "Plagget er ryddig definert: id, kategori (mellomlag), hva/når-tekst og en sporbar seleksjons-trace med klare bånd og ko-seleksjonsregler (alltid ull-bukse i kjolig, alltid under skall ved frost+). Trekk: 'når'-teksten er ikke avledet fra samme kilde som motoren — det at de kan drifte fra hverandre (som de faktisk har gjort, jf. mål 4) tyder på at tekst og regler vedlikeholdes separat uten valideringsledd."
+    },
+    "utseende": {
+      "score": 16,
+      "kommentar": "Bildet viser riktig plaggtype: jakke i barnestørrelse med gjennomgående glidelås, høy krage, raglanermer og strikk i mansjetter — konsistent med 'ull-jakke med glidelås'. Rendering er ren, uten synlige AI-artefakter (symmetrisk, korrekte sømmer, ingen deformerte detaljer). Trekk: teksturen leser mer som fleece/softshell enn ull — overflaten er glatt og uten ullpreg (ingen synlig strikket/børstet struktur), noe som kan forvirre foreldre som leter etter ullplagget i skuffen. Glidelåsen er antydet kun som søm, ingen synlig 'puller', så nøkkelegenskapen i hva-teksten er svakt kommunisert visuelt."
+    },
+    "seleksjon": {
+      "score": 22,
+      "kommentar": "Pediatrisk forsvarlig: ull som mellomlag ved 5-9 °C utelek med ull-bukse er i tråd med lag-på-lag-prinsippet for 0-3 år; vogn og bæresele fra frost og nedover er fornuftig gitt at stillesittende/båret barn trenger mer isolasjon. At plagget aldri velges alene er konservativt og trygt. Mindre svakhet: i vogn-båndet frost→ekstrem bør det verifiseres at trace alltid kombinerer med vognpose/skall (oppgitt 'under skall', ok). At mild-båndet (10-15 °C) er helt utelukket er diskutabelt — en ull-jakke alene ved 10-12 °C rolig aktivitet er faglig akseptabelt, så utelukkelsen er ikke farlig, men den gjør at hull mellom tekst og motor oppstår."
+    },
+    "tekstLogikk": {
+      "score": 14,
+      "kommentar": "Klar drift: 'alene på milde høstdager' beskriver et scenario motoren aldri produserer (aldri 10-15 °C, aldri alene). Jeg utfordrer Claudes retning på funnet: risikoen er ikke primært underkledning via appens anbefalinger (motoren foreslår jo aldri dette), men at foreldre stoler på fritekst utenfor appens forslag og kler barnet i kun ull-jakke ved 10 °C — for et 8 mnd gammelt barn i vogn er det reelt for kaldt. Driften er altså et tillits-/sikkerhetsproblem i teksten, ikke i motoren. Enten må mild.alene legges til i motoren (produktbeslutning) eller teksten endres til f.eks. 'Som mellomlag under skall, eller ytterst sammen med ull-bukse på kjølige dager (5-9 °C)'. 'Hva'-teksten (glidelås = temperaturregulering) er derimot konsistent med både bilde og bruk."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Trace viser ingen modifier som adder/fjerner plagget, og ingen eksplisitte alternativer (f.eks. fleece-jakke ved ull-allergi, tykkere ullgenser uten glidelås for vogn). For en app i 0-3-segmentet bør ull-intoleranse/eksem-alternativ finnes som fallback i samme bånd. Whyforgarment-svakheten Claude fant (mål 1-tilgrensende) hører delvis hjemme her også: uten {feels} og lag-kontekst kan ikke brukeren forstå hvorfor dette ble valgt fremfor et alternativ."
+    },
+    "total": 76,
+    "verdikt": "Solid og pediatrisk trygg seleksjonslogikk med rent illustrasjonsbilde, men 'når'-teksten lover et bruksscenario motoren aldri leverer — det er en tillitsbrist som må fikses før plagget kan kalles ferdig. Tekstur i bildet underkommuniserer at det er ull.",
+    "uenig_med_claude": "Delvis. Enig i at mål 4-driften er hovedfunnet, men 84/100 er for høyt gitt et hoy-funn på et 25-poengs mål — det impliserer nesten fullt hus på alt annet, hvilket ikke stemmer (generisk whyForGarment, manglende alternativer, fleece-aktig tekstur i bildet som Claude ikke flagget). Jeg omkarakteriserer også underkledningsrisikoen: den oppstår via fritekst-tillit, ikke via motorens forslag, og fiksen bør primært være tekst-side med mindre produkt bevisst vil åpne mild.alene.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "'Når'-tekst sier 'alene på milde høstdager', men motoren velger plagget aldri i 10-15 °C og aldri alene. Foreldre som følger friteksten kan underkle barn (0-3 år) ved ~10 °C, særlig i vogn/bæresele der barnet er passivt.",
+        "forslag": "Endre 'når' til: 'Som mellomlag under skall — eller ytterst sammen med ull-bukse på kjølige dager (5-9 °C).' Alternativt: produktbeslutning om å legge til mild.alene i motoren, og da kun for aktiv utelek, ikke vogn."
+      },
+      {
+        "severity": "medium",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen leser som fleece/softshell, ikke ull — glatt overflate uten strikket/børstet tekstur. Kan gi feil plagg-gjenkjenning hos foreldre. Glidelås mangler synlig puller.",
+        "forslag": "Regenerer/juster illustrasjon med subtil ullstruktur (merinopreg) og tydelig glidelås-puller, i samme stilramme som søsken-plaggene."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Bekrefter Claudes funn: whyForGarment er generisk og mangler {feels}-temperatur og kulde-/lag-kontekst som søsken-mellomlag har — inkonsistent struktur på tvers av kategorien.",
+        "forslag": "Harmoniser whyForGarment-malen med øvrige mellomlag: inkluder {feels}, aktivt bånd og lag-rolle ('under skall' / 'med ull-bukse')."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen alternativer eller modifier-stier (f.eks. ved ull-intoleranse/eksem) i samme temperaturbånd.",
+        "forslag": "Legg til fallback-plagg (fleece-jakke) med modifier 'ull_intoleranse' i kjolig- og frost-båndene."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Tekst ('når') og motor-regler vedlikeholdes tilsynelatende uavhengig — driften i mål 4 er et symptom på manglende valideringsledd i strukturen.",
+        "forslag": "Innfør automatisk konsistenssjekk som flagger 'når'-tekster som refererer bånd/moduser plagget aldri velges i."
+      }
+    ]
+  }
+}

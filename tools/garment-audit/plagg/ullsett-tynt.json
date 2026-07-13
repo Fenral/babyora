@@ -1,0 +1,127 @@
+{
+  "claude": {
+    "id": "ullsett-tynt",
+    "dbString": "ullsett tynt",
+    "kategori": "innerst",
+    "struktur": {
+      "score": 19,
+      "kommentar": "Komplett info-oppforing finnes (garment-info.ts linje 41-44): both `what` og `when`. Folger samme to-setnings-monster, tone og lengde som soesken i innerst-kategorien (ullsett-tykt, kortermet-ullbody, langermet-ullbody-tynn). Dedikert whyForGarment-gren finnes (linje 340-342), gruppert med ullsett-tykt/to-ullsett — IKKE fallback. Trekker 1 poeng fordi `when`-teksten driver mot faktisk seleksjon (se mal 4), men strukturelt er oppforingen pa plass."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet pa disk: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\ullsett-tynt.png. Mapping er korrekt og 1:1: MAP['ullsett tynt'] = 'ullsett-tynt' (garment-illustrations.ts linje 20), som matcher db-strengen brukt i tables.ts og garmentPng()-stien. Ingen kollisjon med soesken (ullsett-tykt har egen mapping linje 21). Navn/mapping plausibelt og entydig. Visuell dom utsatt til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "Tynt merinoull-sett som base-lag i 0-16 grader er pediatrisk forsvarlig: ull regulerer fukt/varme (merino-kids, AAP one-layer-more-prinsipp). I baeresele.kald (0-4.9) sitter det under lett kjoredress + foreldrekropp; overoppheting handteres av CK-9/SB-4 (innerJakke fjerner yttertoy). Ingen overoppheting/SIDS/frost-fare introduseres spesifikt av dette plagget — CK-6 rorer kun `to ullsett`, ikke enkelt-sett. Sources.ts dekker ull-base-lagdeling tilstrekkelig; ingen web-soek nodvendig. Trekker 2 poeng fordi seleksjons-envelopen (0-16) er bredere enn noe enkelt kildebelegg eksplisitt definerer for *tynn* vs *tykk* ull-tykkelse — overgangen tynt->tykt skjer ved bandgrensen kald (baeresele bruker tynt i kald 0-4.9, men vogn/utelek bruker tykt allerede i kald), en liten inkonsistens mellom aktiviteter.",
+      "kilder": [
+        "https://merinokids.co.uk/blogs/merino/the-importance-of-temperature-regulation-in-babies",
+        "https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Dressing-Your-Newborn.aspx"
+      ],
+      "trace": "baseTable-treff for 'ullsett tynt': vogn.mild [feels 10-15.9], vogn.kjolig [5-9.9], baeresele.kjolig [5-9.9], baeresele.kald [0-4.9], utelek.mild [10-15.9], utelek.kjolig [5-9.9]. Bredeste envelope = 0 grader (baeresele.kald nedre) til ~15.9 grader (mild ovre). Modifiers: ingen add/remove av selve 'ullsett tynt'; ved feels<=5 legges 'ullsokker' til innerst (modifiers linje 195); conflicts/softBlocks rorer det ikke (CK-6 swapper kun 'to ullsett'->'ullsett tykt'). Inkonsistens mellom aktiviteter: i kald-bandet (0-4.9) velger vogn og utelek 'ullsett tykt', mens baeresele velger 'ullsett tynt' — bevisst (foreldrekropp varmer i sele), men verdt a merke."
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "DRIFT i `when`-teksten. `when` sier 'Ute fra ca 8-14 grader, eller som lag under yttertoy i kjolige forhold.' Faktisk seleksjon (trace): plagget velges helt ned til 0 grader (baeresele.kald) og opp til ~15.9 grader (mild-bandets topp). Nedre drift: 0-7.9 grader ligger under det oppgitte '8-14' — andre setnings-ledd ('som lag under yttertoy i kjolige forhold') redder kjolig-bandet (5-9.9, under yttertoy), men baeresele.kald (0-4.9) er klart kaldere enn 'kjolig' og daarlig dekket av teksten. Ovre drift: 15-15.9 grader er over det oppgitte 14. whyForGarment-grenen (linje 341) er temperatur-NOYTRAL ('ull-mot-huden holder varmen jevn') og driver derfor IKKE — den passer hele 0-16-spennet. Hovedavviket er saaledes `when`-tallene 8-14 vs faktisk 0-16. Villeder pakledning i nedre/ovre kant, men ikke safety-kritisk (ingen frost/overoppheting). Severity hoy per rubrikk."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Mangler alternativ-oppforing. alternatives.ts har INGEN entry for 'ullsett tynt'. Det finnes et reelt, naturlig tykkelse-trinn-alternativ: 'ullsett tykt' (ull->ull, ett trinn varmere) — fullstendig analogt med eksisterende monstre i fila: 'lue m/ ull'->'lue tynn', 'vintersko isolerte'->'vintersko', 'votter tykke'->'votter dun', 'sovepose 1.0'->'sovepose 0.5'. I overgangs-temperaturer (5-10 grader) der foreldre er usikre paa tynt vs tykt, ville et diskret (!)-alternativ vaert nyttig. Ull-forst-DNA-et bevares (begge er ull). Trekker 3 poeng for denne reelle, lett-fikbare luken."
+    },
+    "total": 87,
+    "verdikt": "Solid plagg-oppforing med korrekt mapping, eksisterende PNG, dedikert why-gren og pediatrisk forsvarlig seleksjon. To konkrete forbedringspunkter: (1) `when`-teksten 'ca 8-14 grader' driver mot faktisk seleksjons-envelope (0-16 grader paa tvers av aktiviteter) — bor justeres til a reflektere det reelle spennet inkl. baeresele ned til 0 grader; (2) mangler et naturlig tykkelse-trinn-alternativ ('ullsett tykt') i alternatives.ts. Ingen safety-kritiske funn. Total 87/100.\"",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "kilde": "garment-info.ts linje 43 vs tables.ts (baeresele.kald linje 100, mild/kjolig-band)",
+        "beskrivelse": "`when` sier 'Ute fra ca 8-14 grader' men baseTable velger plagget fra 0 grader (baeresele.kald) til ~15.9 grader (mild-bandets topp). Nedre kant (0-7.9) og ovre kant (15-15.9) er utenfor oppgitt tekst. Andre setnings-ledd 'som lag under yttertoy i kjolige forhold' redder kjolig-bandet, men ikke baeresele.kald (0-4.9 grader).",
+        "forslag": "Juster `when` til a speile reelt spenn, f.eks. 'Ute fra ca 0-16 grader avhengig av aktivitet — alene i mildt vaer, eller som lag under yttertoy i kjolig/kald baeresele.' Ror ALDRI selve terskel-tallene i tables.ts; kun tekst-justering."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "kilde": "alternatives.ts (ingen entry for 'ullsett tynt')",
+        "beskrivelse": "Mangler et tykkelse-trinn-alternativ. 'ullsett tynt' har intet alternativ registrert, til tross for at 'ullsett tykt' er et naturlig ett-trinn-varmere ull->ull-alternativ, analogt med eksisterende monstre (lue m/ull->lue tynn, vintersko isolerte->vintersko, sovepose 1.0->0.5).",
+        "forslag": "Legg til ITEM_ALTERNATIVES-entry for 'ullsett tynt' med alternativ 'ullsett tykt' (whenKey/whyPrimaryKey paa formen alternatives.items.ullsettTykt.*), saa foreldre i overgangs-temp 5-10 grader far et diskret (!)-valg. Bevarer ull-forst-DNA."
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "kilde": "tables.ts: vogn.kald/utelek.kald bruker 'ullsett tykt', baeresele.kald bruker 'ullsett tynt'",
+        "beskrivelse": "Aktivitets-inkonsistens ved kald-bandet (0-4.9 grader): baeresele velger TYNT ullsett mens vogn og utelek velger TYKT. Trolig bevisst (foreldrekropp varmer i baeresele), men ikke dokumentert som rationale i koden.",
+        "forslag": "Vurder a legge en kommentar i tables.ts ved baeresele.kald som forklarer at tynt sett er bevisst der pga. foreldrekropp-varme (jf. modifiers SB-4/CK-9). Ingen tall-endring noedvendig."
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 17,
+      "kommentar": "Id, kategori og to-delt beskrivelse henger sammen, og hva-teksten begrunner valget mot body. Men kategorien «innerst» er i konflikt med faktisk bruk: motoren velger settet som ytterste lag ved utelek/vogn opp til ~16 °C. Dobbeltrollen (selvstendig plagg OG underlag) bør være eksplisitt i strukturen, ikke bare implisitt i when-teksten."
+    },
+    "utseende": {
+      "score": 13,
+      "kommentar": "Riktig plaggtype: to-delt sett med raglan-overdel, skuldertrykknapper (god babydetalj) og leggings med ribb. Men teksturen leser som tykk, polstret fleece/velur — den kommuniserer det motsatte av «tynn merinoull». I tillegg en tydelig kompositt-artefakt: høyre buksebein stikker opp bak ermet og ser ut som et tredje lag/feilmontert plagg, og bakgrunnen er hard svart i stedet for transparent/nøytral."
+    },
+    "seleksjon": {
+      "score": 21,
+      "kommentar": "Pediatrisk forsvarlig: tynn merinoull som basislag fra 0 °C er standard nordisk praksis FORUTSATT yttertøy over, og ullsokk-tillegget ved feels<=5 er fornuftig. At bæresele velger tynt i kald-båndet mens vogn/utelek velger tykt er faktisk riktig fysiologi (overopphetingsrisiko mot foreldrekropp) — her er jeg mildere enn Claudes framstilling: dette er en dokumentasjonsmangel, ikke en seleksjonsfeil. Trekk for at nedre kant hviler på en antakelse om yttertøy som ikke er garantert i trace."
+    },
+    "tekstLogikk": {
+      "score": 16,
+      "kommentar": "Bekrefter Claudes hovedfunn: when sier «8–14 °C», reell seleksjon er 0–15.9 °C. «Lag under yttertøy i kjølige forhold» redder kjolig-båndet, men baeresele.kald (0–4.9) dekkes ikke av noen lesning av teksten — der er settet verken i 8–14 eller nødvendigvis under yttertøy i tradisjonell forstand. Øvre avvik (15–15.9 vs «14») er derimot trivielt og bør ikke vektes likt; Claudes sammenslåing av øvre og nedre avvik overdriver bredden litt."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Enig med Claude: «ullsett tykt» mangler som ett-trinn-varmere alternativ, og asymmetrien mot lue-paret (lue m/ull→lue tynn) er reell. Tillegg: body i merinoull bør nevnes som ett-trinn-enklere alternativ nedover for de minste (0–6 mnd), siden hva-teksten selv sammenligner med body."
+    },
+    "total": 74,
+    "verdikt": "Godkjent med merknader — logikken er pediatrisk solid, men when-teksten dekker ikke kald-båndet, og illustrasjonen kommuniserer tykt der den skal kommunisere tynt.",
+    "uenig_med_claude": "Ja, på tre punkter. (1) 87/100 er for høyt; bildet alene koster mer enn Claude tok høyde for — teksturen motsier «tynn» og det er en synlig lag-artefakt. (2) Claudes mål3-funn er riktig observert men feil rammet inn: bæresele-tynt i kald-bånd er korrekt fysiologi, ikke inkonsistens — problemet er kun manglende dokumentasjon. (3) Claudes mål4-funn er gyldig, men øvre avvik (15–15.9) er kosmetisk; alvoret ligger utelukkende i 0–7.9-gapet for bæresele.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "When-tekst «8–14 °C» dekker ikke baeresele.kald (0–4.9 °C); ingen lesning av teksten forklarer hvorfor settet velges der.",
+        "forslag": "Utvid when til f.eks.: «Ute fra ca 8–14 °C, som lag under yttertøy i kjølige forhold, og i bæresele helt ned mot 0 °C (kroppsvarme fra den voksne)»."
+      },
+      {
+        "severity": "medium",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen viser tykk, polstret fleece-lignende tekstur som kommuniserer «tykt sett», ikke tynn merinoull — direkte motstrid med hva-teksten.",
+        "forslag": "Regenerer med tynnere, glattere strikket overflate, gjerne synlig fin ribb, og mindre volum i ermer/ben."
+      },
+      {
+        "severity": "medium",
+        "mal": 2,
+        "beskrivelse": "Kompositt-artefakt: høyre buksebein ligger synlig bak/oppå overdelen og leser som et tredje plagg; hard svart bakgrunn avviker trolig fra app-stilen.",
+        "forslag": "Plasser buksen helt under eller ved siden av overdelen uten overlapp; lever med transparent bakgrunn."
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "Bæresele-tynt vs vogn/utelek-tykt i kald-bånd er pediatrisk riktig (overoppheting mot foreldrekropp) men udokumentert i kilde/rationale-feltet.",
+        "forslag": "Legg inn en rationale-kommentar i motorens regel: «carrier: parent body heat → one step thinner», med kildehenvisning."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Mangler «ullsett tykt» som ett-trinn-varmere alternativ; bryter mønsteret etablert av lue-paret.",
+        "forslag": "Legg til alternativ-lenke begge veier mellom ullsett tynt ↔ ullsett tykt."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Hva-teksten sammenligner med body, men body i merinoull tilbys ikke som alternativ for de minste der to-delt sett glipper ved bleieskift/bæring.",
+        "forslag": "Legg til ull-body som ett-trinn-enklere alternativ for 0–6 mnd."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Kategori «innerst» dekker ikke plaggets faktiske rolle som ytterste lag ved 8–15.9 °C.",
+        "forslag": "Vurder dobbeltkategori eller et «rolle»-felt (innerst|selvstendig) i datamodellen."
+      }
+    ]
+  }
+}

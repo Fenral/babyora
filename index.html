@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- F60 canvas (bg-canvas-token, matcher status-bar med design-system) -->
+    <meta name="theme-color" content="#DBD8D2" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta
+      name="description"
+      content="Babyora — norsk påkledningsapp for foreldre med barn 0–3 år. Vær, aktivitet og ull-lag i ett."
+    />
+    <meta name="apple-mobile-web-app-title" content="Babyora" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- FOUC-guard: les persistert theme-mode FØR React/CSS laster og
+         sett data-theme="light|dark" på <html>. "auto" → ingen attributt,
+         media-query tar over. Wrappet i try/catch så korrupt JSON aldri
+         kræsjer initial render. Holdes synkront med theme-store.ts. -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem('babyora.theme');
+          if (!raw) return;
+          var parsed = JSON.parse(raw);
+          var mode = parsed && parsed.state && parsed.state.mode;
+          if (mode === 'light' || mode === 'dark') {
+            document.documentElement.setAttribute('data-theme', mode);
+          }
+        } catch (e) {
+          /* swallow — auto-mode er trygg default */
+        }
+      })();
+    </script>
+    <title>Babyora</title>
+    <!-- Native-feel #9 (2026-06-26): alle brand-fonter (Inter, Schibsted
+         Grotesk, DM Serif Display) blir self-hosted via @fontsource(-variable)
+         i src/main.tsx. Google Fonts <link> + Lottie CDN <script> fjernet
+         for raskere cold start + offline-feel (Capacitor). -->
+  </head>
+  <body>
+    <!-- CSS-AUDIT.A-2: byttet fra Tailwind-utility-skip-link (brukte
+         udefinert --accent → usynlig bg ved fokus) til den håndskrevne
+         .skip-link i index.css. -->
+    <a href="#main" class="skip-link">Hopp til hovedinnhold</a>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

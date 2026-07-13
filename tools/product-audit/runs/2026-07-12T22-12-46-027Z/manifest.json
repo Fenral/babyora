@@ -1,0 +1,156 @@
+{
+  "runId": "2026-07-12T22-12-46-027Z",
+  "rubricVersion": "1.0.0",
+  "baseUrl": "http://127.0.0.1:5173",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "locale": "nb-NO",
+  "createdAt": "2026-07-12T22:13:26.293Z",
+  "captures": [
+    {
+      "pageId": "onboarding",
+      "pageLabel": "Onboarding",
+      "stateId": "start",
+      "stateLabel": "Første steg",
+      "required": true,
+      "file": "screenshots/onboarding--start.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:12:49.459Z"
+    },
+    {
+      "pageId": "home",
+      "pageLabel": "Hjem",
+      "stateId": "default",
+      "stateLabel": "Standard anbefaling",
+      "required": true,
+      "file": "screenshots/home--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:12:52.236Z"
+    },
+    {
+      "pageId": "outfit",
+      "pageLabel": "Påkledning",
+      "stateId": "recommendation",
+      "stateLabel": "Antrekksdetaljer",
+      "required": true,
+      "file": "screenshots/outfit--recommendation.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:12:55.430Z"
+    },
+    {
+      "pageId": "plan",
+      "pageLabel": "Uke / Planlegg",
+      "stateId": "default",
+      "stateLabel": "Dags- og ukeplan",
+      "required": true,
+      "file": "screenshots/plan--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:12:58.427Z"
+    },
+    {
+      "pageId": "guide",
+      "pageLabel": "Guide",
+      "stateId": "hub",
+      "stateLabel": "Guideoversikt",
+      "required": true,
+      "file": "screenshots/guide--hub.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:13:01.224Z"
+    },
+    {
+      "pageId": "find-outfit",
+      "pageLabel": "Finn antrekk",
+      "stateId": "default",
+      "stateLabel": "Standard kalkulator",
+      "required": true,
+      "file": "screenshots/find-outfit--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:13:04.373Z"
+    },
+    {
+      "pageId": "clothing-library",
+      "pageLabel": "Plaggbibliotek",
+      "stateId": "overview",
+      "stateLabel": "Bibliotekoversikt",
+      "required": true,
+      "file": "screenshots/clothing-library--overview.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:13:07.626Z"
+    },
+    {
+      "pageId": "wardrobe",
+      "pageLabel": "Min garderobe",
+      "stateId": "default",
+      "stateLabel": "Garderobeoversikt",
+      "required": true,
+      "file": "screenshots/wardrobe--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:13:10.816Z"
+    },
+    {
+      "pageId": "tog",
+      "pageLabel": "TOG",
+      "stateId": "default",
+      "stateLabel": "TOG-veileder",
+      "required": true,
+      "file": "screenshots/tog--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:13:13.956Z"
+    },
+    {
+      "pageId": "warm-cold",
+      "pageLabel": "Varm eller kald",
+      "stateId": "default",
+      "stateLabel": "Nakkesjekk",
+      "required": true,
+      "file": "screenshots/warm-cold--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:13:17.078Z"
+    },
+    {
+      "pageId": "first-winter",
+      "pageLabel": "Første vinter",
+      "stateId": "overview",
+      "stateLabel": "Programoversikt",
+      "required": true,
+      "file": "screenshots/first-winter--overview.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:13:20.197Z"
+    },
+    {
+      "pageId": "settings",
+      "pageLabel": "Innstillinger",
+      "stateId": "default",
+      "stateLabel": "Innstillingsoversikt",
+      "required": true,
+      "file": "screenshots/settings--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:13:22.981Z"
+    },
+    {
+      "pageId": "paywall",
+      "pageLabel": "Betalingsvegg",
+      "stateId": "default",
+      "stateLabel": "Standard Plus-tilbud",
+      "required": true,
+      "file": "screenshots/paywall--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-07-12T22:13:26.231Z"
+    }
+  ]
+}

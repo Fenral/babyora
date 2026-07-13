@@ -1,0 +1,124 @@
+{
+  "claude": {
+    "id": "regntrekk",
+    "dbString": "regntrekk",
+    "kategori": "ekstra-vogn",
+    "struktur": {
+      "score": 18,
+      "kommentar": "garment-info.ts:243-246 har bade what ('Gjennomsiktig regntrekk over kalesjen. Hold luftigheten i tankene - aldri tett over.') og when ('Nar det regner mer enn yr i vogn.'). Dedikert whyForGarment-gren finnes (garment-info.ts:474-476), ikke fallback. Tone/lengde matcher sosken i ekstra-vogn (varmepose, dunteppe, sauekinn-i-vogn) godt - what-feltet inkluderer korrekt en sikkerhets-paaminnelse ('aldri tett over') paa linje med dunteppe ('Bruk aldri OVER kalesjen') og sauekinn ('Aldri som teppe over'). Trekk: when-teksten er kortere/vagere enn sosken-plagg som angir konkrete temp/forhold; den kunne nevnt lufting/varme-risiko slik what-feltet gjor, for konsistens med faresignalet."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes paa C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\regntrekk.png. db-strengen 'regntrekk' er korrekt mappet til id 'regntrekk' i garment-illustrations.ts:85 (1:1, ingen normaliserings-felle). Mapping og navngiving er plausibel og konsistent. Visuell dom utsatt til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 16,
+      "kommentar": "Seleksjonen er pediatrisk delvis uforsvarlig: regntrekk legges paa UTEN noen temperatur-gate eller overoppheting-vakt. Et gjennomsiktig regntrekk over kalesjen er en dokumentert varmefelle (Lullaby Trust: hindrer luftsirkulasjon, kan bidra til SIDS) - samme fysikk som teppe-dekke appen ALLEREDE blokkerer via HB-8 (safety.ts:229-248). Men PRAM_COVER_RE (safety.ts:55) matcher kun 'dunteppe|tynt teppe|teppe over kalesje|...' og IKKE 'regntrekk', saa regntrekk slipper forbi varme-vakten selv ved feels-like >=22 grader med regn (varm sommerbyge). Modifieren har heller ingen oppfordring til mesh-ventilasjon eller lufting i selve seleksjons-laget (kun en mild tekst-note i whyForGarment). Kildene i sources.ts dekker pram-overoppheting generelt (LT-PRAM via halo/Lullaby-fakta) men ikke regntrekk eksplisitt - bekreftet via web at risikoen er reell og samme mekanisme.",
+      "score_dup": 16,
+      "trace": "regntrekk finnes IKKE i baseTable for noen aktivitet/temp-band (tables.ts gjennomgaatt linje 25-237). Den er rent modifier-drevet: modifiers.ts:143-145 -> if (weather.precipMmH >= 0.5) { if (activity === 'vogn') addItem(layers,'ekstra','regntrekk'); }. INGEN temperatur-betingelse - utloses ved alle feels-like-band saa lenge precipMmH >= 0.5 og aktivitet = vogn. Under 0.5 ned til 0.2 mm/t gis kun drizzle-note (kalesjen holder), ingen regntrekk. Ingen conflicts.ts/softBlocks.ts-regel fjerner eller justerer regntrekk. safety.ts HB-8 (linje 229-248) fjerner pram-cover ved feels >=22 grader MEN PRAM_COVER_RE (linje 55) ekskluderer 'regntrekk' -> regntrekk overlever varme-vakten. Resultat: regntrekk kan velges i tropisk/varm-band ved regn uten overoppheting-flag.",
+      "kilder": [
+        "https://www.madeformums.com/news/why-covering-your-babys-pram-with-a-blanket-could-put-their-life-at-risk/",
+        "https://onlinefirstaid.com/dangerous-cover-your-pram/",
+        "https://skyrockets.co.uk/guides/are-pram-rain-covers-safe/"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 22,
+      "kommentar": "when-tekst ('Nar det regner mer enn yr i vogn') stemmer presist med trace: modifieren utloser ved precipMmH >= 0.5 (over yr-terskelen 0.2-0.5 som kun gir drizzle-note), kun for aktivitet vogn. Ingen temp-drift fordi seleksjonen er temp-uavhengig - saa det er ingen falsk temp-paastand a avsloere. whyForGarment (garment-info.ts:474-476: 'Regntrekk holder vognen torr ved X mm/t. Luft kalesjen saa det ikke blir for klamt.') refererer korrekt precipMmH og inneholder en lufting-paaminnelse. Trekk: teksten kommuniserer 'klamt' (komfort) men underdriver den faktiske VARME-/SIDS-risikoen ved regntrekk i varmt vaer - 'for klamt' er en mildere advarsel enn what-feltets 'aldri tett over' og enn HB-8-teksten for teppe. Dette er en mild under-kommunikasjon, ikke villedende paakledning, derfor ikke severity hoy her - selve gap-et er en seleksjon/safety-mangel (se mal 3)."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Ingen oppforing for regntrekk i alternatives.ts. Et reelt, pediatrisk relevant alternativ BURDE tilbys: regntrekk MED mesh-/ventilasjons-paneler kontra tett plast-trekk, eller a utsette/forkorte turen ved varm regnbyge. Dette er ikke en ull<->fleece/dun<->syntet-akse, men en ventilasjons-trinn-akse som er direkte koblet til overoppheting-gapet i mal 3. Eksisterende alternativ-database er ellers konsistent (ull-forst-DNA), saa fravaeret er forsvarlig som mindre mangel, ikke kritisk - derfor 7/10."
+    },
+    "total": 83,
+    "verdikt": "Regntrekk er strukturelt og visuelt solid (komplett what/when + dedikert whyForGarment + korrekt PNG/mapping), og when-teksten matcher seleksjons-tracen uten temp-drift. Hovedsvakheten er en reell pediatrisk seleksjons/safety-glipp: regntrekk legges paa kalesjen ved regn UTEN temperatur-gate og UTEN overoppheting-vakt, fordi PRAM_COVER_RE i safety.ts ekskluderer regntrekk fra HB-8-varme-blokken som ellers fjerner pram-dekke ved feels >=22 grader. Gjennomsiktig regntrekk er en dokumentert varmefelle (samme SIDS/overoppheting-mekanisme som teppe-dekke). Anbefales utbedret av menneske/helsesoker - INGEN tall/terskler er rort i denne auditen.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 3,
+        "beskrivelse": "regntrekk omgaar overoppheting-vakten HB-8. safety.ts:55 definerer PRAM_COVER_RE = /(dunteppe|tynt teppe|teppe over kalesje|dekke over kalesje|kalesje-dekke)/i som IKKE inkluderer 'regntrekk'. HB-8 (safety.ts:229-248) fjerner pram-cover + flagger CRITICAL overoppheting ved aktivitet vogn og feels-like >=22 grader, men siden regntrekk ikke matcher regexen, overlever den i varmt vaer. Et gjennomsiktig regntrekk over kalesjen hindrer luftsirkulasjon og er en kjent varmefelle (Lullaby Trust kobler det til SIDS - samme mekanisme som teppe-dekket regelen siterer 4-15 grader stigning innen 60 min).",
+        "forslag": "Foreslaa for menneske/helsesoker: utvid PRAM_COVER_RE (eller legg til egen REGNTREKK_VARME-regel) slik at regntrekk ved feels-like >=22 grader trigger en overoppheting-advarsel (ikke noedvendigvis full fjerning, siden regnet er reelt, men minst en CRITICAL/HIGH-note om ventilasjon/forkortet tur). Ror ikke 22-grader-terskelen - kun utvid hvilke items den fanger.",
+        "kilde": "Lullaby Trust via madeformums.com/news/why-covering-your-babys-pram-with-a-blanket-could-put-their-life-at-risk/ ; onlinefirstaid.com/dangerous-cover-your-pram/ ; eksisterende kilde LT-PRAM/Pediatrics-Pram i safety.ts HB-8"
+      },
+      {
+        "severity": "medium",
+        "mal": 3,
+        "beskrivelse": "modifiers.ts:143-145 legger paa regntrekk ved precipMmH >= 0.5 for aktivitet vogn helt uten temperatur-betingelse eller ventilasjons-note i seleksjons-laget. Selv om regnet rettferdiggjor et trekk, mangler det en aktiv kobling til varme/lufting i selve regelen - kun whyForGarment nevner lufting passivt.",
+        "forslag": "Foreslaa a legge til en strukturert note i modifieren (a la 'Sorg for ventilasjon/mesh-paneler; sjekk barnet hyppig i varmt regn') naar regntrekk velges ved feels-like over et bestemt band. Ingen terskel-endring - kun en tilleggs-note.",
+        "kilde": "skyrockets.co.uk/guides/are-pram-rain-covers-safe/ (anbefaler mesh-ventilasjon + ikke overkle barnet under trekket)"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "alternatives.ts mangler oppforing for regntrekk. Et ventilasjons-/forhold-alternativ (regntrekk med mesh kontra tett plast, eller utsette tur ved varm byge) er pediatrisk relevant og knyttet til overoppheting-gapet.",
+        "forslag": "Vurder a legge til ITEM_ALTERNATIVES-oppforing for 'regntrekk' med alternativ 'regntrekk med ventilasjon/mesh' eller 'utsett kort tur', med whyPrimary som forklarer at trekk holder tort men maa luftes. Beslutning tas av menneske.",
+        "kilde": "skyrockets.co.uk/guides/are-pram-rain-covers-safe/"
+      },
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "whyForGarment-teksten (garment-info.ts:475) sier 'Luft kalesjen saa det ikke blir for klamt' - 'klamt' kommuniserer komfort, ikke den reelle varme-/SIDS-risikoen ved regntrekk i varmt vaer. Underdriver alvoret sammenlignet med what-feltets 'aldri tett over' og HB-8-teksten.",
+        "forslag": "Foreslaa a styrke ordlyden ved varme (f.eks. 'I varmt vaer kan et tett trekk overopphete vognen - hold mesh/ventilasjon aapen og sjekk barnet ofte'). Ingen logikk-endring, kun tekst, besluttes av menneske.",
+        "kilde": "Lullaby Trust via madeformums.com (overoppheting under pram-cover)"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 17,
+      "kommentar": "Id, kategori (ekstra-vogn) og tekstfelter er på plass og konsistente. Trekk: seleksjonen lever utelukkende i modifiers.ts uten kobling til safety-laget — strukturelt betyr det at sikkerhetsregler (HB-8) og seleksjonsregler kan divergere stille, slik de faktisk gjør her. Mangler også alternatives-oppføring, som ser ut til å være et forventet felt i skjemaet."
+    },
+    "utseende": {
+      "score": 13,
+      "kommentar": "Bildet viser et gjennomsiktig kuppelformet trekk med strammekant og det som ligner et ventilasjonshull øverst — gjenkjennelig som regntrekk-konsept. Men: materialet ser stivt og glassaktig ut (mer som en osteklokke/cloche enn mykt PVC/EVA-trekk), det mangler vogn-/kalesjekontekst som forankrer skalaen, og den rosa innvendige refleksen mot helsvart bakgrunn gjør objektet tvetydig. Ironisk nok forsterker 'lufttett klokke'-utseendet akkurat det app-teksten advarer mot. Ingen tydelige AI-artefakter, men gjenkjennbarheten for en stresset forelder kl. 07 er middels."
+    },
+    "seleksjon": {
+      "score": 9,
+      "kommentar": "Her er det reelle problemet, og det er verre enn Claudes 'hoy'-gradering. Kombinasjonen (a) trigger ved precipMmH >= 0.5 uten temperaturbetingelse, (b) PRAM_COVER_RE (linje 55) som ikke matcher 'regntrekk', og (c) HB-8 som dermed aldri får fjerne plagget, betyr at appen aktivt kan anbefale tett plast over kalesjen i tropisk-/varm-band ved en varm regnbyge — uten overopphetings-flagg. Et plasttrekk i sol/varme gir dokumentert drivhuseffekt i vognen, og tildekket vogn er en kjent risikofaktor Lullaby Trust knytter til overoppheting/SIDS. Dette er ikke en teoretisk kant: sommerbyger i varme er et vanlig norsk scenario. At den eneste motvekten er en tekstlig formaning ('aldri tett over') gjør sikkerheten avhengig av at forelderen leser og tolker riktig."
+    },
+    "tekstLogikk": {
+      "score": 16,
+      "kommentar": "«Når det regner mer enn yr i vogn» stemmer rimelig godt med precipMmH >= 0.5 + activity='vogn' — yr ligger typisk under den terskelen, så når-feltet er ærlig om triggeren. Avviket ligger i det teksten lover men logikken ikke håndhever: what-feltet sier «aldri tett over» (sterk sikkerhetsformulering), mens whyForGarment reduserer det til «så det ikke blir for klamt» — komfortspråk for en varme-/SIDS-risiko. Inkonsistensen mellom appens egne to tekstnivåer, kombinert med at ingen av dem reflekteres i seleksjonslogikken, trekker ned. Claudes lav-gradering på dette er for snill: når motoren kan velge plagget i varme, blir den underdrivende why-teksten den eneste barrieren."
+    },
+    "alternativer": {
+      "score": 2,
+      "kommentar": "alternatives.ts mangler oppføring helt. For akkurat dette plagget er alternativer ikke kosmetikk men risikoreduksjon: mesh-/netting-trekk vs tett plast, og 'vurder å utsette turen ved varm byge' er nettopp de rådene som kompenserer for at logikken ikke har temperaturbetingelse. Enig med Claude i funnet, uenig i at det bare er 'lav' gitt sikkerhetskonteksten."
+    },
+    "total": 57,
+    "verdikt": "Ikke godkjent i nåværende form. Konseptet og når-teksten er solide, men plagget omgår appens egen overopphetingsvakt via et regex-hull, kan anbefales i varmt vær uten flagg, og sikkerhetsbudskapet svekkes fra what- til why-tekst. Dette er et sikkerhetskritisk avvik i en app for 0–3-åringer, ikke et poleringsproblem.",
+    "uenig_med_claude": "Ja, på tre punkter. (1) Totalscore 83/100 er for høy — den priser struktur og tekst, men undervekter at hovedfunnet er en aktiv sikkerhetsbypass i målgruppen med høyest SIDS-sårbarhet; mitt anslag er 57. (2) Claudes 'hoy' på HB-8-omgåelsen bør være 'kritisk': det er ikke bare at vakten kan omgås, det er at standard-stien (regn + vogn + varme) går rett gjennom hullet uten noe kompenserende flagg. (3) 'Klamt'-funnet er medium, ikke lav — why-teksten er siste sikkerhetsbarriere når logikken ikke har temperaturbetingelse. Enig med Claude i selve faktagrunnlaget for alle fire funn.",
+    "funn": [
+      {
+        "severity": "kritisk",
+        "mal": 3,
+        "beskrivelse": "PRAM_COVER_RE (safety.ts linje 55) matcher ikke 'regntrekk', så HB-8 (linje 229-248, fjerning ved feels >= 22 °C) får aldri virke. Kombinert med at modifiers.ts:143-145 trigger uten temperaturbetingelse kan tett plasttrekk anbefales i tropisk/varm-band ved regn — kjent drivhus-/overopphetingsrisiko (Lullaby Trust/SIDS).",
+        "forslag": "Forslag (ingen tall/terskler endres): utvid PRAM_COVER_RE til å inkludere 'regntrekk' (og norske synonymer som 'regnfilm', 'vogntrekk'), slik at eksisterende HB-8 omfatter plagget. Alternativt: legg et eksplisitt overoppheting-flagg på regntrekk i varm-band til medisinsk gjennomgang er gjort."
+      },
+      {
+        "severity": "hoy",
+        "mal": 3,
+        "beskrivelse": "Seleksjonslaget (modifiers.ts:143-145) bærer ingen ventilasjonsnote eller sikkerhetsmetadata — all risikoinformasjon ligger i fritekst forelderen kanskje ikke leser.",
+        "forslag": "Forslag: knytt en strukturert safety-note ('aldri helt tett, sørg for luftspalte') til selve modifier-utfallet slik at den vises sammen med anbefalingen, ikke bare i plaggbeskrivelsen."
+      },
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "whyForGarment («så det ikke blir for klamt») underkommuniserer risikoen what-feltet selv beskriver («aldri tett over»). To tekstnivåer i samme app gir motstridende alvorsgrad.",
+        "forslag": "Forslag: harmoniser why-teksten med what-feltet, f.eks. «La det alltid være luftspalte — et helt tett trekk kan gjøre vognen farlig varm.»"
+      },
+      {
+        "severity": "medium",
+        "mal": 5,
+        "beskrivelse": "alternatives.ts mangler oppføring. For dette plagget er alternativer (mesh-trekk vs tett plast, utsette tur ved varm byge) en reell risikoreduserende funksjon, ikke bare nice-to-have.",
+        "forslag": "Forslag: legg inn minst to alternativer med kort begrunnelse, prioritert etter ventilasjonsgrad."
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen leser som en stiv glassklokke uten vognkontekst; rosa refleks og helsvart bakgrunn gjør objektet tvetydig, og det 'hermetisk lukkede' uttrykket motsier appens eget luftighetsbudskap.",
+        "forslag": "Forslag: re-render med myk/foldet plastfølelse, antydet kalesje under trekket, og synlige ventilasjonsåpninger/luftspalte i front."
+      }
+    ]
+  }
+}

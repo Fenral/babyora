@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#fbf8f3" />
+<title>Babyora — Warm Photo-led</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --warm-bg: oklch(0.97 0.005 60);
+    --warm-bg-soft: oklch(0.94 0.008 60);
+    --warm-bg-deep: oklch(0.91 0.012 55);
+    --ink: oklch(0.20 0.015 30);
+    --ink-soft: oklch(0.36 0.014 30);
+    --ink-faint: oklch(0.55 0.012 35);
+    --terracotta: oklch(0.60 0.14 40);
+    --terracotta-deep: oklch(0.48 0.13 38);
+    --terracotta-pale: oklch(0.88 0.05 45);
+    --hairline: oklch(0.86 0.012 55);
+    --cream: oklch(0.93 0.022 75);
+    --photo-warm: oklch(0.72 0.09 55);
+    --photo-shadow: oklch(0.42 0.08 35);
+    --radius-phone: 47px;
+    --radius-card: 24px;
+    --radius-pill: 999px;
+    --shadow-phone:
+      0 1px 0 rgba(255,255,255,0.6) inset,
+      0 50px 100px -20px rgba(60, 40, 25, 0.25),
+      0 30px 60px -30px rgba(60, 40, 25, 0.30);
+    --shadow-card: 0 1px 2px rgba(60, 40, 25, 0.04), 0 8px 24px -12px rgba(60, 40, 25, 0.08);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: linear-gradient(180deg, oklch(0.93 0.010 60) 0%, oklch(0.90 0.014 55) 100%);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.005em;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+  }
+  .skip-link:focus {
+    left: 16px;
+    top: 16px;
+    background: var(--ink);
+    color: var(--warm-bg);
+    padding: 12px 18px;
+    border-radius: 12px;
+    z-index: 9999;
+  }
+
+  .page-shell {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+
+  .page-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 56px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .page-head h1 {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .page-head .tag {
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+  }
+
+  .phone-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 80px;
+    justify-items: center;
+  }
+  @media (max-width: 900px) {
+    .phone-row { grid-template-columns: 1fr; gap: 64px; }
+    .page-shell { padding: 32px 16px 64px; }
+  }
+
+  .phone-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .phone-caption {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .phone-caption strong { color: var(--ink); font-weight: 600; }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--warm-bg);
+    border-radius: var(--radius-phone);
+    box-shadow: var(--shadow-phone);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid oklch(0.84 0.010 55);
+    padding: 0;
+  }
+  .phone-inner {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 54px;
+    padding: 16px 32px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    flex-shrink: 0;
+    z-index: 30;
+    position: relative;
+  }
+  .status-bar.on-photo { color: #fff; mix-blend-mode: difference; }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .status-icons svg { display: block; }
+
+  /* Bottom tab bar */
+  .tab-bar {
+    height: 92px;
+    padding: 12px 24px 28px;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    background: oklch(0.97 0.005 60 / 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--hairline);
+    flex-shrink: 0;
+    z-index: 30;
+  }
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--ink-faint);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    padding: 4px 8px;
+  }
+  .tab.active { color: var(--terracotta-deep); }
+  .tab svg { display: block; }
+
+  /* Scroll area */
+  .scroll {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ========================
+     HEM (HOME) — Photo-led
+     ======================== */
+  .home {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .hero-photo {
+    position: relative;
+    height: 460px;
+    margin: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, oklch(0.85 0.07 60) 0%, transparent 55%),
+      radial-gradient(ellipse at 70% 80%, oklch(0.55 0.10 35) 0%, transparent 60%),
+      linear-gradient(160deg, oklch(0.75 0.08 50) 0%, oklch(0.45 0.09 32) 100%);
+    overflow: hidden;
+    border-radius: 0 0 32px 32px;
+  }
+  .hero-photo::before {
+    /* film grain */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 22% 31%, rgba(255,255,255,0.06) 0.5px, transparent 1.5px),
+      radial-gradient(circle at 71% 19%, rgba(0,0,0,0.08) 0.5px, transparent 1.5px),
+      radial-gradient(circle at 48% 65%, rgba(255,255,255,0.05) 0.5px, transparent 1.5px),
+      radial-gradient(circle at 11% 82%, rgba(0,0,0,0.10) 0.5px, transparent 1.5px),
+      radial-gradient(circle at 88% 56%, rgba(255,255,255,0.04) 0.5px, transparent 1.5px);
+    background-size: 4px 4px, 5px 5px, 6px 6px, 4px 4px, 5px 5px;
+    mix-blend-mode: overlay;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* Baby silhouette in knit cap — pure SVG art */
+  .hero-baby {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Gradient veil at bottom for text legibility */
+  .hero-veil {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 220px;
+    background: linear-gradient(180deg,
+      transparent 0%,
+      oklch(0.30 0.05 30 / 0.05) 20%,
+      oklch(0.20 0.04 30 / 0.4) 65%,
+      oklch(0.18 0.04 30 / 0.7) 100%);
+    pointer-events: none;
+  }
+
+  .hero-meta {
+    position: absolute;
+    top: 70px;
+    left: 28px;
+    right: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    color: oklch(0.97 0.01 60);
+    z-index: 5;
+  }
+  .brand-mark {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .brand-mark .dot {
+    width: 6px;
+    height: 6px;
+    background: var(--terracotta-pale);
+    border-radius: 50%;
+  }
+  .place-chip {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border: 1px solid oklch(0.97 0.01 60 / 0.4);
+    border-radius: var(--radius-pill);
+    backdrop-filter: blur(8px);
+  }
+
+  .hero-caption {
+    position: absolute;
+    left: 28px;
+    right: 28px;
+    bottom: 28px;
+    color: oklch(0.97 0.01 60);
+    z-index: 5;
+  }
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: oklch(0.88 0.04 60);
+    margin-bottom: 12px;
+  }
+  .hero-title {
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin: 0 0 14px;
+  }
+  .hero-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--terracotta-pale);
+  }
+  .hero-weather {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 13px;
+    font-weight: 400;
+    color: oklch(0.92 0.02 60);
+  }
+  .hero-weather .num { font-size: 22px; font-weight: 500; letter-spacing: -0.02em; color: #fff; }
+  .hero-weather .div { width: 1px; height: 18px; background: oklch(0.97 0.01 60 / 0.3); }
+
+  /* Body below hero */
+  .home-body {
+    flex: 1;
+    background: var(--warm-bg);
+    padding: 24px 24px 12px;
+    margin-top: -24px;
+    border-radius: 28px 28px 0 0;
+    position: relative;
+    z-index: 6;
+  }
+
+  .toggle-row {
+    display: flex;
+    background: var(--warm-bg-deep);
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 22px;
+  }
+  .toggle-row button {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    padding: 11px 10px;
+    border-radius: 11px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    letter-spacing: -0.005em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .toggle-row button.is-active {
+    background: var(--warm-bg);
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(60,40,25,0.06), 0 4px 8px -4px rgba(60,40,25,0.08);
+  }
+
+  .reco {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .reco-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .reco-headline {
+    font-size: 26px;
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .reco-headline strong {
+    font-weight: 600;
+    color: var(--terracotta-deep);
+  }
+
+  .layer-strip {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .layer-pill {
+    flex: 1;
+    background: var(--warm-bg-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    text-align: center;
+  }
+  .layer-pill .num {
+    width: 22px;
+    height: 22px;
+    background: var(--terracotta);
+    color: var(--warm-bg);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .layer-pill .name {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+  }
+
+  .cta {
+    width: 100%;
+    background: var(--ink);
+    color: var(--warm-bg);
+    border: 0;
+    border-radius: 18px;
+    padding: 17px 24px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+  .cta .arrow { font-size: 16px; }
+
+  /* ========================
+     UKE (WEEK) — list-led
+     ======================== */
+  .week {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+  .week-header {
+    padding: 8px 28px 16px;
+  }
+  .week-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .week-title {
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin: 0 0 4px;
+    line-height: 1.05;
+  }
+  .week-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--terracotta-deep);
+  }
+  .week-sub {
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  .week-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px 24px 12px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .week-tab {
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-faint);
+    letter-spacing: -0.005em;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .week-tab.is-active {
+    color: var(--ink);
+    background: var(--warm-bg-deep);
+  }
+
+  .week-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0 16px;
+  }
+
+  /* Photo mini-strip at top of week */
+  .week-photo-strip {
+    margin: 4px 24px 16px;
+    height: 96px;
+    border-radius: 18px;
+    background:
+      linear-gradient(135deg, oklch(0.72 0.08 50) 0%, oklch(0.45 0.09 35) 100%);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+  .week-photo-strip::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 40%, rgba(255,255,255,0.10) 1px, transparent 2px),
+      radial-gradient(circle at 80% 70%, rgba(0,0,0,0.10) 1px, transparent 2px);
+    background-size: 4px 4px, 5px 5px;
+    mix-blend-mode: overlay;
+  }
+  .week-photo-strip-label {
+    position: absolute;
+    inset: auto 18px 14px 18px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .week-photo-strip-label .big {
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    text-transform: none;
+  }
+
+  .week-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 8px;
+  }
+  .week-row {
+    display: grid;
+    grid-template-columns: 56px 32px 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .week-row:last-child { border-bottom: 0; }
+  .week-row.is-now {
+    background: oklch(0.93 0.020 55);
+  }
+  .row-time {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+    font-variant-numeric: tabular-nums;
+  }
+  .row-time .day {
+    display: block;
+    font-size: 10px;
+    color: var(--ink-faint);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .row-icon {
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .row-temp {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
+  }
+  .row-temp .sub {
+    display: block;
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-weight: 400;
+    letter-spacing: 0;
+    margin-top: 1px;
+  }
+  .row-layers {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .row-layers .dots {
+    display: flex;
+    gap: 3px;
+  }
+  .row-layers .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--terracotta);
+  }
+  .row-layers .dot.muted {
+    background: var(--hairline);
+  }
+  .row-layers .count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+    margin-left: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Footnote */
+  .foot {
+    text-align: center;
+    margin-top: 64px;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* Focus visible */
+  :focus-visible {
+    outline: 2px solid var(--terracotta-deep);
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Hopp til hovedinnhold</a>
+
+  <div class="page-shell">
+    <header class="page-head">
+      <h1>Babyora — Mock v7 / Warm Photo-led</h1>
+      <span class="tag">Editorial · Photographic · Native</span>
+    </header>
+
+    <main id="main" class="phone-row">
+
+      <!-- ============== HJEM ============== -->
+      <section class="phone-stage" aria-label="Hjem-skjerm">
+        <div class="phone">
+          <div class="phone-inner">
+            <!-- Status bar -->
+            <div class="status-bar on-photo" role="presentation" aria-hidden="true">
+              <span>14:23</span>
+              <div class="status-icons">
+                <!-- signal -->
+                <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="0.5"/><rect x="5" y="5" width="3" height="6" rx="0.5"/><rect x="10" y="2" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="11" rx="0.5"/></svg>
+                <!-- wifi -->
+                <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 10.5a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4z"/><path d="M3 6.2A7 7 0 018 4a7 7 0 015 2.2l-1.2 1.2A5.3 5.3 0 008 5.7a5.3 5.3 0 00-3.8 1.7L3 6.2z" opacity=".7"/><path d="M.5 3.7A10.5 10.5 0 018 .5a10.5 10.5 0 017.5 3.2l-1.2 1.2A8.8 8.8 0 008 2.2a8.8 8.8 0 00-6.3 2.7L.5 3.7z" opacity=".5"/></svg>
+                <!-- battery -->
+                <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="2.5" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="18" height="8" rx="1.5" fill="currentColor"/><rect x="23" y="4" width="2" height="4" rx="1" fill="currentColor" opacity=".5"/></svg>
+              </div>
+            </div>
+
+            <div class="scroll">
+              <div class="home">
+                <!-- HERO PHOTO -->
+                <div class="hero-photo" role="img" aria-label="Foto av baby i strikkelue under varm høstmorgensol">
+                  <svg class="hero-baby" viewBox="0 0 390 460" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                    <defs>
+                      <radialGradient id="bgGlow" cx="30%" cy="25%" r="60%">
+                        <stop offset="0%" stop-color="oklch(0.88 0.08 60)" stop-opacity="0.55"/>
+                        <stop offset="60%" stop-color="oklch(0.55 0.10 35)" stop-opacity="0"/>
+                      </radialGradient>
+                      <linearGradient id="capGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="oklch(0.55 0.14 38)"/>
+                        <stop offset="100%" stop-color="oklch(0.40 0.12 35)"/>
+                      </linearGradient>
+                      <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="oklch(0.82 0.06 55)"/>
+                        <stop offset="100%" stop-color="oklch(0.68 0.07 45)"/>
+                      </linearGradient>
+                      <linearGradient id="blanketGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="oklch(0.78 0.05 70)"/>
+                        <stop offset="100%" stop-color="oklch(0.58 0.06 50)"/>
+                      </linearGradient>
+                    </defs>
+
+                    <!-- soft background glow -->
+                    <rect width="390" height="460" fill="url(#bgGlow)"/>
+
+                    <!-- blanket area bottom -->
+                    <path d="M -20 360 Q 100 320 195 340 Q 290 360 410 340 L 410 480 L -20 480 Z" fill="url(#blanketGrad)" opacity="0.85"/>
+
+                    <!-- knitted texture (subtle horizontal lines) -->
+                    <g opacity="0.18" stroke="oklch(0.30 0.06 30)" stroke-width="0.6">
+                      <path d="M -20 380 Q 100 360 195 372 Q 290 384 410 372" fill="none"/>
+                      <path d="M -20 396 Q 100 376 195 388 Q 290 400 410 388" fill="none"/>
+                      <path d="M -20 412 Q 100 392 195 404 Q 290 416 410 404" fill="none"/>
+                      <path d="M -20 428 Q 100 408 195 420 Q 290 432 410 420" fill="none"/>
+                    </g>
+
+                    <!-- baby head -->
+                    <ellipse cx="195" cy="265" rx="78" ry="86" fill="url(#skinGrad)"/>
+
+                    <!-- soft cheek blush -->
+                    <ellipse cx="160" cy="290" rx="14" ry="10" fill="oklch(0.65 0.10 30)" opacity="0.35"/>
+                    <ellipse cx="230" cy="290" rx="14" ry="10" fill="oklch(0.65 0.10 30)" opacity="0.35"/>
+
+                    <!-- closed eyes -->
+                    <path d="M 168 258 Q 174 254 180 258" stroke="oklch(0.30 0.05 30)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                    <path d="M 210 258 Q 216 254 222 258" stroke="oklch(0.30 0.05 30)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+
+                    <!-- tiny nose -->
+                    <ellipse cx="195" cy="278" rx="3" ry="2" fill="oklch(0.50 0.08 30)" opacity="0.4"/>
+
+                    <!-- mouth -->
+                    <path d="M 188 298 Q 195 302 202 298" stroke="oklch(0.45 0.10 30)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+
+                    <!-- knit cap base -->
+                    <path d="M 115 215 Q 195 130 275 215 Q 280 240 270 260 L 120 260 Q 110 240 115 215 Z" fill="url(#capGrad)"/>
+
+                    <!-- cap rib texture -->
+                    <g opacity="0.35" stroke="oklch(0.30 0.10 35)" stroke-width="0.8" fill="none">
+                      <path d="M 130 230 Q 195 160 260 230"/>
+                      <path d="M 130 215 Q 195 145 260 215"/>
+                      <path d="M 130 200 Q 195 130 260 200"/>
+                      <path d="M 135 245 L 145 220"/>
+                      <path d="M 165 252 L 170 215"/>
+                      <path d="M 195 256 L 195 210"/>
+                      <path d="M 225 252 L 220 215"/>
+                      <path d="M 255 245 L 245 220"/>
+                    </g>
+
+                    <!-- cap brim -->
+                    <rect x="115" y="252" width="160" height="16" rx="3" fill="oklch(0.38 0.12 35)"/>
+                    <g opacity="0.4" stroke="oklch(0.25 0.08 30)" stroke-width="0.6">
+                      <line x1="125" y1="252" x2="125" y2="268"/>
+                      <line x1="135" y1="252" x2="135" y2="268"/>
+                      <line x1="145" y1="252" x2="145" y2="268"/>
+                      <line x1="155" y1="252" x2="155" y2="268"/>
+                      <line x1="165" y1="252" x2="165" y2="268"/>
+                      <line x1="175" y1="252" x2="175" y2="268"/>
+                      <line x1="185" y1="252" x2="185" y2="268"/>
+                      <line x1="195" y1="252" x2="195" y2="268"/>
+                      <line x1="205" y1="252" x2="205" y2="268"/>
+                      <line x1="215" y1="252" x2="215" y2="268"/>
+                      <line x1="225" y1="252" x2="225" y2="268"/>
+                      <line x1="235" y1="252" x2="235" y2="268"/>
+                      <line x1="245" y1="252" x2="245" y2="268"/>
+                      <line x1="255" y1="252" x2="255" y2="268"/>
+                      <line x1="265" y1="252" x2="265" y2="268"/>
+                    </g>
+
+                    <!-- pom pom -->
+                    <circle cx="195" cy="138" r="20" fill="oklch(0.85 0.04 70)" opacity="0.95"/>
+                    <circle cx="188" cy="132" r="5" fill="oklch(0.95 0.03 70)" opacity="0.6"/>
+                    <g opacity="0.4" stroke="oklch(0.60 0.05 60)" stroke-width="0.6">
+                      <line x1="180" y1="138" x2="210" y2="138"/>
+                      <line x1="187" y1="125" x2="203" y2="151"/>
+                      <line x1="203" y1="125" x2="187" y2="151"/>
+                    </g>
+
+                    <!-- light flare top-left -->
+                    <ellipse cx="80" cy="60" rx="100" ry="40" fill="oklch(0.95 0.04 75)" opacity="0.25"/>
+                  </svg>
+
+                  <div class="hero-veil" aria-hidden="true"></div>
+
+                  <div class="hero-meta">
+                    <div class="brand-mark"><span class="dot"></span> Babyora</div>
+                    <div class="place-chip">Elverum</div>
+                  </div>
+
+                  <div class="hero-caption">
+                    <div class="hero-eyebrow">I dag · Mandag 30. juni</div>
+                    <h2 class="hero-title">God morgen, <em>Liv</em></h2>
+                    <div class="hero-weather">
+                      <span class="num">18°</span>
+                      <span class="div" aria-hidden="true"></span>
+                      <span>Variert · Føles 18° · 3,1 m/s</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- BODY -->
+                <div class="home-body">
+                  <div class="toggle-row" role="tablist" aria-label="Aktivitet">
+                    <button type="button" role="tab" aria-selected="true" class="is-active">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 2v3M7 9v3M2 7h3M9 7h3M3.5 3.5l2 2M8.5 8.5l2 2M3.5 10.5l2-2M8.5 5.5l2-2"/></svg>
+                      Utenfor vogn
+                    </button>
+                    <button type="button" role="tab" aria-selected="false">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 8h10l-1 4H3L2 8zM4 8V5a3 3 0 016 0v3"/><circle cx="5" cy="13" r="0.8"/><circle cx="9" cy="13" r="0.8"/></svg>
+                      I vogn
+                    </button>
+                  </div>
+
+                  <div class="reco">
+                    <div class="reco-label">Anbefaling for Liv</div>
+                    <p class="reco-headline">Tre lette lag mot <strong>morgenkjølen</strong> — bytt til to etter formiddag.</p>
+                  </div>
+
+                  <div class="layer-strip" aria-label="Lagene">
+                    <div class="layer-pill"><span class="num">1</span><span class="name">Ull-body</span></div>
+                    <div class="layer-pill"><span class="num">2</span><span class="name">Tynn genser</span></div>
+                    <div class="layer-pill"><span class="num">3</span><span class="name">Vindjakke</span></div>
+                  </div>
+
+                  <button type="button" class="cta">
+                    <span>Se påkledning</span>
+                    <span class="arrow" aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab bar -->
+            <nav class="tab-bar" aria-label="Hovedmeny">
+              <a href="#hjem" class="tab active" aria-current="page">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L11 3l8 6.5V18a1 1 0 01-1 1h-4v-6h-6v6H4a1 1 0 01-1-1V9.5z" fill="currentColor" fill-opacity="0.15"/></svg>
+                Hjem
+              </a>
+              <a href="#uke" class="tab">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="16" height="14" rx="2"/><path d="M3 9h16M7 3v4M15 3v4"/></svg>
+                Uke
+              </a>
+              <a href="#guide" class="tab">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h9a3 3 0 013 3v11a1 1 0 01-1.5.9L11 16l-4.5 2.9A1 1 0 015 18V4z"/></svg>
+                Guide
+              </a>
+              <a href="#innstillinger" class="tab">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="3"/><path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.5 4.5l1.5 1.5M16 16l1.5 1.5M4.5 17.5L6 16M16 6l1.5-1.5"/></svg>
+                Mer
+              </a>
+            </nav>
+          </div>
+        </div>
+        <div class="phone-caption"><strong>Hjem</strong> · Photo-led editorial</div>
+      </section>
+
+      <!-- ============== UKE ============== -->
+      <section class="phone-stage" aria-label="Uke-oversikt">
+        <div class="phone">
+          <div class="phone-inner">
+            <!-- Status bar -->
+            <div class="status-bar" role="presentation" aria-hidden="true">
+              <span>14:23</span>
+              <div class="status-icons">
+                <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="0.5"/><rect x="5" y="5" width="3" height="6" rx="0.5"/><rect x="10" y="2" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="11" rx="0.5"/></svg>
+                <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 10.5a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4z"/><path d="M3 6.2A7 7 0 018 4a7 7 0 015 2.2l-1.2 1.2A5.3 5.3 0 008 5.7a5.3 5.3 0 00-3.8 1.7L3 6.2z" opacity=".7"/><path d="M.5 3.7A10.5 10.5 0 018 .5a10.5 10.5 0 017.5 3.2l-1.2 1.2A8.8 8.8 0 008 2.2a8.8 8.8 0 00-6.3 2.7L.5 3.7z" opacity=".5"/></svg>
+                <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="2.5" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="18" height="8" rx="1.5" fill="currentColor"/><rect x="23" y="4" width="2" height="4" rx="1" fill="currentColor" opacity=".5"/></svg>
+              </div>
+            </div>
+
+            <div class="scroll">
+              <div class="week">
+                <header class="week-header">
+                  <div class="week-eyebrow">Uke 27 · Elverum</div>
+                  <h2 class="week-title">Værvarsel for <em>Liv</em></h2>
+                  <p class="week-sub">Anbefalt lagantall per dag og tidspunkt.</p>
+                </header>
+
+                <div class="week-tabs" role="tablist">
+                  <button class="week-tab is-active" role="tab" aria-selected="true">I dag</button>
+                  <button class="week-tab" role="tab" aria-selected="false">Uke</button>
+                </div>
+
+                <div class="week-scroll">
+                  <!-- Photo accent at top of list -->
+                  <div class="week-photo-strip" role="img" aria-label="Varmt morgenlys over åpen mark">
+                    <div class="week-photo-strip-label">
+                      <span>Morgen</span>
+                      <span class="big">07—12</span>
+                    </div>
+                  </div>
+
+                  <ul class="week-list" aria-label="Tidsoversikt i dag">
+                    <li class="week-row">
+                      <div class="row-time">07:00<span class="day">Mor.</span></div>
+                      <div class="row-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="3.5" fill="currentColor" fill-opacity="0.2"/><path d="M11 3v2M11 17v2M3 11h2M17 11h2M5 5l1.4 1.4M15.6 15.6L17 17M5 17l1.4-1.4M15.6 6.4L17 5"/></svg>
+                      </div>
+                      <div class="row-temp">14°<span class="sub">Klart · 2,4 m/s</span></div>
+                      <div class="row-layers" aria-label="3 lag">
+                        <span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot muted"></span><span class="dot muted"></span></span>
+                        <span class="count">3</span>
+                      </div>
+                    </li>
+
+                    <li class="week-row is-now">
+                      <div class="row-time">10:00<span class="day">Nå</span></div>
+                      <div class="row-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="9" r="3" fill="currentColor" fill-opacity="0.18"/><path d="M14 14a3.5 3.5 0 100-7 4.5 4.5 0 00-8.7 1.7A3 3 0 006.5 15h7.5z"/></svg>
+                      </div>
+                      <div class="row-temp">18°<span class="sub">Variert · 3,1 m/s</span></div>
+                      <div class="row-layers" aria-label="3 lag">
+                        <span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot muted"></span><span class="dot muted"></span></span>
+                        <span class="count">3</span>
+                      </div>
+                    </li>
+
+                    <li class="week-row">
+                      <div class="row-time">13:00<span class="day">Mid.</span></div>
+                      <div class="row-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 13a3.5 3.5 0 100-7 4.5 4.5 0 00-8.7 1.7A3 3 0 006.5 14h7.5z" fill="currentColor" fill-opacity="0.18"/></svg>
+                      </div>
+                      <div class="row-temp">21°<span class="sub">Skyet · 2,8 m/s</span></div>
+                      <div class="row-layers" aria-label="2 lag">
+                        <span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot muted"></span><span class="dot muted"></span><span class="dot muted"></span></span>
+                        <span class="count">2</span>
+                      </div>
+                    </li>
+
+                    <li class="week-row">
+                      <div class="row-time">16:00<span class="day">Ett.</span></div>
+                      <div class="row-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="3.5" fill="currentColor" fill-opacity="0.2"/><path d="M11 3v2M11 17v2M3 11h2M17 11h2M5 5l1.4 1.4M15.6 15.6L17 17M5 17l1.4-1.4M15.6 6.4L17 5"/></svg>
+                      </div>
+                      <div class="row-temp">22°<span class="sub">Sol · 3,4 m/s</span></div>
+                      <div class="row-layers" aria-label="2 lag">
+                        <span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot muted"></span><span class="dot muted"></span><span class="dot muted"></span></span>
+                        <span class="count">2</span>
+                      </div>
+                    </li>
+
+                    <li class="week-row">
+                      <div class="row-time">19:00<span class="day">Kvel.</span></div>
+                      <div class="row-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 13a3.5 3.5 0 100-7 4.5 4.5 0 00-8.7 1.7A3 3 0 006.5 14h7.5z" fill="currentColor" fill-opacity="0.18"/><path d="M8 17v1M11 18v1M14 17v1" stroke-dasharray="0.1 1.6"/></svg>
+                      </div>
+                      <div class="row-temp">17°<span class="sub">Lett regn · 4,2 m/s</span></div>
+                      <div class="row-layers" aria-label="3 lag + regntøy">
+                        <span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot muted"></span><span class="dot muted"></span></span>
+                        <span class="count">3+</span>
+                      </div>
+                    </li>
+
+                    <li class="week-row">
+                      <div class="row-time">22:00<span class="day">Natt</span></div>
+                      <div class="row-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 13.5A6 6 0 1110.5 5A4.5 4.5 0 0017 13.5z" fill="currentColor" fill-opacity="0.18"/></svg>
+                      </div>
+                      <div class="row-temp">12°<span class="sub">Klart · 1,8 m/s</span></div>
+                      <div class="row-layers" aria-label="4 lag">
+                        <span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot muted"></span></span>
+                        <span class="count">4</span>
+                      </div>
+                    </li>
+
+                    <li class="week-row">
+                      <div class="row-time">i morgen<span class="day">Tir.</span></div>
+                      <div class="row-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12a3.5 3.5 0 100-7 4.5 4.5 0 00-8.7 1.7A3 3 0 006.5 13h7.5zM7 16l-1 2M11 16l-1 2M15 16l-1 2"/></svg>
+                      </div>
+                      <div class="row-temp">15°<span class="sub">Regn · 5,1 m/s</span></div>
+                      <div class="row-layers" aria-label="3 lag + regntøy">
+                        <span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot muted"></span><span class="dot muted"></span></span>
+                        <span class="count">3+</span>
+                      </div>
+                    </li>
+
+                    <li class="week-row">
+                      <div class="row-time">ons.<span class="day">02.07</span></div>
+                      <div class="row-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="3.5" fill="currentColor" fill-opacity="0.2"/><path d="M11 3v2M11 17v2M3 11h2M17 11h2M5 5l1.4 1.4M15.6 15.6L17 17M5 17l1.4-1.4M15.6 6.4L17 5"/></svg>
+                      </div>
+                      <div class="row-temp">23°<span class="sub">Sol · 2,2 m/s</span></div>
+                      <div class="row-layers" aria-label="2 lag">
+                        <span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot muted"></span><span class="dot muted"></span><span class="dot muted"></span></span>
+                        <span class="count">2</span>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab bar -->
+            <nav class="tab-bar" aria-label="Hovedmeny">
+              <a href="#hjem" class="tab">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L11 3l8 6.5V18a1 1 0 01-1 1h-4v-6h-6v6H4a1 1 0 01-1-1V9.5z"/></svg>
+                Hjem
+              </a>
+              <a href="#uke" class="tab active" aria-current="page">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="16" height="14" rx="2" fill="currentColor" fill-opacity="0.15"/><path d="M3 9h16M7 3v4M15 3v4"/></svg>
+                Uke
+              </a>
+              <a href="#guide" class="tab">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h9a3 3 0 013 3v11a1 1 0 01-1.5.9L11 16l-4.5 2.9A1 1 0 015 18V4z"/></svg>
+                Guide
+              </a>
+              <a href="#innstillinger" class="tab">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="3"/><path d="M11 2v2M11 18v2M2 11h2M18 11h2M4.5 4.5l1.5 1.5M16 16l1.5 1.5M4.5 17.5L6 16M16 6l1.5-1.5"/></svg>
+                Mer
+              </a>
+            </nav>
+          </div>
+        </div>
+        <div class="phone-caption"><strong>Uke</strong> · Editorial list</div>
+      </section>
+
+    </main>
+
+    <p class="foot">Babyora · v7-warm-photo-led · 390 × 844</p>
+  </div>
+</body>
+</html>

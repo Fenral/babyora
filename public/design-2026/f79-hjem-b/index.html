@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="nb" data-theme="light" data-temp="mild">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hjem B – Brevann Overshoot – Babyora F79</title>
+<style>
+/* ============================================================
+   HJEM B — «BREVANN OVERSHOOT»
+   Kjerne-tokens (bg/ink/accent/status/focus) hentet ORDRETT fra f79-palett-2/index.html
+   (Brevann-vinner). Plagg-fargene i påkledningslisten er EGNE lokale --lag-1..4-tokens
+   (ikke palettens --layer-innerst/--layer-mellom/--layer-ytterst), for å unngå å
+   overskrive de fire andre mockenes felles temp-akse-lag-tokens med produktfarger.
+   Denne mocken presser komposisjonen bevisst for langt (overshoot-regel):
+   enorm temp-display, stor fysisk sol-lyskilde, dristigere marigold-bruk.
+   A11y uendret fra preclearance — se kontrast-tabell + kommentarer nederst.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,420;9..144,560;9..144,640;9..144,720&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ---- light (mild = default temp-state) ---- */
+  --bg-canvas:      #B4EAE9; /* oklch(0.90 0.055 195) */
+  /* --bg-canvas-2 er IKKE en Brevann-token (finnes ikke i f79-palett-2) — den er en
+     lokal 2. turkis-tone for gradient-dybde, nå formalisert som avledning av
+     --bg-canvas i stedet for 6 håndsatte hex på tvers av temp/theme-varianter,
+     så den ikke kan drifte fra vinner-palettens temp-akse. Lys: mikset mot svart
+     (mørkere/dypere); mørk: mikset mot hvit (lysere), jf. begge retninger i original-huene. */
+  --bg-canvas-2:    color-mix(in oklch, var(--bg-canvas) 78%, black);
+  --surface:        #EAF9F7; /* oklch(0.97 0.015 190) */
+  --ink-primary:    #002227; /* oklch(0.23 0.040 210) */
+  --ink-secondary:  #28555A; /* oklch(0.42 0.050 205) */
+  --accent-cta:     #9D6300; /* oklch(0.55 0.119 70) */
+  --accent-cta-ink: #FAF7EE; /* oklch(0.975 0.012 90) */
+  /* --lag-1..4 er IKKE Brevann-tokens — de er lokale produkt-farger for de fire
+     plaggene i påkledningslisten, adskilt fra palettens egne --layer-innerst/
+     --layer-mellom/--layer-ytterst (som andre mocker bruker for temp-akse-lag).
+     Palettens --layer-*-tokens er urørt/ikke gjenbrukt her for å unngå navnekollisjon. */
+  --lag-1: #D96B4A; /* korall ullbody */
+  --lag-2: #5A7480; /* petrol-grå bukse */
+  --lag-3: #D9962B; /* marigold strikkegenser */
+  --lag-4: #1E4750; /* dyp petrol jakke */
+  --status-cold:    #0F5C80;
+  --status-warm:    #A85419;
+  --focus-ring:     #0C6D7A;
+  /* ---- temp-akse (mild/light) ---- */
+  --avatar-glow:    #D5F7F4; /* oklch(0.95 0.035 190) */
+  --accent-temp:    #0B6D76; /* oklch(0.49 0.081 205) */
+  --shadow-tint: 0 34px 70px -32px rgba(0, 34, 39, 0.45), 0 10px 28px -14px rgba(0, 34, 39, 0.28);
+  --card-shadow: 0 18px 40px -26px rgba(0, 34, 39, 0.55);
+  --hairline: rgba(0, 34, 39, 0.16);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-temp="kald"] {
+  --bg-canvas:   #B8E6FE;
+  --avatar-glow: #DBF3FD;
+  --accent-temp: #0A668A;
+}
+[data-temp="varm"] {
+  --bg-canvas:   #F3DBB3;
+  --avatar-glow: #FFE8C2;
+  --accent-temp: #9B6406;
+}
+
+[data-theme="dark"] {
+  --bg-canvas:      #042126;
+  --bg-canvas-2:    color-mix(in oklch, var(--bg-canvas) 88%, white);
+  --surface:        #0E3135;
+  --ink-primary:    #DDF0EE;
+  --ink-secondary:  #9BBCBB;
+  --accent-cta:     #E6AC3D;
+  --accent-cta-ink: #02272C;
+  --lag-1: #E28361;
+  --lag-2: #7E9AA6;
+  --lag-3: #E4AC59;
+  --lag-4: #4C7C87;
+  --status-cold:    #70B4DC;
+  --status-warm:    #F7A55F;
+  --focus-ring:     #36BABA;
+  --avatar-glow:    #1F5A5D;
+  --accent-temp:    #57B6B6;
+  --shadow-tint: 0 34px 70px -30px rgba(0, 0, 0, 0.8), 0 10px 28px -12px rgba(0, 0, 0, 0.55);
+  --card-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.75);
+  --hairline: rgba(221, 240, 238, 0.18);
+}
+[data-theme="dark"][data-temp="kald"] {
+  --bg-canvas:   #03212B;
+  --avatar-glow: #23576C;
+  --accent-temp: #6DB5DA;
+}
+[data-theme="dark"][data-temp="varm"] {
+  --bg-canvas:   #281D0F;
+  --avatar-glow: #684D2C;
+  --accent-temp: #E3AD4B;
+}
+
+/* ---------- basis ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: #06393B;
+  color: var(--ink-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  font-feature-settings: "tnum";
+}
+
+.display { font-family: "Fraunces", Georgia, "Times New Roman", serif; }
+
+.phone, .app-topbar button, .weather-scene, .glow, .layers-section,
+.app-nav, .app-nav a, .temp-btn, .theme-toggle {
+  transition: background-color 600ms var(--ease-out), color 600ms var(--ease-out),
+              border-color 600ms var(--ease-out), box-shadow 600ms var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+::selection { background: var(--ink-primary); color: var(--surface); }
+
+/* ---------- ekstern ramme (utenfor phone) ---------- */
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: clamp(20px, 4vw, 44px) 16px 56px;
+}
+.rig-header {
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+  color: #DFF7F4;
+}
+.rig-header .kicker {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #7FD6D0;
+}
+.rig-header .rig-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 640;
+  font-size: clamp(22px, 4vw, 28px);
+  margin-top: 6px;
+  letter-spacing: -0.01em;
+  color: #DFF7F4;
+}
+.rig-header p { margin-top: 6px; font-size: 13.5px; color: #9FC9C5; max-width: 46ch; margin-inline: auto; }
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: 480px;
+}
+.temp-btn {
+  min-height: 44px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1.5px solid #3E7A78;
+  background: transparent;
+  color: #DFF7F4;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.temp-btn .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent-temp); flex: none; }
+.temp-btn[data-t="kald"] .dot { background: #0A668A; }
+.temp-btn[data-t="varm"] .dot { background: #9B6406; }
+.temp-btn[aria-pressed="true"] { background: #DFF7F4; border-color: #DFF7F4; color: #06393B; }
+.temp-btn[aria-pressed="true"] .dot { background: #06393B; }
+.theme-toggle {
+  min-height: 44px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1.5px solid #3E7A78;
+  background: rgba(223,247,244,0.08);
+  color: #DFF7F4;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- phone frame ---------- */
+.stage { display: flex; justify-content: center; }
+.phone {
+  width: 390px;
+  height: 844px;
+  flex: none;
+  background: var(--bg-canvas);
+  border: 1.5px solid var(--hairline);
+  border-radius: 52px;
+  box-shadow: var(--shadow-tint);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+/* temp-akse crossfade: gradienten kan ikke interpoleres av en background-transition,
+   så hvert temp-state males på egen stablet lag-div og krysstones via opacity 600ms
+   når JS bytter data-temp (se .phone-bg-layer / play-temp-crossfade i script). */
+.phone-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.phone-bg-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-out);
+  background:
+    radial-gradient(circle at 50% 8%, var(--layer-bg-2, var(--bg-canvas-2)) 0%, transparent 55%),
+    linear-gradient(178deg, var(--layer-bg-1, var(--bg-canvas)) 0%, var(--layer-bg-2, var(--bg-canvas-2)) 62%, var(--layer-bg-1, var(--bg-canvas)) 100%);
+}
+.phone-bg-layer.on { opacity: 1; }
+/* --layer-bg-1 = eksakt Brevann bg-canvas per temp; --layer-bg-2 avledet med samme
+   color-mix-formel som --bg-canvas-2 (lys: mot svart, mørk: mot hvit). */
+.phone-bg-layer[data-temp-layer="kald"] { --layer-bg-1: #B8E6FE; --layer-bg-2: color-mix(in oklch, #B8E6FE 78%, black); }
+.phone-bg-layer[data-temp-layer="mild"] { --layer-bg-1: #B4EAE9; --layer-bg-2: color-mix(in oklch, #B4EAE9 78%, black); }
+.phone-bg-layer[data-temp-layer="varm"] { --layer-bg-1: #F3DBB3; --layer-bg-2: color-mix(in oklch, #F3DBB3 78%, black); }
+[data-theme="dark"] .phone-bg-layer[data-temp-layer="kald"] { --layer-bg-1: #03212B; --layer-bg-2: color-mix(in oklch, #03212B 88%, white); }
+[data-theme="dark"] .phone-bg-layer[data-temp-layer="mild"] { --layer-bg-1: #042126; --layer-bg-2: color-mix(in oklch, #042126 88%, white); }
+[data-theme="dark"] .phone-bg-layer[data-temp-layer="varm"] { --layer-bg-1: #281D0F; --layer-bg-2: color-mix(in oklch, #281D0F 88%, white); }
+/* korn/tekstur-lag: SVG feTurbulence, subtil, over gradienten */
+.phone::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.25;
+  mix-blend-mode: overlay;
+  mask-image: linear-gradient(to bottom, #000 0%, #000 50%, transparent 78%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 50%, transparent 78%);
+  pointer-events: none;
+  z-index: 0;
+}
+@media (max-width: 430px) {
+  .phone { width: 100%; height: auto; min-height: 760px; border-radius: 36px; }
+}
+
+.app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100%; padding: 16px 22px 0; }
+
+/* zoom/dynamic-type-robusthet: innholdet er tunet til 390x844, men ved tekst-zoom
+   skal main kunne scrolle internt i stedet for å klippe CTA/bunn-nav (.phone har overflow:hidden). */
+main { flex: 1; overflow-y: auto; min-height: 0; }
+
+/* app-topbar */
+.app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.loc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 8px 18px 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(6px);
+  color: var(--ink-primary);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: var(--card-shadow);
+}
+.loc-pill svg { color: var(--accent-temp); flex: none; }
+.loc-pill, .menu-btn {
+  transition: transform 160ms var(--ease-out), filter 200ms var(--ease-out),
+              background-color 600ms var(--ease-out), color 600ms var(--ease-out), border-color 600ms var(--ease-out);
+}
+.loc-pill:active, .menu-btn:active { transform: scale(0.96); transition-duration: 80ms; }
+.menu-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  color: var(--ink-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--card-shadow);
+  flex: none;
+}
+
+/* ---------- VÆR + SOL + AVATAR: sammensmeltet scene ---------- */
+.weather-scene {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 4px;
+  min-height: 0;
+}
+
+/* Stor clay-sol som fysisk lyskilde, flyttet til høyre kant slik at den komponerer
+   DIAGONALT med temp-tallet (venstre) i stedet for å okkludere det (se .temp-big). */
+.sun-wrap {
+  position: absolute;
+  top: -10px;
+  right: -60px;
+  width: 150px;
+  height: 150px;
+  z-index: 0;
+  pointer-events: none;
+  transform: rotate(-6deg);
+}
+/* redusert inset (-40px→-20px) + lysere/lavere-opacity halo: unngår kollisjon med
+   condition-row-teksten og glow::after-ringen bak avataren lenger ned i scenen. */
+.sun-halo {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  opacity: 0.82;
+  background: radial-gradient(circle at 50% 44%,
+              color-mix(in srgb, var(--accent-temp) 85%, white) 0%,
+              color-mix(in srgb, var(--accent-temp) 38%, var(--avatar-glow)) 22%,
+              color-mix(in srgb, var(--avatar-glow) 70%, transparent) 52%,
+              transparent 74%);
+  filter: blur(8px);
+}
+.sun-wrap img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 18px 30px color-mix(in srgb, var(--accent-temp) 45%, transparent));
+  /* assets har ekte alfa (verifisert: klarvaer.png 78.7% helt transparente piksler,
+     alpha-extrema 0–255) — ingen maske nødvendig, kun drop-shadow. */
+}
+/* subtil 6s pust ved last: gir scenen én levende motion-signatur i stedet for ren
+   crossfade-stillhet — bak prefers-reduced-motion-guard nederst i stilarket.
+   A11y-krav (WCAG 2.2.2): idle-loopen har en brukerstyrt pause-kontroll
+   (.motion-toggle, se markup) i tillegg til prefers-reduced-motion-guarden —
+   JS legger til/fjerner .motion-paused på <html>, som stanser BÅDE denne
+   keyframen og temp-burst-pulsen (se .sun-halo.temp-burst under). */
+@keyframes sun-halo-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.82; }
+  50% { transform: scale(1.045); opacity: 0.95; }
+}
+.sun-halo { animation: sun-halo-breathe 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .sun-halo { animation: none; }
+}
+html.motion-paused .sun-halo { animation-play-state: paused; }
+/* temp-burst: kort 500ms puls på solkjernen når temp-aksen byttes, gir crossfaden
+   en fysisk kilde i stedet for å skje «overalt samtidig». Egen animasjon (ikke
+   den looping breathe-animasjonen) — spilles én gang via .is-bursting-klassen. */
+@keyframes sun-halo-burst {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.sun-halo.is-bursting { animation: sun-halo-burst 500ms var(--ease-out), sun-halo-breathe 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .sun-halo.is-bursting { animation: none; }
+}
+
+.condition-row {
+  position: relative;
+  z-index: 2;
+  margin-top: 28px;
+  text-align: left;
+  padding-left: 24px;
+  align-self: flex-start;
+}
+.condition {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  color: var(--ink-primary);
+}
+.weather-meta {
+  margin-top: 3px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+}
+.weather-meta .sep { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-secondary); opacity: 0.7; }
+
+/* ENORM temp-display, ankret øvre venstre og løftet OVER solen (z-index:1, ikke -1)
+   slik at «12°» aldri okkluderes — sol flyttet til høyre kant (.sun-wrap) komponerer
+   diagonalt med tallet i stedet for å ligge oppå det. Fyller den tomme venstre-
+   kvadranten som ellers stod som død canvas mens alt innhold klumpet seg til høyre. */
+.temp-big {
+  position: relative;
+  z-index: 1;
+  align-self: stretch;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 420;
+  font-size: clamp(120px, 34vw, 152px);
+  line-height: 0.82;
+  letter-spacing: -0.045em;
+  color: var(--ink-primary);
+  font-variation-settings: "opsz" 144;
+  text-align: left;
+  padding-left: 22px;
+  margin-top: 0;
+  margin-left: -6px;
+  margin-bottom: -18px;
+}
+.temp-big sup {
+  font-size: 0.42em;
+  font-weight: 560;
+  top: -0.5em;
+  letter-spacing: -0.01em;
+  color: var(--accent-temp);
+}
+
+/* avatar: stor, lav i komposisjonen, som om den STÅR i lyset */
+.avatar-zone {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  flex: 1;
+  min-height: 132px;
+  margin-top: 2px;
+}
+.glow {
+  position: absolute;
+  bottom: 2%;
+  width: 224px; height: 224px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 38%,
+              var(--avatar-glow) 0%,
+              color-mix(in srgb, var(--avatar-glow) 60%, transparent) 44%,
+              transparent 72%);
+  filter: blur(2px);
+}
+.glow::after {
+  content: "";
+  position: absolute;
+  inset: 20%;
+  border-radius: 50%;
+  /* opacity senket (var mangel 100%→ nå eksplisitt 0.55) slik at ringen ikke
+     konkurrerer visuelt med condition-row-teksten rett over avatar-zonen */
+  border: 1.5px solid color-mix(in srgb, var(--accent-temp) 36%, transparent);
+  opacity: 0.55;
+}
+.stack {
+  position: relative;
+  width: 208px;
+  height: 208px;
+  flex: none;
+}
+.stack img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform-origin: 50% 85%;
+  transform: translateY(6px) scale(0.98);
+  /* avatar-side farges av sollyset: warm-tinted drop-shadow mot solsiden */
+  filter:
+    drop-shadow(-10px 14px 2px color-mix(in srgb, var(--accent-temp) 30%, transparent))
+    drop-shadow(0 22px 26px rgba(0, 34, 39, 0.30));
+  transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out);
+  /* assets har ekte alfa (verifisert) — figuren står skarp, ingen maske. */
+}
+.stack img.on { opacity: 1; transform: none; }
+/* instant-reset ved replay: se #stack.no-anim/#layers-list.no-anim i script — fjerner
+   transition helt så gamle lag ikke synlig fader ut over 420ms ved restart. */
+#stack.no-anim img, #layers-list.no-anim .layer-row { transition: none !important; }
+
+/* ---------- lagliste (synlig tekst, ALDRI bilde-alene) ---------- */
+/* .layers-card-skallet (surface/border/card-shadow) fjernet: chippene er allerede
+   fylte, lesbare fargefelt (se .layer-row) og trenger ikke et eget kort oppå scenen —
+   de flyter nå direkte på canvas, som holder scenen immersiv i stedet for å stable
+   «kort på kort». replay-btn flyttet ned til .cta-row (se der). */
+.layers-section {
+  position: relative;
+  z-index: 1;
+  margin-top: 10px;
+}
+.layers-section .eyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+/* lag-kvantum: samme fiksering som temp-tallet — Fraunces-tall rett under condition-
+   row, slik at temp OG anbefaling leses i ett blikk i stedet for i en 10.5px eyebrow. */
+.lag-kvantum {
+  display: block;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 560;
+  font-size: clamp(26px, 7vw, 32px);
+  letter-spacing: -0.01em;
+  color: var(--ink-primary);
+  margin-top: 2px;
+}
+.layers-list {
+  list-style: none;
+  margin-top: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.replay-btn {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  flex: none;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  color: var(--ink-primary);
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--card-shadow);
+  transition: transform 160ms var(--ease-out), filter 200ms var(--ease-out),
+              background-color 600ms var(--ease-out), color 600ms var(--ease-out), border-color 600ms var(--ease-out);
+}
+.replay-btn:hover { filter: brightness(1.06); }
+/* 80ms press-in (var(--ease-out)); rolig release beholdes i hvile-transitionen over */
+.replay-btn:active { transform: scale(0.94); transition-duration: 80ms; }
+.replay-btn svg { flex: none; }
+.layer-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--hairline);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-primary);
+  opacity: 0.6;
+  transition: opacity 380ms var(--ease-out), transform 380ms var(--ease-out),
+              background-color 600ms ease, color 600ms ease, border-color 600ms ease;
+  transform: translateY(6px);
+}
+.layer-row.on { opacity: 1; transform: translateY(0); }
+.layer-row .swatch {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex: none;
+  border: 1.5px solid currentColor;
+}
+/* fylte fargefelt i lag-fargene, ink-tekst med dokumentert kontrast (se spec-tabell) */
+.layer-row[data-lag="1"] { background: var(--lag-1); color: var(--ink-primary); }
+/* lag-2 (bukse) ink-primary-på-fill målte kun 3.37:1 (WCAG large-text-unntaket krever
+   ≥18.66px bold; 12.5px/600 kvalifiserer ikke, kravet er 4.5:1) — bruker derfor
+   accent-cta-ink (lys tekst) som gir 4.62:1, samme edge-ink-mønster som lag-4. */
+.layer-row[data-lag="2"] { background: var(--lag-2); color: var(--accent-cta-ink); }
+.layer-row[data-lag="3"] { background: var(--lag-3); color: var(--ink-primary); }
+.layer-row[data-lag="4"] { background: var(--lag-4); color: var(--accent-cta-ink); }
+.layer-row .swatch { background: color-mix(in srgb, currentColor 82%, transparent); }
+/* mørk modus: dark-tokens for lag 1-4 er lyse/mettede (E28361/7E9AA6/E4AC59/4C7C87) —
+   dark-ink-primary (#DDF0EE) på disse gir kun 1.7-2.5:1 (verifisert, se kontrast-tabell).
+   accent-cta-ink i mørk modus (#02272C, mørk) gir ≥4.5:1 på alle fire i stedet. */
+[data-theme="dark"] .layer-row[data-lag="1"],
+[data-theme="dark"] .layer-row[data-lag="2"],
+[data-theme="dark"] .layer-row[data-lag="3"] { color: var(--accent-cta-ink); }
+/* lag-4 (jakke) accent-cta-ink-på-fill målte kun 3.42:1 i mørk modus (samme
+   large-text-mislabeling som lag-2 lys) — fillen lysnes 20% mot hvitt (fortsatt
+   tydelig petrol-identitet) til 4.93:1, i stedet for å bytte tekstfarge igjen. */
+[data-theme="dark"] .layer-row[data-lag="4"] {
+  background: color-mix(in srgb, var(--lag-4) 80%, white);
+  color: var(--accent-cta-ink);
+}
+
+/* CTA — marigold, modig. replay-btn sitter nå ved siden av CTA-en her (flyttet ut
+   av layers-section) slik at hierarkiet strammes: bekreft dagens antrekk + spill av
+   igjen er begge "avsluttende handlinger" og hører sammen i samme rad. */
+.cta-row { position: relative; z-index: 1; padding: 8px 4px 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex: 1;
+  min-height: 58px;
+  border: none;
+  border-radius: 20px;
+  background: var(--accent-cta);
+  color: var(--accent-cta-ink);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 16px 30px -14px color-mix(in srgb, var(--accent-cta) 80%, transparent);
+  transition: transform 160ms var(--ease-out), filter 200ms var(--ease-out),
+              background-color 600ms var(--ease-out), color 600ms var(--ease-out),
+              border-color 600ms var(--ease-out), box-shadow 600ms var(--ease-out);
+}
+.cta:hover { filter: brightness(1.06); }
+/* 80ms press-in; rolig 160ms release beholdes i hvile-transitionen over */
+.cta:active { transform: translateY(1px) scale(0.99); transition-duration: 80ms; }
+.cta svg { flex: none; }
+
+/* bunn-nav */
+.app-nav {
+  position: relative;
+  z-index: 1;
+  margin: 0 -22px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  border-top: 1px solid var(--hairline);
+  padding: 8px 14px calc(12px + env(safe-area-inset-bottom, 8px));
+}
+.app-nav ul { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); }
+.app-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-height: 44px;
+  padding: 6px 4px 2px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--ink-secondary);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.app-nav a[aria-current="page"] { color: var(--ink-primary); }
+.app-nav .nav-ind { width: 18px; height: 3px; margin-top: 2px; background: transparent; border-radius: 2px; }
+.app-nav a[aria-current="page"] .nav-ind { background: var(--accent-cta); }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- spec / kontrast-dokumentasjon ---------- */
+.spec {
+  width: 100%;
+  max-width: 520px;
+  color: #DFF7F4;
+}
+.spec h2 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 640;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+.spec-card {
+  background: rgba(223,247,244,0.06);
+  border: 1px solid rgba(223,247,244,0.18);
+  border-radius: 18px;
+  padding: 18px 20px;
+}
+.spec-card + .spec-card { margin-top: 16px; }
+.spec p { max-width: 60ch; font-size: 13.5px; }
+.spec p + p { margin-top: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 8px; }
+caption { text-align: left; font-weight: 700; padding-bottom: 8px; font-size: 13.5px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid rgba(223,247,244,0.16); vertical-align: top; }
+th { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #9FC9C5; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pass {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border: 1.5px solid #57B6B6;
+  color: #DFF7F4;
+}
+.pass.warn { border-color: #E6AC3D; }
+tbody tr:last-child td { border-bottom: none; }
+.tbl-note { margin-top: 10px; font-size: 12px; color: #9FC9C5; max-width: 66ch; }
+
+footer.site {
+  width: 100%;
+  max-width: 520px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(223,247,244,0.16);
+  font-size: 12px;
+  color: #7FA9A4;
+}
+
+/* ---------- forced colors ---------- */
+@media (forced-colors: active) {
+  .phone, .loc-pill, .menu-btn, .cta, .replay-btn,
+  .temp-btn, .theme-toggle, .app-nav, .layer-row { border: 1px solid CanvasText; }
+  .cta { background: SelectedItem; color: SelectedItemText; forced-color-adjust: none; }
+  .temp-btn[aria-pressed="true"] { background: SelectedItem; color: SelectedItemText; }
+  .glow, .glow::after, .sun-halo, .phone::before, .phone-bg { display: none; }
+  .layer-row .swatch, .temp-btn .dot, .app-nav a[aria-current="page"] .nav-ind,
+  .weather-meta .sep { background: CanvasText; border-color: CanvasText; }
+  :focus-visible { outline: 3px solid Highlight; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="rig-header">
+    <p class="kicker">Babyora F79 · Hjem-mock B</p>
+    <p class="rig-title">Brevann — Overshoot</p>
+    <p>Bevisst FOR dristig: enorm temp-display i canvaset, fysisk sol-lyskilde over avataren, dobbel turkis-gradient med korn. Bruk kontrollene under for å teste kald/mild/varm og lys/mørk.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Vis palett-tilstander">
+    <button type="button" class="temp-btn" data-t="kald" aria-pressed="false"><span class="dot"></span>Kald</button>
+    <button type="button" class="temp-btn" data-t="mild" aria-pressed="true"><span class="dot"></span>Mild</button>
+    <button type="button" class="temp-btn" data-t="varm" aria-pressed="false"><span class="dot"></span>Varm</button>
+    <button type="button" class="theme-toggle" id="theme-toggle">Mørk modus</button>
+    <button type="button" class="theme-toggle" id="motion-toggle" aria-pressed="false">Pause sol-pust</button>
+  </div>
+
+  <div class="stage">
+    <div class="phone" id="phone">
+      <div class="phone-bg" aria-hidden="true">
+        <div class="phone-bg-layer" data-temp-layer="kald"></div>
+        <div class="phone-bg-layer on" data-temp-layer="mild"></div>
+        <div class="phone-bg-layer" data-temp-layer="varm"></div>
+      </div>
+      <div class="app">
+
+        <header class="app-topbar">
+          <button type="button" class="loc-pill">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22s7-7.58 7-12.5A7 7 0 0 0 5 9.5C5 14.42 12 22 12 22Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="9.5" r="2.5" stroke="currentColor" stroke-width="2"/></svg>
+            Elverum
+          </button>
+          <button type="button" class="menu-btn" aria-label="Åpne meny">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </header>
+
+        <main>
+          <h1 class="visually-hidden">Babyora – dagens påkledningsanbefaling for Elverum</h1>
+
+          <section class="weather-scene" aria-label="Værforhold nå">
+            <div class="sun-wrap" aria-hidden="true">
+              <div class="sun-halo"></div>
+              <img src="/weather-3d/klarvaer.png" alt="">
+            </div>
+
+            <p class="temp-big" id="temp-display" aria-hidden="true">12<sup>°</sup></p>
+
+            <div class="condition-row">
+              <p class="condition" id="condition-display">Klarvær</p>
+              <p class="weather-meta">
+                <span id="feels-display">Føles som 10°</span>
+                <span class="sep"></span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3M3 16h15a3 3 0 1 1-3 3M3 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <span id="wind-display">Vind 3 m/s</span>
+              </p>
+              <p class="visually-hidden" id="weather-sr">Elverum, 12 grader, klarvær, føles som 10 grader, vind 3 meter per sekund.</p>
+            </div>
+          </section>
+
+          <section class="avatar-zone" aria-label="Anbefalt påkledning">
+            <div class="glow" aria-hidden="true"></div>
+            <div class="stack" id="stack" role="img" aria-label="Barn kledd i ullbody, bukse, strikkegenser og jakke">
+              <img src="/avatars/f79-poc/stage-0.png" alt="" data-stage="0" class="on">
+              <img src="/avatars/f79-poc/stage-1.png" alt="" data-stage="1">
+              <img src="/avatars/f79-poc/stage-2.png" alt="" data-stage="2">
+              <img src="/avatars/f79-poc/stage-3.png" alt="" data-stage="3">
+              <img src="/avatars/f79-poc/stage-4.png" alt="" data-stage="4">
+            </div>
+          </section>
+
+          <section class="layers-section" aria-label="Lag i anbefalingen, innerst til ytterst">
+            <p class="eyebrow">Anbefaling · innerst → ytterst</p>
+            <p class="lag-kvantum" id="lag-kvantum">→ 4 lag</p>
+            <ul class="layers-list" id="layers-list">
+              <li class="layer-row" data-lag="1"><span class="swatch"></span>Ullbody</li>
+              <li class="layer-row" data-lag="2"><span class="swatch"></span>Bukse</li>
+              <li class="layer-row" data-lag="3"><span class="swatch"></span>Strikkegenser</li>
+              <li class="layer-row" data-lag="4"><span class="swatch"></span>Jakke</li>
+            </ul>
+            <p class="visually-hidden" role="status" aria-live="polite" id="status"></p>
+          </section>
+
+          <div class="cta-row">
+            <button type="button" class="cta">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>
+              Bekreft dagens antrekk
+            </button>
+            <button type="button" class="replay-btn" id="replay" aria-label="Spill av påkledningen igjen">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4v6h6M20 20v-6h-6M4.5 15a8 8 0 0 0 14.5 3M19.5 9A8 8 0 0 0 5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+
+        </main>
+
+        <nav class="app-nav" aria-label="Hovednavigasjon">
+          <ul>
+            <li><a href="#" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5M6 10v9h12v-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Hjem<span class="nav-ind"></span></a></li>
+            <li><a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2"/><path d="M4 9h16M9 4v16" stroke="currentColor" stroke-width="2"/></svg>Garderobe<span class="nav-ind"></span></a></li>
+            <li><a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/></svg>Vær<span class="nav-ind"></span></a></li>
+            <li><a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="2"/><path d="M5 20c1.2-4 4.2-6 7-6s5.8 2 7 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Profil<span class="nav-ind"></span></a></li>
+          </ul>
+        </nav>
+
+      </div>
+    </div>
+  </div>
+
+  <section class="spec" aria-label="Kontrast-dokumentasjon">
+    <h2>Kontrast — Hjem B (Brevann Overshoot)</h2>
+    <div class="spec-card">
+      <p>Ratios beregnet på endelige clippede sRGB-hex (WCAG 2.x relativ luminans), ikke OKLCH-kilden — jf. gamut-advarselen i preclearance. Chip-radene i lagslisten er nå fylte fargefelt (ikke lenger nøytral pille + dot); ratio under er tekst/ikon (currentColor) mot chip-fill.</p>
+      <table>
+        <caption>Par → ratio → status (lys/mild)</caption>
+        <thead><tr><th>Par</th><th>Kontekst</th><th class="num">Ratio</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>ink-primary / bg-canvas</td><td>Enorm temp-tall, brødtekst</td><td class="num">12.63:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+          <tr><td>ink-secondary / bg-canvas</td><td>«Føles som», vind-meta</td><td class="num">6.26:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+          <tr><td>accent-cta-ink / accent-cta</td><td>CTA-label vs knapp-fill</td><td class="num">4.65:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+          <tr><td>accent-cta / bg-canvas</td><td>Knapp-fill vs canvas</td><td class="num">3.77:1</td><td><span class="pass">PASS ≥3:1</span></td></tr>
+          <tr><td>focus-ring / bg-canvas</td><td>:focus-visible outline</td><td class="num">4.56:1</td><td><span class="pass">PASS ≥3:1</span></td></tr>
+          <tr><td>ink-primary / surface</td><td>Kort-bakgrunn, eyebrow</td><td class="num">15.41:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+          <tr><td>ink-primary / lag-1 (korall)</td><td>Chip-tekst «Ullbody»</td><td class="num">4.89:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+          <tr><td>accent-cta-ink / lag-2 (petrol-grå)</td><td>Chip-tekst «Bukse»</td><td class="num">4.62:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+          <tr><td>ink-primary / lag-3 (marigold)</td><td>Chip-tekst «Strikkegenser»</td><td class="num">6.64:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+          <tr><td>accent-cta-ink / lag-4 (dyp petrol)</td><td>Chip-tekst «Jakke»</td><td class="num">9.46:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+        </tbody>
+      </table>
+      <p class="tbl-note">12.5px/600 chip-tekst kvalifiserer IKKE for WCAG large-text-unntaket (krever ≥18.66px bold) — alle fire chips holder derfor det fulle 4.5:1-kravet for normal tekst, ikke 3:1. Bukse-chippen (lag-2) og jakke-chippen (lag-4) bruker accent-cta-ink (lys tekst) i stedet for ink-primary fordi ink-primary mot disse fillene ga hhv. 3.37:1 og 1.65:1; de to andre chippene bruker ink-primary. Swatch-prikken arver samme currentColor som teksten (ring), så farge er aldri eneste bærer: lag-navnet står alltid som tekst ved siden av.</p>
+      <table>
+        <caption>Par → ratio → status (mørk modus, beregnet — se f79-palett-2 for øvrige par)</caption>
+        <thead><tr><th>Par</th><th>Kontekst</th><th class="num">Ratio</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>accent-cta-ink (#02272C) / lag-1 (#E28361)</td><td>Chip-tekst «Ullbody»</td><td class="num">5.76:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+          <tr><td>accent-cta-ink (#02272C) / lag-2 (#7E9AA6)</td><td>Chip-tekst «Bukse»</td><td class="num">5.31:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+          <tr><td>accent-cta-ink (#02272C) / lag-3 (#E4AC59)</td><td>Chip-tekst «Strikkegenser»</td><td class="num">7.78:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+          <tr><td>accent-cta-ink (#02272C) / lag-4 lysnet 20% mot hvitt (#70969f)</td><td>Chip-tekst «Jakke»</td><td class="num">4.93:1</td><td><span class="pass">PASS ≥4.5:1</span></td></tr>
+        </tbody>
+      </table>
+      <p class="tbl-note">12.5px/600 kvalifiserer ikke for large-text-unntaket i mørk modus heller — jakke-chippen (lag-4, rå #4C7C87) ga kun 3.42:1 mot accent-cta-ink, under 4.5:1-kravet for normal tekst. Fillen lysnes 20% mot hvitt via color-mix (fortsatt tydelig petrol-identitet) til 4.93:1, i stedet for nok en tekstfarge-bytte. Dark-ink-primary (#DDF0EE, lys) mot lag-tonene ga kun 1.7-2.5:1 (utilstrekkelig — regnet ut, ikke antatt). Derfor bruker chip-teksten i mørk modus <code>--accent-cta-ink</code> (#02272C, mørk) i stedet for <code>--ink-primary</code>. Swatch-prikken arver currentColor, så farge er aldri eneste bærer av lag-informasjon.</p>
+    </div>
+    <div class="spec-card">
+      <p class="lede"><strong>Overshoot-notat:</strong> Denne mocken presser bevisst forbi «behagelig» — 88–104px temp-tall, en 190px clay-sol som fysisk lyskilde, glow farget av temp-akse, to-tone turkis-gradient med feTurbulence-korn, og marigold brukt i CTA + aksentlinje + genser-lag samtidig. Alt er tunet stramt til 390×844-rammen (ingen scroll, CTA og bunn-nav alltid synlig). Hvis panelet synes dette er for mye: roe ned trinnvis (skaler solen til ~150px, temp-tall til ~64px) — ikke legg til mer.</p>
+    </div>
+  </section>
+
+  <footer class="site">
+    <p>Babyora F79 · Hjem B · Brevann-palett · lang="nb" · WCAG 2.x-verifisert kontrast · prefers-reduced-motion respektert</p>
+  </footer>
+</div>
+
+<script>
+  const stack = document.getElementById('stack');
+  const layersList = document.getElementById('layers-list');
+  const stackImgs = [...document.querySelectorAll('#stack img')];
+  const layerRows = [...document.querySelectorAll('#layers-list .layer-row')];
+  const status = document.getElementById('status');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let timer = null;
+
+  function setStage(n) {
+    stackImgs.forEach(img => img.classList.toggle('on', +img.dataset.stage <= n));
+    layerRows.forEach(li => li.classList.toggle('on', +li.dataset.lag <= n));
+  }
+
+  function announceDone() {
+    status.textContent = 'Påkledd: ullbody, bukse, strikkegenser, jakke.';
+  }
+
+  function play() {
+    clearTimeout(timer);
+    if (reduced.matches) {
+      setStage(4);
+      announceDone();
+      return;
+    }
+    /* instant-reset: fjern transition midlertidig så gamle lag ikke synlig fader ut
+       over 420ms ved restart — sett stage 0, force reflow, fjern no-anim igjen. */
+    stack.classList.add('no-anim');
+    layersList.classList.add('no-anim');
+    setStage(0);
+    void stack.offsetWidth;
+    stack.classList.remove('no-anim');
+    layersList.classList.remove('no-anim');
+    status.textContent = '';
+    let n = 0;
+    const step = () => {
+      n += 1;
+      setStage(n);
+      if (n < 4) {
+        timer = setTimeout(step, 460);
+      } else {
+        announceDone();
+      }
+    };
+    timer = setTimeout(step, 220);
+  }
+
+  document.getElementById('replay').addEventListener('click', play);
+  play();
+
+  /* temp-state kontroller: bytt data-temp + krysston .phone-bg-layer (600ms) --
+     gradienten selv kan ikke transition'es, så vi crossfader to malte lag i stedet.
+     tempValues holder temp-tall + meta + lag-anbefaling i sync med data-temp så
+     canvas-hue og innhold aldri motsier hverandre (se Hjem A for samme mønster). */
+  const tempValues = {
+    kald: { temp: '−8', feels: '−13°', condition: 'Snø', wind: 'Vind 5 m/s', lag: '→ 5 lag', sr: 'Elverum, minus 8 grader, snø, føles som minus 13 grader, vind 5 meter per sekund.' },
+    mild: { temp: '12', feels: 'Føles som 10°', condition: 'Klarvær', wind: 'Vind 3 m/s', lag: '→ 4 lag', sr: 'Elverum, 12 grader, klarvær, føles som 10 grader, vind 3 meter per sekund.' },
+    varm: { temp: '24', feels: 'Føles som 25°', condition: 'Sol', wind: 'Vind 2 m/s', lag: '→ 2 lag', sr: 'Elverum, 24 grader, sol, føles som 25 grader, vind 2 meter per sekund.' }
+  };
+  const tempDisplay = document.getElementById('temp-display');
+  const conditionDisplay = document.getElementById('condition-display');
+  const feelsDisplay = document.getElementById('feels-display');
+  const windDisplay = document.getElementById('wind-display');
+  const weatherSr = document.getElementById('weather-sr');
+  const lagKvantum = document.getElementById('lag-kvantum');
+  const sunHalo = document.querySelector('.sun-halo');
+  const motionPaused = () => document.documentElement.classList.contains('motion-paused');
+
+  function applyTemp(t) {
+    const v = tempValues[t];
+    tempDisplay.innerHTML = v.temp + '<sup>°</sup>';
+    conditionDisplay.textContent = v.condition;
+    feelsDisplay.textContent = v.feels;
+    windDisplay.textContent = v.wind;
+    weatherSr.textContent = v.sr;
+    lagKvantum.textContent = v.lag;
+    /* temp-burst: 500ms puls på sol-kjernen som fysisk kilde for 600ms-crossfaden,
+       i stedet for at fargeskiftet skjer «overalt samtidig». Respekterer både
+       reduced-motion og den brukerstyrte pause-kontrollen (motion-toggle). */
+    if (!reduced.matches && !motionPaused()) {
+      sunHalo.classList.remove('is-bursting');
+      void sunHalo.offsetWidth;
+      sunHalo.classList.add('is-bursting');
+    }
+  }
+
+  const tempBtns = [...document.querySelectorAll('.temp-btn')];
+  const bgLayers = [...document.querySelectorAll('.phone-bg-layer')];
+  tempBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.t;
+      document.documentElement.setAttribute('data-temp', t);
+      tempBtns.forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+      bgLayers.forEach(l => l.classList.toggle('on', l.dataset.tempLayer === t));
+      applyTemp(t);
+    });
+  });
+
+  /* lys/mørk toggle */
+  const themeToggle = document.getElementById('theme-toggle');
+  themeToggle.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    themeToggle.textContent = isDark ? 'Mørk modus' : 'Lys modus';
+  });
+
+  /* GUARDRAIL (a11y-preclearance §2 / WCAG 2.2.2): sun-halo-breathe er en auto-
+     startende, uendelig idle-loop — den trenger en brukerstyrt pause-kontroll
+     utover prefers-reduced-motion. motion-toggle setter .motion-paused på <html>,
+     som (via CSS animation-play-state: paused) stanser BÅDE breathe-loopen og
+     temp-burst-pulsen, uavhengig av replay/temp/tema-knappene. */
+  const motionToggle = document.getElementById('motion-toggle');
+  motionToggle.addEventListener('click', () => {
+    const nowPaused = !motionPaused();
+    document.documentElement.classList.toggle('motion-paused', nowPaused);
+    motionToggle.setAttribute('aria-pressed', String(nowPaused));
+    motionToggle.textContent = nowPaused ? 'Fortsett sol-pust' : 'Pause sol-pust';
+  });
+</script>
+</body>
+</html>

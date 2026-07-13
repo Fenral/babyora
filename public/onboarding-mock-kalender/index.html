@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Babyora — Onboarding med kalender (mock)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,420;9..144,560;9..144,640&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg-canvas:#DAD8EE; --surface:#F3F2FB; --surface-pure:#FFFFFF;
+    --cta:#267147; --cta-ink:#F2FBF5;
+    --ink-900:#211B32; --ink-700:#56506F; --ink-300:#837D9C;
+    --ink-100:rgba(33,27,50,.08); --ink-200:rgba(33,27,50,.16);
+    --terra:#AF5331; --terra-700:#6E3820;
+    --sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+    --serif:'Fraunces',Georgia,serif;
+    --shadow-1:0 1px 3px rgba(23,16,46,.09);
+    --shadow-2:0 4px 14px rgba(23,16,46,.09);
+    --shadow-cta:0 12px 26px -14px rgba(38,113,71,.55);
+    --ease:cubic-bezier(0.22,1,0.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--sans); color:var(--ink-900);
+    background:var(--bg-canvas);
+    display:flex; align-items:center; justify-content:center;
+    min-height:100dvh; padding:20px;
+    background-image:radial-gradient(120% 80% at 30% 0%, #E7E4F5 0%, #DAD8EE 55%, #D3D0E9 100%);
+  }
+  .phone{
+    width:390px; max-width:100%; height:844px; max-height:96dvh;
+    background:var(--bg-canvas); border-radius:46px; overflow:hidden;
+    box-shadow:0 40px 90px -30px rgba(23,16,46,.45),0 12px 30px -14px rgba(23,16,46,.35);
+    position:relative; display:flex; flex-direction:column;
+  }
+  .scr{flex:1; display:flex; flex-direction:column; padding:52px 24px 24px; overflow-y:auto}
+  /* top row */
+  .top{display:flex; align-items:center; justify-content:space-between; flex:none; margin-bottom:6px}
+  .step-label{font-size:.75rem; font-weight:600; letter-spacing:.12em; color:var(--ink-700)}
+  .step-label b{color:var(--terra)}
+  .skip{background:none;border:none;font:inherit;font-weight:600;color:var(--ink-700);cursor:pointer;padding:8px}
+  .dots{display:flex;gap:7px;justify-content:center;margin:14px 0 22px;flex:none}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ink-200);transition:all .3s var(--ease)}
+  .dot.on{background:var(--terra);width:22px;border-radius:5px}
+  .eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.14em;color:var(--terra);text-transform:uppercase;margin-bottom:8px}
+  h1{font-family:var(--serif);font-weight:560;font-size:1.9rem;line-height:1.12;letter-spacing:-.01em;margin-bottom:8px}
+  h1 em{font-style:italic;color:var(--terra-700)}
+  .lede{font-size:.95rem;line-height:1.5;color:var(--ink-700);max-width:34ch;margin-bottom:22px}
+  /* input */
+  .field-label{font-size:.72rem;font-weight:700;letter-spacing:.1em;color:var(--ink-700);text-transform:uppercase;margin:6px 0 8px}
+  .tinput{width:100%;height:56px;border-radius:16px;border:1.5px solid var(--ink-200);background:var(--surface-pure);
+    padding:0 18px;font:inherit;font-size:1.05rem;color:var(--ink-900);outline:none;transition:border-color .2s}
+  .tinput:focus{border-color:var(--cta)}
+  .hint{font-size:.8rem;color:var(--ink-300);margin-top:8px}
+  /* location search */
+  .search-wrap{position:relative}
+  .results{list-style:none;margin:8px 0 0;padding:6px;background:var(--surface-pure);border-radius:16px;
+    box-shadow:var(--shadow-2);max-height:280px;overflow-y:auto}
+  .results:empty{display:none}
+  .results li{display:flex;align-items:center;gap:10px;padding:13px 12px;border-radius:11px;font-size:1rem;
+    color:var(--ink-900);cursor:pointer;transition:background .12s}
+  .results li:hover{background:var(--bg-canvas)}
+  .results li .pin{font-size:.95rem;opacity:.8}
+  .results li.nomatch{color:var(--ink-300);font-size:.85rem;cursor:default;line-height:1.4}
+  .results li.nomatch:hover{background:none}
+  /* calendar */
+  .cal{background:var(--surface-pure);border-radius:22px;box-shadow:var(--shadow-2);padding:16px 16px 18px;margin-top:2px}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .cal-title{font-family:var(--serif);font-weight:560;font-size:1.15rem;color:var(--ink-900)}
+  .cal-nav{display:flex;gap:8px}
+  .cal-nav button{width:38px;height:38px;border-radius:11px;border:1px solid var(--ink-100);background:var(--surface);
+    color:var(--ink-900);font-size:1.1rem;cursor:pointer;display:grid;place-items:center;transition:background .15s}
+  .cal-nav button:hover{background:var(--bg-canvas)}
+  .cal-nav button:disabled{opacity:.35;cursor:default}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .wd{font-size:.68rem;font-weight:700;letter-spacing:.02em;color:var(--ink-300);text-align:center;padding:6px 0 8px;text-transform:uppercase}
+  .day{aspect-ratio:1;border:none;background:none;font:inherit;font-size:.9rem;font-weight:500;color:var(--ink-900);
+    border-radius:11px;cursor:pointer;display:grid;place-items:center;transition:background .15s,color .15s;min-height:40px}
+  .day:hover:not(:disabled){background:var(--bg-canvas)}
+  .day.other{color:var(--ink-200);pointer-events:none}
+  .day:disabled{color:var(--ink-200);cursor:default}
+  .day.sel{background:var(--cta);color:var(--cta-ink);font-weight:700}
+  .day.today:not(.sel){box-shadow:inset 0 0 0 1.5px var(--terra)}
+  .day:focus-visible{outline:2.5px solid var(--cta);outline-offset:2px}
+  .cal-foot{margin-top:16px;display:flex;align-items:baseline;justify-content:space-between}
+  .picked{font-size:.95rem;color:var(--ink-700)}
+  .picked b{color:var(--ink-900);font-weight:700}
+  .age-pill{font-family:var(--serif);font-weight:560;font-size:1.05rem;color:var(--terra-700);
+    background:#F4E3DB;border-radius:999px;padding:5px 14px}
+  /* summary */
+  .sum-card{background:var(--surface-pure);border-radius:18px;box-shadow:var(--shadow-1);padding:6px 4px;margin-top:4px}
+  .sum-row{display:flex;align-items:center;gap:14px;padding:16px 16px;border-bottom:1px solid var(--ink-100)}
+  .sum-row:last-child{border-bottom:none}
+  .sum-ic{width:42px;height:42px;border-radius:12px;background:#F4E3DB;color:var(--terra-700);display:grid;place-items:center;flex:none;font-size:1.1rem}
+  .sum-k{font-size:.72rem;font-weight:700;letter-spacing:.08em;color:var(--ink-300);text-transform:uppercase}
+  .sum-v{font-size:1.05rem;font-weight:600;color:var(--ink-900);margin-top:2px}
+  /* welcome */
+  .wel-illu{width:150px;height:150px;border-radius:34px;margin:8px auto 20px;display:grid;place-items:center;
+    background:linear-gradient(160deg,#F4E3DB,#EAD6E4);font-size:4rem;box-shadow:var(--shadow-2)}
+  .wel h1{text-align:center}
+  .wel .lede{margin:0 auto 22px;text-align:center}
+  .feat{display:flex;gap:12px;align-items:flex-start;padding:12px 0}
+  .feat-ic{width:34px;height:34px;border-radius:10px;background:#DDEBE2;color:var(--cta);display:grid;place-items:center;flex:none;font-size:1rem}
+  .feat-t{font-weight:600;font-size:.95rem}
+  .feat-d{font-size:.85rem;color:var(--ink-700);margin-top:1px}
+  /* cta zone */
+  .cta-zone{flex:none;padding:16px 24px calc(env(safe-area-inset-bottom,0px) + 22px);background:linear-gradient(to top,var(--bg-canvas) 70%,transparent)}
+  .btn{width:100%;min-height:56px;border-radius:24px;border:none;font:inherit;font-size:.98rem;font-weight:700;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .16s var(--ease),box-shadow .2s}
+  .btn-primary{background:var(--cta);color:var(--cta-ink);box-shadow:var(--shadow-cta)}
+  .btn-primary:active{transform:scale(.98)}
+  .btn-primary:disabled{opacity:.5;cursor:default;box-shadow:none}
+  .btn-ghost{background:none;color:var(--ink-700);min-height:48px;font-weight:600}
+  .spacer{flex:1}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="scr" id="scr"></div>
+  <div class="cta-zone" id="cta"></div>
+</div>
+<script>
+const TODAY = new Date();
+const MONTHS = ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+const WD = ['Man','Tir','Ons','Tor','Fre','Lør','Søn'];
+// Speiler src/data/no-cities.ts (searchCities) — i prod søkes også met.no/Nominatim
+// for hvilket som helst sted i verden. Her: den lokale by-databasen (61 byer).
+const CITIES = ['Oslo','Bergen','Trondheim','Stavanger','Drammen','Fredrikstad','Kristiansand','Sandnes','Tromsø','Sarpsborg','Skien','Ålesund','Sandefjord','Haugesund','Tønsberg','Moss','Porsgrunn','Bodø','Arendal','Hamar','Larvik','Halden','Lillehammer','Molde','Harstad','Gjøvik','Kongsberg','Horten','Kristiansund','Steinkjer','Narvik','Alta','Askøy','Rana','Bærum','Asker','Lillestrøm','Ski','Jessheim','Drøbak','Levanger','Mosjøen','Mo i Rana','Brønnøysund','Vadsø','Hammerfest','Kirkenes','Svolvær','Leknes','Sortland','Finnsnes','Notodden','Rjukan','Stryn','Førde','Sogndal','Voss','Odda','Flekkefjord','Mandal'];
+function searchCities(q, limit=6){
+  q=q.trim().toLowerCase(); if(!q) return [];
+  const ex=[],pre=[],con=[];
+  for(const c of CITIES){ const n=c.toLowerCase(); if(n===q)ex.push(c); else if(n.startsWith(q))pre.push(c); else if(n.includes(q))con.push(c); }
+  return [...ex,...pre,...con].slice(0,limit);
+}
+const state = { step:1, name:'', birth:null, city:'', view:new Date(TODAY.getFullYear(), TODAY.getMonth(), 1) };
+const scr = document.getElementById('scr'), cta = document.getElementById('cta');
+
+function ageStr(d){
+  if(!d) return '';
+  let m = (TODAY.getFullYear()-d.getFullYear())*12 + (TODAY.getMonth()-d.getMonth());
+  if(TODAY.getDate()<d.getDate()) m--;
+  if(m<1) return 'under 1 mnd';
+  if(m<24) return m+' mnd';
+  const y=Math.floor(m/12), r=m%12; return r? y+' år '+r+' mnd' : y+' år';
+}
+function fmt(d){ return d ? d.getDate()+'. '+MONTHS[d.getMonth()]+' '+d.getFullYear() : ''; }
+
+function dots(n){ let s='<div class="dots">'; for(let i=1;i<=4;i++) s+='<span class="dot'+(i===n?' on':'')+'"></span>'; return s+'</div>'; }
+
+function calendar(){
+  const v = state.view, y=v.getFullYear(), mo=v.getMonth();
+  const first = new Date(y,mo,1);
+  let lead = (first.getDay()+6)%7; // Man=0
+  const daysIn = new Date(y,mo+1,0).getDate();
+  const minDate = new Date(TODAY.getFullYear()-3, TODAY.getMonth(), 1);
+  const canPrev = new Date(y,mo,1) > minDate;
+  const canNext = new Date(y,mo,1) < new Date(TODAY.getFullYear(),TODAY.getMonth(),1);
+  let cells='';
+  for(let i=0;i<lead;i++) cells+='<button class="day other" tabindex="-1"></button>';
+  for(let d=1;d<=daysIn;d++){
+    const cur=new Date(y,mo,d);
+    const future = cur > TODAY;
+    const isSel = state.birth && cur.toDateString()===state.birth.toDateString();
+    const isToday = cur.toDateString()===TODAY.toDateString();
+    cells+='<button class="day'+(isSel?' sel':'')+(isToday?' today':'')+'" '+(future?'disabled':'')+
+      ' data-d="'+d+'" aria-label="'+d+'. '+MONTHS[mo]+' '+y+'"'+(isSel?' aria-pressed="true"':'')+'>'+d+'</button>';
+  }
+  return `
+  <div class="cal" role="group" aria-label="Velg fødselsdato">
+    <div class="cal-head">
+      <div class="cal-title">${MONTHS[mo]} ${y}</div>
+      <div class="cal-nav">
+        <button id="prev" ${canPrev?'':'disabled'} aria-label="Forrige måned">‹</button>
+        <button id="next" ${canNext?'':'disabled'} aria-label="Neste måned">›</button>
+      </div>
+    </div>
+    <div class="cal-grid">${WD.map(w=>'<div class="wd">'+w+'</div>').join('')}${cells}</div>
+    <div class="cal-foot">
+      <div class="picked">${state.birth?'Valgt: <b>'+fmt(state.birth)+'</b>':'Trykk på en dato'}</div>
+      ${state.birth?'<div class="age-pill">'+ageStr(state.birth)+'</div>':''}
+    </div>
+  </div>`;
+}
+
+function render(){
+  const s = state.step;
+  if(s===1){
+    scr.innerHTML = `
+      <div class="top"><div class="step-label">STEG <b>1</b> AV 4</div><button class="skip" onclick="skip()">Hopp over</button></div>
+      ${dots(1)}
+      <div class="eyebrow">La oss bli kjent</div>
+      <h1>Hva heter <em>babyen</em>?</h1>
+      <p class="lede">Vi bruker navnet for å gi anbefalinger som føles personlige – aldri delt med andre.</p>
+      <div class="field-label">Babyens navn</div>
+      <input class="tinput" id="name" placeholder="F.eks. Iver" value="${state.name}" autocomplete="off" />
+      <p class="hint">Du kan endre dette senere i innstillinger.</p>
+      <div class="spacer"></div>`;
+    cta.innerHTML = `<button class="btn btn-primary" id="next-btn" ${state.name.trim()?'':'disabled'} onclick="go(2)">Fortsett →</button>`;
+    const inp=document.getElementById('name');
+    inp.oninput=e=>{ state.name=e.target.value; document.getElementById('next-btn').disabled=!state.name.trim(); };
+    inp.onkeydown=e=>{ if(e.key==='Enter'&&state.name.trim()) go(2); };
+    inp.focus();
+  }
+  else if(s===2){
+    scr.innerHTML = `
+      <div class="top"><div class="step-label">STEG <b>2</b> AV 4</div><button class="skip" onclick="skip()">Hopp over</button></div>
+      ${dots(2)}
+      <div class="eyebrow">Når ble babyen født</div>
+      <h1>Velg <em>fødselsdato</em></h1>
+      <p class="lede">Alderen styrer hvor mye ${state.name||'babyen'} skal ha på seg. Velg i kalenderen.</p>
+      ${calendar()}
+      <div class="spacer"></div>`;
+    cta.innerHTML = `<button class="btn btn-primary" ${state.birth?'':'disabled'} onclick="go(3)">Fortsett →</button>`;
+    scr.querySelectorAll('.day[data-d]').forEach(b=>{ if(!b.disabled) b.onclick=()=>{ state.birth=new Date(state.view.getFullYear(),state.view.getMonth(),+b.dataset.d); render(); }; });
+    const pv=document.getElementById('prev'), nx=document.getElementById('next');
+    if(pv&&!pv.disabled) pv.onclick=()=>{ state.view=new Date(state.view.getFullYear(),state.view.getMonth()-1,1); render(); };
+    if(nx&&!nx.disabled) nx.onclick=()=>{ state.view=new Date(state.view.getFullYear(),state.view.getMonth()+1,1); render(); };
+  }
+  else if(s===3){
+    scr.innerHTML = `
+      <div class="top"><div class="step-label">STEG <b>3</b> AV 4</div><button class="skip" onclick="skip()">Hopp over</button></div>
+      ${dots(3)}
+      <div class="eyebrow">Hvor er dere</div>
+      <h1>Hvilket <em>sted</em>?</h1>
+      <p class="lede">Vi henter været fra met.no for stedet dere er, så anbefalingen stemmer med dagen.</p>
+      <div class="field-label">Søk etter by eller sted</div>
+      <div class="search-wrap">
+        <input class="tinput" id="city" role="combobox" aria-expanded="false" aria-controls="city-list" aria-autocomplete="list"
+          value="${state.city}" placeholder="Begynn å skrive, f.eks. Trond…" autocomplete="off" />
+        <ul class="results" id="city-list" role="listbox" aria-label="Treff"></ul>
+      </div>
+      <p class="hint" id="loc-hint">Du kan la appen bruke posisjonen din automatisk senere.</p>
+      <div class="spacer"></div>`;
+    cta.innerHTML = `<button class="btn btn-primary" id="loc-next" ${state.city?'':'disabled'} onclick="go(4)">Fortsett →</button>
+      <button class="btn btn-ghost" onclick="go(4)">Hopp over</button>`;
+    const inp=document.getElementById('city'), list=document.getElementById('city-list'), next=document.getElementById('loc-next');
+    const pick=(c)=>{ state.city=c; inp.value=c; list.innerHTML=''; inp.setAttribute('aria-expanded','false'); next.disabled=false; document.getElementById('loc-hint').textContent='Valgt: '+c; };
+    inp.oninput=()=>{
+      state.city=''; next.disabled=true;
+      const hits=searchCities(inp.value);
+      inp.setAttribute('aria-expanded', hits.length?'true':'false');
+      list.innerHTML = hits.map((c,i)=>'<li role="option" tabindex="-1" data-c="'+c+'"><span class="pin">📍</span>'+c+'</li>').join('')
+        || (inp.value.trim()?'<li class="nomatch">Ingen treff i by-lista — i appen søkes også met.no for hvilket som helst sted.</li>':'');
+      list.querySelectorAll('li[data-c]').forEach(li=>li.onclick=()=>pick(li.dataset.c));
+    };
+    inp.focus();
+  }
+  else if(s===4){
+    scr.innerHTML = `
+      <div class="wel">
+        <div class="wel-illu">🍼</div>
+        <div class="eyebrow" style="text-align:center">Velkommen til Babyora</div>
+        <h1>Hei <em>${state.name||'der'}</em> — la oss kle deg riktig</h1>
+        <p class="lede">Alt er klart. Her er hva du har lagt inn:</p>
+        <div class="sum-card">
+          <div class="sum-row"><div class="sum-ic">👶</div><div><div class="sum-k">Navn</div><div class="sum-v">${state.name||'—'}</div></div></div>
+          <div class="sum-row"><div class="sum-ic">📅</div><div><div class="sum-k">Fødselsdato</div><div class="sum-v">${state.birth?fmt(state.birth)+' · '+ageStr(state.birth):'—'}</div></div></div>
+          <div class="sum-row"><div class="sum-ic">📍</div><div><div class="sum-k">Sted</div><div class="sum-v">${state.city||'—'}</div></div></div>
+        </div>
+        <div class="spacer"></div>
+      </div>`;
+    cta.innerHTML = `<button class="btn btn-primary" onclick="restart()">Vis dagens antrekk →</button>`;
+  }
+}
+function go(n){ state.step=n; render(); scr.scrollTop=0; }
+function skip(){ go(Math.min(state.step+1,4)); }
+function restart(){ state.step=1; render(); }
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+{
+  "claude": {
+    "id": "vintersko-isolerte",
+    "dbString": "vintersko isolerte",
+    "kategori": "ekstra-fotter",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett info-oppføring finnes (garment-info.ts linje 213-216): what = 'Tykt isolerte vintersko for streng kulde.', when = 'Under -10 °C eller lang tid utendørs i snø.' Tone/lengde matcher søsken i samme kategori ekstra-fotter (sko/toffel-sko/sandaler/vintersko) godt — kort what + kort when, samme mønster. Dedikert whyForGarment-gren finnes (linje 451-453), IKKE fallback: 'Isolerte vintersko er nødvendig ved X °C — tynne sko gir frostskader på lengre tid.' Trekker 2 poeng fordi when-teksten er faktuelt feil-kalibrert mot seleksjonen (se mål 4), men strukturen som sådan er på plass."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet til stede: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\vintersko-isolerte.png. Mapping er korrekt og entydig i garment-illustrations.ts linje 76: 'vintersko isolerte' -> 'vintersko-isolerte'. db-strengen matcher eksakt den som brukes i tables.ts (utelek frost/streng_frost/ekstrem). Filnavn = id = mapping konsistent. Visuell dom (om bildet faktisk viser isolerte vintersko og skiller seg tydelig fra 'vintersko') overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 21,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig: isolerte vintersko ved frost/streng frost beskytter mot frostskade på føtter, og aldersjusteringen (modifiers.ts pkt 17) fjerner sko helt for <9 mnd (krabbere) og nedjusterer til ullsokker for 9-15 mnd — i tråd med at små barn ikke går/bruker sko ute og varmes via vinterdress-fottak. Ingen overoppheting/SIDS/kvelningsrisiko knyttet til fottøy. Ingen conflicts/softBlocks/safety-regel rører dette plagget (alle hard blocks gjelder søvn/vogn/bilstol/sovepose). Eneste reservasjon: frostskade-veiledning (SB-8) trigges først ved feels <= -10 °C, mens isolerte sko allerede brukes fra frost-båndet (~0 til -7) — men det er konservativt nok. Kildene (capital-area-peds, aap-healthychildren) dekker kulde-eksponering generelt; fottøy-spesifikk frostskade-terskel er ikke eksplisitt i de 11 kildene, men seleksjonen er på den trygge siden.",
+      "trace": "bandForTemp (tables.ts L8-18): frost = -7<=feels<0, streng_frost = -15<=feels<-7, ekstrem = feels<-15. baseTable.utelek: 'vintersko isolerte' i ekstra for frost (L218), streng_frost (L224), ekstrem (L230). IKKE i kald-bånd (0<=feels<5) som bruker 'vintersko' (L212). Kun aktivitet=utelek; ikke i vogn/baeresele/soevn. Modifiers.ts pkt 17 (L486-518) overstyrer per alder for utelek/baeresele: <9 mnd -> fjernes helt via regex (L490), legg til tykke ullsokker ved feels<=10; 9-15 mnd -> 'vintersko isolerte' erstattes med 'tykke ullsokker (vinterdress dekker)' (L509); 16+ mnd -> uendret. Netto: plagget rendres faktisk KUN for barn 16+ mnd i utelek ved feels < 0 °C. Ingen conflicts/softBlocks/safety berorer det.",
+      "kilder": [
+        "https://www.capitalareapediatrics.com/blog/dressing-your-child-for-cold-weather-in-virginia-a-parent-s-guide",
+        "https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Dressing-Your-Newborn.aspx"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 16,
+      "kommentar": "DRIFT: when-teksten sier 'Under -10 °C eller lang tid utendørs i snø.' men baseTable velger 'vintersko isolerte' allerede i frost-båndet (feels -7 til <0 °C) — altså fra rett under 0 °C, ca 10 grader varmere enn teksten antyder. En forelder som leser when-teksten kan tro at vanlige vintersko holder ned mot -10, og dermed underkle barnets føtter i frost-bånd-vær (-1 til -7). Dette villeder påkledning -> severity hoy. whyForGarment-grenen (L451-453) er temp-agnostisk ('nødvendig ved X °C') og drifter derfor IKKE — den fyller inn faktisk feels-verdi og er korrekt uansett bånd. Tilleggsmerknad: verken what eller when nevner at plagget i praksis kun gjelder barn 16+ mnd (modifier-gating), men det er sekundært. Hovedfunnet er temp-drift i when."
+    },
+    "alternativer": {
+      "score": 10,
+      "kommentar": "Korrekt alternativ finnes allerede i alternatives.ts (L105-114): 'vintersko isolerte' -> 'vintersko' (tykkelse-trinn ned), med whenKey/whyPrimaryKey 'vinterskoNonIsolert'. Dette er det riktige trinnet — mindre isolerte vintersko når det ikke er fullt så kaldt. Ingen ull<->fleece eller dun<->syntet er relevant for fottøy. Ingenting mangler."
+    },
+    "total": 85,
+    "verdikt": "Solid plagg-oppføring med korrekt PNG/mapping, forsvarlig aldersjustert seleksjon og riktig alternativ. Hovedsvakheten er en faktuell temp-drift i when-teksten: den oppgir 'Under -10 °C' mens motoren faktisk velger plagget fra frost-båndet (~0 til -7 °C). Dette kan villede foreldre til å underkle barnets føtter. Anbefalt tekstjustering (ikke tallendring i motor).",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "when-teksten ('Under -10 °C eller lang tid utendørs i snø.') drifter ~10 °C fra faktisk seleksjon. baseTable.utelek velger 'vintersko isolerte' allerede i frost-båndet, som per bandForTemp er feels -7 til <0 °C (tables.ts L218), ikke under -10. En forelder kan tro at vanlige vintersko holder i frost-bånd-vær og underkle barnets føtter, med frostskade-risiko.",
+        "forslag": "Juster when-teksten i garment-info.ts til å matche seleksjonen, f.eks. 'Frost og kaldere (fra ca -1 °C) ved utelek, eller lang tid utendørs i snø.' Rør IKKE tersklene i bandForTemp/baseTable — kun tekst.",
+        "kilde": "tables.ts bandForTemp L8-18 + baseTable.utelek L214-231; garment-info.ts L215"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Verken what eller when nevner at plagget i praksis kun rendres for barn 16+ mnd. modifiers.ts pkt 17 (L486-518) fjerner det for <9 mnd og erstatter med ullsokker for 9-15 mnd. En forelder med yngre barn vil aldri se dette plagget anbefalt, noe teksten ikke forklarer.",
+        "forslag": "Vurder å legge til en kort setning i when om at fottøy gjelder gående barn (16+ mnd), mens yngre barn varmes via vinterdress-fottak + ullsokker. Valgfritt — informasjons-tillegg, ingen logikkendring.",
+        "kilde": "modifiers.ts L486-518"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 17,
+      "kommentar": "Konsis what/when og korrekt kategori (ekstra-fotter). Trekk: 'Når'-teksten blander to kriterier (temperatur OG varighet 'lang tid utendørs i snø') der kun temperatur faktisk finnes i motorlogikken, og aldersbetingelsen (16+ mnd) er usynlig i strukturen. Teksten beskriver dermed et annet beslutningsrom enn det motoren opererer i."
+    },
+    "utseende": {
+      "score": 18,
+      "kommentar": "Bildet viser tydelig tykt isolerte vintersko: polstrede, quiltede segmenter, høy skaft, grov vintersåle — klart distinkt fra uisolerte sko/vintersko uten polstring. Ren strek, ingen synlige artefakter, konsistent frontperspektiv. Mindre trekk: proporsjonene leser mer som voksen-/junior-støvel enn småbarnsstøvel (langt skaft relativt til fot), og magenta-sålen er et stilvalg som kan oppfattes kjønnet uten at det er begrunnet."
+    },
+    "seleksjon": {
+      "score": 22,
+      "kommentar": "Pediatrisk forsvarlig kjerne: isolerte sko i frost/streng frost/ekstrem kulde er riktig, og modifier #17 er god praksis — barn under ~9 mnd som ikke går skal ikke ha sko, og 9-15 mnd dekkes av dress + ullsokker. Fornuftig at kald-båndet (0-5) bruker vanlige vintersko. Diskutabelt punkt: ved lang utetid i −5 til −7 kan isolerte sko være riktig også for ikke-gående i vogn (føtter er mest frostutsatt), men dette håndteres antakelig av posen/dressen — akseptabelt, men udokumentert antakelse."
+    },
+    "tekstLogikk": {
+      "score": 15,
+      "kommentar": "Claudes funn er reelt, men UNDERVURDERT: seleksjonen starter ikke ved −7, den rendres ved feels < 0 °C (utelek-ekstra i frost-båndet −7..0). Verste drift er altså nesten 10 °C (vises ved −0,5 °C, tekst sier 'under −10'). Risikomekanismen er også litt annerledes enn Claude beskriver: faren er ikke primært at forelder underkler direkte, men at forelder ser anbefalingen ved −2 °C, leser 'under −10 °C', konkluderer at appen overdriver, og overstyrer med uisolerte sko — som svekker tillit og kan gi underkledning i reell frost. I tillegg: 'lang tid utendørs i snø' finnes ikke som signal i motoren i det hele tatt."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Modifier #17 gir gode aldersbaserte alternativer (tykke ullsokker, 'vinterdress dekker') — riktig substitusjonslogikk. Trekk: teksten i appen nevner ingen alternativer eller graderinger (f.eks. vanlige vintersko + ullsokk som mellomløsning i −7..0), og forelder får ingen forklaring når plagget 'forsvinner' for yngre barn."
+    },
+    "total": 79,
+    "verdikt": "Godkjent med pålegg: plagget er pediatrisk trygt og bildet er korrekt, men 'Når'-teksten må omformuleres slik at den matcher faktisk trigging (feels < 0 °C i utelek), og varighetskriteriet må enten implementeres eller fjernes fra teksten.",
+    "uenig_med_claude": "Delvis. (1) Claude satte driften til ~10 °C med utgangspunkt i −7, men rendering skjer allerede ved feels < 0 °C — gapet er større/like stort, og funnet burde vært vurdert nærmere kritisk enn hoy fordi teksten motsier appens egen anbefaling i hele båndet −0..−10. (2) Claudes risikomekanisme (forelder underkler direkte) er mindre sannsynlig enn tillitserosjon→overstyring; konsekvensen er den samme, men tiltaket er annerledes (fiks teksten, ikke logikken). (3) Claudes lav-funn om aldersgating er korrekt, men jeg legger til at 'lang tid utendørs' i teksten ikke har noe motstykke i motoren — et selvstendig funn Claude overså. Totalscore 85 var derfor noe for snill; 79 er mer riktig.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "'Når'-teksten sier 'under −10 °C', men plagget rendres allerede ved feels < 0 °C (utelek-ekstra i frost-båndet −7..0). Drift på opptil ~10 °C. Risiko: forelder som ser anbefalingen ved mild frost mister tillit til appen ('den overdriver') og overstyrer med uisolerte sko — også senere, i reell streng kulde.",
+        "forslag": "Endre 'Når' til: «Ved utelek i minusgrader, og alltid under −10 °C eller ved lang tid i snø.» Alternativt: flytt isolerte sko ut av frost-båndet og la dem starte ved −7 — men det krever pediatrisk revurdering og er IKKE et tekstgrep."
+      },
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "'eller lang tid utendørs i snø' i 'Når'-teksten har ingen motsvarighet i motorens seleksjon (kun temperaturbånd + aktivitet). Teksten lover en varighetslogikk som ikke finnes.",
+        "forslag": "Enten implementer varighet som signal i motoren, eller omformuler til en ren foreldreveiledning: «Vurder også ved lang utetid i snø, selv om appen ikke spør om varighet.»"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Bekrefter Claudes funn: verken what eller when nevner at plagget i praksis kun vises for barn 16+ mnd (modifier #17 fjerner/erstatter for yngre). Forelder med barn på 12 mnd som leter etter plagget får ingen forklaring.",
+        "forslag": "Legg til én setning i what eller en info-note: «For barn under ca. 16 mnd anbefaler vi tykke ullsokker under vinterdressen i stedet.»"
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonens proporsjoner (høyt skaft, voksen silhuett) og magenta såle leser ikke entydig som småbarnsstøvel og kan oppfattes kjønnet, i en app for 0-3 år.",
+        "forslag": "Juster proporsjoner mot kortere/rundere småbarnsform; vurder nøytral sålefarge eller bekreft magenta som bevisst merkevarefarge på tvers av plagg."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen graderingsalternativ kommuniseres i båndet −7..0 (der både 'vintersko' og 'vintersko isolerte' er pediatrisk forsvarlige avhengig av utetid).",
+        "forslag": "Vurder en kort alternativ-linje: «Vanlige vintersko med tykk ullsokk kan holde ved kort utetid over −7 °C.»"
+      }
+    ]
+  }
+}

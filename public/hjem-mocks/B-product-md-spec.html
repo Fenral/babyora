@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>B · PRODUCT.md spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#1a1a1a;font-family:'Instrument Sans',-apple-system,system-ui,sans-serif;}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .frame{
+    position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.5), 0 0 0 12px #1f1f1f, 0 0 0 13px #333;
+    background:#FFFFFF;
+  }
+  .screen{
+    position:relative;height:100%;width:100%;overflow:hidden;
+    display:flex;flex-direction:column;
+    padding:calc(env(safe-area-inset-top, 0px) + 56px) 24px 26px;
+    font-family:'Instrument Sans',sans-serif;color:#14181f;
+    background:#FFFFFF;
+  }
+  /* Ingen AtmosphereBackground, ingen gradient. Pure white. */
+
+  .topbar{flex:none;display:flex;align-items:center;justify-content:space-between;}
+  .pill{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:13px;background:#F5F5F4;border:1px solid rgba(20,24,31,.06);}
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:#FF6B35;}
+  .pill .city{font-size:13.5px;font-weight:600;color:#14181f;}
+  .notif{width:40px;height:40px;border-radius:50%;background:#F5F5F4;border:1px solid rgba(20,24,31,.06);display:flex;align-items:center;justify-content:center;}
+
+  .hero{flex:none;display:flex;flex-direction:column;align-items:center;margin-top:28px;}
+  .eyebrow{font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:2.6px;text-transform:uppercase;color:rgba(20,24,31,.45);}
+
+  /* Apple Fitness activity-ring: tynn orange ring rundt temp */
+  .ring-wrap{position:relative;margin-top:14px;width:260px;height:260px;display:flex;align-items:center;justify-content:center;}
+  .ring-wrap svg.ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);}
+  .ring-wrap svg.ring circle.track{stroke:rgba(255,107,53,.10);}
+  .ring-wrap svg.ring circle.progress{stroke:#FF6B35;stroke-linecap:round;}
+  .temp{position:relative;display:inline-flex;align-items:flex-start;font-family:'DM Serif Display',Georgia,serif;font-size:112px;font-weight:400;line-height:1;letter-spacing:-4px;font-variant-numeric:tabular-nums;color:#14181f;}
+  .temp .deg{color:rgba(20,24,31,.35);font-family:'DM Serif Display',Georgia,serif;}
+
+  .cond{margin-top:8px;font-family:'DM Serif Display',Georgia,serif;font-size:26px;font-weight:400;letter-spacing:-.3px;color:#14181f;}
+
+  .meta-row{flex:none;text-align:center;margin-top:14px;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;color:rgba(20,24,31,.55);}
+
+  .toggle{flex:none;display:flex;margin-top:22px;padding:3px;border-radius:11px;background:#F5F5F4;}
+  .toggle .seg{flex:1;text-align:center;padding:10px 0;border-radius:9px;font-weight:600;font-size:14px;font-family:'Instrument Sans',sans-serif;}
+  .toggle .seg.active{background:#FFFFFF;color:#14181f;box-shadow:0 1px 2px rgba(20,24,31,.08);}
+  .toggle .seg.inactive{color:rgba(20,24,31,.45);}
+
+  .avatar-wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;}
+  .avatar-stage{position:relative;width:230px;height:230px;}
+  .shadow{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:170px;height:24px;border-radius:50%;background:rgba(20,24,31,.08);filter:blur(14px);}
+  .float{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);}
+  .avatar-img{width:200px;height:200px;background-image:url(../avatars/avatar-A6.png);background-size:contain;background-repeat:no-repeat;background-position:center bottom;filter:drop-shadow(0 12px 18px rgba(20,24,31,.14));}
+
+  .cta{flex:none;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:18px 24px;border-radius:16px;border:none;cursor:pointer;background:#FF6B35;font-family:'Instrument Sans',sans-serif;box-shadow:0 8px 22px rgba(255,107,53,.25);}
+  .cta span{font-size:16px;font-weight:600;color:#FFFFFF;letter-spacing:.1px;}
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="screen">
+
+      <div class="topbar">
+        <div class="pill"><span class="dot"></span><span class="city">Elverum</span></div>
+        <div class="notif">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#14181f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </div>
+      </div>
+
+      <div class="hero">
+        <div class="eyebrow">Akkurat nå</div>
+        <div class="ring-wrap">
+          <!-- Apple Fitness energy-ring: 80% av sirkulær (subtilt) -->
+          <svg class="ring" viewBox="0 0 100 100">
+            <circle class="track" cx="50" cy="50" r="46" fill="none" stroke-width="2.5"/>
+            <circle class="progress" cx="50" cy="50" r="46" fill="none" stroke-width="2.5"
+                    stroke-dasharray="231.2 289" />
+          </svg>
+          <div class="temp"><span>−4</span><span class="deg">°</span></div>
+        </div>
+        <div class="cond">Klarvær</div>
+      </div>
+
+      <div class="meta-row">Føles −5°</div>
+
+      <div class="toggle">
+        <div class="seg active">Utenfor vogn</div>
+        <div class="seg inactive">I vogn</div>
+      </div>
+
+      <div class="avatar-wrap">
+        <div class="avatar-stage">
+          <div class="shadow"></div>
+          <div class="float"><div class="avatar-img"></div></div>
+        </div>
+      </div>
+
+      <button class="cta">
+        <span>Se påkledning</span>
+        <svg width="22" height="13" viewBox="0 0 26 14" fill="none" stroke="#FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20"/><path d="M17 2l5 5-5 5"/></svg>
+      </button>
+    </div>
+  </div>
+</body>
+</html>

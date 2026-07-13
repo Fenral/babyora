@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Babyora · Min garderobe · Mock B (visuell + romslig)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Warm-grey palett */
+    --bg-canvas:#F5F1EA;          /* warm-grey base */
+    --bg-canvas-2:#EDE7DC;        /* warm-grey deep */
+    --surface:#FFFFFF;            /* card surface */
+    --surface-soft:#FBF8F3;       /* card surface soft */
+    --surface-tile:#F0EBE2;       /* image tile fill */
+
+    /* Brand */
+    --warm-orange:#FF6B35;
+    --warm-orange-700:#E25923;
+    --warm-orange-50:#FFEDE4;
+
+    /* Ink */
+    --ink-900:#1D1A15;
+    --ink-700:#3A3530;
+    --ink-500:#7A716A;
+    --ink-400:#A09689;
+    --ink-300:#C9C0B2;
+
+    --hairline:rgba(29,26,21,.08);
+    --hairline-strong:rgba(29,26,21,.12);
+
+    /* Typography */
+    --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+    --font-serif:'DM Serif Display',Georgia,serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#1a1a1a;font-family:var(--font-sans);-webkit-font-smoothing:antialiased;}
+  body{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 24px;gap:32px;flex-wrap:wrap;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+  /* Phone frame */
+  .frame{
+    position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 12px #1f1f1f, 0 0 0 13px #333;
+    background:var(--bg-canvas);
+  }
+  .frame::before{
+    /* dynamic island */
+    content:"";position:absolute;top:11px;left:50%;transform:translateX(-50%);
+    width:118px;height:34px;border-radius:20px;background:#000;z-index:50;
+  }
+  .frame::after{
+    /* home indicator */
+    content:"";position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+    width:134px;height:5px;border-radius:3px;background:rgba(29,26,21,.35);z-index:50;
+  }
+
+  /* Status bar text */
+  .statusbar{
+    position:absolute;top:0;left:0;right:0;height:54px;z-index:40;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 32px 0;
+    font-family:var(--font-sans);font-size:15px;font-weight:600;color:var(--ink-900);
+    pointer-events:none;
+  }
+  .statusbar .right{display:flex;gap:6px;align-items:center;}
+  .statusbar .right svg{display:block;}
+
+  /* Screen */
+  .screen{
+    position:relative;height:100%;width:100%;overflow:hidden;
+    display:flex;flex-direction:column;
+    padding:max(env(safe-area-inset-top, 0px), 54px) 0 max(env(safe-area-inset-bottom, 0px), 24px);
+    font-family:var(--font-sans);color:var(--ink-900);
+    background:
+      radial-gradient(120% 60% at 50% -10%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%),
+      linear-gradient(180deg, var(--bg-canvas) 0%, var(--bg-canvas-2) 100%);
+  }
+
+  /* Header — generous */
+  .header{
+    flex:none;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 22px 6px;
+  }
+  .icon-btn{
+    width:44px;height:44px;min-width:44px;min-height:44px;
+    display:flex;align-items:center;justify-content:center;
+    border:none;background:transparent;cursor:pointer;padding:0;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .icon-btn:focus-visible{outline:2px solid var(--warm-orange);outline-offset:2px;border-radius:14px;}
+  .back-visual{
+    width:40px;height:40px;border-radius:14px;
+    background:rgba(255,255,255,.7);
+    border:1px solid var(--hairline);
+    display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    box-shadow:0 1px 2px rgba(29,26,21,.04);
+  }
+  .menu-visual{
+    width:40px;height:40px;border-radius:14px;
+    background:rgba(255,255,255,.7);
+    border:1px solid var(--hairline);
+    display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    box-shadow:0 1px 2px rgba(29,26,21,.04);
+  }
+
+  /* Hero title block — premium editorial */
+  .hero{
+    flex:none;
+    padding:14px 26px 18px;
+  }
+  .eyebrow{
+    font-family:var(--font-sans);
+    font-size:11px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;
+    color:var(--warm-orange-700);
+    margin:0 0 10px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::after{
+    content:"";flex:1;height:1px;background:linear-gradient(90deg, rgba(226,89,35,.35), rgba(226,89,35,0));
+  }
+  .hero-title{
+    font-family:var(--font-serif);
+    font-weight:400;
+    font-size:40px;line-height:1.02;letter-spacing:-1.4px;
+    color:var(--ink-900);
+    margin:0;
+  }
+  .hero-title em{font-style:italic;color:var(--warm-orange-700);}
+  .hero-sub{
+    margin:10px 0 0;
+    font-size:14px;line-height:1.4;color:var(--ink-500);
+    font-weight:500;max-width:280px;
+  }
+
+  /* Summary chip-row */
+  .summary{
+    flex:none;
+    display:flex;gap:10px;padding:0 26px 18px;
+  }
+  .summary .chip{
+    flex:1;display:flex;flex-direction:column;gap:2px;
+    padding:12px 14px;border-radius:16px;
+    background:var(--surface-soft);
+    border:1px solid var(--hairline);
+  }
+  .summary .chip .num{
+    font-family:var(--font-serif);font-size:24px;line-height:1;color:var(--ink-900);
+    letter-spacing:-.5px;
+  }
+  .summary .chip .lab{
+    margin-top:6px;font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-500);
+  }
+  .summary .chip.accent{
+    background:linear-gradient(160deg, #FFF5EE 0%, #FFE7D6 100%);
+    border-color:rgba(255,107,53,.18);
+  }
+  .summary .chip.accent .num{color:var(--warm-orange-700);}
+  .summary .chip.accent .lab{color:var(--warm-orange-700);}
+
+  /* Scroll area */
+  .scroll{
+    position:relative;
+    flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+    padding:6px 0 120px;
+    scrollbar-width:none;
+  }
+  .scroll::-webkit-scrollbar{display:none;}
+
+  /* Layer section header — generous */
+  .layer{
+    padding:14px 26px 18px;
+  }
+  .layer + .layer{padding-top:8px;}
+  .layer-head{
+    display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+    margin:0 0 14px;
+  }
+  .layer-head h2{
+    margin:0;
+    font-family:var(--font-serif);font-weight:400;
+    font-size:22px;line-height:1.1;letter-spacing:-.4px;color:var(--ink-900);
+  }
+  .layer-head .count{
+    font-size:12px;font-weight:600;color:var(--ink-500);letter-spacing:.2px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .layer-head .count strong{color:var(--ink-900);font-weight:700;}
+
+  /* Garment grid — 2-col, generous */
+  .grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:14px;
+    list-style:none;margin:0;padding:0;
+  }
+
+  /* Garment card — premium-feel */
+  .card{
+    position:relative;
+    display:flex;flex-direction:column;
+    border-radius:22px;overflow:hidden;
+    background:var(--surface);
+    border:1px solid var(--hairline);
+    box-shadow:0 1px 2px rgba(29,26,21,.04), 0 10px 22px rgba(29,26,21,.05);
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:transform 140ms ease, box-shadow 140ms ease;
+    text-align:left;width:100%;padding:0;
+    font-family:inherit;color:inherit;
+  }
+  .card:focus-visible{outline:2px solid var(--warm-orange);outline-offset:3px;}
+  .card:active{transform:scale(.985);}
+  @media (prefers-reduced-motion: reduce){
+    .card{transition:none;}
+    .card:active{transform:none;}
+  }
+
+  /* Image tile (top of card) */
+  .tile{
+    position:relative;aspect-ratio:1/1;width:100%;
+    background:
+      radial-gradient(80% 80% at 30% 25%, rgba(255,255,255,.9), rgba(255,255,255,0) 60%),
+      linear-gradient(160deg, var(--surface-tile) 0%, #E6DFD2 100%);
+    overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tile svg.garment{
+    width:78%;height:78%;display:block;
+    filter:drop-shadow(0 8px 14px rgba(29,26,21,.10));
+  }
+
+  /* Owned badge */
+  .badge{
+    position:absolute;top:10px;left:10px;
+    display:inline-flex;align-items:center;gap:5px;
+    padding:5px 9px;border-radius:999px;
+    font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+    background:rgba(255,255,255,.92);
+    color:var(--ink-700);
+    border:1px solid var(--hairline);
+    backdrop-filter:blur(8px);
+  }
+  .badge.owned{
+    background:rgba(29,26,21,.88);color:#fff;border-color:transparent;
+  }
+  .badge.owned .dot{width:6px;height:6px;border-radius:50%;background:#7AD68B;box-shadow:0 0 0 3px rgba(122,214,139,.25);}
+  .badge.missing{
+    background:var(--warm-orange-50);color:var(--warm-orange-700);
+    border-color:rgba(255,107,53,.22);
+  }
+  .badge.missing .dot{width:6px;height:6px;border-radius:50%;background:var(--warm-orange);box-shadow:0 0 0 3px rgba(255,107,53,.18);}
+
+  /* Card body */
+  .body{
+    padding:12px 14px 14px;
+    display:flex;flex-direction:column;gap:3px;
+    background:var(--surface);
+  }
+  .body .name{
+    font-size:15px;font-weight:700;letter-spacing:-.1px;color:var(--ink-900);
+    margin:0;line-height:1.2;
+  }
+  .body .meta{
+    margin:0;font-size:12px;font-weight:500;color:var(--ink-500);line-height:1.3;
+  }
+
+  /* Missing-style: tile slightly washed */
+  .card.is-missing .tile{
+    background:
+      radial-gradient(80% 80% at 30% 25%, rgba(255,255,255,.65), rgba(255,255,255,0) 60%),
+      linear-gradient(160deg, #EFEAE1 0%, #E1D9C9 100%);
+  }
+  .card.is-missing svg.garment{opacity:.55;filter:grayscale(.35) drop-shadow(0 6px 10px rgba(29,26,21,.08));}
+  .card.is-missing .name{color:var(--ink-700);}
+
+  /* Empty "Add a garment" tile */
+  .card.add{
+    background:transparent;
+    border:1.5px dashed rgba(29,26,21,.18);
+    box-shadow:none;
+    display:flex;align-items:center;justify-content:center;
+    aspect-ratio:auto;
+    min-height:100%;
+  }
+  .card.add .tile{
+    background:transparent;
+    aspect-ratio:1/1;width:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  }
+  .card.add .plus-circ{
+    width:48px;height:48px;border-radius:50%;
+    background:var(--surface);
+    border:1px solid var(--hairline);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 1px 2px rgba(29,26,21,.05);
+  }
+  .card.add .label{
+    font-size:12.5px;font-weight:600;color:var(--ink-500);
+  }
+  .card.add:hover .plus-circ{background:var(--warm-orange-50);border-color:rgba(255,107,53,.3);}
+
+  /* FAB */
+  .fab{
+    position:absolute;right:22px;bottom:calc(env(safe-area-inset-bottom, 0px) + 32px);
+    width:60px;height:60px;border-radius:22px;
+    background:linear-gradient(160deg, var(--warm-orange) 0%, var(--warm-orange-700) 100%);
+    border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:
+      0 1px 2px rgba(255,107,53,.4),
+      0 10px 24px rgba(255,107,53,.38),
+      inset 0 1px 0 rgba(255,255,255,.25);
+    z-index:30;
+    -webkit-tap-highlight-color:transparent;
+    transition:transform 160ms ease, box-shadow 160ms ease;
+  }
+  .fab:active{transform:scale(.96);}
+  .fab:focus-visible{outline:3px solid #fff;outline-offset:3px;}
+  @media (prefers-reduced-motion: reduce){.fab{transition:none;}}
+  .fab .ring{
+    position:absolute;inset:-6px;border-radius:26px;
+    border:2px solid rgba(255,107,53,.18);
+    pointer-events:none;
+    animation:pulse 2.6s ease-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce){.fab .ring{animation:none;opacity:.4;}}
+  @keyframes pulse{
+    0%{transform:scale(.9);opacity:.7;}
+    70%{transform:scale(1.25);opacity:0;}
+    100%{transform:scale(1.25);opacity:0;}
+  }
+
+  /* Bottom fade for visual scroll affordance */
+  .scroll-fade{
+    position:absolute;left:0;right:0;bottom:0;height:64px;
+    background:linear-gradient(180deg, rgba(245,241,234,0) 0%, var(--bg-canvas-2) 100%);
+    pointer-events:none;z-index:5;
+  }
+
+  /* Layer divider */
+  .divider{
+    height:1px;background:linear-gradient(90deg, transparent 0%, var(--hairline-strong) 30%, var(--hairline-strong) 70%, transparent 100%);
+    margin:6px 26px 0;
+  }
+
+  /* Side note */
+  .note{
+    margin:48px 0 0;color:#aaa;font-family:'Schibsted Grotesk',sans-serif;font-size:12px;letter-spacing:.5px;
+    text-align:center;max-width:390px;
+  }
+</style>
+</head>
+<body>
+
+<div class="frame" role="img" aria-label="Babyora Min garderobe – mock B (visuell, romslig)">
+  <div class="statusbar" aria-hidden="true">
+    <span>9:41</span>
+    <span class="right">
+      <!-- signal -->
+      <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><path d="M1 8h2v3H1zM5 6h2v5H5zM9 3h2v8H9zM13 0h2v11h-2z"/></svg>
+      <!-- wifi -->
+      <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor"><path d="M7.5 2.5c2.06 0 3.93.78 5.34 2.06l.99-.99A8.46 8.46 0 0 0 7.5 1 8.46 8.46 0 0 0 1.17 3.57l.99.99A7.96 7.96 0 0 1 7.5 2.5zm0 3c1.24 0 2.36.5 3.18 1.32l.99-.99A5.97 5.97 0 0 0 7.5 4a5.97 5.97 0 0 0-4.17 1.83l.99.99A4.48 4.48 0 0 1 7.5 5.5zM7.5 8.5c.41 0 .79.17 1.06.44l.99-.99A2.99 2.99 0 0 0 7.5 7c-.83 0-1.58.34-2.12.95l.99.99A1.5 1.5 0 0 1 7.5 8.5z"/></svg>
+      <!-- battery -->
+      <svg width="27" height="11" viewBox="0 0 27 11" fill="none"><rect x="0.5" y="0.5" width="22" height="10" rx="2.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="19" height="7" rx="1.2" fill="currentColor"/><rect x="23.5" y="3.5" width="2" height="4" rx="1" fill="currentColor" opacity=".5"/></svg>
+    </span>
+  </div>
+
+  <main class="screen" aria-labelledby="garderobe-title">
+
+    <header class="header">
+      <button type="button" class="icon-btn" aria-label="Tilbake">
+        <span class="back-visual" aria-hidden="true">
+          <svg width="11" height="17" viewBox="0 0 8 14" fill="none" stroke="#1D1A15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1L1 7l6 6"/></svg>
+        </span>
+      </button>
+      <button type="button" class="icon-btn" aria-label="Filtrer garderobe">
+        <span class="menu-visual" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1D1A15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+        </span>
+      </button>
+    </header>
+
+    <section class="hero">
+      <p class="eyebrow"><span>Babyora</span></p>
+      <h1 id="garderobe-title" class="hero-title">
+        Min <em>garderobe</em>
+      </h1>
+      <p class="hero-sub">Alt lille Iben har — og det som mangler før første skikkelige høst&shy;vind.</p>
+    </section>
+
+    <section class="summary" aria-label="Sammendrag">
+      <div class="chip">
+        <span class="num">12</span>
+        <span class="lab">I skuffen</span>
+      </div>
+      <div class="chip">
+        <span class="num">8</span>
+        <span class="lab">Brukes nå</span>
+      </div>
+      <div class="chip accent">
+        <span class="num">3</span>
+        <span class="lab">Mangler</span>
+      </div>
+    </section>
+
+    <nav class="scroll" aria-label="Garderobe-grupper">
+
+      <!-- INNERLAG -->
+      <section class="layer" aria-labelledby="grp-innerlag">
+        <div class="layer-head">
+          <h2 id="grp-innerlag">Innerlag</h2>
+          <span class="count"><strong>2</strong> / 3 har</span>
+        </div>
+
+        <ul class="grid" role="list">
+          <li>
+            <button type="button" class="card" aria-pressed="true" aria-label="Ullbody, str. 80, merinoull. Status: Har. Trykk for å endre.">
+              <div class="tile" aria-hidden="true">
+                <span class="badge owned"><span class="dot"></span>Har</span>
+                <!-- Body / onesie -->
+                <svg class="garment" viewBox="0 0 120 120" fill="none">
+                  <defs>
+                    <linearGradient id="body1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2D3BC"/><stop offset="1" stop-color="#D9A687"/></linearGradient>
+                  </defs>
+                  <path d="M40 28 Q40 22 47 22 L73 22 Q80 22 80 28 L82 42 L96 50 L92 64 L82 60 L82 88 Q82 96 74 96 L46 96 Q38 96 38 88 L38 60 L28 64 L24 50 L38 42 Z" fill="url(#body1)" stroke="#A8775B" stroke-width="1.4"/>
+                  <path d="M50 50 L50 92 M70 50 L70 92" stroke="#A8775B" stroke-width=".8" opacity=".5"/>
+                  <circle cx="54" cy="96" r="2" fill="#A8775B"/>
+                  <circle cx="66" cy="96" r="2" fill="#A8775B"/>
+                  <circle cx="60" cy="96" r="2" fill="#A8775B"/>
+                </svg>
+              </div>
+              <div class="body">
+                <p class="name">Ullbody</p>
+                <p class="meta">Str. 80 · merinoull</p>
+              </div>
+            </button>
+          </li>
+
+          <li>
+            <button type="button" class="card is-missing" aria-pressed="false" aria-label="Bomullsbody, str. 80, kort arm. Status: Mangler. Trykk for å endre.">
+              <div class="tile" aria-hidden="true">
+                <span class="badge missing"><span class="dot"></span>Mangler</span>
+                <svg class="garment" viewBox="0 0 120 120" fill="none">
+                  <defs>
+                    <linearGradient id="body2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBFAF6"/><stop offset="1" stop-color="#E4DFD3"/></linearGradient>
+                  </defs>
+                  <path d="M42 30 Q42 24 49 24 L71 24 Q78 24 78 30 L80 40 L92 46 L88 58 L80 54 L80 86 Q80 94 72 94 L48 94 Q40 94 40 86 L40 54 L32 58 L28 46 L40 40 Z" fill="url(#body2)" stroke="#9A9485" stroke-width="1.4"/>
+                  <path d="M52 50 L52 90 M68 50 L68 90" stroke="#9A9485" stroke-width=".7" opacity=".4"/>
+                </svg>
+              </div>
+              <div class="body">
+                <p class="name">Bomullsbody</p>
+                <p class="meta">Str. 80 · kort arm</p>
+              </div>
+            </button>
+          </li>
+
+          <li>
+            <button type="button" class="card" aria-pressed="true" aria-label="Ullgenser, str. 86, langermet. Status: Har. Trykk for å endre.">
+              <div class="tile" aria-hidden="true">
+                <span class="badge owned"><span class="dot"></span>Har</span>
+                <svg class="garment" viewBox="0 0 120 120" fill="none">
+                  <defs>
+                    <linearGradient id="sw1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D7E1"/><stop offset="1" stop-color="#8FA7B8"/></linearGradient>
+                  </defs>
+                  <path d="M30 38 L42 28 Q50 24 60 24 Q70 24 78 28 L90 38 L96 52 L86 56 L86 82 Q86 90 78 90 L42 90 Q34 90 34 82 L34 56 L24 52 Z" fill="url(#sw1)" stroke="#5E7588" stroke-width="1.4"/>
+                  <path d="M44 56 L44 88 M76 56 L76 88" stroke="#5E7588" stroke-width=".8" opacity=".4"/>
+                  <path d="M44 38 Q60 32 76 38" stroke="#5E7588" stroke-width="1.2" fill="none"/>
+                </svg>
+              </div>
+              <div class="body">
+                <p class="name">Ullgenser</p>
+                <p class="meta">Str. 86 · langermet</p>
+              </div>
+            </button>
+          </li>
+
+          <li>
+            <button type="button" class="card add" aria-label="Legg til nytt innerlag-plagg">
+              <div class="tile">
+                <span class="plus-circ" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                </span>
+                <span class="label">Nytt plagg</span>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <div class="divider" aria-hidden="true"></div>
+
+      <!-- YTTERLAG -->
+      <section class="layer" aria-labelledby="grp-ytterlag">
+        <div class="layer-head">
+          <h2 id="grp-ytterlag">Ytterlag</h2>
+          <span class="count"><strong>2</strong> / 3 har</span>
+        </div>
+
+        <ul class="grid" role="list">
+          <li>
+            <button type="button" class="card" aria-pressed="true" aria-label="Vinterdress, str. 86, vanntett. Status: Har. Trykk for å endre.">
+              <div class="tile" aria-hidden="true">
+                <span class="badge owned"><span class="dot"></span>Har</span>
+                <svg class="garment" viewBox="0 0 120 120" fill="none">
+                  <defs>
+                    <linearGradient id="ws1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3F4A5E"/><stop offset="1" stop-color="#1F2733"/></linearGradient>
+                  </defs>
+                  <!-- hood -->
+                  <ellipse cx="60" cy="22" rx="16" ry="9" fill="url(#ws1)"/>
+                  <!-- body -->
+                  <path d="M32 38 L46 28 L74 28 L88 38 L92 56 L84 60 L84 70 L78 110 L66 110 L66 78 L54 78 L54 110 L42 110 L36 70 L36 60 L28 56 Z" fill="url(#ws1)" stroke="#10151E" stroke-width="1.4"/>
+                  <!-- zipper -->
+                  <path d="M60 36 L60 70" stroke="#FF6B35" stroke-width="1.4"/>
+                  <circle cx="60" cy="40" r="1.6" fill="#FF6B35"/>
+                  <!-- cuffs -->
+                  <rect x="34" y="64" width="6" height="3" fill="#0B0F17"/>
+                  <rect x="80" y="64" width="6" height="3" fill="#0B0F17"/>
+                </svg>
+              </div>
+              <div class="body">
+                <p class="name">Vinterdress</p>
+                <p class="meta">Str. 86 · vanntett</p>
+              </div>
+            </button>
+          </li>
+
+          <li>
+            <button type="button" class="card" aria-pressed="true" aria-label="Fleecedress, str. 80, mellomlag. Status: Har. Trykk for å endre.">
+              <div class="tile" aria-hidden="true">
+                <span class="badge owned"><span class="dot"></span>Har</span>
+                <svg class="garment" viewBox="0 0 120 120" fill="none">
+                  <defs>
+                    <linearGradient id="fl1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E5C9A3"/><stop offset="1" stop-color="#B89469"/></linearGradient>
+                  </defs>
+                  <ellipse cx="60" cy="22" rx="14" ry="8" fill="#B89469"/>
+                  <path d="M34 38 L46 30 L74 30 L86 38 L90 56 L82 60 L82 70 L76 110 L66 110 L66 78 L54 78 L54 110 L44 110 L38 70 L38 60 L30 56 Z" fill="url(#fl1)" stroke="#8C6A42" stroke-width="1.4"/>
+                  <!-- fluffy texture dots -->
+                  <circle cx="46" cy="46" r="1.4" fill="#FFF" opacity=".5"/>
+                  <circle cx="56" cy="54" r="1.4" fill="#FFF" opacity=".5"/>
+                  <circle cx="68" cy="48" r="1.4" fill="#FFF" opacity=".5"/>
+                  <circle cx="74" cy="62" r="1.4" fill="#FFF" opacity=".5"/>
+                  <circle cx="50" cy="68" r="1.4" fill="#FFF" opacity=".5"/>
+                </svg>
+              </div>
+              <div class="body">
+                <p class="name">Fleecedress</p>
+                <p class="meta">Str. 80 · mellomlag</p>
+              </div>
+            </button>
+          </li>
+
+          <li>
+            <button type="button" class="card is-missing" aria-pressed="false" aria-label="Regndress, str. 86, vanntett. Status: Mangler. Trykk for å endre.">
+              <div class="tile" aria-hidden="true">
+                <span class="badge missing"><span class="dot"></span>Mangler</span>
+                <svg class="garment" viewBox="0 0 120 120" fill="none">
+                  <defs>
+                    <linearGradient id="rn1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4A742"/><stop offset="1" stop-color="#C9761A"/></linearGradient>
+                  </defs>
+                  <ellipse cx="60" cy="22" rx="14" ry="8" fill="#C9761A"/>
+                  <path d="M34 38 L46 30 L74 30 L86 38 L90 56 L82 60 L82 70 L76 110 L66 110 L66 78 L54 78 L54 110 L44 110 L38 70 L38 60 L30 56 Z" fill="url(#rn1)" stroke="#8E550E" stroke-width="1.4"/>
+                  <path d="M60 38 L60 70" stroke="#8E550E" stroke-width="1"/>
+                  <!-- raindrop highlights -->
+                  <path d="M44 50 q1 -3 2 0 t-2 0Z" fill="#FFF" opacity=".55"/>
+                  <path d="M72 60 q1 -3 2 0 t-2 0Z" fill="#FFF" opacity=".55"/>
+                </svg>
+              </div>
+              <div class="body">
+                <p class="name">Regndress</p>
+                <p class="meta">Str. 86 · vanntett</p>
+              </div>
+            </button>
+          </li>
+
+          <li>
+            <button type="button" class="card add" aria-label="Legg til nytt ytterlag-plagg">
+              <div class="tile">
+                <span class="plus-circ" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                </span>
+                <span class="label">Nytt plagg</span>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <div class="divider" aria-hidden="true"></div>
+
+      <!-- TILBEHØR -->
+      <section class="layer" aria-labelledby="grp-tilbehor">
+        <div class="layer-head">
+          <h2 id="grp-tilbehor">Tilbehør</h2>
+          <span class="count"><strong>3</strong> / 4 har</span>
+        </div>
+
+        <ul class="grid" role="list">
+          <li>
+            <button type="button" class="card" aria-pressed="true" aria-label="Ullsokker, 3 par. Status: Har. Trykk for å endre.">
+              <div class="tile" aria-hidden="true">
+                <span class="badge owned"><span class="dot"></span>Har</span>
+                <svg class="garment" viewBox="0 0 120 120" fill="none">
+                  <defs>
+                    <linearGradient id="sk1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2D3BC"/><stop offset="1" stop-color="#C7A082"/></linearGradient>
+                  </defs>
+                  <!-- sock -->
+                  <path d="M44 30 L70 30 L70 70 Q70 78 78 78 L94 78 Q98 78 98 82 L98 90 Q98 94 94 94 L60 94 Q44 94 44 78 Z" fill="url(#sk1)" stroke="#8C6A4F" stroke-width="1.4"/>
+                  <path d="M44 38 L70 38" stroke="#8C6A4F" stroke-width="1" opacity=".6"/>
+                  <!-- knit lines -->
+                  <path d="M50 46 L64 46 M50 54 L64 54 M50 62 L64 62" stroke="#8C6A4F" stroke-width=".6" opacity=".4"/>
+                </svg>
+              </div>
+              <div class="body">
+                <p class="name">Ullsokker</p>
+                <p class="meta">3 par</p>
+              </div>
+            </button>
+          </li>
+
+          <li>
+            <button type="button" class="card is-missing" aria-pressed="false" aria-label="Votter, ull, 1–2 år. Status: Mangler. Trykk for å endre.">
+              <div class="tile" aria-hidden="true">
+                <span class="badge missing"><span class="dot"></span>Mangler</span>
+                <svg class="garment" viewBox="0 0 120 120" fill="none">
+                  <defs>
+                    <linearGradient id="mt1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2A98D"/><stop offset="1" stop-color="#B07A5D"/></linearGradient>
+                  </defs>
+                  <!-- mitten -->
+                  <path d="M40 36 Q40 28 50 28 L72 28 Q82 28 82 36 L82 64 Q90 66 90 76 Q90 84 80 84 L80 92 Q80 96 76 96 L46 96 Q42 96 42 92 L42 36 Z" fill="url(#mt1)" stroke="#8A5A40" stroke-width="1.4"/>
+                  <!-- cuff -->
+                  <rect x="42" y="86" width="38" height="6" fill="#8A5A40" opacity=".6"/>
+                  <path d="M48 88 L48 92 M58 88 L58 92 M68 88 L68 92 M76 88 L76 92" stroke="#FFF" stroke-width=".7" opacity=".5"/>
+                </svg>
+              </div>
+              <div class="body">
+                <p class="name">Votter</p>
+                <p class="meta">Ull · 1–2 år</p>
+              </div>
+            </button>
+          </li>
+
+          <li>
+            <button type="button" class="card" aria-pressed="true" aria-label="Lue, merinoull, 6–12 mnd. Status: Har. Trykk for å endre.">
+              <div class="tile" aria-hidden="true">
+                <span class="badge owned"><span class="dot"></span>Har</span>
+                <svg class="garment" viewBox="0 0 120 120" fill="none">
+                  <defs>
+                    <linearGradient id="hat1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D7E1"/><stop offset="1" stop-color="#7E97AB"/></linearGradient>
+                  </defs>
+                  <!-- hat dome -->
+                  <path d="M30 70 Q30 30 60 30 Q90 30 90 70 Z" fill="url(#hat1)" stroke="#4E6577" stroke-width="1.4"/>
+                  <!-- cuff -->
+                  <rect x="28" y="68" width="64" height="10" rx="3" fill="#4E6577"/>
+                  <!-- pom -->
+                  <circle cx="60" cy="22" r="9" fill="#E2D5C2" stroke="#A89376" stroke-width="1.2"/>
+                  <circle cx="56" cy="20" r="2" fill="#FFF" opacity=".6"/>
+                  <!-- knit lines -->
+                  <path d="M40 50 Q60 38 80 50 M40 60 Q60 48 80 60" stroke="#4E6577" stroke-width=".7" fill="none" opacity=".4"/>
+                </svg>
+              </div>
+              <div class="body">
+                <p class="name">Lue</p>
+                <p class="meta">Merinoull · 6–12 mnd</p>
+              </div>
+            </button>
+          </li>
+
+          <li>
+            <button type="button" class="card" aria-pressed="true" aria-label="Hals, fleece, one size. Status: Har. Trykk for å endre.">
+              <div class="tile" aria-hidden="true">
+                <span class="badge owned"><span class="dot"></span>Har</span>
+                <svg class="garment" viewBox="0 0 120 120" fill="none">
+                  <defs>
+                    <linearGradient id="nk1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E5C9A3"/><stop offset="1" stop-color="#A88554"/></linearGradient>
+                  </defs>
+                  <!-- neck tube -->
+                  <ellipse cx="60" cy="36" rx="26" ry="9" fill="url(#nk1)" stroke="#7A5E33" stroke-width="1.4"/>
+                  <path d="M34 36 L34 84 Q34 92 60 92 Q86 92 86 84 L86 36" fill="url(#nk1)" stroke="#7A5E33" stroke-width="1.4"/>
+                  <ellipse cx="60" cy="84" rx="26" ry="6" fill="#A88554" opacity=".6"/>
+                  <path d="M40 50 L80 50 M40 60 L80 60 M40 70 L80 70" stroke="#7A5E33" stroke-width=".5" opacity=".3"/>
+                </svg>
+              </div>
+              <div class="body">
+                <p class="name">Hals</p>
+                <p class="meta">Fleece · one size</p>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+    </nav>
+
+    <div class="scroll-fade" aria-hidden="true"></div>
+
+    <button type="button" class="fab" aria-label="Legg til nytt plagg">
+      <span class="ring" aria-hidden="true"></span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFF" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+
+  </main>
+</div>
+
+<p class="note">Mock B · visuell + romslig · 2-kol garderobe-grid med store plagg-tiles, FAB add og editorial hero</p>
+
+</body>
+</html>

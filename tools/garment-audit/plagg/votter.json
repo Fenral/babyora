@@ -1,0 +1,60 @@
+{
+  "claude": {
+    "id": "votter",
+    "dbString": "votter",
+    "kategori": "ekstra-hender",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Har komplett what ('Standard ullvotter med ribbet strikk.') + when ('Fra 0 °C og nedover.') i garment-info.ts (linje 173-176). Dedikert whyForGarment-gren finnes (linje 420-422), men den DELES med votter-tynne ('votter-tynne' || 'votter' → samme tekst), så begrunnelsen er ikke 100 % spesifikk for standard-votten. Mønster/tone matcher søsken (votter-tynne/tykke/dun), men when-teksten er den korteste i hender-kategorien — søsken har litt rikere formulering."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "votter.png finnes (1 096 585 bytes) i public/illustrations/garments/. db-strengen 'votter' er mappet 1:1 til id 'votter' i garment-illustrations.ts (linje 63). Alle søsken-variantene (votter-tynne/tykke/dun) finnes også som egne PNG-er, så mapping-plausibiliteten er høy. Visuell dom gjøres senere av Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 25,
+      "kommentar": "Eksakt streng 'votter' (ikke tynne/tykke/dun) velges i tre celler: vogn/kald, baeresele/frost, utelek/kald. Pediatrisk forsvarlig — tildekkede hender ved 0 °C og lavere stemmer med kuldekilder (Capital Area Peds, AAP-HC) om frostskade-eksponering. Ingen overoppheting/SIDS/kvelning-risiko knyttet til votter. Ingen modifier eller safety/conflict-regel legger til eller fjerner plain 'votter' (kun separat 'vindvotter (skall)' ved vind ≥8 m/s + feels <0). Ingen helse-spørsmål utenfor de 11 kildenes dekning.",
+      "score_dup": 25,
+      "trace": "bandForTemp: kald = 0..4 °C, frost = -7..-1 °C. baseTable-treff for eksakt 'votter': (1) vogn.kald → ekstra ['lue','votter','varmepose','saueskinn i vogn'] (tables.ts L52); (2) baeresele.frost → ekstra ['lue m/ ull','votter','hals'] (L109); (3) utelek.kald → ekstra ['lue','votter','vintersko'] (L212). Modifiers: ingen add/remove av 'votter'; kun 'vindvotter (skall)' legges til ved windMs≥8 && feels<0 (modifiers.ts L182-184). conflicts/softBlocks/safety: ingen regel matcher 'votter'. Netto: plain 'votter' aktiv i kald-båndet (vogn/utelek) og frost-båndet (baeresele).",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 24,
+      "kommentar": "when sier 'Fra 0 °C og nedover.' Trace bekrefter at plain 'votter' først dukker opp i kald-båndet (0-4 °C) for vogn/utelek og frost-båndet (baeresele). Den høyeste temperaturen votter velges ved er nettopp 0 °C-grensen (kald-bånd starter ved 0 °C) — så 'Fra 0 °C og nedover' er presist og uten drift. whyForGarment bruker dynamisk ${feels} og generisk 'hendene kjøles raskt'-begrunnelse, som ikke kolliderer med faktiske forhold. Liten merknad: 'votter tynne' (den tynnere søsteren) velges allerede ved feels 0-4 °C i kjolig-bånd (5-9 °C) IKKE — faktisk velges votter-tynne i kjolig (5-9 °C), så grensen mellom tynne (5 °C+) og standard (0 °C+) er korrekt sekvensert. Ingen villedende drift."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Plain 'votter' har INGEN oppføring i alternatives.ts. Det finnes en naturlig tykkelse-trinn-kjede (votter tynne ↔ votter ↔ votter tykke ↔ votter dun) der bare 'votter tykke' → 'votter dun' er registrert som alternativ. Et alternativ for standard 'votter' (f.eks. 'votter tykke' når det er kaldere enn ventet, eller 'votter tynne' ved mildere) ville vært konsistent med hvordan tykke-votten håndteres. Ikke kritisk — eksisterende kjede er fornuftig, men det er et reelt hull for konsistens."
+    },
+    "total": 94,
+    "verdikt": "Solid plagg-oppføring. Seleksjon er pediatrisk forsvarlig og when-teksten ('Fra 0 °C og nedover') matcher den faktiske baseTable-tracen presist uten drift. Hovedfunn er mindre konsistens-mangler: delt whyForGarment-gren med votter-tynne, kortest when-tekst i kategorien, og manglende tykkelse-trinn-alternativ i alternatives.ts. Ingen sikkerhets- eller logikk-feil.",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "whyForGarment-grenen for 'votter' deles med 'votter-tynne' (linje 420-422 i garment-info.ts: id === 'votter-tynne' || id === 'votter'), så standard-votten får ikke en begrunnelse som skiller den fra den tynne varianten.",
+        "forslag": "Vurder en egen gren for 'votter' som nevner ull/ribbet strikk og 0 °C-terskelen, slik tykke/dun har egne grener.",
+        "kilde": "garment-info.ts L420-422",
+        "kategori": "struktur"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Plain 'votter' mangler oppføring i alternatives.ts, mens 'votter tykke' har et registrert alternativ (votter dun). Det bryter konsistensen i tykkelse-trinn-kjeden.",
+        "forslag": "Legg til ItemAlternatives for 'votter' med f.eks. 'votter tykke' (kaldere enn ventet) og/eller 'votter tynne' (mildere) som alternativ, med i18n-keys i tråd med eksisterende votterDun-mønster.",
+        "kilde": "alternatives.ts L95-104",
+        "kategori": "alternativer"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "when-teksten for 'votter' ('Fra 0 °C og nedover.') er den korteste i hender-kategorien sammenlignet med søsken-plaggene.",
+        "forslag": "Utvid lett til samme detaljnivå som søsken, f.eks. nevne aktivitet (vogn/utelek/bæresele) der votter brukes i frost-/kald-bånd.",
+        "kilde": "garment-info.ts L173-176",
+        "kategori": "struktur"
+      }
+    ]
+  },
+  "fable": null
+}

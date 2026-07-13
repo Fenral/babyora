@@ -1,0 +1,536 @@
+/**
+ * F80b Babyora design-tokens — Morgennatt (port fra F79 mock).
+ * Schibsted Grotesk (UI) + Fraunces (display, KUN temp-mast) + Morgennatt
+ * canvas/ink/CTA-ramp + temp-reaktiv akse (kald/mild/varm).
+ *
+ * Kilde: docs/F79/morgennatt-cta-analyse.md → «Endelige Morgennatt-tokens».
+ * Layout-fasit: docs/F80/v3-vurdering.md. A11y-krav: docs/F80/a11y-preclearance.md.
+ *
+ * Native-feel #9 (2026-06-26): Schibsted Grotesk blir self-hosted via
+ * @fontsource-variable i src/main.tsx. Fraunces er IKKE self-hosted ennå
+ * (kun brukt på temp-masten) — lastes via Google Fonts @import her, samme
+ * mønster som mocken (public/design-2026/f79-hjem-a/index.html).
+ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,420;9..144,560;9..144,640&display=swap');
+
+:root {
+  /* ============ Morgennatt — light / mild (default) ============ */
+  --bg-canvas: #DAD8EE; /* oklch(0.89 0.030 290) */
+  --bg-canvas-warm: #DAD8EE;
+  --bg-canvas-soft: #DAD8EE;
+  --surface: #F3F2FB; /* oklch(0.965 0.012 290) */
+  --surface-pure: #FFFFFF;
+  --surface-soft: #F3F2FB;
+  --surface-elevated: #FFFFFF;
+
+  /* Granmynte CTA (F79 — «eneste grønne objekt på skjermen») */
+  --warm-orange-500: #267147; /* legacy alias beholdt for uendrede skjermer, peker nå på CTA-grønn */
+  --warm-orange-700: #267147;
+  --accent-cta: #267147; /* oklch(0.49 0.100 155) */
+  --accent-cta-ink: #F2FBF5; /* oklch(0.98 0.012 157) */
+
+  /* Ink-ramp (Morgennatt) */
+  --ink-900: #211B32; /* oklch(0.24 0.045 295) */
+  --ink-800: #211B32;
+  --ink-700: #56506F; /* oklch(0.45 0.050 292) */
+  --ink-500: #56506F;
+  --ink-400: #6B6584;
+  --ink-300: #837D9C;
+  --ink-200: rgba(33, 27, 50, 0.16);
+  --ink-100: rgba(33, 27, 50, 0.08);
+
+  /* Kompat-aliaser (F80.3): komponenter fra før porten (PlaggDetailSheet m.fl.)
+     bruker disse navnene — uten dem faller de tilbake til lys-modus-hex i
+     mørk modus (Siverts dark-kontrast-bug). Pekes til Morgennatt per tema. */
+  --ink: var(--ink-900);
+  --border: var(--ink-200);
+  --surface-2: var(--ink-100);
+  --ink-on-pos-tint: #6E3820;
+  --ink-on-neg-tint: var(--ink-700);
+
+  /* Terracotta accent — beholdt som alias for skjermer utenfor F80b-scope
+     (PaakledningScreen del 2 osv.), pekt til plagg-korall for visuell kontinuitet. */
+  --terracotta-700: #6E3820;
+  --terracotta-600: #AF5331;
+  --terracotta-500: #AF5331;
+  --terracotta-400: #AF5331;
+  --terracotta-200: #F4B49C;
+  --terracotta-100: #F3F2FB;
+
+  /* Lag-farger — plagg-alignerte huer (innerst=korall 40°, mellom=oker 80°, ytterst=petrol 215°) */
+  --layer-ytterst: #285E6A; /* oklch(0.45 0.060 214), re-gen fra #1E4750 */
+  --layer-mellom: #93690D; /* oklch(0.55 0.110 80) */
+  --layer-innerst: #AF5331; /* oklch(0.55 0.130 40) */
+  --lag-korall: #AF5331;
+  --lag-petrolgra: #5A7480;
+  --lag-marigold: #93690D;
+  --lag-dyppetrol: #285E6A;
+  --chip-edge-korall: #6E3820;
+  --chip-edge-petrolgra: #22343C;
+  --chip-edge-marigold: #5C4409;
+  --chip-edge-dyppetrol: #163F48;
+
+  /* Temp-akse (isblå 262° kald ← indigo 290° mild → lyng/rosé 345° varm) */
+  --focus-ring: #6750AB; /* oklch(0.50 0.140 292) */
+  --avatar-glow: #EFECFC;
+  --accent-temp: #6654A1;
+  --layer-bg-kald: #2B5C97;    --layer-glow-kald: #E1ECFC;   --layer-base-kald: #CCDCF7;
+  --layer-bg-mild: #6654A1;    --layer-glow-mild: #EFECFC;   --layer-base-mild: #DAD8EE;
+  --layer-bg-varm: #B54436;    --layer-glow-varm: #FDE5E1;   --layer-base-varm: #EED1E0;
+
+  /* Typografi */
+  /* A2 (Sivert 2026-07-12): UI-font = OS-systemfont (SF Pro / Roboto) for maks
+     native-følelse + instant render. Fraunces beholdes på display/tall (--font-serif). */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-mono: 'SF Mono', ui-monospace, Menlo, monospace;
+
+  /* Radius */
+  --r-sm: 9px;
+  --r-md: 13px;
+  --r-lg: 16px;
+  --r-xl: 24px;
+  --r-pill: 999px;
+  --r-screen: 46px;
+  --r-device: 52px;
+
+  /* Spacing (4pt) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
+
+  /* Skygger */
+  --shadow-1: 0 1px 3px rgba(23, 16, 46, 0.09);
+  --shadow-2: 0 4px 14px rgba(23, 16, 46, 0.09);
+  --shadow-3: 0 4px 16px rgba(23, 16, 46, 0.12);
+  --shadow-cta: 0 1px 2px rgba(23, 16, 46, 0.05), 0 4px 14px rgba(23, 16, 46, 0.09);
+  --shadow-cta-primary: 0 12px 26px -14px rgba(38, 113, 71, 0.55);
+  --shadow-frame: 0 40px 90px -30px rgba(23, 16, 46, 0.45), 0 12px 30px -14px rgba(23, 16, 46, 0.35);
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-press: 160ms;
+  --dur-toggle: 320ms;
+  --dur-sheet: 420ms;
+  --dur-temp: 600ms;
+  --press-scale: 0.97;
+  --press-scale-cta: 0.98;
+
+  /* iOS safe-area-inset — kanoniske F60-tokens for notch + home-indikator.
+     Bruk via max(env(safe-area-inset-top), Xpx) eller calc(var(--safe-top) + Xpx). */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* Status-tokens (warm / cold / ok) — semantiske farger for badges, pills og status-chips. */
+  --status-warm: #B14328; /* oklch(0.53 0.150 35) */
+  --status-warm-bg: var(--surface-soft);
+  --status-cold: #265B8D; /* oklch(0.46 0.100 250) */
+  --status-cold-bg: var(--surface-soft);
+  --status-ok: #267147;
+  --status-ok-bg: var(--surface-soft);
+
+  /* Semantisk: ink-on tinted backgrounds (for pros/cons pills) */
+  --ink-on-pos-tint: var(--terracotta-700);  /* ink når bg er terracotta-100 */
+  --ink-on-neg-tint: var(--ink-700);          /* ink på cons-tint */
+
+  color-scheme: light;
+}
+
+/* ============ Temp-akse: hue-rotasjon av canvas (F80b → F83 M1-fix) ============
+   Samme mønster som mocken: [data-temp] overrider bg-canvas/avatar-glow/accent-temp.
+   F83 M1 (Fable-verify): var scopet :root[data-temp] men data-temp settes på
+   skjerm-roten (.ba-temp-root på <main>/<dialog>) — selektoren matchet ALDRI og
+   hele aksen var død siden F80b. Nå scopet til .ba-temp-root (Sivert-godkjent
+   å vekke den). Transition 600ms via .ba-temp-root; RM → instant snap. */
+.ba-temp-root[data-temp="kald"] {
+  --bg-canvas: #CCDCF7; /* oklch(0.89 0.042 262) */
+  --avatar-glow: #E1ECFC;
+  --accent-temp: #2B5C97;
+}
+.ba-temp-root[data-temp="varm"] {
+  --bg-canvas: #EED1E0; /* oklch(0.89 0.038 345) */
+  --avatar-glow: #FDE5E1;
+  --accent-temp: #B54436;
+}
+
+/**
+ * Native-feel #5 — Dark-mode (semantiske farge-tokens).
+ * Aktiveres automatisk når brukerens system bruker prefers-color-scheme: dark.
+ * Tonene er warm-grey (samme familie som light-mode canvas) for å beholde
+ * Klemeg-følelsen i mørket — ikke neutral kald grå.
+ *
+ * AA-mål (4.5:1 normal tekst):
+ *  - ink-900 (#F4EEE7) på bg-canvas (#1A1816) ≈ 14.1 : 1
+ *  - ink-700 (#C9C0B9) på bg-canvas ≈ 9.6 : 1
+ *  - ink-500 (#8A7F78) på bg-canvas ≈ 4.7 : 1 (AA normal tekst)
+ *  - warm-orange-500 (#FF8550) på bg-canvas ≈ 7.9 : 1
+ *  - terracotta-600 (#C45F38) på bg-canvas ≈ 4.8 : 1
+ *
+ * OKLCH-anker for nye dark-tokens (in-gamut sRGB, lik luminans på tvers):
+ *  - bg-canvas:        oklch(0.21 0.005 60)
+ *  - surface:          oklch(0.27 0.006 60)
+ *  - ink-900:          oklch(0.94 0.012 70)
+ *  - terracotta-600:   oklch(0.62 0.135 38)
+ *  - warm-orange-500:  oklch(0.74 0.175 45)
+ */
+/**
+ * Morgennatt Dark-mode (F80b port fra F79 mock) + theme-toggle.
+ *
+ * Tre theme-modi (drevet av theme-store + boot-script i index.html):
+ *   - auto  — følger prefers-color-scheme (ingen data-theme på <html>)
+ *   - light — data-theme="light" (overstyrer system-dark)
+ *   - dark  — data-theme="dark"  (overstyrer system-light)
+ *
+ * Begge blokker (auto-media + eksplisitt data-theme) speiler hverandre —
+ * hold dem i sync ved fremtidige endringer (samme mønster som forrige palett).
+ */
+
+/* Auto-mode: følg systemets dark-preferanse, men la data-theme="light"
+   overstyre. data-theme="dark" håndteres separat nedenfor og virker uten
+   prefers-color-scheme: dark. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-canvas: #1A1828; /* oklch(0.22 0.030 290) */
+    --bg-canvas-warm: #1A1828;
+    --bg-canvas-soft: #1A1828;
+    --surface: #282639; /* oklch(0.28 0.035 290) */
+    --surface-elevated: #33314A;
+    --surface-pure: #282639;
+    --surface-soft: #282639;
+    --ink-900: #EBEAF5; /* oklch(0.94 0.015 290) */
+    --ink-800: #EBEAF5;
+    /* F80.3 (Sivert dark-kontrast): 700/500 bumpet #B3B2C5→#C6C5D8
+       (8.4:1→10.3:1 mot canvas) — OLED-dim perceptuelt, ikke bare matte */
+    --ink-700: #C6C5D8;
+    --ink-500: #C6C5D8;
+    --ink-400: #9E9CB5;
+    --ink-300: #6D6B87;
+    --ink-200: rgba(235, 234, 245, 0.18);
+    --ink-100: rgba(235, 234, 245, 0.09);
+
+    /* Kompat-aliaser, mørk (F80.3) */
+    --ink: var(--ink-900);
+    --border: var(--ink-200);
+    --surface-2: var(--ink-100);
+    --ink-on-pos-tint: #F4B49C;
+    --ink-on-neg-tint: var(--ink-700);
+
+    --accent-cta: #65D097; /* oklch(0.78 0.130 158) — 7.97/8.99+ */
+    --accent-cta-ink: #0F2B1D;
+    --warm-orange-500: #65D097;
+    --warm-orange-700: #65D097;
+
+    --terracotta-700: #F4B49C;
+    --terracotta-600: #EE9373;
+    --terracotta-500: #EE9373;
+    --terracotta-400: #EE9373;
+    --terracotta-200: #6E3820;
+    --terracotta-100: #282639;
+
+    --layer-ytterst: #6FB0C0; /* oklch(0.72 0.070 215) — 6.06 vs surface */
+    --layer-mellom: #DBB155; /* oklch(0.78 0.120 85) — 7.31 vs surface */
+    --layer-innerst: #EE9373; /* oklch(0.75 0.119 40) — 6.35 vs surface */
+    --lag-korall: #EE9373;
+    --lag-petrolgra: #9BB4BE;
+    --lag-marigold: #DBB155;
+    --lag-dyppetrol: #6FB0C0;
+    --chip-edge-korall: #F4B49C;
+    --chip-edge-petrolgra: #C7D6DC;
+    --chip-edge-marigold: #EAC57E;
+    --chip-edge-dyppetrol: #9BCCD8;
+
+    --focus-ring: #A48FE1; /* oklch(0.70 0.120 295) */
+    --avatar-glow: #4D4869;
+    --accent-temp: #A89AD7;
+    --layer-bg-kald: #79B0E8;    --layer-glow-kald: #384D73;   --layer-base-kald: #131A2D;
+    --layer-bg-mild: #A89AD7;    --layer-glow-mild: #4D4869;   --layer-base-mild: #1A1828;
+    --layer-bg-varm: #F8907C;    --layer-glow-varm: #6E4358;   --layer-base-varm: #251724;
+
+    /* Skygger — mørkere base, mer transparent for å unngå halo */
+    --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-2: 0 4px 14px rgba(0, 0, 0, 0.45);
+    --shadow-3: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --shadow-cta: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.4);
+    --shadow-cta-primary: 0 14px 30px -12px rgba(101, 208, 151, 0.55);
+    --shadow-frame: 0 44px 100px -30px rgba(0, 0, 0, 0.75), 0 14px 34px -14px rgba(0, 0, 0, 0.6);
+
+    /* Status-tokens i dark — lysere hues for AA-kontrast på mørk canvas.
+       status-warm bruker korall-familien KUN for små indikatorer, aldri knapper
+       (jf. morgennatt-cta-analyse verifikasjonsnotat). */
+    --status-warm: #FF987E; /* oklch(0.78 0.130 35) */
+    --status-cold: #79B1E0; /* oklch(0.74 0.090 245) */
+    --status-ok: #65D097;
+
+    --ink-on-pos-tint: var(--terracotta-200);
+    --ink-on-neg-tint: var(--ink-700);
+  }
+  /* F83 M1: data-temp bor på .ba-temp-root (skjerm-roten), ikke :root. */
+  :root:not([data-theme="light"]) .ba-temp-root[data-temp="kald"] {
+    --bg-canvas: #131A2D; /* oklch(0.22 0.040 268) */
+    --avatar-glow: #384D73;
+    --accent-temp: #79B0E8;
+  }
+  :root:not([data-theme="light"]) .ba-temp-root[data-temp="varm"] {
+    --bg-canvas: #251724; /* oklch(0.23 0.032 330) */
+    --avatar-glow: #6E4358;
+    --accent-temp: #F8907C;
+  }
+  :root { color-scheme: light dark; }
+}
+
+/* Eksplisitt dark: brukeren har valgt "dark" i settings — uavhengig av
+   system. Samme tokens som dark-media-blokken. */
+:root[data-theme="dark"] {
+  --bg-canvas: #1A1828; /* oklch(0.22 0.030 290) */
+  --bg-canvas-warm: #1A1828;
+  --bg-canvas-soft: #1A1828;
+  --surface: #282639; /* oklch(0.28 0.035 290) */
+  --surface-elevated: #33314A;
+  --surface-pure: #282639;
+  --surface-soft: #282639;
+  --ink-900: #EBEAF5; /* oklch(0.94 0.015 290) */
+  --ink-800: #EBEAF5;
+  --ink-700: #C6C5D8; /* F80.3 bump (10.3:1) */
+  --ink-500: #C6C5D8;
+  --ink-400: #9E9CB5;
+  --ink-300: #6D6B87;
+  --ink-200: rgba(235, 234, 245, 0.18);
+  --ink-100: rgba(235, 234, 245, 0.09);
+
+  /* Kompat-aliaser, mørk (F80.3) */
+  --ink: var(--ink-900);
+  --border: var(--ink-200);
+  --surface-2: var(--ink-100);
+  --ink-on-pos-tint: #F4B49C;
+  --ink-on-neg-tint: var(--ink-700);
+
+  --accent-cta: #65D097; /* oklch(0.78 0.130 158) — 7.97/8.99+ */
+  --accent-cta-ink: #0F2B1D;
+  --warm-orange-500: #65D097;
+  --warm-orange-700: #65D097;
+
+  --terracotta-700: #F4B49C;
+  --terracotta-600: #EE9373;
+  --terracotta-500: #EE9373;
+  --terracotta-400: #EE9373;
+  --terracotta-200: #6E3820;
+  --terracotta-100: #282639;
+
+  --layer-ytterst: #6FB0C0; /* oklch(0.72 0.070 215) — 6.06 vs surface */
+  --layer-mellom: #DBB155; /* oklch(0.78 0.120 85) — 7.31 vs surface */
+  --layer-innerst: #EE9373; /* oklch(0.75 0.119 40) — 6.35 vs surface */
+  --lag-korall: #EE9373;
+  --lag-petrolgra: #9BB4BE;
+  --lag-marigold: #DBB155;
+  --lag-dyppetrol: #6FB0C0;
+  --chip-edge-korall: #F4B49C;
+  --chip-edge-petrolgra: #C7D6DC;
+  --chip-edge-marigold: #EAC57E;
+  --chip-edge-dyppetrol: #9BCCD8;
+
+  --focus-ring: #A48FE1; /* oklch(0.70 0.120 295) */
+  --avatar-glow: #4D4869;
+  --accent-temp: #A89AD7;
+  --layer-bg-kald: #79B0E8;    --layer-glow-kald: #384D73;   --layer-base-kald: #131A2D;
+  --layer-bg-mild: #A89AD7;    --layer-glow-mild: #4D4869;   --layer-base-mild: #1A1828;
+  --layer-bg-varm: #F8907C;    --layer-glow-varm: #6E4358;   --layer-base-varm: #251724;
+
+  /* Skygger — mørkere base, mer transparent for å unngå halo */
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-cta: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.4);
+  --shadow-cta-primary: 0 14px 30px -12px rgba(101, 208, 151, 0.55);
+  --shadow-frame: 0 44px 100px -30px rgba(0, 0, 0, 0.75), 0 14px 34px -14px rgba(0, 0, 0, 0.6);
+
+  --status-warm: #FF987E; /* oklch(0.78 0.130 35) */
+  --status-cold: #79B1E0; /* oklch(0.74 0.090 245) */
+  --status-ok: #65D097;
+
+  --ink-on-pos-tint: var(--terracotta-200);
+  --ink-on-neg-tint: var(--ink-700);
+
+  color-scheme: dark;
+}
+/* F83 M1: data-temp bor på .ba-temp-root (skjerm-roten), ikke :root. */
+:root[data-theme="dark"] .ba-temp-root[data-temp="kald"] {
+  --bg-canvas: #131A2D; /* oklch(0.22 0.040 268) */
+  --avatar-glow: #384D73;
+  --accent-temp: #79B0E8;
+}
+:root[data-theme="dark"] .ba-temp-root[data-temp="varm"] {
+  --bg-canvas: #251724; /* oklch(0.23 0.032 330) */
+  --avatar-glow: #6E4358;
+  --accent-temp: #F8907C;
+}
+
+/* Forced-colors / Windows high-contrast mode: la system overstyre alle
+   custom-properties — vi setter ingen overrides her, browseren mapper. */
+@media (forced-colors: active) {
+  :root {
+    /* la system overstyre */
+  }
+}
+
+html {
+  /* Dynamic Type: fluid base font-size som skaleres med viewport, men respekterer
+     iOS Dynamic Type / Android Font Scale via -webkit-text-size-adjust. */
+  font-size: clamp(15px, 0.9rem + 0.5vw, 18px);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background: var(--bg-canvas);
+  color: var(--ink-900);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Polish (#10): hindre body-bounce / overscroll-chain ut til native nettleser. */
+  overscroll-behavior: contain;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* F80b — temp-reaktiv canvas: 600ms transition på bg/glow/accent-temp ved
+   [data-temp]-bytte (kald/mild/varm). Scoped til .ba-temp-root (HjemScreen)
+   i stedet for globalt for å unngå transition-kostnad på skjermer uten
+   temp-akse. RM → instant snap (ingen transition), per a11y-preclearance §2. */
+.ba-temp-root {
+  transition: background-color var(--dur-temp, 600ms) var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ba-temp-root {
+    transition: none;
+  }
+}
+
+button {
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  /* Polish (#10): drop iOS long-press callout / kontekstmeny på knapper. */
+  -webkit-touch-callout: none;
+  /* Polish (#10): hit-target-bump — global 44px minimum (WCAG 2.5.5).
+     Komponenter kan overstyre høyere; aldri lavere. */
+  min-height: 44px;
+}
+
+/* Polish (#10): drop long-press "lagre bilde"-menyen på illustrasjoner / avatarer
+   så appen føles native og ikke nettleser-aktig. */
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
+/* Polish (#10): native-feel scroll-roots.
+   - overscroll-behavior: contain hindrer scroll-chain til parent / body
+   - -webkit-overflow-scrolling: touch beholder momentum-scroll på iOS
+   Brukes via .ba-scroll-native på dedikerte scroll-containere. */
+.ba-scroll-native {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Polish (#10): pull-to-refresh native-feel — gir taktilt drag-rom på toppen
+   av root-scroll uten faktisk refresh. Holder seg innen brand-tokens. */
+.ba-pull-refresh {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* F83 (native-polish): globale pressed-states — iOS-grammatikk.
+   Knapper/segmenter SCALER ved trykk; liste-rader får bg-tint i stedet
+   (rader scaler ikke på iOS). !important på rad-bg fordi radene setter
+   background via inline-style. RM-guard nederst nullstiller transform. */
+.ba-press,
+.ba-press-cta {
+  transition: transform 160ms var(--ease-standard);
+}
+.ba-press:active:not(:disabled) {
+  transform: scale(var(--press-scale, 0.97));
+}
+.ba-press-cta:active:not(:disabled) {
+  transform: scale(var(--press-scale-cta, 0.98));
+}
+.ba-row-press:active:not(:disabled) {
+  background: var(--ink-100) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ba-press:active:not(:disabled),
+  .ba-press-cta:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* F80.3 (Sivert: «Menyen i bunn må låses»): app-skallet er en 100dvh
+   flex-kolonne der main scroller INTERNT og nav alltid står i viewport.
+   Skjermer skal bruke 100% (ikke 100dvh) som minHeight. */
+.app-shell {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.app-shell > main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+/* motion-wrapperen (route-transition) må videreføre høyden til skjermen */
+.app-shell > main > div {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 8px;
+  background: var(--ink-900);
+  color: var(--surface);
+  padding: 8px 16px;
+  border-radius: var(--r-sm);
+  z-index: 999;
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

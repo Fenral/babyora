@@ -1,0 +1,107 @@
+/* ============================================================
+   BABYORA — semantiske fargetokens
+   Tillegg til Blokk A (bestilling-babyora-native.md)
+   Regel: én rolle per hue. Komponenter leser KUN disse tokens,
+   aldri rå oklch-verdier.
+   ============================================================ */
+
+:root {
+  /* ---- GRUNN — temp-drevet ramp (Hjem, Uke, Finn antrekk) ----
+     Interpoler hue 350 → 240 på "føles som"-temp.
+     Forslag til stopp: >=20° = 350, 10° = 330, 0° = 300,
+     -10° = 265, <=-20° = 240. Lightness/chroma holdes fast. */
+  --ground-warm:      oklch(93% 0.045 350);
+  --ground-mild:      oklch(93% 0.035 330);
+  --ground-cool:      oklch(93% 0.030 300);
+  --ground-cold:      oklch(93% 0.030 265);
+  --ground-freezing:  oklch(93% 0.035 240);
+
+  /* Stille flater — fast, IKKE temp-drevet (Guide, Innstillinger) */
+  --ground-calm:      oklch(93% 0.025 290);
+
+  /* ---- BLEKK ---- */
+  --ink-primary:      oklch(24% 0.03 300);
+  --ink-secondary:    oklch(42% 0.03 300); /* løftet til AA på grunnene */
+  --ink-muted:        oklch(55% 0.02 300); /* kun metadata/captions */
+
+  /* ---- HANDLING — grønn eier kun dette ---- */
+  --action:           oklch(42% 0.09 155);
+  --action-pressed:   oklch(36% 0.09 155);
+  --on-action:        oklch(97% 0.01 155);
+
+  /* ---- STRUKTUR / BRAND — rust ----
+     Lag-badges, editorial-kort, INNERST-pill, brand-aksent. */
+  --structure:        oklch(48% 0.11 35);
+  --structure-bg:     oklch(90% 0.03 35);
+  --on-structure:     oklch(98% 0.01 35);
+
+  /* ---- PREMIUM — furu + gull (flyttet UT av grønn) ---- */
+  --premium:          oklch(30% 0.05 165);
+  --premium-accent:   oklch(78% 0.11 85);
+  --on-premium:       oklch(96% 0.02 165);
+
+  /* ---- KROPPSSTATUS — de ENESTE mettede fargene i appen ----
+     Nakketest, varsler om varm/kald. Deles aldri med metadata. */
+  --status-hot:       oklch(55% 0.17 28);
+  --status-ok:        oklch(52% 0.11 155); /* nær --action med vilje: kvasi-affirmativ */
+  --status-cold:      oklch(55% 0.13 245);
+  --status-hot-bg:    oklch(92% 0.04 28);
+  --status-ok-bg:     oklch(92% 0.04 155);
+  --status-cold-bg:   oklch(92% 0.04 245);
+
+  /* ---- MATERIALER — dempet jordskala, metadata, aldri status ---- */
+  --material-wool:    oklch(62% 0.07 70);
+  --material-cotton:  oklch(70% 0.03 110);
+  --material-shell:   oklch(52% 0.04 250); /* vanntett */
+  --material-mid:     oklch(58% 0.05 30);  /* mellomlag */
+  --material-synth:   oklch(60% 0.03 290); /* syntetisk/fleece */
+
+  /* ---- SCORE (uke-visning) ----
+     "Middels 3" bruker IKKE lenger gull. Nøytral pill; tallet bærer info. */
+  --score-pill-bg:    oklch(97% 0.005 300);
+  --score-pill-ink:   var(--ink-primary);
+
+  /* ---- FLATER ---- */
+  --card:             oklch(99% 0.005 300);
+  --card-tinted:      oklch(95% 0.02 290);
+  --hairline:         oklch(85% 0.02 300);
+}
+
+/* ============================================================
+   MIGRASJONSNOTAT (for Fable)
+   - Alle grønne Pluss-badges/paywall → --premium / --premium-accent.
+   - "Middels N"-pills i uke: fjern gull-sirkel → --score-pill-*.
+   - Materialprikker i plaggbibliotek → --material-*.
+   - Nakketest-signaler → --status-* (+ tilhørende -bg).
+   - Lag-badges (1/2/3) og INNERST-pill → --structure.
+     Badge 3 "tilbehør" bytter fra teal til --structure eller nøytral
+     — tilbehør er rekkefølge-info, ikke egen semantikk.
+   - Ingen komponent skal referere rå oklch etter migrering.
+   ============================================================ */
+
+/* ============================================================
+   ASSET ART DIRECTION — tekstilpalett for 3D-produksjon (Blokk B)
+   Dette er IKKE UI-tokens. Det er gen-prompt-vokabular.
+   Prinsipp: mettet = UI snakker, dempet = plagg.
+   ============================================================ */
+
+/*  Tillatte tekstilfarger (lav chroma, maks ~0.08):
+      ecru        oklch(92% 0.02 90)
+      havre       oklch(85% 0.03 80)
+      kamel       oklch(70% 0.06 70)
+      dus rust    oklch(58% 0.08 35)
+      støvblå     oklch(65% 0.05 250)
+      salvie      oklch(72% 0.04 150)
+      skifer      oklch(50% 0.03 260)
+      krem/ull    oklch(94% 0.015 85)
+
+    Forbudt på tekstil (reservert UI-status ved høy metning):
+      klar rød-oransje (~hue 28, chroma > 0.10)
+      klar grønn       (~hue 155, chroma > 0.09)
+      klar blå         (~hue 245, chroma > 0.10)
+
+    Fast i alle gen-prompts (senker iterasjonsfaktoren):
+      - samme kamera: 3/4 hero for katalog, låst frontal for worn-lag
+      - samme lys: mykt studiolys, varm fill, ingen harde skygger
+      - samme materialfølelse som babyen (matt, lett SSS, Pixar-stilisert)
+      - nøytral/transparent bakgrunn, skygge bakes separat  */

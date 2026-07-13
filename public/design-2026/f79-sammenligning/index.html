@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>F79 Beslutningspakke – Babyora</title>
+<style>
+  :root {
+    --canvas: #DAD8EE; --surface: #F4F2FA; --ink: #211B32; --ink-2: #55507A;
+    --cta: #267147; --hairline: rgba(33,27,50,0.16);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--canvas); color: var(--ink);
+    font-family: 'Schibsted Grotesk', system-ui, sans-serif;
+    line-height: 1.55; padding: 32px 16px 80px;
+  }
+  main { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 30px; letter-spacing: -0.02em; }
+  .lede { color: var(--ink-2); margin: 6px 0 28px; font-size: 15px; }
+  h2 { font-size: 19px; margin: 36px 0 12px; padding-top: 20px; border-top: 1px solid var(--hairline); }
+  h3 { font-size: 15px; margin: 16px 0 6px; }
+  p, li { font-size: 14.5px; }
+  ul, ol { padding-left: 20px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13.5px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-2); }
+  a { color: #1D5636; font-weight: 600; }
+  .card {
+    background: var(--surface); border: 1px solid var(--hairline);
+    border-radius: 18px; padding: 18px 20px; margin: 14px 0;
+  }
+  .vinner { border-left: none; position: relative; }
+  .tag {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 4px 10px; border-radius: 999px; margin-bottom: 8px;
+  }
+  .tag.gronn { background: var(--cta); color: #FAF7EE; }
+  .tag.graa { background: rgba(33,27,50,0.09); color: var(--ink-2); }
+  .knapp {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px;
+    background: var(--cta); color: #FAF7EE; border-radius: 999px;
+    text-decoration: none; font-weight: 700; font-size: 14px; margin: 6px 8px 6px 0;
+  }
+  .knapp.sekundaer { background: var(--surface); color: var(--ink); border: 1.5px solid var(--ink-2); }
+  .knapp:focus-visible { outline: 3px solid var(--cta); outline-offset: 3px; }
+  .frame-rad { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 14px 0; }
+  .frame-boks { background: var(--surface); border: 1px solid var(--hairline); border-radius: 18px; padding: 12px; }
+  .frame-boks iframe {
+    width: 100%; height: 640px; border: 0; border-radius: 12px; background: #fff;
+  }
+  .frame-boks figcaption { font-size: 12.5px; color: var(--ink-2); padding: 8px 4px 2px; }
+  .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 5px; border: 1px solid var(--hairline); }
+  .aerlig { background: #F6EFE4; border: 1px solid rgba(120,90,20,0.25); }
+  footer { margin-top: 40px; font-size: 12.5px; color: var(--ink-2); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="tag gronn">F79 · Beslutningspakke</span>
+    <h1>Babyora visual-first: alt du skal ta stilling til, på én side</h1>
+    <p class="lede">Baseline 40,8/100 → Morgennatt-vinnere med anatomi-løst påkledningsavatar. Kost: ~50 av 150 NOK. Full dokumentasjon i <code>docs/F79/SLUTTRAPPORT.md</code>.</p>
+  </header>
+
+  <h2>1 · Vinnerne (Morgennatt, ferdig fikset)</h2>
+  <div class="frame-rad">
+    <figure class="frame-boks">
+      <iframe src="/design-2026/f79-hjem-a/" title="Hjem A – Morgennatt" loading="lazy"></iframe>
+      <figcaption><strong>Hjem A</strong> · dommer-score 83,1 (høyest) · a11y SHIP. Temp-mast, clay-sol, dressing ved load, Granmynte-CTA, temp-akse-demo under framen.</figcaption>
+    </figure>
+    <figure class="frame-boks">
+      <iframe src="/design-2026/f79-paakledning-a/" title="Påkledning A – Morgennatt" loading="lazy"></iframe>
+      <figcaption><strong>Påkledning A</strong> · ditt valg (komposisjonen) · a11y-rework fikset. Klikkbare plagg-kort (i-badge + press-fysikk + detaljpanel) og alternativ-indikator («2 alternativer» synlig før tap).</figcaption>
+    </figure>
+  </div>
+  <a class="knapp sekundaer" href="/design-2026/f79-avatar-poc/">Se påklednings-animasjonen (PoC)</a>
+
+  <h2>2 · Beslutning: CTA-farge</h2>
+  <div class="card">
+    <p><span class="swatch" style="background:#267147"></span><strong>Granmynte</strong> (implementert, anbefalt): #267147 lys / #65D097 mørk. Hvorfor: korall-CTA-en lå 7,8° i hue fra plagg-korallen — begge signaler døde. Granmynte er ≥59° fra alt annet på skjermen, eneste grønne objekt, alle kontrast-par PASS (4,20–9,15).</p>
+    <p style="margin-top:8px"><span class="swatch" style="background:#EF7179"></span><strong>Rubinkorall-fallback</strong>: #EF7179 — hvis du absolutt vil ha varm CTA. Krever da at ullbody-plagget omfarges (kollisjonen). Full tabell i <code>docs/F79/morgennatt-cta-analyse.md</code>.</p>
+  </div>
+
+  <h2>3 · Beslutning: full asset-batch (F80)</h2>
+  <table>
+    <tr><th>Post</th><th>Innhold</th><th>Kost</th></tr>
+    <tr><td>Avatar-tiers</td><td>Alle vær-tilstander i clay via edit-kjeden (anatomi-garantert)</td><td>~15–30 NOK</td></tr>
+    <tr><td>Plagg-thumbs</td><td>62 stk re-gen i clay (koherens i popup — de gamle er flate)</td><td>~90–140 NOK</td></tr>
+    <tr><td>Vær-ikoner</td><td>6–8 clay-ikoner (skyet/regn/snø/tåke/natt)</td><td>~10–15 NOK</td></tr>
+    <tr><td><strong>Total</strong></td><td>💰 krever din godkjenning (over 100 NOK-cap)</td><td><strong>~115–185 NOK</strong></td></tr>
+  </table>
+
+  <h2>4 · Beslutning: Guide-løftet inn i F80?</h2>
+  <div class="card">
+    <p>Analysen ga fasit-autoritet <strong>48/100</strong> — motoren er fasit-verdig, presentasjonen er et forslag. Anbefalte tiltak (0 NOK, kun AI-tid): verdikt-hero («3 lag» stort + alltid-synlig hvorfor-linje), autoritets-copy med kilder (droppe «AI-drevet», inn med «bygget på norske helsesøster-råd og TOG-standarden»), og tillits-bugs (død søkeknapp, hardkodet barn i TOG-guiden, bilstol-regelen som finnes i motoren men aldri vises). Detaljer + 8 innholds-gap i <code>docs/F79/guide-analyse.md</code>.</p>
+  </div>
+
+  <h2>5 · Ærlig svakhetsliste (ikke skjult)</h2>
+  <div class="card aerlig">
+    <ol>
+      <li>Dommerpanelet nådde 83,1, ikke 95 — gjenstående gap er distinctness-nyanser (tekstur/grain, statement-kontraster), ikke funksjonsfeil.</li>
+      <li>Body-thumben i komposisjonen leser litt merkelig rotert; avataren kunne vært større.</li>
+      <li>Stage-4: korall-body skimtes ved hoften (edit-artefakt — leser som lag-fortelling, QA-es i batch).</li>
+      <li>Kald vs mild i lys modus er 28° hue-avstand — test 5-sekunders glimt på ekte telefon i morgenlys.</li>
+      <li>Panelets koherens-favoritt på påkledning var C (inline uten popup, 71,8) — verdt et blikk: <a href="/design-2026/f79-paakledning-c/">f79-paakledning-c</a>.</li>
+    </ol>
+  </div>
+
+  <h2>Alt annet fra loopen</h2>
+  <p>
+    Paletter: <a href="/design-2026/f79-palett-0/">Bakstehuset</a> · <a href="/design-2026/f79-palett-1/">Morgennatt</a> · <a href="/design-2026/f79-palett-2/">Brevann</a> · <a href="/design-2026/f79-palett-3/">Byggekloss</a><br />
+    Øvrige mocks: <a href="/design-2026/f79-hjem-b/">Hjem B (overshoot)</a> · <a href="/design-2026/f79-paakledning-b/">Påkledning B (editorial)</a> · <a href="/design-2026/f79-paakledning-c/">Påkledning C (inline)</a>
+  </p>
+
+  <footer>F79 · 2026-07-02 · dommer-vekting: distinctness ×2, benchmark ×1,5 · impeccable som guardrail · «kjedelig er en feil på linje med rotete»</footer>
+</main>
+</body>
+</html>

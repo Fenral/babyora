@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Babyora · Onboarding+Velkomst Mock A (kompakt)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* =========================================================================
+   Babyora — Onboarding+Velkomst Mock A
+   Prinsipp (V2-vinner fra Påkledning): kompakt + skannbar, gruppert liste,
+   hairline-divider, ingen kort-stabling. Welcome-hero pattern (Mobbin:
+   Singapore Airlines World Class), dot-progress bunn (Mobbin: Shell).
+   ========================================================================= */
+:root{
+  /* Brand surface */
+  --bg-canvas:#DBD8D2;
+  --bg-canvas-soft:#E5E2DC;
+  --bg-canvas-deep:#CFCBC2;
+
+  /* Warm orange CTA */
+  --cta-500:#FF6B35;
+  --cta-600:#EE5A20;
+  --cta-700:#D44A14;
+  --cta-100:#FFE3D6;
+  --cta-on-ink:#FFFFFF;
+
+  /* Ink */
+  --ink-900:#2B2B2B;
+  --ink-700:#5A514C;
+  --ink-500:#8A8079;
+  --ink-300:#C9C3BD;
+
+  /* Hairline */
+  --hairline:rgba(43,43,43,.07);
+  --hairline-strong:rgba(43,43,43,.12);
+
+  /* Cards / fields */
+  --field-bg:#FFFFFF;
+  --field-shadow:0 1px 2px rgba(43,37,34,.04);
+
+  --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+  --font-serif:'DM Serif Display',Georgia,serif;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#1a1a1a;font-family:var(--font-sans);}
+body{
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:40px 24px 80px;color:var(--ink-900);gap:32px;
+}
+.page-title{
+  color:#E5E2DC;font-family:var(--font-serif);font-weight:400;
+  font-size:22px;letter-spacing:-.4px;margin:0;text-align:center;
+}
+.page-sub{
+  color:#9A958E;font-size:13.5px;font-weight:500;margin:-22px 0 0;text-align:center;max-width:780px;
+}
+.frames-row{
+  display:flex;flex-wrap:wrap;gap:36px;justify-content:center;align-items:flex-start;
+}
+.frame-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.frame-label{
+  color:#9A958E;font-size:11.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
+}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+/* iPhone-frame 390×844 */
+.frame{
+  position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5), 0 0 0 12px #1f1f1f, 0 0 0 13px #333;
+  background:var(--bg-canvas);
+}
+
+main.screen{
+  position:relative;height:100%;width:100%;
+  display:flex;flex-direction:column;
+  font-family:var(--font-sans);color:var(--ink-900);
+  padding-top:env(safe-area-inset-top,0px);
+  background:var(--bg-canvas);
+}
+/* Soft top sheen — like the production app */
+main.screen::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 46% at 50% -10%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%);
+}
+
+/* Status bar (mock) */
+.status-bar{
+  position:relative;z-index:5;flex:none;
+  height:46px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 24px 4px;font-size:13.5px;font-weight:600;color:var(--ink-900);
+}
+.status-bar .battery{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-700);}
+.status-bar .battery::after{
+  content:"";display:inline-block;width:22px;height:11px;border-radius:3px;
+  border:1.2px solid var(--ink-700);position:relative;
+  background:linear-gradient(90deg,var(--ink-700) 0 78%, transparent 78% 100%);
+  background-clip:content-box;padding:1.2px;
+}
+
+/* Topbar */
+.topbar{
+  position:relative;z-index:5;flex:none;
+  height:52px;padding:0 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.topbar-left,.topbar-right{display:flex;align-items:center;gap:8px;min-width:64px;}
+.topbar-right{justify-content:flex-end;}
+.tb-back{
+  height:36px;padding:0 12px 0 8px;border-radius:11px;border:1px solid var(--hairline);
+  background:rgba(255,255,255,.55);font-size:13px;font-weight:600;color:var(--ink-700);
+  display:flex;align-items:center;gap:4px;cursor:pointer;
+}
+.tb-skip{
+  height:36px;padding:0 12px;border-radius:11px;border:1px solid transparent;
+  background:transparent;font-size:13px;font-weight:600;color:var(--ink-500);
+  cursor:pointer;letter-spacing:.1px;
+}
+.tb-step{
+  flex:1;text-align:center;font-size:11.5px;font-weight:600;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--ink-500);
+}
+
+/* Body scroll */
+.body{
+  position:relative;z-index:3;
+  flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+  padding:8px 24px 24px;scrollbar-width:none;
+  display:flex;flex-direction:column;
+}
+.body::-webkit-scrollbar{display:none;}
+
+/* Hero (welcome + step illustration) */
+.hero{
+  position:relative;width:100%;
+  aspect-ratio:1/1;max-height:300px;
+  border-radius:28px;
+  background:linear-gradient(165deg,#EDE9E2 0%,#DBD8D2 60%,#CFCBC2 100%);
+  border:1px solid var(--hairline);
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:18px;flex:none;
+}
+.hero::before{
+  content:"";position:absolute;inset:auto -20% -40% -20%;height:60%;
+  background:radial-gradient(60% 100% at 50% 0%, rgba(255,107,53,.10), rgba(255,107,53,0) 70%);
+  pointer-events:none;
+}
+.hero img{
+  position:relative;width:78%;height:78%;object-fit:contain;
+  filter:drop-shadow(0 6px 14px rgba(43,37,34,.12));
+}
+.hero .hero-emoji{
+  font-size:128px;line-height:1;filter:drop-shadow(0 6px 14px rgba(43,37,34,.18));
+}
+.hero-badge{
+  position:absolute;top:14px;left:14px;
+  display:flex;align-items:center;gap:6px;
+  padding:6px 10px;border-radius:999px;
+  background:rgba(255,255,255,.78);border:1px solid var(--hairline);
+  font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-700);
+  backdrop-filter:blur(8px);
+}
+.hero-badge .dot{width:6px;height:6px;border-radius:999px;background:var(--cta-500);}
+
+/* Title block */
+.title-block{margin:4px 2px 14px;flex:none;}
+.eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;
+  color:var(--cta-700);margin:0 0 6px;
+}
+.title{
+  font-family:var(--font-serif);font-weight:400;font-style:italic;
+  font-size:30px;line-height:1.08;letter-spacing:-.6px;
+  color:var(--ink-900);margin:0 0 8px;
+}
+.subtitle{
+  font-size:14.5px;line-height:1.5;color:var(--ink-700);margin:0;max-width:34ch;
+}
+
+/* Grouped compact list (V2 winner pattern: hairline-divider, no card stacking) */
+.list{
+  background:var(--field-bg);
+  border:1px solid var(--hairline);
+  border-radius:16px;
+  box-shadow:var(--field-shadow);
+  overflow:hidden;
+  margin-top:2px;
+}
+.list-row{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;min-height:54px;
+  border-bottom:1px solid var(--hairline);
+  cursor:pointer;
+}
+.list-row:last-child{border-bottom:0;}
+.list-row.active{background:linear-gradient(0deg,rgba(255,107,53,.04),rgba(255,107,53,.04));}
+.row-icon{
+  width:34px;height:34px;border-radius:10px;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--cta-100);color:var(--cta-700);font-size:17px;
+}
+.row-icon.muted{background:#EFEBE4;color:var(--ink-700);}
+.row-icon svg{width:18px;height:18px;}
+.row-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.row-label{
+  font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-500);
+}
+.row-value{
+  font-size:15.5px;font-weight:600;letter-spacing:-.2px;color:var(--ink-900);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.row-value.placeholder{color:var(--ink-500);font-weight:500;}
+.row-value .serif{
+  font-family:var(--font-serif);font-style:italic;font-weight:400;font-size:18px;letter-spacing:-.3px;
+}
+.row-chevron{
+  width:18px;height:18px;flex:none;color:var(--ink-500);
+}
+
+/* Section heading */
+.section-eyebrow{
+  font-size:10.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--ink-500);margin:18px 4px 8px;
+}
+
+/* Color picker (compact chips) */
+.color-chips{
+  display:flex;gap:10px;align-items:center;
+  padding:14px 16px;
+  background:var(--field-bg);border:1px solid var(--hairline);border-radius:16px;
+  box-shadow:var(--field-shadow);
+}
+.color-chip{
+  width:32px;height:32px;border-radius:999px;cursor:pointer;
+  position:relative;border:2px solid transparent;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.6);
+}
+.color-chip.selected{border-color:var(--ink-900);transform:scale(1.06);}
+.color-chips .label{
+  font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--ink-500);margin-left:auto;
+}
+
+/* Welcome chips (highlights row in step 4 / welcome) */
+.feature-list{
+  display:flex;flex-direction:column;gap:0;
+  background:var(--field-bg);border:1px solid var(--hairline);border-radius:16px;
+  overflow:hidden;box-shadow:var(--field-shadow);
+}
+.feature-row{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;border-bottom:1px solid var(--hairline);
+}
+.feature-row:last-child{border-bottom:0;}
+.f-icon{
+  width:30px;height:30px;border-radius:9px;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--cta-100);color:var(--cta-700);
+}
+.f-icon svg{width:16px;height:16px;}
+.f-text{
+  font-size:14px;font-weight:600;letter-spacing:-.1px;color:var(--ink-900);line-height:1.3;
+}
+.f-text small{
+  display:block;font-size:12px;font-weight:500;color:var(--ink-700);margin-top:1px;letter-spacing:0;
+}
+
+/* Spacer */
+.spacer-grow{flex:1;}
+
+/* Footer (CTA + progress dots) */
+.footer{
+  position:relative;z-index:5;flex:none;
+  padding:14px 24px calc(20px + env(safe-area-inset-bottom,0px));
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  background:linear-gradient(180deg,rgba(219,216,210,0) 0%, rgba(219,216,210,.96) 22%, var(--bg-canvas) 60%);
+  border-top:1px solid var(--hairline);
+}
+.progress-dots{
+  display:flex;align-items:center;gap:8px;justify-content:center;
+}
+.progress-dots .dot{
+  width:7px;height:7px;border-radius:999px;background:var(--ink-300);transition:all .2s;
+}
+.progress-dots .dot.active{
+  width:22px;background:var(--cta-500);
+}
+.progress-dots .dot.done{background:var(--cta-700);}
+.cta-row{display:flex;align-items:center;gap:10px;width:100%;}
+.btn{
+  height:54px;border-radius:16px;border:0;cursor:pointer;
+  font-family:var(--font-sans);font-size:15.5px;font-weight:700;letter-spacing:-.1px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .15s, box-shadow .15s;
+}
+.btn:active{transform:translateY(1px);}
+.btn-primary{
+  flex:1;background:var(--cta-500);color:var(--cta-on-ink);
+  box-shadow:0 6px 16px rgba(255,107,53,.32), inset 0 -2px 0 rgba(0,0,0,.10);
+}
+.btn-primary:hover{background:var(--cta-600);}
+.btn-ghost{
+  flex:none;padding:0 18px;background:transparent;color:var(--ink-700);
+  border:1px solid var(--hairline-strong);
+}
+.btn svg{width:18px;height:18px;}
+.btn-primary.full{flex:1 1 100%;}
+
+/* === Step 1: Welcome hero ============================================== */
+.welcome-hero{
+  flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 4px;text-align:center;gap:18px;
+}
+.welcome-hero .brand-mark{
+  width:84px;height:84px;border-radius:24px;
+  background:linear-gradient(150deg,#FFE3D6 0%, #FF6B35 100%);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 14px 30px rgba(255,107,53,.30);
+  font-family:var(--font-serif);font-style:italic;font-size:46px;color:#FFFFFF;
+}
+.welcome-hero .brand-name{
+  font-family:var(--font-serif);font-weight:400;font-style:italic;
+  font-size:46px;line-height:1;letter-spacing:-.8px;margin:6px 0 0;color:var(--ink-900);
+}
+.welcome-hero .brand-tag{
+  font-size:14.5px;color:var(--ink-700);max-width:28ch;line-height:1.5;margin:0;
+}
+.welcome-hero .micro-row{
+  display:flex;align-items:center;gap:8px;margin-top:8px;
+  font-size:12px;font-weight:600;color:var(--ink-500);letter-spacing:.4px;
+}
+.welcome-hero .micro-row .pill{
+  padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.7);
+  border:1px solid var(--hairline);text-transform:uppercase;font-size:10.5px;letter-spacing:1.2px;
+}
+
+/* Inline mini illustration row (step 4 welcome variant) */
+.preview-row{
+  display:flex;gap:8px;justify-content:center;align-items:flex-end;margin-bottom:14px;
+}
+.preview-row .chip{
+  width:54px;height:54px;border-radius:14px;
+  background:#FFFFFF;border:1px solid var(--hairline);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--field-shadow);font-size:26px;
+}
+
+/* Anim — respect reduced motion */
+@media (prefers-reduced-motion: no-preference){
+  .frame{animation:floatUp .8s ease both;}
+  .frame .body > *{animation:popIn .55s cubic-bezier(.2,.7,.2,1) both;}
+  .frame .body > *:nth-child(1){animation-delay:.08s}
+  .frame .body > *:nth-child(2){animation-delay:.16s}
+  .frame .body > *:nth-child(3){animation-delay:.24s}
+  .frame .body > *:nth-child(4){animation-delay:.32s}
+  @keyframes floatUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+  @keyframes popIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+}
+@media (prefers-reduced-motion: reduce){
+  .frame, .frame *{animation:none !important;transition:none !important;}
+}
+</style>
+</head>
+<body>
+
+<h1 class="page-title">Babyora — Onboarding+Velkomst · Mock A (kompakt)</h1>
+<p class="page-sub">
+  4 steg: Velkomst → Detaljer → Sted → Klar. Hairline-divider, gruppert liste, ingen kort-stabling — samme V2-prinsipp som vant i Påkledning.
+</p>
+
+<div class="frames-row">
+
+<!-- ====================================================================== -->
+<!-- STEG 1 · VELKOMST                                                       -->
+<!-- ====================================================================== -->
+<div class="frame-wrap">
+  <span class="frame-label">Steg 1 · Velkomst</span>
+  <div class="frame">
+    <main class="screen" aria-label="Babyora onboarding steg 1, velkomst">
+      <h1 class="sr-only">Velkommen til Babyora</h1>
+
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span class="battery">100%</span>
+      </div>
+
+      <div class="topbar">
+        <div class="topbar-left"></div>
+        <div class="tb-step">1 av 4</div>
+        <div class="topbar-right"></div>
+      </div>
+
+      <div class="body">
+        <div class="welcome-hero">
+          <div class="brand-mark" aria-hidden="true">b</div>
+          <p class="brand-name">Babyora</p>
+          <p class="brand-tag">Hyperlokal påkledning for de minste — temperatur, vind og våkenhet i ett blikk.</p>
+          <div class="micro-row" aria-label="Personvern og data">
+            <span class="pill">Norsk</span>
+            <span class="pill">Personvern først</span>
+            <span class="pill">0 annonser</span>
+          </div>
+        </div>
+
+        <section aria-label="Hva får du">
+          <p class="section-eyebrow">Slik fungerer det</p>
+          <ul class="feature-list" role="list">
+            <li class="feature-row" role="listitem">
+              <span class="f-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z"/></svg>
+              </span>
+              <div class="f-text">
+                Konkret antrekk
+                <small>Ikke gradestokk-gjetting — eksakt lag for vær og alder</small>
+              </div>
+            </li>
+            <li class="feature-row" role="listitem">
+              <span class="f-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              </span>
+              <div class="f-text">
+                Tilpasset alder og søvn
+                <small>Vekstvinduer fra 0 mnd, sikre råd ved svøp og rull</small>
+              </div>
+            </li>
+            <li class="feature-row" role="listitem">
+              <span class="f-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/><circle cx="12" cy="12" r="4"/></svg>
+              </span>
+              <div class="f-text">
+                Ditt nærmeste vær
+                <small>met.no, oppdatert 2 × i timen, fungerer offline</small>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <div class="spacer-grow"></div>
+      </div>
+
+      <div class="footer">
+        <div class="progress-dots" role="list" aria-label="4 steg, du er på steg 1">
+          <span class="dot active" role="listitem" aria-label="Steg 1, aktiv"></span>
+          <span class="dot" role="listitem" aria-label="Steg 2"></span>
+          <span class="dot" role="listitem" aria-label="Steg 3"></span>
+          <span class="dot" role="listitem" aria-label="Steg 4"></span>
+        </div>
+        <div class="cta-row">
+          <button class="btn btn-primary full" type="button" aria-label="Kom i gang med Babyora">
+            Kom i gang
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- STEG 2 · DETALJER (Navn + bursdag) — V2 gruppert liste                  -->
+<!-- ====================================================================== -->
+<div class="frame-wrap">
+  <span class="frame-label">Steg 2 · Detaljer</span>
+  <div class="frame">
+    <main class="screen" aria-label="Babyora onboarding steg 2, barnets detaljer">
+      <h1 class="sr-only">Fortell oss om barnet ditt</h1>
+
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span class="battery">100%</span>
+      </div>
+
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="tb-back" type="button" aria-label="Tilbake til velkomst">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            Tilbake
+          </button>
+        </div>
+        <div class="tb-step">2 av 4</div>
+        <div class="topbar-right">
+          <button class="tb-skip" type="button" aria-label="Hopp over">Hopp over</button>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="hero" aria-hidden="true">
+          <span class="hero-badge"><span class="dot"></span>Barnet ditt</span>
+          <img src="/illustrations/onboarding/onboarding-step1-name.png" alt="" onerror="this.style.display='none';this.parentElement.insertAdjacentHTML('beforeend','<span class=&quot;hero-emoji&quot;>👶</span>')">
+        </div>
+
+        <div class="title-block">
+          <p class="eyebrow">Detaljer</p>
+          <h2 class="title">Fortell oss om barnet</h2>
+          <p class="subtitle">Vi tilpasser råd til alder og navngir det riktig i hjemskjermen.</p>
+        </div>
+
+        <section aria-label="Barnets opplysninger">
+          <ul class="list" role="list">
+            <li class="list-row active" role="listitem" aria-label="Navn, Lillian">
+              <span class="row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <div class="row-body">
+                <span class="row-label">Navn</span>
+                <span class="row-value">Lillian</span>
+              </div>
+              <svg class="row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </li>
+            <li class="list-row" role="listitem" aria-label="Fødselsdato, 3. oktober 2025">
+              <span class="row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+              </span>
+              <div class="row-body">
+                <span class="row-label">Fødselsdato</span>
+                <span class="row-value"><span class="serif">3. okt. 2025</span> · 8 mnd</span>
+              </div>
+              <svg class="row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </li>
+            <li class="list-row" role="listitem" aria-label="Kan barnet rulle, ikke ennå">
+              <span class="row-icon muted" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3.5-7.1"/><path d="M21 4v5h-5"/></svg>
+              </span>
+              <div class="row-body">
+                <span class="row-label">Kan rulle</span>
+                <span class="row-value placeholder">Ikke ennå</span>
+              </div>
+              <svg class="row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </li>
+          </ul>
+
+          <p class="section-eyebrow">Farge i appen</p>
+          <div class="color-chips" role="radiogroup" aria-label="Velg fargemerke">
+            <span class="color-chip selected" role="radio" aria-checked="true" aria-label="Terrakotta" style="background:#C25450"></span>
+            <span class="color-chip" role="radio" aria-checked="false" aria-label="Skog" style="background:#4F8A6A"></span>
+            <span class="color-chip" role="radio" aria-checked="false" aria-label="Hav" style="background:#2E7CC2"></span>
+            <span class="color-chip" role="radio" aria-checked="false" aria-label="Karry" style="background:#D87A2E"></span>
+            <span class="color-chip" role="radio" aria-checked="false" aria-label="Plomme" style="background:#8B5A8C"></span>
+            <span class="label">Merke</span>
+          </div>
+        </section>
+
+        <div class="spacer-grow"></div>
+      </div>
+
+      <div class="footer">
+        <div class="progress-dots" role="list" aria-label="4 steg, du er på steg 2">
+          <span class="dot done" role="listitem" aria-label="Steg 1, fullført"></span>
+          <span class="dot active" role="listitem" aria-label="Steg 2, aktiv"></span>
+          <span class="dot" role="listitem" aria-label="Steg 3"></span>
+          <span class="dot" role="listitem" aria-label="Steg 4"></span>
+        </div>
+        <div class="cta-row">
+          <button class="btn btn-ghost" type="button" aria-label="Tilbake">Tilbake</button>
+          <button class="btn btn-primary" type="button" aria-label="Fortsett til sted">
+            Fortsett
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- STEG 3 · STED                                                           -->
+<!-- ====================================================================== -->
+<div class="frame-wrap">
+  <span class="frame-label">Steg 3 · Sted</span>
+  <div class="frame">
+    <main class="screen" aria-label="Babyora onboarding steg 3, sted">
+      <h1 class="sr-only">Hvor bor dere?</h1>
+
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span class="battery">100%</span>
+      </div>
+
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="tb-back" type="button" aria-label="Tilbake til detaljer">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            Tilbake
+          </button>
+        </div>
+        <div class="tb-step">3 av 4</div>
+        <div class="topbar-right"></div>
+      </div>
+
+      <div class="body">
+        <div class="hero" aria-hidden="true">
+          <span class="hero-badge"><span class="dot"></span>Lokalt vær</span>
+          <img src="/illustrations/onboarding/onboarding-step3-location.png" alt="" onerror="this.style.display='none';this.parentElement.insertAdjacentHTML('beforeend','<span class=&quot;hero-emoji&quot;>📍</span>')">
+        </div>
+
+        <div class="title-block">
+          <p class="eyebrow">Sted</p>
+          <h2 class="title">Hvor bor Lillian?</h2>
+          <p class="subtitle">Vi henter eksakt vær fra met.no — kun byen, ingen sporing.</p>
+        </div>
+
+        <section aria-label="Plassering">
+          <ul class="list" role="list">
+            <li class="list-row active" role="listitem" aria-label="Valgt by, Trondheim">
+              <span class="row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>
+              </span>
+              <div class="row-body">
+                <span class="row-label">By</span>
+                <span class="row-value">Trondheim</span>
+              </div>
+              <svg class="row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </li>
+            <li class="list-row" role="listitem" aria-label="Akkurat nå, 14 grader lett bris">
+              <span class="row-icon muted" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 1 1 1.2-9.86A6 6 0 0 1 19 13a4 4 0 0 1 0 8H8"/></svg>
+              </span>
+              <div class="row-body">
+                <span class="row-label">Nå</span>
+                <span class="row-value"><span class="serif">14°</span> · lett bris</span>
+              </div>
+              <svg class="row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </li>
+            <li class="list-row" role="listitem" aria-label="Bruk gjeldende posisjon">
+              <span class="row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+              </span>
+              <div class="row-body">
+                <span class="row-label">Alternativ</span>
+                <span class="row-value placeholder">Bruk min plassering</span>
+              </div>
+              <svg class="row-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </li>
+          </ul>
+
+          <p class="section-eyebrow">Personvern</p>
+          <div class="feature-list">
+            <div class="feature-row">
+              <span class="f-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              </span>
+              <div class="f-text">
+                Kun lagret på enheten
+                <small>Vi sender aldri stedet ditt til en server</small>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="spacer-grow"></div>
+      </div>
+
+      <div class="footer">
+        <div class="progress-dots" role="list" aria-label="4 steg, du er på steg 3">
+          <span class="dot done" role="listitem" aria-label="Steg 1, fullført"></span>
+          <span class="dot done" role="listitem" aria-label="Steg 2, fullført"></span>
+          <span class="dot active" role="listitem" aria-label="Steg 3, aktiv"></span>
+          <span class="dot" role="listitem" aria-label="Steg 4"></span>
+        </div>
+        <div class="cta-row">
+          <button class="btn btn-ghost" type="button" aria-label="Tilbake">Tilbake</button>
+          <button class="btn btn-primary" type="button" aria-label="Fortsett til siste steg">
+            Fortsett
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- STEG 4 · KLAR / VELKOMST-OPPSUMMERING                                   -->
+<!-- ====================================================================== -->
+<div class="frame-wrap">
+  <span class="frame-label">Steg 4 · Klar</span>
+  <div class="frame">
+    <main class="screen" aria-label="Babyora onboarding steg 4, klar">
+      <h1 class="sr-only">Alt er klart for Lillian</h1>
+
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <span class="battery">100%</span>
+      </div>
+
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="tb-back" type="button" aria-label="Tilbake til sted">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            Tilbake
+          </button>
+        </div>
+        <div class="tb-step">4 av 4</div>
+        <div class="topbar-right"></div>
+      </div>
+
+      <div class="body">
+        <div class="hero" aria-hidden="true">
+          <span class="hero-badge"><span class="dot"></span>Klar</span>
+          <img src="/illustrations/onboarding/onboarding-step4-ready.png" alt="" onerror="this.style.display='none';this.parentElement.insertAdjacentHTML('beforeend','<span class=&quot;hero-emoji&quot;>🎉</span>')">
+        </div>
+
+        <div class="title-block">
+          <p class="eyebrow">Alt på plass</p>
+          <h2 class="title">Velkommen, <em>Lillian</em></h2>
+          <p class="subtitle">Vi er klare med dagens råd. Du kan endre alt senere i Innstillinger.</p>
+        </div>
+
+        <section aria-label="Oppsummering">
+          <ul class="list" role="list">
+            <li class="list-row" role="listitem">
+              <span class="row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <div class="row-body">
+                <span class="row-label">Barn</span>
+                <span class="row-value">Lillian · 8 mnd</span>
+              </div>
+            </li>
+            <li class="list-row" role="listitem">
+              <span class="row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>
+              </span>
+              <div class="row-body">
+                <span class="row-label">Sted</span>
+                <span class="row-value">Trondheim · <span class="serif">14°</span></span>
+              </div>
+            </li>
+            <li class="list-row" role="listitem">
+              <span class="row-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              </span>
+              <div class="row-body">
+                <span class="row-label">Dagens råd</span>
+                <span class="row-value">3 lag · ull innerst</span>
+              </div>
+            </li>
+          </ul>
+
+          <p class="section-eyebrow">Forhåndsvis lagene</p>
+          <div class="preview-row" aria-hidden="true">
+            <span class="chip">🧦</span>
+            <span class="chip">👕</span>
+            <span class="chip">🧥</span>
+            <span class="chip">🧣</span>
+            <span class="chip">🧢</span>
+          </div>
+        </section>
+
+        <div class="spacer-grow"></div>
+      </div>
+
+      <div class="footer">
+        <div class="progress-dots" role="list" aria-label="4 steg, du er på steg 4">
+          <span class="dot done" role="listitem" aria-label="Steg 1, fullført"></span>
+          <span class="dot done" role="listitem" aria-label="Steg 2, fullført"></span>
+          <span class="dot done" role="listitem" aria-label="Steg 3, fullført"></span>
+          <span class="dot active" role="listitem" aria-label="Steg 4, aktiv"></span>
+        </div>
+        <div class="cta-row">
+          <button class="btn btn-primary full" type="button" aria-label="Åpne Babyora">
+            Åpne Babyora
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+</div><!-- /.frames-row -->
+
+</body>
+</html>

@@ -1,0 +1,56 @@
+{
+  "claude": {
+    "id": "dunteppe",
+    "dbString": "dunteppe",
+    "kategori": "ekstra-vogn",
+    "struktur": {
+      "score": 19,
+      "kommentar": "Full info-oppføring finnes (garment-info.ts:223-226) med både what ('Tykt dunteppe for ekstra varme i vogn. Bruk aldri OVER kalesjen.') og when ('Kjølige til kalde dager i vogn — som tillegg, ikke alene.'). Tone, lengde og mønster matcher søsken i samme kategori (tynt-teppe, varmepose, varmepose-dun, saueskinn-i-vogn) — kort what + when, med eksplisitt sikkerhets-klausul i samme stil som saueskinn-i-vogn og regntrekk. Dedikert whyForGarment-gren finnes (garment-info.ts:459-461), IKKE fallback: 'Dunteppe legger på ekstra varme i vogn ved {feels} °C. Bruk aldri OVER kalesjen.' Trekker 1 poeng fordi whyForGarment-grenen er den eneste teksten som bruker {feels}-interpolasjon for et plagg som aldri faktisk velges av motoren (se seleksjon) — feels-verdien vil aldri vises i praksis, så interpolasjonen er teknisk korrekt men død."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\dunteppe.png. Mapping i garment-illustrations.ts:80 er korrekt og plausibel: db-streng 'dunteppe' → id 'dunteppe'. Identitets-mapping (samme streng) er konsistent med at db-strengen ikke har mellomrom/spesialtegn (motsatt søsken som 'varmepose lett' → 'varmepose-lett' og 'saueskinn i vogn' → 'sauekinn-i-vogn'). Navne-plausibilitet er god — 'dunteppe' beskriver et dun-fylt vognteppe entydig. Visuell dom delegeres til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "dunteppe er pediatrisk forsvarlig fordi det i praksis ALDRI velges av motoren — det er et rent defensivt/dødt plagg som kun finnes i FJERNINGS-logikk. baseTable.vogn bruker varmepose-familien + saueskinn i alle 9 bånd, aldri dunteppe. CK-5 (conflicts.ts:132-137, kilder LT-PRAM+POLICY) fjerner dunteppe ved samtidig varmepose (SIDS-trigger: stablet isolasjon + tildekking). HB-8 (safety.ts:229-248, PRAM_COVER_RE, kilder LT-PRAM+Pediatrics-Pram) fjerner dunteppe CRITICAL ved feels ≥22 °C (pram-cover kan heve innetemp 4-15 °C på 60 min). SB-2/SB-5/SB-6 filtrerer det først ut ved over-lagring/varme. Pediatrisk posisjon er fullt dekket av de 11 kildene — ingen web-søk nødvendig. Engine-test bekrefter at ingen vogn-celle stabler varmepose+dunteppe (engine.test.ts:37-42) og at dunteppe aldri ender i resultat (engine.test.ts:151-160). Trekker 2 poeng: et plagg med full metadata + PNG som er fullstendig uoppnåelig i seleksjon er en latent vedlikeholds-felle (fremtidig utvikler kan re-introdusere det i base uten å se at det da krasjer mot CK-5/HB-8).",
+      "trace": "VOGN: dunteppe finnes IKKE i noen baseTable.vogn-celle (tropisk/varm/mild/kjolig/kald/frost/streng_frost/ekstrem/ekstrem_varme bruker alle varmepose lett|varmepose|varmepose dun + saueskinn i vogn). modifiers.ts legger ALDRI til dunteppe (kun regntrekk/hals/votter/ullsokker/regntøy). Eneste referanser til dunteppe i seleksjons-laget er FJERNINGER: (1) conflicts CK-5 fjerner dunteppe hvis varmepose+dunteppe i vogn; (2) softBlocks SB-2 fjerner dunteppe først ved >maxItems; (3) SB-5 fjerner dunteppe ved 7-9 mnd + feels≥22; (4) SB-6 fjerner dunteppe ved vogn+feels≥18+≥60min; (5) safety HB-8 fjerner dunteppe (PRAM_COVER_RE) ved vogn+feels≥22 CRITICAL. Netto: dunteppe har INGEN inngangs-sti og kan derfor aldri vises som anbefaling. Det er et defensivt sikkerhetsnett (hvis en fremtidig kilde re-introduserer det), ikke en aktiv anbefaling.",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 24,
+      "kommentar": "Ingen drift som villeder påkledning. when-teksten ('Kjølige til kalde dager i vogn — som tillegg, ikke alene') og whyForGarment ('Dunteppe legger på ekstra varme i vogn ved {feels} °C. Bruk aldri OVER kalesjen') stemmer med plaggets faktiske posisjon: et kald-vær-tillegg som motoren behandler defensivt. 'Bruk aldri OVER kalesjen' i begge tekster er konsistent med HB-8/PRAM_COVER_RE som fjerner det ved varme/sol. 'som tillegg, ikke alene' er konsistent med CK-5 (velg én — varmepose ER varmen). Trekker 1 poeng for en mild logikk-spenning: tekstene presenterer dunteppe som et reelt valg for 'kjølige til kalde dager', men motoren tilbyr det ALDRI på de dagene (varmepose-familien dekker hele kald-stigen). En forelder som leser info vil tro plagget kan anbefales, men ser det aldri foreslått — ikke farlig, men en forventnings-drift mellom info-tekst og faktisk motor-output."
+    },
+    "alternativer": {
+      "score": 9,
+      "kommentar": "Ingen alternativ-oppføring finnes for dunteppe i alternatives.ts (ITEM_ALTERNATIVES dekker mellomlag/jakke/bukse/votter/sko/sovepose/lue, ikke vogn-tepper). Dette er KORREKT: siden dunteppe aldri velges av motoren, ville en alternativ-oppføring (f.eks. dun→syntet eller dunteppe→tynt teppe) være død UI som aldri rendres ((!)-ikonet vises kun ved siden av items som faktisk er i layers). Et reelt dun↔syntet- eller tykkelse-trinn finnes konseptuelt (dunteppe → tynt teppe), men å legge det til ville bryte mønsteret der alternativer kun gis for aktivt valgbare items. Trekker 1 poeng kun fordi varmepose-familien (varmepose lett/varmepose/varmepose dun) — som FAKTISK velges i vogn — mangler innbyrdes tykkelse-trinn-alternativer i alternatives.ts, en relatert kategori-gap, men det er utenfor dette plaggets scope."
+    },
+    "total": 95,
+    "verdikt": "dunteppe er et velbygd, pediatrisk forsvarlig plagg med komplett metadata (info, dedikert why-gren, korrekt PNG-mapping) og solid sikkerhets-dekning (CK-5, HB-8, SB-2/5/6 mot LT-PRAM/Pediatrics-Pram). Sentral observasjon: plagget er funksjonelt DØDT i seleksjon — det velges aldri av baseTable eller modifiers, og finnes kun i fjernings-logikk. Det er trygt by design, men info-/why-tekstene antyder at det er et reelt valg på kjølige/kalde dager, noe motoren aldri leverer. Ingen kritiske eller høye funn. Anbefaling: enten gjør det eksplisitt at dunteppe er et rent defensivt sikkerhetsnett, eller fjern info-/why-/illustrasjons-metadata for å unngå fremtidig forvirring.",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "dunteppe har full info-oppføring, dedikert whyForGarment-gren, illustrasjons-mapping og PNG, men velges ALDRI av motoren — det finnes kun i fjernings-logikk (CK-5, HB-8, SB-2/5/6). baseTable.vogn bruker varmepose-familien + saueskinn i alle bånd. Plagget er funksjonelt dødt som anbefaling.",
+        "forslag": "Dokumenter eksplisitt i garment-info.ts at dunteppe er et defensivt-only plagg (kommentar over oppføringen), ELLER fjern dunteppe fra INFO + whyForGarment + illustrasjons-MAP hvis det ikke skal være et reelt valg. Behold fjernings-reglene uansett som sikkerhetsnett.",
+        "kilde": "engine.test.ts:151-160 ('siden vi fjernet dunteppe fra base ... dunteppe i resultatet (base er ren)'); tables.ts:25-77 (baseTable.vogn uten dunteppe)"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "when-tekst ('Kjølige til kalde dager i vogn — som tillegg') og whyForGarment ('legger på ekstra varme i vogn ved {feels} °C') presenterer dunteppe som et reelt påkledningsvalg for kald-bånd, men motoren tilbyr aldri plagget på de dagene (varmepose-familien dekker hele kald-stigen). Forventnings-drift mellom info-tekst og faktisk motor-output.",
+        "forslag": "Juster when/why til å reflektere at dunteppe er et valgfritt tillegg foreldre selv legger til (ikke motor-anbefalt), eller fjern feels-interpolasjonen i why-grenen siden den aldri rendres i praksis.",
+        "kilde": "garment-info.ts:225,460"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "varmepose-familien (varmepose lett / varmepose / varmepose dun) som FAKTISK velges i vogn-bånd, mangler innbyrdes tykkelse-trinn-alternativer i alternatives.ts, mens søsken-kategorier (sovepose, votter, vintersko) har trinn-alternativer. Relatert kategori-gap til dunteppe.",
+        "forslag": "Vurder å legge til alternatives-oppføringer for varmepose-trinnene (f.eks. varmepose ↔ varmepose lett ved grensetemp) i ITEM_ALTERNATIVES, slik at foreldre ser tykkelse-valg på de items som faktisk anbefales. Ikke for dunteppe selv (dødt item).",
+        "kilde": "alternatives.ts:44-145 (ingen vogn-pose-oppføringer)"
+      }
+    ]
+  },
+  "fable": null
+}

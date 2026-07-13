@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Babyora · Guide · Mock B (visuell + romslig)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  :root {
+    /* Warm grey canvas */
+    --bg-canvas: #DBD8D2;
+    --bg-canvas-soft: #E5E2DC;
+    --bg-canvas-deep: #CFCBC2;
+
+    /* Terracotta accents */
+    --terracotta-400: #C8693A;
+    --terracotta-500: #C0632F;
+    --terracotta-600: #B4502E;
+    --terracotta-700: #A9492A;
+    --terracotta-100: #F4E4D8;
+
+    /* Warm orange (sparingly — hero accent / haptics) */
+    --warm-orange: #FF6B35;
+
+    /* Ink */
+    --ink-900: #2B2B2B;
+    --ink-800: #2B2B2B;
+    --ink-700: #5A514C;
+    --ink-500: #A89E97;
+    --ink-300: #C9C3BD;
+
+    /* Surfaces */
+    --card-bg: #FFFFFF;
+    --card-shadow: 0 1px 2px rgba(43, 37, 34, .05), 0 10px 24px rgba(43, 37, 34, .09);
+    --card-shadow-lg: 0 2px 4px rgba(43, 37, 34, .06), 0 22px 48px rgba(43, 37, 34, .14);
+
+    /* Fonts */
+    --font-sans: 'Schibsted Grotesk', -apple-system, system-ui, sans-serif;
+    --font-serif: 'DM Serif Display', Georgia, serif;
+
+    --ease-standard: cubic-bezier(.2, .8, .2, 1);
+  }
+
+  *,
+  *::before,
+  *::after { box-sizing: border-box; }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: #1a1a1a;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 32px 24px 48px;
+    color: var(--ink-900);
+    gap: 22px;
+  }
+
+  .label {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #c8c2b8;
+  }
+  .label .label-sub {
+    display: block;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+    color: #8d877e;
+    font-size: 11.5px;
+    margin-top: 4px;
+    max-width: 360px;
+    line-height: 1.5;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* iPhone-frame 390 × 844 */
+  .frame {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    border-radius: 48px;
+    overflow: hidden;
+    box-shadow:
+      0 36px 90px rgba(0, 0, 0, .55),
+      0 0 0 12px #1f1f1f,
+      0 0 0 13px #333;
+    background: var(--bg-canvas);
+  }
+
+  /* Status bar (visual only) */
+  .statusbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 46px;
+    z-index: 6;
+    padding: 18px 28px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-900);
+    pointer-events: none;
+  }
+  .statusbar .signal {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .statusbar .bars {
+    display: flex;
+    align-items: end;
+    gap: 2px;
+  }
+  .statusbar .bar {
+    width: 3px;
+    background: var(--ink-900);
+    border-radius: 1px;
+  }
+  .statusbar .bar:nth-child(1) { height: 5px; }
+  .statusbar .bar:nth-child(2) { height: 7px; }
+  .statusbar .bar:nth-child(3) { height: 9px; }
+  .statusbar .bar:nth-child(4) { height: 11px; }
+  .statusbar .battery {
+    width: 26px;
+    height: 12px;
+    border: 1px solid var(--ink-900);
+    border-radius: 3px;
+    position: relative;
+    padding: 1px;
+  }
+  .statusbar .battery::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: 3px;
+    width: 2px;
+    height: 6px;
+    background: var(--ink-900);
+    border-radius: 0 1px 1px 0;
+  }
+  .statusbar .battery-fill {
+    background: var(--ink-900);
+    height: 100%;
+    width: 78%;
+    border-radius: 1px;
+  }
+  .statusbar .notch {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 30px;
+    background: #0a0a0a;
+    border-radius: 18px;
+    pointer-events: none;
+  }
+
+  .screen {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-sans);
+    color: var(--ink-900);
+    /* Warm grey base with subtle vertical wash */
+    background:
+      linear-gradient(180deg, #E1DED7 0%, #DBD8D2 38%, #D2CEC5 100%);
+    overflow: hidden;
+  }
+  .screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(110% 38% at 50% -6%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 58%),
+      radial-gradient(80% 30% at 78% 100%, rgba(192, 99, 47, .06), rgba(192, 99, 47, 0) 60%);
+    z-index: 1;
+  }
+
+  /* Top app bar (compact title row) */
+  .appbar {
+    position: relative;
+    z-index: 4;
+    flex: none;
+    padding: 60px 22px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .appbar .crumb {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: rgba(43, 43, 43, .42);
+  }
+  .appbar .icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .6);
+    border: 1px solid rgba(43, 43, 43, .06);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 140ms var(--ease-standard);
+  }
+  .appbar .icon-btn:active { transform: scale(.94); }
+
+  /* Scroll area */
+  .scroll {
+    position: relative;
+    z-index: 3;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 18px 22px 120px;
+    scrollbar-width: none;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* Headline block */
+  .headline {
+    margin: 4px 0 22px;
+  }
+  .headline h1 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 1.02;
+    letter-spacing: -0.6px;
+    color: var(--ink-900);
+    margin: 0;
+  }
+  .headline h1 em {
+    font-style: italic;
+    color: var(--terracotta-700);
+  }
+  .headline p {
+    margin: 12px 0 0;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: rgba(43, 43, 43, .58);
+    font-weight: 500;
+    max-width: 280px;
+  }
+
+  /* Hero card — large, visual */
+  .hero {
+    position: relative;
+    width: 100%;
+    border: none;
+    padding: 0;
+    margin: 0 0 28px;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 26px;
+    overflow: hidden;
+    background: linear-gradient(150deg, #C8693A 0%, #A9492A 60%, #8A3618 100%);
+    color: #fff;
+    box-shadow:
+      0 2px 4px rgba(120, 50, 28, .12),
+      0 24px 50px rgba(169, 73, 42, .34);
+    transition: transform 160ms var(--ease-standard);
+    font: inherit;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 44px;
+  }
+  .hero:active { transform: scale(.985); }
+
+  /* Decorative artwork inside hero */
+  .hero-art {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .hero-art .sun {
+    position: absolute;
+    top: -40px;
+    right: -34px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 40% 38%, rgba(255, 220, 180, .55), rgba(255, 220, 180, 0) 62%);
+    filter: blur(2px);
+  }
+  .hero-art .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .14);
+  }
+  .hero-art .ring.r1 {
+    width: 320px;
+    height: 320px;
+    top: -110px;
+    right: -90px;
+  }
+  .hero-art .ring.r2 {
+    width: 220px;
+    height: 220px;
+    top: -50px;
+    right: -30px;
+    border-color: rgba(255, 255, 255, .22);
+  }
+  .hero-art .ring.r3 {
+    width: 140px;
+    height: 140px;
+    top: -10px;
+    right: 10px;
+    border-color: rgba(255, 255, 255, .12);
+  }
+  .hero-art .grain {
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px);
+    background-size: 4px 4px;
+    mix-blend-mode: overlay;
+    opacity: .6;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 2;
+    padding: 24px 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .hero-eyebrow {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .82);
+  }
+  .hero-title {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 30px;
+    line-height: 1.04;
+    letter-spacing: -0.3px;
+    color: #fff;
+    max-width: 220px;
+  }
+  .hero-title em {
+    font-style: italic;
+  }
+  .hero-sub {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, .82);
+    max-width: 240px;
+  }
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .14);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -.1px;
+    align-self: flex-start;
+    margin-top: 4px;
+    border: 1px solid rgba(255, 255, 255, .22);
+  }
+  .hero-cta svg { flex: none; }
+
+  /* Live mini-weather strip inside hero */
+  .hero-meta {
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .hero-meta .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, .18);
+    border: 1px solid rgba(255, 255, 255, .14);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: .1px;
+  }
+  .hero-meta .chip .num {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 14px;
+    letter-spacing: -.2px;
+    color: #fff;
+  }
+
+  /* Section eyebrow */
+  .section {
+    margin-top: 8px;
+  }
+  .section + .section {
+    margin-top: 32px;
+  }
+  .section-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 4px 14px;
+  }
+  .section-head .eyebrow {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: rgba(43, 43, 43, .42);
+    margin: 0;
+  }
+  .section-head .head-title {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -.3px;
+    color: var(--ink-900);
+    margin: 6px 0 0;
+  }
+  .section-head .head-count {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(43, 43, 43, .42);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* TOOL CARDS — generous, image-led */
+  .tool-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tool-card {
+    position: relative;
+    width: 100%;
+    border: 1px solid rgba(43, 43, 43, .05);
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--card-bg);
+    box-shadow: var(--card-shadow);
+    display: grid;
+    grid-template-columns: 116px 1fr auto;
+    align-items: stretch;
+    gap: 0;
+    min-height: 116px;
+    transition: transform 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard);
+    font: inherit;
+    color: var(--ink-900);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tool-card:active {
+    transform: scale(.99);
+    box-shadow: 0 1px 2px rgba(43, 37, 34, .05), 0 4px 12px rgba(43, 37, 34, .08);
+  }
+
+  /* Image tile (left) — different gradient per tool */
+  .tool-art {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-canvas-soft);
+  }
+  .tool-art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 60%, rgba(0, 0, 0, .04) 100%);
+  }
+  .tool-art.lib {
+    background:
+      radial-gradient(120% 80% at 30% 30%, rgba(255, 255, 255, .85), rgba(255, 255, 255, 0) 60%),
+      linear-gradient(150deg, #E8DDD0 0%, #D9C7B4 100%);
+  }
+  .tool-art.wardrobe {
+    background:
+      radial-gradient(120% 80% at 30% 30%, rgba(255, 255, 255, .85), rgba(255, 255, 255, 0) 60%),
+      linear-gradient(150deg, #DCE2DA 0%, #B7C7B2 100%);
+  }
+  .tool-art-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Card body */
+  .tool-body {
+    padding: 18px 14px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+  }
+  .tool-title {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 19px;
+    line-height: 1.1;
+    letter-spacing: -.2px;
+    color: var(--ink-900);
+  }
+  .tool-sub {
+    font-size: 13px;
+    line-height: 1.45;
+    color: rgba(43, 43, 43, .54);
+    font-weight: 500;
+  }
+  .tool-tag {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: var(--terracotta-100);
+    color: var(--terracotta-700);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .2px;
+    align-self: flex-start;
+  }
+
+  .tool-chev {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 18px 0 8px;
+    color: rgba(43, 43, 43, .32);
+  }
+
+  /* Knowledge cards — different feel: full-width with side accent strip */
+  .know-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .know-card {
+    position: relative;
+    width: 100%;
+    border: 1px solid rgba(43, 43, 43, .05);
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 20px;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, .92) 0%, rgba(255, 255, 255, .82) 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: var(--card-shadow);
+    display: grid;
+    grid-template-columns: 6px 64px 1fr auto;
+    align-items: center;
+    gap: 0;
+    min-height: 88px;
+    transition: transform 160ms var(--ease-standard);
+    font: inherit;
+    color: var(--ink-900);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .know-card:active { transform: scale(.99); }
+
+  .know-strip {
+    height: 100%;
+    width: 6px;
+  }
+  .know-card.tog .know-strip { background: linear-gradient(180deg, #3F5A78 0%, #2A4060 100%); }
+  .know-card.temp .know-strip { background: linear-gradient(180deg, #C8693A 0%, #A9492A 100%); }
+
+  .know-ico {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 14px;
+  }
+  .know-ico .badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--bg-canvas-soft);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(43, 43, 43, .05);
+  }
+
+  .know-body {
+    padding: 16px 14px 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .know-title {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 15.5px;
+    line-height: 1.2;
+    letter-spacing: -.1px;
+    color: var(--ink-900);
+  }
+  .know-sub {
+    font-size: 13px;
+    line-height: 1.4;
+    color: rgba(43, 43, 43, .54);
+    font-weight: 500;
+  }
+  .know-chev {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 18px 0 8px;
+    color: rgba(43, 43, 43, .3);
+  }
+
+  /* Quote / hint footer */
+  .footer-hint {
+    margin-top: 28px;
+    padding: 18px 18px;
+    border-radius: 18px;
+    background: rgba(43, 43, 43, .03);
+    border: 1px dashed rgba(43, 43, 43, .12);
+    color: rgba(43, 43, 43, .58);
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+  }
+  .footer-hint strong {
+    color: var(--ink-900);
+    font-weight: 600;
+  }
+
+  /* Bottom tab bar */
+  .tabbar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    padding: 10px 14px calc(18px + env(safe-area-inset-bottom, 0px));
+    background:
+      linear-gradient(180deg, rgba(219, 216, 210, 0) 0%, rgba(219, 216, 210, .92) 38%, #DBD8D2 100%);
+    pointer-events: none;
+  }
+  .tabbar-inner {
+    pointer-events: auto;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, .92), rgba(255, 255, 255, .8));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(43, 43, 43, .06);
+    border-radius: 22px;
+    box-shadow: 0 4px 16px rgba(43, 37, 34, .10);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: center;
+    padding: 8px 4px;
+  }
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    color: rgba(43, 43, 43, .52);
+    min-height: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    border-radius: 12px;
+  }
+  .tab:active { transform: scale(.96); }
+  .tab[aria-current='page'] {
+    color: var(--terracotta-700);
+  }
+  .tab .tab-ico {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tab .tab-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .2px;
+  }
+  .tab[aria-current='page'] .tab-ico::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--terracotta-700);
+    border-radius: 50%;
+    margin-top: 28px;
+  }
+
+  /* Focus visible — terracotta ring across all interactives */
+  button:focus-visible,
+  .tool-card:focus-visible,
+  .know-card:focus-visible,
+  .hero:focus-visible,
+  .tab:focus-visible {
+    outline: 2px solid var(--terracotta-600);
+    outline-offset: 2px;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .hero, .tool-card, .know-card, .tab, .appbar .icon-btn {
+      transition: none;
+    }
+    .hero:active, .tool-card:active, .know-card:active, .tab:active, .appbar .icon-btn:active {
+      transform: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <p class="label">
+    Babyora · Guide · Mock B
+    <span class="label-sub">
+      Visuell + romslig hub. Hero-kort med live-vær + bilde-ledede verktøy-kort + kategori-stilte kunnskapskort. iPhone 390×844, safe-area, prefers-reduced-motion respektert.
+    </span>
+  </p>
+
+  <main class="frame" aria-label="Babyora Guide — mock B preview">
+
+    <!-- Status bar (visual chrome only) -->
+    <div class="statusbar" aria-hidden="true">
+      <div>09:41</div>
+      <div class="signal">
+        <div class="bars">
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+        <span style="font-size:11px;">5G</span>
+        <div class="battery"><div class="battery-fill"></div></div>
+      </div>
+    </div>
+    <div class="notch" aria-hidden="true"></div>
+
+    <section class="screen" aria-labelledby="guide-title">
+
+      <!-- App bar — light, no chrome -->
+      <header class="appbar">
+        <div class="crumb" aria-hidden="true">Babyora</div>
+        <button type="button" class="icon-btn" aria-label="Søk i guide">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M21 21l-4.3-4.3"></path>
+          </svg>
+        </button>
+      </header>
+
+      <!-- Scrollable content -->
+      <div class="scroll">
+
+        <!-- Editorial headline -->
+        <div class="headline">
+          <h1>Hva skal <em>Liv</em> ha&nbsp;på i&nbsp;dag?</h1>
+          <p>Finn riktig antrekk, lær lagene og sjekk om barnet er for varmt eller kaldt.</p>
+        </div>
+
+        <!-- HERO CARD — Finn antrekk -->
+        <button type="button" class="hero" aria-label="Finn antrekk — test vær og aktivitet, akkurat nå 6 grader og lett vind">
+
+          <div class="hero-art" aria-hidden="true">
+            <div class="ring r1"></div>
+            <div class="ring r2"></div>
+            <div class="ring r3"></div>
+            <div class="sun"></div>
+            <div class="grain"></div>
+          </div>
+
+          <div class="hero-inner">
+            <div class="hero-eyebrow">Anbefalt nå</div>
+            <div class="hero-title">Finn <em>antrekk</em> til Liv</div>
+            <div class="hero-sub">Vi kombinerer vær, aktivitet og barnets alder.</div>
+
+            <div class="hero-meta">
+              <span class="chip">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+                </svg>
+                <span class="num">6°</span> Lett vind
+              </span>
+              <span class="chip">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M12 7v5l3 2"></path>
+                </svg>
+                3 lag
+              </span>
+            </div>
+
+            <span class="hero-cta">
+              Start
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+              </svg>
+            </span>
+          </div>
+        </button>
+
+        <!-- VERKTØY -->
+        <section class="section" aria-labelledby="tools-head">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Verktøy</p>
+              <h2 id="tools-head" class="head-title">Bla i&nbsp;garderoben</h2>
+            </div>
+            <span class="head-count" aria-hidden="true">2</span>
+          </div>
+
+          <ul role="list" class="tool-grid">
+
+            <li role="listitem">
+              <button type="button" class="tool-card" aria-label="Plaggbiblioteket — se alle plagg etter kategori, 84 plagg">
+
+                <div class="tool-art lib" aria-hidden="true">
+                  <svg class="tool-art-svg" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- stacked folded garments illustration -->
+                    <defs>
+                      <linearGradient id="g1a" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#F4E4D8"/>
+                        <stop offset="1" stop-color="#E0CDB7"/>
+                      </linearGradient>
+                      <linearGradient id="g1b" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#C8693A"/>
+                        <stop offset="1" stop-color="#A9492A"/>
+                      </linearGradient>
+                      <linearGradient id="g1c" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#5E8C6A"/>
+                        <stop offset="1" stop-color="#3F6B4F"/>
+                      </linearGradient>
+                    </defs>
+                    <!-- back layer -->
+                    <rect x="22" y="30" width="76" height="18" rx="4" fill="url(#g1a)" opacity=".95"/>
+                    <rect x="22" y="30" width="76" height="3" rx="1.5" fill="#fff" opacity=".5"/>
+                    <!-- middle -->
+                    <rect x="18" y="54" width="84" height="20" rx="5" fill="url(#g1c)"/>
+                    <rect x="18" y="54" width="84" height="3" rx="1.5" fill="#fff" opacity=".22"/>
+                    <!-- front -->
+                    <rect x="14" y="80" width="92" height="24" rx="6" fill="url(#g1b)"/>
+                    <rect x="14" y="80" width="92" height="3" rx="1.5" fill="#fff" opacity=".28"/>
+                    <!-- fold lines -->
+                    <line x1="60" y1="80" x2="60" y2="104" stroke="#000" stroke-opacity=".12" stroke-width="1"/>
+                  </svg>
+                </div>
+
+                <div class="tool-body">
+                  <div class="tool-title">Plaggbiblioteket</div>
+                  <div class="tool-sub">Se alle plagg etter kategori og lag</div>
+                  <span class="tool-tag" aria-hidden="true">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <circle cx="12" cy="12" r="6"/>
+                    </svg>
+                    84 plagg
+                  </span>
+                </div>
+
+                <div class="tool-chev" aria-hidden="true">
+                  <svg width="9" height="16" viewBox="0 0 8 14" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 1l6 6-6 6"/>
+                  </svg>
+                </div>
+              </button>
+            </li>
+
+            <li role="listitem">
+              <button type="button" class="tool-card" aria-label="Min garderobe — velg plagg og få relevante forslag, 12 plagg lagt til">
+
+                <div class="tool-art wardrobe" aria-hidden="true">
+                  <svg class="tool-art-svg" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="g2a" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#fff" stop-opacity=".9"/>
+                        <stop offset="1" stop-color="#fff" stop-opacity=".5"/>
+                      </linearGradient>
+                    </defs>
+                    <!-- hanger rail -->
+                    <line x1="14" y1="34" x2="106" y2="34" stroke="#5A514C" stroke-opacity=".55" stroke-width="1.5" stroke-linecap="round"/>
+                    <!-- hanger 1 — sweater -->
+                    <g transform="translate(30,34)">
+                      <path d="M0 0 v3 a2 2 0 0 0 2 2 h-2 z" fill="none" stroke="#5A514C" stroke-opacity=".55" stroke-width="1.4" stroke-linecap="round"/>
+                      <path d="M-14 14 Q0 4 14 14 L20 38 Q0 46 -20 38 Z" fill="#C8693A" opacity=".92"/>
+                      <path d="M-8 10 Q0 6 8 10" stroke="#fff" stroke-opacity=".35" stroke-width="1.2" fill="none"/>
+                    </g>
+                    <!-- hanger 2 — pants -->
+                    <g transform="translate(70,34)">
+                      <path d="M0 0 v3 a2 2 0 0 0 2 2 h-2 z" fill="none" stroke="#5A514C" stroke-opacity=".55" stroke-width="1.4" stroke-linecap="round"/>
+                      <path d="M-12 12 Q0 6 12 12 L8 22 L10 50 L2 50 L0 30 L-2 50 L-10 50 L-8 22 Z" fill="#3F5A78" opacity=".88"/>
+                    </g>
+                    <!-- corner check -->
+                    <circle cx="98" cy="92" r="12" fill="#fff" opacity=".95"/>
+                    <path d="M92 92 l4 4 l8 -8" stroke="#3F6B4F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  </svg>
+                </div>
+
+                <div class="tool-body">
+                  <div class="tool-title">Min garderobe</div>
+                  <div class="tool-sub">Velg plagg du eier — få bedre forslag</div>
+                  <span class="tool-tag" aria-hidden="true">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <circle cx="12" cy="12" r="6"/>
+                    </svg>
+                    12 lagt til
+                  </span>
+                </div>
+
+                <div class="tool-chev" aria-hidden="true">
+                  <svg width="9" height="16" viewBox="0 0 8 14" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 1l6 6-6 6"/>
+                  </svg>
+                </div>
+              </button>
+            </li>
+
+          </ul>
+        </section>
+
+        <!-- KUNNSKAP -->
+        <section class="section" aria-labelledby="know-head">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Kunnskap</p>
+              <h2 id="know-head" class="head-title">Lær det vesentlige</h2>
+            </div>
+            <span class="head-count" aria-hidden="true">2</span>
+          </div>
+
+          <ul role="list" class="know-list">
+
+            <li role="listitem">
+              <button type="button" class="know-card tog" aria-label="TOG-guiden — finn riktig sovepose for romtemperatur">
+                <div class="know-strip" aria-hidden="true"></div>
+                <div class="know-ico" aria-hidden="true">
+                  <span class="badge">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3F5A78"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M9 2h6v4l3 4v8a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4v-8l3-4z"/>
+                      <path d="M9 2v4M15 2v4"/>
+                    </svg>
+                  </span>
+                </div>
+                <div class="know-body">
+                  <div class="know-title">TOG-guiden</div>
+                  <div class="know-sub">Finn riktig sovepose for romtemperatur</div>
+                </div>
+                <div class="know-chev" aria-hidden="true">
+                  <svg width="9" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 1l6 6-6 6"/>
+                  </svg>
+                </div>
+              </button>
+            </li>
+
+            <li role="listitem">
+              <button type="button" class="know-card temp" aria-label="Varm eller kald? — sjekk barnets temperatur med tre raske spørsmål">
+                <div class="know-strip" aria-hidden="true"></div>
+                <div class="know-ico" aria-hidden="true">
+                  <span class="badge">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A9492A"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M14 4a2 2 0 0 0-4 0v10a4 4 0 1 0 4 0V4z"/>
+                      <circle cx="12" cy="18" r="1.6" fill="#A9492A" stroke="none"/>
+                    </svg>
+                  </span>
+                </div>
+                <div class="know-body">
+                  <div class="know-title">Varm eller kald?</div>
+                  <div class="know-sub">Tre raske spørsmål om barnets temperatur</div>
+                </div>
+                <div class="know-chev" aria-hidden="true">
+                  <svg width="9" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 1l6 6-6 6"/>
+                  </svg>
+                </div>
+              </button>
+            </li>
+
+          </ul>
+        </section>
+
+        <!-- Footer hint -->
+        <div class="footer-hint" role="note">
+          Hvert antrekk lagres i <strong>historikken</strong> — sveip på Hjem for å se i&nbsp;går.
+        </div>
+
+      </div><!-- /.scroll -->
+
+      <!-- Bottom tab bar -->
+      <nav class="tabbar" aria-label="Hovedmeny">
+        <div class="tabbar-inner">
+
+          <button type="button" class="tab" aria-label="Hjem">
+            <span class="tab-ico" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 11l9-8 9 8"/>
+                <path d="M5 10v10h14V10"/>
+              </svg>
+            </span>
+            <span class="tab-label">Hjem</span>
+          </button>
+
+          <button type="button" class="tab" aria-label="Vær">
+            <span class="tab-ico" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 20 12a4 4 0 0 1 0 8H7z"/>
+              </svg>
+            </span>
+            <span class="tab-label">Vær</span>
+          </button>
+
+          <button type="button" class="tab" aria-current="page" aria-label="Guide, aktiv side">
+            <span class="tab-ico" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 5a2 2 0 0 1 2-2h10l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>
+                <path d="M8 8h6M8 12h8M8 16h5"/>
+              </svg>
+            </span>
+            <span class="tab-label">Guide</span>
+          </button>
+
+          <button type="button" class="tab" aria-label="Innstillinger">
+            <span class="tab-ico" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1A2 2 0 1 1 4.3 17l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+              </svg>
+            </span>
+            <span class="tab-label">Mer</span>
+          </button>
+
+        </div>
+      </nav>
+
+    </section><!-- /.screen -->
+  </main>
+
+</body>
+</html>

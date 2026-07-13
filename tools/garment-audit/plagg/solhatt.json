@@ -1,0 +1,61 @@
+{
+  "claude": {
+    "id": "solhatt",
+    "dbString": "solhatt",
+    "kategori": "ekstra-hode",
+    "struktur": {
+      "score": 19,
+      "kommentar": "Komplett oppføring i garment-info.ts (linje 147-150): what = 'Solhatt med brem som beskytter ansikt, nakke og ører.' + when = 'Solrike dager fra ca 10 °C og oppover.'. Følger samme mønster/tone/lengde som søsken-plagg i ekstra-hode (lue-tynn, lue, lue-m-ull, balaklava) — kort what-setning + kort when. Dedikert whyForGarment-gren finnes (linje 403-405: 'Brem-hatt beskytter ansikt og nakke. Soltimer er sterke selv ved X °C.'), ikke fallback. Eneste lille avvik: what beskriver brem som beskytter 'ører' mens whyForGarment kun nevner 'ansikt og nakke' — bagatell."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\solhatt.png. Mapping er korrekt og robust: i garment-illustrations.ts er BÅDE 'solhatt' → 'solhatt' (linje 54) og fallback-strengen 'caps eller solhatt' → 'solhatt' (linje 55) mappet til samme id. db-strengen 'caps eller solhatt' brukes i utelek/varm-båndet i tables.ts og fanges dermed opp. Navn/mapping er fullt plausibelt. Visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 21,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig. Solhatt velges KUN i varme/sol-kontekster (16 °C og oppover), aldri i kulde — ingen overoppheting/SIDS/kvelning/frost-risiko introdusert av selve plagget. For spedbarn <6 mnd styrer sol-modifieren (modifiers.ts linje 366-375) korrekt til SKYGGE framfor å stole på hatt alene, i tråd med AAP/FDA-anbefaling om at barn <6 mnd holdes ute av direkte sol. Bremme-hatt som dekker ansikt/nakke/ører er nettopp det pediatriske kilder anbefaler. Safety HEAD_COVER_RE (safety.ts linje 46) inkluderer 'solhatt' slik at HB-1 fjerner den ved søvn — riktig, og den velges uansett aldri for søvn. Liten observasjon: solhatt fjernes ikke eksplisitt av noen overopphetings-regel i ekstrem_varme, men det er korrekt — hatt skal beholdes som solbeskyttelse selv i hete (det er LAGENE som kuttes, ikke solbeskyttelsen).",
+      "score_note": "ingen helse-spørsmål kildene IKKE dekket; sol-hatt i hete er standard pediatrisk råd",
+      "kilder": [
+        "https://www.healthychildren.org/English/safety-prevention/at-play/Pages/Sun-Safety.aspx",
+        "https://www.fda.gov/consumers/consumer-updates/should-you-put-sunscreen-infants-not-usually",
+        "https://publications.aap.org/aapnews/article/29/6/28/7670/Keep-kids-safe-from-sun-s-harmful-rays"
+      ],
+      "trace": "bandForTemp (tables.ts linje 8-18): solhatt som FAKTISK plagg-item ('ekstra') velges i: VOGN→tropisk(22-27°C, item 'solhatt') + VOGN→ekstrem_varme(≥28°C, 'solhatt'); BAERESELE→tropisk(22-27°C, 'solhatt') + BAERESELE→varm(16-21°C, 'solhatt') + BAERESELE→ekstrem_varme(≥28°C, 'solhatt'); UTELEK→tropisk(22-27°C, 'solhatt') + UTELEK→varm(16-21°C via db-streng 'caps eller solhatt') + UTELEK→ekstrem_varme(≥28°C, 'solhatt'). Solhatt velges IKKE i mild-båndet (10-15°C) for noen aktivitet, og IKKE i vogn/varm (der står 'lue tynn'). Modifier-tilsetning: sol/UV-noten (modifiers.ts linje 366) trigges ved isSunSymbol && feels ≥10°C og NEVNER solhatt i en NOTE for 6+ mnd ('Solhatt og solkrem på det som vises'), men legger IKKE plagget til layers. Ingen modifier fjerner solhatt. applyConflicts/softBlocks rører den ikke. applySafety: HB-1 fjerner ved søvn (aldri relevant)."
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "DRIFT mellom tekst og faktisk seleksjon på temperatur-gulvet. when-teksten sier 'Solrike dager fra ca 10 °C og oppover' og whyForGarment sier 'Soltimer er sterke selv ved X °C' — begge impliserer at solhatt er en del av antrekket fra 10 °C. Men baseTable plasserer solhatt som faktisk plagg-item FØRST fra varm-båndet (≥16 °C): i vogn/baeresele/utelek. I mild-båndet (10-15 °C) er solhatt IKKE i noen base-liste — der står 'lue tynn'. Mellom 10-15 °C nevnes solhatt kun i en sol-NOTE (for 6+ mnd ved klarvær), ikke som plagg. Dvs. ca 6 °C overstatement i når plagget faktisk dukker opp i antrekket. Dette kan villede en forelder som leser detalj-siden ved 12 °C til å forvente solhatt i listen. whyForGarment-grenen er ellers korrekt (sol/UV-fokus matcher de varme/sol-kontekstene plagget faktisk velges i). Anbefalt presisering av tekst (IKKE endre terskel-tall i engine): juster når-tekst til å reflektere ~16 °C-gulvet ELLER at solhatt fra 10 °C kun gjelder klarvær/sol-note, ikke standard-antrekk."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "Solhatt har ikke oppføring i alternatives.ts. Det finnes ÉN reell variant: db-strengen 'caps eller solhatt' (utelek/varm) viser at caps er en mulig variant, men caps er pediatrisk UNDERLEGEN (skygger ikke nakke/ører) og bør ikke promoteres som likeverdig alternativ — så fraværet er forsvarlig. Et tynkere/bredbremmet vs. smalbremmet skille kunne vurderes, men gir liten praktisk verdi for et enkelt sommerplagg. Eksisterende fravær er akseptabelt; lett poengtrekk fordi en kort 'når caps er ok / hvorfor bredbrem anbefales'-note kunne hjulpet foreldre som vurderer caps (jf. db-strengen som allerede sidestiller dem)."
+    },
+    "total": 86,
+    "verdikt": "Solhatt er et solid, trygt plagg med komplett info, dedikert why-gren, korrekt PNG-mapping og pediatrisk forsvarlig seleksjon (sol-kontekster, aldri kulde; spedbarn <6 mnd styres til skygge). Hovedfunnet er en tekst↔logikk-drift: when/why antyder solhatt 'fra ca 10 °C', men baseTable plasserer plagget som faktisk antrekks-item først fra 16 °C — 10-15 °C gir kun en sol-note, ikke plagget. Ingen kritiske helse-avvik. Anbefaler tekst-presisering (ikke terskel-endring).",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "Tekst↔logikk-drift: when-teksten ('Solrike dager fra ca 10 °C og oppover', garment-info.ts linje 149) og whyForGarment ('Soltimer er sterke selv ved X °C', linje 404) antyder at solhatt inngår i antrekket fra 10 °C. Men baseTable (tables.ts) velger solhatt som faktisk plagg-item først fra varm-båndet (≥16 °C) i vogn/baeresele/utelek; i mild-båndet 10-15 °C er solhatt IKKE i noen base-liste (der står 'lue tynn'), og nevnes kun i en sol-note for 6+ mnd. Ca 6 °C overstatement på temp-gulvet.",
+        "forslag": "Presiser when-teksten til å speile det faktiske 16 °C-gulvet (f.eks. 'Solrike, varme dager fra ca 16 °C og oppover'), ELLER tydeliggjør at solhatt fra 10 °C kun er et sol-/klarvær-råd og ikke standard-antrekk. Rør IKKE terskel-tallene i bandForTemp/baseTable.",
+        "kilde": "tables.ts (baseTable vogn/baeresele/utelek varm+tropisk+ekstrem_varme); garment-info.ts linje 149 + 404; modifiers.ts linje 366-385 (sol-note)"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Liten intern inkonsistens: what-teksten sier brem beskytter 'ansikt, nakke og ører', mens whyForGarment-grenen kun nevner 'ansikt og nakke' (utelater ører). Pediatriske kilder fremhever nettopp at bremme-hatt (ikke caps) skal skygge nakke OG ører.",
+        "forslag": "Legg 'ører' til i whyForGarment-strengen for konsistens med what og med kildenes vekt på nakke+ører-beskyttelse.",
+        "kilde": "garment-info.ts linje 148 vs 404; https://publications.aap.org/aapnews/article/29/6/28/7670/Keep-kids-safe-from-sun-s-harmful-rays"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen alternatives.ts-oppføring for solhatt. db-strengen 'caps eller solhatt' (tables.ts utelek/varm) sidestiller caps og solhatt, men caps skygger ikke nakke/ører og er pediatrisk underlegen — uten en note kan en forelder feilaktig tro de er likeverdige.",
+        "forslag": "Vurder en kort alternatives-note på 'solhatt' / 'caps eller solhatt' som forklarer at bredbremmet hatt anbefales framfor caps fordi den skygger nakke og ører. Lav prioritet; fraværet er ellers forsvarlig.",
+        "kilde": "alternatives.ts (ingen oppføring); tables.ts utelek/varm 'caps eller solhatt'; UCSF/Skin Cancer Foundation sol-beskyttelse for barn"
+      }
+    ]
+  },
+  "fable": null
+}

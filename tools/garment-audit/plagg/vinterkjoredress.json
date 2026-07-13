@@ -1,0 +1,113 @@
+{
+  "claude": {
+    "id": "vinterkjoredress",
+    "dbString": "vinterkjøredress",
+    "kategori": "yttertoy",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett info-oppføring finnes i garment-info.ts (linje 121-124): what='Vinterkjøredress med god fôring og hette.' + when='Frost-dager i vogn fra ca −5 til 0 °C.' Mønster/tone/lengde matcher søsken-plagg i yttertøy-kategorien (lett-kjoredress, kjoredress, vinterkjoredress-isolert) godt — kort what + temp-spesifikk when. Dedikert whyForGarment-gren finnes (linje 383-385): 'Vinterkjøredress er ytterste lag — fôret, vindtett og holder snø ute ved {feels} °C.' — ikke fallback. Trekker 2 poeng fordi when-temperaturen ikke matcher den faktiske seleksjonen (se mål 4)."
+    },
+    "utseende": {
+      "score": 8,
+      "pngExists": false,
+      "kommentar": "PNG MANGLER: public/illustrations/garments/vinterkjoredress.png finnes IKKE (mappen har 28+ andre PNG-er som kjoredress.png, lett-kjoredress.png, regntoy-skall.png, men ingen vinterkjoredress*.png — verken vinterkjoredress.png eller vinterkjoredress-isolert.png). Mapping i garment-illustrations.ts (linje 46) er derimot korrekt: db-streng 'vinterkjøredress' → id 'vinterkjoredress', og søster 'vinterkjøredress isolert' → 'vinterkjoredress-isolert' (linje 47). id matcher garment-info-nøkkelen. Navnekonvensjon (ø→o, mellomrom→bindestrek) er konsistent med resten. Score reflekterer riktig mapping men manglende bildefil — plagget vil vise placeholder/broken image i UI."
+    },
+    "seleksjon": {
+      "score": 21,
+      "trace": "bandForTemp: kald=[0,4]°C, frost=[-7,-1]°C, streng_frost=[-15,-8]°C. VALGT som yttertøy i: (1) baseTable.vogn.kald (tables.ts L51), (2) baseTable.vogn.frost (L57), (3) baseTable.baeresele.streng_frost (L114). Søsken 'vinterkjøredress isolert' tar over i vogn.streng_frost (L63), vogn.ekstrem (L69) og baeresele.ekstrem (L120); utelek bruker vinterdress-serien istedenfor. Effektiv vogn-seleksjon for vinterkjøredress = ca +4°C ned til -7°C (føles-som). MODIFIERS: ingen modifier introduserer eller fjerner vinterkjøredress ved varmere bånd. Nedbør (modifiers L143) legger 'regntrekk' over vogn, ikke erstatter dressen. Vind<5m/s legger ikke til skall i vogn. baeresele innerJakke<10°C tømmer yttertøy-laget helt (L305-307). SIKKERHET: HB-9 (safety.ts L265-278) FJERNER vinterkjøredress helt i bilstol-kontekst (CRITICAL) — korrekt mot kjent komprimerings/kvelnings-risiko i bilsete. Bilstol-note i modifiers (L395-408) dupliserer rådet. PEDIATRISK FORSVARLIGHET: vogn ved 0 til -7°C med tykt ullsett + ull-mellomlag + fôret vindtett yttertøy + varmepose + saueskinn er konservativt og i tråd med 'one layer more than adult' (aap-healthychildren, capital-area-peds) og ull-ved-fukt (merino-kids). Ingen overoppheting-risiko i vogn-kontekst ved disse temp (head heat-loss dekkes av lue). Bilstol-fjerning dekker SIDS/komprimerings-flanken. Ingen helse-spørsmål uten kildedekning — ikke behov for web-søk. Trekker 4 poeng: baeresele.streng_frost-bruken (-8 til -15°C) er aggressiv for bæresele der forelderens kropp allerede varmer (jf. pmc-7202982 babywearing-termoregulering) — vinterkjøredress PÅ barnet inni/utenpå bæresele i streng frost kan gi klamhet; men kildene gir ikke entydig fasit, så medisinsk avvik flagges som funn, ikke endring.",
+      "kilder": [],
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig i vogn-konteksten og sikkerhetslaget (HB-9) håndterer bilstol-flanken eksemplarisk. Hovedusikkerhet er baeresele.streng_frost-bruken."
+    },
+    "tekstLogikk": {
+      "score": 17,
+      "kommentar": "DRIFT mellom when-tekst og faktisk seleksjon. when sier 'Frost-dager i vogn fra ca −5 til 0 °C', men baseTable velger vinterkjøredress i vogn fra kald-båndet (0 til +4°C) gjennom frost-båndet (−1 til −7°C). Altså: (a) varm ende — plagget velges helt opp til +4°C, men teksten stopper ved 0°C; (b) kald ende — plagget velges ned til −7°C, men teksten sier kun −5°C. Teksten underdriver begge ender og kan villede foreldre til å tro at vinterkjøredress er 'for kaldt' ved +2°C eller 'for lett' ved −6°C, selv om motoren faktisk anbefaler det der. whyForGarment-grenen ('ytterste lag — fôret, vindtett og holder snø ute ved {feels} °C') er derimot temp-agnostisk/dynamisk og driver IKKE — den stemmer ved alle de faktiske temperaturene. when nevner heller ikke baeresele.streng_frost-bruken (ned til −15°C). Drift villeder påkledning → severity hoy. Trekker 8 poeng."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "vinterkjøredress har INGEN oppføring i ITEM_ALTERNATIVES (alternatives.ts). Et reelt og forventet alternativ MANGLER: tykkelse-trinnet vinterkjøredress ↔ 'vinterkjøredress isolert' (dun/syntet-isolert variant) — nøyaktig samme mønster som det eksisterende paret 'lett kjøredress'→'kjøredress' (L85-94) og 'vintersko isolerte'→'vintersko' (L106-114). Foreldre i grenseland frost/streng_frost (rundt −7 til −8°C) burde se at de kan trinne opp til isolert variant. Dette er den klareste manglende alternativ-koblingen for plagget. Et fleece-alternativ er IKKE relevant her (yttertøy/skall, ikke mellomlag). Trekker 3 poeng for manglende tykkelse-trinn-alternativ."
+    },
+    "total": 71,
+    "verdikt": "Vinterkjøredress er seleksjons- og sikkerhetsmessig solid (HB-9 bilstol-fjerning er forbilledlig, vogn-seleksjon er pediatrisk konservativ), men har to konkrete kvalitetshull: (1) manglende PNG-illustrasjonsfil, og (2) when-teksten driver mot faktisk temperatur-seleksjon (sier −5 til 0°C, men motoren bruker plagget +4 til −7°C i vogn). Begge bør lukkes før lansering. Mangler dessuten et opplagt tykkelse-trinn-alternativ til den isolerte varianten.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 2,
+        "beskrivelse": "PNG-illustrasjonsfila public/illustrations/garments/vinterkjoredress.png finnes ikke. Mappen inneholder 28+ andre plagg-PNG-er, men verken vinterkjoredress.png eller vinterkjoredress-isolert.png. UI vil vise placeholder/broken image for et kjerne-vinterplagg.",
+        "forslag": "Generer og legg inn vinterkjoredress.png (og vinterkjoredress-isolert.png) i samme stil/oppløsning som kjoredress.png og lett-kjoredress.png. Mapping i garment-illustrations.ts er allerede korrekt, så kun fila mangler.",
+        "kilde": "public/illustrations/garments/ (filliste) + garment-illustrations.ts L46-47"
+      },
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "when-teksten ('Frost-dager i vogn fra ca −5 til 0 °C') matcher ikke faktisk seleksjon. baseTable velger vinterkjøredress i vogn fra kald-båndet (0 til +4°C) til og med frost-båndet (−1 til −7°C). Teksten underdriver både varm ende (+4°C) og kald ende (−7°C), og kan villede foreldre om når plagget faktisk anbefales.",
+        "forslag": "Juster when til å reflektere reell vogn-seleksjon, f.eks. 'Kalde til frost-dager i vogn, ca −7 til +4 °C.' RØR IKKE tabell-tersklene — kun teksten skal stemmes av mot bandForTemp/baseTable.",
+        "kilde": "garment-info.ts L123 vs tables.ts L51 (vogn.kald) + L57 (vogn.frost) + bandForTemp L13-15"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "vinterkjøredress mangler alternativ-oppføring i ITEM_ALTERNATIVES. Det forventede tykkelse-trinnet vinterkjøredress ↔ 'vinterkjøredress isolert' tilbys ikke, selv om samme mønster finnes for 'lett kjøredress'→'kjøredress' og 'vintersko isolerte'→'vintersko'.",
+        "forslag": "Legg til ItemAlternatives med itemName 'vinterkjøredress' og alternativet 'vinterkjøredress isolert' (when: grenseland frost/streng_frost / lang eksponering; whyPrimary: tilstrekkelig for normal frost uten overoppheting). Bruk i18n-key-konvensjonen i fila.",
+        "kilde": "alternatives.ts L44-145 (ingen vinterkjøredress-entry) + tables.ts L63 isolert-variant"
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "baeresele.streng_frost (−8 til −15°C) bruker vinterkjøredress PÅ barnet, mens forelderens kropp allerede bidrar med varme i bæresele (pmc-7202982: babywearing endrer skin-temp +0.71°C). Tykt fôret yttertøy inni/utenpå bæresele i streng frost kan gi klamhet/overvarming. Kildene gir ingen entydig fasit for akkurat denne kombinasjonen.",
+        "forslag": "Vurder en bæresele-spesifikk note (lik modifiers L305-307 innerJakke-logikken) som anbefaler å droppe/åpne tykt yttertøy når barnet bæres tett mot forelder i frost. Ikke endre terskler — legg eventuelt til veiledende note + verifiser mot helsesøster.",
+        "kilde": "pmc-7202982 (babywearing thermoregulation) + tables.ts L114 (baeresele.streng_frost)"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett grunnstruktur: id (vinterkjoredress), kategori (yttertoy), hva/når-tekster og selekjonsregler på plass, inkl. korrekt CRITICAL-håndtering via HB-9 (fjernes i bilstol — pediatrisk riktig). Trekk: alternatives-oppføring mangler (se mål 5) og 'når'-teksten dekker ikke alle kontekster motoren faktisk bruker plagget i (bæresele nevnes ikke)."
+    },
+    "utseende": {
+      "score": 17,
+      "kommentar": "Claudes Stadium-A-funn var feil — bildet finnes og holder god kvalitet. Det viser riktig plagg: fôret, polstret heldress med hette, glidelås, ribbede mansjetter og integrerte fottak. Stilen (myk semi-3D med flate skygger) virker konsistent med app-illustrasjoner. Ingen synlige artefakter, symmetri og volum er troverdig. Trekk: kan ikke verifisere visuell differensiering mot 'vinterkjøredress isolert' uten dét bildet (marineblå puffer-look kan lett forveksles), og bakgrunnen bør verifiseres som ekte alfa-transparens, ikke innbakt svart."
+    },
+    "seleksjon": {
+      "score": 19,
+      "kommentar": "Vogn-seleksjonen er forsvarlig: passivt barn i vogn ved 0..+4 °C og −1..−7 °C med fôret kjøredress er i tråd med vanlig pediatrisk praksis, og HB-9 (aldri tykk dress i bilstol) er korrekt og kritisk viktig. Svakhet: baeresele.streng_frost (−8..−15 °C) med tykk fôret dress PÅ barnet er diskutabelt — foreldrekroppen tilfører betydelig varme (jf. pmc-7202982), og bulkete dress i sele gir både klamhet/overopphetingsrisiko og dårligere ergonomi/posisjonering. Jeg vurderer dette som medium, ikke lav som Claude — bedre mønster er tynnere lag på barnet + dekke/pose utenpå selen."
+    },
+    "tekstLogikk": {
+      "score": 14,
+      "kommentar": "Claudes hoy-funn bekreftes og skjerpes: 'vogn fra ca −5 til 0 °C' underdriver begge ender av reell vogn-seleksjon (+4 ned til −7 °C). Forelder kan tro plagget er feil ved +2 °C (der appen faktisk anbefaler det) eller for tynt ved −6 °C. I tillegg utelater teksten helt at plagget også velges i bæresele ved −8..−15 °C — en kontekst med egne forbehold. Teksten bør oppdateres til å speile faktisk seleksjon (uten å røre tersklene selv), f.eks. «vogn fra ca +4 til −7 °C» + egen setning om bæresele."
+    },
+    "alternativer": {
+      "score": 5,
+      "kommentar": "Mangler tykkelse-trinn-alternativ til 'vinterkjøredress isolert' i alternatives.ts, til tross for at mønsteret finnes for naboplagg. Dette svekker brukerens mulighet til å forstå opp-/nedtrapping rundt streng_frost-grensen der isolert-varianten tar over. Lav alvorlighet, men lett å fikse."
+    },
+    "total": 73,
+    "verdikt": "Godkjent med forbehold: solid plagg-definisjon med korrekt sikkerhetshåndtering (bilstol), men 'når'-teksten må synkroniseres med reell seleksjon, bæresele-bruken i streng frost bør revurderes mot tynnere lag, og alternatives-lenke mangler.",
+    "uenig_med_claude": "Delvis. (1) Claudes mål-2-funn om manglende PNG var feil — bildet finnes, viser riktig plagg i konsistent stil, og utseende-score løftes derfor vesentlig over hva 1. analyse impliserte. (2) Bæresele-funnet oppgraderes fra lav til medium: overoppheting/klamhet med tykk dress mot foreldrekropp er en reell komfort- og termoreguleringsrisiko, ikke bare en detalj. (3) Hoy-funnet om tekst↔seleksjon bekreftes, og utvides med at bæresele-konteksten er helt utelatt fra 'når'-teksten. Total justeres til 73 (fra 71).",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "'Når'-teksten («vogn fra ca −5 til 0 °C») underdriver reell vogn-seleksjon (+4..−7 °C) i begge ender og utelater bæresele-konteksten (−8..−15 °C) helt.",
+        "forslag": "Oppdater tekst til å speile faktisk seleksjon, f.eks. «I vogn fra ca +4 til −7 °C. Brukes også i bæresele ved streng frost — vurder tynnere lag mot kroppen.» Ikke endre terskler."
+      },
+      {
+        "severity": "medium",
+        "mal": 3,
+        "beskrivelse": "baeresele.streng_frost velger tykk fôret dress på barnet selv om foreldrekroppen varmer (pmc-7202982) → risiko for klamhet/overoppheting og dårlig posisjonering i sele.",
+        "forslag": "Vurder å bytte plagg-mapping i denne konteksten til tynnere isolasjonslag på barnet + vind-/varmedekke utenpå selen. Behold tersklene uendret; kun plaggvalget revurderes."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Mangler 'vinterkjøredress isolert' som tykkelse-trinn-alternativ i alternatives.ts, der naboer har mønsteret.",
+        "forslag": "Legg til alternatives-oppføring som peker til 'vinterkjøredress isolert' med relasjon 'tykkere variant for streng_frost/ekstrem'."
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "PNG eksisterer og er korrekt (Claudes 1.-analysefunn var feil), men alfa-transparens bør verifiseres og visuell differensiering mot 'vinterkjøredress isolert' er ukontrollert.",
+        "forslag": "Verifiser transparent bakgrunn i asset-pipeline og legg en synlig stil-markør (f.eks. tykkere kanaler/pelskant) på isolert-varianten så de to ikke forveksles i UI."
+      }
+    ]
+  }
+}

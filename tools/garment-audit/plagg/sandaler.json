@@ -1,0 +1,56 @@
+{
+  "claude": {
+    "id": "sandaler",
+    "dbString": "sandaler",
+    "kategori": "ekstra-fotter",
+    "struktur": {
+      "score": 15,
+      "kommentar": "Har bade what ('Sommer-sandaler med myke remmer.') og when ('Varme sommerdager.') i garment-info.ts (linje 205-208), og en DEDIKERT whyForGarment-gren (linje 445-447, ikke fallback). Oppforingen finnes altsa. MEN: when-teksten er den klart korteste og vageste blant sosken i fott-kategorien. Sammenlign: sko='Innendors eller pa torre, milde dager ute.', vintersko='Frost-dager med utelek.', vintersko-isolerte='Under -10 grader eller lang tid utendors i sno.' Disse gir konkret kontekst/temp-anker; sandaler gir bare 'Varme sommerdager.' uten temperatur eller aktivitet. Tonen er ok, men lengde/informasjonstetthet bryter monsteret til sosken-plaggene. Trekk for inkonsistent detaljniva, ikke for manglende oppforing."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/sandaler.png (830 KB, datert 9. juni). db-strengen 'sandaler' er korrekt mappet til id 'sandaler' i garment-illustrations.ts (linje 74), under riktig seksjon 'Ekstra - fotter'. Navn og mapping er fullt plausible og konsistent med sosken (sko, toffel-sko, vintersko). Selve den visuelle dommen overlates til Fable 5 + Claude. Ingen mapping-problemer funnet."
+    },
+    "seleksjon": {
+      "score": 21,
+      "trace": "baseTable.utelek -> bandet 'tropisk' (feelsLikeC >= 22, tables.ts linje 190-193): { category:'ekstra', items:['solhatt','sandaler'] }. OGSA baseTable.utelek -> bandet 'ekstrem_varme' (feelsLikeC >= 28, linje 232-235): { category:'ekstra', items:['solhatt','sandaler'] }. Sandaler velges IKKE i 'varm' (16-22, bruker 'sko') eller lavere band. Vises ikke i vogn/baeresele/sov-aktiviteter. MODIFIERS: (1) Fottoy-alders-justering #17 (modifiers.ts linje 481-518) gjelder utelek+baeresele: ageMonths<9 FJERNER sandaler helt (filter linje 490) - spedbarn/krabbere skal ikke ha sko ute; 9-15 mnd MAPPER 'sandaler' -> 'barfot eller tynne tofler' (linje 511); 16+ mnd beholder sandaler uendret. (2) Sol/UV-noter (#10, linje 365-391) og ekstrem-varme-noter (linje 417-426) legges til samtidig som sandaler vises, men paavirker ikke selve fottoyet. Ingen conflicts/softBlocks/safety-regel beroerer sandaler direkte (kun HEAD_COVER/teppe-regler).",
+      "kilder": [],
+      "kommentar": "Pediatrisk forsvarlig: sandaler tilbys kun ved >=22 grader felt-temp og for barn >=16 mnd (gaaende). Alders-gaten er klok - spedbarn far ikke open fottoy ute, krabbere far barfot/tofler. De 11 kildene (sources.ts) dekker termoregulering, overoppheting, SIDS og lag-prinsipper, men IKKE fottoy-spesifikk pediatrikk (fall-risiko ved open hael, varme bakke-/asfaltflater som kan brenne smaabarnsfotter ved >=28 grader). Dette er en mindre helsefaglig luke, ikke en farlig kontekst: ingen overoppheting/SIDS/frost-risiko introduseres av selve seleksjonen. Trekk 4p for at ekstrem_varme-bandet (>=28 grader) tilbyr open sandal uten ledsagende note om varm bakke/forbrenning - en relevant smaabarns-fareflate kildene ikke fanger."
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "Retningsmessig samsvar: when='Varme sommerdager' og baseTable velger sandaler ved >=22 grader (tropisk/ekstrem_varme) - ingen kald-band-drift, sa ingen villedende paakledning. MEN to konkrete tekst-feil: (1) whyForGarment-grenen (garment-info.ts linje 446) er grammatisk odelagt: 'Sandaler luftes hudene under varm utelek ved X grader.' Skal vaere 'Sandaler lufter huden ...' - 'luftes hudene' er ikke gyldig norsk og leses som en feil. (2) when gir intet temp-anker mens sosken-plagg gjor det (vintersko='Under -10 grader'), og whyForGarment knytter seg til '>=22 grader'-realiteten kun via runtime-${feels}, ikke via when-teksten. Logikken bak (>=22 grader + alder>=16mnd) stemmer, men formuleringen lekker en grammatikkfeil som rammer tilliten. Ikke severity hoy (ingen termisk villedning), men en konkret tekst-defekt som boer rettes."
+    },
+    "alternativer": {
+      "score": 9,
+      "kommentar": "Et reelt alternativ finnes i alternatives.ts (linje 115-124): sandaler -> 'tynne sko' (whenKey alternatives.items.tynneSko.when, whyPrimaryKey ...whyPrimary). Dette er et fornuftig tykkelse/lukning-trinn: lukket tynn sko som beskytter foten mer enn open sandal i samme varme-band, og dekker tilfeller der underlaget er varmt/ujevnt. Alternativet er korrekt og relevant. Trekk 1p kun fordi 'barfot' (som modifieren selv bruker for 9-15 mnd) kunne vaert et naturlig andre-alternativ for de varmeste, trygge gress-/sand-omgivelsene, men dette er marginalt."
+    },
+    "total": 82,
+    "verdikt": "Solid plagg med korrekt seleksjon (>=22 grader utelek), klok alders-gating og et fornuftig alternativ. To konkrete defekter trekker ned: (1) grammatisk odelagt whyForGarment-tekst ('luftes hudene'), og (2) en vag when-tekst uten temp-anker som bryter sosken-monsteret. Ett pediatrisk hull: ingen note om varm bakke/forbrenning ved open sandal i ekstrem_varme-bandet. Ingen kritiske/farlige funn.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "whyForGarment-grenen for sandaler (garment-info.ts linje 446) er grammatisk feil: 'Sandaler luftes hudene under varm utelek ved ${feels} grader.' Verbet/objektet er feilboyd - 'luftes hudene' er ikke gyldig norsk.",
+        "forslag": "Endre til f.eks. 'Apne sandaler lufter foten under varm utelek ved ${feels} grader.' (kun tekst-retting, ingen tall/terskel rores).",
+        "kilde": "garment-info.ts:446"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "when-teksten 'Varme sommerdager.' er den korteste og eneste uten temp-anker blant fott-soskenplaggene (sko/vintersko/vintersko-isolerte gir alle konkret kontekst), noe som bryter monsteret og gir mindre forutsigbar paakledning.",
+        "forslag": "Tilfoy et lett temp-anker konsistent med trace, f.eks. 'Varme sommerdager (over ~22 grader) nar barnet gaar selv.' - ingen endring av selve terskelen, bare tekst-presisering.",
+        "kilde": "garment-info.ts:207"
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "Ved ekstrem_varme-bandet (>=28 grader) tilbys open sandal uten ledsagende note om at asfalt/bakke kan vaere brennende varm for smaabarnsfotter. De 11 kildene i sources.ts dekker termoregulering/overoppheting/SIDS, men ikke fottoy-/bakkeflate-pediatrikk.",
+        "forslag": "Vurder en sol/varme-note ved >=28 grader: 'Sjekk at asfalt og sand ikke er brennende - test med handbaken for barnet gaar barfot/i sandal.' Foreslatt kilde (utenfor de 11): AAP/healthychildren sun-safety og hot-surface-veiledning (https://www.healthychildren.org/English/safety-prevention/at-play/Pages/Sun-Safety.aspx). Ingen tall/terskel endres - kun mulig note.",
+        "kilde": "tables.ts:232-235 (ekstrem_varme.utelek) + sources.ts"
+      }
+    ]
+  },
+  "fable": null
+}

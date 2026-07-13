@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Babyora — Notion Blocks (v4)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(1.0 0 0);
+    --ink: oklch(0.18 0.005 250);
+    --ink-soft: oklch(0.42 0.008 250);
+    --ink-mute: oklch(0.62 0.01 250);
+    --block: oklch(0.96 0.005 60);
+    --block-warm: oklch(0.93 0.018 55);
+    --block-deep: oklch(0.55 0.04 30);
+    --hairline: oklch(0.9 0.005 250);
+    --hairline-soft: oklch(0.94 0.004 250);
+    --accent: oklch(0.42 0.07 35);
+    --canvas: oklch(0.97 0.004 80);
+    --shadow-phone: 0 30px 60px -20px oklch(0.18 0.02 250 / 0.25), 0 12px 24px -12px oklch(0.18 0.02 250 / 0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100vh;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 8px 16px;
+    z-index: 1000;
+    font-size: 14px;
+  }
+  .skip-link:focus { left: 16px; top: 16px; }
+
+  .stage {
+    min-height: 100vh;
+    padding: 56px 32px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .stage-header {
+    text-align: center;
+    max-width: 720px;
+  }
+  .stage-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 12px;
+  }
+  .stage-title {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .stage-sub {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  .phones {
+    display: flex;
+    flex-direction: row;
+    gap: 56px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  @media (max-width: 880px) {
+    .phones { flex-direction: column; gap: 64px; align-items: center; }
+    .stage { padding: 32px 16px 60px; }
+  }
+
+  .phone-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 14px;
+  }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 47px;
+    box-shadow: var(--shadow-phone), 0 0 0 10px oklch(0.12 0.005 250), 0 0 0 11px oklch(0.22 0.005 250);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .notch {
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 32px;
+    background: oklch(0.12 0.005 250);
+    border-radius: 18px;
+    z-index: 20;
+  }
+
+  .status-bar {
+    height: 54px;
+    padding: 16px 28px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+  .status-bar .right { display: flex; align-items: center; gap: 6px; }
+  .signal { display: flex; gap: 2px; align-items: flex-end; }
+  .signal i {
+    display: block;
+    width: 3px;
+    background: var(--ink);
+    border-radius: 1px;
+  }
+  .signal i:nth-child(1) { height: 4px; }
+  .signal i:nth-child(2) { height: 6px; }
+  .signal i:nth-child(3) { height: 8px; }
+  .signal i:nth-child(4) { height: 10px; }
+  .battery {
+    width: 24px; height: 11px;
+    border: 1.2px solid var(--ink);
+    border-radius: 3px;
+    position: relative;
+    padding: 1.5px;
+  }
+  .battery::after {
+    content: '';
+    position: absolute;
+    right: -3px; top: 3px;
+    width: 1.5px; height: 4px;
+    background: var(--ink);
+    border-radius: 0 1px 1px 0;
+  }
+  .battery i { display: block; height: 100%; width: 78%; background: var(--ink); border-radius: 1px; }
+
+  .screen {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 16px 100px;
+    scrollbar-width: none;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 4px 18px;
+  }
+  .brand {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .brand-dot {
+    width: 10px; height: 10px;
+    background: var(--block-deep);
+    border-radius: 3px;
+    transform: rotate(45deg);
+  }
+  .top-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--block);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* Block primitives */
+  .block {
+    background: var(--bg);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    transition: background 0.15s ease;
+  }
+  .block:hover { background: var(--block); }
+  .block-handle {
+    width: 14px;
+    height: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    opacity: 0;
+    color: var(--ink-mute);
+    flex-shrink: 0;
+  }
+  .block-handle i {
+    width: 3px; height: 3px;
+    background: var(--ink-mute);
+    border-radius: 50%;
+  }
+  .block:hover .block-handle { opacity: 0.5; }
+
+  .block-icon {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .block-body { flex: 1; min-width: 0; }
+  .block-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .block-meta {
+    font-size: 12px;
+    color: var(--ink-mute);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  /* Section headers */
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 12px 8px;
+    margin-top: 6px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .section-action {
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* Hero greeting */
+  .greeting {
+    padding: 4px 4px 14px;
+  }
+  .greet-eyebrow {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-mute);
+    letter-spacing: 0.01em;
+    margin-bottom: 4px;
+  }
+  .greet-headline {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .greet-headline span { color: var(--ink-mute); font-weight: 400; }
+
+  /* Weather block — wide */
+  .weather-block {
+    background: var(--block);
+    border-radius: 14px;
+    padding: 16px 16px 14px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+  .weather-place {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .weather-temp {
+    font-size: 52px;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    line-height: 0.95;
+    font-feature-settings: 'tnum';
+  }
+  .weather-temp sup {
+    font-size: 22px;
+    font-weight: 400;
+    vertical-align: super;
+    color: var(--ink-mute);
+    margin-left: 2px;
+  }
+  .weather-cond {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 6px;
+  }
+  .weather-sun {
+    width: 56px; height: 56px;
+    position: relative;
+    align-self: center;
+  }
+
+  .weather-meta-row {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 4px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--hairline);
+  }
+  .weather-chip {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .weather-chip .lbl {
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .weather-chip .val {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Child block */
+  .child-block {
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .avatar {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: var(--block-warm);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .child-info { flex: 1; }
+  .child-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .child-meta {
+    font-size: 12px;
+    color: var(--ink-mute);
+    margin-top: 1px;
+  }
+  .child-tag {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    background: var(--block);
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+
+  /* Toggle block */
+  .toggle-block {
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    position: relative;
+  }
+  .toggle-opt {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-mute);
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: all 0.18s ease;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .toggle-opt.active {
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  /* Recommendation block */
+  .rec-block {
+    background: var(--block-warm);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .rec-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--block-deep);
+    margin-bottom: 10px;
+  }
+  .rec-tag::before {
+    content: '';
+    width: 5px; height: 5px;
+    background: var(--block-deep);
+    border-radius: 50%;
+  }
+  .rec-headline {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.15;
+    margin-bottom: 4px;
+  }
+  .rec-sub {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+
+  /* Layer list block */
+  .layers-block {
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 6px;
+    margin-bottom: 14px;
+  }
+  .layer-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    position: relative;
+  }
+  .layer-row + .layer-row { border-top: 1px solid var(--hairline-soft); }
+  .layer-num {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-mute);
+    width: 18px;
+    font-variant-numeric: tabular-nums;
+  }
+  .layer-swatch {
+    width: 8px; height: 24px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .layer-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    flex: 1;
+  }
+  .layer-detail {
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+
+  /* Primary CTA */
+  .cta {
+    width: 100%;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    cursor: pointer;
+    margin-top: 4px;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Bottom tab bar */
+  .tab-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 84px;
+    background: oklch(1 0 0 / 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--hairline-soft);
+    display: flex;
+    padding: 8px 16px 28px;
+    z-index: 10;
+  }
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 4px;
+    color: var(--ink-mute);
+    font-family: inherit;
+  }
+  .tab.active { color: var(--ink); }
+  .tab svg { width: 22px; height: 22px; }
+  .tab-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  /* Week view specifics */
+  .week-tabs {
+    display: inline-flex;
+    background: var(--block);
+    border-radius: 11px;
+    padding: 3px;
+    margin: 0 4px 16px;
+    gap: 2px;
+  }
+  .week-tab {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-mute);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .week-tab.active {
+    background: var(--bg);
+    color: var(--ink);
+    box-shadow: 0 1px 2px oklch(0.18 0.02 250 / 0.06);
+  }
+
+  .day-block {
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+  .day-block.today {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+  .day-when {
+    display: flex;
+    flex-direction: column;
+  }
+  .day-name {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .day-block.today .day-name { color: oklch(1 0 0 / 0.6); }
+  .day-date {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    margin-top: 1px;
+  }
+  .day-block.today .day-date { color: var(--bg); }
+
+  .day-cond {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .day-icon {
+    width: 28px; height: 28px;
+    flex-shrink: 0;
+  }
+  .day-text { display: flex; flex-direction: column; }
+  .day-temp {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .day-block.today .day-temp { color: var(--bg); }
+  .day-desc {
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 1px;
+  }
+  .day-block.today .day-desc { color: oklch(1 0 0 / 0.55); }
+
+  .day-layers {
+    background: var(--block);
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+  .day-block.today .day-layers { background: oklch(1 0 0 / 0.12); }
+  .day-layers .n {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  .day-block.today .day-layers .n { color: var(--bg); }
+  .day-layers .u {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--ink-mute);
+  }
+  .day-block.today .day-layers .u { color: oklch(1 0 0 / 0.6); }
+
+  /* Hour list (for I dag tab visible style) */
+  .hour-row {
+    display: grid;
+    grid-template-columns: 44px 28px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 11px 14px;
+    border-radius: 10px;
+  }
+  .hour-row + .hour-row { border-top: 1px solid var(--hairline-soft); }
+  .hour-time {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .hour-icon { width: 22px; height: 22px; }
+  .hour-info { display: flex; flex-direction: column; gap: 1px; }
+  .hour-temp {
+    font-size: 13px;
+    color: var(--ink);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .hour-desc {
+    font-size: 11px;
+    color: var(--ink-mute);
+  }
+  .hour-layers {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+    background: var(--block);
+    padding: 4px 10px;
+    border-radius: 7px;
+  }
+
+  /* Wrap-around for hour block container */
+  .hours-container {
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 6px;
+    margin-bottom: 12px;
+  }
+
+  /* SVG icon defaults */
+  svg { display: block; }
+
+</style>
+</head>
+<body>
+
+<a href="#main-hjem" class="skip-link">Hopp til hovedinnhold</a>
+
+<div class="stage">
+  <header class="stage-header">
+    <div class="stage-eyebrow">Babyora · Mock v4</div>
+    <h1 class="stage-title">Notion Blocks</h1>
+    <p class="stage-sub">Hjem og Uke som komponerbare blokker. Hver rad et håndtak, hver del flyttbar i ånd.</p>
+  </header>
+
+  <div class="phones">
+
+    <!-- ============ PHONE 1: HJEM ============ -->
+    <div>
+      <div class="phone-label">Hjem</div>
+      <article class="phone" aria-label="Hjem-skjerm">
+        <div class="notch" aria-hidden="true"></div>
+
+        <div class="status-bar" role="presentation">
+          <span>14:23</span>
+          <div class="right">
+            <div class="signal" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <svg width="16" height="11" viewBox="0 0 16 11" fill="none" aria-hidden="true">
+              <path d="M8 10.5C8.83 10.5 9.5 9.83 9.5 9C9.5 8.17 8.83 7.5 8 7.5C7.17 7.5 6.5 8.17 6.5 9C6.5 9.83 7.17 10.5 8 10.5Z" fill="currentColor"/>
+              <path d="M3.5 5.5C4.7 4.4 6.3 3.8 8 3.8C9.7 3.8 11.3 4.4 12.5 5.5L13.5 4.4C12.05 3 10.07 2.2 8 2.2C5.93 2.2 3.95 3 2.5 4.4L3.5 5.5Z" fill="currentColor"/>
+              <path d="M1 3L2 4.1C3.6 2.55 5.75 1.6 8 1.6C10.25 1.6 12.4 2.55 14 4.1L15 3C13.15 1.15 10.65 0 8 0C5.35 0 2.85 1.15 1 3Z" fill="currentColor"/>
+            </svg>
+            <div class="battery"><i></i></div>
+          </div>
+        </div>
+
+        <main class="screen" id="main-hjem">
+          <div class="top-bar">
+            <div class="brand">
+              <span class="brand-dot"></span>
+              Babyora
+            </div>
+            <div class="top-actions">
+              <button class="icon-btn" aria-label="Søk">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M9.5 9.5L12.5 12.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="Legg til blokk">+</button>
+            </div>
+          </div>
+
+          <div class="greeting">
+            <div class="greet-eyebrow">Tirsdag 30. juni</div>
+            <h1 class="greet-headline">God ettermiddag, <span>Liv</span></h1>
+          </div>
+
+          <!-- Weather block -->
+          <section class="weather-block" aria-label="Vær i Elverum">
+            <div>
+              <div class="weather-place">
+                <svg width="9" height="11" viewBox="0 0 9 11" fill="none" aria-hidden="true"><path d="M4.5 0.5C2.5 0.5 1 2 1 4C1 6.5 4.5 10.5 4.5 10.5C4.5 10.5 8 6.5 8 4C8 2 6.5 0.5 4.5 0.5Z" stroke="currentColor" stroke-width="1"/></svg>
+                Elverum
+              </div>
+              <div class="weather-temp">18<sup>°</sup></div>
+              <div class="weather-cond">Variert · Føles 18°</div>
+            </div>
+            <svg class="weather-sun" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+              <circle cx="34" cy="22" r="11" fill="oklch(0.85 0.09 80)"/>
+              <ellipse cx="22" cy="32" rx="18" ry="9" fill="oklch(0.88 0.005 250)"/>
+              <ellipse cx="30" cy="34" rx="14" ry="7" fill="oklch(0.94 0.003 250)"/>
+            </svg>
+            <div class="weather-meta-row">
+              <div class="weather-chip">
+                <div class="lbl">Vind</div>
+                <div class="val">3.1 m/s</div>
+              </div>
+              <div class="weather-chip">
+                <div class="lbl">Fukt</div>
+                <div class="val">64 %</div>
+              </div>
+              <div class="weather-chip">
+                <div class="lbl">UV</div>
+                <div class="val">Lav</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Child block -->
+          <section class="child-block" aria-label="Barn">
+            <div class="avatar" aria-hidden="true">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="13" r="6" fill="oklch(0.78 0.04 40)"/>
+                <path d="M5 28C5 22 9.5 19 16 19C22.5 19 27 22 27 28V32H5V28Z" fill="oklch(0.55 0.04 30)"/>
+                <circle cx="14" cy="13" r="0.9" fill="oklch(0.2 0.01 250)"/>
+                <circle cx="18" cy="13" r="0.9" fill="oklch(0.2 0.01 250)"/>
+              </svg>
+            </div>
+            <div class="child-info">
+              <div class="child-name">Liv</div>
+              <div class="child-meta">14 måneder · 78 cm · 10.4 kg</div>
+            </div>
+            <span class="child-tag">Aktiv</span>
+          </section>
+
+          <!-- Activity toggle -->
+          <div class="section-head">
+            <span class="section-title">Aktivitet</span>
+            <button class="section-action" type="button">Endre</button>
+          </div>
+          <div class="toggle-block" role="tablist" aria-label="Aktivitetsvalg">
+            <button class="toggle-opt active" role="tab" aria-selected="true" type="button">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M2 11L6.5 2L11 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 11H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Utenfor vogn
+            </button>
+            <button class="toggle-opt" role="tab" aria-selected="false" type="button">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1.5" y="3" width="8.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.4"/><circle cx="3.5" cy="10.5" r="1.2" stroke="currentColor" stroke-width="1.2"/><circle cx="8.5" cy="10.5" r="1.2" stroke="currentColor" stroke-width="1.2"/></svg>
+              I vogn
+            </button>
+          </div>
+
+          <!-- Recommendation block -->
+          <section class="rec-block" aria-label="Anbefaling">
+            <div class="rec-tag">Anbefaling</div>
+            <h2 class="rec-headline">3 lag mot kulda</h2>
+            <p class="rec-sub">Variert vær med 18° og lett vind. Tre lette lag holder Liv jevn og tørr.</p>
+          </section>
+
+          <!-- Layer block list -->
+          <div class="section-head">
+            <span class="section-title">Lagene</span>
+            <button class="section-action" type="button">Detaljer</button>
+          </div>
+          <div class="layers-block" aria-label="Anbefalte lag">
+            <div class="layer-row">
+              <span class="layer-num">01</span>
+              <span class="layer-swatch" style="background: oklch(0.88 0.02 40)"></span>
+              <span class="layer-name">Tynn ullbody</span>
+              <span class="layer-detail">Merino 160 g</span>
+            </div>
+            <div class="layer-row">
+              <span class="layer-num">02</span>
+              <span class="layer-swatch" style="background: oklch(0.7 0.05 35)"></span>
+              <span class="layer-name">Mellom­tykk genser</span>
+              <span class="layer-detail">Bomull / fleece</span>
+            </div>
+            <div class="layer-row">
+              <span class="layer-num">03</span>
+              <span class="layer-swatch" style="background: oklch(0.42 0.07 35)"></span>
+              <span class="layer-name">Vindtett ytterjakke</span>
+              <span class="layer-detail">Skall</span>
+            </div>
+          </div>
+
+          <!-- Primary CTA -->
+          <button class="cta" type="button">
+            Se påkledning
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7H11M11 7L7.5 3.5M11 7L7.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+
+        </main>
+
+        <nav class="tab-bar" aria-label="Hovednavigasjon">
+          <button class="tab active" type="button" aria-current="page">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 11L12 4L20 11V20H14V14H10V20H4V11Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            <span class="tab-label">Hjem</span>
+          </button>
+          <button class="tab" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 9H20.5" stroke="currentColor" stroke-width="1.6"/><path d="M8 3.5V6.5M16 3.5V6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <span class="tab-label">Uke</span>
+          </button>
+          <button class="tab" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 4H17C18.1 4 19 4.9 19 6V20L12 17L5 20V4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            <span class="tab-label">Guide</span>
+          </button>
+          <button class="tab" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M19.4 13L18.3 12.4C18.4 11.8 18.4 11.2 18.3 10.6L19.4 10C19.7 9.8 19.8 9.5 19.7 9.2L18.7 7.5C18.5 7.2 18.2 7.1 17.9 7.2L16.7 7.7C16.3 7.3 15.8 7 15.2 6.8L15.1 5.5C15 5.2 14.8 5 14.5 5H12.5C12.2 5 12 5.2 11.9 5.5L11.8 6.8C11.2 7 10.7 7.3 10.3 7.7L9.1 7.2C8.8 7.1 8.5 7.2 8.3 7.5L7.3 9.2C7.2 9.5 7.3 9.8 7.6 10L8.7 10.6C8.6 11.2 8.6 11.8 8.7 12.4L7.6 13C7.3 13.2 7.2 13.5 7.3 13.8L8.3 15.5C8.5 15.8 8.8 15.9 9.1 15.8L10.3 15.3C10.7 15.7 11.2 16 11.8 16.2L11.9 17.5C12 17.8 12.2 18 12.5 18H14.5C14.8 18 15 17.8 15.1 17.5L15.2 16.2C15.8 16 16.3 15.7 16.7 15.3L17.9 15.8C18.2 15.9 18.5 15.8 18.7 15.5L19.7 13.8C19.8 13.5 19.7 13.2 19.4 13Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+            <span class="tab-label">Innstillinger</span>
+          </button>
+        </nav>
+      </article>
+    </div>
+
+    <!-- ============ PHONE 2: UKE ============ -->
+    <div>
+      <div class="phone-label">Uke</div>
+      <article class="phone" aria-label="Uke-skjerm">
+        <div class="notch" aria-hidden="true"></div>
+
+        <div class="status-bar" role="presentation">
+          <span>14:23</span>
+          <div class="right">
+            <div class="signal" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <svg width="16" height="11" viewBox="0 0 16 11" fill="none" aria-hidden="true">
+              <path d="M8 10.5C8.83 10.5 9.5 9.83 9.5 9C9.5 8.17 8.83 7.5 8 7.5C7.17 7.5 6.5 8.17 6.5 9C6.5 9.83 7.17 10.5 8 10.5Z" fill="currentColor"/>
+              <path d="M3.5 5.5C4.7 4.4 6.3 3.8 8 3.8C9.7 3.8 11.3 4.4 12.5 5.5L13.5 4.4C12.05 3 10.07 2.2 8 2.2C5.93 2.2 3.95 3 2.5 4.4L3.5 5.5Z" fill="currentColor"/>
+              <path d="M1 3L2 4.1C3.6 2.55 5.75 1.6 8 1.6C10.25 1.6 12.4 2.55 14 4.1L15 3C13.15 1.15 10.65 0 8 0C5.35 0 2.85 1.15 1 3Z" fill="currentColor"/>
+            </svg>
+            <div class="battery"><i></i></div>
+          </div>
+        </div>
+
+        <main class="screen" id="main-uke">
+          <div class="top-bar">
+            <div class="brand">
+              <span class="brand-dot"></span>
+              Babyora
+            </div>
+            <div class="top-actions">
+              <button class="icon-btn" aria-label="Filter">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3H12M3.5 7H10.5M5 11H9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="Meny">···</button>
+            </div>
+          </div>
+
+          <div class="greeting">
+            <div class="greet-eyebrow">Uke 27 · 2026</div>
+            <h1 class="greet-headline">Påkledning <span>fremover</span></h1>
+          </div>
+
+          <div class="week-tabs" role="tablist" aria-label="Tidsperiode">
+            <button class="week-tab" type="button" role="tab" aria-selected="false">I dag</button>
+            <button class="week-tab active" type="button" role="tab" aria-selected="true">Uke</button>
+          </div>
+
+          <!-- Today block (today highlighted) -->
+          <div class="section-head">
+            <span class="section-title">Denne uka</span>
+            <button class="section-action" type="button">Liste</button>
+          </div>
+
+          <!-- Day blocks -->
+          <article class="day-block today" aria-label="Tirsdag, i dag">
+            <div class="day-when">
+              <div class="day-name">Tir</div>
+              <div class="day-date">30</div>
+            </div>
+            <div class="day-cond">
+              <svg class="day-icon" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                <circle cx="17" cy="11" r="6" fill="oklch(0.85 0.09 80)"/>
+                <ellipse cx="11" cy="17" rx="9" ry="4.5" fill="oklch(0.92 0.005 250)"/>
+              </svg>
+              <div class="day-text">
+                <div class="day-temp">18° / 12°</div>
+                <div class="day-desc">Variert</div>
+              </div>
+            </div>
+            <div class="day-layers"><span class="n">3</span><span class="u">lag</span></div>
+          </article>
+
+          <article class="day-block">
+            <div class="day-when">
+              <div class="day-name">Ons</div>
+              <div class="day-date">01</div>
+            </div>
+            <div class="day-cond">
+              <svg class="day-icon" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                <circle cx="14" cy="13" r="6.5" fill="oklch(0.85 0.09 80)"/>
+              </svg>
+              <div class="day-text">
+                <div class="day-temp">22° / 14°</div>
+                <div class="day-desc">Sol</div>
+              </div>
+            </div>
+            <div class="day-layers"><span class="n">2</span><span class="u">lag</span></div>
+          </article>
+
+          <article class="day-block">
+            <div class="day-when">
+              <div class="day-name">Tor</div>
+              <div class="day-date">02</div>
+            </div>
+            <div class="day-cond">
+              <svg class="day-icon" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                <ellipse cx="14" cy="14" rx="10" ry="5" fill="oklch(0.85 0.005 250)"/>
+                <ellipse cx="11" cy="11" rx="6" ry="4" fill="oklch(0.92 0.003 250)"/>
+              </svg>
+              <div class="day-text">
+                <div class="day-temp">19° / 13°</div>
+                <div class="day-desc">Skyet</div>
+              </div>
+            </div>
+            <div class="day-layers"><span class="n">3</span><span class="u">lag</span></div>
+          </article>
+
+          <article class="day-block">
+            <div class="day-when">
+              <div class="day-name">Fre</div>
+              <div class="day-date">03</div>
+            </div>
+            <div class="day-cond">
+              <svg class="day-icon" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                <ellipse cx="14" cy="11" rx="10" ry="5" fill="oklch(0.78 0.005 250)"/>
+                <line x1="10" y1="18" x2="9" y2="24" stroke="oklch(0.6 0.05 230)" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="14" y1="18" x2="13" y2="24" stroke="oklch(0.6 0.05 230)" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="18" y1="18" x2="17" y2="24" stroke="oklch(0.6 0.05 230)" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <div class="day-text">
+                <div class="day-temp">15° / 11°</div>
+                <div class="day-desc">Regn</div>
+              </div>
+            </div>
+            <div class="day-layers"><span class="n">4</span><span class="u">lag</span></div>
+          </article>
+
+          <article class="day-block">
+            <div class="day-when">
+              <div class="day-name">Lør</div>
+              <div class="day-date">04</div>
+            </div>
+            <div class="day-cond">
+              <svg class="day-icon" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                <circle cx="17" cy="11" r="5.5" fill="oklch(0.85 0.09 80)"/>
+                <ellipse cx="11" cy="16" rx="8" ry="4" fill="oklch(0.92 0.005 250)"/>
+              </svg>
+              <div class="day-text">
+                <div class="day-temp">20° / 13°</div>
+                <div class="day-desc">Variert</div>
+              </div>
+            </div>
+            <div class="day-layers"><span class="n">3</span><span class="u">lag</span></div>
+          </article>
+
+          <article class="day-block">
+            <div class="day-when">
+              <div class="day-name">Søn</div>
+              <div class="day-date">05</div>
+            </div>
+            <div class="day-cond">
+              <svg class="day-icon" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                <circle cx="14" cy="13" r="6.5" fill="oklch(0.85 0.09 80)"/>
+              </svg>
+              <div class="day-text">
+                <div class="day-temp">24° / 15°</div>
+                <div class="day-desc">Sol</div>
+              </div>
+            </div>
+            <div class="day-layers"><span class="n">2</span><span class="u">lag</span></div>
+          </article>
+
+          <article class="day-block">
+            <div class="day-when">
+              <div class="day-name">Man</div>
+              <div class="day-date">06</div>
+            </div>
+            <div class="day-cond">
+              <svg class="day-icon" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+                <ellipse cx="14" cy="14" rx="10" ry="5" fill="oklch(0.85 0.005 250)"/>
+              </svg>
+              <div class="day-text">
+                <div class="day-temp">17° / 12°</div>
+                <div class="day-desc">Overskyet</div>
+              </div>
+            </div>
+            <div class="day-layers"><span class="n">3</span><span class="u">lag</span></div>
+          </article>
+
+          <!-- Hour breakdown for today -->
+          <div class="section-head">
+            <span class="section-title">I dag, time for time</span>
+            <button class="section-action" type="button">Alle</button>
+          </div>
+
+          <div class="hours-container">
+            <div class="hour-row">
+              <span class="hour-time">14:00</span>
+              <svg class="hour-icon" viewBox="0 0 22 22" fill="none" aria-hidden="true"><circle cx="13" cy="9" r="5" fill="oklch(0.85 0.09 80)"/><ellipse cx="9" cy="13" rx="7" ry="3.5" fill="oklch(0.92 0.005 250)"/></svg>
+              <div class="hour-info">
+                <span class="hour-temp">18°</span>
+                <span class="hour-desc">Variert · 3.1 m/s</span>
+              </div>
+              <span class="hour-layers">3 lag</span>
+            </div>
+            <div class="hour-row">
+              <span class="hour-time">16:00</span>
+              <svg class="hour-icon" viewBox="0 0 22 22" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="5.5" fill="oklch(0.85 0.09 80)"/></svg>
+              <div class="hour-info">
+                <span class="hour-temp">19°</span>
+                <span class="hour-desc">Sol · 2.8 m/s</span>
+              </div>
+              <span class="hour-layers">2 lag</span>
+            </div>
+            <div class="hour-row">
+              <span class="hour-time">18:00</span>
+              <svg class="hour-icon" viewBox="0 0 22 22" fill="none" aria-hidden="true"><circle cx="13" cy="9" r="5" fill="oklch(0.85 0.09 80)"/><ellipse cx="9" cy="13" rx="7" ry="3.5" fill="oklch(0.92 0.005 250)"/></svg>
+              <div class="hour-info">
+                <span class="hour-temp">17°</span>
+                <span class="hour-desc">Variert · 3.4 m/s</span>
+              </div>
+              <span class="hour-layers">3 lag</span>
+            </div>
+            <div class="hour-row">
+              <span class="hour-time">20:00</span>
+              <svg class="hour-icon" viewBox="0 0 22 22" fill="none" aria-hidden="true"><ellipse cx="11" cy="11" rx="8" ry="4" fill="oklch(0.85 0.005 250)"/></svg>
+              <div class="hour-info">
+                <span class="hour-temp">15°</span>
+                <span class="hour-desc">Skyet · 2.6 m/s</span>
+              </div>
+              <span class="hour-layers">3 lag</span>
+            </div>
+            <div class="hour-row">
+              <span class="hour-time">22:00</span>
+              <svg class="hour-icon" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M14.5 12.5C12 12.5 10 10.5 10 8C10 6.5 10.6 5.2 11.5 4.3C7.9 4.5 5 7.4 5 11C5 14.7 8 17.7 11.7 17.7C14.6 17.7 17 15.9 17.9 13.4C17 13.1 15.8 12.5 14.5 12.5Z" fill="oklch(0.7 0.04 250)"/></svg>
+              <div class="hour-info">
+                <span class="hour-temp">13°</span>
+                <span class="hour-desc">Klart · 2.1 m/s</span>
+              </div>
+              <span class="hour-layers">4 lag</span>
+            </div>
+          </div>
+
+        </main>
+
+        <nav class="tab-bar" aria-label="Hovednavigasjon">
+          <button class="tab" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 11L12 4L20 11V20H14V14H10V20H4V11Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            <span class="tab-label">Hjem</span>
+          </button>
+          <button class="tab active" type="button" aria-current="page">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 9H20.5" stroke="currentColor" stroke-width="1.6"/><path d="M8 3.5V6.5M16 3.5V6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <span class="tab-label">Uke</span>
+          </button>
+          <button class="tab" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 4H17C18.1 4 19 4.9 19 6V20L12 17L5 20V4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            <span class="tab-label">Guide</span>
+          </button>
+          <button class="tab" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M19.4 13L18.3 12.4C18.4 11.8 18.4 11.2 18.3 10.6L19.4 10C19.7 9.8 19.8 9.5 19.7 9.2L18.7 7.5C18.5 7.2 18.2 7.1 17.9 7.2L16.7 7.7C16.3 7.3 15.8 7 15.2 6.8L15.1 5.5C15 5.2 14.8 5 14.5 5H12.5C12.2 5 12 5.2 11.9 5.5L11.8 6.8C11.2 7 10.7 7.3 10.3 7.7L9.1 7.2C8.8 7.1 8.5 7.2 8.3 7.5L7.3 9.2C7.2 9.5 7.3 9.8 7.6 10L8.7 10.6C8.6 11.2 8.6 11.8 8.7 12.4L7.6 13C7.3 13.2 7.2 13.5 7.3 13.8L8.3 15.5C8.5 15.8 8.8 15.9 9.1 15.8L10.3 15.3C10.7 15.7 11.2 16 11.8 16.2L11.9 17.5C12 17.8 12.2 18 12.5 18H14.5C14.8 18 15 17.8 15.1 17.5L15.2 16.2C15.8 16 16.3 15.7 16.7 15.3L17.9 15.8C18.2 15.9 18.5 15.8 18.7 15.5L19.7 13.8C19.8 13.5 19.7 13.2 19.4 13Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+            <span class="tab-label">Innstillinger</span>
+          </button>
+        </nav>
+      </article>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

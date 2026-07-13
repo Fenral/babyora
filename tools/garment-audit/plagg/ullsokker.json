@@ -1,0 +1,66 @@
+{
+  "claude": {
+    "id": "ullsokker",
+    "dbString": "ullsokker",
+    "kategori": "innerst",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Plagget har komplett `what` + `when` i garment-info.ts (linje 69-72) og en dedikert `whyForGarment`-gren — faktisk TO grener: én søvn-spesifikk (linje 328-330) og én generell innerst-gren (linje 349-351), begge ekte (ikke fallback). Tonen matcher søsken-plagg i 'innerst'-kategorien. Eneste svakhet: `when`-teksten 'Alltid synlig anbefalt fra ca 5 °C og lavere' er metatekst om appens visnings-logikk, ikke en bruker-rettet bruksbeskrivelse slik søsken har ('Brukes ved...', 'God som...'). Den bryter mønsteret og lekker intern modifier-terminologi ('synlig anbefalt') til sluttbruker. Trekk 2 poeng."
+    },
+    "utseende": {
+      "score": 18,
+      "pngExists": true,
+      "kommentar": "PNG finnes på public/illustrations/garments/ullsokker.png. Tre db-strenger mapper korrekt til id 'ullsokker' i MAP (linje 27-29): 'ullsokker', 'ullstrømper', 'ullstrømper tykke' — fornuftig konsolidering siden alle er samme plagg-type. Navn/mapping er plausibelt. MEN: engine-strengen 'tykke ullsokker' (modifiers.ts linje 493) mangler i MAP, så garmentIdFor('tykke ullsokker') returnerer null → ingen illustrasjon for det utfallet. Trekk 2 poeng for det manglende mapping-treffet (selve bildet kan jeg ikke bedømme — overlates til Fable 5 + Claude)."
+    },
+    "seleksjon": {
+      "score": 22,
+      "kommentar": "ullsokker velges via flere veier i baseTable (vogn.frost/streng_frost/ekstrem; soevn kjolig/kald/frost/streng_frost/ekstrem) PLUSS modifier-tilsetninger (modifiers.ts:195-197 ved feels ≤5°C for alle ute-aktiviteter; modifiers.ts:492-494 'tykke ullsokker' for baby <9 mnd ute ved feels ≤10°C). Ingen conflict/softBlock/safety fjerner plagget. Pediatrisk forsvarlig: kalde føtter er eksplisitt kuldetegn (halo-tog, slumbersac), og ull-fukt-fordel støttes av merino-kids. Ingen overoppheting/SIDS/kvelnings-risiko ved sokker — trygge også i seng ifølge AAP/Lullaby (ikke løs gjenstand). Ingen udekket helse-spørsmål → web-søk unødvendig. Liten terskel-inkonsistens (søvn ≤9°C rom vs ute ≤5°C), men begge forsvarlige.",
+      "trace": "ullsokker velges via FLERE veier. (A) baseTable direkte: vogn.frost innerst=['ullsett tykt','ullstrømper']; vogn.streng_frost + vogn.ekstrem innerst inkluderer 'ullstrømper tykke'. (B) soevn (INNENDØRS, tempC=romtemp): kjolig (5-9°C) innerst=['langermet body','ullsokker']; kald/frost/streng_frost/ekstrem inneholder 'ullsokker'. (C) modifier-tilsetning modifiers.ts:195-197 — `if (feelsLikeC <= 5) addItem(innerst,'ullsokker')` gjelder ALLE ute-aktiviteter (vogn/baeresele/utelek), men hoppet over for soevn (return på linje 139 før denne). (D) modifiers.ts:492-494 fottøy-justering for baby <9 mnd ved utelek/baeresele legger 'tykke ullsokker' når feels ≤10°C. Ingen conflict/softBlock/safety-regel fjerner ullsokker.",
+      "kilder": [
+        "https://www.halosleep.com/blogs/halo/tog-chart",
+        "https://merinokids.co.uk/blogs/merino/the-importance-of-temperature-regulation-in-babies"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 19,
+      "kommentar": "`when`='Alltid synlig anbefalt fra ca 5 °C og lavere' stemmer EKSAKT med ute-modifieren (feels ≤5°C, modifiers.ts:195). MEN den fanger ikke søvn-bruken: i soevn legges ullsokker allerede ved 'kjolig'-rom = 5-9°C (tables.ts:163), altså OPP til 9°C, over det `when` antyder. whyForGarment-grenene stemmer godt: søvn-grenen (linje 329) er korrekt for innendørs natt-bruk; generell-grenen (linje 350) 'Ull holder varmen selv om sokken blir litt fuktig' matcher ull-fukt-kilden (merino-kids). Ingen villedende påkledningsråd. Trekk 6 poeng for terskel-driften mellom `when` (≤5°C) og faktisk søvn-seleksjon (≤9°C)."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "Ullsokker har INGEN oppføring i ITEM_ALTERNATIVES. Et reelt alternativ finnes: tykkelse-trinn (tynne ullsokker ↔ tykke ullsokker / 'ullstrømper tykke'), parallelt med hvordan 'votter tykke'→'votter dun' og 'lue m/ ull'→'lue tynn' er modellert. Et fottøy-materiale-alternativ (ull vs syntet) er mindre meningsfullt gitt brand-DNA (ull-først). Ikke kritisk siden sokker er lav-risiko, derav kun 2 poeng trekk."
+    },
+    "total": 85,
+    "verdikt": "Solid, sikkert plagg uten medisinske farer — godt forankret i seleksjons-logikken via både baseTable og en dedikert modifier, med ekte whyForGarment-grener og fungerende PNG/mapping. To reelle svakheter trekker ned: (1) terskel-drift mellom `when`-teksten (≤5 °C) og den faktiske søvn-seleksjonen som starter ved 9 °C romtemp, og (2) en mapping-gap der engine-strengen 'tykke ullsokker' ikke finnes i illustrasjons-MAP. Begge er medium og bør fikses, men ingen er sikkerhetskritiske.\"}",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "Terskel-drift mellom `when`-tekst og faktisk seleksjon: `when` sier 'fra ca 5 °C og lavere', men i soevn-tabellen (tables.ts:162-166) legges ullsokker allerede i 'kjolig'-båndet = 5-9 °C romtemp, altså opp til 9 °C. Sluttbruker som leser `when` får inntrykk av at sokker først er aktuelt ≤5 °C, mens appen selv anbefaler dem ved kjølig soverom opp mot 9 °C.",
+        "forslag": "Endre `when` til å skille ute- og søvn-bruk, f.eks.: 'Ute: fra ca 5 °C og lavere. Om natten: i kjølige soverom (under ca 9 °C) der føttene lett blir kalde.' Rør ikke selve terskel-tallene i tables.ts/modifiers.ts — kun teksten.",
+        "kilde": "halo-tog (kalde hender/føtter som kuldetegn); slumbersac"
+      },
+      {
+        "severity": "medium",
+        "mal": 2,
+        "beskrivelse": "Mapping-gap: modifiers.ts:493 produserer engine-strengen 'tykke ullsokker' for baby <9 mnd ved utelek/baeresele når feels ≤10 °C, men 'tykke ullsokker' finnes IKKE som nøkkel i MAP (garment-illustrations.ts). garmentIdFor('tykke ullsokker') returnerer null → ingen illustrasjon vises for dette utfallet. MAP har kun 'ullsokker', 'ullstrømper', 'ullstrømper tykke'.",
+        "forslag": "Legg til MAP-nøkkelen 'tykke ullsokker': 'ullsokker' (og evt. de modifiserte variantene 'tøffel-sko + tykke ullsokker' / 'tykke ullsokker (vinterdress dekker)') i garment-illustrations.ts. Ren mapping-tilføyelse, ingen terskel-endring.",
+        "kilde": "Intern: modifiers.ts:493 vs garment-illustrations.ts MAP"
+      },
+      {
+        "severity": "lav",
+        "mal": 8,
+        "beskrivelse": "Mangler alternativ-oppføring: ullsokker har ingen entry i ITEM_ALTERNATIVES (alternatives.ts), til tross for at et tykkelse-trinn (tynne ullsokker ↔ tykke/ullstrømper tykke) er et reelt og naturlig valg — samme mønster som allerede er modellert for 'votter tykke' og 'lue m/ ull'.",
+        "forslag": "Vurder å legge til en ITEM_ALTERNATIVES-entry for 'ullstrømper tykke' med alternativ 'to par tynne ullsokker' (tykkelse-trinn), med i18n-keys alternatives.items.ullsokkerTynne.{when,whyPrimary}. Lav prioritet siden sokker er lav-risiko.",
+        "kilde": "Intern: alternatives.ts (manglende paritet med votter/lue-mønster)"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "`when`-teksten lekker intern modifier-terminologi til sluttbruker: 'Alltid synlig anbefalt fra ca 5 °C og lavere' beskriver appens visnings-logikk ('synliggjøring', jf. modifiers.ts iter 26-kommentar) snarere enn en bruker-rettet bruksbeskrivelse. Bryter mønsteret til søsken-plagg ('Brukes ved...', 'God som...').",
+        "forslag": "Omformuler til bruker-språk uten meta-begrep, f.eks. 'Holder føttene varme når det er kjølig ute eller i soverommet.' Slås gjerne sammen med fiksen for funn #1.",
+        "kilde": "Intern: garment-info.ts:71 vs søsken-mønster i samme kategori"
+      }
+    ]
+  },
+  "fable": null
+}

@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex" />
+<title>Babyora · Uke — Mock A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  /* ─── tokens ──────────────────────────────────────────────────────────── */
+  :root {
+    --warm-grey:   #DBD8D2;   /* surface base */
+    --warm-grey-2: #E6E3DD;   /* card surface */
+    --warm-grey-3: #CFCCC5;   /* hairline */
+    --ink-900:     #1B1A18;
+    --ink-700:     #3A3733;
+    --ink-500:     #6B6862;
+    --ink-300:     #9D9A93;
+
+    --orange:      #FF6B35;   /* CTA */
+    --orange-600:  #E8551F;
+    --green:       #3F8A5B;   /* lett */
+    --amber:       #C0632F;   /* middels */
+    --navy:        #1F2E45;   /* mye på */
+
+    --font-serif:  'DM Serif Display', 'Times New Roman', serif;
+    --font-sans:   'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+
+    --ease-out:    cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    min-height: 100dvh;
+    background: #2a2a28;
+    color: var(--ink-900);
+    font-family: var(--font-sans);
+    font-feature-settings: 'ss01', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    display: grid;
+    place-items: center;
+    padding: 32px 16px;
+  }
+
+  /* ─── iPhone 390×844 frame (preview only) ────────────────────────────── */
+  .device {
+    width: 390px;
+    min-height: 844px;
+    position: relative;
+    background: var(--warm-grey);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.06),
+      0 30px 60px -20px rgba(0,0,0,0.45),
+      0 60px 120px -30px rgba(0,0,0,0.35);
+    isolation: isolate;
+  }
+
+  /* iOS safe-area emulation in preview; uses env() on real device */
+  .safe-top    { padding-top:    max(54px, env(safe-area-inset-top, 54px)); }
+  .safe-bottom { padding-bottom: max(34px, env(safe-area-inset-bottom, 34px)); }
+
+  /* ─── screen layout ──────────────────────────────────────────────────── */
+  .screen {
+    position: relative;
+    width: 100%;
+    min-height: 844px;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(140% 50% at 50% -10%, rgba(255,255,255,0.55), rgba(255,255,255,0) 60%),
+      var(--warm-grey);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ─── top bar ────────────────────────────────────────────────────────── */
+  .topbar {
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .city-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px 9px 12px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid rgba(27,26,24,0.06);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .city-pill .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.18);
+  }
+  .city-pill .name {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.1px;
+    color: var(--ink-900);
+  }
+  .city-pill .chev {
+    width: 12px; height: 12px;
+    color: var(--ink-500);
+  }
+
+  .icon-btn {
+    width: 44px; height: 44px;
+    min-width: 44px; min-height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid rgba(27,26,24,0.06);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    color: var(--ink-900);
+    padding: 0;
+    transition: transform 160ms var(--ease-out), background 160ms var(--ease-out);
+  }
+  .icon-btn:active { transform: scale(0.94); background: rgba(255,255,255,0.7); }
+  .icon-btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+  /* ─── tabs ───────────────────────────────────────────────────────────── */
+  .tabs {
+    margin: 18px 22px 0;
+    padding: 5px;
+    display: flex;
+    gap: 4px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.45);
+    border: 1px solid rgba(27,26,24,0.05);
+  }
+  .tab {
+    flex: 1;
+    min-height: 44px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(27,26,24,0.55);
+    transition: background 200ms var(--ease-out), color 200ms var(--ease-out);
+  }
+  .tab[aria-pressed='true'] {
+    background: #fff;
+    color: var(--ink-900);
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(27,26,24,0.08);
+  }
+  .tab:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+  /* ─── temp meta (serif headline) ─────────────────────────────────────── */
+  .meta {
+    margin: 22px 22px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .meta-left .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+    margin: 0 0 6px;
+  }
+  .meta-left .headline {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 0.95;
+    letter-spacing: -0.5px;
+    color: var(--ink-900);
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .meta-left .headline .deg {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    color: var(--ink-700);
+  }
+  .meta-left .feels {
+    margin-top: 8px;
+    font-size: 13.5px;
+    color: var(--ink-500);
+    font-weight: 500;
+  }
+  .meta-left .feels b { color: var(--ink-700); font-weight: 600; }
+
+  .meta-right {
+    text-align: right;
+    flex: none;
+  }
+  .meta-right .now-icon {
+    width: 54px; height: 54px;
+    display: block;
+    margin-left: auto;
+    margin-bottom: 4px;
+  }
+  .meta-right .cond {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    color: var(--ink-700);
+    line-height: 1.1;
+    max-width: 110px;
+    margin-left: auto;
+  }
+
+  /* ─── legend strip ───────────────────────────────────────────────────── */
+  .legend {
+    margin: 18px 22px 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.38);
+    border: 1px solid rgba(27,26,24,0.05);
+    list-style: none;
+  }
+  .legend li {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .legend .pip {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+  .legend .lbl {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink-500);
+  }
+
+  /* ─── grouped list card (Apple Weather pattern) ──────────────────────── */
+  .group {
+    margin: 14px 22px 0;
+    background: var(--warm-grey-2);
+    border-radius: 22px;
+    border: 1px solid rgba(27,26,24,0.06);
+    overflow: hidden;
+  }
+  .group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid var(--warm-grey-3);
+  }
+  .group-head h2 {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+  .group-head .meta-now {
+    font-size: 12px;
+    color: var(--ink-300);
+    font-weight: 500;
+  }
+
+  .hours {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .hour {
+    display: grid;
+    grid-template-columns: 56px 32px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 18px;
+    min-height: 56px;
+    border-bottom: 1px solid var(--warm-grey-3);
+    position: relative;
+  }
+  .hour:last-child { border-bottom: none; }
+
+  /* "now" row gets a subtle orange edge */
+  .hour.now {
+    background: linear-gradient(90deg, rgba(255,107,53,0.06), rgba(255,107,53,0) 60%);
+  }
+  .hour.now::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px; bottom: 8px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--orange);
+  }
+
+  .h-time {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+  .h-time .t {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink-900);
+    letter-spacing: -0.2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .h-time .tod {
+    margin-top: 2px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--ink-300);
+  }
+
+  .h-icon {
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+  }
+  .h-icon img, .h-icon svg {
+    width: 28px; height: 28px;
+    display: block;
+  }
+
+  .h-temp {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+  .h-temp .t {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    line-height: 1;
+    color: var(--ink-900);
+    font-variant-numeric: tabular-nums;
+  }
+  .h-temp .feels {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-300);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .h-band {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px 6px 6px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(27,26,24,0.05);
+  }
+  .h-band .pip {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 700;
+    display: grid; place-items: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .h-band .lbl {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-700);
+    letter-spacing: -0.1px;
+  }
+
+  /* ─── primary CTA (warm orange) ──────────────────────────────────────── */
+  .cta-wrap {
+    margin: 16px 22px 14px;
+  }
+  .cta {
+    width: 100%;
+    min-height: 54px;
+    border-radius: 18px;
+    border: none;
+    cursor: pointer;
+    background: var(--orange);
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.1px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.25) inset,
+      0 10px 24px -10px rgba(255,107,53,0.55),
+      0 2px 6px rgba(232,85,31,0.25);
+    transition: transform 160ms var(--ease-out), background 160ms var(--ease-out);
+  }
+  .cta:hover  { background: var(--orange-600); }
+  .cta:active { transform: scale(0.985); }
+  .cta:focus-visible { outline: 2px solid var(--ink-900); outline-offset: 2px; }
+  .cta svg { width: 18px; height: 18px; }
+
+  /* ─── bottom tab bar (decorative — matches prod) ─────────────────────── */
+  .tabbar {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.6);
+    border-top: 1px solid rgba(27,26,24,0.06);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .tabbar button {
+    background: none;
+    border: 0;
+    cursor: pointer;
+    padding: 8px 0 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--ink-300);
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .tabbar button.active { color: var(--orange); }
+  .tabbar button svg { width: 22px; height: 22px; }
+
+  /* ─── reduced motion ─────────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="device" role="img" aria-label="Babyora Uke skjerm, mock A">
+    <main class="screen safe-top safe-bottom" aria-labelledby="uke-heading">
+
+      <h1 id="uke-heading" class="sr-only">Uke — time-for-time prognose med påkledning</h1>
+
+      <!-- top bar -->
+      <div class="topbar">
+        <button class="city-pill" type="button" aria-label="Bytt sted, valgt: Elverum">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="name">Elverum</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        <button class="icon-btn" type="button" aria-label="Varsler">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- tabs -->
+      <nav class="tabs" aria-label="Visning">
+        <button class="tab" type="button" aria-pressed="true">I dag</button>
+        <button class="tab" type="button" aria-pressed="false">10 dager</button>
+      </nav>
+
+      <!-- temp meta — DM Serif headline -->
+      <section class="meta" aria-label="Akkurat nå">
+        <div class="meta-left">
+          <p class="eyebrow">Akkurat nå</p>
+          <p class="headline">
+            7<span class="deg">°C</span>
+          </p>
+          <p class="feels">Føles som <b>5°</b> · vind 3 m/s</p>
+        </div>
+        <div class="meta-right">
+          <img class="now-icon" src="/icons/metno/partlycloudy_day.svg" alt="" />
+          <p class="cond">Delvis skyet</p>
+        </div>
+      </section>
+
+      <!-- legend -->
+      <ul class="legend" role="list" aria-label="Forklaring av påkledning-byrde">
+        <li>
+          <span class="pip" style="background: var(--green)" aria-hidden="true">2</span>
+          <span class="lbl">Lett</span>
+        </li>
+        <li>
+          <span class="pip" style="background: var(--amber)" aria-hidden="true">3</span>
+          <span class="lbl">Middels</span>
+        </li>
+        <li>
+          <span class="pip" style="background: var(--navy)" aria-hidden="true">4</span>
+          <span class="lbl">Mye på</span>
+        </li>
+      </ul>
+
+      <!-- grouped hour list -->
+      <section class="group" aria-label="Time for time">
+        <div class="group-head">
+          <h2>Time for time</h2>
+          <span class="meta-now">Lo · 7 mnd</span>
+        </div>
+
+        <ul class="hours" role="list">
+
+          <li class="hour now"
+              aria-label="Klokken 08, morgen. 5 grader, føles 3. Middels påkledning, 3 plagg.">
+            <div class="h-time">
+              <span class="t">08:00</span>
+              <span class="tod">morgen</span>
+            </div>
+            <div class="h-icon" aria-hidden="true">
+              <img src="/icons/metno/partlycloudy_day.svg" alt="" />
+            </div>
+            <div class="h-temp">
+              <span class="t">5°</span>
+              <span class="feels">føles 3°</span>
+            </div>
+            <span class="h-band">
+              <span class="pip" style="background: var(--amber)" aria-hidden="true">3</span>
+              <span class="lbl">Middels</span>
+            </span>
+          </li>
+
+          <li class="hour"
+              aria-label="Klokken 11, dag. 9 grader, føles 8. Lett påkledning, 2 plagg.">
+            <div class="h-time">
+              <span class="t">11:00</span>
+              <span class="tod">dag</span>
+            </div>
+            <div class="h-icon" aria-hidden="true">
+              <img src="/icons/metno/clearsky_day.svg" alt="" />
+            </div>
+            <div class="h-temp">
+              <span class="t">9°</span>
+              <span class="feels">føles 8°</span>
+            </div>
+            <span class="h-band">
+              <span class="pip" style="background: var(--green)" aria-hidden="true">2</span>
+              <span class="lbl">Lett</span>
+            </span>
+          </li>
+
+          <li class="hour"
+              aria-label="Klokken 14, dag. 12 grader, føles 11. Lett påkledning, 2 plagg.">
+            <div class="h-time">
+              <span class="t">14:00</span>
+              <span class="tod">dag</span>
+            </div>
+            <div class="h-icon" aria-hidden="true">
+              <img src="/icons/metno/clearsky_day.svg" alt="" />
+            </div>
+            <div class="h-temp">
+              <span class="t">12°</span>
+              <span class="feels">føles 11°</span>
+            </div>
+            <span class="h-band">
+              <span class="pip" style="background: var(--green)" aria-hidden="true">2</span>
+              <span class="lbl">Lett</span>
+            </span>
+          </li>
+
+          <li class="hour"
+              aria-label="Klokken 17, kveld. 10 grader, føles 8. Middels påkledning, 3 plagg.">
+            <div class="h-time">
+              <span class="t">17:00</span>
+              <span class="tod">kveld</span>
+            </div>
+            <div class="h-icon" aria-hidden="true">
+              <img src="/icons/metno/cloudy.svg" alt="" />
+            </div>
+            <div class="h-temp">
+              <span class="t">10°</span>
+              <span class="feels">føles 8°</span>
+            </div>
+            <span class="h-band">
+              <span class="pip" style="background: var(--amber)" aria-hidden="true">3</span>
+              <span class="lbl">Middels</span>
+            </span>
+          </li>
+
+          <li class="hour"
+              aria-label="Klokken 20, kveld. 6 grader, føles 4. Middels påkledning, 3 plagg.">
+            <div class="h-time">
+              <span class="t">20:00</span>
+              <span class="tod">kveld</span>
+            </div>
+            <div class="h-icon" aria-hidden="true">
+              <img src="/icons/metno/cloudy.svg" alt="" />
+            </div>
+            <div class="h-temp">
+              <span class="t">6°</span>
+              <span class="feels">føles 4°</span>
+            </div>
+            <span class="h-band">
+              <span class="pip" style="background: var(--amber)" aria-hidden="true">3</span>
+              <span class="lbl">Middels</span>
+            </span>
+          </li>
+
+          <li class="hour"
+              aria-label="Klokken 23, natt. 3 grader, føles 0. Mye på, 4 plagg.">
+            <div class="h-time">
+              <span class="t">23:00</span>
+              <span class="tod">natt</span>
+            </div>
+            <div class="h-icon" aria-hidden="true">
+              <img src="/icons/metno/lightrain.svg" alt="" />
+            </div>
+            <div class="h-temp">
+              <span class="t">3°</span>
+              <span class="feels">føles 0°</span>
+            </div>
+            <span class="h-band">
+              <span class="pip" style="background: var(--navy)" aria-hidden="true">4</span>
+              <span class="lbl">Mye på</span>
+            </span>
+          </li>
+
+        </ul>
+      </section>
+
+      <!-- primary CTA — warm orange -->
+      <div class="cta-wrap">
+        <button class="cta" type="button" aria-label="Se forslag for Lo akkurat nå">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12h13" />
+            <path d="M13 6l7 6-7 6" />
+          </svg>
+          Se forslag for Lo nå
+        </button>
+      </div>
+
+      <!-- bottom tab bar -->
+      <nav class="tabbar" aria-label="Hovedmeny">
+        <button type="button" aria-label="Hjem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 11l9-7 9 7" /><path d="M5 10v9h14v-9" />
+          </svg>
+          Hjem
+        </button>
+        <button type="button" aria-label="Påkledning">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 4l4 2h4l4-2 2 5-4 2v9H8v-9l-4-2 2-5z" />
+          </svg>
+          Påkledning
+        </button>
+        <button type="button" class="active" aria-current="page" aria-label="Uke, valgt">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="3" />
+            <path d="M3 10h18M8 3v4M16 3v4" />
+          </svg>
+          Uke
+        </button>
+        <button type="button" aria-label="Mer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" />
+          </svg>
+          Mer
+        </button>
+      </nav>
+
+    </main>
+  </div>
+
+</body>
+</html>

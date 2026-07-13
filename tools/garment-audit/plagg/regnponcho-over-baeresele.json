@@ -1,0 +1,57 @@
+{
+  "claude": {
+    "id": "regnponcho-over-baeresele",
+    "dbString": "regnponcho over bæresele",
+    "kategori": "ekstra-vogn",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett info-oppføring finnes i garment-info.ts (linje 247-250): what = 'Regnponcho som dekker både den voksne og barnet i bæresele.' og when = 'Når det regner og du bærer barnet i sele eller bæremeis.' Begge er i samme korte, konkrete tone/lengde som søsken i ekstra-vogn-kategorien (regntrekk, varmepose osv.). Dedikert whyForGarment-gren finnes (linje 477-479) — ikke fallback. Trekk på 2 poeng: søster-plagget 'regntrekk' har en innebygd luftighet/varmefelle-advarsel i selve what-teksten ('Hold luftigheten i tankene — aldri tett over'), mens poncho-oppføringen mangler tilsvarende pust/klam-advarsel selv om den dekker et kroppsvarmet barn tett — se funn."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/regnponcho-over-baeresele.png. db-strengen 'regnponcho over bæresele' er korrekt mappet til id 'regnponcho-over-baeresele' i garment-illustrations.ts (linje 86). Mapping plausibel og konsistent med db-strengen som faktisk legges til i modifiers.ts (linje 149). Visuell dom delegeres til Fable 5 + Claude senere."
+    },
+    "seleksjon": {
+      "score": 20,
+      "trace": "Plagget finnes IKKE i baseTable. Det introduseres KUN av modifier #1 (Nedbør) i modifiers.ts linje 142-150: hvis weather.precipMmH >= 0.5 OG activity === 'baeresele' → addItem(layers, 'ekstra', 'regnponcho over bæresele'). Helt temperaturuavhengig: legges til i ALLE temp-bånd (ekstrem_varme→ekstrem) når regnet er minst lett-moderat (>=0.5 mm/t). Ved precipMmH 0.2-0.5 legges INGEN poncho til (kun yr-note). Ved >=2 mm/t legges også note 'notes.rain.heavy'. Ingen conflicts/softBlocks/safety-regel berører plagget; det fjernes aldri. Carrier-grenen (linje 294-317) gir overoppheting-noter KUN hvis input.innerJakke && feels<10, eller dun-advarsel ved feels<0 — ingen av disse trigges av poncho-tilsetningen i seg selv.",
+      "score_note": "ok",
+      "kommentar": "Regnponcho over bæresele i regn er pediatrisk forsvarlig som konsept — barnet holdes tørt. Selv valg-LOGIKKEN (regn + bæresele, uavhengig av temp) er trygg fordi en poncho må fungere ved alle temperaturer der man bærer i regn. Kildene PMC-7202982 (babywearing-thermoregulering) og halo-tog/AAP (overoppheting-tegn) dekker risikoen som finnes: en vanntett poncho over et allerede kroppsvarmet barn (forelder varmer + tett skall) kan skape en varme-/fuktfelle, særlig i mildt-varmt regn (feels 12-22 °C). Dette er et reelt helse-spørsmål, men det er IKKE selve seleksjonen som er farlig — den utløses ved regn uansett — det er MANGEL på en pust/overoppheting-note i den konteksten. Flagges derfor som tekst↔logikk-funn (medium), ikke kritisk seleksjonsfeil. Ingen frost/SIDS/kvelnings-risiko introdusert av selve valget.",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 21,
+      "kommentar": "Ingen temperatur-drift: verken when ('Når det regner og du bærer barnet i sele') eller whyForGarment ('...når det regner X.X mm/t') påstår et temp-bånd, og trace bekrefter at plagget faktisk velges ved regn i ALLE bånd. when nevner korrekt både sele OG bæremeis, og why-grenen interpolerer faktisk precipMmH — stemmer med modifier-terskelen >=0.5. Trekk på 4 poeng fordi BÅDE when- og why-teksten er rent positive ('dekker deg og barnet') og utelater den eneste reelle risikoen ved akkurat dette plagget: en tett vanntett poncho over et kroppsvarmet bæreseле-barn kan bli klam/varm i mildt regn (feels 12-22 °C). Søster-regntrekk har eksplisitt luftighets-advarsel i tekst; poncho-teksten gjør ikke det, og carrier-overoppheting-noten i modifiers fyrer ikke i denne konteksten. Teksten villeder ikke om temperatur, men er ufullstendig på pust/overoppheting — derfor funn med severity medium, ikke hoy."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "Ingen alternativ-oppføring i alternatives.ts for 'regnponcho over bæresele' — korrekt fravær. alternatives.ts handler om ull↔fleece / dun↔syntet / TOG-trinn / tykkelse-trinn (brand-DNA ull-først), og regn-tilbehør passer ikke det mønsteret. regntrekk (vogn) er ikke et substitutt — annen aktivitet. Et teoretisk reelt alternativ ville vært en integrert bæresele-regntrekk vs løs poncho, men det er en produkt-form-variant uten ull/fleece-akse og ligger utenfor alternatives.ts sitt mønster. Trekk på 2 poeng som mild observasjon, ikke feil."
+    },
+    "total": 86,
+    "verdikt": "Solid og trygt plagg. Komplett struktur, korrekt PNG-mapping, og en seleksjons-logikk (regn + bæresele, temp-uavhengig) som er pediatrisk forsvarlig. Eneste reelle svakhet: verken what/when, whyForGarment eller carrier-modifieren advarer om at en tett vanntett poncho over et kroppsvarmet bæreseле-barn kan bli en fukt-/varmefelle i mildt-til-varmt regn — i kontrast til søster-plagget regntrekk som har innebygd luftighets-advarsel. Ingen kritiske/hoy-funn; ett medium tekst↔logikk-funn + to lav-observasjoner.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "kilde": "pmc-7202982; halo-tog; aap-healthychildren",
+        "beskrivelse": "Når regnponcho legges til i bæresele ved regn i mildt-til-varmt vær (feels ca. 12-22 °C), fyrer ingen overoppheting/pust-note. Forelderens kropp varmer barnet og en tett vanntett poncho over begge kan skape en fukt-/varmefelle. Carrier-grenen i modifiers.ts (linje 294-317) gir kun overoppheting-note ved innerJakke && feels<10 eller dun-advarsel ved feels<0 — ingen dekker poncho-konteksten. PMC-7202982 bekrefter babywearing øker skin-temp (+0.71 °C), og halo-tog/AAP lister overoppheting-tegn å se etter.",
+        "forslag": "Vurder en luftighet/pust-note knyttet til 'regnponcho over bæresele' (f.eks. 'Poncho over bæresele blir fort klam — luft regelmessig og kjenn på nakken'), tilsvarende luftighets-advarselen regntrekk allerede har. Endre ALDRI terskler/tall."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "kilde": "garment-info.ts linje 243-250 (sammenligning regntrekk vs poncho)",
+        "beskrivelse": "what-teksten for 'regnponcho-over-baeresele' mangler pust/klam-forbeholdet som søster-plagget regntrekk har innebygd ('Hold luftigheten i tankene — aldri tett over'), selv om poncho dekker et kroppsvarmet barn tettere enn et regntrekk over en luftig kalesje.",
+        "forslag": "Vurder å speile regntrekkets luftighets-formulering i what/when for poncho for konsistent sikkerhetstone. Kun tekst — ingen tall."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "kilde": "alternatives.ts",
+        "beskrivelse": "Ingen alternativ tilbys (korrekt — poncho passer ikke ull↔fleece/TOG-mønsteret i alternatives.ts). Et mulig produkt-form-alternativ (integrert bæresele-regntrekk vs løs poncho) finnes i virkeligheten, men ligger utenfor filens akse og er ikke en mangel.",
+        "forslag": "Ingen handling nødvendig; behold fravær av alternativ. Eventuelt fremtidig: vurder bæresele-spesifikt regntrekk som form-variant hvis alternatives.ts utvides utover ull/fleece-aksen."
+      }
+    ]
+  },
+  "fable": null
+}

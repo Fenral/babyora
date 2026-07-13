@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Babyora — Takeover: standardisert ring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-canvas:#DFDCEF; --surface-pure:#FFFFFF; --surface-soft:#EDEBF6;
+    --ink-900:#241E38; --ink-700:#56506F; --ink-500:#8A83A0; --ink-100:#D9D5E7;
+    --lag:#AF5331; --tilbehor:#285E6A; --focus:#C0632F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:'Schibsted Grotesk',system-ui,sans-serif;background:#0b0b10;display:grid;place-items:center;min-height:100dvh;color:var(--ink-900);}
+  .phone{position:relative;width:min(430px,100vw);height:min(932px,100dvh);background:radial-gradient(120% 60% at 50% 30%, #F3F1FB 0%, var(--bg-canvas) 70%);overflow:hidden;}
+  .inner{position:absolute;inset:0;display:flex;flex-direction:column;padding:54px 20px calc(18px + env(safe-area-inset-bottom,0px));}
+
+  .head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .title{font-family:'Fraunces',serif;font-weight:600;font-size:1.6rem;letter-spacing:-.01em;}
+  .eyebrow{font-size:.8125rem;font-weight:600;color:var(--ink-700);margin-top:2px;}
+  .close{width:44px;height:44px;flex:none;border-radius:999px;border:1px solid var(--ink-100);background:var(--surface-pure);display:grid;place-items:center;color:var(--ink-900);}
+
+  /* Ring-scene */
+  .stage{position:relative;flex:1;min-height:0;margin-top:8px;}
+  .ring-guide{position:absolute;border:1.5px dashed var(--ink-100);border-radius:50%;pointer-events:none;}
+  .avatar{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:210px;height:246px;object-fit:contain;object-position:center;z-index:2;filter:drop-shadow(-8px 14px 22px rgba(175,83,49,.22));}
+  .chip{position:absolute;z-index:3;transform:translate(-50%,-50%);}
+  .chip .thumb{position:relative;border-radius:20px;background:var(--surface-pure);border:1px solid var(--ink-100);box-shadow:0 12px 26px -10px rgba(36,30,56,.28);display:grid;place-items:center;}
+  .chip .thumb img{width:100%;height:100%;object-fit:contain;}
+  .chip .badge{position:absolute;top:-8px;left:-8px;width:25px;height:25px;border-radius:999px;display:grid;place-items:center;font-weight:700;font-size:.76rem;color:#fff;border:2px solid var(--surface-pure);}
+  .badge.b-lag{background:var(--lag);} .badge.b-tilbehor{background:var(--tilbehor);}
+
+  /* Rekkefølge-liste = interaktiv kilde */
+  .rekke{flex:none;margin-top:6px;max-height:38%;overflow-y:auto;}
+  .rekke h3{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin:0 2px 7px;position:sticky;top:0;}
+  .rekke ol{list-style:none;display:flex;flex-direction:column;gap:7px;}
+  .rekke button{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:var(--surface-pure);border:1px solid var(--ink-100);border-radius:14px;padding:8px 12px;min-height:52px;font:inherit;color:var(--ink-900);}
+  .rekke .num{width:24px;height:24px;flex:none;border-radius:999px;display:grid;place-items:center;font-weight:700;font-size:.76rem;color:#fff;}
+  .rekke .num.b-lag{background:var(--lag);} .rekke .num.b-tilbehor{background:var(--tilbehor);}
+  .rekke .rthumb{width:38px;height:38px;flex:none;border-radius:10px;background:var(--surface-soft);display:grid;place-items:center;padding:4px;}
+  .rekke .rthumb img{width:100%;height:100%;object-fit:contain;}
+  .rekke .rtext{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .rekke .rname{font-weight:700;font-size:.9rem;line-height:1.2;} .rekke .rrole{font-size:.8rem;color:var(--ink-700);line-height:1.2;}
+  .rekke .chev{color:var(--ink-500);flex:none;}
+</style>
+</head>
+<body>
+  <div class="phone">
+    <div class="inner">
+      <div class="head">
+        <div><div class="title" id="title">Dagens antrekk</div><div class="eyebrow" id="eyebrow"></div></div>
+        <div class="close" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+      </div>
+      <div class="stage" id="stage">
+        <div class="ring-guide" id="guide"></div>
+        <img class="avatar" id="avatar" alt="">
+      </div>
+      <nav class="rekke" aria-label="Rekkefølge">
+        <h3>Rekkefølge · innerst først</h3>
+        <ol id="list"></ol>
+      </nav>
+    </div>
+  </div>
+
+<script>
+  var G = '../../illustrations/garments/';
+  var A = '../../avatars/f79-poc/';
+  var SETS = {
+    mild: {
+      eyebrow:'Delvis skyet · 23° · 2 lag', avatar:A+'stage-2-solhatt.png',
+      items:[
+        {n:'Langermet ullbody tynn', role:'Innerst · mot huden', kind:'lag', img:'langermet-ullbody-tynn'},
+        {n:'Lett bukse', role:'Innerst · bein', kind:'lag', img:'lett-bukse'},
+        {n:'Caps eller solhatt', role:'Tilbehør · hode', kind:'tilbehor', img:'solhatt'},
+      ],
+    },
+    kald: {
+      eyebrow:'Snø · −12° · 7 lag', avatar:A+'tier-A6-ekstrem.png',
+      // Rekkefølge: streng innerst → ytterst, lue SIST (Sivert).
+      items:[
+        {n:'Langermet ullbody', role:'Innerst · mot huden', kind:'lag', img:'langermet-ullbody'},
+        {n:'Ullsokker', role:'Innerst · føtter', kind:'lag', img:'ullsokker'},
+        {n:'Ull-mellomlag', role:'Mellomlag', kind:'lag', img:'ull-mellomlag'},
+        {n:'Vinterdress', role:'Ytterst', kind:'lag', img:'vinterdress'},
+        {n:'Hals', role:'Tilbehør · hals', kind:'tilbehor', img:'hals'},
+        {n:'Votter, tykke', role:'Tilbehør · hender', kind:'tilbehor', img:'votter-tykke'},
+        {n:'Lue med ull', role:'Tilbehør · hode · sist', kind:'tilbehor', img:'lue-m-ull'},
+      ],
+    },
+  };
+
+  var params = new URLSearchParams(location.search);
+  var set = SETS[params.get('set')] || SETS.mild;
+  var N = set.items.length;
+
+  document.getElementById('eyebrow').textContent = set.eyebrow;
+  document.getElementById('avatar').src = set.avatar;
+
+  // Chip-størrelse skalerer med antall plagg
+  // Plaggene så store som mulig uten overlapp — skalerer ned med antall (Sivert: «hvor store kan de være?»)
+  var chipSize = N <= 3 ? 96 : (N <= 5 ? 80 : 68);
+  var thumbPad = N <= 3 ? 12 : (N <= 5 ? 9 : 7);
+
+  // Bygg liste (interaktiv kilde)
+  var list = document.getElementById('list');
+  set.items.forEach(function(it, i){
+    var cls = it.kind === 'tilbehor' ? 'b-tilbehor' : 'b-lag';
+    var li = document.createElement('li');
+    li.innerHTML =
+      '<button type="button">'+
+        '<span class="num '+cls+'">'+(i+1)+'</span>'+
+        '<span class="rthumb"><img src="'+G+it.img+'.png" alt=""></span>'+
+        '<span class="rtext"><span class="rname">'+it.n+'</span><span class="rrole">'+it.role+'</span></span>'+
+        '<svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>'+
+      '</button>';
+    list.appendChild(li);
+  });
+
+  // Legg plaggene på en standardisert ring (ellipse), jevnt fordelt, 1 øverst → med klokka
+  function layout(){
+    var stage = document.getElementById('stage');
+    var W = stage.clientWidth, H = stage.clientHeight;
+    var cx = W/2, cy = H*0.46;
+    var rx = Math.min(W*0.46, 165);
+    var ry = Math.min(H*0.44, 210);
+    // ring-guide (subtil sirkel bak)
+    var guide = document.getElementById('guide');
+    guide.style.width = (rx*2)+'px'; guide.style.height = (ry*2)+'px';
+    guide.style.left = (cx-rx)+'px'; guide.style.top = (cy-ry)+'px';
+
+    // fjern gamle chips
+    [].forEach.call(stage.querySelectorAll('.chip'), function(c){ c.remove(); });
+    set.items.forEach(function(it, i){
+      var ang = -Math.PI/2 + i*(2*Math.PI/N);
+      var x = cx + rx*Math.cos(ang);
+      var y = cy + ry*Math.sin(ang);
+      var cls = it.kind === 'tilbehor' ? 'b-tilbehor' : 'b-lag';
+      var chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.style.left = x+'px'; chip.style.top = y+'px';
+      chip.innerHTML =
+        '<div class="thumb" style="width:'+chipSize+'px;height:'+chipSize+'px;padding:'+thumbPad+'px">'+
+          '<span class="badge '+cls+'">'+(i+1)+'</span>'+
+          '<img src="'+G+it.img+'.png" alt="">'+
+        '</div>';
+      stage.appendChild(chip);
+    });
+  }
+  requestAnimationFrame(layout);
+  window.addEventListener('resize', layout);
+</script>
+</body>
+</html>

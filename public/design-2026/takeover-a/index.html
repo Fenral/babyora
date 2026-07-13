@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Babyora — Takeover-mock (sone-forankret)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-canvas:#DFDCEF;
+    --surface-pure:#FFFFFF;
+    --surface-soft:#EDEBF6;
+    --ink-900:#241E38;
+    --ink-700:#56506F;
+    --ink-500:#8A83A0;
+    --ink-100:#D9D5E7;
+    --cta:#1F6B3E;
+    --cta-ink:#F1FBF4;
+    --innerst:#AF5331;   /* terracotta — innerste lag */
+    --mellom:#93690D;    /* okergull — mellomlag */
+    --tilbehor:#285E6A;  /* teal — tilbehør */
+    --focus:#C0632F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Schibsted Grotesk',system-ui,sans-serif;
+    background:#0b0b10;
+    display:grid;place-items:center;
+    min-height:100dvh;
+    color:var(--ink-900);
+  }
+
+  /* Telefon-ramme (mock) */
+  .phone{
+    position:relative;
+    width:min(430px,100vw);
+    height:min(932px,100dvh);
+    background:var(--bg-canvas);
+    overflow:hidden;
+    isolation:isolate;
+  }
+
+  /* ─────────── HJEM ─────────── */
+  .home{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    padding:54px 22px 92px;
+    transition:filter .38s cubic-bezier(.32,.72,0,1), opacity .38s cubic-bezier(.32,.72,0,1);
+  }
+  .home[data-dimmed="true"]{ filter:blur(3px); opacity:.55; }
+  .topbar{display:flex;align-items:center;justify-content:space-between;}
+  .pill{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;background:var(--surface-pure);border:1px solid var(--ink-100);min-height:44px;font-weight:600;font-size:.86rem;}
+  .clock{font-variant-numeric:tabular-nums;font-weight:600;font-size:.875rem;color:var(--ink-700);}
+  .meta{font-size:.9375rem;color:var(--ink-700);margin-top:12px;max-width:62%;}
+  .meta b{color:var(--ink-900);font-weight:600;}
+  .weather-emoji{position:absolute;top:96px;right:22px;font-size:30px;filter:drop-shadow(0 8px 12px rgba(0,0,0,.16));}
+  .seg{position:relative;display:flex;margin-top:12px;padding:4px;border-radius:13px;background:var(--surface-soft);min-height:44px;}
+  .seg button{flex:1;border:none;background:transparent;font:inherit;font-weight:600;font-size:.84rem;color:var(--ink-500);border-radius:10px;cursor:pointer;}
+  .seg button[aria-selected="true"]{background:var(--surface-pure);color:var(--ink-900);box-shadow:0 1px 2px rgba(36,30,56,.12);}
+  .scene{flex:1;display:flex;flex-direction:column;margin-top:6px;min-height:0;}
+  .scene-label{text-align:center;font-size:.8125rem;font-weight:600;letter-spacing:.02em;color:var(--ink-700);margin:2px 0 4px;}
+  .stage-home{position:relative;flex:1;display:block;}
+  .temp-mast{position:relative;text-align:center;font-family:'Fraunces',serif;font-weight:600;font-size:clamp(88px,33vw,150px);line-height:.8;letter-spacing:-.03em;color:var(--ink-900);margin:0 0 -22px;font-variant-numeric:tabular-nums;}
+  .temp-mast sup{font-size:.32em;font-weight:500;vertical-align:.9em;}
+  .home-avatar{position:relative;display:block;width:246px;height:246px;margin:-22px auto 0;object-fit:contain;filter:drop-shadow(-8px 14px 18px rgba(175,83,49,.22));}
+  .lag{margin-top:auto;text-align:center;font-weight:700;font-size:1.0625rem;padding-top:6px;}
+  .cta{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:56px;margin-top:14px;border:none;border-radius:24px 24px 24px 8px;background:var(--cta);color:var(--cta-ink);font-weight:700;font-size:.9375rem;letter-spacing:.1px;cursor:pointer;box-shadow:0 10px 24px -8px rgba(31,107,62,.5);transition:transform .16s cubic-bezier(.32,.72,0,1);}
+  .cta:active{transform:scale(.98);}
+
+  /* Bunn-nav */
+  .nav{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));background:var(--surface-pure);border-top:1px solid var(--ink-100);}
+  .nav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.68rem;font-weight:600;color:var(--ink-500);text-decoration:none;padding:6px 12px;border-radius:12px;}
+  .nav a[aria-current]{color:var(--cta);background:#E3F0E8;}
+  .nav svg{width:22px;height:22px;}
+
+  /* ─────────── TAKEOVER (native <dialog>) ─────────── */
+  .takeover{
+    position:fixed;inset:0;width:100%;max-width:none;height:100%;max-height:none;
+    margin:0;border:none;padding:0;background:transparent;color:var(--ink-900);
+    overflow:hidden;
+  }
+  .takeover::backdrop{ background:color-mix(in srgb, var(--bg-canvas) 78%, #171326); backdrop-filter:blur(6px); }
+  .to-inner{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    padding:54px 20px calc(18px + env(safe-area-inset-bottom,0px));
+    /* subtil forhøyet flate så avataren "løftes" ut av hjem-flaten */
+    background:radial-gradient(120% 62% at 50% 30%, #F3F1FB 0%, var(--bg-canvas) 68%);
+  }
+  .to-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .to-title{font-family:'Fraunces',serif;font-weight:600;font-size:1.6rem;letter-spacing:-.01em;}
+  .to-title:focus-visible{outline:3px solid var(--focus);outline-offset:4px;border-radius:6px;}
+  .to-close{width:44px;height:44px;flex:none;border-radius:999px;border:1px solid var(--ink-100);background:var(--surface-pure);display:grid;place-items:center;cursor:pointer;color:var(--ink-900);}
+  .to-eyebrow{font-size:.8125rem;font-weight:600;letter-spacing:.02em;color:var(--ink-700);margin-top:2px;}
+
+  /* Scene: avatar + sone-forankrede plagg (DEKORATIV, aria-hidden) */
+  .to-stage{position:relative;flex:1;min-height:0;margin-top:6px;}
+  .to-avatar{position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);width:214px;height:214px;object-fit:contain;filter:drop-shadow(-8px 14px 22px rgba(175,83,49,.24));z-index:2;}
+  .connectors{position:absolute;inset:0;z-index:1;pointer-events:none;}
+  .connectors line{stroke:var(--ink-500);stroke-width:1.5;stroke-dasharray:2 5;stroke-linecap:round;opacity:.55;}
+  .chip{
+    position:absolute;z-index:3;display:flex;flex-direction:column;align-items:center;gap:5px;width:104px;
+    opacity:0;transform:translateY(10px) scale(.94);
+    transition:opacity .42s cubic-bezier(.16,1,.3,1), transform .42s cubic-bezier(.16,1,.3,1);
+  }
+  .takeover[data-anim="in"] .chip{opacity:1;transform:none;}
+  .chip .thumb{position:relative;width:82px;height:82px;border-radius:20px;background:var(--surface-pure);border:1px solid var(--ink-100);box-shadow:0 12px 26px -10px rgba(36,30,56,.28);display:grid;place-items:center;padding:9px;}
+  .chip .thumb img{width:100%;height:100%;object-fit:contain;}
+  .chip .badge{position:absolute;top:-9px;left:-9px;width:28px;height:28px;border-radius:999px;display:grid;place-items:center;font-weight:700;font-size:.82rem;color:#fff;border:2px solid var(--surface-pure);}
+  .chip .zonelabel{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);}
+  /* soner */
+  .chip.z-hode{left:calc(50% + 40px);top:2%;}
+  .chip.z-torso{left:calc(50% - 150px);top:34%;}
+  .chip.z-bein{left:calc(50% + 52px);top:56%;}
+  .badge.b-innerst{background:var(--innerst);}
+  .badge.b-tilbehor{background:var(--tilbehor);}
+  .chip[data-stagger="1"]{transition-delay:.05s;}
+  .chip[data-stagger="2"]{transition-delay:.14s;}
+  .chip[data-stagger="3"]{transition-delay:.23s;}
+
+  /* Rekkefølge-liste = ENESTE interaktive kilde (a11y-lead) */
+  .rekke{flex:none;margin-top:8px;}
+  .rekke h3{font-size:.75rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-500);margin:0 2px 8px;}
+  .rekke ol{list-style:none;display:flex;flex-direction:column;gap:8px;}
+  .rekke button{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    background:var(--surface-pure);border:1px solid var(--ink-100);border-radius:16px;
+    padding:10px 14px;min-height:60px;cursor:pointer;font:inherit;color:var(--ink-900);
+    transition:transform .16s cubic-bezier(.32,.72,0,1);
+  }
+  .rekke button:active{transform:scale(.985);}
+  .rekke button:focus-visible{outline:3px solid var(--focus);outline-offset:2px;}
+  .rekke .num{width:26px;height:26px;flex:none;border-radius:999px;display:grid;place-items:center;font-weight:700;font-size:.8rem;color:#fff;}
+  .rekke .num.b-innerst{background:var(--innerst);}
+  .rekke .num.b-tilbehor{background:var(--tilbehor);}
+  .rekke .rthumb{width:42px;height:42px;flex:none;border-radius:11px;background:var(--surface-soft);display:grid;place-items:center;padding:5px;}
+  .rekke .rthumb img{width:100%;height:100%;object-fit:contain;}
+  .rekke .rtext{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .rekke .rname{display:block;font-weight:700;font-size:.9375rem;line-height:1.2;}
+  .rekke .rrole{display:block;font-size:.8125rem;color:var(--ink-700);line-height:1.2;}
+  .rekke .chev{color:var(--ink-500);flex:none;}
+
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+
+  @media (prefers-reduced-motion: reduce){
+    .home,.chip,.cta,.rekke button{transition:none !important;}
+    .chip{opacity:1 !important;transform:none !important;}
+  }
+  @media (forced-colors: active){
+    .chip .badge,.rekke .num{border:2px solid ButtonText;background:ButtonFace;color:ButtonText;forced-color-adjust:none;}
+    .connectors line{stroke:CanvasText;}
+  }
+</style>
+</head>
+<body>
+  <div class="phone">
+    <!-- ─────────── HJEM ─────────── -->
+    <main class="home" id="home" aria-label="Hjem">
+      <div class="topbar">
+        <span class="pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>Oslo</span>
+        <time class="clock">21:13</time>
+      </div>
+      <span class="weather-emoji" aria-hidden="true">⛅</span>
+      <p class="meta"><b>Delvis skyet</b> · føles som <b>23°</b> · vind 2 m/s</p>
+      <div class="seg" role="tablist" aria-label="Velg situasjon">
+        <button role="tab" aria-selected="true">Utenfor vogn</button>
+        <button role="tab" aria-selected="false">I vogn</button>
+      </div>
+      <div class="scene">
+        <h2 class="scene-label">Dagens påkledning</h2>
+        <div class="stage-home">
+          <div class="temp-mast" aria-hidden="true">23<sup>°</sup></div>
+          <img class="home-avatar" src="../../avatars/f79-poc/stage-2-solhatt.png" alt="" draggable="false" />
+        </div>
+        <p class="lag">2 lag</p>
+        <button class="cta" id="cta" type="button">Se dagens antrekk</button>
+      </div>
+    </main>
+
+    <!-- ─────────── TAKEOVER ─────────── -->
+    <dialog class="takeover" id="takeover" aria-labelledby="to-title">
+      <div class="to-inner">
+        <div class="to-head">
+          <div>
+            <h2 class="to-title" id="to-title" tabindex="-1">Dagens antrekk</h2>
+            <p class="to-eyebrow">Delvis skyet · 23° · 2 lag</p>
+          </div>
+          <button class="to-close" id="to-close" type="button" aria-label="Lukk dagens antrekk">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+
+        <!-- DEKORATIV scene: avatar + sone-forankrede plagg. aria-hidden. -->
+        <div class="to-stage" aria-hidden="true">
+          <svg class="connectors" viewBox="0 0 390 440" preserveAspectRatio="none">
+            <line x1="243" y1="60" x2="205" y2="150" />   <!-- solhatt → hode -->
+            <line x1="120" y1="180" x2="180" y2="215" />  <!-- ullbody → torso -->
+            <line x1="250" y1="285" x2="205" y2="300" />  <!-- bukse → bein -->
+          </svg>
+          <img class="to-avatar" src="../../avatars/f79-poc/stage-2-solhatt.png" alt="" draggable="false" />
+
+          <div class="chip z-torso" data-stagger="1">
+            <div class="thumb"><span class="badge b-innerst">1</span><img src="../../illustrations/garments/langermet-ullbody-tynn.png" alt=""></div>
+            <span class="zonelabel">Torso</span>
+          </div>
+          <div class="chip z-bein" data-stagger="2">
+            <div class="thumb"><span class="badge b-innerst">2</span><img src="../../illustrations/garments/lett-bukse.png" alt=""></div>
+            <span class="zonelabel">Bein</span>
+          </div>
+          <div class="chip z-hode" data-stagger="3">
+            <div class="thumb"><span class="badge b-tilbehor">3</span><img src="../../illustrations/garments/solhatt.png" alt=""></div>
+            <span class="zonelabel">Hode</span>
+          </div>
+        </div>
+
+        <!-- INTERAKTIV kilde: rekkefølge-liste (innerst → ytterst) -->
+        <nav class="rekke" aria-label="Rekkefølge">
+          <h3>Rekkefølge · innerst først</h3>
+          <ol>
+            <li>
+              <button type="button">
+                <span class="num b-innerst" aria-hidden="true">1</span>
+                <span class="rthumb"><img src="../../illustrations/garments/langermet-ullbody-tynn.png" alt=""></span>
+                <span class="rtext"><span class="rname">Langermet ullbody tynn</span><span class="rrole">Innerst · mot huden</span></span>
+                <span class="sr-only">Lag 1 av 2, innerst: Langermet ullbody tynn. Trykk for detaljer.</span>
+                <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+            </li>
+            <li>
+              <button type="button">
+                <span class="num b-innerst" aria-hidden="true">2</span>
+                <span class="rthumb"><img src="../../illustrations/garments/lett-bukse.png" alt=""></span>
+                <span class="rtext"><span class="rname">Lett bukse</span><span class="rrole">Innerst · bein</span></span>
+                <span class="sr-only">Lag 2 av 2, innerst: Lett bukse. Trykk for detaljer.</span>
+                <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+            </li>
+            <li>
+              <button type="button">
+                <span class="num b-tilbehor" aria-hidden="true">3</span>
+                <span class="rthumb"><img src="../../illustrations/garments/solhatt.png" alt=""></span>
+                <span class="rtext"><span class="rname">Caps eller solhatt</span><span class="rrole">Tilbehør · hode</span></span>
+                <span class="sr-only">Tilbehør: Caps eller solhatt. Trykk for detaljer.</span>
+                <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+            </li>
+          </ol>
+        </nav>
+      </div>
+    </dialog>
+  </div>
+
+<script>
+  (function(){
+    var home = document.getElementById('home');
+    var cta = document.getElementById('cta');
+    var to = document.getElementById('takeover');
+    var closeBtn = document.getElementById('to-close');
+    var title = document.getElementById('to-title');
+    var rm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function open(){
+      if (typeof to.showModal === 'function') to.showModal(); else to.setAttribute('open','');
+      home.setAttribute('data-dimmed','true');
+      home.inert = true;                       // a11y: bakgrunn nøytralisert (ikke bare uklar)
+      history.pushState({ to:1 }, '');         // Android/iOS back → lukk
+      // fokus til overskriften (ikke lukk-knapp, ikke første plagg)
+      requestAnimationFrame(function(){ title.focus(); });
+      if (rm){ to.setAttribute('data-anim','in'); }
+      else { requestAnimationFrame(function(){ requestAnimationFrame(function(){ to.setAttribute('data-anim','in'); }); }); }
+    }
+    function close(){
+      to.removeAttribute('data-anim');
+      if (to.open) to.close();
+      home.removeAttribute('data-dimmed');
+      home.inert = false;
+      if (history.state && history.state.to) history.back();
+      cta.focus();                             // fokus tilbake til CTA (alltid)
+    }
+
+    cta.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    to.addEventListener('cancel', function(e){ e.preventDefault(); close(); }); // ESC
+    window.addEventListener('popstate', function(){ if (to.open) close(); });
+  })();
+</script>
+</body>
+</html>

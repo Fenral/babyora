@@ -1,0 +1,189 @@
+{
+  "nav": {
+    "home": "Home",
+    "plan": "Forecast",
+    "guide": "Guide",
+    "settings": "Settings"
+  },
+  "activity": {
+    "vogn": "Stroller",
+    "baeresele": "Carrier",
+    "utelek": "Outdoor play",
+    "soevn": "Sleep",
+    "groupLabel": "Activity"
+  },
+  "layerCategory": {
+    "innerst": "Base layer",
+    "mellomlag": "Mid layer",
+    "yttertoy": "Outer layer",
+    "ekstra": "Extras"
+  },
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "loading": "Loading…",
+    "tryAgain": "Try again"
+  },
+  "guide": {
+    "title": "Explore dressing",
+    "intro": "Move the sliders to see what Babyora suggests in different conditions.",
+    "temperatureLabel": "Temperature",
+    "indoorTemperatureLabel": "Room temperature",
+    "ageLabel": "Age in months",
+    "windLabel": "Wind speed",
+    "rainLabel": "Rainfall",
+    "outputHeading": "Suggested layers",
+    "outputEmpty": "Pick an activity to see a suggestion.",
+    "modifiersHeading": "Conditions",
+    "tipsHeading": "Good to know",
+    "tip": {
+      "neckTest": {
+        "title": "The neck check",
+        "body": "Slip two fingers behind the baby's neck. Warm and dry means just right. Damp or sweaty means too warm. Cold means add a layer."
+      },
+      "wool": {
+        "title": "Why wool?",
+        "body": "Wool keeps warmth even when damp, and lets skin breathe. For the youngest, wool is often safer than cotton or synthetics."
+      },
+      "newborn": {
+        "title": "Newborns under 3 months",
+        "body": "Tiny babies struggle to regulate temperature. Keep outings under 30 minutes in cold weather. Check the neck and back often."
+      },
+      "disclaimer": {
+        "title": "A note",
+        "body": "Babyora is a guide, not a verdict. You know your baby best. Speak to a health professional if something feels off."
+      }
+    },
+    "wind": {
+      "calm": "Light breeze.",
+      "windproofRecommended": "Windproof layer recommended.",
+      "gale": "Gale — shield the baby.",
+      "storm": "Strong wind. Consider staying inside."
+    },
+    "rain": {
+      "dry": "Dry.",
+      "drizzle": "Light drizzle.",
+      "moderate": "Moderate rain — pop a rain cover over the stroller.",
+      "heavy": "Heavy rain."
+    }
+  },
+  "ageWarning": {
+    "title": "Babyora is built for 0–2 years",
+    "body": "You can still use the app, but suggestions are most accurate for the youngest babies."
+  },
+  "settings": {
+    "language": "Language",
+    "languageDescription": "Choose the app language.",
+    "languageOption": {
+      "no": "Norsk",
+      "en": "English",
+      "sv": "Svenska",
+      "da": "Dansk",
+      "de": "Deutsch"
+    }
+  },
+  "home": {
+    "title": "Today's outfit for {{name}}",
+    "loading": "Loading weather for {{city}}…",
+    "error": "Couldn't load weather.",
+    "tempAria": "{{temp}} degrees, feels like {{feels}}",
+    "feelsLike": "Feels like {{feels}}°",
+    "layerCountAria": "{{count}} layers recommended",
+    "layerSuffix": "layers",
+    "weatherSection": "Today's weather",
+    "weatherNowGroup": "Weather right now",
+    "feelsTile": "Feels",
+    "breezeTile": "Wind",
+    "weatherTile": "Sky",
+    "windAria": "Wind {{wind}} metres per second",
+    "conditionAria": "Conditions: {{condition}}",
+    "feelsAria": "Feels like {{temp}} degrees",
+    "activityChanged": "Recommendation updated for {{activity}}: {{count}} layers",
+    "todayHourLabel": "Today",
+    "tripHourLabel": "Layers on the outing",
+    "todayHourWindow": " at 08, 12, 16 and 20",
+    "todayHourWindowToTomorrow": " from 08 today to 20 tomorrow",
+    "tomorrowHourWindow": " at 08, 12, 16 and 20 tomorrow",
+    "openDetails": "Tap for details."
+  },
+  "notes": {
+    "common": {
+      "neckCheck": "Slip two fingers behind the baby's neck — warm and dry means just right."
+    },
+    "sleep": {
+      "warmRoom": "Bedroom feels warm — air it out a bit or use a lighter sleep sack.",
+      "coolRoom": "Bedroom feels cool — nudge the heating up a notch.",
+      "safeSleep": "A sleep sack is safest. No loose blankets or pillows in the cot.",
+      "newbornBackSleep": "The little one sleeps safest on their back. Check in on the neck now and then."
+    },
+    "rain": {
+      "heavy": "It's bucketing down — maybe a shorter outing or a fully covered stroller?",
+      "drizzle": "Light drizzle — the canopy usually handles it. Feel for damp now and then."
+    },
+    "wind": {
+      "strong": "Brisk wind today — shield the face and keep the outing short."
+    },
+    "humidCold": "Damp cold feels colder than the thermometer says — an extra layer is wise.",
+    "newborn": {
+      "thermoregulation": "Newborns regulate temperature poorly — check neck and back often.",
+      "coldShortTrip": "Keep the trip short in the cold — half an hour max. Dab thick cream on the cheeks.",
+      "coldWindWait": "Wind and cold are hard on the little ones — consider waiting until the wind drops.",
+      "heatTolerance": "Newborns handle heat poorly — short outings and shade matter most.",
+      "coldLimit": "Babies under 3 months: max 30 min outside in freezing temps. Check neck and back often."
+    },
+    "stroller": {
+      "noBlanket": "Never drape a blanket over the canopy — it traps heat.",
+      "warmPouchBlanket": "Use either a foot muff or a blanket, not both — it heats up fast.",
+      "mildShade": "Mild day in the stroller — seek shade and check the neck now and then.",
+      "sunTent": "Sun on the canopy turns the stroller into a tent. An airy sun sail works better.",
+      "outdoorSleepFrost": "Outdoor naps in frost: check every half hour. A down muff alone isn't always enough."
+    },
+    "carrier": {
+      "noDownInside": "Your body warms the baby — skip down innermost, it gets clammy.",
+      "insideJacket": "Baby is inside your jacket — you bring the warmth, skip the outer layer."
+    },
+    "outdoorPlay": {
+      "coldKindergarten": "Properly cold — check what nursery recommends for outdoor play today.",
+      "coldBreakLayer": "When you take a break: add a layer. Kids cool down fast when standing still."
+    },
+    "cold": {
+      "frostCream": "Dab thick cream on the cheeks half an hour before heading out.",
+      "frostWindCheck": "Watch the cheeks and ears underway — white patches mean it's freezing.",
+      "longTripBreak": "Long trip in the cold — plan an indoor break to warm up."
+    },
+    "sun": {
+      "youngShade": "Sun is lovely, but keep the little one in shade. Sunscreen waits until 6 months.",
+      "olderHatSunscreen": "Sun hat and sunscreen on what's exposed. Check the UV — snow and mountains can surprise.",
+      "uvHigh": "Strong sun today — stay in shade between 11 and 3."
+    },
+    "safety": {
+      "carSeatThickSuit": "In the car seat: take off the thick suit, tighten the harness, lay the suit over as a blanket."
+    },
+    "heat": {
+      "extreme": "Very hot today — never alone in the car, plenty to drink, plenty of shade."
+    },
+    "peak": {
+      "overheating79mo": "Babies 7–9 months produce the most body heat. Use fewer layers than usual, check the neck often."
+    },
+    "research": {
+      "overheatingPeak": "Babies 7–9 months produce the most body heat. Use fewer layers than usual, check the neck often.",
+      "newbornColdLimit": "Babies under 3 months: max 30 min outside in freezing temps. Check neck and back often."
+    }
+  },
+  "plan": {
+    "title": "Forecast",
+    "loading": "Loading forecast for {{city}}…",
+    "error": "Couldn't load forecast. Try again later.",
+    "emptyDays": "No days available.",
+    "daysListLabel": "Weather forecast for the next {{count}} days",
+    "showAllDays": "Show all {{count}} days",
+    "showFewerDays": "Show only {{count}} days",
+    "footer": "Weather from met.no. Recommendation is based on the day's coldest moment.",
+    "dayStripeAria": "{{weekday}}, {{tempMin}} to {{tempMax}} degrees, wind {{wind}} metres per second, {{layers}} layers recommended",
+    "layersShort": "{{count}} layers"
+  }
+}

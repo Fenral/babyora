@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Babyora Onboarding · Mock B (visual + spacious)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Samme warm-grey + warm orange tokens som mock A / innst-mock-b */
+    --bg-canvas:#DBD8D2;
+    --bg-canvas-soft:#E5E2DC;
+    --bg-canvas-warm:#EFEBE3;
+    --surface:#F6F3ED;
+    --surface-raised:#FBF8F3;
+    --terracotta-500:#C95F3B;
+    --terracotta-600:#B4502E;
+    --terracotta-700:#974324;
+    --terracotta-100:#F2DDD2;
+    --sun:#F4A742;
+    --rain:#5C8FC9;
+    --ink-900:#2B2522;
+    --ink-800:#3A322E;
+    --ink-700:#5A514C;
+    --ink-500:#8A7F78;
+    --ink-400:#A89E96;
+    --ink-300:#C9C3BD;
+    --ink-200:#DDD8D1;
+    --ink-100:#ECE7E0;
+    --line:rgba(43,37,34,.08);
+    --line-strong:rgba(43,37,34,.14);
+    --shadow-1:0 1px 2px rgba(43,37,34,.04), 0 2px 8px rgba(43,37,34,.05);
+    --shadow-2:0 4px 14px rgba(43,37,34,.08), 0 2px 4px rgba(43,37,34,.04);
+    --shadow-3:0 10px 30px rgba(43,37,34,.12), 0 4px 10px rgba(43,37,34,.06);
+    --shadow-illu:0 24px 60px rgba(151,67,36,.18), 0 8px 20px rgba(43,37,34,.10);
+    --ease-standard:cubic-bezier(.2,.7,.2,1);
+    --ease-spring:cubic-bezier(.34,1.32,.64,1);
+    --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+    --font-serif:'DM Serif Display','Times New Roman',serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#1a1a1a;font-family:var(--font-sans);color:var(--ink-800);}
+  body{
+    min-height:100vh;
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:48px 24px 64px;gap:48px;flex-wrap:wrap;
+  }
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+  /* ────────── Stage / page chrome ────────── */
+  .stage-head{
+    width:100%;text-align:center;color:#cfcac3;
+    font-family:var(--font-sans);font-size:13px;font-weight:500;
+    letter-spacing:.2px;
+    margin-bottom:8px;
+  }
+  .stage-head h1{
+    font-family:var(--font-serif);font-weight:400;
+    font-size:34px;color:#fff;letter-spacing:-.5px;
+    margin:0 0 8px;
+  }
+  .stage-head p{margin:0;opacity:.7;max-width:580px;margin-inline:auto;line-height:1.5;}
+
+  .stage{display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .stage .label{
+    font-family:var(--font-sans);font-size:11.5px;font-weight:600;
+    letter-spacing:1.4px;text-transform:uppercase;
+    color:#9a9690;background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.07);
+    padding:7px 13px;border-radius:999px;
+  }
+  .stage .label em{font-style:normal;color:#F4A742;}
+
+  /* ────────── iPhone frame ────────── */
+  .frame{
+    position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+    box-shadow:
+      0 30px 80px rgba(0,0,0,.55),
+      0 0 0 12px #1f1f1f,
+      0 0 0 13px #333;
+    background:var(--bg-canvas);
+  }
+  .notch{
+    position:absolute;top:11px;left:50%;transform:translateX(-50%);
+    width:120px;height:34px;border-radius:24px;background:#000;z-index:50;
+  }
+  .home-indicator{
+    position:absolute;left:50%;bottom:8px;transform:translateX(-50%);
+    width:134px;height:5px;border-radius:3px;background:rgba(43,37,34,.4);
+    z-index:50;pointer-events:none;
+  }
+
+  /* ────────── Screen ────────── */
+  .screen{
+    position:relative;height:100%;width:100%;overflow:hidden;
+    display:flex;flex-direction:column;
+    font-family:var(--font-sans);color:var(--ink-900);
+    background:
+      radial-gradient(140% 70% at 50% -10%, rgba(255,255,255,.55), transparent 55%),
+      radial-gradient(80% 50% at 100% 0%, rgba(244,167,66,.10), transparent 60%),
+      var(--bg-canvas);
+    padding-top:calc(env(safe-area-inset-top, 0px) + 60px);
+    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 0px);
+  }
+
+  /* ────────── TOP BAR ────────── */
+  .topbar{
+    flex:none;display:flex;align-items:center;justify-content:space-between;
+    padding:4px 22px 8px;min-height:40px;
+  }
+  .top-back{
+    width:40px;height:40px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.55);border:1px solid var(--line);
+    color:var(--ink-700);cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .top-back svg{width:18px;height:18px;}
+  .top-back.ghost{visibility:hidden;}
+  .top-step{
+    font-family:var(--font-sans);font-size:11.5px;font-weight:600;
+    letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-500);
+  }
+  .top-step em{font-style:normal;color:var(--terracotta-700);}
+  .top-skip{
+    font-family:var(--font-sans);font-size:13.5px;font-weight:600;
+    color:var(--ink-500);background:transparent;border:none;cursor:pointer;
+    padding:8px 6px;-webkit-tap-highlight-color:transparent;
+  }
+
+  /* ────────── DOT PROGRESS ────────── */
+  .dots{
+    flex:none;display:flex;justify-content:center;align-items:center;gap:8px;
+    padding:8px 24px 4px;
+  }
+  .dots .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--ink-300);
+    transition:all .35s var(--ease-spring);
+  }
+  .dots .dot.done{background:var(--terracotta-300, #E2A78F);}
+  .dots .dot.active{
+    width:30px;border-radius:999px;
+    background:var(--terracotta-600);
+  }
+
+  /* ────────── BODY (scroll) ────────── */
+  .body{
+    flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+    padding:6px 28px 0;
+    display:flex;flex-direction:column;
+    -webkit-overflow-scrolling:touch;
+  }
+  .body::-webkit-scrollbar{display:none;}
+
+  /* ────────── HERO ILLUSTRATION (stor, romslig) ────────── */
+  .illu{
+    flex:none;margin:10px auto 0;
+    width:100%;max-width:300px;aspect-ratio:1/1;
+    border-radius:36px;
+    background:
+      radial-gradient(130% 90% at 30% 20%, rgba(244,167,66,.16), transparent 60%),
+      radial-gradient(120% 100% at 100% 100%, rgba(201,95,59,.10), transparent 60%),
+      linear-gradient(160deg, var(--surface-raised) 0%, var(--surface) 65%, var(--bg-canvas-warm) 100%);
+    border:1px solid var(--line);
+    box-shadow:var(--shadow-illu);
+    overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .illu::after{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 18% 18%, rgba(255,255,255,.65), transparent 38%);
+    pointer-events:none;
+  }
+  .illu img{
+    width:108%;height:108%;object-fit:cover;
+    transform:translateY(-1%);
+    filter:saturate(1.02) contrast(1.01);
+    position:relative;z-index:1;
+  }
+
+  /* ────────── Welcome hero (større, ingen ramme rundt) ────────── */
+  .illu.hero{
+    max-width:340px;aspect-ratio:1/1.02;
+    border-radius:48px;
+    box-shadow:
+      0 32px 70px rgba(151,67,36,.22),
+      0 12px 24px rgba(43,37,34,.12);
+  }
+
+  /* ────────── COPY ────────── */
+  .copy{
+    flex:none;margin-top:26px;
+    display:flex;flex-direction:column;gap:10px;
+    text-align:center;
+  }
+  .copy .eyebrow{
+    font-family:var(--font-sans);font-size:11.5px;font-weight:700;
+    letter-spacing:1.6px;text-transform:uppercase;color:var(--terracotta-600);
+    margin:0;
+  }
+  .copy h2{
+    font-family:var(--font-serif);font-weight:400;
+    font-size:34px;line-height:1.08;letter-spacing:-.5px;
+    color:var(--ink-900);margin:0;
+    text-wrap:balance;
+  }
+  .copy h2 em{font-style:italic;color:var(--terracotta-700);}
+  .copy p{
+    font-family:var(--font-sans);font-size:15px;line-height:1.5;
+    color:var(--ink-700);margin:0;
+    max-width:300px;margin-inline:auto;
+    text-wrap:pretty;
+  }
+
+  /* ────────── INPUT-felt ────────── */
+  .field{
+    flex:none;margin-top:22px;
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .field label{
+    font-size:11.5px;font-weight:700;letter-spacing:1.2px;
+    text-transform:uppercase;color:var(--ink-500);
+    padding-left:4px;
+  }
+  .input-shell{
+    position:relative;display:flex;align-items:center;
+    background:var(--surface-raised);
+    border:1.5px solid var(--terracotta-600);
+    border-radius:18px;padding:16px 18px;
+    box-shadow:
+      0 0 0 4px rgba(180,80,46,.10),
+      var(--shadow-1);
+    transition:box-shadow .2s var(--ease-standard);
+  }
+  .input-shell .icon{
+    flex:none;width:22px;height:22px;color:var(--terracotta-600);margin-right:12px;
+  }
+  .input-shell input{
+    flex:1;font:inherit;font-size:18px;font-weight:500;color:var(--ink-900);
+    background:transparent;border:none;outline:none;width:100%;
+    letter-spacing:-.1px;
+  }
+  .input-shell input::placeholder{color:var(--ink-400);font-weight:400;}
+  .field .hint{
+    font-size:12.5px;color:var(--ink-500);
+    padding-left:4px;
+  }
+
+  /* ────────── DATO-felter (3 kolonner) ────────── */
+  .date-grid{
+    display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:10px;
+    margin-top:22px;
+  }
+  .date-cell{
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .date-cell label{
+    font-size:10.5px;font-weight:700;letter-spacing:1.2px;
+    text-transform:uppercase;color:var(--ink-500);
+    padding-left:4px;
+  }
+  .date-shell{
+    display:flex;align-items:center;justify-content:center;
+    background:var(--surface-raised);border:1.5px solid var(--line-strong);
+    border-radius:16px;padding:18px 8px;
+    font-family:var(--font-serif);font-size:24px;color:var(--ink-900);
+    line-height:1;letter-spacing:-.3px;
+    box-shadow:var(--shadow-1);
+  }
+  .date-shell.filled{
+    border-color:var(--terracotta-600);
+    background:#fff;
+    box-shadow:0 0 0 4px rgba(180,80,46,.08), var(--shadow-1);
+  }
+  .date-shell.muted{color:var(--ink-400);font-weight:400;}
+
+  /* ────────── LOCATION-kort (stor, romslig) ────────── */
+  .loc-card{
+    margin-top:22px;display:flex;flex-direction:column;gap:18px;
+    padding:22px;border-radius:24px;
+    background:var(--surface-raised);
+    border:1px solid var(--line);
+    box-shadow:var(--shadow-2);
+  }
+  .loc-row{display:flex;align-items:center;gap:14px;}
+  .loc-pin{
+    flex:none;width:48px;height:48px;border-radius:50%;
+    background:var(--terracotta-100);color:var(--terracotta-700);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:inset 0 -2px 4px rgba(151,67,36,.08);
+  }
+  .loc-pin svg{width:22px;height:22px;}
+  .loc-id{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+  .loc-city{
+    font-family:var(--font-serif);font-size:22px;color:var(--ink-900);
+    line-height:1.05;letter-spacing:-.2px;
+  }
+  .loc-coord{
+    font-size:12.5px;font-weight:500;color:var(--ink-500);letter-spacing:.1px;
+  }
+  .loc-actions{
+    display:flex;gap:8px;
+  }
+  .loc-actions button{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+    padding:11px 8px;border-radius:12px;
+    font:inherit;font-size:13px;font-weight:600;color:var(--ink-700);
+    background:rgba(43,37,34,.04);border:1px solid var(--line);cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .loc-actions button svg{width:14px;height:14px;}
+
+  /* ────────── READY summary list ────────── */
+  .summary{
+    margin-top:22px;display:flex;flex-direction:column;
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:22px;overflow:hidden;
+    box-shadow:var(--shadow-1);
+  }
+  .sum-row{
+    display:flex;align-items:center;gap:14px;
+    padding:16px 18px;min-height:62px;
+  }
+  .sum-row + .sum-row{border-top:1px solid var(--line);}
+  .sum-icon{
+    flex:none;width:38px;height:38px;border-radius:12px;
+    background:var(--terracotta-100);color:var(--terracotta-700);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .sum-icon svg{width:18px;height:18px;}
+  .sum-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .sum-label{
+    font-size:11px;font-weight:700;letter-spacing:1px;
+    text-transform:uppercase;color:var(--ink-500);
+  }
+  .sum-value{
+    font-family:var(--font-serif);font-size:18px;color:var(--ink-900);
+    line-height:1.1;letter-spacing:-.2px;
+  }
+  .sum-edit{
+    flex:none;width:34px;height:34px;border-radius:50%;
+    background:transparent;border:1px solid var(--line-strong);
+    color:var(--ink-500);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  .sum-edit svg{width:14px;height:14px;}
+
+  /* ────────── WELCOME feature-list ────────── */
+  .feats{
+    margin-top:22px;display:flex;flex-direction:column;gap:12px;
+  }
+  .feat{
+    display:flex;align-items:center;gap:14px;
+    padding:14px 16px;border-radius:18px;
+    background:rgba(255,255,255,.5);
+    border:1px solid var(--line);
+  }
+  .feat-icon{
+    flex:none;width:42px;height:42px;border-radius:13px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--terracotta-100);color:var(--terracotta-700);
+    box-shadow:inset 0 -2px 4px rgba(151,67,36,.08);
+  }
+  .feat-icon.sun{background:#FCE9C9;color:#A86A14;}
+  .feat-icon.rain{background:#D9E5F3;color:#3C6BA0;}
+  .feat-icon svg{width:20px;height:20px;}
+  .feat-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .feat-title{font-size:14.5px;font-weight:600;color:var(--ink-900);line-height:1.2;}
+  .feat-sub{font-size:12.5px;color:var(--ink-500);line-height:1.3;}
+
+  /* ────────── BOTTOM CTA-zone ────────── */
+  .cta-zone{
+    flex:none;
+    padding:18px 24px calc(env(safe-area-inset-bottom, 0px) + 28px);
+    display:flex;flex-direction:column;gap:10px;
+    background:linear-gradient(180deg, rgba(219,216,210,0) 0%, rgba(219,216,210,.92) 30%, var(--bg-canvas) 60%);
+  }
+  .btn-primary{
+    width:100%;min-height:56px;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    padding:16px 20px;border-radius:18px;
+    background:var(--terracotta-500);color:#fff;
+    font-family:var(--font-sans);font-size:16px;font-weight:600;letter-spacing:.1px;
+    border:none;cursor:pointer;
+    box-shadow:
+      0 8px 22px rgba(180,80,46,.34),
+      inset 0 -2.5px 0 rgba(0,0,0,.14),
+      inset 0 1px 0 rgba(255,255,255,.18);
+    transition:transform .18s var(--ease-spring), box-shadow .18s var(--ease-standard);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn-primary:active{transform:translateY(1px);box-shadow:0 4px 12px rgba(180,80,46,.3), inset 0 -1px 0 rgba(0,0,0,.14);}
+  .btn-primary svg{width:18px;height:18px;}
+  .btn-primary.giant{min-height:64px;font-size:17px;border-radius:22px;}
+
+  .btn-ghost{
+    width:100%;min-height:46px;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    background:transparent;border:none;
+    font-family:var(--font-sans);font-size:14px;font-weight:600;color:var(--ink-500);
+    cursor:pointer;letter-spacing:.1px;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  /* ────────── WELCOME-skjerm har annerledes layout ────────── */
+  .screen.welcome{
+    background:
+      radial-gradient(140% 70% at 50% -10%, rgba(255,255,255,.65), transparent 55%),
+      radial-gradient(80% 60% at 100% 100%, rgba(201,95,59,.12), transparent 60%),
+      radial-gradient(70% 40% at 0% 0%, rgba(244,167,66,.14), transparent 60%),
+      var(--bg-canvas);
+  }
+  .welcome .body{padding:0 28px;}
+  .welcome-brand{
+    flex:none;display:flex;flex-direction:column;align-items:center;gap:10px;
+    padding-top:18px;
+  }
+  .brand-mark{
+    width:48px;height:48px;border-radius:14px;
+    background:linear-gradient(160deg, var(--terracotta-500), var(--terracotta-700));
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-serif);font-size:24px;line-height:1;
+    box-shadow:0 6px 16px rgba(151,67,36,.32), inset 0 -2px 0 rgba(0,0,0,.15);
+  }
+  .brand-name{
+    font-family:var(--font-serif);font-size:14px;color:var(--ink-700);
+    letter-spacing:.4px;
+  }
+  .welcome-greet{
+    flex:none;margin-top:22px;text-align:center;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .welcome-greet .eyebrow{
+    font-family:var(--font-sans);font-size:11.5px;font-weight:700;
+    letter-spacing:1.6px;text-transform:uppercase;color:var(--terracotta-600);
+    margin:0;
+  }
+  .welcome-greet h2{
+    font-family:var(--font-serif);font-weight:400;
+    font-size:40px;line-height:1.02;letter-spacing:-.7px;
+    color:var(--ink-900);margin:0;text-wrap:balance;
+  }
+  .welcome-greet h2 em{font-style:italic;color:var(--terracotta-700);}
+  .welcome-greet p{
+    font-family:var(--font-sans);font-size:15.5px;line-height:1.5;
+    color:var(--ink-700);margin:0;
+    max-width:310px;margin-inline:auto;text-wrap:pretty;
+  }
+
+  /* Focus visibility */
+  :focus-visible{outline:2.5px solid var(--terracotta-600);outline-offset:2px;border-radius:8px;}
+
+  @media (max-width:430px){
+    body{padding:0;background:var(--bg-canvas);gap:0;}
+    .stage-head, .stage .label{display:none;}
+    .frame{width:100%;height:100dvh;border-radius:0;box-shadow:none;}
+    .notch,.home-indicator{display:none;}
+    /* Vis kun ett mock-frame på telefon */
+    .stage:not(:first-of-type){display:none;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="stage-head">
+  <h1>Babyora · Onboarding + Velkomst</h1>
+  <p>Mock <strong style="color:#F4A742;">B</strong> — visuell og romslig. Større illustrasjoner, mer luft mellom elementer, premium-feel. Inspirert av Mobbin-pattern: multi-step onboarding med dot-progress og welcome hero.</p>
+</header>
+
+<!-- ────────── STEG 1 · NAVN ────────── -->
+<div class="stage">
+  <div class="label">Steg <em>1 / 4</em> · Navn</div>
+  <div class="frame" role="region" aria-label="Onboarding steg 1 – navn">
+    <div class="notch" aria-hidden="true"></div>
+
+    <main class="screen" aria-labelledby="ob1-title">
+
+      <div class="topbar">
+        <button type="button" class="top-back ghost" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="top-step">Steg <em>1</em> av 4</div>
+        <button type="button" class="top-skip">Hopp over</button>
+      </div>
+
+      <div class="dots" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="4" aria-label="Steg 1 av 4">
+        <span class="dot active" aria-hidden="true"></span>
+        <span class="dot" aria-hidden="true"></span>
+        <span class="dot" aria-hidden="true"></span>
+        <span class="dot" aria-hidden="true"></span>
+      </div>
+
+      <div class="body">
+        <div class="illu" aria-hidden="true">
+          <img src="/illustrations/onboarding/onboarding-step1-name.png" alt="">
+        </div>
+
+        <div class="copy">
+          <p class="eyebrow">La oss bli kjent</p>
+          <h2 id="ob1-title">Hva heter <em>babyen</em>?</h2>
+          <p>Vi bruker navnet for å gi anbefalinger som føles personlige – aldri delt med andre.</p>
+        </div>
+
+        <div class="field">
+          <label for="ob1-input">Babyens navn</label>
+          <div class="input-shell">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <input id="ob1-input" type="text" value="Iver" placeholder="F.eks. Iver" autocomplete="off">
+          </div>
+          <div class="hint">Du kan endre dette senere i innstillinger.</div>
+        </div>
+      </div>
+
+      <div class="cta-zone">
+        <button class="btn-primary" type="button">
+          Fortsett
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </main>
+
+    <div class="home-indicator" aria-hidden="true"></div>
+  </div>
+</div>
+
+<!-- ────────── STEG 2 · BURSDAG ────────── -->
+<div class="stage">
+  <div class="label">Steg <em>2 / 4</em> · Bursdag</div>
+  <div class="frame" role="region" aria-label="Onboarding steg 2 – bursdag">
+    <div class="notch" aria-hidden="true"></div>
+
+    <main class="screen" aria-labelledby="ob2-title">
+
+      <div class="topbar">
+        <button type="button" class="top-back" aria-label="Tilbake">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="top-step">Steg <em>2</em> av 4</div>
+        <button type="button" class="top-skip">Hopp over</button>
+      </div>
+
+      <div class="dots" role="progressbar" aria-valuenow="2" aria-valuemin="1" aria-valuemax="4" aria-label="Steg 2 av 4">
+        <span class="dot done" aria-hidden="true"></span>
+        <span class="dot active" aria-hidden="true"></span>
+        <span class="dot" aria-hidden="true"></span>
+        <span class="dot" aria-hidden="true"></span>
+      </div>
+
+      <div class="body">
+        <div class="illu" aria-hidden="true">
+          <img src="/illustrations/onboarding/onboarding-step2-birthday.png" alt="">
+        </div>
+
+        <div class="copy">
+          <p class="eyebrow">Alder</p>
+          <h2 id="ob2-title">Når er Iver <em>født</em>?</h2>
+          <p>Babyens alder styrer hvor mye varme vi anbefaler – og hvilke lag som passer akkurat nå.</p>
+        </div>
+
+        <div class="date-grid" role="group" aria-label="Fødselsdato">
+          <div class="date-cell">
+            <label for="ob2-d">Dag</label>
+            <div class="date-shell filled" id="ob2-d">14</div>
+          </div>
+          <div class="date-cell">
+            <label for="ob2-m">Måned</label>
+            <div class="date-shell filled" id="ob2-m">03</div>
+          </div>
+          <div class="date-cell">
+            <label for="ob2-y">År</label>
+            <div class="date-shell filled" id="ob2-y">2025</div>
+          </div>
+        </div>
+
+        <div class="hint" style="text-align:center;margin-top:14px;color:var(--ink-500);font-size:13px;">
+          Iver er <strong style="color:var(--terracotta-700);font-weight:700;">3 mnd</strong> gammel
+        </div>
+      </div>
+
+      <div class="cta-zone">
+        <button class="btn-primary" type="button">
+          Fortsett
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </main>
+
+    <div class="home-indicator" aria-hidden="true"></div>
+  </div>
+</div>
+
+<!-- ────────── STEG 3 · STED ────────── -->
+<div class="stage">
+  <div class="label">Steg <em>3 / 4</em> · Sted</div>
+  <div class="frame" role="region" aria-label="Onboarding steg 3 – sted">
+    <div class="notch" aria-hidden="true"></div>
+
+    <main class="screen" aria-labelledby="ob3-title">
+
+      <div class="topbar">
+        <button type="button" class="top-back" aria-label="Tilbake">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="top-step">Steg <em>3</em> av 4</div>
+        <button type="button" class="top-skip">Hopp over</button>
+      </div>
+
+      <div class="dots" role="progressbar" aria-valuenow="3" aria-valuemin="1" aria-valuemax="4" aria-label="Steg 3 av 4">
+        <span class="dot done" aria-hidden="true"></span>
+        <span class="dot done" aria-hidden="true"></span>
+        <span class="dot active" aria-hidden="true"></span>
+        <span class="dot" aria-hidden="true"></span>
+      </div>
+
+      <div class="body">
+        <div class="illu" aria-hidden="true">
+          <img src="/illustrations/onboarding/onboarding-step3-location.png" alt="">
+        </div>
+
+        <div class="copy">
+          <p class="eyebrow">Hvor bor dere?</p>
+          <h2 id="ob3-title">Vi henter <em>været</em> der dere er</h2>
+          <p>Posisjonen brukes kun til lokale værvarsler fra MET. Slås av når som helst.</p>
+        </div>
+
+        <div class="loc-card">
+          <div class="loc-row">
+            <div class="loc-pin" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div class="loc-id">
+              <div class="loc-city">Trondheim</div>
+              <div class="loc-coord">63.43° N · 10.40° Ø · ±35 m</div>
+            </div>
+          </div>
+          <div class="loc-actions">
+            <button type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Oppdater
+            </button>
+            <button type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Søk by
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-zone">
+        <button class="btn-primary" type="button">
+          Bruk denne posisjonen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="btn-ghost" type="button">Skriv inn manuelt</button>
+      </div>
+    </main>
+
+    <div class="home-indicator" aria-hidden="true"></div>
+  </div>
+</div>
+
+<!-- ────────── STEG 4 · KLAR ────────── -->
+<div class="stage">
+  <div class="label">Steg <em>4 / 4</em> · Klar</div>
+  <div class="frame" role="region" aria-label="Onboarding steg 4 – klar">
+    <div class="notch" aria-hidden="true"></div>
+
+    <main class="screen" aria-labelledby="ob4-title">
+
+      <div class="topbar">
+        <button type="button" class="top-back" aria-label="Tilbake">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="top-step">Steg <em>4</em> av 4</div>
+        <button type="button" class="top-skip" style="visibility:hidden;">·</button>
+      </div>
+
+      <div class="dots" role="progressbar" aria-valuenow="4" aria-valuemin="1" aria-valuemax="4" aria-label="Steg 4 av 4">
+        <span class="dot done" aria-hidden="true"></span>
+        <span class="dot done" aria-hidden="true"></span>
+        <span class="dot done" aria-hidden="true"></span>
+        <span class="dot active" aria-hidden="true"></span>
+      </div>
+
+      <div class="body">
+        <div class="illu" aria-hidden="true">
+          <img src="/illustrations/onboarding/onboarding-step4-ready.png" alt="">
+        </div>
+
+        <div class="copy">
+          <p class="eyebrow">Klar til start</p>
+          <h2 id="ob4-title">Alt er <em>klart</em> for Iver</h2>
+          <p>Sjekk gjerne at alt stemmer før vi tar deg til hjem-skjermen.</p>
+        </div>
+
+        <ul class="summary" aria-label="Sammendrag">
+          <li class="sum-row">
+            <span class="sum-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <div class="sum-text">
+              <span class="sum-label">Navn</span>
+              <span class="sum-value">Iver</span>
+            </div>
+            <button class="sum-edit" type="button" aria-label="Endre navn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </button>
+          </li>
+          <li class="sum-row">
+            <span class="sum-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            <div class="sum-text">
+              <span class="sum-label">Bursdag</span>
+              <span class="sum-value">14. mars 2025 · 3 mnd</span>
+            </div>
+            <button class="sum-edit" type="button" aria-label="Endre bursdag">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </button>
+          </li>
+          <li class="sum-row">
+            <span class="sum-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
+            <div class="sum-text">
+              <span class="sum-label">Sted</span>
+              <span class="sum-value">Trondheim</span>
+            </div>
+            <button class="sum-edit" type="button" aria-label="Endre sted">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="cta-zone">
+        <button class="btn-primary giant" type="button">
+          Ta meg til Babyora
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </main>
+
+    <div class="home-indicator" aria-hidden="true"></div>
+  </div>
+</div>
+
+<!-- ────────── VELKOMST (hero) ────────── -->
+<div class="stage">
+  <div class="label">Velkomst · <em>hero</em></div>
+  <div class="frame" role="region" aria-label="Velkomst-skjerm">
+    <div class="notch" aria-hidden="true"></div>
+
+    <main class="screen welcome" aria-labelledby="welcome-title">
+
+      <div class="topbar" style="justify-content:center;">
+        <div class="welcome-brand">
+          <div class="brand-mark" aria-hidden="true">B</div>
+          <div class="brand-name">Babyora</div>
+        </div>
+      </div>
+
+      <div class="body" style="padding-top:6px;">
+        <div class="illu hero" aria-hidden="true" style="margin-top:18px;">
+          <img src="/illustrations/onboarding/onboarding-step4-ready.png" alt="">
+        </div>
+
+        <div class="welcome-greet">
+          <p class="eyebrow">Velkommen til Babyora</p>
+          <h2 id="welcome-title">Hei <em>Iver</em> — la oss kle deg riktig</h2>
+          <p>Vi har laget en personlig pakke basert på alder, sted og dagens vær. Du er klar på 3 sekunder.</p>
+        </div>
+
+        <ul class="feats" aria-label="Det vi gjør for deg">
+          <li class="feat">
+            <span class="feat-icon sun" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+            </span>
+            <div class="feat-text">
+              <div class="feat-title">Tilpasset dagens vær</div>
+              <div class="feat-sub">Henter MET-varsel for Trondheim hver morgen.</div>
+            </div>
+          </li>
+          <li class="feat">
+            <span class="feat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            </span>
+            <div class="feat-text">
+              <div class="feat-title">Lag-for-lag forslag</div>
+              <div class="feat-sub">Anbefaler 2–4 lag basert på Ivers alder og temperatur.</div>
+            </div>
+          </li>
+          <li class="feat">
+            <span class="feat-icon rain" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="8" y1="13" x2="8" y2="15"/><line x1="16" y1="19" x2="16" y2="21"/><line x1="16" y1="13" x2="16" y2="15"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="12" y1="15" x2="12" y2="17"/></svg>
+            </span>
+            <div class="feat-text">
+              <div class="feat-title">Husker hva som funket</div>
+              <div class="feat-sub">Logg "for varmt / passe / for kaldt" – vi lærer over tid.</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="cta-zone">
+        <button class="btn-primary giant" type="button">
+          Vis dagens antrekk
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="btn-ghost" type="button">Utforsk på egenhånd</button>
+      </div>
+    </main>
+
+    <div class="home-indicator" aria-hidden="true"></div>
+  </div>
+</div>
+
+</body>
+</html>

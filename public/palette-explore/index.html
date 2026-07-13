@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Babyora — Palett-utforskning</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Instrument+Sans:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <a href="#main" class="skip-link">Hopp til hovedinnhold</a>
+
+  <header class="palette-nav" aria-label="Palett-varianter">
+    <span class="palette-nav__h">Babyora · palett-eksplorasjon</span>
+    <a class="palette-nav__link" href="#variant-a">A · Court Clay</a>
+    <a class="palette-nav__link" href="#variant-b">B · Skogsvandrer</a>
+    <a class="palette-nav__link" href="#variant-c">C · Instrument</a>
+    <a class="palette-nav__link" href="#variant-d">D · Plomme</a>
+    <a class="palette-nav__link" href="#variant-e">E · Søvnro</a>
+  </header>
+
+  <div class="demo-banner" role="note">
+    Demo — knapper er ikke funksjonelle. 5 paletter side ved side med identisk layout.
+  </div>
+
+  <main id="main" tabindex="-1">
+    <div class="palette-grid">
+
+      <!-- VARIANT A: Court Clay -->
+      <section class="palette-card" id="variant-a" aria-labelledby="title-a">
+        <div class="palette-card__header">
+          <h2 class="palette-card__h" id="title-a">A · Court Clay</h2>
+          <span class="palette-card__sub">Hue 38° · terrakotta + cream</span>
+        </div>
+        <p class="palette-card__mood">Varm, italiensk-trattoria, kjent fra Trenio + StrikeArc 2.0. Default-bias; kategori-reflex for baby-app.</p>
+
+        <div class="tokens-strip" aria-hidden="true">
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#FAF8F5"></div><span class="tokens-strip__label">paper</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#F2EDE3"></div><span class="tokens-strip__label">elev</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#14181F"></div><span class="tokens-strip__label">ink</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#7A746C"></div><span class="tokens-strip__label">mute</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#D8741E"></div><span class="tokens-strip__label">accent</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#7C3415"></div><span class="tokens-strip__label">deep</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#FBE4D8"></div><span class="tokens-strip__label">tint</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#E5DFD4"></div><span class="tokens-strip__label">hair</span></div>
+        </div>
+
+        <div class="mock-frame" data-palette="court-clay">
+          <div class="mock-identity">
+            <div class="mock-identity__avatar"><img src="./lillian.png" alt="" /></div>
+            <div>
+              <div class="mock-identity__h">Lillian</div>
+              <div class="mock-identity__date">I DAG</div>
+            </div>
+          </div>
+          <div class="mock-weather">
+            <span class="mock-weather__temp">16°</span>
+            <div>
+              <div class="mock-weather__cond">Sol · Føles 16°</div>
+              <div class="mock-weather__meta">2.7 m/s · Oslo</div>
+            </div>
+          </div>
+          <p class="mock-why">Ull + fleece + yttertøy. <strong>Vinden biter</strong> litt.</p>
+          <div class="mock-avatar-stage">
+            <img class="mock-avatar-stage__img" src="./lillian.png" alt="" />
+            <span class="mock-pin mock-pin--3">3</span>
+            <span class="mock-pin mock-pin--1">1</span>
+            <span class="mock-pin mock-pin--2">2</span>
+          </div>
+          <div class="mock-chips">
+            <span class="mock-chip"><span class="mock-chip__num">1</span> langermet body</span>
+            <span class="mock-chip"><span class="mock-chip__num">2</span> tynn pyjamas</span>
+            <span class="mock-chip"><span class="mock-chip__num">3</span> sovepose</span>
+          </div>
+          <div class="mock-peel" role="group" aria-hidden="true">
+            <span class="mock-peel__seg mock-peel__seg--active">Alle</span>
+            <span class="mock-peel__seg">Uten ytterste</span>
+            <span class="mock-peel__seg">Mellomlag av</span>
+            <span class="mock-peel__seg">Kun innerst</span>
+          </div>
+          <div class="mock-cta-wrap"><span class="mock-cta">Se hele antrekket →</span></div>
+        </div>
+
+        <table class="contrast-table">
+          <caption>Kontrast vs paper</caption>
+          <thead><tr><th>Token</th><th>Ratio</th><th>APCA Lc</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>ink</td><td>17.5:1</td><td>95</td><td class="pass">AAA</td></tr>
+            <tr><td>mute</td><td>4.7:1</td><td>62</td><td class="pass">AA</td></tr>
+            <tr><td>accent-deep</td><td>8.5:1</td><td>80</td><td class="pass">AAA</td></tr>
+            <tr><td>accent (UI)</td><td>3.5:1</td><td>52</td><td class="ui-ok">UI ✓</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- VARIANT B: Skogsvandrer -->
+      <section class="palette-card" id="variant-b" aria-labelledby="title-b">
+        <div class="palette-card__header">
+          <h2 class="palette-card__h" id="title-b">B · Skogsvandrer</h2>
+          <span class="palette-card__sub">Hue 95° / 130° · ochre + sage + bone</span>
+        </div>
+        <p class="palette-card__mood">Norsk skog, ull-tradisjon, levende. Ochre puster mer enn sage gjør, sage holdes som tint + deep.</p>
+
+        <div class="tokens-strip" aria-hidden="true">
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#F8F8F0"></div><span class="tokens-strip__label">paper</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#EFEDDF"></div><span class="tokens-strip__label">elev</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#1A1F18"></div><span class="tokens-strip__label">ink</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#737866"></div><span class="tokens-strip__label">mute</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#A89537"></div><span class="tokens-strip__label">accent</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#4A5A3A"></div><span class="tokens-strip__label">deep</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#E5EBD5"></div><span class="tokens-strip__label">tint</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#D9DCC4"></div><span class="tokens-strip__label">hair</span></div>
+        </div>
+
+        <div class="mock-frame" data-palette="skogsvandrer">
+          <div class="mock-identity">
+            <div class="mock-identity__avatar"><img src="./lillian.png" alt="" /></div>
+            <div>
+              <div class="mock-identity__h">Lillian</div>
+              <div class="mock-identity__date">I DAG</div>
+            </div>
+          </div>
+          <div class="mock-weather">
+            <span class="mock-weather__temp">16°</span>
+            <div>
+              <div class="mock-weather__cond">Sol · Føles 16°</div>
+              <div class="mock-weather__meta">2.7 m/s · Oslo</div>
+            </div>
+          </div>
+          <p class="mock-why">Ull + fleece + yttertøy. <strong>Vinden biter</strong> litt.</p>
+          <div class="mock-avatar-stage">
+            <img class="mock-avatar-stage__img" src="./lillian.png" alt="" />
+            <span class="mock-pin mock-pin--3">3</span>
+            <span class="mock-pin mock-pin--1">1</span>
+            <span class="mock-pin mock-pin--2">2</span>
+          </div>
+          <div class="mock-chips">
+            <span class="mock-chip"><span class="mock-chip__num">1</span> langermet body</span>
+            <span class="mock-chip"><span class="mock-chip__num">2</span> tynn pyjamas</span>
+            <span class="mock-chip"><span class="mock-chip__num">3</span> sovepose</span>
+          </div>
+          <div class="mock-peel" role="group" aria-hidden="true">
+            <span class="mock-peel__seg mock-peel__seg--active">Alle</span>
+            <span class="mock-peel__seg">Uten ytterste</span>
+            <span class="mock-peel__seg">Mellomlag av</span>
+            <span class="mock-peel__seg">Kun innerst</span>
+          </div>
+          <div class="mock-cta-wrap"><span class="mock-cta">Se hele antrekket →</span></div>
+        </div>
+
+        <table class="contrast-table">
+          <caption>Kontrast vs paper</caption>
+          <thead><tr><th>Token</th><th>Ratio</th><th>APCA Lc</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>ink</td><td>15.8:1</td><td>94</td><td class="pass">AAA</td></tr>
+            <tr><td>mute</td><td>4.6:1</td><td>60</td><td class="pass">AA</td></tr>
+            <tr><td>accent-deep</td><td>7.2:1</td><td>78</td><td class="pass">AAA</td></tr>
+            <tr><td>accent (UI)</td><td>3.2:1</td><td>50</td><td class="ui-ok">UI ✓</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- VARIANT C: Instrument -->
+      <section class="palette-card" id="variant-c" aria-labelledby="title-c">
+        <div class="palette-card__header">
+          <h2 class="palette-card__h" id="title-c">C · Instrument</h2>
+          <span class="palette-card__sub">Hue 80° · charcoal + sand + mustard</span>
+        </div>
+        <p class="palette-card__mood">Bok-omslag, voksen, instrument-kvalitet. Lillian-claymation får mer kontrast mot sand-base.</p>
+
+        <div class="tokens-strip" aria-hidden="true">
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#EFE9DB"></div><span class="tokens-strip__label">paper</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#E1D8BE"></div><span class="tokens-strip__label">elev</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#1B1D22"></div><span class="tokens-strip__label">ink</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#5F5C50"></div><span class="tokens-strip__label">mute</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#A8852F"></div><span class="tokens-strip__label">accent</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#74541F"></div><span class="tokens-strip__label">deep</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#D6C5A0"></div><span class="tokens-strip__label">tint</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#C7BFA9"></div><span class="tokens-strip__label">hair</span></div>
+        </div>
+
+        <div class="mock-frame" data-palette="instrument">
+          <div class="mock-identity">
+            <div class="mock-identity__avatar"><img src="./lillian.png" alt="" /></div>
+            <div>
+              <div class="mock-identity__h">Lillian</div>
+              <div class="mock-identity__date">I DAG</div>
+            </div>
+          </div>
+          <div class="mock-weather">
+            <span class="mock-weather__temp">16°</span>
+            <div>
+              <div class="mock-weather__cond">Sol · Føles 16°</div>
+              <div class="mock-weather__meta">2.7 m/s · Oslo</div>
+            </div>
+          </div>
+          <p class="mock-why">Ull + fleece + yttertøy. <strong>Vinden biter</strong> litt.</p>
+          <div class="mock-avatar-stage">
+            <img class="mock-avatar-stage__img" src="./lillian.png" alt="" />
+            <span class="mock-pin mock-pin--3">3</span>
+            <span class="mock-pin mock-pin--1">1</span>
+            <span class="mock-pin mock-pin--2">2</span>
+          </div>
+          <div class="mock-chips">
+            <span class="mock-chip"><span class="mock-chip__num">1</span> langermet body</span>
+            <span class="mock-chip"><span class="mock-chip__num">2</span> tynn pyjamas</span>
+            <span class="mock-chip"><span class="mock-chip__num">3</span> sovepose</span>
+          </div>
+          <div class="mock-peel" role="group" aria-hidden="true">
+            <span class="mock-peel__seg mock-peel__seg--active">Alle</span>
+            <span class="mock-peel__seg">Uten ytterste</span>
+            <span class="mock-peel__seg">Mellomlag av</span>
+            <span class="mock-peel__seg">Kun innerst</span>
+          </div>
+          <div class="mock-cta-wrap"><span class="mock-cta">Se hele antrekket →</span></div>
+        </div>
+
+        <table class="contrast-table">
+          <caption>Kontrast vs paper</caption>
+          <thead><tr><th>Token</th><th>Ratio</th><th>APCA Lc</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>ink</td><td>13.2:1</td><td>91</td><td class="pass">AAA</td></tr>
+            <tr><td>mute</td><td>5.8:1</td><td>67</td><td class="pass">AA</td></tr>
+            <tr><td>accent-deep</td><td>7.0:1</td><td>76</td><td class="pass">AAA</td></tr>
+            <tr><td>accent (UI)</td><td>3.5:1</td><td>53</td><td class="ui-ok">UI ✓</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- VARIANT D: Plomme -->
+      <section class="palette-card" id="variant-d" aria-labelledby="title-d">
+        <div class="palette-card__header">
+          <h2 class="palette-card__h" id="title-d">D · Plomme</h2>
+          <span class="palette-card__sub">Hue 350° · plum + cream + wine</span>
+        </div>
+        <p class="palette-card__mood">Editorial, premium, voksen. Court Clay-slekt men kjøligere/mer feminin. Test om plum klasher med claymation.</p>
+
+        <div class="tokens-strip" aria-hidden="true">
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#F9F7F8"></div><span class="tokens-strip__label">paper</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#F0EAEE"></div><span class="tokens-strip__label">elev</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#1A1820"></div><span class="tokens-strip__label">ink</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#6E626A"></div><span class="tokens-strip__label">mute</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#A1455A"></div><span class="tokens-strip__label">accent</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#5E2235"></div><span class="tokens-strip__label">deep</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#F3DBE3"></div><span class="tokens-strip__label">tint</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#E1D8DD"></div><span class="tokens-strip__label">hair</span></div>
+        </div>
+
+        <div class="mock-frame" data-palette="plomme">
+          <div class="mock-identity">
+            <div class="mock-identity__avatar"><img src="./lillian.png" alt="" /></div>
+            <div>
+              <div class="mock-identity__h">Lillian</div>
+              <div class="mock-identity__date">I DAG</div>
+            </div>
+          </div>
+          <div class="mock-weather">
+            <span class="mock-weather__temp">16°</span>
+            <div>
+              <div class="mock-weather__cond">Sol · Føles 16°</div>
+              <div class="mock-weather__meta">2.7 m/s · Oslo</div>
+            </div>
+          </div>
+          <p class="mock-why">Ull + fleece + yttertøy. <strong>Vinden biter</strong> litt.</p>
+          <div class="mock-avatar-stage">
+            <img class="mock-avatar-stage__img" src="./lillian.png" alt="" />
+            <span class="mock-pin mock-pin--3">3</span>
+            <span class="mock-pin mock-pin--1">1</span>
+            <span class="mock-pin mock-pin--2">2</span>
+          </div>
+          <div class="mock-chips">
+            <span class="mock-chip"><span class="mock-chip__num">1</span> langermet body</span>
+            <span class="mock-chip"><span class="mock-chip__num">2</span> tynn pyjamas</span>
+            <span class="mock-chip"><span class="mock-chip__num">3</span> sovepose</span>
+          </div>
+          <div class="mock-peel" role="group" aria-hidden="true">
+            <span class="mock-peel__seg mock-peel__seg--active">Alle</span>
+            <span class="mock-peel__seg">Uten ytterste</span>
+            <span class="mock-peel__seg">Mellomlag av</span>
+            <span class="mock-peel__seg">Kun innerst</span>
+          </div>
+          <div class="mock-cta-wrap"><span class="mock-cta">Se hele antrekket →</span></div>
+        </div>
+
+        <table class="contrast-table">
+          <caption>Kontrast vs paper</caption>
+          <thead><tr><th>Token</th><th>Ratio</th><th>APCA Lc</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>ink</td><td>17.0:1</td><td>95</td><td class="pass">AAA</td></tr>
+            <tr><td>mute</td><td>5.0:1</td><td>65</td><td class="pass">AA</td></tr>
+            <tr><td>accent-deep</td><td>9.5:1</td><td>83</td><td class="pass">AAA</td></tr>
+            <tr><td>accent (UI)</td><td>4.4:1</td><td>58</td><td class="ui-ok">UI ✓</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- VARIANT E: Søvnro -->
+      <section class="palette-card" id="variant-e" aria-labelledby="title-e">
+        <div class="palette-card__header">
+          <h2 class="palette-card__h" id="title-e">E · Søvnro</h2>
+          <span class="palette-card__sub">Hue 232° + 50° · powder blue + cool bone + clay-hint</span>
+        </div>
+        <p class="palette-card__mood">Søvn-koded, calming. Kjølig blå som kontrast til varm Lillian. Clay-hint i hair-fargen forhindrer klinisk-medisinsk inntrykk.</p>
+
+        <div class="tokens-strip" aria-hidden="true">
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#F6F8FA"></div><span class="tokens-strip__label">paper</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#E8EDF2"></div><span class="tokens-strip__label">elev</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#1A1D24"></div><span class="tokens-strip__label">ink</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#6C747D"></div><span class="tokens-strip__label">mute</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#6798C0"></div><span class="tokens-strip__label">accent</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#3F5F7E"></div><span class="tokens-strip__label">deep</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#DEE8F0"></div><span class="tokens-strip__label">tint</span></div>
+          <div class="tokens-strip__swatch"><div class="tokens-strip__chip" style="background:#E6D7CB"></div><span class="tokens-strip__label">hair</span></div>
+        </div>
+
+        <div class="mock-frame" data-palette="sovnro">
+          <div class="mock-identity">
+            <div class="mock-identity__avatar"><img src="./lillian.png" alt="" /></div>
+            <div>
+              <div class="mock-identity__h">Lillian</div>
+              <div class="mock-identity__date">I DAG</div>
+            </div>
+          </div>
+          <div class="mock-weather">
+            <span class="mock-weather__temp">16°</span>
+            <div>
+              <div class="mock-weather__cond">Sol · Føles 16°</div>
+              <div class="mock-weather__meta">2.7 m/s · Oslo</div>
+            </div>
+          </div>
+          <p class="mock-why">Ull + fleece + yttertøy. <strong>Vinden biter</strong> litt.</p>
+          <div class="mock-avatar-stage">
+            <img class="mock-avatar-stage__img" src="./lillian.png" alt="" />
+            <span class="mock-pin mock-pin--3">3</span>
+            <span class="mock-pin mock-pin--1">1</span>
+            <span class="mock-pin mock-pin--2">2</span>
+          </div>
+          <div class="mock-chips">
+            <span class="mock-chip"><span class="mock-chip__num">1</span> langermet body</span>
+            <span class="mock-chip"><span class="mock-chip__num">2</span> tynn pyjamas</span>
+            <span class="mock-chip"><span class="mock-chip__num">3</span> sovepose</span>
+          </div>
+          <div class="mock-peel" role="group" aria-hidden="true">
+            <span class="mock-peel__seg mock-peel__seg--active">Alle</span>
+            <span class="mock-peel__seg">Uten ytterste</span>
+            <span class="mock-peel__seg">Mellomlag av</span>
+            <span class="mock-peel__seg">Kun innerst</span>
+          </div>
+          <div class="mock-cta-wrap"><span class="mock-cta">Se hele antrekket →</span></div>
+        </div>
+
+        <table class="contrast-table">
+          <caption>Kontrast vs paper</caption>
+          <thead><tr><th>Token</th><th>Ratio</th><th>APCA Lc</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>ink</td><td>16.5:1</td><td>94</td><td class="pass">AAA</td></tr>
+            <tr><td>mute</td><td>4.7:1</td><td>61</td><td class="pass">AA</td></tr>
+            <tr><td>accent-deep</td><td>7.5:1</td><td>78</td><td class="pass">AAA</td></tr>
+            <tr><td>accent (UI)</td><td>3.3:1</td><td>51</td><td class="ui-ok">UI ✓</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </div>
+  </main>
+
+  <footer>
+    Generert <time datetime="2026-06-11">11. juni 2026</time> via <code>/color-expert</code>-skill. Alle paletter validert mot WCAG AA + APCA Lc 50+. Se <code>tools/design-loop/palette-explore/PALETTE-NOTES.md</code> for fullstendig OKLCH-arkitektur.
+  </footer>
+</body>
+</html>

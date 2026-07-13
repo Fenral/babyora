@@ -1,0 +1,23 @@
+{
+  "apiCallCount": 3,
+  "results": {
+    "langermet-ullbody": {
+      "ok": true,
+      "attempt": 1,
+      "path": "C:\\Users\\SkotvoldSivertSende\\wool-app\\review\\f62-2-regen\\langermet-ullbody-att1.png",
+      "calls": 1
+    },
+    "sjekk-nakke": {
+      "ok": true,
+      "attempt": 1,
+      "path": "C:\\Users\\SkotvoldSivertSende\\wool-app\\review\\f62-2-regen\\sjekk-nakke-att1.png",
+      "calls": 2
+    },
+    "sjekk-nakke-dark": {
+      "ok": true,
+      "attempt": 1,
+      "path": "C:\\Users\\SkotvoldSivertSende\\wool-app\\review\\f62-2-regen\\sjekk-nakke-dark-att1.png",
+      "calls": 3
+    }
+  }
+}

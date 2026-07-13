@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Babyora — Guide-hub · Mock A</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =========================================================
+       Babyora Guide-hub · Mock A
+       Kompakt + skannbar (V2-prinsipp som vant for Påkledning).
+       Inspirert av Mobbin "Me+ Self-Care Tools" — hero-card +
+       gruppert tool-liste under en eyebrow.
+       ========================================================= */
+
+    :root {
+      /* Brand */
+      --warm-grey: #DBD8D2;
+      --warm-grey-2: #E8E4DD;
+      --warm-grey-3: #F1EEE8;
+      --warm-orange: #FF6B35;
+      --warm-orange-deep: #E2541E;
+      --ink-900: #1F1B16;
+      --ink-700: #4A433B;
+      --ink-500: rgba(31, 27, 22, 0.56);
+      --ink-300: rgba(31, 27, 22, 0.18);
+      --hairline: rgba(31, 27, 22, 0.08);
+      --card: #FFFFFF;
+
+      /* Type */
+      --font-serif: 'DM Serif Display', Georgia, serif;
+      --font-sans: 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+      /* Motion */
+      --ease-standard: cubic-bezier(.2,.7,.2,1);
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #2B2723;
+      font-family: var(--font-sans);
+      color: var(--ink-900);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* A11y */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* =========================================================
+       Phone frame (390 × 844) — preview-shell only
+       ========================================================= */
+    .stage {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .phone {
+      position: relative;
+      width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      background: var(--warm-grey);
+      overflow: hidden;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.04) inset,
+        0 40px 80px -20px rgba(0,0,0,0.55),
+        0 12px 30px -10px rgba(0,0,0,0.4);
+      isolation: isolate;
+    }
+
+    /* iOS-style notch / dynamic island */
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 11px; left: 50%;
+      transform: translateX(-50%);
+      width: 124px; height: 35px;
+      background: #0B0907;
+      border-radius: 22px;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    /* Status bar */
+    .status {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink-900);
+      z-index: 40;
+      pointer-events: none;
+    }
+    .status .right { display: flex; align-items: center; gap: 6px; opacity: 0.88; }
+    .status svg { display: block; }
+
+    /* =========================================================
+       Screen content
+       ========================================================= */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding-top: calc(54px + env(safe-area-inset-top, 0px));
+      padding-left: 20px;
+      padding-right: 20px;
+      padding-bottom: calc(0px + env(safe-area-inset-bottom, 0px));
+      background:
+        radial-gradient(120% 50% at 50% -10%, rgba(255,255,255,0.55), rgba(255,255,255,0) 60%),
+        linear-gradient(180deg, #E4E0D9 0%, var(--warm-grey) 38%, #D2CDC4 100%);
+    }
+
+    /* ---- Topbar ---- */
+    .topbar {
+      flex: none;
+      padding: 6px 4px 8px;
+    }
+
+    .topbar .eyebrow-meta {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 14px;
+      letter-spacing: 0.2px;
+      color: var(--ink-500);
+      margin: 0 0 2px;
+      line-height: 1;
+    }
+
+    .topbar h2.title {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 32px;
+      line-height: 1.02;
+      letter-spacing: -0.8px;
+      color: var(--ink-900);
+      margin: 0;
+    }
+
+    .topbar .lede {
+      font-size: 13.5px;
+      line-height: 1.35;
+      font-weight: 500;
+      color: var(--ink-500);
+      margin: 6px 0 0;
+      max-width: 28ch;
+    }
+
+    /* ---- Scroll container ---- */
+    .scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 18px 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .scroll::-webkit-scrollbar { display: none; }
+
+    /* ---- Hero CTA card ---- */
+    .hero {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 18px 18px 20px;
+      min-height: 96px;
+      border: none;
+      border-radius: 22px;
+      cursor: pointer;
+      text-align: left;
+      color: #FFF;
+      font: inherit;
+      background:
+        radial-gradient(120% 80% at 80% 0%, rgba(255,255,255,0.22), rgba(255,255,255,0) 55%),
+        linear-gradient(135deg, var(--warm-orange) 0%, var(--warm-orange-deep) 100%);
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.06),
+        0 12px 28px -8px rgba(226, 84, 30, 0.45);
+      overflow: hidden;
+      transition: transform 180ms var(--ease-standard);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hero:active { transform: scale(0.985); }
+
+    .hero .hero-copy { flex: 1; min-width: 0; }
+
+    .hero .hero-eyebrow {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 12.5px;
+      letter-spacing: 0.3px;
+      color: rgba(255,255,255,0.78);
+      margin: 0 0 2px;
+      line-height: 1;
+    }
+
+    .hero .hero-title {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+      margin: 0;
+    }
+
+    .hero .hero-sub {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.82);
+      margin: 4px 0 0;
+      line-height: 1.3;
+    }
+
+    .hero .hero-thumb {
+      flex: none;
+      width: 64px; height: 64px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      overflow: hidden;
+    }
+    .hero .hero-thumb img {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .hero .hero-chev {
+      flex: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: flex-end;
+      margin-bottom: 2px;
+    }
+
+    /* ---- Section grouping ---- */
+    .group { margin: 0; padding: 0; }
+
+    .eyebrow {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 14px;
+      letter-spacing: 0.2px;
+      color: var(--ink-700);
+      margin: 0 6px 10px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .eyebrow .count {
+      font-family: var(--font-sans);
+      font-style: normal;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--ink-500);
+    }
+
+    .card {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border-radius: 18px;
+      background: var(--card);
+      border: 1px solid var(--hairline);
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.04),
+        0 8px 20px -8px rgba(31,27,22,0.10);
+      overflow: hidden;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      min-height: 64px;
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      color: var(--ink-900);
+      font: inherit;
+      transition: background 140ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .row:active { background: rgba(31,27,22,0.04); }
+    .row:focus-visible {
+      outline: 2px solid var(--warm-orange);
+      outline-offset: -2px;
+      border-radius: 14px;
+    }
+
+    .row .thumb {
+      flex: none;
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: var(--warm-grey-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .row .thumb img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      display: block;
+    }
+    .row .thumb.emoji {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .row .copy {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .row .copy .t {
+      font-size: 15.5px;
+      font-weight: 600;
+      letter-spacing: -0.15px;
+      color: var(--ink-900);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .row .copy .s {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--ink-500);
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .row .chev {
+      flex: none;
+      opacity: 0.42;
+    }
+
+    /* Hairline divider — only between rows, not under last */
+    .card .row + .row {
+      position: relative;
+    }
+    .card .row + .row::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 70px;   /* aligned past thumb */
+      right: 16px;
+      height: 1px;
+      background: var(--hairline);
+    }
+
+    /* ---- Bottom tab bar ---- */
+    .tabbar {
+      flex: none;
+      position: relative;
+      height: 84px;
+      margin: 0 -20px;
+      padding: 10px 14px calc(20px + env(safe-area-inset-bottom, 0px));
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-around;
+      gap: 4px;
+      background: rgba(255,255,255,0.78);
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      border-top: 1px solid var(--hairline);
+    }
+
+    .tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 4px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font: inherit;
+      color: var(--ink-500);
+      min-width: 44px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tab .icon {
+      width: 24px; height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tab .label {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+    }
+    .tab[aria-current="page"] {
+      color: var(--warm-orange-deep);
+    }
+    .tab:focus-visible {
+      outline: 2px solid var(--warm-orange);
+      outline-offset: 2px;
+      border-radius: 12px;
+    }
+
+    /* Home indicator */
+    .home-indicator {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      border-radius: 3px;
+      background: rgba(31,27,22,0.55);
+      z-index: 60;
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+      .hero:active { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="phone" role="presentation">
+
+      <!-- iOS status bar -->
+      <div class="status" aria-hidden="true">
+        <span>9:41</span>
+        <span class="right">
+          <!-- signal -->
+          <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="6" rx="0.5"/><rect x="9" y="2.5" width="3" height="8.5" rx="0.5"/><rect x="13.5" y="0" width="3" height="11" rx="0.5"/></svg>
+          <!-- wifi -->
+          <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor"><path d="M7.5 1.2c2.9 0 5.5 1.1 7.5 2.9l-1.5 1.5c-1.6-1.5-3.7-2.4-6-2.4S3.1 4.1 1.5 5.6L0 4.1C2 2.3 4.6 1.2 7.5 1.2zm0 3.6c1.9 0 3.7.7 5 1.9L11 8.2c-1-.9-2.2-1.4-3.5-1.4s-2.5.5-3.5 1.4L2.5 6.7c1.3-1.2 3.1-1.9 5-1.9zm0 3.6c.9 0 1.7.3 2.4.9L7.5 11 5.1 9.3c.7-.6 1.5-.9 2.4-.9z"/></svg>
+          <!-- battery -->
+          <svg width="27" height="11" viewBox="0 0 27 11" fill="none"><rect x="0.5" y="0.5" width="22" height="10" rx="2.5" stroke="currentColor" stroke-opacity="0.45"/><rect x="2" y="2" width="19" height="7" rx="1.5" fill="currentColor"/><rect x="23.5" y="3.5" width="2" height="4" rx="1" fill="currentColor" fill-opacity="0.45"/></svg>
+        </span>
+      </div>
+
+      <!-- Screen -->
+      <main class="screen" aria-labelledby="guide-title">
+        <h1 class="sr-only" id="guide-title">Babyora Guide</h1>
+
+        <!-- Topbar -->
+        <header class="topbar">
+          <p class="eyebrow-meta">Påkledning · Onsdag</p>
+          <h2 class="title">Guide</h2>
+          <p class="lede">Verktøy og kunnskap for trygg påkledning.</p>
+        </header>
+
+        <!-- Scrollable content -->
+        <div class="scroll">
+
+          <!-- Hero CTA -->
+          <button class="hero" type="button" aria-label="Finn antrekk — test vær og aktivitet">
+            <div class="hero-thumb" aria-hidden="true">
+              <img src="../illustrations/garments/sovepose-1-0-tog.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧥',style:'font-size:34px'}))" />
+            </div>
+            <div class="hero-copy">
+              <p class="hero-eyebrow">I dag — 8°C, lett vind</p>
+              <p class="hero-title">Finn antrekk</p>
+              <p class="hero-sub">Test vær og aktivitet på 30 sek</p>
+            </div>
+            <span class="hero-chev" aria-hidden="true">
+              <svg width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="#FFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.2 1.2l5.6 5.3-5.6 5.3"/></svg>
+            </span>
+          </button>
+
+          <!-- VERKTØY -->
+          <section class="group" aria-labelledby="grp-tools">
+            <h3 class="eyebrow" id="grp-tools">
+              <span>Verktøy</span>
+              <span class="count">2</span>
+            </h3>
+            <ul class="card" role="list" aria-label="Verktøy">
+
+              <li role="listitem" style="list-style:none">
+                <button class="row" type="button" aria-label="Plaggbiblioteket — se alle plagg etter kategori">
+                  <span class="thumb" aria-hidden="true">
+                    <img src="../illustrations/garments/langermet-ullbody.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'👕',style:'font-size:22px'}))" />
+                  </span>
+                  <span class="copy">
+                    <span class="t">Plaggbiblioteket</span>
+                    <span class="s">Alle plagg etter kategori</span>
+                  </span>
+                  <svg class="chev" width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="#1F1B16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.2 1.2l5.6 5.3-5.6 5.3"/></svg>
+                </button>
+              </li>
+
+              <li role="listitem" style="list-style:none">
+                <button class="row" type="button" aria-label="Min garderobe — velg plagg og få relevante forslag">
+                  <span class="thumb" aria-hidden="true">
+                    <img src="../illustrations/garments/dunteppe.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧺',style:'font-size:22px'}))" />
+                  </span>
+                  <span class="copy">
+                    <span class="t">Min garderobe</span>
+                    <span class="s">Velg plagg → få forslag</span>
+                  </span>
+                  <svg class="chev" width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="#1F1B16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.2 1.2l5.6 5.3-5.6 5.3"/></svg>
+                </button>
+              </li>
+
+            </ul>
+          </section>
+
+          <!-- KUNNSKAP -->
+          <section class="group" aria-labelledby="grp-knowledge">
+            <h3 class="eyebrow" id="grp-knowledge">
+              <span>Kunnskap</span>
+              <span class="count">2</span>
+            </h3>
+            <ul class="card" role="list" aria-label="Kunnskap">
+
+              <li role="listitem" style="list-style:none">
+                <button class="row" type="button" aria-label="TOG-guiden — finn riktig sovepose">
+                  <span class="thumb" aria-hidden="true">
+                    <img src="../illustrations/garments/sovepose-2-5-tog.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🛏️',style:'font-size:22px'}))" />
+                  </span>
+                  <span class="copy">
+                    <span class="t">TOG-guiden</span>
+                    <span class="s">Riktig sovepose for romtemp</span>
+                  </span>
+                  <svg class="chev" width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="#1F1B16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.2 1.2l5.6 5.3-5.6 5.3"/></svg>
+                </button>
+              </li>
+
+              <li role="listitem" style="list-style:none">
+                <button class="row" type="button" aria-label="Varm eller kald? — sjekk barnets temperatur">
+                  <span class="thumb emoji" aria-hidden="true">🌡️</span>
+                  <span class="copy">
+                    <span class="t">Varm eller kald?</span>
+                    <span class="s">Sjekk barnets temperatur</span>
+                  </span>
+                  <svg class="chev" width="8" height="13" viewBox="0 0 8 13" fill="none" stroke="#1F1B16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.2 1.2l5.6 5.3-5.6 5.3"/></svg>
+                </button>
+              </li>
+
+            </ul>
+          </section>
+
+        </div>
+
+        <!-- Bottom tab bar -->
+        <nav class="tabbar" aria-label="Hovednavigasjon">
+          <button class="tab" type="button" aria-label="Hjem">
+            <span class="icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+            </span>
+            <span class="label">Hjem</span>
+          </button>
+
+          <button class="tab" type="button" aria-label="Påkledning">
+            <span class="icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l3-1 3 2 3-2 3 1 2 4-3 1v11H7V9L4 8z"/></svg>
+            </span>
+            <span class="label">Påkledning</span>
+          </button>
+
+          <button class="tab" type="button" aria-current="page" aria-label="Guide, valgt">
+            <span class="icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5z"/><path d="M13 3v5h5"/><path d="M8 13h8M8 17h5"/></svg>
+            </span>
+            <span class="label">Guide</span>
+          </button>
+
+          <button class="tab" type="button" aria-label="Profil">
+            <span class="icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+            </span>
+            <span class="label">Profil</span>
+          </button>
+        </nav>
+
+      </main>
+
+      <!-- iOS home indicator -->
+      <div class="home-indicator" aria-hidden="true"></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="nb" data-theme="light" data-temp="mild">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hjem A – Morgennatt – Babyora F79</title>
+<style>
+/* ============================================================
+   HJEM A — «Morgennatt» (re-themet fra «Brevann ren»)
+   Struktur/layout uendret; tokens byttet til Morgennatt-blokken fra
+   docs/F79/morgennatt-cta-analyse.md. A11y-guardrail-brudd fra
+   iter 4-dommerpanelet (manglende pause-kontroll, 36px touch-target)
+   fikset i samme runde. Kilde-kommentarer bevart for sporbarhet.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,420;9..144,560;9..144,640&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ============================================================
+     TOKENS — Morgennatt (F79, låst kandidat, re-themet fra Brevann)
+     Kilde: docs/F79/morgennatt-cta-analyse.md → «Endelige Morgennatt-
+     tokens for mock-retheming». Variabelnavn beholdt fra Brevann-mocken
+     for strukturell kompatibilitet (atmos-lag/chip/dot-selektorer uendret).
+     ============================================================ */
+  /* ---- light / mild (default) ---- */
+  --bg-canvas:      #DAD8EE; /* oklch(0.89 0.030 290) */
+  --surface:        #F3F2FB; /* oklch(0.965 0.012 290) */
+  --ink-primary:    #211B32; /* oklch(0.24 0.045 295) */
+  --ink-secondary:  #56506F; /* oklch(0.45 0.050 292) */
+  --accent-cta:     #267147; /* oklch(0.49 0.100 155) — Granmynte */
+  --accent-cta-ink: #F2FBF5; /* oklch(0.98 0.012 157) */
+  --focus-ring:     #6750AB; /* oklch(0.50 0.140 292) */
+  --avatar-glow:    #EFECFC;
+  --accent-temp:    #6654A1;
+  --shadow-tint: 0 40px 90px -30px rgba(23, 16, 46, 0.45), 0 12px 30px -14px rgba(23, 16, 46, 0.35);
+  --card-shadow: 0 18px 40px -26px rgba(23, 16, 46, 0.55);
+  --hairline: rgba(33, 27, 50, 0.16);
+
+  /* ---- plagg-lag-farger (plagg-alignerte huer: korall 40° / oker 80° / petrol 215° —
+     fjerner fiolett layer-mellom og deler hue med faktisk avatar-plagg) ---- */
+  --lag-korall:  #AF5331; /* innerst ullbody — oklch(0.55 0.130 40) */
+  --lag-petrolgra: #5A7480; /* bukse — uendret, BEHOLD (passerer ≥3:1 alle temp-states) */
+  --lag-marigold: #93690D; /* mellom strikkegenser (oker) — oklch(0.55 0.110 80) */
+  --lag-dyppetrol: #285E6A; /* ytterst jakke (petrol, re-gen) — oklch(0.45 0.060 214) */
+
+  /* ---- dedikerte mørke chip-edge-tokens (≥3:1 mot surface i lys modus) ---- */
+  --chip-edge-korall: #6E3820;
+  --chip-edge-petrolgra: #22343C;
+  --chip-edge-marigold: #5C4409;
+  --chip-edge-dyppetrol: #163F48;
+
+  /* ---- atmos-lag per-state tokens (temp-aksen sin ene kilde — se .atmos-lag[data-for]).
+     Morgennatt temp-akse: isblå 262° (kald) ← indigo 290° (mild) → lyng/rosé 345° (varm). ---- */
+  --layer-bg-kald: #2B5C97;    --layer-glow-kald: #E1ECFC;   --layer-base-kald: #CCDCF7;
+  --layer-bg-mild: #6654A1;    --layer-glow-mild: #EFECFC;   --layer-base-mild: #DAD8EE;
+  --layer-bg-varm: #B54436;    --layer-glow-varm: #FDE5E1;   --layer-base-varm: #EED1E0;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-temp="kald"] {
+  --bg-canvas:   #CCDCF7; /* oklch(0.89 0.042 262) */
+  --avatar-glow: #E1ECFC;
+  --accent-temp: #2B5C97;
+}
+[data-temp="varm"] {
+  --bg-canvas:   #EED1E0; /* oklch(0.89 0.038 345) */
+  --avatar-glow: #FDE5E1;
+  --accent-temp: #B54436;
+}
+
+[data-theme="dark"] {
+  --bg-canvas:      #1A1828; /* oklch(0.22 0.030 290) */
+  --surface:        #282639; /* oklch(0.28 0.035 290) */
+  --ink-primary:    #EBEAF5; /* oklch(0.94 0.015 290) */
+  --ink-secondary:  #B3B2C5; /* oklch(0.77 0.028 290) */
+  --accent-cta:     #65D097; /* oklch(0.78 0.130 158) — Granmynte, 7.97/8.99:1 */
+  --accent-cta-ink: #0F2B1D;
+  --focus-ring:     #A48FE1; /* oklch(0.70 0.120 295) */
+  --avatar-glow:    #4D4869;
+  --accent-temp:    #A89AD7;
+  --shadow-tint: 0 44px 100px -30px rgba(0, 0, 0, 0.75), 0 14px 34px -14px rgba(0, 0, 0, 0.6);
+  --card-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.75);
+  --hairline: rgba(235, 234, 245, 0.18);
+
+  /* ---- dark-mode plagg-lag: lysnet motsvar (samme hue-familie, ≥4:1 vs dark surface) ---- */
+  --lag-korall:  #EE9373; /* oklch(0.75 0.119 40) — 6.35 vs surface */
+  --lag-petrolgra: #9BB4BE;
+  --lag-marigold: #DBB155; /* oklch(0.78 0.120 85) — 7.31 vs surface */
+  --lag-dyppetrol: #6FB0C0; /* oklch(0.72 0.070 215) — 6.06 vs surface */
+
+  /* ---- dark-mode chip-edges: lysnet motsvar av lag-fargene (≥3:1 mot dark surface) ---- */
+  --chip-edge-korall: #F4B49C;
+  --chip-edge-petrolgra: #C7D6DC;
+  --chip-edge-marigold: #EAC57E;
+  --chip-edge-dyppetrol: #9BCCD8;
+
+  /* ---- dark atmos-lag per-state tokens ---- */
+  --layer-bg-kald: #79B0E8;    --layer-glow-kald: #384D73;   --layer-base-kald: #131A2D;
+  --layer-bg-mild: #A89AD7;    --layer-glow-mild: #4D4869;   --layer-base-mild: #1A1828;
+  --layer-bg-varm: #F8907C;    --layer-glow-varm: #6E4358;   --layer-base-varm: #251724;
+}
+[data-theme="dark"][data-temp="kald"] {
+  --bg-canvas:   #131A2D; /* oklch(0.22 0.040 268) */
+  --avatar-glow: #384D73;
+  --accent-temp: #79B0E8;
+}
+[data-theme="dark"][data-temp="varm"] {
+  --bg-canvas:   #251724; /* oklch(0.23 0.032 330) */
+  --avatar-glow: #6E4358;
+  --accent-temp: #F8907C;
+}
+
+/* ---------- basis ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: color-mix(in srgb, var(--bg-canvas) 42%, #EFF8F7);
+  color: var(--ink-primary);
+  min-height: 100dvh;
+  display: grid;
+  place-items: start center;
+  gap: 22px;
+  padding: 32px 16px 72px;
+  font-feature-settings: "tnum";
+  transition: background-color 600ms var(--ease-out);
+}
+[data-theme="dark"] body {
+  background: color-mix(in srgb, var(--bg-canvas) 88%, #000);
+}
+
+.display { font-family: "Fraunces", Georgia, "Times New Roman", serif; }
+
+/* ---------- meta / lab-header (fora frame, ikke del av produktflaten) ---------- */
+.lab-header {
+  width: min(390px, 100%);
+  text-align: center;
+}
+.lab-header .kicker {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-secondary);
+}
+.lab-header .lab-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 640;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  margin: 4px 0 2px;
+}
+.lab-header p { font-size: 13px; color: var(--ink-secondary); }
+
+/* ---------- fokus ---------- */
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+::selection { background: var(--ink-primary); color: var(--surface); }
+
+/* ============================================================
+   PHONE FRAME 390×844
+   ============================================================ */
+.phone-shell {
+  width: 390px;
+  max-width: 100%;
+  border-radius: 54px;
+  padding: 12px;
+  background: linear-gradient(155deg, #0b1416, #000);
+  box-shadow: var(--shadow-tint);
+}
+.phone {
+  position: relative;
+  width: 100%;
+  height: 844px;
+  max-height: 82dvh;
+  overflow: hidden;
+  border-radius: 44px;
+  background: var(--bg-canvas);
+  transition: background-color 700ms var(--ease-out);
+  display: flex;
+  flex-direction: column;
+}
+.phone::after { /* device notch */
+  content: '';
+  position: absolute;
+  top: 10px; left: 50%; transform: translateX(-50%);
+  width: 108px; height: 26px;
+  background: #000;
+  border-radius: 20px;
+  z-index: 30;
+}
+
+/* atmospheric tone-gradient: "været eier canvaset" — tre stablede lag krysstones
+   via opacity (background/gradient-stops kan ikke transition'es), så hele
+   canvas-rotasjonen animerer i stedet for å snappe ved temp-bytte. */
+.atmos { position: absolute; inset: 0; pointer-events: none; }
+.atmos-lag {
+  position: absolute; inset: 0;
+  opacity: 0;
+  transition: opacity 700ms var(--ease-out);
+}
+.atmos-lag.is-active { opacity: 0.9; }
+[data-theme="dark"] .atmos-lag.is-active { opacity: 0.75; }
+.atmos-lag[data-for="kald"] {
+  background:
+    radial-gradient(120% 60% at 50% -6%, color-mix(in srgb, var(--layer-bg-kald) 30%, transparent) 0%, transparent 62%),
+    radial-gradient(90% 70% at 82% 6%, color-mix(in srgb, var(--layer-glow-kald) 65%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--layer-base-kald) 40%, #000 0%) 0%);
+}
+.atmos-lag[data-for="mild"] {
+  background:
+    radial-gradient(120% 60% at 50% -6%, color-mix(in srgb, var(--layer-bg-mild) 30%, transparent) 0%, transparent 62%),
+    radial-gradient(90% 70% at 82% 6%, color-mix(in srgb, var(--layer-glow-mild) 65%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--layer-base-mild) 40%, #000 0%) 0%);
+}
+.atmos-lag[data-for="varm"] {
+  background:
+    radial-gradient(120% 60% at 50% -6%, color-mix(in srgb, var(--layer-bg-varm) 30%, transparent) 0%, transparent 62%),
+    radial-gradient(90% 70% at 82% 6%, color-mix(in srgb, var(--layer-glow-varm) 65%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--layer-base-varm) 40%, #000 0%) 0%);
+}
+[data-theme="dark"] .atmos-lag[data-for="kald"] {
+  background:
+    radial-gradient(120% 60% at 50% -6%, color-mix(in srgb, var(--layer-bg-kald) 30%, transparent) 0%, transparent 62%),
+    radial-gradient(90% 70% at 82% 6%, color-mix(in srgb, var(--layer-glow-kald) 65%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--layer-base-kald) 40%, #000 0%) 0%);
+}
+[data-theme="dark"] .atmos-lag[data-for="mild"] {
+  background:
+    radial-gradient(120% 60% at 50% -6%, color-mix(in srgb, var(--layer-bg-mild) 30%, transparent) 0%, transparent 62%),
+    radial-gradient(90% 70% at 82% 6%, color-mix(in srgb, var(--layer-glow-mild) 65%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--layer-base-mild) 40%, #000 0%) 0%);
+}
+[data-theme="dark"] .atmos-lag[data-for="varm"] {
+  background:
+    radial-gradient(120% 60% at 50% -6%, color-mix(in srgb, var(--layer-bg-varm) 30%, transparent) 0%, transparent 62%),
+    radial-gradient(90% 70% at 82% 6%, color-mix(in srgb, var(--layer-glow-varm) 65%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--layer-base-varm) 40%, #000 0%) 0%);
+}
+
+/* temp-bytte «rotasjons»-glimt: en sirkel som ekspanderer fra sol-posisjonen */
+.temp-burst {
+  position: absolute; inset: 0;
+  z-index: 1;
+  background: color-mix(in srgb, var(--accent-temp) 38%, transparent);
+  clip-path: circle(0% at 82% 14%);
+  opacity: 0;
+  pointer-events: none;
+}
+.temp-burst.is-bursting {
+  animation: temp-burst-expand 700ms var(--ease-out);
+}
+@keyframes temp-burst-expand {
+  0%   { clip-path: circle(0% at 82% 14%); opacity: 0.9; }
+  70%  { opacity: 0.5; }
+  100% { clip-path: circle(140% at 82% 14%); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .temp-burst { display: none; }
+}
+
+/* subtle canvas grain so the drenched fill doesn't read as a flat swatch */
+.grain {
+  position: absolute; inset: 0;
+  opacity: 0.2;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.app-main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  overflow-y: auto;
+  padding: 58px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scrollbar-width: none;
+}
+.app-main::-webkit-scrollbar { display: none; }
+
+/* ---------- topbar ---------- */
+.app-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+}
+.place-pill {
+  appearance: none; font: inherit; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  border: 1px solid var(--hairline);
+  color: var(--ink-primary);
+  font-size: 13.5px; font-weight: 600;
+  padding: 12px 14px 12px 10px;
+  border-radius: 999px;
+  min-height: 44px;
+  backdrop-filter: blur(6px);
+  transition: transform 260ms var(--ease-out), background-color 220ms var(--ease-out);
+}
+.place-pill:hover { background: color-mix(in srgb, var(--surface) 92%, transparent); }
+.place-pill:active { transform: scale(0.96); transition-duration: 80ms; }
+.place-pill svg { width: 16px; height: 16px; flex: none; color: var(--accent-temp); }
+.clock {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600; font-size: 14px;
+  color: var(--ink-secondary);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- vær-hero — ett anker: temp-mast (i .scene) eier tallet.
+   .temp her er redusert til meta-nivå (kompakt, presist, sammen med vær-teksten)
+   for aria-live-oppdatering ved temp-bytte og som synlig referanse i topp-raden. ---------- */
+.weather-hero {
+  position: relative;
+  z-index: 2;
+  padding: 0 2px 0;
+  margin-bottom: 4px;
+  min-height: 64px;
+}
+/* [benchmark polish, rescore-logg f79-hjem-a] skalert fra 92px til 124px og flyttet
+   slik at halo-gradienten overlapper mastens øvre høyre hjørne — 92px leste for
+   lite til å bære vekten av en fysisk lyskilde ved siden av 196px-tallet. */
+.weather-hero .sun-wrap {
+  position: absolute;
+  top: -22px; right: -10px;
+  width: 124px; height: 124px;
+  display: grid; place-items: center;
+  z-index: 0;
+}
+.weather-hero .sun-wrap::before {
+  content: '';
+  position: absolute; inset: -10%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent-temp) 55%, transparent) 0%, transparent 72%);
+  filter: blur(3px);
+  transition: background 700ms var(--ease-out);
+  /* V3 (F80.2): engangs-pust i stedet for evig loop — under 5s betyr at
+     WCAG 2.2.2 ikke krever pause-kontroll, så toppen kan være helt tom */
+  animation: sun-halo-breathe 4.5s ease-in-out 1;
+}
+@keyframes sun-halo-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.045); opacity: 0.88; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .weather-hero .sun-wrap::before { animation: none; }
+}
+.weather-hero img { width: 100%; height: 100%; position: relative; z-index: 1; filter: drop-shadow(0 8px 14px rgba(0,0,0,0.18)); }
+/* [distinctness/benchmark polish, rescore-logg f79-hjem-a] duplikat-tallet fjernet fra
+   synlig visning — 196px temp-masten (.temp-mast) er nå ENESTE synlige temp-anker.
+   #temp-display lever videre kun som sr-only aria-live-bærer for temp-verdien. */
+.weather-hero .temp {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* Sivert 2026-07-02: mer luft ned fra Elverum-pillen */
+.weather-hero .meta { font-size: 15px; color: var(--ink-secondary); margin-top: 16px; position: relative; z-index: 1; max-width: 62%; }
+.weather-hero .meta strong { color: var(--ink-primary); font-weight: 600; }
+.weather-hero .meta .feels { color: var(--ink-primary); font-weight: 600; }
+/* Info-badge, IKKE handling: surface+ink så Granmynte forblir CTA-ens
+   eksklusive signal (jf. morgennatt-cta-analyse: «eneste grønne objekt»).
+   ink-primary på surface: 11.86:1 lys / 14.62:1 mørk — PASS. */
+.weather-hero .meta .lag-kvantum {
+  display: flex; align-items: center; width: fit-content;
+  margin-top: 9px;
+  color: var(--ink-primary);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  border: 1px solid var(--hairline);
+  font-weight: 700; font-size: 17px;
+  letter-spacing: -0.01em;
+  padding: 6px 15px;
+  border-radius: 24px 24px 24px 8px;
+  box-shadow: 0 10px 22px -16px color-mix(in srgb, var(--ink-primary) 45%, transparent);
+}
+.weather-hero .meta .lag-kvantum::before { content: none; }
+
+/* tick: temp-verdien ankommer sammen med atmos-burst, ikke som et stille snap */
+.tick { animation: temp-tick 300ms var(--ease-out); }
+@keyframes temp-tick {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tick { animation: none; }
+}
+
+/* ---------- avatar scene — plagget eier canvaset, ingen kort-i-kort ---------- */
+.scene-card {
+  position: relative;
+}
+.scene {
+  position: relative;
+  display: block;
+  padding: 6px 0 0;
+  min-height: 280px;
+  overflow: visible;
+}
+.scene::before {
+  content: '';
+  position: absolute; inset: -4% 8%;
+  background: radial-gradient(closest-side, var(--avatar-glow) 0%,
+    color-mix(in srgb, var(--avatar-glow) 55%, transparent) 55%, transparent 78%);
+  filter: blur(7px);
+  transition: background 700ms var(--ease-out);
+}
+/* det ENE store temp-ankeret: klippet mot canvas-kant, eier den øvre halvdelen av scenen.
+   avataren (.stack, z-index 2) overlapper det med negativ margin lenger ned. */
+.scene .temp-mast {
+  position: relative;
+  z-index: 0;
+  margin: -6px 0 -46px -10px;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 640;
+  font-variation-settings: 'opsz' 144;
+  font-size: 196px; line-height: 0.78;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-primary);
+  pointer-events: none;
+  user-select: none;
+  text-align: center;
+  transition: color 700ms var(--ease-out);
+}
+.stack {
+  position: relative; width: 280px; height: 280px; z-index: 2;
+  /* Sivert 2026-07-02: redusert mast-overlapp fra -96px så temperaturen
+     leses — hodet kysser bare bunnen av sifrene */
+  margin: -34px auto 0;
+  left: -18px;
+  filter:
+    drop-shadow(-10px 16px 20px color-mix(in srgb, var(--accent-temp) 32%, transparent))
+    drop-shadow(8px -6px 16px color-mix(in srgb, var(--avatar-glow) 60%, transparent));
+  transition: filter 700ms var(--ease-out);
+}
+.stack img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0;
+  transform-origin: 50% 80%;
+  transform: translateY(5px) scale(0.985);
+  transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out);
+}
+.stack img.on { opacity: 1; transform: translateY(0) scale(1); }
+
+.lagliste-wrap {
+  position: relative;
+  z-index: 1;
+  /* V3 (F80.2): raus luft avatar→teller→CTA — tomrommet er del av designet */
+  margin-top: 10px;
+  padding: 0 6px;
+}
+
+.cta-row {
+  display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 26px;
+}
+.cta {
+  position: relative;
+  appearance: none; border: 0; cursor: pointer;
+  background: var(--accent-cta); color: var(--accent-cta-ink);
+  font: inherit; font-weight: 700; font-size: 15px;
+  /* V3 (F80.2): 56px thumb-friendly, marigold-separator (dekor) fjernet */
+  min-height: 56px; padding: 0 30px;
+  border-radius: 24px 24px 24px 8px;
+  box-shadow: 0 12px 26px -14px color-mix(in srgb, var(--accent-cta) 70%, transparent);
+  transition: transform 260ms var(--ease-out), box-shadow 200ms var(--ease-out), background-color 600ms var(--ease-out), color 600ms var(--ease-out);
+}
+.cta:active { transform: scale(0.97); transition-duration: 80ms; }
+.cta:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -12px color-mix(in srgb, var(--accent-cta) 75%, transparent); }
+
+/* ---------- lag-tekstliste (chips) ---------- */
+.lagliste {
+  list-style: none; display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 7px; padding: 0; margin: 0;
+}
+.lagliste li {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px; font-weight: 700;
+  background: var(--chip-fill, var(--surface)); color: var(--chip-ink, var(--ink-primary));
+  border: 1.5px solid var(--chip-edge, var(--hairline));
+  border-radius: 999px; padding: 6px 12px 6px 8px;
+  opacity: 0.6;
+  transform: translateY(2px);
+  transition: opacity 320ms var(--ease-out), transform 320ms var(--ease-out), background-color 600ms var(--ease-out), color 600ms var(--ease-out), border-color 600ms var(--ease-out);
+}
+.lagliste li.on { opacity: 1; transform: translateY(0); animation: chip-pop 260ms var(--ease-out); }
+@keyframes chip-pop {
+  0%   { scale: 0.95; }
+  55%  { scale: 1.03; }
+  100% { scale: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lagliste li.on { animation: none; }
+}
+.no-anim, .no-anim * { transition: none !important; animation: none !important; }
+.lagliste .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; outline: 1.5px solid var(--chip-ink, var(--ink-primary)); outline-offset: -0.5px; }
+
+/* Lag-teller (Sivert 2026-07-02): anonyme dots + tall — plagg-navn kun i popup */
+.lag-teller {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin-bottom: 2px;
+}
+.lag-teller .lagliste li {
+  background: none; border: none; box-shadow: none; padding: 3px;
+}
+.lag-teller .lagliste .dot { width: 13px; height: 13px; }
+.lag-tall {
+  font-weight: 700; font-size: 17px; letter-spacing: -0.01em;
+  color: var(--ink-primary);
+  font-variant-numeric: tabular-nums;
+}
+/* fylte plagg-farge-chips (à la Hjem B) — dokumentert ink per chip mot fyllfargen */
+.lagliste li[data-lag="1"] { --chip-edge: var(--chip-edge-korall); --chip-fill: color-mix(in srgb, var(--lag-korall) 60%, #7A2E17); --chip-ink: #FFFFFF; }
+.lagliste li[data-lag="2"] { --chip-edge: var(--chip-edge-petrolgra); --chip-fill: var(--lag-petrolgra); --chip-ink: #F5FAFB; }
+.lagliste li[data-lag="3"] { --chip-edge: var(--chip-edge-marigold); --chip-fill: var(--lag-marigold); --chip-ink: #2B1C00; }
+.lagliste li[data-lag="4"] { --chip-edge: var(--chip-edge-dyppetrol); --chip-fill: var(--lag-dyppetrol); --chip-ink: #EAF6F5; }
+
+.section-label {
+  font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
+  text-transform: none; color: var(--ink-secondary);
+  text-align: center; margin: 2px 0 10px;
+}
+
+.status-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- ambient bottom nav ---------- */
+/* [distinctness polish, rescore-logg f79-hjem-a] drenchet fra nesten-hvit surface-blur
+   til canvas-tonet bakgrunn — navbaren var mockens mest generiske AI-flate. */
+.app-nav {
+  position: relative; z-index: 2;
+  display: flex; justify-content: space-around; align-items: center;
+  padding: 10px 8px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--bg-canvas) 70%, var(--surface));
+  border-top: 1px solid var(--hairline);
+  backdrop-filter: blur(10px);
+  transition: background-color 700ms var(--ease-out);
+}
+.app-nav a {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  min-width: 56px; min-height: 44px; justify-content: center;
+  color: var(--ink-secondary); text-decoration: none;
+  font-size: 10.5px; font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  transition: color 200ms var(--ease-out), background-color 220ms var(--ease-out);
+}
+.app-nav a svg { width: 22px; height: 22px; }
+.app-nav a[aria-current="page"] {
+  color: var(--accent-cta);
+  background: color-mix(in srgb, var(--accent-temp) 14%, transparent);
+  border-radius: 24px 24px 24px 8px;
+}
+.app-nav a[aria-current="page"] svg { filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--accent-cta) 40%, transparent)); }
+.app-nav a[aria-current="page"] svg path[data-fill="true"] { fill: currentColor; }
+
+/* ============================================================
+   OUTSIDE-FRAME DEMO CONTROLS (temp-switcher + theme toggle)
+   ============================================================ */
+.lab-controls {
+  width: min(390px, 100%);
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.temp-switcher {
+  display: inline-flex; gap: 6px; padding: 5px;
+  background: var(--surface); border: 1px solid var(--hairline);
+  border-radius: 999px;
+}
+.temp-btn {
+  appearance: none; border: 0; cursor: pointer; font: inherit;
+  min-height: 44px; padding: 0 16px; border-radius: 999px;
+  font-weight: 600; font-size: 13.5px;
+  background: transparent; color: var(--ink-secondary);
+  transition: background-color 220ms var(--ease-out), color 220ms var(--ease-out), transform 450ms var(--ease-out);
+}
+.temp-btn[aria-pressed="true"] {
+  background: var(--accent-temp); color: var(--accent-cta-ink);
+}
+.temp-btn:active { transform: scale(0.94); transition-duration: 80ms; }
+.theme-toggle {
+  appearance: none; cursor: pointer; font: inherit;
+  min-height: 44px; padding: 0 18px;
+  border-radius: 999px;
+  background: var(--surface); color: var(--ink-primary);
+  border: 1px solid var(--hairline);
+  font-weight: 600; font-size: 13.5px;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background-color 220ms var(--ease-out), color 220ms var(--ease-out), transform 450ms var(--ease-out);
+}
+.theme-toggle:active { transform: scale(0.96); transition-duration: 80ms; }
+
+/* ---------- spec / kontrast-dokumentasjon ---------- */
+.spec {
+  width: min(600px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  padding: 18px 20px 20px;
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+}
+.spec h2 { font-size: 14px; color: var(--ink-primary); margin: 0 0 10px; font-family: "Fraunces", Georgia, serif; }
+.spec table { width: 100%; border-collapse: collapse; }
+.spec th, .spec td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--hairline); font-variant-numeric: tabular-nums; }
+.spec th { color: var(--ink-primary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+.spec td.pass { color: var(--ink-secondary); font-weight: 700; }
+.spec .note { margin-top: 12px; font-size: 12px; line-height: 1.6; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+@media (forced-colors: active) {
+  .phone-shell, .place-pill, .lagliste li, .app-nav, .spec, .temp-switcher, .theme-toggle, .replay-icon-btn {
+    border: 1px solid ButtonBorder !important;
+  }
+  .cta { border: 2px solid ButtonText; }
+  /* a11y-sweep: valgt-state må overleve forced-colors (bæres ellers kun av bg) */
+  [aria-pressed="true"] { border: 2px solid Highlight !important; }
+  .app-nav a[aria-current="page"] { border: 2px solid Highlight !important; }
+  .lagliste li.on .dot { forced-color-adjust: none; }
+}
+</style>
+</head>
+<body>
+
+  <div class="lab-header">
+    <p class="kicker">F79 · Salgs-mock · Morgennatt</p>
+    <p class="lab-title">Hjem A</p>
+    <p>Produksjons-plausibel Hjem-skjerm · avatar spiller påkledning ved last</p>
+  </div>
+
+  <div class="phone-shell">
+    <div class="phone" id="phone" data-theme="light" data-temp="mild">
+      <div class="atmos" aria-hidden="true" id="atmos">
+        <div class="atmos-lag" data-for="kald"></div>
+        <div class="atmos-lag is-active" data-for="mild"></div>
+        <div class="atmos-lag" data-for="varm"></div>
+      </div>
+      <div class="temp-burst" aria-hidden="true" id="temp-burst"></div>
+      <svg class="grain" aria-hidden="true" width="100%" height="100%">
+        <filter id="grain-filter">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" result="noise" />
+          <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#grain-filter)" />
+      </svg>
+
+      <header class="app-topbar" style="position:absolute; top:0; left:0; right:0; z-index:2; padding: 16px 20px 0;">
+        <button type="button" class="place-pill" aria-label="Bytt sted, nåværende: Elverum">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+          Elverum
+        </button>
+        <time class="clock" id="clock" datetime="07:40">07:40</time>
+      </header>
+
+      <main class="app-main" id="main-content" aria-label="Hjem">
+        <h1 class="display" style="position:absolute; width:1px; height:1px; overflow:hidden; clip-path: inset(50%);">Babyora – Hjem</h1>
+
+        <section class="weather-hero" aria-label="Vær nå i Elverum">
+          <div class="sun-wrap">
+            <img src="/weather-3d/klarvaer.png" alt="" />
+          </div>
+          <div class="temp" id="temp-display" aria-live="polite">12°</div>
+          <div class="meta">
+            <strong>Klarvær</strong> · føles som <span class="feels">10°</span> · vind 3 m/s
+          </div>
+        </section>
+
+        <section class="scene-card" aria-labelledby="scene-heading">
+          <h2 id="scene-heading" class="section-label">Dagens påkledning</h2>
+
+          <div class="scene">
+            <div class="temp-mast" id="temp-mast" aria-hidden="true">12°</div>
+            <div class="stack" id="stack" role="img" aria-label="Barn kledd i dagens anbefalte antrekk">
+              <img src="/avatars/f79-poc/stage-0.png" alt="" data-stage="0" class="on" />
+              <img src="/avatars/f79-poc/stage-1.png" alt="" data-stage="1" />
+              <img src="/avatars/f79-poc/stage-2.png" alt="" data-stage="2" />
+              <img src="/avatars/f79-poc/stage-3.png" alt="" data-stage="3" />
+              <img src="/avatars/f79-poc/stage-4.png" alt="" data-stage="4" />
+            </div>
+          </div>
+
+          <div class="lagliste-wrap">
+            <!-- V3 (F80.2): kun «N lag»-tallet (Sivert-bestilling beholdt,
+                 dots + replay fjernet per V3-dommen — popupen bærer detaljene) -->
+            <div class="lag-teller">
+              <span class="lag-tall" id="lag-tall">4 lag</span>
+            </div>
+
+            <div class="cta-row">
+              <button type="button" class="cta" id="cta-see">Se dagens antrekk</button>
+            </div>
+          </div>
+
+          <p class="status-sr" role="status" aria-live="polite" id="dressing-status"></p>
+        </section>
+      </main>
+
+      <nav class="app-nav" aria-label="Hovednavigasjon">
+        <a href="#" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path data-fill="true" stroke="none" d="M5 10.6v8.4a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-8.4L12 5.3Z"/></svg>
+          Hjem
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5v14M16 5v14M3 9h5M3 15h5M16 9h5M16 15h5"/></svg>
+          Garderobe
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+          Vær
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          Profil
+        </a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="lab-controls">
+    <div class="temp-switcher" role="group" aria-label="Temperatur-tilstand (demo)">
+      <button type="button" class="temp-btn" data-temp="kald" aria-pressed="false">Kald</button>
+      <button type="button" class="temp-btn" data-temp="mild" aria-pressed="true">Mild</button>
+      <button type="button" class="temp-btn" data-temp="varm" aria-pressed="false">Varm</button>
+    </div>
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19v2.5M4.2 4.2l1.7 1.7M18 18l1.8 1.8M2.5 12h2.4M19 12h2.5M4.2 19.7 6 18M18 6l1.8-1.8"/></svg>
+      <span id="theme-label">Mørk modus</span>
+    </button>
+    <button type="button" class="theme-toggle" id="replay-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      Spill påkledning igjen
+    </button>
+  </div>
+
+  <footer class="spec" aria-label="Kontrast-dokumentasjon">
+    <h2>Kontrast — par → ratio → pass</h2>
+    <table>
+      <thead><tr><th>Par</th><th>Lys</th><th>Mørk</th><th>Krav</th></tr></thead>
+      <tbody>
+        <tr><td>Brødtekst (ink-primary) / canvas</td><td class="pass">10.9:1</td><td class="pass">13.9:1</td><td>≥4.5:1</td></tr>
+        <tr><td>Sekundær-tekst (ink-secondary) / canvas</td><td class="pass">5.4:1</td><td class="pass">8.1:1</td><td>≥4.5:1</td></tr>
+        <tr><td>Masthead temp-tall (ENESTE store anker, Fraunces 196px, opsz 144, ink-primary) / canvas</td><td class="pass">dekorativ, aria-hidden — verdi bæres av #temp-display</td><td class="pass">dekorativ, aria-hidden — verdi bæres av #temp-display</td><td>n/a</td></tr>
+        <tr><td>#temp-display (sr-only aria-live-bærer, ikke lenger visuelt duplikat av masten)</td><td class="pass">n/a — skjult, kun for skjermlesere</td><td class="pass">n/a — skjult, kun for skjermlesere</td><td>n/a</td></tr>
+        <tr><td>«N lag anbefalt»-pille (accent-cta-ink / accent-cta, Granmynte)</td><td class="pass">5.63:1</td><td class="pass">7.97:1</td><td>≥4.5:1</td></tr>
+        <tr><td>CTA-label / CTA-fill (Granmynte)</td><td class="pass">5.63:1</td><td class="pass">7.97:1</td><td>≥4.5:1</td></tr>
+        <tr><td>CTA-fill / canvas, kald/mild/varm (non-text)</td><td class="pass">4.28 / 4.25 / 4.20:1</td><td class="pass">9.08 / 9.15 / 8.99:1</td><td>≥3:1</td></tr>
+        <tr><td>Fokusring / canvas</td><td class="pass">4.1:1</td><td class="pass">6.6:1</td><td>≥3:1</td></tr>
+        <tr><td>Lag-dot innerst (--lag-korall, plagg-aligned 40°, med outline-remediering) / surface</td><td class="pass">4.61:1</td><td class="pass">6.35:1</td><td>≥3:1</td></tr>
+        <tr><td>Lag-dot mellom (--lag-marigold, plagg-aligned oker 80°) / surface</td><td class="pass">4.43:1</td><td class="pass">7.31:1</td><td>≥3:1</td></tr>
+        <tr><td>Lag-dot ytterst (--lag-dyppetrol, plagg-aligned petrol 214°, re-gen) / surface</td><td class="pass">6.52:1</td><td class="pass">6.06:1</td><td>≥3:1</td></tr>
+        <tr><td>Chip-edge (dedikerte mørke tokens) / surface</td><td class="pass">4.4–7.0:1</td><td class="pass">4.9–7.5:1</td><td>≥3:1</td></tr>
+        <tr><td>Chip-fyll (fylte plagg-farge-chips) / chip-tekst</td><td class="pass">4.5–7.9:1</td><td class="pass">4.6–7.2:1</td><td>≥4.5:1</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Morgennatt-retheme (docs/F79/morgennatt-cta-analyse.md): CTA byttet fra Brevann-rav til <strong>Granmynte</strong> (#267147 lys / #65D097 mørk) — eneste grønne objekt på skjermen, ≥59° hue-avstand fra alle plagg og fra hele canvas-temp-rotasjonen (262–345°), løser at gammel korall-CTA lå 7.8° fra ullbody-korall i mørk modus. Lag-tokens er omkodet til plagg-alignerte huer (innerst=korall 40°, mellom=oker 80°, ytterst=petrol 215°, re-gen fra #1E4750 for å fikse en 1.7:1-kollisjon på mørk indigo-canvas) — chip-swatch og faktisk avatar-plagg deler nå hue, og det gamle fiolette layer-mellom-båndet er fjernet. Beregnet på endelige clipped sRGB-hex (WCAG relative luminance), ikke OKLCH-kilden — jf. gamut-advarsel. Lag-dots bruker <code>outline: 1.5px solid var(--chip-ink, var(--ink-primary))</code> som synlig ring i tillegg til fyllfargen; chip-tekst + chip-edge-tokene supplerer alltid dot-fargen — farge alene bærer aldri lag-identiteten. Temperatur/vær kodes aldri med farge alene: tallverdi + ordtekst («Klarvær», «føles som 10°») bærer info uavhengig av kanal.</p>
+  </footer>
+
+<script>
+(function () {
+  var phone = document.getElementById('phone');
+  var imgs = [].slice.call(document.querySelectorAll('.stack img'));
+  var status = document.getElementById('dressing-status');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var timer = null;
+  var STEP_MS = 460; // ~2s total across 4 steps incl. lead-in
+
+  function setStage(n) {
+    imgs.forEach(function (img) { img.classList.toggle('on', +img.dataset.stage <= n); });
+  }
+
+  function play() {
+    clearTimeout(timer);
+    if (reduced.matches) {
+      setStage(4);
+      status.textContent = 'Påkledd: ' + document.getElementById('lag-tall').textContent + '. Åpne påkledningen for detaljer.';
+      return;
+    }
+    // instant reset: kill any in-flight fade before restarting the sequence
+    var stackEl = document.getElementById('stack');
+    stackEl.classList.add('no-anim');
+    setStage(0);
+    void stackEl.offsetWidth; // force reflow
+    stackEl.classList.remove('no-anim');
+    status.textContent = '';
+    var n = 0;
+    function step() {
+      n += 1;
+      setStage(n);
+      if (n < 4) {
+        timer = setTimeout(step, STEP_MS);
+      } else {
+        status.textContent = 'Påkledd: ' + document.getElementById('lag-tall').textContent + '. Åpne påkledningen for detaljer.';
+      }
+    }
+    // 5-sekunders glimt kl. 06 krever at sekvensen starter nesten umiddelbart
+    timer = setTimeout(step, 220);
+  }
+
+  // clock (static demo value refreshed to real time on load, staying in Elverum context)
+  function paintClock() {
+    var el = document.getElementById('clock');
+    var now = new Date();
+    var hh = String(now.getHours()).padStart(2, '0');
+    var mm = String(now.getMinutes()).padStart(2, '0');
+    el.textContent = hh + ':' + mm;
+    el.setAttribute('datetime', hh + ':' + mm);
+  }
+  paintClock();
+
+  // V3 (F80.2): motion-toggle fjernet — sol-pulsen er nå engangs (<5s),
+  // så WCAG 2.2.2 krever ingen pause-kontroll. Replay fjernet — dressing
+  // spiller én gang ved load; popupen bærer antrekks-detaljene.
+
+  // primær-CTA «Se dagens antrekk» åpner påkledningen i appen — i mocken
+  // annonseres handlingen kun (popupen demonstreres i Påkledning A-mocken).
+  var ctaBtn = document.getElementById('cta-see');
+  ctaBtn.addEventListener('click', function () {
+    status.textContent = 'Åpner dagens antrekk. (I appen: påklednings-popupen — se Påkledning A-mocken.)';
+  });
+  // demo-kontroll UNDER framen (presentasjons-chrome, ikke app-UI) beholdes
+  document.getElementById('replay-btn').addEventListener('click', play);
+
+  // temp switcher — rotates the whole canvas world (mekanikken er uendret fra
+  // Brevann; roterer nå Morgennatts temp-akse: isblå→indigo→lyng/rosé).
+  // tempValues holder temp-tall + meta i sync med data-temp så canvas-hue
+  // og tall aldri motsier hverandre.
+  var tempValues = {
+    kald: { temp: '−8°', feels: '−13°', meta: 'Snø', wind: '5 m/s', lag: '5 lag anbefalt' },
+    mild: { temp: '12°', feels: '10°', meta: 'Klarvær', wind: '3 m/s', lag: '4 lag anbefalt' },
+    varm: { temp: '24°', feels: '25°', meta: 'Sol', wind: '2 m/s', lag: '2 lag anbefalt' }
+  };
+  var tempDisplay = document.getElementById('temp-display');
+  var tempMast = document.getElementById('temp-mast');
+  var metaEl = document.querySelector('.weather-hero .meta');
+  var atmosLags = [].slice.call(document.querySelectorAll('.atmos-lag'));
+  var tempBurst = document.getElementById('temp-burst');
+  var tempBtns = [].slice.call(document.querySelectorAll('.temp-btn'));
+
+  function applyTemp(key) {
+    var v = tempValues[key];
+    tempDisplay.textContent = v.temp;
+    tempMast.textContent = v.temp;
+    metaEl.innerHTML = '<strong>' + v.meta + '</strong> · føles som <span class="feels">' + v.feels + '</span> · vind ' + v.wind;
+    document.getElementById('lag-tall').textContent = v.lag.replace(' anbefalt', '');
+    atmosLags.forEach(function (lag) { lag.classList.toggle('is-active', lag.dataset.for === key); });
+    if (!reduced.matches) {
+      tempBurst.classList.remove('is-bursting');
+      void tempBurst.offsetWidth; // force reflow to restart the burst animation
+      tempBurst.classList.add('is-bursting');
+      // tallet ankommer sammen med bursten i stedet for å snappe stille
+      [tempDisplay, tempMast].forEach(function (el) {
+        el.classList.remove('tick');
+        void el.offsetWidth; // force reflow to restart
+        el.classList.add('tick');
+      });
+    }
+  }
+
+  tempBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      tempBtns.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+      btn.setAttribute('aria-pressed', 'true');
+      phone.dataset.temp = btn.dataset.temp;
+      document.documentElement.dataset.temp = btn.dataset.temp;
+      applyTemp(btn.dataset.temp);
+    });
+  });
+
+  // light/dark toggle
+  var themeBtn = document.getElementById('theme-toggle');
+  var themeLabel = document.getElementById('theme-label');
+  themeBtn.addEventListener('click', function () {
+    var dark = phone.dataset.theme !== 'dark';
+    phone.dataset.theme = dark ? 'dark' : 'light';
+    themeBtn.setAttribute('aria-pressed', String(dark));
+    themeLabel.textContent = dark ? 'Lys modus' : 'Mørk modus';
+  });
+
+  play();
+})();
+</script>
+</body>
+</html>

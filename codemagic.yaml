@@ -1,0 +1,173 @@
+# Codemagic CI/CD for Babyora
+# Gjenbruker mønster fra Ryddy + StrikeArc.
+#
+# Krever at Sivert kobler følgende i Codemagic UI før første grønne build:
+# 1. Apple Developer-konto → Code signing identities (App Store distribution cert)
+# 2. App Store Connect API key (for automatisk TestFlight-opplasting)
+# 3. Google Play service account JSON (for Play Internal-opplasting)
+# 4. Android keystore (upload + signing — kan gjenbrukes fra Ryddy)
+#
+# Workflow-trigger: push til main bygger og publiserer både iOS og Android
+# som DRAFT (intern testing). Ingenting går automatisk til offentlig release.
+
+workflows:
+  ios-internal:
+    name: Babyora iOS · TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: ryddy-asc-key # eksisterende key (JQVPW4D944), brukt av Ryddy/StrikeArc
+    environment:
+      # 2026-06-12 (Sivert + Claude kontroll-runde): byttet fra ios_signing-blokk
+      # til fetch-signing-files-pattern fordi babyora_distribution-cert ble
+      # revoked/expired (build #20 + #21 feilet). Auto-generering via ASC API
+      # eliminerer manuelt cert-vedlikehold — samme pattern som StrikeArc/Swinglab.
+      groups:
+        - klemeg_revenuecat   # VITE_REVENUECAT_PUBLIC_KEY_IOS, VITE_REVENUECAT_PUBLIC_KEY_ANDROID
+      vars:
+        XCODE_PROJECT: 'ios/App/App.xcodeproj'
+        XCODE_SCHEME: 'App'
+        BUNDLE_ID: 'no.klemeg.app'
+        WIDGET_BUNDLE_ID: 'no.klemeg.app.widget'
+        APP_STORE_APPLE_ID: '6776416135' # Klemeg ASC-record (verified via Playwright 2026-06-08)
+        # Native (Capacitor) har ingen server på app-origin → met.no-proxyen
+        # må peke på den absolutte Vercel-funksjonen. Web bruker relativ /api.
+        VITE_FORECAST_PROXY: 'https://wool-app.vercel.app/api/forecast'
+      node: 22
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+      - name: Verifiser env-keys (RevenueCat)
+        script: |
+          if [ -z "$VITE_REVENUECAT_PUBLIC_KEY_IOS" ]; then
+            echo "ADVARSEL: VITE_REVENUECAT_PUBLIC_KEY_IOS er ikke satt. Build fortsetter med localStorage-mock."
+          fi
+      - name: Clean web + Capacitor cache
+        script: |
+          rm -rf dist
+          rm -rf ios/App/App/public
+      - name: Build web
+        script: |
+          npm run build
+      - name: Sync Capacitor
+        script: |
+          npx cap sync ios
+      # P9.2 widget-target-injection FJERNET fra CI etter build #35-feil:
+      # xcodeproj-Ruby-scriptet ga 'Unexpected duplicate tasks' og tomme
+      # product-paths. Widget-target legges til på Mac av widget-sesjonen
+      # (feature/widget-ios) med Xcode-GUI istedenfor xcodeproj-gem.
+      # scripts/add-widget-target.rb beholdes som referanse i repoet.
+      - name: Set build number + marketing version
+        script: |
+          cd ios/App
+          agvtool new-version -all $BUILD_NUMBER
+          agvtool new-marketing-version 1.0.6
+      - name: Initialize keychain
+        script: |
+          # Uten dette feiler codesign med errSecInternalComponent
+          # senere i Build IPA (build #22 demonstrert).
+          keychain initialize
+      - name: Generate certificate private key
+        script: |
+          set -ex
+          # fetch-signing-files --create trenger en privatnøkkel via
+          # --certificate-key. Genererer en fersk RSA-2048-nøkkel her.
+          openssl genrsa -out /tmp/cert_private_key.pem 2048
+      - name: Fetch signing files (create cert + profile if missing)
+        script: |
+          set -ex
+          # ASC API auto-genererer cert + provisioning profile hvis ikke
+          # finnes, og laster ned begge til builderen. Bypasser revoked cert.
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --certificate-key=@file:/tmp/cert_private_key.pem \
+            --type IOS_APP_STORE \
+            --create \
+            --verbose
+      - name: Add certificates to keychain
+        script: |
+          keychain add-certificates
+      - name: Unlock keychain for non-interactive codesign
+        script: |
+          set -ex
+          # Fix for errSecInternalComponent på SPM-resource-bundles
+          # (RevenueCat_RevenueCat.bundle) — codesign trenger non-interactive
+          # tilgang til private key uten password-prompt.
+          KEYCHAIN_PATH=$(security list-keychains -d user | head -1 | tr -d '"' | xargs)
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -k "" \
+            "$KEYCHAIN_PATH" || echo "set-key-partition-list ikke nødvendig (eldre keychain)"
+      - name: Apply signing profiles to Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Build IPA
+        script: |
+          # 2026-06-12: SPM-resource-bundles (RevenueCat_RevenueCat.bundle)
+          # feilet med errSecInternalComponent. Standard fix er å sette
+          # CODE_SIGNING_ALLOWED=NO for resource bundles via xcodebuild flag.
+          # Hovedappen signes fortsatt normalt — kun .bundle-resources hoppes over.
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME" \
+            --archive-flags="CODE_SIGNING_ALLOWED_FOR_EXTENSIONS_AND_FRAMEWORKS=NO"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # submit_to_app_store: false — manuell release først, etter feedback fra testere
+
+  android-internal:
+    name: Babyora Android · Play Internal
+    instance_type: linux_x2
+    max_build_duration: 60
+    environment:
+      android_signing:
+        - klemeg_keystore # opprettes i Codemagic UI med kode-signering for Play Store
+      groups:
+        - google_play          # service account JSON som CM_GOOGLE_PLAY_KEY_JSON
+        - klemeg_revenuecat    # VITE_REVENUECAT_PUBLIC_KEY_IOS, VITE_REVENUECAT_PUBLIC_KEY_ANDROID
+      vars:
+        PACKAGE_NAME: 'no.klemeg.app'
+      node: 22
+      java: 17
+    # Auto-trigger disabled inntil klemeg_keystore er opprettet i Codemagic UI.
+    # Manuell trigger via Codemagic-dashboard fungerer fortsatt.
+    # triggering:
+    #   events:
+    #     - push
+    #   branch_patterns:
+    #     - pattern: main
+    #       include: true
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
+      - name: Build web
+        script: |
+          npm run build
+      - name: Sync Capacitor
+        script: |
+          npx cap sync android
+      - name: Set build version
+        script: |
+          cd android
+          ./gradlew bundleRelease \
+            -PversionCode=$BUILD_NUMBER \
+            -PversionName="1.0.6"
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+    publishing:
+      google_play:
+        credentials: $CM_GOOGLE_PLAY_KEY_JSON
+        track: internal
+        submit_as_draft: true # ny build går til Internal Testing som draft

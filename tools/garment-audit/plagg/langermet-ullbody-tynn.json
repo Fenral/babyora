@@ -1,0 +1,57 @@
+{
+  "claude": {
+    "id": "langermet-ullbody-tynn",
+    "kategori": "innerst",
+    "dbString": "langermet ullbody tynn",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett info-oppføring finnes i garment-info.ts (linje 37-40) med både `what` og `when`. Tone, lengde og mønster matcher søsken-plagg i innerst-kategorien (kortermet-ullbody, langermet-ullbody). Dedikert `whyForGarment`-gren finnes EKSPLISITT (linje 334: id-en er listet sammen med langermet-ullbody og kortermet-ullbody) — IKKE fallback. Liten svakhet: `what` sier 'Mindre varmeisolasjon enn vanlig ullbody' uten å nevne at den er ment for varm-bånd spesifikt, og deler ordrett samme whyForGarment-tekst som den tykkere langermet-ullbody, så de to tykkelse-trinnene får identisk begrunnelse i UI."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet til stede: C:/Users/SkotvoldSivertSende/wool-app/public/illustrations/garments/langermet-ullbody-tynn.png. Mapping i garment-illustrations.ts (linje 19) er korrekt og plausibel: db-streng 'langermet ullbody tynn' -> id 'langermet-ullbody-tynn'. Ingen kollisjon med 'langermet ullbody' (linje 18) som mapper til egen id. Filnavn matcher id eksakt slik garmentPng() forventer. Selve den visuelle dommen (tynn vs vanlig ullbody-distinksjon i bildet) overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "Plagget velges KUN i varm-bånd (feels-like 16-21 grader C) for to aktiviteter. Pediatrisk forsvarlig: tynn merinoull-body mot huden ved 16-21 grader i vogn/utelek er godt dekket av kildene — aap-healthychildren ('one layer more than adult'), merino-kids (ull regulerer fukt/varme) og capital-area-peds. Ull mot hud ved milde temp reduserer svette-akkumulering, ikke overoppheting. Ingen safety/conflict/softBlock rører plagget. Ved øvre kant av båndet (21 grader, vogn) fyrer overoppheting-noter (modifiers steg 6: feels>=18 + feels>=15 sol; softBlocks SB-6 lang vognetur). Ingen helse-gap kildene ikke dekker -> ingen web-søk nodvendig. Trekker 2 poeng: thin-varianten og standard-varianten okkuperer ALDRI samme bånd (standard langermet-ullbody finnes ikke i noen utebånd; thin finnes kun i varm), så det er ingen glidende tykkelse-progresjon mellom dem i seleksjonen — et hull i band-dekningen mer enn en fare.",
+      "score_dummy": 0,
+      "trace": "baseTable: (1) vogn.varm.innerst = ['langermet ullbody tynn'] (tables.ts linje 31-35, band 16-21 grader C via bandForTemp). (2) utelek.varm.innerst = ['langermet ullbody tynn', 'lett bukse'] (tables.ts linje 194-197). Ingen forekomst i baeresele eller soevn. modifiers.ts: ingen regel legger til/fjerner dette plagget spesifikt; ved feels<=5 legges ullsokker (ikke relevant i varm-bånd 16-21). conflicts.ts/softBlocks.ts/safety.ts: ingen regel matcher 'langermet ullbody tynn'. Netto: valgt utelukkende i varm-bånd (16-21 grader C), vogn + utelek.",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 19,
+      "kommentar": "DRIFT i `when`-tekst vs faktisk seleksjon. `when` sier 'Milde dager der full ullbody ville blitt for varmt.' Men plagget velges i appens VARM-bånd (16-21 grader C), ikke mild-bånd. Appens egen bandForTemp definerer 'mild' = 10-15 grader C — og i mild-bånd velges faktisk 'ullsett tynt', ALDRI denne body-en. Ordet 'milde dager' colloquialt overlapper med 16-21, men terminologien kolliderer med appens egne båndnavn og kan villede en forelder som leser 'mild' som 10-15. whyForGarment-grenen (linje 334-335: 'Ull mot huden regulerer både fukt og varme... svetter mindre... selv med flere lag på') stemmer med varm-bånd-bruk og er pediatrisk korrekt. Trekker for `when`-driften som peker mot feil temperatursjikt; ikke severity hoy fordi retningen (tynnere = varmere) er trygg, men den er upresis."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Plagget har INGEN oppføring i alternatives.ts. Et reelt og nyttig tykkelse-trinn-alternativ finnes: standard 'langermet ullbody' (tykkere) som forelder kan bruke i nedre kant av varm-båndet, eller kortermet-ullbody i øvre kant (>20 grader). Mange foreldre eier kun én ull-body — å vise 'vanlig langermet ullbody' som alternativ ville hjelpe. Mønsteret finnes allerede i fila (f.eks. 'lue m/ ull' -> 'lue tynn', 'vintersko isolerte' -> 'vintersko' er tykkelse-trinn). Brand-DNA er ull-først, så ull->fleece er ikke aktuelt her (riktig utelatt). Trekker 3 poeng for manglende thin<->standard tykkelse-alternativ."
+    },
+    "total": 86,
+    "verdikt": "Solid innerst-plagg med komplett struktur, bekreftet PNG/mapping og pediatrisk forsvarlig seleksjon i varm-bånd (16-21 grader C, vogn + utelek). To reelle, ikke-kritiske svakheter: (1) `when`-teksten sier 'milde dager' mens plagget faktisk velges i appens VARM-bånd — terminologi-drift som kan villede, og (2) ingen tykkelse-trinn-alternativ i alternatives.ts til tross for etablert mønster. Ingen sikkerhetsfunn. Klart innenfor godkjent-terskel; ingen tall/terskler bør røres.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "`when`-teksten i garment-info.ts (linje 39) sier 'Milde dager der full ullbody ville blitt for varmt.' Men plagget velges utelukkende i appens VARM-bånd (16-21 grader C, vogn + utelek). Appens egen bandForTemp definerer 'mild' = 10-15 grader C, hvor 'ullsett tynt' velges i stedet — ikke denne body-en. Terminologi-drift mellom UI-tekst og faktisk band-logikk.",
+        "forslag": "Juster `when` til å speile varm-båndet eksplisitt, f.eks. 'Varme, milde dager (ca 16-21 grader) i vogn eller utelek, der full ullbody ville blitt for varmt.' — uten å endre noen terskel-tall i tables.ts.",
+        "kilde": "tables.ts vogn.varm + utelek.varm; bandForTemp() linje 8-18"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen alternativ-oppføring i alternatives.ts for 'langermet ullbody tynn', selv om et meningsfullt tykkelse-trinn-alternativ finnes (standard 'langermet ullbody' for nedre kant, eller kortermet-ullbody for øvre kant >20 grader). Mønsteret med tykkelse-trinn-alternativer er allerede etablert i fila.",
+        "forslag": "Vurder å legge til en ITEM_ALTERNATIVES-oppføring for 'langermet ullbody tynn' med alternativ 'langermet ullbody' (vanlig tykkelse) for foreldre som kun eier én ull-body. Behold ull-først, ikke foreslå fleece for innerst-lag.",
+        "kilde": "alternatives.ts ITEM_ALTERNATIVES; eksisterende mønster 'lue m/ ull'->'lue tynn'"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "whyForGarment-grenen (garment-info.ts linje 334) gir IDENTISK begrunnelsestekst til både 'langermet-ullbody-tynn' og den tykkere 'langermet-ullbody'. UI skiller dermed ikke de to tykkelse-trinnene i 'Hvorfor i dette antrekket?'.",
+        "forslag": "Vurder en egen gren for thin-varianten som nevner at den er valgt fordi det er for varmt for full ullbody, slik at de to body-tykkelsene får distinkt begrunnelse.",
+        "kilde": "garment-info.ts whyForGarment linje 334-335"
+      }
+    ]
+  },
+  "fable": null
+}

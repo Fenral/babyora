@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Påkledning · P5-v2 Anatomisk Canvas + Tap-til-detalj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-canvas:#DBD8D2;
+  --bg-canvas-soft:#E5E2DC;
+  --bg-canvas-deep:#CFCBC2;
+  --terracotta-500:#C0632F;
+  --terracotta-600:#B4502E;
+  --terracotta-700:#A9492A;
+  --terracotta-100:#F4E4D8;
+  --terracotta-700-on-100:#8A3618;
+
+  --layer-ytterst:#C0632F;
+  --layer-mellom:#5E8C6A;
+  --layer-innerst:#3F5A78;
+  --layer-tilbehor:#7B6A58;
+
+  --ink-900:#2B2B2B;
+  --ink-700:#5A514C;
+  --ink-500:#A89E97;
+  --ink-300:#C9C3BD;
+
+  --card-bg:#FFFFFF;
+  --card-shadow:0 1px 2px rgba(43,37,34,.05),0 8px 18px rgba(43,37,34,.09);
+
+  --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+  --font-serif:'DM Serif Display',Georgia,serif;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#1a1a1a;font-family:var(--font-sans);}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;color:var(--ink-900);}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+/* iPhone-frame 390×844 */
+.frame{
+  position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5), 0 0 0 12px #1f1f1f, 0 0 0 13px #333;
+  background:linear-gradient(180deg,#C7D6E1 0%,#DEE1DD 45%,#E9E1D6 100%);
+}
+
+.screen{
+  position:relative;height:100%;width:100%;display:flex;flex-direction:column;
+  font-family:var(--font-sans);color:var(--ink-900);
+  padding-top:env(safe-area-inset-top,0px);
+  background:var(--bg-canvas);
+}
+.screen::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 46% at 50% -8%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%);
+}
+
+/* Topbar */
+.topbar{
+  position:relative;z-index:5;flex:none;
+  height:calc(44px + 8px);
+  margin-top:46px;
+  padding:0 16px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(43,43,43,.06);
+}
+.back-btn{
+  width:44px;height:44px;flex:none;border-radius:11px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(43,43,43,.06);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+}
+.back-btn:active{transform:scale(.96);}
+.topbar-title{
+  flex:1;text-align:center;font-size:17px;font-weight:700;letter-spacing:-.3px;color:var(--ink-900);
+}
+.meta-pill{
+  flex:none;display:flex;align-items:center;gap:6px;
+  padding:7px 11px;border-radius:11px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(43,43,43,.06);
+  font-size:12px;font-weight:600;color:var(--ink-700);letter-spacing:.1px;
+}
+.meta-pill .temp-fig{font-family:var(--font-serif);font-weight:400;font-size:13.5px;letter-spacing:-.2px;color:var(--ink-900);}
+
+/* Scroll-area */
+.scroll-area{
+  position:relative;z-index:3;
+  flex:1;min-height:0;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:14px 16px 130px;
+  scrollbar-width:none;
+}
+.scroll-area::-webkit-scrollbar{display:none;}
+
+/* Canvas-intro */
+.canvas-intro{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:0 4px 10px;
+}
+.canvas-intro .label{
+  font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-500);
+}
+.canvas-intro .who{
+  font-size:12.5px;font-weight:600;color:var(--ink-700);letter-spacing:-.1px;
+}
+
+/* Anatomisk canvas */
+.anatomy-canvas{
+  position:relative;
+  width:100%;
+  height:580px;
+  border-radius:24px;
+  background:linear-gradient(180deg, var(--bg-canvas-soft) 0%, var(--bg-canvas) 60%, var(--bg-canvas-deep) 100%);
+  border:1px solid rgba(43,43,43,.05);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 1px 2px rgba(43,37,34,.04);
+  margin-bottom:16px;
+  overflow:hidden;
+}
+.anatomy-canvas::before{
+  content:"";position:absolute;inset:0;border-radius:24px;pointer-events:none;
+  background-image:radial-gradient(circle at 1px 1px, rgba(43,43,43,.05) 1px, transparent 0);
+  background-size:18px 18px;
+  opacity:.55;
+  mask-image:linear-gradient(180deg, rgba(0,0,0,.4), rgba(0,0,0,.15) 70%, transparent);
+  -webkit-mask-image:linear-gradient(180deg, rgba(0,0,0,.4), rgba(0,0,0,.15) 70%, transparent);
+}
+/* Subtil kropps-silhuett-guide (sentral vertikal akse + zoning) */
+.anatomy-canvas::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:24px;
+  background:
+    radial-gradient(ellipse 120px 140px at 50% 18%, rgba(255,255,255,.18), transparent 70%),
+    radial-gradient(ellipse 170px 220px at 50% 50%, rgba(255,255,255,.12), transparent 70%);
+}
+
+/* Zone-positioner — alle absolute, sentered horisontalt der det gir mening */
+.zone{
+  position:absolute;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* HODE-ZONE: topp */
+.zone-head{
+  top:18px;left:50%;transform:translateX(-50%);
+  width:90px;height:90px;
+}
+
+/* TORSO/BEN-ZONE: midten, full vinterdress */
+.zone-body{
+  top:96px;left:50%;transform:translateX(-50%);
+  width:220px;height:380px;
+}
+
+/* HÅND-ZONER: venstre og høyre */
+.zone-hand-left{
+  top:230px;left:18px;
+  width:78px;height:78px;
+}
+.zone-hand-right{
+  top:230px;right:18px;
+  width:78px;height:78px;
+}
+
+/* FØTTER-ZONE: bunn */
+.zone-feet{
+  bottom:24px;left:50%;transform:translateX(-50%);
+  width:90px;height:90px;
+}
+
+/* Tap-target — usynlig button rundt hvert plagg, sikrer 44×44 hit-area */
+.tap{
+  position:absolute;inset:0;
+  background:transparent;border:none;padding:0;cursor:pointer;
+  border-radius:50%;
+  z-index:5;
+  -webkit-tap-highlight-color:transparent;
+}
+.tap:focus-visible{outline:2px solid var(--terracotta-500);outline-offset:4px;}
+
+/* Plagg-image — visuell representasjon, ikke interaktiv */
+.garment-img{
+  position:absolute;inset:0;
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  pointer-events:none;
+}
+
+/* Synlige plagg = drop-shadow */
+.garment-visible{
+  filter:drop-shadow(2px 8px 12px rgba(74,68,58,.22)) drop-shadow(0 2px 3px rgba(74,68,58,.18));
+}
+
+/* X-ray innerlag = subtil ghost */
+.garment-xray{
+  opacity:.32;
+  filter:blur(.3px);
+  mix-blend-mode:multiply;
+}
+.garment-xray-deeper{opacity:.22;}
+
+/* Pulse-ring — vises ved tap, lag-farget */
+.pulse-ring{
+  position:absolute;inset:-6px;
+  border-radius:50%;
+  pointer-events:none;
+  opacity:0;
+  z-index:4;
+}
+.tap:active + .garment-img + .pulse-ring,
+.tap.active + .garment-img + .pulse-ring,
+.zone.pulsing .pulse-ring{
+  animation:pulseRing .55s ease-out;
+}
+@keyframes pulseRing{
+  0%{opacity:.6;transform:scale(.85);}
+  100%{opacity:0;transform:scale(1.25);}
+}
+
+/* Per-lag pulse-color via inline style/class */
+.zone[data-lag="ytterst"] .pulse-ring{box-shadow:0 0 0 3px var(--layer-ytterst), 0 0 12px 6px rgba(192,99,47,.4);}
+.zone[data-lag="mellom"] .pulse-ring{box-shadow:0 0 0 3px var(--layer-mellom), 0 0 12px 6px rgba(94,140,106,.4);}
+.zone[data-lag="innerst"] .pulse-ring{box-shadow:0 0 0 3px var(--layer-innerst), 0 0 12px 6px rgba(63,90,120,.4);}
+.zone[data-lag="tilbehor"] .pulse-ring{box-shadow:0 0 0 3px var(--layer-tilbehor), 0 0 12px 6px rgba(123,106,88,.4);}
+
+/* Press-effekt */
+.tap:active ~ .garment-img,
+.tap.active ~ .garment-img{transform:scale(.96);transition:transform 120ms ease;}
+.garment-img{transition:transform 180ms ease;}
+
+/* Mikro lag-indikator under hvert plagg (synlig hint om tap-able) */
+.lag-dot{
+  position:absolute;
+  width:8px;height:8px;border-radius:50%;
+  bottom:-2px;left:50%;transform:translateX(-50%);
+  z-index:3;
+  box-shadow:0 0 0 2px var(--bg-canvas), 0 2px 4px rgba(43,37,34,.18);
+}
+.lag-dot.ytterst{background:var(--layer-ytterst);}
+.lag-dot.mellom{background:var(--layer-mellom);}
+.lag-dot.innerst{background:var(--layer-innerst);}
+.lag-dot.tilbehor{background:var(--layer-tilbehor);}
+
+/* Legend bar — kort lag-fargenøkkel under canvas */
+.legend{
+  display:flex;justify-content:center;gap:14px;
+  padding:6px 4px 14px;
+}
+.legend-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:10.5px;font-weight:600;color:var(--ink-700);letter-spacing:.2px;
+}
+.legend-swatch{
+  width:9px;height:9px;border-radius:50%;
+}
+.legend-swatch.ytterst{background:var(--layer-ytterst);}
+.legend-swatch.mellom{background:var(--layer-mellom);}
+.legend-swatch.innerst{background:var(--layer-innerst);}
+.legend-swatch.tilbehor{background:var(--layer-tilbehor);}
+
+/* Helper-banner — første interaksjon */
+.helper-banner{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 14px;
+  border-radius:14px;
+  background:var(--card-bg);
+  box-shadow:0 1px 2px rgba(43,37,34,.04),0 4px 10px rgba(43,37,34,.06);
+  margin-bottom:14px;
+}
+.helper-banner svg{flex:none;}
+.helper-banner .text{
+  flex:1;font-size:12.5px;color:var(--ink-700);line-height:1.35;letter-spacing:-.1px;
+}
+.helper-banner .text b{color:var(--ink-900);font-weight:600;}
+
+/* Sticky CTA */
+.sticky-cta{
+  position:absolute;left:0;right:0;bottom:0;z-index:10;
+  padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 16px);
+  background:linear-gradient(180deg,rgba(219,216,210,0) 0%, rgba(219,216,210,.92) 28%, rgba(219,216,210,.98) 100%);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.cta-btn{
+  width:100%;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:17px 24px;border-radius:18px;border:none;cursor:pointer;
+  background:linear-gradient(140deg,var(--terracotta-500) 0%,var(--terracotta-700) 100%);
+  box-shadow:0 1px 2px rgba(43,43,43,.06),0 12px 24px rgba(169,73,42,.32);
+  font-family:var(--font-sans);
+  transition:transform 120ms ease;
+}
+.cta-btn:active{transform:translateY(1px) scale(.99);}
+.cta-btn span{font-size:16px;font-weight:600;color:#FFF;letter-spacing:.1px;}
+
+/* ========== BOTTOM SHEET ========== */
+dialog.detail-sheet{
+  position:absolute;
+  bottom:0;left:0;right:0;top:auto;
+  margin:0;
+  width:100%;max-width:100%;
+  border:none;padding:0;
+  background:transparent;
+  overflow:visible;
+}
+dialog.detail-sheet::backdrop{
+  background:rgba(20,18,16,.45);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+}
+.sheet-inner{
+  background:#FBFAF7;
+  border-radius:24px 24px 0 0;
+  padding:14px 20px calc(env(safe-area-inset-bottom,0px) + 24px);
+  box-shadow:0 -8px 30px rgba(43,37,34,.3);
+  animation:sheetSlide .32s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes sheetSlide{
+  from{transform:translateY(100%);}
+  to{transform:translateY(0);}
+}
+.sheet-handle{
+  width:38px;height:4px;border-radius:2px;
+  background:var(--ink-300);
+  margin:0 auto 14px;
+}
+.sheet-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  margin-bottom:14px;
+}
+.sheet-titles{flex:1;min-width:0;}
+.lag-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 9px;border-radius:6px;
+  font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  margin-bottom:6px;
+}
+.lag-tag.ytterst{background:#F4E4D8;color:#8A3618;}
+.lag-tag.mellom{background:#E0EBE2;color:#3D6048;}
+.lag-tag.innerst{background:#DDE5EE;color:#2A3F58;}
+.lag-tag.tilbehor{background:#EAE3DA;color:#5A4836;}
+.sheet-title{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:22px;color:var(--ink-900);
+  margin:0;line-height:1.15;letter-spacing:-.4px;
+}
+.sheet-close{
+  flex:none;width:36px;height:36px;border-radius:50%;
+  background:rgba(43,43,43,.05);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0;
+}
+.sheet-close:active{transform:scale(.94);}
+
+.sheet-hero{
+  display:flex;align-items:center;justify-content:center;
+  height:170px;
+  background:linear-gradient(180deg,#F5F1EC 0%,#EDE8E1 100%);
+  border-radius:18px;
+  margin-bottom:16px;
+  position:relative;
+}
+.sheet-hero-img{
+  width:160px;height:160px;
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  filter:drop-shadow(2px 8px 12px rgba(74,68,58,.18));
+}
+
+.spec-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
+  margin-bottom:14px;
+}
+.spec{
+  background:#fff;border-radius:12px;padding:10px 12px;
+  box-shadow:0 1px 2px rgba(43,37,34,.04);
+}
+.spec-label{
+  font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--ink-500);margin-bottom:4px;
+}
+.spec-value{
+  font-size:13px;font-weight:600;color:var(--ink-900);letter-spacing:-.1px;line-height:1.2;
+}
+
+.why-block{
+  background:#fff;border-radius:14px;padding:13px 14px;
+  box-shadow:0 1px 2px rgba(43,37,34,.04);
+}
+.why-label{
+  font-size:10.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--terracotta-700-on-100);margin-bottom:6px;
+}
+.why-text{
+  font-size:13px;color:var(--ink-700);line-height:1.5;letter-spacing:-.05px;margin:0;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .pulse-ring,.garment-img{animation:none !important;transition:none !important;}
+  .sheet-inner{animation:none !important;}
+  .cta-btn,.back-btn,.sheet-close{transition:none !important;}
+}
+</style>
+</head>
+<body>
+  <div class="frame">
+    <main class="screen" aria-label="Slik kler du Liv — anatomisk canvas">
+      <h1 class="sr-only">Påkledning — Anatomisk canvas, tap-til-detalj</h1>
+
+      <!-- Topbar -->
+      <div class="topbar" role="banner">
+        <button class="back-btn" aria-label="Tilbake">
+          <svg width="9" height="16" viewBox="0 0 12 20" fill="none" stroke="#2B2B2B" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg>
+        </button>
+        <div class="topbar-title">Slik kler du Liv</div>
+        <div class="meta-pill" aria-label="Minus 22 grader, Karasjok">
+          <span class="temp-fig">−22°</span>
+          <span aria-hidden="true">·</span>
+          <span>Karasjok</span>
+        </div>
+      </div>
+
+      <!-- Scroll-area -->
+      <div class="scroll-area">
+
+        <!-- Canvas-intro -->
+        <div class="canvas-intro">
+          <span class="label">Antrekk</span>
+          <span class="who">Liv · 14 mnd · Utelek</span>
+        </div>
+
+        <!-- Helper-banner -->
+        <div class="helper-banner" role="note">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E8C6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>
+          </svg>
+          <div class="text"><b>Trykk på et plagg</b> for å se hvorfor det er valgt og hvordan det varmer.</div>
+        </div>
+
+        <!-- ANATOMISK CANVAS -->
+        <div class="anatomy-canvas" role="region" aria-label="Antrekk vist anatomisk: hode, kropp, hender, føtter">
+
+          <!-- HODE: Lue -->
+          <div class="zone zone-head" data-lag="tilbehor" data-garment="lue">
+            <button class="tap" type="button" aria-label="Vis detalj for Lue (tilbehør)" data-target="lue"></button>
+            <div class="garment-img garment-visible" style="background-image:url(../illustrations/garments/lue-m-ull.png);" aria-hidden="true"></div>
+            <span class="pulse-ring" aria-hidden="true"></span>
+            <span class="lag-dot tilbehor" aria-hidden="true"></span>
+          </div>
+
+          <!-- TORSO/BEN: 5 plagg stablet z-akse, ytterst på toppen -->
+          <div class="zone zone-body" data-lag="ytterst" data-garment="vinterdress">
+
+            <!-- INNERST (dypeste lag, x-ray) — ullbody langermet -->
+            <div class="garment-img garment-xray garment-xray-deeper"
+                 style="background-image:url(../illustrations/garments/langermet-ullbody.png);
+                        inset:8% 28% 28% 28%;"
+                 aria-hidden="true"></div>
+
+            <!-- INNERST — tynn bukse (x-ray, ben-zone) -->
+            <div class="garment-img garment-xray garment-xray-deeper"
+                 style="background-image:url(../illustrations/garments/tynn-bukse.png);
+                        inset:40% 32% 4% 32%;"
+                 aria-hidden="true"></div>
+
+            <!-- MELLOM — ullsett tykt (x-ray) -->
+            <div class="garment-img garment-xray"
+                 style="background-image:url(../illustrations/garments/ullsett-tykt.png);
+                        inset:4% 18% 6% 18%;"
+                 aria-hidden="true"></div>
+
+            <!-- MELLOM — fleecejakke (x-ray, torso) -->
+            <div class="garment-img garment-xray"
+                 style="background-image:url(../illustrations/garments/ull-jakke.png);
+                        inset:2% 14% 38% 14%;"
+                 aria-hidden="true"></div>
+
+            <!-- YTTERST — vinterdress (full opacity, dekker alt) -->
+            <div class="garment-img garment-visible"
+                 style="background-image:url(../illustrations/garments/vinterdress.png);
+                        inset:0;"
+                 aria-hidden="true"></div>
+
+            <!-- Tap-targets per lag — usynlige zoner stablet over body -->
+            <button class="tap" type="button" aria-label="Vis detalj for Vinterdress (ytterst)"
+                    data-target="vinterdress"
+                    style="position:absolute;top:0;left:6%;right:6%;height:55%;background:transparent;border-radius:30% 30% 18% 18%;"></button>
+
+            <button class="tap" type="button" aria-label="Vis detalj for Tynn bukse (innerst, ben)"
+                    data-target="tynn-bukse"
+                    style="position:absolute;bottom:0;left:24%;right:24%;height:38%;background:transparent;border-radius:14px;"></button>
+
+            <span class="lag-dot ytterst" aria-hidden="true" style="top:8px;bottom:auto;"></span>
+          </div>
+
+          <!-- TAP-LAYER FOR MELLOMLAG — sidekant av body for tap-tilgang til indre lag -->
+          <button class="tap" type="button" aria-label="Vis detalj for Fleecejakke (mellom)"
+                  data-target="fleecejakke"
+                  style="position:absolute;top:120px;left:24px;width:64px;height:70px;border-radius:50%;z-index:6;">
+          </button>
+          <span class="lag-dot mellom" aria-hidden="true" style="position:absolute;top:160px;left:50px;z-index:7;"></span>
+
+          <button class="tap" type="button" aria-label="Vis detalj for Ullsett tykt (mellom)"
+                  data-target="ullsett-tykt"
+                  style="position:absolute;top:120px;right:24px;width:64px;height:70px;border-radius:50%;z-index:6;">
+          </button>
+          <span class="lag-dot mellom" aria-hidden="true" style="position:absolute;top:160px;right:50px;z-index:7;"></span>
+
+          <button class="tap" type="button" aria-label="Vis detalj for Ullbody langermet (innerst)"
+                  data-target="ullbody"
+                  style="position:absolute;top:200px;left:30px;width:64px;height:70px;border-radius:50%;z-index:6;">
+          </button>
+          <span class="lag-dot innerst" aria-hidden="true" style="position:absolute;top:240px;left:56px;z-index:7;"></span>
+
+          <!-- HÅND-VENSTRE: Votter -->
+          <div class="zone zone-hand-left" data-lag="tilbehor" data-garment="votter">
+            <button class="tap" type="button" aria-label="Vis detalj for Votter (tilbehør)" data-target="votter"></button>
+            <div class="garment-img garment-visible" style="background-image:url(../illustrations/garments/vindvotter-skall.png);" aria-hidden="true"></div>
+            <span class="pulse-ring" aria-hidden="true"></span>
+            <span class="lag-dot tilbehor" aria-hidden="true"></span>
+          </div>
+
+          <!-- HÅND-HØYRE: Votter speilet (dekorativt — samme tap-target) -->
+          <div class="zone zone-hand-right" data-lag="tilbehor" data-garment="votter">
+            <button class="tap" type="button" aria-label="Vis detalj for Votter (tilbehør)" data-target="votter"></button>
+            <div class="garment-img garment-visible" style="background-image:url(../illustrations/garments/vindvotter-skall.png);transform:scaleX(-1);" aria-hidden="true"></div>
+            <span class="pulse-ring" aria-hidden="true"></span>
+            <span class="lag-dot tilbehor" aria-hidden="true"></span>
+          </div>
+
+          <!-- FØTTER: Ullsokker -->
+          <div class="zone zone-feet" data-lag="tilbehor" data-garment="ullsokker">
+            <button class="tap" type="button" aria-label="Vis detalj for Ullsokker (tilbehør)" data-target="ullsokker"></button>
+            <div class="garment-img garment-visible" style="background-image:url(../illustrations/garments/ullsokker.png);" aria-hidden="true"></div>
+            <span class="pulse-ring" aria-hidden="true"></span>
+            <span class="lag-dot tilbehor" aria-hidden="true"></span>
+          </div>
+
+        </div>
+
+        <!-- Legend -->
+        <div class="legend" aria-label="Lag-farger">
+          <span class="legend-item"><span class="legend-swatch ytterst"></span>Ytterst</span>
+          <span class="legend-item"><span class="legend-swatch mellom"></span>Mellom</span>
+          <span class="legend-item"><span class="legend-swatch innerst"></span>Innerst</span>
+          <span class="legend-item"><span class="legend-swatch tilbehor"></span>Tilbehør</span>
+        </div>
+
+      </div>
+
+      <!-- Sticky CTA -->
+      <div class="sticky-cta">
+        <button class="cta-btn" type="button" aria-label="Klar for tur">
+          <span>Klar for tur</span>
+          <svg width="22" height="13" viewBox="0 0 26 14" fill="none" stroke="#FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h20"/><path d="M17 2l5 5-5 5"/></svg>
+        </button>
+      </div>
+
+      <!-- Bottom-sheet (native dialog) -->
+      <dialog class="detail-sheet" id="detail-sheet" aria-labelledby="sheet-title">
+        <div class="sheet-inner">
+          <div class="sheet-handle" aria-hidden="true"></div>
+          <div class="sheet-head">
+            <div class="sheet-titles">
+              <span class="lag-tag" id="sheet-lag-tag">Lag</span>
+              <h2 class="sheet-title" id="sheet-title">Plagg</h2>
+            </div>
+            <button class="sheet-close" id="sheet-close" type="button" aria-label="Lukk detalj">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+            </button>
+          </div>
+          <div class="sheet-hero">
+            <div class="sheet-hero-img" id="sheet-hero-img" aria-hidden="true"></div>
+          </div>
+          <div class="spec-grid">
+            <div class="spec">
+              <div class="spec-label">Materiale</div>
+              <div class="spec-value" id="sheet-material">—</div>
+            </div>
+            <div class="spec">
+              <div class="spec-label">Vekt</div>
+              <div class="spec-value" id="sheet-weight">—</div>
+            </div>
+            <div class="spec">
+              <div class="spec-label">Kategori</div>
+              <div class="spec-value" id="sheet-category">—</div>
+            </div>
+          </div>
+          <div class="why-block">
+            <div class="why-label">Hvorfor anbefalt</div>
+            <p class="why-text" id="sheet-why">—</p>
+          </div>
+        </div>
+      </dialog>
+
+    </main>
+  </div>
+
+<script>
+(function(){
+  const garments = {
+    'vinterdress':{
+      name:'Vinterdress',
+      lag:'ytterst',
+      lagLabel:'Ytterst',
+      img:'../illustrations/garments/vinterdress.png',
+      material:'Polyester m/ dun-isolasjon',
+      weight:'480 g',
+      category:'Heldress',
+      why:'Vindtett ytterskall og dun-isolasjon holder Liv tørr og varm ved −22°. Heldress hindrer kald luft mot rygg og mage når hun beveger seg.'
+    },
+    'ull-jakke':{name:'Fleecejakke',lag:'mellom',lagLabel:'Mellom',img:'../illustrations/garments/ull-jakke.png',material:'Fleece (polyester)',weight:'180 g',category:'Mellomlag overdel',why:'Lufting og varme-buffer mellom ullsettet og vinterdressen. Lett, tørker raskt og lar fukten passere ut.'},
+    'fleecejakke':{name:'Fleecejakke',lag:'mellom',lagLabel:'Mellom',img:'../illustrations/garments/ull-jakke.png',material:'Fleece (polyester)',weight:'180 g',category:'Mellomlag overdel',why:'Lufting og varme-buffer mellom ullsettet og vinterdressen. Lett, tørker raskt og lar fukten passere ut.'},
+    'ullsett-tykt':{name:'Ullsett tykt',lag:'mellom',lagLabel:'Mellom',img:'../illustrations/garments/ullsett-tykt.png',material:'100% merinoull, 280 g/m²',weight:'220 g',category:'Mellomlag heldekkende',why:'Tykk merinoull isolerer godt selv når den er litt fuktig, og kløer ikke mot huden. Hovedvarmen i antrekket under −15°.'},
+    'langermet-ullbody':{name:'Ullbody langermet',lag:'innerst',lagLabel:'Innerst',img:'../illustrations/garments/langermet-ullbody.png',material:'100% merinoull, 160 g/m²',weight:'85 g',category:'Innerlag overdel',why:'Tynn merinoull mot huden transporterer svette vekk og holder Liv tørr. Body-form hindrer kuldebro over magen.'},
+    'ullbody':{name:'Ullbody langermet',lag:'innerst',lagLabel:'Innerst',img:'../illustrations/garments/langermet-ullbody.png',material:'100% merinoull, 160 g/m²',weight:'85 g',category:'Innerlag overdel',why:'Tynn merinoull mot huden transporterer svette vekk og holder Liv tørr. Body-form hindrer kuldebro over magen.'},
+    'tynn-bukse':{name:'Tynn ullbukse',lag:'innerst',lagLabel:'Innerst',img:'../illustrations/garments/tynn-bukse.png',material:'100% merinoull, 160 g/m²',weight:'70 g',category:'Innerlag underdel',why:'Tynt ull-innerlag på beina hindrer kald luft mot huden og fukt-oppbygging når hun går i snøen.'},
+    'lue':{name:'Lue med ull',lag:'tilbehor',lagLabel:'Tilbehør',img:'../illustrations/garments/lue-m-ull.png',material:'Ull/akryl-mix m/ fôr',weight:'45 g',category:'Tilbehør · hode',why:'Dekker øret og pannen. Hode taper mest varme i ekstrem kulde — luen er obligatorisk under −10°.'},
+    'votter':{name:'Vindvotter med skall',lag:'tilbehor',lagLabel:'Tilbehør',img:'../illustrations/garments/vindvotter-skall.png',material:'Ull-innerfôr + vindtett skall',weight:'55 g',category:'Tilbehør · hender',why:'Vindtett skall stopper kuldebro når hun griper i snø. Ull-innerlag holder fingrene varme også når vottene blir litt fuktige.'},
+    'ullsokker':{name:'Ullsokker',lag:'tilbehor',lagLabel:'Tilbehør',img:'../illustrations/garments/ullsokker.png',material:'80% merinoull, 20% nylon',weight:'40 g',category:'Tilbehør · føtter',why:'Tjukke ullsokker isolerer i vinterskoene og holder tærne varme i opptil 1 time aktiv lek ved −22°.'}
+  };
+
+  const dialog = document.getElementById('detail-sheet');
+  const elTag = document.getElementById('sheet-lag-tag');
+  const elTitle = document.getElementById('sheet-title');
+  const elHero = document.getElementById('sheet-hero-img');
+  const elMat = document.getElementById('sheet-material');
+  const elWei = document.getElementById('sheet-weight');
+  const elCat = document.getElementById('sheet-category');
+  const elWhy = document.getElementById('sheet-why');
+  const closeBtn = document.getElementById('sheet-close');
+
+  function openDetail(key, sourceZone){
+    const g = garments[key];
+    if(!g) return;
+    elTag.textContent = g.lagLabel.toUpperCase();
+    elTag.className = 'lag-tag ' + g.lag;
+    elTitle.textContent = g.name;
+    elHero.style.backgroundImage = `url(${g.img})`;
+    elMat.textContent = g.material;
+    elWei.textContent = g.weight;
+    elCat.textContent = g.category;
+    elWhy.textContent = g.why;
+
+    // Pulse-ring animasjon på source-zone
+    if(sourceZone && sourceZone.classList.contains('zone')){
+      sourceZone.classList.remove('pulsing');
+      // force reflow
+      void sourceZone.offsetWidth;
+      sourceZone.classList.add('pulsing');
+      setTimeout(()=>sourceZone.classList.remove('pulsing'), 600);
+    }
+
+    if(typeof dialog.showModal === 'function'){
+      dialog.showModal();
+    } else {
+      dialog.setAttribute('open','');
+    }
+    // Focus on close-btn for keyboard users
+    setTimeout(()=>closeBtn.focus(), 80);
+  }
+
+  function closeDetail(){
+    if(typeof dialog.close === 'function'){
+      dialog.close();
+    } else {
+      dialog.removeAttribute('open');
+    }
+  }
+
+  // Wire up all tap-targets
+  document.querySelectorAll('.tap[data-target]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      const key = btn.dataset.target;
+      const zone = btn.closest('.zone');
+      openDetail(key, zone);
+    });
+  });
+
+  closeBtn.addEventListener('click', closeDetail);
+
+  // Backdrop click closes
+  dialog.addEventListener('click', (e)=>{
+    if(e.target === dialog) closeDetail();
+  });
+
+  // Escape closes (native, but ensure)
+  dialog.addEventListener('cancel', (e)=>{
+    e.preventDefault();
+    closeDetail();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "_note": "Mål-2 (utseende) vurdert direkte av Claude med vision i hovedøkta. Korrigerer falske 'manglende PNG'-funn fra Stadium A.",
+  "korreksjoner": [
+    { "id": "vinterkjoredress", "stadiumAFunn": "PNG mangler (hoy, mål 2)", "korreksjon": "FALSK — vinterkjoredress.png EKSISTERER (676 KB). Bildet viser korrekt marineblå, vattert/dun fôret kjøredress med hette og fottak. Riktig plagg, stil-konsistent. Funnet skal forkastes." },
+    { "id": "vinterkjoredress-isolert", "stadiumAFunn": "PNG mangler (nevnt)", "korreksjon": "FALSK — vinterkjoredress-isolert.png EKSISTERER (701 KB)." },
+    { "id": "votter-tynne", "stadiumAFunn": "PNG mangler (hoy, mål 2)", "korreksjon": "FALSK — votter-tynne.png EKSISTERER (795 KB). Bildet viser kremfargede ribbestrikkede votter. Riktig plagg. Mindre mål-2-merknad: 'tynnheten' er ikke visuelt åpenbar vs vanlige/tykke votter — vurder tydeligere tykkelses-differensiering i votter-serien." }
+  ],
+  "visuelleMerknader": [
+    { "id": "kortermet-body", "merknad": "Korrekt kortermet bomullsbody, men fargen er blek ROSA. Hvis resten av plagg-biblioteket er kjønnsnøytralt, bør denne re-genereres i nøytral farge (offwhite/natur). (Bekreftet av Fable.)" },
+    { "id": "tynt-teppe", "merknad": "Korrekt kremfarget muslin-teppe, men presentert sammenbrettet slik at 'tynnheten' ikke kommer frem, og fargen ligger nær dunteppe — forvekslingsrisiko i grid. (Bekreftet av Fable.)" }
+  ]
+}

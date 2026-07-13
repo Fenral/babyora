@@ -1,0 +1,50 @@
+{
+  "claude": {
+    "id": "votter-tykke",
+    "dbString": "votter tykke",
+    "kategori": "ekstra-hender",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett oppføring i garment-info.ts (linje 177-180): what = 'Tykke ullvotter med ekstra isolasjon.', when = 'Frost-dager med kjenn-på-fingrene.'. Tone og lengde matcher søsken i ekstra-hender (votter-tynne, votter, votter-dun). Dedikert whyForGarment-gren finnes (linje 423-425), ikke fallback. Liten svakhet: when-teksten er mer atmosfaerisk/vag ('kjenn-paa-fingrene') enn soesknene som bruker eksplisitte temp-tall (votter-tynne 'fra ca 5 grader', votter 'fra 0 grader', votter-dun 'under -15 grader'). votter-tykke mangler dermed et tydelig temp-anker, noe som bryter monsteret i nabo-plaggene."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet paa disk: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\votter-tykke.png. Mapping i garment-illustrations.ts (linje 64) er korrekt: db-streng 'votter tykke' -> id 'votter-tykke', og garmentPng() bygger '.../votter-tykke.png' som matcher fila. Navne-plausibilitet god: id skiller seg tydelig fra soesken votter-tynne/votter/votter-dun. Selve visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 24,
+      "trace": "baseTable-treff for db-streng 'votter tykke': (1) vogn/frost [feels -7..0 C], ekstra; (2) baeresele/streng_frost [feels -15..-7 C], ekstra; (3) utelek/frost [feels -7..0 C], ekstra; (4) utelek/streng_frost [feels -15..-7 C], ekstra. Effektivt seleksjons-vindu: feels ca -15 til 0 C, utendoers-aktiviteter. Soevn velger aldri votter (innendoers). Modifiers.ts: ingen modifier legger til eller fjerner 'votter tykke' spesifikt; ved vind >=8 m/s + feels<0 ADDES 'vindvotter (skall)' som skall-lag OVER (komplement, ikke erstatning). conflicts.ts/softBlocks.ts/safety.ts beroerer ikke votter tykke (ingen votte-konflikt-regel). Plagget gradvis-skalerer korrekt: votter (0 og nedover) -> votter tykke (frost/streng frost) -> votter dun (ekstrem, <-15). Pediatrisk forsvarlig: tykke votter i sub-null beskytter ekstremiteter mot frostskade. Dekkes av Capital Area Pediatrics (cold-weather dressing/outdoor-exposure-grenser) og AAP-HealthyChildren. Ingen overoppheting/SIDS/kvelning-risiko ved votter utendoers. Ingen helse-spoersmaal som kildene ikke dekker -> ingen web-soek noedvendig.",
+      "kilder": [],
+      "score_dup": null,
+      "kommentar": "Seleksjonen er konsistent og pediatrisk trygg. Eneste mikro-merknad: votter-tykke og votter-dun overlapper paa baeresele/streng_frost (votter tykke) vs utelek/streng_frost (ogsaa votter tykke) — dun foerst ved 'ekstrem' (<-15). Det er en bevisst gradient, ikke en feil."
+    },
+    "tekstLogikk": {
+      "score": 22,
+      "kommentar": "whyForGarment-grenen (linje 423-425) 'Tykke votter trengs ved {feels} C for aa forhindre at fingrene blir hvite og kalde' stemmer presist med trace: dynamisk feels-temp i sub-null-vinduet, frostskade-rasjonale korrekt. when-teksten 'Frost-dager med kjenn-paa-fingrene' stemmer ogsaa med frost/streng_frost-baandene (under 0 C). Ingen villedende drift. Mindre presisjons-tap: when gir intet numerisk intervall mens den faktiske seleksjonen er ca -15..0 C — soesken-plaggene oppgir tall, saa en foreldre som leser when alene faar svakere temp-foering enn ved votter/votter-tynne/votter-dun. Ikke villedende for paakledning, men under optimal."
+    },
+    "alternativer": {
+      "score": 10,
+      "kommentar": "alternatives.ts (linje 95-104) har korrekt registrert alternativ: 'votter tykke' -> 'votter dun' (tykkelse/fyll-trinn opp), med whenKey/whyPrimaryKey. Dette er det mest relevante reelle alternativet (ull-tykt vs dun for kaldere/lengre eksponering). Et nedre alternativ ('votter' standard) kunne teoretisk tilbys, men gradienten er allerede dekket av selve plagg-trinnene i baseTable, saa eksisterende ett-veis alternativ er tilstrekkelig og riktig. Full score."
+    },
+    "total": 94,
+    "verdikt": "GODKJENT. votter-tykke er en solid, pediatrisk forsvarlig oppfoering: komplett what/when, dedikert whyForGarment-gren, korrekt PNG-mapping, konsistent seleksjon i frost/streng_frost-baandene (-15..0 C) paa tvers av vogn/baeresele/utelek, og et riktig dun-alternativ. Eneste forbedringspunkt er at when-teksten mangler et numerisk temp-anker som soesken-plaggene har — anbefalt aa harmonisere for tydeligere foreldre-foering. Ingen sikkerhets-funn, ingen tekst/logikk-drift som villeder paakledning.\"",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "when-teksten 'Frost-dager med kjenn-paa-fingrene' mangler et numerisk temperatur-intervall, til forskjell fra soesken-plaggene i samme kategori (votter-tynne 'fra ca 5 grader', votter 'fra 0 grader og nedover', votter-dun 'under -15 grader'). Det bryter monsteret og gir foreldre svakere temp-foering naar de leser when alene.",
+        "forslag": "Harmoniser when til f.eks. 'Frost-dager fra ca 0 grader og nedover til streng frost (-15 grader).' for aa matche soesken-plaggenes numeriske anker og den faktiske seleksjonen (-15..0 C).",
+        "kilde": "Internt monster i garment-info.ts (votter-tynne/votter/votter-dun)"
+      },
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "Mindre presisjons-tap mellom tekst og logikk: when oppgir ingen oevre/nedre grense, mens faktisk seleksjon (trace) er feels ca -15 til 0 C. whyForGarment kompenserer med dynamisk feels-verdi, saa det er ikke villedende, men den statiske when-teksten alene underspesifiserer intervallet.",
+        "forslag": "Legg numerisk intervall i when (se funn paa mal 1). Da blir statisk when og dynamisk whyForGarment fullt synkronisert med baseTable-baandene.",
+        "kilde": "tables.ts (frost: -7..0, streng_frost: -15..-7); garment-info.ts whyForGarment linje 423-425"
+      }
+    ]
+  },
+  "fable": null
+}

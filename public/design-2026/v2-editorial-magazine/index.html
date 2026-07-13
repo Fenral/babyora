@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Babyora — Editorial Magazine (v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* ===== Tokens — Editorial palette ===== */
+  :root {
+    --paper: oklch(0.96 0.005 80);
+    --paper-deep: oklch(0.93 0.008 80);
+    --ink: oklch(0.18 0.020 30);
+    --ink-soft: oklch(0.36 0.018 30);
+    --ink-mute: oklch(0.55 0.015 30);
+    --rule: oklch(0.82 0.012 60);
+    --rule-soft: oklch(0.88 0.010 60);
+    --terra: oklch(0.65 0.13 40);
+    --terra-deep: oklch(0.52 0.14 38);
+    --terra-tint: oklch(0.92 0.04 50);
+
+    --serif: "DM Serif Display", "Times New Roman", serif;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --frame-radius: 47px;
+    --frame-shadow:
+      0 1px 0 rgba(255,255,255,0.6) inset,
+      0 30px 60px -28px rgba(58, 30, 12, 0.28),
+      0 8px 22px -14px rgba(58, 30, 12, 0.22);
+
+    --track-cap: 0.20em;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background:
+      radial-gradient(1200px 700px at 12% -10%, oklch(0.92 0.02 50 / 0.6), transparent 60%),
+      radial-gradient(1100px 800px at 110% 20%, oklch(0.90 0.025 70 / 0.55), transparent 65%),
+      var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Skip link */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 14px;
+    z-index: 999;
+    text-decoration: none;
+    font-family: var(--sans);
+    font-size: 14px;
+  }
+  .skip-link:focus { left: 12px; top: 12px; }
+
+  /* ===== Page chrome ===== */
+  .masthead {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 48px 40px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 24px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .masthead__meta-left,
+  .masthead__meta-right {
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .masthead__meta-right { text-align: right; }
+  .masthead__brand {
+    font-family: var(--serif);
+    font-size: clamp(48px, 6vw, 86px);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-align: center;
+  }
+  .masthead__brand sup {
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--terra-deep);
+    vertical-align: top;
+    margin-left: 6px;
+  }
+  .masthead__rule {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 14px 40px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  /* ===== Layout — two phones side by side ===== */
+  .spread {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 40px 96px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .spread__column { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .spread__folio {
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .spread__folio em {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--terra-deep);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  @media (max-width: 900px) {
+    .masthead { grid-template-columns: 1fr; padding: 28px 20px 12px; gap: 8px; }
+    .masthead__meta-left, .masthead__meta-right { text-align: center; }
+    .masthead__rule { padding: 12px 20px 0; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+    .spread { grid-template-columns: 1fr; gap: 56px; padding: 36px 16px 72px; }
+  }
+
+  /* ===== iPhone frame ===== */
+  .device {
+    width: 390px;
+    max-width: 100%;
+    aspect-ratio: 390 / 844;
+    background: var(--paper);
+    border-radius: var(--frame-radius);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--frame-shadow);
+    isolation: isolate;
+    border: 1px solid oklch(0.82 0.012 60 / 0.6);
+  }
+  .device::before {
+    /* Dynamic island */
+    content: "";
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 122px;
+    height: 34px;
+    background: #0b0b0b;
+    border-radius: 999px;
+    z-index: 3;
+  }
+  .device__screen {
+    position: absolute;
+    inset: 0;
+    padding: 54px 0 0; /* status bar area */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* Status bar */
+  .status {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 54px;
+    padding: 18px 32px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink);
+    z-index: 4;
+    pointer-events: none;
+  }
+  .status__time { letter-spacing: -0.01em; }
+  .status__icons { display: flex; align-items: center; gap: 6px; }
+  .status__icons svg { display: block; }
+
+  /* Bottom-tab-bar (4 ikoner) */
+  .tabbar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 12px 20px calc(env(safe-area-inset-bottom, 0px) + 22px);
+    background:
+      linear-gradient(to top, var(--paper) 60%, oklch(0.96 0.005 80 / 0)) ;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    border-top: 1px solid var(--rule-soft);
+    z-index: 4;
+  }
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+    color: var(--ink-mute);
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    padding: 6px 0 4px;
+    border-radius: 12px;
+  }
+  .tab[aria-current="page"] {
+    color: var(--ink);
+  }
+  .tab[aria-current="page"] .tab__dot {
+    background: var(--terra);
+  }
+  .tab__icon { width: 22px; height: 22px; display: grid; place-items: center; }
+  .tab__icon svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+  .tab__dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: transparent;
+    margin-top: 2px;
+  }
+
+  /* Home-bar */
+  .device::after {
+    content: "";
+    position: absolute;
+    bottom: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 134px; height: 5px;
+    background: oklch(0.18 0.02 30 / 0.18);
+    border-radius: 999px;
+    z-index: 6;
+    pointer-events: none;
+  }
+
+  /* ===== App content — scroll region ===== */
+  .app {
+    flex: 1;
+    overflow: hidden;
+    padding: 6px 26px 110px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== HOME — Editorial cover ===== */
+  .cover__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 4px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .cover__brand {
+    font-family: var(--serif);
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .cover__brand sup {
+    font-family: var(--sans);
+    font-size: 8.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--terra-deep);
+    margin-left: 4px;
+  }
+  .cover__issue {
+    font-family: var(--sans);
+    font-size: 9.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  .cover__kicker {
+    margin: 18px 0 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    align-items: center;
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .cover__kicker .rule {
+    height: 1px;
+    background: var(--rule);
+    width: 100%;
+  }
+  .cover__place {
+    margin: 6px 0 0;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--terra-deep);
+    letter-spacing: -0.01em;
+  }
+
+  /* Asymmetric grid */
+  .cover__grid {
+    margin-top: 6px;
+    display: grid;
+    grid-template-columns: 7fr 4fr;
+    gap: 12px;
+    align-items: end;
+  }
+  .cover__temp {
+    font-family: var(--serif);
+    font-size: 124px;
+    line-height: 0.85;
+    color: var(--ink);
+    letter-spacing: -0.04em;
+    position: relative;
+  }
+  .cover__temp .unit {
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 18px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    position: absolute;
+    top: 18px;
+    margin-left: 4px;
+  }
+  .cover__condition {
+    padding-bottom: 10px;
+    border-left: 0;
+  }
+  .cover__condition-label {
+    font-family: var(--sans);
+    font-size: 9.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 6px;
+  }
+  .cover__condition-value {
+    font-family: var(--serif);
+    font-size: 22px;
+    line-height: 1.05;
+    color: var(--ink);
+  }
+
+  /* Pull quote */
+  .pullquote {
+    margin: 20px -4px 0;
+    padding: 14px 0 16px;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: center;
+  }
+  .pullquote__mark {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 40px;
+    line-height: 0.6;
+    color: var(--terra);
+    transform: translateY(6px);
+  }
+  .pullquote__text {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.35;
+    color: var(--ink-soft);
+  }
+  .pullquote__text strong {
+    font-style: normal;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-weight: 600;
+  }
+  .pullquote__num {
+    font-family: var(--serif);
+    font-size: 28px;
+    line-height: 1;
+    color: var(--terra-deep);
+  }
+  .pullquote__num small {
+    display: block;
+    font-family: var(--sans);
+    font-size: 8.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-top: 4px;
+  }
+
+  /* Editorial avatar — Liv */
+  .editorial {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+  .avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: var(--terra-tint);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 16px -10px oklch(0.52 0.14 38 / 0.3);
+  }
+  .avatar svg { width: 100%; height: 100%; display: block; }
+
+  .editorial__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 4px;
+  }
+  .editorial__label {
+    font-family: var(--sans);
+    font-size: 9.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .editorial__name {
+    font-family: var(--serif);
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .editorial__byline {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+
+  /* Activity toggle */
+  .toggle {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 4px;
+    background: oklch(0.95 0.008 70);
+    position: relative;
+  }
+  .toggle__option {
+    text-align: center;
+    padding: 9px 8px;
+    border-radius: 999px;
+    font-family: var(--sans);
+    font-size: 10.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    cursor: pointer;
+    user-select: none;
+  }
+  .toggle__option--active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* Recommendation card */
+  .recco {
+    margin-top: 18px;
+    padding: 16px 0 0;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 14px;
+    align-items: end;
+  }
+  .recco__label {
+    grid-column: 1 / -1;
+    font-family: var(--sans);
+    font-size: 9.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .recco__headline {
+    font-family: var(--serif);
+    font-size: 30px;
+    line-height: 0.98;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+  .recco__headline em {
+    font-style: italic;
+    color: var(--terra-deep);
+  }
+  .recco__count {
+    font-family: var(--serif);
+    font-size: 44px;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+  }
+  .recco__count small {
+    display: block;
+    font-family: var(--sans);
+    font-size: 8.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-top: 2px;
+    text-align: right;
+  }
+
+  .cta {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 16px 20px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    font-weight: 500;
+    box-shadow: 0 10px 24px -16px oklch(0.18 0.02 30 / 0.5);
+  }
+  .cta__arrow {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--terra);
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+  }
+  .cta__arrow svg { width: 14px; height: 14px; }
+
+  /* Tiny footnote — micro detail */
+  .footnote {
+    margin-top: 14px;
+    font-family: var(--sans);
+    font-size: 9.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .footnote em {
+    font-family: var(--serif);
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  /* ===== UKE ===== */
+  .week__top { /* reuse cover__top look */ }
+  .week__title-wrap {
+    margin-top: 20px;
+  }
+  .week__title {
+    font-family: var(--serif);
+    font-size: 56px;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+  .week__sub {
+    margin-top: 6px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    max-width: 28ch;
+  }
+
+  .week__tabs {
+    margin-top: 18px;
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .week__tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    font-family: var(--sans);
+    font-size: 10.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .week__tab--active {
+    color: var(--ink);
+    border-bottom: 2px solid var(--terra);
+  }
+
+  /* Rows */
+  .timeline {
+    margin: 8px 0 0;
+    list-style: none;
+    padding: 0;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 56px 1fr auto auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .row:last-child { border-bottom: 0; }
+  .row__time {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .row__time small {
+    display: block;
+    font-family: var(--sans);
+    font-size: 8.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-top: 2px;
+  }
+  .row__cond {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .row__symbol {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--serif);
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+  .row__symbol-icon {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    color: var(--terra-deep);
+  }
+  .row__hint {
+    font-family: var(--sans);
+    font-size: 9.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .row__temp {
+    font-family: var(--serif);
+    font-size: 26px;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+  .row__temp .unit {
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-left: 1px;
+  }
+  .row__layers {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--terra-deep);
+    white-space: nowrap;
+  }
+  .row__layers strong {
+    font-style: normal;
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--ink);
+    margin-right: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .row--feature {
+    background: oklch(0.93 0.012 70 / 0.4);
+    border-radius: 14px;
+    padding: 14px 12px;
+    margin: 6px -10px;
+    border-bottom: 0;
+  }
+  .row--feature + .row { border-top: 1px solid var(--rule-soft); }
+
+  /* Bottom rule footer for week page */
+  .week__foot {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--sans);
+    font-size: 9.5px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .week__foot em {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 12px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink-soft);
+  }
+
+  /* Page-end note */
+  .endmatter {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 24px;
+    align-items: center;
+    color: var(--ink-mute);
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: var(--track-cap);
+    text-transform: uppercase;
+  }
+  .endmatter::before, .endmatter::after {
+    content: "";
+    display: block;
+    height: 1px;
+    background: var(--rule);
+  }
+  @media (max-width: 900px) {
+    .endmatter { padding: 0 20px 56px; }
+  }
+</style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Hopp til hovedinnhold</a>
+
+  <header class="masthead" role="banner" aria-label="Babyora masthead">
+    <div class="masthead__meta-left">No. 24 — Sommer</div>
+    <h1 class="masthead__brand">Babyora<sup>™</sup></h1>
+    <div class="masthead__meta-right">Tirsdag 30. juni</div>
+  </header>
+  <div class="masthead__rule" aria-hidden="true">
+    <span>Et magasin om vær, ull og små mennesker</span>
+    <span>Elverum &mdash; 60°53′N</span>
+  </div>
+
+  <main id="main" class="spread" aria-label="Babyora editorial mock — Hjem og Uke">
+
+    <!-- ===== COLUMN 1 — HJEM ===== -->
+    <section class="spread__column" aria-label="Hjem">
+      <p class="spread__folio"><span>Side 12</span><em>Forsiden</em><span>Hjem</span></p>
+
+      <article class="device" aria-label="iPhone — Hjem">
+        <div class="status" aria-hidden="true">
+          <span class="status__time">14:23</span>
+          <span class="status__icons">
+            <!-- signal -->
+            <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="0.5"/><rect x="5" y="5" width="3" height="6" rx="0.5"/><rect x="10" y="2" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="11" rx="0.5"/></svg>
+            <!-- wifi -->
+            <svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 4.5 C5 1, 12 1, 16 4.5"/><path d="M3.5 7 C6 5, 11 5, 13.5 7"/><circle cx="8.5" cy="10" r="1" fill="currentColor" stroke="none"/></svg>
+            <!-- battery -->
+            <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke="currentColor"/><rect x="2" y="2" width="18.5" height="8" rx="1.5" fill="currentColor"/><rect x="23.5" y="3.5" width="2" height="5" rx="1" fill="currentColor"/></svg>
+          </span>
+        </div>
+
+        <div class="device__screen">
+          <div class="app">
+            <!-- Cover top -->
+            <div class="cover__top">
+              <div class="cover__brand">Babyora<sup>™</sup></div>
+              <div class="cover__issue">Utgave 24 · Tirs</div>
+            </div>
+
+            <!-- Kicker -->
+            <p class="cover__kicker">
+              <span>Værbrev</span>
+              <span class="rule" aria-hidden="true"></span>
+              <span>14:23</span>
+            </p>
+            <p class="cover__place">Fra Elverum, i ettermiddag —</p>
+
+            <!-- Headline temp + condition -->
+            <div class="cover__grid">
+              <div class="cover__temp" aria-label="18 grader">
+                18<span class="unit">°C</span>
+              </div>
+              <div class="cover__condition">
+                <div class="cover__condition-label">I lufta</div>
+                <div class="cover__condition-value">Variert<br/>med klar­vær</div>
+              </div>
+            </div>
+
+            <!-- Pull quote -->
+            <figure class="pullquote" role="group" aria-label="Pull quote">
+              <span class="pullquote__mark" aria-hidden="true">“</span>
+              <blockquote class="pullquote__text">
+                <strong>Føles som 18°.</strong> En mild bris, like­vel kjølig nok til å minne om <em>høst</em>.
+              </blockquote>
+              <div class="pullquote__num">3.1
+                <small>m/s vind</small>
+              </div>
+            </figure>
+
+            <!-- Editorial: barnet -->
+            <div class="editorial">
+              <div class="avatar" aria-hidden="true">
+                <svg viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <radialGradient id="lite" cx="50%" cy="40%" r="60%">
+                      <stop offset="0%" stop-color="oklch(0.95 0.04 60)"/>
+                      <stop offset="100%" stop-color="oklch(0.86 0.06 50)"/>
+                    </radialGradient>
+                  </defs>
+                  <rect width="88" height="88" fill="url(#lite)"/>
+                  <!-- hat -->
+                  <path d="M22 46 C22 30, 66 30, 66 46 L66 52 L22 52 Z" fill="oklch(0.52 0.14 38)"/>
+                  <ellipse cx="44" cy="33" rx="6" ry="4" fill="oklch(0.65 0.13 40)"/>
+                  <!-- face -->
+                  <ellipse cx="44" cy="58" rx="18" ry="20" fill="oklch(0.92 0.03 60)"/>
+                  <!-- eyes -->
+                  <circle cx="38" cy="58" r="1.6" fill="oklch(0.18 0.02 30)"/>
+                  <circle cx="50" cy="58" r="1.6" fill="oklch(0.18 0.02 30)"/>
+                  <!-- cheek -->
+                  <circle cx="34" cy="64" r="2.5" fill="oklch(0.78 0.10 30 / 0.6)"/>
+                  <circle cx="54" cy="64" r="2.5" fill="oklch(0.78 0.10 30 / 0.6)"/>
+                  <!-- mouth -->
+                  <path d="M40 68 Q44 71 48 68" stroke="oklch(0.18 0.02 30)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                  <!-- scarf -->
+                  <path d="M26 78 Q44 88 62 78 L62 92 L26 92 Z" fill="oklch(0.36 0.06 30)"/>
+                </svg>
+              </div>
+              <div class="editorial__body">
+                <div class="editorial__label">Hovedperson</div>
+                <div class="editorial__name">Liv, 14 mnd</div>
+                <p class="editorial__byline">Foretrekker pytsedammen til høyre for grusvegen, og en lue med ører.</p>
+              </div>
+            </div>
+
+            <!-- Activity toggle -->
+            <div class="toggle" role="tablist" aria-label="Aktivitet">
+              <div class="toggle__option toggle__option--active" role="tab" aria-selected="true">Utenfor vogn</div>
+              <div class="toggle__option" role="tab" aria-selected="false">I vogn</div>
+            </div>
+
+            <!-- Recommendation -->
+            <section class="recco" aria-label="Anbefaling">
+              <div class="recco__label">Redaksjonens råd</div>
+              <h2 class="recco__headline">Tre lag <em>mot kulda</em> — lett, lunt og luftig.</h2>
+              <div class="recco__count">3
+                <small>Lag</small>
+              </div>
+            </section>
+
+            <!-- Primary CTA -->
+            <a class="cta" href="#" role="button">
+              <span>Se påkledning</span>
+              <span class="cta__arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+              </span>
+            </a>
+
+            <p class="footnote">
+              <span>Oppdatert 14:18</span>
+              <em>met.no · Yr</em>
+              <span>S. 12 / 13</span>
+            </p>
+          </div>
+
+          <!-- Tab bar -->
+          <nav class="tabbar" aria-label="Hovednavigasjon">
+            <a class="tab" href="#" aria-current="page">
+              <span class="tab__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>
+              </span>
+              <span>Hjem</span>
+              <span class="tab__dot" aria-hidden="true"></span>
+            </a>
+            <a class="tab" href="#column-week">
+              <span class="tab__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/></svg>
+              </span>
+              <span>Uke</span>
+              <span class="tab__dot" aria-hidden="true"></span>
+            </a>
+            <a class="tab" href="#">
+              <span class="tab__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h7M9 14h7M9 18h4"/></svg>
+              </span>
+              <span>Guide</span>
+              <span class="tab__dot" aria-hidden="true"></span>
+            </a>
+            <a class="tab" href="#">
+              <span class="tab__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.18-1.57l2-1.5-2-3.46-2.36 1a7 7 0 0 0-2.71-1.57L13.4 2.5h-2.8l-.35 2.4a7 7 0 0 0-2.71 1.57l-2.36-1-2 3.46 2 1.5A7 7 0 0 0 5 12a7 7 0 0 0 .18 1.57l-2 1.5 2 3.46 2.36-1a7 7 0 0 0 2.71 1.57l.35 2.4h2.8l.35-2.4a7 7 0 0 0 2.71-1.57l2.36 1 2-3.46-2-1.5A7 7 0 0 0 19 12z"/></svg>
+              </span>
+              <span>Instillinger</span>
+              <span class="tab__dot" aria-hidden="true"></span>
+            </a>
+          </nav>
+        </div>
+      </article>
+    </section>
+
+    <!-- ===== COLUMN 2 — UKE ===== -->
+    <section class="spread__column" id="column-week" aria-label="Uke">
+      <p class="spread__folio"><span>Side 13</span><em>Værbrev</em><span>Uke</span></p>
+
+      <article class="device" aria-label="iPhone — Uke">
+        <div class="status" aria-hidden="true">
+          <span class="status__time">14:23</span>
+          <span class="status__icons">
+            <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="0.5"/><rect x="5" y="5" width="3" height="6" rx="0.5"/><rect x="10" y="2" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="11" rx="0.5"/></svg>
+            <svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 4.5 C5 1, 12 1, 16 4.5"/><path d="M3.5 7 C6 5, 11 5, 13.5 7"/><circle cx="8.5" cy="10" r="1" fill="currentColor" stroke="none"/></svg>
+            <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke="currentColor"/><rect x="2" y="2" width="18.5" height="8" rx="1.5" fill="currentColor"/><rect x="23.5" y="3.5" width="2" height="5" rx="1" fill="currentColor"/></svg>
+          </span>
+        </div>
+
+        <div class="device__screen">
+          <div class="app">
+
+            <div class="cover__top">
+              <div class="cover__brand">Babyora<sup>™</sup></div>
+              <div class="cover__issue">Utg. 24 · Værbrev</div>
+            </div>
+
+            <p class="cover__kicker" style="margin-top:14px">
+              <span>Værprognoser</span>
+              <span class="rule" aria-hidden="true"></span>
+              <span>Elverum</span>
+            </p>
+
+            <div class="week__title-wrap">
+              <h2 class="week__title">Et brev<br/><em style="font-family:var(--serif); font-style:italic; color:var(--terra-deep);">fra uka.</em></h2>
+              <p class="week__sub">Syv dager med vekslende lyder fra himmelen, lest gjennom Livs lag.</p>
+            </div>
+
+            <div class="week__tabs" role="tablist" aria-label="Periode">
+              <div class="week__tab" role="tab" aria-selected="false">I dag</div>
+              <div class="week__tab week__tab--active" role="tab" aria-selected="true">Uke</div>
+            </div>
+
+            <ul class="timeline" aria-label="Dager">
+
+              <li class="row">
+                <div class="row__time">Tir<small>30. jun</small></div>
+                <div class="row__cond">
+                  <div class="row__symbol">
+                    <span class="row__symbol-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 4v1.5M12 18.5V20M4 12h1.5M18.5 12H20M6 6l1 1M17 17l1 1M6 18l1-1M17 7l1-1"/></svg>
+                    </span>
+                    Variert
+                  </div>
+                  <span class="row__hint">Vind 3,1 m/s</span>
+                </div>
+                <div class="row__temp">18<span class="unit">°</span></div>
+                <div class="row__layers"><strong>3</strong>lag</div>
+              </li>
+
+              <li class="row row--feature" aria-label="Fremhevet dag">
+                <div class="row__time">Ons<small>1. jul</small></div>
+                <div class="row__cond">
+                  <div class="row__symbol">
+                    <span class="row__symbol-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 16a4 4 0 1 1 .7-7.94A6 6 0 0 1 19 11a3.5 3.5 0 0 1-.5 6.96"/></svg>
+                    </span>
+                    Lett skydekke
+                  </div>
+                  <span class="row__hint">Vind 1,8 m/s</span>
+                </div>
+                <div class="row__temp">21<span class="unit">°</span></div>
+                <div class="row__layers"><strong>2</strong>lag</div>
+              </li>
+
+              <li class="row">
+                <div class="row__time">Tor<small>2. jul</small></div>
+                <div class="row__cond">
+                  <div class="row__symbol">
+                    <span class="row__symbol-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 14a4 4 0 1 1 .9-7.9A5.5 5.5 0 0 1 18 9.5a3.5 3.5 0 0 1 .5 6.96"/><path d="M9 18l-1 2M13 18l-1 2M17 18l-1 2"/></svg>
+                    </span>
+                    Småregn
+                  </div>
+                  <span class="row__hint">Nedbør 1,2 mm</span>
+                </div>
+                <div class="row__temp">14<span class="unit">°</span></div>
+                <div class="row__layers"><strong>4</strong>lag</div>
+              </li>
+
+              <li class="row">
+                <div class="row__time">Fre<small>3. jul</small></div>
+                <div class="row__cond">
+                  <div class="row__symbol">
+                    <span class="row__symbol-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 4v1.5M12 18.5V20M4 12h1.5M18.5 12H20M6 6l1 1M17 17l1 1M6 18l1-1M17 7l1-1"/></svg>
+                    </span>
+                    Klar himmel
+                  </div>
+                  <span class="row__hint">Sol hele dagen</span>
+                </div>
+                <div class="row__temp">23<span class="unit">°</span></div>
+                <div class="row__layers"><strong>2</strong>lag</div>
+              </li>
+
+              <li class="row">
+                <div class="row__time">Lør<small>4. jul</small></div>
+                <div class="row__cond">
+                  <div class="row__symbol">
+                    <span class="row__symbol-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 16a4 4 0 1 1 .7-7.94A6 6 0 0 1 19 11a3.5 3.5 0 0 1-.5 6.96"/><path d="M12 3v2M5.5 6.5l1.4 1.4M18.5 6.5l-1.4 1.4"/></svg>
+                    </span>
+                    Halvskyet
+                  </div>
+                  <span class="row__hint">Vind 2,4 m/s</span>
+                </div>
+                <div class="row__temp">19<span class="unit">°</span></div>
+                <div class="row__layers"><strong>3</strong>lag</div>
+              </li>
+
+              <li class="row">
+                <div class="row__time">Søn<small>5. jul</small></div>
+                <div class="row__cond">
+                  <div class="row__symbol">
+                    <span class="row__symbol-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 14a4 4 0 1 1 .9-7.9A5.5 5.5 0 0 1 18 9.5a3.5 3.5 0 0 1 .5 6.96"/><path d="M9 18l-1 2M13 18l-1 2M17 18l-1 2"/></svg>
+                    </span>
+                    Regnbyger
+                  </div>
+                  <span class="row__hint">Nedbør 4,8 mm</span>
+                </div>
+                <div class="row__temp">12<span class="unit">°</span></div>
+                <div class="row__layers"><strong>4</strong>lag</div>
+              </li>
+
+              <li class="row">
+                <div class="row__time">Man<small>6. jul</small></div>
+                <div class="row__cond">
+                  <div class="row__symbol">
+                    <span class="row__symbol-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 16a4 4 0 1 1 .7-7.94A6 6 0 0 1 19 11a3.5 3.5 0 0 1-.5 6.96"/></svg>
+                    </span>
+                    Overskyet
+                  </div>
+                  <span class="row__hint">Vind 4,1 m/s</span>
+                </div>
+                <div class="row__temp">15<span class="unit">°</span></div>
+                <div class="row__layers"><strong>3</strong>lag</div>
+              </li>
+            </ul>
+
+            <p class="week__foot">
+              <span>S. 13</span>
+              <em>Skrevet av met.no, lest av Babyora.</em>
+              <span>Uke 27</span>
+            </p>
+          </div>
+
+          <!-- Tab bar -->
+          <nav class="tabbar" aria-label="Hovednavigasjon">
+            <a class="tab" href="#">
+              <span class="tab__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>
+              </span>
+              <span>Hjem</span>
+              <span class="tab__dot" aria-hidden="true"></span>
+            </a>
+            <a class="tab" href="#" aria-current="page">
+              <span class="tab__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/></svg>
+              </span>
+              <span>Uke</span>
+              <span class="tab__dot" aria-hidden="true"></span>
+            </a>
+            <a class="tab" href="#">
+              <span class="tab__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h7M9 14h7M9 18h4"/></svg>
+              </span>
+              <span>Guide</span>
+              <span class="tab__dot" aria-hidden="true"></span>
+            </a>
+            <a class="tab" href="#">
+              <span class="tab__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.18-1.57l2-1.5-2-3.46-2.36 1a7 7 0 0 0-2.71-1.57L13.4 2.5h-2.8l-.35 2.4a7 7 0 0 0-2.71 1.57l-2.36-1-2 3.46 2 1.5A7 7 0 0 0 5 12a7 7 0 0 0 .18 1.57l-2 1.5 2 3.46 2.36-1a7 7 0 0 0 2.71 1.57l.35 2.4h2.8l.35-2.4a7 7 0 0 0 2.71-1.57l2.36 1 2-3.46-2-1.5A7 7 0 0 0 19 12z"/></svg>
+              </span>
+              <span>Instillinger</span>
+              <span class="tab__dot" aria-hidden="true"></span>
+            </a>
+          </nav>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="endmatter" role="contentinfo">
+    <span>Babyora — Editorial Mock v2</span>
+    <span>S. 12 — 13</span>
+    <span style="text-align:right;">Trykt på papir, levert i lomma.</span>
+  </footer>
+
+</body>
+</html>

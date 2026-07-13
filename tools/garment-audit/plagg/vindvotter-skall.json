@@ -1,0 +1,49 @@
+{
+  "claude": {
+    "id": "vindvotter-skall",
+    "dbString": "vindvotter (skall)",
+    "kategori": "ekstra-hender",
+    "struktur": {
+      "score": 19,
+      "kommentar": "Komplett info-oppføring i garment-info.ts (linje 185-188): what = 'Vindtette skall-votter — kan brukes over tynne votter.' og when = 'Sterk vind (≥8 m/s) med kulde (under 0 °C).' Samme mønster/tone/lengde som søsken-plagg i ekstra-hender (votter-tynne, votter, votter-tykke, votter-dun). Dedikert whyForGarment-gren finnes (linje 429-431), ikke fallback. Eneste lille minus: what-formuleringen 'over tynne votter' er litt løs, men strukturelt er alt på plass."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes på public/illustrations/garments/vindvotter-skall.png. db-strengen 'vindvotter (skall)' er korrekt mappet til id 'vindvotter-skall' i garment-illustrations.ts (linje 66). Navn/mapping er konsistent og plausibelt — id matcher filnavn og semantikk (vindtett skall-vott). Visuell dom utsatt til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 24,
+      "kommentar": "Pediatrisk forsvarlig og konservativ. Vindvotter er et beskyttende skall-lag mot vindkjøling av fingrene, lagt på KUN ved kombinasjonen sterk vind + frost — aldri i mildt vær. Ingen overoppheting/SIDS/kveling-risiko (hender, utendørs, ikke søvn). AAP-HC + Capital Area Peds dekker kulde-eksponering og frostskade-grenser; SB-8 (frostskade-sjekk ved feels ≤-10) forsterker samme kontekst. Trekker 1 poeng fordi det ikke finnes en eksplisitt kilde i sources.ts som direkte adresserer windchill-frostskade på barnefingre — terskelen virker fornuftig men er ikke kilde-forankret.",
+      "trace": "Vindvotter (skall) finnes IKKE i baseTable for noen aktivitet/temp-bånd. Plagget introduseres UTELUKKENDE via modifier i modifiers.ts linje 178-185: if (weather.windMs >= 8) { addItem(...,'hals'); if (weather.feelsLikeC < 0) addItem(layers,'ekstra','vindvotter (skall)'); }. Krever altså vind ≥8 m/s OG føles-som <0 °C. Søvn-aktivitet returnerer tidlig (linje 89-140) så plagget er umulig under søvn. Ingen conflict/softBlock/safety-regel fjerner eller berører plagget. Effektive bånd: 'kald' (0 til -7), 'frost' (-7 til -15), 'streng_frost'/'ekstrem' (<-15) — i alle disse med vind ≥8 m/s, for vogn/baeresele/utelek.",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 23,
+      "kommentar": "when-teksten 'Sterk vind (≥8 m/s) med kulde (under 0 °C)' matcher EKSAKT trace-terskelen (windMs >= 8 OG feelsLikeC < 0) — ingen drift. whyForGarment (linje 430) 'Vindtette skall-votter blokker X m/s vind som ellers ville kjølt fingrene ned' er presis og korrekt. Eneste reelle drift: what sier 'kan brukes over tynne votter', men i de faktiske utløsnings-båndene velger baseTable som regel 'votter' (kald), 'votter tykke' (frost) eller 'votter dun' (streng frost) — altså IKKE tynne votter. Dette er villedende lavgrad: foreldre kan tro skallet bare passer over tynne votter. Severity lav fordi det ikke endrer påkledning farlig, kun en upresis underlagsbeskrivelse."
+    },
+    "alternativer": {
+      "score": 10,
+      "kommentar": "Vindvotter (skall) har ingen oppføring i alternatives.ts — og det er korrekt. Plagget er et vindtett skall-lag uten reelt materiale-alternativ (det finnes ikke en ull↔fleece eller dun↔syntet-variant av en vindblokkerende skall-vott i plaggsettet). Det legges dessuten OPPÅ en eksisterende vott, så det konkurrerer ikke med tykkelse-trinn-alternativene som allerede dekkes på votter tykke→votter dun (linje 96-104). Ingen manglende alternativ."
+    },
+    "total": 95,
+    "verdikt": "Solid plagg. Seleksjonen (vind ≥8 m/s + feels <0 °C, kun ute) er pediatrisk forsvarlig og beskyttende, when-teksten matcher trace eksakt, og whyForGarment er presis. Eneste konkrete svakhet er at what-teksten ('over tynne votter') ikke stemmer med at de utløsende båndene faktisk bruker votter/votter tykke/votter dun. Ingen sikkerhetsproblemer. Klar for visuell dom.",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "what-teksten i garment-info.ts (linje 186) sier 'kan brukes over tynne votter', men i de faktiske båndene der modifieren utløser plagget (kald/frost/streng_frost med vind ≥8 m/s + feels <0 °C) velger baseTable 'votter', 'votter tykke' eller 'votter dun' — sjelden 'votter tynne'. Beskrivelsen kan villede om hvilket underlag skallet legges over.",
+        "forslag": "Endre 'kan brukes over tynne votter' til noe nøytralt som 'legges som vindtett skall OVER de vanlige vottene' så det dekker både votter, votter tykke og votter dun.",
+        "kilde": "garment-info.ts:186 vs tables.ts kald/frost/streng_frost + modifiers.ts:178-185"
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "Windchill-frostskade-terskelen som styrer plagget (vind ≥8 m/s + feels <0 °C) er ikke direkte forankret i noen av de 11 kildene i sources.ts — kildene dekker generell kulde-eksponering og frostskade-grenser per alder, men ikke spesifikt vind-indusert nedkjøling av barnefingre.",
+        "forslag": "Vurder å legge til en pediatrisk/helsefaglig windchill-kilde (f.eks. AAP/CDC windchill-tabell for barn) som eksplisitt referanse for vindvott-terskelen. Ikke endre terskel-tallene.",
+        "kilde": "modifiers.ts:178-185; sources.ts (mangler windchill-spesifikk kilde)"
+      }
+    ]
+  },
+  "fable": null
+}

@@ -1,0 +1,57 @@
+{
+  "claude": {
+    "id": "vinterkjoredress-isolert",
+    "dbString": "vinterkjøredress isolert",
+    "kategori": "yttertoy",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Har komplett `what` + `when` i garment-info.ts (linje 125-128) i samme mønster/tone/lengde som søsken-yttertøy (lett-kjoredress, kjoredress, vinterkjoredress, vinterdress-isolert). `what` = 'Maksimalt fôret vinterkjøredress — for streng frost.' og `when` = 'Under −10 °C eller lang tid utendørs i vogn.' Det finnes en dedikert `whyForGarment`-gren (linje 386-388), IKKE fallback. Liten kritikk: `what` nevner ikke vindtett/hette slik vinterkjoredress-søsteren gjør ('vindtett og holder snø ute'), så `what`-detaljnivået er litt tynnere enn søsteren — men strukturelt komplett."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\vinterkjoredress-isolert.png. Mappingen er korrekt og entydig: db-strengen 'vinterkjøredress isolert' → id 'vinterkjoredress-isolert' (garment-illustrations.ts linje 47), som matcher garment-info-nøkkelen og PNG-filnavnet eksakt. Ingen kollisjon med søster-fila vinterkjoredress.png. Navn/mapping er plausibelt og konsistent. (Visuell dom gjøres av Fable 5 + Claude senere.)"
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig. Plagget velges kun i de to kaldeste vogn-båndene (streng_frost og ekstrem) og i ett baeresele-bånd (ekstrem). Sikkerhetslaget håndterer de relevante risikoene godt: HB-9 fjerner det automatisk i bilstol (NHTSA/AAP-HC — komprimert dress under sele er en kjent kvelnings/kollisjons-risiko), SB-8 utløser frostskade-sjekk hvert 20. min ved feels ≤ −10 °C, modifier #14 gir utesov-i-frost-advarsel i vogn, og #16 setter 30-min-grense for <3 mnd ved kuldegrader. Overoppheting i vogn dekkes av HB-8 + varmepose/dunteppe-konflikt (CK-5). De 11 kildene (AAP, NHS, Lullaby Trust, Capital Area Peds m.fl.) dekker både frost-eksponering og bilstol-risiko. Ingen udekket helse-spørsmål som krevde web-søk. Trekker 2 p fordi kildesettet ikke har en eksplisitt referanse for vindtetthet/vindchill-terskler for yttertøy spesifikt, men dette er ikke et plagg-spesifikt avvik.",
+      "score_kommentar_intern": "trace lagt i trace-feltet",
+      "kilder": [],
+      "trace": "bandForTemp: frost = -7≤feels<0, streng_frost = -15≤feels<-7, ekstrem = feels<-15. baseTable['vogn']['streng_frost'].yttertoy = ['vinterkjøredress isolert']; baseTable['vogn']['ekstrem'].yttertoy = ['vinterkjøredress isolert']; baseTable['baeresele']['ekstrem'].yttertoy = ['vinterkjøredress isolert']. I baeresele['streng_frost'] brukes derimot vanlig 'vinterkjøredress', ikke isolert. INGEN modifier i modifiers.ts legger til eller fjerner dette plagget. Sikkerhet: HB-9 (safety.ts) fjerner det via THICK_WINTER_OUTER_RE når context.bilstol===true. CK-6 (conflicts.ts) påvirker kun 'to ullsett', ikke dressen. SB-2 (softBlocks.ts) maxLayers ved feels<-5 = 14 og fjerner kun teppe/varmepose lett/tynt teppe, aldri ytterdressen. Netto: plagget vises i vogn ved feels < -7 °C (fra toppen av streng_frost) og i baeresele kun ved feels < -15 °C."
+    },
+    "tekstLogikk": {
+      "score": 19,
+      "kommentar": "DRIFT MELLOM `when`-TEKST OG FAKTISK SELEKSJON: `when` sier 'Under −10 °C eller lang tid utendørs i vogn', men baseTable velger plagget allerede fra toppen av streng_frost-båndet, dvs. ved feels-like −7 °C (vogn). Det er et gap på 3 °C der engine anbefaler plagget mens info-teksten antyder at det ikke gjelder ennå. En forelder ved feels −8/−9 °C som leser detalj-teksten kan tro dette plagget er 'for kaldt' for dagen og velge for lite. `whyForGarment`-grenen (linje 386-388) er derimot temperatur-nøytral ('streng kulde (X °C) eller lang eksponering') og driver IKKE feil — den speiler trace godt. Drift er reell men moderat (3 °C, og 'lang tid utendørs'-klausulen demper den). Severity medium snarere enn høy fordi feilretningen (forsiktig) ikke fører til underkledning av engine selv — kun mulig forvirring i lesningen."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "Plagget mangler oppføring i alternatives.ts. Et reelt og nyttig alternativ ville vært tykkelse-trinnet ned — 'vinterkjøredress' (ikke-isolert) — vist med 'når dette holder' (rundt streng_frost-grensa) på samme måte som vintersko-isolerte→vintersko (linje 106-114) og lett kjøredress→kjøredress (linje 86-94) allerede er modellert. Dette er konsistent med det eksisterende mønsteret for trinn-ned-alternativer og burde tilbys. Trekker ikke mer fordi ull↔fleece/dun↔syntet ikke er relevant for et fôret skall-yttertøy, og fordi engine allerede velger ikke-isolert variant i mildere bånd — så fraværet er en UX-mangel, ikke et seleksjons-/sikkerhetsproblem."
+    },
+    "total": 88,
+    "verdikt": "Solid plagg. Komplett struktur, korrekt PNG-mapping, og pediatrisk forsvarlig seleksjon godt støttet av sikkerhetslaget (HB-9 bilstol, SB-8 frostskade, utesov-warning). To konkrete forbedringspunkter: (1) `when`-teksten sier 'under −10 °C' mens engine faktisk velger plagget fra feels −7 °C i vogn — en 3 °C drift som kan forvirre forelder ved lesning; (2) mangler trinn-ned-alternativ (vinterkjøredress) i alternatives.ts til tross for at samme mønster finnes for søsken-plagg. Ingen kritiske eller høye sikkerhetsfunn.\"",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "`when`-teksten i garment-info.ts (linje 127) sier 'Under −10 °C eller lang tid utendørs i vogn', men baseTable velger plagget allerede fra toppen av streng_frost-båndet, dvs. feels-like −7 °C (vogn['streng_frost'] og vogn['ekstrem']). 3 °C-gap mellom kommunisert terskel og faktisk seleksjon. Feilretningen er forsiktig (forelder kan tro plagget ikke gjelder ennå), men det er reell tekst↔logikk-drift.",
+        "forslag": "Juster `when`-teksten til å speile faktisk seleksjon, f.eks. 'Streng frost — fra ca −7 °C og kaldere i vogn, eller lang tid utendørs.' Rør IKKE terskel-tallene i tables.ts/bandForTemp; kun info-teksten bør stemme overens. (Medisinsk avvik, ikke kode-endring av regelmotor.)",
+        "kilde": "capital-area-peds (outdoor-exposure-grenser per alder); intern trace mot tables.ts bandForTemp + baseTable.vogn"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Plagget 'vinterkjøredress isolert' mangler oppføring i alternatives.ts, til tross for at et naturlig tykkelse-trinn-ned ('vinterkjøredress') finnes og at samme trinn-ned-mønster allerede er modellert for søsken (vintersko isolerte→vintersko, lett kjøredress→kjøredress).",
+        "forslag": "Legg til ITEM_ALTERNATIVES-oppføring for 'vinterkjøredress isolert' med alternativ 'vinterkjøredress' + whenKey/whyPrimaryKey, slik at forelder ved streng_frost-grensa kan se det mildere skall-alternativet. UX-tillegg, ingen tall/terskel berøres.",
+        "kilde": "Intern konsistens mot alternatives.ts linje 106-114 (vintersko) og 86-94 (kjøredress)"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "`what`-teksten (linje 126) er litt tynnere enn søster-plagget vinterkjoredress: den nevner ikke vindtett/hette, mens søsteren skriver 'fôret, vindtett og holder snø ute'. Mindre tone/detalj-inkonsistens innen samme kategori.",
+        "forslag": "Vurder å berike `what` med vindtett/hette-egenskap for paritet med søster-plaggene. Rent kosmetisk.",
+        "kilde": "Intern sammenligning garment-info.ts linje 122 (vinterkjoredress) vs 126 (isolert)"
+      }
+    ]
+  },
+  "fable": null
+}

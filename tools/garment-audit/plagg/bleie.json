@@ -1,0 +1,56 @@
+{
+  "claude": {
+    "id": "bleie",
+    "dbString": "bleie",
+    "kategori": "innerst",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Har komplett what + when i garment-info.ts (linje 65-68), og en dedikert whyForGarment-gren (linje 346-348), ikke fallback. Tone og lengde matcher soesken-plagg i innerst (kortermet-body, t-skjorte). Trekker 2 fordi when-formuleringen ('tropiske forhold >26 grader') ikke matcher det faktiske seleksjons-baandet (ekstrem_varme, >=28 grader) -- se tekstLogikk."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes paa public/illustrations/garments/bleie.png. db-strengen 'bleie' er korrekt mappet til id 'bleie' i garment-illustrations.ts (linje 26). Navn/mapping er konsistent og plausibelt. Visuell dom utestaaende (Fable 5 + Claude)."
+    },
+    "seleksjon": {
+      "score": 17,
+      "trace": "bandForTemp(>=28) -> 'ekstrem_varme'. baseTable.soevn.ekstrem_varme = innerst:['bleie','lett kortermet body (valgfritt)'] (tables.ts linje 145-147). Dette er ENESTE forekomst av 'bleie' i hele baseTable -- kun soevn-aktivitet, kun ekstrem_varme-baandet. applyModifiers: for soevn kortsluttes pipelinen (modifiers.ts linje 89-140) -> ingen lag legges til/fjernes, kun sikkerhets-noter (neckCheck, warmRoom, safeSleep). conflicts.ts CK-3: maxTOGForRoom(>=26)=0, men fjerner kun sovepose-strenger; bleie er ikke sovepose -> uberoert (og ingen sovepose finnes i ekstrem_varme uansett). softBlocks.ts SB-3: roomC>=26 TVINGER innerst=['kortermet body'] og toemmer alle andre kategorier (linje 97-108). Dette OVERSKRIVER bleie + valgfri body. safety.ts: ingen regel beroerer bleie. KONSEKVENS: bleie velges i baseTable men fjernes alltid av SB-3 foer brukeren ser det, siden SB-3-terskelen (>=26) er lavere enn bleie-terskelen (>=28). Pediatrisk: bleie alene ved >=28 grader romtemp er forsvarlig (Lullaby Trust/AAP: ved svaert varmt rom kun bleie/ett tynt lag, ingen sovepose). Overoppheting/SIDS er konservativt haandtert av SB-3+CK-3. Ingen farlig kontekst -- dekket av LT-TOG, AAP-2022, NHS. Trekker fordi seleksjonen er internt inkonsistent (dead entry).",
+      "kilder": [],
+      "kommentar": "Pediatrisk forsvarlig og ingen helsefare. Hovedproblem er at bleie aldri faktisk surfaces pga SB-3-override -- en seleksjons-logikk-defekt, ikke et sikkerhetsavvik."
+    },
+    "tekstLogikk": {
+      "score": 19,
+      "kommentar": "whyForGarment 'bleie' (linje 347) 'Ved X grader innendoers er bleie nok alene. Mer toey gir varmestress.' stemmer med faktisk seleksjon (>=28 grader, ekstrem_varme) og er pediatrisk korrekt. MEN when-teksten driver: sier 'tropiske forhold (>26 grader)'. Faktisk velges bleie kun ved >=28 grader (ekstrem_varme), IKKE i tropisk-baandet (22-27 grader), der tabellen i stedet gir kortermet body + sovepose 1.0 TOG. Ordet 'tropiske' er direkte villedende fordi 'tropisk' er et eget baand (22-27) der bleie aldri brukes. Drift villeder ikke til underkledning (>26 vs >=28 er marginalt og i trygg retning), saa medium snarere enn hoy, men boer rettes til '>=28 grader'."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "Ingen oppfoering for 'bleie' i alternatives.ts. Et rimelig alternativ ('tynn kortermet body' / 'lett body') eksisterer allerede implisitt i tabellen ('lett kortermet body (valgfritt)'). Et formelt alternativ er lavt prioritert siden bleie er et minimalt grunn-plagg, men kunne tilbys for konsistens. Eksisterende fravaer er akseptabelt, derav 8/10."
+    },
+    "total": 81,
+    "verdikt": "Pediatrisk forsvarlig og strukturelt komplett plagg, men med to ikke-kritiske defekter: (1) bleie velges i baseTable kun ved soevn/ekstrem_varme (>=28 grader), men softBlocks SB-3 (>=26 grader) overskriver alltid innerst-laget til 'kortermet body', saa bleie naar aldri brukeren -- en dead selection-entry. (2) when-teksten sier '>26 grader / tropiske forhold' mens faktisk terskel er >=28 grader (ekstrem_varme), og 'tropisk' er et eget baand der bleie ikke brukes. Ingen helsefare; overoppheting/SIDS er konservativt haandtert. Total 81/100.\"",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 3,
+        "kilde": "tables.ts (baseTable.soevn.ekstrem_varme linje 145-147) vs softBlocks.ts (SB-3 linje 95-108)",
+        "beskrivelse": "bleie velges i baseTable kun ved soevn/ekstrem_varme (feels >=28 grader), men SB-3 i softBlocks utloeses allerede ved roomC>=26 og TVINGER innerst=['kortermet body'] + toemmer alle andre lag. Siden 26 < 28 vil SB-3 alltid kjoere naar bleie er valgt, og bleie + 'lett kortermet body (valgfritt)' fjernes foer brukeren ser det. bleie er dermed en dead entry i pipelinen.",
+        "forslag": "Avklar oensket adferd: enten loeft SB-3-terskelen for ekstrem_varme slik at bleie-anbefalingen faktisk surfaces (>=28), eller fjern bleie fra baseTable og la SB-3s 'kortermet body' vaere kanonisk for ekstrem varme. Ikke endre tall uten helsesoester-godkjenning -- dette er en logikk-/konsistensfiks, ikke en terskelendring."
+      },
+      {
+        "severity": "medium",
+        "mal": 4,
+        "kilde": "garment-info.ts (when, linje 67) vs tables.ts (bandForTemp linje 8-9, baseTable.soevn linje 144-151)",
+        "beskrivelse": "when-teksten sier 'Innendoers i tropiske forhold (>26 grader)'. Faktisk velges bleie kun i ekstrem_varme-baandet (>=28 grader). 'tropisk' er et eget baand (22-27 grader) der bleie ikke brukes (der gis kortermet body + sovepose 1.0 TOG). Teksten villeder om naar plagget faktisk gjelder.",
+        "forslag": "Endre when til aa speile faktisk terskel, f.eks. 'Innendoers ved ekstrem varme (>=28 grader) eller helt korte sov-stunder.' Unngaa ordet 'tropiske' siden det kolliderer med tropisk-baandets navn."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "kilde": "alternatives.ts (ITEM_ALTERNATIVES)",
+        "beskrivelse": "Ingen alternativ-oppfoering for 'bleie'. Et naturlig alternativ ('tynn/lett kortermet body') finnes allerede implisitt i tabellen som '(valgfritt)'.",
+        "forslag": "Valgfritt: legg til en alternatives-oppfoering for 'bleie' med 'lett kortermet body' som alternativ for foreldre som foretrekker ett minimalt lag fremfor bleie alene. Lav prioritet."
+      }
+    ]
+  },
+  "fable": null
+}

@@ -1,0 +1,120 @@
+{
+  "claude": {
+    "id": "lue-tynn",
+    "dbString": "lue tynn",
+    "kategori": "ekstra-hode",
+    "struktur": {
+      "score": 16,
+      "kommentar": "Har komplett `what` + `when` i garment-info.ts (linje 151-154) og en DEDIKERT `whyForGarment`-gren (linje 406-408, ikke fallback). Plagget mangler altså ingen info-oppføring. Trekk: `what` ('Tynn strikket lue.') er markant kortere/tynnere enn søsken i samme kategori — solhatt, lue, lue-m-ull og balaklava har alle en forklarende andre-setning om funksjon (dekker ører/nakke/hode). lue-tynn mangler den funksjonelle begrunnelsen, så tonen/lengden er ikke i mønster med søsknene. `when` er på linje med søsknenes lengde."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/lue-tynn.png. db-strengen 'lue tynn' er korrekt mappet til id 'lue-tynn' i garment-illustrations.ts (linje 56), og baseTable bruker eksakt samme streng 'lue tynn'. Mapping er konsistent og plausibel. Visuell dom utsatt til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 22,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig. Tynn lue ved 10-21 °C dekker hodet/ørene som har stor andel av varmetapet (Slumbersac: opptil 85% heat loss i sovende spedbarn; Merino Kids bekrefter). Hodeplagg fjernes korrekt under søvn (CK-4 + HB-1, CRITICAL) så ingen SIDS-/overopphetings-risiko innendørs. I `vogn.varm` (16-21 °C) finnes en mild overopphetings-eksponering, men den er dempet av HB-8 (aldri dekk vogn ≥22 °C), SB-6 (lang mild vognetur fjerner varmepose) og notes.stroller.mildShade (≥18 °C). Ingen helse-spørsmål uten kildedekning — web-søk ikke nødvendig. Trekk: lue-tynn ligger i `varm`-båndet helt opp til 21 °C, som er i øvre kant for å anbefale lue i det hele tatt; en tynn lue ved 20-21 °C er sjelden nødvendig og kan bidra til varmestress hos de varmeste-produserende 7-9 mnd (peak metabolic heat, PMC-12386404). Verdt en helsesøster-titt på den øvre grensen.",
+      "score_dup": null,
+      "kilder": [],
+      "trace": "baseTable-treff for 'lue tynn': vogn.varm (16-21 °C, ekstra), vogn.mild (10-15 °C, ekstra, + varmepose lett), baeresele.mild (10-15 °C, ekstra), utelek.mild (10-15 °C, ekstra, + sko). Effektivt valgt i bånd mild+varm ≈ 10-21 °C. Modifiers: ingen modifier legger til eller fjerner 'lue tynn' utenfor søvn. Under soevn fjernes den av conflicts CK-4 (sovepose × hodeplagg) og hard safety HB-1 (HEAD_COVER_RE), begge CRITICAL. Ingen alternativ-swap berører den."
+    },
+    "tekstLogikk": {
+      "score": 16,
+      "kommentar": "DRIFT mellom info-tekst og faktisk seleksjon. `when` sier 'Milde dager fra ca 8-14 °C', men baseTable velger 'lue tynn' i mild-båndet (10-15 °C) OG i varm-båndet (16-21 °C, vogn + baeresele). Øvre tekstgrense (14 °C) ligger ~7 °C UNDER den reelle øvre seleksjonsgrensen (21 °C), og nedre tekstgrense (8 °C) ligger 2 °C under båndstarten (10 °C); ved 8-9 °C (kjolig-båndet) velges faktisk vanlig 'lue', ikke 'lue tynn'. En forelder som leser '8-14 °C' vil tro plagget ikke gjelder en solrik 18-20 °C vogntur, mens motoren faktisk anbefaler det. `whyForGarment`-grenen (linje 407) er feels-basert og generisk ('Ved {feels} °C er den nok') og driver derfor ikke — den stemmer for alle bånd. Drift i `when` kan villede påkledning (severity hoy), men ikke i farlig/kald retning."
+    },
+    "alternativer": {
+      "score": 9,
+      "kommentar": "lue-tynn er korrekt registrert som ALTERNATIV til 'lue m/ ull' (alternatives.ts linje 135-144: lue m/ull → lue tynn) — det dekker tykkelse-trinn nedover. Men lue-tynn har INGEN egen oppføring i ITEM_ALTERNATIVES som primær-item. Et rimelig alternativ ville vært et trinn opp ('lue') når foreldre opplever det som litt for kjølig i nedre del av båndet, eller en bomulls-/fleece-lue-variant. Mindre trekk fordi tykkelse-laddern allerede er representert via lue m/ull-oppføringen og solhatt dekker varmere ende."
+    },
+    "total": 82,
+    "verdikt": "GODKJENT MED ANMERKNING: lue-tynn er trygt selektert (hodeplagg fjernes korrekt under søvn, overopphetings-vakter dekker varm vogn), men info-teksten `when` ('8-14 °C') drifter ~7 °C under faktisk seleksjon (10-21 °C). Drift villeder påkledning oppover og bør rettes, samt vurder om øvre seleksjonsgrense på 21 °C er for høy for en lue.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "DRIFT tekst↔logikk: `when` i garment-info.ts (linje 153) sier 'Milde dager fra ca 8-14 °C', men baseTable velger 'lue tynn' i mild (10-15 °C) OG varm (16-21 °C) for vogn og bæresele. Øvre grense i teksten (14 °C) ligger ~7 °C under reell seleksjon (21 °C). Nedre grense (8 °C) treffer kjolig-båndet der motoren faktisk velger vanlig 'lue', ikke lue-tynn.",
+        "forslag": "Oppdater `when` til å matche faktisk bånd, f.eks. 'Milde til varme dager, ca 10-21 °C — særlig i vogn og bæresele.' Eventuelt smalne baseTable-grensene hvis 21 °C anses for varmt for lue.",
+        "kilde": "tables.ts (vogn.varm/mild, baeresele.mild, utelek.mild) vs garment-info.ts linje 151-154"
+      },
+      {
+        "severity": "medium",
+        "mal": 1,
+        "beskrivelse": "STRUKTUR: `what` ('Tynn strikket lue.') mangler den funksjonelle andre-setningen som alle søsken i ekstra-hode har (solhatt/lue/lue-m-ull/balaklava beskriver alle hva plagget dekker). Bryter mønster/tone/lengde i kategorien.",
+        "forslag": "Legg til funksjon, f.eks. 'Tynn strikket lue som dekker ørene uten å bygge mye varme.'",
+        "kilde": "garment-info.ts linje 152 vs søsken linje 147-166"
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "SELEKSJON øvre grense: lue-tynn anbefales i vogn/bæresele helt opp til 21 °C (varm-bånd). Ved 20-21 °C er lue sjelden nødvendig og kan bidra til varmestress, særlig hos 7-9 mnd som har peak metabolsk varmeproduksjon.",
+        "forslag": "Be helsesøster vurdere om lue-tynn bør fjernes fra varm-båndet (16-21 °C) for vogn/bæresele, eller begrenses til mild-båndet. RØR IKKE tallet uten helsefaglig avklaring.",
+        "kilde": "PMC-12386404 (metabolic heat peaks 8-9 mnd); tables.ts vogn.varm/baeresele.varm"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "ALTERNATIVER: lue-tynn har ingen egen primær-oppføring i ITEM_ALTERNATIVES (kun som alternativ NEDOVER fra lue m/ull). Mangler et trinn-opp-alternativ ('lue') for nedre del av båndet.",
+        "forslag": "Vurder å legge til oppføring for 'lue tynn' med alternativ 'lue' (når foreldre opplever nedre kant som for kjølig).",
+        "kilde": "alternatives.ts ITEM_ALTERNATIVES"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 16,
+      "kommentar": "Id, kategori og felter er konsistente (lue-tynn / ekstra-hode). Trekk: «what» har bare én deskriptiv setning og bryter med søsken-mønsteret i ekstra-hode som har en funksjonell andre-setning (f.eks. hva den beskytter mot / når den er bedre enn vanlig lue). Strukturelt ellers komplett."
+    },
+    "utseende": {
+      "score": 15,
+      "kommentar": "Bildet viser utvilsomt en strikket lue med fin ribb og oppbrett — riktig plagg-kategori, ren render, ingen synlige artefakter. Men: oppbretten er bred og stofflig tykk, og luen leser visuelt som en ordinær/medium vinterlue snarere enn en distinkt TYNN lue. Brukeren skal kunne skille 'lue' fra 'lue-tynn' på et blikk; her er differensieringen svak. Kremfargen er nøytral og trolig stil-konsistent, men silhuetten bør slankes (tynnere ribb, lavere/smalere brett) for å kommunisere 'tynn'."
+    },
+    "seleksjon": {
+      "score": 17,
+      "kommentar": "Jeg utfordrer Claudes 'lav' på varmestress: dette er ikke en hypotetisk kant — motoren velger faktisk lue-tynn i hele 16-21 °C for vogn/bæresele/utelek. Ved 19-21 °C er hodeplagg på et barn med peak metabolsk varmeproduksjon (7-9 mnd) pediatrisk tvilsomt; i bæresele kommer i tillegg foreldrekroppens varme. Dette bør være MEDIUM, ikke lav, og øvre bånd bør betinges (skygge/vind) eller kuttes ved ~18 °C — uten at jeg rører tallene selv. Pluss: CK-4/HB-1-fjerning under søvn er korrekt håndhevet, og nedre overgang til vanlig lue ved kjølig er fornuftig."
+    },
+    "tekstLogikk": {
+      "score": 12,
+      "kommentar": "Enig med Claude i at dette er hovedfunnet, men det er mer alvorlig enn 'hoy' antyder isolert: teksten «8–14 °C» bommer i BEGGE retninger. Øvre reelle grense (21 °C) ligger 7 °C over oppgitt, så foreldre vil oppleve appen som selvmotsigende når lue-tynn anbefales på en 20-graders dag teksten selv kaller for varm. Nedre grense (8 °C) lover bruk i et bånd der motoren faktisk velger vanlig lue. Teksten beskriver et plagg motoren ikke har. Dette undergraver tillit til hele når-feltet."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Trinn-ned mot varmere vær er implisitt (ingen lue), men trinn-opp-referansen til vanlig 'lue' for nedre bånd mangler i teksten — foreldre i 8-9 °C får ingen forklaring på hvorfor tynn lue ikke vises. Enig med Claude her, men funnet henger sammen med mål 4 og bør løses i samme tekstrevisjon."
+    },
+    "total": 67,
+    "verdikt": "Revisjon nødvendig — godkjennes ikke før når-teksten harmoniseres med faktisk seleksjon og øvre temperaturbånd revurderes pediatrisk.",
+    "uenig_med_claude": "Ja, på to punkter: (1) Total 82/100 er for høyt gitt at flaggskip-feltet «når» aktivt feilinformerer i begge retninger og at varmestress-risikoen er reell (motoren velger faktisk i 16-21 °C), ikke teoretisk — jeg lander på 67. (2) Mål 3-funnet er undervurdert som 'lav'; eksponeringen i varm-båndet er konkret og treffer aldersgruppen med høyest risiko, så medium er riktig. Jeg er enig i mål 1-, 4- og 5-funnene, men vekter mål 4 tyngre fordi tekst↔logikk-avvik er systemisk tillitsskadelig.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "Når-tekst «8–14 °C» avviker fra reell seleksjon 10–21 °C i begge retninger: øvre grense 7 °C for lav, nedre grense lover bruk i kjølig-bånd der vanlig lue velges.",
+        "forslag": "Skriv om når-teksten så den speiler faktisk seleksjon, f.eks. «Milde til varme dager fra ca 10 °C» — eller stram inn motorens øvre bånd hvis pediatrisk vurdering tilsier det (egen beslutning, ikke min)."
+      },
+      {
+        "severity": "medium",
+        "mal": 3,
+        "beskrivelse": "Lue velges aktivt opp til 21 °C inkl. bæresele (ekstra kroppsvarme fra forelder) — varmestressrisiko for 7-9 mnd med peak metabolsk varme. Eskalert fra Claudes 'lav' fordi eksponeringen er reell, ikke en kant-case.",
+        "forslag": "Betinge øvre bånd (kun ved vind/skygge) eller la 16-21 °C falle til 'ingen lue' som default; verifiser mot pediatrisk kilde."
+      },
+      {
+        "severity": "medium",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen leser som ordinær lue, ikke distinkt tynn: bred oppbrett og fyldig stoff gjør den vanskelig å skille fra 'lue' i appen.",
+        "forslag": "Regenerer med tydelig tynnere strikk, smalere/lavere oppbrett og lettere drapering, samme palett og vinkel som søsken."
+      },
+      {
+        "severity": "medium",
+        "mal": 1,
+        "beskrivelse": "«What»-teksten («Tynn strikket lue.») mangler funksjonell andre-setning som søsken i ekstra-hode har — inkonsistent struktur.",
+        "forslag": "Legg til funksjonell setning, f.eks. «Beskytter hodet på milde dager uten å bli for varm.»"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Mangler trinn-opp-referanse til vanlig 'lue' for nedre temperaturbånd.",
+        "forslag": "Legg til alternativ-hint i teksten: «Ved kjøligere vær, bruk vanlig lue.»"
+      }
+    ]
+  }
+}

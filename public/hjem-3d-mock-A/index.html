@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Babyora Hjem · A+3D (F60 current)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+<style>
+  :root{
+    --bg-canvas:#DBD8D2;
+    --bg-canvas-soft:#E5E2DC;
+    --terracotta-600:#B4502E;
+    --terracotta-700:#974324;
+    --ink-900:#2B2522;
+    --ink-700:#5A514C;
+    --ink-500:#8A7F78;
+    --ink-300:#C9C3BD;
+    --sun:#F4A742;
+    --rain:#5C8FC9;
+    --wind:#8FA89B;
+    --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#1a1a1a;font-family:var(--font-sans);}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+  .frame{
+    position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.5), 0 0 0 12px #1f1f1f, 0 0 0 13px #333;
+    background:var(--bg-canvas);
+  }
+  .screen{
+    position:relative;height:100%;width:100%;overflow:hidden;
+    display:flex;flex-direction:column;
+    padding:calc(env(safe-area-inset-top, 0px) + 52px) 22px calc(env(safe-area-inset-bottom, 0px) + 96px);
+    font-family:var(--font-sans);color:var(--ink-900);
+    background:
+      radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,.55), transparent 60%),
+      var(--bg-canvas);
+  }
+
+  /* Topbar */
+  .topbar{flex:none;display:flex;align-items:center;justify-content:space-between;}
+  .pill{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:13px;background:rgba(255,255,255,.6);border:1px solid rgba(43,37,34,.05);}
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--terracotta-600);box-shadow:0 0 0 3px rgba(180,80,46,.18);}
+  .pill .city{font-size:13.5px;font-weight:600;color:var(--ink-900);}
+  .notif{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.6);border:1px solid rgba(43,37,34,.05);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+
+  /* Temp-blokk: Schibsted Grotesk 600 + sol-Lottie */
+  .temp-block{
+    flex:none;margin-top:18px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .temp-figure{
+    font-family:var(--font-sans);
+    font-size:38px;
+    line-height:1;
+    color:var(--ink-900);
+    letter-spacing:-1px;
+    font-weight:600;
+  }
+  .sun-anim{
+    width:46px;height:46px;flex:none;
+    filter:drop-shadow(0 4px 10px rgba(244,167,66,.45));
+    transform-style:preserve-3d;
+    perspective:200px;
+  }
+  .sun-anim svg{width:100%;height:100%;display:block;}
+  .sun-fallback{
+    position:relative;width:46px;height:46px;
+    display:flex;align-items:center;justify-content:center;
+    animation:sunBreathe 4.2s ease-in-out infinite, sunRotate 24s linear infinite;
+    transform-style:preserve-3d;
+  }
+  .sun-fallback .core{
+    position:absolute;inset:8px;border-radius:50%;
+    background:radial-gradient(circle at 32% 28%, #FFE8B8 0%, #F4A742 55%, #C9761A 100%);
+    box-shadow:0 4px 10px rgba(244,167,66,.5), inset -2px -3px 6px rgba(140,70,10,.35), inset 2px 2px 4px rgba(255,240,200,.65);
+  }
+  .sun-fallback .ray{
+    position:absolute;left:50%;top:50%;width:2px;height:8px;border-radius:1px;
+    background:#F4A742;transform-origin:50% 14px;
+  }
+  .sun-fallback .ray:nth-child(2){transform:translate(-50%,-50%) rotate(0deg);}
+  .sun-fallback .ray:nth-child(3){transform:translate(-50%,-50%) rotate(45deg);}
+  .sun-fallback .ray:nth-child(4){transform:translate(-50%,-50%) rotate(90deg);}
+  .sun-fallback .ray:nth-child(5){transform:translate(-50%,-50%) rotate(135deg);}
+  .sun-fallback .ray:nth-child(6){transform:translate(-50%,-50%) rotate(180deg);}
+  .sun-fallback .ray:nth-child(7){transform:translate(-50%,-50%) rotate(225deg);}
+  .sun-fallback .ray:nth-child(8){transform:translate(-50%,-50%) rotate(270deg);}
+  .sun-fallback .ray:nth-child(9){transform:translate(-50%,-50%) rotate(315deg);}
+  @keyframes sunBreathe{
+    0%,100%{transform:scale(1) rotate(0deg);}
+    50%{transform:scale(1.08) rotate(0deg);}
+  }
+  @keyframes sunRotate{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+  /* Meta-rad */
+  .meta-row{
+    flex:none;margin-top:10px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    flex-wrap:wrap;
+  }
+  .meta-pill{
+    display:flex;align-items:center;gap:7px;
+    padding:7px 12px;border-radius:11px;
+    background:rgba(255,255,255,.55);
+    border:1px solid rgba(43,37,34,.06);
+    font-size:12.5px;font-weight:600;color:var(--ink-700);
+    letter-spacing:.1px;
+  }
+  .meta-anim{width:24px;height:24px;flex:none;display:flex;align-items:center;justify-content:center;}
+
+  .rain-fallback{
+    position:relative;width:24px;height:24px;
+    filter:drop-shadow(0 2px 4px rgba(92,143,201,.4));
+  }
+  .rain-fallback .cloud{
+    position:absolute;left:2px;top:4px;width:20px;height:11px;border-radius:10px;
+    background:linear-gradient(180deg,#E9EEF4,#B9C7D5);
+    box-shadow:inset -1px -2px 3px rgba(60,80,110,.25), inset 1px 1px 2px rgba(255,255,255,.7);
+  }
+  .rain-fallback .cloud::before{
+    content:"";position:absolute;left:3px;top:-4px;width:9px;height:9px;border-radius:50%;
+    background:linear-gradient(180deg,#E9EEF4,#C5D2E0);
+  }
+  .rain-fallback .cloud::after{
+    content:"";position:absolute;right:2px;top:-3px;width:7px;height:7px;border-radius:50%;
+    background:linear-gradient(180deg,#E9EEF4,#C5D2E0);
+  }
+  .rain-fallback .drop{
+    position:absolute;width:1.5px;height:4px;border-radius:1px;background:var(--rain);
+    animation:rainFall 1.3s linear infinite;opacity:0;
+  }
+  .rain-fallback .drop:nth-child(2){left:7px;top:14px;animation-delay:0s;}
+  .rain-fallback .drop:nth-child(3){left:12px;top:14px;animation-delay:.35s;}
+  .rain-fallback .drop:nth-child(4){left:17px;top:14px;animation-delay:.7s;}
+  @keyframes rainFall{
+    0%{transform:translateY(0);opacity:0;}
+    20%{opacity:.9;}
+    100%{transform:translateY(7px);opacity:0;}
+  }
+
+  .wind-fallback{
+    position:relative;width:24px;height:24px;
+    filter:drop-shadow(0 2px 3px rgba(143,168,155,.35));
+  }
+  .wind-fallback .streak{
+    position:absolute;left:2px;height:1.8px;border-radius:1px;
+    background:linear-gradient(90deg, transparent, var(--wind) 30%, var(--wind) 70%, transparent);
+    animation:windFlow 2.2s ease-in-out infinite;
+  }
+  .wind-fallback .streak:nth-child(1){top:7px;width:18px;animation-delay:0s;}
+  .wind-fallback .streak:nth-child(2){top:12px;width:14px;animation-delay:.3s;}
+  .wind-fallback .streak:nth-child(3){top:17px;width:16px;animation-delay:.6s;}
+  @keyframes windFlow{
+    0%{transform:translateX(-4px) scaleX(.6);opacity:.4;}
+    50%{transform:translateX(0) scaleX(1);opacity:1;}
+    100%{transform:translateX(4px) scaleX(.6);opacity:.4;}
+  }
+
+  /* Toggle */
+  .toggle{flex:none;display:flex;margin-top:14px;padding:4px;border-radius:13px;background:rgba(43,37,34,.06);}
+  .toggle .seg{flex:1;text-align:center;padding:10px 0;border-radius:10px;font-weight:600;font-size:13.5px;cursor:pointer;color:var(--ink-700);}
+  .toggle .seg.active{background:#FFF;color:var(--ink-900);box-shadow:0 1px 3px rgba(43,37,34,.1);}
+  .toggle .seg.inactive{color:rgba(43,37,34,.45);}
+
+  /* Hero */
+  .hero{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:6px;}
+
+  .avatar-stage{position:relative;width:230px;height:230px;flex:none;}
+  .glow{
+    position:absolute;left:50%;top:54%;width:270px;height:130px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:radial-gradient(closest-side at 50% 58%, rgba(255,255,255,.72), rgba(255,255,255,0) 72%);
+    pointer-events:none;
+  }
+  .shadow{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:180px;height:26px;border-radius:50%;background:rgba(96,90,80,.16);filter:blur(12px);}
+  .float{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);animation:floaty 5.2s ease-in-out infinite;}
+  @keyframes floaty{
+    0%,100%{transform:translate(-50%,0);}
+    50%{transform:translate(-50%,-6px);}
+  }
+  .avatar-img{
+    width:220px;height:220px;
+    background-image:url(../avatars/avatar-A6.png);
+    background-size:contain;background-repeat:no-repeat;background-position:center bottom;
+    filter:drop-shadow(0 16px 22px rgba(74,68,58,.24));
+  }
+
+  .eyebrow{
+    flex:none;margin-top:4px;
+    font-size:10px;font-weight:700;letter-spacing:1.6px;
+    color:var(--terracotta-600);
+    text-transform:uppercase;
+    text-align:center;
+  }
+  .recommendation{
+    flex:none;margin:6px 0 0 0;
+    font-family:var(--font-sans);
+    font-size:22px;
+    font-weight:600;
+    line-height:1.2;
+    letter-spacing:-.3px;
+    color:var(--ink-900);
+    text-align:center;
+  }
+  .subtitle{
+    flex:none;margin-top:5px;
+    font-size:13px;
+    font-weight:500;
+    color:var(--ink-700);
+    text-align:center;
+    letter-spacing:.1px;
+  }
+
+  /* CTA */
+  .cta{
+    flex:none;display:flex;align-items:center;justify-content:center;gap:10px;
+    width:100%;margin-top:16px;padding:17px 24px;border-radius:18px;border:none;cursor:pointer;
+    background:var(--terracotta-600);
+    box-shadow:0 1px 2px rgba(43,37,34,.06),0 12px 24px rgba(180,80,46,.36);
+    font-family:var(--font-sans);
+    transition:transform .15s ease, background .15s ease;
+  }
+  .cta:hover{transform:translateY(-1px);}
+  .cta:active{background:var(--terracotta-700);transform:translateY(0);}
+  .cta span{font-size:16px;font-weight:600;color:#FFF;letter-spacing:.1px;}
+
+  /* BottomTabBar */
+  .tabbar{
+    position:absolute;left:0;right:0;bottom:0;
+    height:calc(env(safe-area-inset-bottom, 0px) + 74px);
+    padding:8px 22px calc(env(safe-area-inset-bottom, 0px) + 10px);
+    background:rgba(219,216,210,.92);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-top:1px solid rgba(43,37,34,.06);
+    display:flex;align-items:center;justify-content:space-around;
+  }
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 10px;background:none;border:none;cursor:pointer;font-family:var(--font-sans);}
+  .tab svg{stroke:rgba(43,37,34,.42);}
+  .tab .tab-label{font-size:10.5px;font-weight:600;color:rgba(43,37,34,.5);letter-spacing:.3px;}
+  .tab.active svg{stroke:var(--terracotta-600);}
+  .tab.active .tab-label{color:var(--terracotta-600);}
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    .float,
+    .sun-fallback,
+    .rain-fallback .drop,
+    .wind-fallback .streak,
+    .cta{
+      animation:none !important;
+      transition:none !important;
+    }
+    .sun-fallback{transform:none;}
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <main class="screen" aria-label="Babyora Hjem">
+      <h1 class="sr-only">Babyora hjem — anbefalt påkledning</h1>
+
+      <div class="topbar">
+        <div class="pill" aria-label="Sted: Elverum"><span class="dot" aria-hidden="true"></span><span class="city">Elverum</span></div>
+        <button class="notif" aria-label="Varsler">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2B2522" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </button>
+      </div>
+
+      <div class="temp-block" aria-label="Temperatur −4 grader, klarvær">
+        <span class="temp-figure">−4°</span>
+        <span class="sun-anim" aria-hidden="true">
+          <lottie-player
+            src="https://assets10.lottiefiles.com/packages/lf20_KUFdS6.json"
+            background="transparent"
+            speed="1"
+            style="width:46px;height:46px;"
+            loop autoplay
+            onerror="this.style.display='none'"
+          ></lottie-player>
+          <div class="sun-fallback" aria-hidden="true" id="sunFallback">
+            <span class="ray"></span>
+            <span class="ray"></span>
+            <span class="ray"></span>
+            <span class="ray"></span>
+            <span class="ray"></span>
+            <span class="ray"></span>
+            <span class="ray"></span>
+            <span class="ray"></span>
+            <span class="core"></span>
+          </div>
+        </span>
+      </div>
+
+      <div class="meta-row" aria-label="Nedbør 0 millimeter per time, vind 2 meter per sekund">
+        <div class="meta-pill">
+          <span class="meta-anim" aria-hidden="true">
+            <div class="rain-fallback">
+              <div class="cloud"></div>
+              <span class="drop"></span>
+              <span class="drop"></span>
+              <span class="drop"></span>
+            </div>
+          </span>
+          <span>0 mm/t</span>
+        </div>
+        <div class="meta-pill">
+          <span class="meta-anim" aria-hidden="true">
+            <div class="wind-fallback">
+              <span class="streak"></span>
+              <span class="streak"></span>
+              <span class="streak"></span>
+            </div>
+          </span>
+          <span>2 m/s</span>
+        </div>
+      </div>
+
+      <div class="toggle" role="tablist" aria-label="Velg situasjon">
+        <div class="seg active" role="tab" aria-selected="true">Utenfor vogn</div>
+        <div class="seg inactive" role="tab" aria-selected="false">I vogn</div>
+      </div>
+
+      <div class="hero">
+        <div class="avatar-stage" aria-label="Avatar kledd for vinterdress, lue og votter">
+          <div class="glow" aria-hidden="true"></div>
+          <div class="shadow" aria-hidden="true"></div>
+          <div class="float"><div class="avatar-img" role="img" aria-label="Avatar i vinterdress"></div></div>
+        </div>
+        <div class="eyebrow">ANBEFALT NÅ</div>
+        <h2 class="recommendation">Vinterdress + lue + votter</h2>
+        <div class="subtitle">for −4° klarvær</div>
+      </div>
+
+      <button class="cta" aria-label="Se påkledning">
+        <span>Se påkledning</span>
+        <svg width="22" height="13" viewBox="0 0 26 14" fill="none" stroke="#FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h20"/><path d="M17 2l5 5-5 5"/></svg>
+      </button>
+
+      <nav class="tabbar" aria-label="Hovedmeny">
+        <button class="tab active" aria-current="page" aria-label="Hjem">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6h-6v6H5a2 2 0 0 1-2-2z"/></svg>
+          <span class="tab-label">Hjem</span>
+        </button>
+        <button class="tab" aria-label="Uke">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+          <span class="tab-label">Uke</span>
+        </button>
+        <button class="tab" aria-label="Garderobe">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l2 12H4z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>
+          <span class="tab-label">Garderobe</span>
+        </button>
+        <button class="tab" aria-label="Meg">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          <span class="tab-label">Meg</span>
+        </button>
+      </nav>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const player = document.querySelector('.sun-anim lottie-player');
+      const fallback = document.getElementById('sunFallback');
+      if (!player || !fallback) return;
+
+      let usedFallback = false;
+      const showFallback = () => {
+        if (usedFallback) return;
+        usedFallback = true;
+        player.style.display = 'none';
+        fallback.style.display = 'flex';
+      };
+      fallback.style.display = 'flex';
+      player.style.position = 'absolute';
+      player.addEventListener('ready', () => {
+        fallback.style.display = 'none';
+        player.style.position = 'static';
+      });
+      player.addEventListener('error', showFallback);
+      setTimeout(() => {
+        if (!player.shadowRoot || !player.shadowRoot.querySelector('canvas, svg')) {
+          showFallback();
+        }
+      }, 2500);
+
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const applyReduce = () => {
+        if (reduce.matches && typeof player.pause === 'function') {
+          try { player.pause(); } catch(_) {}
+        }
+      };
+      reduce.addEventListener('change', applyReduce);
+      applyReduce();
+    });
+  </script>
+</body>
+</html>

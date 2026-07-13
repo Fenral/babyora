@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#EEF2F4" />
+    <title>Babyora · P1 Frost</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /*
+       * P1 Frost — kjølig nordisk vinter med aubergine CTA.
+       * Kontrast-verifikasjoner (WCAG 2.2):
+       *   --cta #4A1F4D mot hvit = 9.2:1 (AAA normal text)
+       *   --ink #14181F mot --bg #EEF2F4 = 16.9:1 (AAA)
+       *   --fg2 #3F4754 mot --bg = 8.4:1 (AAA)
+       *   --fg3 #5A6470 mot --bg = 5.5:1 (AA normal)
+       *   --accent #2A9D6E (status only) mot hvit = 3.0:1 (AA large/UI)
+       */
+      :root {
+        --bg: #eef2f4;
+        --surface: #ffffff;
+        --border: #dde5ea;
+        --muted-bg: #e2e8ec;
+        --ink: #14181f;
+        --fg2: #3f4754;
+        --fg3: #5a6470;
+        --cta: #4a1f4d;
+        --cta-hover: #3d1b40;
+        --cta-fg: #ffffff;
+        --accent: #2a9d6e;
+        --section-label: #5a6470;
+        --tip-leaf: #2a9d6e;
+        --hero-temp: #14181f;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Instrument Sans", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        min-height: 100dvh;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        display: flex;
+        justify-content: center;
+      }
+
+      .phone {
+        width: 100%;
+        max-width: 430px;
+        min-height: 100dvh;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* ───── Top bar ───── */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px 8px;
+      }
+      .loc-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 500;
+        padding: 8px 14px;
+        border-radius: 999px;
+        min-height: 44px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .icon-btn {
+        width: 44px;
+        height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .icon-btn svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* ───── Greet + Hero ───── */
+      .greet {
+        font-family: "DM Serif Display", serif;
+        font-weight: 400;
+        font-size: 26px;
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+        margin: 12px 20px 0;
+        color: var(--ink);
+      }
+      .hero {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 20px 18px;
+      }
+      .hero-temp {
+        font-family: "DM Serif Display", serif;
+        font-weight: 400;
+        font-size: 68px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: var(--hero-temp);
+        margin: 0;
+      }
+      .hero-feels {
+        font-size: 13px;
+        color: var(--fg3);
+        margin-top: 6px;
+      }
+      .hero-icon {
+        width: 62px;
+        height: 62px;
+        flex: 0 0 62px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .hero-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      /* ───── Section label row ───── */
+      .section-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 20px 12px;
+      }
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--section-label);
+        font-weight: 600;
+      }
+      .activity-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .activity-label {
+        font-size: 13px;
+        color: var(--fg2);
+        font-weight: 500;
+      }
+      .layer-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        background: var(--cta);
+        color: var(--cta-fg);
+        font-size: 12px;
+        font-weight: 700;
+        border-radius: 999px;
+        line-height: 1;
+      }
+
+      /* ───── Outfit layers ───── */
+      .layers {
+        list-style: none;
+        margin: 0;
+        padding: 0 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .olayer {
+        display: grid;
+        grid-template-columns: 48px 1fr auto auto;
+        align-items: center;
+        gap: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px 14px;
+        min-height: 64px;
+      }
+      .ico-tile {
+        width: 44px;
+        height: 44px;
+        background: var(--muted-bg);
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--fg2);
+      }
+      .ico-tile svg {
+        width: 22px;
+        height: 22px;
+      }
+      .olayer-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .olayer-cat {
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--section-label);
+        font-weight: 600;
+      }
+      .olayer-garment {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--ink);
+        line-height: 1.2;
+      }
+      .lag-num {
+        font-size: 12px;
+        color: var(--fg3);
+        font-variant-numeric: tabular-nums;
+      }
+      .chevron {
+        color: var(--fg3);
+      }
+      .chevron svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      /* ───── Tip row ───── */
+      .tip {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin: 14px 20px 4px;
+        padding: 12px 14px;
+        background: var(--muted-bg);
+        border-radius: 12px;
+        font-size: 13px;
+        color: var(--fg2);
+        line-height: 1.45;
+      }
+      .tip-leaf {
+        color: var(--tip-leaf);
+        flex: 0 0 18px;
+        margin-top: 1px;
+      }
+      .tip-leaf svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      /* ───── Activity segments ───── */
+      .adjust {
+        margin: 20px 20px 0;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+      }
+      .adjust-label {
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--section-label);
+        font-weight: 600;
+        margin: 0 0 10px;
+      }
+      .segments {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .seg {
+        appearance: none;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--fg2);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 12px 8px;
+        border-radius: 12px;
+        min-height: 44px;
+        cursor: pointer;
+      }
+      .seg.is-active {
+        background: var(--ink);
+        color: var(--bg);
+        border-color: var(--ink);
+      }
+
+      /* ───── Bottom tabs ───── */
+      .tabbar {
+        margin-top: auto;
+        padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+      }
+      .tab {
+        appearance: none;
+        background: transparent;
+        border: 0;
+        font: inherit;
+        color: var(--fg3);
+        font-size: 11px;
+        font-weight: 500;
+        padding: 10px 4px 8px;
+        min-height: 56px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        position: relative;
+        border-radius: 10px;
+      }
+      .tab svg {
+        width: 22px;
+        height: 22px;
+      }
+      .tab.is-active {
+        color: var(--cta);
+      }
+      .tab.is-active::before {
+        content: "";
+        position: absolute;
+        top: -1px;
+        left: 22%;
+        right: 22%;
+        height: 2px;
+        background: var(--cta);
+        border-radius: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="phone" id="main" aria-label="Babyora Hjem-skjerm (P1 Frost)">
+      <header class="topbar">
+        <button class="loc-pill" type="button" aria-label="Bytt lokasjon, valgt Trondheim">
+          <span aria-hidden="true">📍</span>
+          <span>Trondheim</span>
+        </button>
+        <button class="icon-btn" type="button" aria-label="Varsler">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          </svg>
+        </button>
+      </header>
+
+      <h1 class="greet">God morgen, Lillian</h1>
+
+      <section class="hero" aria-label="Værforhold akkurat nå">
+        <div>
+          <p class="hero-temp">5°</p>
+          <p class="hero-feels">Føles som 2°</p>
+        </div>
+        <div class="hero-icon" aria-hidden="true">
+          <img src="/icons/metno/rain.svg" alt="" />
+        </div>
+      </section>
+
+      <div class="section-row">
+        <span class="eyebrow">Akkurat nå · 09:14</span>
+        <span class="activity-meta">
+          <span class="activity-label">Vogn</span>
+          <span class="layer-badge" aria-label="3 lag">3</span>
+        </span>
+      </div>
+
+      <ul class="layers" aria-label="Anbefalte lag">
+        <li class="olayer">
+          <span class="ico-tile" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 4h12l-2 4-2 14H10L8 8z" />
+            </svg>
+          </span>
+          <span class="olayer-text">
+            <span class="olayer-cat">Innerst</span>
+            <span class="olayer-garment">Ullsett tynt</span>
+          </span>
+          <span class="lag-num">Lag 1</span>
+          <span class="chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
+          </span>
+        </li>
+        <li class="olayer">
+          <span class="ico-tile" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 6l3-2h8l3 2-2 4v10H7V10z" />
+            </svg>
+          </span>
+          <span class="olayer-text">
+            <span class="olayer-cat">Mellomlag</span>
+            <span class="olayer-garment">Tynn ull-mellomlag</span>
+          </span>
+          <span class="lag-num">Lag 2</span>
+          <span class="chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
+          </span>
+        </li>
+        <li class="olayer">
+          <span class="ico-tile" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 7l4-3h8l4 3-2 4v9H6v-9z" />
+              <path d="M9 21v-7M15 21v-7" />
+            </svg>
+          </span>
+          <span class="olayer-text">
+            <span class="olayer-cat">Yttertøy</span>
+            <span class="olayer-garment">Vinterkjøredress</span>
+          </span>
+          <span class="lag-num">Lag 3</span>
+          <span class="chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
+          </span>
+        </li>
+        <li class="olayer">
+          <span class="ico-tile" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12a7 7 0 0 1 14 0v2H5z" />
+              <path d="M5 14h14v3H5z" />
+            </svg>
+          </span>
+          <span class="olayer-text">
+            <span class="olayer-cat">Ekstra</span>
+            <span class="olayer-garment">Lue + votter</span>
+          </span>
+          <span class="lag-num">+2</span>
+          <span class="chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
+          </span>
+        </li>
+      </ul>
+
+      <p class="tip" role="note">
+        <span class="tip-leaf" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 4C10 4 4 10 4 20c10 0 16-6 16-16z" />
+            <path d="M4 20l8-8" />
+          </svg>
+        </span>
+        <span>Det biter litt i ørene – votter er en god idé.</span>
+      </p>
+
+      <section class="adjust" aria-label="Juster aktivitet">
+        <p class="adjust-label">Adjust</p>
+        <div class="segments" role="tablist">
+          <button class="seg is-active" type="button" role="tab" aria-selected="true">Vogn</button>
+          <button class="seg" type="button" role="tab" aria-selected="false">Bæresele</button>
+          <button class="seg" type="button" role="tab" aria-selected="false">Utelek</button>
+        </div>
+      </section>
+
+      <nav class="tabbar" aria-label="Hovednavigasjon">
+        <button class="tab is-active" type="button" aria-current="page" aria-label="Hjem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" />
+          </svg>
+          <span>Hjem</span>
+        </button>
+        <button class="tab" type="button" aria-label="Plan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path d="M3 9h18M8 3v4M16 3v4" />
+          </svg>
+          <span>Plan</span>
+        </button>
+        <button class="tab" type="button" aria-label="Guide">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 5a2 2 0 0 1 2-2h11v18H6a2 2 0 0 1-2-2z" />
+            <path d="M8 7h7M8 11h7M8 15h5" />
+          </svg>
+          <span>Guide</span>
+        </button>
+        <button class="tab" type="button" aria-label="Innstillinger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06A2 2 0 1 1 4.17 16.92l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06A2 2 0 1 1 7.08 4.17l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1z" />
+          </svg>
+          <span>Innstillinger</span>
+        </button>
+      </nav>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,64 @@
+{
+  "claude": {
+    "id": "regntoy-skall",
+    "dbString": "regntøy / skall",
+    "kategori": "yttertoy",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett info-oppføring finnes i garment-info.ts (linje 137-140): what = 'Regntøy med tette sømmer — to-delt eller én-delt.', when = 'Når det regner — uavhengig av temperatur.' Tone/lengde matcher søsken-yttertøy (vindtett-skall, kjøredress-rekken). Dedikert whyForGarment-gren finnes (linje 395-397, ikke fallback): 'Regntøy med tette sømmer er nødvendig når det regner X mm/t.' Trekk: when-teksten er noe kortere/mer minimalistisk enn de øvrige yttertøy-søsknene som alle nevner et temp-intervall (f.eks. lett-kjoredress '5-12 °C'); det er bevisst korrekt her (temp-uavhengig) men bryter litt mønsteret. Ingen aktivitets-presisering i when (gjelder kun utelek, ikke vogn/bæresele — se mål 4)."
+    },
+    "utseende": {
+      "score": 18,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet til stede: public/illustrations/garments/regntoy-skall.png (Test-Path True). db-strengen 'regntøy / skall' er mappet korrekt i garment-illustrations.ts linje 50 til id 'regntoy-skall', som matcher PNG-filnavnet og GarmentInfo-nøkkelen. Mapping er entydig (ingen kollisjon/fallback-deling). Navne-plausibilitet god — æøå/skråstrek normaliseres til ascii-slug. Selve visuell kvalitet ikke vurdert (Fable 5 + Claude senere)."
+    },
+    "seleksjon": {
+      "score": 23,
+      "trace": "regntøy/skall finnes IKKE i noen baseTable-celle. Det introduseres KUN via modifiers.ts steg 1 (nedbør): if (weather.precipMmH >= 0.5) { ... else if (activity === 'utelek') addItem(layers,'yttertoy','regntøy / skall') }. Altså: aktivitet=utelek OG precipMmH ≥ 0.5 mm/t, i ALLE temperatur-bånd (temp-uavhengig). For vogn velges 'regntrekk', for bæresele 'regnponcho over bæresele' i stedet — så regntøy/skall er utelek-eksklusivt. Ved 0.2-0.5 mm/t gis kun en yr-note (notes.rain.drizzle), intet plagg. Ingen conflicts/softBlocks/safety fjerner eller begrenser plagget; det kan sameksistere med vinterdress/vindtett skall i kalde/vind-bånd (begge yttertoy). Ingen alders- eller eksponerings-gate.",
+      "score_note": "23/25",
+      "kilder": [],
+      "kommentar": "Pediatrisk forsvarlig. Regntøy som ytterste vannavstøtende skall over isolasjons-lagene er ukontroversielt og reiser ingen overoppheting/SIDS/kvelning/frost-fare i seg selv — det erstatter ikke varme, det legges utenpå. Terskelen 0.5 mm/t (lett-moderat regn) er fornuftig for å unngå falske positive ved yr. SIDS/tildekkings-risikoen ved nedbør håndteres riktig i vogn-grenen (regntrekk + HB-8 luft-advarsel), ikke her. Eneste lille merknad: plagget legges på temp-uavhengig også i tropisk/ekstrem_varme-bånd ved regn — et regntett skall i 28 °C kan gi klam varme, men SB-2 lag-cap (maks 6 items ved ≥16 °C) og nakke-sjekk-notene demper dette, og varm sommerregn-utelek er sjelden. Kildene (AAP-HC, Capital Area Peds) dekker generell vær-påkledning; ingen kilde motsier regn-skall. Ikke behov for ekstra web-søk."
+    },
+    "tekstLogikk": {
+      "score": 22,
+      "kommentar": "Sterk samstemthet. when 'Når det regner — uavhengig av temperatur' matcher den faktiske tracen presist: plagget velges utelukkende på precip-betingelse (≥0.5 mm/t), uavhengig av temp-bånd. whyForGarment-grenen 'Regntøy med tette sømmer er nødvendig når det regner X mm/t' speiler nøyaktig den dynamiske verdien (precipMmH) som triggeren bruker — ingen temp-drift, ingen vind-drift. To mindre presisjons-gap (begge severity lav, ikke villedende): (1) when sier generisk 'når det regner', men plagget vises først ved ≥0.5 mm/t; ved 0.2-0.5 mm/t (yr) får brukeren bare en note og INTET plagg — teksten kunne antydet at lett yr håndteres av kalesje/uten skall. (2) Verken when eller why nevner at dette KUN gjelder utelek; ved vogn/bæresele i regn velges andre plagg (regntrekk/regnponcho). En forelder som leser garment-detaljen isolert kan tro regntøy/skall er universal regn-løsning. Ingen logikk-feil som feil-kler barnet."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "regntøy/skall har INGEN oppføring i alternatives.ts. For dette plagget er fravær i stor grad riktig: et vannavstøtende regnskall har ikke et ull↔fleece eller dun↔syntet materialvalg på samme måte som isolasjonslag — regntøy ER funksjonelt definert (vanntett/tette sømmer). Det finnes likevel ett reelt, utelatt alternativ-akse som BURDE vært tilbudt: regn-PONCHO / regnslag vs to-delt regnsett (regnjakke + regnbukse) — for de minste/krabbere er heldekkende regndress vs poncho et reelt foreldre-valg, og when nevner allerede 'to-delt eller én-delt' uten å eksponere det som valgbart alternativ. Trekk på 3 for denne manglende men meningsfulle akse; ikke kritisk siden funksjonen er den samme."
+    },
+    "total": 88,
+    "verdikt": "Solid, trygt plagg. Regntøy/skall er korrekt modellert som en temp-uavhengig nedbørs-modifier (utelek, ≥0.5 mm/t) med presis what/when og dedikert whyForGarment-gren som speiler den faktiske triggeren. PNG finnes og er entydig mappet. Ingen pediatriske faresignaler. Hovedforbedringer er kommunikative, ikke logiske: (1) tydeliggjør at plagget kun gjelder utelek (vogn=regntrekk, bæresele=regnponcho), og (2) at det først aktiveres ved ≥0.5 mm/t, ikke ved lett yr. Vurder å legge til to-delt regnsett vs poncho som synlig alternativ. Ingen tall/terskler bør røres.",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "when og whyForGarment nevner ikke at regntøy/skall KUN velges for aktivitet=utelek. Ved vogn velges 'regntrekk' og ved bæresele 'regnponcho over bæresele' (modifiers.ts steg 1). En forelder som leser garment-detaljen isolert kan tro plagget er en universal regn-løsning.",
+        "forslag": "Legg til aktivitets-kontekst i when, f.eks. 'Til utelek når det regner — uavhengig av temperatur. (I vogn brukes regntrekk, i bæresele regnponcho.)'",
+        "kilde": "modifiers.ts linje 143-150"
+      },
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "when 'Når det regner' er generisk, men plagget aktiveres først ved precipMmH ≥ 0.5 mm/t. Ved 0.2-0.5 mm/t (yr) gis kun en note (notes.rain.drizzle) og INTET plagg. Teksten antyder ikke at lett yr klares uten regnskall.",
+        "forslag": "Nyanser when til f.eks. 'Når det regner mer enn lett yr' for å matche 0.5 mm/t-terskelen. Ikke endre selve terskelen.",
+        "kilde": "modifiers.ts linje 143 vs 158"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen alternativ-oppføring i alternatives.ts. Materialvalg er ikke relevant for et vanntett skall, men akse to-delt regnsett vs én-delt regndress/poncho er et reelt foreldre-valg (when nevner allerede 'to-delt eller én-delt' uten å eksponere det).",
+        "forslag": "Vurder å legge regntøy/skall i ITEM_ALTERNATIVES med alternativ 'to-delt regnsett' / 'regnponcho' og i18n-keys, så (!)-ikon vises. Lav prioritet.",
+        "kilde": "alternatives.ts; garment-info.ts linje 138"
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "Plagget legges på temp-uavhengig også i tropisk/ekstrem_varme-bånd ved regn (≥0.5 mm/t, utelek). Et vanntett skall i 28 °C kan gi klam varme. Dempes av SB-2 lag-cap og nakke-sjekk-noter, og varmt sommerregn-utelek er sjelden.",
+        "forslag": "Ingen endring nødvendig nå; eventuelt en note ved feels ≥22 °C + regnskall om å lufte/korte turen. Tall/terskler urørt.",
+        "kilde": "modifiers.ts linje 143-150; softBlocks.ts SB-2"
+      }
+    ]
+  },
+  "fable": null
+}

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Babyora Påkledning · P2/P3/P4/P5 sammenligning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#15171a;
+    --bg-card:#1f2125;
+    --bg-soft:#2a2d32;
+    --bg-row:#1a1c20;
+    --border:rgba(255,255,255,.06);
+    --ink-100:#F4F2EE;
+    --ink-300:#C9C3BD;
+    --ink-500:#8A847E;
+    --ink-700:#5A514C;
+    --warm-orange:#FF6B35;
+    --gold:#F4A742;
+    --green:#7FB069;
+    --red:#D9624A;
+    --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+    --font-serif:'DM Serif Display',Georgia,serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink-100);font-family:var(--font-sans);}
+
+  .page{min-height:100vh;padding:48px 32px 64px;}
+
+  .header{max-width:1380px;margin:0 auto 32px;}
+  .header .eyebrow{
+    display:inline-block;padding:4px 10px;border-radius:8px;
+    background:rgba(255,107,53,.14);color:var(--warm-orange);
+    font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:14px;
+  }
+  .header h1{
+    font-family:var(--font-serif);font-size:44px;line-height:1.05;margin:0 0 10px;
+    color:var(--ink-100);letter-spacing:-1px;font-weight:400;
+  }
+  .header p{
+    font-size:15.5px;color:var(--ink-300);margin:0;max-width:780px;line-height:1.55;
+  }
+  .header .meta{
+    margin-top:14px;font-size:12.5px;color:var(--ink-500);font-variant-numeric:tabular-nums;
+  }
+
+  /* Horisontal scroll med 4 iPhone-frames */
+  .scroller{
+    display:flex;gap:28px;
+    overflow-x:auto;overflow-y:visible;
+    padding:24px 16px 48px;margin:0 -16px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+  }
+  .scroller::-webkit-scrollbar{height:10px;}
+  .scroller::-webkit-scrollbar-track{background:var(--bg-card);border-radius:5px;}
+  .scroller::-webkit-scrollbar-thumb{background:var(--bg-soft);border-radius:5px;}
+
+  .variant{
+    flex:0 0 auto;width:420px;
+    scroll-snap-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:16px;
+  }
+  .variant-label{text-align:center;max-width:380px;}
+  .variant-tag{
+    display:inline-block;padding:4px 10px;border-radius:8px;
+    background:rgba(255,107,53,.14);color:var(--warm-orange);
+    font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  .variant-title{
+    font-family:var(--font-serif);font-size:24px;line-height:1.1;margin:0;
+    color:var(--ink-100);letter-spacing:-.5px;font-weight:400;
+  }
+  .variant-source{
+    font-size:11.5px;color:var(--ink-500);margin:6px 0 0;letter-spacing:.4px;text-transform:uppercase;font-weight:600;
+  }
+  .variant-strategy{
+    margin:8px 0 0;font-size:13px;color:var(--ink-300);line-height:1.5;
+  }
+
+  .phone-shell{
+    width:414px;height:880px;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:52px;overflow:hidden;
+    background:transparent;
+    position:relative;
+  }
+  .phone-shell iframe{
+    width:414px;height:880px;border:0;background:#1a1a1a;
+    display:block;
+  }
+  .phone-shell.missing{
+    background:repeating-linear-gradient(45deg,#1f2125,#1f2125 12px,#22252a 12px,#22252a 24px);
+    border:1px dashed rgba(255,255,255,.08);
+    color:var(--ink-500);
+    font-size:13px;text-align:center;padding:24px;line-height:1.55;
+  }
+  .phone-shell.missing strong{display:block;color:var(--ink-300);font-size:14px;margin-bottom:6px;}
+
+  /* Scoring-tabell */
+  .scoring{
+    max-width:1380px;margin:48px auto 0;
+    background:var(--bg-card);border:1px solid var(--border);
+    border-radius:18px;overflow:hidden;
+  }
+  .scoring-head{padding:24px 28px 4px;}
+  .scoring-head h2{
+    font-family:var(--font-serif);font-size:26px;line-height:1.1;margin:0 0 6px;
+    color:var(--ink-100);letter-spacing:-.5px;font-weight:400;
+  }
+  .scoring-head p{font-size:13.5px;color:var(--ink-300);margin:0;max-width:680px;line-height:1.55;}
+
+  table.score{
+    width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px;
+  }
+  table.score thead th{
+    text-align:left;padding:14px 20px;
+    background:var(--bg-row);color:var(--ink-500);
+    font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;
+    border-bottom:1px solid var(--border);
+  }
+  table.score thead th.dim{width:32%;}
+  table.score tbody td{
+    padding:16px 20px;border-bottom:1px solid var(--border);vertical-align:top;
+    color:var(--ink-300);
+  }
+  table.score tbody tr:last-child td{border-bottom:0;}
+  table.score .dim-name{color:var(--ink-100);font-weight:600;}
+  table.score .dim-sub{display:block;color:var(--ink-500);font-size:12px;font-weight:400;margin-top:3px;line-height:1.45;}
+  table.score .stars{color:var(--gold);font-size:15px;letter-spacing:1px;}
+  table.score .stars .dim{color:var(--ink-700);}
+  table.score .note{display:block;font-size:11.5px;color:var(--ink-500);margin-top:5px;line-height:1.45;}
+
+  /* Totals row */
+  table.score tfoot td{
+    padding:18px 20px;background:var(--bg-row);
+    color:var(--ink-100);font-weight:600;font-size:14px;
+  }
+  table.score tfoot .winner{color:var(--warm-orange);}
+
+  /* Legend */
+  .legend{
+    max-width:1380px;margin:18px auto 0;
+    display:flex;gap:18px;flex-wrap:wrap;
+    font-size:12px;color:var(--ink-500);
+  }
+  .legend span b{color:var(--gold);font-weight:700;}
+
+  @media (max-width:1100px){
+    .scroller{padding-bottom:32px;}
+    .variant{width:360px;}
+    .phone-shell, .phone-shell iframe{width:360px;height:768px;}
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="header">
+    <span class="eyebrow">F60.9.3 · Mobbin-research</span>
+    <h1>Påkledning — P2/P3/P4/P5 sammenligning</h1>
+    <p>
+      4 mock-varianter med samme test-case (Karasjok −22°, 7 plagg). Brand C-hybrid LÅST: warm-grey
+      canvas, DM Serif Display på temp, warm-orange CTA, Schibsted Grotesk overalt ellers.
+      Hver variant tester en ulik IA-strategi for hvordan plagg-listen leses på 50&nbsp;ms med
+      hansker.
+    </p>
+    <div class="meta">Scroll iframes horisontalt · Scoring-tabell under · Sticky CTA er fold-safe i alle 4</div>
+  </header>
+
+  <section class="scroller" role="list" aria-label="Mock-varianter">
+
+    <article class="variant" role="listitem">
+      <div class="variant-label">
+        <span class="variant-tag">P2 · Baseline</span>
+        <h2 class="variant-title">Alternerende rader</h2>
+        <div class="variant-source">Eksisterende fold-safe</div>
+        <p class="variant-strategy">
+          Dir-right/left alternerende plagg-rader med fargekodet lag-stripe. Avatar i topp,
+          hairline-dividers, ingen kort. Referanse for hva «brand-låst» faktisk betyr.
+        </p>
+      </div>
+      <div class="phone-shell">
+        <iframe src="/paakledning-mock/" title="P2 alternerende rader" loading="lazy"></iframe>
+      </div>
+    </article>
+
+    <article class="variant" role="listitem">
+      <div class="variant-label">
+        <span class="variant-tag">P3 · Postmates-stil</span>
+        <h2 class="variant-title">Tidslinje med trinn-nummer</h2>
+        <div class="variant-source">Postmates ordre-flow</div>
+        <p class="variant-strategy">
+          Vertikal connector-linje gjennom alle 7 plagg, lag-bolker (YTTERST/MELLOM/INNERST/TILBEHØR)
+          som sticky sub-headers. Hansker leser rekkefølge som progresjon.
+        </p>
+      </div>
+      <div class="phone-shell missing" id="p3-shell">
+        <iframe src="/paakledning-mock-p3/" title="P3 Postmates tidslinje" loading="lazy"
+                onload="this.parentElement.classList.remove('missing')"
+                onerror="this.style.display='none'"></iframe>
+        <noscript>P3 ikke bygget ennå.</noscript>
+      </div>
+    </article>
+
+    <article class="variant" role="listitem">
+      <div class="variant-label">
+        <span class="variant-tag">P4 · Superpower-stil</span>
+        <h2 class="variant-title">Avatar med plagg-orbit</h2>
+        <div class="variant-source">Superpower onboarding</div>
+        <p class="variant-strategy">
+          Stor barne-avatar sentralt, plagg-thumbs roterer rundt i lag-rekkefølge. Emosjonelt
+          fokus, mer «figur enn liste». Tilbehør samles i compact-rad nederst.
+        </p>
+      </div>
+      <div class="phone-shell missing" id="p4-shell">
+        <iframe src="/paakledning-mock-p4/" title="P4 Superpower avatar-orbit" loading="lazy"
+                onload="this.parentElement.classList.remove('missing')"
+                onerror="this.style.display='none'"></iframe>
+        <noscript>P4 ikke bygget ennå.</noscript>
+      </div>
+    </article>
+
+    <article class="variant" role="listitem">
+      <div class="variant-label">
+        <span class="variant-tag">P5 · Whering-stil</span>
+        <h2 class="variant-title">Outfit-stack (lag-kolonner)</h2>
+        <div class="variant-source">Whering outfit-builder</div>
+        <p class="variant-strategy">
+          Plagg stables vertikalt i fysisk lag-rekkefølge (ytterst øverst → innerst nederst),
+          som en faktisk antrekks-stabel. Tilbehør i horisontal chip-rad.
+        </p>
+      </div>
+      <div class="phone-shell">
+        <iframe src="/paakledning-mock-p5/" title="P5 Whering outfit-stack" loading="lazy"></iframe>
+      </div>
+    </article>
+
+  </section>
+
+  <section class="scoring" aria-labelledby="score-title">
+    <div class="scoring-head">
+      <h2 id="score-title">Scoring · 5 dimensjoner</h2>
+      <p>Subjektiv ★1–5 per dimensjon. Vektet likt. Totals nederst peker mot anbefalt vinner for
+      videre React-port.</p>
+    </div>
+
+    <table class="score">
+      <thead>
+        <tr>
+          <th class="dim" scope="col">Dimensjon</th>
+          <th scope="col">P2 Alternerende</th>
+          <th scope="col">P3 Tidslinje</th>
+          <th scope="col">P4 Avatar-orbit</th>
+          <th scope="col">P5 Outfit-stack</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <span class="dim-name">Hansker-test</span>
+            <span class="dim-sub">Parse hele plagg-listen på 50 ms uten å zoome.</span>
+          </td>
+          <td>
+            <span class="stars">★★★★<span class="dim">★</span></span>
+            <span class="note">Klar lag-stripe, men alternering krever 2 saccader per rad.</span>
+          </td>
+          <td>
+            <span class="stars">★★★★★</span>
+            <span class="note">Trinn-nummer + connector gir lineær lesning, hjernen følger linja.</span>
+          </td>
+          <td>
+            <span class="stars">★★★<span class="dim">★★</span></span>
+            <span class="note">Orbit ser bra ut men krever flere fikseringer for å telle plagg.</span>
+          </td>
+          <td>
+            <span class="stars">★★★★★</span>
+            <span class="note">Fysisk stabling matcher mental modell; rekkefølgen er selv-forklarende.</span>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <span class="dim-name">Skala 3 → 7+ plagg uten brudd</span>
+            <span class="dim-sub">Layout må tåle alt fra sommer (3 plagg) til Karasjok (7+).</span>
+          </td>
+          <td>
+            <span class="stars">★★★★<span class="dim">★</span></span>
+            <span class="note">Alternering fungerer 3–7, men 8+ tilbehør gjør rytmen rotete.</span>
+          </td>
+          <td>
+            <span class="stars">★★★★★</span>
+            <span class="note">Tidslinje skalerer ubrutt; sub-headers grupperer naturlig.</span>
+          </td>
+          <td>
+            <span class="stars">★★<span class="dim">★★★</span></span>
+            <span class="note">Orbit blir overfylt &gt;6 plagg; tilbehør må skyves ut av sirkelen.</span>
+          </td>
+          <td>
+            <span class="stars">★★★★<span class="dim">★</span></span>
+            <span class="note">Stack tåler 7, men 9+ krever scroll inn i CTA-sone.</span>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <span class="dim-name">Visuell emosjon</span>
+            <span class="dim-sub">Føler du for barnet ditt — eller leser du en liste?</span>
+          </td>
+          <td>
+            <span class="stars">★★★<span class="dim">★★</span></span>
+            <span class="note">Funksjonell, men lite varme; avatar er en thumbnail i topp.</span>
+          </td>
+          <td>
+            <span class="stars">★★★<span class="dim">★★</span></span>
+            <span class="note">Tidslinje er ryddig men kald; ingen barn-tilstedeværelse.</span>
+          </td>
+          <td>
+            <span class="stars">★★★★★</span>
+            <span class="note">Avatar i sentrum med plagg-orbit gir umiddelbar identifikasjon.</span>
+          </td>
+          <td>
+            <span class="stars">★★★★<span class="dim">★</span></span>
+            <span class="note">Outfit-stacken føles som «barnet ditt påkledt», varm uten å være søt.</span>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <span class="dim-name">Fold-safe naturlig</span>
+            <span class="dim-sub">CTA aldri under fold; topbar+temp+første 2 plagg over fold.</span>
+          </td>
+          <td>
+            <span class="stars">★★★★★</span>
+            <span class="note">Designet rundt fold-safe fra dag 1, sticky CTA fast plassert.</span>
+          </td>
+          <td>
+            <span class="stars">★★★★<span class="dim">★</span></span>
+            <span class="note">Sub-headers tar plass; YTTERST-bolken må alltid være først over fold.</span>
+          </td>
+          <td>
+            <span class="stars">★★<span class="dim">★★★</span></span>
+            <span class="note">Avatar+orbit krever ~480 px høyde, presser tilbehør under fold.</span>
+          </td>
+          <td>
+            <span class="stars">★★★★★</span>
+            <span class="note">Vertikal stabling er iboende fold-vennlig; CTA-zone klart skilt.</span>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <span class="dim-name">PRODUCT.md-match</span>
+            <span class="dim-sub">«Sparing visual elements», «hairline dividers, not cards».</span>
+          </td>
+          <td>
+            <span class="stars">★★★★★</span>
+            <span class="note">Setter standarden — hairlines, ingen kort, fargestripe som eneste «chrome».</span>
+          </td>
+          <td>
+            <span class="stars">★★★★<span class="dim">★</span></span>
+            <span class="note">Connector-linja er én ny visuell element, men sparer ellers.</span>
+          </td>
+          <td>
+            <span class="stars">★★<span class="dim">★★★</span></span>
+            <span class="note">Orbit-grafikk + dekorative bevegelses-baner bryter «sparing».</span>
+          </td>
+          <td>
+            <span class="stars">★★★★<span class="dim">★</span></span>
+            <span class="note">Stable-metafor er minimal; chip-rad for tilbehør er én ekstra komponent.</span>
+          </td>
+        </tr>
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td><span class="dim-name">Sum (av 25)</span></td>
+          <td>21</td>
+          <td class="winner">23</td>
+          <td>14</td>
+          <td class="winner">23</td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <div class="legend" aria-hidden="true">
+    <span><b>★★★★★</b> = matcher fullt</span>
+    <span><b>★★★</b> = OK med kompromiss</span>
+    <span><b>★</b> = bryter prinsippet</span>
+    <span style="margin-left:auto;">P3 og P4 lastes inn når mock-filene er bygget.</span>
+  </div>
+</main>
+</body>
+</html>

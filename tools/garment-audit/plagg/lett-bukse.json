@@ -1,0 +1,126 @@
+{
+  "claude": {
+    "id": "lett-bukse",
+    "dbString": "lett bukse",
+    "kategori": "innerst",
+    "struktur": {
+      "score": 16,
+      "kommentar": "Har komplett 'what' + 'when' i garment-info.ts (linje 61-64). Tonen og lengden matcher søsken-plagg i innerst (t-skjorte, shorts). Dedikert whyForGarment-gren finnes, men den DELES med t-skjorte og shorts i samme if-gren (linje 343-345: id === 't-skjorte' || id === 'shorts' || id === 'lett-bukse') — altså ikke en helt egen, plagg-spesifikk begrunnelse. Det er fortsatt en reell (ikke-fallback) gren, men mindre individualisert enn f.eks. ull-bukse som har egen tekst. Trekk for delt gren + at 'what' er den korteste/tynneste i hele innerst-kategorien (mangler materiale-nyanse som søsknene har)."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/lett-bukse.png. db-strengen 'lett bukse' er korrekt mappet til id 'lett-bukse' i garment-illustrations.ts (linje 25), og id finnes som nøkkel i INFO og whyForGarment. Navn/mapping er plausibelt og konsistent. Visuell dom utstår til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig. Lett bomullsbukse velges KUN i utelek ved 16-21 °C felt-temp — et trygt, mildt-varmt vindu der overoppheting er lav risiko og det ikke er kuldegrader. Ingen farlig kontekst (ingen SIDS/frost/kvelning involvert; lett-bukse er aldri en del av søvn- eller vogn-antrekk). AAP 'one layer more than adult' og PMC-12386404 (sweat capacity til stede ved fødsel, men metabolic heat peaker 7-9 mnd) støtter minimering av lag i dette båndet — appen legger til 7-9 mnd overopphetings-note ved >=22, altså rett over dette båndet. Eneste minus: lett-bukse pares med 'langermet ullbody tynn' på overkroppen mens beina får ren bomull; det er en bevisst og forsvarlig miks, men kildene gir ingen eksplisitt dekning for bomull-underdel kontra ull i nettopp dette båndet. Ingen helsefare som krever web-søk.",
+      "trace": "bandForTemp: 'varm' = feelsLikeC >= 16 og < 22 (tables.ts l.10-11). lett-bukse forekommer KUN i baseTable.utelek.varm (l.195): innerst ['langermet ullbody tynn','lett bukse']. Ingen modifier i modifiers.ts legger til eller fjerner 'lett bukse' (fottøy-modifieren l.481-518 rører kun sko/sokker, ikke bukser). Ingen conflicts/softBlocks/safety treff på plagget. Netto: valgt utelek x 16-21 °C felt, alle aldre; ved >=22 erstattes av t-skjorte+shorts (tropisk), ved <16 av ullsett (mild).",
+      "kilder": [],
+      "score_explanation": "ignored"
+    },
+    "tekstLogikk": {
+      "score": 17,
+      "kommentar": "DRIFT funnet. baseTable velger lett-bukse i 'varm'-båndet (16-21 °C felt-temp). Men 'when'-teksten sier 'Milde sommerdager og tidlig høst', og whyForGarment-grenen sier 'minimerer varme ved ${feels} °C så barnet ikke svetter under utelek'. To problemer: (1) 'mild' er i appens egen vokabular et eget, KJØLIGERE bånd (10-15 °C, l.12) hvor lett-bukse IKKE velges (der velges ullsett) — ordet 'mild' i when-teksten kolliderer altså med systemets band-navn og kan villede mot for tynt antrekk på en 12-13 °C dag. (2) 'tidlig høst' i Norge ligger typisk rundt mild/kjølig (8-15 °C), igjen under det båndet plagget faktisk velges i. whyForGarment-tekstens 'svette'-framing passer derimot godt til 16-21 °C. Teksten er ikke direkte farlig (lett-bukse er aldri yttertøy/kuldebeskyttelse), men band-ordbruken drifter mot et kaldere vindu enn faktisk seleksjon."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "lett-bukse har INGEN oppføring i alternatives.ts. Et reelt og nyttig alternativ mangler: tynn jersey/joggebukse <-> tynn ullbukse (eller 'tynn bukse' fra mellomlag) for foreldre som vil holde ull-mot-huden-linjen i 16-21 °C båndet. Brand-DNA er 'ull-først', og søsken som ull-bukse/ull-mellomlag har eksplisitte fleece-alternativer — lett-bukse (bomull) burde symmetrisk kunne tilby et tynt-ull-alternativ slik at ull-foreldre ser valget. Mindre alvorlig siden plagget er et komfort-mildvær-valg uten sikkerhetskonsekvens, derav 7/10 ikke lavere."
+    },
+    "total": 82,
+    "verdikt": "Solid plagg uten sikkerhetsproblemer. Seleksjonen (utelek, 16-21 °C, alle aldre) er pediatrisk forsvarlig og dekket av kildene. Hovedfunnet er tekst-drift: 'when'-teksten bruker ordet 'mild' (et eget, kjøligere band i systemet) og 'tidlig høst', mens plagget faktisk kun velges i det varmere 'varm'-båndet — dette kan villede mot for tynt antrekk på en mild/kjølig dag. Sekundært: tynn 'what'-tekst, delt whyForGarment-gren med t-skjorte/shorts, og manglende ull-alternativ i alternatives.ts. Ingen tall/terskler bør røres; funnene er tekst- og deknings-justeringer.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "Tekst-drift: 'when' sier 'Milde sommerdager og tidlig høst', men baseTable velger lett-bukse KUN i 'varm'-båndet (16-21 °C felt-temp), ikke i 'mild'-båndet (10-15 °C, der ullsett velges i stedet). Ordet 'mild' kolliderer med systemets eget band-navn og 'tidlig høst' i Norge ligger typisk under 16 °C. Risiko: forelder kler barnet i ren bomullsbukse på en 11-14 °C dag der appen egentlig ville anbefalt ullsett.",
+        "forslag": "Endre 'when'-teksten til å speile faktisk seleksjon, f.eks.: 'Varme dager ute fra ca 16 °C — som lett underdel når det ikke er behov for ull-isolasjon.' Unngå systemordet 'mild' og 'tidlig høst' siden de impliserer kjøligere bånd. (Tekst-endring kun, ingen terskler røres.)",
+        "kilde": "Intern: tables.ts bandForTemp l.10-11 + baseTable.utelek.varm l.195"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "'what'-teksten for lett-bukse ('Lett, behagelig bukse i bomull eller jersey.') er den korteste i hele innerst-kategorien og mangler bruks-/materiale-nyansen søsken-plaggene har (jf. shorts, t-skjorte har 'tynt og luftig'/'bevegelses-vennlig').",
+        "forslag": "Utvid med én klausul om bevegelsesfrihet eller luftighet for å matche søsken-tonen, f.eks. '... Lett og luftig så beina får bevege seg fritt.'",
+        "kilde": "Intern: garment-info.ts l.61-64 vs l.53-60"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "whyForGarment-grenen for lett-bukse deles ordrett med t-skjorte og shorts (samme if-gren l.343-345), så begrunnelsen er ikke plagg-spesifikk slik den er for f.eks. ull-bukse.",
+        "forslag": "Vurder en egen gren for lett-bukse som nevner underdel/bein-komfort, slik at 'Hvorfor i dette antrekket?' blir mer presis. Ikke kritisk — fortsatt en reell (ikke-fallback) gren.",
+        "kilde": "Intern: garment-info.ts whyForGarment l.343-345"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "lett-bukse mangler i alternatives.ts. Brand-DNA er ull-først, og bomulls-søsken/ull-søsken (ull-bukse, ull-mellomlag) har eksplisitte alternativer. Et tynn-ull- eller 'tynn bukse'-alternativ til bomulls-lettbuksa burde tilbys symmetrisk.",
+        "forslag": "Legg til ITEM_ALTERNATIVES-oppføring for 'lett bukse' med alternativ 'tynn ullbukse' (når: ull-foreldre som vil holde ull-mot-huden-linjen i 16-21 °C; whyPrimary: bomull er kjøligere/billigere og helt nok i dette milde båndet).",
+        "kilde": "Intern: alternatives.ts ITEM_ALTERNATIVES l.44-145"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 16,
+      "kommentar": "Plagget er rent definert: én forekomst i baseTable (utelek.varm, innerst), ingen modifier-avhengigheter, klar erstatningslogikk i begge retninger (t-skjorte+shorts ≥22, ullsett <16). Det er en styrke at det ikke finnes død/dobbel referanse. Trekk: 'what' er kategoriens korteste og mangler nyansene søsknene har (materialvalg-begrunnelse, passform), og whyForGarment er ordrett delt med t-skjorte+shorts — det svekker den strukturelle konvensjonen om plagg-spesifikke begrunnelser, selv om det ikke er en logisk feil."
+    },
+    "utseende": {
+      "score": 13,
+      "kommentar": "Bildet viser riktig kategori (langbukse, barn, strikk i liv) og er teknisk rent: ingen artefakter, korrekt anatomi, konsistent 3D-stil. MEN: ribbede ankelmansjetter, synlig stofftykkelse og joggebukse-silhuett leser som fleece-/sweatbukse, ikke 'lett bukse i bomull eller jersey'. En forelder som skanner visuelt kan velge en for varm bukse i 19-21 °C. Dette er en reell mismatch mellom illustrasjon og tekst/intensjon, ikke bare smak. Sort bakgrunn må også verifiseres mot øvrige assets (hvis resten av settet har transparent/lys bakgrunn er dette et stilbrudd)."
+    },
+    "seleksjon": {
+      "score": 22,
+      "kommentar": "Kombinasjonen tynn ullbody + lett bomullsbukse ved 16-21 °C utelek er pediatrisk forsvarlig og følger lagprinsippet (ull innerst mot hud, bomull ytterst i tørt, varmt vær). Erstatning med ullsett <16 °C er konservativt riktig for 0-3 år. Lite trekk: bomull i bukse ved bånd-bunnen (16-17 °C) kombinert med fukt (vått gress, regn) holder dårlig på varme — motoren håndterer dette bare hvis en nedbørs-modifier overstyrer antrekket, og trace sier ingen modifier rører plagget. Verdt å verifisere at regn-scenarier faktisk bytter hele basen og ikke bare legger skall utenpå bomull."
+    },
+    "tekstLogikk": {
+      "score": 15,
+      "kommentar": "Claudes hovedfunn står seg og er etter min vurdering ALVORLIGERE enn 82-totalen hans antyder. Konkret drift: (a) 'milde sommerdager' kolliderer direkte med motorens eget båndnavn 'mild' (10-15 °C) der plagget IKKE velges — intern terminologi-konflikt, ikke bare upresis prosa. (b) 'tidlig høst' i Norge er typisk 8-15 °C på formiddag/barnehagetid; appen ville valgt ullsett, men teksten autoriserer bomullsbukse. En forelder som stoler på 'når'-teksten fremfor anbefalingen kler barnet for kaldt — det er sikkerhetsrelevant drift i feil retning (underkledning av småbarn). Riktig tekst er noe à la 'Varme dager, ca. 16-21 °C' eller 'sommerdager som ikke er hete'. Jeg utfordrer derimot Claudes implisitte premiss om at dette bare er et tekstproblem: alternativt kan man argumentere for at plagget BURDE finnes i mild-båndet med ull-lag under — men det er en terskel-endring og utenfor mandat, så teksten må endres, ikke logikken."
+    },
+    "alternativer": {
+      "score": 5,
+      "kommentar": "Funnet er korrekt: ull-søsknene har tynn/tykk-symmetri i alternatives.ts, lett-bukse mangler tilsvarende ('tynn ullbukse' eller fleecebukse som varmere bytte). Det er nettopp i bånd-grensene (16-17 °C, vind) at en forelder trenger et varmere alternativ uten å hoppe til helt ullsett. Halv score: alternativ-mangel er reell, men plagget er heller ikke isolert — erstatningslogikken i baseTable gir de facto alternativer på bånd-nivå."
+    },
+    "total": 71,
+    "verdikt": "Godkjent med forbehold: seleksjonen er pediatrisk trygg, men 'når'-teksten må omskrives før den kan stå (sikkerhetsrelevant drift mot underkledning), og illustrasjonen bør byttes til en synlig tynnere bukse uten ribbemansjetter.",
+    "uenig_med_claude": "Delvis uenig. Claudes funn er korrekte, men 82/100 undervekter dem: (1) mål 4-driften er ikke bare upresis prosa — 'milde' kolliderer med motorens eget båndnavn og peker forelderen mot underkledning i 10-15 °C, som for 0-3 år er den farlige retningen; det fortjener trekk nær båndets maks-konsekvens, ikke et høy-funn med mild score-effekt. (2) Claude overså utseende-mismatchen: illustrasjonen leser som tykk joggebukse/fleece, ikke lett bomull/jersey, hvilket forsterker samme forvirring visuelt. (3) Jeg er mildere enn Claude på struktur: delt whyForGarment og kort 'what' er konvensjonsbrudd, ikke funksjonelle feil.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "'Når'-teksten ('milde sommerdager og tidlig høst') dekker temperaturområder (10-15 °C) der motoren faktisk velger ullsett, og ordet 'milde' kolliderer med motorens eget bånd-navn 'mild'. Forelder som følger teksten kan kle barnet i bomullsbukse på 11-14 °C-dag — underkledning av småbarn.",
+        "forslag": "Omskriv 'når' til faktisk seleksjonsvindu: «Varme sommerdager, omtrent 16-21 °C» (eller appens publikumsvennlige ekvivalent). Fjern 'tidlig høst'. Innfør lint-regel: 'når'-tekst får ikke bruke båndnavn fra motoren om andre bånd enn der plagget velges."
+      },
+      {
+        "severity": "medium",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen viser joggebukse-silhuett med ribbede ankelmansjetter og tydelig stofftykkelse — leser som fleece/sweat, ikke lett bomull/jersey. Visuell forsterkning av samme misforståelse som tekstdriften i mål 4.",
+        "forslag": "Generer nytt asset: rett/lett legg uten ribb, tynnere stoffall, ev. lett drapering som signaliserer jersey. Verifiser bakgrunn (sort vs. transparent) mot resten av asset-settet."
+      },
+      {
+        "severity": "medium",
+        "mal": 5,
+        "beskrivelse": "Mangler oppføring i alternatives.ts; ull-søsken har tynn/tykk-symmetri. I bånd-bunnen (16-17 °C, vind) finnes ingen mellomting mellom lett bukse og fullt ullsett.",
+        "forslag": "Legg til 'tynn ullbukse' (varmere) og ev. 'shorts' (varmere dag) som alternativer, symmetrisk med ull-plaggene."
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "Bomullsbukse ved 16-17 °C kombinert med fukt (vått gress/regn) isolerer dårlig; trace sier ingen modifier rører plagget, så det må verifiseres at nedbørs-scenarier bytter base og ikke bare legger skall utenpå bomull.",
+        "forslag": "Skriv en testcase: utelek, 16 °C, regn → forvent at innerst-laget ikke lenger er lett-bukse, eller at skallbukse + ull-bytte trigges."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "'What'-teksten er kategoriens korteste og mangler materiale-/bruksnyanse som søsknene har (f.eks. hvorfor bomull/jersey egner seg, passform over bleie).",
+        "forslag": "Utvid til samme detaljnivå som søsknene: «Lett, myk bukse i bomull eller jersey. Puster godt og gir full bevegelsesfrihet over bleien.»"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "whyForGarment er ordrett delt med t-skjorte+shorts og dermed ikke plagg-spesifikk; bryter konvensjonen ellers i innerst-kategorien.",
+        "forslag": "Skriv egen begrunnelse som forklarer buksens rolle spesifikt (beskytter legger mot sol/underlag på dager som er varme, men ikke hete)."
+      }
+    ]
+  }
+}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Babyora · Hjem hero-varianter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1a1a1a;
+    --card:#252422;
+    --ink-100:#F5F2EC;
+    --ink-300:#C9C2B7;
+    --ink-500:#9A9189;
+    --accent:#B4502E;
+    --star:#E8A24A;
+    --star-dim:rgba(232,162,74,.22);
+    --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink-100);font-family:var(--font-sans);}
+  body{min-height:100vh;padding:40px 24px 80px;}
+
+  .page-header{max-width:1400px;margin:0 auto 28px;}
+  .page-header h1{font-size:28px;font-weight:700;letter-spacing:-.4px;margin:0;}
+  .page-header p{margin:8px 0 0;color:var(--ink-300);font-size:14px;max-width:760px;line-height:1.55;}
+
+  .row-scroll{
+    margin:0 -24px;
+    padding:8px 24px 40px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-color:#3a3835 var(--bg);
+  }
+  .row{
+    display:flex;
+    gap:32px;
+    width:max-content;
+    padding:8px 0;
+  }
+  .variant{
+    width:430px;
+    display:flex;flex-direction:column;gap:14px;
+    flex:none;
+  }
+  .variant-head{padding:0 6px;}
+  .variant-title{font-size:18px;font-weight:700;letter-spacing:-.2px;margin:0;color:var(--ink-100);}
+  .variant-strategy{margin:4px 0 0;font-size:13px;color:var(--ink-300);line-height:1.45;}
+
+  .phone-shell{
+    position:relative;
+    width:430px;height:900px;
+    border-radius:54px;
+    background:#1f1f1f;
+    box-shadow:0 30px 80px rgba(0,0,0,.5);
+    padding:8px;
+    overflow:hidden;
+  }
+  .phone-shell iframe{
+    width:390px;height:844px;
+    border:0;
+    border-radius:48px;
+    display:block;
+    margin:14px auto 0;
+    background:#DBD8D2;
+  }
+
+  .heuristics{
+    max-width:1100px;
+    margin:36px auto 0;
+    background:var(--card);
+    border:1px solid #34322e;
+    border-radius:18px;
+    padding:24px 28px 28px;
+  }
+  .heuristics h2{font-size:18px;font-weight:700;letter-spacing:-.2px;margin:0 0 4px;}
+  .heuristics p{margin:0 0 18px;font-size:13px;color:var(--ink-300);line-height:1.5;}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+  }
+  caption{
+    text-align:left;
+    font-size:13px;
+    color:var(--ink-500);
+    margin-bottom:10px;
+    font-weight:500;
+  }
+  th,td{
+    padding:12px 14px;
+    text-align:left;
+    border-bottom:1px solid #34322e;
+    vertical-align:middle;
+  }
+  th{
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--ink-500);
+  }
+  td.heuristic{font-weight:600;color:var(--ink-100);}
+  td.stars{font-size:14px;letter-spacing:1.5px;}
+  .star-on{color:var(--star);}
+  .star-off{color:var(--star-dim);}
+  tr:last-child th,tr:last-child td{border-bottom:none;}
+</style>
+</head>
+<body>
+  <header class="page-header">
+    <h1>Babyora Hjem — hero-varianter</h1>
+    <p>3 standalone HTML-mocks som varierer <strong>hva</strong> som er hero. Samme data på tvers (−4° klarvær, Elverum, anbefaling "Vinterdress + lue + votter"). F60-palett: warm-grey #DBD8D2, terracotta CTA #B4502E, Schibsted Grotesk.</p>
+  </header>
+
+  <section class="row-scroll" aria-label="Hero-varianter sammenligning">
+    <div class="row">
+      <div class="variant">
+        <div class="variant-head">
+          <h2 class="variant-title">V1 · Avatar-hero</h2>
+          <p class="variant-strategy">Avataren ER hero. Ingen tall, ingen meta-pills — figuren forteller alt på ett blikk.</p>
+        </div>
+        <div class="phone-shell">
+          <iframe src="V1-avatar-hero.html" title="V1 Avatar-hero" loading="lazy"></iframe>
+        </div>
+      </div>
+
+      <div class="variant">
+        <div class="variant-head">
+          <h2 class="variant-title">V2 · Tekst-hero</h2>
+          <p class="variant-strategy">Anbefalingen som typografi. Mor leser i hansker på 50 ms — ord, ikke figur.</p>
+        </div>
+        <div class="phone-shell">
+          <iframe src="V2-tekst-hero.html" title="V2 Tekst-hero" loading="lazy"></iframe>
+        </div>
+      </div>
+
+      <div class="variant">
+        <div class="variant-head">
+          <h2 class="variant-title">V3 · Kombinert</h2>
+          <p class="variant-strategy">Avatar + tekst som ÉT hero-felt. Visuell anker + verbal bekreftelse.</p>
+        </div>
+        <div class="phone-shell">
+          <iframe src="V3-kombinert.html" title="V3 Kombinert" loading="lazy"></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="heuristics" aria-label="Heuristikk-impact per variant">
+    <h2>Heuristikk-impact per variant</h2>
+    <p>Stjerne-rating fra Babyora-PRODUCT.md prinsipper og glance-test for foreldre i kulden. 1★ = svak, 4★ = sterk.</p>
+    <table>
+      <caption>Stjerne-skår per variant (lavest = svakest, høyest = sterkest)</caption>
+      <thead>
+        <tr>
+          <th scope="col">Heuristikk</th>
+          <th scope="col">V1 Avatar</th>
+          <th scope="col">V2 Tekst</th>
+          <th scope="col">V3 Kombinert</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="heuristic">Recognition &gt; Recall</td>
+          <td class="stars"><span class="star-on">★★★</span><span class="star-off">★</span></td>
+          <td class="stars"><span class="star-on">★★</span><span class="star-off">★★</span></td>
+          <td class="stars"><span class="star-on">★★★</span><span class="star-off">★</span></td>
+        </tr>
+        <tr>
+          <td class="heuristic">Cognitive load (1,5 s glance)</td>
+          <td class="stars"><span class="star-on">★★★</span><span class="star-off">★</span></td>
+          <td class="stars"><span class="star-on">★★★★</span></td>
+          <td class="stars"><span class="star-on">★★★</span><span class="star-off">★</span></td>
+        </tr>
+        <tr>
+          <td class="heuristic">Match PRODUCT.md ("recommendation IS the product")</td>
+          <td class="stars"><span class="star-on">★★</span><span class="star-off">★★</span></td>
+          <td class="stars"><span class="star-on">★★★★</span></td>
+          <td class="stars"><span class="star-on">★★★</span><span class="star-off">★</span></td>
+        </tr>
+        <tr>
+          <td class="heuristic">Hansker-test (les uten å fokusere)</td>
+          <td class="stars"><span class="star-on">★★</span><span class="star-off">★★</span></td>
+          <td class="stars"><span class="star-on">★★★</span><span class="star-off">★</span></td>
+          <td class="stars"><span class="star-on">★★★</span><span class="star-off">★</span></td>
+        </tr>
+        <tr>
+          <td class="heuristic">Anti-weather-app-signal</td>
+          <td class="stars"><span class="star-on">★★★★</span></td>
+          <td class="stars"><span class="star-on">★★★</span><span class="star-off">★</span></td>
+          <td class="stars"><span class="star-on">★★★</span><span class="star-off">★</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</body>
+</html>

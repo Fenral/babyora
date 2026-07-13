@@ -1,0 +1,59 @@
+{
+  "claude": {
+    "id": "votter-tynne",
+    "dbString": "votter tynne",
+    "kategori": "ekstra-hender",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett oppfoering i garment-info.ts (linje 169-172): what='Tynne strikkede votter.' + when='Kjolige dager fra ca 5 grader C og nedover.' Folger samme korte monster/tone/lengde som soesken i hender-kategorien (votter, votter-tykke, votter-dun, vindvotter-skall) — what = kort definisjon, when = temp-bandbeskrivelse. Har en whyForGarment-gren (linje 420), men den er DELT med standard 'votter' (id === 'votter-tynne' || id === 'votter') og differensierer derfor ikke tynn vs standard. Minus 2 for delt (ikke dedikert) why-gren."
+    },
+    "utseende": {
+      "score": 12,
+      "pngExists": false,
+      "kommentar": "db-strengen 'votter tynne' er korrekt mappet til id 'votter-tynne' i garment-illustrations.ts (linje 62), konsistent med soesken-mapping i samme blokk. Mapping-plausibilitet er god. MEN PNG-fila C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\votter-tynne.png finnes IKKE (Glob ga 0 treff) — plagget vil mangle illustrasjon i UI. Kan ikke vurdere visuelt innhold (gjores av Fable 5 + Claude). Minus 8 for manglende PNG."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "Pediatrisk forsvarlig. Tynne votter velges i milde-til-kjolige forhold (0-9 grader C) der hender kjoles men det ikke er frostfare. Ingen overoppheting/SIDS/kvelning/frost-risiko: soevn-grenen returnerer tidlig (modifiers.ts linje 137-139) saa votter aldri legges til ved soevn. Ingen modifier fjerner/erstatter votter tynne; vindvotter (skall) legges kun til ved >=8 m/s OG feels <0 grader C (modifiers.ts 178-184), dvs. i kald/frost-band der base allerede har byttet til standard/tykke votter — ingen kollisjon. Kilder daekker kalde-hender-signal (halo-tog: 'kalde hender/foetter' som cold-tegn) og head/extremity heat-loss (slumbersac, merino-kids). Ingen aapent helsesporsmaal som krevde web-soek. Minus 2: ingen kilde adresserer eksplisitt finmotorikk/destrekkbarhets-balanse for tynne votter, men dette er komfort, ikke sikkerhet.",
+      "trace": "bandForTemp: kjolig=5-9C, kald=0-4C. 'votter tynne' velges i baseTable i: (1) vogn/kjolig [linje 46] sammen med lue+varmepose; (2) baeresele/kald [linje 103] sammen med lue — MERK: i baeresele brukes tynne votter helt ned til 0C (kald-bandet), mens vogn/utelek paa kald-band oppgraderer til standard 'votter'; (3) utelek/kjolig [linje 206] sammen med lue+sko. Modifiers: ingen add/removeItem treffer 'votter tynne'. Netto seleksjon: feels-som ca 0-9 grader C avhengig av aktivitet, med tynne votter staaende lengst (ned til 0C) i baeresele pga foreldrevarme.",
+      "kilder": [
+        "https://www.halosleep.com/blogs/halo/tog-chart",
+        "https://merinokids.co.uk/blogs/merino/the-importance-of-temperature-regulation-in-babies"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 22,
+      "kommentar": "when='fra ca 5 grader C og nedover' stemmer med trace: plagget velges i kjolig (5-9C) og strekker seg ned i kald (0-4C) i baeresele — 'og nedover' daekker dette korrekt, ingen direkte motsigelse. whyForGarment ('Hendene kjoeles raskt — votter beholder kroppstemperaturen i fingrene ved X grader C') er faktuelt riktig for de valgte forholdene. Svak drift: why-grenen er DELT med standard 'votter' og naevner ikke at dette er den TYNNE varianten, saa teksten skiller ikke pa tykkelse selv om base-tabellen bevisst bytter mellom tynne/standard/tykke ved synkende temp. Villleder ikke pakledning (begge er votter), men presisjonen er svakere enn for soesken med egne why-grener (votter-tykke, votter-dun har dedikerte). Minus 3."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Ingen oppfoering for 'votter tynne' i alternatives.ts. Det finnes et reelt tykkelse-trinn-alternativ som BURDE tilbys: standard 'votter' (ull, tykkere strikk) som naturlig opp-trinn naar fingrene foeles kalde — analogt med hvordan 'votter tykke'->'votter dun' (linje 96-104) og 'lue m/ ull'->'lue tynn' (linje 136-144) allerede tilbyr trinn. Mangelen er konsistens-svikt mot etablert monster i samme kategori. Minus 3."
+    },
+    "total": 82,
+    "verdikt": "Solid plagg med trygg, pediatrisk forsvarlig seleksjon (0-9 grader C, tynne votter staar lengst i baeresele pga foreldrevarme) og korrekt db-mapping. To konkrete mangler trekker ned: (1) PNG-illustrasjon finnes ikke — hoy prioritet for UI; (2) whyForGarment-grenen er delt med standard 'votter' og skiller ikke tykkelse; (3) ingen tykkelse-trinn-alternativ i alternatives.ts der monsteret tilsier det. Ingen sikkerhetsfunn. Score 82/100.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 2,
+        "beskrivelse": "PNG-illustrasjon mangler: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\votter-tynne.png finnes ikke (Glob 0 treff), mens db->id-mapping og info-oppforing eksisterer. Plagget far ingen illustrasjon i UI.",
+        "forslag": "Generer votter-tynne.png i samme stil/format som soesken-PNGene i public/illustrations/garments/ (Fable 5 + Claude visuell pass).",
+        "kilde": "garment-illustrations.ts linje 62 (mapping finnes) + manglende fil"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "whyForGarment-grenen for votter-tynne er delt med standard 'votter' (garment-info.ts linje 420: id === 'votter-tynne' || id === 'votter') og differensierer ikke tykkelse. Soesken votter-tykke og votter-dun har dedikerte grener.",
+        "forslag": "Vurder egen why-gren for votter-tynne som naevner 'tynne' eksplisitt (f.eks. 'Tynne votter holder fingrene varme uten aa bli for varme i kjolig vaer ved X grader C'), for konsistens med tykke/dun-grenene. Ikke endre tall/terskler.",
+        "kilde": "garment-info.ts linje 420-422; sammenlign linje 423-428"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen alternativ registrert for 'votter tynne' i alternatives.ts, selv om et tykkelse-trinn opp til standard 'votter' ville matche etablert monster (votter tykke->votter dun, lue m/ ull->lue tynn).",
+        "forslag": "Legg til ITEM_ALTERNATIVES-oppforing for itemName 'votter tynne' med alternativ 'votter' (standard ullvotter) som opp-trinn naar fingrene foeles kalde i nedre del av bandet (0-5 grader C).",
+        "kilde": "alternatives.ts linje 96-104 og 136-144 (eksisterende trinn-monster)"
+      }
+    ]
+  },
+  "fable": null
+}

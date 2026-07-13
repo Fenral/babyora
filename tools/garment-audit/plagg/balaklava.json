@@ -1,0 +1,52 @@
+{
+  "claude": {
+    "id": "balaklava",
+    "dbString": "balaklava",
+    "kategori": "ekstra-hode",
+    "struktur": {
+      "score": 20,
+      "kommentar": "Komplett oppforing i garment-info.ts (linje 163-166): what = 'Balaklava (finlandshette) dekker hele hode, hals og deler av ansiktet.' + when = 'Streng frost og kald vind.' Tone, monster og lengde matcher sosken i samme kategori (Ekstra hodeplagg: solhatt, lue-tynn, lue, lue-m-ull) eksakt. Dedikert whyForGarment-gren finnes (linje 415-416), IKKE fallback: 'Balaklava dekker hode, orer og hals beskytter mot streng frost ved ${feels} C${windy ? ' og vind' : ''}.' Ingen mangler."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\balaklava.png (714 KB, datert 9. jun). db-streng 'balaklava' mappes til id 'balaklava' i garment-illustrations.ts (linje 59) korrekt 1:1. Filnavn-konvensjon (balaklava.png) matcher id. Mapping-plausibilitet hoy. Visuell dom delegeres til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 24,
+      "kommentar": "Balaklava velges KUN i de to kaldeste utebandene (streng_frost = -15 til -8 C, ekstrem < -15 C) for vogn, baeresele og utelek. Aldri i soevn (korrekt: HB-1 i safety.ts og CK-4 i conflicts.ts fjerner hodeplagg innendors via HAT_INDOOR_RE som matcher 'balaklava'). Ingen modifier i modifiers.ts legger til/fjerner balaklava spesifikt; vind-grenen legger kun til 'hals'/'vindvotter', ikke balaklava. Pediatrisk forsvarlig: ved feels <= -8 C er full hode/ore/hals-dekning stottet av Capital Area Pediatrics (kuldeeksponering-grenser) + slumbersac (hode = opptil 85% varmetap). Ingen overoppheting-/SIDS-risiko fordi soevn-eksklusjon er hard-blokkert. Ingen kvelnings-risiko: balaklava er tettsittende hette uten snor (STRANGULATION_RE i safety.ts matcher kun snor/los hals/los buff, ikke balaklava). 1 poeng trekk: ingen eksplisitt aldersjustering finnes som demper balaklava for spedbarn ved kortere eksponering, men band-grensen i seg selv er konservativ.",
+      "trace": "bandForTemp: feels>=-7 frost(-7..-1) -> balaklava IKKE; feels>=-15 streng_frost(-15..-8) -> balaklava JA; feels<-15 ekstrem -> balaklava JA. baseTable.vogn.streng_frost.ekstra=['balaklava',...] (tables.ts L64); baseTable.vogn.ekstrem.ekstra=['balaklava',...] (L70); baseTable.baeresele.streng_frost (L115) + .ekstrem (L121); baseTable.utelek.streng_frost (L224) + .ekstrem (L230). soevn: ALDRI (HB-1 safety.ts L122-124 + CK-4 conflicts.ts L122-123 fjerner via HAT_INDOOR_RE/HEAD_COVER_RE). Modifiers: ingen balaklava-spesifikk add/remove.",
+      "kilder": [
+        "https://www.capitalareapediatrics.com/blog/dressing-your-child-for-cold-weather-in-virginia-a-parent-s-guide",
+        "https://www.slumbersac.co.uk/blogs/advice/baby-regulate-body-temperature"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 23,
+      "kommentar": "when='Streng frost og kald vind.' stemmer med faktisk trace: balaklava aktiveres ved streng_frost-bandet (-15 til -8 C) og ekstrem (<-15 C). whyForGarment 'beskytter mot streng frost ved ${feels} C${windy ? ' og vind' : ''}' speiler bandet korrekt og legger til vind-fragment dynamisk. Ingen villedende drift: teksten foreslar ikke et varmere band enn det baseTable faktisk bruker. Mindre upresishet: when sier 'streng frost' (folkelig), mens systemets nedre balaklava-grense egentlig er -8 C (ovre kant av streng_frost-bandet) ikke -15 C feels=-8..-9 C kan av noen foreldre oppfattes som 'frost' heller enn 'streng frost'. Ikke villedende for pakledning (over-dekking i overgangen er trygt), derfor ikke severity hoy kun 2 poeng trekk for terskel-presisjon."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Balaklava har ingen oppforing i alternatives.ts. Sosken lue-m-ull HAR et nedtrinn-alternativ (lue tynn, L136-144). Et reelt, pedagogisk nyttig alternativ for balaklava ville vaert kombinasjonen 'lue m/ ull + hals' for foreldre som ikke eier finlandshette dette er et ekte dekningstrinn (hode+orer via lue, hals via halsvarmer) som dekker mye av samme funksjon ned mot -8..-12 C. Mangler i dag. Ikke kritisk siden balaklava forst dukker opp i de kaldeste bandene der maks dekning er onskelig, men et alternativ ville okt brukbarhet. 3 poeng trekk."
+    },
+    "total": 94,
+    "verdikt": "Solid plagg. Komplett struktur + dedikert why-gren, PNG og mapping korrekt, seleksjon korrekt avgrenset til de to kaldeste utebandene med hard soevn-eksklusjon (ingen SIDS/overoppheting/kvelning-risiko), og tekst matcher trace. To smaa forbedringspunkter: (1) when-terskelen ('streng frost') er litt loosere enn faktisk nedre grense -8 C, (2) mangler et nedtrinn-alternativ i alternatives.ts (foreslatt: 'lue m/ ull + hals'). Ingen medisinske avvik. Total 94/100.",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "when-teksten 'Streng frost og kald vind' antyder de aller kaldeste forholdene, men balaklava aktiveres allerede ved streng_frost-bandets ovre kant (feels -8 C). Ved -8..-9 C kan dette av foreldre oppfattes som vanlig frost, ikke 'streng frost'.",
+        "forslag": "Vurder a presisere when til f.eks. 'Fra ca -8 C og kaldere, saerlig med vind' for a matche faktisk band-grense. ROR IKKE selve terskelen i tables.ts kun teksten.",
+        "kilde": "tables.ts bandForTemp L8-18 (streng_frost = -15..-8) + baseTable streng_frost-rader"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Balaklava mangler alternativ i alternatives.ts, mens sosken lue-m-ull har et nedtrinn (lue tynn). Foreldre uten finlandshette far ingen foreslatt erstatning.",
+        "forslag": "Legg til ItemAlternatives for 'balaklava' med alternativet 'lue m/ ull + hals' (ekte dekningstrinn: hode/orer + hals) og i18n-keys alternatives.items.balaklavaKombi.{when,whyPrimary}. Behold balaklava som primaer for maks dekning.",
+        "kilde": "alternatives.ts L135-144 (lue-m-ull -> lue tynn moenster)"
+      }
+    ]
+  },
+  "fable": null
+}

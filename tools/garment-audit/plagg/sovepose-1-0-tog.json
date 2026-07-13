@@ -1,0 +1,109 @@
+{
+  "claude": {
+    "id": "sovepose-1-0-tog",
+    "dbString": "sovepose 1.0 TOG",
+    "kategori": "ekstra-sovn",
+    "struktur": {
+      "score": 16,
+      "kommentar": "Har komplett info-oppføring (garment-info.ts L257-260): what='Lett sovepose (1.0 TOG) for milde rom.' + when='Romtemperatur 18–21 °C.'. Tone/lengde matcher søsken-soveposene (0.5/2.5/3.0-3.5/3.5 TOG) — alle korte 'Romtemperatur X °C'-mønstre. Ingen DEDIKERT whyForGarment-gren for akkurat dette plagget: whyForGarment() bruker en felles `id.startsWith('sovepose-')`-gren (L319-321) som dekker ALLE soveposer likt. Det er ikke en fallback (selve fallback ligger L487), men det er en delt sovepose-gren, ikke plagg-spesifikk. Trekk for manglende plagg-spesifikk gren + at when-tallene er feil (se mål 4)."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/sovepose-1-0-tog.png (865 KB, på linje med søsken 0.5=881KB, 2.5=808KB). Mapping er korrekt: garment-illustrations.ts L90 mapper db-strengen 'sovepose 1.0 TOG' → id 'sovepose-1-0-tog', som matcher GarmentId i garment-info.ts og filnavnet eksakt. Navn/mapping-plausibilitet er feilfri. Visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 18,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig MOT kildene: 1.0 TOG ved romtemp 22-23 °C samsvarer med Lullaby Trust TOG-chart (LT-TOG) og ErgoPouch sin 4-trinns standard (0.2/1.0/2.5/3.5). CK-3 + SB-3 gir robust overoppheting-beskyttelse (nedjustering til 0.5 ved ≥24, fjerning ved ≥26) — dette dekker SIDS/overoppheting-risikoen godt. Trekk: baseTable-plasseringen i 'tropisk' (22-27) overlapper CK-3/SB-3-grensene slik at 1.0 TOG kun reelt overlever i et smalt 22-23 °C-vindu — fungerer korrekt via lag-systemet, men er ikke selv-dokumenterende. Ingen helse-spørsmål utenfor de 11 kildene; ikke behov for web-søk.",
+      "score_dummy": 0,
+      "trace": "baseTable.soevn (tables.ts L144-187): db-strengen 'sovepose 1.0 TOG' forekommer KUN i bånd 'tropisk' (bandForTemp: feelsLikeC 22-27.99 °C, tolket som ROMtemp), sammen med 'kortermet body' (L148-151). Alle øvrige soevn-bånd bruker 2.5 TOG (varm 16-21, mild 10-15, kjolig 5-9) eller 3.5 TOG (kald/frost/streng_frost/ekstrem ≤4 °C). Ekstrem_varme (≥28) gir bleie+body UTEN sovepose. → ETTERBEHANDLING: CK-3 (conflicts.ts L95-119) kjører maxTOGForRoom(): room≥24→max 0.5, ≥21→max 1.0, ≥18→2.5. Ved room 24-27 (fortsatt tropisk) nedjusteres 1.0→0.5 TOG. SB-3 (softBlocks.ts L94-124): room≥26→kun body (sovepose fjernes); room 24-25→tvinger body+0.5 TOG. HB-3 (safety.ts L153-165) deduper ev. doble soveposer. NETTO: 'sovepose 1.0 TOG' anbefales reelt kun ved romtemp 22-23 °C; 24-25→0.5; ≥26→ingen. INGEN modifier kan LEGGE TIL 1.0 TOG utenfor tropisk-båndet (soevn hopper alle ute-modifikatorer, modifiers.ts L89-140).",
+      "kilder": [
+        "https://www.lullabytrust.org.uk/safer-sleep-advice/baby-room-temperature/",
+        "https://www.ergopouch.com/pages/what-to-wear-guide"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 13,
+      "kommentar": "KONKRET DRIFT: when-teksten sier 'Romtemperatur 18–21 °C', men baseTable velger 1.0 TOG i tropisk-båndet 22–27 °C (bandForTemp L8-18), og CK-3/SB-3 innsnevrer det reelle vinduet til 22–23 °C. Ved 18–21 °C velger motoren faktisk 2.5 TOG (varm-band 16-21, tables.ts L152-156), IKKE 1.0 TOG. Teksten peker altså 4 grader for kaldt og kan villede en forelder til å bruke 1.0 TOG ved 18 °C der motoren (og Lullaby Trust) anbefaler 2.5 TOG — for lite varme = potensielt for kjølig barn. what-teksten 'for milde rom' er upresis men ufarlig. whyForGarment sovepose-grenen (L320) er derimot logisk korrekt: den sier 'TOG-nivået matcher romtemperaturen rundt {feels} °C' og bruker dynamisk feels, så DEN driver ikke. Hele trekket skyldes den statiske when-strengen. Severity hoy fordi drift villeder påkledning i kjølig retning."
+    },
+    "alternativer": {
+      "score": 10,
+      "kommentar": "Eksisterende alternativ er riktig og tilstrekkelig: alternatives.ts L125-134 tilbyr 'sovepose 0.5 TOG' som alternativ til 1.0 TOG (step-down for varmere rom) — samme retning som CK-3/SB-3 nedjusterer ved ≥24 °C, så alternativet er pedagogisk konsistent med motoren. Et step-UP til 2.5 er ikke nødvendig som alternativ siden 2.5 TOG er sin egen separate seleksjon i kaldere bånd. Ingen ull↔fleece/dun↔syntet-akse er relevant for soveposer her. Ingen manglende alternativ."
+    },
+    "total": 77,
+    "verdikt": "Solid plagg med korrekt PNG/mapping, forsvarlig seleksjon og god overoppheting-beskyttelse via CK-3/SB-3. Hovedproblemet er én konkret tekst↔logikk-drift: when-teksten ('18–21 °C') motsier den faktiske seleksjonen (reelt 22–23 °C; 18–21 °C gir 2.5 TOG). Driften villeder mot for lite varme og bør rettes til ca. 22–23 °C. whyForGarment kunne også fått en plagg-spesifikk gren i stedet for delt sovepose-gren. Ingen sikkerhets-kritiske funn.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "when-teksten i garment-info.ts (L259) sier 'Romtemperatur 18–21 °C', men baseTable.soevn velger 'sovepose 1.0 TOG' kun i tropisk-båndet (22–27 °C), og CK-3/SB-3 innsnevrer reelt vindu til 22–23 °C. Ved 18–21 °C velger motoren faktisk 2.5 TOG (varm-band). Teksten peker 4 grader for kaldt og kan få forelder til å velge for tynn sovepose i et 18–21 °C-rom.",
+        "forslag": "Rett when-strengen til å matche faktisk seleksjon, f.eks. 'Romtemperatur 22–23 °C (ned til 0.5 TOG fra 24 °C).' Hold tallet konsistent med tropisk-båndet + CK-3 maxTOGForRoom. Rør ikke selve tersklene i tables.ts/conflicts.ts.",
+        "kilde": "LT-TOG (Lullaby Trust TOG-guide), ErgoPouch what-to-wear (4-trinn 0.2/1.0/2.5/3.5)"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "whyForGarment() har ingen plagg-spesifikk gren for sovepose-1-0-tog; den deler en felles `id.startsWith('sovepose-')`-gren (garment-info.ts L319-321) med alle andre TOG-soveposer. Teksten er korrekt og dynamisk, men ikke differensiert per TOG-nivå.",
+        "forslag": "Vurder en valgfri TOG-spesifikk nyanse i sovepose-grenen (f.eks. nevne at 1.0 TOG er for de varmere rommene) for å skille fra 2.5/3.5. Lav prioritet — nåværende delt gren er funksjonelt korrekt.",
+        "kilde": "LT-TOG"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 14,
+      "kommentar": "Id, kategori og felt er konsistente, men whyForGarment deler felles sovepose-gren uten TOG-spesifikk forklaring. Når appen har flere TOG-varianter er TOG-differensiering selve poenget med plagget — en delt gren kan ikke forklare hvorfor 1.0 og ikke 2.5. Jeg vurderer dette som medium, ikke lav slik Claude gjorde."
+    },
+    "utseende": {
+      "score": 13,
+      "kommentar": "Bildet viser riktig plaggtype: ermeløs sovepose med skulderknapper, ren rendering uten tekniske artefakter (sort bakgrunn antas bevisst). MEN posen ser tykk og vattert ut med tydelig polstring og dype quiltefolder — den kommuniserer visuelt 2.5 TOG/vinter, ikke «lett 1.0 TOG». En forelder som skiller varianter på utseende vil kunne forveksle denne med den varme posen."
+    },
+    "seleksjon": {
+      "score": 20,
+      "kommentar": "Motorens logikk er pediatrisk forsvarlig og konservativ: 1.0 TOG ved 22–23 °C, nedjustering til 0.5 ved 24–25 (CK-3) og fjerning ved ≥26 (SB-3) er trygt mot overoppheting, som er den klinisk viktigste risikoen. Standard TOG-tabeller plasserer dog 1.0 TOG bredere (ca. 21–24 °C), så det reelle vinduet på kun 22–23 °C er strengere enn nødvendig og gjør plagget nesten redundant — men det er et nytteproblem, ikke et sikkerhetsproblem."
+    },
+    "tekstLogikk": {
+      "score": 5,
+      "kommentar": "Direkte motstrid: teksten sier «18–21 °C», motoren velger 1.0 TOG kun ved 22–23 °C og bruker 2.5 TOG i hele 18–21-intervallet. Avviket er 4 °C i kald retning. Jeg eskalerer dette fra Claudes «hoy» til «kritisk»: dette er sikkerhetsnær veiledningstekst, og en forelder som følger teksten manuelt (f.eks. uten å bruke anbefalingsflyten) kan legge barnet i en for tynn pose ved 18 °C. I tillegg undergraver motstriden tilliten til appens anbefalinger generelt."
+    },
+    "alternativer": {
+      "score": 5,
+      "kommentar": "Ingen alternativer er definert for grensetilfellene: hva forelderen skal gjøre ved 20–21 °C (motoren hopper rett til 2.5 TOG) eller ved 24–25 °C (nedjustering til 0.5 skjer stille). Overgangene mellom TOG-nivåer er udokumenterte for brukeren, og det smale reelle vinduet gjør at plagget mangler en tydelig nisje mot naboalternativene."
+    },
+    "total": 57,
+    "verdikt": "IKKE GODKJENT — krever retting av «når»-teksten før publisering. Plagget er pediatrisk trygt i motoren, men brukerteksten motsier seleksjonen med 4 °C i sikkerhetsnær retning, og illustrasjonen kommuniserer feil varmenivå.",
+    "uenig_med_claude": "Ja, på tre punkter: (1) Mål 4-funnet bør være KRITISK, ikke hoy — det er sikkerhetsnær veiledning som direkte motsier motoren, med risiko for underkledd barn ved manuell bruk. (2) Mål 1-funnet bør være MEDIUM, ikke lav — manglende TOG-gren er et reelt forklaringshull når produktlinjen differensieres nettopp på TOG. (3) Claude overså bildeproblemet helt: illustrasjonen ser ut som en tykk vinterpose. Totalscore 77/100 er for høy; 57/100 reflekterer at kjernefunksjonen (tekst↔logikk) feiler.",
+    "funn": [
+      {
+        "severity": "kritisk",
+        "mal": 4,
+        "beskrivelse": "«Når»-teksten («18–21 °C») motsier motorens faktiske seleksjon (kun 22–23 °C); ved 18–21 °C velger motoren 2.5 TOG. Forelder som følger teksten kan velge for tynn pose i kjølig rom.",
+        "forslag": "Endre «Når» til «Romtemperatur 22–23 °C» slik at tekst og motor samsvarer, ELLER (produktbeslutning, ikke min terskel-endring) vurder om motorens vindu skal utvides mot standard TOG-tabeller (1.0 TOG ≈ 21–24 °C). Tekst og motor må uansett peke på samme intervall."
+      },
+      {
+        "severity": "hoy",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen viser en tydelig polstret, vattert pose som visuelt leses som 2.5 TOG/vinter — den kommuniserer ikke «lett/1.0 TOG». Forvekslingsfare mellom varianter.",
+        "forslag": "Render posen tynnere og glattere med mindre quilting, eller legg til diskret visuell TOG-markering (f.eks. etikett «1.0») og sørg for at variantene er visuelt distinkte side om side."
+      },
+      {
+        "severity": "medium",
+        "mal": 1,
+        "beskrivelse": "whyForGarment deler felles sovepose-gren uten TOG-spesifikk forklaring; appen kan ikke begrunne valget av 1.0 fremfor 2.5/0.5.",
+        "forslag": "Legg til TOG-spesifikk gren i whyForGarment som refererer romtemperaturvinduet plagget faktisk velges i."
+      },
+      {
+        "severity": "medium",
+        "mal": 3,
+        "beskrivelse": "Reelt seleksjonsvindu er kun 22–23 °C (tropisk minus CK-3/SB-3), smalere enn standard TOG-veiledning. Plagget er nesten redundant og brukes sjelden, noe som øker risikoen for at tekst/bilde-feil ikke oppdages i praksis.",
+        "forslag": "Dokumenter det reelle vinduet eksplisitt i plaggdataene og vurder i produktgjennomgang om vinduet er tilsiktet smalt (ren beslutningssak — ingen terskler endres her)."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen definerte alternativer/fallbacks ved grensetemperaturer (20–21 °C og 24–25 °C); overgangene mellom TOG-nivåer er usynlige for brukeren.",
+        "forslag": "Legg til alternativ-henvisninger i plaggdataene: «Ved 18–21 °C: bruk sovepose 2.5 TOG» og «Ved 24–25 °C: motoren bytter til 0.5 TOG», slik at brukeren forstår nabovalgene."
+      }
+    ]
+  }
+}

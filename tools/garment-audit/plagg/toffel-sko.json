@@ -1,0 +1,57 @@
+{
+  "claude": {
+    "id": "toffel-sko",
+    "dbString": "tøffel-sko",
+    "kategori": "ekstra-fotter",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett oppføring i garment-info.ts (linje 201–204): both `what` (\"Myke tøffel-sko i filtet ull eller mykt skinn\") og `when` finnes. Dedikert `whyForGarment`-gren finnes (linje 442–444) — IKKE fallback. Tone/lengde matcher søsken i ekstra-fotter (sko, sandaler, vintersko, vintersko-isolerte). Trekk: `when` blander to ikke-relaterte kontekster (bæresele OG varme dager) i én setning der søsken-plagg holder seg til én klar kontekst hver — gjør det litt mindre presist enn søsken."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG verifisert: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\toffel-sko.png finnes. db-streng `tøffel-sko` er korrekt mappet til id `toffel-sko` i garment-illustrations.ts (linje 73). Mapping-plausibilitet god: æ→a + bindestrek-normalisering konsistent med øvrige id-er (kjøredress→kjoredress osv.). Kan ikke vurdere selve bildet — overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "Pediatrisk forsvarlig. Plagget velges KUN i bæresele ved kjølig (føles 5–9 °C) — en mild, ikke-kritisk kontekst der forelderens kropp varmer barnet (PMC-7202982: 15 min indoor babywearing endrer ikke core-temp). Soft, ikke-isolerende tøffel uten hard såle gir ingen overopphetings-, SIDS-, kvelnings- eller frostrisiko i denne settingen. modifier-rule 17 (linje 486–518) håndterer alder fornuftig: <9 mnd får tøffelen FJERNET (krabbere/spedbarn bruker ikke sko ute, varmes via ullsokker), 9–15 mnd får tøffel-sko som nedjustert substitusjon for sko/vintersko. Ingen kilde-hull som krever websøk — eksisterende kilder (PMC-7202982, aap-healthychildren) dekker bæresele-termoregulering.",
+      "score_dummy": 0,
+      "trace": "baseTable: ENESTE base-forekomst = baeresele × kjolig (føles 5–9 °C), category 'ekstra', sammen med 'lue' (tables.ts linje 94–98). Ingen andre aktivitet×bånd-celler inneholder 'tøffel-sko' i base. MODIFIERS som påvirker: (1) modifiers.ts rule 17 (linje 486–518), aktivitet utelek/baeresele: <9 mnd → regex (linje 490) STRIPPER 'tøffel-sko' helt; 9–15 mnd → 'vintersko'→'tøffel-sko + tykke ullsokker', 'sko'→'tøffel-sko' (linje 511–513) — INTRODUSERER tøffel-sko som substitusjon i kaldere utelek-bånd og i baeresele/utelek der base hadde 'sko'. 16–24 mnd: ingen endring (baeresele kjolig beholder base-tøffelen som-er). conflicts.ts/softBlocks.ts/safety.ts: INGEN regel berører tøffel-sko (ingen i HEAD_COVER/BLANKET/SOVEPOSE/etc.). Netto: 9 mnd+ i baeresele kjolig får tøffelen fra base; 9–15 mnd får den også via substitusjon i flere bånd; <9 mnd får den aldri.",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 19,
+      "kommentar": "DRIFT funnet. `when` sier \"Inn i bæresele, ELLER varme dager når føttene ikke trenger isolering.\" Men baseTable velger tøffel-sko KUN i bæresele kjølig-båndet (føles 5–9 °C) — som er kjølig, ikke varmt. På varme/tropiske bæresele-dager gir tabellen INGEN fottøy (kun solhatt, tables.ts linje 80–88), så «varme dager»-påstanden i `when` har ingen dekning i seleksjonen. `whyForGarment`-grenen (\"behagelige inn i bæresele — ingen hard såle\") stemmer derimot presist med den faktiske bæresele-konteksten. Driften er lavstakes (fottøy-komfort, ikke termisk villedning) men teksten lover en bruks-kontekst motoren aldri leverer."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "tøffel-sko har INGEN oppføring i alternatives.ts. Et reelt alternativ ville vært meningsfullt: i bæresele kjølig kunne 'tykke ullsokker alene' (barfot i selen) eller 'mykt skinn vs filtet ull'-trinn tilbys — særlig fordi rule 17 selv allerede genererer varianten 'barfot eller tynne tøfler' for sandaler (linje 511). `sko` mangler også alternativ. Trekk er moderat fordi `what` allerede nevner to materialer (filtet ull / mykt skinn), og fordi tøffelen er et ikke-termisk komfortplagg der materialvalg ikke er sikkerhetskritisk."
+    },
+    "total": 86,
+    "verdikt": "Solid plagg-oppføring med komplett struktur, verifisert PNG/mapping og pediatrisk forsvarlig seleksjon (mild bæresele-kontekst, ingen safety-risiko). Hovedproblemet er tekst-drift: `when` lover \\\"varme dager\\\" som baseTable aldri leverer (plagget velges kun i kjølig 5–9 °C bæresele). Mangler også et reelt alternativ i alternatives.ts. Ingen kritiske/høye helsefunn.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "`when`-teksten i garment-info.ts (linje 203) sier plagget brukes 'inn i bæresele, eller varme dager når føttene ikke trenger isolering'. Men baseTable velger tøffel-sko KUN i baeresele × kjolig (føles 5–9 °C). På varme/tropiske bæresele-dager gir tabellen ingen fottøy. 'Varme dager'-konteksten har derfor ingen dekning i motoren og kan villede foreldre til å tro plagget er et varmevær-valg.",
+        "forslag": "Endre `when` til å speile faktisk seleksjon, f.eks.: 'Inn i bæresele på kjølige dager (ca 5–9 °C) — myk såle som ikke plager føttene mot bæreren.' Fjern 'varme dager'-leddet eller flytt det til en kontekst tabellen faktisk dekker.",
+        "kilde": "tables.ts baeresele.kjolig (linje 94–98); garment-info.ts when (linje 203)"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "tøffel-sko (og søsken `sko`) har ingen oppføring i alternatives.ts, selv om flere søsken-fottøy (vintersko isolerte, sandaler) har alternativer. I bæresele kjølig finnes reelle valg foreldre kunne se: tykke ullsokker / barfot i selen, eller filtet ull vs mykt skinn.",
+        "forslag": "Vurder å legge til en ItemAlternatives for 'tøffel-sko' med alternativ 'tykke ullsokker (barfot i selen)' og whenKey/whyPrimaryKey, konsistent med rule 17 sin egen 'barfot eller tynne tøfler'-variant. Ikke obligatorisk siden plagget er ikke-termisk komfort.",
+        "kilde": "alternatives.ts ITEM_ALTERNATIVES (linje 44–145); modifiers.ts linje 511"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "`when` blander to ulike bruks-kontekster i én setning ('bæresele' + 'varme dager'), mens søsken-plagg i ekstra-fotter holder én klar kontekst hver (sandaler='Varme sommerdager', vintersko='Frost-dager med utelek'). Mindre konsistens-avvik i tone.",
+        "forslag": "Splitt til én primær kontekst som matcher seleksjonen, slik øvrige fottøy-søsken gjør.",
+        "kilde": "garment-info.ts linje 197–216"
+      }
+    ]
+  },
+  "fable": null
+}

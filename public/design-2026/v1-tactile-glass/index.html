@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a2942">
+<title>Babyora — Tactile Glass (v1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ------------------------------------------------------------------
+     v1 Tactile Glass — Babyora
+     iOS 16-26 glass-morphism, used sparingly with intent.
+     Ambient blue gradient, frosted cards, depth via blur, no decoration.
+     ------------------------------------------------------------------ */
+
+  :root {
+    /* Palette */
+    --bg-sky-1: oklch(0.72 0.09 235);
+    --bg-sky-2: oklch(0.55 0.12 245);
+    --bg-sky-3: oklch(0.38 0.10 255);
+
+    --ink: oklch(0.20 0.04 240);
+    --ink-soft: oklch(0.32 0.03 240);
+    --ink-muted: oklch(0.50 0.02 240);
+
+    --white-90: oklch(1 0 0 / 0.90);
+    --white-60: oklch(1 0 0 / 0.60);
+    --white-30: oklch(1 0 0 / 0.30);
+    --white-18: oklch(1 0 0 / 0.18);
+    --white-10: oklch(1 0 0 / 0.10);
+
+    --line-soft: oklch(1 0 0 / 0.22);
+    --line-hairline: oklch(1 0 0 / 0.12);
+
+    --accent-warm: oklch(0.78 0.13 60);   /* soft sun */
+    --accent-mint: oklch(0.82 0.10 165);  /* layer ok */
+    --accent-rose: oklch(0.72 0.13 25);   /* cold alert */
+
+    /* Type */
+    --font-sys: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Schibsted Grotesk', system-ui, sans-serif;
+
+    /* Phone */
+    --phone-w: 390px;
+    --phone-h: 844px;
+    --phone-r: 47px;
+    --inner-r: 39px;
+
+    /* Safe areas */
+    --safe-top: 54px;
+    --safe-bottom: 34px;
+  }
+
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-sys);
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 700px at 80% -10%, oklch(0.82 0.08 230) 0%, transparent 55%),
+      radial-gradient(900px 600px at 10% 110%, oklch(0.45 0.10 260) 0%, transparent 60%),
+      linear-gradient(180deg, oklch(0.92 0.04 230) 0%, oklch(0.78 0.06 235) 100%);
+    min-height: 100vh;
+    padding: clamp(16px, 4vw, 64px) clamp(12px, 3vw, 48px);
+    letter-spacing: -0.012em;
+  }
+
+  /* Skip link */
+  .skip {
+    position: absolute; left: -9999px; top: 0;
+    background: var(--ink); color: white; padding: 8px 14px; border-radius: 8px;
+    font-size: 14px; z-index: 1000;
+  }
+  .skip:focus { left: 16px; top: 16px; }
+
+  /* Header */
+  .page-head {
+    max-width: 880px;
+    margin: 0 auto 28px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 0 4px;
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, oklch(0.78 0.13 60), oklch(0.65 0.16 35));
+    box-shadow: 0 0 0 3px oklch(1 0 0 / 0.5), 0 2px 6px oklch(0.30 0.10 30 / 0.35);
+  }
+  .variant-tag {
+    font-size: 12px;
+    color: var(--ink-muted);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  /* Layout */
+  .phones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 36px;
+    justify-content: center;
+    align-items: flex-start;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+
+  /* ------------------------------------------------------------------
+     Phone frame — iOS-style, intentional, not decoration-heavy
+     ------------------------------------------------------------------ */
+  .phone {
+    position: relative;
+    width: var(--phone-w);
+    height: var(--phone-h);
+    border-radius: var(--phone-r);
+    background: linear-gradient(135deg, oklch(0.18 0.02 240), oklch(0.10 0.01 240));
+    padding: 11px;
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.10) inset,
+      0 0 0 1px oklch(0 0 0 / 0.4),
+      0 30px 60px -20px oklch(0.20 0.08 250 / 0.45),
+      0 12px 24px -10px oklch(0.20 0.08 250 / 0.3);
+    flex-shrink: 0;
+  }
+
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--inner-r);
+    overflow: hidden;
+    background:
+      radial-gradient(120% 60% at 70% 0%, var(--bg-sky-1) 0%, transparent 60%),
+      radial-gradient(100% 70% at 0% 100%, var(--bg-sky-3) 0%, transparent 55%),
+      linear-gradient(180deg, var(--bg-sky-1) 0%, var(--bg-sky-2) 55%, var(--bg-sky-3) 100%);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .status {
+    position: relative;
+    height: var(--safe-top);
+    padding: 18px 32px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: oklch(1 0 0);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    z-index: 5;
+  }
+  .status-time {
+    font-variant-numeric: tabular-nums;
+  }
+  .status-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .icn-signal { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 11px; }
+  .icn-signal i {
+    display: block; width: 3px; background: currentColor; border-radius: 1px;
+  }
+  .icn-signal i:nth-child(1) { height: 4px; }
+  .icn-signal i:nth-child(2) { height: 6px; }
+  .icn-signal i:nth-child(3) { height: 8px; }
+  .icn-signal i:nth-child(4) { height: 11px; }
+
+  .icn-wifi {
+    width: 16px; height: 12px;
+    background:
+      radial-gradient(circle at 50% 100%, currentColor 0 2px, transparent 3px),
+      radial-gradient(circle at 50% 100%, transparent 0 4px, currentColor 4px 5px, transparent 6px),
+      radial-gradient(circle at 50% 100%, transparent 0 7px, currentColor 7px 8.5px, transparent 9px),
+      radial-gradient(circle at 50% 100%, transparent 0 10px, currentColor 10px 11.5px, transparent 12px);
+  }
+
+  .icn-batt {
+    position: relative;
+    width: 26px; height: 12px;
+    border: 1.2px solid currentColor;
+    border-radius: 3px;
+    opacity: 0.9;
+  }
+  .icn-batt::after {
+    content: "";
+    position: absolute;
+    right: -3px; top: 3px;
+    width: 2px; height: 4px;
+    background: currentColor;
+    border-radius: 0 1px 1px 0;
+  }
+  .icn-batt::before {
+    content: "";
+    position: absolute;
+    left: 1.5px; top: 1.5px; bottom: 1.5px;
+    width: 18px;
+    background: currentColor;
+    border-radius: 1.5px;
+  }
+
+  /* Dynamic Island */
+  .island {
+    position: absolute;
+    top: 11px; left: 50%;
+    transform: translateX(-50%);
+    width: 122px; height: 36px;
+    background: #000;
+    border-radius: 22px;
+    z-index: 10;
+  }
+
+  /* Main content area */
+  .content {
+    flex: 1;
+    padding: 6px 20px 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* ------------------------------------------------------------------
+     Glass cards — used sparingly
+     ------------------------------------------------------------------ */
+  .glass {
+    background: var(--white-30);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border-radius: 22px;
+    border: 1px solid var(--line-soft);
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.4) inset,
+      0 0 0 0.5px oklch(0 0 0 / 0.05),
+      0 10px 30px -10px oklch(0.15 0.08 250 / 0.35);
+  }
+  .glass-deep {
+    background: var(--white-18);
+    backdrop-filter: blur(36px) saturate(180%);
+    -webkit-backdrop-filter: blur(36px) saturate(180%);
+    border-radius: 28px;
+    border: 1px solid var(--line-soft);
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.35) inset,
+      0 0 0 0.5px oklch(0 0 0 / 0.05),
+      0 18px 40px -14px oklch(0.10 0.06 255 / 0.4);
+  }
+
+  /* ------------------------------------------------------------------
+     HJEM screen
+     ------------------------------------------------------------------ */
+
+  .hjem-head {
+    padding: 6px 4px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .hjem-place {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hjem-place-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: oklch(1 0 0 / 0.78);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .hjem-place-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.025em;
+  }
+  .hjem-child {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--white-18);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    padding: 6px 12px 6px 6px;
+    border-radius: 100px;
+    border: 1px solid var(--line-soft);
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, oklch(0.88 0.10 60), oklch(0.78 0.13 35));
+    display: grid;
+    place-items: center;
+    color: oklch(0.30 0.08 30);
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 1px 0 oklch(1 0 0 / 0.5) inset, 0 2px 6px oklch(0.20 0.10 30 / 0.3);
+  }
+  .hjem-child-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+  }
+
+  /* Weather hero — large display, Apple Weather rhythm */
+  .weather-hero {
+    text-align: center;
+    padding: 14px 0 22px;
+    color: white;
+  }
+  .weather-temp {
+    font-size: 88px;
+    font-weight: 200;
+    line-height: 0.95;
+    letter-spacing: -0.05em;
+    display: inline-flex;
+    align-items: flex-start;
+    color: white;
+  }
+  .weather-temp sup {
+    font-size: 32px;
+    font-weight: 300;
+    margin-top: 12px;
+    margin-left: 2px;
+    opacity: 0.85;
+  }
+  .weather-desc {
+    font-size: 18px;
+    font-weight: 500;
+    margin-top: 4px;
+    letter-spacing: -0.01em;
+    color: oklch(1 0 0 / 0.92);
+  }
+  .weather-meta {
+    font-size: 14px;
+    margin-top: 6px;
+    color: oklch(1 0 0 / 0.72);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Activity toggle — segmented */
+  .toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--white-18);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: 16px;
+    padding: 4px;
+    border: 1px solid var(--line-soft);
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .toggle-opt {
+    text-align: center;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: oklch(1 0 0 / 0.78);
+    letter-spacing: -0.005em;
+    transition: all 0.15s ease;
+  }
+  .toggle-opt.active {
+    background: oklch(1 0 0 / 0.92);
+    color: var(--ink);
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.9) inset,
+      0 2px 8px oklch(0 0 0 / 0.12);
+  }
+
+  /* Recommendation card */
+  .rec-card {
+    padding: 18px 18px 16px;
+    margin-bottom: 14px;
+  }
+  .rec-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 6px;
+  }
+  .rec-headline {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+  .rec-headline strong {
+    background: linear-gradient(135deg, oklch(0.45 0.12 250), oklch(0.30 0.10 255));
+    -webkit-background-clip: text;
+    color: oklch(0.30 0.10 255); /* fallback / not gradient text in final */
+  }
+  .rec-sub {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  /* Layer chips inside recommendation */
+  .layers {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .layer-chip {
+    flex: 1;
+    background: oklch(1 0 0 / 0.5);
+    border: 1px solid oklch(1 0 0 / 0.4);
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .layer-chip-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+    letter-spacing: 0.05em;
+  }
+  .layer-chip-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+
+  /* Primary CTA */
+  .cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: oklch(0.20 0.04 240);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 16px 20px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.15) inset,
+      0 8px 20px -6px oklch(0.10 0.05 245 / 0.5);
+  }
+  .cta-arrow {
+    width: 16px; height: 16px;
+    display: inline-block;
+    position: relative;
+  }
+  .cta-arrow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-top: 2px solid white;
+    border-right: 2px solid white;
+    transform: rotate(45deg);
+    width: 8px; height: 8px;
+    top: 4px; left: 2px;
+  }
+
+  /* ------------------------------------------------------------------
+     UKE screen
+     ------------------------------------------------------------------ */
+
+  .uke-head {
+    padding: 6px 4px 14px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .uke-title {
+    font-size: 30px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.03em;
+  }
+  .uke-sub {
+    font-size: 13px;
+    color: oklch(1 0 0 / 0.72);
+    margin-top: 2px;
+  }
+  .uke-week {
+    font-size: 12px;
+    font-weight: 600;
+    color: oklch(1 0 0 / 0.78);
+    background: var(--white-18);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 6px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--line-soft);
+    letter-spacing: 0.02em;
+  }
+
+  /* Tab pills */
+  .tabs {
+    display: inline-flex;
+    background: var(--white-18);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: 14px;
+    padding: 3px;
+    margin-bottom: 14px;
+    border: 1px solid var(--line-soft);
+  }
+  .tab {
+    padding: 7px 16px;
+    border-radius: 11px;
+    font-size: 13px;
+    font-weight: 600;
+    color: oklch(1 0 0 / 0.75);
+    letter-spacing: -0.005em;
+  }
+  .tab.active {
+    background: oklch(1 0 0 / 0.92);
+    color: var(--ink);
+    box-shadow: 0 1px 4px oklch(0 0 0 / 0.1);
+  }
+
+  /* Week list */
+  .week-list {
+    padding: 8px 4px;
+    flex: 1;
+    overflow: hidden;
+  }
+  .week-card {
+    border-radius: 22px;
+    padding: 4px 4px;
+  }
+  .week-row {
+    display: grid;
+    grid-template-columns: 56px 1fr auto auto;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line-hairline);
+  }
+  .week-row:last-child { border-bottom: none; }
+  .week-row.today {
+    background: oklch(1 0 0 / 0.12);
+    border-radius: 14px;
+    border-bottom: 1px solid transparent;
+    margin: 2px 0;
+  }
+  .week-day {
+    display: flex;
+    flex-direction: column;
+  }
+  .week-day-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .week-day-date {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 1px;
+    font-variant-numeric: tabular-nums;
+  }
+  .week-row.today .week-day-name { color: var(--ink); }
+  .week-row.today .week-day-date { color: var(--ink-soft); }
+
+  .week-weather {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .wx-glyph {
+    width: 26px; height: 26px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+  }
+  .wx-glyph svg { width: 100%; height: 100%; display: block; }
+
+  .week-cond {
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+
+  .week-temp {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  .week-layers {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: oklch(1 0 0 / 0.55);
+    border: 1px solid oklch(1 0 0 / 0.5);
+    border-radius: 100px;
+    padding: 4px 10px;
+    min-width: 44px;
+    justify-content: center;
+  }
+  .week-layers-num {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .week-layers-icn {
+    width: 12px; height: 12px;
+    display: inline-block;
+  }
+
+  /* Stacked rectangle "layers" icon */
+  .layer-icon {
+    position: relative;
+    width: 12px; height: 12px;
+  }
+  .layer-icon::before, .layer-icon::after, .layer-icon i {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: var(--ink-soft);
+    border-radius: 1px;
+  }
+  .layer-icon::before { top: 1px; }
+  .layer-icon i { top: 5px; display:block; }
+  .layer-icon::after { top: 9px; }
+
+  /* ------------------------------------------------------------------
+     Bottom tab bar — iOS native feel
+     ------------------------------------------------------------------ */
+  .tabbar {
+    position: relative;
+    margin: 10px 12px 0;
+    padding: 10px 8px calc(var(--safe-bottom) - 14px);
+    background: oklch(1 0 0 / 0.5);
+    backdrop-filter: blur(34px) saturate(180%);
+    -webkit-backdrop-filter: blur(34px) saturate(180%);
+    border-top: 1px solid var(--line-soft);
+    border-radius: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .tabbar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0 2px;
+    color: var(--ink-muted);
+  }
+  .tabbar-item.active { color: oklch(0.30 0.10 255); }
+  .tabbar-ico { width: 26px; height: 26px; display: grid; place-items: center; }
+  .tabbar-ico svg { width: 100%; height: 100%; }
+  .tabbar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  /* Home indicator */
+  .home-indicator {
+    position: absolute;
+    bottom: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 134px; height: 5px;
+    background: var(--ink);
+    border-radius: 100px;
+    opacity: 0.35;
+  }
+
+  /* ------------------------------------------------------------------
+     Sun / cloud illustration in hero (small, top-right)
+     ------------------------------------------------------------------ */
+  .hero-glyph {
+    position: relative;
+    width: 64px; height: 64px;
+    margin: 0 auto 6px;
+    filter: drop-shadow(0 6px 12px oklch(0.15 0.05 245 / 0.35));
+  }
+
+  /* ------------------------------------------------------------------
+     Responsive — stack phones on small screens
+     ------------------------------------------------------------------ */
+  @media (max-width: 880px) {
+    body { padding: 16px 12px 48px; }
+    .phones { gap: 28px; }
+    .page-head { margin-bottom: 18px; }
+    .brand { font-size: 18px; }
+  }
+
+  @media (max-width: 430px) {
+    body { padding: 8px 0 32px; background-attachment: fixed; }
+    .phone {
+      width: 100%;
+      max-width: 390px;
+      transform: scale(0.96);
+      transform-origin: top center;
+    }
+    .page-head { padding: 0 16px; }
+  }
+
+  /* Prefers-reduced-motion: nothing to disable, animations are absent by design */
+
+  /* Print: avoid */
+  @media print { body { background: white; } .phone { box-shadow: none; } }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip">Hopp til hovedinnhold</a>
+
+<header class="page-head">
+  <div class="brand" aria-label="Babyora">
+    <span class="brand-dot" aria-hidden="true"></span>
+    Babyora
+  </div>
+  <div class="variant-tag">v1 · Tactile Glass</div>
+</header>
+
+<main id="main" class="phones" aria-label="Mock-skjermbilder">
+
+  <!-- =========================================================
+       PHONE 1 — HJEM
+       ========================================================= -->
+  <section class="phone" aria-label="Hjem-skjerm">
+    <div class="screen">
+      <div class="island" aria-hidden="true"></div>
+
+      <!-- Status bar -->
+      <div class="status" aria-hidden="true">
+        <div class="status-time">14:23</div>
+        <div class="status-icons">
+          <span class="icn-signal"><i></i><i></i><i></i><i></i></span>
+          <span class="icn-wifi"></span>
+          <span class="icn-batt"></span>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- Place + child -->
+        <div class="hjem-head">
+          <div class="hjem-place">
+            <div class="hjem-place-label">I dag · Elverum</div>
+            <div class="hjem-place-name">Torsdag 30. juni</div>
+          </div>
+          <div class="hjem-child" aria-label="Aktiv profil: Liv">
+            <div class="avatar" aria-hidden="true">L</div>
+            <div class="hjem-child-name">Liv</div>
+          </div>
+        </div>
+
+        <!-- Weather hero -->
+        <div class="weather-hero">
+          <div class="hero-glyph" aria-hidden="true">
+            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="sun" cx="50%" cy="40%" r="55%">
+                  <stop offset="0%" stop-color="#FFE8B0"/>
+                  <stop offset="60%" stop-color="#FFCB6B"/>
+                  <stop offset="100%" stop-color="#F09F3D"/>
+                </radialGradient>
+                <linearGradient id="cloud" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ffffff"/>
+                  <stop offset="100%" stop-color="#D9E5F0"/>
+                </linearGradient>
+              </defs>
+              <circle cx="38" cy="24" r="14" fill="url(#sun)"/>
+              <g fill="url(#cloud)">
+                <ellipse cx="22" cy="42" rx="14" ry="9"/>
+                <ellipse cx="36" cy="40" rx="12" ry="10"/>
+                <ellipse cx="46" cy="44" rx="10" ry="7"/>
+                <rect x="14" y="42" width="38" height="9" rx="4"/>
+              </g>
+            </svg>
+          </div>
+          <div class="weather-temp">18<sup>°</sup></div>
+          <div class="weather-desc">Variert</div>
+          <div class="weather-meta">Føles som 18° · 3,1 m/s vind</div>
+        </div>
+
+        <!-- Activity toggle -->
+        <div class="toggle" role="tablist" aria-label="Aktivitet">
+          <div class="toggle-opt active" role="tab" aria-selected="true">Utenfor vogn</div>
+          <div class="toggle-opt" role="tab" aria-selected="false">I vogn</div>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="glass rec-card" aria-labelledby="rec-headline">
+          <div class="rec-label">Anbefaling</div>
+          <div id="rec-headline" class="rec-headline">3 lag mot mild sommerkulda</div>
+          <div class="layers" aria-label="Lag-oversikt">
+            <div class="layer-chip">
+              <div class="layer-chip-num">LAG 1</div>
+              <div class="layer-chip-name">Ull · tynn</div>
+            </div>
+            <div class="layer-chip">
+              <div class="layer-chip-num">LAG 2</div>
+              <div class="layer-chip-name">Bomull</div>
+            </div>
+            <div class="layer-chip">
+              <div class="layer-chip-num">LAG 3</div>
+              <div class="layer-chip-name">Vindjakke</div>
+            </div>
+          </div>
+          <div class="rec-sub">Liv går selv. Velg vind­tett ytterst — varm fukt slippes ut, vinden holdes ute.</div>
+        </div>
+
+        <!-- CTA -->
+        <button class="cta" aria-label="Se hele påkledningen for Liv">
+          Se påkledning
+          <span class="cta-arrow" aria-hidden="true"></span>
+        </button>
+
+      </div>
+
+      <!-- Tab bar -->
+      <nav class="tabbar" aria-label="Hovednavigasjon">
+        <div class="tabbar-item active" aria-current="page">
+          <span class="tabbar-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5L12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+          </span>
+          <span class="tabbar-label">Hjem</span>
+        </div>
+        <div class="tabbar-item">
+          <span class="tabbar-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17"/><path d="M8 3v4M16 3v4"/></svg>
+          </span>
+          <span class="tabbar-label">Uke</span>
+        </div>
+        <div class="tabbar-item">
+          <span class="tabbar-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5a2 2 0 0 1 2-2h6.5v17H6a2 2 0 0 1-2-2z"/><path d="M20 5.5a2 2 0 0 0-2-2h-5.5v17H18a2 2 0 0 0 2-2z"/></svg>
+          </span>
+          <span class="tabbar-label">Guide</span>
+        </div>
+        <div class="tabbar-item">
+          <span class="tabbar-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          </span>
+          <span class="tabbar-label">Innstillinger</span>
+        </div>
+        <div class="home-indicator" aria-hidden="true"></div>
+      </nav>
+
+    </div>
+  </section>
+
+  <!-- =========================================================
+       PHONE 2 — UKE
+       ========================================================= -->
+  <section class="phone" aria-label="Uke-skjerm">
+    <div class="screen">
+      <div class="island" aria-hidden="true"></div>
+
+      <!-- Status bar -->
+      <div class="status" aria-hidden="true">
+        <div class="status-time">14:23</div>
+        <div class="status-icons">
+          <span class="icn-signal"><i></i><i></i><i></i><i></i></span>
+          <span class="icn-wifi"></span>
+          <span class="icn-batt"></span>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- Header -->
+        <div class="uke-head">
+          <div>
+            <div class="uke-title">Uke</div>
+            <div class="uke-sub">Liv · Elverum</div>
+          </div>
+          <div class="uke-week">UKE 27</div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" role="tablist" aria-label="Tidsvisning">
+          <div class="tab" role="tab" aria-selected="false">I dag</div>
+          <div class="tab active" role="tab" aria-selected="true">Uke</div>
+        </div>
+
+        <!-- Week list (glass-deep card containing rows) -->
+        <div class="glass-deep week-card">
+
+          <div class="week-row today" aria-current="date">
+            <div class="week-day">
+              <div class="week-day-name">I dag</div>
+              <div class="week-day-date">Tor 30.</div>
+            </div>
+            <div class="week-weather">
+              <span class="wx-glyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="14" cy="9" r="4" fill="#FFCB6B"/><ellipse cx="10" cy="14" rx="6" ry="4" fill="#fff"/><ellipse cx="14" cy="15" rx="5" ry="4" fill="#fff"/></svg>
+              </span>
+              <span class="week-cond">Variert</span>
+            </div>
+            <div class="week-temp">18°</div>
+            <div class="week-layers" title="3 lag">
+              <span class="layer-icon" aria-hidden="true"><i></i></span>
+              <span class="week-layers-num">3</span>
+            </div>
+          </div>
+
+          <div class="week-row">
+            <div class="week-day">
+              <div class="week-day-name">Fre</div>
+              <div class="week-day-date">1. jul</div>
+            </div>
+            <div class="week-weather">
+              <span class="wx-glyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="#FFCB6B"/></svg>
+              </span>
+              <span class="week-cond">Sol</span>
+            </div>
+            <div class="week-temp">22°</div>
+            <div class="week-layers" title="2 lag">
+              <span class="layer-icon" aria-hidden="true"><i></i></span>
+              <span class="week-layers-num">2</span>
+            </div>
+          </div>
+
+          <div class="week-row">
+            <div class="week-day">
+              <div class="week-day-name">Lør</div>
+              <div class="week-day-date">2. jul</div>
+            </div>
+            <div class="week-weather">
+              <span class="wx-glyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><ellipse cx="10" cy="13" rx="6" ry="4" fill="#fff"/><ellipse cx="14" cy="14" rx="5" ry="4" fill="#D9E5F0"/></svg>
+              </span>
+              <span class="week-cond">Skyet</span>
+            </div>
+            <div class="week-temp">19°</div>
+            <div class="week-layers" title="3 lag">
+              <span class="layer-icon" aria-hidden="true"><i></i></span>
+              <span class="week-layers-num">3</span>
+            </div>
+          </div>
+
+          <div class="week-row">
+            <div class="week-day">
+              <div class="week-day-name">Søn</div>
+              <div class="week-day-date">3. jul</div>
+            </div>
+            <div class="week-weather">
+              <span class="wx-glyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><ellipse cx="12" cy="11" rx="7" ry="4.5" fill="#D9E5F0"/><line x1="8" y1="17" x2="8" y2="20" stroke="#5B8FB9" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="17" x2="12" y2="21" stroke="#5B8FB9" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="17" x2="16" y2="20" stroke="#5B8FB9" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+              <span class="week-cond">Regn</span>
+            </div>
+            <div class="week-temp">15°</div>
+            <div class="week-layers" title="4 lag">
+              <span class="layer-icon" aria-hidden="true"><i></i></span>
+              <span class="week-layers-num">4</span>
+            </div>
+          </div>
+
+          <div class="week-row">
+            <div class="week-day">
+              <div class="week-day-name">Man</div>
+              <div class="week-day-date">4. jul</div>
+            </div>
+            <div class="week-weather">
+              <span class="wx-glyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="14" cy="9" r="4" fill="#FFCB6B"/><ellipse cx="10" cy="14" rx="6" ry="4" fill="#fff"/></svg>
+              </span>
+              <span class="week-cond">Variert</span>
+            </div>
+            <div class="week-temp">17°</div>
+            <div class="week-layers" title="3 lag">
+              <span class="layer-icon" aria-hidden="true"><i></i></span>
+              <span class="week-layers-num">3</span>
+            </div>
+          </div>
+
+          <div class="week-row">
+            <div class="week-day">
+              <div class="week-day-name">Tir</div>
+              <div class="week-day-date">5. jul</div>
+            </div>
+            <div class="week-weather">
+              <span class="wx-glyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="#FFCB6B"/></svg>
+              </span>
+              <span class="week-cond">Sol</span>
+            </div>
+            <div class="week-temp">21°</div>
+            <div class="week-layers" title="2 lag">
+              <span class="layer-icon" aria-hidden="true"><i></i></span>
+              <span class="week-layers-num">2</span>
+            </div>
+          </div>
+
+          <div class="week-row">
+            <div class="week-day">
+              <div class="week-day-name">Ons</div>
+              <div class="week-day-date">6. jul</div>
+            </div>
+            <div class="week-weather">
+              <span class="wx-glyph" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><ellipse cx="12" cy="11" rx="7" ry="4.5" fill="#D9E5F0"/><line x1="9" y1="17" x2="9" y2="20" stroke="#5B8FB9" stroke-width="2" stroke-linecap="round"/><line x1="14" y1="17" x2="14" y2="20" stroke="#5B8FB9" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+              <span class="week-cond">Lett regn</span>
+            </div>
+            <div class="week-temp">16°</div>
+            <div class="week-layers" title="3 lag">
+              <span class="layer-icon" aria-hidden="true"><i></i></span>
+              <span class="week-layers-num">3</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Tab bar -->
+      <nav class="tabbar" aria-label="Hovednavigasjon">
+        <div class="tabbar-item">
+          <span class="tabbar-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5L12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+          </span>
+          <span class="tabbar-label">Hjem</span>
+        </div>
+        <div class="tabbar-item active" aria-current="page">
+          <span class="tabbar-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17"/><path d="M8 3v4M16 3v4"/></svg>
+          </span>
+          <span class="tabbar-label">Uke</span>
+        </div>
+        <div class="tabbar-item">
+          <span class="tabbar-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5a2 2 0 0 1 2-2h6.5v17H6a2 2 0 0 1-2-2z"/><path d="M20 5.5a2 2 0 0 0-2-2h-5.5v17H18a2 2 0 0 0 2-2z"/></svg>
+          </span>
+          <span class="tabbar-label">Guide</span>
+        </div>
+        <div class="tabbar-item">
+          <span class="tabbar-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          </span>
+          <span class="tabbar-label">Innstillinger</span>
+        </div>
+        <div class="home-indicator" aria-hidden="true"></div>
+      </nav>
+
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

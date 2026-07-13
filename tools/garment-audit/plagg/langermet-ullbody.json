@@ -1,0 +1,106 @@
+{
+  "claude": {
+    "id": "langermet-ullbody",
+    "dbString": "langermet ullbody",
+    "kategori": "innerst",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Plagget har komplett `what` + `when` i garment-info.ts (linje 33-36), i samme mønster/tone/lengde som søsken-plagg i innerst (kortermet-ullbody, langermet-body, langermet-ullbody-tynn). Det har en dedikert whyForGarment-gren (ikke fallback): linje 334 grupperer 'langermet-ullbody' sammen med 'langermet-ullbody-tynn' og 'kortermet-ullbody' med en felles ull-mot-huden-begrunnelse. I tillegg fanges søvn-konteksten av soevn-grenen linje 322 (id.startsWith('langermet')). Mindre svakhet: whyForGarment-grenen er delt mellom tre ull-bodyer og ikke unik for langermet-spesifikt — fungerer, men er ikke maksimalt skreddersydd. Ingen mangel-funn."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/langermet-ullbody.png er bekreftet på disk. db-strengen 'langermet ullbody' er korrekt mappet til id 'langermet-ullbody' i garment-illustrations.ts linje 18, og garmentPng() bygger riktig sti illustrations/garments/langermet-ullbody.png. Mapping er entydig og kolliderer ikke med den tynne varianten ('langermet ullbody tynn' -> 'langermet-ullbody-tynn', linje 19). Navn/mapping-plausibilitet er solid. Visuell dom utstår til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig og godt dekket av kildene. Bæresele-mild (10-15 grader) bruker ull-body som innerst lag mot foreldrekroppen — PMC-7202982 viser at babywearing med ekstra lag IKKE gir core-temp-endring (skin +0.71, core -0.13), og merino-kids/aap-healthychildren støtter ull-base for fuktregulering. Søvn kald/frost (0-4 grader rom og lavere konservativt) kombinerer ull-body + ullsokker + ull-pyjamas + 3.5 TOG, kalibrert mot LT-TOG og AAP-2022 — innenfor trygg ramme. Ingen overoppheting/SIDS/kvelning/frost-kontekst introduseres av dette plagget. Ingen uavklart helse-spørsmål krevde web-søk. Trekk kun fordi langermet-ullbody-tynn (separat id) lett kan forveksles med dette plagget i varm-båndene, men det er en navne-presisjon, ikke et sikkerhetsproblem.",
+      "trace": "DIRECTE baseTable-treff for 'langermet ullbody': (1) baeresele.mild [10-15 C feels] innerst=['langermet ullbody']; (2) soevn.kald [0-4 C rom] innerst=['langermet ullbody','ullsokker']; (3) soevn.frost/streng_frost/ekstrem [konservative rom-band <0] innerst=['langermet ullbody','ullsokker']. IKKE dette plagget: vogn.varm + utelek.varm bruker 'langermet ullbody tynn' (-> id langermet-ullbody-tynn). MODIFIERS: ingen modifier/conflict/softBlock/safety legger til eller fjerner 'langermet ullbody' direkte. I baeresele.mild legges ullsokker IKKE til (modifier #3 krever feels<=5). I soevn-grenene kommer ullsokker fra baseTable, og soevn hopper alle ute-modifikatorer (modifiers linje 89). Conflicts/softBlocks rører ikke selve bodyen (kun sovepose/teppe/hodeplagg/TOG). NETTO: plagget velges i bæresele 10-15 C + søvn ved kalde rom <=4 C.",
+      "kilder": [],
+      "score_dup": null
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "whyForGarment-grenen (linje 334 + soevn-gren linje 322) stemmer godt med faktiske forhold — den snakker om ull-mot-huden, fuktregulering og inner lag under sovepose, hvilket matcher både bæresele-mild og søvn-kald. MEN `when`-teksten driver fra baseTable: 'Hele året — alene på varme dager, eller som første lag under mellomlag og yttertøy.' Faktisk velges FULL langermet-ullbody KUN i (a) bæresele 10-15 C som første lag under tynn bukse, og (b) søvn ved kalde rom (<=4 C) under ull-pyjamas + 3.5 TOG sovepose. Den blir ALDRI valgt 'alene på varme dager' — i varme/tropiske band brukes kortermet-ullbody eller den tynne varianten (langermet-ullbody-tynn), aldri full ullbody alene. Påstanden 'alene på varme dager' kan villede en forelder til å bruke for varmt plagg i varme — derav severity hoy. `what`-påstanden 'mest brukte base 0-2 år' er markedsføring, ikke logikk-drift."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Plagget har INGEN oppføring i alternatives.ts (ITEM_ALTERNATIVES dekker mellomlag/yttertøy/sovepose/votter/sko, ikke innerst-bodyer). Et reelt og nyttig alternativ finnes allerede i datamodellen som eget plagg: langermet-ullbody-tynn (tykkelse-trinn ned) for de mildeste forholdene, og kortermet-ullbody for varmere. Disse BURDE eksponeres som alternativ via alternatives.ts slik at en forelder kan velge tynnere ull når full body blir for varmt — spesielt gitt at `when`-teksten lover 'alene på varme dager'. Trekk fordi denne tykkelse-trinn-alternativen mangler; ikke kritisk siden ull-først-policyen er bevisst (Sivert-direktiv) og fleece-alternativ ikke hører hjemme på innerst ull-base."
+    },
+    "total": 85,
+    "verdikt": "Solid innerst-plagg med korrekt mapping, eksisterende PNG, dedikert why-gren og pediatrisk forsvarlig seleksjon (bæresele 10-15 C + søvn ved kalde rom). Hovedproblemet er tekst-drift: `when` lover 'alene på varme dager', men engine velger aldri full ullbody i varme/tropiske band (der brukes tynn variant eller kortermet) — kan villede til overpakking. Sekundært mangler et tykkelse-trinn-alternativ (langermet-ullbody-tynn) i alternatives.ts. Ingen sikkerhetsavvik.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "Tekst-drift: garment-info.ts `when` (linje 35) sier 'Hele aret — alene paa varme dager, eller som forste lag under mellomlag og yttertoy.' Men baseTable velger ALDRI full 'langermet ullbody' alene i varme/tropiske band — der brukes 'kortermet ullbody' eller den tynne varianten 'langermet ullbody tynn'. Full ullbody velges kun i bæresele.mild (10-15 C) og soevn ved kalde rom (<=4 C). 'Alene paa varme dager' kan villede en forelder til aa kle barnet for varmt.",
+        "forslag": "Endre `when` til aa speile faktisk seleksjon, f.eks.: 'Forste lag i baeresele paa milde dager (ca 10-15 C), og som inner lag under pyjamas/sovepose ved kalde soverom. Paa varme dager: velg heller tynn ullbody eller kortermet.' Roer ALDRI selve baseTable-tersklene — kun teksten justeres.",
+        "kilde": "aap-healthychildren (one-layer-more-than-adult); baseTable baeresele.mild + soevn.kald"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Manglende tykkelse-trinn-alternativ i alternatives.ts. 'langermet ullbody' har ingen oppforing, men det finnes et reelt nedtrinn ('langermet ullbody tynn') som allerede er et eget plagg i datamodellen. Foreldre faar derfor ikke (!)-ikon/alternativ-sheet for aa velge tynnere ull naar full body blir for varmt — relevant gitt `when`-teksten som nevner varme dager.",
+        "forslag": "Legg til et ITEM_ALTERNATIVES-objekt for itemName 'langermet ullbody' med alternativet 'langermet ullbody tynn' (tykkelse-trinn ned) og whyPrimary som forklarer at standard ullbody er default-varmen. Behold ull-forst-policyen (ikke fleece-alternativ paa innerst ull-base).",
+        "kilde": "merino-kids (ull-fordeler ved fukt); alternatives.ts ITEM_ALTERNATIVES"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 18,
+      "kommentar": "Konsistent id (langermet-ullbody), korrekt kategori 'innerst', og trace viser rene baseTable-treff uten modifier-konflikter. Trekk: 'hele året'-påstanden i tekstfeltet er ikke forankret i noen datastruktur — netto seleksjon dekker kun to smale scenarier (bæresele 10-15 °C og søvn ≤4 °C rom), så struktur og innhold er ikke fullt synkronisert."
+    },
+    "utseende": {
+      "score": 17,
+      "kommentar": "Bildet viser riktig plaggtype: langermet body med raglan-sømmer, skuldertrykknapper og tre trykknapper i skrittet — umiskjennelig en body, ikke genser. Stoffgjengivelsen er myk og matt, troverdig som merinoull. Trekk: fargen er fersken/hudtone som kan gli visuelt inn mot illustrert barnehud i app-kontekst, og helsvart bakgrunn kan avvike fra øvrig stilark hvis andre plagg har transparent/lys bakgrunn. Ingen AI-artefakter av betydning."
+    },
+    "seleksjon": {
+      "score": 22,
+      "kommentar": "Pediatrisk forsvarlig: merinoull som første lag i bæresele ved 10-15 °C er godt belagt (bæresele tilfører ~1 lag kroppsvarme fra bærer), og ullbody + ullsokker ved romtemperatur ≤4 °C ved søvn er konservativt men trygt. At motoren bytter til kortermet/tynn variant i varme bånd er korrekt overopphetingsvern. Mindre merknad: plagget velges ikke i mellombånd (f.eks. søvn 5-15 °C rom) iht. trace — sannsynligvis dekket av andre plagg, men verdt å verifisere at det ikke finnes hull."
+    },
+    "tekstLogikk": {
+      "score": 14,
+      "kommentar": "Konkret drift, og den er verre enn én setning: (1) «alene på varme dager» — motoren velger ALDRI full langermet ullbody i varm/tropisk; en forelder som følger teksten manuelt kan overkle barnet, og overoppheting hos spedbarn er en reell sikkerhetsrisiko (SIDS-assosiert i søvnkontekst). (2) «Hele året» — netto seleksjon er to smale scenarier; teksten lover langt bredere bruk enn logikken leverer. (3) «som første lag under mellomlag og yttertøy» — trace viser ingen kulde-/yttertøy-bånd der plagget faktisk velges som base, kun bæresele og søvn. Når-teksten beskriver et generisk ullbody-bruksmønster, ikke dette plaggets faktiske rolle i motoren."
+    },
+    "alternativer": {
+      "score": 6,
+      "kommentar": "«Langermet ullbody tynn» eksisterer allerede som eget plagg og er det åpenbare tykkelse-trinnet ned, men mangler i alternatives.ts. Også «kortermet ullbody» bør pekes på som varmevariant siden motoren selv bruker den substitusjonen. Lav implementeringskost, klar brukerverdi ved utsolgt/vask."
+    },
+    "total": 77,
+    "verdikt": "Godkjent med pålegg: plagget er visuelt og pediatrisk solid, men når-teksten må skrives om før den kan stå — den beskriver bruk motoren aktivt unngår, i en kontekst (varme + spedbarn) der feilen har sikkerhetsimplikasjon.",
+    "uenig_med_claude": "Ja, på vekting. Claude ga 85 og flagget tekst-driften som hoy, men scoret ikke konsekvensen: «alene på varme dager» er ikke kosmetisk drift, det er en sikkerhetsrelevant motsigelse av motorens eget overopphetingsvern, og «hele året» + «under yttertøy» er to ytterligere drift-punkter Claude ikke fanget. Mål 4 må trekkes hardere (14/25, ikke implisitt ~20+). Claudes mål 5-funn bekreftes, men severity bør heves til medium siden tynn-varianten er motorens egen substitusjon og dermed kjent intern kunnskap som ikke eksponeres.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "Når-tekst «alene på varme dager» motsier seleksjonen: full langermet ullbody velges aldri i varm/tropisk (motoren bytter til kortermet/tynn). Kan lede foreldre til å overkle barn i varme — sikkerhetsrelevant for 0-2 år.",
+        "forslag": "Omskriv til: «I bæresele på kjølige dager (ca. 10-15 °C) og som nattplagg når soverommet er kaldt. På varme dager: velg kortermet eller tynn variant.»"
+      },
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "«Hele året» og «første lag under mellomlag og yttertøy» dekkes ikke av trace — netto seleksjon er kun bæresele 10-15 °C og søvn ≤4 °C rom. Teksten lover bredere rolle enn motoren gir.",
+        "forslag": "Fjern «hele året», eller utvid baseTable hvis plagget faktisk skal være base i kulde-bånd utendørs — men endre da logikk-eier-siden, ikke bare teksten."
+      },
+      {
+        "severity": "medium",
+        "mal": 5,
+        "beskrivelse": "«Langermet ullbody tynn» mangler som tykkelse-alternativ i alternatives.ts til tross for at motoren selv bruker den som varm-substitusjon — kjent intern relasjon som ikke eksponeres til bruker.",
+        "forslag": "Legg til 'langermet ullbody tynn' (tynnere) og 'kortermet ullbody' (varmere forhold) som alternativer."
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "Trace viser ingen treff i mellombånd (f.eks. søvn 5-15 °C rom, bæresele <10 °C). Antatt dekket av andre plagg, men ikke verifisert i tilsendt data.",
+        "forslag": "Kjør hull-analyse på baseTable for kategorien 'innerst' på tvers av alle bånd for å bekrefte at intet scenario står uten base-plagg."
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Fersken/hudtone-farge på plagget kan gi lav kontrast mot illustrert hud i påkledningsvisning; helsvart bakgrunn kan bryte med øvrig bildestil.",
+        "forslag": "Verifiser mot stilark; vurder transparent bakgrunn og en farge med tydeligere kontrast (f.eks. naturhvit ull-tone) hvis plagget vises lagvis på figur."
+      }
+    ]
+  }
+}

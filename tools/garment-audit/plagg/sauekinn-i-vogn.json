@@ -1,0 +1,124 @@
+{
+  "claude": {
+    "id": "sauekinn-i-vogn",
+    "dbString": "saueskinn i vogn",
+    "kategori": "ekstra-vogn",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett oppføring i garment-info.ts (linje 239-242) med både `what` og `when`. Dedikert `whyForGarment`-gren finnes (linje 471-473, `id === 'sauekinn-i-vogn'`) — ikke fallback. Tone/lengde matcher søsken-plagg i ekstra-vogn (dunteppe, varmepose, varmepose-dun). Faktisk RIKERE enn søsken: `when` legger til en sikkerhets-caveat for spedbarn <4 mnd (mykt underlag + kvelnings-risiko ved rulling) som ingen av de andre vogn-tilbehørs-plaggene har. Trekker 2 poeng fordi caveaten kun finnes i info-teksten og ikke speiles i selve seleksjons-logikken (se mål 3) — strukturelt er teksten god, men den lover en sikkerhetsbevissthet motoren ikke håndhever."
+    },
+    "utseende": {
+      "score": 16,
+      "pngExists": true,
+      "kommentar": "PNG finnes: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\sauekinn-i-vogn.png (også bygget til dist/). db-strengen 'saueskinn i vogn' er mappet i garment-illustrations.ts linje 84 til id 'sauekinn-i-vogn'. Mapping er internt konsistent: MAP-verdi → id → PNG-filnavn bruker alle samme streng, så oppslaget VIRKER. MEN det er en latent stavefeil: db-streng + brødtekst staver korrekt 'saueskinn' (dobbel-s), mens id/filnavn/MAP-verdi staver 'sauekinn' (mangler andre s). Funksjonelt ufarlig nå, men skjør — enhver fremtidig 'rett opp filnavnet'-refaktor vil brekke oppslaget. Kan ikke bedømme selve bildet; navne-plausibilitet er god."
+    },
+    "seleksjon": {
+      "score": 14,
+      "trace": "baseTable.vogn velger 'saueskinn i vogn' i 'ekstra'-laget i fire kuldebånd: kald (feels 0-4 °C, linje 52), frost (-7 til 0 °C, linje 58), streng_frost (-15 til -7 °C, linje 64) og ekstrem (<-15 °C, linje 70). IKKE valgt i tropisk/varm/mild/kjolig eller ekstrem_varme. Ingen modifier i modifiers.ts legger til eller fjerner saueskinn. Ingen conflict/softBlock/safety-regel matcher det: PRAM_COVER_RE og BLANKET_RE (safety.ts) treffer teppe/dunteppe/pledd — IKKE 'saueskinn' (det er et underlag, ikke et cover), så ingen hard block fanger det. SB-2 (maks lag) fjerner kun dunteppe/varmepose lett/tynt teppe, aldri saueskinn. Aktiviteten er låst til vogn — det vises aldri for soevn.",
+      "kilder": [
+        "https://www.cpsc.gov/Newsroom/News-Releases/1999/Recommendations-Revised-To-Prevent-Infant-Deaths-from-Soft-Bedding",
+        "https://safetosleep.nichd.nih.gov/reduce-risk/safe-sleep-environment",
+        "https://www.healthychildren.org/English/ages-stages/baby/sleep/Pages/Preventing-SIDS.aspx"
+      ],
+      "score_note": "ignorer",
+      "kommentar": "De 11 kildene i sources.ts dekker IKKE saueskinn-under-spedbarn spesifikt — derfor to web-søk. CPSC/NICHD/AAP er entydige: spedbarn skal aldri sove PÅ saueskinn; opptil 1/3 av myk-sengetøy-SIDS-dødsfall involverte saueskinn (suffokasjon + overoppheting). Motoren velger saueskinn i vogn i alle fire kuldebånd uten alders-gate eller sikkerhets-flagg, og babyer sover ofte i vogn. `when`-teksten har en delvis caveat (<4 mnd, rulling), men motoren håndhever den ikke og rulle-grensen er reelt ~4 mnd (canRoll-logikk i safety.ts HB-6) — risikoen gjelder også yngre liggende spedbarn ved myk, luft-blokkerende overflate. Trekker poeng for manglende håndhevd sikkerhetslag, ikke for at plagget finnes. NB: rør ikke terskler — dette er et funn med forslag, ikke en endring."
+    },
+    "tekstLogikk": {
+      "score": 22,
+      "kommentar": "Ingen temperatur-drift: `when` sier 'Vinterhalvåret — som underlag', og tracen bekrefter at plagget kun velges i kuldebåndene kald→ekstrem (≤4 °C). Konsistent. `whyForGarment`-grenen ('Saueskinn UNDER barnet i vognen varmer fra ryggsiden. Aldri legg det over som teppe.') stemmer med både `what` og funksjon, og 'aldri over som teppe' er korrekt SIDS-bevisst. Trekker 3 poeng: `whyForGarment`-grenen utelater den viktigste sikkerhets-nyansen som `what`/`when` faktisk nevner — at mykt underlag i seg selv kan være en kvelnings-/SIDS-risiko for de minste. Foreldre som ser 'hvorfor dette plagget' får kun varme-begrunnelsen, ikke spedbarns-forbeholdet. Ingen villedende drift, men en ufullstendig begrunnelse."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "Ingen oppføring i alternatives.ts for 'saueskinn i vogn'. Brand-DNA er ull-først, og saueskinn ER naturlig ull, så et fleece-/syntet-alternativ er ikke påkrevd av samme grunn som for ull-mellomlag. Et reelt alternativ kunne vært et fast, ikke-mykt vogn-liggeunderlag (sikrere for liggende spedbarn) eller ganske enkelt 'ingen saueskinn for de minste'. Mindre mangel — eksisterende fravær er forsvarlig for eldre barn, men et sikkerhets-orientert alternativ for <4-6 mnd ville hevet verdien."
+    },
+    "total": 78,
+    "verdikt": "GODKJENT MED FORBEHOLD. Plagget er strukturelt komplett, korrekt mappet, har dedikert why-gren og driver-fri temperatur-logikk (velges kun i kuldebånd kald→ekstrem i vogn). Hovedsvakheten er pediatrisk: motoren velger saueskinn i vogn uten et håndhevd sikkerhetslag mot saueskinn-under-spedbarn (CPSC/NICHD/AAP fraråder spedbarns-søvn på saueskinn). Caveaten finnes i info-teksten men ikke i selv-logikken, og why-grenen utelater den. Sekundært: latent stavefeil sauekinn/saueskinn i id/filnavn. Ingen tall/terskler er rørt — alle avvik er rapportert som funn med forslag.\"",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 3,
+        "beskrivelse": "Motoren velger 'saueskinn i vogn' i alle fire kuldebånd (kald/frost/streng_frost/ekstrem) i baseTable.vogn uten alders-gate eller håndhevd sikkerhets-flagg. Babyer sover ofte i vogn, og myke saueskinn-underlag er en dokumentert SIDS-/suffokasjons-risiko for spedbarn. Verken conflicts.ts, softBlocks.ts eller safety.ts har en regel som matcher 'saueskinn' (PRAM_COVER_RE/BLANKET_RE treffer kun teppe/dunteppe/pledd). `when`-teksten har en delvis caveat for <4 mnd, men den er kun tekst, ikke håndhevet.",
+        "forslag": "Vurder et soft-block/safety-flagg (uten å endre temperatur-terskler) som ved child.ageMonths under en aldersgrense, eller canRoll-status, enten fjerner saueskinn fra vogn-output eller hever en HIGH-note om at spedbarn ikke skal ligge/sove på saueskinn i vogn. Behold plagget for eldre barn.",
+        "kilde": "CPSC 1999 (soft bedding); NICHD Safe to Sleep; AAP HealthyChildren — https://www.cpsc.gov/Newsroom/News-Releases/1999/Recommendations-Revised-To-Prevent-Infant-Deaths-from-Soft-Bedding ; https://safetosleep.nichd.nih.gov/reduce-risk/safe-sleep-environment"
+      },
+      {
+        "severity": "medium",
+        "mal": 1,
+        "beskrivelse": "whyForGarment-grenen for sauekinn-i-vogn (garment-info.ts linje 471-473) gir kun varme-begrunnelsen ('varmer fra ryggsiden. Aldri legg det over som teppe.') og utelater spedbarns-sikkerhets-forbeholdet som `what`/`when` faktisk nevner. Foreldre som åpner 'hvorfor dette plagget' får ikke vite at mykt underlag kan være en kvelnings-risiko for de minste.",
+        "forslag": "Legg en kort sikkerhets-setning i why-grenen for de yngste alderstrinnene, f.eks. 'For de minste: bruk det som fast underlag, aldri til at barnet sover oppå alene' — speil caveaten som allerede står i `when`. Ingen tall-endring.",
+        "kilde": "AAP HealthyChildren — https://www.healthychildren.org/English/ages-stages/baby/sleep/Pages/Preventing-SIDS.aspx"
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Stavefeil i id/filnavn/MAP-verdi: db-streng og brødtekst staver korrekt 'saueskinn' (dobbel-s), mens id, PNG-filnavn og MAP-verdi staver 'sauekinn' (mangler andre s). Internt konsistent og fungerer i dag, men skjør — en fremtidig opprydding av filnavnet vil brekke garmentIdFor-oppslaget uten advarsel.",
+        "forslag": "Hvis det gjøres en samlet refaktor: rett id+filnavn+MAP-verdi til 'saueskinn-i-vogn' samtidig (alle tre må endres i samme commit). Ellers la det stå urørt — ikke endre kun ett av stedene.",
+        "kilde": "Intern konsistens (garment-illustrations.ts linje 84, garment-info.ts linje 239/471)"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen alternativ registrert i alternatives.ts. For eldre barn er fraværet forsvarlig (saueskinn er ull, brand-DNA er ull-først). For de yngste mangler det imidlertid et sikkerhets-alternativ (fast vogn-liggeunderlag fremfor mykt skinn).",
+        "forslag": "Vurder å legge inn et alternativ rettet mot de minste: fast/ikke-mykt vogn-underlag, koblet til samme aldersgrense som sikkerhets-funnet over. Lav prioritet.",
+        "kilde": "alternatives.ts (ingen oppføring for 'saueskinn i vogn')"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 15,
+      "kommentar": "What/når-feltene er konsise og dekker både bruk og forbehold, men strukturen er inkonsistent: whyForGarment utelater spedbarns-forbeholdet som what/when bærer, og id/filnavn ('sauekinn') avviker fra brødtekstens 'saueskinn'. Det siste er kosmetisk i UI, men kan gi vedlikeholds-bugs hvis noen senere skriver regex mot 'saueskinn' og forventer treff i id/MAP."
+    },
+    "utseende": {
+      "score": 18,
+      "kommentar": "Bildet viser umiskjennelig et lammeskinn/saueskinn i naturlig form (klassisk skinn-silhuett med buktende kant), kremfarget ull med troverdig tekstur. Stil-konsistent flat produktfremstilling på sort bakgrunn, ingen synlige AI-artefakter eller anatomiske feil. Eneste trekk: silhuetten kan leses som generisk skinnfell snarere enn et vogn-tilpasset skinn, men det er akseptabelt for illustrasjonsformål."
+    },
+    "seleksjon": {
+      "score": 11,
+      "kommentar": "Her er jeg strengere enn første analyse. Motoren velger saueskinn i ALLE fire kuldebånd uten alders-gate, og flagget 'vises aldri for soevn' gir falsk trygghet: spedbarn sover rutinemessig i vogn på dagtid (vognlur), så et 'våken-i-vogn'-kontekst-filter fanger ikke den reelle eksponeringen. Norsk og internasjonal SIDS-veiledning (fast/flatt underlag, unngå mykt underlag som skinnfeller for sovende spedbarn) gjør tekst-kun-forbeholdet utilstrekkelig for de yngste. Tradisjonell norsk vognbruk taler for at plagget skal finnes i appen, men seleksjon uten håndhevd alders-logikk for <4 mnd (ev. <12 mnd som strengere variant) er pediatrisk svakt. Som instruert rører jeg ikke terskler — dette er et forslag om gate, ikke endrede kuldebånd."
+    },
+    "tekstLogikk": {
+      "score": 16,
+      "kommentar": "«Vinterhalvåret» stemmer godt med de fire kuldebåndene (kald → ekstrem), og «underlag, ikke isolasjon over» er korrekt speilet i at PRAM_COVER_RE/BLANKET_RE bevisst ikke treffer saueskinn. Hovedbristen: når-teksten lover en forsiktighet («vær obs <4 mnd») som logikken ikke håndhever på noen måte — ingen modifier, softBlock eller alders-gate. Teksten beskriver dermed en app som er tryggere enn motoren faktisk er."
+    },
+    "alternativer": {
+      "score": 4,
+      "kommentar": "Ingen sikkerhets-alternativ tilbys for spedbarn (f.eks. fast vogn-liggeunderlag, ullpledd UNDER fast madrass, eller vognpose med fast bunn). Siden målgruppen starter på 0 mnd og forbeholdet selv peker på en risikogruppe, bør et alternativ være obligatorisk, ikke valgfritt — jeg vekter dette tyngre enn Claudes 'lav'."
+    },
+    "total": 64,
+    "verdikt": "Krever endringer før lansering: visuelt og tekstlig solid plagg, men seleksjonslogikken mangler håndhevd alders-gate for en dokumentert SIDS-/kvelningsrisiko som tekst-forbeholdet alene ikke avbøter.",
+    "uenig_med_claude": true,
+    "funn": [
+      {
+        "severity": "kritisk",
+        "mal": 3,
+        "beskrivelse": "Soevn-ekskluderingen dekker ikke vognlur: spedbrn sover de facto i vogn, og saueskinn velges i alle kuldebånd uten alders-gate. Claudes 'hoy' undervurderer at det eneste tekniske sikkerhetsnettet (soevn-flagget) er irrelevant for den vanligste risikosituasjonen.",
+        "forslag": "Innfør håndhevd alders-gate (softBlock eller hard gate) for alder < 4 mnd, vurder utvidelse til < 12 mnd i tråd med trygt-sovemiljø-veiledning; alternativt krev eksplisitt bekreftelse ('barnet er våkent og under tilsyn') før plagget vises for spedbarn."
+      },
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "Når-teksten lover et forbehold motoren ikke håndhever — appen fremstår tryggere enn den er. Dette er en tekst↔logikk-divergens, ikke bare et seleksjonsproblem.",
+        "forslag": "Synkroniser: enten håndhev forbeholdet i logikk (se funn 1), eller omformuler når-teksten så den ikke impliserer at appen selv filtrerer for alder."
+      },
+      {
+        "severity": "medium",
+        "mal": 1,
+        "beskrivelse": "whyForGarment utelater spedbarns-forbeholdet som what/when nevner — brukere som kun leser 'hvorfor' mister sikkerhetsinformasjonen.",
+        "forslag": "Legg én setning i whyForGarment: 'Som underlag, ikke over barnet — vær obs hos spedbarn under 4 mnd.'"
+      },
+      {
+        "severity": "medium",
+        "mal": 5,
+        "beskrivelse": "Mangler sikkerhets-alternativ for de yngste; gitt at risikogruppen er identifisert i egen tekst, er fraværet av alternativ mer enn 'lav'.",
+        "forslag": "Legg til alternativ-felt: 'For spedbarn < 4 mnd: fast vogn-liggeunderlag eller vognpose med fast bunn; saueskinn kan ev. ligge under den faste madrassen.'"
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Stavefeil-inkonsistens: id/PNG/MAP = 'sauekinn', brødtekst = 'saueskinn'. Ingen brukervendt effekt nå, men en latent kilde til regex-/oppslagsfeil.",
+        "forslag": "Behold id som stabil nøkkel hvis migrering er kostbar, men dokumenter avviket i MAP-kommentar — eller migrer til 'saueskinn-i-vogn' med alias."
+      }
+    ]
+  }
+}

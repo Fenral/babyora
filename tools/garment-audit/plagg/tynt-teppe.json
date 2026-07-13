@@ -1,0 +1,128 @@
+{
+  "claude": {
+    "id": "tynt-teppe",
+    "dbString": "tynt teppe",
+    "kategori": "ekstra-vogn",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Plagget har komplett what + when i garment-info.ts (linje 219-222) og en dedikert whyForGarment-gren (linje 456-458), ikke fallback. Tone/lengde matcher søsken-plagg i ekstra-vogn-kategorien (dunteppe, varmepose, saueskinn). Liten svakhet: i motsetning til dunteppe (what: 'Bruk aldri OVER kalesjen') og saueskinn ('Aldri som teppe over') mangler tynt-teppe enhver sikkerhets-formaning i what/when, til tross for at det er nettopp et teppe som legges i/over vogn og fjernes som varmefelle av HB-8. Trekker 2 poeng for manglende sikkerhets-tekst paritet med søsknene."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes på public/illustrations/garments/tynt-teppe.png. db-strengen 'tynt teppe' er korrekt mappet til id 'tynt-teppe' i garment-illustrations.ts linje 79, og garmentPng() vil bygge riktig sti. Filnavn/mapping er plausibelt og konsistent med kebab-case-konvensjonen for alle andre plagg. Visuell dom utsatt til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 9,
+      "kommentar": "Plagget er nesten dødt/uoppnåelig i praksis. Eneste base-seleksjon er vogn × tropisk (feels ≥22 °C). Ingen modifier legger det noen gang til. Men i NØYAKTIG dette båndet fjernes det av HB-8 hard safety (PRAM_COVER_RE matcher 'tynt teppe' og trigges når activity=vogn OG feelsLikeC>=22) som CRITICAL pram-cover/varmefelle, og av SB-2 (TYNT_TEPPE_RE) ved for mange lag. Det finnes til og med en test (engine.test.ts:117) som bekrefter at 24 °C-tilfellet fjernes. Resultatet: plagget genereres og slettes umiddelbart i hver tilstand det kan oppstå. Pediatrisk er fjerningen RIKTIG (LT-PRAM/Pediatrics-Pram: teppe over kalesje kan heve innetemp 4-15 °C på 60 min — SIDS-risiko), men seleksjons-laget er internt selvmotsigende: baseTable foreslår et plagg som sikkerhetslaget alltid forbyr i samme kontekst. Forholdet (lett tildekking i vogn ved varme) er ikke pediatrisk forsvarlig som faktisk anbefaling. Score reflekterer korrekt sikkerhets-utfall, men trekkes hardt for at base-tabellen i det hele tatt plasserer plagget i en tilstand det aldri kan overleve.",
+      "trace": "baseTable.vogn.tropisk (feels >=22 °C) → ekstra: ['solhatt','tynt teppe'] (tables.ts:27-30). Ingen modifier i modifiers.ts legger til eller fjerner 'tynt teppe' direkte. Pipeline: applyModifiers → applyConflicts (ingen regel rører tynt teppe med mindre sovepose/teppe-kombo, ikke relevant i vogn) → applySoftBlocks: SB-2 fjerner via TYNT_TEPPE_RE hvis lag-antall > maxLayersForFeels (6 ved feels>=16) → applySafety: HB-8 (PRAM_COVER_RE = /(dunteppe|tynt teppe|...)/i) fjerner ALLTID når activity='vogn' && feels>=22 med CRITICAL severity (safety.ts:55,229-248). Konklusjon: vogn × tropisk er den ENESTE seleksjons-tilstanden, og den er identisk med HB-8-fjernings-tilstanden → plagget er effektivt uoppnåelig.",
+      "kilder": [
+        "https://www.lullabytrust.org.uk/safer-sleep-advice/pram-safety/",
+        "https://pubmed.ncbi.nlm.nih.gov/?term=pram+cover+temperature+infant"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 12,
+      "kommentar": "Drift som villeder. when-teksten ('Varme dager i vogn — som lett tildekking') og whyForGarment ('Tynt teppe gir litt komfort i vogn uten å bygge varme på en mild dag') beskriver plagget som et legitimt, anbefalt valg ved varme/milde dager i vogn. Men de FAKTISKE forholdene fra trace viser at plagget kun selekteres ved feels ≥22 °C (vogn × tropisk) — og i nettopp det båndet fjerner HB-8 det som en CRITICAL varmefelle/pram-cover-risiko. Teksten lover altså 'lett tildekking i vogn på varme dager' samtidig som motoren forbyr tildekking i vogn på varme dager. To konkrete drift: (1) 'mild dag' i whyForGarment vs. faktisk band tropisk ≥22 °C (ikke mild — mild=10-16 °C i bandForTemp); (2) 'tildekking i vogn' som råd står i direkte motstrid til HB-8/notes.stroller.noBlanket ('Aldri teppe over kalesjen — det blir en varmefelle'). En forelder som leser detalj-teksten kan tro at det er trygt å legge teppe over barnet i vogn på en varm dag. Dette er severity hoy — villedende påkledning med SIDS-relevans."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "tynt-teppe har ingen oppføring i alternatives.ts. Et naturlig tykkelse-trinn-alternativ ville vært dunteppe (tynt↔tykt teppe), men dunteppe er selv sikkerhetsbegrenset (CK-5 fjerner det vs varmepose; what sier 'Bruk aldri OVER kalesjen'), så å tilby det som alternativ ville forsterke samme varmefelle-problem. Et tryggere reelt alternativ er varmepose lett / fotmuff (lukket isolasjon som ikke kan gli over ansiktet — den faktiske trygge erstatningen for løst teppe i vogn). Siden plagget i praksis uansett fjernes av HB-8, er mangelen på alternativ av lav konsekvens, men ett 'varmepose lett'-alternativ med whyPrimary om hvorfor lukket fotmuff er tryggere enn løst teppe ville gitt foreldre riktig signal. Trekker 2 poeng for manglende trygt alternativ-pek."
+    },
+    "total": 67,
+    "verdikt": "Plagget er teknisk velformet (struktur, PNG, mapping alle solide), men har en kritisk intern selvmotsigelse i seleksjons-/sikkerhets-laget: baseTable plasserer 'tynt teppe' i vogn × tropisk (≥22 °C), den eneste tilstanden der det velges — men HB-8 hard safety fjerner det ALLTID i nettopp det båndet som en CRITICAL pram-cover/varmefelle. Plagget er dermed effektivt uoppnåelig, og when/whyForGarment-teksten villeder ved å anbefale 'tildekking i vogn på varme/milde dager' i direkte motstrid til motorens egen SIDS-regel. Pediatrisk er fjerningen riktig; problemet er at base-tabellen og detalj-teksten ikke er samkjørt med safety. Anbefalt opprydding (uten å røre terskler): enten fjern 'tynt teppe' fra baseTable.vogn.tropisk slik at base og safety ikke motsier hverandre, eller omformuler when/why til å fraråde teppe over kalesjen og pek mot lukket fotmuff/varmepose lett.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "Tekst ↔ logikk-drift med SIDS-relevans: when ('Varme dager i vogn — som lett tildekking') og whyForGarment ('komfort i vogn uten å bygge varme på en mild dag') anbefaler teppe-tildekking i vogn, men motoren selekterer plagget kun ved feels ≥22 °C (vogn × tropisk) og fjerner det der ALLTID via HB-8 som CRITICAL varmefelle. Teksten kan få forelder til å tro det er trygt å legge teppe over barnet i vogn på varme dager — stikk i strid med notes.stroller.noBlanket og HB-8.",
+        "forslag": "Omformuler when/whyForGarment til å fraråde teppe over/i lukket kalesje på varme dager og presisere at det kun er aktuelt som lett underlag/komfort utenfor varmefelle-situasjoner; legg til samme sikkerhets-formaning som dunteppe/saueskinn har ('aldri over kalesjen'). Endre IKKE temperatur-terskler.",
+        "kilde": "LT-PRAM (Lullaby Trust — Don't cover the pram); Pediatrics-Pram. Se også safety.ts HB-8 (linje 229-248) og notes.stroller.noBlanket i modifiers.ts (linje 257)."
+      },
+      {
+        "severity": "hoy",
+        "mal": 3,
+        "beskrivelse": "Seleksjons-selvmotsigelse / dødt plagg: baseTable.vogn.tropisk (tables.ts:29) er den eneste tilstanden 'tynt teppe' velges (feels ≥22 °C), men HB-8 (PRAM_COVER_RE, safety.ts:55) fjerner det i nøyaktig samme tilstand (activity=vogn && feels≥22). Plagget genereres og slettes umiddelbart i hvert mulig tilfelle — effektivt uoppnåelig. Eksisterende test engine.test.ts:117 bekrefter fjerningen ved 24 °C.",
+        "forslag": "Fjern 'tynt teppe' fra baseTable.vogn.tropisk slik at base-anbefalingen ikke foreslår et plagg som hard safety alltid forbyr i samme kontekst — eller flytt det til en kontekst der HB-8 ikke trigges (f.eks. ikke-vogn). Ikke endre HB-8-terskelen (22 °C er pediatrisk korrekt).",
+        "kilde": "Intern konsistens: tables.ts:27-30 vs safety.ts:229-248; LT-PRAM / Pediatrics-Pram for at fjerningen er medisinsk korrekt."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Mangler trygt alternativ i alternatives.ts. tynt-teppe har ingen alternativ-oppføring; et lukket varmepose lett / fotmuff er den pediatrisk tryggere erstatningen for løst teppe i vogn (kan ikke gli over ansiktet), men dette pekes ikke ut for foreldre.",
+        "forslag": "Vurder å legge til ITEM_ALTERNATIVES-oppføring for 'tynt teppe' som peker mot 'varmepose lett' med whyPrimary om hvorfor lukket fotmuff er tryggere enn løst teppe i vogn. Lav prioritet siden plagget uansett er sikkerhets-begrenset.",
+        "kilde": "AAP-HC / LT-PRAM (lukket isolasjon foretrukket over løse pledd i vogn)."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Strukturell paritet: i motsetning til søsken-plaggene dunteppe ('Bruk aldri OVER kalesjen') og saueskinn ('Aldri som teppe over') mangler tynt-teppe enhver sikkerhets-formaning i what/when, selv om det er det plagget HB-8 eksplisitt fjerner som varmefelle.",
+        "forslag": "Legg til kort sikkerhets-formaning i what-teksten på linje med søsknene (f.eks. 'Legges aldri over kalesjen').",
+        "kilde": "Intern stil-konsistens med dunteppe/saueskinn i garment-info.ts (linje 224, 240-241)."
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 14,
+      "kommentar": "Plagget følger skjemaet (id, kategori, what/when, oppføring i baseTable, dekning i HB-8-regex og test). Men strukturen mangler sikkerhetsfelt/-formaning som søsknene dunteppe og saueskinn har, og det finnes ingen markering av at plagget er i en 'død' tilstand — ingen lint/invariant som fanger at seleksjonsmengden ⊆ fjerningsmengden. Strukturelt komplett på overflaten, men inkonsistent med søskenplaggene og uten vern mot logisk selvmotsigelse."
+    },
+    "utseende": {
+      "score": 18,
+      "kommentar": "Bildet viser korrekt plagg: et tynt, sammenbrettet teppe i kremfarget bomull/muslin med synlig krepp-tekstur og kantbånd — matcher 'tynt bomulls- eller muslin-teppe' godt. Ren studio-stil på sort bakgrunn, myk og konsistent lyssetting, ingen synlige AI-artefakter i kanter eller tekstur. Lite trekk: brettet form gjør tynnheten mindre åpenbar enn et delvis utbrettet/transparent drapert teppe ville gjort, og fargen ligger nær 'dunteppe'-territorium uten skala-referanse."
+    },
+    "seleksjon": {
+      "score": 7,
+      "kommentar": "Netto-atferden er pediatrisk trygg — barnet får aldri teppet ved ≥22 °C fordi HB-8 fjerner det med CRITICAL — men det er trygt ved et uhell, ikke ved design. baseTable.vogn.tropisk LEGGER AKTIVT TIL et teppe i tropisk varme, som er pediatrisk feil retning (overopphetings-/SIDS-risiko øker med tildekking i varme; tildekking av vogn reduserer dessuten luftsirkulasjon). At sikkerhetslaget må annullere grunntabellen 100 % av tiden betyr at grunntabellen koder feil medisinsk intuisjon. Forsvar-i-dybden fungerer, men selve seleksjonskilden er defekt. Jeg utfordrer Claudes implisitte ramme: dette er ikke primært et 'dødt plagg'-problem (mål 3 teknisk), det er at baseTable selv anbefaler noe utrygt."
+    },
+    "tekstLogikk": {
+      "score": 3,
+      "kommentar": "Verste mulige drift: 'Når: Varme dager i vogn — som lett tildekking' anbefaler eksplisitt praksisen motoren klassifiserer som CRITICAL varmefelle, og motsier notes.stroller.noBlanket direkte. Viktigere enn driften i seg selv: app-teksten er synlig for foreldre uavhengig av om motoren noen gang velger plagget — teksten alene gir et frittstående, potensielt farlig råd ('lett tildekking' av vogn på varme dager strider mot etablert veiledning om at vogn ikke skal dekkes til, heller ikke med tynt stoff, pga. varmeoppbygging og redusert lufting). Dette er ikke bare inkonsistens, det er aktivt feilrådgivende tekst."
+    },
+    "alternativer": {
+      "score": 2,
+      "kommentar": "Ingen trygge alternativer tilbys for behovet teksten later som den dekker. Claudes forslag (lukket varmepose lett / fotmuff) treffer delvis, men er feil temperaturregime — ved feels ≥22 °C er det riktige alternativet typisk INGEN ekstra tildekking pluss skygge via solskjerm/parasoll (ikke tøy over kalesjen), eventuelt tynn ulldress kun ved lavere temperaturer. Appen mangler både alternativ-plagg og en eksplisitt 'ingenting er riktig her'-melding, som er den pediatrisk korrekte anbefalingen i denne tilstanden."
+    },
+    "total": 44,
+    "verdikt": "Underkjent — krever omarbeiding før plagget kan stå i appen. Bildet er bra og strukturen formelt på plass, men plagget er logisk uoppnåelig, grunntabellen koder en utrygg anbefaling som sikkerhetslaget må kansellere hver gang, og app-teksten gir et frittstående råd som strider mot SIDS-/overopphetingsveiledning.",
+    "uenig_med_claude": "Ja, på to punkter. (1) 67/100 er for høyt: når eneste seleksjons-tilstand er utrygg-og-annullert OG teksten aktivt anbefaler praksisen sikkerhetslaget blokkerer, kan ikke mål 3 og 4 til sammen bære mer enn ~10 av 50. (2) Claudes [hoy/mål4] bør oppgraderes til kritisk: teksten leses av foreldre uavhengig av motorens seleksjon, så feilrådet ('lett tildekking' av vogn i varme) eksisterer i produktet selv om plagget aldri genereres. Jeg er derimot enig i at terskler/tall ikke skal røres — fiksen ligger i baseTable-innholdet og teksten, ikke i HB-8. Delvis uenig i [lav/mål5]-forslaget: varmepose/fotmuff er feil substitutt i tropisk regime; riktig alternativ er skygge uten tildekking.",
+    "funn": [
+      {
+        "severity": "kritisk",
+        "mal": 4,
+        "beskrivelse": "App-teksten ('Varme dager i vogn — som lett tildekking') anbefaler eksplisitt tildekking av vogn i varme, i strid med HB-8, notes.stroller.noBlanket og pediatrisk veiledning om overoppheting/redusert lufting. Teksten er synlig for brukere uavhengig av motorens seleksjon og utgjør dermed et frittstående feilråd.",
+        "forslag": "Skriv om when/whyForGarment til kjølige/milde forhold (f.eks. som lag over bena i mild temperatur, aldri over kalesjen, aldri over ansiktshøyde) og legg til samme sikkerhetsformaning som dunteppe/saueskinn har."
+      },
+      {
+        "severity": "hoy",
+        "mal": 3,
+        "beskrivelse": "baseTable.vogn.tropisk legger aktivt til 'tynt teppe' ved feels ≥22 °C — pediatrisk feil retning. At HB-8 alltid annullerer det gjør netto-atferd trygg, men grunntabellen koder utrygg intuisjon og er eneste kilde til plagget → effektivt dødt plagg (bekreftet av engine.test.ts:117).",
+        "forslag": "Fjern 'tynt teppe' fra vogn×tropisk i tables.ts og gi plagget en legitim seleksjons-tilstand (f.eks. vogn ved mildere feels-bånd) der HB-8 ikke trigges. Ingen terskler endres — kun tabellinnhold."
+      },
+      {
+        "severity": "medium",
+        "mal": 1,
+        "beskrivelse": "Ingen invariant/test fanger at et plaggs samlede seleksjonsmengde er en delmengde av en safety-regels fjerningsmengde; testen på linje 117 bekrefter fjerning, men ingen test krever at plagget er oppnåelig i minst én tilstand.",
+        "forslag": "Legg til en 'reachability'-test som itererer alle plagg × alle base-tilstander og feiler hvis et plagg aldri overlever safety-laget."
+      },
+      {
+        "severity": "medium",
+        "mal": 5,
+        "beskrivelse": "Ingen trygge alternativer presenteres for vogn×tropisk-behovet; Claudes forslag (varmepose/fotmuff) er feil temperaturregime og kan selv bidra til varme.",
+        "forslag": "Vis i stedet en eksplisitt 'ingen ekstra tildekking'-melding for vogn i varme, med skygge via solskjerm/parasoll (ikke tøy over kalesjen) og solhatt som de anbefalte tiltakene."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Mangler sikkerhetsformaning i what/when, i motsetning til søskenplaggene dunteppe og saueskinn — inkonsistent struktur på tvers av ekstra-vogn-kategorien.",
+        "forslag": "Standardiser et obligatorisk safetyNote-felt for alle plagg i kategorier som berøres av PRAM_COVER_RE."
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Bildet er korrekt og artefaktfritt, men sammenbrettet presentasjon kommuniserer 'tynt' dårlig og ligger fargemessig nær dunteppe — risiko for forveksling i app-grid.",
+        "forslag": "Vurder re-fotografering/re-generering med teppet delvis draperet slik at gjennomskinnelighet/tynnhet er synlig, eller tydeligere fargeseparasjon fra dunteppe."
+      }
+    ]
+  }
+}

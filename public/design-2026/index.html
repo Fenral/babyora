@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Babyora — 10 design-mocks (F76)</title>
+  <style>
+    :root {
+      --bg: #f3efe9;
+      --bg-soft: #ece6dd;
+      --card: #fbf8f3;
+      --ink: #1c1a17;
+      --ink-soft: #4a443c;
+      --ink-mute: #7a7268;
+      --hair: #d8d0c3;
+      --accent: #2b2622;
+      --focus: #b54a1c;
+      --radius: 14px;
+      --shadow: 0 1px 2px rgba(28,26,23,.04), 0 8px 24px rgba(28,26,23,.06);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Inter", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* skip link */
+    .skip {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      background: var(--ink);
+      color: var(--bg);
+      padding: .75rem 1rem;
+      border-radius: 0 0 8px 0;
+      z-index: 100;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .skip:focus { left: 0; outline: 3px solid var(--focus); outline-offset: 2px; }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: clamp(2rem, 5vw, 4rem) clamp(1.25rem, 4vw, 3rem) 6rem;
+    }
+
+    header.intro {
+      border-bottom: 1px solid var(--hair);
+      padding-bottom: 2rem;
+      margin-bottom: 2.5rem;
+    }
+    .eyebrow {
+      font-size: .78rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin: 0 0 1rem;
+      font-weight: 600;
+    }
+    h1 {
+      font-size: clamp(1.75rem, 4vw, 2.6rem);
+      line-height: 1.1;
+      letter-spacing: -.02em;
+      margin: 0 0 1rem;
+      font-weight: 700;
+    }
+    .lede {
+      max-width: 56ch;
+      color: var(--ink-soft);
+      font-size: 1.05rem;
+      margin: 0;
+    }
+    .lede strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+      font-size: .85rem;
+      color: var(--ink-mute);
+    }
+    .meta span { display: inline-flex; align-items: center; gap: .4rem; }
+    .meta b { color: var(--ink); font-weight: 600; }
+
+    /* grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.75rem;
+    }
+    @media (max-width: 760px) {
+      .grid { grid-template-columns: 1fr; gap: 1.25rem; }
+    }
+
+    article.card {
+      background: var(--card);
+      border: 1px solid var(--hair);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+    article.card:hover,
+    article.card:focus-within {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: #c4b9a7;
+    }
+
+    .preview {
+      position: relative;
+      background: var(--bg-soft);
+      border-bottom: 1px solid var(--hair);
+      /* aspect for 320x640 scaled to 0.5 = 160x320; we let it scale but keep ratio */
+      aspect-ratio: 160 / 320;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .preview-frame {
+      width: 320px;
+      height: 640px;
+      border: 0;
+      transform: scale(0.5);
+      transform-origin: top left;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      margin-left: -80px; /* center the scaled 160px width */
+      background: #fff;
+      pointer-events: none;
+    }
+    /* obscure tag */
+    .ribbon {
+      position: absolute;
+      top: .75rem;
+      left: .75rem;
+      background: var(--ink);
+      color: var(--bg);
+      font-size: .65rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-weight: 600;
+      padding: .3rem .55rem;
+      border-radius: 999px;
+      z-index: 2;
+    }
+    .index {
+      position: absolute;
+      top: .75rem;
+      right: .75rem;
+      background: var(--card);
+      color: var(--ink-soft);
+      font-size: .7rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      padding: .3rem .55rem;
+      border-radius: 6px;
+      border: 1px solid var(--hair);
+      z-index: 2;
+    }
+
+    .body {
+      padding: 1.25rem 1.25rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+      flex: 1;
+    }
+    .name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -.01em;
+      margin: 0;
+      color: var(--ink);
+    }
+    .dna {
+      font-size: .92rem;
+      color: var(--ink-soft);
+      margin: 0;
+      line-height: 1.45;
+    }
+    .actions {
+      margin-top: .6rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .open {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-weight: 600;
+      font-size: .92rem;
+      color: var(--ink);
+      text-decoration: none;
+      border-bottom: 1px solid var(--ink);
+      padding-bottom: 2px;
+      transition: color .2s ease, border-color .2s ease, gap .2s ease;
+    }
+    .open:hover,
+    .open:focus-visible {
+      color: var(--focus);
+      border-color: var(--focus);
+      gap: .6rem;
+    }
+    .open svg { width: 14px; height: 14px; }
+    .id-tag {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: .72rem;
+      color: var(--ink-mute);
+      letter-spacing: .02em;
+    }
+
+    footer.foot {
+      margin-top: 4rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--hair);
+      font-size: .82rem;
+      color: var(--ink-mute);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#mocks">Hopp til mock-galleri</a>
+
+  <main class="page">
+    <header class="intro">
+      <p class="eyebrow">Designsesjon F76</p>
+      <h1>Babyora — 10 design-mocks</h1>
+      <p class="lede">
+        Ti parallelle retninger for samme app-skjerm. Syv er forankret i etablerte
+        produkt-idiomer (glass, hairlines, instrument-data, editorial foto). <strong>Tre er
+        bevisst obskure</strong> — risograf-print, generativ Swiss-grid og nordisk hush —
+        for å bryte AI-default og finne uventede vinnere.
+      </p>
+      <p class="meta" aria-label="Sammendrag">
+        <span><b>10</b> mocks</span>
+        <span><b>7</b> kjente idiomer</span>
+        <span><b>3</b> obskure retninger</span>
+        <span>Viewport <b>320 × 640</b></span>
+      </p>
+    </header>
+
+    <section id="mocks" aria-label="Mock-galleri">
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <footer class="foot">
+      <span>Babyora · intern design-eksplorasjon · F76</span>
+      <span>Klikk «Åpne i full skjerm» for å se hver mock i sin egen kontekst.</span>
+    </footer>
+  </main>
+
+  <script>
+    const styles = [
+      { id: 'v1-tactile-glass',       name: 'Tactile Glass',        dna: 'iOS 16–26 glass-morphism done right — frosted cards, sparse, intentional.', obscure: false },
+      { id: 'v2-things-zen',          name: 'Things Zen',           dna: 'Ultra-clean. Hairlines for separators. Negative space bærer hierarkiet.',   obscure: false },
+      { id: 'v3-carrot-illustrative', name: 'Carrot Quirky',        dna: 'Sterk illustrert karakter. Værdata levert med personlighet — varm, ikke kynisk.', obscure: false },
+      { id: 'v4-notion-blocks',       name: 'Notion Blocks',        dna: 'Blokk-basert komposisjon. Drag-feel selv uten interaksjon. Mixed-density rader.', obscure: false },
+      { id: 'v5-aesop-luxury',        name: 'Aesop Luxury',         dna: 'Spa-grade restraint. Varme nøytrale. Editorial spacing. Avatar som skulptur.', obscure: false },
+      { id: 'v6-data-instrument',     name: 'Data Instrument',      dna: 'TrackMan/Garmin-influens. Tall først. Charts integrert. Data-first.',       obscure: false },
+      { id: 'v7-warm-photo-led',      name: 'Warm Photo-led',       dna: 'Stort foto-hero av baby/plagg. Resten av UI er underordnet.',               obscure: false },
+      { id: 'v8-risograph-dualtone',  name: 'Risograph Dual-tone',  dna: 'Riso-print: dual-tone (lilla + fluor-oransje), ink-bleed kanter, grain.',    obscure: true  },
+      { id: 'v9-nordic-hush',         name: 'Nordic Hush',          dna: 'Norsk stillhet. Tomt fjord-rom. Enkeltelementer flyter i massiv negativ.',  obscure: true  },
+      { id: 'v10-generative-grid',    name: 'Generative Grid',      dna: 'Modulære geometriske blokker som komponerer seg selv. Swiss/Dutch programmatic.', obscure: true  },
+    ];
+
+    const grid = document.getElementById('grid');
+    const frag = document.createDocumentFragment();
+
+    styles.forEach((s, i) => {
+      const article = document.createElement('article');
+      article.className = 'card';
+      article.setAttribute('aria-labelledby', `name-${s.id}`);
+
+      const num = String(i + 1).padStart(2, '0');
+      const ribbon = s.obscure
+        ? '<span class="ribbon" aria-label="Obskur retning">Obskur</span>'
+        : '';
+
+      article.innerHTML = `
+        <div class="preview" aria-hidden="true">
+          ${ribbon}
+          <span class="index">${num} / 10</span>
+          <iframe
+            class="preview-frame"
+            src="./${s.id}/index.html"
+            title="Preview: ${s.name}"
+            loading="lazy"
+            tabindex="-1"
+            aria-hidden="true"
+            sandbox="allow-same-origin allow-scripts"
+          ></iframe>
+        </div>
+        <div class="body">
+          <h2 class="name" id="name-${s.id}">${s.name}</h2>
+          <p class="dna">${s.dna}</p>
+          <div class="actions">
+            <a
+              class="open"
+              href="./${s.id}/index.html"
+              aria-label="Åpne ${s.name} i full skjerm"
+              target="_blank"
+              rel="noopener"
+            >
+              Åpne i full skjerm
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+            </a>
+            <span class="id-tag">${s.id}</span>
+          </div>
+        </div>
+      `;
+      frag.appendChild(article);
+    });
+
+    grid.appendChild(frag);
+  </script>
+</body>
+</html>

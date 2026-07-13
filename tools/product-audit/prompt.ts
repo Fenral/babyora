@@ -1,0 +1,17 @@
+﻿import { readFileSync } from 'node:fs';
+import { PAGE_CATALOG, RUBRIC, RUBRIC_VERSION } from './config';
+import type { CaptureManifest } from './types';
+
+const productContext = readFileSync(new URL('./product-context.md', import.meta.url), 'utf8');
+const referencePrinciples = readFileSync(new URL('./reference-principles.md', import.meta.url), 'utf8');
+
+export function buildAnalysisPrompt({ manifest }: { manifest: CaptureManifest }): string {
+  const captures = manifest.captures.length
+    ? manifest.captures.map((capture) => `- ${capture.pageId}/${capture.stateId}: ${capture.file ?? 'CAPTURE_FAILED'} (${capture.status})`).join('\n')
+    : '- Ingen skjermbilder i manifestet ennÃ¥. Ikke finn pÃ¥ visuelle observasjoner.';
+  const rubric = RUBRIC.map((item) => `- ${item.id}: ${item.weight}% â€” ${item.question}`).join('\n');
+  const roles = PAGE_CATALOG.map((page) => `- ${page.id} (${page.label}, appvekt ${page.appWeight}%): ${page.role}`).join('\n');
+
+  return `# Babyora â€” produktreise-audit\n\nDu er en kritisk senior produktdesigner og produktstrateg. Analyser vedlagte skjermbilder som en sammenhengende mobil produktreise for norske smÃ¥barnsforeldre.\n\nProduktprinsipp: **Gratis = i dag hjemme. Plus = fremover, overalt og sammen med familien.**\n\nDe vedlagte Mobbin- og UX Peak-prinsippene er **inspirasjon, ikke fasit**. KjÃ¸psvilje er en **ekspertinferens**, ikke mÃ¥lt konvertering. Skill alltid mellom rendered fact, repository fact, inference og uncertainty.\n\n${productContext}\n\n${referencePrinciples}\n\n## Rubrikk ${RUBRIC_VERSION}\n${rubric}\n\n## Sider og kommersiell rolle\n${roles}\n\n## Skjermbilder\n${captures}\n\n## Krav\n- Vurder alle sider med gyldig capture. Ikke belÃ¸nn kosmetikk som skjuler manglende eller motstridende funksjon.\n- Gi heltall 1â€“100 for hver dimensjon.\n- Gi nÃ¸yaktig 1â€“3 dokumenterte styrker og maksimalt 3 prioriterte problemer per side.\n- Hvert problem mÃ¥ ha severity, evidence, evidenceType, impact og recommendation.\n- UnngÃ¥ generiske rÃ¥d som Â«bedre spacingÂ» uten Ã¥ navngi element, forhold og Ã¸nsket effekt.\n- Ikke foreslÃ¥ fake urgency, manipulerende tapsbudskap eller Ã¥ svekke gratisrÃ¥det.\n- Vurder fargepalettens semantikk, temperaturbakgrunn, enhÃ¥ndsbruk, tillit og kjÃ¸psbidrag.\n\n## OUTPUT_JSON_ONLY\nReturner kun gyldig JSON uten markdown-gjerde med denne formen:\n{\n  "rubricVersion": "${RUBRIC_VERSION}",\n  "productDiagnosis": "3â€“5 setninger",\n  "primaryPurchaseBlocker": "Ã©n konkret hovedbarriere",\n  "crossScreenFindings": [\n    { "title": "...", "detail": "...", "evidence": "...", "evidenceType": "rendered|repository|inference|uncertainty", "severity": "critical|high|medium|low", "impact": "...", "recommendation": "..." }\n  ],\n  "pages": [\n    {\n      "pageId": "home",\n      "dimensionScores": { "taskClarity": 1, "navigationInteraction": 1, "visualCraft": 1, "colorTemperature": 1, "copyTrust": 1, "productValue": 1, "accessibilityRobustness": 1 },\n      "strengths": [{ "title": "...", "detail": "...", "evidence": "...", "evidenceType": "rendered|repository|inference|uncertainty" }],\n      "issues": [{ "title": "...", "detail": "...", "evidence": "...", "evidenceType": "rendered|repository|inference|uncertainty", "severity": "critical|high|medium|low", "impact": "...", "recommendation": "..." }],\n      "commercialDiagnosis": "hvordan siden pÃ¥virker verdi, retention eller betaling",\n      "confidence": "high|medium|low",\n      "confidenceReason": "..."\n    }\n  ]\n}\n`;
+}
+

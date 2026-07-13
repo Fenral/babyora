@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    @keyframes pkFloat { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-5px) } }
+    @keyframes hapRing { 0%{ transform:translate(-50%,-50%) scale(.34); opacity:.6 } 100%{ transform:translate(-50%,-50%) scale(1); opacity:0 } }
+    @keyframes hapToast { 0%{ opacity:0; transform:translate(-50%,6px) } 100%{ opacity:1; transform:translate(-50%,0) } }
+    .g-chev{ transition:transform 100ms ease; }
+    .g-row:active .g-chev{ transform:translateX(2px); }
+    .ws{ scrollbar-width:none; }
+    .ws::-webkit-scrollbar{ display:none; }
+  </style>
+</helmet>
+<div ref="{{ rootRef }}" style="min-width:100%; width:max-content; min-height:100vh; position:relative; box-sizing:border-box; padding:56px; background:#DBD8D2; font-family:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;">
+
+  <div style="margin-bottom:30px;">
+    <div style="font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:#8A8079;">Påkledningsapp · arbeidsflyt</div>
+    <div style="font-size:26px; font-weight:700; letter-spacing:-.4px; color:#2B2B2B; margin-top:8px;">Hele appen · hovedflyt + Guide</div>
+    <div style="font-size:14px; font-weight:500; color:#6E645D; margin-top:8px; max-width:680px; text-wrap:pretty;">Trykk hvor som helst i skjermene — hver handling gir et taktilt signal. Styrken følger viktigheten: valg er svakest, fullført sterkest.</div>
+    <div style="display:flex; align-items:center; gap:20px; margin-top:16px; flex-wrap:wrap;">
+      <span style="font-size:11px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:#A89E97;">Nivåer</span>
+      <sc-for list="{{ legend }}" as="t" hint-placeholder-count="4">
+        <div style="{{ t.wrap }}"><span style="{{ t.dot }}"></span><span style="{{ t.label }}">{{ t.name }}</span></div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:32px; align-items:flex-start;">
+
+    <div style="flex:none; width:402px; display:flex; flex-direction:column; gap:14px;">
+      <div style="font-size:13px; font-weight:600; color:#5A514C; padding-left:2px;">1 · Forside (Hjem)</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="false" hint-size="402px,874px">
+        <div style="position:relative; height:100%; width:100%; overflow:hidden; box-sizing:border-box; display:flex; flex-direction:column; padding:56px 22px 26px; font-family:'Schibsted Grotesk',sans-serif; color:#2B2B2B; background:linear-gradient(180deg,rgb(199,214,225) 0%,rgb(222,225,221) 45%,rgb(233,225,214) 100%);">
+          <div style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 46% at 50% -8%, rgba(255,255,255,.5), rgba(255,255,255,0) 60%);"></div>
+          <div style="position:relative; z-index:3; flex:none; display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:7px; padding:9px 14px; border-radius:13px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.05); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);"><span style="width:6px; height:6px; border-radius:50%; background:#C0632F;"></span><span style="font-size:13.5px; font-weight:600;">Elverum</span></div>
+            <div data-hap="1" style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.05); display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2B2B2B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg></div>
+          </div>
+          <div style="position:relative; z-index:3; flex:none; display:flex; flex-direction:column; align-items:center; margin-top:18px;">
+            <div style="font-size:12px; font-weight:600; letter-spacing:2.6px; text-transform:uppercase; color:rgba(43,43,43,.4);">Akkurat nå</div>
+            <div style="display:inline-flex; align-items:flex-start; font-size:96px; font-weight:600; line-height:1; letter-spacing:-3px; margin-top:6px; font-variant-numeric:tabular-nums;"><span>−4</span><span style="color:rgba(43,43,43,.4); font-weight:500;">°</span></div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:4px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C7A24E" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.3"></circle><path d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"></path></svg><span style="font-size:19px; font-weight:600; letter-spacing:-.2px;">Klarvær</span></div>
+          </div>
+          <div style="position:relative; z-index:3; flex:none; margin-top:18px; display:flex; border-radius:18px; background:rgba(255,255,255,.62); border:1px solid rgba(255,255,255,.5); box-shadow:0 1px 2px rgba(43,37,34,.04),0 6px 16px rgba(43,37,34,.06); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); overflow:hidden;">
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:13px 6px;"><span style="font-size:10.5px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:rgba(43,43,43,.42);">Føles</span><span style="font-size:17px; font-weight:600; letter-spacing:-.2px;">−5°</span></div>
+            <div style="width:1px; background:rgba(43,43,43,.08); margin:11px 0;"></div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:13px 6px;"><span style="font-size:10.5px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:rgba(43,43,43,.42);">Vind</span><span style="font-size:17px; font-weight:600; letter-spacing:-.2px;">2 m/s</span></div>
+            <div style="width:1px; background:rgba(43,43,43,.08); margin:11px 0;"></div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:13px 6px;"><span style="font-size:10.5px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:rgba(43,43,43,.42);">Fukt</span><span style="font-size:17px; font-weight:600; letter-spacing:-.2px;">78%</span></div>
+          </div>
+          <div data-hap="1" style="position:relative; z-index:3; flex:none; display:flex; margin-top:12px; padding:4px; border-radius:13px; background:rgba(43,37,34,.06);">
+            <div style="flex:1; text-align:center; padding:10px 0; border-radius:10px; background:#FFF; color:#2B2B2B; font-weight:600; font-size:14px; box-shadow:0 1px 3px rgba(43,43,43,.1);">Utenfor vogn</div>
+            <div style="flex:1; text-align:center; padding:10px 0; border-radius:10px; color:rgba(43,43,43,.45); font-weight:600; font-size:14px;">I vogn</div>
+          </div>
+          <div style="position:relative; z-index:2; flex:1; min-height:0; display:flex; align-items:center; justify-content:center;">
+            <div style="position:relative; width:230px; height:230px;">
+              <div style="position:absolute; left:50%; top:54%; width:280px; height:120px; transform:translate(-50%,-50%); border-radius:50%; background:radial-gradient(closest-side at 50% 58%, rgba(255,255,255,.72), rgba(255,255,255,0) 72%);"></div>
+              <div style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); width:186px; height:28px; border-radius:50%; background:rgba(96,90,80,.16); filter:blur(12px);"></div>
+              <div style="position:absolute; bottom:24px; left:50%; transform:translateX(-50%); animation:pkFloat 6.5s ease-in-out infinite;"><div style="width:200px; height:200px; background-image:url(uploads/avatar-A6.png); background-size:contain; background-repeat:no-repeat; background-position:center bottom; filter:drop-shadow(0px 16px 20px rgba(74,68,58,.22));"></div></div>
+            </div>
+          </div>
+          <button class="g-row" data-hap="3" style="position:relative; z-index:3; flex:none; display:flex; align-items:center; justify-content:center; gap:10px; width:100%; box-sizing:border-box; padding:17px 24px; border-radius:18px; border:none; cursor:pointer; background:linear-gradient(140deg,#C0632F 0%,#A9492A 100%); box-shadow:0 1px 2px rgba(43,43,43,.06),0 10px 22px rgba(169,73,42,.26); transition:transform 100ms ease; font-family:'Schibsted Grotesk',sans-serif;" style-active="transform:scale(.98)"><span style="font-size:16px; font-weight:600; color:#FFF; letter-spacing:.1px;">Se påkledning</span><svg class="g-chev" width="22" height="13" viewBox="0 0 26 14" fill="none" stroke="#FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20"></path><path d="M17 2l5 5-5 5"></path></svg></button>
+        </div>
+      </x-import>
+    </div>
+
+    <div style="flex:none; width:402px; display:flex; flex-direction:column; gap:14px;">
+      <div style="font-size:13px; font-weight:600; color:#5A514C; padding-left:2px;">2 · Påkledning</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="false" hint-size="402px,874px">
+        <div style="position:relative; height:100%; width:100%; overflow:hidden; box-sizing:border-box; display:flex; flex-direction:column; padding:54px 16px 0; font-family:'Schibsted Grotesk',sans-serif; color:#2B2B2B; background:linear-gradient(180deg,rgb(199,214,225) 0%,rgb(222,225,221) 45%,rgb(233,225,214) 100%);">
+          <div style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 46% at 50% -8%, rgba(255,255,255,.5), rgba(255,255,255,0) 60%);"></div>
+          <div style="position:relative; z-index:3; flex:none; display:flex; align-items:center; gap:10px; padding:0 0 12px; border-bottom:1px solid rgba(43,43,43,.08);">
+            <div data-hap="2" style="width:36px; height:36px; flex:none; border-radius:11px; background:rgba(255,255,255,.55); border:1px solid rgba(43,43,43,.06); display:flex; align-items:center; justify-content:center;"><svg width="9" height="16" viewBox="0 0 12 20" fill="none" stroke="#2B2B2B" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L2 10l8 8"></path></svg></div>
+            <div style="flex:1; text-align:center; font-size:17px; font-weight:700; letter-spacing:-.3px;">Slik kler du Liv</div>
+            <div style="width:36px; flex:none;"></div>
+          </div>
+          <div style="position:relative; z-index:3; flex:none; text-align:center; font-size:12.5px; font-weight:500; color:rgba(43,43,43,.5); padding:11px 0 0;">−6° · Lett snø · Utenfor vogn</div>
+          <div style="position:relative; z-index:3; flex:1; min-height:0; display:flex; flex-direction:column; justify-content:center; gap:46px; padding:14px 0;">
+            <div data-hap="1" style="position:relative; display:flex; justify-content:flex-end; align-items:center; min-height:104px;">
+              <div style="position:absolute; left:-10px; top:50%; transform:translateY(-50%); width:184px; height:158px; background-image:url(uploads/avatar-A6.png); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(2px 14px 18px rgba(74,68,58,.28)); pointer-events:none; z-index:2;"></div>
+              <div style="width:56%; box-sizing:border-box; padding:16px 18px 16px 36px; border-radius:20px; background:#FFF; box-shadow:0 1px 2px rgba(43,37,34,.05),0 8px 18px rgba(43,37,34,.09);">
+                <div style="font-size:10.5px; font-weight:700; letter-spacing:1.8px; text-transform:uppercase; color:rgba(43,43,43,.42);">Ytterst</div>
+                <div style="font-size:18px; font-weight:700; letter-spacing:-.3px; color:#B85C36; margin-top:3px;">Vinterdress</div>
+                <div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.5); margin-top:3px;">Vind- og vanntett</div>
+              </div>
+            </div>
+            <div data-hap="1" style="position:relative; display:flex; justify-content:flex-start; align-items:center; min-height:104px;">
+              <div style="width:56%; box-sizing:border-box; padding:16px 40px 16px 18px; border-radius:20px; background:#FFF; box-shadow:0 1px 2px rgba(43,37,34,.05),0 8px 18px rgba(43,37,34,.09);">
+                <div style="font-size:10.5px; font-weight:700; letter-spacing:1.8px; text-transform:uppercase; color:rgba(43,43,43,.42); text-align:right;">Mellom</div>
+                <div style="font-size:18px; font-weight:700; letter-spacing:-.3px; color:#3F8A5B; margin-top:3px; text-align:right;">Ullsett</div>
+                <div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.5); margin-top:3px; text-align:right;">Holder på varmen, puster</div>
+              </div>
+              <div style="position:absolute; right:-10px; top:50%; transform:translateY(-50%); width:190px; height:128px; background-image:url(uploads/ullsett-tykt.png); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(-2px 14px 18px rgba(74,68,58,.26)); pointer-events:none; z-index:2;"></div>
+            </div>
+            <div data-hap="1" style="position:relative; display:flex; justify-content:flex-end; align-items:center; min-height:104px;">
+              <div style="position:absolute; left:-8px; top:50%; transform:translateY(-50%); width:182px; height:160px; background-image:url(uploads/pyjamas.png); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(2px 13px 16px rgba(74,68,58,.26)); pointer-events:none; z-index:2;"></div>
+              <div style="width:56%; box-sizing:border-box; padding:16px 18px 16px 36px; border-radius:20px; background:#FFF; box-shadow:0 1px 2px rgba(43,37,34,.05),0 8px 18px rgba(43,37,34,.09);">
+                <div style="font-size:10.5px; font-weight:700; letter-spacing:1.8px; text-transform:uppercase; color:rgba(43,43,43,.42);">Innerst</div>
+                <div style="font-size:18px; font-weight:700; letter-spacing:-.3px; color:#2B2B2B; margin-top:3px;">Body, langermet</div>
+                <div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.5); margin-top:3px;">Mykt mot huden</div>
+              </div>
+            </div>
+          </div>
+          <div style="position:relative; z-index:3; flex:none; padding:0 0 22px;">
+            <div style="height:1px; background:rgba(43,43,43,.1); margin:0 0 14px;"></div>
+            <div style="font-size:11px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:rgba(43,43,43,.4); margin:0 2px 10px;">Pluss</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+              <div data-hap="1" style="display:flex; flex-direction:column; align-items:center; gap:7px; padding:12px 6px; border-radius:16px; background:#FFF; box-shadow:0 1px 2px rgba(43,37,34,.04),0 4px 12px rgba(43,37,34,.06);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C0632F" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17a8 8 0 0 1 16 0"></path><path d="M3 17h18"></path><path d="M12 6.5V9"></path><circle cx="12" cy="5" r="1.5"></circle></svg><span style="font-size:12px; font-weight:600; color:rgba(43,43,43,.66);">Lue</span></div>
+              <div data-hap="1" style="display:flex; flex-direction:column; align-items:center; gap:7px; padding:12px 6px; border-radius:16px; background:#FFF; box-shadow:0 1px 2px rgba(43,37,34,.04),0 4px 12px rgba(43,37,34,.06);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3F8A5B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21v-4"></path><path d="M16 21v-7a4 4 0 0 0-8 0"></path><path d="M8 21h8"></path><path d="M16 13.5l3-1.5"></path></svg><span style="font-size:12px; font-weight:600; color:rgba(43,43,43,.66);">Votter</span></div>
+              <div data-hap="1" style="display:flex; flex-direction:column; align-items:center; gap:7px; padding:12px 6px; border-radius:16px; background:#FFF; box-shadow:0 1px 2px rgba(43,37,34,.04),0 4px 12px rgba(43,37,34,.06);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C0632F" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v9l-3.4 4.4a3.5 3.5 0 0 0 5.5 4.3L16 18.5"></path><path d="M9 3h4.5"></path></svg><span style="font-size:12px; font-weight:600; color:rgba(43,43,43,.66);">Ullsokker</span></div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <div style="flex:none; width:402px; display:flex; flex-direction:column; gap:14px;">
+      <div style="font-size:13px; font-weight:600; color:#5A514C; padding-left:2px;">3 · Uke</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="false" hint-size="402px,874px">
+        <div style="position:relative; height:100%; width:100%; overflow:hidden; box-sizing:border-box; display:flex; flex-direction:column; padding:56px 22px 0; font-family:'Schibsted Grotesk',sans-serif; color:#2B2B2B; background:linear-gradient(180deg,#C9D7E1 0%,#DBDBD6 46%,#E8E1D8 100%);">
+          <div style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 46% at 50% -8%, rgba(255,255,255,.5), rgba(255,255,255,0) 60%);"></div>
+          <div style="position:relative; z-index:3; flex:none; display:flex; align-items:center; justify-content:space-between;"><div style="display:flex; align-items:center; gap:7px; padding:9px 14px; border-radius:13px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.05); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);"><span style="width:6px; height:6px; border-radius:50%; background:#C0632F;"></span><span style="font-size:13.5px; font-weight:600;">Elverum</span></div><div data-hap="1" style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.05); display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2B2B2B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg></div></div>
+          <div data-hap="1" style="position:relative; z-index:3; flex:none; display:flex; padding:5px; gap:4px; border-radius:999px; background:rgba(255,255,255,.4); border:1px solid rgba(43,43,43,.05); margin-top:16px;">
+            <button style="flex:1; padding:11px 0; border-radius:999px; border:none; cursor:pointer; background:#FFF; color:#2B2B2B; font-weight:700; font-size:15px; box-shadow:0 2px 8px rgba(43,43,43,.1); font-family:'Schibsted Grotesk',sans-serif;">I dag</button>
+            <button style="flex:1; padding:11px 0; border-radius:999px; border:none; cursor:pointer; background:transparent; color:rgba(43,43,43,.55); font-weight:600; font-size:15px; font-family:'Schibsted Grotesk',sans-serif;">10 dager</button>
+          </div>
+          <div style="position:relative; z-index:3; flex:none; font-size:24px; font-weight:700; letter-spacing:-.5px; color:#A9492A; margin-top:16px;">Time for time</div>
+          <div style="position:relative; z-index:3; flex:none; display:flex; align-items:center; gap:16px; margin-top:14px;">
+            <div style="display:flex; align-items:center; gap:6px;"><span style="width:20px; height:20px; border-radius:50%; background:#3F8A5B; color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;">2</span><span style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.6);">Lett</span></div>
+            <div style="display:flex; align-items:center; gap:6px;"><span style="width:20px; height:20px; border-radius:50%; background:#C0632F; color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;">3</span><span style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.6);">Middels</span></div>
+            <div style="display:flex; align-items:center; gap:6px;"><span style="width:20px; height:20px; border-radius:50%; background:#1F2E45; color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;">4</span><span style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.6);">Mye på</span></div>
+          </div>
+          <div class="ws" data-hap="2" style="position:relative; z-index:2; flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; margin-top:14px; padding-bottom:8px; display:flex; flex-direction:column; gap:10px;">
+            <div style="flex:none; display:flex; align-items:center; gap:12px; padding:14px 15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.86) 0%,rgba(255,255,255,.7) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 5px 14px rgba(43,43,43,.05);"><div style="width:64px; flex:none;"><div style="font-size:15px; font-weight:700;">08:00</div><div style="font-size:12px; font-weight:500; color:rgba(43,43,43,.5);">morgen</div></div><div style="flex:1; min-width:0; display:flex; align-items:baseline; gap:6px;"><span style="font-size:18px; font-weight:700;">14°</span><span style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.5);">føles 13°</span></div><svg width="30" height="20" viewBox="0 0 32 22" fill="none"><path d="M9 18h14a5.5 5.5 0 0 0 .6-11 7.5 7.5 0 0 0-14.3 1.2A4.8 4.8 0 0 0 9 18z" fill="#9FB4C4"></path></svg><div style="width:32px; height:32px; flex:none; border-radius:50%; background:#C0632F; color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center;">3</div></div>
+            <div style="flex:none; display:flex; align-items:center; gap:12px; padding:14px 15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.86) 0%,rgba(255,255,255,.7) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 5px 14px rgba(43,43,43,.05);"><div style="width:64px; flex:none;"><div style="font-size:15px; font-weight:700;">11:00</div><div style="font-size:12px; font-weight:500; color:rgba(43,43,43,.5);">dag</div></div><div style="flex:1; min-width:0; display:flex; align-items:baseline; gap:6px;"><span style="font-size:18px; font-weight:700;">18°</span><span style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.5);">føles 18°</span></div><svg width="32" height="22" viewBox="0 0 34 24" fill="none"><circle cx="13" cy="9" r="5" fill="#E8A24A"></circle><path d="M11 20h13a5 5 0 0 0 .5-10 6.8 6.8 0 0 0-13 1A4.3 4.3 0 0 0 11 20z" fill="#AEBFCD"></path></svg><div style="width:32px; height:32px; flex:none; border-radius:50%; background:#C0632F; color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center;">3</div></div>
+            <div style="flex:none; display:flex; align-items:center; gap:12px; padding:14px 15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.86) 0%,rgba(255,255,255,.7) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 5px 14px rgba(43,43,43,.05);"><div style="width:64px; flex:none;"><div style="font-size:15px; font-weight:700;">14:00</div><div style="font-size:12px; font-weight:500; color:rgba(43,43,43,.5);">dag</div></div><div style="flex:1; min-width:0; display:flex; align-items:baseline; gap:6px;"><span style="font-size:18px; font-weight:700;">22°</span><span style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.5);">føles 22°</span></div><svg width="32" height="22" viewBox="0 0 34 24" fill="none"><circle cx="13" cy="9" r="5" fill="#E8A24A"></circle><path d="M11 20h13a5 5 0 0 0 .5-10 6.8 6.8 0 0 0-13 1A4.3 4.3 0 0 0 11 20z" fill="#AEBFCD"></path></svg><div style="width:32px; height:32px; flex:none; border-radius:50%; background:#3F8A5B; color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center;">2</div></div>
+            <div style="flex:none; display:flex; align-items:center; gap:12px; padding:14px 15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.86) 0%,rgba(255,255,255,.7) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 5px 14px rgba(43,43,43,.05);"><div style="width:64px; flex:none;"><div style="font-size:15px; font-weight:700;">17:00</div><div style="font-size:12px; font-weight:500; color:rgba(43,43,43,.5);">dag</div></div><div style="flex:1; min-width:0; display:flex; align-items:baseline; gap:6px;"><span style="font-size:18px; font-weight:700;">20°</span><span style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.5);">føles 20°</span></div><svg width="32" height="22" viewBox="0 0 34 24" fill="none"><circle cx="13" cy="9" r="5" fill="#E8A24A"></circle><path d="M11 20h13a5 5 0 0 0 .5-10 6.8 6.8 0 0 0-13 1A4.3 4.3 0 0 0 11 20z" fill="#AEBFCD"></path></svg><div style="width:32px; height:32px; flex:none; border-radius:50%; background:#C0632F; color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center;">3</div></div>
+            <div style="flex:none; display:flex; align-items:center; gap:12px; padding:14px 15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.86) 0%,rgba(255,255,255,.7) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 5px 14px rgba(43,43,43,.05);"><div style="width:64px; flex:none;"><div style="font-size:15px; font-weight:700;">20:00</div><div style="font-size:12px; font-weight:500; color:rgba(43,43,43,.5);">kveld</div></div><div style="flex:1; min-width:0; display:flex; align-items:baseline; gap:6px;"><span style="font-size:18px; font-weight:700;">16°</span><span style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.5);">føles 15°</span></div><svg width="30" height="20" viewBox="0 0 32 22" fill="none"><path d="M9 18h14a5.5 5.5 0 0 0 .6-11 7.5 7.5 0 0 0-14.3 1.2A4.8 4.8 0 0 0 9 18z" fill="#9FB4C4"></path></svg><div style="width:32px; height:32px; flex:none; border-radius:50%; background:#C0632F; color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center;">3</div></div>
+            <div style="flex:none; display:flex; align-items:center; gap:12px; padding:14px 15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.86) 0%,rgba(255,255,255,.7) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 5px 14px rgba(43,43,43,.05);"><div style="width:64px; flex:none;"><div style="font-size:15px; font-weight:700;">23:00</div><div style="font-size:12px; font-weight:500; color:rgba(43,43,43,.5);">natt</div></div><div style="flex:1; min-width:0; display:flex; align-items:baseline; gap:6px;"><span style="font-size:18px; font-weight:700;">13°</span><span style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.5);">føles 12°</span></div><svg width="30" height="20" viewBox="0 0 32 22" fill="none"><path d="M9 18h14a5.5 5.5 0 0 0 .6-11 7.5 7.5 0 0 0-14.3 1.2A4.8 4.8 0 0 0 9 18z" fill="#9FB4C4"></path></svg><div style="width:32px; height:32px; flex:none; border-radius:50%; background:#1F2E45; color:#fff; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center;">4</div></div>
+          </div>
+          <div data-hap="2" style="position:relative; z-index:3; flex:none; display:flex; align-items:flex-start; justify-content:space-around; padding:14px 8px 32px; background:rgba(255,255,255,.36); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); margin:0 -22px;"><div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(43,43,43,.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6"></path><path d="M6 10v8h12v-8"></path></svg><span style="font-size:11px; font-weight:500; color:rgba(43,43,43,.5);">Hjem</span></div><div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C0632F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 3v4M16 3v4"></path></svg><span style="font-size:11px; font-weight:700; color:#C0632F;">Uke</span></div><div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(43,43,43,.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7v15H4zM13 5h7v15h-7z"></path></svg><span style="font-size:11px; font-weight:500; color:rgba(43,43,43,.5);">Guide</span></div><div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(43,43,43,.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 3v3M12 18v3M3 12h3M18 12h3"></path></svg><span style="font-size:11px; font-weight:500; color:rgba(43,43,43,.5);">Innst.</span></div></div>
+        </div>
+      </x-import>
+    </div>
+
+    <div style="flex:none; align-self:stretch; width:1px; background:rgba(43,43,43,.13); margin:40px 6px;"></div>
+
+    <!-- ============ SCREEN 1 · GUIDE HOME ============ -->
+    <div style="flex:none; width:402px; display:flex; flex-direction:column; gap:14px;">
+      <div style="font-size:13px; font-weight:600; color:#5A514C; padding-left:2px;">4 · Guide Home</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="false" hint-size="402px,874px">
+        <div style="position:relative; height:100%; width:100%; overflow:hidden; box-sizing:border-box; display:flex; flex-direction:column; padding:54px 16px 0; font-family:'Schibsted Grotesk',sans-serif; color:#2B2B2B; background:linear-gradient(180deg,#C9D7E1 0%,#DBDBD6 42%,#E8E1D8 100%);">
+          <div style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 44% at 50% -8%, rgba(255,255,255,.5), rgba(255,255,255,0) 60%);"></div>
+
+          <div style="position:relative; z-index:3; flex:none; padding:8px 4px 6px;">
+            <div style="font-size:26px; font-weight:700; letter-spacing:-.6px; color:#2B2B2B; line-height:1;">Guide</div>
+            <div style="font-size:13.5px; font-weight:500; color:rgba(43,43,43,.5); margin-top:5px;">Verktøy og kunnskap for påkledning</div>
+          </div>
+
+          <div style="position:relative; z-index:2; flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding-bottom:18px; display:flex; flex-direction:column; gap:20px;">
+
+            <button class="g-row" data-hap="3" style="position:relative; width:100%; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:20px; margin-top:8px; border:none; cursor:pointer; text-align:left; border-radius:20px; background:linear-gradient(140deg,#C0632F 0%,#A9492A 100%); box-shadow:0 1px 2px rgba(43,43,43,.06), 0 8px 22px rgba(169,73,42,.22); transition:transform 100ms ease, box-shadow 100ms ease;" style-active="transform:scale(.96); box-shadow:0 2px 8px rgba(169,73,42,.22), 0 0 0 4px rgba(192,99,47,.13)">
+              <div style="min-width:0;">
+                <div style="font-size:19px; font-weight:600; letter-spacing:-.2px; color:#FFF;">Finn antrekk</div>
+                <div style="font-size:14px; font-weight:500; color:rgba(255,255,255,.8); margin-top:4px;">Test vær og aktivitet</div>
+              </div>
+              <svg class="g-chev" width="9" height="16" viewBox="0 0 8 14" fill="none" stroke="#FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; opacity:.85;"><path d="M1 1l6 6-6 6"></path></svg>
+            </button>
+
+            <div>
+              <div style="font-size:11.5px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:rgba(43,43,43,.42); margin:0 4px 8px;">Verktøy</div>
+              <div style="display:flex; flex-direction:column; border-radius:18px; overflow:hidden; border:1px solid rgba(43,43,43,.05); background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.72) 100%); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); box-shadow:0 1px 2px rgba(43,43,43,.05),0 8px 18px rgba(43,43,43,.06);">
+                <button class="g-row" data-hap="2" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; border:none; cursor:pointer; text-align:left; background:transparent; transition:background 100ms ease;" style-active="background:rgba(43,43,43,.06)">
+                  <div style="min-width:0;"><div style="font-size:15px; font-weight:600; letter-spacing:-.1px;">Plaggbiblioteket</div><div style="font-size:13px; font-weight:500; color:rgba(43,43,43,.5); margin-top:1px;">Se alle plagg etter kategori</div></div>
+                  <svg class="g-chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="rgba(43,43,43,.34)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M1 1l6 6-6 6"></path></svg>
+                </button>
+                <div style="height:1px; margin:0 16px; background:rgba(43,43,43,.08);"></div>
+                <button class="g-row" data-hap="2" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; border:none; cursor:pointer; text-align:left; background:transparent; transition:background 100ms ease;" style-active="background:rgba(43,43,43,.06)">
+                  <div style="min-width:0;"><div style="font-size:15px; font-weight:600; letter-spacing:-.1px;">Min garderobe</div><div style="font-size:13px; font-weight:500; color:rgba(43,43,43,.5); margin-top:1px;">Velg plagg → få relevante forslag</div></div>
+                  <svg class="g-chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="rgba(43,43,43,.34)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M1 1l6 6-6 6"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:11.5px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:rgba(43,43,43,.42); margin:0 4px 8px;">Kunnskap</div>
+              <div style="display:flex; flex-direction:column; border-radius:18px; overflow:hidden; border:1px solid rgba(43,43,43,.05); background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.72) 100%); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); box-shadow:0 1px 2px rgba(43,43,43,.05),0 8px 18px rgba(43,43,43,.06);">
+                <button class="g-row" data-hap="2" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; border:none; cursor:pointer; text-align:left; background:transparent; transition:background 100ms ease;" style-active="background:rgba(43,43,43,.06)">
+                  <div style="min-width:0;"><div style="font-size:15px; font-weight:600; letter-spacing:-.1px;">TOG-guiden</div><div style="font-size:13px; font-weight:500; color:rgba(43,43,43,.5); margin-top:1px;">Finn riktig sovepose</div></div>
+                  <svg class="g-chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="rgba(43,43,43,.34)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M1 1l6 6-6 6"></path></svg>
+                </button>
+                <div style="height:1px; margin:0 16px; background:rgba(43,43,43,.08);"></div>
+                <button class="g-row" data-hap="2" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; border:none; cursor:pointer; text-align:left; background:transparent; transition:background 100ms ease;" style-active="background:rgba(43,43,43,.06)">
+                  <div style="min-width:0;"><div style="font-size:15px; font-weight:600; letter-spacing:-.1px;">Varm eller kald?</div><div style="font-size:13px; font-weight:500; color:rgba(43,43,43,.5); margin-top:1px;">Sjekk barnets temperatur</div></div>
+                  <svg class="g-chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="rgba(43,43,43,.34)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M1 1l6 6-6 6"></path></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div data-hap="2" style="position:relative; z-index:3; flex:none; display:flex; align-items:flex-start; justify-content:space-around; padding:14px 8px 32px; background:rgba(255,255,255,.36); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); margin:0 -16px;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(43,43,43,.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6 8 6"></path><path d="M6 10v8h12v-8"></path></svg><span style="font-size:11px; font-weight:500; color:rgba(43,43,43,.5);">Hjem</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(43,43,43,.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 3v4M16 3v4"></path></svg><span style="font-size:11px; font-weight:500; color:rgba(43,43,43,.5);">Uke</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C0632F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7v15H4zM13 5h7v15h-7z"></path></svg><span style="font-size:11px; font-weight:700; color:#C0632F;">Guide</span></div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(43,43,43,.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 3v3M12 18v3M3 12h3M18 12h3"></path></svg><span style="font-size:11px; font-weight:500; color:rgba(43,43,43,.5);">Innst.</span></div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ SCREEN 2 · FINN ANTREKK ============ -->
+    <div style="flex:none; width:402px; display:flex; flex-direction:column; gap:14px;">
+      <div style="font-size:13px; font-weight:600; color:#5A514C; padding-left:2px;">5 · Finn antrekk</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="false" hint-size="402px,874px">
+        <div style="position:relative; height:100%; width:100%; overflow:hidden; box-sizing:border-box; display:flex; flex-direction:column; padding:54px 16px 0; font-family:'Schibsted Grotesk',sans-serif; color:#2B2B2B; background:linear-gradient(180deg,#C9D7E1 0%,#DBDBD6 42%,#E8E1D8 100%);">
+          <div style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 44% at 50% -8%, rgba(255,255,255,.5), rgba(255,255,255,0) 60%);"></div>
+
+          <div style="position:relative; z-index:3; flex:none; display:flex; align-items:center; gap:10px; padding:4px 0 12px;">
+            <div data-hap="2" style="width:34px; height:34px; flex:none; border-radius:11px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.07); display:flex; align-items:center; justify-content:center;"><svg width="9" height="15" viewBox="0 0 8 14" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1L1 7l6 6"></path></svg></div>
+            <div style="font-size:21px; font-weight:700; letter-spacing:-.4px;">Finn antrekk</div>
+          </div>
+
+          <div style="position:relative; z-index:2; flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding-bottom:18px; display:flex; flex-direction:column; gap:18px;">
+
+            <div>
+              <div style="font-size:11.5px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:rgba(43,43,43,.42); margin:0 2px 9px;">Vær</div>
+              <div data-hap="1" style="display:flex; gap:8px; flex-wrap:wrap;">
+                <div style="padding:9px 15px; border-radius:999px; background:rgba(192,99,47,.14); border:1px solid rgba(192,99,47,.35); color:#A9492A; font-size:13.5px; font-weight:600;">Klarvær</div>
+                <div style="padding:9px 15px; border-radius:999px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.08); color:rgba(43,43,43,.6); font-size:13.5px; font-weight:500;">Skyet</div>
+                <div style="padding:9px 15px; border-radius:999px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.08); color:rgba(43,43,43,.6); font-size:13.5px; font-weight:500;">Snø</div>
+                <div style="padding:9px 15px; border-radius:999px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.08); color:rgba(43,43,43,.6); font-size:13.5px; font-weight:500;">Regn</div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:11.5px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:rgba(43,43,43,.42); margin:0 2px 9px;">Aktivitet</div>
+              <div data-hap="1" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; padding:14px; border-radius:18px; background:rgba(192,99,47,.1); border:1px solid rgba(192,99,47,.3); transition:transform 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A9492A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4l-2 5h4l-3 11"></path><circle cx="14" cy="4" r="1.6"></circle></svg>
+                  <span style="font-size:14.5px; font-weight:600; color:#A9492A;">Tur</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px; padding:14px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.74) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 5px 14px rgba(43,43,43,.05); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); background:rgba(43,43,43,.06); box-shadow:none">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(43,43,43,.55)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h3l2 9h8l2-6H8"></path><circle cx="9" cy="19" r="1.6"></circle><circle cx="17" cy="19" r="1.6"></circle></svg>
+                  <span style="font-size:14.5px; font-weight:600; color:rgba(43,43,43,.7);">I vogn</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px; padding:14px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.74) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 5px 14px rgba(43,43,43,.05); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); background:rgba(43,43,43,.06); box-shadow:none">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(43,43,43,.55)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle><path d="M12 4v8l5 3"></path></svg>
+                  <span style="font-size:14.5px; font-weight:600; color:rgba(43,43,43,.7);">Lek ute</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px; padding:14px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.74) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 5px 14px rgba(43,43,43,.05); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); background:rgba(43,43,43,.06); box-shadow:none">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(43,43,43,.55)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12.5a8 8 0 1 0 9-9 6.2 6.2 0 0 1-9 9z"></path></svg>
+                  <span style="font-size:14.5px; font-weight:600; color:rgba(43,43,43,.7);">Sovetur</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="border-radius:22px; border:1px solid rgba(43,43,43,.05); background:linear-gradient(180deg,rgba(255,255,255,.92) 0%,rgba(255,255,255,.76) 100%); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); padding:18px; box-shadow:0 4px 16px rgba(43,43,43,.05);">
+              <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px;">
+                <div style="font-size:16px; font-weight:700; letter-spacing:-.2px;">Anbefalt antrekk</div>
+                <div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.5);">Klarvær · −4°</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div style="display:flex; align-items:center; gap:13px;">
+                  <div style="width:26px; height:26px; flex:none; border-radius:999px; background:rgba(192,99,47,.14); color:#A9492A; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center;">1</div>
+                  <div style="flex:1; min-width:0;"><div style="font-size:14.5px; font-weight:600;">Innerst</div><div style="font-size:13px; font-weight:500; color:rgba(43,43,43,.5);">Ullbody, lang arm</div></div>
+                </div>
+                <div style="height:1px; background:rgba(43,43,43,.07); margin-left:39px;"></div>
+                <div style="display:flex; align-items:center; gap:13px;">
+                  <div style="width:26px; height:26px; flex:none; border-radius:999px; background:rgba(192,99,47,.14); color:#A9492A; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center;">2</div>
+                  <div style="flex:1; min-width:0;"><div style="font-size:14.5px; font-weight:600;">Mellomlag</div><div style="font-size:13px; font-weight:500; color:rgba(43,43,43,.5);">Fleecedress</div></div>
+                </div>
+                <div style="height:1px; background:rgba(43,43,43,.07); margin-left:39px;"></div>
+                <div style="display:flex; align-items:center; gap:13px;">
+                  <div style="width:26px; height:26px; flex:none; border-radius:999px; background:rgba(192,99,47,.14); color:#A9492A; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center;">3</div>
+                  <div style="flex:1; min-width:0;"><div style="font-size:14.5px; font-weight:600;">Ytterst</div><div style="font-size:13px; font-weight:500; color:rgba(43,43,43,.5);">Vinterdress, lue og votter</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ SCREEN 3 · PLAGGBIBLIOTEKET ============ -->
+    <div style="flex:none; width:402px; display:flex; flex-direction:column; gap:14px;">
+      <div style="font-size:13px; font-weight:600; color:#5A514C; padding-left:2px;">6 · Plaggbiblioteket</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="false" hint-size="402px,874px">
+        <div style="position:relative; height:100%; width:100%; overflow:hidden; box-sizing:border-box; display:flex; flex-direction:column; padding:54px 16px 0; font-family:'Schibsted Grotesk',sans-serif; color:#2B2B2B; background:linear-gradient(180deg,#C9D7E1 0%,#DBDBD6 42%,#E8E1D8 100%);">
+          <div style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 44% at 50% -8%, rgba(255,255,255,.5), rgba(255,255,255,0) 60%);"></div>
+
+          <div style="position:relative; z-index:3; flex:none; display:flex; align-items:center; gap:10px; padding:4px 0 12px;">
+            <div data-hap="2" style="width:34px; height:34px; flex:none; border-radius:11px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.07); display:flex; align-items:center; justify-content:center;"><svg width="9" height="15" viewBox="0 0 8 14" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1L1 7l6 6"></path></svg></div>
+            <div style="font-size:21px; font-weight:700; letter-spacing:-.4px;">Plaggbiblioteket</div>
+          </div>
+
+          <div style="position:relative; z-index:2; flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding-bottom:18px; display:flex; flex-direction:column; gap:14px;">
+
+            <div data-hap="2" style="display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:13px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.08);">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(43,43,43,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+              <span style="font-size:14.5px; font-weight:500; color:rgba(43,43,43,.42);">Søk i plagg</span>
+            </div>
+
+            <div data-hap="1" style="display:flex; gap:8px; flex-wrap:wrap;">
+              <div style="padding:7px 14px; border-radius:999px; background:rgba(192,99,47,.14); border:1px solid rgba(192,99,47,.35); color:#A9492A; font-size:13px; font-weight:600;">Alle</div>
+              <div style="padding:7px 14px; border-radius:999px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.08); color:rgba(43,43,43,.6); font-size:13px; font-weight:500;">Ull</div>
+              <div style="padding:7px 14px; border-radius:999px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.08); color:rgba(43,43,43,.6); font-size:13px; font-weight:500;">Bomull</div>
+              <div style="padding:7px 14px; border-radius:999px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.08); color:rgba(43,43,43,.6); font-size:13px; font-weight:500;">Vanntett</div>
+            </div>
+
+            <div data-hap="2" style="display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-top:2px;">
+              <div style="padding:15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.74) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 6px 16px rgba(43,43,43,.05); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); background:rgba(43,43,43,.06); box-shadow:none">
+                <div style="width:44px; height:44px; border-radius:13px; background:linear-gradient(180deg,rgba(192,99,47,.18) 0%,rgba(192,99,47,.1) 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 6px rgba(169,73,42,.12); display:flex; align-items:center; justify-content:center; margin-bottom:12px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C0632F" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4l-4 4 3 3v9h10v-9l3-3-4-4-2 2H10z"></path></svg></div>
+                <div style="font-size:15px; font-weight:600;">Innerlag</div>
+                <div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:2px;">8 plagg</div>
+              </div>
+              <div style="padding:15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.74) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 6px 16px rgba(43,43,43,.05); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); background:rgba(43,43,43,.06); box-shadow:none">
+                <div style="width:44px; height:44px; border-radius:13px; background:linear-gradient(180deg,rgba(192,99,47,.18) 0%,rgba(192,99,47,.1) 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 6px rgba(169,73,42,.12); display:flex; align-items:center; justify-content:center; margin-bottom:12px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C0632F" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4l5 3 5-3 4 4-3 3v9H6v-9L3 8z"></path></svg></div>
+                <div style="font-size:15px; font-weight:600;">Mellomlag</div>
+                <div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:2px;">5 plagg</div>
+              </div>
+              <div style="padding:15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.74) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 6px 16px rgba(43,43,43,.05); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); background:rgba(43,43,43,.06); box-shadow:none">
+                <div style="width:44px; height:44px; border-radius:13px; background:linear-gradient(180deg,rgba(192,99,47,.18) 0%,rgba(192,99,47,.1) 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 6px rgba(169,73,42,.12); display:flex; align-items:center; justify-content:center; margin-bottom:12px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C0632F" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5l6-2 6 2 2 5-3 1v9H7v-9l-3-1z"></path></svg></div>
+                <div style="font-size:15px; font-weight:600;">Ytterlag</div>
+                <div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:2px;">4 plagg</div>
+              </div>
+              <div style="padding:15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.74) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 6px 16px rgba(43,43,43,.05); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); background:rgba(43,43,43,.06); box-shadow:none">
+                <div style="width:44px; height:44px; border-radius:13px; background:linear-gradient(180deg,rgba(192,99,47,.18) 0%,rgba(192,99,47,.1) 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 6px rgba(169,73,42,.12); display:flex; align-items:center; justify-content:center; margin-bottom:12px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C0632F" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5a5 5 0 0 1 10 0v3h2v10H5V8h2z"></path></svg></div>
+                <div style="font-size:15px; font-weight:600;">Lue & votter</div>
+                <div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:2px;">6 plagg</div>
+              </div>
+              <div style="padding:15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.74) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 6px 16px rgba(43,43,43,.05); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); background:rgba(43,43,43,.06); box-shadow:none">
+                <div style="width:44px; height:44px; border-radius:13px; background:linear-gradient(180deg,rgba(192,99,47,.18) 0%,rgba(192,99,47,.1) 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 6px rgba(169,73,42,.12); display:flex; align-items:center; justify-content:center; margin-bottom:12px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C0632F" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v9l-3 7h12l-2-5h-4V4z"></path></svg></div>
+                <div style="font-size:15px; font-weight:600;">Sokker</div>
+                <div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:2px;">7 plagg</div>
+              </div>
+              <div style="padding:15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.74) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 6px 16px rgba(43,43,43,.05); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); background:rgba(43,43,43,.06); box-shadow:none">
+                <div style="width:44px; height:44px; border-radius:13px; background:linear-gradient(180deg,rgba(192,99,47,.18) 0%,rgba(192,99,47,.1) 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 6px rgba(169,73,42,.12); display:flex; align-items:center; justify-content:center; margin-bottom:12px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C0632F" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7v8h12l4 3 1-3-5-3-2-5z"></path></svg></div>
+                <div style="font-size:15px; font-weight:600;">Sko</div>
+                <div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:2px;">3 plagg</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ SCREEN 4 · MIN GARDEROBE ============ -->
+    <div style="flex:none; width:402px; display:flex; flex-direction:column; gap:14px;">
+      <div style="font-size:13px; font-weight:600; color:#5A514C; padding-left:2px;">7 · Min garderobe</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="false" hint-size="402px,874px">
+        <div style="position:relative; height:100%; width:100%; overflow:hidden; box-sizing:border-box; display:flex; flex-direction:column; padding:54px 16px 0; font-family:'Schibsted Grotesk',sans-serif; color:#2B2B2B; background:linear-gradient(180deg,#C9D7E1 0%,#DBDBD6 42%,#E8E1D8 100%);">
+          <div style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 44% at 50% -8%, rgba(255,255,255,.5), rgba(255,255,255,0) 60%);"></div>
+
+          <div style="position:relative; z-index:3; flex:none; display:flex; align-items:center; justify-content:space-between; padding:4px 0 12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div data-hap="2" style="width:34px; height:34px; flex:none; border-radius:11px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.07); display:flex; align-items:center; justify-content:center;"><svg width="9" height="15" viewBox="0 0 8 14" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1L1 7l6 6"></path></svg></div>
+              <div style="font-size:21px; font-weight:700; letter-spacing:-.4px;">Min garderobe</div>
+            </div>
+            <div data-hap="2" style="width:34px; height:34px; flex:none; border-radius:999px; background:#C0632F; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(169,73,42,.25);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFF" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></div>
+          </div>
+
+          <div style="position:relative; z-index:2; flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding-bottom:18px; display:flex; flex-direction:column; gap:18px;">
+            <div>
+              <div style="font-size:11.5px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:rgba(43,43,43,.42); margin:0 4px 8px;">Innerlag</div>
+              <div style="display:flex; flex-direction:column; border-radius:18px; overflow:hidden; border:1px solid rgba(43,43,43,.05); background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.72) 100%); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); box-shadow:0 1px 2px rgba(43,43,43,.05),0 8px 18px rgba(43,43,43,.06);">
+                <div data-hap="1" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; cursor:pointer; transition:background 100ms ease;" style-active="background:rgba(43,43,43,.06)">
+                  <div style="min-width:0;"><div style="font-size:15px; font-weight:600;">Ullbody</div><div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:1px;">Str. 80 · merinoull</div></div>
+                  <div style="flex:none; display:flex; align-items:center; gap:5px; padding:5px 11px; border-radius:999px; background:rgba(43,43,43,.06); color:rgba(43,43,43,.6); font-size:12.5px; font-weight:600;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Har</div>
+                </div>
+                <div style="height:1px; margin:0 16px; background:rgba(43,43,43,.08);"></div>
+                <div data-hap="1" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; cursor:pointer; transition:background 100ms ease;" style-active="background:rgba(43,43,43,.06)">
+                  <div style="min-width:0;"><div style="font-size:15px; font-weight:600;">Bomullsbody</div><div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:1px;">Str. 80 · kort arm</div></div>
+                  <div style="flex:none; display:flex; align-items:center; gap:5px; padding:5px 11px; border-radius:999px; background:rgba(192,99,47,.13); color:#A9492A; font-size:12.5px; font-weight:600;">Mangler</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:11.5px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:rgba(43,43,43,.42); margin:0 4px 8px;">Ytterlag</div>
+              <div style="display:flex; flex-direction:column; border-radius:18px; overflow:hidden; border:1px solid rgba(43,43,43,.05); background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.72) 100%); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); box-shadow:0 1px 2px rgba(43,43,43,.05),0 8px 18px rgba(43,43,43,.06);">
+                <div data-hap="1" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; cursor:pointer; transition:background 100ms ease;" style-active="background:rgba(43,43,43,.06)">
+                  <div style="min-width:0;"><div style="font-size:15px; font-weight:600;">Vinterdress</div><div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:1px;">Str. 86 · vanntett</div></div>
+                  <div style="flex:none; display:flex; align-items:center; gap:5px; padding:5px 11px; border-radius:999px; background:rgba(43,43,43,.06); color:rgba(43,43,43,.6); font-size:12.5px; font-weight:600;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Har</div>
+                </div>
+                <div style="height:1px; margin:0 16px; background:rgba(43,43,43,.08);"></div>
+                <div data-hap="1" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; cursor:pointer; transition:background 100ms ease;" style-active="background:rgba(43,43,43,.06)">
+                  <div style="min-width:0;"><div style="font-size:15px; font-weight:600;">Fleecedress</div><div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:1px;">Str. 80 · mellomlag</div></div>
+                  <div style="flex:none; display:flex; align-items:center; gap:5px; padding:5px 11px; border-radius:999px; background:rgba(43,43,43,.06); color:rgba(43,43,43,.6); font-size:12.5px; font-weight:600;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Har</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:11.5px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:rgba(43,43,43,.42); margin:0 4px 8px;">Tilbehør</div>
+              <div style="display:flex; flex-direction:column; border-radius:18px; overflow:hidden; border:1px solid rgba(43,43,43,.05); background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.72) 100%); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); box-shadow:0 1px 2px rgba(43,43,43,.05),0 8px 18px rgba(43,43,43,.06);">
+                <div data-hap="1" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; cursor:pointer; transition:background 100ms ease;" style-active="background:rgba(43,43,43,.06)">
+                  <div style="min-width:0;"><div style="font-size:15px; font-weight:600;">Ullsokker</div><div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:1px;">3 par</div></div>
+                  <div style="flex:none; display:flex; align-items:center; gap:5px; padding:5px 11px; border-radius:999px; background:rgba(43,43,43,.06); color:rgba(43,43,43,.6); font-size:12.5px; font-weight:600;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg>Har</div>
+                </div>
+                <div style="height:1px; margin:0 16px; background:rgba(43,43,43,.08);"></div>
+                <div data-hap="1" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 16px; cursor:pointer; transition:background 100ms ease;" style-active="background:rgba(43,43,43,.06)">
+                  <div style="min-width:0;"><div style="font-size:15px; font-weight:600;">Votter</div><div style="font-size:12.5px; font-weight:500; color:rgba(43,43,43,.45); margin-top:1px;">Ull · 1–2 år</div></div>
+                  <div style="flex:none; display:flex; align-items:center; gap:5px; padding:5px 11px; border-radius:999px; background:rgba(192,99,47,.13); color:#A9492A; font-size:12.5px; font-weight:600;">Mangler</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ SCREEN 5 · TOG-GUIDEN ============ -->
+    <div style="flex:none; width:402px; display:flex; flex-direction:column; gap:14px;">
+      <div style="font-size:13px; font-weight:600; color:#5A514C; padding-left:2px;">8 · TOG-guiden</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="false" hint-size="402px,874px">
+        <div style="position:relative; height:100%; width:100%; overflow:hidden; box-sizing:border-box; display:flex; flex-direction:column; padding:54px 16px 0; font-family:'Schibsted Grotesk',sans-serif; color:#2B2B2B; background:linear-gradient(180deg,#C9D7E1 0%,#DBDBD6 42%,#E8E1D8 100%);">
+          <div style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 44% at 50% -8%, rgba(255,255,255,.5), rgba(255,255,255,0) 60%);"></div>
+
+          <div style="position:relative; z-index:3; flex:none; display:flex; align-items:center; gap:10px; padding:4px 0 12px;">
+            <div data-hap="2" style="width:34px; height:34px; flex:none; border-radius:11px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.07); display:flex; align-items:center; justify-content:center;"><svg width="9" height="15" viewBox="0 0 8 14" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1L1 7l6 6"></path></svg></div>
+            <div style="font-size:21px; font-weight:700; letter-spacing:-.4px;">TOG-guiden</div>
+          </div>
+
+          <div style="position:relative; z-index:2; flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding-bottom:18px; display:flex; flex-direction:column; gap:18px;">
+            <div>
+              <div style="display:flex; align-items:baseline; justify-content:space-between; margin:0 2px 14px;">
+                <div style="font-size:11.5px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:rgba(43,43,43,.42);">Romtemperatur</div>
+                <div style="font-size:18px; font-weight:700; letter-spacing:-.3px; color:#A9492A;">20°</div>
+              </div>
+              <div style="padding:0 2px;">
+                <div style="position:relative; height:12px; border-radius:999px; background:linear-gradient(90deg,#9DBBD4 0%,#C8CFC9 42%,#E2C9A6 72%,#C0632F 100%);">
+                  <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:24px; height:24px; border-radius:50%; background:#FFF; border:3px solid #C0632F; box-shadow:0 3px 10px rgba(43,43,43,.22);"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                  <span style="font-size:12px; font-weight:600; color:rgba(43,43,43,.42);">16° kjølig</span>
+                  <span style="font-size:12px; font-weight:600; color:rgba(43,43,43,.42);">24° varmt</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="border-radius:22px; border:1px solid rgba(43,43,43,.05); background:linear-gradient(180deg,rgba(255,255,255,.92) 0%,rgba(255,255,255,.76) 100%); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); padding:20px; box-shadow:0 4px 16px rgba(43,43,43,.05); display:flex; flex-direction:column; align-items:center; text-align:center;">
+              <div style="font-size:11.5px; font-weight:600; letter-spacing:1.4px; text-transform:uppercase; color:rgba(43,43,43,.42);">Anbefalt TOG</div>
+              <div style="font-size:52px; font-weight:700; letter-spacing:-1px; line-height:1; margin-top:6px; color:#A9492A;">2.5</div>
+              <div style="font-size:14px; font-weight:500; color:rgba(43,43,43,.6); margin-top:8px;">Komfortsone for 18–21°</div>
+            </div>
+
+            <div>
+              <div style="font-size:11.5px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:rgba(43,43,43,.42); margin:0 4px 8px;">Slik kler du på</div>
+              <div style="display:flex; flex-direction:column; border-radius:18px; overflow:hidden; border:1px solid rgba(43,43,43,.05); background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.72) 100%); box-shadow:0 1px 2px rgba(43,43,43,.05),0 8px 18px rgba(43,43,43,.06);">
+                <div style="display:flex; align-items:center; gap:13px; padding:13px 16px;"><div style="width:24px; height:24px; flex:none; border-radius:999px; background:rgba(192,99,47,.14); color:#A9492A; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center;">1</div><span style="font-size:14.5px; font-weight:500;">Bomullsbody med kort arm</span></div>
+                <div style="height:1px; margin:0 16px; background:rgba(43,43,43,.08);"></div>
+                <div style="display:flex; align-items:center; gap:13px; padding:13px 16px;"><div style="width:24px; height:24px; flex:none; border-radius:999px; background:rgba(192,99,47,.14); color:#A9492A; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center;">2</div><span style="font-size:14.5px; font-weight:500;">Sovepose 2.5 TOG</span></div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:12px; padding:14px 16px; border-radius:16px; background:rgba(192,99,47,.08); border:1px solid rgba(192,99,47,.18);">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#A9492A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none; margin-top:1px;"><circle cx="12" cy="12" r="9"></circle><path d="M12 8h.01M11 12h1v4h1"></path></svg>
+              <div style="font-size:13px; font-weight:500; line-height:1.45; color:rgba(43,43,43,.7);">Ikke bruk dyne eller løse tepper sammen med sovepose.</div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- ============ SCREEN 6 · VARM ELLER KALD ============ -->
+    <div style="flex:none; width:402px; display:flex; flex-direction:column; gap:14px;">
+      <div style="font-size:13px; font-weight:600; color:#5A514C; padding-left:2px;">9 · Varm eller kald?</div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="false" hint-size="402px,874px">
+        <div style="position:relative; height:100%; width:100%; overflow:hidden; box-sizing:border-box; display:flex; flex-direction:column; padding:54px 16px 0; font-family:'Schibsted Grotesk',sans-serif; color:#2B2B2B; background:linear-gradient(180deg,#C9D7E1 0%,#DBDBD6 42%,#E8E1D8 100%);">
+          <div style="position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 44% at 50% -8%, rgba(255,255,255,.5), rgba(255,255,255,0) 60%);"></div>
+
+          <div style="position:relative; z-index:3; flex:none; display:flex; align-items:center; gap:10px; padding:4px 0 12px;">
+            <div data-hap="2" style="width:34px; height:34px; flex:none; border-radius:11px; background:rgba(255,255,255,.5); border:1px solid rgba(43,43,43,.07); display:flex; align-items:center; justify-content:center;"><svg width="9" height="15" viewBox="0 0 8 14" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 1L1 7l6 6"></path></svg></div>
+            <div style="font-size:21px; font-weight:700; letter-spacing:-.4px;">Varm eller kald?</div>
+          </div>
+
+          <div style="position:relative; z-index:2; flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding-bottom:18px; display:flex; flex-direction:column; gap:18px;">
+
+            <div style="display:flex; flex-direction:column; align-items:center; padding:8px 0 2px;">
+              <div style="position:relative; width:120px; height:150px;">
+                <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:62px; height:62px; border-radius:50%; background:rgba(43,43,43,.14);"></div>
+                <div style="position:absolute; top:54px; left:50%; transform:translateX(-50%); width:96px; height:96px; border-radius:42px 42px 38px 38px; background:rgba(43,43,43,.11);"></div>
+                <div style="position:absolute; top:56px; left:50%; transform:translateX(-50%); width:54px; height:16px; border-radius:999px; background:rgba(192,99,47,.22); border:1.5px solid rgba(192,99,47,.55);"></div>
+                <div style="position:absolute; top:50px; right:-6px; display:flex; align-items:center; gap:5px;"><div style="width:22px; height:1.5px; background:rgba(192,99,47,.5);"></div><span style="font-size:11.5px; font-weight:600; color:#A9492A; white-space:nowrap;">Nakke</span></div>
+              </div>
+              <div style="font-size:13.5px; font-weight:500; color:rgba(43,43,43,.55); margin-top:8px; text-align:center;">Kjenn på nakken — ikke hender eller føtter</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:11px;">
+              <div data-hap="1" style="display:flex; align-items:center; gap:14px; padding:15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.74) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 5px 14px rgba(43,43,43,.05); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); background:rgba(43,43,43,.06); box-shadow:none">
+                <div style="width:42px; height:42px; flex:none; border-radius:13px; background:rgba(192,99,47,.12); display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#C0632F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v9"></path><circle cx="12" cy="16" r="4"></circle><path d="M12 7l3-3M12 7l-3-3"></path></svg></div>
+                <div style="flex:1; min-width:0;"><div style="font-size:15.5px; font-weight:600;">For varm</div><div style="font-size:13px; font-weight:500; color:rgba(43,43,43,.5); margin-top:1px;">Svett, fuktig nakke — ta av et lag</div></div>
+              </div>
+              <div data-hap="4" style="display:flex; align-items:center; gap:14px; padding:15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.82) 100%); border:1px solid rgba(192,99,47,.3); box-shadow:0 1px 2px rgba(43,43,43,.05),0 8px 18px rgba(169,73,42,.1); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); box-shadow:none">
+                <div style="width:42px; height:42px; flex:none; border-radius:13px; background:rgba(192,99,47,.16); display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#A9492A" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"></path></svg></div>
+                <div style="flex:1; min-width:0;"><div style="font-size:15.5px; font-weight:700; color:#A9492A;">Perfekt</div><div style="font-size:13px; font-weight:500; color:rgba(43,43,43,.55); margin-top:1px;">Nakken er lun og tørr — alt stemmer</div></div>
+              </div>
+              <div data-hap="1" style="display:flex; align-items:center; gap:14px; padding:15px; border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.74) 100%); border:1px solid rgba(43,43,43,.05); box-shadow:0 1px 2px rgba(43,43,43,.04),0 5px 14px rgba(43,43,43,.05); transition:transform 100ms ease,background 100ms ease,box-shadow 100ms ease; cursor:pointer;" style-active="transform:scale(.97) translateY(1px); background:rgba(43,43,43,.06); box-shadow:none">
+                <div style="width:42px; height:42px; flex:none; border-radius:13px; background:rgba(43,43,43,.07); display:flex; align-items:center; justify-content:center;"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="rgba(43,43,43,.55)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l14 8M19 8L5 16"></path></svg></div>
+                <div style="flex:1; min-width:0;"><div style="font-size:15.5px; font-weight:600;">For kald</div><div style="font-size:13px; font-weight:500; color:rgba(43,43,43,.5); margin-top:1px;">Kjølig nakke — legg til et lag</div></div>
+              </div>
+            </div>
+
+            <div style="font-size:12.5px; font-weight:500; line-height:1.45; color:rgba(43,43,43,.45); text-align:center; padding:0 12px;">Kalde hender og føtter er normalt og betyr ikke at barnet fryser.</div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+  </div>
+  <div style="position:absolute; inset:0; z-index:60; pointer-events:none; overflow:visible;"><sc-for list="{{ pulses }}" as="p" hint-placeholder-count="0"><div style="{{ p.style }}"></div></sc-for></div>
+  <div style="{{ toastStyle }}"><span style="{{ toastDot }}"></span><span style="font-size:13px; font-weight:600; color:#2B2522;">{{ lastName }}</span><code style="font-family:ui-monospace,Menlo,monospace; font-size:11px; color:#8A7F78;">{{ lastCall }}</code></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;lyd&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;vibrasjon&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;visualisering&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Ring&quot;,&quot;Glød&quot;],&quot;default&quot;:&quot;Ring&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.state = { pulses: [], last: 0 };
+    this._pid = 0;
+    this._tok = 0;
+    this.setRoot = (el) => { this.rootEl = el; };
+  }
+  PAT(){ return { 1:[8], 2:[13], 3:[22], 4:[12,55,20] }; }
+  meta(){
+    return {
+      1:{ size:46,  ring:'rgba(43,37,34,.30)',  glow:'rgba(43,37,34,.18)',  name:'Valg',       call:'.selectionChanged()',              color:'#7A6F68' },
+      2:{ size:72,  ring:'rgba(43,37,34,.34)',  glow:'rgba(43,37,34,.20)',  name:'Navigasjon', call:'.impactOccurred(.light)',          color:'#5A514C' },
+      3:{ size:108, ring:'rgba(192,99,47,.50)', glow:'rgba(192,99,47,.32)', name:'Handling',   call:'.impactOccurred(.medium)',         color:'#C0632F' },
+      4:{ size:152, ring:'rgba(192,99,47,.62)', glow:'rgba(192,99,47,.42)', name:'Fullført',   call:'.notificationOccurred(.success)',  color:'#A9492A' }
+    };
+  }
+  componentDidMount(){
+    var self=this;
+    this._onClick = function(e){
+      var el = e.target && e.target.closest ? e.target.closest('[data-hap]') : null;
+      if(!el) return;
+      var tier = parseInt(el.getAttribute('data-hap'),10);
+      if(!tier) return;
+      self.fire(tier, e);
+    };
+    if(this.rootEl) this.rootEl.addEventListener('click', this._onClick, true);
+  }
+  componentWillUnmount(){
+    if(this.rootEl && this._onClick) this.rootEl.removeEventListener('click', this._onClick, true);
+  }
+  sound(tier){
+    try{
+      if(!this._ac) this._ac = new (window.AudioContext||window.webkitAudioContext)();
+      var ac=this._ac, t=ac.currentTime;
+      var freq={1:2400,2:1500,3:900,4:700}[tier]||1200;
+      var pop=function(f,at,dur,gain){
+        var o=ac.createOscillator(), g=ac.createGain();
+        o.type='sine'; o.frequency.value=f;
+        g.gain.setValueAtTime(0,at); g.gain.linearRampToValueAtTime(gain,at+0.004);
+        g.gain.exponentialRampToValueAtTime(0.0001,at+dur);
+        o.connect(g).connect(ac.destination); o.start(at); o.stop(at+dur+0.02);
+      };
+      pop(freq,t,0.05,0.06+tier*0.012);
+      if(tier===4) pop(freq*1.18,t+0.075,0.06,0.09);
+    }catch(e){}
+  }
+  fire(tier, e){
+    var x=200, y=420;
+    if(this.rootEl && e){
+      var rr=this.rootEl.getBoundingClientRect();
+      if(typeof e.clientX==='number' && e.clientX){ x=e.clientX-rr.left; y=e.clientY-rr.top; }
+      else if(e.currentTarget && e.currentTarget.getBoundingClientRect){
+        var r=e.currentTarget.getBoundingClientRect();
+        x=r.left+r.width/2-rr.left; y=r.top+r.height/2-rr.top;
+      }
+    }
+    var adds=[{ id:++this._pid, x:x, y:y, tier:tier, delay:0 }];
+    if(tier===4) adds.push({ id:++this._pid, x:x, y:y, tier:4, delay:95, small:true });
+    this.setState(function(s){ return { pulses: s.pulses.concat(adds), last: tier }; });
+    var vib = !(this.props.vibrasjon===false || this.props.vibrasjon==='false');
+    if(vib){ try{ if(navigator.vibrate) navigator.vibrate(this.PAT()[tier]); }catch(er){} }
+    if(this.props.lyd===true || this.props.lyd==='true') this.sound(tier);
+    var self=this;
+    adds.forEach(function(p){ setTimeout(function(){ self.setState(function(s){ return { pulses: s.pulses.filter(function(q){ return q.id!==p.id; }) }; }); }, 780+p.delay); });
+    var tok=++this._tok;
+    setTimeout(function(){ if(self._tok===tok) self.setState({ last:0 }); }, 1700);
+  }
+  renderVals(){
+    var M=this.meta();
+    var glow = String(this.props.visualisering||'Ring')==='Glød';
+    var last=this.state.last;
+    var pulses=this.state.pulses.map(function(p){
+      var m=M[p.tier];
+      var size=p.small ? m.size*0.62 : m.size;
+      var base={ position:'absolute', left:p.x+'px', top:p.y+'px', width:size+'px', height:size+'px', borderRadius:'50%', pointerEvents:'none', animation:'hapRing 780ms cubic-bezier(.22,.61,.36,1) '+p.delay+'ms forwards' };
+      if(glow){ base.background='radial-gradient(closest-side, '+m.glow+', rgba(0,0,0,0) 72%)'; }
+      else { base.border='1.5px solid '+m.ring; base.boxShadow='0 0 0 0.5px '+m.glow; }
+      return { id:p.id, style:base };
+    });
+    var legend=[1,2,3,4].map(function(n){
+      var m=M[n]; var active=last===n;
+      return {
+        name:m.name,
+        wrap:{ display:'flex', alignItems:'center', gap:'7px', transition:'opacity .3s ease', opacity: active?1:0.5 },
+        dot:{ width:(active?'11px':'9px'), height:(active?'11px':'9px'), borderRadius:'50%', background:m.color, transition:'all .3s ease', boxShadow: active?('0 0 0 4px '+m.glow):'none' },
+        label:{ fontSize:'13px', fontWeight:600, color: active?'#2B2B2B':'#5A514C', transition:'color .3s ease' }
+      };
+    });
+    var lm = last ? M[last] : null;
+    var toastStyle={ position:'fixed', bottom:'26px', left:'50%', zIndex:200, display: lm?'flex':'none', alignItems:'center', gap:'10px', padding:'10px 18px 10px 14px', borderRadius:'999px', background:'rgba(251,248,244,.92)', backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)', boxShadow:'0 8px 24px rgba(43,37,34,.18)', border:'1px solid rgba(43,37,34,.06)', transform:'translateX(-50%)', animation:'hapToast 240ms ease-out', pointerEvents:'none' };
+    var toastDot={ width:'8px', height:'8px', borderRadius:'50%', background: lm?lm.color:'#A89E97', flex:'none' };
+    return { rootRef:this.setRoot, pulses:pulses, legend:legend, lastName: lm?lm.name:'', lastCall: lm?lm.call:'', toastStyle:toastStyle, toastDot:toastDot };
+  }
+}
+</script>
+</body>
+</html>

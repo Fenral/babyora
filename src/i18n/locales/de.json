@@ -1,0 +1,189 @@
+{
+  "nav": {
+    "home": "Start",
+    "plan": "Vorhersage",
+    "guide": "Ratgeber",
+    "settings": "Einstellungen"
+  },
+  "activity": {
+    "vogn": "Kinderwagen",
+    "baeresele": "Tragetuch",
+    "utelek": "Draußen spielen",
+    "soevn": "Schlafen",
+    "groupLabel": "Aktivität"
+  },
+  "layerCategory": {
+    "innerst": "Innenlage",
+    "mellomlag": "Zwischenlage",
+    "yttertoy": "Außenlage",
+    "ekstra": "Extras"
+  },
+  "common": {
+    "next": "Weiter",
+    "back": "Zurück",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "loading": "Lädt…",
+    "tryAgain": "Erneut versuchen"
+  },
+  "guide": {
+    "title": "Anziehen erkunden",
+    "intro": "Schiebe die Regler, um zu sehen, was Babyora bei verschiedenen Bedingungen vorschlägt.",
+    "temperatureLabel": "Temperatur",
+    "indoorTemperatureLabel": "Zimmertemperatur",
+    "ageLabel": "Alter in Monaten",
+    "windLabel": "Windstärke",
+    "rainLabel": "Niederschlag",
+    "outputHeading": "Empfohlene Lagen",
+    "outputEmpty": "Wähle eine Aktivität, um einen Vorschlag zu sehen.",
+    "modifiersHeading": "Bedingungen",
+    "tipsHeading": "Gut zu wissen",
+    "tip": {
+      "neckTest": {
+        "title": "Der Nacken-Test",
+        "body": "Schiebe zwei Finger in den Nacken des Babys. Warm und trocken bedeutet genau richtig. Klamm oder verschwitzt bedeutet zu warm. Kalt bedeutet eine Lage mehr."
+      },
+      "wool": {
+        "title": "Warum Wolle?",
+        "body": "Wolle hält warm, selbst wenn es feucht ist, und lässt die Haut atmen. Für die Kleinsten ist Wolle oft sicherer als Baumwolle oder Synthetik."
+      },
+      "newborn": {
+        "title": "Säuglinge unter 3 Monaten",
+        "body": "Die Kleinsten regulieren die Temperatur schlecht. Höchstens 30 Minuten draußen bei Frost. Prüfe Nacken und Rücken oft."
+      },
+      "disclaimer": {
+        "title": "Hinweis",
+        "body": "Babyora ist ein Ratgeber, kein Urteil. Du kennst dein Kind am besten. Sprich mit dem Kinderarzt, wenn du dir Sorgen machst."
+      }
+    },
+    "wind": {
+      "calm": "Leichte Brise.",
+      "windproofRecommended": "Winddichte Lage empfohlen.",
+      "gale": "Sturm — schütze das Baby.",
+      "storm": "Starker Wind. Erwäge drinnen zu bleiben."
+    },
+    "rain": {
+      "dry": "Trocken.",
+      "drizzle": "Leichter Nieselregen.",
+      "moderate": "Mäßiger Regen — Regenschutz über den Kinderwagen.",
+      "heavy": "Starker Regen."
+    }
+  },
+  "ageWarning": {
+    "title": "Babyora ist für 0–2 Jahre optimiert",
+    "body": "Du kannst die App weiterhin benutzen, aber die Empfehlungen sind für die Kleinsten am genauesten."
+  },
+  "settings": {
+    "language": "Sprache",
+    "languageDescription": "Wähle die App-Sprache.",
+    "languageOption": {
+      "no": "Norsk",
+      "en": "English",
+      "sv": "Svenska",
+      "da": "Dansk",
+      "de": "Deutsch"
+    }
+  },
+  "home": {
+    "title": "Heutige Kleidung für {{name}}",
+    "loading": "Wetter wird für {{city}} geladen…",
+    "error": "Wetter konnte nicht geladen werden.",
+    "tempAria": "{{temp}} Grad, gefühlt {{feels}}",
+    "feelsLike": "Gefühlt {{feels}}°",
+    "layerCountAria": "{{count}} Lagen empfohlen",
+    "layerSuffix": "Lagen",
+    "weatherSection": "Wetter heute",
+    "weatherNowGroup": "Wetter jetzt",
+    "feelsTile": "Gefühlt",
+    "breezeTile": "Wind",
+    "weatherTile": "Himmel",
+    "windAria": "Wind {{wind}} Meter pro Sekunde",
+    "conditionAria": "Wetter: {{condition}}",
+    "feelsAria": "Gefühlt {{temp}} Grad",
+    "activityChanged": "Empfehlung aktualisiert für {{activity}}: {{count}} Lagen",
+    "todayHourLabel": "Heute",
+    "tripHourLabel": "Lagen für unterwegs",
+    "todayHourWindow": " um 08, 12, 16 und 20 Uhr",
+    "todayHourWindowToTomorrow": " von 08 Uhr heute bis 20 Uhr morgen",
+    "tomorrowHourWindow": " um 08, 12, 16 und 20 Uhr morgen",
+    "openDetails": "Tippen für Details."
+  },
+  "plan": {
+    "title": "Vorhersage",
+    "loading": "Vorhersage wird für {{city}} geladen…",
+    "error": "Vorhersage konnte nicht geladen werden. Versuche es später erneut.",
+    "emptyDays": "Keine Tage verfügbar.",
+    "daysListLabel": "Wettervorhersage für die nächsten {{count}} Tage",
+    "showAllDays": "Alle {{count}} Tage anzeigen",
+    "showFewerDays": "Nur {{count}} Tage anzeigen",
+    "footer": "Wetter von met.no. Empfehlung basiert auf dem kältesten Moment des Tages.",
+    "dayStripeAria": "{{weekday}}, {{tempMin}} bis {{tempMax}} Grad, Wind {{wind}} Meter pro Sekunde, {{layers}} Lagen empfohlen",
+    "layersShort": "{{count}} Lagen"
+  },
+  "notes": {
+    "common": {
+      "neckCheck": "Fühl mit zwei Fingern in den Nacken — warm und trocken heißt genau richtig."
+    },
+    "sleep": {
+      "warmRoom": "Das Schlafzimmer ist warm — lüfte kurz oder nimm einen dünneren Schlafsack.",
+      "coolRoom": "Das Schlafzimmer ist kühl — dreh die Heizung einen Tick hoch.",
+      "safeSleep": "Schlafsack ist am sichersten. Keine losen Decken oder Kissen ins Bett.",
+      "newbornBackSleep": "Die Kleinsten schlafen sicher auf dem Rücken. Schau ab und zu am Nacken nach."
+    },
+    "rain": {
+      "heavy": "Es schüttet — vielleicht eine kürzere Tour oder ein komplett überdachter Kinderwagen?",
+      "drizzle": "Leichter Nieselregen — das Verdeck reicht meistens. Fühl ab und zu nach, ob es feucht wird."
+    },
+    "wind": {
+      "strong": "Es bläst kräftig — schütze das Gesicht und halte die Tour kurz."
+    },
+    "humidCold": "Feuchte Kälte fühlt sich kälter an als das Thermometer sagt — eine Lage mehr ist klug.",
+    "newborn": {
+      "thermoregulation": "Die Kleinsten regulieren Wärme schlecht — prüfe Nacken und Rücken oft.",
+      "coldShortTrip": "Halte die Tour kurz bei Kälte — höchstens eine halbe Stunde. Trag fette Creme auf die Wangen auf.",
+      "coldWindWait": "Wind und Kälte sind hart für die Kleinsten — überlege zu warten, bis der Wind nachlässt.",
+      "heatTolerance": "Säuglinge vertragen Hitze schlecht — kurze Außenzeit und Schatten sind am wichtigsten.",
+      "coldLimit": "Säuglinge unter 3 Monaten: höchstens 30 Min draußen bei Frost. Prüfe Nacken und Rücken oft."
+    },
+    "stroller": {
+      "noBlanket": "Lege niemals eine Decke über das Verdeck — das wird eine Hitzefalle.",
+      "warmPouchBlanket": "Nimm entweder Fußsack oder Decke, nicht beides — es wird schnell zu warm.",
+      "mildShade": "Milder Tag im Kinderwagen — such Schatten und fühl ab und zu am Nacken.",
+      "sunTent": "Sonne und Kinderwagen = Zeltwärme. Ein luftiges Sonnensegel ist besser.",
+      "outdoorSleepFrost": "Schlafen draußen bei Frost: alle halbe Stunde nachsehen. Daunenfußsack allein reicht nicht immer."
+    },
+    "carrier": {
+      "noDownInside": "Du wärmst das Baby mit deinem Körper — vermeide Daunen direkt am Körper, es wird klamm.",
+      "insideJacket": "Das Baby ist in deiner Jacke — du bringst die Wärme, lass die Außenlage weg."
+    },
+    "outdoorPlay": {
+      "coldKindergarten": "Richtig kalt — schau, was die Kita heute für Draußen empfiehlt.",
+      "coldBreakLayer": "Bei einer Pause: eine Lage drauf. Kinder kühlen beim Stehen schnell aus."
+    },
+    "cold": {
+      "frostCream": "Trag eine halbe Stunde vor dem Rausgehen fette Creme auf die Wangen auf.",
+      "frostWindCheck": "Behalte Wangen und Ohren unterwegs im Blick — weiße Flecken heißen, es friert.",
+      "longTripBreak": "Lange Tour bei Kälte — plane eine Pause drinnen zum Aufwärmen."
+    },
+    "sun": {
+      "youngShade": "Die Sonne ist schön, aber halte das Kleinste im Schatten. Sonnencreme erst nach 6 Monaten.",
+      "olderHatSunscreen": "Sonnenhut und Sonnencreme auf die freien Stellen. Schau auf den UV-Wert — Berge und Schnee überraschen.",
+      "uvHigh": "Die Sonne ist heute stark — bleibt zwischen 11 und 15 Uhr im Schatten."
+    },
+    "safety": {
+      "carSeatThickSuit": "Im Autositz: dicken Anzug ausziehen, Gurt straffziehen, Anzug als Decke darüberlegen."
+    },
+    "heat": {
+      "extreme": "Sehr heiß heute — niemals allein im Auto, viel zu trinken, viel Schatten."
+    },
+    "peak": {
+      "overheating79mo": "Babys 7–9 Monate produzieren die meiste Körperwärme. Nimm weniger Lagen als üblich, fühl oft am Nacken."
+    },
+    "research": {
+      "overheatingPeak": "Babys 7–9 Monate produzieren die meiste Körperwärme. Nimm weniger Lagen als üblich, fühl oft am Nacken.",
+      "newbornColdLimit": "Säuglinge unter 3 Monaten: höchstens 30 Min draußen bei Frost. Prüfe Nacken und Rücken oft."
+    }
+  }
+}

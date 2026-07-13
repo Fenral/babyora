@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#F4F4F5" />
+    <title>Babyora palett-mocks v2 (jun 2026)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Instrument Sans", system-ui, sans-serif;
+        background: #f4f4f5;
+        color: #14181f;
+        min-height: 100dvh;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
+      .hero {
+        margin: 0 0 8px;
+      }
+      .hero h1 {
+        font-family: "DM Serif Display", serif;
+        font-weight: 400;
+        font-size: clamp(34px, 5vw, 52px);
+        letter-spacing: -0.01em;
+        line-height: 1.05;
+        margin: 0 0 12px;
+        color: #14181f;
+      }
+      .hero p {
+        font-size: 16px;
+        color: #4b5563;
+        max-width: 56ch;
+        margin: 0;
+        line-height: 1.5;
+      }
+      .meta {
+        margin-top: 18px;
+        font-size: 13px;
+        color: #6b7280;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .meta span {
+        background: #fff;
+        border: 1px solid #e4e4e7;
+        padding: 4px 10px;
+        border-radius: 999px;
+      }
+      .grid {
+        margin-top: 40px;
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      }
+      .card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        background: #fff;
+        border: 1px solid #e4e4e7;
+        border-radius: 18px;
+        padding: 20px;
+        transition: transform 0.18s ease, border-color 0.18s ease,
+          box-shadow 0.18s ease;
+        min-height: 44px;
+      }
+      .card:hover,
+      .card:focus-visible {
+        transform: translateY(-2px);
+        border-color: #14181f;
+        box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.18);
+        outline: none;
+      }
+      .card-tag {
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #6b7280;
+      }
+      .card-title {
+        font-family: "DM Serif Display", serif;
+        font-weight: 400;
+        font-size: 26px;
+        margin: 4px 0 12px;
+        line-height: 1.1;
+        letter-spacing: -0.01em;
+      }
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+      .swatch {
+        aspect-ratio: 1 / 1;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+      }
+      .card-desc {
+        font-size: 14px;
+        color: #4b5563;
+        line-height: 1.5;
+        margin: 0;
+      }
+      .card-cta {
+        margin-top: 16px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #14181f;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 24px;
+      }
+      .card-cta::after {
+        content: "→";
+        transition: transform 0.18s ease;
+      }
+      .card:hover .card-cta::after,
+      .card:focus-visible .card-cta::after {
+        transform: translateX(3px);
+      }
+      footer {
+        margin-top: 64px;
+        font-size: 12px;
+        color: #9ca3af;
+        text-align: center;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .card,
+        .card-cta::after {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="hero">
+        <h1>Babyora palett-mocks v2</h1>
+        <p>
+          Fire palett-retninger for Hjem-skjermen. Trykk en mock for å se hele
+          skjermen i den retningen. Samme HTML-struktur, kun fargevariabler
+          endrer seg.
+        </p>
+        <div class="meta" aria-label="Metadata">
+          <span>Juni 2026</span>
+          <span>4 retninger</span>
+          <span>iPhone 375×844</span>
+          <span>noindex</span>
+        </div>
+      </header>
+
+      <section class="grid" aria-label="Palett-retninger">
+        <a class="card" href="./p1-frost.html" aria-label="Åpne P1 Frost">
+          <div class="card-tag">P1 · Lys</div>
+          <h2 class="card-title">Frost</h2>
+          <div class="swatches" aria-hidden="true">
+            <span class="swatch" style="background: #eef2f4"></span>
+            <span class="swatch" style="background: #4a1f4d"></span>
+            <span class="swatch" style="background: #2a9d6e"></span>
+            <span class="swatch" style="background: #14181f"></span>
+            <span class="swatch" style="background: #ffffff"></span>
+          </div>
+          <p class="card-desc">
+            Norsk vinter-frost med dyp aubergine CTA — kjølig, premium,
+            anti-cliché.
+          </p>
+          <span class="card-cta">Åpne mock</span>
+        </a>
+
+        <a class="card" href="./p2-sienna.html" aria-label="Åpne P2 Sienna">
+          <div class="card-tag">P2 · Lys</div>
+          <h2 class="card-title">Sienna + skog</h2>
+          <div class="swatches" aria-hidden="true">
+            <span class="swatch" style="background: #efe6d6"></span>
+            <span class="swatch" style="background: #a85628"></span>
+            <span class="swatch" style="background: #6b7f5c"></span>
+            <span class="swatch" style="background: #1b2a4a"></span>
+            <span class="swatch" style="background: #ffffff"></span>
+          </div>
+          <p class="card-desc">
+            Brent sienna mot moss og navy — warm, premium, norsk skog.
+          </p>
+          <span class="card-cta">Åpne mock</span>
+        </a>
+
+        <a class="card" href="./p3-natt.html" aria-label="Åpne P3 Natt">
+          <div class="card-tag">P3 · Dark</div>
+          <h2 class="card-title">Natt + sennep</h2>
+          <div class="swatches" aria-hidden="true">
+            <span class="swatch" style="background: #14202e"></span>
+            <span class="swatch" style="background: #f5c542"></span>
+            <span class="swatch" style="background: #ff8a6c"></span>
+            <span class="swatch" style="background: #f3f1ec"></span>
+            <span class="swatch" style="background: #1c2c3d"></span>
+          </div>
+          <p class="card-desc">
+            Dyp natt med ekte sennep CTA og varm koral — radical anti-cliché,
+            premium-utility.
+          </p>
+          <span class="card-cta">Åpne mock</span>
+        </a>
+
+        <a
+          class="card"
+          href="./p4-apothecary.html"
+          aria-label="Åpne P4 Apothecary"
+        >
+          <div class="card-tag">P4 · Lys</div>
+          <h2 class="card-title">Apothecary</h2>
+          <div class="swatches" aria-hidden="true">
+            <span class="swatch" style="background: #f2efe7"></span>
+            <span class="swatch" style="background: #8b6b2f"></span>
+            <span class="swatch" style="background: #6b7f5c"></span>
+            <span class="swatch" style="background: #1b2a4a"></span>
+            <span class="swatch" style="background: #ffffff"></span>
+          </div>
+          <p class="card-desc">
+            Modern apothecary i krem og oliven-rust — helsekost-autoritet,
+            parenting-trygg.
+          </p>
+          <span class="card-cta">Åpne mock</span>
+        </a>
+      </section>
+
+      <footer>Babyora · palette-mocks-v2 · intern, ikke for indeksering</footer>
+    </main>
+  </body>
+</html>

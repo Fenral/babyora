@@ -1,0 +1,59 @@
+{
+  "claude": {
+    "id": "lue-m-ull",
+    "dbString": "lue m/ ull",
+    "kategori": "ekstra-hode",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Har bade what ('Tykk ull-lue med ore-klaffer.') + when ('Frost og lavere temperaturer.') i garment-info.ts (linje 159-162) og en dedikert whyForGarment-gren (linje 412-414), ikke fallback. Folger samme monster som sosken i ekstra-hode (lue-tynn, lue, balaklava). Trekk: sosken-plaggene gir eksplisitte temp-tall i when ('ca 8-14 C', 'Fra ca 5 C og nedover'), mens lue-m-ull bruker vag formulering uten tall ('Frost og lavere temperaturer') -- liten tone/presisjons-drift fra sosken-monsteret."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/lue-m-ull.png. db-streng 'lue m/ ull' er korrekt mappet til id 'lue-m-ull' i garment-illustrations.ts (linje 58). Navn/mapping er plausibelt og konsistent. Visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 23,
+      "trace": "lue m/ ull velges i baseTable KUN i frost-bandet (bandForTemp: -7 til 0 C feels-like) for tre aktiviteter: vogn (linje 58), baeresele (linje 109) og utelek (linje 218). I streng_frost (-15 til -7) og ekstrem (<-15) erstattes den av balaklava. I kald-bandet (0-5) og oppover brukes 'lue' / 'lue tynn'. soevn-tabellen inneholder den aldri. Modifiers (modifiers.ts) legger ALDRI til eller fjerner hodeplagg -- modifierne rorer kun hals, votter, sko, ullsokker, skall og noter; lue m/ ull er uberort av vind/regn/alder/sol/fottoy-justering. Sikkerhetslag: HB-1 (safety.ts linje 122) og CK-4 (conflicts.ts linje 122) stripper alt hodeplagg ved soevn innendors (hodet er babys varme-avgivelse) -- saa selv om den feilaktig havnet i en sove-kontekst ville den bli fjernet. Pediatrisk vurdering: frost-band hodeplagg utendors er forsvarlig og stottet av kildene om hode-varmetap (slumbersac: hode opptil 85% av varmetap hos sovende spedbarn; merino-kids bekrefter). Ingen overoppheting/SIDS/kvelning/frost-risiko introduseres -- soevn-stripping handterer den eneste reelle SIDS-vektoren. Ingen helse-sporsmaal som kildene ikke dekker; ingen web-sok nodvendig.",
+      "kilder": [
+        "https://www.slumbersac.co.uk/blogs/advice/baby-regulate-body-temperature",
+        "https://merinokids.co.uk/blogs/merino/the-importance-of-temperature-regulation-in-babies"
+      ],
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig: frost-band (-7 til 0 C) for utelek/vogn/baeresele, korrekt avgrenset mot balaklava i strengere kulde, og fullstendig utelukket + sikkerhets-strippet i soevn. Eneste trekk er tekst-drift (se mal 4), ikke seleksjons-feil."
+    },
+    "tekstLogikk": {
+      "score": 19,
+      "kommentar": "DRIFT mellom when-tekst og faktisk seleksjon. when sier 'Frost og lavere temperaturer.' Men baseTable velger lue m/ ull KUN i frost-bandet (-7 til 0 C); ved 'lavere temperaturer' (streng_frost -15 til -7, og ekstrem <-15) erstattes den eksplisitt av balaklava. Formuleringen 'og lavere temperaturer' overdriver dermed plaggets reelle bruksvindu og kan villede en forelder til a velge ore-klaff-lua i stedet for balaklava i streng frost -- en pakledning som gir DAARLIGERE ansikts/hals-beskyttelse enn motoren faktisk anbefaler. whyForGarment-grenen ('nodvendig nar X C krever maks hodevarme') er korrekt og interpolerer feels-like uten paastand om ovre/nedre grense, saa den er konsistent. Drift sitter i when-strengen."
+    },
+    "alternativer": {
+      "score": 9,
+      "kommentar": "Reelt alternativ finnes i alternatives.ts (linje 135-144): lue m/ ull -> lue tynn (tykkelse-nedtrinn). Gyldig ull-til-ull tykkelse-alternativ. Liten innvending: spranget fra tykk ore-klaff-lue rett til TYNN lue er stort; det mer naturlige enkelt-nedtrinnet ville vaert standard 'lue' (som ogsaa dekker orene). Eksisterende alternativ er likevel forsvarlig, ikke feil."
+    },
+    "total": 88,
+    "verdikt": "Solid plagg med korrekt og pediatrisk forsvarlig seleksjon (frost-band, riktig avgrenset mot balaklava, sikkerhets-strippet i soevn). Hovedfunn er en tekst-drift: when-strengen 'Frost og lavere temperaturer' overstiger det faktiske seleksjons-vinduet og kan villede pakledning i streng frost. Anbefaling: stram when-teksten til a matche frost-bandet og marker overgangen til balaklava. Total 88/100.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "when-tekst sier 'Frost og lavere temperaturer.' men baseTable velger lue m/ ull KUN i frost-bandet (-7 til 0 C). Ved lavere temperaturer (streng_frost/ekstrem) erstattes den av balaklava. 'og lavere temperaturer' overdriver bruksvinduet og kan villede forelder til a bruke ore-klaff-lue i stedet for balaklava i streng frost -- svakere ansikts/hals-dekning enn motoren anbefaler.",
+        "forslag": "Endre when til noe som matcher frost-bandet og signaliserer overgangen, f.eks. 'Frost, ca -7 til 0 C. I streng frost: bytt til balaklava.' (TALL/TERSKLER ENDRES IKKE I MOTOREN -- kun info-tekst justeres for a speile eksisterende baseTable-logikk.)",
+        "kilde": "tables.ts linje 58/109/218 (frost) vs linje 64/115/224 (balaklava i streng_frost); garment-info.ts linje 161"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "when-strengen mangler eksplisitt temp-tall, til forskjell fra sosken i samme kategori (lue-tynn 'ca 8-14 C', lue 'Fra ca 5 C og nedover'). Liten tone/presisjons-drift fra sosken-monsteret.",
+        "forslag": "Legg til omtrentlig temp-spenn i when for konsistens med sosken-plaggene (samme endring som dekker funn over).",
+        "kilde": "garment-info.ts linje 152-161"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Alternativet lue m/ ull -> lue tynn er et stort tykkelse-sprang (tykk ore-klaff -> tynn). Standard 'lue' ville vaert et mer naturlig enkelt-nedtrinn.",
+        "forslag": "Vurder a legge til standard 'lue' som mellomliggende alternativ, eller bytt lue tynn -> lue. Ikke kritisk; eksisterende alternativ er gyldig.",
+        "kilde": "alternatives.ts linje 135-144"
+      }
+    ]
+  },
+  "fable": null
+}

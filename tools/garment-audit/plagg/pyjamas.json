@@ -1,0 +1,113 @@
+{
+  "claude": {
+    "id": "pyjamas",
+    "dbString": "pyjamas",
+    "kategori": "mellomlag",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Plagget har komplett what+when i garment-info.ts (linje 103-106) og en dedikert whyForGarment-gren (linje 325-330 for soevn, og 372-374 generelt), ikke fallback. what er kortere enn sosken (tynn-pyjamas og ull-pyjamas har 2-setnings what; pyjamas har kun 'Standard pyjamas i bomull.' uten andre setning om bruk/folelse), saa tonen/lengden avviker litt fra monsteret. MAP-oppforing finnes (linje 39). Trekker 3 for ujevn what-lengde mot sosken."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet eksisterende paa C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\pyjamas.png (dir-verifisert; Glob feilet pga case/index-quirk, men fila finnes). db-streng 'pyjamas' er korrekt mappet til id 'pyjamas' i garment-illustrations.ts linje 39 -> garmentPng gir riktig sti. Navn/mapping er plausibelt og entydig (ingen kollisjon med tynn-pyjamas/ull-pyjamas). Visuell dom utestaaende (Fable 5 + Claude)."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig. pyjamas brukes KUN ved soevn (innendors romtemp) som mellomlag mellom langermet body og sovepose 2.5 TOG, i mild (10-15 grC) og kjolig (5-9 grC) bandene. CK-3 capper TOG mot romtemp (maxAllowed 3.5 for <16 grC, saa 2.5 TOG passerer). CK-8 ville byttet pyjamas->kortermet body ved feels >21 grC + TOG>=2.5, men pyjamas velges aldri saa varmt, saa ingen konflikt. SB-2/SB-3 reduserer ikke pyjamas i disse bandene. Ingen overoppheting/SIDS/kvelning-risiko introduseres. TOG-mappingen er forankret i Lullaby Trust TOG-chart, HALO, ErgoPouch og AAP-2022 (sources.ts). Ingen ukjente helse-sporsmaal -> ingen web-sok nodvendig.",
+      "score_note": "ok",
+      "trace": "baseTable.soevn.mild = [innerst: langermet body | mellomlag: PYJAMAS | ekstra: sovepose 2.5 TOG] (tables.ts L157-161). baseTable.soevn.kjolig = [innerst: langermet body + ullsokker | mellomlag: PYJAMAS | ekstra: sovepose 2.5 TOG] (L162-166). Romtemp-band: mild=10-15 grC, kjolig=5-9 grC (bandForTemp L8-18). Modifier-pipeline for soevn (modifiers.ts L89-140) hopper alle ute-modifikatorer, saa pyjamas roeres ikke der. conflicts.ts: CK-3 (TOG-cap, paavirker ikke pyjamas), CK-8 (kun feels>21 grC -> aldri aktiv for pyjamas). Ingen modifier legger TIL eller FJERNER pyjamas.",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 12,
+      "kommentar": "KLAR DRIFT mellom when-tekst og faktisk seleksjon. garment-info.ts L105 sier: 'Romtemperatur 18-21 grC med sovepose ca 1.0 TOG.' Men baseTable velger pyjamas ved romtemp 5-15 grC (mild+kjolig) med sovepose 2.5 TOG -- IKKE 18-21 grC, og IKKE 1.0 TOG. Ved 18-21 grC (varm-bandet 16-21) velger tabellen faktisk tynn-pyjamas, ikke pyjamas. Teksten beskriver altsaa et VARMERE rom og en TYNNERE sovepose enn motoren bruker. En forelder som leser '18-21 grC med 1.0 TOG' mens appen faktisk kler barnet for 5-15 grC med 2.5 TOG, vil underforberede barnet for kjoligere rom (kulde/termoregulering). whyForGarment-grenen (L325-330, og L372-374) er derimot dynamisk og korrekt -- den bruker faktisk feels-temp og sier 'krever litt ekstra varme i tillegg til soveposen', uten aa motsi logikken. Hele trekket skyldes when-teksten."
+    },
+    "alternativer": {
+      "score": 9,
+      "kommentar": "pyjamas mangler oppforing i alternatives.ts. Et reelt og nyttig alternativ ville vaert ull-pyjamas (tykkelse-/material-trinn opp) for kjolig-bandet (5-9 grC), parallelt til hvordan lue m/ull har lue tynn som alternativ og vintersko isolerte har vintersko. Mellomlag-sosken (tynn ull-mellomlag, ull-mellomlag, ull-jakke, ull-bukse) har alle fleece-alternativer. Pyjamas er bomull og kunne hatt ull-pyjamas som varmere alternativ ved nedre kant av sitt band. Mindre kritisk siden soveplagg-valg er TOG-drevet og CK-3 capper, derfor kun -1."
+    },
+    "total": 80,
+    "verdikt": "Solid seleksjon og trygg pediatrisk logikk, men when-teksten er feil: den oppgir 18-21 grC + 1.0 TOG mens motoren faktisk velger pyjamas ved 5-15 grC + 2.5 TOG. Denne drift villeder paakledning (for lite varme i kjolig rom) og boer rettes. Mindre svakheter: ujevn what-lengde mot sosken og manglende ull-pyjamas-alternativ.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "when-tekst i garment-info.ts (L105) sier 'Romtemperatur 18-21 grC med sovepose ca 1.0 TOG', men baseTable.soevn velger pyjamas ved romtemp 5-15 grC (mild+kjolig) med sovepose 2.5 TOG. Ved 18-21 grC velges faktisk tynn-pyjamas, ikke pyjamas. Teksten beskriver et varmere rom og lettere sovepose enn motoren bruker -> forelder kan underforberede barnet for kjoligere rom.",
+        "forslag": "Endre when-teksten til aa matche faktisk band, f.eks.: 'Romtemperatur 5-15 grC (kjolig til mildt rom) som mellomlag under sovepose 2.5 TOG.' (RØR IKKE tabell-tall -- kun tekst.)",
+        "kilde": "halo-tog (TOG per romtemp); ergopouch-guide (2.5 TOG-trinn); kommentar i tables.ts L135-138"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "pyjamas har ingen oppforing i alternatives.ts, mens material-/tykkelse-soskenet (tynn ull-mellomlag, ull-mellomlag, ull-jakke, ull-bukse) alle har alternativer. Et naturlig ull-pyjamas-alternativ (varmere trinn) for nedre kant av kjolig-bandet mangler.",
+        "forslag": "Vurder aa legge til ITEM_ALTERNATIVES-oppforing for 'pyjamas' med alternativet 'ull-pyjamas' (varmere ved 5-9 grC rom), parallelt til lue m/ull -> lue tynn-monsteret.",
+        "kilde": "merino-kids (ull-fordeler ved fukt/varmeregulering); alternatives.ts monster L44-145"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "what-teksten for pyjamas ('Standard pyjamas i bomull.') er ett-setnings og kortere/tynnere enn sosken tynn-pyjamas og ull-pyjamas som har en utdypende andresetning om bruk/folelse.",
+        "forslag": "Utvid what med en kort andresetning i samme tone som sosken, f.eks. om at den er todelt/myk og lett aa ta av og paa. Ren tekst, ingen logikk-endring.",
+        "kilde": "garment-info.ts L99-110 (sosken-monster)"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 17,
+      "kommentar": "Datamodellen er komplett (id, kategori, what/when, plass i baseTable og alternatives), men «what» er en tynn ettsetnings-beskrivelse uten materialdetalj utover «bomull» — søsknene tynn-pyjamas/ull-pyjamas er rikere. Enig med Claudes lav-funn her, men det er et reelt konsistensavvik i innholdsdybde mellom søskenplagg, ikke bare kosmetikk."
+    },
+    "utseende": {
+      "score": 17,
+      "kommentar": "Bildet viser korrekt plagg: todelt bomullspyjamas med langermet overdel (trykknapper på skulder — riktig for 0-3 år) og bukse med ribbet linning og mansjetter. Stilen er ren flat-illustrasjon uten synlige AI-artefakter; sømmer og folder er konsistente. To småtrekk: buksen har påsydde lommer, noe som er atypisk for pysj til spedbarn og kan forveksles med joggebukse, og helsvart bakgrunn må verifiseres mot appens øvrige illustrasjoner (hvis resten har transparent/lys bakgrunn er dette et avvik)."
+    },
+    "seleksjon": {
+      "score": 16,
+      "kommentar": "Her er jeg strengere enn Claude, som ikke flagget selve seleksjonen. Kombinasjonen langermet body + bomullspyjamas + 2,5 TOG er pediatrisk grei for mild (10-15 °C, om enn i nedre kant — vanlige TOG-tabeller anbefaler 2,5 TOG ned mot ca. 16 °C og 3,5 TOG under). For kjolig (5-9 °C) er samme oppsett trolig for kaldt: under 10 °C romtemp anbefales normalt 3,5 TOG og/eller ull som nattlag. At motoren bruker identisk påkledning i begge bånd uten opptrapping i kjolig er en reell svakhet. Positivt: søvn hopper vær-modifiers, som er riktig (vær er irrelevant innendørs)."
+    },
+    "tekstLogikk": {
+      "score": 7,
+      "kommentar": "Bekrefter Claudes hoy-funn, men oppgraderer alvorlighet: «når»-teksten beskriver 18-21 °C med 1,0 TOG — et scenario der motoren aldri velger dette plagget (der velges tynn-pyjamas). Motorens faktiske bruksområde er 5-15 °C med 2,5 TOG. Teksten er altså ikke bare upresis, den beskriver feil plagg sitt bruksområde. Sikkerhetsretningen er det alvorlige: en forelder som leser kortet kan tro pyjamasen hører til varmt rom + lett pose, og dermed underkle barnet i et 8-graders rom eller velge feil pose-TOG manuelt. Dette er en direkte selvmotsigelse mellom brukerflate og motor, ikke en nyanse."
+    },
+    "alternativer": {
+      "score": 6,
+      "kommentar": "Oppgraderer Claudes lav-funn til medium: manglende ull-pyjamas som varmere alternativ er ikke kosmetisk når motoren faktisk sender bomullspyjamas inn i 5-9 °C-båndet (jf. mål 3). Ull-alternativet er nettopp den pediatrisk riktige eskaleringen for nedre kjolig-kant, så fraværet i alternatives.ts forsterker seleksjonssvakheten. Tynnere alternativ (tynn-pyjamas) finnes implisitt via baseTable, så retningen oppover er hullet."
+    },
+    "total": 63,
+    "verdikt": "Trenger arbeid før lansering: illustrasjon og struktur er solide, men «når»-teksten motsier motorens faktiske seleksjon på en sikkerhetsrelevant måte, og kjolig-båndet (5-9 °C) er trolig underdimensjonert med 2,5 TOG + bomull. Fiks tekst↔motor-avviket og vurder TOG/ull-opptrapping i kjolig før plagget godkjennes.",
+    "uenig_med_claude": "Ja, på to punkter. (1) Claude ga 80/100; jeg lander på 63 fordi mål 4-avviket ikke er en upresishet men en full selvmotsigelse med sikkerhetsretning (forelder kan underkle), og fordi Claude overså at selve seleksjonen i kjolig (2,5 TOG + bomull ved 5-9 °C) er pediatrisk tvilsom — det er et mål 3-funn, ikke bare et tekstproblem. (2) Claudes mål 5-funn bør være medium, ikke lav, siden det manglende ull-alternativet er den direkte mitigeringen av kjolig-svakheten. Claudes mål 1-funn (tynn what-tekst) bekreftes som lav.",
+    "funn": [
+      {
+        "severity": "kritisk",
+        "mal": 4,
+        "beskrivelse": "«Når»-teksten («18-21 °C med sovepose ca 1.0 TOG») beskriver et scenario der motoren velger tynn-pyjamas, ikke pyjamas. Pyjamasens faktiske bruksområde er 5-15 °C med 2,5 TOG. Brukerflaten motsier motoren, med risiko for at forelder underkleder barn i kjølige rom.",
+        "forslag": "Endre when-tekst til noe à la «Kjøligere soverom, ca 5-15 °C, sammen med langermet body og sovepose 2.5 TOG» — eller juster baseTable hvis intensjonen var 18-21 °C. Legg til en CI-sjekk som sammenligner when-tekstens temperaturbånd/TOG mot baseTable-oppslaget for hvert plagg."
+      },
+      {
+        "severity": "hoy",
+        "mal": 3,
+        "beskrivelse": "Identisk påkledning (body + bomullspyjamas + 2,5 TOG) brukes i både mild (10-15 °C) og kjolig (5-9 °C). Vanlig TOG-veiledning tilsier 3,5 TOG og/eller ullag under ca 16 °C, og særlig under 10 °C er 2,5 TOG + bomull trolig for kaldt.",
+        "forslag": "Differensier kjolig-båndet: 3,5 TOG-pose og/eller bytt bomullspyjamas mot ull-pyjamas ved 5-9 °C. Verifiser mot kildetabellen (f.eks. Gro-/TOG-tabeller) som motoren bygger på."
+      },
+      {
+        "severity": "medium",
+        "mal": 5,
+        "beskrivelse": "alternatives.ts mangler ull-pyjamas som varmere alternativ. Hullet er ikke kosmetisk: det er nettopp eskaleringen som trengs i nedre kjolig-kant der dagens seleksjon er svakest.",
+        "forslag": "Legg til ull-pyjamas som «varmere»-alternativ for pyjamas, med betingelse romtemp < 10 °C."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "«What»-teksten er én tynn setning («Standard pyjamas i bomull.») og svakere enn søskenplaggenes beskrivelser — inkonsistent innholdsdybde.",
+        "forslag": "Utvid med 1-2 setninger: passform (todelt, trykknapper på skulder), funksjon som mellomlag under sovepose, og vaskeråd hvis det er mønster i appen."
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen viser joggebukse-lignende lommer, atypisk for pysj 0-3 år, og helsvart bakgrunn som kan avvike fra appens øvrige bildestil.",
+        "forslag": "Vurder regenerering uten lommer og med bakgrunn (transparent/lys) som matcher resten av plaggbiblioteket."
+      }
+    ]
+  }
+}

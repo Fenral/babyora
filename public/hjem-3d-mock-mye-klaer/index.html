@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Babyora · Anbefaling-tekst-strategi (A / B / D × 3-plagg / 7-plagg)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1a1a1a;
+    --bg-soft:#222;
+    --ink:#F4F1EC;
+    --ink-soft:#B5AFA6;
+    --ink-muted:#7C766E;
+    --warm-orange:#FF6B35;
+    --good:#7BC47F;
+    --warn:#E0B454;
+    --bad:#E07A6E;
+    --line:rgba(255,255,255,.08);
+    --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+    --font-serif:'DM Serif Display',Georgia,serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font-sans);}
+  body{padding:40px 32px 80px;min-height:100vh;}
+
+  .page{max-width:1480px;margin:0 auto;}
+
+  header.intro{margin:0 0 36px;max-width:900px;}
+  .eyebrow{
+    display:inline-block;font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+    color:var(--warm-orange);margin-bottom:12px;
+  }
+  h1{
+    font-family:var(--font-serif);font-weight:400;font-size:42px;line-height:1.1;
+    margin:0 0 12px;letter-spacing:-.8px;color:var(--ink);
+  }
+  .lede{font-size:15.5px;line-height:1.55;color:var(--ink-soft);max-width:720px;margin:0;}
+  .lede strong{color:var(--ink);font-weight:600;}
+
+  /* Grid 3×2 */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0,1fr));
+    grid-template-areas:
+      "head-A head-B head-D"
+      "row1-label row1-label row1-label"
+      "frame-A3 frame-B3 frame-D3"
+      "row2-label row2-label row2-label"
+      "frame-A7 frame-B7 frame-D7";
+    gap:18px 24px;align-items:start;justify-items:center;
+    margin-bottom:64px;
+  }
+  .col-head{
+    grid-row:1;width:100%;text-align:center;padding:18px 16px;
+    border:1px solid var(--line);border-radius:18px;
+    background:linear-gradient(180deg, rgba(255,107,53,.06), rgba(255,255,255,.02));
+  }
+  .col-head h2{
+    font-family:var(--font-serif);font-weight:400;font-size:24px;letter-spacing:-.3px;
+    margin:0 0 6px;color:var(--ink);
+  }
+  .col-head .rule{
+    font-size:12.5px;color:var(--ink-soft);line-height:1.4;margin:0;
+    font-family:var(--font-sans);
+  }
+  .col-head .rule code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    background:rgba(255,255,255,.06);padding:1.5px 6px;border-radius:5px;
+    color:var(--ink);font-size:11.5px;
+  }
+
+  .row-label{
+    width:100%;display:flex;align-items:center;gap:14px;
+    padding:6px 4px;margin-top:6px;
+  }
+  .row-label .badge{
+    font-size:10.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--warm-orange);padding:5px 10px;border-radius:6px;
+    background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.25);
+  }
+  .row-label .desc{font-size:13px;color:var(--ink-soft);}
+  .row-label .desc strong{color:var(--ink);font-weight:600;}
+  .row-label .line{flex:1;height:1px;background:var(--line);}
+
+  .frame-wrap{
+    width:100%;display:flex;justify-content:center;
+  }
+  iframe.phone{
+    width:412px;height:868px;
+    border:0;border-radius:48px;background:#0a0a0a;
+    box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.04);
+    display:block;
+  }
+
+  /* Plassering */
+  #head-A{grid-area:head-A;} #head-B{grid-area:head-B;} #head-D{grid-area:head-D;}
+  #row1-label{grid-area:row1-label;} #row2-label{grid-area:row2-label;}
+  #frame-A3{grid-area:frame-A3;} #frame-B3{grid-area:frame-B3;} #frame-D3{grid-area:frame-D3;}
+  #frame-A7{grid-area:frame-A7;} #frame-B7{grid-area:frame-B7;} #frame-D7{grid-area:frame-D7;}
+
+  /* Scoring */
+  .scoring{
+    max-width:1100px;margin:0 auto;
+    border:1px solid var(--line);border-radius:18px;overflow:hidden;
+    background:rgba(255,255,255,.02);
+  }
+  .scoring h3{
+    font-family:var(--font-serif);font-weight:400;font-size:24px;letter-spacing:-.3px;
+    margin:0;padding:22px 26px 6px;color:var(--ink);
+  }
+  .scoring .sub{
+    font-size:13.5px;color:var(--ink-soft);padding:0 26px 18px;margin:0;
+  }
+  table{
+    width:100%;border-collapse:collapse;font-size:13.5px;
+  }
+  thead th{
+    text-align:left;font-weight:600;font-size:12px;letter-spacing:.8px;text-transform:uppercase;
+    color:var(--ink-muted);padding:14px 18px;border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.025);
+  }
+  thead th.col{text-align:center;}
+  tbody td{
+    padding:14px 18px;border-bottom:1px solid var(--line);color:var(--ink);vertical-align:middle;
+  }
+  tbody td.criterion{font-weight:600;width:34%;}
+  tbody td.criterion .hint{display:block;font-weight:400;font-size:12px;color:var(--ink-muted);margin-top:2px;}
+  tbody td.score{text-align:center;font-weight:600;}
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:5px 11px;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:.1px;
+    border:1px solid transparent;
+  }
+  .pill.good{color:#0e2a14;background:#7BC47F;border-color:#5fa863;}
+  .pill.warn{color:#3a2b08;background:#E0B454;border-color:#b9933f;}
+  .pill.bad{color:#3a0e0a;background:#E07A6E;border-color:#b75e54;}
+  tbody tr:last-child td{border-bottom:none;}
+
+  tfoot td{
+    padding:16px 18px;font-size:13px;color:var(--ink-soft);
+    background:rgba(255,255,255,.025);border-top:1px solid var(--line);
+  }
+  tfoot td strong{color:var(--ink);}
+
+  .legend{
+    display:flex;gap:14px;padding:14px 26px 22px;flex-wrap:wrap;
+    font-size:12px;color:var(--ink-muted);
+  }
+  .legend .item{display:flex;align-items:center;gap:6px;}
+
+  @media (max-width:1180px){
+    .grid{grid-template-columns:1fr;
+      grid-template-areas:
+        "head-A"
+        "frame-A3"
+        "frame-A7"
+        "head-B"
+        "frame-B3"
+        "frame-B7"
+        "head-D"
+        "frame-D3"
+        "frame-D7";
+    }
+    .row-label{display:none;}
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <header class="intro">
+      <span class="eyebrow">Babyora · forsknings-mock</span>
+      <h1>Hvordan skal anbefaling-teksten håndtere ULIKT antall plagg?</h1>
+      <p class="lede">
+        Tre tekst-strategier (<strong>A · B · D</strong>) testet mot to scenario-ekstremer:
+        <strong>3 plagg ved mildt vær</strong> og <strong>7 plagg ved ekstrem kulde</strong>.
+        Alt annet i UI-et (avatar, vær-Lottie, brand, tabbar, CTA) holdes konstant — kun
+        anbefaling-blokken varierer. Ramme-størrelse er ekte iPhone 14 (390×844).
+      </p>
+    </header>
+
+    <section class="grid" aria-label="3 strategier × 2 plagg-scenario">
+
+      <div class="col-head" id="head-A">
+        <h2>A · Hovedplagg + telling</h2>
+        <p class="rule"><code>«Vinterdress + N lag til»</code> — primær-plagget får ord, resten blir tall</p>
+      </div>
+      <div class="col-head" id="head-B">
+        <h2>B · Lag-tier abstraksjon</h2>
+        <p class="rule"><code>«N lag mot kulda»</code> — ingen plagg-navn, bare antall lag</p>
+      </div>
+      <div class="col-head" id="head-D">
+        <h2>D · Hierarkisk mini-rad</h2>
+        <p class="rule">Kompakt liste · Ytterst / Mellom / Innerst / Tilbehør · 13–14px</p>
+      </div>
+
+      <div class="row-label" id="row1-label">
+        <span class="badge">Scenario 1</span>
+        <span class="desc"><strong>3 plagg · mildt vinter-vær</strong> · −4°, klarvær, lite vind (Elverum)</span>
+        <span class="line"></span>
+      </div>
+
+      <div class="frame-wrap" id="frame-A3"><iframe class="phone" src="A-3plagg.html" title="A · 3 plagg" loading="lazy"></iframe></div>
+      <div class="frame-wrap" id="frame-B3"><iframe class="phone" src="B-3plagg.html" title="B · 3 plagg" loading="lazy"></iframe></div>
+      <div class="frame-wrap" id="frame-D3"><iframe class="phone" src="D-3plagg.html" title="D · 3 plagg" loading="lazy"></iframe></div>
+
+      <div class="row-label" id="row2-label">
+        <span class="badge">Scenario 2</span>
+        <span class="desc"><strong>7 plagg · ekstrem kulde</strong> · −22°, overskyet, vind (Karasjok)</span>
+        <span class="line"></span>
+      </div>
+
+      <div class="frame-wrap" id="frame-A7"><iframe class="phone" src="A-7plagg.html" title="A · 7 plagg" loading="lazy"></iframe></div>
+      <div class="frame-wrap" id="frame-B7"><iframe class="phone" src="B-7plagg.html" title="B · 7 plagg" loading="lazy"></iframe></div>
+      <div class="frame-wrap" id="frame-D7"><iframe class="phone" src="D-7plagg.html" title="D · 7 plagg" loading="lazy"></iframe></div>
+
+    </section>
+
+    <section class="scoring" aria-label="Skalerings-evaluering">
+      <h3>Hvilken skalerer best fra 2 → 7 plagg?</h3>
+      <p class="sub">
+        Rangering på 5 kriterier som er kritiske for «kald hånd, gråtende baby»-bruken
+        som vi designer for. Grønn = sterk, gul = nøytral, rød = svak.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Kriterium</th>
+            <th class="col">A · Hovedplagg + telling</th>
+            <th class="col">B · Lag-tier</th>
+            <th class="col">D · Mini-rad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="criterion">
+              Hansker-test
+              <span class="hint">Parse på 50 ms i kulden uten å lese</span>
+            </td>
+            <td class="score"><span class="pill good">Sterk</span></td>
+            <td class="score"><span class="pill good">Sterk</span></td>
+            <td class="score"><span class="pill warn">Krever lesing</span></td>
+          </tr>
+          <tr>
+            <td class="criterion">
+              Avatar-fokus bevart
+              <span class="hint">Tekst-blokk konkurrerer ikke med 3D-figuren</span>
+            </td>
+            <td class="score"><span class="pill good">Sterk</span></td>
+            <td class="score"><span class="pill good">Sterk</span></td>
+            <td class="score"><span class="pill bad">Tekst dominerer</span></td>
+          </tr>
+          <tr>
+            <td class="criterion">
+              Skala 2 → 7 plagg
+              <span class="hint">Holder formen uten å sprenge layout</span>
+            </td>
+            <td class="score"><span class="pill good">Skalerer rent</span></td>
+            <td class="score"><span class="pill good">Skalerer rent</span></td>
+            <td class="score"><span class="pill warn">4-rad alltid</span></td>
+          </tr>
+          <tr>
+            <td class="criterion">
+              Bestemor forstår
+              <span class="hint">Klar nok til at ikke-tek-bruker handler riktig</span>
+            </td>
+            <td class="score"><span class="pill good">Tydelig</span></td>
+            <td class="score"><span class="pill bad">«Lag» er fagspråk</span></td>
+            <td class="score"><span class="pill good">Eksplisitt</span></td>
+          </tr>
+          <tr>
+            <td class="criterion">
+              Anti-tekst-overload
+              <span class="hint">Føles ikke som en checklist å lese</span>
+            </td>
+            <td class="score"><span class="pill good">Én linje</span></td>
+            <td class="score"><span class="pill good">Én linje</span></td>
+            <td class="score"><span class="pill bad">4 linjer</span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4">
+              <strong>Tentativ vinner:</strong> A — kombinerer hovedplagg-konkretitet
+              med skaler-bar telling. B er sterkere på minimalisme men taper på «bestemor».
+              D gir mest info men dreper avatar-fokuset og bryter hjem-skjermens «én blikk»-løfte.
+              Vurder hybrid: <em>A på Hjem</em>, <em>D bak «Se påkledning»-CTA</em>.
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="legend" aria-hidden="true">
+        <span class="item"><span class="pill good">Grønn</span> sterk på kriteriet</span>
+        <span class="item"><span class="pill warn">Gul</span> nøytral / med forbehold</span>
+        <span class="item"><span class="pill bad">Rød</span> svak — bryter kriteriet</span>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

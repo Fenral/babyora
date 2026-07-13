@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Babyora — Nano Banana Pro vs Flash A/B</title>
+<style>
+  :root {
+    --bg: oklch(97.5% 0.008 85);
+    --ink: oklch(22% 0.015 35);
+    --muted: oklch(50% 0.02 35);
+    --rust: oklch(42% 0.11 35);
+    --terracotta: oklch(56% 0.13 40);
+    --line: oklch(87% 0.030 85);
+    --serif: 'DM Serif Display', Georgia, serif;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    padding: 48px 24px 96px;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.05;
+    margin: 0 0 8px;
+    color: var(--rust);
+    letter-spacing: -0.01em;
+  }
+  .lead {
+    font-size: 17px;
+    max-width: 720px;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 40px;
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  .meta code {
+    background: rgba(0,0,0,0.04);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .verdict {
+    background: oklch(96% 0.015 85);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin: 0 0 48px;
+  }
+  .verdict h2 {
+    margin: 0 0 12px;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 22px;
+    color: var(--rust);
+  }
+  .verdict ul { margin: 8px 0 0; padding-left: 22px; }
+  .verdict li { margin-bottom: 6px; }
+  .verdict strong { color: var(--ink); }
+
+  .row {
+    margin: 0 0 56px;
+    padding: 0 0 56px;
+    border-bottom: 1px solid var(--line);
+  }
+  .row:last-child { border-bottom: none; }
+  .row h3 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 28px;
+    margin: 0 0 4px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .row .sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 24px;
+    font-family: ui-monospace, monospace;
+  }
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 700px) {
+    .pair { grid-template-columns: 1fr; }
+  }
+  .col {
+    background: var(--bg);
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .col-header {
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .col-header.before {
+    background: oklch(94% 0.02 25);
+    color: oklch(40% 0.13 25);
+  }
+  .col-header.after {
+    background: oklch(94% 0.05 145);
+    color: oklch(35% 0.13 145);
+  }
+  .col-header .tag {
+    font-family: ui-monospace, monospace;
+    background: rgba(0,0,0,0.08);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .img-stage {
+    background: var(--bg);
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+  }
+  .img-stage img {
+    max-width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    display: block;
+  }
+  .notes {
+    background: oklch(96.5% 0.012 85);
+    padding: 12px 18px;
+    font-size: 13px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+  }
+  .notes strong { color: var(--ink); }
+  .delta {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: oklch(97% 0.025 85);
+    border-left: 3px solid var(--terracotta);
+    border-radius: 0 10px 10px 0;
+    font-size: 14px;
+  }
+  .delta-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--terracotta);
+    margin-bottom: 4px;
+    display: block;
+  }
+  .footer {
+    margin-top: 64px;
+    padding: 32px;
+    background: var(--ink);
+    color: oklch(85% 0.01 85);
+    border-radius: 20px;
+  }
+  .footer h2 {
+    margin: 0 0 16px;
+    font-family: var(--serif);
+    font-weight: 400;
+    color: oklch(95% 0.01 85);
+    font-size: 24px;
+  }
+  .footer p { margin: 0 0 10px; font-size: 15px; }
+  .footer code {
+    background: rgba(255,255,255,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Babyora — Nano Banana Pro vs Flash</h1>
+<p class="lead">Side-ved-side A/B på de fem mest representative bilder. Begge sett rendret på app-bakgrunnen <code>#FAF6EF</code> som faktisk brukes i Babyora-appen.</p>
+<p class="meta">
+  Venstre: <code>gemini-2.5-flash-image</code> (dagens). Høyre: <code>gemini-3-pro-image-preview</code> (Nano Banana Pro).
+  <br/>Pro-bildene er chroma-key-strippet (magenta → transparent) og komponert på <code>#FAF6EF</code>.
+  Avatar-A6 er kondisjonert på A1-bildet for ansiktskonsistens.
+</p>
+
+<div class="verdict">
+  <h2>Diagnose: hvorfor app-bg leste som "grå"</h2>
+  <ul>
+    <li><strong>Dagens PNG-er har en INNFELT kald blå studio-bakgrunn</strong> + en mørk drop-shadow på bg-en. Det er den blå firkanten rundt hvert plagg som klasher med <code>#FAF6EF</code> og får hele scenen til å lese kald-grå.</li>
+    <li>Pro-PNG-ene har <strong>null bg-piksler</strong> (transparent alpha) + en subtil baked-in elliptical contact-shadow. Cream-bg-en lyser igjennom — null kollisjon mulig.</li>
+    <li>Dagens A1/A6 ser ut som <strong>toddlere</strong>, ikke babyer. Pro fanger ekte infant-proportions (stort hode, runde kinn, lite hår, kort lemmer).</li>
+    <li>Dagens A6 har <strong>generisk-rød</strong> votter. Pro bruker faktisk brand-terracotta <code>#C8643C</code> som tonet aksent — matcher rust-tittelen.</li>
+  </ul>
+</div>
+
+<!-- 1. kortermet-body -->
+<div class="row">
+  <h3>Kortermet body</h3>
+  <p class="sub">innerste lag — short-sleeve cotton bodysuit</p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-header before"><span>Før</span><span class="tag">2.5 flash</span></div>
+      <div class="img-stage"><img src="../../public/illustrations/garments/kortermet-body.png" alt="Dagens kortermet-body med blå studio-bg" /></div>
+      <div class="notes">Embedded kald blå studio-bg. Drop shadow på bg. Plagg-fargen leser kald.</div>
+    </div>
+    <div class="col">
+      <div class="col-header after"><span>Etter</span><span class="tag">3 pro</span></div>
+      <div class="img-stage"><img src="on-cream/kortermet-body.png" alt="Pro kortermet-body på warm cream bg" /></div>
+      <div class="notes">Warm ivory plagg-tone. Null bg-piksler. Subtil contact-shadow under.</div>
+    </div>
+  </div>
+  <div class="delta">
+    <span class="delta-label">Endring</span>
+    Plagget reads nå som <em>varmt</em>, ikke <em>kjølig</em>. Cream-bg-en lyser igjennom plagg-bildet.
+  </div>
+</div>
+
+<!-- 2. tynt-teppe -->
+<div class="row">
+  <h3>Tynt teppe</h3>
+  <p class="sub">ekstra-lag — thin folded baby blanket</p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-header before"><span>Før</span><span class="tag">2.5 flash</span></div>
+      <div class="img-stage"><img src="../../public/illustrations/garments/tynt-teppe.png" alt="Dagens tynt-teppe" /></div>
+      <div class="notes">Blå bg-firkant gjør bretten flat og lite taktil.</div>
+    </div>
+    <div class="col">
+      <div class="col-header after"><span>Etter</span><span class="tag">3 pro</span></div>
+      <div class="img-stage"><img src="on-cream/tynt-teppe.png" alt="Pro tynt-teppe på warm cream bg" /></div>
+      <div class="notes">Folded teppe med synlig kant-detalj. Warm cream-tone matcher bg.</div>
+    </div>
+  </div>
+  <div class="delta">
+    <span class="delta-label">Endring</span>
+    Stoff-strukturen reads som <em>tynt og foldet</em>, ikke flatt klistre-ikon. "Thin"-instruksjonen i prompten fanges av Pro.
+  </div>
+</div>
+
+<!-- 3. sovepose-1-0-tog -->
+<div class="row">
+  <h3>Sovepose 1.0 TOG</h3>
+  <p class="sub">ekstra-lag — sleeveless light sleep sack</p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-header before"><span>Før</span><span class="tag">2.5 flash</span></div>
+      <div class="img-stage"><img src="../../public/illustrations/garments/sovepose-1-0-tog.png" alt="Dagens sovepose-1-0-tog" /></div>
+      <div class="notes">Blå bg + plagg leser som tunge dun-pose, ikke 1.0 TOG.</div>
+    </div>
+    <div class="col">
+      <div class="col-header after"><span>Etter</span><span class="tag">3 pro</span></div>
+      <div class="img-stage"><img src="on-cream/sovepose-1-0-tog.png" alt="Pro sovepose-1-0-tog" /></div>
+      <div class="notes">Sleeveless envelope shape. Minimal padding — leser tydelig som LETT 1.0 TOG. Terracotta shoulder snaps.</div>
+    </div>
+  </div>
+  <div class="delta">
+    <span class="delta-label">Endring</span>
+    Visuelt skillet mellom 1.0 TOG og 2.5 TOG blir tydelig — brukeren ser at det er en <em>tynn</em> pose, ikke en vinter-versjon.
+  </div>
+</div>
+
+<!-- 4. avatar-A1 -->
+<div class="row">
+  <h3>Avatar A1 — Sommer-base</h3>
+  <p class="sub">~ 20°C — kortermet body, bare bein</p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-header before"><span>Før</span><span class="tag">2.5 flash</span></div>
+      <div class="img-stage"><img src="../../public/avatars/avatar-A1.png" alt="Dagens A1 — leser som toddler" /></div>
+      <div class="notes">Toddler-proportions, hår, stående positur. Innfelt blå bg.</div>
+    </div>
+    <div class="col">
+      <div class="col-header after"><span>Etter</span><span class="tag">3 pro</span></div>
+      <div class="img-stage"><img src="on-cream/avatar-A1.png" alt="Pro A1 — ekte baby-proportions" /></div>
+      <div class="notes">Stort hode, runde kinn, lite hår, kort lemmer. Warm cream body. Soft 3D claymation.</div>
+    </div>
+  </div>
+  <div class="delta">
+    <span class="delta-label">Endring</span>
+    "Babyora" leser endelig som <em>babyene</em> appen er for (0-3 år). Ikke en toddler i en barneapp.
+  </div>
+</div>
+
+<!-- 5. avatar-A6 -->
+<div class="row">
+  <h3>Avatar A6 — Ekstrem vinter</h3>
+  <p class="sub">~ -15°C — full snowsuit, hood up, vinter-votter</p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-header before"><span>Før</span><span class="tag">2.5 flash</span></div>
+      <div class="img-stage"><img src="../../public/avatars/avatar-A6.png" alt="Dagens A6 — generisk-rød votter" /></div>
+      <div class="notes">Generisk-rød votter (ikke brand-aksent). Toddler-look. Blå bg.</div>
+    </div>
+    <div class="col">
+      <div class="col-header after"><span>Etter</span><span class="tag">3 pro</span></div>
+      <div class="img-stage"><img src="on-cream/avatar-A6.png" alt="Pro A6 — terracotta votter, samme ansikt som A1" /></div>
+      <div class="notes">Samme ansikt som A1 (referansebilde-trikket virket). Charcoal puffy snowsuit. Warm terracotta votter — matcher brand-rust.</div>
+    </div>
+  </div>
+  <div class="delta">
+    <span class="delta-label">Endring</span>
+    Karakterkonsistens mellom A1 ↔ A6 er bekreftet. Brand-terracotta-vottene gjør hele palett-systemet sammenhengende.
+  </div>
+</div>
+
+<div class="footer">
+  <h2>Anbefaling</h2>
+  <p><strong>Bytt til Pro.</strong> A/B-en viser at problemene Sivert flagget ("appen leser grå", "fargene klasher") sitter i de innfelte studio-bg-ene i de gamle PNG-ene, ikke i app-bg-tokenet. Pro løser begge: ren transparent, baby-proportions, brand-terracotta hvor det skal være.</p>
+  <p><strong>Neste:</strong> Hvis Pro godkjennes, generer hele garderoben (~70+ plagg + 7 avatar-tiers × 2 headwear-varianter) med samme prompt-system. Anslått kostnad: ~$10-12 én gang.</p>
+  <p style="margin-top:18px; font-size:13px; opacity:.7;">Original Pro-bilder ligger i <code>review/nano-banana-pro/*.png</code> (med magenta-bg). Postprocessed transparente i <code>review/nano-banana-pro/transparent/</code>. Cream-komposisjoner i <code>review/nano-banana-pro/on-cream/</code>.</p>
+</div>
+
+</div>
+</body>
+</html>

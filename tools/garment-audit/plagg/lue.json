@@ -1,0 +1,53 @@
+{
+  "claude": {
+    "id": "lue",
+    "dbString": "lue",
+    "kategori": "ekstra-hode",
+    "struktur": {
+      "score": 19,
+      "kommentar": "Komplett oppføring i garment-info.ts (linje 155-158): what='Standard strikket lue som dekker ørene.' + when='Fra ca 5 °C og nedover.' Samme mønster/tone/lengde som søsken-plagg i samme kategori (lue-tynn, lue-m-ull, solhatt, balaklava). Dedikert whyForGarment-gren finnes (linje 409-411), ikke fallback. Eneste anmerkning: when-formuleringen 'Fra ca 5 °C og nedover' underkommuniserer at lue faktisk velges i hele kjølig-båndet (5-9 °C), altså opp til 9 °C — se mål 4. Strukturelt er den ellers forbilledlig."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/lue.png. Mapping i garment-illustrations.ts (linje 57) er korrekt og entydig: db-streng 'lue' → id 'lue'. Ingen kollisjon med søsken 'lue tynn'→'lue-tynn' (l.56) eller 'lue m/ ull'→'lue-m-ull' (l.58); de tre lue-variantene er rent separert i map-en. Navn/mapping er fullt plausibelt. Visuell dom utstår til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 24,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig. 'lue' (standard) velges i kjølig (5-9 °C) og kald (0-4 °C) i alle tre ute-aktiviteter (vogn, baeresele, utelek). Hodet står for opptil 85% av varmetap hos spedbarn (slumbersac-kilden) og ull-fordel ved fukt (merino-kids) — å dekke ørene fra 0-9 °C er godt forankret. Ingen overoppheting/SIDS-risiko: under soevn fjernes ALL hodeplagg hardt av HB-1 (CRITICAL, AAP-2022/NHS/LT-RT) + CK-4, så lue kan aldri introdusere innendørs varmefelle. Ingen modifier legger til/fjerner 'lue' spesifikt. Ved kaldere bånd (frost+) erstattes den naturlig av 'lue m/ ull'/balaklava i tabellen — riktig progresjon. Ingen åpne helse-spørsmål som krever web-søk; de 11 kildene dekker hode-varmetap fullt.",
+      "score_dup_guard": null,
+      "trace": "baseTable['vogn'].kjolig.ekstra=['lue',...]; baseTable['vogn'].kald.ekstra=['lue',...]; baseTable['baeresele'].kjolig.ekstra=['lue',...]; baseTable['baeresele'].kald.ekstra=['lue',...]; baseTable['utelek'].kjolig.ekstra=['lue',...]; baseTable['utelek'].kald.ekstra=['lue',...]. bandForTemp: kjolig=5-9 °C, kald=0-4 °C. modifiers.ts: ingen add/removeItem('lue'). soevn: aldri (HB-1/CK-4 stripper hodeplagg innendørs). Netto: 'lue' aktiv i feels 0-9 °C ute.",
+      "kilder": [
+        "https://www.slumbersac.co.uk/blogs/advice/baby-regulate-body-temperature",
+        "https://merinokids.co.uk/blogs/merino/the-importance-of-temperature-regulation-in-babies"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 22,
+      "kommentar": "whyForGarment-grenen ('Standard lue dekker ørene fullt og holder hodet varmt ved {feels} °C') er korrekt og kontekst-uavhengig sann for hele 0-9 °C-vinduet — ingen drift der. when-teksten 'Fra ca 5 °C og nedover' har derimot en mild øvre-grense-drift: lue velges faktisk i HELE kjølig-båndet 5-9 °C (bandForTemp: kjolig >= 5 og < 10), altså helt opp til ~9 °C, ikke kun 'fra 5 og nedover'. En forelder ved 8 °C vil få lue anbefalt, men teksten antyder at 5 °C er øvre terskel. Dette villeder ikke til UNDER-påkledning (barnet får mer hodevarme, ikke mindre), så det er ikke en sikkerhetsdrift — men det er en faktuell uoverensstemmelse mot trace. Lav severity. Søsken lue-tynn sier '8-14 °C' som overlapper 8-9 °C, så det er en liten gråsone der begge kunne passe."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "'lue' (standard, eksakt item-streng) har INGEN oppføring i ITEM_ALTERNATIVES. Søsken 'lue m/ ull' har et nedtrinns-alternativ ('lue tynn', l.136-144). For standard lue ville et naturlig tykkelse-trinns-alternativ være 'lue tynn' (mildere) eller 'lue m/ ull' (kaldere) — særlig i gråsone-overlappet 8-9 °C mot lue-tynn (8-14 °C) kunne et diskret alternativ hjelpe foreldre å velge tynnere. Mangelen er reell, men lavt prioritert: ull-først er allerede default og lue-progresjonen håndteres av tabellen per temp-bånd, så fraværet er ikke kritisk. Trekker 2 poeng for manglende tykkelse-trinn-alternativ på selve standard-lua."
+    },
+    "total": 92,
+    "verdikt": "Solid plagg. 'lue' (standard) er strukturelt komplett, korrekt mappet til eksisterende PNG, og pediatrisk forsvarlig selektert i feels 0-9 °C ute med hard SIDS-beskyttelse under søvn (HB-1/CK-4). Eneste reelle svakheter er kosmetiske/lavrisiko: when-tekstens øvre grense ('fra ca 5 °C') matcher ikke at lua brukes opp til 9 °C i kjølig-båndet, og standard 'lue' mangler et tykkelse-trinns-alternativ (lue tynn / lue m/ ull) i alternatives.ts slik søsken 'lue m/ ull' har. Ingen sikkerhetsfunn. Total 92/100.\"",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "when-teksten for 'lue' sier 'Fra ca 5 °C og nedover', men baseTable velger 'lue' i hele kjølig-båndet (5-9 °C, jf. bandForTemp) i tillegg til kald (0-4 °C). Faktisk øvre brukstemperatur er ~9 °C, ikke 5 °C. Drift villeder IKKE til under-påkledning (barnet får mer hodevarme), derav lav severity.",
+        "forslag": "Vurder å justere when-teksten til f.eks. 'Fra ca 9 °C og nedover' eller 'Kjølige dager, ca 9 °C og nedover' for å speile det reelle seleksjons-vinduet. RØR IKKE tabell-terskler — kun info-teksten.",
+        "kilde": "tables.ts (baseTable kjolig/kald + bandForTemp), garment-info.ts l.157"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Standard 'lue' mangler oppføring i ITEM_ALTERNATIVES, mens søsken 'lue m/ ull' har et nedtrinns-alternativ. I temp-overlappet 8-9 °C konkurrerer 'lue' (5-9) og 'lue tynn' (8-14) uten at brukeren ser et tykkelse-alternativ.",
+        "forslag": "Vurder å legge til et alternativ for itemName 'lue' i alternatives.ts (f.eks. 'lue tynn' for mildere/lufting), parallelt med eksisterende 'lue m/ ull'→'lue tynn'-oppføringen. Ikke obligatorisk; ull-først + tabell-progresjon dekker det meste.",
+        "kilde": "alternatives.ts l.135-144 (lue m/ ull har alternativ, lue har ikke)"
+      }
+    ]
+  },
+  "fable": null
+}

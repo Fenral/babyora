@@ -1,0 +1,61 @@
+{
+  "claude": {
+    "id": "kortermet-ullbody",
+    "kategori": "innerst",
+    "dbString": "kortermet ullbody",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Har komplett what + when i garment-info.ts (linje 25-28), samme mønster/tone/lengde som søsken-plagg i innerst-kategorien (kortermet-body, langermet-ullbody osv.). Dedikert whyForGarment-gren finnes på linje 334 (delt med langermet-ullbody og -tynn), IKKE fallback. Trekk: when-teksten har en mild upresishet (se tekstLogikk) som drar ned helheten litt, ellers solid."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet til stede: public/illustrations/garments/kortermet-ullbody.png. db-strengen 'kortermet ullbody' er korrekt mappet til id 'kortermet-ullbody' i garment-illustrations.ts (linje 16), og id matcher filnavnet. garmentPng() bygger riktig sti. Mapping/navn er plausibelt og konsistent. Visuell dom utestår (Fable 5 + Claude)."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "Plagget velges i tre kontekster, alle i den varme enden (>=16 grader). Pediatrisk forsvarlig: merinoull-base i 16-28 grader for vogn/baeresele er godt dekket av merino-kids og aap-healthychildren. I baeresele tropisk varmer forelder-kroppen i tillegg (PMC-7202982: minimal core-temp-endring ved kort babywearing), og kortermet (minst mulig ull) feiler mot for lite, ikke for mye - trygt mot overoppheting. Ingen frost/SIDS/kvelnings-kontekst berøres. Ingen conflict/softBlock/safety fjerner eller introduserer plagget. ullsokker-modifier (feels <=5) co-okkurrerer aldri siden plagget kun finnes >=16. Ingen kilde-hull som krever web-søk.",
+      "score_note": "",
+      "kilder": [
+        "https://merinokids.co.uk/blogs/merino/the-importance-of-temperature-regulation-in-babies",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC7202982/",
+        "https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Dressing-Your-Newborn.aspx"
+      ],
+      "trace": "bandForTemp: tropisk=22-27.9, varm=16-21.9, mild=10-15.9. SELEKSJON: (1) baseTable.vogn.tropisk -> innerst ['kortermet ullbody'] + ekstra ['solhatt','tynt teppe']; (2) baseTable.baeresele.tropisk -> innerst ['kortermet ullbody'] + ekstra ['solhatt']; (3) baseTable.baeresele.varm -> innerst ['kortermet ullbody'] + mellomlag ['tynn bukse'] + ekstra ['solhatt']. IKKE valgt i utelek (bruker t-skjorte/langermet ullbody tynn) eller soevn (bruker kortermet body bomull). MODIFIERS: ingen add/remove treffer 'kortermet ullbody'. ullsokker legges kun til ved feels<=5 (modifiers linje 195) - utenfor plaggets band. SB-2 max-lag-cap (>=16 -> 6 items) berører ikke innerst-laget her. CONFLICTS/SAFETY: CK/HB-regler retter seg mot sovepose/teppe/hodeplagg/svøp/vinterdress - ingen treffer dette plagget. Persisterer uendret i alle tre kontekster."
+    },
+    "tekstLogikk": {
+      "score": 20,
+      "kommentar": "whyForGarment-grenen (linje 334) stemmer godt med faktiske forhold: ull mot huden i vogn/baeresele ved 16-28 grader. Formuleringen 'svetter mindre i {act} selv med flere lag på' er litt rar i tropisk vogn/baeresele der kortermet ullbody typisk er ENESTE innerst-lag (kun solhatt/teppe i tillegg), men villeder ikke. DRIFT i when-teksten: 'Lett ull-base i varme måneder, eller som innerst lag paa milde høstdager.' - men baseTable velger plagget kun fra 16 grader og opp (varm/tropisk). 'Milde høstdager' tilsvarer mild-båndet (10-15.9 grader) der plagget IKKE velges (da brukes langermet ullbody tynn / langermet ullbody / ullsett tynt). when overklaimmer altsaa den kjølige enden. Avviket feiler mot MER dekning (kjøligere antydet enn faktisk valgt), saa det er ikke farlig påkledning, men teksten bør si 'varme til milde dager' heller enn 'milde høstdager'."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Plagget har ingen oppføring i alternatives.ts. Et reelt og nyttig alternativ ville vært bomulls-motparten 'kortermet body' (ull<->bomull tykkelse/material-trinn) for foreldre som ikke har merinoull eller reagerer paa ull mot hud - spesielt siden begge eksisterer i samme innerst-kategori og kortermet body brukes i ekstrem_varme/soevn. Ingen av de innerste base-plaggene (body-er/ullsett) har alternativer registrert i dag; alternatives.ts dekker kun mellomlag/yttertøy/tilbehør (ull<->fleece, dun<->syntet, TOG-trinn). Forslag: legg til ull<->bomull-alternativ for kortermet ullbody. Eksisterende fravær er ikke kritisk siden plagget kun brukes i varme/milde forhold der material-valget har lav helse-konsekvens."
+    },
+    "total": 87,
+    "verdikt": "Solid plagg-oppføring uten sikkerhetsproblemer. Komplett struktur, korrekt PNG-mapping, og pediatrisk forsvarlig seleksjon (kun varme/milde forhold, errer mot for lite tøy). To mindre forbedringer: (1) when-teksten antyder bruk paa milde høstdager (10-15 grader) men baseTable velger plagget kun fra 16 grader og opp - bør justeres til 'varme til milde dager'. (2) Mangler et ull<->bomull-alternativ (kortermet body) i alternatives.ts. Ingen kritiske/høye sikkerhetsfunn. Totalscore 87/100.",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "when-teksten i garment-info.ts (linje 27) sier 'Lett ull-base i varme maaneder, eller som innerst lag paa milde høstdager', men baseTable velger 'kortermet ullbody' kun fra 16 grader og oppover (vogn.tropisk, baeresele.tropisk, baeresele.varm). 'Milde høstdager' tilsvarer mild-baandet 10-15.9 grader, der plagget IKKE velges - da brukes langermet ullbody tynn / langermet ullbody / ullsett tynt.",
+        "forslag": "Juster when-teksten til 'Lett ull-base paa varme til milde dager i vogn eller baeresele' saa den matcher det faktiske seleksjons-baandet (>=16 grader). Ikke endre terskler i tables.ts.",
+        "kilde": "tables.ts baseTable + bandForTemp; garment-info.ts linje 27"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "kortermet ullbody mangler oppføring i alternatives.ts. Bomulls-motparten 'kortermet body' finnes allerede som eget plagg i innerst-kategorien og ville vaert et reelt ull<->bomull material-alternativ for foreldre uten merinoull eller med ull-følsom hud.",
+        "forslag": "Vurder aa legge til ITEM_ALTERNATIVES-oppføring for 'kortermet ullbody' med alternativ 'kortermet body' (bomull) + i18n-keys, paa linje med eksisterende ull<->fleece-mønster. Lav prioritet siden plagget kun brukes i varme/milde forhold med lav helse-konsekvens.",
+        "kilde": "alternatives.ts; garment-illustrations.ts (kortermet body finnes)"
+      },
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "whyForGarment-grenen (garment-info.ts linje 334-335) sier 'svetter mindre i {act} selv med flere lag paa', men i de faktiske seleksjons-kontekstene (tropisk vogn/baeresele) er kortermet ullbody typisk eneste innerst-lag uten ekstra kleslag (kun solhatt/tynt teppe i tillegg). Formuleringen 'flere lag paa' passer bedre for langermet-variantene som deler samme gren.",
+        "forslag": "Vurder aa splitte whyForGarment-grenen saa kortermet-ull-varianten faar en formulering uten 'flere lag paa', f.eks. fokus paa fukt-regulering ved varme. Ikke paakrevd - villeder ikke paakledning.",
+        "kilde": "garment-info.ts linje 334; tables.ts seleksjons-kontekster"
+      }
+    ]
+  },
+  "fable": null
+}

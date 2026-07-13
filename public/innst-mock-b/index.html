@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Babyora Innstillinger · Mock B (visual + spacious)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Warm-grey canvas + warm orange (samme tokens som mock A) */
+    --bg-canvas:#DBD8D2;
+    --bg-canvas-soft:#E5E2DC;
+    --bg-canvas-warm:#EFEBE3;
+    --surface:#F6F3ED;
+    --surface-raised:#FBF8F3;
+    --terracotta-500:#C95F3B;
+    --terracotta-600:#B4502E;
+    --terracotta-700:#974324;
+    --terracotta-100:#F2DDD2;
+    --sun:#F4A742;
+    --rain:#5C8FC9;
+    --ink-900:#2B2522;
+    --ink-800:#3A322E;
+    --ink-700:#5A514C;
+    --ink-500:#8A7F78;
+    --ink-400:#A89E96;
+    --ink-300:#C9C3BD;
+    --ink-200:#DDD8D1;
+    --ink-100:#ECE7E0;
+    --line:rgba(43,37,34,.08);
+    --line-strong:rgba(43,37,34,.14);
+    --shadow-1:0 1px 2px rgba(43,37,34,.04), 0 2px 8px rgba(43,37,34,.05);
+    --shadow-2:0 4px 14px rgba(43,37,34,.08), 0 2px 4px rgba(43,37,34,.04);
+    --shadow-3:0 10px 30px rgba(43,37,34,.12), 0 4px 10px rgba(43,37,34,.06);
+    --ease-standard:cubic-bezier(.2,.7,.2,1);
+    --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+    --font-serif:'DM Serif Display','Times New Roman',serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#1a1a1a;font-family:var(--font-sans);color:var(--ink-800);}
+  body{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 24px;gap:32px;flex-wrap:wrap;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+  /* Stage caption */
+  .stage{display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .stage .label{
+    font-family:var(--font-sans);font-size:12px;font-weight:600;
+    letter-spacing:1.4px;text-transform:uppercase;
+    color:#9a9690;background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.07);
+    padding:8px 14px;border-radius:999px;
+  }
+  .stage .label em{font-style:normal;color:#F4A742;}
+
+  /* iPhone frame */
+  .frame{
+    position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+    box-shadow:
+      0 30px 80px rgba(0,0,0,.55),
+      0 0 0 12px #1f1f1f,
+      0 0 0 13px #333;
+    background:var(--bg-canvas);
+  }
+  /* Notch */
+  .notch{
+    position:absolute;top:11px;left:50%;transform:translateX(-50%);
+    width:120px;height:34px;border-radius:24px;background:#000;z-index:50;
+  }
+  /* Home indicator */
+  .home-indicator{
+    position:absolute;left:50%;bottom:8px;transform:translateX(-50%);
+    width:134px;height:5px;border-radius:3px;background:rgba(43,37,34,.4);
+    z-index:50;pointer-events:none;
+  }
+
+  .screen{
+    position:relative;height:100%;width:100%;overflow:hidden;
+    display:flex;flex-direction:column;
+    font-family:var(--font-sans);color:var(--ink-900);
+    background:
+      radial-gradient(140% 70% at 50% -10%, rgba(255,255,255,.55), transparent 55%),
+      radial-gradient(80% 40% at 100% 0%, rgba(244,167,66,.10), transparent 60%),
+      var(--bg-canvas);
+    padding-top:calc(env(safe-area-inset-top, 0px) + 60px);
+    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 0px);
+  }
+
+  /* ────────── HEADER ────────── */
+  .header{
+    flex:none;padding:6px 24px 8px;
+    display:flex;align-items:baseline;justify-content:space-between;
+  }
+  .h-eyebrow{
+    font-family:var(--font-sans);font-size:11.5px;font-weight:600;
+    letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-500);
+    margin:0 0 6px;
+  }
+  .h-title{
+    font-family:var(--font-serif);font-weight:400;font-size:38px;
+    line-height:1;letter-spacing:-.5px;color:var(--ink-900);margin:0;
+  }
+  .h-aside{
+    display:flex;align-items:center;gap:6px;
+    font-family:var(--font-sans);font-size:12px;font-weight:600;color:var(--ink-500);
+    padding:7px 11px;border-radius:999px;
+    background:rgba(255,255,255,.55);border:1px solid var(--line);
+  }
+  .h-aside .dot{width:6px;height:6px;border-radius:50%;background:#4CAF7D;box-shadow:0 0 0 3px rgba(76,175,125,.18);}
+
+  /* ────────── SCROLL ────────── */
+  .scroll{
+    flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+    padding:18px 20px 120px;
+    display:flex;flex-direction:column;gap:26px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .scroll::-webkit-scrollbar{display:none;}
+
+  /* ────────── PROFIL HERO ────────── */
+  .profil-hero{
+    position:relative;display:flex;flex-direction:column;gap:18px;
+    padding:22px 22px 20px;border-radius:28px;
+    background:
+      radial-gradient(120% 80% at 100% 0%, rgba(244,167,66,.18), transparent 60%),
+      linear-gradient(180deg, var(--surface-raised) 0%, var(--surface) 100%);
+    border:1px solid var(--line);
+    box-shadow:var(--shadow-2);
+    overflow:hidden;
+  }
+  .profil-hero::before{
+    content:"";position:absolute;right:-30px;top:-30px;
+    width:160px;height:160px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, rgba(201,95,59,.18), transparent 65%);
+    pointer-events:none;
+  }
+  .profil-top{display:flex;align-items:center;gap:16px;position:relative;z-index:1;}
+  .avatar-shell{
+    position:relative;flex:none;width:72px;height:72px;border-radius:50%;
+    background:linear-gradient(160deg,#F2DDD2,#E5C9BC);
+    box-shadow:inset 0 -3px 8px rgba(151,67,36,.18), 0 6px 14px rgba(151,67,36,.15);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    border:3px solid var(--surface-raised);
+  }
+  .avatar-shell svg{width:60%;height:60%;}
+  .avatar-edit{
+    position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;
+    background:var(--terracotta-600);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    border:2.5px solid var(--surface-raised);
+    box-shadow:0 2px 6px rgba(151,67,36,.35);
+  }
+  .avatar-edit svg{width:12px;height:12px;}
+  .profil-id{display:flex;flex-direction:column;min-width:0;flex:1;}
+  .profil-name{
+    font-family:var(--font-serif);font-weight:400;font-size:26px;line-height:1.05;
+    color:var(--ink-900);letter-spacing:-.3px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .profil-sub{
+    margin-top:6px;display:flex;align-items:center;gap:8px;
+    font-size:13.5px;font-weight:500;color:var(--ink-500);
+  }
+  .profil-sub .sep{opacity:.45;}
+
+  /* Stat-grid i hero */
+  .profil-stats{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+    position:relative;z-index:1;
+  }
+  .stat{
+    display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+    padding:12px 12px 11px;border-radius:14px;
+    background:rgba(255,255,255,.55);
+    border:1px solid var(--line);
+  }
+  .stat-label{
+    font-size:10.5px;font-weight:600;letter-spacing:.8px;
+    text-transform:uppercase;color:var(--ink-500);
+  }
+  .stat-value{
+    font-family:var(--font-serif);font-size:18px;color:var(--ink-900);
+    line-height:1.1;margin-top:2px;
+  }
+
+  /* ────────── SECTION HEADING ────────── */
+  .section{display:flex;flex-direction:column;gap:12px;}
+  .s-head{display:flex;align-items:baseline;justify-content:space-between;padding:0 6px;}
+  .s-title{
+    font-family:var(--font-serif);font-weight:400;font-size:22px;
+    line-height:1.1;letter-spacing:-.2px;color:var(--ink-900);margin:0;
+  }
+  .s-link{
+    font-family:var(--font-sans);font-size:13px;font-weight:600;
+    color:var(--terracotta-600);text-decoration:none;
+    padding:6px 2px;
+  }
+
+  /* Group card (large, spacious) */
+  .group-card{
+    display:flex;flex-direction:column;
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:22px;overflow:hidden;
+    box-shadow:var(--shadow-1);
+    list-style:none;margin:0;padding:0;
+  }
+  .row{
+    display:flex;align-items:center;gap:14px;
+    padding:18px 18px;min-height:72px;
+    background:transparent;border:none;width:100%;
+    text-align:left;color:var(--ink-800);font:inherit;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .row + .row{border-top:1px solid var(--line);}
+  .row:active{background:rgba(43,37,34,.02);}
+
+  .row-icon{
+    flex:none;width:44px;height:44px;border-radius:13px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--terracotta-100);color:var(--terracotta-700);
+    box-shadow:inset 0 -2px 4px rgba(151,67,36,.08);
+  }
+  .row-icon.muted{background:var(--ink-100);color:var(--ink-700);box-shadow:inset 0 -2px 4px rgba(43,37,34,.04);}
+  .row-icon.sun{background:#FCE9C9;color:#A86A14;}
+  .row-icon.rain{background:#D9E5F3;color:#3C6BA0;}
+  .row-icon svg{width:22px;height:22px;}
+
+  .row-text{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
+  .row-label{
+    font-size:15.5px;font-weight:600;color:var(--ink-900);line-height:1.15;
+    letter-spacing:-.1px;
+  }
+  .row-sub{
+    font-size:12.5px;font-weight:500;color:var(--ink-500);
+    line-height:1.25;letter-spacing:.1px;
+  }
+  .row-value{
+    flex:none;font-family:var(--font-sans);font-size:13.5px;font-weight:600;
+    color:var(--ink-700);
+    background:rgba(43,37,34,.04);
+    padding:6px 11px;border-radius:9px;
+  }
+  .row-chev{flex:none;color:var(--ink-400);}
+  .row-chev svg{display:block;}
+
+  /* Toggle */
+  .toggle{
+    flex:none;position:relative;width:50px;height:30px;border-radius:999px;
+    background:var(--ink-200);border:none;padding:0;cursor:pointer;
+    transition:background .22s var(--ease-standard);
+    box-shadow:inset 0 1px 2px rgba(43,37,34,.08);
+  }
+  .toggle .thumb{
+    position:absolute;top:2px;left:2px;width:26px;height:26px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);
+    transition:transform .22s var(--ease-standard);
+  }
+  .toggle[aria-checked="true"]{background:var(--terracotta-600);}
+  .toggle[aria-checked="true"] .thumb{transform:translateX(20px);}
+
+  /* ────────── ABONNEMENT plan-card ────────── */
+  .plan-card{
+    position:relative;border-radius:22px;overflow:hidden;
+    background:
+      radial-gradient(120% 80% at 0% 0%, rgba(244,167,66,.22), transparent 60%),
+      linear-gradient(160deg, #3A322E 0%, #2B2522 100%);
+    color:#F6F3ED;padding:22px 22px 20px;
+    box-shadow:var(--shadow-3);
+    border:1px solid rgba(255,255,255,.04);
+  }
+  .plan-card::after{
+    content:"";position:absolute;right:-40px;bottom:-50px;
+    width:200px;height:200px;border-radius:50%;
+    background:radial-gradient(circle, rgba(244,167,66,.18), transparent 65%);
+    pointer-events:none;
+  }
+  .plan-top{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;}
+  .plan-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 11px;border-radius:999px;
+    background:rgba(244,167,66,.18);color:#F4A742;
+    font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+    border:1px solid rgba(244,167,66,.28);
+  }
+  .plan-name{
+    font-family:var(--font-serif);font-weight:400;font-size:28px;line-height:1;
+    letter-spacing:-.3px;margin:14px 0 6px;color:#fff;
+    position:relative;z-index:1;
+  }
+  .plan-desc{
+    font-size:13.5px;line-height:1.4;color:rgba(246,243,237,.7);
+    max-width:240px;margin:0;position:relative;z-index:1;
+  }
+  .plan-cta{
+    margin-top:18px;display:inline-flex;align-items:center;gap:8px;
+    padding:13px 18px;border-radius:14px;
+    background:var(--terracotta-500);color:#fff;
+    font-family:var(--font-sans);font-size:14.5px;font-weight:600;
+    border:none;cursor:pointer;letter-spacing:.1px;
+    box-shadow:0 4px 12px rgba(180,80,46,.4), inset 0 -2px 0 rgba(0,0,0,.12);
+    position:relative;z-index:1;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .plan-cta svg{width:14px;height:14px;}
+
+  /* ────────── LOGG UT ────────── */
+  .logout{
+    margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;min-height:60px;padding:18px;
+    border:1.5px solid var(--terracotta-600);
+    background:transparent;border-radius:18px;
+    color:var(--terracotta-700);
+    font-family:var(--font-sans);font-size:15px;font-weight:600;
+    cursor:pointer;letter-spacing:.1px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .logout svg{width:16px;height:16px;}
+
+  .app-footer{
+    margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:2px;
+    font-size:11.5px;color:var(--ink-500);
+  }
+  .app-footer .ver{font-weight:600;color:var(--ink-700);}
+  .app-footer a{color:var(--ink-500);text-decoration:none;border-bottom:1px solid var(--line-strong);}
+
+  /* ────────── BOTTOM TAB BAR ────────── */
+  .tabbar{
+    position:absolute;left:0;right:0;bottom:0;z-index:40;
+    padding:8px 16px calc(env(safe-area-inset-bottom, 0px) + 18px);
+    background:linear-gradient(180deg, rgba(219,216,210,0) 0%, rgba(219,216,210,.92) 30%, var(--bg-canvas) 60%);
+    display:flex;justify-content:space-around;align-items:flex-end;gap:4px;
+  }
+  .tab{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:8px 4px 6px;border-radius:14px;border:none;background:transparent;
+    cursor:pointer;color:var(--ink-500);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tab svg{width:22px;height:22px;}
+  .tab .lbl{font-size:10.5px;font-weight:600;letter-spacing:.2px;}
+  .tab.active{color:var(--terracotta-700);}
+  .tab.active .lbl{color:var(--terracotta-700);}
+
+  /* Focus visibility */
+  :focus-visible{outline:2.5px solid var(--terracotta-600);outline-offset:2px;border-radius:8px;}
+
+  @media (max-width:430px){
+    body{padding:0;background:var(--bg-canvas);}
+    .frame{width:100%;height:100dvh;border-radius:0;box-shadow:none;}
+    .notch,.home-indicator{display:none;}
+    .stage .label{display:none;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="label">Babyora · Innstillinger · Mock <em>B</em> · visuell + romslig</div>
+  <div class="frame" role="region" aria-label="Babyora Innstillinger forhåndsvisning">
+    <div class="notch" aria-hidden="true"></div>
+
+    <main class="screen" aria-labelledby="innst-title">
+
+      <!-- HEADER -->
+      <header class="header">
+        <div>
+          <p class="h-eyebrow">Konto</p>
+          <h1 id="innst-title" class="h-title">Innstillinger</h1>
+        </div>
+        <div class="h-aside" aria-label="Sync-status: synkronisert">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Sync</span>
+        </div>
+      </header>
+
+      <!-- SCROLL -->
+      <div class="scroll">
+
+        <!-- ────── PROFIL HERO ────── -->
+        <section class="profil-hero" aria-label="Profil">
+          <div class="profil-top">
+            <div class="avatar-shell" aria-hidden="true">
+              <!-- baby silhouette -->
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="24" cy="18" r="9" fill="#974324"/>
+                <path d="M9 42c0-8.3 6.7-15 15-15s15 6.7 15 15v2H9v-2z" fill="#974324"/>
+                <circle cx="20.5" cy="17" r="1.4" fill="#F2DDD2"/>
+                <circle cx="27.5" cy="17" r="1.4" fill="#F2DDD2"/>
+                <path d="M21 21.5c.8.7 2.2.7 3 0" stroke="#F2DDD2" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              <button class="avatar-edit" type="button" aria-label="Endre avatar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="profil-id">
+              <div class="profil-name">Iben</div>
+              <div class="profil-sub">
+                <span>Oslo</span>
+                <span class="sep">·</span>
+                <span>14 mnd</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="profil-stats" role="list">
+            <div class="stat" role="listitem">
+              <span class="stat-label">Fødsel</span>
+              <span class="stat-value">14. apr</span>
+            </div>
+            <div class="stat" role="listitem">
+              <span class="stat-label">Vekt</span>
+              <span class="stat-value">10,2 kg</span>
+            </div>
+            <div class="stat" role="listitem">
+              <span class="stat-label">Sted</span>
+              <span class="stat-value">Oslo</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ────── PROFIL ROWS ────── -->
+        <section class="section" aria-labelledby="sec-profil">
+          <div class="s-head">
+            <h2 id="sec-profil" class="s-title">Profil</h2>
+            <a href="#" class="s-link">Endre</a>
+          </div>
+
+          <ul class="group-card" role="list">
+            <li>
+              <button class="row" type="button" aria-label="Barn-navn: Iben">
+                <span class="row-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Barn-navn</span>
+                  <span class="row-sub">Vises i hilsen og dressup</span>
+                </span>
+                <span class="row-value">Iben</span>
+                <span class="row-chev" aria-hidden="true">
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button class="row" type="button" aria-label="Sted: Oslo">
+                <span class="row-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Sted</span>
+                  <span class="row-sub">For lokal vær fra met.no</span>
+                </span>
+                <span class="row-value">Oslo</span>
+                <span class="row-chev" aria-hidden="true">
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button class="row" type="button" aria-label="Fødselsdato: 14. apr 2025">
+                <span class="row-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Fødselsdato</span>
+                  <span class="row-sub">Brukes til alders-justering av lag</span>
+                </span>
+                <span class="row-value">14. apr 25</span>
+                <span class="row-chev" aria-hidden="true">
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+                </span>
+              </button>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ────── NATIVE-FØLELSE ────── -->
+        <section class="section" aria-labelledby="sec-native">
+          <div class="s-head">
+            <h2 id="sec-native" class="s-title">Native-følelse</h2>
+          </div>
+          <ul class="group-card" role="list">
+            <li>
+              <div class="row" role="group">
+                <span class="row-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/><rect x="8" y="6" width="8" height="12" rx="2"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Vibrasjon</span>
+                  <span class="row-sub">Haptisk respons ved valg og lag-skift</span>
+                </span>
+                <button class="toggle" role="switch" aria-checked="true" aria-label="Vibrasjon på" type="button">
+                  <span class="thumb" aria-hidden="true"></span>
+                </button>
+              </div>
+            </li>
+            <li>
+              <div class="row" role="group">
+                <span class="row-icon muted" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Reduser bevegelse</span>
+                  <span class="row-sub">Demper animasjoner og overganger</span>
+                </span>
+                <button class="toggle" role="switch" aria-checked="false" aria-label="Reduser bevegelse av" type="button">
+                  <span class="thumb" aria-hidden="true"></span>
+                </button>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ────── VARSLER ────── -->
+        <section class="section" aria-labelledby="sec-varsler">
+          <div class="s-head">
+            <h2 id="sec-varsler" class="s-title">Varsler</h2>
+            <a href="#" class="s-link">Tilpass</a>
+          </div>
+          <ul class="group-card" role="list">
+            <li>
+              <button class="row" type="button" aria-label="Morgenvarsel">
+                <span class="row-icon sun" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Morgenvarsel</span>
+                  <span class="row-sub">Klokken 07:30 hver dag</span>
+                </span>
+                <span class="row-value">Av</span>
+                <span class="row-chev" aria-hidden="true">
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button class="row" type="button" aria-label="Værendring">
+                <span class="row-icon rain" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-1-9.9A7 7 0 0 0 3 13a5 5 0 0 0 5 5h9z"/><path d="M8 21l1-2M12 21l1-2M16 21l1-2"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Værendring</span>
+                  <span class="row-sub">Når lagene bør oppdateres</span>
+                </span>
+                <span class="row-value">På</span>
+                <span class="row-chev" aria-hidden="true">
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+                </span>
+              </button>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ────── ABONNEMENT (plan-kort) ────── -->
+        <section class="section" aria-labelledby="sec-abo">
+          <div class="s-head">
+            <h2 id="sec-abo" class="s-title">Abonnement</h2>
+          </div>
+
+          <article class="plan-card" aria-label="Nåværende plan: Gratis">
+            <div class="plan-top">
+              <span class="plan-badge">Gratis</span>
+              <span style="font-size:12px;color:rgba(246,243,237,.5);font-weight:500;">7 dagers prøve tilgjengelig</span>
+            </div>
+            <h3 class="plan-name">Babyora Pluss</h3>
+            <p class="plan-desc">Flere barn, ubegrenset garderobe, og lag-historikk for hver dag.</p>
+            <button class="plan-cta" type="button">
+              Oppgrader
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </button>
+          </article>
+
+          <ul class="group-card" role="list" style="margin-top:6px;">
+            <li>
+              <button class="row" type="button" aria-label="Administrer abonnement">
+                <span class="row-icon muted" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Administrer i App Store</span>
+                  <span class="row-sub">Endre eller si opp via Apple</span>
+                </span>
+                <span class="row-chev" aria-hidden="true">
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button class="row" type="button" aria-label="Gjenopprett kjøp">
+                <span class="row-icon muted" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Gjenopprett kjøp</span>
+                  <span class="row-sub">Hvis du har Pluss på en annen enhet</span>
+                </span>
+                <span class="row-chev" aria-hidden="true">
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+                </span>
+              </button>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ────── OM ────── -->
+        <section class="section" aria-labelledby="sec-om">
+          <div class="s-head">
+            <h2 id="sec-om" class="s-title">Om Babyora</h2>
+          </div>
+          <ul class="group-card" role="list">
+            <li>
+              <button class="row" type="button" aria-label="Personvern">
+                <span class="row-icon muted" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Personvern</span>
+                  <span class="row-sub">Hva vi lagrer og hvorfor</span>
+                </span>
+                <span class="row-chev" aria-hidden="true">
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button class="row" type="button" aria-label="Vilkår">
+                <span class="row-icon muted" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Vilkår for bruk</span>
+                  <span class="row-sub">Sist oppdatert mai 2026</span>
+                </span>
+                <span class="row-chev" aria-hidden="true">
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button class="row" type="button" aria-label="Send tilbakemelding">
+                <span class="row-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </span>
+                <span class="row-text">
+                  <span class="row-label">Send tilbakemelding</span>
+                  <span class="row-sub">Vi leser hver eneste melding</span>
+                </span>
+                <span class="row-chev" aria-hidden="true">
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+                </span>
+              </button>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ────── LOGG UT ────── -->
+        <button class="logout" type="button" aria-label="Logg ut og slett lokale data">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+          Logg ut
+        </button>
+
+        <div class="app-footer">
+          <span class="ver">Babyora · v1.4.2</span>
+          <a href="#">Lisenser og åpen kildekode</a>
+        </div>
+
+      </div>
+
+      <!-- BOTTOM TAB BAR -->
+      <nav class="tabbar" aria-label="Hovednavigasjon">
+        <button class="tab" type="button" aria-label="Hjem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v10a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z"/></svg>
+          <span class="lbl">Hjem</span>
+        </button>
+        <button class="tab" type="button" aria-label="Påkledning">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 2 2-2 2 2 4-2 2 4-4 2v10H8V10L4 8z"/></svg>
+          <span class="lbl">Påkledning</span>
+        </button>
+        <button class="tab" type="button" aria-label="Garderobe">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M8 6V4a4 4 0 0 1 8 0v2"/></svg>
+          <span class="lbl">Garderobe</span>
+        </button>
+        <button class="tab active" type="button" aria-label="Innstillinger" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.5-2-3.4-2.4.8a7.6 7.6 0 0 0-1.7-1L15 3h-4l-.3 2.9c-.6.2-1.2.5-1.7 1l-2.4-.8-2 3.4 2 1.5a7.5 7.5 0 0 0 0 2l-2 1.5 2 3.4 2.4-.8c.5.4 1.1.7 1.7 1L11 21h4l.3-2.9c.6-.2 1.2-.5 1.7-1l2.4.8 2-3.4-2-1.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+          <span class="lbl">Innstillinger</span>
+        </button>
+      </nav>
+
+      <div class="home-indicator" aria-hidden="true"></div>
+    </main>
+
+  </div>
+</div>
+
+<script>
+  // Toggle interactivity (visual only)
+  document.querySelectorAll('.toggle').forEach(t => {
+    t.addEventListener('click', () => {
+      const cur = t.getAttribute('aria-checked') === 'true';
+      t.setAttribute('aria-checked', String(!cur));
+    });
+  });
+</script>
+
+</body>
+</html>

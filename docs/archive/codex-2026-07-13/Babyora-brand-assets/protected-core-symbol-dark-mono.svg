@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="title desc">
+  <title id="title">Beskyttet kjerne – mørk monokrom</title>
+  <desc id="desc">Monokrom versjon av en kjerne omgitt av to beskyttende lag.</desc>
+  <path d="M18 27v29c0 21 12.8 33 32 33s32-12 32-33V27" fill="none" stroke="#1B1929" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 38v18c0 12 6.8 19 18 19s18-7 18-19V38" fill="none" stroke="#1B1929" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="50" cy="45" r="8.5" fill="#1B1929"/>
+</svg>

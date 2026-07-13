@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Babyora · Min garderobe — Mock A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ------------------------------------------------------------------
+     Babyora · Min garderobe · Mock A
+     Inspirasjon: Whering (Mobbin) — kompakt scannable category-list +
+     liten counter-eyebrow + brand-warm orange FAB. Fusjonert med V2-
+     vinneren fra Påkledning: gruppert liste + hairline-divider.
+     ------------------------------------------------------------------ */
+
+  :root {
+    --warm-grey:        #DBD8D2;
+    --warm-grey-deep:   #C9C5BC;
+    --warm-grey-soft:   #E8E5DF;
+    --ivory:            #F6F3EE;
+    --ink-900:          #1F1D1A;
+    --ink-700:          #3A3631;
+    --ink-500:          #6A645B;
+    --ink-400:          #8C857A;
+    --ink-300:          #B5AEA2;
+    --orange:           #FF6B35;
+    --orange-deep:      #E55720;
+    --orange-soft:      rgba(255,107,53,.12);
+    --orange-ring:      rgba(255,107,53,.32);
+    --hairline:         rgba(31,29,26,.08);
+    --card:             #FFFFFF;
+    --shadow-fab:       0 8px 20px rgba(255,107,53,.32), 0 2px 6px rgba(229,87,32,.22);
+    --shadow-card:      0 1px 2px rgba(31,29,26,.04), 0 6px 16px rgba(31,29,26,.05);
+
+    --font-serif:       'DM Serif Display', 'Times New Roman', serif;
+    --font-sans:        'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #1c1b18;
+    font-family: var(--font-sans);
+    color: var(--ink-900);
+    min-height: 100vh;
+  }
+
+  /* sr-only h1 — semantisk */
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+    white-space: nowrap; border: 0;
+  }
+
+  /* Stage = svart bakgrunn + iPhone-frame */
+  .stage {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
+
+  .device {
+    width: 390px;
+    height: 844px;
+    border-radius: 48px;
+    background: var(--warm-grey);
+    box-shadow:
+      0 30px 80px rgba(0,0,0,.55),
+      0 0 0 12px #0a0a09,
+      0 0 0 13px #2a2826;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* iOS-status bar + dynamic island faux */
+  .status {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-900);
+    z-index: 5;
+    pointer-events: none;
+  }
+  .island {
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 34px;
+    background: #0a0a09;
+    border-radius: 999px;
+    z-index: 6;
+  }
+
+  /* ====================== SCREEN ====================== */
+  main.screen {
+    position: absolute;
+    inset: 0;
+    padding-top: 54px;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(140% 50% at 50% -10%, rgba(255,255,255,.55), rgba(255,255,255,0) 55%),
+      linear-gradient(180deg, var(--warm-grey-soft) 0%, var(--warm-grey) 100%);
+    overflow: hidden;
+  }
+
+  /* ====================== HEADER ====================== */
+  header.app-header {
+    flex: none;
+    padding: 8px 20px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .back-btn {
+    width: 44px; height: 44px;
+    display: grid; place-items: center;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    margin-left: -10px;
+  }
+  .back-btn span {
+    width: 36px; height: 36px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.6);
+    border: 1px solid rgba(31,29,26,.06);
+    display: grid; place-items: center;
+    color: var(--ink-900);
+  }
+  .title-block {
+    flex: 1;
+    text-align: center;
+    transform: translateX(-12px); /* visuell balanse vs FAB-vekt */
+  }
+  .title-block .label {
+    font-family: var(--font-serif);
+    font-size: 11px;
+    font-style: italic;
+    color: var(--ink-500);
+    letter-spacing: .4px;
+    margin: 0 0 -2px;
+  }
+  .title-block h2 {
+    font-family: var(--font-sans);
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -.3px;
+    color: var(--ink-900);
+    margin: 0;
+  }
+  .header-spacer { width: 44px; }
+
+  /* ====================== CHILD-CARD ====================== */
+  .child-card {
+    flex: none;
+    margin: 0 20px 16px;
+    background: var(--card);
+    border-radius: 22px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid rgba(31,29,26,.04);
+    box-shadow: var(--shadow-card);
+  }
+  .avatar {
+    width: 48px; height: 48px;
+    border-radius: 999px;
+    background: linear-gradient(160deg, #F6E1D1, #E8C6A9);
+    display: grid; place-items: center;
+    overflow: hidden;
+    flex: none;
+  }
+  .avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .child-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .child-name {
+    font-family: var(--font-serif);
+    font-size: 19px;
+    line-height: 1;
+    margin: 0 0 4px;
+    color: var(--ink-900);
+  }
+  .child-sub {
+    font-size: 12.5px;
+    color: var(--ink-500);
+    margin: 0;
+    font-weight: 500;
+  }
+  .stat {
+    flex: none;
+    text-align: right;
+    padding-left: 8px;
+    border-left: 1px solid var(--hairline);
+  }
+  .stat-num {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    line-height: 1;
+    color: var(--ink-900);
+  }
+  .stat-label {
+    display: block;
+    font-size: 10.5px;
+    color: var(--ink-400);
+    letter-spacing: .9px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  /* ====================== FILTER CHIPS ====================== */
+  .chips {
+    flex: none;
+    padding: 0 20px 10px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-700);
+    background: rgba(255,255,255,.7);
+    border: 1px solid rgba(31,29,26,.06);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+  }
+  .chip.active {
+    background: var(--ink-900);
+    color: #fff;
+    border-color: var(--ink-900);
+  }
+  .chip .count {
+    color: var(--ink-400);
+    margin-left: 5px;
+    font-weight: 500;
+  }
+  .chip.active .count {
+    color: rgba(255,255,255,.55);
+  }
+
+  /* ====================== SCROLL AREA ====================== */
+  .scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 20px max(env(safe-area-inset-bottom, 0px), 110px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    scroll-behavior: smooth;
+  }
+  .scroll::-webkit-scrollbar { display: none; }
+  .scroll { scrollbar-width: none; }
+
+  /* ====================== GROUP CARD ====================== */
+  .group-eyebrow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 4px 8px;
+  }
+  .group-eyebrow .label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-500);
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .group-eyebrow .meta {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--ink-400);
+  }
+  .group {
+    background: rgba(255,255,255,.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 18px;
+    border: 1px solid rgba(31,29,26,.05);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ====================== ROW ====================== */
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    min-height: 60px;
+    background: transparent;
+    border: 0;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    color: inherit;
+    font-family: inherit;
+    transition: background 100ms ease;
+  }
+  .row:hover { background: rgba(31,29,26,.025); }
+  .row:active { background: rgba(31,29,26,.05); }
+
+  .thumb {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: var(--warm-grey-soft);
+    display: grid; place-items: center;
+    overflow: hidden;
+    flex: none;
+    border: 1px solid rgba(31,29,26,.05);
+  }
+  .thumb img {
+    width: 80%; height: 80%;
+    object-fit: contain;
+  }
+  .thumb.missing {
+    background: var(--warm-grey);
+    opacity: .55;
+  }
+  .thumb.missing img {
+    filter: grayscale(1);
+  }
+
+  .row-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .row-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-900);
+    line-height: 1.2;
+  }
+  .row-meta {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--ink-500);
+    margin-top: 2px;
+    line-height: 1;
+  }
+
+  /* status pill — scannable, samme rytme som V2 */
+  .pill {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .1px;
+  }
+  .pill-have {
+    background: rgba(31,29,26,.06);
+    color: var(--ink-500);
+  }
+  .pill-missing {
+    background: var(--orange-soft);
+    color: var(--orange-deep);
+  }
+
+  .divider {
+    height: 1px;
+    margin: 0 14px 0 70px; /* indented to skip thumb */
+    background: var(--hairline);
+  }
+
+  /* ====================== FAB ====================== */
+  .fab {
+    position: absolute;
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+    right: 22px;
+    width: 58px; height: 58px;
+    border-radius: 999px;
+    background: var(--orange);
+    border: 0;
+    display: grid; place-items: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-fab);
+    color: #fff;
+    z-index: 10;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease;
+  }
+  .fab:hover { transform: scale(1.04); }
+  .fab:active { transform: scale(.96); }
+  .fab:focus-visible {
+    outline: 3px solid var(--orange-ring);
+    outline-offset: 3px;
+  }
+
+  /* iOS home indicator */
+  .home-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 134px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--ink-900);
+    opacity: .85;
+    z-index: 8;
+  }
+
+  /* ====================== REDUCED-MOTION ====================== */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+    .fab:hover { transform: none; }
+  }
+
+  /* ====================== CAPTION ====================== */
+  .caption {
+    position: fixed;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,.5);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    letter-spacing: .3px;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="device" role="img" aria-label="iPhone 14 frame med Babyora Min garderobe">
+
+    <!-- Status bar -->
+    <div class="status" aria-hidden="true">
+      <span>9:41</span>
+      <span style="display:inline-flex;gap:5px;align-items:center;">
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
+          <path d="M1 7.5 L4 7.5 L4 10 L1 10 Z M5.5 5 L8.5 5 L8.5 10 L5.5 10 Z M10 2.5 L13 2.5 L13 10 L10 10 Z" fill="currentColor"/>
+        </svg>
+        <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+          <path d="M7 9.5c.83 0 1.5-.67 1.5-1.5S7.83 6.5 7 6.5 5.5 7.17 5.5 8 6.17 9.5 7 9.5zM2.5 5.5l1.4 1.4c1.7-1.7 4.5-1.7 6.2 0l1.4-1.4c-2.5-2.5-6.5-2.5-9 0z" fill="currentColor"/>
+        </svg>
+        <span style="display:inline-block;width:24px;height:11px;border-radius:3px;border:1px solid currentColor;position:relative;">
+          <span style="position:absolute;inset:1px;width:18px;background:currentColor;border-radius:1.5px;"></span>
+        </span>
+      </span>
+    </div>
+    <div class="island" aria-hidden="true"></div>
+
+    <!-- ============================ SCREEN ============================ -->
+    <main class="screen" aria-labelledby="garderobe-title">
+      <h1 id="garderobe-title" class="sr-only">Min garderobe for Lo</h1>
+
+      <!-- HEADER -->
+      <header class="app-header">
+        <button type="button" class="back-btn" aria-label="Tilbake">
+          <span aria-hidden="true">
+            <svg width="9" height="15" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 1L1 7l6 6" />
+            </svg>
+          </span>
+        </button>
+        <div class="title-block">
+          <p class="label">Garderobe</p>
+          <h2>Min garderobe</h2>
+        </div>
+        <div class="header-spacer" aria-hidden="true"></div>
+      </header>
+
+      <!-- CHILD-CARD (sub-eyebrow med count) -->
+      <section class="child-card" aria-label="Aktivt barn og total-antall">
+        <div class="avatar" aria-hidden="true">
+          <img src="../avatars/baby-lys-glad.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'👶',style:'font-size:28px'}))" />
+        </div>
+        <div class="child-meta">
+          <p class="child-name">Lo</p>
+          <p class="child-sub">14 mnd · str. 80</p>
+        </div>
+        <div class="stat" aria-label="14 av 18 plagg registrert">
+          <span class="stat-num">14<span style="color:var(--ink-300);font-size:14px;">/18</span></span>
+          <span class="stat-label">Plagg</span>
+        </div>
+      </section>
+
+      <!-- FILTER CHIPS -->
+      <div class="chips" role="tablist" aria-label="Filter">
+        <button type="button" class="chip active" role="tab" aria-selected="true">Alle <span class="count">18</span></button>
+        <button type="button" class="chip" role="tab" aria-selected="false">Har <span class="count">14</span></button>
+        <button type="button" class="chip" role="tab" aria-selected="false">Mangler <span class="count">4</span></button>
+      </div>
+
+      <!-- SCROLL — gruppert liste -->
+      <div class="scroll" role="region" aria-label="Garderobe gruppert per lag">
+
+        <!-- ============ INNERLAG ============ -->
+        <section aria-labelledby="grp-inner">
+          <div class="group-eyebrow">
+            <h3 id="grp-inner" class="label">Innerlag</h3>
+            <span class="meta">5 av 6</span>
+          </div>
+          <ul class="group" role="list">
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="true" aria-label="Langermet ullbody, str. 80, merinoull. Status: Har.">
+                <span class="thumb"><img src="../illustrations/garments/langermet-ullbody.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧥',style:'font-size:22px'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Langermet ullbody</span>
+                  <span class="row-meta">3 stk · merinoull</span>
+                </span>
+                <span class="pill pill-have" aria-hidden="true">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+                  Har
+                </span>
+              </button>
+            </li>
+            <li aria-hidden="true" class="divider"></li>
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="true" aria-label="Kortermet ullbody, str. 80. Status: Har.">
+                <span class="thumb"><img src="../illustrations/garments/kortermet-ullbody.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'👕',style:'font-size:22px'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Kortermet ullbody</span>
+                  <span class="row-meta">2 stk · merinoull</span>
+                </span>
+                <span class="pill pill-have" aria-hidden="true">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+                  Har
+                </span>
+              </button>
+            </li>
+            <li aria-hidden="true" class="divider"></li>
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="false" aria-label="Bomullsbody, str. 80. Status: Mangler.">
+                <span class="thumb missing"><img src="../illustrations/garments/langermet-body.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'👕',style:'font-size:22px;opacity:.5'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Bomullsbody</span>
+                  <span class="row-meta">til vår · str. 86</span>
+                </span>
+                <span class="pill pill-missing" aria-hidden="true">Mangler</span>
+              </button>
+            </li>
+
+          </ul>
+        </section>
+
+        <!-- ============ MELLOMLAG ============ -->
+        <section aria-labelledby="grp-mid">
+          <div class="group-eyebrow">
+            <h3 id="grp-mid" class="label">Mellomlag</h3>
+            <span class="meta">3 av 3</span>
+          </div>
+          <ul class="group" role="list">
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="true" aria-label="Ullsett tykt, str. 80. Status: Har.">
+                <span class="thumb"><img src="../illustrations/garments/ullsett-tykt.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧶',style:'font-size:22px'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Ullsett tykt</span>
+                  <span class="row-meta">1 stk · 100 % ull</span>
+                </span>
+                <span class="pill pill-have" aria-hidden="true">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+                  Har
+                </span>
+              </button>
+            </li>
+            <li aria-hidden="true" class="divider"></li>
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="true" aria-label="Fleecedress, str. 80. Status: Har.">
+                <span class="thumb"><img src="../illustrations/garments/ull-mellomlag.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧥',style:'font-size:22px'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Fleecedress</span>
+                  <span class="row-meta">mellomlag · str. 80</span>
+                </span>
+                <span class="pill pill-have" aria-hidden="true">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+                  Har
+                </span>
+              </button>
+            </li>
+
+          </ul>
+        </section>
+
+        <!-- ============ YTTERLAG ============ -->
+        <section aria-labelledby="grp-outer">
+          <div class="group-eyebrow">
+            <h3 id="grp-outer" class="label">Ytterlag</h3>
+            <span class="meta">2 av 3</span>
+          </div>
+          <ul class="group" role="list">
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="true" aria-label="Vinterdress, str. 86, vanntett. Status: Har.">
+                <span class="thumb"><img src="../illustrations/garments/vinterdress.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧥',style:'font-size:22px'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Vinterdress</span>
+                  <span class="row-meta">vanntett · str. 86</span>
+                </span>
+                <span class="pill pill-have" aria-hidden="true">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+                  Har
+                </span>
+              </button>
+            </li>
+            <li aria-hidden="true" class="divider"></li>
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="true" aria-label="Regnponcho, str. 80. Status: Har.">
+                <span class="thumb"><img src="../illustrations/garments/regnponcho-over-baeresele.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧥',style:'font-size:22px'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Regnponcho</span>
+                  <span class="row-meta">over bæresele · str. 80</span>
+                </span>
+                <span class="pill pill-have" aria-hidden="true">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+                  Har
+                </span>
+              </button>
+            </li>
+            <li aria-hidden="true" class="divider"></li>
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="false" aria-label="Lett kjøredress, str. 80. Status: Mangler.">
+                <span class="thumb missing"><img src="../illustrations/garments/lett-kjoredress.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧥',style:'font-size:22px;opacity:.5'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Lett kjøredress</span>
+                  <span class="row-meta">vår · str. 80</span>
+                </span>
+                <span class="pill pill-missing" aria-hidden="true">Mangler</span>
+              </button>
+            </li>
+
+          </ul>
+        </section>
+
+        <!-- ============ TILBEHØR ============ -->
+        <section aria-labelledby="grp-acc">
+          <div class="group-eyebrow">
+            <h3 id="grp-acc" class="label">Tilbehør</h3>
+            <span class="meta">4 av 6</span>
+          </div>
+          <ul class="group" role="list">
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="true" aria-label="Ullsokker, 3 par. Status: Har.">
+                <span class="thumb"><img src="../illustrations/garments/ullsokker.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧦',style:'font-size:22px'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Ullsokker</span>
+                  <span class="row-meta">3 par</span>
+                </span>
+                <span class="pill pill-have" aria-hidden="true">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+                  Har
+                </span>
+              </button>
+            </li>
+            <li aria-hidden="true" class="divider"></li>
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="true" aria-label="Ullue, 1 til 2 år. Status: Har.">
+                <span class="thumb"><img src="../illustrations/garments/lue-m-ull.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🎩',style:'font-size:22px'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Ullue</span>
+                  <span class="row-meta">1–2 år</span>
+                </span>
+                <span class="pill pill-have" aria-hidden="true">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+                  Har
+                </span>
+              </button>
+            </li>
+            <li aria-hidden="true" class="divider"></li>
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="false" aria-label="Ullvotter, 1 til 2 år. Status: Mangler.">
+                <span class="thumb missing"><img src="../illustrations/garments/votter.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🧤',style:'font-size:22px;opacity:.5'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Ullvotter</span>
+                  <span class="row-meta">1–2 år</span>
+                </span>
+                <span class="pill pill-missing" aria-hidden="true">Mangler</span>
+              </button>
+            </li>
+            <li aria-hidden="true" class="divider"></li>
+
+            <li role="listitem">
+              <button type="button" class="row" aria-pressed="false" aria-label="Solhatt, str. 48 cm. Status: Mangler.">
+                <span class="thumb missing"><img src="../illustrations/garments/solhatt.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'👒',style:'font-size:22px;opacity:.5'}))" /></span>
+                <span class="row-text">
+                  <span class="row-title">Solhatt</span>
+                  <span class="row-meta">til sommer · 48 cm</span>
+                </span>
+                <span class="pill pill-missing" aria-hidden="true">Mangler</span>
+              </button>
+            </li>
+
+          </ul>
+        </section>
+
+      </div>
+
+      <!-- FAB -->
+      <button type="button" class="fab" aria-label="Legg til nytt plagg">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
+
+      <!-- Home indicator -->
+      <div class="home-indicator" aria-hidden="true"></div>
+
+    </main>
+
+  </div>
+</div>
+
+<p class="caption">Mock A · Babyora · Min garderobe — kompakt liste + Whering-FAB-inspirasjon</p>
+
+</body>
+</html>

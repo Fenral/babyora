@@ -1,0 +1,123 @@
+{
+  "claude": {
+    "id": "kjoredress",
+    "dbString": "kjøredress",
+    "kategori": "yttertoy",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Har komplett what + when i garment-info.ts (linje 117-120). Tonen matcher søsken-plagg i yttertøy-gruppen (lett-kjoredress, vinterkjoredress, vinterkjoredress-isolert) — samme mønster 'X kjøredress med ...' + 'Z dager i vogn fra ca A-B °C'. Dedikert whyForGarment-gren finnes (linje 380-382), IKKE fallback. Trekk: whyForGarment-grenen bruker engelsk ord 'Padded' i en ellers norsk app (jf. minne om at Klemeg-UI skal være norsk, ikke Swinglab-engelsk). Søsken bruker norske ord (fôret, vindtett)."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/kjoredress.png bekreftet via Test-Path. db-strengen 'kjøredress' er korrekt mappet til id 'kjoredress' i garment-illustrations.ts (linje 45). Navngivning er konsistent med søsken (lett-kjoredress, vinterkjoredress, vinterkjoredress-isolert finnes alle som egne PNG-er). Mapping-plausibilitet høy — ingen kollisjon/fallback. Visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 22,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig. Standard (ikke-vinter) kjøredress velges i vogn ved kjølig (5-9 °C) og i bæresele ved frost (-7 til 0 °C). Bæresele-bruken ved frost er forsvarlig fordi forelderens kropp deler varme (PMC-7202982: babywearing gir lavere isolasjonsbehov; CK-9/SB-4/modifier-7 håndterer innerJakke-overoppheting og fjerner yttertøy ved innerJakke + feels<10). Vogn-bruken ved 5-9 °C kombineres med varmepose + ull-mellomlag + ullsett tynt, samt SIDS-tildekkings-noter (modifier-6, HB-8). Ingen overoppheting/kvelning/frost-fare som kildene ikke dekker. Trekk: ingen kritiske flagg, men 'kjøredress' er ikke i overheating-konflikt-grafen som eget item (greit — den er nøytral yttertøy).",
+      "trace": "baseTable['vogn']['kjolig'] (feelsLikeC>=5 && <10) → yttertoy:['kjøredress']. baseTable['baeresele']['frost'] (feelsLikeC>=-7 && <0) → yttertoy:['kjøredress']. Modifier-tilsetninger: ingen modifier ADDER 'kjøredress'. Modifier-7 (baeresele, innerJakke && feels<10) TØMMER yttertøy-laget → fjerner kjøredress. CK-6 påvirker ikke. HB-8 (vogn, feels>=22) ikke relevant (kjølig/frost). Ingen safety-blokk fjerner kjøredress direkte. Sluttresultat: kjøredress beholdes i vogn 5-9 °C og bæresele -7-0 °C med mindre bæresele-innerJakke aktiv.",
+      "kilder": [
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC7202982/",
+        "https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Dressing-Your-Newborn.aspx"
+      ],
+      "score_dup": null
+    },
+    "tekstLogikk": {
+      "score": 17,
+      "kommentar": "Drift mellom when-tekst og faktisk trace. when sier 'Kjølige dager i vogn fra ca 0-8 °C', men baseTable velger kjøredress i vogn KUN i kjolig-båndet (5-9 °C, feelsLikeC>=5 && <10). Området 0-4 °C (kald-båndet) bruker vinterkjøredress, IKKE kjøredress. when-teksten hevder altså 0-8 °C mens motoren faktisk gir 5-9 °C i vogn — nedre grense feil med ~5 grader, og overlapper feilaktig inn i vinterkjøredress sitt 0-4 °C-revir. Dette kan villede en forelder til å tro standard kjøredress holder ved 0-2 °C i vogn, mens motoren der anbefaler det varmere vinter-plagget. when nevner heller ikke bæresele-bruken (frost -7-0 °C), så teksten er ufullstendig mot trace. whyForGarment-grenen er derimot generisk/feels-drevet og stemmer (nevner vind betinget). Severity hoy pga villedende temperatur-spenn."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "kjøredress mangler egen oppføring i ITEM_ALTERNATIVES (alternatives.ts). Det finnes et naturlig tykkelse-trinn-alternativ begge veier: nedover til 'lett kjøredress' (mildere) og oppover til 'vinterkjøredress' (kaldere). Merk: 'lett kjøredress' HAR allerede kjøredress som sitt oppover-alternativ (linje 86-93), så halve relasjonen er dekket. Et symmetrisk alternativ på selve kjøredress (lett ↔ vinter) ville hjulpet foreldre å justere ved grensetemperaturer (rundt 5 og 9-10 °C). Ikke kritisk — yttertøy-tykkelse styres allerede av temp-båndene — derfor moderat trekk, ikke fullt."
+    },
+    "total": 85,
+    "verdikt": "Solid plagg med god struktur, korrekt PNG/mapping og pediatrisk forsvarlig seleksjon. Hovedproblem: when-teksten (0-8 °C) driver fra faktisk vogn-seleksjon (5-9 °C) og tråkker inn i vinterkjøredress sitt 0-4 °C-revir — villedende for foreldre ved nedre temperatur. Mindre funn: engelsk 'Padded' i norsk whyForGarment, manglende eget tykkelse-alternativ, og when nevner ikke bæresele-frost-bruken. Ingen sikkerhetskritiske avvik.\"",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "when-teksten i garment-info.ts (linje 119) sier 'Kjølige dager i vogn fra ca 0-8 °C', men baseTable velger kjøredress i vogn kun i kjolig-båndet 5-9 °C (feelsLikeC>=5 && <10). 0-4 °C (kald-bånd) bruker vinterkjøredress. Teksten lover dermed dekning ned til 0 °C som motoren ikke gir, og overlapper feilaktig vinterkjøredress sitt temperaturrevir.",
+        "forslag": "Endre when til å matche trace, f.eks. 'Kjølige dager i vogn fra ca 5-9 °C, eller i bæresele ned mot frost.' Rør ALDRI selve tersklene i tables.ts — kun teksten skal justeres til å speile motoren.",
+        "kilde": "tables.ts baseTable.vogn.kjolig + bandForTemp (kjolig: 5-9 °C); garment-info.ts linje 119"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "whyForGarment-grenen for kjoredress (garment-info.ts linje 381) bruker det engelske ordet 'Padded' i en ellers norsk app. Søsken-grenene bruker norske ord (fôret, vindtett, isolert).",
+        "forslag": "Bytt 'Padded kjøredress' til 'Fôret kjøredress' for norsk konsistens.",
+        "kilde": "garment-info.ts linje 381; minne: Klemeg-UI er norsk"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "kjøredress mangler egen oppføring i ITEM_ALTERNATIVES. Det finnes naturlige tykkelse-trinn (lett kjøredress ↔ vinterkjøredress) som kunne tilbys ved grensetemperaturer. 'lett kjøredress' har allerede kjøredress som oppover-alternativ, men ikke omvendt.",
+        "forslag": "Vurder å legge til en kjøredress-oppføring med alternativ 'vinterkjøredress' (kaldere) og evt. 'lett kjøredress' (mildere) i alternatives.ts. Ikke kritisk siden temp-bånd allerede styrer tykkelse.",
+        "kilde": "alternatives.ts linje 85-94 (lett kjøredress har kjøredress som alt.)"
+      },
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "when-teksten nevner kun vogn, men kjøredress velges også i bæresele ved frost (-7 til 0 °C). Teksten er ufullstendig mot faktisk trace.",
+        "forslag": "Inkluder bæresele-konteksten i when-teksten slik at den dekker begge aktivitetene plagget faktisk velges i.",
+        "kilde": "tables.ts baseTable.baeresele.frost"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 18,
+      "kommentar": "Id, kategori og felter er konsistente (kjoredress/yttertoy, hva/når på plass). Trekk for engelsk «Padded» i whyForGarment i en ellers norsk app — språkblanding er en strukturell kvalitetsfeil i tekstfeltene, ikke bare kosmetikk."
+    },
+    "utseende": {
+      "score": 18,
+      "kommentar": "Bildet viser riktig plagg: helkropps kjøredress med hette, dobbel glidelås og foldede føtter — passende for 0–3 år og lesbart som «moderat fôring» (ikke overdrevent puffete som en vinterkjøredress). Stilen er ren og illustrativ uten synlige artefakter i selve plagget. Trekk: bakgrunnen er helsvart, ikke transparent — må verifiseres at PNG-en faktisk har alfakanal, ellers vil den stikke ut mot lys app-bakgrunn."
+    },
+    "seleksjon": {
+      "score": 21,
+      "kommentar": "Vogn 5–9 °C med moderat fôret kjøredress er pediatrisk forsvarlig. Bæresele/frost-oppføringen er mer tvilsom: tykk dress i sele er generelt frarådet (forelderens kroppsvarme + ergonomi), men modifier-7 ser ut til å nøytralisere dette når innerjakke er valgt. Spørsmålet er om baeresele.frost-raden i praksis er død kode — hvis innerjakke alltid co-selekteres ved frost i sele, leveres kjøredressen aldri der. Intensjonen bør avklares; som fallback uten innerjakke er den akseptabel."
+    },
+    "tekstLogikk": {
+      "score": 15,
+      "kommentar": "Hovedavviket er reelt og verre enn én retning: «vogn fra ca 0–8 °C» både overlover (0–5 °C tilhører vinterkjøredress) og underlover (motoren velger kjøredress opp til 9 °C). Teksten tråkker altså på naboplaggets revir OG skjuler en del av eget bruksområde. Korrekt tekst er «ca 5–9 °C i vogn»."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Mangler ITEM_ALTERNATIVES-oppføring for tykkelse-trinnet lett kjøredress ↔ kjøredress ↔ vinterkjøredress. Lav alvorlighet, men nettopp dette plagget sitter midt i en gradient der alternativ-kobling gir mest verdi for foreldre."
+    },
+    "total": 79,
+    "verdikt": "Godkjent med merknader — bildet og seleksjonslogikken holder, men «når»-teksten må korrigeres (5–9 °C) før den kan kalles ferdig, og bæresele/frost-radens hensikt må avklares mot modifier-7.",
+    "uenig_med_claude": "Delvis. (1) 85/100 er for høyt: et hoy-funn som rammer selve kjerneløftet («når brukes plagget») bør koste mer på mål 4 enn Claudes total antyder. (2) Claudes lav/mål4-funn om at teksten burde nevne bæresele er tvilsomt: modifier-7 fjerner trolig kjøredressen i sele når innerjakke er valgt (feels<10 dekker hele frost-intervallet), så bæresele-leveransen kan være død kode. Å legge bæresele inn i teksten ville da gjøre tekst↔logikk-avviket VERRE, ikke bedre. Riktig fix er å avklare motoren, ikke teksten. (3) Claude overså at 0–8-teksten også underdekker 8–9 °C — avviket går begge veier.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "«Når»-tekst sier «vogn fra ca 0–8 °C», men motoren velger kjøredress i vogn kun ved feels 5–9 °C; 0–4 °C dekkes av vinterkjøredress. Teksten overlover ned til 0 °C og skjuler dekningen ved 8–9 °C.",
+        "forslag": "Endre «når» til: «Kjølige dager i vogn, ca 5–9 °C.»"
+      },
+      {
+        "severity": "medium",
+        "mal": 3,
+        "beskrivelse": "baseTable.baeresele.frost velger kjøredress, men modifier-7 (innerJakke && feels<10) tømmer yttertøy — hele frost-intervallet (-7 til 0 °C) ligger under 10 °C, så raden er trolig død kode når innerjakke co-selekteres. Uklart om kjøredress noensinne leveres i bæresele.",
+        "forslag": "Avklar intensjon: enten fjern kjoredress fra baeresele.frost, eller dokumenter fallback-scenarioet (sele uten innerjakke) eksplisitt i trace/tester."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "whyForGarment bruker engelsk «Padded» i ellers norsk tekst.",
+        "forslag": "Erstatt med «Fôret» eller «Vattert»."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Mangler ITEM_ALTERNATIVES-oppføring for tykkelse-trinnet (lett kjøredress ↔ kjøredress ↔ vinterkjøredress).",
+        "forslag": "Legg til toveis alternativ-kobling med relasjonstype «tykkelse-trinn»."
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen har helsvart bakgrunn — usikkert om PNG-en har transparent alfakanal. Mot lys app-bakgrunn vil en svart boks være et synlig artefakt.",
+        "forslag": "Verifiser alfakanal i kjoredress.png; eksporter på nytt med transparens hvis nødvendig."
+      }
+    ]
+  }
+}

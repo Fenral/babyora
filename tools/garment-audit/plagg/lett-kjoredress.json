@@ -1,0 +1,55 @@
+{
+  "claude": {
+    "id": "lett-kjoredress",
+    "dbString": "lett kjøredress",
+    "kategori": "yttertoy",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett info-oppføring finnes (garment-info.ts l.113-116): 'what' beskriver én-deler med tynt vind-/litt regntett skall, 'when' = 'Milde dager i vogn fra ca 5–12 °C.' Tone/lengde/mønster matcher søsken-plaggene i yttertøy-kategorien (kjoredress, vinterkjoredress osv.) konsist — samme «what = materiale/fôring + when = temp-intervall»-struktur. Dedikert whyForGarment-gren finnes (l.377-379), ikke fallback. Trekk på 2 fordi 'when' kun nevner vogn, mens plagget faktisk også selekteres i baeresele.kald (se mål 4) — beskrivelsen er dermed snevrere enn faktisk bruk."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet på disk: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\lett-kjoredress.png. Mapping er korrekt: db-streng 'lett kjøredress' → id 'lett-kjoredress' (garment-illustrations.ts l.44), som matcher PNG-filnavnet og GarmentId i garment-info.ts. Filnavn-konvensjon (ø→o, mellomrom→bindestrek) er konsistent med søsken. Visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 19,
+      "trace": "baseTable-treff for 'lett kjøredress': (1) vogn.mild (tables.ts l.36-41) → bandForTemp: feels 10-15 °C; (2) baeresele.kald (l.99-104) → bandForTemp: feels 0-4 °C. Ingen andre bånd/aktiviteter bruker plagget. Modifier-interaksjoner (modifiers.ts): vogn.mild legger til ullsokker hvis feels≤5 (kun nedre kant), lue tynn + varmepose lett; SB-6/varme-regler river ikke yttertøyet. baeresele.kald: hvis input.innerJakke && feels<10 TØMMES yttertøy-laget helt (l.305-308) → lett kjøredress fjernes når barnet bæres innenfor jakka; ellers beholdes. Ingen conflicts/softBlocks/safety-regel retter seg spesifikt mot lett kjøredress (THICK_WINTER_OUTER_RE matcher kun vinterdress/vinterkjøredress, ikke dette tynne skallet). Pediatrisk vurdering: vogn.mild ved 10-15 °C med tynt vindtett skall + lett varmepose er forsvarlig; vogn-overoppheting dekkes av HB-8/SB-6 og noBlanket-note. baeresele.kald (0-4 °C) med tynt skall er forsvarlig FORDI forelderens kropp er varmekilden (PMC-7202982 bekrefter minimal core-temp-endring ved babywearing) og innerJakke-grenen fjerner skallet helt. Ingen overoppheting/SIDS/frost-fare introdusert av dette plagget. Trekk på 1: nedre temp-grense i baeresele (0 °C) ligger under det 'when'/whyForGarment kommuniserer.",
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig i begge bånd. Kildene (sources.ts) dekker både vogn-overoppheting (LT-PRAM via safety) og babywearing-termoregulering (PMC-7202982), så ingen web-søk nødvendig. Eneste svakhet er tekst↔logikk-drift, ikke et helse-/sikkerhetsproblem."
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "'when' = 'Milde dager i vogn fra ca 5–12 °C' og whyForGarment-grenen ('blokker vind og lett regn uten å bygge for mye varme. Passer ved {feels} °C i {aktivitet}') stemmer GODT med vogn.mild-treffet (10-15 °C feels). To konkrete drift-punkter: (1) Plagget selekteres ALSO i baeresele.kald (feels 0-4 °C, tables.ts l.99-104) — godt under 'fra ca 5 °C'. 'when' nevner kun vogn, så en forelder i bæresele ved 2 °C ser et plagg hvis beskrivelse sier 'milde dager 5-12 °C i vogn'. Mitigeres delvis av at whyForGarment er dynamisk på {aktivitet} og at innerJakke-grenen fjerner skallet, men teksten villeder fortsatt. (2) Øvre kant: vogn.mild dekker opp til 15 °C feels, mens 'when' sier 12 °C — plagget anbefales 13-15 °C uten at teksten dekker det. Ingen av disse villeder mot under-/overkledning på en farlig måte (bæresele-varmen kompenserer), derav medium, ikke hoy."
+    },
+    "alternativer": {
+      "score": 10,
+      "kommentar": "Korrekt alternativ allerede definert i alternatives.ts (l.85-94): 'lett kjøredress' → 'kjøredress' som et reelt tykkelse-trinn opp, med whenKey/whyPrimaryKey. Dette er det riktige naturlige trinnet (lett skall → fôret kjøredress) for kjøligere/lengre turer. Ingen manglende ull↔fleece- eller dun↔syntet-akse er relevant for et tynt vind-/regnskall (det er ikke et isolasjonsplagg). Fullt dekket."
+    },
+    "total": 85,
+    "verdikt": "Solid plagg-oppføring: komplett info, dedikert why-gren, korrekt PNG-mapping, forsvarlig seleksjon og riktig definert alternativ. Hovedfunnet er tekst↔logikk-drift — 'when' beskriver kun vogn 5-12 °C, men baseTable selekterer plagget også i baeresele ned til 0 °C og i vogn opp til 15 °C. Ikke en sikkerhetsrisiko (bæresele-kroppsvarme + innerJakke-fjerning kompenserer), men teksten bør utvides til å nevne bæresele og dekke faktisk temp-spenn. Anbefalt fiks: oppdater 'when' til å reflektere begge aktiviteter og det reelle intervallet.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "Tekst↔logikk-drift (nedre grense + aktivitet): garment-info 'when' sier 'Milde dager i vogn fra ca 5–12 °C', men baseTable selekterer 'lett kjøredress' også i baeresele.kald (tables.ts l.99-104), som via bandForTemp dekker feels-like 0–4 °C — godt under stated 5 °C og uten å nevne bæresele.",
+        "forslag": "Utvid 'when' til f.eks. 'Milde dager i vogn (ca 5–15 °C) og i bæresele ned mot 0 °C, der forelderens kropp varmer.' Rør IKKE tabellterskler — kun teksten.",
+        "kilde": "pmc-7202982 (babywearing-termoregulering bekrefter at tynt skall i bæresele ved lav temp er forsvarlig pga forelder-kroppsvarme)"
+      },
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "Øvre-grense-drift: vogn.mild-båndet er 10–15 °C (bandForTemp, tables.ts l.11-12), så plagget anbefales i vogn opp til 15 °C feels, mens 'when' setter taket ved 12 °C.",
+        "forslag": "Juster øvre tall i 'when' fra '12 °C' til '15 °C' for å matche mild-båndets faktiske tak. Kun tekstendring.",
+        "kilde": "tables.ts bandForTemp (mild = 10–15 °C)"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Beskrivelse-presisjon: 'what' sier 'Vind- og litt regntett', mens whyForGarment lover 'blokker vind og lett regn'. Plagget håndterer ikke ekte nedbør — modifiers.ts legger 'regntrekk'/'regnponcho' uavhengig ved precip≥0.5, noe info-teksten ikke nevner.",
+        "forslag": "Valgfritt: legg til i 'when' at ved mer enn yr trengs regntrekk/regnponcho i tillegg. Ingen logikkendring.",
+        "kilde": "modifiers.ts l.143-150 (nedbør-modifier)"
+      }
+    ]
+  },
+  "fable": null
+}

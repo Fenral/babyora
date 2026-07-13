@@ -1,0 +1,189 @@
+{
+  "nav": {
+    "home": "Hem",
+    "plan": "Prognos",
+    "guide": "Guide",
+    "settings": "Inställningar"
+  },
+  "activity": {
+    "vogn": "Vagn",
+    "baeresele": "Bärsele",
+    "utelek": "Utelek",
+    "soevn": "Sömn",
+    "groupLabel": "Aktivitet"
+  },
+  "layerCategory": {
+    "innerst": "Innerst",
+    "mellomlag": "Mellanlager",
+    "yttertoy": "Ytterkläder",
+    "ekstra": "Extra"
+  },
+  "common": {
+    "next": "Nästa",
+    "back": "Tillbaka",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "edit": "Redigera",
+    "delete": "Ta bort",
+    "loading": "Laddar…",
+    "tryAgain": "Försök igen"
+  },
+  "guide": {
+    "title": "Utforska påklädning",
+    "intro": "Dra i reglagen för att se vad Babyora föreslår vid olika förhållanden.",
+    "temperatureLabel": "Temperatur",
+    "indoorTemperatureLabel": "Rumstemperatur",
+    "ageLabel": "Ålder i månader",
+    "windLabel": "Vindstyrka",
+    "rainLabel": "Nederbörd",
+    "outputHeading": "Föreslagna lager",
+    "outputEmpty": "Välj en aktivitet för att se ett förslag.",
+    "modifiersHeading": "Förhållanden",
+    "tipsHeading": "Bra att veta",
+    "tip": {
+      "neckTest": {
+        "title": "Nacktestet",
+        "body": "För in två fingrar bakom barnets nacke. Varm och torr betyder lagom. Klibbig eller svettig betyder för varmt. Kall betyder ett lager till."
+      },
+      "wool": {
+        "title": "Varför ull?",
+        "body": "Ull håller värmen även när det är fuktigt, och låter huden andas. För de minsta är ull ofta säkrare än bomull eller syntet."
+      },
+      "newborn": {
+        "title": "Spädbarn under 3 månader",
+        "body": "De minsta reglerar temperaturen dåligt. Max 30 minuter ute i kyla. Känn på nacken och ryggen ofta."
+      },
+      "disclaimer": {
+        "title": "Kom ihåg",
+        "body": "Babyora är en guide, inte ett facit. Du känner ditt barn bäst. Hör med BVC eller läkare vid oro."
+      }
+    },
+    "wind": {
+      "calm": "Lätt bris.",
+      "windproofRecommended": "Vindtätt lager rekommenderas.",
+      "gale": "Kuling — skydda barnet.",
+      "storm": "Hård vind. Överväg att stanna inne."
+    },
+    "rain": {
+      "dry": "Torrt.",
+      "drizzle": "Lätt duggregn.",
+      "moderate": "Måttligt regn — sätt regnskydd över vagnen.",
+      "heavy": "Kraftigt regn."
+    }
+  },
+  "ageWarning": {
+    "title": "Babyora är optimerad för 0–2 år",
+    "body": "Du kan fortfarande använda appen, men förslagen är mest precisa för de minsta."
+  },
+  "settings": {
+    "language": "Språk",
+    "languageDescription": "Välj språk för appen.",
+    "languageOption": {
+      "no": "Norsk",
+      "en": "English",
+      "sv": "Svenska",
+      "da": "Dansk",
+      "de": "Deutsch"
+    }
+  },
+  "home": {
+    "title": "Dagens kläder för {{name}}",
+    "loading": "Hämtar väder för {{city}}…",
+    "error": "Kunde inte hämta vädret.",
+    "tempAria": "{{temp}} grader, känns som {{feels}}",
+    "feelsLike": "Känns som {{feels}}°",
+    "layerCountAria": "{{count}} lager rekommenderas",
+    "layerSuffix": "lager",
+    "weatherSection": "Vädret idag",
+    "weatherNowGroup": "Väder just nu",
+    "feelsTile": "Känns",
+    "breezeTile": "Vind",
+    "weatherTile": "Himmel",
+    "windAria": "Vind {{wind}} meter per sekund",
+    "conditionAria": "Väder: {{condition}}",
+    "feelsAria": "Känns som {{temp}} grader",
+    "activityChanged": "Förslag uppdaterat för {{activity}}: {{count}} lager",
+    "todayHourLabel": "Idag",
+    "tripHourLabel": "Lager på utflykten",
+    "todayHourWindow": " kl 08, 12, 16 och 20",
+    "todayHourWindowToTomorrow": " från 08 idag till 20 imorgon",
+    "tomorrowHourWindow": " kl 08, 12, 16 och 20 imorgon",
+    "openDetails": "Tryck för detaljer."
+  },
+  "plan": {
+    "title": "Prognos",
+    "loading": "Hämtar prognos för {{city}}…",
+    "error": "Kunde inte hämta prognosen. Försök igen senare.",
+    "emptyDays": "Inga dagar tillgängliga.",
+    "daysListLabel": "Väderprognos för nästa {{count}} dagar",
+    "showAllDays": "Visa alla {{count}} dagar",
+    "showFewerDays": "Visa endast {{count}} dagar",
+    "footer": "Väder från met.no. Förslag baseras på dygnets kallaste tidpunkt.",
+    "dayStripeAria": "{{weekday}}, {{tempMin}} till {{tempMax}} grader, vind {{wind}} meter per sekund, {{layers}} lager rekommenderas",
+    "layersShort": "{{count}} lager"
+  },
+  "notes": {
+    "common": {
+      "neckCheck": "Känn på nacken med två fingrar — varm och torr betyder lagom."
+    },
+    "sleep": {
+      "warmRoom": "Sovrummet är varmt — vädra lite eller välj en tunnare sovsäck.",
+      "coolRoom": "Sovrummet är kyligt — höj värmen ett snäpp.",
+      "safeSleep": "Sovsäck är tryggast. Inga lösa filtar eller kuddar i sängen.",
+      "newbornBackSleep": "Den minsta sover tryggt på rygg. Titta in och känn på nacken då och då."
+    },
+    "rain": {
+      "heavy": "Det öser ner — kanske en kortare tur eller helt täckt vagn?",
+      "drizzle": "Lätt duggregn — suffletten brukar räcka. Känn efter om det blir blött."
+    },
+    "wind": {
+      "strong": "Det blåser friskt — skydda ansiktet och håll turen kort."
+    },
+    "humidCold": "Fuktig kyla känns kallare än termometern säger — ett extra lager är smart.",
+    "newborn": {
+      "thermoregulation": "Den minsta reglerar värme dåligt — känn på nacke och rygg ofta.",
+      "coldShortTrip": "Håll turen kort i kylan — max en halvtimme. Smörj fet kräm på kinderna.",
+      "coldWindWait": "Vind och kyla är hårt för de minsta — överväg att vänta tills vinden mojnar.",
+      "heatTolerance": "Spädbarn tål värme dåligt — kort utetid och skugga är viktigast.",
+      "coldLimit": "Spädbarn under 3 mån: max 30 min ute i minusgrader. Känn på nacke och rygg ofta."
+    },
+    "stroller": {
+      "noBlanket": "Lägg aldrig en filt över suffletten — det blir en värmefälla.",
+      "warmPouchBlanket": "Använd antingen åkpåse eller filt, inte båda — det blir snabbt för varmt.",
+      "mildShade": "Mild dag i vagnen — sök skugga och känn på nacken då och då.",
+      "sunTent": "Sol och vagn = tältvärme. Ett luftigt solsegel är bättre.",
+      "outdoorSleepFrost": "Utesömn i kyla: titta in varje halvtimme. Åkpåse med dun räcker inte alltid."
+    },
+    "carrier": {
+      "noDownInside": "Du värmer barnet med din kropp — undvik dun närmast, det blir klibbigt.",
+      "insideJacket": "Barnet är inuti din jacka — du håller värmen, hoppa över ytterlagret."
+    },
+    "outdoorPlay": {
+      "coldKindergarten": "Riktigt kallt — kolla vad förskolan rekommenderar för utelek idag.",
+      "coldBreakLayer": "När ni tar paus: lägg på ett extra lager. Barn kyls snabbt ner när de står stilla."
+    },
+    "cold": {
+      "frostCream": "Smörj lite fet kräm på kinderna en halvtimme innan ni går ut.",
+      "frostWindCheck": "Håll koll på kinder och öron under tiden — vita fläckar betyder att det fryser.",
+      "longTripBreak": "Lång tur i kylan — planera en inomhuspaus för att värma upp."
+    },
+    "sun": {
+      "youngShade": "Solen är fin, men håll den minsta i skuggan. Solkräm väntar till efter 6 månader.",
+      "olderHatSunscreen": "Solhatt och solkräm på det som syns. Kolla UV — fjäll och snö kan överraska.",
+      "uvHigh": "Solen är stark idag — håll er i skugga mellan 11 och 15."
+    },
+    "safety": {
+      "carSeatThickSuit": "I bilbarnstolen: ta av den tjocka overallen, dra åt bältet, lägg overallen som filt."
+    },
+    "heat": {
+      "extreme": "Mycket varmt idag — aldrig ensam i bilen, mycket att dricka, mycket skugga."
+    },
+    "peak": {
+      "overheating79mo": "Barn 7–9 mån producerar mest kroppsvärme. Använd färre lager än vanligt, känn på nacken ofta."
+    },
+    "research": {
+      "overheatingPeak": "Barn 7–9 mån producerar mest kroppsvärme. Använd färre lager än vanligt, känn på nacken ofta.",
+      "newbornColdLimit": "Spädbarn under 3 mån: max 30 min ute i minusgrader. Känn på nacke och rygg ofta."
+    }
+  }
+}

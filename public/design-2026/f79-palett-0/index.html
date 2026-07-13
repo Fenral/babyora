@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="nb" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bakstehuset – Babyora F79</title>
+<style>
+/* ========================================================================
+   PALETT-0 «Bakstehuset» — strategi: restrained (kontroll-kandidat)
+   Alle ratioer under er beregnet på endelige sRGB-hex (WCAG rel. luminance),
+   ikke OKLCH-kilden — jf. a11y-preclearance seksjon 1, OKLCH-advarsel.
+
+   KONTRAST-DOKUMENTASJON (lys / mørk):
+     ink-primary  / bg-canvas    11.00 / 14.50  (krav 4.5)  PASS
+     ink-secondary/ bg-canvas     5.34 /  8.03  (krav 4.5)  PASS
+     ink-primary  / surface      14.50 / 12.24  (krav 4.5)  PASS
+     ink-secondary/ surface       7.04 /  6.78  (krav 4.5)  PASS
+     cta-ink      / cta           5.64 /  6.02  (krav 4.5)  PASS
+     cta          / bg-canvas     4.23 /  6.12  (krav 3.0)  PASS
+     focus-ring   / bg-canvas     4.04 /  6.57  (krav 3.0)  PASS
+     status-cold  / bg-canvas     4.65 /  7.60  (krav 3.0, non-text) PASS
+     status-warm  / bg-canvas     4.16 /  8.24  (krav 3.0, non-text) PASS
+     layer-innerst/ surface       6.70 /  5.15  (krav 3.0)  PASS
+     layer-mellom / surface       4.23 /  6.55  (krav 3.0)  PASS
+     layer-ytterst/ surface       4.41 /  6.05  (krav 3.0)  PASS
+     kald  ink/bg                11.25 / 14.41  PASS · cta/bg 4.33 / 6.08 PASS · aksent/bg 4.72 / 7.58 PASS
+     mild  aksent/bg              3.97 /  6.66  (kun stor tekst ≥18.66px bold / non-text, krav 3.0) PASS
+     varm  ink/bg                11.37 / 14.23  PASS · cta/bg 4.37 / 6.00 PASS · aksent/bg 3.74 / 7.62 (stor tekst/non-text) PASS
+   ======================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,560;9..144,640&display=swap');
+
+:root {
+  /* --- light tokens --- */
+  --bg-canvas: #DAD5CF;        /* oklch(0.875 0.010 70) */
+  --surface: #F6F3EE;          /* oklch(0.965 0.008 80) */
+  --ink-primary: #27201B;      /* oklch(0.25 0.014 55) */
+  --ink-secondary: #5C5048;    /* oklch(0.44 0.020 55) */
+  --accent-cta: #AB3D09;       /* oklch(0.51 0.155 40) */
+  --accent-cta-ink: #F9F4EE;   /* oklch(0.97 0.010 80) */
+  --layer-innerst: #33587D;    /* oklch(0.45 0.075 250) */
+  --layer-mellom: #4F7E60;     /* oklch(0.55 0.070 155) */
+  --layer-ytterst: #B1582B;    /* oklch(0.56 0.130 45) */
+  --status-cold: #295F8A;      /* oklch(0.47 0.090 245) */
+  --status-warm: #A24725;      /* oklch(0.51 0.130 40) */
+  --focus-ring: #AC430E;       /* oklch(0.52 0.150 42) */
+  /* temp-akse (mild = default) */
+  --temp-canvas: #DAD5CF;      /* oklch(0.875 0.010 70) */
+  --avatar-glow: #F3EEE3;      /* oklch(0.95 0.015 85) */
+  --temp-aksent: #A44C1D;      /* oklch(0.52 0.130 45) */
+  /* presentasjons-chrome (utenfor phone-frame, ikke del av paletten) */
+  --page-bg: #E9E4DD;
+  --page-ink: #27201B;
+  --page-ink-2: #5C5048;
+  --page-surface: #F6F3EE;
+  --page-line: #C4BCB1;
+  --frame-shell: #2A2521;
+  --shadow: 0 32px 70px -28px rgba(39, 32, 27, 0.45), 0 8px 24px -12px rgba(39, 32, 27, 0.25);
+}
+
+[data-theme="dark"] {
+  --bg-canvas: #1D1A17;        /* oklch(0.22 0.008 60) */
+  --surface: #2C2824;          /* oklch(0.28 0.010 65) */
+  --ink-primary: #F0EAE3;      /* oklch(0.94 0.012 75) */
+  --ink-secondary: #B9AFA5;    /* oklch(0.76 0.018 70) */
+  --accent-cta: #F27636;       /* oklch(0.70 0.170 45) — re-tonet, mørk label */
+  --accent-cta-ink: #291811;   /* oklch(0.23 0.030 45) */
+  --layer-innerst: #709FBF;    /* oklch(0.68 0.070 240) */
+  --layer-mellom: #82BA95;     /* oklch(0.74 0.080 155) */
+  --layer-ytterst: #F18D57;    /* oklch(0.74 0.140 48) */
+  --status-cold: #7BB2D9;      /* oklch(0.74 0.080 240) */
+  --status-warm: #FD9976;      /* oklch(0.78 0.130 40) */
+  --focus-ring: #F47F46;       /* oklch(0.72 0.160 45) */
+  --temp-canvas: #1D1A17;
+  --avatar-glow: #584A3B;      /* oklch(0.42 0.030 70) */
+  --temp-aksent: #EB8656;      /* oklch(0.72 0.140 45) */
+  --page-bg: #171412;
+  --page-ink: #F0EAE3;
+  --page-ink-2: #B9AFA5;
+  --page-surface: #242019;
+  --page-line: #45403A;
+  --frame-shell: #0E0C0A;
+  --shadow: 0 32px 70px -24px rgba(0, 0, 0, 0.7), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* --- temp-akse-overstyringer (kald / varm), begge temaer --- */
+.phone[data-temp="kald"] {
+  --temp-canvas: #C7DBE8;      /* oklch(0.88 0.028 235) */
+  --avatar-glow: #D5ECF8;      /* oklch(0.93 0.030 230) */
+  --temp-aksent: #13618D;      /* oklch(0.47 0.100 240) */
+}
+[data-theme="dark"] .phone[data-temp="kald"] {
+  --temp-canvas: #141C23;      /* oklch(0.22 0.018 245) */
+  --avatar-glow: #335166;      /* oklch(0.42 0.050 240) */
+  --temp-aksent: #70B4DC;      /* oklch(0.74 0.090 235) */
+}
+.phone[data-temp="varm"] {
+  --temp-canvas: #E9D7B8;      /* oklch(0.885 0.045 80) */
+  --avatar-glow: #FDE0B9;      /* oklch(0.92 0.060 75) */
+  --temp-aksent: #A75607;      /* oklch(0.54 0.131 55) */
+}
+[data-theme="dark"] .phone[data-temp="varm"] {
+  --temp-canvas: #251A13;      /* oklch(0.23 0.022 55) */
+  --avatar-glow: #694B33;      /* oklch(0.44 0.055 60) */
+  --temp-aksent: #F99549;      /* oklch(0.76 0.150 55) */
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--page-bg);
+  color: var(--page-ink);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 600ms ease, color 600ms ease;
+}
+
+/* ============ presentasjons-side rundt mocken ============ */
+.page-header {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px 8px;
+  text-align: center;
+}
+.kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--page-ink-2);
+}
+h1 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 560;
+  font-size: clamp(30px, 5vw, 42px);
+  letter-spacing: -0.01em;
+  margin-top: 8px;
+}
+.page-header p {
+  color: var(--page-ink-2);
+  font-size: 15px;
+  max-width: 52ch;
+  margin: 10px auto 0;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px 64px;
+}
+
+/* ============ phone-frame 390×844 ============ */
+.frame-wrap { position: relative; }
+.phone {
+  width: 390px;
+  height: 844px;
+  max-width: 100%;
+  background: var(--frame-shell);
+  border-radius: 54px;
+  padding: 10px;
+  box-shadow: var(--shadow);
+  transition: background-color 600ms ease, box-shadow 600ms ease;
+}
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--temp-canvas);
+  border-radius: 44px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 600ms ease;
+}
+
+/* --- topbar --- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 20px 0;
+}
+.loc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 18px 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-primary);
+  font: 600 14px/1 inherit;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 2px 8px -3px rgba(39,32,27,0.18);
+  transition: background-color 600ms ease, color 600ms ease;
+}
+.loc-pill svg { color: var(--temp-aksent); transition: color 600ms ease; }
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 8px -3px rgba(39,32,27,0.18);
+  transition: background-color 600ms ease, color 600ms ease;
+}
+
+/* --- vær-sone --- */
+.weather {
+  text-align: center;
+  padding: 18px 24px 0;
+}
+.temp-display {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 560;
+  font-size: 96px;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: var(--ink-primary);
+  font-variant-numeric: lining-nums;
+  transition: color 600ms ease;
+}
+.condition {
+  margin-top: 2px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 21px;             /* ≥18.66px + fet → stor tekst, aksent-krav 3:1 */
+  font-weight: 640;
+  color: var(--temp-aksent);
+  transition: color 600ms ease;
+}
+.weather-meta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  transition: color 600ms ease;
+}
+.weather-meta .dot-sep { opacity: 0.55; }
+.weather-meta svg { vertical-align: -2px; margin-right: 4px; color: var(--temp-aksent); transition: color 600ms ease; }
+
+/* --- avatar + glow --- */
+.avatar-zone {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  min-height: 240px;
+}
+.glow {
+  position: absolute;
+  width: 268px;
+  height: 268px;
+  border-radius: 50%;
+  background: var(--avatar-glow);
+  filter: blur(42px);
+  transition: background-color 600ms ease;
+}
+.glow-core {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: var(--avatar-glow);
+  filter: blur(12px);
+  opacity: 0.9;
+  transition: background-color 600ms ease;
+}
+.avatar-zone img {
+  position: relative;
+  width: 212px;
+  height: auto;
+  filter: drop-shadow(0 14px 22px rgba(39,32,27,0.28));
+}
+
+/* --- anbefaling --- */
+.rec-card {
+  margin: 0 20px;
+  background: var(--surface);
+  border-radius: 22px;
+  padding: 18px 20px 16px;
+  box-shadow: 0 10px 30px -14px rgba(39,32,27,0.3);
+  transition: background-color 600ms ease;
+}
+.eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 600ms ease;
+}
+.eyebrow::before {
+  content: "";
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--temp-aksent);   /* non-text, krav 3:1 */
+  transition: background-color 600ms ease;
+}
+.rec-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 22px;
+  font-weight: 640;
+  letter-spacing: -0.01em;
+  color: var(--ink-primary);
+  margin-top: 7px;
+  transition: color 600ms ease;
+}
+.layer-chips {
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.layer-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-primary);
+  background: color-mix(in srgb, var(--surface) 60%, var(--temp-canvas));
+  border: 1px solid color-mix(in srgb, var(--ink-secondary) 22%, transparent);
+  border-radius: 999px;
+  padding: 6px 12px 6px 8px;
+  transition: background-color 600ms ease, color 600ms ease;
+}
+.layer-chips .swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: none;
+}
+.swatch--innerst { background: var(--layer-innerst); }
+.swatch--mellom  { background: var(--layer-mellom); }
+.swatch--ytterst { background: var(--layer-ytterst); }
+
+/* --- CTA --- */
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 16px 20px 14px;
+  min-height: 56px;
+  border: none;
+  border-radius: 18px;
+  background: var(--accent-cta);
+  color: var(--accent-cta-ink);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 12px 26px -10px color-mix(in srgb, var(--accent-cta) 55%, transparent);
+  transition: background-color 600ms ease, color 600ms ease, transform 150ms ease;
+}
+.cta:active { transform: scale(0.98); }
+
+/* --- bunn-nav --- */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  padding: 6px 12px calc(10px + 14px);
+  background: var(--surface);
+  border-top: 1px solid color-mix(in srgb, var(--ink-secondary) 18%, transparent);
+  transition: background-color 600ms ease;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 64px;
+  min-height: 52px;
+  border: none;
+  background: transparent;
+  color: var(--ink-secondary);
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  border-radius: 14px;
+  transition: color 600ms ease;
+}
+.nav-item[aria-current="page"] { color: var(--ink-primary); }
+.nav-item[aria-current="page"] svg { color: var(--accent-cta); transition: color 600ms ease; }
+
+/* ============ demo-kontroller under framen ============ */
+.controls {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.controls-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--page-ink-2);
+}
+.temp-switch {
+  display: flex;
+  gap: 8px;
+  background: var(--page-surface);
+  border: 1px solid var(--page-line);
+  border-radius: 999px;
+  padding: 6px;
+  transition: background-color 600ms ease;
+}
+.temp-btn {
+  min-height: 44px;
+  min-width: 100px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--page-ink-2);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 300ms ease, color 300ms ease;
+}
+.temp-btn[aria-pressed="true"] {
+  background: var(--accent-cta);
+  color: var(--accent-cta-ink);
+}
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 1px solid var(--page-line);
+  border-radius: 999px;
+  background: var(--page-surface);
+  color: var(--page-ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 600ms ease, color 600ms ease;
+}
+
+/* ============ spec-seksjon (kontrast + editorial) ============ */
+.spec {
+  max-width: 760px;
+  width: 100%;
+  margin: 72px auto 0;
+  padding: 0 8px;
+}
+.spec h2 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 560;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+}
+.spec h3 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 560;
+  font-size: 19px;
+  margin-top: 34px;
+}
+.spec p {
+  margin-top: 10px;
+  font-size: 15px;
+  color: var(--page-ink-2);
+  max-width: 68ch;
+}
+.spec .lede { color: var(--page-ink); font-size: 16px; }
+.table-wrap {
+  margin-top: 18px;
+  overflow-x: auto;
+  border: 1px solid var(--page-line);
+  border-radius: 14px;
+  background: var(--page-surface);
+  transition: background-color 600ms ease;
+}
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 13.5px; }
+caption {
+  text-align: left;
+  padding: 14px 16px 4px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--page-ink-2);
+}
+th, td { text-align: left; padding: 9px 16px; border-top: 1px solid var(--page-line); }
+thead th { border-top: none; font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--page-ink-2); }
+td.num { font-variant-numeric: tabular-nums; }
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.badge--pass { background: color-mix(in srgb, var(--layer-mellom) 18%, transparent); color: var(--page-ink); border-color: color-mix(in srgb, var(--layer-mellom) 55%, transparent); }
+.footnote { font-size: 12.5px; margin-top: 10px; }
+
+footer {
+  border-top: 1px solid var(--page-line);
+  margin-top: 64px;
+  padding: 24px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--page-ink-2);
+}
+
+/* ============ fokus / interaksjon ============ */
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.loc-pill:focus-visible, .menu-btn:focus-visible, .cta:focus-visible,
+.nav-item:focus-visible, .temp-btn:focus-visible, .theme-toggle:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* skjult, men SR-tilgjengelig */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============ reduced motion ============ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
+
+/* ============ forced colors ============ */
+@media (forced-colors: active) {
+  .glow, .glow-core { display: none; }
+  .loc-pill, .menu-btn, .cta, .nav-item, .temp-btn, .theme-toggle,
+  .rec-card, .layer-chips li, .temp-switch { border: 1px solid ButtonText; }
+  .temp-btn[aria-pressed="true"] { border: 3px solid Highlight; }
+  .nav-item[aria-current="page"] { border: 2px solid Highlight; }
+  .layer-chips .swatch { border: 1px solid ButtonText; forced-color-adjust: none; }
+}
+
+@media (max-width: 430px) {
+  .phone { height: auto; min-height: 780px; }
+  .temp-btn { min-width: 0; }
+}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <p class="kicker">Babyora · F79 · Palett-0 · Strategi: restrained</p>
+  <h1>Bakstehuset</h1>
+  <p>Dagens warm-grey og terracotta-DNA beholdt — men canvaset slutter å være dødt. Prøv temperatur-knappene under telefonen.</p>
+</header>
+
+<main>
+  <div class="frame-wrap">
+    <div class="phone" data-temp="mild" id="phone">
+      <div class="screen">
+
+        <div class="topbar">
+          <button class="loc-pill" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            Elverum
+          </button>
+          <button class="menu-btn" type="button" aria-label="Meny">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+              <line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="weather" aria-live="polite">
+          <p class="temp-display" id="tempDisplay">12°</p>
+          <p class="condition" id="condition">Lettskyet</p>
+          <p class="weather-meta">
+            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v2M12 19v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M3 12h2M19 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg><span id="feels">Føles som 10°</span></span>
+            <span class="dot-sep" aria-hidden="true">·</span>
+            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8a2.5 2.5 0 1 1-2.5 2.5"/></svg><span id="wind">3 m/s vind</span></span>
+          </p>
+        </div>
+
+        <div class="avatar-zone">
+          <div class="glow" aria-hidden="true"></div>
+          <div class="glow-core" aria-hidden="true"></div>
+          <img src="/avatars/avatar-A2.png" id="avatarImg" alt="Avatar av barn kledd i tre lag for lettskyet dag" width="212" height="212">
+        </div>
+
+        <section class="rec-card" aria-labelledby="recTitle">
+          <p class="eyebrow">Anbefalt nå</p>
+          <h2 class="rec-title" id="recTitle">3 lag for lettskyet dag</h2>
+          <ul class="layer-chips">
+            <li><span class="swatch swatch--innerst" aria-hidden="true"></span>Innerst</li>
+            <li><span class="swatch swatch--mellom" aria-hidden="true"></span>Mellom</li>
+            <li><span class="swatch swatch--ytterst" aria-hidden="true"></span>Ytterst</li>
+          </ul>
+        </section>
+
+        <button class="cta" type="button">
+          Se påkledning
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+
+        <nav class="bottom-nav" aria-label="Hovednavigasjon i app-mock">
+          <button class="nav-item" type="button" aria-current="page">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+            Hjem
+          </button>
+          <button class="nav-item" type="button">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 4 8v2c0 1.5 1.5 2.5 3 2v8h10v-8c1.5.5 3-.5 3-2V8l-8-4Z"/><path d="M12 4c0 1.5-1 2.5-2.5 2.5M12 4c0 1.5 1 2.5 2.5 2.5"/></svg>
+            Garderobe
+          </button>
+          <button class="nav-item" type="button">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            Uke
+          </button>
+          <button class="nav-item" type="button">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.14-1.4l2.1-1.63-2-3.46-2.48 1a7 7 0 0 0-2.42-1.4L13.7 2.5h-3.4l-.36 2.6a7 7 0 0 0-2.42 1.41l-2.48-1-2 3.46 2.1 1.63A7 7 0 0 0 5 12c0 .48.05.94.14 1.4l-2.1 1.63 2 3.46 2.48-1c.71.62 1.53 1.1 2.42 1.4l.36 2.61h3.4l.36-2.6a7 7 0 0 0 2.42-1.41l2.48 1 2-3.46-2.1-1.63c.09-.46.14-.92.14-1.4Z"/></svg>
+            Innstillinger
+          </button>
+        </nav>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <p class="controls-label" id="tempSwitchLabel">Signatur-demo · temperatur-reaktivt canvas</p>
+    <div class="temp-switch" role="group" aria-labelledby="tempSwitchLabel">
+      <button class="temp-btn" type="button" data-temp="kald" aria-pressed="false">Kald −8°</button>
+      <button class="temp-btn" type="button" data-temp="mild" aria-pressed="true">Mild 12°</button>
+      <button class="temp-btn" type="button" data-temp="varm" aria-pressed="false">Varm 24°</button>
+    </div>
+    <button class="theme-toggle" type="button" id="themeToggle" aria-pressed="false">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M21 13.2A8.5 8.5 0 1 1 10.8 3 7 7 0 0 0 21 13.2Z"/></svg>
+      <span id="themeToggleLabel">Bytt til mørk modus</span>
+    </button>
+  </div>
+
+  <section class="spec" aria-labelledby="specHeading">
+    <h2 id="specHeading">Palett-0 «Bakstehuset» — spesifikasjon</h2>
+    <p class="lede">Kontroll-kandidaten. Dagens warm-grey + terracotta-DNA beholdt, men canvaset slutter å være dødt: ved frost glir det til isgrå-blått (hue 235°), ved sommervarme til solvarm sand (hue 80°) — samme lightness, så teksten aldri mister fotfeste.</p>
+    <p>CTA er strammet fra dekorativ #FF6B35 til en brent terracotta som faktisk passerer 4,22:1 mot canvas, og lag-rampen navy→salvie→terracotta er unifisert i OKLCH med jevn chroma-progresjon. Dette er kontroll-kandidaten: den beviser hvor mye temp-reaktivitet <em>alene</em> løfter, uten identitetsbytte.</p>
+
+    <h3>Kontrast — beregnet WCAG relative luminance på endelige sRGB-verdier</h3>
+    <div class="table-wrap">
+      <table>
+        <caption>Par → ratio lys → ratio mørk → status</caption>
+        <thead>
+          <tr><th scope="col">Par</th><th scope="col">Lys</th><th scope="col">Mørk</th><th scope="col">Krav</th><th scope="col">Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ink-primary / bg-canvas</td><td class="num">11,00:1</td><td class="num">14,50:1</td><td>4,5:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>ink-secondary / bg-canvas</td><td class="num">5,34:1</td><td class="num">8,03:1</td><td>4,5:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>ink-primary / surface</td><td class="num">14,50:1</td><td class="num">12,24:1</td><td>4,5:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>ink-secondary / surface</td><td class="num">7,04:1</td><td class="num">6,78:1</td><td>4,5:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>accent-cta-ink / accent-cta</td><td class="num">5,64:1</td><td class="num">6,02:1</td><td>4,5:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>accent-cta / bg-canvas</td><td class="num">4,23:1</td><td class="num">6,12:1</td><td>3:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>focus-ring / bg-canvas</td><td class="num">4,04:1</td><td class="num">6,57:1</td><td>3:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>status-cold / bg-canvas (non-text)</td><td class="num">4,65:1</td><td class="num">7,60:1</td><td>3:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>status-warm / bg-canvas (non-text)</td><td class="num">4,16:1</td><td class="num">8,24:1</td><td>3:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>layer-innerst / surface</td><td class="num">6,70:1</td><td class="num">5,15:1</td><td>3:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>layer-mellom / surface</td><td class="num">4,23:1</td><td class="num">6,55:1</td><td>3:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>layer-ytterst / surface</td><td class="num">4,41:1</td><td class="num">6,05:1</td><td>3:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>kald: ink-primary / temp-canvas</td><td class="num">11,25:1</td><td class="num">14,41:1</td><td>4,5:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>kald: accent-cta / temp-canvas</td><td class="num">4,33:1</td><td class="num">6,08:1</td><td>3:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>kald: temp-aksent / temp-canvas</td><td class="num">4,72:1</td><td class="num">7,58:1</td><td>3:1*</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>mild: temp-aksent / temp-canvas</td><td class="num">3,97:1</td><td class="num">6,66:1</td><td>3:1*</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>varm: ink-primary / temp-canvas</td><td class="num">11,37:1</td><td class="num">14,23:1</td><td>4,5:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>varm: accent-cta / temp-canvas</td><td class="num">4,37:1</td><td class="num">6,00:1</td><td>3:1</td><td><span class="badge badge--pass">PASS</span></td></tr>
+          <tr><td>varm: temp-aksent / temp-canvas</td><td class="num">3,74:1</td><td class="num">7,62:1</td><td>3:1*</td><td><span class="badge badge--pass">PASS</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="footnote">* temp-aksent brukes utelukkende til stor tekst (condition-linjen, 21px/640) og non-text-elementer (ikon-strokes, eyebrow-strek) — aldri liten brødtekst. Kravet er derfor 3:1 (WCAG 1.4.3 stor tekst / 1.4.11 non-text). Alle ratioer er beregnet på endelige gamut-clippede sRGB-hex, ikke OKLCH-kilden.</p>
+
+    <h3>Anti-klisjé-begrunnelse</h3>
+    <p>1.-ordens: null rosa-pastell, null SaaS-blå — dette er en terracotta/leire-verden. 2.-ordens: dette ER baseline «2026 AI warm neutral»-refleksen (baseline kaller den eksplisitt generisk), og den forsvarer plassen kun som kontroll-kandidat: temp-aksen + strammet CTA-kontrast (2,2:1 → 4,2:1) er det som skiller den fra å være ren status quo. Hvis denne vinner evalueringen, er konklusjonen at hue-identitet ikke var problemet — bare passiviteten.</p>
+  </section>
+</main>
+
+<footer>
+  <p>Babyora F79 · Palett-mock 0 av 4 · Bygget 2026-07-02 · Alle kontrastverdier beregnet, ikke estimert</p>
+</footer>
+
+<script>
+(function () {
+  var TEMP_DATA = {
+    kald: {
+      temp: "−8°",
+      condition: "Klarvær og frost",
+      feels: "Føles som −13°",
+      wind: "4 m/s vind",
+      rec: "5 lag for frostklar dag",
+      alt: "Avatar av barn kledd i fem lag for frostklar dag"
+    },
+    mild: {
+      temp: "12°",
+      condition: "Lettskyet",
+      feels: "Føles som 10°",
+      wind: "3 m/s vind",
+      rec: "3 lag for lettskyet dag",
+      alt: "Avatar av barn kledd i tre lag for lettskyet dag"
+    },
+    varm: {
+      temp: "24°",
+      condition: "Sol og varmt",
+      feels: "Føles som 26°",
+      wind: "2 m/s vind",
+      rec: "1 lag for solvarm dag",
+      alt: "Avatar av barn kledd i ett lag for solvarm dag"
+    }
+  };
+
+  var phone = document.getElementById("phone");
+  var tempDisplay = document.getElementById("tempDisplay");
+  var condition = document.getElementById("condition");
+  var feels = document.getElementById("feels");
+  var wind = document.getElementById("wind");
+  var recTitle = document.getElementById("recTitle");
+  var avatarImg = document.getElementById("avatarImg");
+  var tempBtns = Array.prototype.slice.call(document.querySelectorAll(".temp-btn"));
+
+  function setTemp(key) {
+    var d = TEMP_DATA[key];
+    if (!d) return;
+    phone.setAttribute("data-temp", key);
+    tempDisplay.textContent = d.temp;
+    condition.textContent = d.condition;
+    feels.textContent = d.feels;
+    wind.textContent = d.wind;
+    recTitle.textContent = d.rec;
+    avatarImg.alt = d.alt;
+    tempBtns.forEach(function (btn) {
+      btn.setAttribute("aria-pressed", String(btn.getAttribute("data-temp") === key));
+    });
+  }
+
+  tempBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      setTemp(btn.getAttribute("data-temp"));
+    });
+  });
+
+  /* tema-toggle */
+  var root = document.documentElement;
+  var toggle = document.getElementById("themeToggle");
+  var toggleLabel = document.getElementById("themeToggleLabel");
+
+  function applyTheme(theme) {
+    root.setAttribute("data-theme", theme);
+    var isDark = theme === "dark";
+    toggle.setAttribute("aria-pressed", String(isDark));
+    toggleLabel.textContent = isDark ? "Bytt til lys modus" : "Bytt til mørk modus";
+  }
+
+  toggle.addEventListener("click", function () {
+    applyTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  /* init fra systempreferanse */
+  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    applyTheme("dark");
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Babyora · Hjem-mocks · brand-sammenligning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#0e0e10;color:#e8e8ea;font-family:'Inter',-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  .page{max-width:1800px;margin:0 auto;padding:48px 28px 80px;}
+  header{margin-bottom:36px;}
+  .kicker{font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:#8a8a93;}
+  h1{font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:44px;letter-spacing:-1px;margin:10px 0 8px;color:#fafafa;}
+  .lede{font-size:15px;color:#a8a8b0;max-width:760px;line-height:1.55;}
+  .lede b{color:#fafafa;font-weight:600;}
+
+  .scroller{overflow-x:auto;padding:12px 4px 28px;margin-top:8px;scrollbar-color:#3a3a40 #1a1a1d;}
+  .scroller::-webkit-scrollbar{height:10px;}
+  .scroller::-webkit-scrollbar-track{background:#1a1a1d;border-radius:8px;}
+  .scroller::-webkit-scrollbar-thumb{background:#3a3a40;border-radius:8px;}
+
+  .row{display:flex;gap:32px;padding:8px 4px;align-items:flex-start;}
+  .card{flex:none;width:420px;display:flex;flex-direction:column;gap:14px;}
+  .card .meta{padding:0 6px;}
+  .tag{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:#bdbdc4;padding:5px 10px;border-radius:999px;border:1px solid #2a2a30;background:#16161a;}
+  .tag .swatch{width:10px;height:10px;border-radius:50%;}
+  .title{font-size:22px;font-weight:600;letter-spacing:-.3px;margin:10px 0 4px;color:#fafafa;}
+  .sub{font-size:13.5px;color:#9a9aa3;line-height:1.5;}
+  .brand{margin-top:8px;font-size:12.5px;color:#7a7a83;font-style:italic;}
+
+  .iframe-wrap{position:relative;width:420px;height:880px;border-radius:16px;overflow:hidden;background:#0a0a0c;border:1px solid #1f1f24;}
+  iframe{width:420px;height:880px;border:0;display:block;}
+
+  /* Sammenligning-tabell */
+  .table-wrap{margin-top:48px;background:#15151a;border:1px solid #25252c;border-radius:18px;overflow:hidden;}
+  .table-head{padding:22px 28px 8px;}
+  .table-head h2{font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:26px;letter-spacing:-.4px;margin:0 0 6px;color:#fafafa;}
+  .table-head p{font-size:13.5px;color:#9a9aa3;margin:0;line-height:1.55;}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:14px;}
+  th,td{padding:13px 18px;text-align:center;border-bottom:1px solid #23232a;}
+  th{font-size:11.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#9a9aa3;background:#101014;}
+  th:first-child,td:first-child{text-align:left;color:#e8e8ea;font-weight:500;width:36%;}
+  td .yes{color:#5ad07a;font-weight:700;}
+  td .no{color:#e85a5a;font-weight:700;}
+  td .maybe{color:#d7b14a;font-weight:700;}
+  .legend{padding:14px 28px 22px;font-size:12.5px;color:#7a7a83;display:flex;gap:18px;flex-wrap:wrap;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend b{font-weight:700;}
+  .legend .y{color:#5ad07a;}
+  .legend .n{color:#e85a5a;}
+  .legend .m{color:#d7b14a;}
+
+  .hint{margin-top:14px;font-size:12.5px;color:#7a7a83;text-align:center;}
+  .hint kbd{background:#22222a;padding:2px 7px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;border:1px solid #33333c;}
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Babyora · Hjem-skjerm · brand-retning</div>
+      <h1>4 mocks · velg brand-retning før vi rører kode</h1>
+      <p class="lede">F60-implementering (live på <b>wool-app.vercel.app</b>) bruker warm-grey + terracotta + Schibsted Grotesk. <b>PRODUCT.md</b>-spec sier pure white + warm orange + DM Serif Display + Apple-Fitness-rings. Det er P0-brand-mismatch. Hierarki er låst (temp 96-112px hero per Claude Design). Velg <b>én</b> retning før vi pixel-loop'er.</p>
+    </header>
+
+    <div class="scroller">
+      <div class="row">
+
+        <!-- A · F60 current (live) -->
+        <div class="card">
+          <div class="meta">
+            <span class="tag"><span class="swatch" style="background:#B4502E;"></span> A · referanse</span>
+            <div class="title">F60 current (live)</div>
+            <div class="sub">Warm-grey #DBD8D2 + terracotta #B4502E. Schibsted Grotesk hele veien. AtmosphereBackground (klarvær = sun-bloom). 3 glass-pills. Slik den ser ut <b>akkurat nå</b> på prod.</div>
+            <div class="brand">Brand: «varm tre-stue, taktil, nordisk»</div>
+          </div>
+          <div class="iframe-wrap"><iframe src="A-f60-current.html" loading="lazy" title="A · F60 current"></iframe></div>
+        </div>
+
+        <!-- B · PRODUCT.md spec -->
+        <div class="card">
+          <div class="meta">
+            <span class="tag"><span class="swatch" style="background:#FF6B35;"></span> B · spec</span>
+            <div class="title">PRODUCT.md-spec</div>
+            <div class="sub">Pure white #FFFFFF + warm orange #FF6B35 + DM Serif Display + Instrument Sans. Subtilt Apple-Fitness activity-ring rundt temp. Kun «Føles −5°» (drop Vind + Fukt). Anti-weather-app.</div>
+            <div class="brand">Brand: «editorial, Apple-Health, premium ro»</div>
+          </div>
+          <div class="iframe-wrap"><iframe src="B-product-md-spec.html" loading="lazy" title="B · PRODUCT.md spec"></iframe></div>
+        </div>
+
+        <!-- C · Hybrid -->
+        <div class="card">
+          <div class="meta">
+            <span class="tag"><span class="swatch" style="background:#FF6B35;border:2px solid #B4502E;box-sizing:border-box;"></span> C · hybrid</span>
+            <div class="title">Hybrid (warm-grey + serif + orange)</div>
+            <div class="sub">Beholder warm-grey + Schibsted Grotesk-skjelett. DM Serif Display 112px på temp gir editorial gravitas. Warm orange CTA (ikke terracotta) — sterkere call. Dropper Fukt. Subtil bloom beholdt.</div>
+            <div class="brand">Brand: «editorial nordisk + Apple-energi»</div>
+          </div>
+          <div class="iframe-wrap"><iframe src="C-hybrid.html" loading="lazy" title="C · Hybrid"></iframe></div>
+        </div>
+
+        <!-- D · F60 stripped -->
+        <div class="card">
+          <div class="meta">
+            <span class="tag"><span class="swatch" style="background:#B4502E;"></span> D · stripped F60</span>
+            <div class="title">F60 stripped (minimalist)</div>
+            <div class="sub">F60-paletten beholdt. <b>Ingen</b> AtmosphereBackground. <b>Ingen</b> glass-pills. Enkel cond-rad «Klarvær · føles −5°». 5 elementer totalt: topbar / temp / cond / toggle / avatar / CTA.</div>
+            <div class="brand">Brand: «samme stamme, mindre støy»</div>
+          </div>
+          <div class="iframe-wrap"><iframe src="D-f60-stripped.html" loading="lazy" title="D · F60 stripped"></iframe></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="hint">Scroll horisontalt for å sammenligne side-by-side ←→</div>
+
+    <!-- Sammenligning-tabell -->
+    <div class="table-wrap">
+      <div class="table-head">
+        <h2>Hvilken treffer impeccable Top 5 priority issues?</h2>
+        <p>Fra forrige impeccable-audit av live Hjem-skjerm. Krysstabellen viser om hver variant adresserer issue-et.</p>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Issue</th>
+            <th>A · F60 current</th>
+            <th>B · Spec</th>
+            <th>C · Hybrid</th>
+            <th>D · Stripped</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Brand-mismatch vs PRODUCT.md</td>
+            <td><span class="no">✗</span></td>
+            <td><span class="yes">✓</span></td>
+            <td><span class="maybe">~</span></td>
+            <td><span class="no">✗</span></td>
+          </tr>
+          <tr>
+            <td>Anbefalingen <i>er</i> produktet (ikke veret)</td>
+            <td><span class="no">✗</span></td>
+            <td><span class="yes">✓</span></td>
+            <td><span class="maybe">~</span></td>
+            <td><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td>AI-weather-cosplay (drop wx-rituals)</td>
+            <td><span class="no">✗</span></td>
+            <td><span class="yes">✓</span></td>
+            <td><span class="maybe">~</span></td>
+            <td><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td>Føles / Vind / Fukt-støy</td>
+            <td><span class="no">✗</span></td>
+            <td><span class="yes">✓</span></td>
+            <td><span class="maybe">~</span></td>
+            <td><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td>Vogn-toggle <i>før</i> anbefaling (cart-before-horse)</td>
+            <td><span class="no">✗</span></td>
+            <td><span class="no">✗</span></td>
+            <td><span class="no">✗</span></td>
+            <td><span class="maybe">~</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="legend">
+        <span><b class="y">✓</b> løser issue</span>
+        <span><b class="m">~</b> delvis / kompromiss</span>
+        <span><b class="n">✗</b> løser ikke</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

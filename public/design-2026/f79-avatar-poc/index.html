@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Avatar-påkledning PoC – Babyora F79</title>
+<style>
+  :root {
+    --bg-canvas: #B4EAE9;
+    --surface: #EAF9F8;
+    --ink-primary: #002227;
+    --ink-secondary: #29565B;
+    --accent-cta: #9D6300;
+    --accent-cta-ink: #FAF7EE;
+    --avatar-glow: #D5F7F4;
+    --lag-innerst: #D96B4A;
+    --lag-bukse: #5A7480;
+    --lag-mellom: #D9962B;
+    --lag-ytterst: #1E4750;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  [data-theme="dark"] {
+    --bg-canvas: #042126;
+    --surface: #0B3138;
+    --ink-primary: #DDF0EE;
+    --ink-secondary: #9CC5C2;
+    --accent-cta: #E6AC3D;
+    --accent-cta-ink: #02272C;
+    --avatar-glow: #1F5A5D;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: color-mix(in srgb, var(--bg-canvas) 55%, #fff);
+    color: var(--ink-primary);
+    font-family: 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
+    min-height: 100dvh;
+    display: grid;
+    place-items: start center;
+    padding: 28px 16px 64px;
+    transition: background 600ms var(--ease-out);
+  }
+  [data-theme="dark"] body,
+  body:has([data-theme="dark"]) {
+    background: color-mix(in srgb, var(--bg-canvas) 80%, #000);
+  }
+  .wrap { width: min(520px, 100%); }
+  header.page { text-align: center; margin-bottom: 18px; }
+  header.page h1 { font-size: 20px; letter-spacing: -0.01em; }
+  header.page p { font-size: 13.5px; color: var(--ink-secondary); margin-top: 4px; }
+
+  .phone {
+    width: min(390px, 100%);
+    margin: 0 auto;
+    background: var(--bg-canvas);
+    border-radius: 46px;
+    padding: 22px 20px 26px;
+    box-shadow: 0 24px 60px -24px rgba(0, 34, 39, 0.45), 0 0 0 1px rgba(0, 34, 39, 0.08);
+    transition: background 600ms var(--ease-out);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .topline {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12.5px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-secondary);
+    margin-bottom: 8px;
+  }
+  .weather {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+  }
+  .weather img { width: 52px; height: 52px; }
+  .weather .temp { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .weather .cond { font-size: 14px; color: var(--ink-secondary); }
+
+  .scene {
+    position: relative;
+    display: grid; place-items: center;
+    padding: 6px 0 2px;
+  }
+  .scene::before {
+    content: '';
+    position: absolute; inset: 8% 12%;
+    background: radial-gradient(closest-side, var(--avatar-glow) 0%,
+      color-mix(in srgb, var(--avatar-glow) 55%, transparent) 55%, transparent 78%);
+    filter: blur(6px);
+    transition: background 600ms var(--ease-out);
+  }
+  .stack {
+    position: relative; width: 264px; height: 264px;
+  }
+  .stack img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0;
+    transition: opacity 420ms var(--ease-out);
+  }
+  .stack img.on { opacity: 1; }
+
+  .lagliste {
+    list-style: none; display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 6px; padding: 10px 0 2px;
+  }
+  .lagliste li {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12.5px; font-weight: 600;
+    background: var(--surface); color: var(--ink-primary);
+    border: 1px solid color-mix(in srgb, var(--ink-primary) 14%, transparent);
+    border-radius: 999px; padding: 5px 11px;
+    opacity: 0.28; transition: opacity 300ms var(--ease-out);
+  }
+  .lagliste li.on { opacity: 1; }
+  .lagliste .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+
+  .controls {
+    display: flex; gap: 10px; justify-content: center; margin-top: 14px;
+  }
+  button {
+    font: inherit; cursor: pointer;
+    border: 0; border-radius: 999px;
+    min-height: 48px; padding: 0 22px;
+    font-weight: 700; font-size: 15px;
+  }
+  .replay { background: var(--accent-cta); color: var(--accent-cta-ink); }
+  .replay:active { transform: scale(0.97); }
+  .themebtn {
+    background: var(--surface); color: var(--ink-primary);
+    border: 1px solid color-mix(in srgb, var(--ink-primary) 20%, transparent);
+  }
+  button:focus-visible { outline: 3px solid var(--accent-cta); outline-offset: 3px; }
+
+  .status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  footer.note {
+    max-width: 390px; margin: 22px auto 0; font-size: 13px; line-height: 1.55;
+    color: var(--ink-secondary);
+  }
+  footer.note h2 { font-size: 14px; color: var(--ink-primary); margin-bottom: 6px; }
+  footer.note ol { padding-left: 18px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stack img, .lagliste li, .phone, body, .scene::before { transition: none !important; }
+  }
+  @media (forced-colors: active) {
+    .phone { border: 2px solid ButtonBorder; }
+    .lagliste li { border: 1px solid ButtonBorder; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <h1>Avatar-påkledning – PoC</h1>
+    <p>F79 · edit-kjede-metoden · clay-stil (retning B) · Brevann-palett</p>
+  </header>
+
+  <div class="phone" id="phone" data-theme="light">
+    <main>
+      <div class="topline"><span>Elverum</span><span id="klokke">07:40</span></div>
+      <div class="weather">
+        <img src="/weather-3d/klarvaer.png" alt="" />
+        <div>
+          <div class="temp">12°</div>
+          <div class="cond">Klarvær · føles som 10°</div>
+        </div>
+      </div>
+
+      <div class="scene">
+        <div class="stack" id="stack" role="img" aria-label="Barn kledd i ullbody, bukse, strikkegenser og jakke">
+          <img src="/avatars/f79-poc/stage-0.png" alt="" data-stage="0" class="on" />
+          <img src="/avatars/f79-poc/stage-1.png" alt="" data-stage="1" />
+          <img src="/avatars/f79-poc/stage-2.png" alt="" data-stage="2" />
+          <img src="/avatars/f79-poc/stage-3.png" alt="" data-stage="3" />
+          <img src="/avatars/f79-poc/stage-4.png" alt="" data-stage="4" />
+        </div>
+      </div>
+
+      <ul class="lagliste" aria-label="Anbefalte lag, innerst til ytterst">
+        <li data-lag="1"><span class="dot" style="background: var(--lag-innerst)"></span>Ullbody</li>
+        <li data-lag="2"><span class="dot" style="background: var(--lag-bukse)"></span>Ullbukse</li>
+        <li data-lag="3"><span class="dot" style="background: var(--lag-mellom)"></span>Strikkegenser</li>
+        <li data-lag="4"><span class="dot" style="background: var(--lag-ytterst)"></span>Jakke</li>
+      </ul>
+
+      <div class="controls">
+        <button type="button" class="replay" id="replay">Spill påkledning igjen</button>
+        <button type="button" class="themebtn" id="theme">Mørk</button>
+      </div>
+      <p class="status" role="status" aria-live="polite" id="status"></p>
+    </main>
+  </div>
+
+  <footer class="note">
+    <h2>Hva denne PoC-en beviser</h2>
+    <ol>
+      <li><strong>Anatomien er løst:</strong> hvert steg er en AI-<em>redigering</em> av forrige bilde («legg på plagget, endre ingenting annet») — babyen re-tegnes aldri, så plagget kan ikke lande feil.</li>
+      <li>Samme karakter, positur og lyssetting i alle 5 stadier → crossfade leses som ekte påkledning.</li>
+      <li>Korall-mansjetter synlige under genser og jakke — lag-logikken (innerst→ytterst) er fysisk korrekt i bildene.</li>
+      <li>Ett renderings-språk: clay-baby + clay-vær-ikon (samme verden som 3D-vær-ambisjonen).</li>
+    </ol>
+  </footer>
+</div>
+
+<script>
+  const imgs = [...document.querySelectorAll('.stack img')];
+  const lag = [...document.querySelectorAll('.lagliste li')];
+  const status = document.getElementById('status');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let timer = null;
+
+  function setStage(n) {
+    imgs.forEach(img => img.classList.toggle('on', +img.dataset.stage <= n));
+    lag.forEach(li => li.classList.toggle('on', +li.dataset.lag <= n));
+  }
+
+  function play() {
+    clearTimeout(timer);
+    if (reduced.matches) {
+      setStage(4);
+      status.textContent = 'Påkledd: ullbody, ullbukse, strikkegenser og jakke.';
+      return;
+    }
+    setStage(0);
+    status.textContent = '';
+    let n = 0;
+    const step = () => {
+      n += 1;
+      setStage(n);
+      if (n < 4) {
+        timer = setTimeout(step, 460);
+      } else {
+        status.textContent = 'Påkledd: ullbody, ullbukse, strikkegenser og jakke.';
+      }
+    };
+    timer = setTimeout(step, 550);
+  }
+
+  document.getElementById('replay').addEventListener('click', play);
+
+  const phone = document.getElementById('phone');
+  const themeBtn = document.getElementById('theme');
+  themeBtn.addEventListener('click', () => {
+    const dark = phone.dataset.theme !== 'dark';
+    phone.dataset.theme = dark ? 'dark' : 'light';
+    themeBtn.textContent = dark ? 'Lys' : 'Mørk';
+  });
+
+  play();
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+{
+  "claude": {
+    "id": "vindtett-skall",
+    "dbString": "vindtett skall",
+    "kategori": "yttertoy",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Plagget HAR komplett what+when i garment-info.ts (linje 141-144). 'what' (Vindtett skall-jakke som blokkerer vind effektivt.) og 'when' (Vind over 5 m/s med kjølig vær (under 10 °C).) følger samme korte mønster/tone/lengde som søsken-yttertøy (lett-kjoredress, kjoredress, regntoy-skall). Dedikert whyForGarment-gren finnes (linje 398-400) som returnerer en konkret vind-begrunnelse med m/s — IKKE fallback. Trekk: regntoy-skall og de andre yttertøy-søsknene angir i 'when' eksplisitt hvilken AKTIVITET de gjelder (vogn/utelek), mens vindtett-skall ikke nevner at den KUN tilbys ved utelek. Det er en liten konsistens-/fullstendighetsbrist mot søsken-tonen, men ikke alvorlig."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet til stede: C:/Users/SkotvoldSivertSende/wool-app/public/illustrations/garments/vindtett-skall.png. db-strengen 'vindtett skall' er mappet korrekt til id 'vindtett-skall' i garment-illustrations.ts (linje 51), og garmentPng() bygger riktig sti '.../garments/vindtett-skall.png'. Navn↔id↔fil er konsistent og plausibelt. Visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 19,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig: en vindtett ytre skal i utelek ved vind ≥5 m/s og feels <10 °C beskytter mot vindavkjøling uten å introdusere overopphetings-/SIDS-/kvelningsrisiko. Dekkes av kilde-grunnlaget for kuldeeksponering (capital-area-peds 'outdoor-exposure-grenser per alder', aap-healthychildren). Tersklene (wind≥5, feels<10) er konservative og trygge. Ingen helse-spørsmål faller utenfor de 11 kildene, derfor ikke behov for web-søk. Trekk: plagget finnes IKKE i baseTable i det hele tatt — det innføres KUN via modifier, og dekningen er begrenset til aktivitet=utelek (vogn/baeresele får aldri vindtett skall, de bruker kjøredress hhv. 'innenfor jakka'-regelen). Det er en bevisst men smal seleksjonsflate.",
+      "kilder": [],
+      "trace": "baseTable: vindtett skall forekommer IKKE i noen aktivitet×temp-bånd-celle. Eneste introduksjons-vei er modifiers.ts §2 (Vind), linje 168-172: `if (weather.windMs >= 5) { if (weather.feelsLikeC < 10 && activity === 'utelek') addItem(layers,'yttertoy','vindtett skall'); }`. Altså: KUN utelek + vind ≥5 m/s + feels <10 °C. I utelek mild (10-15°C) og kjolig (5-9°C) har baseTable ingen yttertøy-lag, så vindtett skall blir det eneste ytre — korrekt. MEN i utelek kald (0-4°C) og frost/streng_frost (<0°C) har baseTable allerede yttertøy='vinterdress'/'vinterdress isolert'; siden feels<10 og wind≥5 fortsatt er sant legger modifieren vindtett skall OPPÅ i samme yttertøy-lag → dobbelt ytre. Ingen CK-konflikt eller SB-soft-block fjerner denne dubletten. Ingen alternatives-oppføring."
+    },
+    "tekstLogikk": {
+      "score": 19,
+      "kommentar": "when-teksten 'Vind over 5 m/s med kjølig vær (under 10 °C)' matcher modifier-tersklene (windMs>=5, feelsLikeC<10) eksakt — ingen numerisk drift. whyForGarment-grenen (linje 398-400) er korrekt og kontekstuell (rapporterer faktisk vind i m/s). To reelle drift-punkter: (1) when sier ikke at plagget KUN gjelder utelek — en forelder i vogn/bæresele vil aldri se det selv om when-teksten leses generelt, så teksten lover bredere enn logikken leverer. (2) Logikken (ikke teksten) lar vindtett skall stables OPPÅ vinterdress/vinterdress isolert i kald/frost utelek; det er ikke villedende påkledning (mer vindbeskyttelse skader ikke), men det er en redundans teksten ikke forklarer. Ingen av delene villeder mot under-/feilkledning, derfor ikke severity hoy."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "vindtett skall har ingen oppføring i alternatives.ts. Det er stort sett riktig: et vindtett skall er en funksjonell ytre-membran, ikke et isolasjonsplagg, så det finnes ikke et meningsfullt ull↔fleece- eller dun↔syntet-bytte (en skall er en skall). Et tenkelig alternativ ville vært 'vindtett softshell' eller å la et allerede-vindtett kjøredress/vinterdress dekke behovet, men det er en marginal nyanse, ikke et reelt material-trinn foreldre trenger å velge mellom. Fraværet er forsvarlig; lite poengtrekk for at man kunne nevnt 'allerede vindtett ytre dekker behovet' i kald/frost-tilfellet."
+    },
+    "total": 83,
+    "verdikt": "Solid plagg med komplett tekst, korrekt mapping og bekreftet PNG. Seleksjonen er pediatrisk trygg og numerisk i synk med when-teksten. Hovedfunnet er en logikk-redundans: i utelek kald/frost legges vindtett skall oppå et allerede vindtett vinterdress/vinterdress isolert i samme yttertøy-lag uten at noen conflict/softblock rydder dubletten. Sekundært nevner ikke teksten at plagget kun gjelder utelek. Ingen sikkerhetskritiske avvik.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 3,
+        "kilde": "POLICY",
+        "beskrivelse": "I utelek kald (0-4°C) og frost/streng_frost (<0°C) har baseTable allerede yttertøy='vinterdress'/'vinterdress isolert'. Modifieren (modifiers.ts §2, linje 170-171) legger 'vindtett skall' til samme yttertøy-lag når wind≥5 og feels<10, som begge er sanne i disse båndene. Resultat: to ytre plagg (vinterdress + vindtett skall) samtidig. Ingen CK-konflikt eller SB-soft-block fjerner dubletten. Vinterdress er i praksis allerede vindtett, så skallet er redundant og kan forvirre forelderen.",
+        "forslag": "Vurder å begrense vindtett-skall-modifieren til bånd uten eksisterende yttertøy (mild/kjolig), eller legg til en conflict-regel som fjerner 'vindtett skall' når et vinterdress/vinterkjøredress allerede ligger i yttertøy-laget. INGEN terskel-endring foreslått — kun de-dup-logikk."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "kilde": "garment-info.ts:141-144",
+        "beskrivelse": "when-teksten 'Vind over 5 m/s med kjølig vær (under 10 °C)' angir ikke at plagget kun tilbys ved aktivitet=utelek. Søsken-yttertøy (lett-kjoredress 'i vogn', regntoy-skall) nevner aktivitet/kontekst. En forelder i vogn/bæresele vil aldri få vindtett skall, men teksten leses generelt.",
+        "forslag": "Legg til aktivitets-kontekst i 'when', f.eks. '... ved utelek.' for å speile at seleksjonsflaten er utelek-only. Kun tekst, ingen tall berørt."
+      }
+    ]
+  },
+  "fable": null
+}

@@ -1,0 +1,63 @@
+{
+  "claude": {
+    "id": "sko",
+    "dbString": "sko",
+    "kategori": "ekstra-fotter",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Har komplett what+when i garment-info.ts (linje 197-200) og en DEDIKERT whyForGarment-gren (linje 439-441), ikke fallback. Tone og lengde matcher søsken i samme kategori (toffel-sko, sandaler, vintersko, vintersko-isolerte). To smaa svakheter: (1) what laaser til 'med borrelaas' — unoedig spesifikt for et generelt hverdags-skoplagg; soesken som 'sandaler'/'vintersko' beskriver materialet/saalen, ikke festemekanismen. (2) when-formuleringen 'toerre, milde dager ute' er noe snevrere enn det engine faktisk velger (se tekstLogikk). Strukturen er ellers solid og konsistent."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/sko.png (837 875 bytes, generert 2026-06-09). db-strengen 'sko' er korrekt mappet til id 'sko' i garment-illustrations.ts (linje 72), og garmentPng() bygger riktig sti sko.png. Mapping og navngiving er plausibel og konsistent med soesken-fottoey (toffel-sko, sandaler, vintersko, vintersko-isolerte) som alle har egne PNG-er. Selve det visuelle (om skoen ser ut som 'hverdagssko med borrelaas' vs filt/skinn-toeffel) maa Fable 5 + Claude doemme — kan ikke vurderes her."
+    },
+    "seleksjon": {
+      "score": 21,
+      "trace": "baseTable: 'sko' forekommer KUN under activity=utelek, i tre temp-baand: varm (16-21 C, tables.ts:196), mild (10-15 C, :201), kjolig (5-9 C, :206). Aldri i vogn/baeresele/soevn. bandForTemp styrer baand fra feelsLikeC. MODIFIERS: item 17 (modifiers.ts:481-518, 'fottoey-alders-justering') overstyrer for utelek/baeresele: alder <9 mnd -> ALLE sko inkl. 'sko' fjernes (regex :490) og erstattes av tykke ullsokker; alder 9-15 mnd -> 'sko' mappes til 'toffel-sko' (:512); 16-24 mnd -> 'sko' staar uendret. Netto: 'sko' overlever som faktisk anbefaling kun for barn 16-24 mnd i utelek ved feels 5-21 C. Ingen conflicts/softBlocks/safety-regel beroerer fottoey (verifisert: conflicts.ts, softBlocks.ts, safety.ts refererer ingen sko-strenger). Nedboer-modifier (modifiers.ts:142-164) legger til 'regntoey / skall' i yttertoey ved utelek, men FJERNER ikke 'sko' — vanlig sko beholdes selv ved kraftig regn. PEDIATRISK: et fottoey-valg for 16-24 mnd ved 5-21 C reiser ingen overoppheting/SIDS/kvelning/frost-fare; ingen helsefare i seleksjonen. Saalefeste/sklisikkerhet er ikke en pediatrisk kilde-sak men en praktisk en. De 11 kildene (sources.ts) dekker termoregulering/SIDS/TOG, ikke fottoey-traksjon — men ingen flagg utloeses fordi 5-21 C er trygt temperatur-vindu. Ingen web-soek noedvendig: ingen helse-spoersmaal utenfor kildedekning.",
+      "kilder": [],
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig: 'sko' velges i et trygt temperaturvindu (5-21 C) for barn som faktisk gaar (16-24 mnd), med korrekt aldersnedjustering for krabbere/spedbarn. Ingen farekontekst. Trekk: ved utelek i regn beholdes vanlig 'sko' (ikke fjernet/erstattet av vannavstoetende fottoey), noe whyForGarment-teksten ('toert underlag') motsier — se tekstLogikk."
+    },
+    "tekstLogikk": {
+      "score": 19,
+      "kommentar": "DRIFT 1 (when vs baand): when sier 'paa toerre, milde dager ute', men baseTable velger 'sko' helt ned i kjolig-baandet (5-9 C, tables.ts:206), ikke bare 'milde' dager. 5-9 C er kjoelig, ikke mildt — teksten underkommuniserer det kaldeste vinduet skoen brukes i. DRIFT 2 (why vs nedboer-logikk): whyForGarment sier 'Vanlige sko gir feste paa TOERT underlag ved X C' (garment-info.ts:440), men engine FJERNER ikke 'sko' ved nedboer — den staar igjen selv naar 'regntoey / skall' legges til ved regn (modifiers.ts:142). Brukeren faar altsaa 'toert underlag'-begrunnelse for vanlig sko paa en vaat/regnvaat dag. Dette villeder mildt (foreldre kan tro vanlige sko er greit i regn), men er ikke en helsefare -> medium, ikke hoy. what+why matcher ellers godt for det dominerende toerre 10-21 C-vinduet."
+    },
+    "alternativer": {
+      "score": 6,
+      "kommentar": "'sko' har INGEN oppfoering i alternatives.ts, mens soesken-fottoey har det: 'sandaler' -> 'tynne sko' (linje 116-124) og 'vintersko isolerte' -> 'vintersko' (106-114). Siden 'sko' velges ned til 5 C OG beholdes i regn, er et reelt alternativ relevant: vannavstoetende/vått-foere-sko (eller 'vintersko' med matt gummisaale fra tables.ts:212) for de vaate/kjoelige dagene i 5-9 C-baandet. Et 'sko'-alternativ ville lukket gapet whyForGarment-teksten avsloerer (toert vs vaatt underlag). Dette er en reell mangel, ikke kritisk."
+    },
+    "total": 82,
+    "verdikt": "Solid plagg-oppfoering med komplett struktur, dedikert why-gren, korrekt PNG+mapping og pediatrisk trygg seleksjon (utelek 16-24 mnd, 5-21 C, med riktig alders-nedjustering for yngre barn). Hovedsvakhetene er tekst-drift, ikke helse: when-teksten sier 'milde' dager mens skoen velges ned i kjolig-baandet (5-9 C), og whyForGarment lover 'toert underlag' selv om engine beholder vanlig sko i regn. I tillegg mangler 'sko' et alternativ i alternatives.ts (vått-foere/vintersko) som soesken-fottoey har. Ingen kritiske eller hoye funn. Total 82/100.\"",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "whyForGarment for 'sko' (garment-info.ts:440) sier 'Vanlige sko gir feste paa TOERT underlag', men engine fjerner aldri 'sko' ved nedboer — den staar igjen i utelek selv ved kraftig regn (regntoey/skall legges til, men ikke fottoey-bytte i modifiers.ts:142-164). Begrunnelsen om toert underlag villeder paa vaate dager.",
+        "forslag": "Mykere formulering, f.eks. 'Vanlige sko paa toerre dager — i regn/soele velg heller vannavstoetende sko eller vintersko', ELLER la modifier flagge/bytte til vått-foere-fottoey ved precipMmH >= 0.5 i utelek.",
+        "kilde": "Intern logikk-konsistens (modifiers.ts nedboer-regel vs garment-info.ts why-tekst); ingen medisinsk kilde noedvendig — dette er praktisk traksjon/komfort, ikke en sikkerhetsregel"
+      },
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "when-teksten 'paa toerre, milde dager ute' (garment-info.ts:199) undervurderer kuldevinduet: baseTable velger 'sko' i kjolig-baandet 5-9 C (tables.ts:206), som ikke er 'mildt'. Foreldre kan tro skoen kun gjelder >10 C.",
+        "forslag": "Utvid when til aa naevne kjoelige dager, f.eks. 'Innendoers, eller paa toerre dager ute fra ca 5 C og oppover for barn som gaar (16+ mnd)'.",
+        "kilde": "Intern konsistens tables.ts (kjolig=5-9 C) vs garment-info.ts when"
+      },
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "'sko' mangler oppfoering i alternatives.ts mens soesken-fottoey (sandaler, vintersko isolerte) har alternativer. Siden 'sko' velges ned til 5 C og beholdes i regn, finnes et reelt alternativ som burde tilbys.",
+        "forslag": "Legg til ITEM_ALTERNATIVES-oppfoering for 'sko' med alternativ 'vintersko' (matt gummisaale, vått/kjoelig foere) og evt. vannavstoetende sko, paa linje med eksisterende fottoey-alternativer.",
+        "kilde": "Intern: alternatives.ts moenster for sandaler (:116) og vintersko isolerte (:106); tables.ts:212 'vintersko'"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "what laaser plagget til 'med borrelaas' (garment-info.ts:198), unoedig spesifikt for et generelt hverdags-skoplagg og inkonsistent med soesken som beskriver materiale/saale i stedet for festemekanisme.",
+        "forslag": "Beskriv heller funksjon/saale enn festemekanisme, f.eks. 'Vanlige hverdags-sko med myk saale for barn som gaar.'",
+        "kilde": "Intern stil-konsistens med soesken-oppfoeringer (toffel-sko, vintersko) i garment-info.ts"
+      }
+    ]
+  },
+  "fable": null
+}

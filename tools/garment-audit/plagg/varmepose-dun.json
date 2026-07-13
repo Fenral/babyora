@@ -1,0 +1,56 @@
+{
+  "claude": {
+    "id": "varmepose-dun",
+    "dbString": "varmepose dun",
+    "kategori": "ekstra-vogn",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett info-oppforing finnes i garment-info.ts (linje 235-238): what = 'Dun-fylt varmepose for ekstrem kulde.' + when = 'Streng frost. Pass paa aa ikke kombinere med loese tepper.' Folger samme moenster/tone/lengde som soesken i vogn-tilbehoer (varmepose, varmepose-lett, dunteppe). Dedikert whyForGarment-gren finnes (linje 468-470), IKKE fallback. Trekk: 'what' bruker formuleringen 'ekstrem kulde' mens 'when' sier 'Streng frost' — to ulike intensitets-ord for samme plagg, lett inkonsistens internt i oppforingen."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/varmepose-dun.png. db-streng 'varmepose dun' er korrekt mappet til id 'varmepose-dun' i garment-illustrations.ts (linje 83). Mapping er entydig og skiller seg riktig fra soesken 'varmepose'->'varmepose' (linje 82) og 'varmepose lett'->'varmepose-lett' (linje 81). Navn/mapping plausibelt og konsistent. Visuell dom delegeres til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 23,
+      "trace": "baseTable.vogn velger 'varmepose dun' i ekstra-kategorien i tre baand: frost (feels -7 til <0 C, tables.ts linje 58), streng_frost (feels -15 til <-7 C, linje 64) og ekstrem (feels <-15 C, linje 70). Velges KUN for aktivitet=vogn (ikke baeresele/soevn/utelek). bandForTemp-terskler: frost=[-7,0), streng_frost=[-15,-7), ekstrem=(<-15). Modifier-paavirkning: (1) conflicts.ts CK-5 (linje 132-137): hvis baade varmepose og dunteppe finnes i vogn -> dunteppe fjernes, varmepose dun BEHOLDES (SIDS-policy). (2) modifiers.ts #6 (linje 260-272): hvis varmepose finnes -> legger til overoppheting-note 'enten varmepose eller teppe'. (3) modifiers.ts #6 (linje 283-290): ved feels>=15 + sol fjernes KUN 'varmepose lett', IKKE 'varmepose dun' (irrelevant her siden dun kun er <0 C). (4) modifiers.ts #14 (linje 442-451): vogn + feels<-7 + eksponering>30 min -> tilsynsnote 'Utesov i frost: sjekk innom hvert halvtime. Varmepose dun alene er ikke alltid nok.' Ingen modifier fjerner varmepose dun i kald ende. Pediatrisk vurdering: dun-pose introduseres kun under frysepunktet (alle tre baand <0 C) som maks-isolasjon — forsvarlig for ekte kulde. Overopphetings-vern er paa plass via CK-5 + tildekkings-note + tilsynsnote ved utesov. Kilder dekker baade SIDS/overoppheting (aap-healthychildren: sleep-sacks > loese pledd; halo-tog: overheating-tegn) og kulde-eksponering (capital-area-peds: outdoor-exposure-grenser per alder). Ingen helse-spoersmaal som de 11 kildene IKKE dekker -> ingen web-soek noedvendig. Trekk: ingen oevre alders- eller eksponerings-hard-stop spesifikt for dun-pose, men #14-tilsynsnoten demper risikoen.",
+      "kilder": [],
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig: dun-pose kun under frysepunktet, godt vernet av CK-5 + tilsynsnote. Trekk for at 'frost'-baandet (ned til -7 C) er romsligere enn 'when'-tekstens 'streng frost', se tekstLogikk."
+    },
+    "tekstLogikk": {
+      "score": 20,
+      "kommentar": "DRIFT: 'when'-teksten sier 'Streng frost' (linje 237) og 'what' sier 'for ekstrem kulde' (linje 236), men baseTable introduserer 'varmepose dun' allerede i FROST-baandet (feels -7 til 0 C, tables.ts linje 58) — altsaa ett baand tidligere enn baade 'streng frost' (band streng_frost = -15 til -7) og 'ekstrem' (<-15). Norsk 'streng frost' betyr i dagligtale ca <-10/-15 C, saa teksten undervurderer hvor tidlig plagget faktisk anbefales. Dette villeder IKKE i farlig retning (frost-baandet er ekte kulde, plagget gir mer varme — ingen underkledning), men det er upresist: en forelder ved -3 C som ser 'varmepose dun' kan undre seg fordi teksten sa 'streng frost'. whyForGarment-grenen (linje 468-469) er derimot god — den bruker dynamisk feels-temp og advarsel mot loese tepper, som matcher CK-5 + overoppheting-note presist. Anbefaler aa justere 'when' til aa dekke fra frost (ca -7 C og kaldere), og samkjoere 'what'/'when' (begge bor si 'streng frost'/'hard frost' konsistent). Ikke severity hoy siden retningen er trygg."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "GAP: 'varmepose dun' (dun) mangler i alternatives.ts, men har et opplagt syntet-alternativ. Kodebasen har allerede 'varmepose' som syntetisk variant (LayerSheet.tsx linje 67: 'syntetisk · 250 g fyll') og 'varmepose lett'. Et dun<->syntet-alternativ vil parallelle det eksisterende moensteret 'votter tykke'->'votter dun' (alternatives.ts linje 96-104), der dun tilbys som varmere alternativ. For varmepose bor retningen vaere motsatt: tilby syntetisk varmepose som rimeligere/mindre-allergi-alternativ til dun ved oevre frost-grense. Down-allergi og fukt-handtering (dun klumper naar vaat) er reelle foreldre-hensyn som rettferdiggjoer alternativet. Eksisterende alternativer er ellers riktige; trekk kun for denne manglende dun<->syntet-oppforingen."
+    },
+    "total": 87,
+    "verdikt": "Solid plagg-oppforing: komplett info, korrekt PNG-mapping, pediatrisk forsvarlig seleksjon (dun-pose kun under frysepunktet, godt vernet av CK-5 SIDS-policy + utesov-tilsynsnote). To forbedringspunkter: (1) 'when'/'what'-teksten ('streng frost'/'ekstrem kulde') matcher ikke at baseTable faktisk introduserer plagget allerede i frost-baandet (ned til -7 C) — upresist men trygt; (2) mangler dun<->syntet-alternativ i alternatives.ts selv om syntetisk varmepose finnes. Ingen kritiske/hoye sikkerhetsfunn. Total 87/100.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "Tekst-drift: 'when' sier 'Streng frost' og 'what' sier 'for ekstrem kulde', men baseTable.vogn introduserer 'varmepose dun' allerede i frost-baandet (feels -7 til 0 C, tables.ts linje 58) — ett baand foer 'streng frost'. Teksten undervurderer hvor tidlig plagget anbefales.",
+        "forslag": "Juster 'when' i garment-info.ts (linje 237) til aa dekke fra frost (ca -7 C og kaldere), f.eks. 'Hard frost / streng kulde i vogn — fra ca -7 C.' Samkjoer 'what' og 'when' saa de bruker samme intensitets-ord. Ikke endre temperatur-tersklene i tables.ts/bandForTemp.",
+        "kilde": "tables.ts linje 54-71 (baseTable.vogn.frost/streng_frost/ekstrem) vs garment-info.ts linje 235-237"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "'varmepose dun' mangler dun<->syntet-alternativ i alternatives.ts, til tross for at en syntetisk varmepose-variant allerede finnes i kodebasen (LayerSheet.tsx: 'syntetisk · 250 g fyll'). Moenster for dun-alternativ finnes allerede (votter tykke->votter dun).",
+        "forslag": "Legg til en ITEM_ALTERNATIVES-oppforing for itemName 'varmepose dun' med et syntetisk alternativ (rimeligere, ikke-allergent, bedre i fukt fordi dun klumper naar vaat), med i18n-keys 'alternatives.items.varmeposeSyntet.{when,whyPrimary}'. Kun tekst/alternativ-tillegg, roer ikke seleksjons-logikk.",
+        "kilde": "alternatives.ts linje 44-145 (mangler oppforing); LayerSheet.tsx linje 67 (syntetisk varmepose finnes)"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Intern ord-inkonsistens i info-oppforingen: 'what' sier 'ekstrem kulde' mens 'when' sier 'Streng frost' — to ulike intensitets-ord for samme plagg.",
+        "forslag": "Velg ett konsistent uttrykk (anbefalt 'streng/hard frost') i baade 'what' og 'when' i garment-info.ts linje 236-237.",
+        "kilde": "garment-info.ts linje 236-237"
+      }
+    ]
+  },
+  "fable": null
+}

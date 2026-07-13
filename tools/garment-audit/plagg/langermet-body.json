@@ -1,0 +1,57 @@
+{
+  "claude": {
+    "id": "langermet-body",
+    "dbString": "langermet body",
+    "kategori": "innerst",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Har komplett what + when i garment-info.ts (linje 29-32) i samme mønster/tone/lengde som søsken-plagg i innerst-kategorien (kortermet-body, langermet-ullbody osv.). Dedikert whyForGarment-dekning finnes — IKKE bare fallback: soevn-grenen treffer via id.startsWith('langermet') (linje 322), og det finnes også en eksplisitt non-soevn-gren `id === 'kortermet-body' || id === 'langermet-body'` (linje 337). Trekk: `what` sier 'Holder torsoen dekket uten å bygge mye varme', men plagget velges helt ned til 5 °C romtemp under søvn — beskrivelsen undervurderer det varme spennet litt."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/langermet-body.png (verifisert med test -f → EXISTS). db-strengen 'langermet body' er korrekt mappet til id 'langermet-body' i garment-illustrations.ts (linje 17), og ligger tydelig adskilt fra naboene 'langermet ullbody' → langermet-ullbody og 'langermet ullbody tynn' → langermet-ullbody-tynn (begge har egne PNG-er). Navn/mapping er plausibelt og kollisjonsfritt. Visuell dom utsettes til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "Pediatrisk forsvarlig: bomullsbody som innerste lag under sovepose i romtemp 5-21 °C. Sleep-grenen i modifiers.ts (linje 89-140) sikrer at SIDS/safe-sleep- og kjenn-på-nakken-noter alltid fyres for søvn, og CK-3/SB-3 (conflicts.ts/softBlocks.ts) håndhever TOG-tak mot overoppheting. Dekkes av AAP-healthychildren (sleep-sacks over løse pledd) og HALO/ErgoPouch TOG-kilder. Ingen helse-spørsmål kildene ikke dekker → ingen web-søk nødvendig. Liten observasjon: ved 0-4 °C romtemp byttes plagget til langermet ULLbody (kald-bånd, linje 168) — fornuftig, bomull mister varme ved fukt. Ingen farlig kontekst.",
+      "score_note": "presis trace under",
+      "trace": "garmentIdFor('langermet body') → 'langermet-body'. baseTable-treff KUN i aktivitet=soevn: (1) soevn.varm [16-21 °C]: innerst ['langermet body'] + mellomlag tynn pyjamas + ekstra sovepose 2.5 TOG (tables.ts 152-156); (2) soevn.mild [10-15 °C]: innerst ['langermet body'] + pyjamas + sovepose 2.5 TOG (157-161); (3) soevn.kjolig [5-9 °C]: innerst ['langermet body','ullsokker'] + pyjamas + sovepose 2.5 TOG (162-166). IKKE valgt i vogn/baeresele/utelek noen temp-bånd, og IKKE i soevn kald/frost/streng_frost/ekstrem (der byttes til 'langermet ullbody', 167-186) eller tropisk/ekstrem_varme (kortermet/bleie). Modifier-effekt: soevn returnerer tidlig (modifiers.ts 89-140) så ingen add/removeItem rører bodyen. conflicts.ts CK-8 (155-172) bytter kun pyjamas i mellomlag, ikke innerst-body. softBlocks.ts SB-3 (97-123) tvinger innerst→'kortermet body' ved romtemp ≥24 °C, men det båndet velger uansett ikke langermet body. Netto seleksjonsvindu: søvn, romtemp ~5-21 °C.",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "Drift mellom when-tekst og faktisk seleksjon. `when` (linje 31) sier 'God som inner lag innendørs eller på milde dager.' Trace viser at plagget i praksis KUN velges under søvn (innendørs), aldri i vogn/bæresele/utelek/dagbruk. Frasen 'på milde dager' antyder ute/dagbruk i mildt vær som motoren aldri produserer — kan villede en forelder til å tro plagget anbefales til turer på milde dager. whyForGarment derimot stemmer: soevn-grenen (linje 322) gir korrekt 'Som inner lag under soveposen gir denne huden et tynt ulldek...' (liten ordfeil: 'ulldek' om et BOMULLS-body, men logikken om innerste lag er riktig). Non-soevn-grenen (linje 337) er korrekt generisk men nås i praksis aldri for dette plagget siden seleksjon er sleep-only. Drift er medium, ikke direkte farlig for påkledning, men misvisende om bruksområde."
+    },
+    "alternativer": {
+      "score": 9,
+      "kommentar": "Ingen oppføring for 'langermet body' i alternatives.ts — korrekt for dette plagget. Det naturlige alternativet (langermet ULLbody) er ikke et sidestilt bytte men et eget temperatur-trinn motoren selv velger ved kaldere rom (0-4 °C). Et reelt valgfritt alternativ kunne vært å tilby ull-body som oppgradering ved 5-9 °C-båndet (kjolig søvn) der bomull mot huden er svakere på fuktregulering enn ull — men dette er en svak nice-to-have, ikke en mangel. Eksisterende fravær av alternativ er forsvarlig."
+    },
+    "total": 87,
+    "verdikt": "Solid innerst-plagg med korrekt PNG-mapping, pediatrisk forsvarlig sleep-only seleksjon (romtemp 5-21 °C) godt dekket av safe-sleep-laget. Hovedsvakheten er tekst-drift: `when` antyder 'milde dager'/dagbruk mens motoren utelukkende velger plagget under søvn. Ingen sikkerhetsavvik.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "kilde": "garment-info.ts linje 31 + tables.ts soevn-grenen 144-187",
+        "beskrivelse": "when-teksten 'God som inner lag innendørs eller på milde dager' antyder ute-/dagbruk i mildt vær, men trace viser at langermet body KUN velges under aktivitet=soevn (romtemp ~5-21 °C). Frasen 'på milde dager' kan villede forelder til å tro plagget anbefales til turer i mildt vær.",
+        "forslag": "Endre when til noe sleep-spesifikt, f.eks. 'Innerste lag under sovepose når soverommet er ca 10-21 °C.' Fjern 'milde dager'-formuleringen som impliserer utebruk. (Forslag — ikke utført; READ-ONLY.)"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "kilde": "garment-info.ts linje 30",
+        "beskrivelse": "what sier 'Holder torsoen dekket uten å bygge mye varme', men plagget velges helt ned til 5 °C romtemp — i nedre del av spennet er det nettopp et varme-bidrag. Beskrivelsen undervurderer bruksspennet noe.",
+        "forslag": "Vurder å nyansere til at den er et tynt grunnlag som kombineres med pyjamas/sovepose for å treffe romtemperaturen. (Forslag — ikke utført.)"
+      },
+      {
+        "severity": "lav",
+        "mal": 4,
+        "kilde": "garment-info.ts whyForGarment linje 322",
+        "beskrivelse": "Soevn-grenen kaller bomullsbodyen et 'tynt ulldek' ('Som inner lag under soveposen gir denne huden et tynt ulldek som regulerer fukt og varme'). langermet-body er BOMULL, ikke ull — ull regulerer fukt bedre, så teksten overdriver fuktregulering for nettopp dette plagget.",
+        "forslag": "Skill bomulls-body fra ull-body i denne grenen, eller bruk nøytral formulering som 'et tynt lag mot huden'. (Forslag — ikke utført.)"
+      }
+    ]
+  },
+  "fable": null
+}

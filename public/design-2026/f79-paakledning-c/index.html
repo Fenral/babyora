@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="nb" data-theme="light" data-temp="mild">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Påkledning C – Inline uten popup – Babyora F79</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,420;9..144,560;9..144,640&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap');
+
+  :root {
+    /* ==== BREVANN — nøyaktig fra f79-palett-2 (light/mild default) ==== */
+    --bg-canvas:      #B4EAE9;
+    --surface:        #EAF9F7;
+    --ink-primary:    #002227;
+    --ink-secondary:  #28555A;
+    --accent-cta:     #9D6300;
+    --accent-cta-ink: #FAF7EE;
+    --layer-innerst:  #1D5A70;
+    --layer-mellom:   #2E7E70;
+    --layer-ytterst:  #AF711F;
+    --status-cold:    #0F5C80;
+    --status-warm:    #A85419;
+    --focus-ring:     #0C6D7A;
+    --avatar-glow:    #D5F7F4;
+    --accent-temp:    #0B6D76;
+    --shadow-tint: 0 34px 70px -32px rgba(0, 34, 39, 0.45), 0 10px 28px -14px rgba(0, 34, 39, 0.28);
+    --card-shadow: 0 18px 40px -26px rgba(0, 34, 39, 0.55);
+    --hairline: rgba(0, 34, 39, 0.16);
+
+    /* ---- plagg-lag-farger (fra farge-analysen; egne edge-tokens for avstandslesbarhet) ---- */
+    --lag-innerst:      #D96B4A; /* korall ullbody */
+    --lag-innerst-edge: #7A2E17;
+    --lag-innerst-ink:  var(--ink-primary); /* 4.89:1 on fill */
+    --lag-bukse:        #5A7480; /* petrol-grå bukse */
+    --lag-bukse-edge:   #22343C;
+    --lag-bukse-ink:    var(--accent-cta-ink); /* 4.62:1 on fill */
+    --lag-mellom:       #D9962B; /* marigold strikk */
+    --lag-mellom-edge:  #7A5410;
+    --lag-mellom-ink:   var(--ink-primary); /* 6.64:1 on fill */
+    --lag-ytterst:      #1E4750; /* dyp petrol jakke */
+    --lag-ytterst-edge: #0A2226;
+    --lag-ytterst-ink:  var(--accent-cta-ink); /* 9.46:1 on fill */
+
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  [data-temp="kald"] {
+    --bg-canvas:   #B8E6FE;
+    --avatar-glow: #DBF3FD;
+    --accent-temp: #0A668A;
+  }
+  [data-temp="varm"] {
+    --bg-canvas:   #F3DBB3;
+    --avatar-glow: #FFE8C2;
+    --accent-temp: #9B6406;
+  }
+  [data-theme="dark"] {
+    --bg-canvas:      #042126;
+    --surface:        #0E3135;
+    --ink-primary:    #DDF0EE;
+    --ink-secondary:  #9BBCBB;
+    --accent-cta:     #E6AC3D;
+    --accent-cta-ink: #02272C;
+    --layer-innerst:  #68A8C7;
+    --layer-mellom:   #64BEAD;
+    --layer-ytterst:  #E4AC59;
+    --status-cold:    #70B4DC;
+    --status-warm:    #F7A55F;
+    --focus-ring:     #36BABA;
+    --avatar-glow:    #1F5A5D;
+    --accent-temp:    #57B6B6;
+    --shadow-tint: 0 34px 70px -30px rgba(0, 0, 0, 0.8), 0 10px 28px -12px rgba(0, 0, 0, 0.55);
+    --card-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.75);
+    --hairline: rgba(221, 240, 238, 0.18);
+
+    --lag-innerst-edge: #F4C4B2;
+    --lag-bukse-edge:   #C9DAE0;
+    --lag-mellom-edge:  #F6DCA1;
+    --lag-ytterst-edge: #9FD3DE;
+
+    /* lifted dark-mode fills so the color itself reads against dark surface,
+       not just the edge-ring (was: raw light-mode --lag-* at ~1.2:1) */
+    --lag-innerst:      #E3936F;
+    --lag-bukse:        #8FB0BC;
+    --lag-mellom:       #E6B85B;
+    --lag-ytterst:      #5FA0AC;
+    --lag-innerst-ink:  var(--accent-cta-ink); /* 6.52:1 on lifted fill */
+    --lag-bukse-ink:    var(--accent-cta-ink); /* 6.85:1 on lifted fill */
+    --lag-mellom-ink:   var(--accent-cta-ink); /* 8.56:1 on lifted fill */
+    --lag-ytterst-ink:  var(--accent-cta-ink); /* 5.35:1 on lifted fill */
+  }
+  [data-theme="dark"][data-temp="kald"] {
+    --bg-canvas:   #03212B;
+    --avatar-glow: #23576C;
+    --accent-temp: #6DB5DA;
+  }
+  [data-theme="dark"][data-temp="varm"] {
+    --bg-canvas:   #281D0F;
+    --avatar-glow: #684D2C;
+    --accent-temp: #E3AD4B;
+  }
+
+  /* ---- first-impression load entrance: hero, ticks and avatar are inert
+     at rest otherwise (setStage(4) with zero motion) — a short staggered
+     fade/rise gives the 5-second glimpse some life without touching the
+     FLIP fly-in, which stays the toggle-time highlight ---- */
+  .load-in {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out);
+  }
+  .load-in.load-in-ready {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .load-in[data-delay="1"] { transition-delay: 60ms; }
+  .load-in[data-delay="2"] { transition-delay: 120ms; }
+  .load-in[data-delay="3"] { transition-delay: 180ms; }
+
+  * , *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: color-mix(in srgb, var(--bg-canvas) 42%, #fff);
+    color: var(--ink-primary);
+    min-height: 100dvh;
+    display: grid;
+    place-items: start center;
+    padding: 28px 14px 56px;
+    line-height: 1.5;
+    transition: background 600ms var(--ease-out);
+  }
+  body:has(#phone[data-theme="dark"]) {
+    background: color-mix(in srgb, var(--bg-canvas) 88%, #000);
+  }
+  .display { font-family: "Fraunces", Georgia, serif; }
+
+  :focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+
+  .wrap { width: min(390px, 100%); }
+
+  .intro { text-align: center; margin-bottom: 16px; }
+  .intro .kicker {
+    display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ink-secondary); margin-bottom: 6px;
+  }
+  .intro h1 {
+    font-family: "Fraunces", Georgia, serif; font-weight: 640;
+    font-size: 21px; letter-spacing: -0.01em; color: var(--ink-primary);
+  }
+
+  /* ================= PHONE FRAME ================= */
+  .phone {
+    width: 390px; max-width: 100%; min-height: 844px;
+    margin: 0 auto;
+    background: var(--bg-canvas);
+    border-radius: 46px;
+    padding: 0;
+    box-shadow: var(--shadow-tint), 0 0 0 1px rgba(0,34,39,0.08);
+    position: relative;
+    overflow: hidden;
+    transition: background 600ms var(--ease-out), box-shadow 600ms var(--ease-out);
+    display: flex; flex-direction: column;
+  }
+  .app {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .notch {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    width: 108px; height: 26px; background: rgba(0,0,0,0.82); border-radius: 20px;
+    z-index: 5;
+  }
+
+  .app-header {
+    padding: 46px 22px 10px;
+  }
+  .app-header .row1 {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-secondary);
+  }
+  .app-header .place { display: flex; align-items: center; gap: 6px; }
+  .app-header .place svg { width: 13px; height: 13px; flex: none; }
+  .app-header .weather-meta {
+    font-size: 11.5px; font-weight: 600; letter-spacing: 0; text-transform: none;
+    color: var(--ink-secondary);
+  }
+
+  main { flex: 1; padding: 6px 22px 20px; overflow-y: auto; position: relative; }
+
+  /* ---- hero: weather-sun as a real light source composed top-right, in
+     its own reserved row above the hero figure — real flow height, no
+     negative-margin overlay, so it can never clip the "12° → 4 lag"
+     statement beneath it ---- */
+  .sun-row {
+    display: flex; justify-content: flex-end;
+    margin: 0 -14px;
+    position: relative;
+    z-index: 0;
+  }
+  .sun-source {
+    position: relative;
+    width: 132px; height: 132px;
+    display: grid; place-items: center;
+    pointer-events: none;
+  }
+  .sun-source::before {
+    content: '';
+    position: absolute; inset: 8%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--accent-temp) 38%, transparent) 0%,
+      color-mix(in srgb, var(--accent-temp) 14%, transparent) 60%, transparent 78%);
+    filter: blur(6px);
+    transition: background 600ms var(--ease-out);
+  }
+  .sun-source img {
+    position: relative;
+    width: 116px; height: 116px;
+    filter: drop-shadow(0 10px 24px color-mix(in srgb, var(--accent-temp) 45%, transparent))
+            drop-shadow(0 0 22px color-mix(in srgb, var(--avatar-glow) 75%, transparent));
+    transition: filter 600ms var(--ease-out);
+  }
+
+  /* ---- hero composition: "12° → 4 lag" as one Fraunces statement — this
+     is the page's one idea, so it must anchor the screen, not caption it ---- */
+  .hero-figure {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; row-gap: 0;
+    gap: 4px;
+    margin: 4px 0 0;
+  }
+  .hero-figure .temp {
+    font-family: "Fraunces", Georgia, serif; font-weight: 640;
+    font-size: 76px; letter-spacing: -0.03em; line-height: 0.94;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-temp);
+    transition: color 600ms var(--ease-out);
+  }
+  .hero-figure .arrow {
+    width: 36px; height: 24px; flex: none;
+    color: var(--accent-temp);
+    transition: color 600ms var(--ease-out);
+    margin: 0 2px;
+  }
+  .hero-figure .count {
+    font-family: "Fraunces", Georgia, serif; font-weight: 640;
+    font-size: 76px; letter-spacing: -0.03em; line-height: 0.94;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-primary);
+  }
+  .hero-label {
+    text-align: center;
+    font-size: 12px; color: var(--ink-secondary); font-weight: 600;
+    letter-spacing: 0.03em;
+    margin-top: 4px;
+  }
+
+  /* ---- avatar scene (stage-0/1 default) ---- */
+  .scene {
+    position: relative;
+    display: grid; place-items: center;
+    padding: 4px 0 0;
+    margin-top: 10px;
+  }
+  .scene::before {
+    content: '';
+    position: absolute; inset: -4% 0%;
+    transform: scale(0.82);
+    transform-origin: center;
+    background: radial-gradient(closest-side, var(--avatar-glow) 0%,
+      color-mix(in srgb, var(--avatar-glow) 55%, transparent) 55%, transparent 78%);
+    filter: blur(7px);
+    opacity: 0.86;
+    transition: background 600ms var(--ease-out), transform 520ms var(--ease-out), opacity 520ms var(--ease-out);
+  }
+  .app[data-expanded="true"] .scene::before {
+    transform: scale(1);
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .scene.pulsing::before { animation: glow-pulse 3600ms ease-in-out infinite; }
+  }
+  @keyframes glow-pulse {
+    0%, 100% { opacity: 0.86; }
+    50% { opacity: 0.62; }
+  }
+  .app[data-expanded="true"] .scene::before { animation: none; }
+
+  /* ---- idle-pulse pause control (WCAG 2.2.2): required whenever any
+     looping animation exists in the default/collapsed rest state ---- */
+  .motion-toggle {
+    position: absolute; top: 0; right: 0; z-index: 6;
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center;
+    border: 0;
+    background: transparent;
+    color: var(--ink-secondary);
+    cursor: pointer;
+  }
+  .motion-toggle::before {
+    content: '';
+    position: absolute; inset: 7px;
+    border-radius: 50%;
+    border: 1px solid var(--hairline);
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    transition: background 200ms var(--ease-out);
+  }
+  .motion-toggle svg { position: relative; width: 15px; height: 15px; }
+  .motion-toggle .icon-pause { display: none; }
+  .motion-toggle .icon-play { display: block; }
+  .motion-toggle[aria-pressed="true"] .icon-pause { display: block; }
+  .motion-toggle[aria-pressed="true"] .icon-play { display: none; }
+  .app[data-expanded="true"] .motion-toggle { display: none; }
+  #phone[data-expanded-bg="true"] {
+    background: color-mix(in srgb, var(--accent-temp) 8%, var(--bg-canvas));
+  }
+  .stack {
+    position: relative; width: 208px; height: 208px;
+    /* light falls from the sun's upper-right position: temp-colored shadow
+       cast toward lower-left, so the temp axis physically lights the scene */
+    filter: drop-shadow(-10px 16px 20px color-mix(in srgb, var(--accent-temp) 32%, transparent));
+    transition: transform 420ms var(--ease-out), filter 600ms var(--ease-out);
+  }
+  .app[data-expanded="true"] .stack { transform: scale(1.115); }
+  .stack img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0;
+    transform: translateY(5px) scale(0.985);
+    transform-origin: 50% 80%;
+    transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out);
+  }
+  .stack img.on { opacity: 1; transform: translateY(0) scale(1); }
+  .stack.no-anim img,
+  .lag-list.no-anim .lag-row { transition: none !important; }
+
+  /* ---- signature count-ticks: four bold colored blocks under the hero count ---- */
+  .count-ticks {
+    display: flex; justify-content: center; gap: 8px;
+    margin-top: 12px;
+  }
+  .count-ticks .tick {
+    width: 26px; height: 10px; border-radius: 5px; flex: none;
+    background: color-mix(in srgb, var(--tick-color, var(--hairline)) 22%, var(--surface));
+    border: 1.5px solid var(--tick-edge, var(--hairline));
+    opacity: 0.45;
+    transition: background 320ms var(--ease-out), opacity 320ms var(--ease-out), border-color 600ms var(--ease-out), transform 200ms var(--ease-out);
+  }
+  .count-ticks .tick.on {
+    background: var(--tick-color, var(--ink-primary));
+    opacity: 1;
+    transform: scaleY(1.1);
+  }
+  .count-ticks .tick:nth-child(1) { --tick-color: var(--lag-innerst); --tick-edge: var(--lag-innerst-edge); }
+  .count-ticks .tick:nth-child(2) { --tick-color: var(--lag-bukse); --tick-edge: var(--lag-bukse-edge); }
+  .count-ticks .tick:nth-child(3) { --tick-color: var(--lag-mellom); --tick-edge: var(--lag-mellom-edge); }
+  .count-ticks .tick:nth-child(4) { --tick-color: var(--lag-ytterst); --tick-edge: var(--lag-ytterst-edge); }
+
+  /* ---- summary chips: glimpseable garment names at rest, without expanding ---- */
+  .chip-row {
+    list-style: none;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+    margin-top: 12px;
+  }
+  .chip-row .chip {
+    font-size: 11.5px; font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 999px;
+    line-height: 1.3;
+  }
+  .chip-row .chip[data-lag="1"] { background: var(--lag-innerst); color: var(--lag-innerst-ink); }
+  .chip-row .chip[data-lag="2"] { background: var(--lag-bukse); color: var(--lag-bukse-ink); }
+  .chip-row .chip[data-lag="3"] { background: var(--lag-mellom); color: var(--lag-mellom-ink); }
+  .chip-row .chip[data-lag="4"] { background: var(--lag-ytterst); color: var(--lag-ytterst-ink); }
+
+  /* ---- CTA hierarchy: the product action (confirm outfit) is primary and
+     persistent under the scene; "show dress-up" is secondary/outline — two
+     competing full-width amber buttons was the old bug ---- */
+  .primary-cta-row {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-top: 12px;
+  }
+  .confirm-cta {
+    width: 100%;
+    min-height: 52px;
+    border: 0; border-radius: 999px;
+    background: var(--accent-cta); color: var(--accent-cta-ink);
+    font: inherit; font-weight: 700; font-size: 15.5px;
+    letter-spacing: 0.01em;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 14px 28px -14px color-mix(in srgb, var(--accent-cta) 70%, transparent);
+    transition: transform 80ms var(--ease-out), box-shadow 300ms var(--ease-out), background 600ms var(--ease-out), color 600ms var(--ease-out);
+  }
+  .confirm-cta:active { transform: scale(0.97); transition-duration: 80ms; }
+  .confirm-cta svg { width: 16px; height: 16px; flex: none; }
+
+  .cta-toggle {
+    width: 100%;
+    min-height: 48px;
+    border: 1.5px solid var(--hairline); border-radius: 999px;
+    background: transparent; color: var(--ink-primary);
+    font: inherit; font-weight: 700; font-size: 14.5px;
+    letter-spacing: 0.01em;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer;
+    transition: transform 80ms var(--ease-out), background 200ms var(--ease-out), border-color 600ms var(--ease-out), color 600ms var(--ease-out);
+  }
+  .cta-toggle:hover { background: color-mix(in srgb, var(--ink-primary) 6%, transparent); }
+  .cta-toggle:active { transform: scale(0.97); transition-duration: 80ms; }
+  .cta-toggle .chev {
+    width: 15px; height: 15px; flex: none;
+    transition: transform 300ms var(--ease-out);
+  }
+  .app[data-expanded="true"] .cta-toggle .chev { transform: rotate(180deg); }
+
+  /* crossfading label: two stacked spans, JS toggles data-active */
+  .cta-label {
+    position: relative;
+    display: inline-grid;
+    height: 1.3em;
+  }
+  .cta-label span {
+    grid-area: 1 / 1;
+    opacity: 0;
+    transition: opacity 200ms var(--ease-out);
+    white-space: nowrap;
+  }
+  .cta-label span[data-active="true"] { opacity: 1; }
+
+  /* ================= REVEALED REGION (inline, follows trigger in DOM) ================= */
+  #reveal {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 460ms var(--ease-out), opacity 380ms var(--ease-out);
+  }
+  #reveal > .reveal-inner { min-height: 0; overflow: hidden; }
+  .app[data-expanded="true"] #reveal {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  .reveal-inner-pad { padding-top: 16px; }
+
+  .reveal-heading {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-secondary);
+    margin-bottom: 10px;
+  }
+
+  .lag-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .lag-row {
+    display: flex; align-items: center; gap: 0;
+    /* drenched: full-color lag fill as the row's own field, not a 22% tint —
+       same pattern as the Hjem B chips (documented ink text on saturated fill) */
+    background: var(--row-fill, var(--hairline));
+    border: 1px solid var(--row-edge, var(--hairline));
+    border-radius: 16px;
+    padding: 8px 14px 8px 0;
+    overflow: hidden;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 380ms var(--ease-out), transform 380ms var(--ease-out),
+                background 600ms var(--ease-out), border-color 600ms var(--ease-out);
+  }
+  .app[data-expanded="true"] .lag-row.on {
+    opacity: 1; transform: translateY(0);
+  }
+  .lag-row .thumb {
+    /* full-bleed against the row's left edge: no margin, radius only on the
+       inner (right) side, so the fill reads as one uninterrupted flat plane */
+    width: 76px; height: 100%; min-height: 64px; flex: none;
+    background: color-mix(in srgb, var(--row-edge, var(--ink-primary)) 22%, var(--row-fill, var(--surface)));
+    border-radius: 15px 0 0 15px;
+    display: grid; place-items: center;
+    overflow: hidden;
+    margin-right: 14px;
+    align-self: stretch;
+    transition: background 600ms var(--ease-out);
+  }
+  .lag-row .thumb img { width: 68%; height: 68%; object-fit: contain; }
+  .lag-row .info { flex: 1; min-width: 0; }
+  .lag-row .name { font-size: 14.5px; font-weight: 700; color: var(--row-ink, var(--ink-primary)); }
+  .lag-row .role { font-size: 12px; font-weight: 600; color: var(--row-ink, var(--ink-secondary)); }
+  .lag-row .dot {
+    width: 13px; height: 13px; border-radius: 50%; flex: none;
+    margin-left: 10px;
+    background: var(--row-edge, var(--ink-primary));
+    border: 2px solid var(--row-ink, var(--ink-primary));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--row-ink, var(--ink-primary)) 30%, transparent);
+  }
+
+  .lag-row[data-lag="1"] { --row-fill: var(--lag-innerst); --row-edge: var(--lag-innerst-edge); --row-ink: var(--lag-innerst-ink); }
+  .lag-row[data-lag="2"] { --row-fill: var(--lag-bukse); --row-edge: var(--lag-bukse-edge); --row-ink: var(--lag-bukse-ink); }
+  .lag-row[data-lag="3"] { --row-fill: var(--lag-mellom); --row-edge: var(--lag-mellom-edge); --row-ink: var(--lag-mellom-ink); }
+  .lag-row[data-lag="4"] { --row-fill: var(--lag-ytterst); --row-edge: var(--lag-ytterst-edge); --row-ink: var(--lag-ytterst-ink); }
+
+  .replay-row {
+    display: flex; justify-content: center; margin-top: 12px;
+  }
+  .replay {
+    min-height: 44px; padding: 0 20px;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    background: transparent; color: var(--ink-secondary);
+    font: inherit; font-weight: 700; font-size: 13.5px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+    transition: background 200ms var(--ease-out), color 200ms var(--ease-out), border-color 600ms var(--ease-out),
+                transform 80ms var(--ease-out);
+  }
+  .replay:hover { color: var(--ink-primary); background: color-mix(in srgb, var(--ink-primary) 6%, transparent); }
+  .replay:active { transform: scale(0.97); transition-duration: 80ms; }
+  .replay svg { width: 14px; height: 14px; }
+
+  /* ---- bottom nav (visuell fylle, ikke funksjonell nav i mock) ---- */
+  .app-nav {
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 10px 10px calc(14px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--hairline);
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+  }
+  .app-nav a {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 10.5px; font-weight: 600; color: var(--ink-secondary);
+    text-decoration: none; min-height: 44px; min-width: 44px;
+    justify-content: center; border-radius: 12px; padding: 2px 8px;
+  }
+  .app-nav a[aria-current="page"] { color: var(--accent-temp); }
+  .app-nav svg { width: 20px; height: 20px; }
+
+  .demo-controls {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px;
+  }
+  .temp-row, .theme-row {
+    display: flex; justify-content: center; gap: 10px;
+  }
+  .temp-btn, .theme-row button {
+    min-height: 44px; padding: 0 16px;
+    border-radius: 999px; border: 1px solid var(--hairline);
+    background: var(--surface); color: var(--ink-primary);
+    font: inherit; font-weight: 600; font-size: 13px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .temp-btn .dot {
+    width: 9px; height: 9px; border-radius: 50%; flex: none;
+    background: var(--accent-temp);
+  }
+  .temp-btn[data-t="kald"] .dot { background: var(--status-cold); }
+  .temp-btn[data-t="varm"] .dot { background: var(--status-warm); }
+  .temp-btn[aria-pressed="true"],
+  .theme-row button[aria-pressed="true"] {
+    background: var(--ink-primary); color: var(--surface); border-color: var(--ink-primary);
+  }
+  .temp-btn[aria-pressed="true"] .dot { background: var(--surface); }
+
+  .status-sr {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
+
+  /* ---- spec / kontrast footer ---- */
+  .spec {
+    max-width: 390px; margin: 26px auto 0;
+    font-size: 12.5px; color: var(--ink-secondary);
+  }
+  .spec h2 { font-size: 13.5px; color: var(--ink-primary); margin-bottom: 8px; }
+  .spec table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  .spec th, .spec td {
+    text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--hairline);
+    font-size: 11.5px;
+  }
+  .spec th { color: var(--ink-primary); font-weight: 700; }
+  .spec .pass { color: var(--accent-temp); font-weight: 700; }
+  .spec ol { padding-left: 18px; }
+  .spec li { margin-bottom: 4px; }
+
+  @media (forced-colors: active) {
+    .phone { border: 2px solid ButtonBorder; }
+    .lag-row { border: 1px solid ButtonBorder; }
+    .cta-toggle, .replay, .confirm-cta { border: 1px solid ButtonBorder; }
+    .lag-row .dot { border-color: ButtonText; forced-color-adjust: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="intro">
+    <span class="kicker">F79 · Påkledning C</span>
+    <h1>Inline uten popup</h1>
+  </div>
+
+  <div class="phone" id="phone" data-theme="light">
+    <div class="notch" aria-hidden="true"></div>
+    <div class="app" id="app" data-expanded="false">
+      <header class="app-header">
+        <div class="row1">
+          <span class="place">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2c-3.3 0-6 2.6-6 6 0 4.5 6 10 6 10s6-5.5 6-10c0-3.4-2.7-6-6-6Z" stroke="currentColor" stroke-width="1.4"/><circle cx="10" cy="8" r="2" stroke="currentColor" stroke-width="1.4"/></svg>
+            Elverum
+          </span>
+          <span>07:40</span>
+        </div>
+        <div class="weather-meta" id="weatherMeta">Klarvær · føles som 10° · vind 3 m/s</div>
+      </header>
+
+      <main>
+        <h2 style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);">Hjem</h2>
+
+        <div class="sun-row" aria-hidden="true">
+          <div class="sun-source"><img src="/weather-3d/klarvaer.png" alt="" /></div>
+        </div>
+
+        <div class="hero-figure load-in" data-delay="1">
+          <span class="temp" id="heroTemp">12°</span>
+          <svg class="arrow" viewBox="0 0 44 30" fill="none" aria-hidden="true">
+            <path d="M3 22c9 4 22 4 30-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M25 12l8 4-2 9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="count" id="heroCount">4 lag</span>
+        </div>
+        <div class="hero-label">Anbefalt for i dag</div>
+        <div class="count-ticks load-in" id="countTicks" data-delay="2" aria-hidden="true">
+          <span class="tick" data-lag="1"></span>
+          <span class="tick" data-lag="2"></span>
+          <span class="tick" data-lag="3"></span>
+          <span class="tick" data-lag="4"></span>
+        </div>
+        <ul class="chip-row" id="chipRow" aria-hidden="true">
+          <li class="chip" data-lag="1">Ullbody</li>
+          <li class="chip" data-lag="2">Ullbukse</li>
+          <li class="chip" data-lag="3">Strikkegenser</li>
+          <li class="chip" data-lag="4">Jakke</li>
+        </ul>
+
+        <div class="scene load-in" data-delay="3">
+          <button type="button" class="motion-toggle" id="motionToggle" aria-pressed="true" aria-label="Pause bakgrunnsanimasjon">
+            <svg class="icon-pause" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="6" y="5" width="3" height="10" rx="1" fill="currentColor"/><rect x="11" y="5" width="3" height="10" rx="1" fill="currentColor"/></svg>
+            <svg class="icon-play" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 5.5v9l7-4.5-7-4.5Z" fill="currentColor"/></svg>
+          </button>
+          <div class="stack" id="stack" role="img" aria-label="Barn kledd i ullbody, bukse, strikkegenser og jakke.">
+            <img src="/avatars/f79-poc/stage-0.png" alt="" data-stage="0" class="on" />
+            <img src="/avatars/f79-poc/stage-1.png" alt="" data-stage="1" class="on" />
+            <img src="/avatars/f79-poc/stage-2.png" alt="" data-stage="2" class="on" />
+            <img src="/avatars/f79-poc/stage-3.png" alt="" data-stage="3" class="on" />
+            <img src="/avatars/f79-poc/stage-4.png" alt="" data-stage="4" class="on" />
+          </div>
+        </div>
+
+        <div class="primary-cta-row">
+          <button type="button" class="confirm-cta" id="confirm">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Bekreft antrekk
+          </button>
+          <button type="button" class="cta-toggle" id="toggle" aria-expanded="false" aria-controls="reveal">
+            <span class="cta-label">
+              <span data-state="show" data-active="true">Vis påkledning</span>
+              <span data-state="hide" data-active="false">Skjul påkledning</span>
+            </span>
+            <svg class="chev" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 7.5 10 13l5-5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+        <div id="reveal" inert>
+          <div class="reveal-inner">
+            <div class="reveal-inner-pad">
+              <div class="reveal-heading">Lag, innerst til ytterst</div>
+              <ul class="lag-list" id="lagList">
+                <li class="lag-row" data-lag="1">
+                  <span class="thumb"><img src="/avatars/f79-poc/lag-1-body.png" alt="" /></span>
+                  <span class="info">
+                    <div class="name">Ullbody</div>
+                    <div class="role">Innerst · korall</div>
+                  </span>
+                  <span class="dot" aria-hidden="true"></span>
+                </li>
+                <li class="lag-row" data-lag="2">
+                  <span class="thumb"><img src="/avatars/f79-poc/lag-2-bukse.png" alt="" /></span>
+                  <span class="info">
+                    <div class="name">Ullbukse</div>
+                    <div class="role">Petrol-grå</div>
+                  </span>
+                  <span class="dot" aria-hidden="true"></span>
+                </li>
+                <li class="lag-row" data-lag="3">
+                  <span class="thumb"><img src="/avatars/f79-poc/lag-3-genser.png" alt="" /></span>
+                  <span class="info">
+                    <div class="name">Strikkegenser</div>
+                    <div class="role">Marigold</div>
+                  </span>
+                  <span class="dot" aria-hidden="true"></span>
+                </li>
+                <li class="lag-row" data-lag="4">
+                  <span class="thumb"><img src="/avatars/f79-poc/lag-4-jakke.png" alt="" /></span>
+                  <span class="info">
+                    <div class="name">Jakke</div>
+                    <div class="role">Ytterst · dyp petrol, åpen</div>
+                  </span>
+                  <span class="dot" aria-hidden="true"></span>
+                </li>
+              </ul>
+
+              <div class="replay-row">
+                <button type="button" class="replay" id="replay">
+                  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10a6 6 0 1 1 1.8 4.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4 14v-4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Spill påkledning igjen
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="status-sr" role="status" aria-live="polite" id="status"></p>
+      </main>
+
+      <nav class="app-nav" aria-label="Hovednavigasjon">
+        <a href="#" aria-current="page">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10 10 4l7 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 9v7h10V9" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          Hjem
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4" y="3" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 7h6M7 10h6M7 13h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Garderobe
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="11" r="4" stroke="currentColor" stroke-width="1.6"/><path d="M10 3v1.6M10 15.4V17M3 11h1.6M15.4 11H17M5.3 5.3l1.1 1.1M13.6 13.6l1.1 1.1M5.3 16.7l1.1-1.1M13.6 8.4l1.1-1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Vær
+        </a>
+        <a href="#">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.6"/><path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Profil
+        </a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="demo-controls" role="group" aria-label="Demo-kontroller for temperatur-akse og tema">
+    <div class="temp-row">
+      <button type="button" class="temp-btn" data-t="kald" aria-pressed="false"><span class="dot" aria-hidden="true"></span>Kald &minus;8&deg;</button>
+      <button type="button" class="temp-btn" data-t="mild" aria-pressed="true"><span class="dot" aria-hidden="true"></span>Mild 12&deg;</button>
+      <button type="button" class="temp-btn" data-t="varm" aria-pressed="false"><span class="dot" aria-hidden="true"></span>Varm 24&deg;</button>
+    </div>
+    <div class="theme-row">
+      <button type="button" id="themeLight" aria-pressed="true">Lys</button>
+      <button type="button" id="themeDark" aria-pressed="false">Mørk</button>
+    </div>
+  </div>
+
+  <footer class="spec">
+    <h2>Kontrast — Brevann-tokens brukt i denne mocken</h2>
+    <table>
+      <thead><tr><th>Par</th><th>Ratio</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Ink-primary vs canvas (lys)</td><td>12.63:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Ink-secondary vs canvas (lys)</td><td>6.26:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Ink-primary vs surface-kort (lys)</td><td>15.41:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>CTA-tekst vs CTA-fyll (lys)</td><td>4.65:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>CTA-fyll vs canvas (lys)</td><td>3.77:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Fokusring vs canvas (lys)</td><td>4.56:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Ink-primary vs canvas (mørk)</td><td>14.21:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>CTA-tekst vs CTA-fyll (mørk)</td><td>7.77:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Fokusring vs canvas (mørk)</td><td>7.11:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Lag-dot marigold vs surface-kort (fill alene)</td><td>2.32:1</td><td>Ikke bestått alene → avhjulpet: 2px <code>--lag-mellom-edge</code>-ring rundt hver dot løfter non-text-kontrasten til 6.3:1 mot surface (WCAG 1.4.11-krav er 3:1, bestått). Farge bærer aldri info alene: navn + rekkefølge finnes alltid i synlig tekst.</td></tr>
+        <tr><td>Dot-ring innerst vs surface (lys)</td><td>8.69:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Dot-ring bukse vs surface (lys)</td><td>11.94:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Dot-ring mellom vs surface (lys)</td><td>6.25:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Dot-ring ytterst vs surface (lys)</td><td>15.27:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Dot-ring innerst (#F4C4B2) vs surface (mørk)</td><td>8.87:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Dot-ring bukse (#C9DAE0) vs surface (mørk)</td><td>9.67:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Dot-ring mellom (#F6DCA1) vs surface (mørk)</td><td>10.38:1</td><td class="pass">Bestått</td></tr>
+        <tr><td>Dot-ring ytterst (#9FD3DE) vs surface (mørk)</td><td>8.51:1</td><td class="pass">Bestått</td></tr>
+      </tbody>
+    </table>
+    <h2>Hva denne mocken tester</h2>
+    <ol>
+      <li>Ingen popup/dialog finnes i det hele tatt — «Vis påkledning» utvider siden inline med <code>aria-expanded</code> + <code>grid-template-rows</code>-reveal.</li>
+      <li>Avslørt innhold (lag-liste) følger trigger-knappen direkte i DOM-rekkefølge, ingen fokus-flytting, ingen fokus-felle.</li>
+      <li>Avatar-crossfade (stage 1→4) og lag-radenes inn-glidning kjører i takt (420ms, samme ease-out-kurve) — bevis/motbevis om popup-en var nødvendig for den «magiske» følelsen.</li>
+      <li>Reduced-motion: hopper rett til sluttstate (stage 4 + alle rader synlige), én aria-live-annonsering.</li>
+    </ol>
+  </footer>
+</div>
+
+<script>
+  const app = document.getElementById('app');
+  const phone = document.getElementById('phone');
+  const toggle = document.getElementById('toggle');
+  const reveal = document.getElementById('reveal');
+  const ctaLabelShow = toggle.querySelector('[data-state="show"]');
+  const ctaLabelHide = toggle.querySelector('[data-state="hide"]');
+  const stack = document.getElementById('stack');
+  const imgs = [...stack.querySelectorAll('img')];
+  const rows = [...document.querySelectorAll('.lag-row')];
+  const ticks = [...document.querySelectorAll('.count-ticks .tick')];
+  const heroCount = document.getElementById('heroCount');
+  const lagList = document.getElementById('lagList');
+  const status = document.getElementById('status');
+  const replay = document.getElementById('replay');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const motionToggle = document.getElementById('motionToggle');
+  const scene = document.querySelector('.scene');
+  const DRESSED_LABEL = 'Barn kledd i ullbody, bukse, strikkegenser og jakke.';
+  const UNDRESSED_LABEL = 'Barn kledd i ullbody.';
+  let timer = null;
+  let expanded = false;
+
+  function setCtaLabel(isExpanded) {
+    ctaLabelShow.setAttribute('data-active', String(!isExpanded));
+    ctaLabelHide.setAttribute('data-active', String(isExpanded));
+  }
+
+  // heroCount ("4 lag") is a stable fact — the recommended quantum for the
+  // day — never animated mid-sequence. Only the ticks and the avatar stack
+  // step through the dress-up; a mid-animation glimpse must never show the
+  // wrong recommendation.
+  function setStage(n) {
+    imgs.forEach(img => img.classList.toggle('on', +img.dataset.stage <= n));
+    rows.forEach(row => row.classList.toggle('on', +row.dataset.lag <= n));
+    ticks.forEach(tick => tick.classList.toggle('on', +tick.dataset.lag <= n));
+    stack.setAttribute('aria-label', n >= 4 ? DRESSED_LABEL : UNDRESSED_LABEL);
+  }
+
+  // FLIP: fly a clone of the newly-added layer's thumb from its list
+  // position into the avatar stack, synced with the stage crossfade.
+  function flyThumbToStack(lagIndex) {
+    if (reduced.matches) return;
+    const row = rows.find(r => +r.dataset.lag === lagIndex);
+    const thumbImg = row && row.querySelector('.thumb img');
+    if (!thumbImg) return;
+
+    const from = row.querySelector('.thumb').getBoundingClientRect();
+    const to = stack.getBoundingClientRect();
+
+    const clone = thumbImg.cloneNode(true);
+    clone.style.position = 'fixed';
+    clone.style.left = from.left + 'px';
+    clone.style.top = from.top + 'px';
+    clone.style.width = from.width + 'px';
+    clone.style.height = from.height + 'px';
+    clone.style.margin = '0';
+    clone.style.borderRadius = '10px';
+    clone.style.objectFit = 'contain';
+    clone.style.zIndex = '50';
+    clone.style.pointerEvents = 'none';
+    clone.style.willChange = 'transform, opacity';
+    clone.style.transition = 'transform 420ms var(--ease-out), opacity 420ms var(--ease-out)';
+    document.body.appendChild(clone);
+
+    const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+    const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+    const scale = Math.max(to.width / from.width, to.height / from.height) * 0.55;
+
+    requestAnimationFrame(() => {
+      clone.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+      clone.style.opacity = '0';
+    });
+    setTimeout(() => clone.remove(), 440);
+  }
+
+  function runDressSequence() {
+    let n = 1;
+    const step = () => {
+      n += 1;
+      flyThumbToStack(n);
+      setStage(n);
+      if (n < 4) {
+        timer = setTimeout(step, 420);
+      } else {
+        status.textContent = 'Påkledd: ullbody, bukse, strikkegenser, jakke.';
+      }
+    };
+    timer = setTimeout(step, 420);
+  }
+
+  // Reset guard: force layers 2–4 invisible with transitions off before the
+  // sequence starts, so a replay never fades the previous outfit out first.
+  function resetForReplay() {
+    stack.classList.add('no-anim');
+    lagList.classList.add('no-anim');
+    setStage(1);
+    // force reflow so the no-anim state is committed before we re-enable transitions
+    void stack.offsetWidth;
+    stack.classList.remove('no-anim');
+    lagList.classList.remove('no-anim');
+  }
+
+  function playSequence() {
+    status.textContent = '';
+    if (reduced.matches) {
+      setStage(4);
+      status.textContent = 'Påkledd: ullbody, bukse, strikkegenser, jakke.';
+      return;
+    }
+    resetForReplay();
+    // Wait for the #reveal grid-template-rows expansion to actually finish
+    // before measuring rects for the FLIP fly-in — otherwise the row is
+    // still mid-transition and getBoundingClientRect reads a moving target.
+    let started = false;
+    const start = () => {
+      if (started) return;
+      started = true;
+      runDressSequence();
+    };
+    reveal.addEventListener('transitionend', function onEnd(e) {
+      if (e.target !== reveal || e.propertyName !== 'grid-template-rows') return;
+      reveal.removeEventListener('transitionend', onEnd);
+      start();
+    });
+    // Fallback in case the transitionend never fires (e.g. reveal already open on replay)
+    timer = setTimeout(start, 480);
+  }
+
+  function collapse() {
+    clearTimeout(timer);
+    expanded = false;
+    app.dataset.expanded = 'false';
+    phone.removeAttribute('data-expanded-bg');
+    toggle.setAttribute('aria-expanded', 'false');
+    reveal.setAttribute('inert', '');
+    setCtaLabel(false);
+    setStage(4);
+    status.textContent = '';
+  }
+
+  function expandAndDress() {
+    clearTimeout(timer);
+    expanded = true;
+    app.dataset.expanded = 'true';
+    phone.setAttribute('data-expanded-bg', 'true');
+    toggle.setAttribute('aria-expanded', 'true');
+    reveal.removeAttribute('inert');
+    setCtaLabel(true);
+    playSequence();
+  }
+
+  toggle.addEventListener('click', () => {
+    if (expanded) collapse(); else expandAndDress();
+  });
+
+  replay.addEventListener('click', () => {
+    if (!expanded) return;
+    clearTimeout(timer);
+    playSequence();
+  });
+
+  const confirm = document.getElementById('confirm');
+  confirm.addEventListener('click', () => {
+    status.textContent = 'Antrekk bekreftet: ullbody, bukse, strikkegenser, jakke.';
+  });
+
+  const html = document.documentElement;
+  const themeLight = document.getElementById('themeLight');
+  const themeDark = document.getElementById('themeDark');
+  let currentTemp = 'mild';
+
+  // [data-theme="dark"][data-temp="kald|varm"] combo rules only match an
+  // element that carries BOTH attributes itself (inheritance does not help,
+  // since #phone[data-theme="dark"] re-declares the tokens and shadows
+  // anything inherited from <html>). So both attrs must live on #phone too,
+  // not just on <html>.
+  function syncPhoneAttrs(dark) {
+    const t = dark ? 'dark' : 'light';
+    phone.dataset.theme = t;
+    phone.setAttribute('data-temp', currentTemp);
+    html.setAttribute('data-theme', t);
+  }
+
+  function setTheme(dark) {
+    syncPhoneAttrs(dark);
+    themeLight.setAttribute('aria-pressed', String(!dark));
+    themeDark.setAttribute('aria-pressed', String(dark));
+  }
+  themeLight.addEventListener('click', () => setTheme(false));
+  themeDark.addEventListener('click', () => setTheme(true));
+
+  // Keep the hero number synced to the temp axis: switching cold/mild/warm
+  // must change what "12°" (and the weather meta) actually say, so a cold
+  // canvas never shows a mild-day reading. The demonstrated outfit itself
+  // (4 garments: body/bukse/genser/jakke) is this mock's fixed asset set —
+  // temp changes the *reading*, not a fabricated garment count with no art.
+  const heroTemp = document.getElementById('heroTemp');
+  const weatherMeta = document.getElementById('weatherMeta');
+  const tempValues = {
+    kald: { temp: '−8°', meta: 'Snø · føles som −13° · vind 6 m/s' },
+    mild: { temp: '12°', meta: 'Klarvær · føles som 10° · vind 3 m/s' },
+    varm: { temp: '24°', meta: 'Sol · føles som 25° · vind 1 m/s' },
+  };
+
+  function applyTempValues(t) {
+    const v = tempValues[t];
+    if (!v) return;
+    heroTemp.textContent = v.temp;
+    weatherMeta.textContent = v.meta;
+  }
+
+  const tempBtns = [...document.querySelectorAll('.temp-btn')];
+  tempBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.getAttribute('aria-pressed') === 'true') return;
+      tempBtns.forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+      currentTemp = btn.dataset.t;
+      html.setAttribute('data-temp', currentTemp);
+      phone.setAttribute('data-temp', currentTemp);
+      applyTempValues(currentTemp);
+    });
+  });
+
+  // Idle-glow pause control (WCAG 2.2.2): the rest-state scene has a looping
+  // glow-pulse; user must be able to reach a static rest state without it.
+  // Respects prefers-reduced-motion (starts paused there) and is otherwise
+  // on by default, with an explicit pause toggle always available.
+  function setPulsing(on) {
+    scene.classList.toggle('pulsing', on);
+    motionToggle.setAttribute('aria-pressed', String(on));
+    motionToggle.setAttribute('aria-label', on ? 'Pause bakgrunnsanimasjon' : 'Start bakgrunnsanimasjon');
+  }
+  motionToggle.addEventListener('click', () => {
+    setPulsing(motionToggle.getAttribute('aria-pressed') !== 'true');
+  });
+  setPulsing(!reduced.matches);
+  reduced.addEventListener('change', () => setPulsing(!reduced.matches));
+
+  // Glimpse: show the finished outfit at rest; "Vis påkledning" replays
+  // the dress-up sequence from bare body so the reveal stays the highlight.
+  setStage(4);
+  setCtaLabel(false);
+
+  // First-impression load entrance: hero, ticks and avatar fade/rise in on
+  // load (staggered via [data-delay] + CSS transition-delay). Reduced-motion
+  // renders already-settled (no animation, per the global transition kill).
+  const loadInEls = [...document.querySelectorAll('.load-in')];
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      loadInEls.forEach(el => el.classList.add('load-in-ready'));
+    });
+  });
+</script>
+</body>
+</html>

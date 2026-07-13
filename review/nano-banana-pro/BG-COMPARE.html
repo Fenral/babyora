@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<title>Babyora — bakgrunn-sammenligning</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #1a1a1a;
+    color: #ddd;
+    padding: 20px;
+  }
+  h1 {
+    color: white;
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+    margin: 0 0 8px;
+  }
+  .lead {
+    margin: 0 0 24px;
+    color: #aaa;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 1600px;
+  }
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .label {
+    font-size: 12px;
+    color: #888;
+    text-align: center;
+  }
+  .label strong {
+    color: white;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .label code {
+    background: #333;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #fbb;
+    font-size: 10px;
+  }
+
+  /* Phone */
+  .phone {
+    aspect-ratio: 430 / 700;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phone .header {
+    padding: 14px 18px 8px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .av {
+    width: 64px;
+    height: 80px;
+    background: linear-gradient(135deg, #c2c8d0 0%, #a8b0bd 100%);
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .h-text h2 {
+    margin: 0;
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+    font-size: 24px;
+    color: oklch(42% 0.11 35);
+  }
+  .h-text p {
+    margin: 2px 0 0;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: oklch(50% 0.02 35);
+    text-transform: uppercase;
+  }
+
+  .wp {
+    margin: 6px 18px;
+    padding: 10px 13px;
+    background: #FFFFFF;
+    border-radius: 12px;
+    border: 1px solid oklch(87% 0.030 85);
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+  .wp-t {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 22px;
+    color: oklch(42% 0.11 35);
+    line-height: 1;
+  }
+  .wp-m {
+    flex: 1;
+    font-size: 10px;
+    line-height: 1.4;
+    color: oklch(22% 0.015 35);
+  }
+
+  .rad {
+    margin: 4px 18px 0;
+    background: #FFFFFF;
+    border-radius: 10px;
+    padding: 7px 11px 8px 0;
+    display: grid;
+    grid-template-columns: 18px 3px 1fr;
+    gap: 2px 8px;
+  }
+  .num {
+    grid-row: 1 / 3;
+    place-self: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: oklch(50% 0.02 35);
+  }
+  .mk {
+    grid-row: 1 / 3;
+    width: 3px;
+    height: 100%;
+    border-radius: 0 3px 3px 0;
+  }
+  .cat {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: oklch(50% 0.02 35);
+    text-transform: uppercase;
+    margin: 0 0 2px;
+  }
+  .chips {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 7px 3px 3px;
+    background: var(--phone-bg);
+    border: 1px solid oklch(87% 0.030 85);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    color: oklch(22% 0.015 35);
+  }
+  .thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 1px solid oklch(87% 0.030 85);
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<h1>Babyora — bakgrunn-sammenligning</h1>
+<p class="lead">
+  Klikk gjennom de fire. Den nåværende (A) har kun 0.008 chroma — så lite at den ser grå ut.
+  B–D legger på mer varme i samme L (97.5%) ved å øke chroma og/eller flytte hue.
+</p>
+
+<div class="grid">
+
+  <!-- A: nåværende -->
+  <div class="col">
+    <div class="phone" style="--phone-bg: oklch(97.5% 0.008 85); background: var(--phone-bg);">
+      <div class="header">
+        <div class="av"></div>
+        <div class="h-text"><h2>Lillian</h2><p>I DAG</p></div>
+      </div>
+      <div class="wp">
+        <div class="wp-t">10°</div>
+        <div class="wp-m"><strong>Delvis skyet</strong><br/>Føles 9° · Elverum</div>
+      </div>
+      <div class="rad">
+        <span class="num">1</span><span class="mk" style="background:oklch(92% 0.030 85)"></span>
+        <div><p class="cat">Innerst</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Langermet body</span>
+          <span class="chip"><span class="thumb"></span>Ullsokker</span>
+        </div></div>
+      </div>
+      <div class="rad">
+        <span class="num">2</span><span class="mk" style="background:oklch(66% 0.090 195)"></span>
+        <div><p class="cat">Mellomlag</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Pyjamas</span>
+        </div></div>
+      </div>
+      <div class="rad">
+        <span class="num">3</span><span class="mk" style="background:oklch(70% 0.13 75)"></span>
+        <div><p class="cat">Ekstra</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Sovepose 2.5 TOG</span>
+        </div></div>
+      </div>
+    </div>
+    <p class="label">
+      <strong>A — Nåværende</strong>
+      <code>oklch(97.5% .008 85)</code><br/>
+      ≈ #FAF6EF · «den grå»
+    </p>
+  </div>
+
+  <!-- B: dobbel chroma -->
+  <div class="col">
+    <div class="phone" style="--phone-bg: oklch(97.5% 0.020 85); background: var(--phone-bg);">
+      <div class="header">
+        <div class="av"></div>
+        <div class="h-text"><h2>Lillian</h2><p>I DAG</p></div>
+      </div>
+      <div class="wp">
+        <div class="wp-t">10°</div>
+        <div class="wp-m"><strong>Delvis skyet</strong><br/>Føles 9° · Elverum</div>
+      </div>
+      <div class="rad">
+        <span class="num">1</span><span class="mk" style="background:oklch(92% 0.030 85)"></span>
+        <div><p class="cat">Innerst</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Langermet body</span>
+          <span class="chip"><span class="thumb"></span>Ullsokker</span>
+        </div></div>
+      </div>
+      <div class="rad">
+        <span class="num">2</span><span class="mk" style="background:oklch(66% 0.090 195)"></span>
+        <div><p class="cat">Mellomlag</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Pyjamas</span>
+        </div></div>
+      </div>
+      <div class="rad">
+        <span class="num">3</span><span class="mk" style="background:oklch(70% 0.13 75)"></span>
+        <div><p class="cat">Ekstra</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Sovepose 2.5 TOG</span>
+        </div></div>
+      </div>
+    </div>
+    <p class="label">
+      <strong>B — Lett krem</strong>
+      <code>oklch(97.5% .020 85)</code><br/>
+      ≈ #FBF1DE · «åpenbart varm»
+    </p>
+  </div>
+
+  <!-- C: rav-skift -->
+  <div class="col">
+    <div class="phone" style="--phone-bg: oklch(96.5% 0.030 78); background: var(--phone-bg);">
+      <div class="header">
+        <div class="av"></div>
+        <div class="h-text"><h2>Lillian</h2><p>I DAG</p></div>
+      </div>
+      <div class="wp">
+        <div class="wp-t">10°</div>
+        <div class="wp-m"><strong>Delvis skyet</strong><br/>Føles 9° · Elverum</div>
+      </div>
+      <div class="rad">
+        <span class="num">1</span><span class="mk" style="background:oklch(92% 0.030 85)"></span>
+        <div><p class="cat">Innerst</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Langermet body</span>
+          <span class="chip"><span class="thumb"></span>Ullsokker</span>
+        </div></div>
+      </div>
+      <div class="rad">
+        <span class="num">2</span><span class="mk" style="background:oklch(66% 0.090 195)"></span>
+        <div><p class="cat">Mellomlag</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Pyjamas</span>
+        </div></div>
+      </div>
+      <div class="rad">
+        <span class="num">3</span><span class="mk" style="background:oklch(70% 0.13 75)"></span>
+        <div><p class="cat">Ekstra</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Sovepose 2.5 TOG</span>
+        </div></div>
+      </div>
+    </div>
+    <p class="label">
+      <strong>C — Rav-krem</strong>
+      <code>oklch(96.5% .030 78)</code><br/>
+      ≈ #F8EBD0 · «hyggelig kakao»
+    </p>
+  </div>
+
+  <!-- D: tydelig sand -->
+  <div class="col">
+    <div class="phone" style="--phone-bg: oklch(95.5% 0.038 80); background: var(--phone-bg);">
+      <div class="header">
+        <div class="av"></div>
+        <div class="h-text"><h2>Lillian</h2><p>I DAG</p></div>
+      </div>
+      <div class="wp">
+        <div class="wp-t">10°</div>
+        <div class="wp-m"><strong>Delvis skyet</strong><br/>Føles 9° · Elverum</div>
+      </div>
+      <div class="rad">
+        <span class="num">1</span><span class="mk" style="background:oklch(92% 0.030 85)"></span>
+        <div><p class="cat">Innerst</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Langermet body</span>
+          <span class="chip"><span class="thumb"></span>Ullsokker</span>
+        </div></div>
+      </div>
+      <div class="rad">
+        <span class="num">2</span><span class="mk" style="background:oklch(66% 0.090 195)"></span>
+        <div><p class="cat">Mellomlag</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Pyjamas</span>
+        </div></div>
+      </div>
+      <div class="rad">
+        <span class="num">3</span><span class="mk" style="background:oklch(70% 0.13 75)"></span>
+        <div><p class="cat">Ekstra</p><div class="chips">
+          <span class="chip"><span class="thumb"></span>Sovepose 2.5 TOG</span>
+        </div></div>
+      </div>
+    </div>
+    <p class="label">
+      <strong>D — Sand</strong>
+      <code>oklch(95.5% .038 80)</code><br/>
+      ≈ #F4E3BE · «tydelig beige»
+    </p>
+  </div>
+
+</div>
+
+<div style="margin-top: 40px; max-width: 700px; padding: 20px; background: #2a2a2a; border-radius: 12px;">
+  <h2 style="color:white; font-family: 'DM Serif Display', Georgia, serif; font-weight: 400; margin: 0 0 12px;">Hva endrer seg</h2>
+  <p style="line-height: 1.7; margin: 0 0 12px;">
+    Hver versjon bytter <strong style="color:white">kun bakgrunnen</strong>. Brand-rust,
+    DM Serif-tittel, lag-rad-fargene, alle plagg-markører er IDENTISKE.
+    Det er kun bakgrunnsfølelsen som varierer.
+  </p>
+  <p style="line-height: 1.7; margin: 0;">
+    <strong style="color:#fff">Min anbefaling:</strong> B er trygt – du får varme uten å miste
+    Aa-kontrast eller risikere at PNG-bilder med kjølig hvit hopper ut. C går litt
+    lengre mot kakao-følelsen. D er mest karakter, men kan begynne å føles "yellow-tone".
+  </p>
+</div>
+
+</body>
+</html>

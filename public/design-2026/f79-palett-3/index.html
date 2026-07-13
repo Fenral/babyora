@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="nb" data-theme="light" data-temp="mild">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Byggekloss – Babyora F79</title>
+<style>
+/* ============================================================
+   PALETT-3 «BYGGEKLOSS» — full-palette-strategi
+   Skandinavisk treleke-verden: krem-canvas, fullmettede
+   trelekemaling-klosser (kobolt/gress/oker), valmuerød CTA.
+   Alle kontraster beregnet på endelige sRGB-verdier (WCAG 2.x
+   relative luminance) — se tabell nederst på siden.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
+
+/* ---------- Grunn-tokens: LYS ---------- */
+html[data-theme="light"] {
+  --bg-canvas:      #F0EBDC; /* oklch(0.94 0.020 90) */
+  --surface:        #FBF8F1; /* oklch(0.98 0.010 90) */
+  --ink-primary:    #30231B; /* oklch(0.27 0.025 55) */
+  --ink-secondary:  #655447; /* oklch(0.46 0.030 60) */
+  --accent-cta:     #BC2823; /* oklch(0.52 0.185 28) */
+  --accent-cta-ink: #FBF8F1; /* oklch(0.98 0.010 85) */
+  --accent-cta-edge:#8E1E1A;
+  --layer-innerst:  #315AA9; /* oklch(0.48 0.135 262) */
+  --layer-mellom:   #3E8343; /* oklch(0.55 0.120 145) */
+  --layer-ytterst:  #C07516; /* oklch(0.63 0.135 65) */
+  --layer-innerst-edge:#24437F;
+  --layer-mellom-edge:#2D6232;
+  --layer-ytterst-edge:#915810;
+  --status-cold:    #285E9F; /* oklch(0.48 0.120 255) */
+  --status-warm:    #B84412; /* oklch(0.54 0.160 40) */
+  --focus-ring:     #315AA9; /* oklch(0.48 0.135 262) */
+  --avatar-glow:    #F9F3E5; /* mild default */
+  --aksent:         #915108; /* mild default */
+  --shadow-ink: 48, 35, 27;
+  color-scheme: light;
+}
+/* ---------- Grunn-tokens: MØRK (varm tre-mørk, hue 55°) ---------- */
+html[data-theme="dark"] {
+  --bg-canvas:      #1F1915; /* oklch(0.22 0.012 55) */
+  --surface:        #2E2722; /* oklch(0.28 0.014 60) */
+  --ink-primary:    #F3EEE3; /* oklch(0.95 0.015 85) */
+  --ink-secondary:  #BCB3A7; /* oklch(0.77 0.020 75) */
+  --accent-cta:     #F5614E; /* oklch(0.68 0.185 30) */
+  --accent-cta-ink: #251614; /* oklch(0.22 0.025 30) */
+  --accent-cta-edge:#C24438;
+  --layer-innerst:  #7DA6E3; /* oklch(0.72 0.100 258) */
+  --layer-mellom:   #84C485; /* oklch(0.76 0.110 145) */
+  --layer-ytterst:  #EBB25F; /* oklch(0.80 0.120 75) */
+  --layer-innerst-edge:#5B80B8;
+  --layer-mellom-edge:#619862;
+  --layer-ytterst-edge:#BC8B45;
+  --status-cold:    #79B0E8; /* oklch(0.74 0.100 250) */
+  --status-warm:    #FE9A6C; /* oklch(0.78 0.134 45) */
+  --focus-ring:     #78A5EF; /* oklch(0.72 0.120 260) */
+  --avatar-glow:    #584A3B; /* mild default */
+  --aksent:         #E6964F; /* mild default */
+  --shadow-ink: 0, 0, 0;
+  color-scheme: dark;
+}
+
+/* ---------- Temp-aksen: L holdes konstant, hue+chroma flytter stemningen ---------- */
+html[data-theme="light"][data-temp="kald"] {
+  --bg-canvas:   #D8F0FC; /* oklch(0.94 0.030 230) */
+  --avatar-glow: #E7F7FD; /* oklch(0.965 0.019 225) */
+  --aksent:      #176297; /* oklch(0.48 0.110 245) */
+}
+html[data-theme="dark"][data-temp="kald"] {
+  --bg-canvas:   #121C23; /* oklch(0.22 0.020 240) */
+  --avatar-glow: #2D5267; /* oklch(0.42 0.055 235) */
+  --aksent:      #6DB3E4; /* oklch(0.74 0.100 240) */
+}
+html[data-theme="light"][data-temp="varm"] {
+  --bg-canvas:   #F8EAC7; /* oklch(0.94 0.048 90) */
+  --avatar-glow: #FEEFCF; /* oklch(0.955 0.044 85) */
+  --aksent:      #AB5809; /* oklch(0.55 0.133 55) */
+}
+html[data-theme="dark"][data-temp="varm"] {
+  --bg-canvas:   #251B12; /* oklch(0.23 0.022 60) */
+  --avatar-glow: #6A4B2E; /* oklch(0.44 0.060 65) */
+  --aksent:      #FD9C54; /* oklch(0.78 0.145 55) */
+}
+
+/* ---------- Reset + base ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+body {
+  background: var(--bg-canvas);
+  color: var(--ink-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+/* Stemnings-skift: myk 600ms — instant under reduced motion */
+body, .phone, .card, .chip, .cta, .nav-item, .toggle, .pill, .icon-btn,
+.kloss, .kloss::before, .kloss::after, .glow, .editorial, .spec-table th, .spec-table td {
+  transition: background-color .6s ease, color .6s ease, border-color .6s ease, box-shadow .6s ease, opacity .6s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+h1, h2, h3, .display { font-family: "Fraunces", Georgia, serif; }
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- Side-ramme ---------- */
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+}
+.page-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; margin-bottom: 8px;
+}
+.page-head h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
+.page-head .sub { color: var(--ink-secondary); font-size: 14px; margin-bottom: 28px; }
+
+.toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 8px 18px;
+  background: var(--surface); color: var(--ink-primary);
+  border: 2px solid var(--ink-secondary); border-radius: 999px;
+  font: 600 14px/1 inherit; font-family: inherit; cursor: pointer;
+}
+.toggle svg { width: 18px; height: 18px; }
+.toggle[aria-pressed="true"] .ikon-sol { display: none; }
+.toggle[aria-pressed="false"] .ikon-mane { display: none; }
+
+/* ---------- Phone-frame 390×844 ---------- */
+.stage { display: flex; justify-content: center; margin: 24px 0 12px; }
+.phone {
+  width: 390px; height: 844px; flex: 0 0 auto;
+  background: var(--bg-canvas);
+  border: 10px solid var(--ink-primary);
+  border-radius: 48px;
+  box-shadow: 0 24px 60px -24px rgba(var(--shadow-ink), .45),
+              0 4px 0 rgba(var(--shadow-ink), .10);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+.phone-inner {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 18px 22px 0;
+  overflow: hidden;
+}
+
+/* 1. Topbar */
+.topbar { display: flex; align-items: center; justify-content: space-between; }
+.pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 44px; padding: 8px 16px 8px 13px;
+  background: var(--surface); color: var(--ink-primary);
+  border: 1.5px solid var(--ink-secondary); border-radius: 999px;
+  font: 600 15px/1 inherit; font-family: inherit; cursor: pointer;
+  box-shadow: 0 2px 0 rgba(var(--shadow-ink), .10);
+}
+.pill svg { width: 16px; height: 16px; color: var(--aksent); }
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px;
+  background: var(--surface); color: var(--ink-primary);
+  border: 1.5px solid var(--ink-secondary); border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(var(--shadow-ink), .10);
+}
+.icon-btn svg { width: 20px; height: 20px; }
+
+/* 2. Vær-sone */
+.weather { text-align: center; margin-top: 14px; }
+.temp-display {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 88px; font-weight: 600; line-height: 1;
+  letter-spacing: -0.03em;
+  font-variation-settings: "opsz" 90;
+}
+.temp-display .grad { color: var(--aksent); } /* stor/dekorativ: ≥3:1 overalt */
+.condition { font-size: 18px; font-weight: 600; margin-top: 2px; }
+.meta {
+  display: flex; justify-content: center; gap: 18px;
+  margin-top: 6px; color: var(--ink-secondary);
+  font-size: 14px; font-weight: 500;
+}
+.meta span { display: inline-flex; align-items: center; gap: 5px; }
+.meta svg { width: 15px; height: 15px; color: var(--aksent); }
+
+/* 3. Avatar + glow */
+.avatar-zone { display: flex; justify-content: center; margin: 10px 0 6px; position: relative; }
+.glow {
+  width: 264px; height: 264px; border-radius: 50%;
+  background: radial-gradient(circle, var(--avatar-glow) 0%, var(--avatar-glow) 46%, transparent 72%);
+  display: flex; align-items: center; justify-content: center;
+}
+.glow img { width: 212px; height: auto; display: block; }
+
+/* 4. Anbefaling */
+.card {
+  background: var(--surface);
+  border-radius: 22px;
+  padding: 18px 20px 20px;
+  box-shadow: 0 3px 0 rgba(var(--shadow-ink), .10),
+              0 14px 34px -18px rgba(var(--shadow-ink), .35);
+}
+.eyebrow {
+  font-size: 12px; font-weight: 700; letter-spacing: .14em;
+  color: var(--ink-secondary); text-transform: uppercase;
+}
+.card h2 { font-size: 22px; font-weight: 600; margin-top: 3px; letter-spacing: -0.01em; }
+
+/* Byggekloss-rekka: lag-antall som leses på 5 meter */
+.kloss-row { display: flex; gap: 18px; margin-top: 18px; }
+.kloss-item { text-align: center; flex: 1; }
+.kloss {
+  width: 62px; height: 40px; margin: 8px auto 0;
+  border-radius: 8px; position: relative;
+}
+.kloss::before, .kloss::after {
+  content: ""; position: absolute; top: -7px;
+  width: 15px; height: 9px; border-radius: 5px 5px 0 0;
+  background: inherit;
+}
+.kloss::before { left: 9px; }
+.kloss::after { right: 9px; }
+.kloss.innerst { background: var(--layer-innerst); box-shadow: 0 4px 0 var(--layer-innerst-edge); }
+.kloss.mellom  { background: var(--layer-mellom);  box-shadow: 0 4px 0 var(--layer-mellom-edge); }
+.kloss.ytterst { background: var(--layer-ytterst); box-shadow: 0 4px 0 var(--layer-ytterst-edge); }
+.kloss-item .navn { font-size: 13px; font-weight: 600; margin-top: 10px; }
+.kloss-item .rolle { font-size: 11.5px; color: var(--ink-secondary); }
+.kloss-item[hidden] { display: none; }
+.lag-rekkefolge { font-size: 12px; color: var(--ink-secondary); margin-top: 12px; }
+
+/* 5. CTA — valmuerød kloss med Duplo-tyngde */
+.cta {
+  display: block; width: 100%; margin-top: 14px;
+  min-height: 56px; padding: 15px 20px;
+  background: var(--accent-cta); color: var(--accent-cta-ink);
+  border: none; border-radius: 16px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 19px; font-weight: 600; letter-spacing: .01em;
+  cursor: pointer;
+  box-shadow: 0 5px 0 var(--accent-cta-edge),
+              0 16px 30px -14px rgba(var(--shadow-ink), .45);
+}
+.cta:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--accent-cta-edge); }
+
+/* 6. Bunn-nav */
+.bottom-nav {
+  margin-top: auto;
+  background: var(--surface);
+  border-top: 1.5px solid var(--ink-secondary);
+  display: flex;
+  padding: 8px 10px calc(10px + 6px);
+}
+.nav-item {
+  flex: 1; min-height: 52px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  color: var(--ink-secondary); text-decoration: none;
+  font-size: 11px; font-weight: 600;
+  border-radius: 12px;
+}
+.nav-item svg { width: 22px; height: 22px; }
+.nav-item[aria-current="page"] { color: var(--aksent); }
+.nav-item[aria-current="page"]::after {
+  content: ""; width: 18px; height: 3px; border-radius: 2px;
+  background: var(--aksent); margin-top: 1px;
+}
+
+/* 7. Signatur-demo: temp-aksen */
+.demo {
+  max-width: 390px; margin: 26px auto 0; text-align: center;
+}
+.demo h2 { font-size: 18px; font-weight: 600; }
+.demo p.hint { font-size: 13.5px; color: var(--ink-secondary); margin-top: 2px; }
+.chip-row { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 48px; padding: 10px 18px;
+  background: var(--surface); color: var(--ink-primary);
+  border: 2px solid var(--ink-secondary); border-radius: 999px;
+  font: 600 15px/1 inherit; font-family: inherit; cursor: pointer;
+  box-shadow: 0 2px 0 rgba(var(--shadow-ink), .10);
+}
+.chip .dot { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; }
+.chip[data-temp="kald"] .dot { background: var(--status-cold); }
+.chip[data-temp="mild"] .dot { background: var(--ink-secondary); }
+.chip[data-temp="varm"] .dot { background: var(--status-warm); }
+.chip[aria-pressed="true"] {
+  border-color: var(--aksent);
+  border-width: 3px;
+  color: var(--ink-primary);
+  box-shadow: 0 3px 0 var(--aksent);
+}
+
+/* 9. Editorial + kontrast-tabell */
+.editorial {
+  margin-top: 56px;
+  background: var(--surface);
+  border-radius: 22px;
+  padding: 28px 28px 32px;
+  box-shadow: 0 3px 0 rgba(var(--shadow-ink), .08);
+}
+.editorial h2 { font-size: 22px; font-weight: 600; }
+.editorial h3 { font-size: 16px; font-weight: 600; margin-top: 22px; }
+.editorial p { font-size: 15px; color: var(--ink-secondary); margin-top: 8px; max-width: 62ch; }
+.editorial p strong { color: var(--ink-primary); }
+.swatch-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.swatch {
+  width: 44px; height: 32px; border-radius: 7px;
+  border: 1px solid var(--ink-secondary);
+}
+.spec-table-wrap { overflow-x: auto; margin-top: 14px; }
+.spec-table {
+  border-collapse: collapse; width: 100%; font-size: 13.5px;
+}
+.spec-table caption { text-align: left; font-size: 13px; color: var(--ink-secondary); padding-bottom: 8px; }
+.spec-table th, .spec-table td {
+  text-align: left; padding: 7px 12px;
+  border-bottom: 1px solid var(--ink-secondary);
+}
+.spec-table th { font-weight: 700; }
+.spec-table td.num { font-variant-numeric: tabular-nums; }
+.pass { font-weight: 700; color: var(--layer-mellom); }
+html[data-theme="light"] .pass { color: #2D6232; } /* mørkere grønn for 4.5:1 tekst-krav */
+.merk { font-size: 12px; color: var(--ink-secondary); }
+
+footer.site { margin-top: 28px; text-align: center; font-size: 13px; color: var(--ink-secondary); }
+
+/* Forced colors: borders/outlines bærer strukturen */
+@media (forced-colors: active) {
+  .kloss, .chip, .pill, .icon-btn, .toggle, .card, .phone, .glow { border: 1px solid CanvasText; }
+  .cta { border: 2px solid CanvasText; }
+  .chip[aria-pressed="true"] { border: 3px solid Highlight; }
+  .nav-item[aria-current="page"]::after { background: Highlight; }
+  .chip .dot, .kloss::before, .kloss::after { border: 1px solid CanvasText; }
+}
+
+@media (max-width: 430px) {
+  .phone { width: 100%; max-width: 390px; height: 800px; border-width: 6px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="page-head-wrap">
+    <div class="page-head">
+      <h1>Byggekloss</h1>
+      <button type="button" class="toggle" id="themeToggle" aria-pressed="false">
+        <svg class="ikon-sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="ikon-mane" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
+        <span id="themeLabel">Mørk modus</span>
+      </button>
+    </div>
+    <p class="sub">Babyora F79 · Palett 3 · full-palette · Hjem-mock</p>
+  </header>
+
+  <main>
+    <!-- ============ PHONE-MOCK ============ -->
+    <div class="stage">
+      <div class="phone" role="group" aria-label="Babyora Hjem-skjerm, mock">
+        <div class="phone-inner">
+
+          <!-- 1. Topbar -->
+          <header class="topbar">
+            <button type="button" class="pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Elverum
+            </button>
+            <button type="button" class="icon-btn" aria-label="Meny">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
+          </header>
+
+          <!-- 2. Vær-sone -->
+          <section class="weather" aria-label="Været nå">
+            <p class="temp-display"><span id="tempTall">12</span><span class="grad" aria-hidden="true">°</span><span class="sr-only"> grader</span></p>
+            <p class="condition" id="condTekst">Lettskyet</p>
+            <p class="meta">
+              <span id="folesTekst">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M14 14.8V5a2 2 0 1 0-4 0v9.8a4 4 0 1 0 4 0z"/></svg>
+                Føles som 9°
+              </span>
+              <span id="vindTekst">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8a2.5 2.5 0 1 1-2.5 2.5"/></svg>
+                Vind 4 m/s
+              </span>
+            </p>
+          </section>
+
+          <!-- 3. Avatar med glow -->
+          <div class="avatar-zone">
+            <div class="glow">
+              <img src="/avatars/avatar-A2.png" alt="Barneavatar" width="212" height="212">
+            </div>
+          </div>
+
+          <!-- 4. Anbefaling -->
+          <section class="card" aria-labelledby="anbefaltTittel">
+            <p class="eyebrow">Anbefalt nå</p>
+            <h2 id="anbefaltTittel">3 lag for lettskyet dag</h2>
+            <ul class="kloss-row" role="list" style="list-style:none; padding:0;">
+              <li class="kloss-item" id="klossInnerst">
+                <div class="kloss innerst" aria-hidden="true"></div>
+                <p class="navn">Ullbody</p>
+                <p class="rolle">innerst</p>
+              </li>
+              <li class="kloss-item" id="klossMellom">
+                <div class="kloss mellom" aria-hidden="true"></div>
+                <p class="navn">Ullgenser</p>
+                <p class="rolle">mellom</p>
+              </li>
+              <li class="kloss-item" id="klossYtterst">
+                <div class="kloss ytterst" aria-hidden="true"></div>
+                <p class="navn">Parkdress</p>
+                <p class="rolle">ytterst</p>
+              </li>
+            </ul>
+            <p class="lag-rekkefolge" id="lagListe">Lag innerst → ytterst: ullbody, ullgenser, parkdress</p>
+
+            <!-- 5. CTA -->
+            <button type="button" class="cta">Se påkledning</button>
+          </section>
+        </div>
+
+        <!-- 6. Bunn-nav -->
+        <nav class="bottom-nav" aria-label="Hovednavigasjon">
+          <a class="nav-item" href="#" aria-current="page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+            Hjem
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 12 6l3-2 5 3-2 4-2-1v10H8V10L6 11 4 7z"/></svg>
+            Garderobe
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+            Historikk
+          </a>
+          <a class="nav-item" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.14-1.4l2-1.55-2-3.46-2.36.95A7 7 0 0 0 14.06 5L13.7 2.5h-3.4L9.94 5a7 7 0 0 0-2.44 1.54L5.14 5.6l-2 3.46 2 1.55a7 7 0 0 0 0 2.8l-2 1.55 2 3.46 2.36-.95A7 7 0 0 0 9.94 19l.36 2.5h3.4l.36-2.5a7 7 0 0 0 2.44-1.54l2.36.95 2-3.46-2-1.55A7 7 0 0 0 19 12z"/></svg>
+            Innstillinger
+          </a>
+        </nav>
+      </div>
+    </div>
+
+    <!-- 7. Signatur-demo: temp-aksen -->
+    <section class="demo" aria-labelledby="demoTittel">
+      <h2 id="demoTittel">Signatur: temp-aksen</h2>
+      <p class="hint">Kremen er scenen — kulda iser den til 230°, varmen soltørker den til honning. L holdes konstant; kun hue + chroma flytter seg.</p>
+      <div class="chip-row" role="group" aria-label="Velg temperatur-stemning">
+        <button type="button" class="chip" data-temp="kald" aria-pressed="false"><span class="dot" aria-hidden="true"></span>Kald −8°</button>
+        <button type="button" class="chip" data-temp="mild" aria-pressed="true"><span class="dot" aria-hidden="true"></span>Mild 12°</button>
+        <button type="button" class="chip" data-temp="varm" aria-pressed="false"><span class="dot" aria-hidden="true"></span>Varm 24°</button>
+      </div>
+      <p class="sr-only" aria-live="polite" id="liveRegion"></p>
+    </section>
+
+    <!-- 9. Editorial: konsept + anti-klisjé + kontrast -->
+    <section class="editorial" aria-labelledby="omTittel">
+      <h2 id="omTittel">Om paletten</h2>
+      <div class="swatch-row" aria-hidden="true">
+        <span class="swatch" style="background:var(--bg-canvas)"></span>
+        <span class="swatch" style="background:var(--surface)"></span>
+        <span class="swatch" style="background:var(--layer-innerst)"></span>
+        <span class="swatch" style="background:var(--layer-mellom)"></span>
+        <span class="swatch" style="background:var(--layer-ytterst)"></span>
+        <span class="swatch" style="background:var(--accent-cta)"></span>
+        <span class="swatch" style="background:var(--ink-primary)"></span>
+      </div>
+
+      <h3>Konsept</h3>
+      <p>Skandinavisk treleke-verden: varm krem-canvas (aldri hvit) der <strong>hele lag-rampen</strong> får leve i fullmettet trelekemaling — kobolt innerst, gressgrønn mellom, oker ytterst, valmuerød CTA — som Not Boring «Toy»-temaet, men med Duplo-tyngde i stedet for neon. Fargen bærer systemet: lag-antall leses på fem meter fordi hvert lag har sin egen primærfarge, og popupen blir en lekekasse i stedet for en kvittering. Temp-aksen holder kremen rolig og lar kulda ise den til blekblå 230° og varmen soltørke den til dyp honning-krem — <strong>basen er scenen, klossene er skuespillerne.</strong></p>
+
+      <h3>Anti-klisjé</h3>
+      <p><strong>1. ordens:</strong> motsatt pol av rosa-pastell — mettede primærfarger på krem (leketøy, ikke barnerom); kobolt er én kloss blant fire hues, aldri systemets stemme, så ingen SaaS-blå-lesning. <strong>2. ordens:</strong> unngår «Duolingo/Toy-neon-gamification»-refleksen (den opplagte «leken app»-flukten) ved treleke-chroma (C 0.12–0.185, aldri fluorescerende), varm espresso-ink i stedet for svart, og krem-canvas i stedet for hvit — Lillehammer-verksted, ikke app-arkade.</p>
+
+      <h3>Kontrast-dokumentasjon</h3>
+      <p>Alle ratios er beregnet med WCAG 2.x relative luminance på de endelige sRGB-verdiene (ikke OKLCH-kilden). Temp-aksens rader er målt mot aksens egne bakgrunner.</p>
+      <div class="spec-table-wrap">
+        <table class="spec-table">
+          <caption>Par → ratio lys → ratio mørk → status. Krav: tekst 4.5:1, stor tekst / non-text UI 3:1.</caption>
+          <thead>
+            <tr><th scope="col">Par</th><th scope="col">Lys</th><th scope="col">Mørk</th><th scope="col">Krav</th><th scope="col">Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>ink-primary / bg-canvas</td><td class="num">12.75</td><td class="num">15.02</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+            <tr><td>ink-secondary / bg-canvas</td><td class="num">6.05</td><td class="num">8.40</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+            <tr><td>ink-primary / surface (kort)</td><td class="num">14.33</td><td class="num">12.70</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+            <tr><td>accent-cta-ink / accent-cta (CTA-label)</td><td class="num">5.71</td><td class="num">5.57</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+            <tr><td>accent-cta / bg-canvas (CTA-fill)</td><td class="num">5.08</td><td class="num">5.55</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+            <tr><td>layer-innerst / bg-canvas (non-text)</td><td class="num">5.57</td><td class="num">6.98</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+            <tr><td>layer-mellom / bg-canvas (non-text)</td><td class="num">3.89</td><td class="num">8.46</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+            <tr><td>layer-ytterst / bg-canvas (non-text)</td><td class="num">3.04</td><td class="num">9.16</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+            <tr><td>focus-ring / bg-canvas</td><td class="num">5.57</td><td class="num">6.98</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+            <tr><td>status-cold / bg-canvas (non-text)</td><td class="num">5.52</td><td class="num">7.61</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+            <tr><td>status-warm / bg-canvas (non-text)</td><td class="num">4.55</td><td class="num">8.32</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+            <tr><td>Kald: ink-primary / bg 230°</td><td class="num">12.87</td><td class="num">14.92</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+            <tr><td>Kald: accent-cta / bg 230°</td><td class="num">5.13</td><td class="num">5.51</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+            <tr><td>Kald: aksent / bg 230°</td><td class="num">5.51</td><td class="num">7.58</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+            <tr><td>Varm: ink-primary / bg honning</td><td class="num">12.73</td><td class="num">14.59</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+            <tr><td>Varm: accent-cta / bg honning</td><td class="num">5.07</td><td class="num">5.39</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+            <tr><td>Varm: aksent / bg honning (kun stor tekst + ikoner)</td><td class="num">4.26</td><td class="num">8.09</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="merk">Merk: layer-ytterst (oker) i lys modus lander på 3.04:1 — over non-text-kravet, men med knapp margin; klossene bærer derfor aldri tekst, labels står i ink under. Varm-aksens aksent (4.26:1 lys) brukes utelukkende på store/dekorative elementer og ikoner (krav 3:1), aldri på brødtekst — brødtekst-metadata står i ink-secondary (≥6:1).</p>
+    </section>
+  </main>
+
+  <footer class="site">
+    <p>Babyora F79 · palett-3 «Byggekloss» · mock generert 2026-07-02 · kontraster beregnet, ikke estimert</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var docEl = document.documentElement;
+
+  /* ---------- Temp-aksen ---------- */
+  var DATA = {
+    kald: {
+      temp: "−8", cond: "Snøbyger", feels: "Føles som −13°", wind: "Vind 6 m/s",
+      title: "3 lag + ullue for snøbyger", layers: 3,
+      liste: "Lag innerst → ytterst: ullbody, ullgenser, parkdress — pluss ullue",
+      announce: "Kald stemning valgt: minus 8 grader, snøbyger. Anbefalt: 3 lag pluss ullue."
+    },
+    mild: {
+      temp: "12", cond: "Lettskyet", feels: "Føles som 9°", wind: "Vind 4 m/s",
+      title: "3 lag for lettskyet dag", layers: 3,
+      liste: "Lag innerst → ytterst: ullbody, ullgenser, parkdress",
+      announce: "Mild stemning valgt: 12 grader, lettskyet. Anbefalt: 3 lag."
+    },
+    varm: {
+      temp: "24", cond: "Sol og stille", feels: "Føles som 26°", wind: "Vind 2 m/s",
+      title: "1 lag for varm soldag", layers: 1,
+      liste: "Lag: kun ullbody i dag",
+      announce: "Varm stemning valgt: 24 grader, sol. Anbefalt: 1 lag."
+    }
+  };
+
+  var tempTall = document.getElementById("tempTall");
+  var condTekst = document.getElementById("condTekst");
+  var folesTekst = document.getElementById("folesTekst");
+  var vindTekst = document.getElementById("vindTekst");
+  var tittel = document.getElementById("anbefaltTittel");
+  var lagListe = document.getElementById("lagListe");
+  var live = document.getElementById("liveRegion");
+  var mellom = document.getElementById("klossMellom");
+  var ytterst = document.getElementById("klossYtterst");
+  var chips = Array.prototype.slice.call(document.querySelectorAll(".chip"));
+
+  function setIconText(el, text) {
+    /* bevar ikon-SVG, bytt kun tekstnoden */
+    var svg = el.querySelector("svg");
+    el.textContent = "";
+    if (svg) el.appendChild(svg);
+    el.appendChild(document.createTextNode(" " + text));
+  }
+
+  function setTemp(key) {
+    var d = DATA[key];
+    docEl.setAttribute("data-temp", key);
+    tempTall.textContent = d.temp;
+    condTekst.textContent = d.cond;
+    setIconText(folesTekst, d.feels);
+    setIconText(vindTekst, d.wind);
+    tittel.textContent = d.title;
+    lagListe.textContent = d.liste;
+    mellom.hidden = d.layers < 2;
+    ytterst.hidden = d.layers < 3;
+    chips.forEach(function (c) {
+      c.setAttribute("aria-pressed", String(c.getAttribute("data-temp") === key));
+    });
+    live.textContent = d.announce;
+  }
+
+  chips.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      setTemp(chip.getAttribute("data-temp"));
+    });
+  });
+
+  /* ---------- Tema-toggle ---------- */
+  var toggle = document.getElementById("themeToggle");
+  var themeLabel = document.getElementById("themeLabel");
+  toggle.addEventListener("click", function () {
+    var dark = docEl.getAttribute("data-theme") !== "dark";
+    docEl.setAttribute("data-theme", dark ? "dark" : "light");
+    toggle.setAttribute("aria-pressed", String(dark));
+    themeLabel.textContent = dark ? "Lys modus" : "Mørk modus";
+  });
+})();
+</script>
+</body>
+</html>

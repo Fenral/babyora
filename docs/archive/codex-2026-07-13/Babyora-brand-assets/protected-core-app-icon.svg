@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Beskyttet kjerne – appikon</title>
+  <desc id="desc">Mørkt appikon med en varm kjerne omgitt av mint og kremfargede beskyttende lag.</desc>
+  <rect width="1024" height="1024" rx="224" fill="#1B1929"/>
+  <path d="M246 266v297c0 215 131 338 266 338s266-123 266-338V266" fill="none" stroke="#69D39C" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M365 379v184c0 123 69 195 147 195s147-72 147-195V379" fill="none" stroke="#F5F0E8" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="512" cy="451" r="87" fill="#F19B7B"/>
+</svg>

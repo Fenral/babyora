@@ -1,0 +1,26 @@
+{
+  "calls": 3,
+  "results": {
+    "langermet-ullbody": {
+      "ok": true,
+      "rawPath": "C:\\Users\\SkotvoldSivertSende\\wool-app\\review\\f62-2-regen\\langermet-ullbody-att2-raw.png",
+      "keyedPath": "C:\\Users\\SkotvoldSivertSende\\wool-app\\review\\f62-2-regen\\langermet-ullbody-att2-keyed.png",
+      "opaqueRatio": "29.9",
+      "calls": 1
+    },
+    "sjekk-nakke": {
+      "ok": true,
+      "rawPath": "C:\\Users\\SkotvoldSivertSende\\wool-app\\review\\f62-2-regen\\sjekk-nakke-att2-raw.png",
+      "keyedPath": "C:\\Users\\SkotvoldSivertSende\\wool-app\\review\\f62-2-regen\\sjekk-nakke-att2-keyed.png",
+      "opaqueRatio": "57.3",
+      "calls": 2
+    },
+    "sjekk-nakke-dark": {
+      "ok": true,
+      "rawPath": "C:\\Users\\SkotvoldSivertSende\\wool-app\\review\\f62-2-regen\\sjekk-nakke-dark-att2-raw.png",
+      "keyedPath": "C:\\Users\\SkotvoldSivertSende\\wool-app\\review\\f62-2-regen\\sjekk-nakke-dark-att2-keyed.png",
+      "opaqueRatio": "42.6",
+      "calls": 3
+    }
+  }
+}

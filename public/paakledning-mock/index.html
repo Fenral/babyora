@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Påkledning · P2-layout (fold-safe)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-canvas:#DBD8D2;
+  --bg-canvas-soft:#E5E2DC;
+  --terracotta-500:#C0632F;
+  --terracotta-600:#B4502E;
+  --terracotta-700:#A9492A;
+  --terracotta-100:#F4E4D8;
+  --terracotta-700-on-100:#8A3618;
+
+  /* Lag-farger fra brief */
+  --layer-ytterst:#C0632F;
+  --layer-mellom:#5E8C6A;
+  --layer-innerst:#3F5A78;
+
+  --ink-900:#2B2B2B;
+  --ink-700:#5A514C;
+  --ink-500:#A89E97;
+  --ink-300:#C9C3BD;
+
+  --card-bg:#FFFFFF;
+  --card-shadow:0 1px 2px rgba(43,37,34,.05),0 8px 18px rgba(43,37,34,.09);
+
+  --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+  --font-serif:'DM Serif Display',Georgia,serif;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#1a1a1a;font-family:var(--font-sans);}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;color:var(--ink-900);}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+/* iPhone-frame 390×844 */
+.frame{
+  position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5), 0 0 0 12px #1f1f1f, 0 0 0 13px #333;
+  background:linear-gradient(180deg,#C7D6E1 0%,#DEE1DD 45%,#E9E1D6 100%);
+}
+
+/* main fyller hele frame; intern scroll skjer i .scroll-area */
+.screen{
+  position:relative;height:100%;width:100%;display:flex;flex-direction:column;
+  font-family:var(--font-sans);color:var(--ink-900);
+  padding-top:env(safe-area-inset-top,0px);
+}
+.screen::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 46% at 50% -8%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%);
+}
+
+/* Topbar — sticky-top, 44px */
+.topbar{
+  position:relative;z-index:5;flex:none;
+  height:calc(44px + 8px);
+  margin-top:46px; /* skapt rom for safe-area + iOS notch */
+  padding:0 16px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(43,43,43,.08);
+  background:rgba(219,216,210,.0);
+}
+.back-btn{
+  width:36px;height:36px;flex:none;border-radius:11px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(43,43,43,.06);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  padding:0;
+}
+.back-btn:active{transform:scale(.96);}
+.topbar-title{
+  flex:1;text-align:center;font-size:17px;font-weight:700;letter-spacing:-.3px;
+  color:var(--ink-900);
+}
+.meta-pill{
+  flex:none;display:flex;align-items:center;gap:6px;
+  padding:7px 11px;border-radius:11px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(43,43,43,.06);
+  font-size:12px;font-weight:600;color:var(--ink-700);letter-spacing:.1px;
+}
+.meta-pill .temp-fig{font-family:var(--font-serif);font-weight:400;font-size:13.5px;letter-spacing:-.2px;color:var(--ink-900);}
+
+/* Mini-avatar band — 100px, kontekstuelt */
+.mini-avatar-band{
+  position:relative;z-index:4;flex:none;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:12px 16px 6px;
+}
+.mini-avatar{
+  width:100px;height:100px;flex:none;border-radius:50%;
+  background:rgba(255,255,255,.5);
+  border:1px solid rgba(43,43,43,.05);
+  box-shadow:inset 0 2px 8px rgba(43,37,34,.06);
+  display:flex;align-items:flex-end;justify-content:center;
+  overflow:hidden;
+}
+.mini-avatar img{
+  width:88px;height:88px;object-fit:contain;object-position:center bottom;
+  filter:drop-shadow(0 6px 10px rgba(74,68,58,.22));
+}
+.context-line{
+  flex:1;min-width:0;
+}
+.context-line .name{font-size:14px;font-weight:600;color:var(--ink-900);letter-spacing:-.1px;}
+.context-line .mode{font-size:12.5px;font-weight:500;color:var(--ink-700);margin-top:2px;}
+
+/* Scroll-area — alt scrollbart innhold */
+.scroll-area{
+  position:relative;z-index:3;
+  flex:1;min-height:0;
+  overflow-y:auto;overflow-x:hidden;
+  scroll-snap-type:y mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding:8px 16px 120px; /* 120px = sticky CTA-høyde + buffer */
+  scrollbar-width:none;
+}
+.scroll-area::-webkit-scrollbar{display:none;}
+
+/* Hver "snap-card" — fold-regel: 100% over eller 100% under fold */
+.snap-card{
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+  margin-bottom:14px;
+}
+
+/* Lag-card (Ytterst / Mellom / Innerst) — plagg-PNG stikker ut */
+.layer-card{
+  position:relative;
+  width:100%;
+  min-height:138px; /* gir rom til 26-40px utstikker uten klipping */
+  border-radius:22px;
+  background:var(--card-bg);
+  box-shadow:var(--card-shadow);
+  padding:18px 20px;
+  display:grid;align-items:center;
+  cursor:pointer;border:none;text-align:left;
+  font-family:var(--font-sans);
+  transition:transform 120ms ease;
+}
+.layer-card:active{transform:scale(.985);}
+
+/* Eksplisitt 2-kolonne grid — ingen overlap, dedikert plagg-sone */
+.layer-card.dir-right{grid-template-columns:160px 1fr;column-gap:12px;}
+.layer-card.dir-left{grid-template-columns:1fr 160px;column-gap:12px;}
+.layer-card.dir-left .text-block{grid-column:1;text-align:right;}
+.layer-card.dir-right .text-block{grid-column:2;}
+.layer-card.dir-right .plagg-img{grid-column:1;}
+.layer-card.dir-left .plagg-img{grid-column:2;}
+
+.text-block{min-width:0;}
+.eyebrow{
+  font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+}
+.eyebrow.ytterst{color:var(--layer-ytterst);}
+.eyebrow.mellom{color:var(--layer-mellom);}
+.eyebrow.innerst{color:var(--layer-innerst);}
+.plagg-name{
+  font-size:19px;font-weight:600;letter-spacing:-.3px;color:var(--ink-900);
+  margin-top:4px;line-height:1.2;
+}
+.plagg-spec{
+  font-size:13px;font-weight:500;color:rgba(43,43,43,.55);
+  margin-top:4px;line-height:1.35;
+}
+
+/* Plagg-PNG — grid-cell 160px bred, plagg 170×170 stikker ut card-edge.
+   Bruker negativ margin + drop-shadow. Overflow:visible på card holder utstikkeren synlig. */
+.plagg-img{
+  width:170px;height:170px;
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  filter:drop-shadow(2px 14px 18px rgba(74,68,58,.26));
+  pointer-events:none;
+  animation:plaggFloat 6s ease-in-out infinite;
+}
+.layer-card.dir-right .plagg-img{margin-left:-25px;margin-right:-10px;justify-self:start;}
+.layer-card.dir-left .plagg-img{margin-right:-25px;margin-left:-10px;justify-self:end;}
+@keyframes plaggFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+
+/* Sovepose-card — visual divider over, samme card-stil */
+.sovepose-divider{
+  display:flex;align-items:center;gap:10px;margin:8px 4px 14px;
+  scroll-snap-align:start;
+}
+.sovepose-divider .line{flex:1;height:1px;background:rgba(43,43,43,.12);}
+.sovepose-divider .label{
+  font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;
+  color:var(--ink-500);
+}
+
+.sovepose-card{
+  position:relative;
+  width:100%;min-height:160px;
+  border-radius:22px;
+  background:var(--card-bg);
+  box-shadow:var(--card-shadow);
+  padding:14px 20px 18px;
+  cursor:pointer;border:none;text-align:left;
+  font-family:var(--font-sans);
+}
+.sovepose-card:active{transform:scale(.985);}
+.safety-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:9px;
+  background:var(--terracotta-100);
+  color:var(--terracotta-700-on-100);
+  font-size:11.5px;font-weight:700;letter-spacing:.4px;
+  margin-bottom:8px;
+}
+.safety-badge svg{flex:none;}
+.sovepose-body{
+  display:grid;align-items:center;
+  grid-template-columns:1fr 160px;column-gap:12px;
+  min-height:140px;
+}
+.sovepose-body .text-block{grid-column:1;min-width:0;text-align:right;}
+.sovepose-body .plagg-img{
+  grid-column:2;justify-self:end;
+  width:165px;height:165px;
+  margin-right:-20px;
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  filter:drop-shadow(2px 14px 18px rgba(74,68,58,.26));
+  pointer-events:none;
+  animation:plaggFloatB 6.2s ease-in-out infinite;
+}
+@keyframes plaggFloatB{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+
+/* PLUSS — 3 mini-cards horisontal grid */
+.pluss-section{
+  /* hele PLUSS-blokken er ÉN snap-stopp — viktig så grid-rad ikke deles */
+}
+.pluss-eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;
+  color:var(--ink-500);margin:0 2px 10px;
+}
+.pluss-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
+}
+.mini-card{
+  position:relative;
+  aspect-ratio:4/5;
+  border-radius:18px;
+  background:var(--card-bg);
+  box-shadow:0 1px 2px rgba(43,37,34,.04),0 4px 12px rgba(43,37,34,.06);
+  padding:10px 6px 12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;
+  cursor:pointer;border:none;
+  font-family:var(--font-sans);
+}
+.mini-card:active{transform:scale(.97);}
+.mini-card .mini-img{
+  width:62px;height:62px;
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  filter:drop-shadow(0 4px 6px rgba(74,68,58,.18));
+}
+.mini-card .mini-title{
+  font-size:12.5px;font-weight:700;color:var(--ink-900);letter-spacing:-.1px;
+  text-align:center;margin-top:2px;
+}
+.mini-card .mini-spec{
+  font-size:10.5px;font-weight:500;color:rgba(43,43,43,.55);
+  text-align:center;line-height:1.3;
+  padding:0 4px;
+}
+
+/* Sticky CTA — bottom of frame */
+.sticky-cta{
+  position:absolute;left:0;right:0;bottom:0;
+  z-index:10;
+  padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 16px);
+  background:linear-gradient(180deg,rgba(219,216,210,0) 0%, rgba(219,216,210,.92) 28%, rgba(219,216,210,.98) 100%);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.cta-btn{
+  width:100%;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:17px 24px;border-radius:18px;border:none;cursor:pointer;
+  background:linear-gradient(140deg,var(--terracotta-500) 0%,var(--terracotta-700) 100%);
+  box-shadow:0 1px 2px rgba(43,43,43,.06),0 12px 24px rgba(169,73,42,.32);
+  font-family:var(--font-sans);
+  transition:transform 120ms ease;
+}
+.cta-btn:active{transform:translateY(1px) scale(.99);}
+.cta-btn span{font-size:16px;font-weight:600;color:#FFF;letter-spacing:.1px;}
+.cta-btn svg{flex:none;}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .plagg-img,.sovepose-body .plagg-img{animation:none !important;}
+  .scroll-area{scroll-snap-type:none !important;} /* drop snap-animasjon */
+  .layer-card,.sovepose-card,.mini-card,.cta-btn,.back-btn{transition:none !important;}
+}
+</style>
+</head>
+<body>
+  <div class="frame">
+    <main class="screen" aria-label="Slik kler du Liv">
+      <h1 class="sr-only">Påkledning — Slik kler du Liv</h1>
+
+      <!-- Topbar -->
+      <div class="topbar" role="banner">
+        <button class="back-btn" aria-label="Tilbake">
+          <svg width="9" height="16" viewBox="0 0 12 20" fill="none" stroke="#2B2B2B" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg>
+        </button>
+        <div class="topbar-title">Slik kler du Liv</div>
+        <div class="meta-pill" aria-label="Minus 6 grader, lett snø">
+          <span class="temp-fig">−6°</span>
+          <span aria-hidden="true">·</span>
+          <span>Lett snø</span>
+        </div>
+      </div>
+
+      <!-- Mini-avatar 100px, kontekstuell -->
+      <div class="mini-avatar-band" aria-label="Kontekst: Liv, utenfor vogn">
+        <div class="mini-avatar" aria-hidden="true">
+          <img src="../avatars/avatar-A6.png" alt="" onerror="this.style.display='none'">
+        </div>
+        <div class="context-line">
+          <div class="name">Liv · 14 mnd</div>
+          <div class="mode">Utenfor vogn · −6°</div>
+        </div>
+      </div>
+
+      <!-- Scroll-area med snap-fold -->
+      <div class="scroll-area" role="list" aria-label="Anbefalt påkledning i tre lag">
+
+        <!-- LAG 1: YTTERST -->
+        <button class="snap-card layer-card dir-right" type="button" role="listitem" aria-label="Ytterst: Vinterdress, vind- og vanntett">
+          <div class="plagg-img" style="background-image:url(../illustrations/garments/vinterdress.png);" aria-hidden="true"></div>
+          <div class="text-block">
+            <div class="eyebrow ytterst">Ytterst</div>
+            <div class="plagg-name">Vinterdress</div>
+            <div class="plagg-spec">Vind- og vanntett</div>
+          </div>
+        </button>
+
+        <!-- LAG 2: MELLOM -->
+        <button class="snap-card layer-card dir-left" type="button" role="listitem" aria-label="Mellom: Ullsett, holder på varmen og puster">
+          <div class="plagg-img" style="background-image:url(../illustrations/garments/ullsett-tykt.png);" aria-hidden="true"></div>
+          <div class="text-block">
+            <div class="eyebrow mellom">Mellom</div>
+            <div class="plagg-name">Ullsett</div>
+            <div class="plagg-spec">Holder på varmen, puster</div>
+          </div>
+        </button>
+
+        <!-- LAG 3: INNERST -->
+        <button class="snap-card layer-card dir-right" type="button" role="listitem" aria-label="Innerst: Body langermet, mykt mot huden">
+          <div class="plagg-img" style="background-image:url(../illustrations/garments/langermet-ullbody.png);" aria-hidden="true"></div>
+          <div class="text-block">
+            <div class="eyebrow innerst">Innerst</div>
+            <div class="plagg-name">Body, langermet</div>
+            <div class="plagg-spec">Mykt mot huden</div>
+          </div>
+        </button>
+
+        <!-- SOVEPOSE — conditional vis ved vogn-modus; vist her som demo -->
+        <div class="sovepose-divider" aria-hidden="true">
+          <span class="line"></span>
+          <span class="label">I vogn</span>
+          <span class="line"></span>
+        </div>
+
+        <button class="snap-card sovepose-card" type="button" role="listitem" aria-label="Sovepose 2.5 TOG. Sikkerhets-sjekk: gjelder for 18 til 21 grader romtemperatur">
+          <div class="safety-badge" role="note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2L3 6v6c0 5 4 9 9 10 5-1 9-5 9-10V6l-9-4z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+            <span>TOG 2.5 · sjekk romtemp</span>
+          </div>
+          <div class="sovepose-body" style="position:relative;">
+            <div class="plagg-img" style="background-image:url(../illustrations/garments/sovepose-2-5-tog.png);" aria-hidden="true"></div>
+            <div class="text-block">
+              <div class="eyebrow ytterst" style="color:var(--terracotta-700);">Sovepose</div>
+              <div class="plagg-name">Sovepose 2.5 TOG</div>
+              <div class="plagg-spec">For 18–21° romtemp</div>
+            </div>
+          </div>
+        </button>
+
+        <!-- PLUSS-seksjon — ett snap-stopp så grid-raden ikke deles -->
+        <div class="snap-card pluss-section" role="list" aria-label="Pluss tre mindre plagg">
+          <div class="pluss-eyebrow">Pluss</div>
+          <div class="pluss-grid">
+            <button class="mini-card" type="button" role="listitem" aria-label="Lue med ull">
+              <div class="mini-img" style="background-image:url(../illustrations/garments/lue-m-ull.png);" aria-hidden="true"></div>
+              <div class="mini-title">Lue</div>
+              <div class="mini-spec">Med ull</div>
+            </button>
+            <button class="mini-card" type="button" role="listitem" aria-label="Vindvotter med skall">
+              <div class="mini-img" style="background-image:url(../illustrations/garments/vindvotter-skall.png);" aria-hidden="true"></div>
+              <div class="mini-title">Votter</div>
+              <div class="mini-spec">Vindtett skall</div>
+            </button>
+            <button class="mini-card" type="button" role="listitem" aria-label="Ullsokker">
+              <div class="mini-img" style="background-image:url(../illustrations/garments/ullsokker.png);" aria-hidden="true"></div>
+              <div class="mini-title">Ullsokker</div>
+              <div class="mini-spec">Holder tær varme</div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sticky CTA bottom -->
+      <div class="sticky-cta">
+        <button class="cta-btn" type="button" aria-label="Klar for tur">
+          <span>Klar for tur</span>
+          <svg width="22" height="13" viewBox="0 0 26 14" fill="none" stroke="#FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h20"/><path d="M17 2l5 5-5 5"/></svg>
+        </button>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

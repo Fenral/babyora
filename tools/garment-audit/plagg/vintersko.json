@@ -1,0 +1,114 @@
+{
+  "claude": {
+    "id": "vintersko",
+    "dbString": "vintersko",
+    "kategori": "ekstra-fotter",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Plagget har komplett what+when i garment-info.ts (linje 209-212). What ('Vintersko med matt gummi-såle') og when ('Frost-dager med utelek') følger samme korte mønster/tone/lengde som søsken i ekstra-fotter (sko, toffel-sko, sandaler, vintersko-isolerte). Dedikert whyForGarment-gren finnes (linje 448-450), IKKE fallback. Liten innholdssvakhet trekkes opp i mål 4: when-teksten kaller 0-4 °C-plagget 'frost', men selve strukturen/feltene er på plass."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\vintersko.png finnes. db-strengen 'vintersko' er mappet til id 'vintersko' i garment-illustrations.ts (linje 75), som matcher GarmentId-nøkkelen i garment-info.ts og filnavnet vintersko.png. Mapping er konsistent og plausibel. Visuell dom utstår til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 21,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig: vintersko (uisolert, gummisåle for grep) velges kun i kald-båndet 0-4 °C feels-like for aktiv utelek, der frostskade-risiko er lav og isolerte sko ville vært unødig. Alders-modifieren (#17) håndterer kvelnings-/utviklingshensyn riktig ved å fjerne sko for <9 mnd (krabbere) og nedjustere 9-15 mnd. Ingen overoppheting/SIDS/kvelning/frost-fare reises av dette valget — fottøy i 0-4 °C er godt dekket av AAP-HC og Capital Area Pediatrics sine cold-weather-grenser. Ingen web-søk nødvendig. Trekk: ingen kilde i sources.ts dekker spesifikt fottøy-isolasjonsterskel, men dette er ikke en helsefare-luke, kun en granularitets-luke.",
+      "trace": "baseTable.utelek.kald (feels 0-4 °C) → ekstra: ['lue','votter','vintersko']. Dette er ENESTE base-tabell-forekomst av literalstrengen 'vintersko' (frost/streng_frost/ekstrem bruker 'vintersko isolerte'). Deretter modifiers.ts #17 (linje 481-518): child.ageMonths<9 → vintersko FJERNET (regex), erstattet av 'tykke ullsokker' + babyDressCovers-note; 9-15 mnd → 'vintersko' byttet til 'tøffel-sko + tykke ullsokker'; 16-24 mnd → uendret. Netto: 'vintersko' når sluttbruker KUN ved utelek + feels 0-4 °C + alder ≥16 mnd. conflicts.ts/softBlocks.ts/safety.ts rører ikke vintersko (kun teppe/sovepose/hodeplagg/vinterdress-regler).",
+      "kilder": [
+        "https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Dressing-Your-Newborn.aspx",
+        "https://www.capitalareapediatrics.com/blog/dressing-your-child-for-cold-weather-in-virginia-a-parent-s-guide"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "whyForGarment-grenen (linje 449) interpolerer faktisk temp ('feste på vått eller frossent underlag ved X °C') og er korrekt/selv-korrigerende — den matcher trace. PROBLEM: statisk when-tekst sier 'Frost-dager med utelek', men trace viser at vintersko velges i KALD-båndet 0-4 °C (feels-like over frysepunktet), mens det egentlige frost-båndet (-7 til 0 °C) bruker 'vintersko isolerte'. 'Frost-dager' er altså drift: det villeder foreldre til å tro at uisolerte vintersko hører hjemme i minusgrader, der appen faktisk anbefaler de isolerte. Dette kan føre til underkledde føtter hvis foreldre velger uisolert sko basert på when-teksten i ekte frost. Severity hoy fordi det er påkledningsvilledende, om enn moderat (why-grenen demper effekten i UI)."
+    },
+    "alternativer": {
+      "score": 10,
+      "kommentar": "Alternativ er korrekt og symmetrisk dekket: alternatives.ts (linje 105-114) lister 'vintersko' som alternativ UNDER 'vintersko isolerte' (tykkelse-trinn ned). Det er det rette retning-paret — fra det isolerte primær-valget kan foreldre se det uisolerte som lettere alternativ. Et eget alternativ-oppslag PÅ 'vintersko' selv (f.eks. opp til isolerte) er ikke strengt nødvendig siden trinnet allerede eksponeres fra motsatt side, og vintersko er allerede det letteste vinter-trinnet over vanlige sko. Ingen manglende ull↔fleece/dun↔syntet-akse er relevant for et skall-/gummisåle-produkt."
+    },
+    "total": 87,
+    "verdikt": "Solid plagg-oppføring med korrekt mapping, PNG på plass, forsvarlig og snevert seleksjons-vindu (utelek, 0-4 °C, ≥16 mnd) og god alders-modifier. Hovedfunn: when-teksten 'Frost-dager' mismatcher det faktiske kald-båndet 0-4 °C der vintersko velges (frost-båndet bruker vintersko-isolerte) — bør rettes for å unngå villedende påkledning. Ingen sikkerhetskritiske avvik.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "when-teksten i garment-info.ts (linje 211) sier 'Frost-dager med utelek', men trace viser at 'vintersko' kun velges i kald-båndet 0-4 °C (feels-like over frysepunktet). Det egentlige frost-båndet (-7 til 0 °C) bruker 'vintersko isolerte'. Teksten villeder foreldre til å tro uisolerte vintersko er for minusgrader, der appen faktisk anbefaler isolerte — risiko for underkledde føtter hvis foreldre handler på teksten.",
+        "forslag": "Endre when til å beskrive det faktiske vinduet, f.eks. 'Kjølige til kalde dager (ca 0-5 °C) med utelek på vått eller frossent underlag. For minusgrader: bruk isolerte vintersko.' (Tall er forslag — bekreft mot bandForTemp-tersklene; rør ikke selve tersklene.)",
+        "kilde": "Trace: baseTable.utelek.kald (0-4 °C) vs baseTable.utelek.frost (-7-0 °C, vintersko isolerte) i tables.ts"
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "Ingen kilde i sources.ts adresserer spesifikt terskelen for når uisolert vs isolert fottøy er nødvendig hos småbarn. Seleksjonen er fornuftig, men hvilen på generelle cold-weather-grenser (AAP-HC, Capital Area Peds) snarere enn en fottøy-spesifikk evidens.",
+        "forslag": "Vurder å legge til en fottøy/frostskade-spesifikk pediatrisk referanse i sources.ts hvis fottøy-bånd skal forsvares eksplisitt i en helsesøster-review. Ikke nødvendig for sikkerhet — kun for sporbarhet.",
+        "kilde": "sources.ts (11 kilder, ingen fottøy-isolasjons-spesifikk)"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 18,
+      "kommentar": "Plagget er korrekt strukturert: id, kategori (ekstra-fotter), hva/når-tekster og en tydelig seleksjons-trace med aldersmodifier. Trekk for at det ikke finnes eksplisitt kobling/henvisning til søsterplagget 'vintersko isolerte' i dataene — uten den koblingen er det vanskelig å validere at de to variantene dekker temperaturbåndene uten hull eller overlapp."
+    },
+    "utseende": {
+      "score": 15,
+      "kommentar": "Bildet viser tydelig en vintersko sett forfra: semsket skaft, borrelås-klaff, vattert mellomparti og kraftig yttersåle — riktig plaggtype og fin, konsistent illustrasjonsstil. To problemer: (1) sålens underside er blank magenta/rosa, som visuelt motsier 'matt gummi-såle' i hva-teksten og ser ut som en fargeartefakt snarere enn et designvalg; (2) ingenting i illustrasjonen skiller denne uisolerte modellen fra 'vintersko isolerte' — for foreldre som blar mellom plagg er de trolig visuelt umulige å skille, noe som svekker bildets funksjon som differensiator."
+    },
+    "seleksjon": {
+      "score": 19,
+      "kommentar": "Kjerneterskelen er pediatrisk forsvarlig: uisolert vintersko ved utelek 0-4 °C (over frysepunktet) er rimelig, og at frost/streng frost rutes til isolert variant er riktig konservativt. Trekk for to ting Claudes første analyse ikke fanget: (a) modifier for 9-15 mnd gir 'tøffel-sko + tykke ullsokker' ved utelek 0-4 °C — barn i denne gruppen er ofte gående/krabbende ute på kaldt og potensielt vått underlag, og myke tøffelsko uten gummisåle er tvilsomt der; (b) som Claude påpekte (enig, lav→medium): det finnes ingen fottøy-spesifikk kilde for grensen uisolert/isolert, alt hviler på generelle kuldegrenser."
+    },
+    "tekstLogikk": {
+      "score": 15,
+      "kommentar": "Claudes hoy-funn bekreftes og er det alvorligste avviket: når-teksten sier 'Frost-dager med utelek', men motoren velger plagget UTELUKKENDE i kald-båndet 0-4 °C — selve frost-båndet bruker 'vintersko isolerte'. Teksten beskriver altså presis det scenariet plagget IKKE velges i. Praktisk risiko: forelder som kler barnet manuelt etter app-teksten kan bruke uisolert sko i minusgrader → underkledde føtter. Hva-teksten ('matt gummi-såle') stemmer heller ikke med bildets blanke rosa såle. 87/100 totalt fra første analyse er for høyt når kjerneteksten peker på feil temperaturbånd."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "Alternativkjeden er gjennomtenkt: isolert variant for frost, ullsokk-erstatning for de minste, og tøffelsko-mellomtrinn for 9-15 mnd. Trekk for at 9-15 mnd-alternativet er svakt begrunnet for aktiv utelek (se mål 3), og for at det ikke er dokumentert hva som skjer i grensen 4 °C → mild (overlapp/hull mot lettere fottøy er ikke synlig i trace)."
+    },
+    "total": 75,
+    "verdikt": "Godkjennes ikke i nåværende form. Plagget er strukturelt og seleksjonsmessig solid, men når-teksten ('frost-dager') beskriver eksakt det båndet motoren IKKE bruker plagget i, og må omformuleres (f.eks. 'Kalde dager rett over frysepunktet') før publisering. Bildets rosa, blanke såle bør korrigeres eller hva-teksten justeres, og 9-15 mnd-modifieren bør revurderes for utelek.",
+    "uenig_med_claude": true,
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "Enig med Claudes funn: når-teksten 'Frost-dager med utelek' motsier trace — plagget velges kun i utelek.kald (0-4 °C), mens frost-båndet bruker 'vintersko isolerte'. Tekst peker foreldre mot å bruke uisolert sko i minusgrader.",
+        "forslag": "Endre når-tekst til noe à la 'Kalde dager med utelek, rett over frysepunktet (ca. 0-4 °C)'. Rør ikke tersklene — kun teksten."
+      },
+      {
+        "severity": "medium",
+        "mal": 3,
+        "beskrivelse": "Nytt funn Claude ikke hadde: modifier #17 gir 9-15 mnd 'tøffel-sko + tykke ullsokker' ved utelek 0-4 °C. Gående barn 12-15 mnd på kaldt/vått underlag i myke tøffelsko uten gummisåle er pediatrisk tvilsomt.",
+        "forslag": "Differensier 9-15 mnd: tøffelsko kun for ikke-gående (vogn/bæres), vintersko i liten størrelse for gående. Krever produktbeslutning, ikke terskel-endring."
+      },
+      {
+        "severity": "medium",
+        "mal": 2,
+        "beskrivelse": "Nytt funn: bildets såle har blank magenta/rosa underside som motsier hva-teksten 'matt gummi-såle' og fremstår som fargeartefakt i illustrasjonen.",
+        "forslag": "Regenerer/juster illustrasjonen med matt mørk gummisåle, eller fjern 'matt' fra hva-teksten dersom rosa såle er bevisst design."
+      },
+      {
+        "severity": "medium",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen gir ingen visuell differensiering mot 'vintersko isolerte' — variantene kan ikke skilles av bruker.",
+        "forslag": "Legg til synlig isolasjonsmarkør på isolert variant (f.eks. fôr-kant i åpningen) eller tydelig tekstlabel i UI."
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "Bekrefter Claudes lav-funn: ingen fottøy-spesifikk kilde for terskelen uisolert vs isolert; logikken hviler på generelle cold-weather-grenser.",
+        "forslag": "Dokumenter kilde (f.eks. helsestasjons-/Helsenorge-veiledning om fottøy og kulde) i kildelisten uten å endre terskler."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Trace viser ikke hva som overtar over 4 °C (mild-båndet) — potensielt udokumentert hull eller overlapp mot lettere fottøy.",
+        "forslag": "Verifiser og dokumenter nabobåndet i trace slik at hele temperaturskalaen for ekstra-fotter er sporbar."
+      }
+    ]
+  }
+}

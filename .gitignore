@@ -1,0 +1,55 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+.vercel
+.superpowers/
+
+# Capacitor sync-output — bygges fersk i CI, aldri commited
+ios/App/App/public/
+android/app/src/main/assets/public/
+
+/iter*.png
+/klemeg-*.png
+/mock-*.png
+
+# Lokale rembg-backups (RGB-originaler) — sendes ikke til Vercel
+public/illustrations/characters/_rgb-backup/
+_tmp_transparent/
+.env*
+!.env.example
+
+# Pilot-iterasjons-bilder (kun lokal referanse; MVP-bildene er i public/avatars/mvp/)
+public/avatars/pilot/
+
+# Playwright store-bootstrap
+.playwright-edge-profile/
+.playwright-mcp/
+.playwright-screenshots/
+.apple-iap-key.json
+
+# Pre-Pro asset backup (kun lokal rollback-mulighet)
+tmp/
+public/avatars/.backup-pre-f28-12/
+.playwright-copilot-profile/

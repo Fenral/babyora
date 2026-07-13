@@ -1,0 +1,107 @@
+{
+  "claude": {
+    "id": "ull-pyjamas",
+    "dbString": "ull-pyjamas",
+    "kategori": "mellomlag",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Har komplett what+when i garment-info.ts (linje 107-110). What ('Ull-pyjamas for kjølige soverom. Holder varmen jevnt gjennom natten.') matcher tone og lengde til søsken-plagg tynn-pyjamas/pyjamas i samme mellomlag-kategori. Dedikert whyForGarment-gren finnes — IKKE fallback: soevn-grenen linje 325-330 fanger 'ull-pyjamas' eksplisitt, og mellomlag-grenen linje 372-374 fanger den også. Strukturelt solid. Trekker 3 poeng fordi when-teksten driver fra faktisk seleksjon (se tekstLogikk) — strukturen er der, men innholdet er ikke kalibrert mot tabellen."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet funnet: public/illustrations/garments/ull-pyjamas.png. Mapping i garment-illustrations.ts linje 40: 'ull-pyjamas' (db-streng) -> 'ull-pyjamas' (id) — 1:1, identisk med hvordan baseTable bruker strengen i soevn kald/frost/streng_frost/ekstrem. Plausibelt og konsistent. Kan ikke vurdere selve bildet visuelt (overlatt til Fable 5 + Claude)."
+    },
+    "seleksjon": {
+      "score": 22,
+      "trace": "ull-pyjamas velges KUN i activity=soevn, kategori=mellomlag, i de fire kaldeste rom-temp-båndene: kald (0-4 °C, tables.ts linje 167-171), frost (linje 172-176), streng_frost (linje 177-181) og ekstrem (linje 182-186). I alle fire er antrekket identisk: langermet ullbody + ullsokker + ull-pyjamas + sovepose 3.5 TOG. I kjolig-båndet (5-9 °C, linje 162-166) og mild (10-15 °C, linje 157-161) brukes vanlig 'pyjamas', IKKE ull-pyjamas. Modifier-interaksjoner: for soevn kortslutter modifiers.ts tidlig (linje 89-140) og endrer ingen lag — ull-pyjamas verken legges til eller fjernes der. conflicts.ts CK-8 (linje 155) bytter pyjamas->kortermet body kun ved feels>21 °C, og CK-3 (linje 96) justerer KUN sovepose-TOG, ikke pyjamas — ingen av disse rører ull-pyjamas i kald/frost-båndene. softBlocks SB-3 (roomC>=24) og SB-2 (max 12 lag ved feels>=-5) fjerner kun teppe/varmepose, aldri pyjamas. safety.ts HB-reglene rører ikke pyjamas. Konklusjon: ull-pyjamas er stabilt valgt ved romtemp <5 °C under søvn. Pediatrisk forsvarlig: kombinasjonen ull-pyjamas + sovepose 3.5 TOG ved rom <5 °C er konservativ og innenfor LT-TOG/HALO-tabellene (3.5 TOG for kjølige rom). CK-3 maxTOGForRoom (conflicts.ts linje 48-55) tillater 3.5 TOG ved roomC<16, så ingen TOG-nedjustering trigges — ull + 3.5 TOG matcher kald rom uten overopphetingsrisiko. Ingen helse-spørsmål som de 11 kildene ikke dekker; ingen web-søk nødvendig.",
+      "score_dup": 22,
+      "kilder": [],
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig og godt sporet. Trekker 3 poeng for ett reelt avvik mellom realistisk bruk og bånd-design: ull-pyjamas er bundet til rombånd <5 °C, men norsk innendørs soverom er sjelden under 5 °C. Tabellens egen kommentar (linje 142) erkjenner at frost/streng_frost/ekstrem ikke er realistiske romtemp men gir bevisst konservative anbefalinger. Det er forsvarlig, men betyr at ull-pyjamas i praksis nesten aldri trigges (kun ved rom 0-4 °C). Ikke en sikkerhetsfeil — en realisme-/kalibrerings-observasjon."
+    },
+    "tekstLogikk": {
+      "score": 18,
+      "kommentar": "DRIFT FUNNET. when-teksten i garment-info.ts linje 109 sier 'Kjølige rom (<18 °C) eller frost-grader om natta.' Men baseTable velger ull-pyjamas KUN i bånd under 5 °C (kald 0-4, frost, streng_frost, ekstrem). Ved 5-17 °C rom (kjolig+mild+varm-båndene) bruker tabellen vanlig 'pyjamas', ikke ull-pyjamas. '<18 °C' er altså ~13 grader for vidt og villeder foreldre til å tro ull-pyjamas anbefales ved 15 °C-rom, der motoren faktisk gir tynnere pyjamas. whyForGarment-grenen (linje 326, soevn) er derimot korrekt og uskadelig: 'Pyjamas legger på et mellomlag når romtemperaturen rundt X °C krever litt ekstra varme i tillegg til soveposen' — den er dynamisk (bruker faktisk feels) og motsier ikke tabellen. Hovedproblemet er statisk when-tekst. Drift som kan villede påkledning -> severity hoy."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Ull-pyjamas har INGEN oppføring i alternatives.ts. Et reelt og meningsfullt alternativ mangler: 'pyjamas' (bomull) er det naturlige tykkelse-/material-trinnet ned, helt parallelt med eksisterende mønster i fila (lett kjøredress->kjøredress, vintersko isolerte->vintersko, lue m/ull->lue tynn, sovepose 1.0->0.5). For et brand der ull er default, ville et synlig 'bomulls-pyjamas hvis rommet ikke er fullt så kaldt'-alternativ være konsistent og nyttig — særlig gitt at motoren allerede bytter mellom pyjamas og ull-pyjamas ved 5 °C-grensen. Trekker poeng for manglende oppføring; ikke kritisk siden fraværet bare betyr at UI ikke viser (!)-ikon."
+    },
+    "total": 83,
+    "verdikt": "Solid plagg med trygg seleksjon og korrekt mapping/PNG, men ett hoy-funn: when-teksten ('<18 °C') overdriver bruksområdet kraftig mot den faktiske bånd-grensen (<5 °C), og ull-pyjamas mangler et naturlig bomulls-alternativ i alternatives.ts. Ingen sikkerhetsavvik mot de 11 kildene.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "Drift mellom when-tekst og baseTable: garment-info.ts linje 109 sier ull-pyjamas brukes ved 'Kjølige rom (<18 °C)', men tabellen velger den faktisk kun i bånd under 5 °C (kald/frost/streng_frost/ekstrem). Ved 5-17 °C rom gir motoren vanlig 'pyjamas'. Teksten overdriver bruksområdet med ~13 grader og kan villede foreldre til for varmt nattøy ved milde rom.",
+        "forslag": "Juster when-teksten til å matche faktisk bånd-grense, f.eks. 'Kalde soverom (under ca 5 °C) — sjelden nødvendig i et normalt oppvarmet rom.' Rør ikke selve terskelen i tables.ts; kun teksten skal kalibreres.",
+        "kilde": "tables.ts soevn-bånd linje 144-187 + garment-info.ts linje 109"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "ull-pyjamas mangler oppføring i alternatives.ts. Et naturlig material-/tykkelse-alternativ (vanlig bomulls-'pyjamas') tilbys ikke, til tross for at motoren selv bytter mellom de to ved 5 °C-grensen og at alle søsken-trinn (kjøredress, vintersko, lue, sovepose) har slike alternativer.",
+        "forslag": "Legg til ITEM_ALTERNATIVES-oppføring for 'ull-pyjamas' med alternativ 'pyjamas' (bomull) + i18n-keys alternatives.items.pyjamasBomull.{when,whyPrimary}, der whyPrimary forklarer ull-fordel ved fukt/temp-regulering om natten.",
+        "kilde": "alternatives.ts ITEM_ALTERNATIVES linje 44-145 (mønster) + merino-kids kilde sources.ts linje 89-94"
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "Realisme-observasjon (ikke feil): ull-pyjamas er bundet til rombånd <5 °C, som er urealistisk lavt for et norsk innendørs soverom. I praksis trigges plagget nesten aldri. Tabellens egen kommentar (linje 142) erkjenner dette og kaller anbefalingen bevisst konservativ.",
+        "forslag": "Ingen kode-endring nødvendig — bevisst design. Vurder evt. å la helsesøster-validering bekrefte at <5 °C-grensen for ull-pyjamas er ønsket, eller om kjolig-båndet (5-9 °C) burde bruke ull-pyjamas istedenfor bomulls-pyjamas for nordiske kjølige rom.",
+        "kilde": "tables.ts linje 129-143 (kommentar) + LT-TOG/LT-RT i sources.ts"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 18,
+      "kommentar": "Plagget har komplett datasett: id, kategori (mellomlag), hva/når-tekst og tydelig trace med eksplisitt kombinasjon (ullbody + ullsokker + sovepose 3.5 TOG). Trekk for at 'når'-feltet blander to ulike konsepter (romtemperatur <18 °C og frost-grader) uten å skille soverom fra utesoving/vognsoving — strukturen tvinger to bruksscenarier inn i ett felt."
+    },
+    "utseende": {
+      "score": 16,
+      "kommentar": "Bildet viser et ribbestrikket todelt sett (genser med skuldertrykknapper + bukse med ribb-mansjetter) i dempet brunrosa — stilren render uten synlige artefakter, og ribbeteksturen leser plausibelt som ull. Svakhet: teksturen kan like gjerne tolkes som bomullsribb, så visuell differensiering mot vanlig 'pyjamas' avhenger helt av at bomullsvarianten ser tydelig annerledes ut. Helsvart bakgrunn bør verifiseres mot øvrig bildestil i appen."
+    },
+    "seleksjon": {
+      "score": 22,
+      "kommentar": "Kombinasjonen ullbody + ull-pyjamas + ullsokker + 3.5 TOG ved rom <5 °C er pediatrisk forsvarlig — 3.5 TOG anbefales typisk under ~16 °C, og ekstra ull-lag er riktig respons på de fire kaldeste båndene. Viktig: at vanlig pyjamas tar over ved 5-17 °C er en STYRKE, ikke en svakhet — det beskytter mot overoppheting (SIDS-relevant). Jeg er delvis uenig i Claudes realisme-funn: rom <5 °C er sjeldent for norske soverom, men helt realistisk for vognsoving ute og uoppvarmet hytte — som 'frost-grader om natta' i teksten antyder. Trigger-terskelen kan altså være riktig; problemet ligger i teksten, ikke tabellen."
+    },
+    "tekstLogikk": {
+      "score": 11,
+      "kommentar": "Klar og alvorlig mismatch, og jeg vurderer den som verre enn Claudes 1. analyse antyder: 'kjølige rom (<18 °C)' dekker det norske NORMAL-intervallet for barnesoverom (16-19 °C). En forelder som leser kortet manuelt kan legge ull-pyjamas under sovepose ved 16-17 °C — et reelt overopphetingsscenario, selv om motoren selv aldri ville valgt det. Avstanden på ~13 °C mellom tekst og faktisk seleksjon er ikke bare upresis, den peker i utrygg retning. 'Hva'-teksten ('kjølige soverom') misframer i tillegg plaggets reelle nisje (ekstremkulde/utesoving)."
+    },
+    "alternativer": {
+      "score": 6,
+      "kommentar": "Bekrefter Claudes funn: bomulls-'pyjamas' mangler som tynnere alternativ i alternatives.ts. Konsekvensen er lav siden motoren bytter automatisk ved 5 °C, men for brukere som blar i alternativer manuelt er nedtrappingsstien usynlig — nettopp i det scenariet der tekstfeilen i mål 4 kan villede."
+    },
+    "total": 73,
+    "verdikt": "Trenger revisjon før godkjenning: motorlogikken er trygg og forsvarlig, men 'når'-teksten må skrives om så den matcher faktisk seleksjon (<5 °C / frost / utesoving) — dagens formulering kan lede foreldre til for varmt nattøy i normale soverom.",
+    "uenig_med_claude": true,
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "Bekrefter og skjerper Claudes hovedfunn: '<18 °C' i når-teksten vs. faktisk trigger <5 °C er ikke bare en overdrivelse på ~13 °C — den omfatter normalintervallet for norske barnesoverom og kan føre til overoppheting (ull-pyjamas + sovepose ved 16-17 °C). Claudes total på 83 undervurderer denne risikoen.",
+        "forslag": "Endre 'når' til f.eks.: «Svært kalde rom (under 5 °C), uoppvarmet hytte eller soving ute i frost — alltid sammen med ullbody og varm sovepose.»"
+      },
+      {
+        "severity": "medium",
+        "mal": 3,
+        "beskrivelse": "Uenig i Claudes realisme-funn (lav/mål3): <5 °C er ikke urealistisk, men en legitim nisje for vognsoving ute og hytte — noe 'frost-grader'-formuleringen selv antyder. Funnet bør omklassifiseres fra 'tabellen er for konservativ' til 'teksten kommuniserer ikke nisjen'.",
+        "forslag": "Behold terskelen (rør ikke tall), men gjør utesoving/hytte eksplisitt i hva/når-tekst slik at plagget faktisk blir funnet av målgruppen som trenger det."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Bekrefter: vanlig bomulls-pyjamas mangler som alternativ i alternatives.ts. Lav teknisk konsekvens (motoren bytter selv ved 5 °C), men manuell nedtrappingssti mangler.",
+        "forslag": "Legg til 'pyjamas' som alternativ med relasjonsetikett «tynnere variant for rom 5-17 °C»."
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Bildet er korrekt og rent, men ribbetekstur alene differensierer ikke entydig ull fra bomull — risiko for at brukere ikke ser forskjell på de to pyjamas-kortene.",
+        "forslag": "Verifiser at bomulls-pyjamasens illustrasjon har tydelig annen tekstur/farge, eller legg til et lite ull-ikon/merke på ull-varianter."
+      }
+    ]
+  }
+}

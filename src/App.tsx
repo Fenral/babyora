@@ -1,0 +1,428 @@
+/**
+ * App.tsx — F60 routing (Claude Design port).
+ *
+ * Tab-state + drill-state + sheet-state. Alle hooks før conditional returns.
+ *
+ * Native-feel #9 (2026-06-26): screens lastes nå via React.lazy + Suspense.
+ * Reduserer initial JS-bundle: bare aktiv rute hentes. Fallback er en minimal
+ * canvas-skeleton som matcher app-shell (ingen layout-shift). Type-importen
+ * `GuideHubTarget` blir værende statisk siden type-imports ikke trekker kode.
+ */
+import { lazy, Suspense, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import type { TabKey } from './types/nav';
+import { useChildren } from './state/children-store';
+import { useTheme } from './state/theme-store';
+import { useAutoLocationRefresh } from './hooks/useAutoLocationRefresh';
+import { BottomTabBar } from './components/BottomTabBar';
+
+import type { GuideHubTarget } from './screens/GuideHubScreen';
+import type { Recommendation } from './lib/wool-layers/types';
+
+const HjemScreen = lazy(() =>
+  import('./screens/HjemScreen').then((m) => ({ default: m.HjemScreen })),
+);
+const PaakledningScreen = lazy(() =>
+  import('./screens/PaakledningScreen').then((m) => ({ default: m.PaakledningScreen })),
+);
+const UkeScreen = lazy(() =>
+  import('./screens/UkeScreen').then((m) => ({ default: m.UkeScreen })),
+);
+const GuideHubScreen = lazy(() =>
+  import('./screens/GuideHubScreen').then((m) => ({ default: m.GuideHubScreen })),
+);
+const FinnAntrekkScreen = lazy(() =>
+  import('./screens/FinnAntrekkScreen').then((m) => ({ default: m.FinnAntrekkScreen })),
+);
+const PlaggbibliotekScreen = lazy(() =>
+  import('./screens/PlaggbibliotekScreen').then((m) => ({ default: m.PlaggbibliotekScreen })),
+);
+const MinGarderobeScreen = lazy(() =>
+  import('./screens/MinGarderobeScreen').then((m) => ({ default: m.MinGarderobeScreen })),
+);
+const TogGuideScreen = lazy(() =>
+  import('./screens/TogGuideScreen').then((m) => ({ default: m.TogGuideScreen })),
+);
+const VarmEllerKaldScreen = lazy(() =>
+  import('./screens/VarmEllerKaldScreen').then((m) => ({ default: m.VarmEllerKaldScreen })),
+);
+const VinterprogramScreen = lazy(() =>
+  import('./screens/VinterprogramScreen').then((m) => ({ default: m.VinterprogramScreen })),
+);
+const InnstillingerScreen = lazy(() =>
+  import('./screens/InnstillingerScreen').then((m) => ({ default: m.InnstillingerScreen })),
+);
+const OnboardingScreen = lazy(() =>
+  import('./screens/OnboardingScreen').then((m) => ({ default: m.OnboardingScreen })),
+);
+
+/**
+ * RouteSkeleton — minimal canvas-fallback mens en lazy-route hentes.
+ * Bruker bg-canvas-token + tar full høyde slik at app-shell ikke kollapser.
+ * `role="status"` + sr-only-tekst gjør at skjermlesere annonserer lasting,
+ * uten å bryte prefers-reduced-motion (ingen animasjon).
+ */
+function RouteSkeleton(): ReactElement {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      style={{
+        minHeight: '100vh',
+        background: 'var(--bg-canvas)',
+      }}
+    >
+      <span className="sr-only">Laster skjerm …</span>
+    </div>
+  );
+}
+
+const TAB_TITLES: Record<TabKey, string> = {
+  hjem: 'Hjem · Babyora',
+  plan: 'Uke · Babyora',
+  guide: 'Guide · Babyora',
+  innstillinger: 'Innstillinger · Babyora',
+};
+
+/**
+ * Drill-state bærer påkledning-context fra opener-skjermen (Hjem / Uke) inn i
+ * popupen. Slik unngår vi at PaakledningScreen recomputer recommendation fra
+ * sin EGEN local activity/vognMode (default 'utelek') og dermed ignorerer
+ * Sivert sine toggle-valg på Hjem. context kan være undefined for bakover-
+ * kompatibilitet (test/preview-mounts uten payload).
+ */
+type PaakledningContext = {
+  recommendation: Recommendation | null;
+  activity: 'utelek' | 'vogn';
+  vognMode: 'awake' | 'sleeping';
+};
+
+type Drill =
+  | null
+  | { kind: 'paakledning'; context?: PaakledningContext }
+  | { kind: 'guide'; target: GuideHubTarget };
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+export default function App(): ReactElement {
+  // Førstegangs-flyt: har familien ingen barn ennå, vises OnboardingScreen
+  // i stedet for app-shellet. Vi styrer på egen `onboardingDone`-state (ikke
+  // rått `needsOnboarding`), fordi OnboardingScreen kaller completeOnboarding()
+  // ALLEREDE på steg 4 (som flipper needsOnboarding→false) men skal fortsatt
+  // vise velkomst- + Pluss-teaser-stegene før den melder ferdig via onComplete.
+  const { needsOnboarding } = useChildren();
+  const [onboardingDone, setOnboardingDone] = useState(!needsOnboarding);
+  // Stille GPS-oppslag ved app-åpning/forgrunn — kun når «Automatisk
+  // posisjon» er slått på i Innstillinger (locationMode==='auto'). Fikser
+  // at by/vær ble stående på forrige sted når familien reiser.
+  useAutoLocationRefresh();
+  const [tab, setTab] = useState<TabKey>('hjem');
+  const [drill, setDrill] = useState<Drill>(null);
+  const themeMode = useTheme((s) => s.mode);
+
+  useEffect(() => {
+    document.documentElement.lang = 'nb';
+  }, []);
+
+  // Theme-mode → data-theme på <html>. 'auto' fjerner attributtet slik at
+  // prefers-color-scheme styrer. Boot-scriptet i index.html setter samme
+  // attributt FØR React mounter for å unngå FOUC; denne useEffect-en
+  // synker bare etterfølgende endringer fra theme-toggle.
+  useEffect(() => {
+    if (themeMode === 'auto') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', themeMode);
+    }
+  }, [themeMode]);
+
+  useEffect(() => {
+    document.title = TAB_TITLES[tab];
+  }, [tab]);
+
+  const onNavigate = (next: TabKey) => {
+    setDrill(null);
+    setTab(next);
+  };
+
+  const reduceMotion = prefersReducedMotion();
+
+  const mainRef = useRef<HTMLElement | null>(null);
+  const onBackRef = useRef<(() => void) | null>(null);
+  const canGoBack = drill !== null || tab !== 'hjem';
+
+  // A11y (2026-07-11): når onboarding fullføres og app-shellet tar over, flytt
+  // fokus til <main> så skjermlesere annonserer Hjem og tab-fokus ikke faller
+  // til <body>. Fyres KUN på selve overgangen — ikke ved vanlig app-start for
+  // en returnerende bruker (da starter onboardingDone allerede true).
+  const cameFromOnboarding = useRef(!onboardingDone);
+  useEffect(() => {
+    if (onboardingDone && cameFromOnboarding.current) {
+      cameFromOnboarding.current = false;
+      mainRef.current?.focus();
+    }
+  }, [onboardingDone]);
+
+  useEffect(() => {
+    if (!canGoBack) {
+      onBackRef.current = null;
+      return;
+    }
+    onBackRef.current = () => {
+      if (drill !== null) {
+        setDrill(null);
+      } else {
+        setTab('hjem');
+      }
+    };
+  }, [drill, tab, canGoBack]);
+
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+
+    const EDGE_TRIGGER_PX = 24;
+    const COMMIT_THRESHOLD_PX = 60;
+    const reduce = prefersReducedMotion();
+
+    let tracking = false;
+    let startX = 0;
+    let startY = 0;
+    let currentDx = 0;
+    let committed = false;
+
+    const resetTransform = () => {
+      if (reduce) return;
+      el.style.transform = '';
+      el.style.transition = 'transform 200ms ease-out';
+      window.setTimeout(() => {
+        if (el) el.style.transition = '';
+      }, 220);
+    };
+
+    const onTouchStart = (ev: TouchEvent) => {
+      if (ev.touches.length !== 1) return;
+      const t = ev.touches[0];
+      if (t.clientX > EDGE_TRIGGER_PX) return;
+      if (!onBackRef.current) return;
+      tracking = true;
+      committed = false;
+      startX = t.clientX;
+      startY = t.clientY;
+      currentDx = 0;
+      if (!reduce) {
+        el.style.transition = '';
+      }
+    };
+
+    const onTouchMove = (ev: TouchEvent) => {
+      if (!tracking) return;
+      const t = ev.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12) {
+        tracking = false;
+        resetTransform();
+        return;
+      }
+      if (dx < 0) {
+        currentDx = 0;
+        if (!reduce) el.style.transform = '';
+        return;
+      }
+      currentDx = dx;
+      if (!reduce) {
+        el.style.transform = `translate3d(${dx}px, 0, 0)`;
+      }
+      if (dx >= COMMIT_THRESHOLD_PX) {
+        committed = true;
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (!tracking) return;
+      tracking = false;
+      const shouldCommit = committed && currentDx >= COMMIT_THRESHOLD_PX;
+      resetTransform();
+      committed = false;
+      currentDx = 0;
+      if (shouldCommit && onBackRef.current) {
+        onBackRef.current();
+      }
+    };
+
+    const onTouchCancel = () => {
+      if (!tracking) return;
+      tracking = false;
+      committed = false;
+      currentDx = 0;
+      resetTransform();
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: true });
+    el.addEventListener('touchend', onTouchEnd);
+    el.addEventListener('touchcancel', onTouchCancel);
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchCancel);
+      if (!reduce) {
+        el.style.transform = '';
+        el.style.transition = '';
+      }
+    };
+  }, []);
+
+  // Førstegangs-onboarding tar over hele skjermen (egen <main> + <h1>,
+  // ingen BottomTabBar). onComplete melder ferdig etter velkomst-stegene.
+  if (!onboardingDone) {
+    return (
+      <div className="app-shell">
+        <Suspense fallback={<RouteSkeleton />}>
+          <OnboardingScreen onComplete={() => setOnboardingDone(true)} />
+        </Suspense>
+      </div>
+    );
+  }
+
+  let routeKey: string;
+  let routeContent: ReactNode;
+
+  // Active tab for global BottomTabBar:
+  //  - drill === null            → use current tab
+  //  - drill.kind === 'guide'    → 'guide' (sub-side i guide-flow)
+  //  - drill.kind === 'paakledning' → 'hjem' (åpnet via Hjem CTA;
+  //    baren skjules uansett siden PaakledningScreen er native dialog modal)
+  let activeTabForBar: TabKey;
+  if (drill === null) {
+    activeTabForBar = tab;
+  } else if (drill.kind === 'guide') {
+    activeTabForBar = 'guide';
+  } else {
+    activeTabForBar = 'hjem';
+  }
+
+  // PaakledningScreen mounter <dialog>.showModal() — native modal som
+  // dekker hele skjermen. BottomTabBar skal IKKE være synlig / klikkbar
+  // mens den er åpen. Vi dropper rendring helt for clarity.
+  const sheetOpen = drill?.kind === 'paakledning';
+
+  if (drill?.kind === 'guide' && drill.target === 'finn-antrekk') {
+    routeKey = 'drill:guide:finn-antrekk';
+    routeContent = <FinnAntrekkScreen onBack={() => setDrill(null)} />;
+  } else if (drill?.kind === 'guide' && drill.target === 'plaggbib') {
+    routeKey = 'drill:guide:plaggbib';
+    routeContent = <PlaggbibliotekScreen onBack={() => setDrill(null)} />;
+  } else if (drill?.kind === 'guide' && drill.target === 'min-garderobe') {
+    routeKey = 'drill:guide:min-garderobe';
+    routeContent = <MinGarderobeScreen onBack={() => setDrill(null)} />;
+  } else if (drill?.kind === 'guide' && drill.target === 'tog') {
+    routeKey = 'drill:guide:tog';
+    routeContent = <TogGuideScreen onBack={() => setDrill(null)} />;
+  } else if (drill?.kind === 'guide' && drill.target === 'varm-kald') {
+    routeKey = 'drill:guide:varm-kald';
+    routeContent = <VarmEllerKaldScreen onBack={() => setDrill(null)} />;
+  } else if (drill?.kind === 'guide' && drill.target === 'forste-vinter') {
+    routeKey = 'drill:guide:forste-vinter';
+    routeContent = (
+      <VinterprogramScreen
+        onBack={() => setDrill(null)}
+        onOpenTarget={(target) => setDrill({ kind: 'guide', target })}
+      />
+    );
+  } else if (tab === 'hjem') {
+    routeKey = 'tab:hjem';
+    routeContent = (
+      <HjemScreen
+        onNavigate={onNavigate}
+        onOpenSheet={(ctx) =>
+          setDrill({ kind: 'paakledning', context: ctx })
+        }
+      />
+    );
+  } else if (tab === 'plan') {
+    routeKey = 'tab:plan';
+    routeContent = (
+      <UkeScreen
+        onNavigate={onNavigate}
+        onOpenSheet={() => setDrill({ kind: 'paakledning' })}
+      />
+    );
+  } else if (tab === 'guide') {
+    routeKey = 'tab:guide';
+    routeContent = (
+      <GuideHubScreen
+        onNavigate={onNavigate}
+        onOpenCard={(target) => setDrill({ kind: 'guide', target })}
+      />
+    );
+  } else {
+    routeKey = 'tab:innstillinger';
+    routeContent = <InnstillingerScreen onNavigate={onNavigate} />;
+  }
+
+  return (
+    <div className="app-shell">
+      <a href="#main" className="skip-link">Hopp til hovedinnhold</a>
+      <main id="main" tabIndex={-1} ref={mainRef}>
+        <Suspense fallback={<RouteSkeleton />}>
+          {reduceMotion ? (
+            routeContent
+          ) : (
+            <AnimatePresence mode="wait" initial={false}>
+              {/* F83: native navigasjons-grammatikk — sidestilte TABS crossfader
+                  (140ms), hierarkiske DRILLS pusher (x±24 spring). RM-grenen
+                  over er uendret (a11y-preclearance vilkår 7). */}
+              <motion.div
+                key={routeKey}
+                initial={routeKey.startsWith('tab:') ? { opacity: 0 } : { opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={
+                  routeKey.startsWith('tab:')
+                    ? { opacity: 0, transition: { duration: 0.1, ease: 'easeOut' } }
+                    : { opacity: 0, x: -24 }
+                }
+                transition={
+                  routeKey.startsWith('tab:')
+                    ? { duration: 0.14, ease: 'easeOut' }
+                    : { type: 'spring', stiffness: 300, damping: 30 }
+                }
+              >
+                {routeContent}
+              </motion.div>
+            </AnimatePresence>
+          )}
+        </Suspense>
+      </main>
+      {/* Global BottomTabBar — alltid synlig unntatt når native dialog-modal
+          (PaakledningScreen) er åpen. Skjermer mounter den ikke selv. */}
+      {!sheetOpen && (
+        <BottomTabBar active={activeTabForBar} onNavigate={onNavigate} />
+      )}
+      {/* PaakledningScreen mountes som søsken-overlay OPPÅ aktiv route
+          (typisk HjemScreen). Native <dialog>.showModal() håndterer
+          focus-trap + ESC + aria-modal. Hjem forblir mounted bak så
+          state/scroll-posisjon bevares og fokus returneres til CTA
+          ved lukk. F72 fix 2026-06-29. */}
+      {sheetOpen && drill?.kind === 'paakledning' && (
+        <Suspense fallback={null}>
+          <PaakledningScreen
+            onBack={() => setDrill(null)}
+            recommendation={drill.context?.recommendation ?? null}
+            vogn={drill.context?.activity}
+            vognMode={drill.context?.vognMode ?? 'awake'}
+          />
+        </Suspense>
+      )}
+    </div>
+  );
+}

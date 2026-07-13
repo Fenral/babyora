@@ -1,0 +1,55 @@
+{
+  "claude": {
+    "id": "ull-mellomlag-tykt",
+    "dbString": "ull-mellomlag tykt",
+    "kategori": "mellomlag",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Plagget har komplett what+when i garment-info.ts (linje 87-90): what='Tykkere ull-mellomlag for ekstra varme.', when='Streng kulde eller lang eksponering utendørs.' Tone/lengde matcher søsken i mellomlag-kategorien (tynn-ull-mellomlag, ull-mellomlag). Det FINNES en dedikert whyForGarment-gren (linje 363-365, eksplisitt `if (id === 'ull-mellomlag-tykt')`), ikke fallback. Liten svakhet: 'what' er den korteste i hele mellomlag-gruppa (kun 5 ord vs 8-12 hos søsken) og mangler ull-fukt/material-detalj som ull-mellomlag-søsknene fremhever. Ikke et helse-problem, kun konsistens-finpuss."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet på disk: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\ull-mellomlag-tykt.png. db-strengen 'ull-mellomlag tykt' er korrekt mappet til id 'ull-mellomlag-tykt' i garment-illustrations.ts (linje 35), og garmentPng() bygger sti som matcher filnavnet. Navn/mapping er plausibelt og konsistent. Visuell dom (om bildet faktisk viser et tykt ull-mellomlag) gjøres av Fable 5 + Claude senere."
+    },
+    "seleksjon": {
+      "score": 24,
+      "kommentar": "Seleksjonen er trygt plassert i de kaldeste bandene og reiser ingen pediatrisk bekymring. Tykt isolasjons-mellomlag ved feels < -7 til < -15 °C er forsvarlig: kildene (capital-area-peds, aap-healthychildren) støtter 'ett lag mer enn voksen' + utendørs-eksponerings-grenser i kulde. Overoppheting er ikke en reell risiko her fordi (a) plagget kun velges i frost-utelek der barnet er aktivt, og (b) SB-2 max-layer-cap (14 items ved feels<-5) og kjenn-på-nakken-noter fanger evt. for-mye-lag. Ingen SIDS/kvelnings-kontekst (utelek, ikke søvn/vogn-tildekking). Ingen udekket helse-spørsmål -> ingen web-søk nødvendig.",
+      "score_dup": null,
+      "kilder": [
+        "https://www.capitalareapediatrics.com/blog/dressing-your-child-for-cold-weather-in-virginia-a-parent-s-guide",
+        "https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Dressing-Your-Newborn.aspx"
+      ],
+      "trace": "baseTable: plagget 'ull-mellomlag tykt' forekommer KUN i activity=utelek, og kun i to band: (1) streng_frost (bandForTemp: -15 <= feels < -7) tables.ts linje 220-225, kategori mellomlag=['ull-mellomlag tykt']; (2) ekstrem (feels < -15) tables.ts linje 226-231, kategori mellomlag=['ull-mellomlag tykt']. Forekommer IKKE i vogn/baeresele/soevn (de bruker 'ull-mellomlag', 'ull-jakke', 'ull-bukse' i kalde band). MODIFIERS: ingen modifier i modifiers.ts legger til eller fjerner 'ull-mellomlag tykt' spesifikt. Fottøy-justering (sec 17) og bæresele-tykt->tynn-swap (SB-4) treffer ikke (utelek-only / annet item). softBlocks SB-2 cap = 14 items ved feels<-5; streng_frost/ekstrem utelek har ~7-8 items, ingen fjerning. SB-5/SB-7/SB-6 er varmevær (>=22/>=28/>=18 C) -> trigger aldri i frost. CONFLICTS CK-1..CK-9: ingen regex matcher 'ull-mellomlag tykt'. Netto: plagget overlever uendret i begge band."
+    },
+    "tekstLogikk": {
+      "score": 25,
+      "kommentar": "Ingen drift. 'when'='Streng kulde eller lang eksponering utendørs.' stemmer eksakt med trace: plagget velges kun i streng_frost (-15..-7 C) og ekstrem (<-15 C) under utelek — altså streng kulde. 'lang eksponering utendørs' er konsistent med utelek-konteksten og SB-8/exposure-noter. whyForGarment-grenen (linje 364) 'Tykt ull-mellomlag legger på ekstra varme ved {feels} °C eller lang eksponering ute.' matcher både temperatur-interpolasjonen (faktisk feels fra de kalde bandene) og eksponerings-budskapet. Begge tekster villeder IKKE påkledning — de underspesifiserer ingen forhold og overdriver ingen."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Plagget 'ull-mellomlag tykt' mangler oppføring i ITEM_ALTERNATIVES (alternatives.ts), mens ALLE søsken-mellomlag har fleece-alternativ: 'tynn ull-mellomlag'->tynn fleece, 'ull-mellomlag'->fleecedress, 'ull-jakke'->fleecejakke, 'ull-bukse'->fleecebukse. Den tykke varianten er det eneste mellomlaget uten alternativ — en konsistens-glipp. Et reelt ull<->fleece-alternativ (f.eks. tykk fleecedress) eller tykkelse-trinn finnes og burde tilbys. Trekker noen poeng, men ikke kritisk siden plagget kun brukes i de kaldeste bandene der ull-fordel (fukt-regulering) er sterkest og fleece-substitusjon mindre opplagt."
+    },
+    "total": 92,
+    "verdikt": "Solid plagg. Trygt selektert (kun utelek streng_frost + ekstrem), tekst og why-gren stemmer presist med trace, PNG + mapping på plass. To mindre forbedringspunkter: (1) manglende fleece/tykkelse-alternativ i alternatives.ts der alle søsken har det, (2) kortere/mindre material-rik 'what'-tekst enn søsken. Ingen helse-/sikkerhetsavvik.",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Plagget mangler oppføring i ITEM_ALTERNATIVES (alternatives.ts) selv om alle andre mellomlag-søsken (tynn ull-mellomlag, ull-mellomlag, ull-jakke, ull-bukse) har et fleece-alternativ. Den tykke varianten er eneste mellomlag uten alternativ.",
+        "forslag": "Legg til en ITEM_ALTERNATIVES-oppføring for 'ull-mellomlag tykt' med et tykkelse-/material-alternativ, f.eks. tykk fleecedress eller dobbelt ull-jakke-lag, med i18n-keys analoge til de eksisterende. (Forslag — ikke endre tall/terskler.)",
+        "kilde": "merino-kids (ull-fukt-fordel i kulde rettferdiggjør ull som primær)",
+        "kategori": "alternativer"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "'what'-teksten i garment-info.ts (linje 88) 'Tykkere ull-mellomlag for ekstra varme.' er den korteste i mellomlag-kategorien og mangler ull-fukt/material-detaljen som ull-mellomlag-søsknene fremhever.",
+        "forslag": "Vurder å utvide 'what' til samme detaljnivå som søsken, f.eks. nevne at tykkere merinoull gir mer isolasjon uten å miste fukt-regulering. Ren tekst-finpuss, ingen logikk-endring.",
+        "kilde": "garment-info.ts (konsistens med søsken-plagg)",
+        "kategori": "struktur"
+      }
+    ]
+  },
+  "fable": null
+}

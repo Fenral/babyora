@@ -1,0 +1,60 @@
+{
+  "claude": {
+    "id": "varmepose",
+    "dbString": "varmepose",
+    "kategori": "ekstra-vogn",
+    "struktur": {
+      "score": 19,
+      "kommentar": "Komplett oppføring i garment-info.ts (linje 231-234): what = 'Standard varmepose med fôr og glidelås. Holder barnet jevnt varmt.', when = 'Kjølige til kalde dager i vogn.' Mønster/tone/lengde matcher søsken-plaggene i samme ekstra-vogn-kategori (varmepose-lett linje 227-230, varmepose-dun linje 235-238) godt — de tre danner et rent tre-trinns-sett (lett/standard/dun). Dedikert whyForGarment-gren finnes (linje 465-467), IKKE fallback: 'Fôret varmepose holder ... i vogn ved X °C. Lukk glidelåsen oppover etter behov.' Trekker 1 poeng fordi when-teksten er noe tynnere enn søsknene (varmepose-dun og varmepose-lett har en ekstra sikkerhets-/bruks-setning), men den er fullt funksjonell."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet til stede: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\varmepose.png (samt søsknene varmepose-lett.png og varmepose-dun.png — alle tre eksisterer). Mapping i garment-illustrations.ts er korrekt og entydig: db-streng 'varmepose' (linje 82) → id 'varmepose'. Ingen kollisjon med 'varmepose lett'→'varmepose-lett' eller 'varmepose dun'→'varmepose-dun'. garmentPng() bygger sti '<BASE>illustrations/garments/varmepose.png' som matcher fila. Navn/mapping er fullt plausibelt. Visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 24,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig. Plain 'varmepose' velges KUN i vogn ved føles-som 0-9 °C (kjolig+kald). Overgangene til lett (mild, 10-15 °C) og dun (frost og kaldere) er logiske trinn. Overoppheting/SIDS er aktivt vaktet: CK-5 (conflicts.ts l.132) fjerner dunteppe hvis varmepose finnes ('varmepose ER varmen', kilde LT-PRAM); modifiers.ts l.260-272 legger på overoppheting-note ved varmepose; HB-8 (safety.ts) + universell 'aldri teppe over kalesjen'-note dekker pram-cover-risiko (kilde LT-PRAM, Pediatrics-Pram). Merk: SB-2 layer-cap (softBlocks.ts l.79-92) fjerner KUN 'varmepose lett'/dunteppe/'tynt teppe', ikke plain 'varmepose' — bevisst, siden varmepose i 0-9 °C ER hovedvarmen, ikke overflødig lag. Ingen helse-spørsmål som de 11 kildene ikke dekker — web-søk ikke nødvendig. Trekker 1 poeng: ved feels nær 9 °C i sol (isSunSymbol) fjernes 'varmepose lett' (modifiers l.283-290) men plain 'varmepose' fjernes ikke — i praksis ufarlig siden varmepose kun aktiveres ≤9 °C der teltvarme-risiko er lav, men en eksplisitt sol+vogn-sjekk også for standard-posen hadde vært mer konsistent.",
+      "score_dummy": 0,
+      "trace": "db-streng 'varmepose' velges i baseTable.vogn: (1) kjolig-bånd [feels 5-9 °C] → ekstra: ['lue','votter tynne','varmepose'] (tables.ts l.46); (2) kald-bånd [feels 0-4 °C] → ekstra: ['lue','votter','varmepose','saueskinn i vogn'] (tables.ts l.52). IKKE i mild (bruker 'varmepose lett' l.40), IKKE i frost/streng_frost/ekstrem (bruker 'varmepose dun' l.58/64/70). Kun aktivitet=vogn. Modifier-effekter: CK-5 beholder varmepose + fjerner dunteppe ved kollisjon (conflicts.ts l.132-137); SB-2 fjerner IKKE plain varmepose (kun 'varmepose lett'); SB-6 (≥18 °C) irrelevant (varmepose kun ≤9 °C); ingen modifier ADDER varmepose. Netto: varmepose synlig i vogn ved føles-som 0-9 °C, alltid med no-blanket/no-canopy-cover + kjenn-på-nakken-noter.",
+      "kilder": [
+        "https://www.lullabytrust.org.uk/safer-sleep-advice/pram-buggy-safety/",
+        "https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Dressing-Your-Newborn.aspx"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 25,
+      "kommentar": "Ingen drift. when-teksten 'Kjølige til kalde dager i vogn' samsvarer eksakt med trace: varmepose velges i kjolig-båndet (5-9 °C) + kald-båndet (0-4 °C) i vogn — altså nettopp 'kjølige til kalde dager'. whyForGarment-grenen (garment-info.ts l.465-467) 'Fôret varmepose holder ${childName} varm i vogn ved ${feels} °C. Lukk glidelåsen oppover etter behov.' bruker faktisk feels-temp og nevner kun vogn-konteksten — som er den eneste aktiviteten der plagget faktisk velges. Ingen temp-tall som motsier båndene (i motsetning til t.d. en hardkodet °C-range som kunne avvike). Bruks-rådet om glidelås er praktisk og ufarlig. Ingen villedende påkledning."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "varmepose har INGEN oppføring i alternatives.ts (ITEM_ALTERNATIVES). Det finnes et reelt, mønster-konsistent tykkelse-trinn-alternativ som BURDE vært tilbudt: 'varmepose dun' (varmere) og/eller 'varmepose lett' (lettere) — helt analogt med hvordan motoren allerede tilbyr 'votter tykke'→'votter dun' (l.96-104) og 'vintersko isolerte'→'vintersko' (l.106-114) som tykkelse-trinn. Et ull↔syntet/dun-valg ('når føles for kaldt: bytt til dun-pose; primær standard-pose har bedre fukt-/varmebalanse uten over-isolering') ville hjulpet foreldre å regulere innenfor vogn-konteksten. Lav severity — eksisterende seleksjon dekker behovet automatisk via temp-bånd, så dette er en UX-finesse, ikke en sikkerhets-mangel. Trekker 2 poeng for manglende alternativ-oppføring."
+    },
+    "total": 96,
+    "verdikt": "GODKJENT — varmepose er strukturelt komplett, har eksisterende PNG med korrekt entydig mapping, velges pediatrisk forsvarlig i vogn ved føles-som 0-9 °C med aktiv SIDS-/overopphetings-vakt (CK-5, HB-8, no-blanket-noter), og when/whyForGarment samsvarer presist med seleksjons-tracen uten drift. Eneste reelle funn er et manglende tykkelse-trinn-alternativ (dun/lett) i alternatives.ts — lav severity, ren UX-forbedring.",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "varmepose mangler oppføring i alternatives.ts (ITEM_ALTERNATIVES) selv om et mønster-konsistent tykkelse-trinn-alternativ finnes — analogt med eksisterende votter tykke→dun og vintersko isolerte→vintersko.",
+        "forslag": "Legg til ITEM_ALTERNATIVES-entry for itemName 'varmepose' med alternativ 'varmepose dun' (når føles kaldere/lang utesov) og evt. 'varmepose lett' (mildere dag), med i18n-keys alternatives.items.varmeposeDun.{when,whyPrimary}. Endre IKKE seleksjons-terskler.",
+        "kilde": "alternatives.ts l.96-114 (eksisterende tykkelse-trinn-mønster); LT-PRAM"
+      },
+      {
+        "severity": "lav",
+        "mal": 3,
+        "beskrivelse": "when-teksten for varmepose er noe kortere/tynnere enn søsken-plaggene varmepose-lett og varmepose-dun, som hver har en ekstra bruks-/sikkerhets-setning.",
+        "forslag": "Vurder å harmonisere lengden, f.eks. tilføye en kort kjenn-på-nakken-/ikke-teppe-over-påminnelse i when, slik dun-varianten har ('Pass på å ikke kombinere med løse tepper'). Ren tekst-konsistens, ingen logikk-endring.",
+        "kilde": "garment-info.ts l.227-238 (søsken-mønster)"
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Sol+vogn-modifieren (modifiers.ts l.283-290) fjerner kun 'varmepose lett' ved feels ≥15 °C + sol, ikke plain 'varmepose'. I praksis ufarlig siden plain varmepose kun aktiveres ≤9 °C, men logikken er asymmetrisk mellom de to varmepose-trinnene.",
+        "forslag": "Ingen handling nødvendig nå (ingen reell eksponering siden varmepose ikke velges ≥10 °C). Hvis en fremtidig tabell-endring skulle gi varmepose i mild-båndet, bør sol-fjerningsregelen utvides til å dekke standard-posen også. Endre IKKE terskler nå.",
+        "kilde": "modifiers.ts l.283-290"
+      }
+    ]
+  },
+  "fable": null
+}

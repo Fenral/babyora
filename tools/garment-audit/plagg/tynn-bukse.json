@@ -1,0 +1,112 @@
+{
+  "claude": {
+    "id": "tynn-bukse",
+    "kategori": "mellomlag",
+    "dbString": "tynn bukse",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Har komplett what + when i garment-info.ts (linje 75-78). Tonen og lengden matcher soesken i mellomlag-kategorien (tynn-ull-mellomlag, ull-mellomlag, ull-bukse osv.) godt. Dedikert whyForGarment-gren finnes (linje 354-356: 'Tynn jersey-bukse som mellomlag — gir bevegelses-frihet uten aa bygge unodig volum i {act}.') — IKKE fallback. Trekk: what beskriver plagget som 'jersey- eller fleecebukse' mens whyForGarment kun sier 'jersey-bukse' — liten intern inkonsistens i materialbeskrivelse."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet eksisterende: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\tynn-bukse.png (1 av 60 PNG-er i mappa). Mapping er korrekt: db-strengen 'tynn bukse' -> id 'tynn-bukse' (garment-illustrations.ts linje 32), og id matcher baade INFO-noekkelen og PNG-filnavnet. Navn/mapping-plausibilitet er feilfri. Visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "Pediatrisk forsvarlig. tynn bukse velges kun i milde/varme baand (10-21 grader feels) i vogn og baeresele — et lett jersey/fleece-bunnlag uten overopphetings-risiko. I baeresele.varm (kun kortermet ullbody + tynn bukse + solhatt) varmer foreldrekroppen, og CK-9/SB-4 overheating-guards haandterer baeresele-varme. Ingen SIDS/kvelning/frost-kontekst introduseres av dette plagget. PMC-7202982 (babywearing-termoregulering) og AAP 'one layer'-regelen dekker forholdene — ingen kunnskapshull, derfor ikke webskoek noedvendig. Trekk: ingen modifier synliggjoer/fjerner plagget eksplisitt etter materiale, men det er stabilt og trygt der det staar.",
+      "trace": "baseTable-treff (alle kategori 'mellomlag'): (1) vogn.varm [feels 16-21 C, bandForTemp >=16] = innerst 'langermet ullbody tynn' + mellomlag 'tynn bukse' + ekstra 'lue tynn'. (2) baeresele.varm [16-21 C] = innerst 'kortermet ullbody' + mellomlag 'tynn bukse' + ekstra 'solhatt'. (3) baeresele.mild [10-15 C] = innerst 'langermet ullbody' + mellomlag 'tynn bukse' + ekstra 'lue tynn'. Modifiers: aldri lagt til/fjernet ved navn. SB-2 (for mange lag) fjerner kun dunteppe/varmepose lett/tynt teppe — ikke tynn bukse. SB-4 (baeresele+innerJakke) swapper kun tykt->tynn i mellomlag, paavirker ikke. CK-/HB-/safety-regler roerer den ikke. => tynn bukse er stabil i alle tre celler.",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 17,
+      "kommentar": "Drift mellom when-tekst og faktisk seleksjon. when sier: 'Som mellomlag paa milde dager med yttertoy.' MEN: (1) Ingen av de tre treff-cellene (vogn.varm, baeresele.varm, baeresele.mild) inneholder noe yttertoy-lag i det hele tatt — frasen 'med yttertoy' er direkte feil for de faktiske antrekkene. (2) 'milde dager' er upresist: plagget velges i baade varm-baandet (16-21 C) OG mild-baandet (10-15 C). I app-terminologien er 'mild' et eget baand (10-15 C), saa teksten antyder snevrere bruk enn realiteten. whyForGarment-grenen er derimot korrekt og kontekst-noeytral ('bevegelses-frihet uten unodig volum i {act}') — den stemmer med trace. Hovedtrekket er when-frasen 'med yttertoy' som villeder om at det skal vaere et ytre skall paa, noe motoren ikke anbefaler i disse forholdene."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "Ingen alternativ registrert for 'tynn bukse' i alternatives.ts. Soeskenplagget 'ull-bukse' har et fleecebukse-alternativ, og 'tynn ull-mellomlag' har 'tynn fleece'. tynn bukse er imidlertid selv det lette/ikke-ull bunnlaget for varme/baarne-kontekster, saa et tykkelse-/ull-alternativ ville stort sett over-varme i 16-21 C-baandet der det velges. Fravaeret er derfor forsvarlig. Mindre trekk: et lett tykkelse-trinn-alternativ ('ull-bukse' for nedre kant av mild-baandet ~10-12 C i baeresele) kunne vaert tilbudt for konsistens med hvordan andre bunnlag har trinn, men det er ikke kritisk."
+    },
+    "total": 86,
+    "verdikt": "Solid plagg med korrekt struktur, mapping og PNG, og pediatrisk trygg seleksjon (kun milde/varme baand, ingen overopphetings- eller frost-risiko). Hovedsvakheten er tekst-drift: when-teksten lover 'med yttertoy' og 'milde dager', men motoren velger plagget i baade mild- og varm-baandet UTEN noe yttertoy-lag i de aktuelle antrekkene. Anbefaling: rett when-teksten saa den matcher faktiske forhold, og vurder en liten material-konsistens mellom what og whyForGarment.\"",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "when-teksten sier 'Som mellomlag paa milde dager med yttertoy.' men ingen av de tre seleksjons-cellene (vogn.varm, baeresele.varm, baeresele.mild) inneholder yttertoy-lag. Plagget velges dessuten i baade varm-baandet (16-21 C) og mild-baandet (10-15 C), ikke kun 'milde dager'. Dette villeder forelderen til aa tro at et ytre skall hoerer med.",
+        "forslag": "Endre when til noe som: 'Som mellomlag i milde til varme forhold (ca 10-21 C) i vogn eller baeresele — vanligvis uten yttertoy.' (Roer ALDRI tabell-terskler; kun teksten justeres.)",
+        "kilde": "tables.ts vogn.varm/baeresele.varm/baeresele.mild vs garment-info.ts linje 76-77"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Material-inkonsistens: what (linje 76) beskriver plagget som 'jersey- eller fleecebukse', mens whyForGarment-grenen (linje 355) kun kaller det 'jersey-bukse'. Liten forvirring om materialet.",
+        "forslag": "Harmoniser ordlyden — bruk 'jersey eller fleece' begge steder, eller dropp materialet i whyForGarment.",
+        "kilde": "garment-info.ts linje 76 vs 355"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen alternativ registrert for 'tynn bukse' i alternatives.ts, mens soeskenplagg (ull-bukse, tynn ull-mellomlag) har fleece-alternativer. Fravaeret er stort sett forsvarlig (plagget velges i varme baand der ull ville over-varme), men et lett tykkelse-trinn for nedre kant av mild-baandet mangler.",
+        "forslag": "Vurder valgfritt aa legge til 'ull-bukse' som tykkelse-trinn-alternativ for nedre del av mild-baandet i baeresele; ellers er fravaeret OK.",
+        "kilde": "alternatives.ts ITEM_ALTERNATIVES"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 16,
+      "kommentar": "Datastrukturen er stort sett ryddig, men har to interne inkonsistenser: (1) material-drift mellom what («jersey- eller fleecebukse») og whyForGarment («jersey-bukse»), og (2) en kategorisk selvmotsigelse — plagget er klassifisert som 'mellomlag', men i alle tre cellene det velges i finnes det ikke noe lag utenpå. Et mellomlag uten ytterlag er per definisjon et ytterlag i den konteksten. Dette er et strukturproblem, ikke bare et tekstproblem, fordi kategorien styrer hvordan motoren og brukeren resonnerer om plagget."
+    },
+    "utseende": {
+      "score": 15,
+      "kommentar": "Bildet viser riktig plaggtype (joggebukse for barn med strikk i liv og ribb i ankel), god render-kvalitet, nøytral gråtone og ingen synlige artefakter. MEN: stoffet fremstår tykt og loddent — overflaten har fleece/sweatshirt-preg med tydelig volum i lår og ankel. Det visuelle kommuniserer «vanlig/tykk joggebukse», ikke «tynn bukse». Når plagget heter tynn-bukse og finnes i et tykkelse-hierarki, må illustrasjonen skille seg visuelt fra en tykkere variant (slankere fall, mindre volum, glattere overflate). Claude flagget ikke dette."
+    },
+    "seleksjon": {
+      "score": 21,
+      "kommentar": "Cellene i seg selv er pediatrisk forsvarlige: tynn bukse i vogn ved 16-21 °C er rimelig (passivt barn, men varmt), og i bæresele ved 10-15 og 16-21 °C er det fornuftig fordi bæresele tilfører betydelig kroppsvarme fra bæreren — der er en TYKK bukse faktisk en større overopphetingsrisiko. Trekk: kombinasjonen 'mellomlag-kategori uten ytterlag' gjør det uklart om motoren forventer at noe legges utenpå; hvis en forelder følger app-teksten og legger skallbukse utenpå i bæresele ved 16-21 °C, er overoppheting i sele en reell bekymring for 0-3 år. Risikoen ligger altså ikke i seleksjonen, men i hva teksten kan få brukeren til å gjøre i tillegg."
+    },
+    "tekstLogikk": {
+      "score": 14,
+      "kommentar": "Her er jeg strengere enn Claude. «Når»-teksten bommer på BEGGE akser: (1) «med yttertøy» — null av tre celler har yttertøy-lag, så teksten beskriver en bruk som aldri forekommer, og kan aktivt lede til overdressing (verst i baeresele.varm). (2) «milde dager» — to av tre celler er varm (16-21 °C), bare én er mild (10-15). Teksten beskriver altså verken riktig lagkontekst eller riktig temperaturkontekst. Når formålet med appen er at foreldre skal stole på «når»-feltet, er en dobbel feilbeskrivelse mer enn et kosmetisk avvik. Claude graderte dette som ett høy-funn; jeg ser det som to separate avvik der yttertøy-delen grenser mot kritisk pga. overopphetingsrisiko i bæresele."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Funnet om manglende alternativ er gyldig: ved nedre kant av baeresele.mild (10-11 °C, vind, stillesittende barn i sele om vinterhalvåret) bør det finnes et tykkelse-trinn opp (f.eks. tykk bukse eller ullbukse) i alternatives.ts. Motsatt vei (enda lettere) er mindre viktig siden 16-21 °C-cellene allerede er toppen av skalaen. Trekk på 3 for ett manglende, reelt brukstilfelle — ikke mer, siden kjernen i alternativ-strukturen ellers er intakt."
+    },
+    "total": 73,
+    "verdikt": "Trenger revisjon før publisering: seleksjonen er trygg, men «når»-teksten motsier motoren på både lag og temperatur, kategorien 'mellomlag' er selvmotsigende i alle faktiske celler, og illustrasjonen kommuniserer feil tykkelse. Tre tekst/metadata-endringer + ev. ny render løser det meste uten å røre tall eller terskler.",
+    "uenig_med_claude": "Delvis uenig — 86/100 er for høyt. Claude identifiserte riktig kjerneavvik (yttertøy-drift) men underspilte det: (1) teksten bommer også på temperatur («milde» vs. faktisk mest varm-celler), noe som gjør mål 4 til en dobbel feil, ikke én; (2) Claude overså at 'mellomlag'-kategorien er logisk selvmotsigende når ingen celle har lag utenpå — det er et strukturfunn (mål 1), ikke bare tekst; (3) Claude vurderte ikke at bildet visuelt fremstår som tykk joggebukse og dermed undergraver plaggnavnet. Material-inkonsistensen og det manglende alternativet bekrefter jeg som lav.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "«Når»-teksten sier «mellomlag på milde dager med yttertøy», men ingen av de tre seleksjonscellene har yttertøy-lag, og 2 av 3 celler er varm (16-21 °C), ikke mild. Teksten kan få foreldre til å legge skallbukse utenpå i bæresele ved 16-21 °C — reell overopphetingsrisiko for 0-3 år.",
+        "forslag": "Omskriv «når» til faktisk bruk, f.eks.: «Som eneste buksela g på varme dager (16-21 °C) i vogn eller bæresele, og på milde dager (10-15 °C) i bæresele der bæreren gir ekstra varme.» Fjern referansen til yttertøy helt så lenge ingen celle parer det."
+      },
+      {
+        "severity": "hoy",
+        "mal": 1,
+        "beskrivelse": "Kategorisk selvmotsigelse: plagget er klassifisert som 'mellomlag', men fungerer som ytterste (eneste) buksela g i samtlige celler det velges i. Kategorien beskriver en rolle plagget aldri har i praksis.",
+        "forslag": "Enten (a) reklassifiser til en kategori som tillater standalone-bruk (f.eks. 'mellomlag/ytterlag' eller egen 'helårsbukse'-kategori), eller (b) dokumenter eksplisitt i skjemaet at mellomlag kan stå alene i varme celler — og speil det i tekstene."
+      },
+      {
+        "severity": "medium",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen viser en bukse med tykt, loddent fleece-preg og mye volum — den leser som vanlig/tykk joggebukse, ikke «tynn». Hvis appen har flere tykkelse-trinn vil brukeren ikke kunne skille dem visuelt.",
+        "forslag": "Re-render med slankere silhuett, glattere/tynnere stoffuttrykk og mindre volum i lår og ankel, slik at tynn- og tykk-variantene er visuelt adskilte i samme stil."
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "Material-inkonsistens: what nevner «jersey- eller fleecebukse», whyForGarment kun «jersey-bukse». Bekrefter Claudes funn.",
+        "forslag": "Harmoniser til samme materialbeskrivelse i begge felt — velg én formulering («tynn jersey- eller fleecebukse») og gjenbruk den."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Mangler alternativ-oppføring i alternatives.ts for nedre kant av baeresele.mild (rundt 10 °C), der et varmere tykkelse-trinn kan være riktig ved vind eller lengre stillesitting. Bekrefter Claudes funn, med presisert brukstilfelle.",
+        "forslag": "Legg til alternativ-peker til nærmeste varmere bukse (tykk bukse/ullbukse) for baeresele.mild, uten å endre terskler eller celletilordning."
+      }
+    ]
+  }
+}

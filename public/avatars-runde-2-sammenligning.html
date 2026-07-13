@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Babyora — Avatar runde 2 sammenligning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #2B2B2B;
+    --ink-soft: rgba(43,43,43,.65);
+    --ink-mute: rgba(43,43,43,.45);
+    --accent: #C0632F;
+    --bg: linear-gradient(180deg,#C9D7E1 0%,#DBDBD6 46%,#E8E1D8 100%);
+    --warm-bg: #E8E1D8;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Schibsted Grotesk', -apple-system, system-ui, sans-serif;
+    color: var(--ink);
+    background: #FAF6EF;
+    line-height: 1.45;
+  }
+  .container { max-width: 1240px; margin: 0 auto; padding: 48px 24px 96px; }
+  header { margin-bottom: 40px; max-width: 720px; }
+  .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 2.4px;
+    text-transform: uppercase; color: var(--accent);
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-size: clamp(28px, 4vw, 38px);
+    font-weight: 600;
+    margin: 0 0 18px;
+    letter-spacing: -0.5px;
+  }
+  .lede {
+    font-size: 16px;
+    color: var(--ink-soft);
+    margin: 0 0 8px;
+  }
+  .verdict-box {
+    margin-top: 24px;
+    padding: 20px 22px;
+    background: rgba(192,99,47,.05);
+    border-radius: 14px;
+    border: 1px solid rgba(192,99,47,.15);
+  }
+  .verdict-box h2 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: var(--accent);
+    letter-spacing: -0.2px;
+  }
+  .verdict-box p { margin: 0; font-size: 14px; color: var(--ink-soft); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 40px;
+  }
+  .row {
+    background: #fff;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(43,43,43,.05);
+    border: 1px solid rgba(43,43,43,.08);
+  }
+  .row-head {
+    padding: 18px 20px 12px;
+    border-bottom: 1px solid rgba(43,43,43,.08);
+  }
+  .row-head .tier {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--accent);
+    margin: 0 0 4px;
+  }
+  .row-head .tier-name {
+    font-size: 17px; font-weight: 600;
+    margin: 0;
+  }
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .compare .cell {
+    padding: 18px 16px;
+    text-align: center;
+    border-right: 1px solid rgba(43,43,43,.08);
+  }
+  .compare .cell:last-child { border-right: 0; }
+  .cell-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--ink-mute);
+    margin: 0 0 12px;
+  }
+  .stage {
+    aspect-ratio: 1 / 1.05;
+    background: var(--bg);
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .stage::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(120% 50% at 50% 0%, rgba(255,255,255,.45), transparent 60%);
+    pointer-events: none;
+  }
+  .stage img {
+    width: 80%;
+    height: auto;
+    filter: drop-shadow(0 12px 18px rgba(74,96,126,.25));
+    position: relative;
+    z-index: 1;
+  }
+  .decision {
+    margin-top: 56px;
+    padding: 28px;
+    background: linear-gradient(180deg, rgba(192,99,47,.06), transparent);
+    border-radius: 18px;
+    border: 1px solid rgba(192,99,47,.18);
+  }
+  .decision h2 { margin: 0 0 10px; font-size: 22px; color: var(--accent); }
+  .decision ul { margin: 12px 0; padding-left: 22px; }
+  .decision li { margin-bottom: 6px; font-size: 14.5px; color: var(--ink-soft); }
+  code {
+    background: rgba(0,0,0,.05);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'SF Mono', monospace;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <p class="eyebrow">Nano Banana Pro · Runde 2 · 2026-06-18</p>
+    <h1>Avatar-sammenligning: instrument-spec mot eksisterende</h1>
+    <p class="lede">
+      Sivert godkjente Nano Banana avatar-runde 2 med strikse instrument-regler
+      etter Copilot's million-dollar-feedback. Alle 7 nye avatarer er generert
+      til en fast spec (5° kamera-tilt, 45/135° lys, neutral expression, klær er
+      visuell fokus, ingen søthet).
+    </p>
+    <p class="lede">
+      Kost: <strong>$0.94 (~10 NOK)</strong>. Skiftes ikke live i appen før du
+      godkjenner.
+    </p>
+
+    <div class="verdict-box">
+      <h2>Copilot's instrument-regelsett (lås)</h2>
+      <p>
+        Fast kamera + fast brennvidde + fast lys-rig + fast pose + matte stoff +
+        neutral expression + klær > karakter. Avataren skal være et
+        <em>måleinstrument med menneskelig varme</em>, ikke en figur brukeren
+        blir kjent med.
+      </p>
+    </div>
+  </header>
+
+  <div class="grid">
+    <article class="row">
+      <div class="row-head">
+        <p class="tier">A1</p>
+        <h3 class="tier-name">Warm summer day (15–22°C)</h3>
+      </div>
+      <div class="compare">
+        <div class="cell">
+          <p class="cell-label">Eksisterende</p>
+          <div class="stage"><img src="/avatars/avatar-A1.png" alt="A1 eksisterende" /></div>
+        </div>
+        <div class="cell">
+          <p class="cell-label">Runde 2 (ny)</p>
+          <div class="stage"><img src="/avatars-runde-2/avatar-A1.png" alt="A1 ny instrument-spec" /></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="row">
+      <div class="row-head">
+        <p class="tier">A2</p>
+        <h3 class="tier-name">Mild dag (12–17°C)</h3>
+      </div>
+      <div class="compare">
+        <div class="cell">
+          <p class="cell-label">Eksisterende</p>
+          <div class="stage"><img src="/avatars/avatar-A2.png" alt="A2 eksisterende" /></div>
+        </div>
+        <div class="cell">
+          <p class="cell-label">Runde 2 (ny)</p>
+          <div class="stage"><img src="/avatars-runde-2/avatar-A2.png" alt="A2 ny instrument-spec" /></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="row">
+      <div class="row-head">
+        <p class="tier">A3</p>
+        <h3 class="tier-name">Cool autumn (5–12°C)</h3>
+      </div>
+      <div class="compare">
+        <div class="cell">
+          <p class="cell-label">Eksisterende</p>
+          <div class="stage"><img src="/avatars/avatar-A3.png" alt="A3 eksisterende" /></div>
+        </div>
+        <div class="cell">
+          <p class="cell-label">Runde 2 (ny)</p>
+          <div class="stage"><img src="/avatars-runde-2/avatar-A3.png" alt="A3 ny instrument-spec" /></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="row">
+      <div class="row-head">
+        <p class="tier">A4</p>
+        <h3 class="tier-name">Cold day (−5 to 5°C)</h3>
+      </div>
+      <div class="compare">
+        <div class="cell">
+          <p class="cell-label">Eksisterende</p>
+          <div class="stage"><img src="/avatars/avatar-A4.png" alt="A4 eksisterende" /></div>
+        </div>
+        <div class="cell">
+          <p class="cell-label">Runde 2 (ny)</p>
+          <div class="stage"><img src="/avatars-runde-2/avatar-A4.png" alt="A4 ny instrument-spec" /></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="row">
+      <div class="row-head">
+        <p class="tier">A5</p>
+        <h3 class="tier-name">Cold + wet rain (5–12°C)</h3>
+      </div>
+      <div class="compare">
+        <div class="cell">
+          <p class="cell-label">Eksisterende</p>
+          <div class="stage"><img src="/avatars/avatar-A5.png" alt="A5 eksisterende" /></div>
+        </div>
+        <div class="cell">
+          <p class="cell-label">Runde 2 (ny)</p>
+          <div class="stage"><img src="/avatars-runde-2/avatar-A5.png" alt="A5 ny instrument-spec" /></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="row">
+      <div class="row-head">
+        <p class="tier">A6</p>
+        <h3 class="tier-name">Deep winter (−15 to −5°C)</h3>
+      </div>
+      <div class="compare">
+        <div class="cell">
+          <p class="cell-label">Eksisterende</p>
+          <div class="stage"><img src="/avatars/avatar-A6.png" alt="A6 eksisterende" /></div>
+        </div>
+        <div class="cell">
+          <p class="cell-label">Runde 2 (ny)</p>
+          <div class="stage"><img src="/avatars-runde-2/avatar-A6.png" alt="A6 ny instrument-spec" /></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="row">
+      <div class="row-head">
+        <p class="tier">A7</p>
+        <h3 class="tier-name">Extreme heat (&gt;25°C, sun)</h3>
+      </div>
+      <div class="compare">
+        <div class="cell">
+          <p class="cell-label">Eksisterende</p>
+          <div class="stage"><img src="/avatars/avatar-A7.png" alt="A7 eksisterende" /></div>
+        </div>
+        <div class="cell">
+          <p class="cell-label">Runde 2 (ny)</p>
+          <div class="stage"><img src="/avatars-runde-2/avatar-A7.png" alt="A7 ny instrument-spec" /></div>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <section class="decision">
+    <h2>Hva du må vurdere</h2>
+    <ul>
+      <li><strong>Konsistens på tvers av tier:</strong> ser alle 7 ut som samme baby med ulike klær?</li>
+      <li><strong>Instrument-DNA:</strong> føles avataren som et måleinstrument, eller fortsatt som en maskot?</li>
+      <li><strong>Klær = primær fokus:</strong> leser klærne tydeligere enn karakteren?</li>
+      <li><strong>Neutral expression:</strong> ingen smil, øyne hvilende ned?</li>
+      <li><strong>Bakgrunn:</strong> de nye er transparente og kommer rett inn i appen som-er</li>
+    </ul>
+
+    <h2 style="margin-top: 24px;">Hvis du godkjenner, kjør:</h2>
+    <p style="color: var(--ink-soft); margin-bottom: 8px;">Flytter de 7 nye til <code>public/avatars/</code> og overstyrer eksisterende:</p>
+    <pre style="background: rgba(0,0,0,.04); padding: 14px 18px; border-radius: 8px; font-size: 13px; overflow-x: auto;">cp review/avatars-instrument-round2/*.png public/avatars/</pre>
+
+    <h2 style="margin-top: 24px;">Hvis du IKKE liker dem:</h2>
+    <p style="color: var(--ink-soft);">Vi beholder eksisterende. Ingen rollback nødvendig — nye filer er kun i <code>review/avatars-instrument-round2/</code> som forblir ulest av appen.</p>
+  </section>
+</div>
+</body>
+</html>

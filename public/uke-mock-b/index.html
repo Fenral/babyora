@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Babyora · Uke — Mock B (Visuell + romslig)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ────────────────────────────────────────────────────────────────
+   BABYORA · Mock B for skjermen «Uke»
+   Visuell + romslig variant. Større bilder, mer luft per element,
+   premium-feel inspirert av Mobbin «weather forecast hourly timeline».
+
+   Brand-tokens (samme som mock A / produksjon):
+     - Bakgrunn: warm-grey (#DBD8D2 / #E5E2DC / #CFCBC2)
+     - Display: DM Serif Display
+     - UI/sans: Schibsted Grotesk
+     - Accent: warm-orange / terracotta (#B4502E / #C0632F / #F4E4D8)
+     - Safe-area: env(safe-area-inset-*) inkludert
+     - iPhone-frame: 390×844 (samme som de andre Babyora/Klemeg mocks)
+   ──────────────────────────────────────────────────────────────── */
+
+:root{
+  /* Surface / canvas */
+  --bg-canvas:#DBD8D2;
+  --bg-canvas-soft:#E8E4DD;
+  --bg-canvas-deep:#CFCBC2;
+  --surface-pure:#FFFFFF;
+  --surface-warm:#FAF6EF;
+
+  /* Terracotta-rampe */
+  --terracotta-700:#8A3A1F;
+  --terracotta-600:#B4502E;
+  --terracotta-500:#C0632F;
+  --terracotta-400:#C96B36;
+  --terracotta-200:#E0A07F;
+  --terracotta-100:#F4E4D8;
+
+  /* Påkledning-byrde (samme semantikk som UkeScreen.tsx) */
+  --burden-lett:#3F8A5B;
+  --burden-medium:#C0632F;
+  --burden-mye:#1F2E45;
+
+  /* Vær-aksent */
+  --sun:#E8A24A;
+  --cloud:#AEBFCD;
+  --sky-deep:#7A95AB;
+
+  /* Ink */
+  --ink-900:#2B2522;
+  --ink-800:#2B2B2B;
+  --ink-700:#5A514C;
+  --ink-500:#8A7F78;
+  --ink-300:#A89E97;
+
+  /* Type */
+  --font-sans:'Schibsted Grotesk',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --font-serif:'DM Serif Display',Georgia,serif;
+
+  /* Motion */
+  --ease-standard:cubic-bezier(0.32,0.72,0,1);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#1a1a1a;font-family:var(--font-sans);}
+body{
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;color:var(--ink-900);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+/* ────────── iPhone-frame 390×844 ────────── */
+.frame{
+  position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5), 0 0 0 12px #1f1f1f, 0 0 0 13px #333;
+  background:linear-gradient(180deg,#C7D6E1 0%,#DEE1DD 45%,#E9E1D6 100%);
+}
+
+/* Statisk «notch» / dynamic island for visuell troverdighet */
+.frame::after{
+  content:"";
+  position:absolute;top:11px;left:50%;transform:translateX(-50%);
+  width:118px;height:34px;border-radius:17px;
+  background:#0a0a0a;z-index:50;pointer-events:none;
+}
+
+/* ────────── Skjerm ────────── */
+.screen{
+  position:relative;height:100%;width:100%;
+  display:flex;flex-direction:column;
+  font-family:var(--font-sans);color:var(--ink-800);
+  /* Safe-area + romslig top-padding */
+  padding-top:max(58px, env(safe-area-inset-top,58px));
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:
+    radial-gradient(140% 60% at 50% -10%, rgba(255,255,255,.55), rgba(255,255,255,0) 55%),
+    linear-gradient(180deg,#D8E2EA 0%, #E2DFD8 38%, #EAE2D5 72%, #E8DED0 100%);
+}
+
+/* Subtil korn-tekstur i bakgrunn for «warm grey» troverdighet */
+.screen::before{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+  background-image:
+    radial-gradient(rgba(43,37,34,.025) 1px, transparent 1px);
+  background-size:3px 3px;
+  mix-blend-mode:multiply;
+  opacity:.55;
+}
+
+/* ────────── Top-bar — mer luftig enn mock A ────────── */
+.topbar{
+  position:relative;z-index:5;flex:none;
+  padding:0 22px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+}
+.city-pill{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 16px;border-radius:14px;
+  background:rgba(255,255,255,.55);
+  border:1px solid rgba(43,43,43,.05);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+.city-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--terracotta-500);
+  box-shadow:0 0 0 3px rgba(192,99,47,.18);
+}
+.city-name{font-size:14px;font-weight:600;letter-spacing:-.1px;color:var(--ink-800);}
+.city-meta{font-size:12px;font-weight:500;color:var(--ink-500);margin-left:2px;}
+
+.notif-btn{
+  width:44px;height:44px;min-width:44px;min-height:44px;
+  border-radius:50%;
+  background:rgba(255,255,255,.55);
+  border:1px solid rgba(43,43,43,.05);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform 160ms var(--ease-standard);
+}
+.notif-btn:active{transform:scale(.94);}
+.notif-btn .badge{
+  position:absolute;top:9px;right:9px;
+  width:9px;height:9px;border-radius:50%;
+  background:var(--terracotta-500);
+  border:2px solid rgba(255,255,255,.8);
+}
+.notif-wrap{position:relative;}
+
+/* ────────── Tabs ────────── */
+.tabs{
+  position:relative;z-index:5;flex:none;
+  margin:18px 22px 0;
+  padding:5px;display:flex;gap:4px;
+  border-radius:999px;
+  background:rgba(255,255,255,.45);
+  border:1px solid rgba(43,43,43,.05);
+}
+.tab{
+  flex:1;padding:11px 0;min-height:44px;
+  border-radius:999px;border:none;cursor:pointer;
+  background:transparent;color:rgba(43,43,43,.55);
+  font-weight:600;font-size:15px;
+  font-family:var(--font-sans);
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  transition:background 200ms var(--ease-standard), color 200ms var(--ease-standard);
+}
+.tab.active{
+  background:var(--surface-pure);color:var(--ink-800);
+  font-weight:700;
+  box-shadow:0 2px 8px rgba(43,43,43,.1);
+}
+
+/* ────────── HERO «Akkurat nå» — stor og visuell ────────── */
+.hero{
+  position:relative;z-index:4;flex:none;
+  margin:22px 22px 0;
+  padding:22px 22px 24px;
+  border-radius:26px;
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(232,162,74,.18) 0%, rgba(232,162,74,0) 60%),
+    linear-gradient(180deg, rgba(255,255,255,.82) 0%, rgba(255,255,255,.62) 100%);
+  border:1px solid rgba(43,43,43,.06);
+  box-shadow:
+    0 1px 2px rgba(43,43,43,.04),
+    0 12px 28px rgba(43,43,43,.08);
+  overflow:hidden;
+}
+.hero-label{
+  font-size:10.5px;font-weight:700;letter-spacing:1.8px;
+  text-transform:uppercase;color:var(--ink-500);
+}
+.hero-row{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;margin-top:8px;
+}
+.hero-temp{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:74px;line-height:.95;letter-spacing:-2px;
+  color:var(--ink-900);
+}
+.hero-temp sup{
+  font-size:30px;vertical-align:top;letter-spacing:-1px;color:var(--terracotta-600);
+  font-family:var(--font-serif);
+}
+.hero-icon{flex:none;}
+.hero-sub{
+  margin-top:10px;
+  font-size:14.5px;font-weight:500;color:var(--ink-700);letter-spacing:-.1px;
+}
+.hero-sub strong{color:var(--ink-900);font-weight:700;}
+.hero-meta{
+  margin-top:18px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.hero-meta-item{
+  display:flex;flex-direction:column;gap:2px;
+  padding:10px 12px;border-radius:14px;
+  background:rgba(255,255,255,.5);
+  border:1px solid rgba(43,43,43,.05);
+}
+.hero-meta-item .k{
+  font-size:10.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-500);
+}
+.hero-meta-item .v{
+  font-size:15px;font-weight:700;color:var(--ink-900);letter-spacing:-.2px;
+}
+
+/* ────────── H2 «Time for time» + legend ────────── */
+.section-head{
+  position:relative;z-index:4;flex:none;
+  margin:26px 22px 0;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+}
+.section-title{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:26px;line-height:1;letter-spacing:-.5px;
+  color:var(--terracotta-700);
+  margin:0;
+}
+.legend{
+  display:flex;align-items:center;gap:10px;
+}
+.legend-item{display:flex;align-items:center;gap:6px;}
+.legend-dot{
+  width:14px;height:14px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.65);
+  box-shadow:0 1px 2px rgba(43,43,43,.12);
+}
+.legend-label{font-size:11px;font-weight:600;color:var(--ink-500);letter-spacing:.1px;}
+
+/* ────────── Hourly timeline — visuelle, romslige kort ────────── */
+.timeline-wrap{
+  position:relative;z-index:3;
+  flex:1;min-height:0;
+  margin-top:18px;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  padding:0 22px 124px;
+}
+.timeline-wrap::-webkit-scrollbar{display:none;}
+
+.timeline{
+  display:flex;flex-direction:column;gap:14px;
+  list-style:none;padding:0;margin:0;
+}
+
+/* HVER time = stort kort med ikon, temp og påkledning-sirkel */
+.hour-card{
+  position:relative;
+  display:grid;
+  grid-template-columns:72px 1fr auto;
+  align-items:center;
+  gap:16px;
+  padding:18px 18px;
+  border-radius:22px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.74) 100%);
+  border:1px solid rgba(43,43,43,.05);
+  box-shadow:
+    0 1px 2px rgba(43,43,43,.04),
+    0 8px 20px rgba(43,43,43,.06);
+  transition:transform 180ms var(--ease-standard);
+}
+.hour-card:active{transform:scale(.985);}
+
+/* Vertikal aksent-stripe pr. burden */
+.hour-card::before{
+  content:"";
+  position:absolute;left:0;top:14px;bottom:14px;width:3px;
+  border-radius:0 3px 3px 0;
+  background:var(--terracotta-200);
+}
+.hour-card[data-burden="lett"]::before{background:var(--burden-lett);}
+.hour-card[data-burden="medium"]::before{background:var(--burden-medium);}
+.hour-card[data-burden="mye"]::before{background:var(--burden-mye);}
+
+/* «Nå»-kortet får tydelig fremheving */
+.hour-card.is-now{
+  background:
+    linear-gradient(180deg, var(--surface-warm) 0%, #FFFFFF 100%);
+  border-color:rgba(192,99,47,.25);
+  box-shadow:
+    0 1px 2px rgba(43,43,43,.04),
+    0 14px 30px rgba(180,80,46,.14);
+}
+.hour-card.is-now::before{background:var(--terracotta-500);}
+
+/* Time-kolonne */
+.h-time{display:flex;flex-direction:column;gap:2px;}
+.h-time .clock{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:22px;line-height:1;letter-spacing:-.5px;color:var(--ink-900);
+}
+.h-time .tod{
+  font-size:11.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--ink-500);
+}
+.h-time .now-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  margin-top:6px;width:fit-content;
+  padding:3px 8px;border-radius:999px;
+  background:var(--terracotta-100);color:var(--terracotta-700);
+  font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+}
+.h-time .now-pill::before{
+  content:"";width:5px;height:5px;border-radius:50%;background:var(--terracotta-600);
+}
+
+/* Mid-kolonne: ikon + temp + føles */
+.h-mid{
+  display:flex;align-items:center;gap:14px;min-width:0;
+}
+.h-icon{
+  width:56px;height:56px;flex:none;
+  border-radius:18px;
+  background:
+    radial-gradient(70% 70% at 35% 30%, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 70%),
+    linear-gradient(180deg, #EAF1F6 0%, #DDE6EE 100%);
+  border:1px solid rgba(43,43,43,.05);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
+}
+.h-icon.icon-clear{
+  background:
+    radial-gradient(60% 60% at 40% 30%, #FFF1D8 0%, #FFE2B0 60%, #F4C77E 100%);
+}
+.h-icon.icon-partly{
+  background:
+    radial-gradient(50% 50% at 70% 70%, rgba(232,162,74,.4) 0%, rgba(232,162,74,0) 70%),
+    linear-gradient(180deg, #EAF1F6 0%, #DDE6EE 100%);
+}
+.h-icon.icon-cloud{
+  background:linear-gradient(180deg, #DDE6EE 0%, #C8D6E0 100%);
+}
+.h-icon.icon-rain{
+  background:linear-gradient(180deg, #B8C8D4 0%, #94A8B8 100%);
+}
+.h-icon.icon-night{
+  background:linear-gradient(180deg, #2F3E55 0%, #1F2E45 100%);
+}
+
+.h-temps{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.h-temp{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:28px;line-height:1;letter-spacing:-.6px;color:var(--ink-900);
+}
+.h-temp sup{
+  font-size:14px;vertical-align:top;color:var(--terracotta-600);
+  font-family:var(--font-serif);margin-left:1px;
+}
+.h-feels{
+  font-size:12.5px;font-weight:500;color:var(--ink-500);letter-spacing:-.1px;
+}
+
+/* Høyre: påkledning-byrde — stor, premium */
+.h-burden{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  flex:none;
+}
+.burden-circle{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-serif);font-size:22px;font-weight:400;line-height:1;
+  color:#fff;letter-spacing:-.5px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.25),
+    0 4px 10px rgba(43,43,43,.18);
+}
+.burden-circle[data-band="lett"]{background:linear-gradient(180deg, #4FA46E 0%, var(--burden-lett) 100%);}
+.burden-circle[data-band="medium"]{background:linear-gradient(180deg, #D97B41 0%, var(--burden-medium) 100%);}
+.burden-circle[data-band="mye"]{background:linear-gradient(180deg, #2D4063 0%, var(--burden-mye) 100%);}
+.burden-label{
+  font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--ink-500);
+}
+
+/* ────────── BottomTabBar ────────── */
+.tabbar{
+  position:absolute;left:0;right:0;bottom:0;z-index:10;
+  padding:10px 16px max(14px, env(safe-area-inset-bottom,14px));
+  background:
+    linear-gradient(180deg, rgba(232,225,213,0) 0%, rgba(232,225,213,.9) 40%, rgba(232,225,213,1) 100%);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-top:1px solid rgba(43,43,43,.06);
+  display:flex;align-items:stretch;gap:4px;
+}
+.tabbar-item{
+  flex:1;min-height:52px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  background:none;border:none;cursor:pointer;padding:6px 0;
+  color:var(--ink-500);font-family:var(--font-sans);
+  -webkit-tap-highlight-color:transparent;
+}
+.tabbar-item .ico{
+  width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+}
+.tabbar-item .lbl{
+  font-size:10.5px;font-weight:600;letter-spacing:.2px;
+}
+.tabbar-item.active{color:var(--terracotta-700);}
+.tabbar-item.active .ico{
+  background:var(--terracotta-100);border-radius:12px;padding:0 14px;
+}
+
+/* ────────── Reduced motion ────────── */
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important;animation:none !important;}
+}
+
+/* ────────── Focus-visible for tastatur-a11y ────────── */
+button:focus-visible{
+  outline:2px solid var(--terracotta-600);
+  outline-offset:2px;
+}
+</style>
+</head>
+<body>
+
+<div class="frame" role="img" aria-label="Babyora — skjermen Uke, mock B (visuell + romslig)">
+  <main class="screen" aria-labelledby="uke-heading">
+
+    <!-- ────────── Top-bar ────────── -->
+    <div class="topbar">
+      <div class="city-pill">
+        <span class="city-dot" aria-hidden="true"></span>
+        <span class="city-name">Elverum</span>
+        <span class="city-meta">· oppdatert nå</span>
+      </div>
+      <div class="notif-wrap">
+        <button type="button" class="notif-btn" aria-label="Varsler — 1 nytt">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+          </svg>
+          <span class="badge" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ────────── Tabs ────────── -->
+    <nav class="tabs" aria-label="Visning">
+      <button type="button" class="tab active" aria-pressed="true">I dag</button>
+      <button type="button" class="tab" aria-pressed="false">10 dager</button>
+    </nav>
+
+    <!-- ────────── HERO: stor «akkurat nå» ────────── -->
+    <section class="hero" aria-labelledby="hero-now">
+      <div class="hero-label" id="hero-now">Akkurat nå · 11:42</div>
+      <div class="hero-row">
+        <div class="hero-temp" aria-label="6 grader">6<sup>°</sup></div>
+        <!-- Stor sol-bak-sky-ikon -->
+        <svg class="hero-icon" width="96" height="84" viewBox="0 0 96 84" fill="none" aria-hidden="true">
+          <defs>
+            <radialGradient id="sunGrad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#FFE7B0"/>
+              <stop offset="60%" stop-color="#F0B45A"/>
+              <stop offset="100%" stop-color="#D9913A"/>
+            </radialGradient>
+            <linearGradient id="cloudGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#E6EEF4"/>
+              <stop offset="100%" stop-color="#B6C5D2"/>
+            </linearGradient>
+          </defs>
+          <circle cx="36" cy="30" r="20" fill="url(#sunGrad)"/>
+          <path d="M28 64h44a14 14 0 0 0 1.4-28 18 18 0 0 0-34.5 2.6A12 12 0 0 0 28 64z"
+                fill="url(#cloudGrad)"
+                stroke="rgba(43,43,43,.04)" stroke-width="1"/>
+        </svg>
+      </div>
+      <p class="hero-sub">
+        Føles som <strong>3°</strong>, lett vind. <strong>Mille</strong> trenger
+        <strong style="color:var(--burden-medium)">middels på</strong>.
+      </p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <span class="k">Føles</span>
+          <span class="v">3°</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="k">Vind</span>
+          <span class="v">2 m/s</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="k">Nedbør</span>
+          <span class="v">0 mm</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ────────── Section-tittel + legend ────────── -->
+    <div class="section-head">
+      <h1 id="uke-heading" class="section-title">Time for time</h1>
+      <div class="legend" role="list" aria-label="Påkledning-byrde">
+        <span class="legend-item" role="listitem">
+          <span class="legend-dot" style="background:var(--burden-lett)" aria-hidden="true"></span>
+          <span class="legend-label">Lett</span>
+        </span>
+        <span class="legend-item" role="listitem">
+          <span class="legend-dot" style="background:var(--burden-medium)" aria-hidden="true"></span>
+          <span class="legend-label">Medium</span>
+        </span>
+        <span class="legend-item" role="listitem">
+          <span class="legend-dot" style="background:var(--burden-mye)" aria-hidden="true"></span>
+          <span class="legend-label">Mye</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- ────────── Timeline: visuelle, romslige time-kort ────────── -->
+    <div class="timeline-wrap">
+      <ul class="timeline" role="list" aria-label="Time-for-time prognose">
+
+        <!-- 08:00 morgen — lett -->
+        <li class="hour-card" data-burden="lett"
+            aria-label="Klokken 08, morgen. 4 grader, føles 2. Lett påkledning, 2 plagg.">
+          <div class="h-time">
+            <span class="clock">08:00</span>
+            <span class="tod">Morgen</span>
+          </div>
+          <div class="h-mid">
+            <div class="h-icon icon-partly" aria-hidden="true">
+              <svg width="40" height="32" viewBox="0 0 40 32" fill="none">
+                <circle cx="14" cy="12" r="7" fill="#E8A24A"/>
+                <path d="M12 24h17a6 6 0 0 0 .6-12 8 8 0 0 0-15.2 1.4A5 5 0 0 0 12 24z"
+                      fill="#B6C5D2"/>
+              </svg>
+            </div>
+            <div class="h-temps">
+              <span class="h-temp">4<sup>°</sup></span>
+              <span class="h-feels">føles 2°</span>
+            </div>
+          </div>
+          <div class="h-burden">
+            <span class="burden-circle" data-band="lett" aria-hidden="true">2</span>
+            <span class="burden-label">Lett</span>
+          </div>
+        </li>
+
+        <!-- 11:00 dag — NÅ -->
+        <li class="hour-card is-now" data-burden="medium"
+            aria-label="Klokken 11, nå. 6 grader, føles 3. Medium påkledning, 3 plagg.">
+          <div class="h-time">
+            <span class="clock">11:00</span>
+            <span class="tod">Dag</span>
+            <span class="now-pill">Nå</span>
+          </div>
+          <div class="h-mid">
+            <div class="h-icon icon-partly" aria-hidden="true">
+              <svg width="40" height="32" viewBox="0 0 40 32" fill="none">
+                <circle cx="14" cy="12" r="7" fill="#E8A24A"/>
+                <path d="M12 24h17a6 6 0 0 0 .6-12 8 8 0 0 0-15.2 1.4A5 5 0 0 0 12 24z"
+                      fill="#B6C5D2"/>
+              </svg>
+            </div>
+            <div class="h-temps">
+              <span class="h-temp">6<sup>°</sup></span>
+              <span class="h-feels">føles 3°</span>
+            </div>
+          </div>
+          <div class="h-burden">
+            <span class="burden-circle" data-band="medium" aria-hidden="true">3</span>
+            <span class="burden-label">Medium</span>
+          </div>
+        </li>
+
+        <!-- 14:00 dag — medium -->
+        <li class="hour-card" data-burden="medium"
+            aria-label="Klokken 14, dag. 8 grader, føles 6. Medium påkledning, 3 plagg.">
+          <div class="h-time">
+            <span class="clock">14:00</span>
+            <span class="tod">Dag</span>
+          </div>
+          <div class="h-mid">
+            <div class="h-icon icon-clear" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                <circle cx="18" cy="18" r="7" fill="#E8A24A"/>
+                <g stroke="#E8A24A" stroke-width="2" stroke-linecap="round">
+                  <path d="M18 3v4M18 29v4M3 18h4M29 18h4M7 7l2.5 2.5M26.5 26.5L29 29M29 7l-2.5 2.5M9.5 26.5L7 29"/>
+                </g>
+              </svg>
+            </div>
+            <div class="h-temps">
+              <span class="h-temp">8<sup>°</sup></span>
+              <span class="h-feels">føles 6°</span>
+            </div>
+          </div>
+          <div class="h-burden">
+            <span class="burden-circle" data-band="medium" aria-hidden="true">3</span>
+            <span class="burden-label">Medium</span>
+          </div>
+        </li>
+
+        <!-- 17:00 kveld — medium, lett regn -->
+        <li class="hour-card" data-burden="medium"
+            aria-label="Klokken 17, kveld. 7 grader, føles 4. Medium påkledning, 3 plagg.">
+          <div class="h-time">
+            <span class="clock">17:00</span>
+            <span class="tod">Kveld</span>
+          </div>
+          <div class="h-mid">
+            <div class="h-icon icon-rain" aria-hidden="true">
+              <svg width="40" height="34" viewBox="0 0 40 34" fill="none">
+                <path d="M10 18h20a6 6 0 0 0 .6-12 8.5 8.5 0 0 0-16.4 1.4A5.5 5.5 0 0 0 10 18z"
+                      fill="#EAF1F6"/>
+                <g stroke="#7A95AB" stroke-width="2" stroke-linecap="round">
+                  <path d="M15 22l-2 6M22 22l-2 6M29 22l-2 6"/>
+                </g>
+              </svg>
+            </div>
+            <div class="h-temps">
+              <span class="h-temp">7<sup>°</sup></span>
+              <span class="h-feels">føles 4°</span>
+            </div>
+          </div>
+          <div class="h-burden">
+            <span class="burden-circle" data-band="medium" aria-hidden="true">3</span>
+            <span class="burden-label">Medium</span>
+          </div>
+        </li>
+
+        <!-- 20:00 kveld — mye på -->
+        <li class="hour-card" data-burden="mye"
+            aria-label="Klokken 20, kveld. 3 grader, føles 0. Mye på, 4 plagg.">
+          <div class="h-time">
+            <span class="clock">20:00</span>
+            <span class="tod">Kveld</span>
+          </div>
+          <div class="h-mid">
+            <div class="h-icon icon-cloud" aria-hidden="true">
+              <svg width="40" height="28" viewBox="0 0 40 28" fill="none">
+                <path d="M10 22h22a6.5 6.5 0 0 0 .7-13 9 9 0 0 0-17.3 1.5A5.8 5.8 0 0 0 10 22z"
+                      fill="#94A8B8"/>
+              </svg>
+            </div>
+            <div class="h-temps">
+              <span class="h-temp">3<sup>°</sup></span>
+              <span class="h-feels">føles 0°</span>
+            </div>
+          </div>
+          <div class="h-burden">
+            <span class="burden-circle" data-band="mye" aria-hidden="true">4</span>
+            <span class="burden-label">Mye på</span>
+          </div>
+        </li>
+
+        <!-- 23:00 natt — mye på -->
+        <li class="hour-card" data-burden="mye"
+            aria-label="Klokken 23, natt. 1 grader, føles minus 2. Mye på, 4 plagg.">
+          <div class="h-time">
+            <span class="clock">23:00</span>
+            <span class="tod">Natt</span>
+          </div>
+          <div class="h-mid">
+            <div class="h-icon icon-night" aria-hidden="true">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <path d="M22 20.5A10 10 0 0 1 11.5 10c0-2 .6-3.9 1.6-5.4A10 10 0 1 0 27.4 18.9c-1.5 1-3.4 1.6-5.4 1.6z"
+                      fill="#F5E6C7"/>
+                <circle cx="24" cy="9" r="1.4" fill="#F5E6C7"/>
+                <circle cx="20" cy="6" r="1" fill="#F5E6C7"/>
+              </svg>
+            </div>
+            <div class="h-temps">
+              <span class="h-temp">1<sup>°</sup></span>
+              <span class="h-feels">føles −2°</span>
+            </div>
+          </div>
+          <div class="h-burden">
+            <span class="burden-circle" data-band="mye" aria-hidden="true">4</span>
+            <span class="burden-label">Mye på</span>
+          </div>
+        </li>
+
+      </ul>
+    </div>
+
+    <!-- ────────── Bottom tab-bar (Uke = aktiv) ────────── -->
+    <nav class="tabbar" aria-label="Hovednavigasjon">
+      <button type="button" class="tabbar-item" aria-label="Hjem">
+        <span class="ico" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6h-6v6H5a2 2 0 0 1-2-2z"/>
+          </svg>
+        </span>
+        <span class="lbl">Hjem</span>
+      </button>
+      <button type="button" class="tabbar-item" aria-label="Påkledning">
+        <span class="ico" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 4l3-1 3 2 3-2 3 1 3 5-4 2v9H7v-9L3 9z"/>
+          </svg>
+        </span>
+        <span class="lbl">Påkledning</span>
+      </button>
+      <button type="button" class="tabbar-item active" aria-current="page" aria-label="Uke">
+        <span class="ico" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="5" width="18" height="16" rx="2"/>
+            <path d="M3 9h18M8 3v4M16 3v4"/>
+          </svg>
+        </span>
+        <span class="lbl">Uke</span>
+      </button>
+      <button type="button" class="tabbar-item" aria-label="Profil">
+        <span class="ico" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 21a8 8 0 0 1 16 0"/>
+          </svg>
+        </span>
+        <span class="lbl">Profil</span>
+      </button>
+    </nav>
+
+  </main>
+</div>
+
+</body>
+</html>

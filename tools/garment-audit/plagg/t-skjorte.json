@@ -1,0 +1,54 @@
+{
+  "claude": {
+    "id": "t-skjorte",
+    "dbString": "t-skjorte",
+    "kategori": "innerst",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Har komplett what+when i garment-info.ts (linje 53-56). Tone/lengde matcher søsken i innerst (shorts, lett-bukse, bleie). Dedikert whyForGarment-gren finnes (linje 343-345), delt med shorts og lett-bukse — IKKE fallback. Eneste svakhet: what/when er litt kortere/mindre fyldig enn ull-søsknene (f.eks. langermet-ullbody har 2-setnings what); t-skjorte er bevisst enkel, så akseptabelt. Ingen severity-funn."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes paa C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\t-skjorte.png. Mapping i garment-illustrations.ts linje 23: 't-skjorte' -> 't-skjorte' er korrekt og 1:1 (db-streng identisk med id). Navn plausibelt og entydig — ingen kollisjon med andre id-er. Visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 23,
+      "kommentar": "T-skjorte velges KUN i aktivitet=utelek, i to varmeste baand: tropisk (>=22 C) og ekstrem_varme (>=28 C). Aldri i vogn/baeresele/soevn. Pediatrisk forsvarlig: tynn bomull i varme stoetter varmeavgivelse (AAP 'one layer'-prinsipp, PMC-12386404 om spedbarns varmetoleranse, HALO overophetings-tegn). Overophetings-sikkerhet ved ekstrem hete dekkes av SB-7 (<6 mnd maks 15 min) og sol-modifier (notes.sun). Ingen uoppdekket helse-spoersmaal -> ingen web-soek noedvendig. Liten merknad: ved ekstrem_varme (>=28 C) beholder utelek-baandet IDENTISK antrekk som tropisk (t-skjorte+shorts+sandaler+solhatt), i motsetning til vogn/baeresele/soevn som strippes ned — men for utelek er tynn skjorte som sol-/UV-beskyttelse forsvarlig fremfor bar hud.",
+      "score_dummy": 0,
+      "kilder": [
+        "https://www.healthychildren.org/English/ages-stages/baby/diapers-clothing/Pages/Dressing-Your-Newborn.aspx",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC12386404/",
+        "https://www.halosleep.com/blogs/halo/tog-chart"
+      ],
+      "trace": "baseTable.utelek.tropisk -> innerst:['t-skjorte','shorts'] + ekstra:['solhatt','sandaler']; baseTable.utelek.ekstrem_varme -> innerst:['t-skjorte','shorts'] + ekstra:['solhatt','sandaler']. Modifiers: ingen legger til/fjerner t-skjorte (ullsokker legges kun til ved feels<=5 C, co-oppstaar aldri med t-skjorte; fottoey-modifier ved alder<9mnd fjerner sandaler men beholder t-skjorte). conflicts/softBlocks/safety: ingen regel matcher t-skjorte direkte; SB-2 maks-lag-cap fjerner kun teppe/varmepose lett (t-skjorte overlever som innerst). Konklusjon: t-skjorte = innerst-lag i varm+ekstrem-varme utelek, korrekt avgrenset."
+    },
+    "tekstLogikk": {
+      "score": 24,
+      "kommentar": "STEMMER med trace. when='Varme sommerdager med utelek' matcher praesist baseTable (kun utelek, tropisk+ekstrem_varme >=22 C). whyForGarment-gren (linje 343-345): 'Lett bomulls-plagg — minimerer varme ved {feels} C saa {childName} ikke svetter under utelek' — konsistent med bade temperatur-baand og aktivitet. Ingen drift som villeder paakledning. Liten upresishet: 'sommerdager' antyder >=22 C men teksten naevner ikke at plagget ogsaa staar ved ekstrem hete (>=28 C) — uvesentlig siden begge er 'varme'. Ingen severity-funn."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "T-skjorte (bomull) har ingen oppfoering i alternatives.ts. Et reelt alternativ KUNNE vaert kortermet ullbody (ull svetter/regulerer fukt bedre enn bomull ved aktiv lek i varme — jf. merino-kids og at appens brand-DNA er ull-foerst). Dette er imidlertid en MINDRE/valgfri mangel: tynn bomull er pustende og fullt forsvarlig for varm utelek, og produktet posisjonerer t-skjorte som det lette sommer-valget. Eksisterende alternativ-databasen prioriterer ull<->fleece-bytter i mellomlag/yttertoey, som er der valgene betyr mest. Lav prioritet."
+    },
+    "total": 92,
+    "verdikt": "Solid plagg-oppfoering. Komplett struktur, korrekt mapping og eksisterende PNG, presis og pediatrisk forsvarlig seleksjon (kun varm/ekstrem-varme utelek), og when-tekst + whyForGarment som stemmer med faktisk trace. Eneste reelle forbedring er et valgfritt ull-alternativ (kortermet ullbody) i alternatives.ts. Ingen sikkerhets- eller drift-funn av hoy severity.\"",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "T-skjorte mangler oppfoering i alternatives.ts. Brand-DNA er ull-foerst, og ved aktiv lek i varme regulerer ull fukt/svette bedre enn bomull, men det finnes ingen ull<->bomull-bytte tilbudt for dette plagget.",
+        "forslag": "Vurder aa legge til kortermet ullbody (evt. kortermet-ullbody) som alternativ til 't-skjorte' i ITEM_ALTERNATIVES, med whenKey som forklarer at ull svetter/regulerer fukt bedre ved aktiv lek i varme. Lav prioritet — bomull er fullt forsvarlig for varm utelek.",
+        "kilde": "merino-kids (Merino Kids UK — Temperature regulation in babies): ull-fordeler ved fukt"
+      },
+      {
+        "severity": "lav",
+        "mal": 4,
+        "beskrivelse": "when-teksten ('Varme sommerdager med utelek') daekker tropisk-baandet, men plagget velges ogsaa i ekstrem_varme-baandet (>=28 C) der utelek-tabellen beholder identisk t-skjorte+shorts-antrekk. Teksten naevner ikke ekstrem-varme-konteksten der overophetings-tiltak (skygge, kort utetid) er kritiske.",
+        "forslag": "Valgfritt: utvid when til aa naevne at ved svaert hoye temperaturer er skygge/kort utetid viktigere enn tekstil-valget. Ikke kritisk siden overophetings-noter (SB-7, sol-modifier) leveres dynamisk av motoren.",
+        "kilde": "modifiers.ts SB-7 + notes.heat.extreme; PMC-12386404 (spedbarns varmetoleranse)"
+      }
+    ]
+  },
+  "fable": null
+}

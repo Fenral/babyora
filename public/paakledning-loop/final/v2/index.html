@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Påkledning · Final V2 — Skannbar liste</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-canvas:#DBD8D2;
+  --bg-canvas-soft:#E5E2DC;
+  --bg-canvas-deep:#CFCBC2;
+
+  --terracotta-500:#C0632F;
+  --terracotta-700:#A9492A;
+  --terracotta-100:#F4E4D8;
+
+  --cta-orange:#E85A1F;
+  --cta-orange-deep:#B83F12;
+
+  --layer-ytterst:#B45A24;
+  --layer-mellom:#5E8C6A;
+  --layer-innerst:#3F5A78;
+  --layer-tilbehor:#7B6A58;
+
+  --layer-ytterst-tint:#F2DECF;
+  --layer-mellom-tint:#DDE9DF;
+  --layer-innerst-tint:#DCE4ED;
+  --layer-tilbehor-tint:#E6DFD6;
+
+  --pro-green:#3D6048;
+  --con-amber:#946018;
+
+  --ink-900:#2B2B2B;
+  --ink-700:#5A514C;
+  --ink-500:#A89E97;
+  --ink-300:#C9C3BD;
+
+  --card-bg:#FFFFFF;
+
+  --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+  --font-serif:'DM Serif Display',Georgia,serif;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#1a1a1a;font-family:var(--font-sans);}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;color:var(--ink-900);}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+.frame{
+  position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5), 0 0 0 12px #1f1f1f, 0 0 0 13px #333;
+  background:var(--bg-canvas);
+}
+.screen{
+  position:relative;height:100%;width:100%;display:flex;flex-direction:column;
+  color:var(--ink-900);padding-top:env(safe-area-inset-top,0px);
+  background:var(--bg-canvas);
+}
+.screen::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 46% at 50% -8%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%);
+}
+
+.topbar{
+  position:relative;z-index:5;flex:none;
+  height:52px;margin-top:46px;padding:0 16px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(43,43,43,.06);
+}
+.back-btn{
+  width:44px;height:44px;flex:none;border-radius:11px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(43,43,43,.06);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+}
+.topbar-title{
+  flex:1;text-align:center;font-size:17px;font-weight:700;letter-spacing:-.3px;color:var(--ink-900);
+}
+.meta-pill{
+  flex:none;display:flex;align-items:center;gap:6px;
+  padding:7px 11px;border-radius:11px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(43,43,43,.06);
+  font-size:12px;font-weight:600;color:var(--ink-700);letter-spacing:.1px;
+}
+.meta-pill .temp-fig{font-family:var(--font-serif);font-weight:400;font-size:13.5px;color:var(--ink-900);}
+
+.scroll-area{
+  position:relative;z-index:3;flex:1;min-height:0;
+  overflow-y:auto;overflow-x:hidden;
+  padding:14px 16px 130px;scrollbar-width:none;
+}
+.scroll-area::-webkit-scrollbar{display:none;}
+
+.canvas-intro{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:0 4px 10px;
+}
+.canvas-intro .label{
+  font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-500);
+}
+.canvas-intro .who{font-size:12.5px;font-weight:600;color:var(--ink-700);letter-spacing:-.1px;}
+
+/* ============================================================
+   STACK-PREVIEW — kompakt visning av antrekket som helhet
+   Mini-tegning, ikke interaktiv. Forklarer ANATOMISK lag-orden.
+   Detaljer + tap-handlinger lever i lista nedenfor.
+   ============================================================ */
+.stack-preview{
+  position:relative;
+  display:flex;align-items:center;gap:14px;
+  padding:14px 16px;
+  border-radius:18px;
+  background:linear-gradient(180deg,var(--bg-canvas-soft) 0%,var(--bg-canvas-deep) 100%);
+  border:1px solid rgba(43,43,43,.06);
+  margin-bottom:14px;
+}
+.preview-mini{
+  position:relative;width:100px;height:160px;flex:none;
+  display:flex;flex-direction:column;align-items:center;
+}
+.preview-mini .mini-img{
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  filter:drop-shadow(1px 3px 6px rgba(74,68,58,.20));
+}
+.preview-mini .mini-lue          {width:30px;height:30px;}
+.preview-mini .mini-vinterdress  {width:78px;height:90px;margin-top:-10px;}
+.preview-mini .mini-sokk         {width:38px;height:28px;margin-top:-6px;}
+.preview-summary{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;gap:6px;
+}
+.preview-summary .title{
+  font-family:var(--font-serif);font-weight:400;font-size:20px;
+  line-height:1.1;letter-spacing:-.3px;color:var(--ink-900);
+}
+.preview-summary .sub{
+  font-size:12px;color:var(--ink-700);line-height:1.35;
+}
+.preview-counts{
+  display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;
+}
+.preview-count{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;border-radius:6px;
+  font-size:10.5px;font-weight:700;letter-spacing:1.0px;text-transform:uppercase;
+  border:1px solid transparent;
+}
+.preview-count .count-dot{width:6px;height:6px;border-radius:50%;}
+.preview-count.ytterst {background:var(--layer-ytterst-tint);color:#7A3C1A;}
+.preview-count.ytterst .count-dot{background:var(--layer-ytterst);}
+.preview-count.mellom  {background:var(--layer-mellom-tint);color:#33543E;}
+.preview-count.mellom .count-dot{background:var(--layer-mellom);}
+.preview-count.innerst {background:var(--layer-innerst-tint);color:#243B57;}
+.preview-count.innerst .count-dot{background:var(--layer-innerst);}
+.preview-count.tilbehor{background:var(--layer-tilbehor-tint);color:#473C30;}
+.preview-count.tilbehor .count-dot{background:var(--layer-tilbehor);}
+
+/* Helper-banner */
+.helper-banner{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 13px;border-radius:12px;background:rgba(255,255,255,.7);
+  border:1px solid rgba(43,43,43,.05);
+  margin-bottom:10px;
+}
+.helper-banner svg{flex:none;}
+.helper-banner .text{flex:1;font-size:12px;color:var(--ink-700);line-height:1.32;}
+.helper-banner .text b{color:var(--ink-900);font-weight:600;}
+
+/* ============================================================
+   GROUPED LIST — kategori-overskrift + plagg-rader
+   ============================================================ */
+.group{margin-bottom:14px;}
+.group-head{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 4px 8px;
+}
+.group-bar{width:3px;height:14px;border-radius:2px;}
+.group-bar.ytterst {background:var(--layer-ytterst);}
+.group-bar.mellom  {background:var(--layer-mellom);}
+.group-bar.innerst {background:var(--layer-innerst);}
+.group-bar.tilbehor{background:var(--layer-tilbehor);}
+.group-title{
+  font-size:10.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+}
+.group.ytterst  .group-title{color:#7A3C1A;}
+.group.mellom   .group-title{color:#33543E;}
+.group.innerst  .group-title{color:#243B57;}
+.group.tilbehor .group-title{color:#473C30;}
+.group-count{
+  margin-left:auto;
+  font-size:11px;font-weight:600;color:var(--ink-500);letter-spacing:.1px;
+}
+
+.row-list{
+  list-style:none;padding:0;margin:0;
+  display:flex;flex-direction:column;gap:8px;
+}
+.row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 12px;
+  background:var(--card-bg);border-radius:14px;
+  box-shadow:0 1px 2px rgba(43,37,34,.04), 0 4px 10px rgba(43,37,34,.04);
+  position:relative;cursor:pointer;
+  border:1px solid transparent;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform 140ms ease, border-color 140ms ease;
+  text-align:left;width:100%;font-family:var(--font-sans);
+}
+.row:active{transform:scale(.99);}
+.row:focus-visible{outline:2px solid var(--terracotta-500);outline-offset:2px;}
+.row.swapping{border-color:rgba(180,90,36,.4);}
+
+/* Lag-stripe på venstre kant — eneste lag-koding inni raden */
+.row::before{
+  content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;
+  border-radius:0 2px 2px 0;
+}
+.row[data-lag="ytterst"]::before {background:var(--layer-ytterst);}
+.row[data-lag="mellom"]::before  {background:var(--layer-mellom);}
+.row[data-lag="innerst"]::before {background:var(--layer-innerst);}
+.row[data-lag="tilbehor"]::before{background:var(--layer-tilbehor);}
+
+.row-thumb{
+  width:60px;height:60px;flex:none;
+  border-radius:10px;
+  background:linear-gradient(180deg,#F5F1EC 0%,#EDE8E1 100%);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.row-thumb .thumb-img{
+  width:48px;height:48px;
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  filter:drop-shadow(1px 2px 4px rgba(74,68,58,.18));
+}
+.row-thumb.votter{display:flex;gap:2px;align-items:center;justify-content:center;}
+.row-thumb.votter .thumb-img{width:22px;height:32px;}
+.row-thumb.votter .thumb-img.right{transform:scaleX(-1);}
+
+.row-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.row-name{
+  font-size:14.5px;font-weight:600;color:var(--ink-900);
+  line-height:1.2;letter-spacing:-.15px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.row-meta{
+  display:flex;align-items:center;gap:8px;
+  font-size:11.5px;color:var(--ink-500);letter-spacing:.05px;
+}
+.row-meta .meta-dot{width:3px;height:3px;border-radius:50%;background:var(--ink-300);}
+.row-meta .material{
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;
+}
+.row-meta .weight{font-weight:600;color:var(--ink-700);font-variant-numeric:tabular-nums;}
+
+.row-chevron{
+  flex:none;width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink-500);
+}
+
+/* Swap-badge — viser kun når avvik fra original */
+.swap-badge{
+  position:absolute;top:8px;right:36px;
+  display:none;align-items:center;gap:4px;
+  padding:2px 7px;border-radius:6px;
+  background:#FFF3E8;color:#7A3C1A;
+  font-size:9px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;
+  border:1px solid rgba(180,90,36,.2);
+}
+.swap-badge.visible{display:inline-flex;}
+
+/* CTA */
+.sticky-cta{
+  position:absolute;left:0;right:0;bottom:0;z-index:10;
+  padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 16px);
+  background:linear-gradient(180deg,rgba(219,216,210,0) 0%, rgba(219,216,210,.92) 28%, rgba(219,216,210,.98) 100%);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.cta-btn{
+  width:100%;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:17px 24px;border-radius:18px;border:none;cursor:pointer;
+  background:var(--cta-orange);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.32),
+    0 1px 2px rgba(43,43,43,.08),
+    0 6px 14px rgba(232,90,31,.22);
+  font-family:var(--font-sans);
+  transition:transform 120ms ease, background 120ms ease;
+}
+.cta-btn:active{transform:translateY(1px) scale(.99);background:var(--cta-orange-deep);}
+.cta-btn span{font-size:16px;font-weight:600;color:#FFF;letter-spacing:.1px;}
+
+/* ========== BOTTOM SHEET (samme system som V1) ========== */
+dialog.detail-sheet{
+  position:absolute;bottom:0;left:0;right:0;top:auto;margin:0;
+  width:100%;max-width:100%;border:none;padding:0;background:transparent;
+  overflow:visible;max-height:92%;
+}
+dialog.detail-sheet::backdrop{
+  background:rgba(20,18,16,.45);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+}
+.sheet-inner{
+  background:#FBFAF7;border-radius:24px 24px 0 0;
+  padding:14px 20px 0;box-shadow:0 -8px 30px rgba(43,37,34,.3);
+  animation:sheetSlide .32s cubic-bezier(.2,.8,.2,1);
+  max-height:92vh;display:flex;flex-direction:column;
+}
+@keyframes sheetSlide{ from{transform:translateY(100%);} to{transform:translateY(0);} }
+.sheet-handle{
+  width:38px;height:4px;border-radius:2px;background:var(--ink-300);
+  margin:0 auto 14px;flex:none;
+}
+.sheet-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  margin-bottom:12px;flex:none;
+}
+.sheet-titles{flex:1;min-width:0;}
+.lag-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 9px;border-radius:6px;
+  font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  margin-bottom:6px;
+}
+.lag-tag.ytterst {background:var(--layer-ytterst-tint);color:#7A3C1A;}
+.lag-tag.mellom  {background:var(--layer-mellom-tint);color:#33543E;}
+.lag-tag.innerst {background:var(--layer-innerst-tint);color:#243B57;}
+.lag-tag.tilbehor{background:var(--layer-tilbehor-tint);color:#473C30;}
+.sheet-title{
+  font-family:var(--font-serif);font-weight:400;font-size:22px;color:var(--ink-900);
+  margin:0;line-height:1.15;letter-spacing:-.4px;
+}
+.reset-btn{
+  flex:none;display:none;align-items:center;gap:6px;
+  padding:6px 10px;border-radius:8px;background:transparent;
+  border:1px solid rgba(43,43,43,.18);
+  font-size:11.5px;font-weight:600;color:var(--ink-700);
+  cursor:pointer;font-family:var(--font-sans);
+}
+.reset-btn.visible{display:inline-flex;}
+.sheet-close{
+  flex:none;width:36px;height:36px;border-radius:50%;
+  background:rgba(43,43,43,.05);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0;margin-left:6px;
+}
+
+.sheet-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding-bottom:12px;}
+.sheet-scroll::-webkit-scrollbar{display:none;}
+
+.sheet-hero{
+  display:flex;align-items:center;justify-content:center;
+  height:150px;background:linear-gradient(180deg,#F5F1EC 0%,#EDE8E1 100%);
+  border-radius:18px;margin-bottom:12px;position:relative;
+}
+.sheet-hero-img{
+  width:140px;height:140px;
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  filter:drop-shadow(2px 8px 12px rgba(74,68,58,.18));
+  transition:opacity .25s ease;
+}
+.sheet-hero.swapping .sheet-hero-img{opacity:.3;}
+
+.spec-line{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:#fff;border-radius:12px;padding:10px 14px;
+  box-shadow:0 1px 2px rgba(43,37,34,.04);
+  margin-bottom:12px;font-size:12px;color:var(--ink-700);
+  flex-wrap:nowrap;overflow:hidden;
+}
+.spec-line .spec-item{display:flex;align-items:baseline;gap:6px;min-width:0;}
+.spec-line .spec-item + .spec-item{position:relative;padding-left:14px;}
+.spec-line .spec-item + .spec-item::before{
+  content:"";position:absolute;left:6px;top:50%;width:1px;height:11px;
+  background:rgba(43,43,43,.12);transform:translateY(-50%);
+}
+.spec-label{font-size:9.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--ink-500);}
+.spec-value{font-size:12.5px;font-weight:600;color:var(--ink-900);letter-spacing:-.1px;}
+
+.proscons-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;
+}
+.proscons-col{
+  background:#fff;border-radius:14px;padding:11px 12px;
+  box-shadow:0 1px 2px rgba(43,37,34,.04);
+}
+.proscons-head{
+  display:flex;align-items:center;gap:6px;
+  font-size:10.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;
+  margin-bottom:8px;
+}
+.proscons-col.pros .proscons-head{color:var(--pro-green);}
+.proscons-col.cons .proscons-head{color:var(--con-amber);}
+.proscons-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;}
+.proscons-list li{
+  display:flex;align-items:flex-start;gap:6px;
+  font-size:13.5px;color:var(--ink-700);line-height:1.32;letter-spacing:-.05px;
+}
+.proscons-list li svg{flex:none;margin-top:3px;}
+.proscons-col.pros .proscons-list li svg{color:var(--pro-green);}
+.proscons-col.cons .proscons-list li svg{color:var(--con-amber);}
+
+.swap-section{
+  background:#fff;border-radius:14px;padding:13px 14px;
+  box-shadow:0 1px 2px rgba(43,37,34,.04);margin-bottom:14px;
+}
+.swap-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;
+}
+.swap-label{
+  display:flex;align-items:center;gap:6px;
+  font-size:10.5px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--ink-700);
+}
+.swap-hint{font-size:11px;color:var(--ink-500);font-weight:500;}
+.swap-cards{
+  display:flex;gap:10px;overflow-x:auto;
+  margin:0 -14px;padding:2px 14px 4px;scrollbar-width:none;
+}
+.swap-cards::-webkit-scrollbar{display:none;}
+.swap-card{
+  flex:none;width:118px;
+  display:flex;flex-direction:column;align-items:center;
+  background:#F5F1EC;border:1px solid rgba(43,43,43,.06);
+  border-radius:12px;padding:10px 8px 9px;cursor:pointer;
+  font-family:var(--font-sans);
+  -webkit-tap-highlight-color:transparent;
+  transition:transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  text-align:center;position:relative;
+}
+.swap-card:active{transform:scale(.97);}
+.swap-card-img{
+  width:62px;height:62px;
+  background-size:contain;background-repeat:no-repeat;background-position:center;
+  filter:drop-shadow(1px 3px 6px rgba(74,68,58,.18));
+  margin-bottom:6px;
+}
+.swap-card-name{
+  font-size:11.5px;font-weight:600;color:var(--ink-900);line-height:1.2;letter-spacing:-.1px;
+  margin-bottom:3px;
+}
+.swap-card-meta{font-size:10px;font-weight:500;color:var(--ink-500);}
+.swap-card.current{background:#FFF3E8;border-color:rgba(180,90,36,.35);}
+.swap-card.current::after{
+  content:"Valgt nå";
+  position:absolute;top:4px;right:6px;
+  font-size:8.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:#7A3C1A;background:#F2DECF;padding:2px 5px;border-radius:4px;
+}
+
+.sheet-footer{
+  flex:none;
+  padding:12px 0 calc(env(safe-area-inset-bottom,0px) + 12px);
+  border-top:1px solid rgba(43,43,43,.06);background:#FBFAF7;
+  display:flex;align-items:stretch;gap:8px;
+}
+.footer-primary{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px 18px;border-radius:14px;border:none;cursor:pointer;
+  background:var(--terracotta-700);color:#FFF;
+  font-family:var(--font-sans);font-size:15px;font-weight:600;letter-spacing:-.05px;
+  box-shadow:0 1px 2px rgba(43,43,43,.06),0 8px 18px rgba(169,73,42,.22);
+}
+.footer-primary:active{transform:translateY(1px) scale(.99);background:#923D22;}
+
+.undo-toast{
+  position:absolute;left:16px;right:16px;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 92px);z-index:20;
+  display:flex;align-items:center;gap:10px;
+  padding:11px 14px;border-radius:14px;
+  background:rgba(43,37,34,.95);color:#FBFAF7;
+  font-size:13px;font-weight:500;letter-spacing:-.05px;
+  box-shadow:0 8px 24px rgba(43,37,34,.35);
+  transform:translateY(140%);opacity:0;
+  transition:transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s ease;
+}
+.undo-toast.show{transform:translateY(0);opacity:1;}
+.undo-toast .toast-text{flex:1;}
+.undo-toast .toast-text b{font-weight:700;}
+.undo-btn{
+  background:transparent;border:none;cursor:pointer;
+  color:var(--cta-orange);font-weight:700;font-size:13px;letter-spacing:.2px;
+  padding:4px 6px;font-family:var(--font-sans);text-transform:uppercase;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition:none !important;}
+}
+</style>
+</head>
+<body>
+  <div class="frame">
+    <main class="screen" aria-label="Slik kler du Liv — Final V2 Skannbar liste">
+      <h1 class="sr-only">Påkledning — Final V2: Kompakt liste med kategori-grupper</h1>
+
+      <div class="topbar" role="banner">
+        <button class="back-btn" aria-label="Tilbake">
+          <svg width="9" height="16" viewBox="0 0 12 20" fill="none" stroke="#2B2B2B" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg>
+        </button>
+        <div class="topbar-title">Slik kler du Liv</div>
+        <div class="meta-pill" aria-label="Minus 22 grader, Karasjok">
+          <span class="temp-fig">−22°</span>
+          <span aria-hidden="true">·</span>
+          <span>Karasjok</span>
+        </div>
+      </div>
+
+      <div class="scroll-area">
+
+        <div class="canvas-intro">
+          <span class="label">Antrekk</span>
+          <span class="who">Liv · 14 mnd · Utelek</span>
+        </div>
+
+        <!-- Stack-preview: én blokk som forklarer helheten -->
+        <div class="stack-preview" aria-label="Antrekket som helhet">
+          <div class="preview-mini" aria-hidden="true">
+            <div class="mini-img mini-lue" style="background-image:url(../../illustrations/garments/lue-m-ull.png);"></div>
+            <div class="mini-img mini-vinterdress" style="background-image:url(../../illustrations/garments/vinterdress.png);"></div>
+            <div class="mini-img mini-sokk" style="background-image:url(../../illustrations/garments/ullsokker.png);"></div>
+          </div>
+          <div class="preview-summary">
+            <div class="title">8 plagg · 3 lag</div>
+            <div class="sub">Bygget for tørt aktiv utelek ned mot −22°. Trykk for å se hvorfor, eller bytt et plagg.</div>
+            <div class="preview-counts">
+              <span class="preview-count innerst"><span class="count-dot"></span>2 Innerst</span>
+              <span class="preview-count mellom"><span class="count-dot"></span>2 Mellom</span>
+              <span class="preview-count ytterst"><span class="count-dot"></span>1 Ytterst</span>
+              <span class="preview-count tilbehor"><span class="count-dot"></span>3 Tilbehør</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="helper-banner" role="note">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5E8C6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>
+          </svg>
+          <div class="text"><b>Skannbar liste</b> — gruppert fra innerst til ytterst slik du kler henne.</div>
+        </div>
+
+        <!-- ============ INNERST ============ -->
+        <div class="group innerst" data-group="innerst">
+          <div class="group-head">
+            <span class="group-bar innerst"></span>
+            <span class="group-title">Innerst</span>
+            <span class="group-count">2 plagg</span>
+          </div>
+          <ul class="row-list" data-list="innerst" role="list"></ul>
+        </div>
+
+        <!-- ============ MELLOM ============ -->
+        <div class="group mellom" data-group="mellom">
+          <div class="group-head">
+            <span class="group-bar mellom"></span>
+            <span class="group-title">Mellom</span>
+            <span class="group-count">2 plagg</span>
+          </div>
+          <ul class="row-list" data-list="mellom" role="list"></ul>
+        </div>
+
+        <!-- ============ YTTERST ============ -->
+        <div class="group ytterst" data-group="ytterst">
+          <div class="group-head">
+            <span class="group-bar ytterst"></span>
+            <span class="group-title">Ytterst</span>
+            <span class="group-count">1 plagg</span>
+          </div>
+          <ul class="row-list" data-list="ytterst" role="list"></ul>
+        </div>
+
+        <!-- ============ TILBEHØR ============ -->
+        <div class="group tilbehor" data-group="tilbehor">
+          <div class="group-head">
+            <span class="group-bar tilbehor"></span>
+            <span class="group-title">Tilbehør</span>
+            <span class="group-count">3 plagg</span>
+          </div>
+          <ul class="row-list" data-list="tilbehor" role="list"></ul>
+        </div>
+
+      </div>
+
+      <div class="sticky-cta">
+        <button class="cta-btn" type="button" aria-label="Klar for tur">
+          <span>Klar for tur</span>
+          <svg width="22" height="13" viewBox="0 0 26 14" fill="none" stroke="#FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h20"/><path d="M17 2l5 5-5 5"/></svg>
+        </button>
+      </div>
+
+      <div class="undo-toast" id="undo-toast" role="status" aria-live="polite">
+        <span class="toast-text">Byttet til <b id="undo-name">—</b></span>
+        <button class="undo-btn" type="button" id="undo-btn">Angre</button>
+      </div>
+
+      <dialog class="detail-sheet" id="detail-sheet" aria-labelledby="sheet-title">
+        <div class="sheet-inner">
+          <div class="sheet-handle" aria-hidden="true"></div>
+          <div class="sheet-head">
+            <div class="sheet-titles">
+              <span class="lag-tag" id="sheet-lag-tag">Lag</span>
+              <h2 class="sheet-title" id="sheet-title">Plagg</h2>
+            </div>
+            <button class="reset-btn" id="reset-btn" type="button" aria-label="Tilbakestill til original">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.5"/><path d="M3 3v3h3"/></svg>
+              Tilbakestill
+            </button>
+            <button class="sheet-close" id="sheet-close" type="button" aria-label="Lukk detalj">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+            </button>
+          </div>
+
+          <div class="sheet-scroll">
+            <div class="sheet-hero" id="sheet-hero">
+              <div class="sheet-hero-img" id="sheet-hero-img" aria-hidden="true"></div>
+            </div>
+
+            <div class="spec-line" aria-label="Plagg-spesifikasjoner">
+              <div class="spec-item">
+                <span class="spec-label">Material</span>
+                <span class="spec-value" id="sheet-material">—</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Vekt</span>
+                <span class="spec-value" id="sheet-weight">—</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">Kat.</span>
+                <span class="spec-value" id="sheet-category">—</span>
+              </div>
+            </div>
+
+            <div class="proscons-grid" aria-label="Styrker og hensyn ved valget">
+              <div class="proscons-col pros">
+                <div class="proscons-head">
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l3 3 7-7"/></svg>
+                  Styrker
+                </div>
+                <ul class="proscons-list" id="sheet-pros"><li>—</li></ul>
+              </div>
+              <div class="proscons-col cons">
+                <div class="proscons-head">
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M3 8h10"/></svg>
+                  Hensyn
+                </div>
+                <ul class="proscons-list" id="sheet-cons"><li>—</li></ul>
+              </div>
+            </div>
+
+            <div class="swap-section" aria-label="Bytt til et alternativ">
+              <div class="swap-head">
+                <span class="swap-label">
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7l-2-2M12 12H5l2 2"/></svg>
+                  Bytte til
+                </span>
+                <span class="swap-hint" id="swap-hint">—</span>
+              </div>
+              <div class="swap-cards" id="swap-cards" role="listbox" aria-label="Alternative plagg i samme kategori"></div>
+            </div>
+          </div>
+
+          <div class="sheet-footer">
+            <button class="footer-primary" type="button" id="footer-ok-btn">
+              <span>Behold valg</span>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l3 3 7-7"/></svg>
+            </button>
+          </div>
+        </div>
+      </dialog>
+
+    </main>
+  </div>
+
+<script>
+(function(){
+  const garments = {
+    'ullbody':{
+      name:'Ullbody langermet', lag:'innerst', lagLabel:'Innerst',
+      img:'../../illustrations/garments/langermet-ullbody.png',
+      material:'Merino 160 g/m²', weight:'85 g', category:'Innerlag overdel',
+      pros:['Transporterer svette vekk fra hud','Body-form hindrer kuldebro over magen'],
+      cons:['Krever skånsom vask','Tregere tørketid enn syntetisk'],
+      alternatives:[
+        {key:'ullbody-tykk',name:'Tykk ullbody',meta:'200 g/m² · ekstra varme',img:'../../illustrations/garments/langermet-ullbody.png'},
+        {key:'syntetisk-body',name:'Syntetisk body',meta:'Raskere tørk',img:'../../illustrations/garments/langermet-ullbody.png'}
+      ]
+    },
+    'tynn-bukse':{
+      name:'Tynn ullbukse', lag:'innerst', lagLabel:'Innerst',
+      img:'../../illustrations/garments/tynn-bukse.png',
+      material:'Merino 160 g/m²', weight:'70 g', category:'Innerlag underdel',
+      pros:['Hindrer kald luft mot huden','Fukt-transport når hun går i snø'],
+      cons:['Liten varme alene','Klam under tett bukse i mildvær'],
+      alternatives:[
+        {key:'ullbukse-tykk',name:'Tykk ullbukse',meta:'240 g/m² · varmere',img:'../../illustrations/garments/tynn-bukse.png'},
+        {key:'syntetisk-bukse',name:'Syntetisk bukse',meta:'Rask tørk',img:'../../illustrations/garments/tynn-bukse.png'}
+      ]
+    },
+    'fleecejakke':{
+      name:'Fleecejakke', lag:'mellom', lagLabel:'Mellom',
+      img:'../../illustrations/garments/ull-jakke.png',
+      material:'Fleece (polyester)', weight:'180 g', category:'Mellom overdel',
+      pros:['Tørker raskt etter aktivitet','Lav vekt — lett å bevege seg i'],
+      cons:['Klam over 0° når brukt over ullsett','Vindgjennomgang uten ytterlag'],
+      alternatives:[
+        {key:'ulljakke-tynn',name:'Tynn ulljakke',meta:'Varmere · tregere tørk',img:'../../illustrations/garments/ull-jakke.png'},
+        {key:'dunvest',name:'Dunvest',meta:'Kropp-fokus · armer fri',img:'../../illustrations/garments/ull-jakke.png'}
+      ]
+    },
+    'ullsett-tykt':{
+      name:'Ullsett tykt', lag:'mellom', lagLabel:'Mellom',
+      img:'../../illustrations/garments/ullsett-tykt.png',
+      material:'Merino 280 g/m²', weight:'220 g', category:'Mellomlag sett',
+      pros:['Isolerer godt selv litt fuktig','Hovedvarme under −15°'],
+      cons:['Tar lang tid å tørke','For varmt over −5°'],
+      alternatives:[
+        {key:'ullsett-medium',name:'Ullsett medium',meta:'200 g/m² · til −10°',img:'../../illustrations/garments/ullsett-tykt.png'},
+        {key:'fleecesett',name:'Fleecesett',meta:'Lett · tørker raskt',img:'../../illustrations/garments/ull-jakke.png'}
+      ]
+    },
+    'vinterdress':{
+      name:'Vinterdress', lag:'ytterst', lagLabel:'Ytterst',
+      img:'../../illustrations/garments/vinterdress.png',
+      material:'Polyester m/ dun', weight:'480 g', category:'Heldress',
+      pros:['Vindtett skall stopper kald luft','Heldress hindrer kuldebro over magen'],
+      cons:['Lang tørketid hvis våt','For varm i +5° eller varmere'],
+      alternatives:[
+        {key:'parkdress-skall',name:'Parkdress (skall)',meta:'Lettere · ned til −10°',img:'../../illustrations/garments/vinterdress.png'},
+        {key:'ulldress-tykk',name:'Tykk ulldress',meta:'Pustende · ned til −15°',img:'../../illustrations/garments/ullsett-tykt.png'}
+      ]
+    },
+    'lue':{
+      name:'Lue med ull', lag:'tilbehor', lagLabel:'Tilbehør',
+      img:'../../illustrations/garments/lue-m-ull.png',
+      material:'Ull/akryl m/ fôr', weight:'45 g', category:'Hode',
+      pros:['Dekker øret og pannen','Obligatorisk under −10°'],
+      cons:['Glir av ved aktiv lek','Litt klam over 0°'],
+      alternatives:[
+        {key:'balaklava',name:'Balaklava',meta:'Dekker hals + ansikt',img:'../../illustrations/garments/balaklava.png'},
+        {key:'lue-tynn',name:'Tynn ullue',meta:'Mildvær (0° til −5°)',img:'../../illustrations/garments/lue-tynn.png'}
+      ]
+    },
+    'votter':{
+      name:'Vindvotter med skall', lag:'tilbehor', lagLabel:'Tilbehør',
+      img:'../../illustrations/garments/vindvotter-skall.png',
+      material:'Ull-fôr + vindskall', weight:'55 g', category:'Hender',
+      pros:['Vindtett skall stopper kuldebro','Lange mansjetter dekker håndledd'],
+      cons:['Vanskelig å ta av/på alene','Klam over 0°'],
+      alternatives:[
+        {key:'ullvotter',name:'Ullvotter',meta:'Mer fingerføling',img:'../../illustrations/garments/votter.png'},
+        {key:'lobbevanter',name:'Lobbevanter',meta:'Strikket · til −5°',img:'../../illustrations/garments/votter-tynne.png'}
+      ]
+    },
+    'ullsokker':{
+      name:'Ullsokker', lag:'tilbehor', lagLabel:'Tilbehør',
+      img:'../../illustrations/garments/ullsokker.png',
+      material:'80% merino, 20% nylon', weight:'40 g', category:'Føtter',
+      pros:['Isolerer i vinterskoene','Nylon-andel gir slitestyrke'],
+      cons:['Krymper ved feil vask','Tykk modell kan stramme i støvel'],
+      alternatives:[
+        {key:'ullsokker-tynn',name:'Tynn ullsokk',meta:'Mildvær · 200 g/m²',img:'../../illustrations/garments/ullsokker.png'},
+        {key:'ulldobbel-sokk',name:'Ulldobbel sokk',meta:'Til −25° · ekstra fôr',img:'../../illustrations/garments/ullsokker.png'}
+      ]
+    }
+  };
+
+  // Stack-rekkefølgen innen hver kategori (vises ovenfra-ned i raden)
+  const groupOrder = {
+    innerst:['ullbody','tynn-bukse'],
+    mellom:['fleecejakke','ullsett-tykt'],
+    ytterst:['vinterdress'],
+    tilbehor:['lue','votter','ullsokker']
+  };
+
+  const originals = {};
+  const activeKeys = {};
+  Object.keys(garments).forEach(k=>{
+    originals[k] = { name:garments[k].name, img:garments[k].img, weight:garments[k].weight };
+    activeKeys[k] = null;
+  });
+
+  /* ============================================================
+     Render lister
+     ============================================================ */
+  function renderRow(key){
+    const g = garments[key];
+    const li = document.createElement('li');
+    const isVotter = key === 'votter';
+    const thumbHtml = isVotter
+      ? `<div class="row-thumb votter">
+           <div class="thumb-img" style="background-image:url(${g.img});"></div>
+           <div class="thumb-img right" style="background-image:url(${g.img});"></div>
+         </div>`
+      : `<div class="row-thumb">
+           <div class="thumb-img" style="background-image:url(${g.img});"></div>
+         </div>`;
+    li.innerHTML = `
+      <button class="row" type="button" data-target="${key}" data-lag="${g.lag}" aria-label="${g.name} (${g.lagLabel}) — trykk for detalj">
+        ${thumbHtml}
+        <div class="row-body">
+          <div class="row-name">${g.name}</div>
+          <div class="row-meta">
+            <span class="material">${g.material}</span>
+            <span class="meta-dot" aria-hidden="true"></span>
+            <span class="weight">${g.weight}</span>
+          </div>
+        </div>
+        <span class="swap-badge" data-badge="${key}">Endret</span>
+        <span class="row-chevron" aria-hidden="true">
+          <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>
+        </span>
+      </button>`;
+    return li;
+  }
+
+  function renderAllLists(){
+    Object.entries(groupOrder).forEach(([groupKey, keys])=>{
+      const ul = document.querySelector(`.row-list[data-list="${groupKey}"]`);
+      if(!ul) return;
+      ul.innerHTML = '';
+      keys.forEach(k=>{
+        ul.appendChild(renderRow(k));
+      });
+    });
+    wireRows();
+  }
+
+  function updateRowName(key){
+    const btn = document.querySelector(`.row[data-target="${key}"]`);
+    if(!btn) return;
+    const g = garments[key];
+    const nameEl = btn.querySelector('.row-name');
+    const matEl = btn.querySelector('.material');
+    const weiEl = btn.querySelector('.weight');
+    const thumbImg = btn.querySelectorAll('.thumb-img');
+    if(nameEl) nameEl.textContent = g.name;
+    if(matEl) matEl.textContent = g.material;
+    if(weiEl) weiEl.textContent = g.weight;
+    thumbImg.forEach(t=> t.style.backgroundImage = `url(${g.img})`);
+    const badge = btn.querySelector('.swap-badge');
+    if(badge){
+      if(activeKeys[key]) badge.classList.add('visible');
+      else badge.classList.remove('visible');
+    }
+  }
+
+  /* ============================================================
+     Bottom sheet
+     ============================================================ */
+  const dialog = document.getElementById('detail-sheet');
+  const elTag = document.getElementById('sheet-lag-tag');
+  const elTitle = document.getElementById('sheet-title');
+  const elHeroWrap = document.getElementById('sheet-hero');
+  const elHero = document.getElementById('sheet-hero-img');
+  const elMat = document.getElementById('sheet-material');
+  const elWei = document.getElementById('sheet-weight');
+  const elCat = document.getElementById('sheet-category');
+  const elPros = document.getElementById('sheet-pros');
+  const elCons = document.getElementById('sheet-cons');
+  const elSwapCards = document.getElementById('swap-cards');
+  const elSwapHint = document.getElementById('swap-hint');
+  const closeBtn = document.getElementById('sheet-close');
+  const footerOkBtn = document.getElementById('footer-ok-btn');
+  const resetBtn = document.getElementById('reset-btn');
+  const toast = document.getElementById('undo-toast');
+  const toastName = document.getElementById('undo-name');
+  const undoBtn = document.getElementById('undo-btn');
+
+  let currentKey = null;
+  let lastSwap = null;
+  let toastTimer = null;
+
+  function renderDetail(key){
+    const g = garments[key];
+    if(!g) return;
+    elTag.textContent = g.lagLabel.toUpperCase();
+    elTag.className = 'lag-tag ' + g.lag;
+    elTitle.textContent = g.name;
+    elHero.style.backgroundImage = `url(${g.img})`;
+    elMat.textContent = g.material;
+    elWei.textContent = g.weight;
+    elCat.textContent = g.category;
+
+    elPros.innerHTML = '';
+    g.pros.slice(0,2).forEach(text=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l3 3 7-7"/></svg><span>${text}</span>`;
+      elPros.appendChild(li);
+    });
+    elCons.innerHTML = '';
+    g.cons.slice(0,2).forEach(text=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M3 8h10"/></svg><span>${text}</span>`;
+      elCons.appendChild(li);
+    });
+
+    elSwapCards.innerHTML = '';
+    elSwapHint.textContent = `${(g.alternatives||[]).length} alternativ${(g.alternatives||[]).length===1?'':'er'}`;
+
+    const cur = document.createElement('button');
+    cur.type='button'; cur.className='swap-card current';
+    cur.setAttribute('aria-label', `Valgt: ${g.name}`);
+    cur.innerHTML = `<div class="swap-card-img" style="background-image:url(${g.img});"></div>
+      <div class="swap-card-name">${g.name}</div>
+      <div class="swap-card-meta">${g.weight}</div>`;
+    elSwapCards.appendChild(cur);
+
+    (g.alternatives||[]).forEach(alt=>{
+      const c = document.createElement('button');
+      c.type='button'; c.className='swap-card';
+      c.setAttribute('aria-label', `Bytt til ${alt.name}`);
+      c.innerHTML = `<div class="swap-card-img" style="background-image:url(${alt.img});"></div>
+        <div class="swap-card-name">${alt.name}</div>
+        <div class="swap-card-meta">${alt.meta}</div>`;
+      c.addEventListener('click', ()=>swapTo(alt));
+      elSwapCards.appendChild(c);
+    });
+
+    if(activeKeys[key]) resetBtn.classList.add('visible');
+    else resetBtn.classList.remove('visible');
+  }
+
+  function swapTo(alt){
+    if(!currentKey) return;
+    const g = garments[currentKey];
+    lastSwap = { key: currentKey, prevName: g.name, prevImg: g.img, prevWeight: g.weight };
+
+    elHeroWrap.classList.add('swapping');
+    setTimeout(()=>{
+      elHero.style.backgroundImage = `url(${alt.img})`;
+      elHeroWrap.classList.remove('swapping');
+    }, 180);
+
+    g.name = alt.name; g.img = alt.img;
+    if(/g$/.test(alt.meta)) g.weight = alt.meta;
+    activeKeys[currentKey] = alt.key;
+
+    renderDetail(currentKey);
+    updateRowName(currentKey);
+    showUndoToast(alt.name);
+  }
+
+  function resetToOriginal(){
+    if(!currentKey) return;
+    const g = garments[currentKey];
+    const o = originals[currentKey];
+    g.name = o.name; g.img = o.img; g.weight = o.weight;
+    activeKeys[currentKey] = null;
+    renderDetail(currentKey);
+    updateRowName(currentKey);
+    hideUndoToast();
+    lastSwap = null;
+  }
+
+  function undoSwap(){
+    if(!lastSwap) return;
+    const g = garments[lastSwap.key];
+    g.name = lastSwap.prevName; g.img = lastSwap.prevImg; g.weight = lastSwap.prevWeight;
+    const o = originals[lastSwap.key];
+    if(g.name===o.name && g.img===o.img) activeKeys[lastSwap.key] = null;
+    renderDetail(lastSwap.key);
+    updateRowName(lastSwap.key);
+    hideUndoToast();
+    lastSwap = null;
+  }
+
+  function showUndoToast(name){
+    toastName.textContent = name;
+    toast.classList.add('show');
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideUndoToast, 4500);
+  }
+  function hideUndoToast(){
+    toast.classList.remove('show');
+    if(toastTimer){clearTimeout(toastTimer);toastTimer=null;}
+  }
+
+  function openDetail(key){
+    currentKey = key;
+    renderDetail(key);
+    if(typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open','');
+    setTimeout(()=>closeBtn.focus(), 80);
+  }
+  function closeDetail(){
+    if(typeof dialog.close === 'function') dialog.close();
+    else dialog.removeAttribute('open');
+  }
+
+  function wireRows(){
+    document.querySelectorAll('.row[data-target]').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        openDetail(btn.dataset.target);
+      });
+    });
+  }
+
+  closeBtn.addEventListener('click', closeDetail);
+  footerOkBtn.addEventListener('click', closeDetail);
+  resetBtn.addEventListener('click', resetToOriginal);
+  undoBtn.addEventListener('click', undoSwap);
+  dialog.addEventListener('click', (e)=>{ if(e.target === dialog) closeDetail(); });
+  dialog.addEventListener('cancel', (e)=>{ e.preventDefault(); closeDetail(); });
+
+  renderAllLists();
+})();
+</script>
+</body>
+</html>

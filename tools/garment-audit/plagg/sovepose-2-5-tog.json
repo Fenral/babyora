@@ -1,0 +1,124 @@
+{
+  "claude": {
+    "id": "sovepose-2-5-tog",
+    "dbString": "sovepose 2.5 TOG",
+    "kategori": "ekstra-sovn",
+    "struktur": {
+      "score": 17,
+      "kommentar": "Plagget har komplett what + when i garment-info.ts (linje 261-264). what er konsis og i samme tone/lengde som søsken-soveposene (0.5/1.0/3.0-3.5/3.5 TOG, linje 253-272). Det finnes en dedikert whyForGarment-gren (ikke fallback): soevn-grenen treffer id.startsWith('sovepose-') i garment-info.ts linje 318-321 og returnerer en sovepose-spesifikk begrunnelse. Mapping-id-en er korrekt registrert. Trekk: when-teksten er for snever sammenlignet med søsknene — 1.0 TOG sier '18-21 °C' og 3.5 TOG sier 'under 14 °C', men 2.5 TOG sier '16-18 °C' selv om plagget faktisk velges helt ned til 5 °C romtemp (se mål 4). Strukturelt finnes oppføringen, men innholdet er ikke i samsvar med seleksjonen."
+    },
+    "utseende": {
+      "score": 18,
+      "pngExists": true,
+      "kommentar": "PNG finnes: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\sovepose-2-5-tog.png. db-strengen 'sovepose 2.5 TOG' er mappet til id 'sovepose-2-5-tog' i garment-illustrations.ts linje 91 — korrekt og konsistent slugifisering (2.5 -> 2-5). Mapping-plausibilitet er god: ligger i 'Ekstra · søvn'-blokken sammen med de fire andre soveposene, alle med samme navnemønster. Kan ikke vurdere selve bildet (overlates til Fable 5 + Claude). Ingen åpenbare navne-/mapping-feil."
+    },
+    "seleksjon": {
+      "score": 14,
+      "trace": "baseTable.soevn velger 'sovepose 2.5 TOG' (kategori ekstra) i TRE temp-bånd: varm (16-21 °C, tables.ts linje 152-156), mild (10-15 °C, linje 157-161) og kjolig (5-9 °C, linje 162-166). bandForTemp: varm=feelsLikeC>=16, mild>=10, kjolig>=5. For soevn tolkes feelsLikeC som ROMTEMPERATUR. modifiers.ts: soevn tar tidlig-retur (linje 89-140) og legger KUN på noter (neckCheck, safeSleep, warmRoom ved >23, coolRoom ved <16) — ingen lag-endring av soveposen. conflicts.ts CK-3 (linje 96-119) kapper KUN nedover: maxTOGForRoom gir 2.5 ved 16-21 °C, men 1.0 ved 21-23 (>21 trigger), 0.5 ved 24-25, 0 ved >=26. Altså: i varm-båndet over 21 °C nedjusteres 2.5 -> 1.0/0.5/fjernes. Det finnes INGEN minimums-TOG-håndhevelse: i mild (10-15) og kjolig (5-9) passerer 2.5 TOG urørt. softBlocks SB-3 (linje 95-124) capper kun ved >=24/>=26. Netto effektivt vindu der 2.5 TOG faktisk leveres: ca 5-20 °C romtemp.",
+      "score_pediatrisk": "Standard pediatrisk/Lullaby Trust (LT-TOG, kilde halo-tog + ergopouch-guide i sources.ts) plasserer 2.5 TOG ved 16-20 °C romtemp, og anbefaler 3.5 TOG under ~16 °C. Seleksjon i mild (10-15 °C) og kjolig (5-9 °C) gir derfor for TYNN sovepose mot etablert standard — en kuldemismatch (under-isolering), ikke overoppheting. Ikke SIDS-kritisk, men villedende kald-retning. CK-3 beskytter mot overoppheting men har ingen tilsvarende kald-floor.",
+      "kilder": [
+        "https://www.lullabytrust.org.uk/safer-sleep-advice/baby-room-temperature/",
+        "https://childsleepspecialist.co.uk/blog/sleeping-bag-tog-guide/",
+        "https://www.motherandbaby.com/baby/sleep/baby-sleeping-bag-guide/"
+      ],
+      "kommentar": "Trace presist sporet. Hoved-helsefunn: 2.5 TOG velges i romtemp-bånd ned til 5 °C der LT-TOG anbefaler 3.5 TOG. Ingen frost/SIDS/kvelning, men en reell kald-mismatch som bør hindres av en minimums-TOG-regel analog til CK-3. Markert som funn, ikke endring (rører ikke terskler)."
+    },
+    "tekstLogikk": {
+      "score": 15,
+      "kommentar": "Klar drift mellom when-tekst og faktisk seleksjon. when sier 'Romtemperatur 16-18 °C' (garment-info.ts linje 263), men baseTable.soevn velger 2.5 TOG i hele 5-21 °C (varm+mild+kjolig). To problemer: (1) Den nedre enden — teksten utelater helt at plagget brukes ned til 5 °C, der pediatrisk standard tilsier 3.5 TOG. En forelder som leser '16-18 °C' vil tro plagget passer et lunkent rom, men appen anbefaler det også i et 6 °C rom, hvor det er for tynt. (2) Den øvre enden — teksten stopper på 18 °C, men plagget velges opp til 21 °C (og kappes av CK-3 først over 21). whyForGarment-grenen (linje 320) sier 'TOG-nivået matcher romtemperaturen rundt ${feels} °C' — denne PÅSTÅR aktivt match selv i kjolig-båndet (5-9 °C), der nivået ikke matcher LT-TOG-standarden. whyForGarment villeder altså mest i akkurat de båndene seleksjonen er svakest. Drift som kan villede påkledning -> severity hoy."
+    },
+    "alternativer": {
+      "score": 6,
+      "kommentar": "sovepose 2.5 TOG har INGEN oppføring i alternatives.ts. Eneste registrerte sovepose-alternativ er 'sovepose 1.0 TOG' -> 'sovepose 0.5 TOG' (linje 126-134), dvs. et nedtrinn for varme rom. Et reelt og nyttig alternativ mangler for 2.5 TOG: et tykkelse-trinn til 'sovepose 3.5 TOG' (eller 3.0-3.5) for den kalde enden av vinduet (5-15 °C romtemp), der 2.5 TOG er for tynn mot LT-TOG. Dette er nettopp scenariet UI-et burde tilby via (!)-ikon: 'i et kjøligere rom velg 3.5 TOG'. Brand-DNA er ull-først, men her er det tykkelse-trinn (ikke materiale) som mangler — fullt på linje med eksisterende votter-tykke->votter-dun og vintersko-mønstrene. Eksisterende mangel, ikke feil eksisterende alternativ."
+    },
+    "total": 70,
+    "verdikt": "Plagget er strukturelt solid (komplett info, dedikert why-gren, korrekt PNG-mapping), men har en reell tekst↔logikk-drift og en pediatrisk seleksjons-mismatch i den kalde enden. baseTable velger 2.5 TOG helt ned til 5 °C romtemp, mens when-teksten sier 16-18 °C og LT-TOG-standarden anbefaler 3.5 TOG under ~16 °C. CK-3 kapper kun overoppheting (nedover), aldri en kald-floor (oppover). whyForGarment hevder dessuten aktivt 'TOG matcher romtemp' i akkurat de båndene matchen er dårligst. Ingen frost/SIDS/kvelning — risikoen er under-isolering, ikke overoppheting. Anbefales: enten stramme inn baseTable-båndene for 2.5 TOG, eller speile CK-3 med en minimums-TOG-regel, og oppdatere when-teksten til å reflektere det reelle vinduet. Total 70/100.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "when-tekst sier 'Romtemperatur 16-18 °C', men baseTable.soevn velger 2.5 TOG i mild (10-15 °C) og kjolig (5-9 °C) i tillegg til varm (16-21 °C). Effektivt leverings-vindu er ~5-20 °C, ikke 16-18 °C. Forelder som leser teksten får feil mental modell og kan bruke en for tynn sovepose i et kjølig rom.",
+        "forslag": "Oppdater when-teksten til å reflektere det faktiske vinduet og standarden, f.eks. 'Romtemperatur ca 16-20 °C. I kjøligere rom (under 16 °C) velg heller 3.5 TOG.' Tall i tabellen røres ikke — kun teksten justeres til å stemme med seleksjon + LT-TOG.",
+        "kilde": "halo-tog + ergopouch-guide (sources.ts); https://www.lullabytrust.org.uk/safer-sleep-advice/baby-room-temperature/"
+      },
+      {
+        "severity": "hoy",
+        "mal": 3,
+        "beskrivelse": "baseTable.soevn velger 'sovepose 2.5 TOG' i romtemp-bånd ned til 5 °C (mild 10-15 °C, kjolig 5-9 °C). Pediatrisk standard (Lullaby Trust / NHS, LT-TOG) plasserer 2.5 TOG ved 16-20 °C og anbefaler 3.5 TOG under ~16 °C. Resultatet er under-isolering i kjølige rom. CK-3 kapper kun TOG nedover (overoppheting) og har ingen minimums-TOG-floor, så 2.5 TOG passerer urørt ved f.eks. 6 °C romtemp.",
+        "forslag": "Vurder å endre mild/kjolig-båndene i baseTable.soevn til 3.5 TOG (slik kald-båndet allerede gjør), ELLER legg til en CK-3-speilende minimums-TOG-regel som hever 2.5 -> 3.5 når romtemp < 16 °C. Avvik dokumenteres som funn; tall/terskler endres ikke av auditør.",
+        "kilde": "https://childsleepspecialist.co.uk/blog/sleeping-bag-tog-guide/ ; https://www.motherandbaby.com/baby/sleep/baby-sleeping-bag-guide/"
+      },
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "whyForGarment (garment-info.ts linje 318-321) returnerer for alle sovepose-id-er: 'TOG-nivået matcher romtemperaturen rundt ${feels} °C.' Denne påstanden er aktivt feil i kjolig-båndet (5-9 °C) der 2.5 TOG ikke matcher LT-TOG-standarden. Teksten gir falsk trygghet nettopp der seleksjonen er svakest.",
+        "forslag": "Gjør why-grenen betinget på om valgt TOG faktisk matcher romtemp-standarden, eller fjern den absolutte 'matcher'-påstanden til fordel for en nøytral formulering når feels < 16 °C.",
+        "kilde": "halo-tog (sources.ts) — TOG-tabell per romtemp"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "sovepose 2.5 TOG har ingen oppføring i alternatives.ts. Et nyttig tykkelse-trinn-alternativ til 3.5 TOG mangler for den kalde enden av vinduet, analogt til det eksisterende 1.0 -> 0.5 TOG-alternativet.",
+        "forslag": "Legg til ITEM_ALTERNATIVES-oppføring for 'sovepose 2.5 TOG' med alternativ 'sovepose 3.5 TOG' (whenKey: kjøligere rom under 16 °C; whyPrimary: 2.5 TOG passer 16-20 °C).",
+        "kilde": "alternatives.ts mønster (votter tykke -> votter dun); ergopouch-guide 4-TOG-trinn"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 16,
+      "kommentar": "Datamodellen er ryddig: id, kategori, hva/når-tekst og trace er konsistente og maskinlesbare. Trekk fordi 'når'-feltet kun rommer ett temperaturbånd mens motoren opererer med tre — strukturen mangler et felt som kan uttrykke flerbånds-seleksjon, noe som gjør tekst↔logikk-avvik nesten uunngåelig."
+    },
+    "utseende": {
+      "score": 14,
+      "kommentar": "Bildet viser utvetydig riktig plagg: ermeløs sovepose med skulderknepping, ren 3D-stil. Men det kommuniserer IKKE '2.5 TOG/medium' — ingen visuell tykkelses- eller varmegradering som skiller den fra 1.0 eller 3.5 i et sortiment. To artefakter: en svak magenta/rosa kantglød langs nedre skygge, og fargen ligger ubehagelig nær hudtone, noe som kan gi et tvetydig førsteinntrykk i liten thumbnail-størrelse."
+    },
+    "seleksjon": {
+      "score": 10,
+      "kommentar": "Jeg utfordrer Claudes gradering, ikke funnet: at 2.5 TOG leveres urørt ned til 5 °C romtemp er verre enn 'hoy' for en 0-3-årsapp. Lullaby Trust/NHS-praksis legger 2.5 TOG ved 16-20 °C og 3.5 + ekstra lag under ~16 °C; ved 5-9 °C er anbefalingen i realiteten 'rommet er for kaldt for spedbarn' + maksimal isolering. Motvekten som delvis redder scoren: CK-3s asymmetri (kun kapping nedover) er pediatrisk riktig prioritert, siden overoppheting er den dokumenterte SIDS-risikoen og under-isolering er lettere for forelder å oppdage og korrigere. Men fraværet av både TOG-gulv og kaldroms-advarsel er en reell sikkerhetsmangel, ikke bare en presisjonsfeil."
+    },
+    "tekstLogikk": {
+      "score": 8,
+      "kommentar": "Claudes funn bekreftes og skjerpes: 'når' sier 16-18 °C, men teksten stemmer ikke engang med motorens eget varm-bånd (16-21 °C) — den er altså feil i BEGGE retninger, ikke bare mot mild/kjølig. Effektivt vindu ~5-20 °C vs. kommunisert 16-18 °C betyr at forelder i et 12-graders rom får posen anbefalt uten at appteksten gir noen dekning for det. 'whyForGarment' («TOG-nivået matcher romtemperaturen») er aktivt usann i to av tre bånd. Dette er den mest tillitsskadelige feilen i hele plagget fordi den gir falsk trygghet."
+    },
+    "alternativer": {
+      "score": 3,
+      "kommentar": "Her er jeg uenig i Claudes 'lav'-severity: manglende 3.5 TOG er ikke et kosmetisk hull, det er ROTÅRSAKEN til seleksjonsfeilen i mål 3 — motoren velger 2.5 i mild/kjølig fordi den ikke har noe varmere å velge. Uten 3.5-trinn (eller 'rom for kaldt'-eskalering) kan ingen tekstfiks reparere kjølig-båndet."
+    },
+    "total": 51,
+    "verdikt": "Underkjent i nåværende form. Plagget er visuelt og strukturelt solid, men kombinasjonen av (a) 2.5 TOG levert ned til 5 °C uten gulv eller advarsel, (b) 'når'-tekst som motsier motorens faktiske vindu i begge retninger, og (c) manglende 3.5 TOG som gjør feilen umulig å rute rundt, gjør at det ikke bør skipes til foreldre av 0-3-åringer før kjølig-båndet er håndtert.",
+    "uenig_med_claude": "Ja, på tre punkter. (1) Totalscore 70/100 er for snill: tekst↔logikk-feilen og seleksjonsfeilen forsterker hverandre (feil anbefaling + tekst som skjuler den), og det skal straffes mer enn summen av delene. (2) Mål 5-funnet (manglende 3.5 TOG) er feilklassifisert som 'lav' — det er rotårsaken til mål 3-problemet og bør være minst 'hoy'. (3) Én nyanse i Claudes favør som Claude selv ikke nevnte: CK-3s ensidige nedkapping er pediatrisk velbegrunnet (overoppheting > underkjøling som SIDS-risiko), så arkitekturen er ikke uforsvarlig — den er ufullstendig. I tillegg overså Claude at 'når: 16-18' heller ikke dekker varm-båndets topp (19-21 °C).",
+    "funn": [
+      {
+        "severity": "kritisk",
+        "mal": 3,
+        "beskrivelse": "2.5 TOG velges urørt i kjølig-båndet (5-9 °C romtemp) uten minimums-TOG-gulv og uten advarsel om at rommet er under trygt spedbarnsnivå. Lullaby Trust/NHS-rammeverket tilsier 3.5 TOG + ekstra lag allerede under ~16 °C.",
+        "forslag": "Innfør eskaleringsregel i kjølig-båndet: anbefal varmeste tilgjengelige pose + ekstra lag, OG vis en eksplisitt 'rommet er kaldere enn anbefalt for barn'-advarsel. Ikke endre eksisterende terskler — legg til håndtering for båndene som i dag faller gjennom."
+      },
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "'Når: 16-18 °C' motsier motorens reelle leveringsvindu (~5-20 °C) og dekker heller ikke hele varm-båndet (16-21 °C). Forelder i 10-15 °C-rom får anbefalingen uten tekstlig dekning.",
+        "forslag": "Generer 'når'-teksten fra trace i stedet for å hardkode den, eller utvid til å speile alle bånd der plagget faktisk velges, med betingelsestekst per bånd."
+      },
+      {
+        "severity": "hoy",
+        "mal": 5,
+        "beskrivelse": "3.5 TOG mangler som tykkelse-alternativ — dette er rotårsaken til at motoren ikke har noe varmere å velge i mild/kjølig og dermed under-isolerer. Oppjustert fra Claudes 'lav'.",
+        "forslag": "Legg til 3.5 TOG-plagg i ekstra-sovn-kategorien slik at baseTable.soevn kan velge det i mild/kjølig-båndene."
+      },
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "'whyForGarment' («TOG-nivået matcher romtemperaturen») er aktivt usann i mild- og kjølig-båndet og gir falsk trygghet — verre enn manglende forklaring.",
+        "forslag": "Gjør forklaringen båndavhengig: i mild/kjølig bør den si at posen er varmeste tilgjengelige nivå og at ekstra lag/varmere rom anbefales."
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen viser riktig plagg, men ingen visuell TOG-differensiering, svak magenta kantartefakt i nedre skygge, og hudtone-lik farge som kan misleses i thumbnail.",
+        "forslag": "Legg på diskret TOG-badge eller tykkelsesindikator i illustrasjonsstilen, rendre på nytt uten fargefrynse, og vurder en farge lenger fra hudtone."
+      }
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "claude": {
+    "id": "ullsett-tykt",
+    "dbString": "ullsett tykt",
+    "kategori": "innerst",
+    "struktur": {
+      "score": 19,
+      "kommentar": "Full info-oppføring finnes i garment-info.ts (linje 45-48) med både `what` og `when`. Tonen/lengden matcher søsken-plagg i innerst-kategorien (ullsett-tynt linje 41-44, to-ullsett 49-52) — samme mønster: kort plagg-beskrivelse + bruksvindu. Dedikert `whyForGarment`-gren finnes (linje 340-342), IKKE fallback. Eneste svakhet: whyForGarment-grenen er delt mellom ullsett-tynt, ullsett-tykt OG to-ullsett med identisk tekst, så den skiller ikke tykkelse-trinnene fra hverandre. Mindre fradrag for manglende differensiering."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG bekreftet til stede: C:\\Users\\SkotvoldSivertSende\\wool-app\\public\\illustrations\\garments\\ullsett-tykt.png. db-strengen 'ullsett tykt' er korrekt mappet til id 'ullsett-tykt' i garment-illustrations.ts linje 21 — ingen kollisjon/gjenbruk med andre plagg, dedikert egen illustrasjon. Navn/mapping er konsistent og plausibelt. Visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 24,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig. ullsett tykt velges utelukkende i kald/frost-bånd (−15 til +4 °C, føles-som) alltid sammen med isolert yttertøy (vinterkjøredress/vinterdress/kjøredress) eller — i bæresele/streng_frost — under foreldrekroppens varme. Dette er standard norsk lag-på-lag-praksis og dekkes godt av kildene: AAP/Capital Area Peds («ett lag mer enn voksen» + cold-exposure-grenser), merino-kids (ull regulerer fukt bedre enn bomull). Overoppheting er beskyttet via SB-2 (maxLayersForFeels-cap) og bæresele-insideJacket-regelen som tømmer yttertøy. Ingen SIDS/kvelning/strangulering-relevans (worn to-delt base, ikke søvn/løs-item). Ingen direkte safety-flag treffer plagget, hvilket er korrekt. Mindre teoretisk overoppheting-margin i øvre kald-bånd (4 °C + full vinterdress under aktiv utelek), men nakke-sjekk-noter mitigerer og temp-kombinasjonen er konvensjonell — ingen kritisk flagg. Ingen web-søk nødvendig; kildene dekker kald-lag-konteksten.",
+      "kilder": [],
+      "trace": "baseTable-treff for 'ullsett tykt' (innerst): (1) vogn.kald [0–4 °C] s.49; (2) vogn.frost [−7 til −1 °C] s.55 (+ullstrømper); (3) baeresele.frost [−7 til −1 °C] s.107; (4) baeresele.streng_frost [−15 til −8 °C] s.113; (5) utelek.kald [0–4 °C] s.209; (6) utelek.frost s.215. bandForTemp: kald=0–4, frost=−7 til −1, streng_frost=−15 til −8 (tables.ts s.13-16). Modifier-tilsetninger introduserer/fjerner IKKE ullsett tykt direkte (modifiers legger kun til ullsokker/skall/hals/ekstra ull-lag). KONFLIKT-kilde: CK-6 (conflicts.ts s.139-149) nedgraderer 'to ullsett oppå hverandre' → 'ullsett tykt' når feels > −15 °C, så streng_frost/ekstrem-oppskrifter som spesifiserer to-ullsett faller tilbake til ullsett tykt nær −15-grensen. Effektivt nedre temp-gulv for ullsett tykt = ~−15 °C. SB-2 kan strippe overflødige lag men målretter aldri ullsett tykt selv."
+    },
+    "tekstLogikk": {
+      "score": 23,
+      "kommentar": "`when`-teksten («Vinter og senhøst — som varmt inner lag under mellomlag og yttertøy») stemmer kvalitativt med tracen: plagget velges i kald/frost-bånd (≤4 °C) alltid under mellomlag + yttertøy. Ingen numerisk drift fordi `when` bevisst ikke oppgir et °C-intervall (i motsetning til søsken ullsett-tynt som sier «ca 8–14 °C») — så ingen villedende terskel. `whyForGarment`-grenen («To-delt ullsett gir bevegelses-frihet … ull-mot-huden holder varmen jevn») er korrekt og ikke i konflikt med forholdene. Eneste fradrag: whyForGarment-teksten er identisk for tynt/tykt/to-ullsett og nevner ikke at DETTE er det tykke/varme trinnet for kald-frost — en bruker som sammenligner ullsett-tynt vs ullsett-tykt får samme begrunnelse, hvilket svekker beslutnings-støtten litt. Ingen severity hoy-drift."
+    },
+    "alternativer": {
+      "score": 6,
+      "kommentar": "Ingen oppføring for 'ullsett tykt' (eller 'ullsett tynt') i alternatives.ts. Det finnes et reelt tykkelse-trinn-alternativ som BURDE tilbys, helt parallelt med mønsteret motoren allerede bruker andre steder: 'lett kjøredress'→'kjøredress' (s.86), 'vintersko isolerte'→'vintersko' (s.106), 'votter tykke'→'votter dun' (s.96), 'lue m/ ull'→'lue tynn' (s.136). For ullsett ville et naturlig alternativ vært 'ullsett tynt' (et trinn ned, i øvre kald-bånd ~4 °C der full tykk base + vinterdress kan bli varmt) eller en fleece-base — på linje med fleece-alternativene for ull-mellomlag/ull-jakke/ull-bukse. Gapet er konsistent på tvers av begge ullsett-tykkelser. Reelt, men ikke sikkerhetskritisk."
+    },
+    "total": 92,
+    "verdikt": "Solid plagg-oppføring uten kritiske eller høy-severity-problemer. Struktur, illustrasjon-mapping og seleksjon er alle korrekte og pediatrisk forsvarlige. To medium/lav forbedringspunkter: (1) whyForGarment-grenen er delt mellom alle tre ullsett-tykkelser med identisk tekst og differensierer ikke tykt fra tynt, (2) manglende tykkelse-trinn/fleece-alternativ i alternatives.ts til tross for at samme mønster brukes for kjøredress, vintersko, votter og luer. Ingen tall/terskler bør røres.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 5,
+        "beskrivelse": "whyForGarment-grenen (garment-info.ts linje 340-342) er delt mellom ullsett-tynt, ullsett-tykt og to-ullsett med identisk tekst ('To-delt ullsett gir … bevegelses-frihet … ull-mot-huden holder varmen jevn'). Den skiller ikke det tykke/varme kald-frost-trinnet fra det tynne mild-trinnet, så begrunnelsen blir lik uansett tykkelse-valg.",
+        "forslag": "Splitt grenen slik at ullsett-tykt får en egen setning som fremhever ekstra varme/kald-frost-konteksten (f.eks. 'tykkere ull gir solid base ved kjølige til kalde forhold under yttertøy'), mens ullsett-tynt beholder mild-vinklingen. Ingen tall endres.",
+        "kilde": "garment-info.ts whyForGarment linje 340-342 vs when-tekst linje 45-48"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "alternatives.ts mangler oppføring for 'ullsett tykt'. Motoren tilbyr tykkelse-trinn-alternativer for andre plagg (lett kjøredress→kjøredress, vintersko isolerte→vintersko, votter tykke→votter dun, lue m/ ull→lue tynn) og fleece-alternativer for ull-mellomlag/ull-jakke/ull-bukse, men ikke for ullsett-tykkelsene.",
+        "forslag": "Legg til en ItemAlternatives-oppføring for 'ullsett tykt' med alternativ 'ullsett tynt' (trinn ned, relevant i øvre kald-bånd ~4 °C der tykk base + vinterdress kan bli varmt) og/eller en fleece-base, parallelt med eksisterende ull-først-mønster. Kun ny oppføring, ingen terskel-endring.",
+        "kilde": "alternatives.ts ITEM_ALTERNATIVES (ingen 'ullsett'-treff) vs tables.ts seleksjon i kald/frost"
+      }
+    ]
+  },
+  "fable": null
+}

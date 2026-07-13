@@ -1,0 +1,109 @@
+{
+  "claude": {
+    "id": "tynn-pyjamas",
+    "dbString": "tynn pyjamas",
+    "kategori": "mellomlag",
+    "struktur": {
+      "score": 16,
+      "kommentar": "Har komplett what+when (garment-info.ts L99-102) og en dedikert whyForGarment-gren (L325-327, sleep-spesifikk; ikke fallback). what ('Tynn to-delt nattøy i bomull. Lett å komme i og ut av.') er i samme tone/lengde som søsken 'pyjamas' og 'ull-pyjamas'. Trekk: when-teksten er sterkt avvikende fra søsken-mønsteret — 'pyjamas' og 'ull-pyjamas' beskriver when via romtemp+TOG (18-21 °C / <18 °C), mens tynn-pyjamas sier '>22 °C i kombinasjon med sovepose lett', hvilket både er feil tall (se mål 4) OG bryter med søster-plaggenes terskel-logikk. Strukturen er der, men when-innholdet er internt inkonsistent med søsken."
+    },
+    "utseende": {
+      "score": 20,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/tynn-pyjamas.png (også kopiert til dist/). db-strengen 'tynn pyjamas' er korrekt mappet til id 'tynn-pyjamas' i garment-illustrations.ts L38, og garmentPng() bygger sti illustrations/garments/tynn-pyjamas.png som matcher fila. Navn/mapping er plausibelt og konsistent. Visuell dom overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 22,
+      "trace": "tynn-pyjamas velges KUN i baseTable.soevn.varm (tables.ts L152-156): langermet body + tynn pyjamas + sovepose 2.5 TOG. bandForTemp: 'varm' = feelsLikeC 16-21 °C (her tolket som romtemp, søvn er innendørs). Ingen annen aktivitet/bånd inneholder tynn-pyjamas. Modifiers: applyModifiers tar soevn-grenen og returnerer tidlig (L89-140) — hopper alle ute-modifikatorer, så tynn-pyjamas legges aldri til/fjernes av vær/vind/alder-modifiers. Conflicts: CK-8 (conflicts.ts L155-172) erstatter pyjamas med kortermet body KUN ved feels >21 °C OG sovepose-TOG >=2.5 — siden varm-båndet topper på 21 °C trigges ikke CK-8, så tynn-pyjamas overlever i hele 16-21 °C. CK-3 (TOG-cap) påvirker kun soveposen, ikke pyjamasen. softBlocks SB-3 (>=24/26 °C) ligger over varm-båndet og rører ikke tynn-pyjamas. Netto: tynn-pyjamas vises stabilt for soevn ved romtemp 16-21 °C med sovepose 2.5 TOG. Pediatrisk vurdering mot kildene: kombinasjonen langermet body + tynn pyjamas + 2.5 TOG ved 16-21 °C rom er konsistent med Lullaby Trust TOG-chart (LT-TOG) og ErgoPouch/HALO TOG-trinn (2.5 TOG ~ 16-20 °C), og norsk 18 °C-norm nevnt i tables.ts-kommentaren. CK-8/CK-3 fanger overoppheting hvis brukeren skrur opp temp. Ingen overoppheting/SIDS/kvelnings-flagg utløses feil. Forsvarlig. Trekk: liten overlapp/dobbelvarme-risiko i nedre kant (16 °C med både body+pyjamas+2.5 TOG kan bli i meste laget for noen barn), men dekkes av kjenn-på-nakken-note og er innenfor kildenes spenn.",
+      "score_dup": 22,
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig og dekket av eksisterende kilder (LT-TOG, ErgoPouch, HALO). Ingen web-søk nødvendig — kildene i sources.ts dekker TOG-vs-romtemp fullt ut. Tryggheten ivaretas av CK-8 (pyjamas ut ved >21 °C) og CK-3 (TOG-nedjustering).",
+      "kilder": [
+        "https://www.halosleep.com/blogs/halo/tog-chart",
+        "https://www.ergopouch.com/pages/what-to-wear-guide"
+      ]
+    },
+    "tekstLogikk": {
+      "score": 14,
+      "kommentar": "DRIFT funnet. when-teksten i garment-info.ts L101 sier: 'Varme rom (>22 °C) i kombinasjon med sovepose lett.' Men trace fra mål 3 viser at baseTable faktisk velger tynn-pyjamas i varm-båndet 16-21 °C SAMMEN MED sovepose 2.5 TOG (tables.ts L152-156). Ved >22 °C (tropisk-båndet) gir tabellen i stedet kortermet body + sovepose 1.0 TOG og IKKE tynn-pyjamas — og CK-8 fjerner aktivt pyjamas over 21 °C. Dermed sier when-teksten nesten det motsatte av hva motoren gjør: feil temp-vindu (>22 vs 16-21 °C) og feil sovepose (sovepose lett/1.0 vs sovepose 2.5 TOG). En forelder som leser when vil tro plagget hører til varmere rom med tynnere sovepose enn motoren faktisk anbefaler — villedende for påkledning. whyForGarment-grenen (L325-327) er derimot RIKTIG: den binder seg til 'romtemperaturen rundt {feels} °C' uten hardkodet tall og stemmer med 16-21 °C-seleksjonen. Det er altså when-strengen alene som driver, ikke why-grenen."
+    },
+    "alternativer": {
+      "score": 8,
+      "kommentar": "tynn-pyjamas har ingen oppføring i alternatives.ts, og det er forsvarlig: pyjamas-tykkelse styres allerede av temp-båndene (tynn-pyjamas i varm, pyjamas i mild/kjolig, ull-pyjamas i kald+) og av CK-8-nedgraderingen. Et ull↔bomull-alternativ for nattøy kunne vært relevant (ull-pyjamas finnes som eget plagg), men siden plagget kun lever i et smalt 16-21 °C rom-vindu der bomull er passe, er fravær av eksplisitt alternativ akseptabelt. Mindre trekk for at en tynn-pyjamas (bomull) ↔ tynn ull-overdel-bytte ikke tilbys for foreldre som foretrekker ull-mot-hud-linjen (brand-DNA), men dette er en kan-ha, ikke en mangel."
+    },
+    "total": 80,
+    "verdikt": "Plagget er strukturelt og visuelt på plass, og seleksjonen (soevn, romtemp 16-21 °C, sovepose 2.5 TOG) er pediatrisk forsvarlig og kilde-dekket. Hovedproblemet er en tekst↔logikk-drift: when-teksten oppgir '>22 °C + sovepose lett', mens motoren velger plagget ved 16-21 °C + sovepose 2.5 TOG og faktisk fjerner pyjamas over 21 °C (CK-8). Dette villeder påkledning og bør rettes så when matcher trace. whyForGarment-grenen er korrekt. Ingen sikkerhetskritiske funn.",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "when-teksten driver mot faktisk seleksjon: garment-info.ts L101 sier 'Varme rom (>22 °C) i kombinasjon med sovepose lett', men baseTable.soevn.varm (tables.ts L152-156) velger tynn-pyjamas ved romtemp 16-21 °C sammen med sovepose 2.5 TOG. Ved >22 °C gir motoren i stedet kortermet body + 1.0 TOG, og CK-8 (conflicts.ts L155-172) fjerner pyjamas helt over 21 °C. when sier altså nær det motsatte av motorens oppførsel — både feil temp-vindu og feil sovepose-TOG.",
+        "forslag": "Endre when til å speile trace, f.eks.: 'Milde soverom (ca 16-21 °C) som mellomlag under sovepose 2.5 TOG.' Rør ikke tallene i tables.ts/conflicts.ts — kun info-teksten skal justeres for å matche motoren.",
+        "kilde": "halo-tog (TOG vs romtemp), tables.ts soevn-kommentar L132-142"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "when-teksten bryter med søsken-mønsteret: 'pyjamas' (L105) og 'ull-pyjamas' (L109) beskriver when via romtemp+TOG-bånd, mens tynn-pyjamas bruker et avvikende '>22 °C + sovepose lett'-fraseverk som dessuten er feil. Tone/lengde ellers konsistent.",
+        "forslag": "Harmoniser when-formuleringen med søster-pyjamasene (romtemp-intervall + matchende TOG) når mål 4-driften rettes.",
+        "kilde": "garment-info.ts L103-110 (søsken-plagg)"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 15,
+      "kommentar": "Id og kategori er konsistente, men «mellomlag» er en tvilsom kategori for rent nattøy – søsknene (pyjamas, ull-pyjamas) antyder at søvnplagg burde ha eget mønster. Claudes lav-funn om at when-teksten bryter søsken-mønsteret (romtemp+TOG-bånd) er reelt, men det er et symptom: når teksten først skrives om til korrekt logikk, bør den samtidig tvinges inn i samme mal som søsknene, ellers gjentas avviket ved neste redigering."
+    },
+    "utseende": {
+      "score": 18,
+      "kommentar": "Bildet viser korrekt plagg: tynn, to-delt pyjamas (langermet overdel med skuldertrykknapper + bukse med strikk og ribb i ankel) i lett bomullsaktig stoff – troverdig for 0-3 år. Ren, konsistent illustrasjonsstil uten synlige artefakter eller anatomiske feil. Trekk: helt sort bakgrunn kan avvike fra øvrige plaggillustrasjoner (bør verifiseres mot bibliotekets stilguide), og overdelens lengde/vidde leser nesten som genser, som kan forveksles med faktisk mellomlag."
+    },
+    "seleksjon": {
+      "score": 20,
+      "kommentar": "Motorens faktiske oppførsel er pediatrisk forsvarlig og følger etablerte TOG-tabeller: body + tynn pyjamas + 2,5 TOG ved 16-21 °C er standard anbefaling, og CK-8 som fjerner pyjamas og går til kortermet body + 1,0 TOG over 21 °C er riktig overopphetingsvern. At søvn hopper over vær-modifiers er korrekt (innetemperatur styrer). Eneste forbehold: 21 °C er øvre kant for 2,5 TOG med to lag under – flere referansetabeller skifter til 1,0 TOG allerede ved 21 °C, så grensen bør være kildedokumentert (uten at terskelen endres her)."
+    },
+    "tekstLogikk": {
+      "score": 5,
+      "kommentar": "Alvorligste avvik i hele vurderingen, og verre enn Claudes 1. analyse fremstiller det. «Varme rom (>22 °C) + sovepose lett» er ikke bare unøyaktig – det er motsatt av motoren på begge akser: motoren viser plagget ved 16-21 °C med 2,5 TOG, og fjerner det aktivt over 21 °C. En forelder som leser teksten kan selv kle barnet i tynn pyjamas + lett pose i et 23-graders rom i tro på at appen anbefaler det, eller bli forvirret når appen viser pyjamas i et 18-graders rom teksten sier den ikke passer til. Dette undergraver tilliten til hele motoren. «Hva»-teksten er derimot korrekt."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "Motoren har et reelt og fornuftig alternativ-spor (CK-8: kortermet body + 1,0 TOG over 21 °C), så fallback-logikken finnes. Men ingenting i app-teksten hjelper forelderen å forstå overgangen («blir rommet varmere enn 21 °C, dropp pyjamasen»), og when-feltet peker mot feil scenario, så alternativ-kommunikasjonen utad er i praksis fraværende."
+    },
+    "total": 65,
+    "verdikt": "Underkjent i nåværende form. Motor og illustrasjon holder god kvalitet, men when-teksten sier tilnærmet det motsatte av faktisk seleksjon (feil temperaturvindu OG feil TOG) – en sikkerhetsrelevant tekstfeil som må rettes før plagget godkjennes. Ren tekstfix, ingen terskler skal endres.",
+    "uenig_med_claude": true,
+    "funn": [
+      {
+        "severity": "kritisk",
+        "mal": 4,
+        "beskrivelse": "Claude klassifiserte tekst↔motor-avviket som «hoy», men det bør være kritisk: teksten («>22 °C + sovepose lett») inverterer motorens faktiske vindu (16-21 °C + 2,5 TOG) på begge parametre, og kan lede foreldre til å bruke tynn pyjamas i varme rom der motoren bevisst fjerner den. Total på 80/100 var for snill gitt at dette er et sikkerhetskommuniserende felt.",
+        "forslag": "Skriv when om til faktisk logikk, i søsken-malen: «Romtemperatur 16-21 °C, sammen med langermet body og sovepose 2,5 TOG.» Ingen endring i motor/terskler."
+      },
+      {
+        "severity": "hoy",
+        "mal": 1,
+        "beskrivelse": "Kategorien «mellomlag» er misvisende for rent nattøy som kun selekteres i baseTable.soevn; søsknene antyder et eget søvn-/nattøy-mønster. Claudes lav-funn om mønsterbrudd i when-teksten er gyldig, men rotårsaken er strukturell: uten felles mal for søvnplagg vil tekstavvik oppstå igjen.",
+        "forslag": "Vurder kategori «nattøy/søvn» (eller dokumenter hvorfor mellomlag brukes), og innfør obligatorisk when-mal for alle søvnplagg: romtemp-bånd + TOG."
+      },
+      {
+        "severity": "medium",
+        "mal": 3,
+        "beskrivelse": "21 °C som øvre grense for body + pyjamas + 2,5 TOG ligger i ytterkant av vanlige TOG-referansetabeller (flere går til 1,0 TOG fra 21 °C). Grensen er forsvarlig, men kildegrunnlaget bør være eksplisitt dokumentert.",
+        "forslag": "Legg kildereferanse (f.eks. produsent-TOG-tabell/pediatrisk veileder) i metadata for baseTable.soevn.varm. Ikke endre terskelen."
+      },
+      {
+        "severity": "medium",
+        "mal": 5,
+        "beskrivelse": "CK-8-overgangen (over 21 °C: kortermet body + 1,0 TOG) kommuniseres ikke i app-teksten, så forelderen får ingen hjelp til å forstå hvorfor pyjamasen forsvinner i varmere rom.",
+        "forslag": "Legg en kort alternativ-setning i teksten: «Er rommet varmere enn 21 °C, anbefaler appen kortermet body og tynnere sovepose i stedet.»"
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Helt sort bakgrunn og en overdel som i silhuett kan leses som genser/mellomlag; risiko for stilbrudd eller forveksling i plaggbiblioteket.",
+        "forslag": "Verifiser bakgrunn mot stilguiden og vurder å gjøre overdelen tydeligere pyjamas-aktig (f.eks. synlig matchende sett-kontekst)."
+      }
+    ]
+  }
+}

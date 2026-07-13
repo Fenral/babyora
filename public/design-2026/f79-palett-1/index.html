@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="nb" data-theme="dark" data-temp="mild">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vinternatt – Babyora F79</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&display=swap" rel="stylesheet">
+<!--
+  F79 · Palett 1 «Vinternatt» · strategi: committed
+  Alle kontrast-ratioer under er FAKTISK beregnet (WCAG 2.x relative luminance)
+  på de endelige sRGB-hex-verdiene — ikke på OKLCH-kilden (jf. gamut-clipping-advarsel).
+
+  BASE (mild):                          LYS      MØRK    KRAV
+  ink-primary   / bg-canvas             11.86    14.62   4.5   PASS
+  ink-primary   / surface               14.92    12.35   4.5   PASS
+  ink-secondary / bg-canvas              5.42     8.37   4.5   PASS
+  cta-ink       / accent-cta             5.51     6.31   4.5   PASS
+  accent-cta    / bg-canvas              4.32     6.59   3.0   PASS
+  focus-ring    / bg-canvas              4.54     6.30   3.0   PASS
+  layer-innerst / surface                5.84     5.56   3.0   PASS (non-text)
+  layer-mellom  / surface                5.60     5.77   3.0   PASS (non-text)
+  layer-ytterst / surface                4.12     6.52   3.0   PASS (non-text)
+  status-cold   / bg-canvas              5.07     7.62   3.0   PASS
+  status-warm   / bg-canvas              4.06     8.33   3.0   PASS
+
+  TEMP-AKSE:
+  ink-primary / bg (kald)               11.95    14.52   4.5   PASS
+  ink-primary / bg (varm)               11.70    14.36   4.5   PASS
+  accent-cta  / bg (kald)                4.35     6.55   3.0   PASS
+  accent-cta  / bg (varm)                4.26     6.47   3.0   PASS
+  aksent-kald / bg (kald)                4.92     7.57   3.0   PASS
+  aksent-mild / bg (mild)                4.49     6.86   3.0   PASS (brukes kun ≥20px/700 → stor tekst)
+  aksent-varm / bg (varm)                3.86     7.56   3.0   PASS (brukes kun ≥20px/700 → stor tekst)
+  ink-secondary / bg (varm)              5.35     8.23   4.5   PASS
+  focus-ring  / bg (kald|mild|varm)      4.57/4.54/4.48  ·  6.26/6.30/6.19   3.0   PASS
+-->
+<style>
+  /* ============ TOKENS — Vinternatt ============ */
+  :root, [data-theme="light"] {
+    --bg-canvas:      oklch(0.89 0.030 290); /* #DAD8EE */
+    --surface:        oklch(0.965 0.012 290); /* #F3F2FB */
+    --ink-primary:    oklch(0.24 0.045 295); /* #211B32 */
+    --ink-secondary:  oklch(0.45 0.050 292); /* #56506F */
+    --accent-cta:     oklch(0.52 0.170 28);  /* #B6322B */
+    --accent-cta-ink: oklch(0.97 0.012 60);  /* #FCF3ED */
+    --layer-innerst:  oklch(0.48 0.080 250); /* #386189 */
+    --layer-mellom:   oklch(0.50 0.095 300); /* #6C5691 */
+    --layer-ytterst:  oklch(0.58 0.140 32);  /* #BF5542 */
+    --status-cold:    oklch(0.46 0.100 250); /* #265B8D */
+    --status-warm:    oklch(0.53 0.150 35);  /* #B14328 */
+    --focus-ring:     oklch(0.50 0.140 292); /* #6750AB */
+    --avatar-glow:    #EFECFC;
+    --temp-aksent:    #6654A1;
+    --bezel: #14111f;
+    --shadow-frame: 0 40px 90px -30px rgba(23, 16, 46, 0.45), 0 12px 30px -14px rgba(23, 16, 46, 0.35);
+    color-scheme: light;
+  }
+  [data-theme="dark"] {
+    --bg-canvas:      oklch(0.22 0.030 290); /* #1A1828 */
+    --surface:        oklch(0.28 0.035 290); /* #282639 */
+    --ink-primary:    oklch(0.94 0.015 290); /* #EBEAF5 */
+    --ink-secondary:  oklch(0.77 0.028 290); /* #B3B2C5 */
+    --accent-cta:     oklch(0.72 0.150 30);  /* #F47C6B */
+    --accent-cta-ink: oklch(0.24 0.050 300); /* #231933 */
+    --layer-innerst:  oklch(0.70 0.080 245); /* #74A4CD */
+    --layer-mellom:   oklch(0.72 0.090 300); /* #AD98D5 */
+    --layer-ytterst:  oklch(0.76 0.130 35);  /* #F89177 */
+    --status-cold:    oklch(0.74 0.090 245); /* #79B1E0 */
+    --status-warm:    oklch(0.78 0.130 35);  /* #FF987E */
+    --focus-ring:     oklch(0.70 0.120 295); /* #A48FE1 */
+    --avatar-glow:    #4D4869;
+    --temp-aksent:    #A89AD7;
+    --bezel: #060510;
+    --shadow-frame: 0 44px 100px -30px rgba(0, 0, 0, 0.75), 0 14px 34px -14px rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+  /* Temp-akse: hue-ROTASJON av canvas (isblå 262° ← indigo 290° → lyng/rosé 345°) */
+  [data-theme="light"][data-temp="kald"], :root[data-temp="kald"]:not([data-theme="dark"]) {
+    --bg-canvas: oklch(0.89 0.042 262); /* #CCDCF7 */
+    --avatar-glow: #E1ECFC;
+    --temp-aksent: #2B5C97;
+  }
+  [data-theme="dark"][data-temp="kald"] {
+    --bg-canvas: oklch(0.22 0.040 268); /* #131A2D */
+    --avatar-glow: #384D73;
+    --temp-aksent: #79B0E8;
+  }
+  [data-theme="light"][data-temp="varm"], :root[data-temp="varm"]:not([data-theme="dark"]) {
+    --bg-canvas: oklch(0.89 0.038 345); /* #EED1E0 */
+    --avatar-glow: #FDE5E1;
+    --temp-aksent: #B54436;
+  }
+  [data-theme="dark"][data-temp="varm"] {
+    --bg-canvas: oklch(0.23 0.032 330); /* #251724 */
+    --avatar-glow: #6E4358;
+    --temp-aksent: #F8907C;
+  }
+
+  /* ============ BASE ============ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg-canvas);
+    color: var(--ink-primary);
+    line-height: 1.55;
+    padding: clamp(24px, 5vw, 64px) 16px 80px;
+  }
+
+  /* 600ms fargestemning-transition — kun på fargede egenskaper */
+  body, .screen, .surface-card, .cta, .temp-btn, .theme-toggle, .place-pill, .icon-btn,
+  .glow, .layer-chip, .nav-btn, .contrast-table th, .contrast-table td, .display-temp,
+  .condition, .weather-meta, .eyebrow, .rec-title, footer, .spec-card {
+    transition: background-color .6s ease, color .6s ease, border-color .6s ease,
+                box-shadow .6s ease, fill .6s ease, stroke .6s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  h1, h2, .serif { font-family: "Fraunces", Georgia, serif; }
+
+  /* ============ SIDE-HEADER ============ */
+  .page-header {
+    max-width: 720px; margin: 0 auto 40px; text-align: center;
+  }
+  .page-header .kicker {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-secondary); margin-bottom: 10px;
+  }
+  .page-header h1 {
+    font-size: clamp(34px, 6vw, 52px); font-weight: 560; letter-spacing: -0.015em;
+    font-variation-settings: "opsz" 90;
+  }
+  .page-header p { color: var(--ink-secondary); margin-top: 8px; font-size: 15px; }
+
+  /* ============ PHONE FRAME ============ */
+  .stage { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 844px;
+    background: var(--bezel);
+    border-radius: 56px;
+    padding: 12px;
+    box-shadow: var(--shadow-frame);
+    flex-shrink: 0;
+  }
+  .screen {
+    position: relative;
+    width: 100%; height: 100%;
+    background: var(--bg-canvas);
+    border-radius: 45px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+
+  /* Statusbar-antydning */
+  .statusbar {
+    display: flex; justify-content: center; padding: 14px 28px 0;
+    font-size: 13px; font-weight: 600; color: var(--ink-secondary);
+    letter-spacing: 0.04em;
+  }
+
+  /* Topbar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px 0;
+  }
+  .place-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    min-height: 44px; padding: 10px 18px 10px 14px;
+    background: var(--surface);
+    color: var(--ink-primary);
+    border: 1.5px solid var(--ink-secondary);
+    border-radius: 999px;
+    font: 600 14px/1 inherit; font-family: inherit;
+    cursor: pointer;
+  }
+  .place-pill svg { width: 15px; height: 15px; stroke: var(--temp-aksent); }
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px;
+    background: var(--surface);
+    border: 1.5px solid var(--ink-secondary);
+    border-radius: 50%;
+    color: var(--ink-primary);
+    cursor: pointer;
+  }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  /* Vær-sone */
+  .weather { text-align: center; padding: 18px 24px 0; }
+  .display-temp {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 104px; line-height: 0.95; font-weight: 480;
+    letter-spacing: -0.03em;
+    font-variation-settings: "opsz" 144;
+    color: var(--ink-primary);
+  }
+  .condition {
+    margin-top: 2px;
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 22px; font-weight: 700; font-style: italic;
+    color: var(--temp-aksent); /* alltid ≥20px/700 → stor-tekst-krav 3:1, målt 3.86–7.57:1 */
+  }
+  .weather-meta {
+    margin-top: 6px; font-size: 14px; font-weight: 500;
+    color: var(--ink-secondary);
+    display: flex; justify-content: center; gap: 8px; align-items: center;
+  }
+  .weather-meta .dot-sep { opacity: 0.6; }
+
+  /* Avatar + glow */
+  .avatar-zone {
+    position: relative;
+    display: flex; justify-content: center; align-items: center;
+    flex: 1; min-height: 250px;
+  }
+  .glow {
+    position: absolute; width: 260px; height: 260px; border-radius: 50%;
+    background: var(--avatar-glow);
+    filter: blur(46px);
+  }
+  .glow-core {
+    position: absolute; width: 150px; height: 150px; border-radius: 50%;
+    background: var(--avatar-glow);
+    filter: blur(18px);
+  }
+  .avatar-zone img {
+    position: relative;
+    width: 212px; height: auto;
+    filter: drop-shadow(0 14px 22px rgba(10, 6, 26, 0.28));
+  }
+
+  /* Anbefaling */
+  .rec { text-align: center; padding: 0 28px; }
+  .eyebrow {
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-secondary);
+  }
+  .rec-title {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 24px; font-weight: 600; letter-spacing: -0.01em;
+    margin-top: 6px; color: var(--ink-primary);
+    font-variation-settings: "opsz" 40;
+  }
+  .layer-chips {
+    list-style: none;
+    display: flex; justify-content: center; gap: 8px; margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .layer-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface);
+    padding: 6px 12px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 600; color: var(--ink-primary);
+  }
+  .layer-chip .swatch { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .layer-chip[data-layer="innerst"] .swatch { background: var(--layer-innerst); }
+  .layer-chip[data-layer="mellom"]  .swatch { background: var(--layer-mellom); }
+  .layer-chip[data-layer="ytterst"] .swatch { background: var(--layer-ytterst); }
+  .layer-chip[hidden] { display: none; }
+
+  /* CTA */
+  .cta-row { padding: 18px 28px 10px; }
+  .cta {
+    width: 100%; min-height: 56px;
+    background: var(--accent-cta);
+    color: var(--accent-cta-ink);
+    border: none; border-radius: 28px;
+    font: 700 17px/1 inherit; font-family: inherit;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 10px 26px -8px color-mix(in srgb, var(--accent-cta) 55%, transparent);
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .cta svg { width: 18px; height: 18px; }
+  .cta:active { transform: translateY(1px); }
+
+  /* Bunn-nav */
+  .bottom-nav {
+    display: flex; justify-content: space-around; align-items: stretch;
+    padding: 6px 12px calc(10px + 14px);
+    background: var(--surface);
+    border-top: 1.5px solid color-mix(in srgb, var(--ink-secondary) 45%, transparent);
+  }
+  .nav-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    min-width: 64px; min-height: 52px;
+    background: none; border: none; border-radius: 14px;
+    color: var(--ink-secondary);
+    font: 600 10.5px/1 inherit; font-family: inherit;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+  }
+  .nav-btn svg { width: 22px; height: 22px; }
+  .nav-btn[aria-current="page"] { color: var(--temp-aksent); }
+  .nav-btn[aria-current="page"]::after {
+    content: ""; width: 16px; height: 3px; border-radius: 2px;
+    background: var(--temp-aksent); margin-top: 1px;
+  }
+
+  /* ============ DEMO-KONTROLLER ============ */
+  .controls {
+    width: 390px; max-width: 100%;
+    display: flex; flex-direction: column; gap: 12px; align-items: center;
+  }
+  .controls .label {
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-secondary);
+  }
+  .temp-group { display: flex; gap: 8px; width: 100%; }
+  .temp-btn {
+    flex: 1; min-height: 48px;
+    background: var(--surface);
+    color: var(--ink-primary);
+    border: 1.5px solid var(--ink-secondary);
+    border-radius: 24px;
+    font: 600 14.5px/1.2 inherit; font-family: inherit;
+    cursor: pointer;
+  }
+  .temp-btn[aria-pressed="true"] {
+    background: var(--ink-primary);
+    color: var(--bg-canvas);
+    border-color: var(--ink-primary);
+  }
+  .theme-toggle {
+    display: inline-flex; align-items: center; gap: 9px;
+    min-height: 44px; padding: 10px 20px;
+    background: var(--surface);
+    color: var(--ink-primary);
+    border: 1.5px solid var(--ink-secondary);
+    border-radius: 999px;
+    font: 600 14px/1 inherit; font-family: inherit;
+    cursor: pointer;
+  }
+  .theme-toggle svg { width: 16px; height: 16px; }
+  [data-theme="dark"] .icon-sun { display: inline; }
+  [data-theme="dark"] .icon-moon { display: none; }
+  [data-theme="light"] .icon-sun, :root:not([data-theme="dark"]) .icon-sun { display: none; }
+  [data-theme="light"] .icon-moon, :root:not([data-theme="dark"]) .icon-moon { display: inline; }
+
+  /* ============ EDITORIAL / SPEC-FOOTER ============ */
+  footer {
+    max-width: 760px; margin: 72px auto 0;
+  }
+  .spec-card {
+    background: var(--surface);
+    border: 1.5px solid color-mix(in srgb, var(--ink-secondary) 40%, transparent);
+    border-radius: 24px;
+    padding: clamp(24px, 4vw, 44px);
+  }
+  footer h2 {
+    font-size: 26px; font-weight: 620; letter-spacing: -0.01em; margin-bottom: 10px;
+    font-variation-settings: "opsz" 60;
+  }
+  footer h2 + .strategy-tag {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--temp-aksent);
+    border: 1.5px solid var(--temp-aksent); border-radius: 999px;
+    padding: 4px 12px; margin-bottom: 16px;
+  }
+  footer h3 {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 17px; font-weight: 700; margin: 26px 0 6px;
+  }
+  footer p { color: var(--ink-secondary); font-size: 14.5px; max-width: 64ch; }
+  footer p strong { color: var(--ink-primary); }
+
+  .contrast-wrap { overflow-x: auto; margin-top: 14px; }
+  .contrast-table {
+    border-collapse: collapse; width: 100%; min-width: 560px;
+    font-size: 13px;
+  }
+  .contrast-table caption {
+    text-align: left; font-size: 12.5px; color: var(--ink-secondary);
+    padding-bottom: 10px;
+  }
+  .contrast-table th, .contrast-table td {
+    text-align: left; padding: 8px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--ink-secondary) 35%, transparent);
+  }
+  .contrast-table th {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-secondary);
+  }
+  .contrast-table td.num { font-variant-numeric: tabular-nums; }
+  .pass, .pass-note {
+    font-weight: 700; letter-spacing: 0.06em; font-size: 11.5px;
+  }
+  .pass { color: var(--ink-primary); }
+  .pass::before { content: "✓ "; color: var(--temp-aksent); }
+  .pass-note { color: var(--ink-secondary); font-weight: 600; letter-spacing: 0; text-transform: none; }
+
+  /* ============ FORCED COLORS ============ */
+  @media (forced-colors: active) {
+    .glow, .glow-core { display: none; }
+    .phone { border: 2px solid CanvasText; }
+    .screen { border: 1px solid CanvasText; }
+    .cta, .temp-btn, .theme-toggle, .place-pill, .icon-btn, .nav-btn { border: 1.5px solid ButtonText; }
+    .temp-btn[aria-pressed="true"] { border-width: 3px; }
+    .nav-btn[aria-current="page"]::after { background: Highlight; }
+    .layer-chip { border: 1px solid CanvasText; }
+    .layer-chip .swatch { border: 1px solid CanvasText; forced-color-adjust: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <p class="kicker">Babyora · F79 · Palett 1 av 4</p>
+  <h1>Vinternatt</h1>
+  <p>Dyp indigo-fiolett som eid brand-hue — glødende korall som eneste varme punkt.</p>
+</header>
+
+<main>
+  <div class="stage">
+
+    <!-- ============ PHONE MOCK ============ -->
+    <div class="phone">
+      <div class="screen">
+
+        <div class="statusbar" aria-hidden="true">03:07</div>
+
+        <div class="topbar">
+          <button type="button" class="place-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 21s7-5.1 7-11a7 7 0 1 0-14 0c0 5.9 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/>
+            </svg>
+            Elverum
+          </button>
+          <button type="button" class="icon-btn" aria-label="Meny">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+              <line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/>
+            </svg>
+          </button>
+        </div>
+
+        <section class="weather" aria-label="Været nå">
+          <p class="display-temp" id="temp-display">12°</p>
+          <p class="condition" id="condition-display">Lettskyet</p>
+          <p class="weather-meta">
+            <span id="feels-display">Føles som 9°</span>
+            <span class="dot-sep" aria-hidden="true">·</span>
+            <span id="wind-display">Vind 4 m/s</span>
+          </p>
+        </section>
+
+        <div class="avatar-zone">
+          <div class="glow" aria-hidden="true"></div>
+          <div class="glow-core" aria-hidden="true"></div>
+          <img src="/avatars/avatar-A2.png" alt="Barneavatar klar for dagens påkledning" width="212" height="212">
+        </div>
+
+        <section class="rec" aria-labelledby="rec-title">
+          <p class="eyebrow">Anbefalt nå</p>
+          <h2 class="rec-title" id="rec-title">3 lag for lettskyet dag</h2>
+          <ul class="layer-chips" id="layer-chips">
+            <li class="layer-chip" data-layer="innerst"><span class="swatch" aria-hidden="true"></span><span id="chip-innerst">Ullbody</span></li>
+            <li class="layer-chip" data-layer="mellom"><span class="swatch" aria-hidden="true"></span><span id="chip-mellom">Genser</span></li>
+            <li class="layer-chip" data-layer="ytterst"><span class="swatch" aria-hidden="true"></span><span id="chip-ytterst">Tynn jakke</span></li>
+          </ul>
+        </section>
+
+        <div class="cta-row">
+          <button type="button" class="cta">
+            Se påkledning
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          </button>
+        </div>
+
+        <nav class="bottom-nav" aria-label="Hovednavigasjon">
+          <button type="button" class="nav-btn" aria-current="page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/>
+            </svg>
+            Hjem
+          </button>
+          <button type="button" class="nav-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 4 6 5.5 3 9l3 2.5V20h12v-8.5L21 9l-3-3.5L15 4a3 3 0 0 1-6 0Z"/>
+            </svg>
+            Garderobe
+          </button>
+          <button type="button" class="nav-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5Z"/>
+            </svg>
+            Guide
+          </button>
+          <button type="button" class="nav-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.5a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5.4 12a7 7 0 0 0 .1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.5h4l.4-2.5a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5A7 7 0 0 0 19 12Z"/>
+            </svg>
+            Innstillinger
+          </button>
+        </nav>
+
+      </div>
+    </div>
+
+    <!-- ============ SIGNATUR-DEMO ============ -->
+    <div class="controls">
+      <p class="label" id="temp-demo-label">Signatur: temp-aksen roterer canvas-huen</p>
+      <div class="temp-group" role="group" aria-labelledby="temp-demo-label">
+        <button type="button" class="temp-btn" data-temp="kald" aria-pressed="false">Kald&nbsp;−8°</button>
+        <button type="button" class="temp-btn" data-temp="mild" aria-pressed="true">Mild&nbsp;12°</button>
+        <button type="button" class="temp-btn" data-temp="varm" aria-pressed="false">Varm&nbsp;24°</button>
+      </div>
+      <button type="button" class="theme-toggle" id="theme-toggle">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5 5l1.7 1.7M17.3 17.3 19 19M19 5l-1.7 1.7M6.7 17.3 5 19"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/>
+        </svg>
+        <span id="theme-toggle-label">Bytt til lyst tema</span>
+      </button>
+    </div>
+
+  </div>
+
+  <p class="visually-hidden" role="status" aria-live="polite" id="live-region"></p>
+</main>
+
+<!-- ============ EDITORIAL SPEC-FOOTER ============ -->
+<footer>
+  <div class="spec-card">
+    <h2>Palett 1 · Vinternatt</h2>
+    <span class="strategy-tag">Strategi: committed</span>
+
+    <h3>Konsept</h3>
+    <p>Dyp indigo-fiolett (hue 290°) som <strong>eid brand-hue</strong> à la Clue, med glødende korall-CTA som
+    eneste varme punkt — omsorgsfull og natt-våken, som en forelder kl. 03. Canvas bærer synlig hue
+    (C 0.030, ikke nøytral), og temp-aksen <strong>roterer</strong> den: isblå-fiolett 262° ved frost, ren indigo
+    290° mildt, varm lyng/rosé 345° ved sommer — himmelens egen døgn/års-logikk. Dark mode er palettens
+    hjem («vinternatt» bokstavelig): dyp indigo-navy der korall og lavendel gløder — ingen baby-app i
+    Norden ser slik ut.</p>
+
+    <h3>Anti-klisjé</h3>
+    <p><strong>1.-ordens:</strong> ikke rosa-pastell (inken er nesten-svart indigo, chroma committed, korall er het —
+    dette er natt, ikke barnerom) og ikke SaaS-blå (290° fiolett-indigo, ikke 250° corporate).
+    <strong>2.-ordens:</strong> unngår også «calm lilac wellness-app»-refleksen (Tolan/Calm-lavendel) ved at canvas
+    har ekte chroma i stedet for utvasket lilla-hvitt, varm-bandet går til lyng/rosé i stedet for mer
+    lilla, og CTA er rødglødende korall — ikke wellness-fiolett på fiolett.</p>
+
+    <h3>Kontrast-dokumentasjon</h3>
+    <p>Beregnet med WCAG 2.x relative luminance på endelige sRGB-verdier (ikke OKLCH-kilden, jf.
+    gamut-clipping). Krav: 4.5:1 tekst, 3:1 stor tekst (≥18.66px fet) og non-text UI.</p>
+
+    <div class="contrast-wrap">
+      <table class="contrast-table">
+        <caption>Par → ratio lys → ratio mørk → status. Temp-aksent brukes utelukkende på tekst ≥20px/700 og ikoner (krav 3:1).</caption>
+        <thead>
+          <tr><th scope="col">Par</th><th scope="col">Lys</th><th scope="col">Mørk</th><th scope="col">Krav</th><th scope="col">Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ink-primary / bg-canvas (body + temp-display)</td><td class="num">11.86</td><td class="num">14.62</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+          <tr><td>ink-primary / surface</td><td class="num">14.92</td><td class="num">12.35</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+          <tr><td>ink-secondary / bg-canvas</td><td class="num">5.42</td><td class="num">8.37</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+          <tr><td>accent-cta-ink / accent-cta (CTA-label)</td><td class="num">5.51</td><td class="num">6.31</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+          <tr><td>accent-cta / bg-canvas (knapp-fill)</td><td class="num">4.32</td><td class="num">6.59</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+          <tr><td>focus-ring / bg-canvas</td><td class="num">4.54</td><td class="num">6.30</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+          <tr><td>layer-innerst / surface (non-text)</td><td class="num">5.84</td><td class="num">5.56</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+          <tr><td>layer-mellom / surface (non-text)</td><td class="num">5.60</td><td class="num">5.77</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+          <tr><td>layer-ytterst / surface (non-text)</td><td class="num">4.12</td><td class="num">6.52</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+          <tr><td>ink-primary / bg-canvas (kald 262°)</td><td class="num">11.95</td><td class="num">14.52</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+          <tr><td>ink-primary / bg-canvas (varm 345°)</td><td class="num">11.70</td><td class="num">14.36</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+          <tr><td>ink-secondary / bg-canvas (varm 345°)</td><td class="num">5.35</td><td class="num">8.23</td><td class="num">4.5</td><td class="pass">PASS</td></tr>
+          <tr><td>accent-cta / bg-canvas (kald)</td><td class="num">4.35</td><td class="num">6.55</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+          <tr><td>accent-cta / bg-canvas (varm)</td><td class="num">4.26</td><td class="num">6.47</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+          <tr><td>aksent-kald / bg (kald)</td><td class="num">4.92</td><td class="num">7.57</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+          <tr><td>aksent-mild / bg (mild)</td><td class="num">4.49</td><td class="num">6.86</td><td class="num">3.0</td><td class="pass">PASS <span class="pass-note">(kun stor/fet tekst)</span></td></tr>
+          <tr><td>aksent-varm / bg (varm)</td><td class="num">3.86</td><td class="num">7.56</td><td class="num">3.0</td><td class="pass">PASS <span class="pass-note">(kun stor/fet tekst)</span></td></tr>
+          <tr><td>focus-ring / bg (kald · varm)</td><td class="num">4.57 · 4.48</td><td class="num">6.26 · 6.19</td><td class="num">3.0</td><td class="pass">PASS</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var scenarios = {
+    kald: {
+      temp: "−8°", cond: "Klarvær", feels: "Føles som −13°", wind: "Vind 3 m/s",
+      rec: "3 varme lag for frostklar dag",
+      layers: { innerst: "Ullbody", mellom: "Ullgenser", ytterst: "Parkdress" }
+    },
+    mild: {
+      temp: "12°", cond: "Lettskyet", feels: "Føles som 9°", wind: "Vind 4 m/s",
+      rec: "3 lag for lettskyet dag",
+      layers: { innerst: "Ullbody", mellom: "Genser", ytterst: "Tynn jakke" }
+    },
+    varm: {
+      temp: "24°", cond: "Sol", feels: "Føles som 26°", wind: "Vind 2 m/s",
+      rec: "1 lag for varm sommerdag",
+      layers: { innerst: "Kortermet body", mellom: null, ytterst: null }
+    }
+  };
+
+  var el = function (id) { return document.getElementById(id); };
+  var tempButtons = Array.prototype.slice.call(document.querySelectorAll(".temp-btn"));
+
+  function setTemp(key) {
+    var s = scenarios[key];
+    root.setAttribute("data-temp", key);
+    el("temp-display").textContent = s.temp;
+    el("condition-display").textContent = s.cond;
+    el("feels-display").textContent = s.feels;
+    el("wind-display").textContent = s.wind;
+    el("rec-title").textContent = s.rec;
+
+    ["innerst", "mellom", "ytterst"].forEach(function (layer) {
+      var chip = document.querySelector('.layer-chip[data-layer="' + layer + '"]');
+      var label = el("chip-" + layer);
+      if (s.layers[layer]) {
+        chip.removeAttribute("hidden");
+        label.textContent = s.layers[layer];
+      } else {
+        chip.setAttribute("hidden", "");
+      }
+    });
+
+    tempButtons.forEach(function (btn) {
+      btn.setAttribute("aria-pressed", String(btn.getAttribute("data-temp") === key));
+    });
+
+    el("live-region").textContent = "Vær oppdatert: " + s.temp + ", " + s.cond.toLowerCase() + ". " + s.rec + ".";
+  }
+
+  tempButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () { setTemp(btn.getAttribute("data-temp")); });
+  });
+
+  var toggle = el("theme-toggle");
+  toggle.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    el("theme-toggle-label").textContent = next === "dark" ? "Bytt til lyst tema" : "Bytt til mørkt tema";
+    el("live-region").textContent = next === "dark" ? "Mørkt tema aktivert" : "Lyst tema aktivert";
+  });
+}());
+</script>
+
+</body>
+</html>

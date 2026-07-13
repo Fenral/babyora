@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TOG-guiden · Mock B · Visuell romslig</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Warm-grey kanvas */
+  --bg-canvas:#E5E0D7;
+  --bg-canvas-soft:#EFEAE0;
+  --bg-canvas-deep:#D6CFC2;
+
+  /* Brand */
+  --terracotta-400:#D6814C;
+  --terracotta-500:#C0632F;
+  --terracotta-600:#B4502E;
+  --terracotta-700:#A9492A;
+  --terracotta-100:#F4E4D8;
+
+  --warm-orange:#FF6B35;
+
+  /* Komfortsone-skala (kjølig -> varmt) */
+  --zone-cold:#5B7A95;
+  --zone-cool:#8FA9B8;
+  --zone-mid:#C8C2B0;
+  --zone-warm:#E0A878;
+  --zone-hot:#C0632F;
+
+  /* Ink */
+  --ink-900:#2B2B2B;
+  --ink-800:#3A3530;
+  --ink-700:#5A514C;
+  --ink-500:#A89E97;
+  --ink-300:#C9C3BD;
+
+  --card-bg:#FFFFFF;
+  --card-shadow:0 1px 2px rgba(43,37,34,.05),0 12px 28px rgba(43,37,34,.10);
+  --card-shadow-hero:0 2px 4px rgba(43,37,34,.06),0 24px 56px rgba(43,37,34,.16);
+
+  --font-sans:'Schibsted Grotesk',-apple-system,system-ui,sans-serif;
+  --font-serif:'DM Serif Display',Georgia,serif;
+  --ease-standard:cubic-bezier(.2,.7,.2,1);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#1a1a1a;font-family:var(--font-sans);}
+body{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:24px;color:var(--ink-900);
+  background:radial-gradient(110% 80% at 50% 0%,#2a2622 0%,#161412 75%);
+}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+/* iPhone 390×844 */
+.frame{
+  position:relative;width:390px;height:844px;border-radius:48px;overflow:hidden;
+  box-shadow:0 40px 100px rgba(0,0,0,.55), 0 0 0 12px #1f1f1f, 0 0 0 13px #333;
+  background:var(--bg-canvas);
+}
+/* Dynamic island */
+.island{
+  position:absolute;top:11px;left:50%;transform:translateX(-50%);
+  width:120px;height:34px;border-radius:20px;background:#000;z-index:50;
+}
+
+/* Skjerm-rot */
+.screen{
+  position:relative;height:100%;width:100%;display:flex;flex-direction:column;
+  font-family:var(--font-sans);color:var(--ink-800);
+  padding-top:env(safe-area-inset-top,0px);
+  background:
+    linear-gradient(180deg,#D6E0E7 0%,#E5E0D6 38%,#EAE1D2 72%,#E2D2BC 100%);
+}
+/* Soft top sheen */
+.screen::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(140% 40% at 50% -10%, rgba(255,255,255,.55), rgba(255,255,255,0) 60%),
+    radial-gradient(80% 50% at 20% 110%, rgba(192,99,47,.10), rgba(192,99,47,0) 60%);
+}
+
+/* Topbar — store, romslige tap-targets */
+.topbar{
+  position:relative;z-index:5;flex:none;
+  height:56px;
+  margin-top:54px;
+  padding:0 16px;
+  display:flex;align-items:center;gap:12px;
+}
+.back-btn{
+  width:44px;height:44px;flex:none;border-radius:14px;
+  background:rgba(255,255,255,.65);border:1px solid rgba(43,43,43,.07);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  transition:transform 120ms var(--ease-standard);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.back-btn:active{transform:scale(.94);}
+.back-btn:focus-visible{outline:2px solid var(--terracotta-600);outline-offset:2px;}
+.topbar-title{
+  flex:1;font-size:15px;font-weight:600;letter-spacing:-.2px;color:var(--ink-700);
+  text-align:center;text-transform:uppercase;letter-spacing:1.4px;font-size:11.5px;
+}
+.topbar-spacer{width:44px;height:44px;flex:none;}
+
+/* Scroll-area — romslig */
+.scroll-area{
+  position:relative;z-index:3;
+  flex:1;min-height:0;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:8px 20px calc(40px + env(safe-area-inset-bottom,0px));
+  scrollbar-width:none;
+  display:flex;flex-direction:column;gap:28px;
+}
+.scroll-area::-webkit-scrollbar{display:none;}
+
+/* HERO — Serif-tall + soveromsillustrasjon */
+.hero{
+  position:relative;
+  padding:12px 4px 0;
+  text-align:center;
+}
+.hero .eyebrow{
+  display:inline-block;
+  font-size:10.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--terracotta-600);
+  padding:6px 12px;border-radius:999px;
+  background:rgba(192,99,47,.10);
+  margin-bottom:18px;
+}
+.hero .hero-title{
+  font-family:var(--font-serif);
+  font-size:34px;line-height:1.05;letter-spacing:-.8px;
+  font-weight:400;color:var(--ink-900);
+  margin:0 0 8px;
+}
+.hero .hero-title em{font-style:italic;color:var(--terracotta-700);}
+.hero .hero-sub{
+  font-size:14.5px;line-height:1.5;color:var(--ink-700);
+  max-width:280px;margin:0 auto;
+}
+
+/* Stor sovepose-illustrasjon i hero — premium-feel */
+.scene{
+  position:relative;
+  height:170px;
+  margin:8px -4px 0;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.scene svg{display:block;height:100%;width:auto;}
+
+/* TOG HERO-kort — over slider, store tall + tabular */
+.tog-hero{
+  position:relative;
+  border-radius:28px;
+  padding:24px 22px 22px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,.78) 100%);
+  border:1px solid rgba(43,43,43,.05);
+  box-shadow:var(--card-shadow-hero);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  overflow:hidden;
+}
+.tog-hero::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(80% 60% at 100% 0%, rgba(192,99,47,.08), rgba(192,99,47,0) 60%);
+}
+.tog-hero-row{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:18px;
+}
+.tog-hero-left{display:flex;flex-direction:column;gap:6px;min-width:0;}
+.tog-hero-eyebrow{
+  font-size:10.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--ink-500);
+}
+.tog-hero-number{
+  font-family:var(--font-serif);
+  font-size:84px;line-height:.88;font-weight:400;letter-spacing:-3px;
+  color:var(--terracotta-700);
+  font-variant-numeric:tabular-nums;
+}
+.tog-hero-unit{
+  font-family:var(--font-sans);
+  font-size:20px;font-weight:600;letter-spacing:-.4px;color:var(--terracotta-600);
+  margin-left:6px;vertical-align:8px;
+}
+.tog-hero-right{
+  display:flex;flex-direction:column;align-items:flex-end;text-align:right;gap:4px;
+  padding-bottom:6px;
+}
+.tog-hero-temp{
+  font-family:var(--font-serif);
+  font-size:32px;line-height:1;letter-spacing:-.5px;color:var(--ink-900);
+  font-variant-numeric:tabular-nums;
+}
+.tog-hero-temp em{font-style:normal;font-size:18px;color:var(--ink-500);vertical-align:6px;margin-left:1px;}
+.tog-hero-temp-label{
+  font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-500);
+}
+.tog-hero-zone{
+  margin-top:18px;padding-top:16px;
+  border-top:1px solid rgba(43,43,43,.07);
+  display:flex;align-items:center;gap:10px;
+  font-size:13.5px;font-weight:500;color:var(--ink-700);
+}
+.tog-hero-zone-dot{
+  width:10px;height:10px;border-radius:50%;flex:none;
+  background:var(--terracotta-500);
+  box-shadow:0 0 0 4px rgba(192,99,47,.15);
+}
+
+/* SLIDER SECTION — store steg, mer luft */
+.slider-section{
+  display:flex;flex-direction:column;gap:18px;
+}
+.slider-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  padding:0 2px;
+}
+.slider-label{
+  font-size:11.5px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  color:var(--ink-500);
+}
+.slider-hint{
+  font-size:12.5px;font-weight:500;color:var(--ink-700);
+}
+
+/* Stort track med fargegradient + steg-markører */
+.slider-track-wrap{
+  position:relative;
+  padding:18px 6px 26px;
+}
+.slider-track{
+  position:relative;
+  height:16px;
+  border-radius:999px;
+  background:
+    linear-gradient(90deg,
+      var(--zone-cold) 0%,
+      var(--zone-cool) 28%,
+      var(--zone-mid) 50%,
+      var(--zone-warm) 72%,
+      var(--zone-hot) 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(0,0,0,.18),
+    inset 0 -1px 1px rgba(255,255,255,.35);
+}
+/* Tick-markeringer over track */
+.slider-ticks{
+  position:absolute;left:6px;right:6px;top:6px;
+  display:flex;justify-content:space-between;align-items:center;pointer-events:none;
+}
+.slider-ticks span{
+  width:2px;height:8px;border-radius:1px;background:rgba(255,255,255,.55);
+}
+/* Thumb */
+.thumb{
+  position:absolute;top:50%;transform:translate(-50%,-50%);
+  width:36px;height:36px;border-radius:50%;
+  background:#FFF;
+  border:3px solid var(--terracotta-500);
+  box-shadow:0 6px 16px rgba(43,43,43,.22), 0 0 0 1px rgba(43,43,43,.04);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-sans);font-size:11.5px;font-weight:700;color:var(--terracotta-700);
+  font-variant-numeric:tabular-nums;
+  pointer-events:none;
+  transition:left 160ms var(--ease-standard);
+}
+/* Steg-label-rad under track */
+.step-labels{
+  margin-top:14px;
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:4px;
+  padding:0 4px;
+}
+.step-labels button{
+  appearance:none;border:0;background:transparent;padding:6px 2px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;border-radius:10px;
+  transition:background 120ms var(--ease-standard);
+  font-family:inherit;color:inherit;
+}
+.step-labels button:focus-visible{outline:2px solid var(--terracotta-600);outline-offset:2px;}
+.step-labels .step-temp{
+  font-family:var(--font-serif);font-size:15px;letter-spacing:-.3px;color:var(--ink-800);
+  font-variant-numeric:tabular-nums;
+}
+.step-labels .step-tog{
+  font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-500);
+}
+.step-labels button[aria-pressed="true"] .step-temp{color:var(--terracotta-700);}
+.step-labels button[aria-pressed="true"] .step-tog{color:var(--terracotta-600);}
+
+/* SECTION TITLES — serif-eyebrow */
+.section-eyebrow{
+  display:flex;align-items:baseline;justify-content:space-between;
+  padding:0 4px;margin-bottom:14px;
+}
+.section-eyebrow h2{
+  font-family:var(--font-serif);font-weight:400;
+  font-size:22px;line-height:1.15;letter-spacing:-.4px;color:var(--ink-900);
+  margin:0;
+}
+.section-eyebrow h2 em{font-style:italic;color:var(--terracotta-700);}
+.section-eyebrow .count{
+  font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-500);
+}
+
+/* LAYER CARDS — store, visuelle plagg-kort */
+.layer-list{
+  list-style:none;margin:0;padding:0;
+  display:flex;flex-direction:column;gap:12px;
+}
+.layer-card{
+  position:relative;
+  display:flex;align-items:center;gap:16px;
+  padding:18px;
+  border-radius:22px;
+  background:var(--card-bg);
+  border:1px solid rgba(43,43,43,.05);
+  box-shadow:var(--card-shadow);
+  overflow:hidden;
+}
+.layer-card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--terracotta-500);
+}
+.layer-card[data-layer="inner"]::before{background:#3F5A78;}
+.layer-card[data-layer="mid"]::before{background:#5E8C6A;}
+.layer-card[data-layer="outer"]::before{background:#C0632F;}
+.layer-thumb{
+  width:64px;height:64px;flex:none;border-radius:18px;
+  background:linear-gradient(180deg,#F2EBE0 0%,#E5DCCB 100%);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(43,43,43,.05);
+}
+.layer-thumb svg{display:block;}
+.layer-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
+.layer-step{
+  font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-500);
+}
+.layer-name{
+  font-size:16px;font-weight:600;letter-spacing:-.2px;color:var(--ink-900);
+  line-height:1.25;
+}
+.layer-chip{
+  flex:none;
+  padding:6px 11px;border-radius:999px;
+  background:var(--terracotta-100);
+  font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--terracotta-700);
+}
+
+/* SAFETY — fyldigere, romsligere callout */
+.safety{
+  display:flex;gap:14px;
+  padding:18px 18px;border-radius:22px;
+  background:linear-gradient(180deg,rgba(192,99,47,.10) 0%,rgba(192,99,47,.06) 100%);
+  border:1px solid rgba(192,99,47,.20);
+}
+.safety-icon{
+  width:40px;height:40px;flex:none;border-radius:14px;
+  background:#FFF;border:1px solid rgba(192,99,47,.18);
+  display:flex;align-items:center;justify-content:center;
+}
+.safety-text{flex:1;min-width:0;}
+.safety-title{
+  font-size:13px;font-weight:700;letter-spacing:.1px;color:var(--ink-900);
+  margin:0 0 4px;
+}
+.safety-body{
+  font-size:13px;line-height:1.5;color:var(--ink-700);margin:0;
+}
+
+/* Footer-pad så siste kort puster */
+.footer-pad{height:8px;flex:none;}
+</style>
+</head>
+<body>
+<main class="frame" aria-label="iPhone-rammeverk for mock B">
+  <div class="island" aria-hidden="true"></div>
+  <div class="screen" aria-labelledby="tog-title">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <button type="button" class="back-btn" aria-label="Tilbake">
+        <svg width="9" height="15" viewBox="0 0 8 14" fill="none" stroke="#2B2B2B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M7 1L1 7l6 6"/>
+        </svg>
+      </button>
+      <div class="topbar-title" id="tog-title">TOG-guiden</div>
+      <div class="topbar-spacer" aria-hidden="true"></div>
+    </header>
+
+    <div class="scroll-area">
+
+      <!-- HERO -->
+      <section class="hero" aria-labelledby="hero-title">
+        <span class="eyebrow">For Lo · 4 mnd</span>
+        <h1 class="hero-title" id="hero-title">Riktig <em>varme</em> for natten</h1>
+        <p class="hero-sub">Skyv på guiden og finn anbefalt sovepose etter temperaturen på rommet.</p>
+        <div class="scene" aria-hidden="true">
+          <!-- Stor, rolig soverom-illustrasjon: ramme + sovepose-baby -->
+          <svg viewBox="0 0 340 170" xmlns="http://www.w3.org/2000/svg">
+            <!-- bakgrunns-måne -->
+            <circle cx="280" cy="46" r="28" fill="#F2E8D8"/>
+            <circle cx="288" cy="40" r="22" fill="#E5E0D7"/>
+            <!-- stjerner -->
+            <circle cx="60" cy="32" r="1.8" fill="#A89E97"/>
+            <circle cx="100" cy="20" r="1.4" fill="#A89E97"/>
+            <circle cx="220" cy="22" r="1.6" fill="#A89E97"/>
+            <!-- seng-ramme -->
+            <rect x="40" y="100" width="260" height="60" rx="18" fill="#C9C3BD"/>
+            <rect x="40" y="100" width="260" height="14" rx="7" fill="#B5AEA6"/>
+            <!-- madrass -->
+            <rect x="52" y="106" width="236" height="32" rx="10" fill="#F2EBE0"/>
+            <!-- sovepose / baby -->
+            <path d="M120 138 Q170 70 220 138 Z" fill="#C0632F"/>
+            <ellipse cx="170" cy="138" rx="50" ry="6" fill="#A9492A" opacity=".4"/>
+            <!-- hode -->
+            <circle cx="170" cy="86" r="18" fill="#F4D9C2"/>
+            <!-- kinn -->
+            <circle cx="162" cy="91" r="2.5" fill="#E8A78E"/>
+            <circle cx="178" cy="91" r="2.5" fill="#E8A78E"/>
+            <!-- lukket øyne -->
+            <path d="M158 84q3 3 6 0" stroke="#5A514C" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+            <path d="M174 84q3 3 6 0" stroke="#5A514C" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+            <!-- topp lue / lugg -->
+            <path d="M154 78 Q170 64 186 78" stroke="#A9492A" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </section>
+
+      <!-- TOG HERO-kort -->
+      <section class="tog-hero" aria-labelledby="tog-hero-label">
+        <div class="tog-hero-row">
+          <div class="tog-hero-left">
+            <span class="tog-hero-eyebrow" id="tog-hero-label">Anbefalt TOG</span>
+            <div>
+              <span class="tog-hero-number" aria-live="polite" aria-atomic="true">2.5</span><span class="tog-hero-unit">tog</span>
+            </div>
+          </div>
+          <div class="tog-hero-right">
+            <span class="tog-hero-temp-label">Rom­temperatur</span>
+            <div class="tog-hero-temp">20<em>°C</em></div>
+          </div>
+        </div>
+        <div class="tog-hero-zone">
+          <span class="tog-hero-zone-dot" aria-hidden="true"></span>
+          <span>Komfortsone for 18–21° · trygg fra 16°</span>
+        </div>
+      </section>
+
+      <!-- SLIDER -->
+      <section class="slider-section" aria-labelledby="slider-label">
+        <div class="slider-head">
+          <span class="slider-label" id="slider-label">Sett romtemperatur</span>
+          <span class="slider-hint">Skyv eller velg under</span>
+        </div>
+        <div class="slider-track-wrap" role="group" aria-labelledby="slider-label">
+          <div class="slider-track" aria-hidden="true">
+            <div class="slider-ticks">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <div class="thumb" style="left:50%;" aria-hidden="true">20°</div>
+          </div>
+          <!-- Steg-knapper med anbefalt TOG per trinn -->
+          <div class="step-labels" role="radiogroup" aria-label="Forhåndsvalgte temperatur-steg">
+            <button type="button" role="radio" aria-checked="false">
+              <span class="step-temp">16°</span>
+              <span class="step-tog">3.5 tog</span>
+            </button>
+            <button type="button" role="radio" aria-checked="false">
+              <span class="step-temp">18°</span>
+              <span class="step-tog">2.5 tog</span>
+            </button>
+            <button type="button" role="radio" aria-checked="true" aria-pressed="true">
+              <span class="step-temp">20°</span>
+              <span class="step-tog">2.5 tog</span>
+            </button>
+            <button type="button" role="radio" aria-checked="false">
+              <span class="step-temp">22°</span>
+              <span class="step-tog">1.0 tog</span>
+            </button>
+            <button type="button" role="radio" aria-checked="false">
+              <span class="step-temp">24°</span>
+              <span class="step-tog">0.5 tog</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- LAYER LIST -->
+      <section aria-labelledby="layers-title">
+        <div class="section-eyebrow">
+          <h2 id="layers-title">Slik <em>kler</em> du på</h2>
+          <span class="count">2 lag</span>
+        </div>
+        <ol class="layer-list" role="list">
+          <li class="layer-card" data-layer="inner">
+            <div class="layer-thumb" aria-hidden="true">
+              <!-- Body ikon -->
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                <path d="M11 8h14l-1 4 3 2v8l-3 1v9H12v-9l-3-1v-8l3-2-1-4z" fill="#3F5A78"/>
+                <circle cx="18" cy="12" r="1.5" fill="#FFF"/>
+                <circle cx="18" cy="16" r="1.5" fill="#FFF"/>
+              </svg>
+            </div>
+            <div class="layer-meta">
+              <span class="layer-step">Lag 1 · Innerst</span>
+              <span class="layer-name">Bomullsbody med lang arm</span>
+            </div>
+            <span class="layer-chip">Hud</span>
+          </li>
+          <li class="layer-card" data-layer="outer">
+            <div class="layer-thumb" aria-hidden="true">
+              <!-- Sovepose ikon -->
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                <path d="M18 5l-9 4v5l9-2 9 2V9l-9-4z" fill="#A9492A"/>
+                <path d="M9 14v14h18V14l-9 2-9-2z" fill="#C0632F"/>
+                <path d="M12 18h12M12 22h12M12 26h12" stroke="#A9492A" stroke-width="1" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="layer-meta">
+              <span class="layer-step">Lag 2 · Ytterst</span>
+              <span class="layer-name">Sovepose 2.5 TOG</span>
+            </div>
+            <span class="layer-chip">2.5 TOG</span>
+          </li>
+        </ol>
+      </section>
+
+      <!-- SAFETY -->
+      <aside class="safety" role="note" aria-label="Sikkerhet">
+        <div class="safety-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A9492A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 8h.01M11 12h1v4h1"/>
+          </svg>
+        </div>
+        <div class="safety-text">
+          <p class="safety-title">Trygg-natt-regel</p>
+          <p class="safety-body">Bruk aldri dyne, pute eller løse tepper sammen med sovepose før barnet er over 1 år.</p>
+        </div>
+      </aside>
+
+      <div class="footer-pad" aria-hidden="true"></div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

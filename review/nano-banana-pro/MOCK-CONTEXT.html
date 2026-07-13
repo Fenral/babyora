@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Babyora — bildekontext-mock</title>
+<style>
+  :root {
+    --brand: oklch(42% 0.11 35);
+    --brand-cta: oklch(60% 0.15 35);
+    --brand-tint: oklch(94% 0.03 35);
+    --bg: oklch(97.5% 0.008 85);
+    --surface: #FFFFFF;
+    --surface-2: oklch(94% 0.020 85);
+    --border: oklch(87% 0.030 85);
+    --ink: oklch(22% 0.015 35);
+    --ink-soft: oklch(50% 0.02 35);
+    --garment-innerst:   oklch(92% 0.030 85);
+    --garment-mellomlag: oklch(66% 0.090 195);
+    --garment-ytterst:   oklch(40% 0.070 250);
+    --garment-ekstra:    oklch(70% 0.13 75);
+    --garment-utstyr:    oklch(68% 0.060 175);
+  }
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #2a2a2a;
+    color: var(--ink);
+    padding: 30px;
+  }
+  .lab {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 430px 1fr;
+    gap: 40px;
+  }
+  .phone {
+    width: 430px;
+    height: 900px;
+    background: var(--bg);
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+  }
+  .info {
+    color: #ccc;
+    padding-top: 20px;
+  }
+  .info h1 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    color: white;
+    margin: 0 0 8px;
+    font-weight: 400;
+  }
+  .info p { line-height: 1.6; }
+  .info code {
+    background: #444;
+    padding: 2px 7px;
+    border-radius: 4px;
+    color: #fbb;
+    font-size: 13px;
+  }
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 20px 0 30px;
+  }
+  .sw {
+    border-radius: 8px;
+    padding: 14px 10px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .sw small {
+    display: block;
+    opacity: 0.7;
+    font-weight: 400;
+    margin-top: 3px;
+  }
+
+  /* Phone content */
+  .header {
+    padding: 18px 22px 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .avatar-slot {
+    width: 88px;
+    height: 108px;
+    background: #FF00FF;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.3;
+    flex-shrink: 0;
+    border: 2px dashed white;
+    position: relative;
+  }
+  .avatar-slot::after {
+    content: '← bildet legges her';
+    position: absolute;
+    bottom: -22px;
+    left: 0;
+    right: 0;
+    font-size: 9px;
+    color: #c3c;
+    text-align: center;
+    font-weight: 600;
+  }
+  .h1 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 1;
+    color: var(--brand);
+    margin: 0;
+  }
+  .date {
+    margin: 4px 0 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+
+  .wp {
+    margin: 8px 22px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .wp-temp {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 32px;
+    color: var(--brand);
+    line-height: 1;
+  }
+  .wp-meta {
+    flex: 1;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .wp-meta strong { font-size: 14px; color: var(--ink); }
+
+  .why {
+    margin: 12px 22px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .why strong { color: var(--brand); }
+
+  .gruppert {
+    margin: 14px 22px 0;
+    display: grid;
+    gap: 4px;
+  }
+  .rad {
+    display: grid;
+    grid-template-columns: 22px 3px 1fr;
+    grid-template-rows: auto auto;
+    gap: 2px 10px;
+    padding: 7px 12px 8px 0;
+    background: var(--surface);
+    border-radius: 10px;
+  }
+  .num {
+    grid-row: 1 / span 2;
+    place-self: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    padding-left: 5px;
+  }
+  .marker {
+    grid-row: 1 / span 2;
+    width: 3px;
+    height: 100%;
+    border-radius: 0 3px 3px 0;
+  }
+  .cat {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px 3px 3px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    min-height: 28px;
+  }
+  .thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #FF00FF;
+    display: grid;
+    place-items: center;
+    color: white;
+    font-size: 8px;
+    font-weight: 700;
+    border: 1px dashed white;
+    flex-shrink: 0;
+  }
+  .thumb-real {
+    background: var(--surface-2);
+  }
+
+  .nav {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .nav-item {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+  .nav-item.active { color: var(--brand); }
+  .nav-icon {
+    width: 22px;
+    height: 22px;
+    margin: 0 auto 3px;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z' fill='black'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+
+  .note {
+    background: #FF00FF22;
+    border: 1px dashed #FF00FF;
+    padding: 12px 16px;
+    margin: 20px 0;
+    border-radius: 8px;
+    color: #fcf;
+    font-size: 13px;
+  }
+
+  .note h3 { margin: 0 0 8px; color: #fff; }
+</style>
+</head>
+<body>
+<div class="lab">
+
+  <!-- PHONE -->
+  <div class="phone">
+    <div class="header">
+      <div class="avatar-slot">avatar-A1<br/>88×108<br/>cream-bg<br/>fit:contain</div>
+      <div>
+        <h1 class="h1">Lillian</h1>
+        <p class="date">I DAG</p>
+      </div>
+    </div>
+
+    <div class="wp">
+      <div class="wp-temp">10°</div>
+      <div class="wp-meta">
+        <strong>Delvis skyet · Føles 9°</strong><br/>
+        2,0 m/s · 0,0 mm/t · Elverum
+      </div>
+    </div>
+
+    <p class="why">
+      Langermet body og pyjamas, pluss sovepose 2.5 TOG.
+    </p>
+
+    <div class="gruppert">
+      <div class="rad">
+        <span class="num">1</span>
+        <span class="marker" style="background:var(--garment-innerst)"></span>
+        <div>
+          <p class="cat">Innerst</p>
+          <div class="chips">
+            <span class="chip"><span class="thumb">body</span>Langermet body</span>
+            <span class="chip"><span class="thumb">sokk</span>Ullsokker</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rad">
+        <span class="num">2</span>
+        <span class="marker" style="background:var(--garment-mellomlag)"></span>
+        <div>
+          <p class="cat">Mellomlag</p>
+          <div class="chips">
+            <span class="chip"><span class="thumb">pyja</span>Pyjamas</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rad">
+        <span class="num">3</span>
+        <span class="marker" style="background:var(--garment-ekstra)"></span>
+        <div>
+          <p class="cat">Topp til tå</p>
+          <div class="chips">
+            <span class="chip"><span class="thumb">lue</span>Lue</span>
+            <span class="chip"><span class="thumb">vott</span>Votter</span>
+          </div>
+          <p style="margin:2px 0 0; font-size:11px; color:var(--ink-soft);">9° — lue og votter</p>
+        </div>
+      </div>
+
+      <div class="rad">
+        <span class="num">4</span>
+        <span class="marker" style="background:var(--garment-utstyr)"></span>
+        <div>
+          <p class="cat">I vogna</p>
+          <div class="chips">
+            <span class="chip"><span class="thumb">sovp</span>Sovepose 1.0 TOG</span>
+            <span class="chip"><span class="thumb">tepp</span>Tynt teppe</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item active">
+        <div class="nav-icon"></div>
+        Hjem
+      </div>
+      <div class="nav-item">
+        <div class="nav-icon"></div>
+        Uke
+      </div>
+      <div class="nav-item">
+        <div class="nav-icon"></div>
+        Guide
+      </div>
+      <div class="nav-item">
+        <div class="nav-icon"></div>
+        Innst.
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO -->
+  <div class="info">
+    <h1>Babyora — bildekontext-mock</h1>
+    <p>
+      Slik vil de genererte Nano Banana Pro-bildene leve i appen.
+      <strong style="color:white">Alle magenta-felter</strong> markerer
+      hvor PNG-ene plasseres etter chroma-key-stripping.
+    </p>
+
+    <h2 style="color:white; margin: 24px 0 8px; font-size: 16px;">Faktiske farger som omgir bildene</h2>
+    <div class="swatches">
+      <div class="sw" style="background:#FAF6EF">
+        Krem-BG<br/><small>#FAF6EF · oklch 97.5% .008 85</small>
+      </div>
+      <div class="sw" style="background:#FFFFFF">
+        Surface<br/><small>#FFFFFF (lag-rader)</small>
+      </div>
+      <div class="sw" style="background:oklch(94% 0.020 85)">
+        Surface-2<br/><small>thumb-fallback</small>
+      </div>
+      <div class="sw" style="background:oklch(42% 0.11 35); color:white">
+        Brand-rust<br/><small>tittel + aktiv nav</small>
+      </div>
+      <div class="sw" style="background:oklch(60% 0.15 35); color:white">
+        Brand-CTA<br/><small>knapper</small>
+      </div>
+      <div class="sw" style="background:oklch(94% 0.03 35)">
+        Brand-tint<br/><small>kort-hover</small>
+      </div>
+    </div>
+
+    <h2 style="color:white; margin: 24px 0 8px; font-size: 16px;">Hva bildene må passe inn i</h2>
+    <ul style="line-height: 1.7;">
+      <li><strong style="color:#fff">Avatar (88×108):</strong>
+        står på krem-BG <code>#FAF6EF</code> i header. Må ha warm cream/ivory
+        som "white" — aldri kjølig hvit (vil se grå ut).</li>
+      <li><strong style="color:#fff">Plagg-thumb (22×22 sirkel):</strong>
+        står på <code>#FAF6EF</code> inni chip med 1px border.
+        Object-fit: contain. Lite, så <strong>silhuett-styrke er kritisk</strong>.</li>
+      <li><strong style="color:#fff">Lag-rad bakgrunn:</strong> hvit <code>#FFFFFF</code>.
+        Ikke et problem så lenge alpha er ren etter chroma-key.</li>
+      <li><strong style="color:#fff">Terrakotta-aksent (A6-votter):</strong>
+        skal harmonere med <code>--brand</code> (rust hue 35) — ikke den
+        primær-røde forrige modell ga.</li>
+    </ul>
+
+    <div class="note">
+      <h3>OBS — chroma-key gotcha</h3>
+      Gemini returnerer bildene med magenta <code>#FF00FF</code> bakgrunn.
+      <code>postprocess-review.mjs</code> stripper den til transparent + legger
+      kontakt-skygge. Sjekk at ingen plagg-detalj <em>i seg selv</em> bruker
+      rosa/fuchsia — da forsvinner detaljen ved stripping.
+    </div>
+
+    <p style="margin-top: 24px; opacity: 0.7; font-size: 12px;">
+      Generert <span style="color:white">2026-06-13</span> ·
+      <code>review/nano-banana-pro/MOCK-CONTEXT.html</code>
+    </p>
+  </div>
+</div>
+</body>
+</html>

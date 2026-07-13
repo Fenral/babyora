@@ -1,0 +1,223 @@
+{
+  "version": "2026-06-03",
+  "items": {
+    "kortermet ullbody": {
+      "primary": "nostebarn-singletbody",
+      "alternatives": ["nostebarn-ribbestrikket-body"]
+    },
+    "langermet ullbody": {
+      "primary": "lillelam-ullbody",
+      "alternatives": ["nostebarn-ullbody", "nostebarn-body-ull-silke", "nostebarn-body-ull-silke-2"]
+    },
+    "langermet ullbody tynn": {
+      "primary": "lillelam-ullbody",
+      "alternatives": ["nostebarn-body-ull-silke"]
+    },
+    "ullongs": {
+      "primary": "lillelam-ullongs",
+      "alternatives": []
+    },
+    "ull-bukse": {
+      "primary": "lillelam-ullongs",
+      "alternatives": []
+    },
+    "ullstrømper": {
+      "primary": "lillelam-ullongs",
+      "alternatives": []
+    },
+    "ullstrømper tykke": {
+      "primary": "lillelam-ullongs",
+      "alternatives": []
+    },
+    "ullsett tynt": {
+      "primary": "lillelam-hentesett",
+      "alternatives": ["janus-playsuit-merino", "lillelam-sparkedress-tynn"]
+    },
+    "ullsett tykt": {
+      "primary": "lillelam-classic-sett",
+      "alternatives": ["lillelam-sparkedress-classic"]
+    },
+    "ullsett dobbelt": {
+      "primary": "lillelam-classic-sett",
+      "alternatives": ["lillelam-sparkedress-classic"]
+    },
+    "ull-jakke": {
+      "primary": "janus-playsuit-merino",
+      "alternatives": []
+    },
+    "lue tynn": {
+      "primary": "lillelam-babylue-july",
+      "alternatives": ["lillelam-babylue-classic"]
+    },
+    "lue": {
+      "primary": "lillelam-babylue-classic",
+      "alternatives": ["lillelam-babylue-july"]
+    },
+    "lue m/ ull": {
+      "primary": "lillelam-babylue-classic",
+      "alternatives": []
+    },
+    "dunteppe": {
+      "primary": "lillelam-pledd-classic",
+      "alternatives": ["lillelam-pledd-tynn-classic"]
+    },
+    "tynt teppe": {
+      "primary": "lillelam-pledd-tynn-classic",
+      "alternatives": ["lillelam-pledd-classic"]
+    },
+    "vinterkjøredress": {
+      "primary": "reima-puhuri",
+      "alternatives": []
+    },
+    "vinterkjøredress isolert": {
+      "primary": "reima-puhuri",
+      "alternatives": []
+    },
+    "kjøredress": {
+      "primary": "reima-puhuri",
+      "alternatives": []
+    },
+    "lett kjøredress": {
+      "primary": "reima-puhuri",
+      "alternatives": []
+    }
+  },
+  "products": {
+    "nostebarn-singletbody": {
+      "name": "Singletbody m/ knapp i ull med silke",
+      "brand": "Nøstebarn",
+      "priceNok": 435,
+      "url": "https://nostebarn.no/products/singletbody-m-knapp-i-ull-med-silke",
+      "imageUrl": "https://nostebarn.no/cdn/shop/files/4530-10.jpg?v=1778952123&width=800",
+      "shopName": "Nøstebarn"
+    },
+    "nostebarn-ribbestrikket-body": {
+      "name": "Ribbestrikket body i ull med silke",
+      "brand": "Nøstebarn",
+      "priceNok": 498,
+      "url": "https://nostebarn.no/products/body-i-ull-med-silke-15",
+      "imageUrl": "https://nostebarn.no/cdn/shop/files/4072-113_1.jpg?v=1778857419&width=800",
+      "shopName": "Nøstebarn"
+    },
+    "nostebarn-ullbody": {
+      "name": "Ullbody",
+      "brand": "Nøstebarn",
+      "priceNok": 478,
+      "url": "https://nostebarn.no/products/ullbody-5",
+      "imageUrl": "https://nostebarn.no/cdn/shop/files/4372-709.jpg?v=1778857551&width=800",
+      "shopName": "Nøstebarn"
+    },
+    "nostebarn-body-ull-silke": {
+      "name": "Body i ull med silke (langermet)",
+      "brand": "Nøstebarn",
+      "priceNok": 498,
+      "url": "https://nostebarn.no/products/body-i-ull-med-silke-10",
+      "imageUrl": "https://nostebarn.no/cdn/shop/files/4572-621.jpg?v=1778584675&width=800",
+      "shopName": "Nøstebarn"
+    },
+    "nostebarn-body-ull-silke-2": {
+      "name": "Body i ull med silke (langermet, variant)",
+      "brand": "Nøstebarn",
+      "priceNok": 498,
+      "url": "https://nostebarn.no/products/body-i-ull-med-silke-4",
+      "imageUrl": "https://nostebarn.no/cdn/shop/files/4572-336.jpg?v=1778584662&width=800",
+      "shopName": "Nøstebarn"
+    },
+    "lillelam-ullbody": {
+      "name": "Ullbody — Tynn ullkvalitet — 100% Merino",
+      "brand": "Lillelam",
+      "priceNok": 343,
+      "url": "https://www.ohdearbaby.no/products/lillelam-ullbody-baby-hvit/",
+      "imageUrl": "https://img.ohdearbaby.no/e138f893-dec6-44ae-ef42-7a8749b12800/public",
+      "shopName": "OhDearBaby"
+    },
+    "lillelam-ullongs": {
+      "name": "Ulltights / Ullongs — 100% Merino",
+      "brand": "Lillelam",
+      "priceNok": 319,
+      "url": "https://www.ohdearbaby.no/products/lillelam-ullongs-baby-hvit/",
+      "imageUrl": "https://img.ohdearbaby.no/1bf093fb-8f54-4a8b-e3c4-b6089a1e9200/public",
+      "shopName": "OhDearBaby"
+    },
+    "lillelam-hentesett": {
+      "name": "Hentesett",
+      "brand": "Lillelam",
+      "priceNok": 1699,
+      "url": "https://lillelam.no/produkt/hentesett-baby/",
+      "imageUrl": "https://img.ohdearbaby.no/e138f893-dec6-44ae-ef42-7a8749b12800/public",
+      "shopName": "Lillelam"
+    },
+    "lillelam-classic-sett": {
+      "name": "Classic sett",
+      "brand": "Lillelam",
+      "priceNok": 2099,
+      "url": "https://lillelam.no/produkt/classic-sett/",
+      "imageUrl": "https://img.ohdearbaby.no/e138f893-dec6-44ae-ef42-7a8749b12800/public",
+      "shopName": "Lillelam"
+    },
+    "lillelam-sparkedress-tynn": {
+      "name": "Sparkedress tynn classic",
+      "brand": "Lillelam",
+      "priceNok": 899,
+      "url": "https://lillelam.no/produkt/sparkedress-tynn-classic/",
+      "imageUrl": "https://img.ohdearbaby.no/e138f893-dec6-44ae-ef42-7a8749b12800/public",
+      "shopName": "Lillelam"
+    },
+    "lillelam-sparkedress-classic": {
+      "name": "Sparkedress classic",
+      "brand": "Lillelam",
+      "priceNok": 999,
+      "url": "https://lillelam.no/produkt/sparkedress-classic/",
+      "imageUrl": "https://img.ohdearbaby.no/e138f893-dec6-44ae-ef42-7a8749b12800/public",
+      "shopName": "Lillelam"
+    },
+    "lillelam-babylue-july": {
+      "name": "Babylue July",
+      "brand": "Lillelam",
+      "priceNok": 349,
+      "url": "https://lillelam.no/produkt/babyhat-july/",
+      "imageUrl": "https://img.ohdearbaby.no/e138f893-dec6-44ae-ef42-7a8749b12800/public",
+      "shopName": "Lillelam"
+    },
+    "lillelam-babylue-classic": {
+      "name": "Babylue classic",
+      "brand": "Lillelam",
+      "priceNok": 399,
+      "url": "https://lillelam.no/produkt/babylue-classic/",
+      "imageUrl": "https://img.ohdearbaby.no/e138f893-dec6-44ae-ef42-7a8749b12800/public",
+      "shopName": "Lillelam"
+    },
+    "lillelam-pledd-tynn-classic": {
+      "name": "Pledd tynn classic",
+      "brand": "Lillelam",
+      "priceNok": 799,
+      "url": "https://lillelam.no/produkt/pledd-tynn-classic/",
+      "imageUrl": "https://img.ohdearbaby.no/e138f893-dec6-44ae-ef42-7a8749b12800/public",
+      "shopName": "Lillelam"
+    },
+    "lillelam-pledd-classic": {
+      "name": "Pledd classic",
+      "brand": "Lillelam",
+      "priceNok": 999,
+      "url": "https://lillelam.no/produkt/pledd-classic/",
+      "imageUrl": "https://img.ohdearbaby.no/e138f893-dec6-44ae-ef42-7a8749b12800/public",
+      "shopName": "Lillelam"
+    },
+    "janus-playsuit-merino": {
+      "name": "Playsuit Merino — Babywool 180",
+      "brand": "Janus",
+      "priceNok": 309,
+      "url": "https://www.janus.no/en/collections/baby-forste-lag-ullekedress",
+      "imageUrl": "https://www.janus.no/cdn/shop/files/6921402-923.jpg?crop=center&height=1080&v=1762244758&width=1080",
+      "shopName": "Janus"
+    },
+    "reima-puhuri": {
+      "name": "Vinterdress Puhuri — Slitesterk",
+      "brand": "Reima",
+      "priceNok": 714,
+      "url": "https://www.ohdearbaby.no/products/reima-vinterdress-baby-puhuri-grey-pink/",
+      "imageUrl": "https://img.ohdearbaby.no/455c94dd-b6c9-482d-8c35-5b58bffdaa00/desktop",
+      "shopName": "OhDearBaby"
+    }
+  }
+}

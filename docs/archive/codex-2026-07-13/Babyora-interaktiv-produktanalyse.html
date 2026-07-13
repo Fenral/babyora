@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Babyora — interaktiv produktanalyse</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #151421; --foreground: #f3eff8; --card: #242235;
+      --card-foreground: #f3eff8; --popover: #242235; --popover-foreground: #f3eff8;
+      --primary: #64d09a; --primary-foreground: #10251b; --secondary: #f39a7a;
+      --secondary-foreground: #2b1510; --muted: #37344b; --muted-foreground: #c6c0d2;
+      --accent: #343047; --accent-foreground: #f3eff8; --destructive: #ee7f78;
+      --border: #4b475f; --input: #343047; --ring: #64d09a;
+      --viz-series-1: #64d09a; --viz-series-2: #f39a7a; --viz-series-3: #8ec2d3;
+      --font-size-base: 16px;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        color-scheme: light; --background: #f7f4f2; --foreground: #231f2c; --card: #ffffff;
+        --card-foreground: #231f2c; --popover: #ffffff; --popover-foreground: #231f2c;
+        --primary: #267d58; --primary-foreground: #ffffff; --secondary: #c45f42;
+        --secondary-foreground: #ffffff; --muted: #e9e4e8; --muted-foreground: #655e6c;
+        --accent: #eee8ec; --accent-foreground: #231f2c; --destructive: #b83d3d;
+        --border: #d4ccd3; --input: #ffffff; --ring: #267d58; --viz-series-1: #267d58;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--background); color: var(--foreground); font: 400 var(--font-size-base)/1.5 Inter, ui-sans-serif, system-ui, sans-serif; }
+    main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 72px; }
+    .page-head { margin-bottom: 24px; }
+    .page-head p { color: var(--muted-foreground); max-width: 760px; margin: 6px 0 0; }
+    h1, h2, h3 { margin: 0; font-weight: 500; line-height: 1.15; }
+    h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+    h2 { font-size: 1.25rem; }
+    h3 { font-size: 1rem; }
+    button { font: inherit; }
+    .card { background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); border-radius: 18px; padding: 18px; }
+    .viz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .viz-stat-value { font-size: 2rem; line-height: 1; font-weight: 500; margin-top: 4px; }
+    .viz-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn { appearance: none; border: 1px solid var(--border); border-radius: 12px; background: transparent; color: var(--foreground); padding: 10px 13px; cursor: pointer; }
+    .btn:hover { background: var(--accent); }
+    .btn:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+    .btn-primary { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary); filter: brightness(.96); }
+    .btn-block { width: 100%; }
+    .viz-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 8px; background: color-mix(in srgb, var(--secondary) 22%, transparent); color: var(--foreground); font-size: .75rem; }
+    .text-muted { color: var(--muted-foreground); }
+    .text-small { font-size: .8rem; }
+    .plan-status { margin: 0 0 20px; display: grid; gap: 8px; border-color: color-mix(in srgb, var(--primary) 60%, var(--border)); }
+    .plan-status strong { color: var(--primary); font-weight: 650; }
+    .plan-status p { margin: 0; color: var(--muted-foreground); }
+    @media (max-width: 560px) { main { width: min(100% - 20px, 1180px); padding-top: 24px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="page-head">
+      <h1>Babyora produktanalyse</h1>
+      <p>Utforsk totalscore, sidekarakterer, deldimensjoner og de viktigste tiltakene. Analysen er basert på 13 ferske skjermbilder og kodeverifisert produktlogikk.</p>
+    </header>
+    <aside class="card plan-status" aria-label="Planstatus 13. juli 2026">
+      <strong>Planpakken er ferdig før koding</strong>
+      <p>Scorene under er baseline, ikke forventet sluttresultat. Motor 2.0, alder 0–71 måneder, materialvalg, 36 gullscenarioer, UI 90+, familie, kalibrering, varsler, widgets, logo og kostnadsfri Instagram-utrulling er nå spesifisert. Neste port er Git og grønn lint-baseline.</p>
+    </aside>
+    <section id="babyora-ux-dashboard" aria-label="Interaktiv Babyora-analyse">
+  <div class="viz-grid dashboard-summary">
+    <div class="card viz-stat">
+      <div class="text-muted">Totalscore</div>
+      <div class="viz-stat-value">73,3</div>
+      <div class="text-small text-muted">av 100 · vektet</div>
+    </div>
+    <div class="card viz-stat">
+      <div class="text-muted">Sterkeste side</div>
+      <div class="viz-stat-value">83</div>
+      <div class="text-small text-muted">Varm eller kald</div>
+    </div>
+    <div class="card viz-stat">
+      <div class="text-muted">Største løft</div>
+      <div class="viz-stat-value">Plus</div>
+      <div class="text-small text-muted">tydeligere verdi og tilgang</div>
+    </div>
+  </div>
+
+  <div class="viz-controls" aria-label="Filtrer sider">
+    <button type="button" class="btn btn-primary" data-filter="all" aria-pressed="true">Alle</button>
+    <button type="button" class="btn" data-filter="strong" aria-pressed="false">Sterk · 80+</button>
+    <button type="button" class="btn" data-filter="improve" aria-pressed="false">Forbedre · 70–79</button>
+    <button type="button" class="btn" data-filter="mixed" aria-pressed="false">Blandet · under 70</button>
+  </div>
+
+  <div class="dashboard-layout">
+    <div>
+      <div id="babyora-score-list" class="score-list" aria-label="Sidekarakterer"></div>
+      <div class="score-axis text-small text-muted" aria-hidden="true">
+        <span>0</span><span>50</span><span>70</span><span>80</span><span>100</span>
+      </div>
+    </div>
+
+    <article id="babyora-page-detail" class="card" aria-live="polite"></article>
+  </div>
+
+  <div class="priority-section">
+    <h2>Prioriterte funn</h2>
+    <div class="priority-list">
+      <button type="button" class="btn btn-block priority-item" data-page="settings">
+        <span class="viz-badge">Kritisk</span>
+        <span><strong>Tilgangsreglene peker feil vei</strong><small>Automatisk sted er gratis, mens morgenvarsel er Plus.</small></span>
+      </button>
+      <button type="button" class="btn btn-block priority-item" data-page="paywall">
+        <span class="viz-badge">Kritisk</span>
+        <span><strong>Paywallen selger gratisverdien</strong><small>«Ferdig antrekk» forklarer ikke fremover, overalt og familie.</small></span>
+      </button>
+      <button type="button" class="btn btn-block priority-item" data-page="outfit">
+        <span class="viz-badge">Høy</span>
+        <span><strong>«Lag» og «plagg» blandes</strong><small>Bruk plagg utad; la rekkefølgen forklare lagene.</small></span>
+      </button>
+      <button type="button" class="btn btn-block priority-item" data-page="guide">
+        <span class="viz-badge">Høy</span>
+        <span><strong>Faglig språk er for kategorisk</strong><small>TOG bør skilles fra uteklær og absolutte trygghetspåstander.</small></span>
+      </button>
+      <button type="button" class="btn btn-block priority-item" data-page="wardrobe">
+        <span class="viz-badge">Høy</span>
+        <span><strong>Garderoben krever for mye arbeid</strong><small>62 plagg må vedlikeholdes for en uklar Plus-gevinst.</small></span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<style>
+  #babyora-ux-dashboard { color: var(--foreground); }
+  #babyora-ux-dashboard .dashboard-summary { margin-bottom: 1rem; }
+  #babyora-ux-dashboard .viz-controls { margin-bottom: 1rem; }
+  #babyora-ux-dashboard .dashboard-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr); gap: 1rem; align-items: start; }
+  #babyora-ux-dashboard .score-list { display: grid; gap: .5rem; }
+  #babyora-ux-dashboard .score-row-inner { display: grid; grid-template-columns: minmax(112px, .7fr) minmax(120px, 1.3fr) 44px; gap: .75rem; align-items: center; width: 100%; }
+  #babyora-ux-dashboard .score-label { text-align: left; }
+  #babyora-ux-dashboard .score-track, #babyora-ux-dashboard .dimension-track { height: 10px; background: color-mix(in srgb, var(--muted) 65%, transparent); overflow: hidden; border-radius: 999px; }
+  #babyora-ux-dashboard .score-fill, #babyora-ux-dashboard .dimension-fill { display: block; height: 100%; width: var(--score); background: var(--viz-series-1); border-radius: inherit; transition: width 240ms ease-out; }
+  #babyora-ux-dashboard .score-list .btn-primary .score-track { background: color-mix(in srgb, var(--primary-foreground) 25%, transparent); }
+  #babyora-ux-dashboard .score-list .btn-primary .score-fill { background: var(--primary-foreground); }
+  #babyora-ux-dashboard .score-value { text-align: right; font-variant-numeric: tabular-nums; }
+  #babyora-ux-dashboard .score-axis { display: grid; grid-template-columns: repeat(5, 1fr); margin: .5rem 44px 0 calc(112px + .75rem); }
+  #babyora-ux-dashboard .score-axis span:not(:first-child) { text-align: right; }
+  #babyora-ux-dashboard .detail-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
+  #babyora-ux-dashboard .detail-score { font-variant-numeric: tabular-nums; }
+  #babyora-ux-dashboard .dimension-list { display: grid; gap: .65rem; margin: 1rem 0; }
+  #babyora-ux-dashboard .dimension-row { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(90px, 1fr) 32px; gap: .5rem; align-items: center; }
+  #babyora-ux-dashboard .dimension-row small { color: var(--muted-foreground); }
+  #babyora-ux-dashboard .detail-section + .detail-section { margin-top: 1rem; }
+  #babyora-ux-dashboard .detail-section ul { margin: .45rem 0 0; padding-left: 1.15rem; }
+  #babyora-ux-dashboard .detail-section li + li { margin-top: .4rem; }
+  #babyora-ux-dashboard .priority-section { margin-top: 1.5rem; }
+  #babyora-ux-dashboard .priority-list { display: grid; gap: .5rem; }
+  #babyora-ux-dashboard .priority-item { display: grid; grid-template-columns: auto 1fr; gap: .75rem; align-items: start; text-align: left; }
+  #babyora-ux-dashboard .priority-item span:last-child { display: grid; gap: .2rem; }
+  #babyora-ux-dashboard .priority-item small { color: var(--muted-foreground); }
+  #babyora-ux-dashboard .empty-state { padding: 1rem 0; color: var(--muted-foreground); }
+  @media (prefers-reduced-motion: reduce) {
+    #babyora-ux-dashboard .score-fill, #babyora-ux-dashboard .dimension-fill { transition: none; }
+  }
+  @media (max-width: 680px) {
+    #babyora-ux-dashboard .dashboard-layout { grid-template-columns: 1fr; }
+    #babyora-ux-dashboard .score-row-inner { grid-template-columns: minmax(100px, .8fr) minmax(90px, 1fr) 40px; gap: .5rem; }
+    #babyora-ux-dashboard .score-axis { margin-left: calc(100px + .5rem); margin-right: 40px; }
+  }
+  @media (max-width: 420px) {
+    #babyora-ux-dashboard .score-row-inner { grid-template-columns: 1fr 38px; }
+    #babyora-ux-dashboard .score-track { grid-column: 1 / -1; grid-row: 2; }
+    #babyora-ux-dashboard .score-axis { display: none; }
+    #babyora-ux-dashboard .dimension-row { grid-template-columns: 1fr 30px; }
+    #babyora-ux-dashboard .dimension-track { grid-column: 1 / -1; grid-row: 2; }
+  }
+</style>
+
+<script>
+  (() => {
+    const root = document.getElementById('babyora-ux-dashboard');
+    const list = root.querySelector('#babyora-score-list');
+    const detail = root.querySelector('#babyora-page-detail');
+    const dimensions = [
+      ['taskClarity', 'Oppgave og hierarki'],
+      ['navigationInteraction', 'Navigasjon'],
+      ['visualCraft', 'Visuell kvalitet'],
+      ['colorTemperature', 'Farge og temperatur'],
+      ['copyTrust', 'Tekst og tillit'],
+      ['productValue', 'Verdi og kjøpsvilje'],
+      ['accessibilityRobustness', 'Tilgjengelighet']
+    ];
+    const pages = [
+      { id:'warm-cold', label:'Varm eller kald', score:83, d:[90,86,82,78,72,85,84], role:'En av appens sterkeste tillitsfunksjoner.', strengths:['Umiddelbart handlingsrettet med én kontroll og tre tydelige utfall.','Tekst, ikon og farge gjør mening tilgjengelig uten å være fargeavhengig.'], issues:['Formuleringen om kalde hender og føtter er for absolutt.'] },
+      { id:'tog', label:'TOG', score:82, d:[84,83,88,86,70,82,80], role:'Sterkt tillits- og retention-verktøy, men ikke en naturlig betalingsmur.', strengths:['Fokusert sammenheng mellom romtemperatur, sovepose og TOG.','Temperaturkontrollen er både vakker og forståelig.'], issues:['«Riktig varme for natten» kan leses som en individuell sikkerhetsgaranti.','Relevant produsent- og variasjonskontekst kommer ikke frem i første viewport.'] },
+      { id:'home', label:'Hjem', score:79.4, d:[76,82,86,88,78,72,82], role:'Skal bevise at gratisproduktet løser i dag hjemme.', strengths:['Særpreget temperaturatmosfære og sterk 3D-identitet.','Aktivitetsvalg og CTA ligger godt i tommelsonen.'], issues:['Antrekket krever fortsatt et ekstra trykk.','Den største visuelle flaten viser en naken baby fremfor dagens svar.'] },
+      { id:'outfit', label:'Påkledning', score:77.8, d:[82,68,88,82,65,82,72], role:'Babyoras sterkeste visuelle bevis på kjernemotoren.', strengths:['Plaggene rundt barnet gjør anbefalingen konkret.','Rekkefølge innerst først er direkte handlingsveiledning.'], issues:['«8 lag» bør være «8 plagg».','Orbit og liste dupliserer mye informasjon og gir lang scroll.'] },
+      { id:'find-outfit', label:'Finn antrekk', score:76, d:[78,75,78,84,66,78,72], role:'Demonstrerer motorens dybde og årsak–virkning.', strengths:['Temperatur, vind, nedbør og aktivitet kan utforskes direkte.','Temperaturbakgrunnen fungerer som en tydelig signatur.'], issues:['Resultatet viser abstrakte «lag» fremfor konkrete plagg.','m/s og mm/t mangler menneskelige beskrivelser og endringsforklaring.'] },
+      { id:'guide', label:'Guide', score:72.6, d:[73,78,83,78,58,68,75], role:'Bygger tillit og opplevd bredde rundt kjerneproduktet.', strengths:['Sterk redaksjonell typografi og illustrerte kort.','Verktøy og kunnskap er tydelig gruppert.'], issues:['Utekalkulatoren kobles feilaktig til TOG-standarden.','KLEMEG står fortsatt som produktnavn.'] },
+      { id:'clothing-library', label:'Plaggbibliotek', score:72.1, d:[75,66,76,70,78,68,70], role:'Nyttig oppslagsverk, men ikke en sterk betalingsdriver.', strengths:['Plaggbilder, materiale og kategorier er lette å kjenne igjen.'], issues:['62 plagg og avklipte filterchips gir høy mobil tetthet.','⌘K vises i et mobilgrensesnitt.'] },
+      { id:'onboarding', label:'Onboarding', score:72, d:[68,70,82,80,80,60,72], role:'Skal føre en ny forelder til første ekte anbefaling.', strengths:['Varm og menneskelig inngang med tydelig personalisering.','Steg 1 av 4 gjør arbeidsmengden forutsigbar.'], issues:['Verdien kommer etter en stor illustrasjon og flere felt.','Stegtekst og prikker viser samme fremdrift to ganger.'] },
+      { id:'settings', label:'Innstillinger', score:70.9, d:[75,76,76,72,70,58,76], role:'Skal gjøre barn, sted, varsler og Plus forståelig.', strengths:['Profil, sted og varsler er ryddig gruppert.'], issues:['Automatisk posisjon er gratis mens morgenvarsel er Plus.','Familiedeling er ikke synlig, selv om paywallen lover familieverdi.'] },
+      { id:'first-winter', label:'Første vinter', score:70, d:[72,72,82,76,64,58,74], role:'Støtter tillit og sesongretention, ikke hovedsakelig abonnement.', strengths:['Åtte korte temaer er mer oversiktlig enn lange artikler.'], issues:['Sikkerhetsnære temaer som nakkesjekk ligger bak Plus.','Ukentlig pacing kan hindre hjelp når behovet oppstår.'] },
+      { id:'plan', label:'Uke / Planlegg', score:67.9, d:[68,78,74,72,60,58,74], role:'Burde være den naturlige Plus-motoren for fremtid.', strengths:['Klokkeslett og temperatur kan skannes raskt.'], issues:['Fire tidspunkter gjentar «8 · Mye på» uten handling.','Uke-teaseren forklarer ikke hva fremtidsverdien faktisk er.'] },
+      { id:'paywall', label:'Betalingsvegg', score:64.7, d:[60,74,76,74,62,48,78], role:'Skal selge fremover, overalt og sammen.', strengths:['Valgt årsplan, pris og gratisperiode er lett å se.','Pris etter prøveperioden kommuniseres tydelig.'], issues:['Overskriften selger dagens gratisverdi.','Tre prisvalg kommer før konkrete Plus-fordeler.','«Én Premium» er inkonsistent og familieverdien er ikke levert.'] },
+      { id:'wardrobe', label:'Min garderobe', score:64, d:[65,72,70,68,62,50,72], role:'Svakeste balanse mellom brukerinnsats og Plus-verdi.', strengths:['Har, mangler og totalantall er enkelt å forstå.'], issues:['62 plagg må administreres for en uklar gevinst.','Demoen starter med 62 av 62 plagg og demonstrerer ingen forskjell.'] }
+    ];
+
+    const fmt = value => new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 1 }).format(value);
+    const band = score => score >= 80 ? 'strong' : score >= 70 ? 'improve' : 'mixed';
+    let selected = 'home';
+    let activeFilter = 'all';
+
+    function renderList() {
+      const visible = pages.filter(page => activeFilter === 'all' || band(page.score) === activeFilter);
+      list.innerHTML = '';
+      if (!visible.length) {
+        list.innerHTML = '<div class="empty-state">Ingen sider i dette intervallet.</div>';
+        return;
+      }
+      visible.forEach(page => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `btn btn-block${page.id === selected ? ' btn-primary' : ''}`;
+        button.setAttribute('aria-pressed', String(page.id === selected));
+        button.innerHTML = `<span class="score-row-inner"><span class="score-label">${page.label}</span><span class="score-track" aria-hidden="true"><span class="score-fill" style="--score:${page.score}%"></span></span><strong class="score-value">${fmt(page.score)}</strong></span>`;
+        button.addEventListener('click', () => selectPage(page.id));
+        list.appendChild(button);
+      });
+    }
+
+    function renderDetail() {
+      const page = pages.find(item => item.id === selected) || pages[0];
+      const dimensionRows = dimensions.map((dimension, index) => `<div class="dimension-row"><small>${dimension[1]}</small><span class="dimension-track" aria-hidden="true"><span class="dimension-fill" style="--score:${page.d[index]}%"></span></span><strong>${page.d[index]}</strong></div>`).join('');
+      detail.innerHTML = `<div class="detail-head"><div><h2>${page.label}</h2><div class="text-muted">${page.role}</div></div><div class="viz-stat-value detail-score">${fmt(page.score)}</div></div><div class="dimension-list" aria-label="Delkarakterer">${dimensionRows}</div><div class="detail-section"><h3>Det som fungerer</h3><ul>${page.strengths.map(item => `<li>${item}</li>`).join('')}</ul></div><div class="detail-section"><h3>Det som bør forbedres</h3><ul>${page.issues.map(item => `<li>${item}</li>`).join('')}</ul></div>`;
+    }
+
+    function selectPage(id) {
+      selected = id;
+      if (activeFilter !== 'all' && band(pages.find(page => page.id === id).score) !== activeFilter) {
+        activeFilter = 'all';
+        root.querySelectorAll('[data-filter]').forEach(button => {
+          const active = button.dataset.filter === 'all';
+          button.classList.toggle('btn-primary', active);
+          button.setAttribute('aria-pressed', String(active));
+        });
+      }
+      renderList();
+      renderDetail();
+    }
+
+    root.querySelectorAll('[data-filter]').forEach(button => {
+      button.addEventListener('click', () => {
+        activeFilter = button.dataset.filter;
+        root.querySelectorAll('[data-filter]').forEach(peer => {
+          const active = peer === button;
+          peer.classList.toggle('btn-primary', active);
+          peer.setAttribute('aria-pressed', String(active));
+        });
+        renderList();
+      });
+    });
+
+    root.querySelectorAll('[data-page]').forEach(button => {
+      button.addEventListener('click', () => selectPage(button.dataset.page));
+    });
+
+    renderList();
+    renderDetail();
+  })();
+</script>
+
+  </main>
+</body>
+</html>

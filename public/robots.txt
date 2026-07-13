@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /
+
+# Web-distribusjon er kun dev-preview. Endelig app: App Store + Play Store.

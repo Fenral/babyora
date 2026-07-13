@@ -1,0 +1,725 @@
+{
+  "rubricVersion": "1.0.0",
+  "complete": true,
+  "totalScore": 73.3,
+  "provisionalScore": 73.3,
+  "unweightedMean": 73.3,
+  "highestPage": {
+    "id": "warm-cold",
+    "label": "Varm eller kald",
+    "score": 83
+  },
+  "lowestPage": {
+    "id": "wardrobe",
+    "label": "Min garderobe",
+    "score": 64
+  },
+  "issueCounts": {
+    "critical": 3,
+    "high": 16,
+    "medium": 9,
+    "low": 2
+  },
+  "productDiagnosis": "Babyora har en uvanlig sterk visuell grunnmur og flere sider som føles som et reelt, særpreget foreldreprodukt. Kjernen er lett å forstå når antrekket først åpnes, men Hjem krever fortsatt et ekstra trykk før forelderen får svaret, og Plan gjentar data fremfor å forklare hva som endrer handlingen. Den største kommersielle svakheten er at betalingsveggen selger dagens ferdige antrekk, mens ønsket Plus-retning er fremover, overalt og sammen. Appen fremstår derfor mer moden visuelt enn den nåværende Plus-fortellingen og tilgangsmodellen.",
+  "primaryPurchaseBlocker": "Plus viser ikke én sammenhengende, troverdig utvidelse av gratisproduktet: automatisk sted er tilgjengelig uten Plus, morgenpåminnelsen er låst, familiepåstanden er ikke støttet av en synlig delingsflyt, og paywallen selger hovedsakelig dagens antrekk som gratisproduktet skal bevise.",
+  "crossScreenFindings": [
+    {
+      "title": "Gratis- og Plus-logikken forteller feil historie",
+      "detail": "De mest synlige tilgangsvalgene støtter ikke prinsippet om i dag hjemme kontra fremover, overalt og sammen.",
+      "evidence": "Settings viser automatisk posisjon uten Plus-merke og Morgenvarsel med Plus-merke; paywallen leder med «Våkn opp til ferdig antrekk». Koden i InnstillingerScreen gater morgenvarsel, mens automatisk posisjon ikke sjekker premium.",
+      "evidenceType": "repository",
+      "severity": "critical",
+      "impact": "Brukeren får ikke et intuitivt svar på hvorfor abonnementet er nødvendig, og paywallen risikerer å kannibalisere tilliten til gratisløftet.",
+      "recommendation": "La gratis beholde dagens komplette anbefaling og enkel morgenpåminnelse; samle Plus rundt kommende dager, automatisk sted, flere steder/barn og reell omsorgsdeling før dette markedsføres."
+    },
+    {
+      "title": "Språk og merkevare skifter mellom skjermene",
+      "detail": "Babyora bruker både «lag» og «plagg», både «Plus» og «Premium», og Guide viser fortsatt KLEMEG som avsender.",
+      "evidence": "Påkledning viser «8 lag», Finn antrekk viser «4 lag», garderoben bruker «plagg», paywallen bruker Babyora Plus og samtidig «Én Premium», mens Guide har KLEMEG i toppteksten.",
+      "evidenceType": "rendered",
+      "severity": "high",
+      "impact": "Ujevn terminologi gjør produktet mindre presist og får flere sterke skjermer til å føles som ulike versjoner av appen.",
+      "recommendation": "Bruk «plagg» i brukergrensesnittet, «Babyora Plus» konsekvent og Babyora som eneste synlige produktnavn."
+    },
+    {
+      "title": "Faglig autoritet kommuniseres for kategorisk",
+      "detail": "Flere sider bruker helsesøster- og sikkerhetsspråk som virker mer endelig enn skjermbildet eller funksjonen kan dokumentere.",
+      "evidence": "Guide og Finn antrekk kobler utendørskalkulatoren til «TOG-standarden», TOG leder med «Riktig varme for natten», og Varm eller kald sier at kalde hender og føtter ikke betyr at barnet fryser.",
+      "evidenceType": "rendered",
+      "severity": "high",
+      "impact": "Den visuelle presisjonen kan gi forelderen større sikkerhet i utsagnene enn det er grunnlag for, noe som øker tillits- og sikkerhetsrisiko.",
+      "recommendation": "Skill TOG tydelig fra uteklær, moderer absolutte formuleringer og vis relevante forbehold eller produsentråd uten å fylle skjermene med juridisk tekst."
+    },
+    {
+      "title": "Illustrasjonssystemet mangler én tydelig familie",
+      "detail": "Myk 3D, akvarell, emoji-avatar og flate instruksjonsillustrasjoner opptrer som likeverdige identitetsbærere.",
+      "evidence": "Hjem og Påkledning bruker 3D-baby og plagg, onboarding bruker akvarell, Min garderobe bruker emoji-baby og Varm eller kald bruker flat illustrasjon.",
+      "evidenceType": "rendered",
+      "severity": "medium",
+      "impact": "Fragmenteringen reduserer merkevaregjenkjennelse selv om hver enkelt illustrasjon kan være attraktiv.",
+      "recommendation": "Definer ett funksjonelt 3D-system og ett sekundært kunnskapssystem, og fjern emoji som profilbærer."
+    }
+  ],
+  "missingPages": [],
+  "pages": [
+    {
+      "pageId": "onboarding",
+      "dimensionScores": {
+        "taskClarity": 68,
+        "navigationInteraction": 70,
+        "visualCraft": 82,
+        "colorTemperature": 80,
+        "copyTrust": 80,
+        "productValue": 60,
+        "accessibilityRobustness": 72
+      },
+      "strengths": [
+        {
+          "title": "Varm og menneskelig inngang",
+          "detail": "Navn, fødselsdato og sted kan gi en reelt personlig anbefaling, og teksten forklarer hvorfor navnet etterspørres.",
+          "evidence": "onboarding--start.png",
+          "evidenceType": "rendered"
+        },
+        {
+          "title": "Tydelig fremdrift",
+          "detail": "Steg 1 av 4 gjør arbeidsmengden forutsigbar.",
+          "evidence": "onboarding--start.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Verdien ligger utenfor første skjerm",
+          "detail": "Den første viewporten bruker mye plass på illustrasjon og profilfelt, mens en faktisk antrekksanbefaling ikke er synlig.",
+          "evidence": "onboarding--start.png",
+          "evidenceType": "rendered",
+          "severity": "high",
+          "impact": "En ny bruker må investere før Babyora beviser hva produktet gjør.",
+          "recommendation": "Komprimer illustrasjonen og la onboarding munne direkte ut i en ekte, personlig anbefaling før Plus eller varseltillatelse introduseres."
+        },
+        {
+          "title": "Overlappende fremdriftssignaler",
+          "detail": "Både «Steg 1 av 4» og vertikale prikker viser den samme informasjonen.",
+          "evidence": "onboarding--start.png",
+          "evidenceType": "rendered",
+          "severity": "low",
+          "impact": "Det skaper unødvendig visuell konkurranse i en allerede lang skjerm.",
+          "recommendation": "Behold én fremdriftsindikator og bruk den frigjorte plassen til felt eller verdi."
+        }
+      ],
+      "commercialDiagnosis": "Onboardingen bygger varme og personalisering, men kjøpsviljen blir sterkere hvis svarene umiddelbart demonstrerer hva de låste opp.",
+      "confidence": "medium",
+      "confidenceReason": "Første steg er fanget fullstendig, men senere steg og tidspunktet for første paywall er vurdert med repository- og tidligere flytkontekst fremfor nye skjermbilder.",
+      "label": "Onboarding",
+      "appWeight": 10,
+      "score": 72,
+      "delta": null
+    },
+    {
+      "pageId": "home",
+      "dimensionScores": {
+        "taskClarity": 76,
+        "navigationInteraction": 82,
+        "visualCraft": 86,
+        "colorTemperature": 88,
+        "copyTrust": 78,
+        "productValue": 72,
+        "accessibilityRobustness": 82
+      },
+      "strengths": [
+        {
+          "title": "Særpreget temperaturatmosfære",
+          "detail": "Kuldepaletten, været og 3D-babyen gir Babyora et tydelig uttrykk som ikke ligner en generisk værapp.",
+          "evidence": "home--default.png",
+          "evidenceType": "rendered"
+        },
+        {
+          "title": "God tommelflyt",
+          "detail": "Aktivitetsvalg og hovedknapp ligger i komfortabel rekkevidde, og CTA-en er visuelt entydig.",
+          "evidence": "home--default.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Kjernesvaret krever et ekstra trykk",
+          "detail": "Hjem viser vær, aktivitet og en naken baby, men ikke hvilke plagg som anbefales før «Se dagens antrekk» åpnes.",
+          "evidence": "home--default.png",
+          "evidenceType": "rendered",
+          "severity": "high",
+          "impact": "Gratisproduktets aha-øyeblikk blir langsommere og hjemmeskjermen beviser mindre verdi ved et raskt morgenblikk.",
+          "recommendation": "Vis en kort antrekksoppsummering og påkledd avatar automatisk; behold knappen som «Se detaljer»."
+        },
+        {
+          "title": "Stor flate uten beslutningsinformasjon",
+          "detail": "Babyillustrasjonen dominerer høyden, men den er naken og forklarer derfor ikke anbefalingen.",
+          "evidence": "home--default.png",
+          "evidenceType": "rendered",
+          "severity": "medium",
+          "impact": "Den sterkeste visuelle flaten kommuniserer mindre enn værteksten og CTA-en.",
+          "recommendation": "La babyen bære anbefalingen eller reduser høyden og bruk plassen til plagg og neste værendring."
+        }
+      ],
+      "commercialDiagnosis": "Hjem har høy daglig bruksverdi og sterk merkevare, men bør bevise gratisløftet uten trykk før det kan fungere som grunnlag for senere Plus-salg.",
+      "confidence": "high",
+      "confidenceReason": "Komplett standardtilstand er fanget med deterministisk vær.",
+      "label": "Hjem",
+      "appWeight": 15,
+      "score": 79.4,
+      "delta": null
+    },
+    {
+      "pageId": "outfit",
+      "dimensionScores": {
+        "taskClarity": 82,
+        "navigationInteraction": 68,
+        "visualCraft": 88,
+        "colorTemperature": 82,
+        "copyTrust": 65,
+        "productValue": 82,
+        "accessibilityRobustness": 72
+      },
+      "strengths": [
+        {
+          "title": "Babyoras sterkeste visuelle demonstrasjon",
+          "detail": "Plaggene rundt barnet, nummereringen og listen gjør antrekket konkret og personlig.",
+          "evidence": "outfit--recommendation.png",
+          "evidenceType": "rendered"
+        },
+        {
+          "title": "Rekkefølgen er handlingsklar",
+          "detail": "«Rekkefølge · innerst først» svarer direkte på hvordan plaggene tas på.",
+          "evidence": "outfit--recommendation.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Brukerbegrepet er fortsatt «lag»",
+          "detail": "Topplinjen sier «8 lag», selv om innholdet omfatter sokker, hals, lue og votter som brukeren enklere forstår som plagg.",
+          "evidence": "outfit--recommendation.png",
+          "evidenceType": "rendered",
+          "severity": "high",
+          "impact": "Det introduserer faglig friksjon på appens viktigste svar og bryter med garderobens «plagg»-språk.",
+          "recommendation": "Vis «8 plagg» og la rekkefølgen formidle lag-på-lag-prinsippet."
+        },
+        {
+          "title": "Informasjonen dupliseres over en lang scroll",
+          "detail": "Alle åtte plagg vises både i en stor sirkel og i en omfattende liste.",
+          "evidence": "outfit--recommendation.png",
+          "evidenceType": "rendered",
+          "severity": "medium",
+          "impact": "Den vakre presentasjonen gjør den praktiske sjekklisten tregere å skanne.",
+          "recommendation": "Behold avatar og en kompakt oppsummering øverst, og gjør detaljlisten tettere eller progressivt utvidbar."
+        }
+      ],
+      "commercialDiagnosis": "Denne siden beviser kjernemotorens verdi svært godt og kan være hovedbeviset før Plus introduseres, forutsatt at språk og skannelengde strammes inn.",
+      "confidence": "high",
+      "confidenceReason": "Hele første viewport og starten av plaggrekkefølgen er tydelig fanget.",
+      "label": "Påkledning",
+      "appWeight": 12,
+      "score": 77.8,
+      "delta": null
+    },
+    {
+      "pageId": "plan",
+      "dimensionScores": {
+        "taskClarity": 68,
+        "navigationInteraction": 78,
+        "visualCraft": 74,
+        "colorTemperature": 72,
+        "copyTrust": 60,
+        "productValue": 58,
+        "accessibilityRobustness": 74
+      },
+      "strengths": [
+        {
+          "title": "Tydelig tidsstruktur",
+          "detail": "Klokkeslett, temperatur og antrekksindikator kan leses raskt i én kolonne.",
+          "evidence": "plan--default.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Fire rader gir samme upresise beskjed",
+          "detail": "Alle tidspunkter viser «8 · Mye på» selv om temperaturen varierer.",
+          "evidence": "plan--default.png",
+          "evidenceType": "rendered",
+          "severity": "high",
+          "impact": "Siden viser værdata, men hjelper ikke forelderen forstå hva som faktisk endrer seg eller hva som bør gjøres.",
+          "recommendation": "Komprimer uendret anbefaling og fremhev bare handlingsendringer, for eksempel «samme antrekk hele dagen» eller «legg til X kl. 18»."
+        },
+        {
+          "title": "Plus-forhåndsvisningen forklarer ikke fremtidsverdien",
+          "detail": "«Uke PLUS» er synlig, men dagens flate viser ingen konkret eksempelverdi fra kommende dager.",
+          "evidence": "plan--default.png",
+          "evidenceType": "rendered",
+          "severity": "high",
+          "impact": "Brukeren må kjøpe for å forstå hva ukevisningen faktisk løser.",
+          "recommendation": "Vis én ekte teaser som «I morgen blir det 7 grader kaldere — ett ekstra plagg anbefales»."
+        }
+      ],
+      "commercialDiagnosis": "Plan burde være den naturlige Plus-motoren, men den nåværende skjermen viser gjentakelse fremfor forberedelse og skaper derfor begrenset kjøpspress.",
+      "confidence": "high",
+      "confidenceReason": "Dagens plan og den låste ukefanen er synlige i samme capture.",
+      "label": "Uke / Planlegg",
+      "appWeight": 10,
+      "score": 67.9,
+      "delta": null
+    },
+    {
+      "pageId": "guide",
+      "dimensionScores": {
+        "taskClarity": 73,
+        "navigationInteraction": 78,
+        "visualCraft": 83,
+        "colorTemperature": 78,
+        "copyTrust": 58,
+        "productValue": 68,
+        "accessibilityRobustness": 75
+      },
+      "strengths": [
+        {
+          "title": "Sterk redaksjonell identitet",
+          "detail": "Seriftypografi, store illustrerte kort og tydelige seksjoner gir Guide en premium kunnskapsfølelse.",
+          "evidence": "guide--hub.png",
+          "evidenceType": "rendered"
+        },
+        {
+          "title": "God gruppering",
+          "detail": "Kalkulator, verktøy og kunnskap har tydelig visuelt hierarki.",
+          "evidence": "guide--hub.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Feil faglig kobling i heroen",
+          "detail": "Kleskalkulatoren for utebruk markedsføres som bygget på «TOG-standarden».",
+          "evidence": "guide--hub.png og samme tekst i GuideHubScreen.tsx",
+          "evidenceType": "repository",
+          "severity": "high",
+          "impact": "TOG forbindes med soveposer og innendørs søvn; blandingen svekker faglig presisjon.",
+          "recommendation": "Beskriv uteverktøyet med alder, aktivitet, lag-på-lag-prinsipp og norske værforhold; behold TOG i søvnverktøyet."
+        },
+        {
+          "title": "Utdatert produktnavn",
+          "detail": "Toppteksten viser KLEMEG, mens resten av appen og betalingsproduktet heter Babyora.",
+          "evidence": "guide--hub.png",
+          "evidenceType": "rendered",
+          "severity": "medium",
+          "impact": "Det ser ut som en uferdig migrering og reduserer merkevaresammenheng.",
+          "recommendation": "Bytt KLEMEG til Babyora og kvalitetssikre alle synlige tidligere navn."
+        }
+      ],
+      "commercialDiagnosis": "Guide bygger tillit og opplevd bredde, men bør støtte kjerneproduktet og faglig presisjon fremfor å være en separat innholdsverden.",
+      "confidence": "high",
+      "confidenceReason": "Guidehubens viktigste seksjoner er synlige.",
+      "label": "Guide",
+      "appWeight": 7,
+      "score": 72.6,
+      "delta": null
+    },
+    {
+      "pageId": "find-outfit",
+      "dimensionScores": {
+        "taskClarity": 78,
+        "navigationInteraction": 75,
+        "visualCraft": 78,
+        "colorTemperature": 84,
+        "copyTrust": 66,
+        "productValue": 78,
+        "accessibilityRobustness": 72
+      },
+      "strengths": [
+        {
+          "title": "Tydelig årsak og virkning",
+          "detail": "Brukeren kan justere temperatur, vind, nedbør og aktivitet og se anbefalingen endre seg.",
+          "evidence": "find-outfit--default.png",
+          "evidenceType": "rendered"
+        },
+        {
+          "title": "Temperaturfargen fungerer som signatur",
+          "detail": "Den kalde blå flaten støtter tallet og gjør verktøyet mer minneverdig.",
+          "evidence": "find-outfit--default.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Resultatet bruker igjen «lag»",
+          "detail": "Resultatkortet viser «4 lag» i stedet for et konkret plaggantall og antrekksoppsummering.",
+          "evidence": "find-outfit--default.png",
+          "evidenceType": "rendered",
+          "severity": "high",
+          "impact": "Den viktigste verdien blir en abstrakt måling fremfor et direkte svar.",
+          "recommendation": "Vis plaggantall og de viktigste plaggene; behold lag som intern modell."
+        },
+        {
+          "title": "Vind og nedbør krever faglig tolkning",
+          "detail": "3 m/s og 0.0 mm/t vises uten menneskelige beskrivelser eller forklaring på hva endringen gjør med antrekket.",
+          "evidence": "find-outfit--default.png",
+          "evidenceType": "rendered",
+          "severity": "medium",
+          "impact": "Forelderen ser rådata, men lærer ikke hvorfor anbefalingen endres.",
+          "recommendation": "Legg til sekundære etiketter som «lett vind» og «ingen nedbør», samt en kort endringsforklaring."
+        }
+      ],
+      "commercialDiagnosis": "Verktøyet demonstrerer motorens dybde og kan styrke tillit, men full manuell frihet kan også omgå fremtidsverdien hvis det forblir helt gratis.",
+      "confidence": "high",
+      "confidenceReason": "Alle hovedkontroller og resultatets start er synlige.",
+      "label": "Finn antrekk",
+      "appWeight": 6,
+      "score": 76,
+      "delta": null
+    },
+    {
+      "pageId": "clothing-library",
+      "dimensionScores": {
+        "taskClarity": 75,
+        "navigationInteraction": 66,
+        "visualCraft": 76,
+        "colorTemperature": 70,
+        "copyTrust": 78,
+        "productValue": 68,
+        "accessibilityRobustness": 70
+      },
+      "strengths": [
+        {
+          "title": "Godt visuelt oppslagsverk",
+          "detail": "Plaggbilder, materiale og kategorier gjør innholdet lett å kjenne igjen.",
+          "evidence": "clothing-library--overview.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "62 plagg presenteres som et tungt katalogarbeid",
+          "detail": "To-kolonners grid, kategoriantall og horisontalt avklipte filterchips gir høy informasjonsmengde på mobil.",
+          "evidence": "clothing-library--overview.png",
+          "evidenceType": "rendered",
+          "severity": "medium",
+          "impact": "Oppslagsverket føles mer som inventar enn rask hjelp i en foreldresituasjon.",
+          "recommendation": "Prioriter søk og de vanligste kategoriene, og vurder én mer lesbar liste eller færre tydelige kort per viewport."
+        },
+        {
+          "title": "Desktop-snarvei i mobilgrensesnitt",
+          "detail": "Søkefeltet viser ⌘K selv i iPhone-viewport.",
+          "evidence": "clothing-library--overview.png",
+          "evidenceType": "rendered",
+          "severity": "low",
+          "impact": "Det signaliserer webkomponent fremfor mobiltilpasset produkt.",
+          "recommendation": "Skjul tastatursnarveien på touch-enheter og bruk plassen til et tydelig søkeikon eller filterstatus."
+        }
+      ],
+      "commercialDiagnosis": "Biblioteket bygger faglig verdi, men er mer retention og støtte enn en direkte betalingsgrunn.",
+      "confidence": "high",
+      "confidenceReason": "Oversikten, filtre og de første plaggene er tydelig fanget.",
+      "label": "Plaggbibliotek",
+      "appWeight": 3,
+      "score": 72.1,
+      "delta": null
+    },
+    {
+      "pageId": "wardrobe",
+      "dimensionScores": {
+        "taskClarity": 65,
+        "navigationInteraction": 72,
+        "visualCraft": 70,
+        "colorTemperature": 68,
+        "copyTrust": 62,
+        "productValue": 50,
+        "accessibilityRobustness": 72
+      },
+      "strengths": [
+        {
+          "title": "Tydelig status og filtrering",
+          "detail": "Har, mangler og totalantall er lett å forstå, og hver rad har en tydelig eierskapsstatus.",
+          "evidence": "wardrobe--default.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Høy vedlikeholdsinnsats for uklar gevinst",
+          "detail": "Forelderen forventes å administrere 62 generiske plagg for at Plus skal bruke dem i anbefalingen.",
+          "evidence": "wardrobe--default.png",
+          "evidenceType": "rendered",
+          "severity": "high",
+          "impact": "Funksjonen legger arbeid på brukeren og konkurrerer med Babyoras løfte om mindre gjetting og mindre innsats.",
+          "recommendation": "Ton ned eller fjern garderoben fra hovedflyten; prioriter lavfriksjonsfunksjoner som hva barnet trenger snart og personlig varm/kald-kalibrering."
+        },
+        {
+          "title": "Demoen starter med alt eid",
+          "detail": "62 av 62 plagg og «Mangler 0» gjør personaliseringsverdien vanskelig å demonstrere og virker lite realistisk.",
+          "evidence": "wardrobe--default.png",
+          "evidenceType": "rendered",
+          "severity": "medium",
+          "impact": "Plus-løftet kan ikke sees i praksis, og skjermen ligner en administrasjonsoppgave uten tydelig resultat.",
+          "recommendation": "Bruk en realistisk fixture eller vis et konkret før/etter-eksempel på hvordan anbefalingen endres."
+        }
+      ],
+      "commercialDiagnosis": "Garderoben har den svakeste balansen mellom innsats og verdi og bør ikke bære Plus-fortellingen selv om implementasjonen kan tilpasse forslag.",
+      "confidence": "high",
+      "confidenceReason": "Hele toppflyten, Plus-banneret og flere eierskapsrader er synlige.",
+      "label": "Min garderobe",
+      "appWeight": 3,
+      "score": 64,
+      "delta": null
+    },
+    {
+      "pageId": "tog",
+      "dimensionScores": {
+        "taskClarity": 84,
+        "navigationInteraction": 83,
+        "visualCraft": 88,
+        "colorTemperature": 86,
+        "copyTrust": 70,
+        "productValue": 82,
+        "accessibilityRobustness": 80
+      },
+      "strengths": [
+        {
+          "title": "Sterk og fokusert veileder",
+          "detail": "Romtemperatur, anbefalt TOG og soveposevisualisering er samlet i én tydelig oppgave.",
+          "evidence": "tog--default.png",
+          "evidenceType": "rendered"
+        },
+        {
+          "title": "Svært god visuell temperaturkontroll",
+          "detail": "Gradient, temperaturpunkter og TOG-verdier gjør sammenhengen lett å utforske.",
+          "evidence": "tog--default.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Overskriften lover et fasitsvar",
+          "detail": "«Riktig varme for natten» kan tolkes som en individuell sikkerhetsgaranti.",
+          "evidence": "tog--default.png",
+          "evidenceType": "rendered",
+          "severity": "high",
+          "impact": "Foreldre kan overvurdere hvor presist én TOG-tabell beskriver barn, rom og produkt.",
+          "recommendation": "Bruk «Finn et godt utgangspunkt» eller tilsvarende og vis produsentens råd og nakkesjekk nært resultatet."
+        },
+        {
+          "title": "Begrenset synlig kontekst",
+          "detail": "Første viewport viser anbefalingen, men ikke forbehold om produsent, klær under posen eller individuell variasjon.",
+          "evidence": "tog--default.png",
+          "evidenceType": "rendered",
+          "severity": "medium",
+          "impact": "Den svært polerte fremstillingen fremstår mer endelig enn rådet bør være.",
+          "recommendation": "Legg en kort, rolig kontekstlinje rett under anbefalingen uten å svekke hovedhierarkiet."
+        }
+      ],
+      "commercialDiagnosis": "TOG er et sterkt tillits- og retention-verktøy, men bør forbli tilgjengelig sikkerhetsinnhold fremfor hovedgrunn til abonnement.",
+      "confidence": "high",
+      "confidenceReason": "Hero, anbefaling og hele temperaturkontrollen er fanget.",
+      "label": "TOG",
+      "appWeight": 5,
+      "score": 82,
+      "delta": null
+    },
+    {
+      "pageId": "warm-cold",
+      "dimensionScores": {
+        "taskClarity": 90,
+        "navigationInteraction": 86,
+        "visualCraft": 82,
+        "colorTemperature": 78,
+        "copyTrust": 72,
+        "productValue": 85,
+        "accessibilityRobustness": 84
+      },
+      "strengths": [
+        {
+          "title": "Umiddelbart handlingsrettet",
+          "detail": "Forelderen får én kontroll, tre mulige signaler og konkret handling uten å måtte lære et system.",
+          "evidence": "warm-cold--default.png",
+          "evidenceType": "rendered"
+        },
+        {
+          "title": "God semantisk fargebruk",
+          "detail": "Varm, passe og kald kombinerer tekst, ikon og farge slik at mening ikke er fargeavhengig.",
+          "evidence": "warm-cold--default.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Bunnpåstanden er for absolutt",
+          "detail": "«Kalde hender og føtter er normalt og betyr ikke at barnet fryser» utelukker kontekst og andre tegn.",
+          "evidence": "warm-cold--default.png",
+          "evidenceType": "rendered",
+          "severity": "high",
+          "impact": "En nyttig huskeregel kan bli lest som en garanti.",
+          "recommendation": "Skriv at hender og føtter ofte kan være kjøligere og at nakke og barnets allmenntilstand gir bedre veiledning."
+        }
+      ],
+      "commercialDiagnosis": "Dette er en av appens sterkeste tillitsfunksjoner og et godt grunnlag for senere personlig kalibrering, men selve sikkerhetsguiden bør ikke låses.",
+      "confidence": "high",
+      "confidenceReason": "Hele funksjonen og alle tre utfall er synlige i én viewport.",
+      "label": "Varm eller kald",
+      "appWeight": 5,
+      "score": 83,
+      "delta": null
+    },
+    {
+      "pageId": "first-winter",
+      "dimensionScores": {
+        "taskClarity": 72,
+        "navigationInteraction": 72,
+        "visualCraft": 82,
+        "colorTemperature": 76,
+        "copyTrust": 64,
+        "productValue": 58,
+        "accessibilityRobustness": 74
+      },
+      "strengths": [
+        {
+          "title": "Oversiktlig læringspakke",
+          "detail": "Åtte korte temaer er lettere å forstå enn en lang artikkelsamling, og den første smakebiten er tydelig.",
+          "evidence": "first-winter--overview.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Sikkerhetsnære temaer ligger bak Plus",
+          "detail": "Temaene «Vogn, bæresele eller lek» og «Sjekk nakken» er merket Med Babyora Plus.",
+          "evidence": "first-winter--overview.png",
+          "evidenceType": "rendered",
+          "severity": "high",
+          "impact": "Det kan oppleves som at grunnleggende korrekt og trygg bruk holdes tilbake for betaling, i konflikt med gratisproduktets troverdighet.",
+          "recommendation": "Gjør sikkerhetskritisk kjerneinformasjon gratis; bruk Plus til planlegging, progresjon, personalisering eller sesongpåminnelser."
+        },
+        {
+          "title": "Ukentlig pacing kan hindre behovsstyrt læring",
+          "detail": "«Én i uka» antyder at forelderen må følge rekkefølgen selv når et senere tema er aktuelt nå.",
+          "evidence": "first-winter--overview.png",
+          "evidenceType": "rendered",
+          "severity": "medium",
+          "impact": "Innholdet føles mer som kursretention enn hjelp i øyeblikket.",
+          "recommendation": "La temaene være søkbare og tilgjengelige etter behov; bruk en anbefalt rekkefølge uten tvungen venting."
+        }
+      ],
+      "commercialDiagnosis": "Programmet kan støtte retention og tillit, men tekstinnhold og sikkerhetsgrunnlag er en svakere abonnementskjerne enn automatikk, fremtid og familie.",
+      "confidence": "high",
+      "confidenceReason": "Programoversikten viser titler, gratis smakebit og Plus-merking.",
+      "label": "Første vinter",
+      "appWeight": 5,
+      "score": 70,
+      "delta": null
+    },
+    {
+      "pageId": "settings",
+      "dimensionScores": {
+        "taskClarity": 75,
+        "navigationInteraction": 76,
+        "visualCraft": 76,
+        "colorTemperature": 72,
+        "copyTrust": 70,
+        "productValue": 58,
+        "accessibilityRobustness": 76
+      },
+      "strengths": [
+        {
+          "title": "God gruppering av profil og sted",
+          "detail": "Barn, lokasjon, værkilde og varsler har tydelige seksjoner og store kontrollflater.",
+          "evidence": "settings--default.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Tilgangsreglene er motsatt av produktretningen",
+          "detail": "Automatisk posisjon vises som vanlig innstilling, mens det enkle morgenvarselet er merket Plus.",
+          "evidence": "settings--default.png og gating-logikken i InnstillingerScreen.tsx",
+          "evidenceType": "repository",
+          "severity": "critical",
+          "impact": "Gratisbrukeren får «overalt», men må betale for vanemekanismen som kunne etablert daglig bruk hjemme.",
+          "recommendation": "Gjør enkel morgenpåminnelse gratis og flytt automatisk sted/flere steder til Plus, med tydelig fallback til hjemsted."
+        },
+        {
+          "title": "Familieverdien er ikke synlig",
+          "detail": "Skjermen tilbyr barn og sted, men ingen omsorgspersoner, invitasjoner eller tilgangsroller.",
+          "evidence": "settings--default.png",
+          "evidenceType": "rendered",
+          "severity": "high",
+          "impact": "Påstanden om én betaling for familien kan ikke oppleves eller forstås fra produktet.",
+          "recommendation": "Ikke markedsfør familie som levert før en enkel Familie-flate med eier, omsorgsperson og invitasjonsflyt finnes."
+        }
+      ],
+      "commercialDiagnosis": "Innstillinger avslører den strategiske inkonsistensen tydeligst og må reflektere den nye gratis/Plus-modellen før paywallen kan bli troverdig.",
+      "confidence": "high",
+      "confidenceReason": "Relevant profil-, sted- og varslingsinnhold er synlig, og tilgangshåndteringen er bekreftet i kode.",
+      "label": "Innstillinger",
+      "appWeight": 5,
+      "score": 70.9,
+      "delta": null
+    },
+    {
+      "pageId": "paywall",
+      "dimensionScores": {
+        "taskClarity": 60,
+        "navigationInteraction": 74,
+        "visualCraft": 76,
+        "colorTemperature": 74,
+        "copyTrust": 62,
+        "productValue": 48,
+        "accessibilityRobustness": 78
+      },
+      "strengths": [
+        {
+          "title": "Pris og valgt plan er lett å se",
+          "detail": "Årsplanen er forhåndsvalgt, besparelse og gratisperiode er synlige, og CTA-en gjentar prøveperioden.",
+          "evidence": "paywall--default.png",
+          "evidenceType": "rendered"
+        },
+        {
+          "title": "Transparenslinjen reduserer noe risiko",
+          "detail": "Skjermen sier hva årsplanen koster etter syv dager og at abonnementet kan avsluttes.",
+          "evidence": "paywall--default.png",
+          "evidenceType": "rendered"
+        }
+      ],
+      "issues": [
+        {
+          "title": "Paywallen selger gratisproduktets kjerne",
+          "detail": "Overskriften «Våkn opp til ferdig antrekk» handler om dagens antrekk, ikke fremover, automatisk sted eller familiekoordinering.",
+          "evidence": "paywall--default.png og PAYWALL_COPY.flagshipHeadline",
+          "evidenceType": "repository",
+          "severity": "critical",
+          "impact": "Brukeren kan oppfatte gratisløftet som en demo eller ikke forstå hva abonnementet utvider.",
+          "recommendation": "Led med «Fremover, overalt og sammen» og vis tre konkrete situasjoner: morgendagens endring, råd hos bestemor og delt anbefaling."
+        },
+        {
+          "title": "Tre prisvalg konkurrerer uten verdibevis",
+          "detail": "Årlig, månedlig og Barnetiden fyller nesten hele skjermen før konkrete Plus-fordeler vises; 499 kr er dessuten nær to års årspris.",
+          "evidence": "paywall--default.png og products.ts",
+          "evidenceType": "repository",
+          "severity": "high",
+          "impact": "Brukeren må først ta en komplisert prisbeslutning, og engangskjøpet kan svekke abonnementsøkonomien.",
+          "recommendation": "Vis to hovedvalg med årsplan anbefalt, legg engangskjøp under flere alternativer eller pris det som et tydelig langsiktig pass, og vis verdien før prisene."
+        },
+        {
+          "title": "Familiepåstanden er vag og inkonsistent",
+          "detail": "«Én Premium — begge foreldre» bruker et annet produktnavn enn Plus og lover en familieverdi som ikke er synlig i appen.",
+          "evidence": "paywall--default.png og TRUST_LINE_COPY",
+          "evidenceType": "repository",
+          "severity": "high",
+          "impact": "En sterk mulig betalingsgrunn blir en troverdighetsrisiko når brukeren ikke kan se hvordan deling fungerer.",
+          "recommendation": "Bruk «Én Plus — alle som passer barnet» først når den faktiske invitasjons- og rolleflyten er levert; ellers fjern påstanden midlertidig."
+        }
+      ],
+      "commercialDiagnosis": "Paywallen er ryddig som prisvelger, men den mangler selve Plus-produktet: konkrete utfall, produktforhåndsvisning og en sammenhengende grunn til å abonnere.",
+      "confidence": "high",
+      "confidenceReason": "Hele paywallen, alle planer, CTA og tillitslinje er synlige; produkt- og copykildene er bekreftet i kode.",
+      "label": "Betalingsvegg",
+      "appWeight": 14,
+      "score": 64.7,
+      "delta": null
+    }
+  ]
+}

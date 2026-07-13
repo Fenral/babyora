@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Babyora — Varm eller kald? · Mock B</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =========================================================
+       Babyora · «Varm eller kald?» — Mock B
+       Visual + romslig. Stor body-diagram er heroen, status-kort
+       blir til en checklist langs siden. Inspirert av Mobbin-mønster
+       «body diagram with status indicators and check list».
+       Motsetning til Mock A: mer luft per element, større bilder,
+       mer premium-feel.
+       ========================================================= */
+
+    :root {
+      /* Brand */
+      --warm-grey: #DBD8D2;
+      --warm-grey-2: #E8E4DD;
+      --warm-grey-3: #F1EEE8;
+      --warm-orange: #FF6B35;
+      --warm-orange-deep: #E2541E;
+      --warm-orange-soft: #FFE4D5;
+      --ink-900: #1F1B16;
+      --ink-700: #4A433B;
+      --ink-500: rgba(31, 27, 22, 0.56);
+      --ink-300: rgba(31, 27, 22, 0.18);
+      --hairline: rgba(31, 27, 22, 0.08);
+      --card: #FFFFFF;
+      --cool-blue: #6B8FA8;
+      --cool-blue-soft: #D8E1E8;
+
+      /* Type */
+      --font-serif: 'DM Serif Display', Georgia, serif;
+      --font-sans: 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+      /* Motion */
+      --ease-standard: cubic-bezier(.2,.7,.2,1);
+      --ease-emphasized: cubic-bezier(.2,.8,.2,1.05);
+    }
+
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #2B2723;
+      font-family: var(--font-sans);
+      color: var(--ink-900);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* A11y */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    a:focus-visible {
+      outline: 2px solid var(--warm-orange-deep);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+
+    /* =========================================================
+       Phone frame (390 × 844) — preview-shell only
+       ========================================================= */
+    .stage {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .phone {
+      position: relative;
+      width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      background: var(--warm-grey);
+      overflow: hidden;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.04) inset,
+        0 40px 80px -20px rgba(0,0,0,0.55),
+        0 12px 30px -10px rgba(0,0,0,0.4);
+      isolation: isolate;
+    }
+
+    /* iOS-style notch / dynamic island */
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 11px; left: 50%;
+      transform: translateX(-50%);
+      width: 124px; height: 35px;
+      background: #0B0907;
+      border-radius: 22px;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    /* Status bar */
+    .status {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink-900);
+      z-index: 40;
+      pointer-events: none;
+    }
+    .status .right { display: flex; align-items: center; gap: 6px; opacity: 0.88; }
+    .status svg { display: block; }
+
+    /* =========================================================
+       Screen
+       ========================================================= */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding-top: calc(54px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(0px + env(safe-area-inset-bottom, 0px));
+      background:
+        radial-gradient(140% 55% at 50% -12%, rgba(255,255,255,0.62), rgba(255,255,255,0) 60%),
+        radial-gradient(80% 40% at 50% 60%, rgba(255,107,53,0.06), rgba(255,107,53,0) 70%),
+        linear-gradient(180deg, #EEE9E0 0%, var(--warm-grey-2) 38%, var(--warm-grey) 100%);
+    }
+
+    /* ---- Topbar ---- */
+    .topbar {
+      flex: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 18px 4px;
+    }
+
+    .back-btn {
+      width: 44px;
+      height: 44px;
+      flex: none;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.62);
+      border: 1px solid rgba(31,27,22,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-900);
+      transition: transform 120ms var(--ease-standard), background 120ms var(--ease-standard);
+      touch-action: manipulation;
+    }
+    .back-btn:active { transform: scale(0.94); background: rgba(255,255,255,0.85); }
+
+    .topbar-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .topbar-eyebrow {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      color: var(--ink-500);
+      margin: 0;
+      line-height: 1;
+    }
+
+    .topbar-step {
+      font-family: var(--font-sans);
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--warm-orange-deep);
+      margin: 4px 0 0;
+      line-height: 1;
+    }
+
+    /* ---- Scroll ---- */
+    .scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0 0 24px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .scroll::-webkit-scrollbar { display: none; }
+
+    /* ---- Title block ---- */
+    .title-block {
+      padding: 18px 24px 4px;
+    }
+
+    .title-block h1 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 38px;
+      line-height: 1.02;
+      letter-spacing: -1.1px;
+      color: var(--ink-900);
+      margin: 0;
+    }
+
+    .title-block h1 em {
+      font-style: italic;
+      color: var(--warm-orange-deep);
+    }
+
+    .title-block .lede {
+      font-size: 14.5px;
+      line-height: 1.4;
+      font-weight: 500;
+      color: var(--ink-500);
+      margin: 10px 0 0;
+      max-width: 30ch;
+    }
+
+    /* =========================================================
+       HERO: stor body-diagram med indikator-prikker
+       ========================================================= */
+    .hero-diagram {
+      position: relative;
+      margin: 22px 20px 0;
+      padding: 24px 0 18px;
+      border-radius: 28px;
+      background:
+        radial-gradient(80% 60% at 50% 20%, rgba(255,255,255,0.9), rgba(255,255,255,0.55) 70%),
+        linear-gradient(180deg, #FFFFFF 0%, #FAF7F1 100%);
+      border: 1px solid var(--hairline);
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.04),
+        0 18px 40px -16px rgba(31,27,22,0.18),
+        0 4px 12px -4px rgba(31,27,22,0.06);
+      overflow: hidden;
+    }
+
+    /* Subtil bakgrunns-grid for «medisinsk diagram»-vibe */
+    .hero-diagram::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(31,27,22,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(31,27,22,0.025) 1px, transparent 1px);
+      background-size: 28px 28px;
+      background-position: center;
+      mask-image: radial-gradient(60% 60% at 50% 50%, black 0%, transparent 80%);
+      -webkit-mask-image: radial-gradient(60% 60% at 50% 50%, black 0%, transparent 80%);
+      pointer-events: none;
+    }
+
+    .hero-diagram .corner-label {
+      position: absolute;
+      top: 16px;
+      left: 18px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--ink-500);
+      z-index: 2;
+    }
+
+    .hero-diagram .corner-label::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--warm-orange);
+      box-shadow: 0 0 0 3px rgba(255,107,53,0.18);
+    }
+
+    .hero-diagram .corner-meta {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 12.5px;
+      color: var(--ink-500);
+      z-index: 2;
+    }
+
+    /* SVG-baby tar all plassen */
+    .baby-svg-wrap {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      padding: 18px 0 4px;
+      z-index: 1;
+    }
+
+    .baby-svg {
+      width: 200px;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 8px 16px rgba(31,27,22,0.08));
+    }
+
+    /* Annotation-prikk + linje (nakke) */
+    .annotation {
+      position: absolute;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .annotation.right {
+      top: 122px;
+      left: calc(50% + 18px);
+    }
+
+    .annotation .pin {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #FFF;
+      border: 2.5px solid var(--warm-orange);
+      box-shadow:
+        0 0 0 4px rgba(255,107,53,0.16),
+        0 2px 6px rgba(226,84,30,0.25);
+      flex: none;
+      position: relative;
+    }
+
+    .annotation .pin::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: var(--warm-orange);
+    }
+
+    /* Pulse-animasjon på pin */
+    @keyframes pulse-pin {
+      0%, 100% { box-shadow: 0 0 0 4px rgba(255,107,53,0.16), 0 2px 6px rgba(226,84,30,0.25); }
+      50%      { box-shadow: 0 0 0 8px rgba(255,107,53,0.04), 0 2px 6px rgba(226,84,30,0.25); }
+    }
+    .annotation .pin { animation: pulse-pin 2.4s var(--ease-standard) infinite; }
+
+    .annotation .pin-line {
+      width: 38px;
+      height: 1.5px;
+      background: linear-gradient(90deg, var(--warm-orange) 0%, rgba(255,107,53,0.2) 100%);
+      flex: none;
+    }
+
+    .annotation .pin-label {
+      background: var(--warm-orange-deep);
+      color: #FFF;
+      padding: 6px 11px 7px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      line-height: 1;
+      white-space: nowrap;
+      box-shadow:
+        0 1px 2px rgba(226,84,30,0.3),
+        0 6px 14px -4px rgba(226,84,30,0.4);
+    }
+
+    /* Diagram-footer: liten instruksjon */
+    .diagram-foot {
+      position: relative;
+      z-index: 2;
+      margin: 14px 22px 0;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,107,53,0.06);
+      border: 1px solid rgba(255,107,53,0.12);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .diagram-foot .foot-icon {
+      width: 28px;
+      height: 28px;
+      flex: none;
+      border-radius: 9px;
+      background: var(--warm-orange);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFF;
+    }
+
+    .diagram-foot .foot-text {
+      font-size: 12.5px;
+      line-height: 1.35;
+      font-weight: 500;
+      color: var(--ink-700);
+      margin: 0;
+    }
+
+    .diagram-foot .foot-text strong {
+      color: var(--ink-900);
+      font-weight: 700;
+    }
+
+    /* =========================================================
+       CHECKLIST: tre status-indikatorer som store kort
+       ========================================================= */
+    .checklist-header {
+      margin: 28px 26px 14px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .checklist-header h2 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 22px;
+      letter-spacing: -0.4px;
+      line-height: 1;
+      margin: 0;
+      color: var(--ink-900);
+    }
+
+    .checklist-header h2 em {
+      font-style: italic;
+      color: var(--ink-500);
+      font-size: 16px;
+      letter-spacing: 0;
+      margin-left: 6px;
+    }
+
+    .checklist-header .count {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--ink-500);
+    }
+
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 0 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .check-card {
+      position: relative;
+      display: flex;
+      align-items: stretch;
+      gap: 14px;
+      padding: 18px 18px 18px 16px;
+      border-radius: 20px;
+      background: var(--card);
+      border: 1px solid var(--hairline);
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.03),
+        0 8px 20px -10px rgba(31,27,22,0.10);
+      min-height: 92px;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      transition: transform 140ms var(--ease-standard), box-shadow 140ms var(--ease-standard);
+    }
+    .check-card:active {
+      transform: scale(0.985);
+      box-shadow:
+        0 1px 2px rgba(31,27,22,0.03),
+        0 4px 10px -6px rgba(31,27,22,0.10);
+    }
+
+    /* Venstre fargestripe per kort (subtil status-indikasjon) */
+    .check-card::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      bottom: 18px;
+      left: 0;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: var(--ink-300);
+    }
+    .check-card.warm::before    { background: var(--warm-orange); }
+    .check-card.perfect::before { background: linear-gradient(180deg, var(--warm-orange) 0%, #C13E0B 100%); }
+    .check-card.cold::before    { background: var(--cool-blue); }
+
+    .check-icon-wrap {
+      flex: none;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+    }
+
+    .check-card.warm    .check-icon-wrap { background: var(--warm-orange-soft); color: var(--warm-orange-deep); }
+    .check-card.perfect .check-icon-wrap {
+      background: linear-gradient(135deg, var(--warm-orange) 0%, var(--warm-orange-deep) 100%);
+      color: #FFF;
+      box-shadow: 0 4px 10px -2px rgba(226,84,30,0.35);
+    }
+    .check-card.cold    .check-icon-wrap { background: var(--cool-blue-soft); color: var(--cool-blue); }
+
+    .check-body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .check-title {
+      font-size: 16.5px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      color: var(--ink-900);
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .check-card.perfect .check-title { color: var(--warm-orange-deep); }
+
+    .check-sub {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-500);
+      line-height: 1.35;
+      margin: 0;
+    }
+
+    .check-status {
+      flex: none;
+      align-self: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(31,27,22,0.05);
+      color: var(--ink-500);
+    }
+    .check-card.warm    .check-status { background: rgba(255,107,53,0.12); color: var(--warm-orange-deep); }
+    .check-card.perfect .check-status { background: var(--warm-orange-deep); color: #FFF; }
+    .check-card.cold    .check-status { background: var(--cool-blue-soft); color: var(--cool-blue); }
+
+    /* =========================================================
+       FOOTNOTE
+       ========================================================= */
+    .footnote {
+      margin: 22px 28px 8px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid var(--hairline);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .footnote .fn-icon {
+      flex: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      background: rgba(31,27,22,0.06);
+      color: var(--ink-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footnote p {
+      margin: 0;
+      font-size: 12.5px;
+      line-height: 1.45;
+      font-weight: 500;
+      color: var(--ink-700);
+    }
+
+    .footnote p strong {
+      color: var(--ink-900);
+      font-weight: 700;
+    }
+
+    /* Home indicator */
+    .home-indicator {
+      position: absolute;
+      left: 50%;
+      bottom: 8px;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(31,27,22,0.32);
+      z-index: 60;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="phone" role="img" aria-label="Babyora «Varm eller kald?» — Mock B, visuell og romslig variant">
+
+      <!-- iOS status bar -->
+      <div class="status" aria-hidden="true">
+        <span>9:41</span>
+        <span class="right">
+          <!-- signal -->
+          <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="0.6"/><rect x="4.5" y="5" width="3" height="6" rx="0.6"/><rect x="9" y="2.5" width="3" height="8.5" rx="0.6"/><rect x="13.5" y="0" width="3" height="11" rx="0.6"/></svg>
+          <!-- wifi -->
+          <svg width="15" height="11" viewBox="0 0 15 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 4.2 Q7.5 -1 14 4.2"/><path d="M3.4 6.4 Q7.5 3 11.6 6.4"/><path d="M5.8 8.6 Q7.5 7.2 9.2 8.6"/><circle cx="7.5" cy="10.2" r="0.8" fill="currentColor"/></svg>
+          <!-- battery -->
+          <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="2.7" stroke="currentColor" stroke-opacity="0.5"/><rect x="2" y="2" width="19" height="8" rx="1.5" fill="currentColor"/><rect x="23.5" y="3.5" width="1.5" height="5" rx="0.6" fill="currentColor" opacity="0.5"/></svg>
+        </span>
+      </div>
+
+      <!-- Screen content -->
+      <main class="screen" aria-labelledby="vk-title">
+
+        <!-- Topbar -->
+        <header class="topbar">
+          <button class="back-btn" type="button" aria-label="Tilbake">
+            <svg width="11" height="17" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M7 1L1 7l6 6"/>
+            </svg>
+          </button>
+          <div class="topbar-meta">
+            <p class="topbar-eyebrow">Babyora · Guide</p>
+            <p class="topbar-step">Steg 9 av 12</p>
+          </div>
+        </header>
+
+        <div class="scroll">
+
+          <!-- Tittel -->
+          <div class="title-block">
+            <h1>Varm eller <em>kald?</em></h1>
+            <p class="lede">Kjenn på nakken — den forteller deg alt du trenger å vite om hvordan barnet har det.</p>
+          </div>
+
+          <!-- HERO: stor body-diagram -->
+          <section class="hero-diagram" aria-labelledby="diagram-title">
+            <span class="corner-label">Sjekk her</span>
+            <span class="corner-meta">på babyen</span>
+            <span id="diagram-title" class="sr-only">Babykropp med markert nakke-område</span>
+
+            <div class="baby-svg-wrap">
+              <!-- SVG: stilisert baby, en face, store skuldre, tydelig nakke-sone -->
+              <svg class="baby-svg" viewBox="0 0 200 240" fill="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"  stop-color="#F1ECE3"/>
+                    <stop offset="100%" stop-color="#DDD5C7"/>
+                  </linearGradient>
+                  <linearGradient id="headGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"  stop-color="#F4EFE6"/>
+                    <stop offset="100%" stop-color="#E2DACC"/>
+                  </linearGradient>
+                  <radialGradient id="neckGlow" cx="50%" cy="50%" r="55%">
+                    <stop offset="0%"  stop-color="#FF6B35" stop-opacity="0.55"/>
+                    <stop offset="60%" stop-color="#FF6B35" stop-opacity="0.18"/>
+                    <stop offset="100%" stop-color="#FF6B35" stop-opacity="0"/>
+                  </radialGradient>
+                  <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"  stop-color="#3A2E22"/>
+                    <stop offset="100%" stop-color="#5A4632"/>
+                  </linearGradient>
+                </defs>
+
+                <!-- Skygge under -->
+                <ellipse cx="100" cy="228" rx="58" ry="6" fill="#1F1B16" fill-opacity="0.06"/>
+
+                <!-- Kropp / overall -->
+                <path d="
+                    M 52 138
+                    Q 52 118 70 112
+                    L 130 112
+                    Q 148 118 148 138
+                    L 152 210
+                    Q 152 222 140 224
+                    L 60 224
+                    Q 48 222 48 210
+                    Z"
+                  fill="url(#bodyGrad)"
+                  stroke="#C9C0AE"
+                  stroke-width="1.2"/>
+
+                <!-- Stripe på overall (subtil detalj for premium-feel) -->
+                <path d="M 100 116 L 100 222" stroke="#C9C0AE" stroke-width="0.8" stroke-dasharray="2 4" opacity="0.7"/>
+
+                <!-- Armer (små stubber) -->
+                <ellipse cx="48"  cy="146" rx="9"  ry="14" fill="url(#bodyGrad)" stroke="#C9C0AE" stroke-width="1"/>
+                <ellipse cx="152" cy="146" rx="9"  ry="14" fill="url(#bodyGrad)" stroke="#C9C0AE" stroke-width="1"/>
+
+                <!-- Hender (hudfarge nøytral) -->
+                <circle cx="46"  cy="162" r="7" fill="#EEDFCB" stroke="#D4C2A6" stroke-width="0.8"/>
+                <circle cx="154" cy="162" r="7" fill="#EEDFCB" stroke="#D4C2A6" stroke-width="0.8"/>
+
+                <!-- Hals-glow (terracotta highlight) -->
+                <ellipse cx="100" cy="108" rx="34" ry="14" fill="url(#neckGlow)"/>
+
+                <!-- Hals (synlig sone) -->
+                <rect x="86" y="98" width="28" height="18" rx="8" fill="#EEDFCB" stroke="#D4C2A6" stroke-width="0.8"/>
+
+                <!-- Hode -->
+                <ellipse cx="100" cy="64" rx="42" ry="44" fill="url(#headGrad)" stroke="#C9C0AE" stroke-width="1.2"/>
+
+                <!-- Hår (lite topplugg) -->
+                <path d="M 70 38 Q 90 14 130 32 Q 122 22 100 20 Q 82 22 70 38 Z" fill="url(#hairGrad)" opacity="0.85"/>
+
+                <!-- Øyne (lukket, fredelig) -->
+                <path d="M 82 66 Q 87 70 92 66" stroke="#3A2E22" stroke-width="2" stroke-linecap="round" fill="none"/>
+                <path d="M 108 66 Q 113 70 118 66" stroke="#3A2E22" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+                <!-- Kinn (varm rouge) -->
+                <circle cx="78"  cy="78" r="5" fill="#FFB89A" opacity="0.55"/>
+                <circle cx="122" cy="78" r="5" fill="#FFB89A" opacity="0.55"/>
+
+                <!-- Munn (liten smil-strek) -->
+                <path d="M 94 86 Q 100 90 106 86" stroke="#7A5A40" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+
+                <!-- Nakke-markør: animert ring rundt nakke-sonen -->
+                <circle cx="100" cy="107" r="22" fill="none" stroke="#FF6B35" stroke-width="1.8" stroke-dasharray="4 5" opacity="0.7">
+                  <animateTransform attributeName="transform" type="rotate" from="0 100 107" to="360 100 107" dur="22s" repeatCount="indefinite"/>
+                </circle>
+              </svg>
+
+              <!-- Pin + label (annotation) -->
+              <div class="annotation right">
+                <span class="pin"></span>
+                <span class="pin-line"></span>
+                <span class="pin-label">Nakke</span>
+              </div>
+            </div>
+
+            <!-- Diagram footnote -->
+            <div class="diagram-foot">
+              <span class="foot-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 11c0-1.7 1.3-3 3-3s3 1.3 3 3-3 2-3 4"/>
+                  <circle cx="12" cy="18" r="0.5" fill="currentColor"/>
+                </svg>
+              </span>
+              <p class="foot-text"><strong>Tips:</strong> Kjenn med håndbaken under nakken — ikke på hender eller føtter.</p>
+            </div>
+          </section>
+
+          <!-- CHECKLIST -->
+          <div class="checklist-header">
+            <h2>Hva du kjenner <em>betyr</em></h2>
+            <span class="count">3 tegn</span>
+          </div>
+
+          <ul class="checklist" role="list" aria-label="Tre nakke-statuser og hva de betyr">
+
+            <!-- WARM -->
+            <li>
+              <button class="check-card warm" type="button" aria-label="For varm — svett eller fuktig nakke betyr ta av et lag">
+                <span class="check-icon-wrap" aria-hidden="true">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v3"/>
+                    <path d="M12 22v-2"/>
+                    <path d="M4.93 4.93l2.12 2.12"/>
+                    <path d="M16.95 16.95l2.12 2.12"/>
+                    <path d="M2 12h3"/>
+                    <path d="M19 12h3"/>
+                    <circle cx="12" cy="13" r="5"/>
+                  </svg>
+                </span>
+                <span class="check-body">
+                  <span class="check-title">For varm</span>
+                  <span class="check-sub">Svett eller fuktig nakke — ta av ett lag.</span>
+                </span>
+                <span class="check-status" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5"/>
+                    <path d="M12 19V5"/>
+                  </svg>
+                </span>
+              </button>
+            </li>
+
+            <!-- PERFECT (highlighted) -->
+            <li>
+              <button class="check-card perfect" type="button" aria-label="Perfekt — lun og tørr nakke betyr alt stemmer">
+                <span class="check-icon-wrap" aria-hidden="true">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 12l5 5L20 7"/>
+                  </svg>
+                </span>
+                <span class="check-body">
+                  <span class="check-title">Perfekt</span>
+                  <span class="check-sub">Lun og tørr nakke — alt stemmer.</span>
+                </span>
+                <span class="check-status" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 12l5 5L20 7"/>
+                  </svg>
+                </span>
+              </button>
+            </li>
+
+            <!-- COLD -->
+            <li>
+              <button class="check-card cold" type="button" aria-label="For kald — kjølig nakke betyr legg til et lag">
+                <span class="check-icon-wrap" aria-hidden="true">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v20"/>
+                    <path d="M4 6l16 12"/>
+                    <path d="M20 6L4 18"/>
+                    <path d="M6 4l-2 2 2 2"/>
+                    <path d="M18 4l2 2-2 2"/>
+                    <path d="M6 20l-2-2 2-2"/>
+                    <path d="M18 20l2-2-2-2"/>
+                  </svg>
+                </span>
+                <span class="check-body">
+                  <span class="check-title">For kald</span>
+                  <span class="check-sub">Kjølig nakke — legg til ett lag.</span>
+                </span>
+                <span class="check-status" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5"/>
+                    <path d="M12 19V5"/>
+                  </svg>
+                </span>
+              </button>
+            </li>
+          </ul>
+
+          <!-- Footnote -->
+          <aside class="footnote" aria-label="Viktig informasjon">
+            <span class="fn-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4"/>
+                <circle cx="12" cy="16" r="0.5" fill="currentColor"/>
+              </svg>
+            </span>
+            <p><strong>Husk:</strong> Kalde hender og føtter er helt normalt og betyr ikke at barnet fryser.</p>
+          </aside>
+
+        </div>
+
+      </main>
+
+      <!-- Home indicator -->
+      <div class="home-indicator" aria-hidden="true"></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "claude": {
+    "id": "tynn-ull-mellomlag",
+    "dbString": "tynn ull-mellomlag",
+    "kategori": "mellomlag",
+    "struktur": {
+      "score": 18,
+      "kommentar": "Komplett info-oppføring i garment-info.ts (linje 79-82): what = 'Tynt ull-mellomlag — gir litt ekstra varme uten å bygge volum.', when = 'Kjølige dager der ren base ikke er nok.' Tone, lengde og mønster matcher søsken-plagg i samme kategori (ull-mellomlag, ull-mellomlag-tykt, tynn-bukse) godt. Dedikert whyForGarment-gren finnes (linje 357-359: 'Tynt ull-mellomlag tar av kjølighets-stikket ved {feels} °C uten å overopphete.') — IKKE fallback. Eneste lille svakhet: when-teksten er kortere og mer generisk ('Kjølige dager') enn søsknene som angir konkrete temp/bånd (f.eks. ull-mellomlag: 'Hele vinterhalvåret', ull-mellomlag-tykt: 'Streng kulde eller lang eksponering'). Trekker 2 poeng for manglende temp-spesifisitet."
+    },
+    "utseende": {
+      "score": 19,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/tynn-ull-mellomlag.png (937 KB, datert 9. juni). Mapping er korrekt og dobbel: db-streng 'tynn ull-mellomlag' → id 'tynn-ull-mellomlag' (garment-illustrations.ts linje 33), OG 'ekstra ull-lag' → 'tynn-ull-mellomlag' (linje 41) — sistnevnte er en bevisst fallback-gjenbruk for modifier-tilsetningen i modifiers.ts linje 247, som er plausibelt siden ekstra ull-lag for spedbarn nettopp ER et tynt ull-mellomlag. Filnavn matcher id 1:1. Visuell dom (om bildet faktisk viser et tynt mellomlag) overlates til Fable 5 + Claude."
+    },
+    "seleksjon": {
+      "score": 21,
+      "kommentar": "Plagget velges i tre baseTable-celler pluss én modifier. Pediatrisk er valgene forsvarlige: ull mot/nær hud regulerer fukt godt (merino-kids, aap-healthychildren-kildene støtter lag-tilnærming), og et TYNT mellomlag i mild/kjølig-bånd er lav overopphetings-risiko. SoftBlocks SB-2 (maks-lag) og SB-5 (7-9 mnd peak-varme, modifiers linje 456) fanger overoppheting hvis plagget stables for tett. Ingen frost/kvelnings/SIDS-kontekst utløses av dette plagget. Hovedmerknad: BÅND-INKONSISTENS mellom aktiviteter — vogn og utelek velger det i 'mild' (10-15.99 °C feels), men baeresele velger det allerede i 'kjolig' (5-9.99 °C). Samme plagg, to ulike temp-vinduer, uten dokumentert begrunnelse. Det er pediatrisk forsvarlig (baeresele har mindre yttertøy fordi forelderens kropp varmer — jf. pmc-7202982 babywearing-funn), men ikke eksplisitt forklart. Kildene dekker spørsmålet, så ingen websøk nødvendig.",
+      "score_note": "ingen",
+      "trace": "BÅND: bandForTemp() → 'mild' = feels 10-15.99 °C; 'kjolig' = 5-9.99 °C. BASETABLE-TREFF (tables.ts): (1) vogn.mild.mellomlag = ['tynn ull-mellomlag'] (linje 38); (2) baeresele.kjolig.mellomlag = ['tynn ull-mellomlag'] (linje 96-97); (3) utelek.mild.mellomlag = ['tynn ull-mellomlag'] (linje 199-200). MODIFIER-TILSETNING: modifiers.ts linje 246-248 — hvis child.ageMonths <= 3 OG weather.feelsLikeC < 5 → addItem(mellomlag, 'ekstra ull-lag'), som via illustrasjons-MAP linje 41 mapper til samme id 'tynn-ull-mellomlag'. Dvs. spedbarn <3 mnd får et tynt ekstra ull-lag også i kald-/frost-bånd. INGEN conflicts.ts- eller safety.ts-regel fjerner eller dedupliserer dette plagget. SoftBlocks: kan indirekte trimmes av SB-2 (countAllItems > maxLayersForFeels) eller SB-5 (7-9 mnd ≥22 °C drop første mellomlag-item), men ingen av disse er plagg-spesifikke.",
+      "kilder": []
+    },
+    "tekstLogikk": {
+      "score": 20,
+      "kommentar": "when-tekst ('Kjølige dager der ren base ikke er nok') stemmer godt med baeresele.kjolig (5-9.99 °C) og er rimelig nær vogn/utelek.mild (10-15.99 °C) — 'kjølig' dekker språklig 10-15 °C også i norsk dagligtale, så ingen direkte villedende drift. whyForGarment-grenen ('tar av kjølighets-stikket ved {feels} °C uten å overopphete') er TEMP-DYNAMISK og tilpasser seg den faktiske feels-verdien fra trace, så den vil aldri si feil temperatur. Merknad (severity lav→medium): for spedbarn <3 mnd legges plagget på via 'ekstra ull-lag'-modifieren ved feels < 5 °C (kald/frost), MEN whyForGarment matcher på id 'tynn-ull-mellomlag' og vil da si 'tar av kjølighets-stikket' selv i ekte frost — teksten underdriver forholdene i den spesifikke modifier-grenen. Ikke direkte farlig (plagget er korrekt der), men tekst-tonen ('kjølighets-stikk') passer dårlig for −2 °C. Trekker 5 poeng."
+    },
+    "alternativer": {
+      "score": 10,
+      "kommentar": "Eksisterende alternativ er riktig og dekkende: alternatives.ts linje 45-54 gir 'tynn ull-mellomlag' → 'tynn fleece' (ull↔fleece-byttet), med when- og whyPrimary-i18n-keys (tynnFleece.when / .whyPrimary). Dette er det mest meningsfulle alternativet for et tynt mellomlag og følger ull-først-brand-direktivet. Ingen åpenbart manglende alternativ (tykkelse-trinn oppover til 'ull-mellomlag' er allerede et eget plagg i tabellen, ikke et sidegrads-alternativ). Full score."
+    },
+    "total": 88,
+    "verdikt": "Solid, trygt plagg med komplett struktur, korrekt PNG/mapping, dedikert dynamisk why-tekst og riktig fleece-alternativ. To mindre forbedringspunkter: (1) udokumentert temp-bånd-inkonsistens mellom baeresele (kjolig) og vogn/utelek (mild), og (2) when/why-tonen ('kjølighets-stikk') passer dårlig når plagget tilsettes spedbarn <3 mnd via ekstra-ull-lag-modifieren i kald/frost (feels < 5 °C). Ingen sikkerhetskritiske funn. Total 88/100.",
+    "funn": [
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "when-teksten er kortere og mindre temp-spesifikk enn søsken-plagg i samme kategori (ull-mellomlag/ull-mellomlag-tykt angir bånd/sesong; tynn-ull-mellomlag sier bare 'Kjølige dager').",
+        "forslag": "Vurder å konkretisere when, f.eks. 'Milde til kjølige dager (ca 5-15 °C) der ren base ikke er nok.' — matcher de faktiske båndene fra trace og søsken-tonen.",
+        "kilde": ""
+      },
+      {
+        "severity": "medium",
+        "mal": 3,
+        "beskrivelse": "Båndinkonsistens uten dokumentert begrunnelse: baeresele velger tynn ull-mellomlag i kjolig-båndet (5-9.99 °C), mens vogn og utelek velger det i mild-båndet (10-15.99 °C). Pediatrisk forsvarlig (forelderkropp varmer i bæresele, jf. pmc-7202982), men ikke forklart i koden.",
+        "forslag": "Legg en kort kommentar i tables.ts som forklarer hvorfor bæresele har lavere terskel for samme mellomlag (babywearing-varme fra forelder), så fremtidige auditører ikke leser det som en feil.",
+        "kilde": "pmc-7202982 (Clothing layers and babywearing thermoregulation)"
+      },
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "whyForGarment-grenen matcher på id og sier 'tar av kjølighets-stikket ved {feels} °C uten å overopphete' selv når plagget tilsettes spedbarn <3 mnd via 'ekstra ull-lag'-modifieren ved feels < 5 °C (kald/frost). Ordet 'kjølighets-stikk' underdriver reelle frost-forhold i den grenen.",
+        "forslag": "Vurder å la whyForGarment skille mellom direkte-tabell-valg (mild/kjolig) og modifier-tilsetning for spedbarn i kulde, f.eks. en kald-variant av teksten når feels < 5. Rør ikke terskelen (feels < 5 i modifiers.ts linje 246) — kun teksten.",
+        "kilde": "aap-healthychildren; capital-area-peds (newborn outdoor-exposure-grenser)"
+      }
+    ]
+  },
+  "fable": null
+}

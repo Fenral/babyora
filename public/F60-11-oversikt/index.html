@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#DBD8D2" />
+  <title>F60.11 — Sivert oversikt</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=DM+Serif+Display&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      /* Brand C-hybrid: warm grey + warm orange + Schibsted */
+      --bg-canvas: #DBD8D2;
+      --bg-elevated: #F5F2EC;
+      --bg-card: #FFFFFF;
+      --ink-900: #1A1614;
+      --ink-700: #3A332D;
+      --ink-500: #6B645C;
+      --ink-300: #A39B92;
+      --hairline: rgba(26, 22, 20, 0.08);
+      --hairline-strong: rgba(26, 22, 20, 0.16);
+      --accent: #C75D3A;              /* warm orange */
+      --accent-soft: #E89A7C;
+      --accent-bg: rgba(199, 93, 58, 0.08);
+      --winner: #2E6B4A;
+      --winner-bg: rgba(46, 107, 74, 0.10);
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+
+      --shadow-sm: 0 1px 2px rgba(26, 22, 20, 0.04), 0 0 0 1px var(--hairline);
+      --shadow-md: 0 4px 14px rgba(26, 22, 20, 0.06), 0 0 0 1px var(--hairline);
+      --shadow-lg: 0 12px 32px rgba(26, 22, 20, 0.10), 0 0 0 1px var(--hairline);
+
+      --font-sans: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-serif: 'DM Serif Display', 'Iowan Old Style', Georgia, serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      background: var(--bg-canvas);
+      color: var(--ink-900);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      padding-bottom: env(safe-area-inset-bottom);
+      overscroll-behavior: contain;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ============== HEADER ============== */
+    .site-header {
+      padding: clamp(20px, 4vw, 40px) clamp(16px, 4vw, 32px) clamp(18px, 3vw, 32px);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+      margin: 0 0 8px;
+    }
+    .site-title {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 5.5vw, 3.4rem);
+      line-height: 1.05;
+      margin: 0 0 14px;
+      color: var(--ink-900);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+    .site-sub {
+      font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+      color: var(--ink-500);
+      max-width: 62ch;
+      line-height: 1.55;
+      margin: 0 0 18px;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      font-size: 13.5px;
+      color: var(--ink-700);
+    }
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--hairline);
+      font-variant-numeric: tabular-nums;
+    }
+    .meta-pill strong { color: var(--ink-900); font-weight: 600; }
+
+    /* ============== NATIVE-FEEL TOP-3 ============== */
+    .native-strip {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 clamp(16px, 4vw, 32px) clamp(24px, 4vw, 40px);
+    }
+    .native-strip h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.4rem, 3vw, 1.9rem);
+      margin: 0 0 4px;
+      font-weight: 400;
+      letter-spacing: -0.005em;
+    }
+    .native-strip-sub {
+      color: var(--ink-500);
+      font-size: 14px;
+      margin: 0 0 18px;
+      max-width: 60ch;
+    }
+    .native-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .native-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .native-card::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      background: var(--accent);
+    }
+    .native-rank {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      color: var(--accent);
+      line-height: 1;
+      margin: 0 0 6px;
+    }
+    .native-title {
+      font-size: 15.5px;
+      font-weight: 600;
+      margin: 0 0 8px;
+      color: var(--ink-900);
+      line-height: 1.3;
+    }
+    .native-meta {
+      display: flex;
+      gap: 10px;
+      font-size: 12.5px;
+      color: var(--ink-500);
+      font-variant-numeric: tabular-nums;
+    }
+    .native-meta .lift {
+      color: var(--winner);
+      font-weight: 600;
+    }
+
+    /* ============== SCREEN SECTION ============== */
+    main { max-width: 1400px; margin: 0 auto; }
+    .screen {
+      padding: clamp(24px, 4vw, 44px) clamp(16px, 4vw, 32px);
+      border-top: 1px solid var(--hairline);
+    }
+    .screen-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .screen-h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+      margin: 0;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: var(--ink-900);
+    }
+    .screen-h2 .num {
+      font-family: var(--font-sans);
+      font-size: 0.55em;
+      font-weight: 500;
+      color: var(--ink-300);
+      margin-right: 10px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.05em;
+    }
+    .screen-key {
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-500);
+      background: var(--bg-elevated);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--hairline);
+      font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    }
+
+    /* Mock pair: side-by-side on desktop, stacked on mobile */
+    .mock-pair {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    @media (min-width: 880px) {
+      .mock-pair { grid-template-columns: 1fr 1fr; gap: 22px; }
+    }
+
+    .mock {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      padding: 16px 16px 18px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: box-shadow 180ms ease, transform 180ms ease;
+    }
+    .mock.is-winner {
+      box-shadow: 0 4px 14px rgba(46, 107, 74, 0.10), 0 0 0 2px var(--winner);
+      background: linear-gradient(180deg, var(--winner-bg) 0%, var(--bg-card) 80px);
+    }
+
+    .mock-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .mock-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-700);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mock-letter {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--ink-900);
+      color: var(--bg-elevated);
+      font-family: var(--font-serif);
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+    .mock.is-winner .mock-letter { background: var(--winner); }
+
+    .winner-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: var(--winner);
+      color: #fff;
+      border-radius: 999px;
+      font-size: 11.5px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .winner-badge .star { font-size: 11px; }
+
+    /* iPhone-frame for iframe */
+    .phone-frame {
+      align-self: center;
+      width: 100%;
+      max-width: 390px;
+      aspect-ratio: 390 / 844;
+      background: #0a0a0a;
+      border-radius: 38px;
+      padding: 10px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 8px 24px rgba(26, 22, 20, 0.18);
+      position: relative;
+    }
+    .phone-frame::after {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 28px;
+      background: #0a0a0a;
+      border-radius: 16px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 28px;
+      overflow: hidden;
+      background: var(--bg-canvas);
+      position: relative;
+    }
+    .phone-screen iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: transparent;
+    }
+
+    .mock-strategy {
+      font-size: 13.5px;
+      color: var(--ink-700);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .mock-strategy strong { color: var(--ink-900); font-weight: 600; }
+
+    /* Recommendation */
+    .recommend {
+      margin-top: 18px;
+      padding: 16px 18px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--hairline);
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .recommend-icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-serif);
+      font-size: 18px;
+    }
+    .recommend-body { flex: 1; min-width: 0; }
+    .recommend-line {
+      font-size: 14.5px;
+      color: var(--ink-700);
+      margin: 0 0 6px;
+      line-height: 1.4;
+    }
+    .recommend-line .pick {
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+    .recommend-line .arrow {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .recommend-why {
+      font-size: 13.5px;
+      color: var(--ink-500);
+      margin: 0;
+      line-height: 1.55;
+    }
+
+    /* ============== FOOTER ============== */
+    .site-footer {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: clamp(28px, 4vw, 48px) clamp(16px, 4vw, 32px) clamp(32px, 4vw, 56px);
+      border-top: 1px solid var(--hairline);
+      font-size: 14px;
+      color: var(--ink-500);
+    }
+    .site-footer h3 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 1.2rem;
+      margin: 0 0 10px;
+      color: var(--ink-900);
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      margin: 0 0 18px;
+      padding: 0;
+      list-style: none;
+    }
+    .footer-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .footer-meta {
+      font-size: 12.5px;
+      color: var(--ink-300);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header" role="banner">
+    <p class="eyebrow">F60.11 · Sluttrapport</p>
+    <h1 class="site-title">Sivert oversikt — 18 mocks side-ved-side</h1>
+    <p class="site-sub">
+      9 skjermer × 2 mock-varianter (A kompakt + skannbar, B visuell + romslig) med
+      Claude sin per-skjerm-anbefaling. Native-feel-snitt løftes fra
+      <strong>54</strong> til <strong>82–88</strong> etter top-10 tiltakene.
+    </p>
+    <div class="meta-row" aria-label="Metadata">
+      <span class="meta-pill">📅 <strong>2026-06-26</strong></span>
+      <span class="meta-pill">📱 <strong>9</strong> skjermer</span>
+      <span class="meta-pill">🎨 <strong>18</strong> mocks</span>
+      <span class="meta-pill">⭐ <strong>7A · 2B</strong> anbefalt</span>
+      <span class="meta-pill">📈 <strong>54 → 82–88</strong> native-feel</span>
+    </div>
+  </header>
+
+  <section class="native-strip" aria-labelledby="native-h">
+    <h2 id="native-h">Tverrgående tiltak — løfter alle 9 skjermer gratis</h2>
+    <p class="native-strip-sub">
+      Top-3 fra native-feel-rapporten. Bygg disse <em>før</em> noen mock portes til React —
+      de tre tiltakene alene løfter snittet fra ~54 til ~78.
+    </p>
+    <div class="native-cards" role="list">
+      <article class="native-card" role="listitem">
+        <p class="native-rank">01</p>
+        <h3 class="native-title">Skjerm-overganger via Framer Motion</h3>
+        <p class="native-meta">
+          <span>⏱ 90 min</span>
+          <span class="lift">+12–15 poeng</span>
+        </p>
+        <p class="mock-strategy" style="margin-top:8px;">
+          <code>motion@12</code> er installert med 0 imports i dag. AnimatePresence rundt
+          App.tsx gir alle 9 skjermer gratis push-pop.
+        </p>
+      </article>
+      <article class="native-card" role="listitem">
+        <p class="native-rank">02</p>
+        <h3 class="native-title">Edge-swipe-back fra venstre kant</h3>
+        <p class="native-meta">
+          <span>⏱ 45 min</span>
+          <span class="lift">+6–8 poeng</span>
+        </p>
+        <p class="mock-strategy" style="margin-top:8px;">
+          24 px trigger, 60 px threshold. iOS-brukere savner denne mest. Pluss
+          <code>App.addListener('backButton')</code> for Android-paritet.
+        </p>
+      </article>
+      <article class="native-card" role="listitem">
+        <p class="native-rank">03</p>
+        <h3 class="native-title">Native Capacitor-plugins</h3>
+        <p class="native-meta">
+          <span>⏱ 60 min</span>
+          <span class="lift">+8–10 poeng</span>
+        </p>
+        <p class="mock-strategy" style="margin-top:8px;">
+          <code>status-bar + splash + keyboard + app</code>. Setter statusbar-farge,
+          fjerner splash riktig, løser keyboard-overlay på onboarding.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <main>
+
+    <!-- 2.1 UKE -->
+    <section class="screen" role="region" aria-labelledby="s-uke">
+      <div class="screen-head">
+        <h2 class="screen-h2" id="s-uke"><span class="num">2.1</span>Uke</h2>
+        <span class="screen-key">uke</span>
+      </div>
+      <div class="mock-pair">
+        <article class="mock is-winner">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">A</span>Kompakt + skannbar</span>
+            <span class="winner-badge"><span class="star">★</span>Vinner</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/uke-mock-a/" title="Uke — Mock A (kompakt skannbar)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> Time-for-time tabell, tett rytme, tall + ikon + plagg-strek per rad — bygd for "scroll-og-svar".</p>
+        </article>
+        <article class="mock">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">B</span>Visuell + romslig</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/uke-mock-b/" title="Uke — Mock B (visuell romslig)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> "Time for time" editorial, store time-kort med vær-illustrasjon og luftig padding.</p>
+        </article>
+      </div>
+      <div class="recommend">
+        <span class="recommend-icon" aria-hidden="true">★</span>
+        <div class="recommend-body">
+          <p class="recommend-line">💡 Claude anbefaler: <span class="arrow">→</span> <span class="pick">A — Kompakt + skannbar</span></p>
+          <p class="recommend-why">Uke-skjermen er et beslutningsverktøy ("hva på i morgen tidlig?"). Kompakt liste vinner på skannbarhet og tåler best native push-pop fra Hjem. V2-Skannbar liste vant Påkledning og samme prinsipp gjelder her — tabell-rader med hairline-divider + lag-fargestripe skalerer pent over 24+ timer.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.2 GUIDE-HUB -->
+    <section class="screen" role="region" aria-labelledby="s-guide">
+      <div class="screen-head">
+        <h2 class="screen-h2" id="s-guide"><span class="num">2.2</span>Guide-hub</h2>
+        <span class="screen-key">guide</span>
+      </div>
+      <div class="mock-pair">
+        <article class="mock">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">A</span>Kompakt + skannbar</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/guide-mock-a/" title="Guide-hub — Mock A (kompakt)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> Hub-index med kategoriliste (TOG/Varm-kald/Finn antrekk), sr-only h1, direkte til mål.</p>
+        </article>
+        <article class="mock is-winner">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">B</span>Visuell + romslig</span>
+            <span class="winner-badge"><span class="star">★</span>Vinner</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/guide-mock-b/" title="Guide-hub — Mock B (visuell)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> "Hva skal Liv ha på i dag?" hero + visuelle kategori-kort med illustrasjon.</p>
+        </article>
+      </div>
+      <div class="recommend">
+        <span class="recommend-icon" aria-hidden="true">★</span>
+        <div class="recommend-body">
+          <p class="recommend-line">💡 Claude anbefaler: <span class="arrow">→</span> <span class="pick">B — Visuell + romslig</span></p>
+          <p class="recommend-why">Guide-hub er det ene stedet hvor merkevare og varme tåler hero — brukeren kommer hit sjeldnere enn Hjem/Uke og ønsker en "hva passer i dag"-tonefall. Visuelle kategori-kort gir bedre affordance enn ren liste på et hub-nivå. Behold A-stil på selve underskjermene (TOG/Varm-kald/Finn antrekk).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.3 INNSTILLINGER -->
+    <section class="screen" role="region" aria-labelledby="s-innst">
+      <div class="screen-head">
+        <h2 class="screen-h2" id="s-innst"><span class="num">2.3</span>Innstillinger</h2>
+        <span class="screen-key">innst</span>
+      </div>
+      <div class="mock-pair">
+        <article class="mock is-winner">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">A</span>Kompakt + skannbar</span>
+            <span class="winner-badge"><span class="star">★</span>Vinner</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/innst-mock-a/" title="Innstillinger — Mock A (iOS grouped list)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> iOS-Settings-stil grouped list, sr-only h1, tett rad-rytme med kanonisk 44 px hit-target.</p>
+        </article>
+        <article class="mock">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">B</span>Visuell + romslig</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/innst-mock-b/" title="Innstillinger — Mock B (luftig)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> Stor h-title, luftige seksjons-kort, mer pust mellom toggler.</p>
+        </article>
+      </div>
+      <div class="recommend">
+        <span class="recommend-icon" aria-hidden="true">★</span>
+        <div class="recommend-body">
+          <p class="recommend-line">💡 Claude anbefaler: <span class="arrow">→</span> <span class="pick">A — Kompakt + skannbar</span></p>
+          <p class="recommend-why">Settings skal føles native iOS — grouped list med separator + chevron + 44 px hit-target er det sterkeste native-tellet vi har. B gir for mye scroll-kost for en skjerm man oppsøker for å fikse én ting. Sticky seksjons-headers + scroll-snap fungerer her uten å forstyrre.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.4 PLAGGBIBLIOTEK -->
+    <section class="screen" role="region" aria-labelledby="s-plaggbib">
+      <div class="screen-head">
+        <h2 class="screen-h2" id="s-plaggbib"><span class="num">2.4</span>Plaggbibliotek</h2>
+        <span class="screen-key">plaggbib</span>
+      </div>
+      <div class="mock-pair">
+        <article class="mock is-winner">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">A</span>Kompakt + skannbar</span>
+            <span class="winner-badge"><span class="star">★</span>Vinner</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/plaggbib-mock-a/" title="Plaggbibliotek — Mock A (katalog-liste)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> Tett katalog-liste, søk + filter-chips øverst, sr-only h1, alle plagg på én scroll.</p>
+        </article>
+        <article class="mock">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">B</span>Visuell + romslig</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/plaggbib-mock-b/" title="Plaggbibliotek — Mock B (bilde-tunge kort)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> "Plagg/biblioteket" editorial split-tittel, bilde-tunge kort, færre per skjerm.</p>
+        </article>
+      </div>
+      <div class="recommend">
+        <span class="recommend-icon" aria-hidden="true">★</span>
+        <div class="recommend-body">
+          <p class="recommend-line">💡 Claude anbefaler: <span class="arrow">→</span> <span class="pick">A — Kompakt + skannbar</span></p>
+          <p class="recommend-why">Plaggbibliotek er en oppslags-skjerm (~60+ plagg) — V2-Skannbar liste-prinsippet gjelder mest her. Liste-rad med 44–56 px thumbnail + gruppering med hairline-divider gir 3× så mye innhold per skjerm som B sin 2-kolonne-grid. Bruk B-tonen kun på tom-tilstand og første-gangs onboarding.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.5 MIN GARDEROBE -->
+    <section class="screen" role="region" aria-labelledby="s-garderobe">
+      <div class="screen-head">
+        <h2 class="screen-h2" id="s-garderobe"><span class="num">2.5</span>Min garderobe</h2>
+        <span class="screen-key">garderobe</span>
+      </div>
+      <div class="mock-pair">
+        <article class="mock is-winner">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">A</span>Kompakt + skannbar</span>
+            <span class="winner-badge"><span class="star">★</span>Vinner</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/garderobe-mock-a/" title="Min garderobe — Mock A (gruppert liste)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> "Min garderobe for Lo" sr-only, plaggliste gruppert per kategori, tilstand (rent/i bruk) som rad-meta.</p>
+        </article>
+        <article class="mock">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">B</span>Visuell + romslig</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/garderobe-mock-b/" title="Min garderobe — Mock B (foto-grid)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> Hero-title med barnets navn, foto-grid 2-kolonne, mer pust per plagg.</p>
+        </article>
+      </div>
+      <div class="recommend">
+        <span class="recommend-icon" aria-hidden="true">★</span>
+        <div class="recommend-body">
+          <p class="recommend-line">💡 Claude anbefaler: <span class="arrow">→</span> <span class="pick">A — Kompakt + skannbar</span></p>
+          <p class="recommend-why">Daglig "har jeg en ull-body i ren?"-skjerm. Liste-rad med foto-thumbnail (44–56 px) + tilstand-meta gir bedre skannbarhet enn 2-kolonne-grid på 6.7"-skjerm. Gruppering med hairline-divider per kategori + lag-fargestripe gjør tilstand lesbar i periferien — robust pedagogisk anchor.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.6 TOG-GUIDEN -->
+    <section class="screen" role="region" aria-labelledby="s-tog">
+      <div class="screen-head">
+        <h2 class="screen-h2" id="s-tog"><span class="num">2.6</span>TOG-guiden</h2>
+        <span class="screen-key">tog</span>
+      </div>
+      <div class="mock-pair">
+        <article class="mock">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">A</span>Kompakt + skannbar</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/tog-mock-a/" title="TOG-guiden — Mock A (sjekkliste)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> Sjekkliste-stil, TOG-verdier som tabell, sr-only h1, ferdig på én scroll.</p>
+        </article>
+        <article class="mock is-winner">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">B</span>Visuell + romslig</span>
+            <span class="winner-badge"><span class="star">★</span>Vinner</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/tog-mock-b/" title="TOG-guiden — Mock B (editorial hero)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> "Riktig varme for natten" hero, store TOG-kort med illustrasjon, narrativ flyt.</p>
+        </article>
+      </div>
+      <div class="recommend">
+        <span class="recommend-icon" aria-hidden="true">★</span>
+        <div class="recommend-body">
+          <p class="recommend-line">💡 Claude anbefaler: <span class="arrow">→</span> <span class="pick">B — Visuell + romslig</span></p>
+          <p class="recommend-why">TOG er en lærings/forklarings-skjerm (ikke daglig). Brukeren leser den 1–3 ganger totalt — editorial hero med større typo og mini-stack-preview av plagg per TOG-trinn tjener på minne-effekt. Unntak fra liste-vinner-prinsippet: her er pedagogisk anchor viktigere enn scan-hastighet.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.7 VARM/KALD -->
+    <section class="screen" role="region" aria-labelledby="s-varmkald">
+      <div class="screen-head">
+        <h2 class="screen-h2" id="s-varmkald"><span class="num">2.7</span>Varm/kald</h2>
+        <span class="screen-key">varmkald</span>
+      </div>
+      <div class="mock-pair">
+        <article class="mock is-winner">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">A</span>Kompakt + skannbar</span>
+            <span class="winner-badge"><span class="star">★</span>Vinner</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/varmkald-mock-a/" title="Varm/kald — Mock A (sjekkliste)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> Sjekkliste-form, "Varm eller kald?" + tett kriterieliste, raskt svar.</p>
+        </article>
+        <article class="mock">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">B</span>Visuell + romslig</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/varmkald-mock-b/" title="Varm/kald — Mock B (editorial)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> "Varm eller kald?" editorial split-spørsmål, store kort per kroppsdel.</p>
+        </article>
+      </div>
+      <div class="recommend">
+        <span class="recommend-icon" aria-hidden="true">★</span>
+        <div class="recommend-body">
+          <p class="recommend-line">💡 Claude anbefaler: <span class="arrow">→</span> <span class="pick">A — Kompakt + skannbar</span></p>
+          <p class="recommend-why">"Barnet føles varmt — er det farlig?"-skjermen. Brukeren er stresset og trenger svar på &lt;5 sek. Kompakt sjekkliste vinner over editorial enhver dag. 44 px+ hit-targets, scroll-snap mellom kriterier, og visuell affordance på "varm vs kald"-konklusjon er native-feel-vinner her.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.8 FINN ANTREKK -->
+    <section class="screen" role="region" aria-labelledby="s-finnantrekk">
+      <div class="screen-head">
+        <h2 class="screen-h2" id="s-finnantrekk"><span class="num">2.8</span>Finn antrekk</h2>
+        <span class="screen-key">finnantrekk</span>
+      </div>
+      <div class="mock-pair">
+        <article class="mock is-winner">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">A</span>Kompakt + skannbar</span>
+            <span class="winner-badge"><span class="star">★</span>Vinner</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/finnantrekk-mock-a/" title="Finn antrekk — Mock A (filter + liste)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> Sr-only h1, filter-chips (aktivitet/temp/varighet) + resultat-liste direkte under.</p>
+        </article>
+        <article class="mock">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">B</span>Visuell + romslig</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/finnantrekk-mock-b/" title="Finn antrekk — Mock B (wizard)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> "Finn antrekk" stor title, stegvis wizard-flyt med ett valg per skjerm.</p>
+        </article>
+      </div>
+      <div class="recommend">
+        <span class="recommend-icon" aria-hidden="true">★</span>
+        <div class="recommend-body">
+          <p class="recommend-line">💡 Claude anbefaler: <span class="arrow">→</span> <span class="pick">A — Kompakt + skannbar</span></p>
+          <p class="recommend-why">Filter + liste-resultat er den native iOS-formen brukeren kjenner fra Photos/Reminders. B sin wizard-flyt dobler scroll/tap-kost for samme svar. Sticky filter-chips + scroll-snap på resultater + mini-stack-preview per antrekk gir både hastighet og pedagogisk anchor i samme komponent.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.9 ONBOARDING -->
+    <section class="screen" role="region" aria-labelledby="s-onboarding">
+      <div class="screen-head">
+        <h2 class="screen-h2" id="s-onboarding"><span class="num">2.9</span>Onboarding + Velkomst</h2>
+        <span class="screen-key">onboarding</span>
+      </div>
+      <div class="mock-pair">
+        <article class="mock">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">A</span>Kompakt + skannbar</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/onboarding-mock-a/" title="Onboarding — Mock A (kompakt 3-stegs)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> Kompakt 3-stegs flyt (Velkommen → Barn → Sted), sr-only h1 per steg, minimal scroll.</p>
+        </article>
+        <article class="mock is-winner">
+          <header class="mock-head">
+            <span class="mock-label"><span class="mock-letter">B</span>Visuell + romslig</span>
+            <span class="winner-badge"><span class="star">★</span>Vinner</span>
+          </header>
+          <div class="phone-frame">
+            <div class="phone-screen">
+              <iframe src="https://wool-app.vercel.app/onboarding-mock-b/" title="Onboarding — Mock B (visuell per-skjerm)" loading="lazy"></iframe>
+            </div>
+          </div>
+          <p class="mock-strategy"><strong>Strategi:</strong> Visuell + romslig per-skjerm-velkomst med større illustrasjoner og pust.</p>
+        </article>
+      </div>
+      <div class="recommend">
+        <span class="recommend-icon" aria-hidden="true">★</span>
+        <div class="recommend-body">
+          <p class="recommend-line">💡 Claude anbefaler: <span class="arrow">→</span> <span class="pick">B — Visuell + romslig</span></p>
+          <p class="recommend-why">Det ene stedet hvor merkevare-følelse og illustrasjon faktisk konverterer (første inntrykk = retention). Brukeren ser denne én gang. Bruk B her, men strip til A-rytme fra første gang inn i Hjem. Spring-fysikk på skjerm-overgangene mellom de tre stegene + scroll-snap = native iOS-onboarding-følelse.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <h3>Kilder</h3>
+    <ul class="footer-links">
+      <li><a href="/docs/F60.11-SLUTTRAPPORT.md">📄 F60.11 Sluttrapport</a></li>
+      <li><a href="/docs/native-feel-rapport.md">📱 Native-feel-rapport</a></li>
+      <li><a href="https://wool-app.vercel.app/">↗ wool-app.vercel.app</a></li>
+    </ul>
+    <p class="footer-meta">
+      Oppsummering: 7A · 2B (3B om vi teller Guide-hub).
+      B vinner kun der skjermen er sjelden eller bærer merkevare-løftet
+      (Guide-hub, TOG, Onboarding). · F60.11 · 2026-06-26
+    </p>
+  </footer>
+
+</body>
+</html>

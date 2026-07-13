@@ -1,0 +1,56 @@
+{
+  "claude": {
+    "id": "ull-mellomlag",
+    "dbString": "ull-mellomlag",
+    "kategori": "mellomlag",
+    "struktur": {
+      "score": 19,
+      "kommentar": "Har komplett what + when i garment-info.ts (linje 83-86). Tonen og lengden matcher sosken-plagg i mellomlag-kategorien (tynn-ull-mellomlag, ull-mellomlag-tykt, ull-jakke, ull-bukse) — kort what + en when-setning. Dedikert whyForGarment-gren finnes (linje 360-362), IKKE fallback: 'Standard ull-mellomlag er hovedisolasjonen ... Lett a regulere temperatur ved a pakke ut.' Trekker 1 poeng fordi whyForGarment-grenen er den eneste i mellomlag-blokken som ikke refererer feels-temperatur (${feels}) slik soskenplaggene gjor — den er litt mer generisk enn tynn-ull-mellomlag og ull-mellomlag-tykt."
+    },
+    "utseende": {
+      "score": 18,
+      "pngExists": true,
+      "kommentar": "PNG finnes: public/illustrations/garments/ull-mellomlag.png (~757 KB, datert 9. juni). db-strengen 'ull-mellomlag' er mappet til id 'ull-mellomlag' i garment-illustrations.ts (linje 34) — 1:1, ingen kollisjon med tynn-ull-mellomlag eller ull-mellomlag-tykt. Navn/mapping er plausibelt og entydig. Kan ikke vurdere selve bildet (gjores av Fable 5 + Claude). Trekker 2 poeng kun som markor for at visuell dom gjenstaar."
+    },
+    "seleksjon": {
+      "score": 24,
+      "kommentar": "Seleksjonsbandene er pediatrisk forsvarlige: ull-mellomlag velges i kjolig (5-9), kald (0-4) og frost (-7 til 0) for vogn/baeresele/utelek — alle sammen med ull-base innerst og yttertoy utenpa. Dette er klassisk norsk lag-pa-lag og stottes direkte av Merino Kids (ull-fordeler ved fukt), AAP healthychildren ('one layer more than adult') og Capital Area Pediatrics. Ingen overoppheting/SIDS/kvelning/frost-risiko introduseres av dette mellomlaget i seg selv. SB-2 (maks-lag-cap) og CK-6 holder stablingen i sjakk i kalde band. Ingen helsesporsmaal som kildene ikke dekker — ingen web-sok nodvendig.",
+      "kilder": [],
+      "trace": "baseTable-treff for db-streng 'ull-mellomlag' (-> id ull-mellomlag): vogn.kjolig (feels 5-9 C), vogn.kald (0-4 C), vogn.frost (-7 til 0 C); baeresele.kald (0-4 C), baeresele.frost (-7 til 0 C), baeresele.streng_frost (-15 til -7 C); utelek.kald (0-4 C), utelek.frost (-7 til 0 C). IKKE i mild/varm/tropisk (der brukes 'tynn ull-mellomlag' eller ingen) og IKKE i streng_frost-utelek (der brukes 'ull-mellomlag tykt'). Modifier-tilsetninger: modifiers.ts legger 'ekstra ull-lag' (-> id tynn-ull-mellomlag, IKKE dette plagget) ved spedbarn <3 mnd + feels<5 (linje 246-248), saa selve ull-mellomlag legges aldri til/fjernes av modifiers — det kommer kun fra baseTable. conflicts/softBlocks rorer det ikke direkte (SB-4 tynner kun 'tykt/tykke/isolert'-strenger i baeresele, ikke standard ull-mellomlag)."
+    },
+    "tekstLogikk": {
+      "score": 21,
+      "kommentar": "what stemmer godt: 'den klassiske ull-genseren mellom base og yttertoy' = nettopp det baseTable bruker det som. whyForGarment ('hovedisolasjonen ... lett a regulere ved a pakke ut') stemmer med rollen i alle treff-bandene. MEN when-teksten driver litt: 'Hele vinterhalvaret som essensielt isolasjons-lag.' Trace viser at plagget faktisk ogsaa velges i kjolig-bandet 5-9 C (vogn.kjolig) — typisk host/var, ikke 'vinterhalvaret'. En forelder pa en mild 7-graders host-dag som leser 'hele vinterhalvaret' kan tro plagget er for varmt og hoppe over det, selv om motoren anbefaler det. Dette er en mild villedning, men ikke farlig (under-isolasjon i mildt vaer, ikke overoppheting eller frost). Forslag: utvid when til a dekke kjolig host/var-vaer ned mot ca 9 C. Severity medium, ikke hoy, fordi avviket gjor plagget mer konservativt, ikke farligere."
+    },
+    "alternativer": {
+      "score": 9,
+      "kommentar": "ull-mellomlag har et reelt registrert alternativ i alternatives.ts (linje 55-64): 'fleecedress' med whenKey/whyPrimaryKey — riktig ull->fleece-trinn per Babyora ull-forst-policy. Dette matcher monsteret til tynn-ull-mellomlag (tynn fleece), ull-jakke (fleecejakke) og ull-bukse (fleecebukse). Liten anmerkning: et tykkelse-trinn-alternativ (ull-mellomlag-tykt) tilbys ikke som alternativ, men det er et eget tabell-item i kaldere band, saa det er korrekt utelatt fra alternatives. 'fleecedress' som navn er litt rart for et mellomlag (dress=heldress), kunne hett 'fleecegenser'/'fleece-mellomlag' — derav -1."
+    },
+    "total": 91,
+    "verdikt": "Solid mellomlag-oppforing. Strukturen er komplett med dedikert what/when/whyForGarment, PNG og mapping er pa plass, og seleksjonsbandene (5 til -7 C) er pediatrisk forsvarlige uten sikkerhetsrisiko. Eneste reelle funn er en mild tekst-drift: when sier 'hele vinterhalvaret' mens motoren ogsaa velger plagget i kjolig host/var-vaer (5-9 C). Avviket gjor radet mer konservativt, ikke farligere, saa medium severity. Anbefaler a justere when-teksten og vurdere et mer presist navn pa fleece-alternativet. Ingen tall/terskler ror't.",
+    "funn": [
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "when-teksten ('Hele vinterhalvaret som essensielt isolasjons-lag') daekker ikke at baseTable ogsaa velger ull-mellomlag i kjolig-bandet 5-9 C (vogn.kjolig) — typisk host/var. En forelder pa en mild 7-graders dag kan tolke teksten som at plagget er for varmt og droppe det, selv om motoren anbefaler det. Ikke-farlig (peker mot under-isolasjon i mildt vaer, ikke overoppheting/frost).",
+        "forslag": "Utvid when til a inkludere kjolig host- og varvaer, f.eks. 'Fra kjolige host-/vardager (ca 9 C) og gjennom hele vinterhalvaret som essensielt isolasjons-lag.' Ror IKKE terskelen i bandForTemp.",
+        "kilde": "garment-info.ts linje 85 vs tables.ts vogn.kjolig (feels 5-9 C) / bandForTemp linje 13"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "whyForGarment-grenen for ull-mellomlag (linje 360-362) er den eneste i mellomlag-blokken som ikke flettet inn feels-temperatur (${feels}), slik soskenplaggene tynn-ull-mellomlag og ull-mellomlag-tykt gjor. Den er derfor litt mer generisk enn monsteret rundt.",
+        "forslag": "Vurder a legge til ${feels}-referanse for konsistens med soskenplaggene, f.eks. '... hovedisolasjonen ${childName} trenger ved ${feels} C.' Ren konsistens-polish, ikke funksjonell feil.",
+        "kilde": "garment-info.ts linje 360-362 vs linje 357-365"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Fleece-alternativet for ull-mellomlag heter 'fleecedress' (linje 60). For et mellomlag (genser mellom base og yttertoy) er 'dress' (heldress) misvisende navn — soskenplagg bruker 'tynn fleece'/'fleecejakke'/'fleecebukse'.",
+        "forslag": "Vurder a omdope til 'fleecegenser' eller 'fleece-mellomlag' for a matche plaggtypen. Kun navne-presisjon, alternativet i seg selv er korrekt.",
+        "kilde": "alternatives.ts linje 60"
+      }
+    ]
+  },
+  "fable": null
+}

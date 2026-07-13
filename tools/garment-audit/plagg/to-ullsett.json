@@ -1,0 +1,139 @@
+{
+  "claude": {
+    "id": "to-ullsett",
+    "dbString": "to ullsett oppå hverandre",
+    "kategori": "innerst",
+    "struktur": {
+      "score": 13,
+      "kommentar": "Har bade what og when i garment-info.ts (linje 49-52). MEN: (a) what er markant kortere/tynnere enn sosken i samme kategori — 'ullsett-tynt' og 'ullsett-tykt' har to fullstendige setninger med materiale + bruks-kontekst, mens to-ullsett kun har en kort apposisjons-setning ('To ullsett oppa hverandre — dobbel base-lag for ekstrem kulde.'). (b) when er ufullstendig sammenlignet med sosken: 'Streng frost og lavere — nar enkel ull ikke holder.' mangler temperatur-tall/band som sosken-plaggene har (ullsett-tynt: 'ca 8-14 grader', ullsett-tykt: 'Vinter og senhost'). (c) Ingen DEDIKERT whyForGarment-gren — to-ullsett deler gren med ullsett-tynt OG ullsett-tykt (linje 340-342), og teksten der ('To-delt ullsett gir bevegelses-frihet') beskriver ETT sett, ikke to lag oppa hverandre. Det er teknisk en fallback-deling, ikke en egen gren."
+    },
+    "utseende": {
+      "score": 18,
+      "pngExists": true,
+      "kommentar": "PNG finnes pa public/illustrations/garments/to-ullsett.png. db-strengen 'to ullsett oppa hverandre' er korrekt mappet til id 'to-ullsett' i garment-illustrations.ts (linje 22), og id-en har egen INFO-oppforing + egen png-fil (ikke gjenbruk av ullsett-tykt). Mapping og navngivning er plausibel og konsistent med ovrige innerst-plagg. Kan ikke bedomme selve den visuelle illustrasjonen — det gjores av Fable 5 + Claude senere."
+    },
+    "seleksjon": {
+      "score": 21,
+      "trace": "bandForTemp: streng_frost = -15 til -8 grader C (feelsLikeC>=-15), ekstrem = <=-15 grader (feelsLikeC<-15). baseTable-treff for 'to ullsett oppa hverandre' (kategori innerst): vogn/streng_frost (linje 61, sammen med ullstromper tykke), vogn/ekstrem (linje 67), baeresele/ekstrem (linje 118 — IKKE streng_frost; baeresele/streng_frost bruker kun 'ullsett tykt' linje 112), utelek/streng_frost (linje 221), utelek/ekstrem (linje 227). Ingen treff for soevn (innendors). Ingen modifier i modifiers.ts legger til eller fjerner 'to ullsett' (Grep: ingen treff). KRITISK GUARD — conflicts.ts CK-6 (linje 139-149): hvis feelsLikeC > -15 erstattes 'to ullsett'-streng med 'ullsett tykt' og det flagges som 'overoppheting'-policy. Netto-effekt: plagget overlever KUN i ekstrem-bandet (feels <= -15). I streng_frost-radene (vogn + utelek, -15 til -8) blir 'to ullsett' nesten alltid nedgradert av CK-6 (kun ved noyaktig feels = -15 overlever det, siden CK-6 bruker streng '>'). Pediatrisk forsvarlig: dobbel ull-base ved <=-15 grader er rimelig — kildene (capital-area-peds 'one more layer than adult' + outdoor-exposure-grenser, merino-kids ull-ved-fukt) stotter ekstra isolasjon i streng kulde. Overoppheting-risiko er aktivt motvirket av CK-6-guarden som hindrer 2-lags-stack i mildere vaer. Ingen SIDS-kontekst (soevn velger aldri to-ullsett). Trekker 4 poeng: streng_frost-radene i baseTable er reelt dod kode pga CK-6 — plagget er TILSYNELATENDE valgt i streng_frost men blir systematisk fjernet, noe som er en intern inkonsistens (men IKKE farlig for barnet).",
+      "score_kilder": [],
+      "kilder": [],
+      "kommentar": "Seleksjonen er pediatrisk forsvarlig og godt sikret mot overoppheting via CK-6. Kildene i sources.ts dekker kald-vaer-paakledning tilstrekkelig (capital-area-peds, merino-kids, aap-healthychildren) — ingen helse-sporsmal som krevde ekstra web-sok. Hovedanmerkning er intern: streng_frost-radene i baseTable er praktisk talt aldri aktive fordi CK-6 nedgraderer dem."
+    },
+    "tekstLogikk": {
+      "score": 16,
+      "kommentar": "DRIFT funnet. when-teksten sier 'Streng frost og lavere' — dette signaliserer til foreldre at plagget brukes fra streng_frost-bandet (-15 til -8 grader). Men den faktiske logikken (CK-6 i conflicts.ts) NEDGRADERER 'to ullsett' til 'ullsett tykt' for alt over -15 grader, og selv CK-6-meldingen sier eksplisitt 'To ullsett er forbeholdt ekstrem frost (<=-15 grader)'. Teksten og koden er altsa uenige om terskelen: when sier ~streng frost (-8 og kaldere), koden sier ekstrem (-15 og kaldere). I tillegg beskriver den delte whyForGarment-grenen (linje 340-342) 'To-delt ullsett gir bevegelses-frihet ... mens ull-mot-huden holder varmen jevn' — dette beskriver ETT ullsett og nevner ikke at det er TO lag oppa hverandre eller at det er forbeholdt ekstrem frost, sa why-teksten er villedende svak for nettopp dette plagget. Drift som kan villede paakledning (forelder tror to ullsett er ok ned mot -8) gir severity hoy. Trekker 9 poeng."
+    },
+    "alternativer": {
+      "score": 7,
+      "kommentar": "'to ullsett oppa hverandre' har INGEN oppforing i alternatives.ts. For dette spesifikke plagget er fravaer faktisk delvis riktig: ved <=-15 grader er det ikke et trygt fleece-substitutt for dobbel ull-base (fleece transporterer fukt darligere og gir ikke samme regulering i ekstrem frost), sa et ull->fleece-alternativ ville vaert helsemessig tvilsomt. MEN et reelt og nyttig alternativ mangler: tykkelse-trinn NEDOVER — dvs. 'ullsett tykt' (ett tykt sett) som lettere alternativ nar barnet er svaert aktivt (utelek) og risikoen for svette/overoppheting oker selv i streng frost. Sosken-plaggene ('ull-mellomlag', 'ull-jakke', 'ull-bukse') har alle alternativ-oppforinger, sa konsistens-messig er to-ullsett et hull. Trekker 3 poeng for manglende nedtrappings-alternativ."
+    },
+    "total": 75,
+    "verdikt": "to-ullsett er pediatrisk trygt seleksjonert (godt sikret mot overoppheting via CK-6-guarden), men har en reell tekst-logikk-drift: when-teksten antyder bruk fra streng frost (-8 grader), mens koden forbeholder plagget ekstrem frost (<=-15 grader). I tillegg er info-oppforingen tynnere enn sosken, why-grenen er delt/upresis, og streng_frost-radene i baseTable er reelt dod kode pga CK-6. Ingen farlige funn — tre forbedringspunkter (tekst-terskel, dedikert why, info-fyllde).",
+    "funn": [
+      {
+        "severity": "hoy",
+        "mal": 4,
+        "beskrivelse": "when-teksten ('Streng frost og lavere') antyder at to ullsett brukes fra streng_frost-bandet (-15 til -8 grader), men CK-6 i conflicts.ts nedgraderer plagget til 'ullsett tykt' for alt varmere enn -15 grader, og CK-6-meldingen sier selv 'forbeholdt ekstrem frost (<=-15 grader)'. Teksten kan villede foreldre til a tro dobbel ull-base er riktig allerede ved -8 til -14 grader.",
+        "forslag": "Juster when-teksten til a matche faktisk terskel, f.eks. 'Kun ved ekstrem frost (-15 grader og kaldere) — nar enkel ull ikke holder.' Ror IKKE selve -15-terskelen i CK-6; kun teksten skal endres for a stemme med logikken.",
+        "kilde": "conflicts.ts CK-6 (linje 139-149); bandForTemp tables.ts (linje 16-17)"
+      },
+      {
+        "severity": "medium",
+        "mal": 1,
+        "beskrivelse": "to-ullsett har ingen dedikert whyForGarment-gren — den deler gren med ullsett-tynt og ullsett-tykt (garment-info.ts linje 340-342). Teksten der ('To-delt ullsett gir bevegelses-frihet ... ull-mot-huden holder varmen jevn') beskriver ETT sett og nevner verken at det er to lag oppa hverandre eller at det er forbeholdt ekstrem frost.",
+        "forslag": "Legg til en egen if-gren for id==='to-ullsett' som forklarer at to ull-lag stables fordi enkel ull ikke isolerer nok ved <=-15 grader, og at ull-mot-hud-laget holder fukten borte. Behold de delte grenene for ullsett-tynt/tykt.",
+        "kilde": "garment-info.ts (linje 340-342)"
+      },
+      {
+        "severity": "lav",
+        "mal": 1,
+        "beskrivelse": "what-teksten for to-ullsett er markant kortere/tynnere enn sosken-plaggene i samme kategori. 'ullsett-tynt' og 'ullsett-tykt' har to fulle setninger (materiale + kontekst), mens to-ullsett kun har en kort apposisjon ('To ullsett oppa hverandre — dobbel base-lag for ekstrem kulde.'). when mangler ogsa temperatur-anker som sosken har.",
+        "forslag": "Utvid what til samme monster/lengde som sosken, f.eks. tilfoy en setning om hvorfor to lag (ull mot hud + ekstra isolasjon) og at det er sjeldent brukt. Tilfoy temperatur-anker i when (<=-15 grader).",
+        "kilde": "garment-info.ts (linje 49-52 vs 41-48)"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Streng_frost-radene i baseTable (vogn linje 61, utelek linje 221) lister 'to ullsett oppa hverandre', men CK-6 nedgraderer dem nesten alltid (overlever kun ved noyaktig feels = -15). Dette er reelt dod kode / intern inkonsistens — plagget ser ut til a velges i streng_frost, men gjor det praktisk talt aldri.",
+        "forslag": "Vurder a bytte 'to ullsett oppa hverandre' til 'ullsett tykt' i streng_frost-radene (vogn + utelek) slik at baseTable matcher CK-6-policyen, ELLER heve CK-6-terskelen — men sistnevnte ror et tall og krever helsesoster-godkjenning. Anbefaler det forste (ren konsistens-fiks uten terskel-endring).",
+        "kilde": "tables.ts (linje 61, 221) vs conflicts.ts CK-6 (linje 140)"
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "'to ullsett oppa hverandre' har ingen oppforing i alternatives.ts, mens sosken-plagg (ull-mellomlag, ull-jakke, ull-bukse) alle har alternativ-oppforinger. Et ull->fleece-alternativ er bevisst uonsket her (fleece regulerer fukt darligere ved ekstrem frost), men et nedtrappings-alternativ ('ullsett tykt' nar barnet er svaert aktivt) mangler.",
+        "forslag": "Vurder a legge til 'ullsett tykt' som nedtrappings-alternativ for svaert aktive barn i utelek selv i streng frost (redusert overoppheting-risiko). IKKE legg til fleece-alternativ — fleece er uegnet som dobbel base ved <=-15 grader.",
+        "kilde": "alternatives.ts (ingen oppforing); pmc-12386404 (metabolic heat peaks 8-9 mnd)"
+      }
+    ]
+  },
+  "fable": {
+    "struktur": {
+      "score": 15,
+      "kommentar": "Id, kategori og felter er på plass, og fravær av soevn-treff virker bevisst (dobbel base er et ute-plagg). Trekk for manglende dedikert whyForGarment — plagget deler gren med ullsett-tynt/tykt og begrunnelsen nevner verken 'to lag' eller ekstrem kulde, som er hele plaggets eksistensgrunnlag. Strukturelt er også streng_frost-radene i baseTable et problem: de eksisterer i datastrukturen men kan aldri nås pga CK-6, noe som gjør tabellen misvisende som dokumentasjon av faktisk oppførsel."
+    },
+    "utseende": {
+      "score": 16,
+      "kommentar": "Bildet viser riktig plagg: to komplette ullsett (genser + bukse) i to fargetoner, forskjøvet slik at 'to av samme' kommuniseres tydelig. Stilen er konsistent med illustrert app-estetikk, ingen synlige artefakter, ren transparent/mørk bakgrunn. Svakhet: komposisjonen leser som 'to separate sett ved siden av hverandre', ikke 'lag-på-lag på kroppen' — knappestolpen kun på fremste sett forsterker at dette er to plagg, men prinsippet om at det ene bæres UNDER det andre formidles ikke. En antydet 'innenfor'-komposisjon ville kommunisert funksjonen bedre."
+    },
+    "seleksjon": {
+      "score": 18,
+      "kommentar": "Reell seleksjon (kun feels <= -15) er pediatrisk forsvarlig: dobbel ullbase ved ekstrem frost er etablert praksis, og CK-6-nedgraderingen til 'ullsett tykt' i -8 til -15 forhindrer overoppheting/svetting hos barn som ikke selv regulerer lag — svette i kulde er en reell risiko. To forbehold: (1) vogn ved <= -15 for 0-3 år er i seg selv på grensen av hva helsemyndigheter anbefaler for varighet; motoren kler barnet riktig, men konteksten skriker etter et 'vurder å korte ned/holde dere inne'-hint. (2) bæresele + ekstrem: kroppsvarme fra bærer gjør dobbel base potensielt for varmt på torso — verdt en egen vurdering, ikke nødvendigvis feil."
+    },
+    "tekstLogikk": {
+      "score": 13,
+      "kommentar": "Klar mismatch, og den er verre enn en ren when-glipp: 'Streng frost og lavere' lover bruk fra -8, mens CK-6 gjør plagget reelt utilgjengelig før <= -15. Foreldre som leser app-teksten vil kle dobbel base manuelt fra -8 — altså nøyaktig det CK-6 er designet for å forhindre. Merk også intern inkonsistens i tekstene selv: 'what' sier korrekt 'ekstrem kulde', mens 'when' sier 'streng frost og lavere' — de to setningene motsier hverandre. Fiks: la 'when' speile faktisk guard ('Ekstrem kulde — når tykt ullsett ikke holder'), uten å endre noen terskler."
+    },
+    "alternativer": {
+      "score": 5,
+      "kommentar": "Ingen nedtrappings-alternativ ('hvis barnet blir varmt: bytt til tykt ullsett') og ingen kobling til søsken-plaggene tross at CK-6 i praksis definerer en eksplisitt substitusjonskjede. Død kode i streng_frost-radene betyr også at alternativ-logikken ser bredere ut enn den er. Det positive: substitusjonen ullsett-tykt ↔ to-ullsett eksisterer faktisk i motoren via CK-6 — den er bare usynlig for brukeren."
+    },
+    "total": 67,
+    "verdikt": "Godkjent med forbehold: plagget er pediatrisk riktig plassert i motoren, men app-teksten lover et bruksområde CK-6 aktivt blokkerer — tekstfeilen må rettes før dette kan regnes som konsistent.",
+    "uenig_med_claude": "Delvis uenig. Claudes 75/100 er for høyt: mål4-funnet er ikke bare 'kan villede' — det instruerer foreldre til manuelt å gjøre nøyaktig det conflicts-laget forhindrer automatisk, og bør graderes kritisk/hoy med tilsvarende poengtrekk. Død kode-funnet er undervurdert som 'lav': rader som aldri kan nås er en vedlikeholdsfelle (neste utvikler 'fikser' CK-6 og endrer reell oppførsel utilsiktet) — medium. Derimot er Claudes medium på manglende whyForGarment rimelig, og jeg legger til ett funn Claude ikke fanget: intern motsigelse mellom what ('ekstrem kulde') og when ('streng frost og lavere').",
+    "funn": [
+      {
+        "severity": "kritisk",
+        "mal": 4,
+        "beskrivelse": "'When'-teksten ('Streng frost og lavere') lover bruk fra -8, men CK-6 erstatter plagget med 'ullsett tykt' ved feels > -15. Foreldre som følger teksten manuelt overkler barnet i nettopp det intervallet motoren beskytter mot — med svette-i-kulde-risiko.",
+        "forslag": "Omformuler when til å speile faktisk guard, f.eks. 'Ekstrem kulde — når tykt ullsett ikke strekker til.' Ingen terskler endres."
+      },
+      {
+        "severity": "medium",
+        "mal": 4,
+        "beskrivelse": "Intern motsigelse i app-teksten: 'what' sier korrekt 'ekstrem kulde', 'when' sier 'streng frost og lavere'. De to setningene beskriver ulike bruksområder for samme plagg.",
+        "forslag": "Harmoniser begge tekster rundt 'ekstrem kulde' som anker."
+      },
+      {
+        "severity": "medium",
+        "mal": 5,
+        "beskrivelse": "Streng_frost-radene i baseTable er død kode pga CK-6. Tabellen dokumenterer en oppførsel som ikke finnes, og en fremtidig endring av CK-6 vil reaktivere radene utilsiktet.",
+        "forslag": "Fjern radene fra baseTable eller marker dem eksplisitt som overstyrt av CK-6 med kommentar/test som låser intensjonen."
+      },
+      {
+        "severity": "medium",
+        "mal": 1,
+        "beskrivelse": "Mangler dedikert whyForGarment; deler begrunnelse med ullsett-tynt/tykt uten å nevne 'to lag' eller ekstrem frost — brukeren får ikke vite hvorfor dobbel base, ikke bare tykkere base.",
+        "forslag": "Egen why-tekst: 'To tynne ullag fanger mer luft enn ett tykt og kan justeres underveis.'"
+      },
+      {
+        "severity": "medium",
+        "mal": 3,
+        "beskrivelse": "Vogn ved ekstrem kulde (<= -15) for 0-3 år er på grensen av anbefalt eksponering uansett bekledning; motoren kler riktig men kontekst-advarsel mangler. Bæresele + dobbel base kan i tillegg bli for varmt på torso pga bærerens kroppsvarme.",
+        "forslag": "Vurder et varighets-/inne-hint ved ekstrem + vogn, og en egen gjennomgang av bæresele-raden."
+      },
+      {
+        "severity": "lav",
+        "mal": 5,
+        "beskrivelse": "Ingen synlig nedtrappings-sti for brukeren, selv om CK-6 reelt definerer substitusjonen to-ullsett ↔ ullsett-tykt.",
+        "forslag": "Eksponer alternativet i UI: 'Blir barnet varmt? Bytt til tykt ullsett.'"
+      },
+      {
+        "severity": "lav",
+        "mal": 2,
+        "beskrivelse": "Illustrasjonen leser som to separate sett side om side, ikke lag-på-lag; 'dobbel base'-prinsippet formidles svakt.",
+        "forslag": "Justér komposisjonen så det ene settet antydes båret innenfor det andre, eller legg til et diskret '×2 lag'-merke."
+      }
+    ]
+  }
+}

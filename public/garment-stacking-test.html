@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Babyora garment test — full liste (60 plagg)</title>
+<style>
+  :root {
+    --bg-warm: #FAF7F0;
+    --bg-cool: #F2F2F0;
+    --bg-grid: #FFFFFF;
+    --ink: #1A1A1A;
+    --mute: #525252;
+    --hair: #E5E7EB;
+    --terra: #D9651F;
+    --sans: 'Inter', -apple-system, sans-serif;
+    --shadow: 0 8px 24px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 24px 80px;
+    background: var(--bg-warm);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+  }
+  h1 { font-weight: 800; font-size: 24px; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h2 { font-weight: 700; font-size: 18px; margin: 40px 0 4px; letter-spacing: -0.01em; }
+  .count { color: var(--mute); font-weight: 500; font-size: 14px; }
+  p { color: var(--mute); margin: 0 0 16px; max-width: 720px; font-size: 14px; }
+  code { background: rgba(0,0,0,.05); padding: 1px 6px; border-radius: 4px; font-size: 12.5px; }
+
+  .toggle {
+    display: inline-flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .toggle button {
+    padding: 8px 14px;
+    border: 1px solid var(--hair);
+    background: #fff;
+    border-radius: 999px;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .toggle button[aria-pressed="true"] {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+    max-width: 1200px;
+    margin-top: 16px;
+  }
+  .tile {
+    background: transparent;
+    border: 1px dashed var(--hair);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .tile img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: contain;
+  }
+  .tile span {
+    font-size: 12px;
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  /* Outfit demo (kort-stabel) */
+  .demo {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 24px;
+    max-width: 1200px;
+    margin-top: 18px;
+  }
+  .stack {
+    background: var(--bg-grid);
+    border: 1px solid var(--hair);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .stack__h { font-weight: 700; font-size: 15px; margin: 0 0 4px; }
+  .stack__sub { font-size: 12.5px; color: var(--mute); margin: 0 0 18px; }
+  .deck { display: flex; flex-direction: column; gap: 8px; }
+  .deck__card {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid var(--hair);
+    border-radius: 12px;
+    padding: 8px 12px 8px 8px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
+  }
+  .deck__card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+  .deck__card:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(217,101,31,0.25); }
+  .deck__thumb {
+    width: 56px;
+    height: 56px;
+    background: transparent;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .deck__thumb img { width: 100%; height: 100%; object-fit: contain; }
+  .deck__cat { font: 700 9.5px/1 var(--sans); color: var(--mute); text-transform: uppercase; letter-spacing: .06em; margin: 0; }
+  .deck__name { font: 700 13.5px/1.2 var(--sans); margin: 2px 0 0; }
+  .deck__chev { color: var(--mute); font-size: 16px; }
+
+  body[data-bg="cool"] { background: var(--bg-cool); }
+  body[data-bg="grid"] { background: var(--bg-grid); }
+  body[data-bg="dark"] {
+    background: #1A1A1A;
+    color: #fff;
+  }
+  body[data-bg="dark"] .stack,
+  body[data-bg="dark"] .deck__card { background: #2A2A2A; border-color: #333; color: #fff; }
+  body[data-bg="dark"] .tile { border-color: #333; }
+  body[data-bg="dark"] p,
+  body[data-bg="dark"] .stack__sub,
+  body[data-bg="dark"] .deck__cat,
+  body[data-bg="dark"] .deck__chev,
+  body[data-bg="dark"] .count { color: #999; }
+  body[data-bg="dark"] .tile span,
+  body[data-bg="dark"] .deck__name,
+  body[data-bg="dark"] .stack__h,
+  body[data-bg="dark"] h1,
+  body[data-bg="dark"] h2 { color: #fff; }
+  body[data-bg="dark"] .toggle button { background: #2A2A2A; color: #fff; border-color: #333; }
+  body[data-bg="dark"] .toggle button[aria-pressed="true"] { background: #fff; color: #1A1A1A; }
+</style>
+</head>
+<body>
+  <h1>Babyora garment test — full liste</h1>
+  <p>
+    Alle 60 plagg-illustrasjoner generert via Sivert's master prompt med magenta chroma-key.
+    PNG-er er transparente, så plaggene smelter inn i app-bakgrunnen.
+  </p>
+
+  <div class="toggle" role="group" aria-label="Bakgrunn">
+    <button type="button" aria-pressed="true" onclick="setBg('warm')">Cream</button>
+    <button type="button" aria-pressed="false" onclick="setBg('cool')">Cool white</button>
+    <button type="button" aria-pressed="false" onclick="setBg('grid')">Pure white</button>
+    <button type="button" aria-pressed="false" onclick="setBg('dark')">Dark mode</button>
+  </div>
+
+  <div id="root"></div>
+
+<script>
+  const CATEGORIES = [
+    {
+      label: "Innerst",
+      cat: "innerst",
+      items: [
+        ["kortermet-body", "kortermet body"],
+        ["kortermet-ullbody", "kortermet ullbody"],
+        ["langermet-body", "langermet body"],
+        ["langermet-ullbody", "langermet ullbody"],
+        ["langermet-ullbody-tynn", "langermet ullbody tynn"],
+        ["ullsett-tynt", "ullsett tynt"],
+        ["ullsett-tykt", "ullsett tykt"],
+        ["to-ullsett", "to ullsett oppå hverandre"],
+        ["t-skjorte", "t-skjorte"],
+        ["shorts", "shorts"],
+        ["lett-bukse", "lett bukse"],
+        ["bleie", "bleie"],
+        ["ullsokker", "ullsokker"],
+      ],
+    },
+    {
+      label: "Mellomlag",
+      cat: "mellomlag",
+      items: [
+        ["tynn-bukse", "tynn bukse"],
+        ["tynn-ull-mellomlag", "tynn ull-mellomlag"],
+        ["ull-mellomlag", "ull-mellomlag"],
+        ["ull-mellomlag-tykt", "ull-mellomlag tykt"],
+        ["ull-jakke", "ull-jakke"],
+        ["ull-bukse", "ull-bukse"],
+        ["tynn-pyjamas", "tynn pyjamas"],
+        ["pyjamas", "pyjamas"],
+        ["ull-pyjamas", "ull-pyjamas"],
+      ],
+    },
+    {
+      label: "Yttertøy",
+      cat: "yttertoy",
+      items: [
+        ["lett-kjoredress", "lett kjøredress"],
+        ["kjoredress", "kjøredress"],
+        ["vinterkjoredress", "vinterkjøredress"],
+        ["vinterkjoredress-isolert", "vinterkjøredress isolert"],
+        ["vinterdress", "vinterdress"],
+        ["vinterdress-isolert", "vinterdress isolert"],
+        ["regntoy-skall", "regntøy / skall"],
+        ["vindtett-skall", "vindtett skall"],
+      ],
+    },
+    {
+      label: "Ekstra · Hodeplagg",
+      cat: "ekstra",
+      items: [
+        ["solhatt", "solhatt"],
+        ["lue-tynn", "lue tynn"],
+        ["lue", "lue"],
+        ["lue-m-ull", "lue m/ ull"],
+        ["balaklava", "balaklava"],
+      ],
+    },
+    {
+      label: "Ekstra · Hender",
+      cat: "ekstra",
+      items: [
+        ["votter-tynne", "votter tynne"],
+        ["votter", "votter"],
+        ["votter-tykke", "votter tykke"],
+        ["votter-dun", "votter dun"],
+        ["vindvotter-skall", "vindvotter (skall)"],
+      ],
+    },
+    {
+      label: "Ekstra · Hals",
+      cat: "ekstra",
+      items: [["hals", "hals"]],
+    },
+    {
+      label: "Ekstra · Føtter",
+      cat: "ekstra",
+      items: [
+        ["sko", "sko"],
+        ["toffel-sko", "tøffel-sko"],
+        ["sandaler", "sandaler"],
+        ["vintersko", "vintersko"],
+        ["vintersko-isolerte", "vintersko isolerte"],
+      ],
+    },
+    {
+      label: "Ekstra · Vogn-tilbehør",
+      cat: "ekstra",
+      items: [
+        ["tynt-teppe", "tynt teppe"],
+        ["dunteppe", "dunteppe"],
+        ["varmepose-lett", "varmepose lett"],
+        ["varmepose", "varmepose"],
+        ["varmepose-dun", "varmepose dun"],
+        ["sauekinn-i-vogn", "sauekinn i vogn"],
+        ["regntrekk", "regntrekk"],
+        ["regnponcho-over-baeresele", "regnponcho over bæresele"],
+      ],
+    },
+    {
+      label: "Ekstra · Søvn",
+      cat: "ekstra",
+      items: [
+        ["sovepose-0-5-tog", "sovepose 0.5 TOG"],
+        ["sovepose-1-0-tog", "sovepose 1.0 TOG"],
+        ["sovepose-2-5-tog", "sovepose 2.5 TOG"],
+        ["sovepose-3-0-3-5-tog", "sovepose 3.0–3.5 TOG"],
+        ["sovepose-3-5-tog", "sovepose 3.5 TOG"],
+      ],
+    },
+    {
+      label: "Ekstra · Hud",
+      cat: "ekstra",
+      items: [["ansiktskrem", "ansiktskrem"]],
+    },
+  ];
+
+  const root = document.getElementById("root");
+
+  // Outfit demos section first
+  const demoSection = document.createElement("section");
+  demoSection.innerHTML = `
+    <h2>Bekledning-skjerm — kort-stabel <span class="count">(eksempel-stacks)</span></h2>
+    <p>Forhåndsvisning av hvordan OutfitScreen vil presentere antrekket: hver plagg som klikkbar rad.</p>
+    <div class="demo">
+      <div class="stack">
+        <p class="stack__h">Lag 2 — mild ute (vogn)</p>
+        <p class="stack__sub">3 plagg i dagens antrekk</p>
+        <div class="deck">
+          ${row("Innerst", "Ullsett tynt", "ullsett-tynt")}
+          ${row("Mellomlag", "Ull-mellomlag", "ull-mellomlag")}
+          ${row("Yttertøy", "Lett kjøredress", "lett-kjoredress")}
+          ${row("Ekstra", "Lue tynn", "lue-tynn")}
+        </div>
+      </div>
+
+      <div class="stack">
+        <p class="stack__h">Lag 4 — vinter (utelek)</p>
+        <p class="stack__sub">8 plagg i dagens antrekk</p>
+        <div class="deck">
+          ${row("Innerst", "To ullsett oppå hverandre", "to-ullsett")}
+          ${row("Mellomlag", "Ull-mellomlag tykt", "ull-mellomlag-tykt")}
+          ${row("Yttertøy", "Vinterdress isolert", "vinterdress-isolert")}
+          ${row("Ekstra", "Balaklava", "balaklava")}
+          ${row("Ekstra", "Votter dun", "votter-dun")}
+          ${row("Ekstra", "Hals", "hals")}
+          ${row("Ekstra", "Vintersko isolerte", "vintersko-isolerte")}
+          ${row("Ekstra", "Ansiktskrem", "ansiktskrem")}
+        </div>
+      </div>
+
+      <div class="stack">
+        <p class="stack__h">Søvn — kjølig rom</p>
+        <p class="stack__sub">3 plagg i kveldens antrekk</p>
+        <div class="deck">
+          ${row("Innerst", "Langermet ullbody", "langermet-ullbody")}
+          ${row("Mellomlag", "Pyjamas", "pyjamas")}
+          ${row("Ekstra", "Sovepose 2.5 TOG", "sovepose-2-5-tog")}
+        </div>
+      </div>
+
+      <div class="stack">
+        <p class="stack__h">Bæresele — mild</p>
+        <p class="stack__sub">3 plagg i dagens antrekk</p>
+        <div class="deck">
+          ${row("Innerst", "Langermet ullbody", "langermet-ullbody")}
+          ${row("Mellomlag", "Tynn bukse", "tynn-bukse")}
+          ${row("Ekstra", "Lue tynn", "lue-tynn")}
+        </div>
+      </div>
+    </div>
+  `;
+  root.appendChild(demoSection);
+
+  // All garments by category
+  CATEGORIES.forEach((cat) => {
+    const sec = document.createElement("section");
+    const grid = cat.items
+      .map(([id, name]) => `
+        <div class="tile">
+          <img src="./illustrations/garments/${id}.png" alt="${name}" loading="lazy">
+          <span>${name}</span>
+        </div>
+      `)
+      .join("");
+    sec.innerHTML = `
+      <h2>${cat.label} <span class="count">(${cat.items.length})</span></h2>
+      <div class="grid">${grid}</div>
+    `;
+    root.appendChild(sec);
+  });
+
+  function row(cat, name, id) {
+    return `
+      <a class="deck__card" href="#${id}">
+        <span class="deck__thumb"><img src="./illustrations/garments/${id}.png" alt=""></span>
+        <span><p class="deck__cat">${cat}</p><p class="deck__name">${name}</p></span>
+        <span class="deck__chev" aria-hidden="true">›</span>
+      </a>
+    `;
+  }
+
+  function setBg(mode) {
+    document.body.setAttribute("data-bg", mode);
+    document.querySelectorAll(".toggle button").forEach((b, i) => {
+      const modes = ["warm", "cool", "grid", "dark"];
+      b.setAttribute("aria-pressed", modes[i] === mode ? "true" : "false");
+    });
+  }
+</script>
+</body>
+</html>
