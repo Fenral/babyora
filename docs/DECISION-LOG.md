@@ -26,6 +26,20 @@ This log records current product decisions that override older exploratory mater
 
 **Reason:** Kvalitet på avatar-assets er bærende for valgt retning B; en for stram hard grense skal ikke tvinge kvalitetsreduksjon, men kostnader skal aldri komme som overraskelse.
 
+### R8 avatar-kostnadsplan godkjent (2026-07-14 kveld)
+
+**Decision:** Eier godkjente den konkrete R8-kostnadsplanen («Kjør på»), som oppfyller kravet fra budsjettbeslutningen over om å legge frem en plan før asset-produksjon. Godkjente rammer:
+
+- **Verktøy:** Nano Banana Pro, sekvensiell edit-chain (aldri ny generering fra bunn).
+- **Omfang:** produksjonsmål **24 godkjente komposittbilder** (12 sittende 0–11 mnd + 12 stående 12–24 mnd); teknisk minimum 16.
+- **Oppløsning:** **2K mobiltilpasset som standard; 4K kun ved dokumentert flatebehov.**
+- **Forventet kostnad:** ~150–500 kr (edit-chain, 3–8 forsøk per godkjent bilde). Ingen hard grense, men eier varsles før uventet opptrapping utover dette; eksakt Nano Banana Pro-tariff verifiseres mot gjeldende prisliste før første batch.
+- **Kvalitetsport uendret:** hvert godkjent bilde kontrolleres manuelt for identitet, anatomi, plaggtype, materiale, synlig tilbehør, bakgrunn/alpha, skygge, mobilutsnitt og recommendation-fingerprint-samsvar. Manglende verifisert bilde → plagglisten er fasit.
+
+**Merk:** R8-porten er nå åpen. Selve genereringen forutsetter fortsatt at retning B-skjermene (R7 Task 3+) finnes, men er ikke lenger blokkert av fem-foreldre-porten (frafalt over).
+
+**Reason:** Kostnadsplanen er beskjeden mot verdien av bærende avatar-assets for retning B, og oppfyller «ingen kostnad kommer som overraskelse»-regelen.
+
 ## 2026-07-13
 
 ### Product model

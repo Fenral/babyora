@@ -24,7 +24,7 @@ Eier godkjente pakken eksplisitt («kjør»). Alle tre pakker er committet lokal
 
 **R7 Task 1–2 FERDIG (2026-07-14 kveld):** sentralisert capability-kontrakt (`decideAccess` — lifetime fjernet fra PLAN_ORDER per låst beslutning, trust-copy oppdatert) + kanonisk `RecommendationView`/`AvatarStateKey` (R5-kontrakten: sittende 0–11/stående 12–24, tomt manifest → nøytral fallback til R8). 507 tester grønne. GitHub-webhook til Codemagic gjenopprettet (id 652768164).
 
-**⛔ NESTE ER GATET:** R7 Task 3+ (visuelt arbeid — dock, instrument, Hjem/Antrekk/Plan i retning B) krever fem-foreldre-porten per planens grunnregel. Menneskelige porter: (1) fagperson signerer `engine-v2-scenarios.json`, (2) fem-foreldre-testen (bruk `docs/mocks/north-star/` + sammenligningssiden). Etter portene: R7 Task 3–8, så R8 avatar-assets (kostnadsplan legges frem for eier først).
+**NESTE (porter oppdatert 2026-07-14 kveld):** Fem-foreldre-porten er **frafalt av eier** (se decision log) — R7 Task 3+ (dock, instrument, Hjem/Antrekk/Plan i retning B) er ikke lenger blokkert av den. R8 avatar-**kostnadsplanen er godkjent** («Kjør på»): Nano Banana Pro edit-chain, 24 komposittbilder, 2K standard, ~150–500 kr forventet. R8-genereringen forutsetter retning B-skjermene fra R7 Task 3+. Eneste gjenstående menneskeport: fagperson signerer `engine-v2-scenarios.json` (blokkerer kun Motor V2 Task 17 / kohortaktivering, ikke R7-fremdrift).
 
 ## Completed
 
