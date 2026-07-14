@@ -70,7 +70,10 @@ function targetWarmthFor(role: GarmentRole, intent: ThermalIntent): WarmthLevel 
     case 'mid_bottom':
       return clampWarmth(Math.max(1, w - 1));
     case 'insulated_fullbody':
-      return clampWarmth(w);
+      // Hvilken dress: båndet avgjør (kald→kjøredress w2, frost→vinter w3,
+      // streng frost/ekstrem→isolert w4) — intensitet styrer OM (gaten ≥3),
+      // ikke hvor tykk. Kalibrert fixture-match mot legacy-motoren.
+      return clampWarmth(Math.max(2, intent.baseWarmth));
     case 'shell_fullbody':
     case 'shell_top':
     case 'shell_bottom':

@@ -53,7 +53,9 @@ export function resolveMaterialFamilies(
   // Base — form etter alder og varme (spec §6-tabellen: nyfødt = body/heldress).
   const twoPieceHeat = HEAT_BANDS.has(intent.tempBand) && intent.ageStage !== 'newborn';
   const base = baseMaterials(ctx);
-  const baseCodes: ExplanationCode[] = [];
+  // Plaggform følger alltid alder (spec §6-tabellen) — hver anbefaling får
+  // dermed minst én forklaring (G11).
+  const baseCodes: ExplanationCode[] = ['AGE_APPROPRIATE_GARMENT_FORM'];
   if (ctx.active) baseCodes.push('WICKING_SYNTHETIC_FOR_ACTIVITY');
   if (ctx.warmDryCalm && base[0] === 'cotton') baseCodes.push('COTTON_ONLY_WARM_DRY');
   if (twoPieceHeat) {

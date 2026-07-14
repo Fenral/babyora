@@ -170,8 +170,21 @@ export function applySafetyV2(
     });
   }
 
-  // HB-V2-NB-COLD: nyfødt i kuldegrader (G33; legacy-modifier-semantikk, ny kode).
-  if (outdoor && input.ageMonths < 3 && input.weather.feelsLikeC < 0) {
+  // HB-V2-EXTREME-COLD: ekstrem-bånd (≤ −15) — eksponeringsbegrensning er
+  // hovedrådet; antrekk alene fremstilles aldri som tilstrekkelig (G33).
+  if (outdoor && intent.tempBand === 'ekstrem') {
+    flag({
+      code: 'HB-V2-EXTREME-COLD',
+      message: 'Ekstrem kulde — hold turen svært kort. Påkledning alene er ikke nok i denne kulda.',
+      sources: ['AAP-HC', 'POLICY'],
+      severity: 'HIGH',
+      category: 'kulde',
+    });
+  }
+
+  // HB-V2-NB-COLD: nyfødt i kuldegrader (G03/G33). Legacy-semantikk er
+  // ageMonths <= 3 (modifiers.ts «child.ageMonths <= 3») — ikke < 3.
+  if (outdoor && input.ageMonths <= 3 && input.weather.feelsLikeC < 0) {
     flag({
       code: 'HB-V2-NB-COLD',
       message: 'Spedbarn under 3 mnd: maks 30 min ute i kuldegrader. Sjekk nakke og rygg ofte.',

@@ -46,7 +46,9 @@ describe('Motor 2.0 safety — HB-9 bilstol (CRITICAL)', () => {
   });
 
   it('HB-9 gjelder også ETTER kalibrering +1 (G30 — safety kjører sist)', () => {
-    const { input, intent, parts } = pipelineTo({ carSeat: true, weather: { feelsLikeC: 2 } }, 1);
+    // Frost (−6) → dress-varme 3; kalibrering +1 endrer ikke at HB-9 har siste ord.
+    const { input, intent, parts } = pipelineTo({ carSeat: true, weather: { feelsLikeC: -6 } }, 1);
+    expect(parts.garments.some((g) => g.role === 'insulated_fullbody')).toBe(true);
     const safe = applySafetyV2(input, intent, parts);
     expect(safe.garments.some((g) => g.role === 'insulated_fullbody')).toBe(false);
   });
