@@ -14,7 +14,9 @@ Eier godkjente pakken eksplisitt («kjør»). Alle tre pakker er committet lokal
 
 **Ikke pushet til origin** — venter på eierbeslutning (repo har Codemagic-kobling).
 
-**Neste beslutning:** R4 North-Star-designport (tre prototyper + fem-foreldre-test) som egen godkjent designoppgave, og/eller R5 kanoniske kontrakter / R6 Motor V2 (Fable 5 Extra) etter porten. Ingen av delene er startet.
+**R4 (2026-07-14):** Tre North-Star-prototyper bygget fra låst brief + ekte motor-fixtures (`docs/mocks/north-star/`, commit `c549d8a`). Fable-review + a11y-lead-verifisering utført, alle funn rettet. **Eier valgte retning B «Scenen»** (med C-listeanatomi i Antrekk) — se decision log. Fem-foreldre-testen gjenstår som evidens før R8/R12.
+
+**Pågår:** R5 kanoniske kontrakter + R6 Motor V2 0–24 (Fable 5 Extra) — engine-2-plan Tasks 1–17, én task = én commit.
 
 ## Completed
 

@@ -2,6 +2,22 @@
 
 This log records current product decisions that override older exploratory material.
 
+## 2026-07-14
+
+### North-Star designretning
+
+**Decision:** Retning **B «Scenen»** (atmosfærisk morgenritual) er valgt av eier («Kjør B») som North-Star for redesignet: avataren står i den temperatur-reaktive atmosfæren på Hjem, ytterplaggene som stille orbital-ankre, ett dominant serif-svar, presisjon som liten glass-chip. Retning C sin listeanatomi (hvorfor-chips, redaksjonell «innerst først»-disiplin) tas inn i Antrekk-drillen. Retning A er dokumentert fallback hvis avatar-assetkvaliteten ikke bærer B. Prototyper: `docs/mocks/north-star/`.
+
+**Utestående evidens:** Fem-foreldre-forståelsestesten (alle fem gjengir antrekk + hovedårsak, median ≤ 5 s) gjenstår og kreves fortsatt som dokumentert evidens før avatarproduksjon (R8) og release (R12) — eiers retningsvalg erstatter valg-delen av porten, ikke test-delen.
+
+**Reason:** B er den eneste retningen som forener de to allerede låste signaturene (avatar som identitetsbærer + temperatur-reaktiv atmosfære) til én scene, leder med følelse for målgruppen (den nysgjerrige forelderen), og gir delbare flater for image-first-markedsføringen.
+
+### Avatar-/asset-budsjett (reviderer 2026-07-13-beslutningen)
+
+**Decision:** Den harde grensen på NOK 1 000 for direkte bildegenerering oppheves (eier, 2026-07-14: «Ikke lås deg til 1000kr»). Ny regel: før asset-produksjon (R8) eller annen kostnadsdrivende fase legges en konkret kostnadsplan frem for eier, og **eier godkjenner planen før den overskrider store summer**. Løpende autonom pengebruk følger den stående rammen (≤ 100 kr autonomt, alltid deklarert; over det kreves eksplisitt godkjenning). 24-bilders produksjonsmål og 16-bilders teknisk minimum står uendret som kvalitets-/omfangsramme.
+
+**Reason:** Kvalitet på avatar-assets er bærende for valgt retning B; en for stram hard grense skal ikke tvinge kvalitetsreduksjon, men kostnader skal aldri komme som overraskelse.
+
 ## 2026-07-13
 
 ### Product model
