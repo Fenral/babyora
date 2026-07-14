@@ -160,6 +160,9 @@ export function resolveGarments(
     if (entry.role === 'footwear') {
       const picks = resolveFootwear(intent, entry.rankedMaterials, ageMonths);
       if (picks.length === 0) {
+        // Hete-bånd: barbeint spedbarn / barn i vogn er korrekt (G06/G32) —
+        // tomt fottøy er et gyldig svar, ikke en materialkonflikt.
+        if (HEAT_BANDS.has(intent.tempBand)) continue;
         throw new EngineV2Error(
           'unresolved_material_constraint',
           `Ingen gyldig fottøyvariant for materialene [${entry.rankedMaterials.join(', ')}]`,
