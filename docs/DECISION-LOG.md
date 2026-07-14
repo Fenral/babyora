@@ -4,6 +4,12 @@ This log records current product decisions that override older exploratory mater
 
 ## 2026-07-15
 
+### Omsorgssirkel som dev-only forhåndsvisning (R7 Task 7)
+
+**Decision:** `CareCircle` (barn i sentrum + inntil 4 omsorgspersoner + «+N flere», solid forbindelse = deler / stiplet = ventende invitasjon) legges inn i Familie-roten som en «De som passer»-seksjon, men KUN bak `import.meta.env.DEV` med statiske eksempeldata. Den skjules helt i produksjon (verifisert: prod-bundle uendret) og har en tydelig «Forhåndsvisning — kommer med familiedeling. Ikke aktiv ennå»-caption. Statusspråket er «Deler»/«Venter på svar» — aldri tilstedeværelse, posisjon eller sporing. SVG-klyngen er dekorativ (aria-hidden); rollelisten bærer den tilgjengelige informasjonen.
+
+**Reason:** Familiedeling krever auth/RLS/backend (R9) og er ikke bygget. Planen tillater en dev-only designforhåndsvisning for å låse IA/uttrykk uten å love en funksjon som ikke finnes. Autonomt valg per «kjør gjennom med dokumenterte defaults». Se [[onboarding-forste-anbefaling-for-paywall]].
+
 ### Onboarding viser første anbefaling før paywall (R7 Task 7)
 
 **Decision:** Paywall-teaseren (tidligere onboarding-steg 6, «Se hva Pluss gir deg» → «Prøv 7 dager gratis») fjernes fra onboarding-flyten. Velkomst-steget tar brukeren rett inn i appen, slik at den første ekte anbefalingen på Hjem vises FØR noen paywall. Plus introduseres kontekstuelt inne i appen (eksisterende triggere: imorgen, garderobe_tilpasning, barn_2, forste_vinter), ikke som et pre-verdi-steg.

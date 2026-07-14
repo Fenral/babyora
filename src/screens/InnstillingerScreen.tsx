@@ -62,6 +62,8 @@ import {
 import { requestAppReview, type AppRateResult } from '../lib/feedback/app-rate';
 import { APP_VERSION } from '../lib/app-version';
 import { PaywallDialog } from '../components/PaywallDialog';
+import { CareCircle } from '../components/family/CareCircle';
+import type { Caregiver } from '../components/family/care-circle-model';
 // BottomTabBar er nå global (mounted i App.tsx) — ikke importer/mount her.
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1089,6 +1091,17 @@ function ThemeSegment({ mode, onChange, reducedMotion }: ThemeSegmentProps): Rea
 // InnstillingerScreen
 // ─────────────────────────────────────────────────────────────────────────────
 
+// R7 Task 7 (R9-forhåndsvisning, dev-only): statiske eksempeldata for
+// omsorgssirkelen. Ingen ekte deling skjer — familiedeling krever auth/RLS/
+// backend (R9) og er ikke aktivert. 5 personer → 4 tokens + «+1 flere».
+const CARE_CIRCLE_PREVIEW: readonly Caregiver[] = [
+  { id: 'mor', name: 'Mona', role: 'Mor', status: 'active' },
+  { id: 'far', name: 'Jonas', role: 'Far', status: 'active' },
+  { id: 'beste', name: 'Kari', role: 'Besteforelder', status: 'pending' },
+  { id: 'dag', name: 'Ida', role: 'Dagmamma', status: 'pending' },
+  { id: 'onkel', name: 'Per', role: 'Onkel', status: 'pending' },
+];
+
 export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerScreenProps): ReactElement {
   // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
   // siden BottomTabBar nå mountes globalt i App.tsx.
@@ -1799,6 +1812,29 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
             </li>
           </ul>
         </section>
+
+        {/* DE SOM PASSER — R9-forhåndsvisning, KUN i utvikling (import.meta.env.DEV).
+            Familiedeling krever auth/RLS/backend og er ikke aktivert; seksjonen
+            skjules helt i produksjon. Captionen gjør tydelig at dette ikke er
+            en live-funksjon. */}
+        {import.meta.env.DEV && (
+          <section style={sectionStyle} aria-labelledby="sec-care">
+            <h2 id="sec-care" style={sectionEyebrowStyle}>De som passer</h2>
+            <div style={groupCardStyle}>
+              <p
+                style={{
+                  margin: '0 0 6px',
+                  fontSize: '0.75rem',
+                  color: C.ink500,
+                  lineHeight: 1.4,
+                }}
+              >
+                Forhåndsvisning — kommer med familiedeling. Ikke aktiv ennå.
+              </p>
+              <CareCircle childName={childName} caregivers={CARE_CIRCLE_PREVIEW} />
+            </div>
+          </section>
+        )}
 
         {/* VÆR & STED */}
         <Section eyebrow="Vær & sted" id="sec-vaer">
