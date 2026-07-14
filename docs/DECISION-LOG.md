@@ -4,6 +4,12 @@ This log records current product decisions that override older exploratory mater
 
 ## 2026-07-15
 
+### Paywall verdi-seksjon lover kun leverbare Plus-funksjoner (R7 Task 7)
+
+**Decision:** PaywallDialog får en verdi-seksjon (`PlusExpansionPreview`) som viser Free→Plus som én 500–700ms ekspansjon (instant slutt-tilstand ved reduced-motion). Hvilke løfter som vises styres av `PLUS_FEATURE_AVAILABILITY` i `src/lib/premium/plus-features.ts`: `future_plan`, `automatic_location` og `extra_children` er på (bygget); `family_sharing` (R9) og `personal_calibration` (senere fase) er **av** og vises derfor aldri i paywallen. Når disse funksjonene lander flippes flagget, og en test fanger regresjon.
+
+**Reason:** Paywallen skal aldri love funksjoner som ikke finnes. Familiedeling og kalibrering er ikke bygget, så «Fremover, overalt og sammen»-løftet leder med det som faktisk er leverbart nå, og «sammen» (familie) forblir skjult til R9. Speiler engine-v2 feature-flags-mønsteret. Autonomt valg per «kjør gjennom med dokumenterte defaults». Se [[omsorgssirkel-dev-preview]].
+
 ### Omsorgssirkel som dev-only forhåndsvisning (R7 Task 7)
 
 **Decision:** `CareCircle` (barn i sentrum + inntil 4 omsorgspersoner + «+N flere», solid forbindelse = deler / stiplet = ventende invitasjon) legges inn i Familie-roten som en «De som passer»-seksjon, men KUN bak `import.meta.env.DEV` med statiske eksempeldata. Den skjules helt i produksjon (verifisert: prod-bundle uendret) og har en tydelig «Forhåndsvisning — kommer med familiedeling. Ikke aktiv ennå»-caption. Statusspråket er «Deler»/«Venter på svar» — aldri tilstedeværelse, posisjon eller sporing. SVG-klyngen er dekorativ (aria-hidden); rollelisten bærer den tilgjengelige informasjonen.

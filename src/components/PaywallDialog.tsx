@@ -71,6 +71,7 @@ import {
   computeYearlySavingsPercent,
   formatPlanPrice,
 } from '../lib/premium/paywall-copy';
+import { PlusExpansionPreview } from './paywall/PlusExpansionPreview';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Props — W2 bygger mot denne kontrakten. IKKE avvik.
@@ -776,6 +777,10 @@ export function PaywallDialog({
         </header>
 
         <div style={bodyStyle}>
+          {/* R7 Task 7: verdi-seksjon — Free→Plus-ekspansjon. Rendrer kun
+             leverbare løfter (familie/kalibrering skjult til de er bygget). */}
+          <PlusExpansionPreview reducedMotion={reducedMotion} />
+
           <fieldset style={fieldsetStyle}>
             <legend style={legendStyle}>{PAYWALL_COPY.legend}</legend>
             {PLAN_ORDER.map((key) => {
