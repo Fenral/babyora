@@ -1,0 +1,199 @@
+
+> babyora@0.1.0 lint
+> eslint .
+
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\scripts\garment-audit.workflow.js
+  195:1  error  Parsing error: 'return' outside of function
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\scripts\generate-rules-docs.ts
+  14:21  error  'bandForTemp' is defined but never used        @typescript-eslint/no-unused-vars
+  20:7   error  'BASE_URL' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\components\WeatherLottie.tsx
+  66:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\components\WeatherLottie.tsx:66:5
+  64 |   // Vis fallback igjen hver gang kondisjon byttes til ny animasjon.
+  65 |   useEffect(() => {
+> 66 |     setShowFallback(true);
+     |     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  67 |   }, [condition]);
+  68 |
+  69 |   // Subscribe på dotLottie load/error-events: skjul fallback når animasjonen  react-hooks/set-state-in-effect
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\hooks\useAutoLocationRefresh.ts
+  37:3  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\hooks\useAutoLocationRefresh.ts:37:3
+  35 |   const { active, needsOnboarding, updateChild } = useChildren();
+  36 |   const activeIdRef = useRef(active.id);
+> 37 |   activeIdRef.current = active.id;
+     |   ^^^^^^^^^^^^^^^^^^^ Cannot update ref during render
+  38 |   const lastRunRef = useRef(0);
+  39 |
+  40 |   useEffect(() => {  react-hooks/refs
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\hooks\useCountUp.ts
+  52:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\hooks\useCountUp.ts:52:7
+  50 |
+  51 |     if (prefersReducedMotion()) {
+> 52 |       setValue(target);
+     |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  53 |       fromRef.current = target;
+  54 |       targetRef.current = target;
+  55 |       return;  react-hooks/set-state-in-effect
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\hooks\useOverrides.ts
+  78:18  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\hooks\useOverrides.ts:78:18
+  76 |   // Re-load hvis childId endrer seg
+  77 |   useEffect(() => {
+> 78 |     if (childId) setState(load(childId));
+     |                  ^^^^^^^^ Avoid calling setState() directly within an effect
+  79 |     else setState({});
+  80 |   }, [childId]);
+  81 |  react-hooks/set-state-in-effect
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\hooks\useTooltipSeen.ts
+  38:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\hooks\useTooltipSeen.ts:38:5
+  36 |
+  37 |   useEffect(() => {
+> 38 |     setSeen(readSeen(key));
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  39 |   }, [key]);
+  40 |
+  41 |   const markSeen = useCallback(() => {  react-hooks/set-state-in-effect
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\hooks\useWeather.ts
+  46:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\hooks\useWeather.ts:46:5
+  44 |   useEffect(() => {
+  45 |     let cancelled = false;
+> 46 |     setState((s) => ({ ...s, status: 'loading', error: null }));
+     |     ^^^^^^^^ Avoid calling setState() directly within an effect
+  47 |
+  48 |     fetchForecast(lat, lon)
+  49 |       .then((forecast) => {  react-hooks/set-state-in-effect
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\lib\garments\ownership.ts
+  75:3  error  '_isPremium' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\screens\FinnAntrekkScreen.tsx
+  297:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\screens\FinnAntrekkScreen.tsx:297:7
+  295 |     const now = weather.now;
+  296 |     if (typeof now.tempC === 'number') {
+> 297 |       setTempC(Math.round(now.tempC));
+      |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  298 |     }
+  299 |     if (typeof now.windMs === 'number') {
+  300 |       setWindMs(Math.round(now.windMs));  react-hooks/set-state-in-effect
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\screens\HjemScreen.tsx
+   79:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  218:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\screens\InnstillingerScreen.tsx
+  4319:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\screens\InnstillingerScreen.tsx:4319:7
+  4317 |   useEffect(() => {
+  4318 |     if (open) {
+> 4319 |       setName('');
+       |       ^^^^^^^ Avoid calling setState() directly within an effect
+  4320 |       setDob('');
+  4321 |       setCity('');
+  4322 |       setTouched(false);  react-hooks/set-state-in-effect
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\screens\PaakledningScreen.tsx
+  345:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  357:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  382:7  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\screens\PaakledningScreen.tsx:382:7
+  380 |
+  381 |     if (instant) {
+> 382 |       setLoaderHidden(true);
+      |       ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  383 |       setChipsIn(true);
+  384 |       setRevealed(true);
+  385 |       setAvatarFrame(nodeFrames[N - 1]);  react-hooks/set-state-in-effect
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\screens\UkeScreen.tsx
+  344:5  error  Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `active`, but the source dependencies were [active?.dob]. Inferred less specific property than source.
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\screens\UkeScreen.tsx:344:5
+  342 |
+  343 |   const ageMonths = useMemo(
+> 344 |     () => (active?.dob ? dobToAgeMonths(active.dob) : 12),
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Could not preserve existing manual memoization
+  345 |     [active?.dob],
+  346 |   );
+  347 |  react-hooks/preserve-manual-memoization
+
+C:\Users\SkotvoldSivertSende\Documents\Babyora\src\state\children-store.tsx
+  236:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+✖ 19 problems (17 errors, 2 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+
