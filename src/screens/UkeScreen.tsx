@@ -49,6 +49,9 @@ import type { TabKey } from '../types/nav';
 import { useAccess } from '../lib/premium/use-access';
 import { shouldShowTenDayTeaser } from '../lib/premium/gating';
 import { PaywallDialog } from '../components/PaywallDialog';
+import { deriveChangeEvents } from '../lib/planning/change-events';
+import { buildRailRows } from '../lib/planning/rail-rows';
+import { PlanChangeRail } from '../components/planning/PlanChangeRail';
 
 // Elverum (default ved ingen aktiv barn-lokasjon)
 const DEFAULT_LAT = 60.8867;
@@ -473,11 +476,44 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
     });
   }, [phases, swaps]);
 
+  // R7 Task 5: «Endringer i dag»-rail — kun de meningsfulle plaggendringene
+  // gjennom dagens tidsslots. Additivt over time-for-time (rører ikke den
+  // premium-gatede 10-dagers-flyten). Fingerprint = ordnede plagg-labels.
+  const todayChangeRows = useMemo(() => {
+    if (tab !== 'today') return [];
+    const points = resolvedPhases
+      .filter((p) => p.recommendation)
+      .map((p) => {
+        const rec = p.recommendation!;
+        const ordered = rec.layers.filter((l) => l.category !== 'utstyr').flatMap((l) => l.items);
+        const equipment = rec.layers.find((l) => l.category === 'utstyr')?.items ?? [];
+        return {
+          hour: p.hour,
+          fingerprint: [...ordered, ...equipment].join('|'),
+          orderedGarments: ordered,
+          equipment,
+          feelsLikeC: p.tempC ?? 0,
+          symbolCode: p.symbolCode,
+        };
+      });
+    if (points.length < 2) return [];
+    const events = deriveChangeEvents(points);
+    return buildRailRows(points[0].hour, points[points.length - 1].hour, events);
+  }, [tab, resolvedPhases]);
+
   const isLoading = weather.status === 'loading';
   const isError = weather.status === 'error';
 
   // F81.5-W2 (Flate 1): teaser-modus for 10-dagers-tab, ikke-Premium.
   const showTenDayTeaser = shouldShowTenDayTeaser(tab, isPremium);
+
+  const changeRailWrapStyle: CSSProperties = {
+    padding: '4px 4px 16px', marginBottom: 8, borderBottom: `1px solid ${TOKENS.ink100}`,
+  };
+  const changeRailHeadStyle: CSSProperties = {
+    fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+    color: TOKENS.ink500, margin: '0 0 10px 2px',
+  };
 
   // F80c: Sone 1 — data-temp fra dagens feels-like (weather.now), samme
   // kilde/terskler som HjemScreen. Faller tilbake til 'mild' mens weather
@@ -1109,6 +1145,15 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
                 >
                   Prøv 7 dager gratis
                 </button>
+              </div>
+            )}
+
+            {/* R7 Task 5: endringsrail — kun meningsfulle plaggendringer i dag.
+                Vises over time-for-time som svaret på «hva endrer seg?». */}
+            {tab === 'today' && !showTenDayTeaser && todayChangeRows.length > 0 && (
+              <div style={changeRailWrapStyle}>
+                <h3 style={changeRailHeadStyle}>Endringer i dag</h3>
+                <PlanChangeRail rows={todayChangeRows} />
               </div>
             )}
 
