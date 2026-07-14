@@ -1,0 +1,225 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Motor 2.0 legacy-adapter > snapshot: bilstol 1`] = `
+{
+  "activity": "vogn",
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "tykt ullsett",
+        "ullstrømper",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "ull-mellomlag",
+      ],
+    },
+    {
+      "category": "yttertoy",
+      "items": [
+        "kjøredress",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "balaklava",
+        "tykke votter",
+      ],
+    },
+    {
+      "category": "utstyr",
+      "items": [
+        "vognpose",
+        "kjørepose",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "tempBand": "kald",
+}
+`;
+
+exports[`Motor 2.0 legacy-adapter > snapshot: frost i vogn 1`] = `
+{
+  "activity": "vogn",
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "tykt ullsett",
+        "ullstrømper",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "tykt ull-mellomlag",
+      ],
+    },
+    {
+      "category": "yttertoy",
+      "items": [
+        "vinterkjøredress",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "balaklava",
+        "votter dun",
+      ],
+    },
+    {
+      "category": "utstyr",
+      "items": [
+        "vognpose",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "tempBand": "frost",
+}
+`;
+
+exports[`Motor 2.0 legacy-adapter > snapshot: mild dag 1`] = `
+{
+  "activity": "utelek",
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "teknisk undertøysett",
+        "tekniske sokker",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "solhatt",
+        "sko",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "tempBand": "mild",
+}
+`;
+
+exports[`Motor 2.0 legacy-adapter > snapshot: regn i vogn 1`] = `
+{
+  "activity": "vogn",
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "tykt ullsett",
+        "ullstrømper",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "ull-mellomlag",
+      ],
+    },
+    {
+      "category": "yttertoy",
+      "items": [
+        "kjøredress",
+        "regndress",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "balaklava",
+        "tykke votter",
+      ],
+    },
+    {
+      "category": "utstyr",
+      "items": [
+        "regntrekk på vognen",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "tempBand": "kjolig",
+}
+`;
+
+exports[`Motor 2.0 legacy-adapter > snapshot: ullfritt 1`] = `
+{
+  "activity": "vogn",
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "tykt teknisk undertøysett",
+        "tekniske sokker",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "fleecesett",
+      ],
+    },
+    {
+      "category": "yttertoy",
+      "items": [
+        "vinterkjøredress",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "vindtett balaklava",
+        "votter dun",
+      ],
+    },
+    {
+      "category": "utstyr",
+      "items": [
+        "vognpose",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "tempBand": "frost",
+}
+`;
+
+exports[`Motor 2.0 legacy-adapter > snapshot: varm dag 1`] = `
+{
+  "activity": "utelek",
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "t-skjorte",
+        "shorts",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "solhatt",
+        "sandaler",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "tempBand": "tropisk",
+}
+`;
