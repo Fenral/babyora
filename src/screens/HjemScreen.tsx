@@ -49,7 +49,8 @@ import { useWeather } from '../hooks/useWeather';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { recommend } from '../lib/wool-layers/recommend';
-import type { Recommendation } from '../lib/wool-layers/types';
+import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
+import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 // Gamle A1-A7-PNG-ene er byttet ut med clay-verdenen fra F79/F80.
 // tier/headwear-logikken GJENBRUKES for å velge riktig clay-antrekk:
@@ -305,43 +306,47 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     [active.dob, needsOnboarding],
   );
 
-  const recommendation = useMemo<Recommendation | null>(() => {
+  // R2 (2026-07-14): motor-input som eget memo slik at samme input kan gis
+  // videre til den endelige sikkerhetsgrensen ved session-swaps.
+  const engineInput = useMemo<RecommendInput | null>(() => {
     if (!weather.now) return null;
+    return {
+      weather: {
+        tempC: weather.now.tempC,
+        feelsLikeC: weather.now.feelsLikeC,
+        windMs: weather.now.windMs,
+        precipMmH: weather.now.precipMmH,
+        symbolCode: weather.now.symbolCode,
+      },
+      child: { ageMonths },
+      activity,
+      ...(activity === 'vogn' ? { vognMode } : {}),
+    };
+  }, [weather.now, ageMonths, activity, vognMode]);
+
+  const recommendation = useMemo<Recommendation | null>(() => {
+    if (!engineInput) return null;
     try {
-      return recommend({
-        weather: {
-          tempC: weather.now.tempC,
-          feelsLikeC: weather.now.feelsLikeC,
-          windMs: weather.now.windMs,
-          precipMmH: weather.now.precipMmH,
-          symbolCode: weather.now.symbolCode,
-        },
-        child: { ageMonths },
-        activity,
-        ...(activity === 'vogn' ? { vognMode } : {}),
-      });
+      return recommend(engineInput);
     } catch {
       return null;
     }
-  }, [weather.now, ageMonths, activity, vognMode]);
+  }, [engineInput]);
 
   /**
    * Swap-resolved recommendation: items erstattes per session-swap-store.
    * Brukt av avatar-tier-utvelgelse, lag-tall og popup-context, slik at
    * Sivert ser umiddelbar konsistens mellom valg, avatar og «N lag».
+   *
+   * R2 (2026-07-14): skjermen konstruerer ALDRI trusted Recommendation ved
+   * lokal array-mapping — swaps går gjennom applySwapsFinalized, der den
+   * endelige sikkerhetsgrensen (conflicts → soft-blocks → hard-safety) har
+   * siste ord om hva en swap kan gjeninnføre.
    */
   const resolvedRecommendation = useMemo<Recommendation | null>(() => {
-    if (!recommendation) return null;
-    const hasSwaps = Object.keys(swaps).length > 0;
-    if (!hasSwaps) return recommendation;
-    return {
-      ...recommendation,
-      layers: recommendation.layers.map((l) => ({
-        ...l,
-        items: l.items.map((item) => swaps[item] ?? item),
-      })),
-    };
-  }, [recommendation, swaps]);
+    if (!recommendation || !engineInput) return recommendation;
+    return applySwapsFinalized(engineInput, recommendation, swaps);
+  }, [recommendation, engineInput, swaps]);
 
   const handleActivityChange = (next: Activity) => {
     if (next === activity) return;

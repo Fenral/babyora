@@ -38,7 +38,8 @@ import { useNativeSettings } from '../hooks/useNativeSettings';
 import { Skeleton } from '../components/Skeleton';
 import { useSwapOverride } from '../state/swap-override-store';
 import { recommend } from '../lib/wool-layers/recommend';
-import type { Recommendation } from '../lib/wool-layers/types';
+import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
+import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import type {
   WeatherDayAtHour,
@@ -291,6 +292,9 @@ type Phase = {
   symbolCode: string;
   /** Full recommendation for fasen — brukt av band-count. */
   recommendation: Recommendation | null;
+  /** R2 (2026-07-14): motor-input fasen ble beregnet fra — kreves av den
+   *  endelige sikkerhetsgrensen når session-swaps anvendes. */
+  engineInput: RecommendInput | null;
 };
 
 type Props = {
@@ -384,9 +388,10 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
             band: bandForCount(0),
             symbolCode: 'cloudy',
             recommendation: null,
+            engineInput: null,
           };
         }
-        const rec = recommend({
+        const engineInput: RecommendInput = {
           weather: {
             tempC: point.tempC,
             feelsLikeC: point.feelsLikeC,
@@ -397,7 +402,8 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
           child: { ageMonths },
           activity,
           ...(activity === 'vogn' ? { vognMode } : {}),
-        });
+        };
+        const rec = recommend(engineInput);
         const total = rec.layers.reduce((sum, l) => sum + l.items.length, 0);
         return {
           hour,
@@ -407,6 +413,7 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
           band: bandForCount(total),
           symbolCode: point.symbolCode,
           recommendation: rec,
+          engineInput,
         };
       });
     }
@@ -415,7 +422,7 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
     if (weather.dailyAtHour.length === 0) return [];
     return weather.dailyAtHour.slice(0, 10).map((day: WeatherDayAtHour) => {
       const dayIsToday = isSameDay(day.date, today);
-      const rec = recommend({
+      const engineInput: RecommendInput = {
         weather: {
           tempC: day.tempC,
           feelsLikeC: day.feelsLikeC,
@@ -426,7 +433,8 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
         child: { ageMonths },
         activity,
         ...(activity === 'vogn' ? { vognMode } : {}),
-      });
+      };
+      const rec = recommend(engineInput);
       const total = rec.layers.reduce((sum, l) => sum + l.items.length, 0);
       return {
         hour: day.refHour,
@@ -436,6 +444,7 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
         band: bandForCount(total),
         symbolCode: day.symbolCode,
         recommendation: rec,
+        engineInput,
       };
     });
   }, [tab, weather.status, weather.hourly, weather.dailyAtHour, todayHourSlots, ageMonths, today, activity, vognMode]);
@@ -448,14 +457,10 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
     const hasSwaps = Object.keys(swaps).length > 0;
     if (!hasSwaps) return phases;
     return phases.map((p) => {
-      if (!p.recommendation) return p;
-      const swappedRec: Recommendation = {
-        ...p.recommendation,
-        layers: p.recommendation.layers.map((l) => ({
-          ...l,
-          items: l.items.map((item) => swaps[item] ?? item),
-        })),
-      };
+      if (!p.recommendation || !p.engineInput) return p;
+      // R2 (2026-07-14): swaps går gjennom den endelige sikkerhetsgrensen —
+      // aldri lokal array-mapping av en trusted Recommendation.
+      const swappedRec = applySwapsFinalized(p.engineInput, p.recommendation, swaps);
       const total = swappedRec.layers.reduce((sum, l) => sum + l.items.length, 0);
       return {
         ...p,

@@ -1,0 +1,209 @@
+
+ RUN  v4.1.8 C:/Users/SkotvoldSivertSende/Documents/Babyora
+
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts (27 tests | 11 failed) 31ms
+     × G1: override gjeninnfører ikke vinterkjøredress ved bilstol (HB-9) 7ms
+     × G2: override gjeninnfører ikke hodeplagg under søvn (HB-1) 1ms
+     × G3: override legger ikke teppe ved sovepose under søvn (HB-2/CK-1) 1ms
+     × G4: override gjeninnfører ikke vektede produkter (HB-4) 1ms
+     × G5: override stabler ikke dunteppe over varmepose i vogn (CK-5) 1ms
+     × G6: override legger ikke teppe over kalesjen ved varm vogn (HB-8) 1ms
+     × G7: override reintroduserer ikke lag ved romtemp ≥ 26 °C søvn (SB-3) 1ms
+     × G8c: kalibrert output passerer grensen uendret (finalize er no-op) 5ms
+     × G9a: session-swap som introduserer HB/CK-brudd fjernes i finalisert output 3ms
+     × G9a: ufarlig swap bevares i finalisert output 1ms
+     × G11: grensen er idempotent på mutert output (finalize ∘ finalize = finalize) 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/wool-layers/__tests__/finalize-safety.test.ts > R2 guardrail-matrise — overrides mot endelig sikkerhetsgrense > G1: override gjeninnfører ikke vinterkjøredress ved bilstol (HB-9)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts:66:70
+     64|       { overrides: { yttertoy: ['vinterkjøredress'] } },
+     65|     );
+     66|     expect(allItems(rec).some((i) => THICK_WINTER_OUTER_RE.test(i))).t…
+       |                                                                      ^
+     67|     expect(hasFlag(rec, 'HB-9')).toBe(true);
+     68|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  src/lib/wool-layers/__tests__/finalize-safety.test.ts > R2 guardrail-matrise — overrides mot endelig sikkerhetsgrense > G2: override gjeninnfører ikke hodeplagg under søvn (HB-1)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts:75:62
+     73|       { overrides: { ekstra: ['lue'] } },
+     74|     );
+     75|     expect(allItems(rec).some((i) => HEAD_COVER_RE.test(i))).toBe(fals…
+       |                                                              ^
+     76|     expect(hasFlag(rec, 'HB-1')).toBe(true);
+     77|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  src/lib/wool-layers/__tests__/finalize-safety.test.ts > R2 guardrail-matrise — overrides mot endelig sikkerhetsgrense > G3: override legger ikke teppe ved sovepose under søvn (HB-2/CK-1)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts:86:51
+     84|     const items = allItems(rec);
+     85|     expect(items.some((i) => /^sovepose/i.test(i))).toBe(true);
+     86|     expect(items.some((i) => BLANKET_RE.test(i))).toBe(false);
+       |                                                   ^
+     87|   });
+     88|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  src/lib/wool-layers/__tests__/finalize-safety.test.ts > R2 guardrail-matrise — overrides mot endelig sikkerhetsgrense > G4: override gjeninnfører ikke vektede produkter (HB-4)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts:94:60
+     92|       { overrides: { ekstra: ['tyngdeteppe'] } },
+     93|     );
+     94|     expect(allItems(rec).some((i) => WEIGHTED_RE.test(i))).toBe(false);
+       |                                                            ^
+     95|     expect(hasFlag(rec, 'HB-4')).toBe(true);
+     96|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ FAIL  src/lib/wool-layers/__tests__/finalize-safety.test.ts > R2 guardrail-matrise — overrides mot endelig sikkerhetsgrense > G5: override stabler ikke dunteppe over varmepose i vogn (CK-5)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts:105:53
+    103|     const items = allItems(rec);
+    104|     expect(items.some((i) => /varmepose/i.test(i))).toBe(true);
+    105|     expect(items.some((i) => /^dunteppe/i.test(i))).toBe(false);
+       |                                                     ^
+    106|   });
+    107|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+
+ FAIL  src/lib/wool-layers/__tests__/finalize-safety.test.ts > R2 guardrail-matrise — overrides mot endelig sikkerhetsgrense > G6: override legger ikke teppe over kalesjen ved varm vogn (HB-8)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts:113:57
+    111|       { overrides: { utstyr: ['tynt teppe over kalesjen'] } },
+    112|     );
+    113|     expect(allItems(rec).some((i) => /teppe/i.test(i))).toBe(false);
+       |                                                         ^
+    114|     expect(hasFlag(rec, 'HB-8')).toBe(true);
+    115|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+
+ FAIL  src/lib/wool-layers/__tests__/finalize-safety.test.ts > R2 guardrail-matrise — overrides mot endelig sikkerhetsgrense > G7: override reintroduserer ikke lag ved romtemp ≥ 26 °C søvn (SB-3)
+AssertionError: expected [ 'tynn ullbody', 'ullongs' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "tynn ullbody",
++   "ullongs",
++ ]
+
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts:122:39
+    120|       { overrides: { mellomlag: ['tynn ullbody', 'ullongs'] } },
+    121|     );
+    122|     expect(itemsIn(rec, 'mellomlag')).toEqual([]);
+       |                                       ^
+    123|     expect(itemsIn(rec, 'innerst')).toContain('kortermet body');
+    124|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+
+ FAIL  src/lib/wool-layers/__tests__/finalize-safety.test.ts > R2 guardrail-matrise — endelig grense (finalize-safety) > G8c: kalibrert output passerer grensen uendret (finalize er no-op)
+Error: Cannot find module '/src/lib/wool-layers/finalize-safety.js' imported from C:/Users/SkotvoldSivertSende/Documents/Babyora/src/lib/wool-layers/__tests__/finalize-safety.test.ts
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts:180:32
+    178| describe('R2 guardrail-matrise — endelig grense (finalize-safety)', ()…
+    179|   it('G8c: kalibrert output passerer grensen uendret (finalize er no-o…
+    180|     const { finalizeSafety } = await import(FINALIZE_MODULE);
+       |                                ^
+    181|     const inputs: RecommendInput[] = [
+    182|       makeInput({ activity: 'utelek', weather: { tempC: -4, feelsLikeC…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+
+ FAIL  src/lib/wool-layers/__tests__/finalize-safety.test.ts > R2 guardrail-matrise — endelig grense (finalize-safety) > G9a: session-swap som introduserer HB/CK-brudd fjernes i finalisert output
+Error: Cannot find module '/src/lib/wool-layers/finalize-safety.js' imported from C:/Users/SkotvoldSivertSende/Documents/Babyora/src/lib/wool-layers/__tests__/finalize-safety.test.ts
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts:194:37
+    192|
+    193|   it('G9a: session-swap som introduserer HB/CK-brudd fjernes i finalis…
+    194|     const { applySwapsFinalized } = await import(FINALIZE_MODULE);
+       |                                     ^
+    195|     const input = makeInput({ activity: 'soevn', weather: { tempC: 18,…
+    196|     const rec = recommend(input);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+
+ FAIL  src/lib/wool-layers/__tests__/finalize-safety.test.ts > R2 guardrail-matrise — endelig grense (finalize-safety) > G9a: ufarlig swap bevares i finalisert output
+Error: Cannot find module '/src/lib/wool-layers/finalize-safety.js' imported from C:/Users/SkotvoldSivertSende/Documents/Babyora/src/lib/wool-layers/__tests__/finalize-safety.test.ts
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts:205:37
+    203|
+    204|   it('G9a: ufarlig swap bevares i finalisert output', async () => {
+    205|     const { applySwapsFinalized } = await import(FINALIZE_MODULE);
+       |                                     ^
+    206|     const input = makeInput({ activity: 'utelek', weather: { tempC: 4,…
+    207|     const rec = recommend(input);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+
+ FAIL  src/lib/wool-layers/__tests__/finalize-safety.test.ts > R2 guardrail-matrise — endelig grense (finalize-safety) > G11: grensen er idempotent på mutert output (finalize ∘ finalize = finalize)
+Error: Cannot find module '/src/lib/wool-layers/finalize-safety.js' imported from C:/Users/SkotvoldSivertSende/Documents/Babyora/src/lib/wool-layers/__tests__/finalize-safety.test.ts
+ ❯ src/lib/wool-layers/__tests__/finalize-safety.test.ts:215:32
+    213|
+    214|   it('G11: grensen er idempotent på mutert output (finalize ∘ finalize…
+    215|     const { finalizeSafety } = await import(FINALIZE_MODULE);
+       |                                ^
+    216|     const cases: Array<{ input: RecommendInput; overrides: Record<stri…
+    217|       { input: makeInput({ context: { bilstol: true } }), overrides: {…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
+
+
+  Snapshots  12 written
+ Test Files  1 failed (1)
+      Tests  11 failed | 16 passed (27)
+   Start at  12:54:13
+   Duration  670ms (transform 185ms, setup 0ms, import 217ms, tests 31ms, environment 0ms)
+

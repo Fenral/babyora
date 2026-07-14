@@ -1,0 +1,46 @@
+=== G9b grep: lokal swaps-mapping i skjermer/komponenter ===
+(0 treff — G9b JA)
+
+=== Guardrail-matrise ===
+      Tests  27 passed (27)
+   Start at  13:03:54
+   Duration  424ms (transform 144ms, setup 0ms, import 174ms, tests 17ms, environment 0ms)
+
+
+=== Full suite ===
+      Tests  249 passed (249)
+   Start at  13:03:56
+   Duration  1.55s (transform 2.23s, setup 0ms, import 3.71s, tests 282ms, environment 4ms)
+
+
+=== Audit ===
+      Tests  19 passed (19)
+   Start at  13:03:58
+   Duration  745ms (transform 331ms, setup 0ms, import 1.22s, tests 38ms, environment 1ms)
+
+=== Build ===
+  Type '{ tempC: number; feelsLikeC: number; }' is missing the following properties from type 'WeatherInput': windMs, precipMmH
+src/lib/wool-layers/__tests__/finalize-safety.test.ts(253,56): error TS2322: Type '{ tempC: number; feelsLikeC: number; }' is not assignable to type 'WeatherInput & Partial<WeatherInput>'.
+  Type '{ tempC: number; feelsLikeC: number; }' is missing the following properties from type 'WeatherInput': windMs, precipMmH
+
+=== Lint-delta ===
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+
+=== Build (re-run etter test-type-fiks) ===
+dist/bare/assets/index-BXBewTtp.js  268.80 kB │ gzip: 83.43 kB
+
+[32m✓ built in 144ms[39m
+
+=== Lint-delta (fullstatus) ===
+  345:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  357:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+✖ 19 problems (17 errors, 2 warnings)
+
+=== Guardrail-matrise (re-run etter type-fiks) ===
+   Start at  13:05:24
+   Duration  397ms (transform 115ms, setup 0ms, import 154ms, tests 26ms, environment 0ms)
+
+ Test Files  1 passed (1)
+      Tests  27 passed (27)
+ Test Files  28 passed (28)
+      Tests  249 passed (249)

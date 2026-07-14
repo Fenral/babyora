@@ -138,10 +138,17 @@ export function applySoftBlocks(
   }
 
   // SB-5: Peak overheating-vindu 7-9 mnd
+  // R2 (2026-07-14): apply-once-vakt keyet på notatsporet. SB-5 er
+  // «reduser med ett» og dermed ikke-idempotent — uten vakten ville den
+  // endelige sikkerhetsgrensen (finalize-safety.ts) fjernet ETT mellomlag-
+  // item til per kjøring. Notatet pushes ved første anvendelse og bæres
+  // gjennom pipelinen, så vakten endrer ingen førstegangs-adferd.
+  const SB5_MSG = '7–9 mnd produserer mest kroppsvarme — færre lag enn vanlig.';
   if (
     input.child.ageMonths >= 7
     && input.child.ageMonths <= 9
     && input.weather.feelsLikeC >= 22
+    && !notes.some((n) => n.message === SB5_MSG)
   ) {
     // Fjern toppmest insulasjon: mellomlag eller dunteppe/varmepose lett
     if (!removeFirstMatching(layers, [DUNTEPPE_RE, VARMEPOSE_LETT_RE])) {
@@ -153,7 +160,7 @@ export function applySoftBlocks(
         }
       }
     }
-    const msg = '7–9 mnd produserer mest kroppsvarme — færre lag enn vanlig.';
+    const msg = SB5_MSG;
     pushNote(notes, 'overoppheting', msg);
     // F28.24 V0-runde 4: SB-5 forklarer hvorfor motoren reduserte lag for
     // 7-9 mnd. Informasjon er ekte men ER engine-splaining på samme måte

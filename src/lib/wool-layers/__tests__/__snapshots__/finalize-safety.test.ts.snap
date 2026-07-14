@@ -1,0 +1,410 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: baeresele kald innerJakke — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "tykt ullsett",
+        "ullsokker",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "ull-mellomlag",
+      ],
+    },
+    {
+      "category": "yttertoy",
+      "items": [],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "lue m/ ull",
+        "votter",
+        "halsedisse",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "summary": "Bæresele (-5 °C føles): tykt ullsett, ullsokker • ull-mellomlag • lue m/ ull, votter, halsedisse",
+}
+`;
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: soevn kjølig rom — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "langermet body",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "tynn pyjamas",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "sovepose 2.5 TOG",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "summary": "Søvn (17 °C romtemp): langermet body • tynn pyjamas • sovepose 2.5 TOG",
+}
+`;
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: soevn normalt rom — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "langermet body",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "tynn pyjamas",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "sovepose 2.5 TOG",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "summary": "Søvn (20 °C romtemp): langermet body • tynn pyjamas • sovepose 2.5 TOG",
+}
+`;
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: soevn varmt rom — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [
+    "CK-3",
+    "SB-3",
+  ],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "kortermet body",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "sovepose 0.5 TOG",
+      ],
+    },
+  ],
+  "severity": "HIGH",
+  "summary": "Søvn (25 °C romtemp): kortermet body • sovepose 0.5 TOG",
+}
+`;
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: utelek mild — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "tynt ullsett",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "tynt ull-mellomlag",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "tynn lue",
+        "tøffel-sko",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "summary": "Utelek (13 °C føles): tynt ullsett • tynt ull-mellomlag • tynn lue, tøffel-sko",
+}
+`;
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: utelek peak-overheating 8mnd varm — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [
+    "SB-5",
+  ],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "t-skjorte",
+        "shorts",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "solhatt",
+      ],
+    },
+  ],
+  "severity": "MEDIUM",
+  "summary": "Utelek (23 °C føles): t-skjorte, shorts • solhatt",
+}
+`;
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: utelek streng frost — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [
+    "SB-8",
+  ],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "to ullsett oppå hverandre",
+        "ullsokker",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "tykt ull-mellomlag",
+      ],
+    },
+    {
+      "category": "yttertoy",
+      "items": [
+        "isolert vinterdress",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "balaklava",
+        "votter dun",
+        "halsedisse",
+        "tykke ullsokker (vinterdress dekker)",
+        "ansiktskrem",
+      ],
+    },
+  ],
+  "severity": "MEDIUM",
+  "summary": "Utelek (-21 °C føles): to ullsett oppå hverandre, ullsokker • tykt ull-mellomlag • isolert vinterdress • balaklava, votter dun, halsedisse, tykke ullsokker (vinterdress dekker), ansiktskrem",
+}
+`;
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: vogn frost — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [
+    "SB-8",
+  ],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "to ullsett oppå hverandre",
+        "tykke ullstrømper",
+        "ullsokker",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "ull-jakke",
+        "ull-bukse",
+      ],
+    },
+    {
+      "category": "yttertoy",
+      "items": [
+        "isolert vinterkjøredress",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "balaklava",
+        "votter dun",
+        "varmepose dun",
+        "saueskinn i vogn",
+        "ansiktskrem",
+      ],
+    },
+    {
+      "category": "utstyr",
+      "items": [
+        "vognpose",
+      ],
+    },
+  ],
+  "severity": "MEDIUM",
+  "summary": "Vogn (-16 °C føles): to ullsett oppå hverandre, tykke ullstrømper, ullsokker • ull-jakke, ull-bukse • isolert vinterkjøredress • balaklava, votter dun, varmepose dun, saueskinn i vogn, ansiktskrem • vognpose",
+}
+`;
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: vogn kald — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "tykt ullsett",
+        "ullstrømper",
+        "ullsokker",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "ull-mellomlag",
+        "ull-jakke",
+      ],
+    },
+    {
+      "category": "yttertoy",
+      "items": [
+        "vinterkjøredress",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "lue m/ ull",
+        "tykke votter",
+        "halsedisse",
+        "varmepose dun",
+        "saueskinn i vogn",
+      ],
+    },
+    {
+      "category": "utstyr",
+      "items": [
+        "vognpose",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "summary": "Vogn (-6 °C føles): tykt ullsett, ullstrømper, ullsokker • ull-mellomlag, ull-jakke • vinterkjøredress • lue m/ ull, tykke votter, halsedisse, varmepose dun, saueskinn i vogn • vognpose",
+}
+`;
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: vogn mild regn — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "tynt ullsett",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "ull-mellomlag",
+      ],
+    },
+    {
+      "category": "yttertoy",
+      "items": [
+        "kjøredress",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "lue",
+        "tynne votter",
+        "varmepose",
+      ],
+    },
+    {
+      "category": "utstyr",
+      "items": [
+        "regntrekk på vognen",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "summary": "Vogn (8 °C føles): tynt ullsett • ull-mellomlag • kjøredress • lue, tynne votter, varmepose • regntrekk på vognen",
+}
+`;
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: vogn sover kjølig — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "langermet ullbody",
+        "ullsokker",
+      ],
+    },
+    {
+      "category": "mellomlag",
+      "items": [
+        "ull-pyjamas",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "sovepose 3.5 TOG",
+      ],
+    },
+    {
+      "category": "utstyr",
+      "items": [
+        "vognpose",
+      ],
+    },
+  ],
+  "severity": "NONE",
+  "summary": "Vogn (sover) (4 °C føles): langermet ullbody, ullsokker • ull-pyjamas • sovepose 3.5 TOG • vognpose",
+}
+`;
+
+exports[`R2 guardrail-matrise — G10 uendret adferd uten mutasjoner > G10: vogn varm — uendret uten overrides/kalibrering/swaps 1`] = `
+{
+  "flagCodes": [
+    "HB-8",
+    "SB-6",
+  ],
+  "layers": [
+    {
+      "category": "innerst",
+      "items": [
+        "kortermet ullbody",
+      ],
+    },
+    {
+      "category": "ekstra",
+      "items": [
+        "solhatt",
+      ],
+    },
+  ],
+  "severity": "CRITICAL",
+  "summary": "Vogn (24 °C føles): kortermet ullbody • solhatt",
+}
+`;

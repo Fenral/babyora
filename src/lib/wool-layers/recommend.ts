@@ -2,6 +2,7 @@ import { applyModifiers } from './modifiers.js';
 import { applyConflicts } from './conflicts.js';
 import { applySoftBlocks } from './softBlocks.js';
 import { applySafety } from './safety.js';
+import { finalizeSafety } from './finalize-safety.js';
 import type { SafetyFlag, Severity } from './safety.js';
 import { bandForTemp, baseTable } from './tables.js';
 import type { LayerOverrides, Recommendation, RecommendInput } from './types.js';
@@ -72,6 +73,9 @@ export function recommend(
   // B-1 (2026-06-12): bruker-overrides etter safety. Bevarer kategori-rekkefølge
   // og fjerner kategori om override er tom array.
   let finalLayers = safe.layers;
+  let finalNotes = safe.notes;
+  let finalFlags = allFlags;
+  const hasOverrides = options?.overrides !== undefined;
   if (options?.overrides) {
     finalLayers = applyOverrides(safe.layers, options.overrides);
   }
@@ -84,6 +88,18 @@ export function recommend(
     finalLayers = applyCalibration(finalLayers, input.childCalibration, input);
   }
 
+  // R2 (2026-07-14): ENDELIG SIKKERHETSGRENSE. Overrides og kalibrering er
+  // post-safety-mutasjoner — alt som muterte laget etter applySafety skal
+  // gjennom finalizeSafety som SISTE steg, slik at conflicts/soft-blocks/
+  // hard-safety aldri kan omgås (G1–G7 i guardrail-matrisen). Uten mutasjon
+  // hoppes grensen over → byte-identisk med før-containment (G10).
+  if (hasOverrides || input.childCalibration) {
+    const finalized = finalizeSafety(input, finalLayers, finalNotes, finalFlags);
+    finalLayers = finalized.layers;
+    finalNotes = finalized.notes;
+    finalFlags = finalized.flags;
+  }
+
   const tempPrefix = input.activity === 'soevn' ? 'romtemp' : 'føles';
   const activityLabel = isVognSleeping
     ? 'Vogn (sover)'
@@ -92,16 +108,16 @@ export function recommend(
 
   // Iter 36 — severity må aggregere conflicts + soft + safety, ikke bare safety.
   // Gammelt safe.severity reflekterte kun HB-flags, så CK-7/SB-3 HIGH ble usynlig.
-  const aggregateSeverity = highestSeverity(allFlags);
+  const aggregateSeverity = highestSeverity(finalFlags);
 
   return {
     activity: input.activity,
     tempBand: band,
     layers: finalLayers,
-    notes: safe.notes.map((n) => n.message),
-    structuredNotes: safe.notes,
+    notes: finalNotes.map((n) => n.message),
+    structuredNotes: finalNotes,
     summary,
-    safetyFlags: allFlags,
+    safetyFlags: finalFlags,
     severity: aggregateSeverity,
   };
 }
