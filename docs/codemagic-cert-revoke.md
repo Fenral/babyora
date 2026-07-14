@@ -121,7 +121,8 @@ Forventet output: `BUILD_DONE: success`.
 
 ## Verifisert 2026-06-14
 
-- Cert revoket: `67292KXFCZ` (Sivert Skotvold, Distribution, exp 2027/06/14)
+- Cert revoket 2026-07-14: `96VSFBPF3V` (Sivert Skotvold, Distribution, exp 2027/07/12) via chrome-devtools MCP
+- Build-restart commit: `31350bf` (merge feat/r7-retning-b, retning B)
 - Build-restart commit: `6a1080d`
 - Build-resultat: success (Codemagic genererte fresh cert i ledig slot)
 - Tid: ~10 min fra revoke til ny build på TestFlight
