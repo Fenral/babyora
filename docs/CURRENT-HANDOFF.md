@@ -18,7 +18,9 @@ Eier godkjente pakken eksplisitt («kjør»). Alle tre pakker er committet lokal
 
 **R5/R6 Motor V2-kjernen (2026-07-14): Task 1–12 FERDIG og uavhengig verifisert (PASS).** Range `b279053..6ad7583`, 208 V2-tester/457 totalt, alle 36 gullscenarioer automatisert, flagg av, rollback = containet legacy. Evidens: `docs/superpowers/evidence/packages/motor-v2-core-tasks-1-12.md`.
 
-**Neste:** Task 13–16 (migrering, analytics, situasjons-UI m/a11y-lead, fagpakke-eksport). Task 17 (kohortaktivering) er blokkert på ekstern faglig scenariosignatur. Parallellspor: R7-spec for retning B kan startes; fem-foreldre-testen gjenstår (eier).
+**Task 13–16 FERDIG (2026-07-14 kveld):** profilmigrering (materialPreference, uendret lagringsnøkkel), PII-frie analytics-events (typenivå-bevist), fagpakke-eksport (`npm run engine:v2:review` — deterministisk, `docs/superpowers/evidence/engine-v2-scenarios.json` + expert-review.md, status IKKE SIGNERT), og situasjons-/materialkomponentene (a11y-lead-review fulgt; skjerm-wiring bevisst utsatt til R7 — dokumentert avvik). 478 tester grønne, E2E 2/2.
+
+**Alt maskingjørbart i Motor V2 er nå levert.** Gjenstår i motoren: Task 17 kohortaktivering — **blokkert på ekstern faglig signatur av fagpakken**. Menneskelige porter: (1) fagperson signerer engine-v2-scenarios.json, (2) fem-foreldre-testen for retning B. Neste kodearbeid: R7-spec + implementering av retning B «Scenen».
 
 ## Completed
 
