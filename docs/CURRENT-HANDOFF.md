@@ -1,7 +1,20 @@
 # Current handoff
 
-**Updated:** 2026-07-13  
-**Phase:** Pre-implementation planning and continuity setup.
+**Updated:** 2026-07-14  
+**Phase:** Implementation started — first package (R1→R2→R3) complete and independently verified.
+
+## 2026-07-14: Første implementeringspakke FERDIG (R1→R2→R3)
+
+Eier godkjente pakken eksplisitt («kjør»). Alle tre pakker er committet lokalt på main og uavhengig verifisert (se `docs/superpowers/evidence/packages/r1-r3-first-package.md`):
+
+- **R1** `03b46f6` — fersk baseline (222+19 tester grønne, build grønn, lint-rød baseline dokumentert eksakt).
+- **R2** `da217fb` — legacy safety containment: P0-gapet lukket. Én endelig sikkerhetsgrense (`src/lib/wool-layers/finalize-safety.ts`); overrides/kalibrering/session-swaps kan ikke lenger omgå HB/CK/SB-reglene. Guardrail-matrise G1–G12 (RED→GREEN), uavhengig fresh-context dom: PASS/SHIPPBAR. Trygg Motor V2-rollback = containet legacy-sti.
+- **R3** `dfcc08c` — grønn plattform: lint 19→0 atferdsbevarende, CI-workflow (.github/workflows/ci.yml), E2E-røyktest (`npm run e2e`). Gate grønn på samme SHA.
+- **Pakke-gate §6:** PASS fra ren checkout (alle tall reprodusert).
+
+**Ikke pushet til origin** — venter på eierbeslutning (repo har Codemagic-kobling).
+
+**Neste beslutning:** R4 North-Star-designport (tre prototyper + fem-foreldre-test) som egen godkjent designoppgave, og/eller R5 kanoniske kontrakter / R6 Motor V2 (Fable 5 Extra) etter porten. Ingen av delene er startet.
 
 ## Completed
 
