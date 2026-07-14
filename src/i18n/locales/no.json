@@ -200,6 +200,36 @@
       "AGE_APPROPRIATE_GARMENT_FORM": "Plaggformen er tilpasset barnets alder.",
       "CALIBRATION_WARMER": "Justert litt varmere basert på tilbakemeldingene deres.",
       "CALIBRATION_COOLER": "Justert litt lettere basert på tilbakemeldingene deres."
+    },
+    "situations": {
+      "stroller_awake": "I vogn",
+      "carrier": "I bæresele",
+      "awake_low_mobility": "Våken ute",
+      "active_play": "Aktiv lek",
+      "calm_outdoors": "Rolig ute",
+      "mixed_day": "Blandet dag",
+      "indoor_sleep": "Søvn inne"
+    },
+    "situationPicker": {
+      "legend": "Hva skal barnet gjøre?",
+      "more": "Flere situasjoner"
+    },
+    "materialSheet": {
+      "title": "Materialer",
+      "intro": "Gjelder dette barnet. Trygghet og nødvendig beskyttelse påvirkes aldri av valget.",
+      "done": "Ferdig",
+      "best_for_conditions": {
+        "label": "Velg etter forholdene (anbefalt)",
+        "description": "Motoren velger materiale etter vær, aktivitet og alder."
+      },
+      "prefer_wool": {
+        "label": "Foretrekk ull når det passer",
+        "description": "Ull prioriteres der det fungerer like godt — aldri i stedet for nødvendig beskyttelse."
+      },
+      "avoid_wool": {
+        "label": "Unngå ull",
+        "description": "Fullgode alternativer brukes i stedet, mot huden og i mellomplagg."
+      }
     }
   }
 }

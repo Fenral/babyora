@@ -201,6 +201,36 @@
       "CALIBRATION_WARMER": "Adjusted slightly warmer based on your feedback.",
       "CALIBRATION_COOLER": "Adjusted slightly lighter based on your feedback."
     },
-    "_machineTranslatedPendingReview": true
+    "_machineTranslatedPendingReview": true,
+    "situations": {
+      "stroller_awake": "In the stroller",
+      "carrier": "In the carrier",
+      "awake_low_mobility": "Awake outside",
+      "active_play": "Active play",
+      "calm_outdoors": "Calm outdoors",
+      "mixed_day": "Mixed day",
+      "indoor_sleep": "Indoor sleep"
+    },
+    "situationPicker": {
+      "legend": "What will your child be doing?",
+      "more": "More situations"
+    },
+    "materialSheet": {
+      "title": "Materials",
+      "intro": "Applies to this child. Safety and required protection are never affected by this choice.",
+      "done": "Done",
+      "best_for_conditions": {
+        "label": "Choose by conditions (recommended)",
+        "description": "The engine picks materials based on weather, activity and age."
+      },
+      "prefer_wool": {
+        "label": "Prefer wool when it fits",
+        "description": "Wool is ranked first where it works equally well — never instead of required protection."
+      },
+      "avoid_wool": {
+        "label": "Avoid wool",
+        "description": "Fully capable alternatives are used instead, next to skin and in mid garments."
+      }
+    }
   }
 }

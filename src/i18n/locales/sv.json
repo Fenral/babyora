@@ -201,6 +201,36 @@
       "CALIBRATION_WARMER": "Justerat lite varmare utifrån er återkoppling.",
       "CALIBRATION_COOLER": "Justerat lite lättare utifrån er återkoppling."
     },
-    "_machineTranslatedPendingReview": true
+    "_machineTranslatedPendingReview": true,
+    "situations": {
+      "stroller_awake": "I vagnen",
+      "carrier": "I bärselen",
+      "awake_low_mobility": "Vaken ute",
+      "active_play": "Aktiv lek",
+      "calm_outdoors": "Lugnt ute",
+      "mixed_day": "Blandad dag",
+      "indoor_sleep": "Sömn inne"
+    },
+    "situationPicker": {
+      "legend": "Vad ska barnet göra?",
+      "more": "Fler situationer"
+    },
+    "materialSheet": {
+      "title": "Material",
+      "intro": "Gäller detta barn. Säkerhet och nödvändigt skydd påverkas aldrig av valet.",
+      "done": "Klar",
+      "best_for_conditions": {
+        "label": "Välj efter förhållandena (rekommenderas)",
+        "description": "Motorn väljer material efter väder, aktivitet och ålder."
+      },
+      "prefer_wool": {
+        "label": "Föredra ull när det passar",
+        "description": "Ull prioriteras där det fungerar lika bra — aldrig i stället för nödvändigt skydd."
+      },
+      "avoid_wool": {
+        "label": "Undvik ull",
+        "description": "Fullgoda alternativ används i stället, mot huden och i mellanplagg."
+      }
+    }
   }
 }

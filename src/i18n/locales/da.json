@@ -201,6 +201,36 @@
       "CALIBRATION_WARMER": "Justeret lidt varmere ud fra jeres tilbagemeldinger.",
       "CALIBRATION_COOLER": "Justeret lidt lettere ud fra jeres tilbagemeldinger."
     },
-    "_machineTranslatedPendingReview": true
+    "_machineTranslatedPendingReview": true,
+    "situations": {
+      "stroller_awake": "I barnevognen",
+      "carrier": "I bæreselen",
+      "awake_low_mobility": "Vågen ude",
+      "active_play": "Aktiv leg",
+      "calm_outdoors": "Roligt ude",
+      "mixed_day": "Blandet dag",
+      "indoor_sleep": "Søvn inde"
+    },
+    "situationPicker": {
+      "legend": "Hvad skal barnet lave?",
+      "more": "Flere situationer"
+    },
+    "materialSheet": {
+      "title": "Materialer",
+      "intro": "Gælder dette barn. Sikkerhed og nødvendig beskyttelse påvirkes aldrig af valget.",
+      "done": "Færdig",
+      "best_for_conditions": {
+        "label": "Vælg efter forholdene (anbefalet)",
+        "description": "Motoren vælger materiale efter vejr, aktivitet og alder."
+      },
+      "prefer_wool": {
+        "label": "Foretræk uld, når det passer",
+        "description": "Uld prioriteres, hvor det fungerer lige så godt — aldrig i stedet for nødvendig beskyttelse."
+      },
+      "avoid_wool": {
+        "label": "Undgå uld",
+        "description": "Fuldgode alternativer bruges i stedet, mod huden og i mellemlagstøj."
+      }
+    }
   }
 }

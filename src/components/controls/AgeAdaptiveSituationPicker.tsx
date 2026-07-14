@@ -1,0 +1,94 @@
+/**
+ * Motor 2.0 Task 15 — aldersadaptiv situasjonsvelger (design-spec §15.2).
+ *
+ * Maks tre primærvalg per aldersstadium; gyldige sekundærvalg bak
+ * «Flere situasjoner»-disclosure. IKKE wiret inn i skjermer ennå —
+ * konsumeres av R7 (retning B) når visningsflagget aktiveres.
+ *
+ * A11y (accessibility-lead 2026-07-14, pre-review):
+ *  - Native <input type="radio"> i <fieldset>/<legend> — aldri ARIA-radios.
+ *  - Apply-on-select; konsumenten annonserer REGENERERT anbefaling via egen
+ *    polite live-region (ikke denne komponenten).
+ *  - Disclosure: aria-expanded, avslørte radios i samme name-gruppe, knappen
+ *    ETTER primærradioene i DOM, auto-ekspandert når valgt verdi er sekundær.
+ *  - ≥44pt mål på label; fokus via --focus-ring; aldri farge alene.
+ */
+
+import { useId, useState, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
+import { situationChoicesFor } from './situation-choices.js';
+import type { Situation } from '../../lib/clothing-engine-v2/types.js';
+
+type Props = {
+  ageMonths: number;
+  value: Situation;
+  onChange: (next: Situation) => void;
+};
+
+const fieldset: CSSProperties = { border: 0, margin: 0, padding: 0 };
+const srOnly: CSSProperties = {
+  position: 'absolute', width: 1, height: 1, padding: 0, margin: -1,
+  overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0,
+};
+const row: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 8 };
+const labelBase: CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  minHeight: 44, padding: '10px 16px', borderRadius: 999,
+  border: '1.5px solid var(--ink-200)', background: 'var(--surface)',
+  color: 'var(--ink-900)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+};
+const labelChecked: CSSProperties = {
+  ...labelBase,
+  border: '1.5px solid var(--accent-cta)', background: 'var(--accent-cta)',
+  color: 'var(--accent-cta-ink)', fontWeight: 700,
+};
+const moreBtn: CSSProperties = {
+  ...labelBase, border: '1.5px dashed var(--ink-200)', background: 'transparent',
+  color: 'var(--ink-700)', fontWeight: 600,
+};
+
+export function AgeAdaptiveSituationPicker({ ageMonths, value, onChange }: Props) {
+  const { t } = useTranslation();
+  const name = useId();
+  const { primary, secondary } = situationChoicesFor(ageMonths);
+  // Auto-ekspandert når valgt verdi er sekundær — en valgt radio skjules aldri.
+  const [expanded, setExpanded] = useState(secondary.includes(value));
+  const showSecondary = expanded || secondary.includes(value);
+
+  const radio = (situation: Situation) => {
+    const checked = value === situation;
+    return (
+      <label key={situation} style={checked ? labelChecked : labelBase} className="sit-choice">
+        <input
+          type="radio"
+          name={name}
+          value={situation}
+          checked={checked}
+          onChange={() => onChange(situation)}
+          style={srOnly}
+        />
+        {t(`engineV2.situations.${situation}`)}
+      </label>
+    );
+  };
+
+  return (
+    <fieldset style={fieldset}>
+      <legend style={srOnly}>{t('engineV2.situationPicker.legend')}</legend>
+      <div style={row}>
+        {primary.map(radio)}
+        {showSecondary && secondary.map(radio)}
+        {secondary.length > 0 && !showSecondary && (
+          <button
+            type="button"
+            style={moreBtn}
+            aria-expanded={false}
+            onClick={() => setExpanded(true)}
+          >
+            {t('engineV2.situationPicker.more')}
+          </button>
+        )}
+      </div>
+    </fieldset>
+  );
+}

@@ -201,6 +201,36 @@
       "CALIBRATION_WARMER": "Auf Basis Ihrer Rückmeldungen etwas wärmer eingestellt.",
       "CALIBRATION_COOLER": "Auf Basis Ihrer Rückmeldungen etwas leichter eingestellt."
     },
-    "_machineTranslatedPendingReview": true
+    "_machineTranslatedPendingReview": true,
+    "situations": {
+      "stroller_awake": "Im Kinderwagen",
+      "carrier": "In der Trage",
+      "awake_low_mobility": "Wach draußen",
+      "active_play": "Aktives Spielen",
+      "calm_outdoors": "Ruhig draußen",
+      "mixed_day": "Gemischter Tag",
+      "indoor_sleep": "Schlaf drinnen"
+    },
+    "situationPicker": {
+      "legend": "Was wird Ihr Kind tun?",
+      "more": "Weitere Situationen"
+    },
+    "materialSheet": {
+      "title": "Materialien",
+      "intro": "Gilt für dieses Kind. Sicherheit und notwendiger Schutz werden von dieser Wahl nie beeinflusst.",
+      "done": "Fertig",
+      "best_for_conditions": {
+        "label": "Nach Bedingungen wählen (empfohlen)",
+        "description": "Die Engine wählt Materialien nach Wetter, Aktivität und Alter."
+      },
+      "prefer_wool": {
+        "label": "Wolle bevorzugen, wenn es passt",
+        "description": "Wolle wird bevorzugt, wo sie gleich gut funktioniert — nie statt notwendigem Schutz."
+      },
+      "avoid_wool": {
+        "label": "Wolle vermeiden",
+        "description": "Vollwertige Alternativen werden stattdessen verwendet, auf der Haut und in Zwischenschichten."
+      }
+    }
   }
 }
