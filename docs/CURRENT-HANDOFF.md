@@ -36,7 +36,13 @@ Eier ba om autonom kjøring på dokumenterte defaults mens borte. Levert på lok
 - `c6adda6` — care-circle dev-only preview (`CareCircle`, R9-gatet bak `import.meta.env.DEV`, tre-shakes ut av prod).
 - `ca97be8` — paywall verdi-seksjon (`PlusExpansionPreview`) med sannferdig Free→Plus-ekspansjon; familie/kalibrering skjult til de er bygget (`plus-features.ts`).
 
-564 tester grønne. Gjenstår autonomt: Task 8 90+-audit-biter som ikke krever fysisk enhet (undersøkes), evt. «notification pre-prompt after value».
+564 tester grønne.
+
+**Task 8 headless regresjonssjekk (2026-07-15):** `npm run audit:prepare` (Playwright headless, 390×844, dark, reduced-motion, mocket forecast) fanget **13/13 sider rent** etter alle Task 7-commits — onboarding, Hjem, Påkledning, Plan, Guide, Finn antrekk, Plaggbibliotek, Min garderobe, TOG, Varm/kald, Første vinter, Innstillinger og Betalingsvegg rendrer og navigerer uten feil. Sterk evidens for at Task 7-endringene ikke brøt noen side. Selve rubrikk-scoringen krever vision-LLM/eier-vurdering (owner-bucket).
+
+**«Notification pre-prompt after value» er oppfylt:** varsel-tillatelse spørres kun ved aktiv toggle-handling (etter bruk), aldri kaldt ved oppstart; onboarding har ingen varsel-prompt (teaseren fjernet).
+
+**Autonomt v1-arbeid er med dette uttømt** — alt gjenstående er eier-avhengig (se listen under).
 
 ### ⏳ Venter på eier (samlet — ikke autonomt gjørbart)
 
