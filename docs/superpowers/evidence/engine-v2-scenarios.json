@@ -1,0 +1,3786 @@
+{
+  "pakke": "Motor 2.0 faglig kontrollpakke",
+  "omfang": "0–24 måneder, utendørs + innesøvn-avvisning",
+  "antallScenarioer": 36,
+  "status": "IKKE SIGNERT — ekstern faglig gjennomgang gjenstår (lanseringsport)",
+  "scenarioer": [
+    {
+      "id": "G01",
+      "tittel": "Nyfødt mild vogn",
+      "input": {
+        "weather": {
+          "tempC": 12,
+          "feelsLikeC": 12,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 2,
+        "situation": "stroller_awake"
+      },
+      "termiskBehov": {
+        "ageStage": "newborn",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "mild",
+        "baseWarmth": 1,
+        "insulationWarmth": 2,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": false,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "cotton",
+          "variant": "base-fullbody-cotton-1-long",
+          "label": "langermet body"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "cotton",
+          "variant": "headwear-cotton-0-sun",
+          "label": "solhatt"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_wicking",
+          "variant": "footwear-syn-1-socks",
+          "label": "tekniske sokker"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "COTTON_ONLY_WARM_DRY"
+      ],
+      "fingerprint": "v2-645324ca544e8490",
+      "legacyForskjell": {
+        "status": "needs_review",
+        "grunner": [
+          "V2 mangler kategorien yttertoy"
+        ],
+        "detaljer": {
+          "sameFingerprintContent": false,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G02",
+      "tittel": "Nyfødt kjølig vogn",
+      "input": {
+        "weather": {
+          "tempC": 4,
+          "feelsLikeC": 4,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 2,
+        "situation": "stroller_awake"
+      },
+      "termiskBehov": {
+        "ageStage": "newborn",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "kald",
+        "baseWarmth": 2,
+        "insulationWarmth": 3,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_warm_pouch"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-2",
+          "label": "ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-2-light",
+          "label": "kjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-2-thick",
+          "label": "tykke votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_warm_pouch",
+          "label": "vognpose"
+        }
+      ],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-b763c509e4a6fa6f",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G03",
+      "tittel": "Nyfødt frost og vind",
+      "input": {
+        "weather": {
+          "tempC": -6,
+          "feelsLikeC": -6,
+          "windMs": 6,
+          "precipMmH": 0
+        },
+        "ageMonths": 3,
+        "situation": "stroller_awake"
+      },
+      "termiskBehov": {
+        "ageStage": "newborn",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "frost",
+        "baseWarmth": 3,
+        "insulationWarmth": 4,
+        "needsWindShell": true,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_warm_pouch"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION",
+          "WIND_REQUIRES_SHELL"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-3-thick",
+          "label": "tykt ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-3",
+          "label": "vinterkjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "down",
+          "variant": "handwear-down-3",
+          "label": "votter dun"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_warm_pouch",
+          "label": "vognpose"
+        }
+      ],
+      "sikkerhetsflagg": [
+        {
+          "kode": "HB-V2-NB-COLD",
+          "alvorlighet": "HIGH",
+          "melding": "Spedbarn under 3 mnd: maks 30 min ute i kuldegrader. Sjekk nakke og rygg ofte."
+        }
+      ],
+      "alvorlighet": "HIGH",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "WIND_REQUIRES_SHELL",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-c6857433883afc71",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "HIGH"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G04",
+      "tittel": "Nyfødt i bæresele under jakke",
+      "input": {
+        "weather": {
+          "tempC": 2,
+          "feelsLikeC": 2,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 4,
+        "situation": "carrier",
+        "carrierUnderParentJacket": true
+      },
+      "termiskBehov": {
+        "ageStage": "newborn",
+        "situation": "carrier",
+        "intensity": "resting",
+        "tempBand": "kald",
+        "baseWarmth": 2,
+        "insulationWarmth": 2,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-1-thin",
+          "label": "tynt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-2",
+          "label": "lue m/ ull"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-1-socks",
+          "label": "ullsokker"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-862c212537eb86eb",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G05",
+      "tittel": "Nyfødt i bæresele utenpå jakke",
+      "input": {
+        "weather": {
+          "tempC": 2,
+          "feelsLikeC": 2,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 4,
+        "situation": "carrier"
+      },
+      "termiskBehov": {
+        "ageStage": "newborn",
+        "situation": "carrier",
+        "intensity": "resting",
+        "tempBand": "kald",
+        "baseWarmth": 2,
+        "insulationWarmth": 3,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-2",
+          "label": "ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-2-light",
+          "label": "kjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-2-thick",
+          "label": "tykke votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-083a4c517fe303f3",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G06",
+      "tittel": "Mobil baby varm dag",
+      "input": {
+        "weather": {
+          "tempC": 22,
+          "feelsLikeC": 22,
+          "windMs": 2,
+          "precipMmH": 0,
+          "symbolCode": "clearsky_day"
+        },
+        "ageMonths": 9,
+        "situation": "awake_low_mobility"
+      },
+      "termiskBehov": {
+        "ageStage": "mobile_baby",
+        "situation": "awake_low_mobility",
+        "intensity": "resting",
+        "tempBand": "tropisk",
+        "baseWarmth": 0,
+        "insulationWarmth": 1,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": true,
+        "needsHeadwear": true,
+        "needsHandwear": false,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_top",
+          "materiale": "cotton",
+          "variant": "base-top-cotton-0-tshirt",
+          "label": "t-skjorte"
+        },
+        {
+          "rolle": "base_bottom",
+          "materiale": "cotton",
+          "variant": "base-bottom-cotton-0-shorts",
+          "label": "shorts"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "cotton",
+          "variant": "headwear-cotton-0-sun",
+          "label": "solhatt"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "blend",
+          "variant": "footwear-blend-1-soft",
+          "label": "tøffel-sko"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "COTTON_ONLY_WARM_DRY"
+      ],
+      "fingerprint": "v2-d732672ce5835822",
+      "legacyForskjell": {
+        "status": "needs_review",
+        "grunner": [
+          "Alvorlighet falt fra MEDIUM til NONE"
+        ],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "ekstra"
+          ],
+          "legacySeverity": "MEDIUM",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G07",
+      "tittel": "Mobil baby kort aktiv lek",
+      "input": {
+        "weather": {
+          "tempC": 14,
+          "feelsLikeC": 14,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 10,
+        "situation": "active_play"
+      },
+      "termiskBehov": {
+        "ageStage": "mobile_baby",
+        "situation": "active_play",
+        "intensity": "active",
+        "tempBand": "mild",
+        "baseWarmth": 1,
+        "insulationWarmth": 0,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": false,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "ACTIVE_CHILD_LESS_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "synthetic_wicking",
+          "variant": "base-fullbody-synthetic-1",
+          "label": "teknisk undertøysett"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "cotton",
+          "variant": "headwear-cotton-0-sun",
+          "label": "solhatt"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_wicking",
+          "variant": "footwear-syn-1-socks",
+          "label": "tekniske sokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "blend",
+          "variant": "footwear-blend-1-soft",
+          "label": "tøffel-sko"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "ACTIVE_CHILD_LESS_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WICKING_SYNTHETIC_FOR_ACTIVITY"
+      ],
+      "fingerprint": "v2-a156113f87b95341",
+      "legacyForskjell": {
+        "status": "expected_improvement",
+        "grunner": [
+          "Kategoridekningen avviker bevisst (material-/aldersform-forbedring) — krever produktbeslutning i review-filen"
+        ],
+        "detaljer": {
+          "sameFingerprintContent": false,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G08",
+      "tittel": "Mobil baby regn i vogn",
+      "input": {
+        "weather": {
+          "tempC": 8,
+          "feelsLikeC": 8,
+          "windMs": 2,
+          "precipMmH": 1.5,
+          "symbolCode": "rain"
+        },
+        "ageMonths": 10,
+        "situation": "stroller_awake"
+      },
+      "termiskBehov": {
+        "ageStage": "mobile_baby",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 3,
+        "needsWindShell": false,
+        "needsWaterproofShell": true,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_rain_cover"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION",
+          "RAIN_REQUIRES_SHELL"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-2",
+          "label": "ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-2-light",
+          "label": "kjøredress"
+        },
+        {
+          "rolle": "shell_fullbody",
+          "materiale": "shell",
+          "variant": "shell-fullbody-rain",
+          "label": "regndress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-2-thick",
+          "label": "tykke votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_rain_cover",
+          "label": "regntrekk på vognen"
+        }
+      ],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "RAIN_REQUIRES_SHELL",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-2120a3aedd73af8c",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G09",
+      "tittel": "Ung smårolling kald vogn",
+      "input": {
+        "weather": {
+          "tempC": 0,
+          "feelsLikeC": 0,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 15,
+        "situation": "stroller_awake"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "kald",
+        "baseWarmth": 2,
+        "insulationWarmth": 3,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_warm_pouch"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-2",
+          "label": "ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-2-light",
+          "label": "kjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-2-thick",
+          "label": "tykke votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_warm_pouch",
+          "label": "vognpose"
+        }
+      ],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-94a661d7d88f6035",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G10",
+      "tittel": "Ung smårolling aktiv kulde",
+      "input": {
+        "weather": {
+          "tempC": 0,
+          "feelsLikeC": 0,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 15,
+        "situation": "active_play"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "active_play",
+        "intensity": "active",
+        "tempBand": "kald",
+        "baseWarmth": 2,
+        "insulationWarmth": 1,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "ACTIVE_CHILD_LESS_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "synthetic_wicking",
+          "variant": "base-fullbody-synthetic-1",
+          "label": "teknisk undertøysett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "blend",
+          "variant": "headwear-blend-1-thin",
+          "label": "tynn lue"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-1-socks",
+          "label": "ullsokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "blend",
+          "variant": "footwear-blend-1-soft",
+          "label": "tøffel-sko"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "ACTIVE_CHILD_LESS_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WICKING_SYNTHETIC_FOR_ACTIVITY"
+      ],
+      "fingerprint": "v2-884d5f0c18015a32",
+      "legacyForskjell": {
+        "status": "needs_review",
+        "grunner": [
+          "V2 mangler kategorien yttertoy"
+        ],
+        "detaljer": {
+          "sameFingerprintContent": false,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G11",
+      "tittel": "Ung smårolling blandet barnehagedag",
+      "input": {
+        "weather": {
+          "tempC": 7,
+          "feelsLikeC": 7,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 20,
+        "situation": "mixed_day"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "mixed_day",
+        "intensity": "mixed",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 2,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": []
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-1-thin",
+          "label": "tynt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-2",
+          "label": "lue m/ ull"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-1-socks",
+          "label": "ullsokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_insulation",
+          "variant": "footwear-syn-3-winter",
+          "label": "vintersko isolerte"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-cdb914b5b5548ee7",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G12",
+      "tittel": "Ung smårolling varm og våt",
+      "input": {
+        "weather": {
+          "tempC": 18,
+          "feelsLikeC": 18,
+          "windMs": 2,
+          "precipMmH": 1.2,
+          "symbolCode": "rain"
+        },
+        "ageMonths": 22,
+        "situation": "active_play"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "active_play",
+        "intensity": "active",
+        "tempBand": "varm",
+        "baseWarmth": 1,
+        "insulationWarmth": 0,
+        "needsWindShell": false,
+        "needsWaterproofShell": true,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": false,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "ACTIVE_CHILD_LESS_INSULATION",
+          "RAIN_REQUIRES_SHELL"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "synthetic_wicking",
+          "variant": "base-fullbody-synthetic-1",
+          "label": "teknisk undertøysett"
+        },
+        {
+          "rolle": "shell_fullbody",
+          "materiale": "shell",
+          "variant": "shell-fullbody-rain",
+          "label": "regndress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "cotton",
+          "variant": "headwear-cotton-0-sun",
+          "label": "solhatt"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_wicking",
+          "variant": "footwear-syn-1-socks",
+          "label": "tekniske sokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "blend",
+          "variant": "footwear-blend-0-shoes",
+          "label": "sko"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "ACTIVE_CHILD_LESS_INSULATION",
+        "RAIN_REQUIRES_SHELL",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WICKING_SYNTHETIC_FOR_ACTIVITY"
+      ],
+      "fingerprint": "v2-989576a43bd3cf06",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "yttertoy",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "yttertoy",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G13",
+      "tittel": "Øvre alder aktiv høst",
+      "input": {
+        "weather": {
+          "tempC": 9,
+          "feelsLikeC": 9,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 24,
+        "situation": "active_play"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "active_play",
+        "intensity": "active",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 1,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "ACTIVE_CHILD_LESS_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "synthetic_wicking",
+          "variant": "base-fullbody-synthetic-1",
+          "label": "teknisk undertøysett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "blend",
+          "variant": "headwear-blend-1-thin",
+          "label": "tynn lue"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-1-socks",
+          "label": "ullsokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_insulation",
+          "variant": "footwear-syn-3-winter",
+          "label": "vintersko isolerte"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "ACTIVE_CHILD_LESS_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WICKING_SYNTHETIC_FOR_ACTIVITY"
+      ],
+      "fingerprint": "v2-5bec52d64064888c",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G14",
+      "tittel": "Øvre alder rolig høst",
+      "input": {
+        "weather": {
+          "tempC": 9,
+          "feelsLikeC": 9,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 24,
+        "situation": "calm_outdoors"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "calm_outdoors",
+        "intensity": "resting",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 3,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-2",
+          "label": "ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-2-light",
+          "label": "kjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-2-thick",
+          "label": "tykke votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_insulation",
+          "variant": "footwear-syn-3-winter",
+          "label": "vintersko isolerte"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-97440790371e6216",
+      "legacyForskjell": {
+        "status": "expected_improvement",
+        "grunner": [
+          "Kategoridekningen avviker bevisst (material-/aldersform-forbedring) — krever produktbeslutning i review-filen"
+        ],
+        "detaljer": {
+          "sameFingerprintContent": false,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G15",
+      "tittel": "Øvre alder blandet regndag",
+      "input": {
+        "weather": {
+          "tempC": 6,
+          "feelsLikeC": 6,
+          "windMs": 2,
+          "precipMmH": 2,
+          "symbolCode": "rain"
+        },
+        "ageMonths": 24,
+        "situation": "mixed_day"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "mixed_day",
+        "intensity": "mixed",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 2,
+        "needsWindShell": false,
+        "needsWaterproofShell": true,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "RAIN_REQUIRES_SHELL"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-1-thin",
+          "label": "tynt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "shell_fullbody",
+          "materiale": "shell",
+          "variant": "shell-fullbody-rain",
+          "label": "regndress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-2",
+          "label": "lue m/ ull"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-1-socks",
+          "label": "ullsokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_insulation",
+          "variant": "footwear-syn-3-winter",
+          "label": "vintersko isolerte"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RAIN_REQUIRES_SHELL",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-913313d5c91e3197",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G16",
+      "tittel": "Øvre alder vogn ved behov",
+      "input": {
+        "weather": {
+          "tempC": 3,
+          "feelsLikeC": 3,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 24,
+        "situation": "stroller_awake"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "kald",
+        "baseWarmth": 2,
+        "insulationWarmth": 3,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_warm_pouch"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-2",
+          "label": "ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-2-light",
+          "label": "kjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-2-thick",
+          "label": "tykke votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_warm_pouch",
+          "label": "vognpose"
+        }
+      ],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-94a661d7d88f6035",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G17",
+      "tittel": "Før skogrensen",
+      "input": {
+        "weather": {
+          "tempC": 8,
+          "feelsLikeC": 8,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 8,
+        "situation": "awake_low_mobility"
+      },
+      "termiskBehov": {
+        "ageStage": "mobile_baby",
+        "situation": "awake_low_mobility",
+        "intensity": "resting",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 3,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-2",
+          "label": "ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-2-light",
+          "label": "kjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-2-thick",
+          "label": "tykke votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-013839a9648cb43f",
+      "legacyForskjell": {
+        "status": "expected_improvement",
+        "grunner": [
+          "Kategoridekningen avviker bevisst (material-/aldersform-forbedring) — krever produktbeslutning i review-filen"
+        ],
+        "detaljer": {
+          "sameFingerprintContent": false,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G18",
+      "tittel": "Over første skogrense",
+      "input": {
+        "weather": {
+          "tempC": 8,
+          "feelsLikeC": 8,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 9,
+        "situation": "awake_low_mobility"
+      },
+      "termiskBehov": {
+        "ageStage": "mobile_baby",
+        "situation": "awake_low_mobility",
+        "intensity": "resting",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 3,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-2",
+          "label": "ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-2-light",
+          "label": "kjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-2-thick",
+          "label": "tykke votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "blend",
+          "variant": "footwear-blend-1-soft",
+          "label": "tøffel-sko"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-e86bba5be0265c11",
+      "legacyForskjell": {
+        "status": "expected_improvement",
+        "grunner": [
+          "Kategoridekningen avviker bevisst (material-/aldersform-forbedring) — krever produktbeslutning i review-filen"
+        ],
+        "detaljer": {
+          "sameFingerprintContent": false,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G19",
+      "tittel": "Siste myke fottøygruppe",
+      "input": {
+        "weather": {
+          "tempC": 0,
+          "feelsLikeC": 0,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 15,
+        "situation": "active_play"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "active_play",
+        "intensity": "active",
+        "tempBand": "kald",
+        "baseWarmth": 2,
+        "insulationWarmth": 1,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "ACTIVE_CHILD_LESS_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "synthetic_wicking",
+          "variant": "base-fullbody-synthetic-1",
+          "label": "teknisk undertøysett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "blend",
+          "variant": "headwear-blend-1-thin",
+          "label": "tynn lue"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-1-socks",
+          "label": "ullsokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "blend",
+          "variant": "footwear-blend-1-soft",
+          "label": "tøffel-sko"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "ACTIVE_CHILD_LESS_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WICKING_SYNTHETIC_FOR_ACTIVITY"
+      ],
+      "fingerprint": "v2-884d5f0c18015a32",
+      "legacyForskjell": {
+        "status": "needs_review",
+        "grunner": [
+          "V2 mangler kategorien yttertoy"
+        ],
+        "detaljer": {
+          "sameFingerprintContent": false,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G20",
+      "tittel": "Første ordinære skogruppe",
+      "input": {
+        "weather": {
+          "tempC": 0,
+          "feelsLikeC": 0,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 16,
+        "situation": "active_play"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "active_play",
+        "intensity": "active",
+        "tempBand": "kald",
+        "baseWarmth": 2,
+        "insulationWarmth": 1,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "ACTIVE_CHILD_LESS_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "synthetic_wicking",
+          "variant": "base-fullbody-synthetic-1",
+          "label": "teknisk undertøysett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "blend",
+          "variant": "headwear-blend-1-thin",
+          "label": "tynn lue"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-1-socks",
+          "label": "ullsokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_insulation",
+          "variant": "footwear-syn-3-winter",
+          "label": "vintersko isolerte"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "ACTIVE_CHILD_LESS_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WICKING_SYNTHETIC_FOR_ACTIVITY"
+      ],
+      "fingerprint": "v2-0c3bb0905bf4263a",
+      "legacyForskjell": {
+        "status": "needs_review",
+        "grunner": [
+          "V2 mangler kategorien yttertoy"
+        ],
+        "detaljer": {
+          "sameFingerprintContent": false,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G21",
+      "tittel": "Øvre støttet alder",
+      "input": {
+        "weather": {
+          "tempC": 5,
+          "feelsLikeC": 5,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 24,
+        "situation": "mixed_day"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "mixed_day",
+        "intensity": "mixed",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 2,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": []
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-1-thin",
+          "label": "tynt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-2",
+          "label": "lue m/ ull"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-1-socks",
+          "label": "ullsokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_insulation",
+          "variant": "footwear-syn-3-winter",
+          "label": "vintersko isolerte"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-cdb914b5b5548ee7",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G22",
+      "tittel": "Ustøttet alder",
+      "input": {
+        "weather": {
+          "tempC": 5,
+          "feelsLikeC": 5,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 25,
+        "situation": "stroller_awake"
+      },
+      "forventetFeil": "unsupported_age",
+      "observertFeil": "unsupported_age",
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G23",
+      "tittel": "Ullfri kulde",
+      "input": {
+        "weather": {
+          "tempC": -4,
+          "feelsLikeC": -4,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 18,
+        "situation": "stroller_awake",
+        "materialPreference": "avoid_wool"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "frost",
+        "baseWarmth": 3,
+        "insulationWarmth": 4,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_warm_pouch"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "synthetic_wicking",
+          "variant": "base-fullbody-synthetic-2",
+          "label": "tykt teknisk undertøysett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "fleece",
+          "variant": "mid-fullbody-fleece-2",
+          "label": "fleecesett"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-3",
+          "label": "vinterkjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "blend",
+          "variant": "headwear-blend-3-balaclava",
+          "label": "vindtett balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "down",
+          "variant": "handwear-down-3",
+          "label": "votter dun"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_wicking",
+          "variant": "footwear-syn-1-socks",
+          "label": "tekniske sokker"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_warm_pouch",
+          "label": "vognpose"
+        }
+      ],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WOOL_AVOIDED"
+      ],
+      "fingerprint": "v2-75e1e5cb452313e5",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G24",
+      "tittel": "Ullfri aktiv regndag",
+      "input": {
+        "weather": {
+          "tempC": 6,
+          "feelsLikeC": 6,
+          "windMs": 2,
+          "precipMmH": 1.5
+        },
+        "ageMonths": 20,
+        "situation": "active_play",
+        "materialPreference": "avoid_wool"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "active_play",
+        "intensity": "active",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 1,
+        "needsWindShell": false,
+        "needsWaterproofShell": true,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "ACTIVE_CHILD_LESS_INSULATION",
+          "RAIN_REQUIRES_SHELL"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "synthetic_wicking",
+          "variant": "base-fullbody-synthetic-1",
+          "label": "teknisk undertøysett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "fleece",
+          "variant": "mid-fullbody-fleece-1",
+          "label": "tynt fleecesett"
+        },
+        {
+          "rolle": "shell_fullbody",
+          "materiale": "shell",
+          "variant": "shell-fullbody-rain",
+          "label": "regndress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "blend",
+          "variant": "headwear-blend-1-thin",
+          "label": "tynn lue"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_wicking",
+          "variant": "footwear-syn-1-socks",
+          "label": "tekniske sokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_insulation",
+          "variant": "footwear-syn-3-winter",
+          "label": "vintersko isolerte"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "ACTIVE_CHILD_LESS_INSULATION",
+        "RAIN_REQUIRES_SHELL",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WICKING_SYNTHETIC_FOR_ACTIVITY",
+        "WOOL_AVOIDED"
+      ],
+      "fingerprint": "v2-8f1bdc449529bd0e",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G25",
+      "tittel": "Ullpreferanse kaldt/tørt",
+      "input": {
+        "weather": {
+          "tempC": -4,
+          "feelsLikeC": -4,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 18,
+        "situation": "stroller_awake",
+        "materialPreference": "prefer_wool"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "frost",
+        "baseWarmth": 3,
+        "insulationWarmth": 4,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_warm_pouch"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-3-thick",
+          "label": "tykt ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-3",
+          "label": "vinterkjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "down",
+          "variant": "handwear-down-3",
+          "label": "votter dun"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_warm_pouch",
+          "label": "vognpose"
+        }
+      ],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WOOL_PREFERENCE_APPLIED"
+      ],
+      "fingerprint": "v2-a9eb84c3c4d5ca41",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G26",
+      "tittel": "Ullpreferanse vått ytterlag",
+      "input": {
+        "weather": {
+          "tempC": 5,
+          "feelsLikeC": 5,
+          "windMs": 2,
+          "precipMmH": 1.5
+        },
+        "ageMonths": 20,
+        "situation": "mixed_day",
+        "materialPreference": "prefer_wool"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "mixed_day",
+        "intensity": "mixed",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 2,
+        "needsWindShell": false,
+        "needsWaterproofShell": true,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "RAIN_REQUIRES_SHELL"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-1-thin",
+          "label": "tynt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "shell_fullbody",
+          "materiale": "shell",
+          "variant": "shell-fullbody-rain",
+          "label": "regndress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-2",
+          "label": "lue m/ ull"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-1-socks",
+          "label": "ullsokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_insulation",
+          "variant": "footwear-syn-3-winter",
+          "label": "vintersko isolerte"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RAIN_REQUIRES_SHELL",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WOOL_PREFERENCE_APPLIED"
+      ],
+      "fingerprint": "v2-913313d5c91e3197",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G27",
+      "tittel": "Balansert aktiv og svett",
+      "input": {
+        "weather": {
+          "tempC": 8,
+          "feelsLikeC": 8,
+          "windMs": 2,
+          "precipMmH": 0,
+          "humidity": 85
+        },
+        "ageMonths": 20,
+        "situation": "active_play"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "active_play",
+        "intensity": "active",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 1,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "ACTIVE_CHILD_LESS_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "synthetic_wicking",
+          "variant": "base-fullbody-synthetic-1",
+          "label": "teknisk undertøysett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "blend",
+          "variant": "headwear-blend-1-thin",
+          "label": "tynn lue"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-1-socks",
+          "label": "ullsokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_insulation",
+          "variant": "footwear-syn-3-winter",
+          "label": "vintersko isolerte"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "ACTIVE_CHILD_LESS_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WICKING_SYNTHETIC_FOR_ACTIVITY"
+      ],
+      "fingerprint": "v2-5bec52d64064888c",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G28",
+      "tittel": "Balansert varm og rolig",
+      "input": {
+        "weather": {
+          "tempC": 21,
+          "feelsLikeC": 21,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 20,
+        "situation": "calm_outdoors"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "calm_outdoors",
+        "intensity": "resting",
+        "tempBand": "varm",
+        "baseWarmth": 1,
+        "insulationWarmth": 2,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": false,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "cotton",
+          "variant": "base-fullbody-cotton-1-long",
+          "label": "langermet body"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "cotton",
+          "variant": "headwear-cotton-0-sun",
+          "label": "solhatt"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_wicking",
+          "variant": "footwear-syn-1-socks",
+          "label": "tekniske sokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "blend",
+          "variant": "footwear-blend-0-shoes",
+          "label": "sko"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "COTTON_ONLY_WARM_DRY"
+      ],
+      "fingerprint": "v2-ec8f53710e0a12bf",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G29",
+      "tittel": "Bilstol etter tur",
+      "input": {
+        "weather": {
+          "tempC": 1,
+          "feelsLikeC": 1,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 12,
+        "situation": "stroller_awake",
+        "carSeat": true
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "kald",
+        "baseWarmth": 2,
+        "insulationWarmth": 3,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_warm_pouch",
+          "car_seat_pouch"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-2",
+          "label": "ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-2-light",
+          "label": "kjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-2-thick",
+          "label": "tykke votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_warm_pouch",
+          "label": "vognpose"
+        },
+        {
+          "id": "car_seat_pouch",
+          "label": "kjørepose"
+        }
+      ],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-de71fe27423cdc75",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G30",
+      "tittel": "Kalibrering mot varmere",
+      "input": {
+        "weather": {
+          "tempC": -2,
+          "feelsLikeC": -2,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 20,
+        "situation": "stroller_awake",
+        "childCalibration": 1
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "frost",
+        "baseWarmth": 3,
+        "insulationWarmth": 4,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_warm_pouch"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION",
+          "CALIBRATION_WARMER"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-3-thick",
+          "label": "tykt ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-3",
+          "label": "vinterkjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "down",
+          "variant": "handwear-down-3",
+          "label": "votter dun"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_warm_pouch",
+          "label": "vognpose"
+        }
+      ],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "CALIBRATION_WARMER",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-adedc9a6c0d8028c",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G31",
+      "tittel": "Kalibrering mot kjøligere",
+      "input": {
+        "weather": {
+          "tempC": 12,
+          "feelsLikeC": 12,
+          "windMs": 2,
+          "precipMmH": 1,
+          "symbolCode": "rain"
+        },
+        "ageMonths": 20,
+        "situation": "stroller_awake",
+        "childCalibration": -1
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "mild",
+        "baseWarmth": 1,
+        "insulationWarmth": 1,
+        "needsWindShell": false,
+        "needsWaterproofShell": true,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": false,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_rain_cover"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION",
+          "RAIN_REQUIRES_SHELL",
+          "CALIBRATION_COOLER"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-1-thin",
+          "label": "tynt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-1-thin",
+          "label": "tynt ull-mellomlag"
+        },
+        {
+          "rolle": "shell_fullbody",
+          "materiale": "shell",
+          "variant": "shell-fullbody-rain",
+          "label": "regndress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "cotton",
+          "variant": "headwear-cotton-0-sun",
+          "label": "solhatt"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_wicking",
+          "variant": "footwear-syn-1-socks",
+          "label": "tekniske sokker"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_rain_cover",
+          "label": "regntrekk på vognen"
+        }
+      ],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "RAIN_REQUIRES_SHELL",
+        "CALIBRATION_COOLER",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-eef8d0f68c742adc",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G32",
+      "tittel": "Ekstrem varme spedbarn",
+      "input": {
+        "weather": {
+          "tempC": 29,
+          "feelsLikeC": 29,
+          "windMs": 2,
+          "precipMmH": 0,
+          "symbolCode": "clearsky_day"
+        },
+        "ageMonths": 5,
+        "situation": "stroller_awake"
+      },
+      "termiskBehov": {
+        "ageStage": "newborn",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "ekstrem_varme",
+        "baseWarmth": 0,
+        "insulationWarmth": 1,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": true,
+        "needsHeadwear": true,
+        "needsHandwear": false,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "cotton",
+          "variant": "base-fullbody-cotton-0-short",
+          "label": "kortermet body"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "cotton",
+          "variant": "headwear-cotton-0-sun",
+          "label": "solhatt"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [
+        {
+          "kode": "SB-7",
+          "alvorlighet": "HIGH",
+          "melding": "Spedbarn (< 6 mnd) tåler ekstrem hete dårlig — maks 15 min ute uten skygge."
+        },
+        {
+          "kode": "HB-V2-EXTREME-HEAT",
+          "alvorlighet": "HIGH",
+          "melding": "Veldig varmt — pauser i skygge og rikelig drikke betyr mer enn plaggvalget nå."
+        }
+      ],
+      "alvorlighet": "HIGH",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "COTTON_ONLY_WARM_DRY"
+      ],
+      "fingerprint": "v2-2e4e8f387218547e",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "ekstra"
+          ],
+          "legacySeverity": "HIGH",
+          "v2Severity": "HIGH"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G33",
+      "tittel": "Ekstrem kulde spedbarn",
+      "input": {
+        "weather": {
+          "tempC": -18,
+          "feelsLikeC": -18,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 5,
+        "situation": "stroller_awake"
+      },
+      "termiskBehov": {
+        "ageStage": "newborn",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "ekstrem",
+        "baseWarmth": 4,
+        "insulationWarmth": 4,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_warm_pouch"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-3-thick",
+          "label": "tykt ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-4",
+          "label": "isolert vinterkjøredress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "down",
+          "variant": "handwear-down-3",
+          "label": "votter dun"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_warm_pouch",
+          "label": "vognpose"
+        }
+      ],
+      "sikkerhetsflagg": [
+        {
+          "kode": "SB-8",
+          "alvorlighet": "MEDIUM",
+          "melding": "Kort tur — sjekk kinn, nese og ører hvert 20. minutt. Frostskade-risiko ved feels ≤ -10 °C."
+        },
+        {
+          "kode": "HB-V2-EXTREME-COLD",
+          "alvorlighet": "HIGH",
+          "melding": "Ekstrem kulde — hold turen svært kort. Påkledning alene er ikke nok i denne kulda."
+        }
+      ],
+      "alvorlighet": "HIGH",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-0461e81ac3a151fc",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "MEDIUM",
+          "v2Severity": "HIGH"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G34",
+      "tittel": "Manglende illustrasjon",
+      "input": {
+        "weather": {
+          "tempC": 6,
+          "feelsLikeC": 6,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 20,
+        "situation": "active_play",
+        "materialPreference": "avoid_wool"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "active_play",
+        "intensity": "active",
+        "tempBand": "kjolig",
+        "baseWarmth": 2,
+        "insulationWarmth": 1,
+        "needsWindShell": false,
+        "needsWaterproofShell": false,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [],
+        "explanationCodes": [
+          "ACTIVE_CHILD_LESS_INSULATION"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "synthetic_wicking",
+          "variant": "base-fullbody-synthetic-1",
+          "label": "teknisk undertøysett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "fleece",
+          "variant": "mid-fullbody-fleece-1",
+          "label": "tynt fleecesett"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "blend",
+          "variant": "headwear-blend-1-thin",
+          "label": "tynn lue"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "blend",
+          "variant": "handwear-blend-1-thin",
+          "label": "tynne votter"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_wicking",
+          "variant": "footwear-syn-1-socks",
+          "label": "tekniske sokker"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "synthetic_insulation",
+          "variant": "footwear-syn-3-winter",
+          "label": "vintersko isolerte"
+        }
+      ],
+      "utstyr": [],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "ACTIVE_CHILD_LESS_INSULATION",
+        "AGE_APPROPRIATE_GARMENT_FORM",
+        "WICKING_SYNTHETIC_FOR_ACTIVITY",
+        "WOOL_AVOIDED"
+      ],
+      "fingerprint": "v2-7de62224791ba49e",
+      "legacyForskjell": {
+        "status": "equivalent",
+        "grunner": [],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "ekstra"
+          ],
+          "legacySeverity": "NONE",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G35",
+      "tittel": "Ugyldig situasjon",
+      "input": {
+        "weather": {
+          "tempC": 5,
+          "feelsLikeC": 5,
+          "windMs": 2,
+          "precipMmH": 0
+        },
+        "ageMonths": 24,
+        "situation": "awake_low_mobility"
+      },
+      "forventetFeil": "invalid_situation_for_age",
+      "observertFeil": "invalid_situation_for_age",
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    },
+    {
+      "id": "G36",
+      "tittel": "Determinisme",
+      "input": {
+        "weather": {
+          "tempC": -3,
+          "feelsLikeC": -3,
+          "windMs": 6,
+          "precipMmH": 0.7
+        },
+        "ageMonths": 14,
+        "situation": "stroller_awake"
+      },
+      "termiskBehov": {
+        "ageStage": "young_toddler",
+        "situation": "stroller_awake",
+        "intensity": "resting",
+        "tempBand": "frost",
+        "baseWarmth": 3,
+        "insulationWarmth": 4,
+        "needsWindShell": true,
+        "needsWaterproofShell": true,
+        "needsSunProtection": false,
+        "needsHeadwear": true,
+        "needsHandwear": true,
+        "needsFootwear": true,
+        "equipment": [
+          "stroller_rain_cover",
+          "stroller_warm_pouch"
+        ],
+        "explanationCodes": [
+          "RESTING_CHILD_MORE_INSULATION",
+          "RAIN_REQUIRES_SHELL",
+          "WIND_REQUIRES_SHELL"
+        ]
+      },
+      "valgtePlagg": [
+        {
+          "rolle": "base_fullbody",
+          "materiale": "wool",
+          "variant": "base-fullbody-wool-2-thick",
+          "label": "tykt ullsett"
+        },
+        {
+          "rolle": "mid_fullbody",
+          "materiale": "wool",
+          "variant": "mid-fullbody-wool-3-thick",
+          "label": "tykt ull-mellomlag"
+        },
+        {
+          "rolle": "insulated_fullbody",
+          "materiale": "synthetic_insulation",
+          "variant": "insulated-fullbody-syn-3",
+          "label": "vinterkjøredress"
+        },
+        {
+          "rolle": "shell_fullbody",
+          "materiale": "shell",
+          "variant": "shell-fullbody-rain",
+          "label": "regndress"
+        },
+        {
+          "rolle": "headwear",
+          "materiale": "wool",
+          "variant": "headwear-wool-3-balaclava",
+          "label": "balaklava"
+        },
+        {
+          "rolle": "handwear",
+          "materiale": "down",
+          "variant": "handwear-down-3",
+          "label": "votter dun"
+        },
+        {
+          "rolle": "footwear",
+          "materiale": "wool",
+          "variant": "footwear-wool-2-stockings",
+          "label": "ullstrømper"
+        }
+      ],
+      "utstyr": [
+        {
+          "id": "stroller_rain_cover",
+          "label": "regntrekk på vognen"
+        },
+        {
+          "id": "stroller_warm_pouch",
+          "label": "vognpose"
+        }
+      ],
+      "sikkerhetsflagg": [],
+      "alvorlighet": "NONE",
+      "forklaringer": [
+        "RESTING_CHILD_MORE_INSULATION",
+        "RAIN_REQUIRES_SHELL",
+        "WIND_REQUIRES_SHELL",
+        "AGE_APPROPRIATE_GARMENT_FORM"
+      ],
+      "fingerprint": "v2-460d0e683fb9203e",
+      "legacyForskjell": {
+        "status": "needs_review",
+        "grunner": [
+          "Alvorlighet falt fra MEDIUM til NONE"
+        ],
+        "detaljer": {
+          "sameFingerprintContent": true,
+          "legacyCategories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "v2Categories": [
+            "innerst",
+            "mellomlag",
+            "yttertoy",
+            "ekstra",
+            "utstyr"
+          ],
+          "legacySeverity": "MEDIUM",
+          "v2Severity": "NONE"
+        }
+      },
+      "faglig": {
+        "status": "",
+        "begrunnelse": "",
+        "fagperson": "",
+        "dato": "",
+        "signatur": ""
+      }
+    }
+  ]
+}

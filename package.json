@@ -16,7 +16,8 @@
     "audit:prepare": "tsx tools/product-audit/cli.ts prepare",
     "audit:finalize": "tsx tools/product-audit/cli.ts finalize",
     "audit:test": "vitest run tools/product-audit",
-    "e2e": "tsx e2e/smoke.ts"
+    "e2e": "tsx e2e/smoke.ts",
+    "engine:v2:review": "tsx scripts/export-engine-v2-review.ts"
   },
   "dependencies": {
     "@capacitor-community/in-app-review": "^8.0.0",
