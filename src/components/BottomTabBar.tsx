@@ -32,7 +32,7 @@
  */
 import { useState, type CSSProperties, type ReactElement } from 'react';
 import { motion } from 'motion/react';
-import type { TabKey } from '../types/nav';
+import { TAB_DEFS, type TabKey } from '../types/nav';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 
@@ -96,22 +96,32 @@ function IconGuide({ active }: { active: boolean }): ReactElement {
   );
 }
 
-function IconSettings({ active }: { active: boolean }): ReactElement {
-  // A3: tannhjul (var sol — forvirrende for «Innstillinger»).
+function IconFamily({ active }: { active: boolean }): ReactElement {
+  // R7 Task 3 (a11y-lead): familie-glyf, ikke tannhjul — ikonet skal matche
+  // «Familie»-labelen kognitivt. Innstillinger bor bak Familie til Task 7.
   return (
     <svg {...iconStrokeProps(active)}>
-      <circle cx={12} cy={12} r={3} />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      <circle cx={9} cy={8} r={3} />
+      <circle cx={17} cy={9.5} r={2.3} />
+      <path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5" />
+      <path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2" />
     </svg>
   );
 }
 
-const TABS: ReadonlyArray<TabDef> = [
-  { key: 'hjem',          label: 'Hjem',   Icon: IconHome },
-  { key: 'plan',          label: 'Uke',    Icon: IconWeek },
-  { key: 'guide',         label: 'Guide',  Icon: IconGuide },
-  { key: 'innstillinger', label: 'Innst.', Icon: IconSettings },
-];
+// Nøkler/labels kommer fra TAB_DEFS (src/types/nav.ts) — testbar ren data.
+const TAB_ICONS: Record<TabKey, (p: { active: boolean }) => ReactElement> = {
+  hjem: IconHome,
+  plan: IconWeek,
+  guide: IconGuide,
+  familie: IconFamily,
+};
+
+const TABS: ReadonlyArray<TabDef> = TAB_DEFS.map((def) => ({
+  key: def.key,
+  label: def.label,
+  Icon: TAB_ICONS[def.key],
+}));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Styles

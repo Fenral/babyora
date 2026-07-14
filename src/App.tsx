@@ -49,8 +49,8 @@ const VarmEllerKaldScreen = lazy(() =>
 const VinterprogramScreen = lazy(() =>
   import('./screens/VinterprogramScreen').then((m) => ({ default: m.VinterprogramScreen })),
 );
-const InnstillingerScreen = lazy(() =>
-  import('./screens/InnstillingerScreen').then((m) => ({ default: m.InnstillingerScreen })),
+const FamilieScreen = lazy(() =>
+  import('./screens/FamilieScreen').then((m) => ({ default: m.FamilieScreen })),
 );
 const OnboardingScreen = lazy(() =>
   import('./screens/OnboardingScreen').then((m) => ({ default: m.OnboardingScreen })),
@@ -80,9 +80,9 @@ function RouteSkeleton(): ReactElement {
 
 const TAB_TITLES: Record<TabKey, string> = {
   hjem: 'Hjem · Babyora',
-  plan: 'Uke · Babyora',
+  plan: 'Planlegg · Babyora',
   guide: 'Guide · Babyora',
-  innstillinger: 'Innstillinger · Babyora',
+  familie: 'Familie · Babyora',
 };
 
 /**
@@ -366,8 +366,10 @@ export default function App(): ReactElement {
       />
     );
   } else {
-    routeKey = 'tab:innstillinger';
-    routeContent = <InnstillingerScreen onNavigate={onNavigate} />;
+    // R7 Task 3: Familie-roten hoster innstillingsinnholdet til Task 7
+    // restrukturerer den (barn/omsorgspersoner/steder/Plus-seksjoner).
+    routeKey = 'tab:familie';
+    routeContent = <FamilieScreen onNavigate={onNavigate} />;
   }
 
   return (
