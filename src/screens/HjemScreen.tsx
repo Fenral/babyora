@@ -55,9 +55,9 @@ import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 // Gamle A1-A7-PNG-ene er byttet ut med clay-verdenen fra F79/F80.
 // tier/headwear-logikken GJENBRUKES for å velge riktig clay-antrekk:
 // hodeplagg + vær-tier på avataren er kjernesignalet.
-import { headwearFromRecommendation, tierFromRecommendation } from '../lib/avatar-tier';
 import { tempAxisFor } from '../lib/temp-axis';
-import { stageSrc } from '../lib/avatar-stage';
+import { deriveSceneModelFromLegacy } from '../lib/recommendation/scene';
+import { VerifiedAvatarComposite } from '../components/outfit/VerifiedAvatarComposite';
 // BottomTabBar er global (mounted i App.tsx) — ikke importer/mount her.
 import { MOTION } from '../styles/motion-grammar';
 import { useSwapOverride } from '../state/swap-override-store';
@@ -71,8 +71,6 @@ const ELVERUM = { lat: 60.8867, lon: 11.5614, city: 'Elverum' };
 // R3 (2026-07-14): tempAxisFor/stageSrc er flyttet til src/lib/temp-axis.ts
 // og src/lib/avatar-stage.ts (react-refresh: komponentfiler eksporterer kun
 // komponenter). Samme funksjoner, samme adferd.
-
-const DRESSING_STAGE_COUNT = 4; // stage-0..4 (5 bilder)
 
 type Activity = 'utelek' | 'vogn';
 type VognMode = 'awake' | 'sleeping';
@@ -132,19 +130,10 @@ function formatTemp(t: number | undefined | null): string {
 }
 
 /**
- * Antall "lag" for lag-tallet — samme telling som tidligere B-strategi-tekst
- * brukte (ekskluderer 'utstyr'-kategorien, som ikke er klær PÅ barnet, f.eks.
- * vognpose/regntrekk). Dette matcher hva PaakledningScreen-popupen grupperer
- * som innerst/mellom/ytterst/tilbehør (tilbehør = 'ekstra' + 'utstyr'), så
- * "N lag" på Hjem og popupens faktiske plagg-liste bærer samme fasit-tall.
+ * R7 Task 4: layerCount + stageForRecommendation fjernet — scenemodellen
+ * (deriveSceneModelFromLegacy) eier avledningen, og silhuetten erstatter
+ * clay-stagene til R8-manifestet er godkjent.
  */
-function layerCount(rec: Recommendation | null): number {
-  if (!rec) return 0;
-  return rec.layers.reduce((sum, layer) => {
-    if (layer.category === 'utstyr') return sum;
-    return sum + (layer.items.length > 0 ? 1 : 0);
-  }, 0);
-}
 
 /**
  * Interim ikon-strategi (til batch-vær-tiers leverer full 3D-sett):
@@ -166,17 +155,6 @@ function weatherIconFor(symbolCode: string | undefined): WeatherIconStrategy {
   if (base === 'cloudy') return png('skyet');
   if (base === 'fog') return png('taake');
   return { kind: 'fallback' };
-}
-
-/**
- * Interim dressing-sekvens stage-mapping (til batch leverer vær-tiers).
- * ≤2 lag → spill 0→2, 3 lag → 0→3, ≥4 lag → 0→4. Samlet i én funksjon slik
- * at fremtidig bytte til vær-tier-drevet mapping er én fils endring.
- */
-function stageForRecommendation(layers: number): number {
-  if (layers <= 2) return 2;
-  if (layers === 3) return 3;
-  return Math.min(4, DRESSING_STAGE_COUNT);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -316,17 +294,34 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
   const isWeatherLoading = now === null || now === undefined;
   const conditionLabelText = symbolToLabel(now?.symbolCode);
   const tempAxis = tempAxisFor(now?.feelsLikeC, now?.tempC);
-  const totalLayers = layerCount(resolvedRecommendation);
 
   const weatherIcon = weatherIconFor(now?.symbolCode);
-  const headwear = resolvedRecommendation ? headwearFromRecommendation(resolvedRecommendation) : 'none';
-  const avatarTier = resolvedRecommendation ? tierFromRecommendation(resolvedRecommendation, activity) : undefined;
 
-  // Avatar er NAKEN på Hjem (Sivert 2026-07): ingen påkledning før CTA.
-  // Selve på-kledningen skjer i takeoveren etter «Se dagens antrekk». targetStage
-  // beholdes kun så (skjulte) høyere stage-bilder får riktig hodeplagg-variant.
-  const targetStage = resolvedRecommendation ? stageForRecommendation(totalLayers) : 0;
-  const effectiveStage = 0; // kun stage-0 (naken/bleie) synlig på Hjem
+  // R7 Task 4 — retning B: scenemodellen (dominant svar + ytterste synlige
+  // ankere) avledes fra den swap-finaliserte legacy-anbefalingen så lenge
+  // kohortflaggene er av. Ingen lokal telling/parafrase.
+  const sceneModel = useMemo(
+    () => (resolvedRecommendation
+      ? deriveSceneModelFromLegacy(resolvedRecommendation)
+      : { headline: 'Dagens antrekk', anchors: [], outerBodyLabel: null }),
+    [resolvedRecommendation],
+  );
+
+  // Positur-nøkkel for silhuetten (manifest er tomt til R8 → alltid nøytral).
+  const avatarPoseKey = useMemo(() => ({
+    pose: ageMonths >= 12 ? ('standing' as const) : ('sitting' as const),
+    outerBody: null, headwear: null, handwear: null, neck: null, footwear: null,
+  }), [ageMonths]);
+
+  // Sikkerhetslinje (a11y-lead krav 4b): synlig på solid flate ved ≥ MEDIUM.
+  const safetyLineText = useMemo(() => {
+    const flags = resolvedRecommendation?.safetyFlags ?? [];
+    const rank: Record<string, number> = { NONE: 0, LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
+    const relevant = flags
+      .filter((f) => f.displayInSheet !== false && rank[f.severity] >= 2)
+      .sort((a, b) => rank[b.severity] - rank[a.severity]);
+    return relevant[0]?.message ?? null;
+  }, [resolvedRecommendation]);
 
   // ─── Sol-puls: engangs 4.5s, ingen replay/pause i UI (WCAG 2.2.2: <5s → OK) ──
   const [sunPulseKey] = useState(0);
@@ -474,15 +469,6 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     marginTop: 2,
   };
 
-  const sceneLabel: CSSProperties = {
-    fontSize: '0.8125rem',
-    fontWeight: 600,
-    letterSpacing: '0.02em',
-    color: 'var(--ink-700)',
-    textAlign: 'center',
-    margin: '0 0 6px',
-  };
-
   const scene: CSSProperties = {
     position: 'relative',
     display: 'flex',
@@ -493,6 +479,66 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     minHeight: 110,
     overflow: 'visible',
     flex: 1,
+    // Retning B: temp-reaktiv atmosfære — axis-drevne tokens gir gradienten
+    // gratis via [data-temp]-overrides (avatar-glow/bg-canvas).
+    background: 'radial-gradient(ellipse 90% 70% at 50% 42%, var(--avatar-glow) 0%, transparent 72%)',
+    borderRadius: 28,
+  };
+
+  // Orbital-ankere (dekorative — hele scenen er aria-hidden; sr-sammendraget
+  // bærer teksten). Posisjoner rundt avataren, maks 5.
+  const anchorRing: CSSProperties = {
+    position: 'absolute', inset: 0, pointerEvents: 'none',
+  };
+  const ANCHOR_POSITIONS: Array<CSSProperties> = [
+    { top: '4%', left: '50%', transform: 'translateX(-50%)' },
+    { top: '26%', left: '2%' },
+    { top: '26%', right: '2%' },
+    { bottom: '12%', left: '6%' },
+    { bottom: '12%', right: '6%' },
+  ];
+  const anchorPill = (i: number, _count: number): CSSProperties => ({
+    position: 'absolute',
+    ...ANCHOR_POSITIONS[i],
+    maxWidth: 132,
+    padding: '6px 12px',
+    borderRadius: 999,
+    background: 'var(--surface-elevated)',
+    border: '1px solid var(--ink-200)',
+    boxShadow: '0 4px 12px color-mix(in oklab, var(--ink-900) 12%, transparent)',
+    fontSize: '0.75rem',
+    fontWeight: 650,
+    color: 'var(--ink-900)',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  });
+
+  // Dominant svar — serif display (retning B: svaret er scenens tekst).
+  const sceneHeadline: CSSProperties = {
+    fontFamily: 'var(--font-display)',
+    fontWeight: 600,
+    fontSize: 'clamp(1.6rem, 7vw, 2.1rem)',
+    lineHeight: 1.12,
+    letterSpacing: '-0.01em',
+    color: 'var(--ink-900)',
+    textAlign: 'center',
+    margin: '10px 0 4px',
+    textWrap: 'balance' as CSSProperties['textWrap'],
+  };
+
+  // Sikkerhetslinje — alltid solid flate, aldri kun farge (a11y-lead 4b).
+  const safetyLine: CSSProperties = {
+    margin: '6px auto 0',
+    maxWidth: 340,
+    padding: '10px 14px',
+    borderRadius: 14,
+    background: 'var(--surface-elevated)',
+    border: '1px solid var(--ink-200)',
+    borderLeft: '4px solid var(--terracotta-600)',
+    color: 'var(--ink-900)',
+    fontSize: '0.8125rem',
+    lineHeight: 1.45,
   };
 
   /* Sivert (låst): temp som dempet WATERMARK bak avataren — avataren får maks
@@ -513,33 +559,8 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     transition: reducedMotion ? 'none' : `color ${MOTION.tempBurst}ms ${MOTION.easeOut}`,
   };
 
-  const stack: CSSProperties = {
-    position: 'relative',
-    /* Viewport-skalert med gulv: fast 264px skjøv CTA-en under bunn-nav på
-       iPhone SE (667px høyde). vh (ikke dvh) — støttet i alle WebViews. */
-    width: 'min(264px, max(160px, 32vh))',
-    height: 'min(264px, max(160px, 32vh))',
-    zIndex: 2,
-    margin: '0 auto',
-    filter:
-      'drop-shadow(-10px 16px 20px color-mix(in srgb, var(--accent-temp, var(--warm-orange-500)) 32%, transparent)) drop-shadow(8px -6px 16px color-mix(in srgb, var(--avatar-glow) 60%, transparent))',
-  };
-
-  const stackImgStyle = (on: boolean): CSSProperties => ({
-    position: 'absolute',
-    inset: 0,
-    width: '100%',
-    height: '100%',
-    objectFit: 'contain',
-    objectPosition: 'center bottom',
-    opacity: on ? 1 : 0,
-    transform: on ? 'translateY(0) scale(1)' : 'translateY(5px) scale(0.985)',
-    transition: reducedMotion
-      ? 'none'
-      : `opacity 420ms ${MOTION.easeOut}, transform 420ms ${MOTION.easeOut}`,
-    pointerEvents: 'none',
-    userSelect: 'none',
-  });
+  // R7 Task 4: clay-stack-stilene (stack/stackImgStyle) fjernet — scenen
+  // bruker VerifiedAvatarComposite (nøytral silhuett til R8-manifestet).
 
   const cta: CSSProperties = {
     flex: 'none',
@@ -709,30 +730,42 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
             </button>
           </div>
 
-          {/* Scene: label → temp-mast → avatar-stack → «N lag» → CTA */}
+          {/* R7 Task 4 — retning B «Scenen»: avatar i temp-reaktiv atmosfære,
+              orbital-ankere (dekorative duplikater av listen — a11y-lead
+              krav 1: aldri interaktive), dominant serif-svar, sr-sammendrag
+              (krav 2), sikkerhetslinje på solid flate (krav 4b). */}
           <div style={sceneSection}>
-            <h2 id="scene-heading" style={sceneLabel}>Dagens påkledning</h2>
-
-            <div style={scene}>
-              <div
-                style={stack}
-                role="img"
-                aria-label="Baby, ennå ikke påkledd"
-              >
-                {/* Clay-stagene (F79 edit-kjede) — crossfade 0→N. Sluttbildet
-                    bytter til hodeplagg-variant når anbefalingen har lue/solhatt
-                    (kjernesignal). Batch (F80a) leverer vær-tiers senere. */}
-                {Array.from({ length: DRESSING_STAGE_COUNT + 1 }, (_, stageIdx) => (
-                  <img
-                    key={`${stageIdx}-${headwear}-${avatarTier ?? ''}`}
-                    src={stageSrc(stageIdx, targetStage, headwear, avatarTier)}
-                    alt=""
-                    style={stackImgStyle(stageIdx <= effectiveStage)}
-                    draggable={false}
-                  />
+            <div style={scene} aria-hidden="true">
+              <VerifiedAvatarComposite
+                stateKey={avatarPoseKey}
+                outfitSummary={sceneModel.headline}
+                decorative
+                reducedMotion={reducedMotion}
+                size={188}
+              />
+              <div style={anchorRing}>
+                {sceneModel.anchors.map((anchor, i) => (
+                  <span key={anchor.label} style={anchorPill(i, sceneModel.anchors.length)}>
+                    {anchor.label}
+                  </span>
                 ))}
               </div>
             </div>
+
+            <h2 id="scene-heading" style={sceneHeadline}>{sceneModel.headline}</h2>
+            {/* sr-sammendrag (a11y-lead krav 2): antrekket rekonstruerbart
+                uten grafikk — kilden er samme scenemodell, aldri re-telling. */}
+            <span style={srOnly}>
+              {sceneModel.anchors.length > 0
+                ? `Ytterst: ${sceneModel.anchors.map((a) => a.label).join(', ')}.`
+                : 'Antrekket beregnes.'}
+            </span>
+
+            {safetyLineText !== null && (
+              <p role="status" style={safetyLine}>
+                <span aria-hidden="true">⚠︎ </span>{safetyLineText}
+              </p>
+            )}
 
             {/* CTA — Native-feel: spring-fysikk på tap (whileTap).
                 Reduced-motion: CSS-pressede regler i .ba-hjem-press-cta */}

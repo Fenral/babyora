@@ -10,6 +10,7 @@
 
 import type { RecommendationView } from './view.js';
 import type { ResolvedGarment } from '../clothing-engine-v2/types.js';
+import type { Recommendation } from '../wool-layers/types.js';
 
 export type SceneAnchor = {
   label: string;
@@ -63,5 +64,39 @@ export function deriveSceneModel(view: RecommendationView): SceneModel {
     headline,
     anchors: anchors.slice(0, 5),
     outerBodyLabel: outerBody?.labelNb ?? null,
+  };
+}
+
+/**
+ * Legacy-inngangen — brukes av skjermene SÅ LENGE kohortflaggene er av
+ * (UI-planens grunnregel: konsumér legacy til en kohort er aktivert).
+ * Samme SceneModel-form; ytterste synlige = yttertøy[0] (ellers mellomlag[0],
+ * ellers innerst[0]) + lue/votter/hals fra ekstra + utstyr.
+ */
+export function deriveSceneModelFromLegacy(rec: Recommendation): SceneModel {
+  const items = (category: string): string[] =>
+    rec.layers.find((l) => l.category === category)?.items ?? [];
+
+  const outerBodyLabel =
+    items('yttertoy')[0] ?? items('mellomlag')[0] ?? items('innerst')[0] ?? null;
+
+  const anchors: SceneAnchor[] = [];
+  if (outerBodyLabel) anchors.push({ label: outerBodyLabel, role: 'shell_fullbody' });
+  const ekstra = items('ekstra');
+  const headwear = ekstra.find((i) => /lue|balaklava|solhatt|caps/i.test(i));
+  const handwear = ekstra.find((i) => /votter/i.test(i));
+  const neck = ekstra.find((i) => /halsedisse|hals/i.test(i));
+  if (headwear) anchors.push({ label: headwear, role: 'headwear' });
+  if (handwear) anchors.push({ label: handwear, role: 'handwear' });
+  if (neck) anchors.push({ label: neck, role: 'headwear' });
+  for (const eq of items('utstyr')) {
+    if (anchors.length >= 5) break;
+    anchors.push({ label: eq, role: 'equipment' });
+  }
+
+  return {
+    headline: outerBodyLabel ? `${capitalize(outerBodyLabel)}-dag` : 'Dagens antrekk',
+    anchors: anchors.slice(0, 5),
+    outerBodyLabel,
   };
 }
