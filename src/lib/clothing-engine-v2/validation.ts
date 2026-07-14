@@ -2,17 +2,14 @@
  * Motor 2.0 — inputvalidering.
  * Adferd per design-spec §1 (0–24, avvis 25+), §7 (situasjonsmatrise — UI
  * viser bare gyldige valg; motoren gjetter aldri), §17 (feiltabell).
- *
- * Situasjonsmatrisen bor her midlertidig; Task 2 flytter den til
- * situations.ts/age.ts som frosne oppslagsdata.
  */
 
 import { EngineV2Error } from './errors.js';
+import { ageStageFor } from './age.js';
+import { isSituationValidForStage } from './situations.js';
 import type {
-  AgeStage,
   MaterialPreference,
   RecommendInputV2,
-  Situation,
   ValidatedRecommendInputV2,
 } from './types.js';
 
@@ -21,24 +18,6 @@ const MATERIAL_PREFERENCES: readonly MaterialPreference[] = [
   'prefer_wool',
   'avoid_wool',
 ];
-
-// Spec §7-tabellen: hvilke stadier hver situasjon er gyldig for.
-// «Etter eksplisitt valg» (bæresele 12–24) er gyldig input — UI nedprioriterer.
-const VALID_STAGES: Readonly<Record<Situation, readonly AgeStage[]>> = {
-  stroller_awake: ['newborn', 'mobile_baby', 'young_toddler'],
-  carrier: ['newborn', 'mobile_baby', 'young_toddler'],
-  awake_low_mobility: ['newborn', 'mobile_baby'],
-  active_play: ['mobile_baby', 'young_toddler'],
-  calm_outdoors: ['young_toddler'],
-  mixed_day: ['young_toddler'],
-  indoor_sleep: ['newborn', 'mobile_baby', 'young_toddler'],
-};
-
-function ageStageForValidated(ageMonths: number): AgeStage {
-  if (ageMonths < 6) return 'newborn';
-  if (ageMonths < 12) return 'mobile_baby';
-  return 'young_toddler';
-}
 
 export function validateRecommendInputV2(input: RecommendInputV2): ValidatedRecommendInputV2 {
   const { weather, ageMonths, situation, materialPreference, childCalibration } = input;
@@ -66,9 +45,8 @@ export function validateRecommendInputV2(input: RecommendInputV2): ValidatedReco
   }
 
   // Situasjon-for-alder — spec §7; ukjent situasjon behandles som ugyldig valg.
-  const stages = VALID_STAGES[situation];
-  const stage = ageStageForValidated(ageMonths);
-  if (!stages || !stages.includes(stage)) {
+  const stage = ageStageFor(ageMonths);
+  if (!isSituationValidForStage(situation, stage)) {
     throw new EngineV2Error(
       'invalid_situation_for_age',
       `Situasjonen «${situation}» er ikke gyldig for aldersstadiet ${stage}`,

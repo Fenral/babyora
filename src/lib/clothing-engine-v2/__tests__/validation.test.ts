@@ -6,7 +6,9 @@
  */
 import { describe, expect, it } from 'vitest';
 import { validateRecommendInputV2 } from '../validation.js';
-import type { RecommendInputV2 } from '../types.js';
+import { ageStageFor } from '../age.js';
+import { SITUATION_PROFILES, isSituationValidForStage } from '../situations.js';
+import type { AgeStage, RecommendInputV2, Situation } from '../types.js';
 
 function validInput(partial?: Partial<RecommendInputV2>): RecommendInputV2 {
   return {
@@ -92,6 +94,68 @@ describe('Motor 2.0 input validation', () => {
     } catch (err) {
       expect((err as Error).name).toBe('EngineV2Error');
       expect((err as Error).message).toMatch(/0.*24/);
+    }
+  });
+});
+
+// ─── Task 2: aldersstadier (tosidige boundary-tester, spec §6) ───────────────
+
+describe('Motor 2.0 aldersstadier', () => {
+  it.each([
+    [0, 'newborn'], [5, 'newborn'], [6, 'mobile_baby'], [11, 'mobile_baby'],
+    [12, 'young_toddler'], [23, 'young_toddler'], [24, 'young_toddler'],
+  ] as const)('%s måneder er %s', (age, expected) => {
+    expect(ageStageFor(age)).toBe(expected);
+  });
+
+  it.each([-1, 25, Number.NaN, Number.POSITIVE_INFINITY])(
+    'ageStageFor avviser %s med unsupported_age',
+    (age) => {
+      expect(() => ageStageFor(age))
+        .toThrowError(expect.objectContaining({ code: 'unsupported_age' }));
+    },
+  );
+});
+
+// ─── Task 2: full situasjonsmatrise (alle 21 celler, spec §7) ────────────────
+
+describe('Motor 2.0 situasjonsmatrise', () => {
+  const MATRIX: Array<[Situation, Record<AgeStage, boolean>]> = [
+    ['stroller_awake',     { newborn: true,  mobile_baby: true,  young_toddler: true }],
+    ['carrier',            { newborn: true,  mobile_baby: true,  young_toddler: true }],
+    ['awake_low_mobility', { newborn: true,  mobile_baby: true,  young_toddler: false }],
+    ['active_play',        { newborn: false, mobile_baby: true,  young_toddler: true }],
+    ['calm_outdoors',      { newborn: false, mobile_baby: false, young_toddler: true }],
+    ['mixed_day',          { newborn: false, mobile_baby: false, young_toddler: true }],
+    ['indoor_sleep',       { newborn: true,  mobile_baby: true,  young_toddler: true }],
+  ];
+
+  const REPRESENTATIVE_AGE: Record<AgeStage, number> = {
+    newborn: 3, mobile_baby: 8, young_toddler: 18,
+  };
+
+  for (const [situation, cells] of MATRIX) {
+    for (const stage of ['newborn', 'mobile_baby', 'young_toddler'] as const) {
+      const allowed = cells[stage];
+      it(`${situation} × ${stage} = ${allowed ? 'gyldig' : 'ugyldig'}`, () => {
+        expect(isSituationValidForStage(situation, stage)).toBe(allowed);
+        const attempt = () =>
+          validateRecommendInputV2(validInput({ ageMonths: REPRESENTATIVE_AGE[stage], situation }));
+        if (allowed) expect(attempt).not.toThrow();
+        else expect(attempt).toThrowError(expect.objectContaining({ code: 'invalid_situation_for_age' }));
+      });
+    }
+  }
+
+  it('profilene er frosne data med intensitet og eksponering', () => {
+    expect(Object.isFrozen(SITUATION_PROFILES)).toBe(true);
+    expect(SITUATION_PROFILES.active_play.intensity).toBe('active');
+    expect(SITUATION_PROFILES.mixed_day.intensity).toBe('mixed');
+    expect(SITUATION_PROFILES.stroller_awake.intensity).toBe('resting');
+    expect(SITUATION_PROFILES.indoor_sleep.exposureKind).toBe('indoor');
+    for (const p of Object.values(SITUATION_PROFILES)) {
+      expect(p.exposureKind).toBe(p.id === 'indoor_sleep' ? 'indoor' : 'outdoor');
+      expect(Object.isFrozen(p)).toBe(true);
     }
   });
 });

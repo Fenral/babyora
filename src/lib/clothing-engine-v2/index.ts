@@ -6,6 +6,8 @@
 
 export { EngineV2Error, type EngineV2ErrorCode } from './errors.js';
 export { validateRecommendInputV2 } from './validation.js';
+export { ageStageFor } from './age.js';
+export { SITUATION_PROFILES, isSituationValidForStage } from './situations.js';
 export type {
   AgeStage,
   ActivityIntensity,
