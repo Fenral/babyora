@@ -182,6 +182,9 @@ export type RecommendInputV2 = {
   canRoll?: boolean;
   /** Bilstol-kontekst — sikkerhetsregler for isolert yttertøy (HB-9-ekvivalent). */
   carSeat?: boolean;
+  /** Kun bæresele: barnet ligger innenfor forelderens jakke (G04/G05) —
+   *  foreldrekroppen varmer og jakka er skallet. */
+  carrierUnderParentJacket?: boolean;
   /** Planlagt eksponeringstid i minutter. Default 60. */
   exposureMin?: number;
 };
