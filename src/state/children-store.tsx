@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+import { parseStoredChildren } from './child-profile.js';
 /**
  * Lokal state for barn (uten Supabase ennå).
  * Erstattes med Supabase-data i Fase 3 (onboarding) — men API-en holdes
@@ -32,6 +33,12 @@ export type Child = {
    * faller engine tilbake til alder ≥ 4 mnd som proxy.
    */
   canRoll?: 'yes' | 'no' | 'unknown';
+  /**
+   * Motor 2.0 Task 13: gratis per-barn materialpreferanse. Manglende/ukjent
+   * verdi migreres til 'best_for_conditions' i parseStoredChild — lagrings-
+   * nøkkelen bumpes ikke og onboarding tvinges aldri.
+   */
+  materialPreference?: import('../lib/clothing-engine-v2/types.js').MaterialPreference;
 };
 
 export type ChildrenStore = {
@@ -112,8 +119,9 @@ export function loadFromStorage(): Child[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    // Task 13: rutes gjennom parseStoredChildren — defaulter material-
+    // preferanse trygt og filtrerer kun oppføringer uten kjerneskjema.
+    return parseStoredChildren(JSON.parse(raw));
   } catch {
     return [];
   }
