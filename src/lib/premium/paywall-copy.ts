@@ -18,7 +18,9 @@ import {
   type ProductKey,
 } from './products';
 
-export const PLAN_ORDER: ReadonlyArray<ProductKey> = ['yearly', 'monthly', 'lifetime'];
+/** R7 Task 1 (låst beslutning 2026-07-13): lifetime/«Barnetiden» publiseres
+ *  ikke — SKU-en beholdes definert i products.ts, men vises aldri. */
+export const PLAN_ORDER: ReadonlyArray<ProductKey> = ['yearly', 'monthly'];
 
 export const PLAN_DISPLAY_NAME: Record<ProductKey, string> = {
   yearly: 'Årlig',
@@ -38,7 +40,7 @@ export const PAYWALL_COPY = {
    *  betalingsdriver = veiledning/proaktivitet) — generiske paywall-åpninger
    *  leder med det i stedet for å gjenta produktnavnet. */
   flagshipHeadline: 'Våkn opp til ferdig antrekk',
-  trustLine: 'Én Premium — begge foreldre',
+  trustLine: 'Én Plus — alle som passer barnet',
   ctaYearly: 'Start 7 dager gratis',
   ctaOther: 'Kjøp Babyora Pluss',
   ctaPending: 'Behandler …',
