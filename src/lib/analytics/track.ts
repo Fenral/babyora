@@ -12,7 +12,11 @@
  * lat/lon, child-id i properties.
  */
 
-import type { Activity } from '../wool-layers/types.js';
+import type { Activity, TempBand } from '../wool-layers/types.js';
+import type { AgeStage, GarmentRole, MaterialFamily, Situation } from '../clothing-engine-v2/types.js';
+
+/** Motor 2.0 Task 14: grov årsakskode for fallback — aldri feilmeldingstekst. */
+export type EngineV2FallbackReason = 'flag_off' | 'engine_error' | 'shadow_disagreement';
 
 export type TrackedEvent =
   | { type: 'app_opened'; source: 'direct' | 'push' | 'widget' | 'deeplink' }
@@ -31,7 +35,14 @@ export type TrackedEvent =
   | { type: 'trial_converted'; plan: string }
   | { type: 'trial_expired' }
   | { type: 'winback_shown'; offer: string }
-  | { type: 'winback_converted'; plan: string };
+  | { type: 'winback_converted'; plan: string }
+  // Motor 2.0 Task 14 (design-spec §18): kun grove kategorier — aldri eksakt
+  // alder, aldri preferanse-VERDI (gammel eller ny), aldri identitet.
+  | { type: 'engine_v2_shadow_compared'; same_fingerprint: boolean; age_stage: AgeStage; situation: Situation; temp_band: TempBand }
+  | { type: 'material_preference_changed' }
+  | { type: 'material_alternative_opened'; material: MaterialFamily; role: GarmentRole }
+  | { type: 'situation_changed'; situation: Situation; age_stage: AgeStage }
+  | { type: 'engine_v2_fallback_used'; reason: EngineV2FallbackReason };
 
 const FORBIDDEN_KEYS = /(name|dob|birth|email|phone|lat|lon|location|child_?id)/i;
 const OPT_OUT_KEY = 'babyora:analytics:opt_out';
