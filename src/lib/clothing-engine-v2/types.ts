@@ -126,7 +126,11 @@ export type ExplanationCode =
   | 'FLEECE_FAST_DRYING'
   | 'WICKING_SYNTHETIC_FOR_ACTIVITY'
   | 'COTTON_ONLY_WARM_DRY'
-  | 'AGE_APPROPRIATE_GARMENT_FORM';
+  | 'AGE_APPROPRIATE_GARMENT_FORM'
+  // Tillegg utover spec §16-listen (dokumentert avvik): engine-2-plan Task 5
+  // krever en stabil forklaringskode for anvendt kalibrering.
+  | 'CALIBRATION_WARMER'
+  | 'CALIBRATION_COOLER';
 
 /** Stabil kode + interpolasjonsverdier; oversettelse skjer i presentasjonslaget
  *  (Task 9). Ingen fritekst i motoren. */
