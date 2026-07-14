@@ -77,12 +77,12 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
   {
     id: 'settings', label: 'Innstillinger', appWeight: 5,
     role: 'Gjøre barn, sted, varsler, personvern og abonnement forståelig og kontrollerbart.',
-    states: [{ id: 'default', label: 'Innstillingsoversikt', required: true, actions: [tab('Innst'), wait] }],
+    states: [{ id: 'default', label: 'Innstillingsoversikt', required: true, actions: [tab('Familie|Innst'), wait] }],
   },
   {
     id: 'paywall', label: 'Betalingsvegg', appWeight: 14,
     role: 'Selge fremover, overalt og familie gjennom konkrete utfall, tydelig pris og lav opplevd risiko.',
-    states: [{ id: 'default', label: 'Standard Plus-tilbud', required: true, actions: [tab('Innst'), button('Plus|Premium|Oppgrader|Se abonnement'), wait] }],
+    states: [{ id: 'default', label: 'Standard Plus-tilbud', required: true, actions: [tab('Familie|Innst'), button('Plus|Premium|Oppgrader|Se abonnement'), wait] }],
   },
 ] as const;
 
