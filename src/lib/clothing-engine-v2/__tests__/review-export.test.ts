@@ -3,7 +3,7 @@
  * blanke beslutningsfelter, ingen PII.
  */
 import { describe, expect, it } from 'vitest';
-import { buildReviewExport } from '../../../../scripts/export-engine-v2-review.js';
+import { buildReviewExport } from '../review-export.js';
 
 describe('Motor 2.0 fagpakke-eksport', () => {
   const exported = buildReviewExport() as { scenarioer: Array<Record<string, unknown>> };
