@@ -20,7 +20,11 @@ Eier godkjente pakken eksplisitt («kjør»). Alle tre pakker er committet lokal
 
 **Task 13–16 FERDIG (2026-07-14 kveld):** profilmigrering (materialPreference, uendret lagringsnøkkel), PII-frie analytics-events (typenivå-bevist), fagpakke-eksport (`npm run engine:v2:review` — deterministisk, `docs/superpowers/evidence/engine-v2-scenarios.json` + expert-review.md, status IKKE SIGNERT), og situasjons-/materialkomponentene (a11y-lead-review fulgt; skjerm-wiring bevisst utsatt til R7 — dokumentert avvik). 478 tester grønne, E2E 2/2.
 
-**Alt maskingjørbart i Motor V2 er nå levert.** Gjenstår i motoren: Task 17 kohortaktivering — **blokkert på ekstern faglig signatur av fagpakken**. Menneskelige porter: (1) fagperson signerer engine-v2-scenarios.json, (2) fem-foreldre-testen for retning B. Neste kodearbeid: R7-spec + implementering av retning B «Scenen».
+**Alt maskingjørbart i Motor V2 er nå levert.** Gjenstår i motoren: Task 17 kohortaktivering — **blokkert på ekstern faglig signatur av fagpakken**.
+
+**R7 Task 1–2 FERDIG (2026-07-14 kveld):** sentralisert capability-kontrakt (`decideAccess` — lifetime fjernet fra PLAN_ORDER per låst beslutning, trust-copy oppdatert) + kanonisk `RecommendationView`/`AvatarStateKey` (R5-kontrakten: sittende 0–11/stående 12–24, tomt manifest → nøytral fallback til R8). 507 tester grønne. GitHub-webhook til Codemagic gjenopprettet (id 652768164).
+
+**⛔ NESTE ER GATET:** R7 Task 3+ (visuelt arbeid — dock, instrument, Hjem/Antrekk/Plan i retning B) krever fem-foreldre-porten per planens grunnregel. Menneskelige porter: (1) fagperson signerer `engine-v2-scenarios.json`, (2) fem-foreldre-testen (bruk `docs/mocks/north-star/` + sammenligningssiden). Etter portene: R7 Task 3–8, så R8 avatar-assets (kostnadsplan legges frem for eier først).
 
 ## Completed
 
