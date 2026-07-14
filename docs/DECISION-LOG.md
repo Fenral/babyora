@@ -12,6 +12,14 @@ This log records current product decisions that override older exploratory mater
 
 **Reason:** B er den eneste retningen som forener de to allerede låste signaturene (avatar som identitetsbærer + temperatur-reaktiv atmosfære) til én scene, leder med følelse for målgruppen (den nysgjerrige forelderen), og gir delbare flater for image-first-markedsføringen.
 
+### Fem-foreldre-porten frafalt av eier (2026-07-14 kveld)
+
+**Decision:** Eier frafaller fem-foreldre-forståelsestesten som forhåndsport for R7-produksjons-UI («Hopp over foreldretest»). Retning B implementeres direkte. ≤ 5 sekunders forståelse beholdes som internt verifiseringskrav i R7 Task 8-evidensen, og en forenklet brukersjekk anbefales fortsatt før App Store-release (R12).
+
+**Restrisiko (dokumentert):** designretningen er valgt uten brukerevidens; oppdages forståelsesproblemer i R7-verifiseringen, kan flate-omarbeid bli nødvendig.
+
+**Merk:** Den eksterne faglige signaturen (Task 17/kohortaktivering) står UENDRET — den blokkerer ingen R7-fremdrift (all UI konsumerer dagens motor til kohortflagg aktiveres), og sikkerhetsråd til spedbarn skal ikke aktiveres uten faglig blikk, jf. AGENTS.md.
+
 ### Avatar-/asset-budsjett (reviderer 2026-07-13-beslutningen)
 
 **Decision:** Den harde grensen på NOK 1 000 for direkte bildegenerering oppheves (eier, 2026-07-14: «Ikke lås deg til 1000kr»). Ny regel: før asset-produksjon (R8) eller annen kostnadsdrivende fase legges en konkret kostnadsplan frem for eier, og **eier godkjenner planen før den overskrider store summer**. Løpende autonom pengebruk følger den stående rammen (≤ 100 kr autonomt, alltid deklarert; over det kreves eksplisitt godkjenning). 24-bilders produksjonsmål og 16-bilders teknisk minimum står uendret som kvalitets-/omfangsramme.
