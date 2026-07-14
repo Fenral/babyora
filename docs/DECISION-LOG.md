@@ -2,6 +2,14 @@
 
 This log records current product decisions that override older exploratory material.
 
+## 2026-07-15
+
+### Onboarding viser første anbefaling før paywall (R7 Task 7)
+
+**Decision:** Paywall-teaseren (tidligere onboarding-steg 6, «Se hva Pluss gir deg» → «Prøv 7 dager gratis») fjernes fra onboarding-flyten. Velkomst-steget tar brukeren rett inn i appen, slik at den første ekte anbefalingen på Hjem vises FØR noen paywall. Plus introduseres kontekstuelt inne i appen (eksisterende triggere: imorgen, garderobe_tilpasning, barn_2, forste_vinter), ikke som et pre-verdi-steg.
+
+**Reason:** UI-90-plus-planens Task 7 låser «first recommendation before paywall» og «contextual paywall». Den gamle F81.5-W2 Flate 5-teaseren sto mellom onboarding og første anbefaling og brøt dette. Teaseren listet dessuten morgenvarsel som Plus-gode, som nå er gratis (jf. [[morgenvarsel-gratis]]-endringen 2026-07-15). Autonomt valg per eiers «kjør gjennom med dokumenterte defaults».
+
 ## 2026-07-14
 
 ### North-Star designretning

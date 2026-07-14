@@ -115,7 +115,7 @@ export default function App(): ReactElement {
   // i stedet for app-shellet. Vi styrer på egen `onboardingDone`-state (ikke
   // rått `needsOnboarding`), fordi OnboardingScreen kaller completeOnboarding()
   // ALLEREDE på steg 4 (som flipper needsOnboarding→false) men skal fortsatt
-  // vise velkomst- + Pluss-teaser-stegene før den melder ferdig via onComplete.
+  // vise velkomst-steget før den melder ferdig via onComplete.
   const { needsOnboarding } = useChildren();
   const [onboardingDone, setOnboardingDone] = useState(!needsOnboarding);
   // Stille GPS-oppslag ved app-åpning/forgrunn — kun når «Automatisk

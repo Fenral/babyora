@@ -49,7 +49,6 @@ import { useChildren } from '../state/children-store';
 import { useWeather } from '../hooks/useWeather';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
-import { PaywallDialog } from '../components/PaywallDialog';
 import { searchCities } from '../data/no-cities';
 import { searchAddress } from '../lib/geocode/nominatim';
 
@@ -93,7 +92,7 @@ export type OnboardingScreenProps = {
   onComplete?: () => void;
 };
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6; // 5 = velkomst (post-complete), 6 = Pluss-teaser (F81.5-W2, Flate 5)
+type Step = 1 | 2 | 3 | 4 | 5; // 5 = velkomst (post-complete) → inn i appen (første anbefaling før paywall, R7 Task 7)
 
 type LocationState = {
   city: string;
@@ -237,23 +236,6 @@ function LayersIcon() {
   return (
     <svg viewBox="0 0 24 24" {...Stroke} aria-hidden="true" focusable="false">
       <path d="M3 6h18M3 12h18M3 18h18" />
-    </svg>
-  );
-}
-// F81.5-W2 (Flate 5) — Pluss-teaser bullet-ikoner. Rent dekorativ (aria-hidden),
-// samme Stroke-konvensjon som ikonene over.
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 24 24" {...Stroke} aria-hidden="true" focusable="false">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  );
-}
-function ShirtIcon() {
-  return (
-    <svg viewBox="0 0 24 24" {...Stroke} aria-hidden="true" focusable="false">
-      <path d="M16 3l6 3-3 4-2-1v12H7V9L5 10 2 6l6-3 2 2h4l2-2z" />
     </svg>
   );
 }
@@ -540,37 +522,13 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
     setStep(5); // velkomst-hero
   }, [nameOk, dobIsValid, nameTrim, dobISO, location, completeOnboarding, fire]);
 
-  // F81.5-W2 (Flate 5): begge CTA-ene på velkomst-steget (5) tar brukeren til
-  // et siste, skippbart Pluss-teaser-steg (6) i stedet for rett inn i appen.
-  const handleShowPlussTeaser = useCallback(() => {
-    fire('light').catch(() => {});
-    setStep(6);
-  }, [fire]);
-
+  // R7 Task 7: velkomst-steget (5) tar brukeren rett inn i appen — første
+  // ekte anbefaling vises FØR noen paywall. Plus introduseres kontekstuelt
+  // inne i appen, ikke som et pre-verdi-steg i onboardingen.
   const handleEnterApp = useCallback(() => {
     fire('medium').catch(() => {});
     onComplete?.();
   }, [fire, onComplete]);
-
-  // Pluss-teaser (steg 6): "Prøv 7 dager gratis" åpner delt PaywallDialog
-  // (trigger=null — generisk inngang, ikke en spesifikk feature-gate).
-  // "Hopp over" er LIKEVERDIG og fullfører onboarding som før (handleEnterApp).
-  // Ingen tidsstyring, ingen fokus-felle.
-  const plussCtaRef = useRef<HTMLButtonElement | null>(null);
-  const [plussPaywallOpen, setPlussPaywallOpen] = useState(false);
-  // Fanget i klikk-handleren (aldri under render — react-hooks/refs) og gitt
-  // videre som PaywallDialog sin returnFocusTo (samme mønster som UkeScreen).
-  const [plussPaywallReturnFocusTo, setPlussPaywallReturnFocusTo] =
-    useState<HTMLElement | null>(null);
-
-  // Plain arrow-funksjon (ikke useCallback) — React Compiler auto-memoiserer,
-  // og manuell memoisering kan ikke bevares når vi leser ref-en her (samme
-  // mønster som UkeScreen sin handleOpenTenDayPaywall).
-  const handleOpenPlussPaywall = () => {
-    fire('light').catch(() => {});
-    setPlussPaywallReturnFocusTo(plussCtaRef.current);
-    setPlussPaywallOpen(true);
-  };
 
   // ─── A11y: ESC tilbake (kun steg 2-4) ────────────────────────────────────
   useEffect(() => {
@@ -592,7 +550,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
       <style>{STYLE_CSS}</style>
       <main
         ref={screenRef}
-        className={`ob-screen${step === 5 || step === 6 ? ' welcome' : ''}${step === 1 ? ' intro-hero' : ''}`}
+        className={`ob-screen${step === 5 ? ' welcome' : ''}${step === 1 ? ' intro-hero' : ''}`}
         aria-labelledby="ob-title"
       >
         {/* GSAP stagger-hero kun for intro-step. Suspense fallback=null:
@@ -607,7 +565,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
         {/* ─── TOP BAR ─── */}
         <div className="ob-topbar">
-          {step === 1 || step === 5 || step === 6 ? (
+          {step === 1 || step === 5 ? (
             <button type="button" className="ob-top-back ghost" aria-hidden="true" tabIndex={-1}>
               <ChevronLeft />
             </button>
@@ -617,7 +575,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
             </button>
           )}
 
-          {step === 5 || step === 6 ? (
+          {step === 5 ? (
             <div className="ob-welcome-brand">
               <div className="ob-brand-mark" aria-hidden="true">B</div>
               <div className="ob-brand-name">Babyora</div>
@@ -628,7 +586,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
             </div>
           )}
 
-          {step === 5 || step === 6 ? (
+          {step === 5 ? (
             <button type="button" className="ob-top-skip" aria-hidden="true" tabIndex={-1} style={{ visibility: 'hidden' }}>·</button>
           ) : step < 4 ? (
             <button type="button" className="ob-top-skip" onClick={handleSkip}>Hopp over</button>
@@ -881,6 +839,12 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                   </button>
                 </li>
               </ul>
+
+              {/* R7 Task 7: eksplisitt lokal-først-forklaring før første bruk. */}
+              <p className="ob-hint ob-hint-center">
+                Alt lagres lokalt på enheten din. Ingenting sendes til en server,
+                og du kan endre det når som helst.
+              </p>
             </>
           )}
 
@@ -928,63 +892,13 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
             </>
           )}
 
-          {/* F81.5-W2 (Flate 5): siste, skippbart Pluss-teaser-steg — vises
-              etter fullført oppsett + velkomst. "Hopp over" (i CTA-sonen
-              under) fullfører onboarding akkurat som før; ingen tidsstyring,
-              ingen fokus-felle. Kortoverskrift er h1 (samme heading-mønster
-              som alle andre steg — se id="ob-title" i steg 1-5), ingen
-              nivåhopp. */}
-          {step === 6 && (
-            <>
-              <div className="ob-welcome-greet">
-                <p className="ob-eyebrow">Babyora Pluss</p>
-                <h1 id="ob-title" className="ob-h2-hero">
-                  Se hva Pluss gir deg
-                </h1>
-                <p>Fire ting som venter når du er klar for mer.</p>
-              </div>
-
-              <ul className="ob-feats" aria-label="Det du får med Babyora Pluss">
-                <li className="ob-feat">
-                  <span className="ob-feat-icon" aria-hidden="true"><CalendarIcon /></span>
-                  <div className="ob-feat-text">
-                    <div className="ob-feat-title">I morgen + 10 dagers plan</div>
-                    <div className="ob-feat-sub">Se antrekk for hele uken, ikke bare i dag.</div>
-                  </div>
-                </li>
-                <li className="ob-feat">
-                  <span className="ob-feat-icon" aria-hidden="true"><BellIcon /></span>
-                  <div className="ob-feat-text">
-                    <div className="ob-feat-title">Morgenvarsel</div>
-                    <div className="ob-feat-sub">Få beskjed når dagens antrekk er klart.</div>
-                  </div>
-                </li>
-                <li className="ob-feat">
-                  <span className="ob-feat-icon" aria-hidden="true"><ShirtIcon /></span>
-                  <div className="ob-feat-text">
-                    <div className="ob-feat-title">Anbefaling fra dine plagg</div>
-                    <div className="ob-feat-sub">Vi justerer forslaget til det dere faktisk eier.</div>
-                  </div>
-                </li>
-                <li className="ob-feat">
-                  <span className="ob-feat-icon" aria-hidden="true"><UserIcon /></span>
-                  <div className="ob-feat-text">
-                    <div className="ob-feat-title">Flere barn</div>
-                    <div className="ob-feat-sub">Ett abonnement dekker alle barna dine.</div>
-                  </div>
-                </li>
-              </ul>
-            </>
-          )}
         </div>
 
         {/* sr-only status for screen-readers */}
         <span aria-live="polite" style={ariaLive}>
           {step === 5
             ? 'Onboarding fullført. Velkommen.'
-            : step === 6
-              ? 'Se hva Babyora Pluss gir deg.'
-              : `Steg ${step} av ${totalSteps}`}
+            : `Steg ${step} av ${totalSteps}`}
         </span>
 
         {/* ─── BOTTOM CTA ─── */}
@@ -1039,45 +953,16 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
           {step === 5 && (
             <>
-              <button className="ob-btn-primary giant" type="button" onClick={handleShowPlussTeaser}>
+              <button className="ob-btn-primary giant" type="button" onClick={handleEnterApp}>
                 Vis dagens antrekk <ChevronRight />
               </button>
-              <button className="ob-btn-ghost" type="button" onClick={handleShowPlussTeaser}>
-                Utforsk på egenhånd
-              </button>
-            </>
-          )}
-
-          {/* F81.5-W2 (Flate 5): "Prøv 7 dager gratis" (primær) og "Hopp over"
-              (likeverdig — samme <button>, samme fokusindikator/kontrast via
-              delt .ob-btn-ghost-klasse) rett etter i tab-rekkefølge. */}
-          {step === 6 && (
-            <>
-              <button
-                ref={plussCtaRef}
-                className="ob-btn-primary giant"
-                type="button"
-                onClick={handleOpenPlussPaywall}
-                aria-haspopup="dialog"
-              >
-                Prøv 7 dager gratis <ChevronRight />
-              </button>
               <button className="ob-btn-ghost" type="button" onClick={handleEnterApp}>
-                Hopp over
+                Utforsk på egenhånd
               </button>
             </>
           )}
         </div>
       </main>
-
-      {/* Paywall-modal for Pluss-teaseren (F81.5-W2, Flate 5) — trigger=null,
-          generisk inngang (ikke en spesifikk feature-gate). */}
-      <PaywallDialog
-        open={plussPaywallOpen}
-        trigger={null}
-        onClose={() => setPlussPaywallOpen(false)}
-        returnFocusTo={plussPaywallReturnFocusTo}
-      />
     </>
   );
 }
