@@ -11,13 +11,11 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
-import { baseTable, bandForTemp } from '../src/lib/wool-layers/tables.js';
+import { baseTable } from '../src/lib/wool-layers/tables.js';
 import type { Activity, TempBand } from '../src/lib/wool-layers/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const ROOT = dirname(dirname(__filename));
-
-const BASE_URL = 'https://wool-app.vercel.app';
 
 // ── Data ─────────────────────────────────────────────────────────────────
 

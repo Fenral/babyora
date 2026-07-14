@@ -34,8 +34,14 @@ export function useAutoLocationRefresh(): void {
   const mode = useLocationPref((s) => s.mode);
   const { active, needsOnboarding, updateChild } = useChildren();
   const activeIdRef = useRef(active.id);
-  activeIdRef.current = active.id;
   const lastRunRef = useRef(0);
+
+  // R3 (2026-07-14): ref-synk i effect (kjøres hver render) i stedet for
+  // skriving under render. Konsumentene leser ref-en i async callbacks
+  // (geolocation/geocode), som alltid fyrer etter effekten — ekvivalent.
+  useEffect(() => {
+    activeIdRef.current = active.id;
+  });
 
   useEffect(() => {
     if (mode !== 'auto' || needsOnboarding) return;

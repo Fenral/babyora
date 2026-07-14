@@ -8,7 +8,7 @@
  * LayerDetailSheet til å lagre bruker-valg.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { LayerOverrides } from '../lib/wool-layers/types.js';
 import type { LayerId } from '../lib/outfit-state';
 
@@ -73,11 +73,14 @@ export function useOverrides(childId: string | undefined): OverridesAPI {
     childId ? load(childId) : {},
   );
 
-  // Re-load hvis childId endrer seg
-  useEffect(() => {
-    if (childId) setState(load(childId));
-    else setState({});
-  }, [childId]);
+  // Re-load hvis childId endrer seg.
+  // R3 (2026-07-14): render-justering (React-dokumentert mønster) i stedet
+  // for sync setState i effect — samme resultat, én render tidligere.
+  const [lastChildId, setLastChildId] = useState(childId);
+  if (lastChildId !== childId) {
+    setLastChildId(childId);
+    setState(childId ? load(childId) : {});
+  }
 
   const set = useCallback(
     (layerId: LayerId, items: string[], original: string[]) => {

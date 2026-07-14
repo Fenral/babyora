@@ -1,0 +1,42 @@
+# R3 (2026-07-14) — Grønn arbeidsplattform: test, audit, lint, build og
+# E2E-røyk på hver push/PR mot main. Gate: alt grønt på samme SHA.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Product-audit tests
+        run: npm run audit:test
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E smoke
+        run: npm run e2e

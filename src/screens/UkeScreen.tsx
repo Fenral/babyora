@@ -344,9 +344,12 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
     setTenDayPaywallOpen(true);
   };
 
+  // R3 (2026-07-14): hoistet dob slik at memo-deps matcher inferert
+  // avhengighet (react-hooks/preserve-manual-memoization).
+  const activeDob = active?.dob;
   const ageMonths = useMemo(
-    () => (active?.dob ? dobToAgeMonths(active.dob) : 12),
-    [active?.dob],
+    () => (activeDob ? dobToAgeMonths(activeDob) : 12),
+    [activeDob],
   );
 
   const today = useMemo(() => {

@@ -47,7 +47,8 @@ import { getAlternatives } from '../lib/wool-layers/alternatives';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { feelsLikeC } from '../lib/met-no/feels-like';
 import { headwearFromRecommendation, tierFromRecommendation } from '../lib/avatar-tier';
-import { stageSrc, tempAxisFor } from './HjemScreen';
+import { stageSrc } from '../lib/avatar-stage';
+import { tempAxisFor } from '../lib/temp-axis';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
 import { motion } from 'motion/react';
 
@@ -342,7 +343,6 @@ export function PaakledningScreen({
       frames.push(last);
     }
     return frames;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes, finalStageIdx, dressedSrc]);
 
   // Alle distinkte avatar-frames (stage-0 → kledd) stacket for crossfade UTEN
@@ -354,7 +354,6 @@ export function PaakledningScreen({
       if (!seen.has(f)) { seen.add(f); out.push(f); }
     }
     return out;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodeFrames]);
 
   /* ── Overgang: Hjem cross-fader til takeover (avatar naken, blir stående),
@@ -379,13 +378,20 @@ export function PaakledningScreen({
     playedRef.current = true;
 
     if (instant) {
-      setLoaderHidden(true);
-      setChipsIn(true);
-      setRevealed(true);
-      setAvatarFrame(nodeFrames[N - 1]);
-      setStatusMsg(`Kledd i ${N} plagg`);
+      // R3 (2026-07-14): de visuelle statene er allerede initialisert til
+      // instant-verdiene (useState(instant) over) — settene her var no-ops.
+      // setStatusMsg flyttes til setTimeout(0): async setState tilfredsstiller
+      // set-state-in-effect, og en senere tekst-mutasjon inn i en etablert
+      // live-region annonseres MER pålitelig (a11y-lead 2026-07-14).
+      const instantTimer = window.setTimeout(() => {
+        setLoaderHidden(true);
+        setChipsIn(true);
+        setRevealed(true);
+        setAvatarFrame(nodeFrames[N - 1]);
+        setStatusMsg(`Kledd i ${N} plagg`);
+      }, 0);
       try { window.sessionStorage.setItem(DRESSING_SESSION_KEY, '1'); } catch { /* noop */ }
-      return;
+      return () => window.clearTimeout(instantTimer);
     }
 
     // Choreografi (Sivert): analyse → ALLE klær i ringen samtidig + baby kledd →
@@ -393,10 +399,11 @@ export function PaakledningScreen({
     const timers: number[] = [];
     const CHIPS_AT = 2600;              // «analyse» ~2,5 s før klærne kommer
     const REVEAL_AT = CHIPS_AT + 950;   // ringen lander → så faller lista inn
-    setAvatarFrame(baseFrame(0));
     // M1 (a11y-lead): loaderen ligger i aria-hidden-ringen — annonsér lasting
     // til skjermleser så den ikke får ~3,5 s stillhet før «Kledd i N plagg».
-    setStatusMsg('Setter sammen dagens antrekk …');
+    // R3: avatarFrame er allerede baseFrame(0) initielt (!instant-grenen av
+    // useState) — settet var no-op; statusMsg går i timer (async setState).
+    timers.push(window.setTimeout(() => setStatusMsg('Setter sammen dagens antrekk …'), 0));
     timers.push(window.setTimeout(() => setLoaderHidden(true), CHIPS_AT - 200));
     timers.push(window.setTimeout(() => {
       setChipsIn(true);                 // alle klær i ringen samtidig

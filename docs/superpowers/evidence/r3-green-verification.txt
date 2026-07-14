@@ -1,0 +1,18 @@
+=== R3 grønn plattform — fersk verifisering 2026-07-14T13:29 ===
+--- lint ---
+> eslint .
+
+(exit 0: tom output = 0 problemer)
+--- test ---
+ Test Files  28 passed (28)
+      Tests  249 passed (249)
+--- audit ---
+ Test Files  6 passed (6)
+      Tests  19 passed (19)
+--- build ---
+
+[32m✓ built in 143ms[39m
+--- e2e ---
+SMOKE OK: onboarding rendrer
+SMOKE OK: app-skall (demo) rendrer
+SMOKE PASS: 2/2 scenarioer grønne

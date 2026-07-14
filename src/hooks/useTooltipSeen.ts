@@ -9,7 +9,7 @@
  *   const [seen, markSeen] = useTooltipSeen('premium-activity-lock');
  *   const delay = seen ? 0 : 600;
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 const STORAGE_PREFIX = 'babyora:tooltip-seen:';
 
@@ -34,9 +34,13 @@ function writeSeen(key: string): void {
 export function useTooltipSeen(key: string): readonly [boolean, () => void] {
   const [seen, setSeen] = useState<boolean>(() => readSeen(key));
 
-  useEffect(() => {
+  // R3 (2026-07-14): «reset state når prop endres» via render-justering
+  // (React-dokumentert mønster) i stedet for sync setState i effect.
+  const [lastKey, setLastKey] = useState(key);
+  if (lastKey !== key) {
+    setLastKey(key);
     setSeen(readSeen(key));
-  }, [key]);
+  }
 
   const markSeen = useCallback(() => {
     writeSeen(key);

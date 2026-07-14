@@ -1,12 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useContext } from 'react';
 /**
  * Lokal state for barn (uten Supabase ennå).
  * Erstattes med Supabase-data i Fase 3 (onboarding) — men API-en holdes
@@ -15,6 +7,11 @@ import {
  * Iter 30: localStorage-persistens + needsOnboarding-flag.
  * Hvis brukeren ikke har gjennomført onboarding, vises OnboardingScreen
  * istedenfor tabs. Mock-data brukes kun ved ?seed=demo.
+ *
+ * R3 (2026-07-14): ChildrenProvider-komponenten bor i children-provider.tsx
+ * (react-refresh/only-export-components). Denne filen eier typene, context,
+ * useChildren og storage-hjelperne; hjelperne er eksportert (@internal) for
+ * provideren.
  */
 
 export type Child = {
@@ -37,7 +34,7 @@ export type Child = {
   canRoll?: 'yes' | 'no' | 'unknown';
 };
 
-type ChildrenStore = {
+export type ChildrenStore = {
   children: Child[];
   activeId: string;
   /** Aktivt barn — garantert non-null så lenge needsOnboarding=false.
@@ -54,7 +51,8 @@ type ChildrenStore = {
 
 // Placeholder-barn brukt kun for type-completeness når needsOnboarding=true.
 // App.tsx rendrer OnboardingScreen istedenfor å bruke dette.
-const PLACEHOLDER_CHILD: Child = {
+/** @internal — kun for children-provider.tsx */
+export const PLACEHOLDER_CHILD: Child = {
   id: '__placeholder__',
   name: '',
   dob: '',
@@ -64,15 +62,19 @@ const PLACEHOLDER_CHILD: Child = {
   color: '#000000',
 };
 
-const ChildrenContext = createContext<ChildrenStore | null>(null);
+/** @internal — kun for children-provider.tsx */
+export const ChildrenContext = createContext<ChildrenStore | null>(null);
 
 // F58 (2026-06-24): bumped storage-key v1 (klemeg:*) → v2 (babyora:*:v2).
 // Eksisterende brukere får ny onboarding (per Sivert valg). Gammel data ignoreres uten å slettes.
-const STORAGE_KEY = 'babyora:children:v2';
-const ACTIVE_KEY = 'babyora:activeChildId:v2';
+/** @internal — kun for children-provider.tsx */
+export const STORAGE_KEY = 'babyora:children:v2';
+/** @internal — kun for children-provider.tsx */
+export const ACTIVE_KEY = 'babyora:activeChildId:v2';
 
 // Demo-data — kun aktiv ved ?seed=demo
-const DEMO_CHILDREN: Child[] = [
+/** @internal — kun for children-provider.tsx */
+export const DEMO_CHILDREN: Child[] = [
   {
     id: 'lillian',
     name: 'Lillian',
@@ -95,14 +97,17 @@ const DEMO_CHILDREN: Child[] = [
   },
 ];
 
-const AVATAR_COLORS = ['#C25450', '#4F8A6A', '#2E7CC2', '#D87A2E', '#8B5A8C', '#5B6470'];
+/** @internal — kun for children-provider.tsx */
+export const AVATAR_COLORS = ['#C25450', '#4F8A6A', '#2E7CC2', '#D87A2E', '#8B5A8C', '#5B6470'];
 
-function isDemoMode(): boolean {
+/** @internal — kun for children-provider.tsx */
+export function isDemoMode(): boolean {
   if (typeof window === 'undefined') return false;
   return new URLSearchParams(window.location.search).has('seed');
 }
 
-function loadFromStorage(): Child[] {
+/** @internal — kun for children-provider.tsx */
+export function loadFromStorage(): Child[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -114,7 +119,8 @@ function loadFromStorage(): Child[] {
   }
 }
 
-function saveToStorage(children: Child[]): void {
+/** @internal — kun for children-provider.tsx */
+export function saveToStorage(children: Child[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(children));
   } catch {
@@ -122,7 +128,8 @@ function saveToStorage(children: Child[]): void {
   }
 }
 
-function loadActiveId(fallback: string): string {
+/** @internal — kun for children-provider.tsx */
+export function loadActiveId(fallback: string): string {
   if (typeof window === 'undefined') return fallback;
   try {
     return localStorage.getItem(ACTIVE_KEY) || fallback;
@@ -131,106 +138,13 @@ function loadActiveId(fallback: string): string {
   }
 }
 
-function saveActiveId(id: string): void {
+/** @internal — kun for children-provider.tsx */
+export function saveActiveId(id: string): void {
   try {
     localStorage.setItem(ACTIVE_KEY, id);
   } catch {
     // ignorer
   }
-}
-
-export function ChildrenProvider({ children }: { children: ReactNode }) {
-  const [list, setList] = useState<Child[]>(() => {
-    if (isDemoMode()) return DEMO_CHILDREN;
-    return loadFromStorage();
-  });
-  const [activeId, setActiveIdState] = useState<string>(() => {
-    const initial = list[0]?.id ?? '';
-    return loadActiveId(initial);
-  });
-
-  // Persist endringer i list
-  useEffect(() => {
-    if (!isDemoMode()) saveToStorage(list);
-  }, [list]);
-
-  // Persist activeId
-  useEffect(() => {
-    if (activeId) saveActiveId(activeId);
-  }, [activeId]);
-
-  const needsOnboarding = list.length === 0;
-
-  const active = useMemo(
-    () => list.find((c) => c.id === activeId) ?? list[0] ?? PLACEHOLDER_CHILD,
-    [list, activeId],
-  );
-
-  const setActiveId = useCallback((id: string) => {
-    setActiveIdState(id);
-  }, []);
-
-  const addChild = useCallback((child: Omit<Child, 'id'>) => {
-    const id = `child-${Date.now()}`;
-    setList((prev) => [...prev, { ...child, id }]);
-  }, []);
-
-  const updateChild = useCallback(
-    (id: string, patch: Partial<Omit<Child, 'id'>>) => {
-      setList((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
-    },
-    [],
-  );
-
-  const removeChild = useCallback((id: string) => {
-    setList((prev) => {
-      const next = prev.filter((c) => c.id !== id);
-      return next; // Onboarding trigges automatisk hvis next.length === 0
-    });
-    setActiveIdState((current) => (current === id ? list[0]?.id ?? '' : current));
-  }, [list]);
-
-  const completeOnboarding = useCallback((firstChild: Omit<Child, 'id'>) => {
-    const id = `child-${Date.now()}`;
-    const child: Child = {
-      ...firstChild,
-      id,
-      color: firstChild.color || AVATAR_COLORS[0]!,
-    };
-    setList([child]);
-    setActiveIdState(id);
-    // Trial-start markeres i useAccess-hook ved hasAccess-første-sjekk
-  }, []);
-
-  const resetAll = useCallback(() => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(ACTIVE_KEY);
-      localStorage.removeItem('klemeg:trialStartedAt');
-    } catch {
-      // ignorer
-    }
-    setList([]);
-    setActiveIdState('');
-  }, []);
-
-  const value: ChildrenStore = useMemo(
-    () => ({
-      children: list,
-      activeId,
-      active,
-      needsOnboarding,
-      setActiveId,
-      addChild,
-      updateChild,
-      removeChild,
-      completeOnboarding,
-      resetAll,
-    }),
-    [list, activeId, active, needsOnboarding, setActiveId, addChild, updateChild, removeChild, completeOnboarding, resetAll],
-  );
-
-  return <ChildrenContext.Provider value={value}>{children}</ChildrenContext.Provider>;
 }
 
 export function useChildren(): ChildrenStore {

@@ -267,7 +267,9 @@ export function FinnAntrekkScreen({ onBack }: FinnAntrekkScreenProps): ReactElem
 
   // Track om bruker har dratt slidere — etter første interaksjon skal vi ikke
   // overskrive verdier når weather oppdateres.
-  const initFromWeatherRef = useRef(false);
+  // R3 (2026-07-14): state (ikke ref) — guarden leses under render av
+  // engangsinit-justeringen under, og refs kan ikke leses under render.
+  const [initedFromWeather, setInitedFromWeather] = useState(false);
 
   /* ── Detalj-sheet state (F62 PlaggDetailSheet) ── */
   const [openGarmentId, setOpenGarmentId] = useState<GarmentId | null>(null);
@@ -289,9 +291,11 @@ export function FinnAntrekkScreen({ onBack }: FinnAntrekkScreenProps): ReactElem
     setOpenGarmentId(null);
   }
 
-  useEffect(() => {
-    if (initFromWeatherRef.current) return;
-    if (weather.status !== 'ready' || !weather.now) return;
+  // R3 (2026-07-14): engangsinit av slidere fra første ready-vær via
+  // render-justering (React-dokumentert mønster) i stedet for sync setState
+  // i effect — fjerner også flash av default-verdier før vær lander.
+  if (!initedFromWeather && weather.status === 'ready' && weather.now) {
+    setInitedFromWeather(true);
     const now = weather.now;
     if (typeof now.tempC === 'number') {
       setTempC(Math.round(now.tempC));
@@ -302,8 +306,7 @@ export function FinnAntrekkScreen({ onBack }: FinnAntrekkScreenProps): ReactElem
     if (typeof now.precipMmH === 'number') {
       setPrecipMmH(Math.round(now.precipMmH * 2) / 2);
     }
-    initFromWeatherRef.current = true;
-  }, [weather.status, weather.now]);
+  }
 
   const ageMonths = useMemo(() => {
     if (needsOnboarding || !active.dob) return 12;
@@ -422,7 +425,7 @@ export function FinnAntrekkScreen({ onBack }: FinnAntrekkScreenProps): ReactElem
 
   function selectActivity(ui: ActivityUi): void {
     if (ui === activityUi) return;
-    initFromWeatherRef.current = true;
+    setInitedFromWeather(true);
     setActivityUi(ui);
     void fire('selection');
   }
@@ -442,7 +445,7 @@ export function FinnAntrekkScreen({ onBack }: FinnAntrekkScreenProps): ReactElem
     setter: (n: number) => void,
     value: number,
   ): void {
-    initFromWeatherRef.current = true;
+    setInitedFromWeather(true);
     setter(value);
     const band = bandFn(value);
     const prev = lastBandRef.current[id];

@@ -49,10 +49,13 @@ export function useCountUp(target: number, options: UseCountUpOptions = {}): num
     if (target === targetRef.current && target === value) return;
 
     if (prefersReducedMotion()) {
-      setValue(target);
       fromRef.current = target;
       targetRef.current = target;
-      return;
+      // R3 (2026-07-14): snap i rAF-callback (asynkront) i stedet for sync
+      // setState i effect-kroppen. Fortsatt «instant» for RM-brukere
+      // (én frame, ingen animasjon).
+      const rmRaf = requestAnimationFrame(() => setValue(target));
+      return () => cancelAnimationFrame(rmRaf);
     }
 
     fromRef.current = value;

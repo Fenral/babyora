@@ -4313,15 +4313,19 @@ function AddChildDialog({
     }
   }, [open]);
 
-  // Reset form-state ved åpning, slik at en ny "Legg til" alltid starter blank
-  useEffect(() => {
+  // Reset form-state ved åpning, slik at en ny "Legg til" alltid starter blank.
+  // R3 (2026-07-14): render-justering i stedet for sync setState i effect —
+  // feltene er garantert blanke FØR showModal/fokus-effekten kjører.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) {
       setName('');
       setDob('');
       setCity('');
       setTouched(false);
     }
-  }, [open]);
+  }
 
   // Når <dialog> lukkes (ESC, .close(), backdrop) → focus-return + onClose
   useEffect(() => {

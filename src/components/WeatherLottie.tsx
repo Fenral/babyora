@@ -62,9 +62,12 @@ export function WeatherLottie({ symbolCode, size = 46 }: WeatherLottieProps) {
   const [dotLottie, setDotLottie] = useState<DotLottie | null>(null);
 
   // Vis fallback igjen hver gang kondisjon byttes til ny animasjon.
-  useEffect(() => {
+  // R3 (2026-07-14): render-justering i stedet for sync setState i effect.
+  const [lastCondition, setLastCondition] = useState(condition);
+  if (lastCondition !== condition) {
+    setLastCondition(condition);
     setShowFallback(true);
-  }, [condition]);
+  }
 
   // Subscribe på dotLottie load/error-events: skjul fallback når animasjonen
   // er rendret, hold fallback synlig ved feil. Failsafe på 2.5s ifall ingen

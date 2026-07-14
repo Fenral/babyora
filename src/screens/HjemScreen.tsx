@@ -56,6 +56,8 @@ import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 // tier/headwear-logikken GJENBRUKES for å velge riktig clay-antrekk:
 // hodeplagg + vær-tier på avataren er kjernesignalet.
 import { headwearFromRecommendation, tierFromRecommendation } from '../lib/avatar-tier';
+import { tempAxisFor } from '../lib/temp-axis';
+import { stageSrc } from '../lib/avatar-stage';
 // BottomTabBar er global (mounted i App.tsx) — ikke importer/mount her.
 import { MOTION } from '../styles/motion-grammar';
 import { useSwapOverride } from '../state/swap-override-store';
@@ -66,24 +68,9 @@ import { useSwapOverride } from '../state/swap-override-store';
 
 const ELVERUM = { lat: 60.8867, lon: 11.5614, city: 'Elverum' };
 
-// Temp-band-terskler for data-temp-aksen (kald < 5°, varm > 18°, ellers mild).
-// Egne konstanter (ikke wool-layers TempBand) — dette er en UI-canvas-akse,
-// separat fra motorens finmaskede tempBand-inndeling.
-const TEMP_AXIS_COLD_MAX = 5;
-const TEMP_AXIS_WARM_MIN = 18;
-
-type TempAxis = 'kald' | 'mild' | 'varm';
-
-/** data-temp-verdi fra feels-like (fallback: faktisk temp). Bytte KUN ved
- *  båndgrense. Eksportert (F83 M1) så PaakledningScreen kan synke sitt
- *  fullskjerm-lerret med Hjem — samme akse, sømløs cross-fade. */
-export function tempAxisFor(feelsLikeC: number | undefined | null, tempC: number | undefined | null): TempAxis {
-  const t = feelsLikeC ?? tempC;
-  if (t === undefined || t === null || Number.isNaN(t)) return 'mild';
-  if (t < TEMP_AXIS_COLD_MAX) return 'kald';
-  if (t > TEMP_AXIS_WARM_MIN) return 'varm';
-  return 'mild';
-}
+// R3 (2026-07-14): tempAxisFor/stageSrc er flyttet til src/lib/temp-axis.ts
+// og src/lib/avatar-stage.ts (react-refresh: komponentfiler eksporterer kun
+// komponenter). Samme funksjoner, samme adferd.
 
 const DRESSING_STAGE_COUNT = 4; // stage-0..4 (5 bilder)
 
@@ -190,46 +177,6 @@ function stageForRecommendation(layers: number): number {
   if (layers <= 2) return 2;
   if (layers === 3) return 3;
   return Math.min(4, DRESSING_STAGE_COUNT);
-}
-
-/**
- * Hodeplagg PÅ avataren når anbefalingen inneholder det (kjernesignal).
- * Sluttbildet i sekvensen byttes til hodeplagg-variant der den finnes;
- * mellom-stadier er bare. Manglende kombo → bar stage (graceful).
- * Genererte varianter (F80): 1/2-solhatt, 2/3/4-lue.
- */
-const HEADWEAR_VARIANTS: Record<string, true> = {
-  'stage-1-solhatt': true,
-  'stage-2-solhatt': true,
-  'stage-2-lue': true,
-  'stage-3-lue': true,
-  'stage-4-lue': true,
-};
-
-/** Vær-tiers fra F80a-batchen: sluttbildet for ytterpunkt-vær.
- *  A2-A4 dekkes av stagene (+hodeplagg-varianter); disse fire er
- *  dedikerte antrekk generert via edit-kjeden (samme baby). */
-const TIER_FINALS: Partial<Record<string, string>> = {
-  A1: '/avatars/f79-poc/tier-A1-sommer.png',
-  A5: '/avatars/f79-poc/tier-A5-vinter.png',
-  A6: '/avatars/f79-poc/tier-A6-ekstrem.png',
-  A7: '/avatars/f79-poc/tier-A7-sovn.png',
-};
-
-export function stageSrc(
-  stageIdx: number,
-  targetStage: number,
-  headwear: 'lue' | 'solhatt' | 'none',
-  tier?: string,
-): string {
-  if (stageIdx === targetStage) {
-    // Ytterpunkt-vær (sommer/vinter/ekstrem/sovn): dedikert tier-antrekk
-    if (tier && TIER_FINALS[tier]) return TIER_FINALS[tier] as string;
-    if (headwear !== 'none' && HEADWEAR_VARIANTS[`stage-${stageIdx}-${headwear}`]) {
-      return `/avatars/f79-poc/stage-${stageIdx}-${headwear}.png`;
-    }
-  }
-  return `/avatars/f79-poc/stage-${stageIdx}.png`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

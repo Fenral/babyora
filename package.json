@@ -15,7 +15,8 @@
     "generate:rules": "tsx scripts/generate-rules-docs.ts",
     "audit:prepare": "tsx tools/product-audit/cli.ts prepare",
     "audit:finalize": "tsx tools/product-audit/cli.ts finalize",
-    "audit:test": "vitest run tools/product-audit"
+    "audit:test": "vitest run tools/product-audit",
+    "e2e": "tsx e2e/smoke.ts"
   },
   "dependencies": {
     "@capacitor-community/in-app-review": "^8.0.0",
