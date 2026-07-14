@@ -33,6 +33,12 @@ describe('paywall-copy (F81.5-W1) — copy-lint', () => {
 });
 
 describe('paywall-copy — innhold', () => {
+  it('generisk flaggskip-headline er reframet til Plus-verdiløftet (R7 Task 7)', () => {
+    // Morgenvarsel er gratis → den generiske paywallen leder aldri lenger med
+    // den. Plus = «Fremover, overalt og sammen».
+    expect(PAYWALL_COPY.flagshipHeadline).toBe('Fremover, overalt og sammen');
+  });
+
   it('årlig aria-label matcher a11y-kravet i F81.5-W1-spec', () => {
     expect(buildPlanAriaLabel('yearly')).toBe(
       'Årlig, 299 kroner per år, tilsvarer 24,90 kroner per måned, spar 49 prosent, 7 dager gratis først',

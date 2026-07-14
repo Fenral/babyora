@@ -96,13 +96,14 @@ export const TRUST_LINE_COPY = 'Én Premium — begge foreldre';
  * Paywall-trigger-strenger.
  * Bruk disse konstant for analytics-konsistens; aldri ad-hoc strings.
  *
- * F81.1: redusert til de 4 triggerne fra prisbeslutningen. Droppet:
+ * F81.1: redusert til triggerne fra prisbeslutningen. Droppet:
  * uke_dag, mine_plagg_4 (erstattet av garderobe_tilpasning), soevn_inne
  * (søvn/TOG er sikkerhetsinnhold og kan aldri gates), feedback_proaktiv.
+ * R7 Task 7: morgenvarsel droppet — morgenpåminnelsen er en gratis-
+ * kapabilitet (capabilities.ts), så den gates aldri bak en paywall.
  */
 export const PAYWALL_TRIGGERS = {
   imorgen: 'imorgen',                             // Ser morgendagens antrekk kvelden før
-  morgenvarsel: 'morgenvarsel',                    // Slår på ferdig antrekk-varsel om morgenen
   garderobe_tilpasning: 'garderobe_tilpasning',    // Tilpasser anbefaling til egne plagg
   barn_2: 'barn_2',                                // Legger til barn nr. 2
   forste_vinter: 'forste_vinter',                  // Åpner gated leksjon i Første vinter-programmet (F86)
@@ -113,7 +114,6 @@ export type PaywallTrigger = keyof typeof PAYWALL_TRIGGERS;
 /** Kontekst-overskrift per trigger — navngir det du prøvde, varm og ikke masete tone. */
 export const TRIGGER_HEADLINE: Record<PaywallTrigger, string> = {
   imorgen: 'Se morgendagens antrekk i kveld',
-  morgenvarsel: 'Våkn opp til ferdig antrekk',
   garderobe_tilpasning: 'Anbefalinger fra dine egne plagg',
   barn_2: 'Ett abonnement, alle barna',
   forste_vinter: 'Lær vinterpåkledning, én leksjon i uka',

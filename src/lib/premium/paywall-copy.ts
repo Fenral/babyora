@@ -36,10 +36,10 @@ export const PAYWALL_COPY = {
   legend: 'Velg plan',
   closeLabel: 'Lukk',
   genericHeadline: 'Babyora Pluss',
-  /** F86-F1: morgenvarselet er Pluss-flaggskipet (dokumentert sterkeste
-   *  betalingsdriver = veiledning/proaktivitet) — generiske paywall-åpninger
-   *  leder med det i stedet for å gjenta produktnavnet. */
-  flagshipHeadline: 'Våkn opp til ferdig antrekk',
+  /** R7 Task 7: generiske paywall-åpninger leder med Pluss-verdiløftet.
+   *  Morgenvarselet er gratis (capabilities.ts) og selges aldri her; Plus =
+   *  fremover (10-dagersplan), overalt (flere steder) og sammen (familie). */
+  flagshipHeadline: 'Fremover, overalt og sammen',
   trustLine: 'Én Plus — alle som passer barnet',
   ctaYearly: 'Start 7 dager gratis',
   ctaOther: 'Kjøp Babyora Pluss',

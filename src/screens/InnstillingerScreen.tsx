@@ -1204,17 +1204,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
   const morningRowRef = useRef<HTMLButtonElement | null>(null);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
 
-  // F81.5-W2 (Flate 2): Morgenvarsel er en Babyora Pluss-funksjon. Gratis-
-  // bruker som trykker toggle-en for å SKRU PÅ → åpne delt PaywallDialog
-  // (trigger='morgenvarsel') i stedet for å be om varsel-tillatelse; toggle
-  // sin on/aria-checked-state endres IKKE (styres av morningOn fra storen,
-  // som forblir uendret siden vi aldri kaller handleMorningToggle). Å skru
-  // AV er alltid lov (dekker edge-casen der en tidligere Premium-bruker har
-  // mistet tilgangen mens varselet sto på).
+  // R7 Task 7: Morgenvarsel er en GRATIS-kapabilitet (capabilities.ts) — ingen
+  // paywall-gate. Toggle-en ber direkte om varsel-tillatelse for alle brukere.
   const morningToggleRef = useRef<HTMLButtonElement | null>(null);
-  const [morningPaywallOpen, setMorningPaywallOpen] = useState(false);
-  const [morningPaywallReturnFocusTo, setMorningPaywallReturnFocusTo] =
-    useState<HTMLElement | null>(null);
 
   // Auto-posisjon (Vær & sted → "Bruk posisjon automatisk")
   // Native <dialog> som forklarer permission FØR vi spør navigator.geolocation —
@@ -1551,23 +1543,6 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
       }
     },
     [fire, morningHour, setMorningPref, showToast, active.name],
-  );
-
-  // F81.5-W2 (Flate 2): gating-vakt foran handleMorningToggle. Gratis-bruker
-  // som prøver å skru PÅ → åpne paywall i stedet for permission-flyten;
-  // toggle-state rører vi ikke (handleMorningToggle kalles aldri i det
-  // tilfellet). Skru AV går alltid gjennom uendret.
-  const handleMorningTogglePress = useCallback(
-    (next: boolean) => {
-      if (!isPremium && next) {
-        void fire('light');
-        setMorningPaywallReturnFocusTo(morningToggleRef.current);
-        setMorningPaywallOpen(true);
-        return;
-      }
-      void handleMorningToggle(next);
-    },
-    [fire, handleMorningToggle, isPremium],
   );
 
   // Toggle-entry: ON → åpne forklarings-dialog (samtykke-steg FØR permission-prompt).
@@ -1921,9 +1896,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
             <div
               style={rowStaticBase}
               role="group"
-              aria-label={`Morgenvarsel — ${morningOn ? 'på' : 'av'}${
-                !isPremium ? ' — krever Babyora Pluss' : ''
-              }`}
+              aria-label={`Morgenvarsel — ${morningOn ? 'på' : 'av'}`}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconBell />
@@ -1958,9 +1931,6 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
               >
                 <span style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
                   <span style={rowLabelStyle}>Morgenvarsel</span>
-                  {!isPremium && (
-                    <span aria-hidden="true" style={plussChipStyle}>Pluss</span>
-                  )}
                 </span>
                 <span style={rowSubStyle}>
                   {morningOn
@@ -1970,13 +1940,10 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
               </button>
               <TogglePill
                 on={morningOn}
-                ariaLabel={
-                  isPremium ? 'Morgenvarsel' : 'Morgenvarsel — krever Babyora Pluss'
-                }
-                onChange={handleMorningTogglePress}
+                ariaLabel="Morgenvarsel"
+                onChange={(next) => void handleMorningToggle(next)}
                 reducedMotion={reducedMotion}
                 buttonRef={morningToggleRef}
-                ariaHaspopup={isPremium ? undefined : 'dialog'}
               />
             </div>
           </li>
@@ -2093,7 +2060,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
               <span style={premiumSubStyle}>
                 {isPremium
                   ? 'Administrer abonnement og fakturering'
-                  : 'I morgen + 10 dager, morgenvarsel, garderobe-tilpasning, flere barn'}
+                  : 'I morgen + 10 dager, garderobe-tilpasning, flere barn'}
               </span>
             </span>
             <span style={premiumArrowStyle}>
@@ -2326,16 +2293,6 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
         trigger={null}
         onClose={() => setPaywallOpen(false)}
         returnFocusTo={paywallReturnFocusTo}
-      />
-
-      {/* Paywall-modal for Morgenvarsel-gaten (F81.5-W2, Flate 2) — egen
-          dialog-instans (annen trigger/returnFocusTo enn abonnement-CTA-en
-          over). returnFocusTo peker til selve toggle-en. */}
-      <PaywallDialog
-        open={morningPaywallOpen}
-        trigger="morgenvarsel"
-        onClose={() => setMorningPaywallOpen(false)}
-        returnFocusTo={morningPaywallReturnFocusTo}
       />
 
       {/* Bytt barn-modal — viser alle barn for valg */}

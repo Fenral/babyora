@@ -66,14 +66,17 @@ describe('priceTransparencyText', () => {
 });
 
 describe('Paywall trigger-strenger', () => {
-  it('inneholder nøyaktig de 5 låste triggerne (F81.1 + F86 forste_vinter)', () => {
+  it('inneholder nøyaktig de 4 låste triggerne (R7 Task 7: morgenvarsel er gratis)', () => {
     expect(PAYWALL_TRIGGERS).toEqual({
       imorgen: 'imorgen',
-      morgenvarsel: 'morgenvarsel',
       garderobe_tilpasning: 'garderobe_tilpasning',
       barn_2: 'barn_2',
       forste_vinter: 'forste_vinter',
     });
+  });
+
+  it('morgenvarsel er IKKE en paywall-trigger (gratis-kapabilitet, jf. capabilities.ts)', () => {
+    expect('morgenvarsel' in PAYWALL_TRIGGERS).toBe(false);
   });
 
   it('hver trigger har kontekst-overskrift', () => {

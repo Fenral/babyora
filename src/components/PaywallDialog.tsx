@@ -513,8 +513,8 @@ export function PaywallDialog({
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // F86-F1: generiske åpninger leder med flaggskipet (morgenvarsel) — eyebrow
-  // over h2-en bærer fortsatt produktnavnet (PAYWALL_COPY.genericHeadline).
+  // R7 Task 7: generiske åpninger leder med Pluss-verdiløftet (flagshipHeadline)
+  // — eyebrow over h2-en bærer produktnavnet (PAYWALL_COPY.genericHeadline).
   const headline = trigger ? TRIGGER_HEADLINE[trigger] : PAYWALL_COPY.flagshipHeadline;
 
   const clearAutoClose = useCallback(() => {
