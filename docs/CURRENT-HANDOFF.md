@@ -26,6 +26,27 @@ Eier godkjente pakken eksplisitt («kjør»). Alle tre pakker er committet lokal
 
 **NESTE (porter oppdatert 2026-07-14 kveld):** Fem-foreldre-porten er **frafalt av eier** (se decision log) — R7 Task 3+ (dock, instrument, Hjem/Antrekk/Plan i retning B) er ikke lenger blokkert av den. R8 avatar-**kostnadsplanen er godkjent** («Kjør på»): Nano Banana Pro edit-chain, 24 komposittbilder, 2K standard, ~150–500 kr forventet. R8-genereringen forutsetter retning B-skjermene fra R7 Task 3+. Eneste gjenstående menneskeport: fagperson signerer `engine-v2-scenarios.json` (blokkerer kun Motor V2 Task 17 / kohortaktivering, ikke R7-fremdrift).
 
+## 2026-07-15: R7 Task 7 kode-slices FERDIG (autonom loop)
+
+Eier ba om autonom kjøring på dokumenterte defaults mens borte. Levert på lokal main (ikke pushet), hver bit verifisert (tsc, vitest, lint, e2e, build grønne før commit):
+
+- `b27d92f` — morgenvarsel gjort gratis (fjernet Plus-gate i Innstillinger), generisk paywall reframet til «Fremover, overalt og sammen», død morgenvarsel-trigger fjernet.
+- `7b684d5` — onboarding: paywall-teaser (gml. steg 6) fjernet så første ekte anbefaling vises FØR paywall; eksplisitt lokal-først-forklaring.
+- `02f70e9` — Familie-rot IA-relabel (Profil→Barn, Abonnement→Babyora Pluss; «Vær & sted» beholdt for sannferdighet).
+- `c6adda6` — care-circle dev-only preview (`CareCircle`, R9-gatet bak `import.meta.env.DEV`, tre-shakes ut av prod).
+- `ca97be8` — paywall verdi-seksjon (`PlusExpansionPreview`) med sannferdig Free→Plus-ekspansjon; familie/kalibrering skjult til de er bygget (`plus-features.ts`).
+
+564 tester grønne. Gjenstår autonomt: Task 8 90+-audit-biter som ikke krever fysisk enhet (undersøkes), evt. «notification pre-prompt after value».
+
+### ⏳ Venter på eier (samlet — ikke autonomt gjørbart)
+
+1. **Push til origin** — alle commits over ligger lokalt på main; eier bestemmer push (Codemagic-kobling).
+2. **R8 avatar-generering** — kostnadsplan godkjent, men selve edit-chain-produksjonen krever eiers art direction/utvelgelse.
+3. **Ekstern fagsignatur** på `engine-v2-scenarios.json` — låser opp Motor V2 kohortaktivering (Task 17). Blokkerer ikke v1.
+4. **Fysisk iPhone + IAP-kjøpstesting** — RevenueCat ende-til-ende, purchase-state-skjermbilder, VoiceOver/TalkBack, haptikk.
+5. **App Store-metadata** — mye ligger i STORE-LISTING.md; krever eierbeslutninger (navn-gate m.m.).
+6. **Task 8 manuell evidens** — 90+-rubrikk-skjermbilder i deploy-miljø, tekstskalering, tommelsone, fem-foreldre-forståelsessjekk.
+
 ## Completed
 
 - Product and architecture review.
