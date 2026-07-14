@@ -541,9 +541,16 @@ export function PaakledningScreen({
         .pkl-list.show { opacity: 1; }
         /* Radene faller inn ett og ett via Framer spring (se motion.li i JSX). */
         .pkl-list h3 { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-500); margin: 0 2px 8px; }
-        .pkl-list ol { list-style: none; display: flex; flex-direction: column; gap: 7px; margin: 0; padding: 0; }
-        .pkl-row { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: var(--surface-pure); border: 1px solid var(--ink-100); border-radius: 14px; padding: 8px 12px; min-height: 56px; font: inherit; color: var(--ink-900); cursor: pointer; box-shadow: 0 2px 10px -6px rgba(36,30,56,.16); transition: transform 160ms var(--ease-out, cubic-bezier(.22,1,.36,1)); }
-        .pkl-row:active { transform: scale(.985); }
+        /* R7 Task 4 (retning B/C): tekstil-STACK — sammenhengende rader med
+           ~8px overlapp, vevd fargetab per gruppe (venstre kant), aktiv rad
+           løftes 2px med myk mynte-kantlys. 56px rad − 8px overlapp = 48px
+           ren treffhøyde (≥44pt, a11y-lead). Kategori bæres også av tekst. */
+        .pkl-list ol { list-style: none; display: flex; flex-direction: column; gap: 0; margin: 0; padding: 0; }
+        .pkl-list ol li { position: relative; }
+        .pkl-list ol li + li { margin-top: -8px; }
+        .pkl-row { position: relative; z-index: 1; display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: var(--surface-pure); border: 1px solid var(--ink-100); border-left: 4px solid var(--row-tab, var(--ink-200)); border-radius: 14px; padding: 8px 12px 14px; min-height: 56px; font: inherit; color: var(--ink-900); cursor: pointer; box-shadow: 0 3px 10px -7px rgba(36,30,56,.22); transition: transform 160ms var(--ease-out, cubic-bezier(.22,1,.36,1)), box-shadow 160ms var(--ease-out, cubic-bezier(.22,1,.36,1)); }
+        .pkl-row:hover, .pkl-row:focus-visible, .pkl-row:active { z-index: 3; transform: translateY(-2px); box-shadow: 0 8px 18px -10px rgba(36,30,56,.30), 0 0 0 1.5px color-mix(in oklab, var(--accent-cta) 55%, transparent); }
+        .pkl-row:active { transform: translateY(-1px) scale(.99); }
         .pkl-row .num { width: 24px; height: 24px; flex: none; border-radius: 999px; display: grid; place-items: center; font-weight: 700; font-size: .76rem; color: var(--accent-cta-ink); font-variant-numeric: tabular-nums; outline: 1.5px solid var(--ink-900); outline-offset: -1.5px; }
         .pkl-row .rthumb { width: 42px; height: 42px; flex: none; border-radius: 11px; background: var(--surface-soft); display: grid; place-items: center; padding: 5px; }
         .pkl-row .rthumb img { width: 100%; height: 100%; object-fit: contain; }
@@ -653,6 +660,7 @@ export function PaakledningScreen({
                         ref={(el) => { rowRefs.current[node.key] = el; }}
                         onClick={() => handleOpenNode(node)}
                         className="pkl-row pkl-btn"
+                        style={{ '--row-tab': `var(${node.group.colorVar})` } as CSSProperties}
                         aria-label={`${ordinalWord(node.order, N)}: ${node.name}${node.hasAlt ? `, ${node.altCount} ${node.altCount === 1 ? 'alternativ' : 'alternativer'}` : ''}. Vis detaljer.`}
                       >
                         <span className="num" aria-hidden="true" style={{ background: `var(${node.group.colorVar})` }}>{node.order}</span>
