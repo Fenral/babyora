@@ -185,5 +185,22 @@
       "overheatingPeak": "Babys 7–9 Monate produzieren die meiste Körperwärme. Nimm weniger Lagen als üblich, fühl oft am Nacken.",
       "newbornColdLimit": "Säuglinge unter 3 Monaten: höchstens 30 Min draußen bei Frost. Prüfe Nacken und Rücken oft."
     }
+  },
+  "engineV2": {
+    "explanations": {
+      "ACTIVE_CHILD_LESS_INSULATION": "Ihr Kind wird aktiv sein — weniger Kleidung verhindert Überhitzung und Schwitzen.",
+      "RESTING_CHILD_MORE_INSULATION": "Ihr Kind sitzt meist still — ein zusätzliches warmes Kleidungsstück hält die Körperwärme.",
+      "RAIN_REQUIRES_SHELL": "Regen erwartet — eine wasserdichte Schicht hält die Kleidung darunter trocken.",
+      "WIND_REQUIRES_SHELL": "Der Wind erfordert eine winddichte Außenschicht.",
+      "WOOL_PREFERENCE_APPLIED": "Wolle wird gewählt, wo es passt — wie von Ihnen bevorzugt.",
+      "WOOL_AVOIDED": "Wolle wurde weggelassen — vollwertige Alternativen werden verwendet.",
+      "FLEECE_FAST_DRYING": "Fleece wird gewählt, weil es schnell trocknet und gut unter einer Schicht funktioniert.",
+      "WICKING_SYNTHETIC_FOR_ACTIVITY": "Funktionsunterwäsche leitet Schweiß ab, wenn Ihr Kind in Bewegung ist.",
+      "COTTON_ONLY_WARM_DRY": "Baumwolle ist eine gute Wahl, wenn es warm, trocken und ruhig ist.",
+      "AGE_APPROPRIATE_GARMENT_FORM": "Die Kleidungsform passt zum Alter Ihres Kindes.",
+      "CALIBRATION_WARMER": "Auf Basis Ihrer Rückmeldungen etwas wärmer eingestellt.",
+      "CALIBRATION_COOLER": "Auf Basis Ihrer Rückmeldungen etwas leichter eingestellt."
+    },
+    "_machineTranslatedPendingReview": true
   }
 }

@@ -185,5 +185,22 @@
     "footer": "Weather from met.no. Recommendation is based on the day's coldest moment.",
     "dayStripeAria": "{{weekday}}, {{tempMin}} to {{tempMax}} degrees, wind {{wind}} metres per second, {{layers}} layers recommended",
     "layersShort": "{{count}} layers"
+  },
+  "engineV2": {
+    "explanations": {
+      "ACTIVE_CHILD_LESS_INSULATION": "Your child will be active — fewer garments prevent overheating and sweat.",
+      "RESTING_CHILD_MORE_INSULATION": "Your child is mostly still — an extra warm garment keeps body heat in.",
+      "RAIN_REQUIRES_SHELL": "Rain expected — a waterproof shell keeps the garments underneath dry.",
+      "WIND_REQUIRES_SHELL": "The wind calls for a windproof shell.",
+      "WOOL_PREFERENCE_APPLIED": "Wool is chosen where it fits, as you prefer.",
+      "WOOL_AVOIDED": "Wool has been left out — fully capable alternatives are used instead.",
+      "FLEECE_FAST_DRYING": "Fleece is chosen because it dries quickly and works well under a shell.",
+      "WICKING_SYNTHETIC_FOR_ACTIVITY": "Technical base layers wick sweat away when your child is moving.",
+      "COTTON_ONLY_WARM_DRY": "Cotton is a good choice when it is warm, dry and calm.",
+      "AGE_APPROPRIATE_GARMENT_FORM": "The garment shape matches your child’s age.",
+      "CALIBRATION_WARMER": "Adjusted slightly warmer based on your feedback.",
+      "CALIBRATION_COOLER": "Adjusted slightly lighter based on your feedback."
+    },
+    "_machineTranslatedPendingReview": true
   }
 }

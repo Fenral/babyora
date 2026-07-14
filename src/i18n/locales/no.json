@@ -185,5 +185,21 @@
       "overheatingPeak": "Barn på 7–9 mnd produserer mest kroppsvarme. Bruk færre lag enn vanlig, sjekk nakken ofte.",
       "newbornColdLimit": "Spedbarn under 3 mnd: maks 30 min ute i kuldegrader. Sjekk nakke og rygg ofte."
     }
+  },
+  "engineV2": {
+    "explanations": {
+      "ACTIVE_CHILD_LESS_INSULATION": "Barnet skal være aktivt — færre plagg hindrer overoppheting og svette.",
+      "RESTING_CHILD_MORE_INSULATION": "Barnet sitter mest stille — et ekstra varmeplagg holder på kroppsvarmen.",
+      "RAIN_REQUIRES_SHELL": "Regn i vente — et vanntett skall holder plaggene under tørre.",
+      "WIND_REQUIRES_SHELL": "Vinden gjør at et vindtett skall legges til.",
+      "WOOL_PREFERENCE_APPLIED": "Ull er valgt der det passer, slik dere foretrekker.",
+      "WOOL_AVOIDED": "Ull er valgt bort — fullgode alternativer er brukt i stedet.",
+      "FLEECE_FAST_DRYING": "Fleece er valgt fordi det tørker raskt og fungerer godt under skall.",
+      "WICKING_SYNTHETIC_FOR_ACTIVITY": "Teknisk undertøy leder svette bort når barnet er i bevegelse.",
+      "COTTON_ONLY_WARM_DRY": "Bomull er et godt valg når det er varmt, tørt og rolig.",
+      "AGE_APPROPRIATE_GARMENT_FORM": "Plaggformen er tilpasset barnets alder.",
+      "CALIBRATION_WARMER": "Justert litt varmere basert på tilbakemeldingene deres.",
+      "CALIBRATION_COOLER": "Justert litt lettere basert på tilbakemeldingene deres."
+    }
   }
 }
