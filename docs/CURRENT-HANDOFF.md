@@ -16,7 +16,9 @@ Eier godkjente pakken eksplisitt («kjør»). Alle tre pakker er committet lokal
 
 **R4 (2026-07-14):** Tre North-Star-prototyper bygget fra låst brief + ekte motor-fixtures (`docs/mocks/north-star/`, commit `c549d8a`). Fable-review + a11y-lead-verifisering utført, alle funn rettet. **Eier valgte retning B «Scenen»** (med C-listeanatomi i Antrekk) — se decision log. Fem-foreldre-testen gjenstår som evidens før R8/R12.
 
-**Pågår:** R5 kanoniske kontrakter + R6 Motor V2 0–24 (Fable 5 Extra) — engine-2-plan Tasks 1–17, én task = én commit.
+**R5/R6 Motor V2-kjernen (2026-07-14): Task 1–12 FERDIG og uavhengig verifisert (PASS).** Range `b279053..6ad7583`, 208 V2-tester/457 totalt, alle 36 gullscenarioer automatisert, flagg av, rollback = containet legacy. Evidens: `docs/superpowers/evidence/packages/motor-v2-core-tasks-1-12.md`.
+
+**Neste:** Task 13–16 (migrering, analytics, situasjons-UI m/a11y-lead, fagpakke-eksport). Task 17 (kohortaktivering) er blokkert på ekstern faglig scenariosignatur. Parallellspor: R7-spec for retning B kan startes; fem-foreldre-testen gjenstår (eier).
 
 ## Completed
 
