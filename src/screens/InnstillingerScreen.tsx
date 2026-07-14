@@ -1711,9 +1711,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
 
       {/* Scroll-area */}
       <div style={scrollStyle}>
-        {/* PROFIL */}
+        {/* BARN (R7 Task 7: Familie-rot-IA — barn-sentrert seksjon øverst) */}
         <section style={sectionStyle} aria-labelledby="sec-profil">
-          <h2 id="sec-profil" style={sectionEyebrowStyle}>Profil</h2>
+          <h2 id="sec-profil" style={sectionEyebrowStyle}>Barn</h2>
 
           <div style={profileHeroStyle} role="group" aria-label="Aktiv barn-profil">
             <div style={profileAvatarStyle} role="img" aria-label={`Avatar: ${childName}`}>
@@ -2034,9 +2034,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
           </li>
         </Section>
 
-        {/* ABONNEMENT */}
+        {/* BABYORA PLUSS (R7 Task 7: Familie-rot-IA — Plus-seksjon) */}
         <section style={sectionStyle} aria-labelledby="sec-abo">
-          <h2 id="sec-abo" style={sectionEyebrowStyle}>Abonnement</h2>
+          <h2 id="sec-abo" style={sectionEyebrowStyle}>Babyora Pluss</h2>
           <button
             ref={premiumRowRef}
             type="button"
