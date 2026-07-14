@@ -59,6 +59,7 @@ import { recommend } from '../lib/wool-layers/recommend';
 import type { Activity, Layer, LayerCategory } from '../lib/wool-layers/types';
 import { garmentIdFor, garmentPng, type GarmentId } from '../data/garment-illustrations';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
+import { TemperatureInstrument } from '../components/instrument/TemperatureInstrument';
 
 export type FinnAntrekkScreenProps = {
   onBack: () => void;
@@ -515,36 +516,20 @@ export function FinnAntrekkScreen({ onBack }: FinnAntrekkScreenProps): ReactElem
 
       <div style={scrollStyle} className="ba-scroll-native">
 
-        {/* TEMP — DM Serif Display verdi + slider */}
+        {/* TEMP — R7 Task 3A: signatur-instrumentet (spec §3) erstatter
+            generisk slider. Verdi-avlesningen (DM Serif) beholdes øverst;
+            handleSliderChange-haptikken (bånd-kryssing) gjenbrukes uendret. */}
         <section aria-labelledby="finn-temp-label">
           <p id="finn-temp-label" style={eyebrowStyle}>Temperatur</p>
           <div style={tempValueWrapStyle}>
             <span style={tempValueStyle} aria-hidden>{formatTemp(tempC)}</span>
           </div>
-          {/* F83 termometer: fylt spor i var(--accent-temp) (bånd-reaktiv via
-              data-temp — fyllet skifter farge med kulda) + 0°-frost-tick
-              (ink-400 per a11y-preclearance vilkår 1; dekorativ/redundant —
-              skalaen + aria-valuetext bærer verdien). */}
-          <div style={sliderTrackWrapStyle}>
-            <input
-              id="finn-temp-slider"
-              type="range"
-              min={-20}
-              max={30}
-              step={1}
-              value={tempC}
-              onChange={(e) => handleSliderChange('temp', tempBandText, setTempC, Number(e.target.value))}
-              aria-valuetext={`${tempC} grader, ${tempBandText(tempC)}`}
-              aria-label="Temperatur i celsius"
-              style={{ ...sliderStyle, ...sliderFillVars((tempC + 20) / 50, 'var(--accent-temp)') }}
-              className="finn-slider"
-            />
-            <span aria-hidden="true" style={frostTickStyle} />
-          </div>
-          <div style={sliderScaleStyle}>
-            <span>−20°</span>
-            <span>30°</span>
-          </div>
+          <TemperatureInstrument
+            valueC={tempC}
+            bandText={tempBandText}
+            onChange={(v) => handleSliderChange('temp', tempBandText, setTempC, v)}
+            height={280}
+          />
         </section>
 
         {/* VIND */}
@@ -1158,23 +1143,8 @@ function sliderFillVars(frac: number, color: string): CSSProperties {
   } as CSSProperties;
 }
 
-const sliderTrackWrapStyle: CSSProperties = {
-  position: 'relative',
-};
-
-/** 0°-frost-tick — dekorativ (aria-hidden), redundant med skala + valuetext.
- *  ink-400 per a11y-preclearance vilkår 1 (ink-300 = 2.8:1 i lys modus). */
-const frostTickStyle: CSSProperties = {
-  position: 'absolute',
-  left: 'calc(14px + (100% - 28px) * 0.4)',
-  top: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 2,
-  height: 12,
-  borderRadius: 1,
-  background: 'var(--ink-400)',
-  pointerEvents: 'none',
-};
+// R7 Task 3A: sliderTrackWrapStyle + frostTickStyle fjernet — temp-slideren
+// er erstattet av TemperatureInstrument (bånd-markørene bor i instrumentet).
 
 const sliderHeaderRow: CSSProperties = {
   display: 'flex',
