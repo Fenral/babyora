@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Babyora — Retning A · Ferdig svar-kortet (stille presisjon)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap');
+
+  /* ---------------------------------------------------------------
+     Tokens — reused exactly from docs/mocks/north-star/BRIEF.md and
+     docs/superpowers/specs/2026-07-13-babyora-visual-signature-design.md §12.
+     No new palette introduced. Contrast ratios below computed with the
+     standard WCAG relative-luminance formula (sRGB → linear → 0.2126R+0.7152G+0.0722B).
+  --------------------------------------------------------------- */
+  :root{
+    --canvas-mild:#DAD8EE;
+    --canvas-kald:#CCDCF7;
+    --canvas-varm:#EED1E0;
+    --surface:#F3F2FB;
+    --surface-white:#FFFFFF;
+    --ink:#211B32;
+    --ink-2:#56506F;
+    --cta:#267147;          /* eneste grønne objekt i hele mock-settet */
+    --cta-pool:#3E8B65;     /* lysere mynte for aktiv dock-pool mot mørk dock: 4.01:1 mot #211B32 */
+    --temp-blue:#2B5C97;    /* KUN kulde-mening */
+    --warm-rose:#B54436;
+    --korall:#AF5331;
+    --marigold:#93690D;
+    --petrol:#285E6A;
+    --focus:#6750AB;
+    --dock:#211B32;
+    --dock-inactive:#9089AE; /* 5.03:1 mot #211B32 — dekker a11y-tillegg pkt 2 sin uttrykte risiko (inaktiv dock) */
+    --avatar-fill:#B3A7D5;   /* tint av fokusring #6750AB + hvit — myk clay/Morgennatt-lilla, kun dekorativ silhuett */
+    --font-serif:'Fraunces', Georgia, serif;
+    --font-sans:'Schibsted Grotesk', -apple-system, system-ui, sans-serif;
+  }
+
+  /*
+    Kontrast-referanse (a11y-tillegg 1 og 2), beregnet mot faktiske flater i denne filen:
+    ink #211B32 / mild #DAD8EE      = 11.86:1
+    ink #211B32 / kald #CCDCF7      = 11.95:1
+    ink #211B32 / varm #EED1E0      = 11.70:1
+    ink #211B32 / surface #F3F2FB   = 14.92:1
+    ink #211B32 / hvit              = 16.57:1
+    ink-2 #56506F / hvit            = 7.57:1
+    ink-2 #56506F / surface         = 6.82:1
+    mynte #267147 / hvit            = 5.94:1  (CTA-tekst/ikon)
+    mynte-pool #3E8B65 / dock #211B32 = 4.01:1 (ikke-tekst, ≥3:1)
+    dock-inaktiv #9089AE / dock #211B32 = 5.03:1 (ikke-tekst, ≥3:1)
+    fokusring #6750AB / mild        = 4.54:1
+    fokusring #6750AB / kald        = 4.57:1
+    fokusring #6750AB / varm        = 4.48:1
+    fokusring #6750AB / hvit        = 6.34:1
+    korall #AF5331 / hvit           = 5.12:1   (kun brukt som ikke-tekst-tab, ikke løpende tekst)
+    marigold #93690D / hvit         = 4.92:1   (kun brukt som ikke-tekst-tab)
+    petrol #285E6A / hvit           = 7.24:1   (kun brukt som ikke-tekst-tab)
+    varm-rosé #B54436 / hvit        = 5.46:1   (kun brukt som liten ikke-tekst-strek/ikon)
+    → De fire semantiske "lag"-fargene (korall/marigold/petrol + varm-rosé) brukes ALDRI som
+      løpende tekst rett på en temp-canvas i denne filen (jf. a11y-tillegg pkt 1: rosé/varm=3.9:1,
+      marigold/mild=3.5:1 ville feilet). De opptrer kun som ikke-tekst-tabs/ikoner ved siden av
+      ink-farget tekst, alltid på hvit/#F3F2FB-flate — innenfor "Lov"-unntaket i tillegget.
+    RISIKOPUNKT flagget i tillegg pkt 2 — fokusring på mørk dock: #6750AB alene mot #211B32 = 2.61:1
+    (under 3:1). Løst med en hvit halo bak ringen på dock-elementer (se .dock-item:focus-visible),
+    slik at den synlige kanten mot mørk bakgrunn alltid er hvit (16.57:1). Det separate, alltid-synlige
+    fokuseksempelet i Paywall-rammen (.demo-focus) ligger på hvit/mynte-flate og bruker ringen ublandet.
+  */
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:#EAE8F3;
+    font-family:var(--font-sans);
+    color:var(--ink);
+    padding:28px;
+  }
+  .doc-banner{
+    max-width:1400px;
+    margin:0 auto 28px;
+    padding:16px 20px;
+    background:var(--surface-white);
+    border-radius:14px;
+    box-shadow:0 1px 0 rgba(33,27,50,.06);
+  }
+  .doc-banner .eyebrow{
+    margin:0 0 4px;
+    font-size:12px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-2);
+    font-weight:600;
+  }
+  .doc-banner .doc-title{
+    margin:0 0 4px;
+    font-size:20px;
+    font-weight:700;
+  }
+  .doc-banner .doc-desc{
+    margin:0;
+    font-size:13.5px;
+    color:var(--ink-2);
+    max-width:74ch;
+    line-height:1.5;
+  }
+
+  .gallery{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    gap:26px;
+    max-width:1400px;
+    margin:0 auto;
+  }
+  .frame-block{ width:390px; }
+  .frame-caption{
+    margin:0 0 10px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+  .frame-caption .frame-sub{
+    font-weight:400;
+    color:var(--ink-2);
+    font-size:12px;
+  }
+
+  /* ---------- phone shell ---------- */
+  .phone{
+    width:390px;
+    height:844px;
+    border-radius:44px;
+    overflow:hidden;
+    position:relative;
+    box-shadow:0 18px 40px rgba(33,27,50,.22), 0 2px 0 rgba(255,255,255,.4) inset;
+    display:flex;
+    flex-direction:column;
+    background:var(--surface-white);
+  }
+  .phone.scrollable{ overflow-y:auto; }
+
+  /* ---------- sky stripe (atmosfære, ~25% av flaten) ---------- */
+  .sky{
+    flex:0 0 208px;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    padding:18px 20px 14px;
+    color:var(--ink);
+  }
+  .sky.t-mild{ background:linear-gradient(180deg,#E4E2F4,var(--canvas-mild)); }
+  .sky.t-kald{ background:linear-gradient(180deg,#D9E6FA,var(--canvas-kald)); }
+  .sky.t-varm{ background:linear-gradient(180deg,#F5DFE7,var(--canvas-varm)); }
+  .sky.t-muted{ filter:saturate(.55) brightness(1.02); }
+  .sky-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    font-size:12px;
+    color:var(--ink-2);
+  }
+  /* .sky-symbol er alltid aria-hidden="true" i markup: rent dekorativt værsymbol.
+     Værtilstanden gjengis alltid som synlig tekst ved siden i .sky-condition
+     (f.eks. "delvis skyet"), så svaret er fullstendig lesbart uten grafikken. */
+  .sky-symbol{
+    width:34px; height:34px; border-radius:50%;
+    background:color-mix(in oklab, white 55%, transparent);
+    border:1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+  }
+  .sky-condition{ font-variant-numeric:tabular-nums; }
+
+  /* ---------- card (dominant metaphor) ---------- */
+  .card{
+    flex:1 1 auto;
+    background:var(--surface-white);
+    border-radius:26px 26px 0 0;
+    margin-top:-18px;
+    padding:22px 20px 14px;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    box-shadow:0 -6px 18px rgba(33,27,50,.08);
+    overflow:visible;
+  }
+  h1{
+    font-family:var(--font-serif);
+    font-weight:600;
+    font-size:26px;
+    line-height:1.14;
+    margin:0;
+    color:var(--ink);
+  }
+  .subline{
+    margin:-8px 0 0;
+    font-size:13.5px;
+    color:var(--ink-2);
+  }
+  h2.section-h{
+    font-family:var(--font-sans);
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--ink-2);
+    margin:2px 0 0;
+  }
+
+  .answer-row{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+  }
+
+  /* ---------- avatar silhouette (nøytral positur, ingen ansikt) ---------- */
+  .avatar-wrap{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .avatar-standing{ width:64px; height:118px; position:relative; }
+  .avatar-standing .head{ width:34px; height:34px; border-radius:50%; background:var(--avatar-fill); margin:0 auto; }
+  .avatar-standing .body{ width:52px; height:56px; border-radius:26px 26px 20px 20px; background:var(--avatar-fill); margin:2px auto 0; }
+  .avatar-standing .legs{ width:44px; height:28px; border-radius:0 0 16px 16px; background:var(--avatar-fill); margin:0 auto; opacity:.92; }
+  .avatar-sitting{ width:78px; height:78px; position:relative; }
+  .avatar-sitting .head{ width:32px; height:32px; border-radius:50%; background:var(--avatar-fill); margin:0 auto; }
+  .avatar-sitting .blob{ width:74px; height:52px; border-radius:40% 40% 46% 46%; background:var(--avatar-fill); margin:-2px auto 0; }
+  .avatar-caption{ font-size:10.5px; color:var(--ink-2); text-align:center; }
+
+  /* ---------- textile garment stack ---------- */
+  .stack{ list-style:none; margin:0; padding:0; flex:1 1 auto; }
+  .stack-row{
+    position:relative;
+    background:var(--surface);
+    border-radius:14px;
+    padding:9px 12px 9px 14px;
+    margin-top:-9px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    box-shadow:0 1px 0 rgba(33,27,50,.04);
+  }
+  .stack-row:first-child{ margin-top:0; }
+  .stack-row.active{
+    background:var(--surface-white);
+    transform:translateY(-2px);
+    box-shadow:0 0 0 1.5px color-mix(in oklab, var(--cta) 55%, transparent), 0 6px 14px rgba(33,27,50,.10);
+    z-index:2;
+  }
+  .tab{ flex:0 0 auto; width:8px; height:30px; border-radius:4px; }
+  .tab--innerst{ background:var(--petrol); }     /* 7.24:1 mot hvit, ikke-tekst */
+  .tab--mellomlag{ background:var(--marigold); } /* 4.92:1 mot hvit, ikke-tekst */
+  .tab--yttertoy{ background:var(--korall); }    /* 5.12:1 mot hvit, ikke-tekst */
+  .tab--tilbehor{ background:var(--ink-2); }     /* ekstra/utstyr = tilbehør-gruppe */
+  .row-copy{ display:flex; flex-direction:column; gap:1px; min-width:0; }
+  .row-cat{ font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--ink-2); }
+  .row-items{ font-size:14.5px; color:var(--ink); }
+  .row-flag{
+    margin-left:auto; flex:0 0 auto;
+    font-size:10px; font-weight:700; color:var(--cta);
+    background:color-mix(in oklab, var(--cta) 12%, white);
+    border-radius:999px; padding:3px 8px;
+  }
+
+  /* ---------- precision line ---------- */
+  .precision{
+    display:flex; align-items:center; gap:6px;
+    font-size:12.5px; color:var(--ink-2);
+    font-variant-numeric:tabular-nums;
+    border-top:1px solid color-mix(in oklab, var(--ink) 10%, transparent);
+    padding-top:10px;
+  }
+  .precision b{ color:var(--ink); font-weight:600; }
+  .precision .dot{ opacity:.5; }
+
+  /* ---------- safety line ---------- */
+  .safety{
+    display:flex; gap:10px; align-items:flex-start;
+    background:var(--surface);
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:12.5px;
+    color:var(--ink);
+    line-height:1.42;
+  }
+  .safety .badge{
+    flex:0 0 auto;
+    font-size:10px; font-weight:700;
+    padding:3px 7px; border-radius:999px;
+    background:var(--surface-white);
+    border:1px solid color-mix(in oklab, var(--ink) 16%, transparent);
+    color:var(--ink);
+  }
+  .safety-icon{
+    flex:0 0 auto; width:18px; height:18px; margin-top:1px;
+    border-radius:50%;
+    background:var(--surface-white);
+    border:1.5px solid var(--ink-2); /* ikke-tekst kontur, ikon+tekst — status aldri kun via farge */
+  }
+
+  /* ---------- next-change line ---------- */
+  .next-change{
+    font-size:12.5px;
+    color:var(--ink);
+    background:color-mix(in oklab, var(--cta) 9%, var(--surface));
+    border-radius:12px;
+    padding:9px 12px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .next-change b{ font-weight:700; }
+  .motion-tag{
+    font-size:10px; color:var(--ink-2);
+    border:1px dashed color-mix(in oklab, var(--ink) 30%, transparent);
+    border-radius:999px; padding:2px 8px;
+    display:inline-flex; align-items:center; gap:4px;
+    white-space:nowrap;
+  }
+
+  /* ---------- dock ---------- */
+  .dock{
+    flex:0 0 78px;
+    background:var(--dock);
+    display:flex;
+    align-items:center;
+    justify-content:space-around;
+    padding:0 6px;
+    box-shadow:0 -1px 0 rgba(255,255,255,.06) inset;
+  }
+  .dock-item{
+    appearance:none; border:0; background:transparent; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:var(--dock-inactive);
+    padding:8px 10px;
+    min-width:44px; min-height:44px;
+    justify-content:center;
+    border-radius:14px;
+    position:relative;
+  }
+  .dock-item .dock-pool{
+    position:absolute; inset:2px 6px; border-radius:12px;
+    background:transparent;
+  }
+  .dock-item.active{ color:var(--surface-white); }
+  .dock-item.active .dock-pool{ background:var(--cta-pool); opacity:.9; }
+  .dock-icon{ width:20px; height:20px; fill:currentColor; position:relative; }
+  .dock-label{ font-size:10px; font-weight:600; position:relative; }
+  .dock-item:focus-visible{
+    outline:2.5px solid var(--focus);
+    outline-offset:2px;
+    box-shadow:0 0 0 4.5px #fff; /* hvit halo -> synlig kant ≥3:1 mot mørk dock, se kommentar i :root */
+  }
+
+  /* ---------- generic focus ---------- */
+  a:focus-visible, button:focus-visible{
+    outline:2.5px solid var(--focus);
+    outline-offset:2px;
+  }
+  .demo-focus{
+    outline:3px solid var(--focus) !important;
+    outline-offset:2px !important;
+    box-shadow:0 0 0 5px color-mix(in oklab, var(--focus) 16%, transparent);
+  }
+  .focus-caption{
+    font-size:10.5px; color:var(--ink-2); margin-top:6px;
+  }
+
+  /* ---------- hit-area 44pt demo ---------- */
+  .hit44{ position:relative; }
+  .hit44::after{
+    content:"";
+    position:absolute; inset:50% auto auto 50%;
+    width:44px; height:44px;
+    transform:translate(-50%,-50%);
+    border:1.5px dashed color-mix(in oklab, var(--ink) 45%, transparent);
+    border-radius:10px;
+    pointer-events:none;
+  }
+  .hit44-label{
+    position:absolute; right:-4px; bottom:-16px;
+    font-size:9px; color:var(--ink-2);
+    background:var(--surface-white);
+    padding:1px 5px; border-radius:6px;
+    border:1px solid color-mix(in oklab, var(--ink) 14%, transparent);
+  }
+
+  /* ---------- buttons ---------- */
+  .btn-cta{
+    appearance:none; border:0; cursor:pointer;
+    background:var(--cta); color:#fff;
+    font-family:var(--font-sans); font-weight:700; font-size:14.5px;
+    border-radius:14px; padding:13px 18px;
+    min-height:44px;
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    width:100%;
+  }
+
+  /* ============================================================
+     ANTREKK-specific
+     ============================================================ */
+  .stack.full .stack-row{ margin-top:-8px; }
+
+  /* ============================================================
+     PLAN rail
+     ============================================================ */
+  .rail{
+    position:relative;
+    padding-left:26px;
+    display:flex; flex-direction:column; gap:0;
+  }
+  .rail::before{
+    content:"";
+    position:absolute; left:9px; top:6px; bottom:6px; width:3px;
+    border-radius:3px;
+    background:linear-gradient(180deg,var(--temp-blue),var(--ink-2) 45%, var(--warm-rose) 100%);
+    opacity:.35;
+  }
+  .rail-node{ position:relative; padding:10px 0 18px; }
+  .rail-node::before{
+    content:"";
+    position:absolute; left:-26px; top:12px;
+    width:11px; height:11px; border-radius:50%;
+    background:var(--surface-white);
+    border:2.5px solid var(--ink-2);
+  }
+  .rail-time{ font-size:12.5px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .rail-chip{ font-size:11.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; margin-top:1px; }
+  .rail-marker{
+    position:relative;
+    margin:2px 0 2px -26px;
+    padding:12px 14px 12px 40px;
+    background:var(--surface);
+    border-radius:14px;
+    box-shadow:0 0 0 1.5px color-mix(in oklab, var(--cta) 40%, transparent);
+  }
+  .rail-marker::before{
+    content:"";
+    position:absolute; left:9px; top:50%; transform:translateY(-50%);
+    width:15px; height:15px; border-radius:50%;
+    background:var(--cta);
+  }
+  .rail-marker .label{ font-size:13px; font-weight:700; color:var(--ink); }
+  .rail-marker .sentence{ font-size:12px; color:var(--ink-2); margin-top:2px; }
+  .rail-marker .garments{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .rail-marker .garment-chip{
+    font-size:11px; color:var(--ink); background:var(--surface-white);
+    border-radius:999px; padding:4px 9px;
+    border:1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+  }
+  .rail-collapsed{
+    margin:2px 0 2px -26px; padding:10px 14px;
+    font-size:12px; color:var(--ink-2); font-style:normal;
+  }
+
+  /* ============================================================
+     PAYWALL
+     ============================================================ */
+  .pw-fold{
+    background:linear-gradient(135deg,var(--canvas-mild),var(--canvas-kald));
+    border-radius:20px;
+    padding:16px;
+    position:relative;
+  }
+  .pw-fold-crease{
+    position:absolute; left:14px; right:14px; top:50%;
+    height:1px; background:color-mix(in oklab, var(--ink) 20%, transparent);
+  }
+  .pw-tier{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-2); }
+  .pw-free{ padding-bottom:14px; }
+  .pw-plus{ padding-top:14px; }
+  .pw-markers{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .pw-marker{
+    width:22px; height:22px; border-radius:50%;
+    background:var(--surface-white);
+    border:2px solid var(--ink-2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:9px; color:var(--ink-2); font-weight:700;
+  }
+  .pw-marker.on{ background:var(--cta); border-color:var(--cta); color:#fff; }
+  .pw-row{ display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; color:var(--ink); }
+  .pw-chip{
+    font-size:11px; color:var(--ink); background:var(--surface-white);
+    border-radius:999px; padding:4px 10px; border:1px solid color-mix(in oklab, var(--ink) 14%, transparent);
+  }
+  .pw-circle{ display:flex; margin-top:8px; }
+  .pw-token{
+    width:26px; height:26px; border-radius:50%;
+    background:var(--surface-white);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:var(--ink);
+    box-shadow:0 0 0 2px var(--surface-white);
+  }
+  .pw-token:not(:first-child){ margin-left:-8px; }
+  .pw-token.mint-ring{ box-shadow:0 0 0 2px var(--cta), 0 0 0 4px var(--surface-white); }
+
+  .pricing{ display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+  .price-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 14px; border-radius:14px;
+    background:var(--surface);
+    font-size:13.5px;
+  }
+  .price-row.selected{
+    background:var(--surface-white);
+    box-shadow:0 0 0 1.5px var(--cta);
+  }
+  .price-row .price-main{ font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .price-row .price-sub{ font-size:11px; color:var(--ink-2); margin-top:1px; }
+  .price-selected-badge{
+    font-size:10px; font-weight:700; color:var(--cta); /* 5.94:1 mot hvit */
+    background:color-mix(in oklab, var(--cta) 12%, white);
+    border-radius:999px; padding:3px 8px;
+  }
+  .trial-note{ font-size:11px; color:var(--ink-2); line-height:1.4; }
+  .benefits{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .benefits li{ font-size:12.5px; color:var(--ink); display:flex; gap:8px; align-items:flex-start; }
+  .benefits li::before{ content:"—"; color:var(--ink-2); flex:0 0 auto; }
+
+  /* ============================================================
+     STATE FRAMES
+     ============================================================ */
+  .skeleton{ background:linear-gradient(90deg,var(--surface),#EDEBF7,var(--surface)); border-radius:10px; }
+  .sk-avatar{ width:64px; height:118px; border-radius:20px; }
+  .sk-row{ height:46px; border-radius:14px; margin-top:8px; }
+  .status-line{ font-size:12.5px; color:var(--ink-2); text-align:center; margin-top:10px; }
+
+  .banner{
+    display:flex; align-items:center; gap:8px;
+    background:var(--surface);
+    border-radius:12px; padding:9px 12px;
+    font-size:12px; color:var(--ink);
+  }
+  .banner .dot{ width:8px; height:8px; border-radius:50%; background:var(--ink-2); flex:0 0 auto; }
+  .banner.offline .dot{ background:var(--temp-blue); }
+
+  .ghost-card{
+    border:1.5px dashed color-mix(in oklab, var(--ink) 30%, transparent);
+    border-radius:16px; padding:20px; text-align:center;
+    color:var(--ink-2); font-size:12.5px;
+  }
+
+  /* Størst tekst: eksplisitte px-overstyringer (~130% av basisverdiene) —
+     font-size:130% alene virker ikke her fordi resten av filen bruker faste
+     px-verdier på tekst-elementene, som ikke arver en prosentvis forelder-skalering. */
+  .scale-130 .card{ gap:18px; }
+  .scale-130 .answer-row{ flex-direction:column; align-items:flex-start; }
+  .scale-130 h1{ font-size:34px; }
+  .scale-130 .subline{ font-size:17.5px; }
+  .scale-130 .row-cat{ font-size:13.5px; }
+  .scale-130 .row-items{ font-size:19px; }
+  .scale-130 .avatar-caption{ font-size:13.5px; }
+  .scale-130 .safety{ font-size:16px; }
+  .scale-130 .precision{ font-size:16px; }
+  .scale-130 .next-change{ font-size:16px; }
+  .scale-130 .motion-tag{ font-size:13px; }
+  .scale-130 .stack-row{ padding:12px 14px 12px 16px; }
+  .scale-130 .dock-label{ font-size:13px; }
+
+  .reduced-tag{
+    font-size:10px; color:var(--ink-2);
+    border:1px solid color-mix(in oklab, var(--ink) 22%, transparent);
+    border-radius:999px; padding:2px 8px;
+    display:inline-flex; align-items:center; gap:4px;
+  }
+  .reduced-banner{
+    font-size:11.5px; color:var(--ink-2); text-align:center;
+    padding:6px 0 0;
+  }
+
+  .visually-hidden{
+    position:absolute; width:1px; height:1px; overflow:hidden;
+    clip:rect(0 0 0 0); white-space:nowrap; border:0; padding:0; margin:-1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-banner">
+  <p class="eyebrow">Babyora — R4 North-Star mock</p>
+  <p class="doc-title">Retning A · «Ferdig svar-kortet» (stille presisjon)</p>
+  <p class="doc-desc">Trykksak-rolig svar-kort som dominerende metafor. Statisk mock, ingen produksjonsassets. Alt innhold er ordrett fra <code>fixtures.json</code> (commit 32f4c7b). Bevegelse er annotert som små etiketter, ikke animert. Rekkefølge: Hjem → Antrekk → Plan → Paywall, deretter tilstandsrekke.</p>
+</div>
+
+<!-- Skjult ikon-sprite, gjenbrukt av dock i alle rammer -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11.2 12 4.4l8 6.8V20h-5.2v-6.4H9.2V20H4z"/></symbol>
+  <symbol id="i-plan" viewBox="0 0 24 24"><rect x="4" y="5.2" width="16" height="14.6" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4 9.4h16M8.2 3.4v3.6M15.8 3.4v3.6" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/></symbol>
+  <symbol id="i-guide" viewBox="0 0 24 24"><path d="M5.2 4.2h9.4a3 3 0 0 1 3 3V20H8.2a3 3 0 0 1-3-3V4.2z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8.4 8.4h6.4M8.4 12h6.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-family" viewBox="0 0 24 24"><circle cx="9" cy="9.4" r="3.6" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="16.2" cy="10.6" r="3" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".82"/></symbol>
+</svg>
+
+<div class="gallery">
+
+<!-- =========================================================
+     1. HJEM — mild_utelek_18mnd, stående silhuett
+     ========================================================= -->
+<section class="frame-block" aria-label="Ramme: Hjem">
+  <p class="frame-caption">Hjem <span class="frame-sub">mild_utelek_18mnd · stående</span></p>
+  <div class="phone">
+    <div class="sky t-mild">
+      <div class="sky-top">
+        <span>Utelek i dag</span>
+        <span class="sky-symbol" aria-hidden="true"></span>
+      </div>
+      <!-- alt: smal himmelstripe som fargelegges etter temperaturaksen (mild lilla). Værtilstand gjengis som tekst: "delvis skyet". -->
+      <span class="sky-condition">delvis skyet</span>
+    </div>
+    <div class="card">
+      <h1>Tynt ull-mellomlag</h1>
+      <p class="subline">Ytterst plagg for utelek i dag, 11° føles. <span class="motion-tag">crossfade 220 ms ved endring</span></p>
+
+      <div class="answer-row">
+        <div class="avatar-wrap">
+          <!-- alt: nøytral positur-silhuett, stående, ingen ansikt/identitet — kun for å vise antrekkets siluett -->
+          <div class="avatar-standing" role="img" aria-label="Nøytral stående silhuett iført tynt ull-mellomlag ytterst">
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="legs"></div>
+          </div>
+          <span class="avatar-caption">Verifisert ytterst</span>
+        </div>
+        <ul class="stack" style="margin:0;">
+          <li class="stack-row active">
+            <span class="tab tab--mellomlag" aria-hidden="true"></span>
+            <span class="row-copy"><span class="row-cat">Mellomlag · ytterst</span><span class="row-items">tynt ull-mellomlag</span></span>
+          </li>
+          <li class="stack-row">
+            <span class="tab tab--innerst" aria-hidden="true"></span>
+            <span class="row-copy"><span class="row-cat">Innerst</span><span class="row-items">tynt ullsett</span></span>
+          </li>
+          <li class="stack-row">
+            <span class="tab tab--tilbehor" aria-hidden="true"></span>
+            <span class="row-copy"><span class="row-cat">Ekstra</span><span class="row-items">tynn lue, sko</span></span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="safety">
+        <span class="safety-icon" aria-hidden="true"></span>
+        <span>Kjenn på nakken med to fingre — varm og tørr betyr passe.</span>
+      </div>
+
+      <div class="next-change hit44">
+        <span>Neste endring <b>kl. 16:00</b> · regntrekk + kjøredress på</span>
+        <span class="hit44-label">44×44</span>
+      </div>
+
+      <div class="precision">
+        <b>12°</b><span>føles 11°</span><span class="dot">·</span><span>vind 3 m/s</span><span class="dot">·</span><span>oppdatert 07:12</span>
+      </div>
+    </div>
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <!-- role="tablist"/"tab" i produksjon -->
+      <button class="dock-item active hit44" type="button"><span class="dock-pool" aria-hidden="true"></span><svg class="dock-icon"><use href="#i-home"></use></svg><span class="dock-label">Hjem</span><span class="hit44-label">44×44</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-plan"></use></svg><span class="dock-label">Planlegg</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-guide"></use></svg><span class="dock-label">Guide</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-family"></use></svg><span class="dock-label">Familie</span></button>
+    </nav>
+  </div>
+</section>
+
+<!-- =========================================================
+     2. ANTREKK — samme fixture, full innerst-først-liste
+     ========================================================= -->
+<section class="frame-block" aria-label="Ramme: Antrekk">
+  <p class="frame-caption">Antrekk <span class="frame-sub">kortet ekspandert</span></p>
+  <div class="phone">
+    <div class="sky t-mild" style="flex-basis:150px;">
+      <div class="sky-top"><span>Utelek i dag</span><span class="sky-symbol" aria-hidden="true"></span></div>
+      <span class="sky-condition">delvis skyet</span>
+    </div>
+    <div class="card">
+      <div class="avatar-wrap" style="align-self:center;">
+        <div class="avatar-standing" role="img" aria-label="Nøytral stående silhuett iført tynt ull-mellomlag ytterst"><div class="head"></div><div class="body"></div><div class="legs"></div></div>
+      </div>
+      <h1>Rekkefølge · innerst først</h1>
+      <ul class="stack full" style="margin:0;">
+        <li class="stack-row">
+          <span class="tab tab--innerst" aria-hidden="true"></span>
+          <span class="row-copy"><span class="row-cat">1 · Innerst</span><span class="row-items">tynt ullsett</span></span>
+        </li>
+        <li class="stack-row active">
+          <span class="tab tab--mellomlag" aria-hidden="true"></span>
+          <span class="row-copy"><span class="row-cat">2 · Mellomlag · ytterst</span><span class="row-items">tynt ull-mellomlag</span></span>
+          <span class="row-flag">Verifisert</span>
+        </li>
+        <li class="stack-row">
+          <span class="tab tab--tilbehor" aria-hidden="true"></span>
+          <span class="row-copy"><span class="row-cat">3 · Ekstra</span><span class="row-items">tynn lue</span></span>
+        </li>
+        <li class="stack-row">
+          <span class="tab tab--tilbehor" aria-hidden="true"></span>
+          <span class="row-copy"><span class="row-cat">4 · Ekstra</span><span class="row-items">sko</span></span>
+        </li>
+      </ul>
+      <div class="precision">
+        <b>12°</b><span>føles 11°</span><span class="dot">·</span><span>vind 3 m/s</span><span class="dot">·</span><span>oppdatert 07:12</span>
+      </div>
+    </div>
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button class="dock-item active" type="button"><span class="dock-pool" aria-hidden="true"></span><svg class="dock-icon"><use href="#i-home"></use></svg><span class="dock-label">Hjem</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-plan"></use></svg><span class="dock-label">Planlegg</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-guide"></use></svg><span class="dock-label">Guide</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-family"></use></svg><span class="dock-label">Familie</span></button>
+    </nav>
+  </div>
+</section>
+
+<!-- =========================================================
+     3. PLAN — plan_morgen_08 → plan_midt_12 → plan_henting_16
+     ========================================================= -->
+<section class="frame-block" aria-label="Ramme: Plan">
+  <p class="frame-caption">Plan <span class="frame-sub">endringsrail · kun meningsfulle endringer</span></p>
+  <div class="phone">
+    <div class="sky t-kald" style="flex-basis:130px;">
+      <div class="sky-top"><span>I dag</span><span class="sky-symbol" aria-hidden="true"></span></div>
+      <span class="sky-condition">6° → 11° → 9°, spredt regn mot kvelden</span>
+    </div>
+    <div class="card">
+      <h1>Endringer i dag</h1>
+      <div class="rail">
+        <div class="rail-node">
+          <div class="rail-time">08:00 · Levering</div>
+          <div class="rail-chip">6° · føles 4° · vind 3 m/s</div>
+        </div>
+        <div class="rail-marker hit44">
+          <!-- alt: rundt markørikon for "yttertøy av" på rail-linjen -->
+          <div class="label">Yttertøy av</div>
+          <div class="sentence">Aktivitet endres til utelek — kjøredressen kan av.</div>
+          <div class="garments"><span class="garment-chip">kjøredress</span></div>
+          <span class="hit44-label">44×44</span>
+        </div>
+        <div class="rail-node">
+          <div class="rail-time">12:00 · Utelek</div>
+          <div class="rail-chip">11° · føles 10° · vind 3 m/s</div>
+        </div>
+        <div class="rail-marker">
+          <div class="label">Regntrekk + kjøredress på</div>
+          <div class="sentence">Regn på vei mot henting — legg på beskyttelse.</div>
+          <div class="garments">
+            <span class="garment-chip">kjøredress</span>
+            <span class="garment-chip">regntrekk på vognen</span>
+            <span class="garment-chip">ull-mellomlag</span>
+          </div>
+        </div>
+        <div class="rail-node">
+          <div class="rail-time">16:00 · Henting</div>
+          <div class="rail-chip">9° · føles 7° · vind 6 m/s · regn 1,4 mm/t</div>
+        </div>
+        <div class="rail-collapsed">Samme antrekk frem til 18:00</div>
+      </div>
+    </div>
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-home"></use></svg><span class="dock-label">Hjem</span></button>
+      <button class="dock-item active" type="button"><span class="dock-pool" aria-hidden="true"></span><svg class="dock-icon"><use href="#i-plan"></use></svg><span class="dock-label">Planlegg</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-guide"></use></svg><span class="dock-label">Guide</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-family"></use></svg><span class="dock-label">Familie</span></button>
+    </nav>
+  </div>
+</section>
+
+<!-- =========================================================
+     4. PAYWALL
+     ========================================================= -->
+<section class="frame-block" aria-label="Ramme: Paywall">
+  <p class="frame-caption">Paywall <span class="frame-sub">kortet brettes ut</span></p>
+  <div class="phone scrollable">
+    <div class="card" style="margin-top:0; border-radius:0; padding-top:26px;">
+      <h1>Fremover, overalt og sammen</h1>
+      <p class="subline">Kortet ditt brettes ut til uke, steder og omsorgssirkel. <span class="motion-tag">brettes ut 620 ms · kun første gang</span></p>
+
+      <div class="pw-fold">
+        <div class="pw-fold-crease" aria-hidden="true"></div>
+        <div class="pw-free">
+          <p class="pw-tier">I dag · gratis</p>
+          <!-- alt: sammenbrettet kort som viser kun ett barn, ett sted (hjem) og dagens markør -->
+          <div class="pw-markers"><span class="pw-marker on" aria-hidden="true">I</span></div>
+          <p class="pw-chip" style="margin-top:8px; display:inline-block;">Hjem</p>
+        </div>
+        <div class="pw-plus">
+          <p class="pw-tier">Med Plus · hele uken</p>
+          <!-- alt: utbrettet kort som viser markører for hele uken, flere steder og en omsorgssirkel -->
+          <div class="pw-markers" aria-hidden="true">
+            <span class="pw-marker on">M</span><span class="pw-marker on">T</span><span class="pw-marker on">O</span><span class="pw-marker on">T</span><span class="pw-marker on">F</span><span class="pw-marker">L</span><span class="pw-marker">S</span>
+          </div>
+          <div class="pw-row">
+            <span class="pw-chip">Hjem</span><span class="pw-chip">Barnehage</span>
+          </div>
+          <div class="pw-circle" role="img" aria-label="Omsorgssirkel: to omsorgspersoner med aktiv tilgang">
+            <span class="pw-token mint-ring">M</span><span class="pw-token mint-ring">F</span>
+          </div>
+          <p class="pw-row" style="margin-top:10px;">Kalibrert etter tilbakemeldinger fra i går</p>
+        </div>
+      </div>
+
+      <ul class="benefits">
+        <li>Alle steder og omsorgspersoner, ikke bare hjemme</li>
+        <li>Hele uken planlagt, ikke bare i dag</li>
+        <li>Kalibrert til akkurat ditt barn over tid</li>
+      </ul>
+
+      <div class="pricing">
+        <div class="price-row">
+          <span><span class="price-main">49 kr / mnd</span><br><span class="price-sub">Månedlig, ingen bindingstid</span></span>
+        </div>
+        <div class="price-row selected">
+          <span><span class="price-main">299 kr / år</span><br><span class="price-sub">≈ 25 kr/mnd</span></span>
+          <span class="price-selected-badge">Valgt</span>
+        </div>
+      </div>
+      <p class="trial-note">7 dager gratis, deretter 299 kr faktureres årlig. Avbryt når som helst før prøveperioden er over.</p>
+
+      <button class="btn-cta demo-focus hit44" type="button">Start gratis prøveperiode<span class="hit44-label" style="bottom:auto; top:-16px;">44×44</span></button>
+      <p class="focus-caption">Fokusstil (eksempel, alltid vist her): 3 px #6750AB, offset 2 px — 6,34:1 mot hvit.</p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="gallery" style="margin-top:34px;">
+
+<!-- =========================================================
+     5. LASTER
+     ========================================================= -->
+<section class="frame-block" aria-label="Ramme: Laster">
+  <p class="frame-caption">Laster <span class="frame-sub">skjelett, ingen data ennå</span></p>
+  <div class="phone">
+    <div class="sky t-mild t-muted">
+      <div class="sky-top"><span>&nbsp;</span><span class="sky-symbol" aria-hidden="true"></span></div>
+      <span class="sky-condition">&nbsp;</span>
+    </div>
+    <div class="card">
+      <h1 class="visually-hidden">Henter i dag sitt antrekk</h1>
+      <div class="answer-row">
+        <div class="sk-avatar skeleton" aria-hidden="true"></div>
+        <div style="flex:1;">
+          <div class="sk-row skeleton" aria-hidden="true" style="margin-top:0;"></div>
+          <div class="sk-row skeleton" aria-hidden="true"></div>
+        </div>
+      </div>
+      <div class="sk-row skeleton" aria-hidden="true"></div>
+      <!-- role="status" aria-live="polite" i produksjon: statusteksten under leses opp én gang -->
+      <p class="status-line">Henter vær og antrekk …</p>
+      <p class="reduced-banner"><span class="motion-tag">puls 1400 ms · stopper ved redusert bevegelse</span></p>
+    </div>
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button class="dock-item active" type="button"><span class="dock-pool" aria-hidden="true"></span><svg class="dock-icon"><use href="#i-home"></use></svg><span class="dock-label">Hjem</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-plan"></use></svg><span class="dock-label">Planlegg</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-guide"></use></svg><span class="dock-label">Guide</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-family"></use></svg><span class="dock-label">Familie</span></button>
+    </nav>
+  </div>
+</section>
+
+<!-- =========================================================
+     6. FRAKOBLET (bufret 07:12)
+     ========================================================= -->
+<section class="frame-block" aria-label="Ramme: Frakoblet">
+  <p class="frame-caption">Frakoblet <span class="frame-sub">bufret 07:12</span></p>
+  <div class="phone">
+    <div class="sky t-mild t-muted">
+      <div class="sky-top"><span>Utelek i dag</span><span class="sky-symbol" aria-hidden="true"></span></div>
+      <span class="sky-condition">delvis skyet</span>
+    </div>
+    <div class="card">
+      <div class="banner offline"><span class="dot" aria-hidden="true"></span>Frakoblet · viser bufret 07:12</div>
+      <h1>Tynt ull-mellomlag</h1>
+      <p class="subline">Ytterst plagg for utelek i dag, 11° føles (bufret).</p>
+      <div class="answer-row">
+        <div class="avatar-wrap">
+          <div class="avatar-standing" role="img" aria-label="Nøytral stående silhuett iført tynt ull-mellomlag ytterst"><div class="head"></div><div class="body"></div><div class="legs"></div></div>
+        </div>
+        <ul class="stack" style="margin:0;">
+          <li class="stack-row active"><span class="tab tab--mellomlag" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Mellomlag · ytterst</span><span class="row-items">tynt ull-mellomlag</span></span></li>
+          <li class="stack-row"><span class="tab tab--innerst" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Innerst</span><span class="row-items">tynt ullsett</span></span></li>
+          <li class="stack-row"><span class="tab tab--tilbehor" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Ekstra</span><span class="row-items">tynn lue, sko</span></span></li>
+        </ul>
+      </div>
+      <div class="precision"><b>12°</b><span>føles 11°</span><span class="dot">·</span><span>vind 3 m/s</span><span class="dot">·</span><span>bufret 07:12</span></div>
+    </div>
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button class="dock-item active" type="button"><span class="dock-pool" aria-hidden="true"></span><svg class="dock-icon"><use href="#i-home"></use></svg><span class="dock-label">Hjem</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-plan"></use></svg><span class="dock-label">Planlegg</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-guide"></use></svg><span class="dock-label">Guide</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-family"></use></svg><span class="dock-label">Familie</span></button>
+    </nav>
+  </div>
+</section>
+
+<!-- =========================================================
+     7. MANGLER STED
+     ========================================================= -->
+<section class="frame-block" aria-label="Ramme: Mangler sted">
+  <p class="frame-caption">Mangler sted <span class="frame-sub">ingen antrekk vist — ingen data å vise fra</span></p>
+  <div class="phone">
+    <div class="sky t-mild t-muted">
+      <div class="sky-top"><span>&nbsp;</span><span class="sky-symbol" aria-hidden="true"></span></div>
+      <span class="sky-condition">Sted mangler</span>
+    </div>
+    <div class="card">
+      <h1>Legg til et sted</h1>
+      <p class="subline">Vi trenger et sted for å regne ut riktig antrekk til i dag.</p>
+      <!-- alt: tom, stiplet kortkontur der svaret normalt vises — ingen antrekk er diktet opp uten værdata -->
+      <div class="ghost-card">Antrekket vises her så snart et sted er lagt til.</div>
+      <button class="btn-cta hit44" type="button">Legg til sted<span class="hit44-label" style="bottom:auto; top:-16px;">44×44</span></button>
+    </div>
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button class="dock-item active" type="button"><span class="dock-pool" aria-hidden="true"></span><svg class="dock-icon"><use href="#i-home"></use></svg><span class="dock-label">Hjem</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-plan"></use></svg><span class="dock-label">Planlegg</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-guide"></use></svg><span class="dock-label">Guide</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-family"></use></svg><span class="dock-label">Familie</span></button>
+    </nav>
+  </div>
+</section>
+
+<!-- =========================================================
+     8. EKSTREM KULDE — ekstrem_kulde_7mnd, SITTENDE
+     ========================================================= -->
+<section class="frame-block" aria-label="Ramme: Ekstrem kulde">
+  <p class="frame-caption">Ekstrem kulde <span class="frame-sub">ekstrem_kulde_7mnd · sittende</span></p>
+  <div class="phone">
+    <div class="sky t-kald">
+      <div class="sky-top"><span>Vogntur i dag</span><span class="sky-symbol" aria-hidden="true"></span></div>
+      <span class="sky-condition">klar himmel</span>
+    </div>
+    <div class="card">
+      <h1>Isolert vinterkjøredress</h1>
+      <p class="subline">Ytterst plagg for vogntur i dag, −21° føles.</p>
+      <div class="answer-row">
+        <div class="avatar-wrap">
+          <!-- alt: nøytral positur-silhuett, sittende (0–11 mnd), ingen ansikt/identitet -->
+          <div class="avatar-sitting" role="img" aria-label="Nøytral sittende silhuett iført isolert vinterkjøredress ytterst"><div class="head"></div><div class="blob"></div></div>
+          <span class="avatar-caption">Verifisert ytterst</span>
+        </div>
+        <ul class="stack" style="margin:0;">
+          <li class="stack-row active"><span class="tab tab--yttertoy" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Yttertøy · ytterst</span><span class="row-items">isolert vinterkjøredress</span></span></li>
+          <li class="stack-row"><span class="tab tab--mellomlag" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Mellomlag</span><span class="row-items">ull-jakke, ull-bukse</span></span></li>
+          <li class="stack-row"><span class="tab tab--innerst" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Innerst</span><span class="row-items">to ullsett oppå hverandre, tykke ullstrømper, ullsokker</span></span></li>
+          <li class="stack-row"><span class="tab tab--tilbehor" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Ekstra</span><span class="row-items">balaklava, votter dun, varmepose dun, saueskinn i vogn, ansiktskrem, halsedisse</span></span></li>
+          <li class="stack-row"><span class="tab tab--tilbehor" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Utstyr</span><span class="row-items">vognpose</span></span></li>
+        </ul>
+      </div>
+      <div class="safety">
+        <span class="safety-icon" aria-hidden="true"></span>
+        <span><span class="badge">Middels viktighet · SB-8</span><br>Kort tur — sjekk kinn, nese og ører hvert 20. minutt. Frostskade-risiko ved feels ≤ −10 °C.</span>
+      </div>
+      <div class="precision"><b>−17°</b><span>føles −21°</span><span class="dot">·</span><span>vind 6 m/s</span><span class="dot">·</span><span>oppdatert 07:12</span></div>
+    </div>
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button class="dock-item active" type="button"><span class="dock-pool" aria-hidden="true"></span><svg class="dock-icon"><use href="#i-home"></use></svg><span class="dock-label">Hjem</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-plan"></use></svg><span class="dock-label">Planlegg</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-guide"></use></svg><span class="dock-label">Guide</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-family"></use></svg><span class="dock-label">Familie</span></button>
+    </nav>
+  </div>
+</section>
+
+</div>
+
+<div class="gallery" style="margin-top:34px;">
+
+<!-- =========================================================
+     9. EKSTREM VARME — ekstrem_varme_18mnd
+     ========================================================= -->
+<section class="frame-block" aria-label="Ramme: Ekstrem varme">
+  <p class="frame-caption">Ekstrem varme <span class="frame-sub">ekstrem_varme_18mnd · stående</span></p>
+  <div class="phone">
+    <div class="sky t-varm">
+      <div class="sky-top"><span>Utelek i dag</span><span class="sky-symbol" aria-hidden="true"></span></div>
+      <span class="sky-condition">klar himmel</span>
+    </div>
+    <div class="card">
+      <h1>T-skjorte og shorts</h1>
+      <p class="subline">Ytterst plagg for utelek i dag, 28° føles.</p>
+      <div class="answer-row">
+        <div class="avatar-wrap">
+          <div class="avatar-standing" role="img" aria-label="Nøytral stående silhuett iført t-skjorte og shorts"><div class="head"></div><div class="body"></div><div class="legs"></div></div>
+          <span class="avatar-caption">Verifisert ytterst</span>
+        </div>
+        <ul class="stack" style="margin:0;">
+          <li class="stack-row active"><span class="tab tab--innerst" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Innerst · ytterst</span><span class="row-items">t-skjorte, shorts</span></span></li>
+          <li class="stack-row"><span class="tab tab--tilbehor" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Ekstra</span><span class="row-items">solhatt, sandaler</span></span></li>
+        </ul>
+      </div>
+      <div class="safety">
+        <span class="safety-icon" aria-hidden="true"></span>
+        <span><span class="badge">Varmt i dag</span><br>Veldig varmt i dag — aldri alene i bilen, masse å drikke, mye skygge.</span>
+      </div>
+      <div class="precision"><b>27°</b><span>føles 28°</span><span class="dot">·</span><span>vind 1 m/s</span><span class="dot">·</span><span>oppdatert 07:12</span></div>
+    </div>
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button class="dock-item active" type="button"><span class="dock-pool" aria-hidden="true"></span><svg class="dock-icon"><use href="#i-home"></use></svg><span class="dock-label">Hjem</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-plan"></use></svg><span class="dock-label">Planlegg</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-guide"></use></svg><span class="dock-label">Guide</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-family"></use></svg><span class="dock-label">Familie</span></button>
+    </nav>
+  </div>
+</section>
+
+<!-- =========================================================
+     10. STØRST TEKST — samme Hjem, ~130%
+     ========================================================= -->
+<section class="frame-block" aria-label="Ramme: Størst tekst">
+  <p class="frame-caption">Størst tekst <span class="frame-sub">~130 % · ingenting klippes (rammen skroller)</span></p>
+  <div class="phone scrollable scale-130">
+    <div class="sky t-mild">
+      <div class="sky-top"><span>Utelek i dag</span><span class="sky-symbol" aria-hidden="true"></span></div>
+      <span class="sky-condition">delvis skyet</span>
+    </div>
+    <div class="card">
+      <h1>Tynt ull-mellomlag</h1>
+      <p class="subline">Ytterst plagg for utelek i dag, 11° føles.</p>
+      <div class="answer-row">
+        <div class="avatar-wrap">
+          <div class="avatar-standing" role="img" aria-label="Nøytral stående silhuett iført tynt ull-mellomlag ytterst"><div class="head"></div><div class="body"></div><div class="legs"></div></div>
+        </div>
+        <ul class="stack" style="margin:0;">
+          <li class="stack-row active"><span class="tab tab--mellomlag" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Mellomlag · ytterst</span><span class="row-items">tynt ull-mellomlag</span></span></li>
+          <li class="stack-row"><span class="tab tab--innerst" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Innerst</span><span class="row-items">tynt ullsett</span></span></li>
+          <li class="stack-row"><span class="tab tab--tilbehor" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Ekstra</span><span class="row-items">tynn lue, sko</span></span></li>
+        </ul>
+      </div>
+      <div class="safety"><span class="safety-icon" aria-hidden="true"></span><span>Kjenn på nakken med to fingre — varm og tørr betyr passe.</span></div>
+      <div class="next-change"><span>Neste endring <b>kl. 16:00</b> · regntrekk + kjøredress på</span></div>
+      <div class="precision"><b>12°</b><span>føles 11°</span><span class="dot">·</span><span>vind 3 m/s</span><span class="dot">·</span><span>oppdatert 07:12</span></div>
+    </div>
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button class="dock-item active" type="button"><span class="dock-pool" aria-hidden="true"></span><svg class="dock-icon"><use href="#i-home"></use></svg><span class="dock-label">Hjem</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-plan"></use></svg><span class="dock-label">Planlegg</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-guide"></use></svg><span class="dock-label">Guide</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-family"></use></svg><span class="dock-label">Familie</span></button>
+    </nav>
+  </div>
+</section>
+
+<!-- =========================================================
+     11. REDUSERT BEVEGELSE
+     ========================================================= -->
+<section class="frame-block" aria-label="Ramme: Redusert bevegelse">
+  <p class="frame-caption">Redusert bevegelse <span class="frame-sub">statisk, direkte til sluttilstand</span></p>
+  <div class="phone">
+    <div class="sky t-mild">
+      <div class="sky-top"><span>Utelek i dag</span><span class="sky-symbol" aria-hidden="true"></span></div>
+      <span class="sky-condition">delvis skyet</span>
+    </div>
+    <div class="card">
+      <h1>Tynt ull-mellomlag</h1>
+      <p class="subline">Ytterst plagg for utelek i dag, 11° føles. <span class="reduced-tag">ingen animasjon (direkte)</span></p>
+      <div class="answer-row">
+        <div class="avatar-wrap">
+          <div class="avatar-standing" role="img" aria-label="Nøytral stående silhuett iført tynt ull-mellomlag ytterst"><div class="head"></div><div class="body"></div><div class="legs"></div></div>
+        </div>
+        <ul class="stack" style="margin:0;">
+          <li class="stack-row active"><span class="tab tab--mellomlag" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Mellomlag · ytterst</span><span class="row-items">tynt ull-mellomlag</span></span></li>
+          <li class="stack-row"><span class="tab tab--innerst" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Innerst</span><span class="row-items">tynt ullsett</span></span></li>
+          <li class="stack-row"><span class="tab tab--tilbehor" aria-hidden="true"></span><span class="row-copy"><span class="row-cat">Ekstra</span><span class="row-items">tynn lue, sko</span></span></li>
+        </ul>
+      </div>
+      <div class="safety"><span class="safety-icon" aria-hidden="true"></span><span>Kjenn på nakken med to fingre — varm og tørr betyr passe.</span></div>
+      <div class="precision"><b>12°</b><span>føles 11°</span><span class="dot">·</span><span>vind 3 m/s</span><span class="dot">·</span><span>oppdatert 07:12</span></div>
+      <p class="reduced-banner">prefers-reduced-motion: ingen crossfade, ingen parallax, ingen «brettes ut» — alt vises i sluttilstand direkte.</p>
+    </div>
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button class="dock-item active" type="button"><span class="dock-pool" aria-hidden="true"></span><svg class="dock-icon"><use href="#i-home"></use></svg><span class="dock-label">Hjem</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-plan"></use></svg><span class="dock-label">Planlegg</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-guide"></use></svg><span class="dock-label">Guide</span></button>
+      <button class="dock-item" type="button"><svg class="dock-icon"><use href="#i-family"></use></svg><span class="dock-label">Familie</span></button>
+    </nav>
+  </div>
+</section>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,442 @@
+{
+  "mild_utelek_18mnd": {
+    "input": {
+      "weather": {
+        "tempC": 12,
+        "feelsLikeC": 11,
+        "windMs": 3,
+        "precipMmH": 0,
+        "symbolCode": "partlycloudy_day"
+      },
+      "child": {
+        "ageMonths": 18
+      },
+      "activity": "utelek"
+    },
+    "layers": [
+      {
+        "category": "innerst",
+        "items": [
+          "tynt ullsett"
+        ]
+      },
+      {
+        "category": "mellomlag",
+        "items": [
+          "tynt ull-mellomlag"
+        ]
+      },
+      {
+        "category": "ekstra",
+        "items": [
+          "tynn lue",
+          "sko"
+        ]
+      }
+    ],
+    "summary": "Utelek (11 °C føles): tynt ullsett • tynt ull-mellomlag • tynn lue, sko",
+    "tempBand": "mild",
+    "notes": [
+      "Kjenn på nakken med to fingre — varm og tørr betyr passe.",
+      "Solhatt og solkrem på det som vises. Sjekk UV — fjell og snø kan overraske."
+    ],
+    "severity": "NONE",
+    "flags": []
+  },
+  "kald_vogn_7mnd": {
+    "input": {
+      "weather": {
+        "tempC": -4,
+        "feelsLikeC": -7,
+        "windMs": 4,
+        "precipMmH": 0,
+        "symbolCode": "cloudy"
+      },
+      "child": {
+        "ageMonths": 7
+      },
+      "activity": "vogn"
+    },
+    "layers": [
+      {
+        "category": "innerst",
+        "items": [
+          "tykt ullsett",
+          "ullstrømper",
+          "ullsokker"
+        ]
+      },
+      {
+        "category": "mellomlag",
+        "items": [
+          "ull-mellomlag",
+          "ull-jakke"
+        ]
+      },
+      {
+        "category": "yttertoy",
+        "items": [
+          "vinterkjøredress"
+        ]
+      },
+      {
+        "category": "ekstra",
+        "items": [
+          "lue m/ ull",
+          "tykke votter",
+          "halsedisse",
+          "varmepose dun",
+          "saueskinn i vogn"
+        ]
+      },
+      {
+        "category": "utstyr",
+        "items": [
+          "vognpose"
+        ]
+      }
+    ],
+    "summary": "Vogn (-7 °C føles): tykt ullsett, ullstrømper, ullsokker • ull-mellomlag, ull-jakke • vinterkjøredress • lue m/ ull, tykke votter, halsedisse, varmepose dun, saueskinn i vogn • vognpose",
+    "tempBand": "frost",
+    "notes": [
+      "Kjenn på nakken med to fingre — varm og tørr betyr passe.",
+      "Aldri teppe over kalesjen — det blir en varmefelle.",
+      "Bruk enten varmepose eller teppe, ikke begge — det blir fort for varmt.",
+      "Smør litt fet krem på kinnene en halvtime før dere går ut."
+    ],
+    "severity": "NONE",
+    "flags": []
+  },
+  "ekstrem_kulde_7mnd": {
+    "input": {
+      "weather": {
+        "tempC": -17,
+        "feelsLikeC": -21,
+        "windMs": 6,
+        "precipMmH": 0,
+        "symbolCode": "clearsky_day"
+      },
+      "child": {
+        "ageMonths": 7
+      },
+      "activity": "vogn"
+    },
+    "layers": [
+      {
+        "category": "innerst",
+        "items": [
+          "to ullsett oppå hverandre",
+          "tykke ullstrømper",
+          "ullsokker"
+        ]
+      },
+      {
+        "category": "mellomlag",
+        "items": [
+          "ull-jakke",
+          "ull-bukse"
+        ]
+      },
+      {
+        "category": "yttertoy",
+        "items": [
+          "isolert vinterkjøredress"
+        ]
+      },
+      {
+        "category": "ekstra",
+        "items": [
+          "balaklava",
+          "votter dun",
+          "varmepose dun",
+          "saueskinn i vogn",
+          "ansiktskrem",
+          "halsedisse"
+        ]
+      },
+      {
+        "category": "utstyr",
+        "items": [
+          "vognpose"
+        ]
+      }
+    ],
+    "summary": "Vogn (-21 °C føles): to ullsett oppå hverandre, tykke ullstrømper, ullsokker • ull-jakke, ull-bukse • isolert vinterkjøredress • balaklava, votter dun, varmepose dun, saueskinn i vogn, ansiktskrem, halsedisse • vognpose",
+    "tempBand": "ekstrem",
+    "notes": [
+      "Kjenn på nakken med to fingre — varm og tørr betyr passe.",
+      "Aldri teppe over kalesjen — det blir en varmefelle.",
+      "Bruk enten varmepose eller teppe, ikke begge — det blir fort for varmt.",
+      "Smør litt fet krem på kinnene en halvtime før dere går ut."
+    ],
+    "severity": "MEDIUM",
+    "flags": [
+      {
+        "code": "SB-8",
+        "message": "Kort tur — sjekk kinn, nese og ører hvert 20. minutt. Frostskade-risiko ved feels ≤ -10 °C.",
+        "severity": "MEDIUM"
+      }
+    ]
+  },
+  "ekstrem_varme_18mnd": {
+    "input": {
+      "weather": {
+        "tempC": 27,
+        "feelsLikeC": 28,
+        "windMs": 1,
+        "precipMmH": 0,
+        "symbolCode": "clearsky_day"
+      },
+      "child": {
+        "ageMonths": 18
+      },
+      "activity": "utelek"
+    },
+    "layers": [
+      {
+        "category": "innerst",
+        "items": [
+          "t-skjorte",
+          "shorts"
+        ]
+      },
+      {
+        "category": "ekstra",
+        "items": [
+          "solhatt",
+          "sandaler"
+        ]
+      }
+    ],
+    "summary": "Utelek (28 °C føles): t-skjorte, shorts • solhatt, sandaler",
+    "tempBand": "ekstrem_varme",
+    "notes": [
+      "Kjenn på nakken med to fingre — varm og tørr betyr passe.",
+      "Solhatt og solkrem på det som vises. Sjekk UV — fjell og snø kan overraske.",
+      "Veldig varmt i dag — aldri alene i bilen, masse å drikke, mye skygge."
+    ],
+    "severity": "NONE",
+    "flags": []
+  },
+  "regn_vogn_18mnd": {
+    "input": {
+      "weather": {
+        "tempC": 8,
+        "feelsLikeC": 6,
+        "windMs": 5,
+        "precipMmH": 2.2,
+        "symbolCode": "rain"
+      },
+      "child": {
+        "ageMonths": 18
+      },
+      "activity": "vogn"
+    },
+    "layers": [
+      {
+        "category": "innerst",
+        "items": [
+          "tynt ullsett"
+        ]
+      },
+      {
+        "category": "mellomlag",
+        "items": [
+          "ull-mellomlag"
+        ]
+      },
+      {
+        "category": "yttertoy",
+        "items": [
+          "kjøredress"
+        ]
+      },
+      {
+        "category": "ekstra",
+        "items": [
+          "lue",
+          "tynne votter",
+          "varmepose"
+        ]
+      },
+      {
+        "category": "utstyr",
+        "items": [
+          "regntrekk på vognen"
+        ]
+      }
+    ],
+    "summary": "Vogn (6 °C føles): tynt ullsett • ull-mellomlag • kjøredress • lue, tynne votter, varmepose • regntrekk på vognen",
+    "tempBand": "kjolig",
+    "notes": [
+      "Det høljer ned — kanskje en kortere tur eller helt overbygd vogn?",
+      "Kjenn på nakken med to fingre — varm og tørr betyr passe.",
+      "Aldri teppe over kalesjen — det blir en varmefelle.",
+      "Bruk enten varmepose eller teppe, ikke begge — det blir fort for varmt."
+    ],
+    "severity": "NONE",
+    "flags": []
+  },
+  "plan_morgen_08": {
+    "input": {
+      "weather": {
+        "tempC": 6,
+        "feelsLikeC": 4,
+        "windMs": 3,
+        "precipMmH": 0,
+        "symbolCode": "partlycloudy_day"
+      },
+      "child": {
+        "ageMonths": 18
+      },
+      "activity": "vogn"
+    },
+    "layers": [
+      {
+        "category": "innerst",
+        "items": [
+          "tykt ullsett",
+          "ullsokker"
+        ]
+      },
+      {
+        "category": "mellomlag",
+        "items": [
+          "ull-mellomlag"
+        ]
+      },
+      {
+        "category": "yttertoy",
+        "items": [
+          "kjøredress"
+        ]
+      },
+      {
+        "category": "ekstra",
+        "items": [
+          "lue",
+          "votter",
+          "varmepose dun",
+          "saueskinn i vogn"
+        ]
+      },
+      {
+        "category": "utstyr",
+        "items": [
+          "vognpose"
+        ]
+      }
+    ],
+    "summary": "Vogn (4 °C føles): tykt ullsett, ullsokker • ull-mellomlag • kjøredress • lue, votter, varmepose dun, saueskinn i vogn • vognpose",
+    "tempBand": "kald",
+    "notes": [
+      "Kjenn på nakken med to fingre — varm og tørr betyr passe.",
+      "Aldri teppe over kalesjen — det blir en varmefelle.",
+      "Bruk enten varmepose eller teppe, ikke begge — det blir fort for varmt."
+    ],
+    "severity": "NONE",
+    "flags": []
+  },
+  "plan_midt_12": {
+    "input": {
+      "weather": {
+        "tempC": 11,
+        "feelsLikeC": 10,
+        "windMs": 3,
+        "precipMmH": 0,
+        "symbolCode": "partlycloudy_day"
+      },
+      "child": {
+        "ageMonths": 18
+      },
+      "activity": "utelek"
+    },
+    "layers": [
+      {
+        "category": "innerst",
+        "items": [
+          "tynt ullsett"
+        ]
+      },
+      {
+        "category": "mellomlag",
+        "items": [
+          "tynt ull-mellomlag"
+        ]
+      },
+      {
+        "category": "ekstra",
+        "items": [
+          "tynn lue",
+          "sko"
+        ]
+      }
+    ],
+    "summary": "Utelek (10 °C føles): tynt ullsett • tynt ull-mellomlag • tynn lue, sko",
+    "tempBand": "mild",
+    "notes": [
+      "Kjenn på nakken med to fingre — varm og tørr betyr passe.",
+      "Solhatt og solkrem på det som vises. Sjekk UV — fjell og snø kan overraske."
+    ],
+    "severity": "NONE",
+    "flags": []
+  },
+  "plan_henting_16": {
+    "input": {
+      "weather": {
+        "tempC": 9,
+        "feelsLikeC": 7,
+        "windMs": 6,
+        "precipMmH": 1.4,
+        "symbolCode": "lightrain"
+      },
+      "child": {
+        "ageMonths": 18
+      },
+      "activity": "vogn"
+    },
+    "layers": [
+      {
+        "category": "innerst",
+        "items": [
+          "tynt ullsett"
+        ]
+      },
+      {
+        "category": "mellomlag",
+        "items": [
+          "ull-mellomlag"
+        ]
+      },
+      {
+        "category": "yttertoy",
+        "items": [
+          "kjøredress"
+        ]
+      },
+      {
+        "category": "ekstra",
+        "items": [
+          "lue",
+          "tynne votter",
+          "varmepose"
+        ]
+      },
+      {
+        "category": "utstyr",
+        "items": [
+          "regntrekk på vognen"
+        ]
+      }
+    ],
+    "summary": "Vogn (7 °C føles): tynt ullsett • ull-mellomlag • kjøredress • lue, tynne votter, varmepose • regntrekk på vognen",
+    "tempBand": "kjolig",
+    "notes": [
+      "Kjenn på nakken med to fingre — varm og tørr betyr passe.",
+      "Aldri teppe over kalesjen — det blir en varmefelle.",
+      "Bruk enten varmepose eller teppe, ikke begge — det blir fort for varmt."
+    ],
+    "severity": "NONE",
+    "flags": []
+  }
+}

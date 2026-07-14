@@ -1,0 +1,1251 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Babyora — Retning C: «Påkledningslisten er instrumentet» (mock)</title>
+<style>
+/* ============================================================
+   RETNING C — «Påkledningslisten er instrumentet» (redaksjonell/taktil)
+   Kilder (fasit, les FØR endring):
+   - docs/mocks/north-star/BRIEF.md (felles krav + retning C + a11y-tillegg 1–5)
+   - docs/mocks/north-star/fixtures.json (ekte motor-output, commit 32f4c7b)
+   - docs/superpowers/specs/2026-07-13-babyora-visual-signature-design.md §2,§5,§6,§10,§11
+   Tokens gjenbrukt ordrett fra src/styles/design-tokens.css (Morgennatt, lys modus).
+   Én HTML-fil, ingen avhengigheter (Fraunces via @import, Georgia-fallback).
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,420;9..144,560;9..144,640&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg-canvas: #DAD8EE;
+  --surface: #F3F2FB;
+  --surface-pure: #FFFFFF;
+  --ink-900: #211B32;
+  --ink-700: #56506F;
+  --ink-500: #6B6584;
+  --ink-300: #837D9C;
+  --ink-200: rgba(33, 27, 50, 0.16);
+  --ink-100: rgba(33, 27, 50, 0.08);
+  --hairline: var(--ink-200);
+
+  --accent-cta: #267147;
+  --accent-cta-ink: #F2FBF5;
+  --focus-ring: #6750AB;
+
+  --lag-korall: #AF5331;   /* innerst — non-text tab, ≈4.6:1 mot surface */
+  --lag-marigold: #93690D; /* mellom  — non-text tab, ≈4.4:1 mot surface */
+  --lag-petrol: #285E6A;   /* ytterst — non-text tab, ≈6.5:1 mot surface */
+  --tab-neutral: #6B6584;  /* ekstra/utstyr — non-text tab, ≈5.0:1 mot surface */
+
+  --status-cold: #265B8D;
+  --status-warm: #B14328;
+
+  --accent-temp: #6654A1;
+  --shadow-frame: 0 40px 90px -30px rgba(23, 16, 46, 0.45), 0 12px 30px -14px rgba(23, 16, 46, 0.35);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Font-size-tokens — indirection som lar «Størst tekst»-rammen skalere ALT
+     tekstinnhold ~130% ved å overstyre disse variablene på ett scope, uten å
+     duplisere markup eller CSS (se .frame--xl nederst). */
+  --fs-kicker: 11px;
+  --fs-h1: 27px;
+  --fs-h1-sans: 21px;
+  --fs-sub: 13.5px;
+  --fs-section: 12px;
+  --fs-row: 15px;
+  --fs-meta: 12.5px;
+  --fs-tiny: 11px;
+  --fs-btn: 13.5px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: 'Schibsted Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #EDEBF6;
+  color: var(--ink-900);
+  line-height: 1.4;
+}
+/* Fable-review-fiks (R4.4): tabular-nums var satt globalt på body, men i
+   Schibsted Grotesk gjør tnum også tegnsetting fastbreddet → synlig «luft»
+   før komma/kolon i løpende tekst og overskrifter. Scopes til tallelementer. */
+.masthead, .m-right, .sec-count, .plan-time, .plan-meta, .price-row, .price-left, time {
+  font-variant-numeric: tabular-nums;
+}
+h1, h2, h3, p, ul, li, button { margin: 0; padding: 0; }
+ul { list-style: none; }
+button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+img, svg { display: block; }
+
+/* ---------- galleri (reviewer-skallet UTENFOR de simulerte skjermene —
+   bruker bevisst ingen <h1>/<h2> her, slik at hver .phone-ramme kan eie sin
+   egen «nøyaktig én <h1> per ramme»-hierarki uten konflikt, jf. a11y-tillegg 4). ---------- */
+.gallery-intro {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 40px 0;
+  font-size: 14px;
+  color: var(--ink-700);
+}
+.gallery-intro b { color: var(--ink-900); }
+.gallery {
+  display: flex;
+  gap: 40px;
+  padding: 24px 40px 64px;
+  overflow-x: auto;
+  align-items: flex-start;
+}
+.frame-col { display: flex; flex-direction: column; align-items: center; gap: 12px; flex: none; }
+.frame-caption {
+  font-size: 12.5px; color: var(--ink-700); text-align: center; max-width: 390px; line-height: 1.5;
+}
+.frame-caption b { display: block; font-size: 14.5px; color: var(--ink-900); margin-bottom: 2px; }
+.frame-caption code {
+  font-family: 'SF Mono', ui-monospace, Menlo, monospace; font-size: 11px;
+  background: var(--ink-100); padding: 1px 5px; border-radius: 5px;
+}
+
+/* ---------- telefonramme ---------- */
+.phone {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  border-radius: 46px;
+  overflow: hidden;
+  box-shadow: var(--shadow-frame), 0 0 0 1px rgba(0, 34, 39, 0.06);
+  background: var(--bg-canvas);
+  padding: 16px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.phone[data-temp="kald"] { --bg-canvas: #CCDCF7; --accent-temp: #2B5C97; }
+.phone[data-temp="mild"] { --bg-canvas: #DAD8EE; --accent-temp: #6654A1; }
+.phone[data-temp="varm"] { --bg-canvas: #EED1E0; --accent-temp: #B54436; }
+.phone[data-temp="kald-ekstrem"] { --bg-canvas: #B9CEF0; --accent-temp: #1F4C82; }
+
+/* ---------- header (sitter på canvas — atmosfære-sliveren) ---------- */
+.ph-header { flex: none; padding: max(2px, env(safe-area-inset-top)) 6px 0; }
+.ph-toprow { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.kicker {
+  font-size: var(--fs-kicker); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-700);
+}
+.h1-serif {
+  font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+  font-weight: 620; font-size: var(--fs-h1); line-height: 1.14; letter-spacing: -0.01em;
+  color: var(--ink-900); margin-top: 3px;
+}
+.h1-sans {
+  font-family: 'Schibsted Grotesk', sans-serif;
+  font-weight: 800; font-size: var(--fs-h1-sans); line-height: 1.2;
+  color: var(--ink-900);
+}
+.sub { font-size: var(--fs-sub); color: var(--ink-700); margin-top: 4px; max-width: 300px; }
+
+/* ---------- avatar «kvittering-stempel» (asset-lett — CSS/SVG, ingen bilder) ---------- */
+.stamp { flex: none; position: relative; width: 58px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.stamp-ring {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 2px dashed color-mix(in srgb, var(--ink-900) 40%, transparent);
+  background: color-mix(in srgb, var(--surface-pure) 78%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  transform: rotate(-6deg);
+}
+.stamp-ring svg { width: 26px; height: 26px; color: var(--ink-900); transform: rotate(6deg); }
+.stamp-check {
+  position: absolute; right: 0; bottom: 16px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent-cta); display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 5px -1px rgba(23, 16, 46, 0.4);
+}
+.stamp-check svg { width: 10px; height: 10px; color: var(--accent-cta-ink); }
+.stamp-label { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-700); }
+.stamp.stamp--center { align-self: center; }
+
+/* ---------- panel (den store taktile listen — «raised surface», materiallov #4) ---------- */
+.panel-wrap { position: relative; flex: 1; min-height: 0; display: flex; border-radius: 24px; overflow: hidden; background: var(--surface); box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 12px 26px -20px rgba(23,16,46,.45); }
+/* Fable-review-fiks (R4.4): panelet scroller (overflow-y: auto), men i statisk
+   mock kan en kuttet liste se komplett ut. Fade + hint viser at mer følger.
+   aria-hidden: rent visuelt — innholdet er allerede tilgjengelig via scroll. */
+.scroll-hint { position: absolute; left: 0; right: 0; bottom: 0; height: 72px; pointer-events: none; border-radius: 0 0 24px 24px; background: linear-gradient(to bottom, rgba(243,242,251,0), var(--surface) 80%); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; }
+.scroll-hint span { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; color: var(--ink-700); background: var(--surface); border: 1px solid rgba(33,27,50,.16); border-radius: 999px; padding: 4px 12px; }
+/* <!-- alt: smal vertikal temperaturrail langs listens venstre kant, farget etter
+     kulde/varme-band; rent dekorativ atmosfære-antydning — den faktiske temperaturen
+     står alltid som tall i rad-headeren (masthead), aldri kun i rail-fargen. --> */
+.rail {
+  width: 9px; flex: none;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--accent-temp) 75%, white) 0%,
+    color-mix(in srgb, var(--accent-temp) 45%, var(--surface)) 100%);
+}
+.panel { flex: 1; min-width: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+
+.masthead {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--hairline);
+  font-size: var(--fs-meta); color: var(--ink-700);
+}
+.masthead .m-left { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: var(--fs-kicker); }
+.masthead .m-right { color: var(--ink-900); font-weight: 700; }
+
+.sec { padding: 0 16px; }
+.sec-label {
+  display: flex; align-items: baseline; gap: 7px;
+  font-size: var(--fs-section); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-700);
+  border-top: 1px solid var(--hairline); padding-top: 12px; margin-top: 4px;
+}
+.sec:first-of-type .sec-label { border-top: 0; padding-top: 12px; margin-top: 0; }
+.sec-count { color: var(--ink-500); font-weight: 600; letter-spacing: 0; text-transform: none; }
+
+.rows { margin: 6px 0 2px; }
+.row { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--hairline); }
+.rows li:last-child .row { border-bottom: 0; }
+.tab {
+  width: 6px; height: 22px; border-radius: 3px; flex: none;
+  /* tekstur KUN her (retning C-lov): vevd stripe-mønster på fargetaben, ikke på tekstflatene */
+}
+.tab-innerst { background-image: repeating-linear-gradient(135deg, var(--lag-korall) 0 3px, color-mix(in srgb, var(--lag-korall) 62%, black) 3px 6px); }
+.tab-mellom  { background-image: repeating-linear-gradient(135deg, var(--lag-marigold) 0 3px, color-mix(in srgb, var(--lag-marigold) 62%, black) 3px 6px); }
+.tab-ytterst { background-image: repeating-linear-gradient(135deg, var(--lag-petrol) 0 3px, color-mix(in srgb, var(--lag-petrol) 62%, black) 3px 6px); }
+.tab-neutral { background-image: repeating-linear-gradient(135deg, var(--tab-neutral) 0 3px, color-mix(in srgb, var(--tab-neutral) 62%, black) 3px 6px); }
+.row-name { font-size: var(--fs-row); font-weight: 600; color: var(--ink-900); }
+
+/* aktiv rad: løftet 2–3 px + mynte-kantlys (retning C-karakter) */
+.row--active {
+  margin: 0 -10px; padding: 9px 10px; border-radius: 12px;
+  background: color-mix(in srgb, var(--accent-cta) 7%, var(--surface));
+  box-shadow: inset 3px 0 0 var(--accent-cta);
+  transform: translateY(-2px);
+  border-bottom-color: transparent;
+}
+
+/* Antrekk: utvidet rad m/ hvorfor-chip + Alternativ-knapp (44pt) */
+.row-x { padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+.rows li:last-child .row-x { border-bottom: 0; }
+.row-x-top { display: flex; align-items: center; gap: 11px; }
+.row-x-top .row-name { flex: 1; min-width: 0; }
+.alt-btn {
+  flex: none; min-height: 44px; padding: 0 14px; border-radius: 999px;
+  border: 1.5px solid var(--ink-300); background: var(--surface-pure); color: var(--ink-900);
+  font-size: var(--fs-btn); font-weight: 700; display: inline-flex; align-items: center; gap: 5px;
+}
+.alt-btn svg { width: 13px; height: 13px; }
+.why-chip {
+  margin: 6px 0 0 17px; font-size: var(--fs-meta); color: var(--ink-700); line-height: 1.5;
+  background: color-mix(in srgb, var(--ink-900) 5%, var(--surface));
+  border-radius: 10px; padding: 6px 10px; display: block;
+}
+
+/* rolig sikkerhets-linje (ALDRI skjult; ikke rød/alarm) */
+.safety {
+  margin: 10px 16px 2px; padding: 12px 13px; border-radius: 14px; display: flex; gap: 10px;
+  background: color-mix(in srgb, var(--status-cold) 9%, var(--surface));
+  border: 1.5px solid color-mix(in srgb, var(--status-cold) 35%, transparent);
+}
+.safety svg { width: 19px; height: 19px; flex: none; color: var(--status-cold); margin-top: 1px; }
+.safety p { font-size: var(--fs-meta); color: var(--ink-900); line-height: 1.55; }
+.safety p b { font-weight: 700; }
+
+.footnote { padding: 12px 16px 16px; font-size: var(--fs-meta); color: var(--ink-700); line-height: 1.5; }
+.footnote b { color: var(--ink-900); }
+.motion-note { padding: 0 16px 12px; font-size: var(--fs-tiny); color: var(--ink-500); font-style: italic; }
+
+.banner {
+  margin: 0 0 2px; padding: 11px 13px; border-radius: 13px; display: flex; align-items: center; gap: 9px;
+  background: color-mix(in srgb, var(--ink-900) 8%, var(--surface));
+}
+.banner svg { width: 18px; height: 18px; color: var(--ink-700); flex: none; }
+.banner p { font-size: var(--fs-meta); color: var(--ink-900); font-weight: 700; }
+
+.rm-badge {
+  margin: 0 0 2px; padding: 9px 12px; border-radius: 12px; background: var(--ink-100);
+  display: flex; align-items: center; gap: 9px; font-size: var(--fs-meta); color: var(--ink-900); font-weight: 700;
+}
+.rm-badge svg { width: 17px; height: 17px; color: var(--ink-700); flex: none; }
+
+/* ---------- Antrekk / Paywall header-knapper (drill-in, ikke dock) ---------- */
+.ph-header--drillin { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 50%; flex: none;
+  border: 1.5px solid color-mix(in srgb, var(--ink-900) 22%, transparent);
+  background: color-mix(in srgb, var(--surface-pure) 72%, transparent);
+  display: flex; align-items: center; justify-content: center; color: var(--ink-900);
+}
+.icon-btn svg { width: 19px; height: 19px; }
+
+/* ---------- Plan-rail ---------- */
+.plan-row { display: flex; gap: 14px; padding: 15px 16px; border-bottom: 1px solid var(--hairline); }
+.rows-plan li:last-child .plan-row, .plan-list > .plan-row:last-child { border-bottom: 0; }
+.plan-time { width: 44px; flex: none; font-size: var(--fs-row); font-weight: 800; color: var(--ink-900); padding-top: 1px; }
+.plan-content { flex: 1; min-width: 0; }
+.plan-collapsed { font-size: var(--fs-row); color: var(--ink-700); font-weight: 600; }
+.plan-meta { font-size: var(--fs-meta); color: var(--ink-500); margin-top: 4px; }
+.marker { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 12px; }
+.marker:last-child { margin-bottom: 0; }
+.marker-icon {
+  width: 27px; height: 27px; border-radius: 50%; flex: none;
+  background: var(--surface-pure); border: 1.5px solid var(--ink-300);
+  display: flex; align-items: center; justify-content: center;
+}
+.marker-icon svg { width: 14px; height: 14px; color: var(--ink-900); }
+.marker-type {
+  display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--ink-500); margin-bottom: 1px;
+}
+.marker-body strong { display: block; font-size: var(--fs-row); font-weight: 700; color: var(--ink-900); }
+.marker-body span { font-size: var(--fs-meta); color: var(--ink-700); }
+.plan-list { border-radius: 0; }
+
+/* ---------- Paywall ---------- */
+.pw-block { padding: 12px 16px 4px; }
+.pw-divider {
+  padding: 14px 16px 6px; font-size: var(--fs-section); font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-700); border-top: 1px solid var(--hairline); margin-top: 6px;
+}
+.pw-example {
+  margin: 8px 16px 4px; padding: 11px 12px; border-radius: 13px;
+  border: 1.5px solid color-mix(in srgb, var(--accent-cta) 45%, var(--ink-300));
+  background: color-mix(in srgb, var(--accent-cta) 6%, var(--surface));
+  display: flex; gap: 11px; align-items: flex-start;
+}
+.pw-example .tab { margin-top: 2px; }
+.pw-example-body strong { font-size: var(--fs-row); font-weight: 700; color: var(--ink-900); }
+.pw-example-body span { display: block; font-size: var(--fs-meta); color: var(--ink-700); margin-top: 3px; }
+
+.pw-locked { position: relative; margin: 8px 16px 4px; border-radius: 14px; overflow: hidden; }
+/* <!-- alt: liste over kommende dager, gjort utydelig med blur — representerer
+     LÅST fremtidig innhold. Ingen fabrikkerte plaggnavn skjuler seg i sløret; det er
+     tomme rytme-stolper, samme prinsipp som lasteskjelettet. Ekte fremtids-eksempel
+     står ALLTID synlig og skarpt rett over (.pw-example), fra plan_henting_16. --> */
+.pw-locked-rows { filter: blur(6px); padding: 10px 12px; background: var(--surface); }
+.pw-locked-rows .ghost-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.pw-locked-rows .ghost-tab { width: 6px; height: 20px; border-radius: 3px; background: var(--ink-300); flex: none; }
+.pw-locked-rows .ghost-bar { height: 13px; border-radius: 7px; background: var(--ink-200); }
+/* Scrim: verste-punkt-regel (a11y-tillegg 3). Sløret underlag i verste fall = hvit
+   overflate (surface) blandet inn i sløret; scrim over legger ~66% ink-900 oppå det,
+   som gir et sample-punkt ≈ #6B6577 (L≈0.12). Hvit tekst (#FFFFFF) mot dette punktet
+   ≈ 5.9:1 → PASS (≥4.5:1). Beregnet manuelt, sRGB relativ luminans. */
+.pw-scrim {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 16px; text-align: center;
+  background: color-mix(in srgb, var(--ink-900) 66%, transparent);
+}
+.pw-scrim svg { width: 20px; height: 20px; color: #fff; margin-bottom: 2px; }
+.pw-scrim strong { color: #fff; font-size: 14px; }
+.pw-scrim span { color: color-mix(in srgb, white 84%, transparent); font-size: 12px; max-width: 240px; }
+
+.pw-benefits { margin: 10px 16px 4px; display: flex; flex-direction: column; gap: 7px; }
+.pw-benefits li { display: flex; gap: 8px; font-size: var(--fs-meta); color: var(--ink-700); align-items: flex-start; }
+.pw-benefits svg { width: 15px; height: 15px; color: var(--accent-cta); flex: none; margin-top: 2px; }
+
+.price-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--ink-200);
+  margin: 8px 16px; min-height: 44px;
+}
+.price-row.selected {
+  border-color: var(--accent-cta);
+  background: color-mix(in srgb, var(--accent-cta) 8%, var(--surface));
+  box-shadow: inset 3px 0 0 var(--accent-cta);
+}
+.price-left b { display: block; font-size: 14px; color: var(--ink-900); }
+.price-left span { font-size: var(--fs-tiny); color: var(--ink-500); }
+.radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--ink-300); flex: none; display: flex; align-items: center; justify-content: center; }
+.radio.on { border-color: var(--accent-cta); }
+.radio.on::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-cta); }
+
+.trial-note { margin: 4px 16px 10px; font-size: var(--fs-meta); color: var(--ink-700); text-align: center; }
+.cta-pill {
+  display: block; width: calc(100% - 32px); margin: 4px 16px 6px; min-height: 52px; border: 0;
+  border-radius: 20px 20px 20px 8px; background: var(--accent-cta); color: var(--accent-cta-ink);
+  font-size: 15px; font-weight: 800;
+}
+
+/* ---------- tom-tilstand (Mangler sted) ---------- */
+.empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 26px 26px 10px; gap: 12px; }
+.empty svg { width: 42px; height: 42px; color: var(--ink-500); }
+.empty h1 { font-family: 'Schibsted Grotesk', sans-serif; font-weight: 800; font-size: var(--fs-h1-sans); color: var(--ink-900); }
+.empty p { font-size: var(--fs-sub); color: var(--ink-700); max-width: 250px; }
+.empty-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; width: 100%; max-width: 250px; }
+.btn-primary { min-height: 44px; border-radius: 16px; border: 0; background: var(--accent-cta); color: var(--accent-cta-ink); font-weight: 700; font-size: var(--fs-btn); }
+.btn-secondary { min-height: 44px; border-radius: 16px; border: 1.5px solid var(--ink-300); background: transparent; color: var(--ink-900); font-weight: 700; font-size: var(--fs-btn); }
+.empty-ghost { opacity: 0.28; margin-top: 22px; width: 100%; }
+.empty-ghost .ghost-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+.empty-ghost .ghost-tab { width: 6px; height: 18px; border-radius: 3px; background: var(--ink-500); flex: none; }
+.empty-ghost .ghost-bar { height: 12px; border-radius: 6px; background: var(--ink-500); }
+
+/* ---------- skjelett (Laster) — samme rytme som ekte rader, ikke abstrakte barer ---------- */
+.skel { background: var(--ink-100); border-radius: 8px; animation: skelPulse 1.4s ease-in-out infinite; }
+@keyframes skelPulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; opacity: .75; } }
+.skel-stamp { width: 56px; height: 56px; border-radius: 50%; }
+.skel-h1 { width: 74%; height: 26px; margin-top: 4px; }
+.skel-sub { width: 46%; height: 12px; margin-top: 9px; }
+.skel-mast { height: 14px; width: 55%; }
+.skel-sec { height: 11px; width: 74px; margin: 14px 16px 8px; }
+.skel-row { display: flex; gap: 11px; align-items: center; padding: 8px 16px; }
+.skel-tab { width: 6px; height: 20px; flex: none; }
+.skel-name { height: 13px; flex: 1; max-width: 150px; }
+
+/* ---------- dock (lav, mørk instrument-dock) ---------- */
+.dock { flex: none; background: #211B32; border-radius: 24px; padding: 7px 6px max(7px, env(safe-area-inset-bottom)); display: flex; justify-content: space-around; }
+.dock button {
+  background: none; border: 0; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  /* A11y-verifisering (lead, R4.4): inaktiv dock-tekst løftet #8880A8 → #B0AACB
+     — 10px bold-etikett på dock #211B32 krever 4,5:1; #B0AACB ≈ 7,0:1. */
+  min-width: 60px; min-height: 48px; padding: 4px 6px; border-radius: 14px; color: #B0AACB;
+  font-size: 10px; font-weight: 700;
+}
+.dock-icon-wrap { width: 36px; height: 26px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+.dock button svg { width: 21px; height: 21px; }
+/* <!-- role: nav er aria-label="Hovednavigasjon"; aktiv fane får aria-current="page" --> */
+.dock button[aria-current="page"] { color: #F3F2FB; }
+.dock button[aria-current="page"] .dock-icon-wrap { background: color-mix(in srgb, #65D097 20%, transparent); }
+.dock button[aria-current="page"] svg { color: #65D097; }
+
+/* ---------- fokus + a11y-verktøy ---------- */
+:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: 8px; }
+.focus-demo { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: 16px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ---------- Størst tekst (~130%) — kun font-size-token-overstyring, samme markup ---------- */
+.frame--xl {
+  --fs-kicker: 14px; --fs-h1: 35px; --fs-h1-sans: 27px; --fs-sub: 17.5px;
+  --fs-section: 15.5px; --fs-row: 19.5px; --fs-meta: 16px; --fs-tiny: 14px; --fs-btn: 17.5px;
+}
+</style>
+</head>
+<body>
+
+<p class="gallery-intro">
+  <b>Retning C · «Påkledningslisten er instrumentet»</b> — redaksjonell/taktil mock, 11 rammer à 390×844.
+  Innhold er ekte motor-output fra <code>fixtures.json</code> (commit 32f4c7b). Ingen produksjonsassets;
+  avatar vises som nøytral verifisert-stempel-silhuett (sittende 0–11 mnd / stående 12–24 mnd).
+</p>
+
+<div class="gallery">
+
+<!-- ===================================================================
+     1) HJEM — fixture: kald_vogn_7mnd
+     =================================================================== -->
+<div class="frame-col">
+  <p class="frame-caption"><b>1 · Hjem</b>Stor taktil «innerst først»-liste. <code>kald_vogn_7mnd</code></p>
+  <div class="phone" data-temp="kald">
+    <header class="ph-header">
+      <div class="ph-toprow">
+        <div>
+          <span class="kicker">Vogn</span>
+          <!-- alt: svaret er «9 plagg, vinterkjøredress er ytterste lag i dag» — lesbart uten grafikk -->
+          <h1 class="h1-serif">9 plagg · vinterkjøredress-dag</h1>
+          <p class="sub">Neste endring: ingen ventet nå</p>
+        </div>
+        <!-- alt: liten verifisert «kvittering»-stempel — sittende silhuett + hake, betyr
+             «dagens antrekk er beregnet for et 7 måneder gammelt barn i vogn» -->
+        <div class="stamp">
+          <div class="stamp-ring">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7.4" r="3.6"/><path d="M6.2 20.5c-.4-4.6 2-7.6 5.8-7.6s6.2 3 5.8 7.6c-1.5.9-3.6 1.4-5.8 1.4s-4.3-.5-5.8-1.4Z"/></svg>
+            <span class="stamp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+          </div>
+          <span class="stamp-label">Verifisert</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="panel-wrap">
+      <div class="rail" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="masthead">
+          <span class="m-left">Vogn i dag</span>
+          <span class="m-right">−7 °C føles · vind 4 m/s</span>
+        </div>
+
+        <div class="sec">
+          <p class="sec-label">Innerst <span class="sec-count">· 3</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">tykt ullsett</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">ullstrømper</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">ullsokker</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Mellomlag <span class="sec-count">· 2</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-mellomlag</span></li>
+            <li class="row"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-jakke</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Yttertøy <span class="sec-count">· 1</span></p>
+          <ul class="rows">
+            <li><div class="row row--active"><span class="tab tab-ytterst" aria-hidden="true"></span><span class="row-name">vinterkjøredress</span></div></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Ekstra <span class="sec-count">· 5</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">lue m/ ull</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">tykke votter</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">halsedisse</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">varmepose dun</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">saueskinn i vogn</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Utstyr <span class="sec-count">· 1</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">vognpose</span></li>
+          </ul>
+        </div>
+
+        <p class="footnote"><b>Kjenn på nakken</b> med to fingre — varm og tørr betyr passe.</p>
+      </div>
+      <div class="scroll-hint" aria-hidden="true"><span>Bla ↓ · listen fortsetter</span></div>
+    </div>
+
+    <!-- role: nav aria-label="Hovednavigasjon"; Hjem er aria-current="page" -->
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button type="button" aria-current="page"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg></span>Hjem</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="M8.5 14h2M13.5 14h2M8.5 17h2"/></svg></span>Planlegg</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z"/></svg></span>Guide</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5"/><path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2"/></svg></span>Familie</button>
+    </nav>
+  </div>
+</div>
+
+<!-- ===================================================================
+     2) ANTREKK — fixture: kald_vogn_7mnd (samme), «Rekkefølge · innerst først»
+     =================================================================== -->
+<div class="frame-col">
+  <p class="frame-caption"><b>2 · Antrekk</b>Full liste + hvorfor-chip og Alternativ (44pt) per rad. <code>kald_vogn_7mnd</code></p>
+  <div class="phone" data-temp="kald">
+    <header class="ph-header ph-header--drillin">
+      <button type="button" class="icon-btn focus-demo" aria-label="Tilbake til Hjem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
+      </button>
+      <!-- demonstrerer synlig fokus-stil (a11y felles krav) — normalt kun synlig ved tastatur/switch-fokus -->
+      <div class="stamp stamp--center">
+        <div class="stamp-ring">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7.4" r="3.6"/><path d="M6.2 20.5c-.4-4.6 2-7.6 5.8-7.6s6.2 3 5.8 7.6c-1.5.9-3.6 1.4-5.8 1.4s-4.3-.5-5.8-1.4Z"/></svg>
+          <span class="stamp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        </div>
+        <span class="stamp-label">Verifisert i dag</span>
+      </div>
+      <span style="width:44px" aria-hidden="true"></span>
+    </header>
+
+    <div class="panel-wrap">
+      <div class="rail" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="masthead" style="display:block;">
+          <h1 class="h1-sans">Rekkefølge · innerst først</h1>
+          <p class="sub" style="margin-top:3px;">Vogn · −7 °C føles · vind 4 m/s</p>
+        </div>
+
+        <div class="sec">
+          <p class="sec-label">Innerst <span class="sec-count">· 3</span></p>
+          <ul class="rows">
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">tykt ullsett</span><button type="button" class="alt-btn" aria-label="Alternativ til tykt ullsett">Alternativ</button></div>
+              <p class="why-chip">Ull puster og holder varmen selv når den er litt fuktig.</p>
+            </li>
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">ullstrømper</span><button type="button" class="alt-btn" aria-label="Alternativ til ullstrømper">Alternativ</button></div>
+              <p class="why-chip">Ull mot kalde føtter, andpustent helt innerst.</p>
+            </li>
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">ullsokker</span><button type="button" class="alt-btn" aria-label="Alternativ til ullsokker">Alternativ</button></div>
+              <p class="why-chip">Ekstra varme mot kalde tær i vogna.</p>
+            </li>
+          </ul>
+        </div>
+
+        <div class="sec">
+          <p class="sec-label">Mellomlag <span class="sec-count">· 2</span></p>
+          <ul class="rows">
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-mellomlag</span><button type="button" class="alt-btn" aria-label="Alternativ til ull-mellomlag">Alternativ</button></div>
+              <p class="why-chip">Fanger luft — den usynlige ekstra-varmen.</p>
+            </li>
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-jakke</span><button type="button" class="alt-btn" aria-label="Alternativ til ull-jakke">Alternativ</button></div>
+              <p class="why-chip">Tykkere isolasjon før ytterste skall.</p>
+            </li>
+          </ul>
+        </div>
+
+        <div class="sec">
+          <p class="sec-label">Yttertøy <span class="sec-count">· 1</span></p>
+          <ul class="rows">
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-ytterst" aria-hidden="true"></span><span class="row-name">vinterkjøredress</span><button type="button" class="alt-btn" aria-label="Alternativ til vinterkjøredress">Alternativ</button></div>
+              <p class="why-chip">Vindtett skall mot −7 °C føles.</p>
+            </li>
+          </ul>
+        </div>
+
+        <div class="sec">
+          <p class="sec-label">Ekstra <span class="sec-count">· 5</span></p>
+          <ul class="rows">
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">lue m/ ull</span><button type="button" class="alt-btn" aria-label="Alternativ til lue m/ ull">Alternativ</button></div>
+              <p class="why-chip">Hodet taper varme raskest av alt.</p>
+            </li>
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">tykke votter</span><button type="button" class="alt-btn" aria-label="Alternativ til tykke votter">Alternativ</button></div>
+              <p class="why-chip">Dun-fylte mot fingrene i frost.</p>
+            </li>
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">halsedisse</span><button type="button" class="alt-btn" aria-label="Alternativ til halsedisse">Alternativ</button></div>
+              <p class="why-chip">Tetter igjen mellom lue og kjøredress.</p>
+            </li>
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">varmepose dun</span><button type="button" class="alt-btn" aria-label="Alternativ til varmepose dun">Alternativ</button></div>
+              <p class="why-chip">Kun denne ELLER teppe i vogna — aldri begge.</p>
+            </li>
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">saueskinn i vogn</span><button type="button" class="alt-btn" aria-label="Alternativ til saueskinn i vogn">Alternativ</button></div>
+              <p class="why-chip">Isolerer mot den kalde vognbunnen.</p>
+            </li>
+          </ul>
+        </div>
+
+        <div class="sec">
+          <p class="sec-label">Utstyr <span class="sec-count">· 1</span></p>
+          <ul class="rows">
+            <li class="row-x">
+              <div class="row-x-top"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">vognpose</span><button type="button" class="alt-btn" aria-label="Alternativ til vognpose">Alternativ</button></div>
+              <p class="why-chip">Vogna sin egen skallbeskyttelse mot vind.</p>
+            </li>
+          </ul>
+        </div>
+
+        <p class="motion-note">Aktiv rad løftes 2–3 px med mynte-kantlys · overgang 160 ms ease-out.</p>
+      </div>
+      <div class="scroll-hint" aria-hidden="true"><span>Bla ↓ · listen fortsetter</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================================
+     3) PLAN — fixtures: plan_morgen_08 / plan_midt_12 / plan_henting_16
+     =================================================================== -->
+<div class="frame-col">
+  <p class="frame-caption"><b>3 · Plan</b>Endringsrail: KUN meningsfulle endringer får markør. <code>plan_morgen_08 → plan_midt_12 → plan_henting_16</code></p>
+  <div class="phone" data-temp="mild">
+    <header class="ph-header">
+      <span class="kicker">I dag</span>
+      <h1 class="h1-sans">Planlegg</h1>
+      <p class="sub">Vogn om morgenen, utelek midt på dagen, vogn ved henting.</p>
+    </header>
+
+    <div class="panel-wrap">
+      <div class="rail" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="masthead">
+          <span class="m-left">Dagens rail</span>
+          <span class="m-right">3 punkter</span>
+        </div>
+
+        <div class="plan-list">
+          <!-- 08:00 — uendret, kollapset -->
+          <div class="plan-row">
+            <span class="plan-time">08:00</span>
+            <div class="plan-content">
+              <p class="plan-collapsed">Samme antrekk til 12:00</p>
+              <p class="plan-meta">4 °C føles · vind 3 m/s · vogn</p>
+            </div>
+          </div>
+
+          <!-- 12:00 — fjernes -->
+          <div class="plan-row">
+            <span class="plan-time">12:00</span>
+            <div class="plan-content">
+              <div class="marker">
+                <!-- alt: minus-i-sirkel — markerer at et plagg fjernes fra antrekket -->
+                <span class="marker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M8.3 12h7.4"/></svg></span>
+                <div class="marker-body">
+                  <span class="marker-type">Fjernes</span>
+                  <strong>Yttertøy av</strong>
+                  <span>kjøredress</span>
+                </div>
+              </div>
+              <p class="plan-meta">10 °C føles · vind 3 m/s · utelek</p>
+            </div>
+          </div>
+
+          <!-- 16:00 — legges til + regntrekk -->
+          <div class="plan-row">
+            <span class="plan-time">16:00</span>
+            <div class="plan-content">
+              <div class="marker">
+                <!-- alt: pluss-i-sirkel — markerer at et plagg legges til igjen -->
+                <span class="marker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M12 8.3v7.4M8.3 12h7.4"/></svg></span>
+                <div class="marker-body">
+                  <span class="marker-type">Legges til</span>
+                  <strong>Kjøredress på igjen</strong>
+                  <span>kjøredress</span>
+                </div>
+              </div>
+              <div class="marker">
+                <!-- alt: dråpe-i-sirkel — egen markørtype for regnbeskyttelse, ikke samme form som legges-til -->
+                <span class="marker-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5s6 6.6 6 10.8a6 6 0 1 1-12 0c0-4.2 6-10.8 6-10.8Z"/></svg></span>
+                <div class="marker-body">
+                  <span class="marker-type">Regntrekk</span>
+                  <strong>Regntrekk på vogna</strong>
+                  <span>regntrekk på vognen</span>
+                </div>
+              </div>
+              <p class="plan-meta">7 °C føles · vind 6 m/s · lett regn · henting</p>
+            </div>
+          </div>
+        </div>
+
+        <p class="footnote">Uendrede perioder holdes kollapset — kun endringer får en markør.</p>
+        <p class="motion-note">Markør utvides til handlingssetning · 260 ms ease-out.</p>
+      </div>
+    </div>
+
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg></span>Hjem</button>
+      <button type="button" aria-current="page"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="M8.5 14h2M13.5 14h2M8.5 17h2"/></svg></span>Planlegg</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z"/></svg></span>Guide</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5"/><path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2"/></svg></span>Familie</button>
+    </nav>
+  </div>
+</div>
+
+<!-- ===================================================================
+     4) PAYWALL — «Fremover, overalt og sammen». Eksempelrad fra plan_henting_16
+     =================================================================== -->
+<div class="frame-col">
+  <p class="frame-caption"><b>4 · Paywall</b>Listen bak rolig glass-blur, én sannferdig rad synlig. Ingen lifetime.</p>
+  <div class="phone" data-temp="mild">
+    <header class="ph-header ph-header--drillin">
+      <button type="button" class="icon-btn" aria-label="Lukk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+      <span style="width:44px" aria-hidden="true"></span>
+    </header>
+
+    <div class="panel-wrap">
+      <div class="rail" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="masthead" style="display:block;">
+          <h1 class="h1-sans">Fremover, overalt og sammen</h1>
+          <p class="sub" style="margin-top:4px;">Gratis: ett barn, hjemme, i dag. Plus: alle dager, alle steder, hele familien.</p>
+        </div>
+
+        <div class="pw-block">
+          <p class="sec-label" style="border-top:0; padding-top:0;">I dag <span class="sec-count">· gratis</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-ytterst" aria-hidden="true"></span><span class="row-name">vinterkjøredress</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">tykt ullsett</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">lue m/ ull</span></li>
+          </ul>
+        </div>
+
+        <p class="pw-divider">Fremover · Plus</p>
+
+        <!-- sannferdig eksempelrad — ekte motor-output fra plan_henting_16, alltid skarp -->
+        <div class="pw-example">
+          <span class="tab tab-ytterst" aria-hidden="true"></span>
+          <div class="pw-example-body">
+            <strong>kjøredress</strong>
+            <span>+ regntrekk på vognen · neste dag, 16:00 henting</span>
+          </div>
+        </div>
+
+        <div class="pw-locked">
+          <!-- alt: resten av fremtidsukens rader, sløret og låst — ingen fabrikkerte
+               plaggnavn i sløret, kun tomme rytme-stolper -->
+          <div class="pw-locked-rows" aria-hidden="true">
+            <div class="ghost-row"><span class="ghost-tab"></span><span class="ghost-bar" style="width:64%"></span></div>
+            <div class="ghost-row"><span class="ghost-tab"></span><span class="ghost-bar" style="width:48%"></span></div>
+            <div class="ghost-row"><span class="ghost-tab"></span><span class="ghost-bar" style="width:70%"></span></div>
+            <div class="ghost-row"><span class="ghost-tab"></span><span class="ghost-bar" style="width:40%"></span></div>
+          </div>
+          <div class="pw-scrim">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
+            <strong>+ dagene fremover</strong>
+            <span>Alle steder og alle i omsorgssirkelen ser det samme antrekket.</span>
+          </div>
+        </div>
+
+        <ul class="pw-benefits">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Alle dager, ikke bare i dag</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Flere steder — barnehage, hos bestemor</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Hele omsorgssirkelen ser det samme</span></li>
+        </ul>
+
+        <!-- role: prisradene oppfører seg som én radiogruppe (kun ett valg om gangen) -->
+        <div class="price-row selected">
+          <div class="price-left"><b>Årlig · 299 kr/år</b><span>≈ 25 kr/mnd</span></div>
+          <span class="radio on" aria-hidden="true"></span>
+        </div>
+        <div class="price-row">
+          <div class="price-left"><b>Månedlig · 49 kr/mnd</b><span>Full fleksibilitet</span></div>
+          <span class="radio" aria-hidden="true"></span>
+        </div>
+
+        <p class="trial-note">7 dager gratis prøveperiode, deretter 299 kr/år. Avbryt når som helst.</p>
+        <button type="button" class="cta-pill">Start gratis prøveperiode</button>
+        <p class="motion-note" style="text-align:center;">Avdekkes progressivt · 600 ms, vises én gang · hopper til sluttilstand ved redusert bevegelse.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================================
+     5) LASTER — skjelett-rader med ekte innholdsrytme
+     =================================================================== -->
+<div class="frame-col">
+  <p class="frame-caption"><b>5 · Laster</b>Skjelett-rader følger samme rytme som ekte liste (seksjon → tab → navn).</p>
+  <div class="phone" data-temp="mild">
+    <header class="ph-header">
+      <div class="ph-toprow">
+        <div>
+          <span class="kicker">Vogn</span>
+          <h1 class="h1-serif" style="font-size:15px; font-family:'Schibsted Grotesk',sans-serif; font-weight:700; color:var(--ink-700);">Laster antrekk …</h1>
+          <div class="skel skel-sub" aria-hidden="true"></div>
+        </div>
+        <div class="skel skel-stamp" aria-hidden="true"></div>
+      </div>
+    </header>
+
+    <div class="panel-wrap">
+      <div class="rail" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="masthead"><div class="skel skel-mast" aria-hidden="true"></div></div>
+        <div class="skel skel-sec" aria-hidden="true"></div>
+        <div class="skel-row"><span class="skel skel-tab" aria-hidden="true"></span><span class="skel skel-name" style="max-width:60%" aria-hidden="true"></span></div>
+        <div class="skel-row"><span class="skel skel-tab" aria-hidden="true"></span><span class="skel skel-name" style="max-width:45%" aria-hidden="true"></span></div>
+        <div class="skel-row"><span class="skel skel-tab" aria-hidden="true"></span><span class="skel skel-name" style="max-width:70%" aria-hidden="true"></span></div>
+        <div class="skel skel-sec" aria-hidden="true"></div>
+        <div class="skel-row"><span class="skel skel-tab" aria-hidden="true"></span><span class="skel skel-name" style="max-width:55%" aria-hidden="true"></span></div>
+        <div class="skel-row"><span class="skel skel-tab" aria-hidden="true"></span><span class="skel skel-name" style="max-width:40%" aria-hidden="true"></span></div>
+        <div class="skel skel-sec" aria-hidden="true"></div>
+        <div class="skel-row"><span class="skel skel-tab" aria-hidden="true"></span><span class="skel skel-name" style="max-width:65%" aria-hidden="true"></span></div>
+        <div class="skel-row"><span class="skel skel-tab" aria-hidden="true"></span><span class="skel skel-name" style="max-width:50%" aria-hidden="true"></span></div>
+      </div>
+    </div>
+
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button type="button" aria-current="page"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg></span>Hjem</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="M8.5 14h2M13.5 14h2M8.5 17h2"/></svg></span>Planlegg</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z"/></svg></span>Guide</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5"/><path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2"/></svg></span>Familie</button>
+    </nav>
+  </div>
+</div>
+
+<!-- ===================================================================
+     6) FRAKOBLET — bufret 07:12, samme fixture som Hjem
+     =================================================================== -->
+<div class="frame-col">
+  <p class="frame-caption"><b>6 · Frakoblet</b>Bufret data fra 07:12, listen vises fortsatt (aldri skjult).</p>
+  <div class="phone" data-temp="kald">
+    <header class="ph-header">
+      <!-- role: role="status" — ikke-avbrytende varsel om at data er bufret/frakoblet -->
+      <div class="banner" role="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l16 16"/><path d="M9 8.2A5 5 0 0 1 18 11a4 4 0 0 1-.6 7.9H8"/><path d="M6.2 8.3A4.5 4.5 0 0 0 6 17"/></svg>
+        <p>Frakoblet — viser lagret data fra <span style="font-variant-numeric:tabular-nums;">07:12</span></p>
+      </div>
+      <div class="ph-toprow" style="margin-top:8px;">
+        <div>
+          <span class="kicker">Vogn</span>
+          <h1 class="h1-serif">9 plagg · vinterkjøredress-dag</h1>
+          <p class="sub">Neste endring: ingen ventet nå</p>
+        </div>
+        <div class="stamp">
+          <div class="stamp-ring">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7.4" r="3.6"/><path d="M6.2 20.5c-.4-4.6 2-7.6 5.8-7.6s6.2 3 5.8 7.6c-1.5.9-3.6 1.4-5.8 1.4s-4.3-.5-5.8-1.4Z"/></svg>
+            <span class="stamp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+          </div>
+          <span class="stamp-label">Verifisert</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="panel-wrap" style="opacity:.95;">
+      <div class="rail" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="masthead"><span class="m-left">Vogn i dag</span><span class="m-right">−7 °C føles · vind 4 m/s</span></div>
+        <div class="sec">
+          <p class="sec-label">Innerst <span class="sec-count">· 3</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">tykt ullsett</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">ullstrømper</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">ullsokker</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Mellomlag <span class="sec-count">· 2</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-mellomlag</span></li>
+            <li class="row"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-jakke</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Yttertøy <span class="sec-count">· 1</span></p>
+          <ul class="rows"><li class="row"><span class="tab tab-ytterst" aria-hidden="true"></span><span class="row-name">vinterkjøredress</span></li></ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Ekstra <span class="sec-count">· 5</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">lue m/ ull</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">tykke votter</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">halsedisse</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">varmepose dun</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">saueskinn i vogn</span></li>
+          </ul>
+        </div>
+        <p class="footnote">Oppdateres automatisk når du er tilkoblet igjen.</p>
+      </div>
+    </div>
+
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button type="button" aria-current="page"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg></span>Hjem</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="M8.5 14h2M13.5 14h2M8.5 17h2"/></svg></span>Planlegg</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z"/></svg></span>Guide</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5"/><path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2"/></svg></span>Familie</button>
+    </nav>
+  </div>
+</div>
+
+<!-- ===================================================================
+     7) MANGLER STED — tom-tilstand, ingen fabrikkert liste
+     =================================================================== -->
+<div class="frame-col">
+  <p class="frame-caption"><b>7 · Mangler sted</b>Ingen fabrikkert antrekk uten kjent sted — ærlig tom-tilstand.</p>
+  <div class="phone" data-temp="mild">
+    <header class="ph-header">
+      <span class="kicker">Sted mangler</span>
+    </header>
+    <div class="panel-wrap">
+      <div class="rail" aria-hidden="true" style="background: var(--ink-200);"></div>
+      <div class="panel">
+        <div class="empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.4 7-11.5A7 7 0 0 0 5 9.5C5 14.6 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+          <h1>Vi trenger stedet ditt</h1>
+          <p>For å beregne riktig antrekk må vi vite hvor barnet skal være i dag.</p>
+          <div class="empty-actions">
+            <button type="button" class="btn-primary">Del posisjon</button>
+            <button type="button" class="btn-secondary focus-demo">Skriv inn sted manuelt</button>
+          </div>
+          <!-- demonstrerer synlig fokus-stil på sekundærknappen -->
+          <div class="empty-ghost" aria-hidden="true">
+            <div class="ghost-row"><span class="ghost-tab"></span><span class="ghost-bar" style="width:60%"></span></div>
+            <div class="ghost-row"><span class="ghost-tab"></span><span class="ghost-bar" style="width:44%"></span></div>
+            <div class="ghost-row"><span class="ghost-tab"></span><span class="ghost-bar" style="width:52%"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button type="button" aria-current="page"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg></span>Hjem</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="M8.5 14h2M13.5 14h2M8.5 17h2"/></svg></span>Planlegg</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z"/></svg></span>Guide</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5"/><path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2"/></svg></span>Familie</button>
+    </nav>
+  </div>
+</div>
+
+<!-- ===================================================================
+     8) EKSTREM KULDE — fixture: ekstrem_kulde_7mnd, flagg SB-8 aldri skjult
+     =================================================================== -->
+<div class="frame-col">
+  <p class="frame-caption"><b>8 · Ekstrem kulde</b>Sikkerhetslinje fra motor-flagg SB-8, alltid synlig. <code>ekstrem_kulde_7mnd</code></p>
+  <div class="phone" data-temp="kald-ekstrem">
+    <header class="ph-header">
+      <div class="ph-toprow">
+        <div>
+          <span class="kicker">Vogn</span>
+          <h1 class="h1-serif">10 plagg · isolert vinterkjøredress-dag</h1>
+          <p class="sub">Kort tur anbefales i dag</p>
+        </div>
+        <div class="stamp">
+          <div class="stamp-ring">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7.4" r="3.6"/><path d="M6.2 20.5c-.4-4.6 2-7.6 5.8-7.6s6.2 3 5.8 7.6c-1.5.9-3.6 1.4-5.8 1.4s-4.3-.5-5.8-1.4Z"/></svg>
+            <span class="stamp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+          </div>
+          <span class="stamp-label">Verifisert</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="panel-wrap">
+      <div class="rail" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="masthead"><span class="m-left">Vogn i dag</span><span class="m-right">−21 °C føles · vind 6 m/s</span></div>
+
+        <!-- flagg SB-8 (severity MEDIUM) — sikkerhetssannhet: aldri skjult -->
+        <div class="safety">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4.5 21 19H3L12 4.5Z"/><path d="M12 10v4.2"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></svg>
+          <p><b>Kort tur</b> — sjekk kinn, nese og ører hvert 20. minutt. Frostskade-risiko ved feels ≤ −10 °C.</p>
+        </div>
+
+        <div class="sec">
+          <p class="sec-label">Innerst <span class="sec-count">· 3</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">to ullsett oppå hverandre</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">tykke ullstrømper</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">ullsokker</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Mellomlag <span class="sec-count">· 2</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-jakke</span></li>
+            <li class="row"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-bukse</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Yttertøy <span class="sec-count">· 1</span></p>
+          <ul class="rows"><li><div class="row row--active"><span class="tab tab-ytterst" aria-hidden="true"></span><span class="row-name">isolert vinterkjøredress</span></div></li></ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Ekstra <span class="sec-count">· 6</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">balaklava</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">votter dun</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">varmepose dun</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">saueskinn i vogn</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">ansiktskrem</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">halsedisse</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Utstyr <span class="sec-count">· 1</span></p>
+          <ul class="rows"><li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">vognpose</span></li></ul>
+        </div>
+
+        <p class="footnote">Bruk enten <b>varmepose eller teppe</b>, ikke begge — det blir fort for varmt.</p>
+      </div>
+    </div>
+
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button type="button" aria-current="page"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg></span>Hjem</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="M8.5 14h2M13.5 14h2M8.5 17h2"/></svg></span>Planlegg</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z"/></svg></span>Guide</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5"/><path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2"/></svg></span>Familie</button>
+    </nav>
+  </div>
+</div>
+
+<!-- ===================================================================
+     9) EKSTREM VARME — fixture: ekstrem_varme_18mnd, kort liste, stående silhuett
+     =================================================================== -->
+<div class="frame-col">
+  <p class="frame-caption"><b>9 · Ekstrem varme</b>Kort liste, stående silhuett (12–24 mnd). <code>ekstrem_varme_18mnd</code></p>
+  <div class="phone" data-temp="varm">
+    <header class="ph-header">
+      <div class="ph-toprow">
+        <div>
+          <span class="kicker">Utelek</span>
+          <h1 class="h1-serif">4 plagg · t-skjorte-dag</h1>
+          <p class="sub">Neste endring: ingen ventet nå</p>
+        </div>
+        <!-- alt: stående silhuett-stempel — barn 12–24 mnd -->
+        <div class="stamp">
+          <div class="stamp-ring">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5.6" r="3.1"/><path d="M8.4 21c-.4-6 .5-10.4 3.6-10.4s4 4.4 3.6 10.4a9 9 0 0 1-7.2 0Z"/></svg>
+            <span class="stamp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+          </div>
+          <span class="stamp-label">Verifisert</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="panel-wrap">
+      <div class="rail" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="masthead"><span class="m-left">Utelek i dag</span><span class="m-right">28 °C føles · vind 1 m/s</span></div>
+
+        <div class="sec">
+          <p class="sec-label">Innerst <span class="sec-count">· 2</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">t-skjorte</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">shorts</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Ekstra <span class="sec-count">· 2</span></p>
+          <ul class="rows">
+            <li><div class="row row--active"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">solhatt</span></div></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">sandaler</span></li>
+          </ul>
+        </div>
+
+        <p class="footnote">Veldig varmt i dag — aldri alene i bilen, masse å drikke, mye skygge.</p>
+      </div>
+    </div>
+
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button type="button" aria-current="page"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg></span>Hjem</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="M8.5 14h2M13.5 14h2M8.5 17h2"/></svg></span>Planlegg</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z"/></svg></span>Guide</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5"/><path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2"/></svg></span>Familie</button>
+    </nav>
+  </div>
+</div>
+
+<!-- ===================================================================
+     10) STØRST TEKST (~130%) — samme markup som Hjem, kun fs-tokens skalert
+     =================================================================== -->
+<div class="frame-col">
+  <p class="frame-caption"><b>10 · Størst tekst (~130%)</b>Fluid rader (padding, ikke fast høyde) — ingenting klippes, panelet scroller.</p>
+  <div class="phone frame--xl" data-temp="kald">
+    <header class="ph-header">
+      <div class="ph-toprow">
+        <div>
+          <span class="kicker">Vogn</span>
+          <h1 class="h1-serif">9 plagg · vinterkjøredress-dag</h1>
+          <p class="sub">Neste endring: ingen ventet nå</p>
+        </div>
+        <div class="stamp">
+          <div class="stamp-ring">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7.4" r="3.6"/><path d="M6.2 20.5c-.4-4.6 2-7.6 5.8-7.6s6.2 3 5.8 7.6c-1.5.9-3.6 1.4-5.8 1.4s-4.3-.5-5.8-1.4Z"/></svg>
+            <span class="stamp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+          </div>
+          <span class="stamp-label">Verifisert</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="panel-wrap">
+      <div class="rail" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="masthead"><span class="m-left">Vogn i dag</span><span class="m-right">−7 °C føles · vind 4 m/s</span></div>
+
+        <div class="sec">
+          <p class="sec-label">Innerst <span class="sec-count">· 3</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">tykt ullsett</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">ullstrømper</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">ullsokker</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Mellomlag <span class="sec-count">· 2</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-mellomlag</span></li>
+            <li class="row"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-jakke</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Yttertøy <span class="sec-count">· 1</span></p>
+          <ul class="rows"><li><div class="row row--active"><span class="tab tab-ytterst" aria-hidden="true"></span><span class="row-name">vinterkjøredress</span></div></li></ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Ekstra <span class="sec-count">· 5</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">lue m/ ull</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">tykke votter</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">halsedisse</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">varmepose dun</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">saueskinn i vogn</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Utstyr <span class="sec-count">· 1</span></p>
+          <ul class="rows"><li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">vognpose</span></li></ul>
+        </div>
+
+        <p class="footnote"><b>Kjenn på nakken</b> med to fingre — varm og tørr betyr passe.</p>
+      </div>
+    </div>
+
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button type="button" aria-current="page"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg></span>Hjem</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="M8.5 14h2M13.5 14h2M8.5 17h2"/></svg></span>Planlegg</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z"/></svg></span>Guide</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5"/><path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2"/></svg></span>Familie</button>
+    </nav>
+  </div>
+</div>
+
+<!-- ===================================================================
+     11) REDUSERT BEVEGELSE — statisk sluttilstand + eksplisitt etikett
+     =================================================================== -->
+<div class="frame-col">
+  <p class="frame-caption"><b>11 · Redusert bevegelse</b>Statisk sluttilstand med eksplisitt etikett, ingen crossfade.</p>
+  <div class="phone" data-temp="kald">
+    <header class="ph-header">
+      <p class="rm-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></svg>
+        Redusert bevegelse aktiv — ingen crossfade, direkte sluttilstand vises.
+      </p>
+      <div class="ph-toprow" style="margin-top:8px;">
+        <div>
+          <span class="kicker">Vogn</span>
+          <h1 class="h1-serif">9 plagg · vinterkjøredress-dag</h1>
+          <p class="sub">Neste endring: ingen ventet nå</p>
+        </div>
+        <div class="stamp">
+          <div class="stamp-ring">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7.4" r="3.6"/><path d="M6.2 20.5c-.4-4.6 2-7.6 5.8-7.6s6.2 3 5.8 7.6c-1.5.9-3.6 1.4-5.8 1.4s-4.3-.5-5.8-1.4Z"/></svg>
+            <span class="stamp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+          </div>
+          <span class="stamp-label">Verifisert</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="panel-wrap">
+      <div class="rail" aria-hidden="true"></div>
+      <div class="panel">
+        <div class="masthead"><span class="m-left">Vogn i dag</span><span class="m-right">−7 °C føles · vind 4 m/s</span></div>
+
+        <div class="sec">
+          <p class="sec-label">Innerst <span class="sec-count">· 3</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">tykt ullsett</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">ullstrømper</span></li>
+            <li class="row"><span class="tab tab-innerst" aria-hidden="true"></span><span class="row-name">ullsokker</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Mellomlag <span class="sec-count">· 2</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-mellomlag</span></li>
+            <li class="row"><span class="tab tab-mellom" aria-hidden="true"></span><span class="row-name">ull-jakke</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Yttertøy <span class="sec-count">· 1</span></p>
+          <ul class="rows"><li><div class="row row--active"><span class="tab tab-ytterst" aria-hidden="true"></span><span class="row-name">vinterkjøredress</span></div></li></ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Ekstra <span class="sec-count">· 5</span></p>
+          <ul class="rows">
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">lue m/ ull</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">tykke votter</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">halsedisse</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">varmepose dun</span></li>
+            <li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">saueskinn i vogn</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <p class="sec-label">Utstyr <span class="sec-count">· 1</span></p>
+          <ul class="rows"><li class="row"><span class="tab tab-neutral" aria-hidden="true"></span><span class="row-name">vognpose</span></li></ul>
+        </div>
+
+        <p class="footnote"><b>Kjenn på nakken</b> med to fingre — varm og tørr betyr passe.</p>
+      </div>
+    </div>
+
+    <nav class="dock" aria-label="Hovednavigasjon">
+      <button type="button" aria-current="page"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1v-9"/></svg></span>Hjem</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="M8.5 14h2M13.5 14h2M8.5 17h2"/></svg></span>Planlegg</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5v-13Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5v-13Z"/></svg></span>Guide</button>
+      <button type="button"><span class="dock-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.3"/><path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5"/><path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2"/></svg></span>Familie</button>
+    </nav>
+  </div>
+</div>
+
+</div><!-- /.gallery -->
+</body>
+</html>
