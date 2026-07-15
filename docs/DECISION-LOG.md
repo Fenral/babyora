@@ -4,6 +4,12 @@ This log records current product decisions that override older exploratory mater
 
 ## 2026-07-15
 
+### Prismodell: behold juni-provisjoneringen (39/99/299), kode alignet
+
+**Decision:** Kodens produkt-IDer/priser (F81-forslaget `babyora_*`, 49/299/499 + «Barnetiden») matchet ikke det som faktisk er provisjonert i App Store Connect + RevenueCat (`no.klemeg.app.monthly/quarterly/yearly`, 39/99/299 — STATUS.md, juni 2026). Eier valgte å **beholde juni-provisjoneringen**. Koden er alignet tilbake: `PRODUCT_IDS` → `no.klemeg.app.*`, priser 39/99/299, «Barnetiden»-engangskjøp droppet, kvartal («pappaperm», 99/3 mnd) definert men ikke surfaced i paywallen (`PLAN_ORDER` = årlig + månedlig). Spar-badge 49 % → 36 %.
+
+**Reason:** Ekte kjøp feilet fordi `purchasePackage('babyora_yearly_299')` ikke fant en RevenueCat-package (kun `no.klemeg.app.*` finnes). Å endre koden er raskest til fungerende kjøp; alternativet (re-provisjonere ASC/RC) ga mer portal-arbeid + ny IAP-review. `no.klemeg.app`-bundle beholdes uansett (provisioning-kontinuitet).
+
 ### Offentlig navn: Babyora (naming-porten lukket)
 
 **Decision:** Eier beholder **Babyora** som endelig offentlig navn («Behold navn», 2026-07-15). Den åpne naming-porten er dermed lukket. `Vaerni`, `Klarune` og `Uteklar` er avvist underveis. Ingen kode-endring nødvendig — appen bruker allerede «Babyora» i UI-copy og assets. En formell tilgjengelighetssjekk (varemerke, `.no`-domene, App Store-navn, håndtak) anbefales fortsatt før innsending, men blokkerer ikke videre arbeid.

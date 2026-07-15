@@ -18,14 +18,15 @@ import {
   type ProductKey,
 } from './products';
 
-/** R7 Task 1 (låst beslutning 2026-07-13): lifetime/«Barnetiden» publiseres
- *  ikke — SKU-en beholdes definert i products.ts, men vises aldri. */
+/** Paywallen viser årlig (hero) + månedlig. Kvartal («pappaperm») er
+ *  provisjonert og definert i products.ts, men ikke surfaced her ennå —
+ *  kan legges til PLAN_ORDER hvis eier vil vise pappaperm-planen. */
 export const PLAN_ORDER: ReadonlyArray<ProductKey> = ['yearly', 'monthly'];
 
 export const PLAN_DISPLAY_NAME: Record<ProductKey, string> = {
   yearly: 'Årlig',
+  quarterly: '3 måneder',
   monthly: 'Månedlig',
-  lifetime: PRODUCTS.lifetime.name ?? 'Barnetiden',
 };
 
 /**
@@ -98,8 +99,8 @@ export function buildPlanAriaLabel(key: ProductKey): string {
   if (key === 'monthly') {
     return `${name}, ${product.anchorPriceNok} kroner per måned`;
   }
-  const desc = lowerFirst((product.description ?? '').replace(' · ', ', '));
-  return `${name}, ${product.anchorPriceNok} kroner, engangskjøp, ${desc}`;
+  // quarterly (ikke i PLAN_ORDER, men støttet)
+  return `${name}, ${product.anchorPriceNok} kroner per 3 måneder`;
 }
 
 /** Total-transparens-linje vist under plan-velgeren. */

@@ -10,38 +10,34 @@ import {
   priceTransparencyText,
 } from '../products';
 
-describe('PRODUCT_IDS (F81.0)', () => {
-  it('inneholder de 3 forventede produktene', () => {
-    expect(PRODUCT_IDS.yearly).toBe('babyora_yearly_299');
-    expect(PRODUCT_IDS.monthly).toBe('babyora_monthly_49');
-    expect(PRODUCT_IDS.lifetime).toBe('babyora_barnetiden_499');
+describe('PRODUCT_IDS (provisjonert — STATUS.md, juni 2026)', () => {
+  it('matcher de provisjonerte no.klemeg.app.*-IDene', () => {
+    expect(PRODUCT_IDS.yearly).toBe('no.klemeg.app.yearly');
+    expect(PRODUCT_IDS.quarterly).toBe('no.klemeg.app.quarterly');
+    expect(PRODUCT_IDS.monthly).toBe('no.klemeg.app.monthly');
   });
 
   it('DEFAULT_PLAN er yearly (anker)', () => {
     expect(DEFAULT_PLAN).toBe('yearly');
   });
 
-  it('yearly har 7 dager trial', () => {
+  it('yearly: 299 kr, 7 dager trial, månedlig-ekvivalent i description', () => {
+    expect(PRODUCTS.yearly.anchorPriceNok).toBe(299);
     expect(PRODUCTS.yearly.trialDays).toBe(7);
-  });
-
-  it('yearly viser månedlig ekvivalent i description', () => {
     expect(PRODUCTS.yearly.description).toMatch(/24,90/);
   });
 
-  it('monthly har ingen trial', () => {
+  it('quarterly: 99 kr, 3 mnd (pappaperm), auto-renews, ingen trial', () => {
+    expect(PRODUCTS.quarterly.anchorPriceNok).toBe(99);
+    expect(PRODUCTS.quarterly.periodLabel).toBe('/3 mnd');
+    expect(PRODUCTS.quarterly.autoRenews).toBe(true);
+    expect(PRODUCTS.quarterly.trialDays).toBe(0);
+    expect(PRODUCTS.quarterly.description).toMatch(/pappaperm/);
+  });
+
+  it('monthly: 39 kr, ingen trial', () => {
     expect(PRODUCTS.monthly.trialDays).toBe(0);
-    expect(PRODUCTS.monthly.anchorPriceNok).toBe(49);
-  });
-
-  it('lifetime har autoRenews=false', () => {
-    expect(PRODUCTS.lifetime.autoRenews).toBe(false);
-  });
-
-  it('lifetime heter «Barnetiden» og koster 499', () => {
-    expect(PRODUCTS.lifetime.name).toBe('Barnetiden');
-    expect(PRODUCTS.lifetime.anchorPriceNok).toBe(499);
-    expect(PRODUCTS.lifetime.description).toMatch(/Alle barna dine/);
+    expect(PRODUCTS.monthly.anchorPriceNok).toBe(39);
   });
 });
 
@@ -51,13 +47,11 @@ describe('priceTransparencyText', () => {
   });
 
   it('monthly uten trial — bruker direkte pris', () => {
-    expect(priceTransparencyText('monthly')).toBe('49 kr/mnd. Avslutt når som helst.');
+    expect(priceTransparencyText('monthly')).toBe('39 kr/mnd. Avslutt når som helst.');
   });
 
-  it('lifetime — engangskjøp-tekst', () => {
-    expect(priceTransparencyText('lifetime')).toMatch(/engangskj/i);
-    expect(priceTransparencyText('lifetime')).toMatch(/aldri auto/i);
-    expect(priceTransparencyText('lifetime')).toMatch(/499 kr/);
+  it('quarterly uten trial — direkte pris per 3 mnd', () => {
+    expect(priceTransparencyText('quarterly')).toBe('99 kr/3 mnd. Avslutt når som helst.');
   });
 
   it('respekterer pris fra StoreKit hvis levert', () => {

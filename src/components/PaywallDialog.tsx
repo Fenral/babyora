@@ -816,11 +816,8 @@ export function PaywallDialog({
                     <span style={planPriceRowStyle}>
                       <span style={planPriceBigStyle}>{formatPlanPrice(key)}</span>
                     </span>
-                    {key === 'yearly' && <span style={planSubStyle}>{product.description}</span>}
-                    {key === 'lifetime' && (
-                      <span style={planSubStyle}>Engangskjøp · {product.description}</span>
-                    )}
-                    {key === 'yearly' && (
+                    {product.description && <span style={planSubStyle}>{product.description}</span>}
+                    {key === 'yearly' && product.trialDays > 0 && (
                       <span style={trialLineStyle}>{product.trialDays} dager gratis</span>
                     )}
                   </span>

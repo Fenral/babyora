@@ -1,23 +1,22 @@
 /**
- * F81.0 (2026-07-03): RevenueCat product-IDs og prisanker — «Babyora Pluss».
+ * RevenueCat product-IDs og prisanker — «Babyora Pluss».
  *
- * Produkt-IDene må opprettes manuelt i App Store Connect + RevenueCat
- * dashboard FØR første live-kjøp. Tabellen her er sannhet for app-laget;
- * RevenueCat returnerer faktiske priser fra StoreKit (aldri hardkodet).
+ * IDene MÅ matche det som er provisjonert i App Store Connect + RevenueCat
+ * (STATUS.md, juni 2026). Eierbeslutning 2026-07-15: behold juni-modellen
+ * (39/99/299) — koden er alignet tilbake fra F81-forslaget (49/299/499).
  *
- * Prisene under er ankerverdier for UI-tekst når StoreKit ikke har levert
- * ennå (offline-fallback) — RevenueCat-pris vinner alltid når den finnes.
+ * Ankerprisene er UI-fallback når StoreKit ikke har levert; RevenueCat-pris
+ * vinner alltid når den finnes.
  *
- * Prispakke låst per docs/F81/prisbeslutning.md:
- * 49 kr/mnd (anker) · 299 kr/år (HERO, 7 dagers gratis trial) ·
- * 499 kr «Barnetiden» (engangskjøp, non-consumable, alle barna/hele
- * småbarnstiden 0–3 år).
+ * Provisjonert (STATUS.md):
+ * 39 kr/mnd · 99 kr/3 mnd («pappaperm») · 299 kr/år (HERO).
+ * Alle tre auto-renewable, entitlement «premium», offering «default».
  */
 
 export const PRODUCT_IDS = {
-  yearly: 'babyora_yearly_299',
-  monthly: 'babyora_monthly_49',
-  lifetime: 'babyora_barnetiden_499',
+  yearly: 'no.klemeg.app.yearly',
+  quarterly: 'no.klemeg.app.quarterly',
+  monthly: 'no.klemeg.app.monthly',
 } as const;
 
 export type ProductKey = keyof typeof PRODUCT_IDS;
@@ -26,13 +25,13 @@ export interface ProductDescriptor {
   id: string;
   /** Ankerpris i NOK — fallback hvis StoreKit ikke har levert. */
   anchorPriceNok: number;
-  /** Periode-tekst som vises i UI («/år», «/mnd», tom for engangskjøp). */
+  /** Periode-tekst som vises i UI («/år», «/3 mnd», «/mnd»). */
   periodLabel: string;
   /** Auto-fornyelse-flag — påvirker pristransparens-tekst. */
   autoRenews: boolean;
-  /** Trial-dager (kun yearly per plan). */
+  /** Trial-dager (kun yearly per plan; konfigureres i ASC). */
   trialDays: number;
-  /** Visningsnavn — kun satt der det avviker fra plan-typen (lifetime → «Barnetiden»). */
+  /** Visningsnavn — kun satt der det avviker fra plan-typen. */
   name?: string;
   /** Kort markedsføringsbeskrivelse — vises som sub-tekst under prisen i paywall. */
   description?: string;
@@ -47,21 +46,20 @@ export const PRODUCTS: Record<ProductKey, ProductDescriptor> = {
     trialDays: 7,
     description: 'Tilsvarer 24,90 kr/mnd',
   },
+  quarterly: {
+    id: PRODUCT_IDS.quarterly,
+    anchorPriceNok: 99,
+    periodLabel: '/3 mnd',
+    autoRenews: true,
+    trialDays: 0,
+    description: 'Tilsvarer 33 kr/mnd · pappaperm',
+  },
   monthly: {
     id: PRODUCT_IDS.monthly,
-    anchorPriceNok: 49,
+    anchorPriceNok: 39,
     periodLabel: '/mnd',
     autoRenews: true,
     trialDays: 0,
-  },
-  lifetime: {
-    id: PRODUCT_IDS.lifetime,
-    anchorPriceNok: 499,
-    periodLabel: '',
-    autoRenews: false,
-    trialDays: 0,
-    name: 'Barnetiden',
-    description: 'Alle barna dine · hele småbarnstiden',
   },
 };
 
@@ -77,9 +75,6 @@ export const DEFAULT_PLAN: ProductKey = 'yearly';
 export function priceTransparencyText(key: ProductKey, priceFromStore?: string): string {
   const product = PRODUCTS[key];
   const priceStr = priceFromStore ?? `${product.anchorPriceNok} kr${product.periodLabel}`;
-  if (key === 'lifetime') {
-    return `Du betaler ${priceStr}. Engangskjøp — aldri auto-fornying.`;
-  }
   if (product.trialDays > 0) {
     return `Deretter ${priceStr}. Avslutt når som helst.`;
   }

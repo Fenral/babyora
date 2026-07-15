@@ -61,7 +61,7 @@ Våkn opp til dagens antrekk klart. Ingen betaling for å komme i gang.
 • Flere barn: bytt mellom søsken på ett trykk
 • Tilpasning til plaggene dere faktisk eier
 
-Pluss koster 49 kr/mnd eller 299 kr/år (tilsvarer 24,90 kr/mnd), med 7
+Pluss koster 39 kr/mnd eller 299 kr/år (tilsvarer 24,90 kr/mnd), med 7
 dagers gratis prøveperiode. Avslutt når som helst.
 
 — VEILEDENDE, IKKE EN FASIT —
