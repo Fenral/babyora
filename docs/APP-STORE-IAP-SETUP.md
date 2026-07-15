@@ -1,52 +1,55 @@
-# App Store / IAP-oppsett (Babyora Pluss)
+# App Store / IAP-status (Babyora Pluss)
 
 **Oppdatert:** 2026-07-15
 
-App-siden av kjøpsflyten er **ferdig og verifisert via dev/Playwright** (`npm run e2e:purchase` — 3/3 scenarioer: årsplan, månedsplan, gjenoppretting). Det som gjenstår krever fysisk enhet + Apple/RevenueCat-portaler og kan **ikke** gjøres herfra. Denne fila gjør de stegene turnkey.
+> **Rettelse:** en tidligere versjon av denne fila antok at IAP/RevenueCat måtte
+> settes opp fra bunnen med `babyora_*`-produkt-IDer. Det var FEIL. Den
+> faktiske, provisjonerte sannheten er `STATUS.md` (2026-06-04) — les den først.
 
-## 1. App Store Connect — opprett IAP-produktene
+## Allerede provisjonert (STATUS.md — ikke gjør på nytt)
 
-Bruk **nøyaktig disse produkt-IDene** (må matche `PRODUCT_IDS` i `src/lib/premium/products.ts` — låst av `products.test.ts`):
+- **Bundle:** `no.klemeg.app` (App ID `6776416135`). IKKE endre — provisioning-kontinuitet.
+- **3 IAP-abonnementer** i App Store Connect: `no.klemeg.app.monthly` (39), `no.klemeg.app.quarterly` (99), `no.klemeg.app.yearly` (299), Subscription Group `22131969`.
+- **RevenueCat** fullt satt opp: prosjekt `4bd62d97`, entitlement `premium`, 6 produkter (3 Apple + 3 Play) i offering `default`, SDK-nøkler i `.env.local` + Codemagic env-gruppe `klemeg_revenuecat`.
+- **Codemagic** koblet (App ID `6a217a089f41293842acfade`).
 
-| Produkt-ID | Type | Pris | Trial |
-|---|---|---|---|
-| `babyora_yearly_299` | Auto-renewable subscription | 299 kr/år | 7 dager gratis |
-| `babyora_monthly_49` | Auto-renewable subscription | 49 kr/mnd | — |
-| `babyora_barnetiden_499` | Non-consumable | 499 kr engang | — |
+## ⛔ To blokkere før TestFlight/kjøp virker
 
-- De to abonnementene i **samme subscription group**.
-- `babyora_barnetiden_499` vises ikke i paywallen (utenfor `PLAN_ORDER`), men SKU-en beholdes definert.
-- Fyll inn lokalisert visningsnavn/beskrivelse per produkt.
+### 1. Provisioning-profil (blokkerer TestFlight-bygget)
+ASC-API-nøkkelen `ryddy-asc-key` har rolle **Developer** — trenger **App Manager**
+for å auto-generere distribution-profil. Fiks: `STATUS.md` #2 (ny ASC-nøkkel med
+App Manager, eller manuell `.mobileprovision`). Så → push → grønt bygg → TestFlight.
 
-## 2. RevenueCat
+### 2. Produkt-ID-mismatch (blokkerer ekte kjøp)
+Koden (`src/lib/premium/products.ts`, F81-prising) bruker `babyora_yearly_299`,
+`babyora_monthly_49`, `babyora_barnetiden_499` — men det provisjonerte er
+`no.klemeg.app.monthly/quarterly/yearly`. Prismodellene er også ulike:
 
-1. Opprett prosjekt på https://app.revenuecat.com/.
-2. Legg til de 3 App Store-produktene (+ Play-motparter når Android er aktuelt).
-3. Opprett **ett entitlement `premium`** (må matche `ENTITLEMENT_ID` i `revenuecat.ts`) og tildel alle 3 produktene.
-4. Legg produktene i ett **offering «current»** som packages.
-5. Kopiér de offentlige API-nøklene → `.env.local` (og Codemagic-env for byggene):
-   ```
-   VITE_REVENUECAT_PUBLIC_KEY_IOS=appl_…
-   VITE_REVENUECAT_PUBLIC_KEY_ANDROID=goog_…
-   ```
-   Uten disse faller appen tilbake til dev-mock (ingen ekte kjøp).
+| | Kode (F81, 2026-07) | Provisjonert (juni) |
+|---|---|---|
+| mnd | 49 | 39 |
+| kvartal | — | 99 (pappaperm) |
+| år | 299 | 299 |
+| engang | 499 «Barnetiden» | — |
 
-## 3. Signering / TestFlight (åpen sak)
+`purchasePackage('babyora_yearly_299')` finner ingen match → **ekte kjøp feiler**.
+Dev-mock-testen (`e2e:purchase`) hopper over RevenueCat og fanger ikke dette.
 
-Handoff noterer en **cert-revoke / Apple-innloggingssak** (kvota-feil) som blokkerer TestFlight-bygget. Dette krever Apple Developer-portal + innlogging — **ikke løsbart via dev/Playwright**. Løs sertifikat-kvoten i Apple Developer → Certificates før Codemagic-bygget lykkes.
+**Krever eierbeslutning:** hvilken prismodell er endelig?
+- **A) Behold F81-koden (49/299/499):** oppdater App Store Connect + RevenueCat til
+  `babyora_*`-IDer og ny prising (mer portal-arbeid, ny IAP-review).
+- **B) Behold juni-provisjoneringen (39/99/299):** endre koden tilbake
+  (`PRODUCT_IDS`, `PRODUCTS`, `PLAN_ORDER`, paywall-copy) til `no.klemeg.app.*`.
+  Mindre portal-arbeid, men gir opp «Barnetiden»-engangskjøpet.
 
-## 4. Sandbox-test på enhet (etter 1–3)
+Når du har valgt, aligner jeg kode-siden deterministisk (products.ts + tester).
 
-Det som gjenstår å verifisere på ekte enhet (dev-mock dekker resten):
-- Ekte StoreKit-kjøp av årsplan + månedsplan (sandbox-Apple-ID).
-- Kvitteringsvalidering + entitlement `premium` slår inn.
-- **Gjenopprett kjøp** mot ekte Apple-ID (dev viser kun placeholder-melding).
-- **Trial → belastning**-overgang (7-dagers → 299 kr).
-- Purchase-state-skjermbilder til App Store + 90+-evidens.
+## Gjenstår ellers (STATUS.md)
+- Apple-priser + localization per IAP (~20 min).
+- Play Console-abonnementer (etter første .aab).
+- Personvernerklæring publisert + App Privacy-skjema.
 
-## Allerede verifisert (app-siden)
-
-- Paywall åpner, plan-valg (år/mnd), kjøp → Premium låses opp → entitlement-gating reagerer.
-- Gjenoppretting uten kjøp gir tydelig melding, ingen krasj.
-- Dev/web faller trygt tilbake til mock når RevenueCat ikke er konfigurert.
-- Kilde: `e2e/purchase-flow.ts` (`npm run e2e:purchase`).
+## Verifisert app-side (dev, uten enhet)
+Kjøps*flyten* (UI → valg → «kjøp» → Premium → gating) er grønn i dev-mock
+(`npm run e2e:purchase`, 3/3) — men den validerer IKKE produkt-ID-koblingen mot
+RevenueCat (mocken bypasser den). Det krever enhet + løst mismatch (#2).

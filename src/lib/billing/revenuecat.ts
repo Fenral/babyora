@@ -4,18 +4,13 @@
  * Iter 31: kobler `useAccess` til faktiske abonnementer når RevenueCat
  * API-keys er konfigurert. Fallback: localStorage-mock (trial-modus).
  *
- * Setup (produkt-IDene MÅ matche PRODUCT_IDS i ../premium/products.ts):
- * 1. Opprett konto på https://app.revenuecat.com/
- * 2. Sett `VITE_REVENUECAT_PUBLIC_KEY_IOS` og `_ANDROID` i .env.local
- * 3. Opprett products i App Store Connect + Play Console med DISSE eksakte IDene:
- *    - babyora_yearly_299     (auto-renewable, 7 dagers trial)  ← HERO
- *    - babyora_monthly_49     (auto-renewable)
- *    - babyora_barnetiden_499 (non-consumable, engangskjøp)     ← vises ikke i paywall (PLAN_ORDER), men SKU-en beholdes
- * 4. Legg alle i ett RevenueCat-offering «current» som packages
- * 5. Opprett ett entitlement «premium» (ENTITLEMENT_ID under) som tildeles alle plans
- *
- * RevenueCat Capacitor-plugin håndterer både iOS StoreKit og Android Billing.
- * products.test.ts låser PRODUCT_IDS eksakt, så IDene ikke driver fra hverandre.
+ * ⚠️ PRODUKT-ID-MISMATCH (2026-07-15): PRODUCT_IDS i ../premium/products.ts
+ * (`babyora_*`, F81-prising) matcher IKKE det som faktisk er provisjonert i
+ * App Store Connect + RevenueCat (`no.klemeg.app.monthly/quarterly/yearly`, se
+ * STATUS.md). purchasePackage(PRODUCT_IDS[...]) vil derfor ikke finne en
+ * package på enhet før dette er avstemt. Krever eierbeslutning på prismodell —
+ * se docs/APP-STORE-IAP-SETUP.md. Oppsett/nøkler er allerede gjort (STATUS.md);
+ * ikke sett opp på nytt. RevenueCat Capacitor-plugin håndterer iOS + Android.
  */
 
 import { Capacitor } from '@capacitor/core';

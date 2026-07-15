@@ -47,14 +47,22 @@ Eier ba om autonom kjøring på dokumenterte defaults mens borte. Levert på lok
 - ~~Push~~ ✅ · ~~R8 avatar-generering~~ ✅ (24 kompositter) · ~~Offentlig navn~~ ✅ **Babyora beholdt** (naming-porten lukket) · ~~Fagsignatur som v1-blokker~~ → nedgradert til fast-follow via **veiledende-disclaimer** (v1 på dagens containede motor).
 - **IAP app-side ferdig + verifisert** via dev/Playwright (`npm run e2e:purchase` 3/3). App Store Connect-stegene er turnkey i `docs/APP-STORE-IAP-SETUP.md`.
 
-### ⏳ Venter på eier (kun enhets/portal-avhengig)
+### ⚠️ VIKTIG: Apple/RC er allerede provisjonert (STATUS.md, juni 2026)
 
-1. **App Store Connect + RevenueCat** — opprett IAP-produktene (`babyora_yearly_299` osv.) + entitlement `premium` + ekte nøkler. Steg-for-steg: `docs/APP-STORE-IAP-SETUP.md`.
-2. **Fysisk iPhone + sandbox-kjøpstest** — ekte StoreKit-kjøp, kvittering, restore mot Apple-ID, trial→belastning. (Dev-mock-flyten er verifisert.)
-3. **Signering / TestFlight** — cert-revoke/Apple-innlogging (kvota-feil) må løses i Apple Developer-portalen; ikke løsbart via dev/Playwright.
-4. **App Store-metadata + personvernerklæring** — STORE-LISTING.md + publisert `babyora.no/personvern` + privacy-labels.
-5. **Task 8 manuell evidens** — VoiceOver/TalkBack, haptikk, tekstskalering, tommelsone (enhet).
-6. **Fagsignatur** (fast-follow) på `engine-v2-scenarios.json` — låser opp Motor V2 + R8-avatar-visning. Ikke v1-blokker. **(Eier: «det er det siste vi gjør».)**
+App Store Connect (App ID `6776416135`, bundle `no.klemeg.app` — IKKE endre),
+3 IAP, RevenueCat (prosjekt `4bd62d97`, SDK-nøkler i `.env.local` + Codemagic)
+og Codemagic er satt opp. `STATUS.md` er provisioning-sannheten. (Deler av denne
+øktens tidligere anbefalinger antok feilaktig at dette måtte gjøres fra bunnen —
+rettet i STORE-LISTING.md / APP-STORE-IAP-SETUP.md.)
+
+### ⏳ Venter på eier
+
+1. **Provisioning-profil (blokkerer TestFlight):** ASC-API-nøkkel `ryddy-asc-key` → App Manager-rolle (STATUS.md #2), så push → grønt bygg → TestFlight.
+2. **Produkt-ID-mismatch (blokkerer ekte kjøp):** koden `babyora_*` ≠ provisjonert `no.klemeg.app.*`; prismodell divergerer (49/299/499 vs 39/99/299). Eierbeslutning på prismodell → så aligner jeg kode/store. Se `docs/APP-STORE-IAP-SETUP.md`.
+3. **Apple-priser + localization per IAP** (STATUS.md #1).
+4. **Personvernerklæring** publisert + App Privacy-skjema.
+5. **Task 8 manuell evidens** — VoiceOver, haptikk, tekstskalering (enhet).
+6. **Fagsignatur** (fast-follow) — låser Motor V2 + R8-visning. Ikke v1-blokker.
 
 ## Completed
 

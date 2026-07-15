@@ -104,12 +104,14 @@ Vær-basert påkledning for barn 0–2 år. Ull, lag og «føles som» fra met.n
 | Diagnostikk | Nei (ingen tredjeparts-analytics) | — |
 
 ## TODO før innsending
-- [ ] App Store Connect: opprett app-record, bundle `no.babyora.app`
-- [ ] Personvernerklæring publisert på `babyora.no/personvern`
+- Bundle-ID er **`no.klemeg.app`** (provisjonert, IKKE endre — se `STATUS.md`).
+  App-record + IAP + RevenueCat er allerede opprettet (juni 2026).
+- [ ] **Provisioning-profil:** ASC-API-nøkkel → App Manager-rolle (STATUS.md #2) — blokkerer TestFlight-bygget.
+- [ ] **Avstem produkt-IDer:** koden (`babyora_*`) matcher ikke provisjonerte `no.klemeg.app.*` — ekte kjøp feiler til dette er løst (eierbeslutning på prismodell).
+- [ ] Personvernerklæring publisert (offentlig URL)
 - [ ] App Privacy-spørreskjema utfylt i ASC
-- [ ] Apple Paid Apps Agreement signert
-- [ ] IAP-produkter opprettet (se `docs/APP-STORE-IAP-SETUP.md`)
-- [ ] Skjermbilder 1290×2796 (se `docs/APP-STORE-SCREENSHOTS.md`)
+- [ ] Apple-priser + localization per IAP (STATUS.md #1)
+- [ ] Skjermbilder (se `docs/APP-STORE-SCREENSHOTS.md`)
 
 ---
 
