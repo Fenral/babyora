@@ -23,9 +23,11 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const DEFAULT_MODEL = 'gemini-3-pro-image-preview';
+// Nano Banana Pro (stabil GA). Bekreftet tilgjengelig via `list`.
+const DEFAULT_MODEL = 'gemini-3-pro-image';
 
 /** Minimal .env-lesing (ingen dep). Leser .env.local så .env (prosjektets
  *  konvensjon er .env.local); fyller process.env for manglende nøkler. */
@@ -45,6 +47,31 @@ function loadDotEnv(): void {
       if (process.env[key] === undefined) process.env[key] = val;
     }
   }
+}
+
+export function ensureEnv(): void {
+  loadDotEnv();
+}
+
+/** Gjenbrukbar kjerne: generer ett komposittbilde → rå bilde-bytes (opakt). */
+export async function generateComposite(
+  masterPaths: string[],
+  prompt: string,
+): Promise<Buffer> {
+  const parts: Array<Record<string, unknown>> = [{ text: prompt }];
+  for (const m of masterPaths) {
+    const buf = await readFile(resolve(process.cwd(), m));
+    parts.push({ inline_data: { mime_type: 'image/png', data: buf.toString('base64') } });
+  }
+  const res = await fetch(`${API_BASE}/models/${model()}:generateContent`, {
+    method: 'POST',
+    headers: { 'x-goog-api-key': apiKey(), 'content-type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseModalities: ['IMAGE'] } }),
+  });
+  if (!res.ok) throw new Error(`generering feilet: ${res.status}\n${await res.text()}`);
+  const img = extractImage(await res.json());
+  if (!img) throw new Error('Fant ingen bilde-part i svaret.');
+  return Buffer.from(img.b64, 'base64');
 }
 
 function apiKey(): string {
@@ -159,7 +186,12 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  console.error(err instanceof Error ? err.message : String(err));
-  process.exit(1);
-});
+// Kjør kun ved direkte kall (ikke når batch.ts importerer kjerne-funksjonene).
+const invokedDirectly =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (invokedDirectly) {
+  main().catch((err) => {
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  });
+}
