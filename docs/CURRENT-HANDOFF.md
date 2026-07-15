@@ -26,6 +26,15 @@ Eier godkjente pakken eksplisitt («kjør»). Alle tre pakker er committet lokal
 
 **NESTE (porter oppdatert 2026-07-14 kveld):** Fem-foreldre-porten er **frafalt av eier** (se decision log) — R7 Task 3+ (dock, instrument, Hjem/Antrekk/Plan i retning B) er ikke lenger blokkert av den. R8 avatar-**kostnadsplanen er godkjent** («Kjør på»): Nano Banana Pro edit-chain, 24 komposittbilder, 2K standard, ~150–500 kr forventet. R8-genereringen forutsetter retning B-skjermene fra R7 Task 3+. Eneste gjenstående menneskeport: fagperson signerer `engine-v2-scenarios.json` (blokkerer kun Motor V2 Task 17 / kohortaktivering, ikke R7-fremdrift).
 
+## 2026-07-15: Ny styringsprosess vedtatt (risikobasert plan→kode)
+
+Eier godkjente `docs/PROSESS-PLAN-TIL-KODE.md` som gjeldende prosess. Fremover
+velges **risikoløype** (lett/standard/høy) per oppgave, og kontrollmengden følger
+risikoen. Høyrisikogatene (safety-motor, RLS/auth, betaling, migrering, PII,
+avatar-sannhet) er uendret; lavrisiko-arbeid slipper unødig seremoni. Se
+DECISION-LOG 2026-07-15. `AGENTS.md` peker nå på denne prosessen; den gamle
+`verification-protocol.md` er merket SUPERSEDED (beholdt som referanse).
+
 ## 2026-07-15: R7 Task 7 kode-slices FERDIG (autonom loop)
 
 Eier ba om autonom kjøring på dokumenterte defaults mens borte. Levert på lokal main (ikke pushet), hver bit verifisert (tsc, vitest, lint, e2e, build grønne før commit):

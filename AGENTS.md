@@ -18,6 +18,7 @@
 
 ## Change policy
 
+- **Governing process:** `docs/PROSESS-PLAN-TIL-KODE.md` (owner-approved 2026-07-15) is the authoritative plan→code process. Control scales with risk (lett/standard/høy lanes). It supersedes the old uniform `docs/superpowers/plans/2026-07-13-babyora-verification-protocol.md`, which is now subordinate.
 - Analysis and planning do not authorize implementation.
 - Do not change app code until the owner explicitly starts an implementation phase.
 - During implementation, use one scoped task and one intentional commit at a time.

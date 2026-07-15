@@ -1,3 +1,9 @@
+> **SUPERSEDED 2026-07-15.** The authoritative plan→code process is now
+> `docs/PROSESS-PLAN-TIL-KODE.md` (risk-based lanes: lett/standard/høy). This
+> document remains as reference for the high-risk verifier verdict structure and
+> the security/avatar gates, but its uniform "every task = full fresh-context
+> review" rule no longer applies. When the two disagree, the new process wins.
+
 # Babyora Independent Verification Protocol
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:verification-before-completion after every implementation task and superpowers:requesting-code-review before every package gate. This protocol is mandatory; an implementation session cannot waive it.

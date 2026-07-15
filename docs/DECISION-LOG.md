@@ -4,6 +4,27 @@ This log records current product decisions that override older exploratory mater
 
 ## 2026-07-15
 
+### Ny styringsprosess: risikobasert plan→kode (erstatter uniform verifikasjon)
+
+**Decision:** Eier godkjente `docs/PROSESS-PLAN-TIL-KODE.md` som gjeldende
+prosess («Bruk dette som plan fremover»). Kjernen er **risikoløyper** — lett /
+standard / høy — der kontrollmengden følger risikoen i stedet for å være lik for
+alle endringer. Lett løype (dok, copy, dev-only) kan egenverifiseres og samles i
+pakke-gaten; standard får fresh-context review av et sammenhengende kandidat-sett;
+høy (safety, RLS/auth, betaling, migrering, PII, produksjonsaktivering) beholder
+full uavhengig to-nøkkel-verifikasjon per oppgave. PASS knyttes alltid til en
+uforanderlig kandidat-SHA. Re-verifikasjon etter FAIL skaleres etter påvirkning,
+ikke full runde uansett. Automatisk eskalering til høy risiko er definert.
+
+**Reason:** Den forrige prosessen behandlet alt likt (dobbel modell-runde + full
+bevis-seremoni + full re-review per FAIL), som ga treghet uten ekstra sikkerhet
+på lavrisiko-arbeid. Ny prosess bevarer de harde høyrisikogatene (safety-motor,
+RLS, betaling, avatar-sannhet) uendret, men fjerner seremoni der feil ikke kan
+skade brukere/data/inntekt/tillit. Synkronisert: `AGENTS.md` (governing-process-
+peker), `verification-protocol.md` (SUPERSEDED-banner — beholdt som referanse for
+høyrisiko-verdiktstruktur og sikkerhets-/avatar-gater). Prosessen har egen
+måle-loop (§14) for å justere løypene empirisk.
+
 ### Prismodell: behold juni-provisjoneringen (39/99/299), kode alignet
 
 **Decision:** Kodens produkt-IDer/priser (F81-forslaget `babyora_*`, 49/299/499 + «Barnetiden») matchet ikke det som faktisk er provisjonert i App Store Connect + RevenueCat (`no.klemeg.app.monthly/quarterly/yearly`, 39/99/299 — STATUS.md, juni 2026). Eier valgte å **beholde juni-provisjoneringen**. Koden er alignet tilbake: `PRODUCT_IDS` → `no.klemeg.app.*`, priser 39/99/299, «Barnetiden»-engangskjøp droppet, kvartal («pappaperm», 99/3 mnd) definert men ikke surfaced i paywallen (`PLAN_ORDER` = årlig + månedlig). Spar-badge 49 % → 36 %.
