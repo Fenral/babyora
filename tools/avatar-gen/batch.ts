@@ -13,6 +13,7 @@
  * Bruk: tsx tools/avatar-gen/batch.ts [pose]   (pose = standing|sitting|all)
  */
 import { mkdir, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { ensureEnv, generateComposite } from './generate';
@@ -22,20 +23,41 @@ const G = (name: string) => `public/illustrations/garments-clay/${name}.png`;
 
 type Entry = { name: string; pose: 'standing' | 'sitting'; refs: string[]; outfit: string };
 
-// Varmeskala stående (12–24 mnd). 6 nivåer sommer → ekstrem vinter.
-const STANDING: Entry[] = [
-  { name: 'std-1-sommer', pose: 'standing', refs: [G('kortermet-body'), G('solhatt')],
+// 6 varmenivåer (sommer → ekstrem), gjenbrukt for begge positurer.
+const WARMTH = (p: 'standing' | 'sitting', pfx: string): Entry[] => [
+  { name: `${pfx}-1-sommer`, pose: p, refs: [G('kortermet-body'), G('solhatt')],
     outfit: 'a short-sleeve cream cotton bodysuit and a beige sun bucket hat; bare legs and bare feet' },
-  { name: 'std-2-mild', pose: 'standing', refs: [G('langermet-body'), G('lue-tynn')],
+  { name: `${pfx}-2-mild`, pose: p, refs: [G('langermet-body'), G('lue-tynn')],
     outfit: 'a long-sleeve cream bodysuit and a thin knitted hat; bare legs' },
-  { name: 'std-3-kjolig', pose: 'standing', refs: [G('ull-jakke'), G('ull-bukse'), G('lue')],
+  { name: `${pfx}-3-kjolig`, pose: p, refs: [G('ull-jakke'), G('ull-bukse'), G('lue')],
     outfit: 'a wool cardigan jacket, wool trousers and a knitted hat' },
-  { name: 'std-4-kald', pose: 'standing', refs: [G('kjoredress'), G('lue-m-ull')],
+  { name: `${pfx}-4-kald`, pose: p, refs: [G('kjoredress'), G('lue-m-ull')],
     outfit: 'a padded pram overall (kjøredress) and a grey chunky-knit earflap wool hat' },
-  { name: 'std-5-vinter', pose: 'standing', refs: [G('vinterdress-isolert'), G('lue-m-ull'), G('votter')],
+  { name: `${pfx}-5-vinter`, pose: p, refs: [G('vinterdress-isolert'), G('lue-m-ull'), G('votter')],
     outfit: 'a deep muted teal-green insulated padded snowsuit, a grey chunky-knit earflap wool hat and knitted mittens' },
-  { name: 'std-6-ekstrem', pose: 'standing', refs: [G('vinterdress-isolert'), G('balaklava'), G('votter-dun'), G('vintersko-isolerte')],
+  { name: `${pfx}-6-ekstrem`, pose: p, refs: [G('vinterdress-isolert'), G('balaklava'), G('votter-dun'), G('vintersko-isolerte')],
     outfit: 'a deep muted teal-green insulated snowsuit, a balaclava covering the head and neck, thick down mittens and insulated winter boots' },
+];
+
+// 6 varianter per positur: skall, hals/vindvotter, alt-hodeplagg, synlig fottøy.
+const VARIANTS = (p: 'standing' | 'sitting', pfx: string): Entry[] => [
+  { name: `${pfx}-7-regn`, pose: p, refs: [G('ull-jakke'), G('ull-bukse'), G('regntoy-skall'), G('lue')],
+    outfit: 'a wool mid-layer under a yellow rain shell suit (regntøy) and a knitted hat' },
+  { name: `${pfx}-8-vind`, pose: p, refs: [G('ull-jakke'), G('ull-bukse'), G('vindtett-skall'), G('lue')],
+    outfit: 'a wool mid-layer under a windproof shell jacket and trousers, and a knitted hat' },
+  { name: `${pfx}-9-vinter-hals`, pose: p, refs: [G('vinterdress-isolert'), G('lue-m-ull'), G('hals'), G('votter')],
+    outfit: 'a teal-green insulated snowsuit, a grey earflap wool hat, a neck gaiter (halsedisse) and knitted mittens' },
+  { name: `${pfx}-10-vindvotter`, pose: p, refs: [G('vinterdress-isolert'), G('lue-m-ull'), G('vindvotter-skall')],
+    outfit: 'a teal-green insulated snowsuit, a grey earflap wool hat and windproof shell mittens' },
+  { name: `${pfx}-11-mild-lue`, pose: p, refs: [G('langermet-body'), G('lue')],
+    outfit: 'a long-sleeve cream bodysuit and a knitted wool hat; bare legs' },
+  { name: `${pfx}-12-kald-sko`, pose: p, refs: [G('kjoredress'), G('lue-m-ull'), G('vintersko')],
+    outfit: 'a padded pram overall (kjøredress), a grey earflap wool hat and visible winter boots' },
+];
+
+const ALL: Entry[] = [
+  ...WARMTH('standing', 'std'), ...VARIANTS('standing', 'std'),
+  ...WARMTH('sitting', 'sit'), ...VARIANTS('sitting', 'sit'),
 ];
 
 function buildPrompt(e: Entry): string {
@@ -57,10 +79,13 @@ function matte(rawPath: string, outPath: string): void {
 
 async function main(): Promise<void> {
   ensureEnv();
-  const poseArg = process.argv[2] ?? 'standing';
-  const entries = STANDING.filter((e) => poseArg === 'all' || e.pose === poseArg);
+  const poseArg = process.argv[2] ?? 'all'; // standing | sitting | all
   const outDir = resolve(process.cwd(), 'tools/avatar-gen/out/verified');
   await mkdir(outDir, { recursive: true });
+  // Idempotent: hopp over allerede genererte (så 'all' fyller kun hull).
+  const entries = ALL.filter(
+    (e) => (poseArg === 'all' || e.pose === poseArg) && !existsSync(resolve(outDir, `${e.name}.png`)),
+  );
 
   let i = 0;
   for (const e of entries) {
@@ -78,7 +103,7 @@ async function main(): Promise<void> {
       console.error(`  ${err instanceof Error ? err.message : String(err)}`);
     }
   }
-  console.log(`Ferdig → ${outDir}`);
+  console.log(`Ferdig (${entries.length} nye) → ${outDir}`);
 }
 
 main().catch((err) => {
