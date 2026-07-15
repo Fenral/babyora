@@ -109,14 +109,19 @@ workflows:
           xcode-project use-profiles
       - name: Build IPA
         script: |
-          # 2026-06-12: SPM-resource-bundles (RevenueCat_RevenueCat.bundle)
-          # feilet med errSecInternalComponent. Standard fix er å sette
-          # CODE_SIGNING_ALLOWED=NO for resource bundles via xcodebuild flag.
-          # Hovedappen signes fortsatt normalt — kun .bundle-resources hoppes over.
+          # 2026-07-16: FJERNET --archive-flags=CODE_SIGNING_ALLOWED_FOR_EXTENSIONS_AND_FRAMEWORKS=NO.
+          # Prosjektet er SPM-basert → RevenueCat + Capacitor-plugins lenkes som
+          # DYNAMISKE frameworks som dyld laster ved oppstart. Det brede flagget
+          # kunne etterlate dem usignert, som gir "code signature invalid" launch-
+          # krasj på ekte enhet (ledende mistanke for TestFlight-krasjen). Den ekte
+          # fiksen for errSecInternalComponent på RevenueCats resource-bundle er
+          # keychain partition-list-steget lenger opp — ikke å droppe framework-
+          # signering. Hvis .bundle-signering feiler igjen feiler BYGGET synlig
+          # (ikke en bruker-krasj); da scoper vi CODE_SIGNING_ALLOWED=NO kun på
+          # resource-bundle-targetet i stedet for hele framework-settet.
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME" \
-            --archive-flags="CODE_SIGNING_ALLOWED_FOR_EXTENSIONS_AND_FRAMEWORKS=NO"
+            --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
