@@ -51,6 +51,7 @@ import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { searchCities } from '../data/no-cities';
 import { searchAddress } from '../lib/geocode/nominatim';
+import { DISCLAIMER_FULL } from '../lib/copy/disclaimer';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GSAP stagger-hero (lazy-loaded — kun for intro-step / step 1)
@@ -845,6 +846,9 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                 Alt lagres lokalt på enheten din. Ingenting sendes til en server,
                 og du kan endre det når som helst.
               </p>
+
+              {/* Veiledende-disclaimer (eierbeslutning 2026-07-15). */}
+              <p className="ob-hint ob-hint-center">{DISCLAIMER_FULL}</p>
             </>
           )}
 

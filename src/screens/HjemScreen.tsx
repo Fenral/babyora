@@ -50,6 +50,7 @@ import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { recommend } from '../lib/wool-layers/recommend';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
+import { DISCLAIMER_SHORT } from '../lib/copy/disclaimer';
 import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 // Gamle A1-A7-PNG-ene er byttet ut med clay-verdenen fra F79/F80.
@@ -792,6 +793,21 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
                 <span style={ctaLabel}>Se dagens antrekk</span>
               </motion.button>
             )}
+
+            {/* Veiledende-disclaimer (eierbeslutning 2026-07-15) — diskré,
+                ikke en advarsel; anbefalingen er råd, ikke garanti. */}
+            <p
+              style={{
+                margin: '12px auto 0',
+                maxWidth: 320,
+                fontSize: '0.6875rem',
+                lineHeight: 1.4,
+                color: 'var(--ink-500)',
+                textAlign: 'center',
+              }}
+            >
+              {DISCLAIMER_SHORT}
+            </p>
 
           </div>
         </main>

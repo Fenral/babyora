@@ -64,6 +64,7 @@ import { APP_VERSION } from '../lib/app-version';
 import { PaywallDialog } from '../components/PaywallDialog';
 import { CareCircle } from '../components/family/CareCircle';
 import type { Caregiver } from '../components/family/care-circle-model';
+import { DISCLAIMER_FULL } from '../lib/copy/disclaimer';
 // BottomTabBar er nå global (mounted i App.tsx) — ikke importer/mount her.
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2250,6 +2251,11 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
             </button>
           </li>
         </Section>
+
+        {/* Veiledende-disclaimer (eierbeslutning 2026-07-15) — juridisk sone. */}
+        <p style={{ margin: '2px 6px 0', fontSize: '0.75rem', lineHeight: 1.45, color: C.ink500 }}>
+          {DISCLAIMER_FULL}
+        </p>
 
         {/* Logg ut */}
         <button

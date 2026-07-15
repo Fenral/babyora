@@ -4,6 +4,14 @@ This log records current product decisions that override older exploratory mater
 
 ## 2026-07-15
 
+### v1 lanseres på dagens motor med veiledende-disclaimer (uten fagsignatur)
+
+**Decision:** Eier velger å lansere v1 på den **containede legacy-motoren** (som allerede gikk gjennom R2 sikkerhets-containment) med en tydelig veiledende-disclaimer, i stedet for å vente på ekstern fagsignatur. Fagsignaturen forblir porten for **Motor V2-aktivering** + R8-avatar-manifest (fast-follow, ikke v1-blokker) — V2 aktiveres IKKE på disclaimer alene (ny, uvalidert sikkerhetslogikk).
+
+**Disclaimer (én kilde: `src/lib/copy/disclaimer.ts`):** kort linje ved anbefalingen på Hjem + full formulering i onboarding og Innstillinger/juridisk. Ordlyd rammer inn som veiledende — «ikke en erstatning for ditt eget skjønn eller helsepersonell» — aldri «det kan være feil» (svakere dekning + undergraver tillit). Passerer produkt-copy-lint (ingen absolutte trygghetspåstander).
+
+**Restrisiko (dokumentert, akseptert av eier etter risikogjennomgang):** motorens sikkerhetsgrenser er internt satt, ikke fag-sertifisert; overoppheting/kuldeeksponering er lav-sannsynlig/høy-alvorlighet. Mitigert av harde guardrails (`finalize-safety.ts`), gratis sikkerhetsinnhold, ingen absolutte påstander, og disclaimeren. **Anbefalt fast-follow:** fagvurdering (helsesykepleier) som gjør disclaimeren om fra «usikker» til «fagvurdert».
+
 ### R8 avatar-produksjon fullført via Gemini (Nano Banana Pro) + rembg
 
 **Decision:** De 24 verifiserte komposittene er produsert og ligger i `public/avatars/verified/` (12 stående 12–24 mnd, 12 sittende 0–11 mnd). Metode (eiergodkjent): én låst identitet (`f79-poc` — store øyne, rosa kinn, personlighet) kledd fra appens `garments-clay`-illustrasjoner som referanser, slik at plaggenes farge/form matcher plagg-lista eksakt. Pipeline: Gemini `gemini-3-pro-image` (Nano Banana Pro) → `rembg` (u2net) for ekte alfa. Skall-varianter viser kun ytterste plagg (planregel) og bruker appens faktiske regn/vind-skall-farger (blått, ikke gult). Verktøy: `tools/avatar-gen/{generate,batch,finalize}.ts`. Direkte API-kostnad ~$5 (godt under 1000 kr-taket). Gemini-nøkkel i `.env.local` (gitignorert).
