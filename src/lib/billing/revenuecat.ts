@@ -4,18 +4,18 @@
  * Iter 31: kobler `useAccess` til faktiske abonnementer når RevenueCat
  * API-keys er konfigurert. Fallback: localStorage-mock (trial-modus).
  *
- * Setup:
+ * Setup (produkt-IDene MÅ matche PRODUCT_IDS i ../premium/products.ts):
  * 1. Opprett konto på https://app.revenuecat.com/
- * 2. Sett `VITE_REVENUECAT_PUBLIC_KEY_IOS` og `_ANDROID` i .env
- * 3. Opprett products i App Store Connect + Play Console:
- *    - klemeg.monthly  (Apple ID + Play SKU)
- *    - klemeg.quarterly
- *    - klemeg.yearly
- * 4. Map products til Babyora-pricing-IDs i RevenueCat-dashbord
- * 5. Opprett ett entitlement "premium" som tildeles alle 3 plans
+ * 2. Sett `VITE_REVENUECAT_PUBLIC_KEY_IOS` og `_ANDROID` i .env.local
+ * 3. Opprett products i App Store Connect + Play Console med DISSE eksakte IDene:
+ *    - babyora_yearly_299     (auto-renewable, 7 dagers trial)  ← HERO
+ *    - babyora_monthly_49     (auto-renewable)
+ *    - babyora_barnetiden_499 (non-consumable, engangskjøp)     ← vises ikke i paywall (PLAN_ORDER), men SKU-en beholdes
+ * 4. Legg alle i ett RevenueCat-offering «current» som packages
+ * 5. Opprett ett entitlement «premium» (ENTITLEMENT_ID under) som tildeles alle plans
  *
- * Følger Ryddy-mønsteret. RevenueCat Capacitor-plugin håndterer både
- * iOS StoreKit og Android Billing automatisk.
+ * RevenueCat Capacitor-plugin håndterer både iOS StoreKit og Android Billing.
+ * products.test.ts låser PRODUCT_IDS eksakt, så IDene ikke driver fra hverandre.
  */
 
 import { Capacitor } from '@capacitor/core';

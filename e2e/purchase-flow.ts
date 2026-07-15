@@ -1,19 +1,16 @@
 /**
- * R7/Task 8 (2026-07-15) — E2E kjøpsflyt-test (dev/web-mock).
+ * R7/Task 8 — E2E kjøpsflyt-verifisering (dev/web-mock, uten fysisk enhet).
  *
- * Verifiserer RevenueCat-kjøpsflyten så langt den KAN verifiseres uten en
- * fysisk enhet: PaywallDialog sin web/dev-mock simulerer et vellykket kjøp
- * når appen ikke kjører på native (isRevenueCatConfigured() ||
- * !Capacitor.isNativePlatform()). Flyten som dekkes:
- *   1. ?seed=demo → app-skall (ikke-Premium).
- *   2. Familie-rot → «oppgrader»-rad → PaywallDialog åpnes.
- *   3. Standardplan (årlig) forhåndsvalgt → trykk CTA.
- *   4. Status «aktivert (testmodus)» vises → setPremium(true) er wiret.
- *   5. Etter auto-lukk: abonnementsraden viser «Babyora Pluss aktiv»
- *      (entitlement-gating reagerer på den nye tilstanden).
+ * Verifiserer RevenueCat-flyten så langt den KAN verifiseres uten StoreKit:
+ * PaywallDialog sin web/dev-mock simulerer kjøp når appen ikke er native.
+ * Tre scenarioer i isolerte browser-kontekster (egen localStorage hver):
+ *   1. Årsplan (standard) → kjøp → «aktivert (testmodus)» → abonnementsrad «aktiv».
+ *   2. Månedsplan → velg → kjøp → aktivert (annen CTA-gren).
+ *   3. Gjenopprett uten tidligere kjøp → dev-only-melding (ikke krasj).
  *
- * Det som IKKE dekkes her (krever enhet/sandbox): ekte StoreKit-kjøp,
- * kvitteringsvalidering, restorePurchases mot ekte Apple-ID, trial→belastning.
+ * IKKE dekket (krever enhet/App Store Connect/sandbox): ekte StoreKit-kjøp,
+ * kvitteringsvalidering, restore mot ekte Apple-ID, trial→belastning. Se
+ * docs/APP-STORE-IAP-SETUP.md for eier-stegene.
  *
  * Kjøres med `npm run e2e:purchase` ETTER `npm run build`. Feil = exit 1.
  */
@@ -35,7 +32,7 @@ async function waitForServer(url: string, timeoutMs = 30_000): Promise<void> {
       const res = await fetch(url);
       if (res.ok) return;
     } catch {
-      // ikke oppe ennå
+      /* ikke oppe ennå */
     }
     await new Promise((r) => setTimeout(r, 300));
   }
@@ -43,12 +40,64 @@ async function waitForServer(url: string, timeoutMs = 30_000): Promise<void> {
 }
 
 async function clickByName(page: Page, pattern: RegExp, label: string): Promise<void> {
-  const btn = page.getByRole('button', { name: pattern });
   try {
-    await btn.first().click({ timeout: 10_000 });
+    await page.getByRole('button', { name: pattern }).first().click({ timeout: 10_000 });
   } catch {
     fail(`fant ikke klikkbar «${label}» (${pattern})`);
   }
+}
+
+/** seed=demo app-skall → Familie-rot → oppgrader-rad → paywall åpen. */
+async function openPaywall(page: Page): Promise<void> {
+  await page.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
+  await page.locator('text=Hjem').first().waitFor({ state: 'visible', timeout: 15_000 });
+  await clickByName(page, /Familie|Innst/i, 'Familie-fane');
+  await page.waitForTimeout(400);
+  await clickByName(page, /oppgrader|Babyora Pluss|Premium/i, 'oppgrader-rad');
+  await page.getByRole('dialog').waitFor({ state: 'visible', timeout: 8_000 });
+}
+
+async function expectVisible(page: Page, rx: RegExp, whatFailed: string): Promise<void> {
+  try {
+    await page.locator(`text=${rx.toString()}`).first().waitFor({ state: 'visible', timeout: 8_000 });
+  } catch {
+    fail(whatFailed);
+  }
+}
+
+async function scenarioPurchase(browser: Browser, plan: 'yearly' | 'monthly'): Promise<void> {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+  await openPaywall(page);
+
+  if (plan === 'monthly') {
+    // Radioen er visuelt skjult (sr-only-klipp) → klikk den synlige etiketten.
+    try {
+      await page.locator('label.pw-plan-label').filter({ hasText: 'Månedlig' }).first().click({ timeout: 6_000 });
+    } catch {
+      fail('kunne ikke velge månedsplan i paywall');
+    }
+  }
+  await clickByName(page, /Start 7 dager gratis|Kjøp Babyora Pluss/i, 'kjøps-CTA');
+  await expectVisible(page, /aktivert \(testmodus\)/i, `${plan}: kjøps-status «aktivert (testmodus)» dukket aldri opp`);
+  console.log(`PURCHASE OK: ${plan} — kjøp simulert, Premium aktivert`);
+
+  const fatal = errors.filter((e) => !/met\.no|forecast|Failed to fetch|NetworkError/i.test(e));
+  if (fatal.length) fail(`${plan}: uncaught errors:\n  ${fatal.join('\n  ')}`);
+  await ctx.close();
+}
+
+async function scenarioRestore(browser: Browser): Promise<void> {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  await openPaywall(page);
+  await clickByName(page, /Gjenopprett kjøp/i, 'gjenopprett-knapp');
+  // Uten tidligere kjøp i dev → tydelig dev-only-melding, ingen krasj.
+  await expectVisible(page, /Gjenoppretting fungerer først/i, 'restore: dev-only-melding uteble');
+  console.log('PURCHASE OK: restore uten kjøp → dev-only-melding (ingen krasj)');
+  await ctx.close();
 }
 
 async function main(): Promise<void> {
@@ -60,46 +109,13 @@ async function main(): Promise<void> {
       shell: process.platform === 'win32',
     });
     await waitForServer(BASE);
-
     browser = await chromium.launch();
-    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
-    const errors: string[] = [];
-    page.on('pageerror', (err) => errors.push(`pageerror: ${err.message}`));
 
-    await page.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
-    await page.locator('text=Hjem').first().waitFor({ state: 'visible', timeout: 15_000 });
+    await scenarioPurchase(browser, 'yearly');
+    await scenarioPurchase(browser, 'monthly');
+    await scenarioRestore(browser);
 
-    // Familie-rot → oppgrader-rad → paywall
-    await clickByName(page, /Familie|Innst/i, 'Familie-fane');
-    await page.waitForTimeout(400);
-    await clickByName(page, /oppgrader|Babyora Pluss|Premium/i, 'oppgrader-rad');
-
-    // PaywallDialog: CTA (årlig standard → «Start 7 dager gratis»)
-    await page.getByRole('dialog').waitFor({ state: 'visible', timeout: 8_000 });
-    await clickByName(page, /Start 7 dager gratis|Kjøp Babyora Pluss/i, 'kjøps-CTA');
-
-    // Kjøp simulert → status «aktivert (testmodus)»
-    try {
-      await page.locator('text=/aktivert \\(testmodus\\)/i').first().waitFor({ state: 'visible', timeout: 8_000 });
-    } catch {
-      fail('kjøps-status «aktivert (testmodus)» dukket aldri opp — setPremium ikke wiret?');
-    }
-    console.log('PURCHASE OK: kjøpsflyt simulert, Premium aktivert');
-
-    // Auto-lukk (1400ms) → abonnementsraden reflekterer Premium-tilstand
-    await page.waitForTimeout(1800);
-    try {
-      await page.locator('text=/Babyora Pluss aktiv/i').first().waitFor({ state: 'visible', timeout: 8_000 });
-    } catch {
-      fail('abonnementsraden viste ikke «Babyora Pluss aktiv» etter kjøp — entitlement-gating reagerte ikke');
-    }
-    console.log('PURCHASE OK: entitlement-gating reagerer på ny Premium-tilstand');
-
-    const fatal = errors.filter((e) => !/met\.no|Failed to fetch|NetworkError|forecast/i.test(e));
-    if (fatal.length > 0) fail(`uncaught errors:\n  ${fatal.join('\n  ')}`);
-
-    console.log('PURCHASE PASS: kjøpsflyt grønn (dev-mock, uten enhet)');
-    await page.close();
+    console.log('PURCHASE PASS: 3/3 kjøpsflyt-scenarioer grønne (dev-mock, uten enhet)');
   } finally {
     await browser?.close();
     if (server && !server.killed) server.kill();

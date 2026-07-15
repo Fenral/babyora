@@ -4,6 +4,12 @@ This log records current product decisions that override older exploratory mater
 
 ## 2026-07-15
 
+### Offentlig navn: Babyora (naming-porten lukket)
+
+**Decision:** Eier beholder **Babyora** som endelig offentlig navn («Behold navn», 2026-07-15). Den åpne naming-porten er dermed lukket. `Vaerni`, `Klarune` og `Uteklar` er avvist underveis. Ingen kode-endring nødvendig — appen bruker allerede «Babyora» i UI-copy og assets. En formell tilgjengelighetssjekk (varemerke, `.no`-domene, App Store-navn, håndtak) anbefales fortsatt før innsending, men blokkerer ikke videre arbeid.
+
+**Reason:** Fjerner den største åpne v1-blokkeren (App Store-tittel, domene). AGENTS.md oppdatert tilsvarende.
+
 ### v1 lanseres på dagens motor med veiledende-disclaimer (uten fagsignatur)
 
 **Decision:** Eier velger å lansere v1 på den **containede legacy-motoren** (som allerede gikk gjennom R2 sikkerhets-containment) med en tydelig veiledende-disclaimer, i stedet for å vente på ekstern fagsignatur. Fagsignaturen forblir porten for **Motor V2-aktivering** + R8-avatar-manifest (fast-follow, ikke v1-blokker) — V2 aktiveres IKKE på disclaimer alene (ny, uvalidert sikkerhetslogikk).

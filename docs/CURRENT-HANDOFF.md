@@ -42,16 +42,19 @@ Eier ba om autonom kjøring på dokumenterte defaults mens borte. Levert på lok
 
 **«Notification pre-prompt after value» er oppfylt:** varsel-tillatelse spørres kun ved aktiv toggle-handling (etter bruk), aldri kaldt ved oppstart; onboarding har ingen varsel-prompt (teaseren fjernet).
 
-**Autonomt v1-arbeid er med dette uttømt** — alt gjenstående er eier-avhengig (se listen under).
+### Løst 2026-07-15 (eierbeslutninger)
 
-### ⏳ Venter på eier (samlet — ikke autonomt gjørbart)
+- ~~Push~~ ✅ · ~~R8 avatar-generering~~ ✅ (24 kompositter) · ~~Offentlig navn~~ ✅ **Babyora beholdt** (naming-porten lukket) · ~~Fagsignatur som v1-blokker~~ → nedgradert til fast-follow via **veiledende-disclaimer** (v1 på dagens containede motor).
+- **IAP app-side ferdig + verifisert** via dev/Playwright (`npm run e2e:purchase` 3/3). App Store Connect-stegene er turnkey i `docs/APP-STORE-IAP-SETUP.md`.
 
-1. ~~**Push til origin**~~ — GJORT (eier godkjente; alt pushet t.o.m. `facf236`).
-2. ~~**R8 avatar-generering**~~ — GJORT 2026-07-15. 24 verifiserte kompositter i `public/avatars/verified/` via Gemini (Nano Banana Pro) + rembg, ~$5. Gjenstår: manifest-kobling mot `AvatarStateKey` (presist steg ved V2-aktivering; `index.json` er input).
-3. **Ekstern fagsignatur** på `engine-v2-scenarios.json` — låser opp Motor V2 kohortaktivering (Task 17) OG R8-manifest-koblingen. Blokkerer ikke v1. **(Eier: «det er det siste vi gjør».)**
-4. **Fysisk iPhone + IAP-kjøpstesting** — RevenueCat ende-til-ende, purchase-state-skjermbilder, VoiceOver/TalkBack, haptikk.
-5. **App Store-metadata** — mye ligger i STORE-LISTING.md; krever eierbeslutninger (navn-gate m.m.).
-6. **Task 8 manuell evidens** — 90+-rubrikk-skjermbilder i deploy-miljø, tekstskalering, tommelsone, fem-foreldre-forståelsessjekk.
+### ⏳ Venter på eier (kun enhets/portal-avhengig)
+
+1. **App Store Connect + RevenueCat** — opprett IAP-produktene (`babyora_yearly_299` osv.) + entitlement `premium` + ekte nøkler. Steg-for-steg: `docs/APP-STORE-IAP-SETUP.md`.
+2. **Fysisk iPhone + sandbox-kjøpstest** — ekte StoreKit-kjøp, kvittering, restore mot Apple-ID, trial→belastning. (Dev-mock-flyten er verifisert.)
+3. **Signering / TestFlight** — cert-revoke/Apple-innlogging (kvota-feil) må løses i Apple Developer-portalen; ikke løsbart via dev/Playwright.
+4. **App Store-metadata + personvernerklæring** — STORE-LISTING.md + publisert `babyora.no/personvern` + privacy-labels.
+5. **Task 8 manuell evidens** — VoiceOver/TalkBack, haptikk, tekstskalering, tommelsone (enhet).
+6. **Fagsignatur** (fast-follow) på `engine-v2-scenarios.json` — låser opp Motor V2 + R8-avatar-visning. Ikke v1-blokker. **(Eier: «det er det siste vi gjør».)**
 
 ## Completed
 

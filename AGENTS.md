@@ -12,9 +12,9 @@
 - Free: today at one fixed home location.
 - Plus: future, everywhere, and shared with family.
 - The v1 child and recommendation scope is 0-24 months. Older ages are deferred.
-- `Vaerni` is rejected. The public name remains an open decision gate.
-- `Babyora`, `Klarune`, `Uteklar`, and `Vaerni` are not approved as the final public name.
-- The selected logo direction is `Protected core` / `Beskyttet kjerne`; keep the symbol name-neutral until the naming gate is complete.
+- **`Babyora` is the approved public name** (owner decision 2026-07-15, «Behold navn»). The naming gate is closed. `Vaerni`, `Klarune`, and `Uteklar` were rejected along the way.
+- A formal availability check (trademark, `.no` domain, App Store name uniqueness, social handles) is still recommended before submission.
+- The selected logo direction is `Protected core` / `Beskyttet kjerne`; the wordmark uses the Babyora name.
 
 ## Change policy
 
