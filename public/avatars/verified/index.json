@@ -1,0 +1,258 @@
+[
+  {
+    "name": "std-1-sommer",
+    "asset": "/avatars/verified/std-1-sommer.png",
+    "pose": "standing",
+    "garments": [
+      "kortermet-body",
+      "solhatt"
+    ],
+    "outfit": "a short-sleeve cream cotton bodysuit and a beige sun bucket hat; bare legs and bare feet"
+  },
+  {
+    "name": "std-2-mild",
+    "asset": "/avatars/verified/std-2-mild.png",
+    "pose": "standing",
+    "garments": [
+      "langermet-body",
+      "lue-tynn"
+    ],
+    "outfit": "a long-sleeve cream bodysuit and a thin knitted hat; bare legs"
+  },
+  {
+    "name": "std-3-kjolig",
+    "asset": "/avatars/verified/std-3-kjolig.png",
+    "pose": "standing",
+    "garments": [
+      "ull-jakke",
+      "ull-bukse",
+      "lue"
+    ],
+    "outfit": "a wool cardigan jacket, wool trousers and a knitted hat"
+  },
+  {
+    "name": "std-4-kald",
+    "asset": "/avatars/verified/std-4-kald.png",
+    "pose": "standing",
+    "garments": [
+      "kjoredress",
+      "lue-m-ull"
+    ],
+    "outfit": "a padded pram overall (kjøredress) and a grey chunky-knit earflap wool hat"
+  },
+  {
+    "name": "std-5-vinter",
+    "asset": "/avatars/verified/std-5-vinter.png",
+    "pose": "standing",
+    "garments": [
+      "vinterdress-isolert",
+      "lue-m-ull",
+      "votter"
+    ],
+    "outfit": "a deep muted teal-green insulated padded snowsuit, a grey chunky-knit earflap wool hat and knitted mittens"
+  },
+  {
+    "name": "std-6-ekstrem",
+    "asset": "/avatars/verified/std-6-ekstrem.png",
+    "pose": "standing",
+    "garments": [
+      "vinterdress-isolert",
+      "balaklava",
+      "votter-dun",
+      "vintersko-isolerte"
+    ],
+    "outfit": "a deep muted teal-green insulated snowsuit, a balaclava covering the head and neck, thick down mittens and insulated winter boots"
+  },
+  {
+    "name": "std-7-regn",
+    "asset": "/avatars/verified/std-7-regn.png",
+    "pose": "standing",
+    "garments": [
+      "regntoy-skall",
+      "lue"
+    ],
+    "outfit": "ONLY an outer waterproof rain suit (a full rain shell jacket and trousers) as the single visible garment, plus a knitted hat — no other clothing visible over or under it"
+  },
+  {
+    "name": "std-8-vind",
+    "asset": "/avatars/verified/std-8-vind.png",
+    "pose": "standing",
+    "garments": [
+      "vindtett-skall",
+      "lue"
+    ],
+    "outfit": "ONLY an outer windproof shell suit (a full shell jacket and trousers) as the single visible garment, plus a knitted hat — no other clothing visible over or under it"
+  },
+  {
+    "name": "std-9-vinter-hals",
+    "asset": "/avatars/verified/std-9-vinter-hals.png",
+    "pose": "standing",
+    "garments": [
+      "vinterdress-isolert",
+      "lue-m-ull",
+      "hals",
+      "votter"
+    ],
+    "outfit": "a teal-green insulated snowsuit, a grey earflap wool hat, a neck gaiter (halsedisse) and knitted mittens"
+  },
+  {
+    "name": "std-10-vindvotter",
+    "asset": "/avatars/verified/std-10-vindvotter.png",
+    "pose": "standing",
+    "garments": [
+      "vinterdress-isolert",
+      "lue-m-ull",
+      "vindvotter-skall"
+    ],
+    "outfit": "a teal-green insulated snowsuit, a grey earflap wool hat and windproof shell mittens"
+  },
+  {
+    "name": "std-11-mild-lue",
+    "asset": "/avatars/verified/std-11-mild-lue.png",
+    "pose": "standing",
+    "garments": [
+      "langermet-body",
+      "lue"
+    ],
+    "outfit": "a long-sleeve cream bodysuit and a knitted wool hat; bare legs"
+  },
+  {
+    "name": "std-12-kald-sko",
+    "asset": "/avatars/verified/std-12-kald-sko.png",
+    "pose": "standing",
+    "garments": [
+      "kjoredress",
+      "lue-m-ull",
+      "vintersko"
+    ],
+    "outfit": "a padded pram overall (kjøredress), a grey earflap wool hat and visible winter boots"
+  },
+  {
+    "name": "sit-1-sommer",
+    "asset": "/avatars/verified/sit-1-sommer.png",
+    "pose": "sitting",
+    "garments": [
+      "kortermet-body",
+      "solhatt"
+    ],
+    "outfit": "a short-sleeve cream cotton bodysuit and a beige sun bucket hat; bare legs and bare feet"
+  },
+  {
+    "name": "sit-2-mild",
+    "asset": "/avatars/verified/sit-2-mild.png",
+    "pose": "sitting",
+    "garments": [
+      "langermet-body",
+      "lue-tynn"
+    ],
+    "outfit": "a long-sleeve cream bodysuit and a thin knitted hat; bare legs"
+  },
+  {
+    "name": "sit-3-kjolig",
+    "asset": "/avatars/verified/sit-3-kjolig.png",
+    "pose": "sitting",
+    "garments": [
+      "ull-jakke",
+      "ull-bukse",
+      "lue"
+    ],
+    "outfit": "a wool cardigan jacket, wool trousers and a knitted hat"
+  },
+  {
+    "name": "sit-4-kald",
+    "asset": "/avatars/verified/sit-4-kald.png",
+    "pose": "sitting",
+    "garments": [
+      "kjoredress",
+      "lue-m-ull"
+    ],
+    "outfit": "a padded pram overall (kjøredress) and a grey chunky-knit earflap wool hat"
+  },
+  {
+    "name": "sit-5-vinter",
+    "asset": "/avatars/verified/sit-5-vinter.png",
+    "pose": "sitting",
+    "garments": [
+      "vinterdress-isolert",
+      "lue-m-ull",
+      "votter"
+    ],
+    "outfit": "a deep muted teal-green insulated padded snowsuit, a grey chunky-knit earflap wool hat and knitted mittens"
+  },
+  {
+    "name": "sit-6-ekstrem",
+    "asset": "/avatars/verified/sit-6-ekstrem.png",
+    "pose": "sitting",
+    "garments": [
+      "vinterdress-isolert",
+      "balaklava",
+      "votter-dun",
+      "vintersko-isolerte"
+    ],
+    "outfit": "a deep muted teal-green insulated snowsuit, a balaclava covering the head and neck, thick down mittens and insulated winter boots"
+  },
+  {
+    "name": "sit-7-regn",
+    "asset": "/avatars/verified/sit-7-regn.png",
+    "pose": "sitting",
+    "garments": [
+      "regntoy-skall",
+      "lue"
+    ],
+    "outfit": "ONLY an outer waterproof rain suit (a full rain shell jacket and trousers) as the single visible garment, plus a knitted hat — no other clothing visible over or under it"
+  },
+  {
+    "name": "sit-8-vind",
+    "asset": "/avatars/verified/sit-8-vind.png",
+    "pose": "sitting",
+    "garments": [
+      "vindtett-skall",
+      "lue"
+    ],
+    "outfit": "ONLY an outer windproof shell suit (a full shell jacket and trousers) as the single visible garment, plus a knitted hat — no other clothing visible over or under it"
+  },
+  {
+    "name": "sit-9-vinter-hals",
+    "asset": "/avatars/verified/sit-9-vinter-hals.png",
+    "pose": "sitting",
+    "garments": [
+      "vinterdress-isolert",
+      "lue-m-ull",
+      "hals",
+      "votter"
+    ],
+    "outfit": "a teal-green insulated snowsuit, a grey earflap wool hat, a neck gaiter (halsedisse) and knitted mittens"
+  },
+  {
+    "name": "sit-10-vindvotter",
+    "asset": "/avatars/verified/sit-10-vindvotter.png",
+    "pose": "sitting",
+    "garments": [
+      "vinterdress-isolert",
+      "lue-m-ull",
+      "vindvotter-skall"
+    ],
+    "outfit": "a teal-green insulated snowsuit, a grey earflap wool hat and windproof shell mittens"
+  },
+  {
+    "name": "sit-11-mild-lue",
+    "asset": "/avatars/verified/sit-11-mild-lue.png",
+    "pose": "sitting",
+    "garments": [
+      "langermet-body",
+      "lue"
+    ],
+    "outfit": "a long-sleeve cream bodysuit and a knitted wool hat; bare legs"
+  },
+  {
+    "name": "sit-12-kald-sko",
+    "asset": "/avatars/verified/sit-12-kald-sko.png",
+    "pose": "sitting",
+    "garments": [
+      "kjoredress",
+      "lue-m-ull",
+      "vintersko"
+    ],
+    "outfit": "a padded pram overall (kjøredress), a grey earflap wool hat and visible winter boots"
+  }
+]

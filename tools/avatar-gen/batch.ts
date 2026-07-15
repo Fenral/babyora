@@ -16,12 +16,13 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { ensureEnv, generateComposite } from './generate';
 
 const ID = 'public/avatars/f79-poc/stage-2.png'; // identitets-master
 const G = (name: string) => `public/illustrations/garments-clay/${name}.png`;
 
-type Entry = { name: string; pose: 'standing' | 'sitting'; refs: string[]; outfit: string };
+export type Entry = { name: string; pose: 'standing' | 'sitting'; refs: string[]; outfit: string };
 
 // 6 varmenivåer (sommer → ekstrem), gjenbrukt for begge positurer.
 const WARMTH = (p: 'standing' | 'sitting', pfx: string): Entry[] => [
@@ -41,10 +42,11 @@ const WARMTH = (p: 'standing' | 'sitting', pfx: string): Entry[] => [
 
 // 6 varianter per positur: skall, hals/vindvotter, alt-hodeplagg, synlig fottøy.
 const VARIANTS = (p: 'standing' | 'sitting', pfx: string): Entry[] => [
-  { name: `${pfx}-7-regn`, pose: p, refs: [G('ull-jakke'), G('ull-bukse'), G('regntoy-skall'), G('lue')],
-    outfit: 'a wool mid-layer under a yellow rain shell suit (regntøy) and a knitted hat' },
-  { name: `${pfx}-8-vind`, pose: p, refs: [G('ull-jakke'), G('ull-bukse'), G('vindtett-skall'), G('lue')],
-    outfit: 'a wool mid-layer under a windproof shell jacket and trousers, and a knitted hat' },
+  // Planregel: kun YTTERSTE synlige plagg. Skallet er eneste ytterplagg.
+  { name: `${pfx}-7-regn`, pose: p, refs: [G('regntoy-skall'), G('lue')],
+    outfit: 'ONLY an outer waterproof rain suit (a full rain shell jacket and trousers) as the single visible garment, plus a knitted hat — no other clothing visible over or under it' },
+  { name: `${pfx}-8-vind`, pose: p, refs: [G('vindtett-skall'), G('lue')],
+    outfit: 'ONLY an outer windproof shell suit (a full shell jacket and trousers) as the single visible garment, plus a knitted hat — no other clothing visible over or under it' },
   { name: `${pfx}-9-vinter-hals`, pose: p, refs: [G('vinterdress-isolert'), G('lue-m-ull'), G('hals'), G('votter')],
     outfit: 'a teal-green insulated snowsuit, a grey earflap wool hat, a neck gaiter (halsedisse) and knitted mittens' },
   { name: `${pfx}-10-vindvotter`, pose: p, refs: [G('vinterdress-isolert'), G('lue-m-ull'), G('vindvotter-skall')],
@@ -55,7 +57,7 @@ const VARIANTS = (p: 'standing' | 'sitting', pfx: string): Entry[] => [
     outfit: 'a padded pram overall (kjøredress), a grey earflap wool hat and visible winter boots' },
 ];
 
-const ALL: Entry[] = [
+export const ALL: Entry[] = [
   ...WARMTH('standing', 'std'), ...VARIANTS('standing', 'std'),
   ...WARMTH('sitting', 'sit'), ...VARIANTS('sitting', 'sit'),
 ];
@@ -106,7 +108,10 @@ async function main(): Promise<void> {
   console.log(`Ferdig (${entries.length} nye) → ${outDir}`);
 }
 
-main().catch((err) => {
-  console.error(err instanceof Error ? err.message : String(err));
-  process.exit(1);
-});
+// Kjør kun ved direkte kall (ikke når finalize.ts importerer ALL).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  });
+}
