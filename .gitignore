@@ -53,3 +53,6 @@ public/avatars/pilot/
 tmp/
 public/avatars/.backup-pre-f28-12/
 .playwright-copilot-profile/
+
+# R8 avatar-genererings-råkandidater (kun godkjente kompositter går i public/)
+tools/avatar-gen/out/
