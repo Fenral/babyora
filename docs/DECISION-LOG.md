@@ -4,6 +4,12 @@ This log records current product decisions that override older exploratory mater
 
 ## 2026-07-15
 
+### R8 avatar-produksjon fullført via Gemini (Nano Banana Pro) + rembg
+
+**Decision:** De 24 verifiserte komposittene er produsert og ligger i `public/avatars/verified/` (12 stående 12–24 mnd, 12 sittende 0–11 mnd). Metode (eiergodkjent): én låst identitet (`f79-poc` — store øyne, rosa kinn, personlighet) kledd fra appens `garments-clay`-illustrasjoner som referanser, slik at plaggenes farge/form matcher plagg-lista eksakt. Pipeline: Gemini `gemini-3-pro-image` (Nano Banana Pro) → `rembg` (u2net) for ekte alfa. Skall-varianter viser kun ytterste plagg (planregel) og bruker appens faktiske regn/vind-skall-farger (blått, ikke gult). Verktøy: `tools/avatar-gen/{generate,batch,finalize}.ts`. Direkte API-kostnad ~$5 (godt under 1000 kr-taket). Gemini-nøkkel i `.env.local` (gitignorert).
+
+**Gjenstår (presist, senere):** koble `APPROVED_COMPOSITES`-manifestet i `src/lib/recommendation/avatar-state.ts` mot `AvatarStateKey`-ID-ene. `public/avatars/verified/index.json` mapper hvert asset → positur + plagg-sett som input. Gjøres mot motoren ved V2-aktivering (fagsignatur, som er sist) — til da viser Hjem nøytral silhuett uendret. Se [[paywall-verdi-seksjon]].
+
 ### Paywall verdi-seksjon lover kun leverbare Plus-funksjoner (R7 Task 7)
 
 **Decision:** PaywallDialog får en verdi-seksjon (`PlusExpansionPreview`) som viser Free→Plus som én 500–700ms ekspansjon (instant slutt-tilstand ved reduced-motion). Hvilke løfter som vises styres av `PLUS_FEATURE_AVAILABILITY` i `src/lib/premium/plus-features.ts`: `future_plan`, `automatic_location` og `extra_children` er på (bygget); `family_sharing` (R9) og `personal_calibration` (senere fase) er **av** og vises derfor aldri i paywallen. Når disse funksjonene lander flippes flagget, og en test fanger regresjon.

@@ -46,9 +46,9 @@ Eier ba om autonom kjøring på dokumenterte defaults mens borte. Levert på lok
 
 ### ⏳ Venter på eier (samlet — ikke autonomt gjørbart)
 
-1. **Push til origin** — alle commits over ligger lokalt på main; eier bestemmer push (Codemagic-kobling).
-2. **R8 avatar-generering** — kostnadsplan godkjent, men selve edit-chain-produksjonen krever eiers art direction/utvelgelse.
-3. **Ekstern fagsignatur** på `engine-v2-scenarios.json` — låser opp Motor V2 kohortaktivering (Task 17). Blokkerer ikke v1.
+1. ~~**Push til origin**~~ — GJORT (eier godkjente; alt pushet t.o.m. `facf236`).
+2. ~~**R8 avatar-generering**~~ — GJORT 2026-07-15. 24 verifiserte kompositter i `public/avatars/verified/` via Gemini (Nano Banana Pro) + rembg, ~$5. Gjenstår: manifest-kobling mot `AvatarStateKey` (presist steg ved V2-aktivering; `index.json` er input).
+3. **Ekstern fagsignatur** på `engine-v2-scenarios.json` — låser opp Motor V2 kohortaktivering (Task 17) OG R8-manifest-koblingen. Blokkerer ikke v1. **(Eier: «det er det siste vi gjør».)**
 4. **Fysisk iPhone + IAP-kjøpstesting** — RevenueCat ende-til-ende, purchase-state-skjermbilder, VoiceOver/TalkBack, haptikk.
 5. **App Store-metadata** — mye ligger i STORE-LISTING.md; krever eierbeslutninger (navn-gate m.m.).
 6. **Task 8 manuell evidens** — 90+-rubrikk-skjermbilder i deploy-miljø, tekstskalering, tommelsone, fem-foreldre-forståelsessjekk.
