@@ -1,138 +1,138 @@
-# App Store-tekst for Babyora
+# App Store-tekst for Babyora (ASO-optimalisert)
 
-Norsk-først tekst klar til å lime inn i App Store Connect og Google Play
-Console. Engelsk versjon nederst (for international locales).
+Norsk-først, klar for App Store Connect. **Låst v1-scope: 0–24 måneder.**
+Alt her er sannferdig mot faktiske funksjoner (ingen «validert av helse-
+personell» — v1 lanseres med veiledende-disclaimer, se DECISION-LOG).
+Engelsk nederst.
+
+> **ASO-prinsipp (iOS):** ranking drives av **app-navn + subtittel + keywords**
+> (ikke beskrivelsen). Derfor bærer navn/subtittel de sterkeste søkeordene, og
+> keywords-feltet gjentar dem aldri. Beskrivelsen selger konvertering.
 
 ---
 
-## App-navn
-**Babyora**
+## App-navn (max 30 tegn)
+**`Babyora – Påkledning baby`**  *(25 tegn)*
 
-## Subtittel (max 30 tegn — App Store)
-**Påkledning for de minste**
+Legger det viktigste søkeordet («påkledning») + «baby» i det tyngst-vektede
+feltet. Ren-merkevare-alternativ: bare `Babyora` (svakere for en ukjent app).
+
+## Subtittel (max 30 tegn)
+**`Vær, lag og ull for barnet`**  *(26 tegn)*
+
+Bærer nye søkeord som ikke er i navnet: vær, lag, ull, barn.
+
+## Keywords (max 100 tegn, komma, INGEN mellomrom, ikke gjenta navn/subtittel)
+```
+spedbarn,vinter,klær,kulde,temperatur,fleece,vogn,foreldre,friluft,nyfødt,varme,sesong,met,tur
+```
+Nye termer utover navn/subtittel. Singular (App Store matcher bøyninger selv).
+Droppet: baby/påkledning/vær/lag/ull (allerede i navn+subtittel), «met.no» (bruk «met»).
 
 ## Promo-tekst (max 170 tegn — kan endres uten ny submission)
-Vær + aktivitet = riktige lag. Spesialdesignet for norske foreldre med
-barn 0–3 år. Met.no-data i sanntid.
+```
+Hvor mange lag i dag? Babyora leser været der dere er og viser rett antrekk
+for barn 0–2 år — ull innerst, riktig ytterlag, det lille ekstra. Gratis å bruke.
+```
 
 ## Beskrivelse (App Store full description)
 
 ```
-Hvor mange lag skal jeg ta på henne i dag?
+Hvor mange lag skal barnet ha på seg i dag?
 
-Babyora er en norsk-først app som hjelper foreldre å vite hva barn 0–3 år
-skal ha på seg, basert på været akkurat der dere er.
+Babyora leser været akkurat der dere er og viser et komplett antrekk for
+barn 0–24 måneder — hver morgen, gratis.
 
-— DAGENS ANBEFALING —
-Live værdata fra met.no kombinert med norsk ull-lag-logikk: ull innerst,
-fleece eller ull-mellomlag, yttertøy, og det lille ekstra (lue, votter,
-varmepose, regntrekk).
+— DAGENS ANTREKK, GRATIS —
+Live værdata fra Meteorologisk institutt (met.no) kombinert med norsk lag-på-
+lag-logikk: ull innerst, riktig mellomlag, ytterlag, og det lille ekstra
+(lue, votter, hals, regntrekk). Ett komplett svar på tre sekunder.
 
-— AKTIVITET BETYR ALT —
-Vogn (stillesittende) trenger varmepose. Bæresele varmes av forelderkroppen.
-Utelek krever lag man kan kvitte seg med. Babyora differensierer mellom
-disse — ingen andre apper gjør det.
+— TILPASSET DEN NORSKE VINTEREN —
+Kulde, vind og «føles som»-temperatur er innebygd. Én toggle for vogn eller
+bæring, der barnet holder ulik varme.
 
-— DAGENS TIDSLINJE —
-Se time-for-time når lagene bør endres. Stor temperatur-forskjell i løpet
-av dagen? Få beskjed om å pakke et ekstra lag for kveldtur.
+— MORGENVARSEL, GRATIS —
+Våkn opp til dagens antrekk klart. Ingen betaling for å komme i gang.
 
-— PÅ TUR —
-Planlegger dere hytte, ski eller lang dagstur? Bytt til "På tur"-modus
-og få en samlet pakkeliste basert på 24 timers vær.
+— MED BABYORA PLUSS —
+• Fremover: se i morgen og de neste dagene, ikke bare i dag
+• Overalt: flere steder og automatisk posisjon
+• Flere barn: bytt mellom søsken på ett trykk
+• Tilpasning til plaggene dere faktisk eier
 
-— FLERE BARN —
-Bytt mellom søsken på ett trykk. Hvert barn har sin egen profil med alder,
-sted og standard-aktivitet.
+Pluss koster 49 kr/mnd eller 299 kr/år (tilsvarer 24,90 kr/mnd), med 7
+dagers gratis prøveperiode. Avslutt når som helst.
+
+— VEILEDENDE, IKKE EN FASIT —
+Anbefalingene er veiledende og erstatter ikke ditt eget skjønn eller råd fra
+helsepersonell. Du kjenner barnet best — følg alltid med.
 
 — PERSONVERN FØRST —
-Vi samler ikke posisjons-data (du velger by fra en liste). Vi sporer
-ikke deg eller barnet. Værdata kommer fra Meteorologisk institutt
-(met.no) og lagres bare midlertidig på telefonen.
-
-— PREMIUM —
-Babyora er gratis å bruke for ett barn. Med Babyora Premium får du:
-• Flere barn (søsken)
-• Alle aktivitets-modus
-• 3-døgns varsel
-• Kveldsvarsel ved værendring
-• Garderobe-tracking
-• Ull-vask-guide
-
-Premium koster 39 kr/mnd eller 299 kr/år. 7 dagers gratis prøveperiode.
-
-— OM OSS —
-Babyora er bygget av en norsk forelder, validert av helsesøster, og bruker
-faglige anbefalinger fra Babyverden og Reima. Vi vet at norsk vinter er
-en annen sport enn amerikansk T-skjorte-temperatur.
+Du velger sted fra en liste; vi sporer ikke posisjonen din. Barnedata (navn,
+alder, sted) lagres lokalt på telefonen. Værdata kommer fra met.no.
 
 Vær fra met.no.
 ```
 
-## Promo-tekst (Play Store short description, max 80 tegn)
-Norsk påkledning for barn 0–3 år. Vær + aktivitet + ull-lag. Met.no-data.
+## Play Store kort beskrivelse (max 80 tegn)
+```
+Vær-basert påkledning for barn 0–2 år. Ull, lag og «føles som» fra met.no.
+```
 
 ## Kategorier
-- **App Store iOS:** Lifestyle (primær), Helse & trening (sekundær)
+- **App Store iOS:** Livsstil (primær), Vær (sekundær)
 - **Play Store:** Foreldre (primær)
 
+> Vurdert «Helse & trening» som sekundær — droppet: helse-kategorien øker
+> Apples gransking av sikkerhets-/helsepåstander. «Vær» er tryggere og
+> tematisk presist.
+
 ## Alderskategori
-- App Store: 4+
-- Play Store: Alle aldre
-
-## Nøkkelord (iOS, max 100 tegn separert med komma)
-```
-påkledning,baby,vær,vinter,ull,fleece,vogn,foreldre,met.no,lag
-```
-
-## Skjermbilder (krav)
-
-**iPhone 6.7"/6.9" (1290×2796 px) — 3 obligatoriske:**
-1. Hovedskjerm med "X lag i dag" + avatar + lag-liste
-2. Aktivitets-velger med tur-modus highlightet
-3. Plan-skjerm med 3-døgns varsel
-
-**Anbefalte tilleggs-skjermbilder:**
-4. Vær-notater (sol-vs-skygge eller temp-fall)
-5. Tidslinje med lag-endringer
-6. Settings · Multi-barn-bytter
-
-**Genereres automatisk fra dev-preview** ved hjelp av iPhone-mockup-CSS i
-appen. Bruk Edge devtools + iPhone 16 Pro Max-emulator, screenshot fra
-hver hovedskjerm. ASC-bilder skal IKKE inneholde status bar (Apple legger
-til standard).
+- App Store: 4+ · Play Store: Alle aldre
 
 ## App Privacy (Apple-spørreskjema)
 
 | Kategori | Samles inn? | Brukes til |
 |---|---|---|
-| Kontaktinfo | Nei (med mindre kjøp) | — |
+| Kontaktinfo | Nei | — |
 | Helse & trening | Nei | — |
-| Finansiell info | Ja (via Apple IAP) | Kjøps-historikk |
-| Posisjon | Nei (vi bruker bynavn fra liste) | — |
+| Finansiell info | Ja (via Apple IAP) | Kjøpshistorikk |
+| Posisjon | Nei (bynavn fra liste) | — |
 | Brukerinnhold | Ja (barnedata: navn, alder, sted) | App-funksjonalitet |
 | Identifikatorer | Ja (anonyme push-tokens) | Push-varsler |
 | Diagnostikk | Nei (ingen tredjeparts-analytics) | — |
 
 ## TODO før innsending
-
-- [ ] App Store Connect: opprett app-record med bundle no.klemeg.app
-- [ ] Play Console: opprett app + 11-stegs Play setup (gjenbruk Ryddy-mønster)
-- [ ] Generere 3+ screenshots i 1290×2796 fra iPhone-emulator i Edge
-- [ ] Personvernerklæring publisert på en offentlig URL
-  (foreslag: klemeg.no/personvern via Vercel statisk side)
+- [ ] App Store Connect: opprett app-record, bundle `no.babyora.app`
+- [ ] Personvernerklæring publisert på `babyora.no/personvern`
 - [ ] App Privacy-spørreskjema utfylt i ASC
-- [ ] Apple Paid Apps Agreement (har du fra Ryddy)
-- [ ] Google Play Console-konto + tester-grupper
+- [ ] Apple Paid Apps Agreement signert
+- [ ] IAP-produkter opprettet (se `docs/APP-STORE-IAP-SETUP.md`)
+- [ ] Skjermbilder 1290×2796 (se `docs/APP-STORE-SCREENSHOTS.md`)
 
 ---
 
-## English translations (for international locales — lower priority)
+## Rettinger mot forrige versjon (hvorfor)
+- **0–3 år → 0–24 måneder:** matcher låst v1-scope (AGENTS.md / engine 2-plan).
+- **Fjernet «validert av helsesøster / Reima / Babyverden»:** usant nå — v1
+  lanseres uten fagsignatur, med veiledende-disclaimer. Falske ekspert-
+  påstander ville brutt både sannferdighet og App Store-retningslinjer.
+- **Fjernet «ingen andre apper gjør det»:** absolutt konkurransepåstand.
+- **Premium-liste alignet til «Fremover, overalt og sammen»** + kun bygde
+  funksjoner (familiedeling = R9, ikke lovet som tilgjengelig ennå).
+- **Morgenvarsel flyttet til gratis** (låst kapabilitetskontrakt).
+- **Navn/URL:** klemeg → babyora.
 
-**App name:** Babyora
-**Subtitle:** Dressing for the little ones
+---
+
+## English (international locales — lower priority)
+
+**App name:** `Babyora – Baby dressing`
+**Subtitle:** `Weather-smart layers for baby`
+**Keywords:** `infant,winter,clothes,cold,temperature,fleece,stroller,parents,outdoor,newborn,warmth,season,met`
 **Description (short):**
-Norwegian-first dressing app for parents of 0–3 year olds. Live weather
-from met.no combined with proper wool-layering logic. Activity-aware:
-stroller, baby carrier, outdoor play, and day-trips each get different
-recommendations. Multi-child support. Privacy by default.
+Babyora reads the weather where you are and shows a complete outfit for
+children 0–24 months — wool base, right outer layer, the little extras.
+Free every morning; Plus adds the days ahead, more places and more children.
+Advisory, not a substitute for your own judgment. Weather from met.no.
