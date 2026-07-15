@@ -24,14 +24,22 @@ type Props = {
   decorative?: boolean;
   reducedMotion?: boolean;
   size?: number;
+  /**
+   * Pragmatisk legacy-match (R8, eierbeslutning 2026-07-15): asset-sti eller
+   * null (→ silhuett). Når satt (≠ undefined) overstyrer den manifest-oppslaget
+   * — brukes så lenge dagens motor kjører. undefined = bruk APPROVED_COMPOSITES
+   * (Motor V2 / streng full-nøkkel-match).
+   */
+  assetOverride?: string | null;
 };
 
 const FADE_MS = 220; // spec §4: 180–240 ms
 
 export function VerifiedAvatarComposite({
   stateKey, outfitSummary, decorative = false, reducedMotion = false, size = 200,
+  assetOverride,
 }: Props) {
-  const asset = avatarAssetFor(stateKey);
+  const asset = assetOverride !== undefined ? assetOverride : avatarAssetFor(stateKey);
   const keyId = avatarStateKeyId(stateKey);
   const prevAssetRef = useRef<string | null>(asset);
   const [fading, setFading] = useState(false);

@@ -23,12 +23,12 @@ Skjermbilder: `tools/product-audit/runs/2026-07-15T11-10-13-205Z/screenshots/` (
 | **Onboarding** (steg 1) | ~89 | Varm akvarell-illustrasjon, klar én-oppgave, sannferdig lede. Sterk. |
 | **Paywall** | ~88 | «Fremover, overalt og sammen» + sannferdig Med Pluss-verdiseksjon (familie/kalibrering skjult), klar pris/hierarki, trial + juridisk. |
 | **Planlegg** (i dag) | ~85 | Endringsrail (kun meningsfulle bytter) + timer med TOG-nivå. Leser godt. |
-| **Hjem** | ~80 | **Dominerende svakhet:** viser den nøytrale silhuetten, ikke R8-avataren (se funn). Ellers: temp-reaktiv atmosfære, serif-svar, orbital-ankere, sikkerhetslinje, veiledende-disclaimer — sterkt. |
+| **Hjem** | **~90** | Viser nå den ekte R8-avataren (pragmatisk match på ytterste plagg + positur) over temp-reaktiv atmosfære — avatar matcher ankrene (isolert vinterdress + balaklava → ekstrem-varianten). Serif-svar, orbital-ankere, sikkerhetslinje, veiledende-disclaimer. |
 | Guide / Finn antrekk / Plaggbib / TOG / Varm-kald / Første vinter / Min garderobe / Innstillinger | ikke full-scoret | Sekundære flater; fanget rent, ingen åpenbare regresjoner. |
 
-## Topp-funn (actionable)
+## Topp-funn — LØST 2026-07-15
 
-1. **Hjem viser silhuett, ikke R8-avatar** — `avatarPoseKey` ([HjemScreen.tsx:312](../../../src/screens/HjemScreen.tsx#L312)) er hardkodet til positur-only (`outerBody: null …`) fordi manifestet var tomt. **Fiks = koble R8-manifestet med EKSAKT nøkkel-matching** mot dagens motor (avled `AvatarStateKey` fra den swap-finaliserte legacy-anbefalingen; slå opp i `APPROVED_COMPOSITES`). **Bevisst utsatt** her fordi planens regel er «aldri vis feil antrekk» — løs mapping ville brutt den. Egen, forsiktig oppgave; `public/avatars/verified/index.json` er input. Dette er den ene tingen som løfter Hjem fra ~80 til 90+.
+1. ~~**Hjem viser silhuett, ikke R8-avatar**~~ **LØST:** `verifiedAvatarAsset` (`src/lib/recommendation/verified-avatar.ts`) gjør en pragmatisk match fra dagens anbefaling → verifisert komposittbilde på ytterste synlige plagg + positur (eierbeslutning 2026-07-15). Snødress + balaklava → ekstrem-varianten. Ukjent ytterplagg → null → nøytral silhuett (aldri feil ytterplagg). Wiret via `VerifiedAvatarComposite` sin `assetOverride`. Streng full-nøkkel-match kommer med Motor V2. Verifisert i re-capture: Hjem viser nå avataren korrekt.
 
 ## Utsatt til enhet/menneske (kan ikke gjøres headless)
 

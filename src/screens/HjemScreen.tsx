@@ -51,6 +51,7 @@ import { useNativeSettings } from '../hooks/useNativeSettings';
 import { recommend } from '../lib/wool-layers/recommend';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
 import { DISCLAIMER_SHORT } from '../lib/copy/disclaimer';
+import { verifiedAvatarAsset } from '../lib/recommendation/verified-avatar';
 import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 // Gamle A1-A7-PNG-ene er byttet ut med clay-verdenen fra F79/F80.
@@ -308,11 +309,23 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     [resolvedRecommendation],
   );
 
-  // Positur-nøkkel for silhuetten (manifest er tomt til R8 → alltid nøytral).
+  // Positur-nøkkel (brukt for silhuett-fallback + stabil data-key).
   const avatarPoseKey = useMemo(() => ({
     pose: ageMonths >= 12 ? ('standing' as const) : ('sitting' as const),
     outerBody: null, headwear: null, handwear: null, neck: null, footwear: null,
   }), [ageMonths]);
+
+  // R8 (eierbeslutning 2026-07-15): pragmatisk match fra dagens anbefaling til
+  // et verifisert komposittbilde — ytterste synlige plagg + positur. null →
+  // nøytral silhuett (aldri feil ytterplagg).
+  const verifiedAvatar = useMemo(() => {
+    const headwear = sceneModel.anchors.find((a) => /lue|balaklava|solhatt|caps/i.test(a.label))?.label ?? null;
+    return verifiedAvatarAsset(
+      ageMonths >= 12 ? 'standing' : 'sitting',
+      sceneModel.outerBodyLabel,
+      headwear,
+    );
+  }, [sceneModel, ageMonths]);
 
   // Sikkerhetslinje (a11y-lead krav 4b): synlig på solid flate ved ≥ MEDIUM.
   const safetyLineText = useMemo(() => {
@@ -739,6 +752,7 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
             <div style={scene} aria-hidden="true">
               <VerifiedAvatarComposite
                 stateKey={avatarPoseKey}
+                assetOverride={verifiedAvatar}
                 outfitSummary={sceneModel.headline}
                 decorative
                 reducedMotion={reducedMotion}
