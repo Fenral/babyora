@@ -1,0 +1,36 @@
+{
+  "source_path": "C:\\Users\\siver\\Documents\\Apper 2026\\wool-app-main\\docs\\superpowers\\plans\\2026-07-19-planlegg-dagslinjen-gsd-implementation-plan.md",
+  "type": "PRD",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Planlegg / Dagslinjen — GSD implementation and verification plan",
+  "summary": "Implementation and verification requirements for Planlegg's Dagslinjen, including truthful planning, exact future Outfit context, Free/Plus gating, native interaction, and independent GSD review.",
+  "scope": [
+    "Planlegg",
+    "Dagslinjen",
+    "GSD",
+    "future Outfit context",
+    "Free/Plus gating",
+    "native interaction",
+    "verification"
+  ],
+  "cross_refs": [
+    "AGENTS.md",
+    "docs/DECISION-LOG.md",
+    "docs/PROSESS-PLAN-TIL-KODE.md",
+    "docs/CURRENT-HANDOFF.md",
+    "docs/superpowers/plans/2026-07-13-babyora-ui-90-plus-plan.md",
+    "docs/superpowers/specs/2026-07-13-babyora-visual-signature-design.md",
+    "docs/superpowers/specs/2026-07-13-babyora-90-plus-current-app-design.md",
+    "PROJECT.md",
+    "REQUIREMENTS.md",
+    "ROADMAP.md",
+    "STATE.md",
+    "UI-SPEC.md",
+    "PLAN.md",
+    "<phase>-UAT.md"
+  ],
+  "locked": false,
+  "precedence": 2,
+  "notes": ""
+}

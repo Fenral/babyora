@@ -1,0 +1,32 @@
+{
+  "source_path": "C:\\Users\\siver\\Documents\\Apper 2026\\wool-app-main\\docs\\DECISION-LOG.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Decision log",
+  "summary": "Records current product, design, safety, pricing, process, avatar, navigation, marketing, and repository decisions that override older exploratory material.",
+  "scope": [
+    "Dagslinjen",
+    "Antrekkskartet",
+    "risk-based process",
+    "pricing",
+    "Babyora",
+    "recommendation engine",
+    "avatars",
+    "paywall",
+    "onboarding",
+    "design system",
+    "navigation",
+    "marketing",
+    "repository"
+  ],
+  "cross_refs": [
+    "docs/PROSESS-PLAN-TIL-KODE.md",
+    "AGENTS.md",
+    "verification-protocol.md",
+    "STATUS.md"
+  ],
+  "locked": false,
+  "precedence": 0,
+  "notes": ""
+}

@@ -1,0 +1,28 @@
+{
+  "source_path": "C:/Users/siver/Documents/Apper 2026/wool-app-main/docs/superpowers/specs/2026-07-13-babyora-visual-signature-design.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Babyora Visual Signature — Protective Morning Instrument",
+  "summary": "Defines Babyora's protective-morning visual signature, component behavior, material hierarchy, motion, assets, accessibility, and acceptance criteria.",
+  "scope": [
+    "temperature instrument",
+    "verified outer-outfit avatar",
+    "textile garment stack",
+    "Plan change rail",
+    "Warm or Cold gauge",
+    "Family care circle",
+    "Babyora widget",
+    "paywall transformation",
+    "navigation",
+    "material hierarchy",
+    "motion and haptics",
+    "avatar assets"
+  ],
+  "cross_refs": [
+    "2026-07-13-babyora-90-plus-current-app-design.md"
+  ],
+  "locked": false,
+  "precedence": 3,
+  "notes": ""
+}

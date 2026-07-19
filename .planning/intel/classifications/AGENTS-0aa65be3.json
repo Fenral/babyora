@@ -1,0 +1,23 @@
+{
+  "source_path": "C:\\Users\\siver\\Documents\\Apper 2026\\wool-app-main\\AGENTS.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Babyora repository instructions",
+  "summary": "Repository-level instructions defining Babyora's source of truth, product boundary, change-control policy, and Git synchronization requirements.",
+  "scope": [
+    "Babyora",
+    "product boundary",
+    "change policy",
+    "Git synchronization"
+  ],
+  "cross_refs": [
+    "docs/CLAUDE-START-HERE.md",
+    "docs/PROSESS-PLAN-TIL-KODE.md",
+    "docs/superpowers/plans/2026-07-13-babyora-verification-protocol.md",
+    "docs/CURRENT-HANDOFF.md"
+  ],
+  "locked": false,
+  "precedence": 0,
+  "notes": ""
+}

@@ -44,6 +44,15 @@ Non-goals for this package:
 The existing untracked `docs/screenshots/` directory is user work and stays out
 of every candidate commit unless the owner explicitly changes its status.
 
+### Deferred visual capture during implementation
+
+Owner instruction 2026-07-19: do not produce new screenshots or video from the
+app while the implementation is still changing. Waves may use DOM assertions,
+component tests, accessibility checks and browser interaction without persisted
+visual media. The deterministic screenshot matrix, video evidence and final
+90+ visual PASS are deferred until a stable code candidate exists. GSD must
+record the visual gate as pending rather than infer PASS from code tests.
+
 ## 3. Why this is a mixed-risk package
 
 Pure layout, component, navigation, motion and accessibility changes are

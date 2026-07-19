@@ -1,0 +1,21 @@
+{
+  "source_path": "C:/Users/siver/Documents/Apper 2026/wool-app-main/docs/superpowers/specs/2026-07-13-babyora-90-plus-current-app-design.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Babyora 90+ — Master Product and Experience Design",
+  "summary": "Specifies Babyora’s 90+ product experience, free/Plus capabilities, family sharing, personal calibration, smart notifications, widgets, data flows, security, and release verification.",
+  "scope": [
+    "Babyora",
+    "Babyora Plus",
+    "page families",
+    "family network",
+    "personal temperature calibration",
+    "smart notifications",
+    "widgets"
+  ],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": 4,
+  "notes": ""
+}
