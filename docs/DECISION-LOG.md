@@ -4,6 +4,60 @@ This log records current product decisions that override older exploratory mater
 
 ## 2026-07-19
 
+### Planlegg låses til «Dagslinjen»
+
+**Decision:** Planlegg skal bygges som ett rolig, sammenhengende
+planleggingsinstrument kalt **Dagslinjen**, ikke som et kortbasert dashboard.
+Skjermen bruker én vertikal hovedscroll og én kontinuerlig linje direkte på den
+eksisterende temperaturreaktive flaten. Den store ytterrammen, repeterte hvite
+hendelseskort og duplisert time-for-time-liste skal ikke være
+hovedpresentasjonen.
+
+Hierarkiet er låst slik:
+
+1. Synlig skjermtittel «Planlegg» med kompakt barn-/stedskontekst.
+2. Én behersket kontroll for «I dag / Uke / Snart».
+3. Ett dominant svar, for eksempel «Samme antrekk til kl. 10» og neste
+   relevante handling.
+4. Dagslinjen viser bare tidspunkter hvor anbefalingen faktisk endres.
+5. Bare valgt markør utvides i linjen, med én verbdrevet handling, inntil tre
+   relevante plagg og «Se hele antrekket» ved behov.
+6. Vær forklarer hvorfor handlingen endres; komplett vær-/timeoversikt er
+   sekundær og kan åpnes ved behov.
+
+Linjen er semantisk, ikke dekorativ. I Antrekkskartet kobler linjer plagg til
+kroppen; i Planlegg kobler Dagslinjen antrekket gjennom tiden. Markørform og
+tekst kommuniserer legg til, ta av, bytt, regnbeskyttelse, sted eller
+forberedelse. Farge er sekundær.
+
+Det eksisterende Morgennatt-/temperatursystemet beholdes og raffineres. Mint
+reserveres for valg og handling, og lagfarger brukes bare når de forklarer
+plaggrekkefølge. Bunnmenyen bruker fylt/forsterket ikon, sterkere tekst og en
+rolig mintflate; ingen permanent helomsluttende fokusramme.
+
+**Truth constraints før visuell polering:**
+
+- «Time for time» og «hele dagen» krever faktisk heldekkende timegrunnlag;
+  ellers snevres ordlyden inn.
+- Byttehendelser skiller eksplisitt mellom plagg som tas av og plagg som tas på;
+  systemkomprimering som «+8 til» brukes ikke som hovedhandling.
+- En fremtidig rad åpner alltid akkurat radens dato, sted, aktivitet, vær og
+  anbefaling.
+- Funksjonslignende sted-, varsel- og hendelseskontroller vises bare når de har
+  en sann handling.
+- Skjermen har én `<main>`, én vertikal scroll-eier, `focus-visible` for
+  tastaturfokus, 44-punkts mål og validerte kontraster i lys, mørk og alle
+  temperaturtilstander.
+- Haptikk: `selection` ved visnings-/datovalg og lett respons når en markør
+  åpnes. Bevegelse er rolig, kort og har umiddelbar reduced-motion-variant.
+
+**Reason:** Den eksisterende idéen om å vise bare meningsfulle
+antrekksendringer er sterk, men dagens kortstabel begraver svaret og oppleves
+som mobil web. Dagslinjen gjør Babyoras intelligens, ikke komponentkromen, til
+skjermens hovedperson. Retningen ble eksplisitt godkjent av eier («Kjøper det»)
+etter en read-only design- og kildekodegjennomgang. Dagens utførelse ble vurdert
+til omtrent 53/100; målet er dokumentert 90+ uten å bytte designsystem.
+
 ### Antrekkskartet erstatter den delvise ringen på antrekksdetaljen
 
 **Decision:** Antrekksdetaljen skal bruke et skalerbart **Antrekkskart** med

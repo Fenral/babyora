@@ -1,7 +1,33 @@
 # Current handoff
 
-**Updated:** 2026-07-14  
-**Phase:** Implementation started — first package (R1→R2→R3) complete and independently verified.
+**Updated:** 2026-07-19
+**Phase:** Pre-coding, screen-by-screen design convergence. Antrekkskartet and Planlegg/Dagslinjen are owner-approved; app implementation is not authorized by these planning decisions.
+
+## 2026-07-19: Planlegg-retningen låst
+
+Eier godkjente («Kjøper det») den read-only gjennomgangen av Planlegg. Den
+låste retningen er **Dagslinjen**:
+
+- én synlig `Planlegg`-tittel og kompakt barn-/stedskontekst;
+- én behersket `I dag / Uke / Snart`-kontroll;
+- ett dominant svar om hvor lenge antrekket gjelder og hva som skjer neste;
+- én kontinuerlig, semantisk linje direkte på temperaturflaten;
+- bare reelle antrekksendringer får markør;
+- bare valgt markør utvides, med én handling, inntil tre plagg og tilgang til
+  hele antrekket;
+- ingen mega-card, repeterte hvite hendelseskort eller konkurrerende
+  time-for-time-liste i hovedhierarkiet;
+- eksisterende Morgennatt-designsystem beholdes og raffineres.
+
+Før senere implementering må data-/handlingskontrakten rettes: fire samplede
+tidspunkter kan ikke kalles «time for time» eller bevise «hele dagen»; `swap`
+må skille av/på; og fremtidige rader må åpne sin egen dato/vær/aktivitet/
+anbefaling. Døde sted-/varselkontroller skal ikke presenteres som funksjoner.
+
+Detaljene og akseptansekriteriene er lagt inn i `DECISION-LOG.md` og Task 5 i
+`docs/superpowers/plans/2026-07-13-babyora-ui-90-plus-plan.md`. Ingen appkode er
+endret. Neste planleggingssteg er å lage og stressteste den låste skjermmodellen
+visuelt før en separat implementeringspakke eventuelt godkjennes.
 
 ## 2026-07-14: Første implementeringspakke FERDIG (R1→R2→R3)
 

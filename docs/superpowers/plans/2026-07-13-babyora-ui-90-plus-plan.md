@@ -151,12 +151,21 @@ export type TemperatureInstrumentProps = {
 
 **Interfaces:** `deriveChangeEvents(recommendations)` returns only semantic fingerprint changes; `buildSoonAdvice(child, homeClimate, date)` returns `mustHave`, `niceToHave`, and `notYet` with cautious size language.
 
-- [ ] Write failing fixtures for unchanged-day compression, pickup-time garment addition, tomorrow comparison, future-context drill, and 4–6 week Soon groups.
-- [ ] Implement “I dag / Uke / Snart”; free sees today plus a real future teaser, Plus sees future recommendations and Soon.
-- [ ] Render one vertical change rail with markers only for add/remove/rain protection/location/preparation; collapse unchanged periods and expose marker meaning through icon plus text.
-- [ ] Ensure a future row passes its own weather/recommendation context into Outfit.
+- [ ] Write failing truth fixtures before styling: complete-hour coverage versus sampled-hour wording; unchanged-day compression; add/remove; a true swap with separate removed/added garments; rain; pickup-time change; tomorrow comparison; exact future-context drill; and 4–6 week Soon groups.
+- [ ] Define one persisted planning context for child, date, time, place, activity and recommendation. A tapped future event must pass its own full context into Outfit; it must never open the current recommendation as a fallback.
+- [ ] Permit “Time for time”, “hele dagen” and “samme antrekk til …” only when the evaluated forecast coverage supports the claim. Otherwise use narrower, truthful copy.
+- [ ] Generate parent-facing action sentences from semantic deltas: `Ta på`, `Ta av`, `Bytt fra … til …`, `Ta med` or `Forbered`. Never mix removed and added garments after one `Bytt til`, and never lead with engine compression such as `+8 til`.
+- [ ] Implement the locked **Dagslinjen** hierarchy: visible `Planlegg` title; compact child/place context; restrained `I dag / Uke / Snart`; dominant current verdict and next action; one continuous vertical rail directly on the temperature-reactive canvas.
+- [ ] Remove the mega-card/repeated-card composition. Only recommendation-changing moments receive markers; unchanged spans are quiet line captions. Only the selected event expands inline, showing one action sentence, up to three garment thumbnails and `Se hele antrekket` when more detail exists.
+- [ ] Integrate time, temperature and weather cause as supporting information on the same rail. Demote the complete forecast to a secondary disclosure instead of rendering a competing duplicate list.
+- [ ] Use the line as a shared semantic signature with Antrekkskartet: every line communicates a real relationship; marker form plus text carries meaning and color remains secondary.
+- [ ] Implement “I dag / Uke / Snart”; Free receives the complete today-at-home Dagslinje plus one truthful future example, while Plus receives future days, current/other places and Soon.
 - [ ] Replace Min Garderobe entry points with Snart; retain only lightweight “har allerede” marks for current suggestions.
-- [ ] Run focused tests, screenshots, build, and audit; expect Plan baseline 67.9 to improve without hiding free today.
+- [ ] Remove dead affordances. Place, notification and event controls render as interactive only when their actions are wired and truthful.
+- [ ] Keep one app-level `<main>` and one vertical scroll owner. Validate 44 pt targets, `focus-visible`, label-in-name, VoiceOver/TalkBack order, large text, and every foreground/background pair in light, dark, cold, mild and warm themes.
+- [ ] Apply the locked interaction grammar: `selection` haptic for view/date changes, light haptic for event expansion, calm inline motion around 200–280 ms, no decorative bounce, and instant reduced-motion state.
+- [ ] Capture deterministic states at 390 × 844 for: no changes, one change, many changes, rain, location change, extreme cold, extreme heat, Free future teaser, Plus week, Soon, dark mode, 200% text and reduced motion.
+- [ ] Run focused tests, screenshots, build and the governing risk-based audit. Score Planlegg with the shared rubric and iterate until the enabled states reach documented 90+ without hiding Free today.
 - [ ] Commit `feat: rebuild planning around meaningful changes`.
 
 ### Task 6: Guide and knowledge surfaces
