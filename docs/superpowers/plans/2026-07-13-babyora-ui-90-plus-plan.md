@@ -147,6 +147,11 @@ export type TemperatureInstrumentProps = {
 
 ### Task 5: Planlegg and Snart
 
+**Detailed GSD execution plan:**
+`docs/superpowers/plans/2026-07-19-planlegg-dagslinjen-gsd-implementation-plan.md`.
+It governs Task 5 model/effort routing, risk-separated commits, GSD review/UAT
+loops and the 90+ package gate.
+
 **Files:** Modify `src/screens/UkeScreen.tsx`; create `src/screens/SnartScreen.tsx`, `src/components/planning/PlanChangeRail.tsx`, `src/lib/planning/change-events.ts`, `src/lib/planning/soon.ts` plus tests.
 
 **Interfaces:** `deriveChangeEvents(recommendations)` returns only semantic fingerprint changes; `buildSoonAdvice(child, homeClimate, date)` returns `mustHave`, `niceToHave`, and `notYet` with cautious size language.

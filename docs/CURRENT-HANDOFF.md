@@ -29,6 +29,15 @@ Detaljene og akseptansekriteriene er lagt inn i `DECISION-LOG.md` og Task 5 i
 endret. Neste planleggingssteg er å lage og stressteste den låste skjermmodellen
 visuelt før en separat implementeringspakke eventuelt godkjennes.
 
+**GSD-/modellplan:** Den detaljerte implementerings- og verifikasjonsplanen er
+`docs/superpowers/plans/2026-07-19-planlegg-dagslinjen-gsd-implementation-plan.md`.
+Den deler high-risk sannhet/fremtidskontekst/tilgang (Fable 5 Extra + separat
+verifier) fra standard UI (Sonnet 5 High), bruker Codex som ekstern motleser og
+krever GSD code review, verifier, UI-audit, UAT og 90+ evidens. Manifestet
+`docs/gsd/planlegg-ingest.yml` er klart, men GSD-ingest er ikke kjørt fordi
+workflowen krever en egen dokumentliste-/konfliktgodkjenning. Ingen kode er
+autorisert eller endret.
+
 ## 2026-07-14: Første implementeringspakke FERDIG (R1→R2→R3)
 
 Eier godkjente pakken eksplisitt («kjør»). Alle tre pakker er committet lokalt på main og uavhengig verifisert (se `docs/superpowers/evidence/packages/r1-r3-first-package.md`):
