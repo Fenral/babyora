@@ -125,17 +125,21 @@ export type TemperatureInstrumentProps = {
 
 ### Task 4: Immediate Home and truthful Outfit
 
-**Files:** Modify `src/screens/HjemScreen.tsx`, `src/screens/PaakledningScreen.tsx`, `src/components/AtmosphereBackground.tsx`, `src/components/PlaggDetailSheet.tsx`; create `src/components/outfit/VerifiedAvatarComposite.tsx`, `AvatarStateResolver.ts`, `GarmentStack.tsx` and tests; add focused Playwright screenshots.
+**Files:** Modify `src/screens/HjemScreen.tsx`, `src/screens/PaakledningScreen.tsx`, `src/components/AtmosphereBackground.tsx`, `src/components/PlaggDetailSheet.tsx`; create `src/components/outfit/VerifiedAvatarComposite.tsx`, `AvatarStateResolver.ts`, `OutfitMap.tsx`, `GarmentStack.tsx` and tests; add focused Playwright screenshots.
 
 **Interfaces:** Both screens consume the same `RecommendationView`; avatar selection consumes only `avatarStateKey` and an approved manifest of up to 24 composites or uses an explicitly neutral fallback.
 
 - [ ] Write failing tests for automatic Home answer, “Se detaljer”, plagg count, next meaningful change, cached/offline label, and identical Home/Outfit fingerprint.
 - [ ] Implement stable loading/cached/error/location-fallback states and remove the mandatory tap before seeing the answer.
-- [ ] Make Outfit use “Rekkefølge · innerst først”, compact high-count layouts, consequences for garment swaps, and a calm 44-point close control.
+- [ ] Make Outfit use “Ta på innerst først”, consequences for garment swaps, and a calm 44-point close control.
+- [ ] Build `OutfitMap` with the avatar centered and every recommended garment visible as a numbered node in inner-to-outer order. Every node has a routed connector to the correct body region; the selected connector is emphasized and the others remain visible at low contrast.
+- [ ] Scale deterministically by garment count: 1–4 nodes may show thumbnail, number and short name; 5–10 use two compact node rails around the avatar with all thumbnails/numbers visible and only the selected node expanded. Never hide garments behind `+N`.
+- [ ] Cross-highlight node and ordered-list row on tap/focus. Preserve a logical screen-reader order, 44-point targets, non-color selection cues, largest-text fallback and collision-safe connector routing.
+- [ ] Make the garment row open its explanation. Render an explicit `Se alternativ` action only when a real alternative exists; verify that it opens the comparison/swap surface and omit it entirely otherwise.
 - [ ] Render the verified final outermost outfit immediately. Dressing order is communicated by the static “innerst først” list; do not animate hidden underlayers onto or through the final outer garment.
 - [ ] Crossfade only between two verified final composites after a meaningful visible-state change, 180–240 ms; reduced motion swaps immediately.
 - [ ] Select the sitting pose for 0–11 months and standing pose for 12–24 months. Use engine footwear rules without creating a third body pose.
-- [ ] Replace generic garment cards with one overlapping textile stack; lift only the active row and keep texture confined to thumbnails/category tabs.
+- [ ] Replace generic garment cards with one connected ordered sequence below the Antrekkskart; lift only the active row and keep texture confined to garment thumbnails.
 - [ ] Verify temperature atmosphere uses perceived temperature and remains readable at coldest/hottest fixtures.
 - [ ] Verify no weather, stroller, sleep, or activity context is baked into avatar images and no unverified composite is displayed.
 - [ ] Run focused tests, `npm test`, Playwright screenshots at 390 × 844, and audit prepare/finalize; expect no regression.

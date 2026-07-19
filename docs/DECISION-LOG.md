@@ -2,6 +2,38 @@
 
 This log records current product decisions that override older exploratory material.
 
+## 2026-07-19
+
+### Antrekkskartet erstatter den delvise ringen på antrekksdetaljen
+
+**Decision:** Antrekksdetaljen skal bruke et skalerbart **Antrekkskart** med
+barnet som visuelt sentrum. Hvert anbefalte plagg vises samtidig som en
+nummerert node i rekkefølgen innerst først. En forbindelseslinje fra hver node
+til riktig kroppsområde er en obligatorisk del av informasjonsmodellen, ikke
+dekorasjon. Valgt plagg får tydeligere linje og utvidet navn; øvrige linjer er
+lavkontrast, men fortsatt synlige. Den gamle delvise/dekorative orbit-ringen
+brukes ikke på antrekksdetaljen.
+
+Ved 1–4 plagg kan nodene vise bilde, nummer og kort navn. Ved 5–10 plagg går
+kartet over til to kompakte noderekker rundt avataren: alle plagg, nummer og
+kroppskoblinger forblir synlige, mens bare valgt node viser fullt navn. Ingen
+`+N flere` eller skjulte plagg tillates. Trykk på node og tilsvarende listrad
+skal kryssmarkere hverandre. Farge er sekundær; nummer, plaggform, tekst og
+tilgjengelig navn bærer betydningen.
+
+Avataren viser fortsatt bare det verifiserte ytterste synlige antrekket og
+tilbehøret. Skjulte inner- og mellomplagg forklares av Antrekkskartet og den
+ordnede listen; de animeres aldri gjennom yttertøyet. Listen under kartet bruker
+overskriften «Ta på innerst først». `Se alternativ` er en eksplisitt handling
+kun når et reelt alternativ finnes; plaggraden åpner forklaringen. Ingen død
+alternativhandling vises. Bakgrunnen bruker eksisterende temperaturreaktive
+tokens basert på opplevd temperatur.
+
+**Reason:** Dagens ring viste bare deler av anbefalingen og gjorde skjulte lag
+usynlige, mens en død/uklar alternativhandling svekket tilliten. Antrekkskartet
+gjør avatar, kroppsområde, plagg og påkledningsrekkefølge til ett sammenhengende
+system som skalerer fra lette sommerantrekk til plaggintensive vinterantrekk.
+
 ## 2026-07-15
 
 ### Ny styringsprosess: risikobasert plan→kode (erstatter uniform verifikasjon)
