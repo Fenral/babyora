@@ -7,7 +7,36 @@ export type OnboardingBabyHeroProps = {
   reducedMotion: boolean;
   playMotion?: boolean;
   onMotionDone?: () => void;
+  variant?: 'signature' | 'compact' | 'welcome';
+  context?: 'birthday' | 'location' | 'ready';
 };
+
+function ContextMark({ context }: { context: NonNullable<OnboardingBabyHeroProps['context']> }): ReactElement {
+  if (context === 'birthday') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 3v3M17 3v3M4.5 9h15M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+        <path d="M8 13h3v3H8z" />
+      </svg>
+    );
+  }
+
+  if (context === 'location') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+        <circle cx="12" cy="10" r="2.5" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8 12 2.6 2.6L16.5 9" />
+    </svg>
+  );
+}
 
 /**
  * Babyoras korte signaturøyeblikk i første onboardingsteg.
@@ -20,6 +49,8 @@ export function OnboardingBabyHero({
   reducedMotion,
   playMotion = true,
   onMotionDone,
+  variant = 'signature',
+  context,
 }: OnboardingBabyHeroProps): ReactElement {
   const [showVideo, setShowVideo] = useState(playMotion && !reducedMotion);
   const shouldShowVideo = showVideo && !reducedMotion;
@@ -36,8 +67,10 @@ export function OnboardingBabyHero({
   }, [finishMotion, shouldShowVideo]);
 
   return (
-    <div className="ob-baby-hero" data-hero="logo">
-      <span className="ob-baby-wordmark" data-hero="wordmark">Babyora</span>
+    <div className={`ob-baby-hero ${variant}`} data-hero={variant === 'signature' ? 'logo' : undefined}>
+      {variant === 'signature' && (
+        <span className="ob-baby-wordmark" data-hero="wordmark">Babyora</span>
+      )}
       <img
         className="ob-baby-media ob-baby-poster"
         src={POSTER_SRC}
@@ -63,6 +96,11 @@ export function OnboardingBabyHero({
         />
       )}
       <span className="ob-baby-frame" aria-hidden="true" />
+      {context && (
+        <span className={`ob-baby-context ${context}`} aria-hidden="true">
+          <ContextMark context={context} />
+        </span>
+      )}
     </div>
   );
 }

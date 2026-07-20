@@ -107,6 +107,10 @@ async function main(): Promise<void> {
 
       await page.locator('#ob-name-input').fill('Test');
       await page.getByRole('button', { name: /Fortsett/ }).click();
+      await page.locator('.ob-baby-hero.compact .ob-baby-poster').waitFor({ state: 'visible' });
+      if (await page.locator('.ob-baby-video').count()) {
+        fail('onboarding: signaturvideoen skal ikke repeteres paa senere steg');
+      }
       await page.getByRole('button', { name: 'Tilbake' }).click();
       await page.getByRole('heading', { name: 'Hva heter babyen?' }).waitFor();
 

@@ -1,7 +1,32 @@
 # Current handoff
 
 **Updated:** 2026-07-20
-**Phase:** Onboarding-signaturen er implementert, verifisert og pushet. Planlegg/Dagslinjen forblir en separat arbeidsstrøm.
+**Phase:** Babyora-babyen er nå den gjennomgående onboardingfiguren. Planlegg/Dagslinjen forblir en separat arbeidsstrøm.
+
+## 2026-07-20: Én visuell figur gjennom hele onboardingen
+
+Eier ba om å erstatte de gamle onboardingbildene og vurdere om
+signaturanimasjonen kunne brukes på alle sidene. Den valgte løsningen beholder
+Babyora-babyen gjennom steg 1–5, men spiller den fulle introduksjonsfilmen bare
+én gang. Senere steg bruker det rolige sluttbildet med en kontekstmarkør for
+fødselsdato, sted eller ferdig. Dette gir kontinuitet uten at bevegelsen starter
+på nytt og konkurrerer med kalender, stedssøk og sammendrag.
+
+De tidligere akvarellbildene er ikke lenger referert fra onboardingflyten.
+Steg 2–4 bruker en kompakt 156 px figur, mens velkomststeget bruker en større
+224 px variant. Videoens autoplay-, redusert-bevegelse- og fallbackkontrakt er
+uendret.
+
+**Verifisering før push:**
+
+- `npm run lint`: PASS;
+- `npm test`: 57 filer / 571 tester PASS;
+- `npm run build`: PASS for hovedapp og bare-variant;
+- `npm run e2e`: 5/5 PASS, inkludert at videoen ikke repeteres på senere steg.
+
+Push til `origin/main` utløser `ios-internal` i `codemagic.yaml`, som bygger og
+sender til TestFlight. Android-workflowen er fortsatt manuell etter gjeldende
+repo-konfigurasjon.
 
 ## 2026-07-20: Babyora-baby implementert i første onboardingsteg
 

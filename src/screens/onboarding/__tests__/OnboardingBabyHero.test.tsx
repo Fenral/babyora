@@ -30,4 +30,22 @@ describe('OnboardingBabyHero', () => {
     expect(html).toContain('/illustrations/onboarding/babyora-intro-v3.webp');
     expect(html).not.toContain('<video');
   });
+
+  it('bruker den rolige babyfiguren med kontekstmarkør på senere steg', () => {
+    const html = renderToStaticMarkup(
+      <OnboardingBabyHero
+        reducedMotion={false}
+        playMotion={false}
+        variant="compact"
+        context="birthday"
+      />,
+    );
+
+    expect(html).toContain('ob-baby-hero compact');
+    expect(html).toContain('ob-baby-context birthday');
+    expect(html).toContain('/illustrations/onboarding/babyora-intro-v3.webp');
+    expect(html).not.toContain('/illustrations/onboarding/onboarding-step2-birthday.png');
+    expect(html).not.toContain('<video');
+    expect(html).not.toContain('>Babyora<');
+  });
 });

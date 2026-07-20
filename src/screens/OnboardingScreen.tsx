@@ -683,9 +683,12 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
           {step === 2 && (
             <>
-              <div className="ob-illu" aria-hidden="true">
-                <img src="/illustrations/onboarding/onboarding-step2-birthday.png" alt="" />
-              </div>
+              <OnboardingBabyHero
+                reducedMotion={reducedMotion}
+                playMotion={false}
+                variant="compact"
+                context="birthday"
+              />
 
               <div className="ob-copy">
                 <p className="ob-eyebrow">Alder</p>
@@ -715,9 +718,12 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
           {step === 3 && (
             <>
-              <div className="ob-illu" aria-hidden="true">
-                <img src="/illustrations/onboarding/onboarding-step3-location.png" alt="" />
-              </div>
+              <OnboardingBabyHero
+                reducedMotion={reducedMotion}
+                playMotion={false}
+                variant="compact"
+                context="location"
+              />
 
               <div className="ob-copy">
                 <p className="ob-eyebrow">Hvor bor dere?</p>
@@ -805,9 +811,12 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
           {step === 4 && (
             <>
-              <div className="ob-illu" aria-hidden="true">
-                <img src="/illustrations/onboarding/onboarding-step4-ready.png" alt="" />
-              </div>
+              <OnboardingBabyHero
+                reducedMotion={reducedMotion}
+                playMotion={false}
+                variant="compact"
+                context="ready"
+              />
 
               <div className="ob-copy">
                 <p className="ob-eyebrow">Klar til start</p>
@@ -867,9 +876,12 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
           {step === 5 && (
             <>
-              <div className="ob-illu hero" aria-hidden="true">
-                <img src="/illustrations/onboarding/onboarding-step4-ready.png" alt="" />
-              </div>
+              <OnboardingBabyHero
+                reducedMotion={reducedMotion}
+                playMotion={false}
+                variant="welcome"
+                context="ready"
+              />
 
               <div className="ob-welcome-greet">
                 <p className="ob-eyebrow">Velkommen til Babyora</p>
@@ -1161,6 +1173,17 @@ const STYLE_CSS = `
   border:1px solid var(--ob-line);
   box-shadow:var(--ob-shadow-illu);
 }
+.ob-baby-hero.compact{
+  width:156px;
+  margin-top:8px;
+  border-radius:28px;
+  box-shadow:0 16px 36px color-mix(in srgb, var(--chip-edge-korall) 15%, transparent), 0 6px 14px color-mix(in srgb, var(--ink-900) 9%, transparent);
+}
+.ob-baby-hero.welcome{
+  width:min(58vw, 224px);
+  margin-top:14px;
+  border-radius:34px;
+}
 .ob-baby-media{
   position:absolute;inset:0;width:100%;height:100%;
   object-fit:cover;display:block;pointer-events:none;
@@ -1183,6 +1206,26 @@ const STYLE_CSS = `
   background:
     linear-gradient(180deg, rgba(255,255,255,.13), transparent 28%),
     radial-gradient(90% 42% at 50% 104%, rgba(35,27,50,.1), transparent 70%);
+}
+.ob-baby-context{
+  position:absolute;z-index:4;right:10px;bottom:10px;
+  width:42px;height:42px;border-radius:50%;
+  display:grid;place-items:center;
+  color:var(--ob-terracotta-700);
+  background:color-mix(in srgb, var(--surface-pure) 88%, transparent);
+  border:1px solid color-mix(in srgb, var(--surface-pure) 72%, var(--ob-line));
+  box-shadow:0 7px 18px color-mix(in srgb, var(--ink-900) 16%, transparent);
+  backdrop-filter:blur(10px);
+}
+.ob-baby-context svg{
+  width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.ob-baby-context.birthday svg path:last-child{fill:currentColor;stroke:none;}
+.ob-baby-context.ready{
+  color:var(--ob-accent-cta-ink);
+  background:var(--ob-accent-cta);
+  border-color:color-mix(in srgb, var(--ob-accent-cta) 75%, white);
 }
 
 .ob-illu{
