@@ -68,6 +68,7 @@ export function IntroHeroAnimator(props: IntroHeroAnimatorProps): ReactElement |
       // Samle elementer (alle er garantert i DOM siden komponenten kun
       // mountes for step === 1).
       const logo = root.querySelector<HTMLElement>('[data-hero="logo"]');
+      const wordmark = root.querySelector<HTMLElement>('[data-hero="wordmark"]');
       const eyebrow = root.querySelector<HTMLElement>('[data-hero="eyebrow"]');
       const titleWords = root.querySelectorAll<HTMLElement>('.ob-h2 [data-hero-word]');
       const lede = root.querySelector<HTMLElement>('[data-hero="lede"]');
@@ -77,7 +78,7 @@ export function IntroHeroAnimator(props: IntroHeroAnimatorProps): ReactElement |
 
       // Samlet liste over alle elementer som skal ende synlige. Brukes både
       // for reduced-motion shortcut og for safe end-state.
-      const allTargets = [logo, eyebrow, ...Array.from(titleWords), lede, avatar, ...Array.from(dots), cta]
+      const allTargets = [logo, wordmark, eyebrow, ...Array.from(titleWords), lede, avatar, ...Array.from(dots), cta]
         .filter((el): el is HTMLElement => el !== null);
 
       // ─── REDUCED MOTION: sett ende-state direkte, ingen animasjon ───
@@ -91,6 +92,7 @@ export function IntroHeroAnimator(props: IntroHeroAnimatorProps): ReactElement |
       // GSAP feiler). Vi setter den skjulte fra-tilstanden her, i useGSAP sin
       // useLayoutEffect (før paint) → ingen synlig flash når GSAP er lastet.
       if (logo) gsap.set(logo, { opacity: 0, scale: 0.95, transformOrigin: 'center' });
+      if (wordmark) gsap.set(wordmark, { opacity: 0, y: -8, filter: 'blur(5px)' });
       if (eyebrow) gsap.set(eyebrow, { opacity: 0 });
       if (titleWords.length) gsap.set(titleWords, { opacity: 0, y: 12 });
       if (lede) gsap.set(lede, { opacity: 0 });
@@ -114,6 +116,10 @@ export function IntroHeroAnimator(props: IntroHeroAnimatorProps): ReactElement |
       // 0.00s — logo fade-in + scale fra 0.95 → 1
       if (logo) {
         tl.to(logo, { opacity: 1, scale: 1, duration: 0.55 }, 0);
+      }
+      // 0.38s — ordmerket kommer inn idet babyen retter blikket opp.
+      if (wordmark) {
+        tl.to(wordmark, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.52 }, 0.38);
       }
       // 0.05s — eyebrow rett etter logo (subtilt, leser-seg-sammen-med-tittel)
       if (eyebrow) {

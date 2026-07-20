@@ -52,6 +52,7 @@ import { useNativeSettings } from '../hooks/useNativeSettings';
 import { searchCities } from '../data/no-cities';
 import { searchAddress } from '../lib/geocode/nominatim';
 import { DISCLAIMER_FULL } from '../lib/copy/disclaimer';
+import { OnboardingBabyHero } from './onboarding/OnboardingBabyHero';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GSAP stagger-hero (lazy-loaded — kun for intro-step / step 1)
@@ -622,9 +623,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
         <div className="ob-body">
           {step === 1 && (
             <>
-              <div className="ob-illu" data-hero="logo" aria-hidden="true">
-                <img src="/illustrations/onboarding/onboarding-step1-name.png" alt="" />
-              </div>
+              <OnboardingBabyHero reducedMotion={reducedMotion} />
 
               <div className="ob-copy">
                 <p className="ob-eyebrow" data-hero="eyebrow">La oss bli kjent</p>
@@ -1073,7 +1072,7 @@ const STYLE_CSS = `
 .ob-screen *,.ob-screen *::before,.ob-screen *::after{box-sizing:border-box}
 
 /* ── TOP BAR ── */
-.ob-topbar{
+.ob-screen > .ob-topbar{
   flex:none;display:flex;align-items:center;justify-content:space-between;
   padding:4px 22px 8px;min-height:40px;
 }
@@ -1114,7 +1113,7 @@ const STYLE_CSS = `
 }
 
 /* ── DOT PROGRESS ── */
-.ob-dots{
+.ob-screen > .ob-dots{
   flex:none;display:flex;justify-content:center;align-items:center;gap:8px;
   padding:8px 24px 4px;
 }
@@ -1130,7 +1129,7 @@ const STYLE_CSS = `
 }
 
 /* ── BODY ── */
-.ob-body{
+.ob-screen > .ob-body{
   flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
   padding:6px 28px 0;
   display:flex;flex-direction:column;
@@ -1139,6 +1138,39 @@ const STYLE_CSS = `
 .ob-body::-webkit-scrollbar{display:none;}
 
 /* ── ILLUSTRATION ── */
+.ob-baby-hero{
+  flex:none;margin:10px auto 0;
+  width:min(100%, 300px);aspect-ratio:1;
+  position:relative;isolation:isolate;overflow:hidden;
+  border-radius:36px;
+  background:#eee9f3;
+  border:1px solid var(--ob-line);
+  box-shadow:var(--ob-shadow-illu);
+}
+.ob-baby-media{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;display:block;pointer-events:none;
+  user-select:none;-webkit-user-drag:none;
+}
+.ob-baby-poster{z-index:0;}
+.ob-baby-video{z-index:1;}
+.ob-baby-wordmark{
+  position:absolute;z-index:3;top:7%;left:14px;right:14px;
+  font-family:var(--ob-font-serif);font-size:clamp(32px, 9vw, 40px);
+  font-weight:400;line-height:1;letter-spacing:-.7px;text-align:center;
+  color:#2d2438;
+  text-shadow:0 1px 18px rgba(255,255,255,.78);
+  pointer-events:none;
+}
+.ob-baby-frame{
+  position:absolute;z-index:2;inset:0;pointer-events:none;
+  border-radius:inherit;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.42);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.13), transparent 28%),
+    radial-gradient(90% 42% at 50% 104%, rgba(35,27,50,.1), transparent 70%);
+}
+
 .ob-illu{
   flex:none;margin:10px auto 0;
   width:100%;max-width:300px;aspect-ratio:1/1;
@@ -1450,7 +1482,7 @@ const STYLE_CSS = `
 .ob-feat-sub{font-size:12.5px;color:var(--ob-ink-500);line-height:1.3;}
 
 /* ── CTA ZONE ── */
-.ob-cta-zone{
+.ob-screen > .ob-cta-zone{
   flex:none;
   padding:18px 24px calc(env(safe-area-inset-bottom, 0px) + 28px);
   display:flex;flex-direction:column;gap:10px;
