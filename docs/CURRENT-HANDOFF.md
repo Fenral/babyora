@@ -1,7 +1,37 @@
 # Current handoff
 
-**Updated:** 2026-07-19
-**Phase:** Pre-coding, screen-by-screen design convergence. Antrekkskartet and Planlegg/Dagslinjen are owner-approved; app implementation is not authorized by these planning decisions.
+**Updated:** 2026-07-20
+**Phase:** Onboarding-signaturen er implementert, verifisert og pushet. Planlegg/Dagslinjen forblir en separat arbeidsstrøm.
+
+## 2026-07-20: Babyora-baby implementert i første onboardingsteg
+
+Eier godkjente implementering av den nye Babyora-babyen. Den er lagt inn kun
+i første onboardingsteg som en 2,25 sekunders signatursekvens med ekte
+`Babyora`-tekst over figuren. Videoen spiller én gang per onboardingøkt, uten
+loop; redusert bevegelse, naturlig slutt, mediefeil og avvist autoplay ender på
+det samme rolige WebP-stillbildet. `Fortsett` og `Hopp over` deler nå samme
+overgangsfunksjon, så tilbake-navigasjon starter ikke videoen på nytt.
+
+Den lokale onboarding-CSS-en fikk samtidig nødvendig selektorspesifisitet over
+den globale `.app-shell > main > div`-regelen. Dette flyttet CTA-en fra utenfor
+referansevisningen (`y=846`) til fullt synlig (`y=760`) ved 390 × 844.
+
+**Verifisert kandidat:** `f15a43dd074ddb0b8d894eb9724803e8648fb1bd`
+
+- uavhengig GSD-review: PASS, ingen gjenværende funn;
+- `npm test`: 57 filer / 570 tester PASS;
+- `npm run lint`: PASS;
+- `npm run build`: PASS for hovedapp og bare-variant;
+- `npm run e2e`: 5/5 PASS (CTA, begge tilbakeveier, naturlig slutt,
+  avbrutt video og demo-appskall);
+- ingen skjermbilder eller skjermvideo ble produsert fra appen.
+
+Tre implementeringscommits er pushet til `origin/main`. Vercel mottok pushen,
+men både automatisk deploy og én trygg redeploy sto fortsatt i ekstern
+`Initializing`-kø uten bygglogg eller kjørte byggetrinn ved handoff. Den stabile
+adressen er fortsatt `https://wool-app.vercel.app`; den oppdateres når Vercel
+starter den køede produksjonsjobben. Ikke gjør flere redeploy-forsøk før køen
+har fått tid til å drenere eller Vercel viser en konkret feil.
 
 ## 2026-07-19: Planlegg-retningen låst
 
