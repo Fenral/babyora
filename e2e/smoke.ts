@@ -12,7 +12,7 @@
  * håndtert app-tilstand og feiler IKKE røyktesten (kun uncaught errors gjør).
  */
 import { spawn, type ChildProcess } from 'node:child_process';
-import { chromium, type Browser } from 'playwright';
+import { chromium, type Browser, type Page } from 'playwright';
 
 const PORT = 4173;
 const BASE = `http://localhost:${PORT}`;
@@ -41,6 +41,7 @@ async function checkPage(
   url: string,
   assertVisible: string,
   label: string,
+  inspect?: (page: Page) => Promise<void>,
 ): Promise<void> {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const errors: string[] = [];
@@ -68,6 +69,8 @@ async function checkPage(
   }
 
   // Nettverksfeil mot met.no er håndtert app-tilstand — filtrer bort.
+  await inspect?.(page);
+
   const fatal = errors.filter((e) => !/met\.no|Failed to fetch|NetworkError|ERR_INTERNET|ERR_NAME/i.test(e));
   if (fatal.length > 0) {
     fail(`${label}: uncaught errors:\n  ${fatal.join('\n  ')}`);
@@ -88,11 +91,53 @@ async function main(): Promise<void> {
 
     browser = await chromium.launch();
     // 1) Fersk bruker → onboarding (main-landemerke med h1 per steg)
-    await checkPage(browser, BASE, 'main h1', 'onboarding rendrer');
-    // 2) Demo-seed → app-skall med bunn-nav
+    await checkPage(browser, BASE, 'main h1', 'onboarding rendrer', async (page) => {
+      const cta = await page.getByRole('button', { name: /Fortsett/ }).boundingBox();
+      const viewport = page.viewportSize();
+      if (!cta || !viewport || cta.y + cta.height > viewport.height) {
+        fail('onboarding: Fortsett-knappen er ikke fullt synlig ved 390x844');
+      }
+
+      const video = page.locator('.ob-baby-video');
+      await video.waitFor({ state: 'attached', timeout: 5_000 });
+      await page.waitForFunction(() => {
+        const element = document.querySelector<HTMLVideoElement>('.ob-baby-video');
+        return Boolean(element && !element.paused);
+      });
+
+      await page.locator('#ob-name-input').fill('Test');
+      await page.getByRole('button', { name: /Fortsett/ }).click();
+      await page.getByRole('button', { name: 'Tilbake' }).click();
+      await page.getByRole('heading', { name: 'Hva heter babyen?' }).waitFor();
+
+      if (await page.locator('.ob-baby-video').count()) {
+        fail('onboarding: signaturvideoen startet paa nytt etter frem og tilbake');
+      }
+    });
+
+    // 2) Videoen avsluttes til det rolige stillbildet.
+    const settledPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await settledPage.goto(BASE, { waitUntil: 'domcontentloaded' });
+    const settledVideo = settledPage.locator('.ob-baby-video');
+    await settledVideo.waitFor({ state: 'attached', timeout: 5_000 });
+    await settledVideo.waitFor({ state: 'detached', timeout: 6_000 });
+    await settledPage.locator('.ob-baby-poster').waitFor({ state: 'visible' });
+    await settledPage.close();
+    console.log('SMOKE OK: onboarding-video avsluttes til stillbilde');
+
+    // 3) Mediefeil fjerner videoen, mens stillbildet blir staaende.
+    const fallbackPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await fallbackPage.route('**/babyora-intro-v3.mp4', (route) => route.abort());
+    await fallbackPage.goto(BASE, { waitUntil: 'domcontentloaded' });
+    await fallbackPage.locator('.ob-baby-poster').waitFor({ state: 'visible' });
+    await fallbackPage.locator('.ob-baby-video').waitFor({ state: 'detached', timeout: 5_000 });
+    await fallbackPage.close();
+    console.log('SMOKE OK: onboarding-video har stillbilde-fallback');
+
+    // 4) Demo-seed → app-skall med bunn-nav
     await checkPage(browser, `${BASE}/?seed=demo`, 'text=Hjem', 'app-skall (demo) rendrer');
 
-    console.log('SMOKE PASS: 2/2 scenarioer grønne');
+    console.log('SMOKE PASS: 4/4 scenarioer grønne');
   } finally {
     await browser?.close();
     if (server && !server.killed) server.kill();

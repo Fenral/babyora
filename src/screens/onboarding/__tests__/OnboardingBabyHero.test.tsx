@@ -21,4 +21,13 @@ describe('OnboardingBabyHero', () => {
     expect(html).toContain('/illustrations/onboarding/babyora-intro-v3.webp');
     expect(html).not.toContain('<video');
   });
+
+  it('starter ikke videoen igjen etter at sekvensen er sett', () => {
+    const html = renderToStaticMarkup(
+      <OnboardingBabyHero reducedMotion={false} playMotion={false} />,
+    );
+
+    expect(html).toContain('/illustrations/onboarding/babyora-intro-v3.webp');
+    expect(html).not.toContain('<video');
+  });
 });

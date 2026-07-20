@@ -343,6 +343,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
   // ─── Step + felt-state ───────────────────────────────────────────────────
   const [step, setStep] = useState<Step>(1);
+  const [introMotionPlayed, setIntroMotionPlayed] = useState(false);
 
   // Scope-ref for GSAP useGSAP() — binder alle selectors til denne subtree-en
   // og lar useGSAP() håndtere ryddig cleanup når step byttes (eller komponent
@@ -401,13 +402,18 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   // ─── Step-navigasjon ─────────────────────────────────────────────────────
   const goNext = useCallback(() => {
     fire('medium').catch(() => {});
+    if (step === 1) setIntroMotionPlayed(true);
     setStep((s) => (s < 5 ? ((s + 1) as Step) : s));
-  }, [fire]);
+  }, [fire, step]);
 
   const goBack = useCallback(() => {
     fire('light').catch(() => {});
     setStep((s) => (s > 1 ? ((s - 1) as Step) : s));
   }, [fire]);
+
+  const handleIntroMotionDone = useCallback(() => {
+    setIntroMotionPlayed(true);
+  }, []);
 
   const goEdit = useCallback(
     (target: Step) => {
@@ -623,7 +629,11 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
         <div className="ob-body">
           {step === 1 && (
             <>
-              <OnboardingBabyHero reducedMotion={reducedMotion} />
+              <OnboardingBabyHero
+                reducedMotion={reducedMotion}
+                playMotion={!introMotionPlayed}
+                onMotionDone={handleIntroMotionDone}
+              />
 
               <div className="ob-copy">
                 <p className="ob-eyebrow" data-hero="eyebrow">La oss bli kjent</p>
