@@ -115,7 +115,20 @@ async function main(): Promise<void> {
       }
     });
 
-    // 2) Videoen avsluttes til det rolige stillbildet.
+    // 2) Hopp over forlater ogsaa steg 1 uten at videoen kan starte paa nytt.
+    const skipPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await skipPage.goto(BASE, { waitUntil: 'domcontentloaded' });
+    await skipPage.locator('.ob-baby-video').waitFor({ state: 'attached', timeout: 5_000 });
+    await skipPage.getByRole('button', { name: 'Hopp over' }).click();
+    await skipPage.getByRole('button', { name: 'Tilbake' }).click();
+    await skipPage.getByRole('heading', { name: 'Hva heter babyen?' }).waitFor();
+    if (await skipPage.locator('.ob-baby-video').count()) {
+      fail('onboarding: Hopp over startet signaturvideoen paa nytt ved tilbake');
+    }
+    await skipPage.close();
+    console.log('SMOKE OK: Hopp over repeterer ikke onboarding-videoen');
+
+    // 3) Videoen avsluttes til det rolige stillbildet.
     const settledPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await settledPage.goto(BASE, { waitUntil: 'domcontentloaded' });
     const settledVideo = settledPage.locator('.ob-baby-video');
@@ -125,7 +138,7 @@ async function main(): Promise<void> {
     await settledPage.close();
     console.log('SMOKE OK: onboarding-video avsluttes til stillbilde');
 
-    // 3) Mediefeil fjerner videoen, mens stillbildet blir staaende.
+    // 4) Mediefeil fjerner videoen, mens stillbildet blir staaende.
     const fallbackPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await fallbackPage.route('**/babyora-intro-v3.mp4', (route) => route.abort());
     await fallbackPage.goto(BASE, { waitUntil: 'domcontentloaded' });
@@ -134,10 +147,10 @@ async function main(): Promise<void> {
     await fallbackPage.close();
     console.log('SMOKE OK: onboarding-video har stillbilde-fallback');
 
-    // 4) Demo-seed → app-skall med bunn-nav
+    // 5) Demo-seed → app-skall med bunn-nav
     await checkPage(browser, `${BASE}/?seed=demo`, 'text=Hjem', 'app-skall (demo) rendrer');
 
-    console.log('SMOKE PASS: 4/4 scenarioer grønne');
+    console.log('SMOKE PASS: 5/5 scenarioer grønne');
   } finally {
     await browser?.close();
     if (server && !server.killed) server.kill();

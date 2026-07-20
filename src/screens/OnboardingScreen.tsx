@@ -400,11 +400,15 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   }, [step]);
 
   // ─── Step-navigasjon ─────────────────────────────────────────────────────
+  const advanceStep = useCallback((lastStep: Step) => {
+    if (step === 1) setIntroMotionPlayed(true);
+    setStep((current) => (current < lastStep ? ((current + 1) as Step) : current));
+  }, [step]);
+
   const goNext = useCallback(() => {
     fire('medium').catch(() => {});
-    if (step === 1) setIntroMotionPlayed(true);
-    setStep((s) => (s < 5 ? ((s + 1) as Step) : s));
-  }, [fire, step]);
+    advanceStep(5);
+  }, [advanceStep, fire]);
 
   const goBack = useCallback(() => {
     fire('light').catch(() => {});
@@ -513,8 +517,8 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   // ─── Skip / Submit / Complete ────────────────────────────────────────────
   const handleSkip = useCallback(() => {
     fire('light').catch(() => {});
-    setStep((s) => (s < 4 ? ((s + 1) as Step) : s));
-  }, [fire]);
+    advanceStep(4);
+  }, [advanceStep, fire]);
 
   const handleCompleteOnboarding = useCallback(() => {
     if (!nameOk || !dobIsValid) return;
