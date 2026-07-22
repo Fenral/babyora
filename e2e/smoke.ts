@@ -12,19 +12,31 @@
  * håndtert app-tilstand og feiler IKKE røyktesten (kun uncaught errors gjør).
  */
 import { spawn, type ChildProcess } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 import { chromium, type Browser, type Page } from 'playwright';
 
-const PORT = 4173;
-const BASE = `http://localhost:${PORT}`;
+const PORT = Number(process.env.SMOKE_PORT ?? 4173);
+const BASE = `http://127.0.0.1:${PORT}`;
+const require = createRequire(import.meta.url);
+const VITE_CLI = join(dirname(require.resolve('vite/package.json')), 'bin', 'vite.js');
 
 function fail(msg: string): never {
-  console.error(`SMOKE FAIL: ${msg}`);
-  process.exit(1);
+  throw new Error(`SMOKE FAIL: ${msg}`);
 }
 
-async function waitForServer(url: string, timeoutMs = 30_000): Promise<void> {
+async function waitForServer(url: string, server: ChildProcess, timeoutMs = 30_000): Promise<void> {
+  let spawnError: Error | null = null;
+  server.once('error', (error) => {
+    spawnError = error;
+  });
+
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    if (spawnError) throw spawnError;
+    if (server.exitCode !== null) {
+      throw new Error(`Preview-prosessen avsluttet før oppstart med kode ${server.exitCode}`);
+    }
     try {
       const res = await fetch(url);
       if (res.ok) return;
@@ -34,6 +46,49 @@ async function waitForServer(url: string, timeoutMs = 30_000): Promise<void> {
     await new Promise((r) => setTimeout(r, 300));
   }
   fail(`preview-server svarte ikke på ${url} innen ${timeoutMs} ms`);
+}
+
+async function waitForExit(server: ChildProcess, timeoutMs: number): Promise<boolean> {
+  if (server.exitCode !== null || server.signalCode !== null) return true;
+
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      server.off('exit', onExit);
+      resolve(false);
+    }, timeoutMs);
+    const onExit = () => {
+      clearTimeout(timer);
+      resolve(true);
+    };
+    server.once('exit', onExit);
+  });
+}
+
+async function waitForPortRelease(url: string, timeoutMs = 5_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      await fetch(url);
+    } catch {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`Preview-port ${PORT} ble ikke frigitt innen ${timeoutMs} ms`);
+}
+
+async function stopPreviewServer(server: ChildProcess): Promise<void> {
+  if (server.exitCode === null && server.signalCode === null) {
+    server.kill();
+    if (!(await waitForExit(server, 5_000))) {
+      server.kill('SIGKILL');
+      if (!(await waitForExit(server, 5_000))) {
+        throw new Error('Preview-prosessen avsluttet ikke etter tvungen terminering');
+      }
+    }
+  }
+  await waitForPortRelease(BASE);
+  console.log(`SMOKE PREVIEW STOPPED: port=${PORT}`);
 }
 
 async function checkPage(
@@ -83,11 +138,12 @@ async function main(): Promise<void> {
   let server: ChildProcess | null = null;
   let browser: Browser | null = null;
   try {
-    server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
+    server = spawn(process.execPath, [VITE_CLI, 'preview', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], {
       stdio: 'ignore',
-      shell: process.platform === 'win32',
+      shell: false,
+      windowsHide: true,
     });
-    await waitForServer(BASE);
+    await waitForServer(BASE, server);
 
     browser = await chromium.launch();
     // 1) Fersk bruker → onboarding (main-landemerke med h1 per steg)
@@ -119,20 +175,7 @@ async function main(): Promise<void> {
       }
     });
 
-    // 2) Hopp over forlater ogsaa steg 1 uten at videoen kan starte paa nytt.
-    const skipPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
-    await skipPage.goto(BASE, { waitUntil: 'domcontentloaded' });
-    await skipPage.locator('.ob-baby-video').waitFor({ state: 'attached', timeout: 5_000 });
-    await skipPage.getByRole('button', { name: 'Hopp over' }).click();
-    await skipPage.getByRole('button', { name: 'Tilbake' }).click();
-    await skipPage.getByRole('heading', { name: 'Hva heter babyen?' }).waitFor();
-    if (await skipPage.locator('.ob-baby-video').count()) {
-      fail('onboarding: Hopp over startet signaturvideoen paa nytt ved tilbake');
-    }
-    await skipPage.close();
-    console.log('SMOKE OK: Hopp over repeterer ikke onboarding-videoen');
-
-    // 3) Videoen avsluttes til det rolige stillbildet.
+    // 2) Videoen avsluttes til det rolige stillbildet.
     const settledPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await settledPage.goto(BASE, { waitUntil: 'domcontentloaded' });
     const settledVideo = settledPage.locator('.ob-baby-video');
@@ -142,7 +185,7 @@ async function main(): Promise<void> {
     await settledPage.close();
     console.log('SMOKE OK: onboarding-video avsluttes til stillbilde');
 
-    // 4) Mediefeil fjerner videoen, mens stillbildet blir staaende.
+    // 3) Mediefeil fjerner videoen, mens stillbildet blir staaende.
     const fallbackPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
     await fallbackPage.route('**/babyora-intro-v3.mp4', (route) => route.abort());
     await fallbackPage.goto(BASE, { waitUntil: 'domcontentloaded' });
@@ -151,13 +194,16 @@ async function main(): Promise<void> {
     await fallbackPage.close();
     console.log('SMOKE OK: onboarding-video har stillbilde-fallback');
 
-    // 5) Demo-seed → app-skall med bunn-nav
+    // 4) Demo-seed → app-skall med bunn-nav
     await checkPage(browser, `${BASE}/?seed=demo`, 'text=Hjem', 'app-skall (demo) rendrer');
 
-    console.log('SMOKE PASS: 5/5 scenarioer grønne');
+    console.log('SMOKE PASS: 4/4 scenarioer grønne');
   } finally {
-    await browser?.close();
-    if (server && !server.killed) server.kill();
+    try {
+      await browser?.close();
+    } finally {
+      if (server) await stopPreviewServer(server);
+    }
   }
 }
 

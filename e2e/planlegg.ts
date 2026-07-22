@@ -141,7 +141,6 @@ async function main(): Promise<void> {
   const fixture = PLANLEGG_E2E_FIXTURES[caseName as keyof typeof PLANLEGG_E2E_FIXTURES];
   let server: ChildProcess | null = null;
   let browser: Browser | null = null;
-  let harnessPassed = false;
 
   try {
     server = spawn(process.execPath, [VITE_CLI, 'preview', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], {
@@ -159,7 +158,6 @@ async function main(): Promise<void> {
     const page = await context.newPage();
     await runHarness(page, fixture);
     await context.close();
-    harnessPassed = true;
   } finally {
     try {
       await browser?.close();
@@ -168,9 +166,7 @@ async function main(): Promise<void> {
     }
   }
 
-  if (harnessPassed) {
-    console.log(`PLANLEGG HARNESS PASS: case=${caseName} fixture=${fixture.id}`);
-  }
+  console.log(`PLANLEGG HARNESS PASS: case=${caseName} fixture=${fixture.id}`);
 }
 
 main().catch((error) => {
