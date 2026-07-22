@@ -88,7 +88,7 @@ coverage:
 duration: 67min
 completed: 2026-07-22
 status: complete
-review_status: ready_for_high_risk_review
+review_status: blocked_pending_architecture_refactor
 ---
 
 # Phase 1 Plan 02: Truthful Forecast Evidence Boundary Summary
@@ -169,7 +169,8 @@ All executable evidence below ran from a fresh `npm ci` archive checkout of exac
 | Codex GSD executor (first scoped TDD repair) | High-risk implementation | `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` | **BLOCKED** by fresh independent verifier |
 | Fresh independent approved reviewer | High-risk verification | `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` | **BLOCK** — six residual correctness findings required a second scoped repair |
 | Codex GSD executor (second scoped TDD repair) | High-risk implementation | `80c6da2d929281bf9b38cbb0c7603614c667026a` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic checks green, no self-PASS claimed |
-| Fresh independent approved reviewer | High-risk verification | `80c6da2d929281bf9b38cbb0c7603614c667026a` | **PENDING** — fresh verdict required on the second repaired exact SHA |
+| Fresh independent approved verifier | High-risk verification | `80c6da2d929281bf9b38cbb0c7603614c667026a` | **PASS**, later contradicted by external live-response evidence |
+| External read-only reviewer | Live-response architecture review | `80c6da2d929281bf9b38cbb0c7603614c667026a` | **BLOCK** — reproducible P1 schema/unit/cache-coordination failures; strictest verdict wins |
 
 Any edit to the eight code/test paths after `80c6da2d929281bf9b38cbb0c7603614c667026a` invalidates this candidate and requires fresh evidence plus independent review.
 
@@ -214,6 +215,18 @@ Second repair status: **COMPLETE ON CANDIDATE `80c6da2d929281bf9b38cbb0c7603614c
 - `80c6da2` made the same tests GREEN: current/hourly inputs require truthful one-hour period evidence; six-hour totals carry explicit duration and normalize to hourly averages where supported; null/invalid source currentness is contained offline; an older valid success may commit unless a newer valid success actually committed; cache fallback re-reads current storage; empty-string cache data is evicted; and the final mojibake comment is repaired.
 - The validator now uses the exact 83-value primary MET Locationforecast Swagger enum, including the official `lightssleet...` and `lightssnow...` double-s spellings and exact suffix constraints. An automated source-to-Swagger comparison passed 83/83.
 - The repaired focused run passed 86 tests with one intentional TODO, followed by the complete fresh-checkout matrix above.
+
+## External BLOCK and Verifier Disagreement on Candidate 80c6da2
+
+The approved verifier issued PASS on `80c6da2d929281bf9b38cbb0c7603614c667026a`, but an external read-only reviewer subsequently reproduced P1 failures using the shape of the current official live compact response. Under the strictest-verdict rule, the external **BLOCK** is authoritative and the candidate must not advance.
+
+The architectural findings are:
+
+1. Whole-payload validation incorrectly requires period evidence on every point, rejecting an official terminal instant-only point instead of accepting the envelope and excluding unusable extraction/coverage points.
+2. Consumed MET fields are accepted without the exact official unit contract, so missing or incompatible units can reach ready/cache state.
+3. Same-key coordination can prefer stale storage after a newer validated network success when `localStorage.setItem` fails; the latest validated success must remain an in-memory monotonic commit independent of persistence.
+
+Architecture correction status: **IN PROGRESS**. The verifier PASS is retained as history but superseded by the live-response BLOCK; no accepted independent PASS exists for Plan 01-02.
 
 ## Decisions Made
 
