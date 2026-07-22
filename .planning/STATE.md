@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Completed 01-02-PLAN.md; candidate 4150a1e awaits independent high-risk review
-last_updated: "2026-07-22T21:35:18.632Z"
-last_activity: 2026-07-22
-last_activity_desc: Fresh plan/UI/validation convergence passed on exact clean HEAD `6e7ccac`; no remaining pre-01-02 blocker.
+stopped_at: Completed 01-02 scoped repair; candidate b9b8b51 awaits fresh independent high-risk review
+last_updated: "2026-07-22T22:08:05.965Z"
+last_activity: 2026-07-23
+last_activity_desc: Plan 01-02 scoped TDD repair is deterministic-green on exact candidate `b9b8b51`; fresh independent high-risk review remains pending.
 progress:
   total_phases: 1
   completed_phases: 0
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
 Plan: 2 of 18 in current phase
-Status: Plan 01-02 ready to execute
-Last activity: 2026-07-22 — Fresh plan/UI/validation convergence passed on exact clean HEAD `6e7ccac`; no remaining pre-01-02 blocker.
+Status: Plan 01-02 repaired candidate awaits fresh independent high-risk review
+Last activity: 2026-07-23 — Scoped TDD repair is deterministic-green on exact candidate `b9b8b51`; no self-PASS claimed.
 
 Progress: [█░░░░░░░░░] 11%
 
@@ -79,10 +79,12 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 1]: Candidate `d45cde0` was independently BLOCKED for a leaked Windows preview child; repaired candidate `9115aeb` directly owns, awaits and verifiably releases the Vite process and port on success and failure paths.
 - [Phase 01]: Forecast currentness fails closed unless metadata and absolute points are internally valid. — Missing updated_at, corrupt cache data, duplicates and inconsistent provenance cannot support current or full-span claims.
 - [Phase 01]: useWeather publishes forecast derivatives and matching evidence through one active request transition. — Request ID plus exact fetch key prevents cancelled or older place responses from overwriting current state.
+- [Phase 1]: Stale met.no evidence is capped at six hours and exposed only through an explicit offline state; ready-state recommendation inputs remain empty.
+- [Phase 1]: Forecast payloads fail closed unless calendar instants, weather ranges, symbols, periods, and strictly increasing unique times validate.
 
 ### Pending Todos
 
-- Execute Plan 01-02 from the clean, reviewed baseline.
+- Obtain a fresh independent high-risk verdict on exact repaired candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` before Plan 01-03.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -102,6 +104,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-22T21:35:18.623Z
-Stopped at: Completed 01-02-PLAN.md; candidate 4150a1e awaits independent high-risk review
+Last session: 2026-07-22T22:08:05.956Z
+Stopped at: Completed 01-02 scoped repair; candidate b9b8b51 awaits fresh independent high-risk review
 Resume file: None

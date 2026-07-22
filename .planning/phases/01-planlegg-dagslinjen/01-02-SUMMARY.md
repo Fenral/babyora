@@ -47,10 +47,10 @@ coverage:
     requirement: TRUTH-01
     verification:
       - kind: unit
-        ref: "npx vitest run src/lib/met-no/__tests__/client.test.ts (29 passed)"
+        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (46 passed)"
         status: pass
       - kind: other
-        ref: "git diff --check db31b86..4150a1e and exact eight-path scope manifest"
+        ref: "git diff --check 32e84b8..b9b8b51 and exact seven-path repair scope manifest"
         status: pass
     human_judgment: false
   - id: D2
@@ -69,10 +69,10 @@ coverage:
     requirement: EVID-02
     verification:
       - kind: unit
-        ref: "npx vitest run src/hooks/__tests__/useWeather.test.ts src/lib/planning/__tests__/forecast-evidence.test.ts src/lib/planning/__tests__/timezone.test.ts (20 passed, 1 future-plan TODO)"
+        ref: "focused four-suite run (71 passed, 1 future-plan TODO)"
         status: pass
       - kind: other
-        ref: "npm test && npm run lint && npm run build (616 passed; lint/main/bare build passed)"
+        ref: "npm test && npm run lint && npm run build (638 passed; lint/main/bare build passed)"
         status: pass
     human_judgment: false
   - id: D4
@@ -80,15 +80,15 @@ coverage:
     requirement: GOV-04
     verification:
       - kind: other
-        ref: "code candidate 4150a1e; implementation evidence recorded below"
+        ref: "repaired code candidate b9b8b51f0a0972b96706a6e171cda2cba89e00b5; implementation evidence recorded below"
         status: pass
     human_judgment: true
     rationale: "Repository governance requires a fresh independent high-risk reviewer on the exact candidate SHA; the executor cannot issue that PASS."
 
-duration: 15min
+duration: 48min
 completed: 2026-07-22
 status: complete
-review_status: blocked_pending_repair
+review_status: ready_for_high_risk_review
 ---
 
 # Phase 1 Plan 02: Truthful Forecast Evidence Boundary Summary
@@ -97,9 +97,9 @@ review_status: blocked_pending_repair
 
 ## Performance
 
-- **Duration:** 15 min
+- **Duration:** 48 min including independent BLOCK repair
 - **Started:** 2026-07-22T23:18:30+02:00
-- **Completed:** 2026-07-22T23:33:30+02:00
+- **Completed:** 2026-07-23T00:06:30+02:00
 - **Tasks:** 2
 - **Files modified:** 8
 
@@ -108,6 +108,7 @@ review_status: blocked_pending_repair
 - Added `ForecastFetchResult` and conservative metadata for network, fresh cache, and validated stale fallback while preserving the existing `metno:{lat},{lon}` key, `/api/forecast` proxy, and legacy `{ fetchedAt, data }` reads.
 - Added a pure request lifecycle that accepts only the active request ID/fetch key and publishes `now`, hourly/daily views, raw forecast, and matching evidence atomically.
 - Added absolute-instant coverage that sorts a copy, rejects invalid/duplicate evidence, distinguishes all five required states, preserves repeated DST-hour ISO identities, and denies strong copy outside fresh exact-hour adjacency.
+- Repaired all nine independent-review findings with strict calendar/range/symbol/period validation, bounded stale evidence, invalid-cache eviction, atomic same-key requests, render-key guarding, real cancellation cleanup, explicit offline containment, and weather-only Norwegian copy.
 
 ## Task Commits
 
@@ -115,6 +116,8 @@ review_status: blocked_pending_repair
 2. **Task 1 GREEN: Validated provenance and stale recovery** â€” `bf5c806` (`feat`)
 3. **Task 2 RED: Atomic hook and Oslo coverage contract** â€” `3f4304a` (`test`)
 4. **Task 2 GREEN: Atomic request state and coverage implementation** â€” `4150a1e` (`feat`)
+5. **Repair RED: Reproduce all blocked forecast boundaries** — `3cbaa68` (`test`)
+6. **Repair GREEN: Close all blocked forecast boundaries** — `b9b8b51` (`fix`)
 
 **Plan metadata:** recorded by the final GSD documentation commit.
 
@@ -125,41 +128,44 @@ review_status: blocked_pending_repair
 | No valid cache | Valid forecast | `network / miss / stale=false` | Eligible for complete-hourly only with valid `updated_at` and exact adjacency |
 | Version 1 or legacy entry at TTL | Not called | `cache / fresh / stale=false` | Eligible under the same evidence rules |
 | Valid entry at TTL+1 | Success | Network result | Stale candidate is not preferred over current network evidence |
-| Valid entry at TTL+1 | Failure/HTTP/invalid payload | `cache / stale / stale=true` | Offline/partial wording only; never current/full-span |
-| Corrupt JSON/envelope/forecast | Success | Network result | Corrupt cache is ignored |
+| Valid entry at TTL+1 through 6 hours | Failure/HTTP/invalid payload | `cache / stale / stale=true` | Explicit offline state only; never legacy recommendation inputs or current/full-span |
+| Entry older than 6 hours | Any failure | Error/unavailable | Entry is evicted and never returned |
+| Corrupt JSON/envelope/forecast | Success | Network result | Corrupt cache is evicted |
 | Corrupt or invalid stale entry | Failure | Error/unavailable | Invalid evidence is never returned |
 | Missing/blank/malformed `updated_at` | Any otherwise valid source | `sourceUpdatedAt: null` | Coverage is `unavailable`; currentness claim denied |
 
 ## Files Created/Modified
 
-- `src/lib/met-no/types.ts` â€” Forecast result and currentness metadata types.
-- `src/lib/met-no/client.ts` â€” Runtime validation, legacy/versioned cache classification, and stale fallback.
+- `src/lib/met-no/types.ts` â€” Forecast result/currentness types and strict absolute-ISO calendar parser.
+- `src/lib/met-no/client.ts` â€” Range/symbol/timeline validation, bounded legacy/versioned cache recovery, eviction, and per-key request atomicity.
 - `src/lib/met-no/__tests__/client.test.ts` â€” Exact TTL, validation, proxy/key, network and stale matrix.
-- `src/hooks/useWeather.ts` â€” Pure request reducer, result unwrap, cancellation guard, and nullable evidence.
+- `src/hooks/useWeather.ts` â€” Pure request reducer, render-key guard, real cancellable lifecycle, explicit offline containment, and nullable evidence.
 - `src/hooks/__tests__/useWeather.test.ts` â€” Extractor boundary, atomic publication, reversed promise, and rejection tests.
-- `src/lib/planning/coverage.ts` â€” Europe/Oslo absolute-instant assessment and conservative copy.
+- `src/lib/planning/coverage.ts` â€” Europe/Oslo absolute-instant assessment and conservative weather-only copy.
 - `src/lib/planning/__tests__/forecast-evidence.test.ts` â€” Currentness and five-state evidence assertions.
 - `src/lib/planning/__tests__/timezone.test.ts` â€” Normal day, spring gap, repeated fall hour, mixed offsets, and local-day boundaries.
 
 ## Deterministic Evidence
 
-- `npx vitest run src/lib/met-no/__tests__/client.test.ts` â€” **PASS**, 29/29.
-- `npx vitest run src/hooks/__tests__/useWeather.test.ts src/lib/planning/__tests__/forecast-evidence.test.ts src/lib/planning/__tests__/timezone.test.ts` â€” **PASS**, 20 passed and one intentional Plan 01-11 TODO.
-- `npx tsc -b --pretty false` â€” **PASS**.
-- `npm test` â€” **PASS**, 60 files passed, 4 skipped; 616 tests passed, 34 TODO.
-- `npm run lint` â€” **PASS**.
-- `npm run build` â€” **PASS**, TypeScript plus main and bare Vite builds.
-- `git diff --check db31b86..4150a1e` â€” **PASS**.
-- Scope manifest â€” **PASS**, exactly the eight Plan 01-02 paths; no package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
+All executable evidence below ran from a fresh `npm ci` archive checkout of exact candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5`; the primary checkout's pre-existing `node_modules` remained untouched because active Vite/Playwright processes held its native binaries.
+
+- Focused four-suite Vitest run — **PASS**, 4/4 files; 71 tests passed and one intentional Plan 01-11 TODO.
+- `npx tsc -b --pretty false` — **PASS**.
+- `npm test` — **PASS**, 60 files passed, 4 skipped; 638 tests passed, 34 TODO.
+- `npm run lint` — **PASS**.
+- `npm run build` — **PASS**, TypeScript plus main and bare Vite builds.
+- `git diff --check 32e84b8..b9b8b51` — **PASS**.
+- Repair scope manifest — **PASS**, exactly seven Plan 01-02 paths changed; `timezone.test.ts` remained unchanged. No package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
 
 ## Candidate and Review Authority
 
 | Identity | Lane | Exact candidate | Verdict |
 |---|---|---|---|
-| Codex GSD executor (this session) | High-risk implementation | `4150a1e` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic checks green, no self-PASS claimed |
-| Fresh independent approved reviewer | High-risk verification | `4150a1e` | **PENDING** â€” neither PASS nor BLOCK has been issued yet |
+| Codex GSD executor (original candidate) | High-risk implementation | `4150a1e` | **BLOCKED** by fresh independent verifier and external read-only reviewer |
+| Codex GSD executor (scoped TDD repair) | High-risk implementation | `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic checks green, no self-PASS claimed |
+| Fresh independent approved reviewer | High-risk verification | `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` | **PENDING** — fresh verdict required on the repaired exact SHA |
 
-Any edit to the eight code/test paths after `4150a1e` invalidates this candidate and requires fresh evidence plus independent review.
+Any edit to the eight code/test paths after `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` invalidates this candidate and requires fresh evidence plus independent review.
 
 ## Independent BLOCK on Candidate 4150a1e
 
@@ -175,7 +181,13 @@ Candidate `4150a1e` is rejected and must not advance. Both the fresh independent
 8. Concurrent requests can overwrite or return obsolete per-key cache snapshots.
 9. `formatCoverageCopy` asserts `Samme antrekk` without recommendation fingerprint/event evidence even though it only knows weather coverage.
 
-Repair status: **IN_PROGRESS**. No independent PASS exists for Plan 01-02.
+Repair status: **COMPLETE ON CANDIDATE `b9b8b51f0a0972b96706a6e171cda2cba89e00b5`**. The original BLOCK remains authoritative for `4150a1e`; no independent PASS exists yet for the repaired candidate.
+
+## Scoped TDD Repair Outcome
+
+- `3cbaa68` added behavioral RED coverage for all nine findings. In the isolated environment the RED run failed as expected with 31 failed, 40 passed, and one TODO.
+- `b9b8b51` made the same tests GREEN: strict ISO calendar and MET payload validation; six-hour stale/source-age ceilings; five-minute source future-skew; invalid-cache eviction; per-key success/success and success/failure atomicity; no synthesized clear/dry evidence; render-before-effect key containment; real lifecycle cleanup; explicit non-ready offline state; and weather-only correctly encoded Norwegian copy.
+- The repaired focused run passed 71 tests with one intentional TODO, followed by the complete deterministic matrix above.
 
 ## Decisions Made
 
@@ -183,10 +195,19 @@ Repair status: **IN_PROGRESS**. No independent PASS exists for Plan 01-02.
 - A uniform integral cadence above one hour is `sampled`; any irregular cadence (including 61 minutes) is `gapped`; only exact one-hour absolute adjacency is `complete-hourly`.
 - Repeated Oslo fall-back hours remain separate because ISO strings and epochs are authoritative; local labels are presentation only.
 - A new request clears cross-key weather/evidence and only the active request ID plus exact fetch key may publish a resolved or rejected state.
+- Stale cache evidence is bounded to six hours and contained in an explicit `offline` state with `offlineForecast`; legacy ready-state weather inputs remain empty.
+- MET evidence must have plausible numeric ranges, a known symbol, at least one forecast period, and strictly increasing unique instants before caching or extraction.
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+### Auto-fixed Issues
+
+**1. [Rule 1 - Bugs] Repaired nine independent high-risk review findings**
+- **Found during:** Independent review of original candidate `4150a1e`
+- **Issue:** Cross-key render leakage, impossible ISO acceptance, mojibake, retained corrupt cache, untested real cleanup, unbounded ready-state stale fallback, weak MET/currentness validation, non-atomic same-key cache writes, and recommendation copy unsupported by weather-only evidence.
+- **Fix:** Added behavioral RED coverage in `3cbaa68`, then implemented the bounded repair in `b9b8b51` and repeated the complete isolated verification matrix.
+- **Files modified:** Seven plan-owned source/test paths; `timezone.test.ts` required no edit.
+- **Commits:** `3cbaa68`, `b9b8b51`
 
 ## Known Stubs
 
@@ -202,6 +223,8 @@ None. The existing proxy and persistent cache path remain unchanged; no new netw
 
 - Task 1's new return envelope intentionally made `useWeather` fail type-check until Task 2 completed the planned atomic unwrap. The Task 2 GREEN commit closed that within the same TDD plan; final type-check, tests, lint, and builds are green.
 - One large mechanical patch missed context because the existing Norwegian comments had encoding differences. It applied no partial change; the same planned implementation was applied through narrower patches.
+- The primary checkout's dependency tree was incomplete and its native rolldown binary was locked by pre-existing active Vite/Playwright processes. No process was killed and no user artifact was touched; verification ran from a fresh archive checkout of the exact repaired SHA with `npm ci`.
+- Fresh `npm ci` reported pre-existing dependency audit findings (1 low, 3 moderate, 9 high, 1 critical). Dependency changes are outside this scoped repair and no package manifest or lockfile was changed.
 
 ## User Setup Required
 
@@ -209,19 +232,19 @@ None - no dependency, package, credential, environment, service, API, or migrati
 
 ## Remaining Gates
 
-- Fresh independent high-risk review on exact code candidate `4150a1e`: **BLOCKED**. A new repair candidate and fresh review are required.
+- Fresh independent high-risk review on exact repaired code candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5`: **PENDING**. The executor does not self-issue PASS.
 - New app screenshots/video/traces and the media-based 90+ audit: **Pending stable candidate and owner permission**; none were created here.
 - VoiceOver, TalkBack, physical haptics, OS text scaling, one-handed reach, physical-device UAT, and owner release approval: **Pending**.
 - Six Snart approvals and independent climate artifacts remain Pending and still block Plan 01-13.
 
 ## Next Phase Readiness
 
-- Code candidate `4150a1e` is blocked and must not be consumed by Plan 01-03.
-- A scoped TDD repair is in progress; only a new exact SHA may return to independent high-risk review.
+- Original code candidate `4150a1e` remains blocked and must not be consumed by Plan 01-03.
+- Repaired candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` is ready for fresh independent high-risk review; Plan 01-03 must wait for that verdict.
 
 ## Self-Check: PASSED
 
-All eight plan-owned paths, this summary, commits `b5d68a9`, `bf5c806`, `3f4304a`, and `4150a1e`, and the exact eight-path candidate scope exist and were verified.
+All eight plan-owned paths, this summary, original commits `b5d68a9`, `bf5c806`, `3f4304a`, `4150a1e`, BLOCK record `32e84b8`, repair commits `3cbaa68`, `b9b8b51`, and the exact seven-path repair scope exist and were verified. The repaired exact SHA passed the isolated focused/full/lint/build/type-check matrix; independent review remains pending.
 
 ---
 *Phase: 01-planlegg-dagslinjen*
