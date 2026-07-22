@@ -122,6 +122,6 @@ export type WeatherDayAtHour = {
   tempC: number;
   feelsLikeC: number;
   windMs: number;
-  precipMmH: number;
+  precipMmH: number; // one-hour amount, or normalized hourly average for a six-hour period
   symbolCode: string;
 };

@@ -6,14 +6,15 @@ import {
   extractNow,
   fetchForecast,
 } from '../lib/met-no/client';
-import type {
-  ForecastFetchMetadata,
-  ForecastFetchResult,
-  MetForecast,
-  WeatherDaily,
-  WeatherDayAtHour,
-  WeatherHourly,
-  WeatherNow,
+import {
+  parseStrictIsoInstant,
+  type ForecastFetchMetadata,
+  type ForecastFetchResult,
+  type MetForecast,
+  type WeatherDaily,
+  type WeatherDayAtHour,
+  type WeatherHourly,
+  type WeatherNow,
 } from '../lib/met-no/types';
 import {
   assessForecastCoverage,
@@ -33,7 +34,7 @@ export type WeatherState = {
   hourly: WeatherHourly[];
   daily: WeatherDaily[];
   dailyAtHour: WeatherDayAtHour[];
-  /** RÃ¥ met.no-respons for avledninger som trenger full timeserie. */
+  /** Rå met.no-respons for avledninger som trenger full timeserie. */
   forecast: MetForecast | null;
   /** Stale data is retained only for explicit offline UI, never legacy recommendation inputs. */
   offlineForecast: MetForecast | null;
@@ -101,7 +102,7 @@ export function weatherStateFromForecastResult(
       metadata,
     ),
   };
-  if (metadata.stale) {
+  if (metadata.stale || parseStrictIsoInstant(metadata.sourceUpdatedAt) === null) {
     return {
       ...emptyWeatherState('offline'),
       offlineForecast: forecast,
