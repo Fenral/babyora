@@ -34,14 +34,17 @@ describe('Planlegg forecast evidence contracts', () => {
       source: 'cache', cacheStatus: 'stale', stale: true,
     }));
     expect(coverage.status).toBe('stale');
-    expect(formatCoverageCopy(coverage)).toBe('Planen viser bare tidspunktene Babyora har vÃ¦rdata for.');
+    expect(formatCoverageCopy(coverage)).toBe('V\u00e6rdata finnes bare for enkelte tidspunkter.');
   });
 
-  it.each([null, '', 'ikke-en-dato'])('rejects invalid sourceUpdatedAt evidence %j', (sourceUpdatedAt) => {
-    expect(assessForecastCoverage(points, metadata({ sourceUpdatedAt })).status).toBe('unavailable');
-  });
+  it.each([null, '', 'ikke-en-dato', '2026-02-30T08:12:00.000Z'])(
+    'rejects invalid sourceUpdatedAt evidence %j',
+    (sourceUpdatedAt) => {
+      expect(assessForecastCoverage(points, metadata({ sourceUpdatedAt })).status).toBe('unavailable');
+    },
+  );
 
-  it('distinguishes sampled and gapped evidence with conservative copy', () => {
+  it('distinguishes sampled and gapped evidence with conservative weather copy', () => {
     const sampled = assessForecastCoverage([
       '2026-02-12T08:00:00.000Z', '2026-02-12T11:00:00.000Z', '2026-02-12T14:00:00.000Z',
     ], metadata());
@@ -49,22 +52,26 @@ describe('Planlegg forecast evidence contracts', () => {
       '2026-02-12T08:00:00.000Z', '2026-02-12T09:01:00.000Z',
     ], metadata());
     expect(sampled.status).toBe('sampled');
-    expect(formatCoverageCopy(sampled)).toBe('Samme antrekk i de vurderte tidspunktene');
+    expect(formatCoverageCopy(sampled)).toBe('V\u00e6rdata for de vurderte tidspunktene.');
     expect(gapped.status).toBe('gapped');
-    expect(formatCoverageCopy(gapped)).not.toContain('hele dagen');
+    expect(formatCoverageCopy(gapped)).toBe('V\u00e6rdata finnes bare for enkelte tidspunkter.');
+    expect(formatCoverageCopy(sampled)).not.toContain('antrekk');
+    expect(formatCoverageCopy(gapped)).not.toContain('antrekk');
   });
 
   it.each([
     [['ikke-en-dato']],
+    [['2026-02-30T08:00:00.000Z']],
     [[points[0], points[0]]],
     [[]],
-  ])('rejects invalid, duplicate or missing points: %j', (input) => {
+  ])('rejects invalid, impossible, duplicate or missing points: %j', (input) => {
     expect(assessForecastCoverage(input, metadata()).status).toBe('unavailable');
   });
 
-  it('allows full-span wording only for fresh exact hourly adjacency', () => {
+  it('describes only exact hourly weather coverage without asserting an outfit', () => {
     const coverage = assessForecastCoverage(points, metadata());
-    expect(formatCoverageCopy(coverage)).toBe('Samme antrekk til kl. 11:00');
+    expect(formatCoverageCopy(coverage)).toBe('V\u00e6rdata hver time til kl. 11:00.');
+    expect(formatCoverageCopy(coverage)).not.toContain('antrekk');
   });
 
   it.todo('keeps fixed/manual persistence separate from future memory-only automatic forecast scope');

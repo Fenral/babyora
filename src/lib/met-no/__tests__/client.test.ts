@@ -37,6 +37,7 @@ function forecast(points: MetTimePoint[]): MetForecast {
 const NOW_ISO = '2026-02-12T09:00:00.000Z';
 const NOW_MS = Date.parse(NOW_ISO);
 const CACHE_TTL_MS = 60 * 60 * 1000;
+const MAX_STALE_AGE_MS = 6 * 60 * 60 * 1000;
 const CACHE_KEY = 'metno:61.23,8.77';
 
 function validForecast(...updatedAt: [unknown?]): MetForecast {
@@ -65,6 +66,16 @@ function installStorage(initial: Record<string, string> = {}) {
   } satisfies Storage;
   vi.stubGlobal('localStorage', storage);
   return { storage, values };
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((accept, decline) => {
+    resolve = accept;
+    reject = decline;
+  });
+  return { promise, resolve, reject };
 }
 
 describe('fetchForecast provenance and cache recovery', () => {
@@ -177,7 +188,7 @@ describe('fetchForecast provenance and cache recovery', () => {
     ['invalid forecast shape', JSON.stringify({ version: 1, fetchedAt: NOW_MS, data: { properties: {} } })],
   ])('ignores %s cache data and returns validated network evidence', async (_kind, raw) => {
     const network = validForecast();
-    installStorage({ [CACHE_KEY]: raw });
+    const { storage } = installStorage({ [CACHE_KEY]: raw });
     const fetchMock = vi.fn().mockResolvedValue(response(network));
     vi.stubGlobal('fetch', fetchMock);
 
@@ -186,9 +197,10 @@ describe('fetchForecast provenance and cache recovery', () => {
       metadata: { source: 'network', stale: false },
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(storage.removeItem).toHaveBeenCalledWith(CACHE_KEY);
   });
 
-  it.each([undefined, null, '', '   ', 'ikke-en-dato'])(
+  it.each([undefined, null, '', '   ', 'ikke-en-dato', '2026-02-30T08:12:00.000Z'])(
     'maps absent, blank or malformed updated_at %j to null',
     async (updatedAt) => {
       const data = validForecast(updatedAt);
@@ -253,6 +265,110 @@ describe('fetchForecast provenance and cache recovery', () => {
     await expect(fetchForecast(61.2345, 8.7654)).resolves.toMatchObject({
       forecast: data,
       metadata: { source: 'cache', cacheStatus: 'stale', stale: true },
+    });
+  });
+
+  it('evicts cache older than the conservative stale ceiling and never returns it', async () => {
+    const data = validForecast('2026-02-12T03:30:00.000Z');
+    const { storage } = installStorage({
+      [CACHE_KEY]: JSON.stringify({
+        version: 1,
+        fetchedAt: NOW_MS - MAX_STALE_AGE_MS - 1,
+        data,
+      }),
+    });
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
+
+    await expect(fetchForecast(61.2345, 8.7654)).rejects.toThrow('offline');
+    expect(storage.removeItem).toHaveBeenCalledWith(CACHE_KEY);
+  });
+
+  it.each([
+    ['temperature above range', (data: MetForecast) => { data.properties.timeseries[0]!.data.instant.details.air_temperature = 100; }],
+    ['negative wind', (data: MetForecast) => { data.properties.timeseries[0]!.data.instant.details.wind_speed = -0.1; }],
+    ['wind direction below range', (data: MetForecast) => { data.properties.timeseries[0]!.data.instant.details.wind_from_direction = -1; }],
+    ['humidity above 100', (data: MetForecast) => { data.properties.timeseries[0]!.data.instant.details.relative_humidity = 101; }],
+    ['cloud fraction below zero', (data: MetForecast) => { data.properties.timeseries[0]!.data.instant.details.cloud_area_fraction = -1; }],
+    ['negative precipitation', (data: MetForecast) => { data.properties.timeseries[0]!.data.next_1_hours!.details.precipitation_amount = -0.1; }],
+    ['unknown symbol', (data: MetForecast) => { data.properties.timeseries[0]!.data.next_1_hours!.summary.symbol_code = 'surprise_tornado'; }],
+    ['missing period evidence', (data: MetForecast) => {
+      delete data.properties.timeseries[0]!.data.next_1_hours;
+      delete data.properties.timeseries[0]!.data.next_6_hours;
+    }],
+  ])('rejects out-of-range or unknown %s evidence', async (_case, mutate) => {
+    const data = validForecast();
+    mutate(data);
+    installStorage();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(data)));
+
+    await expect(fetchForecast(61.2345, 8.7654)).rejects.toThrow('met.no: ugyldig prognose');
+  });
+
+  it.each([
+    ['impossible calendar time', ['2026-02-30T08:00:00.000Z']],
+    ['duplicate time', ['2026-02-12T08:00:00.000Z', '2026-02-12T08:00:00.000Z']],
+    ['reverse time', ['2026-02-12T09:00:00.000Z', '2026-02-12T08:00:00.000Z']],
+  ])('rejects %s in the forecast timeline', async (_case, times) => {
+    const data = forecast(times.map((time, index) => {
+      const item = point(2026, 1, 12, 8 + index, -3, 4.2);
+      item.time = time;
+      return item;
+    }));
+    installStorage();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(data)));
+
+    await expect(fetchForecast(61.2345, 8.7654)).rejects.toThrow('met.no: ugyldig prognose');
+  });
+
+  it.each([
+    ['future skew', '2026-02-12T09:05:00.001Z'],
+    ['source too old', '2026-02-12T02:59:59.999Z'],
+  ])('denies currentness when updated_at exceeds the %s policy', async (_case, updatedAt) => {
+    const data = validForecast(updatedAt);
+    installStorage();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(data)));
+
+    await expect(fetchForecast(61.2345, 8.7654)).resolves.toMatchObject({
+      metadata: { sourceUpdatedAt: null },
+    });
+  });
+
+  it('keeps the newer success atomic when same-key successes resolve in reverse order', async () => {
+    const older = deferred<Response>();
+    const newer = deferred<Response>();
+    const { values } = installStorage();
+    vi.stubGlobal('fetch', vi.fn()
+      .mockReturnValueOnce(older.promise)
+      .mockReturnValueOnce(newer.promise));
+    const olderCall = fetchForecast(61.2345, 8.7654);
+    const newerCall = fetchForecast(61.2345, 8.7654);
+    const newerData = validForecast('2026-02-12T08:50:00.000Z');
+    const olderData = validForecast('2026-02-12T08:20:00.000Z');
+
+    newer.resolve(response(newerData));
+    await expect(newerCall).resolves.toMatchObject({ forecast: newerData });
+    older.resolve(response(olderData));
+    await expect(olderCall).resolves.toMatchObject({ forecast: newerData });
+    expect(JSON.parse(values.get(CACHE_KEY) ?? '').data).toEqual(newerData);
+  });
+
+  it('re-reads newer fresh cache before an older same-key failure can fall back', async () => {
+    const older = deferred<Response>();
+    const newer = deferred<Response>();
+    installStorage();
+    vi.stubGlobal('fetch', vi.fn()
+      .mockReturnValueOnce(older.promise)
+      .mockReturnValueOnce(newer.promise));
+    const olderCall = fetchForecast(61.2345, 8.7654);
+    const newerCall = fetchForecast(61.2345, 8.7654);
+    const newerData = validForecast('2026-02-12T08:50:00.000Z');
+
+    newer.resolve(response(newerData));
+    await expect(newerCall).resolves.toMatchObject({ forecast: newerData });
+    older.reject(new TypeError('older offline'));
+    await expect(olderCall).resolves.toMatchObject({
+      forecast: newerData,
+      metadata: { source: 'cache', cacheStatus: 'fresh', stale: false },
     });
   });
 });

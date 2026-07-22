@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   createInitialWeatherRequestState,
   reduceWeatherRequestState,
+  selectWeatherForFetchKey,
+  startWeatherRequest,
   weatherStateFromForecastResult,
 } from '../useWeather';
 import type { ForecastFetchMetadata, ForecastFetchResult, MetForecast } from '../../lib/met-no/types';
@@ -44,6 +46,12 @@ const result = (tempC: number, evidence = metadata()): ForecastFetchResult => ({
   metadata: evidence,
 });
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((accept) => { resolve = accept; });
+  return { promise, resolve };
+}
+
 describe('weather result unwrap', () => {
   it('passes only result.forecast to every weather extractor', () => {
     const resolved = result(-3);
@@ -71,6 +79,24 @@ describe('weather result unwrap', () => {
     expect(extractors.now).not.toHaveBeenCalledWith(resolved);
     expect(state.forecast).toBe(resolved.forecast);
     expect(state.evidence?.metadata).toBe(resolved.metadata);
+    expect(state.attribution).toBe('V\u00e6r fra met.no');
+  });
+
+  it('contains stale evidence in an explicit offline state without legacy weather inputs', () => {
+    const stale = result(-3, metadata({
+      source: 'cache', cacheStatus: 'stale', stale: true,
+    }));
+
+    const state = weatherStateFromForecastResult(stale, 12);
+
+    expect(state.status).toBe('offline');
+    expect(state.now).toBeNull();
+    expect(state.hourly).toEqual([]);
+    expect(state.daily).toEqual([]);
+    expect(state.dailyAtHour).toEqual([]);
+    expect(state.forecast).toBeNull();
+    expect(state.offlineForecast).toBe(stale.forecast);
+    expect(state.evidence?.metadata.stale).toBe(true);
   });
 });
 
@@ -143,5 +169,46 @@ describe('weather request lifecycle', () => {
     expect(afterOldReject).toBe(state);
     expect(afterOldReject.weather.status).toBe('loading');
     expect(afterOldReject.weather.error).toBeNull();
+  });
+
+  it('fails closed on a rerender with a new key before the next effect starts', () => {
+    let state = createInitialWeatherRequestState('old');
+    state = reduceWeatherRequestState(state, { type: 'started', requestId: 1, fetchKey: 'old' });
+    state = reduceWeatherRequestState(state, {
+      type: 'resolved', requestId: 1, fetchKey: 'old', result: result(-8), refHour: 12,
+    });
+    expect(state.weather.now?.tempC).toBe(-8);
+
+    const rendered = selectWeatherForFetchKey(state, 'new');
+
+    expect(rendered).toMatchObject({
+      status: 'loading',
+      now: null,
+      forecast: null,
+      offlineForecast: null,
+      evidence: null,
+    });
+    expect(rendered.hourly).toEqual([]);
+  });
+
+  it('executes the real lifecycle cleanup and suppresses resolution dispatch', async () => {
+    const pending = deferred<ForecastFetchResult>();
+    const dispatch = vi.fn();
+    const lifecycle = startWeatherRequest({
+      requestId: 7,
+      fetchKey: '61,8,12',
+      refHour: 12,
+      load: () => pending.promise,
+      dispatch,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'started', requestId: 7, fetchKey: '61,8,12',
+    });
+
+    lifecycle.cancel();
+    pending.resolve(result(-3));
+    await lifecycle.settled;
+
+    expect(dispatch).toHaveBeenCalledTimes(1);
   });
 });
