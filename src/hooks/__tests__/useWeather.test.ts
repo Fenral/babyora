@@ -98,6 +98,26 @@ describe('weather result unwrap', () => {
     expect(state.offlineForecast).toBe(stale.forecast);
     expect(state.evidence?.metadata.stale).toBe(true);
   });
+
+  it.each([undefined, 'ikke-en-dato'])(
+    'contains missing or invalid updated_at %j without publishing current legacy weather',
+    (updatedAt) => {
+      const uncurrent = result(-3, metadata({ sourceUpdatedAt: null }));
+      uncurrent.forecast.properties.meta.updated_at = updatedAt as string;
+
+      const state = weatherStateFromForecastResult(uncurrent, 12);
+
+      expect(state.status).toBe('offline');
+      expect(state.now).toBeNull();
+      expect(state.hourly).toEqual([]);
+      expect(state.daily).toEqual([]);
+      expect(state.dailyAtHour).toEqual([]);
+      expect(state.forecast).toBeNull();
+      expect(state.offlineForecast).toBe(uncurrent.forecast);
+      expect(state.evidence?.metadata.sourceUpdatedAt).toBeNull();
+      expect(state.evidence?.coverage.status).toBe('unavailable');
+    },
+  );
 });
 
 describe('weather request lifecycle', () => {

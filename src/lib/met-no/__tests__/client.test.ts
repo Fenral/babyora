@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { extractDailyAtHour, extractHourly, fetchForecast } from '../client';
+import { extractDailyAtHour, extractHourly, extractNow, fetchForecast } from '../client';
 import type { MetForecast, MetTimePoint } from '../types';
 
 /** Bygg et timeseries-punkt på LOKAL tid (så getHours() blir deterministisk
@@ -200,6 +200,14 @@ describe('fetchForecast provenance and cache recovery', () => {
     expect(storage.removeItem).toHaveBeenCalledWith(CACHE_KEY);
   });
 
+  it('evicts an empty-string cache value before surfacing a network failure', async () => {
+    const { storage } = installStorage({ [CACHE_KEY]: '' });
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
+
+    await expect(fetchForecast(61.2345, 8.7654)).rejects.toThrow('offline');
+    expect(storage.removeItem).toHaveBeenCalledWith(CACHE_KEY);
+  });
+
   it.each([undefined, null, '', '   ', 'ikke-en-dato', '2026-02-30T08:12:00.000Z'])(
     'maps absent, blank or malformed updated_at %j to null',
     async (updatedAt) => {
@@ -305,6 +313,35 @@ describe('fetchForecast provenance and cache recovery', () => {
   });
 
   it.each([
+    'lightssleetshowersandthunder_day',
+    'lightssnowshowersandthunder_polartwilight',
+    'heavyrainandthunder',
+    'cloudy',
+  ])('accepts official MET symbol_code %s', async (symbolCode) => {
+    const data = validForecast();
+    data.properties.timeseries[0]!.data.next_1_hours!.summary.symbol_code = symbolCode;
+    installStorage();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(data)));
+
+    await expect(fetchForecast(61.2345, 8.7654)).resolves.toMatchObject({ forecast: data });
+  });
+
+  it.each([
+    'lightsleetshowersandthunder_day',
+    'lightsnowshowersandthunder_day',
+    'clearsky',
+    'cloudy_day',
+    'heavyrainandthunder_day',
+  ])('rejects non-enum MET symbol_code %s', async (symbolCode) => {
+    const data = validForecast();
+    data.properties.timeseries[0]!.data.next_1_hours!.summary.symbol_code = symbolCode;
+    installStorage();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(data)));
+
+    await expect(fetchForecast(61.2345, 8.7654)).rejects.toThrow('met.no: ugyldig prognose');
+  });
+
+  it.each([
     ['impossible calendar time', ['2026-02-30T08:00:00.000Z']],
     ['duplicate time', ['2026-02-12T08:00:00.000Z', '2026-02-12T08:00:00.000Z']],
     ['reverse time', ['2026-02-12T09:00:00.000Z', '2026-02-12T08:00:00.000Z']],
@@ -371,6 +408,60 @@ describe('fetchForecast provenance and cache recovery', () => {
       metadata: { source: 'cache', cacheStatus: 'fresh', stale: false },
     });
   });
+
+  it('commits an older valid success when a newer same-key request fails without cache', async () => {
+    const older = deferred<Response>();
+    const newer = deferred<Response>();
+    const { values } = installStorage();
+    vi.stubGlobal('fetch', vi.fn()
+      .mockReturnValueOnce(older.promise)
+      .mockReturnValueOnce(newer.promise));
+    const olderCall = fetchForecast(61.2345, 8.7654);
+    const newerCall = fetchForecast(61.2345, 8.7654);
+    const onlyValidData = validForecast('2026-02-12T08:20:00.000Z');
+
+    newer.reject(new TypeError('newer offline'));
+    await expect(newerCall).rejects.toThrow('newer offline');
+    older.resolve(response(onlyValidData));
+
+    await expect(olderCall).resolves.toMatchObject({
+      forecast: onlyValidData,
+      metadata: { source: 'network', cacheStatus: 'miss', stale: false },
+    });
+    expect(JSON.parse(values.get(CACHE_KEY) ?? '').data).toEqual(onlyValidData);
+  });
+
+  it('replaces stale cache with an older valid success after a newer same-key fallback', async () => {
+    const older = deferred<Response>();
+    const newer = deferred<Response>();
+    const stale = validForecast('2026-02-12T07:00:00.000Z');
+    const onlyValidData = validForecast('2026-02-12T08:20:00.000Z');
+    const { values } = installStorage({
+      [CACHE_KEY]: JSON.stringify({
+        version: 1,
+        fetchedAt: NOW_MS - CACHE_TTL_MS - 1,
+        data: stale,
+      }),
+    });
+    vi.stubGlobal('fetch', vi.fn()
+      .mockReturnValueOnce(older.promise)
+      .mockReturnValueOnce(newer.promise));
+    const olderCall = fetchForecast(61.2345, 8.7654);
+    const newerCall = fetchForecast(61.2345, 8.7654);
+
+    newer.reject(new TypeError('newer offline'));
+    await expect(newerCall).resolves.toMatchObject({
+      forecast: stale,
+      metadata: { source: 'cache', cacheStatus: 'stale', stale: true },
+    });
+    older.resolve(response(onlyValidData));
+
+    await expect(olderCall).resolves.toMatchObject({
+      forecast: onlyValidData,
+      metadata: { source: 'network', cacheStatus: 'miss', stale: false },
+    });
+    expect(JSON.parse(values.get(CACHE_KEY) ?? '').data).toEqual(onlyValidData);
+  });
 });
 
 describe('extractHourly', () => {
@@ -379,6 +470,20 @@ describe('extractHourly', () => {
     const [first] = extractHourly(fc, 1);
     expect(first?.windMs).toBe(4.5);
     expect(first?.tempC).toBe(2);
+  });
+
+  it('never exposes a six-hour precipitation total as an hourly recommendation input', () => {
+    const sixHourPoint = point(2026, 0, 1, 6, 2, 4.5);
+    delete sixHourPoint.data.next_1_hours;
+    sixHourPoint.data.next_6_hours = {
+      summary: { symbol_code: 'rain' },
+      details: { precipitation_amount: 60 },
+    };
+    const fc = forecast([sixHourPoint]);
+
+    expect(() => extractNow(fc)).toThrow('met.no: mangler en-timesbevis');
+    expect(() => extractHourly(fc, 1)).toThrow('met.no: mangler en-timesbevis');
+    expect(extractDailyAtHour(fc, 6, 1)[0]?.precipMmH).toBe(10);
   });
 });
 
