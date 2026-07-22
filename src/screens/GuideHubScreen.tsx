@@ -895,7 +895,7 @@ export function GuideHubScreen({
           ikke skjult med display:none (som ville etterlatt et tab-stopp). */}
       <header style={appbarStyle}>
         <div style={crumbStyle} aria-hidden="true">
-          Klemeg
+          Babyora
         </div>
       </header>
 

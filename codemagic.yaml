@@ -29,7 +29,7 @@ workflows:
         XCODE_SCHEME: 'App'
         BUNDLE_ID: 'no.klemeg.app'
         WIDGET_BUNDLE_ID: 'no.klemeg.app.widget'
-        APP_STORE_APPLE_ID: '6776416135' # Klemeg ASC-record (verified via Playwright 2026-06-08)
+        APP_STORE_APPLE_ID: '6776416135' # Babyora ASC-record; legacy bundle ID retained for continuity
         # Native (Capacitor) har ingen server på app-origin → met.no-proxyen
         # må peke på den absolutte Vercel-funksjonen. Web bruker relativ /api.
         VITE_FORECAST_PROXY: 'https://wool-app.vercel.app/api/forecast'
@@ -67,8 +67,12 @@ workflows:
       - name: Set build number + marketing version
         script: |
           cd ios/App
-          agvtool new-version -all $BUILD_NUMBER
-          agvtool new-marketing-version 1.0.6
+          # Codemagic-appen ble opprettet på nytt og dens interne BUILD_NUMBER
+          # startet derfor på 1. Hent i stedet siste TestFlight-nummer fra Apple,
+          # slik at serien fortsetter etter eksisterende bygg (157, 158, ...).
+          NEXT_TESTFLIGHT_BUILD=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID") + 1))
+          agvtool new-version -all "$NEXT_TESTFLIGHT_BUILD"
+          agvtool new-marketing-version 1.0.11
       - name: Initialize keychain
         script: |
           # Uten dette feiler codesign med errSecInternalComponent
@@ -168,7 +172,7 @@ workflows:
           cd android
           ./gradlew bundleRelease \
             -PversionCode=$BUILD_NUMBER \
-            -PversionName="1.0.6"
+            -PversionName="1.0.11"
     artifacts:
       - android/app/build/outputs/**/*.aab
     publishing:
