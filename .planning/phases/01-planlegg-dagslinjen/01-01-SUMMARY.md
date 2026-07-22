@@ -61,31 +61,34 @@ coverage:
       - kind: other
         ref: "rg static no-media/no-writer scan of e2e/planlegg.ts and e2e/fixtures/planlegg.ts"
         status: pass
+      - kind: e2e
+        ref: "two consecutive npx tsx e2e/planlegg.ts --case harness runs plus OS listener and connection-refusal checks on port 4191"
+        status: pass
     human_judgment: false
   - id: D3
     description: "Immutable Wave-0 candidate remains separated from product waves and later independent review"
     requirement: GOV-04
     verification:
       - kind: other
-        ref: "git diff --name-only 70ae7e6..d45cde0 and git diff --check 70ae7e6..d45cde0"
+        ref: "git diff --name-only 70ae7e6..130733f and git diff --check 70ae7e6..130733f"
         status: pass
     human_judgment: true
-    rationale: "The standard-risk process requires fresh review of exact candidate d45cde0 before an independent PASS can be recorded."
+    rationale: "The standard-risk process requires fresh review of repaired candidate 130733f before an independent PASS can be recorded."
 
-duration: 10min
+duration: 23min
 completed: 2026-07-22
 status: complete
 ---
 
 # Phase 1 Plan 01: Freeze Planlegg Delivery Contracts Summary
 
-**Deterministic invented Planlegg fixtures, 45 explicitly pending contracts, and a case-selectable no-write Playwright harness bound to candidate `d45cde0`.**
+**Deterministic invented Planlegg fixtures, 45 explicitly pending contracts, and a repeat-safe no-write Playwright harness bound to repaired candidate `130733f`.**
 
 ## Performance
 
-- **Duration:** 10 min
+- **Duration:** 23 min
 - **Started:** 2026-07-22T21:20:00+02:00
-- **Completed:** 2026-07-22T21:30:00+02:00
+- **Completed:** 2026-07-22T21:43:00+02:00
 - **Tasks:** 2
 - **Files modified:** 9
 
@@ -93,13 +96,14 @@ status: complete
 
 - Frozen normal-day, DST-boundary, TTL, forecast-validity, child, location, finalized-recommendation, Free/Plus/loading, and Snart gate fixtures using invented data only.
 - Registered 45 named `it.todo` contracts across forecast, timezone, view-model, exact-context, interaction, and future approved-rule Snart ownership without treating a TODO as PASS evidence.
-- Added `PLANLEGG_E2E_FIXTURES` and a strict `--case harness` runner that boots the demo seed at 390x844 in `Europe/Oslo`, collects runtime/network failures, asserts one app-owned `main`, and verifies Hjem/Planlegg/Guide/Familie.
+- Added `PLANLEGG_E2E_FIXTURES` and a strict `--case harness` runner that boots the demo seed at 390x844 in `Europe/Oslo`, collects runtime/network failures, asserts one app-owned `main`, verifies Hjem/Planlegg/Guide/Familie, and synchronously releases its preview process and port.
 
 ## Task Commits
 
 1. **Task 1: Freeze deterministic fixtures and pending contracts** — `093d13d` (`test`)
 2. **Task 1 cleanup: normalize contract file endings** — `b82214d` (`style`)
 3. **Task 2: Add the case-selectable no-media browser harness** — `d45cde0` (`test`)
+4. **Verifier repair: terminate the actual preview process and await port release** — `130733f` (`fix`)
 
 **Plan metadata:** recorded by the final GSD documentation commit.
 
@@ -117,21 +121,23 @@ status: complete
 
 ## Deterministic Evidence
 
-Candidate reviewed by executor checks: `d45cde0`.
+Current candidate reviewed by executor checks: `130733f`.
 
 | Identity | Lane | Candidate | Verdict/evidence |
 |---|---|---|---|
-| Codex GSD executor, current session | Standard test infrastructure | `d45cde0` | `READY_FOR_REVIEW`; both exact plan commands and static/scope checks green; executor does not issue independent PASS |
-| Fresh Sonnet 5 High reviewer | Standard independent review | `d45cde0` | **Pending**; no independent PASS/BLOCK verdict has been issued in this execution context |
-| Fresh plan/UI checker | Standard contract review | `d45cde0` | **Pending** on candidate; pre-execution convergence existed on planning-only start SHA `70ae7e6` |
+| Independent fresh verifier | Standard independent review | `d45cde0` | **BLOCK** — Windows `shell: true` killed only the shell-facing process and leaked the actual Vite preview child/port |
+| Codex GSD executor, repair session | Standard test infrastructure | `130733f` | `READY_FOR_REVIEW`; exact command, repeat-run, port-release, static, and scope checks green; executor does not issue independent PASS |
+| Fresh Sonnet 5 High reviewer | Standard independent review | `130733f` | **Pending**; repaired candidate requires a new immutable-SHA verdict |
+| Fresh plan/UI checker | Standard contract review | `130733f` | **Pending** on repaired candidate; pre-execution convergence existed on planning-only start SHA `70ae7e6` |
 
 - Focused Vitest command: PASS as infrastructure — 6 suites skipped by design, 45 TODOs registered, 0 TODOs counted as passed behavior.
 - Exact build/harness command: PASS — main and bare builds green; `PLANLEGG HARNESS PASS: case=harness fixture=planlegg-harness-v1`.
+- Repeat-run/port-release check: PASS — two consecutive harness runs both report `PLANLEGG PREVIEW STOPPED: port=4191`; the final OS listener count is zero and a direct connection is refused.
 - Unknown case check: PASS — exit 1 and reports `Støttede case: harness`.
 - Static capture scan: PASS — no matches for the prohibited capture/audit API tokens.
 - Static writer/payload scan: PASS — no filesystem writer, environment dump, or payload serialization tokens.
-- Scope check: PASS — `70ae7e6..d45cde0` contains exactly the nine Plan 01-01 target files.
-- `git diff --check 70ae7e6..d45cde0`: PASS.
+- Scope check: PASS — `70ae7e6..130733f` contains exactly the nine Plan 01-01 target files plus the already-required Summary/State/Roadmap bookkeeping.
+- `git diff --check 70ae7e6..130733f`: PASS.
 - Approved source baseline `e669aff` to execution start `70ae7e6` changed planning/governance documents only; no production app file changed between those SHAs.
 
 ## Decisions Made
@@ -155,12 +161,20 @@ Candidate reviewed by executor checks: `d45cde0`.
 **2. [Rule 1 - Bug] Restored the proven Windows preview spawn pattern**
 - **Found during:** Task 2 exact build/harness verification.
 - **Issue:** A warning-avoidance attempt using `npx.cmd` with `shell: false` failed with `spawn EINVAL` on Windows after the build completed.
-- **Fix:** Restored the repository's fixed-argument `spawn('npx', ..., shell: process.platform === 'win32')` pattern.
+- **Fix:** Initially restored the repository's fixed-argument `spawn('npx', ..., shell: process.platform === 'win32')` pattern.
 - **Files modified:** `e2e/planlegg.ts`.
-- **Verification:** The exact Task 2 command passes and the preview process closes in `finally`.
+- **Verification:** The exact Task 2 command passed locally, but independent review later proved that the shell intermediary left the actual Vite child alive; candidate `d45cde0` was correctly BLOCKED.
 - **Committed in:** `d45cde0`.
 
-**Total deviations:** 2 auto-fixed Rule 1 bugs.
+**3. [Rule 1 - Bug] Eliminated the leaked Windows preview child found by independent review**
+- **Found during:** Fresh independent verification of candidate `d45cde0`.
+- **Issue:** `server.kill()` targeted the `shell: true` process rather than the actual Vite preview child and did not await tree/port shutdown.
+- **Fix:** Resolve the repository-local Vite CLI, spawn it directly with `process.execPath` and `shell: false`, close the browser in `finally`, terminate and await the real child, escalate on timeout, then await connection refusal on port 4191 before reporting PASS.
+- **Files modified:** `e2e/planlegg.ts`.
+- **Verification:** Exact build/harness PASS; two consecutive harness invocations PASS; final port listener count zero; connection refused; no user-controlled shell interpolation.
+- **Committed in:** `130733f`.
+
+**Total deviations:** 3 auto-fixed Rule 1 bugs.
 **Impact on plan:** No scope expansion, dependency, production behavior, media, or persisted artifact was added.
 
 ## Known Stubs
@@ -172,7 +186,7 @@ These intentional stubs do not block Plan 01-01's goal, which is to freeze pendi
 
 ## Issues Encountered
 
-- Node emits DEP0190 for the repository-compatible Windows `shell: true` preview spawn. Arguments are fixed internal literals, no user-controlled value reaches the spawned command, and the harness succeeds; no package or production change was made.
+- Independent review correctly blocked `d45cde0` for a Windows process-lifecycle leak that a single local run did not reveal. Candidate `130733f` removes the shell intermediary and adds deterministic repeat/port-release evidence.
 
 ## User Setup Required
 
@@ -180,20 +194,20 @@ None — no external service, credential, package, or environment change is requ
 
 ## Remaining Gates
 
-- Fresh Sonnet 5 High standard review on exact candidate `d45cde0`.
-- Fresh plan/UI checker review on exact candidate `d45cde0`.
+- Fresh Sonnet 5 High standard review on exact repaired candidate `130733f`.
+- Fresh plan/UI checker review on exact repaired candidate `130733f`.
 - All production Wave 0–6 contracts remain pending their owning plans.
 - Six Snart approvals and independently supplied climate artifacts remain Pending and block Plan 01-13.
 - VoiceOver, TalkBack, physical haptics, OS text scaling, one-handed reach, app media, media-based 90+, and owner release approval remain Pending.
 
 ## Next Phase Readiness
 
-- Plan 01-02 may consume the frozen forecast fixtures after exact-SHA independent review is recorded.
+- Plan 01-02 may consume the frozen forecast fixtures after exact-SHA independent review of `130733f` is recorded.
 - No product logic, package, dependency, API, schema, recommendation, pricing, RevenueCat, analytics, media, marketing, brand, store, or onboarding-verification artifact changed.
 
 ## Self-Check: PASSED
 
-All nine target files, this summary, and commits `093d13d`, `b82214d`, and `d45cde0` exist.
+All nine target files, this summary, and commits `093d13d`, `b82214d`, `d45cde0`, and `130733f` exist.
 
 ---
 *Phase: 01-planlegg-dagslinjen*

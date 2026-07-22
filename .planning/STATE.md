@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Completed 01-01-PLAN.md; candidate d45cde0 ready for independent review
-last_updated: "2026-07-22T19:32:29.578Z"
+stopped_at: Repaired Plan 01-01 verifier blocker; candidate 130733f ready for independent review
+last_updated: "2026-07-22T21:43:00+02:00"
 last_activity: 2026-07-22
-last_activity_desc: Plan 01-01 froze deterministic Wave-0 contracts and the no-media browser harness on candidate d45cde0; independent exact-SHA review remains pending.
+last_activity_desc: Repaired the Plan 01-01 Windows preview lifecycle after d45cde0 was blocked; repeat-safe candidate 130733f awaits fresh exact-SHA review.
 progress:
   total_phases: 4
   completed_phases: 0
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
 Plan: 1 of 18 in current phase
-Status: Plan 01-01 execution complete; candidate `d45cde0` ready for independent review
-Last activity: 2026-07-22 — Frozen deterministic Wave-0 contracts and the no-media browser harness; all executor checks are green and exact-SHA review remains pending.
+Status: Plan 01-01 verifier repair complete; candidate `130733f` ready for independent review
+Last activity: 2026-07-22 — Replaced the leaking Windows shell intermediary with direct Vite CLI lifecycle control; exact and repeat-run checks are green.
 
 Progress: [█░░░░░░░░░] 6%
 
@@ -39,18 +39,18 @@ Progress: [█░░░░░░░░░] 6%
 **Velocity:**
 
 - Total plans completed: 1
-- Average duration: 10 min
-- Total execution time: 0.17 hours
+- Average duration: 23 min
+- Total execution time: 0.38 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Planlegg/Dagslinjen | 1 | 18 | 10 min |
+| 1. Planlegg/Dagslinjen | 1 | 18 | 23 min |
 
 **Recent Trend:**
 
-- Last 5 plans: 10 min
+- Last 5 plans: 23 min
 - Trend: Initial plan complete
 
 *Updated after each plan completion*
@@ -58,7 +58,7 @@ Progress: [█░░░░░░░░░] 6%
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
-| Phase 01-planlegg-dagslinjen P01 | 10min | 2 tasks | 9 files |
+| Phase 01-planlegg-dagslinjen P01 | 23min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -75,10 +75,11 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 1]: Wave 0 uses explicit ISO clocks and Europe/Oslo; no fixture or contract depends on Date.now().
 - [Phase 1]: The initial Planlegg browser registry exposes only harness; later cases remain owned by their later plans.
 - [Phase 1]: Executor checks establish readiness only; fresh exact-SHA standard review remains Pending.
+- [Phase 1]: Candidate `d45cde0` was independently BLOCKED for a leaked Windows preview child; repaired candidate `130733f` directly owns and awaits the Vite process and port shutdown.
 
 ### Pending Todos
 
-- Record fresh independent review on candidate `d45cde0`, then continue with Plan 01-02.
+- Record fresh independent review on repaired candidate `130733f`, then continue with Plan 01-02.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -98,6 +99,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-22T19:32:29.569Z
-Stopped at: Completed 01-01-PLAN.md; candidate d45cde0 ready for independent review
+Last session: 2026-07-22T21:43:00+02:00
+Stopped at: Repaired Plan 01-01 verifier blocker; candidate 130733f ready for independent review
 Resume file: None
