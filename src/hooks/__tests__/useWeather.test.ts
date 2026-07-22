@@ -6,7 +6,21 @@ import {
   startWeatherRequest,
   weatherStateFromForecastResult,
 } from '../useWeather';
-import type { ForecastFetchMetadata, ForecastFetchResult, MetForecast } from '../../lib/met-no/types';
+import type {
+  ForecastFetchMetadata,
+  ForecastFetchResult,
+  MetForecast,
+  MetTimePoint,
+} from '../../lib/met-no/types';
+
+const OFFICIAL_UNITS = {
+  air_temperature: 'celsius',
+  precipitation_amount: 'mm',
+  wind_speed: 'm/s',
+  wind_from_direction: 'degrees',
+  relative_humidity: '%',
+  cloud_area_fraction: '%',
+} as const;
 
 const metadata = (overrides: Partial<ForecastFetchMetadata> = {}): ForecastFetchMetadata => ({
   source: 'network',
@@ -19,7 +33,7 @@ const metadata = (overrides: Partial<ForecastFetchMetadata> = {}): ForecastFetch
 
 const forecast = (tempC: number): MetForecast => ({
   properties: {
-    meta: { updated_at: '2026-02-12T08:12:00.000Z', units: {} },
+    meta: { updated_at: '2026-02-12T08:12:00.000Z', units: { ...OFFICIAL_UNITS } },
     timeseries: [{
       time: '2026-02-12T08:00:00.000Z',
       data: {
@@ -40,6 +54,35 @@ const forecast = (tempC: number): MetForecast => ({
     }],
   },
 });
+
+const compactShapedForecast = (): MetForecast => {
+  const start = Date.parse('2026-02-12T08:00:00.000Z');
+  const points = Array.from({ length: 87 }, (_, index): MetTimePoint => ({
+    time: new Date(start + index * 60 * 60 * 1000).toISOString(),
+    data: {
+      instant: {
+        details: {
+          air_temperature: -3 + (index % 4),
+          wind_speed: 2,
+          wind_from_direction: 180,
+          relative_humidity: 70,
+          cloud_area_fraction: 40,
+        },
+      },
+      next_1_hours: {
+        summary: { symbol_code: 'cloudy' },
+        details: { precipitation_amount: 0 },
+      },
+    },
+  }));
+  delete points.at(-1)!.data.next_1_hours;
+  return {
+    properties: {
+      meta: { updated_at: '2026-02-12T08:12:00.000Z', units: { ...OFFICIAL_UNITS } },
+      timeseries: points,
+    },
+  };
+};
 
 const result = (tempC: number, evidence = metadata()): ForecastFetchResult => ({
   forecast: forecast(tempC),
@@ -118,6 +161,35 @@ describe('weather result unwrap', () => {
       expect(state.evidence?.coverage.status).toBe('unavailable');
     },
   );
+
+  it('accepts a terminal instant-only point but excludes it from extraction and coverage', () => {
+    const data = compactShapedForecast();
+    const resolved: ForecastFetchResult = { forecast: data, metadata: metadata() };
+
+    const state = weatherStateFromForecastResult(resolved, 12);
+
+    expect(state.status).toBe('ready');
+    expect(state.forecast?.properties.timeseries).toHaveLength(87);
+    expect(state.hourly).toHaveLength(48);
+    expect(state.evidence?.coverage.points).toHaveLength(86);
+    expect(state.evidence?.coverage.endIso).toBe(data.properties.timeseries[85]!.time);
+  });
+
+  it('fails closed when consumed-field units are missing or incompatible', () => {
+    const invalid = result(-3);
+    invalid.forecast.properties.meta.units.wind_speed = 'km/h';
+
+    const state = weatherStateFromForecastResult(invalid, 12);
+
+    expect(state).toMatchObject({
+      status: 'error',
+      now: null,
+      forecast: null,
+      offlineForecast: null,
+      evidence: null,
+    });
+    expect(state.hourly).toEqual([]);
+  });
 });
 
 describe('weather request lifecycle', () => {
