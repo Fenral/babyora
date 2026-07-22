@@ -1,10 +1,14 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 import { chromium, type Browser, type Page } from 'playwright';
 import { PLANLEGG_E2E_FIXTURES, type PlanleggE2EFixture } from './fixtures/planlegg.js';
 
 const PORT = 4191;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 const SUPPORTED_CASES = Object.keys(PLANLEGG_E2E_FIXTURES);
+const require = createRequire(import.meta.url);
+const VITE_CLI = join(dirname(require.resolve('vite/package.json')), 'bin', 'vite.js');
 
 function parseCase(argv: readonly string[]): string {
   const inline = argv.find((value) => value.startsWith('--case='));
@@ -19,9 +23,18 @@ function parseCase(argv: readonly string[]): string {
   return selected;
 }
 
-async function waitForServer(url: string, timeoutMs = 30_000): Promise<void> {
+async function waitForServer(url: string, server: ChildProcess, timeoutMs = 30_000): Promise<void> {
+  let spawnError: Error | null = null;
+  server.once('error', (error) => {
+    spawnError = error;
+  });
+
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    if (spawnError) throw spawnError;
+    if (server.exitCode !== null) {
+      throw new Error(`Preview-prosessen avsluttet før oppstart med kode ${server.exitCode}`);
+    }
     try {
       const response = await fetch(url);
       if (response.ok) return;
@@ -31,6 +44,49 @@ async function waitForServer(url: string, timeoutMs = 30_000): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   throw new Error(`Preview-server svarte ikke på ${url} innen ${timeoutMs} ms`);
+}
+
+async function waitForExit(server: ChildProcess, timeoutMs: number): Promise<boolean> {
+  if (server.exitCode !== null || server.signalCode !== null) return true;
+
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      server.off('exit', onExit);
+      resolve(false);
+    }, timeoutMs);
+    const onExit = () => {
+      clearTimeout(timer);
+      resolve(true);
+    };
+    server.once('exit', onExit);
+  });
+}
+
+async function waitForPortRelease(url: string, timeoutMs = 5_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      await fetch(url);
+    } catch {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`Preview-port ${PORT} ble ikke frigitt innen ${timeoutMs} ms`);
+}
+
+async function stopPreviewServer(server: ChildProcess): Promise<void> {
+  if (server.exitCode === null && server.signalCode === null) {
+    server.kill();
+    if (!(await waitForExit(server, 5_000))) {
+      server.kill('SIGKILL');
+      if (!(await waitForExit(server, 5_000))) {
+        throw new Error('Preview-prosessen avsluttet ikke etter tvungen terminering');
+      }
+    }
+  }
+  await waitForPortRelease(BASE_URL);
+  console.log(`PLANLEGG PREVIEW STOPPED: port=${PORT}`);
 }
 
 function collectFailures(page: Page): string[] {
@@ -85,13 +141,15 @@ async function main(): Promise<void> {
   const fixture = PLANLEGG_E2E_FIXTURES[caseName as keyof typeof PLANLEGG_E2E_FIXTURES];
   let server: ChildProcess | null = null;
   let browser: Browser | null = null;
+  let harnessPassed = false;
 
   try {
-    server = spawn('npx', ['vite', 'preview', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], {
+    server = spawn(process.execPath, [VITE_CLI, 'preview', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], {
       stdio: 'ignore',
-      shell: process.platform === 'win32',
+      shell: false,
+      windowsHide: true,
     });
-    await waitForServer(BASE_URL);
+    await waitForServer(BASE_URL, server);
 
     browser = await chromium.launch();
     const context = await browser.newContext({
@@ -101,11 +159,14 @@ async function main(): Promise<void> {
     const page = await context.newPage();
     await runHarness(page, fixture);
     await context.close();
-
-    console.log(`PLANLEGG HARNESS PASS: case=${caseName} fixture=${fixture.id}`);
+    harnessPassed = true;
   } finally {
     await browser?.close();
-    if (server && !server.killed) server.kill();
+    if (server) await stopPreviewServer(server);
+  }
+
+  if (harnessPassed) {
+    console.log(`PLANLEGG HARNESS PASS: case=${caseName} fixture=${fixture.id}`);
   }
 }
 
