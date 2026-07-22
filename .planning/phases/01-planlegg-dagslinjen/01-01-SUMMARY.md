@@ -66,14 +66,14 @@ coverage:
         status: pass
     human_judgment: false
   - id: D3
-    description: "Immutable Wave-0 candidate remains separated from product waves and later independent review"
+    description: "Immutable Wave-0 candidate remains separated from product waves and carries an exact-SHA independent review"
     requirement: GOV-04
     verification:
       - kind: other
         ref: "git diff --name-only 70ae7e6..9115aeb and git diff --check 70ae7e6..9115aeb"
         status: pass
     human_judgment: true
-    rationale: "The standard-risk process requires fresh review of repaired candidate 9115aeb before an independent PASS can be recorded."
+    rationale: "Fresh independent verification passed repaired candidate 9115aeb; the separate plan/UI checker remains pending."
 
 duration: 27min
 completed: 2026-07-22
@@ -122,21 +122,22 @@ status: complete
 
 ## Deterministic Evidence
 
-Current candidate reviewed by executor checks: `9115aeb`.
+Current immutable candidate independently reviewed: `9115aeb`.
 
 | Identity | Lane | Candidate | Verdict/evidence |
 |---|---|---|---|
 | Independent fresh verifier | Standard independent review | `d45cde0` | **BLOCK** — Windows `shell: true` killed only the shell-facing process and leaked the actual Vite preview child/port |
 | Codex GSD executor, repair session | Standard test infrastructure | `9115aeb` | `READY_FOR_REVIEW`; exact command, repeat-run, port-release, static, and scope checks green; executor does not issue independent PASS |
-| Fresh Sonnet 5 High reviewer | Standard independent review | `9115aeb` | **Pending**; repaired candidate requires a new immutable-SHA verdict |
+| Codex independent verifier, fresh context | Standard independent review | `9115aeb` | **PASS** — exact build/harness, two consecutive repeat runs, success/failure cleanup, port/process release, static scans, scope and diff checks passed on the detached SHA |
 | Fresh plan/UI checker | Standard contract review | `9115aeb` | **Pending** on repaired candidate; pre-execution convergence existed on planning-only start SHA `70ae7e6` |
 
 - Focused Vitest command: PASS as infrastructure — 6 suites skipped by design, 45 TODOs registered, 0 TODOs counted as passed behavior.
 - Exact build/harness command: PASS — main and bare builds green; `PLANLEGG HARNESS PASS: case=harness fixture=planlegg-harness-v1`.
-- Repeat-run/port-release check: PASS — two consecutive harness runs both report `PLANLEGG PREVIEW STOPPED: port=4191`; the final OS listener count is zero and a direct connection is refused.
+- Repeat-run/port-release check: PASS — the exact build/harness run plus two consecutive direct harness runs report `PLANLEGG PREVIEW STOPPED: port=4191`; port 4191 and the candidate Vite process are absent after every run.
+- Failure-path cleanup check: PASS — forcing Playwright browser launch to fail still reports `PLANLEGG PREVIEW STOPPED: port=4191`, exits nonzero, and leaves no listener or candidate Vite process.
 - Unknown case check: PASS — exit 1 and reports `Støttede case: harness`.
 - Static capture scan: PASS — no matches for the prohibited capture/audit API tokens.
-- Static writer/payload scan: PASS — no filesystem writer, environment dump, or payload serialization tokens.
+- Static writer/environment/payload/shell scan: PASS — no filesystem writer, environment access/dump, payload serialization or shell interpolation; the fixed Vite CLI arguments use `process.execPath` with `shell: false`.
 - Scope check: PASS — `70ae7e6..9115aeb` contains exactly the nine Plan 01-01 target files plus the already-required Summary/State/Roadmap bookkeeping.
 - `git diff --check 70ae7e6..9115aeb`: PASS.
 - Approved source baseline `e669aff` to execution start `70ae7e6` changed planning/governance documents only; no production app file changed between those SHAs.
@@ -195,7 +196,6 @@ None — no external service, credential, package, or environment change is requ
 
 ## Remaining Gates
 
-- Fresh Sonnet 5 High standard review on exact repaired candidate `9115aeb`.
 - Fresh plan/UI checker review on exact repaired candidate `9115aeb`.
 - All production Wave 0–6 contracts remain pending their owning plans.
 - Six Snart approvals and independently supplied climate artifacts remain Pending and block Plan 01-13.
@@ -203,7 +203,7 @@ None — no external service, credential, package, or environment change is requ
 
 ## Next Phase Readiness
 
-- Plan 01-02 may consume the frozen forecast fixtures after exact-SHA independent review of `9115aeb` is recorded.
+- The exact-SHA independent reviewer gate is closed with PASS on `9115aeb`; the separate fresh plan/UI checker remains before Plan 01-02 proceeds.
 - No product logic, package, dependency, API, schema, recommendation, pricing, RevenueCat, analytics, media, marketing, brand, store, or onboarding-verification artifact changed.
 
 ## Self-Check: PASSED

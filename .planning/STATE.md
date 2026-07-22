@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Repaired Plan 01-01 verifier blocker; candidate 9115aeb ready for independent review
-last_updated: "2026-07-22T21:47:00+02:00"
+stopped_at: Plan 01-01 candidate 9115aeb independently passed; fresh plan/UI checker remains
+last_updated: "2026-07-22T22:31:00+02:00"
 last_activity: 2026-07-22
-last_activity_desc: Repaired the Plan 01-01 Windows preview lifecycle after d45cde0 was blocked; repeat-safe candidate 9115aeb awaits fresh exact-SHA review.
+last_activity_desc: Fresh independent verification passed repeat-safe Plan 01-01 candidate 9115aeb; the separate plan/UI checker remains pending.
 progress:
   total_phases: 4
   completed_phases: 0
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
 Plan: 1 of 18 in current phase
-Status: Plan 01-01 verifier repair complete; candidate `9115aeb` ready for independent review
-Last activity: 2026-07-22 — Replaced the leaking Windows shell intermediary with direct Vite CLI lifecycle control; exact and repeat-run checks are green.
+Status: Plan 01-01 candidate `9115aeb` independently PASS; fresh plan/UI checker pending
+Last activity: 2026-07-22 — Fresh detached-SHA verification proved exact build/harness, repeat runs, success/failure cleanup, port release, static boundaries, scope and diff checks.
 
 Progress: [█░░░░░░░░░] 6%
 
@@ -74,12 +74,12 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Milestone]: Phase 2 delivers Outfit truth/Antrekkskart, Phase 3 Living Home/signature transition, and Phase 4 cross-surface convergence.
 - [Phase 1]: Wave 0 uses explicit ISO clocks and Europe/Oslo; no fixture or contract depends on Date.now().
 - [Phase 1]: The initial Planlegg browser registry exposes only harness; later cases remain owned by their later plans.
-- [Phase 1]: Executor checks establish readiness only; fresh exact-SHA standard review remains Pending.
-- [Phase 1]: Candidate `d45cde0` was independently BLOCKED for a leaked Windows preview child; repaired candidate `9115aeb` directly owns and awaits the Vite process and port shutdown.
+- [Phase 1]: Executor checks establish readiness only; fresh independent verification passed exact candidate `9115aeb`.
+- [Phase 1]: Candidate `d45cde0` was independently BLOCKED for a leaked Windows preview child; repaired candidate `9115aeb` directly owns, awaits and verifiably releases the Vite process and port on success and failure paths.
 
 ### Pending Todos
 
-- Record fresh independent review on repaired candidate `9115aeb`, then continue with Plan 01-02.
+- Record the separate fresh plan/UI checker verdict on candidate `9115aeb`, then continue with Plan 01-02.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -99,6 +99,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-22T21:47:00+02:00
-Stopped at: Repaired Plan 01-01 verifier blocker; candidate 9115aeb ready for independent review
+Last session: 2026-07-22T22:31:00+02:00
+Stopped at: Plan 01-01 candidate 9115aeb independently passed; fresh plan/UI checker remains
 Resume file: None
