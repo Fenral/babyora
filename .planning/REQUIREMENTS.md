@@ -21,7 +21,7 @@ These 14 requirements are the complete committed scope for this bounded feature 
   - **Source intel:** `REQ-dagslinjen-contract-freeze`
   - **Acceptance:** UI-SPEC covers normal, no-change, one-change, many-change, rain, location, extreme-temperature, loading, error, offline, Free, Plus, Snart, dark, 200%-text, reduced-motion, and focus states while preserving the locked hierarchy, copy, motion, and haptic grammar. File-level plans identify allowed paths, non-goals, risk lane, model/effort, tests, candidate commit, rollback, baseline evidence, and governing-source SHAs. The current owner authorization is locked for this unchanged bounded scope; a material deviation requires renewed authorization after review.
 
-- [ ] **GOV-04**: Standard-risk and high-risk work is isolated into separately verified immutable candidate slices.
+- [x] **GOV-04**: Standard-risk and high-risk work is isolated into separately verified immutable candidate slices.
   - **Source intel:** `REQ-risk-routed-execution`
   - **Acceptance:** Layout, component, navigation, motion, and accessibility work remains standard risk. Coverage claims, action sentences, exact future context, Free/Plus access, and Snart advice remain high risk. Each lane has a separate candidate commit and fresh independent PASS bound to its exact SHA; any edit invalidates that PASS. Missing approved high-risk verification blocks rather than downgrades the gate.
 
@@ -35,7 +35,7 @@ These 14 requirements are the complete committed scope for this bounded feature 
 
 ### Truth and Exact Context
 
-- [ ] **TRUTH-01**: Dagslinjen derives a truthful presentation model containing only evidence-supported recommendation changes without modifying recommendation rules.
+- [x] **TRUTH-01**: Dagslinjen derives a truthful presentation model containing only evidence-supported recommendation changes without modifying recommendation rules.
   - **Source intel:** `REQ-truthful-planning-model`
   - **Acceptance:** Events use stable ISO timestamp identity; keep added and removed garments distinct; support add, remove, swap, rain, location, and preparation actions; carry plain-language weather cause and destination context; and generate verb-led actions without leading with `+N`. Coverage distinguishes contiguous hourly data from samples, and hour/day/same-outfit-until claims require evidence. Passive weather-only change creates no clothing marker. Tests cover change cardinality, action types, coverage, ordering, duplicate fingerprints, DST, Europe/Oslo, and safe loading/error/offline output.
 
@@ -67,7 +67,7 @@ These 14 requirements are the complete committed scope for this bounded feature 
   - **Source intel:** `REQ-deferred-visual-capture`
   - **Acceptance:** In-progress work may use DOM assertions, component tests, accessibility checks, and browser interaction without persisted visual media. No new app screenshots or video are captured during changing implementation. The media-based visual gate remains explicitly `Pending` and can begin only after a stable candidate exists and the owner grants permission.
 
-- [ ] **EVID-02**: The stable candidate has deterministic independent evidence, while final media, physical-device, 90+, and release approval remain gated honestly.
+- [x] **EVID-02**: The stable candidate has deterministic independent evidence, while final media, physical-device, 90+, and release approval remain gated honestly.
   - **Source intel:** `REQ-dagslinjen-release-evidence`
   - **Acceptance:** Current/future copy matches evaluated data coverage; exact future context, Free/Plus boundaries, one-main/one-scroll structure, and dominant Dagslinjen hold. Truth, context, access, accessibility, tests, lint, build and deterministic E2E checks pass on the final candidate SHA and clean checkout using fixtures that freeze 390×844, Europe/Oslo, clock, forecast, child, and entitlement. A deterministic text-only independent review packet binds the exact SHA, changed-path manifest, complete command matrix, requirement/evidence matrix, source-boundary scans, DOM/browser matrix, no-media scan and separate standard/high-risk verdicts. `audit:prepare` and `audit:finalize` remain deferred while media is forbidden. No truth, entitlement, safety, accessibility, P0, or P1 failure remains. VoiceOver/TalkBack, text scaling, haptics, one-handed use, and visual fit still require final physical-device evidence. App media and the 90+ visual score remain `Pending` until the candidate is stable and the owner authorizes capture; the package cannot claim final release completion before those gates pass.
 
@@ -116,17 +116,17 @@ These requirements implement the approved UX & Motion Bible after the bounded Pl
 | GOV-01 | Phase 1 | Pending |
 | GOV-02 | Phase 1 | Pending |
 | GOV-03 | Phase 1 | Pending |
-| GOV-04 | Phase 1 | Pending |
+| GOV-04 | Phase 1 | Complete |
 | GOV-05 | Phase 1 | Pending |
 | GOV-06 | Phase 1 | Pending |
-| TRUTH-01 | Phase 1 | Pending |
+| TRUTH-01 | Phase 1 | Complete |
 | CTXT-01 | Phase 1 | Pending |
 | UI-01 | Phase 1 | Pending |
 | UI-02 | Phase 1 | Pending |
 | ACCESS-01 | Phase 1 | Pending |
 | A11Y-01 | Phase 1 | Pending |
 | EVID-01 | Phase 1 | Pending |
-| EVID-02 | Phase 1 | Pending |
+| EVID-02 | Phase 1 | Complete |
 | OUTFIT-01 | Phase 2 | Pending |
 | OUTFIT-02 | Phase 2 | Pending |
 | HOME-01 | Phase 3 | Pending |
@@ -134,6 +134,7 @@ These requirements implement the approved UX & Motion Bible after the bounded Pl
 | CONV-01 | Phase 4 | Pending |
 
 **Coverage:**
+
 - milestone requirements: 19 total (14 bounded Phase 1 + 5 UX/Motion Bible)
 - Mapped to phases: 19
 - Unmapped: 0 ✓
