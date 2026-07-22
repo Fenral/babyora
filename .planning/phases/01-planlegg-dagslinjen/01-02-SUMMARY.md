@@ -47,10 +47,10 @@ coverage:
     requirement: TRUTH-01
     verification:
       - kind: unit
-        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (46 passed)"
+        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (59 passed)"
         status: pass
       - kind: other
-        ref: "git diff --check 32e84b8..b9b8b51 and exact seven-path repair scope manifest"
+        ref: "git diff --check 6959443..80c6da2 and exact five-path second-repair scope manifest"
         status: pass
     human_judgment: false
   - id: D2
@@ -69,10 +69,10 @@ coverage:
     requirement: EVID-02
     verification:
       - kind: unit
-        ref: "focused four-suite run (71 passed, 1 future-plan TODO)"
+        ref: "focused four-suite run (86 passed, 1 future-plan TODO)"
         status: pass
       - kind: other
-        ref: "npm test && npm run lint && npm run build (638 passed; lint/main/bare build passed)"
+        ref: "npm test && npm run lint && npm run build (653 passed; lint/main/bare build passed)"
         status: pass
     human_judgment: false
   - id: D4
@@ -80,15 +80,15 @@ coverage:
     requirement: GOV-04
     verification:
       - kind: other
-        ref: "repaired code candidate b9b8b51f0a0972b96706a6e171cda2cba89e00b5; implementation evidence recorded below"
+        ref: "second repaired code candidate 80c6da2d929281bf9b38cbb0c7603614c667026a; implementation evidence recorded below"
         status: pass
     human_judgment: true
     rationale: "Repository governance requires a fresh independent high-risk reviewer on the exact candidate SHA; the executor cannot issue that PASS."
 
-duration: 48min
+duration: 67min
 completed: 2026-07-22
 status: complete
-review_status: blocked_pending_second_repair
+review_status: ready_for_high_risk_review
 ---
 
 # Phase 1 Plan 02: Truthful Forecast Evidence Boundary Summary
@@ -97,9 +97,9 @@ review_status: blocked_pending_second_repair
 
 ## Performance
 
-- **Duration:** 48 min including independent BLOCK repair
+- **Duration:** 67 min including two independent BLOCK repair rounds
 - **Started:** 2026-07-22T23:18:30+02:00
-- **Completed:** 2026-07-23T00:06:30+02:00
+- **Completed:** 2026-07-23T00:25:30+02:00
 - **Tasks:** 2
 - **Files modified:** 8
 
@@ -118,6 +118,8 @@ review_status: blocked_pending_second_repair
 4. **Task 2 GREEN: Atomic request state and coverage implementation** â€” `4150a1e` (`feat`)
 5. **Repair RED: Reproduce all blocked forecast boundaries** — `3cbaa68` (`test`)
 6. **Repair GREEN: Close all blocked forecast boundaries** — `b9b8b51` (`fix`)
+7. **Second repair RED: Reproduce residual forecast boundaries** — `9178047` (`test`)
+8. **Second repair GREEN: Close residual forecast truth gaps** — `80c6da2` (`fix`)
 
 **Plan metadata:** recorded by the final GSD documentation commit.
 
@@ -147,15 +149,17 @@ review_status: blocked_pending_second_repair
 
 ## Deterministic Evidence
 
-All executable evidence below ran from a fresh `npm ci` archive checkout of exact candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5`; the primary checkout's pre-existing `node_modules` remained untouched because active Vite/Playwright processes held its native binaries.
+All executable evidence below ran from a fresh `npm ci` archive checkout of exact candidate `80c6da2d929281bf9b38cbb0c7603614c667026a`; the primary checkout's pre-existing `node_modules` remained untouched because active Vite/Playwright processes held its native binaries.
 
-- Focused four-suite Vitest run — **PASS**, 4/4 files; 71 tests passed and one intentional Plan 01-11 TODO.
+- Focused four-suite Vitest run — **PASS**, 4/4 files; 86 tests passed and one intentional Plan 01-11 TODO.
 - `npx tsc -b --pretty false` — **PASS**.
-- `npm test` — **PASS**, 60 files passed, 4 skipped; 638 tests passed, 34 TODO.
+- `npm test` — **PASS**, 60 files passed, 4 skipped; 653 tests passed, 34 TODO.
 - `npm run lint` — **PASS**.
 - `npm run build` — **PASS**, TypeScript plus main and bare Vite builds.
-- `git diff --check 32e84b8..b9b8b51` — **PASS**.
-- Repair scope manifest — **PASS**, exactly seven Plan 01-02 paths changed; `timezone.test.ts` remained unchanged. No package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
+- Primary MET Swagger enum comparison — **PASS**, all 83 implemented symbol codes exactly match `definitions.WeatherSymbol.enum` from `https://api.met.no/weatherapi/locationforecast/2.0/swagger`.
+- Mojibake scan across all four production paths — **PASS**, no `Ã` or `Â` remnants.
+- `git diff --check 6959443..80c6da2` — **PASS**.
+- Second-repair scope manifest — **PASS**, exactly five Plan 01-02 paths changed. No package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
 
 ## Candidate and Review Authority
 
@@ -163,9 +167,11 @@ All executable evidence below ran from a fresh `npm ci` archive checkout of exac
 |---|---|---|---|
 | Codex GSD executor (original candidate) | High-risk implementation | `4150a1e` | **BLOCKED** by fresh independent verifier and external read-only reviewer |
 | Codex GSD executor (first scoped TDD repair) | High-risk implementation | `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` | **BLOCKED** by fresh independent verifier |
-| Fresh independent approved reviewer | High-risk verification | `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` | **BLOCK** — six residual correctness findings require a second scoped repair |
+| Fresh independent approved reviewer | High-risk verification | `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` | **BLOCK** — six residual correctness findings required a second scoped repair |
+| Codex GSD executor (second scoped TDD repair) | High-risk implementation | `80c6da2d929281bf9b38cbb0c7603614c667026a` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic checks green, no self-PASS claimed |
+| Fresh independent approved reviewer | High-risk verification | `80c6da2d929281bf9b38cbb0c7603614c667026a` | **PENDING** — fresh verdict required on the second repaired exact SHA |
 
-Any edit to the eight code/test paths after `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` invalidates this candidate and requires fresh evidence plus independent review.
+Any edit to the eight code/test paths after `80c6da2d929281bf9b38cbb0c7603614c667026a` invalidates this candidate and requires fresh evidence plus independent review.
 
 ## Independent BLOCK on Candidate 4150a1e
 
@@ -200,7 +206,14 @@ Candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` is independently rejected a
 5. An empty-string cache value is treated like a miss instead of corrupt data that must be evicted.
 6. One mojibake source comment remains.
 
-Second repair status: **IN PROGRESS**. No independent PASS exists for Plan 01-02.
+Second repair status: **COMPLETE ON CANDIDATE `80c6da2d929281bf9b38cbb0c7603614c667026a`**. Both earlier BLOCK verdicts remain authoritative for their exact candidates; no independent PASS exists yet for the second repaired candidate.
+
+## Second Scoped TDD Repair Outcome
+
+- `9178047` added behavioral RED coverage for all six residual findings. The isolated RED run failed as expected with 13 failed, 73 passed, and one TODO.
+- `80c6da2` made the same tests GREEN: current/hourly inputs require truthful one-hour period evidence; six-hour totals carry explicit duration and normalize to hourly averages where supported; null/invalid source currentness is contained offline; an older valid success may commit unless a newer valid success actually committed; cache fallback re-reads current storage; empty-string cache data is evicted; and the final mojibake comment is repaired.
+- The validator now uses the exact 83-value primary MET Locationforecast Swagger enum, including the official `lightssleet...` and `lightssnow...` double-s spellings and exact suffix constraints. An automated source-to-Swagger comparison passed 83/83.
+- The repaired focused run passed 86 tests with one intentional TODO, followed by the complete fresh-checkout matrix above.
 
 ## Decisions Made
 
@@ -210,6 +223,9 @@ Second repair status: **IN PROGRESS**. No independent PASS exists for Plan 01-02
 - A new request clears cross-key weather/evidence and only the active request ID plus exact fetch key may publish a resolved or rejected state.
 - Stale cache evidence is bounded to six hours and contained in an explicit `offline` state with `offlineForecast`; legacy ready-state weather inputs remain empty.
 - MET evidence must have plausible numeric ranges, a known symbol, at least one forecast period, and strictly increasing unique instants before caching or extraction.
+- `precipMmH` requires one-hour evidence for current/hourly inputs; supported six-hour evidence carries duration explicitly and is divided by six before any hourly-rate field is published.
+- Request start order does not invalidate data by itself; only a newer successfully committed result supersedes an older valid same-key success.
+- Symbol validation is a closed exact match against the 83-value primary MET Swagger enum rather than a derived base/suffix grammar.
 
 ## Deviations from Plan
 
@@ -221,6 +237,13 @@ Second repair status: **IN PROGRESS**. No independent PASS exists for Plan 01-02
 - **Fix:** Added behavioral RED coverage in `3cbaa68`, then implemented the bounded repair in `b9b8b51` and repeated the complete isolated verification matrix.
 - **Files modified:** Seven plan-owned source/test paths; `timezone.test.ts` required no edit.
 - **Commits:** `3cbaa68`, `b9b8b51`
+
+**2. [Rule 1 - Bugs] Repaired six residual independent-review findings**
+- **Found during:** Independent review of first repaired candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5`
+- **Issue:** Six-hour totals leaked into hourly-rate fields, invalid source currentness still published ready weather, newer failure could suppress the only valid older response, symbol validation differed from the official enum, empty cache was not evicted, and one mojibake comment remained.
+- **Fix:** Added behavioral RED coverage in `9178047`, implemented the bounded correction in `80c6da2`, compared all 83 symbol values to primary Swagger, and repeated the complete fresh-checkout verification matrix.
+- **Files modified:** Five plan-owned source/test paths.
+- **Commits:** `9178047`, `80c6da2`
 
 ## Known Stubs
 
@@ -245,7 +268,7 @@ None - no dependency, package, credential, environment, service, API, or migrati
 
 ## Remaining Gates
 
-- Fresh independent high-risk review on exact repaired code candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5`: **PENDING**. The executor does not self-issue PASS.
+- Fresh independent high-risk review on exact second repaired code candidate `80c6da2d929281bf9b38cbb0c7603614c667026a`: **PENDING**. The executor does not self-issue PASS.
 - New app screenshots/video/traces and the media-based 90+ audit: **Pending stable candidate and owner permission**; none were created here.
 - VoiceOver, TalkBack, physical haptics, OS text scaling, one-handed reach, physical-device UAT, and owner release approval: **Pending**.
 - Six Snart approvals and independent climate artifacts remain Pending and still block Plan 01-13.
@@ -253,11 +276,12 @@ None - no dependency, package, credential, environment, service, API, or migrati
 ## Next Phase Readiness
 
 - Original code candidate `4150a1e` remains blocked and must not be consumed by Plan 01-03.
-- Repaired candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` is ready for fresh independent high-risk review; Plan 01-03 must wait for that verdict.
+- First repaired candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` also remains blocked.
+- Second repaired candidate `80c6da2d929281bf9b38cbb0c7603614c667026a` is ready for fresh independent high-risk review; Plan 01-03 must wait for that verdict.
 
 ## Self-Check: PASSED
 
-All eight plan-owned paths, this summary, original commits `b5d68a9`, `bf5c806`, `3f4304a`, `4150a1e`, BLOCK record `32e84b8`, repair commits `3cbaa68`, `b9b8b51`, and the exact seven-path repair scope exist and were verified. The repaired exact SHA passed the isolated focused/full/lint/build/type-check matrix; independent review remains pending.
+All eight plan-owned paths, this summary, original commits `b5d68a9`, `bf5c806`, `3f4304a`, `4150a1e`, BLOCK records `32e84b8`, `6959443`, and repair commits `3cbaa68`, `b9b8b51`, `9178047`, `80c6da2` exist and were verified. The exact five-path second-repair scope and immutable SHA passed focused/full/lint/build/type-check/enum/mojibake checks; independent review remains pending.
 
 ---
 *Phase: 01-planlegg-dagslinjen*

@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Completed 01-02 scoped repair; candidate b9b8b51 awaits fresh independent high-risk review
-last_updated: "2026-07-22T22:08:05.965Z"
+stopped_at: Completed second 01-02 scoped repair; candidate 80c6da2 awaits fresh independent high-risk review
+last_updated: "2026-07-22T22:26:21.970Z"
 last_activity: 2026-07-23
-last_activity_desc: Plan 01-02 scoped TDD repair is deterministic-green on exact candidate `b9b8b51`; fresh independent high-risk review remains pending.
+last_activity_desc: Second scoped TDD repair is deterministic-green on exact candidate `80c6da2`; fresh independent high-risk review remains pending.
 progress:
   total_phases: 1
   completed_phases: 0
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
 Plan: 2 of 18 in current phase
-Status: Plan 01-02 repaired candidate awaits fresh independent high-risk review
-Last activity: 2026-07-23 — Scoped TDD repair is deterministic-green on exact candidate `b9b8b51`; no self-PASS claimed.
+Status: Plan 01-02 second repaired candidate awaits fresh independent high-risk review
+Last activity: 2026-07-23 — Second scoped TDD repair is deterministic-green on exact candidate `80c6da2`; no self-PASS claimed.
 
 Progress: [█░░░░░░░░░] 11%
 
@@ -81,10 +81,13 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 01]: useWeather publishes forecast derivatives and matching evidence through one active request transition. — Request ID plus exact fetch key prevents cancelled or older place responses from overwriting current state.
 - [Phase 1]: Stale met.no evidence is capped at six hours and exposed only through an explicit offline state; ready-state recommendation inputs remain empty.
 - [Phase 1]: Forecast payloads fail closed unless calendar instants, weather ranges, symbols, periods, and strictly increasing unique times validate.
+- [Phase 1]: Current/hourly precipitation requires one-hour evidence; supported six-hour totals carry duration explicitly and are normalized before any hourly-rate field.
+- [Phase 1]: Only a newer successfully committed same-key response supersedes an older valid response; request start order or failure alone does not.
+- [Phase 1]: MET symbol validation is a closed exact match to the 83-value primary Locationforecast Swagger enum.
 
 ### Pending Todos
 
-- Obtain a fresh independent high-risk verdict on exact repaired candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` before Plan 01-03.
+- Obtain a fresh independent high-risk verdict on exact second repaired candidate `80c6da2d929281bf9b38cbb0c7603614c667026a` before Plan 01-03.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -104,6 +107,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-22T22:08:05.956Z
-Stopped at: Completed 01-02 scoped repair; candidate b9b8b51 awaits fresh independent high-risk review
+Last session: 2026-07-22T22:26:21.958Z
+Stopped at: Completed second 01-02 scoped repair; candidate 80c6da2 awaits fresh independent high-risk review
 Resume file: None
