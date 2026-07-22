@@ -129,7 +129,7 @@ Current immutable candidate independently reviewed: `9115aeb`.
 | Independent fresh verifier | Standard independent review | `d45cde0` | **BLOCK** — Windows `shell: true` killed only the shell-facing process and leaked the actual Vite preview child/port |
 | Codex GSD executor, repair session | Standard test infrastructure | `9115aeb` | `READY_FOR_REVIEW`; exact command, repeat-run, port-release, static, and scope checks green; executor does not issue independent PASS |
 | Codex independent verifier, fresh context | Standard independent review | `9115aeb` | **PASS** — exact build/harness, two consecutive repeat runs, success/failure cleanup, port/process release, static scans, scope and diff checks passed on the detached SHA |
-| Fresh plan/UI checker | Standard contract review | `c6691c5` working lineage | **Plan package PASS; operational re-check pending** — requested Wave-0 bookkeeping correction and a clean exact-HEAD re-check before 01-02 |
+| Fresh plan/UI checker | Standard contract review | `6e7ccac` | **PASS / READY** — Wave-0 bookkeeping, clean tracked checkout, CI-only delta and all Plan 01-02 paths/symbols verified |
 
 - Focused Vitest command: PASS as infrastructure — 6 suites skipped by design, 45 TODOs registered, 0 TODOs counted as passed behavior.
 - Exact build/harness command: PASS — main and bare builds green; `PLANLEGG HARNESS PASS: case=harness fixture=planlegg-harness-v1`.
@@ -196,14 +196,14 @@ None — no external service, credential, package, or environment change is requ
 
 ## Remaining Gates
 
-- Fresh exact-HEAD plan/UI re-check after the Wave-0 bookkeeping correction.
+- Fresh exact-HEAD plan/UI re-check: **PASS on `6e7ccac`**.
 - All production Wave 0–6 contracts remain pending their owning plans.
 - Six Snart approvals and independently supplied climate artifacts remain Pending and block Plan 01-13.
 - VoiceOver, TalkBack, physical haptics, OS text scaling, one-handed reach, app media, media-based 90+, and owner release approval remain Pending.
 
 ## Next Phase Readiness
 
-- The exact-SHA independent reviewer gate is closed with PASS on `9115aeb`; the plan package has passed checker review, with one clean exact-HEAD operational re-check remaining before Plan 01-02 proceeds.
+- The exact-SHA independent reviewer gate is closed with PASS on `9115aeb`; clean exact-HEAD plan/UI convergence is PASS on `6e7ccac`. Plan 01-02 may proceed.
 - No product logic, package, dependency, API, schema, recommendation, pricing, RevenueCat, analytics, media, marketing, brand, store, or onboarding-verification artifact changed.
 
 ## Self-Check: PASSED

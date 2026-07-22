@@ -145,7 +145,7 @@ Audit result: every GOAL, requirement, applicable research constraint and record
 | Gate | Status |
 |---|---|
 | Six Snart policy/numeric/health/climate/size/privacy approvals and approved climate artifacts | **Pending; blocks 01-13** |
-| Fresh plan/UI/validation convergence | **Pending; blocks execution readiness** |
+| Fresh plan/UI/validation convergence | **PASS on `6e7ccac`** |
 | VoiceOver, TalkBack, physical haptics, OS text scaling and one-handed reach | Pending stable candidate |
 | Media-based 90+ audit | Pending stable candidate and owner permission |
 | Owner release approval | Pending all required gates |
@@ -160,4 +160,4 @@ Audit result: every GOAL, requirement, applicable research constraint and record
 - [x] Wave 0 artifacts exist and pass on independently verified candidate `9115aeb`.
 - [x] Fresh independent plan/UI/validation checker confirms this exact repaired package and source-grounds the drifted `GuideHubScreen.tsx`, `package.json`, and `e2e/smoke.ts` assumptions.
 
-**Approval:** Wave 0 is complete and independently verified on `9115aeb`. The fresh exact-HEAD plan/UI re-check remains the final operational gate before Plan 01-02. This document does not pass Snart human evidence, app runtime, physical-device, media, 90+ or release gates.
+**Approval:** Ready for Plan 01-02 on exact clean HEAD `6e7ccac`. Wave 0 is independently verified on `9115aeb`, and fresh plan/UI/validation convergence passed on `6e7ccac`. This document does not pass Snart human evidence, app runtime, physical-device, media, 90+ or release gates.

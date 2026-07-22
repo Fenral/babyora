@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Wave 0 complete; clean exact-HEAD plan/UI re-check pending before Plan 01-02
-last_updated: "2026-07-22T23:18:00+02:00"
+stopped_at: Plan 01-02 ready to execute after clean exact-HEAD convergence PASS
+last_updated: "2026-07-22T23:23:00+02:00"
 last_activity: 2026-07-22
-last_activity_desc: Wave 0 was marked complete after independent PASS; the plan package passed review and awaits a clean exact-HEAD operational re-check.
+last_activity_desc: Clean exact-HEAD plan/UI/validation convergence passed on 6e7ccac; Plan 01-02 is ready.
 progress:
   total_phases: 4
   completed_phases: 0
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
 Plan: 1 of 18 in current phase
-Status: Wave 0 complete; clean exact-HEAD plan/UI re-check pending before Plan 01-02
-Last activity: 2026-07-22 — Independent Wave-0 verification passed; checker found the plan package sound and requested only bookkeeping correction plus a clean exact-HEAD re-check.
+Status: Plan 01-02 ready to execute
+Last activity: 2026-07-22 — Fresh plan/UI/validation convergence passed on exact clean HEAD `6e7ccac`; no remaining pre-01-02 blocker.
 
 Progress: [█░░░░░░░░░] 6%
 
@@ -79,7 +79,7 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 
 ### Pending Todos
 
-- Record the clean exact-HEAD plan/UI checker verdict after Wave-0 bookkeeping, then continue with Plan 01-02.
+- Execute Plan 01-02 from the clean, reviewed baseline.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -99,6 +99,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-22T23:18:00+02:00
-Stopped at: Wave 0 complete; clean exact-HEAD plan/UI re-check pending before Plan 01-02
+Last session: 2026-07-22T23:23:00+02:00
+Stopped at: Plan 01-02 ready to execute after clean exact-HEAD convergence PASS
 Resume file: None
