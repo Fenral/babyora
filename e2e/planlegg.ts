@@ -161,8 +161,11 @@ async function main(): Promise<void> {
     await context.close();
     harnessPassed = true;
   } finally {
-    await browser?.close();
-    if (server) await stopPreviewServer(server);
+    try {
+      await browser?.close();
+    } finally {
+      if (server) await stopPreviewServer(server);
+    }
   }
 
   if (harnessPassed) {
