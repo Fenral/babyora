@@ -10,4 +10,3 @@ describe('Planlegg interaction decision contracts', () => {
   it.todo('preserves selected view, event, scroll, and trigger focus across the Outfit drill');
   it.todo('keeps reduced motion independent from haptic preference and web adapters silent');
 });
-

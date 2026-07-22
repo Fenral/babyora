@@ -118,4 +118,3 @@ export const planningSnartFixture = Object.freeze({
     unavailable: Object.freeze({ status: 'unavailable' as const, groups: Object.freeze([] as string[]) }),
   }),
 });
-

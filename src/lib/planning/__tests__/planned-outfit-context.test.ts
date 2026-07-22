@@ -9,4 +9,3 @@ describe('Planned Outfit exact-context contracts', () => {
   it.todo('renders the selected future date, place, activity, weather, and finalized garments without recomputation');
   it.todo('keeps the trusted transport Uke to App in React memory with no persistence or URL history');
 });
-

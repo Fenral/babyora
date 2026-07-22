@@ -9,4 +9,3 @@ describe('Planlegg forecast evidence contracts', () => {
   it.todo('keeps stale cached evidence visibly offline instead of presenting it as current');
   it.todo('keeps fixed/manual persistence separate from future memory-only automatic forecast scope');
 });
-

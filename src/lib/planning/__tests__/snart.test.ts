@@ -10,4 +10,3 @@ describe('Snart future approved-rule gate contracts', () => {
   it.todo('keeps ready with only not_yet when all actionable winners are marked and a not_yet winner remains');
   it.todo('prevents a marked actionable winner from reappearing through a lower-priority future approved rule');
 });
-

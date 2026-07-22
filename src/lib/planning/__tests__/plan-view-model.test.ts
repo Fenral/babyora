@@ -12,4 +12,3 @@ describe('Planlegg view-model contracts', () => {
   it.todo('uses whole-day copy only for contiguous verified coverage');
   it.todo('keeps Free today complete while future capability remains separately gated');
 });
-
