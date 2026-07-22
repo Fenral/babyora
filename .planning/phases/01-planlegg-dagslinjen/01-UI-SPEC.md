@@ -5,8 +5,8 @@ status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-07-19
-reviewed_at: 2026-07-19T15:36:21+02:00
-baseline_sha: 37fc01ac2699c671eab3f22af4f8a5a8abe1b7ac
+reviewed_at: 2026-07-22T21:16:00+02:00
+baseline_sha: e669afff0259750840393e8475f84afbc7937352
 ---
 
 # Phase 1 — Planlegg/Dagslinjen UI Design Contract
@@ -123,16 +123,16 @@ The canvas derives from the selected event's perceived temperature when an exact
 | Component | Prescriptive contract |
 |---|---|
 | Planlegg section | Visible `h1`, compact child/place context, no nested main or scroll owner |
-| View control | Native radio group/fieldset with `I dag`, `Uke`, `Snart`; 44px targets; one selection haptic on actual change |
+| View control | `SegmentedControl.tsx` plus scoped `SegmentedControl.css`, preserving native radio-group/fieldset semantics for `I dag`, `Uke`, `Snart`; 44px targets; one selection haptic on actual view/date change |
 | Verdict | One Fraunces answer plus one sans next-action line; no card chrome |
 | Dagslinje | Controlled semantic `<ol>`; exactly one selected expansion for one/many events |
 | Static span row | Non-interactive `<li>` for verified unchanged coverage; never styled as a button |
 | Event disclosure | Button with `aria-expanded`, real `<time datetime>`, marker shape, verb action and cause |
-| Garment preview | At most three safe thumbnails; visible garment names remain authoritative |
+| Garment preview | At most three safe thumbnails; resolve each through `garmentPngSafe(garmentIdFor(label))` and then the canonical generic fallback; visible garment names remain authoritative |
 | Outfit action | `Se hele antrekket` only when exact context exists and fuller content is available |
 | Forecast disclosure | Secondary `Vis full værprognose` / `Skjul full værprognose`; weather only, no duplicate garment timeline |
 | Plus teaser | One truthful example and contextual action; never a wall of locks |
-| Snart list | One continuous grouped list, not cards; `Bør ha`, `Kjekt å ha`, `Ikke nødvendig ennå` |
+| Snart list | One continuous grouped list, not cards; `Bør ha`, `Kjekt å ha`, `Ikke prioritert nå` |
 | Status notice | Loading/error/offline/partial truth with timestamp and recovery action |
 | Bottom navigation | Existing four roots; filled/strong icon, strong label, quiet mint pool, `:focus-visible` only |
 
@@ -154,9 +154,11 @@ Shape, icon and verb carry meaning; color is redundant. Weather-only changes hav
 - Zero change events: no disclosure is expanded; render one truthful static span.
 - One event: it is selected and expanded by default.
 - Many events: the next relevant event is selected by default; selecting another collapses the previous one.
-- `selectedEventId`, `onSelect`, and `onOpenOutfit` are controlled by the parent.
-- If refresh removes the selected ID, selection moves deterministically to the next relevant valid event; it never points to stale content.
+- The rail contract is `selectedEventId: string | null`, `onSelect(nextEventId: string | null)`, and `onOpenOutfit(eventId, trigger)`; it receives event identity and Outfit availability only, never a DTO or context ID.
+- PlanChangeRail owns event expand/collapse intent and emits one `light` cue only when a different event becomes expanded. Uke owns the controlled value plus view/date `selection` cues; Uke does not dispatch event haptics.
+- If refresh removes the selected ID, Uke repairs selection deterministically to the next relevant valid event without passing through the interaction helper and without any cue; it never points to stale content.
 - Collapse/expand does not move keyboard focus. Opening Outfit moves focus to its title; back returns focus to the originating event and preserves Planlegg scroll/selection.
+- All six canonical marker kindsâ€”`add`, `remove`, `swap`, `rain`, `location` and `prep`â€”must render their shape/icon plus verb grammar in the component matrix; `prep` is presented as preparation/`Forbered`, never renamed in the typed contract.
 
 ## Copywriting Contract
 
@@ -189,25 +191,34 @@ Generic CTA copy such as `Fortsett`, `Les mer`, `Oppgrader`, `Se forslag` or `Pr
 | State | Contract |
 |---|---|
 | Free / I dag | Complete supported Dagslinje for one fixed home, including all correctness-relevant situations and exact Outfit drill |
-| Free / Uke | One real future weather/example comparison, no unlocked future clothing advice, followed by contextual Plus action |
+| Free / Uke | One real future weather comparison only when valid evidence exists; otherwise a neutral unavailable state. No invented example or unlocked future clothing advice; contextual Plus action remains available. |
 | Plus / Uke | Implemented future dates/places only; each row/event carries exact context |
 | Free / Snart | Explains the outcome without revealing unimplemented/advisory garment guidance; opens contextual paywall |
-| Plus / Snart | Deterministic 4–6 week grouped guidance with cautious size language and lightweight `Har allerede` choice |
+| Plus / Snart | Only after all product, numeric, health, climate-pack/provenance/validator, size and privacy approvals: deterministic 4–6 week grouped guidance with cautious size language and session-only `Har allerede` choice |
 | Missing capability | Hide the associated tab/claim during intermediate delivery; never ship a dead control or marketing promise |
 | Entitlement loading | Preserve neutral structure until access resolves; do not flash unlocked or locked advice |
 | Entitlement loss | Today remains complete; future/Snart become read-safe teasers and current safe data remains accessible |
 
 `future_plan`, place, Snart, family and other claims must be rendered from the centralized capability map. `sammen` stays absent until family sharing is actually enabled. Safety-critical guidance is never Plus-gated.
 
+SnartPlan renders only the model's authoritative `ready | empty | unavailable` result. `Har allerede` appears only for actionable `must_have`/`nice_to_have` items and emits a concept ID; it never filters locally or appears for `not_yet`. Marking all actionable winners yields `empty` only when no visible group item remains. If a winning `not_yet` remains, the model returns `ready` with only that group; a marked actionable winner cannot reappear through a lower-priority `not_yet` rule.
+
+On configured native startup and every resume, cached Plus is treated as neutral while one shared RevenueCat freshness request is in flight. Concurrent callers share that request; failure or a fresh negative result fails closed. An already open paid future Outfit closes as soon as entitlement becomes loading or denied. Web/development behavior may retain the existing explicit mock path when native RevenueCat is not configured.
+
+The current configured place remains the Today contract until automatic location is fully integrated. Automatic location is child-scoped and memory-only: only the existing mode preference persists. GPS, reverse geocoding and automatic forecast work are forbidden for loading, denied, capability-off and manual states unless the user explicitly activates automatic mode in Settings. Automatic weather and reverse-geocode calls use memory-only application caches plus `cache: 'no-store'`; they neither read nor write persistent `metno:*` or `nominatim:*` keys. Fixed/manual weather retains its existing persistent cache. Hjem and Uke consume one resolved place/source/scope, while Snart always consumes the active child's persisted fixed home.
+
 ## Exact-Context Navigation
 
-Every future Outfit action passes one immutable payload containing child/age inputs, ISO date/time, `Europe/Oslo` timezone, place label and lookup coordinates without history, activity/vogn mode, weather snapshot, finalized recommendation, planning event ID and access state.
+Every future Outfit action resolves an immutable `PlannedOutfitContext` from the currently rendered evaluation. `PlanningPoint.transitionContextId` becomes `ChangeEvent.transitionContextId`; the DTO carries that separate transition ID, its own `plannedContextId`, and `planningEventId`. `resolvePlannedOutfitContext(eventId, currentEvents, contextsByEventId)` is the pure fail-closed boundary: current-event membership, map hit, tolerant DTO guard, matching event ID and matching transition ID are all required. Navigation is allowed only on success; otherwise the action is hidden/refused with no current-context fallback. The payload also contains child/age inputs, ISO date/time, `Europe/Oslo` timezone, place label, lookup coordinates and validated source (`configured-place | fixed-home | automatic`) without history, activity/vogn mode, weather snapshot, finalized recommendation and access state. Before the location cutover Uke records `configured-place`; afterward it records the exact resolved `fixed-home` or `automatic` source.
+
+The only trusted transport is `UkeScreen â†’ App.onOpenPlannedOutfit(dto, trigger)`. The rail transports only an event ID and trigger; Uke resolves it, and App revalidates it before keeping the discriminated planned-drill branch in React memory. A leaf component or click handler never transports the DTO directly. The current Hjem Outfit uses the corresponding transient exact evaluated place/source/weather/recommendation/activity/stroller context, and Paakledning does not reread child/weather when either exact transient branch exists.
 
 - Outfit renders this payload and must not recompute from current time or current weather.
 - The Outfit header exposes the selected date/time/place so context is auditable.
 - A locked teaser is not a link to Outfit; its separate CTA opens the paywall.
 - Closing the paywall restores focus to that CTA.
 - Returning from Outfit restores focus to the originating Dagslinje event and preserves selected view, selected event and page scroll.
+- “Back/return” means the visible in-app close action, explicit bottom-root navigation or the existing App-owned left-edge/back handler in Babyora's React state router. It does not imply browser history, `popstate`, `history.back()`, `pushState` or a new URL/router stack. Guide-to-Snart and every drill use these same in-app semantics.
 
 ## Motion and Haptics
 
@@ -306,7 +317,7 @@ These are contract gaps for the implementation plan, not changes made by this ta
 | Planlegg screen | `src/screens/UkeScreen.tsx` plus one scoped Planlegg stylesheet/component set |
 | Dagslinje | `src/components/planning/**` and focused component tests |
 | Exact Outfit context | `src/App.tsx`, `src/screens/PaakledningScreen.tsx`, planning context module and deterministic Planlegg E2E |
-| View control | `src/components/controls/SegmentedControl.tsx` only if shared behavior remains regression-safe |
+| View control | `src/components/controls/SegmentedControl.tsx` and `src/components/controls/SegmentedControl.css` only if shared behavior remains regression-safe |
 | Access/Snart truth | Central premium capability/gating/copy modules and new deterministic Snart planning module/tests |
 | Shared nav/haptics | `BottomTabBar.tsx`, haptic abstraction/settings and tests only for locked Wave 6 behavior |
 | Tokens | Existing `design-tokens.css` only for semantic aliases/focus/Planlegg-scoped rules; no palette replacement |
@@ -333,10 +344,11 @@ During changing implementation, evidence is limited to deterministic non-media c
 - Browser assertions for one `<main>`, one vertical scroll owner, no horizontal overflow at 390px/200% text, focus-visible behavior, focus return and reduced-motion final state.
 - Exact-context E2E assertion that date, place, activity, temperature and garments match the selected future event.
 - Capability tests proving Free completeness and that every Plus/Snart/paywall claim maps to enabled runtime support.
-- Haptic call-count/no-op tests; physical quality remains Pending human evidence.
+- Pure interaction-decision and dependency-injected dispatch tests cover selection, light, repeat, collapse and callback cardinality; haptic-system unit tests cover native mapping, preference-off, reduced-motion independence and web no-op. Browser checks assert visible/focus/keyboard state only. Physical quality remains Pending human evidence.
+- Component evidence uses pure functions/injected callbacks for behavior and `react-dom/server` only for static markup/ARIA. Actual click, keyboard and focus behavior uses the existing real-browser harness. Server rendering must never be cited as executing handlers. The package must not add jsdom or Testing Library because neither is part of this repository.
 - Contrast may be token/computed-style checked, but subjective visual fit and the 90+ score are not passed here.
 
-No implementation-time command may persist a new app screenshot or video. `audit:prepare`, screenshot matrices and video capture wait for a stable immutable candidate plus owner permission. Final visual score, physical-device UAT and owner release approval remain **Pending**, not waived.
+No implementation-time command may persist new app media. `audit:prepare` and `audit:finalize` remain deferred because they create media-oriented audit artifacts; screenshot matrices, video and trace capture wait for a stable immutable candidate plus owner permission. The final deterministic gate is instead a text-only packet bound to one exact code SHA: changed-path manifest, complete command matrix, requirement/evidence matrix, source-boundary scans, DOM/browser semantics/focus/keyboard/reflow/routes matrix, no-media artifact scan and separate standard plus high-risk independent verdicts. Final visual score, physical-device UAT and owner release approval remain **Pending**, not waived.
 
 ## Registry Safety
 
@@ -346,11 +358,17 @@ No implementation-time command may persist a new app screenshot or video. `audit
 
 ## Checker Sign-Off
 
-- [x] Dimension 1 Copywriting: PASS
-- [x] Dimension 2 Visuals: PASS
-- [x] Dimension 3 Color: PASS
-- [x] Dimension 4 Typography: PASS
-- [x] Dimension 5 Spacing: PASS
-- [x] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: fresh convergence review PASS on `e669aff`
+- [x] Dimension 2 Visuals: fresh convergence review PASS for the bounded Planlegg contract on `e669aff`
+- [x] Dimension 3 Color: fresh convergence review PASS; whole-app theme parity remains Phase 4
+- [x] Dimension 4 Typography: fresh convergence review PASS
+- [x] Dimension 5 Spacing: fresh convergence review PASS
+- [x] Dimension 6 Registry Safety: fresh source-grounding PASS on `e669aff`
 
-**Approval:** approved 2026-07-19 by fresh independent `gsd-ui-checker` Revision 2; post-verification UI-consideration probe resolved 32/32 applicable instances into 8 covered categories.
+**Current approval:** reviewed 2026-07-22 against source SHA `e669afff0259750840393e8475f84afbc7937352` by a fresh independent `gsd-plan-checker`. The bounded Planlegg contract is ready for execution; later whole-app UX/Motion work remains outside this phase.
+
+### Conflict-resolution amendment — 2026-07-19
+
+- Owner decision replaces the potentially absolute Snart group heading `Ikke nødvendig ennå` with `Ikke prioritert nå`. The normative rules document now records this formerly open wording conflict as resolved; it does **not** approve any pending Snart policy, threshold, health copy, climate data, size or privacy decision.
+- Exact-context identifiers and haptic evidence are synchronized with the independent plan-checker contract above.
+- Amendment status: **Converged for execution on `e669aff`**. Snart remains capability-disabled until every required approval and the versioned offline climate pack, provenance and validator are independently accepted.

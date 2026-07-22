@@ -4,15 +4,15 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
-status: planning
-stopped_at: Phase 1 UI-SPEC approved
-last_updated: "2026-07-19T13:37:13.529Z"
-last_activity: 2026-07-19
-last_activity_desc: Initialized the bounded ingest-derived project, mapped all 14 requirements, and created the one-phase roadmap.
+status: executing
+stopped_at: Phase 1 Plan 01-01 ready for execution
+last_updated: "2026-07-22T21:16:00+02:00"
+last_activity: 2026-07-22
+last_activity_desc: Repaired Plan 01-13 through 01-18 filenames, rebound the source baseline, passed fresh independent convergence, and expanded the roadmap for the remaining UX/Motion Bible work.
 progress:
-  total_phases: 1
+  total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 18
   completed_plans: 0
 ---
 
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 
 ## Current Position
 
-Phase: 1 of 1 (Planlegg/Dagslinjen)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-07-19 — Initialized the bounded ingest-derived project, mapped all 14 requirements, and created the one-phase roadmap.
+Phase: 1 of 4 (Planlegg/Dagslinjen)
+Plan: 0 of 18 in current phase
+Status: Ready to execute Plan 01-01 on baseline `e669aff`
+Last activity: 2026-07-22 — Fresh independent GSD plan review found one stale-baseline blocker; the baseline, UX/Motion non-regression context and plan filenames were corrected. Phases 2–4 now cover the remaining Bible obligations.
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -46,7 +46,7 @@ Progress: [░░░░░░░░░░] 0%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Planlegg/Dagslinjen | 0 | TBD | - |
+| 1. Planlegg/Dagslinjen | 0 | 18 | - |
 
 **Recent Trend:**
 
@@ -66,15 +66,18 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 1]: Free is complete today at one fixed home; Plus/family/everywhere language is capability-gated.
 - [Phase 1]: Dagslinjen consumes the contained legacy recommendation output and cannot change clothing rules or activate Motor V2.
 - [Phase 1]: No new app screenshot/video during changing implementation; final media-based 90+ remains Pending until stable-candidate status and owner permission.
+- [Milestone]: Phase 2 delivers Outfit truth/Antrekkskart, Phase 3 Living Home/signature transition, and Phase 4 cross-surface convergence.
 
 ### Pending Todos
 
-None yet. Plan/wave splitting occurs in plan-phase.
+- Execute Plan 01-01 and produce its deterministic fixture/harness evidence.
+- Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
+- Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
 ### Blockers/Concerns
 
 - Final completion/release is gated by owner-permitted app screenshot/video capture, media-based 90+ visual verification, required physical-device evidence, and owner release approval. This does not block planning or deterministic candidate checks.
-- Plan-phase must preserve the authorized sequential wave dependencies and separate standard-risk from high-risk immutable candidate SHAs.
+- Plan 01-13 remains a legitimate human blocker until all six Snart approvals and independently supplied climate artifacts exist.
 
 ## Deferred Items
 
@@ -87,6 +90,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-19T13:37:13.517Z
-Stopped at: Phase 1 UI-SPEC approved
-Resume file: .planning/phases/01-planlegg-dagslinjen/01-UI-SPEC.md
+Last session: 2026-07-22T21:16:00+02:00
+Stopped at: Phase 1 Plan 01-01 ready for execution
+Resume file: .planning/phases/01-planlegg-dagslinjen/01-01-PLAN.md

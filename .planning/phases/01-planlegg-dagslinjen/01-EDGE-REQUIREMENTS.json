@@ -1,0 +1,58 @@
+[
+  {
+    "id": "GOV-01",
+    "text": "Implementation stays inside the explicitly authorized Planlegg/Dagslinjen package boundary. Work must not change clothing thresholds, guardrails, Motor V2 activation, family-sharing backend, live tracking, notification infrastructure, App Store products, pricing, RevenueCat semantics, unrelated Guide/Familie/onboarding surfaces, the design system, or avatar assets; preserve unrelated untracked files."
+  },
+  {
+    "id": "GOV-02",
+    "text": "The approved ingest is represented by a GSD package whose downstream plans preserve the authorized sequence, dependencies, and standard-risk versus high-risk boundaries, with no unresolved high or actionable medium review finding before execution."
+  },
+  {
+    "id": "EVID-01",
+    "text": "New app screenshot and video capture is deferred while implementation changes. In-progress verification may use DOM assertions, component tests, accessibility checks, and browser interaction without persisted visual media; the media-based visual gate remains Pending until a stable candidate exists and the owner grants permission."
+  },
+  {
+    "id": "GOV-03",
+    "text": "The Dagslinjen UI and implementation contract is frozen and reviewed before app-code execution, including all named loading, error, offline, access, large-text, reduced-motion, focus, temperature, and change-cardinality states plus file-level paths, tests, evidence, rollback, and source SHAs."
+  },
+  {
+    "id": "GOV-04",
+    "text": "Standard-risk layout, component, navigation, motion, and accessibility work and high-risk coverage, action-copy, exact-future-context, access, and Snart-advice work are isolated in separate immutable candidate slices, each independently verified on its exact SHA; any edit invalidates PASS and missing approved verification blocks."
+  },
+  {
+    "id": "TRUTH-01",
+    "text": "Dagslinjen derives a truthful presentation model containing only evidence-supported finalized recommendation changes without modifying recommendation rules. Events have stable ISO identities, distinct added and removed garments, add/remove/swap/rain/location/preparation actions, plain-language cause and destination context, verb-led Norwegian actions, evidence-aware coverage, deterministic ordering and deduplication, Europe/Oslo DST handling, and safe loading/error/offline output; passive weather-only changes create no clothing marker."
+  },
+  {
+    "id": "CTXT-01",
+    "text": "Opening a future Dagslinjen event renders that event's exact immutable Outfit context. One transient payload carries child and age inputs, ISO time and timezone, place label and coordinates without location history, activity and stroller mode, weather snapshot, finalized recommendation, event ID, and access state; Outfit must not recompute from current time or weather, and deterministic evidence must match date, place, activity, temperature, and garments."
+  },
+  {
+    "id": "UI-01",
+    "text": "Dagslinjen renders as one accessible semantic ordered list with exactly one expanded selected recommendation-changing event, controlled by selectedEventId, onSelect, and onOpenOutfit. Unchanged spans are static list items; time, marker shape, and verb text carry non-color meaning; the expanded row has one action, cause, at most three safe thumbnails, a full-outfit action when needed, aria-expanded, preserved focus, 44-point targets, large-text and forced-color support, calm motion, immediate reduced-motion state, and one light haptic per expansion."
+  },
+  {
+    "id": "UI-02",
+    "text": "Dagslinjen is the dominant Planlegg composition on the existing temperature-reactive canvas. The app owns the only main landmark and vertical page scroll; title, compact child/place context, I dag/Uke/Snart control, verdict and next action precede the rail; forecast is secondary; obsolete mega-card, repeated cards, duplicate hourly list, burden pills, dead controls, and persistent tab outline are absent; loading, error, offline, 390x844, and shared-navigation states remain accessible."
+  },
+  {
+    "id": "ACCESS-01",
+    "text": "Free retains the complete supported today-at-one-fixed-home Dagslinje and gets one truthful non-interactive future weather comparison only when valid evidence exists; otherwise it gets a neutral unavailable state with no invented example or unlocked clothing advice. Plus and Snart expose only implemented capability-backed future days, places, and cautious deterministic 4-6-week guidance; locked content is not an Outfit link, paywall close restores focus, family/everywhere claims remain absent until enabled, probabilistic size copy and lightweight already-owned state remain truthful, and advice, access, entitlement, and location are independently verified."
+  },
+  {
+    "id": "A11Y-01",
+    "text": "Planlegg has complete native interaction, accessibility, contrast, large-text, motion, haptic, and shared-navigation behavior. View and date changes use selection haptic, event expansion uses one light haptic, preference-off and web are safe no-ops, focus uses focus-visible, active root navigation uses filled icon and stronger label plus quiet mint pool without permanent outline, temperature themes pass contrast, 200 percent text has no clipping or horizontal page scroll, screen-reader order is deterministic, reduced motion resolves immediately, and all four root screens retain correct navigation."
+  },
+  {
+    "id": "EVID-02",
+    "text": "The stable candidate has deterministic independent evidence for truth, exact context, Free/Plus boundaries, one-main/one-scroll structure, dominant Dagslinjen, tests, lint, build, audit, and E2E on a clean checkout and immutable SHA with frozen clock, Europe/Oslo, forecast, child, entitlement, and 390x844 fixtures. No truth, entitlement, safety, accessibility, P0, or P1 failure remains; physical-device evidence, new media, 90+ visual score, and release approval remain Pending until separately authorized and completed."
+  },
+  {
+    "id": "GOV-05",
+    "text": "Execution and review proceed one wave at a time through atomic immutable evidence commits and fresh independent code, work, and UI verification. Any gap creates a gap plan and new SHA; continued disagreement after one unsuccessful repair cycle escalates to the owner and is never auto-approved."
+  },
+  {
+    "id": "GOV-06",
+    "text": "Authority for scope, implementation, independent verification, human evidence, and phase closure stays explicit and separated. Executors cannot pass their own work; fresh approved verifiers pass exact immutable SHAs; external reviewers do not self-fix and approve the same candidate; humans attest physical behavior; GSD blocks closure when required evidence is absent."
+  }
+]

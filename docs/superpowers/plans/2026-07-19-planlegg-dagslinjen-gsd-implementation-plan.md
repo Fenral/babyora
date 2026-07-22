@@ -298,8 +298,19 @@ Component contract:
 - calm 200–280 ms inline motion and instant reduced-motion end state;
 - one `light` haptic per expansion, no duplicate or decorative haptic.
 
-Gate: component tests, accessibility assertions, focused screenshots and fresh
-standard review.
+Gate while implementation is changing: component tests, accessibility
+assertions, deterministic non-media browser checks and fresh standard review.
+Focused screenshots remain deferred until the owner permits capture on a stable
+candidate.
+
+**Source-grounded execution addendum (2026-07-19):** The final GSD package does
+not create a temporary canonical-to-legacy projection between Wave 2 and Wave 3.
+The live Uke context-map handoff and the controlled rail therefore cut over
+atomically in `01-06-PLAN.md`. Because that candidate contains the high-risk
+exact-context boundary, the entire candidate is executed with **Fable 5 Extra**
+and receives both a fresh high-risk Fable verdict and a separate fresh Sonnet UI/
+accessibility verdict on the same immutable SHA. This escalates the standard UI
+slice; it does not downgrade or waive the Wave 2 risk gate.
 
 ## 11. Wave 4 — make Dagslinjen the Planlegg screen
 
