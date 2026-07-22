@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Completed second 01-02 scoped repair; candidate 80c6da2 awaits fresh independent high-risk review
-last_updated: "2026-07-22T22:26:21.970Z"
+stopped_at: Completed 01-02 layered architecture refactor; candidate 2399816 awaits fresh independent high-risk review
+last_updated: "2026-07-22T22:45:42.009Z"
 last_activity: 2026-07-23
-last_activity_desc: Second scoped TDD repair is deterministic-green on exact candidate `80c6da2`; fresh independent high-risk review remains pending.
+last_activity_desc: Layered live-response architecture refactor is deterministic- and probe-green on exact candidate `2399816`; fresh independent high-risk review remains pending.
 progress:
   total_phases: 1
   completed_phases: 0
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
 Plan: 2 of 18 in current phase
-Status: Plan 01-02 second repaired candidate awaits fresh independent high-risk review
-Last activity: 2026-07-23 — Second scoped TDD repair is deterministic-green on exact candidate `80c6da2`; no self-PASS claimed.
+Status: Plan 01-02 layered architecture candidate awaits fresh independent high-risk review
+Last activity: 2026-07-23 — Layered live-response refactor is green on exact candidate `2399816`; no self-PASS claimed.
 
 Progress: [█░░░░░░░░░] 11%
 
@@ -84,10 +84,12 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 1]: Current/hourly precipitation requires one-hour evidence; supported six-hour totals carry duration explicitly and are normalized before any hourly-rate field.
 - [Phase 1]: Only a newer successfully committed same-key response supersedes an older valid response; request start order or failure alone does not.
 - [Phase 1]: MET symbol validation is a closed exact match to the 83-value primary Locationforecast Swagger enum.
+- [Phase 1]: Forecast validation is layered: exact envelope/units/instant truth, optional validated periods, then usable extraction and coverage points; schema-valid period-less points remain raw but unusable.
+- [Phase 1]: Per-key validated network success commits to memory before persistence and precedes freshly re-read cache during concurrent fallback.
 
 ### Pending Todos
 
-- Obtain a fresh independent high-risk verdict on exact second repaired candidate `80c6da2d929281bf9b38cbb0c7603614c667026a` before Plan 01-03.
+- Obtain a fresh independent high-risk verdict on exact layered architecture candidate `23998169ab32c4eff83d4916777d0263a12657cf` before Plan 01-03.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -107,6 +109,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-22T22:26:21.958Z
-Stopped at: Completed second 01-02 scoped repair; candidate 80c6da2 awaits fresh independent high-risk review
+Last session: 2026-07-22T22:45:41.998Z
+Stopped at: Completed 01-02 layered architecture refactor; candidate 2399816 awaits fresh independent high-risk review
 Resume file: None

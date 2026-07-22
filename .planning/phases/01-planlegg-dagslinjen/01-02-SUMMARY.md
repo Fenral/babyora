@@ -47,10 +47,10 @@ coverage:
     requirement: TRUTH-01
     verification:
       - kind: unit
-        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (59 passed)"
+        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (67 passed)"
         status: pass
       - kind: other
-        ref: "git diff --check 6959443..80c6da2 and exact five-path second-repair scope manifest"
+        ref: "git diff --check 2ea2dc1..2399816 and exact four-path architecture-refactor scope manifest"
         status: pass
     human_judgment: false
   - id: D2
@@ -69,10 +69,10 @@ coverage:
     requirement: EVID-02
     verification:
       - kind: unit
-        ref: "focused four-suite run (86 passed, 1 future-plan TODO)"
+        ref: "focused four-suite run (96 passed, 1 future-plan TODO)"
         status: pass
       - kind: other
-        ref: "npm test && npm run lint && npm run build (653 passed; lint/main/bare build passed)"
+        ref: "npm test && npm run lint && npm run build (663 passed; lint/main/bare build passed)"
         status: pass
     human_judgment: false
   - id: D4
@@ -80,15 +80,15 @@ coverage:
     requirement: GOV-04
     verification:
       - kind: other
-        ref: "second repaired code candidate 80c6da2d929281bf9b38cbb0c7603614c667026a; implementation evidence recorded below"
+        ref: "layered architecture candidate 23998169ab32c4eff83d4916777d0263a12657cf; implementation evidence recorded below"
         status: pass
     human_judgment: true
     rationale: "Repository governance requires a fresh independent high-risk reviewer on the exact candidate SHA; the executor cannot issue that PASS."
 
-duration: 67min
+duration: 86min
 completed: 2026-07-22
 status: complete
-review_status: blocked_pending_architecture_refactor
+review_status: ready_for_high_risk_review
 ---
 
 # Phase 1 Plan 02: Truthful Forecast Evidence Boundary Summary
@@ -97,9 +97,9 @@ review_status: blocked_pending_architecture_refactor
 
 ## Performance
 
-- **Duration:** 67 min including two independent BLOCK repair rounds
+- **Duration:** 86 min including two scoped repairs and the live-response architecture refactor
 - **Started:** 2026-07-22T23:18:30+02:00
-- **Completed:** 2026-07-23T00:25:30+02:00
+- **Completed:** 2026-07-23T00:44:30+02:00
 - **Tasks:** 2
 - **Files modified:** 8
 
@@ -109,6 +109,7 @@ review_status: blocked_pending_architecture_refactor
 - Added a pure request lifecycle that accepts only the active request ID/fetch key and publishes `now`, hourly/daily views, raw forecast, and matching evidence atomically.
 - Added absolute-instant coverage that sorts a copy, rejects invalid/duplicate evidence, distinguishes all five required states, preserves repeated DST-hour ISO identities, and denies strong copy outside fresh exact-hour adjacency.
 - Repaired all nine independent-review findings with strict calendar/range/symbol/period validation, bounded stale evidence, invalid-cache eviction, atomic same-key requests, render-key guarding, real cancellation cleanup, explicit offline containment, and weather-only Norwegian copy.
+- Replaced whole-payload period assumptions with layered envelope/unit, period-evidence, and usable-point boundaries that accept the current official 87-point compact shape while excluding its terminal instant-only point from extraction and coverage.
 
 ## Task Commits
 
@@ -120,6 +121,8 @@ review_status: blocked_pending_architecture_refactor
 6. **Repair GREEN: Close all blocked forecast boundaries** — `b9b8b51` (`fix`)
 7. **Second repair RED: Reproduce residual forecast boundaries** — `9178047` (`test`)
 8. **Second repair GREEN: Close residual forecast truth gaps** — `80c6da2` (`fix`)
+9. **Architecture RED: Define live-shaped layered-boundary contracts** — `7d17b0e` (`test`)
+10. **Architecture GREEN: Layer live forecast validation and coordination** — `2399816` (`refactor`)
 
 **Plan metadata:** recorded by the final GSD documentation commit.
 
@@ -149,17 +152,18 @@ review_status: blocked_pending_architecture_refactor
 
 ## Deterministic Evidence
 
-All executable evidence below ran from a fresh `npm ci` archive checkout of exact candidate `80c6da2d929281bf9b38cbb0c7603614c667026a`; the primary checkout's pre-existing `node_modules` remained untouched because active Vite/Playwright processes held its native binaries.
+All executable evidence below ran from a fresh `npm ci` archive checkout of exact candidate `23998169ab32c4eff83d4916777d0263a12657cf`; the primary checkout's pre-existing `node_modules` remained untouched because active Vite/Playwright processes held its native binaries.
 
-- Focused four-suite Vitest run — **PASS**, 4/4 files; 86 tests passed and one intentional Plan 01-11 TODO.
+- Focused four-suite Vitest run — **PASS**, 4/4 files; 96 tests passed and one intentional Plan 01-11 TODO.
 - `npx tsc -b --pretty false` — **PASS**.
-- `npm test` — **PASS**, 60 files passed, 4 skipped; 653 tests passed, 34 TODO.
+- `npm test` — **PASS**, 60 files passed, 4 skipped; 663 tests passed, 34 TODO.
 - `npm run lint` — **PASS**.
 - `npm run build` — **PASS**, TypeScript plus main and bare Vite builds.
 - Primary MET Swagger enum comparison — **PASS**, all 83 implemented symbol codes exactly match `definitions.WeatherSymbol.enum` from `https://api.met.no/weatherapi/locationforecast/2.0/swagger`.
+- Ephemeral official live compact probe — **PASS** through both `isMetForecast` and `fetchForecast`; 87 points, one terminal instant-only point, exact consumed units. Payload stayed in memory and the temporary probe file was deleted after execution.
 - Mojibake scan across all four production paths — **PASS**, no `Ã` or `Â` remnants.
-- `git diff --check 6959443..80c6da2` — **PASS**.
-- Second-repair scope manifest — **PASS**, exactly five Plan 01-02 paths changed. No package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
+- `git diff --check 2ea2dc1..2399816` — **PASS**.
+- Architecture-refactor scope manifest — **PASS**, exactly four Plan 01-02 paths changed. No package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
 
 ## Candidate and Review Authority
 
@@ -171,8 +175,10 @@ All executable evidence below ran from a fresh `npm ci` archive checkout of exac
 | Codex GSD executor (second scoped TDD repair) | High-risk implementation | `80c6da2d929281bf9b38cbb0c7603614c667026a` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic checks green, no self-PASS claimed |
 | Fresh independent approved verifier | High-risk verification | `80c6da2d929281bf9b38cbb0c7603614c667026a` | **PASS**, later contradicted by external live-response evidence |
 | External read-only reviewer | Live-response architecture review | `80c6da2d929281bf9b38cbb0c7603614c667026a` | **BLOCK** — reproducible P1 schema/unit/cache-coordination failures; strictest verdict wins |
+| Codex GSD executor (layered architecture refactor) | High-risk implementation | `23998169ab32c4eff83d4916777d0263a12657cf` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic and ephemeral live checks green, no self-PASS claimed |
+| Fresh independent approved reviewer | High-risk verification | `23998169ab32c4eff83d4916777d0263a12657cf` | **PENDING** — fresh verdict required on the layered exact SHA |
 
-Any edit to the eight code/test paths after `80c6da2d929281bf9b38cbb0c7603614c667026a` invalidates this candidate and requires fresh evidence plus independent review.
+Any edit to the eight code/test paths after `23998169ab32c4eff83d4916777d0263a12657cf` invalidates this candidate and requires fresh evidence plus independent review.
 
 ## Independent BLOCK on Candidate 4150a1e
 
@@ -226,7 +232,16 @@ The architectural findings are:
 2. Consumed MET fields are accepted without the exact official unit contract, so missing or incompatible units can reach ready/cache state.
 3. Same-key coordination can prefer stale storage after a newer validated network success when `localStorage.setItem` fails; the latest validated success must remain an in-memory monotonic commit independent of persistence.
 
-Architecture correction status: **IN PROGRESS**. The verifier PASS is retained as history but superseded by the live-response BLOCK; no accepted independent PASS exists for Plan 01-02.
+Architecture correction status: **COMPLETE ON CANDIDATE `23998169ab32c4eff83d4916777d0263a12657cf`**. The verifier PASS is retained as history but superseded for `80c6da2` by the live-response BLOCK; no independent PASS exists yet for the layered candidate.
+
+## Layered Architecture Refactor Outcome
+
+- `7d17b0e` added architectural RED coverage. The isolated RED run failed as expected with 12 failed, 85 passed, and one TODO.
+- `2399816` separates exact envelope/unit/instant validation, optional per-point period validation, and usable extraction/coverage filtering. Schema-valid period-less points remain in the accepted raw forecast but cannot supply symbol or precipitation evidence.
+- A realistic invented 87-point compact-shaped fixture proves that a terminal instant-only point is accepted and cached while coverage stops at the preceding usable point. Current/hourly extraction uses one-hour points only; daily extraction uses only validated period-bearing points.
+- The six consumed fields require exact official units before network or cache data can reach ready state. A defense-in-depth hook guard converts incompatible typed input to an empty error state.
+- Per-key coordination stores the newest validated network success in memory before attempting persistence. Obsolete success and failure paths consult that validated memory commit before freshly re-reading validated fresh/stale storage, while older success remains eligible when no newer success committed.
+- A read-only live compact response with 87 points and a terminal instant-only point passed both the production type guard and fetch parser. No payload or network-dependent CI test was persisted.
 
 ## Decisions Made
 
@@ -235,10 +250,11 @@ Architecture correction status: **IN PROGRESS**. The verifier PASS is retained a
 - Repeated Oslo fall-back hours remain separate because ISO strings and epochs are authoritative; local labels are presentation only.
 - A new request clears cross-key weather/evidence and only the active request ID plus exact fetch key may publish a resolved or rejected state.
 - Stale cache evidence is bounded to six hours and contained in an explicit `offline` state with `offlineForecast`; legacy ready-state weather inputs remain empty.
-- MET evidence must have plausible numeric ranges, a known symbol, at least one forecast period, and strictly increasing unique instants before caching or extraction.
+- MET envelopes require exact consumed units, plausible instant ranges, and strictly increasing unique instants; any present period must validate, while period-less schema points remain accepted but unusable for symbol/precipitation extraction or coverage.
 - `precipMmH` requires one-hour evidence for current/hourly inputs; supported six-hour evidence carries duration explicitly and is divided by six before any hourly-rate field is published.
 - Request start order does not invalidate data by itself; only a newer successfully committed result supersedes an older valid same-key success.
 - Symbol validation is a closed exact match against the 83-value primary MET Swagger enum rather than a derived base/suffix grammar.
+- Latest validated per-key network success is committed in memory before persistence and wins failure fallback over freshly re-read validated storage.
 
 ## Deviations from Plan
 
@@ -258,6 +274,13 @@ Architecture correction status: **IN PROGRESS**. The verifier PASS is retained a
 - **Files modified:** Five plan-owned source/test paths.
 - **Commits:** `9178047`, `80c6da2`
 
+**3. [Rule 4 - Architecture] Replaced whole-payload validation after live-response BLOCK**
+- **Found during:** External live-response review of verifier-PASS candidate `80c6da2d929281bf9b38cbb0c7603614c667026a`
+- **Issue:** The official 87-point compact shape ends with a valid instant-only point, consumed units were not enforced, and persistence failure could let stale storage outrank a newer validated in-memory result.
+- **Fix:** With explicit architecture-correction authority, added RED coverage in `7d17b0e` and refactored envelope/units, optional period evidence, usable-point selection, hook defense, and per-key coordination in `2399816`.
+- **Files modified:** Four plan-owned source/test paths.
+- **Commits:** `7d17b0e`, `2399816`
+
 ## Known Stubs
 
 - `src/lib/planning/__tests__/forecast-evidence.test.ts` retains one intentional TODO for fixed/manual persistent cache versus future memory-only automatic scope. Plan 01-11 owns that behavior; it does not prevent this plan's provenance/currentness boundary from operating.
@@ -274,6 +297,7 @@ None. The existing proxy and persistent cache path remain unchanged; no new netw
 - One large mechanical patch missed context because the existing Norwegian comments had encoding differences. It applied no partial change; the same planned implementation was applied through narrower patches.
 - The primary checkout's dependency tree was incomplete and its native rolldown binary was locked by pre-existing active Vite/Playwright processes. No process was killed and no user artifact was touched; verification ran from a fresh archive checkout of the exact repaired SHA with `npm ci`.
 - Fresh `npm ci` reported pre-existing dependency audit findings (1 low, 3 moderate, 9 high, 1 critical). Dependency changes are outside this scoped repair and no package manifest or lockfile was changed.
+- The external reviewer and approved verifier disagreed on `80c6da2`; the reproducible live-response P1 evidence overrode PASS. The correction used a synthetic CI fixture plus one non-persisted official live probe on the new exact candidate.
 
 ## User Setup Required
 
@@ -281,7 +305,7 @@ None - no dependency, package, credential, environment, service, API, or migrati
 
 ## Remaining Gates
 
-- Fresh independent high-risk review on exact second repaired code candidate `80c6da2d929281bf9b38cbb0c7603614c667026a`: **PENDING**. The executor does not self-issue PASS.
+- Fresh independent high-risk review on exact layered architecture candidate `23998169ab32c4eff83d4916777d0263a12657cf`: **PENDING**. The executor does not self-issue PASS.
 - New app screenshots/video/traces and the media-based 90+ audit: **Pending stable candidate and owner permission**; none were created here.
 - VoiceOver, TalkBack, physical haptics, OS text scaling, one-handed reach, physical-device UAT, and owner release approval: **Pending**.
 - Six Snart approvals and independent climate artifacts remain Pending and still block Plan 01-13.
@@ -290,11 +314,12 @@ None - no dependency, package, credential, environment, service, API, or migrati
 
 - Original code candidate `4150a1e` remains blocked and must not be consumed by Plan 01-03.
 - First repaired candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` also remains blocked.
-- Second repaired candidate `80c6da2d929281bf9b38cbb0c7603614c667026a` is ready for fresh independent high-risk review; Plan 01-03 must wait for that verdict.
+- Second repaired candidate `80c6da2d929281bf9b38cbb0c7603614c667026a` is blocked by the authoritative external live-response verdict despite its verifier PASS.
+- Layered architecture candidate `23998169ab32c4eff83d4916777d0263a12657cf` is ready for fresh independent high-risk review; Plan 01-03 must wait for that verdict.
 
 ## Self-Check: PASSED
 
-All eight plan-owned paths, this summary, original commits `b5d68a9`, `bf5c806`, `3f4304a`, `4150a1e`, BLOCK records `32e84b8`, `6959443`, and repair commits `3cbaa68`, `b9b8b51`, `9178047`, `80c6da2` exist and were verified. The exact five-path second-repair scope and immutable SHA passed focused/full/lint/build/type-check/enum/mojibake checks; independent review remains pending.
+All eight plan-owned paths, this summary, original commits `b5d68a9`, `bf5c806`, `3f4304a`, `4150a1e`, BLOCK records `32e84b8`, `6959443`, `2ea2dc1`, repair commits `3cbaa68`, `b9b8b51`, `9178047`, `80c6da2`, and architecture commits `7d17b0e`, `2399816` exist and were verified. The exact four-path architecture scope and immutable SHA passed focused/full/lint/build/type-check/enum/mojibake/live-probe checks; independent review remains pending.
 
 ---
 *Phase: 01-planlegg-dagslinjen*
