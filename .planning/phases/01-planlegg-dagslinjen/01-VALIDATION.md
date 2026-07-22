@@ -4,7 +4,7 @@ slug: planlegg-dagslinjen
 status: approved_for_execution
 plan_count: 18
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-07-19
 updated: 2026-07-22
 media_gate: pending_owner_permission_after_stable_candidate
@@ -16,7 +16,7 @@ media_gate: pending_owner_permission_after_stable_candidate
 
 ## Current gate truth
 
-- `wave_0_complete` remains **false** until Plan 01-01 actually creates and verifies every fixture/TODO/harness path.
+- `wave_0_complete` is **true**: Plan 01-01 created every fixture/TODO/harness path and the repaired candidate `9115aeb` received a fresh independent exact-SHA PASS.
 - `nyquist_compliant` is **true** for the repaired 18-plan package after fresh independent plan/UI/validation convergence against source SHA `e669afff0259750840393e8475f84afbc7937352`.
 - `01-SNART-RULES.md` remains exactly `snart-v1.0-draft` / `pending_approval` during planning. Plan `01-13-01` is the only blocking human checkpoint and must stop until all six approvals and independently supplied climate artifacts exist.
 - The corrected draft requires `empty` only when no group has a visible item. If actionable items are marked while a winning `not_yet` remains, S18 requires authoritative `ready` with only `not_yet` and no `Har allerede` action.
@@ -71,8 +71,8 @@ Audit result: every GOAL, requirement, applicable research constraint and record
 
 | Task ID | Behavior proved | Exact automated/manual gate | Status |
 |---|---|---|---|
-| `01-01-01` | Frozen invented fixtures and pending contracts | `npx vitest run src/lib/planning/__tests__/forecast-evidence.test.ts src/lib/planning/__tests__/timezone.test.ts src/lib/planning/__tests__/plan-view-model.test.ts src/lib/planning/__tests__/planned-outfit-context.test.ts src/lib/planning/__tests__/planning-interaction.test.ts src/lib/planning/__tests__/snart.test.ts` | Pending |
-| `01-01-02` | Case-selectable no-media harness | `cmd.exe /d /s /c "npm run build && npx tsx e2e/planlegg.ts --case harness"` | Pending |
+| `01-01-01` | Frozen invented fixtures and pending contracts | `npx vitest run src/lib/planning/__tests__/forecast-evidence.test.ts src/lib/planning/__tests__/timezone.test.ts src/lib/planning/__tests__/plan-view-model.test.ts src/lib/planning/__tests__/planned-outfit-context.test.ts src/lib/planning/__tests__/planning-interaction.test.ts src/lib/planning/__tests__/snart.test.ts` | PASS on `9115aeb` |
+| `01-01-02` | Case-selectable no-media harness | `cmd.exe /d /s /c "npm run build && npx tsx e2e/planlegg.ts --case harness"` | PASS on `9115aeb` |
 | `01-02-01` | Forecast cache provenance/currentness and stale recovery | `npx vitest run src/lib/met-no/__tests__/client.test.ts` | Pending |
 | `01-02-02` | Atomic weather hook plus Oslo/DST coverage | `npx vitest run src/hooks/__tests__/useWeather.test.ts src/lib/planning/__tests__/forecast-evidence.test.ts src/lib/planning/__tests__/timezone.test.ts` | Pending |
 | `01-03-01` | Stable events, distinct changes and action grammar | `npx vitest run src/lib/planning/__tests__/change-events.test.ts src/lib/planning/__tests__/change-sentence.test.ts` | Pending |
@@ -157,7 +157,7 @@ Audit result: every GOAL, requirement, applicable research constraint and record
 - [x] Browser registry ownership is location containment 01-08-03, access 01-10-03, automatic location 01-12-03, Snart 01-16-02, route 01-17-03, and native/all 01-18-03.
 - [x] No media-writing or watch-mode command is specified.
 - [x] Browser haptic call-count assertions are excluded; native adapter behavior is unit-tested.
-- [ ] Wave 0 artifacts exist and pass.
+- [x] Wave 0 artifacts exist and pass on independently verified candidate `9115aeb`.
 - [x] Fresh independent plan/UI/validation checker confirms this exact repaired package and source-grounds the drifted `GuideHubScreen.tsx`, `package.json`, and `e2e/smoke.ts` assumptions.
 
-**Approval:** Ready for Plan 01-01 execution on source SHA `e669afff0259750840393e8475f84afbc7937352`. `nyquist_compliant` is true; `wave_0_complete` remains false until Plan 01-01 creates and verifies its artifacts. This document does not pass Snart human evidence, app runtime, physical-device, media, 90+ or release gates.
+**Approval:** Wave 0 is complete and independently verified on `9115aeb`. The fresh exact-HEAD plan/UI re-check remains the final operational gate before Plan 01-02. This document does not pass Snart human evidence, app runtime, physical-device, media, 90+ or release gates.
