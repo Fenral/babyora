@@ -36,6 +36,19 @@ export type MetTimePoint = {
   };
 };
 
+export type ForecastFetchMetadata = {
+  source: 'network' | 'cache';
+  sourceUpdatedAt: string | null;
+  fetchedAt: number;
+  cacheStatus: 'miss' | 'fresh' | 'stale';
+  stale: boolean;
+};
+
+export type ForecastFetchResult = {
+  forecast: MetForecast;
+  metadata: ForecastFetchMetadata;
+};
+
 export type WeatherNow = {
   tempC: number;
   feelsLikeC: number;

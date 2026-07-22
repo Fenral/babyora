@@ -1,4 +1,13 @@
-import type { MetForecast, MetTimePoint, WeatherDaily, WeatherDayAtHour, WeatherHourly, WeatherNow } from './types.js';
+import type {
+  ForecastFetchMetadata,
+  ForecastFetchResult,
+  MetForecast,
+  MetTimePoint,
+  WeatherDaily,
+  WeatherDayAtHour,
+  WeatherHourly,
+  WeatherNow,
+} from './types.js';
 import { feelsLikeC } from './feels-like.js';
 
 /**
@@ -20,48 +29,145 @@ const CACHE_KEY_PREFIX = 'metno:';
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 time per met.no-anbefaling
 
 type CachedEntry = {
+  version?: 1;
   fetchedAt: number;
   data: MetForecast;
+};
+
+type CacheCandidates = {
+  fresh: CachedEntry | null;
+  stale: CachedEntry | null;
 };
 
 function cacheKey(lat: number, lon: number): string {
   return `${CACHE_KEY_PREFIX}${lat.toFixed(2)},${lon.toFixed(2)}`;
 }
 
-function readCache(lat: number, lon: number): CachedEntry | null {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isIsoInstant(value: unknown): value is string {
+  return typeof value === 'string'
+    && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)
+    && Number.isFinite(Date.parse(value));
+}
+
+function isForecastPeriod(value: unknown): boolean {
+  if (!isRecord(value) || !isRecord(value.summary) || !isRecord(value.details)) return false;
+  return typeof value.summary.symbol_code === 'string'
+    && value.summary.symbol_code.trim().length > 0
+    && isFiniteNumber(value.details.precipitation_amount);
+}
+
+function isMetTimePoint(value: unknown): value is MetTimePoint {
+  if (!isRecord(value) || !isIsoInstant(value.time) || !isRecord(value.data)) return false;
+  const instant = value.data.instant;
+  if (!isRecord(instant) || !isRecord(instant.details)) return false;
+  const details = instant.details;
+  if (
+    !isFiniteNumber(details.air_temperature)
+    || !isFiniteNumber(details.wind_speed)
+    || !isFiniteNumber(details.wind_from_direction)
+    || !isFiniteNumber(details.relative_humidity)
+    || !isFiniteNumber(details.cloud_area_fraction)
+  ) return false;
+
+  const next1 = value.data.next_1_hours;
+  const next6 = value.data.next_6_hours;
+  return (next1 === undefined || isForecastPeriod(next1))
+    && (next6 === undefined || isForecastPeriod(next6));
+}
+
+function isMetForecast(value: unknown): value is MetForecast {
+  if (!isRecord(value) || !isRecord(value.properties)) return false;
+  const { meta, timeseries } = value.properties;
+  if (!isRecord(meta) || !isRecord(meta.units) || !Array.isArray(timeseries) || timeseries.length === 0) {
+    return false;
+  }
+  if (!Object.values(meta.units).every((unit) => typeof unit === 'string')) return false;
+  return timeseries.every(isMetTimePoint);
+}
+
+function isCachedEntry(value: unknown, now: number): value is CachedEntry {
+  if (!isRecord(value)) return false;
+  if (value.version !== undefined && value.version !== 1) return false;
+  return isFiniteNumber(value.fetchedAt)
+    && value.fetchedAt <= now
+    && isMetForecast(value.data);
+}
+
+function readCache(lat: number, lon: number, now: number): CacheCandidates {
   try {
     const raw = localStorage.getItem(cacheKey(lat, lon));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as CachedEntry;
-    if (Date.now() - parsed.fetchedAt > CACHE_TTL_MS) return null;
-    return parsed;
+    if (!raw) return { fresh: null, stale: null };
+    const parsed: unknown = JSON.parse(raw);
+    if (!isCachedEntry(parsed, now)) return { fresh: null, stale: null };
+    if (now - parsed.fetchedAt <= CACHE_TTL_MS) return { fresh: parsed, stale: null };
+    return { fresh: null, stale: parsed };
   } catch {
-    return null;
+    return { fresh: null, stale: null };
   }
 }
 
-function writeCache(lat: number, lon: number, data: MetForecast): void {
+function writeCache(lat: number, lon: number, fetchedAt: number, data: MetForecast): void {
   try {
-    const entry: CachedEntry = { fetchedAt: Date.now(), data };
+    const entry: CachedEntry = { version: 1, fetchedAt, data };
     localStorage.setItem(cacheKey(lat, lon), JSON.stringify(entry));
   } catch {
     // localStorage fullt eller blokkert — ignorer
   }
 }
 
-export async function fetchForecast(lat: number, lon: number): Promise<MetForecast> {
-  const cached = readCache(lat, lon);
-  if (cached) return cached.data;
+function sourceUpdatedAt(forecast: MetForecast): string | null {
+  const value: unknown = forecast.properties.meta.updated_at;
+  return isIsoInstant(value) ? value : null;
+}
+
+function cacheResult(entry: CachedEntry, stale: boolean): ForecastFetchResult {
+  const metadata: ForecastFetchMetadata = {
+    source: 'cache',
+    sourceUpdatedAt: sourceUpdatedAt(entry.data),
+    fetchedAt: entry.fetchedAt,
+    cacheStatus: stale ? 'stale' : 'fresh',
+    stale,
+  };
+  return { forecast: entry.data, metadata };
+}
+
+export async function fetchForecast(lat: number, lon: number): Promise<ForecastFetchResult> {
+  const fetchedAt = Date.now();
+  const cached = readCache(lat, lon, fetchedAt);
+  if (cached.fresh) return cacheResult(cached.fresh, false);
 
   // Via proxy — den setter User-Agent server-side (met.no-krav).
   const url = `${PROXY}?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`;
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
-  if (!res.ok) {
-    throw new Error(`met.no HTTP ${res.status}`);
+  try {
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) {
+      throw new Error(`met.no HTTP ${res.status}`);
+    }
+    const data: unknown = await res.json();
+    if (!isMetForecast(data)) throw new Error('met.no: ugyldig prognose');
+    writeCache(lat, lon, fetchedAt, data);
+    return {
+      forecast: data,
+      metadata: {
+        source: 'network',
+        sourceUpdatedAt: sourceUpdatedAt(data),
+        fetchedAt,
+        cacheStatus: 'miss',
+        stale: false,
+      },
+    };
+  } catch (error) {
+    if (cached.stale) return cacheResult(cached.stale, true);
+    throw error;
   }
-  const data = (await res.json()) as MetForecast;
-  writeCache(lat, lon, data);
-  return data;
 }
 
 export function extractNow(forecast: MetForecast): WeatherNow {

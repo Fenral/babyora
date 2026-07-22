@@ -39,9 +39,11 @@ const NOW_MS = Date.parse(NOW_ISO);
 const CACHE_TTL_MS = 60 * 60 * 1000;
 const CACHE_KEY = 'metno:61.23,8.77';
 
-function validForecast(updatedAt: unknown = '2026-02-12T08:12:00.000Z'): MetForecast {
+function validForecast(...updatedAt: [unknown?]): MetForecast {
   const value = forecast([point(2026, 1, 12, 9, -3, 4.2, 'partlycloudy_day')]);
-  value.properties.meta.updated_at = updatedAt as string;
+  value.properties.meta.updated_at = (updatedAt.length === 0
+    ? '2026-02-12T08:12:00.000Z'
+    : updatedAt[0]) as string;
   return value;
 }
 
