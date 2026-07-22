@@ -32,6 +32,15 @@ const MAX_STALE_AGE_MS = 6 * 60 * 60 * 1000;
 const MAX_SOURCE_AGE_MS = 6 * 60 * 60 * 1000;
 const MAX_SOURCE_FUTURE_SKEW_MS = 5 * 60 * 1000;
 
+const CONSUMED_UNIT_CONTRACT = {
+  air_temperature: 'celsius',
+  precipitation_amount: 'mm',
+  wind_speed: 'm/s',
+  wind_from_direction: 'degrees',
+  relative_humidity: '%',
+  cloud_area_fraction: '%',
+} as const;
+
 const KNOWN_SYMBOL_CODES = new Set([
   'clearsky_day',
   'clearsky_night',
@@ -123,6 +132,7 @@ const latestCommittedByKey = new Map<string, Readonly<{
   version: number;
   result: ForecastFetchResult;
 }>>();
+let coordinatorStorage: Storage | null | undefined;
 
 type CachedEntry = {
   version?: 1;
@@ -137,6 +147,19 @@ type CacheCandidates = {
 
 function cacheKey(lat: number, lon: number): string {
   return `${CACHE_KEY_PREFIX}${lat.toFixed(2)},${lon.toFixed(2)}`;
+}
+
+function alignCoordinatorWithStorage(): void {
+  let currentStorage: Storage | null = null;
+  try {
+    currentStorage = localStorage;
+  } catch {
+    // Memory coordination still works when persistent storage is unavailable.
+  }
+  if (currentStorage === coordinatorStorage) return;
+  latestStartedVersionByKey.clear();
+  latestCommittedByKey.clear();
+  coordinatorStorage = currentStorage;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -155,13 +178,19 @@ function isKnownSymbolCode(value: unknown): value is string {
   return typeof value === 'string' && KNOWN_SYMBOL_CODES.has(value);
 }
 
+function hasExactConsumedUnits(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return Object.entries(CONSUMED_UNIT_CONTRACT)
+    .every(([field, unit]) => value[field] === unit);
+}
+
 function isForecastPeriod(value: unknown): boolean {
   if (!isRecord(value) || !isRecord(value.summary) || !isRecord(value.details)) return false;
   return isKnownSymbolCode(value.summary.symbol_code)
     && isInRange(value.details.precipitation_amount, 0, 500);
 }
 
-function isMetTimePoint(value: unknown): value is MetTimePoint {
+function hasValidInstantPoint(value: unknown): boolean {
   if (!isRecord(value) || parseStrictIsoInstant(value.time) === null || !isRecord(value.data)) return false;
   const instant = value.data.instant;
   if (!isRecord(instant) || !isRecord(instant.details)) return false;
@@ -174,28 +203,47 @@ function isMetTimePoint(value: unknown): value is MetTimePoint {
     || !isInRange(details.cloud_area_fraction, 0, 100)
   ) return false;
 
+  return true;
+}
+
+function hasValidPeriodLayers(value: unknown): boolean {
+  if (!isRecord(value) || !isRecord(value.data)) return false;
   const next1 = value.data.next_1_hours;
   const next6 = value.data.next_6_hours;
-  return (next1 !== undefined || next6 !== undefined)
-    && (next1 === undefined || isForecastPeriod(next1))
+  return (next1 === undefined || isForecastPeriod(next1))
     && (next6 === undefined || isForecastPeriod(next6));
 }
 
-function isMetForecast(value: unknown): value is MetForecast {
+export function isMetForecast(value: unknown): value is MetForecast {
   if (!isRecord(value) || !isRecord(value.properties)) return false;
   const { meta, timeseries } = value.properties;
   if (!isRecord(meta) || !isRecord(meta.units) || !Array.isArray(timeseries) || timeseries.length === 0) {
     return false;
   }
-  if (!Object.values(meta.units).every((unit) => typeof unit === 'string')) return false;
+  if (!hasExactConsumedUnits(meta.units)) return false;
   let previousEpoch = Number.NEGATIVE_INFINITY;
   for (const point of timeseries) {
-    if (!isMetTimePoint(point)) return false;
-    const epoch = parseStrictIsoInstant(point.time);
+    if (!hasValidInstantPoint(point) || !hasValidPeriodLayers(point)) return false;
+    const epoch = parseStrictIsoInstant((point as Record<string, unknown>).time);
     if (epoch === null || epoch <= previousEpoch) return false;
     previousEpoch = epoch;
   }
   return true;
+}
+
+export function hasUsablePeriodEvidence(point: MetTimePoint): boolean {
+  return (point.data.next_1_hours !== undefined && isForecastPeriod(point.data.next_1_hours))
+    || (point.data.next_6_hours !== undefined && isForecastPeriod(point.data.next_6_hours));
+}
+
+export function usableForecastPoints(forecast: MetForecast): MetTimePoint[] {
+  return forecast.properties.timeseries.filter(hasUsablePeriodEvidence);
+}
+
+function oneHourForecastPoints(forecast: MetForecast): MetTimePoint[] {
+  return forecast.properties.timeseries.filter(
+    (point) => point.data.next_1_hours !== undefined && isForecastPeriod(point.data.next_1_hours),
+  );
 }
 
 function isCachedEntry(value: unknown, now: number): value is CachedEntry {
@@ -260,7 +308,26 @@ function cacheResult(entry: CachedEntry, stale: boolean): ForecastFetchResult {
   return { forecast: entry.data, metadata };
 }
 
+function readMemoryCommit(key: string, now: number): Readonly<{
+  version: number;
+  result: ForecastFetchResult;
+}> | null {
+  const committed = latestCommittedByKey.get(key);
+  if (!committed) return null;
+  const age = now - committed.result.metadata.fetchedAt;
+  if (
+    age < 0
+    || age > CACHE_TTL_MS
+    || !isMetForecast(committed.result.forecast)
+  ) {
+    latestCommittedByKey.delete(key);
+    return null;
+  }
+  return committed;
+}
+
 export async function fetchForecast(lat: number, lon: number): Promise<ForecastFetchResult> {
+  alignCoordinatorWithStorage();
   const fetchedAt = Date.now();
   const cached = readCache(lat, lon, fetchedAt);
   if (cached.fresh) return cacheResult(cached.fresh, false);
@@ -279,11 +346,8 @@ export async function fetchForecast(lat: number, lon: number): Promise<ForecastF
     const data: unknown = await res.json();
     if (!isMetForecast(data)) throw new Error('met.no: ugyldig prognose');
 
-    const committed = latestCommittedByKey.get(key);
+    const committed = readMemoryCommit(key, Date.now());
     if (committed && committed.version > requestVersion) {
-      const current = readCache(lat, lon, Date.now());
-      if (current.fresh) return cacheResult(current.fresh, false);
-      if (current.stale) return cacheResult(current.stale, true);
       return committed.result;
     }
 
@@ -297,10 +361,12 @@ export async function fetchForecast(lat: number, lon: number): Promise<ForecastF
         stale: false,
       },
     };
-    writeCache(lat, lon, fetchedAt, data);
     latestCommittedByKey.set(key, { version: requestVersion, result });
+    writeCache(lat, lon, fetchedAt, data);
     return result;
   } catch (error) {
+    const committed = readMemoryCommit(key, Date.now());
+    if (committed) return committed.result;
     const current = readCache(lat, lon, Date.now());
     if (current.fresh) return cacheResult(current.fresh, false);
     if (current.stale) return cacheResult(current.stale, true);
@@ -336,8 +402,8 @@ function periodEvidence(point: MetTimePoint): PeriodEvidence {
 }
 
 export function extractNow(forecast: MetForecast): WeatherNow {
-  const first = forecast.properties.timeseries[0];
-  if (!first) throw new Error('met.no: tom timeseries');
+  const first = oneHourForecastPoints(forecast)[0];
+  if (!first) throw new Error('met.no: mangler en-timesbevis');
   const d = first.data.instant.details;
   const period = oneHourEvidence(first);
   const precipMmH = period.precipitationAmountMm;
@@ -354,7 +420,7 @@ export function extractNow(forecast: MetForecast): WeatherNow {
 }
 
 export function extractHourly(forecast: MetForecast, hours = 12): WeatherHourly[] {
-  return forecast.properties.timeseries.slice(0, hours).map((point) => {
+  return oneHourForecastPoints(forecast).slice(0, hours).map((point) => {
     const d = point.data.instant.details;
     const period = oneHourEvidence(point);
     return {
@@ -380,7 +446,7 @@ export function extractDailyAtHour(
   days = 10,
 ): WeatherDayAtHour[] {
   const byDate = new Map<string, { date: Date; best?: { point: MetTimePoint; distance: number } }>();
-  for (const point of forecast.properties.timeseries) {
+  for (const point of usableForecastPoints(forecast)) {
     const time = new Date(point.time);
     const key = time.toLocaleDateString('nb-NO');
     const midnight = new Date(time);
@@ -425,7 +491,7 @@ export function extractDaily(forecast: MetForecast, days = 3): WeatherDaily[] {
     midDay?: { code: string; distance: number };
   }>();
 
-  for (const point of forecast.properties.timeseries) {
+  for (const point of usableForecastPoints(forecast)) {
     const time = new Date(point.time);
     const key = time.toLocaleDateString('nb-NO');
     const existing = byDate.get(key) ?? { points: [] as typeof forecast.properties.timeseries };

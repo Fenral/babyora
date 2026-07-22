@@ -352,10 +352,6 @@ describe('fetchForecast provenance and cache recovery', () => {
     ['cloud fraction below zero', (data: MetForecast) => { data.properties.timeseries[0]!.data.instant.details.cloud_area_fraction = -1; }],
     ['negative precipitation', (data: MetForecast) => { data.properties.timeseries[0]!.data.next_1_hours!.details.precipitation_amount = -0.1; }],
     ['unknown symbol', (data: MetForecast) => { data.properties.timeseries[0]!.data.next_1_hours!.summary.symbol_code = 'surprise_tornado'; }],
-    ['missing period evidence', (data: MetForecast) => {
-      delete data.properties.timeseries[0]!.data.next_1_hours;
-      delete data.properties.timeseries[0]!.data.next_6_hours;
-    }],
   ])('rejects out-of-range or unknown %s evidence', async (_case, mutate) => {
     const data = validForecast();
     mutate(data);
@@ -565,7 +561,7 @@ describe('extractHourly', () => {
     const fc = forecast([sixHourPoint]);
 
     expect(() => extractNow(fc)).toThrow('met.no: mangler en-timesbevis');
-    expect(() => extractHourly(fc, 1)).toThrow('met.no: mangler en-timesbevis');
+    expect(extractHourly(fc, 1)).toEqual([]);
     expect(extractDailyAtHour(fc, 6, 1)[0]?.precipMmH).toBe(10);
   });
 });

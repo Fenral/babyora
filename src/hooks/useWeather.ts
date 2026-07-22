@@ -5,6 +5,8 @@ import {
   extractHourly,
   extractNow,
   fetchForecast,
+  isMetForecast,
+  usableForecastPoints,
 } from '../lib/met-no/client';
 import {
   parseStrictIsoInstant,
@@ -95,10 +97,17 @@ export function weatherStateFromForecastResult(
   extractors: WeatherExtractors = DEFAULT_EXTRACTORS,
 ): WeatherState {
   const { forecast, metadata } = result;
+  if (!isMetForecast(forecast)) {
+    return {
+      ...emptyWeatherState('error'),
+      error: 'met.no: ugyldig prognose',
+    };
+  }
+  const usablePoints = usableForecastPoints(forecast);
   const evidence = {
     metadata,
     coverage: assessForecastCoverage(
-      forecast.properties.timeseries.map((point) => point.time),
+      usablePoints.map((point) => point.time),
       metadata,
     ),
   };
@@ -109,18 +118,25 @@ export function weatherStateFromForecastResult(
       evidence,
     };
   }
-  return {
-    status: 'ready',
-    now: extractors.now(forecast),
-    hourly: extractors.hourly(forecast, 48),
-    daily: extractors.daily(forecast, 10),
-    dailyAtHour: extractors.dailyAtHour(forecast, refHour, 10),
-    forecast,
-    offlineForecast: null,
-    evidence,
-    error: null,
-    attribution: 'V\u00e6r fra met.no',
-  };
+  try {
+    return {
+      status: 'ready',
+      now: extractors.now(forecast),
+      hourly: extractors.hourly(forecast, 48),
+      daily: extractors.daily(forecast, 10),
+      dailyAtHour: extractors.dailyAtHour(forecast, refHour, 10),
+      forecast,
+      offlineForecast: null,
+      evidence,
+      error: null,
+      attribution: 'V\u00e6r fra met.no',
+    };
+  } catch (error) {
+    return {
+      ...emptyWeatherState('error'),
+      error: error instanceof Error ? error.message : 'met.no: ugyldig prognose',
+    };
+  }
 }
 
 export function selectWeatherForFetchKey(
