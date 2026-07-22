@@ -88,7 +88,7 @@ coverage:
 duration: 48min
 completed: 2026-07-22
 status: complete
-review_status: ready_for_high_risk_review
+review_status: blocked_pending_second_repair
 ---
 
 # Phase 1 Plan 02: Truthful Forecast Evidence Boundary Summary
@@ -162,8 +162,8 @@ All executable evidence below ran from a fresh `npm ci` archive checkout of exac
 | Identity | Lane | Exact candidate | Verdict |
 |---|---|---|---|
 | Codex GSD executor (original candidate) | High-risk implementation | `4150a1e` | **BLOCKED** by fresh independent verifier and external read-only reviewer |
-| Codex GSD executor (scoped TDD repair) | High-risk implementation | `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic checks green, no self-PASS claimed |
-| Fresh independent approved reviewer | High-risk verification | `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` | **PENDING** — fresh verdict required on the repaired exact SHA |
+| Codex GSD executor (first scoped TDD repair) | High-risk implementation | `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` | **BLOCKED** by fresh independent verifier |
+| Fresh independent approved reviewer | High-risk verification | `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` | **BLOCK** — six residual correctness findings require a second scoped repair |
 
 Any edit to the eight code/test paths after `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` invalidates this candidate and requires fresh evidence plus independent review.
 
@@ -188,6 +188,19 @@ Repair status: **COMPLETE ON CANDIDATE `b9b8b51f0a0972b96706a6e171cda2cba89e00b5
 - `3cbaa68` added behavioral RED coverage for all nine findings. In the isolated environment the RED run failed as expected with 31 failed, 40 passed, and one TODO.
 - `b9b8b51` made the same tests GREEN: strict ISO calendar and MET payload validation; six-hour stale/source-age ceilings; five-minute source future-skew; invalid-cache eviction; per-key success/success and success/failure atomicity; no synthesized clear/dry evidence; render-before-effect key containment; real lifecycle cleanup; explicit non-ready offline state; and weather-only correctly encoded Norwegian copy.
 - The repaired focused run passed 71 tests with one intentional TODO, followed by the complete deterministic matrix above.
+
+## Second Independent BLOCK on Candidate b9b8b51
+
+Candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` is independently rejected and must not advance. The residual findings are:
+
+1. `next_6_hours.precipitation_amount` is a six-hour total but can be exposed directly as hourly precipitation.
+2. Missing or invalid `sourceUpdatedAt` can still publish ordinary `ready` legacy weather despite unavailable coverage.
+3. A newer same-key failure can cause an older valid success to be discarded when no newer valid result committed, including stale-cache variants.
+4. The symbol validator is not the exact official MET Locationforecast enum and misses official double-s spellings/suffix constraints.
+5. An empty-string cache value is treated like a miss instead of corrupt data that must be evicted.
+6. One mojibake source comment remains.
+
+Second repair status: **IN PROGRESS**. No independent PASS exists for Plan 01-02.
 
 ## Decisions Made
 
