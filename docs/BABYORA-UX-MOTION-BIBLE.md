@@ -1,7 +1,9 @@
 # Babyora UX & Motion Bible
 
-**Version:** 1.0  
-**Status:** Owner-approved design doctrine  
+**Version:** 1.0
+
+**Status:** Owner-approved design doctrine
+
 **Approved:** 2026-07-22
 
 ## Authority and scope
@@ -142,4 +144,3 @@ The affected experience is done only when:
 - architecture is no more complex than the experience requires;
 - no P0 or P1 UX issue remains;
 - implementation evidence satisfies the governing approved plan.
-
