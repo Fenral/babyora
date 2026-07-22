@@ -10,6 +10,8 @@ This file is the authoritative entry point when the repository is opened from an
 - Product model: **Free = today at home. Plus = future, everywhere, and shared with family.**
 - Quality ambition: 90+ for the core screens and journeys, measured against the verification protocol rather than declared from visual impressions alone.
 - The existing design system is evolved, not replaced with a generic redesign.
+- UX and motion work follows `docs/BABYORA-UX-MOTION-BIBLE.md` within the
+  document precedence and approved implementation plans below.
 - Engine 2.0 v1 is limited to ages 0-24 months. Ages 25-71 are deferred to a later product phase. Synthetic materials are valid functional options alongside wool, cotton, fleece, shell fabrics, and relevant blends.
 - No wardrobe-registration requirement, child-photo analysis, generic AI chat, social feed, or affiliate marketplace is part of the approved core direction.
 - Model routing is mandatory: Sonnet 5 Medium for mechanical documentation, Sonnet 5 High for ordinary product/UI work, and Fable 5 Extra for safety, Motor V2, RLS/auth, entitlement, calibration and server scheduling. Opus 4.8 Extra is the approved fallback; high-risk work is not silently downgraded.
@@ -42,15 +44,16 @@ Older files may still use Babyora or Klarune. That historical wording does not o
 1. `docs/CURRENT-HANDOFF.md`
 2. `docs/DECISION-LOG.md`
 3. `docs/CONVERSATION-CONTEXT.md`
-4. `docs/superpowers/plans/2026-07-13-babyora-analysis-and-action-summary.md`
-5. `docs/superpowers/plans/2026-07-13-babyora-consolidated-revision-plan.md`
-6. `docs/superpowers/plans/2026-07-13-babyora-90-plus-master-plan.md`
-7. `docs/superpowers/plans/2026-07-13-babyora-engine-2-plan.md`
-8. `docs/superpowers/plans/2026-07-13-babyora-ui-90-plus-plan.md`
-9. `docs/superpowers/plans/2026-07-13-babyora-family-sync-plan.md`
-10. `docs/superpowers/plans/2026-07-13-babyora-personal-calibration-plan.md`
-11. `docs/superpowers/plans/2026-07-13-babyora-notifications-widgets-plan.md`
-12. `docs/superpowers/plans/2026-07-13-babyora-verification-protocol.md`
+4. `docs/BABYORA-UX-MOTION-BIBLE.md`
+5. `docs/superpowers/plans/2026-07-13-babyora-analysis-and-action-summary.md`
+6. `docs/superpowers/plans/2026-07-13-babyora-consolidated-revision-plan.md`
+7. `docs/superpowers/plans/2026-07-13-babyora-90-plus-master-plan.md`
+8. `docs/superpowers/plans/2026-07-13-babyora-engine-2-plan.md`
+9. `docs/superpowers/plans/2026-07-13-babyora-ui-90-plus-plan.md`
+10. `docs/superpowers/plans/2026-07-13-babyora-family-sync-plan.md`
+11. `docs/superpowers/plans/2026-07-13-babyora-personal-calibration-plan.md`
+12. `docs/superpowers/plans/2026-07-13-babyora-notifications-widgets-plan.md`
+13. `docs/superpowers/plans/2026-07-13-babyora-verification-protocol.md`
 
 Before implementing, summarize the current direction, identify contradictions, and ask the owner to confirm the first implementation package. Do not interpret repository access as permission to code.
 

@@ -1,7 +1,16 @@
 # Current handoff
 
-**Updated:** 2026-07-20
-**Phase:** Babyora-babyen er nå den gjennomgående onboardingfiguren. Planlegg/Dagslinjen forblir en separat arbeidsstrøm.
+**Updated:** 2026-07-22
+**Phase:** UX- og motionlæren er formalisert. Babyora-babyen er gjennomgående i onboarding, og Planlegg/Dagslinjen forblir en separat arbeidsstrøm.
+
+## 2026-07-22: UX & Motion Bible godkjent
+
+Eier klassifiserte den mottatte master-handoff-en som Babyoras **UX & Motion
+Bible**. Den er lagret som `docs/BABYORA-UX-MOTION-BIBLE.md` og styrer ro,
+forklarende bevegelse, signaturovergangen fra Antrekkskart til plaggliste og
+avgrenset bruk av Higgsfield. Den erstatter ikke `AGENTS.md`,
+`docs/CLAUDE-START-HERE.md`, beslutningsloggen, produktmodellen,
+sikkerhetskravene eller godkjente planer.
 
 ## 2026-07-20: Én visuell figur gjennom hele onboardingen
 

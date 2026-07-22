@@ -2,6 +2,22 @@
 
 This log records current product decisions that override older exploratory material.
 
+## 2026-07-22
+
+### Master handoff klassifiseres som Babyora UX & Motion Bible
+
+**Decision:** `docs/BABYORA-UX-MOTION-BIBLE.md` er godkjent som Babyoras
+styringsdokument for UX-prinsipper, motion, signaturopplevelsen og avgrenset
+bruk av Higgsfield. Dokumentet er ikke prosjektets overordnede «single source
+of truth» og endrer ikke eksisterende dokumentrangering, produktmodell,
+sikkerhetskrav, prosess eller godkjente implementeringsplaner.
+
+**Reason:** Innholdet gir en tydelig og nyttig designlære: rolig intelligens,
+forklarende bevegelse, tillit fremfor dekorasjon og Antrekkskartets plagg som
+informasjonsbærere. Samtidig må repoets etablerte beslutningshierarki og
+produktgrenser forbli styrende. Eier godkjente klassifiseringen eksplisitt:
+«UX og Motion bible it is».
+
 ## 2026-07-19
 
 ### Planlegg låses til «Dagslinjen»
