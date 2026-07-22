@@ -8,6 +8,7 @@ import type {
   WeatherHourly,
   WeatherNow,
 } from './types.js';
+import { parseStrictIsoInstant } from './types.js';
 import { feelsLikeC } from './feels-like.js';
 
 /**
@@ -27,6 +28,27 @@ const PROXY =
 
 const CACHE_KEY_PREFIX = 'metno:';
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 time per met.no-anbefaling
+const MAX_STALE_AGE_MS = 6 * 60 * 60 * 1000;
+const MAX_SOURCE_AGE_MS = 6 * 60 * 60 * 1000;
+const MAX_SOURCE_FUTURE_SKEW_MS = 5 * 60 * 1000;
+
+const KNOWN_SYMBOL_CODES = new Set([
+  'clearsky', 'fair', 'partlycloudy', 'cloudy', 'fog',
+  'lightrainshowers', 'rainshowers', 'heavyrainshowers',
+  'lightrainshowersandthunder', 'rainshowersandthunder', 'heavyrainshowersandthunder',
+  'lightsleetshowers', 'sleetshowers', 'heavysleetshowers',
+  'lightsleetshowersandthunder', 'sleetshowersandthunder', 'heavysleetshowersandthunder',
+  'lightsnowshowers', 'snowshowers', 'heavysnowshowers',
+  'lightsnowshowersandthunder', 'snowshowersandthunder', 'heavysnowshowersandthunder',
+  'lightrain', 'rain', 'heavyrain',
+  'lightrainandthunder', 'rainandthunder', 'heavyrainandthunder',
+  'lightsleet', 'sleet', 'heavysleet',
+  'lightsleetandthunder', 'sleetandthunder', 'heavysleetandthunder',
+  'lightsnow', 'snow', 'heavysnow',
+  'lightsnowandthunder', 'snowandthunder', 'heavysnowandthunder',
+]);
+
+const latestRequestVersionByKey = new Map<string, number>();
 
 type CachedEntry = {
   version?: 1;
@@ -51,35 +73,39 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function isIsoInstant(value: unknown): value is string {
-  return typeof value === 'string'
-    && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)
-    && Number.isFinite(Date.parse(value));
+function isInRange(value: unknown, min: number, max: number): value is number {
+  return isFiniteNumber(value) && value >= min && value <= max;
+}
+
+function isKnownSymbolCode(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const base = value.replace(/_(?:day|night|polartwilight)$/, '');
+  return KNOWN_SYMBOL_CODES.has(base);
 }
 
 function isForecastPeriod(value: unknown): boolean {
   if (!isRecord(value) || !isRecord(value.summary) || !isRecord(value.details)) return false;
-  return typeof value.summary.symbol_code === 'string'
-    && value.summary.symbol_code.trim().length > 0
-    && isFiniteNumber(value.details.precipitation_amount);
+  return isKnownSymbolCode(value.summary.symbol_code)
+    && isInRange(value.details.precipitation_amount, 0, 500);
 }
 
 function isMetTimePoint(value: unknown): value is MetTimePoint {
-  if (!isRecord(value) || !isIsoInstant(value.time) || !isRecord(value.data)) return false;
+  if (!isRecord(value) || parseStrictIsoInstant(value.time) === null || !isRecord(value.data)) return false;
   const instant = value.data.instant;
   if (!isRecord(instant) || !isRecord(instant.details)) return false;
   const details = instant.details;
   if (
-    !isFiniteNumber(details.air_temperature)
-    || !isFiniteNumber(details.wind_speed)
-    || !isFiniteNumber(details.wind_from_direction)
-    || !isFiniteNumber(details.relative_humidity)
-    || !isFiniteNumber(details.cloud_area_fraction)
+    !isInRange(details.air_temperature, -80, 60)
+    || !isInRange(details.wind_speed, 0, 100)
+    || !isInRange(details.wind_from_direction, 0, 360)
+    || !isInRange(details.relative_humidity, 0, 100)
+    || !isInRange(details.cloud_area_fraction, 0, 100)
   ) return false;
 
   const next1 = value.data.next_1_hours;
   const next6 = value.data.next_6_hours;
-  return (next1 === undefined || isForecastPeriod(next1))
+  return (next1 !== undefined || next6 !== undefined)
+    && (next1 === undefined || isForecastPeriod(next1))
     && (next6 === undefined || isForecastPeriod(next6));
 }
 
@@ -90,7 +116,14 @@ function isMetForecast(value: unknown): value is MetForecast {
     return false;
   }
   if (!Object.values(meta.units).every((unit) => typeof unit === 'string')) return false;
-  return timeseries.every(isMetTimePoint);
+  let previousEpoch = Number.NEGATIVE_INFINITY;
+  for (const point of timeseries) {
+    if (!isMetTimePoint(point)) return false;
+    const epoch = parseStrictIsoInstant(point.time);
+    if (epoch === null || epoch <= previousEpoch) return false;
+    previousEpoch = epoch;
+  }
+  return true;
 }
 
 function isCachedEntry(value: unknown, now: number): value is CachedEntry {
@@ -102,14 +135,23 @@ function isCachedEntry(value: unknown, now: number): value is CachedEntry {
 }
 
 function readCache(lat: number, lon: number, now: number): CacheCandidates {
+  const key = cacheKey(lat, lon);
   try {
-    const raw = localStorage.getItem(cacheKey(lat, lon));
+    const raw = localStorage.getItem(key);
     if (!raw) return { fresh: null, stale: null };
     const parsed: unknown = JSON.parse(raw);
-    if (!isCachedEntry(parsed, now)) return { fresh: null, stale: null };
+    if (!isCachedEntry(parsed, now) || now - parsed.fetchedAt > MAX_STALE_AGE_MS) {
+      localStorage.removeItem(key);
+      return { fresh: null, stale: null };
+    }
     if (now - parsed.fetchedAt <= CACHE_TTL_MS) return { fresh: parsed, stale: null };
     return { fresh: null, stale: parsed };
   } catch {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Storage is unavailable; there is nothing else to recover here.
+    }
     return { fresh: null, stale: null };
   }
 }
@@ -123,15 +165,22 @@ function writeCache(lat: number, lon: number, fetchedAt: number, data: MetForeca
   }
 }
 
-function sourceUpdatedAt(forecast: MetForecast): string | null {
+function sourceUpdatedAt(forecast: MetForecast, receivedAt: number): string | null {
   const value: unknown = forecast.properties.meta.updated_at;
-  return isIsoInstant(value) ? value : null;
+  const epoch = parseStrictIsoInstant(value);
+  if (
+    typeof value !== 'string'
+    || epoch === null
+    || epoch > receivedAt + MAX_SOURCE_FUTURE_SKEW_MS
+    || receivedAt - epoch > MAX_SOURCE_AGE_MS
+  ) return null;
+  return value;
 }
 
 function cacheResult(entry: CachedEntry, stale: boolean): ForecastFetchResult {
   const metadata: ForecastFetchMetadata = {
     source: 'cache',
-    sourceUpdatedAt: sourceUpdatedAt(entry.data),
+    sourceUpdatedAt: sourceUpdatedAt(entry.data, Date.now()),
     fetchedAt: entry.fetchedAt,
     cacheStatus: stale ? 'stale' : 'fresh',
     stale,
@@ -144,6 +193,10 @@ export async function fetchForecast(lat: number, lon: number): Promise<ForecastF
   const cached = readCache(lat, lon, fetchedAt);
   if (cached.fresh) return cacheResult(cached.fresh, false);
 
+  const key = cacheKey(lat, lon);
+  const requestVersion = (latestRequestVersionByKey.get(key) ?? 0) + 1;
+  latestRequestVersionByKey.set(key, requestVersion);
+
   // Via proxy — den setter User-Agent server-side (met.no-krav).
   const url = `${PROXY}?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`;
   try {
@@ -153,32 +206,54 @@ export async function fetchForecast(lat: number, lon: number): Promise<ForecastF
     }
     const data: unknown = await res.json();
     if (!isMetForecast(data)) throw new Error('met.no: ugyldig prognose');
+
+    if (latestRequestVersionByKey.get(key) !== requestVersion) {
+      const current = readCache(lat, lon, Date.now());
+      if (current.fresh) return cacheResult(current.fresh, false);
+      if (current.stale) return cacheResult(current.stale, true);
+      return {
+        forecast: data,
+        metadata: {
+          source: 'network',
+          sourceUpdatedAt: sourceUpdatedAt(data, fetchedAt),
+          fetchedAt,
+          cacheStatus: 'miss',
+          stale: false,
+        },
+      };
+    }
     writeCache(lat, lon, fetchedAt, data);
     return {
       forecast: data,
       metadata: {
         source: 'network',
-        sourceUpdatedAt: sourceUpdatedAt(data),
+        sourceUpdatedAt: sourceUpdatedAt(data, fetchedAt),
         fetchedAt,
         cacheStatus: 'miss',
         stale: false,
       },
     };
   } catch (error) {
-    if (cached.stale) return cacheResult(cached.stale, true);
+    const current = readCache(lat, lon, Date.now());
+    if (current.fresh) return cacheResult(current.fresh, false);
+    if (current.stale) return cacheResult(current.stale, true);
     throw error;
   }
+}
+
+function periodEvidence(point: MetTimePoint): NonNullable<MetTimePoint['data']['next_1_hours']> {
+  const period = point.data.next_1_hours ?? point.data.next_6_hours;
+  if (!period) throw new Error('met.no: mangler periodebevis');
+  return period;
 }
 
 export function extractNow(forecast: MetForecast): WeatherNow {
   const first = forecast.properties.timeseries[0];
   if (!first) throw new Error('met.no: tom timeseries');
   const d = first.data.instant.details;
-  const precipMmH = first.data.next_1_hours?.details.precipitation_amount ?? 0;
-  const symbolCode =
-    first.data.next_1_hours?.summary.symbol_code ??
-    first.data.next_6_hours?.summary.symbol_code ??
-    'clearsky_day';
+  const period = periodEvidence(first);
+  const precipMmH = period.details.precipitation_amount;
+  const symbolCode = period.summary.symbol_code;
   return {
     tempC: d.air_temperature,
     feelsLikeC: feelsLikeC(d.air_temperature, d.wind_speed, d.relative_humidity),
@@ -193,14 +268,14 @@ export function extractNow(forecast: MetForecast): WeatherNow {
 export function extractHourly(forecast: MetForecast, hours = 12): WeatherHourly[] {
   return forecast.properties.timeseries.slice(0, hours).map((point) => {
     const d = point.data.instant.details;
+    const period = periodEvidence(point);
     return {
       time: new Date(point.time),
       tempC: d.air_temperature,
       feelsLikeC: feelsLikeC(d.air_temperature, d.wind_speed, d.relative_humidity),
       windMs: d.wind_speed,
-      precipMmH: point.data.next_1_hours?.details.precipitation_amount ?? 0,
-      symbolCode:
-        point.data.next_1_hours?.summary.symbol_code ?? 'clearsky_day',
+      precipMmH: period.details.precipitation_amount,
+      symbolCode: period.summary.symbol_code,
     };
   });
 }
@@ -236,14 +311,9 @@ export function extractDailyAtHour(
     if (!entry.best) continue;
     const p = entry.best.point;
     const d = p.data.instant.details;
-    const symbolCode =
-      p.data.next_6_hours?.summary.symbol_code ??
-      p.data.next_1_hours?.summary.symbol_code ??
-      'cloudy';
-    const precipMmH =
-      p.data.next_1_hours?.details.precipitation_amount ??
-      p.data.next_6_hours?.details.precipitation_amount ??
-      0;
+    const period = periodEvidence(p);
+    const symbolCode = period.summary.symbol_code;
+    const precipMmH = period.details.precipitation_amount;
     result.push({
       date: entry.date,
       refHour,
@@ -276,8 +346,8 @@ export function extractDaily(forecast: MetForecast, days = 3): WeatherDaily[] {
     // Symbol nærmest kl 12:00 brukes som dagens "dominant"
     const hour = time.getHours();
     const distance = Math.abs(hour - 12);
-    const code = point.data.next_6_hours?.summary.symbol_code ?? point.data.next_1_hours?.summary.symbol_code;
-    if (code && (!existing.midDay || distance < existing.midDay.distance)) {
+    const code = periodEvidence(point).summary.symbol_code;
+    if (!existing.midDay || distance < existing.midDay.distance) {
       existing.midDay = { code, distance };
     }
     byDate.set(key, existing);
@@ -297,7 +367,7 @@ export function extractDaily(forecast: MetForecast, days = 3): WeatherDaily[] {
     );
     const winds = entry.points.map((p) => p.data.instant.details.wind_speed);
     const precip = entry.points.reduce(
-      (sum, p) => sum + (p.data.next_1_hours?.details.precipitation_amount ?? 0),
+      (sum, p) => sum + periodEvidence(p).details.precipitation_amount,
       0,
     );
     const firstPoint = entry.points[0]!;
@@ -309,7 +379,7 @@ export function extractDaily(forecast: MetForecast, days = 3): WeatherDaily[] {
       maxFeelsC: Math.max(...feels),
       avgWindMs: winds.reduce((s, v) => s + v, 0) / winds.length,
       totalPrecipMm: precip,
-      symbolCode: entry.midDay?.code ?? 'cloudy',
+      symbolCode: entry.midDay?.code ?? periodEvidence(firstPoint).summary.symbol_code,
     });
     i++;
   }

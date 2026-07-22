@@ -20,7 +20,7 @@ import {
   type ForecastCoverage,
 } from '../lib/planning/coverage';
 
-type Status = 'idle' | 'loading' | 'ready' | 'error';
+type Status = 'idle' | 'loading' | 'ready' | 'offline' | 'error';
 
 export type WeatherEvidence = Readonly<{
   metadata: ForecastFetchMetadata;
@@ -35,6 +35,8 @@ export type WeatherState = {
   dailyAtHour: WeatherDayAtHour[];
   /** RÃ¥ met.no-respons for avledninger som trenger full timeserie. */
   forecast: MetForecast | null;
+  /** Stale data is retained only for explicit offline UI, never legacy recommendation inputs. */
+  offlineForecast: MetForecast | null;
   evidence: WeatherEvidence | null;
   error: string | null;
   attribution: string;
@@ -79,9 +81,10 @@ function emptyWeatherState(status: Status): WeatherState {
     daily: [],
     dailyAtHour: [],
     forecast: null,
+    offlineForecast: null,
     evidence: null,
     error: null,
-    attribution: 'VÃ¦r fra met.no',
+    attribution: 'V\u00e6r fra met.no',
   };
 }
 
@@ -91,6 +94,20 @@ export function weatherStateFromForecastResult(
   extractors: WeatherExtractors = DEFAULT_EXTRACTORS,
 ): WeatherState {
   const { forecast, metadata } = result;
+  const evidence = {
+    metadata,
+    coverage: assessForecastCoverage(
+      forecast.properties.timeseries.map((point) => point.time),
+      metadata,
+    ),
+  };
+  if (metadata.stale) {
+    return {
+      ...emptyWeatherState('offline'),
+      offlineForecast: forecast,
+      evidence,
+    };
+  }
   return {
     status: 'ready',
     now: extractors.now(forecast),
@@ -98,16 +115,44 @@ export function weatherStateFromForecastResult(
     daily: extractors.daily(forecast, 10),
     dailyAtHour: extractors.dailyAtHour(forecast, refHour, 10),
     forecast,
-    evidence: {
-      metadata,
-      coverage: assessForecastCoverage(
-        forecast.properties.timeseries.map((point) => point.time),
-        metadata,
-      ),
-    },
+    offlineForecast: null,
+    evidence,
     error: null,
-    attribution: 'VÃ¦r fra met.no',
+    attribution: 'V\u00e6r fra met.no',
   };
+}
+
+export function selectWeatherForFetchKey(
+  state: WeatherRequestState,
+  currentFetchKey: string,
+): WeatherState {
+  return state.activeFetchKey === currentFetchKey ? state.weather : emptyWeatherState('loading');
+}
+
+type WeatherRequestLifecycleOptions = Readonly<{
+  requestId: number;
+  fetchKey: string;
+  refHour: number;
+  load: () => Promise<ForecastFetchResult>;
+  dispatch: (event: WeatherRequestEvent) => void;
+}>;
+
+export function startWeatherRequest(options: WeatherRequestLifecycleOptions): Readonly<{
+  cancel: () => void;
+  settled: Promise<void>;
+}> {
+  const { requestId, fetchKey, refHour, load, dispatch } = options;
+  let cancelled = false;
+  dispatch({ type: 'started', requestId, fetchKey });
+  const settled = load().then(
+    (result) => {
+      if (!cancelled) dispatch({ type: 'resolved', requestId, fetchKey, result, refHour });
+    },
+    (error: unknown) => {
+      if (!cancelled) dispatch({ type: 'rejected', requestId, fetchKey, error });
+    },
+  );
+  return { cancel: () => { cancelled = true; }, settled };
 }
 
 export function createInitialWeatherRequestState(fetchKey: string): WeatherRequestState {
@@ -149,30 +194,18 @@ export function useWeather(lat: number, lon: number, refHour: number = 12): Weat
   );
 
   useEffect(() => {
-    let cancelled = false;
     const requestId = ++requestIdRef.current;
-    setRequestState((current) => reduceWeatherRequestState(current, {
-      type: 'started', requestId, fetchKey,
-    }));
-
-    fetchForecast(lat, lon)
-      .then((result) => {
-        if (cancelled) return;
-        setRequestState((current) => reduceWeatherRequestState(current, {
-          type: 'resolved', requestId, fetchKey, result, refHour,
-        }));
-      })
-      .catch((error: unknown) => {
-        if (cancelled) return;
-        setRequestState((current) => reduceWeatherRequestState(current, {
-          type: 'rejected', requestId, fetchKey, error,
-        }));
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    const lifecycle = startWeatherRequest({
+      requestId,
+      fetchKey,
+      refHour,
+      load: () => fetchForecast(lat, lon),
+      dispatch: (event) => {
+        setRequestState((current) => reduceWeatherRequestState(current, event));
+      },
+    });
+    return lifecycle.cancel;
   }, [fetchKey, lat, lon, refHour]);
 
-  return requestState.weather;
+  return selectWeatherForFetchKey(requestState, fetchKey);
 }

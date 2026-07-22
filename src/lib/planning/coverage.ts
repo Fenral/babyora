@@ -1,4 +1,4 @@
-import type { ForecastFetchMetadata } from '../met-no/types.js';
+import { parseStrictIsoInstant, type ForecastFetchMetadata } from '../met-no/types.js';
 
 export const FORECAST_TIME_ZONE = 'Europe/Oslo' as const;
 
@@ -25,7 +25,6 @@ export type ForecastCoverage = Readonly<{
 }>;
 
 const HOUR_MS = 60 * 60 * 1000;
-const ABSOLUTE_ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 const dateFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: FORECAST_TIME_ZONE,
@@ -40,10 +39,6 @@ const timeFormatter = new Intl.DateTimeFormat('nb-NO', {
   minute: '2-digit',
   hourCycle: 'h23',
 });
-
-function isAbsoluteIso(value: unknown): value is string {
-  return typeof value === 'string' && ABSOLUTE_ISO.test(value) && Number.isFinite(Date.parse(value));
-}
 
 function localDate(epochMs: number): string {
   const parts = dateFormatter.formatToParts(epochMs);
@@ -66,7 +61,7 @@ function unavailable(points: readonly ForecastCoveragePoint[] = []): ForecastCov
 }
 
 function hasValidMetadata(metadata: ForecastFetchMetadata | null | undefined): metadata is ForecastFetchMetadata {
-  if (!metadata || !Number.isFinite(metadata.fetchedAt) || !isAbsoluteIso(metadata.sourceUpdatedAt)) return false;
+  if (!metadata || !Number.isFinite(metadata.fetchedAt) || parseStrictIsoInstant(metadata.sourceUpdatedAt) === null) return false;
   if (metadata.source === 'network') return metadata.cacheStatus === 'miss' && metadata.stale === false;
   if (metadata.source !== 'cache') return false;
   return (metadata.cacheStatus === 'fresh' && metadata.stale === false)
@@ -77,14 +72,17 @@ export function assessForecastCoverage(
   isoPoints: readonly string[],
   metadata: ForecastFetchMetadata | null | undefined,
 ): ForecastCoverage {
-  if (!hasValidMetadata(metadata) || isoPoints.length === 0 || !isoPoints.every(isAbsoluteIso)) {
+  if (!hasValidMetadata(metadata) || isoPoints.length === 0) {
     return unavailable();
   }
 
-  const sorted = isoPoints
-    .map((iso) => ({ iso, epochMs: Date.parse(iso) }))
+  const parsed = isoPoints.map((iso) => ({ iso, epochMs: parseStrictIsoInstant(iso) }));
+  if (parsed.some((point) => point.epochMs === null)) return unavailable();
+  const sorted = (parsed as Array<{ iso: string; epochMs: number }>)
     .sort((a, b) => a.epochMs - b.epochMs);
-  if (new Set(sorted.map((point) => point.epochMs)).size !== sorted.length) return unavailable();
+  if (sorted.some((point, index) => index > 0 && point.epochMs === sorted[index - 1]!.epochMs)) {
+    return unavailable();
+  }
 
   const points = sorted.map((point): ForecastCoveragePoint => ({
     ...point,
@@ -122,10 +120,10 @@ export function formatCoverageCopy(coverage: ForecastCoverage): string {
     const first = coverage.points[0];
     const last = coverage.points.at(-1);
     if (first?.localTime === '00:00' && last?.localTime === '23:00' && first.localDate === last.localDate) {
-      return 'Samme antrekk ut dagen';
+      return 'V\u00e6rdata hver time gjennom hele dagen.';
     }
-    if (last) return `Samme antrekk til kl. ${last.localTime}`;
+    if (last) return `V\u00e6rdata hver time til kl. ${last.localTime}.`;
   }
-  if (coverage.status === 'sampled') return 'Samme antrekk i de vurderte tidspunktene';
-  return 'Planen viser bare tidspunktene Babyora har vÃ¦rdata for.';
+  if (coverage.status === 'sampled') return 'V\u00e6rdata for de vurderte tidspunktene.';
+  return 'V\u00e6rdata finnes bare for enkelte tidspunkter.';
 }
