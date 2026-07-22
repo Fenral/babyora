@@ -29,7 +29,7 @@ This roadmap first delivers the bounded, already-reviewed Planlegg candidate, th
   5. The reviewed stable candidate passes deterministic truth, exact-context, access, accessibility, test, lint, build, source/privacy, and no-media E2E checks on its immutable SHA through the required standard/high-risk review loop; no new app screenshot/video is captured while implementation changes, and the final physical-device/media-based 90+ visual and owner release gates remain explicitly Pending until the owner authorizes capture.
 **Plans**: 18 sequential execution plans preserving the authorized product package Waves 0–6 while separating high-risk truth, context, entitlement, access presentation, location, advice, routing and final evidence candidates
 
-- [ ] `01-01-PLAN.md` — Wave 0 deterministic fixtures and no-media verification harness
+- [x] `01-01-PLAN.md` — Wave 0 deterministic fixtures and no-media verification harness
 - [ ] `01-02-PLAN.md` — Wave 1 forecast provenance/currentness/coverage and atomic weather-hook behavior (high risk)
 - [ ] `01-03-PLAN.md` — Wave 1 stable events, action copy, coverage rows and aggregate view model (high risk)
 - [ ] `01-04-PLAN.md` — Wave 2 validated transient planned-Outfit DTO with distinct identifiers (high risk)
@@ -94,7 +94,7 @@ This roadmap first delivers the bounded, already-reviewed Planlegg candidate, th
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Planlegg/Dagslinjen | 0/18 | Ready for Plan 01-01 execution | - |
+| 1. Planlegg/Dagslinjen | 1/18 | In Progress | - |
 | 2. Outfit truth and Antrekkskart | 0/TBD | Pending Phase 1 | - |
 | 3. Living Home and signature transition | 0/TBD | Pending Phase 2 | - |
 | 4. Cross-surface convergence | 0/TBD | Pending Phases 1–3 | - |
