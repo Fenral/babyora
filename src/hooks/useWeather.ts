@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   extractDaily,
   extractDailyAtHour,
@@ -7,14 +7,25 @@ import {
   fetchForecast,
 } from '../lib/met-no/client';
 import type {
+  ForecastFetchMetadata,
+  ForecastFetchResult,
   MetForecast,
   WeatherDaily,
   WeatherDayAtHour,
   WeatherHourly,
   WeatherNow,
 } from '../lib/met-no/types';
+import {
+  assessForecastCoverage,
+  type ForecastCoverage,
+} from '../lib/planning/coverage';
 
 type Status = 'idle' | 'loading' | 'ready' | 'error';
+
+export type WeatherEvidence = Readonly<{
+  metadata: ForecastFetchMetadata;
+  coverage: ForecastCoverage;
+}>;
 
 export type WeatherState = {
   status: Status;
@@ -22,66 +33,146 @@ export type WeatherState = {
   hourly: WeatherHourly[];
   daily: WeatherDaily[];
   dailyAtHour: WeatherDayAtHour[];
-  /** Rå met.no-respons — for avledninger som trenger full timeserie
-   *  (f.eks. "10 dager" ved valgt referansetime). */
+  /** RÃ¥ met.no-respons for avledninger som trenger full timeserie. */
   forecast: MetForecast | null;
+  evidence: WeatherEvidence | null;
   error: string | null;
   attribution: string;
 };
 
-export function useWeather(lat: number, lon: number, refHour: number = 12): WeatherState {
-  const [state, setState] = useState<WeatherState>({
-    status: 'loading',
+export type WeatherRequestState = Readonly<{
+  activeRequestId: number;
+  activeFetchKey: string;
+  weather: WeatherState;
+}>;
+
+export type WeatherRequestEvent =
+  | Readonly<{ type: 'started'; requestId: number; fetchKey: string }>
+  | Readonly<{
+    type: 'resolved';
+    requestId: number;
+    fetchKey: string;
+    result: ForecastFetchResult;
+    refHour: number;
+  }>
+  | Readonly<{ type: 'rejected'; requestId: number; fetchKey: string; error: unknown }>;
+
+export type WeatherExtractors = Readonly<{
+  now: typeof extractNow;
+  hourly: typeof extractHourly;
+  daily: typeof extractDaily;
+  dailyAtHour: typeof extractDailyAtHour;
+}>;
+
+const DEFAULT_EXTRACTORS: WeatherExtractors = {
+  now: extractNow,
+  hourly: extractHourly,
+  daily: extractDaily,
+  dailyAtHour: extractDailyAtHour,
+};
+
+function emptyWeatherState(status: Status): WeatherState {
+  return {
+    status,
     now: null,
     hourly: [],
     daily: [],
     dailyAtHour: [],
     forecast: null,
+    evidence: null,
     error: null,
-    attribution: 'Vær fra met.no',
-  });
+    attribution: 'VÃ¦r fra met.no',
+  };
+}
 
-  // R3 (2026-07-14): «tilbake til loading når params endres» via render-
-  // justering i stedet for sync setState i effect. Ved mount er initial-
-  // status allerede 'loading', så effect-settet var kun nødvendig ved
-  // param-endring — som nå håndteres her, én render tidligere.
-  const fetchKey = `${lat},${lon},${refHour}`;
-  const [lastFetchKey, setLastFetchKey] = useState(fetchKey);
-  if (lastFetchKey !== fetchKey) {
-    setLastFetchKey(fetchKey);
-    setState((s) => ({ ...s, status: 'loading', error: null }));
+export function weatherStateFromForecastResult(
+  result: ForecastFetchResult,
+  refHour: number,
+  extractors: WeatherExtractors = DEFAULT_EXTRACTORS,
+): WeatherState {
+  const { forecast, metadata } = result;
+  return {
+    status: 'ready',
+    now: extractors.now(forecast),
+    hourly: extractors.hourly(forecast, 48),
+    daily: extractors.daily(forecast, 10),
+    dailyAtHour: extractors.dailyAtHour(forecast, refHour, 10),
+    forecast,
+    evidence: {
+      metadata,
+      coverage: assessForecastCoverage(
+        forecast.properties.timeseries.map((point) => point.time),
+        metadata,
+      ),
+    },
+    error: null,
+    attribution: 'VÃ¦r fra met.no',
+  };
+}
+
+export function createInitialWeatherRequestState(fetchKey: string): WeatherRequestState {
+  return { activeRequestId: 0, activeFetchKey: fetchKey, weather: emptyWeatherState('loading') };
+}
+
+export function reduceWeatherRequestState(
+  state: WeatherRequestState,
+  event: WeatherRequestEvent,
+  extractors: WeatherExtractors = DEFAULT_EXTRACTORS,
+): WeatherRequestState {
+  if (event.type === 'started') {
+    if (event.requestId <= state.activeRequestId) return state;
+    return {
+      activeRequestId: event.requestId,
+      activeFetchKey: event.fetchKey,
+      weather: emptyWeatherState('loading'),
+    };
   }
+  if (event.requestId !== state.activeRequestId || event.fetchKey !== state.activeFetchKey) return state;
+  if (event.type === 'resolved') {
+    return { ...state, weather: weatherStateFromForecastResult(event.result, event.refHour, extractors) };
+  }
+  return {
+    ...state,
+    weather: {
+      ...state.weather,
+      status: 'error',
+      error: event.error instanceof Error ? event.error.message : 'Ukjent feil',
+    },
+  };
+}
+
+export function useWeather(lat: number, lon: number, refHour: number = 12): WeatherState {
+  const fetchKey = `${lat},${lon},${refHour}`;
+  const requestIdRef = useRef(0);
+  const [requestState, setRequestState] = useState<WeatherRequestState>(
+    () => createInitialWeatherRequestState(fetchKey),
+  );
 
   useEffect(() => {
     let cancelled = false;
+    const requestId = ++requestIdRef.current;
+    setRequestState((current) => reduceWeatherRequestState(current, {
+      type: 'started', requestId, fetchKey,
+    }));
 
     fetchForecast(lat, lon)
-      .then((forecast) => {
+      .then((result) => {
         if (cancelled) return;
-        setState({
-          status: 'ready',
-          now: extractNow(forecast),
-          hourly: extractHourly(forecast, 48),
-          daily: extractDaily(forecast, 10),
-          dailyAtHour: extractDailyAtHour(forecast, refHour, 10),
-          forecast,
-          error: null,
-          attribution: 'Vær fra met.no',
-        });
+        setRequestState((current) => reduceWeatherRequestState(current, {
+          type: 'resolved', requestId, fetchKey, result, refHour,
+        }));
       })
-      .catch((err: unknown) => {
+      .catch((error: unknown) => {
         if (cancelled) return;
-        setState((s) => ({
-          ...s,
-          status: 'error',
-          error: err instanceof Error ? err.message : 'Ukjent feil',
+        setRequestState((current) => reduceWeatherRequestState(current, {
+          type: 'rejected', requestId, fetchKey, error,
         }));
       });
 
     return () => {
       cancelled = true;
     };
-  }, [lat, lon, refHour]);
+  }, [fetchKey, lat, lon, refHour]);
 
-  return state;
+  return requestState.weather;
 }

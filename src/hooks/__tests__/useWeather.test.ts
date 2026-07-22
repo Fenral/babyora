@@ -98,23 +98,37 @@ describe('weather request lifecycle', () => {
     });
   });
 
-  it('keeps the newer fetch key when promises resolve in reverse order', () => {
+  it('keeps the newer fetch key when promises deliberately resolve in reverse order', async () => {
     let state = createInitialWeatherRequestState('old');
     state = reduceWeatherRequestState(state, { type: 'started', requestId: 1, fetchKey: 'old' });
     state = reduceWeatherRequestState(state, { type: 'started', requestId: 2, fetchKey: 'new' });
     const newer = result(6, metadata({ sourceUpdatedAt: '2026-02-12T08:45:00.000Z' }));
     const older = result(-8, metadata({ sourceUpdatedAt: '2026-02-12T07:45:00.000Z' }));
+    const deferred = () => {
+      let resolve!: (value: ForecastFetchResult) => void;
+      const promise = new Promise<ForecastFetchResult>((accept) => { resolve = accept; });
+      return { promise, resolve };
+    };
+    const oldRequest = deferred();
+    const newRequest = deferred();
+    const publish = async (promise: Promise<ForecastFetchResult>, requestId: number, fetchKey: string) => {
+      const resolved = await promise;
+      state = reduceWeatherRequestState(state, {
+        type: 'resolved', requestId, fetchKey, result: resolved, refHour: 12,
+      });
+    };
+    const oldPublish = publish(oldRequest.promise, 1, 'old');
+    const newPublish = publish(newRequest.promise, 2, 'new');
 
-    state = reduceWeatherRequestState(state, {
-      type: 'resolved', requestId: 2, fetchKey: 'new', result: newer, refHour: 12,
-    });
-    const afterOlder = reduceWeatherRequestState(state, {
-      type: 'resolved', requestId: 1, fetchKey: 'old', result: older, refHour: 12,
-    });
+    newRequest.resolve(newer);
+    await newPublish;
+    const acceptedNewState = state;
+    oldRequest.resolve(older);
+    await oldPublish;
 
-    expect(afterOlder).toBe(state);
-    expect(afterOlder.weather.now?.tempC).toBe(6);
-    expect(afterOlder.weather.evidence?.metadata.sourceUpdatedAt).toBe('2026-02-12T08:45:00.000Z');
+    expect(state).toBe(acceptedNewState);
+    expect(state.weather.now?.tempC).toBe(6);
+    expect(state.weather.evidence?.metadata.sourceUpdatedAt).toBe('2026-02-12T08:45:00.000Z');
   });
 
   it('ignores rejected or cancelled older requests after a newer start', () => {
