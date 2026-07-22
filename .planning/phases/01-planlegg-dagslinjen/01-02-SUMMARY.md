@@ -88,6 +88,7 @@ coverage:
 duration: 15min
 completed: 2026-07-22
 status: complete
+review_status: blocked_pending_repair
 ---
 
 # Phase 1 Plan 02: Truthful Forecast Evidence Boundary Summary
@@ -160,6 +161,22 @@ status: complete
 
 Any edit to the eight code/test paths after `4150a1e` invalidates this candidate and requires fresh evidence plus independent review.
 
+## Independent BLOCK on Candidate 4150a1e
+
+Candidate `4150a1e` is rejected and must not advance. Both the fresh independent high-risk verifier and the external read-only reviewer issued **BLOCK**. Their findings are:
+
+1. A render after a weather key change can expose the previous place's weather/evidence until the effect starts.
+2. Regex plus `Date.parse` accepts impossible ISO calendar dates such as `2026-02-30`.
+3. Norwegian attribution and coverage copy contain mojibake.
+4. Invalid cache entries are ignored but not evicted.
+5. The tests do not execute the real cancellation cleanup path.
+6. Stale fallback is surfaced as ordinary `ready`, allowing legacy consumers that ignore evidence to use arbitrarily old weather.
+7. Forecast validation lacks required ranges, known symbols, strictly chronological uniqueness, mandatory period evidence, and conservative source-time currentness policy.
+8. Concurrent requests can overwrite or return obsolete per-key cache snapshots.
+9. `formatCoverageCopy` asserts `Samme antrekk` without recommendation fingerprint/event evidence even though it only knows weather coverage.
+
+Repair status: **IN_PROGRESS**. No independent PASS exists for Plan 01-02.
+
 ## Decisions Made
 
 - Invalid `sourceUpdatedAt`, inconsistent metadata, invalid/duplicate points, empty points, or a future cache timestamp fail closed instead of being normalized into current evidence.
@@ -192,15 +209,15 @@ None - no dependency, package, credential, environment, service, API, or migrati
 
 ## Remaining Gates
 
-- Fresh independent high-risk review on exact code candidate `4150a1e`: **Pending**.
+- Fresh independent high-risk review on exact code candidate `4150a1e`: **BLOCKED**. A new repair candidate and fresh review are required.
 - New app screenshots/video/traces and the media-based 90+ audit: **Pending stable candidate and owner permission**; none were created here.
 - VoiceOver, TalkBack, physical haptics, OS text scaling, one-handed reach, physical-device UAT, and owner release approval: **Pending**.
 - Six Snart approvals and independent climate artifacts remain Pending and still block Plan 01-13.
 
 ## Next Phase Readiness
 
-- Code candidate `4150a1e` is ready for fresh independent high-risk verification.
-- After that review is recorded by the orchestrator, Plan 01-03 can consume the explicit coverage model without inferring currentness or changing recommendation rules.
+- Code candidate `4150a1e` is blocked and must not be consumed by Plan 01-03.
+- A scoped TDD repair is in progress; only a new exact SHA may return to independent high-risk review.
 
 ## Self-Check: PASSED
 
