@@ -35,8 +35,6 @@
  * global design-tokens.css utover å konsumere dens var(--...)-tokens.
  */
 import {
-  lazy,
-  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -53,20 +51,6 @@ import { searchCities } from '../data/no-cities';
 import { searchAddress } from '../lib/geocode/nominatim';
 import { DISCLAIMER_FULL } from '../lib/copy/disclaimer';
 import { OnboardingBabyHero } from './onboarding/OnboardingBabyHero';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GSAP stagger-hero (lazy-loaded — kun for intro-step / step 1)
-// ─────────────────────────────────────────────────────────────────────────────
-//
-// Vi lazy-importerer gsap + @gsap/react slik at:
-//   1. Bundle på subsequent steps (2-5) ikke betaler GSAP-runtime-prisen
-//   2. Første paint av step 1 ikke blokkeres av animasjons-runtime
-//
-// Komponenten er en ren useGSAP-wrapper som velger refs via data-attributes
-// inne i step-1 sub-treet. Den rendrer ingenting selv.
-const IntroHeroAnimator = lazy(() =>
-  import('./onboarding/IntroHeroAnimator').then((m) => ({ default: m.IntroHeroAnimator })),
-);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Konstanter
@@ -192,14 +176,6 @@ function PinIcon() {
     </svg>
   );
 }
-function RefreshIcon() {
-  return (
-    <svg viewBox="0 0 24 24" {...Stroke} aria-hidden="true" focusable="false">
-      <polyline points="23 4 23 10 17 10" />
-      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-    </svg>
-  );
-}
 function SearchIcon() {
   return (
     <svg viewBox="0 0 24 24" {...Stroke} aria-hidden="true" focusable="false">
@@ -241,121 +217,22 @@ function LayersIcon() {
     </svg>
   );
 }
-function RainIcon() {
-  return (
-    <svg viewBox="0 0 24 24" {...Stroke} aria-hidden="true" focusable="false">
-      <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" />
-      <line x1="8" y1="19" x2="8" y2="21" />
-      <line x1="8" y1="13" x2="8" y2="15" />
-      <line x1="16" y1="19" x2="16" y2="21" />
-      <line x1="16" y1="13" x2="16" y2="15" />
-      <line x1="12" y1="21" x2="12" y2="23" />
-      <line x1="12" y1="15" x2="12" y2="17" />
-    </svg>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Komponent
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ObCalendar — månedskalender-datovelger (steg 2). A11y-clearance 2026-07-12:
-// vanlige <button> (ikke role=grid), aria-pressed på valgt + aria-current="date"
-// på i dag, aria-label = full dato, disabled på fremtid/>3år, måned-tittel
-// aria-live, non-color-cues (prikk = valgt, understrek = i dag).
-// ─────────────────────────────────────────────────────────────────────────────
-const WEEKDAYS_NB = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
-
-function ObCalendar({
-  value,
-  onSelect,
-  today,
-}: {
-  value: { d: number; m: number; y: number } | null;
-  onSelect: (d: number, m: number, y: number) => void;
-  today: Date;
-}): ReactElement {
-  const [view, setView] = useState<Date>(() =>
-    value ? new Date(value.y, value.m - 1, 1) : new Date(today.getFullYear(), today.getMonth(), 1),
-  );
-  const y = view.getFullYear();
-  const mo = view.getMonth();
-  const minDate = new Date(today.getFullYear() - 3, today.getMonth(), 1);
-  const maxView = new Date(today.getFullYear(), today.getMonth(), 1);
-  const canPrev = new Date(y, mo, 1) > minDate;
-  const canNext = new Date(y, mo, 1) < maxView;
-  const lead = (new Date(y, mo, 1).getDay() + 6) % 7; // mandag = 0
-  const daysIn = new Date(y, mo + 1, 0).getDate();
-
-  const cells: ReactElement[] = [];
-  for (let i = 0; i < lead; i++) cells.push(<span key={`lead-${i}`} className="ob-cal-empty" aria-hidden="true" />);
-  for (let d = 1; d <= daysIn; d++) {
-    const cur = new Date(y, mo, d);
-    const future = cur > today;
-    const isSel = !!value && value.d === d && value.m === mo + 1 && value.y === y;
-    const isToday = cur.toDateString() === today.toDateString();
-    const cls = ['ob-cal-day'];
-    if (isSel) cls.push('sel');
-    if (isToday) cls.push('today');
-    cells.push(
-      <button
-        key={d}
-        type="button"
-        className={cls.join(' ')}
-        disabled={future}
-        aria-pressed={isSel || undefined}
-        aria-current={isToday ? 'date' : undefined}
-        aria-label={`${d}. ${MONTHS_NB[mo]} ${y}`}
-        onClick={() => onSelect(d, mo + 1, y)}
-      >
-        <span className="ob-cal-num">{d}</span>
-      </button>,
-    );
-  }
-
-  return (
-    <div className="ob-cal">
-      <div className="ob-cal-head">
-        <span className="ob-cal-title" aria-live="polite">{MONTHS_NB[mo]} {y}</span>
-        <span className="ob-cal-nav">
-          <button type="button" onClick={() => setView(new Date(y, mo - 1, 1))} disabled={!canPrev} aria-label="Forrige måned">‹</button>
-          <button type="button" onClick={() => setView(new Date(y, mo + 1, 1))} disabled={!canNext} aria-label="Neste måned">›</button>
-        </span>
-      </div>
-      <div className="ob-cal-grid">
-        {WEEKDAYS_NB.map((w) => <span key={w} className="ob-cal-wd" aria-hidden="true">{w}</span>)}
-        {cells}
-      </div>
-    </div>
-  );
-}
-
 export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   const { onComplete } = props;
   const { completeOnboarding } = useChildren();
   const { fire } = useHapticSystem();
   const { reducedMotion } = useNativeSettings();
   // reducedMotion: native Capacitor-flag + prefers-reduced-motion media query.
-  // Brukes av IntroHeroAnimator for å sette ende-state direkte i stedet for å
-  // animere. Øvrige overganger i screen er CSS-driven og respekterer
-  // @media (prefers-reduced-motion: reduce) lenger nede i STYLE_CSS.
+  // Styrer den korte babyvideoen; CSS-overganger respekterer media query under.
 
   // ─── Step + felt-state ───────────────────────────────────────────────────
   const [step, setStep] = useState<Step>(1);
   const [introMotionPlayed, setIntroMotionPlayed] = useState(false);
 
-  // Scope-ref for GSAP useGSAP() — binder alle selectors til denne subtree-en
-  // og lar useGSAP() håndtere ryddig cleanup når step byttes (eller komponent
-  // unmountes), per @gsap/react best practice.
-  const screenRef = useRef<HTMLElement | null>(null);
-
   const [name, setName] = useState<string>('');
-  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   const today = useMemo(() => new Date(), []);
-  // Ingen forhåndsvalgt dato — bruker må velge i kalenderen (a11y-vilkår: Fortsett
-  // disabled til valgt). Kalender-visningen (calView) starter på inneværende måned.
+  // Ingen forhåndsvalgt dato. iOS/Android får bruke sin egen, kjente datovelger.
   const [day, setDay] = useState<string>('');
   const [month, setMonth] = useState<string>('');
   const [year, setYear] = useState<string>('');
@@ -367,6 +244,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
     accuracy: null,
   });
   const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [locationConfirmed, setLocationConfirmed] = useState(false);
   // Sted-typeahead (full APG-combobox, a11y-clearance 2026-07-12)
   const [showManual, setShowManual] = useState<boolean>(false);
   const [locQuery, setLocQuery] = useState<string>('');
@@ -382,22 +260,16 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   const ageM = ageInMonths(dNum, mNum, yNum);
   const dobIsValid = ageM !== null;
   const dobISO = dobIsValid ? toISODate(dNum, mNum, yNum) : '';
+  const todayISO = toISODate(today.getDate(), today.getMonth() + 1, today.getFullYear());
+  const earliestDob = useMemo(() => {
+    const min = new Date(today.getFullYear() - 5, today.getMonth(), today.getDate());
+    return toISODate(min.getDate(), min.getMonth() + 1, min.getFullYear());
+  }, [today]);
   const nameTrim = name.trim();
   const nameOk = nameTrim.length > 0;
 
   // Forhåndsvarming av vær når vi har location klar (best-effort; ignorer state)
   useWeather(location.lat, location.lon);
-
-  // ─── A11y: fokuser navn-input når step 1 mountes ─────────────────────────
-  useEffect(() => {
-    if (step === 1) {
-      const t = window.setTimeout(() => {
-        nameInputRef.current?.focus();
-      }, 60);
-      return () => window.clearTimeout(t);
-    }
-    return undefined;
-  }, [step]);
 
   // ─── Step-navigasjon ─────────────────────────────────────────────────────
   const advanceStep = useCallback((lastStep: Step) => {
@@ -444,20 +316,22 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
           accuracy: pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null,
         });
         setLocationStatus('ready');
+        setLocationConfirmed(true);
         fire('success').catch(() => {});
       },
       () => {
         setLocationStatus('error');
+        setShowManual(true);
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
     );
   }, [fire]);
 
-  // Kalender-valg → setter dag/mnd/år (eksisterende dobISO/ageM-avledning uendret)
-  const selectDate = useCallback((d: number, m: number, y: number) => {
-    setDay(`${d}`);
-    setMonth(`${m}`);
-    setYear(`${y}`);
+  const selectDate = useCallback((isoDate: string) => {
+    const [y, m, d] = isoDate.split('-');
+    setDay(d ?? '');
+    setMonth(m ?? '');
+    setYear(y ?? '');
     fire('selection').catch(() => {});
   }, [fire]);
 
@@ -502,6 +376,8 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
     setLocResults([]);
     setLocActive(-1);
     setShowManual(false);
+    setLocationStatus('ready');
+    setLocationConfirmed(true);
     fire('selection').catch(() => {});
   }, [fire]);
 
@@ -514,14 +390,8 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
     } else if (e.key === 'Escape') { setLocResults([]); setLocActive(-1); }
   }, [locResults, locActive, pickLocation]);
 
-  // ─── Skip / Submit / Complete ────────────────────────────────────────────
-  const handleSkip = useCallback(() => {
-    fire('light').catch(() => {});
-    advanceStep(4);
-  }, [advanceStep, fire]);
-
   const handleCompleteOnboarding = useCallback(() => {
-    if (!nameOk || !dobIsValid) return;
+    if (!nameOk || !dobIsValid || !locationConfirmed) return;
     completeOnboarding({
       name: nameTrim,
       dob: dobISO,
@@ -532,7 +402,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
     });
     fire('success').catch(() => {});
     setStep(5); // velkomst-hero
-  }, [nameOk, dobIsValid, nameTrim, dobISO, location, completeOnboarding, fire]);
+  }, [nameOk, dobIsValid, locationConfirmed, nameTrim, dobISO, location, completeOnboarding, fire]);
 
   // R7 Task 7: velkomst-steget (5) tar brukeren rett inn i appen — første
   // ekte anbefaling vises FØR noen paywall. Plus introduseres kontekstuelt
@@ -561,20 +431,9 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
     <>
       <style>{STYLE_CSS}</style>
       <main
-        ref={screenRef}
-        className={`ob-screen${step === 5 ? ' welcome' : ''}${step === 1 ? ' intro-hero' : ''}`}
+        className={`ob-screen step-${step}${step === 5 ? ' welcome' : ''}${step === 1 ? ' intro-hero' : ''}`}
         aria-labelledby="ob-title"
       >
-        {/* GSAP stagger-hero kun for intro-step. Suspense fallback=null:
-            initial hero-state er allerede satt via CSS (`.intro-hero [data-hero]`),
-            så ingenting "flasher" mens animator-bundlen lastes. Når reducedMotion
-            er på hopper IntroHeroAnimator rett til ferdig-state via gsap.set(). */}
-        {step === 1 && (
-          <Suspense fallback={null}>
-            <IntroHeroAnimator scopeRef={screenRef} reducedMotion={reducedMotion} />
-          </Suspense>
-        )}
-
         {/* ─── TOP BAR ─── */}
         <div className="ob-topbar">
           {step === 1 || step === 5 ? (
@@ -587,45 +446,25 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
             </button>
           )}
 
-          {step === 5 ? (
-            <div className="ob-welcome-brand">
-              <div className="ob-brand-mark" aria-hidden="true">B</div>
-              <div className="ob-brand-name">Babyora</div>
-            </div>
-          ) : (
-            <div className="ob-top-step">
-              Steg <em>{step}</em> av {totalSteps}
-            </div>
-          )}
+          <div className="ob-top-center">
+            {step !== 1 && <span className="ob-top-brand">Babyora</span>}
+            {step < 5 && <span className="ob-top-step">{step} av {totalSteps}</span>}
+          </div>
 
-          {step === 5 ? (
-            <button type="button" className="ob-top-skip" aria-hidden="true" tabIndex={-1} style={{ visibility: 'hidden' }}>·</button>
-          ) : step < 4 ? (
-            <button type="button" className="ob-top-skip" onClick={handleSkip}>Hopp over</button>
-          ) : (
-            <button type="button" className="ob-top-skip" aria-hidden="true" tabIndex={-1} style={{ visibility: 'hidden' }}>·</button>
-          )}
+          <span className="ob-top-spacer" aria-hidden="true" />
         </div>
 
-        {/* ─── DOT PROGRESS (skjult i welcome + Pluss-teaser) ─── */}
+        {/* Én lavmælt, horisontal fremdriftsindikator. */}
         {step < 5 && (
           <div
-            className="ob-dots"
-            data-hero={step === 1 ? 'dots' : undefined}
+            className="ob-progress"
             role="progressbar"
             aria-valuenow={step}
             aria-valuemin={1}
             aria-valuemax={totalSteps}
             aria-label={`Steg ${step} av ${totalSteps}`}
           >
-            {[1, 2, 3, 4].map((i) => (
-              <span
-                key={i}
-                data-hero-dot={step === 1 ? '' : undefined}
-                className={`ob-dot${i < step ? ' done' : ''}${i === step ? ' active' : ''}`}
-                aria-hidden="true"
-              />
-            ))}
+            <span className="ob-progress-fill" style={{ width: `${(step / totalSteps) * 100}%` }} aria-hidden="true" />
           </div>
         )}
 
@@ -640,29 +479,17 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               />
 
               <div className="ob-copy">
-                <p className="ob-eyebrow" data-hero="eyebrow">La oss bli kjent</p>
-                <h1 id="ob-title" className="ob-h2" data-hero="title">
-                  {/*
-                    Manuelt word-wrap: hvert ord får sin egen span med
-                    data-hero-word slik at GSAP kan stagger inn ord-for-ord.
-                    `display:inline-block` settes via CSS slik at transform
-                    fungerer. Mellomrom beholdes som tekst-noder mellom span-ene.
-                    Lesbart for SR siden vi ikke deler enkelt-ord opp i bokstaver.
-                  */}
-                  <span data-hero-word>Hva</span>{' '}
-                  <span data-hero-word>heter</span>{' '}
-                  <span data-hero-word><em>babyen</em>?</span>
-                </h1>
-                <p data-hero="lede">Vi bruker navnet for å gi anbefalinger som føles personlige – aldri delt med andre.</p>
+                <p className="ob-eyebrow">La oss bli kjent</p>
+                <h1 id="ob-title" className="ob-h2">Hva heter <em>babyen</em>?</h1>
+                <p>Navnet brukes bare for å gjøre rådene personlige.</p>
               </div>
 
-              <div className="ob-field" data-hero="avatar">
+              <div className="ob-field">
                 <label htmlFor="ob-name-input">Babyens navn</label>
                 <div className="ob-input-shell">
                   <span className="ob-input-icon" aria-hidden="true"><UserIcon /></span>
                   <input
                     id="ob-name-input"
-                    ref={nameInputRef}
                     type="text"
                     inputMode="text"
                     autoComplete="off"
@@ -676,7 +503,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                     aria-describedby="ob-name-hint"
                   />
                 </div>
-                <div id="ob-name-hint" className="ob-hint">Du kan endre dette senere i innstillinger.</div>
+                <div id="ob-name-hint" className="ob-hint">Lagres på telefonen din og kan endres senere.</div>
               </div>
             </>
           )}
@@ -695,22 +522,36 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                 <h1 id="ob-title" className="ob-h2">
                   Når er {nameTrim || 'babyen'} <em>født</em>?
                 </h1>
-                <p>Babyens alder styrer hvor mye varme vi anbefaler – og hvilke lag som passer akkurat nå.</p>
+                <p>Alder påvirker hvor varmt barnet bør kles.</p>
               </div>
 
-              <ObCalendar
-                value={day !== '' && month !== '' && year !== '' ? { d: dNum, m: mNum, y: yNum } : null}
-                onSelect={selectDate}
-                today={today}
-              />
+              <label className={`ob-date-picker${dobIsValid ? ' selected' : ''}`} htmlFor="ob-birth-date">
+                <span className="ob-date-icon" aria-hidden="true"><CalendarIcon /></span>
+                <span className="ob-date-copy">
+                  <span className="ob-date-label">Fødselsdato</span>
+                  <span className="ob-date-value">
+                    {dobIsValid ? formatDOBLong(dNum, mNum, yNum) : 'Velg dato'}
+                  </span>
+                </span>
+                <ChevronRight />
+                <input
+                  id="ob-birth-date"
+                  type="date"
+                  value={dobISO}
+                  min={earliestDob}
+                  max={todayISO}
+                  onChange={(event) => selectDate(event.target.value)}
+                  aria-describedby="ob-age-hint"
+                />
+              </label>
 
-              <div className="ob-hint ob-hint-center" aria-live="polite">
+              <div id="ob-age-hint" className="ob-hint ob-hint-center" aria-live="polite">
                 {dobIsValid ? (
                   <>
                     {nameTrim || 'Babyen'} er <strong>{formatAge(ageM)}</strong> gammel
                   </>
                 ) : (
-                  <>Velg fødselsdato i kalenderen</>
+                  <>Den vanlige datovelgeren på telefonen åpnes.</>
                 )}
               </div>
             </>
@@ -726,32 +567,31 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               />
 
               <div className="ob-copy">
-                <p className="ob-eyebrow">Hvor bor dere?</p>
+                <p className="ob-eyebrow">Hjemsted</p>
                 <h1 id="ob-title" className="ob-h2">
-                  Vi henter <em>været</em> der dere er
+                  Hvor er dere <em>hjemme</em>?
                 </h1>
-                <p>Posisjonen brukes kun til lokale værvarsler fra MET. Slås av når som helst.</p>
+                <p>Gratisversjonen gir dagens råd for ett fast hjemsted.</p>
               </div>
 
               <div className="ob-loc-card">
-                <div className="ob-loc-row">
+                {locationConfirmed && <div className="ob-loc-row">
                   <div className="ob-loc-pin" aria-hidden="true"><PinIcon /></div>
                   <div className="ob-loc-id">
                     <div className="ob-loc-city">{location.city}</div>
                     <div className="ob-loc-coord">
-                      {location.lat.toFixed(2)}° N · {location.lon.toFixed(2)}° Ø
-                      {location.accuracy !== null ? ` · ±${location.accuracy} m` : ''}
+                      Brukes som hjemsted for dagens vær
                     </div>
                   </div>
-                </div>
+                </div>}
                 <div className="ob-loc-actions">
                   <button type="button" onClick={requestLocation} disabled={locationStatus === 'loading'}>
-                    <RefreshIcon />
-                    {locationStatus === 'loading' ? 'Henter…' : 'Oppdater'}
+                    <PinIcon />
+                    {locationStatus === 'loading' ? 'Finner stedet…' : 'Bruk posisjonen min'}
                   </button>
                   <button type="button" onClick={() => setShowManual((v) => !v)}>
                     <SearchIcon />
-                    Søk by
+                    Søk etter sted
                   </button>
                 </div>
 
@@ -802,7 +642,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
                 {locationStatus === 'error' && (
                   <div className="ob-loc-error" role="status">
-                    Fikk ikke tilgang til posisjon. Skriv inn manuelt eller bruk standard.
+                    Posisjon er ikke tilgjengelig. Søk etter hjemstedet i stedet.
                   </div>
                 )}
               </div>
@@ -819,11 +659,11 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               />
 
               <div className="ob-copy">
-                <p className="ob-eyebrow">Klar til start</p>
+                <p className="ob-eyebrow">Nesten ferdig</p>
                 <h1 id="ob-title" className="ob-h2">
                   Alt er <em>klart</em> for {nameTrim || 'babyen'}
                 </h1>
-                <p>Sjekk gjerne at alt stemmer før vi tar deg til hjem-skjermen.</p>
+                <p>Kontroller opplysningene før Babyora lager det første rådet.</p>
               </div>
 
               <ul className="ob-summary" aria-label="Sammendrag">
@@ -865,8 +705,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
               {/* R7 Task 7: eksplisitt lokal-først-forklaring før første bruk. */}
               <p className="ob-hint ob-hint-center">
-                Alt lagres lokalt på enheten din. Ingenting sendes til en server,
-                og du kan endre det når som helst.
+                Opplysningene lagres på enheten og kan endres når som helst.
               </p>
 
               {/* Veiledende-disclaimer (eierbeslutning 2026-07-15). */}
@@ -884,12 +723,12 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               />
 
               <div className="ob-welcome-greet">
-                <p className="ob-eyebrow">Velkommen til Babyora</p>
+                <p className="ob-eyebrow">Babyora er klar</p>
                 <h1 id="ob-title" className="ob-h2-hero">
-                  Hei <em>{nameTrim || 'der'}</em> — la oss kle deg riktig
+                  Dagens råd er klart for <em>{nameTrim || 'babyen'}</em>
                 </h1>
                 <p>
-                  Vi har laget en personlig pakke basert på alder, sted og dagens vær. Du er klar på 3 sekunder.
+                  Basert på alder, hjemsted og været akkurat nå.
                 </p>
               </div>
 
@@ -897,24 +736,17 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                 <li className="ob-feat">
                   <span className="ob-feat-icon sun" aria-hidden="true"><SunIcon /></span>
                   <div className="ob-feat-text">
-                    <div className="ob-feat-title">Tilpasset dagens vær</div>
-                    <div className="ob-feat-sub">Henter MET-varsel for {location.city} hver morgen.</div>
+                    <div className="ob-feat-title">I dag · {location.city}</div>
+                    <div className="ob-feat-sub">Lokalt vær fra MET.</div>
                   </div>
                 </li>
                 <li className="ob-feat">
                   <span className="ob-feat-icon" aria-hidden="true"><LayersIcon /></span>
                   <div className="ob-feat-text">
-                    <div className="ob-feat-title">Lag-for-lag forslag</div>
+                    <div className="ob-feat-title">Plagg i riktig rekkefølge</div>
                     <div className="ob-feat-sub">
-                      Anbefaler 2–4 lag basert på {nameTrim || 'barnets'} alder og temperatur.
+                      Tilpasset {formatAge(ageM)} og dagens forhold.
                     </div>
-                  </div>
-                </li>
-                <li className="ob-feat">
-                  <span className="ob-feat-icon rain" aria-hidden="true"><RainIcon /></span>
-                  <div className="ob-feat-text">
-                    <div className="ob-feat-title">Husker hva som funket</div>
-                    <div className="ob-feat-sub">Logg "for varmt / passe / for kaldt" – vi lærer over tid.</div>
                   </div>
                 </li>
               </ul>
@@ -935,7 +767,6 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
           {step === 1 && (
             <button
               className="ob-btn-primary"
-              data-hero="cta"
               type="button"
               onClick={goNext}
               disabled={!nameOk}
@@ -958,14 +789,15 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
           )}
 
           {step === 3 && (
-            <>
-              <button className="ob-btn-primary" type="button" onClick={goNext}>
-                Bruk denne posisjonen <ChevronRight />
-              </button>
-              <button className="ob-btn-ghost" type="button" onClick={() => setShowManual(true)}>
-                Skriv inn manuelt
-              </button>
-            </>
+            <button
+              className="ob-btn-primary"
+              type="button"
+              onClick={goNext}
+              disabled={!locationConfirmed}
+              aria-disabled={!locationConfirmed}
+            >
+              {locationConfirmed ? `Fortsett med ${location.city}` : 'Velg hjemsted'} <ChevronRight />
+            </button>
           )}
 
           {step === 4 && (
@@ -973,10 +805,10 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               className="ob-btn-primary giant"
               type="button"
               onClick={handleCompleteOnboarding}
-              disabled={!nameOk || !dobIsValid}
-              aria-disabled={!nameOk || !dobIsValid}
+              disabled={!nameOk || !dobIsValid || !locationConfirmed}
+              aria-disabled={!nameOk || !dobIsValid || !locationConfirmed}
             >
-              Ta meg til Babyora <ChevronRight />
+              Lag første antrekk <ChevronRight />
             </button>
           )}
 
@@ -984,9 +816,6 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
             <>
               <button className="ob-btn-primary giant" type="button" onClick={handleEnterApp}>
                 Vis dagens antrekk <ChevronRight />
-              </button>
-              <button className="ob-btn-ghost" type="button" onClick={handleEnterApp}>
-                Utforsk på egenhånd
               </button>
             </>
           )}
@@ -1579,28 +1408,247 @@ const STYLE_CSS = `
   -webkit-tap-highlight-color:transparent;
 }
 
+/* ── RESPONSIV ONBOARDING 2026-07 ──────────────────────────────────────────
+   Ett spørsmål per skjerm, én fremdriftsindikator og plattformens datovelger.
+   Layouten er høydebevisst: handlingen er alltid tilgjengelig, mens innholdet
+   kan rulle på små skjermer og når tastaturet er åpent. */
+.ob-screen{
+  height:100dvh;
+  min-height:100dvh;
+  overflow:hidden;
+  padding-top:max(12px, env(safe-area-inset-top, 0px));
+}
+.ob-screen > .ob-topbar{
+  width:min(100%, 560px);
+  min-height:48px;
+  margin:0 auto;
+  padding:4px 20px;
+  display:grid;
+  grid-template-columns:44px minmax(0, 1fr) 44px;
+  align-items:center;
+}
+.ob-top-back{
+  width:40px;
+  height:40px;
+  border-radius:14px;
+  background:color-mix(in srgb, var(--ob-surface-raised) 74%, transparent);
+  box-shadow:none;
+}
+.ob-top-center{
+  min-width:0;
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:8px;
+}
+.ob-top-brand{
+  font-family:var(--ob-font-serif);
+  font-size:18px;
+  letter-spacing:-.2px;
+  color:var(--ob-ink-900);
+}
+.ob-top-step{
+  font-size:11px;
+  letter-spacing:.08em;
+  color:var(--ob-ink-500);
+}
+.ob-top-spacer{width:44px;height:44px;}
+.ob-screen > .ob-progress{
+  position:relative;
+  flex:none;
+  width:min(calc(100% - 48px), 512px);
+  height:3px;
+  margin:2px auto 0;
+  overflow:hidden;
+  border-radius:999px;
+  background:var(--ob-line-strong);
+}
+.ob-progress-fill{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:var(--ob-terracotta-600);
+  transition:width 320ms var(--ob-ease-standard);
+}
+.ob-screen > .ob-body{
+  width:min(100%, 560px);
+  margin:0 auto;
+  padding:10px 24px 20px;
+  scroll-padding-bottom:28px;
+}
+.ob-body > *{
+  animation:ob-content-in 280ms var(--ob-ease-standard) both;
+}
+@keyframes ob-content-in{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.ob-baby-hero{
+  width:clamp(158px, 25dvh, 218px);
+  margin-top:6px;
+  border-radius:28px;
+  box-shadow:0 16px 42px color-mix(in srgb, var(--chip-edge-korall) 14%, transparent), 0 6px 16px color-mix(in srgb, var(--ink-900) 10%, transparent);
+}
+.ob-baby-hero.compact{
+  width:clamp(96px, 15dvh, 122px);
+  margin-top:8px;
+  border-radius:24px;
+  box-shadow:0 10px 26px color-mix(in srgb, var(--ink-900) 12%, transparent);
+}
+.ob-baby-hero.welcome{
+  width:clamp(178px, 28dvh, 224px);
+  margin-top:14px;
+  border-radius:30px;
+}
+.ob-baby-wordmark{
+  top:6%;
+  font-size:clamp(24px, 7vw, 32px);
+}
+.ob-baby-context{
+  right:7px;
+  bottom:7px;
+  width:34px;
+  height:34px;
+}
+.ob-baby-context svg{width:17px;height:17px;}
+.ob-copy{
+  margin-top:16px;
+  gap:7px;
+}
+.ob-h2{
+  font-size:clamp(30px, 8.4vw, 36px);
+  line-height:1.04;
+}
+.ob-h2-hero{
+  font-size:clamp(34px, 9.4vw, 42px);
+  line-height:1.02;
+}
+.ob-copy p,.ob-welcome-greet p{
+  max-width:360px;
+  font-size:14px;
+  line-height:1.42;
+}
+.ob-field{margin-top:18px;gap:7px;}
+.ob-input-shell{
+  min-height:58px;
+  padding:14px 16px;
+  border-radius:16px;
+  border-color:var(--ob-line-strong);
+  box-shadow:var(--ob-shadow-1);
+}
+.ob-input-shell:focus-within{
+  border-color:var(--ob-terracotta-600);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--ob-terracotta-600) 14%, transparent), var(--ob-shadow-1);
+}
+.ob-date-picker{
+  position:relative;
+  min-height:68px;
+  margin-top:20px;
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  overflow:hidden;
+  border:1px solid var(--ob-line-strong);
+  border-radius:18px;
+  background:var(--ob-surface-raised);
+  box-shadow:var(--ob-shadow-1);
+  cursor:pointer;
+}
+.ob-date-picker.selected{border-color:color-mix(in srgb, var(--ob-terracotta-600) 72%, var(--ob-line));}
+.ob-date-icon{
+  width:40px;height:40px;flex:none;border-radius:13px;
+  display:grid;place-items:center;
+  color:var(--ob-terracotta-700);background:var(--ob-terracotta-100);
+}
+.ob-date-icon svg{width:19px;height:19px;}
+.ob-date-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.ob-date-label{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ob-ink-500);}
+.ob-date-value{font-size:16px;font-weight:650;color:var(--ob-ink-900);}
+.ob-date-picker > svg{width:18px;height:18px;color:var(--ob-ink-400);}
+.ob-date-picker input{
+  position:absolute;inset:0;width:100%;height:100%;opacity:.001;
+  cursor:pointer;color:transparent;background:transparent;border:0;
+}
+.ob-loc-card{
+  margin-top:18px;
+  gap:12px;
+  padding:14px;
+  border-radius:20px;
+  box-shadow:var(--ob-shadow-1);
+}
+.ob-loc-row{
+  padding:2px 2px 10px;
+  border-bottom:1px solid var(--ob-line);
+}
+.ob-loc-actions{flex-direction:column;gap:8px;}
+.ob-loc-actions button{
+  min-height:50px;
+  justify-content:flex-start;
+  padding:12px 14px;
+  border-radius:14px;
+  font-size:14px;
+  background:var(--ob-surface);
+}
+.ob-loc-actions button:first-child{
+  color:var(--ob-accent-cta-ink);
+  background:var(--ob-accent-cta);
+  border-color:transparent;
+}
+.ob-manual{padding-top:0;}
+.ob-combo input{min-height:50px;border-radius:14px;padding:13px 14px;}
+.ob-summary{margin-top:18px;border-radius:18px;}
+.ob-sum-row{min-height:58px;padding:12px 14px;}
+.ob-sum-icon{width:36px;height:36px;}
+.ob-welcome-greet{margin-top:16px;gap:8px;}
+.ob-feats{margin-top:18px;gap:8px;}
+.ob-feat{padding:12px 14px;border-radius:16px;}
+.ob-screen > .ob-cta-zone{
+  width:min(100%, 560px);
+  margin:0 auto;
+  padding:12px 24px max(14px, env(safe-area-inset-bottom, 0px));
+  background:linear-gradient(180deg, transparent 0%, var(--ob-bg-canvas) 24%, var(--ob-bg-canvas) 100%);
+}
+.ob-btn-primary{min-height:54px;border-radius:16px;}
+.ob-btn-primary.giant{min-height:56px;font-size:16px;border-radius:17px;}
+
+@media (max-height:740px){
+  .ob-screen > .ob-topbar{min-height:44px;}
+  .ob-screen > .ob-body{padding-top:6px;padding-bottom:12px;}
+  .ob-baby-hero{width:clamp(128px, 21dvh, 158px);}
+  .ob-baby-hero.compact{width:82px;margin-top:4px;border-radius:19px;}
+  .ob-baby-hero.welcome{width:142px;margin-top:6px;}
+  .ob-copy{margin-top:11px;gap:5px;}
+  .ob-h2{font-size:28px;}
+  .ob-h2-hero{font-size:32px;}
+  .ob-field,.ob-date-picker,.ob-loc-card,.ob-summary{margin-top:12px;}
+  .ob-hint-center{margin-top:8px;}
+  .ob-screen > .ob-cta-zone{padding-top:8px;}
+  .ob-screen.step-4 .ob-baby-hero{display:none;}
+  .ob-screen.step-4 .ob-copy{margin-top:8px;}
+  .ob-screen.step-4 .ob-summary{margin-top:10px;}
+  .ob-screen.step-4 .ob-sum-row{min-height:46px;padding:7px 12px;gap:10px;}
+  .ob-screen.step-4 .ob-sum-icon{width:28px;height:28px;border-radius:9px;}
+  .ob-screen.step-4 .ob-sum-icon svg{width:15px;height:15px;}
+  .ob-screen.step-4 .ob-sum-value{font-size:15px;}
+  .ob-screen.step-4 .ob-sum-edit{width:30px;height:30px;}
+  .ob-screen.step-4 .ob-hint-center{font-size:11.5px;line-height:1.3;}
+}
+@media (orientation:landscape) and (max-height:560px){
+  .ob-screen > .ob-body{padding-inline:28px;}
+  .ob-baby-hero,.ob-baby-hero.compact{width:72px;margin-top:2px;border-radius:18px;}
+  .ob-baby-hero.welcome{width:90px;}
+  .ob-copy{margin-top:8px;}
+  .ob-copy p{display:none;}
+}
+
 /* Focus visibility — Morgennatt-fokusring (samme token som HjemScreen). */
 .ob-screen :focus-visible{
   outline:2.5px solid var(--focus-ring, var(--accent-cta));
   outline-offset:2px;border-radius:8px;
 }
 
-/* ── INTRO-HERO (step 1, GSAP stagger-entrance) ──
-   VIKTIG (bugfiks 2026-07-11): hero-innholdet er SYNLIG som default. Den
-   skjulte fra-tilstanden settes av IntroHeroAnimator via gsap.set() rett før
-   timeline-en (useGSAP kjører i useLayoutEffect → før paint, ingen flash når
-   GSAP er lastet). Tidligere satte CSS opacity:0 som default og lot GSAP
-   være ENESTE vei til synlig — hvis GSAP var treg/feilet/aldri mountet ble
-   steg 1 permanent blankt. Nå viser skjermen alltid innhold, uansett GSAP.
-
-   Word-spans inne i .ob-h2: display:inline-block kreves for at GSAP translateY
-   skal virke på span. */
-.ob-screen.intro-hero .ob-h2 [data-hero-word]{
-  display:inline-block;
-}
-
-/* Reduced-motion: drep alle overganger/animasjoner. IntroHeroAnimator setter
-   uansett ende-state direkte (ingen skjuling) under reducedMotion. */
+/* Reduced-motion: drep alle overganger/animasjoner. */
 @media (prefers-reduced-motion: reduce){
   .ob-screen *,.ob-screen *::before,.ob-screen *::after{
     transition:none !important;animation:none !important;
