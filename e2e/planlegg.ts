@@ -1,7 +1,11 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { chromium, type Browser, type Page } from 'playwright';
+import { createElement, type ComponentType } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import {
   PLANLEGG_E2E_FIXTURES,
   type PlanleggE2EFixture,
@@ -19,6 +23,12 @@ const PLANLEGG_CASES = Object.freeze({
   }),
   'exact-context': Object.freeze({
     id: 'planlegg-exact-context-v1',
+    path: '/?seed=demo',
+    viewport: Object.freeze({ width: 390, height: 844 }),
+    timeZone: 'Europe/Oslo',
+  }),
+  'composition-primitives': Object.freeze({
+    id: 'planlegg-composition-primitives-v1',
     path: '/?seed=demo',
     viewport: Object.freeze({ width: 390, height: 844 }),
     timeZone: 'Europe/Oslo',
@@ -41,6 +51,97 @@ const EXACT_CONTEXT_EXPECTED_GARMENTS = Object.freeze([
   'halsedisse',
 ]);
 const EXACT_CONTEXT_EXPECTED_EQUIPMENT = Object.freeze([] as string[]);
+
+type StatusNoticeState =
+  | Readonly<{ status: 'loading' }>
+  | Readonly<{ status: 'error'; onRetry: () => void }>
+  | Readonly<{ status: 'offline'; cachedAtIso: string; onRetry: () => void }>
+  | Readonly<{ status: 'partial' }>
+  | Readonly<{ status: 'ready' }>;
+
+type ForecastRow = Readonly<{
+  atIso: string;
+  tempC: number;
+  feelsLikeC: number;
+  symbolCode: string;
+}>;
+
+async function assertCompositionPrimitives(): Promise<void> {
+  const statusPath = join(process.cwd(), 'src/components/planning/PlanleggStatusNotice.tsx');
+  const forecastPath = join(process.cwd(), 'src/components/planning/ForecastDisclosure.tsx');
+  if (!existsSync(statusPath) || !existsSync(forecastPath)) {
+    throw new Error(
+      'RED_PLANLEGG_STATUS_FORECAST_CONTRACT: de rene status- og prognoseprimitivene mangler',
+    );
+  }
+
+  const statusModule = await import(pathToFileURL(statusPath).href) as unknown as {
+    PlanleggStatusNotice: ComponentType<{ state: StatusNoticeState }>;
+  };
+  const forecastModule = await import(pathToFileURL(forecastPath).href) as unknown as {
+    ForecastDisclosure: ComponentType<{
+      open: boolean;
+      onToggle: () => void;
+      rows: readonly ForecastRow[];
+    }>;
+  };
+  const renderStatus = (state: StatusNoticeState) => renderToStaticMarkup(
+    createElement(statusModule.PlanleggStatusNotice, { state }),
+  );
+
+  const loading = renderStatus({ status: 'loading' });
+  if (
+    !loading.includes('role="status"')
+    || !loading.includes('aria-live="polite"')
+    || !loading.includes('Henter dagens plan')
+  ) {
+    throw new Error('Loading-status mangler én høflig Planlegg-status eller eksakt copy');
+  }
+  const error = renderStatus({ status: 'error', onRetry: () => undefined });
+  if (
+    !error.includes('Vi fikk ikke oppdatert planen')
+    || !error.includes('Prøv å hente planen')
+    || !error.includes('<button')
+  ) {
+    throw new Error('No-cache-feil mangler sannferdig retry-presentasjon');
+  }
+  const offline = renderStatus({
+    status: 'offline',
+    cachedAtIso: '2026-02-12T08:00:00.000Z',
+    onRetry: () => undefined,
+  });
+  if (!offline.includes('Du er frakoblet') || !offline.includes('09:00')) {
+    throw new Error('Cached offline-status mangler Europe/Oslo-tid');
+  }
+  const partial = renderStatus({ status: 'partial' });
+  if (!partial.includes('bare tidspunktene Babyora har værdata for')) {
+    throw new Error('Partial-status mangler avgrenset evidenscopy');
+  }
+  if (renderStatus({ status: 'ready' }) !== '') {
+    throw new Error('Ready-status skal ikke legge til en ekstra statusflate');
+  }
+
+  const closedForecast = renderToStaticMarkup(createElement(
+    forecastModule.ForecastDisclosure,
+    {
+      open: false,
+      onToggle: () => undefined,
+      rows: [{
+        atIso: '2026-02-12T09:00:00.000Z',
+        tempC: -4,
+        feelsLikeC: -7,
+        symbolCode: 'fair_day',
+      }],
+    },
+  ));
+  if (
+    !closedForecast.includes('Vis full værprognose')
+    || !closedForecast.includes('aria-expanded="false"')
+    || closedForecast.includes('Føles som')
+  ) {
+    throw new Error('Lukket prognose-disclosure er ikke kontrollert eller lekker rader');
+  }
+}
 
 function parseCase(argv: readonly string[]): PlanleggCase {
   const inline = argv.find((value) => value.startsWith('--case='));
@@ -524,6 +625,11 @@ async function runExactContext(
 async function main(): Promise<void> {
   const caseName = parseCase(process.argv.slice(2));
   const fixture = PLANLEGG_CASES[caseName];
+  if (caseName === 'composition-primitives') {
+    await assertCompositionPrimitives();
+    console.log(`PLANLEGG HARNESS PASS: case=${caseName} fixture=${fixture.id}`);
+    return;
+  }
   const forecastState: { mode: ForecastMode } = {
     mode: caseName === 'semantic-rail' ? 'zero' : 'many',
   };
