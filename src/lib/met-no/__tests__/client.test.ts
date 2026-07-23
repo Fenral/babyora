@@ -969,3 +969,75 @@ describe('extractDailyAtHour', () => {
     expect(extractDailyAtHour(fc, 12, 1)).toHaveLength(1);
   });
 });
+
+describe('location cache scope', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW_MS);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('keeps automatic forecast coordinates memory-only and disjoint from a persistent same-coordinate entry', async () => {
+    const data = validForecast();
+    const persistent = validForecast('2026-02-12T08:10:00.000Z');
+    const key = 'metno:70.12,20.57';
+    const { storage } = installStorage({
+      [key]: JSON.stringify({
+        version: 1,
+        fetchedAt: NOW_MS,
+        data: persistent,
+      }),
+    });
+    const fetchMock = vi.fn().mockResolvedValue(response(data));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const first = await fetchForecast(70.1234, 20.5678, {
+      cacheScope: 'memory-only',
+    });
+    const second = await fetchForecast(70.1234, 20.5678, {
+      cacheScope: 'memory-only',
+    });
+
+    expect(first).toMatchObject({
+      forecast: data,
+      metadata: { source: 'network', cacheStatus: 'miss', stale: false },
+    });
+    expect(second.forecast).toBe(data);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ cache: 'no-store' }),
+    );
+    expect(storage.getItem).not.toHaveBeenCalled();
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
+
+    await expect(fetchForecast(70.1234, 20.5678)).resolves.toMatchObject({
+      forecast: persistent,
+      metadata: { source: 'cache', cacheStatus: 'fresh' },
+    });
+  });
+
+  it('expires a memory-only forecast without consulting persistent storage on failure', async () => {
+    const { storage } = installStorage();
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response(validForecast()))
+      .mockRejectedValueOnce(new TypeError('automatic offline'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchForecast(70.2234, 20.6678, { cacheScope: 'memory-only' });
+    vi.setSystemTime(NOW_MS + CACHE_TTL_MS + 1);
+
+    await expect(fetchForecast(70.2234, 20.6678, {
+      cacheScope: 'memory-only',
+    })).rejects.toThrow('automatic offline');
+    expect(storage.getItem).not.toHaveBeenCalled();
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
+  });
+});
