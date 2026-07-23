@@ -12,6 +12,7 @@ const metadata = (overrides: Partial<ForecastFetchMetadata> = {}): ForecastFetch
   source: 'network',
   sourceUpdatedAt: '2026-02-12T08:12:00.000Z',
   fetchedAt: Date.parse('2026-02-12T08:15:00.000Z'),
+  evaluatedAt: Date.parse('2026-02-12T08:15:00.000Z'),
   cacheStatus: 'miss',
   stale: false,
   ...overrides,

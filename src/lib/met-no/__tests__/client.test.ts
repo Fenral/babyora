@@ -34,6 +34,16 @@ function point(
   };
 }
 
+function utcPoint(
+  time: string,
+  tempC: number,
+  symbol = 'cloudy',
+): MetTimePoint {
+  const value = point(2026, 1, 12, 9, tempC, 2, symbol);
+  value.time = time;
+  return value;
+}
+
 function forecast(points: MetTimePoint[]): MetForecast {
   return {
     properties: {
@@ -121,6 +131,7 @@ describe('fetchForecast provenance and cache recovery', () => {
         source: 'network',
         sourceUpdatedAt: '2026-02-12T08:12:00.000Z',
         fetchedAt: NOW_MS,
+        evaluatedAt: NOW_MS,
         cacheStatus: 'miss',
         stale: false,
       },
@@ -152,6 +163,7 @@ describe('fetchForecast provenance and cache recovery', () => {
         source: 'cache',
         sourceUpdatedAt: '2026-02-12T08:12:00.000Z',
         fetchedAt: NOW_MS - CACHE_TTL_MS,
+        evaluatedAt: NOW_MS,
         cacheStatus: 'fresh',
         stale: false,
       },
@@ -174,6 +186,7 @@ describe('fetchForecast provenance and cache recovery', () => {
         source: 'cache',
         sourceUpdatedAt: '2026-02-12T08:12:00.000Z',
         fetchedAt,
+        evaluatedAt: NOW_MS,
         cacheStatus: 'stale',
         stale: true,
       },
@@ -419,6 +432,54 @@ describe('fetchForecast provenance and cache recovery', () => {
     });
   });
 
+  it('evaluates network currentness only after response parsing and validation complete', async () => {
+    const sourceAtStart = new Date(NOW_MS - (5 * 60 + 59) * 60 * 1000).toISOString();
+    const data = validForecast(sourceAtStart);
+    const pending = deferred<Response>();
+    installStorage();
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(pending.promise));
+
+    const request = fetchForecast(61.2345, 8.7654);
+    const acceptedAt = NOW_MS + 2 * 60 * 1000;
+    vi.setSystemTime(acceptedAt);
+    pending.resolve(response(data));
+
+    await expect(request).resolves.toMatchObject({
+      forecast: data,
+      metadata: {
+        source: 'network',
+        sourceUpdatedAt: null,
+        fetchedAt: acceptedAt,
+        evaluatedAt: acceptedAt,
+      },
+    });
+  });
+
+  it('keeps persistent-cache commit age separate from its read evaluation clock', async () => {
+    const evaluatedAt = Date.parse('2026-02-12T10:02:00.000Z');
+    const fetchedAt = Date.parse('2026-02-12T09:55:00.000Z');
+    const data = forecast([
+      utcPoint('2026-02-12T09:00:00.000Z', -9),
+      utcPoint('2026-02-12T10:00:00.000Z', 10),
+    ]);
+    installStorage({
+      [CACHE_KEY]: JSON.stringify({ version: 1, fetchedAt, data }),
+    });
+    vi.stubGlobal('fetch', vi.fn());
+    vi.setSystemTime(evaluatedAt);
+
+    const result = await fetchForecast(61.2345, 8.7654);
+
+    expect(result.metadata).toMatchObject({
+      source: 'cache',
+      cacheStatus: 'fresh',
+      fetchedAt,
+      evaluatedAt,
+    });
+    expect(extractNow(result.forecast, result.metadata.evaluatedAt).observedAt.toISOString())
+      .toBe('2026-02-12T10:00:00.000Z');
+  });
+
   it('keeps the newer success atomic when same-key successes resolve in reverse order', async () => {
     const older = deferred<Response>();
     const newer = deferred<Response>();
@@ -504,8 +565,49 @@ describe('fetchForecast provenance and cache recovery', () => {
 
     await expect(fetchForecast(61.2345, 8.7654)).resolves.toMatchObject({
       forecast: data,
-      metadata: { sourceUpdatedAt: null },
+      metadata: {
+        sourceUpdatedAt: null,
+        evaluatedAt: NOW_MS + 2 * 60 * 1000,
+      },
     });
+  });
+
+  it('uses one evaluation clock across network, persistent-cache and memory returns', async () => {
+    const evaluatedAt = Date.parse('2026-02-12T10:30:00.000Z');
+    const data = forecast([
+      utcPoint('2026-02-12T09:00:00.000Z', -9),
+      utcPoint('2026-02-12T10:00:00.000Z', 10),
+    ]);
+    const cacheKey = 'metno:61.22,8.22';
+    const { storage } = installStorage({
+      [cacheKey]: JSON.stringify({
+        version: 1,
+        fetchedAt: Date.parse('2026-02-12T10:20:00.000Z'),
+        data,
+      }),
+    });
+    storage.setItem.mockImplementation(() => { throw new Error('quota'); });
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(response(data))
+      .mockResolvedValueOnce(response(data))
+      .mockRejectedValueOnce(new TypeError('offline')));
+    vi.setSystemTime(evaluatedAt);
+
+    const network = await fetchForecast(61.11, 8.11);
+    const persistentCache = await fetchForecast(61.22, 8.22);
+    await fetchForecast(61.33, 8.33);
+    const memory = await fetchForecast(61.33, 8.33);
+    const results = [network, persistentCache, memory];
+
+    expect(results.map((result) => result.metadata.evaluatedAt))
+      .toEqual([evaluatedAt, evaluatedAt, evaluatedAt]);
+    expect(results.map((result) => (
+      extractNow(result.forecast, result.metadata.evaluatedAt).observedAt.toISOString()
+    ))).toEqual([
+      '2026-02-12T10:00:00.000Z',
+      '2026-02-12T10:00:00.000Z',
+      '2026-02-12T10:00:00.000Z',
+    ]);
   });
 
   it('commits an older valid success when a newer same-key request fails without cache', async () => {
@@ -563,6 +665,84 @@ describe('fetchForecast provenance and cache recovery', () => {
   });
 });
 
+describe('extractNow acceptance clock', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('fails closed at 09:00 when the first forecast point starts at 15:00', () => {
+    const data = forecast([
+      utcPoint('2026-02-12T15:00:00.000Z', 15),
+    ]);
+
+    expect(() => extractNow(data, Date.parse('2026-02-12T09:00:00.000Z')))
+      .toThrow('met.no: mangler gjeldende en-timesintervall');
+  });
+
+  it('selects the 09:00 interval at 09:30 when 09:00 and 10:00 both exist', () => {
+    const data = forecast([
+      utcPoint('2026-02-12T09:00:00.000Z', 9),
+      utcPoint('2026-02-12T10:00:00.000Z', 10),
+    ]);
+
+    expect(extractNow(data, Date.parse('2026-02-12T09:30:00.000Z')))
+      .toMatchObject({ tempC: 9, observedAt: new Date('2026-02-12T09:00:00.000Z') });
+  });
+
+  it('selects the 10:00 interval at the exact 10:00 boundary', () => {
+    const data = forecast([
+      utcPoint('2026-02-12T09:00:00.000Z', 9),
+      utcPoint('2026-02-12T10:00:00.000Z', 10),
+    ]);
+
+    expect(extractNow(data, Date.parse('2026-02-12T10:00:00.000Z')))
+      .toMatchObject({ tempC: 10, observedAt: new Date('2026-02-12T10:00:00.000Z') });
+  });
+
+  it('fails closed when the covering point lacks one-hour evidence even if a later point has it', () => {
+    const covering = utcPoint('2026-02-12T09:00:00.000Z', -20);
+    delete covering.data.next_1_hours;
+    const data = forecast([
+      covering,
+      utcPoint('2026-02-12T10:00:00.000Z', 15, 'clearsky_day'),
+    ]);
+
+    expect(() => extractNow(data, Date.parse('2026-02-12T09:30:00.000Z')))
+      .toThrow('met.no: mangler en-timesbevis');
+  });
+
+  it('is deterministic from evaluatedAt and never consults Date.now internally', () => {
+    const evaluatedAt = Date.parse('2026-02-12T09:30:00.000Z');
+    const data = forecast([
+      utcPoint('2026-02-12T09:00:00.000Z', 9),
+      utcPoint('2026-02-12T10:00:00.000Z', 10),
+    ]);
+    const nowSpy = vi.spyOn(Date, 'now');
+
+    vi.setSystemTime('2000-01-01T00:00:00.000Z');
+    const first = extractNow(data, evaluatedAt);
+    vi.setSystemTime('2040-01-01T00:00:00.000Z');
+    const second = extractNow(data, evaluatedAt);
+
+    expect(first).toEqual(second);
+    expect(first.observedAt.toISOString()).toBe('2026-02-12T09:00:00.000Z');
+    expect(nowSpy).not.toHaveBeenCalled();
+  });
+
+  it('accepts the official terminal instant-only point as raw data but never as current', () => {
+    const data = compactShapedForecast();
+    const terminal = data.properties.timeseries.at(-1)!;
+    const evaluatedAt = Date.parse(terminal.time) + 30 * 60 * 1000;
+
+    expect(() => extractNow(data, evaluatedAt)).toThrow('met.no: mangler en-timesbevis');
+  });
+});
+
 describe('extractHourly', () => {
   it('inkluderer windMs fra instant-detaljene', () => {
     const fc = forecast([point(2026, 0, 1, 6, 2, 4.5)]);
@@ -580,7 +760,8 @@ describe('extractHourly', () => {
     };
     const fc = forecast([sixHourPoint]);
 
-    expect(() => extractNow(fc)).toThrow('met.no: mangler en-timesbevis');
+    expect(() => extractNow(fc, Date.parse(sixHourPoint.time) + 30 * 60 * 1000))
+      .toThrow('met.no: mangler en-timesbevis');
     expect(extractHourly(fc, 1)).toEqual([]);
     expect(extractDailyAtHour(fc, 6, 1)[0]?.precipMmH).toBe(10);
   });
@@ -591,7 +772,8 @@ describe('extractHourly', () => {
     const later = point(2026, 0, 12, 10, 15, 2, 'clearsky_day');
     const fc = forecast([actualNow, later]);
 
-    expect(() => extractNow(fc)).toThrow('met.no: mangler en-timesbevis');
+    expect(() => extractNow(fc, Date.parse(actualNow.time) + 30 * 60 * 1000))
+      .toThrow('met.no: mangler en-timesbevis');
   });
 });
 

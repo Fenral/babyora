@@ -26,6 +26,7 @@ const metadata = (overrides: Partial<ForecastFetchMetadata> = {}): ForecastFetch
   source: 'network',
   sourceUpdatedAt: '2026-02-12T08:12:00.000Z',
   fetchedAt: Date.parse('2026-02-12T08:15:00.000Z'),
+  evaluatedAt: Date.parse('2026-02-12T08:15:00.000Z'),
   cacheStatus: 'miss',
   stale: false,
   ...overrides,
@@ -115,7 +116,10 @@ describe('weather result unwrap', () => {
 
     const state = weatherStateFromForecastResult(resolved, 12, extractors);
 
-    expect(extractors.now).toHaveBeenCalledWith(resolved.forecast);
+    expect(extractors.now).toHaveBeenCalledWith(
+      resolved.forecast,
+      resolved.metadata.evaluatedAt,
+    );
     expect(extractors.hourly).toHaveBeenCalledWith(resolved.forecast, 48);
     expect(extractors.daily).toHaveBeenCalledWith(resolved.forecast, 10);
     expect(extractors.dailyAtHour).toHaveBeenCalledWith(resolved.forecast, 12, 10);
