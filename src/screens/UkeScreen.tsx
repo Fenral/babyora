@@ -38,7 +38,10 @@ import {
   type PlanningVerdictView,
   type PlanningWeatherRow,
 } from '../lib/planning/plan-view-model';
-import { resolvePlanningViewAccess } from '../lib/premium/gating';
+import {
+  resolvePlanningViewAccess,
+  resolveRuntimeCapabilityAccess,
+} from '../lib/premium/gating';
 import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
 import { useAccess } from '../lib/premium/use-access';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
@@ -47,6 +50,7 @@ import { recommend } from '../lib/wool-layers/recommend';
 import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import { useChildren } from '../state/children-store';
 import { useSwapOverride } from '../state/swap-override-store';
+import { resolveEffectivePlace, useLocationPref } from '../state/location-pref-store';
 import type { TabKey } from '../types/nav';
 import './UkeScreen.css';
 
@@ -250,9 +254,33 @@ function PlanleggData({
   const { fire } = useHapticSystem();
   const swaps = useSwapOverride((state) => state.swaps);
   const { isPremium, loading: accessLoading } = useAccess();
-  const lat = active?.lat || DEFAULT_LAT;
-  const lon = active?.lon || DEFAULT_LON;
-  const city = active?.city || 'Elverum';
+  const locationMode = useLocationPref((state) => state.mode);
+  const automaticPlace = useLocationPref((state) => state.automaticPlace);
+  const fixedHome = {
+    childId: active?.id ?? '__fallback__',
+    city: active?.city || 'Elverum',
+    lat: active?.lat || DEFAULT_LAT,
+    lon: active?.lon || DEFAULT_LON,
+  };
+  const locationAccess = resolveRuntimeCapabilityAccess(
+    'automatic_location',
+    { isPlus: isPremium, authenticated: false, loading: accessLoading },
+    PLUS_FEATURE_AVAILABILITY,
+  );
+  const effectivePlace = resolveEffectivePlace(
+    fixedHome,
+    locationMode,
+    locationAccess,
+    automaticPlace,
+  ) ?? {
+    ...fixedHome,
+    source: 'fixed-home' as const,
+    cacheScope: 'persistent' as const,
+  };
+  const { lat, lon } = effectivePlace;
+  const city = effectivePlace.source === 'automatic'
+    ? `Nåværende sted · ${effectivePlace.city}`
+    : `Fast sted · ${effectivePlace.city}`;
   const childName = active?.name || 'barnet';
   const activeDob = active?.dob;
   const ageMonths = useMemo(
@@ -262,7 +290,10 @@ function PlanleggData({
   const [activity] = useState<Activity>('utelek');
   const vognMode: VognMode = 'awake';
   const [refreshKey, setRefreshKey] = useState(0);
-  const weather = useWeather(lat, lon, FALLBACK_REF_HOUR, refreshKey);
+  const weather = useWeather(lat, lon, FALLBACK_REF_HOUR, refreshKey, {
+    cacheScope: effectivePlace.cacheScope,
+    source: effectivePlace.source,
+  });
   const [tab, setTab] = useState<ViewTab>('today');
   const [forecastOpen, setForecastOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
@@ -483,7 +514,7 @@ function PlanleggData({
           label: city,
           lat,
           lon,
-          source: 'configured-place',
+          source: effectivePlace.source,
         },
         activity,
         vognMode: activity === 'vogn' ? vognMode : null,
@@ -555,6 +586,7 @@ function PlanleggData({
     ageMonths,
     childName,
     city,
+    effectivePlace.source,
     lat,
     lon,
     resolvedPhases,

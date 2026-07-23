@@ -30,7 +30,7 @@ export interface PlusFeatureAvailability {
 export const PLUS_FEATURE_AVAILABILITY: Readonly<PlusFeatureAvailability> = Object.freeze({
   today_home: true,
   future_plan: true,
-  automatic_location: false,
+  automatic_location: true,
   extra_children: true,
   family_sharing: false,
   personal_calibration: false,

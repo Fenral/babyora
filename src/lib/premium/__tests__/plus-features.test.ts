@@ -19,8 +19,7 @@ const flags = (partial?: Partial<PlusFeatureAvailability>): PlusFeatureAvailabil
 describe('availablePlusExpansions', () => {
   it('default: viser kun de leverbare (aldri familie/kalibrering)', () => {
     const keys = availablePlusExpansions().map((e) => e.key);
-    expect(keys).toEqual(['future_plan', 'extra_children']);
-    expect(keys).not.toContain('automatic_location');
+    expect(keys).toEqual(['future_plan', 'automatic_location', 'extra_children']);
     expect(keys).not.toContain('family_sharing');
     expect(keys).not.toContain('personal_calibration');
   });
@@ -48,7 +47,7 @@ describe('availablePlusExpansions', () => {
   it('default-konstanten holder familie/kalibrering av (ikke bygget ennå)', () => {
     expect(PLUS_FEATURE_AVAILABILITY.today_home).toBe(true);
     expect(PLUS_FEATURE_AVAILABILITY.future_plan).toBe(true);
-    expect(PLUS_FEATURE_AVAILABILITY.automatic_location).toBe(false);
+    expect(PLUS_FEATURE_AVAILABILITY.automatic_location).toBe(true);
     expect(PLUS_FEATURE_AVAILABILITY.soon_preparation).toBe(false);
     expect(PLUS_FEATURE_AVAILABILITY.family_sharing).toBe(false);
     expect(PLUS_FEATURE_AVAILABILITY.personal_calibration).toBe(false);

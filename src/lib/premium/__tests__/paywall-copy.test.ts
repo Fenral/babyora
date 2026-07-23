@@ -59,7 +59,7 @@ const allDisabled = (
 });
 
 const unsupportedDefaultWords =
-  /sammen|familie|begge foreldre|alle som passer barnet|omsorgsperson|automatisk sted|overalt|snart/i;
+  /sammen|familie|begge foreldre|alle som passer barnet|omsorgsperson|overalt|snart/i;
 
 describe('paywall-copy (F81.5-W1) — copy-lint', () => {
   it('all statisk copy passerer lintCopy (ingen «låst/sperret/nektet»)', () => {
@@ -89,6 +89,7 @@ describe('paywall-copy — innhold', () => {
     const copy = buildCapabilityPaywallCopy(PLUS_FEATURE_AVAILABILITY);
     expect(copy.previewItems.map((item) => item.key)).toEqual([
       'future_plan',
+      'automatic_location',
       'extra_children',
     ]);
     expect(JSON.stringify(copy)).not.toMatch(unsupportedDefaultWords);

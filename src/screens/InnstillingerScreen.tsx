@@ -51,7 +51,7 @@ import {
   resolveRuntimeCapabilityAccess,
 } from '../lib/premium/gating';
 import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
-import { reverseGeocode } from '../lib/geocode/nominatim';
+import { automaticLocationController } from '../hooks/useAutoLocationRefresh';
 import {
   cancelMorningNotification,
   disableWeatherChangeNotifications,
@@ -1111,7 +1111,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
   // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
   // siden BottomTabBar nå mountes globalt i App.tsx.
   void _onNavigate;
-  const { active, needsOnboarding, resetAll, children: allChildren, setActiveId, addChild, updateChild } = useChildren();
+  const { active, needsOnboarding, resetAll, children: allChildren, setActiveId, addChild } = useChildren();
   const { hapticsPref, motionPref, reducedMotion } = useNativeSettings();
   const { fire } = useHapticSystem();
   const themeMode = useTheme((s) => s.mode);
@@ -1128,7 +1128,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
   // Premium-status (se use-access.ts). Migrert fra direkte useSubscription()-
   // lesing — samme underliggende verdi, ingen atferdsendring.
   const { isPremium, loading: accessLoading } = useAccess();
-  const automaticLocationAllowed = resolveRuntimeCapabilityAccess(
+  const automaticLocationAccess = resolveRuntimeCapabilityAccess(
     'automatic_location',
     {
       isPlus: isPremium,
@@ -1137,7 +1137,8 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
       loading: accessLoading,
     },
     PLUS_FEATURE_AVAILABILITY,
-  ).allowed;
+  );
+  const automaticLocationAllowed = automaticLocationAccess.allowed;
   const locationMode = useLocationPref((s) => s.mode);
   const setLocationMode = useLocationPref((s) => s.setMode);
 
@@ -1468,8 +1469,8 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
   // Flyt:
   //  1. Bruker trykker toggle → role=switch, aria-checked styres av locationMode
   //  2. ON  → vi åpner native <dialog> som forklarer permission (samtykke-steg)
-  //  3. Bruker bekrefter → vi spør navigator.geolocation.getCurrentPosition
-  //  4. Suksess → reverseGeocode → updateChild(active.id, { lat, lon, city })
+  //  3. Bruker bekrefter → den delte kontrolleren henter posisjon
+  //  4. Suksess → kontrolleren lagrer et øktbundet sted og vi aktiverer auto-modus
   //             → setLocationMode('auto')
   //             → useWeather re-kjører via lat/lon useEffect-deps (automatisk)
   //  5. Avbryt/feil/denied → setLocationMode('manual') + toast
@@ -1478,19 +1479,25 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
     (next: boolean) => {
       if (!next) {
         void fire('selection');
-        // OFF → tilbake til manuelt valg, beholder eksisterende koordinater
+        automaticLocationController.invalidate();
         setLocationMode('manual');
         return;
       }
-      if (!automaticLocationAllowed) {
+      if (automaticLocationAccess.state === 'neutral'
+        || !automaticLocationAccess.implementationAvailable) {
         setAutoLocationDialogOpen(false);
+        return;
+      }
+      if (!automaticLocationAccess.allowed) {
+        setPaywallReturnFocusTo(autoLocationToggleRef.current);
+        setPaywallOpen(true);
         return;
       }
       void fire('selection');
       // ON → åpne forklarings-dialog (samtykke før permission-prompt)
       setAutoLocationDialogOpen(true);
     },
-    [automaticLocationAllowed, fire, setLocationMode],
+    [automaticLocationAccess, fire, setLocationMode],
   );
 
   const handleConfirmAutoLocation = useCallback(async () => {
@@ -1499,11 +1506,6 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
       return;
     }
     void fire('medium');
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setAutoLocationDialogOpen(false);
-      showToast('Posisjon støttes ikke på denne enheten.');
-      return;
-    }
     if (needsOnboarding) {
       setAutoLocationDialogOpen(false);
       showToast('Fullfør onboarding først.');
@@ -1511,55 +1513,38 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
     }
     setAutoLocationPending(true);
     try {
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: false,
-          timeout: 8000,
-          maximumAge: 60_000,
-        });
+      const outcome = await automaticLocationController.run({
+        intent: 'settings-activation',
+        runtimeDecision: automaticLocationAccess,
+        mode: locationMode,
+        childId: active.id,
       });
-      const lat = Number(pos.coords.latitude.toFixed(4));
-      const lon = Number(pos.coords.longitude.toFixed(4));
-
-      // Reverse-geocode for å oppdatere by-tekst (best-effort, ikke kritisk)
-      let city = active.city || 'Din posisjon';
-      try {
-        const rev = await reverseGeocode(lat, lon);
-        if (rev?.city) city = rev.city;
-      } catch (revErr) {
-        console.warn('[Babyora] reverseGeocode feilet — beholder eksisterende by', revErr);
-      }
-
-      // Skriv til children-store → triggrer useWeather re-fetch via lat/lon-deps
-      updateChild(active.id, { lat, lon, city });
-      setLocationMode('auto');
       setAutoLocationDialogOpen(false);
-      void fire('success');
-      showToast(`Posisjon oppdatert — vær hentes for ${city}.`);
-    } catch (err: unknown) {
-      // PositionError: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
-      const code = (err as GeolocationPositionError | undefined)?.code;
+      if (outcome.status === 'success') {
+        setLocationMode('auto');
+        void fire('success');
+        showToast(`Posisjon oppdatert — vær hentes for ${outcome.placeLabel}.`);
+        return;
+      }
+      setLocationMode('manual');
+      showToast('Kunne ikke hente posisjon. Prøv igjen.');
+    } catch {
+      automaticLocationController.invalidate();
       setLocationMode('manual');
       setAutoLocationDialogOpen(false);
-      if (code === 1) {
-        showToast('Posisjon er blokkert. Skru på i systeminnstillinger.');
-      } else if (code === 3) {
-        showToast('Tidsavbrudd — prøv igjen utendørs.');
-      } else {
-        showToast('Kunne ikke hente posisjon. Prøv igjen.');
-      }
+      showToast('Kunne ikke hente posisjon. Prøv igjen.');
     } finally {
       setAutoLocationPending(false);
     }
   }, [
-    active.city,
     active.id,
+    automaticLocationAccess,
     automaticLocationAllowed,
     fire,
+    locationMode,
     needsOnboarding,
     setLocationMode,
     showToast,
-    updateChild,
   ]);
 
   const handleMorningToggle = useCallback(

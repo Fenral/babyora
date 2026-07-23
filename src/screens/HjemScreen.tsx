@@ -63,6 +63,10 @@ import { VerifiedAvatarComposite } from '../components/outfit/VerifiedAvatarComp
 // BottomTabBar er global (mounted i App.tsx) — ikke importer/mount her.
 import { MOTION } from '../styles/motion-grammar';
 import { useSwapOverride } from '../state/swap-override-store';
+import { useLocationPref, resolveEffectivePlace } from '../state/location-pref-store';
+import { useAccess } from '../lib/premium/use-access';
+import { resolveRuntimeCapabilityAccess } from '../lib/premium/gating';
+import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Konstanter / fallback
@@ -218,12 +222,45 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
   // Swap-overrides for plagg-bytter (session-only) — driver avatar-tier
   // hvis Sivert har byttet base-laget i popupen. Uendret fra forrige iter.
   const swaps = useSwapOverride((s) => s.swaps);
+  const locationMode = useLocationPref((state) => state.mode);
+  const automaticPlace = useLocationPref((state) => state.automaticPlace);
+  const { isPremium, loading: accessLoading } = useAccess();
 
-  const lat = !needsOnboarding && active.lat ? active.lat : ELVERUM.lat;
-  const lon = !needsOnboarding && active.lon ? active.lon : ELVERUM.lon;
-  const cityLabel = !needsOnboarding && active.city ? active.city : ELVERUM.city;
+  const fixedHome = !needsOnboarding ? {
+    childId: active.id,
+    city: active.city,
+    lat: active.lat,
+    lon: active.lon,
+  } : {
+    childId: '__fallback__',
+    city: ELVERUM.city,
+    lat: ELVERUM.lat,
+    lon: ELVERUM.lon,
+  };
+  const locationAccess = resolveRuntimeCapabilityAccess(
+    'automatic_location',
+    { isPlus: isPremium, authenticated: false, loading: accessLoading },
+    PLUS_FEATURE_AVAILABILITY,
+  );
+  const effectivePlace = resolveEffectivePlace(
+    fixedHome,
+    locationMode,
+    locationAccess,
+    automaticPlace,
+  ) ?? {
+    ...fixedHome,
+    source: 'fixed-home' as const,
+    cacheScope: 'persistent' as const,
+  };
+  const { lat, lon } = effectivePlace;
+  const cityLabel = effectivePlace.source === 'automatic'
+    ? `Nåværende sted · ${effectivePlace.city}`
+    : `Fast sted · ${effectivePlace.city}`;
 
-  const weather = useWeather(lat, lon);
+  const weather = useWeather(lat, lon, 12, 0, {
+    cacheScope: effectivePlace.cacheScope,
+    source: effectivePlace.source,
+  });
   const [activity, setActivity] = useState<Activity>('utelek');
   // Søvn/våken-toggle på vogn fjernet (Sivert: ikke viktig nok). Antar våken.
   const vognMode: VognMode = 'awake';
