@@ -299,6 +299,52 @@ describe('buildPlanViewModel', () => {
     });
   });
 
+  it('rejects conflicting planning recommendations at the same absolute instant', () => {
+    const model = canonical.buildPlanViewModel(input({
+      points: [
+        planningPoint(isos[0], 'fp-a', ['ullbody']),
+        planningPoint(isos[1], 'fp-b', ['ullbody', 'lue']),
+        planningPoint('2026-07-20T07:00:00Z', 'fp-c', ['ullbody', 'votter']),
+      ],
+    }));
+
+    expect(model).toMatchObject({
+      status: 'error',
+      verdict: null,
+      nextAction: null,
+      events: [],
+      rows: [],
+    });
+  });
+
+  it('rejects conflicting duplicate forecast rows instead of choosing by input order', () => {
+    const conflictingForecast = [
+      ...weatherRows,
+      {
+        atIso: isos[0],
+        tempC: 99,
+        feelsLikeC: 99,
+        symbolCode: 'clear',
+      },
+    ];
+    const model = canonical.buildPlanViewModel(input({
+      points: [
+        planningPoint(isos[0], 'fp-a', ['ullbody']),
+        planningPoint(isos[1], 'fp-b', ['ullbody', 'lue']),
+      ],
+      forecast: conflictingForecast,
+    }));
+
+    expect(model).toMatchObject({
+      status: 'error',
+      verdict: null,
+      nextAction: null,
+      events: [],
+      rows: [],
+      forecast: [],
+    });
+  });
+
   it('returns the exact empty evaluation copy when valid finalized points have no change event', () => {
     const model = canonical.buildPlanViewModel(input({
       points: [

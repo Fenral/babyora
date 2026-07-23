@@ -187,6 +187,20 @@ describe('buildPlanningRailRows canonical contract', () => {
     expect(JSON.stringify(canonical.buildPlanningRailRows(assessed, events, {}, hourlyIsos)))
       .toBe(JSON.stringify(canonical.buildPlanningRailRows(assessed, [...events].reverse(), {}, hourlyIsos)));
   });
+
+  it('fails closed when one event identity maps to conflicting row content', () => {
+    const first = event(hourlyIsos[1], 'event-nine');
+    const conflicting = event(hourlyIsos[1], 'event-nine', {
+      transitionContextId: 'different-transition',
+    });
+
+    expect(canonical.buildPlanningRailRows(
+      coverage('complete-hourly', hourlyIsos),
+      [first, conflicting],
+      {},
+      hourlyIsos,
+    )).toEqual([]);
+  });
 });
 
 const legacyEvent = (hour: number, kind: ChangeEvent['kind'] = 'add'): ChangeEvent => ({
