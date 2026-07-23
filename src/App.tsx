@@ -32,10 +32,7 @@ import {
   type PlannedOutfitContext,
 } from './lib/planning/planned-outfit-context';
 import { shouldClosePlannedDrillOnAccess } from './lib/planning/planning-interaction';
-import {
-  subscribeToAccessEntitlement,
-  useAccess,
-} from './lib/premium/use-access';
+import { useAccess } from './lib/premium/use-access';
 
 const HjemScreen = lazy(() =>
   import('./screens/HjemScreen').then((m) => ({ default: m.HjemScreen })),
@@ -134,6 +131,27 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+function useClosePlannedDrillOnAccess({
+  isPlannedDrill,
+  loading,
+  isPremium,
+  onClose,
+}: {
+  isPlannedDrill: boolean;
+  loading: boolean;
+  isPremium: boolean;
+  onClose: () => void;
+}): void {
+  useEffect(() => {
+    if (shouldClosePlannedDrillOnAccess(
+      isPlannedDrill,
+      { loading, isPremium },
+    )) {
+      onClose();
+    }
+  }, [isPlannedDrill, isPremium, loading, onClose]);
+}
+
 export default function App(): ReactElement {
   // Førstegangs-flyt: har familien ingen barn ennå, vises OnboardingScreen
   // i stedet for app-shellet. Vi styrer på egen `onboardingDone`-state (ikke
@@ -209,16 +227,12 @@ export default function App(): ReactElement {
     });
   }, [drill]);
 
-  useEffect(() => {
-    return subscribeToAccessEntitlement((nextIsPremium) => {
-      if (shouldClosePlannedDrillOnAccess(
-        drill?.kind === 'paakledning' && drill.source === 'planned',
-        { loading: accessLoading, isPremium: nextIsPremium },
-      )) {
-        closePaakledning();
-      }
-    });
-  }, [accessLoading, closePaakledning, drill]);
+  useClosePlannedDrillOnAccess({
+    isPlannedDrill: drill?.kind === 'paakledning' && drill.source === 'planned',
+    loading: accessLoading,
+    isPremium,
+    onClose: closePaakledning,
+  });
 
   const activeDrill = shouldClosePlannedDrillOnAccess(
     drill?.kind === 'paakledning' && drill.source === 'planned',
