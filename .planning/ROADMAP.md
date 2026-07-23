@@ -31,7 +31,7 @@ This roadmap first delivers the bounded, already-reviewed Planlegg candidate, th
   4. Planlegg remains operable across loading, error, offline, dark/temperature themes, forced colors, 200% text, keyboard, screen reader, reduced motion, haptic preference-off, web, iOS, and Android paths with one app-owned main landmark/page scroll, 44-point targets, focus-visible, correct reading order, shape-plus-text meaning, and regression-safe four-root navigation.
   5. The reviewed stable candidate passes deterministic truth, exact-context, access, accessibility, test, lint, build, source/privacy, and no-media E2E checks on its immutable SHA through the required standard/high-risk review loop; no new app screenshot/video is captured while implementation changes, and the final physical-device/media-based 90+ visual and owner release gates remain explicitly Pending until the owner authorizes capture.
 
-**Plans**: 7/18 plans executed
+**Plans**: 8/18 plans executed
 
 - [x] 01-01-PLAN.md
 - [x] 01-02-PLAN.md
@@ -40,7 +40,7 @@ This roadmap first delivers the bounded, already-reviewed Planlegg candidate, th
 - [x] 01-05-PLAN.md
 - [x] 01-06-PLAN.md
 - [x] 01-07-PLAN.md
-- [ ] 01-08-PLAN.md
+- [x] 01-08-PLAN.md
 - [ ] 01-09-PLAN.md
 - [ ] 01-10-PLAN.md
 - [ ] 01-11-PLAN.md
@@ -59,7 +59,7 @@ This roadmap first delivers the bounded, already-reviewed Planlegg candidate, th
 - [ ] `01-05-PLAN.md` — Wave 2 fail-closed exact-context resolver and trusted App/Outfit boundary (high risk)
 - [ ] `01-06-PLAN.md` — Wave 3 atomic Uke/rail migration, controlled semantic Dagslinjen and exact-context E2E (entire candidate escalated to high-risk Fable; separate UI verifier)
 - [x] `01-07-PLAN.md` — Wave 4 Dagslinjen-led one-scroll Planlegg composition (standard risk)
-- [ ] `01-08-PLAN.md` — Wave 5 generic runtime capability/access policy with compatibility bridge (high risk)
+- [x] `01-08-PLAN.md` — Wave 5 generic runtime capability/access policy with compatibility bridge (high risk)
 - [ ] `01-09-PLAN.md` — Wave 5 fail-closed single-flight RevenueCat entitlement freshness (high risk)
 - [ ] `01-10-PLAN.md` — Wave 5 capability-derived paywall plus Today/Uke/App access presentation (high risk)
 - [ ] `01-11-PLAN.md` — Wave 5 automatic-location storage/cache/resolver foundation (high risk)
@@ -127,7 +127,7 @@ This roadmap first delivers the bounded, already-reviewed Planlegg candidate, th
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Planlegg/Dagslinjen | 7/18 | In Progress|  |
+| 1. Planlegg/Dagslinjen | 8/18 | In Progress|  |
 | 2. Outfit truth and Antrekkskart | 0/TBD | Pending Phase 1 | - |
 | 3. Living Home and signature transition | 0/TBD | Pending Phase 2 | - |
 | 4. Cross-surface convergence | 0/TBD | Pending Phases 1–3 | - |

@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Completed 01-07-PLAN.md
-last_updated: "2026-07-23T18:11:32.838Z"
+stopped_at: Completed 01-08-PLAN.md
+last_updated: "2026-07-23T18:59:26.159Z"
 last_activity: 2026-07-23
-last_activity_desc: Dagslinjen-led Planlegg candidate `0a4d61c` passed all deterministic gates and two independent exact-SHA reviews.
+last_activity_desc: Runtime access/location-containment candidate `9d15536` passed all deterministic gates and two independent exact-SHA reviews.
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 18
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 ## Current Position
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
-Plan: 8 of 18 in current phase
-Status: Plan 01-07 complete; Plan 01-08 ready to execute
-Last activity: 2026-07-23 — Dagslinjen-led Planlegg candidate `0a4d61c` passed all deterministic gates and two independent exact-SHA reviews.
+Plan: 9 of 18 in current phase
+Status: Plan 01-08 complete; Plan 01-09 ready to execute
+Last activity: 2026-07-23 — Runtime access/location-containment candidate `9d15536` passed all deterministic gates and two independent exact-SHA reviews.
 
-Progress: [████░░░░░░] 39%
+Progress: [████░░░░░░] 44%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [████░░░░░░] 39%
 | Phase 01-planlegg-dagslinjen P05 | 87min | 2 tasks | 4 files |
 | Phase 01-planlegg-dagslinjen P06 | 73min | 3 tasks | 11 files |
 | Phase 01-planlegg-dagslinjen P07 | 105m | 3 tasks | 7 files |
+| Phase 01 P08 | 43min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -113,10 +114,13 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 01]: Retry refreshes weather in the same mounted Planlegg instance so persisted selection repair and focus stability are real.
 - [Phase 01]: I dag uses today_home and remains complete for Free; only Uke and future_plan drills are entitlement-gated.
 - [Phase 01]: Retained Outfit callbacks resolve event IDs against the latest committed evaluation and fail closed on stale maps.
+- [Phase 01]: Runtime capability access requires both policy approval and an explicit true implementation flag; absent flags deny.
+- [Phase 01]: Generic loading remains neutral and paywall-free while unavailable planning surfaces remain hidden.
+- [Phase 01]: Stored automatic-location preference remains switchable off but performs no I/O and makes no active-location claim while availability is false.
 
 ### Pending Todos
 
-- Execute Plan 01-08 from the immutable reviewed Planlegg boundary `0a4d61c1542b64a107ac56227ea5138bae4d0ab3`.
+- Execute Plan 01-09 from the immutable reviewed access boundary `9d15536f6fe934cedd908c9c4fd4de9c0b33604f`.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -138,6 +142,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-23T18:11:32.824Z
-Stopped at: Completed 01-07-PLAN.md
+Last session: 2026-07-23T18:59:26.149Z
+Stopped at: Completed 01-08-PLAN.md
 Resume file: None
