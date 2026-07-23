@@ -418,6 +418,29 @@ describe('Planned Outfit exact-context contracts', () => {
     expect(accessorWeather.tempC).toBe(temperatureBacking);
   });
 
+  it('RED_GUARD_REQUIRES_FACTORY_OWNERSHIP_FOR_PROXY_WRAPPERS', () => {
+    const valid = createPlannedOutfitContext(completeInput());
+    const rootProxy = new Proxy(valid, {
+      get(target, property, receiver) {
+        if (property === 'plannedContextId') throw new Error('root proxy changed after validation');
+        return Reflect.get(target, property, receiver);
+      },
+    });
+    const nestedProxy = new Proxy(valid.weather, {
+      get(target, property, receiver) {
+        if (property === 'tempC') throw new Error('nested proxy changed after validation');
+        return Reflect.get(target, property, receiver);
+      },
+    });
+    const nestedWrapper = Object.freeze({ ...valid, weather: nestedProxy });
+
+    expect(isPlannedOutfitContext(rootProxy)).toBe(false);
+    expect(isPlannedOutfitContext(nestedWrapper)).toBe(false);
+    expect(() => rootProxy.plannedContextId).toThrow('root proxy changed after validation');
+    expect(() => nestedProxy.tempC).toThrow('nested proxy changed after validation');
+    expect(isPlannedOutfitContext(valid)).toBe(true);
+  });
+
   it('canonicalizes negative zero before identity and output', () => {
     const zero = completeInput();
     zero.place.lat = 0;
@@ -459,10 +482,16 @@ describe('Planned Outfit exact-context contracts', () => {
   });
 
   it('rejects deceptive Unicode controls and cross-category duplicates', () => {
-    for (const deceptive of ['barn\u0085navn', 'barn\u202Enavn', 'barn\u200Bnavn']) {
+    for (const deceptive of ['barn\u0085navn', 'barn\u202Enavn', 'barn\u200Bnavn', 'barn\u061Cnavn']) {
       const input = completeInput();
       input.child.name = deceptive;
       expect(() => createPlannedOutfitContext(input)).toThrow(/PlannedOutfitContext/u);
+    }
+
+    for (const legitimate of ['نام\u200Cها', 'familie\u200Dnavn']) {
+      const input = completeInput();
+      input.child.name = legitimate;
+      expect(createPlannedOutfitContext(input).child.name).toBe(legitimate);
     }
 
     const duplicate = completeInput();
