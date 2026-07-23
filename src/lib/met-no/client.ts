@@ -323,7 +323,16 @@ function readMemoryCommit(key: string, now: number): Readonly<{
     latestCommittedByKey.delete(key);
     return null;
   }
-  return committed;
+  return {
+    ...committed,
+    result: {
+      ...committed.result,
+      metadata: {
+        ...committed.result.metadata,
+        sourceUpdatedAt: sourceUpdatedAt(committed.result.forecast, now),
+      },
+    },
+  };
 }
 
 export async function fetchForecast(lat: number, lon: number): Promise<ForecastFetchResult> {
@@ -402,7 +411,7 @@ function periodEvidence(point: MetTimePoint): PeriodEvidence {
 }
 
 export function extractNow(forecast: MetForecast): WeatherNow {
-  const first = oneHourForecastPoints(forecast)[0];
+  const first = forecast.properties.timeseries[0];
   if (!first) throw new Error('met.no: mangler en-timesbevis');
   const d = first.data.instant.details;
   const period = oneHourEvidence(first);
