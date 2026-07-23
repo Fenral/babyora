@@ -28,7 +28,7 @@ type ViewModel = Readonly<{
     summary: string;
   }> | null;
   nextAction: string | null;
-  events: readonly Readonly<{ id: string; atIso: string }>[];
+  events: readonly Readonly<{ id: string; atIso: string; kind: string }>[];
   rows: readonly Readonly<{ id: string; type: 'unchanged' | 'change' }>[];
   candidateEventIds: readonly string[];
   forecast: readonly WeatherRow[];
@@ -270,8 +270,21 @@ describe('buildPlanViewModel', () => {
         planningPoint(isos[2], 'fp-b', ['ullbody', 'lue']),
       ],
     }));
+    const sparseRecommendations = canonical.buildPlanViewModel(input({
+      evaluatedAtIso,
+      points: [
+        planningPoint(isos[0], 'fp-a', ['ullbody']),
+        planningPoint(isos[2], 'fp-b', ['ullbody', 'lue']),
+      ],
+    }));
 
-    for (const model of [onePoint, expired, betweenSamples, betweenStaleSamples]) {
+    for (const model of [
+      onePoint,
+      expired,
+      betweenSamples,
+      betweenStaleSamples,
+      sparseRecommendations,
+    ]) {
       expect(model).toMatchObject({
         status: 'error',
         verdict: null,
@@ -315,6 +328,35 @@ describe('buildPlanViewModel', () => {
       events: [],
       rows: [],
     });
+  });
+
+  it('keeps distinct explicit action transitions at one instant when the recommendation agrees', () => {
+    const model = canonical.buildPlanViewModel(input({
+      points: [
+        planningPoint(isos[0], 'fp-a', ['ullbody']),
+        planningPoint(isos[1], 'fp-a', ['ullbody'], {
+          cause: 'Ankomst',
+          transitionContextId: 'location-transition',
+          transition: {
+            kind: 'location',
+            placeLabel: 'Barnehagen',
+            action: 'Ta av skalljakke',
+          },
+        }),
+        planningPoint('2026-07-20T07:00:00Z', 'fp-a', ['ullbody'], {
+          cause: 'Avreise senere',
+          transitionContextId: 'prep-transition',
+          transition: {
+            kind: 'prep',
+            garments: ['regntrekk'],
+          },
+        }),
+      ],
+    }));
+
+    expect(model.status).toBe('ready');
+    expect(model.events.map((event) => event.kind)).toEqual(['location', 'prep']);
+    expect(model.nextAction).toBe('NÃ¥r dere kommer til Barnehagen: Ta av skalljakke');
   });
 
   it('rejects conflicting duplicate forecast rows instead of choosing by input order', () => {

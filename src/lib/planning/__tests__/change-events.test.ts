@@ -140,6 +140,16 @@ describe('derivePlanningChangeEvents canonical contract', () => {
     expect(new Set(events.map((event) => event.id)).size).toBe(events.length);
   });
 
+  it('fails closed for conflicting finalized recommendations at the same absolute instant', () => {
+    const events = canonical.derivePlanningChangeEvents([
+      planningPoint('2026-07-20T08:00:00+02:00', 'base', ['ullbody']),
+      planningPoint('2026-07-20T09:00:00+02:00', 'warm', ['ullbody', 'lue']),
+      planningPoint('2026-07-20T07:00:00Z', 'wet', ['ullbody', 'regnjakke']),
+    ]);
+
+    expect(events).toEqual([]);
+  });
+
   it('is byte-stable for reordered points, Unicode garments, and the repeated DST hour', () => {
     const points = [
       planningPoint('2026-10-25T01:30:00+01:00', 'fp-c', ['ullbody', 'votter'], {
