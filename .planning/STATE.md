@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Completed 01-09-PLAN.md
-last_updated: "2026-07-23T19:32:06.139Z"
+stopped_at: Completed 01-10-PLAN.md
+last_updated: "2026-07-23T21:10:32.535Z"
 last_activity: 2026-07-23
-last_activity_desc: Entitlement freshness candidate `ef4e23d` passed all deterministic gates and two independent exact-SHA reviews.
+last_activity_desc: Truthful access candidate `5cdbe73` passed deterministic gates and two independent exact-SHA reviews.
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 18
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 ## Current Position
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
-Plan: 10 of 18 in current phase
-Status: Plan 01-09 complete; Plan 01-10 ready to execute
-Last activity: 2026-07-23 — Entitlement freshness candidate `ef4e23d` passed all deterministic gates and two independent exact-SHA reviews.
+Plan: 11 of 18 in current phase
+Status: Plan 01-10 complete; Plan 01-11 ready to execute
+Last activity: 2026-07-23 — Truthful access candidate `5cdbe73` passed deterministic gates and two independent exact-SHA reviews.
 
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 56%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [█████░░░░░] 50%
 | Phase 01-planlegg-dagslinjen P07 | 105m | 3 tasks | 7 files |
 | Phase 01 P08 | 43min | 3 tasks | 10 files |
 | Phase 01 P09 | 28min | 2 tasks | 3 files |
+| Phase 01 P10 | 95min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -121,10 +122,13 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 01]: Entitlement freshness stays separate from persistence: configured-native loading masks cache, while settlement restores the live store contract.
 - [Phase 01]: Post-settlement purchase and restore grants remain immediate; the next startup/resume refresh re-neutralizes access until fresh settlement.
 - [Phase 01]: Unconfigured web/dev remains an explicit ready-dev mock branch with no native freshness claim.
+- [Phase 01]: Concrete paywall benefits and trust text render only when their backing capability flag is enabled.
+- [Phase 01]: Only entry into neutral freshness invalidates an open paywall generation; direct purchase and restore grants retain activation and delayed-close flow.
+- [Phase 01]: Live Plus loss returns Planlegg to Today, while resolved paywall transitions focus the remounted trigger or main fallback.
 
 ### Pending Todos
 
-- Execute Plan 01-10 from immutable reviewed entitlement boundary `ef4e23d774c7905b44cf35bd69ab757d2c2f2142`.
+- Execute Plan 01-11 from immutable reviewed access boundary `5cdbe73d426b4473a212d2677a4eaa76286c0a97`.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -146,6 +150,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-23T19:32:06.128Z
-Stopped at: Completed 01-09-PLAN.md
+Last session: 2026-07-23T21:10:32.525Z
+Stopped at: Completed 01-10-PLAN.md
 Resume file: None
