@@ -130,6 +130,27 @@ export function buildPlanningRailRows(
   outfitAvailabilityByEventId: Readonly<Record<string, boolean>> = {},
   evaluatedPointIsos: readonly string[] = [],
 ): PlanningRailRow[] {
+  if (
+    !isRecord(coverage)
+    || !Array.isArray(coverage.points)
+    || !Array.isArray(events)
+    || !isRecord(outfitAvailabilityByEventId)
+    || Object.values(outfitAvailabilityByEventId).some((value) => typeof value !== 'boolean')
+    || !Array.isArray(evaluatedPointIsos)
+    || evaluatedPointIsos.some((iso) => typeof iso !== 'string')
+    || !['complete-hourly', 'sampled', 'gapped', 'stale', 'unavailable'].includes(coverage.status)
+    || coverage.points.some((point) => (
+      !isRecord(point)
+      || typeof point.iso !== 'string'
+      || typeof point.epochMs !== 'number'
+      || !Number.isFinite(point.epochMs)
+      || parseStrictIsoInstant(point.iso) !== point.epochMs
+      || typeof point.localDate !== 'string'
+      || typeof point.localTime !== 'string'
+    ))
+  ) {
+    return [];
+  }
   if (coverage.status === 'unavailable') return [];
   const coveredPoints = canonicalPoints(coverage);
   const evaluatedEpochs = new Set(
@@ -139,7 +160,6 @@ export function buildPlanningRailRows(
   );
   const points = coveredPoints.filter((point) => evaluatedEpochs.has(point.epochMs));
   if (points.length < 2) return [];
-  if (!Array.isArray(events)) return [];
   const canonicalEvents = events as readonly PlanningChangeEvent[];
 
   const eventContentById = new Map<string, string>();
