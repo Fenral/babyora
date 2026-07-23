@@ -25,9 +25,16 @@ void initAnalytics().then(() => {
 // kjøres rett etter (suksess ELLER feil) for å hente reell entitlement-
 // status inn i subscription-store ved oppstart — web/dev uten native+
 // konfigurert RevenueCat er no-op og beholder mock-verdien.
-void initRevenueCat()
-  .catch(console.warn)
-  .then(() => syncPremiumEntitlement());
+async function initializeRevenueCatAccess(): Promise<void> {
+  try {
+    await initRevenueCat();
+  } catch (error) {
+    console.warn(error);
+  }
+  await syncPremiumEntitlement();
+}
+
+void initializeRevenueCatAccess();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
