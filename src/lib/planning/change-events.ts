@@ -92,8 +92,10 @@ function serializedTransition(transition: PlanningTransition | undefined): reado
 }
 
 function eventIdentityContent(event: Omit<PlanningChangeEvent, 'id'>): string {
+  const epochMs = parseStrictIsoInstant(event.atIso);
+  const canonicalInstant = epochMs === null ? event.atIso : new Date(epochMs).toISOString();
   return JSON.stringify([
-    event.atIso,
+    canonicalInstant,
     event.kind,
     [...event.addedGarments],
     [...event.removedGarments],
@@ -134,6 +136,10 @@ function normalizedPoint(point: PlanningPoint): PlanningPoint | null {
     transitionContextId,
     ...(transition ? { transition } : {}),
   };
+}
+
+export function isValidPlanningPoint(point: PlanningPoint): boolean {
+  return normalizedPoint(point) !== null;
 }
 
 function pointCanonicalContent(point: PlanningPoint): string {

@@ -1,3 +1,4 @@
+import { parseStrictIsoInstant } from '../met-no/types.js';
 import type { ForecastCoverage, ForecastCoveragePoint } from './coverage.js';
 import type { ChangeEvent, PlanningChangeEvent } from './change-events.js';
 
@@ -82,16 +83,27 @@ export function buildPlanningRailRows(
   coverage: ForecastCoverage,
   events: readonly PlanningChangeEvent[],
   outfitAvailabilityByEventId: Readonly<Record<string, boolean>> = {},
+  evaluatedPointIsos: readonly string[] = [],
 ): PlanningRailRow[] {
   if (coverage.status === 'unavailable') return [];
-  const points = canonicalPoints(coverage);
-  if (points.length === 0) return [];
+  const coveredPoints = canonicalPoints(coverage);
+  const evaluatedEpochs = new Set(
+    evaluatedPointIsos
+      .map(parseStrictIsoInstant)
+      .filter((epochMs): epochMs is number => epochMs !== null),
+  );
+  const points = coveredPoints.filter((point) => evaluatedEpochs.has(point.epochMs));
+  if (points.length < 2) return [];
 
-  const pointIndexByIso = new Map(points.map((point, index) => [point.iso, index]));
+  const pointIndexByEpoch = new Map(points.map((point, index) => [point.epochMs, index]));
+  const eventPointIndex = (event: PlanningChangeEvent): number | undefined => {
+    const epochMs = parseStrictIsoInstant(event.atIso);
+    return epochMs === null ? undefined : pointIndexByEpoch.get(epochMs);
+  };
   const sortedEvents = [...events]
-    .filter((event) => pointIndexByIso.has(event.atIso))
+    .filter((event) => eventPointIndex(event) !== undefined)
     .sort((a, b) => {
-      const indexDelta = pointIndexByIso.get(a.atIso)! - pointIndexByIso.get(b.atIso)!;
+      const indexDelta = eventPointIndex(a)! - eventPointIndex(b)!;
       if (indexDelta !== 0) return indexDelta;
       return a.id.localeCompare(b.id);
     })
@@ -106,7 +118,7 @@ export function buildPlanningRailRows(
   let eventIndex = 0;
 
   while (eventIndex < sortedEvents.length) {
-    const pointIndex = pointIndexByIso.get(sortedEvents[eventIndex]!.atIso)!;
+    const pointIndex = eventPointIndex(sortedEvents[eventIndex]!)!;
     if (
       (previousEventPointIndex === null && pointIndex > 0)
       || (previousEventPointIndex !== null && pointIndex - previousEventPointIndex > 1)
@@ -117,7 +129,7 @@ export function buildPlanningRailRows(
 
     while (
       eventIndex < sortedEvents.length
-      && pointIndexByIso.get(sortedEvents[eventIndex]!.atIso) === pointIndex
+      && eventPointIndex(sortedEvents[eventIndex]!) === pointIndex
     ) {
       rows.push(changeRow(sortedEvents[eventIndex]!, outfitAvailabilityByEventId));
       eventIndex += 1;

@@ -2,6 +2,7 @@ import { parseStrictIsoInstant } from '../met-no/types.js';
 import type { ForecastCoverage } from './coverage.js';
 import {
   derivePlanningChangeEvents,
+  isValidPlanningPoint,
   type PlanningChangeEvent,
   type PlanningPoint,
 } from './change-events.js';
@@ -136,12 +137,14 @@ function canonicalPlanningPoints(
   points: readonly PlanningPoint[],
   coverage: ForecastCoverage,
 ): readonly PlanningPoint[] | null {
-  if (points.length === 0) return null;
-  const coveredIsos = new Set(coverage.points.map((point) => point.iso));
+  if (points.length < 2) return null;
+  const coveredEpochs = new Set(coverage.points.map((point) => point.epochMs));
+  const contentByFingerprint = new Map<string, string>();
   const normalized: PlanningPoint[] = [];
 
   for (const point of points) {
-    if (parseStrictIsoInstant(point.atIso) === null || !coveredIsos.has(point.atIso)) return null;
+    const pointEpoch = parseStrictIsoInstant(point.atIso);
+    if (pointEpoch === null || !coveredEpochs.has(pointEpoch) || !isValidPlanningPoint(point)) return null;
     const finalizedFingerprint = normalizeText(point.finalizedFingerprint);
     const cause = normalizeText(point.cause);
     const transitionContextId = normalizeText(point.transitionContextId);
@@ -149,6 +152,10 @@ function canonicalPlanningPoints(
     const orderedGarments = normalizeList(point.orderedGarments);
     const equipment = normalizeList(point.equipment);
     if (orderedGarments.length === 0 && equipment.length === 0) return null;
+    const visibleContent = JSON.stringify([orderedGarments, equipment]);
+    const priorContent = contentByFingerprint.get(finalizedFingerprint);
+    if (priorContent !== undefined && priorContent !== visibleContent) return null;
+    contentByFingerprint.set(finalizedFingerprint, visibleContent);
     normalized.push(Object.freeze({
       atIso: point.atIso,
       finalizedFingerprint,
@@ -222,6 +229,7 @@ function evaluatedAdvice(
     coverage,
     events,
     input.outfitAvailabilityByEventId,
+    points.map((point) => point.atIso),
   ));
   const candidates = events.filter(
     (event) => parseStrictIsoInstant(event.atIso)! >= evaluatedAtEpoch,
@@ -249,6 +257,19 @@ export function buildPlanViewModel(input: PlanViewModelInput): PlanViewModel {
     || !coverage
     || coverage.status === 'unavailable'
     || coverage.points.length === 0
+  ) {
+    return errorModel();
+  }
+  const coverageEpochs = coverage.points.map((point) => point.epochMs).sort((a, b) => a - b);
+  const coverageStart = coverageEpochs[0]!;
+  const coverageEnd = coverageEpochs.at(-1)!;
+  if (
+    evaluatedAtEpoch < coverageStart
+    || evaluatedAtEpoch > coverageEnd
+    || (
+      (coverage.status === 'sampled' || coverage.status === 'gapped')
+      && !coverageEpochs.includes(evaluatedAtEpoch)
+    )
   ) {
     return errorModel();
   }
