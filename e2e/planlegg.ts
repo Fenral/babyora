@@ -28,6 +28,13 @@ const PLANLEGG_CASES = Object.freeze({
     viewport: Object.freeze({ width: 390, height: 844 }),
     timeZone: 'Europe/Oslo',
   }),
+  'automatic-location': Object.freeze({
+    id: 'planlegg-automatic-location-v1',
+    path: '/',
+    viewport: Object.freeze({ width: 390, height: 844 }),
+    timeZone: 'Europe/Oslo',
+    containment: PLANLEGG_E2E_FIXTURES['location-containment'].containment,
+  }),
   'composition-primitives': Object.freeze({
     id: 'planlegg-composition-primitives-v1',
     path: '/?seed=demo',
@@ -589,7 +596,7 @@ async function installLocationContainmentPage(
         data: forecast,
       }));
       localStorage.setItem('babyora.subscription', JSON.stringify({
-        state: { isPremium: true, lastSyncedAt: 1 },
+        state: { isPremium: false, lastSyncedAt: 1 },
         version: 0,
       }));
 
@@ -734,6 +741,224 @@ async function runLocationContainment(
   }
   console.log(
     `LOCATION CONTAINMENT: counters=${JSON.stringify(finalCounters)} childBytesEqual=true mode=manual media=none`,
+  );
+}
+
+async function installAutomaticLocationPage(
+  page: Page,
+  fixture: PlanleggE2EFixture,
+): Promise<void> {
+  const containment = fixture.containment;
+  if (!containment) throw new Error('automatic-location-fixturen mangler lagringskontrakt');
+  const fixedForecast = buildForecast('many');
+  await page.clock.install({ time: FIXED_NOW });
+  await page.addInitScript(
+    ({ stored, forecast }) => {
+      const counters = { permission: 0, geolocation: 0, geocode: 0, forecast: 0 };
+      const positions = [
+        { lat: 59.9139, lon: 10.7522 },
+        { lat: 60.3913, lon: 5.3221 },
+      ];
+      Object.defineProperty(window, '__locationContainmentCounters', {
+        configurable: false,
+        value: counters,
+      });
+      localStorage.setItem('babyora:children:v2', stored.childrenStorageRaw);
+      localStorage.setItem('babyora:activeChildId:v2', stored.activeChildId);
+      localStorage.setItem('babyora.location-pref', JSON.stringify({
+        state: { mode: 'manual', automaticPlace: null, generation: 0 },
+        version: 0,
+      }));
+      localStorage.setItem(stored.forecastCacheKey, JSON.stringify({
+        version: 1,
+        fetchedAt: stored.forecastFetchedAt,
+        data: forecast,
+      }));
+      localStorage.setItem('babyora.subscription', JSON.stringify({
+        state: { isPremium: true, lastSyncedAt: 1 },
+        version: 0,
+      }));
+      const getCurrentPosition = window.Function(
+        'counters',
+        'positions',
+        `return function getCurrentPosition(success) {
+          var index = Math.min(counters.geolocation, positions.length - 1);
+          var position = positions[index];
+          counters.geolocation += 1;
+          success({
+            coords: {
+              latitude: position.lat,
+              longitude: position.lon,
+              accuracy: 5,
+              altitude: null,
+              altitudeAccuracy: null,
+              heading: null,
+              speed: null
+            },
+            timestamp: Date.now()
+          });
+        };`,
+      )(counters, positions) as Geolocation['getCurrentPosition'];
+      Object.defineProperty(navigator, 'geolocation', {
+        configurable: true,
+        value: {
+          getCurrentPosition,
+          watchPosition: window.Function('return function watchPosition() { return 1; };')(),
+          clearWatch: window.Function('return function clearWatch() {};')(),
+        },
+      });
+    },
+    { stored: containment, forecast: fixedForecast },
+  );
+  await page.route('**/api/forecast?**', async (route) => {
+    await page.evaluate(() => {
+      const target = window as typeof window & {
+        __locationContainmentCounters: { forecast: number };
+      };
+      target.__locationContainmentCounters.forecast += 1;
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(fixedForecast),
+    });
+  });
+  await page.route(/nominatim\.openstreetmap\.org\/reverse/u, async (route) => {
+    const url = new URL(route.request().url());
+    const lat = Number(url.searchParams.get('lat'));
+    const city = lat < 60 ? 'Oslo' : 'Bergen';
+    await page.evaluate(() => {
+      const target = window as typeof window & {
+        __locationContainmentCounters: { geocode: number };
+      };
+      target.__locationContainmentCounters.geocode += 1;
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        lat: String(lat),
+        lon: url.searchParams.get('lon'),
+        display_name: city,
+        address: { city },
+      }),
+    });
+  });
+}
+
+async function runAutomaticLocation(
+  page: Page,
+  fixture: PlanleggE2EFixture,
+): Promise<void> {
+  const containment = fixture.containment;
+  if (!containment) throw new Error('automatic-location-fixturen mangler lagringskontrakt');
+  const failures = collectFailures(page);
+  await page.goto(`${BASE_URL}${fixture.path}`, { waitUntil: 'domcontentloaded' });
+  const navigation = page.getByRole('navigation').first();
+  await navigation.waitFor({ state: 'visible', timeout: 15_000 });
+  const startup = await readLocationContainmentCounters(page);
+  if (startup.geolocation !== 0 || startup.geocode !== 0) {
+    throw new Error(`Manual startup utførte lokasjons-I/O: ${JSON.stringify(startup)}`);
+  }
+
+  await navigation.getByRole('button', { name: /^Familie/u }).click();
+  const autoSwitch = page.getByRole('switch', { name: 'Bruk posisjon automatisk' });
+  await autoSwitch.waitFor({ state: 'visible', timeout: 15_000 });
+  if (await autoSwitch.getAttribute('aria-checked') !== 'false') {
+    throw new Error('Manual-fixturen startet ikke med auto av');
+  }
+  await autoSwitch.click();
+  const permissionDialog = page.getByRole('dialog', { name: 'Bruk posisjon automatisk' });
+  await permissionDialog.waitFor({ state: 'visible', timeout: 15_000 });
+  await permissionDialog.getByRole('button', { name: /^Tillat posisjon/u }).click();
+  await permissionDialog.waitFor({ state: 'detached', timeout: 15_000 });
+  try {
+    await page.waitForFunction(() => (
+      JSON.parse(localStorage.getItem('babyora.location-pref') ?? '{}')?.state?.mode === 'auto'
+    ), undefined, { timeout: 5_000 });
+  } catch {
+    const activationState = await page.evaluate(() => ({
+      pref: localStorage.getItem('babyora.location-pref'),
+      counters: (window as typeof window & {
+        __locationContainmentCounters: LocationContainmentCounters;
+      }).__locationContainmentCounters,
+    }));
+    throw new Error(`Aktivering ble ikke lagret som auto: ${JSON.stringify({
+      ...activationState,
+      failures,
+    })}`);
+  }
+  const activated = await readLocationContainmentCounters(page);
+  if (activated.geolocation !== 1 || activated.geocode !== 1) {
+    throw new Error(`Eksplisitt aktivering var ikke én stabil suksess: ${JSON.stringify(activated)}`);
+  }
+
+  const storageAfterActivation = await page.evaluate(() => ({
+    childBytes: localStorage.getItem('babyora:children:v2'),
+    locationKeys: Object.keys(localStorage)
+      .filter((key) => key.startsWith('nominatim:'))
+      .sort(),
+  }));
+  if (
+    storageAfterActivation.childBytes !== containment.childrenStorageRaw
+    || storageAfterActivation.locationKeys.length !== 0
+  ) {
+    throw new Error(`Auto-posisjon lekket til varig lagring: ${JSON.stringify({
+      childBytesEqual: storageAfterActivation.childBytes === containment.childrenStorageRaw,
+      locationKeys: storageAfterActivation.locationKeys,
+    })}`);
+  }
+
+  await navigation.getByRole('button', { name: /^Hjem/u }).click();
+  await page.getByText('Nåværende sted · Oslo', { exact: true })
+    .waitFor({ state: 'visible', timeout: 15_000 });
+  const currentCta = page.getByRole('button', { name: 'Se dagens antrekk' });
+  await currentCta.waitFor({ state: 'visible', timeout: 15_000 });
+  await page.waitForFunction(() => {
+    const button = [...document.querySelectorAll('button')]
+      .find((candidate) => candidate.textContent?.includes('Se dagens antrekk'));
+    return button instanceof HTMLButtonElement && !button.disabled;
+  });
+  await currentCta.click();
+  const currentDialog = page.getByRole('dialog', { name: 'Mina Test' });
+  await currentDialog.waitFor({ state: 'visible', timeout: 15_000 });
+  const situation = currentDialog.locator('section[aria-label="Dagens situasjon"]');
+  if (!(await situation.innerText()).includes('Nåværende sted · Oslo · Utelek')) {
+    throw new Error(`Dagens Outfit mistet eksakt Oslo-kontekst: ${await situation.innerText()}`);
+  }
+
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  await page.waitForFunction(() => (
+    (window as typeof window & {
+      __locationContainmentCounters: LocationContainmentCounters;
+    }).__locationContainmentCounters.geolocation === 2
+  ));
+  await page.waitForTimeout(50);
+  if (!(await situation.innerText()).includes('Nåværende sted · Oslo · Utelek')) {
+    throw new Error('Åpent dagens Outfit ble omskrevet av en nyere posisjon');
+  }
+  await currentDialog.getByRole('button', { name: 'Lukk dagens antrekk' }).click();
+  await currentDialog.waitFor({ state: 'detached' });
+  await page.getByText('Nåværende sted · Bergen', { exact: true })
+    .waitFor({ state: 'visible', timeout: 15_000 });
+
+  const finalState = await page.evaluate(() => ({
+    childBytes: localStorage.getItem('babyora:children:v2'),
+    forbiddenKeys: Object.keys(localStorage)
+      .filter((key) => key.startsWith('nominatim:'))
+      .sort(),
+  }));
+  if (
+    finalState.childBytes !== containment.childrenStorageRaw
+    || finalState.forbiddenKeys.length !== 0
+  ) {
+    throw new Error('Posisjonsoppdatering endret fast hjem eller skrev geokode-cache');
+  }
+  if (failures.length > 0) {
+    throw new Error(`Browserfeil:\n  ${failures.join('\n  ')}`);
+  }
+  console.log(
+    `AUTOMATIC LOCATION: counters=${JSON.stringify(await readLocationContainmentCounters(page))} childBytesEqual=true media=none`,
   );
 }
 
@@ -1234,7 +1459,7 @@ async function runAccess(
   await paywall.waitFor({ state: 'visible', timeout: 15_000 });
   const paywallText = await paywall.innerText();
   if (
-    /sammen|familie|begge foreldre|alle som passer barnet|omsorgsperson|automatisk sted|overalt|snart/iu
+    /sammen|familie|begge foreldre|alle som passer barnet|omsorgsperson|overalt|snart/iu
       .test(paywallText)
   ) {
     throw new Error(`Paywall lovet deaktivert funksjon: ${paywallText}`);
@@ -1945,6 +2170,9 @@ async function main(): Promise<void> {
     } else if (caseName === 'location-containment') {
       await installLocationContainmentPage(page, fixture);
       await runLocationContainment(page, fixture);
+    } else if (caseName === 'automatic-location') {
+      await installAutomaticLocationPage(page, fixture);
+      await runAutomaticLocation(page, fixture);
     } else {
       await installDeterministicPage(
         page,

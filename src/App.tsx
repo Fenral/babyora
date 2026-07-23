@@ -28,7 +28,6 @@ import { useAutoLocationRefresh } from './hooks/useAutoLocationRefresh';
 import { BottomTabBar } from './components/BottomTabBar';
 
 import type { GuideHubTarget } from './screens/GuideHubScreen';
-import type { Recommendation } from './lib/wool-layers/types';
 import {
   isPlannedOutfitContext,
   type PlannedOutfitContext,
@@ -114,15 +113,13 @@ const TAB_TITLES: Record<TabKey, string> = {
  * Sivert sine toggle-valg på Hjem. context kan være undefined for bakover-
  * kompatibilitet (test/preview-mounts uten payload).
  */
-type PaakledningContext = {
-  recommendation: Recommendation | null;
-  activity: 'utelek' | 'vogn';
-  vognMode: 'awake' | 'sleeping';
-};
-
 type Drill =
   | null
-  | { kind: 'paakledning'; source: 'current'; context?: PaakledningContext }
+  | {
+      kind: 'paakledning';
+      source: 'current';
+      currentContext: PlannedOutfitContext;
+    }
   | {
       kind: 'paakledning';
       source: 'planned';
@@ -476,7 +473,7 @@ export default function App(): ReactElement {
       <HjemScreen
         onNavigate={onNavigate}
         onOpenSheet={(ctx) =>
-          setDrill({ kind: 'paakledning', source: 'current', context: ctx })
+          setDrill({ kind: 'paakledning', source: 'current', currentContext: ctx })
         }
       />
     );
@@ -485,7 +482,7 @@ export default function App(): ReactElement {
     routeContent = (
       <UkeScreen
         onNavigate={onNavigate}
-        onOpenSheet={() => setDrill({ kind: 'paakledning', source: 'current' })}
+        onOpenSheet={() => undefined}
         onOpenPlannedOutfit={onOpenPlannedOutfit}
       />
     );
@@ -557,9 +554,7 @@ export default function App(): ReactElement {
           ) : (
             <PaakledningScreen
               onBack={closePaakledning}
-              recommendation={activeDrill.context?.recommendation ?? null}
-              vogn={activeDrill.context?.activity}
-              vognMode={activeDrill.context?.vognMode ?? 'awake'}
+              currentContext={activeDrill.currentContext}
             />
           )}
         </Suspense>

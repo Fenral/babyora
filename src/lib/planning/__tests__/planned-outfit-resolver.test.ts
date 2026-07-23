@@ -252,8 +252,11 @@ describe('Planned Outfit resolver', () => {
     expect(appSource).toMatch(
       /source:\s*'planned';\s*plannedContext:\s*PlannedOutfitContext;\s*origin:\s*HTMLElement/u,
     );
-    expect(appSource).toMatch(/source:\s*'current';\s*context\?:\s*PaakledningContext/u);
+    expect(appSource).toMatch(
+      /source:\s*'current';\s*currentContext:\s*PlannedOutfitContext/u,
+    );
     expect(appSource).toContain('plannedContext={activeDrill.plannedContext}');
+    expect(appSource).toContain('currentContext={activeDrill.currentContext}');
     expect(appSource).toContain('origin.isConnected');
     expect(appSource).toContain('mainRef.current?.focus()');
 

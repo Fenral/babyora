@@ -173,7 +173,12 @@ export function useAutoLocationRefresh(request: Readonly<{
       mode,
       childId,
     };
-    void automaticLocationController.run(startupRequest);
+    const currentPlace = useLocationPref.getState().automaticPlace;
+    const activationAlreadyResolved = mode === 'auto'
+      && currentPlace?.childId === childId;
+    if (!activationAlreadyResolved) {
+      void automaticLocationController.run(startupRequest);
+    }
 
     let cleanup: (() => void) | undefined;
     const resume = () => {
@@ -198,7 +203,13 @@ export function useAutoLocationRefresh(request: Readonly<{
     }
     return () => {
       cleanup?.();
-      automaticLocationController.invalidate();
+      const current = useLocationPref.getState();
+      const completingSettingsActivation = mode === 'manual'
+        && current.mode === 'auto'
+        && current.automaticPlace?.childId === childId;
+      if (!completingSettingsActivation) {
+        automaticLocationController.invalidate();
+      }
     };
   }, [
     childId,

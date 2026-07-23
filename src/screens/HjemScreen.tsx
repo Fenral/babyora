@@ -67,6 +67,11 @@ import { useLocationPref, resolveEffectivePlace } from '../state/location-pref-s
 import { useAccess } from '../lib/premium/use-access';
 import { resolveRuntimeCapabilityAccess } from '../lib/premium/gating';
 import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
+import {
+  createPlannedOutfitContext,
+  PLAN_TIME_ZONE,
+  type PlannedOutfitContext,
+} from '../lib/planning/planned-outfit-context';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Konstanter / fallback
@@ -86,15 +91,9 @@ type VognMode = 'awake' | 'sleeping';
  * recommendation som Hjem allerede har beregnet (inkl. swap-overrides) +
  * gjeldende activity / vognMode. Uendret fra forrige iter.
  */
-type OpenSheetContext = {
-  recommendation: Recommendation | null;
-  activity: Activity;
-  vognMode: VognMode;
-};
-
 type HjemScreenProps = {
   onNavigate: (tab: TabKey) => void;
-  onOpenSheet: (ctx: OpenSheetContext) => void;
+  onOpenSheet: (ctx: PlannedOutfitContext) => void;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -312,6 +311,93 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     return applySwapsFinalized(engineInput, recommendation, swaps);
   }, [recommendation, engineInput, swaps]);
 
+  const currentOutfitContext = useMemo<PlannedOutfitContext | null>(() => {
+    const now = weather.now;
+    const evaluatedAt = weather.evidence?.metadata.evaluatedAt;
+    if (
+      !now
+      || !resolvedRecommendation
+      || evaluatedAt === undefined
+      || !Number.isInteger(ageMonths)
+      || ageMonths < 0
+      || ageMonths > 24
+    ) {
+      return null;
+    }
+    const orderedGarments = resolvedRecommendation.layers
+      .filter((layer) => layer.category !== 'utstyr')
+      .flatMap((layer) => layer.items);
+    const equipment = resolvedRecommendation.layers
+      .filter((layer) => layer.category === 'utstyr')
+      .flatMap((layer) => layer.items);
+    if (orderedGarments.length === 0) return null;
+    const fingerprint = `current-finalized:${JSON.stringify([
+      orderedGarments,
+      equipment,
+      now.tempC,
+      now.feelsLikeC,
+      now.windMs,
+      now.precipMmH,
+      now.symbolCode,
+    ])}`;
+    const evaluatedAtIso = new Date(evaluatedAt).toISOString();
+    try {
+      return createPlannedOutfitContext({
+        planningEventId: `current-event:${evaluatedAtIso}:${fingerprint}`,
+        transitionContextId: `current-transition:${evaluatedAtIso}:${fingerprint}`,
+        child: {
+          id: active.id,
+          name: active.name,
+          ageMonths,
+        },
+        plannedForIso: evaluatedAtIso,
+        timeZone: PLAN_TIME_ZONE,
+        place: {
+          label: cityLabel,
+          lat,
+          lon,
+          source: effectivePlace.source,
+        },
+        activity,
+        vognMode: activity === 'vogn' ? vognMode : null,
+        weather: {
+          tempC: now.tempC,
+          feelsLikeC: now.feelsLikeC,
+          windMs: now.windMs,
+          precipMmH: now.precipMmH,
+          symbolCode: now.symbolCode,
+        },
+        recommendation: {
+          id: `current-recommendation:${fingerprint}`,
+          fingerprint,
+          orderedGarments,
+          equipment,
+          finalized: true,
+        },
+        access: {
+          capability: 'today_home',
+          allowed: true,
+          reason: 'free',
+        },
+      });
+    } catch {
+      return null;
+    }
+  }, [
+    active.id,
+    active.name,
+    activity,
+    ageMonths,
+    cityLabel,
+    effectivePlace.source,
+    lat,
+    lon,
+    resolvedRecommendation,
+    vognMode,
+    weather.evidence?.metadata.evaluatedAt,
+    weather.now,
+  ]);
+
   const handleActivityChange = (next: Activity) => {
     if (next === activity) return;
     setActivity(next);
@@ -319,12 +405,9 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
   };
 
   const handleCta = () => {
+    if (!currentOutfitContext) return;
     void fire('medium');
-    onOpenSheet({
-      recommendation: resolvedRecommendation,
-      activity,
-      vognMode,
-    });
+    onOpenSheet(currentOutfitContext);
   };
 
   // ─── Avledede verdier ─────────────────────────────────────────────────────
@@ -825,6 +908,7 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
               <button
                 type="button"
                 onClick={handleCta}
+                disabled={currentOutfitContext === null}
                 aria-haspopup="dialog"
                 className="ba-hjem-press-cta ba-hjem-focus"
                 style={cta}
@@ -835,6 +919,7 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
               <motion.button
                 type="button"
                 onClick={handleCta}
+                disabled={currentOutfitContext === null}
                 aria-haspopup="dialog"
                 className="ba-hjem-focus"
                 style={cta}

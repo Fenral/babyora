@@ -66,6 +66,7 @@ export type PaakledningScreenProps = {
   condition?: string;
   vogn?: 'utelek' | 'vogn';
   vognMode?: 'awake' | 'sleeping';
+  currentContext?: PlannedOutfitContext;
   plannedContext?: PlannedOutfitContext;
 };
 
@@ -229,8 +230,10 @@ const DRESSING_SESSION_KEY = 'babyora.takeover.played';
 function PlannedPaakledningScreen({
   onBack,
   plannedContext,
+  contextKind,
 }: Pick<PaakledningScreenProps, 'onBack'> & {
   plannedContext: PlannedOutfitContext;
+  contextKind: 'current' | 'planned';
 }): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
@@ -334,8 +337,9 @@ function PlannedPaakledningScreen({
       ? 'våken'
       : null;
   const weatherLabel = symbolToLabel(plannedContext.weather.symbolCode);
+  const isCurrentContext = contextKind === 'current';
   const accessLabel = plannedContext.access.allowed
-    ? 'Planen er tilgjengelig'
+    ? isCurrentContext ? 'Dagens antrekk er tilgjengelig' : 'Planen er tilgjengelig'
     : `Planen er ikke tilgjengelig (${plannedContext.access.reason})`;
 
   return (
@@ -367,7 +371,7 @@ function PlannedPaakledningScreen({
           <button
             type="button"
             onClick={onBack}
-            aria-label="Lukk planlagt antrekk"
+            aria-label={isCurrentContext ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
             style={{
               width: 44,
               height: 44,
@@ -381,7 +385,7 @@ function PlannedPaakledningScreen({
           </button>
           <div>
             <p style={{ margin: '0 0 3px', color: 'var(--ink-500)', fontSize: 13 }}>
-              Planlagt antrekk
+              {isCurrentContext ? 'Dagens antrekk' : 'Planlagt antrekk'}
             </p>
             <h2
               id="planned-outfit-title"
@@ -395,7 +399,7 @@ function PlannedPaakledningScreen({
         </header>
 
         <section
-          aria-label="Planlagt situasjon"
+          aria-label={isCurrentContext ? 'Dagens situasjon' : 'Planlagt situasjon'}
           style={{ padding: 18, borderRadius: 20, background: 'var(--surface-pure)', marginBottom: 16 }}
         >
           <p style={{ margin: '0 0 8px', fontWeight: 700, textTransform: 'capitalize' }}>
@@ -442,7 +446,7 @@ function PlannedPaakledningScreen({
         >
           <h3 id="planned-why-title" style={{ margin: '0 0 8px' }}>Hvorfor dette antrekket?</h3>
           <p style={{ margin: 0, lineHeight: 1.55 }}>
-            Planen er laget for {weatherLabel.toLocaleLowerCase('nb-NO')}, vind på{' '}
+            {isCurrentContext ? 'Antrekket' : 'Planen'} er laget for {weatherLabel.toLocaleLowerCase('nb-NO')}, vind på{' '}
             {plannedContext.weather.windMs.toLocaleString('nb-NO')} m/s og nedbør på{' '}
             {plannedContext.weather.precipMmH.toLocaleString('nb-NO')} mm/t.
           </p>
@@ -946,11 +950,13 @@ function CurrentPaakledningScreen({
 }
 
 export function PaakledningScreen(props: PaakledningScreenProps): ReactElement {
-  if (props.plannedContext) {
+  const exactContext = props.currentContext ?? props.plannedContext;
+  if (exactContext) {
     return (
       <PlannedPaakledningScreen
         onBack={props.onBack}
-        plannedContext={props.plannedContext}
+        plannedContext={exactContext}
+        contextKind={props.currentContext ? 'current' : 'planned'}
       />
     );
   }
