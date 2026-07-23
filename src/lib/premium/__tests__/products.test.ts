@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import {
   DEFAULT_PLAN,
@@ -5,7 +7,6 @@ import {
   PRODUCTS,
   PRODUCT_IDS,
   TRIGGER_HEADLINE,
-  TRUST_LINE_COPY,
   VALUE_ANCHOR_COPY,
   priceTransparencyText,
 } from '../products';
@@ -95,7 +96,12 @@ describe('Copy-konstanter', () => {
     expect(VALUE_ANCHOR_COPY).toMatch(/ullbody/);
   });
 
-  it('tillitslinje nevner begge foreldre', () => {
-    expect(TRUST_LINE_COPY).toMatch(/begge foreldre/i);
+  it('legacy tillitslinje og familie/caregiver-løfter er fjernet fra products', () => {
+    const source = readFileSync(
+      fileURLToPath(new URL('../products.ts', import.meta.url)),
+      'utf8',
+    );
+    expect(source).not.toContain('TRUST_LINE_COPY');
+    expect(source).not.toMatch(/begge foreldre|alle som passer barnet|omsorgsperson/i);
   });
 });
