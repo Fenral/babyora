@@ -48,11 +48,12 @@ const PLANLEGG_CASES = Object.freeze({
   }),
 }) satisfies Readonly<Record<string, PlanleggE2EFixture>>;
 type PlanleggCase = keyof typeof PLANLEGG_CASES;
-type ForecastMode = 'zero' | 'one' | 'many';
-type ForecastDelivery = 'success' | 'pending';
+type ForecastMode = 'zero' | 'one' | 'many' | 'partial';
+type ForecastDelivery = 'success' | 'pending' | 'error';
 type ForecastState = {
   mode: ForecastMode;
   delivery?: ForecastDelivery;
+  temperatureC?: number;
 };
 
 const SUPPORTED_CASES = Object.keys(PLANLEGG_CASES);
@@ -176,7 +177,12 @@ function parseCase(argv: readonly string[]): PlanleggCase {
   return selected as PlanleggCase;
 }
 
-function fixtureTemperature(localHour: number, mode: ForecastMode): number {
+function fixtureTemperature(
+  localHour: number,
+  mode: ForecastMode,
+  temperatureC?: number,
+): number {
+  if (temperatureC !== undefined) return temperatureC;
   if (mode === 'zero') return 4;
   if (mode === 'one') return localHour < 15 ? -8 : 14;
   if (localHour < 8) return -12;
@@ -185,7 +191,7 @@ function fixtureTemperature(localHour: number, mode: ForecastMode): number {
   return -3;
 }
 
-function buildForecast(mode: ForecastMode): unknown {
+function buildForecast(mode: ForecastMode, temperatureC?: number): unknown {
   const start = Date.parse('2026-02-11T23:00:00.000Z');
   const timeseries = Array.from({ length: 72 }, (_, index) => {
     const instant = new Date(start + index * 60 * 60 * 1000);
@@ -200,7 +206,7 @@ function buildForecast(mode: ForecastMode): unknown {
       data: {
         instant: {
           details: {
-            air_temperature: fixtureTemperature(localHour, mode),
+            air_temperature: fixtureTemperature(localHour, mode, temperatureC),
             wind_speed: mode === 'many' && localHour >= 16 ? 6 : 2,
             wind_from_direction: 180,
             relative_humidity: 72,
@@ -213,7 +219,7 @@ function buildForecast(mode: ForecastMode): unknown {
         },
       },
     };
-  });
+  }).filter((_point, index) => mode !== 'partial' || index % 3 === 0);
   return {
     properties: {
       meta: {
@@ -230,6 +236,38 @@ function buildForecast(mode: ForecastMode): unknown {
       timeseries,
     },
   };
+}
+
+function parseRgb(value: string): readonly [number, number, number] {
+  const hex = /^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/iu.exec(value.trim());
+  if (hex) {
+    return [
+      Number.parseInt(hex[1]!, 16),
+      Number.parseInt(hex[2]!, 16),
+      Number.parseInt(hex[3]!, 16),
+    ];
+  }
+  const channels = value.match(/[\d.]+/gu)?.slice(0, 3).map(Number);
+  if (!channels || channels.length !== 3) throw new Error(`Ukjent rgb: ${value}`);
+  return channels as [number, number, number];
+}
+
+function relativeLuminance([red, green, blue]: readonly [number, number, number]): number {
+  const linear = [red, green, blue].map((channel) => {
+    const normalized = channel / 255;
+    return normalized <= 0.04045
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * linear[0]! + 0.7152 * linear[1]! + 0.0722 * linear[2]!;
+}
+
+function contrastRatio(foreground: string, background: string): number {
+  const foregroundLuminance = relativeLuminance(parseRgb(foreground));
+  const backgroundLuminance = relativeLuminance(parseRgb(background));
+  const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+  const darker = Math.min(foregroundLuminance, backgroundLuminance);
+  return (lighter + 0.05) / (darker + 0.05);
 }
 
 async function waitForServer(
@@ -340,15 +378,26 @@ async function installDeterministicPage(
       state: { isPremium: true, lastSyncedAt: 1 },
       version: 0,
     }));
-    for (const key of Object.keys(localStorage)) {
-      if (key.startsWith('metno:')) localStorage.removeItem(key);
-    }
   });
   await page.route('**/api/forecast?**', async (route) => {
+    while (forecastState.delivery === 'pending') {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    if (forecastState.delivery === 'error') {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'deterministic forecast failure' }),
+      });
+      return;
+    }
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(buildForecast(forecastState.mode)),
+      body: JSON.stringify(buildForecast(
+        forecastState.mode,
+        forecastState.temperatureC,
+      )),
     });
   });
 }
@@ -372,6 +421,8 @@ async function reloadPlanlegg(
   mode: ForecastMode,
 ): Promise<void> {
   forecastState.mode = mode;
+  forecastState.delivery = 'success';
+  forecastState.temperatureC = undefined;
   await page.evaluate(() => {
     for (const key of Object.keys(localStorage)) {
       if (key.startsWith('metno:')) localStorage.removeItem(key);
@@ -725,6 +776,7 @@ async function runCompositionMatrix(
   fixture: PlanleggE2EFixture,
   forecastState: ForecastState,
 ): Promise<void> {
+  const failures = collectFailures(page);
   forecastState.delivery = 'pending';
   await openPlanlegg(page, fixture.path);
   const loadingStatus = page.getByRole('status').filter({
@@ -735,6 +787,256 @@ async function runCompositionMatrix(
     throw new Error(
       'RED_PLANLEGG_STATE_MATRIX_CONTRACT: loading-evidens kan ikke holdes og observeres deterministisk',
     );
+  }
+
+  const liveOwnerSelector = '[role="status"][aria-live="polite"]';
+  if (await page.locator(liveOwnerSelector).count() !== 1) {
+    throw new Error('Loading skal ha nøyaktig én høflig live-eier');
+  }
+
+  forecastState.delivery = 'error';
+  await page.evaluate(() => {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('metno:')) localStorage.removeItem(key);
+    }
+  });
+  await openPlanlegg(page, fixture.path);
+  const retry = page.getByRole('button', { name: 'Prøv å hente planen', exact: true });
+  await retry.waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await page.getByRole('heading', { name: 'Vi fikk ikke oppdatert planen' }).count() !== 1
+    || await page.locator(liveOwnerSelector).count() !== 1
+  ) {
+    throw new Error('No-cache-feil mangler heading, retry eller eneste live-eier');
+  }
+  forecastState.delivery = 'success';
+  forecastState.mode = 'many';
+  await retry.click();
+  await page.locator('.planlegg-screen__answer').waitFor({ state: 'visible', timeout: 15_000 });
+  if (await page.locator(liveOwnerSelector).count() !== 0) {
+    throw new Error('Ready skal ikke beholde en støyende live-eier');
+  }
+
+  forecastState.delivery = 'error';
+  await page.goto(`${BASE_URL}${fixture.path}`, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(({ key, fetchedAt, data }) => {
+    localStorage.setItem(key, JSON.stringify({
+      version: 1,
+      fetchedAt,
+      data,
+    }));
+  }, {
+    key: 'metno:63.43,10.40',
+    fetchedAt: FIXED_NOW.getTime() - 2 * 60 * 60 * 1000,
+    data: buildForecast('many'),
+  });
+  const planButton = page
+    .getByRole('navigation')
+    .first()
+    .getByRole('button', { name: /^Planlegg/u });
+  await planButton.click();
+  const offline = page.getByRole('status').filter({ hasText: 'Du er frakoblet' });
+  await offline.waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    !(await offline.innerText()).includes('07:30')
+    || await page.locator('.planlegg-screen__answer').count() !== 1
+    || await page.locator(liveOwnerSelector).count() !== 1
+  ) {
+    throw new Error(
+      `Cached offline skal beholde plan, timestamp og én live-eier: `
+      + `status=${JSON.stringify(await offline.innerText())}, `
+      + `answer=${await page.locator('.planlegg-screen__answer').count()}, `
+      + `live=${await page.locator(liveOwnerSelector).count()}`,
+    );
+  }
+
+  forecastState.delivery = 'success';
+  forecastState.mode = 'partial';
+  forecastState.temperatureC = undefined;
+  await page.evaluate(() => {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('metno:')) localStorage.removeItem(key);
+    }
+  });
+  await openPlanlegg(page, fixture.path);
+  const partial = page.getByRole('status').filter({
+    hasText: 'bare tidspunktene Babyora har værdata for',
+  });
+  await partial.waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await page.locator(liveOwnerSelector).count() !== 1
+    || await page.getByText(/hele dagen|time for time/iu).count() !== 0
+  ) {
+    throw new Error('Partial skal avgrense evidensen uten heldagspåstand');
+  }
+
+  for (const mode of ['zero', 'one', 'many'] as const) {
+    await reloadPlanlegg(page, fixture.path, forecastState, mode);
+    const rail = page.getByRole('list', { name: 'Antrekksendringer gjennom dagen' });
+    await rail.waitFor({ state: 'visible', timeout: 15_000 });
+    const disclosureCount = await rail.locator('button[aria-expanded]').count();
+    if (
+      (mode === 'zero' && disclosureCount !== 0)
+      || (mode === 'one' && disclosureCount !== 1)
+      || (mode === 'many' && disclosureCount < 2)
+    ) {
+      throw new Error(`${mode}-state fikk ${disclosureCount} disclosures`);
+    }
+  }
+
+  const screen = page.locator('.planlegg-screen');
+  const verticalOwners = await page.locator('body *').evaluateAll((elements) => (
+    elements
+      .filter((element) => {
+        const overflowY = getComputedStyle(element).overflowY;
+        return overflowY === 'auto' || overflowY === 'scroll';
+      })
+      .map((element) => `${element.tagName.toLowerCase()}#${element.id}.${element.className}`)
+  ));
+  if (verticalOwners.length !== 1 || !verticalOwners[0]?.startsWith('main#main.')) {
+    throw new Error(`App-main skal eie eneste vertikale scroll: ${verticalOwners.join(', ')}`);
+  }
+
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%';
+  });
+  const zoomOverflow = await page.evaluate(() => ({
+    document: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    screen: document.querySelector<HTMLElement>('.planlegg-screen')!
+      .scrollWidth - document.querySelector<HTMLElement>('.planlegg-screen')!.clientWidth,
+  }));
+  if (zoomOverflow.document > 0 || zoomOverflow.screen > 0) {
+    throw new Error(`200% tekst skapte horisontal overflow: ${JSON.stringify(zoomOverflow)}`);
+  }
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '';
+  });
+
+  const forecastToggle = page.locator('.planlegg-forecast__toggle');
+  await forecastToggle.waitFor({ state: 'visible', timeout: 15_000 });
+  if (!(await forecastToggle.innerText()).includes('Vis full værprognose')) {
+    throw new Error(`Prognose-disclosure startet i feil tilstand: ${await forecastToggle.innerText()}`);
+  }
+  await forecastToggle.focus();
+  await page.keyboard.press('Enter');
+  if (
+    await forecastToggle.getAttribute('aria-expanded') !== 'true'
+    || await page.evaluate(() => document.activeElement?.textContent?.includes('Skjul full værprognose')) !== true
+  ) {
+    throw new Error('Tastatur åpnet ikke prognosen med stabilt fokus');
+  }
+
+  const weekRadio = page.getByRole('radio', { name: 'Uke', exact: true });
+  await weekRadio.focus();
+  await page.keyboard.press('Space');
+  const todayRadio = page.getByRole('radio', { name: 'I dag', exact: true });
+  await todayRadio.focus();
+  await page.keyboard.press('Space');
+  if (
+    await todayRadio.isChecked() !== true
+    || await page.evaluate(() => (document.activeElement as HTMLInputElement | null)?.checked) !== true
+    || await page.locator(liveOwnerSelector).count() !== 0
+  ) {
+    throw new Error('Visningsbytte skal være kontrollert, fokusstabilt og stille');
+  }
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const durations = await page.evaluate(() => {
+    const values = [
+      getComputedStyle(document.querySelector<HTMLElement>('.planlegg-forecast__toggle span')!)
+        .transitionDuration,
+      getComputedStyle(document.querySelector<HTMLElement>('.plan-change-rail__detail')!)
+        .transitionDuration,
+    ];
+    return values.flatMap((value) => value.split(',')).map((value) => Number.parseFloat(value));
+  });
+  if (durations.some((duration) => duration > 0.001)) {
+    throw new Error(`Reduced motion beholdt overgang: ${durations.join(', ')}`);
+  }
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+
+  const temperatureCases = [
+    { name: 'extreme-cold', value: -50, axis: 'kald' },
+    { name: 'cold', value: -5, axis: 'kald' },
+    { name: 'mild', value: 10, axis: 'mild' },
+    { name: 'warm', value: 25, axis: 'varm' },
+    { name: 'extreme-heat', value: 55, axis: 'varm' },
+  ] as const;
+  for (const temperatureCase of temperatureCases) {
+    forecastState.delivery = 'success';
+    forecastState.mode = 'zero';
+    forecastState.temperatureC = temperatureCase.value;
+    await page.evaluate(() => {
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith('metno:')) localStorage.removeItem(key);
+      }
+    });
+    await openPlanlegg(page, fixture.path);
+    await screen.waitFor({ state: 'visible', timeout: 15_000 });
+    if (await screen.getAttribute('data-temp') !== temperatureCase.axis) {
+      throw new Error(`${temperatureCase.name} fikk feil temperaturakse`);
+    }
+  }
+
+  const contrast = async (theme: 'light' | 'dark') => {
+    await page.evaluate((nextTheme) => {
+      document.documentElement.dataset.theme = nextTheme;
+    }, theme);
+    const colors = await page.evaluate(() => {
+      const foreground = getComputedStyle(
+        document.querySelector<HTMLElement>('.planlegg-screen__verdict')!,
+      ).color;
+      const background = getComputedStyle(document.documentElement)
+        .getPropertyValue('--bg-canvas').trim();
+      return { foreground, background };
+    });
+    return contrastRatio(colors.foreground, colors.background);
+  };
+  const lightContrast = await contrast('light');
+  const darkContrast = await contrast('dark');
+  if (lightContrast < 4.5 || darkContrast < 4.5) {
+    throw new Error(`AA-kontrast avvek: light=${lightContrast}, dark=${darkContrast}`);
+  }
+
+  await page.emulateMedia({ forcedColors: 'active' });
+  const forcedRadio = page.getByRole('radio', { name: 'I dag', exact: true });
+  await forcedRadio.focus();
+  const forcedStyles = await forcedRadio
+    .locator('xpath=..')
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        borderStyle: style.borderStyle,
+        borderWidth: style.borderWidth,
+        forcedColorAdjust: style.forcedColorAdjust,
+      };
+    });
+  if (
+    forcedStyles.borderStyle === 'none'
+    || Number.parseFloat(forcedStyles.borderWidth) < 1
+    || forcedStyles.forcedColorAdjust !== 'auto'
+    || await forcedRadio.evaluate((element) => element !== document.activeElement)
+  ) {
+    throw new Error(`Forced colors mangler systemkant/fokus: ${JSON.stringify(forcedStyles)}`);
+  }
+  await page.emulateMedia({ forcedColors: 'none' });
+
+  for (const root of ['Hjem', 'Planlegg', 'Guide', 'Familie']) {
+    await page
+      .getByRole('navigation')
+      .first()
+      .getByRole('button', { name: new RegExp(`^${root}`, 'u') })
+      .click();
+    await page.waitForTimeout(180);
+    await assertSingleMain(page);
+    const routeOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    if (routeOverflow > 0) throw new Error(`${root}-roten fikk horisontal overflow`);
+  }
+
+  if (failures.length > 0) {
+    throw new Error(`Browserfeil:\n  ${failures.join('\n  ')}`);
   }
 }
 
