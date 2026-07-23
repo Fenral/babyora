@@ -103,6 +103,7 @@ function timeLabel(atIso: string): string {
   const instant = new Date(atIso);
   if (Number.isNaN(instant.getTime())) return atIso;
   return instant.toLocaleTimeString('nb-NO', {
+    timeZone: 'Europe/Oslo',
     hour: '2-digit',
     minute: '2-digit',
   });

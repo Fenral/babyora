@@ -244,4 +244,14 @@ describe('PlanChangeRail controlled semantic contract', () => {
     expect(source).toContain('decidePlanningInteraction');
     expect(source).toContain('dispatchPlanningInteraction');
   });
+
+  it('RED_OSLO_TIME_AND_DECLARED_TOKEN_CONTRACT', async () => {
+    const [componentModule, cssModule] = await Promise.all([
+      import(/* @vite-ignore */ '../PlanChangeRail.tsx?raw') as Promise<{ default: string }>,
+      import(/* @vite-ignore */ '../PlanChangeRail.css?raw') as Promise<{ default: string }>,
+    ]);
+
+    expect(componentModule.default).toContain("timeZone: 'Europe/Oslo'");
+    expect(cssModule.default, 'UNDECLARED_INK_600_TOKEN').not.toContain('--ink-600');
+  });
 });

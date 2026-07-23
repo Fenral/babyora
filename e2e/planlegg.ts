@@ -420,6 +420,15 @@ async function runExactContext(
   ) {
     throw new Error(`Planlagt dato avvek fra event ${selectedEventTime}: ${situationText}`);
   }
+  const selectedLocalHour = Number(new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Oslo',
+    hour: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(selectedEventTime)));
+  const expectedTemperature = fixtureTemperature(selectedLocalHour, 'many');
+  if (!situationText.includes(`${expectedTemperature}°`)) {
+    throw new Error(`Planlagt temperatur avvek: forventet ${expectedTemperature}°, fikk ${situationText}`);
+  }
   if (
     await dialog
       .locator('section[aria-labelledby="planned-garments-title"] ol > li')
@@ -429,6 +438,17 @@ async function runExactContext(
   }
   if (!(await dialog.textContent())?.includes('Tilgang: future_plan')) {
     throw new Error('Planlagt tilgangsdimensjon mangler');
+  }
+  const whyText = await dialog
+    .locator('section[aria-labelledby="planned-why-title"]')
+    .innerText();
+  const expectedWind = selectedLocalHour >= 16 ? 6 : 2;
+  const expectedPrecipitation = selectedLocalHour >= 12 && selectedLocalHour < 15 ? 2 : 0;
+  if (
+    !whyText.includes(`${expectedWind} m/s`)
+    || !whyText.includes(`${expectedPrecipitation} mm/t`)
+  ) {
+    throw new Error(`Planlagt vind/nedbør avvek: ${whyText}`);
   }
 
   await dialog.getByRole('button', { name: 'Lukk planlagt antrekk' }).click();
