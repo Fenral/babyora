@@ -42,15 +42,19 @@ export type AutoLocationController = Readonly<{
 }>;
 
 function requestAllowed(request: AutoLocationRequest): boolean {
-  return request.childId.trim().length > 0
-    && request.runtimeDecision.capability === 'automatic_location'
-    && request.runtimeDecision.state === 'allowed'
-    && request.runtimeDecision.allowed
-    && request.runtimeDecision.implementationAvailable
+  return requestAccessAllowed(request)
     && (
       request.mode === 'auto'
       || (request.mode === 'manual' && request.intent === 'settings-activation')
     );
+}
+
+function requestAccessAllowed(request: AutoLocationRequest): boolean {
+  return request.childId.trim().length > 0
+    && request.runtimeDecision.capability === 'automatic_location'
+    && request.runtimeDecision.state === 'allowed'
+    && request.runtimeDecision.allowed
+    && request.runtimeDecision.implementationAvailable;
 }
 
 function requestKey(request: AutoLocationRequest): string {
@@ -71,6 +75,7 @@ export function createAutoLocationController(
   let token = 0;
   let inFlight: Readonly<{
     key: string;
+    acceptsManualResume: boolean;
     promise: Promise<AutoLocationOutcome>;
   }> | null = null;
 
@@ -81,11 +86,21 @@ export function createAutoLocationController(
   };
 
   const run = (request: AutoLocationRequest): Promise<AutoLocationOutcome> => {
+    const key = requestKey(request);
+    if (
+      inFlight?.key === key
+      && inFlight.acceptsManualResume
+      && request.intent === 'resume'
+      && request.mode === 'manual'
+      && requestAccessAllowed(request)
+      && liveRequestAllowed(request)
+    ) {
+      return inFlight.promise;
+    }
     if (!requestAllowed(request) || !liveRequestAllowed(request)) {
       invalidate();
       return Promise.resolve({ status: 'blocked' });
     }
-    const key = requestKey(request);
     if (inFlight?.key === key) return inFlight.promise;
     if (inFlight) invalidate();
 
@@ -93,8 +108,13 @@ export function createAutoLocationController(
     const generation = dependencies.begin();
     const current = () => runToken === token;
     const promise = Promise.resolve()
-      .then(() => dependencies.locate())
-      .then(async (position): Promise<AutoLocationOutcome> => {
+      .then(async (): Promise<AutoLocationOutcome> => {
+        if (!current()) return { status: 'superseded' };
+        if (!liveRequestAllowed(request)) {
+          invalidate();
+          return { status: 'superseded' };
+        }
+        const position = await dependencies.locate();
         if (!current()) return { status: 'superseded' };
         if (!liveRequestAllowed(request)) {
           invalidate();
@@ -146,7 +166,12 @@ export function createAutoLocationController(
       .finally(() => {
         if (inFlight?.promise === promise) inFlight = null;
       });
-    inFlight = { key, promise };
+    inFlight = {
+      key,
+      acceptsManualResume: request.intent === 'settings-activation'
+        && request.mode === 'manual',
+      promise,
+    };
     return promise;
   };
 
