@@ -5,6 +5,7 @@ import type { Activity } from '../wool-layers/types.js';
 export const PLAN_TIME_ZONE = 'Europe/Oslo' as const;
 
 const PLANNED_CONTEXT_SCHEMA_VERSION = 1 as const;
+const ownedPlannedContexts = new WeakSet<object>();
 
 const ACTIVITIES: readonly Activity[] = ['vogn', 'baeresele', 'utelek', 'soevn'];
 const PLACE_SOURCES = ['configured-place', 'fixed-home', 'automatic'] as const;
@@ -140,7 +141,7 @@ function normalizedText(value: unknown, path: string): string {
   if (normalized.length === 0) fail(path, 'must not be empty');
   if (
     /\p{Cc}/u.test(normalized)
-    || /[\u200b\u200e\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/u.test(normalized)
+    || /[\u061c\u200b\u200e\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/u.test(normalized)
   ) {
     fail(path, 'must not contain control characters');
   }
@@ -443,7 +444,7 @@ export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext
     ) {
       fail('plannedContextId', 'must differ from caller-supplied identifiers');
     }
-    return recursivelyFreeze({
+    const context = recursivelyFreeze({
       schemaVersion: PLANNED_CONTEXT_SCHEMA_VERSION,
       plannedContextId,
       planningEventId: normalized.planningEventId,
@@ -462,6 +463,8 @@ export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext
       },
       access: { ...normalized.access },
     });
+    ownedPlannedContexts.add(context);
+    return context;
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('Invalid PlannedOutfitContext input')) {
       throw error;
@@ -474,7 +477,13 @@ export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext
 
 export function isPlannedOutfitContext(value: unknown): value is PlannedOutfitContext {
   try {
-    if (!isRecord(value) || value.schemaVersion !== PLANNED_CONTEXT_SCHEMA_VERSION) return false;
+    if (
+      !isRecord(value)
+      || !ownedPlannedContexts.has(value)
+      || value.schemaVersion !== PLANNED_CONTEXT_SCHEMA_VERSION
+    ) {
+      return false;
+    }
     const expected = createPlannedOutfitContext({
       planningEventId: value.planningEventId,
       transitionContextId: value.transitionContextId,

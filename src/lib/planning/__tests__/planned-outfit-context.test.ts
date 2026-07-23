@@ -418,7 +418,7 @@ describe('Planned Outfit exact-context contracts', () => {
     expect(accessorWeather.tempC).toBe(temperatureBacking);
   });
 
-  it('RED_GUARD_REQUIRES_FACTORY_OWNERSHIP_FOR_PROXY_WRAPPERS', () => {
+  it('requires factory ownership before the guard accepts a planned context', () => {
     const valid = createPlannedOutfitContext(completeInput());
     const rootProxy = new Proxy(valid, {
       get(target, property, receiver) {
