@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Completed 01-05-PLAN.md
-last_updated: "2026-07-23T15:03:51.431Z"
+stopped_at: Completed 01-06-PLAN.md
+last_updated: "2026-07-23T16:21:59.370Z"
 last_activity: 2026-07-23
-last_activity_desc: Exact Plan 01-05 candidate `cfbba25` passed all deterministic gates and two independent high-risk reviews.
+last_activity_desc: Controlled exact Planlegg candidate `aeaaebf` passed all deterministic gates and two independent exact-SHA reviews.
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 18
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 ## Current Position
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
-Plan: 6 of 18 in current phase
-Status: Plan 01-05 complete; Plan 01-06 ready to execute
-Last activity: 2026-07-23 — Exact Plan 01-05 candidate `cfbba25` passed all deterministic gates and two independent high-risk reviews.
+Plan: 7 of 18 in current phase
+Status: Plan 01-06 complete; Plan 01-07 ready to execute
+Last activity: 2026-07-23 — Controlled exact Planlegg candidate `aeaaebf` passed all deterministic gates and two independent exact-SHA reviews.
 
-Progress: [███░░░░░░░] 28%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [███░░░░░░░] 28%
 | Phase 01 P03 | 89min | 3 tasks | 8 files |
 | Phase 01 P04 | 65min | 2 tasks | 2 files |
 | Phase 01-planlegg-dagslinjen P05 | 87min | 2 tasks | 4 files |
+| Phase 01-planlegg-dagslinjen P06 | 73min | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,10 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 01]: Plan 01-05: Canonical membership requires a frozen event array and a plain-data structured event snapshot before identity comparison.
 - [Phase 01]: Plan 01-05: Denied planned access renders only a neutral focused dialog before any context or advice materialization.
 - [Phase 01]: Plan 01-05: Live UkeScreen-to-App planned navigation remains deferred to the atomic Plan 01-06 migration.
+- [Phase 01]: Planlegg rail stays ID-only; exact DTO lookup remains in Uke and crosses only the validated App callback.
+- [Phase 01]: Planning fails closed outside child age 0-24 instead of clamping only the DTO.
+- [Phase 01]: App irreversibly closes planned drills from supplied loading or denied access; Plan 01-09 retains entitlement freshness ownership.
+- [Phase 01]: All six marker kinds and fallback are exhaustive server contracts; browser evidence uses reachable canonical Uke facts.
 
 ### Pending Todos
 
@@ -128,6 +133,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-23T15:03:51.417Z
-Stopped at: Completed 01-05-PLAN.md
+Last session: 2026-07-23T16:21:59.360Z
+Stopped at: Completed 01-06-PLAN.md
 Resume file: None

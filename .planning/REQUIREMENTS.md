@@ -45,7 +45,7 @@ These 14 requirements are the complete committed scope for this bounded feature 
 
 ### Interface and Access
 
-- [ ] **UI-01**: Dagslinjen renders as one accessible semantic ordered list with exactly one expanded selected recommendation-changing event.
+- [x] **UI-01**: Dagslinjen renders as one accessible semantic ordered list with exactly one expanded selected recommendation-changing event.
   - **Source intel:** `REQ-semantic-dagslinjen`
   - **Acceptance:** The component is controlled by `selectedEventId`, `onSelect(string | null)`, and `onOpenOutfit`; unchanged spans are static list items; marker shape and verb text carry meaning beyond color; and real time values are emitted. Rail owns expand/collapse intent and the one light cue for a newly expanded event, Uke owns controlled state plus view/date selection cues, and refresh repair is silent. The expanded row shows one action, cause, at most three safe garment thumbnails resolved through the canonical garment-ID/safe-fallback chain, and `Se hele antrekket` when needed. All six marker types pass pure/`react-dom/server` and real-browser evidence without adding jsdom or Testing Library. It preserves `aria-expanded`, focus, 44-point targets, large-text reflow, forced colors, calm 200–280 ms motion, and immediate reduced-motion state.
 
@@ -57,13 +57,13 @@ These 14 requirements are the complete committed scope for this bounded feature 
   - **Source intel:** `REQ-free-plus-snart`
   - **Acceptance:** Free receives the complete today experience at the current configured place and, after automatic-location integration, at one persisted fixed home; it receives one truthful non-interactive future weather comparison only when valid evidence exists, otherwise a neutral unavailable state with no invented example or unlocked clothing advice. Configured-native startup/resume makes cached Plus neutral until one single-flight fresh RevenueCat result resolves; failure, loading and downgrade fail closed and purge paid context. Plus receives only implemented future days and places; family/everywhere claims remain absent until their capability flags are enabled. Automatic coordinates, reverse-geocode results and forecast caches are memory-only/no-store and never create persistent `metno:*` or `nominatim:*` keys; manual/fixed cache behavior remains persistent. Locked content is not an Outfit link; closing the paywall restores focus; paywall claims map only to enabled capabilities. Snart deterministically groups cautious 4–6 week must-have, nice-to-have, and not-yet guidance; `Har allerede` is session-only, returns empty only when no group remains visible, and otherwise preserves visible `not_yet`. Former wardrobe routes move only after verified replacements exist. Advice, access, entitlement, location and Snart changes remain separately verified high-risk slices.
 
-- [ ] **A11Y-01**: Planlegg has complete native interaction, accessibility, contrast, large-text, motion, haptic, and shared-navigation behavior.
+- [x] **A11Y-01**: Planlegg has complete native interaction, accessibility, contrast, large-text, motion, haptic, and shared-navigation behavior.
   - **Source intel:** `REQ-native-polish`
   - **Acceptance:** View/date changes use selection haptic and event expansion one light haptic; preference-off and web paths are safe no-ops. Focus uses `focus-visible`. Active bottom navigation uses a stronger/filled icon, stronger label, and quiet mint pool without permanent outline. Light, dark, cold, mild, and warm contrast passes; 200% text has no clipping or horizontal page scroll; screen-reader order is title, context, view control, verdict, rail; reduced motion resolves immediately; all four root screens retain correct shared navigation.
 
 ### Evidence and Release Gates
 
-- [ ] **EVID-01**: New app screenshot/video capture is deferred while implementation changes, without recording the visual gate as passed.
+- [x] **EVID-01**: New app screenshot/video capture is deferred while implementation changes, without recording the visual gate as passed.
   - **Source intel:** `REQ-deferred-visual-capture`
   - **Acceptance:** In-progress work may use DOM assertions, component tests, accessibility checks, and browser interaction without persisted visual media. No new app screenshots or video are captured during changing implementation. The media-based visual gate remains explicitly `Pending` and can begin only after a stable candidate exists and the owner grants permission.
 
@@ -121,11 +121,11 @@ These requirements implement the approved UX & Motion Bible after the bounded Pl
 | GOV-06 | Phase 1 | Pending |
 | TRUTH-01 | Phase 1 | Complete |
 | CTXT-01 | Phase 1 | Complete |
-| UI-01 | Phase 1 | Pending |
+| UI-01 | Phase 1 | Complete |
 | UI-02 | Phase 1 | Pending |
 | ACCESS-01 | Phase 1 | Complete |
-| A11Y-01 | Phase 1 | Pending |
-| EVID-01 | Phase 1 | Pending |
+| A11Y-01 | Phase 1 | Complete |
+| EVID-01 | Phase 1 | Complete |
 | EVID-02 | Phase 1 | Complete |
 | OUTFIT-01 | Phase 2 | Pending |
 | OUTFIT-02 | Phase 2 | Pending |
