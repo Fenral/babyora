@@ -14,7 +14,7 @@ function ownDataValue(value: object, key: PropertyKey): unknown {
 export function resolvePlannedOutfitContext(
   eventId: string,
   currentEvents: readonly PlanningChangeEvent[],
-  contextsByEventId: Readonly<Record<string, unknown>>,
+  contextsByEventId: ReadonlyMap<string, unknown>,
 ): PlannedOutfitContext | null {
   try {
     if (
@@ -22,9 +22,9 @@ export function resolvePlannedOutfitContext(
       || eventId.length === 0
       || !Array.isArray(currentEvents)
       || Object.getPrototypeOf(currentEvents) !== Array.prototype
+      || !Object.isFrozen(currentEvents)
       || typeof contextsByEventId !== 'object'
       || contextsByEventId === null
-      || Array.isArray(contextsByEventId)
     ) {
       return null;
     }
@@ -39,7 +39,8 @@ export function resolvePlannedOutfitContext(
     }
     if (matchingEvents.length !== 1) return null;
 
-    const context = ownDataValue(contextsByEventId, eventId);
+    if (!Map.prototype.has.call(contextsByEventId, eventId)) return null;
+    const context = Map.prototype.get.call(contextsByEventId, eventId) as unknown;
     if (!isPlannedOutfitContext(context)) return null;
 
     const event = matchingEvents[0]!;

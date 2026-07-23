@@ -260,6 +260,60 @@ function PlannedPaakledningScreen({
     return () => dialog.removeEventListener('cancel', handleCancel);
   }, [onBack]);
 
+  if (!plannedContext.access.allowed) {
+    return (
+      <dialog
+        ref={dialogRef}
+        className="pkl-dialog"
+        aria-labelledby="planned-outfit-title"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          width: '100%',
+          maxWidth: 'none',
+          height: '100%',
+          maxHeight: 'none',
+          margin: 0,
+          padding: 0,
+          border: 0,
+          background: 'var(--bg-canvas)',
+          color: 'var(--ink-900)',
+        }}
+      >
+        <div style={{ maxWidth: 680, margin: '0 auto', padding: 'max(18px, env(safe-area-inset-top)) 18px 32px' }}>
+          <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Lukk planlagt antrekk"
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 999,
+                border: '1px solid var(--ink-100)',
+                background: 'var(--surface-pure)',
+                color: 'var(--ink-900)',
+              }}
+            >
+              <CloseIcon />
+            </button>
+            <h2
+              id="planned-outfit-title"
+              ref={titleRef}
+              tabIndex={-1}
+              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
+            >
+              Planlagt antrekk er ikke tilgjengelig
+            </h2>
+          </header>
+          <p style={{ lineHeight: 1.55, color: 'var(--ink-700)' }}>
+            Tilgangen til fremtidige antrekk er ikke aktiv. Lukk og gå tilbake til Planlegg.
+          </p>
+        </div>
+      </dialog>
+    );
+  }
+
   const plannedDateTime = new Intl.DateTimeFormat('nb-NO', {
     timeZone: plannedContext.timeZone,
     weekday: 'long',
