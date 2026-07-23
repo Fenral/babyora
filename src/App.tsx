@@ -13,6 +13,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactElement,
@@ -35,7 +36,10 @@ import {
 import { shouldClosePlannedDrillOnAccess } from './lib/planning/planning-interaction';
 import { decideAccess } from './lib/access/capabilities';
 import { useAccess } from './lib/premium/use-access';
+import { resolveRuntimeCapabilityAccess } from './lib/premium/gating';
+import { PLUS_FEATURE_AVAILABILITY } from './lib/premium/plus-features';
 import { useSubscription } from './state/subscription-store';
+import { useLocationPref } from './state/location-pref-store';
 
 const HjemScreen = lazy(() =>
   import('./screens/HjemScreen').then((m) => ({ default: m.HjemScreen })),
@@ -161,16 +165,27 @@ export default function App(): ReactElement {
   // rått `needsOnboarding`), fordi OnboardingScreen kaller completeOnboarding()
   // ALLEREDE på steg 4 (som flipper needsOnboarding→false) men skal fortsatt
   // vise velkomst-steget før den melder ferdig via onComplete.
-  const { needsOnboarding } = useChildren();
+  const { needsOnboarding, active } = useChildren();
   const [onboardingDone, setOnboardingDone] = useState(!needsOnboarding);
-  // Stille GPS-oppslag ved app-åpning/forgrunn — kun når «Automatisk
-  // posisjon» er slått på i Innstillinger (locationMode==='auto'). Fikser
-  // at by/vær ble stående på forrige sted når familien reiser.
-  useAutoLocationRefresh();
+  const locationMode = useLocationPref((state) => state.mode);
   const [tab, setTab] = useState<TabKey>('hjem');
   const [drill, setDrill] = useState<Drill>(null);
   const themeMode = useTheme((s) => s.mode);
   const { isPremium, loading: accessLoading } = useAccess();
+  const automaticLocationAccess = useMemo(
+    () => resolveRuntimeCapabilityAccess(
+      'automatic_location',
+      { isPlus: isPremium, authenticated: false, loading: accessLoading },
+      PLUS_FEATURE_AVAILABILITY,
+    ),
+    [accessLoading, isPremium],
+  );
+  useAutoLocationRefresh({
+    runtimeDecision: automaticLocationAccess,
+    mode: locationMode,
+    childId: active.id,
+    enabled: onboardingDone && !needsOnboarding,
+  });
   const liveFutureAccess = decideAccess('future_plan', {
     isPlus: isPremium,
     authenticated: false,
