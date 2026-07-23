@@ -21,6 +21,22 @@ export type PlanningRailRow =
   }>;
 
 const HOUR_MS = 60 * 60 * 1000;
+const PLANNING_KIND_PRIORITY: Readonly<Record<PlanningChangeEvent['kind'], number>> = {
+  location: 0,
+  prep: 1,
+  rain: 2,
+  swap: 3,
+  remove: 4,
+  add: 5,
+};
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isStringList(value: unknown): value is readonly string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
 
 function canonicalPoints(coverage: ForecastCoverage): ForecastCoveragePoint[] {
   return [...coverage.points]
@@ -79,7 +95,24 @@ function changeRow(
   };
 }
 
-function eventContent(event: PlanningChangeEvent): string {
+function eventContent(event: unknown): string | null {
+  if (
+    !isRecord(event)
+    || typeof event.id !== 'string'
+    || event.id.trim().length === 0
+    || typeof event.atIso !== 'string'
+    || parseStrictIsoInstant(event.atIso) === null
+    || typeof event.kind !== 'string'
+    || !(event.kind in PLANNING_KIND_PRIORITY)
+    || !isStringList(event.addedGarments)
+    || !isStringList(event.removedGarments)
+    || typeof event.cause !== 'string'
+    || event.cause.trim().length === 0
+    || typeof event.transitionContextId !== 'string'
+    || event.transitionContextId.trim().length === 0
+  ) {
+    return null;
+  }
   return JSON.stringify([
     event.atIso,
     event.kind,
@@ -106,10 +139,12 @@ export function buildPlanningRailRows(
   );
   const points = coveredPoints.filter((point) => evaluatedEpochs.has(point.epochMs));
   if (points.length < 2) return [];
+  if (!Array.isArray(events)) return [];
 
   const eventContentById = new Map<string, string>();
   for (const event of events) {
     const content = eventContent(event);
+    if (content === null) return [];
     const priorContent = eventContentById.get(event.id);
     if (priorContent !== undefined && priorContent !== content) return [];
     eventContentById.set(event.id, content);
@@ -125,6 +160,8 @@ export function buildPlanningRailRows(
     .sort((a, b) => {
       const indexDelta = eventPointIndex(a)! - eventPointIndex(b)!;
       if (indexDelta !== 0) return indexDelta;
+      const kindDelta = PLANNING_KIND_PRIORITY[a.kind] - PLANNING_KIND_PRIORITY[b.kind];
+      if (kindDelta !== 0) return kindDelta;
       return a.id.localeCompare(b.id);
     })
     .filter((event, index, ordered) => index === 0 || event.id !== ordered[index - 1]!.id);

@@ -273,16 +273,41 @@ function evaluatedAdvice(
 }
 
 export function buildPlanViewModel(input: PlanViewModelInput): PlanViewModel {
+  if (!isRecord(input)) return errorModel();
   if (input.status === 'loading') return loadingModel();
   if (input.status === 'error') return errorModel();
+  if (
+    (input.status !== 'offline' && input.status !== 'ready')
+    || typeof input.evaluatedAtIso !== 'string'
+    || !Array.isArray(input.points)
+    || !Array.isArray(input.forecast)
+  ) {
+    return errorModel();
+  }
 
   const evaluatedAtEpoch = parseStrictIsoInstant(input.evaluatedAtIso);
   const coverage = input.coverage;
   if (
     evaluatedAtEpoch === null
-    || !coverage
+    || !isRecord(coverage)
+    || !Array.isArray(coverage.points)
     || coverage.status === 'unavailable'
     || coverage.points.length === 0
+  ) {
+    return errorModel();
+  }
+  if (
+    coverage.timeZone !== 'Europe/Oslo'
+    || !['complete-hourly', 'sampled', 'gapped', 'stale'].includes(coverage.status)
+    || coverage.points.some((point) => (
+      !isRecord(point)
+      || typeof point.iso !== 'string'
+      || typeof point.epochMs !== 'number'
+      || !Number.isFinite(point.epochMs)
+      || parseStrictIsoInstant(point.iso) !== point.epochMs
+      || typeof point.localDate !== 'string'
+      || typeof point.localTime !== 'string'
+    ))
   ) {
     return errorModel();
   }
@@ -321,7 +346,18 @@ export function buildPlanViewModel(input: PlanViewModelInput): PlanViewModel {
     .every((epochMs, index) => epochMs - pointEpochs[index]! === 60 * 60 * 1000);
   if (
     pointEpochs.length < 2
+    || evaluatedAtEpoch < pointEpochs[0]!
+    || evaluatedAtEpoch > pointEpochs.at(-1)!
     || (!hasExactHourlyRecommendations && !pointEpochs.includes(evaluatedAtEpoch))
+  ) {
+    return errorModel();
+  }
+  if (
+    input.outfitAvailabilityByEventId !== undefined
+    && (
+      !isRecord(input.outfitAvailabilityByEventId)
+      || Object.values(input.outfitAvailabilityByEventId).some((value) => typeof value !== 'boolean')
+    )
   ) {
     return errorModel();
   }

@@ -210,6 +210,7 @@ function compareEvents(a: PlanningChangeEvent, b: PlanningChangeEvent): number {
 }
 
 export function derivePlanningChangeEvents(points: readonly PlanningPoint[]): PlanningChangeEvent[] {
+  if (!Array.isArray(points)) return [];
   const normalized = points.map(normalizedPoint);
   if (normalized.some((point) => point === null)) return [];
   const normalizedPoints = normalized as PlanningPoint[];
