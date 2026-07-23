@@ -590,9 +590,16 @@ async function runLocationContainment(
   }
 
   await autoSwitch.click();
-  const dialog = page.getByRole('dialog', { name: 'Bruk posisjon automatisk' });
-  const confirm = dialog.getByRole('button', { name: /^Tillat posisjon/u });
-  if (await dialog.count() > 0 && await confirm.count() > 0) await confirm.click();
+  if (await page.getByRole('dialog', { name: 'Bruk posisjon automatisk' }).count() !== 0) {
+    throw new Error('Blokkert manual-to-auto må ikke åpne permission-dialogen');
+  }
+  const hiddenConfirm = page.locator(
+    'dialog[aria-labelledby="auto-location-title"] button[aria-label^="Tillat posisjon"]',
+  );
+  if (await hiddenConfirm.count() !== 1) {
+    throw new Error('Containment-caset fant ikke den monterte confirm-handleren');
+  }
+  await hiddenConfirm.evaluate((button) => (button as HTMLButtonElement).click());
   await page.waitForTimeout(50);
 
   const finalState = await page.evaluate(() => ({
