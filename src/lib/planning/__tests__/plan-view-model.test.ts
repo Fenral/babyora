@@ -199,7 +199,10 @@ describe('buildPlanViewModel', () => {
     'returns a partial state with source limits for %s evidence',
     (status) => {
       const model = canonical.buildPlanViewModel(input({
-        coverage: coverage(status, [isos[0], isos[2]]),
+        coverage: coverage(
+          status,
+          status === 'gapped' ? [isos[0], isos[2], isos[3]] : [isos[0], isos[2]],
+        ),
         evaluatedAtIso: isos[0],
         points: [
           planningPoint(isos[0], 'fp-a', ['ullbody']),

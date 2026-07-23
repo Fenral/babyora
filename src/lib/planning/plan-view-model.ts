@@ -9,6 +9,7 @@ import {
 import { planningChangeActionSentence } from './change-sentence.js';
 import {
   buildPlanningRailRows,
+  isValidPlanningCoverage,
   type PlanningRailRow,
 } from './rail-rows.js';
 
@@ -289,25 +290,9 @@ export function buildPlanViewModel(input: PlanViewModelInput): PlanViewModel {
   const coverage = input.coverage;
   if (
     evaluatedAtEpoch === null
-    || !isRecord(coverage)
-    || !Array.isArray(coverage.points)
+    || !isValidPlanningCoverage(coverage)
     || coverage.status === 'unavailable'
     || coverage.points.length === 0
-  ) {
-    return errorModel();
-  }
-  if (
-    coverage.timeZone !== 'Europe/Oslo'
-    || !['complete-hourly', 'sampled', 'gapped', 'stale'].includes(coverage.status)
-    || coverage.points.some((point) => (
-      !isRecord(point)
-      || typeof point.iso !== 'string'
-      || typeof point.epochMs !== 'number'
-      || !Number.isFinite(point.epochMs)
-      || parseStrictIsoInstant(point.iso) !== point.epochMs
-      || typeof point.localDate !== 'string'
-      || typeof point.localTime !== 'string'
-    ))
   ) {
     return errorModel();
   }

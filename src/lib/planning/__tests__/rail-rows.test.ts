@@ -94,11 +94,9 @@ describe('buildPlanningRailRows canonical contract', () => {
   it.each(['sampled', 'gapped', 'stale'] as const)(
     'uses evaluated-point wording for %s evidence',
     (status) => {
-      const evaluatedIsos = [
-        hourlyIsos[0],
-        hourlyIsos[2],
-        hourlyIsos[3],
-      ];
+      const evaluatedIsos = status === 'sampled'
+        ? [hourlyIsos[0], hourlyIsos[2]]
+        : [hourlyIsos[0], hourlyIsos[2], hourlyIsos[3]];
       const rows = canonical.buildPlanningRailRows(
         coverage(status, evaluatedIsos),
         [],

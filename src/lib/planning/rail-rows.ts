@@ -1,5 +1,9 @@
 import { parseStrictIsoInstant } from '../met-no/types.js';
-import type { ForecastCoverage, ForecastCoveragePoint } from './coverage.js';
+import type {
+  ForecastCoverage,
+  ForecastCoveragePoint,
+  ForecastCoverageStatus,
+} from './coverage.js';
 import type { ChangeEvent, PlanningChangeEvent } from './change-events.js';
 
 export type PlanningRailRow =
@@ -21,6 +25,18 @@ export type PlanningRailRow =
   }>;
 
 const HOUR_MS = 60 * 60 * 1000;
+const coverageDateFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Europe/Oslo',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+const coverageTimeFormatter = new Intl.DateTimeFormat('nb-NO', {
+  timeZone: 'Europe/Oslo',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
 const PLANNING_KIND_PRIORITY: Readonly<Record<PlanningChangeEvent['kind'], number>> = {
   location: 0,
   prep: 1,
@@ -35,7 +51,80 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 }
 
 function isStringList(value: unknown): value is readonly string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+  return Array.isArray(value)
+    && value.every((item) => typeof item === 'string' && item.trim().length > 0);
+}
+
+function isCoverageStatus(value: unknown): value is ForecastCoverageStatus {
+  return value === 'complete-hourly'
+    || value === 'sampled'
+    || value === 'gapped'
+    || value === 'stale'
+    || value === 'unavailable';
+}
+
+function osloDate(epochMs: number): string {
+  const parts = coverageDateFormatter.formatToParts(epochMs);
+  const part = (type: Intl.DateTimeFormatPartTypes): string => (
+    parts.find((item) => item.type === type)?.value ?? ''
+  );
+  return `${part('year')}-${part('month')}-${part('day')}`;
+}
+
+function osloTime(epochMs: number): string {
+  return coverageTimeFormatter.format(epochMs).replace('.', ':');
+}
+
+function freshCoverageStatus(points: readonly ForecastCoveragePoint[]): ForecastCoverageStatus {
+  if (points.length < 2) return 'sampled';
+  const intervals = points.slice(1).map((point, index) => point.epochMs - points[index]!.epochMs);
+  if (intervals.every((interval) => interval === HOUR_MS)) return 'complete-hourly';
+  const cadence = intervals[0];
+  if (
+    cadence !== undefined
+    && cadence > HOUR_MS
+    && cadence % HOUR_MS === 0
+    && intervals.every((interval) => interval === cadence)
+  ) {
+    return 'sampled';
+  }
+  return 'gapped';
+}
+
+export function isValidPlanningCoverage(value: unknown): value is ForecastCoverage {
+  if (
+    !isRecord(value)
+    || value.timeZone !== 'Europe/Oslo'
+    || !isCoverageStatus(value.status)
+    || !Array.isArray(value.points)
+  ) {
+    return false;
+  }
+  if (value.status === 'unavailable') {
+    return value.points.length === 0 && value.startIso === null && value.endIso === null;
+  }
+  if (value.points.length === 0) return false;
+
+  const points: ForecastCoveragePoint[] = [];
+  for (const point of value.points) {
+    if (
+      !isRecord(point)
+      || typeof point.iso !== 'string'
+      || typeof point.epochMs !== 'number'
+      || !Number.isFinite(point.epochMs)
+      || parseStrictIsoInstant(point.iso) !== point.epochMs
+      || point.localDate !== osloDate(point.epochMs)
+      || point.localTime !== osloTime(point.epochMs)
+    ) {
+      return false;
+    }
+    points.push(point as ForecastCoveragePoint);
+  }
+  if (points.some((point, index) => index > 0 && point.epochMs <= points[index - 1]!.epochMs)) {
+    return false;
+  }
+  if (value.startIso !== points[0]!.iso || value.endIso !== points.at(-1)!.iso) return false;
+  return value.status === 'stale' || value.status === freshCoverageStatus(points);
 }
 
 function canonicalPoints(coverage: ForecastCoverage): ForecastCoveragePoint[] {
@@ -95,6 +184,50 @@ function changeRow(
   };
 }
 
+function hasExactKeys(value: Readonly<Record<string, unknown>>, keys: readonly string[]): boolean {
+  const actual = Object.keys(value).sort();
+  return actual.length === keys.length
+    && actual.every((key, index) => key === [...keys].sort()[index]);
+}
+
+function transitionContent(
+  kind: PlanningChangeEvent['kind'],
+  transition: unknown,
+): readonly unknown[] | null {
+  if (kind === 'add' || kind === 'remove' || kind === 'swap') {
+    return transition === undefined ? [] : null;
+  }
+  if (!isRecord(transition)) return null;
+  if (kind === 'rain') {
+    if (
+      !hasExactKeys(transition, ['action', 'garments', 'kind'])
+      || transition.kind !== 'rain'
+      || (transition.action !== 'bring' && transition.action !== 'wear')
+      || !isStringList(transition.garments)
+      || transition.garments.length === 0
+    ) return null;
+    return ['rain', transition.action, [...transition.garments]];
+  }
+  if (kind === 'location') {
+    if (
+      !hasExactKeys(transition, ['action', 'kind', 'placeLabel'])
+      || transition.kind !== 'location'
+      || typeof transition.placeLabel !== 'string'
+      || transition.placeLabel.trim().length === 0
+      || typeof transition.action !== 'string'
+      || transition.action.trim().length === 0
+    ) return null;
+    return ['location', transition.placeLabel, transition.action];
+  }
+  if (
+    !hasExactKeys(transition, ['garments', 'kind'])
+    || transition.kind !== 'prep'
+    || !isStringList(transition.garments)
+    || transition.garments.length === 0
+  ) return null;
+  return ['prep', [...transition.garments]];
+}
+
 function eventContent(event: unknown): string | null {
   if (
     !isRecord(event)
@@ -113,6 +246,16 @@ function eventContent(event: unknown): string | null {
   ) {
     return null;
   }
+  const kind = event.kind as PlanningChangeEvent['kind'];
+  if (
+    (kind === 'add' && (event.addedGarments.length === 0 || event.removedGarments.length !== 0))
+    || (kind === 'remove' && (event.removedGarments.length === 0 || event.addedGarments.length !== 0))
+    || (kind === 'swap' && (event.addedGarments.length === 0 || event.removedGarments.length === 0))
+  ) {
+    return null;
+  }
+  const canonicalTransition = transitionContent(kind, event.transition);
+  if (canonicalTransition === null) return null;
   return JSON.stringify([
     event.atIso,
     event.kind,
@@ -120,7 +263,7 @@ function eventContent(event: unknown): string | null {
     [...event.removedGarments],
     event.cause,
     event.transitionContextId,
-    event.transition ?? null,
+    canonicalTransition,
   ]);
 }
 
@@ -131,33 +274,28 @@ export function buildPlanningRailRows(
   evaluatedPointIsos: readonly string[] = [],
 ): PlanningRailRow[] {
   if (
-    !isRecord(coverage)
-    || !Array.isArray(coverage.points)
+    !isValidPlanningCoverage(coverage)
     || !Array.isArray(events)
     || !isRecord(outfitAvailabilityByEventId)
     || Object.values(outfitAvailabilityByEventId).some((value) => typeof value !== 'boolean')
     || !Array.isArray(evaluatedPointIsos)
-    || evaluatedPointIsos.some((iso) => typeof iso !== 'string')
-    || !['complete-hourly', 'sampled', 'gapped', 'stale', 'unavailable'].includes(coverage.status)
-    || coverage.points.some((point) => (
-      !isRecord(point)
-      || typeof point.iso !== 'string'
-      || typeof point.epochMs !== 'number'
-      || !Number.isFinite(point.epochMs)
-      || parseStrictIsoInstant(point.iso) !== point.epochMs
-      || typeof point.localDate !== 'string'
-      || typeof point.localTime !== 'string'
+    || evaluatedPointIsos.some((iso) => (
+      typeof iso !== 'string' || parseStrictIsoInstant(iso) === null
     ))
   ) {
     return [];
   }
   if (coverage.status === 'unavailable') return [];
   const coveredPoints = canonicalPoints(coverage);
-  const evaluatedEpochs = new Set(
-    evaluatedPointIsos
-      .map(parseStrictIsoInstant)
-      .filter((epochMs): epochMs is number => epochMs !== null),
-  );
+  const evaluatedEpochList = evaluatedPointIsos.map((iso) => parseStrictIsoInstant(iso)!);
+  const evaluatedEpochs = new Set(evaluatedEpochList);
+  const coveredEpochs = new Set(coveredPoints.map((point) => point.epochMs));
+  if (
+    evaluatedEpochs.size !== evaluatedEpochList.length
+    || evaluatedEpochList.some((epochMs) => !coveredEpochs.has(epochMs))
+  ) {
+    return [];
+  }
   const points = coveredPoints.filter((point) => evaluatedEpochs.has(point.epochMs));
   if (points.length < 2) return [];
   const canonicalEvents = events as readonly PlanningChangeEvent[];
