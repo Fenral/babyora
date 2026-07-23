@@ -88,8 +88,8 @@ coverage:
 
 duration: 94min
 completed: 2026-07-22
-status: complete
-review_status: ready_for_high_risk_review
+status: blocked
+review_status: architecture_escalation
 ---
 
 # Phase 1 Plan 02: Truthful Forecast Evidence Boundary Summary
@@ -183,9 +183,10 @@ All executable evidence below ran from a fresh `npm ci` archive checkout of exac
 | Codex GSD executor (layered architecture refactor) | High-risk implementation | `23998169ab32c4eff83d4916777d0263a12657cf` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic and ephemeral live checks green, no self-PASS claimed |
 | Fresh independent approved reviewer | High-risk verification | `23998169ab32c4eff83d4916777d0263a12657cf` | **BLOCK** — memory fallback retained stale source currentness and current extraction could skip the actual first point |
 | Codex GSD executor (strict P1 repair) | High-risk implementation | `89e130f8ac4a4c25380d76b4d47f010c57e7853b` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic checks green, no self-PASS claimed |
-| Fresh independent approved reviewer | High-risk verification | `89e130f8ac4a4c25380d76b4d47f010c57e7853b` | **PENDING** — fresh verdict required on the exact repaired SHA |
+| Fresh independent verifier | Goal verification | `89e130f8ac4a4c25380d76b4d47f010c57e7853b` | **PASS** — both requested regressions and the declared plan matrix passed |
+| External adversarial reviewer | Equivalent-bypass review | `89e130f8ac4a4c25380d76b4d47f010c57e7853b` | **BLOCK** — request-start currentness and unconstrained wall-clock "now" remain reproducible P1 failures; strictest verdict wins |
 
-Any edit to the eight code/test paths after `89e130f8ac4a4c25380d76b4d47f010c57e7853b` invalidates this candidate and requires fresh evidence plus independent review.
+Candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b` is rejected. Any replacement candidate requires a revised time-boundary contract, fresh evidence, and independent review.
 
 ## Independent BLOCK on Candidate 4150a1e
 
@@ -266,6 +267,15 @@ Strict P1 repair status: **COMPLETE ON CANDIDATE `89e130f8ac4a4c25380d76b4d47f01
 - `89e130f` recomputes `sourceUpdatedAt` on every memory-commit retrieval and anchors `extractNow` to `timeseries[0]`. Missing current one-hour evidence now fails closed, while hourly, daily, terminal-point, and coverage filtering may still use later usable points.
 - Fresh archive verification of the exact GREEN SHA passed focused/full tests, lint, main and bare builds, TypeScript, diff hygiene, and the exact two-path scope manifest.
 
+## Architecture Escalation on Candidate 89e130f
+
+The fresh verifier passed the two requested regression cases, but the separate adversarial review reproduced two equivalent P1 bypasses:
+
+1. Network source age is evaluated with the request-start timestamp. A response that starts at source age 5h59 and arrives two minutes later can still publish `ready` at a true source age of 6h01.
+2. The first forecast point is anchored by array position but not by its relationship to the acceptance clock. A structurally valid 15:00 point can be published as "now" when the wall clock is 09:00.
+
+This is the same currentness-boundary failure class after multiple repairs and a layered refactor. Per the systematic-debugging architecture gate, no further symptom patch is authorized. The next candidate must first replace the implicit time semantics with one explicit acceptance-time contract shared by network receipt, cache retrieval, memory fallback, and current-point extraction.
+
 ## Decisions Made
 
 - Invalid `sourceUpdatedAt`, inconsistent metadata, invalid/duplicate points, empty points, or a future cache timestamp fail closed instead of being normalized into current evidence.
@@ -337,7 +347,8 @@ None - no dependency, package, credential, environment, service, API, or migrati
 
 ## Remaining Gates
 
-- Fresh independent high-risk review on exact strict P1 repair candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b`: **PENDING**. The executor does not self-issue PASS.
+- Architecture decision for one explicit acceptance-time/current-point contract: **BLOCKING**.
+- Replacement implementation plus fresh independent high-risk verification: **PENDING**.
 - New app screenshots/video/traces and the media-based 90+ audit: **Pending stable candidate and owner permission**; none were created here.
 - VoiceOver, TalkBack, physical haptics, OS text scaling, one-handed reach, physical-device UAT, and owner release approval: **Pending**.
 - Six Snart approvals and independent climate artifacts remain Pending and still block Plan 01-13.
@@ -348,11 +359,12 @@ None - no dependency, package, credential, environment, service, API, or migrati
 - First repaired candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` also remains blocked.
 - Second repaired candidate `80c6da2d929281bf9b38cbb0c7603614c667026a` is blocked by the authoritative external live-response verdict despite its verifier PASS.
 - Layered architecture candidate `23998169ab32c4eff83d4916777d0263a12657cf` is blocked by the strict P1 verdict.
-- Strict P1 repair candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b` is ready for fresh independent high-risk review; Plan 01-03 must wait for that verdict.
+- Strict P1 repair candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b` is blocked by the authoritative equivalent-bypass review.
+- Plan 01-03 must not start until Plan 01-02 has a replacement architecture candidate and independent PASS.
 
-## Self-Check: PASSED
+## Self-Check: FAILED
 
-All eight plan-owned paths, this summary, original commits `b5d68a9`, `bf5c806`, `3f4304a`, `4150a1e`, BLOCK records `32e84b8`, `6959443`, `2ea2dc1`, repair commits `3cbaa68`, `b9b8b51`, `9178047`, `80c6da2`, architecture commits `7d17b0e`, `2399816`, and strict P1 commits `7130886`, `4472888`, `89e130f` exist and were verified. The exact two-path repair scope and immutable SHA passed focused/full/lint/build/type-check/diff checks; independent review remains pending.
+All commits and deterministic checks exist, but the strictest independent verdict is BLOCK. Plan 01-02 is not complete and cannot feed Plan 01-03.
 
 ---
 *Phase: 01-planlegg-dagslinjen*

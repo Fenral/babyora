@@ -4,16 +4,16 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
-status: executing
-stopped_at: Completed 01-02 layered architecture refactor; candidate 2399816 awaits fresh independent high-risk review
-last_updated: "2026-07-22T22:45:42.009Z"
+status: blocked
+stopped_at: Plan 01-02 architecture escalation after equivalent currentness bypasses on candidate 89e130f
+last_updated: "2026-07-23T08:48:42.3705609+02:00"
 last_activity: 2026-07-23
-last_activity_desc: Layered live-response architecture refactor is deterministic- and probe-green on exact candidate `2399816`; fresh independent high-risk review remains pending.
+last_activity_desc: Exact candidate `89e130f` closed the requested regressions, but adversarial review reproduced two equivalent P1 currentness bypasses; strictest verdict is BLOCK.
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 18
-  completed_plans: 2
+  completed_plans: 1
 ---
 
 # Project State
@@ -29,10 +29,10 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
 Plan: 2 of 18 in current phase
-Status: Plan 01-02 layered architecture candidate awaits fresh independent high-risk review
-Last activity: 2026-07-23 — Layered live-response refactor is green on exact candidate `2399816`; no self-PASS claimed.
+Status: Plan 01-02 blocked at the architecture escalation gate
+Last activity: 2026-07-23 — Candidate `89e130f` passed declared regressions but failed adversarial equivalent-bypass review.
 
-Progress: [█░░░░░░░░░] 11%
+Progress: [█░░░░░░░░░] 6%
 
 ## Performance Metrics
 
@@ -89,7 +89,8 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 
 ### Pending Todos
 
-- Obtain a fresh independent high-risk verdict on exact layered architecture candidate `23998169ab32c4eff83d4916777d0263a12657cf` before Plan 01-03.
+- Replace the implicit forecast-currentness semantics with one explicit acceptance-time/current-point contract before any further Plan 01-02 implementation.
+- Require a fresh independent adversarial PASS on the replacement candidate before Plan 01-03.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -97,6 +98,7 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 
 - Final completion/release is gated by owner-permitted app screenshot/video capture, media-based 90+ visual verification, required physical-device evidence, and owner release approval. This does not block planning or deterministic candidate checks.
 - Plan 01-13 remains a legitimate human blocker until all six Snart approvals and independently supplied climate artifacts exist.
+- Plan 01-02 is blocked because the same currentness-boundary failure class persisted after multiple repairs and a layered architecture refactor. No further symptom patch is allowed without an explicit architecture decision.
 
 ## Deferred Items
 
@@ -109,6 +111,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-22T22:45:41.998Z
-Stopped at: Completed 01-02 layered architecture refactor; candidate 2399816 awaits fresh independent high-risk review
+Last session: 2026-07-23T08:48:42.3705609+02:00
+Stopped at: Plan 01-02 architecture escalation after equivalent currentness bypasses on candidate 89e130f
 Resume file: None
