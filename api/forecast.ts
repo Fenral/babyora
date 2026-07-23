@@ -24,10 +24,24 @@ const CORS: Record<string, string> = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-function json(body: unknown, status: number): Response {
+function cacheHeaders(memoryOnly: boolean): Record<string, string> {
+  return memoryOnly
+    ? {
+      'Cache-Control': 'private, no-store, max-age=0',
+      'CDN-Cache-Control': 'no-store',
+      'Vercel-CDN-Cache-Control': 'no-store',
+    }
+    : { 'Cache-Control': 's-maxage=900, stale-while-revalidate=600' };
+}
+
+function json(body: unknown, status: number, memoryOnly = false): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...CORS, 'Content-Type': 'application/json' },
+    headers: {
+      ...CORS,
+      'Content-Type': 'application/json',
+      ...(memoryOnly ? cacheHeaders(true) : {}),
+    },
   });
 }
 
@@ -41,7 +55,7 @@ export default async function handler(req: Request): Promise<Response> {
   const lat = Number(searchParams.get('lat'));
   const lon = Number(searchParams.get('lon'));
   if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
-    return json({ error: 'Ugyldig lat/lon' }, 400);
+    return json({ error: 'Ugyldig lat/lon' }, 400, memoryOnly);
   }
 
   const url = `${MET_BASE}?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`;
@@ -52,11 +66,11 @@ export default async function handler(req: Request): Promise<Response> {
       ...(memoryOnly ? { cache: 'no-store' as const } : {}),
     });
   } catch {
-    return json({ error: 'met.no utilgjengelig' }, 502);
+    return json({ error: 'met.no utilgjengelig' }, 502, memoryOnly);
   }
 
   if (!upstream.ok) {
-    return json({ error: `met.no HTTP ${upstream.status}` }, upstream.status);
+    return json({ error: `met.no HTTP ${upstream.status}` }, upstream.status, memoryOnly);
   }
 
   const body = await upstream.text();
@@ -65,13 +79,7 @@ export default async function handler(req: Request): Promise<Response> {
     headers: {
       ...CORS,
       'Content-Type': 'application/json',
-      ...(memoryOnly
-        ? {
-          'Cache-Control': 'private, no-store, max-age=0',
-          'CDN-Cache-Control': 'no-store',
-          'Vercel-CDN-Cache-Control': 'no-store',
-        }
-        : { 'Cache-Control': 's-maxage=900, stale-while-revalidate=600' }),
+      ...cacheHeaders(memoryOnly),
     },
   });
 }

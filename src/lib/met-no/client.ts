@@ -134,12 +134,13 @@ const KNOWN_SYMBOL_CODES = new Set([
   'heavysnowshowers_polartwilight',
 ]);
 
-const latestStartedVersionByKey = new Map<string, number>();
+const latestStartedVersionByKey = new Map<string, bigint>();
 const latestCommittedByKey = new Map<string, Readonly<{
-  version: number;
+  version: bigint;
   result: ForecastFetchResult;
 }>>();
 const memoryOnlyKeyOrder = new Map<string, true>();
+let requestVersionSequence = 0n;
 let coordinatorStorage: Storage | null | undefined;
 
 type CachedEntry = {
@@ -217,7 +218,7 @@ function alignCoordinatorWithStorage(): void {
 
 function commitMemoryResult(
   key: string,
-  value: Readonly<{ version: number; result: ForecastFetchResult }>,
+  value: Readonly<{ version: bigint; result: ForecastFetchResult }>,
 ): void {
   if (key.startsWith('memory-only:')) touchMemoryOnlyCoordinator(key);
   latestCommittedByKey.delete(key);
@@ -385,7 +386,7 @@ function cacheResult(
 }
 
 function readMemoryCommit(key: string, asCacheHit = false): Readonly<{
-  version: number;
+  version: bigint;
   result: ForecastFetchResult;
 }> | null {
   const committed = latestCommittedByKey.get(key);
@@ -441,7 +442,8 @@ export async function fetchForecast(
     const memory = readMemoryCommit(key, true);
     if (memory) return memory.result;
   }
-  const requestVersion = (latestStartedVersionByKey.get(key) ?? 0) + 1;
+  requestVersionSequence += 1n;
+  const requestVersion = requestVersionSequence;
   if (scope === 'memory-only') touchMemoryOnlyCoordinator(key);
   latestStartedVersionByKey.set(key, requestVersion);
 
