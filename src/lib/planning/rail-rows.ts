@@ -140,9 +140,10 @@ export function buildPlanningRailRows(
   const points = coveredPoints.filter((point) => evaluatedEpochs.has(point.epochMs));
   if (points.length < 2) return [];
   if (!Array.isArray(events)) return [];
+  const canonicalEvents = events as readonly PlanningChangeEvent[];
 
   const eventContentById = new Map<string, string>();
-  for (const event of events) {
+  for (const event of canonicalEvents) {
     const content = eventContent(event);
     if (content === null) return [];
     const priorContent = eventContentById.get(event.id);
@@ -155,7 +156,7 @@ export function buildPlanningRailRows(
     const epochMs = parseStrictIsoInstant(event.atIso);
     return epochMs === null ? undefined : pointIndexByEpoch.get(epochMs);
   };
-  const sortedEvents = [...events]
+  const sortedEvents = [...canonicalEvents]
     .filter((event) => eventPointIndex(event) !== undefined)
     .sort((a, b) => {
       const indexDelta = eventPointIndex(a)! - eventPointIndex(b)!;
