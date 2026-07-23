@@ -154,6 +154,29 @@ describe('resolvePlanningViewAccess', () => {
       availability(),
     ).presentation).toBe('hidden');
   });
+
+  it('holder utilgjengelig Snart skjult også under loading og ved manglende flagg', () => {
+    expect(resolvePlanningViewAccess(
+      'soon',
+      context({ isPlus: true, loading: true }),
+      availability({ soon_preparation: false }),
+    )).toMatchObject({
+      presentation: 'hidden',
+      access: {
+        state: 'neutral',
+        implementationAvailable: false,
+        decision: { allowed: false, reason: 'loading' },
+      },
+    });
+    expect(resolvePlanningViewAccess(
+      'soon',
+      context({ isPlus: true, loading: true }),
+      {},
+    )).toMatchObject({
+      presentation: 'hidden',
+      access: { state: 'neutral', implementationAvailable: false },
+    });
+  });
 });
 
 describe('shouldShowTenDayTeaser compatibility wrapper', () => {
