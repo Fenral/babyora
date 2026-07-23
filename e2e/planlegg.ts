@@ -60,6 +60,7 @@ type ForecastMode =
   | 'many'
   | 'partial'
   | 'today-only'
+  | 'missing-tomorrow'
   | 'week-changes';
 type ForecastDelivery = 'success' | 'pending' | 'error';
 type ForecastState = {
@@ -290,6 +291,12 @@ function buildForecast(mode: ForecastMode, temperatureC?: number): unknown {
   }).filter((_point, index) => (
     (mode !== 'partial' || index % 3 === 0)
     && (mode !== 'today-only' || index < 24)
+    && (
+      mode !== 'missing-tomorrow'
+      || new Date(start + index * 60 * 60 * 1000).toLocaleDateString('en-CA', {
+        timeZone: 'Europe/Oslo',
+      }) !== '2026-02-13'
+    )
   ));
   return {
     properties: {
@@ -445,15 +452,81 @@ function collectFailures(page: Page): string[] {
 async function installDeterministicPage(
   page: Page,
   forecastState: ForecastState,
+  configuredNativeFixture = false,
 ): Promise<void> {
   await page.clock.install({ time: FIXED_NOW });
   await page.addInitScript(() => {
-    const isPremium = new URL(window.location.href).searchParams.get('access') !== 'free';
+    const params = new URL(window.location.href).searchParams;
+    const isPremium = params.get('access') !== 'free';
     localStorage.setItem('babyora.subscription', JSON.stringify({
       state: { isPremium, lastSyncedAt: 1 },
       version: 0,
     }));
   });
+  if (configuredNativeFixture) {
+    await page.addInitScript({
+      content: `
+        (() => {
+          const customerInfo = (premium) => ({
+            customerInfo: {
+              entitlements: {
+                active: premium ? { premium: { identifier: 'premium' } } : {},
+              },
+            },
+          });
+          let premium = false;
+          let pending = false;
+          let initialized = false;
+          const resolvers = [];
+          const initialize = () => {
+            if (initialized) return;
+            const fixture = new URL(window.location.href).searchParams.get('entitlement');
+            premium = fixture === 'plus';
+            pending = fixture === 'loading';
+            initialized = true;
+          };
+          window.addEventListener('planlegg:e2e-entitlement-begin', () => {
+            initialize();
+            pending = true;
+          });
+          window.addEventListener('planlegg:e2e-entitlement-settle', (event) => {
+            initialized = true;
+            premium = event.detail;
+            pending = false;
+            const result = customerInfo(premium);
+            for (const resolve of resolvers.splice(0)) resolve(result);
+          });
+          window.CapacitorCustomPlatform = { name: 'android' };
+          window.Capacitor = {
+            PluginHeaders: [{
+              name: 'Purchases',
+              methods: [
+                'setLogLevel',
+                'configure',
+                'getCustomerInfo',
+                'getOfferings',
+                'purchasePackage',
+                'restorePurchases',
+              ].map((name) => ({ name, rtype: 'promise' })),
+            }],
+            nativePromise: (_plugin, method) => {
+              if (method === 'getCustomerInfo') {
+                initialize();
+                if (pending) {
+                  return new Promise((resolve) => resolvers.push(resolve));
+                }
+                return Promise.resolve(customerInfo(premium));
+              }
+              if (method === 'getOfferings') {
+                return Promise.resolve({ current: null });
+              }
+              return Promise.resolve({});
+            },
+          };
+        })();
+      `,
+    });
+  }
   await page.route('**/api/forecast?**', async (route) => {
     while (forecastState.delivery === 'pending') {
       await new Promise((resolve) => setTimeout(resolve, 25));
@@ -1065,6 +1138,22 @@ async function runExactContext(
   }
 }
 
+async function beginEntitlementRefresh(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('planlegg:e2e-entitlement-begin'));
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+}
+
+async function settleEntitlement(page: Page, premium: boolean): Promise<void> {
+  await page.evaluate((nextPremium) => {
+    window.dispatchEvent(new CustomEvent(
+      'planlegg:e2e-entitlement-settle',
+      { detail: nextPremium },
+    ));
+  }, premium);
+}
+
 async function runAccess(
   page: Page,
   fixture: PlanleggE2EFixture,
@@ -1077,14 +1166,16 @@ async function runAccess(
     || !ukeSource.includes('Se uke med Babyora Plus')
     || !ukeSource.includes('data-planlegg-access="neutral"')
     || !appSource.includes("decideAccess('future_plan'")
+    || !appSource.includes('Capacitor.isNativePlatform()')
+    || !ukeSource.includes('localDate(day.date) === nextCalendarDate')
   ) {
     throw new Error(
-      'RED_PLANLEGG_ACCESS_POLICY: Today/Uke/App mangler sentral tilgang, nøytral lasting eller eksakt handling',
+      'RED_PLANLEGG_ACCESS_REVIEW_REPAIR: native cache må isoleres og i morgen må være eksakt neste kalenderdag',
     );
   }
 
   const failures = collectFailures(page);
-  const freePath = `${fixture.path}${fixture.path.includes('?') ? '&' : '?'}access=free`;
+  const freePath = `${fixture.path}${fixture.path.includes('?') ? '&' : '?'}access=free&entitlement=free`;
 
   forecastState.delivery = 'success';
   forecastState.mode = 'many';
@@ -1148,7 +1239,25 @@ async function runAccess(
     throw new Error('Kontekstuell paywall mistet triggerfokus, Uke-valg eller scroll');
   }
 
-  await reloadPlanlegg(page, freePath, forecastState, 'today-only');
+  await freeWeekAction.click();
+  const refreshPaywall = page.getByRole('dialog');
+  await refreshPaywall.waitFor({ state: 'visible', timeout: 15_000 });
+  await beginEntitlementRefresh(page);
+  await refreshPaywall.waitFor({ state: 'detached', timeout: 15_000 });
+  const neutralWeek = page.locator('[data-planlegg-access="neutral"]');
+  await neutralWeek.waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await weekRadio.isChecked() !== true
+    || await page.getByRole('dialog').count() !== 0
+    || await page.getByText('Se uke med Babyora Plus', { exact: true }).count() !== 0
+    || await page.locator('[data-planlegg-access="plus-week"]').count() !== 0
+  ) {
+    throw new Error('Entitlement-lasting beholdt paywall/låst innhold eller mistet Uke-valget');
+  }
+  await settleEntitlement(page, false);
+  await comparison.waitFor({ state: 'visible', timeout: 15_000 });
+
+  await reloadPlanlegg(page, freePath, forecastState, 'missing-tomorrow');
   await page.getByRole('radio', { name: 'Uke', exact: true })
     .evaluate((radio) => (radio as HTMLInputElement).click());
   const unavailable = page.locator('[data-planlegg-access="free-week-unavailable"]');
@@ -1161,27 +1270,28 @@ async function runAccess(
     throw new Error('Free Uke uten fremtidsevidens materialiserte sammenligning eller råd');
   }
 
-  forecastState.delivery = 'pending';
-  await page.evaluate(() => {
-    for (const key of Object.keys(localStorage)) {
-      if (key.startsWith('metno:')) localStorage.removeItem(key);
-    }
+  const loadingPath = `${fixture.path}${fixture.path.includes('?') ? '&' : '?'}entitlement=loading`;
+  forecastState.delivery = 'success';
+  await reloadPlanlegg(page, loadingPath, forecastState, 'week-changes');
+  const loadingTodayRail = page.getByRole('list', {
+    name: 'Antrekksendringer gjennom dagen',
   });
-  await openPlanlegg(page, freePath);
-  await page.getByRole('status').filter({ hasText: 'Henter dagens plan' })
-    .waitFor({ state: 'visible', timeout: 1_000 });
+  await loadingTodayRail.waitFor({ state: 'visible', timeout: 15_000 });
+  const loadingWeekRadio = page.getByRole('radio', { name: 'Uke', exact: true });
+  await loadingWeekRadio.evaluate((radio) => (radio as HTMLInputElement).click());
+  const startupNeutralWeek = page.locator('[data-planlegg-access="neutral"]');
+  await startupNeutralWeek.waitFor({ state: 'visible', timeout: 15_000 });
   if (
-    await page.getByRole('dialog').count() !== 0
+    await loadingWeekRadio.isChecked() !== true
+    || await page.getByRole('dialog').count() !== 0
     || await page.locator('[data-planlegg-paid-material]').count() !== 0
     || await page.getByText('Se uke med Babyora Plus', { exact: true }).count() !== 0
+    || await page.locator('[data-planlegg-access="plus-week"]').count() !== 0
   ) {
-    throw new Error('Uavklart lasting viste paywall, betalt innhold eller låst handling');
+    throw new Error('Cachet Plus under startup-lasting viste paywall, betalt innhold eller låst handling');
   }
 
-  forecastState.delivery = 'success';
-  await reloadPlanlegg(page, fixture.path, forecastState, 'week-changes');
-  const plusWeek = page.getByRole('radio', { name: 'Uke', exact: true });
-  await plusWeek.evaluate((radio) => (radio as HTMLInputElement).click());
+  await settleEntitlement(page, true);
   const plusMaterial = page.locator('[data-planlegg-access="plus-week"]');
   await plusMaterial.waitFor({ state: 'visible', timeout: 15_000 });
   const futureRail = plusMaterial.getByRole('list', {
@@ -1207,19 +1317,27 @@ async function runAccess(
     throw new Error('Plus Uke åpnet ikke et autorisert fremtidig Outfit');
   }
 
+  await beginEntitlementRefresh(page);
+  await plannedDialog.waitFor({ state: 'detached', timeout: 15_000 });
+  const downgradeNeutral = page.locator('[data-planlegg-access="neutral"]');
+  await downgradeNeutral.waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await loadingWeekRadio.isChecked() !== true
+    || await page.locator('[aria-label="Planlagt situasjon"]').count() !== 0
+    || await page.locator('[data-planlegg-access="plus-week"]').count() !== 0
+    || await main.evaluate((element) => document.activeElement === element) !== true
+  ) {
+    throw new Error('Live nedgradering beholdt betalt DTO/DOM eller mistet trygt hovedfokus');
+  }
+  await settleEntitlement(page, false);
+  await page.locator('[data-planlegg-access="free-week-comparison"]')
+    .waitFor({ state: 'visible', timeout: 15_000 });
+
   await page.evaluate(() => {
     const key = 'babyora.subscription';
-    const current = JSON.parse(localStorage.getItem(key) ?? '{"state":{},"version":0}') as {
-      state?: { isPremium?: boolean; lastSyncedAt?: number | null };
-      version?: number;
-    };
     const nextValue = JSON.stringify({
-      ...current,
-      state: {
-        ...current.state,
-        isPremium: false,
-        lastSyncedAt: Date.now(),
-      },
+      state: { isPremium: true, lastSyncedAt: Date.now() },
+      version: 0,
     });
     localStorage.setItem(key, nextValue);
     window.dispatchEvent(new StorageEvent('storage', {
@@ -1228,18 +1346,12 @@ async function runAccess(
       storageArea: localStorage,
     }));
   });
-  await plannedDialog.waitFor({ state: 'detached', timeout: 15_000 });
-  await page.waitForFunction(() => (
-    document.querySelector<HTMLInputElement>(
-      '.segmented-control__input[value="today"]',
-    )?.checked === true
-  ));
+  await page.waitForTimeout(50);
   if (
-    await page.locator('[aria-label="Planlagt situasjon"]').count() !== 0
-    || await page.locator('[data-planlegg-access="plus-week"]').count() !== 0
-    || await main.evaluate((element) => document.activeElement === element) !== true
+    await page.locator('[data-planlegg-access="plus-week"]').count() !== 0
+    || await page.locator('[data-planlegg-access="free-week-comparison"]').count() !== 1
   ) {
-    throw new Error('Live nedgradering beholdt betalt DTO/DOM eller mistet trygt hovedfokus');
+    throw new Error('Native fersk avvisning ble overstyrt av cachet storage-true');
   }
 
   if (failures.length > 0) {
@@ -1696,11 +1808,12 @@ async function main(): Promise<void> {
   let browser: Browser | null = null;
 
   try {
+    const configuredNativeAccess = caseName === 'access';
     server = spawn(
       process.execPath,
       [
         VITE_CLI,
-        'preview',
+        ...(configuredNativeAccess ? [] : ['preview']),
         '--host',
         '127.0.0.1',
         '--port',
@@ -1711,6 +1824,12 @@ async function main(): Promise<void> {
         stdio: 'ignore',
         shell: false,
         windowsHide: true,
+        env: configuredNativeAccess
+          ? {
+              ...process.env,
+              VITE_REVENUECAT_PUBLIC_KEY_ANDROID: 'planlegg-e2e-public-key',
+            }
+          : process.env,
       },
     );
     await waitForServer(BASE_URL, server);
@@ -1727,7 +1846,11 @@ async function main(): Promise<void> {
       await installLocationContainmentPage(page, fixture);
       await runLocationContainment(page, fixture);
     } else {
-      await installDeterministicPage(page, forecastState);
+      await installDeterministicPage(
+        page,
+        forecastState,
+        caseName === 'access',
+      );
       if (caseName === 'semantic-rail') {
         await runSemanticRail(page, fixture, forecastState);
       } else if (caseName === 'composition') {
