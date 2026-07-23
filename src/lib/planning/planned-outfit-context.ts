@@ -22,6 +22,16 @@ const CAPABILITIES: readonly Capability[] = [
   'smart_notifications',
   'widget',
 ];
+const FREE_CAPABILITIES: readonly Capability[] = [
+  'today_home',
+  'morning_reminder',
+  'safety_guides',
+];
+const AUTH_CAPABILITIES: readonly Capability[] = [
+  'family_sharing',
+  'personal_calibration',
+  'smart_notifications',
+];
 const ACCESS_REASONS: readonly AccessDecision['reason'][] = [
   'free',
   'plus',
@@ -109,27 +119,29 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 
 function recordAt(value: unknown, path: string): Readonly<Record<string, unknown>> {
   if (!isRecord(value)) fail(path, 'expected an object');
+  if (Object.getPrototypeOf(value) !== Object.prototype) fail(path, 'expected a plain object');
   return value;
 }
 
-function requireOwnKeys(
+function ownDataValue(
   value: Readonly<Record<string, unknown>>,
-  keys: readonly string[],
+  key: string,
   path: string,
-): void {
-  for (const key of keys) {
-    if (!Object.hasOwn(value, key)) fail(`${path}.${key}`, 'missing required field');
-  }
+): unknown {
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  if (!descriptor) fail(path, 'missing required field');
+  if (!Object.hasOwn(descriptor, 'value')) fail(path, 'expected a data property');
+  return descriptor.value;
 }
 
 function normalizedText(value: unknown, path: string): string {
   if (typeof value !== 'string') fail(path, 'expected a string');
   const normalized = value.normalize('NFC').trim();
   if (normalized.length === 0) fail(path, 'must not be empty');
-  if ([...normalized].some((character) => {
-    const codePoint = character.codePointAt(0);
-    return codePoint !== undefined && (codePoint <= 31 || codePoint === 127);
-  })) {
+  if (
+    /\p{Cc}/u.test(normalized)
+    || /[\u200b\u200e\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/u.test(normalized)
+  ) {
     fail(path, 'must not contain control characters');
   }
   return normalized;
@@ -137,12 +149,19 @@ function normalizedText(value: unknown, path: string): string {
 
 function finiteNumber(value: unknown, path: string): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) fail(path, 'expected a finite number');
-  return value;
+  return Object.is(value, -0) ? 0 : value;
 }
 
 function normalizedStringList(value: unknown, path: string, allowEmpty: boolean): string[] {
   if (!Array.isArray(value)) fail(path, 'expected an array');
-  const normalized = value.map((item, index) => normalizedText(item, `${path}[${index}]`));
+  if (Object.getPrototypeOf(value) !== Array.prototype) fail(path, 'expected a plain array');
+  const normalized: string[] = [];
+  for (let index = 0; index < value.length; index++) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+    if (!descriptor) fail(`${path}[${index}]`, 'missing array item');
+    if (!Object.hasOwn(descriptor, 'value')) fail(`${path}[${index}]`, 'expected a data property');
+    normalized.push(normalizedText(descriptor.value, `${path}[${index}]`));
+  }
   if (!allowEmpty && normalized.length === 0) fail(path, 'must contain at least one item');
   if (new Set(normalized).size !== normalized.length) fail(path, 'must not contain duplicate items');
   return normalized;
@@ -150,36 +169,35 @@ function normalizedStringList(value: unknown, path: string, allowEmpty: boolean)
 
 function normalizedChild(value: unknown): PlannedChild {
   const child = recordAt(value, 'child');
-  requireOwnKeys(child, ['id', 'name', 'ageMonths'], 'child');
-  const ageMonths = finiteNumber(child.ageMonths, 'child.ageMonths');
+  const ageMonths = finiteNumber(ownDataValue(child, 'ageMonths', 'child.ageMonths'), 'child.ageMonths');
   if (!Number.isInteger(ageMonths) || ageMonths < 0 || ageMonths > 24) {
     fail('child.ageMonths', 'expected an integer from 0 through 24');
   }
   return {
-    id: normalizedText(child.id, 'child.id'),
-    name: normalizedText(child.name, 'child.name'),
+    id: normalizedText(ownDataValue(child, 'id', 'child.id'), 'child.id'),
+    name: normalizedText(ownDataValue(child, 'name', 'child.name'), 'child.name'),
     ageMonths,
   };
 }
 
 function normalizedPlace(value: unknown): PlannedPlace {
   const place = recordAt(value, 'place');
-  requireOwnKeys(place, ['label', 'lat', 'lon', 'source'], 'place');
-  const lat = finiteNumber(place.lat, 'place.lat');
-  const lon = finiteNumber(place.lon, 'place.lon');
+  const lat = finiteNumber(ownDataValue(place, 'lat', 'place.lat'), 'place.lat');
+  const lon = finiteNumber(ownDataValue(place, 'lon', 'place.lon'), 'place.lon');
+  const source = ownDataValue(place, 'source', 'place.source');
   if (lat < -90 || lat > 90) fail('place.lat', 'expected a value from -90 through 90');
   if (lon < -180 || lon > 180) fail('place.lon', 'expected a value from -180 through 180');
   if (
-    typeof place.source !== 'string'
-    || !(PLACE_SOURCES as readonly string[]).includes(place.source)
+    typeof source !== 'string'
+    || !(PLACE_SOURCES as readonly string[]).includes(source)
   ) {
     fail('place.source', 'expected configured-place, fixed-home, or automatic');
   }
   return {
-    label: normalizedText(place.label, 'place.label'),
+    label: normalizedText(ownDataValue(place, 'label', 'place.label'), 'place.label'),
     lat,
     lon,
-    source: place.source as PlaceSource,
+    source: source as PlaceSource,
   };
 }
 
@@ -209,110 +227,135 @@ function normalizedSituation(
 
 function normalizedWeather(value: unknown): PlannedWeather {
   const weather = recordAt(value, 'weather');
-  requireOwnKeys(
-    weather,
-    ['tempC', 'feelsLikeC', 'windMs', 'precipMmH', 'symbolCode'],
-    'weather',
+  const windMs = finiteNumber(ownDataValue(weather, 'windMs', 'weather.windMs'), 'weather.windMs');
+  const precipMmH = finiteNumber(
+    ownDataValue(weather, 'precipMmH', 'weather.precipMmH'),
+    'weather.precipMmH',
   );
-  const windMs = finiteNumber(weather.windMs, 'weather.windMs');
-  const precipMmH = finiteNumber(weather.precipMmH, 'weather.precipMmH');
   if (windMs < 0) fail('weather.windMs', 'must be at least zero');
   if (precipMmH < 0) fail('weather.precipMmH', 'must be at least zero');
   return {
-    tempC: finiteNumber(weather.tempC, 'weather.tempC'),
-    feelsLikeC: finiteNumber(weather.feelsLikeC, 'weather.feelsLikeC'),
+    tempC: finiteNumber(ownDataValue(weather, 'tempC', 'weather.tempC'), 'weather.tempC'),
+    feelsLikeC: finiteNumber(
+      ownDataValue(weather, 'feelsLikeC', 'weather.feelsLikeC'),
+      'weather.feelsLikeC',
+    ),
     windMs,
     precipMmH,
-    symbolCode: normalizedText(weather.symbolCode, 'weather.symbolCode'),
+    symbolCode: normalizedText(
+      ownDataValue(weather, 'symbolCode', 'weather.symbolCode'),
+      'weather.symbolCode',
+    ),
   };
 }
 
 function normalizedRecommendation(value: unknown): PlannedRecommendation {
   const recommendation = recordAt(value, 'recommendation');
-  requireOwnKeys(
-    recommendation,
-    ['id', 'fingerprint', 'orderedGarments', 'equipment', 'finalized'],
-    'recommendation',
+  if (ownDataValue(recommendation, 'finalized', 'recommendation.finalized') !== true) {
+    fail('recommendation.finalized', 'expected true');
+  }
+  const orderedGarments = normalizedStringList(
+    ownDataValue(recommendation, 'orderedGarments', 'recommendation.orderedGarments'),
+    'recommendation.orderedGarments',
+    false,
   );
-  if (recommendation.finalized !== true) fail('recommendation.finalized', 'expected true');
+  const equipment = normalizedStringList(
+    ownDataValue(recommendation, 'equipment', 'recommendation.equipment'),
+    'recommendation.equipment',
+    true,
+  );
+  const equipmentSet = new Set(equipment);
+  if (orderedGarments.some((garment) => equipmentSet.has(garment))) {
+    fail('recommendation', 'garments and equipment must not overlap');
+  }
   return {
-    id: normalizedText(recommendation.id, 'recommendation.id'),
-    fingerprint: normalizedText(recommendation.fingerprint, 'recommendation.fingerprint'),
-    orderedGarments: normalizedStringList(
-      recommendation.orderedGarments,
-      'recommendation.orderedGarments',
-      false,
+    id: normalizedText(ownDataValue(recommendation, 'id', 'recommendation.id'), 'recommendation.id'),
+    fingerprint: normalizedText(
+      ownDataValue(recommendation, 'fingerprint', 'recommendation.fingerprint'),
+      'recommendation.fingerprint',
     ),
-    equipment: normalizedStringList(recommendation.equipment, 'recommendation.equipment', true),
+    orderedGarments,
+    equipment,
     finalized: true,
   };
 }
 
 function normalizedAccess(value: unknown): PlannedAccess {
   const access = recordAt(value, 'access');
-  requireOwnKeys(access, ['capability', 'allowed', 'reason'], 'access');
+  const capability = ownDataValue(access, 'capability', 'access.capability');
+  const allowed = ownDataValue(access, 'allowed', 'access.allowed');
+  const reason = ownDataValue(access, 'reason', 'access.reason');
   if (
-    typeof access.capability !== 'string'
-    || !(CAPABILITIES as readonly string[]).includes(access.capability)
+    typeof capability !== 'string'
+    || !(CAPABILITIES as readonly string[]).includes(capability)
   ) {
     fail('access.capability', 'expected a known capability');
   }
-  if (typeof access.allowed !== 'boolean') fail('access.allowed', 'expected a boolean');
+  if (typeof allowed !== 'boolean') fail('access.allowed', 'expected a boolean');
   if (
-    typeof access.reason !== 'string'
-    || !(ACCESS_REASONS as readonly string[]).includes(access.reason)
+    typeof reason !== 'string'
+    || !(ACCESS_REASONS as readonly string[]).includes(reason)
   ) {
     fail('access.reason', 'expected a known access reason');
   }
-  const reasonAllows = access.reason === 'free' || access.reason === 'plus';
-  if (access.allowed !== reasonAllows) fail('access', 'allowed and reason disagree');
+  const typedCapability = capability as Capability;
+  const typedReason = reason as AccessDecision['reason'];
+  const isFreeCapability = FREE_CAPABILITIES.includes(typedCapability);
+  const needsAuthentication = AUTH_CAPABILITIES.includes(typedCapability);
+  const isConsistent = typedReason === 'loading'
+    ? !allowed
+    : isFreeCapability
+      ? allowed && typedReason === 'free'
+      : typedReason === 'plus'
+        ? allowed
+        : !allowed && (
+          typedReason === 'expired'
+          || (needsAuthentication && (typedReason === 'signed_out' || typedReason === 'role_denied'))
+        );
+  if (!isConsistent) fail('access', 'capability, allowed, and reason disagree');
   return {
-    capability: access.capability as Capability,
-    allowed: access.allowed,
-    reason: access.reason as AccessDecision['reason'],
+    capability: typedCapability,
+    allowed,
+    reason: typedReason,
   };
 }
 
 function normalizedInput(input: unknown): PlannedOutfitContextInput {
   const value = recordAt(input, 'root');
-  requireOwnKeys(
-    value,
-    [
-      'planningEventId',
-      'transitionContextId',
-      'child',
-      'plannedForIso',
-      'timeZone',
-      'place',
-      'activity',
-      'vognMode',
-      'weather',
-      'recommendation',
-      'access',
-    ],
-    'root',
+  const planningEventId = normalizedText(
+    ownDataValue(value, 'planningEventId', 'planningEventId'),
+    'planningEventId',
   );
-  const planningEventId = normalizedText(value.planningEventId, 'planningEventId');
-  const transitionContextId = normalizedText(value.transitionContextId, 'transitionContextId');
+  const transitionContextId = normalizedText(
+    ownDataValue(value, 'transitionContextId', 'transitionContextId'),
+    'transitionContextId',
+  );
   if (planningEventId === transitionContextId) {
     fail('transitionContextId', 'must differ from planningEventId');
   }
-  if (value.timeZone !== PLAN_TIME_ZONE) fail('timeZone', `expected ${PLAN_TIME_ZONE}`);
-  const epochMs = parseStrictIsoInstant(value.plannedForIso);
+  const timeZone = ownDataValue(value, 'timeZone', 'timeZone');
+  if (timeZone !== PLAN_TIME_ZONE) fail('timeZone', `expected ${PLAN_TIME_ZONE}`);
+  const plannedForIso = ownDataValue(value, 'plannedForIso', 'plannedForIso');
+  const epochMs = parseStrictIsoInstant(plannedForIso);
   if (epochMs === null) fail('plannedForIso', 'expected a valid absolute ISO instant');
-  const situation = normalizedSituation(value.activity, value.vognMode);
+  const situation = normalizedSituation(
+    ownDataValue(value, 'activity', 'activity'),
+    ownDataValue(value, 'vognMode', 'vognMode'),
+  );
   return {
     planningEventId,
     transitionContextId,
-    child: normalizedChild(value.child),
+    child: normalizedChild(ownDataValue(value, 'child', 'child')),
     plannedForIso: new Date(epochMs).toISOString(),
     timeZone: PLAN_TIME_ZONE,
-    place: normalizedPlace(value.place),
+    place: normalizedPlace(ownDataValue(value, 'place', 'place')),
     activity: situation.activity,
     vognMode: situation.vognMode,
-    weather: normalizedWeather(value.weather),
-    recommendation: normalizedRecommendation(value.recommendation),
-    access: normalizedAccess(value.access),
+    weather: normalizedWeather(ownDataValue(value, 'weather', 'weather')),
+    recommendation: normalizedRecommendation(
+      ownDataValue(value, 'recommendation', 'recommendation'),
+    ),
+    access: normalizedAccess(ownDataValue(value, 'access', 'access')),
   };
 }
 
@@ -363,14 +406,7 @@ function recursivelyFreeze<T>(value: T): T {
 function sameFrozenKnownShape(actual: unknown, expected: unknown): boolean {
   if (typeof expected !== 'object' || expected === null) return Object.is(actual, expected);
   if (typeof actual !== 'object' || actual === null || !Object.isFrozen(actual)) return false;
-  if (Array.isArray(expected)) {
-    return (
-      Array.isArray(actual)
-      && actual.length === expected.length
-      && expected.every((item, index) => sameFrozenKnownShape(actual[index], item))
-    );
-  }
-  if (Array.isArray(actual)) return false;
+  if (Object.getPrototypeOf(actual) !== Object.getPrototypeOf(expected)) return false;
   const actualKeys = Reflect.ownKeys(actual);
   const expectedKeys = Reflect.ownKeys(expected);
   if (
@@ -379,16 +415,34 @@ function sameFrozenKnownShape(actual: unknown, expected: unknown): boolean {
   ) {
     return false;
   }
-  return expectedKeys.every((key) => sameFrozenKnownShape(
-    (actual as Readonly<Record<PropertyKey, unknown>>)[key],
-    (expected as Readonly<Record<PropertyKey, unknown>>)[key],
-  ));
+  return expectedKeys.every((key) => {
+    const actualDescriptor = Object.getOwnPropertyDescriptor(actual, key);
+    const expectedDescriptor = Object.getOwnPropertyDescriptor(expected, key);
+    if (
+      !actualDescriptor
+      || !expectedDescriptor
+      || !Object.hasOwn(actualDescriptor, 'value')
+      || !Object.hasOwn(expectedDescriptor, 'value')
+      || actualDescriptor.enumerable !== expectedDescriptor.enumerable
+      || actualDescriptor.configurable !== expectedDescriptor.configurable
+      || actualDescriptor.writable !== expectedDescriptor.writable
+    ) {
+      return false;
+    }
+    return sameFrozenKnownShape(actualDescriptor.value, expectedDescriptor.value);
+  });
 }
 
 export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext {
   try {
     const normalized = normalizedInput(input);
     const plannedContextId = `planned-context-${fnv1a64(identityContent(normalized))}`;
+    if (
+      plannedContextId === normalized.planningEventId
+      || plannedContextId === normalized.transitionContextId
+    ) {
+      fail('plannedContextId', 'must differ from caller-supplied identifiers');
+    }
     return recursivelyFreeze({
       schemaVersion: PLANNED_CONTEXT_SCHEMA_VERSION,
       plannedContextId,

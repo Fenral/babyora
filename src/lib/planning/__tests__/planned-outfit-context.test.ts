@@ -305,7 +305,7 @@ describe('Planned Outfit exact-context contracts', () => {
     expect(isPlannedOutfitContext(valid)).toBe(true);
   });
 
-  it('RED_REJECTS_SPARSE_AND_PROTOTYPE_BACKED_RECOMMENDATION_ARRAYS', () => {
+  it('rejects sparse and prototype-backed recommendation arrays', () => {
     const sparseGarments = completeInput();
     sparseGarments.recommendation.orderedGarments = new Array<string>(1);
     const sparseEquipment = completeInput();
@@ -333,7 +333,7 @@ describe('Planned Outfit exact-context contracts', () => {
     }
   });
 
-  it('RED_REJECTS_ROOT_AND_NESTED_ACCESSORS_AND_NON_PLAIN_INPUTS', () => {
+  it('rejects root and nested accessors and non-plain creation input', () => {
     const rootAccessor = completeInput();
     Object.defineProperty(rootAccessor, 'plannedForIso', {
       enumerable: true,
@@ -354,7 +354,7 @@ describe('Planned Outfit exact-context contracts', () => {
     }
   });
 
-  it('RED_GUARD_REJECTS_ACCESSOR_PROTOTYPE_AND_ARRAY_FORGERIES', () => {
+  it('makes the guard reject accessor, prototype, and array forgeries', () => {
     const valid = createPlannedOutfitContext(completeInput());
     const validRecord = valid as Readonly<Record<string, unknown>>;
 
@@ -418,7 +418,7 @@ describe('Planned Outfit exact-context contracts', () => {
     expect(accessorWeather.tempC).toBe(temperatureBacking);
   });
 
-  it('RED_CANONICALIZES_NEGATIVE_ZERO_BEFORE_IDENTITY_AND_OUTPUT', () => {
+  it('canonicalizes negative zero before identity and output', () => {
     const zero = completeInput();
     zero.place.lat = 0;
     zero.weather.windMs = 0;
@@ -433,7 +433,7 @@ describe('Planned Outfit exact-context contracts', () => {
     expect(Object.is(negativeZeroContext.weather.windMs, -0)).toBe(false);
   });
 
-  it('RED_REJECTS_CAPABILITY_REASON_FORGERIES', () => {
+  it('rejects access decisions that contradict the capability map', () => {
     const invalidAccess = [
       { capability: 'future_plan', allowed: true, reason: 'free' },
       { capability: 'today_home', allowed: true, reason: 'plus' },
@@ -458,7 +458,7 @@ describe('Planned Outfit exact-context contracts', () => {
     }
   });
 
-  it('RED_REJECTS_DECEPTIVE_UNICODE_CONTROLS_AND_CROSS_CATEGORY_DUPLICATES', () => {
+  it('rejects deceptive Unicode controls and cross-category duplicates', () => {
     for (const deceptive of ['barn\u0085navn', 'barn\u202Enavn', 'barn\u200Bnavn']) {
       const input = completeInput();
       input.child.name = deceptive;
