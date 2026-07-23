@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -268,6 +267,8 @@ function PlanleggData({
   const [forecastOpen, setForecastOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paywallTrigger, setPaywallTrigger] = useState<HTMLElement | null>(null);
+  const [paywallAccessGeneration, setPaywallAccessGeneration] = useState(0);
+  const paywallActionRef = useRef<HTMLButtonElement | null>(null);
   const weekAccess = useMemo(() => resolvePlanningViewAccess('week', {
     isPlus: isPremium,
     authenticated: false,
@@ -279,15 +280,56 @@ function PlanleggData({
     loading: false,
   }, PLUS_FEATURE_AVAILABILITY), [isPremium]);
   const viewAccess = tab === 'today' ? todayAccess : weekAccess;
-  useEffect(() => {
-    if (weekAccess.access.state !== 'neutral') return;
-    const frame = window.requestAnimationFrame(() => {
-      setPaywallOpen(false);
+  const [weekAccessTransition, setWeekAccessTransition] = useState(() => ({
+    state: weekAccess.access.state,
+    generation: 0,
+    lastResolved: weekAccess.access.state === 'allowed'
+      ? 'allowed' as const
+      : 'denied' as const,
+    paywallFocusPending: false,
+  }));
+  let currentWeekAccessTransition = weekAccessTransition;
+  if (weekAccessTransition.state !== weekAccess.access.state) {
+    const nextAccessState = weekAccess.access.state;
+    const lostLiveWeekAccess = weekAccessTransition.lastResolved === 'allowed'
+      && nextAccessState === 'denied';
+    currentWeekAccessTransition = {
+      state: nextAccessState,
+      generation: weekAccessTransition.generation + 1,
+      lastResolved: nextAccessState === 'neutral'
+        ? weekAccessTransition.lastResolved
+        : nextAccessState,
+      paywallFocusPending: nextAccessState === 'neutral'
+        ? paywallOpen
+          && paywallAccessGeneration === weekAccessTransition.generation
+        : nextAccessState === 'denied'
+          && weekAccessTransition.paywallFocusPending,
+    };
+    setWeekAccessTransition(currentWeekAccessTransition);
+    if (nextAccessState === 'neutral') setForecastOpen(false);
+    if (lostLiveWeekAccess) {
       setForecastOpen(false);
-      if (paywallTrigger?.isConnected) paywallTrigger.focus();
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [paywallTrigger, weekAccess.access.state]);
+      setTab('today');
+    }
+  }
+  useLayoutEffect(() => {
+    if (
+      weekAccess.access.state !== 'denied'
+      || !currentWeekAccessTransition.paywallFocusPending
+    ) {
+      return;
+    }
+    const focusTarget = paywallActionRef.current
+      ?? (paywallTrigger?.isConnected ? paywallTrigger : null);
+    if (focusTarget) {
+      focusTarget.focus();
+    }
+  }, [
+    currentWeekAccessTransition.generation,
+    currentWeekAccessTransition.paywallFocusPending,
+    paywallTrigger,
+    weekAccess.access.state,
+  ]);
   const changeRailHeadStyle: CSSProperties = {
     fontSize: '1.25rem',
     fontWeight: 640,
@@ -783,9 +825,11 @@ function PlanleggData({
               <p>Værsammenligning er ikke tilgjengelig akkurat nå.</p>
             )}
             <button
+              ref={paywallActionRef}
               type="button"
               onClick={(event) => {
                 setPaywallTrigger(event.currentTarget);
+                setPaywallAccessGeneration(currentWeekAccessTransition.generation);
                 setPaywallOpen(true);
               }}
             >
@@ -805,7 +849,8 @@ function PlanleggData({
         />
       )}
     </section>
-    {paywallOpen && (
+    {paywallOpen && weekAccess.access.state !== 'neutral'
+      && paywallAccessGeneration === currentWeekAccessTransition.generation && (
       <PaywallDialog
         open
         trigger="imorgen"
