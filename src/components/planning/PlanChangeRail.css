@@ -64,7 +64,7 @@
 
 .plan-change-rail__disclosure:focus-visible,
 .plan-change-rail__outfit:focus-visible {
-  outline: 3px solid var(--accent-cta);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 4px;
 }
 
@@ -122,15 +122,15 @@
 
 .plan-change-rail__disclosure time {
   color: var(--ink-700);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .plan-change-rail__summary {
   grid-column: 1 / 3;
-  font-size: 0.9375rem;
-  font-weight: 650;
+  font-size: 1rem;
+  font-weight: 640;
   line-height: 1.35;
 }
 
@@ -179,7 +179,7 @@
 
 .plan-change-rail__action {
   color: var(--ink-900);
-  font-weight: 700;
+  font-weight: 640;
 }
 
 .plan-change-rail__cause {
@@ -213,8 +213,9 @@
   margin-top: 3px;
   overflow-wrap: anywhere;
   color: var(--ink-700);
-  font-size: 0.6875rem;
-  line-height: 1.25;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .plan-change-rail__outfit {
@@ -226,7 +227,7 @@
   background: transparent;
   color: var(--accent-cta);
   font: inherit;
-  font-weight: 700;
+  font-weight: 640;
   cursor: pointer;
 }
 

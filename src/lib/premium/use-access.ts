@@ -106,3 +106,19 @@ export function useAccess(): { isPremium: boolean; loading: boolean } {
 
   return { isPremium, loading };
 }
+
+/**
+ * Subscribe to entitlement changes without exposing the subscription store.
+ *
+ * Shell-level safety boundaries use this to revoke already-open premium
+ * surfaces from the external-store notification callback.
+ */
+export function subscribeToAccessEntitlement(
+  listener: (isPremium: boolean) => void,
+): () => void {
+  return useSubscription.subscribe((state, previousState) => {
+    if (state.isPremium !== previousState.isPremium) {
+      listener(state.isPremium);
+    }
+  });
+}

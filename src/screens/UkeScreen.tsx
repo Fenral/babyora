@@ -562,6 +562,8 @@ export function UkeScreen({
       tab !== 'today'
       || !weather.evidence
       || weather.evidence.coverage.status === 'unavailable'
+      || !Number.isInteger(ageMonths)
+      || ageMonths < 0 || ageMonths > 24
     ) {
       return EMPTY_PLANNING_EVALUATION;
     }
@@ -608,7 +610,7 @@ export function UkeScreen({
         child: {
           id: active.id,
           name: active.name,
-          ageMonths: Math.min(24, Math.max(0, Math.round(ageMonths))),
+          ageMonths,
         },
         plannedForIso: event.atIso,
         timeZone: PLAN_TIME_ZONE,
@@ -698,12 +700,37 @@ export function UkeScreen({
     weather.evidence,
   ]);
 
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const renderedSelectedEventId = repairPlanningSelection(
-    selectedEventId,
-    planningEvaluation.events.map((event) => event.id),
-    planningEvaluation.preferredEventId,
+  const planningEventIds = useMemo(
+    () => planningEvaluation.events.map((event) => event.id),
+    [planningEvaluation.events],
   );
+  const planningSelectionScope = JSON.stringify(planningEventIds);
+  const [planningSelection, setPlanningSelection] = useState(() => ({
+    scope: planningSelectionScope,
+    selectedEventId: repairPlanningSelection(
+      null,
+      planningEventIds,
+      planningEvaluation.preferredEventId,
+    ),
+  }));
+  let selectedEventId = planningSelection.selectedEventId;
+  if (planningSelection.scope !== planningSelectionScope) {
+    selectedEventId = repairPlanningSelection(
+      planningSelection.selectedEventId,
+      planningEventIds,
+      planningEvaluation.preferredEventId,
+    );
+    setPlanningSelection({
+      scope: planningSelectionScope,
+      selectedEventId,
+    });
+  }
+  const setSelectedEventId = useCallback((eventId: string | null) => {
+    setPlanningSelection((current) => ({
+      ...current,
+      selectedEventId: eventId,
+    }));
+  }, []);
   const openPlannedOutfit = useCallback((
     eventId: string,
     trigger: HTMLElement,
@@ -727,7 +754,7 @@ export function UkeScreen({
     padding: '4px 4px 16px', marginBottom: 8, borderBottom: `1px solid ${TOKENS.ink100}`,
   };
   const changeRailHeadStyle: CSSProperties = {
-    fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+    fontSize: '1.25rem', fontWeight: 640, lineHeight: 1.25,
     color: TOKENS.ink500, margin: '0 0 10px 2px',
   };
 
@@ -1346,7 +1373,7 @@ export function UkeScreen({
                 <h3 style={changeRailHeadStyle}>Endringer i dag</h3>
                 <PlanChangeRail
                   rows={planningEvaluation.rows}
-                  selectedEventId={renderedSelectedEventId}
+                  selectedEventId={selectedEventId}
                   onSelect={setSelectedEventId}
                   onOpenOutfit={openPlannedOutfit}
                 />

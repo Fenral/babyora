@@ -61,3 +61,10 @@ export function dispatchPlanningInteraction(
     handlers.onCue?.(decision.cue);
   }
 }
+
+export function shouldClosePlannedDrillOnAccess(
+  isPlannedDrill: boolean,
+  access: Readonly<{ loading: boolean; isPremium: boolean }>,
+): boolean {
+  return isPlannedDrill && (access.loading || !access.isPremium);
+}

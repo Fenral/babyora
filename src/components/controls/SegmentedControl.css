@@ -49,11 +49,11 @@
 .segmented-control__segment.is-checked {
   background: var(--accent-cta);
   color: var(--accent-cta-ink);
-  font-weight: 700;
+  font-weight: 640;
 }
 
 .segmented-control__segment:has(.segmented-control__input:focus-visible) {
-  outline: 3px solid var(--accent-cta);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 4px;
 }
 

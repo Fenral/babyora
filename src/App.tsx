@@ -31,6 +31,11 @@ import {
   isPlannedOutfitContext,
   type PlannedOutfitContext,
 } from './lib/planning/planned-outfit-context';
+import { shouldClosePlannedDrillOnAccess } from './lib/planning/planning-interaction';
+import {
+  subscribeToAccessEntitlement,
+  useAccess,
+} from './lib/premium/use-access';
 
 const HjemScreen = lazy(() =>
   import('./screens/HjemScreen').then((m) => ({ default: m.HjemScreen })),
@@ -144,6 +149,7 @@ export default function App(): ReactElement {
   const [tab, setTab] = useState<TabKey>('hjem');
   const [drill, setDrill] = useState<Drill>(null);
   const themeMode = useTheme((s) => s.mode);
+  const { isPremium, loading: accessLoading } = useAccess();
 
   useEffect(() => {
     document.documentElement.lang = 'nb';
@@ -187,7 +193,6 @@ export default function App(): ReactElement {
 
   const mainRef = useRef<HTMLElement | null>(null);
   const onBackRef = useRef<(() => void) | null>(null);
-  const canGoBack = drill !== null || tab !== 'hjem';
 
   const closePaakledning = useCallback(() => {
     const origin = drill?.kind === 'paakledning' && drill.source === 'planned'
@@ -203,6 +208,25 @@ export default function App(): ReactElement {
       }
     });
   }, [drill]);
+
+  useEffect(() => {
+    return subscribeToAccessEntitlement((nextIsPremium) => {
+      if (shouldClosePlannedDrillOnAccess(
+        drill?.kind === 'paakledning' && drill.source === 'planned',
+        { loading: accessLoading, isPremium: nextIsPremium },
+      )) {
+        closePaakledning();
+      }
+    });
+  }, [accessLoading, closePaakledning, drill]);
+
+  const activeDrill = shouldClosePlannedDrillOnAccess(
+    drill?.kind === 'paakledning' && drill.source === 'planned',
+    { loading: accessLoading, isPremium },
+  )
+    ? null
+    : drill;
+  const canGoBack = activeDrill !== null || tab !== 'hjem';
 
   // A11y (2026-07-11): når onboarding fullføres og app-shellet tar over, flytt
   // fokus til <main> så skjermlesere annonserer Hjem og tab-fokus ikke faller
@@ -222,8 +246,8 @@ export default function App(): ReactElement {
       return;
     }
     onBackRef.current = () => {
-      if (drill !== null) {
-        if (drill.kind === 'paakledning') {
+      if (activeDrill !== null) {
+        if (activeDrill.kind === 'paakledning') {
           closePaakledning();
         } else {
           setDrill(null);
@@ -232,7 +256,7 @@ export default function App(): ReactElement {
         setTab('hjem');
       }
     };
-  }, [drill, tab, canGoBack, closePaakledning]);
+  }, [activeDrill, tab, canGoBack, closePaakledning]);
 
   useEffect(() => {
     const el = mainRef.current;
@@ -354,9 +378,9 @@ export default function App(): ReactElement {
   //  - drill.kind === 'paakledning' → 'hjem' (åpnet via Hjem CTA;
   //    baren skjules uansett siden PaakledningScreen er native dialog modal)
   let activeTabForBar: TabKey;
-  if (drill === null) {
+  if (activeDrill === null) {
     activeTabForBar = tab;
-  } else if (drill.kind === 'guide') {
+  } else if (activeDrill.kind === 'guide') {
     activeTabForBar = 'guide';
   } else {
     activeTabForBar = 'hjem';
@@ -365,24 +389,24 @@ export default function App(): ReactElement {
   // PaakledningScreen mounter <dialog>.showModal() — native modal som
   // dekker hele skjermen. BottomTabBar skal IKKE være synlig / klikkbar
   // mens den er åpen. Vi dropper rendring helt for clarity.
-  const sheetOpen = drill?.kind === 'paakledning';
+  const sheetOpen = activeDrill?.kind === 'paakledning';
 
-  if (drill?.kind === 'guide' && drill.target === 'finn-antrekk') {
+  if (activeDrill?.kind === 'guide' && activeDrill.target === 'finn-antrekk') {
     routeKey = 'drill:guide:finn-antrekk';
     routeContent = <FinnAntrekkScreen onBack={() => setDrill(null)} />;
-  } else if (drill?.kind === 'guide' && drill.target === 'plaggbib') {
+  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'plaggbib') {
     routeKey = 'drill:guide:plaggbib';
     routeContent = <PlaggbibliotekScreen onBack={() => setDrill(null)} />;
-  } else if (drill?.kind === 'guide' && drill.target === 'min-garderobe') {
+  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'min-garderobe') {
     routeKey = 'drill:guide:min-garderobe';
     routeContent = <MinGarderobeScreen onBack={() => setDrill(null)} />;
-  } else if (drill?.kind === 'guide' && drill.target === 'tog') {
+  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'tog') {
     routeKey = 'drill:guide:tog';
     routeContent = <TogGuideScreen onBack={() => setDrill(null)} />;
-  } else if (drill?.kind === 'guide' && drill.target === 'varm-kald') {
+  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'varm-kald') {
     routeKey = 'drill:guide:varm-kald';
     routeContent = <VarmEllerKaldScreen onBack={() => setDrill(null)} />;
-  } else if (drill?.kind === 'guide' && drill.target === 'forste-vinter') {
+  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'forste-vinter') {
     routeKey = 'drill:guide:forste-vinter';
     routeContent = (
       <VinterprogramScreen
@@ -467,19 +491,19 @@ export default function App(): ReactElement {
           focus-trap + ESC + aria-modal. Hjem forblir mounted bak så
           state/scroll-posisjon bevares og fokus returneres til CTA
           ved lukk. F72 fix 2026-06-29. */}
-      {sheetOpen && drill?.kind === 'paakledning' && (
+      {sheetOpen && activeDrill?.kind === 'paakledning' && (
         <Suspense fallback={null}>
-          {drill.source === 'planned' ? (
+          {activeDrill.source === 'planned' ? (
             <PaakledningScreen
               onBack={closePaakledning}
-              plannedContext={drill.plannedContext}
+              plannedContext={activeDrill.plannedContext}
             />
           ) : (
             <PaakledningScreen
               onBack={closePaakledning}
-              recommendation={drill.context?.recommendation ?? null}
-              vogn={drill.context?.activity}
-              vognMode={drill.context?.vognMode ?? 'awake'}
+              recommendation={activeDrill.context?.recommendation ?? null}
+              vogn={activeDrill.context?.activity}
+              vognMode={activeDrill.context?.vognMode ?? 'awake'}
             />
           )}
         </Suspense>
