@@ -178,6 +178,11 @@ async function assertCompositionPrimitives(): Promise<void> {
       'RED_REVIEW_AGGREGATE_AUTHORITY: komposisjonen må konsumere modellens rader, kandidater, handling og verdict uten ekstern gjenberegning',
     );
   }
+  if (!ukeSource.includes("tab === 'today' ? 'today_home' : 'future_plan'")) {
+    throw new Error(
+      'RED_REVIEW_FREE_TODAY_ACCESS: I dag må bruke today_home, mens bare Uke kan kreve future_plan',
+    );
+  }
   if (
     ukeSource.includes('key={requestKey}')
     || !ukeSource.includes('useWeather(lat, lon, FALLBACK_REF_HOUR, refreshKey)')
@@ -1056,6 +1061,19 @@ async function runCompositionMatrix(
 
   const freePath = `${fixture.path}${fixture.path.includes('?') ? '&' : '?'}access=free`;
   await openPlanlegg(page, freePath);
+  const freeTodayOutfit = page
+    .getByRole('list', { name: 'Antrekksendringer gjennom dagen' })
+    .getByRole('button', { name: 'Se hele antrekket' })
+    .first();
+  await freeTodayOutfit.waitFor({ state: 'visible', timeout: 15_000 });
+  await freeTodayOutfit.click();
+  const freeTodayDialog = page.getByRole('dialog');
+  await freeTodayDialog.waitFor({ state: 'visible', timeout: 15_000 });
+  if (!(await freeTodayDialog.innerText()).includes('Tilgang: today_home')) {
+    throw new Error('Free I dag skal åpne exact Outfit med today_home-tilgang');
+  }
+  await freeTodayDialog.getByRole('button', { name: 'Lukk planlagt antrekk' }).click();
+  await freeTodayDialog.waitFor({ state: 'detached' });
   await page.getByRole('radio', { name: 'Uke', exact: true })
     .evaluate((radio) => (radio as HTMLInputElement).click());
   const freeWeekContext = page.locator('.planlegg-screen__week-weather');
