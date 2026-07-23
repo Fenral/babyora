@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { resolveRuntimeCapabilityAccess } from '../../lib/premium/gating';
 import { createAutoLocationController } from '../useAutoLocationRefresh';
 
+const live = () => true;
+
 function deferred<T>() {
   let resolve!: (value: T) => void;
   let reject!: (error: unknown) => void;
@@ -49,6 +51,7 @@ describe('automatic location controller', () => {
       runtimeDecision,
       mode,
       childId: 'child-1',
+      isStillAllowed: live,
     })).resolves.toEqual({ status: 'blocked' });
 
     expect(gps).not.toHaveBeenCalled();
@@ -68,6 +71,7 @@ describe('automatic location controller', () => {
       runtimeDecision: access(true),
       mode: 'manual',
       childId: 'child-1',
+      isStillAllowed: live,
     })).resolves.toEqual({ status: 'success', placeLabel: 'Stjørdal' });
 
     expect(begin).toHaveBeenCalledTimes(1);
@@ -92,6 +96,7 @@ describe('automatic location controller', () => {
       runtimeDecision: access(true),
       mode: 'auto' as const,
       childId: 'child-1',
+      isStillAllowed: live,
     };
 
     const first = controller.run(request);
@@ -116,6 +121,7 @@ describe('automatic location controller', () => {
       runtimeDecision: access(true),
       mode: 'auto',
       childId: 'child-1',
+      isStillAllowed: live,
     });
     position.resolve({ lat: 60.39, lon: 5.32 });
     await Promise.resolve();
@@ -137,9 +143,78 @@ describe('automatic location controller', () => {
       runtimeDecision: access(true),
       mode: 'manual',
       childId: 'child-1',
+      isStillAllowed: live,
     })).resolves.toEqual({ status: 'failed' });
 
     expect(clear).toHaveBeenCalledTimes(1);
     expect(commit).not.toHaveBeenCalled();
+  });
+
+  it('rechecks live authorization before reverse geocoding and commit', async () => {
+    const { controller, gps, reverse, commit } = harness();
+    const position = deferred<Readonly<{ lat: number; lon: number }>>();
+    let allowed = true;
+    gps.mockReturnValue(position.promise);
+    reverse.mockResolvedValue({ city: 'Oslo' });
+
+    const request = controller.run({
+      intent: 'settings-activation',
+      runtimeDecision: access(true),
+      mode: 'manual',
+      childId: 'child-1',
+      isStillAllowed: () => allowed,
+    });
+    allowed = false;
+    position.resolve({ lat: 59.9139, lon: 10.7522 });
+
+    await expect(request).resolves.toEqual({ status: 'superseded' });
+    expect(reverse).not.toHaveBeenCalled();
+    expect(commit).not.toHaveBeenCalled();
+  });
+
+  it('rejects a live downgrade while reverse geocoding is in flight', async () => {
+    const { controller, gps, reverse, commit } = harness();
+    const geocode = deferred<Readonly<{ city: string | null }>>();
+    let allowed = true;
+    gps.mockResolvedValue({ lat: 59.9139, lon: 10.7522 });
+    reverse.mockReturnValue(geocode.promise);
+
+    const request = controller.run({
+      intent: 'settings-activation',
+      runtimeDecision: access(true),
+      mode: 'manual',
+      childId: 'child-1',
+      isStillAllowed: () => allowed,
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    allowed = false;
+    geocode.resolve({ city: 'Oslo' });
+
+    await expect(request).resolves.toEqual({ status: 'superseded' });
+    expect(commit).not.toHaveBeenCalled();
+  });
+
+  it('deduplicates overlapping startup and resume for the same child', async () => {
+    const { controller, gps, reverse, commit } = harness();
+    const position = deferred<Readonly<{ lat: number; lon: number }>>();
+    gps.mockReturnValue(position.promise);
+    reverse.mockResolvedValue({ city: 'Oslo' });
+    const base = {
+      runtimeDecision: access(true),
+      mode: 'auto' as const,
+      childId: 'child-1',
+      isStillAllowed: live,
+    };
+
+    const startup = controller.run({ ...base, intent: 'startup' });
+    const resume = controller.run({ ...base, intent: 'resume' });
+    position.resolve({ lat: 59.9139, lon: 10.7522 });
+
+    await expect(startup).resolves.toEqual({ status: 'success', placeLabel: 'Oslo' });
+    await expect(resume).resolves.toEqual({ status: 'success', placeLabel: 'Oslo' });
+    expect(gps).toHaveBeenCalledTimes(1);
+    expect(reverse).toHaveBeenCalledTimes(1);
+    expect(commit).toHaveBeenCalledTimes(1);
   });
 });
