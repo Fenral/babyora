@@ -37,6 +37,7 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const { searchParams } = new URL(req.url);
+  const memoryOnly = searchParams.get('cacheScope') === 'memory-only';
   const lat = Number(searchParams.get('lat'));
   const lon = Number(searchParams.get('lon'));
   if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
@@ -48,6 +49,7 @@ export default async function handler(req: Request): Promise<Response> {
   try {
     upstream = await fetch(url, {
       headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
+      ...(memoryOnly ? { cache: 'no-store' as const } : {}),
     });
   } catch {
     return json({ error: 'met.no utilgjengelig' }, 502);
@@ -63,7 +65,13 @@ export default async function handler(req: Request): Promise<Response> {
     headers: {
       ...CORS,
       'Content-Type': 'application/json',
-      'Cache-Control': 's-maxage=900, stale-while-revalidate=600',
+      ...(memoryOnly
+        ? {
+          'Cache-Control': 'private, no-store, max-age=0',
+          'CDN-Cache-Control': 'no-store',
+          'Vercel-CDN-Cache-Control': 'no-store',
+        }
+        : { 'Cache-Control': 's-maxage=900, stale-while-revalidate=600' }),
     },
   });
 }

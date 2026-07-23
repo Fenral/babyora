@@ -139,6 +139,7 @@ const latestCommittedByKey = new Map<string, Readonly<{
   version: number;
   result: ForecastFetchResult;
 }>>();
+const memoryOnlyKeyOrder = new Map<string, true>();
 let coordinatorStorage: Storage | null | undefined;
 
 type CachedEntry = {
@@ -174,6 +175,34 @@ function clearPersistentCoordinator(): void {
   }
 }
 
+function removeMemoryOnlyCoordinator(key: string): void {
+  memoryOnlyKeyOrder.delete(key);
+  latestStartedVersionByKey.delete(key);
+  latestCommittedByKey.delete(key);
+}
+
+function touchMemoryOnlyCoordinator(key: string): void {
+  memoryOnlyKeyOrder.delete(key);
+  memoryOnlyKeyOrder.set(key, true);
+  while (memoryOnlyKeyOrder.size > MAX_MEMORY_ONLY_ENTRIES) {
+    const oldest = memoryOnlyKeyOrder.keys().next().value as string | undefined;
+    if (!oldest) break;
+    removeMemoryOnlyCoordinator(oldest);
+  }
+}
+
+/** @internal Privacy diagnostic used by the cache-bound regression contract. */
+export function memoryOnlyForecastCoordinatorSize(): number {
+  const keys = new Set(memoryOnlyKeyOrder.keys());
+  for (const key of latestStartedVersionByKey.keys()) {
+    if (key.startsWith('memory-only:')) keys.add(key);
+  }
+  for (const key of latestCommittedByKey.keys()) {
+    if (key.startsWith('memory-only:')) keys.add(key);
+  }
+  return keys.size;
+}
+
 function alignCoordinatorWithStorage(): void {
   let currentStorage: Storage | null = null;
   try {
@@ -190,18 +219,9 @@ function commitMemoryResult(
   key: string,
   value: Readonly<{ version: number; result: ForecastFetchResult }>,
 ): void {
+  if (key.startsWith('memory-only:')) touchMemoryOnlyCoordinator(key);
   latestCommittedByKey.delete(key);
   latestCommittedByKey.set(key, value);
-  if (!key.startsWith('memory-only:')) return;
-  const memoryKeys = [...latestCommittedByKey.keys()]
-    .filter((candidate) => candidate.startsWith('memory-only:'));
-  while (memoryKeys.length > MAX_MEMORY_ONLY_ENTRIES) {
-    const oldest = memoryKeys.shift();
-    if (oldest) {
-      latestCommittedByKey.delete(oldest);
-      latestStartedVersionByKey.delete(oldest);
-    }
-  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -364,14 +384,15 @@ function cacheResult(
   return { forecast: entry.data, metadata };
 }
 
-function readMemoryCommit(key: string): Readonly<{
+function readMemoryCommit(key: string, asCacheHit = false): Readonly<{
   version: number;
   result: ForecastFetchResult;
 }> | null {
   const committed = latestCommittedByKey.get(key);
   if (!committed) return null;
   if (!isMetForecast(committed.result.forecast)) {
-    latestCommittedByKey.delete(key);
+    if (key.startsWith('memory-only:')) removeMemoryOnlyCoordinator(key);
+    else latestCommittedByKey.delete(key);
     return null;
   }
   const evaluatedAt = Date.now();
@@ -380,15 +401,22 @@ function readMemoryCommit(key: string): Readonly<{
     age < 0
     || age > CACHE_TTL_MS
   ) {
-    latestCommittedByKey.delete(key);
+    if (key.startsWith('memory-only:')) removeMemoryOnlyCoordinator(key);
+    else latestCommittedByKey.delete(key);
     return null;
   }
+  if (key.startsWith('memory-only:')) touchMemoryOnlyCoordinator(key);
   return {
     ...committed,
     result: {
       ...committed.result,
       metadata: {
         ...committed.result.metadata,
+        ...(asCacheHit ? {
+          source: 'cache' as const,
+          cacheStatus: 'fresh' as const,
+          stale: false,
+        } : {}),
         sourceUpdatedAt: sourceUpdatedAt(committed.result.forecast, evaluatedAt),
         evaluatedAt,
       },
@@ -410,18 +438,22 @@ export async function fetchForecast(
 
   const key = coordinatorKey(scope, lat, lon);
   if (scope === 'memory-only') {
-    const memory = readMemoryCommit(key);
+    const memory = readMemoryCommit(key, true);
     if (memory) return memory.result;
   }
   const requestVersion = (latestStartedVersionByKey.get(key) ?? 0) + 1;
+  if (scope === 'memory-only') touchMemoryOnlyCoordinator(key);
   latestStartedVersionByKey.set(key, requestVersion);
 
   // Via proxy — den setter User-Agent server-side (met.no-krav).
-  const url = `${PROXY}?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`;
+  const scopeQuery = scope === 'memory-only' ? '&cacheScope=memory-only' : '';
+  const url = `${PROXY}?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}${scopeQuery}`;
   try {
     const res = await fetch(url, {
       headers: { Accept: 'application/json' },
-      ...(scope === 'memory-only' ? { cache: 'no-store' as const } : {}),
+      ...(scope === 'memory-only'
+        ? { cache: 'no-store' as const }
+        : {}),
     });
     if (!res.ok) {
       throw new Error(`met.no HTTP ${res.status}`);
@@ -452,7 +484,12 @@ export async function fetchForecast(
   } catch (error) {
     const committed = readMemoryCommit(key);
     if (committed) return committed.result;
-    if (scope === 'memory-only') throw error;
+    if (scope === 'memory-only') {
+      if (latestStartedVersionByKey.get(key) === requestVersion) {
+        removeMemoryOnlyCoordinator(key);
+      }
+      throw error;
+    }
     const current = readCache(lat, lon);
     if (current.fresh) return cacheResult(current.fresh, false, current.evaluatedAt);
     if (current.stale) return cacheResult(current.stale, true, current.evaluatedAt);
