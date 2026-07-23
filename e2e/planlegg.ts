@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -160,6 +160,32 @@ async function assertCompositionPrimitives(): Promise<void> {
     || closedForecast.includes('Føles som')
   ) {
     throw new Error('Lukket prognose-disclosure er ikke kontrollert eller lekker rader');
+  }
+
+  const ukeSource = readFileSync(
+    join(process.cwd(), 'src/screens/UkeScreen.tsx'),
+    'utf8',
+  );
+  if (
+    ukeSource.includes('buildPlanningRailRows(')
+    || ukeSource.includes('preferredEventId: events[0]')
+    || !ukeSource.includes('viewModel.rows')
+    || !ukeSource.includes('viewModel.candidateEventIds')
+    || !ukeSource.includes('viewModel.nextAction')
+    || !ukeSource.includes('viewModel.verdict')
+  ) {
+    throw new Error(
+      'RED_REVIEW_AGGREGATE_AUTHORITY: komposisjonen må konsumere modellens rader, kandidater, handling og verdict uten ekstern gjenberegning',
+    );
+  }
+  if (
+    !ukeSource.includes('className="planlegg-screen ba-temp-root"')
+    || !readFileSync(join(process.cwd(), 'src/screens/UkeScreen.css'), 'utf8')
+      .includes('background: var(--bg-canvas)')
+  ) {
+    throw new Error(
+      'RED_REVIEW_ACTIVE_TEMP_CANVAS: temperaturaksen må treffe den deklarerte token-roten og faktisk male canvas',
+    );
   }
 }
 
@@ -793,6 +819,12 @@ async function runCompositionMatrix(
   if (await page.locator(liveOwnerSelector).count() !== 1) {
     throw new Error('Loading skal ha nøyaktig én høflig live-eier');
   }
+  if (
+    await page.locator('.planlegg-status__skeleton-verdict').count() !== 1
+    || await page.locator('.planlegg-status__skeleton-rail').count() !== 1
+  ) {
+    throw new Error('Loading skal reservere både verdict- og Dagslinje-geometri');
+  }
 
   forecastState.delivery = 'error';
   await page.evaluate(() => {
@@ -808,6 +840,13 @@ async function runCompositionMatrix(
     || await page.locator(liveOwnerSelector).count() !== 1
   ) {
     throw new Error('No-cache-feil mangler heading, retry eller eneste live-eier');
+  }
+  const errorViews = page.locator('.planlegg-screen__views');
+  if (
+    await errorViews.getAttribute('aria-disabled') !== 'true'
+    || await errorViews.getAttribute('inert') === null
+  ) {
+    throw new Error('No-cache-feil skal gjøre sannhetsavhengige visningsvalg utilgjengelige');
   }
   forecastState.delivery = 'success';
   forecastState.mode = 'many';
@@ -849,6 +888,33 @@ async function runCompositionMatrix(
       + `live=${await page.locator(liveOwnerSelector).count()}`,
     );
   }
+  const offlineRail = page.getByRole('list', { name: 'Antrekksendringer gjennom dagen' });
+  const offlineDisclosures = offlineRail.locator('button[aria-expanded]');
+  if (await offlineDisclosures.count() < 2) {
+    throw new Error('Offline refresh-fixturen må ha en valgt event som kan fjernes');
+  }
+  await offlineDisclosures.nth(1).click();
+  const focusedOutsideRefresh = page
+    .getByRole('navigation')
+    .first()
+    .getByRole('button', { name: /^Planlegg/u });
+  await focusedOutsideRefresh.focus();
+  forecastState.delivery = 'success';
+  forecastState.mode = 'zero';
+  await offline.getByRole('button', { name: 'Prøv å hente planen', exact: true })
+    .evaluate((button) => (button as HTMLButtonElement).click());
+  await offlineRail.getByText('Samme antrekk i de vurderte tidspunktene')
+    .waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await offlineRail.locator('button[aria-expanded]').count() !== 0
+    || await offlineRail.getByRole('button', { name: 'Se hele antrekket' }).count() !== 0
+    || await focusedOutsideRefresh.evaluate((element) => element !== document.activeElement)
+    || await page.locator(liveOwnerSelector).count() !== 0
+  ) {
+    throw new Error(
+      'In-place refresh skal reparere fjernet valg til null, fjerne stale CTA, bevare fokus og være stille når ready',
+    );
+  }
 
   forecastState.delivery = 'success';
   forecastState.mode = 'partial';
@@ -883,6 +949,17 @@ async function runCompositionMatrix(
       throw new Error(`${mode}-state fikk ${disclosureCount} disclosures`);
     }
   }
+
+  const premiumWeekRadio = page.getByRole('radio', { name: 'Uke', exact: true });
+  await premiumWeekRadio.click();
+  await page.locator('.planlegg-screen__answer').waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await page.getByRole('list', { name: 'Antrekksendringer gjennom dagen' }).count() !== 1
+    || await page.getByText('Antrekk videre i uka er tilgjengelig med Babyora Pluss').count() !== 0
+  ) {
+    throw new Error('Premium Uke skal være en ekte aggregert plan, ikke en død eller markedsførende flate');
+  }
+  await page.getByRole('radio', { name: 'I dag', exact: true }).click();
 
   const screen = page.locator('.planlegg-screen');
   const verticalOwners = await page.locator('body *').evaluateAll((elements) => (
@@ -962,6 +1039,7 @@ async function runCompositionMatrix(
     { name: 'warm', value: 25, axis: 'varm' },
     { name: 'extreme-heat', value: 55, axis: 'varm' },
   ] as const;
+  const temperatureBackgrounds = new Set<string>();
   for (const temperatureCase of temperatureCases) {
     forecastState.delivery = 'success';
     forecastState.mode = 'zero';
@@ -976,26 +1054,61 @@ async function runCompositionMatrix(
     if (await screen.getAttribute('data-temp') !== temperatureCase.axis) {
       throw new Error(`${temperatureCase.name} fikk feil temperaturakse`);
     }
+    temperatureBackgrounds.add(await screen.evaluate(
+      (element) => getComputedStyle(element).backgroundColor,
+    ));
+  }
+  if (temperatureBackgrounds.size !== 3) {
+    throw new Error(
+      `Temperaturaksen malte ikke tre distinkte canvas: ${[...temperatureBackgrounds].join(', ')}`,
+    );
   }
 
+  await reloadPlanlegg(page, fixture.path, forecastState, 'many');
   const contrast = async (theme: 'light' | 'dark') => {
     await page.evaluate((nextTheme) => {
       document.documentElement.dataset.theme = nextTheme;
     }, theme);
     const colors = await page.evaluate(() => {
-      const foreground = getComputedStyle(
-        document.querySelector<HTMLElement>('.planlegg-screen__verdict')!,
-      ).color;
-      const background = getComputedStyle(document.documentElement)
-        .getPropertyValue('--bg-canvas').trim();
-      return { foreground, background };
+      const planlegg = document.querySelector<HTMLElement>('.planlegg-screen')!;
+      const planleggStyle = getComputedStyle(planlegg);
+      const background = planleggStyle.getPropertyValue('--bg-canvas').trim();
+      const selectedControl = document.querySelector<HTMLElement>(
+        '.segmented-control__segment.is-checked',
+      )!;
+      const selectedControlStyle = getComputedStyle(selectedControl);
+      const action = document.querySelector<HTMLElement>('.plan-change-rail__outfit')!;
+      return {
+        background,
+        normal: getComputedStyle(
+          document.querySelector<HTMLElement>('.planlegg-screen__context')!,
+        ).color,
+        large: getComputedStyle(
+          document.querySelector<HTMLElement>('.planlegg-screen__verdict')!,
+        ).color,
+        controlForeground: selectedControlStyle.color,
+        controlBackground: selectedControlStyle.backgroundColor,
+        focus: planleggStyle.getPropertyValue('--focus-ring').trim(),
+        action: getComputedStyle(action).color,
+      };
     });
-    return contrastRatio(colors.foreground, colors.background);
+    return {
+      normal: contrastRatio(colors.normal, colors.background),
+      large: contrastRatio(colors.large, colors.background),
+      control: contrastRatio(colors.controlForeground, colors.controlBackground),
+      focus: contrastRatio(colors.focus, colors.background),
+      action: contrastRatio(colors.action, colors.background),
+    };
   };
   const lightContrast = await contrast('light');
   const darkContrast = await contrast('dark');
-  if (lightContrast < 4.5 || darkContrast < 4.5) {
-    throw new Error(`AA-kontrast avvek: light=${lightContrast}, dark=${darkContrast}`);
+  const failingContrast = Object.entries({ lightContrast, darkContrast }).flatMap(
+    ([theme, pairs]) => Object.entries(pairs)
+      .filter(([kind, ratio]) => ratio < (kind === 'large' || kind === 'focus' ? 3 : 4.5))
+      .map(([kind, ratio]) => `${theme}.${kind}=${ratio}`),
+  );
+  if (failingContrast.length > 0) {
+    throw new Error(`AA-kontrast avvek: ${failingContrast.join(', ')}`);
   }
 
   await page.emulateMedia({ forcedColors: 'active' });
