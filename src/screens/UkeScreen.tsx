@@ -1,11 +1,13 @@
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type CSSProperties,
 } from 'react';
+import { PaywallDialog } from '../components/PaywallDialog';
 import { ForecastDisclosure } from '../components/planning/ForecastDisclosure';
 import { PlanChangeRail, type PlanChangeRailRow, type PlanningRailEvent } from '../components/planning/PlanChangeRail';
 import {
@@ -14,7 +16,6 @@ import {
 } from '../components/planning/PlanleggStatusNotice';
 import { SegmentedControl } from '../components/controls/SegmentedControl';
 import { useWeather } from '../hooks/useWeather';
-import { decideAccess } from '../lib/access/capabilities';
 import { useHapticSystem } from '../lib/haptics/system';
 import { extractDailyAtHour, extractHourly } from '../lib/met-no/client';
 import type { WeatherDayAtHour, WeatherHourly } from '../lib/met-no/types';
@@ -38,6 +39,8 @@ import {
   type PlanningVerdictView,
   type PlanningWeatherRow,
 } from '../lib/planning/plan-view-model';
+import { resolvePlanningViewAccess } from '../lib/premium/gating';
+import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
 import { useAccess } from '../lib/premium/use-access';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
@@ -263,6 +266,29 @@ function PlanleggData({
   const weather = useWeather(lat, lon, FALLBACK_REF_HOUR, refreshKey);
   const [tab, setTab] = useState<ViewTab>('today');
   const [forecastOpen, setForecastOpen] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [paywallTrigger, setPaywallTrigger] = useState<HTMLElement | null>(null);
+  const weekAccess = useMemo(() => resolvePlanningViewAccess('week', {
+    isPlus: isPremium,
+    authenticated: false,
+    loading: accessLoading,
+  }, PLUS_FEATURE_AVAILABILITY), [accessLoading, isPremium]);
+  const todayAccess = useMemo(() => resolvePlanningViewAccess('today', {
+    isPlus: isPremium,
+    authenticated: false,
+    loading: false,
+  }, PLUS_FEATURE_AVAILABILITY), [isPremium]);
+  const viewAccess = tab === 'today' ? todayAccess : weekAccess;
+  const previousWeekAllowedRef = useRef(weekAccess.access.allowed);
+  useEffect(() => {
+    const lostLiveWeekAccess = previousWeekAllowedRef.current
+      && !weekAccess.access.allowed;
+    previousWeekAllowedRef.current = weekAccess.access.allowed;
+    if (!lostLiveWeekAccess || tab !== 'tenday') return;
+    setPaywallOpen(false);
+    setForecastOpen(false);
+    setTab('today');
+  }, [tab, weekAccess.access.allowed]);
   const changeRailHeadStyle: CSSProperties = {
     fontSize: '1.25rem',
     fontWeight: 640,
@@ -285,6 +311,9 @@ function PlanleggData({
 
   const phases = useMemo<readonly Phase[]>(() => {
     if (weather.status !== 'ready' && weather.status !== 'offline') return Object.freeze([]);
+    if (tab === 'tenday' && viewAccess.presentation !== 'full') {
+      return Object.freeze([]);
+    }
     if (!Number.isInteger(ageMonths) || ageMonths < 0 || ageMonths > 24) {
       return Object.freeze([]);
     }
@@ -307,6 +336,7 @@ function PlanleggData({
     activity,
     ageMonths,
     tab,
+    viewAccess.presentation,
     vognMode,
     weather.evidence?.metadata.evaluatedAt,
     weather.status,
@@ -325,9 +355,8 @@ function PlanleggData({
   }, [phases, swaps]);
 
   const planningEvaluation = useMemo<PlanningEvaluation>(() => {
-    const isLockedWeek = tab === 'tenday' && (!isPremium || accessLoading);
     if (
-      isLockedWeek
+      (tab === 'tenday' && viewAccess.presentation !== 'full')
       || !weather.evidence
       || weather.evidence.coverage.status === 'unavailable'
       || !Number.isInteger(ageMonths)
@@ -381,12 +410,8 @@ function PlanleggData({
       return EMPTY_PLANNING_EVALUATION;
     }
     const events = viewModel.events;
-    const planCapability = tab === 'today' ? 'today_home' : 'future_plan';
-    const access = decideAccess(planCapability, {
-      isPlus: isPremium,
-      authenticated: false,
-      loading: accessLoading,
-    });
+    const planCapability = viewAccess.capability;
+    const access = viewAccess.access.decision;
     const factByIso = new Map(facts.map((fact) => [fact.point.atIso, fact]));
     const contextEntries: Array<readonly [string, PlannedOutfitContext]> = [];
     const outfitAvailabilityByEventId: Record<string, boolean> = {};
@@ -475,17 +500,18 @@ function PlanleggData({
       hasEvaluatedPlan: true,
     });
   }, [
-    accessLoading,
     active?.id,
     activity,
     ageMonths,
     childName,
     city,
-    isPremium,
     lat,
     lon,
     resolvedPhases,
     tab,
+    viewAccess.access.decision,
+    viewAccess.capability,
+    viewAccess.presentation,
     vognMode,
     weather.evidence,
     weather.status,
@@ -554,15 +580,18 @@ function PlanleggData({
   const onRetry = useCallback(() => {
     setRefreshKey((current) => current + 1);
   }, []);
-  const isLockedWeek = tab === 'tenday' && (!isPremium || accessLoading);
+  const isWeekView = tab === 'tenday';
+  const isWeekFull = isWeekView && viewAccess.presentation === 'full';
+  const isWeekTeaser = isWeekView && viewAccess.presentation === 'teaser';
+  const isWeekNeutral = isWeekView && viewAccess.presentation === 'neutral';
   if (weather.status === 'loading' || weather.status === 'idle') {
     statusState = { status: 'loading' };
   } else if (
-    weather.status === 'error'
+    (weather.status === 'error' && !isWeekTeaser && !isWeekNeutral)
     || (
       (weather.status === 'ready' || weather.status === 'offline')
       && !planningEvaluation.hasEvaluatedPlan
-      && !isLockedWeek
+      && (!isWeekView || isWeekFull)
     )
   ) {
     statusState = { status: 'error', onRetry };
@@ -578,6 +607,33 @@ function PlanleggData({
   ) {
     statusState = { status: 'partial' };
   }
+
+  const freeWeekComparison = useMemo(() => {
+    if (
+      viewAccess.presentation !== 'teaser'
+      || (weather.status !== 'ready' && weather.status !== 'offline')
+      || !weather.evidence
+      || weather.evidence.coverage.status === 'unavailable'
+    ) {
+      return null;
+    }
+    const localDate = (date: Date) => date.toLocaleDateString('en-CA', {
+      timeZone: PLAN_TIME_ZONE,
+    });
+    const evaluatedDate = localDate(new Date(weather.evidence.metadata.evaluatedAt));
+    const today = activeDaily.find((day) => localDate(day.date) === evaluatedDate);
+    const future = activeDaily.find((day) => localDate(day.date) > evaluatedDate);
+    if (!today || !future) return null;
+    return Object.freeze({
+      todayC: Math.round(today.tempC),
+      futureC: Math.round(future.tempC),
+    });
+  }, [
+    activeDaily,
+    viewAccess.presentation,
+    weather.evidence,
+    weather.status,
+  ]);
 
   const onViewChange = (nextTab: ViewTab) => {
     dispatchPlanningInteraction(
@@ -597,6 +653,7 @@ function PlanleggData({
 
   const showAdvice = statusState.status !== 'loading'
     && statusState.status !== 'error'
+    && (!isWeekView || isWeekFull)
     && planningEvaluation.hasEvaluatedPlan;
   const forecastRows = planningEvaluation.hasEvaluatedPlan
     ? planningEvaluation.forecast
@@ -620,10 +677,12 @@ function PlanleggData({
       }));
 
   return (
+    <>
     <section
       className="planlegg-screen ba-temp-root"
       aria-labelledby="planlegg-title"
       data-temp={tempAxis}
+      data-planlegg-access={isWeekFull ? 'plus-week' : undefined}
     >
       <header className="planlegg-screen__header">
         <h1 id="planlegg-title">Planlegg</h1>
@@ -632,8 +691,8 @@ function PlanleggData({
 
       <div
         className="planlegg-screen__views"
-        aria-disabled={statusState.status === 'error' && !isLockedWeek ? 'true' : undefined}
-        inert={statusState.status === 'error' && !isLockedWeek ? true : undefined}
+        aria-disabled={statusState.status === 'error' ? 'true' : undefined}
+        inert={statusState.status === 'error' ? true : undefined}
       >
         <SegmentedControl
           legend="Velg planvisning"
@@ -648,7 +707,7 @@ function PlanleggData({
 
       <PlanleggStatusNotice
         state={statusState}
-        subject={isLockedWeek ? 'weather' : 'plan'}
+        subject={isWeekView && !isWeekFull ? 'weather' : 'plan'}
       />
 
       {showAdvice && (
@@ -689,19 +748,50 @@ function PlanleggData({
         </>
       )}
 
-      {tab === 'tenday'
-        && !isPremium
-        && statusState.status !== 'loading'
-        && statusState.status !== 'error'
-        && (
-        <p className="planlegg-screen__week-weather">
-          {accessLoading
-            ? 'Sjekker tilgang til antrekksplanen. Ukevisningen viser vær ved middagstid.'
-            : 'Ukevisningen viser vær ved middagstid. Antrekksråd er ikke tilgjengelig med denne tilgangen.'}
+      {isWeekNeutral && (
+        <p
+          className="planlegg-screen__week-weather"
+          data-planlegg-access="neutral"
+        >
+          Sjekker tilgang til ukeplanen.
         </p>
       )}
 
-      {statusState.status !== 'loading' && statusState.status !== 'error' && (
+      {isWeekTeaser
+        && statusState.status !== 'loading'
+        && (
+          <section
+            className="planlegg-screen__week-weather"
+            aria-labelledby="planlegg-free-week-title"
+            data-planlegg-access={freeWeekComparison
+              ? 'free-week-comparison'
+              : 'free-week-unavailable'}
+          >
+            <h2 id="planlegg-free-week-title">Ukevær</h2>
+            {freeWeekComparison ? (
+              <p data-weather-comparison>
+                I morgen ved middagstid: {freeWeekComparison.futureC}°.
+                {' '}I dag ved middagstid: {freeWeekComparison.todayC}°.
+              </p>
+            ) : (
+              <p>Værsammenligning er ikke tilgjengelig akkurat nå.</p>
+            )}
+            <button
+              type="button"
+              onClick={(event) => {
+                setPaywallTrigger(event.currentTarget);
+                setPaywallOpen(true);
+              }}
+            >
+              Se uke med Babyora Plus
+            </button>
+          </section>
+        )}
+
+      {(!isWeekView || isWeekFull)
+        && statusState.status !== 'loading'
+        && statusState.status !== 'error'
+        && (
         <ForecastDisclosure
           open={forecastOpen}
           onToggle={() => setForecastOpen((current) => !current)}
@@ -709,6 +799,15 @@ function PlanleggData({
         />
       )}
     </section>
+    {paywallOpen && (
+      <PaywallDialog
+        open
+        trigger="imorgen"
+        onClose={() => setPaywallOpen(false)}
+        returnFocusTo={paywallTrigger}
+      />
+    )}
+    </>
   );
 }
 

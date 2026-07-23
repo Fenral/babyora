@@ -190,7 +190,11 @@ async function assertCompositionPrimitives(): Promise<void> {
       'RED_REVIEW_AGGREGATE_AUTHORITY: komposisjonen må konsumere modellens rader, kandidater, handling og verdict uten ekstern gjenberegning',
     );
   }
-  if (!ukeSource.includes("tab === 'today' ? 'today_home' : 'future_plan'")) {
+  if (
+    !ukeSource.includes("resolvePlanningViewAccess('today'")
+    || !ukeSource.includes("resolvePlanningViewAccess('week'")
+    || !ukeSource.includes('const planCapability = viewAccess.capability')
+  ) {
     throw new Error(
       'RED_REVIEW_FREE_TODAY_ACCESS: I dag må bruke today_home, mens bare Uke kan kreve future_plan',
     );
@@ -1459,18 +1463,24 @@ async function runCompositionMatrix(
   await freeTodayDialog.waitFor({ state: 'detached' });
   await page.getByRole('radio', { name: 'Uke', exact: true })
     .evaluate((radio) => (radio as HTMLInputElement).click());
-  const freeWeekContext = page.locator('.planlegg-screen__week-weather');
+  const freeWeekContext = page.locator(
+    '[data-planlegg-access="free-week-comparison"]',
+  );
   await freeWeekContext.waitFor({ state: 'visible', timeout: 15_000 });
-  const freeWeekForecast = page.locator('.planlegg-forecast__toggle');
-  await freeWeekForecast.click();
   if (
-    !(await freeWeekContext.innerText()).includes('vær ved middagstid')
+    await freeWeekContext.locator('[data-weather-comparison]').count() !== 1
     || await page.locator('.planlegg-screen__answer').count() !== 0
-    || await page.getByText(/Babyora Pluss/iu).count() !== 0
-    || await page.locator('.planlegg-forecast__rows li').count() < 2
+    || await page.getByRole('button', {
+      name: 'Se uke med Babyora Plus',
+      exact: true,
+    }).count() !== 1
+    || await page.getByRole('button', { name: 'Se hele antrekket' }).count() !== 0
+    || await page.locator('.planlegg-forecast').count() !== 0
     || await page.locator(liveOwnerSelector).count() !== 0
   ) {
-    throw new Error('Free Uke skal gi sann, nyttig ukesvær-kontekst uten plan- eller markedspåstand');
+    throw new Error(
+      'Free Uke skal gi nøyaktig én værsammenligning uten plan, Outfit eller full prognose',
+    );
   }
   await reloadPlanlegg(page, fixture.path, forecastState, 'many');
 

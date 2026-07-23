@@ -32,7 +32,9 @@ import {
   type PlannedOutfitContext,
 } from './lib/planning/planned-outfit-context';
 import { shouldClosePlannedDrillOnAccess } from './lib/planning/planning-interaction';
+import { decideAccess } from './lib/access/capabilities';
 import { useAccess } from './lib/premium/use-access';
+import { useSubscription } from './state/subscription-store';
 
 const HjemScreen = lazy(() =>
   import('./screens/HjemScreen').then((m) => ({ default: m.HjemScreen })),
@@ -168,9 +170,23 @@ export default function App(): ReactElement {
   const [drill, setDrill] = useState<Drill>(null);
   const themeMode = useTheme((s) => s.mode);
   const { isPremium, loading: accessLoading } = useAccess();
+  const liveFutureAccess = decideAccess('future_plan', {
+    isPlus: isPremium,
+    authenticated: false,
+    loading: accessLoading,
+  });
 
   useEffect(() => {
     document.documentElement.lang = 'nb';
+  }, []);
+
+  useEffect(() => {
+    const syncPersistedEntitlement = (event: StorageEvent) => {
+      if (event.key !== 'babyora.subscription') return;
+      void useSubscription.persist.rehydrate();
+    };
+    window.addEventListener('storage', syncPersistedEntitlement);
+    return () => window.removeEventListener('storage', syncPersistedEntitlement);
   }, []);
 
   // Theme-mode → data-theme på <html>. 'auto' fjerner attributtet slik at
@@ -199,6 +215,12 @@ export default function App(): ReactElement {
     origin: HTMLElement,
   ) => {
     if (!isPlannedOutfitContext(plannedContext) || !origin.isConnected) return;
+    if (
+      plannedContext.access.capability === 'future_plan'
+      && !liveFutureAccess.allowed
+    ) {
+      return;
+    }
     setDrill({
       kind: 'paakledning',
       source: 'planned',
@@ -233,13 +255,13 @@ export default function App(): ReactElement {
   useClosePlannedDrillOnAccess({
     isPlannedDrill: isAccessGatedPlannedDrill,
     loading: accessLoading,
-    isPremium,
+    isPremium: liveFutureAccess.allowed,
     onClose: closePaakledning,
   });
 
   const activeDrill = shouldClosePlannedDrillOnAccess(
     isAccessGatedPlannedDrill,
-    { loading: accessLoading, isPremium },
+    { loading: accessLoading, isPremium: liveFutureAccess.allowed },
   )
     ? null
     : drill;
