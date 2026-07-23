@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { extractDailyAtHour, extractHourly, extractNow, fetchForecast } from '../client';
+import {
+  extractDailyAtHour,
+  extractHourly,
+  extractNow,
+  fetchForecast,
+  memoryOnlyForecastCoordinatorSize,
+} from '../client';
 import type { MetForecast, MetTimePoint } from '../types';
 
 const OFFICIAL_UNITS = {
@@ -1008,6 +1014,11 @@ describe('location cache scope', () => {
       metadata: { source: 'network', cacheStatus: 'miss', stale: false },
     });
     expect(second.forecast).toBe(data);
+    expect(second.metadata).toMatchObject({
+      source: 'cache',
+      cacheStatus: 'fresh',
+      stale: false,
+    });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
       expect.any(String),
@@ -1036,6 +1047,22 @@ describe('location cache scope', () => {
     await expect(fetchForecast(70.2234, 20.6678, {
       cacheScope: 'memory-only',
     })).rejects.toThrow('automatic offline');
+    expect(storage.getItem).not.toHaveBeenCalled();
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
+  });
+
+  it('bounds failed automatic-coordinate coordinator entries', async () => {
+    const { storage } = installStorage();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('automatic offline')));
+
+    for (let index = 0; index < 33; index += 1) {
+      await expect(fetchForecast(71 + index / 100, 21, {
+        cacheScope: 'memory-only',
+      })).rejects.toThrow('automatic offline');
+    }
+
+    expect(memoryOnlyForecastCoordinatorSize()).toBeLessThanOrEqual(32);
     expect(storage.getItem).not.toHaveBeenCalled();
     expect(storage.setItem).not.toHaveBeenCalled();
     expect(storage.removeItem).not.toHaveBeenCalled();
