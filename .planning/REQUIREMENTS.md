@@ -39,7 +39,7 @@ These 14 requirements are the complete committed scope for this bounded feature 
   - **Source intel:** `REQ-truthful-planning-model`
   - **Acceptance:** Events use stable ISO timestamp identity; keep added and removed garments distinct; support add, remove, swap, rain, location, and preparation actions; carry plain-language weather cause and destination context; and generate verb-led actions without leading with `+N`. Coverage distinguishes contiguous hourly data from samples, and hour/day/same-outfit-until claims require evidence. Passive weather-only change creates no clothing marker. Tests cover change cardinality, action types, coverage, ordering, duplicate fingerprints, DST, Europe/Oslo, and safe loading/error/offline output.
 
-- [ ] **CTXT-01**: Opening a future Dagslinjen event renders that event's exact immutable Outfit context.
+- [x] **CTXT-01**: Opening a future Dagslinjen event renders that event's exact immutable Outfit context.
   - **Source intel:** `REQ-exact-future-outfit-context`
   - **Acceptance:** One immutable payload carries child/age inputs, ISO date/time and timezone, place label and coordinates without location history, activity and stroller mode, weather snapshot, finalized recommendation, planning event ID, and access state. A fail-closed resolver verifies current-event membership, map hit, DTO guard, event ID and transition ID; the rail transports only event identity, and `UkeScreen → App.onOpenPlannedOutfit(dto, trigger)` is the sole trusted DTO boundary. Outfit does not recompute from current time or current weather when this payload exists. Deterministic end-to-end evidence proves date, place, activity, temperature, and garments all belong to the selected event, followed by independent high-risk review of the exact SHA.
 
@@ -120,7 +120,7 @@ These requirements implement the approved UX & Motion Bible after the bounded Pl
 | GOV-05 | Phase 1 | Pending |
 | GOV-06 | Phase 1 | Pending |
 | TRUTH-01 | Phase 1 | Complete |
-| CTXT-01 | Phase 1 | Pending |
+| CTXT-01 | Phase 1 | Complete |
 | UI-01 | Phase 1 | Pending |
 | UI-02 | Phase 1 | Pending |
 | ACCESS-01 | Phase 1 | Pending |

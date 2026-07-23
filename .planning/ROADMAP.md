@@ -31,12 +31,12 @@ This roadmap first delivers the bounded, already-reviewed Planlegg candidate, th
   4. Planlegg remains operable across loading, error, offline, dark/temperature themes, forced colors, 200% text, keyboard, screen reader, reduced motion, haptic preference-off, web, iOS, and Android paths with one app-owned main landmark/page scroll, 44-point targets, focus-visible, correct reading order, shape-plus-text meaning, and regression-safe four-root navigation.
   5. The reviewed stable candidate passes deterministic truth, exact-context, access, accessibility, test, lint, build, source/privacy, and no-media E2E checks on its immutable SHA through the required standard/high-risk review loop; no new app screenshot/video is captured while implementation changes, and the final physical-device/media-based 90+ visual and owner release gates remain explicitly Pending until the owner authorizes capture.
 
-**Plans**: 3/18 plans executed
+**Plans**: 4/18 plans executed
 
 - [x] 01-01-PLAN.md
 - [x] 01-02-PLAN.md
 - [x] 01-03-PLAN.md
-- [ ] 01-04-PLAN.md
+- [x] 01-04-PLAN.md
 - [ ] 01-05-PLAN.md
 - [ ] 01-06-PLAN.md
 - [ ] 01-07-PLAN.md
@@ -127,7 +127,7 @@ This roadmap first delivers the bounded, already-reviewed Planlegg candidate, th
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Planlegg/Dagslinjen | 3/18 | In Progress|  |
+| 1. Planlegg/Dagslinjen | 4/18 | In Progress|  |
 | 2. Outfit truth and Antrekkskart | 0/TBD | Pending Phase 1 | - |
 | 3. Living Home and signature transition | 0/TBD | Pending Phase 2 | - |
 | 4. Cross-surface convergence | 0/TBD | Pending Phases 1–3 | - |

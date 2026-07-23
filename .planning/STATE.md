@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-07-23T12:22:07.443Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-07-23T13:32:25.725Z"
 last_activity: 2026-07-23
-last_activity_desc: Exact Plan 01-03 candidate `a8a6c3f` received two independent high-risk PASS verdicts after all deterministic gates passed.
+last_activity_desc: Exact Plan 01-04 candidate `f8685de` passed all deterministic gates and two independent high-risk reviews.
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 18
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 ## Current Position
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
-Plan: 4 of 18 in current phase
-Status: Plan 01-04 ready to execute
-Last activity: 2026-07-23 — Plan 01-03 approved with two independent PASS verdicts on `a8a6c3f`.
+Plan: 5 of 18 in current phase
+Status: Plan 01-04 complete; Plan 01-05 ready to execute
+Last activity: 2026-07-23 — Exact Plan 01-04 candidate `f8685de` passed all deterministic gates and two independent high-risk reviews.
 
-Progress: [██░░░░░░░░] 17%
+Progress: [██░░░░░░░░] 22%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [██░░░░░░░░] 17%
 | Phase 01-planlegg-dagslinjen P01 | 27min | 2 tasks | 9 files |
 | Phase 01 P02 | 15min | 2 tasks | 8 files |
 | Phase 01 P03 | 89min | 3 tasks | 8 files |
+| Phase 01 P04 | 65min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,9 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 01]: Planning advice publishes only inside structurally truthful weather coverage and recommendation evidence; malformed, conflicting, sparse or out-of-bounds evidence fails closed.
 - [Phase 01]: Events and rail rows share one canonical absolute-time, kind-priority and content comparator so IDs never substitute for semantic action order.
 - [Phase 01]: Outfit availability is honored only from an explicitly owned parent-supplied event key; inherited properties and future DTO construction are rejected.
+- [Phase 01]: Factory-owned transient identity is required because a boolean structural guard cannot certify that an arbitrary Proxy remains truthful after return.
+- [Phase 01]: All Unicode Cc and Cf characters are rejected from planned-context text except explicit ZWNJ and ZWJ joiners.
+- [Phase 01]: Access capability, allowed state, and reason are validated as one semantic decision.
 
 ### Pending Todos
 
@@ -119,6 +123,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-23T12:22:07.431Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-07-23T13:32:25.715Z
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None
