@@ -350,7 +350,7 @@ async function openPlanlegg(page: Page, path: string): Promise<void> {
     .getByRole('button', { name: /^Planlegg/u });
   await planButton.waitFor({ state: 'visible', timeout: 15_000 });
   await planButton.click();
-  await page.getByRole('heading', { name: /time-for-time prognose/u })
+  await page.getByRole('heading', { level: 1, name: 'Planlegg', exact: true })
     .waitFor({ state: 'attached', timeout: 15_000 });
 }
 
@@ -410,6 +410,7 @@ async function runComposition(
   await assertSingleMain(page);
 
   const screen = page.locator('section.planlegg-screen[aria-labelledby="planlegg-title"]');
+  await screen.waitFor({ state: 'attached', timeout: 15_000 }).catch(() => undefined);
   if (await screen.count() !== 1) {
     throw new Error(
       'RED_PLANLEGG_COMPOSITION_CONTRACT: Planlegg mangler én naturlig section under appens main',
@@ -585,12 +586,12 @@ async function runExactContext(
 
   const outfitCta = rail.getByRole('button', { name: 'Se hele antrekket' }).first();
   await outfitCta.waitFor({ state: 'visible' });
-  const scrollContainer = page.locator('.ba-temp-root').first();
+  const scrollContainer = page.locator('main#main');
   await scrollContainer.evaluate((element) => {
     element.scrollTop = 120;
   });
-  const scrollBefore = await scrollContainer.evaluate((element) => element.scrollTop);
   await outfitCta.focus();
+  const scrollBefore = await scrollContainer.evaluate((element) => element.scrollTop);
   await outfitCta.click();
 
   const dialog = page.getByRole('dialog', { name: 'Lillian' });

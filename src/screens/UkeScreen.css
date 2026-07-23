@@ -133,6 +133,20 @@
   line-height: 1.25;
 }
 
+.planlegg-screen .plan-change-rail__disclosure {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  background: transparent;
+}
+
+.planlegg-screen .plan-change-rail__detail-inner {
+  padding-inline: 0;
+}
+
+.planlegg-screen .plan-change-rail__preview img {
+  background: var(--surface-soft);
+}
+
 .planlegg-forecast {
   margin-top: 24px;
   border-top: 1px solid var(--ink-200);
