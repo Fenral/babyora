@@ -227,15 +227,18 @@ export default function App(): ReactElement {
     });
   }, [drill]);
 
+  const isAccessGatedPlannedDrill = drill?.kind === 'paakledning'
+    && drill.source === 'planned'
+    && drill.plannedContext.access.capability === 'future_plan';
   useClosePlannedDrillOnAccess({
-    isPlannedDrill: drill?.kind === 'paakledning' && drill.source === 'planned',
+    isPlannedDrill: isAccessGatedPlannedDrill,
     loading: accessLoading,
     isPremium,
     onClose: closePaakledning,
   });
 
   const activeDrill = shouldClosePlannedDrillOnAccess(
-    drill?.kind === 'paakledning' && drill.source === 'planned',
+    isAccessGatedPlannedDrill,
     { loading: accessLoading, isPremium },
   )
     ? null

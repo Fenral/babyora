@@ -381,7 +381,8 @@ function PlanleggData({
       return EMPTY_PLANNING_EVALUATION;
     }
     const events = viewModel.events;
-    const access = decideAccess('future_plan', {
+    const planCapability = tab === 'today' ? 'today_home' : 'future_plan';
+    const access = decideAccess(planCapability, {
       isPlus: isPremium,
       authenticated: false,
       loading: accessLoading,
@@ -426,7 +427,7 @@ function PlanleggData({
           finalized: true,
         },
         access: {
-          capability: 'future_plan',
+          capability: planCapability,
           allowed: access.allowed,
           reason: access.reason,
         },

@@ -821,7 +821,7 @@ async function runExactContext(
   ) {
     throw new Error(`Planlagt utstyr avvek: ${JSON.stringify(equipmentItems)}`);
   }
-  if (!(await dialog.textContent())?.includes('Tilgang: future_plan')) {
+  if (!(await dialog.textContent())?.includes('Tilgang: today_home')) {
     throw new Error('Planlagt tilgangsdimensjon mangler');
   }
   const whyText = await dialog
