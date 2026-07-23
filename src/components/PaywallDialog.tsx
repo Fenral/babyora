@@ -58,7 +58,6 @@ import {
   DEFAULT_PLAN,
   PRODUCTS,
   PRODUCT_IDS,
-  TRIGGER_HEADLINE,
   type PaywallTrigger,
   type ProductKey,
 } from '../lib/premium/products';
@@ -67,10 +66,12 @@ import {
   PLAN_DISPLAY_NAME,
   PLAN_ORDER,
   buildPlanAriaLabel,
+  buildCapabilityPaywallCopy,
   buildTransparencyLine,
   computeYearlySavingsPercent,
   formatPlanPrice,
 } from '../lib/premium/paywall-copy';
+import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
 import { PlusExpansionPreview } from './paywall/PlusExpansionPreview';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -275,6 +276,14 @@ const bodyStyle: CSSProperties = {
   flexDirection: 'column',
   gap: 12,
   WebkitOverflowScrolling: 'touch',
+};
+
+const benefitBodyStyle: CSSProperties = {
+  margin: 0,
+  fontSize: 14,
+  fontWeight: 500,
+  lineHeight: 1.4,
+  color: 'var(--ink-700)',
 };
 
 const fieldsetStyle: CSSProperties = {
@@ -514,9 +523,10 @@ export function PaywallDialog({
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // R7 Task 7: generiske åpninger leder med Pluss-verdiløftet (flagshipHeadline)
-  // — eyebrow over h2-en bærer produktnavnet (PAYWALL_COPY.genericHeadline).
-  const headline = trigger ? TRIGGER_HEADLINE[trigger] : PAYWALL_COPY.flagshipHeadline;
+  const capabilityCopy = buildCapabilityPaywallCopy(
+    PLUS_FEATURE_AVAILABILITY,
+    trigger,
+  );
 
   const clearAutoClose = useCallback(() => {
     if (autoCloseTimerRef.current) {
@@ -772,14 +782,16 @@ export function PaywallDialog({
             </button>
           </div>
           <h2 id="paywall-title" style={titleStyle}>
-            {headline}
+            {capabilityCopy.heading}
           </h2>
         </header>
 
         <div style={bodyStyle}>
-          {/* R7 Task 7: verdi-seksjon — Free→Plus-ekspansjon. Rendrer kun
-             leverbare løfter (familie/kalibrering skjult til de er bygget). */}
-          <PlusExpansionPreview reducedMotion={reducedMotion} />
+          <p style={benefitBodyStyle}>{capabilityCopy.body}</p>
+          <PlusExpansionPreview
+            items={capabilityCopy.previewItems}
+            reducedMotion={reducedMotion}
+          />
 
           <fieldset style={fieldsetStyle}>
             <legend style={legendStyle}>{PAYWALL_COPY.legend}</legend>
@@ -849,7 +861,9 @@ export function PaywallDialog({
           >
             {ctaLabel}
           </button>
-          <p style={trustLineStyle}>{PAYWALL_COPY.trustLine}</p>
+          {capabilityCopy.trustLine && (
+            <p style={trustLineStyle}>{capabilityCopy.trustLine}</p>
+          )}
           <div style={linksRowStyle}>
             <button
               type="button"

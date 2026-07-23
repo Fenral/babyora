@@ -6,7 +6,6 @@ import {
   PAYWALL_TRIGGERS,
   PRODUCTS,
   PRODUCT_IDS,
-  TRIGGER_HEADLINE,
   VALUE_ANCHOR_COPY,
   priceTransparencyText,
 } from '../products';
@@ -74,21 +73,6 @@ describe('Paywall trigger-strenger', () => {
     expect('morgenvarsel' in PAYWALL_TRIGGERS).toBe(false);
   });
 
-  it('hver trigger har kontekst-overskrift', () => {
-    for (const key of Object.keys(PAYWALL_TRIGGERS) as Array<keyof typeof PAYWALL_TRIGGERS>) {
-      expect(TRIGGER_HEADLINE[key]).toBeTruthy();
-      expect(TRIGGER_HEADLINE[key].length).toBeGreaterThan(5);
-      // Aldri generisk «Oppgrader til Premium»
-      expect(TRIGGER_HEADLINE[key]).not.toMatch(/oppgrader til premium/i);
-    }
-  });
-
-  it('forbidden-ord IKKE i kontekst-overskrifter', () => {
-    const forbidden = /låst|sperret|nektet|krever/i;
-    for (const headline of Object.values(TRIGGER_HEADLINE)) {
-      expect(headline).not.toMatch(forbidden);
-    }
-  });
 });
 
 describe('Copy-konstanter', () => {
