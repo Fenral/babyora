@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Completed 01-06-PLAN.md
-last_updated: "2026-07-23T16:21:59.370Z"
+stopped_at: Completed 01-07-PLAN.md
+last_updated: "2026-07-23T18:11:32.838Z"
 last_activity: 2026-07-23
-last_activity_desc: Controlled exact Planlegg candidate `aeaaebf` passed all deterministic gates and two independent exact-SHA reviews.
+last_activity_desc: Dagslinjen-led Planlegg candidate `0a4d61c` passed all deterministic gates and two independent exact-SHA reviews.
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 18
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 ## Current Position
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
-Plan: 7 of 18 in current phase
-Status: Plan 01-06 complete; Plan 01-07 ready to execute
-Last activity: 2026-07-23 — Controlled exact Planlegg candidate `aeaaebf` passed all deterministic gates and two independent exact-SHA reviews.
+Plan: 8 of 18 in current phase
+Status: Plan 01-07 complete; Plan 01-08 ready to execute
+Last activity: 2026-07-23 — Dagslinjen-led Planlegg candidate `0a4d61c` passed all deterministic gates and two independent exact-SHA reviews.
 
-Progress: [███░░░░░░░] 33%
+Progress: [████░░░░░░] 39%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 01 P04 | 65min | 2 tasks | 2 files |
 | Phase 01-planlegg-dagslinjen P05 | 87min | 2 tasks | 4 files |
 | Phase 01-planlegg-dagslinjen P06 | 73min | 3 tasks | 11 files |
+| Phase 01-planlegg-dagslinjen P07 | 105m | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -108,10 +109,14 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 01]: Planning fails closed outside child age 0-24 instead of clamping only the DTO.
 - [Phase 01]: App irreversibly closes planned drills from supplied loading or denied access; Plan 01-09 retains entitlement freshness ownership.
 - [Phase 01]: All six marker kinds and fallback are exhaustive server contracts; browser evidence uses reachable canonical Uke facts.
+- [Phase 01]: Planlegg consumes aggregate rows, verdict, next action, candidate IDs and forecast; Uke only adapts presentation and builds exact contexts.
+- [Phase 01]: Retry refreshes weather in the same mounted Planlegg instance so persisted selection repair and focus stability are real.
+- [Phase 01]: I dag uses today_home and remains complete for Free; only Uke and future_plan drills are entitlement-gated.
+- [Phase 01]: Retained Outfit callbacks resolve event IDs against the latest committed evaluation and fail closed on stale maps.
 
 ### Pending Todos
 
-- Execute Plan 01-04 from the immutable approved planning-transition boundary `a8a6c3f1c5f5b553cc56baf98075b9fc4ca8e37b`.
+- Execute Plan 01-08 from the immutable reviewed Planlegg boundary `0a4d61c1542b64a107ac56227ea5138bae4d0ab3`.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -133,6 +138,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-23T16:21:59.360Z
-Stopped at: Completed 01-06-PLAN.md
+Last session: 2026-07-23T18:11:32.824Z
+Stopped at: Completed 01-07-PLAN.md
 Resume file: None

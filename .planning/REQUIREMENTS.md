@@ -49,7 +49,7 @@ These 14 requirements are the complete committed scope for this bounded feature 
   - **Source intel:** `REQ-semantic-dagslinjen`
   - **Acceptance:** The component is controlled by `selectedEventId`, `onSelect(string | null)`, and `onOpenOutfit`; unchanged spans are static list items; marker shape and verb text carry meaning beyond color; and real time values are emitted. Rail owns expand/collapse intent and the one light cue for a newly expanded event, Uke owns controlled state plus view/date selection cues, and refresh repair is silent. The expanded row shows one action, cause, at most three safe garment thumbnails resolved through the canonical garment-ID/safe-fallback chain, and `Se hele antrekket` when needed. All six marker types pass pure/`react-dom/server` and real-browser evidence without adding jsdom or Testing Library. It preserves `aria-expanded`, focus, 44-point targets, large-text reflow, forced colors, calm 200–280 ms motion, and immediate reduced-motion state.
 
-- [ ] **UI-02**: Dagslinjen is the dominant Planlegg composition on the existing temperature-reactive canvas.
+- [x] **UI-02**: Dagslinjen is the dominant Planlegg composition on the existing temperature-reactive canvas.
   - **Source intel:** `REQ-planlegg-screen`
   - **Acceptance:** The app owns the only `main` landmark and vertical page scroll. Planlegg shows a visible title, compact child/place context, restrained I dag/Uke/Snart control, current verdict and next action before the rail, and secondary forecast disclosure. The mega-card, repeated white event cards, duplicate hourly list, burden pills, dead place/bell controls, and persistent bottom-tab touch outline are absent. Accessible loading, error, and offline states remain, and the 390×844 matrix plus shared-navigation regressions pass.
 
@@ -122,7 +122,7 @@ These requirements implement the approved UX & Motion Bible after the bounded Pl
 | TRUTH-01 | Phase 1 | Complete |
 | CTXT-01 | Phase 1 | Complete |
 | UI-01 | Phase 1 | Complete |
-| UI-02 | Phase 1 | Pending |
+| UI-02 | Phase 1 | Complete |
 | ACCESS-01 | Phase 1 | Complete |
 | A11Y-01 | Phase 1 | Complete |
 | EVID-01 | Phase 1 | Complete |
