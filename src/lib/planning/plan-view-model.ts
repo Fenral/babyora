@@ -144,15 +144,13 @@ function canonicalPlanningPoints(
   if (points.length < 2) return null;
   const coveredEpochs = new Set(coverage.points.map((point) => point.epochMs));
   const contentByFingerprint = new Map<string, string>();
-  const seenPointEpochs = new Set<number>();
+  const recommendationByEpoch = new Map<number, string>();
   const normalized: PlanningPoint[] = [];
 
   for (const point of points) {
     if (!isValidPlanningPoint(point)) return null;
     const pointEpoch = parseStrictIsoInstant(point.atIso);
     if (pointEpoch === null || !coveredEpochs.has(pointEpoch)) return null;
-    if (seenPointEpochs.has(pointEpoch)) return null;
-    seenPointEpochs.add(pointEpoch);
     const finalizedFingerprint = normalizeText(point.finalizedFingerprint);
     const cause = normalizeText(point.cause);
     const transitionContextId = normalizeText(point.transitionContextId);
@@ -161,6 +159,10 @@ function canonicalPlanningPoints(
     const equipment = normalizeList(point.equipment);
     if (orderedGarments.length === 0 && equipment.length === 0) return null;
     const visibleContent = JSON.stringify([orderedGarments, equipment]);
+    const recommendation = JSON.stringify([finalizedFingerprint, visibleContent]);
+    const priorRecommendation = recommendationByEpoch.get(pointEpoch);
+    if (priorRecommendation !== undefined && priorRecommendation !== recommendation) return null;
+    recommendationByEpoch.set(pointEpoch, recommendation);
     const priorContent = contentByFingerprint.get(finalizedFingerprint);
     if (priorContent !== undefined && priorContent !== visibleContent) return null;
     contentByFingerprint.set(finalizedFingerprint, visibleContent);
@@ -312,6 +314,17 @@ export function buildPlanViewModel(input: PlanViewModelInput): PlanViewModel {
 
   const points = canonicalPlanningPoints(input.points, coverage);
   if (!points) return errorModel();
+  const pointEpochs = [...new Set(points.map((point) => parseStrictIsoInstant(point.atIso)!))]
+    .sort((a, b) => a - b);
+  const hasExactHourlyRecommendations = pointEpochs.length > 1 && pointEpochs
+    .slice(1)
+    .every((epochMs, index) => epochMs - pointEpochs[index]! === 60 * 60 * 1000);
+  if (
+    pointEpochs.length < 2
+    || (!hasExactHourlyRecommendations && !pointEpochs.includes(evaluatedAtEpoch))
+  ) {
+    return errorModel();
+  }
   const advice = evaluatedAdvice(input, coverage, evaluatedAtEpoch, points);
   if (!advice) return errorModel();
 

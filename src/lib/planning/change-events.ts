@@ -212,8 +212,21 @@ function compareEvents(a: PlanningChangeEvent, b: PlanningChangeEvent): number {
 export function derivePlanningChangeEvents(points: readonly PlanningPoint[]): PlanningChangeEvent[] {
   const normalized = points.map(normalizedPoint);
   if (normalized.some((point) => point === null)) return [];
+  const normalizedPoints = normalized as PlanningPoint[];
+  const recommendationByEpoch = new Map<number, string>();
+  for (const point of normalizedPoints) {
+    const epochMs = parseStrictIsoInstant(point.atIso)!;
+    const recommendation = JSON.stringify([
+      point.finalizedFingerprint,
+      [...point.orderedGarments],
+      [...point.equipment],
+    ]);
+    const priorRecommendation = recommendationByEpoch.get(epochMs);
+    if (priorRecommendation !== undefined && priorRecommendation !== recommendation) return [];
+    recommendationByEpoch.set(epochMs, recommendation);
+  }
 
-  const canonicalPoints = [...normalized as PlanningPoint[]]
+  const canonicalPoints = [...normalizedPoints]
     .sort((a, b) => {
       const epochDelta = (parseStrictIsoInstant(a.atIso) ?? 0) - (parseStrictIsoInstant(b.atIso) ?? 0);
       if (epochDelta !== 0) return epochDelta;
