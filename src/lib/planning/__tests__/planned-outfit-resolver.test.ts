@@ -64,7 +64,7 @@ function plannedContext(
 }
 
 describe('Planned Outfit resolver', () => {
-  it('RED_RESOLVES_ONLY_AN_EXACT_CURRENT_EVENT_CONTEXT', () => {
+  it('resolves only an exact current-event context', () => {
     const event = planningEvent();
     const context = plannedContext(event);
 
