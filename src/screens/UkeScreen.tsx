@@ -295,14 +295,16 @@ function PlanleggData({
       && nextAccessState === 'denied';
     currentWeekAccessTransition = {
       state: nextAccessState,
-      generation: weekAccessTransition.generation + 1,
+      generation: nextAccessState === 'neutral'
+        ? weekAccessTransition.generation + 1
+        : weekAccessTransition.generation,
       lastResolved: nextAccessState === 'neutral'
         ? weekAccessTransition.lastResolved
         : nextAccessState,
       paywallFocusPending: nextAccessState === 'neutral'
         ? paywallOpen
           && paywallAccessGeneration === weekAccessTransition.generation
-        : nextAccessState === 'denied'
+        : weekAccessTransition.state === 'neutral'
           && weekAccessTransition.paywallFocusPending,
     };
     setWeekAccessTransition(currentWeekAccessTransition);
@@ -314,22 +316,29 @@ function PlanleggData({
   }
   useLayoutEffect(() => {
     if (
-      weekAccess.access.state !== 'denied'
+      weekAccess.access.state === 'neutral'
       || !currentWeekAccessTransition.paywallFocusPending
     ) {
       return;
     }
     const focusTarget = paywallActionRef.current
-      ?? (paywallTrigger?.isConnected ? paywallTrigger : null);
+      ?? document.getElementById('main');
     if (focusTarget) {
       focusTarget.focus();
     }
   }, [
     currentWeekAccessTransition.generation,
     currentWeekAccessTransition.paywallFocusPending,
-    paywallTrigger,
     weekAccess.access.state,
   ]);
+  const closePaywall = useCallback(() => {
+    setPaywallOpen(false);
+    window.requestAnimationFrame(() => {
+      const focusTarget = paywallActionRef.current
+        ?? document.getElementById('main');
+      focusTarget?.focus();
+    });
+  }, []);
   const changeRailHeadStyle: CSSProperties = {
     fontSize: '1.25rem',
     fontWeight: 640,
@@ -854,7 +863,7 @@ function PlanleggData({
       <PaywallDialog
         open
         trigger="imorgen"
-        onClose={() => setPaywallOpen(false)}
+        onClose={closePaywall}
         returnFocusTo={paywallTrigger}
       />
     )}
