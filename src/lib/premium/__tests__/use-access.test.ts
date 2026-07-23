@@ -1,32 +1,52 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+
+const runtime = vi.hoisted(() => {
+  const subscriptionState = {
+    isPremium: false,
+    lastSyncedAt: null as string | null,
+    setPremium: vi.fn<(isPremium: boolean) => void>(),
+    markReady: vi.fn(),
+  };
+
+  subscriptionState.setPremium.mockImplementation((isPremium) => {
+    subscriptionState.isPremium = isPremium;
+  });
+
+  return {
+    native: false,
+    configured: false,
+    check: vi.fn<() => Promise<boolean>>(),
+    addListener: vi.fn(() => Promise.resolve({ remove: vi.fn() })),
+    subscriptionState,
+  };
+});
 
 vi.mock('@capacitor/core', () => ({
   Capacitor: {
-    isNativePlatform: () => false,
+    isNativePlatform: () => runtime.native,
   },
 }));
 
 vi.mock('@capacitor/app', () => ({
   App: {
-    addListener: vi.fn(),
+    addListener: runtime.addListener,
   },
 }));
 
 vi.mock('../../billing/revenuecat', () => ({
-  checkPremium: vi.fn(),
-  isRevenueCatConfigured: () => false,
+  checkPremium: () => runtime.check(),
+  isRevenueCatConfigured: () => runtime.configured,
 }));
 
 vi.mock('../../../state/subscription-store', () => {
   const useSubscription = Object.assign(
-    () => ({ isPremium: false, lastSyncedAt: null }),
+    <T>(selector: (state: typeof runtime.subscriptionState) => T) => (
+      selector(runtime.subscriptionState)
+    ),
     {
-      getState: () => ({
-        isPremium: false,
-        lastSyncedAt: null,
-        setPremium: vi.fn(),
-        markReady: vi.fn(),
-      }),
+      getState: () => runtime.subscriptionState,
     },
   );
 
@@ -58,17 +78,28 @@ type ControllerFactory = (
   dependencies: ControllerDependencies,
 ) => EntitlementFreshnessController;
 
+type EffectiveAccessResolver = (
+  snapshot: AccessSnapshot,
+  persistedPremium: boolean,
+) => { isPremium: boolean; loading: boolean };
+
 let createController: ControllerFactory;
+let resolveEffectiveAccess: EffectiveAccessResolver;
 
 beforeAll(async () => {
   const accessModule = await import('../use-access') as Record<string, unknown>;
   const candidate = accessModule.createEntitlementFreshnessController;
+  const resolverCandidate = accessModule.resolveEffectiveAccess;
 
   if (typeof candidate !== 'function') {
     throw new Error('MISSING_SINGLE_FLIGHT_ENTITLEMENT_FRESHNESS');
   }
+  if (typeof resolverCandidate !== 'function') {
+    throw new Error('MISSING_POST_REFRESH_STORE_GRANT');
+  }
 
   createController = candidate as ControllerFactory;
+  resolveEffectiveAccess = resolverCandidate as EffectiveAccessResolver;
 });
 
 function deferred<T>() {
@@ -97,6 +128,48 @@ function nativeController(check: () => Promise<boolean>) {
 }
 
 describe('configured-native entitlement freshness', () => {
+  it('hides cached Plus while refreshing, then accepts a post-refresh purchase grant', async () => {
+    const checkResult = deferred<boolean>();
+    let persistedPremium = true;
+    const controller = createController({
+      configuredNative: true,
+      check: () => checkResult.promise,
+      commit: (value) => {
+        persistedPremium = value;
+      },
+      readDevPremium: () => persistedPremium,
+    });
+
+    expect(resolveEffectiveAccess(
+      controller.getSnapshot(),
+      persistedPremium,
+    )).toEqual({
+      isPremium: false,
+      loading: true,
+    });
+
+    const refresh = controller.refresh();
+    checkResult.resolve(false);
+    await refresh;
+
+    expect(resolveEffectiveAccess(
+      controller.getSnapshot(),
+      persistedPremium,
+    )).toEqual({
+      isPremium: false,
+      loading: false,
+    });
+
+    persistedPremium = true;
+    expect(resolveEffectiveAccess(
+      controller.getSnapshot(),
+      persistedPremium,
+    )).toEqual({
+      isPremium: true,
+      loading: false,
+    });
+  });
+
   it('publishes neutral synchronously, shares one promise, and publishes one fresh result', async () => {
     const firstCheck = deferred<boolean>();
     const check = vi.fn(() => firstCheck.promise);
@@ -225,5 +298,69 @@ describe('unconfigured web/dev access', () => {
     expect(check).not.toHaveBeenCalled();
     expect(commit).not.toHaveBeenCalled();
     expect(controller.getSnapshot().source).toBe('ready-dev');
+  });
+});
+
+describe('module startup/resume integration', () => {
+  it('shares startup/resume, registers once, and exposes a settled purchase grant', async () => {
+    runtime.native = true;
+    runtime.configured = true;
+    runtime.subscriptionState.isPremium = true;
+    runtime.subscriptionState.setPremium.mockClear();
+    runtime.addListener.mockClear();
+    const firstCheck = deferred<boolean>();
+    const secondCheck = deferred<boolean>();
+    runtime.check
+      .mockReset()
+      .mockImplementationOnce(() => firstCheck.promise)
+      .mockImplementationOnce(() => secondCheck.promise);
+    vi.resetModules();
+
+    const accessModule = await import('../use-access');
+    const renderAccess = () => {
+      function AccessProbe() {
+        const access = accessModule.useAccess();
+        return createElement('span', null, JSON.stringify(access));
+      }
+
+      return renderToStaticMarkup(createElement(AccessProbe));
+    };
+
+    expect(runtime.addListener).toHaveBeenCalledTimes(1);
+    expect(renderAccess()).toContain(
+      '{&quot;isPremium&quot;:false,&quot;loading&quot;:true}',
+    );
+
+    const startup = accessModule.syncPremiumEntitlement();
+    const concurrent = accessModule.syncPremiumEntitlement();
+    const resumeListener = runtime.addListener.mock.calls[0]?.[1] as
+      | ((state: { isActive: boolean }) => void)
+      | undefined;
+    resumeListener?.({ isActive: true });
+
+    expect(concurrent).toBe(startup);
+    expect(runtime.check).toHaveBeenCalledTimes(1);
+
+    firstCheck.resolve(false);
+    await startup;
+    expect(renderAccess()).toContain(
+      '{&quot;isPremium&quot;:false,&quot;loading&quot;:false}',
+    );
+
+    runtime.subscriptionState.setPremium(true);
+    expect(renderAccess()).toContain(
+      '{&quot;isPremium&quot;:true,&quot;loading&quot;:false}',
+    );
+
+    const nextResume = accessModule.syncPremiumEntitlement();
+    expect(runtime.check).toHaveBeenCalledTimes(2);
+    expect(renderAccess()).toContain(
+      '{&quot;isPremium&quot;:false,&quot;loading&quot;:true}',
+    );
+    secondCheck.resolve(true);
+    await nextResume;
+    expect(renderAccess()).toContain(
+      '{&quot;isPremium&quot;:true,&quot;loading&quot;:false}',
+    );
   });
 });
