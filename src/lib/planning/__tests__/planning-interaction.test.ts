@@ -101,6 +101,40 @@ describe('Planlegg interaction decision contracts', () => {
     expect(onCue).not.toHaveBeenCalled();
   });
 
+  it('keeps a repaired selection when a removed ID is later reintroduced', () => {
+    let selected: string | null = 'event-a';
+    selected = repairPlanningSelection(selected, ['event-b'], 'event-b');
+    expect(selected).toBe('event-b');
+    selected = repairPlanningSelection(selected, ['event-a', 'event-b'], 'event-a');
+    expect(selected).toBe('event-b');
+  });
+
+  it('closes only a planned drill when future-plan access becomes neutral or denied', async () => {
+    const module = await import('../planning-interaction.js') as typeof import('../planning-interaction.js') & {
+      shouldClosePlannedDrillOnAccess: (
+        isPlannedDrill: boolean,
+        access: Readonly<{ loading: boolean; isPremium: boolean }>,
+      ) => boolean;
+    };
+
+    expect(module.shouldClosePlannedDrillOnAccess(true, {
+      loading: true,
+      isPremium: true,
+    })).toBe(true);
+    expect(module.shouldClosePlannedDrillOnAccess(true, {
+      loading: false,
+      isPremium: false,
+    })).toBe(true);
+    expect(module.shouldClosePlannedDrillOnAccess(true, {
+      loading: false,
+      isPremium: true,
+    })).toBe(false);
+    expect(module.shouldClosePlannedDrillOnAccess(false, {
+      loading: true,
+      isPremium: false,
+    })).toBe(false);
+  });
+
   it('contains no browser, haptic adapter, DTO, recommendation, or persistence capability', async () => {
     const sourcePath = '../planning-interaction.ts?raw';
     const source = (await import(/* @vite-ignore */ sourcePath) as { default: string }).default;

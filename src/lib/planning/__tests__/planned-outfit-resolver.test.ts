@@ -253,7 +253,7 @@ describe('Planned Outfit resolver', () => {
       /source:\s*'planned';\s*plannedContext:\s*PlannedOutfitContext;\s*origin:\s*HTMLElement/u,
     );
     expect(appSource).toMatch(/source:\s*'current';\s*context\?:\s*PaakledningContext/u);
-    expect(appSource).toContain('plannedContext={drill.plannedContext}');
+    expect(appSource).toContain('plannedContext={activeDrill.plannedContext}');
     expect(appSource).toContain('origin.isConnected');
     expect(appSource).toContain('mainRef.current?.focus()');
 
@@ -288,6 +288,20 @@ describe('Planned Outfit resolver', () => {
     expect(plannedBranch).toContain('tabIndex={-1}');
     expect(plannedBranch).toContain('ref={titleRef}');
     expect(plannedBranch).toContain('titleRef.current?.focus()');
+  });
+
+  it('RED_REVIEW_RESTART_ACCESS_AND_AGE_CONTRACTS', async () => {
+    const [{ default: appSource }, { default: ukeSource }] = await Promise.all([
+      import(/* @vite-ignore */ '../../../App.tsx?raw') as Promise<{ default: string }>,
+      import(/* @vite-ignore */ '../../../screens/UkeScreen.tsx?raw') as Promise<{ default: string }>,
+    ]);
+
+    expect(appSource).toContain('shouldClosePlannedDrillOnAccess');
+    expect(appSource).toContain('loading: accessLoading');
+    expect(ukeSource, 'OUT_OF_RANGE_AGE_MUST_FAIL_CLOSED').toMatch(
+      /ageMonths\s*<\s*0\s*\|\|\s*ageMonths\s*>\s*24/u,
+    );
+    expect(ukeSource).not.toMatch(/Math\.(?:min|max)\(24/u);
   });
 
   it('does not materialize planned advice when exact access is denied', async () => {

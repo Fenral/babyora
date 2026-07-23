@@ -1,3 +1,6 @@
+/// <reference types="node" />
+
+import { readFile } from 'node:fs/promises';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { PlanningChangeEvent, PlanningChangeKind } from '../../../lib/planning/change-events.js';
@@ -246,12 +249,35 @@ describe('PlanChangeRail controlled semantic contract', () => {
   });
 
   it('RED_OSLO_TIME_AND_DECLARED_TOKEN_CONTRACT', async () => {
-    const [componentModule, cssModule] = await Promise.all([
+    const [componentModule, cssSource] = await Promise.all([
       import(/* @vite-ignore */ '../PlanChangeRail.tsx?raw') as Promise<{ default: string }>,
-      import(/* @vite-ignore */ '../PlanChangeRail.css?raw') as Promise<{ default: string }>,
+      readFile(new URL('../PlanChangeRail.css', import.meta.url), 'utf8'),
     ]);
 
     expect(componentModule.default).toContain("timeZone: 'Europe/Oslo'");
-    expect(cssModule.default, 'UNDECLARED_INK_600_TOKEN').not.toContain('--ink-600');
+    expect(cssSource, 'UNDECLARED_INK_600_TOKEN').not.toContain('--ink-600');
+  });
+
+  it('RED_REVIEW_RESTART_UI_AND_SELECTION_CONTRACTS', async () => {
+    const [railCss, controlCss, ukeSource] = await Promise.all([
+      readFile(new URL('../PlanChangeRail.css', import.meta.url), 'utf8'),
+      readFile(new URL('../../controls/SegmentedControl.css', import.meta.url), 'utf8'),
+      import(/* @vite-ignore */ '../../../screens/UkeScreen.tsx?raw') as Promise<{ default: string }>,
+    ]);
+
+    expect(`${railCss}\n${controlCss}`).toContain('var(--focus-ring)');
+    expect(`${railCss}\n${controlCss}`).not.toMatch(
+      /(?:font-size:\s*(?:0\.6875|0\.72|0\.8125|0\.9375)rem|font-weight:\s*(?:650|700))/u,
+    );
+    const railHeadingStyle = ukeSource.default.match(
+      /const changeRailHeadStyle: CSSProperties = \{[\s\S]*?\n\s{2}\};/u,
+    )?.[0];
+    expect(railHeadingStyle).toBeDefined();
+    expect(railHeadingStyle).not.toContain("textTransform: 'uppercase'");
+    expect(railHeadingStyle).toContain("fontSize: '1.25rem'");
+    expect(railHeadingStyle).toContain('fontWeight: 640');
+    expect(ukeSource.default, 'REPAIR_MUST_PERSIST').toMatch(
+      /if \(planningSelection\.scope !== planningSelectionScope\)[\s\S]*?repairPlanningSelection[\s\S]*?setPlanningSelection/u,
+    );
   });
 });
