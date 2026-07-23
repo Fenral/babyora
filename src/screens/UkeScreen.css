@@ -132,11 +132,16 @@
 }
 
 .planlegg-screen__action,
-.planlegg-screen__empty {
+.planlegg-screen__empty,
+.planlegg-screen__week-weather {
   color: var(--ink-700);
   font-size: 1rem;
   font-weight: 500;
   line-height: 1.5;
+}
+
+.planlegg-screen__week-weather {
+  margin-top: 24px;
 }
 
 .planlegg-screen__rail {

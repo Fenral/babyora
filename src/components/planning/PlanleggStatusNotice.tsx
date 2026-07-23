@@ -7,6 +7,7 @@ export type PlanleggStatusState =
 
 type Props = Readonly<{
   state: PlanleggStatusState;
+  subject?: 'plan' | 'weather';
 }>;
 
 const osloTimeFormatter = new Intl.DateTimeFormat('nb-NO', {
@@ -22,7 +23,7 @@ function cachedTime(cachedAtIso: string): string {
   return osloTimeFormatter.format(instant).replace('.', ':');
 }
 
-export function PlanleggStatusNotice({ state }: Props) {
+export function PlanleggStatusNotice({ state, subject = 'plan' }: Props) {
   if (state.status === 'ready') return null;
 
   if (state.status === 'loading') {
@@ -33,7 +34,7 @@ export function PlanleggStatusNotice({ state }: Props) {
         aria-live="polite"
         aria-busy="true"
       >
-        <p>Henter dagens plan …</p>
+        <p>{subject === 'weather' ? 'Henter værprognosen …' : 'Henter dagens plan …'}</p>
         <div className="planlegg-status__skeleton" aria-hidden="true">
           <span className="planlegg-status__skeleton-verdict" />
           <span className="planlegg-status__skeleton-action" />
@@ -50,10 +51,18 @@ export function PlanleggStatusNotice({ state }: Props) {
   if (state.status === 'error') {
     return (
       <div className="planlegg-status" role="status" aria-live="polite">
-        <h2>Vi fikk ikke oppdatert planen</h2>
-        <p>Vi har ingen oppdatert plan å vise. Prøv å hente planen på nytt.</p>
+        <h2>
+          {subject === 'weather'
+            ? 'Vi fikk ikke oppdatert værprognosen'
+            : 'Vi fikk ikke oppdatert planen'}
+        </h2>
+        <p>
+          {subject === 'weather'
+            ? 'Vi har ingen oppdatert værprognose å vise. Prøv å hente været på nytt.'
+            : 'Vi har ingen oppdatert plan å vise. Prøv å hente planen på nytt.'}
+        </p>
         <button type="button" onClick={state.onRetry}>
-          Prøv å hente planen
+          {subject === 'weather' ? 'Prøv å hente været' : 'Prøv å hente planen'}
         </button>
       </div>
     );
@@ -62,9 +71,12 @@ export function PlanleggStatusNotice({ state }: Props) {
   if (state.status === 'offline') {
     return (
       <div className="planlegg-status" role="status" aria-live="polite">
-        <p>Du er frakoblet · viser planen fra {cachedTime(state.cachedAtIso)}</p>
+        <p>
+          Du er frakoblet · viser {subject === 'weather' ? 'værprognosen' : 'planen'} fra{' '}
+          {cachedTime(state.cachedAtIso)}
+        </p>
         <button type="button" onClick={state.onRetry}>
-          Prøv å hente planen
+          {subject === 'weather' ? 'Prøv å hente været' : 'Prøv å hente planen'}
         </button>
       </div>
     );
@@ -72,7 +84,11 @@ export function PlanleggStatusNotice({ state }: Props) {
 
   return (
     <div className="planlegg-status" role="status" aria-live="polite">
-      <p>Planen viser bare tidspunktene Babyora har værdata for.</p>
+      <p>
+        {subject === 'weather'
+          ? 'Værprognosen viser bare tidspunktene Babyora har værdata for.'
+          : 'Planen viser bare tidspunktene Babyora har værdata for.'}
+      </p>
     </div>
   );
 }

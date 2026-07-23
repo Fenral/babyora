@@ -241,8 +241,7 @@ function currentPhase(
 
 function PlanleggData({
   onOpenPlannedOutfit,
-  onRetry,
-}: Pick<Props, 'onOpenPlannedOutfit'> & Readonly<{ onRetry: () => void }>) {
+}: Pick<Props, 'onOpenPlannedOutfit'>) {
   const { active } = useChildren();
   const { fire } = useHapticSystem();
   const swaps = useSwapOverride((state) => state.swaps);
@@ -258,7 +257,8 @@ function PlanleggData({
   );
   const [activity] = useState<Activity>('utelek');
   const vognMode: VognMode = 'awake';
-  const weather = useWeather(lat, lon, FALLBACK_REF_HOUR);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const weather = useWeather(lat, lon, FALLBACK_REF_HOUR, refreshKey);
   const [tab, setTab] = useState<ViewTab>('today');
   const [forecastOpen, setForecastOpen] = useState(false);
   const changeRailHeadStyle: CSSProperties = {
@@ -543,6 +543,9 @@ function PlanleggData({
     temperatureContext?.tempC,
   );
   let statusState: PlanleggStatusState = { status: 'ready' };
+  const onRetry = useCallback(() => {
+    setRefreshKey((current) => current + 1);
+  }, []);
   const isLockedWeek = tab === 'tenday' && (!isPremium || accessLoading);
   if (weather.status === 'loading' || weather.status === 'idle') {
     statusState = { status: 'loading' };
@@ -589,12 +592,24 @@ function PlanleggData({
     && planningEvaluation.hasEvaluatedPlan;
   const forecastRows = planningEvaluation.hasEvaluatedPlan
     ? planningEvaluation.forecast
-    : activeHourly.map((row) => ({
-      atIso: row.time.toISOString(),
-      tempC: row.tempC,
-      feelsLikeC: row.feelsLikeC,
-      symbolCode: row.symbolCode,
-    }));
+    : tab === 'tenday'
+      ? activeDaily.map((row) => ({
+        atIso: new Date(
+          row.date.getFullYear(),
+          row.date.getMonth(),
+          row.date.getDate(),
+          row.refHour,
+        ).toISOString(),
+        tempC: row.tempC,
+        feelsLikeC: row.feelsLikeC,
+        symbolCode: row.symbolCode,
+      }))
+      : activeHourly.map((row) => ({
+        atIso: row.time.toISOString(),
+        tempC: row.tempC,
+        feelsLikeC: row.feelsLikeC,
+        symbolCode: row.symbolCode,
+      }));
 
   return (
     <section
@@ -609,8 +624,8 @@ function PlanleggData({
 
       <div
         className="planlegg-screen__views"
-        aria-disabled={statusState.status === 'error' ? 'true' : undefined}
-        inert={statusState.status === 'error' ? true : undefined}
+        aria-disabled={statusState.status === 'error' && !isLockedWeek ? 'true' : undefined}
+        inert={statusState.status === 'error' && !isLockedWeek ? true : undefined}
       >
         <SegmentedControl
           legend="Velg planvisning"
@@ -623,7 +638,10 @@ function PlanleggData({
         />
       </div>
 
-      <PlanleggStatusNotice state={statusState} />
+      <PlanleggStatusNotice
+        state={statusState}
+        subject={isLockedWeek ? 'weather' : 'plan'}
+      />
 
       {showAdvice && (
         <>
@@ -665,11 +683,13 @@ function PlanleggData({
 
       {tab === 'tenday'
         && !isPremium
-        && !accessLoading
         && statusState.status !== 'loading'
+        && statusState.status !== 'error'
         && (
-        <p className="planlegg-screen__empty">
-          Antrekksplan for uka er en del av Babyora Pluss. Værprognosen kan du se nedenfor.
+        <p className="planlegg-screen__week-weather">
+          {accessLoading
+            ? 'Sjekker tilgang til antrekksplanen. Ukevisningen viser vær ved middagstid.'
+            : 'Ukevisningen viser vær ved middagstid. Antrekksråd er ikke tilgjengelig med denne tilgangen.'}
         </p>
       )}
 
@@ -689,12 +709,9 @@ export function UkeScreen({
   onNavigate: _onNavigate,
   onOpenSheet: _onOpenSheet,
 }: Props) {
-  const [requestKey, setRequestKey] = useState(0);
   return (
     <PlanleggData
-      key={requestKey}
       onOpenPlannedOutfit={onOpenPlannedOutfit}
-      onRetry={() => setRequestKey((current) => current + 1)}
     />
   );
 }

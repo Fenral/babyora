@@ -203,7 +203,12 @@ export function reduceWeatherRequestState(
   };
 }
 
-export function useWeather(lat: number, lon: number, refHour: number = 12): WeatherState {
+export function useWeather(
+  lat: number,
+  lon: number,
+  refHour: number = 12,
+  refreshKey: number = 0,
+): WeatherState {
   const fetchKey = `${lat},${lon},${refHour}`;
   const requestIdRef = useRef(0);
   const [requestState, setRequestState] = useState<WeatherRequestState>(
@@ -222,7 +227,7 @@ export function useWeather(lat: number, lon: number, refHour: number = 12): Weat
       },
     });
     return lifecycle.cancel;
-  }, [fetchKey, lat, lon, refHour]);
+  }, [fetchKey, lat, lon, refHour, refreshKey]);
 
   return selectWeatherForFetchKey(requestState, fetchKey);
 }

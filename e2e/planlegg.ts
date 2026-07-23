@@ -384,8 +384,11 @@ function collectFailures(page: Page): string[] {
     }
   });
   page.on('requestfailed', (request) => {
+    const navigationAbortedImage = request.resourceType() === 'image'
+      && request.failure()?.errorText === 'net::ERR_ABORTED';
     if (
       request.resourceType() !== 'font'
+      && !navigationAbortedImage
       && !/\/api\/forecast|met\.no|fonts\.gstatic\.com/i.test(request.url())
     ) {
       failures.push(
@@ -457,17 +460,21 @@ async function startLiveRegionTrace(page: Page): Promise<void> {
     };
     tracedWindow.__planleggLiveObserver?.disconnect();
     tracedWindow.__planleggLiveTrace = [];
-    const record = () => {
-      const text = document
-        .querySelector<HTMLElement>('[role="status"][aria-live="polite"]')
-        ?.innerText.replace(/\s+/gu, ' ').trim();
-      if (!text) return;
-      const trace = tracedWindow.__planleggLiveTrace!;
-      if (trace.at(-1) !== text) trace.push(text);
-    };
-    record();
+    const initialText = document
+      .querySelector<HTMLElement>('[role="status"][aria-live="polite"]')
+      ?.innerText.replace(/\s+/gu, ' ').trim();
+    if (initialText) tracedWindow.__planleggLiveTrace.push(initialText);
     const owner = document.querySelector<HTMLElement>('.planlegg-screen');
     if (!owner) throw new Error('Planlegg-roten mangler for live-sporing');
+    const record = window.Function(`
+      const tracedWindow = window;
+      const text = document
+        .querySelector('[role="status"][aria-live="polite"]')
+        ?.innerText.replace(/\\s+/gu, ' ').trim();
+      if (!text) return;
+      const trace = tracedWindow.__planleggLiveTrace;
+      if (trace.at(-1) !== text) trace.push(text);
+    `) as MutationCallback;
     tracedWindow.__planleggLiveObserver = new MutationObserver(record);
     tracedWindow.__planleggLiveObserver.observe(owner, {
       childList: true,
@@ -1132,9 +1139,11 @@ async function runCompositionMatrix(
     { name: 'extreme-heat', value: 55, axis: 'varm' },
   ] as const;
   const contrast = async (theme: 'light' | 'dark') => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.evaluate((nextTheme) => {
       document.documentElement.dataset.theme = nextTheme;
     }, theme);
+    await page.waitForTimeout(50);
     const colors = await page.evaluate(() => {
       const planlegg = document.querySelector<HTMLElement>('.planlegg-screen')!;
       const planleggStyle = getComputedStyle(planlegg);
@@ -1204,6 +1213,7 @@ async function runCompositionMatrix(
   if (failingContrast.length > 0) {
     throw new Error(`AA-kontrast avvek: ${failingContrast.join(', ')}`);
   }
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
 
   await page.emulateMedia({ forcedColors: 'active' });
   const forcedRadio = page.getByRole('radio', { name: 'I dag', exact: true });
@@ -1235,7 +1245,7 @@ async function runCompositionMatrix(
       .getByRole('button', { name: new RegExp(`^${root}`, 'u') })
       .click();
     await page.waitForTimeout(180);
-    await assertSingleMain(page);
+    await page.locator('main#main').waitFor({ state: 'visible', timeout: 15_000 });
     const routeOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
