@@ -467,6 +467,9 @@ async function installDeterministicPage(
     await page.addInitScript({
       content: `
         (() => {
+          if (new URL(window.location.href).searchParams.get('runtime') === 'web') {
+            return;
+          }
           const customerInfo = (premium) => ({
             customerInfo: {
               entitlements: {
@@ -519,6 +522,10 @@ async function installDeterministicPage(
               }
               if (method === 'getOfferings') {
                 return Promise.resolve({ current: null });
+              }
+              if (method === 'restorePurchases') {
+                premium = true;
+                return Promise.resolve(customerInfo(true));
               }
               return Promise.resolve({});
             },
@@ -1276,6 +1283,22 @@ async function runAccess(
     );
   }
 
+  await freeWeekAction.click();
+  const allowedRefreshPaywall = page.getByRole('dialog');
+  await allowedRefreshPaywall.waitFor({ state: 'visible', timeout: 15_000 });
+  await beginEntitlementRefresh(page);
+  await allowedRefreshPaywall.waitFor({ state: 'detached', timeout: 15_000 });
+  await neutralWeek.waitFor({ state: 'visible', timeout: 15_000 });
+  await settleEntitlement(page, true);
+  await page.locator('[data-planlegg-access="plus-week"]')
+    .waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await page.getByRole('dialog').count() !== 0
+    || await main.evaluate((element) => document.activeElement === element) !== true
+  ) {
+    throw new Error('Tillatt entitlement-avklaring mistet trygt hovedfokus');
+  }
+
   await reloadPlanlegg(page, freePath, forecastState, 'missing-tomorrow');
   await page.getByRole('radio', { name: 'Uke', exact: true })
     .evaluate((radio) => (radio as HTMLInputElement).click());
@@ -1287,6 +1310,53 @@ async function runAccess(
     || await page.getByRole('button', { name: 'Se hele antrekket' }).count() !== 0
   ) {
     throw new Error('Free Uke uten fremtidsevidens materialiserte sammenligning eller råd');
+  }
+
+  const webPurchasePath = `${freePath}&runtime=web`;
+  await reloadPlanlegg(page, webPurchasePath, forecastState, 'many');
+  await page.getByRole('radio', { name: 'Uke', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
+  await page.getByRole('button', {
+    name: 'Se uke med Babyora Plus',
+    exact: true,
+  }).click();
+  const webPurchasePaywall = page.getByRole('dialog');
+  await webPurchasePaywall.waitFor({ state: 'visible', timeout: 15_000 });
+  await webPurchasePaywall.getByRole('button', {
+    name: /Start 7 dager gratis|Kjøp Babyora Pluss/u,
+  }).click();
+  await webPurchasePaywall.getByText(
+    'Babyora Pluss aktivert (testmodus).',
+    { exact: true },
+  ).waitFor({ state: 'visible', timeout: 15_000 });
+  await page.clock.fastForward(2_000);
+  await webPurchasePaywall.waitFor({ state: 'detached', timeout: 15_000 });
+  await page.locator('[data-planlegg-access="plus-week"]')
+    .waitFor({ state: 'visible', timeout: 15_000 });
+  if (await main.evaluate((element) => document.activeElement === element) !== true) {
+    throw new Error('Vellykket web-kjøp mistet aktiveringsstatus eller hovedfokus');
+  }
+
+  await reloadPlanlegg(page, freePath, forecastState, 'many');
+  await page.getByRole('radio', { name: 'Uke', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
+  await page.getByRole('button', {
+    name: 'Se uke med Babyora Plus',
+    exact: true,
+  }).click();
+  const restorePaywall = page.getByRole('dialog');
+  await restorePaywall.waitFor({ state: 'visible', timeout: 15_000 });
+  await restorePaywall.getByRole('button', { name: 'Gjenopprett kjøp' }).click();
+  await restorePaywall.getByText(
+    'Babyora Pluss aktivert.',
+    { exact: true },
+  ).waitFor({ state: 'visible', timeout: 15_000 });
+  await page.clock.fastForward(2_000);
+  await restorePaywall.waitFor({ state: 'detached', timeout: 15_000 });
+  await page.locator('[data-planlegg-access="plus-week"]')
+    .waitFor({ state: 'visible', timeout: 15_000 });
+  if (await main.evaluate((element) => document.activeElement === element) !== true) {
+    throw new Error('Vellykket restore mistet aktiveringsstatus eller hovedfokus');
   }
 
   const loadingPath = `${fixture.path}${fixture.path.includes('?') ? '&' : '?'}entitlement=loading`;
