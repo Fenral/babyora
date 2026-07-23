@@ -18,6 +18,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { AnimatePresence, motion } from 'motion/react';
 import type { TabKey } from './types/nav';
 import { useChildren } from './state/children-store';
@@ -181,6 +182,7 @@ export default function App(): ReactElement {
   }, []);
 
   useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
     const syncPersistedEntitlement = (event: StorageEvent) => {
       if (event.key !== 'babyora.subscription') return;
       void useSubscription.persist.rehydrate();

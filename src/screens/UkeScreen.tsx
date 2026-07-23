@@ -279,16 +279,15 @@ function PlanleggData({
     loading: false,
   }, PLUS_FEATURE_AVAILABILITY), [isPremium]);
   const viewAccess = tab === 'today' ? todayAccess : weekAccess;
-  const previousWeekAllowedRef = useRef(weekAccess.access.allowed);
   useEffect(() => {
-    const lostLiveWeekAccess = previousWeekAllowedRef.current
-      && !weekAccess.access.allowed;
-    previousWeekAllowedRef.current = weekAccess.access.allowed;
-    if (!lostLiveWeekAccess || tab !== 'tenday') return;
-    setPaywallOpen(false);
-    setForecastOpen(false);
-    setTab('today');
-  }, [tab, weekAccess.access.allowed]);
+    if (weekAccess.access.state !== 'neutral') return;
+    const frame = window.requestAnimationFrame(() => {
+      setPaywallOpen(false);
+      setForecastOpen(false);
+      if (paywallTrigger?.isConnected) paywallTrigger.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [paywallTrigger, weekAccess.access.state]);
   const changeRailHeadStyle: CSSProperties = {
     fontSize: '1.25rem',
     fontWeight: 640,
@@ -621,8 +620,15 @@ function PlanleggData({
       timeZone: PLAN_TIME_ZONE,
     });
     const evaluatedDate = localDate(new Date(weather.evidence.metadata.evaluatedAt));
+    const [year, month, day] = evaluatedDate.split('-').map(Number);
+    if (!year || !month || !day) return null;
+    const nextCalendarDate = new Date(Date.UTC(year, month - 1, day + 1))
+      .toISOString()
+      .slice(0, 10);
     const today = activeDaily.find((day) => localDate(day.date) === evaluatedDate);
-    const future = activeDaily.find((day) => localDate(day.date) > evaluatedDate);
+    const future = activeDaily.find(
+      (day) => localDate(day.date) === nextCalendarDate,
+    );
     if (!today || !future) return null;
     return Object.freeze({
       todayC: Math.round(today.tempC),
