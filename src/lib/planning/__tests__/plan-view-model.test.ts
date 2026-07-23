@@ -356,7 +356,7 @@ describe('buildPlanViewModel', () => {
 
     expect(model.status).toBe('ready');
     expect(model.events.map((event) => event.kind)).toEqual(['location', 'prep']);
-    expect(model.nextAction).toBe('NÃ¥r dere kommer til Barnehagen: Ta av skalljakke');
+    expect(model.nextAction).toBe('N\u00e5r dere kommer til Barnehagen: Ta av skalljakke');
   });
 
   it('rejects conflicting duplicate forecast rows instead of choosing by input order', () => {
