@@ -34,6 +34,7 @@ key-decisions:
   - "Forecast currentness fails closed: invalid metadata or points are unavailable, and only internally consistent fresh metadata can support complete-hourly wording."
   - "The cache key and proxy URL remain unchanged; writes use a version-1 envelope while valid unversioned legacy entries remain readable."
   - "useWeather clears cross-key data on start and publishes forecast derivatives plus matching evidence through one request-ID-gated state transition."
+  - "Memory fallback recomputes source currentness at retrieval time, and current extraction is anchored to the actual first forecast instant rather than the first later usable point."
 
 patterns-established:
   - "ForecastFetchResult is the only fetch boundary; consumers unwrap result.forecast before extraction."
@@ -47,10 +48,10 @@ coverage:
     requirement: TRUTH-01
     verification:
       - kind: unit
-        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (67 passed)"
+        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (69 passed)"
         status: pass
       - kind: other
-        ref: "git diff --check 2ea2dc1..2399816 and exact four-path architecture-refactor scope manifest"
+        ref: "git diff --check db98c25..89e130f and exact two-path P1-repair scope manifest"
         status: pass
     human_judgment: false
   - id: D2
@@ -61,7 +62,7 @@ coverage:
         ref: "src/hooks/__tests__/useWeather.test.ts#keeps the newer fetch key when promises deliberately resolve in reverse order"
         status: pass
       - kind: other
-        ref: "npx tsc -b --pretty false"
+        ref: "node_modules/.bin/tsc -b --pretty false"
         status: pass
     human_judgment: false
   - id: D3
@@ -69,10 +70,10 @@ coverage:
     requirement: EVID-02
     verification:
       - kind: unit
-        ref: "focused four-suite run (96 passed, 1 future-plan TODO)"
+        ref: "focused four-suite run (98 passed, 1 future-plan TODO)"
         status: pass
       - kind: other
-        ref: "npm test && npm run lint && npm run build (663 passed; lint/main/bare build passed)"
+        ref: "npm test && npm run lint && npm run build (665 passed; lint/main/bare build passed)"
         status: pass
     human_judgment: false
   - id: D4
@@ -80,12 +81,12 @@ coverage:
     requirement: GOV-04
     verification:
       - kind: other
-        ref: "layered architecture candidate 23998169ab32c4eff83d4916777d0263a12657cf; implementation evidence recorded below"
+        ref: "strict P1 repair candidate 89e130f8ac4a4c25380d76b4d47f010c57e7853b; implementation evidence recorded below"
         status: pass
     human_judgment: true
     rationale: "Repository governance requires a fresh independent high-risk reviewer on the exact candidate SHA; the executor cannot issue that PASS."
 
-duration: 86min
+duration: 94min
 completed: 2026-07-22
 status: complete
 review_status: ready_for_high_risk_review
@@ -97,7 +98,7 @@ review_status: ready_for_high_risk_review
 
 ## Performance
 
-- **Duration:** 86 min including two scoped repairs and the live-response architecture refactor
+- **Duration:** 94 min including three scoped repairs and the live-response architecture refactor
 - **Started:** 2026-07-22T23:18:30+02:00
 - **Completed:** 2026-07-23T00:44:30+02:00
 - **Tasks:** 2
@@ -123,6 +124,10 @@ review_status: ready_for_high_risk_review
 8. **Second repair GREEN: Close residual forecast truth gaps** — `80c6da2` (`fix`)
 9. **Architecture RED: Define live-shaped layered-boundary contracts** — `7d17b0e` (`test`)
 10. **Architecture GREEN: Layer live forecast validation and coordination** — `2399816` (`refactor`)
+
+11. **Strict P1 RED A: Reproduce stale memory currentness** — `7130886` (`test`)
+12. **Strict P1 RED B: Reproduce skipped current forecast point** — `4472888` (`test`)
+13. **Strict P1 GREEN: Close memory and current-point findings** — `89e130f` (`fix`)
 
 **Plan metadata:** recorded by the final GSD documentation commit.
 
@@ -152,18 +157,18 @@ review_status: ready_for_high_risk_review
 
 ## Deterministic Evidence
 
-All executable evidence below ran from a fresh `npm ci` archive checkout of exact candidate `23998169ab32c4eff83d4916777d0263a12657cf`; the primary checkout's pre-existing `node_modules` remained untouched because active Vite/Playwright processes held its native binaries.
+All executable evidence below ran from a fresh `npm ci` archive checkout of exact candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b`; the primary checkout's pre-existing `node_modules` remained untouched.
 
-- Focused four-suite Vitest run — **PASS**, 4/4 files; 96 tests passed and one intentional Plan 01-11 TODO.
-- `npx tsc -b --pretty false` — **PASS**.
-- `npm test` — **PASS**, 60 files passed, 4 skipped; 663 tests passed, 34 TODO.
+- Focused four-suite Vitest run — **PASS**, 4/4 files; 98 tests passed and one intentional Plan 01-11 TODO.
+- `node_modules/.bin/tsc -b --pretty false` — **PASS**.
+- `npm test` — **PASS**, 60 files passed, 4 skipped; 665 tests passed, 34 TODO.
 - `npm run lint` — **PASS**.
 - `npm run build` — **PASS**, TypeScript plus main and bare Vite builds.
 - Primary MET Swagger enum comparison — **PASS**, all 83 implemented symbol codes exactly match `definitions.WeatherSymbol.enum` from `https://api.met.no/weatherapi/locationforecast/2.0/swagger`.
 - Ephemeral official live compact probe — **PASS** through both `isMetForecast` and `fetchForecast`; 87 points, one terminal instant-only point, exact consumed units. Payload stayed in memory and the temporary probe file was deleted after execution.
 - Mojibake scan across all four production paths — **PASS**, no `Ã` or `Â` remnants.
-- `git diff --check 2ea2dc1..2399816` — **PASS**.
-- Architecture-refactor scope manifest — **PASS**, exactly four Plan 01-02 paths changed. No package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
+- `git diff --check db98c25a254187a91a9f6fc630131fec888ddfd3..89e130f8ac4a4c25380d76b4d47f010c57e7853b` — **PASS**.
+- Strict P1 repair scope manifest — **PASS**, exactly `src/lib/met-no/client.ts` and its existing test file changed. No package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
 
 ## Candidate and Review Authority
 
@@ -176,9 +181,11 @@ All executable evidence below ran from a fresh `npm ci` archive checkout of exac
 | Fresh independent approved verifier | High-risk verification | `80c6da2d929281bf9b38cbb0c7603614c667026a` | **PASS**, later contradicted by external live-response evidence |
 | External read-only reviewer | Live-response architecture review | `80c6da2d929281bf9b38cbb0c7603614c667026a` | **BLOCK** — reproducible P1 schema/unit/cache-coordination failures; strictest verdict wins |
 | Codex GSD executor (layered architecture refactor) | High-risk implementation | `23998169ab32c4eff83d4916777d0263a12657cf` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic and ephemeral live checks green, no self-PASS claimed |
-| Fresh independent approved reviewer | High-risk verification | `23998169ab32c4eff83d4916777d0263a12657cf` | **PENDING** — fresh verdict required on the layered exact SHA |
+| Fresh independent approved reviewer | High-risk verification | `23998169ab32c4eff83d4916777d0263a12657cf` | **BLOCK** — memory fallback retained stale source currentness and current extraction could skip the actual first point |
+| Codex GSD executor (strict P1 repair) | High-risk implementation | `89e130f8ac4a4c25380d76b4d47f010c57e7853b` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic checks green, no self-PASS claimed |
+| Fresh independent approved reviewer | High-risk verification | `89e130f8ac4a4c25380d76b4d47f010c57e7853b` | **PENDING** — fresh verdict required on the exact repaired SHA |
 
-Any edit to the eight code/test paths after `23998169ab32c4eff83d4916777d0263a12657cf` invalidates this candidate and requires fresh evidence plus independent review.
+Any edit to the eight code/test paths after `89e130f8ac4a4c25380d76b4d47f010c57e7853b` invalidates this candidate and requires fresh evidence plus independent review.
 
 ## Independent BLOCK on Candidate 4150a1e
 
@@ -232,7 +239,7 @@ The architectural findings are:
 2. Consumed MET fields are accepted without the exact official unit contract, so missing or incompatible units can reach ready/cache state.
 3. Same-key coordination can prefer stale storage after a newer validated network success when `localStorage.setItem` fails; the latest validated success must remain an in-memory monotonic commit independent of persistence.
 
-Architecture correction status: **COMPLETE ON CANDIDATE `23998169ab32c4eff83d4916777d0263a12657cf`**. The verifier PASS is retained as history but superseded for `80c6da2` by the live-response BLOCK; no independent PASS exists yet for the layered candidate.
+Architecture correction status: **COMPLETE ON CANDIDATE `23998169ab32c4eff83d4916777d0263a12657cf`**. The verifier PASS is retained as history but superseded for `80c6da2` by the live-response BLOCK; the layered candidate is subsequently rejected by the strict P1 BLOCK recorded below.
 
 ## Layered Architecture Refactor Outcome
 
@@ -242,6 +249,22 @@ Architecture correction status: **COMPLETE ON CANDIDATE `23998169ab32c4eff83d491
 - The six consumed fields require exact official units before network or cache data can reach ready state. A defense-in-depth hook guard converts incompatible typed input to an empty error state.
 - Per-key coordination stores the newest validated network success in memory before attempting persistence. Obsolete success and failure paths consult that validated memory commit before freshly re-reading validated fresh/stale storage, while older success remains eligible when no newer success committed.
 - A read-only live compact response with 87 points and a terminal instant-only point passed both the production type guard and fetch parser. No payload or network-dependent CI test was persisted.
+
+## Strict P1 BLOCK and Repair on Candidate 2399816
+
+Candidate `23998169ab32c4eff83d4916777d0263a12657cf` is independently rejected and must not advance. The strict review reproduced two P1 correctness failures:
+
+1. A validated source that was 5h59 old when a memory commit was created remained marked current after the clock advanced two minutes and network plus storage recovery failed. Memory fallback reused committed metadata instead of recomputing the six-hour source-age boundary at retrieval.
+2. `extractNow` selected the first later point with one-hour evidence. If the actual first/current instant was period-less, it could silently publish a later forecast as current weather.
+
+Strict P1 repair status: **COMPLETE ON CANDIDATE `89e130f8ac4a4c25380d76b4d47f010c57e7853b`**. The BLOCK remains authoritative for `2399816`; the repaired candidate requires a fresh independent verdict.
+
+## Strict P1 TDD Repair Outcome
+
+- `7130886` added the first RED regression: source age crosses from 5h59 to 6h01 after a failed persistence write and later network failure. Before GREEN it returned the stale non-null source timestamp.
+- `4472888` added the independent second RED regression: a 09:00 instant-only point at -20°C followed by a usable 10:00 point at +15°C. Before GREEN, current extraction incorrectly returned the later point.
+- `89e130f` recomputes `sourceUpdatedAt` on every memory-commit retrieval and anchors `extractNow` to `timeseries[0]`. Missing current one-hour evidence now fails closed, while hourly, daily, terminal-point, and coverage filtering may still use later usable points.
+- Fresh archive verification of the exact GREEN SHA passed focused/full tests, lint, main and bare builds, TypeScript, diff hygiene, and the exact two-path scope manifest.
 
 ## Decisions Made
 
@@ -255,6 +278,8 @@ Architecture correction status: **COMPLETE ON CANDIDATE `23998169ab32c4eff83d491
 - Request start order does not invalidate data by itself; only a newer successfully committed result supersedes an older valid same-key success.
 - Symbol validation is a closed exact match against the 83-value primary MET Swagger enum rather than a derived base/suffix grammar.
 - Latest validated per-key network success is committed in memory before persistence and wins failure fallback over freshly re-read validated storage.
+- Source currentness stored with an in-memory commit is not timeless evidence; it is recomputed against the retrieval clock before fallback publication.
+- “Now” means the actual first forecast instant. A later usable point may support later forecast views but can never substitute for missing current-period evidence.
 
 ## Deviations from Plan
 
@@ -281,6 +306,13 @@ Architecture correction status: **COMPLETE ON CANDIDATE `23998169ab32c4eff83d491
 - **Files modified:** Four plan-owned source/test paths.
 - **Commits:** `7d17b0e`, `2399816`
 
+**4. [Rule 1 - Bugs] Repaired two strict P1 review findings**
+- **Found during:** Strict independent review of layered candidate `23998169ab32c4eff83d4916777d0263a12657cf`
+- **Issue:** Memory fallback could retain source currentness after the source crossed the six-hour limit, and `extractNow` could skip an actual period-less current point in favor of a later forecast.
+- **Fix:** Added separate RED commits `7130886` and `4472888`, then recomputed source currentness per retrieval and anchored current extraction to the first forecast instant in `89e130f`.
+- **Files modified:** `src/lib/met-no/client.ts` and `src/lib/met-no/__tests__/client.test.ts`.
+- **Commits:** `7130886`, `4472888`, `89e130f`
+
 ## Known Stubs
 
 - `src/lib/planning/__tests__/forecast-evidence.test.ts` retains one intentional TODO for fixed/manual persistent cache versus future memory-only automatic scope. Plan 01-11 owns that behavior; it does not prevent this plan's provenance/currentness boundary from operating.
@@ -305,7 +337,7 @@ None - no dependency, package, credential, environment, service, API, or migrati
 
 ## Remaining Gates
 
-- Fresh independent high-risk review on exact layered architecture candidate `23998169ab32c4eff83d4916777d0263a12657cf`: **PENDING**. The executor does not self-issue PASS.
+- Fresh independent high-risk review on exact strict P1 repair candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b`: **PENDING**. The executor does not self-issue PASS.
 - New app screenshots/video/traces and the media-based 90+ audit: **Pending stable candidate and owner permission**; none were created here.
 - VoiceOver, TalkBack, physical haptics, OS text scaling, one-handed reach, physical-device UAT, and owner release approval: **Pending**.
 - Six Snart approvals and independent climate artifacts remain Pending and still block Plan 01-13.
@@ -315,11 +347,12 @@ None - no dependency, package, credential, environment, service, API, or migrati
 - Original code candidate `4150a1e` remains blocked and must not be consumed by Plan 01-03.
 - First repaired candidate `b9b8b51f0a0972b96706a6e171cda2cba89e00b5` also remains blocked.
 - Second repaired candidate `80c6da2d929281bf9b38cbb0c7603614c667026a` is blocked by the authoritative external live-response verdict despite its verifier PASS.
-- Layered architecture candidate `23998169ab32c4eff83d4916777d0263a12657cf` is ready for fresh independent high-risk review; Plan 01-03 must wait for that verdict.
+- Layered architecture candidate `23998169ab32c4eff83d4916777d0263a12657cf` is blocked by the strict P1 verdict.
+- Strict P1 repair candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b` is ready for fresh independent high-risk review; Plan 01-03 must wait for that verdict.
 
 ## Self-Check: PASSED
 
-All eight plan-owned paths, this summary, original commits `b5d68a9`, `bf5c806`, `3f4304a`, `4150a1e`, BLOCK records `32e84b8`, `6959443`, `2ea2dc1`, repair commits `3cbaa68`, `b9b8b51`, `9178047`, `80c6da2`, and architecture commits `7d17b0e`, `2399816` exist and were verified. The exact four-path architecture scope and immutable SHA passed focused/full/lint/build/type-check/enum/mojibake/live-probe checks; independent review remains pending.
+All eight plan-owned paths, this summary, original commits `b5d68a9`, `bf5c806`, `3f4304a`, `4150a1e`, BLOCK records `32e84b8`, `6959443`, `2ea2dc1`, repair commits `3cbaa68`, `b9b8b51`, `9178047`, `80c6da2`, architecture commits `7d17b0e`, `2399816`, and strict P1 commits `7130886`, `4472888`, `89e130f` exist and were verified. The exact two-path repair scope and immutable SHA passed focused/full/lint/build/type-check/diff checks; independent review remains pending.
 
 ---
 *Phase: 01-planlegg-dagslinjen*
