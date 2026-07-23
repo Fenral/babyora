@@ -27,7 +27,10 @@ import { BottomTabBar } from './components/BottomTabBar';
 
 import type { GuideHubTarget } from './screens/GuideHubScreen';
 import type { Recommendation } from './lib/wool-layers/types';
-import type { PlannedOutfitContext } from './lib/planning/planned-outfit-context';
+import {
+  isPlannedOutfitContext,
+  type PlannedOutfitContext,
+} from './lib/planning/planned-outfit-context';
 
 const HjemScreen = lazy(() =>
   import('./screens/HjemScreen').then((m) => ({ default: m.HjemScreen })),
@@ -165,6 +168,19 @@ export default function App(): ReactElement {
   const onNavigate = (next: TabKey) => {
     setDrill(null);
     setTab(next);
+  };
+
+  const onOpenPlannedOutfit = (
+    plannedContext: PlannedOutfitContext,
+    origin: HTMLElement,
+  ) => {
+    if (!isPlannedOutfitContext(plannedContext) || !origin.isConnected) return;
+    setDrill({
+      kind: 'paakledning',
+      source: 'planned',
+      plannedContext,
+      origin,
+    });
   };
 
   const reduceMotion = prefersReducedMotion();
@@ -390,6 +406,7 @@ export default function App(): ReactElement {
       <UkeScreen
         onNavigate={onNavigate}
         onOpenSheet={() => setDrill({ kind: 'paakledning', source: 'current' })}
+        onOpenPlannedOutfit={onOpenPlannedOutfit}
       />
     );
   } else if (tab === 'guide') {

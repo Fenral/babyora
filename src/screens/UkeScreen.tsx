@@ -26,6 +26,7 @@
  * som Hjem (transition scoped via CSS, RM → instant snap).
  */
 import {
+  useCallback,
   useMemo,
   useRef,
   useState,
@@ -49,9 +50,29 @@ import type { TabKey } from '../types/nav';
 import { useAccess } from '../lib/premium/use-access';
 import { shouldShowTenDayTeaser } from '../lib/premium/gating';
 import { PaywallDialog } from '../components/PaywallDialog';
-import { deriveChangeEvents } from '../lib/planning/change-events';
-import { buildRailRows } from '../lib/planning/rail-rows';
-import { PlanChangeRail } from '../components/planning/PlanChangeRail';
+import {
+  derivePlanningChangeEvents,
+  type PlanningPoint,
+} from '../lib/planning/change-events';
+import { buildPlanningRailRows } from '../lib/planning/rail-rows';
+import {
+  PlanChangeRail,
+  type PlanChangeRailRow,
+  type PlanningRailEvent,
+} from '../components/planning/PlanChangeRail';
+import { SegmentedControl } from '../components/controls/SegmentedControl';
+import {
+  decidePlanningInteraction,
+  dispatchPlanningInteraction,
+  repairPlanningSelection,
+} from '../lib/planning/planning-interaction';
+import {
+  createPlannedOutfitContext,
+  PLAN_TIME_ZONE,
+  type PlannedOutfitContext,
+} from '../lib/planning/planned-outfit-context';
+import { resolvePlannedOutfitContext } from '../lib/planning/planned-outfit-resolver';
+import { decideAccess } from '../lib/access/capabilities';
 
 // Elverum (default ved ingen aktiv barn-lokasjon)
 const DEFAULT_LAT = 60.8867;
@@ -298,19 +319,57 @@ type Phase = {
   /** R2 (2026-07-14): motor-input fasen ble beregnet fra — kreves av den
    *  endelige sikkerhetsgrensen når session-swaps anvendes. */
   engineInput: RecommendInput | null;
+  /** Eksakt værgrunnlag og tidspunkt som recommendation ble evaluert mot. */
+  weather: Readonly<{
+    atIso: string;
+    tempC: number;
+    feelsLikeC: number;
+    windMs: number;
+    precipMmH: number;
+    symbolCode: string;
+  }> | null;
 };
 
 type Props = {
   onNavigate: (tab: TabKey) => void;
   onOpenSheet: () => void;
+  onOpenPlannedOutfit: (
+    context: PlannedOutfitContext,
+    trigger: HTMLElement,
+  ) => void;
 };
 
 /** Fast referansetime for prognoser når brukeren ikke kan velge. F67: 12:00. */
 const FALLBACK_REF_HOUR = 12;
 
+type PlanningEvaluation = Readonly<{
+  events: readonly ReturnType<typeof derivePlanningChangeEvents>[number][];
+  rows: readonly PlanChangeRailRow[];
+  contextsByEventId: ReadonlyMap<string, PlannedOutfitContext>;
+  preferredEventId: string | null;
+}>;
+
+const EMPTY_PLANNING_EVALUATION: PlanningEvaluation = Object.freeze({
+  events: Object.freeze([]),
+  rows: Object.freeze([]),
+  contextsByEventId: Object.freeze(new Map<string, PlannedOutfitContext>()),
+  preferredEventId: null,
+});
+
+function finalizedFingerprint(
+  orderedGarments: readonly string[],
+  equipment: readonly string[],
+): string {
+  return `planned-finalized:${JSON.stringify([orderedGarments, equipment])}`;
+}
+
 // ──────────────── selve komponenten ────────────────
 
-export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
+export function UkeScreen({
+  onNavigate,
+  onOpenSheet,
+  onOpenPlannedOutfit,
+}: Props) {
   const { active } = useChildren();
   const { reducedMotion } = useNativeSettings();
   const { fire } = useHapticSystem();
@@ -332,7 +391,7 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
   // ViewTab='tenday') er en Babyora Pluss-funksjon. Modell (b): tab-en er
   // fortsatt valgbar (aria-pressed settes normalt, viser faktisk teaser-
   // innhold) — kun antrekks-/lag-delen av hver rad er gatet.
-  const { isPremium } = useAccess();
+  const { isPremium, loading: accessLoading } = useAccess();
   const tenDayCtaRef = useRef<HTMLButtonElement | null>(null);
   const [tenDayPaywallOpen, setTenDayPaywallOpen] = useState(false);
   // Fanget i klikk-handleren (aldri under render — react-hooks/refs) og gitt
@@ -395,6 +454,7 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
             symbolCode: 'cloudy',
             recommendation: null,
             engineInput: null,
+            weather: null,
           };
         }
         const engineInput: RecommendInput = {
@@ -420,6 +480,14 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
           symbolCode: point.symbolCode,
           recommendation: rec,
           engineInput,
+          weather: {
+            atIso: point.time.toISOString(),
+            tempC: point.tempC,
+            feelsLikeC: point.feelsLikeC,
+            windMs: point.windMs,
+            precipMmH: point.precipMmH,
+            symbolCode: point.symbolCode,
+          },
         };
       });
     }
@@ -451,6 +519,19 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
         symbolCode: day.symbolCode,
         recommendation: rec,
         engineInput,
+        weather: {
+          atIso: new Date(
+            day.date.getFullYear(),
+            day.date.getMonth(),
+            day.date.getDate(),
+            day.refHour,
+          ).toISOString(),
+          tempC: day.tempC,
+          feelsLikeC: day.feelsLikeC,
+          windMs: day.windMs,
+          precipMmH: day.precipMmH,
+          symbolCode: day.symbolCode,
+        },
       };
     });
   }, [tab, weather.status, weather.hourly, weather.dailyAtHour, todayHourSlots, ageMonths, today, activity, vognMode]);
@@ -476,30 +557,165 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
     });
   }, [phases, swaps]);
 
-  // R7 Task 5: «Endringer i dag»-rail — kun de meningsfulle plaggendringene
-  // gjennom dagens tidsslots. Additivt over time-for-time (rører ikke den
-  // premium-gatede 10-dagers-flyten). Fingerprint = ordnede plagg-labels.
-  const todayChangeRows = useMemo(() => {
-    if (tab !== 'today') return [];
-    const points = resolvedPhases
-      .filter((p) => p.recommendation)
-      .map((p) => {
-        const rec = p.recommendation!;
-        const ordered = rec.layers.filter((l) => l.category !== 'utstyr').flatMap((l) => l.items);
-        const equipment = rec.layers.find((l) => l.category === 'utstyr')?.items ?? [];
-        return {
-          hour: p.hour,
-          fingerprint: [...ordered, ...equipment].join('|'),
-          orderedGarments: ordered,
-          equipment,
-          feelsLikeC: p.tempC ?? 0,
-          symbolCode: p.symbolCode,
-        };
+  const planningEvaluation = useMemo<PlanningEvaluation>(() => {
+    if (
+      tab !== 'today'
+      || !weather.evidence
+      || weather.evidence.coverage.status === 'unavailable'
+    ) {
+      return EMPTY_PLANNING_EVALUATION;
+    }
+
+    const facts = resolvedPhases.flatMap((phase) => {
+      if (!phase.recommendation || !phase.weather) return [];
+      const orderedGarments = phase.recommendation.layers
+        .filter((layer) => layer.category !== 'utstyr')
+        .flatMap((layer) => layer.items);
+      const equipment = phase.recommendation.layers
+        .filter((layer) => layer.category === 'utstyr')
+        .flatMap((layer) => layer.items);
+      if (orderedGarments.length === 0) return [];
+      const fingerprint = finalizedFingerprint(orderedGarments, equipment);
+      const point: PlanningPoint = Object.freeze({
+        atIso: phase.weather.atIso,
+        finalizedFingerprint: fingerprint,
+        orderedGarments: Object.freeze([...orderedGarments]),
+        equipment: Object.freeze([...equipment]),
+        cause: `${conditionLabel(phase.weather.symbolCode)} · føles som ${Math.round(phase.weather.feelsLikeC)}°`,
+        transitionContextId: `planning-transition:${phase.weather.atIso}:${fingerprint}`,
       });
-    if (points.length < 2) return [];
-    const events = deriveChangeEvents(points);
-    return buildRailRows(points[0].hour, points[points.length - 1].hour, events);
-  }, [tab, resolvedPhases]);
+      return [{ phase, point, fingerprint, orderedGarments, equipment }];
+    });
+    if (facts.length < 2) return EMPTY_PLANNING_EVALUATION;
+
+    const points = Object.freeze(facts.map((fact) => fact.point));
+    const events = Object.freeze(derivePlanningChangeEvents(points));
+    const access = decideAccess('future_plan', {
+      isPlus: isPremium,
+      authenticated: false,
+      loading: accessLoading,
+    });
+    const factByIso = new Map(facts.map((fact) => [fact.point.atIso, fact]));
+    const contextEntries: Array<readonly [string, PlannedOutfitContext]> = [];
+    const outfitAvailabilityByEventId: Record<string, boolean> = {};
+
+    for (const event of events) {
+      const fact = factByIso.get(event.atIso);
+      if (!fact) continue;
+      const context = createPlannedOutfitContext({
+        planningEventId: event.id,
+        transitionContextId: event.transitionContextId,
+        child: {
+          id: active.id,
+          name: active.name,
+          ageMonths: Math.min(24, Math.max(0, Math.round(ageMonths))),
+        },
+        plannedForIso: event.atIso,
+        timeZone: PLAN_TIME_ZONE,
+        place: {
+          label: city,
+          lat,
+          lon,
+          source: 'configured-place',
+        },
+        activity,
+        vognMode: activity === 'vogn' ? vognMode : null,
+        weather: {
+          tempC: fact.phase.weather!.tempC,
+          feelsLikeC: fact.phase.weather!.feelsLikeC,
+          windMs: fact.phase.weather!.windMs,
+          precipMmH: fact.phase.weather!.precipMmH,
+          symbolCode: fact.phase.weather!.symbolCode,
+        },
+        recommendation: {
+          id: `planned-recommendation:${fact.fingerprint}`,
+          fingerprint: fact.fingerprint,
+          orderedGarments: fact.orderedGarments,
+          equipment: fact.equipment,
+          finalized: true,
+        },
+        access: {
+          capability: 'future_plan',
+          allowed: access.allowed,
+          reason: access.reason,
+        },
+      });
+      contextEntries.push([event.id, context]);
+      outfitAvailabilityByEventId[event.id] = access.allowed;
+    }
+
+    const canonicalRows = buildPlanningRailRows(
+      weather.evidence.coverage,
+      events,
+      outfitAvailabilityByEventId,
+      points.map((point) => point.atIso),
+    );
+    const eventById = new Map(events.map((event) => [event.id, event]));
+    const rows = Object.freeze(canonicalRows.flatMap((row): PlanChangeRailRow[] => {
+      if (row.type === 'unchanged') {
+        return [{ id: row.id, type: 'unchanged', copy: row.copy }];
+      }
+      const event = eventById.get(row.eventId);
+      if (!event) return [];
+      const presentationEvent: PlanningRailEvent = {
+        id: event.id,
+        atIso: event.atIso,
+        kind: event.kind,
+        addedGarments: event.addedGarments,
+        removedGarments: event.removedGarments,
+        cause: event.cause,
+        ...(event.transition ? { transition: event.transition } : {}),
+      };
+      return [{
+        id: row.id,
+        type: 'change',
+        eventId: row.eventId,
+        atIso: row.atIso,
+        hasOutfit: row.hasOutfit,
+        event: presentationEvent,
+      }];
+    }));
+
+    return Object.freeze({
+      events,
+      rows,
+      contextsByEventId: Object.freeze(new Map(contextEntries)),
+      preferredEventId: events[0]?.id ?? null,
+    });
+  }, [
+    accessLoading,
+    active.id,
+    active.name,
+    activity,
+    ageMonths,
+    city,
+    isPremium,
+    lat,
+    lon,
+    resolvedPhases,
+    tab,
+    vognMode,
+    weather.evidence,
+  ]);
+
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const renderedSelectedEventId = repairPlanningSelection(
+    selectedEventId,
+    planningEvaluation.events.map((event) => event.id),
+    planningEvaluation.preferredEventId,
+  );
+  const openPlannedOutfit = useCallback((
+    eventId: string,
+    trigger: HTMLElement,
+  ) => {
+    const context = resolvePlannedOutfitContext(
+      eventId,
+      planningEvaluation.events,
+      planningEvaluation.contextsByEventId,
+    );
+    if (!context || !context.access.allowed) return;
+    onOpenPlannedOutfit(context, trigger);
+  }, [onOpenPlannedOutfit, planningEvaluation]);
 
   const isLoading = weather.status === 'loading';
   const isError = weather.status === 'error';
@@ -621,42 +837,8 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
     flex: 'none',
   };
 
-  const tabButtonStyle = (isActive: boolean): CSSProperties => ({
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 999,
-    border: 'none',
-    background: isActive ? TOKENS.surfacePure : 'transparent',
-    cursor: 'pointer',
-    fontFamily: TOKENS.fontSans,
-    fontSize: '0.9375rem',
-    fontWeight: isActive ? 700 : 600,
-    color: isActive ? TOKENS.ink900 : TOKENS.ink500,
-    boxShadow: isActive ? TOKENS.shadow1 : 'none',
-    touchAction: 'manipulation',
-    WebkitTapHighlightColor: 'transparent',
-    transition: reducedMotion
-      ? 'none'
-      : `background 200ms ${TOKENS.easeOut}, color 200ms ${TOKENS.easeOut}`,
-  });
-
   // F81.5-W2 (Flate 1): synlig "Pluss"-chip på 10-dagers-tabben for
   // ikke-Premium — aria-hidden, meningen ligger i tab-knappens aria-label.
-  const tabPlussChipStyle: CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    marginLeft: 6,
-    padding: '1px 6px',
-    borderRadius: 999,
-    fontSize: '0.5625rem',
-    fontWeight: 700,
-    letterSpacing: '0.3px',
-    textTransform: 'uppercase',
-    color: 'var(--accent-cta-ink)',
-    background: 'var(--accent-cta)',
-    verticalAlign: 'middle',
-  };
-
   // ─── Vogn-modus segment-pill (vises BARE når activity === 'vogn') ────────
   const vognModeWrapStyle: CSSProperties = {
     margin: '8px 22px 0',
@@ -940,15 +1122,35 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
 
   // ─── event-handlers ───
   const onTabClick = (next: ViewTab) => {
-    if (next === tab) return;
-    setTab(next);
-    void fire('selection');
+    dispatchPlanningInteraction(
+      decidePlanningInteraction({
+        type: 'view-date',
+        currentKey: `view:${tab}`,
+        nextKey: `view:${next}`,
+      }),
+      {
+        onCue: (cue) => {
+          void fire(cue);
+        },
+      },
+    );
+    if (next !== tab) setTab(next);
   };
 
   const onVognModeClick = (next: VognMode) => {
-    if (next === vognMode) return;
-    setVognMode(next);
-    void fire('selection');
+    dispatchPlanningInteraction(
+      decidePlanningInteraction({
+        type: 'view-date',
+        currentKey: `vogn:${vognMode}`,
+        nextKey: `vogn:${next}`,
+      }),
+      {
+        onCue: (cue) => {
+          void fire(cue);
+        },
+      },
+    );
+    if (next !== vognMode) setVognMode(next);
   };
 
   const onCtaClick = () => {
@@ -962,7 +1164,7 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
 
   return (
     <div style={shellStyle}>
-      <main
+      <div
         style={screenStyle}
         aria-labelledby="uke-heading"
         className="ba-temp-root"
@@ -1021,26 +1223,15 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
 
         {/* Tabs */}
         <nav style={tabsWrapStyle} aria-label="Visning">
-          <button
-            type="button"
-            style={tabButtonStyle(tab === 'today')}
-            onClick={() => onTabClick('today')}
-            aria-pressed={tab === 'today'}
-          >
-            I dag
-          </button>
-          <button
-            type="button"
-            style={tabButtonStyle(tab === 'tenday')}
-            onClick={() => onTabClick('tenday')}
-            aria-pressed={tab === 'tenday'}
-            aria-label={isPremium ? 'Uke' : '10 dager, krever Babyora Pluss'}
-          >
-            Uke
-            {!isPremium && (
-              <span aria-hidden="true" style={tabPlussChipStyle}>Pluss</span>
-            )}
-          </button>
+          <SegmentedControl
+            legend="Velg planvisning"
+            options={[
+              { value: 'today', label: 'I dag' },
+              { value: 'tenday', label: isPremium ? 'Uke' : 'Uke · Pluss' },
+            ]}
+            value={tab}
+            onChange={onTabClick}
+          />
         </nav>
 
         {/* Vogn-modus mini-segment — KUN når activity === 'vogn'. */}
@@ -1150,10 +1341,15 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
 
             {/* R7 Task 5: endringsrail — kun meningsfulle plaggendringer i dag.
                 Vises over time-for-time som svaret på «hva endrer seg?». */}
-            {tab === 'today' && !showTenDayTeaser && todayChangeRows.length > 0 && (
+            {tab === 'today' && !showTenDayTeaser && planningEvaluation.rows.length > 0 && (
               <div style={changeRailWrapStyle}>
                 <h3 style={changeRailHeadStyle}>Endringer i dag</h3>
-                <PlanChangeRail rows={todayChangeRows} />
+                <PlanChangeRail
+                  rows={planningEvaluation.rows}
+                  selectedEventId={renderedSelectedEventId}
+                  onSelect={setSelectedEventId}
+                  onOpenOutfit={openPlannedOutfit}
+                />
               </div>
             )}
 
@@ -1285,7 +1481,7 @@ export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
 
         {/* Skjult condition-label så den ikke regresserer i markup */}
         <span style={srOnlyStyle} aria-hidden="true">{nowCond}</span>
-      </main>
+      </div>
 
       {/* Paywall-modal for 10-dagers-teaseren (F81.5-W2, Flate 1) */}
       <PaywallDialog
