@@ -580,6 +580,15 @@ async function runLocationContainment(
   if (await autoSwitch.getAttribute('aria-checked') !== 'true') {
     throw new Error('Stored auto må kunne slås av selv om implementasjonen er utilgjengelig');
   }
+  const automaticLocationGroup = page.getByRole('group', {
+    name: 'Bruk posisjon automatisk — på, men utilgjengelig',
+  });
+  if (
+    await automaticLocationGroup.getByText('Posisjon brukes ikke', { exact: true }).count() !== 1
+    || await automaticLocationGroup.getByText('Henter vær der du er', { exact: true }).count() !== 0
+  ) {
+    throw new Error('Stored auto må beskrive den effektive, utilgjengelige runtime-tilstanden');
+  }
   await autoSwitch.click();
   if (
     await autoSwitch.getAttribute('aria-checked') !== 'false'

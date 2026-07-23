@@ -1887,7 +1887,13 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
             <div
               style={rowStaticBase}
               role="group"
-              aria-label={`Bruk posisjon automatisk — ${locationMode === 'auto' ? 'på' : 'av'}`}
+              aria-label={`Bruk posisjon automatisk — ${
+                locationMode === 'auto'
+                  ? automaticLocationAllowed
+                    ? 'på'
+                    : 'på, men utilgjengelig'
+                  : 'av'
+              }`}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconCrosshair />
@@ -1898,7 +1904,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
                   {autoLocationPending
                     ? 'Henter posisjon …'
                     : locationMode === 'auto'
-                      ? 'Henter vær der du er'
+                      ? automaticLocationAllowed
+                        ? 'Henter vær der du er'
+                        : 'Posisjon brukes ikke'
                       : 'Bruker valgt sted'}
                 </span>
               </span>
