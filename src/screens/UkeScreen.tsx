@@ -1,6 +1,8 @@
 import {
   useCallback,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
 } from 'react';
@@ -519,18 +521,23 @@ function PlanleggData({
       selectedEventId: eventId,
     }));
   }, []);
+  const latestPlanningEvaluationRef = useRef(planningEvaluation);
+  useLayoutEffect(() => {
+    latestPlanningEvaluationRef.current = planningEvaluation;
+  }, [planningEvaluation]);
   const openPlannedOutfit = useCallback((
     eventId: string,
     trigger: HTMLElement,
   ) => {
+    const latestPlanningEvaluation = latestPlanningEvaluationRef.current;
     const context = resolvePlannedOutfitContext(
       eventId,
-      planningEvaluation.events,
-      planningEvaluation.contextsByEventId,
+      latestPlanningEvaluation.events,
+      latestPlanningEvaluation.contextsByEventId,
     );
     if (!context || !context.access.allowed) return;
     onOpenPlannedOutfit(context, trigger);
-  }, [onOpenPlannedOutfit, planningEvaluation]);
+  }, [onOpenPlannedOutfit]);
 
   const evaluatedAt = weather.evidence?.metadata.evaluatedAt ?? 0;
   const selectedContext = selectedEventId
