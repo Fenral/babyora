@@ -90,6 +90,7 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 ### Pending Todos
 
 - Replace the implicit forecast-currentness semantics with one explicit acceptance-time/current-point contract before any further Plan 01-02 implementation.
+- Review and approve the proposed contract in `01-02-TIME-CONTRACT-ADR.md`.
 - Require a fresh independent adversarial PASS on the replacement candidate before Plan 01-03.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
