@@ -304,6 +304,21 @@ describe('Planned Outfit resolver', () => {
     expect(ukeSource).not.toMatch(/Math\.(?:min|max)\(24/u);
   });
 
+  it('RED_SUPPLIED_ACCESS_STATE_IRREVERSIBLY_CLOSES_PLANNED_DRILL', async () => {
+    const { default: appSource } = await import(
+      /* @vite-ignore */ '../../../App.tsx?raw'
+    ) as { default: string };
+
+    expect(appSource).not.toContain('subscribeToAccessEntitlement');
+    expect(appSource).toContain('function useClosePlannedDrillOnAccess');
+    expect(appSource).toMatch(
+      /useClosePlannedDrillOnAccess\(\{[\s\S]*?loading:\s*accessLoading[\s\S]*?isPremium[\s\S]*?onClose:\s*closePaakledning/u,
+    );
+    expect(appSource).toMatch(
+      /const activeDrill = shouldClosePlannedDrillOnAccess\([\s\S]*?\?\s*null\s*:\s*drill/u,
+    );
+  });
+
   it('does not materialize planned advice when exact access is denied', async () => {
     const event = planningEvent();
     const denied = plannedContext(event, {
