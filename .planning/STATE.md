@@ -4,11 +4,11 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
-status: executing
-stopped_at: Owner approved 01-02 unified forecast time contract; implementation starting
-last_updated: "2026-07-23T11:47:58.2765920+02:00"
+status: awaiting_review
+stopped_at: Plan 01-02 candidate d2a44d8 awaiting two independent verdicts
+last_updated: "2026-07-23T11:59:39.5354896+02:00"
 last_activity: 2026-07-23
-last_activity_desc: Owner approved `01-02-TIME-CONTRACT-ADR.md`; Plan 01-02 resumes under its mandatory RED matrix.
+last_activity_desc: Accepted unified time contract implemented on `d2a44d8`; deterministic checks green, two independent verdicts pending.
 progress:
   total_phases: 1
   completed_phases: 0
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
 Plan: 2 of 18 in current phase
-Status: Plan 01-02 executing the approved unified time contract
-Last activity: 2026-07-23 — Owner approved the ADR; implementation begins with the ten RED contracts.
+Status: Plan 01-02 awaiting two independent high-risk verdicts on `d2a44d8`
+Last activity: 2026-07-23 — Unified evaluatedAt/current-interval contract implemented and deterministically verified.
 
 Progress: [█░░░░░░░░░] 6%
 
@@ -86,12 +86,12 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 1]: MET symbol validation is a closed exact match to the 83-value primary Locationforecast Swagger enum.
 - [Phase 1]: Forecast validation is layered: exact envelope/units/instant truth, optional validated periods, then usable extraction and coverage points; schema-valid period-less points remain raw but unusable.
 - [Phase 1]: Per-key validated network success commits to memory before persistence and precedes freshly re-read cache during concurrent fallback.
+- [Phase 1]: One explicit `evaluatedAt` clock drives source currentness and current-point selection; network captures it after validation, cache/memory refresh it per return, and `fetchedAt` remains cache-age evidence only.
 
 ### Pending Todos
 
-- Replace the implicit forecast-currentness semantics with one explicit acceptance-time/current-point contract before any further Plan 01-02 implementation.
-- Implement the accepted contract in `01-02-TIME-CONTRACT-ADR.md`.
-- Require a fresh independent adversarial PASS on the replacement candidate before Plan 01-03.
+- Obtain fresh independent goal-verification and adversarial/equivalent-bypass verdicts on exact candidate `d2a44d802c2b149bcef39093f58c176187c9ca19`.
+- Require both independent verdicts to be PASS before Plan 01-03.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -99,7 +99,7 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 
 - Final completion/release is gated by owner-permitted app screenshot/video capture, media-based 90+ visual verification, required physical-device evidence, and owner release approval. This does not block planning or deterministic candidate checks.
 - Plan 01-13 remains a legitimate human blocker until all six Snart approvals and independently supplied climate artifacts exist.
-- Plan 01-02 remains a dependency gate until the accepted time contract has two independent PASS verdicts.
+- Plan 01-02 candidate `d2a44d8` remains a dependency gate until the accepted time contract has two independent PASS verdicts on that exact SHA.
 
 ## Deferred Items
 
@@ -112,6 +112,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-23T11:47:58.2765920+02:00
-Stopped at: Owner approved 01-02 unified forecast time contract; implementation starting
+Last session: 2026-07-23T11:59:39.5354896+02:00
+Stopped at: Plan 01-02 candidate d2a44d8 awaiting two independent verdicts
 Resume file: None

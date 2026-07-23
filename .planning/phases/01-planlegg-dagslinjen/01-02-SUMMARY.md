@@ -34,11 +34,13 @@ key-decisions:
   - "Forecast currentness fails closed: invalid metadata or points are unavailable, and only internally consistent fresh metadata can support complete-hourly wording."
   - "The cache key and proxy URL remain unchanged; writes use a version-1 envelope while valid unversioned legacy entries remain readable."
   - "useWeather clears cross-key data on start and publishes forecast derivatives plus matching evidence through one request-ID-gated state transition."
-  - "Memory fallback recomputes source currentness at retrieval time, and current extraction is anchored to the actual first forecast instant rather than the first later usable point."
+  - "One explicit evaluatedAt clock is captured after network validation or at each cache/memory retrieval and drives source currentness plus current-point selection."
+  - "Current extraction selects the unique one-hour interval containing evaluatedAt; array position and period availability never substitute for temporal containment."
 
 patterns-established:
   - "ForecastFetchResult is the only fetch boundary; consumers unwrap result.forecast before extraction."
   - "Coverage sorts a copy by epoch and formats only with an explicit Europe/Oslo Intl formatter."
+  - "fetchedAt measures cache age; evaluatedAt measures the truth decision for each returned result."
 
 requirements-completed: [TRUTH-01, EVID-02, GOV-04]
 
@@ -48,10 +50,10 @@ coverage:
     requirement: TRUTH-01
     verification:
       - kind: unit
-        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (69 passed)"
+        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (78 passed)"
         status: pass
       - kind: other
-        ref: "git diff --check db98c25..89e130f and exact two-path P1-repair scope manifest"
+        ref: "git diff --check d697c05..d2a44d8 and exact seven-path accepted-ADR scope manifest"
         status: pass
     human_judgment: false
   - id: D2
@@ -70,10 +72,10 @@ coverage:
     requirement: EVID-02
     verification:
       - kind: unit
-        ref: "focused four-suite run (98 passed, 1 future-plan TODO)"
+        ref: "focused four-suite run (107 passed, 1 future-plan TODO)"
         status: pass
       - kind: other
-        ref: "npm test && npm run lint && npm run build (665 passed; lint/main/bare build passed)"
+        ref: "npm test && npm run lint && npm run build (674 passed; lint/main/bare build passed)"
         status: pass
     human_judgment: false
   - id: D4
@@ -81,15 +83,15 @@ coverage:
     requirement: GOV-04
     verification:
       - kind: other
-        ref: "strict P1 repair candidate 89e130f8ac4a4c25380d76b4d47f010c57e7853b; implementation evidence recorded below"
+        ref: "accepted time-contract candidate d2a44d802c2b149bcef39093f58c176187c9ca19; implementation evidence recorded below"
         status: pass
     human_judgment: true
     rationale: "Repository governance requires a fresh independent high-risk reviewer on the exact candidate SHA; the executor cannot issue that PASS."
 
-duration: 94min
-completed: 2026-07-22
-status: blocked
-review_status: architecture_escalation
+duration: 102min
+completed: 2026-07-23
+status: ready_for_high_risk_review
+review_status: awaiting_two_independent_verdicts
 ---
 
 # Phase 1 Plan 02: Truthful Forecast Evidence Boundary Summary
@@ -98,9 +100,9 @@ review_status: architecture_escalation
 
 ## Performance
 
-- **Duration:** 94 min including three scoped repairs and the live-response architecture refactor
+- **Duration:** 102 min including the owner-approved unified time-contract replacement
 - **Started:** 2026-07-22T23:18:30+02:00
-- **Completed:** 2026-07-23T00:44:30+02:00
+- **Candidate prepared:** 2026-07-23T11:56:00+02:00
 - **Tasks:** 2
 - **Files modified:** 8
 
@@ -111,6 +113,7 @@ review_status: architecture_escalation
 - Added absolute-instant coverage that sorts a copy, rejects invalid/duplicate evidence, distinguishes all five required states, preserves repeated DST-hour ISO identities, and denies strong copy outside fresh exact-hour adjacency.
 - Repaired all nine independent-review findings with strict calendar/range/symbol/period validation, bounded stale evidence, invalid-cache eviction, atomic same-key requests, render-key guarding, real cancellation cleanup, explicit offline containment, and weather-only Norwegian copy.
 - Replaced whole-payload period assumptions with layered envelope/unit, period-evidence, and usable-point boundaries that accept the current official 87-point compact shape while excluding its terminal instant-only point from extraction and coverage.
+- Implemented the accepted `01-02-TIME-CONTRACT-ADR.md`: post-validation network acceptance, per-return cache/memory evaluation, explicit `evaluatedAt`, and unique containing-interval current selection.
 
 ## Task Commits
 
@@ -129,19 +132,23 @@ review_status: architecture_escalation
 12. **Strict P1 RED B: Reproduce skipped current forecast point** — `4472888` (`test`)
 13. **Strict P1 GREEN: Close memory and current-point findings** — `89e130f` (`fix`)
 
+14. **Unified time contract RED: Ten-case accepted ADR matrix** — `3849e87` (`test`)
+15. **Unified time contract GREEN: Explicit evaluation clock and interval selection** — `d2a44d8` (`feat`)
+
 **Plan metadata:** recorded by the final GSD documentation commit.
 
 ## Cache and Currentness Matrix
 
 | Input | Network outcome | Result | Currentness consequence |
 |---|---|---|---|
-| No valid cache | Valid forecast | `network / miss / stale=false` | Eligible for complete-hourly only with valid `updated_at` and exact adjacency |
-| Version 1 or legacy entry at TTL | Not called | `cache / fresh / stale=false` | Eligible under the same evidence rules |
+| No valid cache | Valid forecast | `network / miss / stale=false` | Acceptance time is captured only after validation and drives source age plus the containing current interval |
+| Version 1 or legacy entry at TTL | Not called | `cache / fresh / stale=false` | Stored `fetchedAt` drives TTL while a new `evaluatedAt` drives source age and current selection |
 | Valid entry at TTL+1 | Success | Network result | Stale candidate is not preferred over current network evidence |
 | Valid entry at TTL+1 through 6 hours | Failure/HTTP/invalid payload | `cache / stale / stale=true` | Explicit offline state only; never legacy recommendation inputs or current/full-span |
 | Entry older than 6 hours | Any failure | Error/unavailable | Entry is evicted and never returned |
 | Corrupt JSON/envelope/forecast | Success | Network result | Corrupt cache is evicted |
 | Corrupt or invalid stale entry | Failure | Error/unavailable | Invalid evidence is never returned |
+| Memory commit within TTL | Network failure/obsolete caller | Original result with refreshed evaluation | Original `fetchedAt` is retained; `evaluatedAt` and `sourceUpdatedAt` are recomputed on every return |
 | Missing/blank/malformed `updated_at` | Any otherwise valid source | `sourceUpdatedAt: null` | Coverage is `unavailable`; currentness claim denied |
 
 ## Files Created/Modified
@@ -157,18 +164,16 @@ review_status: architecture_escalation
 
 ## Deterministic Evidence
 
-All executable evidence below ran from a fresh `npm ci` archive checkout of exact candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b`; the primary checkout's pre-existing `node_modules` remained untouched.
+All executable replacement evidence below ran from a fresh `npm ci` archive checkout of exact candidate `d2a44d802c2b149bcef39093f58c176187c9ca19`; the primary checkout's pre-existing `node_modules` remained untouched.
 
-- Focused four-suite Vitest run — **PASS**, 4/4 files; 98 tests passed and one intentional Plan 01-11 TODO.
+- Mandatory RED run before production changes — **EXPECTED FAIL**, 12 failed, 95 passed, and one TODO. Failures proved request-start source age, missing `evaluatedAt`, wrong exact-hour selection, future-only publication, terminal instant-only publication, and the missing hook clock argument.
+- Focused four-suite Vitest run — **PASS**, 4/4 files; 107 tests passed and one intentional Plan 01-11 TODO.
 - `node_modules/.bin/tsc -b --pretty false` — **PASS**.
-- `npm test` — **PASS**, 60 files passed, 4 skipped; 665 tests passed, 34 TODO.
+- `npm test` — **PASS**, 60 files passed, 4 skipped; 674 tests passed, 34 TODO.
 - `npm run lint` — **PASS**.
 - `npm run build` — **PASS**, TypeScript plus main and bare Vite builds.
-- Primary MET Swagger enum comparison — **PASS**, all 83 implemented symbol codes exactly match `definitions.WeatherSymbol.enum` from `https://api.met.no/weatherapi/locationforecast/2.0/swagger`.
-- Ephemeral official live compact probe — **PASS** through both `isMetForecast` and `fetchForecast`; 87 points, one terminal instant-only point, exact consumed units. Payload stayed in memory and the temporary probe file was deleted after execution.
-- Mojibake scan across all four production paths — **PASS**, no `Ã` or `Â` remnants.
-- `git diff --check db98c25a254187a91a9f6fc630131fec888ddfd3..89e130f8ac4a4c25380d76b4d47f010c57e7853b` — **PASS**.
-- Strict P1 repair scope manifest — **PASS**, exactly `src/lib/met-no/client.ts` and its existing test file changed. No package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
+- `git diff --check d697c050e79cc36edee1ec395dc8cb2e77bad482..d2a44d802c2b149bcef39093f58c176187c9ca19` — **PASS**.
+- Accepted-ADR scope manifest — **PASS**, exactly seven original Plan 01-02 paths changed. `coverage.ts` required no implementation edit; no package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
 
 ## Candidate and Review Authority
 
@@ -185,8 +190,11 @@ All executable evidence below ran from a fresh `npm ci` archive checkout of exac
 | Codex GSD executor (strict P1 repair) | High-risk implementation | `89e130f8ac4a4c25380d76b4d47f010c57e7853b` | `READY_FOR_HIGH_RISK_REVIEW`; deterministic checks green, no self-PASS claimed |
 | Fresh independent verifier | Goal verification | `89e130f8ac4a4c25380d76b4d47f010c57e7853b` | **PASS** — both requested regressions and the declared plan matrix passed |
 | External adversarial reviewer | Equivalent-bypass review | `89e130f8ac4a4c25380d76b4d47f010c57e7853b` | **BLOCK** — request-start currentness and unconstrained wall-clock "now" remain reproducible P1 failures; strictest verdict wins |
+| Codex GSD executor (accepted unified time contract) | High-risk implementation | `d2a44d802c2b149bcef39093f58c176187c9ca19` | `READY_FOR_HIGH_RISK_REVIEW`; all deterministic checks green, no self-PASS claimed |
+| Fresh independent verifier | Goal verification | `d2a44d802c2b149bcef39093f58c176187c9ca19` | **PENDING** — first independent verdict required |
+| External adversarial reviewer | Equivalent-bypass review | `d2a44d802c2b149bcef39093f58c176187c9ca19` | **PENDING** — second independent verdict required |
 
-Candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b` is rejected. Any replacement candidate requires a revised time-boundary contract, fresh evidence, and independent review.
+Candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b` remains rejected. Replacement candidate `d2a44d802c2b149bcef39093f58c176187c9ca19` implements the owner-accepted ADR and awaits two independent verdicts; any edit to the seven changed plan paths invalidates it.
 
 ## Independent BLOCK on Candidate 4150a1e
 
@@ -276,6 +284,23 @@ The fresh verifier passed the two requested regression cases, but the separate a
 
 This is the same currentness-boundary failure class after multiple repairs and a layered refactor. Per the systematic-debugging architecture gate, no further symptom patch is authorized. The next candidate must first replace the implicit time semantics with one explicit acceptance-time contract shared by network receipt, cache retrieval, memory fallback, and current-point extraction.
 
+## Owner-Accepted Unified Time Contract
+
+The owner accepted `01-02-TIME-CONTRACT-ADR.md` on 2026-07-23. Candidate `d2a44d802c2b149bcef39093f58c176187c9ca19` implements that decision without changing hourly, daily, coverage, live MET compatibility, cache identity, units, symbol validation, terminal-point acceptance, or concurrency precedence.
+
+- `ForecastFetchMetadata.evaluatedAt` explicitly records the clock used for each truth decision.
+- Network results capture one `acceptedAt` only after response parsing and full validation; it becomes `fetchedAt`, `evaluatedAt`, source-age reference, cache commit time, and current-selection time.
+- Persistent cache retains stored `fetchedAt` for TTL/stale age while recomputing `evaluatedAt` and source currentness for every read.
+- Memory fallback retains committed `fetchedAt` while recomputing `evaluatedAt` and source currentness for every return.
+- `extractNow(forecast, evaluatedAt)` selects exactly one interval satisfying `point.time <= evaluatedAt < point.time + 1h`, then requires valid `next_1_hours`. It contains no internal `Date.now()`.
+- The hook passes `metadata.evaluatedAt`; hourly, daily, and coverage extraction remain independent.
+
+### Mandatory RED matrix
+
+All ten accepted cases are executable in the existing Plan 01-02 tests: in-flight source expiry; future-only first point; 09:30 containment; exact 10:00 boundary; cache TTL versus 10:02 evaluation; covering instant without one-hour evidence; memory source-age crossing; network/cache/memory parity; fake-time determinism without internal clock access; and official terminal instant-only containment failure.
+
+`3849e87` committed the complete test-only matrix. Its pre-production focused run failed as expected with 12 failures, 95 passes, and one TODO. `d2a44d8` made the same focused matrix GREEN with 107 passes and one TODO, followed by the complete fresh-archive verification above.
+
 ## Decisions Made
 
 - Invalid `sourceUpdatedAt`, inconsistent metadata, invalid/duplicate points, empty points, or a future cache timestamp fail closed instead of being normalized into current evidence.
@@ -288,8 +313,9 @@ This is the same currentness-boundary failure class after multiple repairs and a
 - Request start order does not invalidate data by itself; only a newer successfully committed result supersedes an older valid same-key success.
 - Symbol validation is a closed exact match against the 83-value primary MET Swagger enum rather than a derived base/suffix grammar.
 - Latest validated per-key network success is committed in memory before persistence and wins failure fallback over freshly re-read validated storage.
-- Source currentness stored with an in-memory commit is not timeless evidence; it is recomputed against the retrieval clock before fallback publication.
-- “Now” means the actual first forecast instant. A later usable point may support later forecast views but can never substitute for missing current-period evidence.
+- `fetchedAt` is cache-age evidence only; `evaluatedAt` is the decision clock for source currentness and current-point selection.
+- Network acceptance occurs after parsing and validation, never at request start.
+- “Now” is the unique one-hour interval containing `evaluatedAt`; array position and later period availability cannot substitute for temporal containment.
 
 ## Deviations from Plan
 
@@ -323,6 +349,14 @@ This is the same currentness-boundary failure class after multiple repairs and a
 - **Files modified:** `src/lib/met-no/client.ts` and `src/lib/met-no/__tests__/client.test.ts`.
 - **Commits:** `7130886`, `4472888`, `89e130f`
 
+**5. [Rule 4 - Architecture] Implemented the owner-approved unified time contract**
+- **Found during:** Equivalent-bypass review of candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b`
+- **Issue:** Request-start source age and array-position current selection left the same P1 failure class reachable.
+- **Decision:** Owner accepted `01-02-TIME-CONTRACT-ADR.md`, authorizing one explicit post-validation/retrieval clock across network, persistent cache, memory, hook, and current extraction.
+- **Fix:** Added the ten-case RED matrix in `3849e87`, then implemented explicit `evaluatedAt` and unique interval containment in `d2a44d8`.
+- **Files modified:** Seven original Plan 01-02 source/test paths; `src/lib/planning/coverage.ts` required no change.
+- **Commits:** `3849e87`, `d2a44d8`
+
 ## Known Stubs
 
 - `src/lib/planning/__tests__/forecast-evidence.test.ts` retains one intentional TODO for fixed/manual persistent cache versus future memory-only automatic scope. Plan 01-11 owns that behavior; it does not prevent this plan's provenance/currentness boundary from operating.
@@ -348,8 +382,10 @@ None - no dependency, package, credential, environment, service, API, or migrati
 ## Remaining Gates
 
 - Architecture decision for one explicit acceptance-time/current-point contract: **APPROVED**.
-- Accepted decision and RED matrix: `01-02-TIME-CONTRACT-ADR.md`.
-- Replacement implementation plus fresh independent high-risk verification: **PENDING**.
+- Accepted decision and ten-case RED matrix: `01-02-TIME-CONTRACT-ADR.md` and commit `3849e87`.
+- Replacement implementation on exact candidate `d2a44d802c2b149bcef39093f58c176187c9ca19`: **READY_FOR_HIGH_RISK_REVIEW**.
+- Fresh independent goal-verification verdict on the exact candidate: **PENDING**.
+- Fresh external adversarial/equivalent-bypass verdict on the exact candidate: **PENDING**.
 - New app screenshots/video/traces and the media-based 90+ audit: **Pending stable candidate and owner permission**; none were created here.
 - VoiceOver, TalkBack, physical haptics, OS text scaling, one-handed reach, physical-device UAT, and owner release approval: **Pending**.
 - Six Snart approvals and independent climate artifacts remain Pending and still block Plan 01-13.
@@ -361,12 +397,13 @@ None - no dependency, package, credential, environment, service, API, or migrati
 - Second repaired candidate `80c6da2d929281bf9b38cbb0c7603614c667026a` is blocked by the authoritative external live-response verdict despite its verifier PASS.
 - Layered architecture candidate `23998169ab32c4eff83d4916777d0263a12657cf` is blocked by the strict P1 verdict.
 - Strict P1 repair candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b` is blocked by the authoritative equivalent-bypass review.
-- Plan 01-03 must not start until Plan 01-02 has a replacement architecture candidate and independent PASS.
+- Unified time-contract candidate `d2a44d802c2b149bcef39093f58c176187c9ca19` is ready for two fresh independent high-risk verdicts.
+- Plan 01-03 must not start until both independent verdicts are PASS on that exact SHA.
 
-## Self-Check: FAILED
+## Self-Check: PASSED
 
-All commits and deterministic checks exist, but the strictest independent verdict is BLOCK. Plan 01-02 is not complete and cannot feed Plan 01-03.
+All eight plan-owned paths, accepted ADR, summary, RED commit `3849e87`, and GREEN candidate `d2a44d8` exist. The exact seven-path candidate scope passed focused/full/lint/build/type-check/diff checks in a fresh archive. Implementation readiness is established; both independent verdicts remain pending and Plan 01-03 remains blocked.
 
 ---
 *Phase: 01-planlegg-dagslinjen*
-*Completed: 2026-07-22*
+*Candidate prepared: 2026-07-23*
