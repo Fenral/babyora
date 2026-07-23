@@ -199,11 +199,38 @@ describe('buildPlanViewModel', () => {
     const malformedLocation = planningPoint(isos[1], 'fp-b', ['ullbody', 'lue'], {
       transition: { kind: 'location', placeLabel: 'Barnehagen', action: '   ' },
     });
+    const malformedRain = planningPoint(isos[1], 'fp-b', ['ullbody', 'regnjakke'], {
+      transition: {
+        kind: 'rain',
+        action: 'invalid',
+        garments: ['regnjakke'],
+      } as unknown as PlanningPoint['transition'],
+    });
+    const unknownKind = planningPoint(isos[1], 'fp-b', ['ullbody', 'lue'], {
+      transition: {
+        kind: 'ukjent',
+        garments: ['lue'],
+      } as unknown as PlanningPoint['transition'],
+    });
+    const missingGarments = planningPoint(isos[1], 'fp-b', ['ullbody', 'lue'], {
+      transition: {
+        kind: 'prep',
+      } as unknown as PlanningPoint['transition'],
+    });
 
-    for (const malformed of [malformedPrep, malformedLocation]) {
-      const model = canonical.buildPlanViewModel(input({
-        points: [planningPoint(isos[0], 'fp-a', ['ullbody']), malformed],
-      }));
+    for (const malformed of [
+      malformedPrep,
+      malformedLocation,
+      malformedRain,
+      unknownKind,
+      missingGarments,
+    ]) {
+      let model: ViewModel | undefined;
+      expect(() => {
+        model = canonical.buildPlanViewModel(input({
+          points: [planningPoint(isos[0], 'fp-a', ['ullbody']), malformed],
+        }));
+      }).not.toThrow();
       expect(model).toMatchObject({
         status: 'error',
         verdict: null,
@@ -233,8 +260,18 @@ describe('buildPlanViewModel', () => {
         planningPoint(isos[2], 'fp-b', ['ullbody', 'lue']),
       ],
     }));
+    const betweenStaleSamples = canonical.buildPlanViewModel(input({
+      status: 'offline',
+      coverage: coverage('stale', [isos[0], isos[2]]),
+      cachedAtIso: '2026-07-20T05:07:00Z',
+      evaluatedAtIso,
+      points: [
+        planningPoint(isos[0], 'fp-a', ['ullbody']),
+        planningPoint(isos[2], 'fp-b', ['ullbody', 'lue']),
+      ],
+    }));
 
-    for (const model of [onePoint, expired, betweenSamples]) {
+    for (const model of [onePoint, expired, betweenSamples, betweenStaleSamples]) {
       expect(model).toMatchObject({
         status: 'error',
         verdict: null,
