@@ -291,8 +291,7 @@ export function buildPlanningRailRows(
   const evaluatedEpochs = new Set(evaluatedEpochList);
   const coveredEpochs = new Set(coveredPoints.map((point) => point.epochMs));
   if (
-    evaluatedEpochs.size !== evaluatedEpochList.length
-    || evaluatedEpochList.some((epochMs) => !coveredEpochs.has(epochMs))
+    evaluatedEpochList.some((epochMs) => !coveredEpochs.has(epochMs))
   ) {
     return [];
   }
