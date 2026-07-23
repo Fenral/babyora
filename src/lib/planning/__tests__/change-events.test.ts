@@ -180,8 +180,13 @@ describe('derivePlanningChangeEvents canonical contract', () => {
       ...event,
       atIso: '2026-10-25T01:30:00+01:00',
     });
+    const equivalentInstant = canonical.stablePlanningEventId({
+      ...event,
+      atIso: '2026-10-24T23:30:00Z',
+    });
 
     expect(first).toBe(same);
+    expect(first).toBe(equivalentInstant);
     expect(first).not.toBe(repeatedLocalHour);
     expect(first).toMatch(/^planning-event-/);
   });

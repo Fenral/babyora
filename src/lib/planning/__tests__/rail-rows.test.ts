@@ -27,6 +27,7 @@ const canonical = railRows as unknown as {
     coverage: ForecastCoverage,
     events: readonly PlanningChangeEvent[],
     outfitAvailabilityByEventId?: Readonly<Record<string, boolean>>,
+    evaluatedPointIsos?: readonly string[],
   ) => CanonicalRow[];
 };
 
@@ -79,7 +80,7 @@ describe('buildPlanningRailRows canonical contract', () => {
     const fullDay = Array.from({ length: 24 }, (_, hour) => (
       `2026-07-20T${String(hour).padStart(2, '0')}:00:00+02:00`
     ));
-    const rows = canonical.buildPlanningRailRows(coverage('complete-hourly', fullDay), []);
+    const rows = canonical.buildPlanningRailRows(coverage('complete-hourly', fullDay), [], {}, fullDay);
 
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
@@ -93,11 +94,17 @@ describe('buildPlanningRailRows canonical contract', () => {
   it.each(['sampled', 'gapped', 'stale'] as const)(
     'uses evaluated-point wording for %s evidence',
     (status) => {
-      const rows = canonical.buildPlanningRailRows(coverage(status, [
+      const evaluatedIsos = [
         hourlyIsos[0],
         hourlyIsos[2],
         hourlyIsos[3],
-      ]), []);
+      ];
+      const rows = canonical.buildPlanningRailRows(
+        coverage(status, evaluatedIsos),
+        [],
+        {},
+        evaluatedIsos,
+      );
 
       expect(rows).toHaveLength(1);
       expect(rows[0]).toMatchObject({
@@ -117,15 +124,34 @@ describe('buildPlanningRailRows canonical contract', () => {
       removedGarments: ['lue'],
     });
 
-    expect(canonical.buildPlanningRailRows(assessed, []).map((row) => row.type))
+    expect(canonical.buildPlanningRailRows(assessed, [], {}, hourlyIsos).map((row) => row.type))
       .toEqual(['unchanged']);
-    expect(canonical.buildPlanningRailRows(assessed, [atNine]).map((row) => row.type))
+    expect(canonical.buildPlanningRailRows(assessed, [atNine], {}, hourlyIsos).map((row) => row.type))
       .toEqual(['unchanged', 'change', 'unchanged']);
-    expect(canonical.buildPlanningRailRows(assessed, [atNine, atTen]).map((row) => row.type))
+    expect(canonical.buildPlanningRailRows(assessed, [atNine, atTen], {}, hourlyIsos).map((row) => row.type))
       .toEqual(['unchanged', 'change', 'change', 'unchanged']);
 
-    const many = canonical.buildPlanningRailRows(assessed, [atNine, atTen]);
+    const many = canonical.buildPlanningRailRows(assessed, [atNine, atTen], {}, hourlyIsos);
     expect(new Set(many.map((row) => row.id)).size).toBe(many.length);
+  });
+
+  it('never promotes weather coverage into unevaluated unchanged-outfit evidence', () => {
+    const assessed = coverage('complete-hourly', hourlyIsos);
+
+    expect(canonical.buildPlanningRailRows(assessed, [], {}, [hourlyIsos[0]])).toEqual([]);
+
+    const sampledRecommendationRows = canonical.buildPlanningRailRows(
+      assessed,
+      [],
+      {},
+      [hourlyIsos[0], hourlyIsos[2]],
+    );
+    expect(sampledRecommendationRows).toHaveLength(1);
+    expect(sampledRecommendationRows[0]).toMatchObject({
+      type: 'unchanged',
+      evidencePointIsos: [hourlyIsos[0], hourlyIsos[2]],
+      copy: 'Samme antrekk i de vurderte tidspunktene',
+    });
   });
 
   it('preserves canonical event identity and only parent-supplied Outfit availability', () => {
@@ -134,6 +160,7 @@ describe('buildPlanningRailRows canonical contract', () => {
       coverage('complete-hourly', hourlyIsos),
       [plannedEvent],
       { 'event-nine': true },
+      hourlyIsos,
     );
 
     expect(leading?.type).toBe('unchanged');
@@ -157,8 +184,8 @@ describe('buildPlanningRailRows canonical contract', () => {
       event(hourlyIsos[1], 'event-nine'),
     ];
 
-    expect(JSON.stringify(canonical.buildPlanningRailRows(assessed, events)))
-      .toBe(JSON.stringify(canonical.buildPlanningRailRows(assessed, [...events].reverse())));
+    expect(JSON.stringify(canonical.buildPlanningRailRows(assessed, events, {}, hourlyIsos)))
+      .toBe(JSON.stringify(canonical.buildPlanningRailRows(assessed, [...events].reverse(), {}, hourlyIsos)));
   });
 });
 

@@ -179,6 +179,7 @@ describe('buildPlanViewModel', () => {
     (status) => {
       const model = canonical.buildPlanViewModel(input({
         coverage: coverage(status, [isos[0], isos[2]]),
+        evaluatedAtIso: isos[0],
         points: [
           planningPoint(isos[0], 'fp-a', ['ullbody']),
           planningPoint(isos[2], 'fp-b', ['ullbody', 'lue']),
@@ -190,6 +191,76 @@ describe('buildPlanViewModel', () => {
       expect(model.nextAction).toBe('Ta på lue');
     },
   );
+
+  it('fails malformed explicit transitions closed instead of presenting false no-change advice', () => {
+    const malformedPrep = planningPoint(isos[1], 'fp-b', ['ullbody', 'lue'], {
+      transition: { kind: 'prep', garments: [] },
+    });
+    const malformedLocation = planningPoint(isos[1], 'fp-b', ['ullbody', 'lue'], {
+      transition: { kind: 'location', placeLabel: 'Barnehagen', action: '   ' },
+    });
+
+    for (const malformed of [malformedPrep, malformedLocation]) {
+      const model = canonical.buildPlanViewModel(input({
+        points: [planningPoint(isos[0], 'fp-a', ['ullbody']), malformed],
+      }));
+      expect(model).toMatchObject({
+        status: 'error',
+        verdict: null,
+        nextAction: null,
+        events: [],
+        rows: [],
+      });
+    }
+  });
+
+  it('fails insufficient, expired, and between-sample planning evidence closed', () => {
+    const onePoint = canonical.buildPlanViewModel(input({
+      points: [planningPoint(isos[0], 'fp-a', ['ullbody'])],
+    }));
+    const expired = canonical.buildPlanViewModel(input({
+      evaluatedAtIso: '2026-07-21T08:15:00+02:00',
+      points: [
+        planningPoint(isos[0], 'fp-a', ['ullbody']),
+        planningPoint(isos[1], 'fp-b', ['ullbody', 'lue']),
+      ],
+    }));
+    const betweenSamples = canonical.buildPlanViewModel(input({
+      coverage: coverage('sampled', [isos[0], isos[2]]),
+      evaluatedAtIso,
+      points: [
+        planningPoint(isos[0], 'fp-a', ['ullbody']),
+        planningPoint(isos[2], 'fp-b', ['ullbody', 'lue']),
+      ],
+    }));
+
+    for (const model of [onePoint, expired, betweenSamples]) {
+      expect(model).toMatchObject({
+        status: 'error',
+        verdict: null,
+        nextAction: null,
+        events: [],
+        rows: [],
+      });
+    }
+  });
+
+  it('rejects one finalized fingerprint that maps to inconsistent visible content', () => {
+    const model = canonical.buildPlanViewModel(input({
+      points: [
+        planningPoint(isos[0], 'same-fingerprint', ['ullbody']),
+        planningPoint(isos[1], 'same-fingerprint', ['ullbody', 'lue']),
+      ],
+    }));
+
+    expect(model).toMatchObject({
+      status: 'error',
+      verdict: null,
+      nextAction: null,
+      events: [],
+      rows: [],
+    });
+  });
 
   it('returns the exact empty evaluation copy when valid finalized points have no change event', () => {
     const model = canonical.buildPlanViewModel(input({
