@@ -139,9 +139,16 @@ function normalizedText(value: unknown, path: string): string {
   if (typeof value !== 'string') fail(path, 'expected a string');
   const normalized = value.normalize('NFC').trim();
   if (normalized.length === 0) fail(path, 'must not be empty');
+  const hasDisallowedFormat = [...normalized].some(
+    (character) => (
+      character !== '\u200C'
+      && character !== '\u200D'
+      && /\p{Cf}/u.test(character)
+    ),
+  );
   if (
     /\p{Cc}/u.test(normalized)
-    || /[\u061c\u200b\u200e\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/u.test(normalized)
+    || hasDisallowedFormat
   ) {
     fail(path, 'must not contain control characters');
   }

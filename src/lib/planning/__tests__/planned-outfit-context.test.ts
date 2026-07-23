@@ -500,7 +500,7 @@ describe('Planned Outfit exact-context contracts', () => {
     expect(() => createPlannedOutfitContext(duplicate)).toThrow(/PlannedOutfitContext/u);
   });
 
-  it('RED_REJECTS_ALL_FORMAT_CONTROLS_EXCEPT_JOINERS', () => {
+  it('rejects all Unicode format controls except ZWNJ and ZWJ', () => {
     for (const disallowed of ['A\u206AB', 'A\u180EB']) {
       const input = completeInput();
       input.child.name = disallowed;
