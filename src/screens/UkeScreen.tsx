@@ -256,11 +256,16 @@ function PlanleggData({
   const { isPremium, loading: accessLoading } = useAccess();
   const locationMode = useLocationPref((state) => state.mode);
   const automaticPlace = useLocationPref((state) => state.automaticPlace);
-  const fixedHome = {
-    childId: active?.id ?? '__fallback__',
-    city: active?.city || 'Elverum',
-    lat: active?.lat || DEFAULT_LAT,
-    lon: active?.lon || DEFAULT_LON,
+  const fixedHome = active ? {
+    childId: active.id,
+    city: active.city,
+    lat: active.lat,
+    lon: active.lon,
+  } : {
+    childId: '__fallback__',
+    city: 'Elverum',
+    lat: DEFAULT_LAT,
+    lon: DEFAULT_LON,
   };
   const locationAccess = resolveRuntimeCapabilityAccess(
     'automatic_location',
@@ -272,15 +277,14 @@ function PlanleggData({
     locationMode,
     locationAccess,
     automaticPlace,
-  ) ?? {
-    ...fixedHome,
-    source: 'fixed-home' as const,
-    cacheScope: 'persistent' as const,
-  };
-  const { lat, lon } = effectivePlace;
-  const city = effectivePlace.source === 'automatic'
-    ? `Nåværende sted · ${effectivePlace.city}`
-    : `Fast sted · ${effectivePlace.city}`;
+  );
+  const lat = effectivePlace?.lat ?? 0;
+  const lon = effectivePlace?.lon ?? 0;
+  const city = effectivePlace === null
+    ? 'Sted mangler'
+    : effectivePlace.source === 'automatic'
+      ? `Nåværende sted · ${effectivePlace.city}`
+      : `Fast sted · ${effectivePlace.city}`;
   const childName = active?.name || 'barnet';
   const activeDob = active?.dob;
   const ageMonths = useMemo(
@@ -291,9 +295,9 @@ function PlanleggData({
   const vognMode: VognMode = 'awake';
   const [refreshKey, setRefreshKey] = useState(0);
   const weather = useWeather(lat, lon, FALLBACK_REF_HOUR, refreshKey, {
-    cacheScope: effectivePlace.cacheScope,
-    source: effectivePlace.source,
-  });
+    cacheScope: effectivePlace?.cacheScope ?? 'persistent',
+    source: effectivePlace?.source ?? 'fixed-home',
+  }, effectivePlace !== null);
   const [tab, setTab] = useState<ViewTab>('today');
   const [forecastOpen, setForecastOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
@@ -439,6 +443,7 @@ function PlanleggData({
     if (
       (tab === 'tenday' && viewAccess.presentation !== 'full')
       || !weather.evidence
+      || effectivePlace === null
       || weather.evidence.coverage.status === 'unavailable'
       || !Number.isInteger(ageMonths)
       || ageMonths < 0 || ageMonths > 24
@@ -586,7 +591,7 @@ function PlanleggData({
     ageMonths,
     childName,
     city,
-    effectivePlace.source,
+    effectivePlace,
     lat,
     lon,
     resolvedPhases,

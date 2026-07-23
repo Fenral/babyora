@@ -244,6 +244,7 @@ export function useWeather(
   refHour: number = 12,
   refreshKey: number = 0,
   options: WeatherRequestOptions = DEFAULT_WEATHER_REQUEST_OPTIONS,
+  enabled: boolean = true,
 ): WeatherState {
   const identity = createWeatherFetchIdentity(lat, lon, refHour, options);
   const { fetchKey } = identity;
@@ -253,6 +254,7 @@ export function useWeather(
   );
 
   useEffect(() => {
+    if (!enabled) return;
     const requestId = ++requestIdRef.current;
     const lifecycle = startWeatherRequest({
       requestId,
@@ -264,7 +266,7 @@ export function useWeather(
       },
     });
     return lifecycle.cancel;
-  }, [fetchKey, identity.cacheScope, lat, lon, refHour, refreshKey]);
+  }, [enabled, fetchKey, identity.cacheScope, lat, lon, refHour, refreshKey]);
 
   return selectWeatherForFetchKey(requestState, fetchKey);
 }

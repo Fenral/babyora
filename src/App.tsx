@@ -119,6 +119,7 @@ type Drill =
       kind: 'paakledning';
       source: 'current';
       currentContext: PlannedOutfitContext;
+      origin: HTMLElement;
     }
   | {
       kind: 'paakledning';
@@ -249,14 +250,15 @@ export default function App(): ReactElement {
   const onBackRef = useRef<(() => void) | null>(null);
 
   const closePaakledning = useCallback(() => {
-    const origin = drill?.kind === 'paakledning' && drill.source === 'planned'
-      ? drill.origin
-      : null;
+    const origin = drill?.kind === 'paakledning' ? drill.origin : null;
+    const source = drill?.kind === 'paakledning' ? drill.source : null;
     setDrill(null);
     if (!origin) return;
     window.requestAnimationFrame(() => {
       if (origin.isConnected) {
         origin.focus();
+      } else if (source === 'current') {
+        document.getElementById('hjem-current-outfit-trigger')?.focus();
       } else {
         mainRef.current?.focus();
       }
@@ -472,8 +474,13 @@ export default function App(): ReactElement {
     routeContent = (
       <HjemScreen
         onNavigate={onNavigate}
-        onOpenSheet={(ctx) =>
-          setDrill({ kind: 'paakledning', source: 'current', currentContext: ctx })
+        onOpenSheet={(ctx, origin) =>
+          setDrill({
+            kind: 'paakledning',
+            source: 'current',
+            currentContext: ctx,
+            origin,
+          })
         }
       />
     );

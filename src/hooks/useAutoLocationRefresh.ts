@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { reverseGeocode } from '../lib/geocode/nominatim';
@@ -17,6 +17,7 @@ export type AutoLocationRequest = Readonly<{
   runtimeDecision: RuntimeCapabilityAccess;
   mode: LocationMode;
   childId: string;
+  isStillAllowed: () => boolean;
 }>;
 
 export type AutoLocationOutcome =
@@ -53,7 +54,15 @@ function requestAllowed(request: AutoLocationRequest): boolean {
 }
 
 function requestKey(request: AutoLocationRequest): string {
-  return `${request.childId}:${request.mode}:${request.intent}`;
+  return request.childId;
+}
+
+function liveRequestAllowed(request: AutoLocationRequest): boolean {
+  try {
+    return request.isStillAllowed();
+  } catch {
+    return false;
+  }
 }
 
 export function createAutoLocationController(
@@ -72,7 +81,7 @@ export function createAutoLocationController(
   };
 
   const run = (request: AutoLocationRequest): Promise<AutoLocationOutcome> => {
-    if (!requestAllowed(request)) {
+    if (!requestAllowed(request) || !liveRequestAllowed(request)) {
       invalidate();
       return Promise.resolve({ status: 'blocked' });
     }
@@ -87,6 +96,10 @@ export function createAutoLocationController(
       .then(() => dependencies.locate())
       .then(async (position): Promise<AutoLocationOutcome> => {
         if (!current()) return { status: 'superseded' };
+        if (!liveRequestAllowed(request)) {
+          invalidate();
+          return { status: 'superseded' };
+        }
         const lat = Number(position.lat.toFixed(4));
         const lon = Number(position.lon.toFixed(4));
         if (
@@ -96,14 +109,26 @@ export function createAutoLocationController(
           invalidate();
           return { status: 'failed' };
         }
+        if (!liveRequestAllowed(request)) {
+          invalidate();
+          return { status: 'superseded' };
+        }
         const place = await dependencies.reverse(lat, lon, {
           cacheScope: 'memory-only',
         });
         if (!current()) return { status: 'superseded' };
+        if (!liveRequestAllowed(request)) {
+          invalidate();
+          return { status: 'superseded' };
+        }
         const city = place?.city?.trim();
         if (!city) {
           invalidate();
           return { status: 'failed' };
+        }
+        if (!liveRequestAllowed(request)) {
+          invalidate();
+          return { status: 'superseded' };
         }
         dependencies.commit(generation, {
           childId: request.childId,
@@ -161,6 +186,10 @@ export function useAutoLocationRefresh(request: Readonly<{
   enabled: boolean;
 }>): void {
   const { runtimeDecision, mode, childId, enabled } = request;
+  const latestRequest = useRef(request);
+  useLayoutEffect(() => {
+    latestRequest.current = request;
+  }, [request]);
 
   useEffect(() => {
     if (!enabled) {
@@ -172,6 +201,18 @@ export function useAutoLocationRefresh(request: Readonly<{
       runtimeDecision,
       mode,
       childId,
+      isStillAllowed: () => {
+        const latest = latestRequest.current;
+        return latest.enabled
+          && latest.childId === childId
+          && requestAllowed({
+            intent: 'resume',
+            runtimeDecision: latest.runtimeDecision,
+            mode: useLocationPref.getState().mode,
+            childId: latest.childId,
+            isStillAllowed: () => true,
+          });
+      },
     };
     const currentPlace = useLocationPref.getState().automaticPlace;
     const activationAlreadyResolved = mode === 'auto'

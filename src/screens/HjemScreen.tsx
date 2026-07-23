@@ -41,7 +41,12 @@
  *  - Canvas/atmos er aria-hidden; temp-endring annonseres av #temp-display.
  *  - Ingen transition ved RM (design-tokens.css .ba-temp-root + inline RM-gates).
  */
-import { type CSSProperties, useMemo, useState } from 'react';
+import {
+  type CSSProperties,
+  type MouseEvent,
+  useMemo,
+  useState,
+} from 'react';
 import { motion } from 'motion/react';
 import type { TabKey } from '../types/nav';
 import { useChildren } from '../state/children-store';
@@ -93,7 +98,7 @@ type VognMode = 'awake' | 'sleeping';
  */
 type HjemScreenProps = {
   onNavigate: (tab: TabKey) => void;
-  onOpenSheet: (ctx: PlannedOutfitContext) => void;
+  onOpenSheet: (ctx: PlannedOutfitContext, origin: HTMLButtonElement) => void;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -246,20 +251,19 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     locationMode,
     locationAccess,
     automaticPlace,
-  ) ?? {
-    ...fixedHome,
-    source: 'fixed-home' as const,
-    cacheScope: 'persistent' as const,
-  };
-  const { lat, lon } = effectivePlace;
-  const cityLabel = effectivePlace.source === 'automatic'
-    ? `Nåværende sted · ${effectivePlace.city}`
-    : `Fast sted · ${effectivePlace.city}`;
+  );
+  const lat = effectivePlace?.lat ?? 0;
+  const lon = effectivePlace?.lon ?? 0;
+  const cityLabel = effectivePlace === null
+    ? 'Sted mangler'
+    : effectivePlace.source === 'automatic'
+      ? `Nåværende sted · ${effectivePlace.city}`
+      : `Fast sted · ${effectivePlace.city}`;
 
   const weather = useWeather(lat, lon, 12, 0, {
-    cacheScope: effectivePlace.cacheScope,
-    source: effectivePlace.source,
-  });
+    cacheScope: effectivePlace?.cacheScope ?? 'persistent',
+    source: effectivePlace?.source ?? 'fixed-home',
+  }, effectivePlace !== null);
   const [activity, setActivity] = useState<Activity>('utelek');
   // Søvn/våken-toggle på vogn fjernet (Sivert: ikke viktig nok). Antar våken.
   const vognMode: VognMode = 'awake';
@@ -317,6 +321,7 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     if (
       !now
       || !resolvedRecommendation
+      || effectivePlace === null
       || evaluatedAt === undefined
       || !Number.isInteger(ageMonths)
       || ageMonths < 0
@@ -389,7 +394,7 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     activity,
     ageMonths,
     cityLabel,
-    effectivePlace.source,
+    effectivePlace,
     lat,
     lon,
     resolvedRecommendation,
@@ -404,10 +409,10 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     void fire('selection');
   };
 
-  const handleCta = () => {
+  const handleCta = (event: MouseEvent<HTMLButtonElement>) => {
     if (!currentOutfitContext) return;
     void fire('medium');
-    onOpenSheet(currentOutfitContext);
+    onOpenSheet(currentOutfitContext, event.currentTarget);
   };
 
   // ─── Avledede verdier ─────────────────────────────────────────────────────
@@ -906,6 +911,7 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
                 Reduced-motion: CSS-pressede regler i .ba-hjem-press-cta */}
             {reducedMotion ? (
               <button
+                id="hjem-current-outfit-trigger"
                 type="button"
                 onClick={handleCta}
                 disabled={currentOutfitContext === null}
@@ -917,6 +923,7 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
               </button>
             ) : (
               <motion.button
+                id="hjem-current-outfit-trigger"
                 type="button"
                 onClick={handleCta}
                 disabled={currentOutfitContext === null}
