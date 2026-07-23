@@ -79,6 +79,18 @@ function changeRow(
   };
 }
 
+function eventContent(event: PlanningChangeEvent): string {
+  return JSON.stringify([
+    event.atIso,
+    event.kind,
+    [...event.addedGarments],
+    [...event.removedGarments],
+    event.cause,
+    event.transitionContextId,
+    event.transition ?? null,
+  ]);
+}
+
 export function buildPlanningRailRows(
   coverage: ForecastCoverage,
   events: readonly PlanningChangeEvent[],
@@ -94,6 +106,14 @@ export function buildPlanningRailRows(
   );
   const points = coveredPoints.filter((point) => evaluatedEpochs.has(point.epochMs));
   if (points.length < 2) return [];
+
+  const eventContentById = new Map<string, string>();
+  for (const event of events) {
+    const content = eventContent(event);
+    const priorContent = eventContentById.get(event.id);
+    if (priorContent !== undefined && priorContent !== content) return [];
+    eventContentById.set(event.id, content);
+  }
 
   const pointIndexByEpoch = new Map(points.map((point, index) => [point.epochMs, index]));
   const eventPointIndex = (event: PlanningChangeEvent): number | undefined => {

@@ -121,6 +121,10 @@ function normalizeText(value: string): string {
   return value.normalize('NFC').trim();
 }
 
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === 'object' && value !== null;
+}
+
 function normalizeList(values: readonly string[]): readonly string[] {
   const seen = new Set<string>();
   const result: string[] = [];
@@ -140,11 +144,15 @@ function canonicalPlanningPoints(
   if (points.length < 2) return null;
   const coveredEpochs = new Set(coverage.points.map((point) => point.epochMs));
   const contentByFingerprint = new Map<string, string>();
+  const seenPointEpochs = new Set<number>();
   const normalized: PlanningPoint[] = [];
 
   for (const point of points) {
+    if (!isValidPlanningPoint(point)) return null;
     const pointEpoch = parseStrictIsoInstant(point.atIso);
-    if (pointEpoch === null || !coveredEpochs.has(pointEpoch) || !isValidPlanningPoint(point)) return null;
+    if (pointEpoch === null || !coveredEpochs.has(pointEpoch)) return null;
+    if (seenPointEpochs.has(pointEpoch)) return null;
+    seenPointEpochs.add(pointEpoch);
     const finalizedFingerprint = normalizeText(point.finalizedFingerprint);
     const cause = normalizeText(point.cause);
     const transitionContextId = normalizeText(point.transitionContextId);
@@ -175,26 +183,40 @@ function canonicalPlanningPoints(
 }
 
 function canonicalForecast(
-  rows: readonly PlanningWeatherRow[],
+  rows: readonly unknown[],
   coverage: ForecastCoverage,
-): readonly PlanningWeatherRow[] {
-  const coveredIsos = new Set(coverage.points.map((point) => point.iso));
-  const unique = new Map<string, PlanningWeatherRow>();
+): readonly PlanningWeatherRow[] | null {
+  const coveredIsoByEpoch = new Map(coverage.points.map((point) => [point.epochMs, point.iso]));
+  const contentByEpoch = new Map<number, string>();
+  const unique = new Map<number, PlanningWeatherRow>();
   for (const row of rows) {
     if (
-      !coveredIsos.has(row.atIso)
-      || parseStrictIsoInstant(row.atIso) === null
+      !isRecord(row)
+      || typeof row.atIso !== 'string'
+      || typeof row.tempC !== 'number'
+      || typeof row.feelsLikeC !== 'number'
+      || typeof row.symbolCode !== 'string'
       || !Number.isFinite(row.tempC)
       || !Number.isFinite(row.feelsLikeC)
       || normalizeText(row.symbolCode).length === 0
     ) {
-      continue;
+      return null;
     }
-    unique.set(row.atIso, Object.freeze({
-      atIso: row.atIso,
+    const epochMs = parseStrictIsoInstant(row.atIso);
+    if (epochMs === null) return null;
+    const coveredIso = coveredIsoByEpoch.get(epochMs);
+    if (!coveredIso) continue;
+    const normalizedSymbolCode = normalizeText(row.symbolCode);
+    const content = JSON.stringify([row.tempC, row.feelsLikeC, normalizedSymbolCode]);
+    const priorContent = contentByEpoch.get(epochMs);
+    if (priorContent !== undefined && priorContent !== content) return null;
+    if (priorContent !== undefined) continue;
+    contentByEpoch.set(epochMs, content);
+    unique.set(epochMs, Object.freeze({
+      atIso: coveredIso,
       tempC: row.tempC,
       feelsLikeC: row.feelsLikeC,
-      symbolCode: normalizeText(row.symbolCode),
+      symbolCode: normalizedSymbolCode,
     }));
   }
   return Object.freeze([...unique.values()].sort(
@@ -236,13 +258,15 @@ function evaluatedAdvice(
   );
   const candidateEventIds = Object.freeze(candidates.map((event) => event.id));
   const nextAction = candidates[0] ? planningChangeActionSentence(candidates[0]) : null;
+  const forecast = canonicalForecast(input.forecast, coverage);
+  if (!forecast) return null;
   return {
     verdict: buildVerdict(currentPoint),
     nextAction: nextAction || null,
     events,
     rows,
     candidateEventIds,
-    forecast: canonicalForecast(input.forecast, coverage),
+    forecast,
   };
 }
 
@@ -261,15 +285,21 @@ export function buildPlanViewModel(input: PlanViewModelInput): PlanViewModel {
     return errorModel();
   }
   const coverageEpochs = coverage.points.map((point) => point.epochMs).sort((a, b) => a - b);
+  if (
+    coverageEpochs.some((epochMs) => !Number.isFinite(epochMs))
+    || coverageEpochs.some((epochMs, index) => index > 0 && epochMs === coverageEpochs[index - 1])
+  ) {
+    return errorModel();
+  }
   const coverageStart = coverageEpochs[0]!;
   const coverageEnd = coverageEpochs.at(-1)!;
+  const hasExactHourlyCoverage = coverageEpochs.length > 1 && coverageEpochs
+    .slice(1)
+    .every((epochMs, index) => epochMs - coverageEpochs[index]! === 60 * 60 * 1000);
   if (
     evaluatedAtEpoch < coverageStart
     || evaluatedAtEpoch > coverageEnd
-    || (
-      (coverage.status === 'sampled' || coverage.status === 'gapped')
-      && !coverageEpochs.includes(evaluatedAtEpoch)
-    )
+    || (!hasExactHourlyCoverage && !coverageEpochs.includes(evaluatedAtEpoch))
   ) {
     return errorModel();
   }

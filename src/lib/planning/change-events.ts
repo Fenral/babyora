@@ -52,6 +52,10 @@ function normalizedText(value: string): string {
   return value.normalize('NFC').trim();
 }
 
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === 'object' && value !== null;
+}
+
 function normalizedList(values: readonly string[]): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
@@ -64,20 +68,32 @@ function normalizedList(values: readonly string[]): string[] {
   return result;
 }
 
-function normalizedTransition(transition: PlanningTransition | undefined): PlanningTransition | undefined {
-  if (!transition) return undefined;
+function normalizedUnknownList(value: unknown): string[] | null {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) return null;
+  return normalizedList(value);
+}
+
+function normalizedTransition(transition: unknown): PlanningTransition | null {
+  if (!isRecord(transition) || typeof transition.kind !== 'string') return null;
   if (transition.kind === 'location') {
+    if (typeof transition.placeLabel !== 'string' || typeof transition.action !== 'string') return null;
     const placeLabel = normalizedText(transition.placeLabel);
     const action = normalizedText(transition.action);
-    if (placeLabel.length === 0 || action.length === 0) return undefined;
+    if (placeLabel.length === 0 || action.length === 0) return null;
     return { kind: 'location', placeLabel, action };
   }
-  const garments = normalizedList(transition.garments);
-  if (garments.length === 0) return undefined;
   if (transition.kind === 'rain') {
+    if (transition.action !== 'bring' && transition.action !== 'wear') return null;
+    const garments = normalizedUnknownList(transition.garments);
+    if (!garments || garments.length === 0) return null;
     return { kind: 'rain', action: transition.action, garments };
   }
-  return { kind: 'prep', garments };
+  if (transition.kind === 'prep') {
+    const garments = normalizedUnknownList(transition.garments);
+    if (!garments || garments.length === 0) return null;
+    return { kind: 'prep', garments };
+  }
+  return null;
 }
 
 function serializedTransition(transition: PlanningTransition | undefined): readonly unknown[] | null {
@@ -119,26 +135,37 @@ export function stablePlanningEventId(event: Omit<PlanningChangeEvent, 'id'>): s
   return `planning-event-${fnv1a64(eventIdentityContent(event))}`;
 }
 
-function normalizedPoint(point: PlanningPoint): PlanningPoint | null {
-  if (parseStrictIsoInstant(point.atIso) === null) return null;
+function normalizedPoint(point: unknown): PlanningPoint | null {
+  if (
+    !isRecord(point)
+    || typeof point.atIso !== 'string'
+    || typeof point.finalizedFingerprint !== 'string'
+    || typeof point.cause !== 'string'
+    || typeof point.transitionContextId !== 'string'
+  ) {
+    return null;
+  }
+  const orderedGarments = normalizedUnknownList(point.orderedGarments);
+  const equipment = normalizedUnknownList(point.equipment);
+  if (!orderedGarments || !equipment || parseStrictIsoInstant(point.atIso) === null) return null;
   const finalizedFingerprint = normalizedText(point.finalizedFingerprint);
   const cause = normalizedText(point.cause);
   const transitionContextId = normalizedText(point.transitionContextId);
   if (finalizedFingerprint.length === 0 || cause.length === 0 || transitionContextId.length === 0) return null;
-  const transition = normalizedTransition(point.transition);
-  if (point.transition && !transition) return null;
+  const transition = point.transition === undefined ? undefined : normalizedTransition(point.transition);
+  if (point.transition !== undefined && !transition) return null;
   return {
     atIso: point.atIso,
     finalizedFingerprint,
-    orderedGarments: normalizedList(point.orderedGarments),
-    equipment: normalizedList(point.equipment),
+    orderedGarments,
+    equipment,
     cause,
     transitionContextId,
     ...(transition ? { transition } : {}),
   };
 }
 
-export function isValidPlanningPoint(point: PlanningPoint): boolean {
+export function isValidPlanningPoint(point: unknown): point is PlanningPoint {
   return normalizedPoint(point) !== null;
 }
 
