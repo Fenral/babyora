@@ -144,6 +144,7 @@ type CachedEntry = {
 type CacheCandidates = {
   fresh: CachedEntry | null;
   stale: CachedEntry | null;
+  evaluatedAt: number;
 };
 
 function cacheKey(lat: number, lon: number): string {
@@ -247,33 +248,42 @@ function oneHourForecastPoints(forecast: MetForecast): MetTimePoint[] {
   );
 }
 
-function isCachedEntry(value: unknown, now: number): value is CachedEntry {
+function isCachedEntry(value: unknown): value is CachedEntry {
   if (!isRecord(value)) return false;
   if (value.version !== undefined && value.version !== 1) return false;
   return isFiniteNumber(value.fetchedAt)
-    && value.fetchedAt <= now
     && isMetForecast(value.data);
 }
 
-function readCache(lat: number, lon: number, now: number): CacheCandidates {
+function readCache(lat: number, lon: number): CacheCandidates {
   const key = cacheKey(lat, lon);
   try {
     const raw = localStorage.getItem(key);
-    if (raw === null) return { fresh: null, stale: null };
+    if (raw === null) return { fresh: null, stale: null, evaluatedAt: Date.now() };
     const parsed: unknown = JSON.parse(raw);
-    if (!isCachedEntry(parsed, now) || now - parsed.fetchedAt > MAX_STALE_AGE_MS) {
+    if (!isCachedEntry(parsed)) {
       localStorage.removeItem(key);
-      return { fresh: null, stale: null };
+      return { fresh: null, stale: null, evaluatedAt: Date.now() };
     }
-    if (now - parsed.fetchedAt <= CACHE_TTL_MS) return { fresh: parsed, stale: null };
-    return { fresh: null, stale: parsed };
+    const evaluatedAt = Date.now();
+    if (
+      parsed.fetchedAt > evaluatedAt
+      || evaluatedAt - parsed.fetchedAt > MAX_STALE_AGE_MS
+    ) {
+      localStorage.removeItem(key);
+      return { fresh: null, stale: null, evaluatedAt };
+    }
+    if (evaluatedAt - parsed.fetchedAt <= CACHE_TTL_MS) {
+      return { fresh: parsed, stale: null, evaluatedAt };
+    }
+    return { fresh: null, stale: parsed, evaluatedAt };
   } catch {
     try {
       localStorage.removeItem(key);
     } catch {
       // Storage is unavailable; there is nothing else to recover here.
     }
-    return { fresh: null, stale: null };
+    return { fresh: null, stale: null, evaluatedAt: Date.now() };
   }
 }
 
@@ -344,9 +354,8 @@ function readMemoryCommit(key: string, now: number): Readonly<{
 
 export async function fetchForecast(lat: number, lon: number): Promise<ForecastFetchResult> {
   alignCoordinatorWithStorage();
-  const cacheEvaluatedAt = Date.now();
-  const cached = readCache(lat, lon, cacheEvaluatedAt);
-  if (cached.fresh) return cacheResult(cached.fresh, false, cacheEvaluatedAt);
+  const cached = readCache(lat, lon);
+  if (cached.fresh) return cacheResult(cached.fresh, false, cached.evaluatedAt);
 
   const key = cacheKey(lat, lon);
   const requestVersion = (latestStartedVersionByKey.get(key) ?? 0) + 1;
@@ -383,12 +392,12 @@ export async function fetchForecast(lat: number, lon: number): Promise<ForecastF
     writeCache(lat, lon, acceptedAt, data);
     return result;
   } catch (error) {
-    const evaluatedAt = Date.now();
-    const committed = readMemoryCommit(key, evaluatedAt);
+    const memoryEvaluatedAt = Date.now();
+    const committed = readMemoryCommit(key, memoryEvaluatedAt);
     if (committed) return committed.result;
-    const current = readCache(lat, lon, evaluatedAt);
-    if (current.fresh) return cacheResult(current.fresh, false, evaluatedAt);
-    if (current.stale) return cacheResult(current.stale, true, evaluatedAt);
+    const current = readCache(lat, lon);
+    if (current.fresh) return cacheResult(current.fresh, false, current.evaluatedAt);
+    if (current.stale) return cacheResult(current.stale, true, current.evaluatedAt);
     throw error;
   }
 }
