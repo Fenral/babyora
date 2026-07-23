@@ -86,7 +86,7 @@ function eventFor(
 function changeRow(
   kind: PlanningChangeKind,
   overrides: Partial<TestRow & { type: 'change' }> = {},
-): TestRow {
+): Extract<TestRow, { type: 'change' }> {
   const event = eventFor(kind);
   return {
     id: `row-${kind}`,
@@ -166,7 +166,7 @@ describe('PlanChangeRail controlled semantic contract', () => {
 
     expect(markup.match(/aria-expanded="true"/gu)).toHaveLength(1);
     expect(markup.match(/aria-expanded="false"/gu)).toHaveLength(1);
-    expect(markup).toContain('datetime="2026-02-12T12:00:00.000Z"');
+    expect(markup).toMatch(/datetime="2026-02-12T12:00:00.000Z"/iu);
   });
 
   it('renders action, cause, max three safe decorative previews and exact Outfit CTA', () => {

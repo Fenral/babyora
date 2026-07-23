@@ -1,96 +1,243 @@
-/**
- * R7 Task 5 — Planlegg-endringsrail (design-spec §6, retning B).
- *
- * Én vertikal <ol> gjennom dagen. Bare meningsfulle endringer får markør;
- * uendrede perioder er egne, ikke-interaktive rader. Konsumerer ferdig-
- * avledede ChangeEvent-er (aldri egen telling).
- *
- * A11y (accessibility-lead 2026-07-14):
- *  1. <ol aria-label> — hver rad (markør OG kollapset periode) er en <li>.
- *  2. Handlingen ligger i TEKST (changeActionSentence navngir verbet);
- *     ikonet er aria-hidden.
- *  3. Utvidbar markør = <button aria-expanded> disclosure; kollapset
- *     periode er statisk tekst.
- *  4. Ikon-glyf skiller handlingstype (ikke bare farge).
- *  5. Tid som ekte <time>-tekst.
- */
+import type { ReactNode } from 'react';
+import {
+  GENERIC_GARMENT_SVG,
+  garmentIdFor,
+  garmentPngSafe,
+} from '../../data/garment-illustrations.js';
+import { useHapticSystem } from '../../lib/haptics/system.js';
+import type {
+  PlanningChangeEvent,
+  PlanningChangeKind,
+  PlanningTransition,
+} from '../../lib/planning/change-events.js';
+import { planningChangeActionSentence } from '../../lib/planning/change-sentence.js';
+import {
+  decidePlanningInteraction,
+  dispatchPlanningInteraction,
+} from '../../lib/planning/planning-interaction.js';
+import './PlanChangeRail.css';
 
-import { useState, type CSSProperties } from 'react';
-import { changeActionSentence } from '../../lib/planning/change-sentence.js';
-import type { ChangeEvent, ChangeKind } from '../../lib/planning/change-events.js';
-import type { RailRow } from '../../lib/planning/rail-rows.js';
+export type PlanningRailEvent = Readonly<{
+  id: string;
+  atIso: string;
+  kind: PlanningChangeKind;
+  addedGarments: readonly string[];
+  removedGarments: readonly string[];
+  cause: string;
+  transition?: PlanningTransition;
+}>;
+
+export type PlanChangeRailRow =
+  | Readonly<{
+    id: string;
+    type: 'unchanged';
+    copy: string;
+  }>
+  | Readonly<{
+    id: string;
+    type: 'change';
+    eventId: string;
+    atIso: string;
+    hasOutfit: boolean;
+    event: PlanningRailEvent;
+  }>;
 
 type Props = {
-  rows: RailRow[];
+  rows: readonly PlanChangeRailRow[];
+  selectedEventId: string | null;
+  onSelect: (eventId: string | null) => void;
+  onOpenOutfit: (eventId: string, trigger: HTMLElement) => void;
 };
 
-const KIND_COLOR: Record<ChangeKind, string> = {
-  add: 'var(--layer-innerst)',
-  remove: 'var(--ink-500)',
-  rain: 'var(--layer-ytterst)',
-  swap: 'var(--layer-mellom)',
-  location: 'var(--accent-temp)',
+const MARKER_SHAPE: Readonly<Record<PlanningChangeKind, string>> = {
+  add: 'circle-plus',
+  remove: 'circle-minus',
+  swap: 'diamond-swap',
+  rain: 'droplet-shield',
+  location: 'pin',
+  prep: 'bag-check',
 };
 
-function KindIcon({ kind }: { kind: ChangeKind }) {
-  // Distinkte glyfer per handlingstype (a11y krav 4) — dekorativt.
-  const p = { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2.4, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true };
+function KindIcon({ kind }: { kind: PlanningChangeKind }): ReactNode {
+  const iconProps = {
+    width: 18,
+    height: 18,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2.2,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  };
+
   switch (kind) {
-    case 'add': return <svg {...p}><path d="M12 5v14M5 12h14" /></svg>;
-    case 'remove': return <svg {...p}><path d="M5 12h14" /></svg>;
-    case 'rain': return <svg {...p}><path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9Z" /></svg>;
-    case 'swap': return <svg {...p}><path d="M4 8h13l-3-3M20 16H7l3 3" /></svg>;
-    case 'location': return <svg {...p}><path d="M12 21s-6-5.5-6-10a6 6 0 0 1 12 0c0 4.5-6 10-6 10Z" /><circle cx="12" cy="11" r="2" /></svg>;
-    default: return null;
+    case 'add':
+      return <svg {...iconProps}><path d="M12 5v14M5 12h14" /></svg>;
+    case 'remove':
+      return <svg {...iconProps}><path d="M5 12h14" /></svg>;
+    case 'swap':
+      return <svg {...iconProps}><path d="M4 8h13l-3-3M20 16H7l3 3" /></svg>;
+    case 'rain':
+      return <svg {...iconProps}><path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9Z" /><path d="m9.5 12 1.6 1.6 3.4-3.6" /></svg>;
+    case 'location':
+      return <svg {...iconProps}><path d="M12 21s-6-5.5-6-10a6 6 0 0 1 12 0c0 4.5-6 10-6 10Z" /><circle cx="12" cy="11" r="2" /></svg>;
+    case 'prep':
+      return <svg {...iconProps}><path d="M7 8h10l2 12H5L7 8Z" /><path d="M9 8a3 3 0 0 1 6 0m-5 6 1.5 1.5L15 12" /></svg>;
   }
 }
 
-const ol: CSSProperties = { listStyle: 'none', margin: 0, padding: '0 0 0 22px', position: 'relative', display: 'flex', flexDirection: 'column', gap: 0 };
-const railLine: CSSProperties = { position: 'absolute', left: 7, top: 8, bottom: 8, width: 2, background: 'var(--ink-200)' };
-const collapsedLi: CSSProperties = { position: 'relative', padding: '10px 0 10px 14px', color: 'var(--ink-500)', fontSize: '0.8125rem' };
-const collapsedDot: CSSProperties = { position: 'absolute', left: -19, top: 15, width: 8, height: 8, borderRadius: '50%', background: 'var(--surface)', border: '2px solid var(--ink-200)' };
-const changeLi: CSSProperties = { position: 'relative', padding: '4px 0' };
-const markerBtn: CSSProperties = { width: '100%', textAlign: 'left', background: 'var(--surface-elevated)', border: '1px solid var(--ink-200)', borderRadius: 14, padding: '12px 14px 12px 44px', minHeight: 44, cursor: 'pointer', color: 'var(--ink-900)', font: 'inherit', position: 'relative' };
-const marker: CSSProperties = { position: 'absolute', left: -19, top: 16, width: 26, height: 26, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'var(--surface-pure, #fff)' };
-const timeStyle: CSSProperties = { fontVariantNumeric: 'tabular-nums', fontWeight: 700, fontSize: '0.8125rem', color: 'var(--ink-700)' };
-const actionStyle: CSSProperties = { fontWeight: 650, fontSize: '0.9375rem', margin: '2px 0 0' };
-const detailStyle: CSSProperties = { margin: '8px 0 0', fontSize: '0.8125rem', color: 'var(--ink-700)', lineHeight: 1.5 };
+function eventGarments(event: PlanningRailEvent): readonly string[] {
+  const transitionGarments = event.transition?.kind === 'rain'
+    || event.transition?.kind === 'prep'
+    ? event.transition.garments
+    : [];
+  return [...new Set([
+    ...event.removedGarments,
+    ...event.addedGarments,
+    ...transitionGarments,
+  ])];
+}
 
-function ChangeMarker({ event }: { event: ChangeEvent }) {
-  const [open, setOpen] = useState(false);
-  const sentence = changeActionSentence(event);
+function timeLabel(atIso: string): string {
+  const instant = new Date(atIso);
+  if (Number.isNaN(instant.getTime())) return atIso;
+  return instant.toLocaleTimeString('nb-NO', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function GarmentPreview({ garment }: { garment: string }) {
+  const source = garmentPngSafe(garmentIdFor(garment));
   return (
-    <li style={changeLi}>
-      <button type="button" style={markerBtn} aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-        <span aria-hidden="true" style={{ ...marker, left: -32, background: KIND_COLOR[event.kind] }}>
-          <KindIcon kind={event.kind} />
+    <figure className="plan-change-rail__preview">
+      <img
+        alt=""
+        src={source}
+        onError={(event) => {
+          if (event.currentTarget.src !== GENERIC_GARMENT_SVG) {
+            event.currentTarget.src = GENERIC_GARMENT_SVG;
+          }
+        }}
+      />
+      <figcaption>{garment}</figcaption>
+    </figure>
+  );
+}
+
+function ChangeRow({
+  row,
+  expanded,
+  onToggle,
+  onOpenOutfit,
+}: {
+  row: Extract<PlanChangeRailRow, { type: 'change' }>;
+  expanded: boolean;
+  onToggle: (eventId: string) => void;
+  onOpenOutfit: Props['onOpenOutfit'];
+}) {
+  const detailId = `planning-rail-detail-${row.eventId}`;
+  const action = planningChangeActionSentence(row.event as PlanningChangeEvent);
+  const garments = eventGarments(row.event);
+
+  return (
+    <li className="plan-change-rail__change" data-kind={row.event.kind}>
+      <button
+        type="button"
+        className="plan-change-rail__disclosure"
+        aria-expanded={expanded}
+        aria-controls={detailId}
+        onClick={() => onToggle(row.eventId)}
+      >
+        <span
+          className="plan-change-rail__marker"
+          data-kind={row.event.kind}
+          data-marker-shape={MARKER_SHAPE[row.event.kind]}
+          aria-hidden="true"
+        >
+          <KindIcon kind={row.event.kind} />
         </span>
-        <time style={timeStyle}>{String(event.hour).padStart(2, '0')}:00</time>
-        <p style={actionStyle}>{sentence}</p>
-        {open && event.garments.length > 0 && (
-          <p style={detailStyle}>{event.garments.join(' · ')}</p>
-        )}
+        <time dateTime={row.atIso}>{timeLabel(row.atIso)}</time>
+        <span className="plan-change-rail__summary">{action}</span>
+        <span className="plan-change-rail__chevron" aria-hidden="true">⌄</span>
       </button>
+      <div
+        id={detailId}
+        className={`plan-change-rail__detail${expanded ? ' is-expanded' : ''}`}
+        aria-hidden={!expanded}
+      >
+        <div className="plan-change-rail__detail-inner">
+          <p className="plan-change-rail__action">{action}</p>
+          <p className="plan-change-rail__cause">{row.event.cause}</p>
+          {garments.length > 0 && (
+            <div className="plan-change-rail__previews" aria-label="Plagg i endringen">
+              {garments.slice(0, 3).map((garment) => (
+                <GarmentPreview key={garment} garment={garment} />
+              ))}
+            </div>
+          )}
+          {row.hasOutfit && (
+            <button
+              type="button"
+              className="plan-change-rail__outfit"
+              tabIndex={expanded ? 0 : -1}
+              disabled={!expanded}
+              onClick={(event) => onOpenOutfit(row.eventId, event.currentTarget)}
+            >
+              Se hele antrekket
+            </button>
+          )}
+        </div>
+      </div>
     </li>
   );
 }
 
-export function PlanChangeRail({ rows }: Props) {
+export function PlanChangeRail({
+  rows,
+  selectedEventId,
+  onSelect,
+  onOpenOutfit,
+}: Props) {
+  const { fire } = useHapticSystem();
+
+  const onToggle = (eventId: string) => {
+    dispatchPlanningInteraction(
+      decidePlanningInteraction({
+        type: 'rail-toggle',
+        selectedEventId,
+        eventId,
+      }),
+      {
+        onSelect,
+        onCue: (cue) => {
+          void fire(cue);
+        },
+      },
+    );
+  };
+
   return (
-    <ol style={ol} aria-label="Antrekksendringer gjennom dagen">
-      <span aria-hidden="true" style={railLine} />
-      {rows.map((row, i) =>
-        row.type === 'collapsed' ? (
-          <li key={`c-${i}`} style={collapsedLi}>
-            <span aria-hidden="true" style={collapsedDot} />
-            {row.untilLabel === 'hele dagen'
-              ? 'Samme antrekk hele dagen'
-              : `Samme antrekk frem til ${row.untilLabel}`}
-          </li>
-        ) : (
-          <ChangeMarker key={`e-${row.event.hour}-${i}`} event={row.event} />
-        ),
-      )}
+    <ol className="plan-change-rail" aria-label="Antrekksendringer gjennom dagen">
+      {rows.map((row) => (
+        row.type === 'unchanged'
+          ? (
+            <li className="plan-change-rail__unchanged" key={row.id}>
+              <span className="plan-change-rail__unchanged-dot" aria-hidden="true" />
+              {row.copy}
+            </li>
+          )
+          : (
+            <ChangeRow
+              key={row.id}
+              row={row}
+              expanded={selectedEventId === row.eventId}
+              onToggle={onToggle}
+              onOpenOutfit={onOpenOutfit}
+            />
+          )
+      ))}
     </ol>
   );
 }

@@ -1,0 +1,81 @@
+.segmented-control {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.segmented-control__legend,
+.segmented-control__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.segmented-control__group {
+  display: inline-flex;
+  gap: 4px;
+  max-width: 100%;
+  padding: 4px;
+  border: 1px solid var(--ink-200);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.segmented-control__segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: var(--ink-700);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.segmented-control__segment.is-checked {
+  background: var(--accent-cta);
+  color: var(--accent-cta-ink);
+  font-weight: 700;
+}
+
+.segmented-control__segment:has(.segmented-control__input:focus-visible) {
+  outline: 3px solid var(--accent-cta);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segmented-control__segment {
+    transition-duration: 0ms;
+  }
+}
+
+@media (forced-colors: active) {
+  .segmented-control__segment {
+    border: 1px solid ButtonText;
+    forced-color-adjust: auto;
+  }
+
+  .segmented-control__segment.is-checked {
+    border-width: 3px;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .segmented-control__segment:has(.segmented-control__input:focus-visible) {
+    outline-color: Highlight;
+  }
+}
