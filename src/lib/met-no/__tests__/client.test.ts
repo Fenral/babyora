@@ -1099,4 +1099,34 @@ describe('location cache scope', () => {
     });
     expect(memoryOnlyForecastCoordinatorSize()).toBeLessThanOrEqual(32);
   });
+
+  it('never resurrects an invalidated request after the newer commit is also evicted', async () => {
+    const older = deferred<Response>();
+    const firstEviction = Array.from({ length: 32 }, () => deferred<Response>());
+    const newer = deferred<Response>();
+    const secondEviction = Array.from({ length: 32 }, () => deferred<Response>());
+    const fetchMock = vi.fn().mockReturnValueOnce(older.promise);
+    for (const filler of firstEviction) fetchMock.mockReturnValueOnce(filler.promise);
+    fetchMock.mockReturnValueOnce(newer.promise);
+    for (const filler of secondEviction) fetchMock.mockReturnValueOnce(filler.promise);
+    vi.stubGlobal('fetch', fetchMock);
+    installStorage();
+
+    const olderCall = fetchForecast(74.5, 24.5, { cacheScope: 'memory-only' });
+    for (let index = 0; index < firstEviction.length; index += 1) {
+      void fetchForecast(75 + index / 100, 25, { cacheScope: 'memory-only' });
+    }
+    const newerCall = fetchForecast(74.5, 24.5, { cacheScope: 'memory-only' });
+    newer.resolve(response(validForecast('2026-02-12T08:50:00.000Z')));
+    await expect(newerCall).resolves.toMatchObject({
+      metadata: { source: 'network', cacheStatus: 'miss' },
+    });
+    for (let index = 0; index < secondEviction.length; index += 1) {
+      void fetchForecast(76 + index / 100, 26, { cacheScope: 'memory-only' });
+    }
+
+    older.resolve(response(validForecast('2026-02-12T08:20:00.000Z')));
+    await expect(olderCall).rejects.toThrow('superseded');
+    expect(memoryOnlyForecastCoordinatorSize()).toBeLessThanOrEqual(32);
+  });
 });

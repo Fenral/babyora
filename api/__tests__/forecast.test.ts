@@ -70,4 +70,21 @@ describe('forecast proxy cache policy', () => {
     expect(response.headers.get('Vercel-CDN-Cache-Control')).toBe('no-store');
     expect(response.headers.get('CDN-Cache-Control')).toBe('no-store');
   });
+
+  it('keeps an automatic upstream body-read failure explicitly no-store', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: vi.fn().mockRejectedValue(new TypeError('body stream failed')),
+    } as unknown as Response));
+
+    const response = await handler(new Request(
+      'https://babyora.test/api/forecast?lat=69.6492&lon=18.9553&cacheScope=memory-only',
+    ));
+
+    expect(response.status).toBe(502);
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store, max-age=0');
+    expect(response.headers.get('Vercel-CDN-Cache-Control')).toBe('no-store');
+    expect(response.headers.get('CDN-Cache-Control')).toBe('no-store');
+  });
 });
