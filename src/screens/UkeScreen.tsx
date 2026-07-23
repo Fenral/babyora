@@ -16,7 +16,7 @@ import { useHapticSystem } from '../lib/haptics/system';
 import { extractDailyAtHour, extractHourly } from '../lib/met-no/client';
 import type { WeatherDayAtHour, WeatherHourly } from '../lib/met-no/types';
 import {
-  derivePlanningChangeEvents,
+  type PlanningChangeEvent,
   type PlanningPoint,
 } from '../lib/planning/change-events';
 import { planningChangeActionSentence } from '../lib/planning/change-sentence';
@@ -31,6 +31,7 @@ import {
   type PlannedOutfitContext,
 } from '../lib/planning/planned-outfit-context';
 import { resolvePlannedOutfitContext } from '../lib/planning/planned-outfit-resolver';
+import { buildPlanViewModel } from '../lib/planning/plan-view-model';
 import { buildPlanningRailRows } from '../lib/planning/rail-rows';
 import { useAccess } from '../lib/premium/use-access';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
@@ -74,7 +75,7 @@ type Props = Readonly<{
 }>;
 
 type PlanningEvaluation = Readonly<{
-  events: readonly ReturnType<typeof derivePlanningChangeEvents>[number][];
+  events: readonly PlanningChangeEvent[];
   rows: readonly PlanChangeRailRow[];
   contextsByEventId: ReadonlyMap<string, PlannedOutfitContext>;
   preferredEventId: string | null;
@@ -343,7 +344,29 @@ function PlanleggData({
     if (facts.length < 2) return EMPTY_PLANNING_EVALUATION;
 
     const points = Object.freeze(facts.map((fact) => fact.point));
-    const events = Object.freeze(derivePlanningChangeEvents(points));
+    const evaluatedAtEpoch = weather.evidence.metadata.evaluatedAt;
+    const evaluatedFact = [...facts]
+      .filter((fact) => Date.parse(fact.point.atIso) <= evaluatedAtEpoch)
+      .at(-1) ?? facts[0]!;
+    const viewModel = buildPlanViewModel({
+      status: weather.status === 'offline' ? 'offline' : 'ready',
+      coverage: weather.evidence.coverage,
+      points,
+      forecast: facts.map((fact) => ({
+        atIso: fact.phase.weather.atIso,
+        tempC: fact.phase.weather.tempC,
+        feelsLikeC: fact.phase.weather.feelsLikeC,
+        symbolCode: fact.phase.weather.symbolCode,
+      })),
+      evaluatedAtIso: evaluatedFact.point.atIso,
+      ...(weather.status === 'offline'
+        ? { cachedAtIso: new Date(weather.evidence.metadata.fetchedAt).toISOString() }
+        : {}),
+    });
+    if (viewModel.status === 'loading' || viewModel.status === 'error') {
+      return EMPTY_PLANNING_EVALUATION;
+    }
+    const events = viewModel.events;
     const access = decideAccess('future_plan', {
       isPlus: isPremium,
       authenticated: false,
@@ -451,6 +474,7 @@ function PlanleggData({
     tab,
     vognMode,
     weather.evidence,
+    weather.status,
   ]);
 
   const planningEventIds = useMemo(
