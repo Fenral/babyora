@@ -679,6 +679,99 @@ describe('fetchForecast provenance and cache recovery', () => {
     ]);
   });
 
+  it('validates a memory failure fallback before evaluating its TTL, source and current interval', async () => {
+    const validationStartedAt = Date.parse('2026-02-12T09:59:59.000Z');
+    const evaluatedAt = Date.parse('2026-02-12T10:00:01.000Z');
+    const committedAt = Date.parse('2026-02-12T09:00:00.000Z');
+    const data = forecast([
+      utcPoint('2026-02-12T09:00:00.000Z', -9),
+      utcPoint('2026-02-12T10:00:00.000Z', 10),
+    ]);
+    data.properties.meta.updated_at = '2026-02-12T04:00:00.000Z';
+    const cacheRaw = JSON.stringify({ version: 1, fetchedAt: committedAt, data });
+    const { storage, values } = installStorage();
+    storage.setItem.mockImplementation(() => { throw new Error('quota'); });
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response(data))
+      .mockImplementationOnce(() => {
+        values.set(CACHE_KEY, cacheRaw);
+        return Promise.reject(new TypeError('offline'));
+      });
+    vi.stubGlobal('fetch', fetchMock);
+    vi.setSystemTime(committedAt);
+    await fetchForecast(61.2345, 8.7654);
+
+    const points = data.properties.timeseries;
+    Object.defineProperty(data.properties, 'timeseries', {
+      configurable: true,
+      get: () => {
+        vi.setSystemTime(evaluatedAt);
+        return points;
+      },
+    });
+    vi.setSystemTime(validationStartedAt);
+
+    const result = await fetchForecast(61.2345, 8.7654);
+
+    expect(result.metadata).toMatchObject({
+      source: 'cache',
+      cacheStatus: 'stale',
+      stale: true,
+      sourceUpdatedAt: null,
+      fetchedAt: committedAt,
+      evaluatedAt,
+    });
+    expect(extractNow(result.forecast, result.metadata.evaluatedAt).observedAt.toISOString())
+      .toBe('2026-02-12T10:00:00.000Z');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('validates an obsolete-success memory candidate before deciding whether it can supersede', async () => {
+    const validationStartedAt = Date.parse('2026-02-12T09:59:59.000Z');
+    const evaluatedAt = Date.parse('2026-02-12T10:00:01.000Z');
+    const committedAt = Date.parse('2026-02-12T09:00:00.000Z');
+    const older = deferred<Response>();
+    const newerData = forecast([
+      utcPoint('2026-02-12T09:00:00.000Z', -9),
+      utcPoint('2026-02-12T10:00:00.000Z', 10),
+    ]);
+    newerData.properties.meta.updated_at = '2026-02-12T04:00:00.000Z';
+    const olderData = forecast([
+      utcPoint('2026-02-12T09:00:00.000Z', -1),
+      utcPoint('2026-02-12T10:00:00.000Z', 12),
+    ]);
+    olderData.properties.meta.updated_at = '2026-02-12T08:00:00.000Z';
+    const { storage } = installStorage();
+    storage.setItem.mockImplementation(() => { throw new Error('quota'); });
+    vi.stubGlobal('fetch', vi.fn()
+      .mockReturnValueOnce(older.promise)
+      .mockResolvedValueOnce(response(newerData)));
+    vi.setSystemTime(committedAt);
+    const olderCall = fetchForecast(61.2345, 8.7654);
+    await fetchForecast(61.2345, 8.7654);
+
+    const points = newerData.properties.timeseries;
+    Object.defineProperty(newerData.properties, 'timeseries', {
+      configurable: true,
+      get: () => {
+        vi.setSystemTime(evaluatedAt);
+        return points;
+      },
+    });
+    vi.setSystemTime(validationStartedAt);
+    older.resolve(response(olderData));
+
+    await expect(olderCall).resolves.toMatchObject({
+      forecast: olderData,
+      metadata: {
+        source: 'network',
+        sourceUpdatedAt: '2026-02-12T08:00:00.000Z',
+        fetchedAt: validationStartedAt,
+        evaluatedAt: validationStartedAt,
+      },
+    });
+  });
+
   it('commits an older valid success when a newer same-key request fails without cache', async () => {
     const older = deferred<Response>();
     const newer = deferred<Response>();
