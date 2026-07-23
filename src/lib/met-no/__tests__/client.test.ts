@@ -1021,8 +1021,8 @@ describe('location cache scope', () => {
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ cache: 'no-store', method: 'POST' }),
+      expect.stringContaining('cacheScope=memory-only'),
+      expect.objectContaining({ cache: 'no-store' }),
     );
     expect(storage.getItem).not.toHaveBeenCalled();
     expect(storage.setItem).not.toHaveBeenCalled();
