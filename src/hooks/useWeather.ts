@@ -22,6 +22,7 @@ import {
   assessForecastCoverage,
   type ForecastCoverage,
 } from '../lib/planning/coverage';
+import type { LocationCacheScope } from '../lib/location/cache-scope';
 
 type Status = 'idle' | 'loading' | 'ready' | 'offline' | 'error';
 
@@ -29,6 +30,40 @@ export type WeatherEvidence = Readonly<{
   metadata: ForecastFetchMetadata;
   coverage: ForecastCoverage;
 }>;
+
+export type WeatherLocationSource =
+  | 'configured-place'
+  | 'fixed-home'
+  | 'manual'
+  | 'automatic';
+
+export type WeatherRequestOptions = Readonly<{
+  cacheScope: LocationCacheScope;
+  source: WeatherLocationSource;
+}>;
+
+export type WeatherFetchIdentity = Readonly<WeatherRequestOptions & {
+  fetchKey: string;
+}>;
+
+const DEFAULT_WEATHER_REQUEST_OPTIONS: WeatherRequestOptions = Object.freeze({
+  cacheScope: 'persistent',
+  source: 'configured-place',
+});
+
+export function createWeatherFetchIdentity(
+  lat: number,
+  lon: number,
+  refHour: number,
+  options: WeatherRequestOptions = DEFAULT_WEATHER_REQUEST_OPTIONS,
+): WeatherFetchIdentity {
+  const { cacheScope, source } = options;
+  return {
+    fetchKey: `${source}:${cacheScope}:${lat},${lon},${refHour}`,
+    cacheScope,
+    source,
+  };
+}
 
 export type WeatherState = {
   status: Status;
@@ -208,8 +243,10 @@ export function useWeather(
   lon: number,
   refHour: number = 12,
   refreshKey: number = 0,
+  options: WeatherRequestOptions = DEFAULT_WEATHER_REQUEST_OPTIONS,
 ): WeatherState {
-  const fetchKey = `${lat},${lon},${refHour}`;
+  const identity = createWeatherFetchIdentity(lat, lon, refHour, options);
+  const { fetchKey } = identity;
   const requestIdRef = useRef(0);
   const [requestState, setRequestState] = useState<WeatherRequestState>(
     () => createInitialWeatherRequestState(fetchKey),
@@ -221,13 +258,13 @@ export function useWeather(
       requestId,
       fetchKey,
       refHour,
-      load: () => fetchForecast(lat, lon),
+      load: () => fetchForecast(lat, lon, { cacheScope: identity.cacheScope }),
       dispatch: (event) => {
         setRequestState((current) => reduceWeatherRequestState(current, event));
       },
     });
     return lifecycle.cancel;
-  }, [fetchKey, lat, lon, refHour, refreshKey]);
+  }, [fetchKey, identity.cacheScope, lat, lon, refHour, refreshKey]);
 
   return selectWeatherForFetchKey(requestState, fetchKey);
 }
