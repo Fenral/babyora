@@ -162,6 +162,27 @@ const entitlementFreshness = createEntitlementFreshnessController({
 });
 
 /**
+ * Kombinerer freshness-livssyklusen med den eksisterende store-kontrakten.
+ *
+ * Før og under en konfigurert native refresh er cache alltid blokkert.
+ * Etter at refresh har skrevet sin ferske verdi, kan senere store-endringer
+ * (blant annet vellykket kjøp/gjenoppretting) slå gjennom umiddelbart.
+ */
+export function resolveEffectiveAccess(
+  freshness: AccessSnapshot,
+  persistedPremium: boolean,
+): { isPremium: boolean; loading: boolean } {
+  if (
+    freshness.source === 'configured-native'
+    && freshness.loading
+  ) {
+    return { isPremium: false, loading: true };
+  }
+
+  return { isPremium: persistedPremium, loading: false };
+}
+
+/**
  * Synker subscription-store mot RevenueCat sin faktiske entitlement.
  * Parallelle kall deler nøyaktig samme promise; etter settlement starter
  * neste kall en ny generasjon.
@@ -210,12 +231,5 @@ export function useAccess(): { isPremium: boolean; loading: boolean } {
     entitlementFreshness.getSnapshot,
   );
 
-  if (freshness.source === 'ready-dev') {
-    return { isPremium: devPremium, loading: false };
-  }
-
-  return {
-    isPremium: freshness.isPremium,
-    loading: freshness.loading,
-  };
+  return resolveEffectiveAccess(freshness, devPremium);
 }

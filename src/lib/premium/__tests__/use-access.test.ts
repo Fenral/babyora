@@ -18,7 +18,12 @@ const runtime = vi.hoisted(() => {
     native: false,
     configured: false,
     check: vi.fn<() => Promise<boolean>>(),
-    addListener: vi.fn(() => Promise.resolve({ remove: vi.fn() })),
+    addListener: vi.fn<(
+      eventName: string,
+      listener: (state: { isActive: boolean }) => void,
+    ) => Promise<{ remove: () => void }>>(
+      (_eventName, _listener) => Promise.resolve({ remove: vi.fn() }),
+    ),
     subscriptionState,
   };
 });
