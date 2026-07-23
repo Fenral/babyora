@@ -324,17 +324,21 @@ function cacheResult(
   return { forecast: entry.data, metadata };
 }
 
-function readMemoryCommit(key: string, now: number): Readonly<{
+function readMemoryCommit(key: string): Readonly<{
   version: number;
   result: ForecastFetchResult;
 }> | null {
   const committed = latestCommittedByKey.get(key);
   if (!committed) return null;
-  const age = now - committed.result.metadata.fetchedAt;
+  if (!isMetForecast(committed.result.forecast)) {
+    latestCommittedByKey.delete(key);
+    return null;
+  }
+  const evaluatedAt = Date.now();
+  const age = evaluatedAt - committed.result.metadata.fetchedAt;
   if (
     age < 0
     || age > CACHE_TTL_MS
-    || !isMetForecast(committed.result.forecast)
   ) {
     latestCommittedByKey.delete(key);
     return null;
@@ -345,8 +349,8 @@ function readMemoryCommit(key: string, now: number): Readonly<{
       ...committed.result,
       metadata: {
         ...committed.result.metadata,
-        sourceUpdatedAt: sourceUpdatedAt(committed.result.forecast, now),
-        evaluatedAt: now,
+        sourceUpdatedAt: sourceUpdatedAt(committed.result.forecast, evaluatedAt),
+        evaluatedAt,
       },
     },
   };
@@ -372,7 +376,7 @@ export async function fetchForecast(lat: number, lon: number): Promise<ForecastF
     if (!isMetForecast(data)) throw new Error('met.no: ugyldig prognose');
     const acceptedAt = Date.now();
 
-    const committed = readMemoryCommit(key, acceptedAt);
+    const committed = readMemoryCommit(key);
     if (committed && committed.version > requestVersion) {
       return committed.result;
     }
@@ -392,8 +396,7 @@ export async function fetchForecast(lat: number, lon: number): Promise<ForecastF
     writeCache(lat, lon, acceptedAt, data);
     return result;
   } catch (error) {
-    const memoryEvaluatedAt = Date.now();
-    const committed = readMemoryCommit(key, memoryEvaluatedAt);
+    const committed = readMemoryCommit(key);
     if (committed) return committed.result;
     const current = readCache(lat, lon);
     if (current.fresh) return cacheResult(current.fresh, false, current.evaluatedAt);
