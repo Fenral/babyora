@@ -76,6 +76,7 @@ export function createAutoLocationController(
   let inFlight: Readonly<{
     key: string;
     acceptsManualResume: boolean;
+    ownerRequest: AutoLocationRequest;
     promise: Promise<AutoLocationOutcome>;
   }> | null = null;
 
@@ -93,7 +94,7 @@ export function createAutoLocationController(
       && request.intent === 'resume'
       && request.mode === 'manual'
       && requestAccessAllowed(request)
-      && liveRequestAllowed(request)
+      && liveRequestAllowed(inFlight.ownerRequest)
     ) {
       return inFlight.promise;
     }
@@ -170,6 +171,7 @@ export function createAutoLocationController(
       key,
       acceptsManualResume: request.intent === 'settings-activation'
         && request.mode === 'manual',
+      ownerRequest: request,
       promise,
     };
     return promise;

@@ -987,10 +987,34 @@ async function runAutomaticLocation(
   await navigation.getByRole('button', { name: /^Familie/u }).click();
   await autoSwitch.waitFor({ state: 'visible', timeout: 15_000 });
 
+  await page.evaluate(() => {
+    (window as typeof window & { __holdAutoLocation: boolean }).__holdAutoLocation = true;
+  });
   await autoSwitch.click();
   const permissionDialog = page.getByRole('dialog', { name: 'Bruk posisjon automatisk' });
   await permissionDialog.waitFor({ state: 'visible', timeout: 15_000 });
   await permissionDialog.getByRole('button', { name: /^Tillat posisjon/u }).click();
+  await page.waitForFunction(() => (
+    (window as typeof window & {
+      __locationContainmentCounters: LocationContainmentCounters;
+    }).__locationContainmentCounters.geolocation === 3
+  ));
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  await page.waitForTimeout(50);
+  const activationResume = await readLocationContainmentCounters(page);
+  if (activationResume.geolocation !== 3 || activationResume.geocode !== 0) {
+    throw new Error(`Resume dupliserte pågående Settings-aktivering: ${
+      JSON.stringify(activationResume)
+    }`);
+  }
+  await page.evaluate(() => {
+    const target = window as typeof window & {
+      __holdAutoLocation: boolean;
+      __pendingAutoLocations: Array<() => void>;
+    };
+    target.__holdAutoLocation = false;
+    target.__pendingAutoLocations.splice(0).forEach((deliver) => deliver());
+  });
   await permissionDialog.waitFor({ state: 'detached', timeout: 15_000 });
   try {
     await page.waitForFunction(() => (
