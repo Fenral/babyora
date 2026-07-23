@@ -197,6 +197,19 @@ describe('Planned Outfit resolver', () => {
         return Reflect.getOwnPropertyDescriptor(target, property);
       },
     });
+    const fabricatedEvent = new Proxy({} as PlanningChangeEvent, {
+      getOwnPropertyDescriptor(target, property) {
+        if (property === 'id' || property === 'transitionContextId') {
+          return {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: property === 'id' ? event.id : event.transitionContextId,
+          };
+        }
+        return Reflect.getOwnPropertyDescriptor(target, property);
+      },
+    });
 
     expect(resolvePlannedOutfitContext(
       event.id,
@@ -208,6 +221,11 @@ describe('Planned Outfit resolver', () => {
       currentEvents(event),
       fabricatedMap,
     )).toBeNull();
+    expect(resolvePlannedOutfitContext(
+      event.id,
+      currentEvents(fabricatedEvent),
+      contextMap([[event.id, context]]),
+    )).toBeNull();
   });
 
   it('has no construction, recommendation, time, weather, storage, navigation, or logging capability', async () => {
@@ -218,6 +236,7 @@ describe('Planned Outfit resolver', () => {
       /\b(?:createPlannedOutfitContext|Date|recommend|weather|localStorage|sessionStorage|indexedDB|fetch|XMLHttpRequest|WebSocket|sendBeacon|console|posthog|analytics|track|history|pushState|replaceState|URLSearchParams|React)\b/u,
     );
     expect(sourceModule.default).toContain('Object.isFrozen(currentEvents)');
+    expect(sourceModule.default).toContain('structuredClone(eventValue)');
     expect(sourceModule.default).toContain('Map.prototype.has.call');
     expect(sourceModule.default).toContain('Map.prototype.get.call');
   });
