@@ -1,14 +1,269 @@
-import { describe, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+import type { ForecastCoverage, ForecastCoverageStatus } from '../coverage.js';
+import type { PlanningPoint } from '../change-events.js';
 
-describe('Planlegg view-model contracts', () => {
-  it.todo('renders the exact loading state while the atomic forecast context resolves');
-  it.todo('renders the exact error state when no valid current or cached plan exists');
-  it.todo('renders offline cached evidence with its explicit HH:mm timestamp');
-  it.todo('renders partial coverage without claiming the samples cover the whole day');
-  it.todo('uses a static unchanged span for zero recommendation-changing events');
-  it.todo('selects the only event for one recommendation-changing event');
-  it.todo('selects the next relevant event for many recommendation-changing events');
-  it.todo('creates no clothing marker for a passive weather-only change');
-  it.todo('uses whole-day copy only for contiguous verified coverage');
-  it.todo('keeps Free today complete while future capability remains separately gated');
+type WeatherRow = Readonly<{
+  atIso: string;
+  tempC: number;
+  feelsLikeC: number;
+  symbolCode: string;
+}>;
+
+type ViewModelInput = Readonly<{
+  status: 'loading' | 'error' | 'offline' | 'ready';
+  coverage: ForecastCoverage | null;
+  points: readonly PlanningPoint[];
+  forecast: readonly WeatherRow[];
+  evaluatedAtIso: string;
+  cachedAtIso?: string;
+  outfitAvailabilityByEventId?: Readonly<Record<string, boolean>>;
+}>;
+
+type ViewModel = Readonly<{
+  status: 'loading' | 'error' | 'offline' | 'partial' | 'empty' | 'ready';
+  verdict: Readonly<{
+    finalizedFingerprint: string;
+    orderedGarments: readonly string[];
+    equipment: readonly string[];
+    summary: string;
+  }> | null;
+  nextAction: string | null;
+  events: readonly Readonly<{ id: string; atIso: string }>[];
+  rows: readonly Readonly<{ id: string; type: 'unchanged' | 'change' }>[];
+  candidateEventIds: readonly string[];
+  forecast: readonly WeatherRow[];
+  message?: string;
+  heading?: string;
+  body?: string;
+  retryLabel?: string;
+}>;
+
+const viewModule = await import('../plan-view-model.js').catch(() => ({}));
+const canonical = viewModule as unknown as {
+  buildPlanViewModel: (input: ViewModelInput) => ViewModel;
+};
+
+function coverage(status: ForecastCoverageStatus, isos: readonly string[]): ForecastCoverage {
+  const points = isos.map((iso) => ({
+    iso,
+    epochMs: Date.parse(iso),
+    localDate: iso.slice(0, 10),
+    localTime: iso.slice(11, 16),
+  }));
+  return {
+    status,
+    timeZone: 'Europe/Oslo',
+    points,
+    startIso: points[0]?.iso ?? null,
+    endIso: points.at(-1)?.iso ?? null,
+  };
+}
+
+function planningPoint(
+  atIso: string,
+  finalizedFingerprint: string,
+  orderedGarments: readonly string[],
+  overrides: Partial<PlanningPoint> = {},
+): PlanningPoint {
+  return {
+    atIso,
+    finalizedFingerprint,
+    orderedGarments,
+    equipment: [],
+    cause: 'Det blir kjøligere',
+    transitionContextId: `transition-${atIso}`,
+    ...overrides,
+  };
+}
+
+const isos = [
+  '2026-07-20T08:00:00+02:00',
+  '2026-07-20T09:00:00+02:00',
+  '2026-07-20T10:00:00+02:00',
+  '2026-07-20T11:00:00+02:00',
+] as const;
+
+const evaluatedAtIso = '2026-07-20T08:15:00+02:00';
+const assessed = coverage('complete-hourly', isos);
+const weatherRows: readonly WeatherRow[] = isos.map((atIso, index) => ({
+  atIso,
+  tempC: 8 - index,
+  feelsLikeC: 6 - index,
+  symbolCode: index > 1 ? 'rain' : 'cloudy',
+}));
+
+function input(overrides: Partial<ViewModelInput> = {}): ViewModelInput {
+  return {
+    status: 'ready',
+    coverage: assessed,
+    points: [],
+    forecast: weatherRows,
+    evaluatedAtIso,
+    ...overrides,
+  };
+}
+
+describe('buildPlanViewModel', () => {
+  it('publishes the pure aggregate API', () => {
+    expect(typeof canonical.buildPlanViewModel).toBe('function');
+  });
+
+  it('returns exact loading and no-cache error states without advice', () => {
+    const loading = canonical.buildPlanViewModel(input({ status: 'loading', coverage: null }));
+    expect(loading).toMatchObject({
+      status: 'loading',
+      message: 'Henter dagens plan …',
+      verdict: null,
+      nextAction: null,
+      events: [],
+      rows: [],
+      forecast: [],
+    });
+
+    const error = canonical.buildPlanViewModel(input({ status: 'error', coverage: null }));
+    expect(error).toMatchObject({
+      status: 'error',
+      heading: 'Vi fikk ikke oppdatert planen',
+      body: 'Vi har ingen oppdatert plan å vise. Prøv å hente planen på nytt.',
+      retryLabel: 'Prøv å hente planen',
+      verdict: null,
+      nextAction: null,
+      events: [],
+      rows: [],
+      forecast: [],
+    });
+  });
+
+  it('fails unavailable or invalid evidence closed without garments or actions', () => {
+    const unavailable = canonical.buildPlanViewModel(input({
+      coverage: coverage('unavailable', []),
+      points: [planningPoint(isos[0], 'fp-a', ['ullbody'])],
+    }));
+    const invalidClock = canonical.buildPlanViewModel(input({
+      evaluatedAtIso: 'ikke-en-dato',
+      points: [planningPoint(isos[0], 'fp-a', ['ullbody'])],
+    }));
+
+    for (const model of [unavailable, invalidClock]) {
+      expect(model.status).toBe('error');
+      expect(model.verdict).toBeNull();
+      expect(model.nextAction).toBeNull();
+      expect(model.events).toEqual([]);
+      expect(model.rows).toEqual([]);
+    }
+  });
+
+  it('returns cached offline advice only with an explicit Oslo timestamp and stale limits', () => {
+    const model = canonical.buildPlanViewModel(input({
+      status: 'offline',
+      coverage: coverage('stale', isos),
+      cachedAtIso: '2026-07-20T05:07:00Z',
+      points: [
+        planningPoint(isos[0], 'fp-a', ['ullbody']),
+        planningPoint(isos[1], 'fp-b', ['ullbody', 'lue']),
+      ],
+    }));
+
+    expect(model.status).toBe('offline');
+    expect(model.message).toBe('Du er frakoblet · viser planen fra 07:07');
+    expect(model.verdict?.orderedGarments).toEqual(['ullbody']);
+    expect(model.nextAction).toBe('Ta på lue');
+    expect(model.rows.every((row) => (
+      row.type === 'change'
+      || !JSON.stringify(row).match(/hele dagen|ut dagen|til kl\.|time for time/i)
+    ))).toBe(true);
+  });
+
+  it.each(['sampled', 'gapped'] as const)(
+    'returns a partial state with source limits for %s evidence',
+    (status) => {
+      const model = canonical.buildPlanViewModel(input({
+        coverage: coverage(status, [isos[0], isos[2]]),
+        points: [
+          planningPoint(isos[0], 'fp-a', ['ullbody']),
+          planningPoint(isos[2], 'fp-b', ['ullbody', 'lue']),
+        ],
+      }));
+
+      expect(model.status).toBe('partial');
+      expect(model.message).toBe('Planen viser bare tidspunktene Babyora har værdata for.');
+      expect(model.nextAction).toBe('Ta på lue');
+    },
+  );
+
+  it('returns the exact empty evaluation copy when valid finalized points have no change event', () => {
+    const model = canonical.buildPlanViewModel(input({
+      points: [
+        planningPoint(isos[0], 'same', ['ullbody']),
+        planningPoint(isos[1], 'same', ['ullbody'], { cause: 'Vinden øker' }),
+      ],
+    }));
+
+    expect(model).toMatchObject({
+      status: 'empty',
+      heading: 'Ingen antrekksendringer',
+      body: 'Babyora fant ingen endringer i perioden som er vurdert.',
+      nextAction: null,
+      events: [],
+    });
+    expect(model.verdict?.orderedGarments).toEqual(['ullbody']);
+    expect(model.rows.map((row) => row.type)).toEqual(['unchanged']);
+  });
+
+  it('returns a deterministic verdict, next action, and candidate order for valid events', () => {
+    const points = [
+      planningPoint(isos[2], 'fp-c', ['ullbody', 'votter']),
+      planningPoint(isos[0], 'fp-a', ['ullbody']),
+      planningPoint(isos[1], 'fp-b', ['ullbody', 'lue']),
+    ];
+    const forward = canonical.buildPlanViewModel(input({ points }));
+    const reversed = canonical.buildPlanViewModel(input({
+      points: [...points].reverse(),
+      forecast: [...weatherRows].reverse(),
+    }));
+
+    expect(forward.status).toBe('ready');
+    expect(forward.verdict).toEqual({
+      finalizedFingerprint: 'fp-a',
+      orderedGarments: ['ullbody'],
+      equipment: [],
+      summary: 'ullbody',
+    });
+    expect(forward.nextAction).toBe('Ta på lue');
+    expect(forward.candidateEventIds).toEqual(forward.events.map((event) => event.id));
+    expect(JSON.stringify(reversed)).toBe(JSON.stringify(forward));
+  });
+
+  it('returns forecast rows with weather fields only and constructs no future DTO', () => {
+    const model = canonical.buildPlanViewModel(input({
+      points: [
+        planningPoint(isos[0], 'fp-a', ['ullbody']),
+        planningPoint(isos[1], 'fp-b', ['ullbody', 'lue']),
+      ],
+    }));
+
+    expect(model.forecast).toEqual(weatherRows);
+    expect(Object.keys(model.forecast[0] ?? {}).sort()).toEqual([
+      'atIso',
+      'feelsLikeC',
+      'symbolCode',
+      'tempC',
+    ]);
+    expect(JSON.stringify(model)).not.toMatch(/plannedContextId|PlannedOutfitContext/);
+  });
+
+  it('keeps the aggregate on canonical builders while current runtime consumers remain legacy-only', () => {
+    const modelSource = readFileSync('src/lib/planning/plan-view-model.ts', 'utf8');
+    const screenSource = readFileSync('src/screens/UkeScreen.tsx', 'utf8');
+    const railSource = readFileSync('src/components/planning/PlanChangeRail.tsx', 'utf8');
+
+    expect(modelSource).toContain('derivePlanningChangeEvents');
+    expect(modelSource).toContain('buildPlanningRailRows');
+    expect(modelSource).not.toMatch(/\bderiveChangeEvents\b|\bbuildRailRows\b/);
+    expect(screenSource).toContain('deriveChangeEvents');
+    expect(screenSource).toContain('buildRailRows');
+    expect(railSource).toContain('ChangeEvent');
+    expect(railSource).toContain('RailRow');
+  });
 });
