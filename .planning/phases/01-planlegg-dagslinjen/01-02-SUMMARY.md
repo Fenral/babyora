@@ -50,10 +50,10 @@ coverage:
     requirement: TRUTH-01
     verification:
       - kind: unit
-        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (78 passed)"
+        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (80 passed)"
         status: pass
       - kind: other
-        ref: "git diff --check d697c05..d2a44d8 and exact seven-path accepted-ADR scope manifest"
+        ref: "git diff --check 41e658e..2ac6d04 and exact two-path cache-clock repair scope manifest"
         status: pass
     human_judgment: false
   - id: D2
@@ -72,10 +72,10 @@ coverage:
     requirement: EVID-02
     verification:
       - kind: unit
-        ref: "focused four-suite run (107 passed, 1 future-plan TODO)"
+        ref: "focused four-suite run (109 passed, 1 future-plan TODO)"
         status: pass
       - kind: other
-        ref: "npm test && npm run lint && npm run build (674 passed; lint/main/bare build passed)"
+        ref: "npm test && npm run lint && npm run build (676 passed; lint/main/bare build passed)"
         status: pass
     human_judgment: false
   - id: D4
@@ -83,12 +83,12 @@ coverage:
     requirement: GOV-04
     verification:
       - kind: other
-        ref: "accepted time-contract candidate d2a44d802c2b149bcef39093f58c176187c9ca19; implementation evidence recorded below"
+        ref: "post-validation cache-clock candidate 2ac6d04c565abe5191d4938aa449a1e51cd84959; implementation evidence recorded below"
         status: pass
     human_judgment: true
     rationale: "Repository governance requires a fresh independent high-risk reviewer on the exact candidate SHA; the executor cannot issue that PASS."
 
-duration: 102min
+duration: 110min
 completed: 2026-07-23
 status: ready_for_high_risk_review
 review_status: awaiting_two_independent_verdicts
@@ -100,7 +100,7 @@ review_status: awaiting_two_independent_verdicts
 
 ## Performance
 
-- **Duration:** 102 min including the owner-approved unified time-contract replacement
+- **Duration:** 110 min including the post-validation persistent-cache clock repair
 - **Started:** 2026-07-22T23:18:30+02:00
 - **Candidate prepared:** 2026-07-23T11:56:00+02:00
 - **Tasks:** 2
@@ -134,6 +134,8 @@ review_status: awaiting_two_independent_verdicts
 
 14. **Unified time contract RED: Ten-case accepted ADR matrix** — `3849e87` (`test`)
 15. **Unified time contract GREEN: Explicit evaluation clock and interval selection** — `d2a44d8` (`feat`)
+16. **Cache read clock RED: Cross TTL/source/current boundaries during validated storage reads** — `ae0e336` (`test`)
+17. **Cache read clock GREEN: Capture cache evaluation after validated storage reads** — `2ac6d04` (`fix`)
 
 **Plan metadata:** recorded by the final GSD documentation commit.
 
@@ -164,16 +166,17 @@ review_status: awaiting_two_independent_verdicts
 
 ## Deterministic Evidence
 
-All executable replacement evidence below ran from a fresh `npm ci` archive checkout of exact candidate `d2a44d802c2b149bcef39093f58c176187c9ca19`; the primary checkout's pre-existing `node_modules` remained untouched.
+All executable replacement evidence below ran from a fresh `npm ci` archive checkout of exact candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959`; the primary checkout's pre-existing `node_modules` remained untouched.
 
-- Mandatory RED run before production changes — **EXPECTED FAIL**, 12 failed, 95 passed, and one TODO. Failures proved request-start source age, missing `evaluatedAt`, wrong exact-hour selection, future-only publication, terminal instant-only publication, and the missing hook clock argument.
-- Focused four-suite Vitest run — **PASS**, 4/4 files; 107 tests passed and one intentional Plan 01-11 TODO.
+- Mandatory unified-contract RED history — **EXPECTED FAIL**, 12 failed, 95 passed, and one TODO before `d2a44d8`.
+- Cache-read clock RED before production changes — **EXPECTED FAIL**, 2 failed and 78 skipped. The failures showed `fresh/evaluatedAt=09:59:59` after retrieval reached 10:00:01 and retained source 04:00/current interval 09:00 after structural validation crossed both boundaries.
+- Focused four-suite Vitest run — **PASS**, 4/4 files; 109 tests passed and one intentional Plan 01-11 TODO.
 - `node_modules/.bin/tsc -b --pretty false` — **PASS**.
-- `npm test` — **PASS**, 60 files passed, 4 skipped; 674 tests passed, 34 TODO.
+- `npm test` — **PASS**, 60 files passed, 4 skipped; 676 tests passed, 34 TODO.
 - `npm run lint` — **PASS**.
 - `npm run build` — **PASS**, TypeScript plus main and bare Vite builds.
-- `git diff --check d697c050e79cc36edee1ec395dc8cb2e77bad482..d2a44d802c2b149bcef39093f58c176187c9ca19` — **PASS**.
-- Accepted-ADR scope manifest — **PASS**, exactly seven original Plan 01-02 paths changed. `coverage.ts` required no implementation edit; no package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
+- `git diff --check 41e658ead674a2122f9bb9af1ef856304fe5b9fb..2ac6d04c565abe5191d4938aa449a1e51cd84959` — **PASS**.
+- Cache-clock repair scope manifest — **PASS**, exactly `src/lib/met-no/client.ts` and its existing test file changed. No package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
 
 ## Candidate and Review Authority
 
@@ -191,10 +194,12 @@ All executable replacement evidence below ran from a fresh `npm ci` archive chec
 | Fresh independent verifier | Goal verification | `89e130f8ac4a4c25380d76b4d47f010c57e7853b` | **PASS** — both requested regressions and the declared plan matrix passed |
 | External adversarial reviewer | Equivalent-bypass review | `89e130f8ac4a4c25380d76b4d47f010c57e7853b` | **BLOCK** — request-start currentness and unconstrained wall-clock "now" remain reproducible P1 failures; strictest verdict wins |
 | Codex GSD executor (accepted unified time contract) | High-risk implementation | `d2a44d802c2b149bcef39093f58c176187c9ca19` | `READY_FOR_HIGH_RISK_REVIEW`; all deterministic checks green, no self-PASS claimed |
-| Fresh independent verifier | Goal verification | `d2a44d802c2b149bcef39093f58c176187c9ca19` | **PENDING** — first independent verdict required |
-| External adversarial reviewer | Equivalent-bypass review | `d2a44d802c2b149bcef39093f58c176187c9ca19` | **PENDING** — second independent verdict required |
+| Strictest independent reviewer | Persistent-cache timing review | `d2a44d802c2b149bcef39093f58c176187c9ca19` | **BLOCK** — cache evaluation was captured before storage retrieval, parse, and structural validation; accepted ADR remains sound |
+| Codex GSD executor (post-validation cache clock repair) | High-risk implementation | `2ac6d04c565abe5191d4938aa449a1e51cd84959` | `READY_FOR_HIGH_RISK_REVIEW`; all deterministic checks green, no self-PASS claimed |
+| Fresh independent verifier | Goal verification | `2ac6d04c565abe5191d4938aa449a1e51cd84959` | **PENDING** — first independent verdict required |
+| External adversarial reviewer | Equivalent-bypass review | `2ac6d04c565abe5191d4938aa449a1e51cd84959` | **PENDING** — second independent verdict required |
 
-Candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b` remains rejected. Replacement candidate `d2a44d802c2b149bcef39093f58c176187c9ca19` implements the owner-accepted ADR and awaits two independent verdicts; any edit to the seven changed plan paths invalidates it.
+Candidate `d2a44d802c2b149bcef39093f58c176187c9ca19` is rejected by the strictest verdict. Replacement candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959` preserves the owner-accepted ADR, closes the persistent-read timing gap, and awaits two independent verdicts; any edit to the repaired code/test paths invalidates it.
 
 ## Independent BLOCK on Candidate 4150a1e
 
@@ -301,6 +306,15 @@ All ten accepted cases are executable in the existing Plan 01-02 tests: in-fligh
 
 `3849e87` committed the complete test-only matrix. Its pre-production focused run failed as expected with 12 failures, 95 passes, and one TODO. `d2a44d8` made the same focused matrix GREEN with 107 passes and one TODO, followed by the complete fresh-archive verification above.
 
+## Persistent Cache Read P1 BLOCK and Repair
+
+The strictest independent verdict **BLOCKED** `d2a44d802c2b149bcef39093f58c176187c9ca19` for one implementation gap while affirming that the accepted ADR remains sound. `fetchForecast` captured the cache evaluation timestamp before `localStorage.getItem`, JSON parsing, and structural forecast validation. A slow synchronous read could therefore cross TTL, source-age, or current-interval boundaries while returning metadata based on the earlier clock.
+
+- `ae0e336` added two test-only RED cases. One crosses 09:59:59→10:00:01 during `getItem` for a 09:00 commit and requires stale fallback. The other crosses the six-hour source boundary plus the 09:00→10:00 current interval during structural validation.
+- On `d2a44d8`, both failed for the expected reason: stale data remained `fresh/evaluatedAt=09:59:59`, and source 04:00 plus current point 09:00 remained accepted after validation reached 10:00:01.
+- `2ac6d04` makes `readCache` own one final `evaluatedAt` captured only after retrieval, parsing, and successful structural validation. That same timestamp now classifies future commit time, TTL/max-stale age, source currentness, metadata, and downstream current interval on initial and network-fallback reads.
+- No tolerance, cache identity, concurrency, storage-isolation, live MET, unit, enum, terminal-point, hourly, daily, or coverage contract changed.
+
 ## Decisions Made
 
 - Invalid `sourceUpdatedAt`, inconsistent metadata, invalid/duplicate points, empty points, or a future cache timestamp fail closed instead of being normalized into current evidence.
@@ -315,6 +329,7 @@ All ten accepted cases are executable in the existing Plan 01-02 tests: in-fligh
 - Latest validated per-key network success is committed in memory before persistence and wins failure fallback over freshly re-read validated storage.
 - `fetchedAt` is cache-age evidence only; `evaluatedAt` is the decision clock for source currentness and current-point selection.
 - Network acceptance occurs after parsing and validation, never at request start.
+- Persistent cache evaluation is captured by `readCache` after storage retrieval, JSON parsing, and structural validation, never by its caller before the read.
 - “Now” is the unique one-hour interval containing `evaluatedAt`; array position and later period availability cannot substitute for temporal containment.
 
 ## Deviations from Plan
@@ -357,6 +372,13 @@ All ten accepted cases are executable in the existing Plan 01-02 tests: in-fligh
 - **Files modified:** Seven original Plan 01-02 source/test paths; `src/lib/planning/coverage.ts` required no change.
 - **Commits:** `3849e87`, `d2a44d8`
 
+**6. [Rule 1 - Bug] Closed the persistent-cache read timing gap**
+- **Found during:** Strictest independent review of candidate `d2a44d802c2b149bcef39093f58c176187c9ca19`
+- **Issue:** Cache evaluation was captured before synchronous storage retrieval, parse, and validation, allowing TTL/source/current interval decisions to use an obsolete timestamp.
+- **Fix:** Added clock-advancing RED coverage in `ae0e336`, then moved ownership of the one final cache evaluation timestamp into `readCache` in `2ac6d04`.
+- **Files modified:** `src/lib/met-no/client.ts` and `src/lib/met-no/__tests__/client.test.ts`.
+- **Commits:** `ae0e336`, `2ac6d04`
+
 ## Known Stubs
 
 - `src/lib/planning/__tests__/forecast-evidence.test.ts` retains one intentional TODO for fixed/manual persistent cache versus future memory-only automatic scope. Plan 01-11 owns that behavior; it does not prevent this plan's provenance/currentness boundary from operating.
@@ -383,7 +405,8 @@ None - no dependency, package, credential, environment, service, API, or migrati
 
 - Architecture decision for one explicit acceptance-time/current-point contract: **APPROVED**.
 - Accepted decision and ten-case RED matrix: `01-02-TIME-CONTRACT-ADR.md` and commit `3849e87`.
-- Replacement implementation on exact candidate `d2a44d802c2b149bcef39093f58c176187c9ca19`: **READY_FOR_HIGH_RISK_REVIEW**.
+- Unified-contract candidate `d2a44d802c2b149bcef39093f58c176187c9ca19`: **BLOCKED** by the persistent-cache timing verdict.
+- Post-validation cache-clock repair on exact candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959`: **READY_FOR_HIGH_RISK_REVIEW**.
 - Fresh independent goal-verification verdict on the exact candidate: **PENDING**.
 - Fresh external adversarial/equivalent-bypass verdict on the exact candidate: **PENDING**.
 - New app screenshots/video/traces and the media-based 90+ audit: **Pending stable candidate and owner permission**; none were created here.
@@ -397,12 +420,13 @@ None - no dependency, package, credential, environment, service, API, or migrati
 - Second repaired candidate `80c6da2d929281bf9b38cbb0c7603614c667026a` is blocked by the authoritative external live-response verdict despite its verifier PASS.
 - Layered architecture candidate `23998169ab32c4eff83d4916777d0263a12657cf` is blocked by the strict P1 verdict.
 - Strict P1 repair candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b` is blocked by the authoritative equivalent-bypass review.
-- Unified time-contract candidate `d2a44d802c2b149bcef39093f58c176187c9ca19` is ready for two fresh independent high-risk verdicts.
+- Unified time-contract candidate `d2a44d802c2b149bcef39093f58c176187c9ca19` is blocked by the strictest persistent-cache timing verdict.
+- Post-validation cache-clock candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959` is ready for two fresh independent high-risk verdicts.
 - Plan 01-03 must not start until both independent verdicts are PASS on that exact SHA.
 
 ## Self-Check: PASSED
 
-All eight plan-owned paths, accepted ADR, summary, RED commit `3849e87`, and GREEN candidate `d2a44d8` exist. The exact seven-path candidate scope passed focused/full/lint/build/type-check/diff checks in a fresh archive. Implementation readiness is established; both independent verdicts remain pending and Plan 01-03 remains blocked.
+All eight plan-owned paths, accepted ADR, summary, cache-clock RED commit `ae0e336`, and GREEN candidate `2ac6d04` exist. The exact two-path repair scope passed focused/full/lint/build/type-check/diff checks in a fresh archive. Implementation readiness is established; both independent verdicts remain pending and Plan 01-03 remains blocked.
 
 ---
 *Phase: 01-planlegg-dagslinjen*
