@@ -217,4 +217,47 @@ describe('automatic location controller', () => {
     expect(reverse).toHaveBeenCalledTimes(1);
     expect(commit).toHaveBeenCalledTimes(1);
   });
+
+  it('performs zero GPS I/O when invalidated before the scheduled locate boundary', async () => {
+    const { controller, gps, reverse, commit } = harness();
+    gps.mockResolvedValue({ lat: 59.9139, lon: 10.7522 });
+
+    const request = controller.run({
+      intent: 'startup',
+      runtimeDecision: access(true),
+      mode: 'auto',
+      childId: 'child-1',
+      isStillAllowed: live,
+    });
+    controller.invalidate();
+
+    await expect(request).resolves.toEqual({ status: 'superseded' });
+    expect(gps).not.toHaveBeenCalled();
+    expect(reverse).not.toHaveBeenCalled();
+    expect(commit).not.toHaveBeenCalled();
+  });
+
+  it('joins same-child App resume to an explicit manual Settings activation', async () => {
+    const { controller, gps, reverse, commit } = harness();
+    const position = deferred<Readonly<{ lat: number; lon: number }>>();
+    gps.mockReturnValue(position.promise);
+    reverse.mockResolvedValue({ city: 'Oslo' });
+    const base = {
+      runtimeDecision: access(true),
+      mode: 'manual' as const,
+      childId: 'child-1',
+      isStillAllowed: live,
+    };
+
+    const activation = controller.run({ ...base, intent: 'settings-activation' });
+    await Promise.resolve();
+    const resume = controller.run({ ...base, intent: 'resume' });
+    position.resolve({ lat: 59.9139, lon: 10.7522 });
+
+    await expect(activation).resolves.toEqual({ status: 'success', placeLabel: 'Oslo' });
+    await expect(resume).resolves.toEqual({ status: 'success', placeLabel: 'Oslo' });
+    expect(gps).toHaveBeenCalledTimes(1);
+    expect(reverse).toHaveBeenCalledTimes(1);
+    expect(commit).toHaveBeenCalledTimes(1);
+  });
 });
