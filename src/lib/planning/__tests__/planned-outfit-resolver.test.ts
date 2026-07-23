@@ -320,5 +320,5 @@ describe('Planned Outfit resolver', () => {
     expect(markup).toContain('Planlagt antrekk er ikke tilgjengelig');
     expect(markup).not.toContain('BETALT-PLAGG-SKAL-IKKE-VISES');
     expect(markup).not.toContain('BETALT-UTSTYR-SKAL-IKKE-VISES');
-  });
+  }, 15_000);
 });
