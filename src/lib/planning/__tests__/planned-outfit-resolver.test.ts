@@ -241,7 +241,7 @@ describe('Planned Outfit resolver', () => {
     expect(sourceModule.default).toContain('Map.prototype.get.call');
   });
 
-  it('RED_PREPARES_A_TRANSIENT_PLANNED_DRILL_WITHOUT_LIVE_RAIL_WIRING', async () => {
+  it('MIGRATES_THE_TRANSIENT_PLANNED_DRILL_TO_THE_TRUSTED_LIVE_CALLBACK', async () => {
     const appPath = '../../../App.tsx?raw';
     const outfitPath = '../../../screens/PaakledningScreen.tsx?raw';
     const [{ default: appSource }, { default: outfitSource }] = await Promise.all([
@@ -258,7 +258,8 @@ describe('Planned Outfit resolver', () => {
     expect(appSource).toContain('mainRef.current?.focus()');
 
     const ukeMount = appSource.match(/<UkeScreen[\s\S]*?\/>/u)?.[0] ?? '';
-    expect(ukeMount).not.toMatch(/plannedContext|onOpenPlannedOutfit|contextId/u);
+    expect(ukeMount).toContain('onOpenPlannedOutfit={onOpenPlannedOutfit}');
+    expect(ukeMount).not.toMatch(/plannedContext|contextId/u);
     expect(appSource).not.toMatch(
       /(?:localStorage|sessionStorage|indexedDB|JSON\.stringify|URLSearchParams|pushState|replaceState|console|posthog|analytics|track)\s*\([^)]*plannedContext/u,
     );
