@@ -319,6 +319,24 @@ describe('Planned Outfit resolver', () => {
     );
   });
 
+  it('RED_EXACT_CONTEXT_ASSERTS_EVERY_VISIBLE_DIMENSION', async () => {
+    const { default: e2eSource } = await import(
+      /* @vite-ignore */ '../../../../e2e/planlegg.ts?raw'
+    ) as { default: string };
+
+    for (const exactAssertion of [
+      'EXACT_CONTEXT_EXPECTED_GARMENTS',
+      'EXACT_CONTEXT_EXPECTED_EQUIPMENT',
+      'expectedAgeMonths',
+      'expectedWeatherLabel',
+      'expectedFeelsLike',
+    ]) {
+      expect(e2eSource, `MISSING_EXACT_CONTEXT_DIMENSION:${exactAssertion}`).toContain(
+        exactAssertion,
+      );
+    }
+  });
+
   it('does not materialize planned advice when exact access is denied', async () => {
     const event = planningEvent();
     const denied = plannedContext(event, {
