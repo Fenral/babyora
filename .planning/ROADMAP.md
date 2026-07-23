@@ -53,7 +53,7 @@ This roadmap first delivers the bounded, already-reviewed Planlegg candidate, th
 - [ ] 01-18-PLAN.md
 
 - [x] `01-01-PLAN.md` — Wave 0 deterministic fixtures and no-media verification harness
-- [x] `01-02-PLAN.md` — Wave 1 forecast provenance/currentness/coverage and atomic weather-hook behavior (high risk; layered architecture candidate awaiting fresh independent review)
+- [x] `01-02-PLAN.md` — Wave 1 forecast provenance/currentness/coverage and atomic weather-hook behavior (high risk; approved unified time contract with two independent PASS verdicts)
 - [ ] `01-03-PLAN.md` — Wave 1 stable events, action copy, coverage rows and aggregate view model (high risk)
 - [ ] `01-04-PLAN.md` — Wave 2 validated transient planned-Outfit DTO with distinct identifiers (high risk)
 - [ ] `01-05-PLAN.md` — Wave 2 fail-closed exact-context resolver and trusted App/Outfit boundary (high risk)
