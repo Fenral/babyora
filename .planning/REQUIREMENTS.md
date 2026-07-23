@@ -53,7 +53,7 @@ These 14 requirements are the complete committed scope for this bounded feature 
   - **Source intel:** `REQ-planlegg-screen`
   - **Acceptance:** The app owns the only `main` landmark and vertical page scroll. Planlegg shows a visible title, compact child/place context, restrained I dag/Uke/Snart control, current verdict and next action before the rail, and secondary forecast disclosure. The mega-card, repeated white event cards, duplicate hourly list, burden pills, dead place/bell controls, and persistent bottom-tab touch outline are absent. Accessible loading, error, and offline states remain, and the 390×844 matrix plus shared-navigation regressions pass.
 
-- [ ] **ACCESS-01**: Free retains the complete supported today-at-home Dagslinje while Plus and Snart expose only implemented, capability-backed value.
+- [x] **ACCESS-01**: Free retains the complete supported today-at-home Dagslinje while Plus and Snart expose only implemented, capability-backed value.
   - **Source intel:** `REQ-free-plus-snart`
   - **Acceptance:** Free receives the complete today experience at the current configured place and, after automatic-location integration, at one persisted fixed home; it receives one truthful non-interactive future weather comparison only when valid evidence exists, otherwise a neutral unavailable state with no invented example or unlocked clothing advice. Configured-native startup/resume makes cached Plus neutral until one single-flight fresh RevenueCat result resolves; failure, loading and downgrade fail closed and purge paid context. Plus receives only implemented future days and places; family/everywhere claims remain absent until their capability flags are enabled. Automatic coordinates, reverse-geocode results and forecast caches are memory-only/no-store and never create persistent `metno:*` or `nominatim:*` keys; manual/fixed cache behavior remains persistent. Locked content is not an Outfit link; closing the paywall restores focus; paywall claims map only to enabled capabilities. Snart deterministically groups cautious 4–6 week must-have, nice-to-have, and not-yet guidance; `Har allerede` is session-only, returns empty only when no group remains visible, and otherwise preserves visible `not_yet`. Former wardrobe routes move only after verified replacements exist. Advice, access, entitlement, location and Snart changes remain separately verified high-risk slices.
 
@@ -123,7 +123,7 @@ These requirements implement the approved UX & Motion Bible after the bounded Pl
 | CTXT-01 | Phase 1 | Complete |
 | UI-01 | Phase 1 | Pending |
 | UI-02 | Phase 1 | Pending |
-| ACCESS-01 | Phase 1 | Pending |
+| ACCESS-01 | Phase 1 | Complete |
 | A11Y-01 | Phase 1 | Pending |
 | EVID-01 | Phase 1 | Pending |
 | EVID-02 | Phase 1 | Complete |
