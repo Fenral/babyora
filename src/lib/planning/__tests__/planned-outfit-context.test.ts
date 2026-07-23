@@ -500,6 +500,20 @@ describe('Planned Outfit exact-context contracts', () => {
     expect(() => createPlannedOutfitContext(duplicate)).toThrow(/PlannedOutfitContext/u);
   });
 
+  it('RED_REJECTS_ALL_FORMAT_CONTROLS_EXCEPT_JOINERS', () => {
+    for (const disallowed of ['A\u206AB', 'A\u180EB']) {
+      const input = completeInput();
+      input.child.name = disallowed;
+      expect(() => createPlannedOutfitContext(input)).toThrow(/PlannedOutfitContext/u);
+    }
+
+    for (const allowed of ['A\u200CB', 'A\u200DB']) {
+      const input = completeInput();
+      input.child.name = allowed;
+      expect(createPlannedOutfitContext(input).child.name).toBe(allowed);
+    }
+  });
+
   it('copies only known keys and has no persistence, URL, logging, tracking, or network capability', async () => {
     const input = completeInput() as MutablePlannedContextInput & {
       extra?: string;
