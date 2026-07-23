@@ -1165,12 +1165,15 @@ async function runAccess(
     !ukeSource.includes('resolvePlanningViewAccess')
     || !ukeSource.includes('Se uke med Babyora Plus')
     || !ukeSource.includes('data-planlegg-access="neutral"')
+    || !ukeSource.includes(
+      "paywallOpen && weekAccess.access.state !== 'neutral'",
+    )
     || !appSource.includes("decideAccess('future_plan'")
     || !appSource.includes('Capacitor.isNativePlatform()')
     || !ukeSource.includes('localDate(day.date) === nextCalendarDate')
   ) {
     throw new Error(
-      'RED_PLANLEGG_ACCESS_REVIEW_REPAIR: native cache må isoleres og i morgen må være eksakt neste kalenderdag',
+      'RED_PLANLEGG_ACCESS_REVIEW_REPAIR: neutral paywall, native cache, Today downgrade og eksakt i morgen må holdes',
     );
   }
 
@@ -1257,6 +1260,22 @@ async function runAccess(
   await settleEntitlement(page, false);
   await comparison.waitFor({ state: 'visible', timeout: 15_000 });
 
+  await freeWeekAction.click();
+  const fastRefreshPaywall = page.getByRole('dialog');
+  await fastRefreshPaywall.waitFor({ state: 'visible', timeout: 15_000 });
+  await beginEntitlementRefresh(page);
+  await settleEntitlement(page, false);
+  await fastRefreshPaywall.waitFor({ state: 'detached', timeout: 15_000 });
+  await comparison.waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await page.getByRole('dialog').count() !== 0
+    || await freeWeekAction.evaluate((button) => document.activeElement === button) !== true
+  ) {
+    throw new Error(
+      'Rask entitlement-avklaring lot paywall gjenoppstÃ¥ eller mistet triggerfokus',
+    );
+  }
+
   await reloadPlanlegg(page, freePath, forecastState, 'missing-tomorrow');
   await page.getByRole('radio', { name: 'Uke', exact: true })
     .evaluate((radio) => (radio as HTMLInputElement).click());
@@ -1330,8 +1349,19 @@ async function runAccess(
     throw new Error('Live nedgradering beholdt betalt DTO/DOM eller mistet trygt hovedfokus');
   }
   await settleEntitlement(page, false);
-  await page.locator('[data-planlegg-access="free-week-comparison"]')
+  const downgradedTodayRadio = page.getByRole('radio', {
+    name: 'I dag',
+    exact: true,
+  });
+  await downgradedTodayRadio.waitFor({ state: 'visible', timeout: 15_000 });
+  await page.getByRole('list', { name: 'Antrekksendringer gjennom dagen' })
     .waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await downgradedTodayRadio.isChecked() !== true
+    || await page.locator('[data-planlegg-access="free-week-comparison"]').count() !== 0
+  ) {
+    throw new Error('Live Plus-tap gjenopprettet ikke en gyldig I dag-visning');
+  }
 
   await page.evaluate(() => {
     const key = 'babyora.subscription';
@@ -1349,7 +1379,7 @@ async function runAccess(
   await page.waitForTimeout(50);
   if (
     await page.locator('[data-planlegg-access="plus-week"]').count() !== 0
-    || await page.locator('[data-planlegg-access="free-week-comparison"]').count() !== 1
+    || await downgradedTodayRadio.isChecked() !== true
   ) {
     throw new Error('Native fersk avvisning ble overstyrt av cachet storage-true');
   }
