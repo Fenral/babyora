@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Completed 01-10-PLAN.md
-last_updated: "2026-07-23T21:10:32.535Z"
+stopped_at: Completed 01-11-PLAN.md
+last_updated: "2026-07-23T21:52:44.309Z"
 last_activity: 2026-07-23
 last_activity_desc: Truthful access candidate `5cdbe73` passed deterministic gates and two independent exact-SHA reviews.
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 18
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 ## Current Position
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
-Plan: 11 of 18 in current phase
+Plan: 12 of 18 in current phase
 Status: Plan 01-10 complete; Plan 01-11 ready to execute
 Last activity: 2026-07-23 — Truthful access candidate `5cdbe73` passed deterministic gates and two independent exact-SHA reviews.
 
-Progress: [██████░░░░] 56%
+Progress: [██████░░░░] 61%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [██████░░░░] 56%
 | Phase 01 P08 | 43min | 3 tasks | 10 files |
 | Phase 01 P09 | 28min | 2 tasks | 3 files |
 | Phase 01 P10 | 95min | 3 tasks | 9 files |
+| Phase 01 P11 | 39min | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,9 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 01]: Concrete paywall benefits and trust text render only when their backing capability flag is enabled.
 - [Phase 01]: Only entry into neutral freshness invalidates an open paywall generation; direct purchase and restore grants retain activation and delayed-close flow.
 - [Phase 01]: Live Plus loss returns Planlegg to Today, while resolved paywall transitions focus the remounted trigger or main fallback.
+- [Phase ?]: Only location mode persists; automatic place, generation, coordinates, source and entitlement remain bounded session state.
+- [Phase ?]: Automatic forecast traffic is no-store at browser, Vercel CDN, generic CDN and upstream seams while fixed/manual shared caching remains unchanged.
+- [Phase ?]: Bounded per-request invalidation tokens prevent evicted in-flight location requests from ABA resurrection without coordinate tombstones.
 
 ### Pending Todos
 
@@ -150,6 +154,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-23T21:10:32.525Z
-Stopped at: Completed 01-10-PLAN.md
+Last session: 2026-07-23T21:52:44.298Z
+Stopped at: Completed 01-11-PLAN.md
 Resume file: None
