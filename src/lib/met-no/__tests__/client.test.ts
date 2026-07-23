@@ -1067,4 +1067,36 @@ describe('location cache scope', () => {
     expect(storage.setItem).not.toHaveBeenCalled();
     expect(storage.removeItem).not.toHaveBeenCalled();
   });
+
+  it('keeps the newer same-key result after in-flight eviction and reintroduction', async () => {
+    const older = deferred<Response>();
+    const fillers = Array.from({ length: 32 }, () => deferred<Response>());
+    const newer = deferred<Response>();
+    const fetchMock = vi.fn()
+      .mockReturnValueOnce(older.promise);
+    for (const filler of fillers) fetchMock.mockReturnValueOnce(filler.promise);
+    fetchMock.mockReturnValueOnce(newer.promise);
+    vi.stubGlobal('fetch', fetchMock);
+    installStorage();
+
+    const olderCall = fetchForecast(72.5, 22.5, { cacheScope: 'memory-only' });
+    for (let index = 0; index < fillers.length; index += 1) {
+      void fetchForecast(73 + index / 100, 23, { cacheScope: 'memory-only' });
+    }
+    const newerCall = fetchForecast(72.5, 22.5, { cacheScope: 'memory-only' });
+    const newerData = validForecast('2026-02-12T08:50:00.000Z');
+    const olderData = validForecast('2026-02-12T08:20:00.000Z');
+
+    newer.resolve(response(newerData));
+    await expect(newerCall).resolves.toMatchObject({ forecast: newerData });
+    older.resolve(response(olderData));
+    await expect(olderCall).resolves.toMatchObject({ forecast: newerData });
+    await expect(fetchForecast(72.5, 22.5, {
+      cacheScope: 'memory-only',
+    })).resolves.toMatchObject({
+      forecast: newerData,
+      metadata: { source: 'cache', cacheStatus: 'fresh' },
+    });
+    expect(memoryOnlyForecastCoordinatorSize()).toBeLessThanOrEqual(32);
+  });
 });
