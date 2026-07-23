@@ -4,11 +4,11 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
-status: blocked
-stopped_at: Plan 01-02 architecture escalation after equivalent currentness bypasses on candidate 89e130f
-last_updated: "2026-07-23T08:48:42.3705609+02:00"
+status: executing
+stopped_at: Owner approved 01-02 unified forecast time contract; implementation starting
+last_updated: "2026-07-23T09:00:00+02:00"
 last_activity: 2026-07-23
-last_activity_desc: Exact candidate `89e130f` closed the requested regressions, but adversarial review reproduced two equivalent P1 currentness bypasses; strictest verdict is BLOCK.
+last_activity_desc: Owner approved `01-02-TIME-CONTRACT-ADR.md`; Plan 01-02 resumes under its mandatory RED matrix.
 progress:
   total_phases: 1
   completed_phases: 0
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
 Plan: 2 of 18 in current phase
-Status: Plan 01-02 blocked at the architecture escalation gate
-Last activity: 2026-07-23 — Candidate `89e130f` passed declared regressions but failed adversarial equivalent-bypass review.
+Status: Plan 01-02 executing the approved unified time contract
+Last activity: 2026-07-23 — Owner approved the ADR; implementation begins with the ten RED contracts.
 
 Progress: [█░░░░░░░░░] 6%
 
@@ -90,7 +90,7 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 ### Pending Todos
 
 - Replace the implicit forecast-currentness semantics with one explicit acceptance-time/current-point contract before any further Plan 01-02 implementation.
-- Review and approve the proposed contract in `01-02-TIME-CONTRACT-ADR.md`.
+- Implement the accepted contract in `01-02-TIME-CONTRACT-ADR.md`.
 - Require a fresh independent adversarial PASS on the replacement candidate before Plan 01-03.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
@@ -99,7 +99,7 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 
 - Final completion/release is gated by owner-permitted app screenshot/video capture, media-based 90+ visual verification, required physical-device evidence, and owner release approval. This does not block planning or deterministic candidate checks.
 - Plan 01-13 remains a legitimate human blocker until all six Snart approvals and independently supplied climate artifacts exist.
-- Plan 01-02 is blocked because the same currentness-boundary failure class persisted after multiple repairs and a layered architecture refactor. No further symptom patch is allowed without an explicit architecture decision.
+- Plan 01-02 remains a dependency gate until the accepted time contract has two independent PASS verdicts.
 
 ## Deferred Items
 
@@ -112,6 +112,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-23T08:48:42.3705609+02:00
-Stopped at: Plan 01-02 architecture escalation after equivalent currentness bypasses on candidate 89e130f
+Last session: 2026-07-23T09:00:00+02:00
+Stopped at: Owner approved 01-02 unified forecast time contract; implementation starting
 Resume file: None

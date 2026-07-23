@@ -347,8 +347,8 @@ None - no dependency, package, credential, environment, service, API, or migrati
 
 ## Remaining Gates
 
-- Architecture decision for one explicit acceptance-time/current-point contract: **BLOCKING**.
-- Proposed decision and RED matrix: `01-02-TIME-CONTRACT-ADR.md` — **AWAITING OWNER APPROVAL**.
+- Architecture decision for one explicit acceptance-time/current-point contract: **APPROVED**.
+- Accepted decision and RED matrix: `01-02-TIME-CONTRACT-ADR.md`.
 - Replacement implementation plus fresh independent high-risk verification: **PENDING**.
 - New app screenshots/video/traces and the media-based 90+ audit: **Pending stable candidate and owner permission**; none were created here.
 - VoiceOver, TalkBack, physical haptics, OS text scaling, one-handed reach, physical-device UAT, and owner release approval: **Pending**.

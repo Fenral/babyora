@@ -1,9 +1,11 @@
 ---
-status: proposed
+status: accepted
 phase: 01-planlegg-dagslinjen
 plan: "02"
 decision: forecast-acceptance-and-current-point
 created: 2026-07-23
+accepted: 2026-07-23
+accepted_by: owner
 blocks: [01-02, 01-03]
 ---
 
@@ -156,6 +158,6 @@ Rejected because source validity can expire while the request is in flight.
 - Existing extractor test doubles must accept the new clock argument.
 - Plan 01-03 remains blocked until the implementation has two independent PASS verdicts on one exact SHA.
 
-## Approval gate
+## Approval
 
-Implementation is intentionally not started by this ADR. The architecture escalation requires owner approval before replacing the existing boundary.
+The owner approved the recommended architecture on 2026-07-23. Implementation may proceed under the mandatory RED matrix and independent-review gates above.
