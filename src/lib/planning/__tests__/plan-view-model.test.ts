@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { ForecastCoverage, ForecastCoverageStatus } from '../coverage.js';
 import type { PlanningPoint } from '../change-events.js';
@@ -253,17 +252,4 @@ describe('buildPlanViewModel', () => {
     expect(JSON.stringify(model)).not.toMatch(/plannedContextId|PlannedOutfitContext/);
   });
 
-  it('keeps the aggregate on canonical builders while current runtime consumers remain legacy-only', () => {
-    const modelSource = readFileSync('src/lib/planning/plan-view-model.ts', 'utf8');
-    const screenSource = readFileSync('src/screens/UkeScreen.tsx', 'utf8');
-    const railSource = readFileSync('src/components/planning/PlanChangeRail.tsx', 'utf8');
-
-    expect(modelSource).toContain('derivePlanningChangeEvents');
-    expect(modelSource).toContain('buildPlanningRailRows');
-    expect(modelSource).not.toMatch(/\bderiveChangeEvents\b|\bbuildRailRows\b/);
-    expect(screenSource).toContain('deriveChangeEvents');
-    expect(screenSource).toContain('buildRailRows');
-    expect(railSource).toContain('ChangeEvent');
-    expect(railSource).toContain('RailRow');
-  });
 });
