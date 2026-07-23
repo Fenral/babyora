@@ -143,8 +143,29 @@ describe('buildPlanViewModel', () => {
       evaluatedAtIso: 'ikke-en-dato',
       points: [planningPoint(isos[0], 'fp-a', ['ullbody'])],
     }));
+    const forgedLocalCoverage = coverage('complete-hourly', [isos[0], isos[1]]);
+    const forgedLocal = canonical.buildPlanViewModel(input({
+      coverage: {
+        ...forgedLocalCoverage,
+        points: forgedLocalCoverage.points.map((point, index) => (
+          index === 1 ? { ...point, localTime: '23:00' } : point
+        )),
+      },
+      points: [
+        planningPoint(isos[0], 'same', ['ullbody']),
+        planningPoint(isos[1], 'same', ['ullbody']),
+      ],
+    }));
+    const falseHourly = canonical.buildPlanViewModel(input({
+      coverage: coverage('complete-hourly', [isos[0], isos[2]]),
+      evaluatedAtIso: isos[0],
+      points: [
+        planningPoint(isos[0], 'same', ['ullbody']),
+        planningPoint(isos[2], 'same', ['ullbody']),
+      ],
+    }));
 
-    for (const model of [unavailable, invalidClock]) {
+    for (const model of [unavailable, invalidClock, forgedLocal, falseHourly]) {
       expect(model.status).toBe('error');
       expect(model.verdict).toBeNull();
       expect(model.nextAction).toBeNull();

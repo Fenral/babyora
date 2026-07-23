@@ -228,6 +228,30 @@ describe('buildPlanningRailRows canonical contract', () => {
       ...assessed,
       points: [null],
     } as unknown as ForecastCoverage;
+    const duplicateEpochCoverage = {
+      ...assessed,
+      points: [
+        assessed.points[0],
+        {
+          ...assessed.points[0],
+          iso: '2026-07-20T06:00:00Z',
+        },
+        ...assessed.points.slice(1),
+      ],
+    } as ForecastCoverage;
+    const rainWithoutTransition = event(hourlyIsos[1], 'rain-without-transition', {
+      kind: 'rain',
+    });
+    const circularTransition: Record<string, unknown> = {
+      kind: 'rain',
+      action: 'wear',
+      garments: ['regnjakke'],
+    };
+    circularTransition.self = circularTransition;
+    const circularEvent = event(hourlyIsos[1], 'circular-transition', {
+      kind: 'rain',
+      transition: circularTransition as unknown as PlanningChangeEvent['transition'],
+    });
 
     expect(() => canonical.buildPlanningRailRows(
       assessed,
@@ -259,6 +283,36 @@ describe('buildPlanningRailRows canonical contract', () => {
       assessed,
       [event(hourlyIsos[1], 'event-nine')],
       null as unknown as Readonly<Record<string, boolean>>,
+      hourlyIsos,
+    )).toEqual([]);
+    expect(canonical.buildPlanningRailRows(
+      assessed,
+      [],
+      {},
+      ['ikke-en-dato', ...hourlyIsos],
+    )).toEqual([]);
+    expect(canonical.buildPlanningRailRows(
+      duplicateEpochCoverage,
+      [],
+      {},
+      hourlyIsos,
+    )).toEqual([]);
+    expect(canonical.buildPlanningRailRows(
+      assessed,
+      [rainWithoutTransition],
+      {},
+      hourlyIsos,
+    )).toEqual([]);
+    expect(() => canonical.buildPlanningRailRows(
+      assessed,
+      [circularEvent],
+      {},
+      hourlyIsos,
+    )).not.toThrow();
+    expect(canonical.buildPlanningRailRows(
+      assessed,
+      [circularEvent],
+      {},
       hourlyIsos,
     )).toEqual([]);
   });
