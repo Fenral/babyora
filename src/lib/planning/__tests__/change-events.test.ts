@@ -56,6 +56,15 @@ describe('derivePlanningChangeEvents canonical contract', () => {
     expect(typeof canonical.stablePlanningEventId).toBe('function');
   });
 
+  it('fails malformed runtime point containers closed without throwing', () => {
+    expect(() => canonical.derivePlanningChangeEvents(
+      null as unknown as readonly CanonicalPoint[],
+    )).not.toThrow();
+    expect(canonical.derivePlanningChangeEvents(
+      null as unknown as readonly CanonicalPoint[],
+    )).toEqual([]);
+  });
+
   it('emits no event for passive weather or fingerprint changes without visible advice changes', () => {
     const points = [
       planningPoint('2026-10-25T00:30:00+02:00', 'fp-a', ['ullbody']),

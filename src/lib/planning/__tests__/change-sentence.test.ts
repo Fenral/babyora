@@ -38,6 +38,21 @@ describe('planningChangeActionSentence canonical grammar', () => {
     expect(typeof canonical.planningChangeActionSentence).toBe('function');
   });
 
+  it('returns no copy for malformed runtime events instead of throwing or inventing advice', () => {
+    const malformed = event({
+      kind: 'add',
+      addedGarments: null as unknown as readonly string[],
+    });
+
+    expect(() => canonical.planningChangeActionSentence(
+      null as unknown as CanonicalEvent,
+    )).not.toThrow();
+    expect(canonical.planningChangeActionSentence(
+      null as unknown as CanonicalEvent,
+    )).toBe('');
+    expect(canonical.planningChangeActionSentence(malformed)).toBe('');
+  });
+
   it('uses exact add and remove verbs without leading with a count', () => {
     expect(canonical.planningChangeActionSentence(event({
       kind: 'add',

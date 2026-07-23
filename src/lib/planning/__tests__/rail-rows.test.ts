@@ -188,6 +188,58 @@ describe('buildPlanningRailRows canonical contract', () => {
       .toBe(JSON.stringify(canonical.buildPlanningRailRows(assessed, [...events].reverse(), {}, hourlyIsos)));
   });
 
+  it('keeps canonical kind priority for multiple actions at one instant', () => {
+    const assessed = coverage('complete-hourly', hourlyIsos);
+    const location = event(hourlyIsos[1], 'z-location', {
+      kind: 'location',
+      addedGarments: [],
+      transitionContextId: 'location-transition',
+      transition: {
+        kind: 'location',
+        placeLabel: 'Barnehagen',
+        action: 'Ta av skalljakke',
+      },
+    });
+    const prep = event(hourlyIsos[1], 'a-prep', {
+      kind: 'prep',
+      addedGarments: [],
+      transitionContextId: 'prep-transition',
+      transition: { kind: 'prep', garments: ['regntrekk'] },
+    });
+
+    const rows = canonical.buildPlanningRailRows(
+      assessed,
+      [prep, location],
+      {},
+      hourlyIsos,
+    );
+
+    expect(rows.filter((row) => row.type === 'change').map((row) => (
+      row.type === 'change' ? row.eventId : ''
+    ))).toEqual(['z-location', 'a-prep']);
+  });
+
+  it('fails malformed runtime event containers closed without throwing', () => {
+    const assessed = coverage('complete-hourly', hourlyIsos);
+    const malformed = event(hourlyIsos[1], 'malformed', {
+      addedGarments: null as unknown as readonly string[],
+    });
+
+    expect(() => canonical.buildPlanningRailRows(
+      assessed,
+      null as unknown as readonly PlanningChangeEvent[],
+      {},
+      hourlyIsos,
+    )).not.toThrow();
+    expect(canonical.buildPlanningRailRows(
+      assessed,
+      null as unknown as readonly PlanningChangeEvent[],
+      {},
+      hourlyIsos,
+    )).toEqual([]);
+    expect(canonical.buildPlanningRailRows(assessed, [malformed], {}, hourlyIsos)).toEqual([]);
+  });
+
   it('fails closed when one event identity maps to conflicting row content', () => {
     const first = event(hourlyIsos[1], 'event-nine');
     const conflicting = event(hourlyIsos[1], 'event-nine', {

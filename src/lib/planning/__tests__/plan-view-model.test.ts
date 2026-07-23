@@ -277,6 +277,19 @@ describe('buildPlanViewModel', () => {
         planningPoint(isos[2], 'fp-b', ['ullbody', 'lue']),
       ],
     }));
+    const afterRecommendations = canonical.buildPlanViewModel(input({
+      evaluatedAtIso: isos[2],
+      points: [
+        planningPoint(isos[0], 'fp-a', ['ullbody']),
+        planningPoint(isos[1], 'fp-b', ['ullbody', 'lue']),
+      ],
+    }));
+    let malformedContainer: ViewModel | undefined;
+    expect(() => {
+      malformedContainer = canonical.buildPlanViewModel(input({
+        points: null as unknown as readonly PlanningPoint[],
+      }));
+    }).not.toThrow();
 
     for (const model of [
       onePoint,
@@ -284,6 +297,8 @@ describe('buildPlanViewModel', () => {
       betweenSamples,
       betweenStaleSamples,
       sparseRecommendations,
+      afterRecommendations,
+      malformedContainer,
     ]) {
       expect(model).toMatchObject({
         status: 'error',
