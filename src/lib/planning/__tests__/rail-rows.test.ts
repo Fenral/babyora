@@ -250,6 +250,10 @@ describe('buildPlanningRailRows canonical contract', () => {
       kind: 'rain',
       transition: circularTransition as unknown as PlanningChangeEvent['transition'],
     });
+    const prototypeKindEvent = event(hourlyIsos[1], 'prototype-kind', {
+      kind: 'toString' as unknown as PlanningChangeEvent['kind'],
+      transition: { kind: 'prep', garments: ['regntrekk'] },
+    });
 
     expect(() => canonical.buildPlanningRailRows(
       assessed,
@@ -310,6 +314,12 @@ describe('buildPlanningRailRows canonical contract', () => {
     expect(canonical.buildPlanningRailRows(
       assessed,
       [circularEvent],
+      {},
+      hourlyIsos,
+    )).toEqual([]);
+    expect(canonical.buildPlanningRailRows(
+      assessed,
+      [prototypeKindEvent],
       {},
       hourlyIsos,
     )).toEqual([]);
