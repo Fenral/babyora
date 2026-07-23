@@ -236,7 +236,7 @@ function eventContent(event: unknown): string | null {
     || typeof event.atIso !== 'string'
     || parseStrictIsoInstant(event.atIso) === null
     || typeof event.kind !== 'string'
-    || !(event.kind in PLANNING_KIND_PRIORITY)
+    || !Object.prototype.hasOwnProperty.call(PLANNING_KIND_PRIORITY, event.kind)
     || !isStringList(event.addedGarments)
     || !isStringList(event.removedGarments)
     || typeof event.cause !== 'string'
