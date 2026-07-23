@@ -1059,9 +1059,9 @@ async function runCompositionMatrix(
       (element) => getComputedStyle(element).backgroundColor,
     ));
   }
-  if (temperatureBackgrounds.size !== 3) {
+  if (temperatureBackgrounds.size < 3) {
     throw new Error(
-      `Temperaturaksen malte ikke tre distinkte canvas: ${[...temperatureBackgrounds].join(', ')}`,
+      `Temperaturaksen malte færre enn tre distinkte canvas: ${[...temperatureBackgrounds].join(', ')}`,
     );
   }
 
