@@ -2,6 +2,7 @@ import {
   useCallback,
   useMemo,
   useState,
+  type CSSProperties,
 } from 'react';
 import { ForecastDisclosure } from '../components/planning/ForecastDisclosure';
 import { PlanChangeRail, type PlanChangeRailRow, type PlanningRailEvent } from '../components/planning/PlanChangeRail';
@@ -255,6 +256,11 @@ function PlanleggData({
   const weather = useWeather(lat, lon, FALLBACK_REF_HOUR);
   const [tab, setTab] = useState<ViewTab>('today');
   const [forecastOpen, setForecastOpen] = useState(false);
+  const changeRailHeadStyle: CSSProperties = {
+    fontSize: '1.25rem',
+    fontWeight: 640,
+    lineHeight: 1.25,
+  };
 
   const activeForecast = weather.status === 'offline'
     ? weather.offlineForecast
@@ -481,14 +487,32 @@ function PlanleggData({
     () => planningEvaluation.events.map((event) => event.id),
     [planningEvaluation.events],
   );
-  const [requestedEventId, setRequestedEventId] = useState<string | null>(null);
-  const selectedEventId = repairPlanningSelection(
-    requestedEventId,
-    planningEventIds,
-    planningEvaluation.preferredEventId,
-  );
+  const planningSelectionScope = JSON.stringify(planningEventIds);
+  const [planningSelection, setPlanningSelection] = useState(() => ({
+    scope: planningSelectionScope,
+    selectedEventId: repairPlanningSelection(
+      null,
+      planningEventIds,
+      planningEvaluation.preferredEventId,
+    ),
+  }));
+  let selectedEventId = planningSelection.selectedEventId;
+  if (planningSelection.scope !== planningSelectionScope) {
+    selectedEventId = repairPlanningSelection(
+      planningSelection.selectedEventId,
+      planningEventIds,
+      planningEvaluation.preferredEventId,
+    );
+    setPlanningSelection({
+      scope: planningSelectionScope,
+      selectedEventId,
+    });
+  }
   const setSelectedEventId = useCallback((eventId: string | null) => {
-    setRequestedEventId(eventId);
+    setPlanningSelection((current) => ({
+      ...current,
+      selectedEventId: eventId,
+    }));
   }, []);
   const openPlannedOutfit = useCallback((
     eventId: string,
@@ -625,7 +649,7 @@ function PlanleggData({
           </div>
 
           <section className="planlegg-screen__rail" aria-labelledby="planlegg-rail-title">
-            <h2 id="planlegg-rail-title">Dagslinjen</h2>
+            <h2 id="planlegg-rail-title" style={changeRailHeadStyle}>Dagslinjen</h2>
             <PlanChangeRail
               rows={planningEvaluation.rows}
               selectedEventId={selectedEventId}
