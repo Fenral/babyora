@@ -31,6 +31,16 @@ const SUPPORTED_CASES = Object.keys(PLANLEGG_CASES);
 const require = createRequire(import.meta.url);
 const VITE_CLI = join(dirname(require.resolve('vite/package.json')), 'bin', 'vite.js');
 const FIXED_NOW = new Date('2026-02-12T08:30:00.000Z');
+const EXACT_CONTEXT_EXPECTED_GARMENTS = Object.freeze([
+  'tykt ullsett',
+  'tykke ullsokker',
+  'ull-mellomlag',
+  'vinterdress',
+  'lue m/ ull',
+  'tykke votter',
+  'halsedisse',
+]);
+const EXACT_CONTEXT_EXPECTED_EQUIPMENT = Object.freeze([] as string[]);
 
 function parseCase(argv: readonly string[]): PlanleggCase {
   const inline = argv.find((value) => value.startsWith('--case='));
@@ -426,15 +436,48 @@ async function runExactContext(
     hourCycle: 'h23',
   }).format(new Date(selectedEventTime)));
   const expectedTemperature = fixtureTemperature(selectedLocalHour, 'many');
-  if (!situationText.includes(`${expectedTemperature}°`)) {
-    throw new Error(`Planlagt temperatur avvek: forventet ${expectedTemperature}°, fikk ${situationText}`);
-  }
+  const expectedAgeMonths = 4;
+  const expectedWeatherLabel = 'lettskyet';
+  const expectedFeelsLike = -1;
   if (
-    await dialog
-      .locator('section[aria-labelledby="planned-garments-title"] ol > li')
-      .count() < 1
+    !situationText.includes(`${expectedAgeMonths} mnd`)
+    || !situationText.includes(expectedWeatherLabel)
+    || !situationText.includes(
+      `${expectedTemperature}° (føles som ${expectedFeelsLike}°)`,
+    )
   ) {
-    throw new Error('Planlagt antrekk mangler autoritativ plagg-rekkefølge');
+    throw new Error(`Planlagt barn/vær avvek: ${situationText}`);
+  }
+  if (/(?:Vogn|Sover|Våkent)/u.test(situationText)) {
+    throw new Error(`Utelek-plan fikk uventet vognmodus: ${situationText}`);
+  }
+  const garmentSection = dialog.locator(
+    'section[aria-labelledby="planned-garments-title"]',
+  );
+  const garmentItems = (await garmentSection.locator('ol > li').allTextContents())
+    .map((item) => item.trim());
+  if (
+    garmentItems.length !== EXACT_CONTEXT_EXPECTED_GARMENTS.length
+    || garmentItems.some(
+      (item, index) => item !== EXACT_CONTEXT_EXPECTED_GARMENTS[index],
+    )
+  ) {
+    throw new Error(
+      `Planlagt plagg-rekkefølge avvek: ${JSON.stringify(garmentItems)}`,
+    );
+  }
+  const equipmentItems = (await garmentSection
+    .getByRole('heading', { name: 'Utstyr', exact: true })
+    .locator('xpath=following-sibling::ul[1]/li')
+    .allTextContents())
+    .map((item) => item.trim());
+  if (
+    equipmentItems.length !== EXACT_CONTEXT_EXPECTED_EQUIPMENT.length
+    || equipmentItems.some(
+      (item, index) => item !== EXACT_CONTEXT_EXPECTED_EQUIPMENT[index],
+    )
+  ) {
+    throw new Error(`Planlagt utstyr avvek: ${JSON.stringify(equipmentItems)}`);
   }
   if (!(await dialog.textContent())?.includes('Tilgang: future_plan')) {
     throw new Error('Planlagt tilgangsdimensjon mangler');
