@@ -488,6 +488,26 @@ describe('fetchForecast provenance and cache recovery', () => {
     expect(JSON.parse(values.get(CACHE_KEY) ?? '').data).toEqual(stale);
   });
 
+  it('recomputes source currentness whenever a committed memory result is returned', async () => {
+    const sourceAtCommit = new Date(NOW_MS - (5 * 60 + 59) * 60 * 1000).toISOString();
+    const data = validForecast(sourceAtCommit);
+    const { storage } = installStorage();
+    storage.setItem.mockImplementation(() => { throw new Error('quota'); });
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(response(data))
+      .mockRejectedValueOnce(new TypeError('offline')));
+
+    await expect(fetchForecast(61.2345, 8.7654)).resolves.toMatchObject({
+      metadata: { sourceUpdatedAt: sourceAtCommit },
+    });
+    vi.setSystemTime(NOW_MS + 2 * 60 * 1000);
+
+    await expect(fetchForecast(61.2345, 8.7654)).resolves.toMatchObject({
+      forecast: data,
+      metadata: { sourceUpdatedAt: null },
+    });
+  });
+
   it('commits an older valid success when a newer same-key request fails without cache', async () => {
     const older = deferred<Response>();
     const newer = deferred<Response>();
