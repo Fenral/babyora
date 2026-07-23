@@ -49,6 +49,7 @@ import { feelsLikeC } from '../lib/met-no/feels-like';
 import { headwearFromRecommendation, tierFromRecommendation } from '../lib/avatar-tier';
 import { stageSrc } from '../lib/avatar-stage';
 import { tempAxisFor } from '../lib/temp-axis';
+import type { PlannedOutfitContext } from '../lib/planning/planned-outfit-context';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
 import { motion } from 'motion/react';
 
@@ -65,6 +66,7 @@ export type PaakledningScreenProps = {
   condition?: string;
   vogn?: 'utelek' | 'vogn';
   vognMode?: 'awake' | 'sleeping';
+  plannedContext?: PlannedOutfitContext;
 };
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -224,7 +226,182 @@ const DRESSING_SESSION_KEY = 'babyora.takeover.played';
    Komponent
    ────────────────────────────────────────────────────────────────────────── */
 
-export function PaakledningScreen({
+function PlannedPaakledningScreen({
+  onBack,
+  plannedContext,
+}: Pick<PaakledningScreenProps, 'onBack'> & {
+  plannedContext: PlannedOutfitContext;
+}): ReactElement {
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (!dialog.open) {
+      try { dialog.showModal(); } catch { /* older browsers degrade in place */ }
+    }
+    titleRef.current?.focus();
+    return () => {
+      if (dialog.open) {
+        try { dialog.close(); } catch { /* already closed */ }
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const handleCancel = (event: Event) => {
+      event.preventDefault();
+      onBack();
+    };
+    dialog.addEventListener('cancel', handleCancel);
+    return () => dialog.removeEventListener('cancel', handleCancel);
+  }, [onBack]);
+
+  const plannedDateTime = new Intl.DateTimeFormat('nb-NO', {
+    timeZone: plannedContext.timeZone,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(plannedContext.plannedForIso));
+  const activityLabel: Record<PlannedOutfitContext['activity'], string> = {
+    vogn: 'Vogn',
+    baeresele: 'Bæresele',
+    utelek: 'Utelek',
+    soevn: 'Søvn',
+  };
+  const vognLabel = plannedContext.vognMode === 'sleeping'
+    ? 'sovende'
+    : plannedContext.vognMode === 'awake'
+      ? 'våken'
+      : null;
+  const weatherLabel = symbolToLabel(plannedContext.weather.symbolCode);
+  const accessLabel = plannedContext.access.allowed
+    ? 'Planen er tilgjengelig'
+    : `Planen er ikke tilgjengelig (${plannedContext.access.reason})`;
+
+  return (
+    <dialog
+      ref={dialogRef}
+      className="pkl-dialog ba-temp-root"
+      data-temp={tempAxisFor(
+        plannedContext.weather.feelsLikeC,
+        plannedContext.weather.tempC,
+      )}
+      aria-labelledby="planned-outfit-title"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100%',
+        maxWidth: 'none',
+        height: '100%',
+        maxHeight: 'none',
+        margin: 0,
+        padding: 0,
+        border: 0,
+        background: 'var(--bg-canvas)',
+        color: 'var(--ink-900)',
+        overflow: 'auto',
+      }}
+    >
+      <div style={{ maxWidth: 680, margin: '0 auto', padding: 'max(18px, env(safe-area-inset-top)) 18px 32px' }}>
+        <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Lukk planlagt antrekk"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 999,
+              border: '1px solid var(--ink-100)',
+              background: 'var(--surface-pure)',
+              color: 'var(--ink-900)',
+            }}
+          >
+            <CloseIcon />
+          </button>
+          <div>
+            <p style={{ margin: '0 0 3px', color: 'var(--ink-500)', fontSize: 13 }}>
+              Planlagt antrekk
+            </p>
+            <h2
+              id="planned-outfit-title"
+              ref={titleRef}
+              tabIndex={-1}
+              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
+            >
+              {plannedContext.child.name}
+            </h2>
+          </div>
+        </header>
+
+        <section
+          aria-label="Planlagt situasjon"
+          style={{ padding: 18, borderRadius: 20, background: 'var(--surface-pure)', marginBottom: 16 }}
+        >
+          <p style={{ margin: '0 0 8px', fontWeight: 700, textTransform: 'capitalize' }}>
+            {plannedDateTime}
+          </p>
+          <p style={{ margin: '0 0 5px' }}>
+            {plannedContext.place.label} · {activityLabel[plannedContext.activity]}
+            {vognLabel ? ` · ${vognLabel}` : ''}
+          </p>
+          <p style={{ margin: 0, color: 'var(--ink-700)' }}>
+            {plannedContext.child.ageMonths} mnd · {weatherLabel} ·{' '}
+            {Math.round(plannedContext.weather.tempC)}° (føles som{' '}
+            {Math.round(plannedContext.weather.feelsLikeC)}°)
+          </p>
+        </section>
+
+        <section
+          aria-labelledby="planned-garments-title"
+          style={{ padding: 18, borderRadius: 20, background: 'var(--surface-pure)', marginBottom: 16 }}
+        >
+          <h3 id="planned-garments-title" style={{ margin: '0 0 12px' }}>
+            Påkledningsrekkefølge
+          </h3>
+          <ol style={{ margin: 0, paddingLeft: 24 }}>
+            {plannedContext.recommendation.orderedGarments.map((garment) => (
+              <li key={garment} style={{ padding: '5px 0' }}>{garment}</li>
+            ))}
+          </ol>
+          {plannedContext.recommendation.equipment.length > 0 && (
+            <>
+              <h3 style={{ margin: '18px 0 8px' }}>Utstyr</h3>
+              <ul style={{ margin: 0, paddingLeft: 24 }}>
+                {plannedContext.recommendation.equipment.map((item) => (
+                  <li key={item} style={{ padding: '5px 0' }}>{item}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+
+        <section
+          aria-labelledby="planned-why-title"
+          style={{ padding: 18, borderRadius: 20, background: 'var(--surface-soft)' }}
+        >
+          <h3 id="planned-why-title" style={{ margin: '0 0 8px' }}>Hvorfor dette antrekket?</h3>
+          <p style={{ margin: 0, lineHeight: 1.55 }}>
+            Planen er laget for {weatherLabel.toLocaleLowerCase('nb-NO')}, vind på{' '}
+            {plannedContext.weather.windMs.toLocaleString('nb-NO')} m/s og nedbør på{' '}
+            {plannedContext.weather.precipMmH.toLocaleString('nb-NO')} mm/t.
+          </p>
+          <p className="sr-only">
+            {accessLabel}. Tilgang: {plannedContext.access.capability}.
+          </p>
+        </section>
+      </div>
+    </dialog>
+  );
+}
+
+function CurrentPaakledningScreen({
   onBack,
   onOpenGarment,
   recommendation: recommendationProp,
@@ -712,6 +889,18 @@ export function PaakledningScreen({
       )}
     </>
   );
+}
+
+export function PaakledningScreen(props: PaakledningScreenProps): ReactElement {
+  if (props.plannedContext) {
+    return (
+      <PlannedPaakledningScreen
+        onBack={props.onBack}
+        plannedContext={props.plannedContext}
+      />
+    );
+  }
+  return <CurrentPaakledningScreen {...props} />;
 }
 
 export default PaakledningScreen;

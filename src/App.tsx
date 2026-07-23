@@ -8,7 +8,16 @@
  * canvas-skeleton som matcher app-shell (ingen layout-shift). Type-importen
  * `GuideHubTarget` blir værende statisk siden type-imports ikke trekker kode.
  */
-import { lazy, Suspense, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { TabKey } from './types/nav';
 import { useChildren } from './state/children-store';
@@ -18,6 +27,7 @@ import { BottomTabBar } from './components/BottomTabBar';
 
 import type { GuideHubTarget } from './screens/GuideHubScreen';
 import type { Recommendation } from './lib/wool-layers/types';
+import type { PlannedOutfitContext } from './lib/planning/planned-outfit-context';
 
 const HjemScreen = lazy(() =>
   import('./screens/HjemScreen').then((m) => ({ default: m.HjemScreen })),
@@ -100,7 +110,13 @@ type PaakledningContext = {
 
 type Drill =
   | null
-  | { kind: 'paakledning'; context?: PaakledningContext }
+  | { kind: 'paakledning'; source: 'current'; context?: PaakledningContext }
+  | {
+      kind: 'paakledning';
+      source: 'planned';
+      plannedContext: PlannedOutfitContext;
+      origin: HTMLElement;
+    }
   | { kind: 'guide'; target: GuideHubTarget };
 
 function prefersReducedMotion(): boolean {
@@ -157,6 +173,21 @@ export default function App(): ReactElement {
   const onBackRef = useRef<(() => void) | null>(null);
   const canGoBack = drill !== null || tab !== 'hjem';
 
+  const closePaakledning = useCallback(() => {
+    const origin = drill?.kind === 'paakledning' && drill.source === 'planned'
+      ? drill.origin
+      : null;
+    setDrill(null);
+    if (!origin) return;
+    window.requestAnimationFrame(() => {
+      if (origin.isConnected) {
+        origin.focus();
+      } else {
+        mainRef.current?.focus();
+      }
+    });
+  }, [drill]);
+
   // A11y (2026-07-11): når onboarding fullføres og app-shellet tar over, flytt
   // fokus til <main> så skjermlesere annonserer Hjem og tab-fokus ikke faller
   // til <body>. Fyres KUN på selve overgangen — ikke ved vanlig app-start for
@@ -176,12 +207,16 @@ export default function App(): ReactElement {
     }
     onBackRef.current = () => {
       if (drill !== null) {
-        setDrill(null);
+        if (drill.kind === 'paakledning') {
+          closePaakledning();
+        } else {
+          setDrill(null);
+        }
       } else {
         setTab('hjem');
       }
     };
-  }, [drill, tab, canGoBack]);
+  }, [drill, tab, canGoBack, closePaakledning]);
 
   useEffect(() => {
     const el = mainRef.current;
@@ -345,7 +380,7 @@ export default function App(): ReactElement {
       <HjemScreen
         onNavigate={onNavigate}
         onOpenSheet={(ctx) =>
-          setDrill({ kind: 'paakledning', context: ctx })
+          setDrill({ kind: 'paakledning', source: 'current', context: ctx })
         }
       />
     );
@@ -354,7 +389,7 @@ export default function App(): ReactElement {
     routeContent = (
       <UkeScreen
         onNavigate={onNavigate}
-        onOpenSheet={() => setDrill({ kind: 'paakledning' })}
+        onOpenSheet={() => setDrill({ kind: 'paakledning', source: 'current' })}
       />
     );
   } else if (tab === 'guide') {
@@ -417,12 +452,19 @@ export default function App(): ReactElement {
           ved lukk. F72 fix 2026-06-29. */}
       {sheetOpen && drill?.kind === 'paakledning' && (
         <Suspense fallback={null}>
-          <PaakledningScreen
-            onBack={() => setDrill(null)}
-            recommendation={drill.context?.recommendation ?? null}
-            vogn={drill.context?.activity}
-            vognMode={drill.context?.vognMode ?? 'awake'}
-          />
+          {drill.source === 'planned' ? (
+            <PaakledningScreen
+              onBack={closePaakledning}
+              plannedContext={drill.plannedContext}
+            />
+          ) : (
+            <PaakledningScreen
+              onBack={closePaakledning}
+              recommendation={drill.context?.recommendation ?? null}
+              vogn={drill.context?.activity}
+              vognMode={drill.context?.vognMode ?? 'awake'}
+            />
+          )}
         </Suspense>
       )}
     </div>
