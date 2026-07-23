@@ -455,6 +455,170 @@ async function installDeterministicPage(
   });
 }
 
+type LocationContainmentCounters = Readonly<{
+  permission: number;
+  geolocation: number;
+  geocode: number;
+  forecast: number;
+}>;
+
+async function installLocationContainmentPage(
+  page: Page,
+  fixture: PlanleggE2EFixture,
+): Promise<void> {
+  const containment = fixture.containment;
+  if (!containment) throw new Error('location-containment-fixturen mangler lagringskontrakt');
+  const fixedForecast = buildForecast('many');
+
+  await page.clock.install({ time: FIXED_NOW });
+  await page.addInitScript(
+    ({ stored, forecast }) => {
+      const counters = { permission: 0, geolocation: 0, geocode: 0, forecast: 0 };
+      Object.defineProperty(window, '__locationContainmentCounters', {
+        configurable: false,
+        value: counters,
+      });
+      localStorage.setItem('babyora:children:v2', stored.childrenStorageRaw);
+      localStorage.setItem('babyora:activeChildId:v2', stored.activeChildId);
+      localStorage.setItem('babyora.location-pref', stored.locationPrefStorageRaw);
+      localStorage.setItem(stored.forecastCacheKey, JSON.stringify({
+        version: 1,
+        fetchedAt: stored.forecastFetchedAt,
+        data: forecast,
+      }));
+      localStorage.setItem('babyora.subscription', JSON.stringify({
+        state: { isPremium: true, lastSyncedAt: 1 },
+        version: 0,
+      }));
+
+      if (navigator.permissions) {
+        const query = window.Function(
+          'counters',
+          'return function query() { counters.permission += 1; return Promise.resolve({ state: "granted", onchange: null }); };',
+        )(counters) as Permissions['query'];
+        Object.defineProperty(navigator, 'permissions', {
+          configurable: true,
+          value: { query },
+        });
+      }
+      const getCurrentPosition = window.Function(
+        'counters',
+        'return function getCurrentPosition() { counters.geolocation += 1; };',
+      )(counters) as Geolocation['getCurrentPosition'];
+      const watchPosition = window.Function(
+        'counters',
+        'return function watchPosition() { counters.geolocation += 1; return 1; };',
+      )(counters) as Geolocation['watchPosition'];
+      Object.defineProperty(navigator, 'geolocation', {
+        configurable: true,
+        value: {
+          getCurrentPosition,
+          watchPosition,
+          clearWatch: window.Function('return function clearWatch() {};')(),
+        },
+      });
+    },
+    { stored: containment, forecast: fixedForecast },
+  );
+  await page.route('**/api/forecast?**', async (route) => {
+    await page.evaluate(() => {
+      const target = window as typeof window & {
+        __locationContainmentCounters: { forecast: number };
+      };
+      target.__locationContainmentCounters.forecast += 1;
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(fixedForecast),
+    });
+  });
+  await page.route(/nominatim\.openstreetmap\.org\/(?:reverse|search)/u, async (route) => {
+    await page.evaluate(() => {
+      const target = window as typeof window & {
+        __locationContainmentCounters: { geocode: number };
+      };
+      target.__locationContainmentCounters.geocode += 1;
+    });
+    await route.fulfill({ status: 500, body: 'unexpected geocode' });
+  });
+}
+
+async function readLocationContainmentCounters(page: Page): Promise<LocationContainmentCounters> {
+  return page.evaluate(() => {
+    const target = window as typeof window & {
+      __locationContainmentCounters: LocationContainmentCounters;
+    };
+    return { ...target.__locationContainmentCounters };
+  });
+}
+
+async function runLocationContainment(
+  page: Page,
+  fixture: PlanleggE2EFixture,
+): Promise<void> {
+  const containment = fixture.containment;
+  if (!containment) throw new Error('location-containment-fixturen mangler lagringskontrakt');
+  const failures = collectFailures(page);
+
+  await page.goto(`${BASE_URL}${fixture.path}`, { waitUntil: 'domcontentloaded' });
+  await page.getByRole('navigation').first().waitFor({ state: 'visible', timeout: 15_000 });
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  await page.waitForTimeout(50);
+  const startupCounters = await readLocationContainmentCounters(page);
+  if (Object.values(startupCounters).some((count) => count !== 0)) {
+    throw new Error(`Lagret auto utførte I/O ved startup/resume: ${JSON.stringify(startupCounters)}`);
+  }
+
+  await page
+    .getByRole('navigation')
+    .first()
+    .getByRole('button', { name: /^Familie/u })
+    .click();
+  const autoSwitch = page.getByRole('switch', { name: 'Bruk posisjon automatisk' });
+  await autoSwitch.waitFor({ state: 'visible', timeout: 15_000 });
+  if (await autoSwitch.getAttribute('aria-checked') !== 'true') {
+    throw new Error('Stored auto må kunne slås av selv om implementasjonen er utilgjengelig');
+  }
+  await autoSwitch.click();
+  if (
+    await autoSwitch.getAttribute('aria-checked') !== 'false'
+    || await page.evaluate(() => JSON.parse(localStorage.getItem('babyora.location-pref') ?? '{}')
+      ?.state?.mode) !== 'manual'
+  ) {
+    throw new Error('Auto-til-manual off må forbli ubetinget');
+  }
+
+  await autoSwitch.click();
+  const dialog = page.getByRole('dialog', { name: 'Bruk posisjon automatisk' });
+  const confirm = dialog.getByRole('button', { name: /^Tillat posisjon/u });
+  if (await dialog.count() > 0 && await confirm.count() > 0) await confirm.click();
+  await page.waitForTimeout(50);
+
+  const finalState = await page.evaluate(() => ({
+    mode: JSON.parse(localStorage.getItem('babyora.location-pref') ?? '{}')?.state?.mode,
+    childBytes: localStorage.getItem('babyora:children:v2'),
+  }));
+  const finalCounters = await readLocationContainmentCounters(page);
+  if (
+    finalState.mode !== 'manual'
+    || finalState.childBytes !== containment.childrenStorageRaw
+    || Object.values(finalCounters).some((count) => count !== 0)
+  ) {
+    throw new Error(`Containment avvek: ${JSON.stringify({
+      mode: finalState.mode,
+      childBytesEqual: finalState.childBytes === containment.childrenStorageRaw,
+      counters: finalCounters,
+    })}`);
+  }
+  if (failures.length > 0) {
+    throw new Error(`Browserfeil:\n  ${failures.join('\n  ')}`);
+  }
+  console.log(
+    `LOCATION CONTAINMENT: counters=${JSON.stringify(finalCounters)} childBytesEqual=true mode=manual media=none`,
+  );
+}
+
 async function openPlanlegg(page: Page, path: string): Promise<void> {
   await page.goto(`${BASE_URL}${path}`, { waitUntil: 'domcontentloaded' });
   const planButton = page
@@ -1330,6 +1494,9 @@ async function main(): Promise<void> {
     const page = await context.newPage();
     if (caseName === 'harness') {
       await runHarness(page, fixture);
+    } else if (caseName === 'location-containment') {
+      await installLocationContainmentPage(page, fixture);
+      await runLocationContainment(page, fixture);
     } else {
       await installDeterministicPage(page, forecastState);
       if (caseName === 'semantic-rail') {
