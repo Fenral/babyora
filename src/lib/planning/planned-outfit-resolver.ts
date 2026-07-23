@@ -11,6 +11,50 @@ function ownDataValue(value: object, key: PropertyKey): unknown {
     : undefined;
 }
 
+function isPlainData(value: unknown, seen: WeakSet<object>): boolean {
+  if (typeof value !== 'object' || value === null) {
+    return (
+      value === null
+      || typeof value === 'string'
+      || typeof value === 'number'
+      || typeof value === 'boolean'
+      || typeof value === 'undefined'
+    );
+  }
+  if (seen.has(value)) return false;
+  seen.add(value);
+
+  const isPlainArray = Array.isArray(value)
+    && Object.getPrototypeOf(value) === Array.prototype;
+  const isPlainObject = !Array.isArray(value)
+    && Object.getPrototypeOf(value) === Object.prototype;
+  if (!isPlainArray && !isPlainObject) return false;
+
+  return Reflect.ownKeys(value).every((key) => {
+    if (typeof key !== 'string' || (isPlainArray && key === 'length')) return isPlainArray && key === 'length';
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return Boolean(
+      descriptor
+      && Object.hasOwn(descriptor, 'value')
+      && isPlainData(descriptor.value, seen),
+    );
+  });
+}
+
+function clonePlainEvent(value: object): PlanningChangeEvent | null {
+  if (!isPlainData(value, new WeakSet())) return null;
+  const eventValue = value;
+  const clone = structuredClone(eventValue) as unknown;
+  return (
+    typeof clone === 'object'
+    && clone !== null
+    && !Array.isArray(clone)
+    && Object.getPrototypeOf(clone) === Object.prototype
+  )
+    ? clone as PlanningChangeEvent
+    : null;
+}
+
 export function resolvePlannedOutfitContext(
   eventId: string,
   currentEvents: readonly PlanningChangeEvent[],
@@ -31,10 +75,12 @@ export function resolvePlannedOutfitContext(
 
     const matchingEvents: PlanningChangeEvent[] = [];
     for (let index = 0; index < currentEvents.length; index++) {
-      const event = ownDataValue(currentEvents, String(index));
-      if (typeof event !== 'object' || event === null) return null;
+      const eventValue = ownDataValue(currentEvents, String(index));
+      if (typeof eventValue !== 'object' || eventValue === null) return null;
+      const event = clonePlainEvent(eventValue);
+      if (!event) return null;
       if (ownDataValue(event, 'id') === eventId) {
-        matchingEvents.push(event as PlanningChangeEvent);
+        matchingEvents.push(event);
       }
     }
     if (matchingEvents.length !== 1) return null;
