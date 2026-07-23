@@ -28,6 +28,7 @@ const PROXY =
 
 const CACHE_KEY_PREFIX = 'metno:';
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 time per met.no-anbefaling
+const ONE_HOUR_MS = 60 * 60 * 1000;
 const MAX_STALE_AGE_MS = 6 * 60 * 60 * 1000;
 const MAX_SOURCE_AGE_MS = 6 * 60 * 60 * 1000;
 const MAX_SOURCE_FUTURE_SKEW_MS = 5 * 60 * 1000;
@@ -297,11 +298,16 @@ function sourceUpdatedAt(forecast: MetForecast, receivedAt: number): string | nu
   return value;
 }
 
-function cacheResult(entry: CachedEntry, stale: boolean): ForecastFetchResult {
+function cacheResult(
+  entry: CachedEntry,
+  stale: boolean,
+  evaluatedAt: number,
+): ForecastFetchResult {
   const metadata: ForecastFetchMetadata = {
     source: 'cache',
-    sourceUpdatedAt: sourceUpdatedAt(entry.data, Date.now()),
+    sourceUpdatedAt: sourceUpdatedAt(entry.data, evaluatedAt),
     fetchedAt: entry.fetchedAt,
+    evaluatedAt,
     cacheStatus: stale ? 'stale' : 'fresh',
     stale,
   };
@@ -330,6 +336,7 @@ function readMemoryCommit(key: string, now: number): Readonly<{
       metadata: {
         ...committed.result.metadata,
         sourceUpdatedAt: sourceUpdatedAt(committed.result.forecast, now),
+        evaluatedAt: now,
       },
     },
   };
@@ -337,9 +344,9 @@ function readMemoryCommit(key: string, now: number): Readonly<{
 
 export async function fetchForecast(lat: number, lon: number): Promise<ForecastFetchResult> {
   alignCoordinatorWithStorage();
-  const fetchedAt = Date.now();
-  const cached = readCache(lat, lon, fetchedAt);
-  if (cached.fresh) return cacheResult(cached.fresh, false);
+  const cacheEvaluatedAt = Date.now();
+  const cached = readCache(lat, lon, cacheEvaluatedAt);
+  if (cached.fresh) return cacheResult(cached.fresh, false, cacheEvaluatedAt);
 
   const key = cacheKey(lat, lon);
   const requestVersion = (latestStartedVersionByKey.get(key) ?? 0) + 1;
@@ -354,8 +361,9 @@ export async function fetchForecast(lat: number, lon: number): Promise<ForecastF
     }
     const data: unknown = await res.json();
     if (!isMetForecast(data)) throw new Error('met.no: ugyldig prognose');
+    const acceptedAt = Date.now();
 
-    const committed = readMemoryCommit(key, Date.now());
+    const committed = readMemoryCommit(key, acceptedAt);
     if (committed && committed.version > requestVersion) {
       return committed.result;
     }
@@ -364,21 +372,23 @@ export async function fetchForecast(lat: number, lon: number): Promise<ForecastF
       forecast: data,
       metadata: {
         source: 'network',
-        sourceUpdatedAt: sourceUpdatedAt(data, fetchedAt),
-        fetchedAt,
+        sourceUpdatedAt: sourceUpdatedAt(data, acceptedAt),
+        fetchedAt: acceptedAt,
+        evaluatedAt: acceptedAt,
         cacheStatus: 'miss',
         stale: false,
       },
     };
     latestCommittedByKey.set(key, { version: requestVersion, result });
-    writeCache(lat, lon, fetchedAt, data);
+    writeCache(lat, lon, acceptedAt, data);
     return result;
   } catch (error) {
-    const committed = readMemoryCommit(key, Date.now());
+    const evaluatedAt = Date.now();
+    const committed = readMemoryCommit(key, evaluatedAt);
     if (committed) return committed.result;
-    const current = readCache(lat, lon, Date.now());
-    if (current.fresh) return cacheResult(current.fresh, false);
-    if (current.stale) return cacheResult(current.stale, true);
+    const current = readCache(lat, lon, evaluatedAt);
+    if (current.fresh) return cacheResult(current.fresh, false, evaluatedAt);
+    if (current.stale) return cacheResult(current.stale, true, evaluatedAt);
     throw error;
   }
 }
@@ -391,7 +401,7 @@ type PeriodEvidence = Readonly<{
 
 function oneHourEvidence(point: MetTimePoint): PeriodEvidence {
   const period = point.data.next_1_hours;
-  if (!period) throw new Error('met.no: mangler en-timesbevis');
+  if (!period || !isForecastPeriod(period)) throw new Error('met.no: mangler en-timesbevis');
   return {
     symbolCode: period.summary.symbol_code,
     precipitationAmountMm: period.details.precipitation_amount,
@@ -410,9 +420,20 @@ function periodEvidence(point: MetTimePoint): PeriodEvidence {
   };
 }
 
-export function extractNow(forecast: MetForecast): WeatherNow {
-  const first = forecast.properties.timeseries[0];
-  if (!first) throw new Error('met.no: mangler en-timesbevis');
+export function extractNow(forecast: MetForecast, evaluatedAt: number): WeatherNow {
+  if (!Number.isFinite(evaluatedAt)) {
+    throw new Error('met.no: ugyldig evalueringstid');
+  }
+  const coveringPoints = forecast.properties.timeseries.filter((point) => {
+    const pointAt = parseStrictIsoInstant(point.time);
+    return pointAt !== null
+      && pointAt <= evaluatedAt
+      && evaluatedAt < pointAt + ONE_HOUR_MS;
+  });
+  if (coveringPoints.length !== 1) {
+    throw new Error('met.no: mangler gjeldende en-timesintervall');
+  }
+  const first = coveringPoints[0]!;
   const d = first.data.instant.details;
   const period = oneHourEvidence(first);
   const precipMmH = period.precipitationAmountMm;

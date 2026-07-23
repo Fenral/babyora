@@ -40,6 +40,7 @@ export type ForecastFetchMetadata = {
   source: 'network' | 'cache';
   sourceUpdatedAt: string | null;
   fetchedAt: number;
+  evaluatedAt: number;
   cacheStatus: 'miss' | 'fresh' | 'stale';
   stale: boolean;
 };

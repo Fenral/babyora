@@ -121,7 +121,7 @@ export function weatherStateFromForecastResult(
   try {
     return {
       status: 'ready',
-      now: extractors.now(forecast),
+      now: extractors.now(forecast, metadata.evaluatedAt),
       hourly: extractors.hourly(forecast, 48),
       daily: extractors.daily(forecast, 10),
       dailyAtHour: extractors.dailyAtHour(forecast, refHour, 10),
