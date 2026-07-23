@@ -224,6 +224,10 @@ describe('buildPlanningRailRows canonical contract', () => {
     const malformed = event(hourlyIsos[1], 'malformed', {
       addedGarments: null as unknown as readonly string[],
     });
+    const malformedCoverage = {
+      ...assessed,
+      points: [null],
+    } as unknown as ForecastCoverage;
 
     expect(() => canonical.buildPlanningRailRows(
       assessed,
@@ -238,6 +242,25 @@ describe('buildPlanningRailRows canonical contract', () => {
       hourlyIsos,
     )).toEqual([]);
     expect(canonical.buildPlanningRailRows(assessed, [malformed], {}, hourlyIsos)).toEqual([]);
+    expect(() => canonical.buildPlanningRailRows(
+      malformedCoverage,
+      [],
+      {},
+      hourlyIsos,
+    )).not.toThrow();
+    expect(canonical.buildPlanningRailRows(malformedCoverage, [], {}, hourlyIsos)).toEqual([]);
+    expect(canonical.buildPlanningRailRows(
+      assessed,
+      [],
+      {},
+      null as unknown as readonly string[],
+    )).toEqual([]);
+    expect(canonical.buildPlanningRailRows(
+      assessed,
+      [event(hourlyIsos[1], 'event-nine')],
+      null as unknown as Readonly<Record<string, boolean>>,
+      hourlyIsos,
+    )).toEqual([]);
   });
 
   it('fails closed when one event identity maps to conflicting row content', () => {
