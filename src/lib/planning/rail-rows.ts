@@ -4,7 +4,11 @@ import type {
   ForecastCoveragePoint,
   ForecastCoverageStatus,
 } from './coverage.js';
-import type { ChangeEvent, PlanningChangeEvent } from './change-events.js';
+import {
+  comparePlanningChangeEvents,
+  type ChangeEvent,
+  type PlanningChangeEvent,
+} from './change-events.js';
 
 export type PlanningRailRow =
   | Readonly<{
@@ -180,7 +184,8 @@ function changeRow(
     eventId: event.id,
     atIso: event.atIso,
     transitionContextId: event.transitionContextId,
-    hasOutfit: outfitAvailabilityByEventId[event.id] === true,
+    hasOutfit: Object.prototype.hasOwnProperty.call(outfitAvailabilityByEventId, event.id)
+      && outfitAvailabilityByEventId[event.id] === true,
   };
 }
 
@@ -320,6 +325,8 @@ export function buildPlanningRailRows(
       if (indexDelta !== 0) return indexDelta;
       const kindDelta = PLANNING_KIND_PRIORITY[a.kind] - PLANNING_KIND_PRIORITY[b.kind];
       if (kindDelta !== 0) return kindDelta;
+      const contentDelta = comparePlanningChangeEvents(a, b);
+      if (contentDelta !== 0) return contentDelta;
       return a.id.localeCompare(b.id);
     })
     .filter((event, index, ordered) => index === 0 || event.id !== ordered[index - 1]!.id);

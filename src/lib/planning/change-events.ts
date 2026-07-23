@@ -201,7 +201,10 @@ function eventKind(
   return null;
 }
 
-function compareEvents(a: PlanningChangeEvent, b: PlanningChangeEvent): number {
+export function comparePlanningChangeEvents(
+  a: PlanningChangeEvent,
+  b: PlanningChangeEvent,
+): number {
   const epochDelta = (parseStrictIsoInstant(a.atIso) ?? 0) - (parseStrictIsoInstant(b.atIso) ?? 0);
   if (epochDelta !== 0) return epochDelta;
   const kindDelta = PLANNING_KIND_PRIORITY[a.kind] - PLANNING_KIND_PRIORITY[b.kind];
@@ -270,7 +273,7 @@ export function derivePlanningChangeEvents(points: readonly PlanningPoint[]): Pl
   }
 
   const uniqueEvents = new Map(events.map((event) => [event.id, event]));
-  return [...uniqueEvents.values()].sort(compareEvents);
+  return [...uniqueEvents.values()].sort(comparePlanningChangeEvents);
 }
 
 /**
