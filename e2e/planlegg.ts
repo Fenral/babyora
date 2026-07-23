@@ -951,7 +951,7 @@ async function runCompositionMatrix(
   }
 
   const premiumWeekRadio = page.getByRole('radio', { name: 'Uke', exact: true });
-  await premiumWeekRadio.click();
+  await premiumWeekRadio.evaluate((radio) => (radio as HTMLInputElement).click());
   await page.locator('.planlegg-screen__answer').waitFor({ state: 'visible', timeout: 15_000 });
   if (
     await page.getByRole('list', { name: 'Antrekksendringer gjennom dagen' }).count() !== 1
@@ -959,7 +959,8 @@ async function runCompositionMatrix(
   ) {
     throw new Error('Premium Uke skal være en ekte aggregert plan, ikke en død eller markedsførende flate');
   }
-  await page.getByRole('radio', { name: 'I dag', exact: true }).click();
+  await page.getByRole('radio', { name: 'I dag', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
 
   const screen = page.locator('.planlegg-screen');
   const verticalOwners = await page.locator('body *').evaluateAll((elements) => (

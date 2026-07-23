@@ -20,7 +20,6 @@ import {
   type PlanningChangeEvent,
   type PlanningPoint,
 } from '../lib/planning/change-events';
-import { planningChangeActionSentence } from '../lib/planning/change-sentence';
 import {
   decidePlanningInteraction,
   dispatchPlanningInteraction,
@@ -32,8 +31,11 @@ import {
   type PlannedOutfitContext,
 } from '../lib/planning/planned-outfit-context';
 import { resolvePlannedOutfitContext } from '../lib/planning/planned-outfit-resolver';
-import { buildPlanViewModel } from '../lib/planning/plan-view-model';
-import { buildPlanningRailRows } from '../lib/planning/rail-rows';
+import {
+  buildPlanViewModel,
+  type PlanningVerdictView,
+  type PlanningWeatherRow,
+} from '../lib/planning/plan-view-model';
 import { useAccess } from '../lib/premium/use-access';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
@@ -76,26 +78,29 @@ type Props = Readonly<{
 }>;
 
 type PlanningEvaluation = Readonly<{
+  status: 'offline' | 'partial' | 'empty' | 'ready' | null;
+  verdict: PlanningVerdictView | null;
+  nextAction: string | null;
   events: readonly PlanningChangeEvent[];
   rows: readonly PlanChangeRailRow[];
+  candidateEventIds: readonly string[];
+  forecast: readonly PlanningWeatherRow[];
   contextsByEventId: ReadonlyMap<string, PlannedOutfitContext>;
   preferredEventId: string | null;
   hasEvaluatedPlan: boolean;
 }>;
 
 const EMPTY_PLANNING_EVALUATION: PlanningEvaluation = Object.freeze({
+  status: null,
+  verdict: null,
+  nextAction: null,
   events: Object.freeze([]),
   rows: Object.freeze([]),
+  candidateEventIds: Object.freeze([]),
+  forecast: Object.freeze([]),
   contextsByEventId: Object.freeze(new Map<string, PlannedOutfitContext>()),
   preferredEventId: null,
   hasEvaluatedPlan: false,
-});
-
-const timeFormatter = new Intl.DateTimeFormat('nb-NO', {
-  timeZone: PLAN_TIME_ZONE,
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
 });
 
 function tempAxisFor(
@@ -318,8 +323,9 @@ function PlanleggData({
   }, [phases, swaps]);
 
   const planningEvaluation = useMemo<PlanningEvaluation>(() => {
+    const isLockedWeek = tab === 'tenday' && (!isPremium || accessLoading);
     if (
-      tab !== 'today'
+      isLockedWeek
       || !weather.evidence
       || weather.evidence.coverage.status === 'unavailable'
       || !Number.isInteger(ageMonths)
@@ -427,14 +433,8 @@ function PlanleggData({
       outfitAvailabilityByEventId[event.id] = access.allowed;
     }
 
-    const canonicalRows = buildPlanningRailRows(
-      weather.evidence.coverage,
-      events,
-      outfitAvailabilityByEventId,
-      points.map((point) => point.atIso),
-    );
     const eventById = new Map(events.map((event) => [event.id, event]));
-    const rows = Object.freeze(canonicalRows.flatMap((row): PlanChangeRailRow[] => {
+    const rows = Object.freeze(viewModel.rows.flatMap((row): PlanChangeRailRow[] => {
       if (row.type === 'unchanged') {
         return [{ id: row.id, type: 'unchanged', copy: row.copy }];
       }
@@ -454,16 +454,21 @@ function PlanleggData({
         type: 'change',
         eventId: row.eventId,
         atIso: row.atIso,
-        hasOutfit: row.hasOutfit,
+        hasOutfit: outfitAvailabilityByEventId[row.eventId] === true,
         event: presentationEvent,
       }];
     }));
 
     return Object.freeze({
+      status: viewModel.status,
+      verdict: viewModel.verdict,
+      nextAction: viewModel.nextAction,
       events,
       rows,
+      candidateEventIds: viewModel.candidateEventIds,
+      forecast: viewModel.forecast,
       contextsByEventId: Object.freeze(new Map(contextEntries)),
-      preferredEventId: events[0]?.id ?? null,
+      preferredEventId: viewModel.candidateEventIds[0] ?? null,
       hasEvaluatedPlan: true,
     });
   }, [
@@ -537,15 +542,8 @@ function PlanleggData({
     temperatureContext?.feelsLikeC,
     temperatureContext?.tempC,
   );
-  const selectedEvent = selectedEventId
-    ? planningEvaluation.events.find((event) => event.id === selectedEventId) ?? null
-    : null;
-  const nextEvent = planningEvaluation.events.find(
-    (event) => Date.parse(event.atIso) >= evaluatedAt,
-  ) ?? planningEvaluation.events[0] ?? null;
-  const answerEvent = selectedEvent ?? nextEvent;
-
   let statusState: PlanleggStatusState = { status: 'ready' };
+  const isLockedWeek = tab === 'tenday' && (!isPremium || accessLoading);
   if (weather.status === 'loading' || weather.status === 'idle') {
     statusState = { status: 'loading' };
   } else if (
@@ -553,7 +551,7 @@ function PlanleggData({
     || (
       (weather.status === 'ready' || weather.status === 'offline')
       && !planningEvaluation.hasEvaluatedPlan
-      && tab === 'today'
+      && !isLockedWeek
     )
   ) {
     statusState = { status: 'error', onRetry };
@@ -588,18 +586,19 @@ function PlanleggData({
 
   const showAdvice = statusState.status !== 'loading'
     && statusState.status !== 'error'
-    && planningEvaluation.hasEvaluatedPlan
-    && tab === 'today';
-  const forecastRows = activeHourly.map((row) => ({
-    atIso: row.time.toISOString(),
-    tempC: row.tempC,
-    feelsLikeC: row.feelsLikeC,
-    symbolCode: row.symbolCode,
-  }));
+    && planningEvaluation.hasEvaluatedPlan;
+  const forecastRows = planningEvaluation.hasEvaluatedPlan
+    ? planningEvaluation.forecast
+    : activeHourly.map((row) => ({
+      atIso: row.time.toISOString(),
+      tempC: row.tempC,
+      feelsLikeC: row.feelsLikeC,
+      symbolCode: row.symbolCode,
+    }));
 
   return (
     <section
-      className="planlegg-screen ba-temp-root-transition"
+      className="planlegg-screen ba-temp-root"
       aria-labelledby="planlegg-title"
       data-temp={tempAxis}
     >
@@ -608,7 +607,11 @@ function PlanleggData({
         <p className="planlegg-screen__context">{childName} · {city}</p>
       </header>
 
-      <div className="planlegg-screen__views">
+      <div
+        className="planlegg-screen__views"
+        aria-disabled={statusState.status === 'error' ? 'true' : undefined}
+        inert={statusState.status === 'error' ? true : undefined}
+      >
         <SegmentedControl
           legend="Velg planvisning"
           options={[
@@ -625,7 +628,7 @@ function PlanleggData({
       {showAdvice && (
         <>
           <div className="planlegg-screen__answer">
-            {planningEvaluation.events.length === 0 ? (
+            {planningEvaluation.status === 'empty' ? (
               <>
                 <p className="planlegg-screen__verdict">Ingen antrekksendringer</p>
                 <p className="planlegg-screen__empty">
@@ -635,13 +638,13 @@ function PlanleggData({
             ) : (
               <>
                 <p className="planlegg-screen__verdict">
-                  {nextEvent
-                    ? `Antrekket holder til ${timeFormatter.format(new Date(nextEvent.atIso)).replace('.', ':')}.`
+                  {planningEvaluation.verdict
+                    ? `Planlagt antrekk: ${planningEvaluation.verdict.summary}.`
                     : 'Antrekket holder i de vurderte tidspunktene.'}
                 </p>
-                {answerEvent && (
+                {planningEvaluation.nextAction && (
                   <p className="planlegg-screen__action">
-                    {planningChangeActionSentence(answerEvent)}
+                    {planningEvaluation.nextAction}
                   </p>
                 )}
               </>
@@ -660,9 +663,13 @@ function PlanleggData({
         </>
       )}
 
-      {tab === 'tenday' && !isPremium && statusState.status !== 'loading' && (
+      {tab === 'tenday'
+        && !isPremium
+        && !accessLoading
+        && statusState.status !== 'loading'
+        && (
         <p className="planlegg-screen__empty">
-          Antrekk videre i uka er tilgjengelig med Babyora Pluss.
+          Antrekksplan for uka er en del av Babyora Pluss. Værprognosen kan du se nedenfor.
         </p>
       )}
 

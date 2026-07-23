@@ -35,9 +35,13 @@ export function PlanleggStatusNotice({ state }: Props) {
       >
         <p>Henter dagens plan …</p>
         <div className="planlegg-status__skeleton" aria-hidden="true">
-          <span />
-          <span />
-          <span />
+          <span className="planlegg-status__skeleton-verdict" />
+          <span className="planlegg-status__skeleton-action" />
+          <div className="planlegg-status__skeleton-rail">
+            <span />
+            <span />
+            <span />
+          </div>
         </div>
       </div>
     );
