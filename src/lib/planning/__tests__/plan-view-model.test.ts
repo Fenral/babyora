@@ -29,7 +29,7 @@ type ViewModel = Readonly<{
   }> | null;
   nextAction: string | null;
   events: readonly Readonly<{ id: string; atIso: string; kind: string }>[];
-  rows: readonly Readonly<{ id: string; type: 'unchanged' | 'change' }>[];
+  rows: readonly Readonly<{ id: string; type: 'unchanged' | 'change'; eventId?: string }>[];
   candidateEventIds: readonly string[];
   forecast: readonly WeatherRow[];
   message?: string;
@@ -397,6 +397,30 @@ describe('buildPlanViewModel', () => {
     expect(model.events.map((event) => event.kind)).toEqual(['location', 'prep']);
     expect(model.nextAction).toBe('N\u00e5r dere kommer til Barnehagen: Ta av skalljakke');
     expect(model.rows.filter((row) => row.type === 'change')).toHaveLength(2);
+  });
+
+  it('keeps equal-kind same-instant action order coherent from events through rows', () => {
+    const model = canonical.buildPlanViewModel(input({
+      points: [
+        planningPoint(isos[0], 'fp-a', ['ullbody']),
+        planningPoint(isos[1], 'fp-a', ['ullbody'], {
+          cause: 'Forbered',
+          transitionContextId: 'prep-b',
+          transition: { kind: 'prep', garments: ['b'] },
+        }),
+        planningPoint(isos[1], 'fp-a', ['ullbody'], {
+          cause: 'Forbered',
+          transitionContextId: 'prep-a',
+          transition: { kind: 'prep', garments: ['a'] },
+        }),
+      ],
+    }));
+
+    const rowEventIds = model.rows
+      .filter((row) => row.type === 'change')
+      .map((row) => row.eventId);
+    expect(model.events.map((event) => event.kind)).toEqual(['prep', 'prep']);
+    expect(rowEventIds).toEqual(model.events.map((event) => event.id));
   });
 
   it('rejects conflicting duplicate forecast rows instead of choosing by input order', () => {

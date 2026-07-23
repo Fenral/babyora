@@ -173,6 +173,15 @@ describe('buildPlanningRailRows canonical contract', () => {
     expect(change).not.toHaveProperty('event');
     expect(change).not.toHaveProperty('contextId');
     expect(change).not.toHaveProperty('plannedContextId');
+
+    const inheritedAvailability = Object.create({ 'event-nine': true }) as Readonly<Record<string, boolean>>;
+    const inheritedChange = canonical.buildPlanningRailRows(
+      coverage('complete-hourly', hourlyIsos),
+      [plannedEvent],
+      inheritedAvailability,
+      hourlyIsos,
+    ).find((row) => row.type === 'change');
+    expect(inheritedChange).toMatchObject({ type: 'change', hasOutfit: false });
   });
 
   it('is byte-identical for reordered canonical events', () => {
@@ -215,6 +224,30 @@ describe('buildPlanningRailRows canonical contract', () => {
     expect(rows.filter((row) => row.type === 'change').map((row) => (
       row.type === 'change' ? row.eventId : ''
     ))).toEqual(['z-location', 'a-prep']);
+
+    const prepA = event(hourlyIsos[1], 'z-prep-a', {
+      kind: 'prep',
+      addedGarments: [],
+      cause: 'Forbered',
+      transitionContextId: 'prep-a',
+      transition: { kind: 'prep', garments: ['a'] },
+    });
+    const prepB = event(hourlyIsos[1], 'a-prep-b', {
+      kind: 'prep',
+      addedGarments: [],
+      cause: 'Forbered',
+      transitionContextId: 'prep-b',
+      transition: { kind: 'prep', garments: ['b'] },
+    });
+    const equalKindRows = canonical.buildPlanningRailRows(
+      assessed,
+      [prepB, prepA],
+      {},
+      hourlyIsos,
+    );
+    expect(equalKindRows.filter((row) => row.type === 'change').map((row) => (
+      row.type === 'change' ? row.eventId : ''
+    ))).toEqual(['z-prep-a', 'a-prep-b']);
   });
 
   it('fails malformed runtime event containers closed without throwing', () => {
