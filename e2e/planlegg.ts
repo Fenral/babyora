@@ -34,6 +34,12 @@ const PLANLEGG_CASES = Object.freeze({
     viewport: Object.freeze({ width: 390, height: 844 }),
     timeZone: 'Europe/Oslo',
   }),
+  composition: Object.freeze({
+    id: 'planlegg-composition-v1',
+    path: '/?seed=demo',
+    viewport: Object.freeze({ width: 390, height: 844 }),
+    timeZone: 'Europe/Oslo',
+  }),
 }) satisfies Readonly<Record<string, PlanleggE2EFixture>>;
 type PlanleggCase = keyof typeof PLANLEGG_CASES;
 type ForecastMode = 'zero' | 'one' | 'many';
@@ -390,6 +396,84 @@ async function runHarness(page: Page, fixture: PlanleggE2EFixture): Promise<void
   }
 }
 
+async function runComposition(
+  page: Page,
+  fixture: PlanleggE2EFixture,
+): Promise<void> {
+  const failures = collectFailures(page);
+  await page.goto(`${BASE_URL}${fixture.path}`, { waitUntil: 'domcontentloaded' });
+  await page
+    .getByRole('navigation')
+    .first()
+    .getByRole('button', { name: /^Planlegg/u })
+    .click();
+  await assertSingleMain(page);
+
+  const screen = page.locator('section.planlegg-screen[aria-labelledby="planlegg-title"]');
+  if (await screen.count() !== 1) {
+    throw new Error(
+      'RED_PLANLEGG_COMPOSITION_CONTRACT: Planlegg mangler én naturlig section under appens main',
+    );
+  }
+  await screen.getByRole('heading', { level: 1, name: 'Planlegg', exact: true }).waitFor();
+  const context = screen.locator('.planlegg-screen__context');
+  if (!(await context.innerText()).includes('Lillian · Trondheim')) {
+    throw new Error(`Synlig barn-/stedskontekst avvek: ${await context.innerText()}`);
+  }
+  const radios = screen.getByRole('radio');
+  if (
+    await radios.count() !== 2
+    || await screen.getByRole('radio', { name: 'I dag', exact: true }).count() !== 1
+    || await screen.getByRole('radio', { name: 'Uke', exact: true }).count() !== 1
+    || await screen.getByText('Snart', { exact: true }).count() !== 0
+  ) {
+    throw new Error('Planlegg skal bare ha native I dag/Uke-kontrollen');
+  }
+
+  const answer = screen.locator('.planlegg-screen__answer');
+  const rail = screen.getByRole('list', { name: 'Antrekksendringer gjennom dagen' });
+  const forecast = screen.getByRole('button', { name: 'Vis full værprognose' });
+  await answer.waitFor({ state: 'visible', timeout: 15_000 });
+  await rail.waitFor({ state: 'visible', timeout: 15_000 });
+  await forecast.waitFor({ state: 'visible', timeout: 15_000 });
+  const ordered = await screen.locator(
+    '.planlegg-screen__header, .planlegg-screen__views, .planlegg-screen__answer, .planlegg-screen__rail, .planlegg-forecast',
+  ).evaluateAll((elements) => elements.map((element) => element.className));
+  if (
+    ordered.length !== 5
+    || !String(ordered[0]).includes('header')
+    || !String(ordered[1]).includes('views')
+    || !String(ordered[2]).includes('answer')
+    || !String(ordered[3]).includes('rail')
+    || !String(ordered[4]).includes('forecast')
+  ) {
+    throw new Error(`Planlegg-hierarkiet avvek: ${ordered.join(' > ')}`);
+  }
+
+  const obsolete = [
+    'Time for time',
+    '10 dager fremover',
+    'Se forslag for',
+    'Varsler',
+    'Velg sted',
+  ];
+  const screenText = await screen.innerText();
+  for (const copy of obsolete) {
+    if (screenText.includes(copy)) throw new Error(`Foreldet Planlegg-copy står igjen: ${copy}`);
+  }
+  const overflow = await page.evaluate(() => ({
+    document: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    screen: document.querySelector<HTMLElement>('.planlegg-screen')!
+      .scrollWidth - document.querySelector<HTMLElement>('.planlegg-screen')!.clientWidth,
+  }));
+  if (overflow.document > 0 || overflow.screen > 0) {
+    throw new Error(`Horisontal overflow: ${JSON.stringify(overflow)}`);
+  }
+  if (failures.length > 0) {
+    throw new Error(`Browserfeil:\n  ${failures.join('\n  ')}`);
+  }
+}
+
 async function runSemanticRail(
   page: Page,
   fixture: PlanleggE2EFixture,
@@ -670,6 +754,8 @@ async function main(): Promise<void> {
       await installDeterministicPage(page, forecastState);
       if (caseName === 'semantic-rail') {
         await runSemanticRail(page, fixture, forecastState);
+      } else if (caseName === 'composition') {
+        await runComposition(page, fixture);
       } else {
         await runExactContext(page, fixture, forecastState);
       }
