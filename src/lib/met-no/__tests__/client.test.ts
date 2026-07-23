@@ -480,6 +480,75 @@ describe('fetchForecast provenance and cache recovery', () => {
       .toBe('2026-02-12T10:00:00.000Z');
   });
 
+  it('captures cache evaluation after storage retrieval crosses the TTL boundary', async () => {
+    const startedAt = Date.parse('2026-02-12T09:59:59.000Z');
+    const evaluatedAt = Date.parse('2026-02-12T10:00:01.000Z');
+    const fetchedAt = Date.parse('2026-02-12T09:00:00.000Z');
+    const data = validForecast();
+    const raw = JSON.stringify({ version: 1, fetchedAt, data });
+    const { storage } = installStorage({ [CACHE_KEY]: raw });
+    storage.getItem.mockImplementation((key: string) => {
+      vi.setSystemTime(evaluatedAt);
+      return key === CACHE_KEY ? raw : null;
+    });
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError('offline'));
+    vi.stubGlobal('fetch', fetchMock);
+    vi.setSystemTime(startedAt);
+
+    await expect(fetchForecast(61.2345, 8.7654)).resolves.toMatchObject({
+      forecast: data,
+      metadata: {
+        source: 'cache',
+        cacheStatus: 'stale',
+        stale: true,
+        fetchedAt,
+        evaluatedAt,
+      },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('captures cache evaluation after structural validation crosses source and current intervals', async () => {
+    const startedAt = Date.parse('2026-02-12T09:59:59.000Z');
+    const evaluatedAt = Date.parse('2026-02-12T10:00:01.000Z');
+    const fetchedAt = Date.parse('2026-02-12T09:55:00.000Z');
+    const data = forecast([
+      utcPoint('2026-02-12T09:00:00.000Z', -9),
+      utcPoint('2026-02-12T10:00:00.000Z', 10),
+    ]);
+    data.properties.meta.updated_at = '2026-02-12T04:00:00.000Z';
+    const points = data.properties.timeseries;
+    Object.defineProperty(data.properties, 'timeseries', {
+      configurable: true,
+      get: () => {
+        vi.setSystemTime(evaluatedAt);
+        return points;
+      },
+    });
+    installStorage({ [CACHE_KEY]: '{}' });
+    vi.spyOn(JSON, 'parse').mockImplementationOnce(() => ({
+      version: 1,
+      fetchedAt,
+      data,
+    }));
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    vi.setSystemTime(startedAt);
+
+    const result = await fetchForecast(61.2345, 8.7654);
+
+    expect(result.metadata).toMatchObject({
+      source: 'cache',
+      cacheStatus: 'fresh',
+      sourceUpdatedAt: null,
+      fetchedAt,
+      evaluatedAt,
+    });
+    expect(extractNow(result.forecast, result.metadata.evaluatedAt).observedAt.toISOString())
+      .toBe('2026-02-12T10:00:00.000Z');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('keeps the newer success atomic when same-key successes resolve in reverse order', async () => {
     const older = deferred<Response>();
     const newer = deferred<Response>();
