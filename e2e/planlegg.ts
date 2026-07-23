@@ -757,6 +757,7 @@ async function installAutomaticLocationPage(
       const counters = { permission: 0, geolocation: 0, geocode: 0, forecast: 0 };
       const positions = [
         { lat: 59.9139, lon: 10.7522 },
+        { lat: 60.3913, lon: 5.3221 },
         { lat: 59.9139, lon: 10.7522 },
         { lat: 60.3913, lon: 5.3221 },
         { lat: 59.9139, lon: 10.7522 },
@@ -948,6 +949,44 @@ async function runAutomaticLocation(
     throw new Error(`Avbrutt aktivering fullførte arbeid: ${JSON.stringify(cancelled)}`);
   }
 
+  await page.evaluate(() => {
+    (window as typeof window & { __holdAutoLocation: boolean }).__holdAutoLocation = true;
+  });
+  await autoSwitch.click();
+  const unmountedDialog = page.getByRole('dialog', { name: 'Bruk posisjon automatisk' });
+  await unmountedDialog.waitFor({ state: 'visible', timeout: 15_000 });
+  await unmountedDialog.getByRole('button', { name: /^Tillat posisjon/u }).click();
+  await page.waitForFunction(() => (
+    (window as typeof window & {
+      __locationContainmentCounters: LocationContainmentCounters;
+    }).__locationContainmentCounters.geolocation === 2
+  ));
+  await navigation.getByRole('button', { name: /^Hjem/u })
+    .evaluate((button) => (button as HTMLButtonElement).click());
+  await unmountedDialog.waitFor({ state: 'detached', timeout: 15_000 });
+  await page.evaluate(() => {
+    const target = window as typeof window & {
+      __holdAutoLocation: boolean;
+      __pendingAutoLocations: Array<() => void>;
+    };
+    target.__holdAutoLocation = false;
+    target.__pendingAutoLocations.splice(0).forEach((deliver) => deliver());
+  });
+  await page.waitForTimeout(50);
+  const unmounted = await readLocationContainmentCounters(page);
+  const unmountedMode = await page.evaluate(() => (
+    JSON.parse(localStorage.getItem('babyora.location-pref') ?? '{}')?.state?.mode
+  ));
+  if (
+    unmounted.geolocation !== 2
+    || unmounted.geocode !== 0
+    || unmountedMode !== 'manual'
+  ) {
+    throw new Error(`Avmontert Settings fullførte aktivering: ${JSON.stringify(unmounted)}`);
+  }
+  await navigation.getByRole('button', { name: /^Familie/u }).click();
+  await autoSwitch.waitFor({ state: 'visible', timeout: 15_000 });
+
   await autoSwitch.click();
   const permissionDialog = page.getByRole('dialog', { name: 'Bruk posisjon automatisk' });
   await permissionDialog.waitFor({ state: 'visible', timeout: 15_000 });
@@ -970,7 +1009,7 @@ async function runAutomaticLocation(
     })}`);
   }
   const activated = await readLocationContainmentCounters(page);
-  if (activated.geolocation !== 2 || activated.geocode !== 1) {
+  if (activated.geolocation !== 3 || activated.geocode !== 1) {
     throw new Error(`Eksplisitt aktivering var ikke én stabil suksess: ${JSON.stringify(activated)}`);
   }
 
@@ -1008,6 +1047,9 @@ async function runAutomaticLocation(
   const currentGarmentsBeforeRefresh = await currentDialog
     .locator('section[aria-labelledby="planned-garments-title"]')
     .innerText();
+  const currentWhyBeforeRefresh = await currentDialog
+    .locator('section[aria-labelledby="planned-why-title"]')
+    .innerText();
   if (!currentSituationBeforeRefresh.includes('Nåværende sted · Oslo · Utelek')) {
     throw new Error(`Dagens Outfit mistet eksakt Oslo-kontekst: ${currentSituationBeforeRefresh}`);
   }
@@ -1016,13 +1058,15 @@ async function runAutomaticLocation(
   await page.waitForFunction(() => (
     (window as typeof window & {
       __locationContainmentCounters: LocationContainmentCounters;
-    }).__locationContainmentCounters.geolocation === 3
+    }).__locationContainmentCounters.geolocation === 4
   ));
   await page.waitForTimeout(50);
   if (
     await situation.innerText() !== currentSituationBeforeRefresh
     || await currentDialog.locator('section[aria-labelledby="planned-garments-title"]')
       .innerText() !== currentGarmentsBeforeRefresh
+    || await currentDialog.locator('section[aria-labelledby="planned-why-title"]')
+      .innerText() !== currentWhyBeforeRefresh
   ) {
     throw new Error('Åpent dagens Outfit fikk endret sted, vær eller anbefaling');
   }
@@ -1073,6 +1117,9 @@ async function runAutomaticLocation(
   const futureGarmentsBeforeRefresh = await futureDialog
     .locator('section[aria-labelledby="planned-garments-title"]')
     .innerText();
+  const futureWhyBeforeRefresh = await futureDialog
+    .locator('section[aria-labelledby="planned-why-title"]')
+    .innerText();
   if (!futureSituationBeforeRefresh.includes('Nåværende sted · Oslo · Utelek')) {
     throw new Error('Fremtidig Outfit manglet automatisk Oslo-kontekst');
   }
@@ -1081,7 +1128,7 @@ async function runAutomaticLocation(
     await page.waitForFunction(() => (
       (window as typeof window & {
         __locationContainmentCounters: LocationContainmentCounters;
-      }).__locationContainmentCounters.geolocation === 5
+      }).__locationContainmentCounters.geolocation === 6
     ), undefined, { timeout: 5_000 });
   } catch {
     throw new Error(
@@ -1095,6 +1142,8 @@ async function runAutomaticLocation(
     await futureSituation.innerText() !== futureSituationBeforeRefresh
     || await futureDialog.locator('section[aria-labelledby="planned-garments-title"]')
       .innerText() !== futureGarmentsBeforeRefresh
+    || await futureDialog.locator('section[aria-labelledby="planned-why-title"]')
+      .innerText() !== futureWhyBeforeRefresh
   ) {
     throw new Error('Åpent fremtidig Outfit fikk endret sted, vær eller anbefaling');
   }
@@ -1115,7 +1164,7 @@ async function runAutomaticLocation(
     await page.waitForFunction(() => (
       (window as typeof window & {
         __locationContainmentCounters: LocationContainmentCounters;
-      }).__locationContainmentCounters.geolocation === 6
+      }).__locationContainmentCounters.geolocation === 7
     ), undefined, { timeout: 5_000 });
   } catch {
     throw new Error(`Første barn-bytte startet ikke location: ${
@@ -1130,7 +1179,7 @@ async function runAutomaticLocation(
     await page.waitForFunction(() => (
       (window as typeof window & {
         __locationContainmentCounters: LocationContainmentCounters;
-      }).__locationContainmentCounters.geolocation === 7
+      }).__locationContainmentCounters.geolocation === 8
     ), undefined, { timeout: 5_000 });
   } catch {
     throw new Error(`Andre barn-bytte startet ikke location: ${
