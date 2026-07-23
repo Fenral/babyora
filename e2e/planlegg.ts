@@ -179,6 +179,14 @@ async function assertCompositionPrimitives(): Promise<void> {
     );
   }
   if (
+    ukeSource.includes('key={requestKey}')
+    || !ukeSource.includes('useWeather(lat, lon, FALLBACK_REF_HOUR, refreshKey)')
+  ) {
+    throw new Error(
+      'RED_REVIEW_IN_PLACE_REFRESH: retry må oppdatere vær i samme PlanleggData-instans slik at selection-repair faktisk kjøres',
+    );
+  }
+  if (
     !ukeSource.includes('className="planlegg-screen ba-temp-root"')
     || !readFileSync(join(process.cwd(), 'src/screens/UkeScreen.css'), 'utf8')
       .includes('background: var(--bg-canvas)')
@@ -400,8 +408,9 @@ async function installDeterministicPage(
 ): Promise<void> {
   await page.clock.install({ time: FIXED_NOW });
   await page.addInitScript(() => {
+    const isPremium = new URL(window.location.href).searchParams.get('access') !== 'free';
     localStorage.setItem('babyora.subscription', JSON.stringify({
-      state: { isPremium: true, lastSyncedAt: 1 },
+      state: { isPremium, lastSyncedAt: 1 },
       version: 0,
     }));
   });
@@ -438,6 +447,41 @@ async function openPlanlegg(page: Page, path: string): Promise<void> {
   await planButton.click();
   await page.getByRole('heading', { level: 1, name: 'Planlegg', exact: true })
     .waitFor({ state: 'attached', timeout: 15_000 });
+}
+
+async function startLiveRegionTrace(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const tracedWindow = window as typeof window & {
+      __planleggLiveTrace?: string[];
+      __planleggLiveObserver?: MutationObserver;
+    };
+    tracedWindow.__planleggLiveObserver?.disconnect();
+    tracedWindow.__planleggLiveTrace = [];
+    const record = () => {
+      const text = document
+        .querySelector<HTMLElement>('[role="status"][aria-live="polite"]')
+        ?.innerText.replace(/\s+/gu, ' ').trim();
+      if (!text) return;
+      const trace = tracedWindow.__planleggLiveTrace!;
+      if (trace.at(-1) !== text) trace.push(text);
+    };
+    record();
+    const owner = document.querySelector<HTMLElement>('.planlegg-screen');
+    if (!owner) throw new Error('Planlegg-roten mangler for live-sporing');
+    tracedWindow.__planleggLiveObserver = new MutationObserver(record);
+    tracedWindow.__planleggLiveObserver.observe(owner, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+  });
+}
+
+async function readLiveRegionTrace(page: Page): Promise<readonly string[]> {
+  return page.evaluate(() => {
+    const tracedWindow = window as typeof window & { __planleggLiveTrace?: string[] };
+    return [...(tracedWindow.__planleggLiveTrace ?? [])];
+  });
 }
 
 async function reloadPlanlegg(
@@ -848,12 +892,22 @@ async function runCompositionMatrix(
   ) {
     throw new Error('No-cache-feil skal gjøre sannhetsavhengige visningsvalg utilgjengelige');
   }
+  await startLiveRegionTrace(page);
   forecastState.delivery = 'success';
   forecastState.mode = 'many';
   await retry.click();
   await page.locator('.planlegg-screen__answer').waitFor({ state: 'visible', timeout: 15_000 });
   if (await page.locator(liveOwnerSelector).count() !== 0) {
     throw new Error('Ready skal ikke beholde en støyende live-eier');
+  }
+  const errorRecoveryTrace = await readLiveRegionTrace(page);
+  if (
+    errorRecoveryTrace.filter((entry) => entry.includes('Vi fikk ikke oppdatert planen')).length !== 1
+    || errorRecoveryTrace.filter((entry) => entry.includes('Henter dagens plan')).length !== 1
+  ) {
+    throw new Error(
+      `Feil/retry skal gi én DOM-kadens per meningsfulle status: ${JSON.stringify(errorRecoveryTrace)}`,
+    );
   }
 
   forecastState.delivery = 'error';
@@ -894,25 +948,43 @@ async function runCompositionMatrix(
     throw new Error('Offline refresh-fixturen må ha en valgt event som kan fjernes');
   }
   await offlineDisclosures.nth(1).click();
-  const focusedOutsideRefresh = page
-    .getByRole('navigation')
-    .first()
-    .getByRole('button', { name: /^Planlegg/u });
-  await focusedOutsideRefresh.focus();
+  const staleOutfitAction = await offlineRail
+    .getByRole('button', { name: 'Se hele antrekket' })
+    .elementHandle();
+  if (!staleOutfitAction) {
+    throw new Error('Valgt offline-event mangler CTA før refresh');
+  }
+  const focusedDuringRefresh = page.getByRole('radio', { name: 'I dag', exact: true });
+  await focusedDuringRefresh.focus();
+  await focusedDuringRefresh.evaluate((radio) => {
+    const tracedWindow = window as typeof window & { __planleggRefreshFocus?: Element };
+    tracedWindow.__planleggRefreshFocus = radio;
+  });
+  await startLiveRegionTrace(page);
   forecastState.delivery = 'success';
   forecastState.mode = 'zero';
   await offline.getByRole('button', { name: 'Prøv å hente planen', exact: true })
     .evaluate((button) => (button as HTMLButtonElement).click());
   await offlineRail.getByText('Samme antrekk i de vurderte tidspunktene')
     .waitFor({ state: 'visible', timeout: 15_000 });
+  await staleOutfitAction.evaluate((button) => (button as HTMLButtonElement).click());
+  const keptSameFocusedControl = await focusedDuringRefresh.evaluate((radio) => {
+    const tracedWindow = window as typeof window & { __planleggRefreshFocus?: Element };
+    return tracedWindow.__planleggRefreshFocus === radio && document.activeElement === radio;
+  });
+  const offlineRecoveryTrace = await readLiveRegionTrace(page);
   if (
     await offlineRail.locator('button[aria-expanded]').count() !== 0
     || await offlineRail.getByRole('button', { name: 'Se hele antrekket' }).count() !== 0
-    || await focusedOutsideRefresh.evaluate((element) => element !== document.activeElement)
+    || await page.getByRole('dialog').count() !== 0
+    || !keptSameFocusedControl
     || await page.locator(liveOwnerSelector).count() !== 0
+    || offlineRecoveryTrace.filter((entry) => entry.includes('Du er frakoblet')).length !== 1
+    || offlineRecoveryTrace.filter((entry) => entry.includes('Henter dagens plan')).length !== 1
   ) {
     throw new Error(
-      'In-place refresh skal reparere fjernet valg til null, fjerne stale CTA, bevare fokus og være stille når ready',
+      `In-place refresh skal kjøre persisted repair, avvise stale CTA og bevare samme fokusnode: `
+      + `${JSON.stringify({ keptSameFocusedControl, offlineRecoveryTrace })}`,
     );
   }
 
@@ -961,6 +1033,25 @@ async function runCompositionMatrix(
   }
   await page.getByRole('radio', { name: 'I dag', exact: true })
     .evaluate((radio) => (radio as HTMLInputElement).click());
+
+  const freePath = `${fixture.path}${fixture.path.includes('?') ? '&' : '?'}access=free`;
+  await openPlanlegg(page, freePath);
+  await page.getByRole('radio', { name: 'Uke', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
+  const freeWeekContext = page.locator('.planlegg-screen__week-weather');
+  await freeWeekContext.waitFor({ state: 'visible', timeout: 15_000 });
+  const freeWeekForecast = page.locator('.planlegg-forecast__toggle');
+  await freeWeekForecast.click();
+  if (
+    !(await freeWeekContext.innerText()).includes('vær ved middagstid')
+    || await page.locator('.planlegg-screen__answer').count() !== 0
+    || await page.getByText(/Babyora Pluss/iu).count() !== 0
+    || await page.locator('.planlegg-forecast__rows li').count() < 2
+    || await page.locator(liveOwnerSelector).count() !== 0
+  ) {
+    throw new Error('Free Uke skal gi sann, nyttig ukesvær-kontekst uten plan- eller markedspåstand');
+  }
+  await reloadPlanlegg(page, fixture.path, forecastState, 'many');
 
   const screen = page.locator('.planlegg-screen');
   const verticalOwners = await page.locator('body *').evaluateAll((elements) => (
@@ -1040,10 +1131,48 @@ async function runCompositionMatrix(
     { name: 'warm', value: 25, axis: 'varm' },
     { name: 'extreme-heat', value: 55, axis: 'varm' },
   ] as const;
+  const contrast = async (theme: 'light' | 'dark') => {
+    await page.evaluate((nextTheme) => {
+      document.documentElement.dataset.theme = nextTheme;
+    }, theme);
+    const colors = await page.evaluate(() => {
+      const planlegg = document.querySelector<HTMLElement>('.planlegg-screen')!;
+      const planleggStyle = getComputedStyle(planlegg);
+      const selectedControl = document.querySelector<HTMLElement>(
+        '.segmented-control__segment.is-checked',
+      )!;
+      const selectedControlStyle = getComputedStyle(selectedControl);
+      const controlGroup = document.querySelector<HTMLElement>('.segmented-control__group')!;
+      const action = document.querySelector<HTMLElement>('.plan-change-rail__outfit')!;
+      return {
+        background: planleggStyle.backgroundColor,
+        normal: getComputedStyle(
+          document.querySelector<HTMLElement>('.planlegg-screen__context')!,
+        ).color,
+        large: getComputedStyle(
+          document.querySelector<HTMLElement>('.planlegg-screen__verdict')!,
+        ).color,
+        controlForeground: selectedControlStyle.color,
+        controlBackground: selectedControlStyle.backgroundColor,
+        controlSurface: getComputedStyle(controlGroup).backgroundColor,
+        focus: planleggStyle.getPropertyValue('--focus-ring').trim(),
+        action: getComputedStyle(action).color,
+      };
+    });
+    return {
+      normal: contrastRatio(colors.normal, colors.background),
+      large: contrastRatio(colors.large, colors.background),
+      control: contrastRatio(colors.controlForeground, colors.controlBackground),
+      focusCanvas: contrastRatio(colors.focus, colors.background),
+      focusSurface: contrastRatio(colors.focus, colors.controlSurface),
+      action: contrastRatio(colors.action, colors.background),
+    };
+  };
   const temperatureBackgrounds = new Set<string>();
+  const failingContrast: string[] = [];
   for (const temperatureCase of temperatureCases) {
     forecastState.delivery = 'success';
-    forecastState.mode = 'zero';
+    forecastState.mode = 'many';
     forecastState.temperatureC = temperatureCase.value;
     await page.evaluate(() => {
       for (const key of Object.keys(localStorage)) {
@@ -1058,56 +1187,20 @@ async function runCompositionMatrix(
     temperatureBackgrounds.add(await screen.evaluate(
       (element) => getComputedStyle(element).backgroundColor,
     ));
+    for (const theme of ['light', 'dark'] as const) {
+      const pairs = await contrast(theme);
+      failingContrast.push(...Object.entries(pairs)
+        .filter(([kind, ratio]) => (
+          ratio < (kind === 'large' || kind.startsWith('focus') ? 3 : 4.5)
+        ))
+        .map(([kind, ratio]) => `${temperatureCase.name}.${theme}.${kind}=${ratio}`));
+    }
   }
   if (temperatureBackgrounds.size < 3) {
     throw new Error(
       `Temperaturaksen malte færre enn tre distinkte canvas: ${[...temperatureBackgrounds].join(', ')}`,
     );
   }
-
-  await reloadPlanlegg(page, fixture.path, forecastState, 'many');
-  const contrast = async (theme: 'light' | 'dark') => {
-    await page.evaluate((nextTheme) => {
-      document.documentElement.dataset.theme = nextTheme;
-    }, theme);
-    const colors = await page.evaluate(() => {
-      const planlegg = document.querySelector<HTMLElement>('.planlegg-screen')!;
-      const planleggStyle = getComputedStyle(planlegg);
-      const background = planleggStyle.getPropertyValue('--bg-canvas').trim();
-      const selectedControl = document.querySelector<HTMLElement>(
-        '.segmented-control__segment.is-checked',
-      )!;
-      const selectedControlStyle = getComputedStyle(selectedControl);
-      const action = document.querySelector<HTMLElement>('.plan-change-rail__outfit')!;
-      return {
-        background,
-        normal: getComputedStyle(
-          document.querySelector<HTMLElement>('.planlegg-screen__context')!,
-        ).color,
-        large: getComputedStyle(
-          document.querySelector<HTMLElement>('.planlegg-screen__verdict')!,
-        ).color,
-        controlForeground: selectedControlStyle.color,
-        controlBackground: selectedControlStyle.backgroundColor,
-        focus: planleggStyle.getPropertyValue('--focus-ring').trim(),
-        action: getComputedStyle(action).color,
-      };
-    });
-    return {
-      normal: contrastRatio(colors.normal, colors.background),
-      large: contrastRatio(colors.large, colors.background),
-      control: contrastRatio(colors.controlForeground, colors.controlBackground),
-      focus: contrastRatio(colors.focus, colors.background),
-      action: contrastRatio(colors.action, colors.background),
-    };
-  };
-  const lightContrast = await contrast('light');
-  const darkContrast = await contrast('dark');
-  const failingContrast = Object.entries({ lightContrast, darkContrast }).flatMap(
-    ([theme, pairs]) => Object.entries(pairs)
-      .filter(([kind, ratio]) => ratio < (kind === 'large' || kind === 'focus' ? 3 : 4.5))
-      .map(([kind, ratio]) => `${theme}.${kind}=${ratio}`),
-  );
   if (failingContrast.length > 0) {
     throw new Error(`AA-kontrast avvek: ${failingContrast.join(', ')}`);
   }
