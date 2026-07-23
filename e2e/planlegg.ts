@@ -46,9 +46,21 @@ const PLANLEGG_CASES = Object.freeze({
     viewport: Object.freeze({ width: 390, height: 844 }),
     timeZone: 'Europe/Oslo',
   }),
+  access: Object.freeze({
+    id: 'planlegg-access-v1',
+    path: '/?seed=demo',
+    viewport: Object.freeze({ width: 390, height: 844 }),
+    timeZone: 'Europe/Oslo',
+  }),
 }) satisfies Readonly<Record<string, PlanleggE2EFixture>>;
 type PlanleggCase = keyof typeof PLANLEGG_CASES;
-type ForecastMode = 'zero' | 'one' | 'many' | 'partial';
+type ForecastMode =
+  | 'zero'
+  | 'one'
+  | 'many'
+  | 'partial'
+  | 'today-only'
+  | 'week-changes';
 type ForecastDelivery = 'success' | 'pending' | 'error';
 type ForecastState = {
   mode: ForecastMode;
@@ -244,6 +256,7 @@ function buildForecast(mode: ForecastMode, temperatureC?: number): unknown {
   const start = Date.parse('2026-02-11T23:00:00.000Z');
   const timeseries = Array.from({ length: 72 }, (_, index) => {
     const instant = new Date(start + index * 60 * 60 * 1000);
+    const dayOffset = Math.floor(index / 24);
     const localHour = Number(new Intl.DateTimeFormat('en-GB', {
       timeZone: 'Europe/Oslo',
       hour: '2-digit',
@@ -255,7 +268,9 @@ function buildForecast(mode: ForecastMode, temperatureC?: number): unknown {
       data: {
         instant: {
           details: {
-            air_temperature: fixtureTemperature(localHour, mode, temperatureC),
+            air_temperature: mode === 'week-changes'
+              ? [-12, 2, 15][dayOffset % 3]!
+              : fixtureTemperature(localHour, mode, temperatureC),
             wind_speed: mode === 'many' && localHour >= 16 ? 6 : 2,
             wind_from_direction: 180,
             relative_humidity: 72,
@@ -268,7 +283,10 @@ function buildForecast(mode: ForecastMode, temperatureC?: number): unknown {
         },
       },
     };
-  }).filter((_point, index) => mode !== 'partial' || index % 3 === 0);
+  }).filter((_point, index) => (
+    (mode !== 'partial' || index % 3 === 0)
+    && (mode !== 'today-only' || index < 24)
+  ));
   return {
     properties: {
       meta: {
@@ -1043,6 +1061,191 @@ async function runExactContext(
   }
 }
 
+async function runAccess(
+  page: Page,
+  fixture: PlanleggE2EFixture,
+  forecastState: ForecastState,
+): Promise<void> {
+  const ukeSource = readFileSync(join(process.cwd(), 'src/screens/UkeScreen.tsx'), 'utf8');
+  const appSource = readFileSync(join(process.cwd(), 'src/App.tsx'), 'utf8');
+  if (
+    !ukeSource.includes('resolvePlanningViewAccess')
+    || !ukeSource.includes('Se uke med Babyora Plus')
+    || !ukeSource.includes('data-planlegg-access="neutral"')
+    || !appSource.includes("decideAccess('future_plan'")
+  ) {
+    throw new Error(
+      'RED_PLANLEGG_ACCESS_POLICY: Today/Uke/App mangler sentral tilgang, nøytral lasting eller eksakt handling',
+    );
+  }
+
+  const failures = collectFailures(page);
+  const freePath = `${fixture.path}${fixture.path.includes('?') ? '&' : '?'}access=free`;
+
+  forecastState.delivery = 'success';
+  forecastState.mode = 'many';
+  await openPlanlegg(page, freePath);
+  const todayRail = page.getByRole('list', { name: 'Antrekksendringer gjennom dagen' });
+  await todayRail.waitFor({ state: 'visible', timeout: 15_000 });
+  const freeTodayOutfit = todayRail.getByRole('button', { name: 'Se hele antrekket' }).first();
+  await freeTodayOutfit.waitFor({ state: 'visible', timeout: 15_000 });
+  await freeTodayOutfit.click();
+  const todayDialog = page.getByRole('dialog', { name: 'Lillian' });
+  await todayDialog.waitFor({ state: 'visible', timeout: 15_000 });
+  if (!(await todayDialog.innerText()).includes('Tilgang: today_home')) {
+    throw new Error('Free I dag mistet komplett Outfit ved konfigurert sted');
+  }
+  await todayDialog.getByRole('button', { name: 'Lukk planlagt antrekk' }).click();
+  await todayDialog.waitFor({ state: 'detached' });
+
+  const weekRadio = page.getByRole('radio', { name: 'Uke', exact: true });
+  await weekRadio.evaluate((radio) => (radio as HTMLInputElement).click());
+  const comparison = page.locator('[data-planlegg-access="free-week-comparison"]');
+  await comparison.waitFor({ state: 'visible', timeout: 15_000 });
+  const comparisonRows = comparison.locator('[data-weather-comparison]');
+  const freeWeekAction = page.getByRole('button', {
+    name: 'Se uke med Babyora Plus',
+    exact: true,
+  });
+  await freeWeekAction.waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await comparisonRows.count() !== 1
+    || await page.locator('.planlegg-screen__answer').count() !== 0
+    || await page.getByRole('list', { name: 'Antrekksendringer gjennom dagen' }).count() !== 0
+    || await page.getByRole('button', { name: 'Se hele antrekket' }).count() !== 0
+    || await page.locator('[aria-label="Planlagt situasjon"]').count() !== 0
+    || await page.locator('[data-planlegg-paid-material]').count() !== 0
+  ) {
+    throw new Error('Free Uke lekket råd, Outfit, kontekst eller skjult Plus-DOM');
+  }
+
+  const main = page.locator('main#main');
+  await main.evaluate((element) => {
+    element.scrollTop = 90;
+  });
+  const scrollBeforePaywall = await main.evaluate((element) => element.scrollTop);
+  await freeWeekAction.click();
+  const paywall = page.getByRole('dialog');
+  await paywall.waitFor({ state: 'visible', timeout: 15_000 });
+  const paywallText = await paywall.innerText();
+  if (
+    /sammen|familie|begge foreldre|alle som passer barnet|omsorgsperson|automatisk sted|overalt|snart/iu
+      .test(paywallText)
+  ) {
+    throw new Error(`Paywall lovet deaktivert funksjon: ${paywallText}`);
+  }
+  await page.keyboard.press('Escape');
+  await paywall.waitFor({ state: 'detached' });
+  if (
+    await freeWeekAction.evaluate((button) => document.activeElement === button) !== true
+    || await weekRadio.isChecked() !== true
+    || await main.evaluate((element) => element.scrollTop) !== scrollBeforePaywall
+  ) {
+    throw new Error('Kontekstuell paywall mistet triggerfokus, Uke-valg eller scroll');
+  }
+
+  await reloadPlanlegg(page, freePath, forecastState, 'today-only');
+  await page.getByRole('radio', { name: 'Uke', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
+  const unavailable = page.locator('[data-planlegg-access="free-week-unavailable"]');
+  await unavailable.waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await page.locator('[data-weather-comparison]').count() !== 0
+    || await page.locator('.planlegg-screen__answer').count() !== 0
+    || await page.getByRole('button', { name: 'Se hele antrekket' }).count() !== 0
+  ) {
+    throw new Error('Free Uke uten fremtidsevidens materialiserte sammenligning eller råd');
+  }
+
+  forecastState.delivery = 'pending';
+  await page.evaluate(() => {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('metno:')) localStorage.removeItem(key);
+    }
+  });
+  await openPlanlegg(page, freePath);
+  await page.getByRole('status').filter({ hasText: 'Henter dagens plan' })
+    .waitFor({ state: 'visible', timeout: 1_000 });
+  if (
+    await page.getByRole('dialog').count() !== 0
+    || await page.locator('[data-planlegg-paid-material]').count() !== 0
+    || await page.getByText('Se uke med Babyora Plus', { exact: true }).count() !== 0
+  ) {
+    throw new Error('Uavklart lasting viste paywall, betalt innhold eller låst handling');
+  }
+
+  forecastState.delivery = 'success';
+  await reloadPlanlegg(page, fixture.path, forecastState, 'week-changes');
+  const plusWeek = page.getByRole('radio', { name: 'Uke', exact: true });
+  await plusWeek.evaluate((radio) => (radio as HTMLInputElement).click());
+  const plusMaterial = page.locator('[data-planlegg-access="plus-week"]');
+  await plusMaterial.waitFor({ state: 'visible', timeout: 15_000 });
+  const futureRail = plusMaterial.getByRole('list', {
+    name: 'Antrekksendringer gjennom dagen',
+  });
+  await futureRail.waitFor({ state: 'visible', timeout: 15_000 });
+  let futureOutfit = futureRail
+    .getByRole('button', { name: 'Se hele antrekket' })
+    .first();
+  if (await futureOutfit.count() === 0) {
+    const firstFutureEvent = futureRail.locator('button[aria-expanded]').first();
+    await firstFutureEvent.evaluate((button) => (button as HTMLButtonElement).click());
+    futureOutfit = futureRail
+      .getByRole('button', { name: 'Se hele antrekket' })
+      .first();
+  }
+  await futureOutfit.waitFor({ state: 'visible', timeout: 15_000 });
+  await futureOutfit.click();
+  const plannedDialog = page.getByRole('dialog', { name: 'Lillian' });
+  await plannedDialog.waitFor({ state: 'visible', timeout: 15_000 });
+  await page.waitForFunction(() => document.activeElement?.id === 'planned-outfit-title');
+  if (!(await plannedDialog.innerText()).includes('Tilgang: future_plan')) {
+    throw new Error('Plus Uke åpnet ikke et autorisert fremtidig Outfit');
+  }
+
+  await page.evaluate(() => {
+    const key = 'babyora.subscription';
+    const current = JSON.parse(localStorage.getItem(key) ?? '{"state":{},"version":0}') as {
+      state?: { isPremium?: boolean; lastSyncedAt?: number | null };
+      version?: number;
+    };
+    const nextValue = JSON.stringify({
+      ...current,
+      state: {
+        ...current.state,
+        isPremium: false,
+        lastSyncedAt: Date.now(),
+      },
+    });
+    localStorage.setItem(key, nextValue);
+    window.dispatchEvent(new StorageEvent('storage', {
+      key,
+      newValue: nextValue,
+      storageArea: localStorage,
+    }));
+  });
+  await plannedDialog.waitFor({ state: 'detached', timeout: 15_000 });
+  await page.waitForFunction(() => (
+    document.querySelector<HTMLInputElement>(
+      '.segmented-control__input[value="today"]',
+    )?.checked === true
+  ));
+  if (
+    await page.locator('[aria-label="Planlagt situasjon"]').count() !== 0
+    || await page.locator('[data-planlegg-access="plus-week"]').count() !== 0
+    || await main.evaluate((element) => document.activeElement === element) !== true
+  ) {
+    throw new Error('Live nedgradering beholdt betalt DTO/DOM eller mistet trygt hovedfokus');
+  }
+
+  if (failures.length > 0) {
+    throw new Error(`Browserfeil:\n  ${failures.join('\n  ')}`);
+  }
+  console.log(
+    `PLANLEGG ACCESS: fixture=${fixture.id} states=free-valid,free-unavailable,loading,plus,downgrade media=none`,
+  );
+}
+
 async function runCompositionMatrix(
   page: Page,
   fixture: PlanleggE2EFixture,
@@ -1521,6 +1724,8 @@ async function main(): Promise<void> {
         await runComposition(page, fixture);
       } else if (caseName === 'composition-matrix') {
         await runCompositionMatrix(page, fixture, forecastState);
+      } else if (caseName === 'access') {
+        await runAccess(page, fixture, forecastState);
       } else {
         await runExactContext(page, fixture, forecastState);
       }
