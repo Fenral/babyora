@@ -251,7 +251,13 @@ describe('automatic location controller', () => {
 
     const activation = controller.run({ ...base, intent: 'settings-activation' });
     await Promise.resolve();
-    const resume = controller.run({ ...base, intent: 'resume' });
+    const resume = controller.run({
+      ...base,
+      intent: 'resume',
+      // Production App liveness includes resume eligibility, which is false
+      // while Settings deliberately keeps mode manual until activation succeeds.
+      isStillAllowed: () => false,
+    });
     position.resolve({ lat: 59.9139, lon: 10.7522 });
 
     await expect(activation).resolves.toEqual({ status: 'success', placeLabel: 'Oslo' });
