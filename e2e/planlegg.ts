@@ -4,7 +4,8 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium, type Browser, type Page } from 'playwright';
-import { createElement, type ComponentType } from 'react';
+import * as ReactRuntime from 'react';
+import type { ComponentType } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
   PLANLEGG_E2E_FIXTURES,
@@ -75,6 +76,7 @@ async function assertCompositionPrimitives(): Promise<void> {
     );
   }
 
+  (globalThis as typeof globalThis & { React?: typeof ReactRuntime }).React = ReactRuntime;
   const statusModule = await import(pathToFileURL(statusPath).href) as unknown as {
     PlanleggStatusNotice: ComponentType<{ state: StatusNoticeState }>;
   };
@@ -86,7 +88,7 @@ async function assertCompositionPrimitives(): Promise<void> {
     }>;
   };
   const renderStatus = (state: StatusNoticeState) => renderToStaticMarkup(
-    createElement(statusModule.PlanleggStatusNotice, { state }),
+    ReactRuntime.createElement(statusModule.PlanleggStatusNotice, { state }),
   );
 
   const loading = renderStatus({ status: 'loading' });
@@ -121,7 +123,7 @@ async function assertCompositionPrimitives(): Promise<void> {
     throw new Error('Ready-status skal ikke legge til en ekstra statusflate');
   }
 
-  const closedForecast = renderToStaticMarkup(createElement(
+  const closedForecast = renderToStaticMarkup(ReactRuntime.createElement(
     forecastModule.ForecastDisclosure,
     {
       open: false,
