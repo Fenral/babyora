@@ -1,38 +1,121 @@
 /**
- * gating — F81.5-W2: rene, testbare gating-predikater for freemium-flatene.
+ * Pure runtime access and compatibility predicates.
  *
- * Holdt UTEN React/Capacitor-avhengigheter (samme mønster som
- * paywall-copy.ts) slik at predikatene kan importeres og testes trygt fra
- * vitest (node-miljø, ingen jsdom) OG fra skjermene som faktisk bruker dem
- * til å styre rendering/guard-logikk (InnstillingerScreen.tsx, UkeScreen.tsx).
- *
- * Denne appen har ingen jsdom/@testing-library/react-oppsett — skjerm-
- * rendering verifiseres via Playwright/e2e (se f.eks. useOverrides.test.tsx).
- * Disse predikatene eksisterer derfor som egne, importerbare enheter slik at
- * selve GATING-BESLUTNINGEN (ikke DOM-outputet) kan enhetstestes presist.
+ * Policy and implementation availability are intentionally separate. A paid
+ * entitlement is necessary for Plus capabilities, but it is never sufficient
+ * when the corresponding runtime implementation is absent or disabled.
  */
+import {
+  decideAccess,
+  type AccessContext,
+  type AccessDecision,
+  type Capability,
+} from '../access/capabilities';
+import { PLUS_FEATURE_AVAILABILITY } from './plus-features';
+
+export type RuntimeCapabilityState = 'allowed' | 'denied' | 'neutral';
+
+export type RuntimeCapabilityAccess = Readonly<{
+  capability: Capability;
+  state: RuntimeCapabilityState;
+  allowed: boolean;
+  implementationAvailable: boolean;
+  decision: AccessDecision;
+}>;
+
+export type RuntimeCapabilityAvailability =
+  Readonly<Partial<Record<Capability, boolean>>>;
 
 /**
- * Flate 4 (barn 2+): skal denne barn-raden i Bytt barn-dialogen gates bak
- * Babyora Pluss?
- *
- * Regel: barn nr. 1 (index 0) er alltid gratis. For ikke-Premium er
- * children[1+] gatet — MEN aktivt barn låses ALDRI ut, selv om det er
- * barn 2+ og brukeren har mistet Premium (edge-case: nedgradering mens et
- * barn nr. 2+ var valgt). `isActive` overstyrer derfor alltid gating.
+ * Authoritative runtime seam. Loading is neutral and never creates a paywall
+ * trigger; every other capability requires both policy access and an explicit
+ * true implementation flag.
  */
-export function isChildSwitchGated(index: number, isActive: boolean, isPremium: boolean): boolean {
+export function resolveRuntimeCapabilityAccess(
+  capability: Capability,
+  context: AccessContext,
+  availability: RuntimeCapabilityAvailability,
+): RuntimeCapabilityAccess {
+  const decision = decideAccess(capability, context);
+  const implementationAvailable = availability[capability] === true;
+  if (decision.reason === 'loading') {
+    return {
+      capability,
+      state: 'neutral',
+      allowed: false,
+      implementationAvailable,
+      decision,
+    };
+  }
+  const allowed = decision.allowed && implementationAvailable;
+  return {
+    capability,
+    state: allowed ? 'allowed' : 'denied',
+    allowed,
+    implementationAvailable,
+    decision,
+  };
+}
+
+export type PlanningView = 'today' | 'week' | 'soon';
+export type PlanningViewPresentation = 'neutral' | 'full' | 'teaser' | 'hidden';
+
+export type PlanningViewAccess = Readonly<{
+  view: PlanningView;
+  capability: 'today_home' | 'future_plan' | 'soon_preparation';
+  presentation: PlanningViewPresentation;
+  access: RuntimeCapabilityAccess;
+}>;
+
+const PLANNING_VIEW_CAPABILITY = {
+  today: 'today_home',
+  week: 'future_plan',
+  soon: 'soon_preparation',
+} as const satisfies Readonly<Record<PlanningView, Capability>>;
+
+export function resolvePlanningViewAccess(
+  view: PlanningView,
+  context: AccessContext,
+  availability: RuntimeCapabilityAvailability = PLUS_FEATURE_AVAILABILITY,
+): PlanningViewAccess {
+  const capability = PLANNING_VIEW_CAPABILITY[view];
+  const access = resolveRuntimeCapabilityAccess(capability, context, availability);
+  let presentation: PlanningViewPresentation;
+  if (access.state === 'neutral') {
+    presentation = 'neutral';
+  } else if (!access.implementationAvailable) {
+    presentation = 'hidden';
+  } else if (access.allowed) {
+    presentation = 'full';
+  } else {
+    presentation = view === 'today' ? 'hidden' : 'teaser';
+  }
+  return { view, capability, presentation, access };
+}
+
+/**
+ * Barn nr. 1 er gratis. Et aktivt barn låses aldri ut ved nedgradering.
+ */
+export function isChildSwitchGated(
+  index: number,
+  isActive: boolean,
+  isPremium: boolean,
+): boolean {
   if (isPremium || isActive) return false;
   return index > 0;
 }
 
 /**
- * Flate 1 (10 dager / "Uke"-tab): skal 10-dagers-panelet vise
- * teaser-modus (antrekk-/lag-delen erstattet av ETT samlet låst-parti)?
- *
- * Modell (b): tabben er alltid valgbar — kun tenday-tab + ikke-Premium
- * trigger teaser. "I dag"-tab er alltid urørt, uansett Premium-status.
+ * Compatibility bridge for UkeScreen until its atomic 01-10 migration.
  */
-export function shouldShowTenDayTeaser(tab: 'today' | 'tenday', isPremium: boolean): boolean {
-  return tab === 'tenday' && !isPremium;
+export function shouldShowTenDayTeaser(
+  tab: 'today' | 'tenday',
+  isPremium: boolean,
+): boolean {
+  const view = tab === 'today' ? 'today' : 'week';
+  return resolvePlanningViewAccess(view, {
+    isPlus: isPremium,
+    authenticated: false,
+    loading: false,
+  }).presentation === 'teaser';
 }

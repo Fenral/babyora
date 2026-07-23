@@ -46,7 +46,11 @@ import { useNotificationPref } from '../state/notification-pref-store';
 import { useRefHour, type RefHour } from '../state/ref-hour-store';
 import { useLocationPref } from '../state/location-pref-store';
 import { useAccess } from '../lib/premium/use-access';
-import { isChildSwitchGated } from '../lib/premium/gating';
+import {
+  isChildSwitchGated,
+  resolveRuntimeCapabilityAccess,
+} from '../lib/premium/gating';
+import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
 import { reverseGeocode } from '../lib/geocode/nominatim';
 import {
   cancelMorningNotification,
@@ -1123,7 +1127,17 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
   // F81.5-W2: useAccess() er den eneste kontrakten skjermer skal bruke for
   // Premium-status (se use-access.ts). Migrert fra direkte useSubscription()-
   // lesing — samme underliggende verdi, ingen atferdsendring.
-  const { isPremium } = useAccess();
+  const { isPremium, loading: accessLoading } = useAccess();
+  const automaticLocationAllowed = resolveRuntimeCapabilityAccess(
+    'automatic_location',
+    {
+      isPlus: isPremium,
+      // automatic_location has no authentication requirement.
+      authenticated: false,
+      loading: accessLoading,
+    },
+    PLUS_FEATURE_AVAILABILITY,
+  ).allowed;
   const locationMode = useLocationPref((s) => s.mode);
   const setLocationMode = useLocationPref((s) => s.setMode);
 
@@ -1468,14 +1482,22 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
         setLocationMode('manual');
         return;
       }
+      if (!automaticLocationAllowed) {
+        setAutoLocationDialogOpen(false);
+        return;
+      }
       // ON → åpne forklarings-dialog (samtykke før permission-prompt)
       setAutoLocationDialogOpen(true);
     },
-    [fire, setLocationMode],
+    [automaticLocationAllowed, fire, setLocationMode],
   );
 
   const handleConfirmAutoLocation = useCallback(async () => {
     void fire('medium');
+    if (!automaticLocationAllowed) {
+      setAutoLocationDialogOpen(false);
+      return;
+    }
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       setAutoLocationDialogOpen(false);
       showToast('Posisjon støttes ikke på denne enheten.');
@@ -1528,7 +1550,16 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
     } finally {
       setAutoLocationPending(false);
     }
-  }, [active.city, active.id, fire, needsOnboarding, setLocationMode, showToast, updateChild]);
+  }, [
+    active.city,
+    active.id,
+    automaticLocationAllowed,
+    fire,
+    needsOnboarding,
+    setLocationMode,
+    showToast,
+    updateChild,
+  ]);
 
   const handleMorningToggle = useCallback(
     async (next: boolean) => {

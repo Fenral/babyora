@@ -27,12 +27,26 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { useChildren, type Child } from '../state/children-store';
 import { useLocationPref } from '../state/location-pref-store';
 import { reverseGeocode } from '../lib/geocode/nominatim';
+import { useAccess } from '../lib/premium/use-access';
+import { resolveRuntimeCapabilityAccess } from '../lib/premium/gating';
+import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
 
 const MIN_REFRESH_INTERVAL_MS = 60_000;
 
 export function useAutoLocationRefresh(): void {
   const mode = useLocationPref((s) => s.mode);
   const { active, needsOnboarding, updateChild } = useChildren();
+  const { isPremium, loading } = useAccess();
+  const automaticLocationAllowed = resolveRuntimeCapabilityAccess(
+    'automatic_location',
+    {
+      isPlus: isPremium,
+      // automatic_location is not an auth capability; do not infer identity.
+      authenticated: false,
+      loading,
+    },
+    PLUS_FEATURE_AVAILABILITY,
+  ).allowed;
   const activeIdRef = useRef(active.id);
   const lastRunRef = useRef(0);
 
@@ -44,7 +58,7 @@ export function useAutoLocationRefresh(): void {
   });
 
   useEffect(() => {
-    if (mode !== 'auto' || needsOnboarding) return;
+    if (!automaticLocationAllowed || mode !== 'auto' || needsOnboarding) return;
     if (typeof navigator === 'undefined' || !navigator.geolocation) return;
 
     const refresh = (): void => {
@@ -97,5 +111,5 @@ export function useAutoLocationRefresh(): void {
     }
 
     return () => cleanup?.();
-  }, [mode, needsOnboarding, updateChild]);
+  }, [automaticLocationAllowed, mode, needsOnboarding, updateChild]);
 }
