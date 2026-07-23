@@ -584,6 +584,15 @@ describe('extractHourly', () => {
     expect(extractHourly(fc, 1)).toEqual([]);
     expect(extractDailyAtHour(fc, 6, 1)[0]?.precipMmH).toBe(10);
   });
+
+  it('fails closed when the actual current point lacks one-hour evidence', () => {
+    const actualNow = point(2026, 0, 12, 9, -20, 2, 'cloudy');
+    delete actualNow.data.next_1_hours;
+    const later = point(2026, 0, 12, 10, 15, 2, 'clearsky_day');
+    const fc = forecast([actualNow, later]);
+
+    expect(() => extractNow(fc)).toThrow('met.no: mangler en-timesbevis');
+  });
 });
 
 describe('extractDailyAtHour', () => {
