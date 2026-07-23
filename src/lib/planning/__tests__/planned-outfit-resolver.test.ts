@@ -63,15 +63,27 @@ function plannedContext(
   });
 }
 
+function currentEvents(
+  ...events: readonly PlanningChangeEvent[]
+): readonly PlanningChangeEvent[] {
+  return Object.freeze([...events]);
+}
+
+function contextMap(
+  entries: readonly (readonly [string, unknown])[],
+): ReadonlyMap<string, unknown> {
+  return new Map(entries);
+}
+
 describe('Planned Outfit resolver', () => {
-  it('resolves only an exact current-event context', () => {
+  it('resolves only an exact current-event ReadonlyMap context', () => {
     const event = planningEvent();
     const context = plannedContext(event);
 
     expect(resolvePlannedOutfitContext(
       event.id,
-      [event],
-      { [event.id]: context },
+      currentEvents(event),
+      contextMap([[event.id, context]]),
     )).toBe(context);
     expect(new Set([
       context.plannedContextId,
@@ -95,24 +107,20 @@ describe('Planned Outfit resolver', () => {
     const transitionMismatch = plannedContext(event, {
       transitionContextId: 'transition-unrelated',
     });
-    const inheritedContexts = Object.create({
-      [event.id]: exact,
-    }) as Readonly<Record<string, unknown>>;
 
     const rejected: ReadonlyArray<readonly [
       string,
       readonly PlanningChangeEvent[],
-      Readonly<Record<string, unknown>>,
+      ReadonlyMap<string, unknown>,
     ]> = [
-      ['planning-event-missing', [event], { [event.id]: exact }],
-      [event.id, [], { [event.id]: exact }],
-      [event.id, [other], { [event.id]: exact }],
-      [event.id, [event], {}],
-      [event.id, [event], inheritedContexts],
-      [event.id, [event], { [event.id]: invalidClone }],
-      [event.id, [event], { [event.id]: planningMismatch }],
-      [event.id, [event], { [event.id]: transitionMismatch }],
-      [event.id, [event], { [other.id]: plannedContext(other) }],
+      ['planning-event-missing', currentEvents(event), contextMap([[event.id, exact]])],
+      [event.id, currentEvents(), contextMap([[event.id, exact]])],
+      [event.id, currentEvents(other), contextMap([[event.id, exact]])],
+      [event.id, currentEvents(event), contextMap([])],
+      [event.id, currentEvents(event), contextMap([[event.id, invalidClone]])],
+      [event.id, currentEvents(event), contextMap([[event.id, planningMismatch]])],
+      [event.id, currentEvents(event), contextMap([[event.id, transitionMismatch]])],
+      [event.id, currentEvents(event), contextMap([[other.id, plannedContext(other)]])],
     ];
 
     for (const [eventId, events, contexts] of rejected) {
@@ -129,15 +137,15 @@ describe('Planned Outfit resolver', () => {
     });
     const firstContext = plannedContext(first);
     const secondContext = plannedContext(second);
-    const contexts = {
-      [first.id]: firstContext,
-      [second.id]: secondContext,
-    };
+    const contexts = contextMap([
+      [first.id, firstContext],
+      [second.id, secondContext],
+    ]);
 
-    expect(resolvePlannedOutfitContext(second.id, [first, second], contexts)).toBe(
+    expect(resolvePlannedOutfitContext(second.id, currentEvents(first, second), contexts)).toBe(
       secondContext,
     );
-    expect(resolvePlannedOutfitContext(first.id, [first, second], contexts)).toBe(
+    expect(resolvePlannedOutfitContext(first.id, currentEvents(first, second), contexts)).toBe(
       firstContext,
     );
   });
@@ -151,8 +159,54 @@ describe('Planned Outfit resolver', () => {
 
     expect(resolvePlannedOutfitContext(
       event.id,
-      [event, conflicting],
-      { [event.id]: context },
+      currentEvents(event, conflicting),
+      contextMap([[event.id, context]]),
+    )).toBeNull();
+  });
+
+  it('fails closed for proxy containers that fabricate membership or map hits', () => {
+    const event = planningEvent();
+    const context = plannedContext(event);
+    const fabricatedEvents = new Proxy([] as PlanningChangeEvent[], {
+      get(target, property, receiver) {
+        if (property === 'length') return 1;
+        return Reflect.get(target, property, receiver);
+      },
+      getOwnPropertyDescriptor(target, property) {
+        if (property === '0') {
+          return {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: event,
+          };
+        }
+        return Reflect.getOwnPropertyDescriptor(target, property);
+      },
+    });
+    const fabricatedMap = new Proxy(new Map<string, unknown>(), {
+      getOwnPropertyDescriptor(target, property) {
+        if (property === event.id) {
+          return {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: context,
+          };
+        }
+        return Reflect.getOwnPropertyDescriptor(target, property);
+      },
+    });
+
+    expect(resolvePlannedOutfitContext(
+      event.id,
+      fabricatedEvents,
+      contextMap([[event.id, context]]),
+    )).toBeNull();
+    expect(resolvePlannedOutfitContext(
+      event.id,
+      currentEvents(event),
+      fabricatedMap,
     )).toBeNull();
   });
 
@@ -163,6 +217,9 @@ describe('Planned Outfit resolver', () => {
     expect(sourceModule.default).not.toMatch(
       /\b(?:createPlannedOutfitContext|Date|recommend|weather|localStorage|sessionStorage|indexedDB|fetch|XMLHttpRequest|WebSocket|sendBeacon|console|posthog|analytics|track|history|pushState|replaceState|URLSearchParams|React)\b/u,
     );
+    expect(sourceModule.default).toContain('Object.isFrozen(currentEvents)');
+    expect(sourceModule.default).toContain('Map.prototype.has.call');
+    expect(sourceModule.default).toContain('Map.prototype.get.call');
   });
 
   it('RED_PREPARES_A_TRANSIENT_PLANNED_DRILL_WITHOUT_LIVE_RAIL_WIRING', async () => {
@@ -211,5 +268,37 @@ describe('Planned Outfit resolver', () => {
     expect(plannedBranch).toContain('tabIndex={-1}');
     expect(plannedBranch).toContain('ref={titleRef}');
     expect(plannedBranch).toContain('titleRef.current?.focus()');
+  });
+
+  it('does not materialize planned advice when exact access is denied', async () => {
+    const event = planningEvent();
+    const denied = plannedContext(event, {
+      recommendation: {
+        id: 'denied-recommendation',
+        fingerprint: 'denied:fingerprint',
+        orderedGarments: ['BETALT-PLAGG-SKAL-IKKE-VISES'],
+        equipment: ['BETALT-UTSTYR-SKAL-IKKE-VISES'],
+        finalized: true,
+      },
+      access: {
+        capability: 'future_plan',
+        allowed: false,
+        reason: 'expired',
+      },
+    });
+    const [{ createElement }, { renderToStaticMarkup }, { PaakledningScreen }] =
+      await Promise.all([
+        import('react'),
+        import('react-dom/server'),
+        import('../../../screens/PaakledningScreen.js'),
+      ]);
+    const markup = renderToStaticMarkup(createElement(PaakledningScreen, {
+      onBack: () => undefined,
+      plannedContext: denied,
+    }));
+
+    expect(markup).toContain('Planlagt antrekk er ikke tilgjengelig');
+    expect(markup).not.toContain('BETALT-PLAGG-SKAL-IKKE-VISES');
+    expect(markup).not.toContain('BETALT-UTSTYR-SKAL-IKKE-VISES');
   });
 });
