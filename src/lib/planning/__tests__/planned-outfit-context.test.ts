@@ -5,6 +5,11 @@ import {
   planningFinalizedRecommendationFixture,
   planningLocationFixture,
 } from './planlegg-fixtures.js';
+import {
+  createPlannedOutfitContext,
+  isPlannedOutfitContext,
+  PLAN_TIME_ZONE,
+} from '../planned-outfit-context.js';
 
 type MutablePlannedContextInput = {
   planningEventId: string;
@@ -44,18 +49,6 @@ type MutablePlannedContextInput = {
     reason: string;
   };
 };
-
-type PlannedContextContract = {
-  PLAN_TIME_ZONE: string;
-  createPlannedOutfitContext(input: unknown): Readonly<Record<string, unknown>>;
-  isPlannedOutfitContext(value: unknown): boolean;
-};
-
-const modulePath = '../planned-outfit-context.js';
-
-async function loadContract(): Promise<PlannedContextContract> {
-  return import(/* @vite-ignore */ modulePath) as Promise<PlannedContextContract>;
-}
 
 function completeInput(): MutablePlannedContextInput {
   return {
@@ -109,32 +102,14 @@ function assertRecursivelyFrozen(value: unknown, seen = new Set<object>()): void
   for (const nested of Object.values(value)) assertRecursivelyFrozen(nested, seen);
 }
 
-function isExpectedMissingModule(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  const message = error.message;
-  return (
-    /planned-outfit-context\.(?:js|ts)/u.test(message)
-    && /Failed to load url|Cannot find module|ERR_MODULE_NOT_FOUND|does the file exist/iu.test(message)
-  );
-}
-
 describe('Planned Outfit exact-context contracts', () => {
-  it('RED_PLANNED_CONTEXT_CONTRACT', async () => {
-    try {
-      const contract = await loadContract();
-      expect(contract.PLAN_TIME_ZONE).toBe('Europe/Oslo');
-      expect(contract.createPlannedOutfitContext).toBeTypeOf('function');
-      expect(contract.isPlannedOutfitContext).toBeTypeOf('function');
-    } catch (error) {
-      if (isExpectedMissingModule(error)) {
-        throw new Error('MISSING_PLANNED_OUTFIT_CONTEXT_CONTRACT');
-      }
-      throw error;
-    }
+  it('exports the fixed timezone, strict constructor, and tolerant guard', () => {
+    expect(PLAN_TIME_ZONE).toBe('Europe/Oslo');
+    expect(createPlannedOutfitContext).toBeTypeOf('function');
+    expect(isPlannedOutfitContext).toBeTypeOf('function');
   });
 
-  it('freezes a complete known-key clone and keeps the three identities distinct', async () => {
-    const { createPlannedOutfitContext, isPlannedOutfitContext } = await loadContract();
+  it('freezes a complete known-key clone and keeps the three identities distinct', () => {
     const input = completeInput();
     const original = cloneInput(input);
     const context = createPlannedOutfitContext(input);
@@ -177,8 +152,7 @@ describe('Planned Outfit exact-context contracts', () => {
     });
   });
 
-  it('is byte-stable for canonical Unicode input and changes identity for every planned dimension', async () => {
-    const { createPlannedOutfitContext } = await loadContract();
+  it('is byte-stable for canonical Unicode input and changes identity for every planned dimension', () => {
     const canonical = completeInput();
     const decomposed = cloneInput(canonical);
     decomposed.child.name = 'A\u030Ase';
@@ -230,8 +204,7 @@ describe('Planned Outfit exact-context contracts', () => {
 
   it.each(['configured-place', 'fixed-home', 'automatic'])(
     'accepts the closed place source %s and exact coordinate boundaries',
-    async (source) => {
-      const { createPlannedOutfitContext } = await loadContract();
+    (source) => {
       const northEast = completeInput();
       northEast.place = { ...northEast.place, source, lat: 90, lon: 180 };
       const southWest = completeInput();
@@ -241,8 +214,7 @@ describe('Planned Outfit exact-context contracts', () => {
     },
   );
 
-  it('rejects missing, partial, defaultable, aliased, and malformed creation input', async () => {
-    const { createPlannedOutfitContext } = await loadContract();
+  it('rejects missing, partial, defaultable, aliased, and malformed creation input', () => {
     const invalidInputs: unknown[] = [
       undefined,
       null,
@@ -289,8 +261,7 @@ describe('Planned Outfit exact-context contracts', () => {
     }
   });
 
-  it('uses a total tolerant guard that rejects mutable, partial, tampered, circular, and hostile values', async () => {
-    const { createPlannedOutfitContext, isPlannedOutfitContext } = await loadContract();
+  it('uses a total tolerant guard that rejects mutable, partial, tampered, circular, and hostile values', () => {
     const valid = createPlannedOutfitContext(completeInput());
     const mutableClone = structuredClone(valid);
     const tampered = structuredClone(valid) as Record<string, unknown>;
@@ -328,7 +299,6 @@ describe('Planned Outfit exact-context contracts', () => {
   });
 
   it('copies only known keys and has no persistence, URL, logging, tracking, or network capability', async () => {
-    const { createPlannedOutfitContext } = await loadContract();
     const input = completeInput() as MutablePlannedContextInput & {
       inheritedSecret?: string;
       extra?: string;
