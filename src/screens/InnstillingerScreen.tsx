@@ -1476,8 +1476,8 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
   //  6. OFF → setLocationMode('manual') (beholder eksisterende lat/lon)
   const handleAutoLocationToggle = useCallback(
     (next: boolean) => {
-      void fire('selection');
       if (!next) {
+        void fire('selection');
         // OFF → tilbake til manuelt valg, beholder eksisterende koordinater
         setLocationMode('manual');
         return;
@@ -1486,6 +1486,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
         setAutoLocationDialogOpen(false);
         return;
       }
+      void fire('selection');
       // ON → åpne forklarings-dialog (samtykke før permission-prompt)
       setAutoLocationDialogOpen(true);
     },
@@ -1493,11 +1494,11 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
   );
 
   const handleConfirmAutoLocation = useCallback(async () => {
-    void fire('medium');
     if (!automaticLocationAllowed) {
       setAutoLocationDialogOpen(false);
       return;
     }
+    void fire('medium');
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       setAutoLocationDialogOpen(false);
       showToast('Posisjon støttes ikke på denne enheten.');
