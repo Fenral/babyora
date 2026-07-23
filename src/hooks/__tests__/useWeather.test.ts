@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  createWeatherFetchIdentity,
   createInitialWeatherRequestState,
   reduceWeatherRequestState,
   selectWeatherForFetchKey,
@@ -197,6 +198,64 @@ describe('weather result unwrap', () => {
 });
 
 describe('weather request lifecycle', () => {
+  it('includes location source and cache scope in the fetch identity', () => {
+    expect(createWeatherFetchIdentity(61, 8, 12)).toEqual({
+      fetchKey: 'configured-place:persistent:61,8,12',
+      cacheScope: 'persistent',
+      source: 'configured-place',
+    });
+    expect(createWeatherFetchIdentity(61, 8, 12, {
+      cacheScope: 'memory-only',
+      source: 'automatic',
+    })).toEqual({
+      fetchKey: 'automatic:memory-only:61,8,12',
+      cacheScope: 'memory-only',
+      source: 'automatic',
+    });
+  });
+
+  it('keeps persistent and automatic requests distinct for identical coordinates', async () => {
+    const persistent = createWeatherFetchIdentity(61, 8, 12, {
+      cacheScope: 'persistent',
+      source: 'fixed-home',
+    });
+    const automatic = createWeatherFetchIdentity(61, 8, 12, {
+      cacheScope: 'memory-only',
+      source: 'automatic',
+    });
+    let state = createInitialWeatherRequestState(persistent.fetchKey);
+    const oldRequest = deferred<ForecastFetchResult>();
+    const newRequest = deferred<ForecastFetchResult>();
+    const publish = async (
+      promise: Promise<ForecastFetchResult>,
+      requestId: number,
+      fetchKey: string,
+    ) => {
+      const resolved = await promise;
+      state = reduceWeatherRequestState(state, {
+        type: 'resolved', requestId, fetchKey, result: resolved, refHour: 12,
+      });
+    };
+
+    state = reduceWeatherRequestState(state, {
+      type: 'started', requestId: 1, fetchKey: persistent.fetchKey,
+    });
+    const oldPublish = publish(oldRequest.promise, 1, persistent.fetchKey);
+    state = reduceWeatherRequestState(state, {
+      type: 'started', requestId: 2, fetchKey: automatic.fetchKey,
+    });
+    const newPublish = publish(newRequest.promise, 2, automatic.fetchKey);
+
+    newRequest.resolve(result(6));
+    await newPublish;
+    oldRequest.resolve(result(-8));
+    await oldPublish;
+
+    expect(persistent.fetchKey).not.toBe(automatic.fetchKey);
+    expect(state.activeFetchKey).toBe(automatic.fetchKey);
+    expect(state.weather.now?.tempC).toBe(6);
+  });
+
   it('publishes weather and matching evidence in one accepted resolution', () => {
     const started = reduceWeatherRequestState(
       createInitialWeatherRequestState('61,8,12'),
