@@ -35,6 +35,7 @@ key-decisions:
   - "The cache key and proxy URL remain unchanged; writes use a version-1 envelope while valid unversioned legacy entries remain readable."
   - "useWeather clears cross-key data on start and publishes forecast derivatives plus matching evidence through one request-ID-gated state transition."
   - "One explicit evaluatedAt clock is captured after network validation or at each cache/memory retrieval and drives source currentness plus current-point selection."
+  - "Committed-memory evaluation is owned by readMemoryCommit and captured only after forecast revalidation; callers cannot predate truth decisions."
   - "Current extraction selects the unique one-hour interval containing evaluatedAt; array position and period availability never substitute for temporal containment."
 
 patterns-established:
@@ -50,10 +51,10 @@ coverage:
     requirement: TRUTH-01
     verification:
       - kind: unit
-        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (80 passed)"
+        ref: "npm exec -- vitest run src/lib/met-no/__tests__/client.test.ts (82 passed)"
         status: pass
       - kind: other
-        ref: "git diff --check 41e658e..2ac6d04 and exact two-path cache-clock repair scope manifest"
+        ref: "git diff --check c0677c9..7105265 and exact two-path memory-clock repair scope manifest"
         status: pass
     human_judgment: false
   - id: D2
@@ -72,10 +73,10 @@ coverage:
     requirement: EVID-02
     verification:
       - kind: unit
-        ref: "focused four-suite run (109 passed, 1 future-plan TODO)"
+        ref: "focused four-suite run (111 passed, 1 future-plan TODO)"
         status: pass
       - kind: other
-        ref: "npm test && npm run lint && npm run build (676 passed; lint/main/bare build passed)"
+        ref: "npm test && npm run lint && npm run build (678 passed; lint/main/bare build passed)"
         status: pass
     human_judgment: false
   - id: D4
@@ -83,12 +84,12 @@ coverage:
     requirement: GOV-04
     verification:
       - kind: other
-        ref: "post-validation cache-clock candidate 2ac6d04c565abe5191d4938aa449a1e51cd84959; implementation evidence recorded below"
+        ref: "post-validation memory-clock candidate 7105265455ea7da66c4f2146add5df6714ec3979; implementation evidence recorded below"
         status: pass
     human_judgment: true
     rationale: "Repository governance requires a fresh independent high-risk reviewer on the exact candidate SHA; the executor cannot issue that PASS."
 
-duration: 110min
+duration: 118min
 completed: 2026-07-23
 status: ready_for_high_risk_review
 review_status: awaiting_two_independent_verdicts
@@ -100,7 +101,7 @@ review_status: awaiting_two_independent_verdicts
 
 ## Performance
 
-- **Duration:** 110 min including the post-validation persistent-cache clock repair
+- **Duration:** 118 min including the post-validation memory clock repair
 - **Started:** 2026-07-22T23:18:30+02:00
 - **Candidate prepared:** 2026-07-23T11:56:00+02:00
 - **Tasks:** 2
@@ -136,6 +137,8 @@ review_status: awaiting_two_independent_verdicts
 15. **Unified time contract GREEN: Explicit evaluation clock and interval selection** — `d2a44d8` (`feat`)
 16. **Cache read clock RED: Cross TTL/source/current boundaries during validated storage reads** — `ae0e336` (`test`)
 17. **Cache read clock GREEN: Capture cache evaluation after validated storage reads** — `2ac6d04` (`fix`)
+18. **Memory clock RED: Cross TTL/source/current boundaries during committed validation** — `640907a` (`test`)
+19. **Memory clock GREEN: Capture memory evaluation after forecast validation** — `7105265` (`fix`)
 
 **Plan metadata:** recorded by the final GSD documentation commit.
 
@@ -166,17 +169,18 @@ review_status: awaiting_two_independent_verdicts
 
 ## Deterministic Evidence
 
-All executable replacement evidence below ran from a fresh `npm ci` archive checkout of exact candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959`; the primary checkout's pre-existing `node_modules` remained untouched.
+All executable replacement evidence below ran from a fresh `npm ci` archive checkout of exact candidate `7105265455ea7da66c4f2146add5df6714ec3979`; the primary checkout's pre-existing `node_modules` remained untouched.
 
 - Mandatory unified-contract RED history — **EXPECTED FAIL**, 12 failed, 95 passed, and one TODO before `d2a44d8`.
-- Cache-read clock RED before production changes — **EXPECTED FAIL**, 2 failed and 78 skipped. The failures showed `fresh/evaluatedAt=09:59:59` after retrieval reached 10:00:01 and retained source 04:00/current interval 09:00 after structural validation crossed both boundaries.
-- Focused four-suite Vitest run — **PASS**, 4/4 files; 109 tests passed and one intentional Plan 01-11 TODO.
+- Cache-read clock RED history — **EXPECTED FAIL**, 2 failed and 78 skipped before `2ac6d04`.
+- Memory clock RED before production changes — **EXPECTED FAIL**, 2 failed and 80 skipped. Failure fallback returned the expired network memory result with `evaluatedAt=09:59:59`/source 04:00, and obsolete-success handling let that expired commit supersede the older valid response after validation reached 10:00:01.
+- Focused four-suite Vitest run — **PASS**, 4/4 files; 111 tests passed and one intentional Plan 01-11 TODO.
 - `node_modules/.bin/tsc -b --pretty false` — **PASS**.
-- `npm test` — **PASS**, 60 files passed, 4 skipped; 676 tests passed, 34 TODO.
+- `npm test` — **PASS**, 60 files passed, 4 skipped; 678 tests passed, 34 TODO.
 - `npm run lint` — **PASS**.
 - `npm run build` — **PASS**, TypeScript plus main and bare Vite builds.
-- `git diff --check 41e658ead674a2122f9bb9af1ef856304fe5b9fb..2ac6d04c565abe5191d4938aa449a1e51cd84959` — **PASS**.
-- Cache-clock repair scope manifest — **PASS**, exactly `src/lib/met-no/client.ts` and its existing test file changed. No package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
+- `git diff --check c0677c9..7105265455ea7da66c4f2146add5df6714ec3979` — **PASS**.
+- Memory-clock repair scope manifest — **PASS**, exactly `src/lib/met-no/client.ts` and its existing test file changed. No package, UI, product, media, endpoint, schema, recommendation, pricing, RevenueCat, analytics, or unrelated file changed.
 
 ## Candidate and Review Authority
 
@@ -196,10 +200,12 @@ All executable replacement evidence below ran from a fresh `npm ci` archive chec
 | Codex GSD executor (accepted unified time contract) | High-risk implementation | `d2a44d802c2b149bcef39093f58c176187c9ca19` | `READY_FOR_HIGH_RISK_REVIEW`; all deterministic checks green, no self-PASS claimed |
 | Strictest independent reviewer | Persistent-cache timing review | `d2a44d802c2b149bcef39093f58c176187c9ca19` | **BLOCK** — cache evaluation was captured before storage retrieval, parse, and structural validation; accepted ADR remains sound |
 | Codex GSD executor (post-validation cache clock repair) | High-risk implementation | `2ac6d04c565abe5191d4938aa449a1e51cd84959` | `READY_FOR_HIGH_RISK_REVIEW`; all deterministic checks green, no self-PASS claimed |
-| Fresh independent verifier | Goal verification | `2ac6d04c565abe5191d4938aa449a1e51cd84959` | **PENDING** — first independent verdict required |
-| External adversarial reviewer | Equivalent-bypass review | `2ac6d04c565abe5191d4938aa449a1e51cd84959` | **PENDING** — second independent verdict required |
+| Strictest independent reviewer | Committed-memory timing review | `2ac6d04c565abe5191d4938aa449a1e51cd84959` | **BLOCK** — memory evaluation was captured before committed forecast validation; accepted ADR remains sound |
+| Codex GSD executor (post-validation memory clock repair) | High-risk implementation | `7105265455ea7da66c4f2146add5df6714ec3979` | `READY_FOR_HIGH_RISK_REVIEW`; all deterministic checks green, no self-PASS claimed |
+| Fresh independent verifier | Goal verification | `7105265455ea7da66c4f2146add5df6714ec3979` | **PENDING** — first independent verdict required |
+| External adversarial reviewer | Equivalent-bypass review | `7105265455ea7da66c4f2146add5df6714ec3979` | **PENDING** — second independent verdict required |
 
-Candidate `d2a44d802c2b149bcef39093f58c176187c9ca19` is rejected by the strictest verdict. Replacement candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959` preserves the owner-accepted ADR, closes the persistent-read timing gap, and awaits two independent verdicts; any edit to the repaired code/test paths invalidates it.
+Candidates `d2a44d802c2b149bcef39093f58c176187c9ca19` and `2ac6d04c565abe5191d4938aa449a1e51cd84959` are rejected by their strictest verdicts. Replacement candidate `7105265455ea7da66c4f2146add5df6714ec3979` preserves the owner-accepted ADR, closes the persistent-read and committed-memory timing gaps, and awaits two independent verdicts; any edit to the repaired code/test paths invalidates it.
 
 ## Independent BLOCK on Candidate 4150a1e
 
@@ -315,6 +321,16 @@ The strictest independent verdict **BLOCKED** `d2a44d802c2b149bcef39093f58c17618
 - `2ac6d04` makes `readCache` own one final `evaluatedAt` captured only after retrieval, parsing, and successful structural validation. That same timestamp now classifies future commit time, TTL/max-stale age, source currentness, metadata, and downstream current interval on initial and network-fallback reads.
 - No tolerance, cache identity, concurrency, storage-isolation, live MET, unit, enum, terminal-point, hourly, daily, or coverage contract changed.
 
+## Memory Validation P1 BLOCK and Repair
+
+The strictest independent verdict **BLOCKED** `2ac6d04c565abe5191d4938aa449a1e51cd84959` for one remaining implementation gap while affirming that the accepted ADR remains sound. Both `readMemoryCommit` call sites captured an evaluation timestamp before the committed forecast was revalidated. A validation getter that advanced the clock could therefore cross TTL, source-age, or current-interval boundaries while memory metadata retained the earlier clock.
+
+- `640907a` added two test-only RED cases covering both memory paths. Each starts committed validation at 09:59:59 and finishes at 10:00:01 for a 09:00 commit, 04:00 source, and 09:00/10:00 points.
+- On `2ac6d04`, both failed for the expected reason: failure fallback retained expired network memory with `evaluatedAt=09:59:59` and source 04:00, while obsolete-success handling allowed that expired newer memory commit to supersede the older valid response.
+- `7105265` makes `readMemoryCommit` retrieve and validate the committed forecast first, then capture its one internal `evaluatedAt`. The same final timestamp classifies future/TTL age, recomputes `sourceUpdatedAt`, and populates returned metadata.
+- Both callers now invoke `readMemoryCommit(key)` without a pre-captured timestamp. Persistent cache and network producers retain their own post-retrieval/parse/validation clocks.
+- No ADR, tolerance, cache identity, concurrency, storage-isolation, live MET, unit, enum, terminal-point, hourly, daily, or coverage contract changed.
+
 ## Decisions Made
 
 - Invalid `sourceUpdatedAt`, inconsistent metadata, invalid/duplicate points, empty points, or a future cache timestamp fail closed instead of being normalized into current evidence.
@@ -330,6 +346,7 @@ The strictest independent verdict **BLOCKED** `d2a44d802c2b149bcef39093f58c17618
 - `fetchedAt` is cache-age evidence only; `evaluatedAt` is the decision clock for source currentness and current-point selection.
 - Network acceptance occurs after parsing and validation, never at request start.
 - Persistent cache evaluation is captured by `readCache` after storage retrieval, JSON parsing, and structural validation, never by its caller before the read.
+- Committed-memory evaluation is captured by `readMemoryCommit` only after `isMetForecast` revalidation; callers cannot predate TTL, source-currentness, or current-interval decisions.
 - “Now” is the unique one-hour interval containing `evaluatedAt`; array position and later period availability cannot substitute for temporal containment.
 
 ## Deviations from Plan
@@ -379,6 +396,13 @@ The strictest independent verdict **BLOCKED** `d2a44d802c2b149bcef39093f58c17618
 - **Files modified:** `src/lib/met-no/client.ts` and `src/lib/met-no/__tests__/client.test.ts`.
 - **Commits:** `ae0e336`, `2ac6d04`
 
+**7. [Rule 1 - Bug] Closed the committed-memory validation timing gap**
+- **Found during:** Strictest independent review of candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959`
+- **Issue:** Memory evaluation was captured before committed forecast validation, allowing TTL/source/current interval decisions to retain an obsolete timestamp.
+- **Fix:** Added clock-advancing RED coverage for both `readMemoryCommit` paths in `640907a`, then moved ownership of the one final memory evaluation timestamp into `readMemoryCommit` after validation in `7105265`.
+- **Files modified:** `src/lib/met-no/client.ts` and `src/lib/met-no/__tests__/client.test.ts`.
+- **Commits:** `640907a`, `7105265`
+
 ## Known Stubs
 
 - `src/lib/planning/__tests__/forecast-evidence.test.ts` retains one intentional TODO for fixed/manual persistent cache versus future memory-only automatic scope. Plan 01-11 owns that behavior; it does not prevent this plan's provenance/currentness boundary from operating.
@@ -406,7 +430,8 @@ None - no dependency, package, credential, environment, service, API, or migrati
 - Architecture decision for one explicit acceptance-time/current-point contract: **APPROVED**.
 - Accepted decision and ten-case RED matrix: `01-02-TIME-CONTRACT-ADR.md` and commit `3849e87`.
 - Unified-contract candidate `d2a44d802c2b149bcef39093f58c176187c9ca19`: **BLOCKED** by the persistent-cache timing verdict.
-- Post-validation cache-clock repair on exact candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959`: **READY_FOR_HIGH_RISK_REVIEW**.
+- Post-validation cache-clock candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959`: **BLOCKED** by the committed-memory timing verdict.
+- Post-validation memory-clock repair on exact candidate `7105265455ea7da66c4f2146add5df6714ec3979`: **READY_FOR_HIGH_RISK_REVIEW**.
 - Fresh independent goal-verification verdict on the exact candidate: **PENDING**.
 - Fresh external adversarial/equivalent-bypass verdict on the exact candidate: **PENDING**.
 - New app screenshots/video/traces and the media-based 90+ audit: **Pending stable candidate and owner permission**; none were created here.
@@ -421,12 +446,13 @@ None - no dependency, package, credential, environment, service, API, or migrati
 - Layered architecture candidate `23998169ab32c4eff83d4916777d0263a12657cf` is blocked by the strict P1 verdict.
 - Strict P1 repair candidate `89e130f8ac4a4c25380d76b4d47f010c57e7853b` is blocked by the authoritative equivalent-bypass review.
 - Unified time-contract candidate `d2a44d802c2b149bcef39093f58c176187c9ca19` is blocked by the strictest persistent-cache timing verdict.
-- Post-validation cache-clock candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959` is ready for two fresh independent high-risk verdicts.
+- Post-validation cache-clock candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959` is blocked by the strictest committed-memory timing verdict.
+- Post-validation memory-clock candidate `7105265455ea7da66c4f2146add5df6714ec3979` is ready for two fresh independent high-risk verdicts.
 - Plan 01-03 must not start until both independent verdicts are PASS on that exact SHA.
 
 ## Self-Check: PASSED
 
-All eight plan-owned paths, accepted ADR, summary, cache-clock RED commit `ae0e336`, and GREEN candidate `2ac6d04` exist. The exact two-path repair scope passed focused/full/lint/build/type-check/diff checks in a fresh archive. Implementation readiness is established; both independent verdicts remain pending and Plan 01-03 remains blocked.
+All eight plan-owned paths, accepted ADR, summary, memory-clock RED commit `640907a`, and GREEN candidate `7105265455ea7da66c4f2146add5df6714ec3979` exist. Both committed-memory paths are covered, and the exact two-path repair scope passed focused/full/lint/build/type-check/diff checks in a fresh archive. Implementation readiness is established; both independent verdicts remain pending and Plan 01-03 remains blocked.
 
 ---
 *Phase: 01-planlegg-dagslinjen*

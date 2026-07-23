@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: awaiting_review
-stopped_at: Plan 01-02 candidate 2ac6d04 awaiting two independent verdicts
-last_updated: "2026-07-23T12:15:57.5853418+02:00"
+stopped_at: Plan 01-02 candidate 7105265 awaiting two independent verdicts
+last_updated: "2026-07-23T12:35:15.4870664+02:00"
 last_activity: 2026-07-23
-last_activity_desc: Persistent-cache timing gap repaired on `2ac6d04`; deterministic checks green, two independent verdicts pending.
+last_activity_desc: Committed-memory validation timing gap repaired on `7105265`; deterministic checks green, two independent verdicts pending.
 progress:
   total_phases: 1
   completed_phases: 0
@@ -29,8 +29,8 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
 Plan: 2 of 18 in current phase
-Status: Plan 01-02 awaiting two independent high-risk verdicts on `2ac6d04`
-Last activity: 2026-07-23 — Cache evaluation now occurs after retrieval, parse, and structural validation.
+Status: Plan 01-02 awaiting two independent high-risk verdicts on `7105265`
+Last activity: 2026-07-23 — Memory evaluation now occurs after committed forecast validation.
 
 Progress: [█░░░░░░░░░] 6%
 
@@ -88,10 +88,11 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase 1]: Per-key validated network success commits to memory before persistence and precedes freshly re-read cache during concurrent fallback.
 - [Phase 1]: One explicit `evaluatedAt` clock drives source currentness and current-point selection; network captures it after validation, cache/memory refresh it per return, and `fetchedAt` remains cache-age evidence only.
 - [Phase 1]: Persistent cache owns its evaluation clock after retrieval, JSON parse, and structural validation; callers cannot predate TTL/source/current-interval decisions.
+- [Phase 1]: Committed memory owns its evaluation clock after `isMetForecast` revalidation; callers cannot predate TTL/source/current-interval decisions.
 
 ### Pending Todos
 
-- Obtain fresh independent goal-verification and adversarial/equivalent-bypass verdicts on exact candidate `2ac6d04c565abe5191d4938aa449a1e51cd84959`.
+- Obtain fresh independent goal-verification and adversarial/equivalent-bypass verdicts on exact candidate `7105265455ea7da66c4f2146add5df6714ec3979`.
 - Require both independent verdicts to be PASS before Plan 01-03.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
@@ -100,7 +101,7 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 
 - Final completion/release is gated by owner-permitted app screenshot/video capture, media-based 90+ visual verification, required physical-device evidence, and owner release approval. This does not block planning or deterministic candidate checks.
 - Plan 01-13 remains a legitimate human blocker until all six Snart approvals and independently supplied climate artifacts exist.
-- Plan 01-02 candidate `2ac6d04` remains a dependency gate until the accepted time contract has two independent PASS verdicts on that exact SHA.
+- Plan 01-02 candidate `7105265` remains a dependency gate until the accepted time contract has two independent PASS verdicts on that exact SHA.
 
 ## Deferred Items
 
@@ -113,6 +114,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-23T12:15:57.5853418+02:00
-Stopped at: Plan 01-02 candidate 2ac6d04 awaiting two independent verdicts
+Last session: 2026-07-23T12:35:15.4870664+02:00
+Stopped at: Plan 01-02 candidate 7105265 awaiting two independent verdicts
 Resume file: None
