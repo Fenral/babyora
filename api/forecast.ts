@@ -73,7 +73,12 @@ export default async function handler(req: Request): Promise<Response> {
     return json({ error: `met.no HTTP ${upstream.status}` }, upstream.status, memoryOnly);
   }
 
-  const body = await upstream.text();
+  let body: string;
+  try {
+    body = await upstream.text();
+  } catch {
+    return json({ error: 'met.no utilgjengelig' }, 502, memoryOnly);
+  }
   return new Response(body, {
     status: 200,
     headers: {

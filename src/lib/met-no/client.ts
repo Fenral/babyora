@@ -139,6 +139,8 @@ const latestCommittedByKey = new Map<string, Readonly<{
   version: bigint;
   result: ForecastFetchResult;
 }>>();
+type ActiveMemoryRequest = { version: bigint; active: boolean };
+const activeMemoryRequestByKey = new Map<string, ActiveMemoryRequest>();
 const memoryOnlyKeyOrder = new Map<string, true>();
 let requestVersionSequence = 0n;
 let coordinatorStorage: Storage | null | undefined;
@@ -177,6 +179,9 @@ function clearPersistentCoordinator(): void {
 }
 
 function removeMemoryOnlyCoordinator(key: string): void {
+  const activeRequest = activeMemoryRequestByKey.get(key);
+  if (activeRequest) activeRequest.active = false;
+  activeMemoryRequestByKey.delete(key);
   memoryOnlyKeyOrder.delete(key);
   latestStartedVersionByKey.delete(key);
   latestCommittedByKey.delete(key);
@@ -201,7 +206,15 @@ export function memoryOnlyForecastCoordinatorSize(): number {
   for (const key of latestCommittedByKey.keys()) {
     if (key.startsWith('memory-only:')) keys.add(key);
   }
+  for (const key of activeMemoryRequestByKey.keys()) keys.add(key);
   return keys.size;
+}
+
+function releaseMemoryRequest(key: string, request: ActiveMemoryRequest): void {
+  if (activeMemoryRequestByKey.get(key) === request) {
+    activeMemoryRequestByKey.delete(key);
+  }
+  request.active = false;
 }
 
 function alignCoordinatorWithStorage(): void {
@@ -444,7 +457,14 @@ export async function fetchForecast(
   }
   requestVersionSequence += 1n;
   const requestVersion = requestVersionSequence;
-  if (scope === 'memory-only') touchMemoryOnlyCoordinator(key);
+  let memoryRequest: ActiveMemoryRequest | null = null;
+  if (scope === 'memory-only') {
+    const previous = activeMemoryRequestByKey.get(key);
+    if (previous) previous.active = false;
+    touchMemoryOnlyCoordinator(key);
+    memoryRequest = { version: requestVersion, active: true };
+    activeMemoryRequestByKey.set(key, memoryRequest);
+  }
   latestStartedVersionByKey.set(key, requestVersion);
 
   // Via proxy — den setter User-Agent server-side (met.no-krav).
@@ -466,7 +486,11 @@ export async function fetchForecast(
 
     const committed = readMemoryCommit(key);
     if (committed && committed.version > requestVersion) {
+      if (memoryRequest) releaseMemoryRequest(key, memoryRequest);
       return committed.result;
+    }
+    if (memoryRequest && !memoryRequest.active) {
+      throw new Error('automatic request superseded');
     }
 
     const result: ForecastFetchResult = {
@@ -481,6 +505,7 @@ export async function fetchForecast(
       },
     };
     commitMemoryResult(key, { version: requestVersion, result });
+    if (memoryRequest) releaseMemoryRequest(key, memoryRequest);
     if (scope === 'persistent') writeCache(lat, lon, acceptedAt, data);
     return result;
   } catch (error) {
@@ -489,6 +514,8 @@ export async function fetchForecast(
     if (scope === 'memory-only') {
       if (latestStartedVersionByKey.get(key) === requestVersion) {
         removeMemoryOnlyCoordinator(key);
+      } else if (memoryRequest) {
+        releaseMemoryRequest(key, memoryRequest);
       }
       throw error;
     }
