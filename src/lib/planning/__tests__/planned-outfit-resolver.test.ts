@@ -164,4 +164,52 @@ describe('Planned Outfit resolver', () => {
       /\b(?:createPlannedOutfitContext|Date|recommend|weather|localStorage|sessionStorage|indexedDB|fetch|XMLHttpRequest|WebSocket|sendBeacon|console|posthog|analytics|track|history|pushState|replaceState|URLSearchParams|React)\b/u,
     );
   });
+
+  it('RED_PREPARES_A_TRANSIENT_PLANNED_DRILL_WITHOUT_LIVE_RAIL_WIRING', async () => {
+    const appPath = '../../../App.tsx?raw';
+    const outfitPath = '../../../screens/PaakledningScreen.tsx?raw';
+    const [{ default: appSource }, { default: outfitSource }] = await Promise.all([
+      import(/* @vite-ignore */ appPath) as Promise<{ default: string }>,
+      import(/* @vite-ignore */ outfitPath) as Promise<{ default: string }>,
+    ]);
+
+    expect(appSource).toMatch(
+      /source:\s*'planned';\s*plannedContext:\s*PlannedOutfitContext;\s*origin:\s*HTMLElement/u,
+    );
+    expect(appSource).toMatch(/source:\s*'current';\s*context\?:\s*PaakledningContext/u);
+    expect(appSource).toContain('plannedContext={drill.plannedContext}');
+    expect(appSource).toContain('origin.isConnected');
+    expect(appSource).toContain('mainRef.current?.focus()');
+
+    const ukeMount = appSource.match(/<UkeScreen[\s\S]*?\/>/u)?.[0] ?? '';
+    expect(ukeMount).not.toMatch(/plannedContext|onOpenPlannedOutfit|contextId/u);
+    expect(appSource).not.toMatch(
+      /(?:localStorage|sessionStorage|indexedDB|JSON\.stringify|URLSearchParams|pushState|replaceState|console|posthog|analytics|track)\s*\([^)]*plannedContext/u,
+    );
+
+    const plannedStart = outfitSource.indexOf('function PlannedPaakledningScreen');
+    const currentStart = outfitSource.indexOf('function CurrentPaakledningScreen');
+    expect(plannedStart).toBeGreaterThan(-1);
+    expect(currentStart).toBeGreaterThan(plannedStart);
+    const plannedBranch = outfitSource.slice(plannedStart, currentStart);
+    for (const exactField of [
+      'plannedContext.child',
+      'plannedContext.plannedForIso',
+      'plannedContext.timeZone',
+      'plannedContext.place',
+      'plannedContext.activity',
+      'plannedContext.vognMode',
+      'plannedContext.weather',
+      'plannedContext.recommendation',
+      'plannedContext.access',
+    ]) {
+      expect(plannedBranch).toContain(exactField);
+    }
+    expect(plannedBranch).not.toMatch(
+      /\b(?:useWeather|useChildren|recommend|Date\.now|sessionStorage|localStorage|fetch)\b/u,
+    );
+    expect(plannedBranch).toContain('tabIndex={-1}');
+    expect(plannedBranch).toContain('ref={titleRef}');
+    expect(plannedBranch).toContain('titleRef.current?.focus()');
+  });
 });
