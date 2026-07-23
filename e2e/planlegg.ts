@@ -40,9 +40,20 @@ const PLANLEGG_CASES = Object.freeze({
     viewport: Object.freeze({ width: 390, height: 844 }),
     timeZone: 'Europe/Oslo',
   }),
+  'composition-matrix': Object.freeze({
+    id: 'planlegg-composition-matrix-v1',
+    path: '/?seed=demo',
+    viewport: Object.freeze({ width: 390, height: 844 }),
+    timeZone: 'Europe/Oslo',
+  }),
 }) satisfies Readonly<Record<string, PlanleggE2EFixture>>;
 type PlanleggCase = keyof typeof PLANLEGG_CASES;
 type ForecastMode = 'zero' | 'one' | 'many';
+type ForecastDelivery = 'success' | 'pending';
+type ForecastState = {
+  mode: ForecastMode;
+  delivery?: ForecastDelivery;
+};
 
 const SUPPORTED_CASES = Object.keys(PLANLEGG_CASES);
 const require = createRequire(import.meta.url);
@@ -321,7 +332,7 @@ function collectFailures(page: Page): string[] {
 
 async function installDeterministicPage(
   page: Page,
-  forecastState: { mode: ForecastMode },
+  forecastState: ForecastState,
 ): Promise<void> {
   await page.clock.install({ time: FIXED_NOW });
   await page.addInitScript(() => {
@@ -357,7 +368,7 @@ async function openPlanlegg(page: Page, path: string): Promise<void> {
 async function reloadPlanlegg(
   page: Page,
   path: string,
-  forecastState: { mode: ForecastMode },
+  forecastState: ForecastState,
   mode: ForecastMode,
 ): Promise<void> {
   forecastState.mode = mode;
@@ -478,7 +489,7 @@ async function runComposition(
 async function runSemanticRail(
   page: Page,
   fixture: PlanleggE2EFixture,
-  forecastState: { mode: ForecastMode },
+  forecastState: ForecastState,
 ): Promise<void> {
   const failures = collectFailures(page);
 
@@ -571,7 +582,7 @@ async function runSemanticRail(
 async function runExactContext(
   page: Page,
   fixture: PlanleggE2EFixture,
-  forecastState: { mode: ForecastMode },
+  forecastState: ForecastState,
 ): Promise<void> {
   const failures = collectFailures(page);
   await openPlanlegg(page, fixture.path);
@@ -709,6 +720,24 @@ async function runExactContext(
   }
 }
 
+async function runCompositionMatrix(
+  page: Page,
+  fixture: PlanleggE2EFixture,
+  forecastState: ForecastState,
+): Promise<void> {
+  forecastState.delivery = 'pending';
+  await openPlanlegg(page, fixture.path);
+  const loadingStatus = page.getByRole('status').filter({
+    hasText: 'Henter dagens plan',
+  });
+  await loadingStatus.waitFor({ state: 'visible', timeout: 1_000 }).catch(() => undefined);
+  if (await loadingStatus.count() !== 1) {
+    throw new Error(
+      'RED_PLANLEGG_STATE_MATRIX_CONTRACT: loading-evidens kan ikke holdes og observeres deterministisk',
+    );
+  }
+}
+
 async function main(): Promise<void> {
   const caseName = parseCase(process.argv.slice(2));
   const fixture = PLANLEGG_CASES[caseName];
@@ -717,7 +746,7 @@ async function main(): Promise<void> {
     console.log(`PLANLEGG HARNESS PASS: case=${caseName} fixture=${fixture.id}`);
     return;
   }
-  const forecastState: { mode: ForecastMode } = {
+  const forecastState: ForecastState = {
     mode: caseName === 'semantic-rail' ? 'zero' : 'many',
   };
   let server: ChildProcess | null = null;
@@ -757,6 +786,8 @@ async function main(): Promise<void> {
         await runSemanticRail(page, fixture, forecastState);
       } else if (caseName === 'composition') {
         await runComposition(page, fixture);
+      } else if (caseName === 'composition-matrix') {
+        await runCompositionMatrix(page, fixture, forecastState);
       } else {
         await runExactContext(page, fixture, forecastState);
       }
