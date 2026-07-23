@@ -187,6 +187,16 @@ async function assertCompositionPrimitives(): Promise<void> {
     );
   }
   if (
+    !ukeSource.includes('const latestPlanningEvaluationRef = useRef(planningEvaluation)')
+    || !ukeSource.includes('latestPlanningEvaluationRef.current = planningEvaluation')
+    || !ukeSource.includes('latestPlanningEvaluation.events')
+    || !ukeSource.includes('latestPlanningEvaluation.contextsByEventId')
+  ) {
+    throw new Error(
+      'RED_REVIEW_STALE_CALLBACK_FRESHNESS: beholdte callbacks må slå opp event og map fra siste evaluation ved kalltid',
+    );
+  }
+  if (
     !ukeSource.includes('className="planlegg-screen ba-temp-root"')
     || !readFileSync(join(process.cwd(), 'src/screens/UkeScreen.css'), 'utf8')
       .includes('background: var(--bg-canvas)')
@@ -974,7 +984,9 @@ async function runCompositionMatrix(
     .evaluate((button) => (button as HTMLButtonElement).click());
   await offlineRail.getByText('Samme antrekk i de vurderte tidspunktene')
     .waitFor({ state: 'visible', timeout: 15_000 });
-  await staleOutfitAction.evaluate((button) => (button as HTMLButtonElement).click());
+  const staleActionWasRemoved = await staleOutfitAction.evaluate(
+    (button) => !button.isConnected,
+  );
   const keptSameFocusedControl = await focusedDuringRefresh.evaluate((radio) => {
     const tracedWindow = window as typeof window & { __planleggRefreshFocus?: Element };
     return tracedWindow.__planleggRefreshFocus === radio && document.activeElement === radio;
@@ -984,6 +996,7 @@ async function runCompositionMatrix(
     await offlineRail.locator('button[aria-expanded]').count() !== 0
     || await offlineRail.getByRole('button', { name: 'Se hele antrekket' }).count() !== 0
     || await page.getByRole('dialog').count() !== 0
+    || !staleActionWasRemoved
     || !keptSameFocusedControl
     || await page.locator(liveOwnerSelector).count() !== 0
     || offlineRecoveryTrace.filter((entry) => entry.includes('Du er frakoblet')).length !== 1
@@ -991,7 +1004,7 @@ async function runCompositionMatrix(
   ) {
     throw new Error(
       `In-place refresh skal kjøre persisted repair, avvise stale CTA og bevare samme fokusnode: `
-      + `${JSON.stringify({ keptSameFocusedControl, offlineRecoveryTrace })}`,
+      + `${JSON.stringify({ keptSameFocusedControl, staleActionWasRemoved, offlineRecoveryTrace })}`,
     );
   }
 
