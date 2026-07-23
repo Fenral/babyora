@@ -10,6 +10,11 @@ import type {
 } from './types.js';
 import { parseStrictIsoInstant } from './types.js';
 import { feelsLikeC } from './feels-like.js';
+import {
+  locationCacheScope,
+  type LocationCacheScope,
+  type LocationRequestOptions,
+} from '../location/cache-scope.js';
 
 /**
  * met.no LocationForecast-klient.
@@ -32,6 +37,7 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
 const MAX_STALE_AGE_MS = 6 * 60 * 60 * 1000;
 const MAX_SOURCE_AGE_MS = 6 * 60 * 60 * 1000;
 const MAX_SOURCE_FUTURE_SKEW_MS = 5 * 60 * 1000;
+const MAX_MEMORY_ONLY_ENTRIES = 32;
 
 const CONSUMED_UNIT_CONTRACT = {
   air_temperature: 'celsius',
@@ -151,6 +157,23 @@ function cacheKey(lat: number, lon: number): string {
   return `${CACHE_KEY_PREFIX}${lat.toFixed(2)},${lon.toFixed(2)}`;
 }
 
+function coordinatorKey(
+  scope: LocationCacheScope,
+  lat: number,
+  lon: number,
+): string {
+  return `${scope}:${cacheKey(lat, lon)}`;
+}
+
+function clearPersistentCoordinator(): void {
+  for (const key of latestStartedVersionByKey.keys()) {
+    if (key.startsWith('persistent:')) latestStartedVersionByKey.delete(key);
+  }
+  for (const key of latestCommittedByKey.keys()) {
+    if (key.startsWith('persistent:')) latestCommittedByKey.delete(key);
+  }
+}
+
 function alignCoordinatorWithStorage(): void {
   let currentStorage: Storage | null = null;
   try {
@@ -159,9 +182,26 @@ function alignCoordinatorWithStorage(): void {
     // Memory coordination still works when persistent storage is unavailable.
   }
   if (currentStorage === coordinatorStorage) return;
-  latestStartedVersionByKey.clear();
-  latestCommittedByKey.clear();
+  clearPersistentCoordinator();
   coordinatorStorage = currentStorage;
+}
+
+function commitMemoryResult(
+  key: string,
+  value: Readonly<{ version: number; result: ForecastFetchResult }>,
+): void {
+  latestCommittedByKey.delete(key);
+  latestCommittedByKey.set(key, value);
+  if (!key.startsWith('memory-only:')) return;
+  const memoryKeys = [...latestCommittedByKey.keys()]
+    .filter((candidate) => candidate.startsWith('memory-only:'));
+  while (memoryKeys.length > MAX_MEMORY_ONLY_ENTRIES) {
+    const oldest = memoryKeys.shift();
+    if (oldest) {
+      latestCommittedByKey.delete(oldest);
+      latestStartedVersionByKey.delete(oldest);
+    }
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -356,19 +396,33 @@ function readMemoryCommit(key: string): Readonly<{
   };
 }
 
-export async function fetchForecast(lat: number, lon: number): Promise<ForecastFetchResult> {
-  alignCoordinatorWithStorage();
-  const cached = readCache(lat, lon);
-  if (cached.fresh) return cacheResult(cached.fresh, false, cached.evaluatedAt);
+export async function fetchForecast(
+  lat: number,
+  lon: number,
+  options?: LocationRequestOptions,
+): Promise<ForecastFetchResult> {
+  const scope = locationCacheScope(options);
+  if (scope === 'persistent') {
+    alignCoordinatorWithStorage();
+    const cached = readCache(lat, lon);
+    if (cached.fresh) return cacheResult(cached.fresh, false, cached.evaluatedAt);
+  }
 
-  const key = cacheKey(lat, lon);
+  const key = coordinatorKey(scope, lat, lon);
+  if (scope === 'memory-only') {
+    const memory = readMemoryCommit(key);
+    if (memory) return memory.result;
+  }
   const requestVersion = (latestStartedVersionByKey.get(key) ?? 0) + 1;
   latestStartedVersionByKey.set(key, requestVersion);
 
   // Via proxy — den setter User-Agent server-side (met.no-krav).
   const url = `${PROXY}?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`;
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      ...(scope === 'memory-only' ? { cache: 'no-store' as const } : {}),
+    });
     if (!res.ok) {
       throw new Error(`met.no HTTP ${res.status}`);
     }
@@ -392,12 +446,13 @@ export async function fetchForecast(lat: number, lon: number): Promise<ForecastF
         stale: false,
       },
     };
-    latestCommittedByKey.set(key, { version: requestVersion, result });
-    writeCache(lat, lon, acceptedAt, data);
+    commitMemoryResult(key, { version: requestVersion, result });
+    if (scope === 'persistent') writeCache(lat, lon, acceptedAt, data);
     return result;
   } catch (error) {
     const committed = readMemoryCommit(key);
     if (committed) return committed.result;
+    if (scope === 'memory-only') throw error;
     const current = readCache(lat, lon);
     if (current.fresh) return cacheResult(current.fresh, false, current.evaluatedAt);
     if (current.stale) return cacheResult(current.stale, true, current.evaluatedAt);
