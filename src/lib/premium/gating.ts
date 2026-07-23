@@ -81,10 +81,10 @@ export function resolvePlanningViewAccess(
   const capability = PLANNING_VIEW_CAPABILITY[view];
   const access = resolveRuntimeCapabilityAccess(capability, context, availability);
   let presentation: PlanningViewPresentation;
-  if (access.state === 'neutral') {
-    presentation = 'neutral';
-  } else if (!access.implementationAvailable) {
+  if (!access.implementationAvailable) {
     presentation = 'hidden';
+  } else if (access.state === 'neutral') {
+    presentation = 'neutral';
   } else if (access.allowed) {
     presentation = 'full';
   } else {
