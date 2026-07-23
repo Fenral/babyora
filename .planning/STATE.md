@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 1
 current_phase_name: Planlegg/Dagslinjen
 status: executing
-stopped_at: Completed 01-11-PLAN.md
-last_updated: "2026-07-23T21:52:44.309Z"
+stopped_at: Completed 01-12-PLAN.md
+last_updated: "2026-07-23T23:11:45.349Z"
 last_activity: 2026-07-23
-last_activity_desc: Truthful access candidate `5cdbe73` passed deterministic gates and two independent exact-SHA reviews.
+last_activity_desc: Privacy-safe automatic-location candidate `e69e038` passed deterministic gates and two independent exact-SHA reviews.
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 18
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-07-19)
 ## Current Position
 
 Phase: 1 of 4 (Planlegg/Dagslinjen)
-Plan: 12 of 18 in current phase
-Status: Plan 01-10 complete; Plan 01-11 ready to execute
-Last activity: 2026-07-23 — Truthful access candidate `5cdbe73` passed deterministic gates and two independent exact-SHA reviews.
+Plan: 13 of 18 in current phase
+Status: Plan 01-12 complete; Plan 01-13 ready for its approval checkpoint
+Last activity: 2026-07-23 — Privacy-safe automatic-location candidate `e69e038` passed deterministic gates and two independent exact-SHA reviews.
 
-Progress: [██████░░░░] 61%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -69,6 +69,7 @@ Progress: [██████░░░░] 61%
 | Phase 01 P09 | 28min | 2 tasks | 3 files |
 | Phase 01 P10 | 95min | 3 tasks | 9 files |
 | Phase 01 P11 | 39min | 3 tasks | 11 files |
+| Phase 01 P12 | 75min | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -129,10 +130,13 @@ Decisions are logged in PROJECT.md Key Decisions table. Recent decisions affecti
 - [Phase ?]: Only location mode persists; automatic place, generation, coordinates, source and entitlement remain bounded session state.
 - [Phase ?]: Automatic forecast traffic is no-store at browser, Vercel CDN, generic CDN and upstream seams while fixed/manual shared caching remains unchanged.
 - [Phase ?]: Bounded per-request invalidation tokens prevent evicted in-flight location requests from ABA resurrection without coordinate tombstones.
+- [Phase ?]: A pending explicit Settings activation owns its live access/child predicate; same-child App resume joins it while mode remains manual.
+- [Phase ?]: Automatic location checks generation and live authorization before every external boundary, including the scheduled pre-GPS microtask.
+- [Phase ?]: Hjem and Uke fail closed without weather I/O when effective-place resolution is invalid, and Outfit drills use immutable same-render context.
 
 ### Pending Todos
 
-- Execute Plan 01-11 from immutable reviewed access boundary `5cdbe73d426b4473a212d2677a4eaa76286c0a97`.
+- Execute Plan 01-13 from immutable reviewed automatic-location boundary `e69e0388eb14da9d00392199473edc120f047f7e`.
 - Keep the Snart rules draft/pending until the blocking 01-13 approval checkpoint.
 - Plan Phases 2–4 only after their dependencies are complete; do not mix them into bounded Phase 1.
 
@@ -154,6 +158,6 @@ Items acknowledged and carried forward from initialization:
 
 ## Session Continuity
 
-Last session: 2026-07-23T21:52:44.298Z
-Stopped at: Completed 01-11-PLAN.md
+Last session: 2026-07-23T23:11:45.338Z
+Stopped at: Completed 01-12-PLAN.md
 Resume file: None
