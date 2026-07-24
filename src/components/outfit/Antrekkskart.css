@@ -16,7 +16,7 @@
 .outfit-row__detail { color: var(--muted-foreground, #776c66); flex: 1 1 10rem; margin-inline-start: auto; min-inline-size: 0; overflow-wrap: anywhere; text-align: end; }
 .outfit-alternative { min-block-size: 44px; margin-block-start: .25rem; }
 .outfit-active-caption { margin-block: 1rem; min-block-size: 1.5rem; }
-.outfit-map-status { color: var(--muted-foreground, #776c66); }
+.outfit-map-status { color: var(--ink-700); }
 .outfit-comparison { background: var(--surface, #fbf8f4); border: 1px solid var(--surface-border, #c9c0b9); color: inherit; inline-size: auto; margin-block: 1rem; max-inline-size: 100%; padding: 1rem; position: static; }
 @media (max-width: 28rem) { .outfit-row { align-items: flex-start; } .outfit-row__detail { flex-basis: calc(100% - 2.4rem); margin-inline-start: 2.4rem; text-align: start; } }
 @media (prefers-reduced-motion: reduce) { .outfit-experience *, .outfit-experience *::before, .outfit-experience *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
