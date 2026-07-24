@@ -38,12 +38,12 @@ describe('resolveHomeAtmosphere', () => {
   });
 
   it.each([
-    ['rain_day', 'rain'],
-    ['snow_night', 'snow'],
-    ['cloudy_day', 'cloud'],
+    ['rainshowers_day', 'rain'],
+    ['snowshowers_night', 'snow'],
+    ['partlycloudy_day', 'cloud'],
     ['clearsky_day', 'sun'],
-    ['fog_day', 'fog'],
-    ['heavyrainandthunder_day', 'storm'],
+    ['fog', 'fog'],
+    ['heavyrainshowersandthunder_day', 'storm'],
     ['provider_future_symbol_day', 'unknown'],
   ] as const)('normalizes %s deterministically to %s', (symbolCode, condition) => {
     const first = resolveHomeAtmosphere({ tempC: 8, feelsLikeC: 8, symbolCode });
@@ -53,16 +53,58 @@ describe('resolveHomeAtmosphere', () => {
     expect(second).toEqual(first);
   });
 
+  it.each([
+    'brain_day',
+    'unfair_night',
+    'snowball_polartwilight',
+    'clearsky_dawn',
+  ])('fails closed for unknown provider symbol %s', (symbolCode) => {
+    const atmosphere = resolveHomeAtmosphere({
+      tempC: 10,
+      feelsLikeC: 10,
+      symbolCode,
+    });
+
+    expect(atmosphere.condition).toBe('unknown');
+    expect(atmosphere.lighting).toBe('neutral');
+    expect(atmosphere.layers).toEqual([
+      { kind: 'wash', variant: 'mild' },
+      { kind: 'condition', variant: 'unknown' },
+    ]);
+  });
+
+  it.each([
+    ['heavyrain', 'rain', 'neutral'],
+    ['lightrainshowers_day', 'rain', 'day'],
+    ['heavysnow', 'snow', 'neutral'],
+    ['lightsleetshowers_polartwilight', 'snow', 'polar-twilight'],
+    ['rainandthunder', 'storm', 'neutral'],
+    ['heavysnowshowersandthunder_night', 'storm', 'night'],
+    ['fair_polartwilight', 'sun', 'polar-twilight'],
+  ] as const)(
+    'supports exact MET symbol %s as %s with %s lighting',
+    (symbolCode, condition, lighting) => {
+      const atmosphere = resolveHomeAtmosphere({
+        tempC: 10,
+        feelsLikeC: 10,
+        symbolCode,
+      });
+
+      expect(atmosphere.condition).toBe(condition);
+      expect(atmosphere.lighting).toBe(lighting);
+    },
+  );
+
   it('keeps actual temperature separate from a colder perceived-temperature palette', () => {
     const temperateActual = resolveHomeAtmosphere({
       tempC: 8,
       feelsLikeC: -12,
-      symbolCode: 'snow_day',
+      symbolCode: 'snowshowers_day',
     });
     const extremeActual = resolveHomeAtmosphere({
       tempC: -20,
       feelsLikeC: -12,
-      symbolCode: 'snow_day',
+      symbolCode: 'snowshowers_day',
     });
 
     expect(temperateActual.palette).toBe('cold');
@@ -80,7 +122,7 @@ describe('resolveHomeAtmosphere', () => {
     const daylight = resolveHomeAtmosphere({
       tempC: 10,
       feelsLikeC: 10,
-      symbolCode: 'rain_night',
+      symbolCode: 'rainshowers_night',
     });
 
     expect(neutral.layers).toEqual([

@@ -13,6 +13,12 @@ function layerCount(markup: string): number {
   return markup.match(/data-home-atmosphere-layer=/gu)?.length ?? 0;
 }
 
+function millisecondsFor(property: 'animation-duration' | 'animation-delay'): number[] {
+  return [...backgroundCss.matchAll(new RegExp(`${property}:\\\\s*(\\\\d+)ms`, 'gu'))].map(
+    (match) => Number(match[1]),
+  );
+}
+
 describe('LivingHomeBackground', () => {
   it('renders two or three decorative layers from the resolved model', () => {
     const neutral = renderToStaticMarkup(
@@ -29,7 +35,7 @@ describe('LivingHomeBackground', () => {
         atmosphere={resolveHomeAtmosphere({
           tempC: -8,
           feelsLikeC: -13,
-          symbolCode: 'snow_night',
+          symbolCode: 'snowshowers_night',
         })}
       />,
     );
@@ -49,7 +55,7 @@ describe('LivingHomeBackground', () => {
         atmosphere={resolveHomeAtmosphere({
           tempC: 8,
           feelsLikeC: 8,
-          symbolCode: 'rain_day',
+          symbolCode: 'rainshowers_day',
         })}
         reducedMotion
       />,
@@ -65,9 +71,15 @@ describe('LivingHomeBackground', () => {
   });
 
   it('allows only finite entrance motion and no perpetual decorative loop', () => {
+    const durations = millisecondsFor('animation-duration');
+    const delays = [0, ...millisecondsFor('animation-delay')];
+    const effectiveMaximumMs = Math.max(...durations) + Math.max(...delays);
+
     expect(backgroundCss).not.toMatch(/\binfinite\b/iu);
     expect(backgroundCss).toMatch(/animation-iteration-count:\s*1\b/iu);
     expect(backgroundCss).not.toMatch(/\bsetInterval\b|\bsetTimeout\b/iu);
+    expect(durations.length).toBeGreaterThan(0);
+    expect(effectiveMaximumMs).toBeLessThanOrEqual(250);
   });
 
   it('retains a token-driven gradient fallback for unknown or malformed decoration', () => {
