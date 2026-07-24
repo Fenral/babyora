@@ -82,7 +82,8 @@ describe('finalized occurrence swap adapter', () => {
     const finalizedRecommendation = recommend(input);
     const baseSnapshot = buildBase(input, finalizedRecommendation);
     const source = baseSnapshot.garments.find(
-      (garment) => garment.sourceLabel === 'tykt ullsett',
+      (garment) =>
+        garment.sourceLabel === 'isolert vinterkjøredress',
     )!;
 
     const mismatched = finalizeOutfitOccurrenceSwap({
@@ -93,7 +94,7 @@ describe('finalized occurrence swap adapter', () => {
         ...selectorFor(source),
         sourceLabel: source.catalogGarmentId!,
       },
-      targetLabel: 'bomullssett',
+      targetLabel: 'vinterkjøredress',
     });
     expect(mismatched).toMatchObject({
       kind: 'rejected',
@@ -105,16 +106,16 @@ describe('finalized occurrence swap adapter', () => {
       finalizedRecommendation,
       baseSnapshot,
       source: selectorFor(source),
-      targetLabel: 'bomullssett',
+      targetLabel: 'vinterkjøredress',
     });
     expect(exact.kind).toBe('finalized');
     if (exact.kind === 'finalized') {
       expect(
         exact.recommendation.layers.flatMap((layer) => layer.items),
-      ).toContain('bomullssett');
+      ).toContain('vinterkjøredress');
       expect(
         exact.recommendation.layers.flatMap((layer) => layer.items),
-      ).not.toContain('tykt ullsett');
+      ).not.toContain('isolert vinterkjøredress');
     }
   });
 
@@ -191,7 +192,8 @@ describe('finalized occurrence swap adapter', () => {
     };
     const baseSnapshot = buildBase(input, finalizedRecommendation);
     const source = baseSnapshot.garments.find(
-      (garment) => garment.sourceLabel === 'tykt ullsett',
+      (garment) =>
+        garment.sourceLabel === 'isolert vinterkjøredress',
     )!;
 
     const result = finalizeOutfitOccurrenceSwap({
@@ -199,7 +201,7 @@ describe('finalized occurrence swap adapter', () => {
       finalizedRecommendation,
       baseSnapshot,
       source: selectorFor(source),
-      targetLabel: 'bomullssett',
+      targetLabel: 'vinterkjøredress',
     });
     expect(result.kind).toBe('finalized');
     if (result.kind !== 'finalized') return;
@@ -228,7 +230,7 @@ describe('finalized occurrence swap adapter', () => {
     expect(Object.isFrozen(result.recommendation.layers)).toBe(true);
     expect(Object.isFrozen(result.recommendation.safetyFlags)).toBe(true);
     expect(finalizedRecommendation.layers.flatMap((layer) => layer.items))
-      .not.toContain('bomullssett');
+      .not.toContain('vinterkjøredress');
   });
 });
 
@@ -277,7 +279,15 @@ describe('engine-backed alternative options', () => {
   });
 
   it('keeps duplicate labels occurrence-specific and rejects ambiguous identity', () => {
-    const input = makeInput();
+    const input = makeInput({
+      activity: 'soevn',
+      weather: {
+        feelsLikeC: 20,
+        tempC: 20,
+        windMs: 0,
+        precipMmH: 0,
+      },
+    });
     const recommendation = recommend(input);
     const duplicated: Recommendation = {
       ...recommendation,
@@ -285,7 +295,11 @@ describe('engine-backed alternative options', () => {
         category: layer.category,
         items:
           layer.category === 'innerst'
-            ? ['tykt ullsett', 'tykt ullsett', ...layer.items.slice(1)]
+            ? [
+                'langermet body',
+                'langermet body',
+                ...layer.items.slice(1),
+              ]
             : [...layer.items],
       })),
       notes: [...recommendation.notes],
@@ -305,13 +319,13 @@ describe('engine-backed alternative options', () => {
     if (result.kind !== 'supported') return;
 
     const duplicateSources = result.base.garments.filter(
-      (garment) => garment.sourceLabel === 'tykt ullsett',
+      (garment) => garment.sourceLabel === 'langermet body',
     );
     const duplicateOptions = result.options.filter(
       (option) =>
         duplicateSources.some(
           (source) => source.itemId === option.sourceItemId,
-        ) && option.targetLabel === 'bomullssett',
+        ) && option.targetLabel === 'langermet ullbody',
     );
     expect(duplicateSources).toHaveLength(2);
     expect(duplicateOptions).toHaveLength(2);
@@ -322,12 +336,12 @@ describe('engine-backed alternative options', () => {
       duplicateOptions[1]!.optionId,
     );
     expect(labels(duplicateOptions[0]!.outcome).slice(0, 2)).toEqual([
-      'bomullssett',
-      'tykt ullsett',
+      'langermet ullbody',
+      'langermet body',
     ]);
     expect(labels(duplicateOptions[1]!.outcome).slice(0, 2)).toEqual([
-      'tykt ullsett',
-      'bomullssett',
+      'langermet body',
+      'langermet ullbody',
     ]);
 
     const firstSource = duplicateSources[0]!;
@@ -340,7 +354,7 @@ describe('engine-backed alternative options', () => {
           ...selectorFor(firstSource),
           order: duplicateSources[1]!.order,
         },
-        targetLabel: 'bomullssett',
+        targetLabel: 'langermet ullbody',
       }),
     ).toMatchObject({
       kind: 'rejected',
@@ -411,13 +425,13 @@ describe('engine-backed alternative options', () => {
     expect(result.truth.orderedGarments.map(
       (garment) => garment.sourceLabel,
     )).toEqual([
-      'to ullsett oppÃ¥ hverandre',
-      'tykke ullstrÃ¸mper',
+      'to ullsett oppå hverandre',
+      'tykke ullstrømper',
       'ullsokker',
       'ull-jakke',
       'ull-bukse',
       'ekstra ull-lag',
-      'isolert vinterkjÃ¸redress',
+      'isolert vinterkjøredress',
       'balaklava',
       'votter dun',
       'halsedisse',
