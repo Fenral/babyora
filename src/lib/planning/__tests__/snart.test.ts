@@ -188,7 +188,7 @@ describe('Snart plan model', () => {
       /medisin(?:sk|ske|en)?/iu,
       /(?:kulde)?eksponerings?(?:fare|tid|råd)?/iu,
       /spedbarns?(?:råd)?/iu,
-      /sol(?:hatt|krem|beskyttelse|dekkende)?/iu,
+      /(?:^|[^\p{L}])sol(?:hatt|krem|beskyttelse|dekkende)?(?:$|[^\p{L}])/iu,
       /uv(?:-?indeks|stråling)?/iu,
       /størrels(?:e|er|es|esråd)/iu,
       /passform(?:en|er|råd)?/iu,
