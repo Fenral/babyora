@@ -81,6 +81,18 @@ const PLANLEGG_CASES = Object.freeze({
     viewport: Object.freeze({ width: 390, height: 844 }),
     timeZone: 'Europe/Oslo',
   }),
+  'native-polish': Object.freeze({
+    id: 'planlegg-native-polish-v1',
+    path: '/?seed=demo',
+    viewport: Object.freeze({ width: 390, height: 844 }),
+    timeZone: 'Europe/Oslo',
+  }),
+  all: Object.freeze({
+    id: 'planlegg-all-no-media-v1',
+    path: '/?seed=demo',
+    viewport: Object.freeze({ width: 390, height: 844 }),
+    timeZone: 'Europe/Oslo',
+  }),
 }) satisfies Readonly<Record<string, PlanleggE2EFixture>>;
 type PlanleggCase = keyof typeof PLANLEGG_CASES;
 type ForecastMode =
@@ -231,7 +243,7 @@ async function assertCompositionPrimitives(): Promise<void> {
   }
   if (
     ukeSource.includes('key={requestKey}')
-    || !ukeSource.includes('useWeather(lat, lon, FALLBACK_REF_HOUR, refreshKey)')
+    || !/useWeather\(lat, lon, FALLBACK_REF_HOUR, refreshKey(?:,|\))/u.test(ukeSource)
   ) {
     throw new Error(
       'RED_REVIEW_IN_PLACE_REFRESH: retry må oppdatere vær i samme PlanleggData-instans slik at selection-repair faktisk kjøres',
@@ -3220,9 +3232,169 @@ async function runCompositionMatrix(
   }
 }
 
+function assertNativePolishSourceContracts(): void {
+  const haptics = readFileSync(join(process.cwd(), 'src/lib/haptics/system.ts'), 'utf8');
+  const bottomNav = readFileSync(join(process.cwd(), 'src/components/BottomTabBar.tsx'), 'utf8');
+  const bottomNavCss = readFileSync(join(process.cwd(), 'src/components/BottomTabBar.css'), 'utf8');
+  const changedPaths = execFileSync(
+    'git',
+    ['diff', '--name-only', '561c470fccd826ef7decd594e781f885113f016a', 'HEAD'],
+    { cwd: process.cwd(), encoding: 'utf8' },
+  ).split(/\r?\n/u).filter(Boolean);
+  const allowedPaths = new Set([
+    'src/lib/haptics/system.ts',
+    'src/lib/haptics/__tests__/system.test.ts',
+    'src/components/BottomTabBar.tsx',
+    'src/components/BottomTabBar.css',
+    'src/components/__tests__/BottomTabBar.test.tsx',
+    'e2e/planlegg.ts',
+  ]);
+
+  if (haptics.match(/navigator\s*\.\s*vibrate|prefersReducedMotion|WEB_VIBRATE_PATTERNS/u)) {
+    throw new Error('Native-haptics source contract forbids browser vibration and reduced-motion gating');
+  }
+  if (
+    !haptics.includes('selectionChanged()')
+    || !haptics.includes('selectionEnd()')
+    || !haptics.includes('isHapticsOn()')
+  ) {
+    throw new Error('Native-haptics source contract lacks the selection sequence or preference gate');
+  }
+  if (
+    !bottomNav.includes('TAB_DEFS')
+    || !bottomNav.includes('decideRootChange')
+    || /useState|onFocus|onBlur|style=/u.test(bottomNav)
+  ) {
+    throw new Error('Bottom navigation must use TAB_DEFS, pure change decisions and CSS focus state');
+  }
+  for (const requiredCss of [
+    'min-inline-size: 44px',
+    'min-block-size: 44px',
+    ':focus-visible',
+    'outline: 3px',
+    'env(safe-area-inset-bottom',
+    '@media (forced-colors: active)',
+  ]) {
+    if (!bottomNavCss.includes(requiredCss)) {
+      throw new Error(`Bottom navigation CSS contract is missing ${requiredCss}`);
+    }
+  }
+  const outOfScope = changedPaths.filter((path) => !allowedPaths.has(path));
+  if (outOfScope.length > 0) {
+    throw new Error(`01-18 source scope drift: ${outOfScope.join(', ')}`);
+  }
+  if (changedPaths.some((path) => /\.(?:png|jpe?g|webp|gif|mp4|webm|zip)$/iu.test(path))) {
+    throw new Error('No-media candidate contains a newly changed media artifact');
+  }
+}
+
+async function runNativePolish(page: Page, fixture: PlanleggE2EFixture): Promise<void> {
+  assertNativePolishSourceContracts();
+  const failures = collectFailures(page);
+  await page.goto(`${BASE_URL}${fixture.path}`, { waitUntil: 'domcontentloaded' });
+  const navigation = page.getByRole('navigation', { name: 'Hovednavigasjon' });
+  await navigation.waitFor({ state: 'visible', timeout: 15_000 });
+  const buttons = navigation.getByRole('button');
+  if (await buttons.count() !== 4) throw new Error('Bottom navigation must expose exactly four roots');
+
+  for (const label of ['Hjem', 'Planlegg', 'Guide', 'Familie']) {
+    const button = navigation.getByRole('button', { name: label, exact: true });
+    const box = await button.boundingBox();
+    if (!box || box.width < 44 || box.height < 44) {
+      throw new Error(`${label} does not meet the 44px target contract`);
+    }
+  }
+  if (await navigation.locator('button[aria-current="page"]').count() !== 1) {
+    throw new Error('Bottom navigation must expose exactly one current root');
+  }
+
+  const plan = navigation.getByRole('button', { name: 'Planlegg', exact: true });
+  await plan.click();
+  await plan.waitFor({ state: 'visible', timeout: 15_000 });
+  if (await navigation.locator('button[aria-current="page"]').getAttribute('aria-current') !== 'page') {
+    throw new Error('Selected root lost aria-current semantics');
+  }
+  const activeState = await plan.evaluate((element) => {
+    const icon = element.querySelector('svg');
+    const label = element.querySelector('.bottom-tab-bar__label');
+    const indicator = element.querySelector('.bottom-tab-bar__indicator');
+    return {
+      activeClass: element.classList.contains('bottom-tab-bar__button--active'),
+      strokeWidth: icon ? getComputedStyle(icon).strokeWidth : '',
+      labelWeight: label ? Number.parseInt(getComputedStyle(label).fontWeight, 10) : 0,
+      indicatorBackground: indicator ? getComputedStyle(indicator).backgroundColor : '',
+      pointerFocusVisible: element.matches(':focus-visible'),
+    };
+  });
+  if (
+    !activeState.activeClass
+    || Number.parseFloat(activeState.strokeWidth) < 2
+    || activeState.labelWeight < 600
+    || activeState.indicatorBackground === 'rgba(0, 0, 0, 0)'
+    || activeState.pointerFocusVisible
+  ) {
+    throw new Error(`Active root lacks redundant state or pointer focus contract: ${JSON.stringify(activeState)}`);
+  }
+
+  const guide = navigation.getByRole('button', { name: 'Guide', exact: true });
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    if (await guide.evaluate((element) => document.activeElement === element)) break;
+    await page.keyboard.press('Tab');
+  }
+  if (!await guide.evaluate((element) => document.activeElement === element)) {
+    throw new Error('Keyboard traversal could not reach the Guide root');
+  }
+  const focusState = await guide.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      focusVisible: element.matches(':focus-visible'),
+      outlineWidth: style.outlineWidth,
+      outlineOffset: style.outlineOffset,
+    };
+  });
+  if (
+    !focusState.focusVisible
+    || Number.parseFloat(focusState.outlineWidth) < 3
+    || Number.parseFloat(focusState.outlineOffset) < 3
+  ) {
+    throw new Error(`Keyboard focus-visible contract failed: ${JSON.stringify(focusState)}`);
+  }
+  await page.keyboard.press('Enter');
+  if (await guide.getAttribute('aria-current') !== 'page') {
+    throw new Error('Keyboard activation did not change the root');
+  }
+
+  await page.emulateMedia({ forcedColors: 'active' });
+  const forcedState = await guide.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { borderWidth: style.borderWidth, outlineWidth: style.outlineWidth };
+  });
+  if (Number.parseFloat(forcedState.borderWidth) < 1 || Number.parseFloat(forcedState.outlineWidth) < 3) {
+    throw new Error(`Forced-colors active/focus state failed: ${JSON.stringify(forcedState)}`);
+  }
+  await page.emulateMedia({ forcedColors: 'none', reducedMotion: 'reduce' });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  if (await navigation.locator('button[aria-current="page"]').count() !== 1) {
+    throw new Error('Reduced-motion root navigation lost its active state');
+  }
+
+  if (failures.length > 0) throw new Error(`Browserfeil:\n  ${failures.join('\n  ')}`);
+}
+
 async function main(): Promise<void> {
   const caseName = parseCase(process.argv.slice(2));
   const fixture = PLANLEGG_CASES[caseName];
+  if (caseName === 'all') {
+    for (const nextCase of SUPPORTED_CASES.filter((name) => name !== 'all')) {
+      execFileSync(
+        process.execPath,
+        [require.resolve('tsx/cli'), 'e2e/planlegg.ts', '--case', nextCase],
+        { cwd: process.cwd(), stdio: 'inherit' },
+      );
+    }
+    console.log(`PLANLEGG HARNESS PASS: case=${caseName} fixture=${fixture.id}`);
+    return;
+  }
   if (caseName === 'composition-primitives') {
     await assertCompositionPrimitives();
     console.log(`PLANLEGG HARNESS PASS: case=${caseName} fixture=${fixture.id}`);
@@ -3295,6 +3467,8 @@ async function main(): Promise<void> {
         await runSoonReadiness(page, fixture, forecastState);
       } else if (caseName === 'route-migration') {
         await runRouteMigration(page, fixture);
+      } else if (caseName === 'native-polish') {
+        await runNativePolish(page, fixture);
       } else if (caseName === 'semantic-rail') {
         await runSemanticRail(page, fixture, forecastState);
       } else if (caseName === 'composition') {
