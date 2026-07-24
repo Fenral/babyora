@@ -54,7 +54,7 @@ export const LESSONS: readonly Lesson[] = [
         body: 'Merk hvordan barnet ditt reagerer de første ukene. Rødme, kløe eller uro etter påkledning er tegn på at bomull innerst kan passe bedre for akkurat dere. Ull kan fortsatt brukes i lagene utenpå.',
       },
     ],
-    tryDet: { label: 'Se ull og bomull i garderoben din', target: 'min-garderobe' },
+    tryDet: { label: 'Se ull og bomull i Plaggbiblioteket', target: 'plaggbib' },
     kilde: 'F62 pkt. 5-6 (barnelegeforening/Kvenshagen 40 %-regelen), alternatives.ts (WOOL/COTTON pros/cons)',
   },
   {
@@ -216,28 +216,28 @@ export const LESSONS: readonly Lesson[] = [
   {
     id: 'din-garderobe-din-anbefaling',
     week: 8,
-    title: 'Din garderobe, din anbefaling',
-    lead: 'Med Pluss bruker appen dine egne plagg i anbefalingen, ikke et generisk sett.',
+    title: 'Forbered neste periode',
+    lead: 'Snart viser hva det kan være greit å ha tilgjengelig, basert på månedlige normaler fra 1991–2020.',
     sections: [
       {
-        heading: 'Fra generisk til ditt',
-        body: 'Uten garderobe-tilpasning foreslår Babyora det teknisk beste plagget for hver situasjon. Med Pluss ser motoren hva du faktisk eier, og bygger anbefalingen rundt det.',
+        heading: 'Historiske mønstre, ikke værvarsel',
+        body: 'Snart bygger på historiske månedsnormaler for stedet ditt. Det beskriver et mønster for perioden, ikke hvordan været blir på en bestemt dag.',
       },
       {
-        heading: 'Har du det ikke, får du nest best',
-        body: 'Merker du et plagg som «har ikke», bytter motoren automatisk til det nærmeste eide alternativet, med samme ærlige fordeler og ulemper som i plagg-detaljene: pris, varme, fukt og vask.',
+        heading: 'Se gjennom kategoriene',
+        body: 'Flaten fremhever plaggkategorier som kan være nyttige å sjekke for perioden. Den velger ikke produkter, materialer eller konkrete antrekk.',
       },
       {
-        heading: 'Sikkerhet byttes aldri stille',
-        body: 'Sovepose og isolert vinter-yttertøy er unntaket. Der varsler appen deg tydelig i stedet for å bytte ned uten videre, fordi disse plaggene er dimensjonert for en bestemt varme.',
+        heading: 'Marker det som allerede er klart',
+        body: 'Du kan markere et fremhevet handlingspunkt som klart for denne økten. Markeringen lagres ikke og starter på nytt når visningen nullstilles.',
       },
       {
-        heading: 'Bygg garderoben etter hvert',
-        body: 'Du trenger ikke legge inn alt på én gang. Legg til plagg etter hvert som du kjøper eller arver dem, så blir anbefalingen mer og mer treffsikker for akkurat deres skap.',
+        heading: 'Sjekk nærmere datoen',
+        body: 'Bruk Snart til forberedelse, og sjekk dagens vær og egne behov nærmere datoen.',
       },
     ],
-    tryDet: { label: 'Fyll ut Mine plagg', target: 'min-garderobe' },
-    kilde: 'alternatives.ts (ITEM_ALTERNATIVES), ownership-override.ts (SAFETY_CRITICAL-guardrail)',
+    tryDet: { label: 'Se historiske månedsnormaler', target: 'snart' },
+    kilde: 'snart-copy.nb.ts, babyora-snart-heuristics@2, MET seNorge_2018 normaler 1991–2020',
   },
 ] as const;
 

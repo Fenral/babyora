@@ -63,9 +63,6 @@ const FinnAntrekkScreen = lazy(() =>
 const PlaggbibliotekScreen = lazy(() =>
   import('./screens/PlaggbibliotekScreen').then((m) => ({ default: m.PlaggbibliotekScreen })),
 );
-const MinGarderobeScreen = lazy(() =>
-  import('./screens/MinGarderobeScreen').then((m) => ({ default: m.MinGarderobeScreen })),
-);
 const TogGuideScreen = lazy(() =>
   import('./screens/TogGuideScreen').then((m) => ({ default: m.TogGuideScreen })),
 );
@@ -481,9 +478,6 @@ export default function App(): ReactElement {
   } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'plaggbib') {
     routeKey = 'drill:guide:plaggbib';
     routeContent = <PlaggbibliotekScreen onBack={() => setDrill(null)} />;
-  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'min-garderobe') {
-    routeKey = 'drill:guide:min-garderobe';
-    routeContent = <MinGarderobeScreen onBack={() => setDrill(null)} />;
   } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'tog') {
     routeKey = 'drill:guide:tog';
     routeContent = <TogGuideScreen onBack={() => setDrill(null)} />;
