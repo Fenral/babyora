@@ -54,6 +54,8 @@ type GridSelection =
       X: number;
       gridLat: number;
       gridLon: number;
+      utmY: number;
+      utmX: number;
       distanceMillimetres: number;
     }
   | {
@@ -63,35 +65,41 @@ type GridSelection =
     };
 
 type HttpPolicy = {
+  version: string;
   method: string;
   scheme: string;
   hostname: string;
-  allowedPorts: string[];
+  allowedPorts: readonly string[];
   allowUsername: boolean;
   allowPassword: boolean;
   allowHash: boolean;
   pathPattern: string;
   requireFamilyVariableMatch: boolean;
-  allowedDatasetUrls: string[];
-  allowedQueryVariables: string[];
+  allowedDatasetUrls: readonly string[];
+  allowedQueryVariables: readonly string[];
+  queryGrammar: string;
   userAgent: string;
   redirect: RequestRedirect;
   timeoutMilliseconds: number;
-  maxBodyBytes: {
+  maxBodyBytes: Readonly<{
     coordinateGrid: number;
     metadataOrPoint: number;
-  };
-  acceptedStatuses: number[];
-  retryableStatuses: number[];
+  }>;
+  acceptedStatuses: readonly number[];
+  retryableStatuses: readonly number[];
   maxAttempts: number;
   maxConcurrentRequests: number;
-  retryBackoffMilliseconds: number[];
-  retryAfterClampSeconds: [number, number];
+  retryBackoffMilliseconds: readonly number[];
+  retryAfterFormats: readonly string[];
+  retryAfterClampSeconds: readonly [number, number];
+  followRedirects: boolean;
+  cacheOnlyValidatedBodies: boolean;
 };
 
 type GridPolicy = {
   earthRadiusMetres: number;
   maxDistanceMillimetres: number;
+  pointResponseMapBinding: string;
 };
 
 export type SnartContract = {
@@ -140,7 +148,7 @@ export type SnartContract = {
       precipitation: number;
     };
   };
-  httpPolicy: HttpPolicy & { version: string };
+  httpPolicy: HttpPolicy;
   serializationPolicy: { version: string };
 };
 
@@ -206,6 +214,8 @@ export type MonthlyPointBinding = {
   X: number;
   lat: number;
   lon: number;
+  utmY: number;
+  utmX: number;
 };
 
 type BuiltBundle = {
@@ -244,6 +254,38 @@ const MET_DATASET_URLS = Object.freeze(
     }),
   ),
 );
+const FROZEN_MET_HTTP_POLICY = Object.freeze({
+  version: 'met-thredds-http@1',
+  method: MET_METHOD,
+  scheme: MET_SCHEME,
+  hostname: MET_HOSTNAME,
+  allowedPorts: MET_ALLOWED_PORTS,
+  allowUsername: false,
+  allowPassword: false,
+  allowHash: false,
+  pathPattern: MET_PATH_PATTERN,
+  requireFamilyVariableMatch: true,
+  allowedDatasetUrls: MET_DATASET_URLS,
+  allowedQueryVariables: MET_ALLOWED_QUERY_VARIABLES,
+  queryGrammar:
+    'DAP2-variable-with-integer-slices-within-validated-DDS-dimensions',
+  userAgent: 'klemeg/1.0 (sivertskotvold@gmail.com)',
+  redirect: 'manual',
+  timeoutMilliseconds: 20_000,
+  maxBodyBytes: Object.freeze({
+    coordinateGrid: 100_663_296,
+    metadataOrPoint: 2_097_152,
+  }),
+  acceptedStatuses: Object.freeze([200]),
+  retryableStatuses: Object.freeze([429, 500, 502, 503, 504]),
+  maxAttempts: 3,
+  retryBackoffMilliseconds: Object.freeze([1_000, 2_000]),
+  retryAfterFormats: Object.freeze(['delta-seconds', 'IMF-fixdate']),
+  retryAfterClampSeconds: Object.freeze([0, 30]) as readonly [number, number],
+  followRedirects: false,
+  cacheOnlyValidatedBodies: true,
+  maxConcurrentRequests: 1,
+}) satisfies HttpPolicy;
 const MONTHLY_NORMAL_TIME_BY_MONTH = Object.freeze([
   797_694, 798_438, 799_110, 799_854, 800_574, 801_318, 802_038,
   802_782, 803_526, 804_246, 804_990, 805_710,
@@ -409,36 +451,19 @@ function splitQuerySelections(query: string): string[] {
   return selections;
 }
 
-function exactStringArray(
-  actual: readonly string[],
-  expected: readonly string[],
-): boolean {
-  return (
-    actual.length === expected.length &&
-    actual.every((value, index) => value === expected[index])
-  );
-}
-
-function assertFrozenMetAuthority(policy: HttpPolicy): void {
-  if (
-    policy.method !== MET_METHOD ||
-    policy.scheme !== MET_SCHEME ||
-    policy.hostname !== MET_HOSTNAME ||
-    !exactStringArray(policy.allowedPorts, MET_ALLOWED_PORTS) ||
-    policy.allowUsername !== false ||
-    policy.allowPassword !== false ||
-    policy.allowHash !== false ||
-    policy.pathPattern !== MET_PATH_PATTERN ||
-    policy.requireFamilyVariableMatch !== true ||
-    !exactStringArray(policy.allowedDatasetUrls, MET_DATASET_URLS) ||
-    !exactStringArray(
-      policy.allowedQueryVariables,
-      MET_ALLOWED_QUERY_VARIABLES,
-    )
-  ) {
+function assertFrozenMetHttpPolicy(policy: HttpPolicy): void {
+  let matches: boolean;
+  try {
+    matches =
+      canonicalJson(policy as unknown as JsonValue) ===
+      canonicalJson(FROZEN_MET_HTTP_POLICY as unknown as JsonValue);
+  } catch {
+    matches = false;
+  }
+  if (!matches) {
     throw new SnartPipelineError(
       'FAIL_HTTP_AUTHORITY_CONTRACT',
-      'caller policy differs from the immutable MET network authority',
+      'caller policy differs from the immutable MET request policy',
     );
   }
 }
@@ -453,7 +478,8 @@ export function validateMetUrl(
   month: number;
   url: URL;
 } {
-  assertFrozenMetAuthority(policy);
+  assertFrozenMetHttpPolicy(policy);
+  const frozenPolicy = FROZEN_MET_HTTP_POLICY;
   const parsed = new URL(input);
   if (parsed.protocol !== MET_SCHEME) {
     throw new SnartPipelineError(
@@ -468,9 +494,9 @@ export function validateMetUrl(
     throw new SnartPipelineError('FAIL_URL_PORT', 'unexpected effective port');
   }
   if (
-    (!policy.allowUsername && parsed.username !== '') ||
-    (!policy.allowPassword && parsed.password !== '') ||
-    (!policy.allowHash && parsed.hash !== '')
+    (!frozenPolicy.allowUsername && parsed.username !== '') ||
+    (!frozenPolicy.allowPassword && parsed.password !== '') ||
+    (!frozenPolicy.allowHash && parsed.hash !== '')
   ) {
     throw new SnartPipelineError(
       'FAIL_URL_AUTHORITY',
@@ -492,7 +518,7 @@ export function validateMetUrl(
   }
   const folderFamily = match[1] as VariableFamily;
   const family = match[2] as VariableFamily;
-  if (policy.requireFamilyVariableMatch && folderFamily !== family) {
+  if (frozenPolicy.requireFamilyVariableMatch && folderFamily !== family) {
     throw new SnartPipelineError(
       'FAIL_URL_FAMILY',
       'folder family differs from filename variable',
@@ -536,7 +562,7 @@ export function validateMetUrl(
       }
       const variable = selectionMatch[1];
       if (
-        policy.requireFamilyVariableMatch &&
+        frozenPolicy.requireFamilyVariableMatch &&
         (variable === 'tg' || variable === 'rr') &&
         variable !== family
       ) {
@@ -569,10 +595,10 @@ export function validateMetUrl(
 function retryDelayMilliseconds(
   response: Response,
   attempt: number,
-  policy: HttpPolicy,
   now: number,
 ): number {
-  const backoff = policy.retryBackoffMilliseconds[attempt - 1] ?? 0;
+  const backoff =
+    FROZEN_MET_HTTP_POLICY.retryBackoffMilliseconds[attempt - 1] ?? 0;
   const retryAfter = response.headers.get('retry-after');
   if (!retryAfter) return backoff;
   let seconds: number;
@@ -583,7 +609,8 @@ function retryDelayMilliseconds(
     if (!Number.isFinite(date)) return backoff;
     seconds = Math.max(0, (date - now) / 1000);
   }
-  const [minimum, maximum] = policy.retryAfterClampSeconds;
+  const [minimum, maximum] =
+    FROZEN_MET_HTTP_POLICY.retryAfterClampSeconds;
   const clamped = Math.min(maximum, Math.max(minimum, seconds));
   return Math.max(backoff, Math.round(clamped * 1000));
 }
@@ -647,12 +674,28 @@ async function readLimitedBody(
   return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
 }
 
+function isAcceptedContentType(header: string | null): boolean {
+  if (header === null) return false;
+  const sections = header.split(';');
+  const mediaType = sections.shift()?.trim().toLowerCase();
+  if (
+    mediaType !== 'text/plain' &&
+    mediaType !== 'application/octet-stream'
+  ) {
+    return false;
+  }
+  const parameter =
+    /^\s*[A-Za-z0-9!#$%&'*+.^_`|~-]+\s*=\s*(?:"[^"\r\n]*"|[A-Za-z0-9!#$%&'*+.^_`|~-]+)\s*$/u;
+  return sections.every((section) => parameter.test(section));
+}
+
 export async function fetchTextWithPolicy(
   input: string,
   policy: HttpPolicy,
   options: FetchTextOptions = {},
 ): Promise<{ text: string; attempts: number; sha256: string }> {
   const validated = validateMetUrl(input, policy);
+  const frozenPolicy = FROZEN_MET_HTTP_POLICY;
   const fetchImpl =
     options.fetchImpl ??
     ((url: string, init: RequestInit) => fetch(url, init));
@@ -664,29 +707,54 @@ export async function fetchTextWithPolicy(
       }));
   const now = options.now ?? Date.now;
   const decodedQuery = decodeURIComponent(validated.url.search.slice(1));
-  const maxBodyBytes =
-    options.maxBodyBytes ??
-    (validated.kind === 'ascii' &&
-    (decodedQuery.startsWith('lat[0:') ||
-      decodedQuery.includes(',lat[0:') ||
-      decodedQuery.startsWith('lon[0:') ||
-      decodedQuery.includes(',lon[0:'))
-      ? policy.maxBodyBytes.coordinateGrid
-      : policy.maxBodyBytes.metadataOrPoint);
+  const coordinateGridQuery =
+    validated.kind === 'ascii' &&
+    /^lat\[0:1:\d+\]\[0:1:\d+\],lon\[0:1:\d+\]\[0:1:\d+\]$/u.test(
+      decodedQuery,
+    );
+  const maxBodyBytes = coordinateGridQuery
+    ? frozenPolicy.maxBodyBytes.coordinateGrid
+    : frozenPolicy.maxBodyBytes.metadataOrPoint;
+  if (
+    options.maxBodyBytes !== undefined &&
+    options.maxBodyBytes !== maxBodyBytes
+  ) {
+    throw new SnartPipelineError(
+      'FAIL_HTTP_AUTHORITY_CONTRACT',
+      'caller body limit differs from the immutable endpoint limit',
+    );
+  }
 
-  for (let attempt = 1; attempt <= policy.maxAttempts; attempt += 1) {
+  for (let attempt = 1; attempt <= frozenPolicy.maxAttempts; attempt += 1) {
     const controller = new AbortController();
     const timeout = setTimeout(
       () => controller.abort(),
-      policy.timeoutMilliseconds,
+      frozenPolicy.timeoutMilliseconds,
     );
     try {
-      const response = await fetchImpl(validated.url.href, {
-        headers: { 'User-Agent': policy.userAgent },
-        method: MET_METHOD,
-        redirect: policy.redirect,
-        signal: controller.signal,
-      });
+      let response: Response;
+      try {
+        response = await fetchImpl(validated.url.href, {
+          headers: { 'User-Agent': frozenPolicy.userAgent },
+          method: frozenPolicy.method,
+          redirect: frozenPolicy.redirect,
+          signal: controller.signal,
+        });
+      } catch (error) {
+        if (
+          controller.signal.aborted ||
+          (error instanceof DOMException && error.name === 'AbortError')
+        ) {
+          throw new SnartPipelineError(
+            'FAIL_TIMEOUT',
+            `request aborted after ${frozenPolicy.timeoutMilliseconds} ms`,
+          );
+        }
+        throw new SnartPipelineError(
+          'FAIL_NETWORK',
+          'network request failed',
+        );
+      }
       if (response.status >= 300 && response.status < 400) {
         await response.body?.cancel();
         throw new SnartPipelineError(
@@ -694,14 +762,14 @@ export async function fetchTextWithPolicy(
           `redirect response rejected with HTTP ${response.status}`,
         );
       }
-      if (!policy.acceptedStatuses.includes(response.status)) {
+      if (!frozenPolicy.acceptedStatuses.includes(response.status)) {
         if (
-          policy.retryableStatuses.includes(response.status) &&
-          attempt < policy.maxAttempts
+          frozenPolicy.retryableStatuses.includes(response.status) &&
+          attempt < frozenPolicy.maxAttempts
         ) {
           await response.body?.cancel();
           clearTimeout(timeout);
-          await sleep(retryDelayMilliseconds(response, attempt, policy, now()));
+          await sleep(retryDelayMilliseconds(response, attempt, now()));
           continue;
         }
         throw new SnartPipelineError(
@@ -710,12 +778,7 @@ export async function fetchTextWithPolicy(
         );
       }
       const contentTypeHeader = response.headers.get('content-type');
-      const contentType = contentTypeHeader?.trim().toLowerCase() ?? '';
-      if (
-        contentType === '' ||
-        (!contentType.startsWith('text/plain') &&
-          !contentType.startsWith('application/octet-stream'))
-      ) {
+      if (!isAcceptedContentType(contentTypeHeader)) {
         await response.body?.cancel();
         throw new SnartPipelineError(
           'FAIL_CONTENT_TYPE',
@@ -732,12 +795,12 @@ export async function fetchTextWithPolicy(
       ) {
         throw new SnartPipelineError(
           'FAIL_TIMEOUT',
-          `request aborted after ${policy.timeoutMilliseconds} ms`,
+          `request aborted after ${frozenPolicy.timeoutMilliseconds} ms`,
         );
       }
       throw new SnartPipelineError(
         'FAIL_NETWORK',
-        error instanceof Error ? error.message : 'unknown fetch failure',
+        'network request failed',
       );
     } finally {
       clearTimeout(timeout);
@@ -1034,7 +1097,9 @@ export function parseMonthlyPointAscii(
     !Number.isSafeInteger(binding.X) ||
     binding.X < 0 ||
     !Number.isFinite(binding.lat) ||
-    !Number.isFinite(binding.lon)
+    !Number.isFinite(binding.lon) ||
+    !Number.isFinite(binding.utmY) ||
+    !Number.isFinite(binding.utmX)
   ) {
     throw new SnartPipelineError(
       'FAIL_ASCII_BINDING',
@@ -1142,10 +1207,12 @@ export function parseMonthlyPointAscii(
   if (
     parsed.lat !== binding.lat ||
     parsed.lon !== binding.lon ||
-    parsed.latY !== parsed.lonY ||
-    parsed.latY !== parsed.familyY ||
-    parsed.latX !== parsed.lonX ||
-    parsed.latX !== parsed.familyX ||
+    parsed.latY !== binding.utmY ||
+    parsed.lonY !== binding.utmY ||
+    parsed.familyY !== binding.utmY ||
+    parsed.latX !== binding.utmX ||
+    parsed.lonX !== binding.utmX ||
+    parsed.familyX !== binding.utmX ||
     parsed.familyTime !== parsed.time ||
     parsed.time !== expectedTime
   ) {
@@ -1233,10 +1300,67 @@ function parseGridArray(
   return output;
 }
 
+function parseGridAxis(
+  body: string,
+  variable: 'lat' | 'lon',
+  axis: 'Y' | 'X',
+  expectedLength: number,
+): Float64Array {
+  const normalizedBody = body.replace(/\r\n/gu, '\n');
+  if (normalizedBody.includes('\r')) {
+    throw new SnartPipelineError(
+      'FAIL_GRID_SCHEMA',
+      `${variable}.${axis} contains unsupported line endings`,
+    );
+  }
+  const matches = [
+    ...normalizedBody.matchAll(
+      new RegExp(
+        `(?:^|\\n)${variable}\\.${axis}\\[(\\d+)\\][ \\t]*\\n([^\\n]*)`,
+        'gu',
+      ),
+    ),
+  ];
+  if (
+    matches.length !== 1 ||
+    Number(matches[0][1]) !== expectedLength
+  ) {
+    throw new SnartPipelineError(
+      'FAIL_GRID_SCHEMA',
+      `${variable}.${axis} dimensions do not match DDS`,
+    );
+  }
+  const values = matches[0][2]
+    .split(',')
+    .map((value) => Number(value.trim()));
+  if (
+    values.length !== expectedLength ||
+    values.some((value) => !Number.isFinite(value))
+  ) {
+    throw new SnartPipelineError(
+      'FAIL_GRID_SCHEMA',
+      `${variable}.${axis} contains invalid projected coordinates`,
+    );
+  }
+  return Float64Array.from(values);
+}
+
+function exactFloatArray(
+  actual: Float64Array,
+  expected: Float64Array,
+): boolean {
+  return (
+    actual.length === expected.length &&
+    actual.every((value, index) => value === expected[index])
+  );
+}
+
 function selectAllGridCells(
   projection: HomePlaceProjection[],
   latitudes: Float64Array,
   longitudes: Float64Array,
+  utmYCoordinates: Float64Array,
+  utmXCoordinates: Float64Array,
   YCount: number,
   XCount: number,
   policy: GridPolicy,
@@ -1313,6 +1437,8 @@ function selectAllGridCells(
         X: selected.X,
         gridLat: selected.lat,
         gridLon: selected.lon,
+        utmY: utmYCoordinates[selected.Y],
+        utmX: utmXCoordinates[selected.X],
         distanceMillimetres: selected.distanceMillimetres,
       });
     }
@@ -1828,11 +1954,46 @@ async function buildLiveOrCacheBundle(
     reference.Y,
     reference.X,
   );
+  const latitudeUtmY = parseGridAxis(
+    coordinateResponse.text,
+    'lat',
+    'Y',
+    reference.Y,
+  );
+  const latitudeUtmX = parseGridAxis(
+    coordinateResponse.text,
+    'lat',
+    'X',
+    reference.X,
+  );
+  const longitudeUtmY = parseGridAxis(
+    coordinateResponse.text,
+    'lon',
+    'Y',
+    reference.Y,
+  );
+  const longitudeUtmX = parseGridAxis(
+    coordinateResponse.text,
+    'lon',
+    'X',
+    reference.X,
+  );
+  if (
+    !exactFloatArray(latitudeUtmY, longitudeUtmY) ||
+    !exactFloatArray(latitudeUtmX, longitudeUtmX)
+  ) {
+    throw new SnartPipelineError(
+      'FAIL_GRID_SCHEMA',
+      'latitude and longitude projected coordinate axes differ',
+    );
+  }
   const projection = buildHomePlaceProjection(options.contractPath);
   const selections = selectAllGridCells(
     projection,
     latitudes,
     longitudes,
+    latitudeUtmY,
+    latitudeUtmX,
     reference.Y,
     reference.X,
     contract.gridPolicy,
@@ -1887,6 +2048,8 @@ async function buildLiveOrCacheBundle(
             X: selection.X,
             lat: selection.gridLat,
             lon: selection.gridLon,
+            utmY: selection.utmY,
+            utmX: selection.utmX,
           },
         );
         if (dataset.family === 'tg') {
@@ -1979,6 +2142,8 @@ export async function buildClimatePack(
     contract.contractVersion !== 'snart-monthly-normal-contract@2' ||
     contract.httpPolicy.maxConcurrentRequests !== 1 ||
     contract.source.datasetUrls.length !== 24 ||
+    contract.gridPolicy.pointResponseMapBinding !==
+      'exact-selected-grid-axis-values-from-validated-coordinate-grid' ||
     contract.derivationPolicy.monthCount !== 12 ||
     contract.derivationPolicy.sourceValueStorage !==
       'exact-finite-source-value' ||

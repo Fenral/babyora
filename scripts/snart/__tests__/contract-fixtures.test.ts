@@ -197,6 +197,8 @@ describe('Snart autonomy contract', () => {
       distanceRounding: 'half-away-from-zero',
       invalidSelectedCell: 'grid_invalid_or_sea',
       neighbourFallback: false,
+      pointResponseMapBinding:
+        'exact-selected-grid-axis-values-from-validated-coordinate-grid',
     });
     expect(contract.derivationPolicy).toMatchObject({
       version: 'babyora-monthly-normal-pack@2',

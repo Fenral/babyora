@@ -75,12 +75,12 @@ Pakken bygges kun fra METs offisielle, kompakte `seNorge_2018` månedsnormaler f
 
 Alle nettverkskall følger den maskinlesbare `httpPolicy` i autonomikontrakten:
 
-- Builderens uforanderlige modulkonstanter og caller-kontrakten må være identiske: metode er eksakt `GET`, URL-skjema er eksakt `https:`, hostname er eksakt ASCII `thredds.met.no`, effektiv port er 443 (`URL.port` bare tom eller `443`), og username/password/hash er tomme;
+- Builderens uforanderlige modulkonstanter og caller-kontrakten må være identiske for hvert eneste `httpPolicy`-felt før `fetch` kan kalles: metode er eksakt `GET`, URL-skjema er eksakt `https:`, hostname er eksakt ASCII `thredds.met.no`, effektiv port er 443 (`URL.port` bare tom eller `443`), username/password/hash er tomme, og alle body-, status-, retry-, timeout-, redirect-, samtidighets- og headergrenser er frosset uavhengig av caller;
 - pathname matcher eksakt `^/thredds/dodsC/senorge/seNorge_2018/aggregated_products/(tg|rr)/seNorge2018_(tg|rr)_normal_1991_2020_monthly_(0[1-9]|1[0-2])\.nc\.(dds|das|ascii)$`; mappefamilie og variabelnavn må være identiske, URL-en må finnes i den genererte 24-elementers allowlisten, og `.ascii`-query parses strukturelt og tillater bare `time,lat,lon,tg,rr` med heltallsindekser innen validerte DDS-dimensjoner;
-- `fetch` bruker `redirect: "manual"`; alle 3xx, off-host `Location`, HTTPS→HTTP-downgrade, ukjent status og ukjent content type er terminal FAIL og følges aldri;
+- `fetch` bruker `redirect: "manual"`; alle 3xx, off-host `Location`, HTTPS→HTTP-downgrade, ukjent status og manglende/ukjent content type er terminal FAIL og følges aldri. Medietypetokenet må være eksakt `text/plain` eller `application/octet-stream` uten prefix-lookalikes; gyldige `;`-parametere kan følge;
 - timeout er 20 000 ms per forsøk; body leses streaming med hard grense 2 MiB for DDS/DAS/punkt-ASCII og 96 MiB for den ene koordinatgrid-responsen; avbrutt, trunkert eller større body er FAIL og caches ikke;
 - bare HTTP 200 aksepteres. Bare 429, 500, 502, 503 og 504 kan retries, maksimalt tre totale forsøk med 1 s og 2 s eksponentiell venting. Gyldig numerisk eller IMF-date `Retry-After` brukes som `max(backoff, retryAfter)` og clampes til 0–30 s;
-- `User-Agent` er frosset til eksakt `klemeg/1.0 (sivertskotvold@gmail.com)`, samme verdi som `VITE_METNO_USER_AGENT` i `.env.example`; kontrakttesten feiler dersom repositoryverdien mangler eller avviker, og builderen sender kontraktverdien uendret på hvert kall;
+- `User-Agent` er frosset til eksakt `klemeg/1.0 (sivertskotvold@gmail.com)`, samme verdi som `VITE_METNO_USER_AGENT` i `.env.example`; kontrakttesten feiler dersom repositoryverdien mangler eller avviker, og builderen sender bare den identiske modulkonstanten. Underliggende nettverksfeil serialiseres alltid som fast `FAIL_NETWORK`-tekst uten fremmed message, stack, URL eller credentialmetadata;
 - off-host redirect, downgrade, timeout, abort, trunkering, oversize, 429 med/uten `Retry-After`, retrybar 5xx, ikke-retrybar status og feil User-Agent har frosne boundary-fixtures og tester.
 
 Appens produksjonskode importerer bare den committede pakken. Den kan ikke importere builder, `fetch`, THREDDS, Frost eller andre klimaendepunkter.
@@ -102,6 +102,7 @@ Gridbinding `nearest-grid-cell@1` er også eksakt:
 - beregn Haversine-avstand med jordradius 6 371 008,8 m fra stedets `latE4/lonE4` til hver endelig gridkoordinat;
 - kvantiser positiv avstand til millimeter med half-away-from-zero, sorter på `[distanceMillimetres,Y,X]`, og velg bare første geometriske celle; lik millimeteravstand brytes med laveste `Y`, deretter `X`;
 - maksimal avstand er 5 000 000 mm. Over grensen gir eksplisitt `grid_too_far`;
+- koordinatgrid-responsens validerte projiserte `Y`-/`X`-akseverdier følger den valgte gridindeksen inn i punktparseren; alle `lat.Y/lon.Y/family.Y`- og `lat.X/lon.X/family.X`-kart må være eksakt lik disse valgte akseverdiene, ikke bare hverandre;
 - valgt celle må ha endelig lat/lon og en endelig, ikke-`_FillValue` verdi for både `tg` og `rr` i alle tolv måneder. Hav/ugyldig celle eller ett manglende månedsfelt gir eksplisitt `grid_invalid_or_sea`; builderen prøver aldri nest nærmeste celle i stillhet;
 - boundary-fixtures dekker eksakt treff, sub-millimeter/tie, Y/X-tiebreak, 5 000 000/5 000 001 mm, invalid/havcelle og to navn med samme koordinat.
 
@@ -116,7 +117,7 @@ Build-pipelinen skal:
 1. preflighte alle 24 månedlige DDS/DAS-skjemaer, kildeinstitusjon, fil-/kildeversjoner, periode, enheter, aggregation-attributt, `_FillValue` og lisens gjennom den frosne HTTP-policyen;
 2. løse gridceller med `nearest-grid-cell@1` og aldri nabo-fallback;
 3. hente ett sted, én variabel og én måned om gangen med maksimal samtidighet én, begrenset retry/backoff og resumérbar cache under ignorert `tmp/`;
-4. parse bare validert DAP2-ASCII og binde hvert svar til kontraktens eksakte variabel, måned og gridindeks;
+4. parse bare validert DAP2-ASCII og binde hvert svar til kontraktens eksakte variabel, måned, gridindeks og den valgte cellens validerte projiserte Y/X-akseverdier;
 5. avvise ukjente felt, duplikate/manglende måneder, ikke-endelige tall og `_FillValue`;
 6. bevare eksakte endelige `tg`-/`rr`-kildeverdier (bare `-0`→`0`), derivere og terskelsammenligne på disse råverdiene, og ellers sortere/serialisere med stabile nøkler, UTF-8 og LF; én-desimals half-away-avrunding er kun presentasjon;
 7. bygge to ganger fra separate tomme outputmapper mot den samme hashede råkilde-cachen;

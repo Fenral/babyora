@@ -109,7 +109,8 @@
     "distanceRounding": "half-away-from-zero",
     "invalidSelectedCell": "grid_invalid_or_sea",
     "tooFarReason": "grid_too_far",
-    "neighbourFallback": false
+    "neighbourFallback": false,
+    "pointResponseMapBinding": "exact-selected-grid-axis-values-from-validated-coordinate-grid"
   },
   "derivationPolicy": {
     "version": "babyora-monthly-normal-pack@2",
