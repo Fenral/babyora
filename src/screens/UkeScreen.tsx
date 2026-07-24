@@ -74,6 +74,20 @@ type Activity = 'utelek' | 'vogn';
 type VognMode = 'awake' | 'sleeping';
 type TempAxis = 'kald' | 'mild' | 'varm';
 
+type PlanleggE2EWindow = Window & {
+  __BABYORA_PLANLEGG_E2E__?: Readonly<{ testOnlySoonAvailability?: boolean }>;
+};
+
+function planningAvailability() {
+  if (
+    import.meta.env.VITE_PLANLEGG_E2E === 'true'
+    && (window as PlanleggE2EWindow).__BABYORA_PLANLEGG_E2E__?.testOnlySoonAvailability === true
+  ) {
+    return { ...PLUS_FEATURE_AVAILABILITY, soon_preparation: true };
+  }
+  return PLUS_FEATURE_AVAILABILITY;
+}
+
 type Phase = Readonly<{
   recommendation: Recommendation;
   engineInput: RecommendInput;
@@ -316,21 +330,22 @@ function PlanleggData({
   const [paywallTriggerType, setPaywallTriggerType] = useState<PaywallTrigger>('imorgen');
   const [paywallAccessGeneration, setPaywallAccessGeneration] = useState(0);
   const paywallActionRef = useRef<HTMLButtonElement | null>(null);
+  const availability = planningAvailability();
   const weekAccess = useMemo(() => resolvePlanningViewAccess('week', {
     isPlus: isPremium,
     authenticated: false,
     loading: accessLoading,
-  }, PLUS_FEATURE_AVAILABILITY), [accessLoading, isPremium]);
+  }, availability), [accessLoading, availability, isPremium]);
   const todayAccess = useMemo(() => resolvePlanningViewAccess('today', {
     isPlus: isPremium,
     authenticated: false,
     loading: false,
-  }, PLUS_FEATURE_AVAILABILITY), [isPremium]);
+  }, availability), [availability, isPremium]);
   const soonAccess = useMemo(() => resolvePlanningViewAccess('soon', {
     isPlus: isPremium,
     authenticated: false,
     loading: accessLoading,
-  }, PLUS_FEATURE_AVAILABILITY), [accessLoading, isPremium]);
+  }, availability), [accessLoading, availability, isPremium]);
   const viewAccess = tab === 'today' ? todayAccess : tab === 'tenday' ? weekAccess : soonAccess;
   const [snartEvaluator] = useState(() => createSnartSessionEvaluator({
     resolveExactHome: resolveCommittedSnartHome,
