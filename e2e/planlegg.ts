@@ -1,6 +1,15 @@
-import { spawn, type ChildProcess } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { chromium, type Browser, type Page } from 'playwright';
@@ -11,6 +20,13 @@ import {
   PLANLEGG_E2E_FIXTURES,
   type PlanleggE2EFixture,
 } from './fixtures/planlegg.js';
+import {
+  validateReviewRecords,
+  type CandidateSnapshot,
+  type IndependentReviewReceipt,
+  type ReviewCandidateRecord,
+} from '../scripts/snart/review-gate.js';
+import { validateClimateBundle } from '../scripts/snart/validate-climate-pack.js';
 
 const PORT = 4191;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
@@ -1735,6 +1751,221 @@ async function runExactContext(
   }
 }
 
+const SNART_PRIOR_PLAN_IDS = ['01-13', '01-14', '01-15'] as const;
+const SNART_CONTRACT_PATH =
+  '.planning/phases/01-planlegg-dagslinjen/01-SNART-AUTONOMY-CONTRACT.json';
+const SNART_PACK_PATH = 'src/data/snart/climate-1991-2020-v1.json';
+const SNART_MANIFEST_PATH = 'src/data/snart/climate-1991-2020-v1.manifest.json';
+const SNART_BUILDER_PATH = 'scripts/snart/build-climate-pack.ts';
+const SNART_EVIDENCE_DIR = '.planning/phases/01-planlegg-dagslinjen/evidence';
+
+function sha256Bytes(value: Buffer | string): string {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+function gitText(root: string, arguments_: readonly string[]): string {
+  return execFileSync('git', [...arguments_], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
+}
+
+function gitBlob(root: string, revision: string, path: string): Buffer {
+  return execFileSync('git', ['show', `${revision}:${path}`], {
+    cwd: root,
+    encoding: null,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+}
+
+function candidateChangedPaths(
+  root: string,
+  planId: string,
+  gitSha: string,
+): string[] {
+  const lines = gitText(root, [
+    'log',
+    '--first-parent',
+    '--format=%H%x09%s',
+    gitSha,
+  ]).split(/\r?\n/u).filter(Boolean);
+  let scopedCommitCount = 0;
+  let baseSha: string | undefined;
+  for (const line of lines) {
+    const tab = line.indexOf('\t');
+    if (tab < 1) throw new Error(`Snart readiness kunne ikke lese historikken for ${planId}`);
+    const hash = line.slice(0, tab);
+    const subject = line.slice(tab + 1);
+    if (subject.includes(`(${planId})`)) {
+      scopedCommitCount += 1;
+      continue;
+    }
+    if (scopedCommitCount > 0) {
+      baseSha = hash;
+      break;
+    }
+    throw new Error(`Snart readiness fant ikke ${planId}-kandidaten på oppgitt SHA`);
+  }
+  if (scopedCommitCount === 0) {
+    throw new Error(`Snart readiness fant ingen commits for ${planId}`);
+  }
+  const arguments_ = baseSha
+    ? ['diff', '--name-only', '--diff-filter=ACDMRTUXB', `${baseSha}..${gitSha}`]
+    : ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', gitSha];
+  return gitText(root, arguments_)
+    .split(/\r?\n/u)
+    .map((path) => path.trim().replaceAll('\\', '/'))
+    .filter(Boolean)
+    .sort();
+}
+
+function gitBundleSha256(
+  root: string,
+  paths: readonly string[],
+  revision = 'HEAD',
+): string {
+  const hash = createHash('sha256');
+  for (const path of [...paths].sort()) {
+    hash.update(path);
+    hash.update('\0');
+    hash.update(gitBlob(root, revision, path));
+    hash.update('\0');
+  }
+  return hash.digest('hex');
+}
+
+function validatePriorSnartReadiness(
+  root: string,
+  fixture: NonNullable<PlanleggE2EFixture['snartReadiness']>,
+): void {
+  const currentContractSha256 = sha256Bytes(gitBlob(root, 'HEAD', SNART_CONTRACT_PATH));
+  const currentPackSha256 = sha256Bytes(gitBlob(root, 'HEAD', SNART_PACK_PATH));
+  const candidateRecords = new Map<string, ReviewCandidateRecord>();
+
+  for (const planId of SNART_PRIOR_PLAN_IDS) {
+    const candidate = JSON.parse(readFileSync(
+      join(root, SNART_EVIDENCE_DIR, `${planId}-candidate.json`),
+      'utf8',
+    )) as ReviewCandidateRecord;
+    const receiptA = JSON.parse(readFileSync(
+      join(root, SNART_EVIDENCE_DIR, `${planId}-review-a.json`),
+      'utf8',
+    )) as IndependentReviewReceipt;
+    const receiptB = JSON.parse(readFileSync(
+      join(root, SNART_EVIDENCE_DIR, `${planId}-review-b.json`),
+      'utf8',
+    )) as IndependentReviewReceipt;
+    const expectedTuple = fixture.priorCandidates[planId];
+    if (
+      candidate.candidate.gitSha !== expectedTuple.gitSha
+      || candidate.candidate.treeSha !== expectedTuple.treeSha
+      || candidate.candidate.contractSha256 !== expectedTuple.contractSha256
+      || candidate.candidate.packSha256 !== expectedTuple.packSha256
+      || candidate.candidate.evidenceSha256 !== expectedTuple.evidenceSha256
+    ) {
+      throw new Error(`Snart readiness fant endret kandidat-tuple for ${planId}`);
+    }
+    try {
+      execFileSync('git', ['merge-base', '--is-ancestor', candidate.candidate.gitSha, 'HEAD'], {
+        cwd: root,
+        stdio: 'ignore',
+      });
+    } catch {
+      throw new Error(`Snart readiness fant ikke ${planId}-kandidaten som ancestor av HEAD`);
+    }
+    const snapshot: CandidateSnapshot = {
+      changedPaths: candidateChangedPaths(root, planId, candidate.candidate.gitSha),
+      clean: true,
+      contractPath: candidate.paths.contract,
+      contractSha256: sha256Bytes(gitBlob(
+        root,
+        candidate.candidate.gitSha,
+        candidate.paths.contract,
+      )),
+      gitSha: candidate.candidate.gitSha,
+      packPath: candidate.paths.pack,
+      packSha256: sha256Bytes(gitBlob(
+        root,
+        candidate.candidate.gitSha,
+        candidate.paths.pack,
+      )),
+      treeSha: gitText(root, ['rev-parse', `${candidate.candidate.gitSha}^{tree}`]),
+      worktreePath: root.replaceAll('\\', '/'),
+    };
+    const result = validateReviewRecords({
+      candidate,
+      receiptA,
+      receiptB,
+      snapshot,
+    });
+    if (!result.valid || result.gateStatus !== 'PASS') {
+      throw new Error(`Snart readiness review-port feilet for ${planId}`);
+    }
+    if (
+      currentContractSha256 !== candidate.candidate.contractSha256
+      || currentPackSha256 !== candidate.candidate.packSha256
+    ) {
+      throw new Error(`Snart readiness fant contract-/pack-drift etter ${planId}`);
+    }
+    candidateRecords.set(planId, candidate);
+  }
+
+  const modelPaths = candidateRecords.get('01-14')?.repository.changedPaths ?? [];
+  const uiSessionPaths = candidateRecords.get('01-15')?.repository.changedPaths ?? [];
+  const priorEvidencePaths = SNART_PRIOR_PLAN_IDS.flatMap((planId) => [
+    `${SNART_EVIDENCE_DIR}/${planId}-candidate.json`,
+    `${SNART_EVIDENCE_DIR}/${planId}-review-a.json`,
+    `${SNART_EVIDENCE_DIR}/${planId}-review-b.json`,
+  ]);
+  if (
+    gitBundleSha256(root, modelPaths) !== fixture.modelBundleSha256
+    || gitBundleSha256(root, uiSessionPaths) !== fixture.uiSessionBundleSha256
+    || gitBundleSha256(root, priorEvidencePaths) !== fixture.priorEvidenceBundleSha256
+  ) {
+    throw new Error('Snart readiness fant modell-, UI/session- eller evidence-drift');
+  }
+
+  const manifest = gitBlob(root, 'HEAD', SNART_MANIFEST_PATH);
+  const builder = gitBlob(root, 'HEAD', SNART_BUILDER_PATH);
+  if (
+    sha256Bytes(manifest) !== fixture.manifestSha256
+    || sha256Bytes(builder) !== fixture.builderSha256
+  ) {
+    throw new Error('Snart readiness fant manifest- eller builder-drift');
+  }
+
+  const temporaryRoot = mkdtempSync(join(tmpdir(), 'babyora-snart-readiness-'));
+  const previousWorkingDirectory = process.cwd();
+  try {
+    for (const path of [
+      SNART_CONTRACT_PATH,
+      SNART_PACK_PATH,
+      SNART_MANIFEST_PATH,
+      SNART_BUILDER_PATH,
+    ]) {
+      const target = join(temporaryRoot, path);
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, gitBlob(root, 'HEAD', path));
+    }
+    process.chdir(temporaryRoot);
+    const report = validateClimateBundle({
+      contractPath: join(temporaryRoot, SNART_CONTRACT_PATH),
+      dataDir: join(temporaryRoot, 'src/data/snart'),
+    });
+    if (
+      !report.valid
+      || report.packSha256 !== currentPackSha256
+      || report.manifestSha256 !== fixture.manifestSha256
+    ) {
+      throw new Error('Snart readiness offline data-validator avviste bunten');
+    }
+  } finally {
+    process.chdir(previousWorkingDirectory);
+    rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+}
+
 async function beginEntitlementRefresh(page: Page): Promise<void> {
   await page.evaluate(() => {
     window.dispatchEvent(new Event('planlegg:e2e-entitlement-begin'));
@@ -1751,16 +1982,13 @@ async function runSoonReadiness(
   const availability = readFileSync(join(root, 'src/lib/premium/plus-features.ts'), 'utf8');
   const session = readFileSync(join(root, 'src/lib/planning/snart-session.ts'), 'utf8');
   const privacy = readFileSync(join(root, 'src/lib/planning/__tests__/snart-privacy-contract.test.ts'), 'utf8');
-  const contract = readFileSync(
-    join(root, '.planning/phases/01-planlegg-dagslinjen/01-SNART-AUTONOMY-CONTRACT.json'),
-    'utf8',
-  );
-  const previousEvidence = ['01-13', '01-14', '01-15'].map((plan) => readFileSync(
-    join(root, `.planning/phases/01-planlegg-dagslinjen/evidence/${plan}-candidate.json`),
-    'utf8',
-  ));
+  if (!fixture.snartReadiness) {
+    throw new Error('Snart readiness-fixturen mangler frosne kandidat- og bundlehasher');
+  }
+  validatePriorSnartReadiness(root, fixture.snartReadiness);
+  const soonCapability = availability.match(/soon_preparation:\s*(true|false)/u)?.[1];
   if (
-    !/soon_preparation:\s*false/u.test(availability)
+    (soonCapability !== 'false' && soonCapability !== 'true')
     || !/family_sharing:\s*false/u.test(availability)
     || !/personal_calibration:\s*false/u.test(availability)
     || !session.includes('projectSnartSession')
@@ -1769,8 +1997,6 @@ async function runSoonReadiness(
     || !privacy.includes('indexedDB')
     || !privacy.includes('CacheStorage')
     || !privacy.includes('automatic')
-    || !contract.includes('packSha256')
-    || previousEvidence.some((record) => !record.includes('"gateStatus":"PENDING_REVIEW"') && !record.includes('"gateStatus":"PASS"'))
   ) {
     throw new Error('Snart readiness preflight mangler låst capability-, privacy-, contract- eller tidligere evidence-binding');
   }
@@ -1799,6 +2025,7 @@ async function runSoonReadiness(
         entitlement: state === 'loading' ? 'loading' : state === 'free' ? 'free' : 'plus',
         fixedHome,
         automatic,
+        climateProfile: state === 'invalid-hash' ? 'invalid-hash' : undefined,
         profileScope: state === 'profile-b' ? 'b' : 'a',
         windowLocalDate: state === 'emptyable'
           ? '2026-01-01'
@@ -2009,6 +2236,14 @@ async function runSoonReadiness(
   await unavailable.waitFor({ state: 'visible' });
   if (!/ikke godt nok historisk grunnlag/iu.test(await unavailable.innerText()) || await unavailable.locator('[data-snart-item]').count() !== 0) throw new Error('Unsupported home did not fail closed');
 
+  const invalidHash = await openSoonState('invalid-hash');
+  if (
+    !/ikke godt nok historisk grunnlag/iu.test(await invalidHash.innerText())
+    || await invalidHash.locator('[data-snart-item]').count() !== 0
+  ) {
+    throw new Error('Invalid climate-profile hash did not fail closed');
+  }
+
   const navigationForAge = page.getByRole('navigation').first();
   await navigationForAge.getByRole('button', { name: /^Familie/u }).click();
   const switchChild = page.getByRole('button', { name: /Bytt barn/u });
@@ -2135,6 +2370,13 @@ async function runSoonReadiness(
   const htmlLeaks = await page.content();
   if (/2025-10-03|2023-12-03|\b(?:childId|child_id|birthLocalDate|actionTimestamp)\b/iu.test(htmlLeaks)) {
     throw new Error('Snart DOM leaked a raw DOB, child-id field name, or action timestamp');
+  }
+  const availabilityAfter = readFileSync(
+    join(root, 'src/lib/premium/plus-features.ts'),
+    'utf8',
+  );
+  if (availabilityAfter !== availability) {
+    throw new Error('Snart readiness endret capability-bytes under kontrollen');
   }
 }
 
