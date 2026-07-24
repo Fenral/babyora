@@ -31,8 +31,6 @@ function build(
   finalizedRecommendation: Recommendation = recommend(input),
 ) {
   return createOutfitTruthSnapshot({
-    recommendationId: 'recommendation:fixture',
-    recommendationFingerprint: 'fingerprint:fixture',
     transitionContextId: 'transition:fixture',
     input,
     finalizedRecommendation,
@@ -63,6 +61,70 @@ describe('canonical outfit truth', () => {
       );
       expect(isOutfitTruthSnapshot(first.snapshot)).toBe(true);
     }
+  });
+
+  it('binds recommendation provenance to the complete input and finalized layers', () => {
+    const input = exactInput();
+    const recommendation = recommend(input);
+    const fabricated: Recommendation = {
+      ...recommendation,
+      layers: recommendation.layers.map((layer, index) => ({
+        ...layer,
+        items:
+          index === 0
+            ? [...layer.items, 'fabricated provenance layer']
+            : [...layer.items],
+        })),
+    };
+
+    const original = build(input, recommendation);
+    const altered = build(input, fabricated);
+    expect(original.kind).toBe('supported');
+    expect(altered.kind).toBe('supported');
+    if (original.kind !== 'supported' || altered.kind !== 'supported') return;
+
+    expect(altered.snapshot.recommendationId).not.toBe(
+      original.snapshot.recommendationId,
+    );
+    expect(altered.snapshot.recommendationFingerprint).not.toBe(
+      original.snapshot.recommendationFingerprint,
+    );
+    expect(altered.snapshot.snapshotId).not.toBe(
+      original.snapshot.snapshotId,
+    );
+  });
+
+  it.each([
+    ['recommendationId', 'outfit-recommendation-v1:fabricated'],
+    [
+      'recommendationFingerprint',
+      'outfit-recommendation-fingerprint-v1:fabricated',
+    ],
+  ] as const)('rejects a fabricated %s', (key, fabricatedValue) => {
+    const input = exactInput();
+    const finalizedRecommendation = recommend(input);
+
+    expect(() =>
+      createOutfitTruthSnapshot({
+        [key]: fabricatedValue,
+        transitionContextId: 'transition:fixture',
+        input,
+        finalizedRecommendation,
+        pose: 'sitting',
+      } as Parameters<typeof createOutfitTruthSnapshot>[0]),
+    ).toThrow(OutfitTruthInputError);
+  });
+
+  it('does not trust a structurally identical snapshot created by type assertion', () => {
+    const result = build(exactInput());
+    expect(result.kind).toBe('supported');
+    if (result.kind !== 'supported') return;
+
+    const assertedClone = structuredClone(
+      result.snapshot,
+    ) as typeof result.snapshot;
+    expect(assertedClone).toEqual(result.snapshot);
+    expect(isOutfitTruthSnapshot(assertedClone)).toBe(false);
   });
 
   it('preserves duplicate source labels as distinct stable occurrences', () => {
@@ -239,12 +301,11 @@ describe('canonical outfit truth', () => {
       },
     },
   ])('rejects $name before snapshot construction', ({ value }) => {
+    const input = exactInput();
     expect(() =>
       createOutfitTruthSnapshot({
-        recommendationId: 'recommendation:fixture',
-        recommendationFingerprint: 'fingerprint:fixture',
         transitionContextId: 'transition:fixture',
-        input: exactInput(),
+        input,
         finalizedRecommendation: value as Recommendation,
         pose: 'sitting',
       }),

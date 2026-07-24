@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { recommend } from '../../wool-layers/recommend.js';
 import type { RecommendInput } from '../../wool-layers/types.js';
 import {
@@ -28,26 +28,43 @@ function input(
 }
 
 function truth(exactInput: RecommendInput = input()) {
+  const finalizedRecommendation = recommend(exactInput);
   return createOutfitTruthSnapshot({
-    recommendationId: 'recommendation:transition',
-    recommendationFingerprint: 'fingerprint:transition',
     transitionContextId: 'transition:context',
     input: exactInput,
-    finalizedRecommendation: recommend(exactInput),
+    finalizedRecommendation,
     pose: exactInput.child.ageMonths < 12 ? 'sitting' : 'standing',
   });
 }
 
-function element(connected = true): HTMLElement {
-  return { isConnected: connected } as HTMLElement;
+class TestElement {
+  constructor(readonly isConnected = true) {}
 }
 
-function identity() {
-  return {
-    snapshotId: '',
-    recommendationFingerprint: 'fingerprint:transition',
-    transitionContextId: 'transition:context',
-  };
+const originalElement = globalThis.Element;
+
+beforeAll(() => {
+  Object.defineProperty(globalThis, 'Element', {
+    configurable: true,
+    writable: true,
+    value: TestElement,
+  });
+});
+
+afterAll(() => {
+  if (originalElement === undefined) {
+    delete (globalThis as { Element?: typeof Element }).Element;
+    return;
+  }
+  Object.defineProperty(globalThis, 'Element', {
+    configurable: true,
+    writable: true,
+    value: originalElement,
+  });
+});
+
+function element(connected = true): HTMLElement {
+  return new TestElement(connected) as unknown as HTMLElement;
 }
 
 describe('Phase-2 Outfit target registration', () => {
@@ -81,8 +98,10 @@ describe('Phase-2 Outfit target registration', () => {
     const readiness = evaluateOutfitTargetReadiness({
       truth: result,
       expectedIdentity: {
-        ...identity(),
         snapshotId: result.snapshot.snapshotId,
+        recommendationFingerprint:
+          result.snapshot.recommendationFingerprint,
+        transitionContextId: result.snapshot.transitionContextId,
       },
       targetRows: registry.read(),
       reducedMotion: false,
@@ -91,7 +110,8 @@ describe('Phase-2 Outfit target registration', () => {
     expect(readiness).toMatchObject({
       kind: 'ready',
       snapshotId: result.snapshot.snapshotId,
-      recommendationFingerprint: 'fingerprint:transition',
+      recommendationFingerprint:
+        result.snapshot.recommendationFingerprint,
       transitionContextId: 'transition:context',
     });
     if (readiness.kind === 'ready') {
@@ -127,8 +147,10 @@ describe('Phase-2 Outfit target registration', () => {
       evaluateOutfitTargetReadiness({
         truth: result,
         expectedIdentity: {
-          ...identity(),
           snapshotId: result.snapshot.snapshotId,
+          recommendationFingerprint:
+            result.snapshot.recommendationFingerprint,
+          transitionContextId: result.snapshot.transitionContextId,
           [key]: value,
         },
         targetRows: registry.read(),
@@ -145,8 +167,10 @@ describe('Phase-2 Outfit target registration', () => {
     expect(result.kind).toBe('supported');
     if (result.kind !== 'supported') return;
     const expectedIdentity = {
-      ...identity(),
       snapshotId: result.snapshot.snapshotId,
+      recommendationFingerprint:
+        result.snapshot.recommendationFingerprint,
+      transitionContextId: result.snapshot.transitionContextId,
     };
     const rows = result.snapshot.garments.map((garment) => ({
       itemId: garment.itemId,
@@ -213,6 +237,74 @@ describe('Phase-2 Outfit target registration', () => {
     });
   });
 
+  it('rejects a connected-looking plain object that is not an Element', () => {
+    const result = truth();
+    expect(result.kind).toBe('supported');
+    if (result.kind !== 'supported') return;
+    const rows = result.snapshot.garments.map((garment) => ({
+      itemId: garment.itemId,
+      element: element(),
+    }));
+    rows[0] = {
+      ...rows[0]!,
+      element: { isConnected: true } as HTMLElement,
+    };
+
+    expect(
+      evaluateOutfitTargetReadiness({
+        truth: result,
+        expectedIdentity: {
+          snapshotId: result.snapshot.snapshotId,
+          recommendationFingerprint:
+            result.snapshot.recommendationFingerprint,
+          transitionContextId: result.snapshot.transitionContextId,
+        },
+        targetRows: rows,
+        reducedMotion: false,
+      }),
+    ).toEqual({
+      kind: 'static-only',
+      reason: 'stale-target-row',
+      itemId: rows[0]!.itemId,
+    });
+  });
+
+  it('fails closed without a DOM Element constructor', () => {
+    const result = truth();
+    expect(result.kind).toBe('supported');
+    if (result.kind !== 'supported') return;
+    const rows = result.snapshot.garments.map((garment) => ({
+      itemId: garment.itemId,
+      element: element(),
+    }));
+    delete (globalThis as { Element?: typeof Element }).Element;
+    try {
+      expect(
+        evaluateOutfitTargetReadiness({
+          truth: result,
+          expectedIdentity: {
+            snapshotId: result.snapshot.snapshotId,
+            recommendationFingerprint:
+              result.snapshot.recommendationFingerprint,
+            transitionContextId: result.snapshot.transitionContextId,
+          },
+          targetRows: rows,
+          reducedMotion: false,
+        }),
+      ).toEqual({
+        kind: 'static-only',
+        reason: 'stale-target-row',
+        itemId: rows[0]!.itemId,
+      });
+    } finally {
+      Object.defineProperty(globalThis, 'Element', {
+        configurable: true,
+        writable: true,
+        value: TestElement,
+      });
+    }
+  });
+
   it('makes unsupported cardinality and reduced motion static-only', () => {
     const unsupportedInput = input({
       activity: 'vogn',
@@ -229,7 +321,11 @@ describe('Phase-2 Outfit target registration', () => {
     expect(
       evaluateOutfitTargetReadiness({
         truth: truth(unsupportedInput),
-        expectedIdentity: identity(),
+        expectedIdentity: {
+          snapshotId: '',
+          recommendationFingerprint: '',
+          transitionContextId: '',
+        },
         targetRows: [],
         reducedMotion: false,
       }),
@@ -245,8 +341,10 @@ describe('Phase-2 Outfit target registration', () => {
       evaluateOutfitTargetReadiness({
         truth: supported,
         expectedIdentity: {
-          ...identity(),
           snapshotId: supported.snapshot.snapshotId,
+          recommendationFingerprint:
+            supported.snapshot.recommendationFingerprint,
+          transitionContextId: supported.snapshot.transitionContextId,
         },
         targetRows: [],
         reducedMotion: true,
