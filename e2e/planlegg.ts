@@ -1794,7 +1794,7 @@ async function runSoonReadiness(
         entitlement: state === 'loading' ? 'loading' : state === 'free' ? 'free' : 'plus',
         fixedHome,
         profileScope: state === 'profile-b' ? 'b' : 'a',
-        windowLocalDate: state === 'window-b' ? '2026-02-13' : '2026-02-12',
+        windowLocalDate: state === 'emptyable' ? '2026-01-01' : state === 'window-b' ? '2026-02-13' : '2026-02-12',
       };
     const record = (kind: string, payload: unknown) => {
       const target = window as Window & { __babyoraSoonTransport?: string[] };
@@ -1884,6 +1884,15 @@ async function runSoonReadiness(
   if (leaked.length > 0) {
     throw new Error(`Snart lekket til browser-signal eller transport: ${leaked.join(', ')}`);
   }
+
+  await openPlanlegg(page, `${fixture.path}&snart-e2e=emptyable`);
+  await page.getByRole('radio', { name: 'Snart', exact: true }).evaluate((radio) => (radio as HTMLInputElement).click());
+  const emptyable = page.locator('.snart-plan');
+  await emptyable.waitFor({ state: 'visible' });
+  while (await emptyable.getByRole('button', { name: 'Har allerede', exact: true }).count() > 0) {
+    await emptyable.getByRole('button', { name: 'Har allerede', exact: true }).first().evaluate((button) => (button as HTMLButtonElement).click());
+  }
+  if (!/Ingenting å forberede/iu.test(await emptyable.innerText()) || await emptyable.locator('[data-snart-item]').count() !== 0) throw new Error('January actionable fixture did not reach model empty');
 
   await openPlanlegg(page, `${fixture.path}&snart-e2e=free`);
   const freeSoon = page.getByRole('radio', { name: 'Snart', exact: true });
