@@ -2991,9 +2991,9 @@ async function runSoonReadiness(
 
   const mainNavigation = page.getByRole('navigation', { name: 'Hovednavigasjon' });
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await mainNavigation.getByRole('button', { name: 'Hjem', exact: true }).click({ force: true });
+  await mainNavigation.getByRole('button', { name: 'Hjem', exact: true }).click();
   await page.locator('.planlegg-screen').waitFor({ state: 'detached', timeout: 15_000 });
-  await mainNavigation.getByRole('button', { name: 'Planlegg', exact: true }).click({ force: true });
+  await mainNavigation.getByRole('button', { name: 'Planlegg', exact: true }).click();
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.getByRole('heading', { level: 1, name: 'Planlegg', exact: true })
     .waitFor({ state: 'visible', timeout: 15_000 });
