@@ -19,31 +19,45 @@ inventory_test_blob: 5c6a3db2adbbcddcaae956b56d17650e0110cb57
 inventory_scenarios: 2036160
 scope_file_count: 2
 review_receipt_count: 1
-unresolved_findings: 0
+historical_review_record_count: 1
+unresolved_p0: 0
+unresolved_p1: 0
 external_cost: 0
 push_performed: false
 deploy_performed: false
 review:
-  reviewer_id: phase2-02-03-independent-review-existing-session
-  session: /root/phase3_03_03_contract_review_a_attempt6
-  existing_session: true
-  fresh_to_candidate: true
+  reviewer_id: /root/phase2_02_03_fresh_review
+  canonical_task: /root/phase2_02_03_fresh_review
+  session: phase2-02-03-fresh-review-be3e82e
+  capability: standard-verification
+  focus: geometry-accessibility
+  fork_turns: none
+  fresh_context: true
   independent_from_implementation: true
-  fork_turns_none_claimed: false
-  fresh_context_claimed: false
   verdict: PASS
-  findings: 0
+  unresolved_p0: 0
+  unresolved_p1: 0
+review_history:
+  - reviewer_id: phase2-02-03-independent-review-existing-session
+    session: /root/phase3_03_03_contract_review_a_attempt6
+    existing_session: true
+    fresh_to_candidate: true
+    independent_from_implementation: true
+    fork_turns_none_claimed: false
+    fresh_context_claimed: false
+    verdict: PASS
+    findings: 0
 ---
 
 # Plan 02-03 Independent Review Evidence
 
 ## Verdict
 
-**PASS.** Independent reviewer
-`phase2-02-03-independent-review-existing-session`, session
-`/root/phase3_03_03_contract_review_a_attempt6`, reviewed implementation
-candidate `be3e82e7e14428b97f1181da578b7f60b89fbd4f`, tree
-`4bc91e37a75cf77baa1435c9e91151796cc7a584`, and reported zero findings.
+**PASS.** Fresh independent reviewer `/root/phase2_02_03_fresh_review`,
+session `phase2-02-03-fresh-review-be3e82e`, reviewed implementation candidate
+`be3e82e7e14428b97f1181da578b7f60b89fbd4f`, tree
+`4bc91e37a75cf77baa1435c9e91151796cc7a584`, at
+`standard-verification` capability and reported no unresolved P0/P1.
 
 This evidence binds the implementation candidate. The later documentation-only
 commit that adds this file and `02-03-SUMMARY.md` does not alter the reviewed
@@ -51,18 +65,20 @@ implementation tree.
 
 ## Receipt Provenance
 
-The receipt came from an **existing session**. It was explicitly:
+The qualified receipt explicitly records:
 
-- `existing_session: true`
-- `fresh_to_candidate: true`
-- `independent_from_implementation: true`
-- verdict `PASS`
-- findings `0`
+- canonical task `/root/phase2_02_03_fresh_review`;
+- session `phase2-02-03-fresh-review-be3e82e`;
+- capability `standard-verification`;
+- `fresh_context: true`;
+- `fork_turns: none`;
+- independence from implementation;
+- verdict `PASS`;
+- no unresolved P0/P1.
 
-This record does **not** claim `fork_turns: none` or `fresh_context: true`.
-Those properties were not part of the supplied receipt and are not inferred.
-Freshness here means fresh exposure to this exact candidate, not a newly
-created conversational context.
+The earlier existing-session PASS is retained below as historical review
+evidence. It is not relabeled as fresh and does not substitute for the
+qualified receipt.
 
 ## Immutable Binding
 
@@ -98,25 +114,36 @@ RED are all ancestors of the reviewed candidate.
 No truth, engine, package manifest, lockfile, media, Hjem, Uke, Paakledning,
 state, avatar, inventory, or other implementation path changed.
 
-## Independent Review Receipt
+## Independent Review Receipts
 
 | Field | Receipt |
+|---|---|
+| Reviewer ID / canonical task | `/root/phase2_02_03_fresh_review` |
+| Session | `phase2-02-03-fresh-review-be3e82e` |
+| Capability | `standard-verification` |
+| Fresh context | `true` |
+| Fork context | `none` |
+| Independent from implementation | `true` |
+| Candidate | `be3e82e7e14428b97f1181da578b7f60b89fbd4f` |
+| Tree | `4bc91e37a75cf77baa1435c9e91151796cc7a584` |
+| Verdict | **PASS** |
+| Unresolved P0/P1 | `0 / 0` |
+
+Historical record:
+
+| Field | Historical receipt |
 |---|---|
 | Reviewer ID | `phase2-02-03-independent-review-existing-session` |
 | Session | `/root/phase3_03_03_contract_review_a_attempt6` |
 | Existing session | `true` |
 | Fresh to exact candidate | `true` |
 | Independent from implementation | `true` |
-| Candidate | `be3e82e7e14428b97f1181da578b7f60b89fbd4f` |
-| Tree | `4bc91e37a75cf77baa1435c9e91151796cc7a584` |
-| Verdict | **PASS** |
-| Findings | `0` |
+| Verdict / findings | **PASS** / `0` |
 | `fork_turns: none` claimed | `false` |
 | `fresh_context: true` claimed | `false` |
 
-The independent receipt bound its conclusion to the repaired immutable
-candidate rather than the rejected predecessor. No executor self-review is
-substituted for this receipt.
+The fresh receipt supersedes this historical record for the plan gate while
+preserving its original facts.
 
 ## Responsive Geometry Matrix
 
