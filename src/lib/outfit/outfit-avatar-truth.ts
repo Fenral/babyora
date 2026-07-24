@@ -44,6 +44,101 @@ const MANIFEST = Object.freeze(
   ),
 );
 
+function readExactPlainDataRecord(
+  value: unknown,
+  expectedKeys: readonly string[],
+): Readonly<Record<string, unknown>> | null {
+  try {
+    if (
+      value === null ||
+      typeof value !== 'object' ||
+      Array.isArray(value) ||
+      Object.getPrototypeOf(value) !== Object.prototype
+    ) {
+      return null;
+    }
+    const expected = new Set(expectedKeys);
+    const ownKeys = Reflect.ownKeys(value);
+    if (
+      ownKeys.length !== expectedKeys.length ||
+      ownKeys.some(
+        (key) => typeof key !== 'string' || !expected.has(key),
+      )
+    ) {
+      return null;
+    }
+
+    const result = Object.create(null) as Record<string, unknown>;
+    for (const key of expectedKeys) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (
+        descriptor === undefined ||
+        !('value' in descriptor) ||
+        descriptor.enumerable !== true
+      ) {
+        return null;
+      }
+      result[key] = descriptor.value;
+    }
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+function readExactDenseDataArray(
+  value: unknown,
+): readonly unknown[] | null {
+  try {
+    if (
+      !Array.isArray(value) ||
+      Object.getPrototypeOf(value) !== Array.prototype
+    ) {
+      return null;
+    }
+    const lengthDescriptor = Object.getOwnPropertyDescriptor(
+      value,
+      'length',
+    );
+    if (
+      lengthDescriptor === undefined ||
+      !('value' in lengthDescriptor) ||
+      lengthDescriptor.enumerable !== false ||
+      !Number.isSafeInteger(lengthDescriptor.value) ||
+      lengthDescriptor.value < 0
+    ) {
+      return null;
+    }
+    const length = lengthDescriptor.value;
+    const ownKeys = Reflect.ownKeys(value);
+    if (ownKeys.length !== length + 1) return null;
+
+    const result: unknown[] = [];
+    for (let index = 0; index < length; index += 1) {
+      const descriptor = Object.getOwnPropertyDescriptor(
+        value,
+        String(index),
+      );
+      if (
+        descriptor === undefined ||
+        !('value' in descriptor) ||
+        descriptor.enumerable !== true
+      ) {
+        return null;
+      }
+      Object.defineProperty(result, String(index), {
+        configurable: true,
+        enumerable: true,
+        value: descriptor.value,
+        writable: true,
+      });
+    }
+    return result;
+  } catch {
+    return null;
+  }
+}
+
 function neutral(pose: OutfitAvatarPose): OutfitAvatarTruth {
   return Object.freeze({
     pose,
@@ -78,6 +173,122 @@ function validCoverage(value: AvatarVisualCoverage): boolean {
   );
 }
 
+function parseCoverage(value: unknown): AvatarVisualCoverage | null {
+  const record = readExactPlainDataRecord(value, [
+    'coverageVersion',
+    'bodyCoverage',
+    'visibleSlots',
+    'visualLayerRank',
+    'occludesSlots',
+  ]);
+  if (record === null) return null;
+
+  const bodyCoverage = readExactDenseDataArray(record.bodyCoverage);
+  const visibleSlots = readExactDenseDataArray(record.visibleSlots);
+  const occludesSlots = readExactDenseDataArray(record.occludesSlots);
+  if (
+    bodyCoverage === null ||
+    visibleSlots === null ||
+    occludesSlots === null ||
+    !bodyCoverage.every(
+      (slot): slot is AvatarVisibleSlot =>
+        typeof slot === 'string' &&
+        VALID_SLOTS.has(slot as AvatarVisibleSlot),
+    ) ||
+    !visibleSlots.every(
+      (slot): slot is AvatarVisibleSlot =>
+        typeof slot === 'string' &&
+        VALID_SLOTS.has(slot as AvatarVisibleSlot),
+    ) ||
+    !occludesSlots.every(
+      (slot): slot is AvatarVisibleSlot =>
+        typeof slot === 'string' &&
+        VALID_SLOTS.has(slot as AvatarVisibleSlot),
+    )
+  ) {
+    return null;
+  }
+
+  const coverage: AvatarVisualCoverage = {
+    coverageVersion: record.coverageVersion as 1,
+    bodyCoverage,
+    visibleSlots,
+    visualLayerRank: record.visualLayerRank as number,
+    occludesSlots,
+  };
+  return validCoverage(coverage) ? coverage : null;
+}
+
+function parseResolverArgs(value: unknown): Readonly<{
+  pose: OutfitAvatarPose;
+  garments: readonly AvatarResolvableGarment[];
+}> | null {
+  const record = readExactPlainDataRecord(value, [
+    'pose',
+    'garments',
+  ]);
+  if (
+    record === null ||
+    (record.pose !== 'sitting' && record.pose !== 'standing')
+  ) {
+    return null;
+  }
+  const garmentValues = readExactDenseDataArray(record.garments);
+  if (garmentValues === null) return null;
+
+  const garments: AvatarResolvableGarment[] = [];
+  for (const garmentValue of garmentValues) {
+    const garment = readExactPlainDataRecord(garmentValue, [
+      'itemId',
+      'catalogGarmentId',
+      'avatarCoverage',
+    ]);
+    if (
+      garment === null ||
+      typeof garment.itemId !== 'string' ||
+      garment.itemId.length === 0 ||
+      (garment.catalogGarmentId !== null &&
+        typeof garment.catalogGarmentId !== 'string')
+    ) {
+      return null;
+    }
+
+    let avatarCoverage: AvatarVisualCoverage | null = null;
+    if (garment.avatarCoverage !== null) {
+      avatarCoverage = parseCoverage(garment.avatarCoverage);
+      if (avatarCoverage === null) return null;
+    }
+    garments.push({
+      itemId: garment.itemId as OutfitItemId,
+      catalogGarmentId: garment.catalogGarmentId,
+      avatarCoverage,
+    });
+  }
+  return {
+    pose: record.pose,
+    garments,
+  };
+}
+
+function neutralPose(value: unknown): OutfitAvatarPose {
+  try {
+    if (value !== null && typeof value === 'object') {
+      const descriptor = Object.getOwnPropertyDescriptor(value, 'pose');
+      if (
+        descriptor !== undefined &&
+        'value' in descriptor &&
+        (descriptor.value === 'sitting' ||
+          descriptor.value === 'standing')
+      ) {
+        return descriptor.value;
+      }
+    }
+  } catch {
+    // Invalid graph: use the stable neutral fallback below.
+  }
+  return 'standing';
+}
+
 function sameSet(left: readonly string[], right: readonly string[]): boolean {
   if (left.length !== right.length) return false;
   const rightSet = new Set(right);
@@ -88,7 +299,9 @@ export function resolveOutfitAvatarTruth(args: Readonly<{
   pose: OutfitAvatarPose;
   garments: readonly AvatarResolvableGarment[];
 }>): OutfitAvatarTruth {
-  const { pose, garments } = args;
+  const parsed = parseResolverArgs(args);
+  if (parsed === null) return neutral(neutralPose(args));
+  const { pose, garments } = parsed;
   if (
     garments.length === 0 ||
     new Set(garments.map((garment) => garment.itemId)).size !==

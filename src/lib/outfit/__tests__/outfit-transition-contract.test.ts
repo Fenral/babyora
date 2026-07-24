@@ -473,6 +473,35 @@ describe('Phase-2 Outfit target registration', () => {
     }
   });
 
+  it('rejects row fields supplied by Object.prototype pollution', () => {
+    const pollutedKey = 'element';
+    const previous = Object.getOwnPropertyDescriptor(
+      Object.prototype,
+      pollutedKey,
+    );
+    const args = readinessArgs();
+    const pollutedElement = args.targetRows[0]!.element;
+    args.targetRows[0] = {
+      itemId: args.targetRows[0]!.itemId,
+    } as (typeof args.targetRows)[number];
+    Object.defineProperty(Object.prototype, pollutedKey, {
+      configurable: true,
+      enumerable: false,
+      value: pollutedElement,
+      writable: true,
+    });
+
+    try {
+      expectUnknownStaticOnly(args);
+    } finally {
+      if (previous === undefined) {
+        delete (Object.prototype as Record<string, unknown>)[pollutedKey];
+      } else {
+        Object.defineProperty(Object.prototype, pollutedKey, previous);
+      }
+    }
+  });
+
   it('does not invoke identity or row accessors', () => {
     const identityArgs = readinessArgs();
     let identityGetterCalls = 0;
@@ -507,6 +536,42 @@ describe('Phase-2 Outfit target registration', () => {
     expect(rowGetterCalls).toBe(0);
     expect(rowOutcome.error).toBeUndefined();
     expect(rowOutcome.result).toMatchObject({
+      kind: 'static-only',
+    });
+  });
+
+  it('does not invoke readiness-root or truth-wrapper accessors', () => {
+    const source = readinessArgs();
+    let rootGetterCalls = 0;
+    const rootAccessor = {
+      get truth() {
+        rootGetterCalls += 1;
+        throw new Error('readiness root getter must not run');
+      },
+      expectedIdentity: source.expectedIdentity,
+      targetRows: source.targetRows,
+      reducedMotion: false,
+    };
+    const rootOutcome = attemptUnknownReadiness(rootAccessor);
+    expect(rootGetterCalls).toBe(0);
+    expect(rootOutcome.error).toBeUndefined();
+    expect(rootOutcome.result).toMatchObject({
+      kind: 'static-only',
+    });
+
+    const truthArgs = readinessArgs();
+    let truthGetterCalls = 0;
+    truthArgs.truth = {
+      kind: 'supported',
+      get snapshot() {
+        truthGetterCalls += 1;
+        throw new Error('truth wrapper getter must not run');
+      },
+    } as typeof truthArgs.truth;
+    const truthOutcome = attemptUnknownReadiness(truthArgs);
+    expect(truthGetterCalls).toBe(0);
+    expect(truthOutcome.error).toBeUndefined();
+    expect(truthOutcome.result).toMatchObject({
       kind: 'static-only',
     });
   });
@@ -578,6 +643,12 @@ describe('Phase-2 Outfit target registration', () => {
   });
 
   it('rejects sparse and decorated target-row arrays', () => {
+    const inheritedArrayArgs = readinessArgs();
+    inheritedArrayArgs.targetRows = Object.create(
+      inheritedArrayArgs.targetRows,
+    ) as typeof inheritedArrayArgs.targetRows;
+    expectUnknownStaticOnly(inheritedArrayArgs);
+
     const customArrayArgs = readinessArgs();
     Object.setPrototypeOf(
       customArrayArgs.targetRows,
@@ -619,6 +690,26 @@ describe('Phase-2 Outfit target registration', () => {
       writable: true,
     });
     expectUnknownStaticOnly(nonEnumerableArgs);
+  });
+
+  it('does not invoke target-row array index accessors', () => {
+    const args = readinessArgs();
+    let indexGetterCalls = 0;
+    Object.defineProperty(args.targetRows, '0', {
+      configurable: true,
+      enumerable: true,
+      get() {
+        indexGetterCalls += 1;
+        throw new Error('array index getter must not run');
+      },
+    });
+
+    const outcome = attemptUnknownReadiness(args);
+    expect(indexGetterCalls).toBe(0);
+    expect(outcome.error).toBeUndefined();
+    expect(outcome.result).toMatchObject({
+      kind: 'static-only',
+    });
   });
 
   it('rejects sparse row records without an uncontrolled exception', () => {
