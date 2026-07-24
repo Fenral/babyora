@@ -168,6 +168,71 @@ function continuedCommitNodeCases(
   ];
 }
 
+function commitMappingKeyCases(
+  conflictingSha: string,
+): readonly DecoratedCommitScalarCase[] {
+  return [
+    {
+      name: 'bare top-level commit mapping key',
+      lines: [`${conflictingSha}: reviewed`],
+    },
+    {
+      name: 'quoted nested commit mapping key',
+      lines: ['metadata:', `  "${conflictingSha}": reviewed`],
+    },
+    {
+      name: 'tagged nested commit mapping key',
+      lines: ['metadata:', `  !!str ${conflictingSha}: reviewed`],
+    },
+    {
+      name: 'anchored nested commit mapping key',
+      lines: [
+        'metadata:',
+        `  &mapping.key-v1 ${conflictingSha}: reviewed`,
+      ],
+    },
+  ];
+}
+
+function legalAnchorCommitCases(
+  conflictingSha: string,
+): readonly DecoratedCommitScalarCase[] {
+  return [
+    {
+      name: 'dotted anchor name',
+      lines: ['candidate_commit:', `  &candidate.v1 ${conflictingSha}`],
+    },
+    {
+      name: 'slash anchor name',
+      lines: [
+        'candidate_commit:',
+        `  &candidate/review-v1 ${conflictingSha}`,
+      ],
+    },
+    {
+      name: 'at-sign anchor name',
+      lines: ['candidate_commit:', `  &candidate@v1 ${conflictingSha}`],
+    },
+  ];
+}
+
+function ordinaryMultilineFlowControls(checksum: string): readonly string[] {
+  return [
+    'metadata_flow: [',
+    '  stable,',
+    '  { state: reviewed, note: "literal ], # and comma, remain quoted" },',
+    '  # comment delimiters are inert: ], }',
+    '  [nested, "quoted, value"]',
+    '  ]',
+    'metadata_map: {',
+    '  tags: [stable, reviewed],',
+    '  note: "ordinary: # literal",',
+    `  checksum: ${checksum},`,
+    '  nested: { state: reviewed }',
+    '  }',
+  ];
+}
+
 function ordinaryMetadataControls(checksum: string): readonly string[] {
   const referencedCommit = 'c'.repeat(40);
   return [
@@ -192,6 +257,7 @@ function ordinaryMetadataControls(checksum: string): readonly string[] {
     "single_quoted_note: 'another literal # value'",
     'url_fragment: https://example.invalid/path#fragment',
     `validation_evidence_sha256: ${checksum} # ordinary checksum comment`,
+    ...ordinaryMultilineFlowControls(checksum),
   ];
 }
 
@@ -864,6 +930,77 @@ describe('pure exact-label and path guards', () => {
     },
   );
 
+  it.each([
+    ...commitMappingKeyCases('b'.repeat(40)),
+    ...legalAnchorCommitCases('b'.repeat(40)),
+  ])('rejects a Phase 1 $name', ({ lines }) => {
+    expect(() =>
+      parsePhase1CandidateSummary(
+        [
+          '---',
+          'status: PASS',
+          `candidate_sha: ${'1'.repeat(40)}`,
+          ...lines,
+          '---',
+        ].join('\n'),
+      ),
+    ).toThrow();
+  });
+
+  it.each([
+    ...commitMappingKeyCases('b'.repeat(40)),
+    ...legalAnchorCommitCases('b'.repeat(40)),
+  ])('rejects a Phase 2 $name', ({ lines }) => {
+    expect(() =>
+      parsePhase2HandoffSummary(
+        [
+          '---',
+          'status: PASS',
+          `phase2_candidate_sha: ${'2'.repeat(40)}`,
+          'feature_flag: true',
+          `phase1_candidate_sha: ${'1'.repeat(40)}`,
+          ...lines,
+          '---',
+        ].join('\n'),
+      ),
+    ).toThrow();
+  });
+
+  it('rejects a commit scalar inside assembled multiline flow metadata', () => {
+    const conflictingSha = 'b'.repeat(40);
+    const flowNode = [
+      'metadata_flow: [',
+      '  stable,',
+      `  ${conflictingSha}`,
+      '  ]',
+    ];
+
+    expect(() =>
+      parsePhase1CandidateSummary(
+        [
+          '---',
+          'status: PASS',
+          `candidate_sha: ${'1'.repeat(40)}`,
+          ...flowNode,
+          '---',
+        ].join('\n'),
+      ),
+    ).toThrow(/candidate SHA alias|flow|frontmatter/i);
+
+    expect(() =>
+      parsePhase2HandoffSummary(
+        [
+          '---',
+          'status: PASS',
+          `phase2_candidate_sha: ${'2'.repeat(40)}`,
+          'feature_flag: true',
+          ...flowNode,
+          '---',
+        ].join('\n'),
+      ),
+    ).toThrow(/candidate SHA alias|flow|frontmatter/i);
+  });
+
   it('rejects semantic continuations on every Phase 1 security field', () => {
     const candidateSha = '1'.repeat(40);
     const canonical = [
@@ -1406,6 +1543,51 @@ describe('candidate mode', () => {
     );
   });
 
+  it('rejects commit mapping keys, legal anchor names, and multiline flow through candidate mode', () => {
+    const harness = createHarness();
+    const summaryPath = join(
+      harness.evidenceRoot,
+      'node scanner phase1.md',
+    );
+    const args = replaceOption(
+      candidateArgs(harness),
+      '--phase1-summary',
+      summaryPath,
+    );
+    const cases = [
+      ...commitMappingKeyCases(harness.candidateSha),
+      ...legalAnchorCommitCases(harness.candidateSha),
+      {
+        name: 'assembled multiline flow commit scalar',
+        lines: [
+          'metadata_flow: [',
+          '  stable,',
+          `  ${harness.candidateSha}`,
+          '  ]',
+        ],
+      },
+    ];
+
+    for (const testCase of cases) {
+      writeFileSync(
+        summaryPath,
+        [
+          '---',
+          'status: PASS',
+          `candidate_sha: ${harness.phase1Sha}`,
+          ...testCase.lines,
+          '---',
+        ].join('\n'),
+        'utf8',
+      );
+
+      expectFailure(
+        runScript(harness, args),
+        /candidate SHA alias|frontmatter|flow|anchor/i,
+      );
+    }
+  });
+
   it('rejects every semantic Phase 1 commit alias through candidate mode', () => {
     const harness = createHarness();
     const aliasSummary = join(
@@ -1620,6 +1802,37 @@ describe('phase2-handoff mode', () => {
       runPhase2(harness, summaryPath),
       /feature.flag|frontmatter|continuation|unambiguous/i,
     );
+  });
+
+  it('rejects commit mapping keys, legal anchor names, and multiline flow through handoff mode', () => {
+    const harness = createHarness();
+    const cases = [
+      ...commitMappingKeyCases(harness.candidateSha),
+      ...legalAnchorCommitCases(harness.candidateSha),
+      {
+        name: 'assembled multiline flow commit scalar',
+        lines: [
+          'metadata_flow: [',
+          '  stable,',
+          `  ${harness.candidateSha}`,
+          '  ]',
+        ],
+      },
+    ];
+
+    for (const testCase of cases) {
+      const summaryPath = writePhase2Summary(harness, [
+        'status: PASS',
+        `phase2_candidate_sha: ${harness.phase1Sha}`,
+        'feature_flag: true',
+        ...testCase.lines,
+      ]);
+
+      expectFailure(
+        runPhase2(harness, summaryPath),
+        /candidate SHA alias|frontmatter|flow|anchor/i,
+      );
+    }
   });
 
   it.each([
