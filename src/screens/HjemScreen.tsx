@@ -320,6 +320,7 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     const evaluatedAt = weather.evidence?.metadata.evaluatedAt;
     if (
       !now
+      || !engineInput
       || !resolvedRecommendation
       || effectivePlace === null
       || evaluatedAt === undefined
@@ -329,27 +330,11 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     ) {
       return null;
     }
-    const orderedGarments = resolvedRecommendation.layers
-      .filter((layer) => layer.category !== 'utstyr')
-      .flatMap((layer) => layer.items);
-    const equipment = resolvedRecommendation.layers
-      .filter((layer) => layer.category === 'utstyr')
-      .flatMap((layer) => layer.items);
-    if (orderedGarments.length === 0) return null;
-    const fingerprint = `current-finalized:${JSON.stringify([
-      orderedGarments,
-      equipment,
-      now.tempC,
-      now.feelsLikeC,
-      now.windMs,
-      now.precipMmH,
-      now.symbolCode,
-    ])}`;
     const evaluatedAtIso = new Date(evaluatedAt).toISOString();
     try {
       return createPlannedOutfitContext({
-        planningEventId: `current-event:${evaluatedAtIso}:${fingerprint}`,
-        transitionContextId: `current-transition:${evaluatedAtIso}:${fingerprint}`,
+        planningEventId: `current-event:${evaluatedAtIso}`,
+        transitionContextId: `current-transition:${evaluatedAtIso}`,
         child: {
           id: active.id,
           name: active.name,
@@ -372,13 +357,8 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
           precipMmH: now.precipMmH,
           symbolCode: now.symbolCode,
         },
-        recommendation: {
-          id: `current-recommendation:${fingerprint}`,
-          fingerprint,
-          orderedGarments,
-          equipment,
-          finalized: true,
-        },
+        recommendInput: engineInput,
+        finalizedRecommendation: resolvedRecommendation,
         access: {
           capability: 'today_home',
           allowed: true,
@@ -394,6 +374,7 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     activity,
     ageMonths,
     cityLabel,
+    engineInput,
     effectivePlace,
     lat,
     lon,

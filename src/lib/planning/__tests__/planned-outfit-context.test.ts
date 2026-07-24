@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { recommend } from '../../wool-layers/recommend.js';
 import {
   planningAccessFixture,
   planningChildFixture,
@@ -109,7 +110,141 @@ function frozenContextWith(
   return Object.freeze({ ...context, ...overrides });
 }
 
+function canonicalCompleteInput() {
+  const recommendInput = {
+    weather: {
+      tempC: 1,
+      feelsLikeC: -2,
+      windMs: 3.1,
+      precipMmH: 0.4,
+      humidity: 72,
+      symbolCode: 'lightsnow',
+      uvIndex: 0,
+    },
+    child: { ageMonths: 5, canRoll: false },
+    activity: 'vogn' as const,
+    exposureMin: 75,
+    innerJakke: false,
+    vognMode: 'sleeping' as const,
+    context: { bilstol: false },
+    childCalibration: 0 as const,
+  };
+  return {
+    planningEventId: 'planning-event-canonical-11',
+    transitionContextId: 'transition-canonical-11',
+    child: { id: 'barn-01', name: 'Ada', ageMonths: 5 },
+    plannedForIso: '2026-02-12T11:00:00.000Z',
+    timeZone: PLAN_TIME_ZONE,
+    place: {
+      label: 'Hjemme', lat: 59.9139, lon: 10.7522, source: 'configured-place' as const,
+    },
+    activity: 'vogn' as const,
+    vognMode: 'sleeping' as const,
+    weather: {
+      tempC: 1, feelsLikeC: -2, windMs: 3.1, precipMmH: 0.4, symbolCode: 'lightsnow',
+    },
+    recommendInput,
+    finalizedRecommendation: recommend(recommendInput),
+    access: { capability: 'future_plan' as const, allowed: true, reason: 'plus' as const },
+  };
+}
+
 describe('Planned Outfit exact-context contracts', () => {
+  it('owns one complete immutable Phase-2 producer seed and derives its projection', () => {
+    const input = canonicalCompleteInput();
+    const original = structuredClone(input);
+    const context = createPlannedOutfitContext(input);
+
+    expect(context.sourceKind).toBe('phase2-outfit-truth');
+    if (context.sourceKind !== 'phase2-outfit-truth') throw new Error('expected Phase-2 context');
+    const { producerSeed } = context;
+    expect(producerSeed).toMatchObject({
+      version: 1,
+      sourceContextId: context.plannedContextId,
+      transitionContextId: context.transitionContextId,
+      recommendInput: original.recommendInput,
+      finalizedRecommendation: original.finalizedRecommendation,
+    });
+    expect(producerSeed.recommendationId).toBe(context.recommendation.id);
+    expect(producerSeed.recommendationFingerprint).toBe(context.recommendation.fingerprint);
+    expect(context.recommendation.orderedGarments).toEqual(
+      original.finalizedRecommendation.layers
+        .filter((layer) => layer.category !== 'utstyr')
+        .flatMap((layer) => layer.items),
+    );
+    expect(context.recommendation.equipment).toEqual(
+      original.finalizedRecommendation.layers
+        .filter((layer) => layer.category === 'utstyr')
+        .flatMap((layer) => layer.items),
+    );
+    expect(JSON.parse(JSON.stringify(context))).not.toHaveProperty('layout');
+    expect(JSON.stringify(createPlannedOutfitContext(structuredClone(original)))).toBe(
+      JSON.stringify(context),
+    );
+    assertRecursivelyFrozen(context);
+
+    input.recommendInput.weather.humidity = 0;
+    input.recommendInput.context.bilstol = true;
+    input.finalizedRecommendation.layers[0]!.items[0] = 'Mutert lag';
+    input.finalizedRecommendation.notes.push('Mutert note');
+    expect(producerSeed.recommendInput.weather.humidity).toBe(72);
+    expect(producerSeed.recommendInput.context?.bilstol).toBe(false);
+    expect(producerSeed.finalizedRecommendation.layers[0]!.items[0]).not.toBe('Mutert lag');
+    expect(producerSeed.finalizedRecommendation.notes).not.toContain('Mutert note');
+  });
+
+  it('fails closed on flat, injected, mismatched, cyclic, and accessor-backed Phase-2 seeds', () => {
+    const valid = canonicalCompleteInput();
+    const injected = { ...valid, outfitProducerSeed: { version: 1 } };
+    const flattened = {
+      ...valid,
+      recommendation: completeInput().recommendation,
+    };
+    const activityMismatch = structuredClone(valid);
+    activityMismatch.finalizedRecommendation.activity = 'utelek';
+    const cyclic = canonicalCompleteInput() as ReturnType<typeof canonicalCompleteInput> & {
+      recommendInput: Record<string, unknown>;
+    };
+    cyclic.recommendInput.self = cyclic.recommendInput;
+    const accessor = canonicalCompleteInput();
+    Object.defineProperty(accessor.finalizedRecommendation, 'summary', {
+      enumerable: true,
+      get: () => 'getter must not execute',
+    });
+
+    for (const invalid of [injected, flattened, activityMismatch, cyclic, accessor]) {
+      expect(() => createPlannedOutfitContext(invalid)).toThrow(/PlannedOutfitContext/u);
+    }
+  });
+
+  it('keeps the Phase-1 string projection explicit and outside the outfit-truth guard', async () => {
+    const legacy = createPlannedOutfitContext(completeInput());
+    const { isOutfitTruthPlannedOutfitContext } = await import('../planned-outfit-context.js');
+    expect(legacy.sourceKind).toBe('phase1-legacy');
+    expect(isPlannedOutfitContext(legacy)).toBe(true);
+    expect(isOutfitTruthPlannedOutfitContext(legacy)).toBe(false);
+  });
+
+  it('preserves existing full source objects at both screen handoffs without a handoff rerun', async () => {
+    const [{ default: hjemSource }, { default: ukeSource }] = await Promise.all([
+      import(/* @vite-ignore */ '../../../screens/HjemScreen.tsx?raw') as Promise<{ default: string }>,
+      import(/* @vite-ignore */ '../../../screens/UkeScreen.tsx?raw') as Promise<{ default: string }>,
+    ]);
+    const hjemHandoff = hjemSource.slice(
+      hjemSource.indexOf('const currentOutfitContext'),
+      hjemSource.indexOf('const handleActivityChange'),
+    );
+    const ukeHandoffStart = ukeSource.indexOf('for (const event of events)');
+    const ukeHandoff = ukeSource.slice(ukeHandoffStart, ukeSource.indexOf('contextEntries.push', ukeHandoffStart));
+
+    expect(hjemHandoff).toContain('recommendInput: engineInput');
+    expect(hjemHandoff).toContain('finalizedRecommendation: resolvedRecommendation');
+    expect(hjemHandoff).not.toMatch(/\brecommend\s*\(/u);
+    expect(hjemHandoff).not.toContain('orderedGarments = resolvedRecommendation.layers');
+    expect(ukeHandoff).toContain('recommendInput: fact.phase.engineInput');
+    expect(ukeHandoff).toContain('finalizedRecommendation: fact.phase.recommendation');
+    expect(ukeHandoff).not.toMatch(/\brecommend\s*\(/u);
+  });
   it('exports the fixed timezone, strict constructor, and tolerant guard', () => {
     expect(PLAN_TIME_ZONE).toBe('Europe/Oslo');
     expect(createPlannedOutfitContext).toBeTypeOf('function');

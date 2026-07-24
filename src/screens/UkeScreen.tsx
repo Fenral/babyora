@@ -696,13 +696,8 @@ function PlanleggData({
           precipMmH: fact.phase.weather.precipMmH,
           symbolCode: fact.phase.weather.symbolCode,
         },
-        recommendation: {
-          id: `planned-recommendation:${fact.fingerprint}`,
-          fingerprint: fact.fingerprint,
-          orderedGarments: fact.orderedGarments,
-          equipment: fact.equipment,
-          finalized: true,
-        },
+        recommendInput: fact.phase.engineInput,
+        finalizedRecommendation: fact.phase.recommendation,
         access: {
           capability: planCapability,
           allowed: access.allowed,

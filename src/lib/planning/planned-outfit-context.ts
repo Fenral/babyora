@@ -1,10 +1,12 @@
 import type { AccessDecision, Capability } from '../access/capabilities.js';
 import { parseStrictIsoInstant } from '../met-no/types.js';
-import type { Activity } from '../wool-layers/types.js';
+import { createOutfitTruthSnapshot } from '../outfit/outfit-truth.js';
+import type { Activity, Recommendation, RecommendInput } from '../wool-layers/types.js';
 
 export const PLAN_TIME_ZONE = 'Europe/Oslo' as const;
 
 const PLANNED_CONTEXT_SCHEMA_VERSION = 1 as const;
+const OUTFIT_BUNDLE_PRODUCER_SEED_VERSION = 1 as const;
 const ownedPlannedContexts = new WeakSet<object>();
 
 const ACTIVITIES: readonly Activity[] = ['vogn', 'baeresele', 'utelek', 'soevn'];
@@ -94,7 +96,22 @@ type PlannedOutfitContextInput = Readonly<{
   access: PlannedAccess;
 }>;
 
-export type PlannedOutfitContext = Readonly<{
+type CanonicalPlannedOutfitContextInput = Omit<PlannedOutfitContextInput, 'recommendation'> & Readonly<{
+  recommendInput: RecommendInput;
+  finalizedRecommendation: Recommendation;
+}>;
+
+export type OutfitBundleProducerSeedV1 = Readonly<{
+  version: typeof OUTFIT_BUNDLE_PRODUCER_SEED_VERSION;
+  sourceContextId: string;
+  transitionContextId: string;
+  recommendationId: string;
+  recommendationFingerprint: string;
+  recommendInput: Readonly<RecommendInput>;
+  finalizedRecommendation: Readonly<Recommendation>;
+}>;
+
+type PlannedContextCore = Readonly<{
   schemaVersion: typeof PLANNED_CONTEXT_SCHEMA_VERSION;
   plannedContextId: string;
   planningEventId: string;
@@ -109,6 +126,18 @@ export type PlannedOutfitContext = Readonly<{
   recommendation: PlannedRecommendation;
   access: PlannedAccess;
 }>;
+
+export type OutfitTruthPlannedOutfitContext = PlannedContextCore & Readonly<{
+  sourceKind: 'phase2-outfit-truth';
+  producerSeed: OutfitBundleProducerSeedV1;
+}>;
+
+export type LegacyPlannedOutfitContext = PlannedContextCore & Readonly<{
+  /** Explicit Phase-1 migration shape; it is never Phase-2 outfit truth. */
+  sourceKind: 'phase1-legacy';
+}>;
+
+export type PlannedOutfitContext = OutfitTruthPlannedOutfitContext | LegacyPlannedOutfitContext;
 
 function fail(path: string, reason: string): never {
   throw new Error(`Invalid PlannedOutfitContext input at ${path}: ${reason}`);
@@ -367,6 +396,167 @@ function normalizedInput(input: unknown): PlannedOutfitContextInput {
   };
 }
 
+function assertExactOwnKeys(
+  value: Readonly<Record<string, unknown>>,
+  path: string,
+  expectedKeys: readonly string[],
+): void {
+  const actualKeys = Reflect.ownKeys(value);
+  if (
+    actualKeys.some((key) => typeof key !== 'string' || !expectedKeys.includes(key))
+    || expectedKeys.some((key) => {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      return !descriptor || !Object.hasOwn(descriptor, 'value') || descriptor.enumerable !== true;
+    })
+  ) {
+    fail(path, 'contains unexpected or missing fields');
+  }
+}
+
+/**
+ * Crosses the serialized/navigation boundary without ever executing a getter
+ * or retaining a caller-owned object. The engine-specific assertion below then
+ * enforces the closed RecommendInput/Recommendation vocabulary.
+ */
+function clonePlainOwnData(value: unknown, path: string, visiting = new WeakSet<object>()): unknown {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return value;
+  if (typeof value === 'number') return finiteNumber(value, path);
+  if (typeof value !== 'object') fail(path, `unsupported ${typeof value}`);
+  if (visiting.has(value)) fail(path, 'must not contain a cycle');
+  const isArray = Array.isArray(value);
+  if (Object.getPrototypeOf(value) !== (isArray ? Array.prototype : Object.prototype)) {
+    fail(path, `expected a plain ${isArray ? 'array' : 'object'}`);
+  }
+  visiting.add(value);
+  try {
+    if (isArray) {
+      const clone: unknown[] = [];
+      for (let index = 0; index < value.length; index += 1) {
+        const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+        if (!descriptor || !Object.hasOwn(descriptor, 'value') || descriptor.enumerable !== true) {
+          fail(`${path}[${index}]`, 'expected an enumerable own data item');
+        }
+        clone.push(clonePlainOwnData(descriptor.value, `${path}[${index}]`, visiting));
+      }
+      for (const key of Reflect.ownKeys(value)) {
+        if (key === 'length') continue;
+        if (
+          typeof key !== 'string'
+          || !/^(?:0|[1-9]\d*)$/u.test(key)
+          || Number(key) >= value.length
+        ) {
+          fail(path, 'contains unexpected array fields');
+        }
+      }
+      return clone;
+    }
+    const clone: Record<string, unknown> = {};
+    for (const key of Reflect.ownKeys(value)) {
+      if (typeof key !== 'string') fail(path, 'contains a symbol field');
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (!descriptor || !Object.hasOwn(descriptor, 'value') || descriptor.enumerable !== true) {
+        fail(`${path}.${key}`, 'expected an enumerable own data field');
+      }
+      clone[key] = clonePlainOwnData(descriptor.value, `${path}.${key}`, visiting);
+    }
+    return clone;
+  } finally {
+    visiting.delete(value);
+  }
+}
+
+function stableSerialize(value: unknown, path = 'value'): string {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') {
+    return JSON.stringify(value);
+  }
+  if (typeof value === 'number') return Object.is(value, -0) ? '-0' : String(finiteNumber(value, path));
+  if (Array.isArray(value)) {
+    return `[${value.map((item, index) => stableSerialize(item, `${path}[${index}]`)).join(',')}]`;
+  }
+  const record = recordAt(value, path);
+  return `{${Reflect.ownKeys(record).map(String).sort().map((key) => (
+    `${JSON.stringify(key)}:${stableSerialize(ownDataValue(record, key, `${path}.${key}`), `${path}.${key}`)}`
+  )).join(',')}}`;
+}
+
+function canonicalInput(input: unknown): CanonicalPlannedOutfitContextInput {
+  const value = recordAt(input, 'root');
+  assertExactOwnKeys(value, 'root', [
+    'planningEventId', 'transitionContextId', 'child', 'plannedForIso', 'timeZone',
+    'place', 'activity', 'vognMode', 'weather', 'recommendInput',
+    'finalizedRecommendation', 'access',
+  ]);
+  assertExactOwnKeys(recordAt(ownDataValue(value, 'child', 'child'), 'child'), 'child', [
+    'id', 'name', 'ageMonths',
+  ]);
+  assertExactOwnKeys(recordAt(ownDataValue(value, 'place', 'place'), 'place'), 'place', [
+    'label', 'lat', 'lon', 'source',
+  ]);
+  assertExactOwnKeys(recordAt(ownDataValue(value, 'weather', 'weather'), 'weather'), 'weather', [
+    'tempC', 'feelsLikeC', 'windMs', 'precipMmH', 'symbolCode',
+  ]);
+  assertExactOwnKeys(recordAt(ownDataValue(value, 'access', 'access'), 'access'), 'access', [
+    'capability', 'allowed', 'reason',
+  ]);
+  const sourceInput = clonePlainOwnData(
+    ownDataValue(value, 'recommendInput', 'recommendInput'),
+    'recommendInput',
+  ) as RecommendInput;
+  const sourceRecommendation = clonePlainOwnData(
+    ownDataValue(value, 'finalizedRecommendation', 'finalizedRecommendation'),
+    'finalizedRecommendation',
+  ) as Recommendation;
+  const common = normalizedInput({
+    planningEventId: ownDataValue(value, 'planningEventId', 'planningEventId'),
+    transitionContextId: ownDataValue(value, 'transitionContextId', 'transitionContextId'),
+    child: ownDataValue(value, 'child', 'child'),
+    plannedForIso: ownDataValue(value, 'plannedForIso', 'plannedForIso'),
+    timeZone: ownDataValue(value, 'timeZone', 'timeZone'),
+    place: ownDataValue(value, 'place', 'place'),
+    activity: ownDataValue(value, 'activity', 'activity'),
+    vognMode: ownDataValue(value, 'vognMode', 'vognMode'),
+    weather: ownDataValue(value, 'weather', 'weather'),
+    recommendation: {
+      id: 'pending-canonical-recommendation',
+      fingerprint: 'pending-canonical-fingerprint',
+      orderedGarments: ['pending'],
+      equipment: [],
+      finalized: true,
+    },
+    access: ownDataValue(value, 'access', 'access'),
+  });
+  try {
+    createOutfitTruthSnapshot({
+      transitionContextId: common.transitionContextId,
+      input: sourceInput,
+      finalizedRecommendation: sourceRecommendation,
+      pose: 'sitting',
+    });
+  } catch {
+    fail('producerSeed', 'recommendInput or finalizedRecommendation is malformed or mismatched');
+  }
+  if (
+    sourceInput.activity !== common.activity
+    || sourceRecommendation.activity !== common.activity
+    || sourceInput.child.ageMonths !== common.child.ageMonths
+    || (common.activity === 'vogn'
+      ? sourceInput.vognMode !== common.vognMode
+      : Object.hasOwn(sourceInput, 'vognMode'))
+  ) {
+    fail('producerSeed', 'activity, child, or vogn mode must agree with context');
+  }
+  if (
+    sourceInput.weather.tempC !== common.weather.tempC
+    || sourceInput.weather.feelsLikeC !== common.weather.feelsLikeC
+    || sourceInput.weather.windMs !== common.weather.windMs
+    || sourceInput.weather.precipMmH !== common.weather.precipMmH
+    || sourceInput.weather.symbolCode !== common.weather.symbolCode
+  ) {
+    fail('producerSeed', 'weather must agree with context');
+  }
+  return { ...common, recommendInput: sourceInput, finalizedRecommendation: sourceRecommendation };
+}
+
 function identityContent(input: PlannedOutfitContextInput): string {
   return JSON.stringify([
     PLANNED_CONTEXT_SCHEMA_VERSION,
@@ -411,6 +601,36 @@ function recursivelyFreeze<T>(value: T): T {
   return Object.freeze(value);
 }
 
+function canonicalIdentityContent(input: CanonicalPlannedOutfitContextInput): string {
+  return stableSerialize({
+    context: identityContent({
+      ...input,
+      recommendation: {
+        id: 'derived',
+        fingerprint: 'derived',
+        orderedGarments: ['derived'],
+        equipment: [],
+        finalized: true,
+      },
+    }),
+    recommendInput: input.recommendInput,
+    finalizedRecommendation: input.finalizedRecommendation,
+  });
+}
+
+function canonicalProjection(finalizedRecommendation: Recommendation): Readonly<{
+  orderedGarments: readonly string[];
+  equipment: readonly string[];
+}> {
+  const orderedGarments: string[] = [];
+  const equipment: string[] = [];
+  for (const layer of finalizedRecommendation.layers) {
+    (layer.category === 'utstyr' ? equipment : orderedGarments).push(...layer.items);
+  }
+  if (orderedGarments.length === 0) fail('finalizedRecommendation.layers', 'must contain a non-equipment garment');
+  return { orderedGarments, equipment };
+}
+
 function sameFrozenKnownShape(actual: unknown, expected: unknown): boolean {
   if (typeof expected !== 'object' || expected === null) return Object.is(actual, expected);
   if (typeof actual !== 'object' || actual === null || !Object.isFrozen(actual)) return false;
@@ -443,15 +663,19 @@ function sameFrozenKnownShape(actual: unknown, expected: unknown): boolean {
 
 export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext {
   try {
-    const normalized = normalizedInput(input);
-    const plannedContextId = `planned-context-${fnv1a64(identityContent(normalized))}`;
-    if (
-      plannedContextId === normalized.planningEventId
-      || plannedContextId === normalized.transitionContextId
-    ) {
+    const root = recordAt(input, 'root');
+    const isCanonical = Object.hasOwn(root, 'recommendInput') || Object.hasOwn(root, 'finalizedRecommendation');
+    const canonical = isCanonical ? canonicalInput(input) : null;
+    const legacy = isCanonical ? null : normalizedInput(input);
+    const normalized = canonical ?? legacy!;
+    const content = canonical
+      ? canonicalIdentityContent(canonical)
+      : identityContent(legacy!);
+    const plannedContextId = `planned-context-${fnv1a64(content)}`;
+    if (plannedContextId === normalized.planningEventId || plannedContextId === normalized.transitionContextId) {
       fail('plannedContextId', 'must differ from caller-supplied identifiers');
     }
-    const context = recursivelyFreeze({
+    const base = {
       schemaVersion: PLANNED_CONTEXT_SCHEMA_VERSION,
       plannedContextId,
       planningEventId: normalized.planningEventId,
@@ -463,15 +687,53 @@ export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext
       activity: normalized.activity,
       vognMode: normalized.vognMode,
       weather: { ...normalized.weather },
-      recommendation: {
-        ...normalized.recommendation,
-        orderedGarments: [...normalized.recommendation.orderedGarments],
-        equipment: [...normalized.recommendation.equipment],
-      },
       access: { ...normalized.access },
-    });
+    };
+    const context = canonical
+      ? (() => {
+          const projection = canonicalProjection(canonical.finalizedRecommendation);
+          const recommendationFingerprint = `outfit-recommendation-fingerprint-v1:${fnv1a64(
+            stableSerialize({
+              recommendInput: canonical.recommendInput,
+              finalizedRecommendation: canonical.finalizedRecommendation,
+              transitionContextId: canonical.transitionContextId,
+            }),
+          )}`;
+          const recommendationId = `outfit-recommendation-v1:${fnv1a64(
+            `${plannedContextId}|${recommendationFingerprint}`,
+          )}`;
+          return recursivelyFreeze({
+            ...base,
+            sourceKind: 'phase2-outfit-truth' as const,
+            recommendation: {
+              id: recommendationId,
+              fingerprint: recommendationFingerprint,
+              orderedGarments: [...projection.orderedGarments],
+              equipment: [...projection.equipment],
+              finalized: true as const,
+            },
+            producerSeed: {
+              version: OUTFIT_BUNDLE_PRODUCER_SEED_VERSION,
+              sourceContextId: plannedContextId,
+              transitionContextId: canonical.transitionContextId,
+              recommendationId,
+              recommendationFingerprint,
+              recommendInput: canonical.recommendInput,
+              finalizedRecommendation: canonical.finalizedRecommendation,
+            },
+          });
+        })()
+      : recursivelyFreeze({
+          ...base,
+          sourceKind: 'phase1-legacy' as const,
+          recommendation: {
+            ...legacy!.recommendation,
+            orderedGarments: [...legacy!.recommendation.orderedGarments],
+            equipment: [...legacy!.recommendation.equipment],
+          },
+        });
     ownedPlannedContexts.add(context);
-    return context;
+    return context as PlannedOutfitContext;
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('Invalid PlannedOutfitContext input')) {
       throw error;
@@ -491,6 +753,19 @@ export function isPlannedOutfitContext(value: unknown): value is PlannedOutfitCo
     ) {
       return false;
     }
+    const sourceKind = ownDataValue(value, 'sourceKind', 'sourceKind');
+    const producerSeed = sourceKind === 'phase2-outfit-truth'
+      ? recordAt(ownDataValue(value, 'producerSeed', 'producerSeed'), 'producerSeed')
+      : null;
+    const source = producerSeed
+      ? {
+          recommendInput: ownDataValue(producerSeed, 'recommendInput', 'producerSeed.recommendInput'),
+          finalizedRecommendation: ownDataValue(producerSeed, 'finalizedRecommendation', 'producerSeed.finalizedRecommendation'),
+        }
+      : sourceKind === 'phase1-legacy'
+        ? { recommendation: value.recommendation }
+        : null;
+    if (!source) return false;
     const expected = createPlannedOutfitContext({
       planningEventId: value.planningEventId,
       transitionContextId: value.transitionContextId,
@@ -501,11 +776,15 @@ export function isPlannedOutfitContext(value: unknown): value is PlannedOutfitCo
       activity: value.activity,
       vognMode: value.vognMode,
       weather: value.weather,
-      recommendation: value.recommendation,
       access: value.access,
+      ...source,
     });
     return sameFrozenKnownShape(value, expected);
   } catch {
     return false;
   }
+}
+
+export function isOutfitTruthPlannedOutfitContext(value: unknown): value is OutfitTruthPlannedOutfitContext {
+  return isPlannedOutfitContext(value) && value.sourceKind === 'phase2-outfit-truth';
 }
