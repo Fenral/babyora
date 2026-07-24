@@ -99,6 +99,7 @@ export const PAYWALL_TRIGGERS = {
   garderobe_tilpasning: 'garderobe_tilpasning',    // Tilpasser anbefaling til egne plagg
   barn_2: 'barn_2',                                // Legger til barn nr. 2
   forste_vinter: 'forste_vinter',                  // Åpner gated leksjon i Første vinter-programmet (F86)
+  snart: 'snart',                                  // Åpner nøytral historikk-preview for Snart-forberedelser
 } as const;
 
 export type PaywallTrigger = keyof typeof PAYWALL_TRIGGERS;

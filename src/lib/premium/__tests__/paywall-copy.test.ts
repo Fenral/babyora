@@ -59,7 +59,7 @@ const allDisabled = (
 });
 
 const unsupportedDefaultWords =
-  /sammen|familie|begge foreldre|alle som passer barnet|omsorgsperson|overalt|snart/i;
+  /sammen|familie|begge foreldre|alle som passer barnet|omsorgsperson|overalt|forberedelser snart/i;
 
 describe('paywall-copy (F81.5-W1) — copy-lint', () => {
   it('all statisk copy passerer lintCopy (ingen «låst/sperret/nektet»)', () => {
@@ -138,6 +138,34 @@ describe('paywall-copy — innhold', () => {
       allDisabled(),
       'imorgen',
     ).heading).not.toMatch(/morgen|fremover/i);
+  });
+
+  it('Snart er en nøytral historikk-preview bare når capability er tillatt', () => {
+    const disabled = buildCapabilityPaywallCopy(allDisabled(), 'snart');
+    expect(JSON.stringify(disabled)).not.toMatch(/historiske forberedelser|1991–2020|varsel/i);
+
+    const enabled = buildCapabilityPaywallCopy(allDisabled({ soon_preparation: true }), 'snart');
+    expect(enabled).toMatchObject({
+      heading: 'Se historiske forberedelser med Babyora Plus',
+      body: expect.stringContaining('fire–seks uker'),
+      previewItems: [{
+        key: 'soon_preparation',
+        from: 'Dagens plan',
+        to: 'Historiske forberedelser',
+      }],
+    });
+    expect(JSON.stringify(enabled)).toContain('1991–2020');
+    expect(JSON.stringify(enabled)).toMatch(/ikke.*varsel/i);
+    expect(JSON.stringify(enabled)).not.toMatch(/godkjent|helse|prognose|familie|calibration/i);
+  });
+
+  it('PaywallDialog beholder eksisterende focus-return ved lukk mens Snart er skjult', () => {
+    const source = readFileSync(
+      fileURLToPath(new URL('../../../components/PaywallDialog.tsx', import.meta.url)),
+      'utf8',
+    );
+    expect(PLUS_FEATURE_AVAILABILITY.soon_preparation).toBe(false);
+    expect(source).toContain('returnFocusTo?.focus?.()');
   });
 
   it('legacy trust-copy og statisk flaggskip-løfte er fjernet', () => {

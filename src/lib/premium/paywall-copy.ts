@@ -117,8 +117,10 @@ const CAPABILITY_CLAIMS: readonly ClaimDefinition[] = [
   {
     key: 'soon_preparation',
     from: 'Dagens plan',
-    to: 'Forberedelser snart',
-    body: 'Se godkjente forberedelser barnet kan trenge snart.',
+    to: 'Historiske forberedelser',
+    body: 'Se historiske forberedelser for fire–seks uker basert på 1991–2020-historikk, ikke et varsel.',
+    triggers: ['snart'],
+    contextualHeading: 'Se historiske forberedelser med Babyora Plus',
   },
 ] as const;
 

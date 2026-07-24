@@ -60,13 +60,25 @@ describe('priceTransparencyText', () => {
 });
 
 describe('Paywall trigger-strenger', () => {
-  it('inneholder nøyaktig de 4 låste triggerne (R7 Task 7: morgenvarsel er gratis)', () => {
+  it('inneholder de låste triggerne inkludert Snart uten å endre produktkontrakten', () => {
     expect(PAYWALL_TRIGGERS).toEqual({
       imorgen: 'imorgen',
       garderobe_tilpasning: 'garderobe_tilpasning',
       barn_2: 'barn_2',
       forste_vinter: 'forste_vinter',
+      snart: 'snart',
     });
+  });
+
+  it('Snart-triggeren endrer ikke produkt-ID, pris, trial eller RevenueCat-ankere', () => {
+    expect(PRODUCT_IDS).toEqual({
+      yearly: 'no.klemeg.app.yearly',
+      quarterly: 'no.klemeg.app.quarterly',
+      monthly: 'no.klemeg.app.monthly',
+    });
+    expect(PRODUCTS.yearly).toMatchObject({ anchorPriceNok: 299, trialDays: 7 });
+    expect(PRODUCTS.quarterly).toMatchObject({ anchorPriceNok: 99, trialDays: 0 });
+    expect(PRODUCTS.monthly).toMatchObject({ anchorPriceNok: 39, trialDays: 0 });
   });
 
   it('morgenvarsel er IKKE en paywall-trigger (gratis-kapabilitet, jf. capabilities.ts)', () => {
