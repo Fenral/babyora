@@ -186,6 +186,17 @@ type SourceMetadata = {
   aggregation: string;
 };
 
+type SourceDasMetadata = Pick<
+  SourceMetadata,
+  | 'aggregation'
+  | 'family'
+  | 'fileVersion'
+  | 'licenseUri'
+  | 'sourceInstitution'
+  | 'sourceVariableVersion'
+  | 'units'
+>;
+
 type BuiltBundle = {
   packPath: string;
   manifestPath: string;
@@ -874,7 +885,7 @@ export function parseDas(
   body: string,
   family: VariableFamily,
   contract: SnartContract,
-): SourceMetadata {
+): SourceDasMetadata {
   const blockMatch = body.match(
     new RegExp(`(?:^|\\n)\\s*${family}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`, 'u'),
   );
@@ -913,10 +924,6 @@ export function parseDas(
   }
   return {
     family,
-    month: 0,
-    X: 0,
-    Y: 0,
-    timeCount: 1,
     licenseUri,
     sourceInstitution,
     sourceVariableVersion: expectedVariableVersion,
@@ -1540,8 +1547,8 @@ async function preflightSource(
     const dimensions = parseDds(dds.text, family);
     const attributes = parseDas(das.text, family, contract);
     metadata.push({
-      ...dimensions,
       ...attributes,
+      ...dimensions,
       family,
       month,
     });
