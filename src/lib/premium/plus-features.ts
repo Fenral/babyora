@@ -34,7 +34,7 @@ export const PLUS_FEATURE_AVAILABILITY: Readonly<PlusFeatureAvailability> = Obje
   extra_children: true,
   family_sharing: false,
   personal_calibration: false,
-  soon_preparation: true,
+  soon_preparation: false,
 });
 
 export interface PlusExpansion {

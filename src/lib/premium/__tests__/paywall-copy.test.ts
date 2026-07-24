@@ -91,7 +91,6 @@ describe('paywall-copy — innhold', () => {
       'future_plan',
       'automatic_location',
       'extra_children',
-      'soon_preparation',
     ]);
     expect(JSON.stringify(copy)).not.toMatch(unsupportedDefaultWords);
     expect(copy.heading.length).toBeGreaterThan(5);
@@ -160,12 +159,12 @@ describe('paywall-copy — innhold', () => {
     expect(JSON.stringify(enabled)).not.toMatch(/godkjent|helse|prognose|familie|calibration/i);
   });
 
-  it('PaywallDialog beholder eksisterende focus-return ved lukk når Snart er aktiv', () => {
+  it('PaywallDialog beholder eksisterende focus-return ved lukk mens Snart er skjult', () => {
     const source = readFileSync(
       fileURLToPath(new URL('../../../components/PaywallDialog.tsx', import.meta.url)),
       'utf8',
     );
-    expect(PLUS_FEATURE_AVAILABILITY.soon_preparation).toBe(true);
+    expect(PLUS_FEATURE_AVAILABILITY.soon_preparation).toBe(false);
     expect(source).toContain('returnFocusTo?.focus?.()');
   });
 

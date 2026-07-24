@@ -1758,7 +1758,7 @@ async function runSoonReadiness(
     'utf8',
   ));
   if (
-    !/soon_preparation:\s*true/u.test(availability)
+    !/soon_preparation:\s*false/u.test(availability)
     || !/family_sharing:\s*false/u.test(availability)
     || !/personal_calibration:\s*false/u.test(availability)
     || !session.includes('projectSnartSession')
