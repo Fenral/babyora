@@ -1,29 +1,53 @@
 {
-  "schemaVersion": "babyora-snart-boundaries@1",
+  "schemaVersion": "babyora-snart-boundaries@2",
   "officialExcerpts": [
     {
-      "id": "senorge-2020-dds-shape",
+      "id": "senorge-tg-monthly-01-dds-shape",
       "kind": "dds",
       "syntheticBoundary": false,
-      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/Archive/seNorge2018_2020.nc.dds",
-      "sha256": "1da515ed83345bb475c5bf47c374255f40458532b2780fa4d3db4617b562fec1",
-      "body": "Dataset {\n    Float64 time[time = 366];\n    Grid {\n     ARRAY:\n        Float32 tg[time = 366][Y = 1550][X = 1195];\n    } tg;\n    Grid {\n     ARRAY:\n        Float32 rr[time = 366][Y = 1550][X = 1195];\n    } rr;\n    Grid {\n     ARRAY:\n        Float32 tx[time = 366][Y = 1550][X = 1195];\n    } tx;\n    Grid {\n     ARRAY:\n        Float32 tn[time = 366][Y = 1550][X = 1195];\n    } tn;\n} senorge/seNorge_2018/Archive/seNorge2018_2020.nc;\n"
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc.dds",
+      "sha256": "b3ba8f386c96ff004d4b10c34df4d54439b5faf210e77006979cd01d9de26d4b",
+      "body": "Dataset {\n    Float64 X[X = 1195];\n    Float64 Y[Y = 1550];\n    Grid {\n     ARRAY:\n        Float32 lat[Y = 1550][X = 1195];\n    } lat;\n    Grid {\n     ARRAY:\n        Float32 lon[Y = 1550][X = 1195];\n    } lon;\n    Grid {\n     ARRAY:\n        Float32 tg[time = 1][Y = 1550][X = 1195];\n    } tg;\n    Float64 time[time = 1];\n} senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc;\n"
     },
     {
-      "id": "senorge-2020-das-provenance",
+      "id": "senorge-tg-monthly-01-das-provenance",
       "kind": "das",
       "syntheticBoundary": false,
-      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/Archive/seNorge2018_2020.nc.das",
-      "sha256": "f586bf93df92401c6923b5f22f80d3d71fb291c3e22e9bec7e3da3484f749921",
-      "body": "Attributes {\n    tg {\n        String units \"Celsius\";\n        Float32 _FillValue -999.99;\n        String long_name \"daily mean temperature (06UTC-06UTC)\";\n        String version \"23.09\";\n    }\n    rr {\n        String units \"kg/m^2\";\n        Float32 _FillValue -999.99;\n        String long_name \"daily total precipitation (06UTC-06UTC)\";\n        String version \"23.11\";\n    }\n    tx {\n        String long_name \"daily maximum temperature (18UTC-18UTC)\";\n        String version \"23.09\";\n    }\n    tn {\n        String long_name \"daily minimum temperature (18UTC-18UTC)\";\n        String version \"23.09\";\n    }\n    NC_GLOBAL {\n        String institution \"Norwegian Meteorological Institute, MET Norway\";\n        String license \"https://www.met.no/en/free-meteorological-data/Licensing-and-crediting\";\n    }\n}\n"
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc.das",
+      "sha256": "85753bca11073fb02f021969e5f58c82d131ce4e11ce55bb24c2a3ad1420e8b0",
+      "body": "tg {\n    String standard_name \"air_temperature\";\n    String units \"Celsius\";\n    Float32 _FillValue -999.99;\n    String cell_methods \"time: mean\";\n    String version \"1.0\";\n    String long_name \"monthly temperature normal 1991-2020\";\n}\nNC_GLOBAL {\n    String institution \"Norwegian Meteorological Institute, MET Norway\";\n    String license \"https://www.met.no/en/free-meteorological-data/Licensing-and-crediting\";\n    String title \"aggregated_tg_seNorge2018_v23_09\";\n}\n"
     },
     {
-      "id": "senorge-2020-ascii-point",
+      "id": "senorge-tg-monthly-01-ascii-point",
       "kind": "ascii",
       "syntheticBoundary": false,
-      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/Archive/seNorge2018_2020.nc.ascii?time[0:1:1],latitude[1000:1:1000][500:1:500],longitude[1000:1:1000][500:1:500],tg[0:1:1][1000:1:1000][500:1:500],tn[0:1:1][1000:1:1000][500:1:500],tx[0:1:1][1000:1:1000][500:1:500],rr[0:1:1][1000:1:1000][500:1:500]",
-      "sha256": "47197281de30c51719f77d6831acbbbeb4549183e827a32b44943c8bce608200",
-      "body": "time[2]\n1051902.0, 1051926.0\n\ntg.tg[2][1][1]\n[0][0], -1.838\n[1][0], 2.221\n\nlongitude.longitude[1][1]\n[0], 13.523177\n\nlatitude.latitude[1][1]\n[0], 63.117165\n\nrr.rr[2][1][1]\n[0][0], 3.41\n[1][0], 0.0\n\ntx.tx[2][1][1]\n[0][0], 3.904\n[1][0], 4.933\n\ntn.tn[2][1][1]\n[0][0], -1.838\n[1][0], 1.406\n"
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc.ascii?lat[1041:1:1041][119:1:119],lon[1041:1:1041][119:1:119],tg[0:1:0][1041:1:1041][119:1:119],time[0:1:0]",
+      "sha256": "dccf17cc2bfd8cd63ede49f87d7fde27d6a7ed531dc66b476d9ab0631dfadd64",
+      "body": "lat.lat[1][1]\n[0], 62.47589\n\nlon.lon[1][1]\n[0], 6.145098\n\ntg.tg[1][1][1]\n[0][0], 2.806599\n\ntime[1]\n797694.0\n"
+    },
+    {
+      "id": "senorge-rr-monthly-01-dds-shape",
+      "kind": "dds",
+      "syntheticBoundary": false,
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc.dds",
+      "sha256": "0afae42e6986359c1ed0b9e6a83ce55d48966e49b4db76f5d88ff01c239bd6fb",
+      "body": "Dataset {\n    Float64 X[X = 1195];\n    Float64 Y[Y = 1550];\n    Grid {\n     ARRAY:\n        Float32 lat[Y = 1550][X = 1195];\n    } lat;\n    Grid {\n     ARRAY:\n        Float32 lon[Y = 1550][X = 1195];\n    } lon;\n    Grid {\n     ARRAY:\n        Float32 rr[time = 1][Y = 1550][X = 1195];\n    } rr;\n    Float64 time[time = 1];\n} senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc;\n"
+    },
+    {
+      "id": "senorge-rr-monthly-01-das-provenance",
+      "kind": "das",
+      "syntheticBoundary": false,
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc.das",
+      "sha256": "05bde4ae0ef6f13566e6dae04307725d4aac579bdf1280578a302700f75b22f0",
+      "body": "rr {\n    String standard_name \"precipitation_amount\";\n    String units \"mm\";\n    Float32 _FillValue -999.99;\n    String cell_methods \"time: sum\";\n    String version \"1.0\";\n    String long_name \"precipitation amount monthly normal 1991-2020\";\n}\nNC_GLOBAL {\n    String institution \"Norwegian Meteorological Institute, MET Norway\";\n    String license \"https://www.met.no/en/free-meteorological-data/Licensing-and-crediting\";\n    String title \"aggregated_rr_seNorge2018_v23_11\";\n}\n"
+    },
+    {
+      "id": "senorge-rr-monthly-01-ascii-point",
+      "kind": "ascii",
+      "syntheticBoundary": false,
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc.ascii?rr[0:1:0][1041:1:1041][119:1:119],time[0:1:0]",
+      "sha256": "c7d8260685ba6653a1736e01e254df789a50723db7cda54589d03b5df97f23fd",
+      "body": "rr.rr[1][1][1]\n[0][0], 184.691\n\ntime[1]\n797694.0\n"
     }
   ],
   "fixtureBuild": {
@@ -33,100 +57,69 @@
       "Oslo"
     ],
     "formula": {
-      "tg": "seasonalBase + yearOffset",
-      "tn": "tg - 3.25",
-      "tx": "tg + 4.75",
-      "rr": "calendarIndex % 5 === 0 ? 2.5 : 0.2"
+      "meanTemperatureC": "month-7",
+      "monthlyPrecipitationMm": "month*10"
     }
   },
   "syntheticCases": [
     {
-      "id": "redirect-off-host",
-      "area": "http-redirect",
+      "id": "age-window-25-month-boundaries",
+      "area": "age",
       "syntheticBoundary": true,
       "input": {
-        "status": 302,
-        "location": "https://example.invalid/archive"
-      },
-      "expected": {
-        "followed": false,
-        "result": "FAIL_REDIRECT"
-      }
-    },
-    {
-      "id": "redirect-downgrade",
-      "area": "http-downgrade",
-      "syntheticBoundary": true,
-      "input": {
-        "status": 301,
-        "location": "http://thredds.met.no/archive"
-      },
-      "expected": {
-        "followed": false,
-        "result": "FAIL_DOWNGRADE"
-      }
-    },
-    {
-      "id": "timeout-abort-20000",
-      "area": "http-timeout",
-      "syntheticBoundary": true,
-      "input": {
-        "elapsedMilliseconds": 20001
-      },
-      "expected": {
-        "cached": false,
-        "result": "FAIL_TIMEOUT"
-      }
-    },
-    {
-      "id": "truncated-content-length",
-      "area": "http-truncated",
-      "syntheticBoundary": true,
-      "input": {
-        "contentLength": 12,
-        "receivedBytes": 11
-      },
-      "expected": {
-        "cached": false,
-        "result": "FAIL_TRUNCATED"
-      }
-    },
-    {
-      "id": "metadata-body-over-limit",
-      "area": "http-oversize",
-      "syntheticBoundary": true,
-      "input": {
-        "limitBytes": 2097152,
-        "receivedBytes": 2097153
-      },
-      "expected": {
-        "cached": false,
-        "result": "FAIL_OVERSIZE"
-      }
-    },
-    {
-      "id": "retry-429-and-5xx",
-      "area": "http-retry",
-      "syntheticBoundary": true,
-      "input": {
-        "statuses": [
-          429,
-          500,
-          502,
-          503,
-          504
+        "twentyFiveMonthsAtOffsets": [
+          28,
+          35,
+          42,
+          43
         ],
-        "retryAfter": [
-          "2",
-          "Wed, 21 Oct 2015 07:28:00 GMT"
+        "birthDays": [
+          29,
+          30,
+          31
         ]
       },
+      "expected": [
+        false,
+        false,
+        false,
+        true
+      ]
+    },
+    {
+      "id": "candidate-receipt-identity",
+      "area": "candidate-receipt-schema",
+      "syntheticBoundary": true,
+      "input": {
+        "candidateSchemaVersion": "snart-review-candidate@1",
+        "receiptSchemaVersion": "babyora-independent-review-receipt@2",
+        "reviewer": {
+          "canonicalTaskName": "/root/review-a",
+          "agentId": "review-a"
+        },
+        "signedByIdentity": {
+          "canonicalTaskName": "/root/review-a",
+          "agentId": "review-a"
+        }
+      },
       "expected": {
-        "maxAttempts": 3,
-        "waitSecondsClamp": [
-          0,
-          30
-        ]
+        "distinctReviewerAgentIds": true,
+        "distinctReviewerCanonicalTaskNames": true,
+        "identityMatchesSignature": true,
+        "provenanceAuthenticated": false
+      }
+    },
+    {
+      "id": "selected-sea-cell-does-not-neighbour-fallback",
+      "area": "grid-sea",
+      "syntheticBoundary": true,
+      "input": {
+        "nearestCellValid": false,
+        "secondCellValid": true
+      },
+      "expected": {
+        "reason": "grid_invalid_or_sea",
+        "usedSecondCell": false
       }
     },
     {
@@ -158,115 +151,171 @@
       }
     },
     {
-      "id": "selected-sea-cell-does-not-neighbour-fallback",
-      "area": "grid-sea",
+      "id": "redirect-downgrade",
+      "area": "http-downgrade",
       "syntheticBoundary": true,
       "input": {
-        "nearestCellValid": false,
-        "secondCellValid": true
+        "status": 301,
+        "location": "http://thredds.met.no/"
       },
       "expected": {
-        "reason": "grid_invalid_or_sea",
-        "usedSecondCell": false
+        "followed": false,
+        "result": "FAIL_DOWNGRADE"
       }
     },
     {
-      "id": "source-and-target-leap-policy",
-      "area": "leap-date",
+      "id": "metadata-body-over-limit",
+      "area": "http-oversize",
       "syntheticBoundary": true,
       "input": {
-        "source": "2020-02-29",
-        "target": "2028-02-29"
+        "limitBytes": 2097152,
+        "receivedBytes": 2097153
       },
       "expected": {
-        "sourceAction": "discard",
-        "targetProfileKey": "02-28"
+        "cached": false,
+        "result": "FAIL_OVERSIZE"
       }
     },
     {
-      "id": "five-day-ring-boundaries",
-      "area": "window",
+      "id": "redirect-off-host",
+      "area": "http-redirect",
       "syntheticBoundary": true,
       "input": {
-        "01-01": [
-          "12-30",
-          "12-31",
-          "01-01",
-          "01-02",
-          "01-03"
-        ],
-        "02-28": [
-          "02-26",
-          "02-27",
-          "02-28",
-          "03-01",
-          "03-02"
+        "status": 302,
+        "location": "https://example.invalid/"
+      },
+      "expected": {
+        "followed": false,
+        "result": "FAIL_REDIRECT"
+      }
+    },
+    {
+      "id": "retry-429-and-5xx",
+      "area": "http-retry",
+      "syntheticBoundary": true,
+      "input": {
+        "statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
         ]
       },
       "expected": {
-        "samplesPerVariable": 150
+        "maxAttempts": 3,
+        "waitSecondsClamp": [
+          0,
+          30
+        ]
       }
     },
     {
-      "id": "half-away-from-zero-and-wet-scale",
+      "id": "timeout-abort-20000",
+      "area": "http-timeout",
+      "syntheticBoundary": true,
+      "input": {
+        "elapsedMilliseconds": 20001
+      },
+      "expected": {
+        "cached": false,
+        "result": "FAIL_TIMEOUT"
+      }
+    },
+    {
+      "id": "truncated-content-length",
+      "area": "http-truncated",
+      "syntheticBoundary": true,
+      "input": {
+        "contentLength": 12,
+        "receivedBytes": 11
+      },
+      "expected": {
+        "cached": false,
+        "result": "FAIL_TRUNCATED"
+      }
+    },
+    {
+      "id": "twelve-distinct-months-required",
+      "area": "monthly-coverage",
+      "syntheticBoundary": true,
+      "input": {
+        "months": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          11
+        ]
+      },
+      "expected": {
+        "result": "FAIL_MONTH_COVERAGE"
+      }
+    },
+    {
+      "id": "monthly-url-family-must-match-variable",
+      "area": "monthly-url",
+      "syntheticBoundary": true,
+      "input": {
+        "urlFamily": "tg",
+        "fileVariable": "rr",
+        "month": 1
+      },
+      "expected": {
+        "result": "FAIL_URL_FAMILY"
+      }
+    },
+    {
+      "id": "half-away-from-zero",
       "area": "rounding",
       "syntheticBoundary": true,
       "input": {
         "values": [
           1.25,
           -1.25,
-          0.00005,
           -0
         ]
       },
       "expected": {
-        "temperature": [
+        "oneDecimal": [
           1.3,
-          -1.3
-        ],
-        "wetProbability": 0.0001,
-        "negativeZero": 0
+          -1.3,
+          0
+        ]
       }
     },
     {
-      "id": "age-window-25-month-boundaries",
-      "area": "age",
+      "id": "target-window-crosses-february-in-leap-year",
+      "area": "target-window-weighting",
       "syntheticBoundary": true,
       "input": {
-        "twentyFiveMonthsAtOffsets": [
-          28,
-          35,
-          42,
-          43
-        ],
-        "birthDays": [
-          29,
-          30,
-          31
-        ]
-      },
-      "expected": [
-        false,
-        false,
-        false,
-        true
-      ]
-    },
-    {
-      "id": "candidate-receipt-identity",
-      "area": "candidate-receipt-schema",
-      "syntheticBoundary": true,
-      "input": {
-        "fork_turns": "none",
-        "candidateSchemaVersion": "snart-review-candidate@1",
-        "receiptSchemaVersion": "codex-collaboration-review-receipt@1",
-        "resultSchemaVersion": "snart-review-result@1"
+        "targetYear": 2028,
+        "targetDaysByMonth": {
+          "2": 5,
+          "3": 10
+        },
+        "monthlyRows": {
+          "2": {
+            "meanTemperatureC": -2,
+            "monthlyPrecipitationMm": 58
+          },
+          "3": {
+            "meanTemperatureC": 4,
+            "monthlyPrecipitationMm": 93
+          }
+        }
       },
       "expected": {
-        "distinctReviewerAgentIds": true,
-        "distinctReviewerCanonicalTaskNames": true,
-        "implementerExcluded": true,
-        "provenanceAuthenticated": false
+        "daysInFebruary": 29,
+        "targetMeanTemperatureC": 2,
+        "targetPrecipitationMm": 40
       }
     }
   ]

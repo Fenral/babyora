@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "babyora-snart-autonomy-contract@1",
-  "contractVersion": "snart-data-contract@1",
+  "schemaVersion": "babyora-snart-autonomy-contract@2",
+  "contractVersion": "snart-monthly-normal-contract@2",
   "status": "locked_for_autonomous_implementation",
   "expectedNewCostNok": 0,
   "capabilities": {
@@ -12,58 +12,61 @@
     "datasetName": "seNorge_2018",
     "sourceOrganization": "Meteorologisk institutt (MET Norway)",
     "normalPeriod": {
-      "from": "1991-01-01",
-      "through": "2020-12-31"
+      "fromYear": 1991,
+      "throughYear": 2020
     },
-    "years": [
-      1991,
-      1992,
-      1993,
-      1994,
-      1995,
-      1996,
-      1997,
-      1998,
-      1999,
-      2000,
-      2001,
-      2002,
-      2003,
-      2004,
-      2005,
-      2006,
-      2007,
-      2008,
-      2009,
-      2010,
-      2011,
-      2012,
-      2013,
-      2014,
-      2015,
-      2016,
-      2017,
-      2018,
-      2019,
-      2020
+    "datasetUrls": [
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_02.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_03.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_04.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_05.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_06.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_07.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_08.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_09.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_10.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_11.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_12.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_02.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_03.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_04.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_05.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_06.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_07.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_08.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_09.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_10.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_11.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_12.nc"
     ],
-    "catalogUrl": "https://thredds.met.no/thredds/catalog/senorge/seNorge_2018/Archive/catalog.html",
-    "catalogMachineUrl": "https://thredds.met.no/thredds/catalog/senorge/seNorge_2018/Archive/catalog.xml",
-    "datasetUrlTemplate": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/Archive/seNorge2018_{YYYY}.nc",
+    "catalogUrls": {
+      "rr": "https://thredds.met.no/thredds/catalog/senorge/seNorge_2018/aggregated_products/rr/catalog.xml",
+      "tg": "https://thredds.met.no/thredds/catalog/senorge/seNorge_2018/aggregated_products/tg/catalog.xml"
+    },
     "variableVersions": {
-      "rr": "23.11",
-      "tg": "23.09",
-      "tn": "23.09",
-      "tx": "23.09"
+      "rr": "v23_11",
+      "tg": "v23_09"
+    },
+    "fileVersions": {
+      "rr": "1.0",
+      "tg": "1.0"
+    },
+    "units": {
+      "rr": "mm",
+      "tg": "Celsius"
+    },
+    "aggregations": {
+      "rr": "time: sum",
+      "tg": "time: mean"
     },
     "requiredVariables": [
-      "latitude",
-      "longitude",
+      "lat",
+      "lon",
       "rr",
       "tg",
-      "time",
-      "tn",
-      "tx"
+      "time"
     ],
     "fillValue": -999.99,
     "licenseUriPolicy": "exact-uri-from-validated-das-metadata",
@@ -71,8 +74,8 @@
       "https://www.met.no/en/free-meteorological-data/Licensing-and-crediting",
       "https://www.met.no/frie-meteorologiske-data/lisensiering-og-kreditering"
     ],
-    "attributionText": "Historiske data: Meteorologisk institutt (MET Norway). Bearbeidet av Babyora.",
-    "derivedDataDisclaimer": "Babyora-avledet 1991–2020-klimatologi basert på MET seNorge_2018 v23.09/v23.11; ikke et MET-varsel eller en offisiell MET-normal."
+    "attributionText": "Månedsnormaler 1991–2020: Meteorologisk institutt (MET Norway). Bearbeidet av Babyora.",
+    "derivedDataDisclaimer": "Kildefilene er offisielle MET-månedsnormaler. Babyoras målperiodeberegning og plaggheuristikker er ikke et MET-varsel eller en MET-anbefaling."
   },
   "homePlacePolicy": {
     "version": "home-place-key@1",
@@ -107,55 +110,28 @@
     "tooFarReason": "grid_too_far",
     "neighbourFallback": false
   },
-  "timePolicy": {
-    "version": "met-utc-local-date@1",
-    "timezone": "Europe/Oslo",
-    "allowedUtcHours": [
-      6,
-      18
-    ],
-    "sourceInstantPattern": "YYYY-MM-DDTHH:00:00Z",
-    "profileKeyFormat": "MM-DD",
-    "profileKeyCount": 365,
-    "leapDayPolicy": "map-target-02-29-to-02-28;discard-source-02-29",
-    "rejectDuplicateVariableLocalDate": true
-  },
   "derivationPolicy": {
-    "version": "babyora-climate-derivation@1",
-    "normalYears": [
-      1991,
-      2020
+    "version": "babyora-monthly-normal-pack@2",
+    "monthCount": 12,
+    "rowFields": [
+      "month",
+      "meanTemperatureC",
+      "monthlyPrecipitationMm"
     ],
-    "centeredWindowOffsets": [
-      -2,
-      -1,
-      0,
-      1,
-      2
-    ],
-    "ringDays": 365,
-    "expectedSamplesPerKey": 150,
-    "minimumRepresentedYears": 27,
-    "minimumValidSamples": 135,
-    "quantileMethod": "Type-7",
-    "quantileFormula": "h=(n-1)p+1;j=floor(h);gamma=h-j;q=x[j]+gamma*(x[j+1]-x[j])",
-    "wetThresholdMillimetres": 1,
-    "outputFields": [
-      "p10MinC",
-      "p50MeanC",
-      "p90MaxC",
-      "wetProbability"
-    ],
+    "targetWindowDerivationVersion": "babyora-target-window-monthly-weighting@1",
+    "targetMeanTemperatureFormula": "sum(meanTemperatureC*targetDaysInMonth)/15",
+    "targetPrecipitationFormula": "sum(monthlyPrecipitationMm/daysInMonth*targetDaysInMonth)",
+    "leapMonthPolicy": "use-actual-days-in-target-year-month",
+    "partialProfiles": false,
+    "compareHeuristicsBeforeRounding": true,
+    "negativeZero": "normalize-to-zero",
+    "exponentNotation": false,
     "rounding": {
       "distanceMillimetres": 0,
       "mode": "half-away-from-zero",
       "temperature": 1,
-      "wetProbability": 4
-    },
-    "negativeZero": "normalize-to-zero",
-    "exponentNotation": false,
-    "compareHeuristicsBeforeRounding": true,
-    "partialProfiles": false
+      "precipitation": 1
+    }
   },
   "agePolicy": {
     "ageScopeMonths": [
@@ -188,15 +164,40 @@
     "allowUsername": false,
     "allowPassword": false,
     "allowHash": false,
-    "pathPattern": "^/thredds/dodsC/senorge/seNorge_2018/Archive/seNorge2018_(199[1-9]|20(0[0-9]|1[0-9]|20))\\.nc\\.(dds|das|ascii)$",
+    "pathPattern": "^/thredds/dodsC/senorge/seNorge_2018/aggregated_products/(tg|rr)/seNorge2018_(tg|rr)_normal_1991_2020_monthly_(0[1-9]|1[0-2])\\.nc\\.(dds|das|ascii)$",
+    "requireFamilyVariableMatch": true,
+    "allowedDatasetUrls": [
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_02.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_03.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_04.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_05.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_06.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_07.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_08.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_09.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_10.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_11.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_12.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_02.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_03.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_04.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_05.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_06.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_07.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_08.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_09.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_10.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_11.nc",
+      "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_12.nc"
+    ],
     "allowedQueryVariables": [
-      "latitude",
-      "longitude",
+      "lat",
+      "lon",
       "rr",
       "tg",
-      "time",
-      "tn",
-      "tx"
+      "time"
     ],
     "queryGrammar": "DAP2-variable-with-integer-slices-within-validated-DDS-dimensions",
     "userAgent": "klemeg/1.0 (sivertskotvold@gmail.com)",
@@ -256,14 +257,15 @@
   "reviewPolicy": {
     "maxCompleteAttempts": 3,
     "exhaustedStatus": "FAIL_REVIEW_CYCLES_EXHAUSTED",
-    "forkTurns": "none",
     "candidateSchemaVersion": "snart-review-candidate@1",
-    "receiptSchemaVersion": "codex-collaboration-review-receipt@1",
-    "resultSchemaVersion": "snart-review-result@1",
+    "receiptSchemaVersion": "babyora-independent-review-receipt@2",
     "requireDistinctReviewerAgentIds": true,
     "requireDistinctReviewerCanonicalTaskNames": true,
-    "requireImplementerExclusion": true,
-    "requirePassWithoutBlockerOrHigh": true,
+    "requireReviewerSignatureIdentityMatch": true,
+    "requireCleanBeforeAfter": true,
+    "requirePass": true,
+    "requiredCommandExitCode": 0,
+    "requireZeroUnresolvedFindings": true,
     "immutableHashes": [
       "contractSha256",
       "evidenceSha256",
@@ -271,8 +273,6 @@
       "packSha256",
       "treeSha"
     ],
-    "finalAnswerDigest": "SHA-256-exact-UTF8-payload",
-    "transcriptDigest": "SHA-256-canonical-JSON-UTF8-LF-of-spawnRequest-spawnResult-finalEvent",
     "provenanceAuthenticated": false,
     "localReceiptsAreNotCryptographicProvenance": true
   },
