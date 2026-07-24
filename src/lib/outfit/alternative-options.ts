@@ -144,6 +144,30 @@ function isExactPlainDataRecord(
   });
 }
 
+function isPlainOwnDataRecord(
+  value: unknown,
+): value is Record<string, unknown> {
+  if (
+    value === null ||
+    typeof value !== 'object' ||
+    Array.isArray(value) ||
+    Object.getPrototypeOf(value) !== Object.prototype
+  ) {
+    return false;
+  }
+  return Reflect.ownKeys(value).every((key) => {
+    if (typeof key !== 'string') return false;
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return (
+      descriptor !== undefined &&
+      'value' in descriptor &&
+      descriptor.enumerable === true &&
+      descriptor.get === undefined &&
+      descriptor.set === undefined
+    );
+  });
+}
+
 function ownDataValue(
   value: Record<string, unknown>,
   key: string,
@@ -273,25 +297,19 @@ type CandidateReadResult =
       invalidTargetLabels: readonly (string | null)[];
     }>;
 
-function readCandidateData(sourceLabel: string): CandidateReadResult {
+function readCandidateDataUnchecked(
+  sourceLabel: string,
+): CandidateReadResult {
   let entry;
   try {
     entry = getAlternatives(sourceLabel);
   } catch {
-    return Object.freeze({
-      kind: 'invalid-source' as const,
-      targetLabel: null,
-    });
+    return Object.freeze({ kind: 'invalid-candidates' as const });
   }
   if (entry === undefined) {
     return Object.freeze({ kind: 'none' as const });
   }
-  if (
-    entry === null ||
-    typeof entry !== 'object' ||
-    Array.isArray(entry) ||
-    Object.getPrototypeOf(entry) !== Object.prototype
-  ) {
+  if (!isPlainOwnDataRecord(entry)) {
     return Object.freeze({
       kind: 'invalid-source' as const,
       targetLabel: null,
@@ -331,12 +349,7 @@ function readCandidateData(sourceLabel: string): CandidateReadResult {
   const candidates: CandidateSnapshot[] = [];
   const invalidTargetLabels: Array<string | null> = [];
   for (const rawCandidate of rawCandidates) {
-    if (
-      rawCandidate === null ||
-      typeof rawCandidate !== 'object' ||
-      Array.isArray(rawCandidate) ||
-      Object.getPrototypeOf(rawCandidate) !== Object.prototype
-    ) {
+    if (!isPlainOwnDataRecord(rawCandidate)) {
       invalidTargetLabels.push(null);
       continue;
     }
@@ -393,6 +406,14 @@ function readCandidateData(sourceLabel: string): CandidateReadResult {
   });
 }
 
+function readCandidateData(sourceLabel: string): CandidateReadResult {
+  try {
+    return readCandidateDataUnchecked(sourceLabel);
+  } catch {
+    return Object.freeze({ kind: 'invalid-candidates' as const });
+  }
+}
+
 function sourceSelector(
   source: OutfitTruthSnapshotV1['garments'][number],
 ): OutfitSwapSourceOccurrenceV1 {
@@ -446,7 +467,7 @@ function candidateTargetSurvived(
   );
 }
 
-export function buildOutfitAlternativeOptions(
+function buildOutfitAlternativeOptionsUnchecked(
   rawArgs: BuildOutfitAlternativeOptionsArgs,
 ): OutfitAlternativeOptionsBuildResultV1 {
   if (!isExactPlainDataRecord(rawArgs, ARG_KEYS)) {
@@ -687,6 +708,16 @@ export function buildOutfitAlternativeOptions(
     options,
     diagnostics,
   });
+}
+
+export function buildOutfitAlternativeOptions(
+  rawArgs: BuildOutfitAlternativeOptionsArgs,
+): OutfitAlternativeOptionsBuildResultV1 {
+  try {
+    return buildOutfitAlternativeOptionsUnchecked(rawArgs);
+  } catch {
+    return unavailable();
+  }
 }
 
 export function isOutfitAlternativeOption(

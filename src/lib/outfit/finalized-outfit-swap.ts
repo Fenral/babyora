@@ -292,7 +292,7 @@ function normalizedBaseIsFinalized(
   return sameData(control.flags, recommendation.safetyFlags);
 }
 
-export function finalizeOutfitOccurrenceSwap(
+function finalizeOutfitOccurrenceSwapUnchecked(
   rawArgs: FinalizeOutfitOccurrenceSwapArgs,
 ): FinalizedOutfitSwapResult {
   if (!isExactPlainDataRecord(rawArgs, REQUEST_KEYS)) {
@@ -506,4 +506,14 @@ export function finalizeOutfitOccurrenceSwap(
     recommendation,
     targetCatalogGarmentId: targetClassification.catalogGarmentId,
   });
+}
+
+export function finalizeOutfitOccurrenceSwap(
+  rawArgs: FinalizeOutfitOccurrenceSwapArgs,
+): FinalizedOutfitSwapResult {
+  try {
+    return finalizeOutfitOccurrenceSwapUnchecked(rawArgs);
+  } catch {
+    return reject('invalid-request');
+  }
 }

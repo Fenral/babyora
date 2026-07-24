@@ -224,7 +224,13 @@ export const useOutfitSelectionStore = create<OutfitSelectionStore>()(
           makeDiagnostic('invalid-base', 'untrusted-base'),
         );
       }
-      if (!validOptionsForBase(base, options)) {
+      let optionsAreValid: boolean;
+      try {
+        optionsAreValid = validOptionsForBase(base, options);
+      } catch {
+        optionsAreValid = false;
+      }
+      if (!optionsAreValid) {
         return rejected(
           makeDiagnostic(
             'invalid-options',
