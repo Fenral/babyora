@@ -1,8 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
+import type { ComponentType } from 'react';
 import { describe, expect, it } from 'vitest';
 import { recommend } from '../../../lib/wool-layers/recommend.js';
-import type { OutfitAlternativeOptionV1 } from '../../../lib/outfit/alternative-options.js';
+import {
+  buildOutfitAlternativeOptions,
+  type OutfitAlternativeOptionV1,
+} from '../../../lib/outfit/alternative-options.js';
 import { createOutfitTruthSnapshot } from '../../../lib/outfit/outfit-truth.js';
 import { useOutfitSelectionStore } from '../../../state/outfit-selection-store.js';
 import {
@@ -17,6 +21,52 @@ function snapshot() {
   const result = createOutfitTruthSnapshot({ transitionContextId: 'component-test', input, finalizedRecommendation: recommend(input), pose: 'standing' });
   if (result.kind !== 'supported') throw new Error('fixture must be supported');
   return result.snapshot;
+}
+
+type ComparisonDialogProps = Readonly<{
+  option: OutfitAlternativeOptionV1;
+  sourceLabel: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}>;
+
+async function comparisonDialogComponent() {
+  const module = await import('../OutfitExperience.js');
+  return (
+    module as unknown as {
+      OutfitComparisonDialog?: ComponentType<ComparisonDialogProps>;
+    }
+  ).OutfitComparisonDialog;
+}
+
+function finalizedComparisonFixture(
+  input: Parameters<typeof recommend>[0],
+  equipment: 'present' | 'empty',
+) {
+  const result = buildOutfitAlternativeOptions({
+    transitionContextId: `component-comparison-${equipment}`,
+    input,
+    finalizedRecommendation: recommend(input),
+    pose: input.child.ageMonths < 12 ? 'sitting' : 'standing',
+  });
+  if (result.kind !== 'supported') {
+    throw new Error(`comparison fixture must be supported: ${result.kind}`);
+  }
+  const option = result.options.find((candidate) =>
+    equipment === 'present'
+      ? candidate.outcome.equipment.length > 0
+      : candidate.outcome.equipment.length === 0,
+  );
+  if (option === undefined) {
+    throw new Error(`comparison fixture needs ${equipment} equipment`);
+  }
+  const source = result.base.garments.find(
+    (garment) => garment.itemId === option.sourceItemId,
+  );
+  if (source === undefined) {
+    throw new Error('comparison source must belong to the finalized base');
+  }
+  return { option, sourceLabel: source.label };
 }
 
 function relativeLuminance(hex: string): number {
@@ -103,6 +153,89 @@ describe('OutfitExperience', () => {
     expect(source).toContain('<dialog');
     expect(source).not.toContain('aria-modal="true"');
     expect(source).not.toContain('role="dialog"');
+  });
+
+  it('shows the complete finalized vogn outcome, including equipment, before confirmation', async () => {
+    const fixture = finalizedComparisonFixture({
+      weather: {
+        feelsLikeC: -8,
+        tempC: -5,
+        windMs: 2,
+        precipMmH: 0,
+      },
+      child: { ageMonths: 10 },
+      activity: 'vogn',
+    }, 'present');
+    const ComparisonDialog = await comparisonDialogComponent();
+    expect(ComparisonDialog).toBeTypeOf('function');
+    if (ComparisonDialog === undefined) return;
+
+    const html = renderToStaticMarkup(
+      <ComparisonDialog
+        option={fixture.option}
+        sourceLabel={fixture.sourceLabel}
+        onConfirm={() => undefined}
+        onCancel={() => undefined}
+      />,
+    );
+    const garmentListAt = html.indexOf(
+      'data-outfit-comparison-garments',
+    );
+    const equipmentListAt = html.indexOf(
+      'data-outfit-comparison-equipment',
+    );
+    const confirmationAt = html.indexOf('Velg dette antrekket');
+
+    expect(fixture.option.outcome.equipment.length).toBeGreaterThan(0);
+    expect(garmentListAt).toBeGreaterThan(-1);
+    expect(equipmentListAt).toBeGreaterThan(garmentListAt);
+    expect(confirmationAt).toBeGreaterThan(equipmentListAt);
+    expect(html).toMatch(
+      /<ol[^>]*data-outfit-comparison-garments/,
+    );
+    expect(html).toMatch(
+      /<h4[^>]*>Utstyr<\/h4><ul[^>]*data-outfit-comparison-equipment/,
+    );
+
+    for (const garment of fixture.option.outcome.garments) {
+      const labelAt = html.indexOf(garment.label, garmentListAt);
+      expect(labelAt, garment.label).toBeGreaterThan(garmentListAt);
+      expect(labelAt, garment.label).toBeLessThan(equipmentListAt);
+    }
+    for (const equipment of fixture.option.outcome.equipment) {
+      const labelAt = html.indexOf(equipment.label, equipmentListAt);
+      expect(labelAt, equipment.label).toBeGreaterThan(equipmentListAt);
+      expect(labelAt, equipment.label).toBeLessThan(confirmationAt);
+    }
+  });
+
+  it('omits the equipment section instead of rendering an empty placeholder', async () => {
+    const fixture = finalizedComparisonFixture({
+      weather: {
+        feelsLikeC: -12,
+        tempC: -10,
+        windMs: 2,
+        precipMmH: 0,
+      },
+      child: { ageMonths: 10 },
+      activity: 'utelek',
+    }, 'empty');
+    const ComparisonDialog = await comparisonDialogComponent();
+    expect(ComparisonDialog).toBeTypeOf('function');
+    if (ComparisonDialog === undefined) return;
+
+    const html = renderToStaticMarkup(
+      <ComparisonDialog
+        option={fixture.option}
+        sourceLabel={fixture.sourceLabel}
+        onConfirm={() => undefined}
+        onCancel={() => undefined}
+      />,
+    );
+
+    expect(fixture.option.outcome.equipment).toHaveLength(0);
+    expect(html).not.toContain('data-outfit-comparison-equipment');
+    expect(html).not.toMatch(/<h4[^>]*>Utstyr<\/h4>/);
   });
 
   it('renders the conservative 320px/200% layout geometry without a fixed 560px rail', () => {
