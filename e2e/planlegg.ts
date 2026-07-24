@@ -1373,6 +1373,40 @@ async function openPlanlegg(page: Page, path: string): Promise<void> {
     .waitFor({ state: 'attached', timeout: 15_000 });
 }
 
+async function prewarmViteModuleGraph(
+  page: Page,
+  path: string,
+  modulePath: string,
+  expectedExport: string,
+): Promise<void> {
+  const browser = page.context().browser();
+  if (!browser) throw new Error('Vite lazy-module readiness requires a browser');
+  const readinessContext = await browser.newContext();
+  try {
+    const readinessPage = await readinessContext.newPage();
+    await readinessPage.goto(`${BASE_URL}${path}`, { waitUntil: 'domcontentloaded' });
+    const moduleReady = await readinessPage.evaluate(
+      async ({ targetModule, exportName }) => {
+        const importModule = window.Function(
+          'modulePath',
+          'return import(modulePath)',
+        ) as (modulePath: string) => Promise<Record<string, unknown>>;
+        const loaded = await importModule(targetModule);
+        return typeof loaded[exportName] === 'function';
+      },
+      { targetModule: modulePath, exportName: expectedExport },
+    );
+    if (!moduleReady) {
+      throw new Error(
+        `Vite lazy-module readiness failed: ${modulePath} did not expose ${expectedExport}`,
+      );
+    }
+  } finally {
+    await readinessContext.close();
+  }
+  console.log(`PLANLEGG DEV MODULE READY: module=${modulePath} export=${expectedExport}`);
+}
+
 async function startLiveRegionTrace(page: Page): Promise<void> {
   await page.evaluate(() => {
     const tracedWindow = window as typeof window & {
@@ -2159,6 +2193,12 @@ async function runSoonReadiness(
       return nativeOpen.call(this, method, url, ...rest);
     };
   });
+  await prewarmViteModuleGraph(
+    page,
+    fixture.path,
+    '/src/screens/FamilieScreen.tsx',
+    'FamilieScreen',
+  );
   forecastState.delivery = 'success';
   forecastState.mode = 'many';
   const observedTransport: string[] = [];
@@ -2348,9 +2388,22 @@ async function runSoonReadiness(
   }
 
   const navigationForAge = page.getByRole('navigation').first();
-  await navigationForAge.getByRole('button', { name: /^Familie/u }).click();
+  const familyRoot = navigationForAge.getByRole('button', { name: /^Familie/u });
+  await familyRoot.click();
+  await familyRoot.waitFor({ state: 'visible', timeout: 15_000 });
+  if (await familyRoot.getAttribute('aria-current') !== 'page') {
+    throw new Error('Familie root did not become current before child-switch readiness');
+  }
   const switchChild = page.getByRole('button', { name: /Bytt barn/u });
-  await switchChild.waitFor({ state: 'visible', timeout: 15_000 });
+  try {
+    await switchChild.waitFor({ state: 'visible', timeout: 15_000 });
+  } catch (error) {
+    const mainText = await page.locator('main#main').innerText().catch(() => '(main unavailable)');
+    throw new Error(
+      `Familie route became current but its child-switch UI did not become ready: ${mainText.slice(0, 1_500)}`,
+      { cause: error },
+    );
+  }
   await switchChild.evaluate((button) => (button as HTMLButtonElement).click());
   const childDialog = page.getByRole('dialog', { name: 'Bytt barn' });
   await childDialog.getByRole('radio', { name: /Bytt til Eskil/u }).click();
