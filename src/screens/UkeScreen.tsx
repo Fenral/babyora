@@ -26,6 +26,7 @@ import {
   type PlanningPoint,
 } from '../lib/planning/change-events';
 import {
+  type RequestedPlanningView,
   decidePlanningInteraction,
   dispatchPlanningInteraction,
   repairPlanningSelection,
@@ -127,6 +128,9 @@ type Props = Readonly<{
     context: PlannedOutfitContext,
     trigger: HTMLElement,
   ) => void;
+  requestedPlanView: RequestedPlanningView | null;
+  requestedPlanViewToken: number | null;
+  onConsumeRequestedPlanView: (token: number) => void;
 }>;
 
 type PlanningEvaluation = Readonly<{
@@ -293,7 +297,16 @@ function currentPhase(
 
 function PlanleggData({
   onOpenPlannedOutfit,
-}: Pick<Props, 'onOpenPlannedOutfit'>) {
+  requestedPlanView,
+  requestedPlanViewToken,
+  onConsumeRequestedPlanView,
+}: Pick<
+  Props,
+  | 'onOpenPlannedOutfit'
+  | 'requestedPlanView'
+  | 'requestedPlanViewToken'
+  | 'onConsumeRequestedPlanView'
+>) {
   const { active } = useChildren();
   const e2eFixture = planningE2EFixture();
   const { fire } = useHapticSystem();
@@ -355,6 +368,20 @@ function PlanleggData({
     source: effectivePlace?.source ?? 'fixed-home',
   }, effectivePlace !== null);
   const [tab, setTab] = useState<ViewTab>('today');
+  const consumedRequestedPlanViewToken = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (
+      requestedPlanView !== 'snart'
+      || requestedPlanViewToken === null
+      || consumedRequestedPlanViewToken.current === requestedPlanViewToken
+    ) {
+      return;
+    }
+    consumedRequestedPlanViewToken.current = requestedPlanViewToken;
+    setTab('soon');
+    onConsumeRequestedPlanView(requestedPlanViewToken);
+  }, [onConsumeRequestedPlanView, requestedPlanView, requestedPlanViewToken]);
   const [forecastOpen, setForecastOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paywallTrigger, setPaywallTrigger] = useState<HTMLElement | null>(null);
@@ -1084,10 +1111,16 @@ export function UkeScreen({
   onOpenPlannedOutfit,
   onNavigate: _onNavigate,
   onOpenSheet: _onOpenSheet,
+  requestedPlanView,
+  requestedPlanViewToken,
+  onConsumeRequestedPlanView,
 }: Props) {
   return (
     <PlanleggData
       onOpenPlannedOutfit={onOpenPlannedOutfit}
+      requestedPlanView={requestedPlanView}
+      requestedPlanViewToken={requestedPlanViewToken}
+      onConsumeRequestedPlanView={onConsumeRequestedPlanView}
     />
   );
 }

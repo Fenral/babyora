@@ -32,7 +32,12 @@ import {
   isPlannedOutfitContext,
   type PlannedOutfitContext,
 } from './lib/planning/planned-outfit-context';
-import { shouldClosePlannedDrillOnAccess } from './lib/planning/planning-interaction';
+import {
+  consumeRequestedPlanningView,
+  issueRequestedPlanningView,
+  shouldClosePlannedDrillOnAccess,
+  type RequestedPlanningViewState,
+} from './lib/planning/planning-interaction';
 import { decideAccess } from './lib/access/capabilities';
 import { useAccess } from './lib/premium/use-access';
 import { resolveRuntimeCapabilityAccess } from './lib/premium/gating';
@@ -168,6 +173,10 @@ export default function App(): ReactElement {
   const locationMode = useLocationPref((state) => state.mode);
   const [tab, setTab] = useState<TabKey>('hjem');
   const [drill, setDrill] = useState<Drill>(null);
+  const [requestedPlanViewState, setRequestedPlanViewState] = useState<RequestedPlanningViewState>({
+    nextToken: 0,
+    requestedView: null,
+  });
   const themeMode = useTheme((s) => s.mode);
   const { isPremium, loading: accessLoading } = useAccess();
   const automaticLocationAccess = useMemo(
@@ -224,6 +233,26 @@ export default function App(): ReactElement {
     setDrill(null);
     setTab(next);
   };
+
+  const onOpenGuideTarget = useCallback((target: GuideHubTarget | 'snart') => {
+    if (target === 'snart') {
+      setDrill(null);
+      setTab('plan');
+      setRequestedPlanViewState((current) => issueRequestedPlanningView(current, 'snart'));
+      return;
+    }
+    setDrill({ kind: 'guide', target });
+  }, []);
+
+  const onConsumeRequestedPlanView = useCallback((token: number) => {
+    setRequestedPlanViewState((current) => {
+      const { consumedView: _consumedView, ...next } = consumeRequestedPlanningView(
+        current,
+        token,
+      );
+      return next;
+    });
+  }, []);
 
   const onOpenPlannedOutfit = (
     plannedContext: PlannedOutfitContext,
@@ -466,7 +495,7 @@ export default function App(): ReactElement {
     routeContent = (
       <VinterprogramScreen
         onBack={() => setDrill(null)}
-        onOpenTarget={(target) => setDrill({ kind: 'guide', target })}
+        onOpenTarget={onOpenGuideTarget}
       />
     );
   } else if (tab === 'hjem') {
@@ -491,6 +520,9 @@ export default function App(): ReactElement {
         onNavigate={onNavigate}
         onOpenSheet={() => undefined}
         onOpenPlannedOutfit={onOpenPlannedOutfit}
+        requestedPlanView={requestedPlanViewState.requestedView?.view ?? null}
+        requestedPlanViewToken={requestedPlanViewState.requestedView?.token ?? null}
+        onConsumeRequestedPlanView={onConsumeRequestedPlanView}
       />
     );
   } else if (tab === 'guide') {
@@ -498,7 +530,7 @@ export default function App(): ReactElement {
     routeContent = (
       <GuideHubScreen
         onNavigate={onNavigate}
-        onOpenCard={(target) => setDrill({ kind: 'guide', target })}
+        onOpenCard={onOpenGuideTarget}
       />
     );
   } else {

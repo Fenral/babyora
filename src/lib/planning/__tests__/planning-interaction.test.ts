@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  consumeRequestedPlanningView,
   decidePlanningInteraction,
   dispatchPlanningInteraction,
+  issueRequestedPlanningView,
   repairPlanningSelection,
   type PlanningInteractionDecision,
+  type RequestedPlanningViewState,
 } from '../planning-interaction.js';
 
 describe('Planlegg interaction decision contracts', () => {
@@ -133,6 +136,49 @@ describe('Planlegg interaction decision contracts', () => {
       loading: true,
       isPremium: false,
     })).toBe(false);
+  });
+
+  it('issues opaque monotonically increasing Snart requests without user, route, or time data', () => {
+    const initial: RequestedPlanningViewState = {
+      nextToken: 0,
+      requestedView: null,
+    };
+    const first = issueRequestedPlanningView(initial, 'snart');
+    const second = issueRequestedPlanningView(first, 'snart');
+
+    expect(first).toEqual({
+      nextToken: 1,
+      requestedView: { view: 'snart', token: 1 },
+    });
+    expect(second).toEqual({
+      nextToken: 2,
+      requestedView: { view: 'snart', token: 2 },
+    });
+    expect(Object.keys(second.requestedView ?? {})).toEqual(['view', 'token']);
+  });
+
+  it('consumes each requested view atomically at most once, including after a remount', () => {
+    const requested = issueRequestedPlanningView({
+      nextToken: 4,
+      requestedView: null,
+    }, 'snart');
+    const firstConsumption = consumeRequestedPlanningView(requested, 5);
+
+    expect(firstConsumption).toEqual({
+      nextToken: 5,
+      requestedView: null,
+      consumedView: 'snart',
+    });
+    expect(consumeRequestedPlanningView(firstConsumption, 5)).toEqual({
+      nextToken: 5,
+      requestedView: null,
+      consumedView: null,
+    });
+    expect(consumeRequestedPlanningView(firstConsumption, 4)).toEqual({
+      nextToken: 5,
+      requestedView: null,
+      consumedView: null,
+    });
   });
 
   it('contains no browser, haptic adapter, DTO, recommendation, or persistence capability', async () => {

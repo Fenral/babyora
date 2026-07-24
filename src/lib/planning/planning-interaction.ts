@@ -17,6 +17,20 @@ export type PlanningInteractionRequest =
     eventId: string;
   }>;
 
+export type RequestedPlanningView = 'snart';
+
+export type RequestedPlanningViewState = Readonly<{
+  nextToken: number;
+  requestedView: Readonly<{
+    view: RequestedPlanningView;
+    token: number;
+  }> | null;
+}>;
+
+export type RequestedPlanningViewConsumption = RequestedPlanningViewState & Readonly<{
+  consumedView: RequestedPlanningView | null;
+}>;
+
 type PlanningInteractionHandlers = Readonly<{
   onSelect?: (eventId: string | null) => void;
   onCue?: (cue: PlanningInteractionCue) => void;
@@ -67,4 +81,29 @@ export function shouldClosePlannedDrillOnAccess(
   access: Readonly<{ loading: boolean; isPremium: boolean }>,
 ): boolean {
   return isPlannedDrill && (access.loading || !access.isPremium);
+}
+
+export function issueRequestedPlanningView(
+  state: RequestedPlanningViewState,
+  view: RequestedPlanningView,
+): RequestedPlanningViewState {
+  const token = state.nextToken + 1;
+  return {
+    nextToken: token,
+    requestedView: { view, token },
+  };
+}
+
+export function consumeRequestedPlanningView(
+  state: RequestedPlanningViewState,
+  token: number,
+): RequestedPlanningViewConsumption {
+  if (state.requestedView?.token !== token) {
+    return { ...state, consumedView: null };
+  }
+  return {
+    nextToken: state.nextToken,
+    requestedView: null,
+    consumedView: state.requestedView.view,
+  };
 }
