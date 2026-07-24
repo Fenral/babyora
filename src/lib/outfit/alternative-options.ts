@@ -85,6 +85,7 @@ const ARG_KEYS = Object.freeze([
   'finalizedRecommendation',
   'pose',
 ]);
+const FACTORY_ALTERNATIVE_OPTIONS = new WeakSet<object>();
 
 function freezeDeep<T>(value: T): T {
   if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
@@ -364,7 +365,7 @@ function makeOption(
   targetCatalogGarmentId: string,
   outcome: OutfitTruthSnapshotV1,
 ): OutfitAlternativeOptionV1 {
-  return freezeDeep({
+  const option = freezeDeep({
     optionId: `outfit-alternative-option-v1:${stableHash(
       [
         base.snapshotId,
@@ -383,6 +384,8 @@ function makeOption(
     },
     outcome,
   });
+  FACTORY_ALTERNATIVE_OPTIONS.add(option);
+  return option;
 }
 
 function candidateTargetSurvived(
@@ -619,6 +622,32 @@ export function buildOutfitAlternativeOptions(
     options,
     diagnostics,
   });
+}
+
+export function isOutfitAlternativeOption(
+  value: unknown,
+): value is OutfitAlternativeOptionV1 {
+  if (
+    value === null ||
+    typeof value !== 'object' ||
+    !FACTORY_ALTERNATIVE_OPTIONS.has(value)
+  ) {
+    return false;
+  }
+  const option = value as OutfitAlternativeOptionV1;
+  return (
+    Object.isFrozen(option) &&
+    typeof option.optionId === 'string' &&
+    option.optionId.startsWith('outfit-alternative-option-v1:') &&
+    typeof option.sourceItemId === 'string' &&
+    typeof option.targetLabel === 'string' &&
+    (option.targetCatalogGarmentId === null ||
+      typeof option.targetCatalogGarmentId === 'string') &&
+    Object.isFrozen(option.comparison) &&
+    Object.isFrozen(option.comparison.advantages) &&
+    Object.isFrozen(option.comparison.tradeoffs) &&
+    isOutfitTruthSnapshot(option.outcome)
+  );
 }
 
 // Keeps the source table's role explicit in generated declarations: it
