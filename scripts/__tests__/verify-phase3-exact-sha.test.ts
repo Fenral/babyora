@@ -23,6 +23,12 @@ import {
 const scriptPath = fileURLToPath(
   new URL('../verify-phase3-exact-sha.mjs', import.meta.url),
 );
+const representativeSummaryPath = fileURLToPath(
+  new URL(
+    '../../.planning/phases/01-planlegg-dagslinjen/01-12-SUMMARY.md',
+    import.meta.url,
+  ),
+);
 
 const temporaryParents: string[] = [];
 
@@ -163,6 +169,7 @@ function continuedCommitNodeCases(
 }
 
 function ordinaryMetadataControls(checksum: string): readonly string[] {
+  const referencedCommit = 'c'.repeat(40);
   return [
     'tags: [typescript, motion, replay, privacy, reduced-motion]',
     'requires:',
@@ -175,11 +182,28 @@ function ordinaryMetadataControls(checksum: string): readonly string[] {
     '  options: {mode: strict}',
     'anchored_note: &ordinary ordinary',
     'alias_note: *ordinary',
+    `review_reference: "${referencedCommit} / SHA256 ${checksum}"`,
+    `review_url: https://example.invalid/commits/${referencedCommit}`,
+    `review_flow: [reviewed, "${referencedCommit} / immutable bundle"]`,
+    'review_history: |-',
+    `  candidate ${referencedCommit} was independently reviewed`,
+    `review_comment: complete # ${referencedCommit}`,
     'quoted_note: "a literal # remains part of this quoted value"',
     "single_quoted_note: 'another literal # value'",
     'url_fragment: https://example.invalid/path#fragment',
     `validation_evidence_sha256: ${checksum} # ordinary checksum comment`,
   ];
+}
+
+function representativeSummaryWith(
+  securityFields: readonly string[],
+): string {
+  return readFileSync(representativeSummaryPath, 'utf8')
+    .replace(
+      /^---\r?\n/,
+      ['---', ...securityFields, ''].join('\n'),
+    )
+    .replace(/^status: complete$/m, 'status: PASS');
 }
 
 type Harness = {
@@ -735,6 +759,32 @@ describe('pure exact-label and path guards', () => {
           ...controls,
           '---',
         ].join('\n'),
+      ),
+    ).toEqual({
+      phase2CandidateSha: phase2Sha,
+      featureFlag: true,
+    });
+  });
+
+  it('accepts representative nested summary metadata and embedded SHA prose', () => {
+    const phase1Sha = '1'.repeat(40);
+    const phase2Sha = '2'.repeat(40);
+
+    expect(
+      parsePhase1CandidateSummary(
+        representativeSummaryWith([
+          `candidate_sha: ${phase1Sha} # exact Phase 1 candidate`,
+        ]),
+      ),
+    ).toEqual({ phase1CandidateSha: phase1Sha });
+
+    expect(
+      parsePhase2HandoffSummary(
+        representativeSummaryWith([
+          `phase2_candidate_sha: ${phase2Sha} # exact Phase 2 candidate`,
+          'feature_flag: true',
+          `phase1_candidate_sha: ${phase1Sha} # exact upstream candidate`,
+        ]),
       ),
     ).toEqual({
       phase2CandidateSha: phase2Sha,
