@@ -670,7 +670,7 @@ function PlanleggData({
       ...current,
       selectedEventId: eventId,
     }));
-  }, [setRefreshKey]);
+  }, [setPlanningSelection]);
   const latestPlanningEvaluationRef = useRef(planningEvaluation);
   useLayoutEffect(() => {
     latestPlanningEvaluationRef.current = planningEvaluation;
@@ -702,7 +702,7 @@ function PlanleggData({
   let statusState: PlanleggStatusState = { status: 'ready' };
   const onRetry = useCallback(() => {
     setRefreshKey((current) => current + 1);
-  }, []);
+  }, [setRefreshKey]);
   const isWeekView = tab === 'tenday';
   const isWeekFull = isWeekView && viewAccess.presentation === 'full';
   const isWeekTeaser = isWeekView && viewAccess.presentation === 'teaser';
