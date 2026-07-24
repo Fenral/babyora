@@ -1,4 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import {
+  ITEM_ALTERNATIVES,
+  type Alternative,
+} from '../../wool-layers/alternatives.js';
 import { recommend } from '../../wool-layers/recommend.js';
 import type {
   RecommendInput,
@@ -74,6 +78,26 @@ function selectorFor(source: OutfitGarmentTruth) {
 
 function labels(snapshot: OutfitTruthSnapshotV1): string[] {
   return snapshot.garments.map((garment) => garment.sourceLabel);
+}
+
+function withCatalogAlternatives<T>(
+  sourceLabel: string,
+  alternatives: Alternative[],
+  run: () => T,
+): T {
+  const entry = ITEM_ALTERNATIVES.find(
+    (candidate) => candidate.itemName === sourceLabel,
+  );
+  if (entry === undefined) {
+    throw new Error(`missing fixture catalog entry: ${sourceLabel}`);
+  }
+  const original = entry.alternatives;
+  entry.alternatives = alternatives;
+  try {
+    return run();
+  } finally {
+    entry.alternatives = original;
+  }
 }
 
 describe('finalized occurrence swap adapter', () => {
@@ -232,6 +256,52 @@ describe('finalized occurrence swap adapter', () => {
     expect(finalizedRecommendation.layers.flatMap((layer) => layer.items))
       .not.toContain('vinterkjøredress');
   });
+
+  it.each([
+    [
+      'missing severity',
+      (recommendation: Recommendation) => {
+        delete recommendation.severity;
+      },
+    ],
+    [
+      'severity above the highest finalized flag',
+      (recommendation: Recommendation) => {
+        expect(recommendation.severity).toBe('HIGH');
+        recommendation.severity = 'CRITICAL';
+      },
+    ],
+  ])(
+    'rejects complete-outcome finalizer data with %s',
+    (_name, mutate) => {
+      const input = makeInput();
+      const finalizedRecommendation = structuredClone(
+        recommend(input),
+      );
+      mutate(finalizedRecommendation);
+      const baseSnapshot = buildBase(
+        input,
+        finalizedRecommendation,
+      );
+      const source = baseSnapshot.garments.find(
+        (garment) =>
+          garment.sourceLabel === 'isolert vinterkjøredress',
+      )!;
+
+      expect(
+        finalizeOutfitOccurrenceSwap({
+          input,
+          finalizedRecommendation,
+          baseSnapshot,
+          source: selectorFor(source),
+          targetLabel: 'vinterkjøredress',
+        }),
+      ).toMatchObject({
+        kind: 'rejected',
+        code: 'base-not-finalized',
+      });
+    },
+  );
 });
 
 describe('engine-backed alternative options', () => {
@@ -402,6 +472,94 @@ describe('engine-backed alternative options', () => {
     );
   });
 
+  it.each([
+    [
+      'throwing indexed accessor',
+      (markExecuted: () => void) => {
+        const alternatives = new Array<Alternative>(1);
+        Object.defineProperty(alternatives, '0', {
+          configurable: true,
+          enumerable: true,
+          get() {
+            markExecuted();
+            throw new Error('HOSTILE_GETTER_EXECUTED');
+          },
+        });
+        return alternatives;
+      },
+    ],
+    [
+      'custom array prototype with a throwing iterator accessor',
+      (markExecuted: () => void) => {
+        const alternatives: Alternative[] = [
+          {
+            name: 'vinterkjøredress',
+            pros: ['valid-looking candidate'],
+          },
+        ];
+        const hostilePrototype = Object.create(
+          Array.prototype,
+        ) as object;
+        Object.defineProperty(
+          hostilePrototype,
+          Symbol.iterator,
+          {
+            configurable: true,
+            get() {
+              markExecuted();
+              throw new Error('HOSTILE_GETTER_EXECUTED');
+            },
+          },
+        );
+        Object.setPrototypeOf(alternatives, hostilePrototype);
+        return alternatives;
+      },
+    ],
+    [
+      'sparse candidate array',
+      (_markExecuted: () => void) =>
+        new Array<Alternative>(1),
+    ],
+  ])(
+    'validates %s before reading candidate values',
+    (_name, makeHostileAlternatives) => {
+      const input = makeInput();
+      let hostileGetterExecuted = false;
+      const hostileAlternatives = makeHostileAlternatives(() => {
+        hostileGetterExecuted = true;
+      });
+
+      const result = withCatalogAlternatives(
+        'isolert vinterkjøredress',
+        hostileAlternatives,
+        () =>
+          buildOutfitAlternativeOptions(
+            buildArgs(input, recommend(input)),
+          ),
+      );
+
+      expect(hostileGetterExecuted).toBe(false);
+      expect(result.kind).toBe('supported');
+      if (result.kind !== 'supported') return;
+      const source = result.base.garments.find(
+        (garment) =>
+          garment.sourceLabel === 'isolert vinterkjøredress',
+      )!;
+      expect(
+        result.options.some(
+          (option) => option.sourceItemId === source.itemId,
+        ),
+      ).toBe(false);
+      expect(result.diagnostics).toContainEqual(
+        expect.objectContaining({
+          code: 'invalid-candidate-data',
+          sourceItemId: source.itemId,
+          targetLabel: null,
+        }),
+      );
+    },
+  );
+
   it('preserves the tracked 11-garment result as list-only with no option', () => {
     const input = makeInput({
       weather: {
@@ -452,6 +610,8 @@ describe('engine-backed alternative options', () => {
     'notes',
     'structuredNotes',
     'summary',
+    'safetyFlags',
+    'severity',
   ] as const)(
     'rejects a Recommendation missing the complete %s field',
     (missingField) => {
@@ -477,6 +637,29 @@ describe('engine-backed alternative options', () => {
       });
     },
   );
+
+  it('rejects severity that does not equal the highest safety flag', () => {
+    const input = makeInput();
+    const inconsistent = structuredClone(recommend(input));
+    expect(inconsistent.severity).toBe('HIGH');
+    inconsistent.severity = 'CRITICAL';
+
+    expect(
+      buildOutfitAlternativeOptions({
+        ...buildArgs(input),
+        finalizedRecommendation: inconsistent,
+      }),
+    ).toMatchObject({
+      kind: 'unavailable',
+      reason: 'invalid-input',
+      options: [],
+      diagnostics: [
+        {
+          code: 'invalid-base-input',
+        },
+      ],
+    });
+  });
 
   it('rejects a flattened projection and returns deterministic diagnostics', () => {
     const input = makeInput();
