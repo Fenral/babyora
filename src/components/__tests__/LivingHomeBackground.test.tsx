@@ -1,8 +1,13 @@
+import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import backgroundCss from '../LivingHomeBackground.css?raw';
 import { LivingHomeBackground } from '../LivingHomeBackground.js';
 import { resolveHomeAtmosphere } from '../../lib/home-atmosphere.js';
+
+const backgroundCss = readFileSync(
+  new URL('../LivingHomeBackground.css', import.meta.url),
+  'utf8',
+);
 
 function layerCount(markup: string): number {
   return markup.match(/data-home-atmosphere-layer=/gu)?.length ?? 0;
