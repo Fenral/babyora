@@ -268,7 +268,7 @@ describe('Snart plan model', () => {
       expect(source).not.toMatch(/localStorage|sessionStorage|indexedDB|CacheStorage|posthog|analytics|console\./iu);
     }
     expect(modelSource).not.toMatch(/childId|birthLocalDate|coordinates|actionTimestamp|\bname\b/iu);
-    expect(capabilitySource).toMatch(/soon_preparation:\s*false/u);
+    expect(capabilitySource).toMatch(/soon_preparation:\s*true/u);
     expect(capabilitySource).toMatch(/family_sharing:\s*false/u);
     expect(capabilitySource).toMatch(/personal_calibration:\s*false/u);
   });

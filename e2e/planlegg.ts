@@ -1758,7 +1758,7 @@ async function runSoonReadiness(
     'utf8',
   ));
   if (
-    !/soon_preparation:\s*false/u.test(availability)
+    !/soon_preparation:\s*true/u.test(availability)
     || !/family_sharing:\s*false/u.test(availability)
     || !/personal_calibration:\s*false/u.test(availability)
     || !session.includes('projectSnartSession')
@@ -1784,7 +1784,7 @@ async function runSoonReadiness(
     /historiske forberedelser|1991–2020|har allerede/iu.test(rendered)
     || requests.some((url) => /thredds|frost|climate|snart/iu.test(url))
   ) {
-    throw new Error('False capability lekket Snart-copy eller utførte runtime-klimaforespørsel');
+    throw new Error('Aktiv Snart-kandidat utførte forbudt runtime-klimaforespørsel');
   }
   const beforeUrl = page.url();
   const beforeStorage = await page.evaluate(() => JSON.stringify({
@@ -1797,7 +1797,7 @@ async function runSoonReadiness(
     session: Object.keys(sessionStorage).sort(),
   }));
   if (page.url() !== beforeUrl || afterStorage !== beforeStorage) {
-    throw new Error('False-state Snart readiness endret URL eller browser storage');
+    throw new Error('Snart readiness endret URL eller browser storage');
   }
 }
 
