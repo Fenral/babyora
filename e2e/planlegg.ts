@@ -1908,6 +1908,10 @@ async function runSoonReadiness(
     throw new Error('Free Snart-paywall returnerte ikke fokus til teaseren');
   }
 
+  await openPlanlegg(page, `${fixture.path}&snart-e2e=loading`);
+  await page.getByRole('radio', { name: 'Snart', exact: true }).evaluate((radio) => (radio as HTMLInputElement).click());
+  await page.locator('[data-planlegg-access="neutral"]').waitFor({ state: 'visible' });
+  if (await page.locator('.snart-plan, [data-planlegg-access="soon-teaser"]').count() !== 0) throw new Error('Loading leaked Snart advice');
 }
 
 async function settleEntitlement(page: Page, premium: boolean): Promise<void> {
