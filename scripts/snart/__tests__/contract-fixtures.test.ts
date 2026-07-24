@@ -234,19 +234,21 @@ describe('Snart autonomy contract', () => {
     });
   });
 
-  it('locks review receipts to independent forkless collaboration identities', () => {
+  it('locks review receipts to two independent signed identities', () => {
     const contract = loadJson(CONTRACT_PATH);
 
     expect(contract.reviewPolicy).toMatchObject({
       maxCompleteAttempts: 3,
       exhaustedStatus: 'FAIL_REVIEW_CYCLES_EXHAUSTED',
-      forkTurns: 'none',
       candidateSchemaVersion: 'snart-review-candidate@1',
-      receiptSchemaVersion: 'codex-collaboration-review-receipt@1',
-      resultSchemaVersion: 'snart-review-result@1',
+      receiptSchemaVersion: 'babyora-independent-review-receipt@2',
       requireDistinctReviewerAgentIds: true,
       requireDistinctReviewerCanonicalTaskNames: true,
-      requireImplementerExclusion: true,
+      requireReviewerSignatureIdentityMatch: true,
+      requireCleanBeforeAfter: true,
+      requirePass: true,
+      requiredCommandExitCode: 0,
+      requireZeroUnresolvedFindings: true,
       provenanceAuthenticated: false,
       localReceiptsAreNotCryptographicProvenance: true,
       immutableHashes: [
@@ -257,6 +259,10 @@ describe('Snart autonomy contract', () => {
         'treeSha',
       ],
     });
+    expect(contract.reviewPolicy).not.toHaveProperty('forkTurns');
+    expect(contract.reviewPolicy).not.toHaveProperty('implementerAgentId');
+    expect(contract.reviewPolicy).not.toHaveProperty('resultSchemaVersion');
+    expect(contract.reviewPolicy).not.toHaveProperty('transcriptDigest');
   });
 
   it('contains no health, solar or child-size contract fields', () => {
