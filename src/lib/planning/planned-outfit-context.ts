@@ -101,14 +101,22 @@ type CanonicalPlannedOutfitContextInput = Omit<PlannedOutfitContextInput, 'recom
   finalizedRecommendation: Recommendation;
 }>;
 
+type DeepReadonly<T> = T extends (...args: never[]) => unknown
+  ? T
+  : T extends readonly (infer U)[]
+    ? readonly DeepReadonly<U>[]
+    : T extends object
+      ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+      : T;
+
 export type OutfitBundleProducerSeedV1 = Readonly<{
-  version: typeof OUTFIT_BUNDLE_PRODUCER_SEED_VERSION;
+  seedVersion: typeof OUTFIT_BUNDLE_PRODUCER_SEED_VERSION;
   sourceContextId: string;
   transitionContextId: string;
   recommendationId: string;
   recommendationFingerprint: string;
-  recommendInput: Readonly<RecommendInput>;
-  finalizedRecommendation: Readonly<Recommendation>;
+  input: DeepReadonly<RecommendInput>;
+  finalizedRecommendation: DeepReadonly<Recommendation>;
 }>;
 
 type PlannedContextCore = Readonly<{
@@ -595,6 +603,39 @@ function fnv1a64(value: string): string {
   return hash.toString(16).padStart(16, '0');
 }
 
+// Byte-equivalent to the frozen outfit-truth content hash. This local copy is
+// necessary because Plan 02-05 may edit only the serialized context boundary.
+function outfitTruthStableHash(value: string): string {
+  let first = 0x811c9dc5;
+  let second = 0x9e3779b9;
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    first = Math.imul(first ^ code, 0x01000193);
+    second = Math.imul(second ^ code, 0x85ebca6b);
+  }
+  return `${(first >>> 0).toString(16).padStart(8, '0')}${(
+    second >>> 0
+  ).toString(16).padStart(8, '0')}`;
+}
+
+function canonicalRecommendationProvenance(
+  input: RecommendInput,
+  finalizedRecommendation: Recommendation,
+): Readonly<{ recommendationId: string; recommendationFingerprint: string }> {
+  const recommendationContentDigest = outfitTruthStableHash(stableSerialize({
+    input,
+    finalizedRecommendation,
+    pose: 'sitting',
+  }));
+  return {
+    recommendationId: `outfit-recommendation-v1:${outfitTruthStableHash(
+      `recommendation|${recommendationContentDigest}`,
+    )}`,
+    recommendationFingerprint:
+      `outfit-recommendation-fingerprint-v1:${recommendationContentDigest}`,
+  };
+}
+
 function recursivelyFreeze<T>(value: T): T {
   if (typeof value !== 'object' || value === null || Object.isFrozen(value)) return value;
   for (const nested of Object.values(value)) recursivelyFreeze(nested);
@@ -692,16 +733,11 @@ export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext
     const context = canonical
       ? (() => {
           const projection = canonicalProjection(canonical.finalizedRecommendation);
-          const recommendationFingerprint = `outfit-recommendation-fingerprint-v1:${fnv1a64(
-            stableSerialize({
-              recommendInput: canonical.recommendInput,
-              finalizedRecommendation: canonical.finalizedRecommendation,
-              transitionContextId: canonical.transitionContextId,
-            }),
-          )}`;
-          const recommendationId = `outfit-recommendation-v1:${fnv1a64(
-            `${plannedContextId}|${recommendationFingerprint}`,
-          )}`;
+          const { recommendationId, recommendationFingerprint } =
+            canonicalRecommendationProvenance(
+              canonical.recommendInput,
+              canonical.finalizedRecommendation,
+            );
           return recursivelyFreeze({
             ...base,
             sourceKind: 'phase2-outfit-truth' as const,
@@ -713,12 +749,12 @@ export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext
               finalized: true as const,
             },
             producerSeed: {
-              version: OUTFIT_BUNDLE_PRODUCER_SEED_VERSION,
+              seedVersion: OUTFIT_BUNDLE_PRODUCER_SEED_VERSION,
               sourceContextId: plannedContextId,
               transitionContextId: canonical.transitionContextId,
               recommendationId,
               recommendationFingerprint,
-              recommendInput: canonical.recommendInput,
+              input: canonical.recommendInput,
               finalizedRecommendation: canonical.finalizedRecommendation,
             },
           });
@@ -759,7 +795,7 @@ export function isPlannedOutfitContext(value: unknown): value is PlannedOutfitCo
       : null;
     const source = producerSeed
       ? {
-          recommendInput: ownDataValue(producerSeed, 'recommendInput', 'producerSeed.recommendInput'),
+          recommendInput: ownDataValue(producerSeed, 'input', 'producerSeed.input'),
           finalizedRecommendation: ownDataValue(producerSeed, 'finalizedRecommendation', 'producerSeed.finalizedRecommendation'),
         }
       : sourceKind === 'phase1-legacy'

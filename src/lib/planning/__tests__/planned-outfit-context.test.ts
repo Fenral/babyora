@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { createOutfitTruthSnapshot } from '../../outfit/outfit-truth.js';
 import { recommend } from '../../wool-layers/recommend.js';
+import type { Recommendation } from '../../wool-layers/types.js';
 import {
   planningAccessFixture,
   planningChildFixture,
@@ -159,12 +161,21 @@ describe('Planned Outfit exact-context contracts', () => {
     if (context.sourceKind !== 'phase2-outfit-truth') throw new Error('expected Phase-2 context');
     const { producerSeed } = context;
     expect(producerSeed).toMatchObject({
-      version: 1,
+      seedVersion: 1,
       sourceContextId: context.plannedContextId,
       transitionContextId: context.transitionContextId,
-      recommendInput: original.recommendInput,
+      input: original.recommendInput,
       finalizedRecommendation: original.finalizedRecommendation,
     });
+    expect(Object.keys(producerSeed)).toEqual([
+      'seedVersion',
+      'sourceContextId',
+      'transitionContextId',
+      'recommendationId',
+      'recommendationFingerprint',
+      'input',
+      'finalizedRecommendation',
+    ]);
     expect(producerSeed.recommendationId).toBe(context.recommendation.id);
     expect(producerSeed.recommendationFingerprint).toBe(context.recommendation.fingerprint);
     expect(context.recommendation.orderedGarments).toEqual(
@@ -187,15 +198,176 @@ describe('Planned Outfit exact-context contracts', () => {
     input.recommendInput.context.bilstol = true;
     input.finalizedRecommendation.layers[0]!.items[0] = 'Mutert lag';
     input.finalizedRecommendation.notes.push('Mutert note');
-    expect(producerSeed.recommendInput.weather.humidity).toBe(72);
-    expect(producerSeed.recommendInput.context?.bilstol).toBe(false);
+    expect(producerSeed.input.weather.humidity).toBe(72);
+    expect(producerSeed.input.context?.bilstol).toBe(false);
     expect(producerSeed.finalizedRecommendation.layers[0]!.items[0]).not.toBe('Mutert lag');
     expect(producerSeed.finalizedRecommendation.notes).not.toContain('Mutert note');
   });
 
+  it('matches canonical outfit-truth recommendation provenance exactly', () => {
+    const source = canonicalCompleteInput();
+    const context = createPlannedOutfitContext(source);
+    expect(context.sourceKind).toBe('phase2-outfit-truth');
+    if (context.sourceKind !== 'phase2-outfit-truth') throw new Error('expected Phase-2 context');
+    const canonical = createOutfitTruthSnapshot({
+      transitionContextId: context.producerSeed.transitionContextId,
+      input: context.producerSeed.input,
+      finalizedRecommendation: context.producerSeed.finalizedRecommendation as Recommendation,
+      pose: 'sitting',
+    });
+    expect(canonical.kind).toBe('supported');
+    if (canonical.kind !== 'supported') throw new Error('expected supported canonical truth');
+    expect(context.producerSeed.recommendationId).toBe(canonical.snapshot.recommendationId);
+    expect(context.producerSeed.recommendationFingerprint).toBe(
+      canonical.snapshot.recommendationFingerprint,
+    );
+
+    const same = createPlannedOutfitContext(structuredClone(source));
+    expect(same.sourceKind).toBe('phase2-outfit-truth');
+    if (same.sourceKind !== 'phase2-outfit-truth') throw new Error('expected Phase-2 context');
+    expect(same.plannedContextId).toBe(context.plannedContextId);
+    expect(same.producerSeed.recommendationId).toBe(context.producerSeed.recommendationId);
+    expect(same.producerSeed.recommendationFingerprint).toBe(
+      context.producerSeed.recommendationFingerprint,
+    );
+
+    const changedTransition = structuredClone(source);
+    changedTransition.transitionContextId = 'transition-canonical-12';
+    const transitioned = createPlannedOutfitContext(changedTransition);
+    expect(transitioned.sourceKind).toBe('phase2-outfit-truth');
+    if (transitioned.sourceKind !== 'phase2-outfit-truth') throw new Error('expected Phase-2 context');
+    expect(transitioned.plannedContextId).not.toBe(context.plannedContextId);
+    expect(transitioned.producerSeed.recommendationId).toBe(context.producerSeed.recommendationId);
+    expect(transitioned.producerSeed.recommendationFingerprint).toBe(
+      context.producerSeed.recommendationFingerprint,
+    );
+    const canonicalTransitioned = createOutfitTruthSnapshot({
+      transitionContextId: transitioned.producerSeed.transitionContextId,
+      input: transitioned.producerSeed.input,
+      finalizedRecommendation:
+        transitioned.producerSeed.finalizedRecommendation as Recommendation,
+      pose: 'sitting',
+    });
+    expect(canonicalTransitioned.kind).toBe('supported');
+    if (canonicalTransitioned.kind !== 'supported') {
+      throw new Error('expected supported canonical truth');
+    }
+    expect(transitioned.producerSeed.recommendationId).toBe(
+      canonicalTransitioned.snapshot.recommendationId,
+    );
+    expect(transitioned.producerSeed.recommendationFingerprint).toBe(
+      canonicalTransitioned.snapshot.recommendationFingerprint,
+    );
+    expect(canonicalTransitioned.snapshot.snapshotId).not.toBe(canonical.snapshot.snapshotId);
+
+    const changedInput = structuredClone(source);
+    changedInput.recommendInput.weather.tempC = 2;
+    changedInput.weather.tempC = 2;
+    changedInput.finalizedRecommendation = recommend(changedInput.recommendInput);
+    const changedInputContext = createPlannedOutfitContext(changedInput);
+    expect(changedInputContext.sourceKind).toBe('phase2-outfit-truth');
+    if (changedInputContext.sourceKind !== 'phase2-outfit-truth') throw new Error('expected Phase-2 context');
+    expect(changedInputContext.producerSeed.recommendationId).not.toBe(
+      context.producerSeed.recommendationId,
+    );
+    expect(changedInputContext.producerSeed.recommendationFingerprint).not.toBe(
+      context.producerSeed.recommendationFingerprint,
+    );
+    const canonicalChangedInput = createOutfitTruthSnapshot({
+      transitionContextId: changedInputContext.producerSeed.transitionContextId,
+      input: changedInputContext.producerSeed.input,
+      finalizedRecommendation:
+        changedInputContext.producerSeed.finalizedRecommendation as Recommendation,
+      pose: 'sitting',
+    });
+    expect(canonicalChangedInput.kind).toBe('supported');
+    if (canonicalChangedInput.kind !== 'supported') {
+      throw new Error('expected supported canonical truth');
+    }
+    expect(changedInputContext.producerSeed.recommendationId).toBe(
+      canonicalChangedInput.snapshot.recommendationId,
+    );
+    expect(changedInputContext.producerSeed.recommendationFingerprint).toBe(
+      canonicalChangedInput.snapshot.recommendationFingerprint,
+    );
+
+    const changedRecommendation = structuredClone(source);
+    changedRecommendation.finalizedRecommendation.layers[0]!.items.push('ekstra testlag');
+    const changedRecommendationContext = createPlannedOutfitContext(changedRecommendation);
+    expect(changedRecommendationContext.sourceKind).toBe('phase2-outfit-truth');
+    if (changedRecommendationContext.sourceKind !== 'phase2-outfit-truth') {
+      throw new Error('expected Phase-2 context');
+    }
+    expect(changedRecommendationContext.producerSeed.recommendationId).not.toBe(
+      context.producerSeed.recommendationId,
+    );
+    expect(changedRecommendationContext.producerSeed.recommendationFingerprint).not.toBe(
+      context.producerSeed.recommendationFingerprint,
+    );
+    const canonicalChangedRecommendation = createOutfitTruthSnapshot({
+      transitionContextId: changedRecommendationContext.producerSeed.transitionContextId,
+      input: changedRecommendationContext.producerSeed.input,
+      finalizedRecommendation:
+        changedRecommendationContext.producerSeed.finalizedRecommendation as Recommendation,
+      pose: 'sitting',
+    });
+    expect(canonicalChangedRecommendation.kind).toBe('supported');
+    if (canonicalChangedRecommendation.kind !== 'supported') {
+      throw new Error('expected supported canonical truth');
+    }
+    expect(changedRecommendationContext.producerSeed.recommendationId).toBe(
+      canonicalChangedRecommendation.snapshot.recommendationId,
+    );
+    expect(changedRecommendationContext.producerSeed.recommendationFingerprint).toBe(
+      canonicalChangedRecommendation.snapshot.recommendationFingerprint,
+    );
+  });
+
+  it('preserves a complete producer seed for canonical unsupported cardinality', () => {
+    const source = canonicalCompleteInput();
+    source.recommendInput.weather = {
+      feelsLikeC: -30,
+      tempC: -30,
+      windMs: 8,
+      precipMmH: 0,
+      humidity: 72,
+      symbolCode: 'cloudy',
+      uvIndex: 0,
+    };
+    source.weather = {
+      feelsLikeC: -30,
+      tempC: -30,
+      windMs: 8,
+      precipMmH: 0,
+      symbolCode: 'cloudy',
+    };
+    source.recommendInput.child = { ageMonths: 0, canRoll: false };
+    source.child.ageMonths = 0;
+    (source.recommendInput as { vognMode: 'awake' | 'sleeping' }).vognMode = 'awake';
+    (source as { vognMode: 'awake' | 'sleeping' }).vognMode = 'awake';
+    source.finalizedRecommendation = recommend(source.recommendInput);
+    const canonical = createOutfitTruthSnapshot({
+      transitionContextId: source.transitionContextId,
+      input: source.recommendInput,
+      finalizedRecommendation: source.finalizedRecommendation,
+      pose: 'sitting',
+    });
+    expect(canonical.kind).toBe('unsupported-cardinality');
+
+    const context = createPlannedOutfitContext(source);
+    expect(context.sourceKind).toBe('phase2-outfit-truth');
+    if (context.sourceKind !== 'phase2-outfit-truth') throw new Error('expected Phase-2 context');
+    expect(context.producerSeed.input).toEqual(source.recommendInput);
+    expect(context.producerSeed.finalizedRecommendation).toEqual(source.finalizedRecommendation);
+    expect(context.producerSeed.recommendationId).toMatch(/^outfit-recommendation-v1:[0-9a-f]{16}$/u);
+    expect(context.producerSeed.recommendationFingerprint).toMatch(
+      /^outfit-recommendation-fingerprint-v1:[0-9a-f]{16}$/u,
+    );
+  });
+
   it('fails closed on flat, injected, mismatched, cyclic, and accessor-backed Phase-2 seeds', () => {
     const valid = canonicalCompleteInput();
-    const injected = { ...valid, outfitProducerSeed: { version: 1 } };
+    const injected = { ...valid, outfitProducerSeed: { seedVersion: 1 } };
     const flattened = {
       ...valid,
       recommendation: completeInput().recommendation,
