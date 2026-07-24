@@ -39,6 +39,35 @@ const semanticCommitAliasKeys = [
   'source_phase2_commit',
 ] as const;
 
+const commitIdentifierAliasTokenSets = [
+  ['candidate', 'commit', 'id'],
+  ['source', 'commit', 'id'],
+  ['phase1', 'candidate', 'commit', 'id'],
+  ['phase1', 'sha'],
+  ['source', 'sha'],
+  ['candidate', 'oid'],
+  ['candidate', 'revision'],
+] as const;
+
+const commitIdentifierAliasKeys = Object.freeze([
+  ...new Set(
+    commitIdentifierAliasTokenSets.flatMap((tokens) => {
+      const capitalized = tokens.map(
+        (token) => `${token[0].toUpperCase()}${token.slice(1)}`,
+      );
+      return [
+        tokens.join('_'),
+        tokens.join('-'),
+        tokens.join(''),
+        `${tokens[0]}${capitalized.slice(1).join('')}`,
+        capitalized.join(''),
+        tokens.join('_').toUpperCase(),
+        tokens.join('-').toUpperCase(),
+      ];
+    }),
+  ),
+]);
+
 type Harness = {
   parent: string;
   repository: string;
@@ -466,6 +495,104 @@ describe('pure exact-label and path guards', () => {
     }
   });
 
+  it('allows only the canonical Phase 1 key for every commit-shaped scalar', () => {
+    const candidateSha = '1'.repeat(40);
+    const conflictingSha = 'b'.repeat(40);
+    const canonical = [
+      '---',
+      'status: PASS',
+      `candidate_sha: ${candidateSha}`,
+      'candidate_revision_status: reviewed',
+      'source_sha_algorithm: sha1',
+      'candidate_oid_format: git',
+      `validation_evidence_sha256: ${'a'.repeat(64)}`,
+    ];
+    const parseWith = (line: string) =>
+      parsePhase1CandidateSummary([...canonical, line, '---'].join('\n'));
+
+    expect(
+      parsePhase1CandidateSummary([...canonical, '---'].join('\n')),
+    ).toEqual({ phase1CandidateSha: candidateSha });
+
+    for (const alias of commitIdentifierAliasKeys) {
+      for (const nonCommitValue of [
+        'reviewed',
+        'g'.repeat(40),
+        'a'.repeat(39),
+        'a'.repeat(41),
+      ]) {
+        expect(parseWith(`${alias}: ${nonCommitValue}`)).toEqual({
+          phase1CandidateSha: candidateSha,
+        });
+      }
+
+      for (const commitLikeValue of [
+        conflictingSha,
+        candidateSha,
+        conflictingSha.toUpperCase(),
+        `"${conflictingSha}"`,
+        `'${conflictingSha}'`,
+      ]) {
+        expect(() =>
+          parseWith(`${alias}: ${commitLikeValue}`),
+        ).toThrow(/candidate SHA alias/i);
+      }
+    }
+  });
+
+  it('allows only canonical Phase 2 keys for every commit-shaped scalar', () => {
+    const phase2Sha = '2'.repeat(40);
+    const phase1Sha = '1'.repeat(40);
+    const conflictingSha = 'b'.repeat(40);
+    const canonical = [
+      '---',
+      'status: PASS',
+      `phase2_candidate_sha: ${phase2Sha}`,
+      'feature_flag: true',
+      `phase1_candidate_sha: ${phase1Sha}`,
+      'candidate_revision_status: reviewed',
+      'source_sha_algorithm: sha1',
+      'candidate_oid_format: git',
+      `validation_evidence_sha256: ${'a'.repeat(64)}`,
+    ];
+    const parseWith = (line: string) =>
+      parsePhase2HandoffSummary([...canonical, line, '---'].join('\n'));
+
+    expect(
+      parsePhase2HandoffSummary([...canonical, '---'].join('\n')),
+    ).toEqual({
+      phase2CandidateSha: phase2Sha,
+      featureFlag: true,
+    });
+
+    for (const alias of commitIdentifierAliasKeys) {
+      for (const nonCommitValue of [
+        'reviewed',
+        'g'.repeat(40),
+        'a'.repeat(39),
+        'a'.repeat(41),
+      ]) {
+        expect(parseWith(`${alias}: ${nonCommitValue}`)).toEqual({
+          phase2CandidateSha: phase2Sha,
+          featureFlag: true,
+        });
+      }
+
+      for (const commitLikeValue of [
+        conflictingSha,
+        phase2Sha,
+        phase1Sha,
+        conflictingSha.toUpperCase(),
+        `"${conflictingSha}"`,
+        `'${conflictingSha}'`,
+      ]) {
+        expect(() =>
+          parseWith(`${alias}: ${commitLikeValue}`),
+        ).toThrow(/candidate SHA alias/i);
+      }
+    }
+  });
+
   it('rejects duplicate or aliased candidate JSON labels', () => {
     const sha = '2'.repeat(40);
     const hash = 'a'.repeat(64);
@@ -855,6 +982,54 @@ describe('candidate mode', () => {
       expectFailure(runScript(harness, args), /candidate SHA alias/i);
     }
   });
+
+  it('rejects every commit-shaped Phase 1 identifier through candidate mode', () => {
+    const harness = createHarness();
+    const aliasSummary = join(
+      harness.evidenceRoot,
+      'commit shaped identifier phase1.md',
+    );
+    const args = replaceOption(
+      candidateArgs(harness),
+      '--phase1-summary',
+      aliasSummary,
+    );
+
+    writeFileSync(
+      aliasSummary,
+      [
+        '---',
+        'status: PASS',
+        `candidate_sha: ${harness.phase1Sha}`,
+        'candidate_revision: reviewed',
+        'source_sha: not-recorded',
+        'candidate_oid: unavailable',
+        `validation_evidence_sha256: ${'a'.repeat(64)}`,
+        '---',
+      ].join('\n'),
+      'utf8',
+    );
+    expect(runScript(harness, args).status).toBe(0);
+
+    for (const alias of commitIdentifierAliasKeys) {
+      for (const value of [harness.candidateSha, harness.phase1Sha]) {
+        writeFileSync(
+          aliasSummary,
+          [
+            '---',
+            'status: PASS',
+            `candidate_sha: ${harness.phase1Sha}`,
+            'candidate_revision_status: reviewed',
+            `${alias}: ${value}`,
+            '---',
+          ].join('\n'),
+          'utf8',
+        );
+
+        expectFailure(runScript(harness, args), /candidate SHA alias/i);
+      }
+    }
+  }, 30_000);
 });
 
 describe('phase2-handoff mode', () => {
@@ -968,6 +1143,37 @@ describe('phase2-handoff mode', () => {
       );
     }
   });
+
+  it('rejects every commit-shaped Phase 2 identifier through handoff mode', () => {
+    const harness = createHarness();
+    const controlSummaryPath = writePhase2Summary(harness, [
+      'status: PASS',
+      `phase2_candidate_sha: ${harness.phase1Sha}`,
+      'feature_flag: true',
+      `phase1_candidate_sha: ${harness.phase1Sha}`,
+      'candidate_revision: reviewed',
+      'source_sha: not-recorded',
+      'candidate_oid: unavailable',
+      `validation_evidence_sha256: ${'a'.repeat(64)}`,
+    ]);
+
+    expect(runPhase2(harness, controlSummaryPath).status).toBe(0);
+
+    for (const alias of commitIdentifierAliasKeys) {
+      for (const value of [harness.candidateSha, harness.phase1Sha]) {
+        const summaryPath = writePhase2Summary(harness, [
+          'status: PASS',
+          `phase2_candidate_sha: ${harness.phase1Sha}`,
+          'feature_flag: true',
+          `phase1_candidate_sha: ${harness.phase1Sha}`,
+          'candidate_revision_status: reviewed',
+          `${alias}: ${value}`,
+        ]);
+
+        expectFailure(runPhase2(harness, summaryPath), /candidate SHA alias/i);
+      }
+    }
+  }, 30_000);
 
   it('rejects malformed, aliased, disabled, missing, and nonancestor handoffs', () => {
     const cases = [
