@@ -38,6 +38,9 @@ import {
   type PlanningVerdictView,
   type PlanningWeatherRow,
 } from '../lib/planning/plan-view-model';
+import { buildSnartDateWindow, isAgeEligibleForWholeWindow } from '../lib/planning/snart-date-window';
+import { buildSnartPlan } from '../lib/planning/snart';
+import { createSnartSessionEvaluator } from '../lib/planning/snart-session';
 import {
   resolvePlanningViewAccess,
   resolveRuntimeCapabilityAccess,
@@ -58,7 +61,7 @@ const DEFAULT_LAT = 60.8867;
 const DEFAULT_LON = 11.5614;
 const FALLBACK_REF_HOUR = 12;
 
-type ViewTab = 'today' | 'tenday';
+type ViewTab = 'today' | 'tenday' | 'soon';
 type Activity = 'utelek' | 'vogn';
 type VognMode = 'awake' | 'sleeping';
 type TempAxis = 'kald' | 'mild' | 'varm';
@@ -314,7 +317,42 @@ function PlanleggData({
     authenticated: false,
     loading: false,
   }, PLUS_FEATURE_AVAILABILITY), [isPremium]);
-  const viewAccess = tab === 'today' ? todayAccess : weekAccess;
+  const soonAccess = useMemo(() => resolvePlanningViewAccess('soon', {
+    isPlus: isPremium,
+    authenticated: false,
+    loading: accessLoading,
+  }, PLUS_FEATURE_AVAILABILITY), [accessLoading, isPremium]);
+  const viewAccess = tab === 'today' ? todayAccess : tab === 'tenday' ? weekAccess : soonAccess;
+  const snartGeneration = useRef(0);
+  const lastSnartProfile = useRef<string | null>(null);
+  const snartEvaluator = useRef(createSnartSessionEvaluator({
+    resolveExactHome: (home) => {
+      const key = `no-city:v1:${encodeURIComponent(home.city.trim().toLocaleLowerCase('nb-NO'))}:${Math.round(home.lat * 10_000)}:${Math.round(home.lon * 10_000)}`;
+      return { homePlaceKey: key, climateProfileId: `snart-profile:v2:${key}` };
+    },
+    buildModel: buildSnartPlan,
+  }));
+  const snartProfileScope = active?.id ?? '__none__';
+  if (lastSnartProfile.current !== snartProfileScope) {
+    lastSnartProfile.current = snartProfileScope;
+    snartGeneration.current += 1;
+    snartEvaluator.current.teardown();
+  }
+  const snartWindow = new Date().toLocaleDateString('en-CA', { timeZone: PLAN_TIME_ZONE });
+  const soonWindow = buildSnartDateWindow(snartWindow, PLAN_TIME_ZONE);
+  const soonAgeEligible = activeDob !== undefined && soonWindow.status === 'available'
+    ? isAgeEligibleForWholeWindow(activeDob, soonWindow.endLocalDate)
+    : false;
+  // The session evaluator is deliberately evaluated before any model payload is
+  // constructed; with the live false implementation flag this returns at once.
+  snartEvaluator.current.evaluate({
+    allowed: soonAccess.access.allowed,
+    generation: String(snartGeneration.current),
+    profileVersion: 'snart-home-key@1',
+    window: snartWindow,
+    home: { city: fixedHome.city, lat: fixedHome.lat, lon: fixedHome.lon },
+    ageEligibleForWholeWindow: soonAgeEligible,
+  });
   const [weekAccessTransition, setWeekAccessTransition] = useState(() => ({
     state: weekAccess.access.state,
     generation: 0,
