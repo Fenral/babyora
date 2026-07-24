@@ -1,5 +1,4 @@
 import { tempAxisFor, type TempAxis } from './temp-axis.js';
-import { symbolToTheme } from './weather-theme/symbolToTheme.js';
 
 export type HomeAtmospherePalette = 'cold' | 'mild' | 'warm';
 export type HomeAtmosphereLighting = 'day' | 'night' | 'polar-twilight' | 'neutral';
@@ -36,6 +35,91 @@ export interface HomeAtmosphere {
 }
 
 const PROVIDER_LIGHTING_SUFFIX = /_(day|night|polartwilight)$/iu;
+const PROVIDER_LIGHTING_VARIANTS = ['day', 'night', 'polartwilight'] as const;
+
+const SUFFIXED_SUN_CODES = ['clearsky', 'fair'] as const;
+const SUFFIXED_CLOUD_CODES = ['partlycloudy'] as const;
+const PLAIN_CLOUD_CODES = ['cloudy'] as const;
+const PLAIN_FOG_CODES = ['fog'] as const;
+const PLAIN_RAIN_CODES = ['heavyrain', 'lightrain', 'rain'] as const;
+const SUFFIXED_RAIN_CODES = [
+  'heavyrainshowers',
+  'lightrainshowers',
+  'rainshowers',
+] as const;
+const PLAIN_SNOW_CODES = [
+  'heavysnow',
+  'lightsleet',
+  'snow',
+  'lightsnow',
+  'heavysleet',
+  'sleet',
+] as const;
+const SUFFIXED_SNOW_CODES = [
+  'lightsnowshowers',
+  'heavysleetshowers',
+  'lightsleetshowers',
+  'snowshowers',
+  'sleetshowers',
+  'heavysnowshowers',
+] as const;
+const PLAIN_STORM_CODES = [
+  'heavyrainandthunder',
+  'heavysnowandthunder',
+  'rainandthunder',
+  'lightsnowandthunder',
+  'heavysleetandthunder',
+  'sleetandthunder',
+  'lightrainandthunder',
+  'lightsleetandthunder',
+  'snowandthunder',
+] as const;
+const SUFFIXED_STORM_CODES = [
+  'lightssnowshowersandthunder',
+  'heavysleetshowersandthunder',
+  'heavyrainshowersandthunder',
+  'snowshowersandthunder',
+  'rainshowersandthunder',
+  'lightrainshowersandthunder',
+  'lightssleetshowersandthunder',
+  'sleetshowersandthunder',
+  'heavysnowshowersandthunder',
+] as const;
+
+function buildProviderConditionMap(): ReadonlyMap<string, HomeAtmosphereCondition> {
+  const map = new Map<string, HomeAtmosphereCondition>();
+  const addPlain = (
+    condition: HomeAtmosphereCondition,
+    codes: readonly string[],
+  ): void => {
+    for (const code of codes) map.set(code, condition);
+  };
+  const addSuffixed = (
+    condition: HomeAtmosphereCondition,
+    codes: readonly string[],
+  ): void => {
+    for (const code of codes) {
+      for (const lighting of PROVIDER_LIGHTING_VARIANTS) {
+        map.set(`${code}_${lighting}`, condition);
+      }
+    }
+  };
+
+  addSuffixed('sun', SUFFIXED_SUN_CODES);
+  addSuffixed('cloud', SUFFIXED_CLOUD_CODES);
+  addPlain('cloud', PLAIN_CLOUD_CODES);
+  addPlain('fog', PLAIN_FOG_CODES);
+  addPlain('rain', PLAIN_RAIN_CODES);
+  addSuffixed('rain', SUFFIXED_RAIN_CODES);
+  addPlain('snow', PLAIN_SNOW_CODES);
+  addSuffixed('snow', SUFFIXED_SNOW_CODES);
+  addPlain('storm', PLAIN_STORM_CODES);
+  addSuffixed('storm', SUFFIXED_STORM_CODES);
+
+  return map;
+}
+
+const PROVIDER_CONDITION_BY_CODE = buildProviderConditionMap();
 
 function finiteNumber(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
@@ -73,23 +157,8 @@ function lightingFor(symbolCode: string | undefined): HomeAtmosphereLighting {
 }
 
 function conditionFor(symbolCode: string | undefined): HomeAtmosphereCondition {
-  switch (symbolToTheme(symbolCode)) {
-    case 'rainy':
-      return 'rain';
-    case 'snowy':
-      return 'snow';
-    case 'partly':
-    case 'cloudy':
-      return 'cloud';
-    case 'sunny':
-      return 'sun';
-    case 'foggy':
-      return 'fog';
-    case 'stormy':
-      return 'storm';
-    case 'default':
-      return 'unknown';
-  }
+  if (symbolCode === undefined) return 'unknown';
+  return PROVIDER_CONDITION_BY_CODE.get(symbolCode) ?? 'unknown';
 }
 
 function intensityFor(actualTemperatureC: number | undefined): HomeAtmosphereIntensity {
@@ -116,8 +185,8 @@ export function resolveHomeAtmosphere(input?: HomeAtmosphereInput | null): HomeA
   const symbolCode = normalizedSymbol(safeInput?.symbolCode);
 
   const palette = paletteFor(tempAxisFor(perceivedTemperatureC, actualTemperatureC));
-  const lighting = lightingFor(symbolCode);
   const condition = conditionFor(symbolCode);
+  const lighting = condition === 'unknown' ? 'neutral' : lightingFor(symbolCode);
   const intensity = intensityFor(actualTemperatureC);
 
   const layers: HomeAtmosphereLayer[] = [

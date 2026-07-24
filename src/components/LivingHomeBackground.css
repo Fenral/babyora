@@ -56,7 +56,7 @@
   opacity: 1;
   transform: translate3d(0, 0, 0);
   animation-name: ba-living-home-settle;
-  animation-duration: var(--dur-state, 220ms);
+  animation-duration: 180ms;
   animation-timing-function: var(--ease-out);
   animation-iteration-count: 1;
   animation-fill-mode: both;
@@ -82,7 +82,7 @@
 }
 
 .ba-living-home-background__layer[data-home-atmosphere-layer='condition'] {
-  animation-delay: 40ms;
+  animation-delay: 30ms;
 }
 
 .ba-living-home-background__layer[data-variant='sun'] {
@@ -149,7 +149,7 @@
 }
 
 .ba-living-home-background__layer[data-home-atmosphere-layer='lighting'] {
-  animation-delay: 80ms;
+  animation-delay: 60ms;
 }
 
 .ba-living-home-background__layer[data-variant='day'] {

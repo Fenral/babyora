@@ -14,7 +14,7 @@ function layerCount(markup: string): number {
 }
 
 function millisecondsFor(property: 'animation-duration' | 'animation-delay'): number[] {
-  return [...backgroundCss.matchAll(new RegExp(`${property}:\\\\s*(\\\\d+)ms`, 'gu'))].map(
+  return [...backgroundCss.matchAll(new RegExp(`${property}:\\s*(\\d+)ms`, 'gu'))].map(
     (match) => Number(match[1]),
   );
 }
