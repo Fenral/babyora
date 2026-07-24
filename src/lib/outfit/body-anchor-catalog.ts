@@ -120,44 +120,48 @@ const REGION_CATALOG_IDS = {
   Record<Exclude<BodyRegion, 'unknown'>, readonly GarmentId[]>
 >;
 
-const BODY_REGION_BY_CATALOG_ID: Readonly<Record<GarmentId, Exclude<BodyRegion, 'unknown'>>> =
-  Object.freeze(
-    Object.fromEntries(
-      Object.entries(REGION_CATALOG_IDS).flatMap(([region, ids]) =>
-        ids.map((id) => [id, region]),
-      ),
-    ),
-  );
+const BODY_REGION_BY_CATALOG_ID: Readonly<
+  Record<GarmentId, Exclude<BodyRegion, 'unknown'>>
+> = Object.freeze(
+  Object.entries(REGION_CATALOG_IDS).reduce<
+    Record<GarmentId, Exclude<BodyRegion, 'unknown'>>
+  >((catalog, [region, ids]) => {
+    for (const id of ids) {
+      catalog[id] = region as Exclude<BodyRegion, 'unknown'>;
+    }
+    return catalog;
+  }, {}),
+);
 
-const ANCHOR_POINTS: Readonly<
+const ANCHOR_POINTS = Object.freeze({
+  standing: Object.freeze({
+    head: [0.5, 0.12] as const,
+    neck: [0.5, 0.24] as const,
+    torso: [0.5, 0.38] as const,
+    arms: [0.5, 0.42] as const,
+    hands: [0.5, 0.56] as const,
+    hips: [0.5, 0.58] as const,
+    legs: [0.5, 0.74] as const,
+    feet: [0.5, 0.94] as const,
+    whole_body: [0.5, 0.5] as const,
+  }),
+  sitting: Object.freeze({
+    head: [0.5, 0.14] as const,
+    neck: [0.5, 0.27] as const,
+    torso: [0.5, 0.4] as const,
+    arms: [0.5, 0.44] as const,
+    hands: [0.5, 0.58] as const,
+    hips: [0.5, 0.58] as const,
+    legs: [0.5, 0.7] as const,
+    feet: [0.5, 0.84] as const,
+    whole_body: [0.5, 0.52] as const,
+  }),
+}) satisfies Readonly<
   Record<
     OutfitAvatarPose,
     Readonly<Record<Exclude<BodyRegion, 'unknown'>, readonly [number, number]>>
   >
-> = Object.freeze({
-  standing: Object.freeze({
-    head: [0.5, 0.12],
-    neck: [0.5, 0.24],
-    torso: [0.5, 0.38],
-    arms: [0.5, 0.42],
-    hands: [0.5, 0.56],
-    hips: [0.5, 0.58],
-    legs: [0.5, 0.74],
-    feet: [0.5, 0.94],
-    whole_body: [0.5, 0.5],
-  }),
-  sitting: Object.freeze({
-    head: [0.5, 0.14],
-    neck: [0.5, 0.27],
-    torso: [0.5, 0.4],
-    arms: [0.5, 0.44],
-    hands: [0.5, 0.58],
-    hips: [0.5, 0.58],
-    legs: [0.5, 0.7],
-    feet: [0.5, 0.84],
-    whole_body: [0.5, 0.52],
-  }),
-});
+>;
 
 function makeAnchor(
   region: Exclude<BodyRegion, 'unknown'>,
