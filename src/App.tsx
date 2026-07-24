@@ -174,6 +174,7 @@ export default function App(): ReactElement {
     nextToken: 0,
     requestedView: null,
   });
+  const mainRef = useRef<HTMLElement | null>(null);
   const themeMode = useTheme((s) => s.mode);
   const { isPremium, loading: accessLoading } = useAccess();
   const automaticLocationAccess = useMemo(
@@ -236,6 +237,7 @@ export default function App(): ReactElement {
       setDrill(null);
       setTab('plan');
       setRequestedPlanViewState((current) => issueRequestedPlanningView(current, 'snart'));
+      window.requestAnimationFrame(() => mainRef.current?.focus());
       return;
     }
     setDrill({ kind: 'guide', target });
@@ -272,7 +274,6 @@ export default function App(): ReactElement {
 
   const reduceMotion = prefersReducedMotion();
 
-  const mainRef = useRef<HTMLElement | null>(null);
   const onBackRef = useRef<(() => void) | null>(null);
 
   const closePaakledning = useCallback(() => {

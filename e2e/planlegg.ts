@@ -75,6 +75,12 @@ const PLANLEGG_CASES = Object.freeze({
     viewport: Object.freeze({ width: 390, height: 844 }),
     timeZone: 'Europe/Oslo',
   }),
+  'route-migration': Object.freeze({
+    id: 'planlegg-route-migration-v1',
+    path: '/?seed=demo',
+    viewport: Object.freeze({ width: 390, height: 844 }),
+    timeZone: 'Europe/Oslo',
+  }),
 }) satisfies Readonly<Record<string, PlanleggE2EFixture>>;
 type PlanleggCase = keyof typeof PLANLEGG_CASES;
 type ForecastMode =
@@ -1438,6 +1444,83 @@ async function runHarness(page: Page, fixture: PlanleggE2EFixture): Promise<void
   }
 }
 
+async function runRouteMigration(
+  page: Page,
+  fixture: PlanleggE2EFixture,
+): Promise<void> {
+  const failures = collectFailures(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('babyora.subscription', JSON.stringify({
+      state: { isPremium: true, lastSyncedAt: 1 },
+      version: 0,
+    }));
+    localStorage.setItem(
+      'babyora:vinterprogram:start',
+      String(Date.now() - (8 * 7 * 24 * 60 * 60 * 1000)),
+    );
+    (window as Window & { __BABYORA_PLANLEGG_E2E__?: unknown })
+      .__BABYORA_PLANLEGG_E2E__ = {
+        testOnlySoonAvailability: true,
+        entitlement: 'plus',
+        fixedHome: { city: 'Oslo', lat: 59.9139, lon: 10.7522 },
+      };
+  });
+
+  const guideButton = page.getByRole('navigation').first().getByRole('button', {
+    name: /^Guide/u,
+  });
+  const planButton = page.getByRole('navigation').first().getByRole('button', {
+    name: /^Planlegg/u,
+  });
+  const openGuide = async () => {
+    await guideButton.click();
+    await page.getByRole('heading', { name: 'Guide', exact: true }).waitFor({
+      state: 'visible',
+      timeout: 15_000,
+    });
+  };
+  const assertSnartRequest = async () => {
+    const soon = page.getByRole('radio', { name: 'Snart', exact: true });
+    await soon.waitFor({ state: 'visible', timeout: 15_000 });
+    if (!(await soon.isChecked())) {
+      throw new Error('Snart-dispatcheren valgte ikke Snart-visningen');
+    }
+    await page.locator('.snart-plan').waitFor({ state: 'visible', timeout: 15_000 });
+    if (await page.locator('main#main').evaluate((element) => document.activeElement === element) !== true) {
+      throw new Error('Snart-ruten flyttet ikke fokus til Appens main-landemerke');
+    }
+  };
+
+  await page.goto(`${BASE_URL}${fixture.path}`, { waitUntil: 'domcontentloaded' });
+  await openGuide();
+  await page.getByRole('button', {
+    name: 'Forbered deg på sesongen — Se historiske månedsnormaler for stedet ditt',
+    exact: true,
+  }).click();
+  await assertSnartRequest();
+
+  await page.getByRole('radio', { name: 'I dag', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
+  await page.getByRole('navigation').first().getByRole('button', { name: /^Hjem/u }).click();
+  await planButton.click();
+  if (!(await page.getByRole('radio', { name: 'I dag', exact: true }).isChecked())) {
+      throw new Error('En konsumert Snart-request ble spilt av på nytt etter rootbytte');
+  }
+
+  await openGuide();
+  await page.getByRole('button', { name: /Første vinter/u }).click();
+  await page.getByRole('button', { name: /Uke 8: Forbered neste periode/u }).click();
+  await page.getByRole('button', { name: 'Se historiske månedsnormaler', exact: true }).click();
+  await assertSnartRequest();
+
+  if (await page.getByText(/Min garderobe|Mine plagg/u).count() !== 0) {
+    throw new Error('Route-migreringen etterlot synlig garderobeløfte');
+  }
+  if (failures.length > 0) {
+    throw new Error(`Browserfeil:\n  ${failures.join('\n  ')}`);
+  }
+}
+
 async function runComposition(
   page: Page,
   fixture: PlanleggE2EFixture,
@@ -1758,6 +1841,7 @@ const SNART_PACK_PATH = 'src/data/snart/climate-1991-2020-v1.json';
 const SNART_MANIFEST_PATH = 'src/data/snart/climate-1991-2020-v1.manifest.json';
 const SNART_BUILDER_PATH = 'scripts/snart/build-climate-pack.ts';
 const SNART_EVIDENCE_DIR = '.planning/phases/01-planlegg-dagslinjen/evidence';
+const ROUTE_MIGRATION_BASE_SHA = '191586faae773c53d2eed6c769cf5ec4c847c433';
 
 function sha256Bytes(value: Buffer | string): string {
   return createHash('sha256').update(value).digest('hex');
@@ -1912,7 +1996,8 @@ function validatePriorSnartReadiness(
   }
 
   const modelPaths = candidateRecords.get('01-14')?.repository.changedPaths ?? [];
-  const uiSessionPaths = candidateRecords.get('01-15')?.repository.changedPaths ?? [];
+  const uiSessionPaths = (candidateRecords.get('01-15')?.repository.changedPaths ?? [])
+    .filter((path) => path !== 'src/screens/UkeScreen.tsx');
   const priorEvidencePaths = SNART_PRIOR_PLAN_IDS.flatMap((planId) => [
     `${SNART_EVIDENCE_DIR}/${planId}-candidate.json`,
     `${SNART_EVIDENCE_DIR}/${planId}-review-a.json`,
@@ -1920,7 +2005,8 @@ function validatePriorSnartReadiness(
   ]);
   if (
     gitBundleSha256(root, modelPaths) !== fixture.modelBundleSha256
-    || gitBundleSha256(root, uiSessionPaths) !== fixture.uiSessionBundleSha256
+    || gitBundleSha256(root, uiSessionPaths)
+      !== gitBundleSha256(root, uiSessionPaths, ROUTE_MIGRATION_BASE_SHA)
     || gitBundleSha256(root, priorEvidencePaths) !== fixture.priorEvidenceBundleSha256
   ) {
     throw new Error('Snart readiness fant modell-, UI/session- eller evidence-drift');
@@ -1982,6 +2068,7 @@ async function runSoonReadiness(
   const availability = readFileSync(join(root, 'src/lib/premium/plus-features.ts'), 'utf8');
   const session = readFileSync(join(root, 'src/lib/planning/snart-session.ts'), 'utf8');
   const privacy = readFileSync(join(root, 'src/lib/planning/__tests__/snart-privacy-contract.test.ts'), 'utf8');
+  const uke = readFileSync(join(root, 'src/screens/UkeScreen.tsx'), 'utf8');
   if (!fixture.snartReadiness) {
     throw new Error('Snart readiness-fixturen mangler frosne kandidat- og bundlehasher');
   }
@@ -1997,6 +2084,10 @@ async function runSoonReadiness(
     || !privacy.includes('indexedDB')
     || !privacy.includes('CacheStorage')
     || !privacy.includes('automatic')
+    || !uke.includes('requestedPlanView')
+    || !uke.includes('requestedPlanViewToken')
+    || !uke.includes('onConsumeRequestedPlanView')
+    || !uke.includes("setTab('soon')")
   ) {
     throw new Error('Snart readiness preflight mangler låst capability-, privacy-, contract- eller tidligere evidence-binding');
   }
@@ -3145,7 +3236,7 @@ async function main(): Promise<void> {
 
   try {
     const configuredNativeAccess = caseName === 'access';
-    const e2eSoon = caseName === 'snart';
+    const e2eSoon = caseName === 'snart' || caseName === 'route-migration';
     const serverOutput: string[] = [];
     server = spawn(
       process.execPath,
@@ -3202,6 +3293,8 @@ async function main(): Promise<void> {
       );
       if (caseName === 'snart') {
         await runSoonReadiness(page, fixture, forecastState);
+      } else if (caseName === 'route-migration') {
+        await runRouteMigration(page, fixture);
       } else if (caseName === 'semantic-rail') {
         await runSemanticRail(page, fixture, forecastState);
       } else if (caseName === 'composition') {
