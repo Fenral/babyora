@@ -1784,8 +1784,18 @@ async function runSoonReadiness(
     `requestfailed:${request.url()}:${request.failure()?.errorText ?? ''}`,
   ));
   await page.addInitScript(() => {
-    (window as Window & { __BABYORA_PLANLEGG_E2E__?: { testOnlySoonAvailability: boolean } })
-      .__BABYORA_PLANLEGG_E2E__ = { testOnlySoonAvailability: true };
+    const state = new URL(location.href).searchParams.get('snart-e2e') ?? 'plus';
+    const fixedHome = state === 'unsupported'
+      ? { city: 'Ukjent', lat: 60, lon: 11 }
+      : { city: 'Oslo', lat: 59.9139, lon: 10.7522 };
+    (window as Window & { __BABYORA_PLANLEGG_E2E__?: unknown })
+      .__BABYORA_PLANLEGG_E2E__ = {
+        testOnlySoonAvailability: true,
+        entitlement: state === 'loading' ? 'loading' : state === 'free' ? 'free' : 'plus',
+        fixedHome,
+        profileScope: state === 'profile-b' ? 'b' : 'a',
+        windowLocalDate: state === 'window-b' ? '2026-02-13' : '2026-02-12',
+      };
     const record = (kind: string, payload: unknown) => {
       const target = window as Window & { __babyoraSoonTransport?: string[] };
       target.__babyoraSoonTransport ??= [];
@@ -1857,7 +1867,7 @@ async function runSoonReadiness(
     throw new Error('Har allerede oppdaterte ikke den in-memory baserte modellen');
   }
   await page.reload();
-  await openPlanlegg(page, fixture.path);
+  await openPlanlegg(page, `${fixture.path}&entitlement=plus`);
   await page.getByRole('radio', { name: 'Snart', exact: true })
     .evaluate((radio) => (radio as HTMLInputElement).click());
   await ready.waitFor({ state: 'visible', timeout: 15_000 });
@@ -1875,7 +1885,7 @@ async function runSoonReadiness(
     throw new Error(`Snart lekket til browser-signal eller transport: ${leaked.join(', ')}`);
   }
 
-  await openPlanlegg(page, `${fixture.path}&access=free`);
+  await openPlanlegg(page, `${fixture.path}&snart-e2e=free`);
   const freeSoon = page.getByRole('radio', { name: 'Snart', exact: true });
   await freeSoon.evaluate((radio) => (radio as HTMLInputElement).click());
   const teaser = page.locator('[data-planlegg-access="soon-teaser"]');
@@ -1897,6 +1907,7 @@ async function runSoonReadiness(
   if (await page.evaluate(() => document.activeElement?.textContent?.includes('Se historiske forberedelser') !== true)) {
     throw new Error('Free Snart-paywall returnerte ikke fokus til teaseren');
   }
+
 }
 
 async function settleEntitlement(page: Page, premium: boolean): Promise<void> {

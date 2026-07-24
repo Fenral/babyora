@@ -75,7 +75,14 @@ type VognMode = 'awake' | 'sleeping';
 type TempAxis = 'kald' | 'mild' | 'varm';
 
 type PlanleggE2EWindow = Window & {
-  __BABYORA_PLANLEGG_E2E__?: Readonly<{ testOnlySoonAvailability?: boolean }>;
+  __BABYORA_PLANLEGG_E2E__?: Readonly<{
+    testOnlySoonAvailability?: boolean;
+    entitlement?: 'loading' | 'free' | 'plus';
+    fixedHome?: Readonly<{ city: string; lat: number; lon: number }>;
+    automatic?: Readonly<{ mode: 'auto'; place: Readonly<{ city: string; lat: number; lon: number }> }>;
+    profileScope?: string;
+    windowLocalDate?: string;
+  }>;
 };
 
 const PLANLEGG_E2E_SOON_AVAILABILITY = Object.freeze({
@@ -91,6 +98,12 @@ function planningAvailability() {
     return PLANLEGG_E2E_SOON_AVAILABILITY;
   }
   return PLUS_FEATURE_AVAILABILITY;
+}
+
+function planningE2EFixture(): PlanleggE2EWindow['__BABYORA_PLANLEGG_E2E__'] {
+  return import.meta.env.VITE_PLANLEGG_E2E === 'true'
+    ? (window as PlanleggE2EWindow).__BABYORA_PLANLEGG_E2E__
+    : undefined;
 }
 
 type Phase = Readonly<{
@@ -281,12 +294,13 @@ function PlanleggData({
   onOpenPlannedOutfit,
 }: Pick<Props, 'onOpenPlannedOutfit'>) {
   const { active } = useChildren();
+  const e2eFixture = planningE2EFixture();
   const { fire } = useHapticSystem();
   const swaps = useSwapOverride((state) => state.swaps);
   const { isPremium, loading: accessLoading } = useAccess();
   const locationMode = useLocationPref((state) => state.mode);
   const automaticPlace = useLocationPref((state) => state.automaticPlace);
-  const fixedHome = active ? {
+  const storedFixedHome = active ? {
     childId: active.id,
     city: active.city,
     lat: active.lat,
@@ -297,6 +311,9 @@ function PlanleggData({
     lat: DEFAULT_LAT,
     lon: DEFAULT_LON,
   };
+  const fixedHome = e2eFixture?.fixedHome
+    ? { childId: '__e2e__', ...e2eFixture.fixedHome }
+    : storedFixedHome;
   const locationAccess = resolveRuntimeCapabilityAccess(
     'automatic_location',
     { isPlus: isPremium, authenticated: false, loading: accessLoading },
@@ -347,10 +364,10 @@ function PlanleggData({
     loading: false,
   }, availability), [availability, isPremium]);
   const soonAccess = useMemo(() => resolvePlanningViewAccess('soon', {
-    isPlus: isPremium,
+    isPlus: e2eFixture?.entitlement === 'plus' ? true : e2eFixture?.entitlement === 'free' ? false : isPremium,
     authenticated: false,
-    loading: accessLoading,
-  }, availability), [accessLoading, availability, isPremium]);
+    loading: e2eFixture?.entitlement === 'loading' ? true : accessLoading,
+  }, availability), [accessLoading, availability, e2eFixture?.entitlement, isPremium]);
   const viewAccess = tab === 'today' ? todayAccess : tab === 'tenday' ? weekAccess : soonAccess;
   const [snartEvaluator] = useState(() => createSnartSessionEvaluator({
     resolveExactHome: resolveCommittedSnartHome,
@@ -374,8 +391,9 @@ function PlanleggData({
     snartEvaluator.current,
     () => null,
   );
-  const snartProfileScope = active?.id ?? '__none__';
-  const snartWindow = new Date().toLocaleDateString('en-CA', { timeZone: PLAN_TIME_ZONE });
+  const snartProfileScope = e2eFixture?.profileScope ?? active?.id ?? '__none__';
+  const snartWindow = e2eFixture?.windowLocalDate
+    ?? new Date().toLocaleDateString('en-CA', { timeZone: PLAN_TIME_ZONE });
   useEffect(() => {
     const generation = crypto.randomUUID();
     if (!soonAccess.access.allowed) {
