@@ -16,7 +16,6 @@ import { fileURLToPath } from 'node:url';
 const SHA_40 = /^[0-9a-f]{40}$/;
 const SHA_256 = /^[0-9a-f]{64}$/;
 const COMMIT_LIKE_SCALAR_40 = /^[0-9a-f]{40}$/i;
-const UNSUPPORTED_YAML_SCALAR_PREFIX = /^[!&*|>\[{]/;
 const MAX_DEPENDENCIES = 100;
 const PHASE1_COMMIT_SCALAR_KEYS = Object.freeze(['candidate_sha']);
 const PHASE2_COMMIT_SCALAR_KEYS = Object.freeze([
@@ -167,11 +166,6 @@ function decodeSingleQuotedYamlScalar(value, label, key) {
 
 function normalizeFrontmatterScalar(rawValue, label, key) {
   const exactValue = stripOutsideYamlComment(rawValue);
-  invariant(
-    !UNSUPPORTED_YAML_SCALAR_PREFIX.test(exactValue),
-    `${label} contains unsupported frontmatter scalar syntax for ${key}`,
-  );
-
   let semanticValue = exactValue;
   if (exactValue.startsWith('"')) {
     try {
@@ -193,22 +187,431 @@ function normalizeFrontmatterScalar(rawValue, label, key) {
   return Object.freeze({ exactValue, semanticValue });
 }
 
+function hasSemanticContinuation(node) {
+  return node.continuationLines.some((line) => {
+    const trimmedLine = line.trim();
+    return (
+      trimmedLine.length > 0 &&
+      !trimmedLine.startsWith('#')
+    );
+  });
+}
+
+function hasTopLevelBlockScalar(node) {
+  const exactValue = stripOutsideYamlComment(node.rawValue);
+  return /(?:^|\s)[|>][+-]?[1-9]?\s*$/.test(exactValue);
+}
+
+function topLevelMappingColon(value) {
+  const closingStack = [];
+  let quote = null;
+
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index];
+
+    if (quote === '"') {
+      if (character === '\\') {
+        index += 1;
+      } else if (character === '"') {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (quote === "'") {
+      if (character === "'" && value[index + 1] === "'") {
+        index += 1;
+      } else if (character === "'") {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+
+    if (character === '[') {
+      closingStack.push(']');
+      continue;
+    }
+    if (character === '{') {
+      closingStack.push('}');
+      continue;
+    }
+    if (
+      (character === ']' || character === '}') &&
+      closingStack.at(-1) === character
+    ) {
+      closingStack.pop();
+      continue;
+    }
+
+    if (
+      character === ':' &&
+      closingStack.length === 0 &&
+      (index + 1 === value.length || /\s/.test(value[index + 1]))
+    ) {
+      return index;
+    }
+  }
+
+  return -1;
+}
+
+function splitTopLevelFlow(value, label, key) {
+  const parts = [];
+  const closingStack = [];
+  let quote = null;
+  let start = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index];
+
+    if (quote === '"') {
+      if (character === '\\') {
+        index += 1;
+      } else if (character === '"') {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (quote === "'") {
+      if (character === "'" && value[index + 1] === "'") {
+        index += 1;
+      } else if (character === "'") {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+
+    if (character === '[') {
+      closingStack.push(']');
+      continue;
+    }
+    if (character === '{') {
+      closingStack.push('}');
+      continue;
+    }
+    if (character === ']' || character === '}') {
+      invariant(
+        closingStack.pop() === character,
+        `${label} contains malformed flow metadata for ${key}`,
+      );
+      continue;
+    }
+
+    if (character === ',' && closingStack.length === 0) {
+      parts.push(value.slice(start, index));
+      start = index + 1;
+    }
+  }
+
+  invariant(
+    quote === null && closingStack.length === 0,
+    `${label} contains malformed flow metadata for ${key}`,
+  );
+  parts.push(value.slice(start));
+  return parts;
+}
+
+function stripYamlDecorators(value) {
+  let remaining = value.trim();
+
+  while (remaining.length > 0) {
+    const tag = /^!(?:<[^>]+>|[^\s,[\]{}]+)(?:\s+|$)/.exec(remaining);
+    if (tag !== null) {
+      remaining = remaining.slice(tag[0].length).trimStart();
+      continue;
+    }
+
+    const anchor = /^&[A-Za-z0-9_-]+(?:\s+|$)/.exec(remaining);
+    if (anchor !== null) {
+      remaining = remaining.slice(anchor[0].length).trimStart();
+      continue;
+    }
+
+    break;
+  }
+
+  return remaining;
+}
+
+function yamlValueContainsCommitScalar(value, label, key) {
+  const exactValue = stripOutsideYamlComment(value).trim();
+  if (exactValue.length === 0) {
+    return false;
+  }
+
+  const undecorated = stripYamlDecorators(exactValue);
+  if (undecorated.startsWith('*')) {
+    return false;
+  }
+
+  if (undecorated.startsWith('"') || undecorated.startsWith("'")) {
+    const scalar = normalizeFrontmatterScalar(undecorated, label, key);
+    return COMMIT_LIKE_SCALAR_40.test(scalar.semanticValue);
+  }
+
+  if (undecorated.startsWith('[') || undecorated.startsWith('{')) {
+    const closing = undecorated.startsWith('[') ? ']' : '}';
+    invariant(
+      undecorated.endsWith(closing),
+      `${label} contains malformed flow metadata for ${key}`,
+    );
+    const inner = undecorated.slice(1, -1);
+    return splitTopLevelFlow(inner, label, key).some((part) =>
+      yamlFragmentContainsCommitScalar(part, label, key),
+    );
+  }
+
+  return COMMIT_LIKE_SCALAR_40.test(undecorated);
+}
+
+function yamlFragmentContainsCommitScalar(value, label, key) {
+  let fragment = stripOutsideYamlComment(value).trim();
+  if (fragment.length === 0) {
+    return false;
+  }
+
+  if (/^-(?:\s+|$)/.test(fragment) || /^\?(?:\s+|$)/.test(fragment)) {
+    fragment = fragment.slice(1).trimStart();
+  }
+
+  const mappingColon = topLevelMappingColon(fragment);
+  if (mappingColon === -1) {
+    return yamlValueContainsCommitScalar(fragment, label, key);
+  }
+
+  const mappingKey = fragment.slice(0, mappingColon).trim();
+  const mappingValue = fragment.slice(mappingColon + 1).trim();
+  return (
+    yamlValueContainsCommitScalar(mappingKey, label, key) ||
+    yamlValueContainsCommitScalar(mappingValue, label, key)
+  );
+}
+
+function blockScalarStyle(value, isHeaderValue) {
+  let fragment = stripOutsideYamlComment(value).trim();
+  if (!isHeaderValue && /^-(?:\s+|$)/.test(fragment)) {
+    fragment = fragment.slice(1).trimStart();
+  }
+
+  const mappingColon = isHeaderValue
+    ? -1
+    : topLevelMappingColon(fragment);
+  if (mappingColon !== -1) {
+    fragment = fragment.slice(mappingColon + 1).trim();
+  }
+  fragment = stripYamlDecorators(fragment);
+
+  const match = /^([|>])(?:[+-][1-9]?|[1-9][+-]?)?$/.exec(fragment);
+  return match?.[1] ?? null;
+}
+
+function leadingSpaceCount(line, label) {
+  const indentation = /^[ \t]*/.exec(line)?.[0] ?? '';
+  invariant(
+    !indentation.includes('\t'),
+    `${label} contains unsupported tab indentation`,
+  );
+  return indentation.length;
+}
+
+function nodeContainsCommitScalar(node, label) {
+  const lines = [
+    Object.freeze({
+      indent: 0,
+      text: node.rawValue,
+      isHeaderValue: true,
+    }),
+    ...node.continuationLines.map((line) =>
+      Object.freeze({
+        indent: leadingSpaceCount(line, label),
+        text: line.trimStart(),
+        isHeaderValue: false,
+      }),
+    ),
+  ];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const trimmedLine = line.text.trim();
+    if (trimmedLine.length === 0 || trimmedLine.startsWith('#')) {
+      continue;
+    }
+
+    const style = blockScalarStyle(line.text, line.isHeaderValue);
+    if (style !== null) {
+      const contentLines = [];
+      let next = index + 1;
+      while (
+        next < lines.length &&
+        (
+          lines[next].text.trim().length === 0 ||
+          lines[next].indent > line.indent
+        )
+      ) {
+        contentLines.push(lines[next]);
+        next += 1;
+      }
+
+      const contentIndent = contentLines
+        .filter((contentLine) => contentLine.text.trim().length > 0)
+        .reduce(
+          (minimum, contentLine) => Math.min(minimum, contentLine.indent),
+          Number.POSITIVE_INFINITY,
+        );
+      const normalizedLines = contentLines.map((contentLine) =>
+        Number.isFinite(contentIndent)
+          ? `${' '.repeat(contentLine.indent)}${contentLine.text}`.slice(
+              contentIndent,
+            )
+          : '',
+      );
+      const blockValue = style === '>'
+        ? normalizedLines.join(' ')
+        : normalizedLines.join('\n');
+      if (COMMIT_LIKE_SCALAR_40.test(blockValue.trim())) {
+        return true;
+      }
+
+      index = next - 1;
+      continue;
+    }
+
+    const containsCommit = line.isHeaderValue
+      ? yamlValueContainsCommitScalar(line.text, label, node.key)
+      : yamlFragmentContainsCommitScalar(line.text, label, node.key);
+    if (containsCommit) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function yamlReferenceTokens(rawValue) {
+  const tokens = [];
+  let quote = null;
+
+  for (let index = 0; index < rawValue.length; index += 1) {
+    const character = rawValue[index];
+
+    if (quote === '"') {
+      if (character === '\\') {
+        index += 1;
+      } else if (character === '"') {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (quote === "'") {
+      if (character === "'" && rawValue[index + 1] === "'") {
+        index += 1;
+      } else if (character === "'") {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+
+    if (
+      character === '#' &&
+      (index === 0 || /\s/.test(rawValue[index - 1]))
+    ) {
+      break;
+    }
+
+    if (
+      (character !== '&' && character !== '*') ||
+      (index > 0 && !/[\s,[\]{}:]/.test(rawValue[index - 1]))
+    ) {
+      continue;
+    }
+
+    let end = index + 1;
+    while (end < rawValue.length && /[A-Za-z0-9_-]/.test(rawValue[end])) {
+      end += 1;
+    }
+    if (end === index + 1) {
+      continue;
+    }
+
+    tokens.push(Object.freeze({
+      kind: character === '&' ? 'anchor' : 'alias',
+      name: rawValue.slice(index + 1, end),
+    }));
+    index = end - 1;
+  }
+
+  return tokens;
+}
+
+function validateYamlReferences(fields, label) {
+  const anchors = new Set();
+
+  for (const node of fields.values()) {
+    const referenceLines = [node.rawValue];
+    if (!hasTopLevelBlockScalar(node)) {
+      referenceLines.push(...node.continuationLines);
+    }
+
+    for (const line of referenceLines) {
+      for (const token of yamlReferenceTokens(line)) {
+        if (token.kind === 'anchor') {
+          invariant(
+            !anchors.has(token.name),
+            `${label} contains duplicate YAML anchor ${token.name}`,
+          );
+          anchors.add(token.name);
+          continue;
+        }
+
+        invariant(
+          anchors.has(token.name),
+          `${label} contains unsupported frontmatter alias ${token.name}`,
+        );
+      }
+    }
+  }
+}
+
 function parseFrontmatter(text, label) {
   invariant(typeof text === 'string', `${label} must be text`);
 
-  const lines = text.replaceAll('\r\n', '\n').split('\n');
+  const lines = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n').split('\n');
   invariant(lines[0] === '---', `${label} must start with YAML frontmatter`);
   const closingIndex = lines.indexOf('---', 1);
   invariant(closingIndex > 1, `${label} frontmatter is incomplete`);
 
   const fields = new Map();
+  let currentNode = null;
   for (const line of lines.slice(1, closingIndex)) {
     const trimmedLine = line.trim();
-    if (
-      trimmedLine.length === 0 ||
-      trimmedLine.startsWith('#') ||
-      /^\s/.test(line)
-    ) {
+    if (trimmedLine.length === 0 || trimmedLine.startsWith('#')) {
+      currentNode?.continuationLines.push(line);
+      continue;
+    }
+
+    if (/^\s/.test(line)) {
+      invariant(
+        currentNode !== null,
+        `${label} contains orphaned frontmatter continuation: ${line}`,
+      );
+      currentNode.continuationLines.push(line);
       continue;
     }
 
@@ -220,24 +623,49 @@ function parseFrontmatter(text, label) {
 
     const [, key, rawValue] = match;
     invariant(!fields.has(key), `${label} contains duplicate key ${key}`);
-    fields.set(key, normalizeFrontmatterScalar(rawValue, label, key));
+    currentNode = {
+      key,
+      rawValue,
+      continuationLines: [],
+    };
+    fields.set(key, currentNode);
   }
 
+  for (const [key, node] of fields) {
+    fields.set(
+      key,
+      Object.freeze({
+        ...node,
+        continuationLines: Object.freeze([...node.continuationLines]),
+      }),
+    );
+  }
+
+  validateYamlReferences(fields, label);
   return fields;
 }
 
 function rejectUnexpectedCommitScalars(fields, allowedKeys, label) {
-  for (const [key, scalar] of fields) {
+  for (const [key, node] of fields) {
     invariant(
       allowedKeys.includes(key) ||
-        !COMMIT_LIKE_SCALAR_40.test(scalar.semanticValue),
+        !nodeContainsCommitScalar(node, label),
       `${label} uses forbidden candidate SHA alias ${key}`,
     );
   }
 }
 
-function exactFrontmatterValue(fields, key) {
-  return fields.get(key)?.exactValue;
+function exactFrontmatterValue(fields, key, label) {
+  const node = fields.get(key);
+  if (node === undefined) {
+    return undefined;
+  }
+
+  invariant(
+    !hasSemanticContinuation(node),
+    `${label} ${key} must be one unambiguous scalar without continuation`,
+  );
+  return normalizeFrontmatterScalar(node.rawValue, label, key).exactValue;
 }
 
 export function parsePhase1CandidateSummary(text) {
@@ -250,10 +678,14 @@ export function parsePhase1CandidateSummary(text) {
   );
 
   invariant(
-    exactFrontmatterValue(fields, 'status') === 'PASS',
+    exactFrontmatterValue(fields, 'status', 'Phase 1 summary') === 'PASS',
     'Phase 1 summary status must be exact PASS',
   );
-  const candidateSha = exactFrontmatterValue(fields, 'candidate_sha');
+  const candidateSha = exactFrontmatterValue(
+    fields,
+    'candidate_sha',
+    'Phase 1 summary',
+  );
   invariant(
     typeof candidateSha === 'string' && SHA_40.test(candidateSha),
     'Phase 1 summary requires exact candidate_sha with 40 lowercase hex',
@@ -272,18 +704,35 @@ export function parsePhase2HandoffSummary(text) {
   );
 
   invariant(
-    exactFrontmatterValue(fields, 'status') === 'PASS',
+    exactFrontmatterValue(fields, 'status', 'Phase 2 summary') === 'PASS',
     'Phase 2 summary status must be exact PASS',
   );
-  const candidateSha = exactFrontmatterValue(fields, 'phase2_candidate_sha');
+  const candidateSha = exactFrontmatterValue(
+    fields,
+    'phase2_candidate_sha',
+    'Phase 2 summary',
+  );
   invariant(
     typeof candidateSha === 'string' && SHA_40.test(candidateSha),
     'Phase 2 summary requires exact phase2_candidate_sha',
   );
-  const featureFlag = exactFrontmatterValue(fields, 'feature_flag');
+  const featureFlag = exactFrontmatterValue(
+    fields,
+    'feature_flag',
+    'Phase 2 summary',
+  );
   invariant(
     featureFlag === 'true',
     'Phase 2 summary feature_flag must be intrinsically true',
+  );
+  const phase1CandidateSha = exactFrontmatterValue(
+    fields,
+    'phase1_candidate_sha',
+    'Phase 2 summary',
+  );
+  invariant(
+    phase1CandidateSha === undefined || SHA_40.test(phase1CandidateSha),
+    'Phase 2 summary phase1_candidate_sha must be exact 40 lowercase hex',
   );
 
   return Object.freeze({
