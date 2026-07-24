@@ -589,10 +589,16 @@ export function layoutOutfitMap(
   availableWidth: number,
   options: OutfitMapLayoutOptionsV1 = {},
 ): OutfitMapLayoutResultV1 {
-  if (isUnsupportedCardinalityResult(snapshot)) {
-    return mapIneligible('unsupported-cardinality');
-  }
-  if (!isOutfitTruthSnapshot(snapshot)) {
+  let validatedSnapshot: OutfitTruthSnapshotV1;
+  try {
+    if (isUnsupportedCardinalityResult(snapshot)) {
+      return mapIneligible('unsupported-cardinality');
+    }
+    if (!isOutfitTruthSnapshot(snapshot)) {
+      return mapIneligible('invalid-snapshot');
+    }
+    validatedSnapshot = snapshot;
+  } catch {
     return mapIneligible('invalid-snapshot');
   }
   if (
@@ -603,12 +609,17 @@ export function layoutOutfitMap(
   ) {
     return mapIneligible('invalid-width');
   }
-  const textScale = readTextScale(options);
+  let textScale: number | null;
+  try {
+    textScale = readTextScale(options);
+  } catch {
+    return mapIneligible('invalid-constraints');
+  }
   if (textScale === null) {
     return mapIneligible('invalid-constraints');
   }
 
-  const anchored = anchoredGarments(snapshot);
+  const anchored = anchoredGarments(validatedSnapshot);
   if (typeof anchored === 'string') {
     return mapIneligible(anchored);
   }
@@ -691,7 +702,7 @@ export function layoutOutfitMap(
   const layout: OutfitMapLayoutV1 = {
     kind: 'layout',
     layoutVersion: 1,
-    snapshotId: snapshot.snapshotId,
+    snapshotId: validatedSnapshot.snapshotId,
     mode,
     width: availableWidth,
     height,
