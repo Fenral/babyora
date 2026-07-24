@@ -173,10 +173,9 @@ describe('canonical outfit truth', () => {
     ['positive infinite childCalibration', Number.POSITIVE_INFINITY],
     ['negative infinite childCalibration', Number.NEGATIVE_INFINITY],
   ])('rejects %s before identity derivation', (_name, childCalibration) => {
-    const input = exactInput() as RecommendInput & {
-      childCalibration: number;
-    };
-    input.childCalibration = childCalibration;
+    const input = exactInput();
+    (input as unknown as { childCalibration: number }).childCalibration =
+      childCalibration;
     const finalizedRecommendation = recommend(exactInput());
 
     expect(() =>

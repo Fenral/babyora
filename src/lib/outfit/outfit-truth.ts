@@ -1,4 +1,8 @@
-import type { SafetyFlag, Severity } from '../wool-layers/safety.js';
+import type {
+  SafetyFlag,
+  SafetySource,
+  Severity,
+} from '../wool-layers/safety.js';
 import { bandForTemp } from '../wool-layers/tables.js';
 import type {
   LayerCategory,
@@ -123,6 +127,34 @@ const SEVERITY = new Set<Severity>([
   'HIGH',
   'CRITICAL',
 ]);
+const TEMP_BAND = new Set([
+  'tropisk',
+  'varm',
+  'mild',
+  'kjolig',
+  'kald',
+  'frost',
+  'streng_frost',
+  'ekstrem',
+  'ekstrem_varme',
+]);
+const VOGN_MODE = new Set(['awake', 'sleeping']);
+const SAFETY_SOURCE = new Set<SafetySource>([
+  'AAP-2022',
+  'NHS',
+  'LT-RT',
+  'LT-TOG',
+  'LT-PRAM',
+  'RN-AU',
+  'RN-WRAP',
+  'CDC-NICHD',
+  'AAP-HC',
+  'ASTM-2024',
+  'NHTSA',
+  'Pediatrics-Pram',
+  'IHDI',
+  'POLICY',
+]);
 
 export class OutfitTruthInputError extends Error {
   constructor(message: string) {
@@ -139,6 +171,7 @@ function assertOwnDataGraph(value: unknown, path: string): void {
       throw new OutfitTruthInputError(`${currentPath} contains a cycle`);
     }
     const prototype = Object.getPrototypeOf(current);
+    const isArray = Array.isArray(current);
     if (
       prototype !== Object.prototype &&
       prototype !== Array.prototype
@@ -165,6 +198,11 @@ function assertOwnDataGraph(value: unknown, path: string): void {
           `${currentPath}.${key} must be an own data property`,
         );
       }
+      if ((!isArray || key !== 'length') && descriptor.enumerable !== true) {
+        throw new OutfitTruthInputError(
+          `${currentPath}.${key} must be enumerable`,
+        );
+      }
       walk(descriptor.value, `${currentPath}.${key}`);
     }
     visiting.delete(current);
@@ -174,6 +212,89 @@ function assertOwnDataGraph(value: unknown, path: string): void {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
+}
+
+function assertRecordShape(
+  value: unknown,
+  path: string,
+  requiredKeys: readonly string[],
+  optionalKeys: readonly string[] = [],
+): asserts value is Record<string, unknown> {
+  if (
+    value === null ||
+    typeof value !== 'object' ||
+    Array.isArray(value) ||
+    Object.getPrototypeOf(value) !== Object.prototype
+  ) {
+    throw new OutfitTruthInputError(`${path} must be a plain object`);
+  }
+  const allowedKeys = new Set([...requiredKeys, ...optionalKeys]);
+  for (const key of Reflect.ownKeys(value)) {
+    if (typeof key !== 'string' || !allowedKeys.has(key)) {
+      throw new OutfitTruthInputError(
+        `${path} contains an unexpected property ${String(key)}`,
+      );
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (
+      descriptor === undefined ||
+      !('value' in descriptor) ||
+      descriptor.enumerable !== true
+    ) {
+      throw new OutfitTruthInputError(
+        `${path}.${key} must be an enumerable own data property`,
+      );
+    }
+  }
+  const missing = requiredKeys.filter(
+    (key) => !Object.prototype.hasOwnProperty.call(value, key),
+  );
+  if (missing.length > 0) {
+    throw new OutfitTruthInputError(
+      `${path} is missing ${missing.join(', ')}`,
+    );
+  }
+}
+
+function assertDenseArray(
+  value: unknown,
+  path: string,
+): asserts value is unknown[] {
+  if (!Array.isArray(value)) {
+    throw new OutfitTruthInputError(`${path} must be an array`);
+  }
+  let indexCount = 0;
+  for (const key of Reflect.ownKeys(value)) {
+    if (key === 'length') continue;
+    if (typeof key !== 'string') {
+      throw new OutfitTruthInputError(`${path} contains a symbol key`);
+    }
+    const index = Number(key);
+    if (
+      !Number.isInteger(index) ||
+      index < 0 ||
+      index >= value.length ||
+      String(index) !== key
+    ) {
+      throw new OutfitTruthInputError(
+        `${path} contains an unexpected property ${key}`,
+      );
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (
+      descriptor === undefined ||
+      !('value' in descriptor) ||
+      descriptor.enumerable !== true
+    ) {
+      throw new OutfitTruthInputError(
+        `${path}[${key}] must be an enumerable own data property`,
+      );
+    }
+    indexCount += 1;
+  }
+  if (indexCount !== value.length) {
+    throw new OutfitTruthInputError(`${path} must not be sparse`);
+  }
 }
 
 function assertString(value: unknown, path: string): asserts value is string {
@@ -186,7 +307,8 @@ function assertStringArray(
   value: unknown,
   path: string,
 ): asserts value is string[] {
-  if (!Array.isArray(value) || !value.every((item) => typeof item === 'string')) {
+  assertDenseArray(value, path);
+  if (!value.every((item) => typeof item === 'string')) {
     throw new OutfitTruthInputError(`${path} must be a string array`);
   }
 }
@@ -195,59 +317,202 @@ function assertNoteArray(
   value: unknown,
   path: string,
 ): asserts value is Note[] {
-  if (
-    !Array.isArray(value) ||
-    !value.every(
-      (note) =>
-        note !== null &&
-        typeof note === 'object' &&
-        NOTE_CATEGORY.has((note as Note).category) &&
-        typeof (note as Note).message === 'string',
-    )
-  ) {
-    throw new OutfitTruthInputError(
-      `${path} must be a structured note array`,
-    );
+  assertDenseArray(value, path);
+  for (const [index, note] of value.entries()) {
+    const notePath = `${path}[${index}]`;
+    assertRecordShape(note, notePath, ['category', 'message']);
+    if (
+      !NOTE_CATEGORY.has(note.category as Note['category']) ||
+      typeof note.message !== 'string'
+    ) {
+      throw new OutfitTruthInputError(
+        `${notePath} must be a structured note`,
+      );
+    }
   }
 }
 
-function validSafetyFlag(flag: unknown): flag is SafetyFlag {
-  if (flag === null || typeof flag !== 'object') return false;
-  const candidate = flag as Partial<SafetyFlag>;
-  return (
-    typeof candidate.code === 'string' &&
-    candidate.code.length > 0 &&
-    typeof candidate.message === 'string' &&
-    Array.isArray(candidate.sources) &&
-    candidate.sources.every((source) => typeof source === 'string') &&
-    typeof candidate.severity === 'string' &&
-    SEVERITY.has(candidate.severity as Severity) &&
-    typeof candidate.category === 'string' &&
-    NOTE_CATEGORY.has(candidate.category as Note['category']) &&
-    (candidate.displayInSheet === undefined ||
-      typeof candidate.displayInSheet === 'boolean')
-  );
+function assertSafetyFlagArray(
+  value: unknown,
+  path: string,
+): asserts value is SafetyFlag[] {
+  assertDenseArray(value, path);
+  for (const [index, flag] of value.entries()) {
+    const flagPath = `${path}[${index}]`;
+    assertRecordShape(
+      flag,
+      flagPath,
+      ['code', 'message', 'sources', 'severity', 'category'],
+      ['displayInSheet'],
+    );
+    assertString(flag.code, `${flagPath}.code`);
+    if (typeof flag.message !== 'string') {
+      throw new OutfitTruthInputError(
+        `${flagPath}.message must be a string`,
+      );
+    }
+    assertDenseArray(flag.sources, `${flagPath}.sources`);
+    if (
+      !flag.sources.every(
+        (source) =>
+          typeof source === 'string' &&
+          SAFETY_SOURCE.has(source as SafetySource),
+      )
+    ) {
+      throw new OutfitTruthInputError(
+        `${flagPath}.sources must contain known safety sources`,
+      );
+    }
+    if (
+      typeof flag.severity !== 'string' ||
+      !SEVERITY.has(flag.severity as Severity)
+    ) {
+      throw new OutfitTruthInputError(
+        `${flagPath}.severity is malformed`,
+      );
+    }
+    if (
+      typeof flag.category !== 'string' ||
+      !NOTE_CATEGORY.has(flag.category as Note['category'])
+    ) {
+      throw new OutfitTruthInputError(
+        `${flagPath}.category is malformed`,
+      );
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(flag, 'displayInSheet') &&
+      typeof flag.displayInSheet !== 'boolean'
+    ) {
+      throw new OutfitTruthInputError(
+        `${flagPath}.displayInSheet must be a boolean`,
+      );
+    }
+  }
 }
 
 function assertRecommendInput(value: unknown): asserts value is RecommendInput {
   assertOwnDataGraph(value, 'input');
-  if (value === null || typeof value !== 'object') {
-    throw new OutfitTruthInputError('input must be an object');
-  }
-  const input = value as Partial<RecommendInput>;
+  assertRecordShape(
+    value,
+    'input',
+    ['weather', 'child', 'activity'],
+    [
+      'exposureMin',
+      'innerJakke',
+      'vognMode',
+      'context',
+      'childCalibration',
+    ],
+  );
+  assertRecordShape(
+    value.weather,
+    'input.weather',
+    ['feelsLikeC', 'tempC', 'windMs', 'precipMmH'],
+    ['humidity', 'symbolCode', 'uvIndex'],
+  );
+  assertRecordShape(
+    value.child,
+    'input.child',
+    ['ageMonths'],
+    ['canRoll'],
+  );
   if (
-    input.weather === undefined ||
-    !isFiniteNumber(input.weather.feelsLikeC) ||
-    !isFiniteNumber(input.weather.tempC) ||
-    !isFiniteNumber(input.weather.windMs) ||
-    input.weather.windMs < 0 ||
-    !isFiniteNumber(input.weather.precipMmH) ||
-    input.weather.precipMmH < 0 ||
-    input.child === undefined ||
-    !Number.isInteger(input.child.ageMonths) ||
-    !ACTIVITY.has(input.activity ?? '')
+    !isFiniteNumber(value.weather.feelsLikeC) ||
+    !isFiniteNumber(value.weather.tempC) ||
+    !isFiniteNumber(value.weather.windMs) ||
+    value.weather.windMs < 0 ||
+    !isFiniteNumber(value.weather.precipMmH) ||
+    value.weather.precipMmH < 0 ||
+    !Number.isInteger(value.child.ageMonths) ||
+    (value.child.ageMonths as number) < 0 ||
+    (value.child.ageMonths as number) > 60 ||
+    !ACTIVITY.has(value.activity as string)
   ) {
     throw new OutfitTruthInputError('input is not a normalized RecommendInput');
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(value.weather, 'humidity') &&
+    (!isFiniteNumber(value.weather.humidity) ||
+      value.weather.humidity < 0 ||
+      value.weather.humidity > 100)
+  ) {
+    throw new OutfitTruthInputError(
+      'input.weather.humidity must be finite and between 0 and 100',
+    );
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(value.weather, 'symbolCode') &&
+    typeof value.weather.symbolCode !== 'string'
+  ) {
+    throw new OutfitTruthInputError(
+      'input.weather.symbolCode must be a string',
+    );
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(value.weather, 'uvIndex') &&
+    (!isFiniteNumber(value.weather.uvIndex) || value.weather.uvIndex < 0)
+  ) {
+    throw new OutfitTruthInputError(
+      'input.weather.uvIndex must be finite and non-negative',
+    );
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(value.child, 'canRoll') &&
+    typeof value.child.canRoll !== 'boolean'
+  ) {
+    throw new OutfitTruthInputError(
+      'input.child.canRoll must be a boolean',
+    );
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(value, 'exposureMin') &&
+    (!isFiniteNumber(value.exposureMin) || value.exposureMin < 0)
+  ) {
+    throw new OutfitTruthInputError(
+      'input.exposureMin must be finite and non-negative',
+    );
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(value, 'innerJakke') &&
+    typeof value.innerJakke !== 'boolean'
+  ) {
+    throw new OutfitTruthInputError(
+      'input.innerJakke must be a boolean',
+    );
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(value, 'vognMode') &&
+    (typeof value.vognMode !== 'string' ||
+      !VOGN_MODE.has(value.vognMode))
+  ) {
+    throw new OutfitTruthInputError(
+      'input.vognMode must be awake or sleeping',
+    );
+  }
+  if (Object.prototype.hasOwnProperty.call(value, 'context')) {
+    assertRecordShape(
+      value.context,
+      'input.context',
+      [],
+      ['bilstol'],
+    );
+    if (
+      Object.prototype.hasOwnProperty.call(value.context, 'bilstol') &&
+      typeof value.context.bilstol !== 'boolean'
+    ) {
+      throw new OutfitTruthInputError(
+        'input.context.bilstol must be a boolean',
+      );
+    }
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(value, 'childCalibration') &&
+    (typeof value.childCalibration !== 'number' ||
+      ![-1, 0, 1].includes(value.childCalibration))
+  ) {
+    throw new OutfitTruthInputError(
+      'input.childCalibration must be -1, 0, or 1',
+    );
   }
 }
 
@@ -256,53 +521,70 @@ function assertRecommendation(
   input: RecommendInput,
 ): asserts value is Recommendation {
   assertOwnDataGraph(value, 'finalizedRecommendation');
-  if (value === null || typeof value !== 'object') {
-    throw new OutfitTruthInputError(
-      'finalizedRecommendation must be an object',
-    );
-  }
-  const recommendation = value as Partial<Recommendation>;
+  assertRecordShape(
+    value,
+    'finalizedRecommendation',
+    [
+      'activity',
+      'tempBand',
+      'layers',
+      'notes',
+      'structuredNotes',
+      'summary',
+    ],
+    ['safetyFlags', 'severity'],
+  );
   if (
-    recommendation.activity !== input.activity ||
-    recommendation.tempBand !== bandForTemp(input.weather.feelsLikeC) ||
-    !Array.isArray(recommendation.layers) ||
-    recommendation.layers.length === 0 ||
-    !recommendation.layers.every(
-      (layer) =>
-        layer !== null &&
-        typeof layer === 'object' &&
-        LAYER_CATEGORY.has(layer.category) &&
-        Array.isArray(layer.items) &&
-        layer.items.every((item) => typeof item === 'string'),
-    )
+    value.activity !== input.activity ||
+    value.tempBand !== bandForTemp(input.weather.feelsLikeC) ||
+    typeof value.tempBand !== 'string' ||
+    !TEMP_BAND.has(value.tempBand)
   ) {
     throw new OutfitTruthInputError(
       'finalizedRecommendation does not match normalized input',
     );
   }
-  assertStringArray(recommendation.notes, 'finalizedRecommendation.notes');
+  assertDenseArray(value.layers, 'finalizedRecommendation.layers');
+  if (value.layers.length === 0) {
+    throw new OutfitTruthInputError(
+      'finalizedRecommendation.layers must not be empty',
+    );
+  }
+  for (const [index, layer] of value.layers.entries()) {
+    const layerPath = `finalizedRecommendation.layers[${index}]`;
+    assertRecordShape(layer, layerPath, ['category', 'items']);
+    if (
+      typeof layer.category !== 'string' ||
+      !LAYER_CATEGORY.has(layer.category)
+    ) {
+      throw new OutfitTruthInputError(
+        `${layerPath}.category is malformed`,
+      );
+    }
+    assertStringArray(layer.items, `${layerPath}.items`);
+  }
+  assertStringArray(value.notes, 'finalizedRecommendation.notes');
   assertNoteArray(
-    recommendation.structuredNotes,
+    value.structuredNotes,
     'finalizedRecommendation.structuredNotes',
   );
-  if (typeof recommendation.summary !== 'string') {
+  if (typeof value.summary !== 'string') {
     throw new OutfitTruthInputError(
       'finalizedRecommendation.summary must be a string',
     );
   }
   if (
-    Object.prototype.hasOwnProperty.call(recommendation, 'safetyFlags') &&
-    (!Array.isArray(recommendation.safetyFlags) ||
-      !recommendation.safetyFlags.every(validSafetyFlag))
+    Object.prototype.hasOwnProperty.call(value, 'safetyFlags')
   ) {
-    throw new OutfitTruthInputError(
-      'finalizedRecommendation.safetyFlags is malformed',
+    assertSafetyFlagArray(
+      value.safetyFlags,
+      'finalizedRecommendation.safetyFlags',
     );
   }
   if (
-    Object.prototype.hasOwnProperty.call(recommendation, 'severity') &&
-    (typeof recommendation.severity !== 'string' ||
-      !SEVERITY.has(recommendation.severity as Severity))
+    Object.prototype.hasOwnProperty.call(value, 'severity') &&
+    (typeof value.severity !== 'string' ||
+      !SEVERITY.has(value.severity as Severity))
   ) {
     throw new OutfitTruthInputError(
       'finalizedRecommendation.severity is malformed',
@@ -310,19 +592,54 @@ function assertRecommendation(
   }
 }
 
-function stableSerialize(value: unknown): string {
-  if (value === null || typeof value !== 'object') {
+function stableSerialize(value: unknown, path = 'value'): string {
+  if (value === null) return 'null';
+  if (typeof value === 'string' || typeof value === 'boolean') {
     return JSON.stringify(value);
   }
-  if (Array.isArray(value)) {
-    return `[${value.map(stableSerialize).join(',')}]`;
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) {
+      throw new OutfitTruthInputError(
+        `${path} contains a non-finite number`,
+      );
+    }
+    return Object.is(value, -0) ? '-0' : JSON.stringify(value);
   }
-  return `{${Object.keys(value)
+  if (typeof value !== 'object') {
+    throw new OutfitTruthInputError(
+      `${path} contains an unsupported ${typeof value}`,
+    );
+  }
+  if (Array.isArray(value)) {
+    assertDenseArray(value, path);
+    return `[${value
+      .map((item, index) => stableSerialize(item, `${path}[${index}]`))
+      .join(',')}]`;
+  }
+  const keys = Reflect.ownKeys(value);
+  if (
+    Object.getPrototypeOf(value) !== Object.prototype ||
+    keys.some((key) => typeof key !== 'string') ||
+    keys.some((key) => {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      return (
+        descriptor === undefined ||
+        !('value' in descriptor) ||
+        descriptor.enumerable !== true
+      );
+    })
+  ) {
+    throw new OutfitTruthInputError(
+      `${path} contains unsupported object data`,
+    );
+  }
+  return `{${(keys as string[])
     .sort()
     .map(
       (key) =>
         `${JSON.stringify(key)}:${stableSerialize(
           (value as Record<string, unknown>)[key],
+          `${path}.${key}`,
         )}`,
     )
     .join(',')}}`;
