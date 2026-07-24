@@ -1,0 +1,681 @@
+import { createHash } from 'node:crypto';
+import { execFileSync, spawnSync } from 'node:child_process';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterEach, describe, expect, it } from 'vitest';
+import {
+  isPathWithinResolvedRoot,
+  parsePhase1CandidateSummary,
+  parsePhase3CandidateRecord,
+} from '../verify-phase3-exact-sha.mjs';
+
+const scriptPath = fileURLToPath(
+  new URL('../verify-phase3-exact-sha.mjs', import.meta.url),
+);
+
+const temporaryParents: string[] = [];
+
+type Harness = {
+  parent: string;
+  repository: string;
+  evidenceRoot: string;
+  phase1SummaryPath: string;
+  phase1Sha: string;
+  candidateSha: string;
+  bundlePath: string;
+  candidateRecordPath: string;
+  codeReviewPath: string;
+  uiReviewPath: string;
+  evidenceHash: string;
+};
+
+type ProcessResult = ReturnType<typeof spawnSync>;
+
+function git(
+  repository: string,
+  args: readonly string[],
+  input?: string,
+): string {
+  return execFileSync('git', [...args], {
+    cwd: repository,
+    encoding: 'utf8',
+    input,
+    stdio: input === undefined ? ['ignore', 'pipe', 'pipe'] : ['pipe', 'pipe', 'pipe'],
+  }).trim();
+}
+
+function writeJson(path: string, value: Readonly<Record<string, unknown>>): void {
+  writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+}
+
+function refreshEvidence(
+  harness: Harness,
+  overrides: {
+    candidate?: Readonly<Record<string, unknown>>;
+    codeReview?: Readonly<Record<string, unknown>>;
+    uiReview?: Readonly<Record<string, unknown>>;
+  } = {},
+): void {
+  const candidate = {
+    phase3_candidate_sha: harness.candidateSha,
+    ancestry_status: 'PASS',
+    clean_status: 'PASS',
+    validation_evidence_sha256: harness.evidenceHash,
+    ...overrides.candidate,
+  };
+  const codeReview = {
+    code_security_sha: harness.candidateSha,
+    code_security_status: 'PASS',
+    code_security_verdict: 'PASS',
+    code_security_reviewer_id: 'code-reviewer',
+    code_security_session_id: 'code-session',
+    code_security_fork_turns: 'none',
+    code_security_fresh_context: true,
+    code_security_evidence_sha256: harness.evidenceHash,
+    ...overrides.codeReview,
+  };
+  const uiReview = {
+    ui_accessibility_sha: harness.candidateSha,
+    ui_accessibility_status: 'PASS',
+    ui_accessibility_verdict: 'PASS',
+    ui_accessibility_reviewer_id: 'ui-reviewer',
+    ui_accessibility_session_id: 'ui-session',
+    ui_accessibility_fork_turns: 'none',
+    ui_accessibility_fresh_context: true,
+    ui_accessibility_evidence_sha256: harness.evidenceHash,
+    ...overrides.uiReview,
+  };
+
+  writeJson(harness.candidateRecordPath, candidate);
+  writeJson(harness.codeReviewPath, codeReview);
+  writeJson(harness.uiReviewPath, uiReview);
+}
+
+function createHarness(): Harness {
+  const parent = mkdtempSync(join(tmpdir(), 'babyora phase3 verifier '));
+  temporaryParents.push(parent);
+
+  const repository = join(parent, 'detached candidate checkout with spaces');
+  const evidenceRoot = join(parent, 'external evidence sibling with spaces');
+  mkdirSync(repository);
+  mkdirSync(evidenceRoot);
+
+  git(repository, ['init', '--quiet']);
+  git(repository, ['config', 'user.name', 'Phase 3 Test']);
+  git(repository, ['config', 'user.email', 'phase3-test@example.invalid']);
+
+  writeFileSync(join(repository, 'base.txt'), 'base\n', 'utf8');
+  git(repository, ['add', '--', 'base.txt']);
+  git(repository, ['commit', '--quiet', '-m', 'phase 1 candidate']);
+  const phase1Sha = git(repository, ['rev-parse', 'HEAD']);
+
+  const phase1SummaryPath = join(
+    repository,
+    '.planning',
+    'phase1-summary.md',
+  );
+  mkdirSync(dirname(phase1SummaryPath), { recursive: true });
+  writeFileSync(
+    phase1SummaryPath,
+    [
+      '---',
+      'status: PASS',
+      `candidate_sha: ${phase1Sha}`,
+      'contract_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      'pack_sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      '---',
+      '',
+      '# Phase 1',
+      '',
+    ].join('\n'),
+    'utf8',
+  );
+  writeFileSync(join(repository, 'candidate.txt'), 'candidate\n', 'utf8');
+  git(repository, ['add', '--', '.planning/phase1-summary.md', 'candidate.txt']);
+  git(repository, ['commit', '--quiet', '-m', 'phase 3 candidate']);
+  const candidateSha = git(repository, ['rev-parse', 'HEAD']);
+  git(repository, ['switch', '--quiet', '--detach', candidateSha]);
+
+  const bundlePath = join(evidenceRoot, 'phase3 final validation.log');
+  writeFileSync(bundlePath, 'tests: PASS\nbuild: PASS\n', 'utf8');
+  const evidenceHash = createHash('sha256')
+    .update(readFileSync(bundlePath))
+    .digest('hex');
+  const harness: Harness = {
+    parent,
+    repository,
+    evidenceRoot,
+    phase1SummaryPath,
+    phase1Sha,
+    candidateSha,
+    bundlePath,
+    candidateRecordPath: join(evidenceRoot, 'phase3 candidate.json'),
+    codeReviewPath: join(evidenceRoot, 'phase3 code security review.json'),
+    uiReviewPath: join(evidenceRoot, 'phase3 ui accessibility review.json'),
+    evidenceHash,
+  };
+  refreshEvidence(harness);
+
+  return harness;
+}
+
+function candidateArgs(harness: Harness): string[] {
+  return [
+    'candidate',
+    '--candidate-record',
+    harness.candidateRecordPath,
+    '--code-security-review',
+    harness.codeReviewPath,
+    '--ui-accessibility-review',
+    harness.uiReviewPath,
+    '--validation-bundle',
+    harness.bundlePath,
+    '--phase1-summary',
+    harness.phase1SummaryPath,
+    '--expected-dependency-count',
+    '1',
+  ];
+}
+
+function replaceOption(
+  args: readonly string[],
+  option: string,
+  value: string,
+): string[] {
+  const next = [...args];
+  const index = next.indexOf(option);
+  if (index === -1) {
+    throw new Error(`missing test option ${option}`);
+  }
+  next[index + 1] = value;
+  return next;
+}
+
+function removeOption(args: readonly string[], option: string): string[] {
+  const next = [...args];
+  const index = next.indexOf(option);
+  if (index === -1) {
+    throw new Error(`missing test option ${option}`);
+  }
+  next.splice(index, 2);
+  return next;
+}
+
+function runScript(
+  harness: Harness,
+  args: readonly string[],
+  evidenceRoot: string | undefined = harness.evidenceRoot,
+): ProcessResult {
+  const env = { ...process.env };
+  if (evidenceRoot === undefined) {
+    delete env.BABYORA_PHASE3_EVIDENCE_ROOT;
+  } else {
+    env.BABYORA_PHASE3_EVIDENCE_ROOT = evidenceRoot;
+  }
+
+  return spawnSync(process.execPath, [scriptPath, ...args], {
+    cwd: harness.repository,
+    env,
+    encoding: 'utf8',
+    shell: false,
+  });
+}
+
+function output(result: ProcessResult): string {
+  return `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+}
+
+function expectFailure(result: ProcessResult, pattern?: RegExp): void {
+  expect(result.status).not.toBe(0);
+  if (pattern !== undefined) {
+    expect(output(result)).toMatch(pattern);
+  }
+}
+
+afterEach(() => {
+  for (const parent of temporaryParents.splice(0)) {
+    rmSync(parent, { recursive: true, force: true });
+  }
+});
+
+describe('pure exact-label and path guards', () => {
+  it('accepts only exact Phase 1 candidate_sha and normalizes it internally', () => {
+    const sha = '1'.repeat(40);
+
+    expect(
+      parsePhase1CandidateSummary(
+        ['---', 'status: PASS', `candidate_sha: ${sha}`, '---'].join('\n'),
+      ),
+    ).toEqual({ phase1CandidateSha: sha });
+
+    for (const aliased of [
+      `phase1_candidate_sha: ${sha}`,
+      `candidateSha: ${sha}`,
+      `final_candidate_sha: ${sha}`,
+      `commit: ${sha}`,
+      `candidate_sha: ${sha}\ncandidate_sha: ${sha}`,
+    ]) {
+      expect(() =>
+        parsePhase1CandidateSummary(
+          ['---', 'status: PASS', aliased, '---'].join('\n'),
+        ),
+      ).toThrow();
+    }
+  });
+
+  it('rejects duplicate or aliased candidate JSON labels', () => {
+    const sha = '2'.repeat(40);
+    const hash = 'a'.repeat(64);
+    const valid = {
+      phase3_candidate_sha: sha,
+      ancestry_status: 'PASS',
+      clean_status: 'PASS',
+      validation_evidence_sha256: hash,
+    };
+
+    expect(parsePhase3CandidateRecord(JSON.stringify(valid))).toEqual(valid);
+    expect(() =>
+      parsePhase3CandidateRecord(
+        JSON.stringify({ ...valid, candidate_sha: sha }),
+      ),
+    ).toThrow();
+    expect(() =>
+      parsePhase3CandidateRecord(
+        `{"phase3_candidate_sha":"${sha}","phase3_candidate_sha":"${sha}","ancestry_status":"PASS","clean_status":"PASS","validation_evidence_sha256":"${hash}"}`,
+      ),
+    ).toThrow();
+  });
+
+  it('uses resolved path boundaries rather than string prefixes', () => {
+    const root = realpathSync(tmpdir());
+    const child = join(root, 'evidence file.json');
+    const siblingPrefix = `${root}-outside`;
+
+    expect(isPathWithinResolvedRoot(root, child)).toBe(true);
+    expect(isPathWithinResolvedRoot(root, root)).toBe(false);
+    expect(isPathWithinResolvedRoot(root, siblingPrefix)).toBe(false);
+  });
+});
+
+describe('candidate mode', () => {
+  it('passes one detached clean SHA with external spaced evidence and exact ancestry', () => {
+    const harness = createHarness();
+    const result = runScript(harness, candidateArgs(harness));
+
+    expect(result.status).toBe(0);
+    expect(JSON.parse(String(result.stdout))).toEqual({
+      status: 'PASS',
+      mode: 'candidate',
+      phase3CandidateSha: harness.candidateSha,
+      phase1CandidateSha: harness.phase1Sha,
+      dependencyCount: 1,
+      validationEvidenceSha256: harness.evidenceHash,
+    });
+  });
+
+  it('uses execFileSync argument arrays and contains no shell execution surface', () => {
+    const source = readFileSync(scriptPath, 'utf8');
+
+    expect(source).toContain('execFileSync');
+    expect(source).not.toMatch(/\bexecSync\s*\(/);
+    expect(source).not.toMatch(/\bshell\s*:/);
+  });
+
+  it.each([
+    ['missing', undefined],
+    ['empty', ''],
+    ['relative', 'relative evidence'],
+  ])('rejects a %s evidence root', (_name, evidenceRoot) => {
+    const harness = createHarness();
+
+    expectFailure(
+      runScript(harness, candidateArgs(harness), evidenceRoot),
+      /BABYORA_PHASE3_EVIDENCE_ROOT/i,
+    );
+  });
+
+  it('rejects roots equal to, nested in, or resolving back into the checkout', () => {
+    for (const kind of ['equal', 'nested', 'junction'] as const) {
+      const harness = createHarness();
+      let root: string;
+
+      if (kind === 'equal') {
+        root = harness.repository;
+      } else if (kind === 'nested') {
+        root = join(harness.repository, 'inside evidence');
+        mkdirSync(root);
+      } else {
+        root = join(harness.parent, 'outside-looking checkout link');
+        symlinkSync(
+          harness.repository,
+          root,
+          process.platform === 'win32' ? 'junction' : 'dir',
+        );
+      }
+
+      expectFailure(
+        runScript(harness, candidateArgs(harness), root),
+        /outside.*checkout|evidence root/i,
+      );
+    }
+  });
+
+  it('confines every distinct record and bundle beneath the external root', () => {
+    const harness = createHarness();
+    const recordInsideCheckout = join(harness.repository, 'record.json');
+    writeFileSync(
+      recordInsideCheckout,
+      readFileSync(harness.candidateRecordPath),
+    );
+
+    expectFailure(
+      runScript(
+        harness,
+        replaceOption(
+          candidateArgs(harness),
+          '--candidate-record',
+          recordInsideCheckout,
+        ),
+      ),
+      /candidate record.*evidence root/i,
+    );
+    expectFailure(
+      runScript(
+        harness,
+        replaceOption(
+          candidateArgs(harness),
+          '--ui-accessibility-review',
+          harness.codeReviewPath,
+        ),
+      ),
+      /distinct/i,
+    );
+  });
+
+  it('rejects missing and aliased record arguments', () => {
+    const harness = createHarness();
+
+    expectFailure(
+      runScript(
+        harness,
+        removeOption(candidateArgs(harness), '--candidate-record'),
+      ),
+      /candidate-record/i,
+    );
+    expectFailure(
+      runScript(harness, [
+        ...candidateArgs(harness),
+        '--combined-review',
+        harness.codeReviewPath,
+      ]),
+      /unknown option/i,
+    );
+  });
+
+  it.each(['tracked', 'untracked'] as const)(
+    'rejects a dirty %s candidate checkout despite recorded clean PASS',
+    (kind) => {
+      const harness = createHarness();
+      if (kind === 'tracked') {
+        writeFileSync(join(harness.repository, 'candidate.txt'), 'dirty\n');
+      } else {
+        writeFileSync(join(harness.repository, 'untracked.txt'), 'dirty\n');
+      }
+
+      expectFailure(
+        runScript(harness, candidateArgs(harness)),
+        /clean|porcelain/i,
+      );
+    },
+  );
+
+  it('requires direct HEAD equality and detached state', () => {
+    for (const kind of ['wrong-head', 'attached'] as const) {
+      const harness = createHarness();
+      if (kind === 'wrong-head') {
+        refreshEvidence(harness, {
+          candidate: { phase3_candidate_sha: harness.phase1Sha },
+          codeReview: { code_security_sha: harness.phase1Sha },
+          uiReview: { ui_accessibility_sha: harness.phase1Sha },
+        });
+      } else {
+        git(harness.repository, ['switch', '--quiet', '-c', 'attached-test']);
+      }
+
+      expectFailure(
+        runScript(harness, candidateArgs(harness)),
+        kind === 'wrong-head' ? /HEAD.*candidate|candidate.*HEAD/i : /detached/i,
+      );
+    }
+  });
+
+  it.each([
+    ['zero', '0'],
+    ['wrong count', '2'],
+    ['omitted', null],
+  ])('rejects a %s expected dependency count', (_name, count) => {
+    const harness = createHarness();
+    let args = candidateArgs(harness);
+    if (count === null) {
+      args = removeOption(args, '--expected-dependency-count');
+    } else {
+      args = replaceOption(args, '--expected-dependency-count', count);
+    }
+
+    expectFailure(runScript(harness, args), /dependency.*count/i);
+  });
+
+  it('rejects a declared nonancestor and duplicate dependency', () => {
+    for (const kind of ['nonancestor', 'duplicate'] as const) {
+      const harness = createHarness();
+      const dependency =
+        kind === 'duplicate'
+          ? harness.phase1Sha
+          : git(
+              harness.repository,
+              ['commit-tree', `${harness.candidateSha}^{tree}`],
+              'unrelated dependency\n',
+            );
+      const args = [
+        ...replaceOption(
+          candidateArgs(harness),
+          '--expected-dependency-count',
+          '2',
+        ),
+        '--dependency',
+        dependency,
+      ];
+
+      expectFailure(
+        runScript(harness, args),
+        kind === 'duplicate' ? /duplicate dependency/i : /ancestor/i,
+      );
+    }
+  });
+
+  it('rejects candidate, reviewer, context, verdict, SHA, and hash ambiguity', () => {
+    const cases: Array<
+      (
+        harness: Harness,
+      ) => void
+    > = [
+      (harness) =>
+        refreshEvidence(harness, {
+          candidate: { candidate_sha: harness.candidateSha },
+        }),
+      (harness) =>
+        refreshEvidence(harness, {
+          uiReview: { ui_accessibility_reviewer_id: 'code-reviewer' },
+        }),
+      (harness) =>
+        refreshEvidence(harness, {
+          uiReview: { ui_accessibility_session_id: 'code-session' },
+        }),
+      (harness) =>
+        refreshEvidence(harness, {
+          codeReview: { code_security_fork_turns: 'all' },
+        }),
+      (harness) =>
+        refreshEvidence(harness, {
+          uiReview: { ui_accessibility_fresh_context: false },
+        }),
+      (harness) =>
+        refreshEvidence(harness, {
+          codeReview: { code_security_verdict: 'FAIL' },
+        }),
+      (harness) =>
+        refreshEvidence(harness, {
+          uiReview: { ui_accessibility_sha: harness.phase1Sha },
+        }),
+      (harness) =>
+        refreshEvidence(harness, {
+          candidate: { validation_evidence_sha256: '0'.repeat(64) },
+        }),
+    ];
+
+    for (const mutate of cases) {
+      const harness = createHarness();
+      mutate(harness);
+      expectFailure(runScript(harness, candidateArgs(harness)));
+    }
+  });
+
+  it('rejects a changed or missing validation bundle and malformed JSON', () => {
+    for (const kind of ['changed', 'missing', 'malformed'] as const) {
+      const harness = createHarness();
+      if (kind === 'changed') {
+        writeFileSync(harness.bundlePath, 'changed after review\n', 'utf8');
+      } else if (kind === 'missing') {
+        rmSync(harness.bundlePath);
+      } else {
+        writeFileSync(harness.codeReviewPath, '{"broken":', 'utf8');
+      }
+
+      expectFailure(runScript(harness, candidateArgs(harness)));
+    }
+  });
+
+  it('runs git diff-tree --check against the immutable candidate', () => {
+    const harness = createHarness();
+    writeFileSync(join(harness.repository, 'bad-whitespace.txt'), 'bad   \n');
+    git(harness.repository, ['add', '--', 'bad-whitespace.txt']);
+    git(harness.repository, ['commit', '--quiet', '-m', 'bad whitespace']);
+    harness.candidateSha = git(harness.repository, ['rev-parse', 'HEAD']);
+    refreshEvidence(harness);
+
+    expectFailure(
+      runScript(harness, candidateArgs(harness)),
+      /whitespace|diff-tree/i,
+    );
+  });
+
+  it('rejects Phase 1 aliases through candidate mode before ancestry checks', () => {
+    const harness = createHarness();
+    const aliasSummary = join(harness.evidenceRoot, 'aliased phase1.md');
+    writeFileSync(
+      aliasSummary,
+      [
+        '---',
+        'status: PASS',
+        `phase1_candidate_sha: ${harness.phase1Sha}`,
+        '---',
+      ].join('\n'),
+      'utf8',
+    );
+
+    expectFailure(
+      runScript(
+        harness,
+        replaceOption(
+          candidateArgs(harness),
+          '--phase1-summary',
+          aliasSummary,
+        ),
+      ),
+      /candidate_sha|Phase 1/i,
+    );
+  });
+});
+
+describe('phase2-handoff mode', () => {
+  function writePhase2Summary(
+    harness: Harness,
+    fields: readonly string[],
+  ): string {
+    const summaryPath = join(harness.evidenceRoot, 'phase2 summary.md');
+    writeFileSync(
+      summaryPath,
+      ['---', ...fields, '---', '', '# Phase 2'].join('\n'),
+      'utf8',
+    );
+    return summaryPath;
+  }
+
+  function runPhase2(
+    harness: Harness,
+    summaryPath: string,
+  ): ProcessResult {
+    return runScript(harness, [
+      'phase2-handoff',
+      '--summary',
+      summaryPath,
+      '--expected-feature-flag',
+      'true',
+      '--ancestor-of',
+      'HEAD',
+    ]);
+  }
+
+  it('requires exact PASS, enabled flag, commit existence, and ancestry', () => {
+    const harness = createHarness();
+    const summaryPath = writePhase2Summary(harness, [
+      'status: PASS',
+      `phase2_candidate_sha: ${harness.phase1Sha}`,
+      'feature_flag: true',
+    ]);
+    const result = runPhase2(harness, summaryPath);
+
+    expect(result.status).toBe(0);
+    expect(JSON.parse(String(result.stdout))).toEqual({
+      status: 'PASS',
+      mode: 'phase2-handoff',
+      phase2CandidateSha: harness.phase1Sha,
+      featureFlag: true,
+      ancestorOf: harness.candidateSha,
+    });
+  });
+
+  it('rejects malformed, aliased, disabled, missing, and nonancestor handoffs', () => {
+    const cases = [
+      ['status: FAIL', `phase2_candidate_sha: ${'1'.repeat(40)}`, 'feature_flag: true'],
+      ['status: PASS', `candidate_sha: ${'1'.repeat(40)}`, 'feature_flag: true'],
+      ['status: PASS', `phase2_candidate_sha: ${'1'.repeat(40)}`, 'feature_flag: false'],
+      ['status: PASS', `phase2_candidate_sha: ${'1'.repeat(40)}`, 'feature_flag: true'],
+    ];
+
+    for (const [index, fields] of cases.entries()) {
+      const harness = createHarness();
+      if (index === cases.length - 1) {
+        const unrelated = git(
+          harness.repository,
+          ['commit-tree', `${harness.candidateSha}^{tree}`],
+          'unrelated phase2\n',
+        );
+        fields[1] = `phase2_candidate_sha: ${unrelated}`;
+      }
+      const summaryPath = writePhase2Summary(harness, fields);
+
+      expectFailure(runPhase2(harness, summaryPath));
+    }
+  });
+});
