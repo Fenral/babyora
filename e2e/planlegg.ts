@@ -33,6 +33,8 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
 const UKE_VITE_MODULE_PATH = '/src/screens/UkeScreen.tsx';
 // eslint-disable-next-line no-control-regex -- A 7-bit ANSI CSI sequence starts with ESC.
 const ANSI_CSI_SEQUENCE = /\u001B\[[0-?]*[ -/]*[@-~]/gu;
+const SNART_BROWSER_PREWARM_IDENTIFIER = ['prewarm', 'Vite', 'Module', 'Graph'].join('');
+const SNART_DYNAMIC_MODULE_PATH_IMPORT = /\breturn\s+import\s*\(\s*modulePath\s*\)/u;
 const PLANLEGG_CASES = Object.freeze({
   ...PLANLEGG_E2E_FIXTURES,
   'semantic-rail': Object.freeze({
@@ -2208,6 +2210,34 @@ async function beginEntitlementRefresh(page: Page): Promise<void> {
   });
 }
 
+function hasForbiddenSnartBrowserPrewarm(source: string): boolean {
+  return source.includes(SNART_BROWSER_PREWARM_IDENTIFIER)
+    || SNART_DYNAMIC_MODULE_PATH_IMPORT.test(source);
+}
+
+function assertSnartBrowserPrewarmSourceGuard(harness: string): void {
+  const forbiddenIdentifierFixture = [
+    'async function ',
+    SNART_BROWSER_PREWARM_IDENTIFIER,
+    '(modulePath) {}',
+  ].join('');
+  const forbiddenDynamicImportFixture = [
+    'async function load(modulePath) { ',
+    'return ',
+    'import',
+    '(modulePath); }',
+  ].join('');
+  if (
+    !hasForbiddenSnartBrowserPrewarm(forbiddenIdentifierFixture)
+    || !hasForbiddenSnartBrowserPrewarm(forbiddenDynamicImportFixture)
+  ) {
+    throw new Error('Snart browser-prewarm source guard accepted a forbidden fixture');
+  }
+  if (hasForbiddenSnartBrowserPrewarm(harness)) {
+    throw new Error('Snart browser-prewarm source guard rejected the current harness');
+  }
+}
+
 async function runSoonReadiness(
   page: Page,
   fixture: PlanleggE2EFixture,
@@ -2223,6 +2253,7 @@ async function runSoonReadiness(
     throw new Error('Snart readiness-fixturen mangler frosne kandidat- og bundlehasher');
   }
   validatePriorSnartReadiness(root, fixture.snartReadiness);
+  assertSnartBrowserPrewarmSourceGuard(harness);
   const soonCapability = availability.match(/soon_preparation:\s*(true|false)/u)?.[1];
   if (
     (soonCapability !== 'false' && soonCapability !== 'true')
@@ -2241,8 +2272,6 @@ async function runSoonReadiness(
     || SNART_INIT_SCRIPT.includes('__name')
     || SNART_INIT_SCRIPT.includes('window.__name')
     || !harness.includes('page.addInitScript({ content: SNART_INIT_SCRIPT })')
-    || harness.includes('prewarmViteModuleGraph')
-    || harness.includes("return import(modulePath)")
   ) {
     throw new Error('Snart readiness preflight mangler låst capability-, privacy-, contract- eller tidligere evidence-binding');
   }
