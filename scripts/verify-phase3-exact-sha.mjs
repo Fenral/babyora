@@ -131,7 +131,7 @@ function looksLikeCandidateShaAlias(key) {
   const normalized = key.toLowerCase().replaceAll(/[^a-z0-9]/g, '');
   return (
     (normalized.includes('candidate') && normalized.includes('sha')) ||
-    normalized === 'commit' ||
+    normalized.endsWith('commit') ||
     (normalized.includes('commit') && normalized.includes('sha'))
   );
 }
