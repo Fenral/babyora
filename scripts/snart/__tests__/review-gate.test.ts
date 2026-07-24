@@ -1,5 +1,13 @@
 import { createHash } from 'node:crypto';
 import {
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import {
   buildCandidateRecord,
   buildReviewReceipt,
   canonicalReviewJsonFile,
@@ -11,10 +19,18 @@ import {
   type ReviewIdentity,
   type ReviewLane,
 } from '../review-gate';
-import { describe, expect, it } from 'vitest';
+import * as reviewGate from '../review-gate';
+import { afterEach, describe, expect, it } from 'vitest';
 
 const sha256 = (value: string) =>
   createHash('sha256').update(value, 'utf8').digest('hex');
+const temporaryPaths: string[] = [];
+
+afterEach(() => {
+  for (const path of temporaryPaths.splice(0)) {
+    rmSync(path, { recursive: true, force: true });
+  }
+});
 
 const snapshot: CandidateSnapshot = {
   changedPaths: [
@@ -153,6 +169,79 @@ describe('Snart immutable review candidate', () => {
       gateStatus: 'FAIL_REVIEW_CYCLES_EXHAUSTED',
       provenanceAuthenticated: false,
     });
+  });
+
+  it('accepts only the literal canonical evidence directory and excludes only the three plan evidence files', () => {
+    type EvidenceDirectoryGuard = (
+      repositoryRoot: string,
+      evidenceDir: string,
+    ) => string;
+    type EvidencePathGuard = (path: string, planId: string) => boolean;
+    const validateEvidenceDirectory = Reflect.get(
+      reviewGate,
+      'validateEvidenceDirectory',
+    ) as EvidenceDirectoryGuard | undefined;
+    const isPlanEvidencePath = Reflect.get(
+      reviewGate,
+      'isPlanEvidencePath',
+    ) as EvidencePathGuard | undefined;
+    expect(typeof validateEvidenceDirectory).toBe('function');
+    expect(typeof isPlanEvidencePath).toBe('function');
+    if (!validateEvidenceDirectory || !isPlanEvidencePath) return;
+
+    const canonical =
+      '.planning/phases/01-planlegg-dagslinjen/evidence';
+    expect(validateEvidenceDirectory(process.cwd(), canonical)).toBe(
+      canonical,
+    );
+    for (const alias of [
+      `./${canonical}`,
+      canonical.replaceAll('/', '\\'),
+      `${canonical}/.`,
+      '.planning/phases/01-planlegg-dagslinjen/../01-planlegg-dagslinjen/evidence',
+      join(process.cwd(), canonical),
+    ]) {
+      expect(() =>
+        validateEvidenceDirectory(process.cwd(), alias),
+      ).toThrow(/canonical|evidence|literal/iu);
+    }
+
+    const evidencePrefix = `${canonical}/01-13`;
+    expect(
+      [
+        `${evidencePrefix}-candidate.json`,
+        `${evidencePrefix}-review-a.json`,
+        `${evidencePrefix}-review-b.json`,
+      ].every((path) => isPlanEvidencePath(path, '01-13')),
+    ).toBe(true);
+    for (const unrelated of [
+      `${evidencePrefix}-candidate.json.tmp`,
+      `${canonical}/01-14-candidate.json`,
+      `${canonical}/nested/01-13-review-a.json`,
+      `${canonical}/unrelated.json`,
+    ]) {
+      expect(isPlanEvidencePath(unrelated, '01-13')).toBe(false);
+    }
+
+    const repositoryRoot = mkdtempSync(join(tmpdir(), 'snart-evidence-'));
+    temporaryPaths.push(repositoryRoot);
+    const evidenceParent = join(
+      repositoryRoot,
+      '.planning',
+      'phases',
+      '01-planlegg-dagslinjen',
+    );
+    const linkTarget = join(repositoryRoot, 'real-evidence');
+    mkdirSync(evidenceParent, { recursive: true });
+    mkdirSync(linkTarget, { recursive: true });
+    symlinkSync(
+      linkTarget,
+      join(evidenceParent, 'evidence'),
+      process.platform === 'win32' ? 'junction' : 'dir',
+    );
+    expect(() =>
+      validateEvidenceDirectory(repositoryRoot, canonical),
+    ).toThrow(/junction|link|canonical/iu);
   });
 });
 

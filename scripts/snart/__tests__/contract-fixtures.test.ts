@@ -213,7 +213,11 @@ describe('Snart autonomy contract', () => {
         'sum(monthlyPrecipitationMm/daysInMonth*targetDaysInMonth)',
       leapMonthPolicy: 'use-actual-days-in-target-year-month',
       partialProfiles: false,
+      sourceValueStorage: 'exact-finite-source-value',
+      compareHeuristicsBeforeRounding: true,
+      negativeZero: 'normalize-to-zero',
       rounding: {
+        application: 'presentation-only',
         distanceMillimetres: 0,
         mode: 'half-away-from-zero',
         temperature: 1,

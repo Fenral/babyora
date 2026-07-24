@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildClimatePack,
   buildHomePlaceProjection,
+  canonicalJsonFile,
   deriveMonthlyProfile,
   fetchTextWithPolicy,
   parseDas,
@@ -20,6 +21,7 @@ import {
   publishBundleAtomically,
   roundHalfAwayFromZero,
   selectNearestGridCell,
+  sha256,
   validateMetUrl,
 } from '../build-climate-pack';
 import { validateClimateBundle } from '../validate-climate-pack';
@@ -62,6 +64,74 @@ function monthlyRows() {
   }));
 }
 
+function calendarDate(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function addCalendarDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result;
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function targetSignals(
+  rows: ReturnType<typeof monthlyRows>,
+  asOf: Date,
+): { precipitation: number; temperature: number } {
+  let precipitation = 0;
+  let temperature = 0;
+  for (let offset = 28; offset <= 42; offset += 1) {
+    const date = addCalendarDays(asOf, offset);
+    const month = date.getUTCMonth() + 1;
+    const row = rows[month - 1];
+    temperature += row.meanTemperatureC / 15;
+    precipitation +=
+      row.monthlyPrecipitationMm /
+      daysInMonth(date.getUTCFullYear(), month);
+  }
+  return { precipitation, temperature };
+}
+
+function temperatureBucket(value: number): number {
+  return [2, 7, 12, 16].findIndex((threshold) => value <= threshold);
+}
+
+function precipitationBucket(value: number): number {
+  return value < 20 ? 0 : value < 50 ? 1 : 2;
+}
+
+function readBundle(directory: string) {
+  return {
+    manifest: JSON.parse(
+      readFileSync(
+        join(directory, 'climate-1991-2020-v1.manifest.json'),
+        'utf8',
+      ),
+    ),
+    pack: JSON.parse(
+      readFileSync(join(directory, 'climate-1991-2020-v1.json'), 'utf8'),
+    ),
+  };
+}
+
+function writeCanonicalBundle(
+  directory: string,
+  pack: Record<string, unknown>,
+  manifest: Record<string, unknown>,
+): void {
+  const packRaw = canonicalJsonFile(pack as never);
+  manifest.packSha256 = sha256(packRaw);
+  writeFileSync(join(directory, 'climate-1991-2020-v1.json'), packRaw);
+  writeFileSync(
+    join(directory, 'climate-1991-2020-v1.manifest.json'),
+    canonicalJsonFile(manifest as never),
+  );
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   for (const path of temporaryPaths.splice(0)) {
@@ -100,23 +170,58 @@ describe('Snart monthly-normal HTTP and source boundary', () => {
     }
   });
 
-  it('never follows redirects and rejects timeout, truncation and oversize', async () => {
+  it('uses immutable MET GET authority even when a caller supplies an alternate contract', async () => {
     const contract = loadContract();
     const url = `${contract.source.datasetUrls[0]}.dds`;
+    const fetchImpl = vi.fn(async () => response('official response'));
+
+    await fetchTextWithPolicy(url, contract.httpPolicy, { fetchImpl });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      new URL(url).href,
+      expect.objectContaining({ method: 'GET', redirect: 'manual' }),
+    );
+
+    const alternatePolicy = structuredClone(contract.httpPolicy);
+    alternatePolicy.hostname = '127.0.0.1';
+    alternatePolicy.allowedDatasetUrls = alternatePolicy.allowedDatasetUrls.map(
+      (datasetUrl: string) =>
+        datasetUrl.replace('thredds.met.no', '127.0.0.1'),
+    );
+    expect(() =>
+      validateMetUrl(
+        url.replace('thredds.met.no', '127.0.0.1'),
+        alternatePolicy,
+      ),
+    ).toThrow(/authority|contract|frozen/iu);
+  });
+
+  it('never follows redirects, redacts Location, and rejects timeout, truncation and oversize', async () => {
+    const contract = loadContract();
+    const url = `${contract.source.datasetUrls[0]}.dds`;
+    const credentialLocation =
+      'https://redirect-user:redirect-secret@example.invalid/private';
     const redirectFetch = vi.fn(async (_url: string, init: RequestInit) => {
       expect(init.redirect).toBe('manual');
       return response('', {
         status: 302,
-        headers: { location: 'https://example.invalid/data' },
+        headers: { location: credentialLocation },
       });
     });
 
-    await expect(
-      fetchTextWithPolicy(url, contract.httpPolicy, {
+    const redirectError = await fetchTextWithPolicy(
+      url,
+      contract.httpPolicy,
+      {
         fetchImpl: redirectFetch,
         sleep: async () => undefined,
-      }),
-    ).rejects.toThrow(/redirect/iu);
+      },
+    ).catch((error: unknown) => error);
+    expect(redirectError).toBeInstanceOf(Error);
+    expect((redirectError as Error).message).toMatch(/redirect/iu);
+    expect((redirectError as Error).message).not.toContain(credentialLocation);
+    expect((redirectError as Error).message).not.toMatch(
+      /redirect-user|redirect-secret|Location/iu,
+    );
     expect(redirectFetch).toHaveBeenCalledTimes(1);
 
     const abortedFetch = vi.fn(async () => {
@@ -162,6 +267,26 @@ describe('Snart monthly-normal HTTP and source boundary', () => {
         sleep: async () => undefined,
       }),
     ).rejects.toThrow(/large|size|limit/iu);
+  });
+
+  it('treats a missing Content-Type as a terminal response failure', async () => {
+    const contract = loadContract();
+    const url = `${contract.source.datasetUrls[0]}.dds`;
+    const body = new TextEncoder().encode('Dataset {} official');
+    const fetchImpl = vi.fn(async () =>
+      new Response(body, {
+        status: 200,
+        headers: { 'content-length': String(body.byteLength) },
+      }),
+    );
+
+    await expect(
+      fetchTextWithPolicy(url, contract.httpPolicy, {
+        fetchImpl,
+        sleep: async () => undefined,
+      }),
+    ).rejects.toThrow(/content.?type/iu);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   it('retries only 429 and frozen 5xx statuses three total attempts', async () => {
@@ -248,7 +373,7 @@ describe('Snart deterministic monthly-normal derivation', () => {
     });
   });
 
-  it('requires exactly 12 sorted finite rows and frozen rounding', () => {
+  it('requires exactly 12 sorted finite rows while preserving source precision', () => {
     const contract = loadContract();
     expect(deriveMonthlyProfile(monthlyRows(), contract)).toEqual(
       monthlyRows(),
@@ -274,14 +399,36 @@ describe('Snart deterministic monthly-normal derivation', () => {
         contract,
       ),
     ).toThrow(/fill|value/iu);
+    const exactRows = monthlyRows().map((row, index) =>
+      index === 0
+        ? {
+            ...row,
+            meanTemperatureC: -0,
+            monthlyPrecipitationMm: 12.345_678,
+          }
+        : index === 1
+          ? { ...row, meanTemperatureC: 1.234_567 }
+          : row,
+    );
+    const exactProfile = deriveMonthlyProfile(exactRows, contract);
+    expect(exactProfile[0].monthlyPrecipitationMm).toBe(12.345_678);
+    expect(exactProfile[1].meanTemperatureC).toBe(1.234_567);
+    expect(Object.is(exactProfile[0].meanTemperatureC, -0)).toBe(false);
     expect(roundHalfAwayFromZero(1.25, 1)).toBe(1.3);
     expect(roundHalfAwayFromZero(-1.25, 1)).toBe(-1.3);
     expect(Object.is(roundHalfAwayFromZero(-0, 1), -0)).toBe(false);
   });
 
-  it('parses the official monthly-normal DDS, DAS and point excerpts', () => {
+  it('parses only an exact point response bound to family, month, time and selected cell', () => {
     const contract = loadContract();
     const excerpts = loadFixtures().officialExcerpts;
+    const binding = {
+      X: 119,
+      Y: 1041,
+      lat: 62.47589,
+      lon: 6.145098,
+      sourceUrl: excerpts[2].sourceUrl,
+    };
 
     expect(parseDds(excerpts[0].body, 'tg')).toEqual({
       X: 1195,
@@ -300,19 +447,42 @@ describe('Snart deterministic monthly-normal derivation', () => {
       units: 'Celsius',
     });
     expect(
-      parseMonthlyPointAscii(excerpts[2].body, 'tg', 1, contract),
+      parseMonthlyPointAscii(excerpts[2].body, 'tg', 1, contract, binding),
     ).toMatchObject({
       family: 'tg',
       month: 1,
+      time: 797694,
       value: 2.806599,
     });
     expect(
-      parseMonthlyPointAscii(excerpts[5].body, 'rr', 1, contract),
+      parseMonthlyPointAscii(excerpts[5].body, 'rr', 1, contract, {
+        ...binding,
+        sourceUrl: excerpts[5].sourceUrl,
+      }),
     ).toMatchObject({
       family: 'rr',
       month: 1,
+      time: 797694,
       value: 184.691,
     });
+
+    for (const malformed of [
+      `${excerpts[2].body}unexpected-extra-section\n`,
+      excerpts[2].body.replace('monthly_01.nc;', 'monthly_02.nc;'),
+      excerpts[2].body.replace('tg.time[1]\n797694.0', 'tg.time[1]\n0.0'),
+      excerpts[2].body.replace('[0], 62.47589', '[0], 62.47590'),
+      excerpts[2].body.replace('tg.Y[1]\n6958500.0', 'tg.Y[1]\n0.0'),
+    ]) {
+      expect(() =>
+        parseMonthlyPointAscii(malformed, 'tg', 1, contract, binding),
+      ).toThrow(/ASCII|binding|cell|month|schema|time/iu);
+    }
+    expect(() =>
+      parseMonthlyPointAscii(excerpts[2].body, 'tg', 1, contract, {
+        ...binding,
+        X: binding.X + 1,
+      }),
+    ).toThrow(/binding|cell|query/iu);
   });
 });
 
@@ -382,6 +552,161 @@ describe('Snart fixture build, validation and atomic output', () => {
         (entry: { datasetUrl: string }) => entry.datasetUrl,
       ),
     ).toEqual(loadContract().source.datasetUrls);
+    expect(manifest.sourceAttribution).toBe(
+      loadContract().source.attributionText,
+    );
+    expect(manifest.sourceAttribution).toContain('Bearbeidet av Babyora');
+  });
+
+  it('preserves raw source values for every 2024-2025 15-day threshold decision', () => {
+    const pack = JSON.parse(
+      readFileSync(
+        'src/data/snart/climate-1991-2020-v1.json',
+        'utf8',
+      ),
+    ) as {
+      profiles: Record<
+        string,
+        { months: ReturnType<typeof monthlyRows> }
+      >;
+    };
+    const drift = { precipitation: 0, temperature: 0 };
+    let rawPrecisionValues = 0;
+
+    for (const profile of Object.values(pack.profiles)) {
+      const rawRows = profile.months;
+      const presentationRows = rawRows.map((row) => ({
+        ...row,
+        meanTemperatureC: roundHalfAwayFromZero(
+          row.meanTemperatureC,
+          1,
+        ),
+        monthlyPrecipitationMm: roundHalfAwayFromZero(
+          row.monthlyPrecipitationMm,
+          1,
+        ),
+      }));
+      rawPrecisionValues += rawRows.filter(
+        (row) =>
+          row.meanTemperatureC !==
+            roundHalfAwayFromZero(row.meanTemperatureC, 1) ||
+          row.monthlyPrecipitationMm !==
+            roundHalfAwayFromZero(row.monthlyPrecipitationMm, 1),
+      ).length;
+
+      for (
+        let asOf = calendarDate(2024, 1, 1);
+        asOf <= calendarDate(2025, 12, 31);
+        asOf = addCalendarDays(asOf, 1)
+      ) {
+        const raw = targetSignals(rawRows, asOf);
+        const presentation = targetSignals(presentationRows, asOf);
+        if (
+          temperatureBucket(raw.temperature) !==
+          temperatureBucket(presentation.temperature)
+        ) {
+          drift.temperature += 1;
+        }
+        if (
+          precipitationBucket(raw.precipitation) !==
+          precipitationBucket(presentation.precipitation)
+        ) {
+          drift.precipitation += 1;
+        }
+      }
+    }
+
+    expect(rawPrecisionValues).toBeGreaterThan(0);
+    expect(drift).toEqual({ temperature: 319, precipitation: 6 });
+  });
+
+  it('rejects extra pack, manifest and binding fields plus provenance text tampering after hashes are recomputed', async () => {
+    const contract = loadContract();
+    const cases: Array<{
+      mutate: (
+        pack: Record<string, any>,
+        manifest: Record<string, any>,
+      ) => void;
+      name: string;
+    }> = [
+      {
+        name: 'pack child identity',
+        mutate: (pack) => {
+          pack.childId = 'forbidden-child';
+        },
+      },
+      {
+        name: 'manifest capability',
+        mutate: (_pack, manifest) => {
+          manifest.capability = 'soon_preparation';
+        },
+      },
+      {
+        name: 'supported binding PII',
+        mutate: (_pack, manifest) => {
+          manifest.placeGridBindings.find(
+            (binding: { status: string }) => binding.status === 'supported',
+          ).childId = 'forbidden-child';
+        },
+      },
+      {
+        name: 'unavailable binding PII',
+        mutate: (_pack, manifest) => {
+          manifest.placeGridBindings.find(
+            (binding: { status: string }) => binding.status === 'unavailable',
+          ).email = 'forbidden@example.invalid';
+        },
+      },
+      {
+        name: 'source disclaimer',
+        mutate: (_pack, manifest) => {
+          manifest.sourceDisclaimer = 'tampered but reserialized';
+        },
+      },
+      {
+        name: 'source attribution',
+        mutate: (_pack, manifest) => {
+          manifest.sourceAttribution =
+            'Meteorologisk institutt (MET Norway)';
+        },
+      },
+      {
+        name: 'nested normal period',
+        mutate: (pack) => {
+          pack.normalPeriod.capability = true;
+        },
+      },
+    ];
+
+    for (const testCase of cases) {
+      const directory = makeTempDir();
+      await buildClimatePack({
+        contractPath: CONTRACT_PATH,
+        fixturePath: FIXTURE_PATH,
+        mode: 'fixture',
+        outputDir: directory,
+        createdFromGitSha: 'fixture-candidate',
+      });
+      const { pack, manifest } = readBundle(directory);
+      expect(manifest.sourceDisclaimer).toBe(
+        contract.source.derivedDataDisclaimer,
+      );
+      expect(manifest.sourceAttribution).toBe(
+        contract.source.attributionText,
+      );
+      testCase.mutate(pack, manifest);
+      writeCanonicalBundle(directory, pack, manifest);
+
+      expect(
+        () =>
+          validateClimateBundle({
+            contractPath: CONTRACT_PATH,
+            dataDir: directory,
+            fixtureMode: true,
+          }),
+        testCase.name,
+      ).toThrow(/field|provenance|schema/iu);
+    }
   });
 
   it('rejects tampered monthly data, missing places and credential-shaped text', async () => {

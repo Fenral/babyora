@@ -22,8 +22,8 @@
       "kind": "ascii",
       "syntheticBoundary": false,
       "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc.ascii?lat[1041:1:1041][119:1:119],lon[1041:1:1041][119:1:119],tg[0:1:0][1041:1:1041][119:1:119],time[0:1:0]",
-      "sha256": "dccf17cc2bfd8cd63ede49f87d7fde27d6a7ed531dc66b476d9ab0631dfadd64",
-      "body": "lat.lat[1][1]\n[0], 62.47589\n\nlon.lon[1][1]\n[0], 6.145098\n\ntg.tg[1][1][1]\n[0][0], 2.806599\n\ntime[1]\n797694.0\n"
+      "sha256": "145cb1c38af8ca1dbed45febbae322c01b9403dd2c4c9d3d4da869918192e8aa",
+      "body": "Dataset {\n    Grid {\n     ARRAY:\n        Float32 lat[Y = 1][X = 1];\n     MAPS:\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } lat;\n    Grid {\n     ARRAY:\n        Float32 lon[Y = 1][X = 1];\n     MAPS:\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } lon;\n    Grid {\n     ARRAY:\n        Float32 tg[time = 1][Y = 1][X = 1];\n     MAPS:\n        Float64 time[time = 1];\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } tg;\n    Float64 time[time = 1];\n} senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc;\n---------------------------------------------\nlat.lat[1][1]\n[0], 62.47589\n\nlat.Y[1]\n6958500.0\n\nlat.X[1]\n44500.0\n\n\nlon.lon[1][1]\n[0], 6.145098\n\nlon.Y[1]\n6958500.0\n\nlon.X[1]\n44500.0\n\n\ntg.tg[1][1][1]\n[0][0], 2.806599\n\ntg.time[1]\n797694.0\n\ntg.Y[1]\n6958500.0\n\ntg.X[1]\n44500.0\n\n\ntime[1]\n797694.0\n\n"
     },
     {
       "id": "senorge-rr-monthly-01-dds-shape",
@@ -45,9 +45,9 @@
       "id": "senorge-rr-monthly-01-ascii-point",
       "kind": "ascii",
       "syntheticBoundary": false,
-      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc.ascii?rr[0:1:0][1041:1:1041][119:1:119],time[0:1:0]",
-      "sha256": "c7d8260685ba6653a1736e01e254df789a50723db7cda54589d03b5df97f23fd",
-      "body": "rr.rr[1][1][1]\n[0][0], 184.691\n\ntime[1]\n797694.0\n"
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc.ascii?lat[1041:1:1041][119:1:119],lon[1041:1:1041][119:1:119],rr[0:1:0][1041:1:1041][119:1:119],time[0:1:0]",
+      "sha256": "55023a3ba5a2599fc4e2338b4c74c5313fe00052bd2b5e51c38a461a0bfa71fd",
+      "body": "Dataset {\n    Grid {\n     ARRAY:\n        Float32 lat[Y = 1][X = 1];\n     MAPS:\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } lat;\n    Grid {\n     ARRAY:\n        Float32 lon[Y = 1][X = 1];\n     MAPS:\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } lon;\n    Grid {\n     ARRAY:\n        Float32 rr[time = 1][Y = 1][X = 1];\n     MAPS:\n        Float64 time[time = 1];\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } rr;\n    Float64 time[time = 1];\n} senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc;\n---------------------------------------------\nlat.lat[1][1]\n[0], 62.47589\n\nlat.Y[1]\n6958500.0\n\nlat.X[1]\n44500.0\n\n\nlon.lon[1][1]\n[0], 6.145098\n\nlon.Y[1]\n6958500.0\n\nlon.X[1]\n44500.0\n\n\nrr.rr[1][1][1]\n[0][0], 184.691\n\nrr.time[1]\n797694.0\n\nrr.Y[1]\n6958500.0\n\nrr.X[1]\n44500.0\n\n\ntime[1]\n797694.0\n\n"
     }
   ],
   "fixtureBuild": {
