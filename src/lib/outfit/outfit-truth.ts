@@ -313,6 +313,21 @@ function assertStringArray(
   }
 }
 
+function assertOutfitItemArray(
+  value: unknown,
+  path: string,
+): asserts value is string[] {
+  assertStringArray(value, path);
+  if (
+    value.length === 0 ||
+    value.some((item) => item.trim().length === 0)
+  ) {
+    throw new OutfitTruthInputError(
+      `${path} must contain one or more non-blank item labels`,
+    );
+  }
+}
+
 function assertNoteArray(
   value: unknown,
   path: string,
@@ -561,7 +576,7 @@ function assertRecommendation(
         `${layerPath}.category is malformed`,
       );
     }
-    assertStringArray(layer.items, `${layerPath}.items`);
+    assertOutfitItemArray(layer.items, `${layerPath}.items`);
   }
   assertStringArray(value.notes, 'finalizedRecommendation.notes');
   assertNoteArray(
