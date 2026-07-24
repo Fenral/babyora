@@ -836,7 +836,13 @@ export function createOutfitTruthSnapshot(
 
   const avatar = resolveOutfitAvatarTruth({
     pose: args.pose,
-    garments: garmentDrafts,
+    garments: garmentDrafts.map(
+      ({ itemId, catalogGarmentId, avatarCoverage }) => ({
+        itemId,
+        catalogGarmentId,
+        avatarCoverage,
+      }),
+    ),
   });
   const visible = new Set(avatar.visibleGarmentIds);
   const garments = garmentDrafts.map((garment) => ({
