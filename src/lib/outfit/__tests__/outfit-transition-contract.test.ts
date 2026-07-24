@@ -506,7 +506,7 @@ describe('Phase-2 Outfit target registration', () => {
     const identityArgs = readinessArgs();
     let identityGetterCalls = 0;
     identityArgs.expectedIdentity = {
-      get snapshotId() {
+      get snapshotId(): never {
         identityGetterCalls += 1;
         throw new Error('identity getter must not run');
       },
@@ -526,7 +526,7 @@ describe('Phase-2 Outfit target registration', () => {
     const source = rowArgs.targetRows[0]!;
     let rowGetterCalls = 0;
     rowArgs.targetRows[0] = {
-      get itemId() {
+      get itemId(): never {
         rowGetterCalls += 1;
         throw new Error('row getter must not run');
       },
@@ -563,7 +563,7 @@ describe('Phase-2 Outfit target registration', () => {
     let truthGetterCalls = 0;
     truthArgs.truth = {
       kind: 'supported',
-      get snapshot() {
+      get snapshot(): never {
         truthGetterCalls += 1;
         throw new Error('truth wrapper getter must not run');
       },
