@@ -1,8 +1,8 @@
 ---
 phase: 01-planlegg-dagslinjen
 artifact: snart-autonomous-rules
-ruleset_version: babyora-snart-heuristics@1
-derivation_version: babyora-climate-derivation@1
+ruleset_version: babyora-snart-heuristics@2
+derivation_version: babyora-monthly-normal-pack@2
 status: locked_for_autonomous_implementation
 created: 2026-07-19
 revised: 2026-07-24
@@ -31,7 +31,7 @@ Snart er **nøytral historisk forberedelse**, ikke et værvarsel, helseråd elle
 | D-02 | Snart beskriver historisk grunnlag, aldri prognose. | All synlig copy sier 1991–2020 og «ikke et værvarsel». |
 | D-03 | MET `seNorge_2018` er eneste klimakilde. | Uthenting skjer i en separat, reproduserbar build-time-pipeline; appen har ingen runtime klima-API. |
 | D-04 | Data skal aldri fabrikeres eller erstattes stille. | Manglende/ugyldig profil, kilde, dekning, schema, lisens eller hash gir `unavailable`. Ingen Frost-, forecast-, nabo- eller syntetisk fallback. |
-| D-05 | Tallgrensene eies av Babyora. | `babyora-snart-heuristics@1` er en versjonert produktheuristikk, ikke en MET-, helse- eller sikkerhetsgrense. |
+| D-05 | Tallgrensene eies av Babyora. | `babyora-snart-heuristics@2` er en versjonert produktheuristikk, ikke en MET-, helse- eller sikkerhetsgrense. |
 | D-06 | Sol-, helse-, kuldeeksponerings-, sikkerhets-, størrelse- og passformpåstander er ute. | Ingen solsignal, UV-copy, medisinsk rationale, eksponeringsråd, størrelsesinput eller passformnote finnes i modell eller UI. |
 | D-07 | `Har allerede` er session-only. | Ingen URL, storage, logger, analytics, backend, barn-ID eller tidspunktshistorikk; state nullstilles ved relevante grenser. |
 | D-08 | Høyrisiko krever determinisme og to uavhengige reviewer. | Den aktive `gsd-executor` spawner begge etter immutable kandidatcommit med `fork_turns: "none"`, bruker sin collaboration-gitte canonical agent/task-identitet som eksklusjons-ID og reviewer aldri eget arbeid. Lokale receipts er konsistensbevis, ikke kryptografisk proveniens. |
@@ -66,12 +66,17 @@ Følgende finnes ikke i Snart v1:
 
 ### Kilde
 
-Pakken bygges kun fra METs offisielle `seNorge_2018`-arkiv for 1991-01-01–2020-12-31. Temperaturvariablene `tg`, `tn`, `tx` bruker dokumentert versjon 23.09 og `rr` bruker 23.11. Katalog-URL-en er attribusjon, ikke en dynamisk redirect-/discoveryinngang.
+Pakken bygges kun fra METs offisielle, kompakte `seNorge_2018` månedsnormaler for 1991–2020:
+
+- `tg_normal_1991_2020_monthly_MM.nc` med variabel `tg`, enhet `Celsius`, `time: mean`, filversjon `1.0` og kildeversjon `v23_09`;
+- `rr_normal_1991_2020_monthly_MM.nc` med variabel `rr`, enhet `mm`, `time: sum`, filversjon `1.0` og kildeversjon `v23_11`.
+
+`MM` er eksakt `01`–`12`. Katalog-URL-ene er attribusjon, ikke dynamiske redirect-/discoveryinnganger. Kontrakten genererer en eksakt allowlist med 24 dataset-URL-er — to variabelfamilier × tolv måneder — og ingen andre datasettnavn kan hentes.
 
 Alle nettverkskall følger den maskinlesbare `httpPolicy` i autonomikontrakten:
 
 - URL-skjema er eksakt `https:`, hostname er eksakt ASCII `thredds.met.no`, effektiv port er 443 (`URL.port` bare tom eller `443`), og username/password/hash er tomme;
-- pathname matcher eksakt `^/thredds/dodsC/senorge/seNorge_2018/Archive/seNorge2018_(199[1-9]|20(0[0-9]|1[0-9]|20))\.nc\.(dds|das|ascii)$`; `.ascii`-query parses strukturelt og tillater bare `time,latitude,longitude,tg,tn,tx,rr` med heltallsindekser innen validerte DDS-dimensjoner;
+- pathname matcher eksakt `^/thredds/dodsC/senorge/seNorge_2018/aggregated_products/(tg|rr)/seNorge2018_(tg|rr)_normal_1991_2020_monthly_(0[1-9]|1[0-2])\.nc\.(dds|das|ascii)$`; mappefamilie og variabelnavn må være identiske, URL-en må finnes i den genererte 24-elementers allowlisten, og `.ascii`-query parses strukturelt og tillater bare `time,lat,lon,tg,rr` med heltallsindekser innen validerte DDS-dimensjoner;
 - `fetch` bruker `redirect: "manual"`; alle 3xx, off-host `Location`, HTTPS→HTTP-downgrade, ukjent status og ukjent content type er terminal FAIL og følges aldri;
 - timeout er 20 000 ms per forsøk; body leses streaming med hard grense 2 MiB for DDS/DAS/punkt-ASCII og 96 MiB for den ene koordinatgrid-responsen; avbrutt, trunkert eller større body er FAIL og caches ikke;
 - bare HTTP 200 aksepteres. Bare 429, 500, 502, 503 og 504 kan retries, maksimalt tre totale forsøk med 1 s og 2 s eksponentiell venting. Gyldig numerisk eller IMF-date `Retry-After` brukes som `max(backoff, retryAfter)` og clampes til 0–30 s;
@@ -97,7 +102,7 @@ Gridbinding `nearest-grid-cell@1` er også eksakt:
 - beregn Haversine-avstand med jordradius 6 371 008,8 m fra stedets `latE4/lonE4` til hver endelig gridkoordinat;
 - kvantiser positiv avstand til millimeter med half-away-from-zero, sorter på `[distanceMillimetres,Y,X]`, og velg bare første geometriske celle; lik millimeteravstand brytes med laveste `Y`, deretter `X`;
 - maksimal avstand er 5 000 000 mm. Over grensen gir eksplisitt `grid_too_far`;
-- valgt celle må ha endelig lat/lon og bestå dekning for alle fire variabler. `_FillValue`, ikke-endelig verdi, hav/ugyldig celle eller dekningsbrudd gir eksplisitt `grid_invalid_or_sea`; builderen prøver aldri nest nærmeste celle i stillhet;
+- valgt celle må ha endelig lat/lon og en endelig, ikke-`_FillValue` verdi for både `tg` og `rr` i alle tolv måneder. Hav/ugyldig celle eller ett manglende månedsfelt gir eksplisitt `grid_invalid_or_sea`; builderen prøver aldri nest nærmeste celle i stillhet;
 - boundary-fixtures dekker eksakt treff, sub-millimeter/tie, Y/X-tiebreak, 5 000 000/5 000 001 mm, invalid/havcelle og to navn med samme koordinat.
 
 Manifestet registrerer hele kanoniske projeksjonshashen, hver binding, faktisk `canonicalPlaceCount`, `supportedProfileCount` og én eksplisitt unavailable-grunn per ikke-støttet oppføring. Validatoren krever at støttet + unavailable er eksakt lik den aktuelle hashede `NO_CITIES`-projeksjonen.
@@ -108,11 +113,11 @@ Ugyldig eller ikke-kanonisk hjemsted velger aldri nærmeste profil ved runtime. 
 
 Build-pipelinen skal:
 
-1. preflighte alle 30 DDS/DAS-skjemaer, kildeinstitusjon, variabelversjoner, periode, tidsenheter, `_FillValue` og lisens gjennom den frosne HTTP-policyen;
+1. preflighte alle 24 månedlige DDS/DAS-skjemaer, kildeinstitusjon, fil-/kildeversjoner, periode, enheter, aggregation-attributt, `_FillValue` og lisens gjennom den frosne HTTP-policyen;
 2. løse gridceller med `nearest-grid-cell@1` og aldri nabo-fallback;
-3. hente ett sted og ett år om gangen med begrenset retry/backoff og resumérbar cache under ignorert `tmp/`;
-4. parse bare validert DAP2-ASCII og mappe eksplisitte UTC-tidsstempler til lokale datoer etter tidskontrakten under;
-5. avvise ukjente felt, duplikate datoer, ikke-endelige tall og `_FillValue`;
+3. hente ett sted, én variabel og én måned om gangen med maksimal samtidighet én, begrenset retry/backoff og resumérbar cache under ignorert `tmp/`;
+4. parse bare validert DAP2-ASCII og binde hvert svar til kontraktens eksakte variabel, måned og gridindeks;
+5. avvise ukjente felt, duplikate/manglende måneder, ikke-endelige tall og `_FillValue`;
 6. derivere, sortere og serialisere med stabile nøkler, dokumentert avrunding, UTF-8 og LF;
 7. bygge to ganger fra separate tomme outputmapper mot den samme hashede råkilde-cachen;
 8. kreve byte-identisk pack- og manifest-hash;
@@ -121,7 +126,7 @@ Build-pipelinen skal:
 
 Manifestet inneholder minst:
 
-`schemaVersion`, `derivationVersion`, `rulesetVersion`, `normalPeriod`, `createdFromGitSha`, `sourceCatalogUrl`, `sourceDatasetUrls`, `sourceVariableVersions`, `sourceInstitution`, `sourceLicenseUri`, `sourceMetadataSha256`, `sourceResponseSha256`, `httpPolicyVersion`, `homePlaceKeyVersion`, `gridPolicyVersion`, `timeMappingVersion`, `leapDayPolicy`, `placeGridBindings`, `coveragePolicy`, `quantileMethod`, `roundingPolicy`, `canonicalPlacesSha256`, `packSha256`, `builderSha256` og `contractSha256`.
+`schemaVersion`, `derivationVersion`, `rulesetVersion`, `normalPeriod`, `createdFromGitSha`, `sourceCatalogUrls`, eksakt 24 `sourceDatasets[{url,family,variable,month,metadataSha256,responseSha256[]}]`, `sourceFileVersions`, `sourceVariableVersions`, `sourceUnits`, `sourceAggregations`, `sourceInstitution`, `sourceLicenseUri`, `httpPolicyVersion`, `homePlaceKeyVersion`, `gridPolicyVersion`, `targetWindowDerivationVersion`, `placeGridBindings`, `monthCount`, `roundingPolicy`, `canonicalPlacesSha256`, `packSha256`, `builderSha256` og `contractSha256`.
 
 `generatedAt` kan bare ligge i et ikke-identitetsbærende kjørespor. Kandidatidentiteten er Git-SHA + kontrakt-SHA + datapakke-SHA.
 
@@ -133,27 +138,17 @@ Manifest og kildevisning skal vise:
 - eksakt datasettnavn, variabelversjoner, normalperiode og kilde-URL-er;
 - lisens-URI fra faktisk MET-metadata;
 - `Bearbeidet av Babyora`;
-- forklaring om at Babyora har avledet statistikken, og at den ikke er et MET-varsel eller en offisiell MET-normal.
+- forklaring om at kildefilene er METs offisielle månedsnormalprodukter, mens Babyoras målperiodeberegning og plaggheuristikker verken er et MET-varsel eller en MET-anbefaling.
 
-## Avledningsmetode `babyora-climate-derivation@1`
+## Datapakke `babyora-monthly-normal-pack@2`
 
-### UTC→lokal dato og skuddår
+Hver støttet hjemstedsprofil har eksakt tolv rader, sortert fra januar til desember:
 
-- Hver DAP2-rad må ha et eksplisitt UTC-tidsstempel med time eksakt `06:00:00Z` eller `18:00:00Z`. Instantet formateres med eksplisitt `Europe/Oslo` til `YYYY-MM-DD`; andre timer, ugyldig offset, lokal dato utenfor filåret eller duplikat `{variabel,lokalDato}` er FAIL.
-- Den kanoniske klimatologiaksen har 365 `MM-DD`-nøkler og utelater `02-29`. Rå 29. februar registreres i manifestets `discardedLeapDaySamples` og brukes ikke i kvantiler, slik at marsdatoer aldri ordinalforskyves mellom skuddår og normalår.
-- En runtime-måldato 29. februar bruker eksplisitt profilnøkkel `02-28`. Dette er `leapDayPolicy="map-target-02-29-to-02-28;discard-source-02-29"` og kan bare endres med ny derivation-version.
-- Boundary-fixtures dekker 06/18 UTC på begge sider av norsk DST, 2019/2020 februar–mars, 2020-02-29-discard, runtime 02-29-map og årsskifte.
+```text
+{month, meanTemperatureC, monthlyPrecipitationMm}
+```
 
-For hver av de 365 profilnøklene brukes et sentrert femdagers vindu på den 365-dagers ringen (`D-2,D-1,D,D+1,D+2`). Dermed er 01-01-vinduet eksakt `12-30,12-31,01-01,01-02,01-03`, og 02-28-vinduet eksakt `02-26,02-27,02-28,03-01,03-02`, for hvert kildeår 1991–2020:
-
-- `p10MinC`: Type-7-kvantilen av gyldig `tn`;
-- `p50MeanC`: Type-7-kvantilen av gyldig `tg`;
-- `p90MaxC`: Type-7-kvantilen av gyldig `tx`;
-- `wetProbability`: andel gyldig `rr` hvor `rr >= 1.0`;
-- Type-7 er eksakt `h=(n-1)p+1`, `j=floor(h)`, `gamma=h-j`, og `q=x[j]+gamma*(x[j+1]-x[j])` over stabilt numerisk sorterte råverdier med énindeksert beskrivelse og eksplisitte endepunkter;
-- temperaturfelter serialiseres med skala 1 desimal, `wetProbability` med 4 desimaler, og gridavstand med 0 mm-desimaler. Alle bruker half-away-from-zero; `-0` normaliseres til `0`, JSON bruker aldri eksponentform, og alle heuristikk-/terskelsammenligninger bruker uavrundet verdi.
-
-Hver profilnøkkel og variabel forventer 150 observasjoner (30 år × 5 dager), minst 27 representerte år og minst 135 gyldige observasjoner. Ett brudd gjør hele stedsprofilen `unavailable`; delvise råd er ikke tillatt. Profilen bærer faktiske gyldige/manglende/discarded antall og min/maks per variabel. Golden fixtures inkluderer eksakte Type-7-interpolasjoner, `±1.25 → ±1.3`, 0.00005-probabilitet, råverdi på hver heuristikkgrense og serialiseringsrekkefølge.
+`month` må være hvert heltall 1–12 nøyaktig én gang. Begge verdier må være endelige og ikke lik kildens `_FillValue`. Temperatur og nedbør serialiseres med én desimal; gridavstand med null desimaler. Alle bruker half-away-from-zero, `-0` normaliseres til `0`, JSON bruker aldri eksponentform, og runtimeberegning/terskelsammenligning bruker uavrundede kildeverdier. Ett avvik gjør hele stedsprofilen `unavailable`; delvise råd er ikke tillatt.
 
 ## Modellinput og målperiode
 
@@ -172,36 +167,37 @@ Målperioden er D+28 til D+42, begge ender inkludert, alltid 15 unike lokale dat
 
 ## Avledede signaler
 
-For målperiodens 15 datoer:
+`babyora-target-window-monthly-weighting@1` grupperer målperiodens 15 datoer etter kalendermåned:
 
-- `coldTailC` = minimum av `p10MinC`;
-- `expectedWetDays` = summen av `wetProbability`;
-- `p50MeanC` og `p90MaxC` er sporbar QA-kontekst, men utløser ingen regel eller brukerrettet varme-/sikkerhetspåstand.
+- `targetMeanTemperatureC = Σ(meanTemperatureC_month × targetDaysInMonth) / 15`;
+- `targetPrecipitationMm = Σ(monthlyPrecipitationMm_month / daysInMonth(targetYear, month) × targetDaysInMonth)`.
 
-## Produktheuristikk `babyora-snart-heuristics@1`
+Dette skalerer historiske månedsnormaler til den konkrete 15-dagersperioden. Det er aldri et værvarsel. Skuddår håndteres bare ved faktisk antall dager i den berørte februar; det finnes ingen 29.-februar-profil eller kalenderdagsfallback.
+
+## Produktheuristikk `babyora-snart-heuristics@2`
 
 Alle rader har `policyOwner: "Babyora"` og `evidenceType: "product_heuristic"`.
 
 | Regel-ID | Trigger | Intern gruppe | Konsept | Synlig setning |
 |---|---|---|---|---|
-| `SNART-H1-BASE-CHECK` | `coldTailC <= 10` | `check_first` | `snart.base_layer` | `Sjekk om dere har et lett innerlag tilgjengelig for perioden.` |
-| `SNART-H1-BASE-AVAILABLE` | `10 < coldTailC <= 16` | `available_if_needed` | `snart.base_layer` | `Et lett innerlag kan være greit å finne fram dersom perioden blir kjøligere enn det historiske mønsteret.` |
-| `SNART-H1-BASE-NOT-HIGHLIGHTED` | `coldTailC > 16` | `not_highlighted` | `snart.base_layer` | `Innerlag er ikke fremhevet av denne historiske perioden.` |
-| `SNART-H1-MID-CHECK` | `coldTailC <= 5` | `check_first` | `snart.mid_layer` | `Sjekk om dere har et mellomlag tilgjengelig for perioden.` |
-| `SNART-H1-MID-AVAILABLE` | `5 < coldTailC <= 10` | `available_if_needed` | `snart.mid_layer` | `Et mellomlag kan være greit å finne fram dersom perioden blir kjøligere enn det historiske mønsteret.` |
-| `SNART-H1-MID-NOT-HIGHLIGHTED` | `coldTailC > 10` | `not_highlighted` | `snart.mid_layer` | `Mellomlag er ikke fremhevet av denne historiske perioden.` |
-| `SNART-H1-OUTER-CHECK` | `coldTailC <= 0` | `check_first` | `snart.insulated_outer` | `Sjekk om dere har et isolert ytterlag tilgjengelig for perioden.` |
-| `SNART-H1-OUTER-AVAILABLE` | `0 < coldTailC <= 5` | `available_if_needed` | `snart.insulated_outer` | `Et isolert ytterlag kan være greit å ha tilgjengelig dersom perioden blir kjøligere enn det historiske mønsteret.` |
-| `SNART-H1-OUTER-NOT-HIGHLIGHTED` | `coldTailC > 5` | `not_highlighted` | `snart.insulated_outer` | `Isolert ytterlag er ikke fremhevet av denne historiske perioden.` |
-| `SNART-H1-HEAD-CHECK` | `coldTailC <= 5` | `check_first` | `snart.cold_headwear` | `Sjekk om dere har et hodeplagg tilgjengelig for perioden.` |
-| `SNART-H1-HEAD-AVAILABLE` | `5 < coldTailC <= 10` | `available_if_needed` | `snart.cold_headwear` | `Et hodeplagg kan være greit å ha tilgjengelig dersom perioden blir kjøligere enn det historiske mønsteret.` |
-| `SNART-H1-HEAD-NOT-HIGHLIGHTED` | `coldTailC > 10` | `not_highlighted` | `snart.cold_headwear` | `Hodeplagg er ikke fremhevet av denne historiske perioden.` |
-| `SNART-H1-HAND-CHECK` | `coldTailC <= 0` | `check_first` | `snart.handwear` | `Sjekk om dere har håndplagg tilgjengelig for perioden.` |
-| `SNART-H1-HAND-AVAILABLE` | `0 < coldTailC <= 5` | `available_if_needed` | `snart.handwear` | `Håndplagg kan være greit å ha tilgjengelig dersom perioden blir kjøligere enn det historiske mønsteret.` |
-| `SNART-H1-HAND-NOT-HIGHLIGHTED` | `coldTailC > 5` | `not_highlighted` | `snart.handwear` | `Håndplagg er ikke fremhevet av denne historiske perioden.` |
-| `SNART-H1-WET-CHECK` | `expectedWetDays >= 4.0` | `check_first` | `snart.weather_shell` | `Historikken har flere nedbørsdager i perioden. Sjekk om et værbeskyttende ytterlag er tilgjengelig.` |
-| `SNART-H1-WET-AVAILABLE` | `2.0 <= expectedWetDays < 4.0` | `available_if_needed` | `snart.weather_shell` | `Et værbeskyttende ytterlag kan være greit å ha tilgjengelig ut fra historiske nedbørsmønstre.` |
-| `SNART-H1-WET-NOT-HIGHLIGHTED` | `expectedWetDays < 2.0` | `not_highlighted` | `snart.weather_shell` | `Værbeskyttende ytterlag er ikke fremhevet av denne historiske perioden.` |
+| `SNART-H2-BASE-CHECK` | `targetMeanTemperatureC <= 12` | `check_first` | `snart.base_layer` | `Sjekk om dere har et lett innerlag tilgjengelig for perioden.` |
+| `SNART-H2-BASE-AVAILABLE` | `12 < targetMeanTemperatureC <= 16` | `available_if_needed` | `snart.base_layer` | `Et lett innerlag kan være greit å finne fram dersom perioden blir kjøligere enn det historiske mønsteret.` |
+| `SNART-H2-BASE-NOT-HIGHLIGHTED` | `targetMeanTemperatureC > 16` | `not_highlighted` | `snart.base_layer` | `Innerlag er ikke fremhevet av denne historiske perioden.` |
+| `SNART-H2-MID-CHECK` | `targetMeanTemperatureC <= 7` | `check_first` | `snart.mid_layer` | `Sjekk om dere har et mellomlag tilgjengelig for perioden.` |
+| `SNART-H2-MID-AVAILABLE` | `7 < targetMeanTemperatureC <= 12` | `available_if_needed` | `snart.mid_layer` | `Et mellomlag kan være greit å finne fram dersom perioden blir kjøligere enn det historiske mønsteret.` |
+| `SNART-H2-MID-NOT-HIGHLIGHTED` | `targetMeanTemperatureC > 12` | `not_highlighted` | `snart.mid_layer` | `Mellomlag er ikke fremhevet av denne historiske perioden.` |
+| `SNART-H2-OUTER-CHECK` | `targetMeanTemperatureC <= 2` | `check_first` | `snart.insulated_outer` | `Sjekk om dere har et isolert ytterlag tilgjengelig for perioden.` |
+| `SNART-H2-OUTER-AVAILABLE` | `2 < targetMeanTemperatureC <= 7` | `available_if_needed` | `snart.insulated_outer` | `Et isolert ytterlag kan være greit å ha tilgjengelig dersom perioden blir kjøligere enn det historiske mønsteret.` |
+| `SNART-H2-OUTER-NOT-HIGHLIGHTED` | `targetMeanTemperatureC > 7` | `not_highlighted` | `snart.insulated_outer` | `Isolert ytterlag er ikke fremhevet av denne historiske perioden.` |
+| `SNART-H2-HEAD-CHECK` | `targetMeanTemperatureC <= 7` | `check_first` | `snart.cold_headwear` | `Sjekk om dere har et hodeplagg tilgjengelig for perioden.` |
+| `SNART-H2-HEAD-AVAILABLE` | `7 < targetMeanTemperatureC <= 12` | `available_if_needed` | `snart.cold_headwear` | `Et hodeplagg kan være greit å ha tilgjengelig dersom perioden blir kjøligere enn det historiske mønsteret.` |
+| `SNART-H2-HEAD-NOT-HIGHLIGHTED` | `targetMeanTemperatureC > 12` | `not_highlighted` | `snart.cold_headwear` | `Hodeplagg er ikke fremhevet av denne historiske perioden.` |
+| `SNART-H2-HAND-CHECK` | `targetMeanTemperatureC <= 2` | `check_first` | `snart.handwear` | `Sjekk om dere har håndplagg tilgjengelig for perioden.` |
+| `SNART-H2-HAND-AVAILABLE` | `2 < targetMeanTemperatureC <= 7` | `available_if_needed` | `snart.handwear` | `Håndplagg kan være greit å ha tilgjengelig dersom perioden blir kjøligere enn det historiske mønsteret.` |
+| `SNART-H2-HAND-NOT-HIGHLIGHTED` | `targetMeanTemperatureC > 7` | `not_highlighted` | `snart.handwear` | `Håndplagg er ikke fremhevet av denne historiske perioden.` |
+| `SNART-H2-WET-CHECK` | `targetPrecipitationMm >= 50` | `check_first` | `snart.weather_shell` | `Historisk nedbørsmengde er høyere for perioden. Sjekk om et værbeskyttende ytterlag er tilgjengelig.` |
+| `SNART-H2-WET-AVAILABLE` | `20 <= targetPrecipitationMm < 50` | `available_if_needed` | `snart.weather_shell` | `Et værbeskyttende ytterlag kan være greit å ha tilgjengelig ut fra historisk nedbørsmengde.` |
+| `SNART-H2-WET-NOT-HIGHLIGHTED` | `targetPrecipitationMm < 20` | `not_highlighted` | `snart.weather_shell` | `Værbeskyttende ytterlag er ikke fremhevet av periodens historiske nedbørsmengde.` |
 
 Rekkefølge etter deduplisering:
 
@@ -214,14 +210,14 @@ Hvert konsept har nøyaktig én vinnende regel. Gruppeprioritet er `check_first`
 | Element | Copy |
 |---|---|
 | Tittel | `Planlegg for {fraDato}–{tilDato}` |
-| Undertekst | `Basert på historiske værmønstre 1991–2020, ikke et værvarsel.` |
+| Undertekst | `Basert på månedlige normaler for 1991–2020, ikke et værvarsel.` |
 | Gruppe 1 | `Sjekk først` |
 | Gruppe 2 | `Kan være greit å ha tilgjengelig` |
 | Gruppe 3 | `Ikke fremhevet for perioden` |
-| Global note | `Dette er en Babyora-planleggingsregel basert på historiske data. Sjekk dagens vær og egne behov nærmere datoen.` |
+| Global note | `Dette er en Babyora-planleggingsregel basert på historiske månedsnormaler. Sjekk dagens vær og egne behov nærmere datoen.` |
 | Utilgjengelig | `Vi har ikke godt nok historisk grunnlag for dette stedet akkurat nå.` |
 | Tom | `Ingenting å forberede akkurat nå.` |
-| Kilde | `Historiske data: Meteorologisk institutt (MET Norway). Bearbeidet av Babyora.` |
+| Kilde | `Månedsnormaler 1991–2020: Meteorologisk institutt (MET Norway). Bearbeidet av Babyora.` |
 
 Copykontrakten blokkerer påstander om sikkerhet, helse, medisin, eksponeringsfare, spedbarnsråd, sol/UV, størrelse/passform og MET-anbefaling. Testen skal dekke bøyninger og sammensatte varianter, ikke bare eksakt streng.
 
@@ -346,5 +342,6 @@ Ved vedvarende ekstern kildefeil beholdes siste validerte pakke; uten en slik pa
 - `src/data/no-cities.ts`
 - [MET seNorge_2018](https://github.com/metno/seNorge_docs/wiki/seNorge_2018)
 - [MET seNorge variables](https://github.com/metno/seNorge_docs/wiki/Variables)
-- [MET THREDDS archive](https://thredds.met.no/thredds/catalog/senorge/seNorge_2018/Archive/catalog.html)
+- [MET THREDDS temperatur-månedsnormaler](https://thredds.met.no/thredds/catalog/senorge/seNorge_2018/aggregated_products/tg/catalog.html)
+- [MET THREDDS nedbør-månedsnormaler](https://thredds.met.no/thredds/catalog/senorge/seNorge_2018/aggregated_products/rr/catalog.html)
 - [MET licensing and attribution](https://www.met.no/frie-meteorologiske-data/lisensiering-og-kreditering)
