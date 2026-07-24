@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "babyora-independent-review-receipt@2",
+  "planId": "01-18",
+  "lane": "A",
+  "attempt": 3,
+  "candidate": {
+    "gitSha": "5cf7df85014fa51096b06a7e381926ebb4601798",
+    "treeSha": "968a6d1db29138f0886d4a1d9c8091358bc45d61",
+    "contractSha256": "f223636699eb0b654ad29ab08b407237db6e5ee224aeb8f0720e4c80a0f05033",
+    "packSha256": "e222950d15e49a98e5aeb65516219f6a4adda5a618e6ad1ae98ad6193136457b",
+    "evidenceSha256": "867576f203a30f563ac5409c35aa003bf89a1f40bf79ea03ef2fcd373736749a"
+  },
+  "reviewer": {
+    "agentId": "/root/review_01_18_a3_canonical_a",
+    "canonicalTaskName": "/root/review_01_18_a3_canonical_a"
+  },
+  "signedByIdentity": {
+    "agentId": "/root/review_01_18_a3_canonical_a",
+    "canonicalTaskName": "/root/review_01_18_a3_canonical_a"
+  },
+  "verdict": "PASS",
+  "findings": [],
+  "commands": [
+    {
+      "command": "npx tsx scripts/snart/validate-climate-pack.ts",
+      "exitCode": 0
+    },
+    {
+      "command": "focused haptics/nav Vitest suite (26 tests)",
+      "exitCode": 0
+    },
+    {
+      "command": "npm test (945 passed, 1 todo)",
+      "exitCode": 0
+    },
+    {
+      "command": "npx tsc -b --pretty false",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0
+    },
+    {
+      "command": "npx vite build && npm run build:bare",
+      "exitCode": 0
+    },
+    {
+      "command": "npx tsx e2e/planlegg.ts --case native-polish",
+      "exitCode": 0
+    },
+    {
+      "command": "npx tsx e2e/planlegg.ts --case snart (first and only cold standalone run)",
+      "exitCode": 0
+    },
+    {
+      "command": "source/security/no-media/no-secret/diff/clean/hash-parity audit",
+      "exitCode": 0
+    }
+  ],
+  "cleanBefore": true,
+  "cleanAfter": true
+}
