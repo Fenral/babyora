@@ -8,6 +8,7 @@ import type {
 } from '../wool-layers/types.js';
 import {
   finalizeOutfitOccurrenceSwap,
+  hasCompleteFinalizedSafetyData,
   type FinalizedOutfitSwapRejectionCode,
   type OutfitSwapSourceOccurrenceV1,
 } from './finalized-outfit-swap.js';
@@ -187,35 +188,70 @@ function unavailable(
   });
 }
 
-function readStringArray(value: unknown): readonly string[] | null {
-  if (
-    value === undefined
-  ) {
-    return Object.freeze([]);
-  }
-  if (
-    !Array.isArray(value) ||
-    Reflect.ownKeys(value).some((key) => {
-      if (key === 'length') return false;
-      if (typeof key !== 'string') return true;
-      const index = Number(key);
-      const descriptor = Object.getOwnPropertyDescriptor(value, key);
-      return (
-        !Number.isInteger(index) ||
-        index < 0 ||
-        index >= value.length ||
-        String(index) !== key ||
+function readDensePlainDataArray(
+  value: unknown,
+): readonly unknown[] | null {
+  try {
+    if (!Array.isArray(value)) {
+      return null;
+    }
+    if (Object.getPrototypeOf(value) !== Array.prototype) {
+      return null;
+    }
+    const lengthDescriptor = Object.getOwnPropertyDescriptor(
+      value,
+      'length',
+    );
+    const ownKeys = Reflect.ownKeys(value);
+    if (
+      lengthDescriptor === undefined ||
+      !('value' in lengthDescriptor) ||
+      !Number.isInteger(lengthDescriptor.value) ||
+      lengthDescriptor.value < 0 ||
+      ownKeys.length !== lengthDescriptor.value + 1
+    ) {
+      return null;
+    }
+
+    const snapshot: unknown[] = [];
+    for (
+      let index = 0;
+      index < lengthDescriptor.value;
+      index += 1
+    ) {
+      const descriptor = Object.getOwnPropertyDescriptor(
+        value,
+        String(index),
+      );
+      if (
         descriptor === undefined ||
         !('value' in descriptor) ||
         descriptor.enumerable !== true
-      );
-    }) ||
-    Object.keys(value).length !== value.length ||
-    value.some((item) => typeof item !== 'string')
+      ) {
+        return null;
+      }
+      snapshot.push(descriptor.value);
+    }
+    return Object.freeze(snapshot);
+  } catch {
+    return null;
+  }
+}
+
+function readStringArray(value: unknown): readonly string[] | null {
+  if (value === undefined) {
+    return Object.freeze([]);
+  }
+  const snapshot = readDensePlainDataArray(value);
+  if (
+    snapshot === null ||
+    !snapshot.every((item): item is string =>
+      typeof item === 'string'
+    )
   ) {
     return null;
   }
-  return Object.freeze([...value]);
+  return Object.freeze([...snapshot]);
 }
 
 type CandidateSnapshot = Readonly<{
@@ -230,6 +266,7 @@ type CandidateReadResult =
       kind: 'invalid-source';
       targetLabel: string | null;
     }>
+  | Readonly<{ kind: 'invalid-candidates' }>
   | Readonly<{
       kind: 'candidates';
       candidates: readonly CandidateSnapshot[];
@@ -271,20 +308,29 @@ function readCandidateData(sourceLabel: string): CandidateReadResult {
   if (
     itemNameDescriptor === undefined ||
     !('value' in itemNameDescriptor) ||
-    itemNameDescriptor.value !== sourceLabel ||
-    alternativesDescriptor === undefined ||
-    !('value' in alternativesDescriptor) ||
-    !Array.isArray(alternativesDescriptor.value)
+    itemNameDescriptor.value !== sourceLabel
   ) {
     return Object.freeze({
       kind: 'invalid-source' as const,
       targetLabel: null,
     });
   }
+  if (
+    alternativesDescriptor === undefined ||
+    !('value' in alternativesDescriptor)
+  ) {
+    return Object.freeze({ kind: 'invalid-candidates' as const });
+  }
+  const rawCandidates = readDensePlainDataArray(
+    alternativesDescriptor.value,
+  );
+  if (rawCandidates === null) {
+    return Object.freeze({ kind: 'invalid-candidates' as const });
+  }
 
   const candidates: CandidateSnapshot[] = [];
   const invalidTargetLabels: Array<string | null> = [];
-  for (const rawCandidate of alternativesDescriptor.value as unknown[]) {
+  for (const rawCandidate of rawCandidates) {
     if (
       rawCandidate === null ||
       typeof rawCandidate !== 'object' ||
@@ -436,6 +482,9 @@ export function buildOutfitAlternativeOptions(
   } catch {
     return unavailable(transitionContextId);
   }
+  if (!hasCompleteFinalizedSafetyData(finalizedRecommendation)) {
+    return unavailable(transitionContextId);
+  }
   if (baseBuild.kind === 'unsupported-cardinality') {
     return freezeDeep({
       kind: 'unsupported-cardinality' as const,
@@ -460,13 +509,18 @@ export function buildOutfitAlternativeOptions(
 
   for (const equipment of base.equipment) {
     const candidateData = readCandidateData(equipment.sourceLabel);
-    if (candidateData.kind === 'invalid-source') {
+    if (
+      candidateData.kind === 'invalid-source' ||
+      candidateData.kind === 'invalid-candidates'
+    ) {
       diagnostics.push(
         diagnostic(
           base.snapshotId,
           'invalid-candidate-data',
           equipment.itemId,
-          candidateData.targetLabel,
+          candidateData.kind === 'invalid-source'
+            ? candidateData.targetLabel
+            : null,
         ),
       );
       continue;
@@ -496,6 +550,17 @@ export function buildOutfitAlternativeOptions(
 
   for (const source of base.garments) {
     const candidateData = readCandidateData(source.sourceLabel);
+    if (candidateData.kind === 'invalid-candidates') {
+      diagnostics.push(
+        diagnostic(
+          base.snapshotId,
+          'invalid-candidate-data',
+          source.itemId,
+          null,
+        ),
+      );
+      continue;
+    }
     if (candidateData.kind === 'invalid-source') {
       diagnostics.push(
         diagnostic(

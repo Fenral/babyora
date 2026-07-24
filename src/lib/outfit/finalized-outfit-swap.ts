@@ -213,6 +213,18 @@ function highestSeverity(flags: readonly SafetyFlag[]): Severity {
   return highest;
 }
 
+export function hasCompleteFinalizedSafetyData(
+  recommendation: Recommendation,
+): boolean {
+  return (
+    Object.hasOwn(recommendation, 'safetyFlags') &&
+    Array.isArray(recommendation.safetyFlags) &&
+    Object.hasOwn(recommendation, 'severity') &&
+    recommendation.severity ===
+      highestSeverity(recommendation.safetyFlags)
+  );
+}
+
 function countLabel(
   layers: readonly Layer[],
   label: string,
@@ -274,16 +286,10 @@ function normalizedBaseIsFinalized(
   ) {
     return false;
   }
-  if (
-    Object.hasOwn(recommendation, 'safetyFlags') &&
-    !sameData(control.flags, recommendation.safetyFlags)
-  ) {
+  if (!hasCompleteFinalizedSafetyData(recommendation)) {
     return false;
   }
-  return (
-    Object.hasOwn(recommendation, 'safetyFlags') ||
-    control.flags.length === 0
-  );
+  return sameData(control.flags, recommendation.safetyFlags);
 }
 
 export function finalizeOutfitOccurrenceSwap(
