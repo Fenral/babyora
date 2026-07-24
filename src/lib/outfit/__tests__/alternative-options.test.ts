@@ -100,7 +100,129 @@ function withCatalogAlternatives<T>(
   }
 }
 
+type HostileProxyOperation =
+  | 'getPrototypeOf'
+  | 'ownKeys'
+  | 'getOwnPropertyDescriptor'
+  | 'revoked';
+
+function makeHostileProxy<T extends object>(
+  target: T,
+  operation: HostileProxyOperation,
+): T {
+  const fail = (): never => {
+    throw new Error(`HOSTILE_PROXY_${operation}`);
+  };
+  if (operation === 'revoked') {
+    const revocable = Proxy.revocable(target, {});
+    revocable.revoke();
+    return revocable.proxy;
+  }
+  if (operation === 'getPrototypeOf') {
+    return new Proxy(target, { getPrototypeOf: fail });
+  }
+  if (operation === 'ownKeys') {
+    return new Proxy(target, { ownKeys: fail });
+  }
+  return new Proxy(target, {
+    getOwnPropertyDescriptor: fail,
+  });
+}
+
+function withCatalogEntryProxy<T>(
+  sourceLabel: string,
+  operation: HostileProxyOperation,
+  run: () => T,
+): T {
+  const index = ITEM_ALTERNATIVES.findIndex(
+    (candidate) => candidate.itemName === sourceLabel,
+  );
+  if (index < 0) {
+    throw new Error(`missing fixture catalog entry: ${sourceLabel}`);
+  }
+  const original = ITEM_ALTERNATIVES[index]!;
+  ITEM_ALTERNATIVES[index] = makeHostileProxy(
+    original,
+    operation,
+  );
+  try {
+    return run();
+  } finally {
+    ITEM_ALTERNATIVES[index] = original;
+  }
+}
+
+function captureNoThrow<T>(run: () => T): T {
+  let result: T | undefined;
+  expect(() => {
+    result = run();
+  }).not.toThrow();
+  if (result === undefined) {
+    throw new Error('expected a synchronous result');
+  }
+  return result;
+}
+
+function expectInvalidCandidateData(
+  result: ReturnType<typeof buildOutfitAlternativeOptions>,
+  sourceLabel: string,
+): void {
+  expect(result.kind).toBe('supported');
+  if (result.kind !== 'supported') return;
+  const source = result.base.garments.find(
+    (garment) => garment.sourceLabel === sourceLabel,
+  )!;
+  expect(
+    result.options.some(
+      (option) => option.sourceItemId === source.itemId,
+    ),
+  ).toBe(false);
+  expect(result.diagnostics).toContainEqual(
+    expect.objectContaining({
+      code: 'invalid-candidate-data',
+      sourceItemId: source.itemId,
+      targetLabel: null,
+    }),
+  );
+}
+
 describe('finalized occurrence swap adapter', () => {
+  it.each([
+    'getPrototypeOf',
+    'ownKeys',
+    'getOwnPropertyDescriptor',
+    'revoked',
+  ] as const)(
+    'rejects a public request Proxy with a hostile %s operation',
+    (operation) => {
+      const input = makeInput();
+      const finalizedRecommendation = recommend(input);
+      const baseSnapshot = buildBase(input, finalizedRecommendation);
+      const source = baseSnapshot.garments.find(
+        (garment) =>
+          garment.sourceLabel === 'isolert vinterkjøredress',
+      )!;
+      const request = {
+        input,
+        finalizedRecommendation,
+        baseSnapshot,
+        source: selectorFor(source),
+        targetLabel: 'vinterkjøredress',
+      };
+
+      const result = captureNoThrow(() =>
+        finalizeOutfitOccurrenceSwap(
+          makeHostileProxy(request, operation),
+        ),
+      );
+
+      expect(result).toEqual({
+        kind: 'rejected',
+        code: 'invalid-request',
+      });
+    },
+  );
+
   it('uses the exact raw source occurrence, not its kebab catalog id', () => {
     const input = makeInput();
     const finalizedRecommendation = recommend(input);
@@ -305,6 +427,38 @@ describe('finalized occurrence swap adapter', () => {
 });
 
 describe('engine-backed alternative options', () => {
+  it.each([
+    'getPrototypeOf',
+    'ownKeys',
+    'getOwnPropertyDescriptor',
+    'revoked',
+  ] as const)(
+    'fails closed for a public builder request Proxy with %s',
+    (operation) => {
+      const input = makeInput();
+      const request = buildArgs(input, recommend(input));
+
+      const result = captureNoThrow(() =>
+        buildOutfitAlternativeOptions(
+          makeHostileProxy(request, operation),
+        ),
+      );
+
+      expect(result).toMatchObject({
+        kind: 'unavailable',
+        reason: 'invalid-input',
+        options: [],
+        diagnostics: [
+          {
+            code: 'invalid-base-input',
+            sourceItemId: null,
+            targetLabel: null,
+          },
+        ],
+      });
+    },
+  );
+
   it('builds deterministic immutable full outcomes for supported garments', () => {
     const input = makeInput();
     const finalizedRecommendation = recommend(input);
@@ -556,6 +710,67 @@ describe('engine-backed alternative options', () => {
           sourceItemId: source.itemId,
           targetLabel: null,
         }),
+      );
+    },
+  );
+
+  it.each([
+    'getPrototypeOf',
+    'ownKeys',
+    'getOwnPropertyDescriptor',
+    'revoked',
+  ] as const)(
+    'omits a catalog entry Proxy with hostile %s reflection',
+    (operation) => {
+      const input = makeInput();
+      const result = withCatalogEntryProxy(
+        'isolert vinterkjøredress',
+        operation,
+        () =>
+          captureNoThrow(() =>
+            buildOutfitAlternativeOptions(
+              buildArgs(input, recommend(input)),
+            ),
+          ),
+      );
+
+      expectInvalidCandidateData(
+        result,
+        'isolert vinterkjøredress',
+      );
+    },
+  );
+
+  it.each([
+    'getPrototypeOf',
+    'ownKeys',
+    'getOwnPropertyDescriptor',
+    'revoked',
+  ] as const)(
+    'omits a raw candidate Proxy with hostile %s reflection',
+    (operation) => {
+      const input = makeInput();
+      const candidate = makeHostileProxy<Alternative>(
+        {
+          name: 'vinterkjøredress',
+          pros: ['valid-looking candidate'],
+        },
+        operation,
+      );
+      const result = withCatalogAlternatives(
+        'isolert vinterkjøredress',
+        [candidate],
+        () =>
+          captureNoThrow(() =>
+            buildOutfitAlternativeOptions(
+              buildArgs(input, recommend(input)),
+            ),
+          ),
+      );
+
+      expectInvalidCandidateData(
+        result,
+        'isolert vinterkjøredress',
       );
     },
   );

@@ -53,6 +53,35 @@ function openSession() {
   return session;
 }
 
+type HostileOptionsOperation =
+  | 'getPrototypeOf'
+  | 'ownKeys'
+  | 'getOwnPropertyDescriptor'
+  | 'revoked';
+
+function makeHostileOptionsProxy(
+  options: readonly OutfitAlternativeOptionV1[],
+  operation: HostileOptionsOperation,
+): readonly OutfitAlternativeOptionV1[] {
+  const fail = (): never => {
+    throw new Error(`HOSTILE_OPTIONS_PROXY_${operation}`);
+  };
+  if (operation === 'revoked') {
+    const revocable = Proxy.revocable(options, {});
+    revocable.revoke();
+    return revocable.proxy;
+  }
+  if (operation === 'getPrototypeOf') {
+    return new Proxy(options, { getPrototypeOf: fail });
+  }
+  if (operation === 'ownKeys') {
+    return new Proxy(options, { ownKeys: fail });
+  }
+  return new Proxy(options, {
+    getOwnPropertyDescriptor: fail,
+  });
+}
+
 afterEach(() => {
   useOutfitSelectionStore.getState().close();
 });
@@ -300,6 +329,44 @@ describe('exact outfit snapshot selection store', () => {
     });
     expect(useOutfitSelectionStore.getState().session).toBe(before);
   });
+
+  it.each([
+    'getPrototypeOf',
+    'ownKeys',
+    'getOwnPropertyDescriptor',
+    'revoked',
+  ] as const)(
+    'rejects a hostile %s options Proxy atomically',
+    (operation) => {
+      const fixture = makeSupported(
+        `transition:selection:proxy:${operation}`,
+      );
+      expect(
+        useOutfitSelectionStore.getState().open(
+          fixture.base,
+          fixture.options,
+        ),
+      ).toEqual({ ok: true });
+      const before = useOutfitSelectionStore.getState().session;
+      const hostileOptions = makeHostileOptionsProxy(
+        fixture.options,
+        operation,
+      );
+
+      let result: unknown;
+      expect(() => {
+        result = useOutfitSelectionStore.getState().open(
+          fixture.base,
+          hostileOptions,
+        );
+      }).not.toThrow();
+      expect(result).toMatchObject({
+        ok: false,
+        diagnostic: { code: 'invalid-options' },
+      });
+      expect(useOutfitSelectionStore.getState().session).toBe(before);
+    },
+  );
 
   it('rejects select/reset while closed and keeps a closed state exact', () => {
     const fixture = makeSupported('transition:selection:closed');
