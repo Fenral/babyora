@@ -43,6 +43,70 @@ const BUILDER_PATH = 'scripts/snart/build-climate-pack.ts';
 const FIXTURE_PATH = 'scripts/snart/fixtures/met-boundaries-v1.json';
 const CREDENTIAL_PATTERN =
   /(?:FROST_CLIENT_ID|(?:API|ACCESS)[_-]?KEY|AUTHORIZATION\s*[:=]|BEARER\s+[A-Za-z0-9._~-]+|CLIENT[_-]?SECRET|PRIVATE[_-]?KEY)/iu;
+const PACK_KEYS = [
+  'contractVersion',
+  'derivationVersion',
+  'normalPeriod',
+  'profiles',
+  'rulesetVersion',
+  'schemaVersion',
+];
+const MANIFEST_KEYS = [
+  'builderSha256',
+  'canonicalPlaceCount',
+  'canonicalPlacesSha256',
+  'contractSha256',
+  'createdFromGitSha',
+  'derivationVersion',
+  'fixtureMode',
+  'gridPolicyVersion',
+  'homePlaceKeyVersion',
+  'httpPolicyVersion',
+  'monthCount',
+  'normalPeriod',
+  'packSha256',
+  'placeGridBindings',
+  'productionEligible',
+  'roundingPolicy',
+  'rulesetVersion',
+  'schemaVersion',
+  'sourceAggregations',
+  'sourceAttribution',
+  'sourceCatalogUrls',
+  'sourceDatasetName',
+  'sourceDatasets',
+  'sourceDisclaimer',
+  'sourceFileVersions',
+  'sourceInstitution',
+  'sourceLicenseUri',
+  'sourceMetadataSha256',
+  'sourceUnits',
+  'sourceVariableVersions',
+  'supportedProfileCount',
+  'targetWindowDerivationVersion',
+  'unavailableProfileCount',
+];
+const SUPPORTED_BINDING_KEYS = [
+  'X',
+  'Y',
+  'distanceMillimetres',
+  'gridLat',
+  'gridLon',
+  'homePlaceKey',
+  'latE4',
+  'lonE4',
+  'nameNfc',
+  'profileId',
+  'status',
+];
+const UNAVAILABLE_BINDING_KEYS = [
+  'homePlaceKey',
+  'latE4',
+  'lonE4',
+  'nameNfc',
+  'reason',
+  'status',
+];
 
 function readJsonRecord(path: string, label: string): {
   parsed: JsonRecord;
@@ -382,6 +446,18 @@ export function validateClimateBundle(
       'unexpected contract, pack or manifest schema',
     );
   }
+  const actualFixtureMode = boolean(
+    manifest.fixtureMode,
+    'manifest.fixtureMode',
+  );
+  exactKeys(pack, PACK_KEYS, 'pack');
+  exactKeys(
+    manifest,
+    actualFixtureMode
+      ? [...MANIFEST_KEYS, 'fixtureSourceExcerptsSha256']
+      : MANIFEST_KEYS,
+    'manifest',
+  );
   if (sha(manifest.packSha256, 'manifest.packSha256') !== packSha) {
     throw new SnartPipelineError(
       'FAIL_PACK_HASH',
@@ -412,10 +488,6 @@ export function validateClimateBundle(
       'generatedAt cannot carry bundle identity',
     );
   }
-  const actualFixtureMode = boolean(
-    manifest.fixtureMode,
-    'manifest.fixtureMode',
-  );
   if (
     actualFixtureMode !== Boolean(options.fixtureMode) ||
     boolean(manifest.productionEligible, 'manifest.productionEligible') !==
@@ -459,6 +531,8 @@ export function validateClimateBundle(
     manifest.monthCount !== contract.derivationPolicy.monthCount ||
     manifest.sourceDatasetName !== contract.source.datasetName ||
     manifest.sourceInstitution !== contract.source.metadataInstitution ||
+    manifest.sourceAttribution !== contract.source.attributionText ||
+    manifest.sourceDisclaimer !== contract.source.derivedDataDisclaimer ||
     !contract.source.acceptedLicenseUris.includes(
       string(manifest.sourceLicenseUri, 'sourceLicenseUri'),
     ) ||
@@ -531,6 +605,7 @@ export function validateClimateBundle(
       );
     }
     if (binding.status === 'supported') {
+      exactKeys(binding, SUPPORTED_BINDING_KEYS, `binding ${key}`);
       string(binding.profileId, `${key}.profileId`);
       integer(binding.X, `${key}.X`);
       integer(binding.Y, `${key}.Y`);
@@ -547,6 +622,7 @@ export function validateClimateBundle(
       number(binding.gridLat, `${key}.gridLat`);
       number(binding.gridLon, `${key}.gridLon`);
     } else if (binding.status === 'unavailable') {
+      exactKeys(binding, UNAVAILABLE_BINDING_KEYS, `binding ${key}`);
       string(binding.reason, `${key}.reason`);
     } else {
       throw new SnartPipelineError(

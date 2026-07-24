@@ -1,12 +1,14 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import {
+  existsSync,
+  lstatSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   writeFileSync,
 } from 'node:fs';
 import {
-  isAbsolute,
   join,
   relative,
   resolve,
@@ -740,21 +742,47 @@ function planChangedPaths(
   return changedPaths;
 }
 
-function repositoryRelativeDirectory(
+function sameFilesystemPath(left: string, right: string): boolean {
+  const normalizedLeft = resolve(left).replaceAll('\\', '/');
+  const normalizedRight = resolve(right).replaceAll('\\', '/');
+  return process.platform === 'win32'
+    ? normalizedLeft.toLowerCase() === normalizedRight.toLowerCase()
+    : normalizedLeft === normalizedRight;
+}
+
+export function validateEvidenceDirectory(
   repositoryRoot: string,
-  directory: string,
+  evidenceDir: string,
 ): string {
-  const absolute = resolve(repositoryRoot, directory);
-  const relativePath = relative(repositoryRoot, absolute).replaceAll('\\', '/');
-  if (
-    relativePath.length === 0 ||
-    relativePath === '..' ||
-    relativePath.startsWith('../') ||
-    isAbsolute(relativePath)
-  ) {
-    fail('evidence directory must be inside the repository');
+  if (evidenceDir !== DEFAULT_EVIDENCE_DIR) {
+    fail(
+      `evidence directory must be the literal canonical path ${DEFAULT_EVIDENCE_DIR}`,
+    );
   }
-  return relativePath;
+  const root = resolve(repositoryRoot);
+  let current = root;
+  for (const segment of DEFAULT_EVIDENCE_DIR.split('/')) {
+    current = join(current, segment);
+    if (existsSync(current) && lstatSync(current).isSymbolicLink()) {
+      fail('evidence directory must not traverse a symlink or junction');
+    }
+  }
+  if (
+    existsSync(current) &&
+    !sameFilesystemPath(realpathSync.native(current), current)
+  ) {
+    fail('evidence directory must resolve to its canonical literal path');
+  }
+  return DEFAULT_EVIDENCE_DIR;
+}
+
+export function isPlanEvidencePath(path: string, planId: string): boolean {
+  const prefix = `${DEFAULT_EVIDENCE_DIR}/${planId}`;
+  return (
+    path === `${prefix}-candidate.json` ||
+    path === `${prefix}-review-a.json` ||
+    path === `${prefix}-review-b.json`
+  );
 }
 
 export function captureCandidateSnapshot({
@@ -771,12 +799,12 @@ export function captureCandidateSnapshot({
     'rev-parse',
     '--show-toplevel',
   ]);
-  const evidencePath = repositoryRelativeDirectory(
+  validateEvidenceDirectory(
     repositoryRoot,
     evidenceDir,
   );
   const dirtyCodePaths = statusPaths(repositoryRoot).filter(
-    (path) => path !== evidencePath && !path.startsWith(`${evidencePath}/`),
+    (path) => !isPlanEvidencePath(path, validatedPlanId),
   );
   const contractAbsolutePath = join(repositoryRoot, CONTRACT_PATH);
   const packAbsolutePath = join(repositoryRoot, PACK_PATH);
@@ -840,7 +868,15 @@ async function main(): Promise<void> {
   const planId = assertPlanId(requiredArgument(arguments_, '--plan'));
   const evidenceDir =
     argumentValue(arguments_, '--evidence-dir') ?? DEFAULT_EVIDENCE_DIR;
-  const evidenceRoot = resolve(process.cwd(), evidenceDir);
+  const repositoryRoot = runGit(resolve(process.cwd()), [
+    'rev-parse',
+    '--show-toplevel',
+  ]);
+  const canonicalEvidenceDir = validateEvidenceDirectory(
+    repositoryRoot,
+    evidenceDir,
+  );
+  const evidenceRoot = join(repositoryRoot, canonicalEvidenceDir);
   const candidatePath = join(evidenceRoot, `${planId}-candidate.json`);
 
   if (command === 'candidate') {

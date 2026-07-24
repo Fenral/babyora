@@ -63,6 +63,7 @@ type GridSelection =
     };
 
 type HttpPolicy = {
+  method: string;
   scheme: string;
   hostname: string;
   allowedPorts: string[];
@@ -130,7 +131,9 @@ export type SnartContract = {
     rowFields: string[];
     targetWindowDerivationVersion: string;
     partialProfiles: boolean;
+    sourceValueStorage: string;
     rounding: {
+      application: string;
       distanceMillimetres: number;
       mode: string;
       temperature: number;
@@ -197,6 +200,14 @@ type SourceDasMetadata = Pick<
   | 'units'
 >;
 
+export type MonthlyPointBinding = {
+  sourceUrl: string;
+  Y: number;
+  X: number;
+  lat: number;
+  lon: number;
+};
+
 type BuiltBundle = {
   packPath: string;
   manifestPath: string;
@@ -208,6 +219,35 @@ type BuiltBundle = {
 const PACK_NAME = 'climate-1991-2020-v1.json';
 const MANIFEST_NAME = 'climate-1991-2020-v1.manifest.json';
 const THIS_FILE = fileURLToPath(import.meta.url);
+const MET_METHOD = 'GET';
+const MET_SCHEME = 'https:';
+const MET_HOSTNAME = 'thredds.met.no';
+const MET_ALLOWED_PORTS = Object.freeze(['', '443']);
+const MET_ALLOWED_QUERY_VARIABLES = Object.freeze([
+  'lat',
+  'lon',
+  'rr',
+  'tg',
+  'time',
+]);
+const MET_PATH_PATTERN =
+  '^/thredds/dodsC/senorge/seNorge_2018/aggregated_products/(tg|rr)/seNorge2018_(tg|rr)_normal_1991_2020_monthly_(0[1-9]|1[0-2])\\.nc\\.(dds|das|ascii)$';
+const MET_ENDPOINT_PATH =
+  /^\/thredds\/dodsC\/senorge\/seNorge_2018\/aggregated_products\/(tg|rr)\/seNorge2018_(tg|rr)_normal_1991_2020_monthly_(0[1-9]|1[0-2])\.nc\.(dds|das|ascii)$/u;
+const MET_DATASET_ROOT =
+  'https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products';
+const MET_DATASET_URLS = Object.freeze(
+  (['tg', 'rr'] as const).flatMap((family) =>
+    Array.from({ length: 12 }, (_, index) => {
+      const month = String(index + 1).padStart(2, '0');
+      return `${MET_DATASET_ROOT}/${family}/seNorge2018_${family}_normal_1991_2020_monthly_${month}.nc`;
+    }),
+  ),
+);
+const MONTHLY_NORMAL_TIME_BY_MONTH = Object.freeze([
+  797_694, 798_438, 799_110, 799_854, 800_574, 801_318, 802_038,
+  802_782, 803_526, 804_246, 804_990, 805_710,
+]);
 
 export class SnartPipelineError extends Error {
   readonly code: string;
@@ -369,6 +409,40 @@ function splitQuerySelections(query: string): string[] {
   return selections;
 }
 
+function exactStringArray(
+  actual: readonly string[],
+  expected: readonly string[],
+): boolean {
+  return (
+    actual.length === expected.length &&
+    actual.every((value, index) => value === expected[index])
+  );
+}
+
+function assertFrozenMetAuthority(policy: HttpPolicy): void {
+  if (
+    policy.method !== MET_METHOD ||
+    policy.scheme !== MET_SCHEME ||
+    policy.hostname !== MET_HOSTNAME ||
+    !exactStringArray(policy.allowedPorts, MET_ALLOWED_PORTS) ||
+    policy.allowUsername !== false ||
+    policy.allowPassword !== false ||
+    policy.allowHash !== false ||
+    policy.pathPattern !== MET_PATH_PATTERN ||
+    policy.requireFamilyVariableMatch !== true ||
+    !exactStringArray(policy.allowedDatasetUrls, MET_DATASET_URLS) ||
+    !exactStringArray(
+      policy.allowedQueryVariables,
+      MET_ALLOWED_QUERY_VARIABLES,
+    )
+  ) {
+    throw new SnartPipelineError(
+      'FAIL_HTTP_AUTHORITY_CONTRACT',
+      'caller policy differs from the immutable MET network authority',
+    );
+  }
+}
+
 export function validateMetUrl(
   input: string,
   policy: HttpPolicy,
@@ -379,17 +453,18 @@ export function validateMetUrl(
   month: number;
   url: URL;
 } {
+  assertFrozenMetAuthority(policy);
   const parsed = new URL(input);
-  if (parsed.protocol !== policy.scheme) {
+  if (parsed.protocol !== MET_SCHEME) {
     throw new SnartPipelineError(
       'FAIL_URL_SCHEME',
       'only frozen HTTPS is allowed',
     );
   }
-  if (parsed.hostname !== policy.hostname) {
+  if (parsed.hostname !== MET_HOSTNAME) {
     throw new SnartPipelineError('FAIL_URL_HOST', 'unexpected MET hostname');
   }
-  if (!policy.allowedPorts.includes(parsed.port)) {
+  if (!MET_ALLOWED_PORTS.includes(parsed.port)) {
     throw new SnartPipelineError('FAIL_URL_PORT', 'unexpected effective port');
   }
   if (
@@ -402,15 +477,13 @@ export function validateMetUrl(
       'credentials and fragments are forbidden',
     );
   }
-  if (!new RegExp(policy.pathPattern, 'u').test(parsed.pathname)) {
+  if (!MET_ENDPOINT_PATH.test(parsed.pathname)) {
     throw new SnartPipelineError(
       'FAIL_URL_PATH',
       'path is outside the frozen monthly-normal allowlist',
     );
   }
-  const match = parsed.pathname.match(
-    /\/aggregated_products\/(tg|rr)\/seNorge2018_(tg|rr)_normal_1991_2020_monthly_(0[1-9]|1[0-2])\.nc\.(dds|das|ascii)$/u,
-  );
+  const match = parsed.pathname.match(MET_ENDPOINT_PATH);
   if (!match) {
     throw new SnartPipelineError(
       'FAIL_URL_PATH',
@@ -431,7 +504,7 @@ export function validateMetUrl(
     0,
     -(`.${kind}`.length),
   )}`;
-  if (!policy.allowedDatasetUrls.includes(datasetUrl)) {
+  if (!MET_DATASET_URLS.includes(datasetUrl)) {
     throw new SnartPipelineError(
       'FAIL_URL_ALLOWLIST',
       'dataset is not in the frozen 24-URL allowlist',
@@ -454,7 +527,7 @@ export function validateMetUrl(
       );
       if (
         !selectionMatch ||
-        !policy.allowedQueryVariables.includes(selectionMatch[1])
+        !MET_ALLOWED_QUERY_VARIABLES.includes(selectionMatch[1])
       ) {
         throw new SnartPipelineError(
           'FAIL_URL_QUERY',
@@ -610,15 +683,15 @@ export async function fetchTextWithPolicy(
     try {
       const response = await fetchImpl(validated.url.href, {
         headers: { 'User-Agent': policy.userAgent },
+        method: MET_METHOD,
         redirect: policy.redirect,
         signal: controller.signal,
       });
       if (response.status >= 300 && response.status < 400) {
-        const location =
-          response.headers.get('location') ?? 'missing Location';
+        await response.body?.cancel();
         throw new SnartPipelineError(
           'FAIL_REDIRECT',
-          `redirect was not followed (${response.status}: ${location})`,
+          `redirect response rejected with HTTP ${response.status}`,
         );
       }
       if (!policy.acceptedStatuses.includes(response.status)) {
@@ -636,17 +709,17 @@ export async function fetchTextWithPolicy(
           `unexpected HTTP ${response.status}`,
         );
       }
-      const contentType = (
-        response.headers.get('content-type') ?? ''
-      ).toLowerCase();
+      const contentTypeHeader = response.headers.get('content-type');
+      const contentType = contentTypeHeader?.trim().toLowerCase() ?? '';
       if (
-        contentType !== '' &&
-        !contentType.startsWith('text/plain') &&
-        !contentType.startsWith('application/octet-stream')
+        contentType === '' ||
+        (!contentType.startsWith('text/plain') &&
+          !contentType.startsWith('application/octet-stream'))
       ) {
+        await response.body?.cancel();
         throw new SnartPipelineError(
           'FAIL_CONTENT_TYPE',
-          `unexpected content type ${contentType}`,
+          'response Content-Type is missing or unsupported',
         );
       }
       const text = await readLimitedBody(response, maxBodyBytes);
@@ -819,14 +892,15 @@ export function deriveMonthlyProfile(
       }
       return {
         month: row.month,
-        meanTemperatureC: roundHalfAwayFromZero(
-          row.meanTemperatureC,
-          contract.derivationPolicy.rounding.temperature,
-        ),
-        monthlyPrecipitationMm: roundHalfAwayFromZero(
+        meanTemperatureC: Object.is(row.meanTemperatureC, -0)
+          ? 0
+          : row.meanTemperatureC,
+        monthlyPrecipitationMm: Object.is(
           row.monthlyPrecipitationMm,
-          contract.derivationPolicy.rounding.precipitation,
-        ),
+          -0,
+        )
+          ? 0
+          : row.monthlyPrecipitationMm,
       };
     });
   return result;
@@ -949,27 +1023,139 @@ export function parseMonthlyPointAscii(
   family: VariableFamily,
   month: number,
   contract: SnartContract,
+  binding: MonthlyPointBinding,
 ): { family: VariableFamily; month: number; value: number; time: number } {
   if (!Number.isInteger(month) || month < 1 || month > 12) {
     throw new SnartPipelineError('FAIL_MONTH', `invalid month ${month}`);
   }
-  const valueMatch = body.match(
-    new RegExp(
-      `${family}\\.${family}\\[1\\]\\[1\\]\\[1\\][\\s\\S]*?\\[0\\]\\[0\\],\\s*(-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)`,
-      'u',
-    ),
+  if (
+    !Number.isSafeInteger(binding.Y) ||
+    binding.Y < 0 ||
+    !Number.isSafeInteger(binding.X) ||
+    binding.X < 0 ||
+    !Number.isFinite(binding.lat) ||
+    !Number.isFinite(binding.lon)
+  ) {
+    throw new SnartPipelineError(
+      'FAIL_ASCII_BINDING',
+      'selected point binding is invalid',
+    );
+  }
+  const validatedUrl = validateMetUrl(
+    binding.sourceUrl,
+    contract.httpPolicy,
   );
-  const timeMatch = body.match(
-    /(?:^|\n)time\[1\]\s*\n\s*(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/u,
+  const expectedQuery = pointQuerySelection(
+    family,
+    binding.Y,
+    binding.X,
   );
-  if (!valueMatch || !timeMatch) {
+  if (
+    validatedUrl.kind !== 'ascii' ||
+    validatedUrl.family !== family ||
+    validatedUrl.month !== month ||
+    decodeURIComponent(validatedUrl.url.search.slice(1)) !== expectedQuery
+  ) {
+    throw new SnartPipelineError(
+      'FAIL_ASCII_BINDING',
+      'point URL is not bound to the expected family, month and grid cell',
+    );
+  }
+
+  const numeric =
+    '-?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?';
+  const monthToken = String(month).padStart(2, '0');
+  const structuralLines = [
+    'Dataset \\{',
+    '[ ]+Grid \\{',
+    '[ ]+ARRAY:',
+    '[ ]+Float32 lat\\[Y = 1\\]\\[X = 1\\];',
+    '[ ]+MAPS:',
+    '[ ]+Float64 Y\\[Y = 1\\];',
+    '[ ]+Float64 X\\[X = 1\\];',
+    '[ ]+\\} lat;',
+    '[ ]+Grid \\{',
+    '[ ]+ARRAY:',
+    '[ ]+Float32 lon\\[Y = 1\\]\\[X = 1\\];',
+    '[ ]+MAPS:',
+    '[ ]+Float64 Y\\[Y = 1\\];',
+    '[ ]+Float64 X\\[X = 1\\];',
+    '[ ]+\\} lon;',
+    '[ ]+Grid \\{',
+    '[ ]+ARRAY:',
+    `[ ]+Float32 ${family}\\[time = 1\\]\\[Y = 1\\]\\[X = 1\\];`,
+    '[ ]+MAPS:',
+    '[ ]+Float64 time\\[time = 1\\];',
+    '[ ]+Float64 Y\\[Y = 1\\];',
+    '[ ]+Float64 X\\[X = 1\\];',
+    `[ ]+\\} ${family};`,
+    '[ ]+Float64 time\\[time = 1\\];',
+    `\\} senorge/seNorge_2018/aggregated_products/${family}/seNorge2018_${family}_normal_1991_2020_monthly_${monthToken}\\.nc;`,
+    '---------------------------------------------',
+    'lat\\.lat\\[1\\]\\[1\\]',
+    `\\[0\\],[ ]*(?<lat>${numeric})`,
+    'lat\\.Y\\[1\\]',
+    `(?<latY>${numeric})`,
+    'lat\\.X\\[1\\]',
+    `(?<latX>${numeric})`,
+    'lon\\.lon\\[1\\]\\[1\\]',
+    `\\[0\\],[ ]*(?<lon>${numeric})`,
+    'lon\\.Y\\[1\\]',
+    `(?<lonY>${numeric})`,
+    'lon\\.X\\[1\\]',
+    `(?<lonX>${numeric})`,
+    `${family}\\.${family}\\[1\\]\\[1\\]\\[1\\]`,
+    `\\[0\\]\\[0\\],[ ]*(?<value>${numeric})`,
+    `${family}\\.time\\[1\\]`,
+    `(?<familyTime>${numeric})`,
+    `${family}\\.Y\\[1\\]`,
+    `(?<familyY>${numeric})`,
+    `${family}\\.X\\[1\\]`,
+    `(?<familyX>${numeric})`,
+    'time\\[1\\]',
+    `(?<time>${numeric})`,
+  ];
+  const normalizedBody = body.replace(/\r\n/gu, '\n');
+  if (normalizedBody.includes('\r')) {
     throw new SnartPipelineError(
       'FAIL_ASCII_SCHEMA',
       `monthly ${family} point response is malformed`,
     );
   }
-  const value = numericToken(valueMatch[1], `${family} value`);
-  const time = numericToken(timeMatch[1], 'time value');
+  const match = new RegExp(
+    `^${structuralLines.join('\\n+')}\\n*$`,
+    'u',
+  ).exec(normalizedBody);
+  if (!match?.groups) {
+    throw new SnartPipelineError(
+      'FAIL_ASCII_SCHEMA',
+      `monthly ${family} point response is malformed`,
+    );
+  }
+  const parsed = Object.fromEntries(
+    Object.entries(match.groups).map(([key, value]) => [
+      key,
+      numericToken(value, `${family} ${key}`),
+    ]),
+  ) as Record<string, number>;
+  const expectedTime = MONTHLY_NORMAL_TIME_BY_MONTH[month - 1];
+  if (
+    parsed.lat !== binding.lat ||
+    parsed.lon !== binding.lon ||
+    parsed.latY !== parsed.lonY ||
+    parsed.latY !== parsed.familyY ||
+    parsed.latX !== parsed.lonX ||
+    parsed.latX !== parsed.familyX ||
+    parsed.familyTime !== parsed.time ||
+    parsed.time !== expectedTime
+  ) {
+    throw new SnartPipelineError(
+      'FAIL_ASCII_BINDING',
+      'point response differs from the expected month or selected cell',
+    );
+  }
+  const value = parsed.value;
+  const time = parsed.time;
   if (value === contract.source.fillValue) {
     throw new SnartPipelineError(
       'FAIL_SOURCE_VALUE',
@@ -1134,13 +1320,21 @@ function selectAllGridCells(
   return selections;
 }
 
+function pointQuerySelection(
+  family: VariableFamily,
+  Y: number,
+  X: number,
+): string {
+  return `lat[${Y}:1:${Y}][${X}:1:${X}],lon[${Y}:1:${Y}][${X}:1:${X}],${family}[0:1:0][${Y}:1:${Y}][${X}:1:${X}],time[0:1:0]`;
+}
+
 function endpointQuery(
   datasetUrl: string,
   family: VariableFamily,
   Y: number,
   X: number,
 ): string {
-  return `${datasetUrl}.ascii?${family}[0:1:0][${Y}:1:${Y}][${X}:1:${X}],time[0:1:0]`;
+  return `${datasetUrl}.ascii?${pointQuerySelection(family, Y, X)}`;
 }
 
 function gridQuery(datasetUrl: string, Y: number, X: number): string {
@@ -1322,6 +1516,7 @@ function makeManifest(input: {
       input.contract.source.aggregations as unknown as JsonValue,
     sourceCatalogUrls:
       input.contract.source.catalogUrls as unknown as JsonValue,
+    sourceAttribution: input.contract.source.attributionText,
     sourceDatasetName: input.contract.source.datasetName,
     sourceDatasets: sourceDatasets as unknown as JsonValue,
     sourceDisclaimer: input.contract.source
@@ -1686,6 +1881,13 @@ async function buildLiveOrCacheBundle(
           dataset.family,
           dataset.month,
           contract,
+          {
+            sourceUrl: url,
+            Y: selection.Y,
+            X: selection.X,
+            lat: selection.gridLat,
+            lon: selection.gridLon,
+          },
         );
         if (dataset.family === 'tg') {
           temperatures.set(dataset.month, parsed.value);
@@ -1778,6 +1980,11 @@ export async function buildClimatePack(
     contract.httpPolicy.maxConcurrentRequests !== 1 ||
     contract.source.datasetUrls.length !== 24 ||
     contract.derivationPolicy.monthCount !== 12 ||
+    contract.derivationPolicy.sourceValueStorage !==
+      'exact-finite-source-value' ||
+    contract.derivationPolicy.rounding.application !==
+      'presentation-only' ||
+    !contract.source.attributionText.includes('Bearbeidet av Babyora') ||
     contract.capabilities.soon_preparation ||
     contract.capabilities.family_sharing ||
     contract.capabilities.personal_calibration

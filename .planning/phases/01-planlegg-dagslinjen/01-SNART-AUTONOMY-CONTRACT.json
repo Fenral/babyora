@@ -124,10 +124,12 @@
     "targetPrecipitationFormula": "sum(monthlyPrecipitationMm/daysInMonth*targetDaysInMonth)",
     "leapMonthPolicy": "use-actual-days-in-target-year-month",
     "partialProfiles": false,
+    "sourceValueStorage": "exact-finite-source-value",
     "compareHeuristicsBeforeRounding": true,
     "negativeZero": "normalize-to-zero",
     "exponentNotation": false,
     "rounding": {
+      "application": "presentation-only",
       "distanceMillimetres": 0,
       "mode": "half-away-from-zero",
       "temperature": 1,
@@ -156,6 +158,7 @@
   },
   "httpPolicy": {
     "version": "met-thredds-http@1",
+    "method": "GET",
     "scheme": "https:",
     "hostname": "thredds.met.no",
     "allowedPorts": [

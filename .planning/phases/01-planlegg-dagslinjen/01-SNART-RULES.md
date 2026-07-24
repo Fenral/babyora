@@ -75,7 +75,7 @@ Pakken bygges kun fra METs offisielle, kompakte `seNorge_2018` månedsnormaler f
 
 Alle nettverkskall følger den maskinlesbare `httpPolicy` i autonomikontrakten:
 
-- URL-skjema er eksakt `https:`, hostname er eksakt ASCII `thredds.met.no`, effektiv port er 443 (`URL.port` bare tom eller `443`), og username/password/hash er tomme;
+- Builderens uforanderlige modulkonstanter og caller-kontrakten må være identiske: metode er eksakt `GET`, URL-skjema er eksakt `https:`, hostname er eksakt ASCII `thredds.met.no`, effektiv port er 443 (`URL.port` bare tom eller `443`), og username/password/hash er tomme;
 - pathname matcher eksakt `^/thredds/dodsC/senorge/seNorge_2018/aggregated_products/(tg|rr)/seNorge2018_(tg|rr)_normal_1991_2020_monthly_(0[1-9]|1[0-2])\.nc\.(dds|das|ascii)$`; mappefamilie og variabelnavn må være identiske, URL-en må finnes i den genererte 24-elementers allowlisten, og `.ascii`-query parses strukturelt og tillater bare `time,lat,lon,tg,rr` med heltallsindekser innen validerte DDS-dimensjoner;
 - `fetch` bruker `redirect: "manual"`; alle 3xx, off-host `Location`, HTTPS→HTTP-downgrade, ukjent status og ukjent content type er terminal FAIL og følges aldri;
 - timeout er 20 000 ms per forsøk; body leses streaming med hard grense 2 MiB for DDS/DAS/punkt-ASCII og 96 MiB for den ene koordinatgrid-responsen; avbrutt, trunkert eller større body er FAIL og caches ikke;
@@ -118,7 +118,7 @@ Build-pipelinen skal:
 3. hente ett sted, én variabel og én måned om gangen med maksimal samtidighet én, begrenset retry/backoff og resumérbar cache under ignorert `tmp/`;
 4. parse bare validert DAP2-ASCII og binde hvert svar til kontraktens eksakte variabel, måned og gridindeks;
 5. avvise ukjente felt, duplikate/manglende måneder, ikke-endelige tall og `_FillValue`;
-6. derivere, sortere og serialisere med stabile nøkler, dokumentert avrunding, UTF-8 og LF;
+6. bevare eksakte endelige `tg`-/`rr`-kildeverdier (bare `-0`→`0`), derivere og terskelsammenligne på disse råverdiene, og ellers sortere/serialisere med stabile nøkler, UTF-8 og LF; én-desimals half-away-avrunding er kun presentasjon;
 7. bygge to ganger fra separate tomme outputmapper mot den samme hashede råkilde-cachen;
 8. kreve byte-identisk pack- og manifest-hash;
 9. validere pakken offline i vanlige tester og build;
@@ -126,7 +126,7 @@ Build-pipelinen skal:
 
 Manifestet inneholder minst:
 
-`schemaVersion`, `derivationVersion`, `rulesetVersion`, `normalPeriod`, `createdFromGitSha`, `sourceCatalogUrls`, eksakt 24 `sourceDatasets[{url,family,variable,month,metadataSha256,responseSha256[]}]`, `sourceFileVersions`, `sourceVariableVersions`, `sourceUnits`, `sourceAggregations`, `sourceInstitution`, `sourceLicenseUri`, `httpPolicyVersion`, `homePlaceKeyVersion`, `gridPolicyVersion`, `targetWindowDerivationVersion`, `placeGridBindings`, `monthCount`, `roundingPolicy`, `canonicalPlacesSha256`, `packSha256`, `builderSha256` og `contractSha256`.
+`schemaVersion`, `derivationVersion`, `rulesetVersion`, `normalPeriod`, `createdFromGitSha`, `sourceCatalogUrls`, eksakt 24 `sourceDatasets[{url,family,variable,month,metadataSha256,responseSha256[]}]`, `sourceFileVersions`, `sourceVariableVersions`, `sourceUnits`, `sourceAggregations`, `sourceInstitution`, `sourceLicenseUri`, eksakt `sourceAttribution`/`sourceDisclaimer` fra kontrakten, `httpPolicyVersion`, `homePlaceKeyVersion`, `gridPolicyVersion`, `targetWindowDerivationVersion`, `placeGridBindings`, `monthCount`, `roundingPolicy`, `canonicalPlacesSha256`, `packSha256`, `builderSha256` og `contractSha256`.
 
 `generatedAt` kan bare ligge i et ikke-identitetsbærende kjørespor. Kandidatidentiteten er Git-SHA + kontrakt-SHA + datapakke-SHA.
 
@@ -148,7 +148,7 @@ Hver støttet hjemstedsprofil har eksakt tolv rader, sortert fra januar til dese
 {month, meanTemperatureC, monthlyPrecipitationMm}
 ```
 
-`month` må være hvert heltall 1–12 nøyaktig én gang. Begge verdier må være endelige og ikke lik kildens `_FillValue`. Temperatur og nedbør serialiseres med én desimal; gridavstand med null desimaler. Alle bruker half-away-from-zero, `-0` normaliseres til `0`, JSON bruker aldri eksponentform, og runtimeberegning/terskelsammenligning bruker uavrundede kildeverdier. Ett avvik gjør hele stedsprofilen `unavailable`; delvise råd er ikke tillatt.
+`month` må være hvert heltall 1–12 nøyaktig én gang. Begge verdier må være endelige og ikke lik kildens `_FillValue`. Pakken serialiserer de eksakte endelige `tg`-/`rr`-kildeverdiene; bare `-0` normaliseres til `0`, og JSON bruker aldri eksponentform. Runtimeberegning og terskelsammenligning bruker disse lagrede råverdiene. Temperatur og nedbør avrundes først ved presentasjon til én desimal med half-away-from-zero; gridavstand lagres med null desimaler etter samme modus. Ett avvik gjør hele stedsprofilen `unavailable`; delvise råd er ikke tillatt.
 
 ## Modellinput og målperiode
 

@@ -166,6 +166,7 @@ describe('Snart autonomy contract', () => {
     expect(contract.httpPolicy).toEqual(
       expect.objectContaining({
         version: 'met-thredds-http@1',
+        method: 'GET',
         scheme: 'https:',
         hostname: 'thredds.met.no',
         allowedPorts: ['', '443'],

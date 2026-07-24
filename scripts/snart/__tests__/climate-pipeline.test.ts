@@ -104,24 +104,37 @@ function precipitationBucket(value: number): number {
   return value < 20 ? 0 : value < 50 ? 1 : 2;
 }
 
-function readBundle(directory: string) {
+type MutablePack = Record<string, unknown> & {
+  normalPeriod: Record<string, unknown>;
+};
+
+type MutableManifest = Record<string, unknown> & {
+  packSha256: string;
+  placeGridBindings: Array<Record<string, unknown>>;
+  sourceAttribution?: string;
+  sourceDisclaimer: string;
+};
+
+function readBundle(
+  directory: string,
+): { manifest: MutableManifest; pack: MutablePack } {
   return {
     manifest: JSON.parse(
       readFileSync(
         join(directory, 'climate-1991-2020-v1.manifest.json'),
         'utf8',
       ),
-    ),
+    ) as MutableManifest,
     pack: JSON.parse(
       readFileSync(join(directory, 'climate-1991-2020-v1.json'), 'utf8'),
-    ),
+    ) as MutablePack,
   };
 }
 
 function writeCanonicalBundle(
   directory: string,
-  pack: Record<string, unknown>,
-  manifest: Record<string, unknown>,
+  pack: MutablePack,
+  manifest: MutableManifest,
 ): void {
   const packRaw = canonicalJsonFile(pack as never);
   manifest.packSha256 = sha256(packRaw);
@@ -624,8 +637,8 @@ describe('Snart fixture build, validation and atomic output', () => {
     const contract = loadContract();
     const cases: Array<{
       mutate: (
-        pack: Record<string, any>,
-        manifest: Record<string, any>,
+        pack: MutablePack,
+        manifest: MutableManifest,
       ) => void;
       name: string;
     }> = [
@@ -645,16 +658,16 @@ describe('Snart fixture build, validation and atomic output', () => {
         name: 'supported binding PII',
         mutate: (_pack, manifest) => {
           manifest.placeGridBindings.find(
-            (binding: { status: string }) => binding.status === 'supported',
-          ).childId = 'forbidden-child';
+            (binding) => binding.status === 'supported',
+          )!.childId = 'forbidden-child';
         },
       },
       {
         name: 'unavailable binding PII',
         mutate: (_pack, manifest) => {
           manifest.placeGridBindings.find(
-            (binding: { status: string }) => binding.status === 'unavailable',
-          ).email = 'forbidden@example.invalid';
+            (binding) => binding.status === 'unavailable',
+          )!.email = 'forbidden@example.invalid';
         },
       },
       {
