@@ -13,10 +13,14 @@ evidence_sha256: 867576f203a30f563ac5409c35aa003bf89a1f40bf79ea03ef2fcd373736749
 
 review_a_agent_id: /root/review_01_18_a3_canonical_a
 review_a_canonical_task_name: /root/review_01_18_a3_canonical_a
+review_a_fresh_context: true
 review_a_verdict: PASS
 review_b_agent_id: /root/review_01_18_a3_canonical_b
 review_b_canonical_task_name: /root/review_01_18_a3_canonical_b
+review_b_fresh_context: true
 review_b_verdict: PASS
+review_receipts_bind_same_tuple: true
+reviewer_contexts_distinct: true
 review_attempts: 3
 local_receipts_are_not_cryptographic_provenance: true
 
