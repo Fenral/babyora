@@ -452,4 +452,50 @@ describe('OutfitExperience', () => {
       /@media \(forced-colors: active\)[\s\S]*stroke: ButtonText;[\s\S]*stroke: Highlight;/,
     );
   });
+
+  it('uses the current ink token for AA map-status text on every light temperature canvas', () => {
+    const css = readFileSync(
+      new URL('../Antrekkskart.css', import.meta.url),
+      'utf8',
+    );
+    const tokens = readFileSync(
+      new URL('../../../styles/design-tokens.css', import.meta.url),
+      'utf8',
+    );
+    const ink700 = tokens.match(
+      /:root\s*\{[\s\S]*?--ink-700:\s*(#[0-9a-f]{6});/i,
+    )?.[1];
+    const canvases = [
+      [
+        'mild',
+        tokens.match(
+          /:root\s*\{[\s\S]*?--bg-canvas:\s*(#[0-9a-f]{6});/i,
+        )?.[1],
+      ],
+      [
+        'kald',
+        tokens.match(
+          /\.ba-temp-root\[data-temp="kald"\]\s*\{[\s\S]*?--bg-canvas:\s*(#[0-9a-f]{6});/i,
+        )?.[1],
+      ],
+      [
+        'varm',
+        tokens.match(
+          /\.ba-temp-root\[data-temp="varm"\]\s*\{[\s\S]*?--bg-canvas:\s*(#[0-9a-f]{6});/i,
+        )?.[1],
+      ],
+    ] as const;
+
+    expect(css).toMatch(
+      /\.outfit-map-status\s*\{\s*color:\s*var\(--ink-700\);\s*\}/,
+    );
+    expect(ink700).toBeDefined();
+    for (const [temperature, canvas] of canvases) {
+      expect(canvas, `${temperature} light canvas token`).toBeDefined();
+      expect(
+        wcagContrast(ink700!, canvas!),
+        `${temperature} light map-status contrast`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
 });
