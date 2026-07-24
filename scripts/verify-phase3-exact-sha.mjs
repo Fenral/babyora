@@ -100,14 +100,17 @@ function readUtf8(path, label) {
   }
 }
 
-function stripOutsideYamlComment(rawValue) {
-  let quote = null;
+function scanYamlLine(rawLine, initialQuote = null) {
+  let quote = initialQuote;
+  let text = '';
 
-  for (let index = 0; index < rawValue.length; index += 1) {
-    const character = rawValue[index];
+  for (let index = 0; index < rawLine.length; index += 1) {
+    const character = rawLine[index];
 
     if (quote === '"') {
-      if (character === '\\') {
+      text += character;
+      if (character === '\\' && index + 1 < rawLine.length) {
+        text += rawLine[index + 1];
         index += 1;
       } else if (character === '"') {
         quote = null;
@@ -116,7 +119,9 @@ function stripOutsideYamlComment(rawValue) {
     }
 
     if (quote === "'") {
-      if (character === "'" && rawValue[index + 1] === "'") {
+      text += character;
+      if (character === "'" && rawLine[index + 1] === "'") {
+        text += rawLine[index + 1];
         index += 1;
       } else if (character === "'") {
         quote = null;
@@ -126,42 +131,163 @@ function stripOutsideYamlComment(rawValue) {
 
     if (character === '"' || character === "'") {
       quote = character;
+      text += character;
       continue;
     }
 
     if (
       character === '#' &&
-      (index === 0 || /\s/.test(rawValue[index - 1]))
+      (index === 0 || /\s/.test(rawLine[index - 1]))
     ) {
-      return rawValue.slice(0, index).trim();
+      break;
     }
+
+    text += character;
   }
 
-  return rawValue.trim();
+  return Object.freeze({ text: text.trimEnd(), quote });
+}
+
+function stripOutsideYamlComment(rawValue) {
+  const normalized = rawValue
+    .replaceAll('\r\n', '\n')
+    .replaceAll('\r', '\n');
+  const lines = [];
+  let quote = null;
+
+  for (const rawLine of normalized.split('\n')) {
+    const scanned = scanYamlLine(rawLine, quote);
+    lines.push(scanned.text);
+    quote = scanned.quote;
+  }
+
+  return lines.join('\n').trim();
+}
+
+function scalarSyntaxMessage(label, key) {
+  return `${label} contains unsupported frontmatter scalar syntax for ${key}`;
+}
+
+function skipQuotedLineIndentation(value, index) {
+  let next = index;
+  while (next < value.length && (value[next] === ' ' || value[next] === '\t')) {
+    next += 1;
+  }
+  return next;
 }
 
 function decodeSingleQuotedYamlScalar(value, label, key) {
   invariant(
-    value.length >= 2 && value.endsWith("'"),
-    `${label} contains unsupported frontmatter scalar syntax for ${key}`,
+    value.startsWith("'"),
+    scalarSyntaxMessage(label, key),
   );
 
-  const inner = value.slice(1, -1);
   let decoded = '';
-  for (let index = 0; index < inner.length; index += 1) {
-    if (inner[index] !== "'") {
-      decoded += inner[index];
+  for (let index = 1; index < value.length; index += 1) {
+    const character = value[index];
+    if (character === "'") {
+      if (value[index + 1] === "'") {
+        decoded += "'";
+        index += 1;
+        continue;
+      }
+
+      invariant(
+        value.slice(index + 1).trim().length === 0,
+        scalarSyntaxMessage(label, key),
+      );
+      return decoded;
+    }
+
+    if (character === '\n') {
+      decoded += ' ';
+      index = skipQuotedLineIndentation(value, index + 1) - 1;
       continue;
     }
 
-    invariant(
-      inner[index + 1] === "'",
-      `${label} contains unsupported frontmatter scalar syntax for ${key}`,
-    );
-    decoded += "'";
-    index += 1;
+    decoded += character;
   }
-  return decoded;
+
+  throw new Error(scalarSyntaxMessage(label, key));
+}
+
+const DOUBLE_QUOTED_YAML_ESCAPES = Object.freeze({
+  '0': '\0',
+  a: '\x07',
+  b: '\b',
+  t: '\t',
+  n: '\n',
+  v: '\v',
+  f: '\f',
+  r: '\r',
+  e: '\x1b',
+  ' ': ' ',
+  '"': '"',
+  '/': '/',
+  '\\': '\\',
+  N: '\u0085',
+  _: '\u00a0',
+  L: '\u2028',
+  P: '\u2029',
+});
+
+function decodeDoubleQuotedYamlScalar(value, label, key) {
+  invariant(
+    value.startsWith('"'),
+    scalarSyntaxMessage(label, key),
+  );
+
+  let decoded = '';
+  for (let index = 1; index < value.length; index += 1) {
+    const character = value[index];
+    if (character === '"') {
+      invariant(
+        value.slice(index + 1).trim().length === 0,
+        scalarSyntaxMessage(label, key),
+      );
+      return decoded;
+    }
+
+    if (character === '\n') {
+      decoded += ' ';
+      index = skipQuotedLineIndentation(value, index + 1) - 1;
+      continue;
+    }
+
+    if (character !== '\\') {
+      decoded += character;
+      continue;
+    }
+
+    const escape = value[index + 1];
+    invariant(escape !== undefined, scalarSyntaxMessage(label, key));
+    if (escape === '\n') {
+      index = skipQuotedLineIndentation(value, index + 2) - 1;
+      continue;
+    }
+
+    if (Object.hasOwn(DOUBLE_QUOTED_YAML_ESCAPES, escape)) {
+      decoded += DOUBLE_QUOTED_YAML_ESCAPES[escape];
+      index += 1;
+      continue;
+    }
+
+    const hexLength = escape === 'x' ? 2 : escape === 'u' ? 4 : escape === 'U' ? 8 : 0;
+    invariant(hexLength > 0, scalarSyntaxMessage(label, key));
+    const hex = value.slice(index + 2, index + 2 + hexLength);
+    invariant(
+      hex.length === hexLength && /^[0-9a-f]+$/i.test(hex),
+      scalarSyntaxMessage(label, key),
+    );
+    try {
+      decoded += String.fromCodePoint(Number.parseInt(hex, 16));
+    } catch {
+      throw new Error(scalarSyntaxMessage(label, key));
+    }
+    index += hexLength + 1;
+  }
+
+  throw new Error(scalarSyntaxMessage(label, key));
 }
 
 function normalizeFrontmatterScalar(rawValue, label, key) {
@@ -169,16 +295,9 @@ function normalizeFrontmatterScalar(rawValue, label, key) {
   let semanticValue = exactValue;
   if (exactValue.startsWith('"')) {
     try {
-      const decoded = JSON.parse(exactValue);
-      invariant(
-        typeof decoded === 'string',
-        `${label} contains unsupported frontmatter scalar syntax for ${key}`,
-      );
-      semanticValue = decoded;
+      semanticValue = decodeDoubleQuotedYamlScalar(exactValue, label, key);
     } catch {
-      throw new Error(
-        `${label} contains unsupported frontmatter scalar syntax for ${key}`,
-      );
+      throw new Error(scalarSyntaxMessage(label, key));
     }
   } else if (exactValue.startsWith("'")) {
     semanticValue = decodeSingleQuotedYamlScalar(exactValue, label, key);
@@ -188,13 +307,15 @@ function normalizeFrontmatterScalar(rawValue, label, key) {
 }
 
 function hasSemanticContinuation(node) {
-  return node.continuationLines.some((line) => {
-    const trimmedLine = line.trim();
-    return (
-      trimmedLine.length > 0 &&
-      !trimmedLine.startsWith('#')
-    );
-  });
+  let quote = scanYamlLine(node.rawValue).quote;
+  for (const line of node.continuationLines) {
+    const scanned = scanYamlLine(line.trimStart(), quote);
+    quote = scanned.quote;
+    if (scanned.text.trim().length > 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function hasTopLevelBlockScalar(node) {
@@ -500,21 +621,24 @@ function flowCollectionState(value, isHeaderValue, label, key) {
 
 function assembleMultilineFlow(lines, start, label, key) {
   const firstLine = lines[start];
-  let assembled = stripOutsideYamlComment(firstLine.text).trim();
-  let state = flowCollectionState(
-    assembled,
+  const initialState = flowCollectionState(
+    firstLine.text,
     firstLine.isHeaderValue,
     label,
     key,
   );
-  if (state === null || state.complete) {
+  if (initialState === null || initialState.complete) {
     return null;
   }
 
-  for (let index = start + 1; index < lines.length; index += 1) {
-    const semanticLine = stripOutsideYamlComment(lines[index].text).trim();
-    assembled = `${assembled}\n${semanticLine}`;
-    state = flowCollectionState(
+  const semanticLines = [];
+  let quote = null;
+  for (let index = start; index < lines.length; index += 1) {
+    const scanned = scanYamlLine(lines[index].text, quote);
+    semanticLines.push(scanned.text.trim());
+    quote = scanned.quote;
+    const assembled = semanticLines.join('\n').trim();
+    const state = flowCollectionState(
       assembled,
       firstLine.isHeaderValue,
       label,
@@ -533,6 +657,29 @@ function assembleMultilineFlow(lines, start, label, key) {
   }
 
   throw new Error(`${label} contains malformed flow metadata for ${key}`);
+}
+
+function assembleMultilineQuotedScalar(lines, start, label, key) {
+  const firstLine = scanYamlLine(lines[start].text);
+  if (firstLine.quote === null) {
+    return null;
+  }
+
+  const semanticLines = [firstLine.text];
+  let quote = firstLine.quote;
+  for (let index = start + 1; index < lines.length; index += 1) {
+    const scanned = scanYamlLine(lines[index].text, quote);
+    semanticLines.push(scanned.text);
+    quote = scanned.quote;
+    if (quote === null) {
+      return Object.freeze({
+        value: semanticLines.join('\n').trim(),
+        end: index,
+      });
+    }
+  }
+
+  throw new Error(scalarSyntaxMessage(label, key));
 }
 
 function nodeContainsCommitScalar(node, label) {
@@ -623,6 +770,32 @@ function nodeContainsCommitScalar(node, label) {
       continue;
     }
 
+    const assembledQuotedScalar = assembleMultilineQuotedScalar(
+      lines,
+      index,
+      label,
+      node.key,
+    );
+    if (assembledQuotedScalar !== null) {
+      const containsCommit = line.isHeaderValue
+        ? yamlValueContainsCommitScalar(
+            assembledQuotedScalar.value,
+            label,
+            node.key,
+          )
+        : yamlFragmentContainsCommitScalar(
+            assembledQuotedScalar.value,
+            label,
+            node.key,
+          );
+      if (containsCommit) {
+        return true;
+      }
+
+      index = assembledQuotedScalar.end;
+      continue;
+    }
+
     const containsCommit = line.isHeaderValue
       ? yamlValueContainsCommitScalar(line.text, label, node.key)
       : yamlFragmentContainsCommitScalar(line.text, label, node.key);
@@ -705,22 +878,21 @@ function validateYamlReferences(fields, label) {
       referenceLines.push(...node.continuationLines);
     }
 
-    for (const line of referenceLines) {
-      for (const token of yamlReferenceTokens(line)) {
-        if (token.kind === 'anchor') {
-          invariant(
-            !anchors.has(token.name),
-            `${label} contains duplicate YAML anchor ${token.name}`,
-          );
-          anchors.add(token.name);
-          continue;
-        }
-
+    const referenceText = stripOutsideYamlComment(referenceLines.join('\n'));
+    for (const token of yamlReferenceTokens(referenceText)) {
+      if (token.kind === 'anchor') {
         invariant(
-          anchors.has(token.name),
-          `${label} contains unsupported frontmatter alias ${token.name}`,
+          !anchors.has(token.name),
+          `${label} contains duplicate YAML anchor ${token.name}`,
         );
+        anchors.add(token.name);
+        continue;
       }
+
+      invariant(
+        anchors.has(token.name),
+        `${label} contains unsupported frontmatter alias ${token.name}`,
+      );
     }
   }
 }
