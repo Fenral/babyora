@@ -17,6 +17,7 @@ const SHA_40 = /^[0-9a-f]{40}$/;
 const SHA_256 = /^[0-9a-f]{64}$/;
 const COMMIT_LIKE_SCALAR_40 = /^[0-9a-f]{40}$/i;
 const MAX_DEPENDENCIES = 100;
+const MAX_FRONTMATTER_STRUCTURE_DEPTH = 32;
 const PHASE1_COMMIT_SCALAR_KEYS = Object.freeze(['candidate_sha']);
 const PHASE2_COMMIT_SCALAR_KEYS = Object.freeze([
   'phase2_candidate_sha',
@@ -465,20 +466,76 @@ function stripYamlDecorators(value) {
   return remaining;
 }
 
-function yamlValueContainsCommitScalar(value, label, key) {
+function frontmatterStructureDepthInvariant(depth, label, key) {
+  invariant(
+    depth <= MAX_FRONTMATTER_STRUCTURE_DEPTH,
+    `${label} exceeds bounded frontmatter structure depth for ${key}`,
+  );
+}
+
+function leadingBlockIndicator(value) {
+  return /^[-?](?:[ \t]+|$)/.exec(value);
+}
+
+function* enumerateFrontmatterStructuralScalars(
+  value,
+  label,
+  key,
+  depth = 0,
+) {
+  frontmatterStructureDepthInvariant(depth, label, key);
   const exactValue = stripOutsideYamlComment(value).trim();
   if (exactValue.length === 0) {
-    return false;
+    return;
   }
 
   const undecorated = stripYamlDecorators(exactValue);
+  if (undecorated !== exactValue) {
+    yield* enumerateFrontmatterStructuralScalars(
+      undecorated,
+      label,
+      key,
+      depth + 1,
+    );
+    return;
+  }
+
+  const blockIndicator = leadingBlockIndicator(undecorated);
+  if (blockIndicator !== null) {
+    yield* enumerateFrontmatterStructuralScalars(
+      undecorated.slice(blockIndicator[0].length),
+      label,
+      key,
+      depth + 1,
+    );
+    return;
+  }
+
+  const mappingColon = topLevelMappingColon(undecorated);
+  if (mappingColon !== -1) {
+    yield* enumerateFrontmatterStructuralScalars(
+      undecorated.slice(0, mappingColon),
+      label,
+      key,
+      depth + 1,
+    );
+    yield* enumerateFrontmatterStructuralScalars(
+      undecorated.slice(mappingColon + 1),
+      label,
+      key,
+      depth + 1,
+    );
+    return;
+  }
+
   if (undecorated.startsWith('*')) {
-    return false;
+    return;
   }
 
   if (undecorated.startsWith('"') || undecorated.startsWith("'")) {
     const scalar = normalizeFrontmatterScalar(undecorated, label, key);
-    return COMMIT_LIKE_SCALAR_40.test(scalar.semanticValue);
+    yield scalar.semanticValue;
+    return;
   }
 
   if (undecorated.startsWith('[') || undecorated.startsWith('{')) {
@@ -488,50 +545,76 @@ function yamlValueContainsCommitScalar(value, label, key) {
       `${label} contains malformed flow metadata for ${key}`,
     );
     const inner = undecorated.slice(1, -1);
-    return splitTopLevelFlow(inner, label, key).some((part) =>
-      yamlFragmentContainsCommitScalar(part, label, key),
-    );
+    for (const part of splitTopLevelFlow(inner, label, key)) {
+      yield* enumerateFrontmatterStructuralScalars(
+        part,
+        label,
+        key,
+        depth + 1,
+      );
+    }
+    return;
   }
 
-  return COMMIT_LIKE_SCALAR_40.test(undecorated);
+  yield undecorated;
 }
 
 function yamlFragmentContainsCommitScalar(value, label, key) {
-  let fragment = stripOutsideYamlComment(value).trim();
-  if (fragment.length === 0) {
-    return false;
+  for (const scalar of enumerateFrontmatterStructuralScalars(
+    value,
+    label,
+    key,
+  )) {
+    if (COMMIT_LIKE_SCALAR_40.test(scalar)) {
+      return true;
+    }
   }
+  return false;
+}
 
-  if (/^-(?:\s+|$)/.test(fragment) || /^\?(?:\s+|$)/.test(fragment)) {
-    fragment = fragment.slice(1).trimStart();
-  }
-
-  const mappingColon = topLevelMappingColon(fragment);
-  if (mappingColon === -1) {
-    return yamlValueContainsCommitScalar(fragment, label, key);
-  }
-
-  const mappingKey = fragment.slice(0, mappingColon).trim();
-  const mappingValue = fragment.slice(mappingColon + 1).trim();
-  return (
-    yamlValueContainsCommitScalar(mappingKey, label, key) ||
-    yamlValueContainsCommitScalar(mappingValue, label, key)
-  );
+function yamlValueContainsCommitScalar(value, label, key) {
+  return yamlFragmentContainsCommitScalar(value, label, key);
 }
 
 function yamlNodeValueFragment(value, isHeaderValue) {
   let fragment = stripOutsideYamlComment(value).trim();
-  if (!isHeaderValue && /^-(?:\s+|$)/.test(fragment)) {
-    fragment = fragment.slice(1).trimStart();
+  let depth = 0;
+
+  while (fragment.length > 0) {
+    frontmatterStructureDepthInvariant(
+      depth,
+      'frontmatter node',
+      'metadata',
+    );
+    const undecorated = stripYamlDecorators(fragment);
+    if (undecorated !== fragment) {
+      fragment = undecorated;
+      depth += 1;
+      continue;
+    }
+
+    if (!isHeaderValue) {
+      const blockIndicator = leadingBlockIndicator(fragment);
+      if (blockIndicator !== null) {
+        fragment = fragment
+          .slice(blockIndicator[0].length)
+          .trimStart();
+        depth += 1;
+        continue;
+      }
+
+      const mappingColon = topLevelMappingColon(fragment);
+      if (mappingColon !== -1) {
+        fragment = fragment.slice(mappingColon + 1).trim();
+        depth += 1;
+        continue;
+      }
+    }
+
+    break;
   }
 
-  const mappingColon = isHeaderValue
-    ? -1
-    : topLevelMappingColon(fragment);
-  if (mappingColon !== -1) {
-    fragment = fragment.slice(mappingColon + 1).trim();
-  }
-  return stripYamlDecorators(fragment);
+  return fragment;
 }
 
 function blockScalarStyle(value, isHeaderValue) {

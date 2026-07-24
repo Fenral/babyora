@@ -268,6 +268,30 @@ function nestedStructuralCommitScalarCases(
           '  ]',
         ],
       },
+      {
+        name: `compact block sequence wrapping flow depth ${depth}`,
+        lines: [
+          `nested_block_flow_${depth}:`,
+          `  ${'- '.repeat(depth)}${nestedFlowValue(quotedSha, depth)}`,
+        ],
+      },
+      {
+        name: `nested flow mapping key depth ${depth}`,
+        lines: [
+          `nested_flow_key_${depth}: ${nestedFlowValue(
+            `{ ${quotedSha}: reviewed }`,
+            depth,
+          )}`,
+        ],
+      },
+      {
+        name: `compact alias-key mapping value depth ${depth}`,
+        lines: [
+          `ordinary_anchor_${depth}: &ordinary_${depth} reviewed`,
+          `nested_alias_mapping_${depth}:`,
+          `  ${'- '.repeat(depth - 2)}*ordinary_${depth} : ${quotedSha}`,
+        ],
+      },
     );
   }
 
@@ -297,6 +321,12 @@ function ordinaryNestedStructuralControls(
       `  ? ${'- '.repeat(depth - 1)}${value}`,
       '  : stable',
       `ordinary_nested_flow_${depth}: ${nestedFlowValue(value, depth)}`,
+      `ordinary_nested_block_flow_${depth}:`,
+      `  ${'- '.repeat(depth)}${nestedFlowValue(value, depth)}`,
+      `ordinary_nested_flow_key_${depth}: ${nestedFlowValue(
+        `{ "ordinary_key_${depth}": reviewed }`,
+        depth,
+      )}`,
     );
   }
 
@@ -345,6 +375,9 @@ function ordinaryMetadataControls(checksum: string): readonly string[] {
     '  options: {mode: strict}',
     'anchored_note: &ordinary ordinary',
     'alias_note: *ordinary',
+    'mapping_key_anchor: &ordinary-key reviewed',
+    'alias_mapping_key:',
+    '  *ordinary-key : stable',
     `review_reference: "${referencedCommit} / SHA256 ${checksum}"`,
     `review_url: https://example.invalid/commits/${referencedCommit}`,
     `review_flow: [reviewed, "${referencedCommit} / immutable bundle"]`,
@@ -1079,7 +1112,7 @@ describe('pure exact-label and path guards', () => {
             '---',
           ].join('\n'),
         ),
-      ).toThrow(/candidate SHA alias|frontmatter|flow|scalar/i);
+      ).toThrow(/candidate SHA alias/i);
     },
   );
 
@@ -1098,9 +1131,67 @@ describe('pure exact-label and path guards', () => {
             '---',
           ].join('\n'),
         ),
-      ).toThrow(/candidate SHA alias|frontmatter|flow|scalar/i);
+      ).toThrow(/candidate SHA alias/i);
     },
   );
+
+  it('accepts the structure-depth boundary and fails closed beyond it', () => {
+    const phase1Sha = '1'.repeat(40);
+    const phase2Sha = '2'.repeat(40);
+    const conflictingSha = 'b'.repeat(40);
+    const nestedArrays = (value: string, depth: number) =>
+      `${'['.repeat(depth)}${value}${']'.repeat(depth)}`;
+    const phase1Summary = (value: string) =>
+      [
+        '---',
+        'status: PASS',
+        `candidate_sha: ${phase1Sha}`,
+        `metadata: ${value}`,
+        '---',
+      ].join('\n');
+    const phase2Summary = (value: string) =>
+      [
+        '---',
+        'status: PASS',
+        `phase2_candidate_sha: ${phase2Sha}`,
+        'feature_flag: true',
+        `phase1_candidate_sha: ${phase1Sha}`,
+        `metadata: ${value}`,
+        '---',
+      ].join('\n');
+
+    expect(
+      parsePhase1CandidateSummary(
+        phase1Summary(nestedArrays('reviewed', 32)),
+      ),
+    ).toEqual({ phase1CandidateSha: phase1Sha });
+    expect(
+      parsePhase2HandoffSummary(phase2Summary(nestedArrays('reviewed', 32))),
+    ).toEqual({
+      phase2CandidateSha: phase2Sha,
+      featureFlag: true,
+    });
+    expect(() =>
+      parsePhase1CandidateSummary(
+        phase1Summary(nestedArrays(`"${conflictingSha}"`, 32)),
+      ),
+    ).toThrow(/candidate SHA alias/i);
+    expect(() =>
+      parsePhase2HandoffSummary(
+        phase2Summary(nestedArrays(`"${conflictingSha}"`, 32)),
+      ),
+    ).toThrow(/candidate SHA alias/i);
+    expect(() =>
+      parsePhase1CandidateSummary(
+        phase1Summary(nestedArrays('reviewed', 33)),
+      ),
+    ).toThrow(/bounded frontmatter structure depth/i);
+    expect(() =>
+      parsePhase2HandoffSummary(
+        phase2Summary(nestedArrays('reviewed', 33)),
+      ),
+    ).toThrow(/bounded frontmatter structure depth/i);
+  });
 
   it('rejects a commit scalar inside assembled multiline flow metadata', () => {
     const conflictingSha = 'b'.repeat(40);
@@ -1835,7 +1926,7 @@ describe('candidate mode', () => {
 
       expectFailure(
         runScript(harness, args),
-        /candidate SHA alias|frontmatter|flow|scalar/i,
+        /candidate SHA alias/i,
       );
     }
   });
@@ -2103,7 +2194,7 @@ describe('phase2-handoff mode', () => {
 
       expectFailure(
         runPhase2(harness, summaryPath),
-        /candidate SHA alias|frontmatter|flow|scalar/i,
+        /candidate SHA alias/i,
       );
     }
   });
