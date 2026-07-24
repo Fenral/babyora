@@ -333,6 +333,50 @@ describe('pure exact-label and path guards', () => {
     }
   });
 
+  it('rejects generalized candidate and commit SHA aliases without metadata false positives', () => {
+    const phase2Sha = '2'.repeat(40);
+    const phase1Sha = '1'.repeat(40);
+    const conflictingSha = '3'.repeat(40);
+    const canonical = [
+      '---',
+      'status: PASS',
+      `phase2_candidate_sha: ${phase2Sha}`,
+      'feature_flag: true',
+      `phase1_candidate_sha: ${phase1Sha}`,
+      'phase1_source_field: candidate_sha',
+      'phase2_candidate_status: reviewed',
+      'candidate_count: 2',
+      'commit_message: immutable handoff',
+      `validation_evidence_sha256: ${'a'.repeat(64)}`,
+      `sha256_manifest: ${'b'.repeat(64)}`,
+      'source_phase2: exact',
+    ];
+
+    expect(
+      parsePhase2HandoffSummary([...canonical, '---'].join('\n')),
+    ).toEqual({
+      phase2CandidateSha: phase2Sha,
+      featureFlag: true,
+    });
+
+    for (const conflictingAlias of [
+      `phase2_candidate_commit_sha: ${conflictingSha}`,
+      `source_phase2_candidate_sha: ${conflictingSha}`,
+      `phase1_candidate_commit_sha: ${conflictingSha}`,
+      `source_phase1_candidate_sha: ${conflictingSha}`,
+      `candidate_source_sha: ${conflictingSha}`,
+      `source_commit_sha: ${conflictingSha}`,
+      `"source_phase2_candidate_sha": ${conflictingSha}`,
+      `source.phase1.candidate.sha: ${conflictingSha}`,
+    ]) {
+      expect(() =>
+        parsePhase2HandoffSummary(
+          [...canonical, conflictingAlias, '---'].join('\n'),
+        ),
+      ).toThrow();
+    }
+  });
+
   it('rejects duplicate or aliased candidate JSON labels', () => {
     const sha = '2'.repeat(40);
     const hash = 'a'.repeat(64);
@@ -732,6 +776,11 @@ describe('phase2-handoff mode', () => {
       'feature_flag: true',
       'phase1_source_field: candidate_sha',
       `phase1_candidate_sha: ${harness.phase1Sha}`,
+      'phase2_candidate_status: reviewed',
+      'candidate_count: 2',
+      'commit_message: immutable handoff',
+      `validation_evidence_sha256: ${'a'.repeat(64)}`,
+      `sha256_manifest: ${'b'.repeat(64)}`,
     ]);
     const result = runPhase2(harness, summaryPath);
 
@@ -764,6 +813,35 @@ describe('phase2-handoff mode', () => {
       );
     },
   );
+
+  it('rejects conflicting semantic SHA aliases through the real CLI', () => {
+    const aliases = [
+      'phase2_candidate_commit_sha',
+      'source_phase2_candidate_sha',
+      'phase1_candidate_commit_sha',
+      'source_phase1_candidate_sha',
+      'candidate_source_sha',
+      'source_commit_sha',
+      '"source_phase2_candidate_sha"',
+      'source.phase1.candidate.sha',
+    ];
+
+    for (const alias of aliases) {
+      const harness = createHarness();
+      const summaryPath = writePhase2Summary(harness, [
+        'status: PASS',
+        `phase2_candidate_sha: ${harness.phase1Sha}`,
+        'feature_flag: true',
+        `phase1_candidate_sha: ${harness.phase1Sha}`,
+        `${alias}: ${harness.candidateSha}`,
+      ]);
+
+      expectFailure(
+        runPhase2(harness, summaryPath),
+        /candidate SHA alias|unsupported top-level frontmatter/i,
+      );
+    }
+  });
 
   it('rejects malformed, aliased, disabled, missing, and nonancestor handoffs', () => {
     const cases = [
