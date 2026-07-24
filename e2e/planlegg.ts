@@ -2405,7 +2405,7 @@ async function runAccess(
     || !ukeSource.includes('Se uke med Babyora Plus')
     || !ukeSource.includes('data-planlegg-access="neutral"')
     || !ukeSource.includes(
-      "paywallOpen && weekAccess.access.state !== 'neutral'",
+      "paywallOpen && viewAccess.access.state !== 'neutral'",
     )
     || !appSource.includes("decideAccess('future_plan'")
     || !appSource.includes('Capacitor.isNativePlatform()')
