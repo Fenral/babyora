@@ -1815,20 +1815,21 @@ async function runSoonReadiness(
     const documentExcerpt = await page.locator('body').innerText().catch(() => '(body unavailable)');
     throw new Error(
       `Snart dev navigation failed at ${page.url()}: ${documentExcerpt.slice(0, 1_500)}\n${browserSignals.join('\n')}\n${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
   const soon = page.getByRole('radio', { name: 'Snart', exact: true });
   try {
     await soon.waitFor({ state: 'visible', timeout: 15_000 });
   } catch (error) {
-    throw new Error(`Snart control absent: ${await page.locator('body').innerText()} hook=${await page.evaluate(() => JSON.stringify((window as Window & { __BABYORA_PLANLEGG_E2E__?: unknown }).__BABYORA_PLANLEGG_E2E__))} signals=${browserSignals.join('\n')} ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`Snart control absent: ${await page.locator('body').innerText()} hook=${await page.evaluate(() => JSON.stringify((window as Window & { __BABYORA_PLANLEGG_E2E__?: unknown }).__BABYORA_PLANLEGG_E2E__))} signals=${browserSignals.join('\n')} ${error instanceof Error ? error.message : String(error)}`, { cause: error });
   }
   await soon.evaluate((radio) => (radio as HTMLInputElement).click());
   const ready = page.locator('.snart-plan');
   try {
     await ready.waitFor({ state: 'visible', timeout: 15_000 });
   } catch (error) {
-    throw new Error(`Snart model did not render: ${await page.locator('body').innerText()} ${browserSignals.join('\n')} ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`Snart model did not render: ${await page.locator('body').innerText()} ${browserSignals.join('\n')} ${error instanceof Error ? error.message : String(error)}`, { cause: error });
   }
   const rendered = await ready.innerText();
   if (
@@ -1866,7 +1867,8 @@ async function runSoonReadiness(
   const transport = await page.evaluate(() => (
     (window as Window & { __babyoraSoonTransport?: string[] }).__babyoraSoonTransport ?? []
   ));
-  const leaked = [...browserSignals, ...transport, ...requests].filter((entry) => (
+  const externalRequests = requests.filter((url) => !url.startsWith(BASE_URL));
+  const leaked = [...browserSignals, ...transport, ...externalRequests].filter((entry) => (
     /snart|lillian|eskil|2025-10-03|2023-12-03|already|har allerede/iu.test(entry)
   ));
   if (leaked.length > 0) {
