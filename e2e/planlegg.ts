@@ -30,6 +30,7 @@ import { validateClimateBundle } from '../scripts/snart/validate-climate-pack.js
 
 const PORT = 4191;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
+const UKE_VITE_MODULE_PATH = '/src/screens/UkeScreen.tsx';
 const PLANLEGG_CASES = Object.freeze({
   ...PLANLEGG_E2E_FIXTURES,
   'semantic-rail': Object.freeze({
@@ -124,6 +125,66 @@ const EXACT_CONTEXT_EXPECTED_GARMENTS = Object.freeze([
   'halsedisse',
 ]);
 const EXACT_CONTEXT_EXPECTED_EQUIPMENT = Object.freeze([] as string[]);
+const SNART_INIT_SCRIPT = String.raw`
+(() => {
+  const state = new URL(window.location.href).searchParams.get('snart-e2e') || 'plus';
+  const fixedHome = state === 'unsupported'
+    ? { city: 'Ukjent', lat: 60, lon: 11 }
+    : { city: 'Oslo', lat: 59.9139, lon: 10.7522 };
+  const automatic = state === 'automatic-b1'
+    ? { mode: 'auto', place: { city: 'Bergen', lat: 60.3913, lon: 5.3221 } }
+    : state === 'automatic-b2'
+      ? { mode: 'auto', place: { city: 'Troms\u00f8', lat: 69.6492, lon: 18.9553 } }
+      : undefined;
+  window.__BABYORA_PLANLEGG_E2E__ = {
+    testOnlySoonAvailability: true,
+    entitlement: state === 'loading' ? 'loading' : state === 'free' ? 'free' : 'plus',
+    fixedHome,
+    automatic,
+    climateProfile: state === 'invalid-hash' ? 'invalid-hash' : undefined,
+    profileScope: state === 'profile-b' ? 'b' : 'a',
+    windowLocalDate: state === 'emptyable'
+      ? '2026-01-01'
+      : state === 'retained'
+        ? '2026-06-01'
+        : state === 'window-b'
+          ? '2026-02-13'
+          : '2026-02-12',
+  };
+  const recordTransport = function (kind, payload) {
+    window.__babyoraSoonTransport = window.__babyoraSoonTransport || [];
+    window.__babyoraSoonTransport.push(kind + ':' + String(payload == null ? '' : payload));
+  };
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = function (input, init) {
+    recordTransport('fetch', typeof input === 'string' ? input : input.toString());
+    return nativeFetch(input, init);
+  };
+  const nativeBeacon = navigator.sendBeacon.bind(navigator);
+  navigator.sendBeacon = function (url, data) {
+    recordTransport('beacon', String(url) + ':' + String(data == null ? '' : data));
+    return nativeBeacon(url, data);
+  };
+  const nativeOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+    recordTransport('xhr', String(method) + ':' + String(url));
+    return nativeOpen.call(this, method, url, ...rest);
+  };
+})();
+`;
+
+type SnartHookSnapshot = Readonly<{
+  testOnlySoonAvailability: true;
+  entitlement: 'loading' | 'free' | 'plus';
+  fixedHome: Readonly<{ city: string; lat: number; lon: number }>;
+  automatic?: Readonly<{
+    mode: 'auto';
+    place: Readonly<{ city: string; lat: number; lon: number }>;
+  }>;
+  climateProfile?: 'invalid-hash';
+  profileScope: 'a' | 'b';
+  windowLocalDate: string;
+}>;
 
 type StatusNoticeState =
   | Readonly<{ status: 'loading' }>
@@ -403,19 +464,66 @@ async function waitForServer(
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (spawnError) throw spawnError;
-    if (server.exitCode !== null) {
+    if (server.exitCode !== null || server.signalCode !== null) {
       throw new Error(`Preview-prosessen avsluttet før oppstart med kode ${server.exitCode}`);
     }
-    try {
-      const response = await fetch(url);
-      if (response.ok) return;
-    } catch {
-      // Preview-prosessen starter fortsatt.
+    const serverLog = output.join('').replaceAll(String.fromCharCode(27), '');
+    const ownedReady = new RegExp(
+      `Local:\\s+http://127\\.0\\.0\\.1:${PORT}/`,
+      'u',
+    ).test(serverLog);
+    if (ownedReady) {
+      try {
+        const response = await fetch(url);
+        if (
+          response.ok
+          && server.exitCode === null
+          && server.signalCode === null
+        ) {
+          console.log(`PLANLEGG OWNED SERVER READY: pid=${server.pid ?? 'unknown'} url=${url}`);
+          return;
+        }
+      } catch {
+        // Den eide Vite-prosessen har annonsert URL-en, men svarer ikke ennå.
+      }
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   if (output.length > 0) console.error(`PLANLEGG SERVER LOG:\n${output.join('')}`);
   throw new Error(`Preview-server svarte ikke på ${url} innen ${timeoutMs} ms`);
+}
+
+async function requireOwnedViteModule(
+  url: string,
+  server: ChildProcess,
+  output: readonly string[],
+): Promise<void> {
+  if (server.exitCode !== null || server.signalCode !== null) {
+    throw new Error('Vite process stopped before UkeScreen readiness');
+  }
+  const moduleUrl = new URL(UKE_VITE_MODULE_PATH, url);
+  const response = await fetch(moduleUrl);
+  const transformed = await response.text();
+  const contentType = response.headers.get('content-type') ?? '';
+  const exportsUkeScreen = /(?:export\s+(?:function|const)\s+UkeScreen\b|export\s*\{[^}]*\bUkeScreen\b)/u
+    .test(transformed);
+  if (
+    response.status !== 200
+    || !/javascript|typescript/iu.test(contentType)
+    || !exportsUkeScreen
+    || server.exitCode !== null
+    || server.signalCode !== null
+  ) {
+    if (output.length > 0) console.error(`PLANLEGG SERVER LOG:\n${output.join('')}`);
+    throw new Error(
+      `Owned Vite UkeScreen readiness failed: status=${response.status} `
+      + `contentType=${contentType} export=${exportsUkeScreen}`,
+    );
+  }
+  console.log(
+    `PLANLEGG OWNED MODULE READY: pid=${server.pid ?? 'unknown'} `
+    + `module=${UKE_VITE_MODULE_PATH} export=UkeScreen`,
+  );
 }
 
 async function waitForExit(server: ChildProcess, timeoutMs: number): Promise<boolean> {
@@ -1361,8 +1469,7 @@ async function runAutomaticLocation(
   );
 }
 
-async function openPlanlegg(page: Page, path: string): Promise<void> {
-  await page.goto(`${BASE_URL}${path}`, { waitUntil: 'domcontentloaded' });
+async function enterPlanlegg(page: Page): Promise<void> {
   const planButton = page
     .getByRole('navigation')
     .first()
@@ -1373,38 +1480,9 @@ async function openPlanlegg(page: Page, path: string): Promise<void> {
     .waitFor({ state: 'attached', timeout: 15_000 });
 }
 
-async function prewarmViteModuleGraph(
-  page: Page,
-  path: string,
-  modulePath: string,
-  expectedExport: string,
-): Promise<void> {
-  const browser = page.context().browser();
-  if (!browser) throw new Error('Vite lazy-module readiness requires a browser');
-  const readinessContext = await browser.newContext();
-  try {
-    const readinessPage = await readinessContext.newPage();
-    await readinessPage.goto(`${BASE_URL}${path}`, { waitUntil: 'domcontentloaded' });
-    const moduleReady = await readinessPage.evaluate(
-      async ({ targetModule, exportName }) => {
-        const importModule = window.Function(
-          'modulePath',
-          'return import(modulePath)',
-        ) as (modulePath: string) => Promise<Record<string, unknown>>;
-        const loaded = await importModule(targetModule);
-        return typeof loaded[exportName] === 'function';
-      },
-      { targetModule: modulePath, exportName: expectedExport },
-    );
-    if (!moduleReady) {
-      throw new Error(
-        `Vite lazy-module readiness failed: ${modulePath} did not expose ${expectedExport}`,
-      );
-    }
-  } finally {
-    await readinessContext.close();
-  }
-  console.log(`PLANLEGG DEV MODULE READY: module=${modulePath} export=${expectedExport}`);
+async function openPlanlegg(page: Page, path: string): Promise<void> {
+  await page.goto(`${BASE_URL}${path}`, { waitUntil: 'domcontentloaded' });
+  await enterPlanlegg(page);
 }
 
 async function startLiveRegionTrace(page: Page): Promise<void> {
@@ -2115,6 +2193,7 @@ async function runSoonReadiness(
   const session = readFileSync(join(root, 'src/lib/planning/snart-session.ts'), 'utf8');
   const privacy = readFileSync(join(root, 'src/lib/planning/__tests__/snart-privacy-contract.test.ts'), 'utf8');
   const uke = readFileSync(join(root, 'src/screens/UkeScreen.tsx'), 'utf8');
+  const harness = readFileSync(join(root, 'e2e/planlegg.ts'), 'utf8');
   if (!fixture.snartReadiness) {
     throw new Error('Snart readiness-fixturen mangler frosne kandidat- og bundlehasher');
   }
@@ -2134,75 +2213,89 @@ async function runSoonReadiness(
     || !uke.includes('requestedPlanViewToken')
     || !uke.includes('onConsumeRequestedPlanView')
     || !uke.includes("setTab('soon')")
+    || SNART_INIT_SCRIPT.includes('__name')
+    || SNART_INIT_SCRIPT.includes('window.__name')
+    || !harness.includes('page.addInitScript({ content: SNART_INIT_SCRIPT })')
+    || harness.includes('prewarmViteModuleGraph')
+    || harness.includes("return import(modulePath)")
   ) {
     throw new Error('Snart readiness preflight mangler låst capability-, privacy-, contract- eller tidligere evidence-binding');
   }
 
   const requests: string[] = [];
   const browserSignals: string[] = [];
+  const fatalBrowserSignals: string[] = [];
   page.on('request', (request) => requests.push(request.url()));
   page.on('console', (message) => browserSignals.push(`console:${message.type()}:${message.text()}`));
-  page.on('pageerror', (error) => browserSignals.push(`pageerror:${error.message}`));
-  page.on('requestfailed', (request) => browserSignals.push(
-    `requestfailed:${request.url()}:${request.failure()?.errorText ?? ''}`,
-  ));
-  await page.addInitScript(() => {
-    const state = new URL(location.href).searchParams.get('snart-e2e') ?? 'plus';
-    const fixedHome = state === 'unsupported'
-      ? { city: 'Ukjent', lat: 60, lon: 11 }
-      : { city: 'Oslo', lat: 59.9139, lon: 10.7522 };
-    const automatic = state === 'automatic-b1'
-      ? { mode: 'auto' as const, place: { city: 'Bergen', lat: 60.3913, lon: 5.3221 } }
-      : state === 'automatic-b2'
-        ? { mode: 'auto' as const, place: { city: 'Troms\u00f8', lat: 69.6492, lon: 18.9553 } }
-        : undefined;
-    (window as Window & { __BABYORA_PLANLEGG_E2E__?: unknown })
-      .__BABYORA_PLANLEGG_E2E__ = {
-        testOnlySoonAvailability: true,
-        entitlement: state === 'loading' ? 'loading' : state === 'free' ? 'free' : 'plus',
-        fixedHome,
-        automatic,
-        climateProfile: state === 'invalid-hash' ? 'invalid-hash' : undefined,
-        profileScope: state === 'profile-b' ? 'b' : 'a',
-        windowLocalDate: state === 'emptyable'
-          ? '2026-01-01'
-          : state === 'retained'
-            ? '2026-06-01'
-          : state === 'window-b'
-            ? '2026-02-13'
-            : '2026-02-12',
-      };
-    const record = (kind: string, payload: unknown) => {
-      const target = window as Window & { __babyoraSoonTransport?: string[] };
-      target.__babyoraSoonTransport ??= [];
-      target.__babyoraSoonTransport.push(`${kind}:${String(payload ?? '')}`);
-    };
-    const nativeFetch = window.fetch.bind(window);
-    window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
-      record('fetch', typeof input === 'string' ? input : input.toString());
-      return nativeFetch(input, init);
-    }) as typeof window.fetch;
-    const nativeBeacon = navigator.sendBeacon.bind(navigator);
-    navigator.sendBeacon = ((url: string | URL, data?: BodyInit | null) => {
-      record('beacon', `${url}:${data ?? ''}`);
-      return nativeBeacon(url, data);
-    }) as typeof navigator.sendBeacon;
-    const nativeOpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function open(method, url, ...rest) {
-      record('xhr', `${method}:${url}`);
-      return nativeOpen.call(this, method, url, ...rest);
-    };
+  page.on('pageerror', (error) => {
+    const signal = `pageerror:${error.message}`;
+    browserSignals.push(signal);
+    fatalBrowserSignals.push(signal);
   });
-  await prewarmViteModuleGraph(
-    page,
-    fixture.path,
-    '/src/screens/FamilieScreen.tsx',
-    'FamilieScreen',
-  );
+  page.on('requestfailed', (request) => {
+    const signal = `requestfailed:${request.url()}:${request.failure()?.errorText ?? ''}`;
+    browserSignals.push(signal);
+    fatalBrowserSignals.push(signal);
+  });
+  await page.addInitScript({ content: SNART_INIT_SCRIPT });
   forecastState.delivery = 'success';
   forecastState.mode = 'many';
   const observedTransport: string[] = [];
+  const assertNoFatalBrowserSignal = (stage: string) => {
+    if (fatalBrowserSignals.length > 0) {
+      throw new Error(
+        `Snart browser runtime failed at ${stage}: ${fatalBrowserSignals.join('\n')}`,
+      );
+    }
+  };
+  const expectedHook = (state: string): SnartHookSnapshot => {
+    const automatic = state === 'automatic-b1'
+      ? { mode: 'auto' as const, place: { city: 'Bergen', lat: 60.3913, lon: 5.3221 } }
+      : state === 'automatic-b2'
+        ? { mode: 'auto' as const, place: { city: 'Tromsø', lat: 69.6492, lon: 18.9553 } }
+        : undefined;
+    return {
+      testOnlySoonAvailability: true,
+      entitlement: state === 'loading' ? 'loading' : state === 'free' ? 'free' : 'plus',
+      fixedHome: state === 'unsupported'
+        ? { city: 'Ukjent', lat: 60, lon: 11 }
+        : { city: 'Oslo', lat: 59.9139, lon: 10.7522 },
+      ...(automatic ? { automatic } : {}),
+      ...(state === 'invalid-hash' ? { climateProfile: 'invalid-hash' as const } : {}),
+      profileScope: state === 'profile-b' ? 'b' : 'a',
+      windowLocalDate: state === 'emptyable'
+        ? '2026-01-01'
+        : state === 'retained'
+          ? '2026-06-01'
+          : state === 'window-b'
+            ? '2026-02-13'
+            : '2026-02-12',
+    };
+  };
+  const assertHookSnapshot = async (state: string) => {
+    assertNoFatalBrowserSignal(`hook:${state}`);
+    const actual = await page.evaluate(() => JSON.stringify(
+      (window as Window & { __BABYORA_PLANLEGG_E2E__?: unknown })
+        .__BABYORA_PLANLEGG_E2E__ ?? null,
+    ));
+    const expected = JSON.stringify(expectedHook(state));
+    if (actual !== expected) {
+      throw new Error(
+        `Snart E2E hook mismatch for ${state}: expected=${expected} actual=${actual}`,
+      );
+    }
+  };
+  const navigateSoonState = async (
+    state: string,
+    path = `${fixture.path}&snart-e2e=${state}`,
+  ) => {
+    await page.goto(`${BASE_URL}${path}`, { waitUntil: 'domcontentloaded' });
+    await assertHookSnapshot(state);
+    await enterPlanlegg(page);
+    assertNoFatalBrowserSignal(`planlegg:${state}`);
+  };
   const captureTransport = async () => {
+    assertNoFatalBrowserSignal('capture-transport');
     const events = await page.evaluate(() => (
       (window as Window & { __babyoraSoonTransport?: string[] }).__babyoraSoonTransport ?? []
     )).catch(() => [] as string[]);
@@ -2210,11 +2303,12 @@ async function runSoonReadiness(
   };
   const openSoonState = async (state: string) => {
     await captureTransport();
-    await openPlanlegg(page, `${fixture.path}&snart-e2e=${state}`);
+    await navigateSoonState(state);
     await page.getByRole('radio', { name: 'Snart', exact: true })
       .evaluate((radio) => (radio as HTMLInputElement).click());
     const plan = page.locator('.snart-plan');
     await plan.waitFor({ state: 'visible', timeout: 15_000 });
+    assertNoFatalBrowserSignal(`render:${state}`);
     return plan;
   };
   const readSoonSignature = async () => page.locator('.snart-plan').evaluate((element) => JSON.stringify({
@@ -2225,7 +2319,7 @@ async function runSoonReadiness(
       .map((button) => button.dataset.conceptId ?? ''),
   }));
   try {
-    await openPlanlegg(page, fixture.path);
+    await navigateSoonState('plus', fixture.path);
   } catch (error) {
     const documentExcerpt = await page.locator('body').innerText().catch(() => '(body unavailable)');
     throw new Error(
@@ -2308,8 +2402,10 @@ async function runSoonReadiness(
     throw new Error('Har allerede oppdaterte ikke den in-memory baserte modellen');
   }
   await captureTransport();
-  await page.reload();
-  await openPlanlegg(page, `${fixture.path}&entitlement=plus`);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await assertHookSnapshot('plus');
+  await enterPlanlegg(page);
+  assertNoFatalBrowserSignal('planlegg:reload-plus');
   await page.getByRole('radio', { name: 'Snart', exact: true })
     .evaluate((radio) => (radio as HTMLInputElement).click());
   await ready.waitFor({ state: 'visible', timeout: 15_000 });
@@ -2325,7 +2421,7 @@ async function runSoonReadiness(
     throw new Error(`Snart lekket til browser-signal eller transport: ${leaked.join(', ')}`);
   }
 
-  await openPlanlegg(page, `${fixture.path}&snart-e2e=emptyable`);
+  await navigateSoonState('emptyable');
   await page.getByRole('radio', { name: 'Snart', exact: true }).evaluate((radio) => (radio as HTMLInputElement).click());
   const emptyable = page.locator('.snart-plan');
   await emptyable.waitFor({ state: 'visible' });
@@ -2346,7 +2442,7 @@ async function runSoonReadiness(
     throw new Error('Warm Snart did not retain not_highlighted after all actions were marked');
   }
 
-  await openPlanlegg(page, `${fixture.path}&snart-e2e=free`);
+  await navigateSoonState('free');
   const freeSoon = page.getByRole('radio', { name: 'Snart', exact: true });
   await freeSoon.evaluate((radio) => (radio as HTMLInputElement).click());
   const teaser = page.locator('[data-planlegg-access="soon-teaser"]');
@@ -2369,11 +2465,11 @@ async function runSoonReadiness(
     throw new Error('Free Snart-paywall returnerte ikke fokus til teaseren');
   }
 
-  await openPlanlegg(page, `${fixture.path}&snart-e2e=loading`);
+  await navigateSoonState('loading');
   await page.getByRole('radio', { name: 'Snart', exact: true }).evaluate((radio) => (radio as HTMLInputElement).click());
   await page.locator('[data-planlegg-access="neutral"]').waitFor({ state: 'visible' });
   if (await page.locator('.snart-plan, [data-planlegg-access="soon-teaser"]').count() !== 0) throw new Error('Loading leaked Snart advice');
-  await openPlanlegg(page, `${fixture.path}&snart-e2e=unsupported`);
+  await navigateSoonState('unsupported');
   await page.getByRole('radio', { name: 'Snart', exact: true }).evaluate((radio) => (radio as HTMLInputElement).click());
   const unavailable = page.locator('.snart-plan');
   await unavailable.waitFor({ state: 'visible' });
@@ -2394,16 +2490,19 @@ async function runSoonReadiness(
   if (await familyRoot.getAttribute('aria-current') !== 'page') {
     throw new Error('Familie root did not become current before child-switch readiness');
   }
+  assertNoFatalBrowserSignal('familie-root-current');
   const switchChild = page.getByRole('button', { name: /Bytt barn/u });
   try {
     await switchChild.waitFor({ state: 'visible', timeout: 15_000 });
   } catch (error) {
+    assertNoFatalBrowserSignal('familie-child-switch-wait');
     const mainText = await page.locator('main#main').innerText().catch(() => '(main unavailable)');
     throw new Error(
       `Familie route became current but its child-switch UI did not become ready: ${mainText.slice(0, 1_500)}`,
       { cause: error },
     );
   }
+  assertNoFatalBrowserSignal('familie-child-switch-ready');
   await switchChild.evaluate((button) => (button as HTMLButtonElement).click());
   const childDialog = page.getByRole('dialog', { name: 'Bytt barn' });
   await childDialog.getByRole('radio', { name: /Bytt til Eskil/u }).click();
@@ -2538,6 +2637,7 @@ async function runSoonReadiness(
   if (availabilityAfter !== availability) {
     throw new Error('Snart readiness endret capability-bytes under kontrollen');
   }
+  assertNoFatalBrowserSignal('snart-final');
 }
 
 async function settleEntitlement(page: Page, premium: boolean): Promise<void> {
@@ -3495,6 +3595,9 @@ async function main(): Promise<void> {
     server.stdout?.on('data', captureServerOutput);
     server.stderr?.on('data', captureServerOutput);
     await waitForServer(BASE_URL, server, serverOutput);
+    if (e2eSoon) {
+      await requireOwnedViteModule(BASE_URL, server, serverOutput);
+    }
 
     browser = await chromium.launch();
     const context = await browser.newContext({
