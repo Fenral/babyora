@@ -2554,13 +2554,15 @@ async function runAccess(
   }).click();
   const webPurchasePaywall = page.getByRole('dialog');
   await webPurchasePaywall.waitFor({ state: 'visible', timeout: 15_000 });
-  await webPurchasePaywall.getByRole('button', {
-    name: /Start 7 dager gratis|Kjøp Babyora Pluss/u,
-  }).click();
-  await webPurchasePaywall.getByText(
-    'Babyora Pluss aktivert (testmodus).',
-    { exact: true },
-  ).waitFor({ state: 'visible', timeout: 15_000 });
+  await Promise.all([
+    webPurchasePaywall.getByRole('status').getByText(
+      'Babyora Pluss aktivert (testmodus).',
+      { exact: true },
+    ).waitFor({ state: 'visible', timeout: 15_000 }),
+    webPurchasePaywall.getByRole('button', {
+      name: /Start 7 dager gratis|Kjøp Babyora Pluss/u,
+    }).click(),
+  ]);
   await page.clock.fastForward(2_000);
   await webPurchasePaywall.waitFor({ state: 'detached', timeout: 15_000 });
   await page.locator('[data-planlegg-access="plus-week"]')
@@ -2578,11 +2580,13 @@ async function runAccess(
   }).click();
   const restorePaywall = page.getByRole('dialog');
   await restorePaywall.waitFor({ state: 'visible', timeout: 15_000 });
-  await restorePaywall.getByRole('button', { name: 'Gjenopprett kjøp' }).click();
-  await restorePaywall.getByText(
-    'Babyora Pluss aktivert.',
-    { exact: true },
-  ).waitFor({ state: 'visible', timeout: 15_000 });
+  await Promise.all([
+    restorePaywall.getByRole('status').getByText(
+      'Babyora Pluss aktivert.',
+      { exact: true },
+    ).waitFor({ state: 'visible', timeout: 15_000 }),
+    restorePaywall.getByRole('button', { name: 'Gjenopprett kjøp' }).click(),
+  ]);
   await page.clock.fastForward(2_000);
   await restorePaywall.waitFor({ state: 'detached', timeout: 15_000 });
   await page.locator('[data-planlegg-access="plus-week"]')
