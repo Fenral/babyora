@@ -9,4 +9,26 @@ describe('Snart privacy contract', () => {
       expect(source).not.toMatch(/localStorage|sessionStorage|indexedDB|CacheStorage|fetch\s*\(|XMLHttpRequest|WebSocket|supabase|posthog|analytics|tracing|console\.|history|location\.href|childId|birthLocalDate|actionTimestamp/iu);
     }
   });
+
+  it('keeps automatic/effective place and identity out of the session contract', async () => {
+    const sessionSource = readFileSync(
+      new URL('../snart-session.ts', import.meta.url),
+      'utf8',
+    );
+    const ukeSource = (
+      await import('../../../screens/UkeScreen.tsx?raw') as { default: string }
+    ).default;
+
+    expect(sessionSource).not.toMatch(
+      /automaticPlace|effectivePlace|cacheScope|childId|birthLocalDate|actionTimestamp/iu,
+    );
+    expect(ukeSource).toContain('resolveCommittedSnartHome');
+    expect(ukeSource).toContain('lookupClimateProfile');
+    expect(ukeSource).toMatch(
+      /snartProfileScope\s*=\s*active\?\.id[\s\S]*?crypto\.randomUUID\(\)/u,
+    );
+    expect(ukeSource).not.toMatch(
+      /generation:\s*(?:active\?\.id|snartProfileScope)/u,
+    );
+  });
 });
