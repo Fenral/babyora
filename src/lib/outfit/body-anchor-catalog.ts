@@ -179,7 +179,9 @@ function makeAnchor(
 export function bodyRegionForCatalogGarment(
   catalogGarmentId: GarmentId,
 ): Exclude<BodyRegion, 'unknown'> | null {
-  return BODY_REGION_BY_CATALOG_ID[catalogGarmentId] ?? null;
+  return Object.hasOwn(BODY_REGION_BY_CATALOG_ID, catalogGarmentId)
+    ? BODY_REGION_BY_CATALOG_ID[catalogGarmentId]
+    : null;
 }
 
 export function normalizedBodyAnchorFor(
@@ -195,7 +197,17 @@ export function classifyOutfitItem(
   engineCategory: LayerCategory,
   pose: OutfitAvatarPose = 'standing',
 ): SemanticOutfitItemClassification {
-  const catalogGarmentId = garmentIdFor(sourceLabel);
+  const normalizedSourceLabel = sourceLabel.trim();
+  const resolvedCatalogGarmentId = Object.hasOwn(
+    Object.prototype,
+    normalizedSourceLabel,
+  )
+    ? null
+    : garmentIdFor(sourceLabel);
+  const catalogGarmentId =
+    typeof resolvedCatalogGarmentId === 'string'
+      ? resolvedCatalogGarmentId
+      : null;
   const catalogCategory =
     catalogGarmentId === null ? null : categoryFor(catalogGarmentId);
 

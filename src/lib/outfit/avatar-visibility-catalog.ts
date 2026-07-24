@@ -99,5 +99,7 @@ const COVERAGE_BY_CATALOG_ID: Readonly<
 export function avatarCoverageForCatalogGarment(
   catalogGarmentId: string,
 ): AvatarVisualCoverage | null {
-  return COVERAGE_BY_CATALOG_ID[catalogGarmentId] ?? null;
+  return Object.hasOwn(COVERAGE_BY_CATALOG_ID, catalogGarmentId)
+    ? COVERAGE_BY_CATALOG_ID[catalogGarmentId]
+    : null;
 }

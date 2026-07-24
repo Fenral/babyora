@@ -38,6 +38,12 @@ function build(
   });
 }
 
+const PROTOTYPE_PROPERTY_NAMES = [
+  '__proto__',
+  'constructor',
+  'prototype',
+] as const;
+
 describe('canonical outfit truth', () => {
   it('is deterministic for the exact same complete finalized input', () => {
     const input = exactInput();
@@ -496,6 +502,67 @@ describe('canonical outfit truth', () => {
       });
       expect(result.snapshot.avatar.verifiedAssetPath).toBeNull();
       expect(result.snapshot.avatar.visibleGarmentIds).toEqual([]);
+    }
+  });
+
+  it.each(PROTOTYPE_PROPERTY_NAMES)(
+    'keeps prototype-named unknown label %s neutral',
+    (sourceLabel) => {
+      const input = exactInput();
+      const recommendation = recommend(input);
+      recommendation.layers = [{
+        category: 'innerst',
+        items: [sourceLabel],
+      }];
+
+      const result = build(input, recommendation);
+      expect(result.kind).toBe('supported');
+      if (result.kind !== 'supported') return;
+      expect(result.snapshot.garments[0]).toMatchObject({
+        sourceLabel,
+        catalogGarmentId: null,
+        bodyRegion: 'unknown',
+        bodyAnchor: null,
+        avatarCoverage: null,
+        visibleOnAvatar: false,
+      });
+      expect(result.snapshot.avatar.verifiedAssetPath).toBeNull();
+      expect(result.snapshot.avatar.visibleGarmentIds).toEqual([]);
+    },
+  );
+
+  it('keeps a prototype-polluted unknown label neutral and cleans up', () => {
+    const sourceLabel = 'future prototype-polluted snapshot label';
+    Object.defineProperty(Object.prototype, sourceLabel, {
+      configurable: true,
+      enumerable: false,
+      value: 'lue',
+      writable: true,
+    });
+
+    try {
+      const input = exactInput();
+      const recommendation = recommend(input);
+      recommendation.layers = [{
+        category: 'innerst',
+        items: [sourceLabel],
+      }];
+
+      const result = build(input, recommendation);
+      expect(result.kind).toBe('supported');
+      if (result.kind !== 'supported') return;
+      expect(result.snapshot.garments[0]).toMatchObject({
+        sourceLabel,
+        catalogGarmentId: null,
+        bodyRegion: 'unknown',
+        bodyAnchor: null,
+        avatarCoverage: null,
+        visibleOnAvatar: false,
+      });
+      expect(result.snapshot.avatar.verifiedAssetPath).toBeNull();
+      expect(result.snapshot.avatar.visibleGarmentIds).toEqual([]);
+    } finally {
+      delete (Object.prototype as Record<string, unknown>)[sourceLabel];
     }
   });
 

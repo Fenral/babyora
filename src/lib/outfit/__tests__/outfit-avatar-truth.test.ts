@@ -17,6 +17,12 @@ type ManifestRow = {
   garments: string[];
 };
 
+const PROTOTYPE_PROPERTY_NAMES = [
+  '__proto__',
+  'constructor',
+  'prototype',
+] as const;
+
 const manifest = JSON.parse(manifestJson) as ManifestRow[];
 
 function item(
@@ -111,6 +117,33 @@ describe('exact verified avatar truth', () => {
         occludesSlots: [],
       }),
     ]);
+  });
+
+  it.each(PROTOTYPE_PROPERTY_NAMES)(
+    'returns null coverage for prototype-named unknown id %s',
+    (catalogGarmentId) => {
+      expect(
+        avatarCoverageForCatalogGarment(catalogGarmentId),
+      ).toBeNull();
+    },
+  );
+
+  it('rejects inherited coverage from temporary prototype pollution', () => {
+    const catalogGarmentId = 'future prototype-polluted visual id';
+    Object.defineProperty(Object.prototype, catalogGarmentId, {
+      configurable: true,
+      enumerable: false,
+      value: 'lue',
+      writable: true,
+    });
+
+    try {
+      expect(
+        avatarCoverageForCatalogGarment(catalogGarmentId),
+      ).toBeNull();
+    } finally {
+      delete (Object.prototype as Record<string, unknown>)[catalogGarmentId];
+    }
   });
 
   it('fails neutral on missing, extra or differently posed manifest sets', () => {

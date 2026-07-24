@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+  bodyRegionForCatalogGarment,
   classifyOutfitItem,
   normalizedBodyAnchorFor,
 } from '../body-anchor-catalog.js';
+
+const PROTOTYPE_PROPERTY_NAMES = [
+  '__proto__',
+  'constructor',
+  'prototype',
+] as const;
 
 describe('semantic outfit classification', () => {
   it.each([
@@ -71,5 +78,46 @@ describe('semantic outfit classification', () => {
       bodyRegion: 'unknown',
       bodyAnchor: null,
     });
+  });
+
+  it.each(PROTOTYPE_PROPERTY_NAMES)(
+    'fails closed for prototype-named catalog and source label %s',
+    (label) => {
+      expect(bodyRegionForCatalogGarment(label)).toBeNull();
+      expect(normalizedBodyAnchorFor(label, 'standing')).toBeNull();
+      expect(classifyOutfitItem(label, 'innerst')).toEqual({
+        kind: 'unknown',
+        sourceLabel: label,
+        catalogGarmentId: null,
+        catalogCategory: null,
+        bodyRegion: 'unknown',
+        bodyAnchor: null,
+      });
+    },
+  );
+
+  it('rejects an inherited catalog hit from temporary prototype pollution', () => {
+    const label = 'future prototype-polluted garment';
+    Object.defineProperty(Object.prototype, label, {
+      configurable: true,
+      enumerable: false,
+      value: 'lue',
+      writable: true,
+    });
+
+    try {
+      expect(bodyRegionForCatalogGarment(label)).toBeNull();
+      expect(normalizedBodyAnchorFor(label, 'standing')).toBeNull();
+      expect(classifyOutfitItem(label, 'innerst')).toEqual({
+        kind: 'unknown',
+        sourceLabel: label,
+        catalogGarmentId: null,
+        catalogCategory: null,
+        bodyRegion: 'unknown',
+        bodyAnchor: null,
+      });
+    } finally {
+      delete (Object.prototype as Record<string, unknown>)[label];
+    }
   });
 });
