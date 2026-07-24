@@ -22,6 +22,7 @@ import {
   roundHalfAwayFromZero,
   selectNearestGridCell,
   sha256,
+  SnartPipelineError,
   validateMetUrl,
 } from '../build-climate-pack';
 import { validateClimateBundle } from '../validate-climate-pack';
@@ -220,6 +221,138 @@ describe('Snart monthly-normal HTTP and source boundary', () => {
     ).toThrow(/authority|contract|frozen/iu);
   });
 
+  it('rejects every alternate HTTP request policy field before fetch', async () => {
+    const contract = loadContract();
+    const policy = contract.httpPolicy;
+    const url = `${contract.source.datasetUrls[0]}.dds`;
+    const alternatePolicies = [
+      { name: 'version', policy: { ...policy, version: 'alternate' } },
+      { name: 'method', policy: { ...policy, method: 'POST' } },
+      { name: 'scheme', policy: { ...policy, scheme: 'http:' } },
+      { name: 'hostname', policy: { ...policy, hostname: 'example.invalid' } },
+      {
+        name: 'allowedPorts',
+        policy: { ...policy, allowedPorts: ['443'] },
+      },
+      {
+        name: 'allowUsername',
+        policy: { ...policy, allowUsername: true },
+      },
+      {
+        name: 'allowPassword',
+        policy: { ...policy, allowPassword: true },
+      },
+      { name: 'allowHash', policy: { ...policy, allowHash: true } },
+      {
+        name: 'pathPattern',
+        policy: { ...policy, pathPattern: '^.*$' },
+      },
+      {
+        name: 'requireFamilyVariableMatch',
+        policy: { ...policy, requireFamilyVariableMatch: false },
+      },
+      {
+        name: 'allowedDatasetUrls',
+        policy: {
+          ...policy,
+          allowedDatasetUrls: [...policy.allowedDatasetUrls].reverse(),
+        },
+      },
+      {
+        name: 'allowedQueryVariables',
+        policy: {
+          ...policy,
+          allowedQueryVariables: [...policy.allowedQueryVariables].reverse(),
+        },
+      },
+      {
+        name: 'queryGrammar',
+        policy: { ...policy, queryGrammar: 'alternate' },
+      },
+      {
+        name: 'userAgent',
+        policy: { ...policy, userAgent: 'alternate/1.0' },
+      },
+      { name: 'redirect', policy: { ...policy, redirect: 'follow' } },
+      {
+        name: 'timeoutMilliseconds',
+        policy: { ...policy, timeoutMilliseconds: 60_000 },
+      },
+      {
+        name: 'maxBodyBytes.coordinateGrid',
+        policy: {
+          ...policy,
+          maxBodyBytes: {
+            ...policy.maxBodyBytes,
+            coordinateGrid: policy.maxBodyBytes.coordinateGrid + 1,
+          },
+        },
+      },
+      {
+        name: 'maxBodyBytes.metadataOrPoint',
+        policy: {
+          ...policy,
+          maxBodyBytes: {
+            ...policy.maxBodyBytes,
+            metadataOrPoint: policy.maxBodyBytes.metadataOrPoint + 1,
+          },
+        },
+      },
+      {
+        name: 'acceptedStatuses',
+        policy: { ...policy, acceptedStatuses: [200, 206] },
+      },
+      {
+        name: 'retryableStatuses',
+        policy: {
+          ...policy,
+          retryableStatuses: [...policy.retryableStatuses].reverse(),
+        },
+      },
+      {
+        name: 'maxAttempts',
+        policy: { ...policy, maxAttempts: policy.maxAttempts + 1 },
+      },
+      {
+        name: 'retryBackoffMilliseconds',
+        policy: { ...policy, retryBackoffMilliseconds: [0, 0] },
+      },
+      {
+        name: 'retryAfterFormats',
+        policy: { ...policy, retryAfterFormats: ['delta-seconds'] },
+      },
+      {
+        name: 'retryAfterClampSeconds',
+        policy: { ...policy, retryAfterClampSeconds: [0, 300] },
+      },
+      {
+        name: 'followRedirects',
+        policy: { ...policy, followRedirects: true },
+      },
+      {
+        name: 'cacheOnlyValidatedBodies',
+        policy: { ...policy, cacheOnlyValidatedBodies: false },
+      },
+      {
+        name: 'maxConcurrentRequests',
+        policy: { ...policy, maxConcurrentRequests: 2 },
+      },
+    ];
+
+    for (const alternate of alternatePolicies) {
+      const fetchImpl = vi.fn(async () => response('official response'));
+      const error = await fetchTextWithPolicy(url, alternate.policy, {
+        fetchImpl,
+        sleep: async () => undefined,
+      }).catch((reason: unknown) => reason);
+      expect(error, alternate.name).toBeInstanceOf(Error);
+      expect((error as Error).message, alternate.name).toMatch(
+        /authority|contract|frozen|policy/iu,
+      );
+      expect(fetchImpl, alternate.name).not.toHaveBeenCalled();
+    }
+  });
+
   it('never follows redirects, redacts Location, and rejects timeout, truncation and oversize', async () => {
     const contract = loadContract();
     const url = `${contract.source.datasetUrls[0]}.dds`;
@@ -294,6 +427,43 @@ describe('Snart monthly-normal HTTP and source boundary', () => {
     ).rejects.toThrow(/large|size|limit/iu);
   });
 
+  it('never serializes arbitrary network failure secrets', async () => {
+    const contract = loadContract();
+    const url = `${contract.source.datasetUrls[0]}.dds`;
+    const sentinels = [
+      'network-user',
+      'network-password',
+      'sk-network-secret',
+      'credential.example.invalid',
+    ];
+    const secretMessage =
+      'failed https://network-user:network-password@credential.example.invalid/private?token=sk-network-secret';
+    const failures = [
+      new Error(secretMessage),
+      new SnartPipelineError('FAIL_INJECTED_FETCH', secretMessage),
+    ];
+
+    for (const failure of failures) {
+      const fetchImpl = vi.fn(async () => {
+        throw failure;
+      });
+      const error = await fetchTextWithPolicy(url, contract.httpPolicy, {
+        fetchImpl,
+        sleep: async () => undefined,
+      }).catch((reason: unknown) => reason);
+      expect(error).toBeInstanceOf(SnartPipelineError);
+      expect((error as SnartPipelineError).code).toBe('FAIL_NETWORK');
+      const cliVisibleText = [
+        (error as Error).message,
+        (error as Error).stack ?? '',
+        JSON.stringify(error),
+      ].join('\n');
+      for (const sentinel of sentinels) {
+        expect(cliVisibleText).not.toContain(sentinel);
+      }
+    }
+  });
+
   it('treats a missing Content-Type as a terminal response failure', async () => {
     const contract = loadContract();
     const url = `${contract.source.datasetUrls[0]}.dds`;
@@ -312,6 +482,50 @@ describe('Snart monthly-normal HTTP and source boundary', () => {
       }),
     ).rejects.toThrow(/content.?type/iu);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    'text/plain-evil',
+    'application/octet-stream.lookalike',
+    'text/plain, application/octet-stream',
+  ])('rejects the lookalike Content-Type %s', async (contentType) => {
+    const contract = loadContract();
+    const url = `${contract.source.datasetUrls[0]}.dds`;
+    const fetchImpl = vi.fn(async () =>
+      response('Dataset {} official', {
+        headers: {
+          'content-length': '19',
+          'content-type': contentType,
+        },
+      }),
+    );
+
+    await expect(
+      fetchTextWithPolicy(url, contract.httpPolicy, {
+        fetchImpl,
+        sleep: async () => undefined,
+      }),
+    ).rejects.toThrow(/content.?type/iu);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('accepts exact media types case-insensitively with a valid charset parameter', async () => {
+    const contract = loadContract();
+    const url = `${contract.source.datasetUrls[0]}.dds`;
+    const fetchImpl = vi.fn(async () =>
+      response('Dataset {} official', {
+        headers: {
+          'content-type': 'Text/Plain ; charset="UTF-8"',
+        },
+      }),
+    );
+
+    await expect(
+      fetchTextWithPolicy(url, contract.httpPolicy, {
+        fetchImpl,
+        sleep: async () => undefined,
+      }),
+    ).resolves.toMatchObject({ attempts: 1 });
   });
 
   it('retries only 429 and frozen 5xx statuses three total attempts', async () => {
@@ -453,6 +667,8 @@ describe('Snart deterministic monthly-normal derivation', () => {
       lat: 62.47589,
       lon: 6.145098,
       sourceUrl: excerpts[2].sourceUrl,
+      utmX: 44_500,
+      utmY: 6_958_500,
     };
 
     expect(parseDds(excerpts[0].body, 'tg')).toEqual({
@@ -501,6 +717,20 @@ describe('Snart deterministic monthly-normal derivation', () => {
       expect(() =>
         parseMonthlyPointAscii(malformed, 'tg', 1, contract, binding),
       ).toThrow(/ASCII|binding|cell|month|schema|time/iu);
+    }
+    for (const consistentlyWrongUtm of [
+      excerpts[2].body.replaceAll('6958500.0', '0.0'),
+      excerpts[2].body.replaceAll('44500.0', '12345.0'),
+    ]) {
+      expect(() =>
+        parseMonthlyPointAscii(
+          consistentlyWrongUtm,
+          'tg',
+          1,
+          contract,
+          binding,
+        ),
+      ).toThrow(/ASCII|binding|cell|coordinate/iu);
     }
     expect(() =>
       parseMonthlyPointAscii(excerpts[2].body, 'tg', 1, contract, {
