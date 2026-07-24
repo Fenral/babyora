@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "babyora-independent-review-receipt@2",
+  "planId": "01-18",
+  "lane": "B",
+  "attempt": 3,
+  "candidate": {
+    "gitSha": "5cf7df85014fa51096b06a7e381926ebb4601798",
+    "treeSha": "968a6d1db29138f0886d4a1d9c8091358bc45d61",
+    "contractSha256": "f223636699eb0b654ad29ab08b407237db6e5ee224aeb8f0720e4c80a0f05033",
+    "packSha256": "e222950d15e49a98e5aeb65516219f6a4adda5a618e6ad1ae98ad6193136457b",
+    "evidenceSha256": "867576f203a30f563ac5409c35aa003bf89a1f40bf79ea03ef2fcd373736749a"
+  },
+  "reviewer": {
+    "canonicalTaskName": "/root/review_01_18_a3_canonical_b",
+    "agentId": "/root/review_01_18_a3_canonical_b"
+  },
+  "signedByIdentity": {
+    "canonicalTaskName": "/root/review_01_18_a3_canonical_b",
+    "agentId": "/root/review_01_18_a3_canonical_b"
+  },
+  "verdict": "PASS",
+  "findings": [],
+  "commands": [
+    {
+      "command": "validate-climate-pack: PASS; 60 canonical/supported profiles; locked pack hash",
+      "exitCode": 0
+    },
+    {
+      "command": "focused Vitest + tsc: PASS; 10 files, 65 tests",
+      "exitCode": 0
+    },
+    {
+      "command": "npm test: PASS; 83 files, 945 passed, 1 todo",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run lint: PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run build: PASS; main and bare production builds",
+      "exitCode": 0
+    },
+    {
+      "command": "npx tsx e2e/planlegg.ts --case all: PASS on first and only run; no prewarm/retry; production-preview cold-route, fixed/automatic Snart, exact-context, access, native-polish, no-media",
+      "exitCode": 0
+    },
+    {
+      "command": "final containment/source/package/secret/media/hash/clean audit: PASS; six allowed paths only; no package drift, browser vibration, Snart privacy/network leakage, secrets, or media drift",
+      "exitCode": 0
+    }
+  ],
+  "cleanBefore": true,
+  "cleanAfter": true
+}
