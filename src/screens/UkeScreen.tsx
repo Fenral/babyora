@@ -5,11 +5,13 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
 } from 'react';
 import { PaywallDialog } from '../components/PaywallDialog';
 import { ForecastDisclosure } from '../components/planning/ForecastDisclosure';
 import { PlanChangeRail, type PlanChangeRailRow, type PlanningRailEvent } from '../components/planning/PlanChangeRail';
+import { SnartPlan } from '../components/planning/SnartPlan';
 import {
   PlanleggStatusNotice,
   type PlanleggStatusState,
@@ -39,9 +41,13 @@ import {
   type PlanningVerdictView,
   type PlanningWeatherRow,
 } from '../lib/planning/plan-view-model';
+import { resolveSnartClimateProfile } from '../lib/planning/snart-climate';
 import { buildSnartDateWindow, isAgeEligibleForWholeWindow } from '../lib/planning/snart-date-window';
-import { buildSnartPlan } from '../lib/planning/snart';
-import { createSnartSessionEvaluator } from '../lib/planning/snart-session';
+import { buildSnartPlan, type SnartPlan as SnartPlanResult } from '../lib/planning/snart';
+import {
+  createSnartSessionEvaluator,
+  resolveCommittedSnartHome,
+} from '../lib/planning/snart-session';
 import {
   resolvePlanningViewAccess,
   resolveRuntimeCapabilityAccess,
@@ -325,32 +331,70 @@ function PlanleggData({
   }, PLUS_FEATURE_AVAILABILITY), [accessLoading, isPremium]);
   const viewAccess = tab === 'today' ? todayAccess : tab === 'tenday' ? weekAccess : soonAccess;
   const [snartEvaluator] = useState(() => createSnartSessionEvaluator({
-    resolveExactHome: (home) => {
-      const key = `no-city:v1:${encodeURIComponent(home.city.trim().toLocaleLowerCase('nb-NO'))}:${Math.round(home.lat * 10_000)}:${Math.round(home.lon * 10_000)}`;
-      return { homePlaceKey: key, climateProfileId: `snart-profile:v2:${key}` };
+    resolveExactHome: resolveCommittedSnartHome,
+    lookupClimateProfile: (homePlaceKey) => {
+      const climateProfileId = `snart-profile:v2:${homePlaceKey}`;
+      const climate = resolveSnartClimateProfile({
+        homePlaceKey,
+        climateProfileId,
+      });
+      return climate.status === 'available'
+        ? {
+            climateProfileId: climate.profile.profileId,
+            profileVersion: climate.packSha256,
+          }
+        : null;
     },
     buildModel: buildSnartPlan,
   }));
+  const snartResult = useSyncExternalStore<SnartPlanResult | null>(
+    snartEvaluator.subscribe,
+    snartEvaluator.current,
+    () => null,
+  );
   const snartProfileScope = active?.id ?? '__none__';
   const snartWindow = new Date().toLocaleDateString('en-CA', { timeZone: PLAN_TIME_ZONE });
-  const soonWindow = buildSnartDateWindow(snartWindow, PLAN_TIME_ZONE);
-  const soonAgeEligible = activeDob !== undefined && soonWindow.status === 'available'
-    ? isAgeEligibleForWholeWindow(activeDob, soonWindow.endLocalDate)
-    : false;
   useEffect(() => {
     const generation = crypto.randomUUID();
-    // The evaluator returns before resolving a home or constructing a model
-    // input unless capability access is already allowed.
+    if (!soonAccess.access.allowed) {
+      snartEvaluator.evaluate({
+        access: soonAccess.access,
+        generation,
+        window: snartWindow,
+        fixedHome: { city: '', lat: 0, lon: 0 },
+        ageEligibleForWholeWindow: false,
+      });
+      return () => snartEvaluator.teardown();
+    }
+    const targetWindow = buildSnartDateWindow(snartWindow, PLAN_TIME_ZONE);
+    const ageEligibleForWholeWindow = activeDob !== undefined
+      && targetWindow.status === 'available'
+      && isAgeEligibleForWholeWindow(activeDob, targetWindow.endLocalDate);
     snartEvaluator.evaluate({
-      allowed: soonAccess.access.allowed,
+      access: soonAccess.access,
       generation,
-      profileVersion: 'snart-home-key@1',
       window: snartWindow,
-      home: { city: fixedHome.city, lat: fixedHome.lat, lon: fixedHome.lon },
-      ageEligibleForWholeWindow: soonAgeEligible,
+      fixedHome: {
+        city: fixedHome.city,
+        lat: fixedHome.lat,
+        lon: fixedHome.lon,
+      },
+      ageEligibleForWholeWindow,
     });
     return () => snartEvaluator.teardown();
-  }, [fixedHome.city, fixedHome.lat, fixedHome.lon, snartEvaluator, snartProfileScope, snartWindow, soonAccess.access.allowed, soonAgeEligible]);
+  }, [
+    activeDob,
+    fixedHome.city,
+    fixedHome.lat,
+    fixedHome.lon,
+    snartEvaluator,
+    snartProfileScope,
+    snartWindow,
+    soonAccess.access,
+  ]);
+  const markSnartAlreadyHave = useCallback((conceptId: string) => {
+    snartEvaluator.markAlreadyHave(conceptId);
+  }, [snartEvaluator]);
   const [weekAccessTransition, setWeekAccessTransition] = useState(() => ({
     state: weekAccess.access.state,
     generation: 0,
@@ -707,6 +751,7 @@ function PlanleggData({
   const isWeekFull = isWeekView && viewAccess.presentation === 'full';
   const isWeekTeaser = isWeekView && viewAccess.presentation === 'teaser';
   const isWeekNeutral = isWeekView && viewAccess.presentation === 'neutral';
+  const isSoonView = tab === 'soon';
   if (weather.status === 'loading' || weather.status === 'idle') {
     statusState = { status: 'loading' };
   } else if (
@@ -783,6 +828,7 @@ function PlanleggData({
 
   const showAdvice = statusState.status !== 'loading'
     && statusState.status !== 'error'
+    && !isSoonView
     && (!isWeekView || isWeekFull)
     && planningEvaluation.hasEvaluatedPlan;
   const forecastRows = planningEvaluation.hasEvaluatedPlan
@@ -829,16 +875,36 @@ function PlanleggData({
           options={[
             { value: 'today', label: 'I dag' },
             { value: 'tenday', label: 'Uke' },
+            ...(soonAccess.presentation === 'hidden'
+              ? []
+              : [{ value: 'soon' as const, label: 'Snart' }]),
           ]}
           value={tab}
           onChange={onViewChange}
         />
       </div>
 
-      <PlanleggStatusNotice
-        state={statusState}
-        subject={isWeekView && !isWeekFull ? 'weather' : 'plan'}
-      />
+      {!isSoonView && (
+        <PlanleggStatusNotice
+          state={statusState}
+          subject={isWeekView && !isWeekFull ? 'weather' : 'plan'}
+        />
+      )}
+
+      {isSoonView
+        && soonAccess.presentation === 'full'
+        && snartResult && (
+          <SnartPlan
+            result={snartResult}
+            onMarkAlreadyHave={markSnartAlreadyHave}
+          />
+      )}
+
+      {isSoonView && soonAccess.presentation === 'neutral' && (
+        <p className="planlegg-screen__week-weather" data-planlegg-access="neutral">
+          Sjekker tilgang til Snart.
+        </p>
+      )}
 
       {showAdvice && (
         <>
@@ -920,7 +986,8 @@ function PlanleggData({
           </section>
         )}
 
-      {(!isWeekView || isWeekFull)
+      {!isSoonView
+        && (!isWeekView || isWeekFull)
         && statusState.status !== 'loading'
         && statusState.status !== 'error'
         && (
