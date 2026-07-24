@@ -29,6 +29,15 @@ const expectUnavailableWithoutAdvice = (result: ReturnType<typeof buildSnartPlan
   expect(JSON.stringify(result)).not.toMatch(/snart\.|ruleId|conceptId|items|groups|signalValue/u);
 };
 
+const buildWithoutThrowing = (input: SnartPlanInput): ReturnType<typeof buildSnartPlan> => {
+  let result: ReturnType<typeof buildSnartPlan> | undefined;
+  expect(() => {
+    result = buildSnartPlan(input);
+  }).not.toThrow();
+  expect(result).toBeDefined();
+  return result as ReturnType<typeof buildSnartPlan>;
+};
+
 const expectDeepFrozen = (value: unknown): void => {
   if (!value || typeof value !== 'object') return;
   expect(Object.isFrozen(value)).toBe(true);
@@ -65,6 +74,46 @@ describe('Snart plan model', () => {
     const symbolKey = { ...validInput() } as SnartPlanInput & { [key: symbol]: boolean };
     symbolKey[Symbol('childId')] = true;
     expectUnavailableWithoutAdvice(buildSnartPlan(symbolKey));
+  });
+
+  it('fails closed when input own-key reflection throws', () => {
+    const hostile = new Proxy(validInput(), {
+      ownKeys() {
+        throw new Error('hostile ownKeys');
+      },
+    });
+
+    expectUnavailableWithoutAdvice(buildWithoutThrowing(hostile));
+  });
+
+  it('fails closed when an input property read throws', () => {
+    const hostile = new Proxy(validInput(), {
+      get(target, property, receiver) {
+        if (property === 'asOfLocalDate') throw new Error('hostile get');
+        return Reflect.get(target, property, receiver);
+      },
+    });
+
+    expectUnavailableWithoutAdvice(buildWithoutThrowing(hostile));
+  });
+
+  it('fails closed for a Proxy-wrapped Set instead of invoking incompatible Set intrinsics', () => {
+    const hostileSet = new Proxy(new Set<string>(), {});
+
+    expectUnavailableWithoutAdvice(buildWithoutThrowing(validInput({
+      alreadyHaveConceptIds: hostileSet,
+    })));
+  });
+
+  it('fails closed when a Proxy conceals a forbidden childId own property', () => {
+    const target = { ...validInput(), childId: 'child-123' };
+    const hostile = new Proxy(target, {
+      ownKeys() {
+        return Reflect.ownKeys(target).filter((key) => key !== 'childId');
+      },
+    });
+
+    expectUnavailableWithoutAdvice(buildWithoutThrowing(hostile));
   });
 
   it('requires an exact native Set containing only known concept IDs and never mutates it', () => {
