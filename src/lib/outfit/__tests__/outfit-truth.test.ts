@@ -359,6 +359,58 @@ describe('canonical outfit truth', () => {
     ).toThrow(OutfitTruthInputError);
   });
 
+  it.each([
+    [
+      'empty garment label',
+      (recommendation: Recommendation) => {
+        recommendation.layers[0]!.items = [''];
+      },
+    ],
+    [
+      'whitespace garment label',
+      (recommendation: Recommendation) => {
+        recommendation.layers[0]!.items = [' \t '];
+      },
+    ],
+    [
+      'empty garment item array',
+      (recommendation: Recommendation) => {
+        recommendation.layers[0]!.items = [];
+      },
+    ],
+    [
+      'blank equipment label',
+      (recommendation: Recommendation) => {
+        recommendation.layers.push({
+          category: 'utstyr',
+          items: ['  '],
+        });
+      },
+    ],
+    [
+      'empty equipment item array',
+      (recommendation: Recommendation) => {
+        recommendation.layers.push({
+          category: 'utstyr',
+          items: [],
+        });
+      },
+    ],
+  ])('rejects %s before semantic classification', (_name, mutate) => {
+    const input = exactInput();
+    const finalizedRecommendation = structuredClone(recommend(input));
+    mutate(finalizedRecommendation);
+
+    expect(() =>
+      createOutfitTruthSnapshot({
+        transitionContextId: 'transition:fixture',
+        input,
+        finalizedRecommendation,
+        pose: 'sitting',
+      }),
+    ).toThrow(OutfitTruthInputError);
+  });
+
   it('preserves duplicate source labels as distinct stable occurrences', () => {
     const input = exactInput();
     const recommendation = recommend(input);
