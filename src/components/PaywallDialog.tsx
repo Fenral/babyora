@@ -389,6 +389,7 @@ const transparencyStyle: CSSProperties = {
 const statusRegionStyle: CSSProperties = {
   margin: '0 2px',
   minHeight: 0,
+  flexShrink: 0,
   fontSize: '0.75rem',
   fontWeight: 600,
   color: 'var(--status-ok)',
