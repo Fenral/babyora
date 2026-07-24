@@ -6,13 +6,27 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { chromium, type Browser, type Page } from 'playwright';
+import {
+  chromium,
+  type Browser,
+  type Frame,
+  type Page,
+  type Response,
+} from 'playwright';
 import * as ReactRuntime from 'react';
 import type { ComponentType } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -30,7 +44,12 @@ import { validateClimateBundle } from '../scripts/snart/validate-climate-pack.js
 
 const PORT = 4191;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
-const UKE_VITE_MODULE_PATH = '/src/screens/UkeScreen.tsx';
+const OWNED_PRODUCTION_ARTIFACT_PREFIX = 'babyora-planlegg-production-';
+const VITE_MANIFEST_RELATIVE_PATH = '.vite/manifest.json';
+const SNART_PRODUCTION_LAZY_ENTRIES = Object.freeze([
+  'src/screens/UkeScreen.tsx',
+  'src/screens/FamilieScreen.tsx',
+] as const);
 // eslint-disable-next-line no-control-regex -- A 7-bit ANSI CSI sequence starts with ESC.
 const ANSI_CSI_SEQUENCE = /\u001B\[[0-?]*[ -/]*[@-~]/gu;
 const SNART_BROWSER_PREWARM_IDENTIFIER = ['prewarm', 'Vite', 'Module', 'Graph'].join('');
@@ -114,6 +133,15 @@ type ForecastState = {
   delivery?: ForecastDelivery;
   temperatureC?: number;
 };
+type ViteManifestChunk = Readonly<Record<string, unknown>>;
+type ProductionArtifactAccess = Readonly<{
+  requireFile: (relativePath: string) => void;
+  readFile: (relativePath: string) => string;
+}>;
+type MainFrameNavigationObservation = Readonly<{
+  url: string;
+  status: number | null;
+}>;
 
 const SUPPORTED_CASES = Object.keys(PLANLEGG_CASES);
 const require = createRequire(import.meta.url);
@@ -520,37 +548,262 @@ async function waitForServer(
   throw new Error(`Preview-server svarte ikke på ${url} innen ${timeoutMs} ms`);
 }
 
-async function requireOwnedViteModule(
-  url: string,
-  server: ChildProcess,
-  output: readonly string[],
-): Promise<void> {
-  if (server.exitCode !== null || server.signalCode !== null) {
-    throw new Error('Vite process stopped before UkeScreen readiness');
-  }
-  const moduleUrl = new URL(UKE_VITE_MODULE_PATH, url);
-  const response = await fetch(moduleUrl);
-  const transformed = await response.text();
-  const contentType = response.headers.get('content-type') ?? '';
-  const exportsUkeScreen = /(?:export\s+(?:function|const)\s+UkeScreen\b|export\s*\{[^}]*\bUkeScreen\b)/u
-    .test(transformed);
+function requireOwnedProductionArtifactRoot(artifactRoot: string): string {
+  const resolvedRoot = resolve(artifactRoot);
+  const relativeToTemp = relative(resolve(tmpdir()), resolvedRoot).replaceAll('\\', '/');
   if (
-    response.status !== 200
-    || !/javascript|typescript/iu.test(contentType)
-    || !exportsUkeScreen
-    || server.exitCode !== null
-    || server.signalCode !== null
+    isAbsolute(relativeToTemp)
+    || relativeToTemp === '..'
+    || relativeToTemp.startsWith('../')
+    || !basename(resolvedRoot).startsWith(OWNED_PRODUCTION_ARTIFACT_PREFIX)
   ) {
-    if (output.length > 0) console.error(`PLANLEGG SERVER LOG:\n${output.join('')}`);
+    throw new Error(`Refusing unsafe production-artifact path: ${resolvedRoot}`);
+  }
+  return resolvedRoot;
+}
+
+function removeOwnedProductionArtifact(artifactRoot: string): void {
+  const resolvedRoot = requireOwnedProductionArtifactRoot(artifactRoot);
+  rmSync(resolvedRoot, { recursive: true, force: true });
+  if (existsSync(resolvedRoot)) {
+    throw new Error(`Owned production artifact still exists after cleanup: ${resolvedRoot}`);
+  }
+  console.log(`PLANLEGG PRODUCTION ARTIFACT REMOVED: ${resolvedRoot}`);
+}
+
+function buildOwnedSnartProductionArtifact(): string {
+  const artifactRoot = mkdtempSync(
+    join(tmpdir(), OWNED_PRODUCTION_ARTIFACT_PREFIX),
+  );
+  try {
+    const output = execFileSync(
+      process.execPath,
+      [
+        VITE_CLI,
+        'build',
+        '--manifest',
+        '--outDir',
+        artifactRoot,
+        '--emptyOutDir',
+      ],
+      {
+        cwd: process.cwd(),
+        encoding: 'utf8',
+        env: { ...process.env, VITE_PLANLEGG_E2E: 'true' },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    );
+    console.log(
+      `PLANLEGG OWNED PRODUCTION BUILD READY: outDir=${artifactRoot} `
+      + `logBytes=${Buffer.byteLength(output)}`,
+    );
+    return artifactRoot;
+  } catch (error) {
+    let cleanupError = '';
+    try {
+      removeOwnedProductionArtifact(artifactRoot);
+    } catch (cleanupFailure) {
+      cleanupError = ` cleanup=${cleanupFailure instanceof Error
+        ? cleanupFailure.message
+        : String(cleanupFailure)}`;
+    }
     throw new Error(
-      `Owned Vite UkeScreen readiness failed: status=${response.status} `
-      + `contentType=${contentType} export=${exportsUkeScreen}`,
+      `Owned Snart production build failed:${cleanupError} `
+      + `${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
-  console.log(
-    `PLANLEGG OWNED MODULE READY: pid=${server.pid ?? 'unknown'} `
-    + `module=${UKE_VITE_MODULE_PATH} export=UkeScreen`,
+}
+
+function createProductionArtifactAccess(
+  artifactRoot: string,
+): ProductionArtifactAccess {
+  const resolvedRoot = requireOwnedProductionArtifactRoot(artifactRoot);
+  const requireFile = (relativePath: string): string => {
+    if (!relativePath || isAbsolute(relativePath)) {
+      throw new Error(`Production manifest contains an unsafe file path: ${relativePath}`);
+    }
+    const absolutePath = resolve(resolvedRoot, relativePath);
+    const relativePathFromRoot = relative(resolvedRoot, absolutePath).replaceAll('\\', '/');
+    if (
+      relativePathFromRoot === '..'
+      || relativePathFromRoot.startsWith('../')
+      || isAbsolute(relativePathFromRoot)
+      || !existsSync(absolutePath)
+      || !statSync(absolutePath).isFile()
+    ) {
+      throw new Error(`Production manifest references a missing or unsafe file: ${relativePath}`);
+    }
+    return absolutePath;
+  };
+  return {
+    requireFile: (relativePath) => {
+      requireFile(relativePath);
+    },
+    readFile: (relativePath) => readFileSync(requireFile(relativePath), 'utf8'),
+  };
+}
+
+function requireViteManifestChunk(
+  manifest: Readonly<Record<string, unknown>>,
+  key: string,
+): ViteManifestChunk {
+  const chunk = manifest[key];
+  if (!chunk || typeof chunk !== 'object' || Array.isArray(chunk)) {
+    throw new Error(`Production manifest is missing chunk ${key}`);
+  }
+  return chunk as ViteManifestChunk;
+}
+
+function readManifestStringArray(
+  chunk: ViteManifestChunk,
+  field: string,
+  key: string,
+): readonly string[] {
+  const value = chunk[field];
+  if (value === undefined) return [];
+  if (
+    !Array.isArray(value)
+    || value.some((item) => typeof item !== 'string' || item.length === 0)
+  ) {
+    throw new Error(`Production manifest ${key}.${field} must be a string array`);
+  }
+  return value as string[];
+}
+
+function validateOwnedProductionManifest(
+  manifestValue: unknown,
+  artifacts: ProductionArtifactAccess,
+): readonly string[] {
+  if (!manifestValue || typeof manifestValue !== 'object' || Array.isArray(manifestValue)) {
+    throw new Error('Production manifest must be an object');
+  }
+  const manifest = manifestValue as Readonly<Record<string, unknown>>;
+  const visited = new Set<string>();
+  const visit = (key: string) => {
+    if (visited.has(key)) return;
+    const chunk = requireViteManifestChunk(manifest, key);
+    const file = chunk.file;
+    if (typeof file !== 'string' || file.length === 0) {
+      throw new Error(`Production manifest ${key}.file must be a non-empty string`);
+    }
+    visited.add(key);
+    artifacts.requireFile(file);
+    for (const field of ['css', 'assets'] as const) {
+      for (const referencedFile of readManifestStringArray(chunk, field, key)) {
+        artifacts.requireFile(referencedFile);
+      }
+    }
+    for (const field of ['imports', 'dynamicImports'] as const) {
+      for (const referencedChunk of readManifestStringArray(chunk, field, key)) {
+        visit(referencedChunk);
+      }
+    }
+  };
+
+  for (const sourcePath of SNART_PRODUCTION_LAZY_ENTRIES) {
+    const entry = requireViteManifestChunk(manifest, sourcePath);
+    if (entry.src !== sourcePath || entry.isDynamicEntry !== true) {
+      throw new Error(`Production manifest did not emit lazy entry ${sourcePath}`);
+    }
+    visit(sourcePath);
+  }
+
+  const familyEntry = requireViteManifestChunk(
+    manifest,
+    'src/screens/FamilieScreen.tsx',
   );
+  if (typeof familyEntry.file !== 'string') {
+    throw new Error('Production Familie chunk lacks its emitted file');
+  }
+  const familyChunk = artifacts.readFile(familyEntry.file);
+  if (!familyChunk.includes('Bytt barn') || !familyChunk.includes('Innstillinger')) {
+    throw new Error('Production Familie chunk did not compile the Innstillinger graph');
+  }
+  return [...visited].sort();
+}
+
+function assertProductionManifestValidator(): void {
+  const manifestFixture = {
+    'src/screens/UkeScreen.tsx': {
+      file: 'assets/uke.js',
+      src: 'src/screens/UkeScreen.tsx',
+      isDynamicEntry: true,
+      imports: ['_shared.js'],
+    },
+    'src/screens/FamilieScreen.tsx': {
+      file: 'assets/familie.js',
+      src: 'src/screens/FamilieScreen.tsx',
+      isDynamicEntry: true,
+      imports: ['_shared.js'],
+    },
+    '_shared.js': { file: 'assets/shared.js' },
+  };
+  const files = new Map([
+    ['assets/uke.js', 'uke'],
+    ['assets/familie.js', 'Bytt barn Innstillinger'],
+    ['assets/shared.js', 'shared'],
+  ]);
+  const access = (availableFiles: ReadonlyMap<string, string>): ProductionArtifactAccess => ({
+    requireFile: (path) => {
+      if (!availableFiles.has(path)) throw new Error(`missing fixture file ${path}`);
+    },
+    readFile: (path) => {
+      const value = availableFiles.get(path);
+      if (value === undefined) throw new Error(`missing fixture file ${path}`);
+      return value;
+    },
+  });
+  const verified = validateOwnedProductionManifest(manifestFixture, access(files));
+  if (
+    !verified.includes('src/screens/UkeScreen.tsx')
+    || !verified.includes('src/screens/FamilieScreen.tsx')
+    || !verified.includes('_shared.js')
+  ) {
+    throw new Error('Production manifest fixture did not traverse its lazy chunk graph');
+  }
+  const missingReference = new Map(files);
+  missingReference.delete('assets/shared.js');
+  let rejectedMissingReference = false;
+  try {
+    validateOwnedProductionManifest(manifestFixture, access(missingReference));
+  } catch {
+    rejectedMissingReference = true;
+  }
+  if (!rejectedMissingReference) {
+    throw new Error('Production manifest fixture accepted a missing referenced file');
+  }
+}
+
+function requireOwnedProductionManifest(
+  artifactRoot: string,
+  server: ChildProcess,
+  output: readonly string[],
+): void {
+  if (server.exitCode !== null || server.signalCode !== null) {
+    throw new Error('Owned preview stopped before production-manifest readiness');
+  }
+  try {
+    const artifacts = createProductionArtifactAccess(artifactRoot);
+    const manifest = JSON.parse(artifacts.readFile(VITE_MANIFEST_RELATIVE_PATH)) as unknown;
+    const verified = validateOwnedProductionManifest(manifest, artifacts);
+    if (server.exitCode !== null || server.signalCode !== null) {
+      throw new Error('Owned preview stopped during production-manifest validation');
+    }
+    console.log(
+      `PLANLEGG OWNED MANIFEST READY: pid=${server.pid ?? 'unknown'} `
+      + `lazy=${SNART_PRODUCTION_LAZY_ENTRIES.join(',')} files=${verified.length} `
+      + 'innstillinger=true',
+    );
+  } catch (error) {
+    if (output.length > 0) console.error(`PLANLEGG SERVER LOG:\n${output.join('')}`);
+    throw new Error(
+      `Owned production-manifest readiness failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+      { cause: error },
+    );
+  }
 }
 
 async function waitForExit(server: ChildProcess, timeoutMs: number): Promise<boolean> {
@@ -625,6 +878,95 @@ function collectFailures(page: Page): string[] {
   });
 
   return failures;
+}
+
+function createMainFrameNavigationCounter() {
+  const observations: MainFrameNavigationObservation[] = [];
+  return {
+    record: (url: string, status: number | null) => {
+      observations.push({ url, status });
+    },
+    snapshot: () => ({
+      count: observations.length,
+      observations: observations.map((observation) => ({ ...observation })),
+    }),
+  };
+}
+
+function assertMainFrameNavigationCounter(): void {
+  const counter = createMainFrameNavigationCounter();
+  if (counter.snapshot().count !== 0) {
+    throw new Error('Main-frame navigation counter did not start empty');
+  }
+  counter.record('http://127.0.0.1:4191/?unexpected=reload', 200);
+  const observed = counter.snapshot();
+  if (
+    observed.count !== 1
+    || observed.observations[0]?.url !== 'http://127.0.0.1:4191/?unexpected=reload'
+    || observed.observations[0]?.status !== 200
+  ) {
+    throw new Error('Main-frame navigation counter lost URL or status evidence');
+  }
+}
+
+function createStageMainFrameNavigationGuard(
+  page: Page,
+  stage: string,
+  browserSignals: readonly string[],
+  serverOutput: readonly string[],
+) {
+  const counter = createMainFrameNavigationCounter();
+  const navigationStatuses = new Map<string, number>();
+  let observedFailure: Error | null = null;
+  let rejectUnexpectedNavigation: (error: Error) => void = () => undefined;
+  const unexpectedNavigation = new Promise<never>((_resolve, reject) => {
+    rejectUnexpectedNavigation = reject;
+  });
+  const failureFor = (
+    observation: MainFrameNavigationObservation,
+    count: number,
+  ) => new Error(
+    `Unexpected main-frame navigation during ${stage}: count=${count} `
+    + `url=${observation.url} status=${observation.status ?? 'unavailable'}\n`
+    + `browserSignals=${browserSignals.slice(-20).join('\n') || '(none)'}\n`
+    + `serverOutput=${
+      serverOutput.join('').replace(ANSI_CSI_SEQUENCE, '').slice(-4_000) || '(none)'
+    }`,
+  );
+  const onResponse = (response: Response) => {
+    const request = response.request();
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) {
+      navigationStatuses.set(response.url(), response.status());
+    }
+  };
+  const onFrameNavigated = (frame: Frame) => {
+    if (frame !== page.mainFrame()) return;
+    const observation = {
+      url: frame.url(),
+      status: navigationStatuses.get(frame.url()) ?? null,
+    };
+    counter.record(observation.url, observation.status);
+    const count = counter.snapshot().count;
+    observedFailure = failureFor(observation, count);
+    rejectUnexpectedNavigation(observedFailure);
+  };
+  page.on('response', onResponse);
+  page.on('framenavigated', onFrameNavigated);
+  return {
+    unexpectedNavigation,
+    assertNoUnexpectedNavigation: () => {
+      if (observedFailure) throw observedFailure;
+      const snapshot = counter.snapshot();
+      if (snapshot.count !== 0) {
+        const observation = snapshot.observations[snapshot.observations.length - 1]!;
+        throw failureFor(observation, snapshot.count);
+      }
+    },
+    dispose: () => {
+      page.off('response', onResponse);
+      page.off('framenavigated', onFrameNavigated);
+    },
+  };
 }
 
 async function installDeterministicPage(
@@ -2242,6 +2584,7 @@ async function runSoonReadiness(
   page: Page,
   fixture: PlanleggE2EFixture,
   forecastState: ForecastState,
+  serverOutput: readonly string[],
 ): Promise<void> {
   const root = process.cwd();
   const availability = readFileSync(join(root, 'src/lib/premium/plus-features.ts'), 'utf8');
@@ -2377,7 +2720,7 @@ async function runSoonReadiness(
   } catch (error) {
     const documentExcerpt = await page.locator('body').innerText().catch(() => '(body unavailable)');
     throw new Error(
-      `Snart dev navigation failed at ${page.url()}: ${documentExcerpt.slice(0, 1_500)}\n${browserSignals.join('\n')}\n${error instanceof Error ? error.message : String(error)}`,
+      `Snart cold production navigation failed at ${page.url()}: ${documentExcerpt.slice(0, 1_500)}\n${browserSignals.join('\n')}\n${error instanceof Error ? error.message : String(error)}`,
       { cause: error },
     );
   }
@@ -2539,24 +2882,54 @@ async function runSoonReadiness(
 
   const navigationForAge = page.getByRole('navigation').first();
   const familyRoot = navigationForAge.getByRole('button', { name: /^Familie/u });
-  await familyRoot.click();
-  await familyRoot.waitFor({ state: 'visible', timeout: 15_000 });
-  if (await familyRoot.getAttribute('aria-current') !== 'page') {
-    throw new Error('Familie root did not become current before child-switch readiness');
-  }
-  assertNoFatalBrowserSignal('familie-root-current');
   const switchChild = page.getByRole('button', { name: /Bytt barn/u });
+  const familyNavigationGuard = createStageMainFrameNavigationGuard(
+    page,
+    'familie-click',
+    browserSignals,
+    serverOutput,
+  );
   try {
-    await switchChild.waitFor({ state: 'visible', timeout: 15_000 });
-  } catch (error) {
-    assertNoFatalBrowserSignal('familie-child-switch-wait');
-    const mainText = await page.locator('main#main').innerText().catch(() => '(main unavailable)');
-    throw new Error(
-      `Familie route became current but its child-switch UI did not become ready: ${mainText.slice(0, 1_500)}`,
-      { cause: error },
-    );
+    await Promise.race([
+      familyRoot.click(),
+      familyNavigationGuard.unexpectedNavigation,
+    ]);
+    await Promise.race([
+      familyRoot.waitFor({ state: 'visible', timeout: 15_000 }),
+      familyNavigationGuard.unexpectedNavigation,
+    ]);
+    familyNavigationGuard.assertNoUnexpectedNavigation();
+    if (
+      await Promise.race([
+        familyRoot.getAttribute('aria-current'),
+        familyNavigationGuard.unexpectedNavigation,
+      ]) !== 'page'
+    ) {
+      throw new Error('Familie root did not become current before child-switch readiness');
+    }
+    assertNoFatalBrowserSignal('familie-root-current');
+    try {
+      await Promise.race([
+        switchChild.waitFor({ state: 'visible', timeout: 15_000 }),
+        familyNavigationGuard.unexpectedNavigation,
+      ]);
+    } catch (error) {
+      familyNavigationGuard.assertNoUnexpectedNavigation();
+      assertNoFatalBrowserSignal('familie-child-switch-wait');
+      const mainText = await page.locator('main#main').innerText()
+        .catch(() => '(main unavailable)');
+      throw new Error(
+        `Familie route became current but its child-switch UI did not become ready: ${
+          mainText.slice(0, 1_500)
+        }`,
+        { cause: error },
+      );
+    }
+    familyNavigationGuard.assertNoUnexpectedNavigation();
+    assertNoFatalBrowserSignal('familie-child-switch-ready');
+  } finally {
+    familyNavigationGuard.dispose();
   }
-  assertNoFatalBrowserSignal('familie-child-switch-ready');
   await switchChild.evaluate((button) => (button as HTMLButtonElement).click());
   const childDialog = page.getByRole('dialog', { name: 'Bytt barn' });
   await childDialog.getByRole('radio', { name: /Bytt til Eskil/u }).click();
@@ -3590,6 +3963,8 @@ async function runNativePolish(page: Page, fixture: PlanleggE2EFixture): Promise
 
 async function main(): Promise<void> {
   assertOwnedViteUrlSignalParser();
+  assertProductionManifestValidator();
+  assertMainFrameNavigationCounter();
   const caseName = parseCase(process.argv.slice(2));
   const fixture = PLANLEGG_CASES[caseName];
   if (caseName === 'all') {
@@ -3613,16 +3988,25 @@ async function main(): Promise<void> {
   };
   let server: ChildProcess | null = null;
   let browser: Browser | null = null;
+  let productionArtifactRoot: string | null = null;
 
   try {
     const configuredNativeAccess = caseName === 'access';
     const e2eSoon = caseName === 'snart' || caseName === 'route-migration';
     const serverOutput: string[] = [];
+    if (e2eSoon) {
+      productionArtifactRoot = buildOwnedSnartProductionArtifact();
+    }
+    const viteModeArguments = e2eSoon
+      ? ['preview', '--outDir', productionArtifactRoot!]
+      : configuredNativeAccess
+        ? []
+        : ['preview'];
     server = spawn(
       process.execPath,
       [
         VITE_CLI,
-        ...(configuredNativeAccess || e2eSoon ? [] : ['preview']),
+        ...viteModeArguments,
         '--host',
         '127.0.0.1',
         '--port',
@@ -3651,7 +4035,7 @@ async function main(): Promise<void> {
     server.stderr?.on('data', captureServerOutput);
     await waitForServer(BASE_URL, server, serverOutput);
     if (e2eSoon) {
-      await requireOwnedViteModule(BASE_URL, server, serverOutput);
+      requireOwnedProductionManifest(productionArtifactRoot!, server, serverOutput);
     }
 
     browser = await chromium.launch();
@@ -3675,7 +4059,7 @@ async function main(): Promise<void> {
         caseName === 'access',
       );
       if (caseName === 'snart') {
-        await runSoonReadiness(page, fixture, forecastState);
+        await runSoonReadiness(page, fixture, forecastState, serverOutput);
       } else if (caseName === 'route-migration') {
         await runRouteMigration(page, fixture);
       } else if (caseName === 'native-polish') {
@@ -3697,7 +4081,13 @@ async function main(): Promise<void> {
     try {
       await browser?.close();
     } finally {
-      if (server) await stopPreviewServer(server);
+      try {
+        if (server) await stopPreviewServer(server);
+      } finally {
+        if (productionArtifactRoot) {
+          removeOwnedProductionArtifact(productionArtifactRoot);
+        }
+      }
     }
   }
 
