@@ -161,7 +161,7 @@ const normalizeSnartPlanInput = (value: unknown): unknown => {
   }
 };
 
-const unavailable = (reason: string): SnartPlan => deepFreeze({
+export const buildSnartUnavailable = (reason: string): SnartPlan => deepFreeze({
   status: 'unavailable',
   reason,
   copy: SNART_COPY.unavailable,
@@ -177,16 +177,16 @@ export function buildSnartPlan(input: SnartPlanInput): SnartPlan {
     || typeof normalizedInput.climateProfileId !== 'string'
     || typeof normalizedInput.ageEligibleForWholeWindow !== 'boolean'
     || !isExactConceptSet(normalizedInput.alreadyHaveConceptIds)
-  ) return unavailable('invalid_model_input');
-  if (!normalizedInput.ageEligibleForWholeWindow) return unavailable('age_ineligible');
+  ) return buildSnartUnavailable('invalid_model_input');
+  if (!normalizedInput.ageEligibleForWholeWindow) return buildSnartUnavailable('age_ineligible');
 
   const alreadyHaveConceptIds = new Set(normalizedInput.alreadyHaveConceptIds);
   const window = buildSnartDateWindow(normalizedInput.asOfLocalDate, normalizedInput.timezone);
-  if (window.status === 'unavailable') return unavailable(window.reason);
+  if (window.status === 'unavailable') return buildSnartUnavailable(window.reason);
   const climate = resolveSnartClimateProfile(normalizedInput);
-  if (climate.status === 'unavailable') return unavailable(climate.reason);
+  if (climate.status === 'unavailable') return buildSnartUnavailable(climate.reason);
   const signals = deriveSnartTargetWindowSignals(climate.profile, window.dates);
-  if (signals.status === 'unavailable') return unavailable(signals.reason);
+  if (signals.status === 'unavailable') return buildSnartUnavailable(signals.reason);
 
   const source = {
     profileId: climate.profile.profileId,

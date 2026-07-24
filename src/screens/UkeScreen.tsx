@@ -43,7 +43,7 @@ import {
 } from '../lib/planning/plan-view-model';
 import { resolveSnartClimateProfile } from '../lib/planning/snart-climate';
 import { buildSnartDateWindow, isAgeEligibleForWholeWindow } from '../lib/planning/snart-date-window';
-import { buildSnartPlan, type SnartPlan as SnartPlanResult } from '../lib/planning/snart';
+import { buildSnartPlan, buildSnartUnavailable, type SnartPlan as SnartPlanResult } from '../lib/planning/snart';
 import {
   createSnartSessionEvaluator,
   resolveCommittedSnartHome,
@@ -385,6 +385,7 @@ function PlanleggData({
         : null;
     },
     buildModel: buildSnartPlan,
+    buildUnavailable: buildSnartUnavailable,
   }));
   const snartResult = useSyncExternalStore<SnartPlanResult | null>(
     snartEvaluator.subscribe,

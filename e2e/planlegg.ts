@@ -1912,6 +1912,11 @@ async function runSoonReadiness(
   await page.getByRole('radio', { name: 'Snart', exact: true }).evaluate((radio) => (radio as HTMLInputElement).click());
   await page.locator('[data-planlegg-access="neutral"]').waitFor({ state: 'visible' });
   if (await page.locator('.snart-plan, [data-planlegg-access="soon-teaser"]').count() !== 0) throw new Error('Loading leaked Snart advice');
+  await openPlanlegg(page, `${fixture.path}&snart-e2e=unsupported`);
+  await page.getByRole('radio', { name: 'Snart', exact: true }).evaluate((radio) => (radio as HTMLInputElement).click());
+  const unavailable = page.locator('.snart-plan');
+  await unavailable.waitFor({ state: 'visible' });
+  if (!/ikke godt nok historisk grunnlag/iu.test(await unavailable.innerText()) || await unavailable.locator('[data-snart-item]').count() !== 0) throw new Error('Unsupported home did not fail closed');
 }
 
 async function settleEntitlement(page: Page, premium: boolean): Promise<void> {

@@ -34,6 +34,7 @@ export type SnartSessionDependencies<T = SnartPlan> = Readonly<{
   resolveExactHome: (home: SnartFixedHome) => SnartExactHome | null;
   lookupClimateProfile: (homePlaceKey: string) => SnartClimateLookup | null;
   buildModel: (input: SnartPlanInput) => T;
+  buildUnavailable?: (reason: string) => T;
 }>;
 
 type SnartProjectionInput = Readonly<
@@ -181,6 +182,13 @@ export function createSnartSessionEvaluator<T = SnartPlan>(
   const evaluate = (request: SnartSessionRequest): T | null => {
     const projection = projectSnartSession(request, dependencies);
     if (!projection) {
+      if (isAllowed(request.access) && dependencies.buildUnavailable) {
+        clear();
+        cached = dependencies.buildUnavailable('unsupported_home');
+        hasCached = true;
+        notify();
+        return cached;
+      }
       clear();
       return null;
     }
