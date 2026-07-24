@@ -13,6 +13,7 @@ import {
 import {
   layoutOutfitMap,
   type OutfitMapBox,
+  type OutfitMapIneligibleReason,
   type OutfitMapLayoutV1,
   type OutfitMapNodeLayout,
   type OutfitMapPoint,
@@ -113,6 +114,28 @@ function expectLayout(
   if (value.kind !== 'layout') {
     throw new Error(`Expected layout, received ${value.reason}`);
   }
+}
+
+function expectDeterministicIneligibility(
+  operation: () => ReturnType<typeof layoutOutfitMap>,
+  reason: OutfitMapIneligibleReason,
+): void {
+  const results: ReturnType<typeof layoutOutfitMap>[] = [];
+  expect(() => {
+    results.push(operation(), operation());
+  }).not.toThrow();
+  expect(results).toEqual([
+    {
+      kind: 'map-ineligible',
+      layoutVersion: 1,
+      reason,
+    },
+    {
+      kind: 'map-ineligible',
+      layoutVersion: 1,
+      reason,
+    },
+  ]);
 }
 
 function pointEquals(
@@ -669,6 +692,154 @@ describe('outfit map fail-closed boundaries', () => {
       layoutVersion: 1,
       reason: 'invalid-constraints',
     });
+  });
+
+  it.each([
+    [
+      'getOwnPropertyDescriptor',
+      () =>
+        new Proxy(
+          {},
+          {
+            getOwnPropertyDescriptor() {
+              throw new Error('snapshot getOwnPropertyDescriptor trap');
+            },
+          },
+        ),
+    ],
+    [
+      'revoked Array.isArray',
+      () => {
+        const revocable = Proxy.revocable({}, {});
+        revocable.revoke();
+        return revocable.proxy;
+      },
+    ],
+  ] as const)(
+    'contains hostile snapshot %s reflection as invalid-snapshot',
+    (_operation, createSnapshot) => {
+      const hostileSnapshot = createSnapshot();
+      expectDeterministicIneligibility(
+        () => layoutOutfitMap(hostileSnapshot, 320),
+        'invalid-snapshot',
+      );
+    },
+  );
+
+  it.each([
+    [
+      'getPrototypeOf',
+      () =>
+        new Proxy(
+          {},
+          {
+            getPrototypeOf() {
+              throw new Error('options getPrototypeOf trap');
+            },
+          },
+        ),
+    ],
+    [
+      'ownKeys',
+      () =>
+        new Proxy(
+          {},
+          {
+            ownKeys() {
+              throw new Error('options ownKeys trap');
+            },
+          },
+        ),
+    ],
+    [
+      'getOwnPropertyDescriptor',
+      () =>
+        new Proxy(
+          { textScale: 1 },
+          {
+            getOwnPropertyDescriptor() {
+              throw new Error('options getOwnPropertyDescriptor trap');
+            },
+          },
+        ),
+    ],
+    [
+      'revoked Array.isArray',
+      () => {
+        const revocable = Proxy.revocable({}, {});
+        revocable.revoke();
+        return revocable.proxy;
+      },
+    ],
+  ] as const)(
+    'contains hostile options %s reflection as invalid-constraints',
+    (_operation, createOptions) => {
+      const hostileOptions =
+        createOptions() as Parameters<typeof layoutOutfitMap>[2];
+      expectDeterministicIneligibility(
+        () => layoutOutfitMap(snapshotForCount(1), 320, hostileOptions),
+        'invalid-constraints',
+      );
+    },
+  );
+
+  it('does not invoke nested accessors or inspect nested proxy values', () => {
+    let snapshotGetterReads = 0;
+    const accessorSnapshot = {};
+    Object.defineProperty(accessorSnapshot, 'kind', {
+      enumerable: true,
+      get() {
+        snapshotGetterReads += 1;
+        throw new Error('snapshot kind getter must not run');
+      },
+    });
+    Object.defineProperty(accessorSnapshot, 'reason', {
+      enumerable: true,
+      value: 'semantic-garment-count-outside-1-10',
+    });
+    expectDeterministicIneligibility(
+      () => layoutOutfitMap(accessorSnapshot, 320),
+      'invalid-snapshot',
+    );
+    expect(snapshotGetterReads).toBe(0);
+
+    let optionsGetterReads = 0;
+    const accessorOptions = {};
+    Object.defineProperty(accessorOptions, 'textScale', {
+      enumerable: true,
+      get() {
+        optionsGetterReads += 1;
+        throw new Error('textScale getter must not run');
+      },
+    });
+    expectDeterministicIneligibility(
+      () =>
+        layoutOutfitMap(
+          snapshotForCount(1),
+          320,
+          accessorOptions as Parameters<typeof layoutOutfitMap>[2],
+        ),
+      'invalid-constraints',
+    );
+    expect(optionsGetterReads).toBe(0);
+
+    const nestedRevocable = Proxy.revocable({}, {});
+    nestedRevocable.revoke();
+    expectDeterministicIneligibility(
+      () =>
+        layoutOutfitMap(
+          { garments: nestedRevocable.proxy },
+          320,
+        ),
+      'invalid-snapshot',
+    );
+    expectDeterministicIneligibility(
+      () =>
+        layoutOutfitMap(snapshotForCount(1), 320, {
+          textScale: nestedRevocable.proxy,
+        } as unknown as Parameters<typeof layoutOutfitMap>[2]),
+      'invalid-constraints',
+    );
   });
 
   it('rejects structurally asserted snapshots and invalid garment counts', () => {
