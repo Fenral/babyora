@@ -19,6 +19,18 @@ function createValidInput() {
   const orderedItemIds = ['base-layer', 'outer-layer'];
   const baseRect = { x: 12, y: 24, width: 80, height: 96 };
   const outerRect = { x: 104, y: 28, width: 88, height: 104 };
+  const mutableIdentity: {
+    snapshotId: string;
+    recommendationFingerprint: string;
+    transitionContextId: string;
+  } = { ...identity };
+  const mutableViewport: {
+    width: number;
+    height: number;
+    scrollX: number;
+    scrollY: number;
+    orientation: 'portrait' | 'landscape';
+  } = { ...viewport };
   const rectanglesByItemId = new Map([
     ['base-layer', baseRect],
     ['outer-layer', outerRect],
@@ -26,8 +38,8 @@ function createValidInput() {
 
   return {
     input: {
-      identity: { ...identity },
-      viewport: { ...viewport },
+      identity: mutableIdentity,
+      viewport: mutableViewport,
       orderedItemIds,
       rectanglesByItemId,
     },
