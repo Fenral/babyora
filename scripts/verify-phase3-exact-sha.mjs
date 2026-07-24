@@ -15,8 +15,8 @@ import { fileURLToPath } from 'node:url';
 
 const SHA_40 = /^[0-9a-f]{40}$/;
 const SHA_256 = /^[0-9a-f]{64}$/;
-const COMMIT_LIKE_SCALAR_40 =
-  /^(?:[0-9a-fA-F]{40}|"[0-9a-fA-F]{40}"|'[0-9a-fA-F]{40}')$/;
+const COMMIT_LIKE_SCALAR_40 = /^[0-9a-f]{40}$/i;
+const UNSUPPORTED_YAML_SCALAR_PREFIX = /^[!&*|>\[{]/;
 const MAX_DEPENDENCIES = 100;
 const PHASE1_COMMIT_SCALAR_KEYS = Object.freeze(['candidate_sha']);
 const PHASE2_COMMIT_SCALAR_KEYS = Object.freeze([
@@ -101,6 +101,98 @@ function readUtf8(path, label) {
   }
 }
 
+function stripOutsideYamlComment(rawValue) {
+  let quote = null;
+
+  for (let index = 0; index < rawValue.length; index += 1) {
+    const character = rawValue[index];
+
+    if (quote === '"') {
+      if (character === '\\') {
+        index += 1;
+      } else if (character === '"') {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (quote === "'") {
+      if (character === "'" && rawValue[index + 1] === "'") {
+        index += 1;
+      } else if (character === "'") {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+
+    if (
+      character === '#' &&
+      (index === 0 || /\s/.test(rawValue[index - 1]))
+    ) {
+      return rawValue.slice(0, index).trim();
+    }
+  }
+
+  return rawValue.trim();
+}
+
+function decodeSingleQuotedYamlScalar(value, label, key) {
+  invariant(
+    value.length >= 2 && value.endsWith("'"),
+    `${label} contains unsupported frontmatter scalar syntax for ${key}`,
+  );
+
+  const inner = value.slice(1, -1);
+  let decoded = '';
+  for (let index = 0; index < inner.length; index += 1) {
+    if (inner[index] !== "'") {
+      decoded += inner[index];
+      continue;
+    }
+
+    invariant(
+      inner[index + 1] === "'",
+      `${label} contains unsupported frontmatter scalar syntax for ${key}`,
+    );
+    decoded += "'";
+    index += 1;
+  }
+  return decoded;
+}
+
+function normalizeFrontmatterScalar(rawValue, label, key) {
+  const exactValue = stripOutsideYamlComment(rawValue);
+  invariant(
+    !UNSUPPORTED_YAML_SCALAR_PREFIX.test(exactValue),
+    `${label} contains unsupported frontmatter scalar syntax for ${key}`,
+  );
+
+  let semanticValue = exactValue;
+  if (exactValue.startsWith('"')) {
+    try {
+      const decoded = JSON.parse(exactValue);
+      invariant(
+        typeof decoded === 'string',
+        `${label} contains unsupported frontmatter scalar syntax for ${key}`,
+      );
+      semanticValue = decoded;
+    } catch {
+      throw new Error(
+        `${label} contains unsupported frontmatter scalar syntax for ${key}`,
+      );
+    }
+  } else if (exactValue.startsWith("'")) {
+    semanticValue = decodeSingleQuotedYamlScalar(exactValue, label, key);
+  }
+
+  return Object.freeze({ exactValue, semanticValue });
+}
+
 function parseFrontmatter(text, label) {
   invariant(typeof text === 'string', `${label} must be text`);
 
@@ -128,19 +220,24 @@ function parseFrontmatter(text, label) {
 
     const [, key, rawValue] = match;
     invariant(!fields.has(key), `${label} contains duplicate key ${key}`);
-    fields.set(key, rawValue.trim());
+    fields.set(key, normalizeFrontmatterScalar(rawValue, label, key));
   }
 
   return fields;
 }
 
 function rejectUnexpectedCommitScalars(fields, allowedKeys, label) {
-  for (const [key, rawValue] of fields) {
+  for (const [key, scalar] of fields) {
     invariant(
-      allowedKeys.includes(key) || !COMMIT_LIKE_SCALAR_40.test(rawValue),
+      allowedKeys.includes(key) ||
+        !COMMIT_LIKE_SCALAR_40.test(scalar.semanticValue),
       `${label} uses forbidden candidate SHA alias ${key}`,
     );
   }
+}
+
+function exactFrontmatterValue(fields, key) {
+  return fields.get(key)?.exactValue;
 }
 
 export function parsePhase1CandidateSummary(text) {
@@ -153,10 +250,10 @@ export function parsePhase1CandidateSummary(text) {
   );
 
   invariant(
-    fields.get('status') === 'PASS',
+    exactFrontmatterValue(fields, 'status') === 'PASS',
     'Phase 1 summary status must be exact PASS',
   );
-  const candidateSha = fields.get('candidate_sha');
+  const candidateSha = exactFrontmatterValue(fields, 'candidate_sha');
   invariant(
     typeof candidateSha === 'string' && SHA_40.test(candidateSha),
     'Phase 1 summary requires exact candidate_sha with 40 lowercase hex',
@@ -175,15 +272,15 @@ export function parsePhase2HandoffSummary(text) {
   );
 
   invariant(
-    fields.get('status') === 'PASS',
+    exactFrontmatterValue(fields, 'status') === 'PASS',
     'Phase 2 summary status must be exact PASS',
   );
-  const candidateSha = fields.get('phase2_candidate_sha');
+  const candidateSha = exactFrontmatterValue(fields, 'phase2_candidate_sha');
   invariant(
     typeof candidateSha === 'string' && SHA_40.test(candidateSha),
     'Phase 2 summary requires exact phase2_candidate_sha',
   );
-  const featureFlag = fields.get('feature_flag');
+  const featureFlag = exactFrontmatterValue(fields, 'feature_flag');
   invariant(
     featureFlag === 'true',
     'Phase 2 summary feature_flag must be intrinsically true',
