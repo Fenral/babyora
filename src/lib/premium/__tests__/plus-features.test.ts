@@ -12,7 +12,7 @@ const flags = (partial?: Partial<PlusFeatureAvailability>): PlusFeatureAvailabil
   extra_children: false,
   family_sharing: false,
   personal_calibration: false,
-  soon_preparation: false,
+  soon_preparation: true,
   ...partial,
 });
 
@@ -48,7 +48,7 @@ describe('availablePlusExpansions', () => {
     expect(PLUS_FEATURE_AVAILABILITY.today_home).toBe(true);
     expect(PLUS_FEATURE_AVAILABILITY.future_plan).toBe(true);
     expect(PLUS_FEATURE_AVAILABILITY.automatic_location).toBe(true);
-    expect(PLUS_FEATURE_AVAILABILITY.soon_preparation).toBe(false);
+    expect(PLUS_FEATURE_AVAILABILITY.soon_preparation).toBe(true);
     expect(PLUS_FEATURE_AVAILABILITY.family_sharing).toBe(false);
     expect(PLUS_FEATURE_AVAILABILITY.personal_calibration).toBe(false);
   });
