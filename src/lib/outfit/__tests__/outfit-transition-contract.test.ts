@@ -38,7 +38,11 @@ function truth(exactInput: RecommendInput = input()) {
 }
 
 class TestElement {
-  constructor(readonly isConnected = true) {}
+  readonly isConnected: boolean;
+
+  constructor(isConnected = true) {
+    this.isConnected = isConnected;
+  }
 }
 
 const originalElement = globalThis.Element;

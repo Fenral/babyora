@@ -100,6 +100,14 @@ function staticOnly(
   });
 }
 
+function isConnectedElement(value: unknown): value is HTMLElement {
+  return (
+    typeof Element !== 'undefined' &&
+    value instanceof Element &&
+    value.isConnected === true
+  );
+}
+
 /**
  * D-08 Phase-2 boundary: validates only canonical identity and real Outfit
  * target-row registration. Home sources and combined geometry readiness remain
@@ -139,9 +147,7 @@ export function evaluateOutfitTargetReadiness(args: Readonly<{
   for (const row of args.targetRows) {
     if (
       !expectedIds.has(row.itemId) ||
-      row.element === null ||
-      row.element === undefined ||
-      row.element.isConnected === false
+      !isConnectedElement(row.element)
     ) {
       return staticOnly('stale-target-row', row.itemId);
     }

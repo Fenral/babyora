@@ -88,8 +88,6 @@ export type OutfitTruthBuildResultV1 =
     }>;
 
 export type CreateOutfitTruthSnapshotArgsV1 = Readonly<{
-  recommendationId: string;
-  recommendationFingerprint: string;
   transitionContextId: string;
   input: RecommendInput;
   finalizedRecommendation: Recommendation;
@@ -340,6 +338,28 @@ function stableHash(value: string): string {
     .padStart(8, '0')}`;
 }
 
+function assertExactOwnKeys(
+  value: object,
+  expectedKeys: readonly string[],
+  path: string,
+): void {
+  const actualKeys = Reflect.ownKeys(value).map(String);
+  const expected = new Set(expectedKeys);
+  const unexpected = actualKeys.filter((key) => !expected.has(key));
+  const missing = expectedKeys.filter(
+    (key) => !Object.prototype.hasOwnProperty.call(value, key),
+  );
+  if (unexpected.length > 0 || missing.length > 0) {
+    throw new OutfitTruthInputError(
+      `${path} has an invalid shape${
+        unexpected.length === 0
+          ? ''
+          : `; unexpected: ${unexpected.join(', ')}`
+      }${missing.length === 0 ? '' : `; missing: ${missing.join(', ')}`}`,
+    );
+  }
+}
+
 function freezeDeep<T>(value: T): T {
   if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
     for (const key of Reflect.ownKeys(value)) {
@@ -365,10 +385,10 @@ export function createOutfitTruthSnapshot(
   args: CreateOutfitTruthSnapshotArgsV1,
 ): OutfitTruthBuildResultV1 {
   assertOwnDataGraph(args, 'args');
-  assertString(args.recommendationId, 'recommendationId');
-  assertString(
-    args.recommendationFingerprint,
-    'recommendationFingerprint',
+  assertExactOwnKeys(
+    args,
+    ['transitionContextId', 'input', 'finalizedRecommendation', 'pose'],
+    'args',
   );
   assertString(args.transitionContextId, 'transitionContextId');
   if (args.pose !== 'sitting' && args.pose !== 'standing') {
@@ -377,14 +397,24 @@ export function createOutfitTruthSnapshot(
   assertRecommendInput(args.input);
   assertRecommendation(args.finalizedRecommendation, args.input);
 
-  const recommendationIdentity = stableHash(
+  const recommendationContentDigest = stableHash(
     stableSerialize({
-      recommendationId: args.recommendationId,
-      recommendationFingerprint: args.recommendationFingerprint,
-      transitionContextId: args.transitionContextId,
-      pose: args.pose,
       input: args.input,
       finalizedRecommendation: args.finalizedRecommendation,
+      pose: args.pose,
+    }),
+  );
+  const recommendationFingerprint =
+    `outfit-recommendation-fingerprint-v1:${recommendationContentDigest}`;
+  const recommendationId = `outfit-recommendation-v1:${stableHash(
+    `recommendation|${recommendationContentDigest}`,
+  )}`;
+  const recommendationIdentity = stableHash(
+    stableSerialize({
+      recommendationId,
+      recommendationFingerprint,
+      transitionContextId: args.transitionContextId,
+      pose: args.pose,
     }),
   );
   const duplicateCount = new Map<string, number>();
@@ -482,8 +512,8 @@ export function createOutfitTruthSnapshot(
   const snapshot = freezeDeep({
     contractVersion: 1 as const,
     snapshotId,
-    recommendationId: args.recommendationId,
-    recommendationFingerprint: args.recommendationFingerprint,
+    recommendationId,
+    recommendationFingerprint,
     transitionContextId: args.transitionContextId,
     garments,
     equipment: frozenEquipment,
