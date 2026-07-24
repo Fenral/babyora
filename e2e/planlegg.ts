@@ -1465,12 +1465,12 @@ async function runComposition(
   }
   const radios = screen.getByRole('radio');
   if (
-    await radios.count() !== 2
+    await radios.count() !== 3
     || await screen.getByRole('radio', { name: 'I dag', exact: true }).count() !== 1
     || await screen.getByRole('radio', { name: 'Uke', exact: true }).count() !== 1
-    || await screen.getByText('Snart', { exact: true }).count() !== 0
+    || await screen.getByRole('radio', { name: 'Snart', exact: true }).count() !== 1
   ) {
-    throw new Error('Planlegg skal bare ha native I dag/Uke-kontrollen');
+    throw new Error('Planlegg skal ha én native I dag/Uke/Snart-kontroll');
   }
 
   const answer = screen.locator('.planlegg-screen__answer');
@@ -1600,7 +1600,7 @@ async function runSemanticRail(
   }
 
   if (
-    await page.getByRole('radio').count() !== 2
+    await page.getByRole('radio').count() !== 3
     || await page.getByRole('radio', { checked: true }).count() !== 1
   ) {
     throw new Error('Segmentkontrollen skal være én kontrollert native radiogruppe');
