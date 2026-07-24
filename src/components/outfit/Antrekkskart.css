@@ -1,4 +1,4 @@
-.outfit-experience { --outfit-connector: #5a514c; --outfit-active: #ad4b2a; color: var(--ink-900, #2b2522); max-inline-size: 42rem; margin-inline: auto; }
+.outfit-experience { --outfit-connector: #5a514c; --outfit-active: #ad4b2a; --outfit-connector-dark-mild: #c6c5d8; --outfit-connector-dark-kald: #79b1e0; --outfit-connector-dark-varm: #ff987e; --outfit-active-dark: #ee9373; color: var(--ink-900, #2b2522); max-inline-size: 42rem; margin-inline: auto; }
 .outfit-experience[data-temp='kald'] { --outfit-connector: #36566d; }
 .outfit-experience[data-temp='varm'] { --outfit-connector: #7b3521; }
 .outfit-map { position: relative; inline-size: 100%; max-inline-size: 100%; min-inline-size: 0; contain: inline-size; }
@@ -19,4 +19,12 @@
 .outfit-comparison { background: var(--surface, #fbf8f4); border: 1px solid var(--surface-border, #c9c0b9); color: inherit; inline-size: auto; margin-block: 1rem; max-inline-size: 100%; padding: 1rem; position: static; }
 @media (max-width: 28rem), (min-resolution: 1.9dppx) { .outfit-row { align-items: flex-start; flex-wrap: wrap; } .outfit-row__detail { inline-size: 100%; margin-inline-start: 2.4rem; } }
 @media (prefers-reduced-motion: reduce) { .outfit-experience *, .outfit-experience *::before, .outfit-experience *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .outfit-experience { --outfit-connector: var(--outfit-connector-dark-mild); --outfit-active: var(--outfit-active-dark); }
+  :root:not([data-theme="light"]) .outfit-experience[data-temp='kald'] { --outfit-connector: var(--outfit-connector-dark-kald); }
+  :root:not([data-theme="light"]) .outfit-experience[data-temp='varm'] { --outfit-connector: var(--outfit-connector-dark-varm); }
+}
+:root[data-theme="dark"] .outfit-experience { --outfit-connector: var(--outfit-connector-dark-mild); --outfit-active: var(--outfit-active-dark); }
+:root[data-theme="dark"] .outfit-experience[data-temp='kald'] { --outfit-connector: var(--outfit-connector-dark-kald); }
+:root[data-theme="dark"] .outfit-experience[data-temp='varm'] { --outfit-connector: var(--outfit-connector-dark-varm); }
 @media (forced-colors: active) { .outfit-experience { color: CanvasText; } .outfit-map__node, .outfit-row, .outfit-comparison { background: Canvas; border-color: ButtonText; color: CanvasText; } .outfit-map__connectors polyline { stroke: ButtonText; } .outfit-map__connectors polyline.is-highlighted { stroke: Highlight; stroke-dasharray: 8 4; } .outfit-map__node.is-highlighted, .outfit-row.is-highlighted { outline: 2px solid Highlight; } }
