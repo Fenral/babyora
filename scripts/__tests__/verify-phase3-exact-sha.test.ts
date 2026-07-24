@@ -10,7 +10,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
@@ -214,8 +214,12 @@ function removeOption(args: readonly string[], option: string): string[] {
 function runScript(
   harness: Harness,
   args: readonly string[],
-  evidenceRoot: string | undefined = harness.evidenceRoot,
+  ...evidenceRootOverride: [] | [string | undefined]
 ): ProcessResult {
+  const evidenceRoot =
+    evidenceRootOverride.length === 0
+      ? harness.evidenceRoot
+      : evidenceRootOverride[0];
   const env = { ...process.env };
   if (evidenceRoot === undefined) {
     delete env.BABYORA_PHASE3_EVIDENCE_ROOT;
