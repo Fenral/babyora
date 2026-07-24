@@ -74,7 +74,7 @@ describe('canonical outfit truth', () => {
           index === 0
             ? [...layer.items, 'fabricated provenance layer']
             : [...layer.items],
-        })),
+      })),
     };
 
     const original = build(input, recommendation);
@@ -139,6 +139,225 @@ describe('canonical outfit truth', () => {
     ) as typeof result.snapshot;
     expect(assertedClone).toEqual(result.snapshot);
     expect(isOutfitTruthSnapshot(assertedClone)).toBe(false);
+  });
+
+  it('accepts every valid optional RecommendInput field without flattening it', () => {
+    const input = exactInput({
+      weather: {
+        feelsLikeC: 4,
+        tempC: 5,
+        windMs: 1,
+        precipMmH: 0,
+        humidity: 72.5,
+        symbolCode: 'clearsky_day',
+        uvIndex: 3.4,
+      },
+      child: {
+        ageMonths: 8,
+        canRoll: false,
+      },
+      exposureMin: 45.5,
+      innerJakke: true,
+      vognMode: 'awake',
+      context: {
+        bilstol: false,
+      },
+      childCalibration: 1,
+    });
+
+    expect(build(input).kind).toBe('supported');
+  });
+
+  it.each([
+    ['NaN childCalibration', NaN],
+    ['positive infinite childCalibration', Number.POSITIVE_INFINITY],
+    ['negative infinite childCalibration', Number.NEGATIVE_INFINITY],
+  ])('rejects %s before identity derivation', (_name, childCalibration) => {
+    const input = exactInput() as RecommendInput & {
+      childCalibration: number;
+    };
+    input.childCalibration = childCalibration;
+    const finalizedRecommendation = recommend(exactInput());
+
+    expect(() =>
+      createOutfitTruthSnapshot({
+        transitionContextId: 'transition:fixture',
+        input,
+        finalizedRecommendation,
+        pose: 'sitting',
+      }),
+    ).toThrow(OutfitTruthInputError);
+  });
+
+  it.each([
+    [
+      'non-finite humidity',
+      (input: RecommendInput) => {
+        input.weather.humidity = Number.POSITIVE_INFINITY;
+      },
+    ],
+    [
+      'humidity outside 0-100',
+      (input: RecommendInput) => {
+        input.weather.humidity = 101;
+      },
+    ],
+    [
+      'negative UV index',
+      (input: RecommendInput) => {
+        input.weather.uvIndex = -1;
+      },
+    ],
+    [
+      'non-finite exposure',
+      (input: RecommendInput) => {
+        input.exposureMin = NaN;
+      },
+    ],
+    [
+      'negative exposure',
+      (input: RecommendInput) => {
+        input.exposureMin = -1;
+      },
+    ],
+    [
+      'invalid canRoll',
+      (input: RecommendInput) => {
+        input.child.canRoll = 'yes' as unknown as boolean;
+      },
+    ],
+    [
+      'invalid innerJakke',
+      (input: RecommendInput) => {
+        input.innerJakke = 1 as unknown as boolean;
+      },
+    ],
+    [
+      'invalid vognMode',
+      (input: RecommendInput) => {
+        input.vognMode = 'resting' as RecommendInput['vognMode'];
+      },
+    ],
+    [
+      'invalid bilstol context',
+      (input: RecommendInput) => {
+        input.context = {
+          bilstol: 'yes' as unknown as boolean,
+        };
+      },
+    ],
+    [
+      'age below engine range',
+      (input: RecommendInput) => {
+        input.child.ageMonths = -1;
+      },
+    ],
+    [
+      'age above engine range',
+      (input: RecommendInput) => {
+        input.child.ageMonths = 61;
+      },
+    ],
+  ])('rejects optional/input shape: %s', (_name, mutate) => {
+    const input = exactInput();
+    mutate(input);
+    const finalizedRecommendation = recommend(exactInput());
+
+    expect(() =>
+      createOutfitTruthSnapshot({
+        transitionContextId: 'transition:fixture',
+        input,
+        finalizedRecommendation,
+        pose: 'sitting',
+      }),
+    ).toThrow(OutfitTruthInputError);
+  });
+
+  it('rejects non-enumerable own input fields that serialization would omit', () => {
+    const input = exactInput();
+    Object.defineProperty(input, 'childCalibration', {
+      configurable: true,
+      enumerable: false,
+      value: 1,
+      writable: true,
+    });
+
+    expect(() =>
+      createOutfitTruthSnapshot({
+        transitionContextId: 'transition:fixture',
+        input,
+        finalizedRecommendation: recommend(exactInput()),
+        pose: 'sitting',
+      }),
+    ).toThrow(OutfitTruthInputError);
+  });
+
+  it.each([
+    [
+      'layers',
+      (recommendation: Recommendation) => {
+        recommendation.layers =
+          new Array<Recommendation['layers'][number]>(1);
+      },
+    ],
+    [
+      'layer items',
+      (recommendation: Recommendation) => {
+        recommendation.layers[0]!.items = new Array<string>(1);
+      },
+    ],
+    [
+      'notes',
+      (recommendation: Recommendation) => {
+        recommendation.notes = new Array<string>(1);
+      },
+    ],
+    [
+      'structured notes',
+      (recommendation: Recommendation) => {
+        recommendation.structuredNotes =
+          new Array<Recommendation['structuredNotes'][number]>(1);
+      },
+    ],
+    [
+      'safety flags',
+      (recommendation: Recommendation) => {
+        recommendation.safetyFlags =
+          new Array<NonNullable<Recommendation['safetyFlags']>[number]>(1);
+      },
+    ],
+    [
+      'safety sources',
+      (recommendation: Recommendation) => {
+        recommendation.safetyFlags = [
+          {
+            code: 'TEST',
+            message: 'Test',
+            sources:
+              new Array<
+                NonNullable<
+                  Recommendation['safetyFlags']
+                >[number]['sources'][number]
+              >(1),
+            severity: 'LOW',
+            category: 'sikkerhet',
+          },
+        ];
+      },
+    ],
+  ])('rejects sparse %s with a controlled input error', (_name, mutate) => {
+    const input = exactInput();
+    const finalizedRecommendation = structuredClone(recommend(input));
+    mutate(finalizedRecommendation);
+
+    expect(() =>
+      createOutfitTruthSnapshot({
+        transitionContextId: 'transition:fixture',
+        input,
+        finalizedRecommendation,
+        pose: 'sitting',
+      }),
+    ).toThrow(OutfitTruthInputError);
   });
 
   it('preserves duplicate source labels as distinct stable occurrences', () => {
