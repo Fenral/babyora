@@ -27,16 +27,34 @@ inventory:
   scenario_count: 2036160
   status: PASS
 
+review_receipt_count: 1
+historical_review_record_count: 1
+unresolved_p0: 0
+unresolved_p1: 0
+
 review:
-  reviewer_id: phase2-02-03-independent-review-existing-session
-  session: /root/phase3_03_03_contract_review_a_attempt6
-  existing_session: true
-  fresh_to_candidate: true
+  reviewer_id: /root/phase2_02_03_fresh_review
+  canonical_task: /root/phase2_02_03_fresh_review
+  session: phase2-02-03-fresh-review-be3e82e
+  capability: standard-verification
+  focus: geometry-accessibility
+  fork_turns: none
+  fresh_context: true
   independent_from_implementation: true
-  fork_turns_none_claimed: false
-  fresh_context_claimed: false
   verdict: PASS
-  findings: 0
+  unresolved_p0: 0
+  unresolved_p1: 0
+
+review_history:
+  - reviewer_id: phase2-02-03-independent-review-existing-session
+    session: /root/phase3_03_03_contract_review_a_attempt6
+    existing_session: true
+    fresh_to_candidate: true
+    independent_from_implementation: true
+    fork_turns_none_claimed: false
+    fresh_context_claimed: false
+    verdict: PASS
+    findings: 0
 
 requires:
   - phase: 02-outfit-truth-antrekkskart
@@ -138,15 +156,19 @@ map ineligibility.**
 - **Documentation base:**
   `0f8be9fba5ba639266d03b5e3590c96f6e91bbb1`
 - **Scope:** Exactly two authorized implementation/test files
-- **Independent review:** One PASS receipt, 0 findings
-- **Review provenance:** Existing session, fresh to candidate, independent from
-  implementation
+- **Independent review:** One qualified fresh-context PASS receipt with no
+  unresolved P0/P1
+- **Review provenance:** `standard-verification`, `fork_turns: none`, independent
+  from implementation
+- **Historical review:** The earlier existing-session PASS remains recorded but
+  is superseded for the plan's fresh-context gate
 - **External cost:** 0
 - **Status:** **PASS**
 
-The review receipt does not claim `fork_turns: none` or
-`fresh_context: true`. Its actual provenance is recorded explicitly in this
-summary and the independent-review evidence file.
+The qualified receipt is bound to the unchanged implementation candidate
+`be3e82e7e14428b97f1181da578b7f60b89fbd4f`. The prior existing-session review
+is preserved as history and is not presented as satisfying the fresh-context
+requirement.
 
 The documentation-only completion commit containing this summary and its
 evidence file changes no implementation, test, inventory, package, dependency,
@@ -263,11 +285,13 @@ scope evidence are recorded in
 
 | Reviewer / session | Provenance | Verdict |
 |---|---|---|
-| `phase2-02-03-independent-review-existing-session` / `/root/phase3_03_03_contract_review_a_attempt6` | `existing_session: true`; `fresh_to_candidate: true`; `independent_from_implementation: true` | **PASS**, 0 findings |
+| `/root/phase2_02_03_fresh_review` / `phase2-02-03-fresh-review-be3e82e` | `standard-verification`; `fresh_context: true`; `fork_turns: none`; independent from implementation | **PASS**, no unresolved P0/P1 |
+| Historical: `phase2-02-03-independent-review-existing-session` / `/root/phase3_03_03_contract_review_a_attempt6` | Existing session; fresh to candidate; independent from implementation; no fresh-context claim | **PASS**, 0 findings |
 
-The receipt is independent from implementation and fresh to candidate
-`be3e82e`, but it came from an existing session. No claim is made that the
-session used `fork_turns: none` or was a wholly fresh context.
+The fresh review reproduced the 131-test focused geometry/truth gate, the
+2,036,160-scenario inventory, the 1,022-test full suite, lint, build, exact
+two-file scope, and diff cleanliness. It supersedes the historical record only
+for qualification of the plan gate; it does not erase or rewrite that history.
 
 ## TDD and Repair Chain
 
@@ -341,7 +365,8 @@ data migration is required.
 
 ## Next Plan Readiness
 
-- Plan 02-03 is complete with one independent exact-candidate PASS receipt.
+- Plan 02-03 is complete with one qualified fresh-context, standard-verification
+  exact-candidate PASS receipt.
 - Its responsive geometry and fail-closed fallback contract are ready for
   dependent Plan 02-04 and later Antrekkskart integration.
 - No later plan, push, deployment, or release action was started by this
