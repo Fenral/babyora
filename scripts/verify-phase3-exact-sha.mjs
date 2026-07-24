@@ -15,7 +15,14 @@ import { fileURLToPath } from 'node:url';
 
 const SHA_40 = /^[0-9a-f]{40}$/;
 const SHA_256 = /^[0-9a-f]{64}$/;
+const COMMIT_LIKE_SCALAR_40 =
+  /^(?:[0-9a-fA-F]{40}|"[0-9a-fA-F]{40}"|'[0-9a-fA-F]{40}')$/;
 const MAX_DEPENDENCIES = 100;
+const PHASE1_COMMIT_SCALAR_KEYS = Object.freeze(['candidate_sha']);
+const PHASE2_COMMIT_SCALAR_KEYS = Object.freeze([
+  'phase2_candidate_sha',
+  'phase1_candidate_sha',
+]);
 
 const CANDIDATE_RECORD_KEYS = Object.freeze([
   'phase3_candidate_sha',
@@ -127,33 +134,23 @@ function parseFrontmatter(text, label) {
   return fields;
 }
 
-function looksLikeCandidateShaAlias(key) {
-  const normalized = key.toLowerCase().replaceAll(/[^a-z0-9]/g, '');
-  return (
-    (normalized.includes('candidate') && normalized.includes('sha')) ||
-    normalized.endsWith('commit') ||
-    (normalized.includes('commit') && normalized.includes('sha'))
-  );
-}
-
-function looksLikePhase2CandidateShaAlias(key) {
-  if (key === 'phase2_candidate_sha' || key === 'phase1_candidate_sha') {
-    return false;
+function rejectUnexpectedCommitScalars(fields, allowedKeys, label) {
+  for (const [key, rawValue] of fields) {
+    invariant(
+      allowedKeys.includes(key) || !COMMIT_LIKE_SCALAR_40.test(rawValue),
+      `${label} uses forbidden candidate SHA alias ${key}`,
+    );
   }
-
-  const normalized = key.toLowerCase().replaceAll(/[^a-z0-9]/g, '');
-  return looksLikeCandidateShaAlias(key) || normalized === 'phase2sha';
 }
 
 export function parsePhase1CandidateSummary(text) {
   const fields = parseFrontmatter(text, 'Phase 1 summary');
 
-  for (const key of fields.keys()) {
-    invariant(
-      key === 'candidate_sha' || !looksLikeCandidateShaAlias(key),
-      `Phase 1 summary uses forbidden candidate SHA alias ${key}`,
-    );
-  }
+  rejectUnexpectedCommitScalars(
+    fields,
+    PHASE1_COMMIT_SCALAR_KEYS,
+    'Phase 1 summary',
+  );
 
   invariant(
     fields.get('status') === 'PASS',
@@ -171,12 +168,11 @@ export function parsePhase1CandidateSummary(text) {
 export function parsePhase2HandoffSummary(text) {
   const fields = parseFrontmatter(text, 'Phase 2 summary');
 
-  for (const key of fields.keys()) {
-    invariant(
-      !looksLikePhase2CandidateShaAlias(key),
-      `Phase 2 summary uses forbidden candidate SHA alias ${key}`,
-    );
-  }
+  rejectUnexpectedCommitScalars(
+    fields,
+    PHASE2_COMMIT_SCALAR_KEYS,
+    'Phase 2 summary',
+  );
 
   invariant(
     fields.get('status') === 'PASS',
