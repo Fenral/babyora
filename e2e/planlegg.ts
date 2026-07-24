@@ -1788,13 +1788,23 @@ async function runSoonReadiness(
     const fixedHome = state === 'unsupported'
       ? { city: 'Ukjent', lat: 60, lon: 11 }
       : { city: 'Oslo', lat: 59.9139, lon: 10.7522 };
+    const automatic = state === 'automatic-b1'
+      ? { mode: 'auto' as const, place: { city: 'Bergen', lat: 60.3913, lon: 5.3221 } }
+      : state === 'automatic-b2'
+        ? { mode: 'auto' as const, place: { city: 'Troms\u00f8', lat: 69.6492, lon: 18.9553 } }
+        : undefined;
     (window as Window & { __BABYORA_PLANLEGG_E2E__?: unknown })
       .__BABYORA_PLANLEGG_E2E__ = {
         testOnlySoonAvailability: true,
         entitlement: state === 'loading' ? 'loading' : state === 'free' ? 'free' : 'plus',
         fixedHome,
+        automatic,
         profileScope: state === 'profile-b' ? 'b' : 'a',
-        windowLocalDate: state === 'emptyable' ? '2026-01-01' : state === 'window-b' ? '2026-02-13' : '2026-02-12',
+        windowLocalDate: state === 'emptyable'
+          ? '2026-01-01'
+          : state === 'window-b'
+            ? '2026-02-13'
+            : '2026-02-12',
       };
     const record = (kind: string, payload: unknown) => {
       const target = window as Window & { __babyoraSoonTransport?: string[] };
@@ -1819,6 +1829,29 @@ async function runSoonReadiness(
   });
   forecastState.delivery = 'success';
   forecastState.mode = 'many';
+  const observedTransport: string[] = [];
+  const captureTransport = async () => {
+    const events = await page.evaluate(() => (
+      (window as Window & { __babyoraSoonTransport?: string[] }).__babyoraSoonTransport ?? []
+    )).catch(() => [] as string[]);
+    observedTransport.push(...events);
+  };
+  const openSoonState = async (state: string) => {
+    await captureTransport();
+    await openPlanlegg(page, `${fixture.path}&snart-e2e=${state}`);
+    await page.getByRole('radio', { name: 'Snart', exact: true })
+      .evaluate((radio) => (radio as HTMLInputElement).click());
+    const plan = page.locator('.snart-plan');
+    await plan.waitFor({ state: 'visible', timeout: 15_000 });
+    return plan;
+  };
+  const readSoonSignature = async () => page.locator('.snart-plan').evaluate((element) => JSON.stringify({
+    text: element.textContent?.replace(/\s+/gu, ' ').trim() ?? '',
+    items: [...element.querySelectorAll<HTMLElement>('[data-snart-item]')]
+      .map((item) => item.dataset.snartItem ?? ''),
+    actions: [...element.querySelectorAll<HTMLButtonElement>('button[data-concept-id]')]
+      .map((button) => button.dataset.conceptId ?? ''),
+  }));
   try {
     await openPlanlegg(page, fixture.path);
   } catch (error) {
@@ -1866,6 +1899,7 @@ async function runSoonReadiness(
   if (await ready.getByRole('button', { name: 'Har allerede', exact: true }).count() >= 6) {
     throw new Error('Har allerede oppdaterte ikke den in-memory baserte modellen');
   }
+  await captureTransport();
   await page.reload();
   await openPlanlegg(page, `${fixture.path}&entitlement=plus`);
   await page.getByRole('radio', { name: 'Snart', exact: true })
@@ -1874,11 +1908,9 @@ async function runSoonReadiness(
   if (await ready.getByRole('button', { name: 'Har allerede', exact: true }).count() < 1) {
     throw new Error('Reload resetter ikke Har allerede-sessionen');
   }
-  const transport = await page.evaluate(() => (
-    (window as Window & { __babyoraSoonTransport?: string[] }).__babyoraSoonTransport ?? []
-  ));
+  await captureTransport();
   const externalRequests = requests.filter((url) => !url.startsWith(BASE_URL));
-  const leaked = [...browserSignals, ...transport, ...externalRequests].filter((entry) => (
+  const leaked = [...browserSignals, ...observedTransport, ...externalRequests].filter((entry) => (
     /snart|lillian|eskil|2025-10-03|2023-12-03|already|har allerede/iu.test(entry)
   ));
   if (leaked.length > 0) {
@@ -1926,6 +1958,109 @@ async function runSoonReadiness(
   const unavailable = page.locator('.snart-plan');
   await unavailable.waitFor({ state: 'visible' });
   if (!/ikke godt nok historisk grunnlag/iu.test(await unavailable.innerText()) || await unavailable.locator('[data-snart-item]').count() !== 0) throw new Error('Unsupported home did not fail closed');
+
+  const automaticB1 = await openSoonState('automatic-b1');
+  const automaticB1Signature = await readSoonSignature();
+  const automaticB1Context = await page.locator('.planlegg-screen__context').innerText();
+  if (!/Nåværende sted\s*·\s*Bergen/iu.test(automaticB1Context)) {
+    throw new Error(`Automatic B1-fixturen påvirket ikke synlig stedskontekst: ${automaticB1Context}`);
+  }
+  if (await automaticB1.locator('[data-snart-item]').count() < 1) {
+    throw new Error('Automatic B1 manglet fast-hjem-basert Snart-resultat');
+  }
+
+  const automaticB2 = await openSoonState('automatic-b2');
+  const automaticB2Signature = await readSoonSignature();
+  const automaticB2Context = await page.locator('.planlegg-screen__context').innerText();
+  if (!/Nåværende sted\s*·\s*Tromsø/iu.test(automaticB2Context)) {
+    throw new Error(`Automatic B2-fixturen påvirket ikke synlig stedskontekst: ${automaticB2Context}`);
+  }
+  if (
+    automaticB2Signature !== automaticB1Signature
+    || await automaticB2.locator('[data-snart-item]').count() < 1
+  ) {
+    throw new Error('Fast hjem A ga ulikt Snart-resultat under automatic place B1/B2');
+  }
+
+  const resetPlan = await openSoonState('plus');
+  const firstResetAction = resetPlan.locator('button[data-concept-id]').first();
+  const resetConceptId = await firstResetAction.getAttribute('data-concept-id');
+  if (!resetConceptId) throw new Error('Reset-fixturen manglet markérbart Snart-konsept');
+  await firstResetAction.evaluate((button) => (button as HTMLButtonElement).click());
+  const hasConceptAction = (conceptId: string) => page
+    .locator('.snart-plan button[data-concept-id]')
+    .evaluateAll(
+      (buttons, expected) => buttons.some(
+        (button) => button.getAttribute('data-concept-id') === expected,
+      ),
+      conceptId,
+    );
+  if (await hasConceptAction(resetConceptId)) {
+    throw new Error('Har allerede fjernet ikke valgt konsept før reset');
+  }
+
+  const navigation = page.getByRole('navigation').first();
+  await navigation.getByRole('button', { name: /^Hjem/u }).click();
+  await page.locator('.planlegg-screen').waitFor({ state: 'detached', timeout: 15_000 });
+  await navigation.getByRole('button', { name: /^Planlegg/u }).click();
+  await page.getByRole('heading', { level: 1, name: 'Planlegg', exact: true })
+    .waitFor({ state: 'visible', timeout: 15_000 });
+  await page.getByRole('radio', { name: 'Snart', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
+  await page.locator('.snart-plan').waitFor({ state: 'visible', timeout: 15_000 });
+  if (!await hasConceptAction(resetConceptId)) {
+    throw new Error('Unmount/remount resetter ikke Har allerede-sessionen');
+  }
+
+  await page.locator(`.snart-plan button[data-concept-id="${resetConceptId}"]`)
+    .evaluate((button) => (button as HTMLButtonElement).click());
+  await page.evaluate(() => {
+    const target = window as Window & {
+      __BABYORA_PLANLEGG_E2E__?: Record<string, unknown>;
+    };
+    const current = target.__BABYORA_PLANLEGG_E2E__;
+    if (!current) throw new Error('Snart E2E-fixturen mangler ved profilbytte');
+    target.__BABYORA_PLANLEGG_E2E__ = { ...current, profileScope: 'profile-b' };
+  });
+  await page.getByRole('radio', { name: 'I dag', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
+  await page.getByRole('radio', { name: 'Snart', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
+  await page.locator('.snart-plan').waitFor({ state: 'visible', timeout: 15_000 });
+  if (!await hasConceptAction(resetConceptId)) {
+    throw new Error('Profilbytte resetter ikke Har allerede-sessionen');
+  }
+
+  await page.locator(`.snart-plan button[data-concept-id="${resetConceptId}"]`)
+    .evaluate((button) => (button as HTMLButtonElement).click());
+  await page.evaluate(() => {
+    const target = window as Window & {
+      __BABYORA_PLANLEGG_E2E__?: Record<string, unknown>;
+    };
+    const current = target.__BABYORA_PLANLEGG_E2E__;
+    if (!current) throw new Error('Snart E2E-fixturen mangler ved vindubytte');
+    target.__BABYORA_PLANLEGG_E2E__ = { ...current, windowLocalDate: '2026-02-13' };
+  });
+  await page.getByRole('radio', { name: 'I dag', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
+  await page.getByRole('radio', { name: 'Snart', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
+  await page.locator('.snart-plan').waitFor({ state: 'visible', timeout: 15_000 });
+  if (!await hasConceptAction(resetConceptId)) {
+    throw new Error('Nytt Snart-vindu resetter ikke Har allerede-sessionen');
+  }
+
+  await captureTransport();
+  const finalLeaks = [
+    ...browserSignals,
+    ...observedTransport,
+    ...requests.filter((url) => !url.startsWith(BASE_URL)),
+  ].filter((entry) => (
+    /snart|lillian|eskil|2025-10-03|2023-12-03|already|har allerede/iu.test(entry)
+  ));
+  if (finalLeaks.length > 0) {
+    throw new Error(`Snart lekket under A/B- eller resetmatrisen: ${finalLeaks.join(', ')}`);
+  }
 }
 
 async function settleEntitlement(page: Page, premium: boolean): Promise<void> {
