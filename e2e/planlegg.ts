@@ -1802,6 +1802,8 @@ async function runSoonReadiness(
         profileScope: state === 'profile-b' ? 'b' : 'a',
         windowLocalDate: state === 'emptyable'
           ? '2026-01-01'
+          : state === 'retained'
+            ? '2026-06-01'
           : state === 'window-b'
             ? '2026-02-13'
             : '2026-02-12',
@@ -1882,6 +1884,42 @@ async function runSoonReadiness(
   ) {
     throw new Error('Plus Snart mangler modellresultat eller utførte forbudt runtime-klimaforespørsel');
   }
+  const firstSoonAction = ready.getByRole('button', { name: 'Har allerede', exact: true }).first();
+  const actionBox = await firstSoonAction.boundingBox();
+  if (!actionBox || actionBox.width < 44 || actionBox.height < 44) {
+    throw new Error(`Snart-action must be at least 44 by 44: ${JSON.stringify(actionBox)}`);
+  }
+  for (let index = 0; index < 24; index += 1) {
+    if (await firstSoonAction.evaluate((element) => document.activeElement === element)) break;
+    await page.keyboard.press('Tab');
+  }
+  if (!await firstSoonAction.evaluate((element) => document.activeElement === element && element.matches(':focus-visible'))) {
+    throw new Error('Snart-action could not receive keyboard focus-visible state');
+  }
+  const focusStyle = await firstSoonAction.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth };
+  });
+  if (focusStyle.outlineStyle === 'none' || Number.parseFloat(focusStyle.outlineWidth) < 1) {
+    throw new Error(`Snart-action lacks a visible focus outline: ${JSON.stringify(focusStyle)}`);
+  }
+  await page.emulateMedia({ forcedColors: 'active' });
+  const forcedActionStyle = await firstSoonAction.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { borderStyle: style.borderStyle, borderWidth: style.borderWidth, outlineStyle: style.outlineStyle };
+  });
+  if (
+    (forcedActionStyle.borderStyle === 'none' || Number.parseFloat(forcedActionStyle.borderWidth) < 1)
+    && forcedActionStyle.outlineStyle === 'none'
+  ) {
+    throw new Error(`Snart-action lacks a forced-colors border or outline: ${JSON.stringify(forcedActionStyle)}`);
+  }
+  await page.emulateMedia({ forcedColors: 'none' });
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  const soonZoomOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  if (soonZoomOverflow > 0) throw new Error(`Snart overflows horizontally at 200% text: ${soonZoomOverflow}`);
+
   const snapshot = () => page.evaluate(async () => JSON.stringify({
     url: location.href,
     history: history.state,
@@ -1926,6 +1964,18 @@ async function runSoonReadiness(
   }
   if (!/Ingenting å forberede/iu.test(await emptyable.innerText()) || await emptyable.locator('[data-snart-item]').count() !== 0) throw new Error('January actionable fixture did not reach model empty');
 
+  const retained = await openSoonState('retained');
+  while (await retained.getByRole('button', { name: 'Har allerede', exact: true }).count() > 0) {
+    await retained.getByRole('button', { name: 'Har allerede', exact: true }).first()
+      .evaluate((button) => (button as HTMLButtonElement).click());
+  }
+  if (
+    await retained.locator('[data-snart-item]').count() < 1
+    || !/Ikke fremhevet for perioden/iu.test(await retained.innerText())
+  ) {
+    throw new Error('Warm Snart did not retain not_highlighted after all actions were marked');
+  }
+
   await openPlanlegg(page, `${fixture.path}&snart-e2e=free`);
   const freeSoon = page.getByRole('radio', { name: 'Snart', exact: true });
   await freeSoon.evaluate((radio) => (radio as HTMLInputElement).click());
@@ -1958,6 +2008,29 @@ async function runSoonReadiness(
   const unavailable = page.locator('.snart-plan');
   await unavailable.waitFor({ state: 'visible' });
   if (!/ikke godt nok historisk grunnlag/iu.test(await unavailable.innerText()) || await unavailable.locator('[data-snart-item]').count() !== 0) throw new Error('Unsupported home did not fail closed');
+
+  const navigationForAge = page.getByRole('navigation').first();
+  await navigationForAge.getByRole('button', { name: /^Familie/u }).click();
+  const switchChild = page.getByRole('button', { name: /Bytt barn/u });
+  await switchChild.waitFor({ state: 'visible', timeout: 15_000 });
+  await switchChild.evaluate((button) => (button as HTMLButtonElement).click());
+  const childDialog = page.getByRole('dialog', { name: 'Bytt barn' });
+  await childDialog.getByRole('radio', { name: /Bytt til Eskil/u }).click();
+  await navigationForAge.getByRole('button', { name: /^Planlegg/u }).click();
+  await page.getByRole('radio', { name: 'Snart', exact: true }).evaluate((radio) => (radio as HTMLInputElement).click());
+  const ageUnavailable = page.locator('.snart-plan');
+  await ageUnavailable.waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    !/ikke godt nok historisk grunnlag/iu.test(await ageUnavailable.innerText())
+    || await ageUnavailable.locator('[data-snart-item]').count() !== 0
+  ) {
+    throw new Error('Age-ineligible existing child did not yield an empty Snart-unavailable state');
+  }
+  await navigationForAge.getByRole('button', { name: /^Familie/u }).click();
+  await page.getByRole('button', { name: /Bytt barn/u })
+    .evaluate((button) => (button as HTMLButtonElement).click());
+  await page.getByRole('dialog', { name: 'Bytt barn' })
+    .getByRole('radio', { name: /Bytt til Lillian/u }).click();
 
   const automaticB1 = await openSoonState('automatic-b1');
   const automaticB1Signature = await readSoonSignature();
@@ -1999,10 +2072,8 @@ async function runSoonReadiness(
     throw new Error('Har allerede fjernet ikke valgt konsept før reset');
   }
 
-  const navigation = page.getByRole('navigation').first();
-  await navigation.getByRole('button', { name: /^Hjem/u }).click();
-  await page.locator('.planlegg-screen').waitFor({ state: 'detached', timeout: 15_000 });
-  await navigation.getByRole('button', { name: /^Planlegg/u }).click();
+  await page.goto(`${BASE_URL}${fixture.path}&snart-e2e=plus`, { waitUntil: 'domcontentloaded' });
+  await page.getByRole('navigation').first().getByRole('button', { name: /^Planlegg/u }).click();
   await page.getByRole('heading', { level: 1, name: 'Planlegg', exact: true })
     .waitFor({ state: 'visible', timeout: 15_000 });
   await page.getByRole('radio', { name: 'Snart', exact: true })
@@ -2060,6 +2131,10 @@ async function runSoonReadiness(
   ));
   if (finalLeaks.length > 0) {
     throw new Error(`Snart lekket under A/B- eller resetmatrisen: ${finalLeaks.join(', ')}`);
+  }
+  const htmlLeaks = await page.content();
+  if (/2025-10-03|2023-12-03|\b(?:childId|child_id|birthLocalDate|actionTimestamp)\b/iu.test(htmlLeaks)) {
+    throw new Error('Snart DOM leaked a raw DOB, child-id field name, or action timestamp');
   }
 }
 
