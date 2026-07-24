@@ -132,7 +132,7 @@ function looksLikeCandidateShaAlias(key) {
   return (
     (normalized.includes('candidate') && normalized.includes('sha')) ||
     normalized === 'commit' ||
-    normalized === 'commitsha'
+    (normalized.includes('commit') && normalized.includes('sha'))
   );
 }
 
@@ -142,15 +142,7 @@ function looksLikePhase2CandidateShaAlias(key) {
   }
 
   const normalized = key.toLowerCase().replaceAll(/[^a-z0-9]/g, '');
-  return [
-    'candidatesha',
-    'phase1candidatesha',
-    'phase2candidatesha',
-    'phase2sha',
-    'finalcandidatesha',
-    'commit',
-    'commitsha',
-  ].includes(normalized);
+  return looksLikeCandidateShaAlias(key) || normalized === 'phase2sha';
 }
 
 export function parsePhase1CandidateSummary(text) {
