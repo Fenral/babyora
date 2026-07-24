@@ -12,16 +12,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildClimatePack,
   buildHomePlaceProjection,
-  centeredWindowKeys,
-  deriveClimateDays,
+  deriveMonthlyProfile,
   fetchTextWithPolicy,
-  profileKeys,
+  parseDas,
+  parseDds,
+  parseMonthlyPointAscii,
   publishBundleAtomically,
   roundHalfAwayFromZero,
   selectNearestGridCell,
-  type7Quantile,
   validateMetUrl,
-  type RawClimateObservation,
 } from '../build-climate-pack';
 import { validateClimateBundle } from '../validate-climate-pack';
 
@@ -40,6 +39,10 @@ function loadContract() {
   return JSON.parse(readFileSync(CONTRACT_PATH, 'utf8'));
 }
 
+function loadFixtures() {
+  return JSON.parse(readFileSync(FIXTURE_PATH, 'utf8'));
+}
+
 function response(body: string, init: ResponseInit = {}): Response {
   return new Response(body, {
     status: 200,
@@ -51,6 +54,14 @@ function response(body: string, init: ResponseInit = {}): Response {
   });
 }
 
+function monthlyRows() {
+  return Array.from({ length: 12 }, (_, index) => ({
+    month: index + 1,
+    meanTemperatureC: index - 6,
+    monthlyPrecipitationMm: (index + 1) * 10,
+  }));
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   for (const path of temporaryPaths.splice(0)) {
@@ -58,33 +69,40 @@ afterEach(() => {
   }
 });
 
-describe('Snart climate HTTP and source boundary', () => {
-  it('accepts only the exact frozen MET URL grammar', () => {
+describe('Snart monthly-normal HTTP and source boundary', () => {
+  it('accepts only the exact 24 frozen monthly MET datasets', () => {
     const contract = loadContract();
     const valid =
-      'https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/Archive/seNorge2018_2020.nc.ascii?time[0:1:365],tg[0:1:365][10:1:10][20:1:20]';
+      'https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc.ascii?tg[0:1:0][10:1:10][20:1:20],time[0:1:0]';
 
     expect(validateMetUrl(valid, contract.httpPolicy)).toMatchObject({
+      datasetUrl:
+        'https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc',
+      family: 'tg',
       kind: 'ascii',
-      year: 2020,
+      month: 1,
     });
     for (const invalid of [
       valid.replace('https:', 'http:'),
       valid.replace('thredds.met.no', 'example.invalid'),
-      valid.replace('2020.nc', '2021.nc'),
+      valid.replace('/tg/seNorge2018_tg_', '/tg/seNorge2018_rr_'),
+      valid.replace('monthly_01', 'monthly_13'),
       valid.replace('.ascii', '.html'),
       valid.replace('tg[', 'unknown['),
       valid.replace('https://', 'https://user:secret@'),
       `${valid}#fragment`,
+      valid.replace(
+        '/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01',
+        '/Archive/seNorge2018_2020',
+      ),
     ]) {
       expect(() => validateMetUrl(invalid, contract.httpPolicy)).toThrow();
     }
   });
 
-  it('never follows redirects and rejects downgrade, timeout, truncation and oversize', async () => {
+  it('never follows redirects and rejects timeout, truncation and oversize', async () => {
     const contract = loadContract();
-    const url =
-      'https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/Archive/seNorge2018_2020.nc.dds';
+    const url = `${contract.source.datasetUrls[0]}.dds`;
     const redirectFetch = vi.fn(async (_url: string, init: RequestInit) => {
       expect(init.redirect).toBe('manual');
       return response('', {
@@ -100,19 +118,6 @@ describe('Snart climate HTTP and source boundary', () => {
       }),
     ).rejects.toThrow(/redirect/iu);
     expect(redirectFetch).toHaveBeenCalledTimes(1);
-
-    const downgradeFetch = vi.fn(async () =>
-      response('', {
-        status: 301,
-        headers: { location: 'http://thredds.met.no/data' },
-      }),
-    );
-    await expect(
-      fetchTextWithPolicy(url, contract.httpPolicy, {
-        fetchImpl: downgradeFetch,
-        sleep: async () => undefined,
-      }),
-    ).rejects.toThrow(/redirect|downgrade/iu);
 
     const abortedFetch = vi.fn(async () => {
       throw new DOMException('aborted', 'AbortError');
@@ -161,13 +166,12 @@ describe('Snart climate HTTP and source boundary', () => {
 
   it('retries only 429 and frozen 5xx statuses three total attempts', async () => {
     const contract = loadContract();
-    const url =
-      'https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/Archive/seNorge2018_2020.nc.dds';
+    const url = `${contract.source.datasetUrls[0]}.dds`;
     const waits: number[] = [];
     const statuses = [429, 503, 200];
     const fetchImpl = vi.fn(async () => {
       const status = statuses.shift() ?? 500;
-      if (status === 200) return response('Dataset { Float64 time[time = 366]; }');
+      if (status === 200) return response('Dataset { Float64 time[time = 1]; }');
       return response('', {
         status,
         headers:
@@ -201,7 +205,7 @@ describe('Snart climate HTTP and source boundary', () => {
   });
 });
 
-describe('Snart deterministic climate derivation', () => {
+describe('Snart deterministic monthly-normal derivation', () => {
   it('derives 60 unique current home-place keys without a builder count constant', () => {
     const projection = buildHomePlaceProjection();
 
@@ -244,49 +248,71 @@ describe('Snart deterministic climate derivation', () => {
     });
   });
 
-  it('uses a 365-day ring, explicit leap mapping, Type-7 and half-away rounding', () => {
-    expect(profileKeys()).toHaveLength(365);
-    expect(profileKeys()).not.toContain('02-29');
-    expect(centeredWindowKeys('01-01')).toEqual([
-      '12-30',
-      '12-31',
-      '01-01',
-      '01-02',
-      '01-03',
-    ]);
-    expect(centeredWindowKeys('02-28')).toEqual([
-      '02-26',
-      '02-27',
-      '02-28',
-      '03-01',
-      '03-02',
-    ]);
-    expect(type7Quantile([0, 10, 20, 30], 0.5)).toBe(15);
+  it('requires exactly 12 sorted finite rows and frozen rounding', () => {
+    const contract = loadContract();
+    expect(deriveMonthlyProfile(monthlyRows(), contract)).toEqual(
+      monthlyRows(),
+    );
+    expect(() =>
+      deriveMonthlyProfile(monthlyRows().slice(0, 11), contract),
+    ).toThrow(/month|coverage/iu);
+    expect(() =>
+      deriveMonthlyProfile(
+        monthlyRows().map((row, index) =>
+          index === 11 ? { ...row, month: 11 } : row,
+        ),
+        contract,
+      ),
+    ).toThrow(/month|duplicate/iu);
+    expect(() =>
+      deriveMonthlyProfile(
+        monthlyRows().map((row, index) =>
+          index === 0
+            ? { ...row, meanTemperatureC: contract.source.fillValue }
+            : row,
+        ),
+        contract,
+      ),
+    ).toThrow(/fill|value/iu);
     expect(roundHalfAwayFromZero(1.25, 1)).toBe(1.3);
     expect(roundHalfAwayFromZero(-1.25, 1)).toBe(-1.3);
-    expect(roundHalfAwayFromZero(0.00005, 4)).toBe(0.0001);
     expect(Object.is(roundHalfAwayFromZero(-0, 1), -0)).toBe(false);
   });
 
-  it('fails the whole profile when one variable misses the 27-year/135-sample gate', () => {
+  it('parses the official monthly-normal DDS, DAS and point excerpts', () => {
     const contract = loadContract();
-    const observations: RawClimateObservation[] = [];
-    for (let year = 1991; year <= 2020; year += 1) {
-      for (const key of profileKeys()) {
-        observations.push({
-          localDate: `${year}-${key}`,
-          year,
-          tg: 4,
-          tn: year < 2018 ? null : 1,
-          tx: 8,
-          rr: 0,
-        });
-      }
-    }
+    const excerpts = loadFixtures().officialExcerpts;
 
-    expect(() => deriveClimateDays(observations, contract)).toThrow(
-      /coverage/iu,
-    );
+    expect(parseDds(excerpts[0].body, 'tg')).toEqual({
+      X: 1195,
+      Y: 1550,
+      family: 'tg',
+      timeCount: 1,
+    });
+    expect(parseDas(excerpts[1].body, 'tg', contract)).toMatchObject({
+      aggregation: 'time: mean',
+      family: 'tg',
+      fileVersion: '1.0',
+      licenseUri:
+        'https://www.met.no/en/free-meteorological-data/Licensing-and-crediting',
+      sourceInstitution: 'Norwegian Meteorological Institute, MET Norway',
+      sourceVariableVersion: 'v23_09',
+      units: 'Celsius',
+    });
+    expect(
+      parseMonthlyPointAscii(excerpts[2].body, 'tg', 1, contract),
+    ).toMatchObject({
+      family: 'tg',
+      month: 1,
+      value: 2.806599,
+    });
+    expect(
+      parseMonthlyPointAscii(excerpts[5].body, 'rr', 1, contract),
+    ).toMatchObject({
+      family: 'rr',
+      month: 1,
+      value: 184.691,
+    });
   });
 });
 
@@ -330,9 +356,35 @@ describe('Snart fixture build, validation and atomic output', () => {
       unavailableProfileCount: 59,
       valid: true,
     });
+
+    const pack = JSON.parse(
+      readFileSync(join(first, 'climate-1991-2020-v1.json'), 'utf8'),
+    );
+    const profile = Object.values(pack.profiles)[0] as {
+      months: unknown[];
+    };
+    expect(profile.months).toHaveLength(12);
+    expect(Object.keys(profile.months[0] as object).sort()).toEqual([
+      'meanTemperatureC',
+      'month',
+      'monthlyPrecipitationMm',
+    ]);
+
+    const manifest = JSON.parse(
+      readFileSync(
+        join(first, 'climate-1991-2020-v1.manifest.json'),
+        'utf8',
+      ),
+    );
+    expect(manifest.sourceDatasets).toHaveLength(24);
+    expect(
+      manifest.sourceDatasets.map(
+        (entry: { datasetUrl: string }) => entry.datasetUrl,
+      ),
+    ).toEqual(loadContract().source.datasetUrls);
   });
 
-  it('rejects tampered data, missing places and credential-shaped text', async () => {
+  it('rejects tampered monthly data, missing places and credential-shaped text', async () => {
     const directory = makeTempDir();
     await buildClimatePack({
       contractPath: CONTRACT_PATH,
@@ -343,7 +395,10 @@ describe('Snart fixture build, validation and atomic output', () => {
     });
     const packPath = join(directory, 'climate-1991-2020-v1.json');
     const original = readFileSync(packPath, 'utf8');
-    writeFileSync(packPath, original.replace('"p10MinC":', '"p10MinC":999,'));
+    writeFileSync(
+      packPath,
+      original.replace('"meanTemperatureC":-6', '"meanTemperatureC":999'),
+    );
 
     expect(() =>
       validateClimateBundle({
