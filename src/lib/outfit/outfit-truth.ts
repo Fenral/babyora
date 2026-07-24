@@ -94,6 +94,11 @@ export type CreateOutfitTruthSnapshotArgsV1 = Readonly<{
   pose: OutfitAvatarPose;
 }>;
 
+/**
+ * Runtime provenance for values canonicalized and recursively frozen by this
+ * module. Membership does not authenticate engine origin and is not a
+ * cryptographic claim about the caller that supplied the plain input data.
+ */
 const FACTORY_SNAPSHOTS = new WeakSet<object>();
 const ACTIVITY = new Set(['vogn', 'baeresele', 'utelek', 'soevn']);
 const LAYER_CATEGORY = new Set([
@@ -397,6 +402,9 @@ export function createOutfitTruthSnapshot(
   assertRecommendInput(args.input);
   assertRecommendation(args.finalizedRecommendation, args.input);
 
+  // Deterministic content binding, not engine-origin authentication. Any
+  // content change gets a new identity without rerunning the recommendation
+  // engine, which also keeps finalized alternative outcomes representable.
   const recommendationContentDigest = stableHash(
     stableSerialize({
       input: args.input,

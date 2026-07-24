@@ -92,6 +92,20 @@ describe('canonical outfit truth', () => {
     expect(altered.snapshot.snapshotId).not.toBe(
       original.snapshot.snapshotId,
     );
+    expect(
+      altered.snapshot.garments.find(
+        (garment) =>
+          garment.sourceLabel === 'fabricated provenance layer',
+      ),
+    ).toMatchObject({
+      catalogGarmentId: null,
+      bodyRegion: 'unknown',
+      bodyAnchor: null,
+      avatarCoverage: null,
+      visibleOnAvatar: false,
+    });
+    expect(altered.snapshot.avatar.verifiedAssetPath).toBeNull();
+    expect(altered.snapshot.avatar.visibleGarmentIds).toEqual([]);
   });
 
   it.each([
