@@ -53,6 +53,7 @@ import {
   resolveRuntimeCapabilityAccess,
 } from '../lib/premium/gating';
 import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
+import type { PaywallTrigger } from '../lib/premium/products';
 import { useAccess } from '../lib/premium/use-access';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
@@ -312,6 +313,7 @@ function PlanleggData({
   const [forecastOpen, setForecastOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paywallTrigger, setPaywallTrigger] = useState<HTMLElement | null>(null);
+  const [paywallTriggerType, setPaywallTriggerType] = useState<PaywallTrigger>('imorgen');
   const [paywallAccessGeneration, setPaywallAccessGeneration] = useState(0);
   const paywallActionRef = useRef<HTMLButtonElement | null>(null);
   const weekAccess = useMemo(() => resolvePlanningViewAccess('week', {
@@ -454,6 +456,12 @@ function PlanleggData({
       focusTarget?.focus();
     });
   }, [setPaywallOpen]);
+  const openPaywall = useCallback((trigger: PaywallTrigger, element: HTMLButtonElement) => {
+    setPaywallTrigger(element);
+    setPaywallTriggerType(trigger);
+    setPaywallAccessGeneration(currentWeekAccessTransition.generation);
+    setPaywallOpen(true);
+  }, [currentWeekAccessTransition.generation]);
   const changeRailHeadStyle: CSSProperties = {
     fontSize: '1.25rem',
     fontWeight: 640,
@@ -906,6 +914,20 @@ function PlanleggData({
         </p>
       )}
 
+      {isSoonView && soonAccess.presentation === 'teaser' && (
+        <section className="planlegg-screen__week-weather" data-planlegg-access="soon-teaser">
+          <h2>Snart</h2>
+          <p>Se historiske forberedelser med Babyora Plus.</p>
+          <button
+            ref={paywallActionRef}
+            type="button"
+            onClick={(event) => openPaywall('snart', event.currentTarget)}
+          >
+            Se historiske forberedelser med Babyora Plus
+          </button>
+        </section>
+      )}
+
       {showAdvice && (
         <>
           <div className="planlegg-screen__answer">
@@ -975,11 +997,7 @@ function PlanleggData({
             <button
               ref={paywallActionRef}
               type="button"
-              onClick={(event) => {
-                setPaywallTrigger(event.currentTarget);
-                setPaywallAccessGeneration(currentWeekAccessTransition.generation);
-                setPaywallOpen(true);
-              }}
+              onClick={(event) => openPaywall('imorgen', event.currentTarget)}
             >
               Se uke med Babyora Plus
             </button>
@@ -998,11 +1016,11 @@ function PlanleggData({
         />
       )}
     </section>
-    {paywallOpen && weekAccess.access.state !== 'neutral'
+    {paywallOpen && viewAccess.access.state !== 'neutral'
       && paywallAccessGeneration === currentWeekAccessTransition.generation && (
       <PaywallDialog
         open
-        trigger="imorgen"
+        trigger={paywallTriggerType}
         onClose={closePaywall}
         returnFocusTo={paywallTrigger}
       />
