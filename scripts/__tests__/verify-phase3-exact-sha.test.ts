@@ -10,12 +10,13 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   isPathWithinResolvedRoot,
   parsePhase1CandidateSummary,
+  parsePhase2HandoffSummary,
   parsePhase3CandidateRecord,
 } from '../verify-phase3-exact-sha.mjs';
 
@@ -277,6 +278,61 @@ describe('pure exact-label and path guards', () => {
     }
   });
 
+  it('rejects quoted, dotted, and semantic duplicate Phase 1 SHA keys', () => {
+    const sha = '1'.repeat(40);
+    const canonical = [
+      '---',
+      'status: PASS',
+      `candidate_sha: ${sha}`,
+    ];
+
+    for (const ambiguousLine of [
+      `candidate.sha: ${sha}`,
+      `commit.sha: ${sha}`,
+      `"candidate_sha": ${sha}`,
+      `'candidate_sha': ${sha}`,
+      `phase1.candidate.sha: ${sha}`,
+      `"phase1_candidate_sha": ${sha}`,
+      'metadata.version: 1',
+      '"status": PASS',
+    ]) {
+      expect(() =>
+        parsePhase1CandidateSummary(
+          [...canonical, ambiguousLine, '---'].join('\n'),
+        ),
+      ).toThrow();
+    }
+  });
+
+  it('rejects quoted, dotted, and semantic duplicate Phase 2 SHA keys', () => {
+    const sha = '2'.repeat(40);
+    const canonical = [
+      '---',
+      'status: PASS',
+      `phase2_candidate_sha: ${sha}`,
+      'feature_flag: true',
+      `phase1_candidate_sha: ${sha}`,
+    ];
+
+    for (const ambiguousLine of [
+      `candidate.sha: ${sha}`,
+      `commit.sha: ${sha}`,
+      `"phase2_candidate_sha": ${sha}`,
+      `'phase2_candidate_sha': ${sha}`,
+      `phase2.candidate.sha: ${sha}`,
+      `phase1.candidate.sha: ${sha}`,
+      `"phase1_candidate_sha": ${sha}`,
+      'metadata.version: 1',
+      '"feature_flag": true',
+    ]) {
+      expect(() =>
+        parsePhase2HandoffSummary(
+          [...canonical, ambiguousLine, '---'].join('\n'),
+        ),
+      ).toThrow();
+    }
+  });
+
   it('rejects duplicate or aliased candidate JSON labels', () => {
     const sha = '2'.repeat(40);
     const hash = 'a'.repeat(64);
@@ -333,6 +389,33 @@ describe('candidate mode', () => {
     expect(source).toContain('execFileSync');
     expect(source).not.toMatch(/\bexecSync\s*\(/);
     expect(source).not.toMatch(/\bshell\s*:/);
+  });
+
+  it('executes and fails closed through a real directory junction or symlink', () => {
+    const parent = mkdtempSync(join(tmpdir(), 'phase3 verifier entrypoint '));
+    temporaryParents.push(parent);
+    const linkedScripts = join(parent, 'scripts through junction');
+    symlinkSync(
+      dirname(scriptPath),
+      linkedScripts,
+      process.platform === 'win32' ? 'junction' : 'dir',
+    );
+    const indirectScriptPath = join(linkedScripts, basename(scriptPath));
+
+    const direct = spawnSync(process.execPath, [scriptPath], {
+      encoding: 'utf8',
+      shell: false,
+    });
+    const indirect = spawnSync(process.execPath, [indirectScriptPath], {
+      encoding: 'utf8',
+      shell: false,
+    });
+
+    expect(direct.status).toBe(1);
+    expect(indirect.status).toBe(direct.status);
+    expect(indirect.stdout).toBe(direct.stdout);
+    expect(indirect.stderr).toBe(direct.stderr);
+    expect(output(indirect)).toMatch(/verification mode is required/i);
   });
 
   it.each([
@@ -628,13 +711,14 @@ describe('phase2-handoff mode', () => {
   function runPhase2(
     harness: Harness,
     summaryPath: string,
+    expectedFeatureFlag = 'true',
   ): ProcessResult {
     return runScript(harness, [
       'phase2-handoff',
       '--summary',
       summaryPath,
       '--expected-feature-flag',
-      'true',
+      expectedFeatureFlag,
       '--ancestor-of',
       'HEAD',
     ]);
@@ -660,6 +744,26 @@ describe('phase2-handoff mode', () => {
       ancestorOf: harness.candidateSha,
     });
   });
+
+  it.each([
+    ['false summary with false configuration', 'false', 'false'],
+    ['true summary with false configuration', 'true', 'false'],
+  ])(
+    'rejects %s because enabled handoff is intrinsic',
+    (_name, summaryFeatureFlag, expectedFeatureFlag) => {
+      const harness = createHarness();
+      const summaryPath = writePhase2Summary(harness, [
+        'status: PASS',
+        `phase2_candidate_sha: ${harness.phase1Sha}`,
+        `feature_flag: ${summaryFeatureFlag}`,
+      ]);
+
+      expectFailure(
+        runPhase2(harness, summaryPath, expectedFeatureFlag),
+        /feature.flag|expected-feature-flag/i,
+      );
+    },
+  );
 
   it('rejects malformed, aliased, disabled, missing, and nonancestor handoffs', () => {
     const cases = [
