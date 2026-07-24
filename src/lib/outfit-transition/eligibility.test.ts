@@ -125,10 +125,10 @@ describe('decideTransitionEligibility', () => {
 
   it('returns a deeply immutable snapshot detached from caller data', () => {
     const candidate = createValidCandidate();
-    candidate.sourceSnapshot = cloneSnapshot(candidate.sourceSnapshot);
-    candidate.targetSnapshot = cloneSnapshot(candidate.targetSnapshot);
-    const sourceInput = candidate.sourceSnapshot;
-    const targetInput = candidate.targetSnapshot;
+    const sourceInput = cloneSnapshot(candidate.sourceSnapshot);
+    const targetInput = cloneSnapshot(candidate.targetSnapshot);
+    candidate.sourceSnapshot = sourceInput;
+    candidate.targetSnapshot = targetInput;
     const decision = decideTransitionEligibility(candidate);
 
     expect(decision.kind).toBe('animate');
@@ -138,8 +138,16 @@ describe('decideTransitionEligibility', () => {
 
     sourceInput.items[0]!.rect.width = 999;
     targetInput.items[1]!.rect.x = 999;
-    candidate.expectedIdentity.snapshotId = 'mutated';
-    candidate.currentViewport.width = 999;
+    (
+      candidate.expectedIdentity as {
+        snapshotId: string;
+      }
+    ).snapshotId = 'mutated';
+    (
+      candidate.currentViewport as {
+        width: number;
+      }
+    ).width = 999;
     candidate.expectedItemIds.reverse();
 
     expect(decision.snapshot.items[0]?.sourceRect.width).toBe(60);
