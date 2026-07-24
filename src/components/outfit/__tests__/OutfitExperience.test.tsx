@@ -23,6 +23,39 @@ function snapshot() {
   return result.snapshot;
 }
 
+const LONGEST_INVENTORY_GARMENT_LABEL =
+  'tykke ullsokker (vinterdress dekker)';
+
+function longestInventoryLabelSnapshot() {
+  const input = {
+    weather: {
+      feelsLikeC: -21,
+      tempC: -17,
+      windMs: 2,
+      precipMmH: 0,
+    },
+    child: { ageMonths: 10 },
+    activity: 'utelek',
+  } as const;
+  const result = createOutfitTruthSnapshot({
+    transitionContextId: 'component-longest-inventory-label',
+    input,
+    finalizedRecommendation: recommend(input),
+    pose: 'sitting',
+  });
+  if (result.kind !== 'supported') {
+    throw new Error('longest-label fixture must be supported');
+  }
+  if (
+    !result.snapshot.garments.some(
+      (garment) => garment.label === LONGEST_INVENTORY_GARMENT_LABEL,
+    )
+  ) {
+    throw new Error('fixture must contain the longest inventory garment label');
+  }
+  return result.snapshot;
+}
+
 type ComparisonDialogProps = Readonly<{
   option: OutfitAlternativeOptionV1;
   sourceLabel: string;
@@ -253,6 +286,34 @@ describe('OutfitExperience', () => {
     expect(source).not.toContain('layoutOutfitMap(snapshot, 560)');
   });
 
+  it('keeps the longest inventory row intrinsically wrappable at 560px and 200% text', () => {
+    const truth = longestInventoryLabelSnapshot();
+    const html = renderToStaticMarkup(
+      <OutfitExperience snapshot={truth} temp="kald" />,
+    );
+    const css = readFileSync(
+      new URL('../Antrekkskart.css', import.meta.url),
+      'utf8',
+    );
+
+    expect(html).toContain(
+      `<span class="outfit-row__label">${LONGEST_INVENTORY_GARMENT_LABEL}</span>`,
+    );
+    expect(css).toMatch(
+      /\.outfit-row\s*\{[^}]*min-inline-size:\s*0;[^}]*flex-wrap:\s*wrap;/,
+    );
+    expect(css).toMatch(
+      /\.outfit-row\s*\{[^}]*box-sizing:\s*border-box;/,
+    );
+    expect(css).toMatch(
+      /\.outfit-row__label\s*\{[^}]*min-inline-size:\s*0;[^}]*overflow-wrap:\s*anywhere;/,
+    );
+    expect(css).toMatch(
+      /\.outfit-row__detail\s*\{[^}]*min-inline-size:\s*0;[^}]*overflow-wrap:\s*anywhere;/,
+    );
+    expect(css).not.toContain('(min-resolution: 1.9dppx)');
+  });
+
   it('restores the comparison origin once and makes every later close idempotent', () => {
     let focusCount = 0;
     const lifecycle = createComparisonFocusLifecycle();
@@ -278,7 +339,36 @@ describe('OutfitExperience', () => {
     expect(focusCount).toBe(1);
   });
 
-  it('listens for Escape only while comparison is open and cannot steal focus later', () => {
+  it('handles Escape without a dialog by clearing transient state and preserving selection', () => {
+    const truth = snapshot();
+    const lifecycle = createComparisonFocusLifecycle();
+    const keys = escapeTarget();
+    const selectedId = truth.garments[0]!.itemId;
+    let focusId = truth.garments[1]!.itemId;
+    let hoverId = truth.garments[2]!.itemId;
+
+    const detach = attachComparisonEscapeListener(
+      keys.target,
+      lifecycle.isOpen(),
+      () => {
+        focusId = null;
+        hoverId = null;
+        lifecycle.close({ restoreFocus: true });
+      },
+    );
+
+    expect(keys.listenerCount()).toBe(1);
+    keys.dispatch('Escape');
+    expect(focusId).toBeNull();
+    expect(hoverId).toBeNull();
+    expect(selectedId).toBe(truth.garments[0]!.itemId);
+    expect(lifecycle.isOpen()).toBe(false);
+
+    detach();
+    expect(keys.listenerCount()).toBe(0);
+  });
+
+  it('closes an open comparison on Escape and cannot steal focus later', () => {
     let focusCount = 0;
     const lifecycle = createComparisonFocusLifecycle();
     const keys = escapeTarget();
@@ -288,14 +378,6 @@ describe('OutfitExperience', () => {
         focusCount += 1;
       },
     };
-
-    const detachClosed = attachComparisonEscapeListener(
-      keys.target,
-      false,
-      () => lifecycle.close({ restoreFocus: true }),
-    );
-    expect(keys.listenerCount()).toBe(0);
-    detachClosed();
 
     lifecycle.open(origin);
     const detachOpen = attachComparisonEscapeListener(
