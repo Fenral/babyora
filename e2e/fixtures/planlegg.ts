@@ -13,6 +13,12 @@ export type PlanleggE2EFixture = Readonly<{
 }>;
 
 export const PLANLEGG_E2E_FIXTURES = Object.freeze({
+  snart: Object.freeze({
+    id: 'planlegg-snart-readiness-v1',
+    path: '/?seed=demo',
+    viewport: Object.freeze({ width: 390, height: 844 }),
+    timeZone: 'Europe/Oslo',
+  }),
   harness: Object.freeze({
     id: 'planlegg-harness-v1',
     path: '/?seed=demo',

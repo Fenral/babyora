@@ -1442,7 +1442,7 @@ async function runComposition(
   }
   await screen.getByRole('heading', { level: 1, name: 'Planlegg', exact: true }).waitFor();
   const context = screen.locator('.planlegg-screen__context');
-  if (!(await context.innerText()).includes('Lillian · Trondheim')) {
+  if (!/Lillian\s*·.*Trondheim/u.test(await context.innerText())) {
     throw new Error(`Synlig barn-/stedskontekst avvek: ${await context.innerText()}`);
   }
   const radios = screen.getByRole('radio');
@@ -1738,6 +1738,67 @@ async function beginEntitlementRefresh(page: Page): Promise<void> {
     window.dispatchEvent(new Event('planlegg:e2e-entitlement-begin'));
     document.dispatchEvent(new Event('visibilitychange'));
   });
+}
+
+async function runSoonReadiness(
+  page: Page,
+  fixture: PlanleggE2EFixture,
+  forecastState: ForecastState,
+): Promise<void> {
+  const root = process.cwd();
+  const availability = readFileSync(join(root, 'src/lib/premium/plus-features.ts'), 'utf8');
+  const session = readFileSync(join(root, 'src/lib/planning/snart-session.ts'), 'utf8');
+  const privacy = readFileSync(join(root, 'src/lib/planning/__tests__/snart-privacy-contract.test.ts'), 'utf8');
+  const contract = readFileSync(
+    join(root, '.planning/phases/01-planlegg-dagslinjen/01-SNART-AUTONOMY-CONTRACT.json'),
+    'utf8',
+  );
+  const previousEvidence = ['01-13', '01-14', '01-15'].map((plan) => readFileSync(
+    join(root, `.planning/phases/01-planlegg-dagslinjen/evidence/${plan}-candidate.json`),
+    'utf8',
+  ));
+  if (
+    !/soon_preparation:\s*false/u.test(availability)
+    || !/family_sharing:\s*false/u.test(availability)
+    || !/personal_calibration:\s*false/u.test(availability)
+    || !session.includes('projectSnartSession')
+    || !session.includes('createSnartSessionEvaluator')
+    || !privacy.includes('localStorage')
+    || !privacy.includes('indexedDB')
+    || !privacy.includes('CacheStorage')
+    || !privacy.includes('automatic')
+    || !contract.includes('packSha256')
+    || previousEvidence.some((record) => !record.includes('"gateStatus":"PENDING_REVIEW"') && !record.includes('"gateStatus":"PASS"'))
+  ) {
+    throw new Error('Snart readiness preflight mangler låst capability-, privacy-, contract- eller tidligere evidence-binding');
+  }
+
+  const requests: string[] = [];
+  page.on('request', (request) => requests.push(request.url()));
+  forecastState.delivery = 'success';
+  forecastState.mode = 'many';
+  await openPlanlegg(page, fixture.path);
+  await page.locator('main#main').waitFor({ state: 'visible', timeout: 15_000 });
+  const rendered = await page.locator('body').innerText();
+  if (
+    /historiske forberedelser|1991–2020|har allerede/iu.test(rendered)
+    || requests.some((url) => /thredds|frost|climate|snart/iu.test(url))
+  ) {
+    throw new Error('False capability lekket Snart-copy eller utførte runtime-klimaforespørsel');
+  }
+  const beforeUrl = page.url();
+  const beforeStorage = await page.evaluate(() => JSON.stringify({
+    local: Object.keys(localStorage).sort(),
+    session: Object.keys(sessionStorage).sort(),
+  }));
+  await page.reload();
+  const afterStorage = await page.evaluate(() => JSON.stringify({
+    local: Object.keys(localStorage).sort(),
+    session: Object.keys(sessionStorage).sort(),
+  }));
+  if (page.url() !== beforeUrl || afterStorage !== beforeStorage) {
+    throw new Error('False-state Snart readiness endret URL eller browser storage');
+  }
 }
 
 async function settleEntitlement(page: Page, premium: boolean): Promise<void> {
@@ -2542,7 +2603,9 @@ async function main(): Promise<void> {
         forecastState,
         caseName === 'access',
       );
-      if (caseName === 'semantic-rail') {
+      if (caseName === 'snart') {
+        await runSoonReadiness(page, fixture, forecastState);
+      } else if (caseName === 'semantic-rail') {
         await runSemanticRail(page, fixture, forecastState);
       } else if (caseName === 'composition') {
         await runComposition(page, fixture);
