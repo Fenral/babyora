@@ -565,9 +565,9 @@ describe('outfit map responsive geometry', () => {
   it('keeps selectedItemId outside the layout options contract', () => {
     const snapshot = snapshotForCount(1);
     const attemptSelectionCoupling = (selectedItemId: OutfitItemId) => {
-      // @ts-expect-error Selection belongs to paired UI state, not geometry.
       return layoutOutfitMap(snapshot, 320, {
         textScale: 1,
+        // @ts-expect-error Selection belongs to paired UI state, not geometry.
         selectedItemId,
       });
     };
