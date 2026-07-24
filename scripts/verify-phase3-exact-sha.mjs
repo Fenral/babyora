@@ -11,7 +11,7 @@ import {
   resolve,
   sep,
 } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const SHA_40 = /^[0-9a-f]{40}$/;
 const SHA_256 = /^[0-9a-f]{64}$/;
@@ -104,14 +104,20 @@ function parseFrontmatter(text, label) {
 
   const fields = new Map();
   for (const line of lines.slice(1, closingIndex)) {
-    if (line.trim().length === 0 || /^\s/.test(line)) {
+    const trimmedLine = line.trim();
+    if (
+      trimmedLine.length === 0 ||
+      trimmedLine.startsWith('#') ||
+      /^\s/.test(line)
+    ) {
       continue;
     }
 
     const match = /^([A-Za-z0-9_-]+):[ \t]*(.*)$/.exec(line);
-    if (match === null) {
-      continue;
-    }
+    invariant(
+      match !== null,
+      `${label} contains unsupported top-level frontmatter syntax: ${line}`,
+    );
 
     const [, key, rawValue] = match;
     invariant(!fields.has(key), `${label} contains duplicate key ${key}`);
@@ -131,13 +137,14 @@ function looksLikeCandidateShaAlias(key) {
 }
 
 function looksLikePhase2CandidateShaAlias(key) {
-  if (key === 'phase2_candidate_sha') {
+  if (key === 'phase2_candidate_sha' || key === 'phase1_candidate_sha') {
     return false;
   }
 
   const normalized = key.toLowerCase().replaceAll(/[^a-z0-9]/g, '');
   return [
     'candidatesha',
+    'phase1candidatesha',
     'phase2candidatesha',
     'phase2sha',
     'finalcandidatesha',
@@ -190,13 +197,13 @@ export function parsePhase2HandoffSummary(text) {
   );
   const featureFlag = fields.get('feature_flag');
   invariant(
-    featureFlag === 'true' || featureFlag === 'false',
-    'Phase 2 summary requires exact feature_flag boolean',
+    featureFlag === 'true',
+    'Phase 2 summary feature_flag must be intrinsically true',
   );
 
   return Object.freeze({
     phase2CandidateSha: candidateSha,
-    featureFlag: featureFlag === 'true',
+    featureFlag: true,
   });
 }
 
@@ -613,14 +620,13 @@ function parsePhase2Options(args) {
     'ancestor-of': { required: true },
   });
   invariant(
-    values['expected-feature-flag'] === 'true' ||
-      values['expected-feature-flag'] === 'false',
-    '--expected-feature-flag must be true or false',
+    values['expected-feature-flag'] === 'true',
+    '--expected-feature-flag must be intrinsically true',
   );
 
   return Object.freeze({
     summaryPath: values.summary,
-    expectedFeatureFlag: values['expected-feature-flag'] === 'true',
+    expectedFeatureFlag: true,
     ancestorOf: values['ancestor-of'],
   });
 }
@@ -864,7 +870,18 @@ function isMainModule() {
     return false;
   }
 
-  return pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
+  let invokedPath;
+  let loadedModulePath;
+  try {
+    invokedPath = realpathSync.native(resolve(process.argv[1]));
+    loadedModulePath = realpathSync.native(fileURLToPath(import.meta.url));
+  } catch (error) {
+    throw new Error(
+      `main-module canonical path resolution failed: ${errorOutput(error)}`,
+    );
+  }
+
+  return sameResolvedPath(invokedPath, loadedModulePath);
 }
 
 if (isMainModule()) {
