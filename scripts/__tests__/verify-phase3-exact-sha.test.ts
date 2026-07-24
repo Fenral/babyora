@@ -118,6 +118,70 @@ function decoratedCommitScalarCases(
   ];
 }
 
+function continuedCommitNodeCases(
+  conflictingSha: string,
+): readonly DecoratedCommitScalarCase[] {
+  return [
+    {
+      name: 'next-line plain scalar',
+      lines: ['candidate_commit:', `  ${conflictingSha}`],
+    },
+    {
+      name: 'next-line quoted scalar',
+      lines: ['candidate_commit:', `  "${conflictingSha}"`],
+    },
+    {
+      name: 'next-line explicit string tag',
+      lines: ['candidate_commit:', `  !!str ${conflictingSha}`],
+    },
+    {
+      name: 'next-line anchor decoration',
+      lines: ['candidate_commit:', `  &candidate ${conflictingSha}`],
+    },
+    {
+      name: 'next-line YAML alias to an indented commit anchor',
+      lines: [
+        'metadata:',
+        `  pinned: &candidate ${conflictingSha}`,
+        'candidate_commit:',
+        '  *candidate',
+      ],
+    },
+    {
+      name: 'next-line literal block scalar',
+      lines: ['candidate_commit:', '  |-', `    ${conflictingSha}`],
+    },
+    {
+      name: 'next-line folded block scalar',
+      lines: ['candidate_commit:', '  >-', `    ${conflictingSha}`],
+    },
+    {
+      name: 'next-line flow collection',
+      lines: ['candidate_commit:', `  [${conflictingSha}]`],
+    },
+  ];
+}
+
+function ordinaryMetadataControls(checksum: string): readonly string[] {
+  return [
+    'tags: [typescript, motion, replay, privacy, reduced-motion]',
+    'requires:',
+    '  - phase: 03-02',
+    '    provides: ordinary dependency metadata',
+    'notes: |-',
+    '  ordinary block metadata remains readable',
+    'tech-stack:',
+    '  added: []',
+    '  options: {mode: strict}',
+    'anchored_note: &ordinary ordinary',
+    'alias_note: *ordinary',
+    'quoted_note: "a literal # remains part of this quoted value"',
+    "single_quoted_note: 'another literal # value'",
+    'url_fragment: https://example.invalid/path#fragment',
+    `validation_evidence_sha256: ${checksum} # ordinary checksum comment`,
+  ];
+}
+
 type Harness = {
   parent: string;
   repository: string;
@@ -647,12 +711,7 @@ describe('pure exact-label and path guards', () => {
     const phase1Sha = '1'.repeat(40);
     const phase2Sha = '2'.repeat(40);
     const checksum = 'a'.repeat(64);
-    const controls = [
-      'notes: "a literal # remains part of this quoted value"',
-      "single_quoted_notes: 'another literal # value'",
-      'url_fragment: https://example.invalid/path#fragment',
-      `validation_evidence_sha256: ${checksum} # ordinary checksum comment`,
-    ];
+    const controls = ordinaryMetadataControls(checksum);
 
     expect(
       parsePhase1CandidateSummary(
@@ -718,6 +777,87 @@ describe('pure exact-label and path guards', () => {
       ).toThrow();
     },
   );
+
+  it.each(continuedCommitNodeCases('b'.repeat(40)))(
+    'rejects a Phase 1 $name',
+    ({ lines }) => {
+      expect(() =>
+        parsePhase1CandidateSummary(
+          [
+            '---',
+            'status: PASS',
+            `candidate_sha: ${'1'.repeat(40)}`,
+            ...lines,
+            '---',
+          ].join('\n'),
+        ),
+      ).toThrow();
+    },
+  );
+
+  it.each(continuedCommitNodeCases('b'.repeat(40)))(
+    'rejects a Phase 2 $name',
+    ({ lines }) => {
+      expect(() =>
+        parsePhase2HandoffSummary(
+          [
+            '---',
+            'status: PASS',
+            `phase2_candidate_sha: ${'2'.repeat(40)}`,
+            'feature_flag: true',
+            `phase1_candidate_sha: ${'1'.repeat(40)}`,
+            ...lines,
+            '---',
+          ].join('\n'),
+        ),
+      ).toThrow();
+    },
+  );
+
+  it('rejects semantic continuations on every Phase 1 security field', () => {
+    const candidateSha = '1'.repeat(40);
+    const canonical = [
+      '---',
+      'status: PASS',
+      `candidate_sha: ${candidateSha}`,
+    ];
+
+    for (const lines of [
+      ['status: PASS', '  FAIL', `candidate_sha: ${candidateSha}`],
+      ['status: PASS', `candidate_sha: ${candidateSha}`, '  trailing'],
+    ]) {
+      expect(() =>
+        parsePhase1CandidateSummary(['---', ...lines, '---'].join('\n')),
+      ).toThrow(/status|candidate_sha|unambiguous|continuation/i);
+    }
+
+    expect(
+      parsePhase1CandidateSummary([...canonical, '  # comment only', '---'].join('\n')),
+    ).toEqual({ phase1CandidateSha: candidateSha });
+  });
+
+  it('rejects semantic continuations on every Phase 2 security field', () => {
+    const phase2Sha = '2'.repeat(40);
+    const phase1Sha = '1'.repeat(40);
+    const securityFieldCases = [
+      ['status: PASS', '  FAIL', `phase2_candidate_sha: ${phase2Sha}`, 'feature_flag: true'],
+      ['status: PASS', `phase2_candidate_sha: ${phase2Sha}`, '  trailing', 'feature_flag: true'],
+      ['status: PASS', `phase2_candidate_sha: ${phase2Sha}`, 'feature_flag: true', '  false'],
+      [
+        'status: PASS',
+        `phase2_candidate_sha: ${phase2Sha}`,
+        'feature_flag: true',
+        `phase1_candidate_sha: ${phase1Sha}`,
+        '  trailing',
+      ],
+    ];
+
+    for (const lines of securityFieldCases) {
+      expect(() =>
+        parsePhase2HandoffSummary(['---', ...lines, '---'].join('\n')),
+      ).toThrow(/status|candidate_sha|feature_flag|unambiguous|continuation/i);
+    }
+  });
 
   it('rejects duplicate or aliased candidate JSON labels', () => {
     const sha = '2'.repeat(40);
@@ -1091,8 +1231,7 @@ describe('candidate mode', () => {
         '---',
         'status: PASS',
         `candidate_sha: ${harness.phase1Sha} # exact Phase 1 candidate`,
-        'notes: "a literal # remains ordinary metadata"',
-        `validation_evidence_sha256: ${'a'.repeat(64)} # checksum metadata`,
+        ...ordinaryMetadataControls('a'.repeat(64)),
         '---',
       ].join('\n'),
       'utf8',
@@ -1151,6 +1290,71 @@ describe('candidate mode', () => {
       );
     },
   );
+
+  it.each(continuedCommitNodeCases('b'.repeat(40)))(
+    'rejects a Phase 1 $name through candidate mode',
+    ({ lines }) => {
+      const harness = createHarness();
+      const continuedSummary = join(
+        harness.evidenceRoot,
+        'continued phase1.md',
+      );
+      writeFileSync(
+        continuedSummary,
+        [
+          '---',
+          'status: PASS',
+          `candidate_sha: ${harness.phase1Sha}`,
+          ...lines,
+          '---',
+        ].join('\n'),
+        'utf8',
+      );
+
+      expectFailure(
+        runScript(
+          harness,
+          replaceOption(
+            candidateArgs(harness),
+            '--phase1-summary',
+            continuedSummary,
+          ),
+        ),
+        /candidate SHA alias|frontmatter|continuation|alias/i,
+      );
+    },
+  );
+
+  it('rejects a continued canonical Phase 1 SHA through candidate mode', () => {
+    const harness = createHarness();
+    const continuedSummary = join(
+      harness.evidenceRoot,
+      'continued canonical phase1.md',
+    );
+    writeFileSync(
+      continuedSummary,
+      [
+        '---',
+        'status: PASS',
+        `candidate_sha: ${harness.phase1Sha}`,
+        '  trailing',
+        '---',
+      ].join('\n'),
+      'utf8',
+    );
+
+    expectFailure(
+      runScript(
+        harness,
+        replaceOption(
+          candidateArgs(harness),
+          '--phase1-summary',
+          continuedSummary,
+        ),
+      ),
+      /candidate_sha|frontmatter|continuation|unambiguous/i,
+    );
+  });
 
   it('rejects every semantic Phase 1 commit alias through candidate mode', () => {
     const harness = createHarness();
@@ -1300,8 +1504,7 @@ describe('phase2-handoff mode', () => {
       `phase2_candidate_sha: ${harness.phase1Sha} # exact Phase 2 candidate`,
       'feature_flag: true',
       `phase1_candidate_sha: ${harness.phase1Sha} # exact upstream candidate`,
-      'notes: "a literal # remains ordinary metadata"',
-      `validation_evidence_sha256: ${'a'.repeat(64)} # checksum metadata`,
+      ...ordinaryMetadataControls('a'.repeat(64)),
     ]);
     const result = runPhase2(harness, summaryPath);
 
@@ -1333,6 +1536,41 @@ describe('phase2-handoff mode', () => {
       );
     },
   );
+
+  it.each(continuedCommitNodeCases('b'.repeat(40)))(
+    'rejects a Phase 2 $name through handoff mode',
+    ({ lines }) => {
+      const harness = createHarness();
+      const summaryPath = writePhase2Summary(harness, [
+        'status: PASS',
+        `phase2_candidate_sha: ${harness.phase1Sha}`,
+        'feature_flag: true',
+        `phase1_candidate_sha: ${harness.phase1Sha}`,
+        ...lines,
+      ]);
+
+      expectFailure(
+        runPhase2(harness, summaryPath),
+        /candidate SHA alias|frontmatter|continuation|alias/i,
+      );
+    },
+  );
+
+  it('rejects a continued feature flag through handoff mode', () => {
+    const harness = createHarness();
+    const summaryPath = writePhase2Summary(harness, [
+      'status: PASS',
+      `phase2_candidate_sha: ${harness.phase1Sha}`,
+      'feature_flag: true',
+      '  false',
+      `phase1_candidate_sha: ${harness.phase1Sha}`,
+    ]);
+
+    expectFailure(
+      runPhase2(harness, summaryPath),
+      /feature.flag|frontmatter|continuation|unambiguous/i,
+    );
+  });
 
   it.each([
     ['false summary with false configuration', 'false', 'false'],
