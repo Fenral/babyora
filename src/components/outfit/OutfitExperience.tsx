@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type Ref } from 'react';
 import type { OutfitAlternativeOptionV1 } from '../../lib/outfit/alternative-options.js';
 import type { RegisterOutfitRow } from '../../lib/outfit/outfit-transition-contract.js';
 import type { OutfitItemId, OutfitTruthSnapshotV1 } from '../../lib/outfit/outfit-truth.js';
@@ -70,6 +70,25 @@ export function attachComparisonEscapeListener(
   return () => target.removeEventListener('keydown', onKeyDown);
 }
 
+type OutfitComparisonDialogProps = Readonly<{
+  option: OutfitAlternativeOptionV1;
+  sourceLabel: string;
+  headingRef?: Ref<HTMLHeadingElement>;
+  onConfirm: () => void;
+  onCancel: () => void;
+}>;
+
+// Kept here to preserve the plan's five-file component boundary.
+export function OutfitComparisonDialog({
+  option,
+  sourceLabel,
+  headingRef,
+  onConfirm,
+  onCancel,
+}: OutfitComparisonDialogProps) {
+  return <dialog open aria-labelledby="outfit-comparison-title" className="outfit-comparison"><h2 ref={headingRef} tabIndex={-1} id="outfit-comparison-title">{sourceLabel} til {option.targetLabel}</h2><p>Fordeler: {option.comparison.advantages.join(', ')}</p><p>Avveininger: {option.comparison.tradeoffs.join(', ')}</p><h3>Resultatet</h3><h4>Klær</h4><ol data-outfit-comparison-garments>{option.outcome.garments.map((item) => <li key={item.itemId}>{item.order}. {item.label}</li>)}</ol>{option.outcome.equipment.length > 0 && <><h4>Utstyr</h4><ul data-outfit-comparison-equipment>{option.outcome.equipment.map((item) => <li key={item.itemId}>{item.label}</li>)}</ul></>}<button type="button" onClick={onConfirm}>Velg dette antrekket</button><button type="button" onClick={onCancel}>Avbryt</button></dialog>;
+}
+
 export function OutfitExperience({ snapshot, options = EMPTY_OPTIONS, temp, registerOutfitRow }: Props) {
   const [selectedId, setSelectedId] = useState<OutfitItemId | null>(null); const [focusId, setFocusId] = useState<OutfitItemId | null>(null); const [hoverId, setHoverId] = useState<OutfitItemId | null>(null); const [compareId, setCompareId] = useState<OutfitItemId | null>(null);
   const session = useOutfitSelectionStore((state) => state.session); const open = useOutfitSelectionStore((state) => state.open); const select = useOutfitSelectionStore((state) => state.select); const reset = useOutfitSelectionStore((state) => state.reset); const close = useOutfitSelectionStore((state) => state.close);
@@ -98,5 +117,5 @@ export function OutfitExperience({ snapshot, options = EMPTY_OPTIONS, temp, regi
     if (compareId !== null && option === null) comparisonFocusLifecycle.clear();
   }, [compareId, option, comparisonFocusLifecycle]);
   const activate = (id: OutfitItemId) => setSelectedId(id);
-  return <section className="outfit-experience ba-temp-root" data-temp={temp}><Antrekkskart snapshot={current} selectedId={selectedId} highlightedId={highlightedId} captionId={captionId} onActivate={activate} onFocus={setFocusId} onHover={setHoverId} /><p ref={captionRef} tabIndex={-1} id={captionId} className="outfit-active-caption">{(current.garments.find((item) => item.itemId === highlightedId) ?? current.garments[0])?.label ?? 'Antrekk'}</p><OutfitGarmentList snapshot={current} selectedId={selectedId} highlightedId={highlightedId} captionId={captionId} registerOutfitRow={registerOutfitRow} onActivate={activate} onFocus={setFocusId} onHover={setHoverId} hasAlternative={(id) => authorizedOptions.some((candidate) => candidate.sourceItemId === id)} onAlternative={(id, trigger) => { comparisonFocusLifecycle.open(trigger); setCompareId(id); }} />{current !== snapshot && <button type="button" onClick={() => { reset(); }}>Tilbakestill antrekk</button>}{option && <dialog open aria-labelledby="outfit-comparison-title" className="outfit-comparison"><h2 ref={comparisonHeadingRef} tabIndex={-1} id="outfit-comparison-title">{current.garments.find((item) => item.itemId === option.sourceItemId)?.label ?? ''} til {option.targetLabel}</h2><p>Fordeler: {option.comparison.advantages.join(', ')}</p><p>Avveininger: {option.comparison.tradeoffs.join(', ')}</p><h3>Resultatet</h3><ol>{option.outcome.garments.map((item) => <li key={item.itemId}>{item.order}. {item.label}</li>)}</ol><button type="button" onClick={() => { if (select(option).ok) { setSelectedId(null); finishComparison(false); captionRef.current?.focus(); } }}>Velg dette antrekket</button><button type="button" onClick={closeComparison}>Avbryt</button></dialog>}<div className="outfit-recovery-copy" /></section>;
+  return <section className="outfit-experience ba-temp-root" data-temp={temp}><Antrekkskart snapshot={current} selectedId={selectedId} highlightedId={highlightedId} captionId={captionId} onActivate={activate} onFocus={setFocusId} onHover={setHoverId} /><p ref={captionRef} tabIndex={-1} id={captionId} className="outfit-active-caption">{(current.garments.find((item) => item.itemId === highlightedId) ?? current.garments[0])?.label ?? 'Antrekk'}</p><OutfitGarmentList snapshot={current} selectedId={selectedId} highlightedId={highlightedId} captionId={captionId} registerOutfitRow={registerOutfitRow} onActivate={activate} onFocus={setFocusId} onHover={setHoverId} hasAlternative={(id) => authorizedOptions.some((candidate) => candidate.sourceItemId === id)} onAlternative={(id, trigger) => { comparisonFocusLifecycle.open(trigger); setCompareId(id); }} />{current !== snapshot && <button type="button" onClick={() => { reset(); }}>Tilbakestill antrekk</button>}{option && <OutfitComparisonDialog option={option} sourceLabel={current.garments.find((item) => item.itemId === option.sourceItemId)?.label ?? ''} headingRef={comparisonHeadingRef} onConfirm={() => { if (select(option).ok) { setSelectedId(null); finishComparison(false); captionRef.current?.focus(); } }} onCancel={closeComparison} />}<div className="outfit-recovery-copy" /></section>;
 }
