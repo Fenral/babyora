@@ -78,12 +78,17 @@ type PlanleggE2EWindow = Window & {
   __BABYORA_PLANLEGG_E2E__?: Readonly<{ testOnlySoonAvailability?: boolean }>;
 };
 
+const PLANLEGG_E2E_SOON_AVAILABILITY = Object.freeze({
+  ...PLUS_FEATURE_AVAILABILITY,
+  soon_preparation: true,
+});
+
 function planningAvailability() {
   if (
     import.meta.env.VITE_PLANLEGG_E2E === 'true'
     && (window as PlanleggE2EWindow).__BABYORA_PLANLEGG_E2E__?.testOnlySoonAvailability === true
   ) {
-    return { ...PLUS_FEATURE_AVAILABILITY, soon_preparation: true };
+    return PLANLEGG_E2E_SOON_AVAILABILITY;
   }
   return PLUS_FEATURE_AVAILABILITY;
 }
@@ -544,7 +549,8 @@ function PlanleggData({
 
   const planningEvaluation = useMemo<PlanningEvaluation>(() => {
     if (
-      (tab === 'tenday' && viewAccess.presentation !== 'full')
+      tab === 'soon'
+      || (tab === 'tenday' && viewAccess.presentation !== 'full')
       || !weather.evidence
       || effectivePlace === null
       || weather.evidence.coverage.status === 'unavailable'

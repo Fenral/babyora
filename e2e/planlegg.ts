@@ -358,6 +358,7 @@ function contrastRatio(foreground: string, background: string): number {
 async function waitForServer(
   url: string,
   server: ChildProcess,
+  output: readonly string[],
   timeoutMs = 30_000,
 ): Promise<void> {
   let spawnError: Error | null = null;
@@ -379,6 +380,7 @@ async function waitForServer(
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
+  if (output.length > 0) console.error(`PLANLEGG SERVER LOG:\n${output.join('')}`);
   throw new Error(`Preview-server svarte ikke på ${url} innen ${timeoutMs} ms`);
 }
 
@@ -1774,30 +1776,101 @@ async function runSoonReadiness(
   }
 
   const requests: string[] = [];
+  const browserSignals: string[] = [];
   page.on('request', (request) => requests.push(request.url()));
+  page.on('console', (message) => browserSignals.push(`console:${message.type()}:${message.text()}`));
+  page.on('pageerror', (error) => browserSignals.push(`pageerror:${error.message}`));
+  page.on('requestfailed', (request) => browserSignals.push(
+    `requestfailed:${request.url()}:${request.failure()?.errorText ?? ''}`,
+  ));
+  await page.addInitScript(() => {
+    (window as Window & { __BABYORA_PLANLEGG_E2E__?: { testOnlySoonAvailability: boolean } })
+      .__BABYORA_PLANLEGG_E2E__ = { testOnlySoonAvailability: true };
+    const record = (kind: string, payload: unknown) => {
+      const target = window as Window & { __babyoraSoonTransport?: string[] };
+      target.__babyoraSoonTransport ??= [];
+      target.__babyoraSoonTransport.push(`${kind}:${String(payload ?? '')}`);
+    };
+    const nativeFetch = window.fetch.bind(window);
+    window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+      record('fetch', typeof input === 'string' ? input : input.toString());
+      return nativeFetch(input, init);
+    }) as typeof window.fetch;
+    const nativeBeacon = navigator.sendBeacon.bind(navigator);
+    navigator.sendBeacon = ((url: string | URL, data?: BodyInit | null) => {
+      record('beacon', `${url}:${data ?? ''}`);
+      return nativeBeacon(url, data);
+    }) as typeof navigator.sendBeacon;
+    const nativeOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function open(method, url, ...rest) {
+      record('xhr', `${method}:${url}`);
+      return nativeOpen.call(this, method, url, ...rest);
+    };
+  });
   forecastState.delivery = 'success';
   forecastState.mode = 'many';
-  await openPlanlegg(page, fixture.path);
-  await page.locator('main#main').waitFor({ state: 'visible', timeout: 15_000 });
-  const rendered = await page.locator('body').innerText();
-  if (
-    /historiske forberedelser|1991–2020|har allerede/iu.test(rendered)
-    || requests.some((url) => /thredds|frost|climate|snart/iu.test(url))
-  ) {
-    throw new Error('Aktiv Snart-kandidat utførte forbudt runtime-klimaforespørsel');
+  try {
+    await openPlanlegg(page, fixture.path);
+  } catch (error) {
+    const documentExcerpt = await page.locator('body').innerText().catch(() => '(body unavailable)');
+    throw new Error(
+      `Snart dev navigation failed at ${page.url()}: ${documentExcerpt.slice(0, 1_500)}\n${browserSignals.join('\n')}\n${error instanceof Error ? error.message : String(error)}`,
+    );
   }
-  const beforeUrl = page.url();
-  const beforeStorage = await page.evaluate(() => JSON.stringify({
-    local: Object.keys(localStorage).sort(),
-    session: Object.keys(sessionStorage).sort(),
+  const soon = page.getByRole('radio', { name: 'Snart', exact: true });
+  try {
+    await soon.waitFor({ state: 'visible', timeout: 15_000 });
+  } catch (error) {
+    throw new Error(`Snart control absent: ${await page.locator('body').innerText()} hook=${await page.evaluate(() => JSON.stringify((window as Window & { __BABYORA_PLANLEGG_E2E__?: unknown }).__BABYORA_PLANLEGG_E2E__))} signals=${browserSignals.join('\n')} ${error instanceof Error ? error.message : String(error)}`);
+  }
+  await soon.evaluate((radio) => (radio as HTMLInputElement).click());
+  const ready = page.locator('.snart-plan');
+  try {
+    await ready.waitFor({ state: 'visible', timeout: 15_000 });
+  } catch (error) {
+    throw new Error(`Snart model did not render: ${await page.locator('body').innerText()} ${browserSignals.join('\n')} ${error instanceof Error ? error.message : String(error)}`);
+  }
+  const rendered = await ready.innerText();
+  if (
+    !/1991–2020/iu.test(rendered)
+    || !/Har allerede/iu.test(rendered)
+    || requests.some((url) => /thredds|frost/iu.test(url))
+  ) {
+    throw new Error('Plus Snart mangler modellresultat eller utførte forbudt runtime-klimaforespørsel');
+  }
+  const snapshot = () => page.evaluate(async () => JSON.stringify({
+    url: location.href,
+    history: history.state,
+    local: Object.entries(localStorage).sort(),
+    session: Object.entries(sessionStorage).sort(),
+    indexedDb: await indexedDB.databases().then((items) => items.map((item) => item.name).sort()),
+    caches: await caches.keys(),
   }));
+  const beforeMark = await snapshot();
+  const mark = ready.getByRole('button', { name: 'Har allerede', exact: true }).first();
+  await mark.focus();
+  await page.keyboard.press('Enter');
+  const afterMark = await snapshot();
+  if (afterMark !== beforeMark) throw new Error('Har allerede skrev URL/history eller browser storage');
+  if (await ready.getByRole('button', { name: 'Har allerede', exact: true }).count() >= 6) {
+    throw new Error('Har allerede oppdaterte ikke den in-memory baserte modellen');
+  }
   await page.reload();
-  const afterStorage = await page.evaluate(() => JSON.stringify({
-    local: Object.keys(localStorage).sort(),
-    session: Object.keys(sessionStorage).sort(),
-  }));
-  if (page.url() !== beforeUrl || afterStorage !== beforeStorage) {
-    throw new Error('Snart readiness endret URL eller browser storage');
+  await openPlanlegg(page, fixture.path);
+  await page.getByRole('radio', { name: 'Snart', exact: true })
+    .evaluate((radio) => (radio as HTMLInputElement).click());
+  await ready.waitFor({ state: 'visible', timeout: 15_000 });
+  if (await ready.getByRole('button', { name: 'Har allerede', exact: true }).count() < 1) {
+    throw new Error('Reload resetter ikke Har allerede-sessionen');
+  }
+  const transport = await page.evaluate(() => (
+    (window as Window & { __babyoraSoonTransport?: string[] }).__babyoraSoonTransport ?? []
+  ));
+  const leaked = [...browserSignals, ...transport, ...requests].filter((entry) => (
+    /snart|lillian|eskil|2025-10-03|2023-12-03|already|har allerede/iu.test(entry)
+  ));
+  if (leaked.length > 0) {
+    throw new Error(`Snart lekket til browser-signal eller transport: ${leaked.join(', ')}`);
   }
 }
 
@@ -2558,11 +2631,13 @@ async function main(): Promise<void> {
 
   try {
     const configuredNativeAccess = caseName === 'access';
+    const e2eSoon = caseName === 'snart';
+    const serverOutput: string[] = [];
     server = spawn(
       process.execPath,
       [
         VITE_CLI,
-        ...(configuredNativeAccess ? [] : ['preview']),
+        ...(configuredNativeAccess || e2eSoon ? [] : ['preview']),
         '--host',
         '127.0.0.1',
         '--port',
@@ -2570,7 +2645,7 @@ async function main(): Promise<void> {
         '--strictPort',
       ],
       {
-        stdio: 'ignore',
+        stdio: ['ignore', 'pipe', 'pipe'],
         shell: false,
         windowsHide: true,
         env: configuredNativeAccess
@@ -2578,10 +2653,18 @@ async function main(): Promise<void> {
               ...process.env,
               VITE_REVENUECAT_PUBLIC_KEY_ANDROID: 'planlegg-e2e-public-key',
             }
-          : process.env,
+          : e2eSoon
+            ? { ...process.env, VITE_PLANLEGG_E2E: 'true' }
+            : process.env,
       },
     );
-    await waitForServer(BASE_URL, server);
+    const captureServerOutput = (chunk: Buffer) => {
+      serverOutput.push(chunk.toString());
+      if (serverOutput.join('').length > 12_000) serverOutput.splice(0, serverOutput.length - 12);
+    };
+    server.stdout?.on('data', captureServerOutput);
+    server.stderr?.on('data', captureServerOutput);
+    await waitForServer(BASE_URL, server, serverOutput);
 
     browser = await chromium.launch();
     const context = await browser.newContext({
