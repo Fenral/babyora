@@ -1,0 +1,9 @@
+export const SNART_RULESET_VERSION = 'babyora-snart-heuristics@2' as const;
+export type SnartGroup = 'check_first' | 'available_if_needed' | 'not_highlighted';
+export type SnartHeuristicRow = Readonly<{ ruleId: string; conceptId: string; group: SnartGroup; signalName: 'targetMeanTemperatureC' | 'targetPrecipitationMm'; signalValue: number; policyOwner: 'Babyora'; evidenceType: 'product_heuristic' }>;
+const choose = (value: number, low: number, high: number, prefix: string, conceptId: string): SnartHeuristicRow => { const group: SnartGroup = value <= low ? 'check_first' : value <= high ? 'available_if_needed' : 'not_highlighted'; return { ruleId: `${prefix}-${group === 'check_first' ? 'CHECK' : group === 'available_if_needed' ? 'AVAILABLE' : 'NOT-HIGHLIGHTED'}`, conceptId, group, signalName: 'targetMeanTemperatureC', signalValue: value, policyOwner: 'Babyora', evidenceType: 'product_heuristic' }; };
+export function evaluateSnartHeuristics({ targetMeanTemperatureC: t, targetPrecipitationMm: p }: { targetMeanTemperatureC: number; targetPrecipitationMm: number }): readonly SnartHeuristicRow[] {
+  if (!Number.isFinite(t) || !Number.isFinite(p)) return [];
+  const wetGroup: SnartGroup = p >= 50 ? 'check_first' : p >= 20 ? 'available_if_needed' : 'not_highlighted';
+  return [choose(t, 12, 16, 'SNART-H2-BASE', 'snart.base_layer'), choose(t, 7, 12, 'SNART-H2-MID', 'snart.mid_layer'), choose(t, 2, 7, 'SNART-H2-OUTER', 'snart.insulated_outer'), choose(t, 7, 12, 'SNART-H2-HEAD', 'snart.cold_headwear'), choose(t, 2, 7, 'SNART-H2-HAND', 'snart.handwear'), { ruleId: `SNART-H2-WET-${wetGroup === 'check_first' ? 'CHECK' : wetGroup === 'available_if_needed' ? 'AVAILABLE' : 'NOT-HIGHLIGHTED'}`, conceptId: 'snart.weather_shell', group: wetGroup, signalName: 'targetPrecipitationMm', signalValue: p, policyOwner: 'Babyora', evidenceType: 'product_heuristic' }];
+}
