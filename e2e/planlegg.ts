@@ -1874,6 +1874,29 @@ async function runSoonReadiness(
   if (leaked.length > 0) {
     throw new Error(`Snart lekket til browser-signal eller transport: ${leaked.join(', ')}`);
   }
+
+  await openPlanlegg(page, `${fixture.path}&access=free`);
+  const freeSoon = page.getByRole('radio', { name: 'Snart', exact: true });
+  await freeSoon.evaluate((radio) => (radio as HTMLInputElement).click());
+  const teaser = page.locator('[data-planlegg-access="soon-teaser"]');
+  await teaser.waitFor({ state: 'visible', timeout: 15_000 });
+  if (
+    await page.locator('.snart-plan').count() !== 0
+    || !(await teaser.innerText()).includes('Se historiske forberedelser med Babyora Plus')
+  ) {
+    throw new Error('Free Snart viste råd eller manglet den sannferdige Plus-teaseren');
+  }
+  const paywallTrigger = teaser.getByRole('button', {
+    name: 'Se historiske forberedelser med Babyora Plus',
+    exact: true,
+  });
+  await paywallTrigger.click();
+  await page.getByRole('dialog').waitFor({ state: 'visible', timeout: 15_000 });
+  await page.keyboard.press('Escape');
+  await page.getByRole('dialog').waitFor({ state: 'detached', timeout: 15_000 });
+  if (await page.evaluate(() => document.activeElement?.textContent?.includes('Se historiske forberedelser') !== true)) {
+    throw new Error('Free Snart-paywall returnerte ikke fokus til teaseren');
+  }
 }
 
 async function settleEntitlement(page: Page, premium: boolean): Promise<void> {
