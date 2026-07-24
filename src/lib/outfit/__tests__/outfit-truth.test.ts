@@ -4,6 +4,7 @@ import type {
   RecommendInput,
   Recommendation,
 } from '../../wool-layers/types.js';
+import { resolveOutfitAvatarTruth } from '../outfit-avatar-truth.js';
 import {
   createOutfitTruthSnapshot,
   isOutfitTruthSnapshot,
@@ -45,6 +46,46 @@ const PROTOTYPE_PROPERTY_NAMES = [
 ] as const;
 
 describe('canonical outfit truth', () => {
+  it('projects canonical occurrences into the exact avatar resolver contract', () => {
+    const input: RecommendInput = {
+      weather: {
+        feelsLikeC: 28,
+        tempC: 28,
+        windMs: 0,
+        precipMmH: 0,
+      },
+      child: { ageMonths: 0 },
+      activity: 'vogn',
+      vognMode: 'awake',
+    };
+    const result = build(input, recommend(input));
+    expect(result.kind).toBe('supported');
+    if (result.kind !== 'supported') return;
+
+    const projectedOccurrences = result.snapshot.garments.map(
+      ({ itemId, catalogGarmentId, avatarCoverage }) => ({
+        itemId,
+        catalogGarmentId,
+        avatarCoverage,
+      }),
+    );
+    const directAvatar = resolveOutfitAvatarTruth({
+      pose: 'sitting',
+      garments: projectedOccurrences,
+    });
+
+    expect(directAvatar).toMatchObject({
+      pose: 'sitting',
+      stateKey: 'sit-1-sommer',
+      verifiedAssetPath: '/avatars/verified/sit-1-sommer.png',
+    });
+    expect(result.snapshot.avatar).toEqual(directAvatar);
+    expect(result.snapshot.avatar.visibleGarmentIds).toEqual(
+      projectedOccurrences.map((garment) => garment.itemId),
+    );
+    expect(result.snapshot.avatar.visibleGarmentIds).toHaveLength(2);
+  });
+
   it('is deterministic for the exact same complete finalized input', () => {
     const input = exactInput();
     const recommendation = recommend(input);
