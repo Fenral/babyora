@@ -59,7 +59,7 @@ export const PLANLEGG_E2E_FIXTURES = Object.freeze({
       manifestSha256: 'a20244cfbe3129ed360ac33f592718bb1a58d7f208d07987d076660f4fd700aa',
       builderSha256: '7f651d485dfd35a4b60cf2dc74b3e8091215cdd2496f80e4cb094fc55eba9399',
       modelBundleSha256: '01bce64fa05f3069892931204264f376339f7059aacad7408c06a7d5530ca8f6',
-      uiSessionBundleSha256: '7a998d063062636b91a9094844b9d10516507f2f72ca1ad531150b6609ebaca5',
+      uiSessionBundleSha256: '480c7ce2835fcb21658d779b1956c0b79007770ea0bf71178718008040a3bf33',
       priorEvidenceBundleSha256: '33492fe07edfe1f3fb9134295da07e12bd0e8bdccb626c994b65245b7485896b',
     }),
   }),
