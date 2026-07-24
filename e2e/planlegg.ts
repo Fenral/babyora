@@ -31,6 +31,8 @@ import { validateClimateBundle } from '../scripts/snart/validate-climate-pack.js
 const PORT = 4191;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 const UKE_VITE_MODULE_PATH = '/src/screens/UkeScreen.tsx';
+// eslint-disable-next-line no-control-regex -- A 7-bit ANSI CSI sequence starts with ESC.
+const ANSI_CSI_SEQUENCE = /\u001B\[[0-?]*[ -/]*[@-~]/gu;
 const PLANLEGG_CASES = Object.freeze({
   ...PLANLEGG_E2E_FIXTURES,
   'semantic-rail': Object.freeze({
@@ -450,6 +452,33 @@ function contrastRatio(foreground: string, background: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+function hasOwnedViteUrlSignal(output: readonly string[]): boolean {
+  const serverLog = output.join('').replace(ANSI_CSI_SEQUENCE, '');
+  return new RegExp(
+    `Local:\\s+http://127\\.0\\.0\\.1:${PORT}/`,
+    'u',
+  ).test(serverLog);
+}
+
+function assertOwnedViteUrlSignalParser(): void {
+  const sgrWrappedLocalUrl = [
+    '\u001B[1m\u001B[32m➜\u001B[39m\u001B[22m  '
+    + '\u001B[1mLocal\u001B[22m:   '
+    + '\u001B[36mhttp://127.0.0.1:4191/\u001B[39m\r\n',
+  ];
+  const foreignOrNonMatchingOutput = [
+    ['\u001B[1mLocal\u001B[22m: http://192.0.2.10:4191/\r\n'],
+    ['\u001B[1mLocal\u001B[22m: http://127.0.0.1:4192/\r\n'],
+    ['Network: http://127.0.0.1:4191/\r\n'],
+  ];
+  if (!hasOwnedViteUrlSignal(sgrWrappedLocalUrl)) {
+    throw new Error('Vite ownership parser rejected its SGR-wrapped local URL');
+  }
+  if (foreignOrNonMatchingOutput.some(hasOwnedViteUrlSignal)) {
+    throw new Error('Vite ownership parser accepted a foreign or non-matching URL');
+  }
+}
+
 async function waitForServer(
   url: string,
   server: ChildProcess,
@@ -467,11 +496,7 @@ async function waitForServer(
     if (server.exitCode !== null || server.signalCode !== null) {
       throw new Error(`Preview-prosessen avsluttet før oppstart med kode ${server.exitCode}`);
     }
-    const serverLog = output.join('').replaceAll(String.fromCharCode(27), '');
-    const ownedReady = new RegExp(
-      `Local:\\s+http://127\\.0\\.0\\.1:${PORT}/`,
-      'u',
-    ).test(serverLog);
+    const ownedReady = hasOwnedViteUrlSignal(output);
     if (ownedReady) {
       try {
         const response = await fetch(url);
@@ -3535,6 +3560,7 @@ async function runNativePolish(page: Page, fixture: PlanleggE2EFixture): Promise
 }
 
 async function main(): Promise<void> {
+  assertOwnedViteUrlSignalParser();
   const caseName = parseCase(process.argv.slice(2));
   const fixture = PLANLEGG_CASES[caseName];
   if (caseName === 'all') {
