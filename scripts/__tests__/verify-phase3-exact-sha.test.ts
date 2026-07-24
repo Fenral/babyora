@@ -216,6 +216,93 @@ function legalAnchorCommitCases(
   ];
 }
 
+function nestedFlowValue(value: string, depth: number): string {
+  let nested = value;
+  for (let level = 0; level < depth; level += 1) {
+    nested =
+      level % 2 === 0
+        ? `[${nested}]`
+        : `{ nested_${level}: ${nested} }`;
+  }
+  return nested;
+}
+
+function nestedStructuralCommitScalarCases(
+  conflictingSha: string,
+): readonly DecoratedCommitScalarCase[] {
+  const cases: DecoratedCommitScalarCase[] = [];
+
+  for (let depth = 2; depth <= 5; depth += 1) {
+    const quotedSha =
+      depth % 2 === 0
+        ? `"${conflictingSha}"`
+        : `'${conflictingSha}'`;
+    cases.push(
+      {
+        name: `compact block sequence depth ${depth}`,
+        lines: [
+          `nested_sequence_${depth}:`,
+          `  ${'- '.repeat(depth)}${quotedSha}`,
+        ],
+      },
+      {
+        name: `compact sequence explicit key depth ${depth}`,
+        lines: [
+          `nested_explicit_${depth}:`,
+          `  ${'- '.repeat(depth - 1)}? ${quotedSha}`,
+        ],
+      },
+      {
+        name: `explicit key compact sequence depth ${depth}`,
+        lines: [
+          `nested_complex_key_${depth}:`,
+          `  ? ${'- '.repeat(depth - 1)}${quotedSha}`,
+          '  : reviewed',
+        ],
+      },
+      {
+        name: `nested flow array and map depth ${depth}`,
+        lines: [
+          `nested_flow_${depth}: [`,
+          `  ${nestedFlowValue(quotedSha, depth - 1)}`,
+          '  ]',
+        ],
+      },
+    );
+  }
+
+  return cases;
+}
+
+function ordinaryNestedStructuralControls(
+  checksum: string,
+): readonly string[] {
+  const referencedCommit = 'c'.repeat(40);
+  const ordinaryValues = [
+    'reviewed',
+    `"candidate ${referencedCommit} was independently reviewed"`,
+    `"https://example.invalid/commits/${referencedCommit}"`,
+    checksum,
+  ] as const;
+  const lines: string[] = [];
+
+  for (let depth = 2; depth <= 5; depth += 1) {
+    const value = ordinaryValues[depth - 2];
+    lines.push(
+      `ordinary_nested_sequence_${depth}:`,
+      `  ${'- '.repeat(depth)}${value}`,
+      `ordinary_nested_explicit_${depth}:`,
+      `  ${'- '.repeat(depth - 1)}? ${value}`,
+      `ordinary_nested_complex_key_${depth}:`,
+      `  ? ${'- '.repeat(depth - 1)}${value}`,
+      '  : stable',
+      `ordinary_nested_flow_${depth}: ${nestedFlowValue(value, depth)}`,
+    );
+  }
+
+  return lines;
+}
+
 function ordinaryMultilineFlowControls(checksum: string): readonly string[] {
   return [
     'metadata_flow: [',
@@ -268,6 +355,7 @@ function ordinaryMetadataControls(checksum: string): readonly string[] {
     "single_quoted_note: 'another literal # value'",
     'url_fragment: https://example.invalid/path#fragment',
     `validation_evidence_sha256: ${checksum} # ordinary checksum comment`,
+    ...ordinaryNestedStructuralControls(checksum),
     ...ordinaryMultilineFlowControls(checksum),
     ...ordinaryMultilineQuotedControls(),
   ];
@@ -978,6 +1066,42 @@ describe('pure exact-label and path guards', () => {
     ).toThrow();
   });
 
+  it.each(nestedStructuralCommitScalarCases('b'.repeat(40)))(
+    'rejects a Phase 1 $name',
+    ({ lines }) => {
+      expect(() =>
+        parsePhase1CandidateSummary(
+          [
+            '---',
+            'status: PASS',
+            `candidate_sha: ${'1'.repeat(40)}`,
+            ...lines,
+            '---',
+          ].join('\n'),
+        ),
+      ).toThrow(/candidate SHA alias|frontmatter|flow|scalar/i);
+    },
+  );
+
+  it.each(nestedStructuralCommitScalarCases('b'.repeat(40)))(
+    'rejects a Phase 2 $name',
+    ({ lines }) => {
+      expect(() =>
+        parsePhase2HandoffSummary(
+          [
+            '---',
+            'status: PASS',
+            `phase2_candidate_sha: ${'2'.repeat(40)}`,
+            'feature_flag: true',
+            `phase1_candidate_sha: ${'1'.repeat(40)}`,
+            ...lines,
+            '---',
+          ].join('\n'),
+        ),
+      ).toThrow(/candidate SHA alias|frontmatter|flow|scalar/i);
+    },
+  );
+
   it('rejects a commit scalar inside assembled multiline flow metadata', () => {
     const conflictingSha = 'b'.repeat(40);
     const flowNode = [
@@ -1682,6 +1806,40 @@ describe('candidate mode', () => {
     }
   });
 
+  it('rejects depth 2-5 nested block and flow scalars through candidate mode', () => {
+    const harness = createHarness();
+    const summaryPath = join(
+      harness.evidenceRoot,
+      'nested structural scalar phase1.md',
+    );
+    const args = replaceOption(
+      candidateArgs(harness),
+      '--phase1-summary',
+      summaryPath,
+    );
+
+    for (const testCase of nestedStructuralCommitScalarCases(
+      harness.candidateSha,
+    )) {
+      writeFileSync(
+        summaryPath,
+        [
+          '---',
+          'status: PASS',
+          `candidate_sha: ${harness.phase1Sha}`,
+          ...testCase.lines,
+          '---',
+        ].join('\n'),
+        'utf8',
+      );
+
+      expectFailure(
+        runScript(harness, args),
+        /candidate SHA alias|frontmatter|flow|scalar/i,
+      );
+    }
+  });
+
   it('rejects every semantic Phase 1 commit alias through candidate mode', () => {
     const harness = createHarness();
     const aliasSummary = join(
@@ -1925,6 +2083,27 @@ describe('phase2-handoff mode', () => {
       expectFailure(
         runPhase2(harness, summaryPath),
         /candidate SHA alias|frontmatter|flow|anchor/i,
+      );
+    }
+  });
+
+  it('rejects depth 2-5 nested block and flow scalars through handoff mode', () => {
+    const harness = createHarness();
+
+    for (const testCase of nestedStructuralCommitScalarCases(
+      harness.candidateSha,
+    )) {
+      const summaryPath = writePhase2Summary(harness, [
+        'status: PASS',
+        `phase2_candidate_sha: ${harness.phase1Sha}`,
+        'feature_flag: true',
+        `phase1_candidate_sha: ${harness.phase1Sha}`,
+        ...testCase.lines,
+      ]);
+
+      expectFailure(
+        runPhase2(harness, summaryPath),
+        /candidate SHA alias|frontmatter|flow|scalar/i,
       );
     }
   });
