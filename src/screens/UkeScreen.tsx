@@ -314,6 +314,14 @@ function PlanleggData({
   const fixedHome = e2eFixture?.fixedHome
     ? { childId: '__e2e__', ...e2eFixture.fixedHome }
     : storedFixedHome;
+  const effectiveLocationMode = e2eFixture?.automatic?.mode ?? locationMode;
+  const effectiveAutomaticPlace = e2eFixture?.automatic
+    ? {
+        childId: fixedHome.childId,
+        generation: 1,
+        ...e2eFixture.automatic.place,
+      }
+    : automaticPlace;
   const locationAccess = resolveRuntimeCapabilityAccess(
     'automatic_location',
     { isPlus: isPremium, authenticated: false, loading: accessLoading },
@@ -321,9 +329,9 @@ function PlanleggData({
   );
   const effectivePlace = resolveEffectivePlace(
     fixedHome,
-    locationMode,
+    effectiveLocationMode,
     locationAccess,
-    automaticPlace,
+    effectiveAutomaticPlace,
   );
   const lat = effectivePlace?.lat ?? 0;
   const lon = effectivePlace?.lon ?? 0;
@@ -392,7 +400,8 @@ function PlanleggData({
     snartEvaluator.current,
     () => null,
   );
-  const snartProfileScope = e2eFixture?.profileScope ?? active?.id ?? '__none__';
+  const snartProfileScope = active?.id ?? '__none__';
+  const effectiveSnartProfileScope = e2eFixture?.profileScope ?? snartProfileScope;
   const snartWindow = e2eFixture?.windowLocalDate
     ?? new Date().toLocaleDateString('en-CA', { timeZone: PLAN_TIME_ZONE });
   useEffect(() => {
@@ -429,7 +438,7 @@ function PlanleggData({
     fixedHome.lat,
     fixedHome.lon,
     snartEvaluator,
-    snartProfileScope,
+    effectiveSnartProfileScope,
     snartWindow,
     soonAccess.access,
   ]);
