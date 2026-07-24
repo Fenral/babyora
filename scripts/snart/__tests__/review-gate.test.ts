@@ -3,127 +3,94 @@ import {
   buildCandidateRecord,
   buildReviewReceipt,
   canonicalReviewJsonFile,
+  markReviewCyclesExhausted,
   validateReviewRecords,
   type CandidateSnapshot,
+  type CandidateTuple,
+  type IndependentReviewReceipt,
+  type ReviewIdentity,
   type ReviewLane,
-  type ReviewReceiptInput,
 } from '../review-gate';
 import { describe, expect, it } from 'vitest';
 
 const sha256 = (value: string) =>
   createHash('sha256').update(value, 'utf8').digest('hex');
 
-const implementer = {
-  agentId: 'executor-agent-01-13',
-  canonicalTaskName: '/root/run_phase1_plan13',
-};
-
 const snapshot: CandidateSnapshot = {
   changedPaths: [
-    'scripts/snart/build-climate-pack.ts',
     'src/data/snart/climate-1991-2020-v1.json',
+    'scripts/snart/build-climate-pack.ts',
   ],
   clean: true,
   contractPath:
     '.planning/phases/01-planlegg-dagslinjen/01-SNART-AUTONOMY-CONTRACT.json',
   contractSha256: '1'.repeat(64),
   gitSha: '2'.repeat(40),
-  manifestPath: 'src/data/snart/climate-1991-2020-v1.manifest.json',
-  manifestSha256: '3'.repeat(64),
   packPath: 'src/data/snart/climate-1991-2020-v1.json',
-  packSha256: '4'.repeat(64),
-  treeSha: '5'.repeat(40),
+  packSha256: '3'.repeat(64),
+  treeSha: '4'.repeat(40),
   worktreePath: 'C:/repo',
 };
 
-function resultPayload(
-  lane: ReviewLane,
-  candidate: ReturnType<typeof buildCandidateRecord>,
-  overrides: Record<string, unknown> = {},
-) {
-  return JSON.stringify({
-    schemaVersion: 'snart-review-result@1',
-    planId: '01-13',
-    lane,
-    attempt: 1,
-    candidate: candidate.candidate,
-    verdict: 'PASS',
-    findings: [],
-    ...overrides,
-  });
-}
+const reviewerA: ReviewIdentity = {
+  agentId: 'review-agent-a',
+  canonicalTaskName: '/root/snart_01_13_review_a_attempt_1',
+};
 
-function receiptInput(
+const reviewerB: ReviewIdentity = {
+  agentId: 'review-agent-b',
+  canonicalTaskName: '/root/snart_01_13_review_b_attempt_1',
+};
+
+const candidate = () =>
+  buildCandidateRecord({
+    attempt: 1,
+    planId: '01-13',
+    snapshot,
+  });
+
+function receipt(
   lane: ReviewLane,
-  candidate: ReturnType<typeof buildCandidateRecord>,
-  reviewerId: string,
-  reviewerTaskName: string,
-  payload = resultPayload(lane, candidate),
-): ReviewReceiptInput {
-  const laneKey = lane.toLowerCase();
-  return {
-    candidate,
-    implementer,
-    spawnRequest: {
-      agent_type:
-        lane === 'A' ? 'gsd-code-reviewer' : 'gsd-security-auditor',
-      fork_turns: 'none',
-      task_name: `snart_01_13_review_${laneKey}_attempt_1`,
-      message: `READ ONLY lane ${lane}`,
+  tuple: CandidateTuple,
+  reviewer: ReviewIdentity,
+  overrides: Partial<IndependentReviewReceipt> = {},
+) {
+  return buildReviewReceipt(
+    {
+      schemaVersion: 'babyora-independent-review-receipt@2',
+      planId: '01-13',
+      lane,
+      attempt: 1,
+      candidate: tuple,
+      reviewer,
+      signedByIdentity: reviewer,
+      verdict: 'PASS',
+      findings: [],
+      commands: [
+        {
+          command: `npm run independent-review-${lane.toLowerCase()}`,
+          exitCode: 0,
+        },
+      ],
+      cleanBefore: true,
+      cleanAfter: true,
+      ...overrides,
     },
-    spawnResult: {
-      agentId: reviewerId,
-      canonicalTaskName: reviewerTaskName,
-    },
-    finalEvent: {
-      messageType: 'FINAL_ANSWER',
-      agentId: reviewerId,
-      canonicalTaskName: reviewerTaskName,
-      payload,
-    },
-  };
+    candidate(),
+  );
 }
 
 describe('Snart immutable review candidate', () => {
-  it('requires the same non-empty executor identity from CLI and stdin', () => {
-    expect(() =>
-      buildCandidateRecord({
-        attempt: 1,
-        cliIdentity: implementer,
-        executorIdentity: { ...implementer, agentId: 'different' },
-        planId: '01-13',
-        snapshot,
-      }),
-    ).toThrow(/identity/iu);
+  it('binds actual Git, artifact and canonical evidence hashes without identity provenance', () => {
+    const record = candidate();
 
-    expect(() =>
-      buildCandidateRecord({
-        attempt: 1,
-        cliIdentity: { agentId: '', canonicalTaskName: '' },
-        executorIdentity: { agentId: '', canonicalTaskName: '' },
-        planId: '01-13',
-        snapshot,
-      }),
-    ).toThrow(/identity/iu);
-  });
-
-  it('binds actual Git, artifact and canonical evidence hashes without a provenance claim', () => {
-    const candidate = buildCandidateRecord({
-      attempt: 1,
-      cliIdentity: implementer,
-      executorIdentity: implementer,
-      planId: '01-13',
-      snapshot,
-    });
-
-    expect(candidate).toMatchObject({
+    expect(record).toMatchObject({
       schemaVersion: 'snart-review-candidate@1',
       planId: '01-13',
       attempt: 1,
       gateStatus: 'PENDING_REVIEW',
-      implementer,
       provenanceAuthenticated: false,
-      localConsistencyOnly: true,
+      localReceiptsAreNotCryptographicProvenance: true,
       candidate: {
         gitSha: snapshot.gitSha,
         treeSha: snapshot.treeSha,
@@ -135,246 +102,236 @@ describe('Snart immutable review candidate', () => {
         changedPaths: [...snapshot.changedPaths].sort(),
       },
     });
-    expect(candidate.candidate.evidenceSha256).toMatch(/^[a-f0-9]{64}$/u);
-    expect(candidate.candidate.evidenceSha256).toBe(
+    expect('implementer' in record).toBe(false);
+    expect(record.candidate.evidenceSha256).toBe(
       sha256(
         canonicalReviewJsonFile({
           changedPaths: [...snapshot.changedPaths].sort(),
           contractPath: snapshot.contractPath,
           contractSha256: snapshot.contractSha256,
           gitSha: snapshot.gitSha,
-          manifestPath: snapshot.manifestPath,
-          manifestSha256: snapshot.manifestSha256,
           packPath: snapshot.packPath,
           packSha256: snapshot.packSha256,
+          planId: '01-13',
           treeSha: snapshot.treeSha,
         }),
       ),
     );
+  });
+
+  it('requires a clean snapshot, bounds attempts and records terminal exhaustion at attempt three', () => {
     expect(() =>
       buildCandidateRecord({
-        attempt: 4,
-        cliIdentity: implementer,
-        executorIdentity: implementer,
+        attempt: 1,
+        planId: '01-13',
+        snapshot: { ...snapshot, clean: false },
+      }),
+    ).toThrow(/clean|worktree/iu);
+    expect(() =>
+      buildCandidateRecord({
+        attempt: 0,
         planId: '01-13',
         snapshot,
       }),
     ).toThrow(/attempt/iu);
+    expect(() =>
+      buildCandidateRecord({
+        attempt: 4,
+        planId: '01-13',
+        snapshot,
+      }),
+    ).toThrow(/attempt/iu);
+    expect(() => markReviewCyclesExhausted(candidate())).toThrow(/third/iu);
+
+    const thirdAttempt = buildCandidateRecord({
+      attempt: 3,
+      planId: '01-13',
+      snapshot,
+    });
+    expect(markReviewCyclesExhausted(thirdAttempt)).toMatchObject({
+      attempt: 3,
+      gateStatus: 'FAIL_REVIEW_CYCLES_EXHAUSTED',
+      provenanceAuthenticated: false,
+    });
   });
 });
 
-describe('Snart collaboration receipts', () => {
-  it('stores only the message hash and binds exact FINAL_ANSWER/transcript bytes', () => {
-    const candidate = buildCandidateRecord({
-      attempt: 1,
-      cliIdentity: implementer,
-      executorIdentity: implementer,
-      planId: '01-13',
-      snapshot,
-    });
-    const input = receiptInput(
-      'A',
-      candidate,
-      'review-agent-a',
-      '/root/snart_01_13_review_a_attempt_1',
-    );
-    const receipt = buildReviewReceipt(input, 'A');
+describe('Snart independent review receipts', () => {
+  it('accepts the compact consistency-only receipt and exact reviewer signature identity', () => {
+    const record = candidate();
+    const result = receipt('A', record.candidate, reviewerA);
 
-    expect(receipt).toMatchObject({
-      schemaVersion: 'codex-collaboration-review-receipt@1',
+    expect(result).toEqual({
+      schemaVersion: 'babyora-independent-review-receipt@2',
       planId: '01-13',
       lane: 'A',
       attempt: 1,
-      implementer,
-      candidate: candidate.candidate,
-      spawnRequest: {
-        agent_type: 'gsd-code-reviewer',
-        fork_turns: 'none',
-        task_name: 'snart_01_13_review_a_attempt_1',
-        messageSha256: sha256(input.spawnRequest.message),
-      },
+      candidate: record.candidate,
+      reviewer: reviewerA,
+      signedByIdentity: reviewerA,
+      verdict: 'PASS',
+      findings: [],
+      commands: [
+        {
+          command: 'npm run independent-review-a',
+          exitCode: 0,
+        },
+      ],
+      cleanBefore: true,
+      cleanAfter: true,
     });
-    expect('message' in receipt.spawnRequest).toBe(false);
-    expect(receipt.finalAnswerSha256).toBe(
-      sha256(input.finalEvent.payload),
-    );
-    expect(receipt.transcriptSha256).toBe(
-      sha256(
-        canonicalReviewJsonFile({
-          finalEvent: receipt.finalEvent,
-          spawnRequest: receipt.spawnRequest,
-          spawnResult: receipt.spawnResult,
-        }),
-      ),
-    );
+    expect('spawnRequest' in result).toBe(false);
+    expect('transcriptSha256' in result).toBe(false);
+    expect('finalAnswerSha256' in result).toBe(false);
   });
 
-  it('rejects fork inheritance, mismatched tool identities and malformed result tuples', () => {
-    const candidate = buildCandidateRecord({
-      attempt: 1,
-      cliIdentity: implementer,
-      executorIdentity: implementer,
-      planId: '01-13',
-      snapshot,
-    });
-    const inherited = receiptInput(
-      'A',
-      candidate,
-      'review-agent-a',
-      '/root/snart_01_13_review_a_attempt_1',
-    );
-    inherited.spawnRequest.fork_turns = 'all';
-    expect(() => buildReviewReceipt(inherited, 'A')).toThrow(/fork_turns/iu);
+  it('rejects mismatched signatures, malformed tuples and empty command evidence', () => {
+    const record = candidate();
 
-    const identityMismatch = receiptInput(
-      'A',
-      candidate,
-      'review-agent-a',
-      '/root/snart_01_13_review_a_attempt_1',
-    );
-    identityMismatch.finalEvent.agentId = 'different';
-    expect(() => buildReviewReceipt(identityMismatch, 'A')).toThrow(
-      /identity/iu,
-    );
-
-    const tupleMismatch = receiptInput(
-      'A',
-      candidate,
-      'review-agent-a',
-      '/root/snart_01_13_review_a_attempt_1',
-      resultPayload('A', candidate, {
+    expect(() =>
+      receipt('A', record.candidate, reviewerA, {
+        signedByIdentity: reviewerB,
+      }),
+    ).toThrow(/identity|signature/iu);
+    expect(() =>
+      receipt('A', record.candidate, reviewerA, {
         candidate: {
-          ...candidate.candidate,
+          ...record.candidate,
           packSha256: '9'.repeat(64),
         },
       }),
-    );
-    expect(() => buildReviewReceipt(tupleMismatch, 'A')).toThrow(
-      /candidate/iu,
-    );
+    ).toThrow(/candidate|tuple/iu);
+    expect(() =>
+      receipt('A', record.candidate, reviewerA, {
+        commands: [],
+      }),
+    ).toThrow(/command/iu);
   });
 });
 
 describe('Snart two-lane review gate', () => {
-  it('accepts only two distinct PASS reviewers on the unchanged clean candidate', () => {
-    const candidate = buildCandidateRecord({
-      attempt: 1,
-      cliIdentity: implementer,
-      executorIdentity: implementer,
-      planId: '01-13',
+  it('accepts two distinct PASS reviewers on the unchanged clean candidate', () => {
+    const record = candidate();
+    const result = validateReviewRecords({
+      candidate: record,
+      receiptA: receipt('A', record.candidate, reviewerA),
+      receiptB: receipt('B', record.candidate, reviewerB),
       snapshot,
     });
-    const receiptA = buildReviewReceipt(
-      receiptInput(
-        'A',
-        candidate,
-        'review-agent-a',
-        '/root/snart_01_13_review_a_attempt_1',
-      ),
-      'A',
-    );
-    const receiptB = buildReviewReceipt(
-      receiptInput(
-        'B',
-        candidate,
-        'review-agent-b',
-        '/root/snart_01_13_review_b_attempt_1',
-      ),
-      'B',
-    );
 
-    expect(
-      validateReviewRecords({
-        candidate,
-        implementerAgentId: implementer.agentId,
-        receiptA,
-        receiptB,
-        snapshot,
-      }),
-    ).toEqual({
+    expect(result).toEqual({
       attempt: 1,
       gateStatus: 'PASS',
-      localConsistencyOnly: true,
+      localReceiptsAreNotCryptographicProvenance: true,
       planId: '01-13',
       provenanceAuthenticated: false,
       reviewerAgentIds: ['review-agent-a', 'review-agent-b'],
+      reviewerCanonicalTaskNames: [
+        '/root/snart_01_13_review_a_attempt_1',
+        '/root/snart_01_13_review_b_attempt_1',
+      ],
       valid: true,
     });
   });
 
-  it('fails closed on duplicate/implementer reviewers, blocker findings, tampering or dirty code', () => {
-    const candidate = buildCandidateRecord({
-      attempt: 1,
-      cliIdentity: implementer,
-      executorIdentity: implementer,
-      planId: '01-13',
-      snapshot,
+  it('allows resolved findings but rejects any unresolved finding regardless of severity', () => {
+    const record = candidate();
+    const resolved = receipt('A', record.candidate, reviewerA, {
+      findings: [
+        {
+          severity: 'low',
+          code: 'DOCUMENTED_OBSERVATION',
+          message: 'Checked and resolved before the receipt was signed.',
+          resolved: true,
+        },
+      ],
     });
-    const receiptA = buildReviewReceipt(
-      receiptInput(
-        'A',
-        candidate,
-        'review-agent-a',
-        '/root/snart_01_13_review_a_attempt_1',
-      ),
-      'A',
-    );
-    const makeB = (reviewerId = 'review-agent-b', payload?: string) =>
-      buildReviewReceipt(
-        receiptInput(
-          'B',
-          candidate,
-          reviewerId,
-          '/root/snart_01_13_review_b_attempt_1',
-          payload ?? resultPayload('B', candidate),
-        ),
-        'B',
-      );
 
-    for (const receiptB of [
-      makeB('review-agent-a'),
-      makeB(implementer.agentId),
-      makeB(
-        'review-agent-b',
-        resultPayload('B', candidate, {
+    expect(
+      validateReviewRecords({
+        candidate: record,
+        receiptA: resolved,
+        receiptB: receipt('B', record.candidate, reviewerB),
+        snapshot,
+      }).valid,
+    ).toBe(true);
+
+    expect(() =>
+      validateReviewRecords({
+        candidate: record,
+        receiptA: resolved,
+        receiptB: receipt('B', record.candidate, reviewerB, {
           findings: [
             {
-              code: 'BLOCKING_DATA_ERROR',
-              message: 'The pack is not safe to publish.',
-              severity: 'blocker',
+              severity: 'info',
+              code: 'UNRESOLVED_TRUTH_GAP',
+              message: 'Even informational unresolved findings fail closed.',
+              resolved: false,
             },
           ],
         }),
-      ),
-    ]) {
+        snapshot,
+      }),
+    ).toThrow(/unresolved|finding/iu);
+  });
+
+  it('fails closed on duplicate identities, FAIL, non-zero commands or dirty review state', () => {
+    const record = candidate();
+    const receiptA = receipt('A', record.candidate, reviewerA);
+    const invalidBReceipts = [
+      receipt('B', record.candidate, {
+        ...reviewerB,
+        agentId: reviewerA.agentId,
+      }),
+      receipt('B', record.candidate, {
+        ...reviewerB,
+        canonicalTaskName: reviewerA.canonicalTaskName,
+      }),
+      receipt('B', record.candidate, reviewerB, {
+        verdict: 'FAIL',
+      }),
+      receipt('B', record.candidate, reviewerB, {
+        commands: [{ command: 'npm test', exitCode: 1 }],
+      }),
+      receipt('B', record.candidate, reviewerB, {
+        cleanAfter: false,
+      }),
+    ];
+
+    for (const receiptB of invalidBReceipts) {
       expect(() =>
         validateReviewRecords({
-          candidate,
-          implementerAgentId: implementer.agentId,
+          candidate: record,
           receiptA,
           receiptB,
           snapshot,
         }),
       ).toThrow();
     }
+  });
 
-    expect(() =>
-      validateReviewRecords({
-        candidate,
-        implementerAgentId: implementer.agentId,
-        receiptA,
-        receiptB: makeB(),
-        snapshot: { ...snapshot, clean: false },
-      }),
-    ).toThrow(/clean|worktree/iu);
-    expect(() =>
-      validateReviewRecords({
-        candidate,
-        implementerAgentId: implementer.agentId,
-        receiptA,
-        receiptB: { ...makeB(), finalAnswerSha256: '0'.repeat(64) },
-        snapshot,
-      }),
-    ).toThrow(/digest|hash/iu);
+  it('recomputes the local candidate tuple and rejects code or artifact tampering', () => {
+    const record = candidate();
+    const receiptA = receipt('A', record.candidate, reviewerA);
+    const receiptB = receipt('B', record.candidate, reviewerB);
+
+    for (const changedSnapshot of [
+      { ...snapshot, clean: false },
+      { ...snapshot, gitSha: '9'.repeat(40) },
+      { ...snapshot, packSha256: '8'.repeat(64) },
+      {
+        ...snapshot,
+        changedPaths: [...snapshot.changedPaths, 'unexpected-change.ts'],
+      },
+    ]) {
+      expect(() =>
+        validateReviewRecords({
+          candidate: record,
+          receiptA,
+          receiptB,
+          snapshot: changedSnapshot,
+        }),
+      ).toThrow();
+    }
   });
 });
