@@ -646,6 +646,8 @@ describe('phase2-handoff mode', () => {
       'status: PASS',
       `phase2_candidate_sha: ${harness.phase1Sha}`,
       'feature_flag: true',
+      'phase1_source_field: candidate_sha',
+      `phase1_candidate_sha: ${harness.phase1Sha}`,
     ]);
     const result = runPhase2(harness, summaryPath);
 
