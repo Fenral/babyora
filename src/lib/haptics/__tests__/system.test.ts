@@ -22,7 +22,7 @@ function createSystem(options: {
   module?: HapticNativeModule | null;
 }) {
   const calls: string[] = [];
-  const nativeModule = options.module ?? createNativeModule(calls);
+  const nativeModule = options.module === undefined ? createNativeModule(calls) : options.module;
   const loadNativeModule = vi.fn(async () => nativeModule);
   const system = createHapticSystem({
     platform: { isNative: () => options.native ?? true },
