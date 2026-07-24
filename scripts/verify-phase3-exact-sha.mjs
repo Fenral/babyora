@@ -130,6 +130,22 @@ function looksLikeCandidateShaAlias(key) {
   );
 }
 
+function looksLikePhase2CandidateShaAlias(key) {
+  if (key === 'phase2_candidate_sha') {
+    return false;
+  }
+
+  const normalized = key.toLowerCase().replaceAll(/[^a-z0-9]/g, '');
+  return [
+    'candidatesha',
+    'phase2candidatesha',
+    'phase2sha',
+    'finalcandidatesha',
+    'commit',
+    'commitsha',
+  ].includes(normalized);
+}
+
 export function parsePhase1CandidateSummary(text) {
   const fields = parseFrontmatter(text, 'Phase 1 summary');
 
@@ -158,7 +174,7 @@ export function parsePhase2HandoffSummary(text) {
 
   for (const key of fields.keys()) {
     invariant(
-      key === 'phase2_candidate_sha' || !looksLikeCandidateShaAlias(key),
+      !looksLikePhase2CandidateShaAlias(key),
       `Phase 2 summary uses forbidden candidate SHA alias ${key}`,
     );
   }
