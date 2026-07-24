@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   copyFileSync,
@@ -8,7 +9,6 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -23,6 +23,8 @@ export type JsonValue =
   | { [key: string]: JsonValue };
 
 type JsonRecord = { [key: string]: JsonValue };
+type VariableFamily = 'rr' | 'tg';
+type EndpointKind = 'ascii' | 'das' | 'dds';
 
 export type HomePlaceProjection = {
   homePlaceKey: string;
@@ -37,6 +39,12 @@ export type GridCell = {
   lat: number;
   lon: number;
   dataValid: boolean;
+};
+
+export type MonthlyProfileRow = {
+  month: number;
+  meanTemperatureC: number;
+  monthlyPrecipitationMm: number;
 };
 
 type GridSelection =
@@ -54,34 +62,6 @@ type GridSelection =
       selected?: GridCell & { distanceMillimetres: number };
     };
 
-export type RawClimateObservation = {
-  localDate: string;
-  year: number;
-  tg: number | null;
-  tn: number | null;
-  tx: number | null;
-  rr: number | null;
-};
-
-type VariableName = 'rr' | 'tg' | 'tn' | 'tx';
-
-type CoverageStats = {
-  validCount: number;
-  missingCount: number;
-  discardedCount: number;
-  representedYears: number;
-  min: number;
-  max: number;
-};
-
-export type ClimateDay = {
-  p10MinC: number;
-  p50MeanC: number;
-  p90MaxC: number;
-  wetProbability: number;
-  coverage: Record<VariableName, CoverageStats>;
-};
-
 type HttpPolicy = {
   scheme: string;
   hostname: string;
@@ -90,6 +70,8 @@ type HttpPolicy = {
   allowPassword: boolean;
   allowHash: boolean;
   pathPattern: string;
+  requireFamilyVariableMatch: boolean;
+  allowedDatasetUrls: string[];
   allowedQueryVariables: string[];
   userAgent: string;
   redirect: RequestRedirect;
@@ -111,19 +93,25 @@ type GridPolicy = {
   maxDistanceMillimetres: number;
 };
 
-type SnartContract = {
+export type SnartContract = {
   schemaVersion: string;
   contractVersion: string;
+  capabilities: {
+    family_sharing: boolean;
+    personal_calibration: boolean;
+    soon_preparation: boolean;
+  };
   source: {
     datasetName: string;
     sourceOrganization: string;
-    normalPeriod: { from: string; through: string };
-    years: number[];
-    catalogUrl: string;
-    catalogMachineUrl: string;
-    datasetUrlTemplate: string;
-    variableVersions: Record<VariableName, string>;
-    requiredVariables: string[];
+    metadataInstitution: string;
+    normalPeriod: { fromYear: number; throughYear: number };
+    datasetUrls: string[];
+    catalogUrls: Record<VariableFamily, string>;
+    variableVersions: Record<VariableFamily, string>;
+    fileVersions: Record<VariableFamily, string>;
+    units: Record<VariableFamily, string>;
+    aggregations: Record<VariableFamily, string>;
     fillValue: number;
     acceptedLicenseUris: string[];
     attributionText: string;
@@ -136,35 +124,21 @@ type SnartContract = {
     canonicalProjectionSha256: string;
   };
   gridPolicy: GridPolicy & { version: string };
-  timePolicy: {
-    version: string;
-    timezone: string;
-    allowedUtcHours: number[];
-    profileKeyCount: number;
-    leapDayPolicy: string;
-  };
   derivationPolicy: {
     version: string;
-    normalYears: [number, number];
-    centeredWindowOffsets: number[];
-    ringDays: number;
-    expectedSamplesPerKey: number;
-    minimumRepresentedYears: number;
-    minimumValidSamples: number;
-    quantileMethod: string;
-    wetThresholdMillimetres: number;
-    outputFields: string[];
+    monthCount: number;
+    rowFields: string[];
+    targetWindowDerivationVersion: string;
+    partialProfiles: boolean;
     rounding: {
       distanceMillimetres: number;
       mode: string;
       temperature: number;
-      wetProbability: number;
+      precipitation: number;
     };
   };
   httpPolicy: HttpPolicy & { version: string };
-  serializationPolicy: {
-    version: string;
-  };
+  serializationPolicy: { version: string };
 };
 
 type FetchTextOptions = {
@@ -184,21 +158,32 @@ type BuildOptions = {
   onProgress?: (message: string) => void;
 };
 
-type SourceResponseDigest = {
+type ResponseDigest = {
   url: string;
   sha256: string;
 };
 
+type SourceDatasetRecord = {
+  datasetUrl: string;
+  family: VariableFamily;
+  variable: VariableFamily;
+  month: number;
+  metadataSha256: string;
+  responseSha256: ResponseDigest[];
+};
+
 type SourceMetadata = {
-  year: number;
-  timeCount: number;
-  Y: number;
+  family: VariableFamily;
+  month: number;
   X: number;
+  Y: number;
+  timeCount: number;
   licenseUri: string;
   sourceInstitution: string;
-  variableVersions: Record<VariableName, string>;
-  ddsSha256: string;
-  dasSha256: string;
+  sourceVariableVersion: string;
+  fileVersion: string;
+  units: string;
+  aggregation: string;
 };
 
 type BuiltBundle = {
@@ -211,7 +196,6 @@ type BuiltBundle = {
 
 const PACK_NAME = 'climate-1991-2020-v1.json';
 const MANIFEST_NAME = 'climate-1991-2020-v1.manifest.json';
-const VARIABLES: VariableName[] = ['rr', 'tg', 'tn', 'tx'];
 const THIS_FILE = fileURLToPath(import.meta.url);
 
 export class SnartPipelineError extends Error {
@@ -228,36 +212,31 @@ function compareUtf8(left: string, right: string): number {
   return Buffer.from(left).compare(Buffer.from(right));
 }
 
-function formatNumber(value: number): string {
-  if (!Number.isFinite(value)) {
-    throw new SnartPipelineError('FAIL_NON_FINITE', 'JSON number is not finite');
-  }
-  if (Object.is(value, -0)) return '0';
-  const rendered = String(value);
-  if (!/[eE]/u.test(rendered)) return rendered;
-
-  const [coefficient, exponentText] = rendered.toLowerCase().split('e');
-  const exponent = Number(exponentText);
-  const negative = coefficient.startsWith('-');
-  const digits = coefficient.replace('-', '').replace('.', '');
-  const decimalIndex =
-    coefficient.replace('-', '').indexOf('.') === -1
-      ? coefficient.replace('-', '').length
-      : coefficient.replace('-', '').indexOf('.');
-  const targetIndex = decimalIndex + exponent;
-  const unsigned =
-    targetIndex <= 0
-      ? `0.${'0'.repeat(-targetIndex)}${digits}`
-      : targetIndex >= digits.length
-        ? `${digits}${'0'.repeat(targetIndex - digits.length)}`
-        : `${digits.slice(0, targetIndex)}.${digits.slice(targetIndex)}`;
-  return negative ? `-${unsigned}` : unsigned;
-}
-
 export function canonicalJson(value: JsonValue): string {
-  if (value === null || typeof value === 'boolean') return JSON.stringify(value);
-  if (typeof value === 'number') return formatNumber(value);
-  if (typeof value === 'string') return JSON.stringify(value);
+  if (
+    value === null ||
+    typeof value === 'boolean' ||
+    typeof value === 'string'
+  ) {
+    return JSON.stringify(value);
+  }
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) {
+      throw new SnartPipelineError(
+        'FAIL_CANONICAL_NUMBER',
+        'canonical JSON cannot contain a non-finite number',
+      );
+    }
+    const normalized = Object.is(value, -0) ? 0 : value;
+    const encoded = JSON.stringify(normalized);
+    if (/[eE]/u.test(encoded)) {
+      throw new SnartPipelineError(
+        'FAIL_CANONICAL_NUMBER',
+        'canonical JSON cannot contain exponent notation',
+      );
+    }
+    return encoded;
+  }
   if (Array.isArray(value)) {
     return `[${value.map((child) => canonicalJson(child)).join(',')}]`;
   }
@@ -279,10 +258,10 @@ function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf8')) as T;
 }
 
-function writeAtomic(path: string, content: string): void {
+function writeAtomic(path: string, content: string | Uint8Array): void {
   mkdirSync(dirname(path), { recursive: true });
   const temporary = `${path}.tmp-${process.pid}`;
-  writeFileSync(temporary, content, { encoding: 'utf8', flag: 'w' });
+  writeFileSync(temporary, content, { flag: 'w' });
   renameSync(temporary, path);
 }
 
@@ -292,7 +271,10 @@ function normalizedName(name: string): string {
 
 function coordinateE4(value: number, scale: number, tolerance: number): number {
   if (!Number.isFinite(value)) {
-    throw new SnartPipelineError('FAIL_PLACE_COORDINATE', 'non-finite coordinate');
+    throw new SnartPipelineError(
+      'FAIL_PLACE_COORDINATE',
+      'non-finite coordinate',
+    );
   }
   const scaled = value * scale;
   const integer = Math.round(scaled);
@@ -379,10 +361,19 @@ function splitQuerySelections(query: string): string[] {
 export function validateMetUrl(
   input: string,
   policy: HttpPolicy,
-): { kind: 'ascii' | 'das' | 'dds'; year: number; url: URL } {
+): {
+  datasetUrl: string;
+  family: VariableFamily;
+  kind: EndpointKind;
+  month: number;
+  url: URL;
+} {
   const parsed = new URL(input);
   if (parsed.protocol !== policy.scheme) {
-    throw new SnartPipelineError('FAIL_URL_SCHEME', 'only frozen HTTPS is allowed');
+    throw new SnartPipelineError(
+      'FAIL_URL_SCHEME',
+      'only frozen HTTPS is allowed',
+    );
   }
   if (parsed.hostname !== policy.hostname) {
     throw new SnartPipelineError('FAIL_URL_HOST', 'unexpected MET hostname');
@@ -400,18 +391,41 @@ export function validateMetUrl(
       'credentials and fragments are forbidden',
     );
   }
-  const contractPathPattern = new RegExp(policy.pathPattern, 'u');
-  if (!contractPathPattern.test(parsed.pathname)) {
-    throw new SnartPipelineError('FAIL_URL_PATH', 'path is outside frozen archive');
+  if (!new RegExp(policy.pathPattern, 'u').test(parsed.pathname)) {
+    throw new SnartPipelineError(
+      'FAIL_URL_PATH',
+      'path is outside the frozen monthly-normal allowlist',
+    );
   }
   const match = parsed.pathname.match(
-    /seNorge2018_(\d{4})\.nc\.(dds|das|ascii)$/u,
+    /\/aggregated_products\/(tg|rr)\/seNorge2018_(tg|rr)_normal_1991_2020_monthly_(0[1-9]|1[0-2])\.nc\.(dds|das|ascii)$/u,
   );
   if (!match) {
-    throw new SnartPipelineError('FAIL_URL_PATH', 'cannot identify year/kind');
+    throw new SnartPipelineError(
+      'FAIL_URL_PATH',
+      'cannot identify family, month and endpoint',
+    );
   }
-  const year = Number(match[1]);
-  const kind = match[2] as 'ascii' | 'das' | 'dds';
+  const folderFamily = match[1] as VariableFamily;
+  const family = match[2] as VariableFamily;
+  if (policy.requireFamilyVariableMatch && folderFamily !== family) {
+    throw new SnartPipelineError(
+      'FAIL_URL_FAMILY',
+      'folder family differs from filename variable',
+    );
+  }
+  const month = Number(match[3]);
+  const kind = match[4] as EndpointKind;
+  const datasetUrl = `${parsed.origin}${parsed.pathname.slice(
+    0,
+    -(`.${kind}`.length),
+  )}`;
+  if (!policy.allowedDatasetUrls.includes(datasetUrl)) {
+    throw new SnartPipelineError(
+      'FAIL_URL_ALLOWLIST',
+      'dataset is not in the frozen 24-URL allowlist',
+    );
+  }
   if (kind !== 'ascii' && parsed.search !== '') {
     throw new SnartPipelineError(
       'FAIL_URL_QUERY',
@@ -436,35 +450,36 @@ export function validateMetUrl(
           `unknown or malformed selection ${selection}`,
         );
       }
-      const slices = [...selectionMatch[2].matchAll(/\[([^\]]+)\]/gu)];
-      for (const slice of slices) {
+      const variable = selectionMatch[1];
+      if (
+        policy.requireFamilyVariableMatch &&
+        (variable === 'tg' || variable === 'rr') &&
+        variable !== family
+      ) {
+        throw new SnartPipelineError(
+          'FAIL_URL_FAMILY',
+          `query variable ${variable} differs from dataset family ${family}`,
+        );
+      }
+      for (const slice of selectionMatch[2].matchAll(/\[([^\]]+)\]/gu)) {
         const values = slice[1].split(':').map(Number);
         if (
           values.length < 1 ||
           values.length > 3 ||
-          values.some((value) => !Number.isSafeInteger(value) || value < 0)
+          values.some((value) => !Number.isSafeInteger(value) || value < 0) ||
+          (values.length === 3 &&
+            (values[1] <= 0 || values[0] > values[2])) ||
+          (values.length === 2 && values[0] > values[1])
         ) {
           throw new SnartPipelineError(
             'FAIL_URL_QUERY',
             `invalid integer slice ${slice[0]}`,
           );
         }
-        if (values.length === 3 && (values[1] <= 0 || values[0] > values[2])) {
-          throw new SnartPipelineError(
-            'FAIL_URL_QUERY',
-            `invalid slice bounds ${slice[0]}`,
-          );
-        }
-        if (values.length === 2 && values[0] > values[1]) {
-          throw new SnartPipelineError(
-            'FAIL_URL_QUERY',
-            `invalid slice bounds ${slice[0]}`,
-          );
-        }
       }
     }
   }
-  return { kind, year, url: parsed };
+  return { datasetUrl, family, kind, month, url: parsed };
 }
 
 function retryDelayMilliseconds(
@@ -517,7 +532,6 @@ async function readLimitedBody(
     if (expectedLength === 0 || expectedLength === null) return '';
     throw new SnartPipelineError('FAIL_TRUNCATED', 'response body is missing');
   }
-
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
@@ -565,12 +579,14 @@ export async function fetchTextWithPolicy(
         setTimeout(resolveSleep, milliseconds);
       }));
   const now = options.now ?? Date.now;
+  const decodedQuery = decodeURIComponent(validated.url.search.slice(1));
   const maxBodyBytes =
     options.maxBodyBytes ??
     (validated.kind === 'ascii' &&
-    /(?:^|,)latitude\[|(?:^|,)longitude\[/u.test(
-      decodeURIComponent(validated.url.search.slice(1)),
-    )
+    (decodedQuery.startsWith('lat[0:') ||
+      decodedQuery.includes(',lat[0:') ||
+      decodedQuery.startsWith('lon[0:') ||
+      decodedQuery.includes(',lon[0:'))
       ? policy.maxBodyBytes.coordinateGrid
       : policy.maxBodyBytes.metadataOrPoint);
 
@@ -580,15 +596,52 @@ export async function fetchTextWithPolicy(
       () => controller.abort(),
       policy.timeoutMilliseconds,
     );
-    let response: Response;
     try {
-      response = await fetchImpl(validated.url.href, {
+      const response = await fetchImpl(validated.url.href, {
         headers: { 'User-Agent': policy.userAgent },
         redirect: policy.redirect,
         signal: controller.signal,
       });
+      if (response.status >= 300 && response.status < 400) {
+        const location =
+          response.headers.get('location') ?? 'missing Location';
+        throw new SnartPipelineError(
+          'FAIL_REDIRECT',
+          `redirect was not followed (${response.status}: ${location})`,
+        );
+      }
+      if (!policy.acceptedStatuses.includes(response.status)) {
+        if (
+          policy.retryableStatuses.includes(response.status) &&
+          attempt < policy.maxAttempts
+        ) {
+          await response.body?.cancel();
+          clearTimeout(timeout);
+          await sleep(retryDelayMilliseconds(response, attempt, policy, now()));
+          continue;
+        }
+        throw new SnartPipelineError(
+          'FAIL_HTTP_STATUS',
+          `unexpected HTTP ${response.status}`,
+        );
+      }
+      const contentType = (
+        response.headers.get('content-type') ?? ''
+      ).toLowerCase();
+      if (
+        contentType !== '' &&
+        !contentType.startsWith('text/plain') &&
+        !contentType.startsWith('application/octet-stream')
+      ) {
+        throw new SnartPipelineError(
+          'FAIL_CONTENT_TYPE',
+          `unexpected content type ${contentType}`,
+        );
+      }
+      const text = await readLimitedBody(response, maxBodyBytes);
+      return { text, attempts: attempt, sha256: sha256(text) };
     } catch (error) {
-      clearTimeout(timeout);
+      if (error instanceof SnartPipelineError) throw error;
       if (
         controller.signal.aborted ||
         (error instanceof DOMException && error.name === 'AbortError')
@@ -605,44 +658,6 @@ export async function fetchTextWithPolicy(
     } finally {
       clearTimeout(timeout);
     }
-
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get('location') ?? 'missing Location';
-      throw new SnartPipelineError(
-        'FAIL_REDIRECT',
-        `redirect was not followed (${response.status}: ${location})`,
-      );
-    }
-    if (!policy.acceptedStatuses.includes(response.status)) {
-      if (
-        policy.retryableStatuses.includes(response.status) &&
-        attempt < policy.maxAttempts
-      ) {
-        await response.body?.cancel();
-        await sleep(retryDelayMilliseconds(response, attempt, policy, now()));
-        continue;
-      }
-      throw new SnartPipelineError(
-        'FAIL_HTTP_STATUS',
-        `unexpected HTTP ${response.status}`,
-      );
-    }
-
-    const contentType = (
-      response.headers.get('content-type') ?? ''
-    ).toLowerCase();
-    if (
-      contentType !== '' &&
-      !contentType.startsWith('text/plain') &&
-      !contentType.startsWith('application/octet-stream')
-    ) {
-      throw new SnartPipelineError(
-        'FAIL_CONTENT_TYPE',
-        `unexpected content type ${contentType}`,
-      );
-    }
-    const text = await readLimitedBody(response, maxBodyBytes);
-    return { text, attempts: attempt, sha256: sha256(text) };
   }
   throw new SnartPipelineError(
     'FAIL_RETRY_EXHAUSTED',
@@ -652,7 +667,10 @@ export async function fetchTextWithPolicy(
 
 export function roundHalfAwayFromZero(value: number, scale: number): number {
   if (!Number.isFinite(value) || !Number.isInteger(scale) || scale < 0) {
-    throw new SnartPipelineError('FAIL_ROUNDING_INPUT', 'invalid rounding input');
+    throw new SnartPipelineError(
+      'FAIL_ROUNDING_INPUT',
+      'invalid rounding input',
+    );
   }
   const factor = 10 ** scale;
   const rounded =
@@ -710,26 +728,32 @@ export function selectNearestGridCell(
       ) * 1000,
       0,
     );
-    const candidate = { ...cell, distanceMillimetres };
     if (
       !selected ||
-      candidate.distanceMillimetres < selected.distanceMillimetres ||
-      (candidate.distanceMillimetres === selected.distanceMillimetres &&
-        (candidate.Y < selected.Y ||
-          (candidate.Y === selected.Y && candidate.X < selected.X)))
+      distanceMillimetres < selected.distanceMillimetres ||
+      (distanceMillimetres === selected.distanceMillimetres &&
+        (cell.Y < selected.Y ||
+          (cell.Y === selected.Y && cell.X < selected.X)))
     ) {
-      selected = candidate;
+      selected = { ...cell, distanceMillimetres };
     }
   }
-  if (!selected || !selected.dataValid) {
+  if (!selected) {
+    return { status: 'unavailable', reason: 'grid_invalid_or_sea' };
+  }
+  if (selected.distanceMillimetres > policy.maxDistanceMillimetres) {
+    return {
+      status: 'unavailable',
+      reason: 'grid_too_far',
+      selected,
+    };
+  }
+  if (!selected.dataValid) {
     return {
       status: 'unavailable',
       reason: 'grid_invalid_or_sea',
-      ...(selected ? { selected } : {}),
+      selected,
     };
-  }
-  if (selected.distanceMillimetres > policy.maxDistanceMillimetres) {
-    return { status: 'unavailable', reason: 'grid_too_far', selected };
   }
   return {
     status: 'supported',
@@ -741,304 +765,106 @@ export function selectNearestGridCell(
   };
 }
 
-let cachedProfileKeys: string[] | undefined;
-
-export function profileKeys(): string[] {
-  if (!cachedProfileKeys) {
-    const keys: string[] = [];
-    const cursor = new Date(Date.UTC(2001, 0, 1));
-    while (cursor.getUTCFullYear() === 2001) {
-      keys.push(
-        `${String(cursor.getUTCMonth() + 1).padStart(2, '0')}-${String(
-          cursor.getUTCDate(),
-        ).padStart(2, '0')}`,
-      );
-      cursor.setUTCDate(cursor.getUTCDate() + 1);
-    }
-    cachedProfileKeys = keys;
-  }
-  return [...cachedProfileKeys];
-}
-
-export function centeredWindowKeys(key: string): string[] {
-  const keys = profileKeys();
-  const index = keys.indexOf(key === '02-29' ? '02-28' : key);
-  if (index < 0) {
-    throw new SnartPipelineError('FAIL_PROFILE_KEY', `unknown key ${key}`);
-  }
-  return [-2, -1, 0, 1, 2].map(
-    (offset) => keys[(index + offset + keys.length) % keys.length],
-  );
-}
-
-export function type7Quantile(values: number[], probability: number): number {
-  if (
-    values.length === 0 ||
-    probability < 0 ||
-    probability > 1 ||
-    values.some((value) => !Number.isFinite(value))
-  ) {
-    throw new SnartPipelineError('FAIL_QUANTILE_INPUT', 'invalid Type-7 input');
-  }
-  const sorted = [...values].sort((left, right) => left - right);
-  if (probability === 0) return sorted[0];
-  if (probability === 1) return sorted[sorted.length - 1];
-  const h = (sorted.length - 1) * probability + 1;
-  const j = Math.floor(h);
-  const gamma = h - j;
-  const lower = sorted[j - 1];
-  const upper = sorted[Math.min(j, sorted.length - 1)];
-  return lower + gamma * (upper - lower);
-}
-
-function validateRawValue(value: number | null, fillValue: number): number | null {
-  if (value === null || value === fillValue) return null;
-  if (!Number.isFinite(value)) {
+export function deriveMonthlyProfile(
+  rows: MonthlyProfileRow[],
+  contract: SnartContract,
+): MonthlyProfileRow[] {
+  if (rows.length !== contract.derivationPolicy.monthCount) {
     throw new SnartPipelineError(
-      'FAIL_SOURCE_VALUE',
-      'source value is not finite',
+      'FAIL_MONTH_COVERAGE',
+      `expected ${contract.derivationPolicy.monthCount} monthly rows`,
     );
   }
-  return value;
-}
-
-export function deriveClimateDays(
-  observations: RawClimateObservation[],
-  contract: SnartContract,
-): Record<string, ClimateDay> {
-  const byYearAndKey = new Map<string, RawClimateObservation>();
-  let discardedLeapDaySamples = 0;
-  for (const observation of observations) {
-    if (
-      observation.year < contract.derivationPolicy.normalYears[0] ||
-      observation.year > contract.derivationPolicy.normalYears[1] ||
-      !observation.localDate.startsWith(`${observation.year}-`)
-    ) {
-      throw new SnartPipelineError(
-        'FAIL_SOURCE_DATE',
-        `date ${observation.localDate} is outside its source year`,
-      );
-    }
-    const key = observation.localDate.slice(5);
-    if (key === '02-29') {
-      discardedLeapDaySamples += VARIABLES.length;
-      continue;
-    }
-    if (!profileKeys().includes(key)) {
-      throw new SnartPipelineError(
-        'FAIL_SOURCE_DATE',
-        `invalid calendar key ${key}`,
-      );
-    }
-    const mapKey = `${observation.year}:${key}`;
-    if (byYearAndKey.has(mapKey)) {
-      throw new SnartPipelineError(
-        'FAIL_DUPLICATE_DATE',
-        `duplicate observation ${mapKey}`,
-      );
-    }
-    byYearAndKey.set(mapKey, {
-      ...observation,
-      rr: validateRawValue(observation.rr, contract.source.fillValue),
-      tg: validateRawValue(observation.tg, contract.source.fillValue),
-      tn: validateRawValue(observation.tn, contract.source.fillValue),
-      tx: validateRawValue(observation.tx, contract.source.fillValue),
-    });
-  }
-
-  const output: Record<string, ClimateDay> = {};
-  for (const key of profileKeys()) {
-    const windows = centeredWindowKeys(key);
-    const values: Record<VariableName, number[]> = {
-      rr: [],
-      tg: [],
-      tn: [],
-      tx: [],
-    };
-    const represented: Record<VariableName, Set<number>> = {
-      rr: new Set(),
-      tg: new Set(),
-      tn: new Set(),
-      tx: new Set(),
-    };
-    for (
-      let year = contract.derivationPolicy.normalYears[0];
-      year <= contract.derivationPolicy.normalYears[1];
-      year += 1
-    ) {
-      for (const windowKey of windows) {
-        const observation = byYearAndKey.get(`${year}:${windowKey}`);
-        for (const variable of VARIABLES) {
-          const value = observation?.[variable] ?? null;
-          if (value !== null) {
-            values[variable].push(value);
-            represented[variable].add(year);
-          }
-        }
-      }
-    }
-    const coverage = {} as Record<VariableName, CoverageStats>;
-    for (const variable of VARIABLES) {
+  const result = [...rows]
+    .sort((left, right) => left.month - right.month)
+    .map((row, index) => {
       if (
-        values[variable].length <
-          contract.derivationPolicy.minimumValidSamples ||
-        represented[variable].size <
-          contract.derivationPolicy.minimumRepresentedYears
+        Object.keys(row).sort().join(',') !==
+        'meanTemperatureC,month,monthlyPrecipitationMm'
       ) {
         throw new SnartPipelineError(
-          'FAIL_COVERAGE',
-          `${key}/${variable} coverage ${values[variable].length}/${represented[variable].size} is below contract`,
+          'FAIL_MONTH_SCHEMA',
+          'monthly row has unexpected fields',
         );
       }
-      coverage[variable] = {
-        validCount: values[variable].length,
-        missingCount:
-          contract.derivationPolicy.expectedSamplesPerKey -
-          values[variable].length,
-        discardedCount:
-          key === '02-28' ? Math.floor(discardedLeapDaySamples / 30) : 0,
-        representedYears: represented[variable].size,
-        min: Math.min(...values[variable]),
-        max: Math.max(...values[variable]),
+      const expectedMonth = index + 1;
+      if (row.month !== expectedMonth) {
+        throw new SnartPipelineError(
+          'FAIL_MONTH_COVERAGE',
+          `missing or duplicate month ${expectedMonth}`,
+        );
+      }
+      if (
+        !Number.isFinite(row.meanTemperatureC) ||
+        !Number.isFinite(row.monthlyPrecipitationMm) ||
+        row.meanTemperatureC === contract.source.fillValue ||
+        row.monthlyPrecipitationMm === contract.source.fillValue ||
+        row.monthlyPrecipitationMm < 0
+      ) {
+        throw new SnartPipelineError(
+          'FAIL_MONTH_VALUE',
+          `month ${row.month} contains an invalid or fill value`,
+        );
+      }
+      return {
+        month: row.month,
+        meanTemperatureC: roundHalfAwayFromZero(
+          row.meanTemperatureC,
+          contract.derivationPolicy.rounding.temperature,
+        ),
+        monthlyPrecipitationMm: roundHalfAwayFromZero(
+          row.monthlyPrecipitationMm,
+          contract.derivationPolicy.rounding.precipitation,
+        ),
       };
-    }
-    const wetCount = values.rr.filter(
-      (value) => value >= contract.derivationPolicy.wetThresholdMillimetres,
-    ).length;
-    output[key] = {
-      p10MinC: roundHalfAwayFromZero(
-        type7Quantile(values.tn, 0.1),
-        contract.derivationPolicy.rounding.temperature,
-      ),
-      p50MeanC: roundHalfAwayFromZero(
-        type7Quantile(values.tg, 0.5),
-        contract.derivationPolicy.rounding.temperature,
-      ),
-      p90MaxC: roundHalfAwayFromZero(
-        type7Quantile(values.tx, 0.9),
-        contract.derivationPolicy.rounding.temperature,
-      ),
-      wetProbability: roundHalfAwayFromZero(
-        wetCount / values.rr.length,
-        contract.derivationPolicy.rounding.wetProbability,
-      ),
-      coverage,
-    };
-  }
-  return output;
-}
-
-function gitHead(): string {
-  return execFileSync('git', ['rev-parse', 'HEAD'], {
-    encoding: 'utf8',
-  }).trim();
-}
-
-function cachePaths(cacheDir: string, url: string) {
-  const key = sha256(url);
-  return {
-    body: join(cacheDir, 'responses', `${key}.body`),
-    metadata: join(cacheDir, 'responses', `${key}.json`),
-  };
-}
-
-async function readOrFetchCached(
-  url: string,
-  contract: SnartContract,
-  cacheDir: string,
-  offline: boolean,
-  maxBodyBytes?: number,
-): Promise<{ text: string; sha256: string }> {
-  const paths = cachePaths(cacheDir, url);
-  if (existsSync(paths.body) && existsSync(paths.metadata)) {
-    const text = readFileSync(paths.body, 'utf8');
-    const metadata = readJson<{ url: string; bodySha256: string }>(
-      paths.metadata,
-    );
-    const bodySha = sha256(text);
-    if (metadata.url !== url || metadata.bodySha256 !== bodySha) {
-      throw new SnartPipelineError(
-        'FAIL_CACHE_TAMPERING',
-        `cache identity mismatch for ${url}`,
-      );
-    }
-    return { text, sha256: bodySha };
-  }
-  if (offline) {
-    throw new SnartPipelineError(
-      'FAIL_CACHE_MISS',
-      `offline cache has no validated response for ${url}`,
-    );
-  }
-  const fetched = await fetchTextWithPolicy(url, contract.httpPolicy, {
-    maxBodyBytes,
-  });
-  writeAtomic(paths.body, fetched.text);
-  writeAtomic(
-    paths.metadata,
-    canonicalJsonFile({
-      bodySha256: fetched.sha256,
-      url,
-    }),
-  );
-  return { text: fetched.text, sha256: fetched.sha256 };
+    });
+  return result;
 }
 
 export function parseDds(
   body: string,
-  year: number,
-  contract: SnartContract,
-): { timeCount: number; Y: number; X: number } {
-  const timeMatch = body.match(/Float64 time\[time = (\d+)\];/u);
-  const gridMatch = body.match(
-    /Float32 tg\[time = \d+\]\[Y = (\d+)\]\[X = (\d+)\];/u,
+  family: VariableFamily,
+): { family: VariableFamily; timeCount: number; Y: number; X: number } {
+  const variable = body.match(
+    new RegExp(
+      `Float32\\s+${family}\\[time\\s*=\\s*(\\d+)\\]\\[Y\\s*=\\s*(\\d+)\\]\\[X\\s*=\\s*(\\d+)\\]`,
+      'u',
+    ),
   );
-  if (!timeMatch || !gridMatch) {
-    throw new SnartPipelineError('FAIL_DDS_SCHEMA', `missing dimensions ${year}`);
-  }
-  const timeCount = Number(timeMatch[1]);
-  const Y = Number(gridMatch[1]);
-  const X = Number(gridMatch[2]);
-  const leap =
-    year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-  if (timeCount !== (leap ? 366 : 365)) {
+  if (!variable) {
     throw new SnartPipelineError(
-      'FAIL_DDS_TIME',
-      `${year} has unexpected time dimension ${timeCount}`,
+      'FAIL_DDS_SCHEMA',
+      `DDS is missing ${family}[time][Y][X]`,
     );
   }
-  for (const variable of contract.source.requiredVariables) {
-    if (!new RegExp(`\\b${variable}\\b`, 'u').test(body)) {
-      throw new SnartPipelineError(
-        'FAIL_DDS_VARIABLE',
-        `${year} is missing ${variable}`,
-      );
-    }
-  }
-  return { timeCount, Y, X };
-}
-
-function attributeBlock(body: string, name: string): string {
-  const escaped = name.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
-  const match = body.match(new RegExp(`\\n\\s*${escaped} \\{([\\s\\S]*?)\\n\\s*\\}`, 'u'));
-  if (!match) {
+  const timeCount = Number(variable[1]);
+  const Y = Number(variable[2]);
+  const X = Number(variable[3]);
+  if (
+    timeCount !== 1 ||
+    !Number.isSafeInteger(Y) ||
+    !Number.isSafeInteger(X) ||
+    Y <= 0 ||
+    X <= 0 ||
+    !/Float32\s+lat\[Y\s*=\s*\d+\]\[X\s*=\s*\d+\]/u.test(body) ||
+    !/Float32\s+lon\[Y\s*=\s*\d+\]\[X\s*=\s*\d+\]/u.test(body)
+  ) {
     throw new SnartPipelineError(
-      'FAIL_DAS_SCHEMA',
-      `missing attribute block ${name}`,
+      'FAIL_DDS_SCHEMA',
+      'monthly DDS dimensions or coordinates are invalid',
     );
   }
-  return match[1];
+  return { family, timeCount, Y, X };
 }
 
-function quotedAttribute(block: string, name: string): string {
-  const escaped = name.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
-  const match = block.match(
-    new RegExp(`String ${escaped} "([^"]+)";`, 'u'),
+function stringAttribute(body: string, name: string): string {
+  const match = body.match(
+    new RegExp(`String\\s+${name}\\s+"([^"]+)"\\s*;`, 'u'),
   );
   if (!match) {
     throw new SnartPipelineError(
       'FAIL_DAS_ATTRIBUTE',
-      `missing ${name} attribute`,
+      `missing DAS attribute ${name}`,
     );
   }
   return match[1];
@@ -1046,218 +872,126 @@ function quotedAttribute(block: string, name: string): string {
 
 export function parseDas(
   body: string,
+  family: VariableFamily,
   contract: SnartContract,
-): {
-  licenseUri: string;
-  sourceInstitution: string;
-  variableVersions: Record<VariableName, string>;
-} {
-  const variableVersions = {} as Record<VariableName, string>;
-  for (const variable of VARIABLES) {
-    const block = attributeBlock(body, variable);
-    const fillMatch = block.match(/Float32 _FillValue (-?\d+(?:\.\d+)?);/u);
-    if (!fillMatch || Number(fillMatch[1]) !== contract.source.fillValue) {
-      throw new SnartPipelineError(
-        'FAIL_DAS_FILL',
-        `${variable} has an unexpected fill value`,
-      );
-    }
-    const version = quotedAttribute(block, 'version');
-    if (version !== contract.source.variableVersions[variable]) {
-      throw new SnartPipelineError(
-        'FAIL_DAS_VERSION',
-        `${variable} version ${version} differs from contract`,
-      );
-    }
-    variableVersions[variable] = version;
+): SourceMetadata {
+  const blockMatch = body.match(
+    new RegExp(`(?:^|\\n)\\s*${family}\\s*\\{([\\s\\S]*?)\\n\\s*\\}`, 'u'),
+  );
+  if (!blockMatch) {
+    throw new SnartPipelineError(
+      'FAIL_DAS_SCHEMA',
+      `DAS is missing ${family} attributes`,
+    );
   }
-  const globalBlock = attributeBlock(body, 'NC_GLOBAL');
-  const sourceInstitution = quotedAttribute(globalBlock, 'institution');
-  const licenseUri = quotedAttribute(globalBlock, 'license');
+  const block = blockMatch[1];
+  const units = stringAttribute(block, 'units');
+  const aggregation = stringAttribute(block, 'cell_methods');
+  const fileVersion = stringAttribute(block, 'version');
+  const longName = stringAttribute(block, 'long_name');
+  const fillMatch = block.match(/Float32\s+_FillValue\s+(-?\d+(?:\.\d+)?)\s*;/u);
+  const sourceInstitution = stringAttribute(body, 'institution');
+  const licenseUri = stringAttribute(body, 'license');
+  const title = stringAttribute(body, 'title');
+  const expectedVariableVersion = contract.source.variableVersions[family];
   if (
-    sourceInstitution !== 'Norwegian Meteorological Institute, MET Norway' ||
-    !contract.source.acceptedLicenseUris.includes(licenseUri)
+    units !== contract.source.units[family] ||
+    aggregation !== contract.source.aggregations[family] ||
+    fileVersion !== contract.source.fileVersions[family] ||
+    !fillMatch ||
+    Number(fillMatch[1]) !== contract.source.fillValue ||
+    !longName.toLowerCase().includes('monthly') ||
+    !longName.includes('1991-2020') ||
+    sourceInstitution !== contract.source.metadataInstitution ||
+    !contract.source.acceptedLicenseUris.includes(licenseUri) ||
+    !title.includes(expectedVariableVersion)
   ) {
     throw new SnartPipelineError(
       'FAIL_DAS_PROVENANCE',
-      'source institution or license differs from contract',
+      `${family} DAS differs from the frozen monthly-normal contract`,
     );
   }
-  return { licenseUri, sourceInstitution, variableVersions };
+  return {
+    family,
+    month: 0,
+    X: 0,
+    Y: 0,
+    timeCount: 1,
+    licenseUri,
+    sourceInstitution,
+    sourceVariableVersion: expectedVariableVersion,
+    fileVersion,
+    units,
+    aggregation,
+  };
 }
 
-function parseArrayRows(
+function numericToken(value: string, label: string): number {
+  const result = Number(value);
+  if (!Number.isFinite(result)) {
+    throw new SnartPipelineError(
+      'FAIL_ASCII_VALUE',
+      `${label} is not finite`,
+    );
+  }
+  return result;
+}
+
+export function parseMonthlyPointAscii(
   body: string,
-  heading: RegExp,
-): { heading: RegExpMatchArray; rows: string[] } {
-  const lines = body.replace(/\r\n/gu, '\n').split('\n');
-  const index = lines.findIndex((line) => heading.test(line.trim()));
-  if (index < 0) {
+  family: VariableFamily,
+  month: number,
+  contract: SnartContract,
+): { family: VariableFamily; month: number; value: number; time: number } {
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    throw new SnartPipelineError('FAIL_MONTH', `invalid month ${month}`);
+  }
+  const valueMatch = body.match(
+    new RegExp(
+      `${family}\\.${family}\\[1\\]\\[1\\]\\[1\\][\\s\\S]*?\\[0\\]\\[0\\],\\s*(-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)`,
+      'u',
+    ),
+  );
+  const timeMatch = body.match(
+    /(?:^|\n)time\[1\]\s*\n\s*(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/u,
+  );
+  if (!valueMatch || !timeMatch) {
     throw new SnartPipelineError(
       'FAIL_ASCII_SCHEMA',
-      `missing array heading ${heading.source}`,
+      `monthly ${family} point response is malformed`,
     );
   }
-  const headingMatch = lines[index].trim().match(heading);
-  if (!headingMatch) {
-    throw new SnartPipelineError('FAIL_ASCII_SCHEMA', 'heading parse mismatch');
-  }
-  const rows: string[] = [];
-  for (let cursor = index + 1; cursor < lines.length; cursor += 1) {
-    const line = lines[cursor].trim();
-    if (line === '') {
-      if (rows.length > 0) break;
-      continue;
-    }
-    if (!line.startsWith('[') && rows.length > 0) break;
-    if (line.startsWith('[')) rows.push(line);
-  }
-  return { heading: headingMatch, rows };
-}
-
-function parseTimeValues(body: string): number[] {
-  const lines = body.replace(/\r\n/gu, '\n').split('\n');
-  const index = lines.findIndex((line) => /^time\[\d+\]$/u.test(line.trim()));
-  if (index < 0) {
-    throw new SnartPipelineError('FAIL_ASCII_TIME', 'time array is missing');
-  }
-  const expected = Number(lines[index].trim().match(/\d+/u)?.[0]);
-  const tokens: string[] = [];
-  for (let cursor = index + 1; cursor < lines.length; cursor += 1) {
-    const line = lines[cursor].trim();
-    if (line === '') {
-      if (tokens.length > 0) break;
-      continue;
-    }
-    if (/^[A-Za-z]/u.test(line)) break;
-    tokens.push(...line.split(',').map((token) => token.trim()).filter(Boolean));
-  }
-  const values = tokens.map(Number);
-  if (
-    values.length !== expected ||
-    values.some((value) => !Number.isFinite(value))
-  ) {
+  const value = numericToken(valueMatch[1], `${family} value`);
+  const time = numericToken(timeMatch[1], 'time value');
+  if (value === contract.source.fillValue) {
     throw new SnartPipelineError(
-      'FAIL_ASCII_TIME',
-      `expected ${expected} time values, received ${values.length}`,
+      'FAIL_SOURCE_VALUE',
+      `${family} month ${month} is the source fill value`,
     );
   }
-  return values;
-}
-
-function parsePointVariable(
-  body: string,
-  variable: VariableName,
-  expectedCount: number,
-): (number | null)[] {
-  const parsed = parseArrayRows(
-    body,
-    new RegExp(`^${variable}\\.${variable}\\[(\\d+)\\]\\[1\\]\\[1\\]$`, 'u'),
-  );
-  if (Number(parsed.heading[1]) !== expectedCount) {
+  if (family === 'rr' && value < 0) {
     throw new SnartPipelineError(
-      'FAIL_ASCII_VARIABLE',
-      `${variable} count differs from time`,
+      'FAIL_SOURCE_VALUE',
+      `rr month ${month} is negative`,
     );
   }
-  const values = parsed.rows.map((row, index) => {
-    const match = row.match(/^\[(\d+)\]\[0\],\s*(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)$/u);
-    if (!match || Number(match[1]) !== index) {
-      throw new SnartPipelineError(
-        'FAIL_ASCII_VARIABLE',
-        `${variable} row ${index} is malformed`,
-      );
-    }
-    const value = Number(match[2]);
-    return Number.isFinite(value) ? value : null;
-  });
-  if (values.length !== expectedCount) {
-    throw new SnartPipelineError(
-      'FAIL_ASCII_VARIABLE',
-      `${variable} row count differs from time`,
-    );
-  }
-  return values;
-}
-
-function localIsoDateFromHours(
-  hoursSince1900: number,
-  contract: SnartContract,
-): string {
-  const milliseconds =
-    Date.UTC(1900, 0, 1) + hoursSince1900 * 60 * 60 * 1000;
-  const instant = new Date(milliseconds);
-  if (
-    !Number.isFinite(milliseconds) ||
-    !contract.timePolicy.allowedUtcHours.includes(instant.getUTCHours()) ||
-    instant.getUTCMinutes() !== 0 ||
-    instant.getUTCSeconds() !== 0
-  ) {
-    throw new SnartPipelineError(
-      'FAIL_SOURCE_INSTANT',
-      `unexpected source instant ${instant.toISOString()}`,
-    );
-  }
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: contract.timePolicy.timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(instant);
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((part) => part.type === type)?.value;
-  return `${get('year')}-${get('month')}-${get('day')}`;
-}
-
-export function parsePointAscii(
-  body: string,
-  year: number,
-  contract: SnartContract,
-): RawClimateObservation[] {
-  const times = parseTimeValues(body);
-  const values = {
-    rr: parsePointVariable(body, 'rr', times.length),
-    tg: parsePointVariable(body, 'tg', times.length),
-    tn: parsePointVariable(body, 'tn', times.length),
-    tx: parsePointVariable(body, 'tx', times.length),
-  };
-  const seen = new Set<string>();
-  return times.map((time, index) => {
-    const localDate = localIsoDateFromHours(time, contract);
-    if (!localDate.startsWith(`${year}-`) || seen.has(localDate)) {
-      throw new SnartPipelineError(
-        'FAIL_SOURCE_DATE',
-        `duplicate or out-of-year local date ${localDate}`,
-      );
-    }
-    seen.add(localDate);
-    const normalize = (value: number | null) =>
-      value === contract.source.fillValue ? null : value;
-    return {
-      localDate,
-      year,
-      rr: normalize(values.rr[index]),
-      tg: normalize(values.tg[index]),
-      tn: normalize(values.tn[index]),
-      tx: normalize(values.tx[index]),
-    };
-  });
+  return { family, month, value, time };
 }
 
 function parseGridArray(
   body: string,
-  variable: 'latitude' | 'longitude',
+  variable: 'lat' | 'lon',
   expectedY: number,
   expectedX: number,
 ): Float64Array {
-  const parsed = parseArrayRows(
-    body,
-    new RegExp(`^${variable}\\.${variable}\\[(\\d+)\\]\\[(\\d+)\\]$`, 'u'),
-  );
+  const heading = new RegExp(
+    `(?:^|\\n)${variable}\\.${variable}\\[(\\d+)\\]\\[(\\d+)\\]\\s*\\n`,
+    'u',
+  ).exec(body);
   if (
-    Number(parsed.heading[1]) !== expectedY ||
-    Number(parsed.heading[2]) !== expectedX ||
-    parsed.rows.length !== expectedY
+    !heading ||
+    Number(heading[1]) !== expectedY ||
+    Number(heading[2]) !== expectedX
   ) {
     throw new SnartPipelineError(
       'FAIL_GRID_SCHEMA',
@@ -1265,12 +999,23 @@ function parseGridArray(
     );
   }
   const output = new Float64Array(expectedY * expectedX);
-  for (let Y = 0; Y < parsed.rows.length; Y += 1) {
-    const match = parsed.rows[Y].match(/^\[(\d+)\],\s*(.+)$/u);
-    if (!match || Number(match[1]) !== Y) {
+  const lines = body
+    .slice((heading.index ?? 0) + heading[0].length)
+    .replace(/\r\n/gu, '\n')
+    .split('\n');
+  let row = 0;
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (line === '') {
+      if (row > 0) break;
+      continue;
+    }
+    const match = line.match(/^\[(\d+)\],\s*(.+)$/u);
+    if (!match || Number(match[1]) !== row) {
+      if (row === expectedY) break;
       throw new SnartPipelineError(
         'FAIL_GRID_SCHEMA',
-        `${variable} row ${Y} is malformed`,
+        `${variable} row ${row} is malformed`,
       );
     }
     const values = match[2].split(',').map((value) => Number(value.trim()));
@@ -1280,10 +1025,17 @@ function parseGridArray(
     ) {
       throw new SnartPipelineError(
         'FAIL_GRID_SCHEMA',
-        `${variable} row ${Y} has invalid values`,
+        `${variable} row ${row} has invalid values`,
       );
     }
-    output.set(values, Y * expectedX);
+    output.set(values, row * expectedX);
+    row += 1;
+  }
+  if (row !== expectedY) {
+    throw new SnartPipelineError(
+      'FAIL_GRID_SCHEMA',
+      `${variable} contains ${row} of ${expectedY} rows`,
+    );
   }
   return output;
 }
@@ -1298,31 +1050,27 @@ function selectAllGridCells(
 ): Map<string, GridSelection> {
   const selections = new Map<string, GridSelection>();
   for (const place of projection) {
-    const placeLat = place.latE4 / 10_000;
-    const placeLon = place.lonE4 / 10_000;
     let selected:
       | (GridCell & {
           distanceMillimetres: number;
         })
       | undefined;
-
-    // The production grid contains millions of cells. Keeping this as a
-    // tight, allocation-free loop avoids constructing hundreds of millions
-    // of temporary iterator objects while preserving nearest-grid-cell@1.
+    const placeLat = place.latE4 / 10_000;
+    const placeLon = place.lonE4 / 10_000;
     for (let Y = 0; Y < YCount; Y += 1) {
       const rowOffset = Y * XCount;
       for (let X = 0; X < XCount; X += 1) {
         const index = rowOffset + X;
         const lat = latitudes[index];
         const lon = longitudes[index];
-        const coordinateValid =
-          Number.isFinite(lat) &&
-          Number.isFinite(lon) &&
-          lat >= -90 &&
-          lat <= 90 &&
-          lon >= -180 &&
-          lon <= 180;
-        if (!coordinateValid) {
+        if (
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lon) ||
+          lat < -90 ||
+          lat > 90 ||
+          lon < -180 ||
+          lon > 180
+        ) {
           continue;
         }
         const distanceMillimetres = roundHalfAwayFromZero(
@@ -1352,7 +1100,6 @@ function selectAllGridCells(
         }
       }
     }
-
     if (!selected) {
       selections.set(place.homePlaceKey, {
         status: 'unavailable',
@@ -1380,42 +1127,123 @@ function selectAllGridCells(
   return selections;
 }
 
-function syntheticFixtureObservations(): RawClimateObservation[] {
-  const observations: RawClimateObservation[] = [];
-  const keys = profileKeys();
-  for (let year = 1991; year <= 2020; year += 1) {
-    const leap =
-      year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-    for (let index = 0; index < keys.length; index += 1) {
-      const key = keys[index];
-      const seasonal = 7 + Math.sin(((index - 30) / 365) * Math.PI * 2) * 8;
-      const yearOffset = (year - 2005.5) * 0.01;
-      const tg = seasonal + yearOffset;
-      observations.push({
-        localDate: `${year}-${key}`,
-        year,
-        tg,
-        tn: tg - 3.25,
-        tx: tg + 4.75,
-        rr: index % 5 === 0 ? 2.5 : 0.2,
-      });
-      if (leap && key === '02-28') {
-        observations.push({
-          localDate: `${year}-02-29`,
-          year,
-          tg,
-          tn: tg - 3.25,
-          tx: tg + 4.75,
-          rr: 0.2,
-        });
-      }
-    }
+function endpointQuery(
+  datasetUrl: string,
+  family: VariableFamily,
+  Y: number,
+  X: number,
+): string {
+  return `${datasetUrl}.ascii?${family}[0:1:0][${Y}:1:${Y}][${X}:1:${X}],time[0:1:0]`;
+}
+
+function gridQuery(datasetUrl: string, Y: number, X: number): string {
+  return `${datasetUrl}.ascii?lat[0:1:${Y - 1}][0:1:${
+    X - 1
+  }],lon[0:1:${Y - 1}][0:1:${X - 1}]`;
+}
+
+function descriptor(datasetUrl: string): {
+  family: VariableFamily;
+  month: number;
+} {
+  const match = datasetUrl.match(
+    /\/(tg|rr)\/seNorge2018_(tg|rr)_normal_1991_2020_monthly_(0[1-9]|1[0-2])\.nc$/u,
+  );
+  if (!match || match[1] !== match[2]) {
+    throw new SnartPipelineError(
+      'FAIL_DATASET_URL',
+      `invalid monthly dataset URL ${datasetUrl}`,
+    );
   }
-  return observations;
+  return { family: match[1] as VariableFamily, month: Number(match[3]) };
+}
+
+function cachePaths(cacheDir: string, url: string): {
+  body: string;
+  metadata: string;
+} {
+  const key = sha256(url);
+  return {
+    body: join(cacheDir, `${key}.body`),
+    metadata: join(cacheDir, `${key}.json`),
+  };
+}
+
+async function readOrFetchCached(
+  url: string,
+  contract: SnartContract,
+  cacheDir: string,
+  offline: boolean,
+  maxBodyBytes?: number,
+): Promise<{ text: string; sha256: string }> {
+  const validated = validateMetUrl(url, contract.httpPolicy);
+  const canonicalUrl = validated.url.href;
+  const paths = cachePaths(cacheDir, canonicalUrl);
+  if (existsSync(paths.body) && existsSync(paths.metadata)) {
+    const metadata = readJson<{
+      schemaVersion: string;
+      url: string;
+      sha256: string;
+      bytes: number;
+    }>(paths.metadata);
+    const bytes = readFileSync(paths.body);
+    if (
+      metadata.schemaVersion !== 'babyora-snart-source-cache@1' ||
+      metadata.url !== canonicalUrl ||
+      metadata.sha256 !== sha256(bytes) ||
+      metadata.bytes !== bytes.byteLength
+    ) {
+      throw new SnartPipelineError(
+        'FAIL_CACHE_INTEGRITY',
+        `cached response is invalid for ${canonicalUrl}`,
+      );
+    }
+    return {
+      text: new TextDecoder('utf-8', { fatal: true }).decode(bytes),
+      sha256: metadata.sha256,
+    };
+  }
+  if (offline) {
+    throw new SnartPipelineError(
+      'FAIL_CACHE_MISS',
+      `offline cache is missing ${canonicalUrl}`,
+    );
+  }
+  const fetched = await fetchTextWithPolicy(canonicalUrl, contract.httpPolicy, {
+    maxBodyBytes,
+  });
+  const bytes = new TextEncoder().encode(fetched.text);
+  mkdirSync(cacheDir, { recursive: true });
+  writeAtomic(paths.body, bytes);
+  writeAtomic(
+    paths.metadata,
+    canonicalJsonFile({
+      bytes: bytes.byteLength,
+      schemaVersion: 'babyora-snart-source-cache@1',
+      sha256: fetched.sha256,
+      url: canonicalUrl,
+    }),
+  );
+  return { text: fetched.text, sha256: fetched.sha256 };
+}
+
+function addResponseDigest(
+  dataset: SourceDatasetRecord,
+  digest: ResponseDigest,
+): void {
+  if (!dataset.responseSha256.some((entry) => entry.url === digest.url)) {
+    dataset.responseSha256.push(digest);
+  }
 }
 
 function builderSha256(): string {
   return sha256(readFileSync(THIS_FILE));
+}
+
+function gitHead(): string {
+  return execFileSync('git', ['rev-parse', 'HEAD'], {
+    encoding: 'utf8',
+  }).trim();
 }
 
 function makePack(
@@ -1423,73 +1251,87 @@ function makePack(
   profiles: Record<string, JsonValue>,
 ): JsonRecord {
   return {
-    schemaVersion: 'babyora-snart-climate-pack@1',
+    contractVersion: contract.contractVersion,
     derivationVersion: contract.derivationPolicy.version,
     normalPeriod: contract.source.normalPeriod as unknown as JsonValue,
     profiles,
-    rulesetVersion: 'babyora-snart-heuristics@1',
+    rulesetVersion: 'babyora-snart-heuristics@2',
+    schemaVersion: 'babyora-monthly-normal-pack@2',
   };
 }
 
 function makeManifest(input: {
+  bindings: JsonValue[];
   contract: SnartContract;
   contractSha256: string;
   createdFromGitSha: string;
   fixtureMode: boolean;
+  fixtureSourceExcerptsSha256?: string;
   licenseUri: string;
-  sourceMetadataSha256: string;
-  sourceResponses: SourceResponseDigest[];
-  bindings: JsonValue[];
+  packSha256: string;
+  sourceDatasets: SourceDatasetRecord[];
   supportedProfileCount: number;
   unavailableProfileCount: number;
-  packSha256: string;
 }): JsonRecord {
-  const { contract } = input;
+  const sourceDatasets = input.sourceDatasets.map((dataset) => ({
+    ...dataset,
+    responseSha256: [...dataset.responseSha256].sort((left, right) =>
+      compareUtf8(left.url, right.url),
+    ),
+  }));
+  const metadataProjection = sourceDatasets.map((dataset) => ({
+    datasetUrl: dataset.datasetUrl,
+    metadataSha256: dataset.metadataSha256,
+  }));
   return {
-    schemaVersion: 'babyora-snart-climate-manifest@1',
     builderSha256: builderSha256(),
     canonicalPlaceCount:
       input.supportedProfileCount + input.unavailableProfileCount,
-    canonicalPlacesSha256: contract.homePlacePolicy.canonicalProjectionSha256,
+    canonicalPlacesSha256:
+      input.contract.homePlacePolicy.canonicalProjectionSha256,
     contractSha256: input.contractSha256,
-    coveragePolicy: {
-      expectedSamplesPerKey:
-        contract.derivationPolicy.expectedSamplesPerKey,
-      minimumRepresentedYears:
-        contract.derivationPolicy.minimumRepresentedYears,
-      minimumValidSamples: contract.derivationPolicy.minimumValidSamples,
-      partialProfiles: false,
-    },
     createdFromGitSha: input.createdFromGitSha,
-    derivationVersion: contract.derivationPolicy.version,
+    derivationVersion: input.contract.derivationPolicy.version,
     fixtureMode: input.fixtureMode,
-    gridPolicyVersion: contract.gridPolicy.version,
-    homePlaceKeyVersion: contract.homePlacePolicy.version,
-    httpPolicyVersion: contract.httpPolicy.version,
-    leapDayPolicy: contract.timePolicy.leapDayPolicy,
-    normalPeriod: contract.source.normalPeriod as unknown as JsonValue,
+    ...(input.fixtureSourceExcerptsSha256
+      ? {
+          fixtureSourceExcerptsSha256:
+            input.fixtureSourceExcerptsSha256,
+        }
+      : {}),
+    gridPolicyVersion: input.contract.gridPolicy.version,
+    homePlaceKeyVersion: input.contract.homePlacePolicy.version,
+    httpPolicyVersion: input.contract.httpPolicy.version,
+    monthCount: input.contract.derivationPolicy.monthCount,
+    normalPeriod: input.contract.source.normalPeriod as unknown as JsonValue,
     packSha256: input.packSha256,
     placeGridBindings: input.bindings,
     productionEligible: !input.fixtureMode,
-    quantileMethod: contract.derivationPolicy.quantileMethod,
-    roundingPolicy: contract.derivationPolicy.rounding as unknown as JsonValue,
-    rulesetVersion: 'babyora-snart-heuristics@1',
-    sourceCatalogUrl: contract.source.catalogUrl,
-    sourceDatasetName: contract.source.datasetName,
-    sourceDatasetUrls: contract.source.years.map((year) =>
-      contract.source.datasetUrlTemplate.replace('{YYYY}', String(year)),
-    ),
-    sourceDisclaimer: contract.source.derivedDataDisclaimer,
-    sourceInstitution: contract.source.sourceOrganization,
+    roundingPolicy:
+      input.contract.derivationPolicy.rounding as unknown as JsonValue,
+    rulesetVersion: 'babyora-snart-heuristics@2',
+    schemaVersion: 'babyora-monthly-normal-manifest@2',
+    sourceAggregations:
+      input.contract.source.aggregations as unknown as JsonValue,
+    sourceCatalogUrls:
+      input.contract.source.catalogUrls as unknown as JsonValue,
+    sourceDatasetName: input.contract.source.datasetName,
+    sourceDatasets: sourceDatasets as unknown as JsonValue,
+    sourceDisclaimer: input.contract.source
+      .derivedDataDisclaimer as JsonValue,
+    sourceFileVersions:
+      input.contract.source.fileVersions as unknown as JsonValue,
+    sourceInstitution: input.contract.source.metadataInstitution,
     sourceLicenseUri: input.licenseUri,
-    sourceMetadataSha256: input.sourceMetadataSha256,
-    sourceResponseSha256: input.sourceResponses.map(
-      (entry) => entry as unknown as JsonValue,
+    sourceMetadataSha256: sha256(
+      canonicalJsonFile(metadataProjection as unknown as JsonValue),
     ),
+    sourceUnits: input.contract.source.units as unknown as JsonValue,
     sourceVariableVersions:
-      contract.source.variableVersions as unknown as JsonValue,
+      input.contract.source.variableVersions as unknown as JsonValue,
     supportedProfileCount: input.supportedProfileCount,
-    timeMappingVersion: contract.timePolicy.version,
+    targetWindowDerivationVersion:
+      input.contract.derivationPolicy.targetWindowDerivationVersion,
     unavailableProfileCount: input.unavailableProfileCount,
   };
 }
@@ -1497,7 +1339,7 @@ function makeManifest(input: {
 function writeBundle(
   outputDir: string,
   pack: JsonRecord,
-  manifestWithoutPackHash: Omit<JsonRecord, 'packSha256'> | JsonRecord,
+  manifestWithoutPackHash: JsonRecord,
 ): BuiltBundle {
   mkdirSync(outputDir, { recursive: true });
   const packContent = canonicalJsonFile(pack);
@@ -1533,6 +1375,7 @@ async function buildFixtureBundle(
       sourceUrl: string;
       sha256: string;
       body: string;
+      kind: EndpointKind;
     }[];
     fixtureBuild: {
       productionEligible: boolean;
@@ -1553,19 +1396,33 @@ async function buildFixtureBundle(
       );
     }
   }
+  const excerptProjection = fixtures.officialExcerpts.map((excerpt) => ({
+    sha256: excerpt.sha256,
+    sourceUrl: excerpt.sourceUrl,
+  }));
+  const fixtureSourceExcerptsSha256 = sha256(
+    canonicalJsonFile(excerptProjection as unknown as JsonValue),
+  );
   const projection = buildHomePlaceProjection(options.contractPath);
   const supportedNames = new Set(
     fixtures.fixtureBuild.supportedHomePlaceNames.map((name) =>
       normalizedName(name),
     ),
   );
-  const days = deriveClimateDays(syntheticFixtureObservations(), contract);
   const profiles: Record<string, JsonValue> = {};
   const bindings: JsonValue[] = [];
   for (const place of projection) {
     if (supportedNames.has(place.nameNfc)) {
+      const months = deriveMonthlyProfile(
+        Array.from({ length: 12 }, (_, index) => ({
+          month: index + 1,
+          meanTemperatureC: index - 6,
+          monthlyPrecipitationMm: (index + 1) * 10,
+        })),
+        contract,
+      );
+      const profileId = `snart-profile:v2:${place.homePlaceKey}`;
       profiles[place.homePlaceKey] = {
-        days: days as unknown as JsonValue,
         grid: {
           X: 0,
           Y: 0,
@@ -1574,7 +1431,8 @@ async function buildFixtureBundle(
           lon: place.lonE4 / 10_000,
         },
         homePlaceKey: place.homePlaceKey,
-        profileId: `snart-profile:v1:${place.homePlaceKey}`,
+        months: months as unknown as JsonValue,
+        profileId,
       };
       bindings.push({
         ...place,
@@ -1583,7 +1441,7 @@ async function buildFixtureBundle(
         distanceMillimetres: 0,
         gridLat: place.latE4 / 10_000,
         gridLon: place.lonE4 / 10_000,
-        profileId: `snart-profile:v1:${place.homePlaceKey}`,
+        profileId,
         status: 'supported',
       } as unknown as JsonValue);
     } else {
@@ -1594,26 +1452,54 @@ async function buildFixtureBundle(
       } as unknown as JsonValue);
     }
   }
+  const sourceDatasets = contract.source.datasetUrls.map((datasetUrl) => {
+    const { family, month } = descriptor(datasetUrl);
+    const familyExcerpts = fixtures.officialExcerpts.filter((entry) =>
+      entry.sourceUrl.includes(`/aggregated_products/${family}/`),
+    );
+    const metadataSha256 = sha256(
+      canonicalJsonFile({
+        datasetUrl,
+        officialExcerptSha256: familyExcerpts
+          .filter((entry) => entry.kind === 'dds' || entry.kind === 'das')
+          .map((entry) => entry.sha256),
+      }),
+    );
+    const url = endpointQuery(datasetUrl, family, 0, 0);
+    return {
+      datasetUrl,
+      family,
+      variable: family,
+      month,
+      metadataSha256,
+      responseSha256: [
+        {
+          url,
+          sha256: sha256(
+            canonicalJsonFile({
+              family,
+              fixtureMode: true,
+              month,
+            }),
+          ),
+        },
+      ],
+    };
+  });
   const pack = makePack(contract, profiles);
   const packSha = sha256(canonicalJsonFile(pack));
-  const sourceResponses = fixtures.officialExcerpts.map((excerpt) => ({
-    url: excerpt.sourceUrl,
-    sha256: excerpt.sha256,
-  }));
   const manifest = makeManifest({
+    bindings,
     contract,
     contractSha256: contractSha,
     createdFromGitSha: options.createdFromGitSha ?? 'fixture-candidate',
     fixtureMode: true,
+    fixtureSourceExcerptsSha256,
     licenseUri: contract.source.acceptedLicenseUris[0],
-    sourceMetadataSha256: sha256(
-      canonicalJsonFile(sourceResponses as unknown as JsonValue),
-    ),
-    sourceResponses,
-    bindings,
+    packSha256: packSha,
+    sourceDatasets,
     supportedProfileCount: Object.keys(profiles).length,
     unavailableProfileCount: projection.length - Object.keys(profiles).length,
-    packSha256: packSha,
   });
   return writeBundle(options.outputDir, pack, manifest);
 }
@@ -1622,18 +1508,23 @@ async function preflightSource(
   contract: SnartContract,
   cacheDir: string,
   offline: boolean,
-  sourceResponses: SourceResponseDigest[],
   onProgress: (message: string) => void,
-): Promise<SourceMetadata[]> {
+): Promise<{
+  metadata: SourceMetadata[];
+  sourceDatasets: SourceDatasetRecord[];
+}> {
   const metadata: SourceMetadata[] = [];
-  for (const year of contract.source.years) {
-    onProgress(`preflight ${year}`);
-    const base = contract.source.datasetUrlTemplate.replace(
-      '{YYYY}',
-      String(year),
+  const sourceDatasets: SourceDatasetRecord[] = [];
+  for (let index = 0; index < contract.source.datasetUrls.length; index += 1) {
+    const datasetUrl = contract.source.datasetUrls[index];
+    const { family, month } = descriptor(datasetUrl);
+    onProgress(
+      `preflight ${index + 1}/${contract.source.datasetUrls.length} ${family}-${String(
+        month,
+      ).padStart(2, '0')}`,
     );
-    const ddsUrl = `${base}.dds`;
-    const dasUrl = `${base}.das`;
+    const ddsUrl = `${datasetUrl}.dds`;
+    const dasUrl = `${datasetUrl}.das`;
     const dds = await readOrFetchCached(
       ddsUrl,
       contract,
@@ -1646,18 +1537,26 @@ async function preflightSource(
       cacheDir,
       offline,
     );
-    sourceResponses.push(
-      { url: ddsUrl, sha256: dds.sha256 },
-      { url: dasUrl, sha256: das.sha256 },
-    );
-    const dimensions = parseDds(dds.text, year, contract);
-    const attributes = parseDas(das.text, contract);
+    const dimensions = parseDds(dds.text, family);
+    const attributes = parseDas(das.text, family, contract);
     metadata.push({
-      year,
       ...dimensions,
       ...attributes,
-      ddsSha256: dds.sha256,
-      dasSha256: das.sha256,
+      family,
+      month,
+    });
+    sourceDatasets.push({
+      datasetUrl,
+      family,
+      variable: family,
+      month,
+      metadataSha256: sha256(
+        canonicalJsonFile({
+          das: { sha256: das.sha256, url: new URL(dasUrl).href },
+          dds: { sha256: dds.sha256, url: new URL(ddsUrl).href },
+        }),
+      ),
+      responseSha256: [],
     });
   }
   const first = metadata[0];
@@ -1665,31 +1564,17 @@ async function preflightSource(
     if (
       entry.Y !== first.Y ||
       entry.X !== first.X ||
+      entry.timeCount !== 1 ||
       entry.licenseUri !== first.licenseUri ||
-      canonicalJson(entry.variableVersions as unknown as JsonValue) !==
-        canonicalJson(first.variableVersions as unknown as JsonValue)
+      entry.sourceInstitution !== first.sourceInstitution
     ) {
       throw new SnartPipelineError(
         'FAIL_SOURCE_DRIFT',
-        `source schema/provenance drift in ${entry.year}`,
+        `source schema/provenance drift in ${entry.family}-${entry.month}`,
       );
     }
   }
-  return metadata;
-}
-
-function pointQuery(
-  base: string,
-  timeCount: number,
-  Y: number,
-  X: number,
-): string {
-  const last = timeCount - 1;
-  const variables = VARIABLES.map(
-    (variable) =>
-      `${variable}[0:1:${last}][${Y}:1:${Y}][${X}:1:${X}]`,
-  );
-  return `${base}.ascii?time[0:1:${last}],${variables.join(',')}`;
+  return { metadata, sourceDatasets };
 }
 
 async function buildLiveOrCacheBundle(
@@ -1705,42 +1590,39 @@ async function buildLiveOrCacheBundle(
   }
   const offline = options.mode === 'cache';
   const onProgress = options.onProgress ?? (() => undefined);
-  const sourceResponses: SourceResponseDigest[] = [];
-  const metadata = await preflightSource(
+  const { metadata, sourceDatasets } = await preflightSource(
     contract,
     options.cacheDir,
     offline,
-    sourceResponses,
     onProgress,
   );
-  const reference = metadata.find((entry) => entry.year === 2020) ?? metadata[0];
-  const referenceBase = contract.source.datasetUrlTemplate.replace(
-    '{YYYY}',
-    String(reference.year),
+  const reference = metadata[0];
+  const coordinateUrl = gridQuery(
+    sourceDatasets[0].datasetUrl,
+    reference.Y,
+    reference.X,
   );
-  const gridUrl = `${referenceBase}.ascii?latitude[0:1:${
-    reference.Y - 1
-  }][0:1:${reference.X - 1}],longitude[0:1:${reference.Y - 1}][0:1:${
-    reference.X - 1
-  }]`;
-  onProgress('resolve grid coordinates');
-  const grid = await readOrFetchCached(
-    gridUrl,
+  onProgress('resolve source coordinate grid');
+  const coordinateResponse = await readOrFetchCached(
+    coordinateUrl,
     contract,
     options.cacheDir,
     offline,
     contract.httpPolicy.maxBodyBytes.coordinateGrid,
   );
-  sourceResponses.push({ url: gridUrl, sha256: grid.sha256 });
+  addResponseDigest(sourceDatasets[0], {
+    url: new URL(coordinateUrl).href,
+    sha256: coordinateResponse.sha256,
+  });
   const latitudes = parseGridArray(
-    grid.text,
-    'latitude',
+    coordinateResponse.text,
+    'lat',
     reference.Y,
     reference.X,
   );
   const longitudes = parseGridArray(
-    grid.text,
-    'longitude',
+    coordinateResponse.text,
+    'lon',
     reference.Y,
     reference.X,
   );
@@ -1755,9 +1637,9 @@ async function buildLiveOrCacheBundle(
   );
   const profiles: Record<string, JsonValue> = {};
   const bindings: JsonValue[] = [];
-  let placeIndex = 0;
-  for (const place of projection) {
-    placeIndex += 1;
+
+  for (let placeIndex = 0; placeIndex < projection.length; placeIndex += 1) {
+    const place = projection[placeIndex];
     const selection = selections.get(place.homePlaceKey);
     if (!selection || selection.status === 'unavailable') {
       bindings.push({
@@ -1768,92 +1650,110 @@ async function buildLiveOrCacheBundle(
       continue;
     }
     onProgress(
-      `fetch point ${placeIndex}/${projection.length} ${place.nameNfc} ` +
-        `Y=${selection.Y} X=${selection.X}`,
+      `fetch place ${placeIndex + 1}/${projection.length} ${place.nameNfc}`,
     );
-    const observations: RawClimateObservation[] = [];
-    for (const entry of metadata) {
-      onProgress(
-        `fetch point ${placeIndex}/${projection.length} ${place.nameNfc} ${entry.year}`,
-      );
-      const base = contract.source.datasetUrlTemplate.replace(
-        '{YYYY}',
-        String(entry.year),
-      );
-      const url = pointQuery(
-        base,
-        entry.timeCount,
+    const temperatures = new Map<number, number>();
+    const precipitation = new Map<number, number>();
+    let invalidReason: string | undefined;
+    for (const dataset of sourceDatasets) {
+      const url = endpointQuery(
+        dataset.datasetUrl,
+        dataset.family,
         selection.Y,
         selection.X,
       );
-      const point = await readOrFetchCached(
-        url,
-        contract,
-        options.cacheDir,
-        offline,
-      );
-      sourceResponses.push({ url, sha256: point.sha256 });
-      observations.push(...parsePointAscii(point.text, entry.year, contract));
-    }
-    try {
-      const days = deriveClimateDays(observations, contract);
-      const profileId = `snart-profile:v1:${place.homePlaceKey}`;
-      profiles[place.homePlaceKey] = {
-        days: days as unknown as JsonValue,
-        grid: {
-          X: selection.X,
-          Y: selection.Y,
-          distanceMillimetres: selection.distanceMillimetres,
-          lat: selection.gridLat,
-          lon: selection.gridLon,
-        },
-        homePlaceKey: place.homePlaceKey,
-        profileId,
-      };
-      bindings.push({
-        ...place,
-        X: selection.X,
-        Y: selection.Y,
-        distanceMillimetres: selection.distanceMillimetres,
-        gridLat: selection.gridLat,
-        gridLon: selection.gridLon,
-        profileId,
-        status: 'supported',
-      } as unknown as JsonValue);
-    } catch (error) {
-      if (
-        error instanceof SnartPipelineError &&
-        (error.code === 'FAIL_COVERAGE' ||
-          error.code === 'FAIL_SOURCE_VALUE' ||
-          error.code === 'FAIL_DUPLICATE_DATE')
-      ) {
-        bindings.push({
-          ...place,
-          reason: 'grid_invalid_or_sea',
-          status: 'unavailable',
-        } as unknown as JsonValue);
-      } else {
+      try {
+        const point = await readOrFetchCached(
+          url,
+          contract,
+          options.cacheDir,
+          offline,
+          contract.httpPolicy.maxBodyBytes.metadataOrPoint,
+        );
+        addResponseDigest(dataset, {
+          url: new URL(url).href,
+          sha256: point.sha256,
+        });
+        const parsed = parseMonthlyPointAscii(
+          point.text,
+          dataset.family,
+          dataset.month,
+          contract,
+        );
+        if (dataset.family === 'tg') {
+          temperatures.set(dataset.month, parsed.value);
+        } else {
+          precipitation.set(dataset.month, parsed.value);
+        }
+      } catch (error) {
+        if (
+          error instanceof SnartPipelineError &&
+          (error.code === 'FAIL_SOURCE_VALUE' ||
+            error.code === 'FAIL_ASCII_VALUE')
+        ) {
+          invalidReason = 'grid_invalid_or_sea';
+          break;
+        }
         throw error;
       }
     }
+    if (invalidReason) {
+      bindings.push({
+        ...place,
+        reason: invalidReason,
+        status: 'unavailable',
+      } as unknown as JsonValue);
+      continue;
+    }
+    const months = deriveMonthlyProfile(
+      Array.from({ length: 12 }, (_, index) => {
+        const month = index + 1;
+        return {
+          month,
+          meanTemperatureC: temperatures.get(month) ?? Number.NaN,
+          monthlyPrecipitationMm:
+            precipitation.get(month) ?? Number.NaN,
+        };
+      }),
+      contract,
+    );
+    const profileId = `snart-profile:v2:${place.homePlaceKey}`;
+    profiles[place.homePlaceKey] = {
+      grid: {
+        X: selection.X,
+        Y: selection.Y,
+        distanceMillimetres: selection.distanceMillimetres,
+        lat: selection.gridLat,
+        lon: selection.gridLon,
+      },
+      homePlaceKey: place.homePlaceKey,
+      months: months as unknown as JsonValue,
+      profileId,
+    };
+    bindings.push({
+      ...place,
+      X: selection.X,
+      Y: selection.Y,
+      distanceMillimetres: selection.distanceMillimetres,
+      gridLat: selection.gridLat,
+      gridLon: selection.gridLon,
+      profileId,
+      status: 'supported',
+    } as unknown as JsonValue);
   }
   const pack = makePack(contract, profiles);
   const packSha = sha256(canonicalJsonFile(pack));
-  const sourceMetadataSha = sha256(
-    canonicalJsonFile(metadata as unknown as JsonValue),
-  );
   const manifest = makeManifest({
+    bindings,
     contract,
     contractSha256: contractSha,
     createdFromGitSha: options.createdFromGitSha ?? gitHead(),
     fixtureMode: false,
     licenseUri: metadata[0].licenseUri,
-    sourceMetadataSha256: sourceMetadataSha,
-    sourceResponses,
-    bindings,
+    packSha256: packSha,
+    sourceDatasets,
     supportedProfileCount: Object.keys(profiles).length,
     unavailableProfileCount: projection.length - Object.keys(profiles).length,
-    packSha256: packSha,
   });
   return writeBundle(options.outputDir, pack, manifest);
 }
@@ -1862,15 +1762,33 @@ export async function buildClimatePack(
   options: BuildOptions,
 ): Promise<BuiltBundle> {
   const contractBytes = readFileSync(options.contractPath);
-  const contract = JSON.parse(contractBytes.toString('utf8')) as SnartContract;
+  const contract = JSON.parse(
+    contractBytes.toString('utf8'),
+  ) as SnartContract;
   if (
-    contract.schemaVersion !== 'babyora-snart-autonomy-contract@1' ||
-    contract.httpPolicy.maxConcurrentRequests !== 1
+    contract.schemaVersion !== 'babyora-snart-autonomy-contract@2' ||
+    contract.contractVersion !== 'snart-monthly-normal-contract@2' ||
+    contract.httpPolicy.maxConcurrentRequests !== 1 ||
+    contract.source.datasetUrls.length !== 24 ||
+    contract.derivationPolicy.monthCount !== 12 ||
+    contract.capabilities.soon_preparation ||
+    contract.capabilities.family_sharing ||
+    contract.capabilities.personal_calibration
   ) {
     throw new SnartPipelineError(
       'FAIL_CONTRACT',
-      'unexpected contract or concurrency policy',
+      'unexpected monthly-normal contract or capability state',
     );
+  }
+  for (const datasetUrl of contract.source.datasetUrls) {
+    const { family } = descriptor(datasetUrl);
+    validateMetUrl(`${datasetUrl}.dds`, contract.httpPolicy);
+    if (!['tg', 'rr'].includes(family)) {
+      throw new SnartPipelineError(
+        'FAIL_CONTRACT',
+        'unknown dataset family',
+      );
+    }
   }
   const contractSha = sha256(contractBytes);
   if (options.mode === 'fixture') {
@@ -1967,13 +1885,13 @@ async function main(): Promise<void> {
     onProgress: (message) => process.stderr.write(`[snart] ${message}\n`),
   });
   process.stdout.write(
-    `${canonicalJsonFile({
+    canonicalJsonFile({
       manifestPath: result.manifestPath,
       packPath: result.packPath,
       packSha256: result.packSha256,
       supportedProfileCount: result.supportedProfileCount,
       unavailableProfileCount: result.unavailableProfileCount,
-    })}`,
+    }),
   );
 }
 
@@ -1982,7 +1900,8 @@ const invokedPath = process.argv[1]
   : '';
 if (invokedPath === import.meta.url) {
   main().catch((error: unknown) => {
-    const message = error instanceof Error ? error.stack ?? error.message : String(error);
+    const message =
+      error instanceof Error ? error.stack ?? error.message : String(error);
     process.stderr.write(`${message}\n`);
     process.exitCode = 1;
   });

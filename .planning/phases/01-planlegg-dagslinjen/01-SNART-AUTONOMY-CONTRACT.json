@@ -11,6 +11,7 @@
   "source": {
     "datasetName": "seNorge_2018",
     "sourceOrganization": "Meteorologisk institutt (MET Norway)",
+    "metadataInstitution": "Norwegian Meteorological Institute, MET Norway",
     "normalPeriod": {
       "fromYear": 1991,
       "throughYear": 2020

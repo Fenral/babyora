@@ -4,19 +4,19 @@ import {
   readFileSync,
   rmSync,
 } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import {
   buildClimatePack,
   buildHomePlaceProjection,
   canonicalJsonFile,
-  profileKeys,
-  roundHalfAwayFromZero,
+  deriveMonthlyProfile,
   sha256,
   SnartPipelineError,
   validateMetUrl,
   type JsonValue,
+  type SnartContract,
 } from './build-climate-pack';
 
 type JsonRecord = { [key: string]: JsonValue };
@@ -40,6 +40,7 @@ export type ValidationReport = {
 const PACK_NAME = 'climate-1991-2020-v1.json';
 const MANIFEST_NAME = 'climate-1991-2020-v1.manifest.json';
 const BUILDER_PATH = 'scripts/snart/build-climate-pack.ts';
+const FIXTURE_PATH = 'scripts/snart/fixtures/met-boundaries-v1.json';
 const CREDENTIAL_PATTERN =
   /(?:FROST_CLIENT_ID|(?:API|ACCESS)[_-]?KEY|AUTHORIZATION\s*[:=]|BEARER\s+[A-Za-z0-9._~-]+|CLIENT[_-]?SECRET|PRIVATE[_-]?KEY)/iu;
 
@@ -119,6 +120,16 @@ function integer(value: JsonValue | undefined, label: string): number {
   return result;
 }
 
+function boolean(value: JsonValue | undefined, label: string): boolean {
+  if (typeof value !== 'boolean') {
+    throw new SnartPipelineError(
+      'FAIL_SCHEMA',
+      `${label} must be a boolean`,
+    );
+  }
+  return value;
+}
+
 function sha(value: JsonValue | undefined, label: string): string {
   const result = string(value, label);
   if (!/^[a-f0-9]{64}$/u.test(result)) {
@@ -134,80 +145,151 @@ function sameJson(left: JsonValue, right: JsonValue): boolean {
   return canonicalJsonFile(left) === canonicalJsonFile(right);
 }
 
-function validateDay(
-  day: JsonRecord,
+function exactKeys(
+  value: JsonRecord,
+  expected: string[],
   label: string,
-  minimumValidSamples: number,
-  minimumRepresentedYears: number,
 ): void {
-  const p10 = number(day.p10MinC, `${label}.p10MinC`);
-  const p50 = number(day.p50MeanC, `${label}.p50MeanC`);
-  const p90 = number(day.p90MaxC, `${label}.p90MaxC`);
-  const wet = number(day.wetProbability, `${label}.wetProbability`);
-  if (p10 > p50 || p50 > p90 || wet < 0 || wet > 1) {
+  const actual = Object.keys(value).sort();
+  const wanted = [...expected].sort();
+  if (!sameJson(actual, wanted)) {
     throw new SnartPipelineError(
-      'FAIL_DAY_VALUES',
-      `${label} has inconsistent climate values`,
+      'FAIL_SCHEMA_KEYS',
+      `${label} has unexpected fields`,
     );
-  }
-  if (
-    roundHalfAwayFromZero(p10, 1) !== p10 ||
-    roundHalfAwayFromZero(p50, 1) !== p50 ||
-    roundHalfAwayFromZero(p90, 1) !== p90 ||
-    roundHalfAwayFromZero(wet, 4) !== wet
-  ) {
-    throw new SnartPipelineError(
-      'FAIL_ROUNDING',
-      `${label} violates the frozen scales`,
-    );
-  }
-  const coverage = record(day.coverage, `${label}.coverage`);
-  const variables = Object.keys(coverage).sort();
-  if (!sameJson(variables, ['rr', 'tg', 'tn', 'tx'])) {
-    throw new SnartPipelineError(
-      'FAIL_COVERAGE_SCHEMA',
-      `${label} has unexpected coverage variables`,
-    );
-  }
-  for (const variable of variables) {
-    const stats = record(coverage[variable], `${label}.${variable}`);
-    const validCount = integer(stats.validCount, `${label}.${variable}.valid`);
-    const representedYears = integer(
-      stats.representedYears,
-      `${label}.${variable}.years`,
-    );
-    const missingCount = integer(
-      stats.missingCount,
-      `${label}.${variable}.missing`,
-    );
-    const discardedCount = integer(
-      stats.discardedCount,
-      `${label}.${variable}.discarded`,
-    );
-    const minimum = number(stats.min, `${label}.${variable}.min`);
-    const maximum = number(stats.max, `${label}.${variable}.max`);
-    if (
-      validCount < minimumValidSamples ||
-      representedYears < minimumRepresentedYears ||
-      missingCount < 0 ||
-      discardedCount < 0 ||
-      minimum > maximum
-    ) {
-      throw new SnartPipelineError(
-        'FAIL_COVERAGE',
-        `${label}.${variable} violates the coverage gate`,
-      );
-    }
   }
 }
 
-function validateProfile(
+function fixtureExcerptDigest(): string {
+  const fixtures = JSON.parse(
+    readFileSync(FIXTURE_PATH, 'utf8'),
+  ) as {
+    officialExcerpts: { sourceUrl: string; sha256: string; body: string }[];
+  };
+  for (const excerpt of fixtures.officialExcerpts) {
+    if (sha256(excerpt.body) !== excerpt.sha256) {
+      throw new SnartPipelineError(
+        'FAIL_FIXTURE_SHA',
+        `fixture excerpt hash mismatch for ${excerpt.sourceUrl}`,
+      );
+    }
+  }
+  return sha256(
+    canonicalJsonFile(
+      fixtures.officialExcerpts.map((excerpt) => ({
+        sha256: excerpt.sha256,
+        sourceUrl: excerpt.sourceUrl,
+      })) as unknown as JsonValue,
+    ),
+  );
+}
+
+function validateSourceDatasets(
+  manifest: JsonRecord,
+  contract: SnartContract,
+  fixtureMode: boolean,
+  supportedProfileCount: number,
+): void {
+  const datasets = array(
+    manifest.sourceDatasets,
+    'manifest.sourceDatasets',
+  ).map((value, index) =>
+    record(value, `manifest.sourceDatasets[${index}]`),
+  );
+  if (datasets.length !== 24) {
+    throw new SnartPipelineError(
+      'FAIL_SOURCE_DATASETS',
+      'manifest must bind exactly 24 monthly datasets',
+    );
+  }
+  const metadataProjection: JsonValue[] = [];
+  for (let index = 0; index < datasets.length; index += 1) {
+    const dataset = datasets[index];
+    exactKeys(
+      dataset,
+      [
+        'datasetUrl',
+        'family',
+        'metadataSha256',
+        'month',
+        'responseSha256',
+        'variable',
+      ],
+      `source dataset ${index}`,
+    );
+    const expectedUrl = contract.source.datasetUrls[index];
+    const datasetUrl = string(dataset.datasetUrl, 'datasetUrl');
+    if (datasetUrl !== expectedUrl) {
+      throw new SnartPipelineError(
+        'FAIL_SOURCE_DATASET_ORDER',
+        `source dataset ${index} differs from contract`,
+      );
+    }
+    const parsed = validateMetUrl(`${datasetUrl}.dds`, contract.httpPolicy);
+    if (
+      dataset.family !== parsed.family ||
+      dataset.variable !== parsed.family ||
+      dataset.month !== parsed.month
+    ) {
+      throw new SnartPipelineError(
+        'FAIL_SOURCE_DATASET_IDENTITY',
+        `${datasetUrl} family/month metadata is inconsistent`,
+      );
+    }
+    const metadataSha256 = sha(
+      dataset.metadataSha256,
+      `${datasetUrl}.metadataSha256`,
+    );
+    metadataProjection.push({ datasetUrl, metadataSha256 });
+    const responses = array(
+      dataset.responseSha256,
+      `${datasetUrl}.responseSha256`,
+    ).map((value, responseIndex) =>
+      record(value, `${datasetUrl}.responseSha256[${responseIndex}]`),
+    );
+    if (!fixtureMode && supportedProfileCount > 0 && responses.length === 0) {
+      throw new SnartPipelineError(
+        'FAIL_SOURCE_RESPONSES',
+        `${datasetUrl} has no point response evidence`,
+      );
+    }
+    const seen = new Set<string>();
+    for (const response of responses) {
+      exactKeys(response, ['sha256', 'url'], 'source response');
+      const url = string(response.url, 'source response URL');
+      const validated = validateMetUrl(url, contract.httpPolicy);
+      if (validated.datasetUrl !== datasetUrl || seen.has(url)) {
+        throw new SnartPipelineError(
+          'FAIL_SOURCE_RESPONSE_BINDING',
+          `${url} is duplicate or bound to the wrong dataset`,
+        );
+      }
+      seen.add(url);
+      sha(response.sha256, `${url}.sha256`);
+    }
+  }
+  if (
+    sha(manifest.sourceMetadataSha256, 'sourceMetadataSha256') !==
+    sha256(canonicalJsonFile(metadataProjection))
+  ) {
+    throw new SnartPipelineError(
+      'FAIL_SOURCE_METADATA_HASH',
+      'source metadata projection hash is inconsistent',
+    );
+  }
+}
+
+function validateMonthlyProfile(
   profile: JsonRecord,
   homePlaceKey: string,
   binding: JsonRecord,
-  minimumValidSamples: number,
-  minimumRepresentedYears: number,
+  contract: SnartContract,
 ): void {
+  exactKeys(
+    profile,
+    ['grid', 'homePlaceKey', 'months', 'profileId'],
+    `profile ${homePlaceKey}`,
+  );
   if (
     profile.homePlaceKey !== homePlaceKey ||
     profile.profileId !== binding.profileId
@@ -218,6 +300,11 @@ function validateProfile(
     );
   }
   const grid = record(profile.grid, `${homePlaceKey}.grid`);
+  exactKeys(
+    grid,
+    ['X', 'Y', 'distanceMillimetres', 'lat', 'lon'],
+    `${homePlaceKey}.grid`,
+  );
   for (const field of ['X', 'Y', 'distanceMillimetres'] as const) {
     if (integer(grid[field], `${homePlaceKey}.grid.${field}`) !== binding[field]) {
       throw new SnartPipelineError(
@@ -238,21 +325,32 @@ function validateProfile(
       );
     }
   }
-  const days = record(profile.days, `${homePlaceKey}.days`);
-  const expectedKeys = profileKeys();
-  const actualKeys = Object.keys(days).sort();
-  if (!sameJson(actualKeys, [...expectedKeys].sort())) {
+  const rows = array(profile.months, `${homePlaceKey}.months`).map(
+    (value, index) => {
+      const row = record(value, `${homePlaceKey}.months[${index}]`);
+      exactKeys(
+        row,
+        ['meanTemperatureC', 'month', 'monthlyPrecipitationMm'],
+        `${homePlaceKey}.months[${index}]`,
+      );
+      return {
+        month: integer(row.month, `${homePlaceKey}.month`),
+        meanTemperatureC: number(
+          row.meanTemperatureC,
+          `${homePlaceKey}.meanTemperatureC`,
+        ),
+        monthlyPrecipitationMm: number(
+          row.monthlyPrecipitationMm,
+          `${homePlaceKey}.monthlyPrecipitationMm`,
+        ),
+      };
+    },
+  );
+  const normalized = deriveMonthlyProfile(rows, contract);
+  if (!sameJson(rows as unknown as JsonValue, normalized as unknown as JsonValue)) {
     throw new SnartPipelineError(
-      'FAIL_PROFILE_DAYS',
-      `${homePlaceKey} does not contain exactly 365 profile keys`,
-    );
-  }
-  for (const key of expectedKeys) {
-    validateDay(
-      record(days[key], `${homePlaceKey}.${key}`),
-      `${homePlaceKey}.${key}`,
-      minimumValidSamples,
-      minimumRepresentedYears,
+      'FAIL_MONTH_ROUNDING',
+      `${homePlaceKey} monthly rows violate the frozen rounding policy`,
     );
   }
 }
@@ -261,7 +359,9 @@ export function validateClimateBundle(
   options: ValidateOptions,
 ): ValidationReport {
   const contractRaw = readFileSync(options.contractPath);
-  const contract = JSON.parse(contractRaw.toString('utf8')) as JsonRecord;
+  const contract = JSON.parse(
+    contractRaw.toString('utf8'),
+  ) as SnartContract;
   const packResult = readJsonRecord(join(options.dataDir, PACK_NAME), 'pack');
   const manifestResult = readJsonRecord(
     join(options.dataDir, MANIFEST_NAME),
@@ -273,12 +373,13 @@ export function validateClimateBundle(
   const manifestSha = sha256(manifestResult.raw);
 
   if (
-    pack.schemaVersion !== 'babyora-snart-climate-pack@1' ||
-    manifest.schemaVersion !== 'babyora-snart-climate-manifest@1'
+    contract.schemaVersion !== 'babyora-snart-autonomy-contract@2' ||
+    pack.schemaVersion !== 'babyora-monthly-normal-pack@2' ||
+    manifest.schemaVersion !== 'babyora-monthly-normal-manifest@2'
   ) {
     throw new SnartPipelineError(
       'FAIL_SCHEMA_VERSION',
-      'unexpected pack or manifest schema',
+      'unexpected contract, pack or manifest schema',
     );
   }
   if (sha(manifest.packSha256, 'manifest.packSha256') !== packSha) {
@@ -305,100 +406,101 @@ export function validateClimateBundle(
       'manifest builder hash differs from current builder',
     );
   }
-
-  const source = record(contract.source, 'contract.source');
-  const homePolicy = record(
-    contract.homePlacePolicy,
-    'contract.homePlacePolicy',
-  );
-  const gridPolicy = record(contract.gridPolicy, 'contract.gridPolicy');
-  const timePolicy = record(contract.timePolicy, 'contract.timePolicy');
-  const derivationPolicy = record(
-    contract.derivationPolicy,
-    'contract.derivationPolicy',
-  );
-  const httpPolicy = record(contract.httpPolicy, 'contract.httpPolicy');
-  const projection = buildHomePlaceProjection(options.contractPath);
-
-  if (
-    manifest.canonicalPlacesSha256 !==
-      homePolicy.canonicalProjectionSha256 ||
-    manifest.canonicalPlaceCount !== projection.length ||
-    manifest.homePlaceKeyVersion !== homePolicy.version ||
-    manifest.gridPolicyVersion !== gridPolicy.version ||
-    manifest.timeMappingVersion !== timePolicy.version ||
-    manifest.httpPolicyVersion !== httpPolicy.version ||
-    manifest.derivationVersion !== derivationPolicy.version ||
-    pack.derivationVersion !== derivationPolicy.version ||
-    !sameJson(
-      manifest.sourceVariableVersions as JsonValue,
-      source.variableVersions as JsonValue,
-    ) ||
-    manifest.sourceDatasetName !== source.datasetName ||
-    manifest.sourceInstitution !== source.sourceOrganization ||
-    !array(
-      source.acceptedLicenseUris,
-      'contract.source.acceptedLicenseUris',
-    ).includes(manifest.sourceLicenseUri)
-  ) {
-    throw new SnartPipelineError(
-      'FAIL_PROVENANCE',
-      'manifest provenance differs from the frozen contract',
-    );
-  }
   if (Object.hasOwn(manifest, 'generatedAt')) {
     throw new SnartPipelineError(
       'FAIL_NONDETERMINISTIC_FIELD',
       'generatedAt cannot carry bundle identity',
     );
   }
-  const actualFixtureMode = manifest.fixtureMode === true;
+  const actualFixtureMode = boolean(
+    manifest.fixtureMode,
+    'manifest.fixtureMode',
+  );
   if (
     actualFixtureMode !== Boolean(options.fixtureMode) ||
-    manifest.productionEligible !== !actualFixtureMode
+    boolean(manifest.productionEligible, 'manifest.productionEligible') !==
+      !actualFixtureMode
   ) {
     throw new SnartPipelineError(
       'FAIL_FIXTURE_BOUNDARY',
       'fixture/production eligibility mismatch',
     );
   }
-
-  const responses = array(
-    manifest.sourceResponseSha256,
-    'manifest.sourceResponseSha256',
-  );
-  const responseUrls = new Set<string>();
-  for (const value of responses) {
-    const response = record(value, 'source response digest');
-    const url = string(response.url, 'source response URL');
-    validateMetUrl(url, httpPolicy as unknown as Parameters<
-      typeof validateMetUrl
-    >[1]);
-    sha(response.sha256, 'source response SHA');
-    if (responseUrls.has(url)) {
+  if (actualFixtureMode) {
+    if (
+      sha(
+        manifest.fixtureSourceExcerptsSha256,
+        'fixtureSourceExcerptsSha256',
+      ) !== fixtureExcerptDigest()
+    ) {
       throw new SnartPipelineError(
-        'FAIL_SOURCE_RESPONSE_DUPLICATE',
-        `duplicate response URL ${url}`,
+        'FAIL_FIXTURE_METADATA_HASH',
+        'fixture manifest does not bind the official excerpts',
       );
     }
-    responseUrls.add(url);
+  } else if (Object.hasOwn(manifest, 'fixtureSourceExcerptsSha256')) {
+    throw new SnartPipelineError(
+      'FAIL_FIXTURE_BOUNDARY',
+      'production manifest contains fixture evidence',
+    );
   }
-  sha(manifest.sourceMetadataSha256, 'manifest.sourceMetadataSha256');
+
+  const projection = buildHomePlaceProjection(options.contractPath);
   if (
-    actualFixtureMode &&
-    manifest.sourceMetadataSha256 !==
-      sha256(canonicalJsonFile(responses))
+    manifest.canonicalPlacesSha256 !==
+      contract.homePlacePolicy.canonicalProjectionSha256 ||
+    manifest.canonicalPlaceCount !== projection.length ||
+    manifest.homePlaceKeyVersion !== contract.homePlacePolicy.version ||
+    manifest.gridPolicyVersion !== contract.gridPolicy.version ||
+    manifest.httpPolicyVersion !== contract.httpPolicy.version ||
+    manifest.derivationVersion !== contract.derivationPolicy.version ||
+    manifest.targetWindowDerivationVersion !==
+      contract.derivationPolicy.targetWindowDerivationVersion ||
+    manifest.monthCount !== contract.derivationPolicy.monthCount ||
+    manifest.sourceDatasetName !== contract.source.datasetName ||
+    manifest.sourceInstitution !== contract.source.metadataInstitution ||
+    !contract.source.acceptedLicenseUris.includes(
+      string(manifest.sourceLicenseUri, 'sourceLicenseUri'),
+    ) ||
+    !sameJson(
+      manifest.sourceCatalogUrls as JsonValue,
+      contract.source.catalogUrls as unknown as JsonValue,
+    ) ||
+    !sameJson(
+      manifest.sourceVariableVersions as JsonValue,
+      contract.source.variableVersions as unknown as JsonValue,
+    ) ||
+    !sameJson(
+      manifest.sourceFileVersions as JsonValue,
+      contract.source.fileVersions as unknown as JsonValue,
+    ) ||
+    !sameJson(
+      manifest.sourceUnits as JsonValue,
+      contract.source.units as unknown as JsonValue,
+    ) ||
+    !sameJson(
+      manifest.sourceAggregations as JsonValue,
+      contract.source.aggregations as unknown as JsonValue,
+    ) ||
+    !sameJson(
+      manifest.normalPeriod as JsonValue,
+      contract.source.normalPeriod as unknown as JsonValue,
+    ) ||
+    !sameJson(
+      manifest.roundingPolicy as JsonValue,
+      contract.derivationPolicy.rounding as unknown as JsonValue,
+    )
   ) {
     throw new SnartPipelineError(
-      'FAIL_FIXTURE_METADATA_HASH',
-      'fixture metadata hash does not bind its official excerpts',
+      'FAIL_PROVENANCE',
+      'manifest provenance differs from the frozen contract',
     );
   }
 
   const bindings = array(
     manifest.placeGridBindings,
     'manifest.placeGridBindings',
-  ).map((value) => record(value, 'place binding'));
+  ).map((value, index) => record(value, `place binding ${index}`));
   if (bindings.length !== projection.length) {
     throw new SnartPipelineError(
       'FAIL_PLACE_COVERAGE',
@@ -432,7 +534,16 @@ export function validateClimateBundle(
       string(binding.profileId, `${key}.profileId`);
       integer(binding.X, `${key}.X`);
       integer(binding.Y, `${key}.Y`);
-      integer(binding.distanceMillimetres, `${key}.distance`);
+      const distance = integer(
+        binding.distanceMillimetres,
+        `${key}.distance`,
+      );
+      if (distance < 0 || distance > contract.gridPolicy.maxDistanceMillimetres) {
+        throw new SnartPipelineError(
+          'FAIL_GRID_BINDING',
+          `${key} distance is outside the frozen policy`,
+        );
+      }
       number(binding.gridLat, `${key}.gridLat`);
       number(binding.gridLon, `${key}.gridLon`);
     } else if (binding.status === 'unavailable') {
@@ -465,6 +576,21 @@ export function validateClimateBundle(
       'supported/unavailable/profile counts disagree',
     );
   }
+  if (
+    pack.derivationVersion !== contract.derivationPolicy.version ||
+    pack.contractVersion !== contract.contractVersion ||
+    pack.rulesetVersion !== 'babyora-snart-heuristics@2' ||
+    manifest.rulesetVersion !== 'babyora-snart-heuristics@2' ||
+    !sameJson(
+      pack.normalPeriod as JsonValue,
+      contract.source.normalPeriod as unknown as JsonValue,
+    )
+  ) {
+    throw new SnartPipelineError(
+      'FAIL_PACK_PROVENANCE',
+      'pack identity differs from the contract',
+    );
+  }
   for (const key of Object.keys(profiles)) {
     const binding = bindingByKey.get(key);
     if (!binding || binding.status !== 'supported') {
@@ -473,21 +599,20 @@ export function validateClimateBundle(
         `profile ${key} is not supported by manifest`,
       );
     }
-    validateProfile(
+    validateMonthlyProfile(
       record(profiles[key], `profile ${key}`),
       key,
       binding,
-      integer(
-        record(manifest.coveragePolicy, 'coveragePolicy').minimumValidSamples,
-        'minimumValidSamples',
-      ),
-      integer(
-        record(manifest.coveragePolicy, 'coveragePolicy')
-          .minimumRepresentedYears,
-        'minimumRepresentedYears',
-      ),
+      contract,
     );
   }
+
+  validateSourceDatasets(
+    manifest,
+    contract,
+    actualFixtureMode,
+    supportedBindings.length,
+  );
 
   return {
     valid: true,
@@ -511,12 +636,24 @@ function temporaryDirectory(prefix: string): string {
   return mkdtempSync(join(root, prefix));
 }
 
+function removeTemporaryDirectory(directory: string): void {
+  const root = `${resolve('tmp')}${sep}`;
+  const target = resolve(directory);
+  if (!target.startsWith(root)) {
+    throw new SnartPipelineError(
+      'FAIL_TEMP_PATH',
+      `refusing to remove non-temporary path ${target}`,
+    );
+  }
+  rmSync(target, { recursive: true, force: true });
+}
+
 async function validateFixture(contractPath: string): Promise<ValidationReport> {
   const directory = temporaryDirectory('snart-fixture-validation-');
   try {
     await buildClimatePack({
       contractPath,
-      fixturePath: 'scripts/snart/fixtures/met-boundaries-v1.json',
+      fixturePath: FIXTURE_PATH,
       mode: 'fixture',
       outputDir: directory,
       createdFromGitSha: 'fixture-candidate',
@@ -527,7 +664,7 @@ async function validateFixture(contractPath: string): Promise<ValidationReport> 
       fixtureMode: true,
     });
   } finally {
-    rmSync(directory, { recursive: true, force: true });
+    removeTemporaryDirectory(directory);
   }
 }
 
@@ -579,8 +716,8 @@ async function validateReproducibility(
     }
     return hashes;
   } finally {
-    rmSync(first, { recursive: true, force: true });
-    rmSync(second, { recursive: true, force: true });
+    removeTemporaryDirectory(first);
+    removeTemporaryDirectory(second);
   }
 }
 
@@ -605,7 +742,10 @@ async function main(): Promise<void> {
   } else {
     const dataDir =
       argumentValue(arguments_, '--data-dir') ?? 'src/data/snart';
-    result = validateClimateBundle({ contractPath, dataDir }) as unknown as JsonValue;
+    result = validateClimateBundle({
+      contractPath,
+      dataDir,
+    }) as unknown as JsonValue;
   }
   process.stdout.write(canonicalJsonFile(result));
 }
