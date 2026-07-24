@@ -82,18 +82,30 @@ function targetSignals(
   rows: ReturnType<typeof monthlyRows>,
   asOf: Date,
 ): { precipitation: number; temperature: number } {
-  let precipitation = 0;
-  let temperature = 0;
+  const targetMonths = new Map<
+    string,
+    { count: number; month: number; year: number }
+  >();
   for (let offset = 28; offset <= 42; offset += 1) {
     const date = addCalendarDays(asOf, offset);
+    const year = date.getUTCFullYear();
     const month = date.getUTCMonth() + 1;
+    const key = `${year}-${month}`;
+    const current = targetMonths.get(key) ?? { count: 0, month, year };
+    current.count += 1;
+    targetMonths.set(key, current);
+  }
+  let precipitation = 0;
+  let temperature = 0;
+  for (const { count, month, year } of targetMonths.values()) {
     const row = rows[month - 1];
-    temperature += row.meanTemperatureC / 15;
+    temperature += row.meanTemperatureC * count;
     precipitation +=
       row.monthlyPrecipitationMm /
-      daysInMonth(date.getUTCFullYear(), month);
+      daysInMonth(year, month) *
+      count;
   }
-  return { precipitation, temperature };
+  return { precipitation, temperature: temperature / 15 };
 }
 
 function temperatureBucket(value: number): number {
