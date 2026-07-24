@@ -233,6 +233,17 @@ function ordinaryMultilineFlowControls(checksum: string): readonly string[] {
   ];
 }
 
+function ordinaryMultilineQuotedControls(): readonly string[] {
+  return [
+    'multiline_double_note: "first line',
+    '  # literal comment-looking content inside the continuing quote',
+    '  folded final line with an escaped \\"reviewed\\" quote"',
+    "multiline_single_note: 'first line",
+    '  # literal comment-looking content inside the continuing quote',
+    "  folded final line with a doubled ''reviewed'' quote'",
+  ];
+}
+
 function ordinaryMetadataControls(checksum: string): readonly string[] {
   const referencedCommit = 'c'.repeat(40);
   return [
@@ -258,6 +269,7 @@ function ordinaryMetadataControls(checksum: string): readonly string[] {
     'url_fragment: https://example.invalid/path#fragment',
     `validation_evidence_sha256: ${checksum} # ordinary checksum comment`,
     ...ordinaryMultilineFlowControls(checksum),
+    ...ordinaryMultilineQuotedControls(),
   ];
 }
 
@@ -999,6 +1011,88 @@ describe('pure exact-label and path guards', () => {
         ].join('\n'),
       ),
     ).toThrow(/candidate SHA alias|flow|frontmatter/i);
+  });
+
+  it('rejects an unknown semantic commit scalar joined by an escaped quoted line break', () => {
+    const conflictingSha = 'b'.repeat(40);
+    const escapedCommitNode = [
+      `metadata_note: "${conflictingSha.slice(0, 20)}\\`,
+      `  ${conflictingSha.slice(20)}"`,
+    ];
+
+    expect(() =>
+      parsePhase1CandidateSummary(
+        [
+          '---',
+          'status: PASS',
+          `candidate_sha: ${'1'.repeat(40)}`,
+          ...escapedCommitNode,
+          '---',
+        ].join('\n'),
+      ),
+    ).toThrow(/candidate SHA alias|frontmatter|scalar/i);
+
+    expect(() =>
+      parsePhase2HandoffSummary(
+        [
+          '---',
+          'status: PASS',
+          `phase2_candidate_sha: ${'2'.repeat(40)}`,
+          'feature_flag: true',
+          ...escapedCommitNode,
+          '---',
+        ].join('\n'),
+      ),
+    ).toThrow(/candidate SHA alias|frontmatter|scalar/i);
+  });
+
+  it('keeps multiline quoted security fields unambiguously invalid', () => {
+    const phase1Sha = '1'.repeat(40);
+    const phase2Sha = '2'.repeat(40);
+
+    for (const summary of [
+      [
+        '---',
+        'status: "PA',
+        '  SS"',
+        `candidate_sha: ${phase1Sha}`,
+        '---',
+      ],
+      [
+        '---',
+        'status: PASS',
+        `candidate_sha: "${phase1Sha.slice(0, 20)}\\`,
+        `  ${phase1Sha.slice(20)}"`,
+        '---',
+      ],
+    ]) {
+      expect(() =>
+        parsePhase1CandidateSummary(summary.join('\n')),
+      ).toThrow(/status|candidate_sha|unambiguous|continuation/i);
+    }
+
+    for (const summary of [
+      [
+        '---',
+        'status: PASS',
+        `phase2_candidate_sha: "${phase2Sha.slice(0, 20)}\\`,
+        `  ${phase2Sha.slice(20)}"`,
+        'feature_flag: true',
+        '---',
+      ],
+      [
+        '---',
+        'status: PASS',
+        `phase2_candidate_sha: ${phase2Sha}`,
+        'feature_flag: "tr',
+        '  ue"',
+        '---',
+      ],
+    ]) {
+      expect(() =>
+        parsePhase2HandoffSummary(summary.join('\n')),
+      ).toThrow(/candidate_sha|feature_flag|unambiguous|continuation/i);
+    }
   });
 
   it('rejects semantic continuations on every Phase 1 security field', () => {
