@@ -80,6 +80,7 @@ type PlanleggE2EWindow = Window & {
     entitlement?: 'loading' | 'free' | 'plus';
     fixedHome?: Readonly<{ city: string; lat: number; lon: number }>;
     automatic?: Readonly<{ mode: 'auto'; place: Readonly<{ city: string; lat: number; lon: number }> }>;
+    climateProfile?: 'invalid-hash';
     profileScope?: string;
     windowLocalDate?: string;
   }>;
@@ -380,6 +381,7 @@ function PlanleggData({
   const [snartEvaluator] = useState(() => createSnartSessionEvaluator({
     resolveExactHome: resolveCommittedSnartHome,
     lookupClimateProfile: (homePlaceKey) => {
+      if (e2eFixture?.climateProfile === 'invalid-hash') return null;
       const climateProfileId = `snart-profile:v2:${homePlaceKey}`;
       const climate = resolveSnartClimateProfile({
         homePlaceKey,

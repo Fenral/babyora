@@ -2307,8 +2307,12 @@ async function runSoonReadiness(
     throw new Error('Har allerede fjernet ikke valgt konsept før reset');
   }
 
-  await page.goto(`${BASE_URL}${fixture.path}&snart-e2e=plus`, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('navigation').first().getByRole('button', { name: /^Planlegg/u }).click();
+  const mainNavigation = page.getByRole('navigation', { name: 'Hovednavigasjon' });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await mainNavigation.getByRole('button', { name: 'Hjem', exact: true }).click({ force: true });
+  await page.locator('.planlegg-screen').waitFor({ state: 'detached', timeout: 15_000 });
+  await mainNavigation.getByRole('button', { name: 'Planlegg', exact: true }).click({ force: true });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.getByRole('heading', { level: 1, name: 'Planlegg', exact: true })
     .waitFor({ state: 'visible', timeout: 15_000 });
   await page.getByRole('radio', { name: 'Snart', exact: true })
