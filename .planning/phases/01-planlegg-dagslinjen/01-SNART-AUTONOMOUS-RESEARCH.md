@@ -13,7 +13,7 @@ Plan 01-13–01-18 kan kjøres uten eierporter dersom omfanget fryses slik:
 3. Begrens v1 til den aktuelle hashede `NO_CITIES`-projeksjonen: 60 oppføringer og 60 unike `home-place-key@1` ved kontroll 2026-07-24. Antallet avledes, aldri hardkodes. Et annet eller ugyldig hjemsted gir `unavailable`; aldri velg «nærmeste» profil i stillhet. [VERIFIED: repository `src/data/no-cities.ts`]
 4. Frys temperatur- og nedbørsgrensene som `babyora-snart-heuristics@2`. Merk dem i schema, manifest og copy som Babyora-produktheuristikker. Fjern sol-, helse-, sikkerhets- og størrelsesreglene fra Snart v1.
 5. Utsett formell personverngjennomgang uten å lempe på tekniske grenser: session-only; ingen URL, lagring, logger, analyse, backend, barn-ID eller tidspunkthistorikk.
-6. Erstatt alle godkjenningsporter med deterministiske validatorer og to reviewer som den aktive `gsd-executor` spawner etter kandidatcommit med `fork_turns: "none"`. Executoren bruker sin collaboration-gitte ID som implementøreksklusjon og reconciler receipts mot toolresultatene i samme agenttur; SHA-er er consistency-only.
+6. Erstatt alle godkjenningsporter med deterministiske validatorer og to distinkte, uavhengige read-only reviewer som root-orchestratoren innhenter på eksakt kandidat-SHA/tree/contract/pack. Eksisterende ikke-implementerende revieweragenter kan gjenbrukes. Identitetssignerte JSON-receipts er consistency-only, ikke kryptografisk proveniens.
 7. Ved kilde-, dekning-, hash-, review- eller credentialproblem: behold capability av og returner `unavailable`. Ikke generer syntetiske profiler, ikke bruk Frost som skjult fallback, og ikke muter siste validerte pakke.
 
 **Primær anbefaling:** La 01-13 fryse kontrakten og produsere/låse datapakken, la 01-14 bygge runtime-modellen, la 01-15 holde capability false, og la samme executor i 01-16 aktivere før final kandidatcommit slik at begge reviewer vurderer den faktiske aktiverte SHA-en.
@@ -116,7 +116,7 @@ Ingen credentialnavn eller credentialverdi skal inn i klimamanifest, datapakke, 
 6. `serialize`: bruk sorterte nøkler, stabil tallavrunding og UTF-8/LF for byte-identisk JSON.
 7. `validate`: kjør schema-, dekning-, plausibilitets-, lisens-, copy-, privacy- og hashkontroller.
 8. `reproduce`: bygg to ganger fra tomme, separate arbeidskataloger. `packSha256` og `manifestSha256` må være identiske.
-9. `review`: etter kandidatcommit spawner den aktive executoren to uavhengige reviewer med `fork_turns: "none"`, lagrer receipts etter `FINAL_ANSWER` og reconciler dem mot sine faktiske toolresultater.
+9. `review`: etter kandidatcommit innhenter root-orchestratoren to uavhengige read-only review på eksakt tuple og lagrer deres identitetssignerte JSON-receipts uendret.
 10. `publish`: commit pakken først når alle porter er grønne. Runtime leser kun den committede pakken og gjør aldri klimakall.
 
 Builderen bør implementeres med eksisterende `tsx`/TypeScript samt Node sine innebygde `fetch`- og `crypto`-API-er. Det unngår nye installasjoner; repositoryet har allerede `tsx`, TypeScript og Vitest. [VERIFIED: repository `package.json`]
@@ -241,21 +241,21 @@ En statisk import/API-skann og en dynamisk nettleserspy skal begge kreves. Dynam
 
 Ingen AI-review kan erstatte schema-, hash-, dekning-, copy- eller privacytester. AI-reviewene fanger tverrgående feil som er vanskelige å uttrykke fullstendig som assertions.
 
-Den aktive `gsd-executor` fortsetter som post-candidate review-orchestrator i samme agenttur. Den leser sin collaboration-gitte canonical task name/agent ID, sender den eksplisitt til candidate CLI som `implementerAgentId`, og spawner lane A med `agent_type:"gsd-code-reviewer"` og lane B med `agent_type:"gsd-security-auditor"`, begge `fork_turns:"none"` og unik task name per plan/lane/attempt. Etter `wait_agent`/`list_agents` tar executoren canonical reviewer-ID-er fra toolresultatene og exact `FINAL_ANSWER` fra completion-eventene, skriver receipts og reconciler digests lokalt.
+Etter immutable kandidatcommit innhenter root-orchestratoren lane A og B fra to distinkte, uavhengige read-only reviewer. Nye agenter er ikke et krav; eksisterende agenter kan gjenbrukes når de ikke har implementert kandidaten. Begge mottar og vurderer eksakt kandidat-SHA/tree/contract/pack/evidence.
 
 Review A eier datakilde, lisens, proveniens, beregning, dekning, determinisme og fail-closed-adferd. Review B eier produktgrense, nøytral copy, personverninvarianter, tilgang, routing og sikker databehandling. Begge må gi PASS. Endres én kandidatbyte, kontrakten eller Git-SHA-en, blir begge rapportene ugyldige og kjøres på nytt.
 
-`review-gate.ts` validerer schemaer, hasher, distinkte reviewer-ID-er, implementøreksklusjon og digestkonsistens, men kan ikke kryptografisk autentisere Codex-tooloutput. Manglende executoridentitet, spawn/wait/list eller completion-payload er fail-closed. En ytre root-task kan auditere senere, men er ikke en nødvendig mid-plan handoff. Dette er uavhengig review, ikke ekstern MET-, helse-, personvern- eller releasegodkjenning.
+`review-gate.ts` validerer schema, eksakt tuple, identisk reviewer/signaturidentitet, distinkte reviewer-ID-er, ren worktree før/etter, PASS-kommandoer og null uløste findings. Den kan ikke kryptografisk autentisere Codex-output; receipts er konsistensevidens. Dette er uavhengig review, ikke ekstern MET-, helse-, personvern- eller releasegodkjenning.
 
 ## Ny rekkefølge for 01-13–01-18
 
 | Plan | Autonomt ansvar | Obligatorisk utgangsport |
 |---|---|---|
-| **01-13** | Frys full data-/nettverk-/reviewkontrakt, bygg boundary-fixtures, extractor, validator og statisk pack/manifest, og opprett shared receipt-/consistency-gate. | Task-1 kontrakttest er selvstendig grønn; 60 aktuelle unike keys avledes; byte-identisk pack; eksakt HTTP/SSRF-port; executor-reconciled review A+B |
-| **01-14** | Implementer strict decoder, D+28–D+42/alder-kalender, månedsvektede målperiodesignaler, Babyora-heuristikk, copy og ren tretilstandsmodell med TDD. | 12-måneds-/dato-/skuddårs-/25-måneders-/terskelgrenser grønne; ukjent sted/data/hash fail-closed; executor-reconciled reviewpar; capability false |
-| **01-15** | Implementer Snart-komponent, exact-home/access-first session-evaluator, statisk privacyport og skjult Uke-integrasjon. | Ingen persistence/URL/logger/analytics/backend/identitet/timestamp; UI/session-tester; executor-reconciled reviewpar; capability false |
+| **01-13** | Frys full data-/nettverk-/reviewkontrakt, bygg boundary-fixtures, extractor, validator og statisk pack/manifest, og opprett shared receipt-/consistency-gate. | Task-1 kontrakttest er selvstendig grønn; 60 aktuelle unike keys avledes; byte-identisk pack; eksakt HTTP/SSRF-port; uavhengig review A+B |
+| **01-14** | Implementer strict decoder, D+28–D+42/alder-kalender, månedsvektede målperiodesignaler, Babyora-heuristikk, copy og ren tretilstandsmodell med TDD. | 12-måneds-/dato-/skuddårs-/25-måneders-/terskelgrenser grønne; ukjent sted/data/hash fail-closed; uavhengig review A+B; capability false |
+| **01-15** | Implementer Snart-komponent, exact-home/access-first session-evaluator, statisk privacyport og skjult Uke-integrasjon. | Ingen persistence/URL/logger/analytics/backend/identitet/timestamp; UI/session-tester; uavhengig review A+B; capability false |
 | **01-16** | Legg til truthful paywall/accesscopy, aktiver før final commit, review faktisk activated SHA og kjør dynamisk privacy/access/browsermatrise + false rollback ved feil. | Capability viser bare validert fixed-home; family/calibration false; actual activated SHA review A+B |
-| **01-17** | Bygg typed App→Uke én-gangsrequest og migrer Guide/program/Min garderobe-route når Snart er tilgjengelig. | Cross-root/no-replay/exact-context-regresjoner og executor-reconciled reviewpar |
+| **01-17** | Bygg typed App→Uke én-gangsrequest og migrer Guide/program/Min garderobe-route når Snart er tilgjengelig. | Cross-root/no-replay/exact-context-regresjoner og uavhengig review A+B |
 | **01-18** | Legg til nav/haptics via eksisterende adapter, kjør full CI/Playwright/native-kontrakt der miljøet støtter det, samle endelig evidens og gjennomfør siste to-review-kontroll dersom kandidaten har endret seg. | Full deterministisk suite grønn; samme kandidat-SHA i evidens og reviews; ingen påstand om fysisk enhet som ikke faktisk er testet |
 
 Avhengighetsrekkefølgen er streng: `13 → 14 → 15 → 16 → 17 → 18`. Appkode starter ikke før kontrakten er grønn. I 01-16 aktiveres flagget i den lokale finalkandidaten før review, men kandidaten kan ikke regnes som leverbar før pakke, modell, UI, privacy og begge reviews gjelder nøyaktig denne aktiverte SHA-en.
@@ -286,7 +286,7 @@ Avhengighetsrekkefølgen er streng: `13 → 14 → 15 → 16 → 17 → 18`. App
 
 - `scripts/snart/__tests__/contract-fixtures.test.ts`: exact home/grid/http/24-URL/måned/rounding/age/reviewkontrakt uten builder.
 - `scripts/snart/__tests__/climate-pipeline.test.ts`: månedlig DAP2, redirects/timeouts/body/retry, `_FillValue`, 60 avledede stedbindinger, lisens/12-månedsdekning/hash og stabil serialisering.
-- `scripts/snart/__tests__/review-gate.test.ts`: actual HEAD/clean/evidencehash, receipt-schema/digests, `fork_turns: "none"`, distinkte tool-observerte IDs, implementøreksklusjon, eksplisitt no-provenance-claim og tre-forsøks FAIL.
+- `scripts/snart/__tests__/review-gate.test.ts`: actual HEAD/clean/evidencehash, identitetssignert receipt-schema, distinkte reviewer-ID-er, eksakt tuple, PASS/zero-unresolved, eksplisitt no-provenance-claim og tre-forsøks FAIL.
 - `src/lib/planning/__tests__/snart-date-window.test.ts`: D+28–D+42, DST, faktisk antall dager i måned og 25-månedersgrense.
 - `src/lib/planning/__tests__/snart-heuristics-v1.test.ts`: eksakte `2/7/12/16` °C og `20/50` mm, deduplisering og ingen sol/size/health.
 - `src/lib/planning/__tests__/snart-privacy-contract.test.ts`: forbudte imports/API-er og minimal input/output-shape.
@@ -326,7 +326,7 @@ Viktigste trusler er manipulert datapakke (Tampering), gammel review mot ny kand
 
 ## Hva kan kjøres uten et menneske
 
-Følgende kan gjennomføres autonomt under gjeldende fullmakt: kontraktfrysing innen denne anbefalingen, gratis MET-preflight og sekvensiell datauthenting, datapakkebygg, tester, lint/build, browsermatrise, executor-spawnede `fork_turns: "none"` AI-reviewer, feilretting/omplanlegging, dokumentasjon, scoped commits og grønne GitHub-pushes. [VERIFIED: repository `AGENTS.md`; `docs/DECISION-LOG.md` 2026-07-24]
+Følgende kan gjennomføres autonomt under gjeldende fullmakt: kontraktfrysing innen denne anbefalingen, gratis MET-preflight og sekvensiell datauthenting, datapakkebygg, tester, lint/build, browsermatrise, root-innhentede uavhengige read-only AI-reviewer, feilretting/omplanlegging, dokumentasjon, scoped commits og grønne GitHub-pushes. [VERIFIED: repository `AGENTS.md`; `docs/DECISION-LOG.md` 2026-07-24]
 
 Det autonome løpet må stoppe eller avgrense funksjonen — ikke be om en mekanisk godkjenning — når teknisk evidens mangler. Bare en faktisk scopeutvidelse som krever credential-/betalt tjeneste, eller ny kostnadsforpliktelse over NOK 1 000, trenger ny eierbeslutning. Denne anbefalingen er utformet slik at ingen av delene er nødvendig.
 
