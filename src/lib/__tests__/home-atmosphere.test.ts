@@ -4,7 +4,7 @@ import { resolveHomeAtmosphere } from '../home-atmosphere.js';
 describe('resolveHomeAtmosphere', () => {
   it('uses perceived temperature for the palette while actual temperature controls intensity', () => {
     const cold = resolveHomeAtmosphere({
-      tempC: 12,
+      tempC: 5,
       feelsLikeC: -4,
       symbolCode: 'cloudy_day',
     });
