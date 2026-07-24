@@ -332,7 +332,7 @@ function stripYamlDecorators(value) {
       continue;
     }
 
-    const anchor = /^&[A-Za-z0-9_-]+(?:\s+|$)/.exec(remaining);
+    const anchor = /^&[^\s,\[\]{}]+(?:\s+|$)/.exec(remaining);
     if (anchor !== null) {
       remaining = remaining.slice(anchor[0].length).trimStart();
       continue;
@@ -398,7 +398,7 @@ function yamlFragmentContainsCommitScalar(value, label, key) {
   );
 }
 
-function blockScalarStyle(value, isHeaderValue) {
+function yamlNodeValueFragment(value, isHeaderValue) {
   let fragment = stripOutsideYamlComment(value).trim();
   if (!isHeaderValue && /^-(?:\s+|$)/.test(fragment)) {
     fragment = fragment.slice(1).trimStart();
@@ -410,8 +410,11 @@ function blockScalarStyle(value, isHeaderValue) {
   if (mappingColon !== -1) {
     fragment = fragment.slice(mappingColon + 1).trim();
   }
-  fragment = stripYamlDecorators(fragment);
+  return stripYamlDecorators(fragment);
+}
 
+function blockScalarStyle(value, isHeaderValue) {
+  const fragment = yamlNodeValueFragment(value, isHeaderValue);
   const match = /^([|>])(?:[+-][1-9]?|[1-9][+-]?)?$/.exec(fragment);
   return match?.[1] ?? null;
 }
@@ -423,6 +426,113 @@ function leadingSpaceCount(line, label) {
     `${label} contains unsupported tab indentation`,
   );
   return indentation.length;
+}
+
+function flowCollectionState(value, isHeaderValue, label, key) {
+  const fragment = yamlNodeValueFragment(value, isHeaderValue);
+  if (!fragment.startsWith('[') && !fragment.startsWith('{')) {
+    return null;
+  }
+
+  const closingStack = [];
+  let quote = null;
+  let completedAt = -1;
+
+  for (let index = 0; index < fragment.length; index += 1) {
+    const character = fragment[index];
+
+    if (quote === '"') {
+      if (character === '\\') {
+        index += 1;
+      } else if (character === '"') {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (quote === "'") {
+      if (character === "'" && fragment[index + 1] === "'") {
+        index += 1;
+      } else if (character === "'") {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+
+    if (character === '[') {
+      closingStack.push(']');
+      continue;
+    }
+    if (character === '{') {
+      closingStack.push('}');
+      continue;
+    }
+    if (character !== ']' && character !== '}') {
+      continue;
+    }
+
+    invariant(
+      closingStack.pop() === character,
+      `${label} contains malformed flow metadata for ${key}`,
+    );
+    if (closingStack.length === 0) {
+      completedAt = index;
+      break;
+    }
+  }
+
+  if (completedAt !== -1) {
+    invariant(
+      fragment.slice(completedAt + 1).trim().length === 0,
+      `${label} contains malformed flow metadata for ${key}`,
+    );
+  }
+
+  return Object.freeze({
+    complete: completedAt !== -1,
+  });
+}
+
+function assembleMultilineFlow(lines, start, label, key) {
+  const firstLine = lines[start];
+  let assembled = stripOutsideYamlComment(firstLine.text).trim();
+  let state = flowCollectionState(
+    assembled,
+    firstLine.isHeaderValue,
+    label,
+    key,
+  );
+  if (state === null || state.complete) {
+    return null;
+  }
+
+  for (let index = start + 1; index < lines.length; index += 1) {
+    const semanticLine = stripOutsideYamlComment(lines[index].text).trim();
+    assembled = `${assembled}\n${semanticLine}`;
+    state = flowCollectionState(
+      assembled,
+      firstLine.isHeaderValue,
+      label,
+      key,
+    );
+    invariant(
+      state !== null,
+      `${label} contains malformed flow metadata for ${key}`,
+    );
+    if (state.complete) {
+      return Object.freeze({
+        value: assembled,
+        end: index,
+      });
+    }
+  }
+
+  throw new Error(`${label} contains malformed flow metadata for ${key}`);
 }
 
 function nodeContainsCommitScalar(node, label) {
@@ -487,6 +597,32 @@ function nodeContainsCommitScalar(node, label) {
       continue;
     }
 
+    const assembledFlow = assembleMultilineFlow(
+      lines,
+      index,
+      label,
+      node.key,
+    );
+    if (assembledFlow !== null) {
+      const containsCommit = line.isHeaderValue
+        ? yamlValueContainsCommitScalar(
+            assembledFlow.value,
+            label,
+            node.key,
+          )
+        : yamlFragmentContainsCommitScalar(
+            assembledFlow.value,
+            label,
+            node.key,
+          );
+      if (containsCommit) {
+        return true;
+      }
+
+      index = assembledFlow.end;
+      continue;
+    }
+
     const containsCommit = line.isHeaderValue
       ? yamlValueContainsCommitScalar(line.text, label, node.key)
       : yamlFragmentContainsCommitScalar(line.text, label, node.key);
@@ -543,7 +679,7 @@ function yamlReferenceTokens(rawValue) {
     }
 
     let end = index + 1;
-    while (end < rawValue.length && /[A-Za-z0-9_-]/.test(rawValue[end])) {
+    while (end < rawValue.length && !/[\s,\[\]{}]/.test(rawValue[end])) {
       end += 1;
     }
     if (end === index + 1) {
@@ -647,6 +783,10 @@ function parseFrontmatter(text, label) {
 
 function rejectUnexpectedCommitScalars(fields, allowedKeys, label) {
   for (const [key, node] of fields) {
+    invariant(
+      !COMMIT_LIKE_SCALAR_40.test(key),
+      `${label} uses forbidden candidate SHA alias ${key}`,
+    );
     invariant(
       allowedKeys.includes(key) ||
         !nodeContainsCommitScalar(node, label),
