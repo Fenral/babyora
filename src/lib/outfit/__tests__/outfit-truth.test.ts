@@ -192,6 +192,7 @@ describe('canonical outfit truth', () => {
         'varmepose dun',
         'saueskinn i vogn',
         'ansiktskrem',
+        'vognpose',
       ]);
       expect('snapshot' in result).toBe(false);
     }
