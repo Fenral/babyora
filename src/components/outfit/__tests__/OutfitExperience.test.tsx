@@ -10,7 +10,7 @@ import {
 import { createOutfitTruthSnapshot } from '../../../lib/outfit/outfit-truth.js';
 import { useOutfitSelectionStore } from '../../../state/outfit-selection-store.js';
 import {
-  attachComparisonEscapeListener,
+  attachOutfitEscapeListener,
   createComparisonFocusLifecycle,
   type ComparisonEscapeTarget,
   OutfitExperience,
@@ -344,12 +344,11 @@ describe('OutfitExperience', () => {
     const lifecycle = createComparisonFocusLifecycle();
     const keys = escapeTarget();
     const selectedId = truth.garments[0]!.itemId;
-    let focusId = truth.garments[1]!.itemId;
-    let hoverId = truth.garments[2]!.itemId;
+    let focusId: typeof selectedId | null = truth.garments[1]!.itemId;
+    let hoverId: typeof selectedId | null = truth.garments[2]!.itemId;
 
-    const detach = attachComparisonEscapeListener(
+    const detach = attachOutfitEscapeListener(
       keys.target,
-      lifecycle.isOpen(),
       () => {
         focusId = null;
         hoverId = null;
@@ -380,9 +379,8 @@ describe('OutfitExperience', () => {
     };
 
     lifecycle.open(origin);
-    const detachOpen = attachComparisonEscapeListener(
+    const detachOpen = attachOutfitEscapeListener(
       keys.target,
-      lifecycle.isOpen(),
       () => lifecycle.close({ restoreFocus: true }),
     );
     expect(keys.listenerCount()).toBe(1);

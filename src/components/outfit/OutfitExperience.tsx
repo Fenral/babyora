@@ -57,12 +57,10 @@ export function createComparisonFocusLifecycle(): ComparisonFocusLifecycle {
 
 // Kept here to preserve the plan's five-file component boundary.
 // eslint-disable-next-line react-refresh/only-export-components
-export function attachComparisonEscapeListener(
+export function attachOutfitEscapeListener(
   target: ComparisonEscapeTarget,
-  isOpen: boolean,
   onEscape: () => void,
 ): () => void {
-  if (!isOpen) return () => undefined;
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') onEscape();
   };
@@ -108,10 +106,10 @@ export function OutfitExperience({ snapshot, options = EMPTY_OPTIONS, temp, regi
   useEffect(() => { close(); open(snapshot, options); return close; }, [snapshot, options, open, close]);
   useEffect(() => () => comparisonFocusLifecycle.clear(), [comparisonFocusLifecycle]);
   useEffect(() => { if (option !== null) comparisonHeadingRef.current?.focus(); }, [option]);
-  useEffect(() => attachComparisonEscapeListener(window, option !== null, () => {
+  useEffect(() => attachOutfitEscapeListener(window, () => {
     setFocusId(null);
     setHoverId(null);
-    closeComparison();
+    if (option !== null) closeComparison();
   }), [option, closeComparison]);
   useEffect(() => {
     if (compareId !== null && option === null) comparisonFocusLifecycle.clear();
