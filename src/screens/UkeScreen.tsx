@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -323,9 +324,7 @@ function PlanleggData({
     loading: accessLoading,
   }, PLUS_FEATURE_AVAILABILITY), [accessLoading, isPremium]);
   const viewAccess = tab === 'today' ? todayAccess : tab === 'tenday' ? weekAccess : soonAccess;
-  const snartGeneration = useRef(0);
-  const lastSnartProfile = useRef<string | null>(null);
-  const snartEvaluator = useRef(createSnartSessionEvaluator({
+  const [snartEvaluator] = useState(() => createSnartSessionEvaluator({
     resolveExactHome: (home) => {
       const key = `no-city:v1:${encodeURIComponent(home.city.trim().toLocaleLowerCase('nb-NO'))}:${Math.round(home.lat * 10_000)}:${Math.round(home.lon * 10_000)}`;
       return { homePlaceKey: key, climateProfileId: `snart-profile:v2:${key}` };
@@ -333,26 +332,25 @@ function PlanleggData({
     buildModel: buildSnartPlan,
   }));
   const snartProfileScope = active?.id ?? '__none__';
-  if (lastSnartProfile.current !== snartProfileScope) {
-    lastSnartProfile.current = snartProfileScope;
-    snartGeneration.current += 1;
-    snartEvaluator.current.teardown();
-  }
   const snartWindow = new Date().toLocaleDateString('en-CA', { timeZone: PLAN_TIME_ZONE });
   const soonWindow = buildSnartDateWindow(snartWindow, PLAN_TIME_ZONE);
   const soonAgeEligible = activeDob !== undefined && soonWindow.status === 'available'
     ? isAgeEligibleForWholeWindow(activeDob, soonWindow.endLocalDate)
     : false;
-  // The session evaluator is deliberately evaluated before any model payload is
-  // constructed; with the live false implementation flag this returns at once.
-  snartEvaluator.current.evaluate({
-    allowed: soonAccess.access.allowed,
-    generation: String(snartGeneration.current),
-    profileVersion: 'snart-home-key@1',
-    window: snartWindow,
-    home: { city: fixedHome.city, lat: fixedHome.lat, lon: fixedHome.lon },
-    ageEligibleForWholeWindow: soonAgeEligible,
-  });
+  useEffect(() => {
+    const generation = crypto.randomUUID();
+    // The evaluator returns before resolving a home or constructing a model
+    // input unless capability access is already allowed.
+    snartEvaluator.evaluate({
+      allowed: soonAccess.access.allowed,
+      generation,
+      profileVersion: 'snart-home-key@1',
+      window: snartWindow,
+      home: { city: fixedHome.city, lat: fixedHome.lat, lon: fixedHome.lon },
+      ageEligibleForWholeWindow: soonAgeEligible,
+    });
+    return () => snartEvaluator.teardown();
+  }, [fixedHome.city, fixedHome.lat, fixedHome.lon, snartEvaluator, snartProfileScope, snartWindow, soonAccess.access.allowed, soonAgeEligible]);
   const [weekAccessTransition, setWeekAccessTransition] = useState(() => ({
     state: weekAccess.access.state,
     generation: 0,
@@ -411,7 +409,7 @@ function PlanleggData({
         ?? document.getElementById('main');
       focusTarget?.focus();
     });
-  }, []);
+  }, [setPaywallOpen]);
   const changeRailHeadStyle: CSSProperties = {
     fontSize: '1.25rem',
     fontWeight: 640,
@@ -672,7 +670,7 @@ function PlanleggData({
       ...current,
       selectedEventId: eventId,
     }));
-  }, []);
+  }, [setRefreshKey]);
   const latestPlanningEvaluationRef = useRef(planningEvaluation);
   useLayoutEffect(() => {
     latestPlanningEvaluationRef.current = planningEvaluation;
