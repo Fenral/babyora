@@ -126,6 +126,41 @@ const isExactConceptSet = (value: unknown): value is ReadonlySet<string> => {
   ));
 };
 
+const isSafeCloneLeaf = (value: unknown): boolean => {
+  if (typeof value === 'string' || typeof value === 'boolean') return true;
+  if (
+    !(value instanceof Set)
+    || Object.getPrototypeOf(value) !== Set.prototype
+    || Reflect.ownKeys(value).length !== 0
+  ) return false;
+  return [...Set.prototype.values.call(value)].every((item) => typeof item === 'string');
+};
+
+const normalizeSnartPlanInput = (value: unknown): unknown => {
+  try {
+    if (
+      !value
+      || typeof value !== 'object'
+      || Array.isArray(value)
+      || Object.getPrototypeOf(value) !== Object.prototype
+    ) return null;
+    const keys = Reflect.ownKeys(value);
+    if (keys.some((key) => typeof key !== 'string')) return null;
+    for (const key of keys) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (
+        !descriptor
+        || !descriptor.enumerable
+        || !('value' in descriptor)
+        || !isSafeCloneLeaf(descriptor.value)
+      ) return null;
+    }
+    return structuredClone(value);
+  } catch {
+    return null;
+  }
+};
+
 const unavailable = (reason: string): SnartPlan => deepFreeze({
   status: 'unavailable',
   reason,
@@ -133,21 +168,22 @@ const unavailable = (reason: string): SnartPlan => deepFreeze({
 });
 
 export function buildSnartPlan(input: SnartPlanInput): SnartPlan {
+  const normalizedInput = normalizeSnartPlanInput(input);
   if (
-    !hasExactInputShape(input)
-    || typeof input.asOfLocalDate !== 'string'
-    || input.timezone !== 'Europe/Oslo'
-    || typeof input.homePlaceKey !== 'string'
-    || typeof input.climateProfileId !== 'string'
-    || typeof input.ageEligibleForWholeWindow !== 'boolean'
-    || !isExactConceptSet(input.alreadyHaveConceptIds)
+    !hasExactInputShape(normalizedInput)
+    || typeof normalizedInput.asOfLocalDate !== 'string'
+    || normalizedInput.timezone !== 'Europe/Oslo'
+    || typeof normalizedInput.homePlaceKey !== 'string'
+    || typeof normalizedInput.climateProfileId !== 'string'
+    || typeof normalizedInput.ageEligibleForWholeWindow !== 'boolean'
+    || !isExactConceptSet(normalizedInput.alreadyHaveConceptIds)
   ) return unavailable('invalid_model_input');
-  if (!input.ageEligibleForWholeWindow) return unavailable('age_ineligible');
+  if (!normalizedInput.ageEligibleForWholeWindow) return unavailable('age_ineligible');
 
-  const alreadyHaveConceptIds = new Set(input.alreadyHaveConceptIds);
-  const window = buildSnartDateWindow(input.asOfLocalDate, input.timezone);
+  const alreadyHaveConceptIds = new Set(normalizedInput.alreadyHaveConceptIds);
+  const window = buildSnartDateWindow(normalizedInput.asOfLocalDate, normalizedInput.timezone);
   if (window.status === 'unavailable') return unavailable(window.reason);
-  const climate = resolveSnartClimateProfile(input);
+  const climate = resolveSnartClimateProfile(normalizedInput);
   if (climate.status === 'unavailable') return unavailable(climate.reason);
   const signals = deriveSnartTargetWindowSignals(climate.profile, window.dates);
   if (signals.status === 'unavailable') return unavailable(signals.reason);
