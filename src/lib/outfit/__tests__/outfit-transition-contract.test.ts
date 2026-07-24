@@ -71,6 +71,50 @@ function element(connected = true): HTMLElement {
   return new TestElement(connected) as unknown as HTMLElement;
 }
 
+function readinessArgs() {
+  const result = truth();
+  if (result.kind !== 'supported') {
+    throw new Error('expected supported fixture');
+  }
+  return {
+    truth: result,
+    expectedIdentity: {
+      snapshotId: result.snapshot.snapshotId,
+      recommendationFingerprint:
+        result.snapshot.recommendationFingerprint,
+      transitionContextId: result.snapshot.transitionContextId,
+    },
+    targetRows: result.snapshot.garments.map((garment) => ({
+      itemId: garment.itemId,
+      element: element(),
+    })),
+    reducedMotion: false,
+  };
+}
+
+function attemptUnknownReadiness(args: unknown): {
+  result?: ReturnType<typeof evaluateOutfitTargetReadiness>;
+  error?: unknown;
+} {
+  try {
+    return {
+      result: evaluateOutfitTargetReadiness(
+        args as Parameters<typeof evaluateOutfitTargetReadiness>[0],
+      ),
+    };
+  } catch (error) {
+    return { error };
+  }
+}
+
+function expectUnknownStaticOnly(args: unknown): void {
+  const outcome = attemptUnknownReadiness(args);
+  expect(outcome.error).toBeUndefined();
+  expect(outcome.result).toMatchObject({
+    kind: 'static-only',
+  });
+}
+
 describe('Phase-2 Outfit target registration', () => {
   it('registers only existing occurrence item ids and unregisters with null', () => {
     const result = truth();
@@ -357,6 +401,232 @@ describe('Phase-2 Outfit target registration', () => {
       kind: 'static-only',
       reason: 'reduced-motion',
     });
+  });
+
+  it('rejects Object.create and custom-prototype identities', () => {
+    const inheritedArgs = readinessArgs();
+    inheritedArgs.expectedIdentity = Object.create(
+      inheritedArgs.expectedIdentity,
+    ) as typeof inheritedArgs.expectedIdentity;
+    expectUnknownStaticOnly(inheritedArgs);
+
+    const customArgs = readinessArgs();
+    const customIdentity = {
+      ...customArgs.expectedIdentity,
+    };
+    Object.setPrototypeOf(customIdentity, { custom: true });
+    customArgs.expectedIdentity = customIdentity;
+    expectUnknownStaticOnly(customArgs);
+  });
+
+  it('rejects inherited row records and inherited row fields', () => {
+    const inheritedRecordArgs = readinessArgs();
+    inheritedRecordArgs.targetRows[0] = Object.create(
+      inheritedRecordArgs.targetRows[0]!,
+    ) as (typeof inheritedRecordArgs.targetRows)[number];
+    expectUnknownStaticOnly(inheritedRecordArgs);
+
+    const inheritedFieldArgs = readinessArgs();
+    const source = inheritedFieldArgs.targetRows[0]!;
+    inheritedFieldArgs.targetRows[0] = Object.assign(
+      Object.create({ element: source.element }),
+      { itemId: source.itemId },
+    ) as (typeof inheritedFieldArgs.targetRows)[number];
+    expectUnknownStaticOnly(inheritedFieldArgs);
+
+    const customRecordArgs = readinessArgs();
+    Object.setPrototypeOf(customRecordArgs.targetRows[0]!, {
+      custom: true,
+    });
+    expectUnknownStaticOnly(customRecordArgs);
+  });
+
+  it('rejects identity supplied by Object.prototype pollution', () => {
+    const pollutedKey = 'snapshotId';
+    const previous = Object.getOwnPropertyDescriptor(
+      Object.prototype,
+      pollutedKey,
+    );
+    const args = readinessArgs();
+    const expectedSnapshotId = args.expectedIdentity.snapshotId;
+    args.expectedIdentity = {
+      recommendationFingerprint:
+        args.expectedIdentity.recommendationFingerprint,
+      transitionContextId:
+        args.expectedIdentity.transitionContextId,
+    } as typeof args.expectedIdentity;
+    Object.defineProperty(Object.prototype, pollutedKey, {
+      configurable: true,
+      enumerable: false,
+      value: expectedSnapshotId,
+      writable: true,
+    });
+
+    try {
+      expectUnknownStaticOnly(args);
+    } finally {
+      if (previous === undefined) {
+        delete (Object.prototype as Record<string, unknown>)[pollutedKey];
+      } else {
+        Object.defineProperty(Object.prototype, pollutedKey, previous);
+      }
+    }
+  });
+
+  it('does not invoke identity or row accessors', () => {
+    const identityArgs = readinessArgs();
+    let identityGetterCalls = 0;
+    identityArgs.expectedIdentity = {
+      get snapshotId() {
+        identityGetterCalls += 1;
+        throw new Error('identity getter must not run');
+      },
+      recommendationFingerprint:
+        identityArgs.expectedIdentity.recommendationFingerprint,
+      transitionContextId:
+        identityArgs.expectedIdentity.transitionContextId,
+    };
+    const identityOutcome = attemptUnknownReadiness(identityArgs);
+    expect(identityGetterCalls).toBe(0);
+    expect(identityOutcome.error).toBeUndefined();
+    expect(identityOutcome.result).toMatchObject({
+      kind: 'static-only',
+    });
+
+    const rowArgs = readinessArgs();
+    const source = rowArgs.targetRows[0]!;
+    let rowGetterCalls = 0;
+    rowArgs.targetRows[0] = {
+      get itemId() {
+        rowGetterCalls += 1;
+        throw new Error('row getter must not run');
+      },
+      element: source.element,
+    };
+    const rowOutcome = attemptUnknownReadiness(rowArgs);
+    expect(rowGetterCalls).toBe(0);
+    expect(rowOutcome.error).toBeUndefined();
+    expect(rowOutcome.result).toMatchObject({
+      kind: 'static-only',
+    });
+  });
+
+  it('rejects symbol, non-enumerable and extra identity properties', () => {
+    const symbolArgs = readinessArgs();
+    Object.defineProperty(
+      symbolArgs.expectedIdentity,
+      Symbol('unexpected'),
+      {
+        enumerable: true,
+        value: true,
+      },
+    );
+    expectUnknownStaticOnly(symbolArgs);
+
+    const nonEnumerableArgs = readinessArgs();
+    Object.defineProperty(
+      nonEnumerableArgs.expectedIdentity,
+      'snapshotId',
+      {
+        configurable: true,
+        enumerable: false,
+        value: nonEnumerableArgs.expectedIdentity.snapshotId,
+        writable: true,
+      },
+    );
+    expectUnknownStaticOnly(nonEnumerableArgs);
+
+    const extraArgs = readinessArgs();
+    extraArgs.expectedIdentity = {
+      ...extraArgs.expectedIdentity,
+      unexpected: true,
+    } as typeof extraArgs.expectedIdentity;
+    expectUnknownStaticOnly(extraArgs);
+  });
+
+  it('rejects symbol, non-enumerable and extra row properties', () => {
+    const symbolArgs = readinessArgs();
+    Object.defineProperty(
+      symbolArgs.targetRows[0]!,
+      Symbol('unexpected'),
+      {
+        enumerable: true,
+        value: true,
+      },
+    );
+    expectUnknownStaticOnly(symbolArgs);
+
+    const nonEnumerableArgs = readinessArgs();
+    Object.defineProperty(
+      nonEnumerableArgs.targetRows[0]!,
+      'itemId',
+      {
+        configurable: true,
+        enumerable: false,
+        value: nonEnumerableArgs.targetRows[0]!.itemId,
+        writable: true,
+      },
+    );
+    expectUnknownStaticOnly(nonEnumerableArgs);
+
+    const extraArgs = readinessArgs();
+    extraArgs.targetRows[0] = {
+      ...extraArgs.targetRows[0]!,
+      unexpected: true,
+    } as (typeof extraArgs.targetRows)[number];
+    expectUnknownStaticOnly(extraArgs);
+  });
+
+  it('rejects sparse and decorated target-row arrays', () => {
+    const customArrayArgs = readinessArgs();
+    Object.setPrototypeOf(
+      customArrayArgs.targetRows,
+      Object.create(Array.prototype) as unknown[],
+    );
+    expectUnknownStaticOnly(customArrayArgs);
+
+    const sparseArgs = readinessArgs();
+    const sparseRows = new Array<
+      (typeof sparseArgs.targetRows)[number]
+    >(sparseArgs.targetRows.length);
+    for (let index = 1; index < sparseArgs.targetRows.length; index += 1) {
+      sparseRows[index] = sparseArgs.targetRows[index]!;
+    }
+    sparseArgs.targetRows = sparseRows;
+    expectUnknownStaticOnly(sparseArgs);
+
+    const symbolArgs = readinessArgs();
+    Object.defineProperty(symbolArgs.targetRows, Symbol('unexpected'), {
+      enumerable: true,
+      value: true,
+    });
+    expectUnknownStaticOnly(symbolArgs);
+
+    const extraArgs = readinessArgs();
+    Object.defineProperty(extraArgs.targetRows, 'unexpected', {
+      configurable: true,
+      enumerable: true,
+      value: true,
+      writable: true,
+    });
+    expectUnknownStaticOnly(extraArgs);
+
+    const nonEnumerableArgs = readinessArgs();
+    Object.defineProperty(nonEnumerableArgs.targetRows, '0', {
+      configurable: true,
+      enumerable: false,
+      value: nonEnumerableArgs.targetRows[0],
+      writable: true,
+    });
+    expectUnknownStaticOnly(nonEnumerableArgs);
+  });
+
+  it('rejects sparse row records without an uncontrolled exception', () => {
+    const args = readinessArgs();
+    args.targetRows[0] = {
+      itemId: args.targetRows[0]!.itemId,
+    } as (typeof args.targetRows)[number];
+    expectUnknownStaticOnly(args);
   });
 
   it('does not export or conflate a Home-source registrar', () => {
