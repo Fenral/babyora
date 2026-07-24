@@ -72,11 +72,23 @@ function collectKeys(value: unknown, output: string[] = []): string[] {
   return output;
 }
 
+function expectedMonthlyDatasetUrls(): string[] {
+  const root =
+    'https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products';
+  return (['tg', 'rr'] as const).flatMap((family) =>
+    Array.from({ length: 12 }, (_, index) => {
+      const month = String(index + 1).padStart(2, '0');
+      return `${root}/${family}/seNorge2018_${family}_normal_1991_2020_monthly_${month}.nc`;
+    }),
+  );
+}
+
 describe('Snart autonomy contract', () => {
   it('freezes source, scope, cost and disabled capabilities', () => {
     const contract = loadJson(CONTRACT_PATH);
 
-    expect(contract.schemaVersion).toBe('babyora-snart-autonomy-contract@1');
+    expect(contract.schemaVersion).toBe('babyora-snart-autonomy-contract@2');
+    expect(contract.contractVersion).toBe('snart-monthly-normal-contract@2');
     expect(contract.status).toBe('locked_for_autonomous_implementation');
     expect(contract.expectedNewCostNok).toBe(0);
     expect(contract.capabilities).toEqual({
@@ -88,19 +100,37 @@ describe('Snart autonomy contract', () => {
       datasetName: 'seNorge_2018',
       sourceOrganization: 'Meteorologisk institutt (MET Norway)',
       normalPeriod: {
-        from: '1991-01-01',
-        through: '2020-12-31',
+        fromYear: 1991,
+        throughYear: 2020,
       },
       variableVersions: {
-        rr: '23.11',
-        tg: '23.09',
-        tn: '23.09',
-        tx: '23.09',
+        rr: 'v23_11',
+        tg: 'v23_09',
+      },
+      fileVersions: {
+        rr: '1.0',
+        tg: '1.0',
+      },
+      units: {
+        rr: 'mm',
+        tg: 'Celsius',
+      },
+      aggregations: {
+        rr: 'time: sum',
+        tg: 'time: mean',
       },
       attributionText:
-        'Historiske data: Meteorologisk institutt (MET Norway). Bearbeidet av Babyora.',
+        'Månedsnormaler 1991–2020: Meteorologisk institutt (MET Norway). Bearbeidet av Babyora.',
       derivedDataDisclaimer:
-        'Babyora-avledet 1991–2020-klimatologi basert på MET seNorge_2018 v23.09/v23.11; ikke et MET-varsel eller en offisiell MET-normal.',
+        'Kildefilene er offisielle MET-månedsnormaler. Babyoras målperiodeberegning og plaggheuristikker er ikke et MET-varsel eller en MET-anbefaling.',
+    });
+
+    const source = contract.source as JsonRecord;
+    expect(source.datasetUrls).toEqual(expectedMonthlyDatasetUrls());
+    expect(new Set(source.datasetUrls as string[]).size).toBe(24);
+    expect(source.catalogUrls).toEqual({
+      rr: 'https://thredds.met.no/thredds/catalog/senorge/seNorge_2018/aggregated_products/rr/catalog.xml',
+      tg: 'https://thredds.met.no/thredds/catalog/senorge/seNorge_2018/aggregated_products/tg/catalog.xml',
     });
   });
 
@@ -130,7 +160,7 @@ describe('Snart autonomy contract', () => {
     expect(new Set(ranaKeys).size).toBe(2);
   });
 
-  it('freezes exact HTTP, grid, time, derivation and age boundaries', () => {
+  it('freezes exact HTTP, grid, monthly-pack and age boundaries', () => {
     const contract = loadJson(CONTRACT_PATH);
 
     expect(contract.httpPolicy).toEqual(
@@ -140,16 +170,10 @@ describe('Snart autonomy contract', () => {
         hostname: 'thredds.met.no',
         allowedPorts: ['', '443'],
         pathPattern:
-          '^/thredds/dodsC/senorge/seNorge_2018/Archive/seNorge2018_(199[1-9]|20(0[0-9]|1[0-9]|20))\\.nc\\.(dds|das|ascii)$',
-        allowedQueryVariables: [
-          'latitude',
-          'longitude',
-          'rr',
-          'tg',
-          'time',
-          'tn',
-          'tx',
-        ],
+          '^/thredds/dodsC/senorge/seNorge_2018/aggregated_products/(tg|rr)/seNorge2018_(tg|rr)_normal_1991_2020_monthly_(0[1-9]|1[0-2])\\.nc\\.(dds|das|ascii)$',
+        requireFamilyVariableMatch: true,
+        allowedDatasetUrls: expectedMonthlyDatasetUrls(),
+        allowedQueryVariables: ['lat', 'lon', 'rr', 'tg', 'time'],
         userAgent: 'klemeg/1.0 (sivertskotvold@gmail.com)',
         redirect: 'manual',
         timeoutMilliseconds: 20_000,
@@ -173,27 +197,27 @@ describe('Snart autonomy contract', () => {
       invalidSelectedCell: 'grid_invalid_or_sea',
       neighbourFallback: false,
     });
-    expect(contract.timePolicy).toMatchObject({
-      version: 'met-utc-local-date@1',
-      timezone: 'Europe/Oslo',
-      allowedUtcHours: [6, 18],
-      profileKeyCount: 365,
-      leapDayPolicy:
-        'map-target-02-29-to-02-28;discard-source-02-29',
-    });
     expect(contract.derivationPolicy).toMatchObject({
-      version: 'babyora-climate-derivation@1',
-      centeredWindowOffsets: [-2, -1, 0, 1, 2],
-      expectedSamplesPerKey: 150,
-      minimumRepresentedYears: 27,
-      minimumValidSamples: 135,
-      quantileMethod: 'Type-7',
-      outputFields: ['p10MinC', 'p50MeanC', 'p90MaxC', 'wetProbability'],
+      version: 'babyora-monthly-normal-pack@2',
+      monthCount: 12,
+      rowFields: [
+        'month',
+        'meanTemperatureC',
+        'monthlyPrecipitationMm',
+      ],
+      targetWindowDerivationVersion:
+        'babyora-target-window-monthly-weighting@1',
+      targetMeanTemperatureFormula:
+        'sum(meanTemperatureC*targetDaysInMonth)/15',
+      targetPrecipitationFormula:
+        'sum(monthlyPrecipitationMm/daysInMonth*targetDaysInMonth)',
+      leapMonthPolicy: 'use-actual-days-in-target-year-month',
+      partialProfiles: false,
       rounding: {
         distanceMillimetres: 0,
         mode: 'half-away-from-zero',
         temperature: 1,
-        wetProbability: 4,
+        precipitation: 1,
       },
     });
     expect(contract.agePolicy).toMatchObject({
@@ -243,6 +267,17 @@ describe('Snart autonomy contract', () => {
 
     expect(keys.filter((key) => forbiddenKey.test(key))).toEqual([]);
   });
+
+  it('contains no obsolete daily, quantile or wet-day contract fields', () => {
+    const contract = loadJson(CONTRACT_PATH);
+    const forbiddenKey =
+      /^(years|timePolicy|profileKeyCount|leapDayPolicy|centeredWindowOffsets|ringDays|expectedSamplesPerKey|minimumRepresentedYears|minimumValidSamples|quantileMethod|quantileFormula|wetThresholdMillimetres|p10MinC|p50MeanC|p90MaxC|wetProbability|tn|tx)$/u;
+
+    expect(collectKeys(contract).filter((key) => forbiddenKey.test(key))).toEqual(
+      [],
+    );
+    expect(JSON.stringify(contract)).not.toContain('/Archive/');
+  });
 });
 
 describe('Snart source and boundary fixtures', () => {
@@ -250,8 +285,11 @@ describe('Snart source and boundary fixtures', () => {
     const fixtures = loadJson(FIXTURE_PATH);
     const officialExcerpts = fixtures.officialExcerpts as JsonRecord[];
 
-    expect(fixtures.schemaVersion).toBe('babyora-snart-boundaries@1');
+    expect(fixtures.schemaVersion).toBe('babyora-snart-boundaries@2');
     expect(officialExcerpts.map((entry) => entry.kind)).toEqual([
+      'dds',
+      'das',
+      'ascii',
       'dds',
       'das',
       'ascii',
@@ -259,10 +297,17 @@ describe('Snart source and boundary fixtures', () => {
     for (const excerpt of officialExcerpts) {
       expect(excerpt.syntheticBoundary).toBe(false);
       expect(excerpt.sourceUrl).toMatch(
-        /^https:\/\/thredds\.met\.no\/thredds\/dodsC\/senorge\/seNorge_2018\/Archive\/seNorge2018_2020\.nc\.(dds|das|ascii)/u,
+        /^https:\/\/thredds\.met\.no\/thredds\/dodsC\/senorge\/seNorge_2018\/aggregated_products\/(tg|rr)\/seNorge2018_(tg|rr)_normal_1991_2020_monthly_01\.nc\.(dds|das|ascii)/u,
       );
       expect(excerpt.sha256).toBe(sha256(excerpt.body as string));
     }
+    expect(
+      officialExcerpts.every(
+        (entry) =>
+          !String(entry.body).includes('daily minimum') &&
+          !String(entry.body).includes('daily maximum'),
+      ),
+    ).toBe(true);
   });
 
   it('labels every synthetic boundary and covers every fail-closed family', () => {
@@ -285,9 +330,10 @@ describe('Snart source and boundary fixtures', () => {
         'http-retry',
         'http-timeout',
         'http-truncated',
-        'leap-date',
+        'monthly-coverage',
+        'monthly-url',
         'rounding',
-        'window',
+        'target-window-weighting',
       ]),
     );
   });
