@@ -26,6 +26,19 @@ const scriptPath = fileURLToPath(
 
 const temporaryParents: string[] = [];
 
+const semanticCommitAliasKeys = [
+  'candidate_commit',
+  'candidate-commit',
+  'candidateCommit',
+  'CandidateCommit',
+  'source_commit',
+  'source-commit',
+  'sourceCommit',
+  'SourceCommit',
+  'phase2_candidate_commit',
+  'source_phase2_commit',
+] as const;
+
 type Harness = {
   parent: string;
   repository: string;
@@ -347,6 +360,12 @@ describe('pure exact-label and path guards', () => {
       'phase2_candidate_status: reviewed',
       'candidate_count: 2',
       'commit_message: immutable handoff',
+      'commit_status: reviewed',
+      'commit_count: 2',
+      'commit_date: 2026-07-24',
+      'last_commit_at: 2026-07-24T10:00:00Z',
+      'source_commit_message: exact upstream provenance',
+      'candidate_commit_status: reviewed',
       `validation_evidence_sha256: ${'a'.repeat(64)}`,
       `sha256_manifest: ${'b'.repeat(64)}`,
       'source_phase2: exact',
@@ -372,6 +391,76 @@ describe('pure exact-label and path guards', () => {
       expect(() =>
         parsePhase2HandoffSummary(
           [...canonical, conflictingAlias, '---'].join('\n'),
+        ),
+      ).toThrow();
+    }
+  });
+
+  it('rejects every semantic 40-hex commit alias in Phase 1 without blocking metadata', () => {
+    const candidateSha = '1'.repeat(40);
+    const conflictingSha = '2'.repeat(40);
+    const canonical = [
+      '---',
+      'status: PASS',
+      `candidate_sha: ${candidateSha}`,
+      'phase1_source_field: candidate_sha',
+      'candidate_status: reviewed',
+      'candidate_count: 1',
+      'commit_message: immutable candidate',
+      'commit_status: reviewed',
+      'commit_count: 2',
+      'commit_date: 2026-07-24',
+      'last_commit_at: 2026-07-24T10:00:00Z',
+      'source_commit_message: exact upstream provenance',
+      'candidate_commit_status: reviewed',
+    ];
+
+    expect(
+      parsePhase1CandidateSummary([...canonical, '---'].join('\n')),
+    ).toEqual({ phase1CandidateSha: candidateSha });
+
+    for (const alias of semanticCommitAliasKeys) {
+      expect(() =>
+        parsePhase1CandidateSummary(
+          [...canonical, `${alias}: ${conflictingSha}`, '---'].join('\n'),
+        ),
+      ).toThrow();
+    }
+  });
+
+  it('rejects every semantic 40-hex commit alias in Phase 2 without blocking metadata', () => {
+    const phase2Sha = '2'.repeat(40);
+    const phase1Sha = '1'.repeat(40);
+    const conflictingSha = '3'.repeat(40);
+    const canonical = [
+      '---',
+      'status: PASS',
+      `phase2_candidate_sha: ${phase2Sha}`,
+      'feature_flag: true',
+      `phase1_candidate_sha: ${phase1Sha}`,
+      'phase1_source_field: candidate_sha',
+      'phase2_candidate_status: reviewed',
+      'candidate_count: 2',
+      'commit_message: immutable handoff',
+      'commit_status: reviewed',
+      'commit_count: 2',
+      'commit_date: 2026-07-24',
+      'last_commit_at: 2026-07-24T10:00:00Z',
+      'source_commit_message: exact upstream provenance',
+      'candidate_commit_status: reviewed',
+    ];
+
+    expect(
+      parsePhase2HandoffSummary([...canonical, '---'].join('\n')),
+    ).toEqual({
+      phase2CandidateSha: phase2Sha,
+      featureFlag: true,
+    });
+
+    for (const alias of semanticCommitAliasKeys) {
+      expect(() =>
+        parsePhase2HandoffSummary(
+          [...canonical, `${alias}: ${conflictingSha}`, '---'].join('\n'),
         ),
       ).toThrow();
     }
@@ -736,6 +825,36 @@ describe('candidate mode', () => {
       /candidate_sha|Phase 1/i,
     );
   });
+
+  it('rejects every semantic Phase 1 commit alias through candidate mode', () => {
+    const harness = createHarness();
+    const aliasSummary = join(
+      harness.evidenceRoot,
+      'semantic commit alias phase1.md',
+    );
+    const args = replaceOption(
+      candidateArgs(harness),
+      '--phase1-summary',
+      aliasSummary,
+    );
+
+    for (const alias of semanticCommitAliasKeys) {
+      writeFileSync(
+        aliasSummary,
+        [
+          '---',
+          'status: PASS',
+          `candidate_sha: ${harness.phase1Sha}`,
+          'commit_message: immutable candidate',
+          `${alias}: ${harness.candidateSha}`,
+          '---',
+        ].join('\n'),
+        'utf8',
+      );
+
+      expectFailure(runScript(harness, args), /candidate SHA alias/i);
+    }
+  });
 });
 
 describe('phase2-handoff mode', () => {
@@ -779,6 +898,12 @@ describe('phase2-handoff mode', () => {
       'phase2_candidate_status: reviewed',
       'candidate_count: 2',
       'commit_message: immutable handoff',
+      'commit_status: reviewed',
+      'commit_count: 2',
+      'commit_date: 2026-07-24',
+      'last_commit_at: 2026-07-24T10:00:00Z',
+      'source_commit_message: exact upstream provenance',
+      'candidate_commit_status: reviewed',
       `validation_evidence_sha256: ${'a'.repeat(64)}`,
       `sha256_manifest: ${'b'.repeat(64)}`,
     ]);
@@ -824,10 +949,11 @@ describe('phase2-handoff mode', () => {
       'source_commit_sha',
       '"source_phase2_candidate_sha"',
       'source.phase1.candidate.sha',
+      ...semanticCommitAliasKeys,
     ];
+    const harness = createHarness();
 
     for (const alias of aliases) {
-      const harness = createHarness();
       const summaryPath = writePhase2Summary(harness, [
         'status: PASS',
         `phase2_candidate_sha: ${harness.phase1Sha}`,
