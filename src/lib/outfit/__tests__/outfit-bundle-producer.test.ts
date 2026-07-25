@@ -23,7 +23,10 @@ type ContextOptions = Readonly<{
   plannedForIso?: string;
   recommendInput?: RecommendInput;
   finalizedRecommendation?: Recommendation;
+  rawTransitionContextId?: string;
 }>;
+
+type ContextRoute = 'current' | 'planned';
 
 function completeRecommendInput(
   overrides: Partial<RecommendInput> = {},
@@ -49,24 +52,78 @@ function completeRecommendInput(
   };
 }
 
+function recommendationProjection(
+  recommendation: Recommendation,
+): Readonly<{
+  orderedGarments: readonly string[];
+  equipment: readonly string[];
+}> {
+  return {
+    orderedGarments: recommendation.layers
+      .filter((layer) => layer.category !== 'utstyr')
+      .flatMap((layer) => layer.items),
+    equipment: recommendation.layers
+      .filter((layer) => layer.category === 'utstyr')
+      .flatMap((layer) => layer.items),
+  };
+}
+
+function canonicalRawTransitionContextId(
+  route: ContextRoute,
+  plannedForIso: string,
+  recommendInput: RecommendInput,
+  finalizedRecommendation: Recommendation,
+): string {
+  const { orderedGarments, equipment } =
+    recommendationProjection(finalizedRecommendation);
+  const fingerprint = route === 'current'
+    ? `current-finalized:${JSON.stringify([
+        orderedGarments,
+        equipment,
+        recommendInput.weather.tempC,
+        recommendInput.weather.feelsLikeC,
+        recommendInput.weather.windMs,
+        recommendInput.weather.precipMmH,
+        recommendInput.weather.symbolCode ?? 'clearsky_day',
+      ])}`
+    : `planned-finalized:${JSON.stringify([
+        orderedGarments,
+        equipment,
+      ])}`;
+  return `${
+    route === 'current' ? 'current' : 'planning'
+  }-transition:${plannedForIso}:${fingerprint}`;
+}
+
 function exactContext(
   options: ContextOptions = {},
-  factory: typeof createPlannedOutfitContext = createPlannedOutfitContext,
+  route: ContextRoute = 'planned',
 ): OutfitTruthPlannedOutfitContext {
   const identity = options.identity ?? 'current';
   const recommendInput = options.recommendInput ?? completeRecommendInput();
   const finalizedRecommendation =
     options.finalizedRecommendation ?? recommend(recommendInput);
+  const plannedForIso =
+    options.plannedForIso ?? '2026-02-12T11:00:00.000Z';
+  const factory = route === 'current'
+    ? createCurrentOutfitContext
+    : createPlannedOutfitContext;
   const context = factory({
     planningEventId: `planning-event-${identity}`,
-    transitionContextId: `transition-${identity}`,
+    transitionContextId:
+      options.rawTransitionContextId
+      ?? canonicalRawTransitionContextId(
+        route,
+        plannedForIso,
+        recommendInput,
+        finalizedRecommendation,
+      ),
     child: {
       id: 'barn-01',
       name: 'Ada',
       ageMonths: recommendInput.child.ageMonths,
     },
-    plannedForIso:
-      options.plannedForIso ?? '2026-02-12T11:00:00.000Z',
+    plannedForIso,
     timeZone: 'Europe/Oslo',
     place: {
       label: 'Hjemme',
@@ -103,7 +160,7 @@ function exactContext(
 function exactCurrentContext(
   options: ContextOptions = {},
 ): OutfitTruthPlannedOutfitContext {
-  return exactContext(options, createCurrentOutfitContext);
+  return exactContext(options, 'current');
 }
 
 function currentSource(
@@ -217,13 +274,22 @@ describe('produceOutfitBundle', () => {
   });
 
   it('keeps current, planned, and changed-interval identities isolated', () => {
+    const sharedOptions = { identity: 'route-isolated' } as const;
     const currentContext = exactCurrentContext({
-      identity: 'current-isolated',
+      ...sharedOptions,
     });
-    const plannedContext = exactContext({ identity: 'planned-isolated' });
+    const plannedContext = exactContext({
+      ...sharedOptions,
+    });
     const intervalContext = exactContext({
-      identity: 'planned-next-interval',
+      ...sharedOptions,
       plannedForIso: '2026-02-12T12:00:00.000Z',
+    });
+    const currentContextAgain = exactCurrentContext({
+      ...sharedOptions,
+    });
+    const plannedContextAgain = exactContext({
+      ...sharedOptions,
     });
 
     const current = produceOutfitBundle({
@@ -238,10 +304,22 @@ describe('produceOutfitBundle', () => {
       seed: intervalContext.producerSeed,
       source: plannedSource(intervalContext),
     });
+    const currentAgain = produceOutfitBundle({
+      seed: currentContextAgain.producerSeed,
+      source: currentSource(currentContextAgain),
+    });
+    const plannedAgain = produceOutfitBundle({
+      seed: plannedContextAgain.producerSeed,
+      source: plannedSource(plannedContextAgain),
+    });
 
     expect(current.kind).toBe('supported');
     expect(planned.kind).toBe('supported');
     expect(changedInterval.kind).toBe('supported');
+    expect(currentAgain).toEqual(current);
+    expect(JSON.stringify(currentAgain)).toBe(JSON.stringify(current));
+    expect(plannedAgain).toEqual(planned);
+    expect(JSON.stringify(plannedAgain)).toBe(JSON.stringify(planned));
     if (
       current.kind !== 'supported'
       || planned.kind !== 'supported'
@@ -256,6 +334,16 @@ describe('produceOutfitBundle', () => {
     expect(planned.options.length).toBeGreaterThan(0);
     expect(changedInterval.options.length).toBeGreaterThan(0);
     expect(new Set([
+      currentContext.plannedContextId,
+      plannedContext.plannedContextId,
+      intervalContext.plannedContextId,
+    ])).toHaveLength(3);
+    expect(new Set([
+      currentContext.producerSeed.sourceContextId,
+      plannedContext.producerSeed.sourceContextId,
+      intervalContext.producerSeed.sourceContextId,
+    ])).toHaveLength(3);
+    expect(new Set([
       current.base.snapshotId,
       planned.base.snapshotId,
       changedInterval.base.snapshotId,
@@ -265,6 +353,16 @@ describe('produceOutfitBundle', () => {
       planned.base.transitionContextId,
       changedInterval.base.transitionContextId,
     ])).toHaveLength(3);
+    expect(new Set([
+      current.base.recommendationId,
+      planned.base.recommendationId,
+      changedInterval.base.recommendationId,
+    ])).toHaveLength(1);
+    expect(new Set([
+      current.base.recommendationFingerprint,
+      planned.base.recommendationFingerprint,
+      changedInterval.base.recommendationFingerprint,
+    ])).toHaveLength(1);
     expect(
       new Set([
         ...current.options.map((option) => option.optionId),
@@ -285,6 +383,28 @@ describe('produceOutfitBundle', () => {
       + planned.base.garments.length
       + changedInterval.base.garments.length,
     );
+    for (const [context, bundle] of [
+      [currentContext, current],
+      [plannedContext, planned],
+      [intervalContext, changedInterval],
+    ] as const) {
+      expect(context.plannedContextId).toBe(
+        context.producerSeed.sourceContextId,
+      );
+      expect(context.transitionContextId).toBe(
+        context.producerSeed.transitionContextId,
+      );
+      expect(bundle.base.transitionContextId).toBe(
+        context.transitionContextId,
+      );
+      expect(
+        bundle.options.every(
+          (option) =>
+            option.outcome.transitionContextId
+            === context.transitionContextId,
+        ),
+      ).toBe(true);
+    }
   });
 
   it('requires exact factory origin and planned event/interval provenance', () => {
@@ -309,6 +429,14 @@ describe('produceOutfitBundle', () => {
       seed: planned.producerSeed,
       source: plannedSource(planned),
     }).kind).toBe('supported');
+    expect(() => exactCurrentContext({
+      identity: 'origin-current',
+      rawTransitionContextId: current.transitionContextId,
+    })).toThrow(/factory-derived canonical source transition/u);
+    expect(() => exactContext({
+      identity: 'origin-planned',
+      rawTransitionContextId: planned.transitionContextId,
+    })).toThrow(/factory-derived canonical source transition/u);
 
     expectUnavailable({
       seed: current.producerSeed,
@@ -502,9 +630,9 @@ describe('produceOutfitBundle', () => {
 
   it.each([
     [
-      'a frozen structural seed clone',
+      'a root-frozen structural seed clone',
       (context: OutfitTruthPlannedOutfitContext) => ({
-        seed: structuredClone(context.producerSeed),
+        seed: Object.freeze(structuredClone(context.producerSeed)),
         source: currentSource(context),
       }),
       'invalid-provenance',
@@ -663,9 +791,9 @@ describe('produceOutfitBundle', () => {
     },
   );
 
-  it('turns unreadable args, source, and seed proxies into typed unavailable', () => {
+  it('turns hostile args/source proxies and an unowned seed proxy into typed unavailable', () => {
     const context = exactContext();
-    const hostile = new Proxy(
+    const hostileArgs = new Proxy(
       {
         seed: context.producerSeed,
         source: currentSource(context),
@@ -676,16 +804,41 @@ describe('produceOutfitBundle', () => {
         },
       },
     );
+    const hostileSource = new Proxy(
+      currentSource(context),
+      {
+        ownKeys() {
+          throw new Error('hostile source ownKeys');
+        },
+      },
+    );
+    const unownedSeedProxy = new Proxy(context.producerSeed, {});
 
     expect(() => produceOutfitBundle(
-      hostile as ProduceOutfitBundleArgsV1,
+      hostileArgs as ProduceOutfitBundleArgsV1,
     )).not.toThrow();
     expect(produceOutfitBundle(
-      hostile as ProduceOutfitBundleArgsV1,
+      hostileArgs as ProduceOutfitBundleArgsV1,
     )).toEqual({
       kind: 'unavailable',
       bundleVersion: 1,
       reason: 'invalid-input',
+    });
+    expect(produceOutfitBundle({
+      seed: context.producerSeed,
+      source: hostileSource,
+    })).toEqual({
+      kind: 'unavailable',
+      bundleVersion: 1,
+      reason: 'invalid-input',
+    });
+    expect(produceOutfitBundle({
+      seed: unownedSeedProxy,
+      source: currentSource(context),
+    })).toEqual({
+      kind: 'unavailable',
+      bundleVersion: 1,
+      reason: 'invalid-provenance',
     });
   });
 
