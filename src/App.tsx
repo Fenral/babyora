@@ -27,6 +27,7 @@ import { useTheme } from './state/theme-store';
 import { useAutoLocationRefresh } from './hooks/useAutoLocationRefresh';
 import { useOutfitTransitionCoordinator } from './hooks/useOutfitTransitionCoordinator';
 import { BottomTabBar } from './components/BottomTabBar';
+import { OutfitTransitionOverlay } from './components/outfit-transition/OutfitTransitionOverlay';
 
 import type { GuideHubTarget } from './screens/GuideHubScreen';
 import {
@@ -497,6 +498,43 @@ export default function App(): ReactElement {
 
   // Førstegangs-onboarding tar over hele skjermen (egen <main> + <h1>,
   // ingen BottomTabBar). onComplete melder ferdig etter velkomst-stegene.
+  const currentTransitionBundle = (
+    activeDrill?.kind === 'paakledning'
+    && activeDrill.source === 'current'
+  ) ? activeDrill.outfitBundle : undefined;
+  const selectTransitionHomeSources = outfitTransition.selectHomeSources;
+  const transitionPresentation = useMemo(() => {
+    if (currentTransitionBundle === undefined) return null;
+    const selection = selectTransitionHomeSources(
+      currentTransitionBundle,
+    );
+    return selection.kind === 'ready' ? selection.sources : null;
+  }, [currentTransitionBundle, selectTransitionHomeSources]);
+  const transitionSnapshot = (
+    outfitTransition.state.status === 'ready'
+    || outfitTransition.state.status === 'playing'
+  ) ? outfitTransition.state.snapshot : null;
+  const transitionIsLanding = (
+    transitionSnapshot !== null
+    && transitionPresentation !== null
+  );
+
+  useEffect(() => {
+    if (
+      outfitTransition.state.status === 'ready'
+      && transitionPresentation !== null
+    ) {
+      outfitTransition.beginPlayback();
+    }
+  }, [outfitTransition, transitionPresentation]);
+
+  const finishOutfitTransition = useCallback(() => {
+    outfitTransition.settle('completed');
+  }, [outfitTransition]);
+  const abortOutfitTransitionOverlay = useCallback(() => {
+    outfitTransition.abort('motion-ineligible');
+  }, [outfitTransition]);
+
   if (!onboardingDone) {
     return (
       <div className="app-shell">
@@ -528,7 +566,6 @@ export default function App(): ReactElement {
   // dekker hele skjermen. BottomTabBar skal IKKE være synlig / klikkbar
   // mens den er åpen. Vi dropper rendring helt for clarity.
   const sheetOpen = activeDrill?.kind === 'paakledning';
-
   if (activeDrill?.kind === 'guide' && activeDrill.target === 'finn-antrekk') {
     routeKey = 'drill:guide:finn-antrekk';
     routeContent = <FinnAntrekkScreen onBack={() => setDrill(null)} />;
@@ -642,7 +679,7 @@ export default function App(): ReactElement {
               plannedContext={activeDrill.plannedContext}
               outfitBundle={activeDrill.outfitBundle}
               registerOutfitRow={outfitTransition.registerOutfitRow}
-              transitionVisualState="settled"
+              transitionVisualState={transitionIsLanding ? 'landing' : 'settled'}
               onOpenWarmColdGuide={onOpenWarmColdGuide}
             />
           ) : (
@@ -651,11 +688,20 @@ export default function App(): ReactElement {
               currentContext={activeDrill.currentContext}
               outfitBundle={activeDrill.outfitBundle}
               registerOutfitRow={outfitTransition.registerOutfitRow}
-              transitionVisualState="settled"
+              transitionVisualState={transitionIsLanding ? 'landing' : 'settled'}
               onOpenWarmColdGuide={onOpenWarmColdGuide}
             />
           )}
         </Suspense>
+      )}
+      {transitionIsLanding && transitionSnapshot !== null && (
+        <OutfitTransitionOverlay
+          snapshot={transitionSnapshot}
+          presentations={transitionPresentation}
+          reducedMotion={reduceMotion}
+          onFinish={finishOutfitTransition}
+          onAbort={abortOutfitTransitionOverlay}
+        />
       )}
     </div>
   );

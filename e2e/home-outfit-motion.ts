@@ -1,9 +1,14 @@
 import { readFileSync } from 'node:fs';
-import { spawn, type ChildProcess } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { chromium, type Browser, type Page } from 'playwright';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 
 const PORT = 4318;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
+const require = createRequire(import.meta.url);
+const VITE_CLI = join(dirname(require.resolve('vite/package.json')), 'bin', 'vite.js');
+const PRODUCTION_NOW = new Date('2026-02-12T12:00:00.000Z');
 const requestedCase = process.argv[
   process.argv.indexOf('--case') + 1
 ];
@@ -26,6 +31,157 @@ async function waitForServer(server: ChildProcess): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 125));
   }
   throw new Error('Timed out waiting for the local Vite fixture server');
+}
+
+function deterministicForecast(): unknown {
+  const start = Date.parse('2026-02-11T23:00:00.000Z');
+  return {
+    properties: {
+      meta: {
+        updated_at: PRODUCTION_NOW.toISOString(),
+        units: {
+          air_temperature: 'celsius',
+          wind_speed: 'm/s',
+          wind_from_direction: 'degrees',
+          relative_humidity: '%',
+          cloud_area_fraction: '%',
+          precipitation_amount: 'mm',
+        },
+      },
+      timeseries: Array.from({ length: 72 }, (_, index) => ({
+        time: new Date(start + index * 3_600_000).toISOString(),
+        data: {
+          instant: {
+            details: {
+              air_temperature: (() => {
+                const localHour = (
+                  new Date(start + index * 3_600_000).getUTCHours() + 1
+                ) % 24;
+                return localHour < 8
+                  ? -8
+                  : localHour < 12
+                    ? 1
+                    : localHour < 16 ? 28 : -3;
+              })(),
+              wind_speed: 2,
+              wind_from_direction: 180,
+              relative_humidity: 72,
+              cloud_area_fraction: 35,
+            },
+          },
+          next_1_hours: {
+            summary: { symbol_code: 'fair_day' },
+            details: { precipitation_amount: 0 },
+          },
+        },
+      })),
+    },
+  };
+}
+
+async function installProductionInputs(page: Page): Promise<void> {
+  await page.clock.install({ time: PRODUCTION_NOW });
+  await page.addInitScript(() => {
+    localStorage.setItem('babyora.subscription', JSON.stringify({
+      state: { isPremium: true, lastSyncedAt: 1 },
+      version: 0,
+    }));
+  });
+  await page.route('**/api/forecast?**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(deterministicForecast()),
+    });
+  });
+}
+
+async function runProductionSignature(browser: Browser): Promise<void> {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 900 },
+    timezoneId: 'Europe/Oslo',
+  });
+  const page = await context.newPage();
+  await installProductionInputs(page);
+  await page.goto(`${BASE_URL}/?seed=demo`, { waitUntil: 'networkidle' });
+
+  const stroller = page.getByRole('button', { name: 'I vogn', exact: true });
+  await stroller.click();
+  assert(await stroller.getAttribute('aria-pressed') === 'true',
+    'compiled App did not activate the real 28C I vogn context');
+  const source = page.locator('[data-outfit-transition-source]');
+  await source.first().waitFor({ state: 'visible', timeout: 10_000 });
+  const sourceIds = await source.evaluateAll((nodes) => nodes.map(
+    (node) => (node as HTMLElement).dataset.outfitTransitionSource ?? '',
+  ));
+  assert(sourceIds.length > 0 && new Set(sourceIds).size === sourceIds.length,
+    'compiled Home did not expose unique exact transition IDs');
+
+  await page.locator('#hjem-current-outfit-trigger').click();
+  const dialog = page.getByRole('dialog', { name: 'Lillian', exact: true });
+  await dialog.waitFor({ state: 'visible', timeout: 10_000 });
+  const heading = dialog.getByRole('heading', { name: 'Lillian', exact: true });
+  assert(await heading.evaluate((node) => document.activeElement === node),
+    'semantic Outfit heading was not focused at T0');
+  const targetIds = await dialog.locator('[data-outfit-row]').evaluateAll(
+    (nodes) => nodes.map((node) => (node as HTMLElement).dataset.outfitRow ?? ''),
+  );
+  assert(JSON.stringify(targetIds) === JSON.stringify(sourceIds),
+    'actual Home IDs did not map to actual Outfit rows in exact order');
+
+  const overlay = page.locator('[data-outfit-transition-overlay]');
+  await overlay.waitFor({ state: 'attached', timeout: 10_000 });
+  assert(await overlay.getAttribute('aria-hidden') === 'true',
+    'overlay is not semantic-hidden');
+  assert((await overlay.evaluate((node) => getComputedStyle(node).pointerEvents)) === 'none',
+    'overlay is not pointer-inert');
+  assert(Number(await overlay.getAttribute('data-outfit-transition-duration-ms')) === 1_250,
+    'overlay did not use the bounded 1250ms explanation');
+  const clones = overlay.locator('[data-outfit-transition-clone]');
+  assert(await clones.count() === sourceIds.length,
+    'overlay clone count diverged from exact visible garment count');
+  const destinationProof = await clones.evaluateAll((nodes) => nodes.map((node) => {
+    const element = node as HTMLElement;
+    return {
+      id: element.dataset.outfitTransitionClone ?? '',
+      x: Number(element.dataset.outfitTransitionTargetX),
+      y: Number(element.dataset.outfitTransitionTargetY),
+      width: Number(element.dataset.outfitTransitionTargetWidth),
+      height: Number(element.dataset.outfitTransitionTargetHeight),
+      end: Number(element.dataset.outfitTransitionEndMs),
+    };
+  }));
+  const targetRects = await dialog.locator('[data-outfit-row]').evaluateAll(
+    (nodes) => nodes.map((node) => {
+      const rect = node.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    }),
+  );
+  destinationProof.forEach((proof, index) => {
+    const target = targetRects[index];
+    assert(proof.id === sourceIds[index] && target !== undefined,
+      'overlay destination ID/order diverged');
+    for (const key of ['x', 'y', 'width', 'height'] as const) {
+      assert(Math.abs(proof[key] - target[key]) < 0.51,
+        `overlay immutable ${key} did not equal the actual row`);
+    }
+    assert(proof.end === 1_250, 'clone completion exceeded shared clock');
+  });
+  assert(await dialog.locator('[data-transition-visual-state="landing"]').count() === 1,
+    'semantic Outfit did not enter landing before explanation playback');
+  await overlay.waitFor({ state: 'detached', timeout: 3_000 });
+  assert(await page.locator('.app-shell').getAttribute('data-outfit-transition-state') === 'settled',
+    'compiled App did not settle after completion');
+  assert(await dialog.locator('[data-outfit-row]').count() === targetIds.length,
+    'semantic Outfit DOM changed after settlement');
+
+  await page.getByRole('button', { name: 'Lukk dagens antrekk', exact: true }).click();
+  await page.locator('#hjem-current-outfit-trigger').press('Enter');
+  await dialog.waitFor({ state: 'visible' });
+  assert(await page.locator('[data-outfit-transition-overlay]').count() === 0,
+    'same-triple keyboard replay created a duplicate overlay');
+  await page.getByRole('button', { name: 'Lukk dagens antrekk', exact: true }).click();
+  await context.close();
 }
 
 async function loadFixture(
@@ -400,32 +556,66 @@ function assertProductionWiring(): void {
 
 async function main(): Promise<void> {
   assert(
-    requestedCase === 'coordinator',
-    'Use --case coordinator for this bounded harness',
+    requestedCase === 'coordinator'
+      || requestedCase === 'signature'
+      || requestedCase === 'all',
+    'Use --case coordinator, signature, or all',
   );
   assertProductionWiring();
-  const server = spawn(
-    process.execPath,
-    [
-      'node_modules/vite/bin/vite.js',
-      '--host',
-      '127.0.0.1',
-      '--port',
-      String(PORT),
-    ],
-    { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
-  );
-  server.stdout?.on('data', (chunk) => process.stdout.write(chunk));
-  server.stderr?.on('data', (chunk) => process.stderr.write(chunk));
-  let browser: Browser | null = null;
-  try {
-    await waitForServer(server);
-    browser = await chromium.launch({ headless: true });
-    await runCoordinatorCase(browser);
-    console.log('home-outfit-motion coordinator: PASS');
-  } finally {
-    await browser?.close();
-    server.kill();
+
+  if (requestedCase === 'signature' || requestedCase === 'all') {
+    const build = spawnSync(process.execPath, [VITE_CLI, 'build'], {
+      cwd: process.cwd(),
+      shell: false,
+      windowsHide: true,
+      encoding: 'utf8',
+    });
+    assert(build.status === 0 && build.error === undefined,
+      `compiled production build failed: ${`${build.stdout ?? ''}${build.stderr ?? ''}`.slice(-4_000)}`);
+    const preview = spawn(process.execPath, [
+      VITE_CLI,
+      'preview',
+      '--host', '127.0.0.1',
+      '--port', String(PORT),
+      '--strictPort',
+    ], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    let browser: Browser | null = null;
+    try {
+      await waitForServer(preview);
+      browser = await chromium.launch({ headless: true });
+      await runProductionSignature(browser);
+      console.log('home-outfit-motion production signature: PASS');
+    } finally {
+      await browser?.close();
+      preview.kill();
+      await new Promise<void>((resolve) => {
+        if (preview.exitCode !== null) resolve();
+        else preview.once('exit', () => resolve());
+      });
+    }
+  }
+
+  if (
+    requestedCase === 'coordinator'
+    || requestedCase === 'signature'
+    || requestedCase === 'all'
+  ) {
+    const server = spawn(process.execPath, [
+      VITE_CLI,
+      '--host', '127.0.0.1',
+      '--port', String(PORT),
+      '--strictPort',
+    ], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    let browser: Browser | null = null;
+    try {
+      await waitForServer(server);
+      browser = await chromium.launch({ headless: true });
+      await runCoordinatorCase(browser);
+      console.log('home-outfit-motion coordinator: PASS');
+    } finally {
+      await browser?.close();
+      server.kill();
+    }
   }
 }
 

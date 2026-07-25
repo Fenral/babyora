@@ -297,7 +297,16 @@ describe('PaakledningScreen outfit truth integration', () => {
     expect(app).toContain('planningEventId: plannedContext.planningEventId');
     expect(app).toContain('plannedForIso: plannedContext.plannedForIso');
     expect(app).toContain('outfitBundle={activeDrill.outfitBundle}');
-    expect(app).toContain('transitionVisualState="settled"');
+    expect(app).toContain(
+      "transitionSnapshot !== null\n    && transitionPresentation !== null",
+    );
+    const visualStateProps = app.match(
+      /transitionVisualState=\{transitionIsLanding \? 'landing' : 'settled'\}/gu,
+    ) ?? [];
+    expect(visualStateProps).toHaveLength(2);
+    expect(app.match(/transitionVisualState=/gu)).toHaveLength(2);
+    expect(app).toContain("outfitTransition.settle('completed')");
+    expect(app).toContain("outfitTransition.abort('motion-ineligible')");
     expect(app).toContain("setDrill({ kind: 'guide', target: 'varm-kald' });");
     expect(app).not.toContain('outfitProducerSeed');
     expect((app.match(/produceOutfitBundle\s*\(/gu) ?? [])).toHaveLength(2);
