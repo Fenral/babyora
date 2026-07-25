@@ -4,7 +4,6 @@ plan_id: "02-09"
 status: PASS
 phase2_candidate_sha: 7de4bf480c2b203937bb4093001df23a5d85f264
 feature_flag: true
-pre_activation_sha: 14385e208947ae22b1f15787fb03a515de2d8ed3
 pre_activation_parent_of_candidate: true
 pre_activation_feature_flag: false
 pre_activation_status_clean: true
@@ -13,15 +12,6 @@ phase1_candidate_sha: 5cf7df85014fa51096b06a7e381926ebb4601798
 contract_sha256: f223636699eb0b654ad29ab08b407237db6e5ee224aeb8f0720e4c80a0f05033
 pack_sha256: e222950d15e49a98e5aeb65516219f6a4adda5a618e6ad1ae98ad6193136457b
 dependency_ancestry: PASS
-dependencies:
-  02-01: 5f2217eb46ea64a33bfafe24c588c434cd30a0f3
-  02-02: ac20e97e106aa0953d70f38ec5427d5a6af9e3d5
-  02-03: be3e82e7e14428b97f1181da578b7f60b89fbd4f
-  02-04: 3e01127a198427bd762113bcc7b1da4cd55b937d
-  02-05: ac9e78311b01f8b2d52f10c33600a80d7d996366
-  02-06: 947be06ff2615482572567b4066ae0832f5d8dee
-  02-07: 05b4b503ce162b49c94d6fe95ae0a2d429a92160
-  02-08: f1688a5799af2806b790ece790d9630438625b14
 inventory:
   scenario_count: 2036160
   unique_outputs: 70
@@ -42,7 +32,6 @@ external_cost_nok: 0
 push_performed: false
 deploy_performed: false
 testflight_performed: false
-rollback_sha: 14385e208947ae22b1f15787fb03a515de2d8ed3
 ---
 
 # Plan 02-09: enabled production truth handoff
@@ -62,6 +51,17 @@ commands exited zero. The candidate record used the Phase-1 source field
 `candidate_sha` and then normalized it only to `phase1_candidate_sha`; the
 candidate, contract, and pack hashes above are the accepted exact tuple. All
 listed 02-01 through 02-08 commits exist and are ancestors of the candidate.
+
+The exact dependency ancestry is:
+
+- 02-01: `5f2217eb46ea64a33bfafe24c588c434cd30a0f3`
+- 02-02: `ac20e97e106aa0953d70f38ec5427d5a6af9e3d5`
+- 02-03: `be3e82e7e14428b97f1181da578b7f60b89fbd4f`
+- 02-04: `3e01127a198427bd762113bcc7b1da4cd55b937d`
+- 02-05: `ac9e78311b01f8b2d52f10c33600a80d7d996366`
+- 02-06: `947be06ff2615482572567b4066ae0832f5d8dee`
+- 02-07: `05b4b503ce162b49c94d6fe95ae0a2d429a92160`
+- 02-08: `f1688a5799af2806b790ece790d9630438625b14`
 
 ## Inventory and retained source truth
 
