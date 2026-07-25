@@ -33,6 +33,14 @@ import {
   type PlannedOutfitContext,
 } from './lib/planning/planned-outfit-context';
 import {
+  produceOutfitBundle,
+  type OutfitBundleProducerResult,
+} from './lib/outfit/outfit-bundle-producer';
+import {
+  createOutfitRowRegistrationRegistry,
+  type OutfitRowRegistrationRegistryV1,
+} from './lib/outfit/outfit-transition-contract';
+import {
   consumeRequestedPlanningView,
   issueRequestedPlanningView,
   shouldClosePlannedDrillOnAccess,
@@ -121,12 +129,14 @@ type Drill =
       kind: 'paakledning';
       source: 'current';
       currentContext: PlannedOutfitContext;
+      outfitBundle?: OutfitBundleProducerResult;
       origin: HTMLElement;
     }
   | {
       kind: 'paakledning';
       source: 'planned';
       plannedContext: PlannedOutfitContext;
+      outfitBundle?: OutfitBundleProducerResult;
       origin: HTMLElement;
     }
   | { kind: 'guide'; target: GuideHubTarget };
@@ -170,6 +180,10 @@ export default function App(): ReactElement {
   const locationMode = useLocationPref((state) => state.mode);
   const [tab, setTab] = useState<TabKey>('hjem');
   const [drill, setDrill] = useState<Drill>(null);
+  const [outfitRowRegistry] = useState<OutfitRowRegistrationRegistryV1>(
+    createOutfitRowRegistrationRegistry,
+  );
+  const registerOutfitRow = outfitRowRegistry.registerOutfitRow;
   const [requestedPlanViewState, setRequestedPlanViewState] = useState<RequestedPlanningViewState>({
     nextToken: 0,
     requestedView: null,
@@ -243,6 +257,10 @@ export default function App(): ReactElement {
     setDrill({ kind: 'guide', target });
   }, []);
 
+  const onOpenWarmColdGuide = useCallback(() => {
+    setDrill({ kind: 'guide', target: 'varm-kald' });
+  }, []);
+
   const onConsumeRequestedPlanView = useCallback((token: number) => {
     setRequestedPlanViewState((current) => {
       const { consumedView: _consumedView, ...next } = consumeRequestedPlanningView(
@@ -264,10 +282,45 @@ export default function App(): ReactElement {
     ) {
       return;
     }
+    const outfitBundle = plannedContext.sourceKind === 'phase2-outfit-truth'
+      ? produceOutfitBundle({
+          seed: plannedContext.producerSeed,
+          source: {
+            kind: 'planned',
+            sourceContextId: plannedContext.producerSeed.sourceContextId,
+            planningEventId: plannedContext.planningEventId,
+            plannedForIso: plannedContext.plannedForIso,
+          },
+        })
+      : undefined;
     setDrill({
       kind: 'paakledning',
       source: 'planned',
       plannedContext,
+      outfitBundle,
+      origin,
+    });
+  };
+
+  const onOpenCurrentOutfit = (
+    currentContext: PlannedOutfitContext,
+    origin: HTMLElement,
+  ) => {
+    if (!isPlannedOutfitContext(currentContext) || !origin.isConnected) return;
+    const outfitBundle = currentContext.sourceKind === 'phase2-outfit-truth'
+      ? produceOutfitBundle({
+          seed: currentContext.producerSeed,
+          source: {
+            kind: 'current',
+            sourceContextId: currentContext.producerSeed.sourceContextId,
+          },
+        })
+      : undefined;
+    setDrill({
+      kind: 'paakledning',
+      source: 'current',
+      currentContext,
+      outfitBundle,
       origin,
     });
   };
@@ -498,14 +551,7 @@ export default function App(): ReactElement {
     routeContent = (
       <HjemScreen
         onNavigate={onNavigate}
-        onOpenSheet={(ctx, origin) =>
-          setDrill({
-            kind: 'paakledning',
-            source: 'current',
-            currentContext: ctx,
-            origin,
-          })
-        }
+        onOpenSheet={onOpenCurrentOutfit}
       />
     );
   } else if (tab === 'plan') {
@@ -584,11 +630,19 @@ export default function App(): ReactElement {
             <PaakledningScreen
               onBack={closePaakledning}
               plannedContext={activeDrill.plannedContext}
+              outfitBundle={activeDrill.outfitBundle}
+              registerOutfitRow={registerOutfitRow}
+              transitionVisualState="settled"
+              onOpenWarmColdGuide={onOpenWarmColdGuide}
             />
           ) : (
             <PaakledningScreen
               onBack={closePaakledning}
               currentContext={activeDrill.currentContext}
+              outfitBundle={activeDrill.outfitBundle}
+              registerOutfitRow={registerOutfitRow}
+              transitionVisualState="settled"
+              onOpenWarmColdGuide={onOpenWarmColdGuide}
             />
           )}
         </Suspense>

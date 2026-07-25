@@ -50,7 +50,14 @@ import { headwearFromRecommendation, tierFromRecommendation } from '../lib/avata
 import { stageSrc } from '../lib/avatar-stage';
 import { tempAxisFor } from '../lib/temp-axis';
 import type { PlannedOutfitContext } from '../lib/planning/planned-outfit-context';
+import type { OutfitBundleProducerResult } from '../lib/outfit/outfit-bundle-producer';
+import { OUTFIT_TRUTH_V1_AVAILABLE } from '../lib/outfit/feature-flags';
+import type {
+  OutfitTransitionVisualState,
+  RegisterOutfitRow,
+} from '../lib/outfit/outfit-transition-contract';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
+import { OutfitTruthPanel } from '../components/outfit/OutfitTruthPanel';
 import { motion } from 'motion/react';
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -68,6 +75,10 @@ export type PaakledningScreenProps = {
   vognMode?: 'awake' | 'sleeping';
   currentContext?: PlannedOutfitContext;
   plannedContext?: PlannedOutfitContext;
+  outfitBundle?: OutfitBundleProducerResult;
+  registerOutfitRow?: RegisterOutfitRow;
+  transitionVisualState?: OutfitTransitionVisualState;
+  onOpenWarmColdGuide?: () => void;
 };
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -231,7 +242,17 @@ function PlannedPaakledningScreen({
   onBack,
   plannedContext,
   contextKind,
-}: Pick<PaakledningScreenProps, 'onBack'> & {
+  outfitBundle,
+  registerOutfitRow,
+  transitionVisualState = 'settled',
+  onOpenWarmColdGuide,
+}: Pick<PaakledningScreenProps,
+  | 'onBack'
+  | 'outfitBundle'
+  | 'registerOutfitRow'
+  | 'transitionVisualState'
+  | 'onOpenWarmColdGuide'
+> & {
   plannedContext: PlannedOutfitContext;
   contextKind: 'current' | 'planned';
 }): ReactElement {
@@ -262,6 +283,68 @@ function PlannedPaakledningScreen({
     dialog.addEventListener('cancel', handleCancel);
     return () => dialog.removeEventListener('cancel', handleCancel);
   }, [onBack]);
+
+  if (OUTFIT_TRUTH_V1_AVAILABLE && outfitBundle !== undefined) {
+    return (
+      <dialog
+        ref={dialogRef}
+        className="pkl-dialog ba-temp-root"
+        data-temp={tempAxisFor(
+          plannedContext.weather.feelsLikeC,
+          plannedContext.weather.tempC,
+        )}
+        aria-labelledby="outfit-truth-dialog-title"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          width: '100%',
+          maxWidth: 'none',
+          height: '100%',
+          maxHeight: 'none',
+          margin: 0,
+          padding: 0,
+          border: 0,
+          background: 'var(--bg-canvas)',
+          color: 'var(--ink-900)',
+          overflow: 'auto',
+        }}
+      >
+        <div style={{ maxWidth: 680, margin: '0 auto', padding: 'max(18px, env(safe-area-inset-top)) 18px 32px' }}>
+          <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label={contextKind === 'current' ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 999,
+                border: '1px solid var(--ink-100)',
+                background: 'var(--surface-pure)',
+                color: 'var(--ink-900)',
+              }}
+            >
+              <CloseIcon />
+            </button>
+            <h2
+              id="outfit-truth-dialog-title"
+              ref={titleRef}
+              tabIndex={-1}
+              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
+            >
+              {contextKind === 'current' ? 'Dagens antrekk' : 'Planlagt antrekk'}
+            </h2>
+          </header>
+          <OutfitTruthPanel
+            outfitBundle={outfitBundle}
+            registerOutfitRow={registerOutfitRow}
+            transitionVisualState={transitionVisualState}
+            onOpenWarmColdGuide={onOpenWarmColdGuide}
+          />
+        </div>
+      </dialog>
+    );
+  }
 
   if (!plannedContext.access.allowed) {
     return (
@@ -957,6 +1040,10 @@ export function PaakledningScreen(props: PaakledningScreenProps): ReactElement {
         onBack={props.onBack}
         plannedContext={exactContext}
         contextKind={props.currentContext ? 'current' : 'planned'}
+        outfitBundle={props.outfitBundle}
+        registerOutfitRow={props.registerOutfitRow}
+        transitionVisualState={props.transitionVisualState}
+        onOpenWarmColdGuide={props.onOpenWarmColdGuide}
       />
     );
   }
