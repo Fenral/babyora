@@ -405,6 +405,7 @@ async function assertProductionRoutes(page: Page, expectedFlag: ExpectedFlag): P
   // unavailable branches are exercised above at their closest authentic
   // producer boundary because trusted UI contexts cannot naturally be invalid.
   const homeAction = page.locator('#hjem-current-outfit-trigger');
+  await homeAction.waitFor({ state: 'visible', timeout: 10_000 });
   if (await homeAction.count() !== 1) throw new Error('Production Hjem outfit action is missing');
   await homeAction.waitFor({ state: 'visible', timeout: 10_000 });
   await homeAction.click();
