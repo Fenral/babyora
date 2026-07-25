@@ -46,7 +46,13 @@ import {
 import { getAlternatives } from '../lib/wool-layers/alternatives';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { feelsLikeC } from '../lib/met-no/feels-like';
-import { headwearFromRecommendation, tierFromRecommendation } from '../lib/avatar-tier';
+import {
+  avatarPng,
+  headwearFromGarmentLabels,
+  headwearFromRecommendation,
+  tierFromGarmentLabels,
+  tierFromRecommendation,
+} from '../lib/avatar-tier';
 import { stageSrc } from '../lib/avatar-stage';
 import { tempAxisFor } from '../lib/temp-axis';
 import type { PlannedOutfitContext } from '../lib/planning/planned-outfit-context';
@@ -312,6 +318,10 @@ function PlannedPaakledningScreen({
   const accessLabel = plannedContext.access.allowed
     ? isCurrentContext ? 'Dagens antrekk er tilgjengelig' : 'Planen er tilgjengelig'
     : `Planen er ikke tilgjengelig (${plannedContext.access.reason})`;
+  const illustrativeAvatarAsset = avatarPng(
+    tierFromGarmentLabels(plannedContext.recommendation.orderedGarments, plannedContext.activity),
+    headwearFromGarmentLabels(plannedContext.recommendation.orderedGarments),
+  );
 
   // Entitlement is a route boundary, not an Outfit-panel capability. It must
   // therefore win even when a caller also holds an exact process-local bundle.
@@ -450,6 +460,7 @@ function PlannedPaakledningScreen({
             registerOutfitRow={registerOutfitRow}
             transitionVisualState={transitionVisualState}
             onOpenWarmColdGuide={onOpenWarmColdGuide}
+            illustrativeAvatarAsset={illustrativeAvatarAsset}
           />
 
           <section

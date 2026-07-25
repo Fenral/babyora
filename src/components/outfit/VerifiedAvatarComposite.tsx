@@ -1,5 +1,8 @@
 import type { CSSProperties } from 'react';
-import { isVerifiedAvatarAssetPath } from '../../lib/outfit/outfit-avatar-truth.js';
+import {
+  isIllustrativeAvatarAssetPath,
+  isVerifiedAvatarAssetPath,
+} from '../../lib/outfit/outfit-avatar-truth.js';
 import {
   isOutfitTruthSnapshot,
   type OutfitAvatarTruth,
@@ -19,6 +22,7 @@ type CanonicalProps = SharedProps & Readonly<{
   stateKey?: never;
   outfitSummary?: never;
   assetOverride?: never;
+  illustrativeAssetOverride?: string | null;
 }>;
 
 type LegacyProps = SharedProps & Readonly<{
@@ -26,6 +30,7 @@ type LegacyProps = SharedProps & Readonly<{
   stateKey: Readonly<{ pose: OutfitAvatarPose }>;
   outfitSummary: string;
   assetOverride?: string | null;
+  illustrativeAssetOverride?: string | null;
   snapshot?: never;
   avatarTruth?: never;
 }>;
@@ -111,7 +116,7 @@ function VerifiedAvatarImage({
   reducedMotion: boolean;
   size: number;
   snapshotId?: string;
-  source: 'canonical' | 'legacy';
+  source: 'canonical' | 'legacy' | 'illustrative';
 }>) {
   return (
     <div
@@ -143,6 +148,7 @@ export function VerifiedAvatarComposite(props: VerifiedAvatarCompositeProps) {
   const reducedMotion =
     readOwnDataValue(props, 'reducedMotion') === true;
   const legacyStateKey = readOwnDataValue(props, 'stateKey');
+  const illustrativeAsset = readOwnDataValue(props, 'illustrativeAssetOverride');
   if (legacyStateKey !== undefined) {
     const legacyAsset = readOwnDataValue(props, 'assetOverride');
     if (isVerifiedAvatarAssetPath(legacyAsset)) {
@@ -155,6 +161,9 @@ export function VerifiedAvatarComposite(props: VerifiedAvatarCompositeProps) {
           source="legacy"
         />
       );
+    }
+    if (isIllustrativeAvatarAssetPath(illustrativeAsset)) {
+      return <VerifiedAvatarImage assetPath={illustrativeAsset} decorative={decorative} reducedMotion={reducedMotion} size={size} source="illustrative" />;
     }
     return (
       <NeutralAvatar
@@ -180,6 +189,9 @@ export function VerifiedAvatarComposite(props: VerifiedAvatarCompositeProps) {
     snapshot.avatar !== avatarTruth
     || snapshot.avatar.verifiedAssetPath === null
   ) {
+    if (isIllustrativeAvatarAssetPath(illustrativeAsset)) {
+      return <VerifiedAvatarImage assetPath={illustrativeAsset} decorative={decorative} reducedMotion={reducedMotion} size={size} snapshotId={snapshot.snapshotId} source="illustrative" />;
+    }
     return (
       <NeutralAvatar
         pose={snapshot.avatar.pose}

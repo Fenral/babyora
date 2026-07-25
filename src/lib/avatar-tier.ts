@@ -43,15 +43,35 @@ function flatItems(rec: Recommendation): string[] {
   return rec.layers.flatMap((l) => l.items.map((i) => i.toLowerCase()));
 }
 
+export function headwearFromGarmentLabels(items: readonly string[]): Headwear {
+  const normalized = items.map((item) => item.toLowerCase());
+  if (normalized.some((item) => SOLHATT.test(item))) return 'solhatt';
+  if (normalized.some((item) => LUE.test(item))) return 'lue';
+  return 'none';
+}
+
 /**
  * Avgjør hvilken type hodeplagg som er anbefalt i denne recommendation.
  * Brukes til å velge riktig avatar-variant (A1-hat / A2-hat).
  */
 export function headwearFromRecommendation(rec: Recommendation): Headwear {
-  const items = flatItems(rec);
-  if (items.some((i) => SOLHATT.test(i))) return 'solhatt';
-  if (items.some((i) => LUE.test(i))) return 'lue';
-  return 'none';
+  return headwearFromGarmentLabels(flatItems(rec));
+}
+
+/** A coherent tier illustration, separate from exact-composite verification. */
+export function tierFromGarmentLabels(
+  labels: readonly string[],
+  activity: Activity,
+): AvatarTier {
+  if (activity === 'soevn') return 'A7';
+  const items = labels.map((item) => item.toLowerCase());
+  if (items.some((i) => WINTER_OUTER.test(i) && ISOLATED.test(i))) return 'A6';
+  if (items.some((i) => WINTER_OUTER.test(i))) return 'A5';
+  if (items.some((i) => LIGHT_OUTER.test(i))) return 'A4';
+  if (items.some((i) => MID_LAYER.test(i))) return 'A3';
+  if (items.some((i) => MILD_BASE.test(i))) return 'A2';
+  if (items.some((i) => SUMMER_BASE.test(i))) return 'A1';
+  return 'A2';
 }
 
 /**
@@ -63,6 +83,8 @@ export function headwearFromRecommendation(rec: Recommendation): Headwear {
  * strengen i rec.layers og mapper til tier basert på regex-matchere over.
  */
 export function tierFromRecommendation(rec: Recommendation, activity: Activity): AvatarTier {
+  return tierFromGarmentLabels(flatItems(rec), activity);
+/*
   if (activity === 'soevn') return 'A7';
 
   const items = flatItems(rec);
@@ -80,6 +102,7 @@ export function tierFromRecommendation(rec: Recommendation, activity: Activity):
 
   // Fallback hvis ingenting matcher
   return 'A2';
+*/
 }
 
 /**

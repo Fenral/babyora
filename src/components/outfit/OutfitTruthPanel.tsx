@@ -22,6 +22,7 @@ import { VerifiedAvatarComposite } from './VerifiedAvatarComposite.js';
 
 export type OutfitTruthPanelProps = Readonly<{
   outfitBundle: OutfitBundleProducerResult;
+  illustrativeAvatarAsset?: string | null;
   registerOutfitRow?: RegisterOutfitRow;
   transitionVisualState?: OutfitTransitionVisualState;
   onOpenWarmColdGuide?: () => void;
@@ -110,11 +111,13 @@ function SupportedPanel({
   registerOutfitRow,
   transitionVisualState,
   onOpenWarmColdGuide,
+  illustrativeAvatarAsset,
 }: Readonly<{
   outfitBundle: Extract<OutfitBundleProducerResult, { kind: 'supported' }>;
   registerOutfitRow?: RegisterOutfitRow;
   transitionVisualState: OutfitTransitionVisualState;
   onOpenWarmColdGuide?: () => void;
+  illustrativeAvatarAsset?: string | null;
 }>) {
   const session = useOutfitSelectionStore((state) => state.session);
   const { base, options } = outfitBundle;
@@ -136,9 +139,9 @@ function SupportedPanel({
       data-transition-visual-state={transitionVisualState}
     >
       {avatarSnapshot === null ? (
-        <VerifiedAvatarComposite stateKey={{ pose: base.avatar.pose }} outfitSummary="" decorative />
+        <VerifiedAvatarComposite stateKey={{ pose: base.avatar.pose }} outfitSummary="" illustrativeAssetOverride={illustrativeAvatarAsset} decorative />
       ) : (
-        <VerifiedAvatarComposite snapshot={avatarSnapshot} avatarTruth={avatarSnapshot.avatar} decorative />
+        <VerifiedAvatarComposite snapshot={avatarSnapshot} avatarTruth={avatarSnapshot.avatar} illustrativeAssetOverride={illustrativeAvatarAsset} decorative />
       )}
       <OutfitExperience
         snapshot={base}
@@ -168,6 +171,7 @@ export function OutfitTruthPanel({
   registerOutfitRow,
   transitionVisualState = 'settled',
   onOpenWarmColdGuide,
+  illustrativeAvatarAsset,
 }: OutfitTruthPanelProps) {
   // This identity check must stay before any envelope or nested truth read.
   if (!isOutfitBundleProducerResult(outfitBundle)) return <UnavailablePanel />;
@@ -180,6 +184,7 @@ export function OutfitTruthPanel({
           registerOutfitRow={registerOutfitRow}
           transitionVisualState={transitionVisualState}
           onOpenWarmColdGuide={onOpenWarmColdGuide}
+          illustrativeAvatarAsset={illustrativeAvatarAsset}
         />
       );
     case 'unsupported-cardinality':
