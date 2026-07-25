@@ -10,9 +10,13 @@ const OUTFIT_BUNDLE_PRODUCER_SEED_VERSION = 1 as const;
 const ownedPlannedContexts = new WeakSet<object>();
 const ownedOutfitBundleProducerSeeds = new WeakSet<object>();
 type OutfitBundleProducerSeedSource =
-  | Readonly<{ kind: 'current' }>
+  | Readonly<{
+      kind: 'current';
+      rawTransitionContextId: string;
+    }>
   | Readonly<{
       kind: 'planned';
+      rawTransitionContextId: string;
       planningEventId: string;
       plannedForIso: string;
     }>;
@@ -671,6 +675,35 @@ function canonicalIdentityContent(input: CanonicalPlannedOutfitContextInput): st
   });
 }
 
+function canonicalRouteIdentity(
+  input: CanonicalPlannedOutfitContextInput,
+  producerSeedSource: 'current' | 'planned',
+): Readonly<{
+  effectiveTransitionContextId: string;
+  identityMaterial: string;
+}> {
+  const identityMaterial = stableSerialize(
+    producerSeedSource === 'current'
+      ? {
+          identityVersion: 1,
+          kind: 'current',
+          rawTransitionContextId: input.transitionContextId,
+        }
+      : {
+          identityVersion: 1,
+          kind: 'planned',
+          rawTransitionContextId: input.transitionContextId,
+          planningEventId: input.planningEventId,
+          plannedForIso: input.plannedForIso,
+        },
+  );
+  return {
+    effectiveTransitionContextId:
+      `outfit-transition-v1:${fnv1a64(identityMaterial)}`,
+    identityMaterial,
+  };
+}
+
 function canonicalProjection(finalizedRecommendation: Recommendation): Readonly<{
   orderedGarments: readonly string[];
   equipment: readonly string[];
@@ -682,6 +715,33 @@ function canonicalProjection(finalizedRecommendation: Recommendation): Readonly<
   }
   if (orderedGarments.length === 0) fail('finalizedRecommendation.layers', 'must contain a non-equipment garment');
   return { orderedGarments, equipment };
+}
+
+function canonicalRawTransitionContextId(
+  input: CanonicalPlannedOutfitContextInput,
+  producerSeedSource: 'current' | 'planned',
+  projection: Readonly<{
+    orderedGarments: readonly string[];
+    equipment: readonly string[];
+  }>,
+): string {
+  const fingerprint = producerSeedSource === 'current'
+    ? `current-finalized:${JSON.stringify([
+        projection.orderedGarments,
+        projection.equipment,
+        input.weather.tempC,
+        input.weather.feelsLikeC,
+        input.weather.windMs,
+        input.weather.precipMmH,
+        input.weather.symbolCode,
+      ])}`
+    : `planned-finalized:${JSON.stringify([
+        projection.orderedGarments,
+        projection.equipment,
+      ])}`;
+  return `${
+    producerSeedSource === 'current' ? 'current' : 'planning'
+  }-transition:${input.plannedForIso}:${fingerprint}`;
 }
 
 function sameFrozenKnownShape(actual: unknown, expected: unknown): boolean {
@@ -724,18 +784,69 @@ function createOutfitContext(
     const canonical = isCanonical ? canonicalInput(input) : null;
     const legacy = isCanonical ? null : normalizedInput(input);
     const normalized = canonical ?? legacy!;
+    const projection = canonical
+      ? canonicalProjection(canonical.finalizedRecommendation)
+      : null;
+    const expectedRawTransitionContextId = canonical
+      ? canonicalRawTransitionContextId(
+          canonical,
+          producerSeedSource,
+          projection!,
+        )
+      : null;
+    if (
+      canonical
+      && (
+        canonical.transitionContextId !== expectedRawTransitionContextId
+        || ownDataValue(
+          root,
+          'transitionContextId',
+          'transitionContextId',
+        ) !== expectedRawTransitionContextId
+      )
+    ) {
+      fail(
+        'transitionContextId',
+        'must equal the factory-derived canonical source transition',
+      );
+    }
+    const routeIdentity = canonical
+      ? canonicalRouteIdentity(canonical, producerSeedSource)
+      : null;
     const content = canonical
-      ? canonicalIdentityContent(canonical)
+      ? stableSerialize({
+          canonicalContent: canonicalIdentityContent(canonical),
+          routeIdentity: routeIdentity!.identityMaterial,
+        })
       : identityContent(legacy!);
     const plannedContextId = `planned-context-${fnv1a64(content)}`;
-    if (plannedContextId === normalized.planningEventId || plannedContextId === normalized.transitionContextId) {
+    const effectiveTransitionContextId =
+      routeIdentity?.effectiveTransitionContextId
+      ?? normalized.transitionContextId;
+    if (
+      routeIdentity
+      && (
+        effectiveTransitionContextId === normalized.planningEventId
+        || effectiveTransitionContextId === normalized.transitionContextId
+      )
+    ) {
+      fail(
+        'transitionContextId',
+        'factory-derived identity must differ from caller-supplied identifiers',
+      );
+    }
+    if (
+      plannedContextId === normalized.planningEventId
+      || plannedContextId === normalized.transitionContextId
+      || plannedContextId === effectiveTransitionContextId
+    ) {
       fail('plannedContextId', 'must differ from caller-supplied identifiers');
     }
     const base = {
       schemaVersion: PLANNED_CONTEXT_SCHEMA_VERSION,
       plannedContextId,
       planningEventId: normalized.planningEventId,
-      transitionContextId: normalized.transitionContextId,
+      transitionContextId: effectiveTransitionContextId,
       child: { ...normalized.child },
       plannedForIso: normalized.plannedForIso,
       timeZone: normalized.timeZone,
@@ -747,7 +858,6 @@ function createOutfitContext(
     };
     const context = canonical
       ? (() => {
-          const projection = canonicalProjection(canonical.finalizedRecommendation);
           const { recommendationId, recommendationFingerprint } =
             canonicalRecommendationProvenance(
               canonical.recommendInput,
@@ -756,7 +866,7 @@ function createOutfitContext(
           const producerSeed = recursivelyFreeze({
             seedVersion: OUTFIT_BUNDLE_PRODUCER_SEED_VERSION,
             sourceContextId: plannedContextId,
-            transitionContextId: canonical.transitionContextId,
+            transitionContextId: effectiveTransitionContextId,
             recommendationId,
             recommendationFingerprint,
             input: canonical.recommendInput,
@@ -766,9 +876,13 @@ function createOutfitContext(
           ownedOutfitBundleProducerSeedSources.set(
             producerSeed,
             producerSeedSource === 'current'
-              ? Object.freeze({ kind: 'current' as const })
+              ? Object.freeze({
+                  kind: 'current' as const,
+                  rawTransitionContextId: canonical.transitionContextId,
+                })
               : Object.freeze({
                   kind: 'planned' as const,
+                  rawTransitionContextId: canonical.transitionContextId,
                   planningEventId: canonical.planningEventId,
                   plannedForIso: canonical.plannedForIso,
                 }),
@@ -779,8 +893,8 @@ function createOutfitContext(
             recommendation: {
               id: recommendationId,
               fingerprint: recommendationFingerprint,
-              orderedGarments: [...projection.orderedGarments],
-              equipment: [...projection.equipment],
+              orderedGarments: [...projection!.orderedGarments],
+              equipment: [...projection!.equipment],
               finalized: true as const,
             },
             producerSeed,
@@ -832,6 +946,10 @@ export function isPlannedOutfitContext(value: unknown): value is PlannedOutfitCo
     const producerSeed = sourceKind === 'phase2-outfit-truth'
       ? recordAt(ownDataValue(value, 'producerSeed', 'producerSeed'), 'producerSeed')
       : null;
+    const producerSeedSource = producerSeed
+      ? ownedOutfitBundleProducerSeedSources.get(producerSeed)
+      : null;
+    if (producerSeed && !producerSeedSource) return false;
     const source = producerSeed
       ? {
           recommendInput: ownDataValue(producerSeed, 'input', 'producerSeed.input'),
@@ -841,9 +959,11 @@ export function isPlannedOutfitContext(value: unknown): value is PlannedOutfitCo
         ? { recommendation: value.recommendation }
         : null;
     if (!source) return false;
-    const expected = createPlannedOutfitContext({
+    const expectedInput = {
       planningEventId: value.planningEventId,
-      transitionContextId: value.transitionContextId,
+      transitionContextId:
+        producerSeedSource?.rawTransitionContextId
+        ?? value.transitionContextId,
       child: value.child,
       plannedForIso: value.plannedForIso,
       timeZone: value.timeZone,
@@ -853,7 +973,10 @@ export function isPlannedOutfitContext(value: unknown): value is PlannedOutfitCo
       weather: value.weather,
       access: value.access,
       ...source,
-    });
+    };
+    const expected = producerSeedSource?.kind === 'current'
+      ? createCurrentOutfitContext(expectedInput)
+      : createPlannedOutfitContext(expectedInput);
     return sameFrozenKnownShape(value, expected);
   } catch {
     return false;
@@ -970,6 +1093,41 @@ export function matchesOutfitBundleProducerSeedCurrentSourceV1(
   try {
     if (!isOutfitBundleProducerSeedV1(seed)) return false;
     return ownedOutfitBundleProducerSeedSources.get(seed)?.kind === 'current';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Matches an authenticated canonical planned context to the exact raw event
+ * identity that entered the planned factory. The public transition is already
+ * route-qualified, so it is never accepted as a substitute for the raw event
+ * transition.
+ */
+export function matchesPlannedOutfitContextEventV1(
+  value: unknown,
+  planningEventId: unknown,
+  rawTransitionContextId: unknown,
+  plannedForIso: unknown,
+): value is OutfitTruthPlannedOutfitContext {
+  try {
+    if (!isOutfitTruthPlannedOutfitContext(value)) return false;
+    const { producerSeed } = value;
+    if (!isOutfitBundleProducerSeedV1(producerSeed)) return false;
+    const source = ownedOutfitBundleProducerSeedSources.get(producerSeed);
+    return (
+      source?.kind === 'planned'
+      && typeof planningEventId === 'string'
+      && typeof rawTransitionContextId === 'string'
+      && typeof plannedForIso === 'string'
+      && planningEventId === source.planningEventId
+      && rawTransitionContextId === source.rawTransitionContextId
+      && plannedForIso === source.plannedForIso
+      && value.planningEventId === source.planningEventId
+      && value.plannedForIso === source.plannedForIso
+      && value.transitionContextId === producerSeed.transitionContextId
+      && value.plannedContextId === producerSeed.sourceContextId
+    );
   } catch {
     return false;
   }

@@ -1,8 +1,13 @@
 # Phase 2 → Phase 3: Outfit truth interface contract
 
-**Status:** FROZEN FOR PLANNING — implementation and contract tests are still required
-**Date:** 2026-07-24
+**Status:** FROZEN WITH APPROVED IDENTITY AMENDMENT
+**Date:** 2026-07-25
 **Owner:** Phase 2 owns outfit truth, responsive Antrekkskart, production `PaakledningScreen`, activation flag, Outfit-row registration, the serialized 02-05 Hjem/Uke preservation of full producer inputs after Phase-1 01-18, and the serialized 02-09 `App` current/planned bundle bootstrap. After 02-09 passes, Phase 3 extends `HjemScreen` and `App` for Home atmosphere/source registration, transient DOM measurement and transition orchestration without replacing the producer seed or editing Paakledning.
+
+Identity semantics are amended by
+`02-IDENTITY-AMENDMENT.md`. That amendment has precedence only where the
+original text implied byte-equivalent IDs across different current, planned or
+planned-interval provenance.
 
 ## Purpose
 
@@ -134,7 +139,7 @@ The build result is intentionally explicit. The read-only finite-domain inventor
 ### Semantic invariants
 
 1. The factory consumes a finalized recommendation and exact context. Callers cannot construct a trusted snapshot with a type assertion. This extends the existing factory-owned `PlannedOutfitContext` pattern. `[VERIFIED: src/lib/planning/planned-outfit-context.ts]`
-2. `snapshotId`, `recommendationFingerprint` and `transitionContextId` must all match across Home, navigation and Outfit. A mismatch disables motion but never blocks the static screen.
+2. `snapshotId`, `recommendationFingerprint` and the factory-derived route-qualified `transitionContextId` must all match across Home, navigation and Outfit. A mismatch disables motion but never blocks the static screen. Identical route-qualified input is deterministic; different current/planned/interval provenance cannot reuse transition, snapshot, occurrence or option ownership.
 3. `itemId` is opaque, deterministic inside the exact snapshot and unique per occurrence. It is derived from the snapshot/context identity, engine category, exact `sourceLabel` and duplicate occurrence ordinal — never from display label, catalog ID or render index alone.
 4. Duplicate labels and duplicate catalog IDs remain distinct occurrences with distinct `itemId` values.
 5. Garments preserve finalized engine order exactly. Phase 2 does not re-sort by body region, visual position or catalog category.
@@ -303,9 +308,9 @@ type PaakledningOutfitIntegrationProps = Readonly<{
 - `null` unregisters on unmount.
 - `PaakledningScreen` accepts `registerOutfitRow?: RegisterOutfitRow` and forwards the same function unchanged to `OutfitTruthPanel` → `OutfitGarmentList`; it neither rewrites IDs nor falls back to labels/selectors.
 - `outfitBundle` is additive/optional for cross-phase atomicity. Present valid bundles use the enabled Phase-2 panel; absent bundles preserve the existing safe Phase-1 text fallback without recomputation. Invalid/unavailable present bundles are neutral, never silently treated as absent.
-- `HjemScreen` and `UkeScreen` pass their already-computed `RecommendInput` and already-finalized full `Recommendation` to `createPlannedOutfitContext` in serialized 02-05 after Phase-1 01-18. The factory accepts those two source objects, but callers cannot inject `outfitProducerSeed`, seed IDs, provenance or a flattened substitute.
-- `createPlannedOutfitContext` validates plain own-data objects, normalizes and deep-clones every optional/nested input field plus every full Recommendation field (activity, tempBand, categorized layers, notes, structured notes, summary, optional safety flags and optional severity), preserves presence/absence, recursively freezes them, and derives stable IDs/provenance itself. Accessors, custom prototypes, cycles, mutation, missing required Recommendation data, malformed optional finalizer data or a caller-supplied seed fail closed.
-- The full finalized Recommendation must agree with the exact input/activity and its category-preserving flattened garment/equipment projection must equal the context's existing recommendation projection and fingerprint basis. This check preserves existing stable `plannedContextId`, recommendation fingerprint and transitionContextId; it never rebuilds layer categories from strings or calls `recommend`.
+- `HjemScreen` and `UkeScreen` pass their already-computed `RecommendInput` and already-finalized full `Recommendation` to the separate current/planned factory entry points in serialized 02-05 after Phase-1 01-18. The factory accepts those two source objects, but callers cannot inject `outfitProducerSeed`, seed IDs, source kind, provenance or a flattened substitute.
+- The current/planned entry points share one canonicalizer that validates plain own-data objects, normalizes and deep-clones every optional/nested input field plus every full Recommendation field (activity, tempBand, categorized layers, notes, structured notes, summary, optional safety flags and optional severity), preserves presence/absence, recursively freezes them, and derives stable route-qualified IDs/provenance itself. Accessors, custom prototypes, cycles, mutation, missing required Recommendation data, malformed optional finalizer data or caller-supplied provenance fail closed.
+- The full finalized Recommendation must agree with the exact input/activity and its category-preserving flattened garment/equipment projection must equal the context's existing recommendation projection and fingerprint basis. This check preserves the content-derived recommendation identity while the factory deterministically qualifies context/transition ownership by current/planned/interval provenance; it never rebuilds layer categories from strings or calls `recommend`.
 - App supplies only the explicit `current`/`planned` source from its `Drill` discriminant and must not infer source from access capability.
 - In 02-09, both real App open handlers call `produceOutfitBundle` once, store that exact result in route state, and pass it to both Paakledning branches. Production routes never omit or directly inject the bundle; optional absence remains only for atomic legacy/fixture fallback.
 - `transitionVisualState` is visual-only. `"landing"` cannot delay mount, heading focus, content, controls, registration or accessibility; it cannot use `hidden`, `display:none`, `visibility:hidden`, `inert` or accessibility-tree suppression. Default is `"settled"`.

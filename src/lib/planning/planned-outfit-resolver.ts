@@ -1,6 +1,6 @@
 import type { PlanningChangeEvent } from './change-events.js';
 import {
-  isPlannedOutfitContext,
+  matchesPlannedOutfitContextEventV1,
   type PlannedOutfitContext,
 } from './planned-outfit-context.js';
 
@@ -87,11 +87,14 @@ export function resolvePlannedOutfitContext(
 
     if (!Map.prototype.has.call(contextsByEventId, eventId)) return null;
     const context = Map.prototype.get.call(contextsByEventId, eventId) as unknown;
-    if (!isPlannedOutfitContext(context)) return null;
 
     const event = matchingEvents[0]!;
-    return context.planningEventId === ownDataValue(event, 'id')
-      && context.transitionContextId === ownDataValue(event, 'transitionContextId')
+    return matchesPlannedOutfitContextEventV1(
+      context,
+      ownDataValue(event, 'id'),
+      ownDataValue(event, 'transitionContextId'),
+      ownDataValue(event, 'atIso'),
+    )
       ? context
       : null;
   } catch {
