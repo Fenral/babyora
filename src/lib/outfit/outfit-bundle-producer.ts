@@ -1,6 +1,8 @@
 import { parseStrictIsoInstant } from '../met-no/types.js';
 import {
   isOutfitBundleProducerSeedV1,
+  matchesOutfitBundleProducerSeedCurrentSourceV1,
+  matchesOutfitBundleProducerSeedPlannedSourceV1,
   type OutfitBundleProducerSeedV1,
 } from '../planning/planned-outfit-context.js';
 import {
@@ -269,6 +271,14 @@ function produceOutfitBundleUnchecked(
   if (source.sourceContextId !== rawSeed.sourceContextId) {
     return unavailable('invalid-provenance');
   }
+  const sourceMatchesSeed = source.kind === 'current'
+    ? matchesOutfitBundleProducerSeedCurrentSourceV1(rawSeed)
+    : matchesOutfitBundleProducerSeedPlannedSourceV1(
+        rawSeed,
+        source.planningEventId,
+        source.plannedForIso,
+      );
+  if (!sourceMatchesSeed) return unavailable('invalid-provenance');
 
   const input = rawSeed.input as unknown as
     CreateOutfitTruthSnapshotArgsV1['input'];

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createCurrentOutfitContext,
   createPlannedOutfitContext,
   type OutfitTruthPlannedOutfitContext,
 } from '../../planning/planned-outfit-context.js';
@@ -50,12 +51,13 @@ function completeRecommendInput(
 
 function exactContext(
   options: ContextOptions = {},
+  factory: typeof createPlannedOutfitContext = createPlannedOutfitContext,
 ): OutfitTruthPlannedOutfitContext {
   const identity = options.identity ?? 'current';
   const recommendInput = options.recommendInput ?? completeRecommendInput();
   const finalizedRecommendation =
     options.finalizedRecommendation ?? recommend(recommendInput);
-  const context = createPlannedOutfitContext({
+  const context = factory({
     planningEventId: `planning-event-${identity}`,
     transitionContextId: `transition-${identity}`,
     child: {
@@ -98,9 +100,15 @@ function exactContext(
   return context;
 }
 
+function exactCurrentContext(
+  options: ContextOptions = {},
+): OutfitTruthPlannedOutfitContext {
+  return exactContext(options, createCurrentOutfitContext);
+}
+
 function currentSource(
   context: OutfitTruthPlannedOutfitContext,
-): OutfitBundleSourceV1 {
+): Extract<OutfitBundleSourceV1, { kind: 'current' }> {
   return {
     kind: 'current',
     sourceContextId: context.producerSeed.sourceContextId,
@@ -109,7 +117,7 @@ function currentSource(
 
 function plannedSource(
   context: OutfitTruthPlannedOutfitContext,
-): OutfitBundleSourceV1 {
+): Extract<OutfitBundleSourceV1, { kind: 'planned' }> {
   return {
     kind: 'planned',
     sourceContextId: context.producerSeed.sourceContextId,
@@ -138,7 +146,7 @@ function assertRecursivelyFrozen(
 
 describe('produceOutfitBundle', () => {
   it('emits deterministic supported current truth with exact weather and options', () => {
-    const context = exactContext();
+    const context = exactCurrentContext();
     const mutableSource = {
       kind: 'current' as const,
       sourceContextId: context.producerSeed.sourceContextId,
@@ -209,7 +217,9 @@ describe('produceOutfitBundle', () => {
   });
 
   it('keeps current, planned, and changed-interval identities isolated', () => {
-    const currentContext = exactContext({ identity: 'current-isolated' });
+    const currentContext = exactCurrentContext({
+      identity: 'current-isolated',
+    });
     const plannedContext = exactContext({ identity: 'planned-isolated' });
     const intervalContext = exactContext({
       identity: 'planned-next-interval',
@@ -275,6 +285,75 @@ describe('produceOutfitBundle', () => {
       + planned.base.garments.length
       + changedInterval.base.garments.length,
     );
+  });
+
+  it('requires exact factory origin and planned event/interval provenance', () => {
+    const current = exactCurrentContext({ identity: 'origin-current' });
+    const planned = exactContext({ identity: 'origin-planned' });
+    const expectUnavailable = (
+      args: ProduceOutfitBundleArgsV1,
+      reason: 'invalid-input' | 'invalid-provenance',
+    ) => {
+      expect(produceOutfitBundle(args)).toEqual({
+        kind: 'unavailable',
+        bundleVersion: 1,
+        reason,
+      });
+    };
+
+    expect(produceOutfitBundle({
+      seed: current.producerSeed,
+      source: currentSource(current),
+    }).kind).toBe('supported');
+    expect(produceOutfitBundle({
+      seed: planned.producerSeed,
+      source: plannedSource(planned),
+    }).kind).toBe('supported');
+
+    expectUnavailable({
+      seed: current.producerSeed,
+      source: plannedSource(current),
+    }, 'invalid-provenance');
+    expectUnavailable({
+      seed: planned.producerSeed,
+      source: currentSource(planned),
+    }, 'invalid-provenance');
+    expectUnavailable({
+      seed: planned.producerSeed,
+      source: {
+        ...plannedSource(planned),
+        planningEventId: 'planning-event-arbitrary',
+      },
+    }, 'invalid-provenance');
+    expectUnavailable({
+      seed: planned.producerSeed,
+      source: {
+        ...plannedSource(planned),
+        plannedForIso: '2026-02-12T12:00:00.000Z',
+      },
+    }, 'invalid-provenance');
+    expectUnavailable({
+      seed: planned.producerSeed,
+      source: {
+        ...plannedSource(planned),
+        plannedForIso: '2026-02-12T12:00:00.000+01:00',
+      },
+    }, 'invalid-provenance');
+    expectUnavailable({
+      seed: planned.producerSeed,
+      source: {
+        ...plannedSource(planned),
+        planningEventId: 'planning-event-arbitrary',
+        plannedForIso: '2027-01-01T00:00:00.000Z',
+      },
+    }, 'invalid-provenance');
+    expectUnavailable({
+      seed: planned.producerSeed,
+      source: {
+        ...plannedSource(planned),
+        plannedForIso: 'next Tuesday',
+      },
+    }, 'invalid-input');
   });
 
   it('preserves duplicate occurrences and semantic equipment without flattening', () => {
@@ -405,7 +484,7 @@ describe('produceOutfitBundle', () => {
     const finalizedRecommendation = recommend(recommendInput);
     delete finalizedRecommendation.safetyFlags;
     delete finalizedRecommendation.severity;
-    const context = exactContext({
+    const context = exactCurrentContext({
       identity: 'incomplete-finalizer',
       recommendInput,
       finalizedRecommendation,
