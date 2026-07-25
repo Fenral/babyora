@@ -281,6 +281,6 @@ Plan 02-09 retains sole App bootstrap ownership.
 
 ---
 
-*Phase: 02-outfit-truth-antrekkskart*  
-*Plan: 02-05*  
+*Phase: 02-outfit-truth-antrekkskart*
+*Plan: 02-05*
 *Completed: 2026-07-25*
