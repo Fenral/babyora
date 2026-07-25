@@ -4,7 +4,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { recommend } from '../../lib/wool-layers/recommend.js';
 import type { RecommendInput } from '../../lib/wool-layers/types.js';
-import { createCurrentOutfitContext } from '../../lib/planning/planned-outfit-context.js';
+import {
+  createCurrentOutfitContext,
+  createPlannedOutfitContext,
+} from '../../lib/planning/planned-outfit-context.js';
 import { produceOutfitBundle } from '../../lib/outfit/outfit-bundle-producer.js';
 
 const screenPath = 'src/screens/PaakledningScreen.tsx';
@@ -14,7 +17,10 @@ function source(path: string): string {
   return readFileSync(resolve(process.cwd(), path), 'utf8');
 }
 
-function supportedBundle() {
+function supportedBundle(
+  kind: 'current' | 'planned' = 'current',
+  accessAllowed = true,
+) {
   const input: RecommendInput = {
     weather: {
       tempC: 5,
@@ -40,17 +46,22 @@ function supportedBundle() {
   const equipment = finalizedRecommendation.layers
     .filter((layer) => layer.category === 'utstyr')
     .flatMap((layer) => layer.items);
-  const context = createCurrentOutfitContext({
+  const contextInput = {
     planningEventId: 'paak-screen-current',
-    transitionContextId: `current-transition:${plannedForIso}:current-finalized:${JSON.stringify([
-      garments,
-      equipment,
-      input.weather.tempC,
-      input.weather.feelsLikeC,
-      input.weather.windMs,
-      input.weather.precipMmH,
-      input.weather.symbolCode,
-    ])}`,
+    transitionContextId: kind === 'current'
+      ? `current-transition:${plannedForIso}:current-finalized:${JSON.stringify([
+          garments,
+          equipment,
+          input.weather.tempC,
+          input.weather.feelsLikeC,
+          input.weather.windMs,
+          input.weather.precipMmH,
+          input.weather.symbolCode,
+        ])}`
+      : `planning-transition:${plannedForIso}:planned-finalized:${JSON.stringify([
+          garments,
+          equipment,
+        ])}`,
     child: { id: 'paak-child', name: 'Ada', ageMonths: input.child.ageMonths },
     plannedForIso,
     timeZone: 'Europe/Oslo',
@@ -66,12 +77,24 @@ function supportedBundle() {
     },
     recommendInput: input,
     finalizedRecommendation,
-    access: { capability: 'today_home', allowed: true, reason: 'free' },
-  });
+    access: accessAllowed
+      ? { capability: 'today_home' as const, allowed: true, reason: 'free' as const }
+      : { capability: 'future_plan' as const, allowed: false, reason: 'expired' as const },
+  };
+  const context = kind === 'current'
+    ? createCurrentOutfitContext(contextInput)
+    : createPlannedOutfitContext(contextInput);
   if (context.sourceKind !== 'phase2-outfit-truth') throw new Error('expected real producer context');
   const bundle = produceOutfitBundle({
     seed: context.producerSeed,
-    source: { kind: 'current', sourceContextId: context.producerSeed.sourceContextId },
+    source: kind === 'current'
+      ? { kind: 'current', sourceContextId: context.producerSeed.sourceContextId }
+      : {
+          kind: 'planned',
+          sourceContextId: context.producerSeed.sourceContextId,
+          planningEventId: context.planningEventId,
+          plannedForIso: context.plannedForIso,
+        },
   });
   if (bundle.kind !== 'supported') throw new Error('expected real supported producer result');
   return { bundle, context };
@@ -151,6 +174,97 @@ describe('PaakledningScreen outfit truth integration', () => {
       transitionVisualState: 'settled',
       onOpenWarmColdGuide,
     });
+    const capturedPanelProps = panelProps as unknown as Record<string, unknown>;
+    expect(capturedPanelProps.outfitBundle).toBe(bundle);
+    expect(capturedPanelProps.registerOutfitRow).toBe(registerOutfitRow);
+    expect(capturedPanelProps.onOpenWarmColdGuide).toBe(onOpenWarmColdGuide);
+  });
+
+  it('keeps the exact current and planned context shell around one enabled panel', async () => {
+    const current = supportedBundle('current');
+    const planned = supportedBundle('planned');
+    vi.doMock('../../lib/outfit/feature-flags.js', () => ({
+      OUTFIT_TRUTH_V1_AVAILABLE: true,
+    }));
+    vi.doMock('../../components/outfit/OutfitTruthPanel.js', () => ({
+      OutfitTruthPanel: () => <section className="outfit-truth-panel">panel</section>,
+    }));
+    const { PaakledningScreen } = await import('../PaakledningScreen.js');
+    const currentHtml = renderToStaticMarkup(
+      <PaakledningScreen onBack={() => undefined} currentContext={current.context} outfitBundle={current.bundle} />,
+    );
+    const plannedHtml = renderToStaticMarkup(
+      <PaakledningScreen onBack={() => undefined} plannedContext={planned.context} outfitBundle={planned.bundle} />,
+    );
+
+    for (const html of [currentHtml, plannedHtml]) {
+      expect(html).toContain('aria-labelledby="planned-outfit-title"');
+      expect(html).toContain('id="planned-outfit-title"');
+      expect(html).toContain('>Ada</h2>');
+      expect(html).toContain('Hjemme');
+      expect(html).toContain('Utelek');
+      expect(html).toContain('10 mnd');
+      expect(html).toContain('skyet');
+      expect(html).toContain('5°');
+      expect(html).toContain('føles som');
+      expect(html).toContain('4°');
+      expect(html).toContain('Hvorfor dette antrekket?');
+      expect(html).toContain('vind på 1 m/s');
+      expect(html).toContain('nedbør på 0 mm/t');
+      expect(html).toContain('data-outfit-access-capability="today_home"');
+      expect(html).not.toContain('planned-garments-title');
+      expect(html).not.toContain('Tilgang:');
+      expect((html.match(/outfit-truth-panel/g) ?? [])).toHaveLength(1);
+    }
+    expect(currentHtml).toContain('Dagens antrekk');
+    expect(currentHtml).toContain('aria-label="Dagens situasjon"');
+    expect(plannedHtml).toContain('Planlagt antrekk');
+    expect(plannedHtml).toContain('aria-label="Planlagt situasjon"');
+  });
+
+  it('mounts one panel and retains no second garment list in the enabled branch', async () => {
+    const { bundle, context } = supportedBundle();
+    vi.doMock('../../lib/outfit/feature-flags.js', () => ({
+      OUTFIT_TRUTH_V1_AVAILABLE: true,
+    }));
+    vi.doMock('../../components/outfit/OutfitTruthPanel.js', () => ({
+      OutfitTruthPanel: () => (
+        <section className="outfit-truth-panel">
+          <section className="outfit-list">real panel garment rows</section>
+        </section>
+      ),
+    }));
+    const { PaakledningScreen } = await import('../PaakledningScreen.js');
+    const html = renderToStaticMarkup(
+      <PaakledningScreen onBack={() => undefined} currentContext={context} outfitBundle={bundle} />,
+    );
+    expect((html.match(/class="outfit-truth-panel/g) ?? [])).toHaveLength(1);
+    expect((html.match(/class="outfit-list/g) ?? [])).toHaveLength(1);
+    expect(html).not.toContain('planned-garments-title');
+    expect(html).not.toContain('sr-only');
+    const screen = source(screenPath);
+    const gate = screen.indexOf('OUTFIT_TRUTH_V1_AVAILABLE && outfitBundle !== undefined');
+    const legacyReturn = screen.indexOf('\n  return (', gate);
+    expect((screen.match(/<OutfitTruthPanel/g) ?? [])).toHaveLength(1);
+    expect(screen.slice(gate, legacyReturn)).not.toContain('planned-garments-title');
+  });
+
+  it('keeps access denial ahead of the enabled exact-bundle branch', async () => {
+    const { bundle, context } = supportedBundle('planned', false);
+    const renderPanel = vi.fn(() => <section>panel</section>);
+    vi.doMock('../../lib/outfit/feature-flags.js', () => ({
+      OUTFIT_TRUTH_V1_AVAILABLE: true,
+    }));
+    vi.doMock('../../components/outfit/OutfitTruthPanel.js', () => ({
+      OutfitTruthPanel: renderPanel,
+    }));
+    const { PaakledningScreen } = await import('../PaakledningScreen.js');
+    const html = renderToStaticMarkup(
+      <PaakledningScreen onBack={() => undefined} plannedContext={context} outfitBundle={bundle} />,
+    );
+    expect(renderPanel).not.toHaveBeenCalled();
+    expect(html).toContain('Planlagt antrekk er ikke tilgjengelig');
+    expect(html).not.toContain('data-outfit-access-capability');
   });
 
   it('keeps the native dialog close and Escape hooks unconditional before the feature gate', () => {
@@ -160,7 +274,7 @@ describe('PaakledningScreen outfit truth integration', () => {
     expect(functionStart).toBeGreaterThanOrEqual(0);
     expect(screen.indexOf('dialog.showModal()', functionStart)).toBeLessThan(gate);
     expect(screen.indexOf("addEventListener('cancel', handleCancel)", functionStart)).toBeLessThan(gate);
-    expect(screen.indexOf('onClick={onBack}', functionStart)).toBeGreaterThan(gate);
+    expect(screen.indexOf('if (!plannedContext.access.allowed)', functionStart)).toBeLessThan(gate);
   });
 
   it('keeps App production propagation event-owned, source-explicit, and free of render recomputation', () => {

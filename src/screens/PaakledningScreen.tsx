@@ -284,68 +284,37 @@ function PlannedPaakledningScreen({
     return () => dialog.removeEventListener('cancel', handleCancel);
   }, [onBack]);
 
-  if (OUTFIT_TRUTH_V1_AVAILABLE && outfitBundle !== undefined) {
-    return (
-      <dialog
-        ref={dialogRef}
-        className="pkl-dialog ba-temp-root"
-        data-temp={tempAxisFor(
-          plannedContext.weather.feelsLikeC,
-          plannedContext.weather.tempC,
-        )}
-        aria-labelledby="outfit-truth-dialog-title"
-        style={{
-          position: 'fixed',
-          inset: 0,
-          width: '100%',
-          maxWidth: 'none',
-          height: '100%',
-          maxHeight: 'none',
-          margin: 0,
-          padding: 0,
-          border: 0,
-          background: 'var(--bg-canvas)',
-          color: 'var(--ink-900)',
-          overflow: 'auto',
-        }}
-      >
-        <div style={{ maxWidth: 680, margin: '0 auto', padding: 'max(18px, env(safe-area-inset-top)) 18px 32px' }}>
-          <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-            <button
-              type="button"
-              onClick={onBack}
-              aria-label={contextKind === 'current' ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 999,
-                border: '1px solid var(--ink-100)',
-                background: 'var(--surface-pure)',
-                color: 'var(--ink-900)',
-              }}
-            >
-              <CloseIcon />
-            </button>
-            <h2
-              id="outfit-truth-dialog-title"
-              ref={titleRef}
-              tabIndex={-1}
-              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
-            >
-              {contextKind === 'current' ? 'Dagens antrekk' : 'Planlagt antrekk'}
-            </h2>
-          </header>
-          <OutfitTruthPanel
-            outfitBundle={outfitBundle}
-            registerOutfitRow={registerOutfitRow}
-            transitionVisualState={transitionVisualState}
-            onOpenWarmColdGuide={onOpenWarmColdGuide}
-          />
-        </div>
-      </dialog>
-    );
-  }
+  // Keep these frozen-context derivations ahead of every production gate. The
+  // enabled shell deliberately presents the same route-owned context as the
+  // compatibility shell; it never derives weather, access, or garments from
+  // the panel bundle.
+  const plannedDateTime = new Intl.DateTimeFormat('nb-NO', {
+    timeZone: plannedContext.timeZone,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(plannedContext.plannedForIso));
+  const activityLabel: Record<PlannedOutfitContext['activity'], string> = {
+    vogn: 'Vogn',
+    baeresele: 'Bæresele',
+    utelek: 'Utelek',
+    soevn: 'Søvn',
+  };
+  const vognLabel = plannedContext.vognMode === 'sleeping'
+    ? 'sovende'
+    : plannedContext.vognMode === 'awake'
+      ? 'våken'
+      : null;
+  const weatherLabel = symbolToLabel(plannedContext.weather.symbolCode);
+  const isCurrentContext = contextKind === 'current';
+  const accessLabel = plannedContext.access.allowed
+    ? isCurrentContext ? 'Dagens antrekk er tilgjengelig' : 'Planen er tilgjengelig'
+    : `Planen er ikke tilgjengelig (${plannedContext.access.reason})`;
 
+  // Entitlement is a route boundary, not an Outfit-panel capability. It must
+  // therefore win even when a caller also holds an exact process-local bundle.
   if (!plannedContext.access.allowed) {
     return (
       <dialog
@@ -400,30 +369,104 @@ function PlannedPaakledningScreen({
     );
   }
 
-  const plannedDateTime = new Intl.DateTimeFormat('nb-NO', {
-    timeZone: plannedContext.timeZone,
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(plannedContext.plannedForIso));
-  const activityLabel: Record<PlannedOutfitContext['activity'], string> = {
-    vogn: 'Vogn',
-    baeresele: 'Bæresele',
-    utelek: 'Utelek',
-    soevn: 'Søvn',
-  };
-  const vognLabel = plannedContext.vognMode === 'sleeping'
-    ? 'sovende'
-    : plannedContext.vognMode === 'awake'
-      ? 'våken'
-      : null;
-  const weatherLabel = symbolToLabel(plannedContext.weather.symbolCode);
-  const isCurrentContext = contextKind === 'current';
-  const accessLabel = plannedContext.access.allowed
-    ? isCurrentContext ? 'Dagens antrekk er tilgjengelig' : 'Planen er tilgjengelig'
-    : `Planen er ikke tilgjengelig (${plannedContext.access.reason})`;
+  if (OUTFIT_TRUTH_V1_AVAILABLE && outfitBundle !== undefined) {
+    return (
+      <dialog
+        ref={dialogRef}
+        className="pkl-dialog ba-temp-root"
+        data-temp={tempAxisFor(
+          plannedContext.weather.feelsLikeC,
+          plannedContext.weather.tempC,
+        )}
+        data-outfit-access-capability={plannedContext.access.capability}
+        aria-labelledby="planned-outfit-title"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          width: '100%',
+          maxWidth: 'none',
+          height: '100%',
+          maxHeight: 'none',
+          margin: 0,
+          padding: 0,
+          border: 0,
+          background: 'var(--bg-canvas)',
+          color: 'var(--ink-900)',
+          overflow: 'auto',
+        }}
+      >
+        <div style={{ maxWidth: 680, margin: '0 auto', padding: 'max(18px, env(safe-area-inset-top)) 18px 32px' }}>
+          <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label={isCurrentContext ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 999,
+                border: '1px solid var(--ink-100)',
+                background: 'var(--surface-pure)',
+                color: 'var(--ink-900)',
+              }}
+            >
+              <CloseIcon />
+            </button>
+            <div>
+              <p style={{ margin: '0 0 3px', color: 'var(--ink-500)', fontSize: 13 }}>
+                {isCurrentContext ? 'Dagens antrekk' : 'Planlagt antrekk'}
+              </p>
+              <h2
+                id="planned-outfit-title"
+                ref={titleRef}
+                tabIndex={-1}
+                style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
+              >
+                {plannedContext.child.name}
+              </h2>
+            </div>
+          </header>
+
+          <section
+            aria-label={isCurrentContext ? 'Dagens situasjon' : 'Planlagt situasjon'}
+            style={{ padding: 18, borderRadius: 20, background: 'var(--surface-pure)', marginBottom: 16 }}
+          >
+            <p style={{ margin: '0 0 8px', fontWeight: 700, textTransform: 'capitalize' }}>
+              {plannedDateTime}
+            </p>
+            <p style={{ margin: '0 0 5px' }}>
+              {plannedContext.place.label} · {activityLabel[plannedContext.activity]}
+              {vognLabel ? ` · ${vognLabel}` : ''}
+            </p>
+            <p style={{ margin: 0, color: 'var(--ink-700)' }}>
+              {plannedContext.child.ageMonths} mnd · {weatherLabel} ·{' '}
+              {Math.round(plannedContext.weather.tempC)}° (føles som{' '}
+              {Math.round(plannedContext.weather.feelsLikeC)}°)
+            </p>
+          </section>
+
+          <OutfitTruthPanel
+            outfitBundle={outfitBundle}
+            registerOutfitRow={registerOutfitRow}
+            transitionVisualState={transitionVisualState}
+            onOpenWarmColdGuide={onOpenWarmColdGuide}
+          />
+
+          <section
+            aria-labelledby="planned-why-title"
+            style={{ padding: 18, borderRadius: 20, background: 'var(--surface-soft)', marginTop: 16 }}
+          >
+            <h3 id="planned-why-title" style={{ margin: '0 0 8px' }}>Hvorfor dette antrekket?</h3>
+            <p style={{ margin: 0, lineHeight: 1.55 }}>
+              {isCurrentContext ? 'Antrekket' : 'Planen'} er laget for {weatherLabel.toLocaleLowerCase('nb-NO')}, vind på{' '}
+              {plannedContext.weather.windMs.toLocaleString('nb-NO')} m/s og nedbør på{' '}
+              {plannedContext.weather.precipMmH.toLocaleString('nb-NO')} mm/t.
+            </p>
+          </section>
+        </div>
+      </dialog>
+    );
+  }
 
   return (
     <dialog
