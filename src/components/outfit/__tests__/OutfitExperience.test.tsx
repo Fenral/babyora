@@ -152,6 +152,8 @@ describe('OutfitExperience', () => {
     expect((html.match(/data-outfit-map-node=/g) ?? []).length).toBe(truth.garments.length);
     expect((html.match(/data-outfit-row=/g) ?? []).length).toBe(truth.garments.length);
     expect((html.match(/data-outfit-connector=/g) ?? []).length).toBe(truth.garments.length);
+    expect((html.match(/outfit-map__thumbnail/g) ?? []).length).toBe(truth.garments.length);
+    expect((html.match(/outfit-row__thumbnail/g) ?? []).length).toBe(truth.garments.length);
     expect(html).toContain('aria-pressed="false"');
   });
 

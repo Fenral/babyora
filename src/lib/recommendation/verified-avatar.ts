@@ -27,6 +27,19 @@ const LEVEL_NAME: Readonly<Record<number, string>> = {
   5: '5-vinter', 6: '6-ekstrem', 7: '7-regn', 8: '8-vind',
 };
 
+// Every approved composite contains a specific head covering. Keep this check
+// next to the asset lookup so a mismatched composite is never shown.
+const EXPECTED_HEADWEAR: Readonly<Record<number, string>> = {
+  1: 'solhatt',
+  2: 'lue-tynn',
+  3: 'lue',
+  4: 'lue-m-ull',
+  5: 'lue-m-ull',
+  6: 'balaklava',
+  7: 'lue',
+  8: 'lue',
+};
+
 /**
  * Asset-sti for en anbefaling, eller null (→ silhuett). `outerBodyLabel` og
  * `headwearLabel` er de norske plaggnavnene fra scenemodellen.
@@ -44,6 +57,9 @@ export function verifiedAvatarAsset(
   // Snødress + balaklava = ekstrem-varianten (så lua stemmer).
   if (level === 5 && headwearLabel && garmentIdFor(headwearLabel) === 'balaklava') {
     level = 6;
+  }
+  if (!headwearLabel || garmentIdFor(headwearLabel) !== EXPECTED_HEADWEAR[level]) {
+    return null;
   }
   const name = LEVEL_NAME[level];
   if (!name) return null;

@@ -58,7 +58,8 @@ describe('Hjem outfit-transition sources', () => {
     );
     expect(markup).toContain('Ullbody');
     expect(markup).toContain('Ullue');
-    expect(markup).not.toContain('aria-hidden="true"');
+    expect((markup.match(/<img/g) ?? []).length).toBe(2);
+    expect(markup).not.toMatch(/data-outfit-transition-source[^>]*aria-hidden/u);
     expect(markup).not.toContain('opacity:0');
   });
 
@@ -77,6 +78,7 @@ describe('Hjem outfit-transition sources', () => {
 
     expect(markup).toContain('Legacy ullbody');
     expect(markup).toContain('Legacy ullue');
+    expect((markup.match(/<img/g) ?? []).length).toBe(2);
     expect(markup).not.toContain('data-outfit-transition-source');
   });
 

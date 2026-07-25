@@ -409,16 +409,19 @@ describe('OutfitTruthPanel', () => {
     expect(unavailable).not.toContain('data-transition-visual-state=');
   });
 
-  it('uses only exact factory snapshot/avatar references for an image and ignores legacy asset overrides', () => {
+  it('uses only manifest-backed avatar assets for canonical and protected legacy paths', () => {
     const truth = snapshot();
     const trusted = renderToStaticMarkup(<VerifiedAvatarComposite snapshot={truth} avatarTruth={truth.avatar} />);
     const forged = renderToStaticMarkup(<VerifiedAvatarComposite snapshot={truth} avatarTruth={{ ...truth.avatar, verifiedAssetPath: '/forged.png' }} />);
     const legacy = renderToStaticMarkup(<VerifiedAvatarComposite stateKey={{ pose: 'sitting' } as never} outfitSummary="forged summary" assetOverride="/looks-real.png" />);
+    const verifiedLegacy = renderToStaticMarkup(<VerifiedAvatarComposite stateKey={{ pose: 'sitting' } as never} outfitSummary="ignored" assetOverride="/avatars/verified/sit-7-regn.png" />);
     if (truth.avatar.verifiedAssetPath === null) expect(trusted).not.toContain('<img');
     else expect(trusted).toContain(`src="${truth.avatar.verifiedAssetPath}"`);
     expect(forged).not.toContain('<img');
     expect(legacy).not.toContain('<img');
     expect(legacy).not.toContain('forged summary');
+    expect(verifiedLegacy).toContain('src="/avatars/verified/sit-7-regn.png"');
+    expect(verifiedLegacy).toContain('data-avatar-source="legacy"');
   });
 
   it('returns stable neutral markup for malformed canonical and legacy avatar props without reading nested data', () => {

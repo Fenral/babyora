@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { isVerifiedAvatarAssetPath } from '../../lib/outfit/outfit-avatar-truth.js';
 import {
   isOutfitTruthSnapshot,
   type OutfitAvatarTruth,
@@ -21,7 +22,7 @@ type CanonicalProps = SharedProps & Readonly<{
 }>;
 
 type LegacyProps = SharedProps & Readonly<{
-  /** Temporary protected-Hjem compatibility seam; it always stays neutral. */
+  /** Temporary protected-Hjem compatibility seam; only manifest assets render. */
   stateKey: Readonly<{ pose: OutfitAvatarPose }>;
   outfitSummary: string;
   assetOverride?: string | null;
@@ -97,6 +98,38 @@ function NeutralAvatar({
   );
 }
 
+function VerifiedAvatarImage({
+  assetPath,
+  decorative,
+  reducedMotion,
+  size,
+  snapshotId,
+  source,
+}: Readonly<{
+  assetPath: string;
+  decorative: boolean;
+  reducedMotion: boolean;
+  size: number;
+  snapshotId?: string;
+  source: 'canonical' | 'legacy';
+}>) {
+  return (
+    <div
+      style={{ width: size, height: size * 1.05, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      data-avatar-truth="verified"
+      data-avatar-source={source}
+      data-avatar-snapshot={snapshotId}
+    >
+      <img
+        src={assetPath}
+        alt={decorative ? '' : 'Verifisert antrekksillustrasjon'}
+        aria-hidden={decorative || undefined}
+        style={{ maxWidth: '100%', maxHeight: '100%', transition: reducedMotion ? 'none' : 'opacity 220ms ease' }}
+      />
+    </div>
+  );
+}
+
 export function VerifiedAvatarComposite(props: VerifiedAvatarCompositeProps) {
   const decorative = readOwnDataValue(props, 'decorative') === true;
   const rawSize = readOwnDataValue(props, 'size');
@@ -107,8 +140,22 @@ export function VerifiedAvatarComposite(props: VerifiedAvatarCompositeProps) {
   )
     ? rawSize
     : 200;
+  const reducedMotion =
+    readOwnDataValue(props, 'reducedMotion') === true;
   const legacyStateKey = readOwnDataValue(props, 'stateKey');
   if (legacyStateKey !== undefined) {
+    const legacyAsset = readOwnDataValue(props, 'assetOverride');
+    if (isVerifiedAvatarAssetPath(legacyAsset)) {
+      return (
+        <VerifiedAvatarImage
+          assetPath={legacyAsset}
+          decorative={decorative}
+          reducedMotion={reducedMotion}
+          size={size}
+          source="legacy"
+        />
+      );
+    }
     return (
       <NeutralAvatar
         pose={neutralPoseFromLegacy(legacyStateKey)}
@@ -143,20 +190,14 @@ export function VerifiedAvatarComposite(props: VerifiedAvatarCompositeProps) {
     );
   }
 
-  const reducedMotion =
-    readOwnDataValue(props, 'reducedMotion') === true;
   return (
-    <div
-      style={{ width: size, height: size * 1.05, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-      data-avatar-truth="verified"
-      data-avatar-snapshot={snapshot.snapshotId}
-    >
-      <img
-        src={snapshot.avatar.verifiedAssetPath}
-        alt={decorative ? '' : 'Verifisert antrekksillustrasjon'}
-        aria-hidden={decorative || undefined}
-        style={{ maxWidth: '100%', maxHeight: '100%', transition: reducedMotion ? 'none' : 'opacity 220ms ease' }}
-      />
-    </div>
+    <VerifiedAvatarImage
+      assetPath={snapshot.avatar.verifiedAssetPath}
+      decorative={decorative}
+      reducedMotion={reducedMotion}
+      size={size}
+      snapshotId={snapshot.snapshotId}
+      source="canonical"
+    />
   );
 }
