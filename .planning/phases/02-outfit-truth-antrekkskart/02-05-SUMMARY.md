@@ -6,8 +6,8 @@ status: PASS
 subsystem: exact-outfit-context-handoff
 tags: [outfit, context, provenance, immutability, integration]
 
-candidate_sha: 87d2d586ac7a4ea9b18854116b2da0a38708df27
-candidate_tree: 9d8bf40b2a374debe9190ec6e6f50a8012cb650a
+candidate_sha: 3636337613b1f4d7a572b761fb2f066191e36c11
+candidate_tree: f31e4c3ccce1e8163011e63d592c0e55b50e9add
 assembly_base_sha: 8ae3d5269e0df78ca87a1442ce9dca0cac69b8d0
 phase2_candidate_merge_sha: daae5349560f4586f914c8e94b9ec03d29d79925
 phase1_docs_merge_sha: 1c1819bd5f816ef0fb12ecc9c5960198f1d24102
@@ -48,22 +48,22 @@ unresolved_p0: 0
 unresolved_p1: 0
 reviews:
   - lane: A
-    reviewer_id: /root/review_02_05_a3
-    canonical_task: /root/review_02_05_a3
-    session: phase2-02-05-a3-87d2d58
+    reviewer_id: /root/review_02_05_auth_a
+    canonical_task: /root/review_02_05_auth_a
+    session: phase2-02-05-auth-a-3636337
     capability: high-verification
-    focus: engine-finalizer-provenance-safety
+    focus: factory-authentication-and-provenance-safety
     fresh_context: true
     independent_from_implementation: true
     verdict: PASS
     unresolved_p0: 0
     unresolved_p1: 0
   - lane: B
-    reviewer_id: /root/review_02_05_b3
-    canonical_task: /root/review_02_05_b3
-    session: phase2-02-05-b3-87d2d58
+    reviewer_id: /root/review_02_05_auth_b
+    canonical_task: /root/review_02_05_auth_b
+    session: phase2-02-05-auth-b-363633
     capability: high-verification
-    focus: serialized-screen-ownership-and-tuple-correctness
+    focus: downstream-consumer-sufficiency-and-bypass-resistance
     fresh_context: true
     independent_from_implementation: true
     verdict: PASS
@@ -124,9 +124,9 @@ recomputation.**
 
 - **Plan ID:** `02-05`
 - **Implementation candidate:**
-  `87d2d586ac7a4ea9b18854116b2da0a38708df27`
+  `3636337613b1f4d7a572b761fb2f066191e36c11`
 - **Implementation tree:**
-  `9d8bf40b2a374debe9190ec6e6f50a8012cb650a`
+  `f31e4c3ccce1e8163011e63d592c0e55b50e9add`
 - **Assembly base:**
   `8ae3d5269e0df78ca87a1442ce9dca0cac69b8d0`
 - **Dependency ancestry:** PASS for final Phase 1 and Plans 02-01 through
@@ -191,6 +191,8 @@ The factory:
 - clones and recursively freezes every nested array and record;
 - derives canonical recommendation provenance with the same sitting-pose
   content binding as `createOutfitTruthSnapshot`;
+- registers only the exact internally constructed seed in a private WeakSet
+  and exposes a read-only guard that rejects structural clones and forgeries;
 - keeps transition identity separate from recommendation content identity;
 - excludes layout boxes, connectors, DOM elements, selection state, storage
   and other runtime-only data.
@@ -230,7 +232,13 @@ behavior changed.
 4. An independent Lane B review then rejected a Hjem transition-ID regression.
 5. `87d2d58` restored the exact fingerprint-bound current event/transition
    identity and added same-evaluation-time divergence coverage.
-6. Two new, independent fresh-context reviewers passed the final candidate.
+6. Two new, independent fresh-context reviewers passed that repaired
+   intermediate candidate.
+7. Plan 02-06 then proved that a structural seed alone could not authenticate
+   factory origin, so `3636337` added a private ownership registry and exported
+   read-only guard.
+8. Two further fresh high-verification reviewers passed the authentication
+   candidate with no unresolved P0/P1.
 
 Failed candidates were retained as immutable ancestors; none was amended.
 
@@ -238,8 +246,8 @@ Failed candidates were retained as immutable ancestors; none was amended.
 
 | Gate | Result |
 |---|---|
-| Focused planning/truth/options suite | 4 files, 116 tests passed |
-| Full Vitest suite | 92 files, 1,208 tests passed, 1 todo |
+| Focused planning/truth/options suite | Up to 117 tests passed in final review |
+| Full Vitest suite | 92 files, 1,209 tests passed, 1 todo |
 | Tracked inventory assertion | PASS; 2,036,160 scenarios |
 | Standalone TypeScript | PASS |
 | ESLint | PASS |
@@ -253,8 +261,8 @@ Failed candidates were retained as immutable ancestors; none was amended.
 
 | Path | Candidate blob |
 |---|---|
-| `src/lib/planning/planned-outfit-context.ts` | `a7f53f2fd81890fa39180bd2e8c8aa8aa2be3c61` |
-| `src/lib/planning/__tests__/planned-outfit-context.test.ts` | `c3d5caeb559f96c15199203065d5030e39d50c24` |
+| `src/lib/planning/planned-outfit-context.ts` | `e2d884db96de2ec89aa2b5e0df11708e168970cc` |
+| `src/lib/planning/__tests__/planned-outfit-context.test.ts` | `86ce0c6518b7e4612128b9316d3ecc9b6e6873df` |
 | `src/screens/HjemScreen.tsx` | `661c47a409952248371fa6ce42b03abf585c1db8` |
 | `src/screens/UkeScreen.tsx` | `6ca722bce8728e30ab79879b555caeabeae17e35` |
 
@@ -265,9 +273,10 @@ storage, network or engine-threshold path changed.
 
 Revert the three Plan 02-05 implementation commits in reverse order:
 
-1. `87d2d586ac7a4ea9b18854116b2da0a38708df27`
-2. `1a8e48ac50364de0340c3e6429f642d3e551464c`
-3. `6be7192ddc0f06fca2ce1dc91a862fa65743db63`
+1. `3636337613b1f4d7a572b761fb2f066191e36c11`
+2. `87d2d586ac7a4ea9b18854116b2da0a38708df27`
+3. `1a8e48ac50364de0340c3e6429f642d3e551464c`
+4. `6be7192ddc0f06fca2ce1dc91a862fa65743db63`
 
 This returns to assembly base
 `8ae3d5269e0df78ca87a1442ce9dca0cac69b8d0` without altering the accepted
