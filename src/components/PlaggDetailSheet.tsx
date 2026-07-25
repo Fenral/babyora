@@ -1,6 +1,6 @@
 /**
  * PlaggDetailSheet — modal bottom-sheet med plagg-detalj, fordeler/ulemper og
- * «Bytte til»-alternativer.
+ * informative katalogalternativer.
  *
  * Bruker native <dialog> for innebygd focus-trap og a11y-modal-håndtering.
  * Focus returneres til `triggerRef` etter lukking. ESC, backdrop-click og
@@ -11,12 +11,10 @@
  *   - getAlternatives(id)    → { pros, cons, alternatives[] }  (primær item)
  *   - garmentPng(id)         → PNG-sti (hero + thumb)
  *
- * Bytter til et alternativ via swap-override-store (session-only).
  */
 import { useCallback, useEffect, useRef, type JSX, type RefObject } from 'react';
 
 import { useNativeSettings } from '../hooks/useNativeSettings';
-import { useHapticSystem } from '../lib/haptics/system';
 import { infoFor } from '../data/garment-info';
 import {
   GENERIC_GARMENT_SVG,
@@ -27,7 +25,6 @@ import {
 } from '../data/garment-illustrations';
 import { categoryFor, CATEGORY_LABEL, type GarmentCategory } from '../data/garment-category';
 import { getAlternatives } from '../lib/wool-layers/alternatives';
-import { useSwapOverride } from '../state/swap-override-store';
 
 /* F84 (Sivert: «mer native og spennende» — dagens ark leste som nettside).
    Kategori → lag-triade farge (samme som PaakledningScreen/Plaggbiblioteket). */
@@ -55,12 +52,10 @@ export function PlaggDetailSheet({
   triggerRef,
 }: PlaggDetailSheetProps): JSX.Element | null {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
-  const setSwap = useSwapOverride((s) => s.setSwap);
   const { reducedMotion } = useNativeSettings();
-  const { fire } = useHapticSystem();
 
   /* F83 sheet-exit (a11y-preclearance vilkår 3):
-     - requestClose() = ENESTE lukke-vei for X/backdrop/ESC/swap.
+     - requestClose() = ENESTE lukke-vei for X/backdrop/ESC.
      - Single-flight: andre kall under exit ignoreres.
      - ESC nr. 2 under exit går RETT til native close (aldri strandet).
      - RM-gren lukker direkte (ingen preventDefault, ingen animasjon).
@@ -171,12 +166,6 @@ export function PlaggDetailSheet({
   // følger alltid med badgen).
   const category = categoryFor(garmentId);
   const catColor = category ? CAT_COLOR[category] : CAT_COLOR_FALLBACK;
-
-  const handleSwap = (alternativeName: string) => {
-    void fire('light');
-    setSwap(garmentId, alternativeName);
-    requestClose();
-  };
 
   return (
     <dialog
@@ -399,13 +388,13 @@ export function PlaggDetailSheet({
             </section>
           ) : null}
 
-          {/* BYTTE TIL → vertikale rader med swap-affordance */}
+          {/* Katalogalternativer er kun informasjon; ferdigstilte valg eies av OutfitExperience. */}
           {alternatives.length > 0 ? (
             <section
               className={reducedMotion ? undefined : 'plagg-stagger'}
               style={{ marginBottom: 0, '--stagger-i': 4 } as React.CSSProperties}
             >
-              <h3 style={eyebrowStyle}>Bytte til</h3>
+              <h3 style={eyebrowStyle}>Alternative plagg</h3>
               <ul
                 role="list"
                 style={{
@@ -423,14 +412,7 @@ export function PlaggDetailSheet({
                   // direkte (mest sannsynlig allerede en gyldig id).
                   const altId = garmentIdFor(a.name) ?? (a.name as GarmentId);
                   return (
-                  <li key={a.name} style={{ display: 'flex' }}>
-                    <button
-                      type="button"
-                      onClick={() => handleSwap(a.name)}
-                      className="ba-row-press"
-                      style={altRowStyle}
-                    >
-                      <span className="sr-only">Bytt til </span>
+                  <li key={a.name} style={alternativeInfoRowStyle}>
                       <span aria-hidden="true" style={altThumbWrapStyle}>
                         <img
                           src={garmentPng(altId)}
@@ -481,10 +463,6 @@ export function PlaggDetailSheet({
                           </div>
                         ) : null}
                       </div>
-                      <span aria-hidden="true" style={swapChipStyle}>
-                        <SwapIcon />
-                      </span>
-                    </button>
                   </li>
                   );
                 })}
@@ -543,19 +521,15 @@ export function PlaggDetailSheet({
           }
         }
 
-        /* F84 (a11y-lead: manglende fokus-ring på .ba-press/.ba-row-press —
-           disse har kun :active-stiler globalt, ikke :focus-visible). Samme
-           mønster som resten av appen (PaakledningScreen, PaywallDialog m.fl). */
-        .plagg-detail-sheet .ba-press:focus-visible,
-        .plagg-detail-sheet .ba-row-press:focus-visible {
-          outline: 2px solid var(--focus-ring, var(--accent-cta));
-          outline-offset: 2px;
-        }
-
         /* F84: stagger-inn av innhold-sonene ved åpning. Kjører KUN på barn
            av scroll-diven (aldri på .plagg-detail-sheet selv) — treffer
            derfor aldri animationend-filteret i requestClose (linje 90).
            Dobbel RM-gate: betinget className (reducedMotion) + media query. */
+        .plagg-detail-sheet .ba-press:focus-visible {
+          outline: 2px solid var(--focus-ring, var(--accent-cta));
+          outline-offset: 2px;
+        }
+
         @keyframes plagg-item-in {
           from { opacity: 0; transform: translateY(14px); }
           to   { opacity: 1; transform: none; }
@@ -584,19 +558,6 @@ function ClockIcon({ color }: { color: string }): JSX.Element {
     >
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3.5 2" />
-    </svg>
-  );
-}
-
-function SwapIcon(): JSX.Element {
-  return (
-    <svg
-      width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cta)"
-      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true" focusable="false"
-    >
-      <path d="M7 7h11l-3-3" />
-      <path d="M17 17H6l3 3" />
     </svg>
   );
 }
@@ -684,18 +645,7 @@ const altThumbWrapStyle: React.CSSProperties = {
   padding: 6,
 };
 
-const swapChipStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: 32,
-  height: 32,
-  borderRadius: '50%',
-  flexShrink: 0,
-  background: 'color-mix(in srgb, var(--accent-cta) 14%, transparent)',
-};
-
-const altRowStyle: React.CSSProperties = {
+const alternativeInfoRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 'var(--sp-3)',
@@ -707,9 +657,7 @@ const altRowStyle: React.CSSProperties = {
   boxShadow: 'var(--shadow-1)',
   background: 'var(--surface-pure)',
   color: 'inherit',
-  cursor: 'pointer',
   textAlign: 'left',
-  font: 'inherit',
 };
 
 const miniProsStyle: React.CSSProperties = {

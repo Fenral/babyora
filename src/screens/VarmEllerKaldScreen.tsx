@@ -23,6 +23,7 @@
 import { useCallback, useState, type CSSProperties, type ReactElement } from 'react';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
+import { WARM_COLD_RECOVERY_COPY } from '../lib/copy/warm-cold-recovery';
 
 export interface VarmEllerKaldScreenProps {
   onBack: () => void;
@@ -34,7 +35,7 @@ interface StatusRowSpec {
   key: StatusKey;
   num: string;
   title: string;
-  body: string;
+  signal: string;
   action: string;
   iconBg: string;
   iconColor: string;
@@ -47,13 +48,10 @@ interface StatusRowSpec {
   ariaLabel: string;
 }
 
-const STATUS_ROWS: StatusRowSpec[] = [
+const STATUS_ROWS: readonly StatusRowSpec[] = [
   {
-    key: 'varm',
+    ...WARM_COLD_RECOVERY_COPY.statuses.warm,
     num: '1',
-    title: 'For varm',
-    body: 'Svett eller fuktig nakke',
-    action: 'Ta av',
     iconBg: 'var(--status-warm-bg)',
     iconColor: 'var(--status-warm)',
     dotColor: 'var(--status-warm)',
@@ -61,7 +59,6 @@ const STATUS_ROWS: StatusRowSpec[] = [
     actionBg: 'var(--surface-soft)',
     actionBorder: '1px solid var(--ink-200)',
     iconStrokeWidth: 2,
-    ariaLabel: 'For varm — svett eller fuktig nakke, ta av et lag',
     iconPaths: (
       <>
         <path d="M14 4a2 2 0 0 0-4 0v9.5a4 4 0 1 0 4 0V4z" />
@@ -70,11 +67,8 @@ const STATUS_ROWS: StatusRowSpec[] = [
     ),
   },
   {
-    key: 'perfekt',
+    ...WARM_COLD_RECOVERY_COPY.statuses.perfekt,
     num: '2',
-    title: 'Perfekt',
-    body: 'Lun og tørr nakke',
-    action: 'Behold',
     iconBg: 'var(--status-ok-bg)',
     iconColor: 'var(--status-ok)',
     dotColor: 'var(--status-ok)',
@@ -82,15 +76,11 @@ const STATUS_ROWS: StatusRowSpec[] = [
     actionBg: 'var(--terracotta-100)',
     actionBorder: '1px solid var(--terracotta-200)',
     iconStrokeWidth: 2.4,
-    ariaLabel: 'Perfekt — nakken er lun og tørr, alt stemmer',
     iconPaths: <path d="M5 12.5l4.5 4.5L19 7" />,
   },
   {
-    key: 'kald',
+    ...WARM_COLD_RECOVERY_COPY.statuses.cold,
     num: '3',
-    title: 'For kald',
-    body: 'Kjølig eller kald nakke',
-    action: 'Legg til',
     iconBg: 'var(--status-cold-bg)',
     iconColor: 'var(--status-cold)',
     dotColor: 'var(--status-cold)',
@@ -98,7 +88,6 @@ const STATUS_ROWS: StatusRowSpec[] = [
     actionBg: 'var(--surface-soft)',
     actionBorder: '1px solid var(--ink-200)',
     iconStrokeWidth: 1.9,
-    ariaLabel: 'For kald — kjølig nakke, legg til et lag',
     iconPaths: (
       <>
         <path d="M12 3v18" />
@@ -541,11 +530,8 @@ export function VarmEllerKaldScreen({
           </div>
           <div style={heroTextStyle}>
             <p style={heroEyebrowStyle}>2-finger-test</p>
-            <h3 style={heroTitleStyle}>Kjenn nakken</h3>
-            <p style={heroSubStyle}>
-              Stikk to fingre under genseren bak i nakken — ikke hender eller
-              føtter.
-            </p>
+            <h3 style={heroTitleStyle}>{WARM_COLD_RECOVERY_COPY.title}</h3>
+            <p style={heroSubStyle}>{WARM_COLD_RECOVERY_COPY.instruction}</p>
           </div>
         </section>
 
@@ -690,7 +676,7 @@ export function VarmEllerKaldScreen({
                       <span style={dotStyle} aria-hidden="true" />
                       {row.title}
                     </span>
-                    <span style={bodyStyle}>{row.body}</span>
+                    <span style={bodyStyle}>{row.signal}</span>
                   </span>
                   <span style={actionStyle} aria-hidden="true">
                     {row.action}
