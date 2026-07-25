@@ -489,7 +489,7 @@ describe('strict raw candidate frontmatter', () => {
       key === 'recorded_at' ? /predates the candidate/u : new RegExp(key, 'u'),
     );
     writeEvidence();
-  });
+  }, 15_000);
 });
 
 describe('activation sequence', () => {

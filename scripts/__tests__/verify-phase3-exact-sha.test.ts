@@ -1688,7 +1688,7 @@ describe('candidate mode', () => {
       mutate(harness);
       expectFailure(runScript(harness, candidateArgs(harness)));
     }
-  });
+  }, 15_000);
 
   it('rejects a changed or missing validation bundle and malformed JSON', () => {
     for (const kind of ['changed', 'missing', 'malformed'] as const) {

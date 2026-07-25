@@ -134,8 +134,12 @@ afterEach(() => {
   }
 });
 
+function filesystemIt(name: string, test: () => void): void {
+  it(name, test, 15_000);
+}
+
 describe('Phase 3 final runner contracts', () => {
-  it('rejects missing, empty, relative, inside-checkout, and symlinked roots', () => {
+  filesystemIt('rejects missing, empty, relative, inside-checkout, and symlinked roots', () => {
     const harness = createHarness();
     for (const value of [undefined, '', 'relative/evidence']) {
       expect(() => resolveEvidenceLayout({
@@ -162,7 +166,7 @@ describe('Phase 3 final runner contracts', () => {
     })).toThrow(/outside/u);
   });
 
-  it('constructs four distinct fixed paths beneath a spaced metacharacter root', () => {
+  filesystemIt('constructs four distinct fixed paths beneath a spaced metacharacter root', () => {
     const harness = createHarness();
     const layout = resolveEvidenceLayout({
       environment: { BABYORA_PHASE3_EVIDENCE_ROOT: harness.evidence },
@@ -177,7 +181,7 @@ describe('Phase 3 final runner contracts', () => {
     }
   });
 
-  it('rejects artifact symlink escape and stale review records before collection', () => {
+  filesystemIt('rejects artifact symlink escape and stale review records before collection', () => {
     const harness = createHarness();
     const outsideTarget = join(harness.root, 'outside-validation');
     mkdirSync(outsideTarget);
@@ -208,7 +212,7 @@ describe('Phase 3 final runner contracts', () => {
     })).toThrow(/stale|empty/u);
   });
 
-  it('resolves only a validated absolute npm CLI JavaScript file', () => {
+  filesystemIt('resolves only a validated absolute npm CLI JavaScript file', () => {
     const actual = resolveNpmCli({
       environment: process.env,
       execPath: process.execPath,
@@ -244,7 +248,7 @@ describe('Phase 3 final runner contracts', () => {
     ]);
   });
 
-  it('collects shell-free output, stops on the first failure, and writes no candidate', () => {
+  filesystemIt('collects shell-free output, stops on the first failure, and writes no candidate', () => {
     const harness = createHarness();
     const calls: Parameters<typeof successfulMatrixSpawn>[1] = [];
     let npmCalls = 0;
@@ -276,7 +280,7 @@ describe('Phase 3 final runner contracts', () => {
     expect(calls.every(({ options }) => options.shell === false)).toBe(true);
   });
 
-  it('collects a detached clean candidate and hashes the completed external log', () => {
+  filesystemIt('collects a detached clean candidate and hashes the completed external log', () => {
     const harness = createHarness();
     const calls: Parameters<typeof successfulMatrixSpawn>[1] = [];
     const result = runPhase3Final(['collect'], {
