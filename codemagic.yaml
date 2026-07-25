@@ -18,12 +18,24 @@ workflows:
     integrations:
       app_store_connect: ryddy-asc-key # eksisterende key (JQVPW4D944), brukt av Ryddy/StrikeArc
     environment:
-      # 2026-06-12 (Sivert + Claude kontroll-runde): byttet fra ios_signing-blokk
-      # til fetch-signing-files-pattern fordi babyora_distribution-cert ble
-      # revoked/expired (build #20 + #21 feilet). Auto-generering via ASC API
-      # eliminerer manuelt cert-vedlikehold — samme pattern som StrikeArc/Swinglab.
+      # 2026-06-12: byttet fra ios_signing-blokk til fetch-signing-files fordi
+      # babyora_distribution-cert ble revoked/expired (build #20 + #21 feilet).
+      #
+      # 2026-07-25 (release-reparasjon, build #4-feil): den varianten genererte en
+      # FERSK RSA-nøkkel per bygg og kjørte fetch-signing-files --create. Ingen
+      # eksisterende sertifikat matcher en fersk nøkkel, så hvert bygg ba Apple om
+      # et NYTT Apple Distribution-sertifikat. Apple tillater maks 2-3 aktive, og
+      # returnerte til slutt 409 ("already an active or pending certificate
+      # request"). Fiksen er å persistere ÉN privatnøkkel som matcher ÉT
+      # gjenbrukbart sertifikat — se gruppen klemeg_ios_signing under.
       groups:
         - klemeg_revenuecat   # VITE_REVENUECAT_PUBLIC_KEY_IOS, VITE_REVENUECAT_PUBLIC_KEY_ANDROID
+        # klemeg_ios_signing må opprettes i Codemagic UI (Environment variables)
+        # med ÉN secure variabel:
+        #   CERTIFICATE_PRIVATE_KEY = PEM-privatnøkkelen som hører til det
+        #   Apple Distribution-sertifikatet Babyora skal signere med.
+        # Nøkkelen ligger KUN i Codemagic (secure), aldri i Git.
+        - klemeg_ios_signing  # CERTIFICATE_PRIVATE_KEY (secure)
       vars:
         XCODE_PROJECT: 'ios/App/App.xcodeproj'
         XCODE_SCHEME: 'App'
@@ -78,22 +90,39 @@ workflows:
           # Uten dette feiler codesign med errSecInternalComponent
           # senere i Build IPA (build #22 demonstrert).
           keychain initialize
-      - name: Generate certificate private key
+      - name: Verify persistent signing key is present
         script: |
-          set -ex
-          # fetch-signing-files --create trenger en privatnøkkel via
-          # --certificate-key. Genererer en fersk RSA-2048-nøkkel her.
-          openssl genrsa -out /tmp/cert_private_key.pem 2048
-      - name: Fetch signing files (create cert + profile if missing)
+          # Bevisst UTEN 'set -x': privatnøkkelen må aldri havne i byggloggen.
+          set -e
+          if [ -z "$CERTIFICATE_PRIVATE_KEY" ]; then
+            echo "FEIL: CERTIFICATE_PRIVATE_KEY er ikke satt."
+            echo "Opprett env-gruppen 'klemeg_ios_signing' i Codemagic med denne"
+            echo "secure variabelen (PEM-nøkkelen til Babyoras Apple Distribution-"
+            echo "sertifikat). Uten den ville bygget be Apple om et nytt sertifikat"
+            echo "for hvert kjør, og treffe 409-taket igjen."
+            exit 1
+          fi
+          echo "CERTIFICATE_PRIVATE_KEY er satt (verdi ikke logget)."
+      - name: List existing distribution certificates (diagnostikk)
         script: |
-          set -ex
-          # ASC API auto-genererer cert + provisioning profile hvis ikke
-          # finnes, og laster ned begge til builderen. Bypasser revoked cert.
+          set -e
+          # Kun offentlig metadata (navn, utløp, serienummer) — ingen nøkler.
+          # Gjør et framtidig 409 diagnoserbart direkte fra byggloggen.
+          app-store-connect list-certificates --type IOS_DISTRIBUTION || \
+            echo "Kunne ikke liste sertifikater (ikke-fatalt)."
+      - name: Fetch signing files (gjenbruk eksisterende sertifikat)
+        script: |
+          set -e
+          # app-store-connect leser CERTIFICATE_PRIVATE_KEY fra miljøet som
+          # default for --certificate-key. Nøkkelen sendes derfor IKKE som
+          # argument (ville kunne lekke i loggen).
+          #
+          # Med en persistent nøkkel matcher fetch-signing-files det EKSISTERENDE
+          # sertifikatet og laster det ned. --create oppretter da kun manglende
+          # provisioning profile — ikke et nytt sertifikat per bygg.
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --certificate-key=@file:/tmp/cert_private_key.pem \
             --type IOS_APP_STORE \
-            --create \
-            --verbose
+            --create
       - name: Add certificates to keychain
         script: |
           keychain add-certificates
