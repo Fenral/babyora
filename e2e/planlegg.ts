@@ -24,6 +24,7 @@ import {
   chromium,
   type Browser,
   type Frame,
+  type Locator,
   type Page,
   type Response,
 } from 'playwright';
@@ -142,6 +143,14 @@ type MainFrameNavigationObservation = Readonly<{
   url: string;
   status: number | null;
 }>;
+
+async function frozenOutfitListText(dialog: Locator): Promise<string> {
+  const truthPanel = dialog.locator('.outfit-truth-panel');
+  const list = (await truthPanel.count()) > 0
+    ? truthPanel.locator('.outfit-list')
+    : dialog.locator('section[aria-labelledby="planned-garments-title"]');
+  return list.innerText();
+}
 
 const SUPPORTED_CASES = Object.keys(PLANLEGG_CASES);
 const require = createRequire(import.meta.url);
@@ -1581,9 +1590,7 @@ async function runAutomaticLocation(
   await currentDialog.waitFor({ state: 'visible', timeout: 15_000 });
   const situation = currentDialog.locator('section[aria-label="Dagens situasjon"]');
   const currentSituationBeforeRefresh = await situation.innerText();
-  const currentGarmentsBeforeRefresh = await currentDialog
-    .locator('section[aria-labelledby="planned-garments-title"]')
-    .innerText();
+  const currentGarmentsBeforeRefresh = await frozenOutfitListText(currentDialog);
   const currentWhyBeforeRefresh = await currentDialog
     .locator('section[aria-labelledby="planned-why-title"]')
     .innerText();
@@ -1600,8 +1607,7 @@ async function runAutomaticLocation(
   await page.waitForTimeout(50);
   if (
     await situation.innerText() !== currentSituationBeforeRefresh
-    || await currentDialog.locator('section[aria-labelledby="planned-garments-title"]')
-      .innerText() !== currentGarmentsBeforeRefresh
+    || await frozenOutfitListText(currentDialog) !== currentGarmentsBeforeRefresh
     || await currentDialog.locator('section[aria-labelledby="planned-why-title"]')
       .innerText() !== currentWhyBeforeRefresh
   ) {
@@ -1651,9 +1657,7 @@ async function runAutomaticLocation(
   await futureDialog.waitFor({ state: 'visible', timeout: 15_000 });
   const futureSituation = futureDialog.locator('section[aria-label="Planlagt situasjon"]');
   const futureSituationBeforeRefresh = await futureSituation.innerText();
-  const futureGarmentsBeforeRefresh = await futureDialog
-    .locator('section[aria-labelledby="planned-garments-title"]')
-    .innerText();
+  const futureGarmentsBeforeRefresh = await frozenOutfitListText(futureDialog);
   const futureWhyBeforeRefresh = await futureDialog
     .locator('section[aria-labelledby="planned-why-title"]')
     .innerText();
@@ -1677,8 +1681,7 @@ async function runAutomaticLocation(
   await page.waitForTimeout(50);
   if (
     await futureSituation.innerText() !== futureSituationBeforeRefresh
-    || await futureDialog.locator('section[aria-labelledby="planned-garments-title"]')
-      .innerText() !== futureGarmentsBeforeRefresh
+    || await frozenOutfitListText(futureDialog) !== futureGarmentsBeforeRefresh
     || await futureDialog.locator('section[aria-labelledby="planned-why-title"]')
       .innerText() !== futureWhyBeforeRefresh
   ) {
@@ -2257,10 +2260,14 @@ async function runExactContext(
   if (/(?:Vogn|Sover|Våkent)/u.test(situationText)) {
     throw new Error(`Utelek-plan fikk uventet vognmodus: ${situationText}`);
   }
+  const truthPanel = dialog.locator('.outfit-truth-panel');
+  const hasTruthPanel = (await truthPanel.count()) > 0;
   const garmentSection = dialog.locator(
     'section[aria-labelledby="planned-garments-title"]',
   );
-  const garmentItems = (await garmentSection.locator('ol > li').allTextContents())
+  const garmentItems = (await (hasTruthPanel
+    ? truthPanel.locator('.outfit-row__label')
+    : garmentSection.locator('ol > li')).allTextContents())
     .map((item) => item.trim());
   if (
     garmentItems.length !== EXACT_CONTEXT_EXPECTED_GARMENTS.length
@@ -2272,10 +2279,11 @@ async function runExactContext(
       `Planlagt plagg-rekkefølge avvek: ${JSON.stringify(garmentItems)}`,
     );
   }
-  const equipmentItems = (await garmentSection
-    .getByRole('heading', { name: 'Utstyr', exact: true })
-    .locator('xpath=following-sibling::ul[1]/li')
-    .allTextContents())
+  const equipmentItems = (await (hasTruthPanel
+    ? truthPanel.locator('section[aria-label="Utstyr"] li')
+    : garmentSection
+      .getByRole('heading', { name: 'Utstyr', exact: true })
+      .locator('xpath=following-sibling::ul[1]/li')).allTextContents())
     .map((item) => item.trim());
   if (
     equipmentItems.length !== EXACT_CONTEXT_EXPECTED_EQUIPMENT.length
@@ -2285,7 +2293,9 @@ async function runExactContext(
   ) {
     throw new Error(`Planlagt utstyr avvek: ${JSON.stringify(equipmentItems)}`);
   }
-  if (!(await dialog.textContent())?.includes('Tilgang: today_home')) {
+  if (hasTruthPanel
+    ? await dialog.getAttribute('data-outfit-access-capability') !== 'today_home'
+    : !(await dialog.textContent())?.includes('Tilgang: today_home')) {
     throw new Error('Planlagt tilgangsdimensjon mangler');
   }
   const whyText = await dialog

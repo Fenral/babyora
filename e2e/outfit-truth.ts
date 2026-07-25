@@ -408,7 +408,9 @@ async function assertProductionRoutes(page: Page, expectedFlag: ExpectedFlag): P
   if (await homeAction.count() !== 1) throw new Error('Production Hjem outfit action is missing');
   await homeAction.waitFor({ state: 'visible', timeout: 10_000 });
   await homeAction.click();
-  const currentDialog = page.getByRole('dialog', { name: 'Dagens antrekk', exact: true });
+  const currentDialog = page.getByRole('dialog', { name: 'Lillian', exact: true }).filter({
+    has: page.getByRole('heading', { name: 'Lillian', exact: true }),
+  });
   await currentDialog.waitFor({ state: 'visible', timeout: 10_000 });
   if (await currentDialog.locator('.outfit-truth-panel').count() !== 1) throw new Error('Current production dialog did not mount real panel');
   await page.getByRole('button', { name: 'Lukk dagens antrekk', exact: true }).click();
@@ -433,7 +435,9 @@ async function assertProductionRoutes(page: Page, expectedFlag: ExpectedFlag): P
     throw new Error(`Production Planlegg route did not expose its outfit action: ${await page.locator('body').innerText()}`);
   }
   await plannedAction.click({ force: true });
-  const plannedDialog = page.getByRole('dialog', { name: 'Planlagt antrekk', exact: true });
+  const plannedDialog = page.getByRole('dialog', { name: 'Lillian', exact: true }).filter({
+    has: page.getByRole('heading', { name: 'Lillian', exact: true }),
+  });
   await plannedDialog.waitFor({ state: 'visible', timeout: 10_000 });
   if (await plannedDialog.locator('.outfit-truth-panel').count() !== 1) throw new Error('Planned production dialog did not mount real panel');
   await page.getByRole('button', { name: 'Lukk planlagt antrekk', exact: true }).click();
