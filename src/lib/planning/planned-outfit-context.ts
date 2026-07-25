@@ -717,6 +717,33 @@ function canonicalProjection(finalizedRecommendation: Recommendation): Readonly<
   return { orderedGarments, equipment };
 }
 
+function canonicalRawTransitionContextId(
+  input: CanonicalPlannedOutfitContextInput,
+  producerSeedSource: 'current' | 'planned',
+  projection: Readonly<{
+    orderedGarments: readonly string[];
+    equipment: readonly string[];
+  }>,
+): string {
+  const fingerprint = producerSeedSource === 'current'
+    ? `current-finalized:${JSON.stringify([
+        projection.orderedGarments,
+        projection.equipment,
+        input.weather.tempC,
+        input.weather.feelsLikeC,
+        input.weather.windMs,
+        input.weather.precipMmH,
+        input.weather.symbolCode,
+      ])}`
+    : `planned-finalized:${JSON.stringify([
+        projection.orderedGarments,
+        projection.equipment,
+      ])}`;
+  return `${
+    producerSeedSource === 'current' ? 'current' : 'planning'
+  }-transition:${input.plannedForIso}:${fingerprint}`;
+}
+
 function sameFrozenKnownShape(actual: unknown, expected: unknown): boolean {
   if (typeof expected !== 'object' || expected === null) return Object.is(actual, expected);
   if (typeof actual !== 'object' || actual === null || !Object.isFrozen(actual)) return false;
@@ -757,6 +784,32 @@ function createOutfitContext(
     const canonical = isCanonical ? canonicalInput(input) : null;
     const legacy = isCanonical ? null : normalizedInput(input);
     const normalized = canonical ?? legacy!;
+    const projection = canonical
+      ? canonicalProjection(canonical.finalizedRecommendation)
+      : null;
+    const expectedRawTransitionContextId = canonical
+      ? canonicalRawTransitionContextId(
+          canonical,
+          producerSeedSource,
+          projection!,
+        )
+      : null;
+    if (
+      canonical
+      && (
+        canonical.transitionContextId !== expectedRawTransitionContextId
+        || ownDataValue(
+          root,
+          'transitionContextId',
+          'transitionContextId',
+        ) !== expectedRawTransitionContextId
+      )
+    ) {
+      fail(
+        'transitionContextId',
+        'must equal the factory-derived canonical source transition',
+      );
+    }
     const routeIdentity = canonical
       ? canonicalRouteIdentity(canonical, producerSeedSource)
       : null;
@@ -805,7 +858,6 @@ function createOutfitContext(
     };
     const context = canonical
       ? (() => {
-          const projection = canonicalProjection(canonical.finalizedRecommendation);
           const { recommendationId, recommendationFingerprint } =
             canonicalRecommendationProvenance(
               canonical.recommendInput,
@@ -841,8 +893,8 @@ function createOutfitContext(
             recommendation: {
               id: recommendationId,
               fingerprint: recommendationFingerprint,
-              orderedGarments: [...projection.orderedGarments],
-              equipment: [...projection.equipment],
+              orderedGarments: [...projection!.orderedGarments],
+              equipment: [...projection!.equipment],
               finalized: true as const,
             },
             producerSeed,

@@ -7,26 +7,8 @@ import {
 } from '../planned-outfit-context.js';
 import { resolvePlannedOutfitContext } from '../planned-outfit-resolver.js';
 
-function planningEvent(
-  overrides: Partial<PlanningChangeEvent> = {},
-): PlanningChangeEvent {
+function resolverRecommendInput() {
   return {
-    id: 'planning-event-future-11',
-    atIso: '2026-02-12T11:00:00.000Z',
-    kind: 'add',
-    addedGarments: ['Balaklava'],
-    removedGarments: [],
-    cause: 'Kaldere luft',
-    transitionContextId: 'transition-future-11',
-    ...overrides,
-  };
-}
-
-function plannedContext(
-  event: PlanningChangeEvent = planningEvent(),
-  overrides: Readonly<Record<string, unknown>> = {},
-) {
-  const recommendInput = {
     weather: {
       tempC: 1,
       feelsLikeC: -2,
@@ -44,6 +26,69 @@ function plannedContext(
     context: { bilstol: false },
     childCalibration: 0 as const,
   };
+}
+
+function recommendationProjection(recommendation: ReturnType<typeof recommend>) {
+  return {
+    orderedGarments: recommendation.layers
+      .filter((layer) => layer.category !== 'utstyr')
+      .flatMap((layer) => layer.items),
+    equipment: recommendation.layers
+      .filter((layer) => layer.category === 'utstyr')
+      .flatMap((layer) => layer.items),
+  };
+}
+
+function plannedRawTransition(
+  atIso: string,
+  recommendation = recommend(resolverRecommendInput()),
+): string {
+  const { orderedGarments, equipment } =
+    recommendationProjection(recommendation);
+  const fingerprint =
+    `planned-finalized:${JSON.stringify([orderedGarments, equipment])}`;
+  return `planning-transition:${atIso}:${fingerprint}`;
+}
+
+function currentRawTransition(
+  atIso: string,
+  recommendation: ReturnType<typeof recommend>,
+): string {
+  const { orderedGarments, equipment } =
+    recommendationProjection(recommendation);
+  const fingerprint = `current-finalized:${JSON.stringify([
+    orderedGarments,
+    equipment,
+    1,
+    -2,
+    3.1,
+    0.4,
+    'lightsnow',
+  ])}`;
+  return `current-transition:${atIso}:${fingerprint}`;
+}
+
+function planningEvent(
+  overrides: Partial<PlanningChangeEvent> = {},
+): PlanningChangeEvent {
+  const atIso = overrides.atIso ?? '2026-02-12T11:00:00.000Z';
+  return {
+    id: 'planning-event-future-11',
+    atIso,
+    kind: 'add',
+    addedGarments: ['Balaklava'],
+    removedGarments: [],
+    cause: 'Kaldere luft',
+    transitionContextId: plannedRawTransition(atIso),
+    ...overrides,
+  };
+}
+
+function plannedContext(
+  event: PlanningChangeEvent = planningEvent(),
+  overrides: Readonly<Record<string, unknown>> = {},
+) {
+  const recommendInput = resolverRecommendInput();
   return createPlannedOutfitContext({
     planningEventId: event.id,
     transitionContextId: event.transitionContextId,
@@ -81,27 +126,14 @@ function plannedContext(
 }
 
 function currentContext(event: PlanningChangeEvent = planningEvent()) {
-  const recommendInput = {
-    weather: {
-      tempC: 1,
-      feelsLikeC: -2,
-      windMs: 3.1,
-      precipMmH: 0.4,
-      humidity: 72,
-      symbolCode: 'lightsnow',
-      uvIndex: 0,
-    },
-    child: { ageMonths: 5, canRoll: false },
-    activity: 'vogn' as const,
-    exposureMin: 75,
-    innerJakke: false,
-    vognMode: 'sleeping' as const,
-    context: { bilstol: false },
-    childCalibration: 0 as const,
-  };
+  const recommendInput = resolverRecommendInput();
+  const finalizedRecommendation = recommend(recommendInput);
   return createCurrentOutfitContext({
     planningEventId: event.id,
-    transitionContextId: event.transitionContextId,
+    transitionContextId: currentRawTransition(
+      event.atIso,
+      finalizedRecommendation,
+    ),
     child: { id: 'barn-01', name: 'Ada', ageMonths: 5 },
     plannedForIso: event.atIso,
     timeZone: 'Europe/Oslo',
@@ -121,7 +153,7 @@ function currentContext(event: PlanningChangeEvent = planningEvent()) {
       symbolCode: 'lightsnow',
     },
     recommendInput,
-    finalizedRecommendation: recommend(recommendInput),
+    finalizedRecommendation,
     access: { capability: 'future_plan', allowed: true, reason: 'plus' },
   });
 }
@@ -169,18 +201,28 @@ describe('Planned Outfit resolver', () => {
     const other = planningEvent({
       id: 'planning-event-future-12',
       atIso: '2026-02-12T12:00:00.000Z',
-      transitionContextId: 'transition-future-12',
     });
     const invalidClone = structuredClone(exact);
     const planningMismatch = plannedContext(event, {
       planningEventId: 'planning-event-unrelated',
     });
-    const transitionMismatch = plannedContext(event, {
-      transitionContextId: 'transition-unrelated',
+    const transitionMismatchInput = resolverRecommendInput();
+    const transitionMismatchRecommendation = recommend(transitionMismatchInput);
+    transitionMismatchRecommendation.layers[0]!.items.push('annet ullag');
+    const transitionMismatchEvent = planningEvent({
+      transitionContextId: plannedRawTransition(
+        event.atIso,
+        transitionMismatchRecommendation,
+      ),
     });
-    const intervalMismatch = plannedContext(event, {
-      plannedForIso: '2026-02-12T12:00:00.000Z',
+    const transitionMismatch = plannedContext(transitionMismatchEvent, {
+      recommendInput: transitionMismatchInput,
+      finalizedRecommendation: transitionMismatchRecommendation,
     });
+    const intervalMismatchEvent = planningEvent({
+      atIso: '2026-02-12T12:00:00.000Z',
+    });
+    const intervalMismatch = plannedContext(intervalMismatchEvent);
     const staleIntervalEvent = planningEvent({
       atIso: '2026-02-12T12:00:00.000Z',
     });
@@ -220,7 +262,6 @@ describe('Planned Outfit resolver', () => {
     const second = planningEvent({
       id: 'planning-event-future-next-day',
       atIso: '2026-02-13T11:00:00.000Z',
-      transitionContextId: 'transition-future-next-day',
     });
     const firstContext = plannedContext(first);
     const secondContext = plannedContext(second);
@@ -428,7 +469,6 @@ describe('Planned Outfit resolver', () => {
   });
 
   it('does not materialize planned advice when exact access is denied', async () => {
-    const event = planningEvent();
     const deniedRecommendInput = {
       weather: {
         tempC: 1,
@@ -458,7 +498,13 @@ describe('Planned Outfit resolver', () => {
         items: ['BETALT-UTSTYR-SKAL-IKKE-VISES'],
       },
     ];
-    const denied = plannedContext(event, {
+    const deniedEvent = planningEvent({
+      transitionContextId: plannedRawTransition(
+        '2026-02-12T11:00:00.000Z',
+        deniedRecommendation,
+      ),
+    });
+    const denied = plannedContext(deniedEvent, {
       recommendInput: deniedRecommendInput,
       finalizedRecommendation: deniedRecommendation,
       access: {
