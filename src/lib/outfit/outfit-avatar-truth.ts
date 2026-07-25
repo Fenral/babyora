@@ -44,6 +44,14 @@ const MANIFEST = Object.freeze(
   ),
 );
 
+// Compatibility paths may only render assets from the checked-in verification
+// manifest. A string that merely resembles an avatar path must fail closed.
+const VERIFIED_ASSET_PATHS = new Set(MANIFEST.map((row) => row.asset));
+
+export function isVerifiedAvatarAssetPath(value: unknown): value is string {
+  return typeof value === 'string' && VERIFIED_ASSET_PATHS.has(value);
+}
+
 function readExactPlainDataRecord(
   value: unknown,
   expectedKeys: readonly string[],

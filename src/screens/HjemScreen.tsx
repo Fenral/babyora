@@ -67,6 +67,7 @@ import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { tempAxisFor } from '../lib/temp-axis';
 import { deriveSceneModelFromLegacy } from '../lib/recommendation/scene';
 import { VerifiedAvatarComposite } from '../components/outfit/VerifiedAvatarComposite';
+import { GarmentThumbnail } from '../components/outfit/GarmentThumbnail';
 import { LivingHomeAtmosphere } from '../components/LivingHomeAtmosphere';
 // BottomTabBar er global (mounted i App.tsx) — ikke importer/mount her.
 import { MOTION } from '../styles/motion-grammar';
@@ -145,9 +146,13 @@ function RegisteredHomeGarmentPill({
     <span
       ref={register}
       data-outfit-transition-source={source.itemId}
-      style={style}
+      style={{ ...style, alignItems: 'center', display: 'inline-flex', gap: 6 }}
     >
-      {source.label}
+      <GarmentThumbnail
+        label={source.label}
+        style={{ blockSize: 24, inlineSize: 24, flex: '0 0 24px', objectFit: 'contain' }}
+      />
+      <span>{source.label}</span>
     </span>
   );
 }
@@ -170,9 +175,13 @@ export function HomeGarmentPills({
     return fallbackAnchors.map((anchor, index) => (
       <span
         key={`${anchor.label}:${index}`}
-        style={styleForIndex(index, fallbackAnchors.length)}
+        style={{ ...styleForIndex(index, fallbackAnchors.length), alignItems: 'center', display: 'inline-flex', gap: 6 }}
       >
-        {anchor.label}
+        <GarmentThumbnail
+          label={anchor.label}
+          style={{ blockSize: 24, inlineSize: 24, flex: '0 0 24px', objectFit: 'contain' }}
+        />
+        <span>{anchor.label}</span>
       </span>
     ));
   }

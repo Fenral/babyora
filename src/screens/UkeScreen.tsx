@@ -42,6 +42,7 @@ import {
   type PlanningVerdictView,
   type PlanningWeatherRow,
 } from '../lib/planning/plan-view-model';
+import { selectTodayPlanningHours } from '../lib/planning/today-hours';
 import { resolveSnartClimateProfile } from '../lib/planning/snart-climate';
 import { buildSnartDateWindow, isAgeEligibleForWholeWindow } from '../lib/planning/snart-date-window';
 import { buildSnartPlan, buildSnartUnavailable, type SnartPlan as SnartPlanResult } from '../lib/planning/snart';
@@ -184,30 +185,6 @@ function conditionLabel(symbolCode: string): string {
   if (normalized.includes('fair')) return 'Lettskyet';
   if (normalized.includes('clear')) return 'Klarvær';
   return 'Vær';
-}
-
-function pickHourly(
-  hourly: readonly WeatherHourly[],
-  targetHour: number,
-  localDate: string,
-): WeatherHourly | null {
-  const sameDate = hourly.filter((point) => point.time.toLocaleDateString('en-CA', {
-    timeZone: PLAN_TIME_ZONE,
-  }) === localDate);
-  if (sameDate.length === 0) return null;
-  return [...sameDate].sort((left, right) => {
-    const leftHour = Number(left.time.toLocaleTimeString('en-GB', {
-      timeZone: PLAN_TIME_ZONE,
-      hour: '2-digit',
-      hourCycle: 'h23',
-    }));
-    const rightHour = Number(right.time.toLocaleTimeString('en-GB', {
-      timeZone: PLAN_TIME_ZONE,
-      hour: '2-digit',
-      hourCycle: 'h23',
-    }));
-    return Math.abs(leftHour - targetHour) - Math.abs(rightHour - targetHour);
-  })[0] ?? null;
 }
 
 function finalizedFingerprint(
@@ -573,13 +550,10 @@ function PlanleggData({
       ));
     }
     const evaluatedAt = weather.evidence?.metadata.evaluatedAt ?? 0;
-    const localDate = new Date(evaluatedAt).toLocaleDateString('en-CA', {
-      timeZone: PLAN_TIME_ZONE,
-    });
-    return Object.freeze([6, 10, 14, 18].flatMap((hour) => {
-      const point = pickHourly(activeHourly, hour, localDate);
-      return point ? [phaseFromHourly(point, ageMonths, activity, vognMode)] : [];
-    }));
+    return Object.freeze(
+      selectTodayPlanningHours(activeHourly, evaluatedAt, PLAN_TIME_ZONE)
+        .map((point) => phaseFromHourly(point, ageMonths, activity, vognMode)),
+    );
   }, [
     activeDaily,
     activeHourly,
