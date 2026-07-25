@@ -232,10 +232,10 @@ function selectableBundle(): Extract<OutfitBundleProducerResult, { kind: 'suppor
 }
 
 describe('OutfitTruthPanel', () => {
-  it('keeps the Phase-2 readiness boundary compile-time true without a bypass', () => {
-    expect(OUTFIT_TRUTH_V1_AVAILABLE).toBe(true);
+  it('keeps the Phase-2 readiness boundary compile-time false without a bypass', () => {
+    expect(OUTFIT_TRUTH_V1_AVAILABLE).toBe(false);
     const source = readFileSync(new URL('../../../lib/outfit/feature-flags.ts', import.meta.url), 'utf8');
-    expect(source).toMatch(/OUTFIT_TRUTH_V1_AVAILABLE\s*=\s*true/u);
+    expect(source).toMatch(/OUTFIT_TRUTH_V1_AVAILABLE\s*=\s*false/u);
     expect(source).not.toMatch(/localStorage|sessionStorage|import\.meta\.env|URLSearchParams|process\.env/u);
   });
 
