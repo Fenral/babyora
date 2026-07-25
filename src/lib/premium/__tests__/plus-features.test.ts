@@ -6,11 +6,13 @@ import {
 } from '../plus-features';
 
 const flags = (partial?: Partial<PlusFeatureAvailability>): PlusFeatureAvailability => ({
+  today_home: true,
   future_plan: false,
   automatic_location: false,
   extra_children: false,
   family_sharing: false,
   personal_calibration: false,
+  soon_preparation: true,
   ...partial,
 });
 
@@ -43,6 +45,10 @@ describe('availablePlusExpansions', () => {
   });
 
   it('default-konstanten holder familie/kalibrering av (ikke bygget ennå)', () => {
+    expect(PLUS_FEATURE_AVAILABILITY.today_home).toBe(true);
+    expect(PLUS_FEATURE_AVAILABILITY.future_plan).toBe(true);
+    expect(PLUS_FEATURE_AVAILABILITY.automatic_location).toBe(true);
+    expect(PLUS_FEATURE_AVAILABILITY.soon_preparation).toBe(true);
     expect(PLUS_FEATURE_AVAILABILITY.family_sharing).toBe(false);
     expect(PLUS_FEATURE_AVAILABILITY.personal_calibration).toBe(false);
   });

@@ -1,0 +1,322 @@
+{
+  "schemaVersion": "babyora-snart-boundaries@2",
+  "officialExcerpts": [
+    {
+      "id": "senorge-tg-monthly-01-dds-shape",
+      "kind": "dds",
+      "syntheticBoundary": false,
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc.dds",
+      "sha256": "b3ba8f386c96ff004d4b10c34df4d54439b5faf210e77006979cd01d9de26d4b",
+      "body": "Dataset {\n    Float64 X[X = 1195];\n    Float64 Y[Y = 1550];\n    Grid {\n     ARRAY:\n        Float32 lat[Y = 1550][X = 1195];\n    } lat;\n    Grid {\n     ARRAY:\n        Float32 lon[Y = 1550][X = 1195];\n    } lon;\n    Grid {\n     ARRAY:\n        Float32 tg[time = 1][Y = 1550][X = 1195];\n    } tg;\n    Float64 time[time = 1];\n} senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc;\n"
+    },
+    {
+      "id": "senorge-tg-monthly-01-das-provenance",
+      "kind": "das",
+      "syntheticBoundary": false,
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc.das",
+      "sha256": "85753bca11073fb02f021969e5f58c82d131ce4e11ce55bb24c2a3ad1420e8b0",
+      "body": "tg {\n    String standard_name \"air_temperature\";\n    String units \"Celsius\";\n    Float32 _FillValue -999.99;\n    String cell_methods \"time: mean\";\n    String version \"1.0\";\n    String long_name \"monthly temperature normal 1991-2020\";\n}\nNC_GLOBAL {\n    String institution \"Norwegian Meteorological Institute, MET Norway\";\n    String license \"https://www.met.no/en/free-meteorological-data/Licensing-and-crediting\";\n    String title \"aggregated_tg_seNorge2018_v23_09\";\n}\n"
+    },
+    {
+      "id": "senorge-tg-monthly-01-ascii-point",
+      "kind": "ascii",
+      "syntheticBoundary": false,
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc.ascii?lat[1041:1:1041][119:1:119],lon[1041:1:1041][119:1:119],tg[0:1:0][1041:1:1041][119:1:119],time[0:1:0]",
+      "sha256": "145cb1c38af8ca1dbed45febbae322c01b9403dd2c4c9d3d4da869918192e8aa",
+      "body": "Dataset {\n    Grid {\n     ARRAY:\n        Float32 lat[Y = 1][X = 1];\n     MAPS:\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } lat;\n    Grid {\n     ARRAY:\n        Float32 lon[Y = 1][X = 1];\n     MAPS:\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } lon;\n    Grid {\n     ARRAY:\n        Float32 tg[time = 1][Y = 1][X = 1];\n     MAPS:\n        Float64 time[time = 1];\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } tg;\n    Float64 time[time = 1];\n} senorge/seNorge_2018/aggregated_products/tg/seNorge2018_tg_normal_1991_2020_monthly_01.nc;\n---------------------------------------------\nlat.lat[1][1]\n[0], 62.47589\n\nlat.Y[1]\n6958500.0\n\nlat.X[1]\n44500.0\n\n\nlon.lon[1][1]\n[0], 6.145098\n\nlon.Y[1]\n6958500.0\n\nlon.X[1]\n44500.0\n\n\ntg.tg[1][1][1]\n[0][0], 2.806599\n\ntg.time[1]\n797694.0\n\ntg.Y[1]\n6958500.0\n\ntg.X[1]\n44500.0\n\n\ntime[1]\n797694.0\n\n"
+    },
+    {
+      "id": "senorge-rr-monthly-01-dds-shape",
+      "kind": "dds",
+      "syntheticBoundary": false,
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc.dds",
+      "sha256": "0afae42e6986359c1ed0b9e6a83ce55d48966e49b4db76f5d88ff01c239bd6fb",
+      "body": "Dataset {\n    Float64 X[X = 1195];\n    Float64 Y[Y = 1550];\n    Grid {\n     ARRAY:\n        Float32 lat[Y = 1550][X = 1195];\n    } lat;\n    Grid {\n     ARRAY:\n        Float32 lon[Y = 1550][X = 1195];\n    } lon;\n    Grid {\n     ARRAY:\n        Float32 rr[time = 1][Y = 1550][X = 1195];\n    } rr;\n    Float64 time[time = 1];\n} senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc;\n"
+    },
+    {
+      "id": "senorge-rr-monthly-01-das-provenance",
+      "kind": "das",
+      "syntheticBoundary": false,
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc.das",
+      "sha256": "05bde4ae0ef6f13566e6dae04307725d4aac579bdf1280578a302700f75b22f0",
+      "body": "rr {\n    String standard_name \"precipitation_amount\";\n    String units \"mm\";\n    Float32 _FillValue -999.99;\n    String cell_methods \"time: sum\";\n    String version \"1.0\";\n    String long_name \"precipitation amount monthly normal 1991-2020\";\n}\nNC_GLOBAL {\n    String institution \"Norwegian Meteorological Institute, MET Norway\";\n    String license \"https://www.met.no/en/free-meteorological-data/Licensing-and-crediting\";\n    String title \"aggregated_rr_seNorge2018_v23_11\";\n}\n"
+    },
+    {
+      "id": "senorge-rr-monthly-01-ascii-point",
+      "kind": "ascii",
+      "syntheticBoundary": false,
+      "sourceUrl": "https://thredds.met.no/thredds/dodsC/senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc.ascii?lat[1041:1:1041][119:1:119],lon[1041:1:1041][119:1:119],rr[0:1:0][1041:1:1041][119:1:119],time[0:1:0]",
+      "sha256": "55023a3ba5a2599fc4e2338b4c74c5313fe00052bd2b5e51c38a461a0bfa71fd",
+      "body": "Dataset {\n    Grid {\n     ARRAY:\n        Float32 lat[Y = 1][X = 1];\n     MAPS:\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } lat;\n    Grid {\n     ARRAY:\n        Float32 lon[Y = 1][X = 1];\n     MAPS:\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } lon;\n    Grid {\n     ARRAY:\n        Float32 rr[time = 1][Y = 1][X = 1];\n     MAPS:\n        Float64 time[time = 1];\n        Float64 Y[Y = 1];\n        Float64 X[X = 1];\n    } rr;\n    Float64 time[time = 1];\n} senorge/seNorge_2018/aggregated_products/rr/seNorge2018_rr_normal_1991_2020_monthly_01.nc;\n---------------------------------------------\nlat.lat[1][1]\n[0], 62.47589\n\nlat.Y[1]\n6958500.0\n\nlat.X[1]\n44500.0\n\n\nlon.lon[1][1]\n[0], 6.145098\n\nlon.Y[1]\n6958500.0\n\nlon.X[1]\n44500.0\n\n\nrr.rr[1][1][1]\n[0][0], 184.691\n\nrr.time[1]\n797694.0\n\nrr.Y[1]\n6958500.0\n\nrr.X[1]\n44500.0\n\n\ntime[1]\n797694.0\n\n"
+    }
+  ],
+  "fixtureBuild": {
+    "syntheticBoundary": true,
+    "productionEligible": false,
+    "supportedHomePlaceNames": [
+      "Oslo"
+    ],
+    "formula": {
+      "meanTemperatureC": "month-7",
+      "monthlyPrecipitationMm": "month*10"
+    }
+  },
+  "syntheticCases": [
+    {
+      "id": "age-window-25-month-boundaries",
+      "area": "age",
+      "syntheticBoundary": true,
+      "input": {
+        "twentyFiveMonthsAtOffsets": [
+          28,
+          35,
+          42,
+          43
+        ],
+        "birthDays": [
+          29,
+          30,
+          31
+        ]
+      },
+      "expected": [
+        false,
+        false,
+        false,
+        true
+      ]
+    },
+    {
+      "id": "candidate-receipt-identity",
+      "area": "candidate-receipt-schema",
+      "syntheticBoundary": true,
+      "input": {
+        "candidateSchemaVersion": "snart-review-candidate@1",
+        "receiptSchemaVersion": "babyora-independent-review-receipt@2",
+        "reviewer": {
+          "canonicalTaskName": "/root/review-a",
+          "agentId": "review-a"
+        },
+        "signedByIdentity": {
+          "canonicalTaskName": "/root/review-a",
+          "agentId": "review-a"
+        }
+      },
+      "expected": {
+        "distinctReviewerAgentIds": true,
+        "distinctReviewerCanonicalTaskNames": true,
+        "identityMatchesSignature": true,
+        "provenanceAuthenticated": false
+      }
+    },
+    {
+      "id": "selected-sea-cell-does-not-neighbour-fallback",
+      "area": "grid-sea",
+      "syntheticBoundary": true,
+      "input": {
+        "nearestCellValid": false,
+        "secondCellValid": true
+      },
+      "expected": {
+        "reason": "grid_invalid_or_sea",
+        "usedSecondCell": false
+      }
+    },
+    {
+      "id": "grid-millimetre-y-x-order",
+      "area": "grid-tie",
+      "syntheticBoundary": true,
+      "input": {
+        "candidates": [
+          {
+            "distanceMillimetres": 1000,
+            "Y": 11,
+            "X": 2
+          },
+          {
+            "distanceMillimetres": 1000,
+            "Y": 10,
+            "X": 9
+          },
+          {
+            "distanceMillimetres": 1000,
+            "Y": 10,
+            "X": 8
+          }
+        ]
+      },
+      "expected": {
+        "Y": 10,
+        "X": 8
+      }
+    },
+    {
+      "id": "redirect-downgrade",
+      "area": "http-downgrade",
+      "syntheticBoundary": true,
+      "input": {
+        "status": 301,
+        "location": "http://thredds.met.no/"
+      },
+      "expected": {
+        "followed": false,
+        "result": "FAIL_DOWNGRADE"
+      }
+    },
+    {
+      "id": "metadata-body-over-limit",
+      "area": "http-oversize",
+      "syntheticBoundary": true,
+      "input": {
+        "limitBytes": 2097152,
+        "receivedBytes": 2097153
+      },
+      "expected": {
+        "cached": false,
+        "result": "FAIL_OVERSIZE"
+      }
+    },
+    {
+      "id": "redirect-off-host",
+      "area": "http-redirect",
+      "syntheticBoundary": true,
+      "input": {
+        "status": 302,
+        "location": "https://example.invalid/"
+      },
+      "expected": {
+        "followed": false,
+        "result": "FAIL_REDIRECT"
+      }
+    },
+    {
+      "id": "retry-429-and-5xx",
+      "area": "http-retry",
+      "syntheticBoundary": true,
+      "input": {
+        "statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ]
+      },
+      "expected": {
+        "maxAttempts": 3,
+        "waitSecondsClamp": [
+          0,
+          30
+        ]
+      }
+    },
+    {
+      "id": "timeout-abort-20000",
+      "area": "http-timeout",
+      "syntheticBoundary": true,
+      "input": {
+        "elapsedMilliseconds": 20001
+      },
+      "expected": {
+        "cached": false,
+        "result": "FAIL_TIMEOUT"
+      }
+    },
+    {
+      "id": "truncated-content-length",
+      "area": "http-truncated",
+      "syntheticBoundary": true,
+      "input": {
+        "contentLength": 12,
+        "receivedBytes": 11
+      },
+      "expected": {
+        "cached": false,
+        "result": "FAIL_TRUNCATED"
+      }
+    },
+    {
+      "id": "twelve-distinct-months-required",
+      "area": "monthly-coverage",
+      "syntheticBoundary": true,
+      "input": {
+        "months": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          11
+        ]
+      },
+      "expected": {
+        "result": "FAIL_MONTH_COVERAGE"
+      }
+    },
+    {
+      "id": "monthly-url-family-must-match-variable",
+      "area": "monthly-url",
+      "syntheticBoundary": true,
+      "input": {
+        "urlFamily": "tg",
+        "fileVariable": "rr",
+        "month": 1
+      },
+      "expected": {
+        "result": "FAIL_URL_FAMILY"
+      }
+    },
+    {
+      "id": "half-away-from-zero",
+      "area": "rounding",
+      "syntheticBoundary": true,
+      "input": {
+        "values": [
+          1.25,
+          -1.25,
+          -0
+        ]
+      },
+      "expected": {
+        "oneDecimal": [
+          1.3,
+          -1.3,
+          0
+        ]
+      }
+    },
+    {
+      "id": "target-window-crosses-february-in-leap-year",
+      "area": "target-window-weighting",
+      "syntheticBoundary": true,
+      "input": {
+        "targetYear": 2028,
+        "targetDaysByMonth": {
+          "2": 5,
+          "3": 10
+        },
+        "monthlyRows": {
+          "2": {
+            "meanTemperatureC": -2,
+            "monthlyPrecipitationMm": 58
+          },
+          "3": {
+            "meanTemperatureC": 4,
+            "monthlyPrecipitationMm": 93
+          }
+        }
+      },
+      "expected": {
+        "daysInFebruary": 29,
+        "targetMeanTemperatureC": 2,
+        "targetPrecipitationMm": 40
+      }
+    }
+  ]
+}

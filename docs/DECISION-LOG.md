@@ -2,6 +2,61 @@
 
 This log records current product decisions that override older exploratory material.
 
+## 2026-07-24
+
+### Godkjent GSD-arbeidsliste gjennomføres autonomt
+
+**Decision:** Eier har autorisert at den gjeldende, godkjente GSD-arbeidslisten
+kan planlegges, implementeres, testes, uavhengig gjennomgås, dokumenteres,
+committes og pushes til GitHub uten nye eiergodkjenninger underveis. Når en
+kontroll finner feil, skal arbeidsløpet selv undersøke årsaken, omplanlegge ved
+behov, rette og fortsette. Tidligere dokumenter som krever eiergodkjenning ved
+hvert plan-, kandidat-, media-, fysisk-enhet- eller release-kontrollpunkt er
+prosessmessig overstyrt for denne arbeidslisten. En port kan fortsatt gi
+`FAIL` eller holde en capability av dersom den tekniske evidensen ikke er god
+nok; den skal ikke erstattes av en eierbekreftelse.
+
+Fase 2 og fase 3 kan arbeide parallelt i isolerte grener/worktrees. Fase 3 kan
+bygge Living Home- og motion-grunnlaget før fase 2 er ferdig, men integrasjonen
+Home → Outfit skal vente på et frosset fase-2-grensesnitt for stabile plagg-ID-er,
+anker-/kroppsgeometri, rekkefølge og navigasjonssnapshot.
+
+**Kostnadsgrense:** Ingen enkeltutgift eller samlet ny kostnadsforpliktelse over
+**NOK 1 000** kan pådras uten eksplisitt eiergodkjenning. Gratis verktøy,
+offentlige datakilder og kvoter som allerede inngår i eksisterende abonnementer
+kan brukes autonomt. Ekstra betalte kreditter skal ikke antas å være inkludert.
+Denne regelen erstatter både den eldre autonome grensen på NOK 100 og den eldre,
+mer uklare formuleringen om «store summer».
+
+**Avgrensning:** Fullmakten gir ikke anledning til å fabrikkere faglig
+godkjenning, dataproveniens, testresultater eller fysisk-enhet-bevis. Dersom en
+slik påstand ikke kan dokumenteres, skal påstanden eller den avhengige
+funksjonen fjernes, avgrenses eller holdes deaktivert. Eksterne publiseringer
+utføres bare når de inngår i den gjeldende arbeidslisten og alle tekniske porter
+for den publiseringen er grønne.
+
+**Reason:** Eier ønsker et reelt unattended arbeidsløp og skal ikke være en
+mekanisk flaskehals. Automatisering skal erstatte eierporter med deterministiske
+kontroller og fresh-context AI-review, uten å svekke sannhet, rollback eller
+kostnadskontroll.
+
+### Snart avgrenses fra helsecopy og manuell personvernport
+
+**Decision:** Snart skal være en nøytral, historisk basert
+forberedelsesfunksjon, ikke helse- eller sikkerhetsrådgivning. Helsepåstander og
+medisinsk/sikkerhetsmessig copy tas ut av Snart i stedet for å kreve ekstern
+helsefaglig godkjenning. Formell personverngjennomgang utsettes, men de tekniske
+invariantene beholdes og testes automatisk: session-only valg, ingen URL,
+localStorage, logger, analyse, backend, barn-ID eller tidspunktshistorikk.
+
+MET leverer kildegrunnlaget; Babyoras numeriske grenser er transparente,
+versjonerte produktheuristikker og skal aldri omtales som MET-grenser eller
+helseråd. Manglende offisiell og validerbar klimadekning gir en ærlig
+`unavailable`-tilstand.
+
+**Reason:** Dette fjerner to unødvendige menneskelige porter uten å late som AI
+er helsepersonell eller å svekke den tekniske dataminimeringen.
+
 ## 2026-07-22
 
 ### Master handoff klassifiseres som Babyora UX & Motion Bible

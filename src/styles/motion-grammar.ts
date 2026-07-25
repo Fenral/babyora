@@ -30,6 +30,8 @@ export const MOTION = {
   toastExit: 250,         // toast fade-out
   staggerStep: 40,        // per-list-item delay
   staggerMax: 480,        // max total stagger duration
+  outfitTransitionNormal: 220,       // semantic Home â†’ Outfit feedback
+  outfitTransitionExplanation: 1250, // bounded cause/effect explanation
 
   /** ─── Press-feedback scales ─── */
   scaleCta: 0.997,        // CTA pill press

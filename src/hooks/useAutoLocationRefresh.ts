@@ -1,101 +1,291 @@
-/**
- * useAutoLocationRefresh — stille posisjons-oppdatering ved appåpning.
- *
- * Sivert (2026-07-08): «Jeg er på Steinkjer nå, men det står fortsatt
- * Elverum?» — appen hentet posisjon KUN én gang (onboarding, eller manuell
- * «Automatisk posisjon»-toggle i Innstillinger) og oppdaterte den aldri
- * igjen, selv om brukeren reiste. By/vær ble stående på forrige sted.
- *
- * Denne hooken kjører ETT GPS-oppslag (`getCurrentPosition`, ikke
- * `watchPosition` — ingen kontinuerlig sporing) hver gang appen åpnes eller
- * kommer i forgrunn igjen, MEN kun når `locationMode==='auto'` (brukeren har
- * eksplisitt slått på automatisk posisjon i Innstillinger). Helt stille:
- * ingen toast/dialog — kun konsoll-warn ved feil. Den eksplisitte
- * «slå på»-flyten i InnstillingerScreen (samtykke-dialog + toast) er
- * uendret og separat fra denne.
- *
- * Resume-mønsteret speiler `src/lib/premium/use-access.ts`:
- *  - native: @capacitor/app sin `appStateChange` (isActive)
- *  - web:    document.visibilitychange
- *
- * Rate-limitert til maks 1×/minutt for å unngå dobbel-fyring ved raske
- * resume-events (app-bytting frem og tilbake).
- */
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
-import { useChildren, type Child } from '../state/children-store';
-import { useLocationPref } from '../state/location-pref-store';
 import { reverseGeocode } from '../lib/geocode/nominatim';
+import type { RuntimeCapabilityAccess } from '../lib/premium/gating';
+import {
+  useLocationPref,
+  type AutomaticPlaceInput,
+  type LocationMode,
+} from '../state/location-pref-store';
+import type { LocationRequestOptions } from '../lib/location/cache-scope';
 
-const MIN_REFRESH_INTERVAL_MS = 60_000;
+export type AutoLocationIntent = 'startup' | 'resume' | 'settings-activation';
 
-export function useAutoLocationRefresh(): void {
-  const mode = useLocationPref((s) => s.mode);
-  const { active, needsOnboarding, updateChild } = useChildren();
-  const activeIdRef = useRef(active.id);
-  const lastRunRef = useRef(0);
+export type AutoLocationRequest = Readonly<{
+  intent: AutoLocationIntent;
+  runtimeDecision: RuntimeCapabilityAccess;
+  mode: LocationMode;
+  childId: string;
+  isStillAllowed: () => boolean;
+}>;
 
-  // R3 (2026-07-14): ref-synk i effect (kjøres hver render) i stedet for
-  // skriving under render. Konsumentene leser ref-en i async callbacks
-  // (geolocation/geocode), som alltid fyrer etter effekten — ekvivalent.
-  useEffect(() => {
-    activeIdRef.current = active.id;
-  });
+export type AutoLocationOutcome =
+  | Readonly<{ status: 'success'; placeLabel: string }>
+  | Readonly<{ status: 'blocked' | 'failed' | 'superseded' }>;
 
-  useEffect(() => {
-    if (mode !== 'auto' || needsOnboarding) return;
-    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+type AutoLocationDependencies = Readonly<{
+  locate: () => Promise<Readonly<{ lat: number; lon: number }>>;
+  reverse: (
+    lat: number,
+    lon: number,
+    options: LocationRequestOptions,
+  ) => Promise<Readonly<{ city: string | null }> | null>;
+  clear: () => void;
+  begin: () => number;
+  commit: (generation: number, place: AutomaticPlaceInput) => void;
+}>;
 
-    const refresh = (): void => {
-      const now = Date.now();
-      if (now - lastRunRef.current < MIN_REFRESH_INTERVAL_MS) return;
-      lastRunRef.current = now;
+export type AutoLocationController = Readonly<{
+  run: (request: AutoLocationRequest) => Promise<AutoLocationOutcome>;
+  invalidate: () => void;
+}>;
 
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = Number(pos.coords.latitude.toFixed(4));
-          const lon = Number(pos.coords.longitude.toFixed(4));
-          const patch: Partial<Pick<Child, 'lat' | 'lon' | 'city'>> = { lat, lon };
-          reverseGeocode(lat, lon)
-            .then((rev) => {
-              // Kun sett city hvis vi faktisk fikk et navn — aldri skriv
-              // `city: undefined` inn i patch (updateChild spreader patch
-              // rått, så en eksplisitt undefined-nøkkel ville slettet
-              // eksisterende by-navn).
-              if (rev?.city) patch.city = rev.city;
-              updateChild(activeIdRef.current, patch);
-            })
-            .catch((err: unknown) => {
-              console.warn('[Babyora] auto-location: reverseGeocode feilet — beholder by-navn', err);
-              updateChild(activeIdRef.current, patch);
-            });
-        },
-        (err: GeolocationPositionError) => {
-          console.warn('[Babyora] auto-location: getCurrentPosition feilet', err);
-        },
-        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
-      );
+function requestAllowed(request: AutoLocationRequest): boolean {
+  return requestAccessAllowed(request)
+    && (
+      request.mode === 'auto'
+      || (request.mode === 'manual' && request.intent === 'settings-activation')
+    );
+}
+
+function requestAccessAllowed(request: AutoLocationRequest): boolean {
+  return request.childId.trim().length > 0
+    && request.runtimeDecision.capability === 'automatic_location'
+    && request.runtimeDecision.state === 'allowed'
+    && request.runtimeDecision.allowed
+    && request.runtimeDecision.implementationAvailable;
+}
+
+function requestKey(request: AutoLocationRequest): string {
+  return request.childId;
+}
+
+function liveRequestAllowed(request: AutoLocationRequest): boolean {
+  try {
+    return request.isStillAllowed();
+  } catch {
+    return false;
+  }
+}
+
+export function createAutoLocationController(
+  dependencies: AutoLocationDependencies,
+): AutoLocationController {
+  let token = 0;
+  let inFlight: Readonly<{
+    key: string;
+    acceptsManualResume: boolean;
+    ownerRequest: AutoLocationRequest;
+    promise: Promise<AutoLocationOutcome>;
+  }> | null = null;
+
+  const invalidate = (): void => {
+    token += 1;
+    inFlight = null;
+    dependencies.clear();
+  };
+
+  const run = (request: AutoLocationRequest): Promise<AutoLocationOutcome> => {
+    const key = requestKey(request);
+    if (
+      inFlight?.key === key
+      && inFlight.acceptsManualResume
+      && request.intent === 'resume'
+      && request.mode === 'manual'
+      && requestAccessAllowed(request)
+      && liveRequestAllowed(inFlight.ownerRequest)
+    ) {
+      return inFlight.promise;
+    }
+    if (!requestAllowed(request) || !liveRequestAllowed(request)) {
+      invalidate();
+      return Promise.resolve({ status: 'blocked' });
+    }
+    if (inFlight?.key === key) return inFlight.promise;
+    if (inFlight) invalidate();
+
+    const runToken = ++token;
+    const generation = dependencies.begin();
+    const current = () => runToken === token;
+    const promise = Promise.resolve()
+      .then(async (): Promise<AutoLocationOutcome> => {
+        if (!current()) return { status: 'superseded' };
+        if (!liveRequestAllowed(request)) {
+          invalidate();
+          return { status: 'superseded' };
+        }
+        const position = await dependencies.locate();
+        if (!current()) return { status: 'superseded' };
+        if (!liveRequestAllowed(request)) {
+          invalidate();
+          return { status: 'superseded' };
+        }
+        const lat = Number(position.lat.toFixed(4));
+        const lon = Number(position.lon.toFixed(4));
+        if (
+          !Number.isFinite(lat) || lat < -90 || lat > 90
+          || !Number.isFinite(lon) || lon < -180 || lon > 180
+        ) {
+          invalidate();
+          return { status: 'failed' };
+        }
+        if (!liveRequestAllowed(request)) {
+          invalidate();
+          return { status: 'superseded' };
+        }
+        const place = await dependencies.reverse(lat, lon, {
+          cacheScope: 'memory-only',
+        });
+        if (!current()) return { status: 'superseded' };
+        if (!liveRequestAllowed(request)) {
+          invalidate();
+          return { status: 'superseded' };
+        }
+        const city = place?.city?.trim();
+        if (!city) {
+          invalidate();
+          return { status: 'failed' };
+        }
+        if (!liveRequestAllowed(request)) {
+          invalidate();
+          return { status: 'superseded' };
+        }
+        dependencies.commit(generation, {
+          childId: request.childId,
+          city,
+          lat,
+          lon,
+        });
+        return { status: 'success', placeLabel: city };
+      })
+      .catch((): AutoLocationOutcome => {
+        if (!current()) return { status: 'superseded' };
+        invalidate();
+        return { status: 'failed' };
+      })
+      .finally(() => {
+        if (inFlight?.promise === promise) inFlight = null;
+      });
+    inFlight = {
+      key,
+      acceptsManualResume: request.intent === 'settings-activation'
+        && request.mode === 'manual',
+      ownerRequest: request,
+      promise,
     };
+    return promise;
+  };
 
-    refresh(); // appen åpnes/mountes
+  return { run, invalidate };
+}
+
+function locateOnce(): Promise<Readonly<{ lat: number; lon: number }>> {
+  if (typeof navigator === 'undefined' || !navigator.geolocation) {
+    return Promise.reject(new Error('location unavailable'));
+  }
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => resolve({
+        lat: position.coords.latitude,
+        lon: position.coords.longitude,
+      }),
+      reject,
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
+    );
+  });
+}
+
+export const automaticLocationController = createAutoLocationController({
+  locate: locateOnce,
+  reverse: reverseGeocode,
+  clear: () => useLocationPref.getState().clearAutomaticPlace(),
+  begin: () => useLocationPref.getState().beginAutomaticPlaceRequest(),
+  commit: (generation, place) => {
+    useLocationPref.getState().setAutomaticPlace(generation, place);
+  },
+});
+
+export function useAutoLocationRefresh(request: Readonly<{
+  runtimeDecision: RuntimeCapabilityAccess;
+  mode: LocationMode;
+  childId: string;
+  enabled: boolean;
+}>): void {
+  const { runtimeDecision, mode, childId, enabled } = request;
+  const latestRequest = useRef(request);
+  useLayoutEffect(() => {
+    latestRequest.current = request;
+  }, [request]);
+
+  useEffect(() => {
+    if (!enabled) {
+      automaticLocationController.invalidate();
+      return;
+    }
+    const startupRequest: AutoLocationRequest = {
+      intent: 'startup',
+      runtimeDecision,
+      mode,
+      childId,
+      isStillAllowed: () => {
+        const latest = latestRequest.current;
+        return latest.enabled
+          && latest.childId === childId
+          && requestAllowed({
+            intent: 'resume',
+            runtimeDecision: latest.runtimeDecision,
+            mode: useLocationPref.getState().mode,
+            childId: latest.childId,
+            isStillAllowed: () => true,
+          });
+      },
+    };
+    const currentPlace = useLocationPref.getState().automaticPlace;
+    const activationAlreadyResolved = mode === 'auto'
+      && currentPlace?.childId === childId;
+    if (!activationAlreadyResolved) {
+      void automaticLocationController.run(startupRequest);
+    }
 
     let cleanup: (() => void) | undefined;
+    const resume = () => {
+      void automaticLocationController.run({
+        ...startupRequest,
+        intent: 'resume',
+      });
+    };
     if (Capacitor.isNativePlatform()) {
-      const handlePromise = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-        if (isActive) refresh();
+      const handle = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) resume();
       });
       cleanup = () => {
-        handlePromise.then((h) => h.remove()).catch(() => { /* noop */ });
+        void handle.then((listener) => listener.remove()).catch(() => undefined);
       };
     } else if (typeof document !== 'undefined') {
-      const onVisible = (): void => {
-        if (document.visibilityState === 'visible') refresh();
+      const onVisible = () => {
+        if (document.visibilityState === 'visible') resume();
       };
       document.addEventListener('visibilitychange', onVisible);
       cleanup = () => document.removeEventListener('visibilitychange', onVisible);
     }
-
-    return () => cleanup?.();
-  }, [mode, needsOnboarding, updateChild]);
+    return () => {
+      cleanup?.();
+      const current = useLocationPref.getState();
+      const completingSettingsActivation = mode === 'manual'
+        && current.mode === 'auto'
+        && current.automaticPlace?.childId === childId;
+      if (!completingSettingsActivation) {
+        automaticLocationController.invalidate();
+      }
+    };
+  }, [
+    childId,
+    enabled,
+    mode,
+    runtimeDecision.allowed,
+    runtimeDecision,
+    runtimeDecision.implementationAvailable,
+    runtimeDecision.state,
+  ]);
 }

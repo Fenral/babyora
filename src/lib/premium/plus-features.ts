@@ -11,9 +11,11 @@
  */
 
 export interface PlusFeatureAvailability {
+  /** Dagens plan hjemme — komplett Free-kapabilitet. */
+  today_home: boolean;
   /** 10-dagers plan / «i morgen» — bygget (UkeScreen ten-day). */
   future_plan: boolean;
-  /** Automatisk/valgt sted — bygget (auto-posisjon i Innstillinger). */
+  /** Automatisk sted — av til 01-12 integrerer og godkjenner hele livssyklusen. */
   automatic_location: boolean;
   /** Flere barn — bygget (barn 2+-gating). */
   extra_children: boolean;
@@ -21,14 +23,18 @@ export interface PlusFeatureAvailability {
   family_sharing: boolean;
   /** Personlig kalibrering — senere fase, IKKE bygget. */
   personal_calibration: boolean;
+  /** Snart-forberedelser — holdes av til godkjent implementasjon i 01-16. */
+  soon_preparation: boolean;
 }
 
 export const PLUS_FEATURE_AVAILABILITY: Readonly<PlusFeatureAvailability> = Object.freeze({
+  today_home: true,
   future_plan: true,
   automatic_location: true,
   extra_children: true,
   family_sharing: false,
   personal_calibration: false,
+  soon_preparation: true,
 });
 
 export interface PlusExpansion {

@@ -13,7 +13,7 @@
  *  - Editorial headline: "Guide"
  *  - Hero-CTA: "Finn antrekk" — autoritets-copy (Guide-løftet tiltak 3):
  *    "Kleskalkulatoren — bygget på norske helsesøster-råd og TOG-standarden"
- *  - Eyebrow "VERKTØY" + bilde-ledede kort (Plaggbiblioteket + Min garderobe)
+ *  - Eyebrow "VERKTØY" + bilde-ledede kort (Plaggbiblioteket + Snart)
  *  - Eyebrow "KUNNSKAP" + farge-stripe-kort (TOG-guiden + Varm eller kald?)
  *  - Footer hint
  *  - BottomTabBar (Guide aktiv)
@@ -38,7 +38,7 @@ import { useNativeSettings } from '../hooks/useNativeSettings';
 export type GuideHubTarget =
   | 'finn-antrekk'
   | 'plaggbib'
-  | 'min-garderobe'
+  | 'snart'
   | 'tog'
   | 'varm-kald'
   | 'forste-vinter';
@@ -820,10 +820,10 @@ const TOOL_ROWS: ToolRowDef[] = [
     art: 'lib',
   },
   {
-    target: 'min-garderobe',
-    title: 'Min garderobe',
-    subtitle: 'Velg plagg du eier — få bedre forslag',
-    tag: 'Personliggjør',
+    target: 'snart',
+    title: 'Forbered deg på sesongen',
+    subtitle: 'Se historiske månedsnormaler for stedet ditt',
+    tag: 'Historiske normaler',
     art: 'wardrobe',
   },
 ];
@@ -946,7 +946,7 @@ export function GuideHubScreen({
             <div>
               <p style={sectionEyebrow}>Verktøy</p>
               <h2 id="guide-tools-heading" style={sectionTitle}>
-                Bla i&nbsp;garderoben
+                Utforsk plagg og sesong
               </h2>
             </div>
             <span style={sectionCount} aria-hidden="true">

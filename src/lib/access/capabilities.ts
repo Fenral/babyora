@@ -14,6 +14,7 @@ export type Capability =
   | 'safety_guides'
   | 'future_plan'
   | 'automatic_location'
+  | 'soon_preparation'
   | 'extra_places'
   | 'extra_children'
   | 'family_sharing'

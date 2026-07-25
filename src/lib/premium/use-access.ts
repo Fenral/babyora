@@ -2,66 +2,198 @@
  * use-access — F81.5-W1: bro mellom RevenueCat-entitlement og UI.
  *
  * `syncPremiumEntitlement()` slår opp reell entitlement-status via
- * `checkPremium()` (kun native + konfigurert RevenueCat) og skriver
- * resultatet inn i subscription-store. På web/dev (ikke native eller
- * RevenueCat ikke konfigurert) er dette en no-op — subscription-store
- * beholder sin cachede/mock-verdi slik at utviklere kan teste Premium-UI
- * uten et ekte RevenueCat-oppsett.
+ * `checkPremium()` (kun native + konfigurert RevenueCat). Mens oppslaget
+ * pågår er effektiv tilgang alltid nøytral (`false` + `loading`) — en
+ * cachet Plus-verdi kan derfor aldri åpne betalt innhold før en fersk
+ * butikkrespons er autoritativ. Parallelle kall deler samme promise.
+ *
+ * På web/dev (ikke native eller RevenueCat ikke konfigurert) er synken en
+ * eksplisitt ready-dev no-op. subscription-store beholder mock-verdien slik
+ * at utviklere kan teste Premium-UI uten et ekte RevenueCat-oppsett.
  *
  * Wiring:
  *  - main.tsx kaller `syncPremiumEntitlement()` én gang ved oppstart
- *    (etter `initRevenueCat()` er ferdig, suksess eller ikke).
- *  - Denne modulen registrerer i tillegg — på modul-nivå, KUN én gang,
- *    aldri inne i en React-komponent — en app-resume-lytter som re-synker
- *    hver gang appen kommer i forgrunnen igjen:
- *      · native: @capacitor/app sin `appStateChange` (isActive)
- *      · web:    document.visibilitychange
- *    Dette fanger opp kjøp gjort utenfor appen (f.eks. i App Store/Play
- *    "Administrer abonnement") uten at brukeren må starte appen på nytt.
+ *    etter at `initRevenueCat()` er ferdig.
+ *  - Denne modulen registrerer på modulnivå kun én app-resume-lytter som
+ *    bruker den samme single-flight-controlleren.
  *
  * `useAccess()` er den eneste kontrakten skjermer/komponenter skal bruke
- * for å lese Premium-status — aldri les subscription-store direkte fra nye
- * kall-steder (eksisterende kall-steder i InnstillingerScreen er unntatt
- * inntil de migreres).
+ * for å lese Premium-status.
  */
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { checkPremium, isRevenueCatConfigured } from '../billing/revenuecat';
 import { useSubscription } from '../../state/subscription-store';
 
-let firstSyncDone = false;
-const readyListeners = new Set<() => void>();
+type AccessSnapshot = {
+  isPremium: boolean;
+  loading: boolean;
+  source: 'configured-native' | 'ready-dev';
+};
 
-function markReady(): void {
-  if (firstSyncDone) return;
-  firstSyncDone = true;
-  for (const cb of readyListeners) cb();
-  readyListeners.clear();
+type ControllerDependencies = {
+  configuredNative: boolean;
+  check: () => Promise<boolean>;
+  commit: (isPremium: boolean) => void;
+  readDevPremium: () => boolean;
+  warn?: (message: string, error: unknown) => void;
+};
+
+type EntitlementFreshnessController = {
+  getSnapshot: () => AccessSnapshot;
+  subscribe: (listener: () => void) => () => void;
+  refresh: () => Promise<void>;
+  supersede: () => void;
+};
+
+const READY_DEV_NOOP = Promise.resolve();
+
+/**
+ * Injiserbar controller-seam for kontrakttester.
+ *
+ * `supersede()` finnes for eksplisitt livssyklus-invalidering: en pågående
+ * generasjon mister da publiseringsretten, og neste refresh starter et nytt
+ * single-flight. Ordinære startup/resume-kall bruker bare `refresh()`.
+ */
+export function createEntitlementFreshnessController(
+  dependencies: ControllerDependencies,
+): EntitlementFreshnessController {
+  const listeners = new Set<() => void>();
+  let generation = 0;
+  let inFlight: Promise<void> | null = null;
+  let snapshot: AccessSnapshot = dependencies.configuredNative
+    ? {
+        isPremium: false,
+        loading: true,
+        source: 'configured-native',
+      }
+    : {
+        isPremium: dependencies.readDevPremium(),
+        loading: false,
+        source: 'ready-dev',
+      };
+
+  const publish = (next: AccessSnapshot): void => {
+    snapshot = next;
+    for (const listener of listeners) listener();
+  };
+
+  const publishRefreshing = (): void => {
+    publish({
+      isPremium: false,
+      loading: true,
+      source: 'configured-native',
+    });
+  };
+
+  const refresh = (): Promise<void> => {
+    if (!dependencies.configuredNative) return READY_DEV_NOOP;
+    if (inFlight) return inFlight;
+
+    const refreshGeneration = ++generation;
+    publishRefreshing();
+
+    let checkResult: Promise<boolean>;
+    try {
+      checkResult = dependencies.check();
+    } catch (error) {
+      checkResult = Promise.reject(error);
+    }
+
+    const refreshPromise = checkResult
+      .then(
+        (isPremium) => {
+          if (refreshGeneration !== generation) return;
+          dependencies.commit(isPremium);
+          publish({
+            isPremium,
+            loading: false,
+            source: 'configured-native',
+          });
+        },
+        (error: unknown) => {
+          if (refreshGeneration !== generation) return;
+          dependencies.commit(false);
+          publish({
+            isPremium: false,
+            loading: false,
+            source: 'configured-native',
+          });
+          dependencies.warn?.(
+            '[Babyora] syncPremiumEntitlement feilet',
+            error,
+          );
+        },
+      )
+      .finally(() => {
+        if (inFlight === refreshPromise) inFlight = null;
+      });
+
+    inFlight = refreshPromise;
+    return refreshPromise;
+  };
+
+  return {
+    getSnapshot: () => snapshot,
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    refresh,
+    supersede: () => {
+      if (!dependencies.configuredNative) return;
+      generation += 1;
+      inFlight = null;
+      publishRefreshing();
+    },
+  };
+}
+
+const configuredNative =
+  Capacitor.isNativePlatform() && isRevenueCatConfigured();
+
+const entitlementFreshness = createEntitlementFreshnessController({
+  configuredNative,
+  check: checkPremium,
+  commit: (isPremium) => useSubscription.getState().setPremium(isPremium),
+  readDevPremium: () => useSubscription.getState().isPremium,
+  warn: (message, error) => console.warn(message, error),
+});
+
+/**
+ * Kombinerer freshness-livssyklusen med den eksisterende store-kontrakten.
+ *
+ * Før og under en konfigurert native refresh er cache alltid blokkert.
+ * Etter at refresh har skrevet sin ferske verdi, kan senere store-endringer
+ * (blant annet vellykket kjøp/gjenoppretting) slå gjennom umiddelbart.
+ */
+export function resolveEffectiveAccess(
+  freshness: AccessSnapshot,
+  persistedPremium: boolean,
+): { isPremium: boolean; loading: boolean } {
+  if (
+    freshness.source === 'configured-native'
+    && freshness.loading
+  ) {
+    return { isPremium: false, loading: true };
+  }
+
+  return { isPremium: persistedPremium, loading: false };
 }
 
 /**
  * Synker subscription-store mot RevenueCat sin faktiske entitlement.
- * Trygg å kalle ubegrenset antall ganger — feiler aldri hardt (nettverk,
- * manglende nøkkel, native-plugin-feil håndteres alle med silent no-op).
+ * Parallelle kall deler nøyaktig samme promise; etter settlement starter
+ * neste kall en ny generasjon.
  */
-export async function syncPremiumEntitlement(): Promise<void> {
-  try {
-    if (Capacitor.isNativePlatform() && isRevenueCatConfigured()) {
-      const isPremium = await checkPremium();
-      useSubscription.getState().setPremium(isPremium);
-    }
-    // Web/dev uten native+konfigurert RevenueCat: no-op — behold mock-verdi.
-  } catch (err) {
-    console.warn('[Babyora] syncPremiumEntitlement feilet', err);
-  } finally {
-    markReady();
-  }
+export function syncPremiumEntitlement(): Promise<void> {
+  return entitlementFreshness.refresh();
 }
 
 let resumeSyncRegistered = false;
 
-/** Registrerer ÉN app-resume-lytter. Kalles kun fra modul-scope (se bunn). */
+/** Registrerer én app-resume-lytter. Kalles kun fra modul-scope. */
 function registerResumeSync(): void {
   if (resumeSyncRegistered) return;
   resumeSyncRegistered = true;
@@ -69,40 +201,35 @@ function registerResumeSync(): void {
   if (Capacitor.isNativePlatform()) {
     App.addListener('appStateChange', ({ isActive }) => {
       if (isActive) void syncPremiumEntitlement();
-    }).catch((err) => {
-      console.warn('[Babyora] appStateChange-listener feilet', err);
+    }).catch((error) => {
+      console.warn('[Babyora] appStateChange-listener feilet', error);
     });
   } else if (typeof document !== 'undefined') {
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') void syncPremiumEntitlement();
+      if (document.visibilityState === 'visible') {
+        void syncPremiumEntitlement();
+      }
     });
   }
 }
 
-// Modul-nivå — registreres én gang ved første import, aldri i React-render.
+// Modulnivå: registreres én gang ved første import, aldri i React-render.
 registerResumeSync();
 
 /**
  * React-hook for Premium-tilgang.
  *
- * `loading` er true helt til FØRSTE synk-forsøk (uansett utfall) er
- * fullført — bruk den til å unngå å vise "Gratis"-UI et kort øyeblikk før
- * en ekte Premium-status har rukket å komme inn fra RevenueCat.
+ * På konfigurert native er `loading` true og `isPremium` alltid false for
+ * hver pågående refresh. På eksplisitt web/dev kommer mock-verdien direkte
+ * fra subscription-store uten å bli feilaktig merket som butikkfersk.
  */
 export function useAccess(): { isPremium: boolean; loading: boolean } {
-  const isPremium = useSubscription((s) => s.isPremium);
-  const [loading, setLoading] = useState(!firstSyncDone);
+  const devPremium = useSubscription((state) => state.isPremium);
+  const freshness = useSyncExternalStore(
+    entitlementFreshness.subscribe,
+    entitlementFreshness.getSnapshot,
+    entitlementFreshness.getSnapshot,
+  );
 
-  useEffect(() => {
-    // Allerede reflektert i useState(!firstSyncDone)-initialiseringen over —
-    // ingen setState nødvendig her (unngår react-hooks/set-state-in-effect).
-    if (firstSyncDone) return;
-    const cb = () => setLoading(false);
-    readyListeners.add(cb);
-    return () => {
-      readyListeners.delete(cb);
-    };
-  }, []);
-
-  return { isPremium, loading };
+  return resolveEffectiveAccess(freshness, devPremium);
 }

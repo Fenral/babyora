@@ -1,1300 +1,1122 @@
-/**
- * UkeScreen — F65 forenkling, F80c PORT til Morgennatt-design.
- *
- * Endringer fra forrige iter:
- *  - Dropper hero-sone (sticky avatar-img + sticky indikator-chip + temp/mood)
- *  - Dropper avatar tier-mapping per rad + crossfade-effekter
- *  - Dropper IntersectionObserver + activeIdx + row-highlight (rader blir flate)
- *  - Dropper WeatherSparkline-bruk i alle rader
- *  - Dropper lag-display-seksjonen (krevde aktiv rad — uten activeIdx gir det ikke mening)
- *
- * Beholder:
- *  - Topbar (sted-pille + varsler-knapp)
- *  - Tabs (I dag / 10 dager)
- *  - RefHourPicker (global klokkeslett)
- *  - vognMode-toggle (conditional når activity === 'vogn')
- *  - Time-/dag-rader: klokkeslett + vær-ikon + temp + plagg-band
- *  - recommend() per rad for plagg-band
- *  - Primary CTA (navigerer til hjem)
- *  - useWeather, useChildren, useRefHour
- *
- * F80c (2026-07-02): visuell port til Morgennatt — KUN tokens/farger, ingen
- * funksjonsendring. Se docs/F80/a11y-preclearance.md §2 (temp-canvas) og
- * HjemScreen.tsx for det portede data-temp-mønsteret (tempAxisFor-terskler
- * kald<5/varm>18). Uke er Sone 1: data-temp settes på skjerm-roten fra
- * dagens feels-like (weather.now), samme .ba-temp-root-transition-klasse
- * som Hjem (transition scoped via CSS, RM → instant snap).
- */
 import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
 } from 'react';
-import { useChildren } from '../state/children-store';
+import { PaywallDialog } from '../components/PaywallDialog';
+import { ForecastDisclosure } from '../components/planning/ForecastDisclosure';
+import { PlanChangeRail, type PlanChangeRailRow, type PlanningRailEvent } from '../components/planning/PlanChangeRail';
+import { SnartPlan } from '../components/planning/SnartPlan';
+import {
+  PlanleggStatusNotice,
+  type PlanleggStatusState,
+} from '../components/planning/PlanleggStatusNotice';
+import { SegmentedControl } from '../components/controls/SegmentedControl';
 import { useWeather } from '../hooks/useWeather';
 import { useHapticSystem } from '../lib/haptics/system';
-import { useNativeSettings } from '../hooks/useNativeSettings';
-import { Skeleton } from '../components/Skeleton';
-import { useSwapOverride } from '../state/swap-override-store';
-import { recommend } from '../lib/wool-layers/recommend';
-import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
-import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
-import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
-import type {
-  WeatherDayAtHour,
-  WeatherHourly,
-} from '../lib/met-no/types';
-import type { TabKey } from '../types/nav';
+import { extractDailyAtHour, extractHourly } from '../lib/met-no/client';
+import type { WeatherDayAtHour, WeatherHourly } from '../lib/met-no/types';
+import {
+  type PlanningChangeEvent,
+  type PlanningPoint,
+} from '../lib/planning/change-events';
+import {
+  type RequestedPlanningView,
+  decidePlanningInteraction,
+  dispatchPlanningInteraction,
+  repairPlanningSelection,
+} from '../lib/planning/planning-interaction';
+import {
+  createPlannedOutfitContext,
+  PLAN_TIME_ZONE,
+  type PlannedOutfitContext,
+} from '../lib/planning/planned-outfit-context';
+import { resolvePlannedOutfitContext } from '../lib/planning/planned-outfit-resolver';
+import {
+  buildPlanViewModel,
+  type PlanningVerdictView,
+  type PlanningWeatherRow,
+} from '../lib/planning/plan-view-model';
+import { resolveSnartClimateProfile } from '../lib/planning/snart-climate';
+import { buildSnartDateWindow, isAgeEligibleForWholeWindow } from '../lib/planning/snart-date-window';
+import { buildSnartPlan, buildSnartUnavailable, type SnartPlan as SnartPlanResult } from '../lib/planning/snart';
+import {
+  createSnartSessionEvaluator,
+  resolveCommittedSnartHome,
+} from '../lib/planning/snart-session';
+import {
+  resolvePlanningViewAccess,
+  resolveRuntimeCapabilityAccess,
+} from '../lib/premium/gating';
+import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
+import type { PaywallTrigger } from '../lib/premium/products';
 import { useAccess } from '../lib/premium/use-access';
-import { shouldShowTenDayTeaser } from '../lib/premium/gating';
-import { PaywallDialog } from '../components/PaywallDialog';
-import { deriveChangeEvents } from '../lib/planning/change-events';
-import { buildRailRows } from '../lib/planning/rail-rows';
-import { PlanChangeRail } from '../components/planning/PlanChangeRail';
+import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
+import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
+import { recommend } from '../lib/wool-layers/recommend';
+import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
+import { useChildren } from '../state/children-store';
+import { useSwapOverride } from '../state/swap-override-store';
+import { resolveEffectivePlace, useLocationPref } from '../state/location-pref-store';
+import type { TabKey } from '../types/nav';
+import './UkeScreen.css';
 
-// Elverum (default ved ingen aktiv barn-lokasjon)
 const DEFAULT_LAT = 60.8867;
 const DEFAULT_LON = 11.5614;
+const FALLBACK_REF_HOUR = 12;
 
-type ViewTab = 'today' | 'tenday';
+type ViewTab = 'today' | 'tenday' | 'soon';
 type Activity = 'utelek' | 'vogn';
 type VognMode = 'awake' | 'sleeping';
+type TempAxis = 'kald' | 'mild' | 'varm';
 
-type BurdenBand = {
-  count: number;
-  color: string;
-  label: 'Lett' | 'Middels' | 'Mye på';
+type PlanleggE2EWindow = Window & {
+  __BABYORA_PLANLEGG_E2E__?: Readonly<{
+    testOnlySoonAvailability?: boolean;
+    entitlement?: 'loading' | 'free' | 'plus';
+    fixedHome?: Readonly<{ city: string; lat: number; lon: number }>;
+    automatic?: Readonly<{ mode: 'auto'; place: Readonly<{ city: string; lat: number; lon: number }> }>;
+    climateProfile?: 'invalid-hash';
+    profileScope?: string;
+    windowLocalDate?: string;
+  }>;
 };
 
-// Morgennatt-tokens (F80c port) — bruker KUN CSS-vars fra design-tokens.css
-// så dark-mode + temp-akse auto-flipper. Ingen nye hex.
-const TOKENS = {
-  warmGrey: 'var(--bg-canvas)',
-  warmGrey2: 'var(--bg-canvas-warm)',
-  warmGrey3: 'var(--ink-200)',
-  ink900: 'var(--ink-900)',
-  ink700: 'var(--ink-700)',
-  ink500: 'var(--ink-500)',
-  ink300: 'var(--ink-300)',
-  ink100: 'var(--ink-100)',
-  surface: 'var(--surface)',
-  surfaceSoft: 'var(--surface-soft)',
-  surfacePure: 'var(--surface-pure)',
-  surfaceElevated: 'var(--surface-elevated, var(--surface-pure))',
-  orange: 'var(--accent-cta)',
-  orange600: 'var(--accent-cta)',
-  // Plagg-byrde-bånd: 3 tiers mappet til Morgennatt lag-/status-familien
-  // (Lett=ok-grønn, Middels=marigold/oker, Mye på=dyp petrol — samme
-  // rekkefølge/intensitet som før, ingen nye hex).
-  green: 'var(--status-ok)',
-  amber: 'var(--lag-marigold)',
-  navy: 'var(--layer-ytterst)',
-  fontSerif: 'var(--font-display, var(--font-serif))',
-  fontSans: 'var(--font-sans)',
-  easeOut: 'var(--ease-out)',
-  shadow1: 'var(--shadow-1)',
-  shadowElevated: 'var(--shadow-elevated, 0 4px 16px rgba(0,0,0,0.08))',
-  shadowCta: 'var(--shadow-cta-primary)',
-} as const;
+const PLANLEGG_E2E_SOON_AVAILABILITY = Object.freeze({
+  ...PLUS_FEATURE_AVAILABILITY,
+  soon_preparation: true,
+});
 
-// ──────────────── små helpers ────────────────
+function planningAvailability() {
+  if (
+    import.meta.env.VITE_PLANLEGG_E2E === 'true'
+    && (window as PlanleggE2EWindow).__BABYORA_PLANLEGG_E2E__?.testOnlySoonAvailability === true
+  ) {
+    return PLANLEGG_E2E_SOON_AVAILABILITY;
+  }
+  return PLUS_FEATURE_AVAILABILITY;
+}
 
-// F80c: Uke er Sone 1 — data-temp følger samme terskler/mønster som
-// HjemScreen.tempAxisFor (kald<5, varm>18, ellers mild). Ikke delt via
-// import (tempAxisFor er privat i HjemScreen.tsx) — replikert lokalt med
-// identisk logikk per port-kontrakten (a11y-preclearance.md §2).
-type TempAxis = 'kald' | 'mild' | 'varm';
-const TEMP_AXIS_COLD_MAX = 5;
-const TEMP_AXIS_WARM_MIN = 18;
+function planningE2EFixture(): PlanleggE2EWindow['__BABYORA_PLANLEGG_E2E__'] {
+  return import.meta.env.VITE_PLANLEGG_E2E === 'true'
+    ? (window as PlanleggE2EWindow).__BABYORA_PLANLEGG_E2E__
+    : undefined;
+}
 
-function tempAxisFor(feelsLikeC: number | undefined | null, tempC: number | undefined | null): TempAxis {
-  const t = feelsLikeC ?? tempC;
-  if (t === undefined || t === null || Number.isNaN(t)) return 'mild';
-  if (t < TEMP_AXIS_COLD_MAX) return 'kald';
-  if (t > TEMP_AXIS_WARM_MIN) return 'varm';
+type Phase = Readonly<{
+  recommendation: Recommendation;
+  engineInput: RecommendInput;
+  weather: Readonly<{
+    atIso: string;
+    tempC: number;
+    feelsLikeC: number;
+    windMs: number;
+    precipMmH: number;
+    symbolCode: string;
+  }>;
+}>;
+
+type Props = Readonly<{
+  onNavigate: (tab: TabKey) => void;
+  onOpenSheet: () => void;
+  onOpenPlannedOutfit: (
+    context: PlannedOutfitContext,
+    trigger: HTMLElement,
+  ) => void;
+  requestedPlanView: RequestedPlanningView | null;
+  requestedPlanViewToken: number | null;
+  onConsumeRequestedPlanView: (token: number) => void;
+}>;
+
+type PlanningEvaluation = Readonly<{
+  status: 'offline' | 'partial' | 'empty' | 'ready' | null;
+  verdict: PlanningVerdictView | null;
+  nextAction: string | null;
+  events: readonly PlanningChangeEvent[];
+  rows: readonly PlanChangeRailRow[];
+  candidateEventIds: readonly string[];
+  forecast: readonly PlanningWeatherRow[];
+  contextsByEventId: ReadonlyMap<string, PlannedOutfitContext>;
+  preferredEventId: string | null;
+  hasEvaluatedPlan: boolean;
+}>;
+
+const EMPTY_PLANNING_EVALUATION: PlanningEvaluation = Object.freeze({
+  status: null,
+  verdict: null,
+  nextAction: null,
+  events: Object.freeze([]),
+  rows: Object.freeze([]),
+  candidateEventIds: Object.freeze([]),
+  forecast: Object.freeze([]),
+  contextsByEventId: Object.freeze(new Map<string, PlannedOutfitContext>()),
+  preferredEventId: null,
+  hasEvaluatedPlan: false,
+});
+
+function tempAxisFor(
+  feelsLikeC: number | undefined | null,
+  tempC: number | undefined | null,
+): TempAxis {
+  const temperature = feelsLikeC ?? tempC;
+  if (temperature === undefined || temperature === null || Number.isNaN(temperature)) {
+    return 'mild';
+  }
+  if (temperature < 5) return 'kald';
+  if (temperature > 18) return 'varm';
   return 'mild';
 }
 
-function timeOfDayLabel(hour: number): string {
-  if (hour >= 5 && hour < 10) return 'morgen';
-  if (hour >= 10 && hour < 17) return 'dag';
-  if (hour >= 17 && hour < 22) return 'kveld';
-  return 'natt';
-}
-
-function bandForCount(count: number): BurdenBand {
-  if (count <= 2) return { count, color: TOKENS.green, label: 'Lett' };
-  if (count <= 3) return { count, color: TOKENS.amber, label: 'Middels' };
-  return { count, color: TOKENS.navy, label: 'Mye på' };
-}
-
-/** Velg fra hourly den entry hvis hour-of-day er nærmest target. */
-function pickHourly(
-  hourly: WeatherHourly[],
-  targetHour: number,
-): WeatherHourly | null {
-  if (hourly.length === 0) return null;
-  let best: WeatherHourly = hourly[0]!;
-  let bestDelta = 24;
-  for (const h of hourly) {
-    const hh = h.time.getHours();
-    const delta = Math.abs(hh - targetHour);
-    if (delta < bestDelta) {
-      bestDelta = delta;
-      best = h;
-    }
-    if (delta === 0) break;
-  }
-  return best;
-}
-
 function conditionLabel(symbolCode: string): string {
-  const c = (symbolCode || '').toLowerCase();
-  if (c.includes('clear')) return 'Klarvær';
-  if (c.includes('fair')) return 'Lettskyet';
-  if (c.includes('partly')) return 'Delvis skyet';
-  if (c.includes('cloud')) return 'Skyet';
-  if (c.includes('fog')) return 'Tåke';
-  if (c.includes('snow')) return 'Snø';
-  if (c.includes('sleet')) return 'Sludd';
-  if (c.includes('rain')) return 'Regn';
-  if (c.includes('thunder')) return 'Torden';
+  const normalized = symbolCode.toLocaleLowerCase('nb-NO');
+  if (normalized.includes('thunder')) return 'Torden';
+  if (normalized.includes('snow')) return 'Snø';
+  if (normalized.includes('sleet')) return 'Sludd';
+  if (normalized.includes('rain')) return 'Regn';
+  if (normalized.includes('fog')) return 'Tåke';
+  if (normalized.includes('cloud')) return 'Skyet';
+  if (normalized.includes('partly')) return 'Delvis skyet';
+  if (normalized.includes('fair')) return 'Lettskyet';
+  if (normalized.includes('clear')) return 'Klarvær';
   return 'Vær';
 }
 
-const DAY_NAMES = ['Søndag', 'Mandag', 'Tirsdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lørdag'];
-
-function formatDayShort(date: Date, isToday: boolean): string {
-  if (isToday) return 'I dag';
-  const dayName = (DAY_NAMES[date.getDay()] ?? '').slice(0, 3);
-  const day = date.getDate();
-  return `${dayName} ${day}.`;
+function pickHourly(
+  hourly: readonly WeatherHourly[],
+  targetHour: number,
+  localDate: string,
+): WeatherHourly | null {
+  const sameDate = hourly.filter((point) => point.time.toLocaleDateString('en-CA', {
+    timeZone: PLAN_TIME_ZONE,
+  }) === localDate);
+  if (sameDate.length === 0) return null;
+  return [...sameDate].sort((left, right) => {
+    const leftHour = Number(left.time.toLocaleTimeString('en-GB', {
+      timeZone: PLAN_TIME_ZONE,
+      hour: '2-digit',
+      hourCycle: 'h23',
+    }));
+    const rightHour = Number(right.time.toLocaleTimeString('en-GB', {
+      timeZone: PLAN_TIME_ZONE,
+      hour: '2-digit',
+      hourCycle: 'h23',
+    }));
+    return Math.abs(leftHour - targetHour) - Math.abs(rightHour - targetHour);
+  })[0] ?? null;
 }
 
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+function finalizedFingerprint(
+  orderedGarments: readonly string[],
+  equipment: readonly string[],
+): string {
+  return `planned-finalized:${JSON.stringify([orderedGarments, equipment])}`;
 }
 
-// ──────────────── WeatherIcon ────────────────
-
-/**
- * F80c: ink-nøytral vær-ikon — droppet hue-kodede fills (gul sol / blå sky)
- * til fordel for currentColor/var(--ink-500), samme prinsipp som Hjems
- * WeatherFallbackIcon (canvas/temp-akse bærer temperatur-signalet, ikke
- * ikonet). Formen (sol/sky/regn) beholdes, kun fargen er nøytralisert.
- */
-function WeatherIcon({ symbolCode, size = 28 }: { symbolCode: string; size?: number }) {
-  const code = (symbolCode || '').toLowerCase();
-  const hasSun = code.includes('clear') || code.includes('fair') || code.includes('partly');
-  const hasRain = code.includes('rain') || code.includes('sleet') || code.includes('snow');
-  const hasCloud =
-    !code.includes('clear') ||
-    code.includes('cloud') ||
-    code.includes('rain') ||
-    code.includes('snow') ||
-    code.includes('fog');
-
-  if (hasSun && hasCloud) {
-    return (
-      <svg
-        width={size}
-        height={size * 0.71}
-        viewBox="0 0 34 24"
-        fill="none"
-        aria-hidden="true"
-        color="var(--ink-500)"
-      >
-        <circle cx={13} cy={9} r={5} fill="currentColor" opacity={0.85} />
-        <path
-          d="M11 20h13a5 5 0 0 0 .5-10 6.8 6.8 0 0 0-13 1A4.3 4.3 0 0 0 11 20z"
-          fill="currentColor"
-          opacity={0.4}
-        />
-      </svg>
-    );
-  }
-  if (hasSun) {
-    return (
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-        color="var(--ink-500)"
-      >
-        <circle cx={12} cy={12} r={5} fill="currentColor" opacity={0.85} />
-        <g stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" opacity={0.85}>
-          <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2" />
-        </g>
-      </svg>
-    );
-  }
-  if (hasRain) {
-    return (
-      <svg
-        width={size}
-        height={size * 0.79}
-        viewBox="0 0 34 27"
-        fill="none"
-        aria-hidden="true"
-        color="var(--ink-500)"
-      >
-        <path
-          d="M9 17h14a5.5 5.5 0 0 0 .6-11 7.5 7.5 0 0 0-14.3 1.2A4.8 4.8 0 0 0 9 17z"
-          fill="currentColor"
-          opacity={0.4}
-        />
-        <g stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" opacity={0.85}>
-          <path d="M12 20l-1.2 4M17 20l-1.2 4M22 20l-1.2 4" />
-        </g>
-      </svg>
-    );
-  }
-  return (
-    <svg
-      width={size}
-      height={size * 0.69}
-      viewBox="0 0 32 22"
-      fill="none"
-      aria-hidden="true"
-      color="var(--ink-500)"
-    >
-      <path
-        d="M9 18h14a5.5 5.5 0 0 0 .6-11 7.5 7.5 0 0 0-14.3 1.2A4.8 4.8 0 0 0 9 18z"
-        fill="currentColor"
-        opacity={0.4}
-      />
-    </svg>
-  );
-}
-
-// ──────────────── phase-type ────────────────
-
-/**
- * Én fase = en rad i listen. Identisk struktur for begge tabs; bare
- * date-felt og hour varierer.
- */
-type Phase = {
-  /** Klokkeslett (0-23) — for "I dag" varierer, for "10 dager" = refHour */
-  hour: number;
-  /** Dato fasen representerer */
-  date: Date;
-  /** True hvis denne fasen er dagens dato */
-  isToday: boolean;
-  /** Temperatur (°C) */
-  tempC: number | null;
-  /** Plagg-byrde-bånd for fasen */
-  band: BurdenBand;
-  /** Vær-symbol */
-  symbolCode: string;
-  /** Full recommendation for fasen — brukt av band-count. */
-  recommendation: Recommendation | null;
-  /** R2 (2026-07-14): motor-input fasen ble beregnet fra — kreves av den
-   *  endelige sikkerhetsgrensen når session-swaps anvendes. */
-  engineInput: RecommendInput | null;
-};
-
-type Props = {
-  onNavigate: (tab: TabKey) => void;
-  onOpenSheet: () => void;
-};
-
-/** Fast referansetime for prognoser når brukeren ikke kan velge. F67: 12:00. */
-const FALLBACK_REF_HOUR = 12;
-
-// ──────────────── selve komponenten ────────────────
-
-export function UkeScreen({ onNavigate, onOpenSheet }: Props) {
-  const { active } = useChildren();
-  const { reducedMotion } = useNativeSettings();
-  const { fire } = useHapticSystem();
-  const refHour = FALLBACK_REF_HOUR;
-  const swaps = useSwapOverride((s) => s.swaps);
-
-  const lat = active?.lat || DEFAULT_LAT;
-  const lon = active?.lon || DEFAULT_LON;
-  const city = active?.city || 'Elverum';
-  const childName = active?.name || 'barnet';
-
-  const weather = useWeather(lat, lon, refHour);
-  const [tab, setTab] = useState<ViewTab>('today');
-  // Intern aktivitets-state (default 'utelek' — bevarer eksisterende oppførsel).
-  const [activity] = useState<Activity>('utelek');
-  const [vognMode, setVognMode] = useState<VognMode>('awake');
-
-  // F81.5-W2 (Flate 1): «10 dager»-tab («Uke»-tab i denne fila, se
-  // ViewTab='tenday') er en Babyora Pluss-funksjon. Modell (b): tab-en er
-  // fortsatt valgbar (aria-pressed settes normalt, viser faktisk teaser-
-  // innhold) — kun antrekks-/lag-delen av hver rad er gatet.
-  const { isPremium } = useAccess();
-  const tenDayCtaRef = useRef<HTMLButtonElement | null>(null);
-  const [tenDayPaywallOpen, setTenDayPaywallOpen] = useState(false);
-  // Fanget i klikk-handleren (aldri under render — react-hooks/refs) og gitt
-  // videre som PaywallDialog sin returnFocusTo (samme mønster som
-  // InnstillingerScreen.tsx sin paywallReturnFocusTo).
-  const [tenDayPaywallReturnFocusTo, setTenDayPaywallReturnFocusTo] =
-    useState<HTMLElement | null>(null);
-
-  const handleOpenTenDayPaywall = () => {
-    void fire('light');
-    setTenDayPaywallReturnFocusTo(tenDayCtaRef.current);
-    setTenDayPaywallOpen(true);
+function phaseFromHourly(
+  point: WeatherHourly,
+  ageMonths: number,
+  activity: Activity,
+  vognMode: VognMode,
+): Phase {
+  const engineInput: RecommendInput = {
+    weather: {
+      tempC: point.tempC,
+      feelsLikeC: point.feelsLikeC,
+      windMs: point.windMs,
+      precipMmH: point.precipMmH,
+      symbolCode: point.symbolCode,
+    },
+    child: { ageMonths },
+    activity,
+    ...(activity === 'vogn' ? { vognMode } : {}),
   };
+  return Object.freeze({
+    recommendation: recommend(engineInput),
+    engineInput,
+    weather: Object.freeze({
+      atIso: point.time.toISOString(),
+      tempC: point.tempC,
+      feelsLikeC: point.feelsLikeC,
+      windMs: point.windMs,
+      precipMmH: point.precipMmH,
+      symbolCode: point.symbolCode,
+    }),
+  });
+}
 
-  // R3 (2026-07-14): hoistet dob slik at memo-deps matcher inferert
-  // avhengighet (react-hooks/preserve-manual-memoization).
+function phaseFromDay(
+  day: WeatherDayAtHour,
+  ageMonths: number,
+  activity: Activity,
+  vognMode: VognMode,
+): Phase {
+  const engineInput: RecommendInput = {
+    weather: {
+      tempC: day.tempC,
+      feelsLikeC: day.feelsLikeC,
+      windMs: day.windMs,
+      precipMmH: day.precipMmH,
+      symbolCode: day.symbolCode,
+    },
+    child: { ageMonths },
+    activity,
+    ...(activity === 'vogn' ? { vognMode } : {}),
+  };
+  return Object.freeze({
+    recommendation: recommend(engineInput),
+    engineInput,
+    weather: Object.freeze({
+      atIso: new Date(
+        day.date.getFullYear(),
+        day.date.getMonth(),
+        day.date.getDate(),
+        day.refHour,
+      ).toISOString(),
+      tempC: day.tempC,
+      feelsLikeC: day.feelsLikeC,
+      windMs: day.windMs,
+      precipMmH: day.precipMmH,
+      symbolCode: day.symbolCode,
+    }),
+  });
+}
+
+function currentPhase(
+  phases: readonly Phase[],
+  evaluatedAt: number,
+): Phase | null {
+  return [...phases]
+    .filter((phase) => Date.parse(phase.weather.atIso) <= evaluatedAt)
+    .at(-1) ?? phases[0] ?? null;
+}
+
+function PlanleggData({
+  onOpenPlannedOutfit,
+  requestedPlanView,
+  requestedPlanViewToken,
+  onConsumeRequestedPlanView,
+}: Pick<
+  Props,
+  | 'onOpenPlannedOutfit'
+  | 'requestedPlanView'
+  | 'requestedPlanViewToken'
+  | 'onConsumeRequestedPlanView'
+>) {
+  const { active } = useChildren();
+  const e2eFixture = planningE2EFixture();
+  const { fire } = useHapticSystem();
+  const swaps = useSwapOverride((state) => state.swaps);
+  const { isPremium, loading: accessLoading } = useAccess();
+  const locationMode = useLocationPref((state) => state.mode);
+  const automaticPlace = useLocationPref((state) => state.automaticPlace);
+  const storedFixedHome = active ? {
+    childId: active.id,
+    city: active.city,
+    lat: active.lat,
+    lon: active.lon,
+  } : {
+    childId: '__fallback__',
+    city: 'Elverum',
+    lat: DEFAULT_LAT,
+    lon: DEFAULT_LON,
+  };
+  const fixedHome = e2eFixture?.fixedHome
+    ? { childId: '__e2e__', ...e2eFixture.fixedHome }
+    : storedFixedHome;
+  const effectiveLocationMode = e2eFixture?.automatic?.mode ?? locationMode;
+  const effectiveAutomaticPlace = e2eFixture?.automatic
+    ? {
+        childId: fixedHome.childId,
+        generation: 1,
+        ...e2eFixture.automatic.place,
+      }
+    : automaticPlace;
+  const locationAccess = resolveRuntimeCapabilityAccess(
+    'automatic_location',
+    { isPlus: isPremium, authenticated: false, loading: accessLoading },
+    PLUS_FEATURE_AVAILABILITY,
+  );
+  const effectivePlace = resolveEffectivePlace(
+    fixedHome,
+    effectiveLocationMode,
+    locationAccess,
+    effectiveAutomaticPlace,
+  );
+  const lat = effectivePlace?.lat ?? 0;
+  const lon = effectivePlace?.lon ?? 0;
+  const city = effectivePlace === null
+    ? 'Sted mangler'
+    : effectivePlace.source === 'automatic'
+      ? `Nåværende sted · ${effectivePlace.city}`
+      : `Fast sted · ${effectivePlace.city}`;
+  const childName = active?.name || 'barnet';
   const activeDob = active?.dob;
   const ageMonths = useMemo(
     () => (activeDob ? dobToAgeMonths(activeDob) : 12),
     [activeDob],
   );
+  const [activity] = useState<Activity>('utelek');
+  const vognMode: VognMode = 'awake';
+  const [refreshKey, setRefreshKey] = useState(0);
+  const weather = useWeather(lat, lon, FALLBACK_REF_HOUR, refreshKey, {
+    cacheScope: effectivePlace?.cacheScope ?? 'persistent',
+    source: effectivePlace?.source ?? 'fixed-home',
+  }, effectivePlace !== null);
+  const [tab, setTab] = useState<ViewTab>('today');
+  const consumedRequestedPlanViewToken = useRef<number | null>(null);
 
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
-
-  // ─────────────────────────────────────────────────────────────────
-  // PHASES — felles arkitektur for begge tabs.
-  // "I dag": 4 faser sentrert på refHour (-6h/-2h/+2h/+6h, clamped 0-23)
-  // "10 dager": 10 faser, én per dag, hver på refHour
-  // ─────────────────────────────────────────────────────────────────
-
-  /** I dag-tab: 4 tids-slots rundt refHour (clamped). */
-  const todayHourSlots = useMemo<number[]>(() => {
-    const offsets = [-6, -2, 2, 6];
-    const slots = offsets
-      .map((d) => Math.min(23, Math.max(0, refHour + d)))
-      .filter((h, i, arr) => arr.indexOf(h) === i)
-      .sort((a, b) => a - b);
-    return slots;
-  }, [refHour]);
-
-  /** Bygg phase-array for aktiv tab. */
-  const phases = useMemo<Phase[]>(() => {
-    if (weather.status !== 'ready') return [];
-
-    if (tab === 'today') {
-      if (weather.hourly.length === 0) return [];
-      return todayHourSlots.map((hour) => {
-        const point = pickHourly(weather.hourly, hour);
-        if (!point) {
-          return {
-            hour,
-            date: today,
-            isToday: true,
-            tempC: null,
-            band: bandForCount(0),
-            symbolCode: 'cloudy',
-            recommendation: null,
-            engineInput: null,
-          };
-        }
-        const engineInput: RecommendInput = {
-          weather: {
-            tempC: point.tempC,
-            feelsLikeC: point.feelsLikeC,
-            windMs: point.windMs,
-            precipMmH: point.precipMmH,
-            symbolCode: point.symbolCode,
-          },
-          child: { ageMonths },
-          activity,
-          ...(activity === 'vogn' ? { vognMode } : {}),
-        };
-        const rec = recommend(engineInput);
-        const total = rec.layers.reduce((sum, l) => sum + l.items.length, 0);
-        return {
-          hour,
-          date: today,
-          isToday: true,
-          tempC: Math.round(point.tempC),
-          band: bandForCount(total),
-          symbolCode: point.symbolCode,
-          recommendation: rec,
-          engineInput,
-        };
-      });
+  useEffect(() => {
+    if (
+      requestedPlanView !== 'snart'
+      || requestedPlanViewToken === null
+      || consumedRequestedPlanViewToken.current === requestedPlanViewToken
+    ) {
+      return;
     }
-
-    // "10 dager"
-    if (weather.dailyAtHour.length === 0) return [];
-    return weather.dailyAtHour.slice(0, 10).map((day: WeatherDayAtHour) => {
-      const dayIsToday = isSameDay(day.date, today);
-      const engineInput: RecommendInput = {
-        weather: {
-          tempC: day.tempC,
-          feelsLikeC: day.feelsLikeC,
-          windMs: day.windMs,
-          precipMmH: day.precipMmH,
-          symbolCode: day.symbolCode,
-        },
-        child: { ageMonths },
-        activity,
-        ...(activity === 'vogn' ? { vognMode } : {}),
-      };
-      const rec = recommend(engineInput);
-      const total = rec.layers.reduce((sum, l) => sum + l.items.length, 0);
-      return {
-        hour: day.refHour,
-        date: day.date,
-        isToday: dayIsToday,
-        tempC: Math.round(day.tempC),
-        band: bandForCount(total),
-        symbolCode: day.symbolCode,
-        recommendation: rec,
-        engineInput,
-      };
+    consumedRequestedPlanViewToken.current = requestedPlanViewToken;
+    setTab('soon');
+    onConsumeRequestedPlanView(requestedPlanViewToken);
+  }, [onConsumeRequestedPlanView, requestedPlanView, requestedPlanViewToken]);
+  const [forecastOpen, setForecastOpen] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [paywallTrigger, setPaywallTrigger] = useState<HTMLElement | null>(null);
+  const [paywallTriggerType, setPaywallTriggerType] = useState<PaywallTrigger>('imorgen');
+  const [paywallAccessGeneration, setPaywallAccessGeneration] = useState(0);
+  const paywallActionRef = useRef<HTMLButtonElement | null>(null);
+  const availability = planningAvailability();
+  const weekAccess = useMemo(() => resolvePlanningViewAccess('week', {
+    isPlus: isPremium,
+    authenticated: false,
+    loading: accessLoading,
+  }, availability), [accessLoading, availability, isPremium]);
+  const todayAccess = useMemo(() => resolvePlanningViewAccess('today', {
+    isPlus: isPremium,
+    authenticated: false,
+    loading: false,
+  }, availability), [availability, isPremium]);
+  const soonAccess = useMemo(() => resolvePlanningViewAccess('soon', {
+    isPlus: e2eFixture?.entitlement === 'plus' ? true : e2eFixture?.entitlement === 'free' ? false : isPremium,
+    authenticated: false,
+    loading: e2eFixture?.entitlement === 'loading' ? true : accessLoading,
+  }, availability), [accessLoading, availability, e2eFixture?.entitlement, isPremium]);
+  const viewAccess = tab === 'today' ? todayAccess : tab === 'tenday' ? weekAccess : soonAccess;
+  const [snartEvaluator] = useState(() => createSnartSessionEvaluator({
+    resolveExactHome: resolveCommittedSnartHome,
+    lookupClimateProfile: (homePlaceKey) => {
+      if (e2eFixture?.climateProfile === 'invalid-hash') return null;
+      const climateProfileId = `snart-profile:v2:${homePlaceKey}`;
+      const climate = resolveSnartClimateProfile({
+        homePlaceKey,
+        climateProfileId,
+      });
+      return climate.status === 'available'
+        ? {
+            climateProfileId: climate.profile.profileId,
+            profileVersion: climate.packSha256,
+          }
+        : null;
+    },
+    buildModel: buildSnartPlan,
+    buildUnavailable: buildSnartUnavailable,
+  }));
+  const snartResult = useSyncExternalStore<SnartPlanResult | null>(
+    snartEvaluator.subscribe,
+    snartEvaluator.current,
+    () => null,
+  );
+  const snartProfileScope = active?.id ?? '__none__';
+  const effectiveSnartProfileScope = e2eFixture?.profileScope ?? snartProfileScope;
+  const snartWindow = e2eFixture?.windowLocalDate
+    ?? new Date().toLocaleDateString('en-CA', { timeZone: PLAN_TIME_ZONE });
+  useEffect(() => {
+    const generation = crypto.randomUUID();
+    if (!soonAccess.access.allowed) {
+      snartEvaluator.evaluate({
+        access: soonAccess.access,
+        generation,
+        window: snartWindow,
+        fixedHome: { city: '', lat: 0, lon: 0 },
+        ageEligibleForWholeWindow: false,
+      });
+      return () => snartEvaluator.teardown();
+    }
+    const targetWindow = buildSnartDateWindow(snartWindow, PLAN_TIME_ZONE);
+    const ageEligibleForWholeWindow = activeDob !== undefined
+      && targetWindow.status === 'available'
+      && isAgeEligibleForWholeWindow(activeDob, targetWindow.endLocalDate);
+    snartEvaluator.evaluate({
+      access: soonAccess.access,
+      generation,
+      window: snartWindow,
+      fixedHome: {
+        city: fixedHome.city,
+        lat: fixedHome.lat,
+        lon: fixedHome.lon,
+      },
+      ageEligibleForWholeWindow,
     });
-  }, [tab, weather.status, weather.hourly, weather.dailyAtHour, todayHourSlots, ageMonths, today, activity, vognMode]);
-
-  /**
-   * Swap-resolved phases: hver fase får layers byttet ut basert på
-   * swap-store. Band-count re-beregnes så pill-count oppdateres.
-   */
-  const resolvedPhases = useMemo<Phase[]>(() => {
-    const hasSwaps = Object.keys(swaps).length > 0;
-    if (!hasSwaps) return phases;
-    return phases.map((p) => {
-      if (!p.recommendation || !p.engineInput) return p;
-      // R2 (2026-07-14): swaps går gjennom den endelige sikkerhetsgrensen —
-      // aldri lokal array-mapping av en trusted Recommendation.
-      const swappedRec = applySwapsFinalized(p.engineInput, p.recommendation, swaps);
-      const total = swappedRec.layers.reduce((sum, l) => sum + l.items.length, 0);
-      return {
-        ...p,
-        recommendation: swappedRec,
-        band: bandForCount(total),
-      };
+    return () => snartEvaluator.teardown();
+  }, [
+    activeDob,
+    fixedHome.city,
+    fixedHome.lat,
+    fixedHome.lon,
+    snartEvaluator,
+    effectiveSnartProfileScope,
+    snartWindow,
+    soonAccess.access,
+  ]);
+  const markSnartAlreadyHave = useCallback((conceptId: string) => {
+    snartEvaluator.markAlreadyHave(conceptId);
+  }, [snartEvaluator]);
+  const [weekAccessTransition, setWeekAccessTransition] = useState(() => ({
+    state: weekAccess.access.state,
+    generation: 0,
+    lastResolved: weekAccess.access.state === 'allowed'
+      ? 'allowed' as const
+      : 'denied' as const,
+    paywallFocusPending: false,
+  }));
+  let currentWeekAccessTransition = weekAccessTransition;
+  if (weekAccessTransition.state !== weekAccess.access.state) {
+    const nextAccessState = weekAccess.access.state;
+    const lostLiveWeekAccess = weekAccessTransition.lastResolved === 'allowed'
+      && nextAccessState === 'denied';
+    currentWeekAccessTransition = {
+      state: nextAccessState,
+      generation: nextAccessState === 'neutral'
+        ? weekAccessTransition.generation + 1
+        : weekAccessTransition.generation,
+      lastResolved: nextAccessState === 'neutral'
+        ? weekAccessTransition.lastResolved
+        : nextAccessState,
+      paywallFocusPending: nextAccessState === 'neutral'
+        ? paywallOpen
+          && paywallAccessGeneration === weekAccessTransition.generation
+        : weekAccessTransition.state === 'neutral'
+          && weekAccessTransition.paywallFocusPending,
+    };
+    setWeekAccessTransition(currentWeekAccessTransition);
+    if (nextAccessState === 'neutral') setForecastOpen(false);
+    if (lostLiveWeekAccess) {
+      setForecastOpen(false);
+      setTab('today');
+    }
+  }
+  useLayoutEffect(() => {
+    if (
+      weekAccess.access.state === 'neutral'
+      || !currentWeekAccessTransition.paywallFocusPending
+    ) {
+      return;
+    }
+    const focusTarget = paywallActionRef.current
+      ?? document.getElementById('main');
+    if (focusTarget) {
+      focusTarget.focus();
+    }
+  }, [
+    currentWeekAccessTransition.generation,
+    currentWeekAccessTransition.paywallFocusPending,
+    weekAccess.access.state,
+  ]);
+  const closePaywall = useCallback(() => {
+    setPaywallOpen(false);
+    window.requestAnimationFrame(() => {
+      const focusTarget = paywallActionRef.current
+        ?? document.getElementById('main');
+      focusTarget?.focus();
     });
+  }, [setPaywallOpen]);
+  const openPaywall = useCallback((trigger: PaywallTrigger, element: HTMLButtonElement) => {
+    setPaywallTrigger(element);
+    setPaywallTriggerType(trigger);
+    setPaywallAccessGeneration(currentWeekAccessTransition.generation);
+    setPaywallOpen(true);
+  }, [currentWeekAccessTransition.generation]);
+  const changeRailHeadStyle: CSSProperties = {
+    fontSize: '1.25rem',
+    fontWeight: 640,
+    lineHeight: 1.25,
+  };
+
+  const activeForecast = weather.status === 'offline'
+    ? weather.offlineForecast
+    : weather.forecast;
+  const activeHourly = useMemo(
+    () => activeForecast ? extractHourly(activeForecast, 48) : weather.hourly,
+    [activeForecast, weather.hourly],
+  );
+  const activeDaily = useMemo(
+    () => activeForecast
+      ? extractDailyAtHour(activeForecast, FALLBACK_REF_HOUR, 10)
+      : weather.dailyAtHour,
+    [activeForecast, weather.dailyAtHour],
+  );
+
+  const phases = useMemo<readonly Phase[]>(() => {
+    if (weather.status !== 'ready' && weather.status !== 'offline') return Object.freeze([]);
+    if (tab === 'tenday' && viewAccess.presentation !== 'full') {
+      return Object.freeze([]);
+    }
+    if (!Number.isInteger(ageMonths) || ageMonths < 0 || ageMonths > 24) {
+      return Object.freeze([]);
+    }
+    if (tab === 'tenday') {
+      return Object.freeze(activeDaily.map(
+        (day) => phaseFromDay(day, ageMonths, activity, vognMode),
+      ));
+    }
+    const evaluatedAt = weather.evidence?.metadata.evaluatedAt ?? 0;
+    const localDate = new Date(evaluatedAt).toLocaleDateString('en-CA', {
+      timeZone: PLAN_TIME_ZONE,
+    });
+    return Object.freeze([6, 10, 14, 18].flatMap((hour) => {
+      const point = pickHourly(activeHourly, hour, localDate);
+      return point ? [phaseFromHourly(point, ageMonths, activity, vognMode)] : [];
+    }));
+  }, [
+    activeDaily,
+    activeHourly,
+    activity,
+    ageMonths,
+    tab,
+    viewAccess.presentation,
+    vognMode,
+    weather.evidence?.metadata.evaluatedAt,
+    weather.status,
+  ]);
+
+  const resolvedPhases = useMemo<readonly Phase[]>(() => {
+    if (Object.keys(swaps).length === 0) return phases;
+    return Object.freeze(phases.map((phase) => Object.freeze({
+      ...phase,
+      recommendation: applySwapsFinalized(
+        phase.engineInput,
+        phase.recommendation,
+        swaps,
+      ),
+    })));
   }, [phases, swaps]);
 
-  // R7 Task 5: «Endringer i dag»-rail — kun de meningsfulle plaggendringene
-  // gjennom dagens tidsslots. Additivt over time-for-time (rører ikke den
-  // premium-gatede 10-dagers-flyten). Fingerprint = ordnede plagg-labels.
-  const todayChangeRows = useMemo(() => {
-    if (tab !== 'today') return [];
-    const points = resolvedPhases
-      .filter((p) => p.recommendation)
-      .map((p) => {
-        const rec = p.recommendation!;
-        const ordered = rec.layers.filter((l) => l.category !== 'utstyr').flatMap((l) => l.items);
-        const equipment = rec.layers.find((l) => l.category === 'utstyr')?.items ?? [];
-        return {
-          hour: p.hour,
-          fingerprint: [...ordered, ...equipment].join('|'),
-          orderedGarments: ordered,
-          equipment,
-          feelsLikeC: p.tempC ?? 0,
-          symbolCode: p.symbolCode,
-        };
+  const planningEvaluation = useMemo<PlanningEvaluation>(() => {
+    if (
+      tab === 'soon'
+      || (tab === 'tenday' && viewAccess.presentation !== 'full')
+      || !weather.evidence
+      || effectivePlace === null
+      || weather.evidence.coverage.status === 'unavailable'
+      || !Number.isInteger(ageMonths)
+      || ageMonths < 0 || ageMonths > 24
+    ) {
+      return EMPTY_PLANNING_EVALUATION;
+    }
+
+    const facts = resolvedPhases.flatMap((phase) => {
+      const orderedGarments = phase.recommendation.layers
+        .filter((layer) => layer.category !== 'utstyr')
+        .flatMap((layer) => layer.items);
+      const equipment = phase.recommendation.layers
+        .filter((layer) => layer.category === 'utstyr')
+        .flatMap((layer) => layer.items);
+      if (orderedGarments.length === 0) return [];
+      const fingerprint = finalizedFingerprint(orderedGarments, equipment);
+      const point: PlanningPoint = Object.freeze({
+        atIso: phase.weather.atIso,
+        finalizedFingerprint: fingerprint,
+        orderedGarments: Object.freeze([...orderedGarments]),
+        equipment: Object.freeze([...equipment]),
+        cause: `${conditionLabel(phase.weather.symbolCode)} · føles som ${Math.round(phase.weather.feelsLikeC)}°`,
+        transitionContextId: `planning-transition:${phase.weather.atIso}:${fingerprint}`,
       });
-    if (points.length < 2) return [];
-    const events = deriveChangeEvents(points);
-    return buildRailRows(points[0].hour, points[points.length - 1].hour, events);
-  }, [tab, resolvedPhases]);
+      return [{ phase, point, fingerprint, orderedGarments, equipment }];
+    });
+    if (facts.length < 2) return EMPTY_PLANNING_EVALUATION;
 
-  const isLoading = weather.status === 'loading';
-  const isError = weather.status === 'error';
+    const points = Object.freeze(facts.map((fact) => fact.point));
+    const evaluatedAtEpoch = weather.evidence.metadata.evaluatedAt;
+    const evaluatedFact = [...facts]
+      .filter((fact) => Date.parse(fact.point.atIso) <= evaluatedAtEpoch)
+      .at(-1) ?? facts[0]!;
+    const viewModel = buildPlanViewModel({
+      status: weather.status === 'offline' ? 'offline' : 'ready',
+      coverage: weather.evidence.coverage,
+      points,
+      forecast: facts.map((fact) => ({
+        atIso: fact.phase.weather.atIso,
+        tempC: fact.phase.weather.tempC,
+        feelsLikeC: fact.phase.weather.feelsLikeC,
+        symbolCode: fact.phase.weather.symbolCode,
+      })),
+      evaluatedAtIso: evaluatedFact.point.atIso,
+      ...(weather.status === 'offline'
+        ? { cachedAtIso: new Date(weather.evidence.metadata.fetchedAt).toISOString() }
+        : {}),
+    });
+    if (viewModel.status === 'loading' || viewModel.status === 'error') {
+      return EMPTY_PLANNING_EVALUATION;
+    }
+    const events = viewModel.events;
+    const planCapability = viewAccess.capability;
+    const access = viewAccess.access.decision;
+    const factByIso = new Map(facts.map((fact) => [fact.point.atIso, fact]));
+    const contextEntries: Array<readonly [string, PlannedOutfitContext]> = [];
+    const outfitAvailabilityByEventId: Record<string, boolean> = {};
 
-  // F81.5-W2 (Flate 1): teaser-modus for 10-dagers-tab, ikke-Premium.
-  const showTenDayTeaser = shouldShowTenDayTeaser(tab, isPremium);
+    for (const event of events) {
+      const fact = factByIso.get(event.atIso);
+      if (!fact) continue;
+      const context = createPlannedOutfitContext({
+        planningEventId: event.id,
+        transitionContextId: event.transitionContextId,
+        child: {
+          id: active?.id ?? 'default-child',
+          name: childName,
+          ageMonths,
+        },
+        plannedForIso: event.atIso,
+        timeZone: PLAN_TIME_ZONE,
+        place: {
+          label: city,
+          lat,
+          lon,
+          source: effectivePlace.source,
+        },
+        activity,
+        vognMode: activity === 'vogn' ? vognMode : null,
+        weather: {
+          tempC: fact.phase.weather.tempC,
+          feelsLikeC: fact.phase.weather.feelsLikeC,
+          windMs: fact.phase.weather.windMs,
+          precipMmH: fact.phase.weather.precipMmH,
+          symbolCode: fact.phase.weather.symbolCode,
+        },
+        recommendInput: fact.phase.engineInput,
+        finalizedRecommendation: fact.phase.recommendation,
+        access: {
+          capability: planCapability,
+          allowed: access.allowed,
+          reason: access.reason,
+        },
+      });
+      contextEntries.push([event.id, context]);
+      outfitAvailabilityByEventId[event.id] = access.allowed;
+    }
 
-  const changeRailWrapStyle: CSSProperties = {
-    padding: '4px 4px 16px', marginBottom: 8, borderBottom: `1px solid ${TOKENS.ink100}`,
-  };
-  const changeRailHeadStyle: CSSProperties = {
-    fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
-    color: TOKENS.ink500, margin: '0 0 10px 2px',
-  };
+    const eventById = new Map(events.map((event) => [event.id, event]));
+    const rows = Object.freeze(viewModel.rows.flatMap((row): PlanChangeRailRow[] => {
+      if (row.type === 'unchanged') {
+        return [{ id: row.id, type: 'unchanged', copy: row.copy }];
+      }
+      const event = eventById.get(row.eventId);
+      if (!event) return [];
+      const presentationEvent: PlanningRailEvent = {
+        id: event.id,
+        atIso: event.atIso,
+        kind: event.kind,
+        addedGarments: event.addedGarments,
+        removedGarments: event.removedGarments,
+        cause: event.cause,
+        ...(event.transition ? { transition: event.transition } : {}),
+      };
+      return [{
+        id: row.id,
+        type: 'change',
+        eventId: row.eventId,
+        atIso: row.atIso,
+        hasOutfit: outfitAvailabilityByEventId[row.eventId] === true,
+        event: presentationEvent,
+      }];
+    }));
 
-  // F80c: Sone 1 — data-temp fra dagens feels-like (weather.now), samme
-  // kilde/terskler som HjemScreen. Faller tilbake til 'mild' mens weather
-  // laster (tempAxisFor håndterer null/undefined trygt).
-  const tempAxis = tempAxisFor(weather.now?.feelsLikeC, weather.now?.tempC);
+    return Object.freeze({
+      status: viewModel.status,
+      verdict: viewModel.verdict,
+      nextAction: viewModel.nextAction,
+      events,
+      rows,
+      candidateEventIds: viewModel.candidateEventIds,
+      forecast: viewModel.forecast,
+      contextsByEventId: Object.freeze(new Map(contextEntries)),
+      preferredEventId: viewModel.candidateEventIds[0] ?? null,
+      hasEvaluatedPlan: true,
+    });
+  }, [
+    active?.id,
+    activity,
+    ageMonths,
+    childName,
+    city,
+    effectivePlace,
+    lat,
+    lon,
+    resolvedPhases,
+    tab,
+    viewAccess.access.decision,
+    viewAccess.capability,
+    viewAccess.presentation,
+    vognMode,
+    weather.evidence,
+    weather.status,
+  ]);
 
-  // ──────────────── styles ────────────────
+  const planningEventIds = useMemo(
+    () => planningEvaluation.events.map((event) => event.id),
+    [planningEvaluation.events],
+  );
+  const planningSelectionScope = JSON.stringify(planningEventIds);
+  const [planningSelection, setPlanningSelection] = useState(() => ({
+    scope: planningSelectionScope,
+    selectedEventId: repairPlanningSelection(
+      null,
+      planningEventIds,
+      planningEvaluation.preferredEventId,
+    ),
+  }));
+  let selectedEventId = planningSelection.selectedEventId;
+  if (planningSelection.scope !== planningSelectionScope) {
+    selectedEventId = repairPlanningSelection(
+      planningSelection.selectedEventId,
+      planningEventIds,
+      planningEvaluation.preferredEventId,
+    );
+    setPlanningSelection({
+      scope: planningSelectionScope,
+      selectedEventId,
+    });
+  }
+  const setSelectedEventId = useCallback((eventId: string | null) => {
+    setPlanningSelection((current) => ({
+      ...current,
+      selectedEventId: eventId,
+    }));
+  }, [setPlanningSelection]);
+  const latestPlanningEvaluationRef = useRef(planningEvaluation);
+  useLayoutEffect(() => {
+    latestPlanningEvaluationRef.current = planningEvaluation;
+  }, [planningEvaluation]);
+  const openPlannedOutfit = useCallback((
+    eventId: string,
+    trigger: HTMLElement,
+  ) => {
+    const latestPlanningEvaluation = latestPlanningEvaluationRef.current;
+    const context = resolvePlannedOutfitContext(
+      eventId,
+      latestPlanningEvaluation.events,
+      latestPlanningEvaluation.contextsByEventId,
+    );
+    if (!context || !context.access.allowed) return;
+    onOpenPlannedOutfit(context, trigger);
+  }, [onOpenPlannedOutfit]);
 
-  const shellStyle: CSSProperties = {
-    minHeight: '100dvh',
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: TOKENS.warmGrey,
-    fontFamily: TOKENS.fontSans,
-    color: TOKENS.ink900,
-    fontFeatureSettings: "'ss01', 'cv11'",
-    WebkitFontSmoothing: 'antialiased',
-  };
+  const evaluatedAt = weather.evidence?.metadata.evaluatedAt ?? 0;
+  const selectedContext = selectedEventId
+    ? planningEvaluation.contextsByEventId.get(selectedEventId) ?? null
+    : null;
+  const fallbackPhase = currentPhase(resolvedPhases, evaluatedAt);
+  const temperatureContext = selectedContext?.weather ?? fallbackPhase?.weather ?? weather.now;
+  const tempAxis = tempAxisFor(
+    temperatureContext?.feelsLikeC,
+    temperatureContext?.tempC,
+  );
+  let statusState: PlanleggStatusState = { status: 'ready' };
+  const onRetry = useCallback(() => {
+    setRefreshKey((current) => current + 1);
+  }, [setRefreshKey]);
+  const isWeekView = tab === 'tenday';
+  const isWeekFull = isWeekView && viewAccess.presentation === 'full';
+  const isWeekTeaser = isWeekView && viewAccess.presentation === 'teaser';
+  const isWeekNeutral = isWeekView && viewAccess.presentation === 'neutral';
+  const isSoonView = tab === 'soon';
+  if (weather.status === 'loading' || weather.status === 'idle') {
+    statusState = { status: 'loading' };
+  } else if (
+    (weather.status === 'error' && !isWeekTeaser && !isWeekNeutral)
+    || (
+      (weather.status === 'ready' || weather.status === 'offline')
+      && !planningEvaluation.hasEvaluatedPlan
+      && (!isWeekView || isWeekFull)
+    )
+  ) {
+    statusState = { status: 'error', onRetry };
+  } else if (weather.status === 'offline') {
+    statusState = {
+      status: 'offline',
+      cachedAtIso: new Date(weather.evidence?.metadata.fetchedAt ?? evaluatedAt).toISOString(),
+      onRetry,
+    };
+  } else if (
+    weather.evidence?.coverage.status === 'sampled'
+    || weather.evidence?.coverage.status === 'gapped'
+  ) {
+    statusState = { status: 'partial' };
+  }
 
-  const screenStyle: CSSProperties = {
-    position: 'relative',
-    flex: 1,
-    minHeight: 0,
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    paddingTop: 'max(54px, env(safe-area-inset-top, 54px))',
-    background: TOKENS.warmGrey,
-  };
+  const freeWeekComparison = useMemo(() => {
+    if (
+      viewAccess.presentation !== 'teaser'
+      || (weather.status !== 'ready' && weather.status !== 'offline')
+      || !weather.evidence
+      || weather.evidence.coverage.status === 'unavailable'
+    ) {
+      return null;
+    }
+    const localDate = (date: Date) => date.toLocaleDateString('en-CA', {
+      timeZone: PLAN_TIME_ZONE,
+    });
+    const evaluatedDate = localDate(new Date(weather.evidence.metadata.evaluatedAt));
+    const [year, month, day] = evaluatedDate.split('-').map(Number);
+    if (!year || !month || !day) return null;
+    const nextCalendarDate = new Date(Date.UTC(year, month - 1, day + 1))
+      .toISOString()
+      .slice(0, 10);
+    const today = activeDaily.find((day) => localDate(day.date) === evaluatedDate);
+    const future = activeDaily.find(
+      (day) => localDate(day.date) === nextCalendarDate,
+    );
+    if (!today || !future) return null;
+    return Object.freeze({
+      todayC: Math.round(today.tempC),
+      futureC: Math.round(future.tempC),
+    });
+  }, [
+    activeDaily,
+    viewAccess.presentation,
+    weather.evidence,
+    weather.status,
+  ]);
 
-  const topBarStyle: CSSProperties = {
-    padding: '0 22px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    flex: 'none',
-  };
-
-  const cityPillStyle: CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '9px 14px 9px 12px',
-    borderRadius: 14,
-    background: TOKENS.surface,
-    border: `1px solid ${TOKENS.ink100}`,
-    backdropFilter: 'blur(10px)',
-    WebkitBackdropFilter: 'blur(10px)',
-    cursor: 'pointer',
-    color: TOKENS.ink900,
-    fontFamily: TOKENS.fontSans,
-    transition: reducedMotion ? 'none' : `transform 160ms ${TOKENS.easeOut}`,
-    touchAction: 'manipulation',
-    WebkitTapHighlightColor: 'transparent',
-  };
-
-  const cityDotStyle: CSSProperties = {
-    width: 7,
-    height: 7,
-    borderRadius: '50%',
-    background: TOKENS.orange,
-    // F80c: var-drevet tint (var(--accent-cta) er Granmynte-grønn i
-    // Morgennatt, ikke legacy warm-orange) — samme color-mix-mønster som
-    // HjemScreen sin avatar-glow-skygge.
-    boxShadow: '0 0 0 3px color-mix(in srgb, var(--accent-cta) 18%, transparent)',
-  };
-
-  const cityNameStyle: CSSProperties = {
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    letterSpacing: '-0.1px',
-    color: TOKENS.ink900,
-  };
-
-  const iconBtnStyle: CSSProperties = {
-    width: 44,
-    height: 44,
-    minWidth: 44,
-    minHeight: 44,
-    borderRadius: '50%',
-    background: TOKENS.surface,
-    border: `1px solid ${TOKENS.ink100}`,
-    display: 'grid',
-    placeItems: 'center',
-    cursor: 'pointer',
-    color: TOKENS.ink900,
-    padding: 0,
-    touchAction: 'manipulation',
-    WebkitTapHighlightColor: 'transparent',
-    transition: reducedMotion
-      ? 'none'
-      : `transform 160ms ${TOKENS.easeOut}, background 160ms ${TOKENS.easeOut}`,
-  };
-
-  const tabsWrapStyle: CSSProperties = {
-    margin: '18px 22px 0',
-    padding: 5,
-    display: 'flex',
-    gap: 4,
-    borderRadius: 999,
-    background: TOKENS.surfaceSoft,
-    border: `1px solid ${TOKENS.ink100}`,
-    flex: 'none',
-  };
-
-  const tabButtonStyle = (isActive: boolean): CSSProperties => ({
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 999,
-    border: 'none',
-    background: isActive ? TOKENS.surfacePure : 'transparent',
-    cursor: 'pointer',
-    fontFamily: TOKENS.fontSans,
-    fontSize: '0.9375rem',
-    fontWeight: isActive ? 700 : 600,
-    color: isActive ? TOKENS.ink900 : TOKENS.ink500,
-    boxShadow: isActive ? TOKENS.shadow1 : 'none',
-    touchAction: 'manipulation',
-    WebkitTapHighlightColor: 'transparent',
-    transition: reducedMotion
-      ? 'none'
-      : `background 200ms ${TOKENS.easeOut}, color 200ms ${TOKENS.easeOut}`,
-  });
-
-  // F81.5-W2 (Flate 1): synlig "Pluss"-chip på 10-dagers-tabben for
-  // ikke-Premium — aria-hidden, meningen ligger i tab-knappens aria-label.
-  const tabPlussChipStyle: CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    marginLeft: 6,
-    padding: '1px 6px',
-    borderRadius: 999,
-    fontSize: '0.5625rem',
-    fontWeight: 700,
-    letterSpacing: '0.3px',
-    textTransform: 'uppercase',
-    color: 'var(--accent-cta-ink)',
-    background: 'var(--accent-cta)',
-    verticalAlign: 'middle',
-  };
-
-  // ─── Vogn-modus segment-pill (vises BARE når activity === 'vogn') ────────
-  const vognModeWrapStyle: CSSProperties = {
-    margin: '8px 22px 0',
-    padding: 3,
-    display: 'inline-flex',
-    alignSelf: 'center',
-    gap: 4,
-    borderRadius: 999,
-    background: TOKENS.surfaceSoft,
-    border: `1px solid ${TOKENS.ink100}`,
-    flex: 'none',
-    minHeight: 36,
-  };
-
-  const vognModeBtnStyle = (selected: boolean): CSSProperties => ({
-    minHeight: 44,
-    minWidth: 86,
-    padding: '6px 16px',
-    borderRadius: 999,
-    border: 'none',
-    background: selected ? TOKENS.surfacePure : 'transparent',
-    cursor: 'pointer',
-    fontFamily: TOKENS.fontSans,
-    fontSize: '0.8125rem',
-    fontWeight: selected ? 700 : 600,
-    color: selected ? TOKENS.ink900 : TOKENS.ink500,
-    boxShadow: selected ? TOKENS.shadow1 : 'none',
-    touchAction: 'manipulation',
-    WebkitTapHighlightColor: 'transparent',
-    transition: 'none',
-  });
-
-  // ─── row-list ───
-  const groupCardStyle: CSSProperties = {
-    margin: '14px 22px 0',
-    background: TOKENS.warmGrey2,
-    borderRadius: 22,
-    border: `1px solid ${TOKENS.ink100}`,
-    overflow: 'hidden',
-    flex: 1,
-    minHeight: 0,
-    display: 'flex',
-    flexDirection: 'column',
-  };
-
-  const groupHeadStyle: CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '14px 18px 10px',
-    borderBottom: `1px solid ${TOKENS.warmGrey3}`,
-    flex: 'none',
-  };
-
-  const groupHeadTitleStyle: CSSProperties = {
-    margin: 0,
-    fontFamily: TOKENS.fontSans,
-    fontSize: '0.78125rem',
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    color: TOKENS.ink500,
-  };
-
-  const groupHeadMetaStyle: CSSProperties = {
-    fontSize: '0.75rem',
-    color: TOKENS.ink300,
-    fontWeight: 500,
-  };
-
-  // F81.5-W2 (Flate 1): ETT samlet låst-parti-kort for 10-dagers-teaser.
-  const tenDayTeaserCardStyle: CSSProperties = {
-    margin: '12px 14px 4px',
-    padding: '14px 16px',
-    borderRadius: 16,
-    background: TOKENS.surface,
-    border: `1px solid ${TOKENS.ink100}`,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: 10,
-    flex: 'none',
-  };
-
-  const tenDayTeaserTextStyle: CSSProperties = {
-    margin: 0,
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    color: TOKENS.ink900,
-    lineHeight: 1.35,
-  };
-
-  const tenDayTeaserBtnStyle: CSSProperties = {
-    minHeight: 44,
-    padding: '10px 18px',
-    borderRadius: 999,
-    border: 'none',
-    background: TOKENS.orange,
-    color: 'var(--accent-cta-ink)',
-    fontFamily: TOKENS.fontSans,
-    fontSize: '0.875rem',
-    fontWeight: 700,
-    letterSpacing: '-0.05px',
-    cursor: 'pointer',
-    boxShadow: TOKENS.shadowCta,
-    WebkitTapHighlightColor: 'transparent',
-    touchAction: 'manipulation',
-  };
-
-  const rowsListStyle: CSSProperties = {
-    listStyle: 'none',
-    padding: '6px 0',
-    margin: 0,
-    flex: 1,
-    minHeight: 0,
-    overflowY: 'auto',
-    overscrollBehaviorY: 'contain',
-    WebkitOverflowScrolling: 'touch',
+  const onViewChange = (nextTab: ViewTab) => {
+    dispatchPlanningInteraction(
+      decidePlanningInteraction({
+        type: 'view-date',
+        currentKey: tab,
+        nextKey: nextTab,
+      }),
+      {
+        onCue: (cue) => {
+          void fire(cue);
+        },
+      },
+    );
+    setTab(nextTab);
   };
 
-  /** Flat rad — ingen activeIdx-highlight. */
-  const rowStyle = (isLast: boolean): CSSProperties => ({
-    display: 'grid',
-    gridTemplateColumns: tab === 'today'
-      ? '64px 36px minmax(0, 1fr) auto'
-      : '92px 36px minmax(0, 1fr) auto',
-    alignItems: 'center',
-    gap: 10,
-    padding: '12px 14px',
-    margin: '4px 10px',
-    minHeight: 60,
-    borderBottom: 'none',
-    borderRadius: 16,
-    position: 'relative',
-    background: 'transparent',
-    border: '1px solid transparent',
-    marginBottom: isLast ? 14 : 4,
-  });
-
-  /** F67: rad-knapp innen <li> — full-bredde, transparent, åpner påkledning-sheet. */
-  const rowButtonStyle = (isLast: boolean): CSSProperties => ({
-    ...rowStyle(isLast),
-    cursor: 'pointer',
-    width: 'calc(100% - 20px)',
-    font: 'inherit',
-    color: 'inherit',
-    textAlign: 'left',
-    WebkitTapHighlightColor: 'transparent',
-    touchAction: 'manipulation',
-    transition: reducedMotion
-      ? 'none'
-      : `background 160ms ${TOKENS.easeOut}, border-color 160ms ${TOKENS.easeOut}`,
-  });
-
-  const rowTimeColStyle: CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    lineHeight: 1.1,
-  };
-
-  const rowTimeBigStyle: CSSProperties = {
-    fontSize: '0.9375rem',
-    fontWeight: 700,
-    color: TOKENS.ink900,
-    letterSpacing: '-0.2px',
-    fontVariantNumeric: 'tabular-nums',
-  };
-
-  const rowTimeSubStyle: CSSProperties = {
-    marginTop: 2,
-    fontSize: '0.71875rem',
-    fontWeight: 500,
-    color: TOKENS.ink300,
-  };
-
-  const rowIconStyle: CSSProperties = {
-    width: 36,
-    height: 36,
-    display: 'grid',
-    placeItems: 'center',
-  };
-
-  const rowTempWrapStyle: CSSProperties = {
-    display: 'flex',
-    alignItems: 'baseline',
-    gap: 8,
-    minWidth: 0,
-  };
-
-  const rowTempStyle: CSSProperties = {
-    fontFamily: TOKENS.fontSerif,
-    fontSize: '1.375rem',
-    lineHeight: 1,
-    color: TOKENS.ink900,
-    fontVariantNumeric: 'tabular-nums',
-  };
-
-  const bandPillStyle: CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '6px 10px 6px 6px',
-    borderRadius: 999,
-    background: TOKENS.surface,
-    border: `1px solid ${TOKENS.ink100}`,
-  };
-
-  const bandPipStyle = (bg: string): CSSProperties => ({
-    width: 22,
-    height: 22,
-    borderRadius: '50%',
-    background: bg,
-    color: '#fff',
-    fontSize: '0.71875rem',
-    fontWeight: 700,
-    display: 'grid',
-    placeItems: 'center',
-    fontVariantNumeric: 'tabular-nums',
-  });
-
-  const bandLabelStyle: CSSProperties = {
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    color: TOKENS.ink700,
-    letterSpacing: '-0.1px',
-  };
-
-  const ctaWrapStyle: CSSProperties = {
-    margin: '16px 22px 14px',
-    flex: 'none',
-  };
-
-  const ctaStyle: CSSProperties = {
-    width: '100%',
-    minHeight: 54,
-    borderRadius: 18,
-    border: 'none',
-    cursor: 'pointer',
-    background: TOKENS.orange,
-    color: 'var(--accent-cta-ink)',
-    fontFamily: TOKENS.fontSans,
-    fontSize: '1rem',
-    fontWeight: 700,
-    letterSpacing: '-0.1px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    boxShadow: TOKENS.shadowCta,
-    touchAction: 'manipulation',
-    WebkitTapHighlightColor: 'transparent',
-    transition: reducedMotion
-      ? 'none'
-      : `transform 160ms ${TOKENS.easeOut}, background 160ms ${TOKENS.easeOut}`,
-  };
-
-  const emptyStateStyle: CSSProperties = {
-    flex: 1,
-    minHeight: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '24px 22px',
-    color: TOKENS.ink500,
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    textAlign: 'center',
-  };
-
-  const srOnlyStyle: CSSProperties = {
-    position: 'absolute',
-    width: 1,
-    height: 1,
-    padding: 0,
-    margin: -1,
-    overflow: 'hidden',
-    clip: 'rect(0,0,0,0)',
-    whiteSpace: 'nowrap',
-    border: 0,
-  };
-
-  // ─── event-handlers ───
-  const onTabClick = (next: ViewTab) => {
-    if (next === tab) return;
-    setTab(next);
-    void fire('selection');
-  };
-
-  const onVognModeClick = (next: VognMode) => {
-    if (next === vognMode) return;
-    setVognMode(next);
-    void fire('selection');
-  };
-
-  const onCtaClick = () => {
-    void fire('medium');
-    onNavigate('hjem');
-  };
-
-  // ─── header-data ───
-  const nowSymbol = weather.now?.symbolCode ?? phases[0]?.symbolCode ?? 'fair';
-  const nowCond = conditionLabel(nowSymbol);
+  const showAdvice = statusState.status !== 'loading'
+    && statusState.status !== 'error'
+    && !isSoonView
+    && (!isWeekView || isWeekFull)
+    && planningEvaluation.hasEvaluatedPlan;
+  const forecastRows = planningEvaluation.hasEvaluatedPlan
+    ? planningEvaluation.forecast
+    : tab === 'tenday'
+      ? activeDaily.map((row) => ({
+        atIso: new Date(
+          row.date.getFullYear(),
+          row.date.getMonth(),
+          row.date.getDate(),
+          row.refHour,
+        ).toISOString(),
+        tempC: row.tempC,
+        feelsLikeC: row.feelsLikeC,
+        symbolCode: row.symbolCode,
+      }))
+      : activeHourly.map((row) => ({
+        atIso: row.time.toISOString(),
+        tempC: row.tempC,
+        feelsLikeC: row.feelsLikeC,
+        symbolCode: row.symbolCode,
+      }));
 
   return (
-    <div style={shellStyle}>
-      <main
-        style={screenStyle}
-        aria-labelledby="uke-heading"
-        className="ba-temp-root"
-        data-temp={tempAxis}
+    <>
+    <section
+      className="planlegg-screen ba-temp-root"
+      aria-labelledby="planlegg-title"
+      data-temp={tempAxis}
+      data-planlegg-access={isWeekFull ? 'plus-week' : undefined}
+    >
+      <header className="planlegg-screen__header">
+        <h1 id="planlegg-title">Planlegg</h1>
+        <p className="planlegg-screen__context">{childName} · {city}</p>
+      </header>
+
+      <div
+        className="planlegg-screen__views"
+        aria-disabled={statusState.status === 'error' ? 'true' : undefined}
+        inert={statusState.status === 'error' ? true : undefined}
       >
-        <h1 id="uke-heading" style={srOnlyStyle}>
-          Uke — time-for-time prognose med påkledning
-        </h1>
+        <SegmentedControl
+          legend="Velg planvisning"
+          options={[
+            { value: 'today', label: 'I dag' },
+            { value: 'tenday', label: 'Uke' },
+            ...(soonAccess.presentation === 'hidden'
+              ? []
+              : [{ value: 'soon' as const, label: 'Snart' }]),
+          ]}
+          value={tab}
+          onChange={onViewChange}
+        />
+      </div>
 
-        {/* Top-bar */}
-        <div style={topBarStyle}>
+      {!isSoonView && (
+        <PlanleggStatusNotice
+          state={statusState}
+          subject={isWeekView && !isWeekFull ? 'weather' : 'plan'}
+        />
+      )}
+
+      {isSoonView
+        && soonAccess.presentation === 'full'
+        && snartResult && (
+          <SnartPlan
+            result={snartResult}
+            onMarkAlreadyHave={markSnartAlreadyHave}
+          />
+      )}
+
+      {isSoonView && soonAccess.presentation === 'neutral' && (
+        <p className="planlegg-screen__week-weather" data-planlegg-access="neutral">
+          Sjekker tilgang til Snart.
+        </p>
+      )}
+
+      {isSoonView && soonAccess.presentation === 'teaser' && (
+        <section className="planlegg-screen__week-weather" data-planlegg-access="soon-teaser">
+          <h2>Snart</h2>
+          <p>Se historiske forberedelser med Babyora Plus.</p>
           <button
+            ref={paywallActionRef}
             type="button"
-            style={cityPillStyle}
-            aria-label={`Bytt sted, valgt: ${city}`}
-            onClick={() => void fire('selection')}
+            onClick={(event) => openPaywall('snart', event.currentTarget)}
           >
-            <span style={cityDotStyle} aria-hidden="true" />
-            <span style={cityNameStyle}>{city}</span>
-            <svg
-              width={12}
-              height={12}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke={TOKENS.ink500}
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+            Se historiske forberedelser med Babyora Plus
           </button>
-          <button
-            type="button"
-            aria-label="Varsler"
-            style={iconBtnStyle}
-            onClick={() => void fire('light')}
-          >
-            <svg
-              width={20}
-              height={20}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.8}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.7 21a2 2 0 0 1-3.4 0" />
-            </svg>
-          </button>
-        </div>
+        </section>
+      )}
 
-        {/* Tabs */}
-        <nav style={tabsWrapStyle} aria-label="Visning">
-          <button
-            type="button"
-            style={tabButtonStyle(tab === 'today')}
-            onClick={() => onTabClick('today')}
-            aria-pressed={tab === 'today'}
-          >
-            I dag
-          </button>
-          <button
-            type="button"
-            style={tabButtonStyle(tab === 'tenday')}
-            onClick={() => onTabClick('tenday')}
-            aria-pressed={tab === 'tenday'}
-            aria-label={isPremium ? 'Uke' : '10 dager, krever Babyora Pluss'}
-          >
-            Uke
-            {!isPremium && (
-              <span aria-hidden="true" style={tabPlussChipStyle}>Pluss</span>
-            )}
-          </button>
-        </nav>
-
-        {/* Vogn-modus mini-segment — KUN når activity === 'vogn'. */}
-        {activity === 'vogn' && (
-          <div
-            role="group"
-            aria-label="Vogn-modus"
-            style={vognModeWrapStyle}
-          >
-            <button
-              type="button"
-              onClick={() => onVognModeClick('awake')}
-              aria-pressed={vognMode === 'awake'}
-              style={vognModeBtnStyle(vognMode === 'awake')}
-            >
-              Våkent
-            </button>
-            <button
-              type="button"
-              onClick={() => onVognModeClick('sleeping')}
-              aria-pressed={vognMode === 'sleeping'}
-              style={vognModeBtnStyle(vognMode === 'sleeping')}
-            >
-              Sover
-            </button>
-          </div>
-        )}
-
-        {/* F67: RefHourPicker droppet — info kommer i rader uansett. */}
-
-        {/* Rad-liste — felles render for begge tabs */}
-        {isLoading ? (
-          <section
-            style={groupCardStyle}
-            aria-label="Henter prognose"
-            aria-busy="true"
-          >
-            <div style={groupHeadStyle}>
-              <h2 style={groupHeadTitleStyle}>
-                {tab === 'today' ? 'Time for time' : '10 dager fremover'}
-              </h2>
-              <span style={groupHeadMetaStyle}>
-                {childName} · {ageMonths} mnd
-              </span>
-            </div>
-            <ul style={rowsListStyle} role="list" aria-hidden="true">
-              {[0, 1, 2, 3].map((idx) => (
-                <li key={idx} style={rowStyle(idx === 3)}>
-                  <div style={rowTimeColStyle}>
-                    <Skeleton width={40} height={14} radius={6} ariaLabel="Henter tid" />
-                    <span style={{ marginTop: 4 }}>
-                      <Skeleton width={28} height={10} radius={5} ariaLabel="Henter dagdel" />
-                    </span>
-                  </div>
-                  <div style={rowIconStyle}>
-                    <Skeleton width={28} height={28} radius="50%" ariaLabel="Henter ikon" />
-                  </div>
-                  <div style={rowTempWrapStyle}>
-                    <Skeleton width={36} height={18} radius={6} ariaLabel="Henter temperatur" />
-                  </div>
-                  <Skeleton width={84} height={32} radius={999} ariaLabel="Henter påkledning" />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : isError ? (
-          <div style={emptyStateStyle} role="alert">
-            Kunne ikke hente vær akkurat nå.
-          </div>
-        ) : phases.length === 0 ? (
-          <div style={emptyStateStyle}>Ingen prognose tilgjengelig.</div>
-        ) : (
-          <section
-            style={groupCardStyle}
-            aria-label={tab === 'today' ? 'Time for time' : '10 dager fremover'}
-          >
-            <div style={groupHeadStyle}>
-              <h2 style={groupHeadTitleStyle}>
-                {tab === 'today' ? 'Time for time' : '10 dager fremover'}
-              </h2>
-              <span style={groupHeadMetaStyle}>
-                {childName} · {ageMonths} mnd · kl. {String(refHour).padStart(2, '0')}
-              </span>
-            </div>
-
-            {/* F81.5-W2 (Flate 1): ETT samlet låst-parti for 10-dagers-tab
-                ikke-Premium — erstatter de 10 enkelt-radenes antrekk-/lag-del
-                (bandPillStyle nedenfor rendres ikke i det hele tatt for
-                gratisbrukere, se map() under). Vær-dataen (dato/ikon/temp)
-                forblir synlig OG tilgjengelig for alle. */}
-            {showTenDayTeaser && (
-              <div style={tenDayTeaserCardStyle}>
-                <p style={tenDayTeaserTextStyle}>
-                  Se antrekk for alle 10 dagene med Babyora Pluss
+      {showAdvice && (
+        <>
+          <div className="planlegg-screen__answer">
+            {planningEvaluation.status === 'empty' ? (
+              <>
+                <p className="planlegg-screen__verdict">Ingen antrekksendringer</p>
+                <p className="planlegg-screen__empty">
+                  Babyora fant ingen endringer i perioden som er vurdert.
                 </p>
-                <button
-                  ref={tenDayCtaRef}
-                  type="button"
-                  style={tenDayTeaserBtnStyle}
-                  onClick={handleOpenTenDayPaywall}
-                  aria-haspopup="dialog"
-                >
-                  Prøv 7 dager gratis
-                </button>
-              </div>
+              </>
+            ) : (
+              <>
+                <p className="planlegg-screen__verdict">
+                  {planningEvaluation.verdict
+                    ? `Planlagt antrekk: ${planningEvaluation.verdict.summary}.`
+                    : 'Antrekket holder i de vurderte tidspunktene.'}
+                </p>
+                {planningEvaluation.nextAction && (
+                  <p className="planlegg-screen__action">
+                    {planningEvaluation.nextAction}
+                  </p>
+                )}
+              </>
             )}
+          </div>
 
-            {/* R7 Task 5: endringsrail — kun meningsfulle plaggendringer i dag.
-                Vises over time-for-time som svaret på «hva endrer seg?». */}
-            {tab === 'today' && !showTenDayTeaser && todayChangeRows.length > 0 && (
-              <div style={changeRailWrapStyle}>
-                <h3 style={changeRailHeadStyle}>Endringer i dag</h3>
-                <PlanChangeRail rows={todayChangeRows} />
-              </div>
+          <section className="planlegg-screen__rail" aria-labelledby="planlegg-rail-title">
+            <h2 id="planlegg-rail-title" style={changeRailHeadStyle}>Dagslinjen</h2>
+            <PlanChangeRail
+              rows={planningEvaluation.rows}
+              selectedEventId={selectedEventId}
+              onSelect={setSelectedEventId}
+              onOpenOutfit={openPlannedOutfit}
+            />
+          </section>
+        </>
+      )}
+
+      {isWeekNeutral && (
+        <p
+          className="planlegg-screen__week-weather"
+          data-planlegg-access="neutral"
+        >
+          Sjekker tilgang til ukeplanen.
+        </p>
+      )}
+
+      {isWeekTeaser
+        && statusState.status !== 'loading'
+        && (
+          <section
+            className="planlegg-screen__week-weather"
+            aria-labelledby="planlegg-free-week-title"
+            data-planlegg-access={freeWeekComparison
+              ? 'free-week-comparison'
+              : 'free-week-unavailable'}
+          >
+            <h2 id="planlegg-free-week-title">Ukevær</h2>
+            {freeWeekComparison ? (
+              <p data-weather-comparison>
+                I morgen ved middagstid: {freeWeekComparison.futureC}°.
+                {' '}I dag ved middagstid: {freeWeekComparison.todayC}°.
+              </p>
+            ) : (
+              <p>Værsammenligning er ikke tilgjengelig akkurat nå.</p>
             )}
-
-            <ul style={rowsListStyle} role="list">
-              {resolvedPhases.map((phase, idx) => {
-                const isLast = idx === resolvedPhases.length - 1;
-                const tempLabel = phase.tempC !== null ? `${phase.tempC}°` : '—';
-
-                const dayTimeCol = (
-                  <div style={rowTimeColStyle}>
-                    {tab === 'today' ? (
-                      <>
-                        <span style={rowTimeBigStyle}>
-                          {`${String(phase.hour).padStart(2, '0')}:00`}
-                        </span>
-                        <span style={rowTimeSubStyle}>
-                          {timeOfDayLabel(phase.hour)}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span style={rowTimeBigStyle}>
-                          {formatDayShort(phase.date, phase.isToday)}
-                        </span>
-                        <span style={rowTimeSubStyle}>
-                          kl. {String(phase.hour).padStart(2, '0')}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                );
-
-                // F81.5-W2: 10-dagers-teaser — dato/ikon/temp er fri værdata og
-                // forblir synlig OG tilgjengelig (ingen button, ingen
-                // antrekks-/lag-del). Klikk-til-sheet + band-pill droppes helt
-                // for gratisbrukere (se ETT samlet låst-parti over).
-                if (showTenDayTeaser) {
-                  return (
-                    <li
-                      key={`${tab}-${idx}-${phase.hour}-${phase.date.toISOString().slice(0, 10)}`}
-                      style={{ listStyle: 'none' }}
-                    >
-                      <div style={rowStyle(isLast)}>
-                        {dayTimeCol}
-                        <div style={rowIconStyle} aria-label={conditionLabel(phase.symbolCode)}>
-                          <WeatherIcon symbolCode={phase.symbolCode} size={28} />
-                        </div>
-                        <div style={rowTempWrapStyle}>
-                          <span style={rowTempStyle}>{tempLabel}</span>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                }
-
-                // F67: aria-label er handlingsorientert ("Vis påkledning for …")
-                // siden raden nå er en knapp som åpner påkledning-sheet.
-                const ariaLabel =
-                  tab === 'today'
-                    ? `Vis påkledning for kl ${String(phase.hour).padStart(2, '0')}:00. ${tempLabel}. ${phase.band.label} påkledning, ${phase.band.count} plagg.`
-                    : `Vis påkledning for ${formatDayShort(phase.date, phase.isToday)} kl. ${String(phase.hour).padStart(2, '0')}. ${tempLabel}. ${phase.band.label} påkledning, ${phase.band.count} plagg.`;
-
-                return (
-                  <li
-                    key={`${tab}-${idx}-${phase.hour}-${phase.date.toISOString().slice(0, 10)}`}
-                    style={{ listStyle: 'none' }}
-                  >
-                    <button
-                      type="button"
-                      style={rowButtonStyle(isLast)}
-                      aria-label={ariaLabel}
-                      onClick={() => {
-                        void fire('light');
-                        // Limitation: sheet bruker "current"-data uavhengig av
-                        // rad-time/dag. Per-fase-context er ikke wired enda.
-                        onOpenSheet();
-                      }}
-                    >
-                      {dayTimeCol}
-                      <div style={rowIconStyle} aria-label={conditionLabel(phase.symbolCode)}>
-                        <WeatherIcon symbolCode={phase.symbolCode} size={28} />
-                      </div>
-                      <div style={rowTempWrapStyle}>
-                        <span style={rowTempStyle} aria-hidden="true">
-                          {tempLabel}
-                        </span>
-                      </div>
-                      <span style={bandPillStyle}>
-                        <span style={bandPipStyle(phase.band.color)} aria-hidden="true">
-                          {phase.band.count}
-                        </span>
-                        <span style={bandLabelStyle}>{phase.band.label}</span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <button
+              ref={paywallActionRef}
+              type="button"
+              onClick={(event) => openPaywall('imorgen', event.currentTarget)}
+            >
+              Se uke med Babyora Plus
+            </button>
           </section>
         )}
 
-        {/* Primary CTA */}
-        {!isLoading && !isError && phases.length > 0 && (
-          <div style={ctaWrapStyle}>
-            <button
-              type="button"
-              style={ctaStyle}
-              onClick={onCtaClick}
-              aria-label={`Se forslag for ${childName} akkurat nå`}
-            >
-              <svg
-                width={18}
-                height={18}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M3 12h13" />
-                <path d="M13 6l7 6-7 6" />
-              </svg>
-              Se forslag for {childName} nå
-            </button>
-          </div>
-        )}
-
-        {/* Skjult condition-label så den ikke regresserer i markup */}
-        <span style={srOnlyStyle} aria-hidden="true">{nowCond}</span>
-      </main>
-
-      {/* Paywall-modal for 10-dagers-teaseren (F81.5-W2, Flate 1) */}
+      {!isSoonView
+        && (!isWeekView || isWeekFull)
+        && statusState.status !== 'loading'
+        && statusState.status !== 'error'
+        && (
+        <ForecastDisclosure
+          open={forecastOpen}
+          onToggle={() => setForecastOpen((current) => !current)}
+          rows={forecastRows}
+        />
+      )}
+    </section>
+    {paywallOpen && viewAccess.access.state !== 'neutral'
+      && paywallAccessGeneration === currentWeekAccessTransition.generation && (
       <PaywallDialog
-        open={tenDayPaywallOpen}
-        trigger="imorgen"
-        onClose={() => setTenDayPaywallOpen(false)}
-        returnFocusTo={tenDayPaywallReturnFocusTo}
+        open
+        trigger={paywallTriggerType}
+        onClose={closePaywall}
+        returnFocusTo={paywallTrigger}
       />
-    </div>
+    )}
+    </>
+  );
+}
+
+export function UkeScreen({
+  onOpenPlannedOutfit,
+  onNavigate: _onNavigate,
+  onOpenSheet: _onOpenSheet,
+  requestedPlanView,
+  requestedPlanViewToken,
+  onConsumeRequestedPlanView,
+}: Props) {
+  return (
+    <PlanleggData
+      onOpenPlannedOutfit={onOpenPlannedOutfit}
+      requestedPlanView={requestedPlanView}
+      requestedPlanViewToken={requestedPlanViewToken}
+      onConsumeRequestedPlanView={onConsumeRequestedPlanView}
+    />
   );
 }
 

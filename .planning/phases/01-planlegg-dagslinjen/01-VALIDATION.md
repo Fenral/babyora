@@ -1,163 +1,174 @@
 ---
-phase: 01
-slug: planlegg-dagslinjen
-status: approved_for_execution
-plan_count: 18
-nyquist_compliant: true
-wave_0_complete: false
-created: 2026-07-19
-updated: 2026-07-22
-media_gate: pending_owner_permission_after_stable_candidate
+phase: 01-planlegg-dagslinjen
+artifact: validation-strategy
+status: validated_autonomous_round_3
+updated: 2026-07-24
+plans_total: 18
+plans_completed: 12
+plans_remaining: 6
+remaining_autonomous: true
 ---
 
-# Phase 01 — Validation Strategy
+# Phase 01 — autonom valideringsstrategi
 
-> Exact validation map for 18 sequential plans and 45 tasks: 44 automated bindings plus one blocking human checkpoint. While implementation can still change, evidence is source-, test-, DOM-, accessibility- and interaction-based only. No new app screenshot, video or trace is created.
+## Gjeldende portstatus
 
-## Current gate truth
+- 01-01–01-12 er fullført historie. Planer, summaries, SHA-er og bevis derfra endres ikke.
+- 01-13 er ikke lenger en menneskelig blokkering. 01-13–01-18 er `autonomous: true` uten menneskelig stopptask, eiergodkjenning, fagport eller manuelt gjenopptakssignal.
+- Snart er nøytral historisk forberedelse. Helse, sikkerhet, kuldeeksponering, sol/UV, størrelse og passform er ute av scope.
+- Formell personvernreview er utsatt. De tekniske session-only/no-URL/no-storage/no-log/no-analytics/no-backend/no-identitet/no-tidshistorikk-invariantene er automatiske capability-porter.
+- `soon_preparation=false` til 01-16s eksakte aktiverte kandidat er grønn og dobbelt reviewet. `family_sharing=false` og `personal_calibration=false`.
+- Ingen ny app screenshot/video/trace mens flaten endres. Fase 1 fullføres på deterministisk tekst/DOM/E2E; fysisk/visuell 90+ konvergens eies av fase 4 og er ikke en 01-13–01-18-port.
+- Forventet ny kostnad er NOK 0. Ingen betalt fallback; en ny enkelt/aggregert forpliktelse over NOK 1 000 ligger utenfor det autonome løpet og pådras ikke.
+- Plannerens samlede scope-warning for 01-13–01-18 er eksplisitt akseptert: de seks planene er cohesive vertikale slices, og executorbudsjettet holdes ved tre selvstendig verifiserbare tasks per plan og maksimalt fem paths per task.
 
-- `wave_0_complete` remains **false** until Plan 01-01 actually creates and verifies every fixture/TODO/harness path.
-- `nyquist_compliant` is **true** for the repaired 18-plan package after fresh independent plan/UI/validation convergence against source SHA `e669afff0259750840393e8475f84afbc7937352`.
-- `01-SNART-RULES.md` remains exactly `snart-v1.0-draft` / `pending_approval` during planning. Plan `01-13-01` is the only blocking human checkpoint and must stop until all six approvals and independently supplied climate artifacts exist.
-- The corrected draft requires `empty` only when no group has a visible item. If actionable items are marked while a winning `not_yet` remains, S18 requires authoritative `ready` with only `not_yet` and no `Har allerede` action.
-- App media, physical-device checks, the media-based 90+ score and owner release remain **Pending**. `audit:prepare` and `audit:finalize` remain deferred.
+## Sekvens og rollbackgrenser
 
-## Test infrastructure
+| Plan | Ansvar | Må være sant ved utgang |
+|---|---|---|
+| 01-13 | Build-time generator, source/provenance, lisens, dekning, validator, datapakke | Byte-reproduserbar pack; hver kanoniske stedoppføring valid eller eksplisitt unavailable; review A+B PASS |
+| 01-14 | Runtime decoder, D+28–D+42, Babyora-heuristikk, copy, ren modell | ready/empty/unavailable og alle terskelgrenser grønne; capability false; review A+B PASS |
+| 01-15 | UI, session-only state, fast-hjem og access-first | Null advice før allowed; privacy source scan grønn; capability false; review A+B PASS |
+| 01-16 | Capability + dynamisk privacy/access/E2E | Samme executor aktiverer, tester og committer før reviewer; begge PASS binder faktisk activated SHA; feil rollbacker false |
+| 01-17 | Typed route-migrering | Guide/program→Snart uten replay; Min garderobe kun uroutbar, ikke bredt slettet; review A+B PASS |
+| 01-18 | Native haptics, bottomnav, full integrasjon | Full no-media suite og final review A+B PASS på én tuple |
 
-| Property | Contract |
-|---|---|
-| Unit/component | Vitest 4.1.8; pure functions and `react-dom/server`; no jsdom or Testing Library |
-| Browser | Repository TypeScript Playwright harness: `npx tsx e2e/planlegg.ts --case <name>` |
-| Browser fixture | 390×844, `Europe/Oslo`, frozen clock/weather/child/entitlement/location and invented data only |
-| Multi-step command | PowerShell 5.1-safe fail-fast wrapper: `cmd.exe /d /s /c "first && second"` |
-| Full deterministic run | `cmd.exe /d /s /c "node scripts/validate-snart-climate.mjs src/data/snart-climate-1991-2020-v1.json .planning/phases/01-planlegg-dagslinjen/01-SNART-CLIMATE-PROVENANCE.md && npm test && npm run lint && npm run build && npx tsx e2e/planlegg.ts --case native-polish && npx tsx e2e/planlegg.ts --case all"` |
-| Recording | Screenshot off, video off, trace off and no persisted browser media output |
-| Review | Every candidate is immutable; executor cannot PASS own work; any edit invalidates the prior verdict |
+Avhengighetskjede: `01-12 → 01-13 → 01-14 → 01-15 → 01-16 → 01-17 → 01-18`.
 
-## Review continuity
+## Immutable kandidat- og reviewprotokoll
 
-- Run each task's exact literal command below immediately after that task. Commands must remain byte-identical to their PLAN binding.
-- High-risk truth/context/entitlement/access/location/Snart slices require fresh approved high-risk verification on their exact candidate SHA.
-- Standard UI/routing slices that touch App/Uke boundaries also require high-risk regression review of unchanged contracts.
-- Plan 01-18 requires separate standard UI/code and high-risk truth/context/access verdicts on the same exact code SHA, recorded in a deterministic text-only packet.
-- One scoped repair cycle creates a new SHA and new reviews. A repeated unresolved disagreement stops and escalates to the owner.
+Hver høyrisikoport bruker `scripts/snart/review-gate.ts candidate|receipt|validate` og nøyaktig tre planbundne filer:
+
+```text
+evidence/<plan>-candidate.json
+evidence/<plan>-review-a.json
+evidence/<plan>-review-b.json
+```
+
+Candidatefilen genereres fra faktisk repository- og commandevidence og binder:
+
+```text
+gitSha
+treeSha
+cleanCodeWorktree
+contractSha256
+packSha256
+evidenceSha256
+```
+
+Krav:
+
+1. Den aktive `gsd-executor` leser sin faktiske collaboration-gitte canonical task name/agent ID og bruker agent-ID-en som `implementerAgentId`. Ingen mid-plan handoff er nødvendig.
+2. Etter immutable kandidatcommit kjører executoren `review-gate.ts candidate` med eksplisitte `--implementer-agent-id`/`--implementer-task-name` og identisk `executorIdentity` på stdin. Manglende/tomme/ulike felt er FAIL; verktøyet recomputer faktisk HEAD/tree/clean-state/contract/pack/evidence.
+3. Executoren starter begge reviewer før venting med eksakte `collaboration.spawn_agent`-kall: lane A bruker `agent_type:"gsd-code-reviewer"`, lane B `agent_type:"gsd-security-auditor"`, begge `fork_turns:"none"` og unike `task_name:"snart_<plan>_review_<lane>_attempt_<N>"`. Den reviewer aldri eget arbeid.
+4. Executoren bruker `collaboration.wait_agent`/`collaboration.list_agents`, tar canonical reviewer-ID-er fra toolresultatene og exact `FINAL_ANSWER` fra completion-eventene, og skriver først deretter A/B receipts med output/transcript SHA-256.
+5. `validate` recomputer lokale hasher/digests og krever distinkte reviewer agent/task-ID-er, begge ulik `implementerAgentId`, samme final SHA/evidence og PASS uten blocker/high. Executoren reconciler receipts mot toolresultatene fra samme agenttur.
+6. Receipts/hashes er uttrykkelig consistency-only og ikke kryptografisk autentisering av Codex-output. En ytre root-audit kan gjøres senere, men er ikke en nødvendig routing- eller completion-port.
+7. Hvis executorens canonical identitet, `spawn_agent`, `wait_agent`, `list_agents`, tool-returned reviewer-ID eller `FINAL_ANSWER` mangler, feiler planen lukket. Kodeendring etter review ugyldiggjør SHA og krever to nye task names/reviewer.
+8. Det tillates høyst tre komplette repair/review-forsøk. Uttømming gir `FAIL_REVIEW_CYCLES_EXHAUSTED`, capability false og teknisk FAIL uten menneskelig port.
+
+Plan 01-16 reviewes på faktisk aktiverte bytes: executoren setter bare `soon_preparation=true`, kjører hele matrisen, committer final activated SHA og starter deretter begge reviewer. Ved FAIL rollbackes false før reparasjon; hver ny true-kandidat får ny SHA og nye reviewer. Ingen post-review flaggpatch er tillatt.
+
+## Eksakt task-verifikasjonskart 01-13–01-18
+
+| Task | Bevis | Automatisk kommando |
+|---|---|---|
+| `01-13-01` | Selvstendig GREEN kontrakt for source/HTTP/home-place/grid/tid/leap/femdagersvindu/rounding/alder/review og boundary-fixtures | `npx vitest run scripts/snart/__tests__/contract-fixtures.test.ts` |
+| `01-13-02` | Sekvensiell builder, offline validator, 60-avledet canonical dekning, reproduserbarhet og unavailable-fail-closed | Plan 01-13 Task 2s eksakte `climate-pipeline` + fixture-validator-kommando |
+| `01-13-03` | Live refresh, to byte-identiske bygg, pack/manifest og actual-HEAD reviewtuple | Plan 01-13 Task 3s eksakte reproduce→validate→`review-gate validate`-kommando |
+| `01-14-01` | Strict packdecoder og 15 lokale datoer over DST | Plan 01-14 Task 1s data-validator + `snart-climate`/`snart-date-window`-tester |
+| `01-14-02` | 0/5/10/16, 2/4, copy, dedupe og tre tilstander | Plan 01-14 Task 2s fem fokussuiter + typecheck |
+| `01-14-03` | Ingen forbudte imports/identitetsfelt; full suite og to reviewer | Plan 01-14 Task 3s validator + full test/lint/build + `review-gate validate` |
+| `01-15-01` | Uttømmende tilgjengelig renderer uten lokal modelllogikk | Plan 01-15 Task 1s copy/model/component-suite + lint |
+| `01-15-02` | Access zero-call, session reset og privacy source scan | Plan 01-15 Task 2s session/privacy-suite + typecheck |
+| `01-15-03` | Skjult Uke/access-wiring med capability fortsatt false og to reviewer | Plan 01-15 Task 3s fokussuiter + full test/lint/build + `review-gate validate` |
+| `01-16-01` | Typed truthful paywall-trigger/copy mens alle capabilityflagg er false | Plan 01-16 Task 1s produkt-/paywalltester + build |
+| `01-16-02` | False-state readiness; browser access, tilstander, privacy og regresjoner via eksplisitt test-only override | Plan 01-16 Task 2s availability-suite + `snart`, `automatic-location`, `exact-context`, `semantic-rail`, `composition`, `access` |
+| `01-16-03` | Faktisk aktivert immutable SHA, to reviewer og fail-closed false rollback | Plan 01-16 Task 3s full suite + `snart` + `review-gate validate` |
+| `01-17-01` | Felles typed App→Uke one-shot request uten replay | Plan 01-17 Task 1s interactiontest + typecheck |
+| `01-17-02` | Kun uroutbar Min garderobe-gren fjernes | Plan 01-17 Task 2s route-suite + lint/build |
+| `01-17-03` | Cross-root focus/no-replay og high-risk regresjoner med to reviewer | Plan 01-17 Task 3s route/exact/access/location/snart + `review-gate validate` |
+| `01-18-01` | Native-only haptics, preference independence og web no-op | Plan 01-18 Task 1s interaction/haptics + typecheck |
+| `01-18-02` | Fire-root, 44px, aria-current, focus-visible og forced colors | Plan 01-18 Task 2s nav/haptics/types + lint/build |
+| `01-18-03` | Hele kandidaten, alle source scans, all E2E og to finalreviewer | Plan 01-18 Task 3s data-validator + full test/lint/build + `native-polish` + `all` + `review-gate validate` |
+
+Alle `<verify>`-kommandoer i PLAN-filene er autoritative og skal kjøres byte-for-byte. Hurtigtester bruker committede fixtures og krever ikke live MET. Bare eksplisitt 01-13 data-refresh bruker nettverk.
+
+## Browser-case-register
+
+| Case | Eier | Scope |
+|---|---|---|
+| `harness` | 01-01 | Deterministisk boot/no-media |
+| `location-containment` | 01-08 | Capability-off/manual zero-I/O |
+| `exact-context` | 01-06 | Trusted future DTO |
+| `semantic-rail` | 01-06 | ID-only rail og seks markører |
+| `composition` | 01-07 | Planlegg state/scroll/a11y |
+| `access` | 01-10 | Entitlement Free/loading/Plus/downgrade |
+| `automatic-location` | 01-12 | Memory-only exact place/context |
+| `snart` | 01-16 | Historikk, access, privacy, fast-hjem og tre modelltilstander |
+| `route-migration` | 01-17 | Guide/program→Snart, focus og no-replay |
+| `native-polish` | 01-18 | Bottomnav/motion/focus; ingen haptikk-call-count |
+| `all` | 01-18 | Alle deterministiske cases uten media |
+
+## Explicit no-media-port
+
+- Forbudt i 01-13–01-18: app screenshots, video, Playwright trace og mediaorienterte `audit:prepare`/`audit:finalize`.
+- Tillatt: DOM, computed style, geometry, overflow, keyboard, focus, semantics, storage-/URL-/transportspies og tekstlig command output.
+- E2E-konfigurasjonen skal eksplisitt ha screenshot/video/trace av.
+- `git status` og no-media scan skal bevise at ingen ny appmedia ble opprettet.
+- Ingen plan trenger eiermedia- eller fysisk-enhet-godkjenning for å fullføres. Fase 4 kan senere verifisere fysisk haptikk, VoiceOver/TalkBack, appmedia og 90+ konvergens uten å omskrive Phase 1 til Pending.
+
+## Source- og personvernsøk
+
+Finale porter skal bevise:
+
+- ingen runtimeimport av `scripts/snart`, THREDDS, Frost eller `fetch` fra Snart-domene/UI;
+- ingen Snart-write til URL/query/hash/history, localStorage, sessionStorage, IndexedDB eller Cache API;
+- ingen Snart-payload til logger, console, PostHog/analytics/tracing, beacon, XHR, fetch, API-route eller backend;
+- ingen barn-ID, navn, rå fødselsdato eller brukerhandlingstidspunkt i Snart state/output/fixtures/review;
+- ingen sol/UV, helse/sikkerhet, kuldeeksponering, størrelse/passform eller MET-endorsement i Snart-copy;
+- ingen `navigator.vibrate`, browser-history-router eller unsupported family/calibration claim.
 
 ## Multi-Source Coverage Audit
 
-| Source | Item or item group | Coverage | Plans |
-|---|---|---|---|
-| GOAL | Truthful immediate Planlegg decision; Free today at configured/fixed home; Plus only implemented future/place/Snart value; exact future drill; family remains unclaimed | COVERED | 01-02–01-18 |
-| REQ | GOV-01, GOV-02, GOV-03 | COVERED | 01-01, 01-07, 01-10 |
-| REQ | GOV-04, GOV-05, GOV-06 | COVERED | High-risk candidate/reviewer contracts across 01-02–01-18, final dual verdict in 01-18 |
-| REQ | TRUTH-01 | COVERED | 01-01–01-03, 01-07, 01-14 |
-| REQ | CTXT-01 | COVERED | 01-04–01-06 and current-context extension 01-12 |
-| REQ | UI-01 | COVERED | 01-01, 01-03, 01-06 |
-| REQ | UI-02 | COVERED | 01-07, 01-10, 01-12, 01-15–01-18 |
-| REQ | ACCESS-01 | COVERED | 01-08–01-17 |
-| REQ | A11Y-01 | COVERED | 01-01, 01-06–01-07, 01-15–01-16, 01-18 |
-| REQ | EVID-01, EVID-02 | COVERED | 01-01, 01-06–01-08, 01-10, 01-12, 01-16–01-18 |
-| RESEARCH | Responsibility map, existing-stack reuse and no new package/framework | COVERED | Exact file ownership and package prohibitions in all plans |
-| RESEARCH | Forecast currentness, coverage, timezone and offline truth | COVERED | 01-02–01-03; scope-aware preservation in 01-11–01-12 |
-| RESEARCH | Exact future context and controlled semantic rail | COVERED | 01-04–01-07 |
-| RESEARCH | Access/product truth and capability availability | COVERED | 01-08–01-10; entitlement freshness in 01-09 |
-| RESEARCH | Snart deterministic evidence/model/presentation | COVERED | Blocking approval 01-13; model 01-14; component/session 01-15; enable/E2E 01-16 |
-| RESEARCH | Native polish, haptics, shared navigation and validation architecture | COVERED | 01-18 plus per-task command matrix here |
-| CONTEXT | No standalone `01-CONTEXT.md` exists; locked owner decisions are carried by PROJECT/REQUIREMENTS/UI-SPEC/SNART-RULES: no app media while changing, no unsupported family claim, session-only `Har allerede`, App state-router semantics and capability-backed premium value | COVERED | 01-08–01-18 and explicit no-media gate |
-| DEFERRED | Screenshot/video/trace audit, physical-device evidence, 90+ score and release approval | EXCLUDED — explicitly deferred, never represented as PASS | Post-stable-candidate owner gate |
+| Source | ID/gruppe | Dekning | Plan | Status |
+|---|---|---|---|---|
+| GOAL | Phase 1 goal | Truthful Planlegg + capability-backed historisk Snart + exact context | 01-13–01-18 sammen med fullført 01-01–01-12 | COVERED |
+| REQ | GOV-01, GOV-02, GOV-03 | Scope, planformat og frozen kontrakter | 01-13, 01-15, 01-18 + fullført historikk | COVERED |
+| REQ | GOV-04, GOV-05, GOV-06 | Immutable slices, autonom repair og to fresh reviewer | Alle 01-13–01-18 | COVERED |
+| REQ | TRUTH-01 | Historisk/datatruth uten motorendring | 01-13–01-14 | COVERED |
+| REQ | CTXT-01 | Exact Outfit-context bevares | 01-17–01-18 regresjon + fullført 01-04–01-12 | COVERED |
+| REQ | UI-01, UI-02 | Planlegg/Snart semantic composition | 01-15–01-18 + fullført 01-06–01-07 | COVERED |
+| REQ | ACCESS-01 | Free/Plus/capability/fixed-home/session truth | 01-15–01-17 | COVERED |
+| REQ | A11Y-01 | 44px, keyboard, focus, motion/haptics/nav | 01-15–01-16, 01-18 | COVERED |
+| REQ | EVID-01, EVID-02 | No-media determinisme og exact-SHA review | 01-13–01-18 | COVERED |
+| RESEARCH | seNorge build-time, provenance, lisens, schema/hash/dekning | 01-13 | COVERED |
+| RESEARCH | D+28–D+42, derivation@1 og heuristics@1 | 01-14 | COVERED |
+| RESEARCH | Session privacy, fixed-home, access-first | 01-15–01-16 | COVERED |
+| RESEARCH | Capability, route, haptikk og final evidence | 01-16–01-18 | COVERED |
+| CONTEXT | D-01–D-04 | Autonomi, historikk-not-forecast, build-time-only, ingen fabrikasjon | 01-13–01-18 | COVERED |
+| CONTEXT | D-05–D-07 | Babyora-heuristikk, ingen health/solar/size, session-only privacy | 01-14–01-16 | COVERED |
+| CONTEXT | D-08–D-12 | To reviewer, kostnad, capability/family/calibration, no-media | 01-13–01-18 | COVERED |
 
-Audit result: every GOAL, requirement, applicable research constraint and recorded owner decision is covered; there is no unplanned in-scope item. Deferred media/device/release work remains visible as a gate rather than being silently omitted.
+Auditresultat: ingen in-scope kildepost mangler. Den gamle manuelle approvaljournalen, formell privacyreview, appmedia og fysisk/90+ review er ekskludert av nyere eierbeslutning eller flyttet til fase 4, ikke stille utelatt.
 
-## Exact per-task verification map
+## Faseparallelitet
 
-| Task ID | Behavior proved | Exact automated/manual gate | Status |
-|---|---|---|---|
-| `01-01-01` | Frozen invented fixtures and pending contracts | `npx vitest run src/lib/planning/__tests__/forecast-evidence.test.ts src/lib/planning/__tests__/timezone.test.ts src/lib/planning/__tests__/plan-view-model.test.ts src/lib/planning/__tests__/planned-outfit-context.test.ts src/lib/planning/__tests__/planning-interaction.test.ts src/lib/planning/__tests__/snart.test.ts` | Pending |
-| `01-01-02` | Case-selectable no-media harness | `cmd.exe /d /s /c "npm run build && npx tsx e2e/planlegg.ts --case harness"` | Pending |
-| `01-02-01` | Forecast cache provenance/currentness and stale recovery | `npx vitest run src/lib/met-no/__tests__/client.test.ts` | Pending |
-| `01-02-02` | Atomic weather hook plus Oslo/DST coverage | `npx vitest run src/hooks/__tests__/useWeather.test.ts src/lib/planning/__tests__/forecast-evidence.test.ts src/lib/planning/__tests__/timezone.test.ts` | Pending |
-| `01-03-01` | Stable events, distinct changes and action grammar | `npx vitest run src/lib/planning/__tests__/change-events.test.ts src/lib/planning/__tests__/change-sentence.test.ts` | Pending |
-| `01-03-02` | Coverage-aware canonical rail rows | `npx vitest run src/lib/planning/__tests__/rail-rows.test.ts` | Pending |
-| `01-03-03` | Safe aggregate view model and isolated legacy seam | `cmd.exe /d /s /c "npx vitest run src/lib/planning/__tests__/plan-view-model.test.ts && npx vitest run src/lib/planning/__tests__ && npm run lint && npm run build"` | Pending |
-| `01-04-01` | Expected missing planned-context RED signature | `powershell -NoProfile -Command '$out = (& npx vitest run src/lib/planning/__tests__/planned-outfit-context.test.ts --reporter=verbose 2>&1 | Out-String); $code = $LASTEXITCODE; if ($code -eq 0) { throw "Expected RED" }; if ($out -notmatch "RED_PLANNED_CONTEXT_CONTRACT" -or $out -notmatch "MISSING_PLANNED_OUTFIT_CONTEXT_CONTRACT") { $out; throw "Unexpected RED signature" }'` | Pending |
-| `01-04-02` | Immutable DTO with three distinct IDs and no persistence | `cmd.exe /d /s /c "npx vitest run src/lib/planning/__tests__/planned-outfit-context.test.ts && npx tsc -b --pretty false"` | Pending |
-| `01-05-01` | Pure fail-closed current-event/map/DTO/ID resolver | `npx vitest run src/lib/planning/__tests__/planned-outfit-resolver.test.ts src/lib/planning/__tests__/planned-outfit-context.test.ts` | Pending |
-| `01-05-02` | Trusted transient App/Outfit planned branch | `cmd.exe /d /s /c "npx vitest run src/lib/planning/__tests__/planned-outfit-resolver.test.ts src/lib/planning/__tests__/planned-outfit-context.test.ts src/lib/recommendation/__tests__ && npm run build"` | Pending |
-| `01-06-01` | Expected old rail-contract RED and pure cue cases | `powershell -NoProfile -Command '$out = (& npx vitest run src/components/planning/__tests__/PlanChangeRail.test.tsx --reporter=verbose 2>&1 | Out-String); $code = $LASTEXITCODE; if ($code -eq 0) { throw "Expected RED" }; if ($out -notmatch "RED_CONTROLLED_RAIL_CONTRACT" -or $out -notmatch "OLD_RAIL_OWNS_LOCAL_OPEN_STATE") { $out; throw "Unexpected RED signature" }'` | Pending |
-| `01-06-02` | ID-only controlled rail, nullable select, six markers and canonical thumbnail chain | `cmd.exe /d /s /c "npx vitest run src/lib/planning/__tests__/planning-interaction.test.ts src/components/planning/__tests__/PlanChangeRail.test.tsx && npm run lint && npm run build"` | Pending |
-| `01-06-03` | Atomic Uke/App migration, sole trusted DTO handoff and exact-context E2E | `cmd.exe /d /s /c "npx vitest run src/lib/planning/__tests__/planned-outfit-resolver.test.ts src/lib/planning/__tests__/planned-outfit-context.test.ts src/lib/planning/__tests__/planning-interaction.test.ts src/components/planning/__tests__/PlanChangeRail.test.tsx && npm run build && npx tsx e2e/planlegg.ts --case semantic-rail && npx tsx e2e/planlegg.ts --case exact-context"` | Pending |
-| `01-07-01` | Truthful status/recovery and weather disclosure primitives | `cmd.exe /d /s /c "npm run lint && npm run build"` | Pending |
-| `01-07-02` | One-scroll hierarchy, preserved resolver and silent refresh repair | `cmd.exe /d /s /c "npx vitest run src/lib/planning/__tests__ src/components/planning/__tests__/PlanChangeRail.test.tsx && npm run lint && npm run build"` | Pending |
-| `01-07-03` | Composition state/focus/reflow plus exact-context regression | `cmd.exe /d /s /c "npm run build && npx tsx e2e/planlegg.ts --case composition && npx tsx e2e/planlegg.ts --case exact-context"` | Pending |
-| `01-08-01` | Pure centralized capability decision matrix | `npx vitest run src/lib/access/__tests__/capabilities.test.ts` | Pending |
-| `01-08-02` | Generic policy/availability intersection and compatibility wrapper | `npx vitest run src/lib/premium/__tests__/gating.test.ts src/lib/premium/__tests__/plus-features.test.ts` | Pending |
-| `01-08-03` | False-availability containment at App-called refresh and Settings, with seeded-auto zero-I/O/unchanged-child evidence | `cmd.exe /d /s /c "npm run build && npx tsx e2e/planlegg.ts --case location-containment"` | Pending |
-| `01-09-01` | Expected missing single-flight entitlement RED signature | `powershell -NoProfile -Command '$out = (& npx vitest run src/lib/premium/__tests__/use-access.test.ts --reporter=verbose 2>&1 | Out-String); $code = $LASTEXITCODE; if ($code -eq 0) { throw "Expected RED" }; if ($out -notmatch "MISSING_SINGLE_FLIGHT_ENTITLEMENT_FRESHNESS") { $out; throw "Unexpected RED signature" }'` | Pending |
-| `01-09-02` | Fail-closed startup/resume entitlement freshness | `cmd.exe /d /s /c "npx vitest run src/lib/premium/__tests__/use-access.test.ts src/lib/access/__tests__/capabilities.test.ts && npx tsc -b --pretty false && npm run build"` | Pending |
-| `01-10-01` | Capability-derived paywall and zero family semantics | `cmd.exe /d /s /c "npx vitest run src/lib/premium/__tests__/paywall-copy.test.ts src/lib/premium/__tests__/products.test.ts src/lib/premium/__tests__/gating.test.ts && npx tsc -b --pretty false"` | Pending |
-| `01-10-02` | Truthful Today/Uke from fresh centralized access | `cmd.exe /d /s /c "npx vitest run src/lib/premium/__tests__/use-access.test.ts src/lib/premium/__tests__/gating.test.ts src/lib/planning/__tests__/plan-view-model.test.ts src/lib/premium/__tests__/paywall-copy.test.ts && npm run build"` | Pending |
-| `01-10-03` | Free/loading/Plus/downgrade/focus access matrix | `cmd.exe /d /s /c "npm run build && npx tsx e2e/planlegg.ts --case access && npx tsx e2e/planlegg.ts --case exact-context && npx tsx e2e/planlegg.ts --case semantic-rail"` | Pending |
-| `01-11-01` | Persistent fixed/manual versus memory-only automatic cache scopes | `cmd.exe /d /s /c "npx vitest run src/lib/met-no/__tests__/client.test.ts src/lib/geocode/__tests__/nominatim.test.ts && npx tsc -b --pretty false"` | Pending |
-| `01-11-02` | Cache scope/source carried atomically through useWeather | `npx vitest run src/hooks/__tests__/useWeather.test.ts src/lib/planning/__tests__/forecast-evidence.test.ts` | Pending |
-| `01-11-03` | Fixed home, persisted mode and child-scoped ephemeral place separation | `cmd.exe /d /s /c "npx vitest run src/state/__tests__/location-pref-store.test.ts src/lib/premium/__tests__/gating.test.ts && npx tsc -b --pretty false"` | Pending |
-| `01-12-01` | Intent-aware cancellable automatic-location controller | `cmd.exe /d /s /c "npx vitest run src/hooks/__tests__/useAutoLocationRefresh.test.ts src/state/__tests__/location-pref-store.test.ts src/lib/premium/__tests__/use-access.test.ts src/lib/premium/__tests__/gating.test.ts && npx tsc -b --pretty false"` | Pending |
-| `01-12-02` | Settings/Hjem/Uke share access/place/scope and enable only proven automatic location | `cmd.exe /d /s /c "npx vitest run src/hooks/__tests__/useWeather.test.ts src/hooks/__tests__/useAutoLocationRefresh.test.ts src/state/__tests__/location-pref-store.test.ts src/lib/premium/__tests__/plus-features.test.ts src/lib/premium/__tests__/paywall-copy.test.ts && npm run build"` | Pending |
-| `01-12-03` | Exact current/future Outfit contexts plus zero automatic persistent cache keys | `cmd.exe /d /s /c "npm run build && npx tsx e2e/planlegg.ts --case automatic-location && npx tsx e2e/planlegg.ts --case access && npx tsx e2e/planlegg.ts --case exact-context"` | Pending |
-| `01-13-01` | Six Snart approvals, unchanged normative projection and approved climate artifacts | **Blocking human checkpoint:** follow Plan 01-13's seven-step verification and resume only with six named approvals plus rules/pack/provenance/validator hashes | Pending / expected block |
-| `01-14-01` | Approved offline pack validator and strict exact-profile decoder | `cmd.exe /d /s /c "node scripts/validate-snart-climate.mjs src/data/snart-climate-1991-2020-v1.json .planning/phases/01-planlegg-dagslinjen/01-SNART-CLIMATE-PROVENANCE.md && npx vitest run src/lib/planning/__tests__/snart-climate.test.ts"` | Pending after 01-13 PASS |
-| `01-14-02` | S01–S18 pure model, traceability and corrected mark-all semantics | `cmd.exe /d /s /c "npx vitest run src/lib/planning/__tests__/snart-climate.test.ts src/lib/planning/__tests__/snart.test.ts && npx tsc -b --pretty false"` | Pending after 01-13 PASS |
-| `01-14-03` | Immutable model/evidence candidate and independent exact-SHA PASS | `cmd.exe /d /s /c "node scripts/validate-snart-climate.mjs src/data/snart-climate-1991-2020-v1.json .planning/phases/01-planlegg-dagslinjen/01-SNART-CLIMATE-PROVENANCE.md && npm test && npm run lint && npm run build"` | Pending after 01-13 PASS |
-| `01-15-01` | Exhaustive accessible component with both authoritative mark-all outcomes | `cmd.exe /d /s /c "npx vitest run src/lib/planning/__tests__/snart.test.ts src/components/planning/__tests__/SnartPlan.test.tsx && npm run lint"` | Pending after 01-14 PASS |
-| `01-15-02` | Access-before-evaluation fixed-home session and one-shot request contract | `cmd.exe /d /s /c "npx vitest run src/lib/planning/__tests__/snart-session.test.ts src/lib/premium/__tests__/gating.test.ts src/lib/premium/__tests__/products.test.ts src/lib/premium/__tests__/paywall-copy.test.ts src/lib/planning/__tests__/planning-interaction.test.ts src/components/planning/__tests__/SnartPlan.test.tsx && npx tsc -b --pretty false"` | Pending after 01-14 PASS |
-| `01-16-01` | Only verified `soon_preparation` becomes available | `cmd.exe /d /s /c "npx vitest run src/lib/premium/__tests__/plus-features.test.ts src/lib/premium/__tests__/paywall-copy.test.ts src/components/planning/__tests__/SnartPlan.test.tsx && npm run build"` | Pending after 01-15 PASS |
-| `01-16-02` | Browser no-leak/state/fixed-home/mark-all/regression matrix | `cmd.exe /d /s /c "npm run build && npx tsx e2e/planlegg.ts --case snart && npx tsx e2e/planlegg.ts --case automatic-location && npx tsx e2e/planlegg.ts --case exact-context && npx tsx e2e/planlegg.ts --case semantic-rail && npx tsx e2e/planlegg.ts --case composition && npx tsx e2e/planlegg.ts --case access"` | Pending after 01-15 PASS |
-| `01-17-01` | Guide/program entries share one typed Snart dispatcher | `cmd.exe /d /s /c "npx vitest run src/screens/__tests__/guide-routing.test.tsx src/lib/premium/__tests__/plus-features.test.ts src/lib/planning/__tests__/planning-interaction.test.ts && npx tsc -b --pretty false"` | Pending after 01-16 PASS |
-| `01-17-02` | Unreachable legacy route removed and content targets locked | `cmd.exe /d /s /c "npx vitest run src/screens/__tests__/guide-routing.test.tsx && npm run lint && npm run build"` | Pending after 01-16 PASS |
-| `01-17-03` | In-app root/left-edge/dismiss route semantics, no replay/history invention and high-risk regressions | `cmd.exe /d /s /c "npm run build && npx tsx e2e/planlegg.ts --case route-migration && npx tsx e2e/planlegg.ts --case exact-context && npx tsx e2e/planlegg.ts --case access && npx tsx e2e/planlegg.ts --case automatic-location && npx tsx e2e/planlegg.ts --case snart"` | Pending after 01-16 PASS |
-| `01-18-01` | Native-only haptics, off/web/plugin zero adapter calls and motion independence | `cmd.exe /d /s /c "npx vitest run src/lib/planning/__tests__/planning-interaction.test.ts src/lib/haptics/__tests__/system.test.ts && npx tsc -b --pretty false"` | Pending |
-| `01-18-02` | Four-root focus-visible/44px/forced-colors active navigation | `cmd.exe /d /s /c "npx vitest run src/components/__tests__/BottomTabBar.test.tsx src/lib/haptics/__tests__/system.test.ts src/types/__tests__/nav.test.ts && npm run lint && npm run build"` | Pending |
-| `01-18-03` | Full deterministic text-only packet, source-boundary scans, dual independent verdicts and post-PASS AGENTS routine | `cmd.exe /d /s /c "node scripts/validate-snart-climate.mjs src/data/snart-climate-1991-2020-v1.json .planning/phases/01-planlegg-dagslinjen/01-SNART-CLIMATE-PROVENANCE.md && npm test && npm run lint && npm run build && npx tsx e2e/planlegg.ts --case native-polish && npx tsx e2e/planlegg.ts --case all"` | Pending |
+- Phase 2 kan planlegges og kjøres parallelt med resterende Phase 1 i isolert worktree/branch.
+- Phase 3 kan planlegge og bygge Living Home-/motion-grunnlag parallelt i en annen isolert worktree/branch.
+- Home→Outfit-integrasjonen i Phase 3 må vente på et frosset Phase 2-interface for stabile garment IDs, anchor/body geometry, dressing order og navigation snapshot.
+- Samme fil kan ikke eies av parallelle worktrees uten eksplisitt merge-order; Phase 1-planenes `files_modified` er canonical konfliktgrunnlag.
 
-## Browser case registry
+## Planner-konsistensport
 
-| Case | Binding | Scope |
-|---|---|---|
-| `harness` | `01-01-02` | deterministic boot and no-media harness |
-| `exact-context` | `01-06-03` | trusted exact future handoff; later regression owner unchanged |
-| `semantic-rail` | `01-06-03` | ID-only rail, six markers, keyboard and reflow |
-| `composition` | `01-07-03` | state matrix, one main/scroll and four roots |
-| `location-containment` | `01-08-03` | seeded stored-auto startup/resume and Settings off/blocked reactivation; zero permission/geolocation/geocode/forecast calls and unchanged child bytes |
-| `access` | `01-10-03` | fresh entitlement, Free/loading/Plus/downgrade/paywall |
-| `automatic-location` | `01-12-03` | intent/access/cache/privacy/exact-current-and-future lifecycle |
-| `snart` | `01-16-02` | no-leak access and ready/empty/unavailable plus S18 |
-| `route-migration` | `01-17-03` | Guide/program to Snart through App state-router semantics |
-| `native-polish` | `01-18-03` | visible navigation/motion behavior; haptic internals stay unit-only |
-| `all` | `01-18-03` | all deterministic cases; no media output |
+Før execution:
 
-## Explicit no-media gate
+- alle seks PLAN-filer validerer mot GSD frontmatter/structure;
+- `autonomous: true` i 01-13–01-18;
+- ingen menneskelig stopptask, manuelt gjenopptakssignal, eierapproval eller helse-/privacy-human-gate;
+- waves er 13–18 og dependencies danner én acyklisk kjede;
+- plan count er 18, completed er 12, remaining er 6 i ROADMAP;
+- hver plan har requirements, must_haves, tasks, automated verify, threat model og rollback;
+- ingen files_modified-overlap finnes i samme wave.
 
-- Do not run `scripts/verify-browser-uke.mjs`, `npm run audit:prepare`, `npm run audit:finalize`, screenshot-matrix helpers or any media-writing command while implementation changes.
-- `e2e/planlegg.ts` keeps screenshot, video and trace recording off and persists no Playwright media artifacts.
-- Browser assertions may inspect DOM geometry, landmarks, overflow, keyboard, focus, semantics, copy, exact context, route state, storage keys and external-call cardinality. They must not instrument haptic delivery or claim physical tactile quality.
-- Final Plan 01-18 evidence is a deterministic text-only packet bound to one code SHA. App media and the 90+ visual score remain Pending until the owner explicitly permits capture.
-
-## Manual/external gates
-
-| Gate | Status |
-|---|---|
-| Six Snart policy/numeric/health/climate/size/privacy approvals and approved climate artifacts | **Pending; blocks 01-13** |
-| Fresh plan/UI/validation convergence | **Pending; blocks execution readiness** |
-| VoiceOver, TalkBack, physical haptics, OS text scaling and one-handed reach | Pending stable candidate |
-| Media-based 90+ audit | Pending stable candidate and owner permission |
-| Owner release approval | Pending all required gates |
-
-## Sign-off checklist
-
-- [x] All 18 plan numbers and all 45 task IDs are represented: 44 automated bindings plus one blocking human checkpoint.
-- [x] Every multi-step command uses the exact PowerShell-5.1-safe `cmd.exe /d /s /c "... && ..."` literal from its PLAN.
-- [x] Browser registry ownership is location containment 01-08-03, access 01-10-03, automatic location 01-12-03, Snart 01-16-02, route 01-17-03, and native/all 01-18-03.
-- [x] No media-writing or watch-mode command is specified.
-- [x] Browser haptic call-count assertions are excluded; native adapter behavior is unit-tested.
-- [ ] Wave 0 artifacts exist and pass.
-- [x] Fresh independent plan/UI/validation checker confirms this exact repaired package and source-grounds the drifted `GuideHubScreen.tsx`, `package.json`, and `e2e/smoke.ts` assumptions.
-
-**Approval:** Ready for Plan 01-01 execution on source SHA `e669afff0259750840393e8475f84afbc7937352`. `nyquist_compliant` is true; `wave_0_complete` remains false until Plan 01-01 creates and verifies its artifacts. This document does not pass Snart human evidence, app runtime, physical-device, media, 90+ or release gates.
+**Status 2026-07-24, autonomous revision round 3: PASS.** `frontmatter.validate --schema plan` og `verify.plan-structure` er grønne uten warnings for alle seks planene. Statisk konsistenssjekk bekrefter tre tasks per plan, maksimalt fem oppførte filer per task, komplett wave/dependency-kjede, ingen menneskelige porter, ingen package-install og ingen `files_modified`-konflikt i samme wave. Den aksepterte scope-warningen endrer derfor ikke executability. Stalesøk bekrefter at den tidligere sentrale reviewhandoffen og patch-after-review-modellen er fjernet; legitime UI-termer som cross-root/rootnav er beholdt. `git diff --check` er grønn for de reviderte planleggingsfilene.

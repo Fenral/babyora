@@ -1,106 +1,162 @@
-/**
- * R7 Task 4 — verifisert ytterantrekk-avatar (visual-signature-spec §4).
- *
- * Viser KUN godkjente komposittbilder fra manifestet (avatarAssetFor) —
- * tomt manifest til R8 → alltid den nøytrale silhuetten. Aldri nærmeste-
- * nabo-gjetting; plagglisten er fasit ved manglende asset.
- *
- * A11y (lead-krav 3): silhuetten er aria-hidden når scenens sr-tekst-
- * sammendrag står ved siden av (props.decorative=true — Hjem-scenen), ellers
- * role="img" + nøytral label. Verifiserte kompositter (R8+) får alt fra
- * samme antrekkssammendrag som sr-teksten — aldri filnavn. Crossfade
- * 180–240 ms kun mellom to verifiserte kompositter; redusert bevegelse
- * bytter umiddelbart.
- */
+import type { CSSProperties } from 'react';
+import {
+  isOutfitTruthSnapshot,
+  type OutfitAvatarTruth,
+  type OutfitAvatarPose,
+  type OutfitTruthSnapshotV1,
+} from '../../lib/outfit/outfit-truth.js';
 
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { avatarAssetFor, avatarStateKeyId, type AvatarStateKey } from '../../lib/recommendation/avatar-state.js';
-
-type Props = {
-  stateKey: AvatarStateKey;
-  /** Antrekkssammendrag for alt-tekst på verifiserte kompositter. */
-  outfitSummary: string;
-  /** true når et tilstøtende sr-sammendrag bærer teksten (Hjem-scenen). */
+type SharedProps = Readonly<{
   decorative?: boolean;
   reducedMotion?: boolean;
   size?: number;
-  /**
-   * Pragmatisk legacy-match (R8, eierbeslutning 2026-07-15): asset-sti eller
-   * null (→ silhuett). Når satt (≠ undefined) overstyrer den manifest-oppslaget
-   * — brukes så lenge dagens motor kjører. undefined = bruk APPROVED_COMPOSITES
-   * (Motor V2 / streng full-nøkkel-match).
-   */
+}>;
+
+type CanonicalProps = SharedProps & Readonly<{
+  snapshot: OutfitTruthSnapshotV1;
+  avatarTruth: OutfitAvatarTruth;
+  stateKey?: never;
+  outfitSummary?: never;
+  assetOverride?: never;
+}>;
+
+type LegacyProps = SharedProps & Readonly<{
+  /** Temporary protected-Hjem compatibility seam; it always stays neutral. */
+  stateKey: Readonly<{ pose: OutfitAvatarPose }>;
+  outfitSummary: string;
   assetOverride?: string | null;
-};
+  snapshot?: never;
+  avatarTruth?: never;
+}>;
 
-const FADE_MS = 220; // spec §4: 180–240 ms
+export type VerifiedAvatarCompositeProps = CanonicalProps | LegacyProps;
 
-export function VerifiedAvatarComposite({
-  stateKey, outfitSummary, decorative = false, reducedMotion = false, size = 200,
-  assetOverride,
-}: Props) {
-  const asset = assetOverride !== undefined ? assetOverride : avatarAssetFor(stateKey);
-  const keyId = avatarStateKeyId(stateKey);
-  const prevAssetRef = useRef<string | null>(asset);
-  const [fading, setFading] = useState(false);
-
-  useEffect(() => {
-    // Crossfade kun mellom TO verifiserte kompositter (aldri mot silhuett).
-    if (!reducedMotion && asset && prevAssetRef.current && asset !== prevAssetRef.current) {
-      setFading(true);
-      const t = window.setTimeout(() => setFading(false), FADE_MS);
-      return () => window.clearTimeout(t);
+function readOwnDataValue(
+  value: unknown,
+  key: string,
+): unknown {
+  try {
+    if (
+      value === null
+      || typeof value !== 'object'
+      || Array.isArray(value)
+    ) {
+      return undefined;
     }
-    prevAssetRef.current = asset;
-    return undefined;
-  }, [asset, reducedMotion]);
-
-  const frame: CSSProperties = {
-    width: size, height: size * 1.05, position: 'relative',
-    display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-  };
-
-  if (asset) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
     return (
-      <div style={frame} data-avatar-key={keyId}>
-        <img
-          src={asset}
-          alt={decorative ? '' : outfitSummary}
-          aria-hidden={decorative || undefined}
-          style={{
-            maxWidth: '100%', maxHeight: '100%',
-            opacity: fading ? 0 : 1,
-            transition: reducedMotion ? 'none' : `opacity ${FADE_MS}ms ease`,
-          }}
-        />
-      </div>
-    );
+      descriptor !== undefined
+      && Object.hasOwn(descriptor, 'value')
+      && descriptor.enumerable === true
+    )
+      ? descriptor.value
+      : undefined;
+  } catch {
+    return undefined;
   }
+}
 
-  // Nøytral silhuett — myk clay-tone, positurstyrt (sittende/stående).
-  const sitting = stateKey.pose === 'sitting';
+function neutralPoseFromLegacy(value: unknown): OutfitAvatarPose {
+  const pose = readOwnDataValue(value, 'pose');
+  return pose === 'sitting' || pose === 'standing'
+    ? pose
+    : 'standing';
+}
+
+function NeutralAvatar({
+  pose,
+  decorative,
+  size,
+  snapshotId,
+}: Readonly<{
+  pose: OutfitAvatarPose;
+  decorative: boolean;
+  size: number;
+  snapshotId?: string;
+}>) {
+  const sitting = pose === 'sitting';
+  const frame: CSSProperties = {
+    width: size,
+    height: size * 1.05,
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  };
   const a11yProps = decorative
     ? { 'aria-hidden': true as const }
     : { role: 'img' as const, 'aria-label': 'Nøytral barnefigur — antrekket står i listen' };
   return (
-    <div style={frame} data-avatar-key={keyId} {...a11yProps}>
+    <div style={frame} data-avatar-truth="neutral" data-avatar-snapshot={snapshotId} {...a11yProps}>
       <svg width={size * 0.9} height={size} viewBox="0 0 180 200" aria-hidden="true">
         <ellipse cx={90} cy={196} rx={sitting ? 62 : 46} ry={7} fill="color-mix(in oklab, var(--ink-900) 12%, transparent)" />
         <circle cx={90} cy={sitting ? 66 : 48} r={34} fill="var(--avatar-glow)" stroke="color-mix(in oklab, var(--ink-900) 14%, transparent)" />
-        {sitting ? (
-          <>
-            <path d="M40 150 a50 44 0 0 1 100 0 v22 a10 10 0 0 1 -10 10 H50 a10 10 0 0 1 -10 -10 Z" fill="var(--avatar-glow)" stroke="color-mix(in oklab, var(--ink-900) 14%, transparent)" />
-            <ellipse cx={52} cy={182} rx={20} ry={12} fill="var(--avatar-glow)" />
-            <ellipse cx={128} cy={182} rx={20} ry={12} fill="var(--avatar-glow)" />
-          </>
-        ) : (
-          <>
-            <rect x={58} y={84} width={64} height={82} rx={26} fill="var(--avatar-glow)" stroke="color-mix(in oklab, var(--ink-900) 14%, transparent)" />
-            <rect x={64} y={158} width={22} height={36} rx={10} fill="var(--avatar-glow)" />
-            <rect x={94} y={158} width={22} height={36} rx={10} fill="var(--avatar-glow)" />
-          </>
-        )}
+        {sitting ? <><path d="M40 150 a50 44 0 0 1 100 0 v22 a10 10 0 0 1 -10 10 H50 a10 10 0 0 1 -10 -10 Z" fill="var(--avatar-glow)" stroke="color-mix(in oklab, var(--ink-900) 14%, transparent)" /><ellipse cx={52} cy={182} rx={20} ry={12} fill="var(--avatar-glow)" /><ellipse cx={128} cy={182} rx={20} ry={12} fill="var(--avatar-glow)" /></> : <><rect x={58} y={84} width={64} height={82} rx={26} fill="var(--avatar-glow)" stroke="color-mix(in oklab, var(--ink-900) 14%, transparent)" /><rect x={64} y={158} width={22} height={36} rx={10} fill="var(--avatar-glow)" /><rect x={94} y={158} width={22} height={36} rx={10} fill="var(--avatar-glow)" /></>}
       </svg>
+    </div>
+  );
+}
+
+export function VerifiedAvatarComposite(props: VerifiedAvatarCompositeProps) {
+  const decorative = readOwnDataValue(props, 'decorative') === true;
+  const rawSize = readOwnDataValue(props, 'size');
+  const size = (
+    typeof rawSize === 'number'
+    && Number.isFinite(rawSize)
+    && rawSize > 0
+  )
+    ? rawSize
+    : 200;
+  const legacyStateKey = readOwnDataValue(props, 'stateKey');
+  if (legacyStateKey !== undefined) {
+    return (
+      <NeutralAvatar
+        pose={neutralPoseFromLegacy(legacyStateKey)}
+        decorative={decorative}
+        size={size}
+      />
+    );
+  }
+
+  const snapshot = readOwnDataValue(props, 'snapshot');
+  const avatarTruth = readOwnDataValue(props, 'avatarTruth');
+  if (!isOutfitTruthSnapshot(snapshot)) {
+    return (
+      <NeutralAvatar
+        pose="standing"
+        decorative={decorative}
+        size={size}
+      />
+    );
+  }
+  if (
+    snapshot.avatar !== avatarTruth
+    || snapshot.avatar.verifiedAssetPath === null
+  ) {
+    return (
+      <NeutralAvatar
+        pose={snapshot.avatar.pose}
+        decorative={decorative}
+        size={size}
+        snapshotId={snapshot.snapshotId}
+      />
+    );
+  }
+
+  const reducedMotion =
+    readOwnDataValue(props, 'reducedMotion') === true;
+  return (
+    <div
+      style={{ width: size, height: size * 1.05, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      data-avatar-truth="verified"
+      data-avatar-snapshot={snapshot.snapshotId}
+    >
+      <img
+        src={snapshot.avatar.verifiedAssetPath}
+        alt={decorative ? '' : 'Verifisert antrekksillustrasjon'}
+        aria-hidden={decorative || undefined}
+        style={{ maxWidth: '100%', maxHeight: '100%', transition: reducedMotion ? 'none' : 'opacity 220ms ease' }}
+      />
     </div>
   );
 }

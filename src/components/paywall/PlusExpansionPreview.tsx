@@ -6,16 +6,12 @@
  * seksjonen mountes. Ved reduced-motion vises slutt-tilstanden umiddelbart
  * (ingen animasjon).
  *
- * SANNFERDIGHET: rendrer kun ekspansjoner hvis tilgjengelighetsflagg er på
- * (availablePlusExpansions). Familie/kalibrering er ikke bygget (R9/senere) og
- * vises derfor aldri — paywallen lover aldri noe som ikke finnes. Returnerer
- * null hvis ingenting er leverbart.
+ * SANNFERDIGHET: rendrer bare elementene den capability-avledede
+ * `buildCapabilityPaywallCopy`-grensen har godkjent. Returnerer null hvis
+ * ingen aktiv kapabilitet gir et leverbart løfte.
  */
 import type { CSSProperties, ReactElement } from 'react';
-import {
-  availablePlusExpansions,
-  type PlusFeatureAvailability,
-} from '../../lib/premium/plus-features';
+import type { CapabilityPaywallPreviewItem } from '../../lib/premium/paywall-copy';
 
 const STYLE_CSS = `
 @keyframes plus-exp-in {
@@ -41,10 +37,9 @@ const wrapStyle: CSSProperties = {
 };
 
 const eyebrowStyle: CSSProperties = {
-  fontSize: '0.65625rem',
-  fontWeight: 700,
-  letterSpacing: '1.6px',
-  textTransform: 'uppercase',
+  fontSize: 14,
+  fontWeight: 500,
+  lineHeight: 1.4,
   color: 'var(--ink-500)',
   margin: 0,
 };
@@ -66,31 +61,33 @@ const rowStyle: CSSProperties = {
 };
 
 const fromStyle: CSSProperties = {
-  fontSize: '0.8125rem',
+  fontSize: 14,
+  fontWeight: 500,
+  lineHeight: 1.4,
   color: 'var(--ink-500)',
   textAlign: 'right',
 };
 
 const arrowStyle: CSSProperties = {
-  fontSize: '0.8125rem',
+  fontSize: 14,
   color: 'var(--ink-400)',
   flex: 'none',
 };
 
 const toStyle: CSSProperties = {
-  fontSize: '0.8125rem',
-  fontWeight: 700,
+  fontSize: 14,
+  fontWeight: 640,
+  lineHeight: 1.4,
   color: 'var(--ink-900)',
 };
 
 export function PlusExpansionPreview({
+  items,
   reducedMotion = false,
-  flags,
 }: {
+  items: readonly CapabilityPaywallPreviewItem[];
   reducedMotion?: boolean;
-  flags?: PlusFeatureAvailability;
 }): ReactElement | null {
-  const items = availablePlusExpansions(flags);
   if (items.length === 0) return null;
 
   return (

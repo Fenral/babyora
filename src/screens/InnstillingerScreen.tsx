@@ -28,6 +28,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -46,8 +47,12 @@ import { useNotificationPref } from '../state/notification-pref-store';
 import { useRefHour, type RefHour } from '../state/ref-hour-store';
 import { useLocationPref } from '../state/location-pref-store';
 import { useAccess } from '../lib/premium/use-access';
-import { isChildSwitchGated } from '../lib/premium/gating';
-import { reverseGeocode } from '../lib/geocode/nominatim';
+import {
+  isChildSwitchGated,
+  resolveRuntimeCapabilityAccess,
+} from '../lib/premium/gating';
+import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
+import { automaticLocationController } from '../hooks/useAutoLocationRefresh';
 import {
   cancelMorningNotification,
   disableWeatherChangeNotifications,
@@ -831,6 +836,7 @@ interface TogglePillProps {
   /** F81.5-W2: sett til 'dialog' når trykk (i gatet tilstand) åpner en
    *  paywall i stedet for å faktisk toggle — ellers undefined. */
   ariaHaspopup?: 'dialog';
+  disabled?: boolean;
 }
 
 function TogglePill({
@@ -840,6 +846,7 @@ function TogglePill({
   reducedMotion,
   buttonRef,
   ariaHaspopup,
+  disabled = false,
 }: TogglePillProps): ReactElement {
   const trackStyle: CSSProperties = {
     width: 46,
@@ -848,7 +855,8 @@ function TogglePill({
     background: on ? C.orange500 : C.ink200,
     border: 'none',
     position: 'relative',
-    cursor: 'pointer',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.55 : 1,
     flex: 'none',
     padding: 0,
     transition: reducedMotion ? 'none' : `background 200ms ${C.ease}`,
@@ -881,6 +889,8 @@ function TogglePill({
       aria-checked={on}
       aria-label={ariaLabel}
       aria-haspopup={ariaHaspopup}
+      aria-disabled={disabled || undefined}
+      disabled={disabled}
       onClick={() => onChange(!on)}
       style={trackStyle}
     >
@@ -1107,7 +1117,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
   // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
   // siden BottomTabBar nå mountes globalt i App.tsx.
   void _onNavigate;
-  const { active, needsOnboarding, resetAll, children: allChildren, setActiveId, addChild, updateChild } = useChildren();
+  const { active, needsOnboarding, resetAll, children: allChildren, setActiveId, addChild } = useChildren();
   const { hapticsPref, motionPref, reducedMotion } = useNativeSettings();
   const { fire } = useHapticSystem();
   const themeMode = useTheme((s) => s.mode);
@@ -1123,9 +1133,36 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
   // F81.5-W2: useAccess() er den eneste kontrakten skjermer skal bruke for
   // Premium-status (se use-access.ts). Migrert fra direkte useSubscription()-
   // lesing — samme underliggende verdi, ingen atferdsendring.
-  const { isPremium } = useAccess();
+  const { isPremium, loading: accessLoading } = useAccess();
+  const automaticLocationAccess = resolveRuntimeCapabilityAccess(
+    'automatic_location',
+    {
+      isPlus: isPremium,
+      // automatic_location has no authentication requirement.
+      authenticated: false,
+      loading: accessLoading,
+    },
+    PLUS_FEATURE_AVAILABILITY,
+  );
+  const automaticLocationAllowed = automaticLocationAccess.allowed;
   const locationMode = useLocationPref((s) => s.mode);
   const setLocationMode = useLocationPref((s) => s.setMode);
+  const autoLocationLiveRef = useRef({
+    access: automaticLocationAccess,
+    childId: active.id,
+  });
+  useLayoutEffect(() => {
+    autoLocationLiveRef.current = {
+      access: automaticLocationAccess,
+      childId: active.id,
+    };
+  }, [active.id, automaticLocationAccess]);
+  const autoLocationActivationPendingRef = useRef(false);
+  useEffect(() => () => {
+    if (autoLocationActivationPendingRef.current) {
+      automaticLocationController.invalidate();
+    }
+  }, []);
 
   // Toast (norsk content, auto-skjul etter 4s)
   const [toast, setToast] = useState<string | null>(null);
@@ -1454,81 +1491,98 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
   // Flyt:
   //  1. Bruker trykker toggle → role=switch, aria-checked styres av locationMode
   //  2. ON  → vi åpner native <dialog> som forklarer permission (samtykke-steg)
-  //  3. Bruker bekrefter → vi spør navigator.geolocation.getCurrentPosition
-  //  4. Suksess → reverseGeocode → updateChild(active.id, { lat, lon, city })
+  //  3. Bruker bekrefter → den delte kontrolleren henter posisjon
+  //  4. Suksess → kontrolleren lagrer et øktbundet sted og vi aktiverer auto-modus
   //             → setLocationMode('auto')
   //             → useWeather re-kjører via lat/lon useEffect-deps (automatisk)
   //  5. Avbryt/feil/denied → setLocationMode('manual') + toast
   //  6. OFF → setLocationMode('manual') (beholder eksisterende lat/lon)
   const handleAutoLocationToggle = useCallback(
     (next: boolean) => {
-      void fire('selection');
       if (!next) {
-        // OFF → tilbake til manuelt valg, beholder eksisterende koordinater
+        void fire('selection');
+        automaticLocationController.invalidate();
         setLocationMode('manual');
         return;
       }
+      if (automaticLocationAccess.state === 'neutral'
+        || !automaticLocationAccess.implementationAvailable) {
+        setAutoLocationDialogOpen(false);
+        return;
+      }
+      if (!automaticLocationAccess.allowed) {
+        setPaywallReturnFocusTo(autoLocationToggleRef.current);
+        setPaywallOpen(true);
+        return;
+      }
+      void fire('selection');
       // ON → åpne forklarings-dialog (samtykke før permission-prompt)
       setAutoLocationDialogOpen(true);
     },
-    [fire, setLocationMode],
+    [automaticLocationAccess, fire, setLocationMode],
   );
 
   const handleConfirmAutoLocation = useCallback(async () => {
-    void fire('medium');
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+    if (!automaticLocationAllowed) {
       setAutoLocationDialogOpen(false);
-      showToast('Posisjon støttes ikke på denne enheten.');
       return;
     }
+    void fire('medium');
     if (needsOnboarding) {
       setAutoLocationDialogOpen(false);
       showToast('Fullfør onboarding først.');
       return;
     }
     setAutoLocationPending(true);
+    autoLocationActivationPendingRef.current = true;
+    const requestedChildId = active.id;
     try {
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: false,
-          timeout: 8000,
-          maximumAge: 60_000,
-        });
+      const outcome = await automaticLocationController.run({
+        intent: 'settings-activation',
+        runtimeDecision: automaticLocationAccess,
+        mode: locationMode,
+        childId: requestedChildId,
+        isStillAllowed: () => {
+          const live = autoLocationLiveRef.current;
+          const liveMode = useLocationPref.getState().mode;
+          return live.childId === requestedChildId
+            && live.access.capability === 'automatic_location'
+            && live.access.state === 'allowed'
+            && live.access.allowed
+            && live.access.implementationAvailable
+            && (liveMode === 'manual' || liveMode === 'auto');
+        },
       });
-      const lat = Number(pos.coords.latitude.toFixed(4));
-      const lon = Number(pos.coords.longitude.toFixed(4));
-
-      // Reverse-geocode for å oppdatere by-tekst (best-effort, ikke kritisk)
-      let city = active.city || 'Din posisjon';
-      try {
-        const rev = await reverseGeocode(lat, lon);
-        if (rev?.city) city = rev.city;
-      } catch (revErr) {
-        console.warn('[Babyora] reverseGeocode feilet — beholder eksisterende by', revErr);
-      }
-
-      // Skriv til children-store → triggrer useWeather re-fetch via lat/lon-deps
-      updateChild(active.id, { lat, lon, city });
-      setLocationMode('auto');
+      autoLocationActivationPendingRef.current = false;
       setAutoLocationDialogOpen(false);
-      void fire('success');
-      showToast(`Posisjon oppdatert — vær hentes for ${city}.`);
-    } catch (err: unknown) {
-      // PositionError: 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
-      const code = (err as GeolocationPositionError | undefined)?.code;
+      if (outcome.status === 'success') {
+        setLocationMode('auto');
+        void fire('success');
+        showToast(`Posisjon oppdatert — vær hentes for ${outcome.placeLabel}.`);
+        return;
+      }
+      setLocationMode('manual');
+      showToast('Kunne ikke hente posisjon. Prøv igjen.');
+    } catch {
+      autoLocationActivationPendingRef.current = false;
+      automaticLocationController.invalidate();
       setLocationMode('manual');
       setAutoLocationDialogOpen(false);
-      if (code === 1) {
-        showToast('Posisjon er blokkert. Skru på i systeminnstillinger.');
-      } else if (code === 3) {
-        showToast('Tidsavbrudd — prøv igjen utendørs.');
-      } else {
-        showToast('Kunne ikke hente posisjon. Prøv igjen.');
-      }
+      showToast('Kunne ikke hente posisjon. Prøv igjen.');
     } finally {
+      autoLocationActivationPendingRef.current = false;
       setAutoLocationPending(false);
     }
-  }, [active.city, active.id, fire, needsOnboarding, setLocationMode, showToast, updateChild]);
+  }, [
+    active.id,
+    automaticLocationAccess,
+    automaticLocationAllowed,
+    fire,
+    locationMode,
+    needsOnboarding,
+    setLocationMode,
+    showToast,
+  ]);
 
   const handleMorningToggle = useCallback(
     async (next: boolean) => {
@@ -1855,7 +1909,13 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
             <div
               style={rowStaticBase}
               role="group"
-              aria-label={`Bruk posisjon automatisk — ${locationMode === 'auto' ? 'på' : 'av'}`}
+              aria-label={`Bruk posisjon automatisk — ${
+                locationMode === 'auto'
+                  ? automaticLocationAllowed
+                    ? 'på'
+                    : 'på, men utilgjengelig'
+                  : 'av'
+              }`}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconCrosshair />
@@ -1866,7 +1926,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
                   {autoLocationPending
                     ? 'Henter posisjon …'
                     : locationMode === 'auto'
-                      ? 'Henter vær der du er'
+                      ? automaticLocationAllowed
+                        ? 'Henter vær der du er'
+                        : 'Posisjon brukes ikke'
                       : 'Bruker valgt sted'}
                 </span>
               </span>
@@ -1876,6 +1938,18 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
                 onChange={handleAutoLocationToggle}
                 reducedMotion={reducedMotion}
                 buttonRef={autoLocationToggleRef}
+                ariaHaspopup={
+                  locationMode === 'manual' && automaticLocationAccess.state === 'denied'
+                    ? 'dialog'
+                    : undefined
+                }
+                disabled={
+                  locationMode === 'manual'
+                  && (
+                    automaticLocationAccess.state === 'neutral'
+                    || !automaticLocationAccess.implementationAvailable
+                  )
+                }
               />
             </div>
           </li>
@@ -2376,7 +2450,13 @@ export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerSc
         open={autoLocationDialogOpen}
         pending={autoLocationPending}
         reducedMotion={reducedMotion}
-        onClose={() => setAutoLocationDialogOpen(false)}
+        onClose={() => {
+          if (autoLocationActivationPendingRef.current) {
+            autoLocationActivationPendingRef.current = false;
+            automaticLocationController.invalidate();
+          }
+          setAutoLocationDialogOpen(false);
+        }}
         onConfirm={() => {
           void handleConfirmAutoLocation();
         }}
@@ -4900,6 +4980,11 @@ function AutoLocationDialog({
       ref={dialogRef}
       aria-labelledby="auto-location-title"
       aria-describedby="auto-location-desc"
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+        dialogRef.current?.close();
+      }}
       onClick={handleBackdropClick}
       style={dialogStyle}
     >

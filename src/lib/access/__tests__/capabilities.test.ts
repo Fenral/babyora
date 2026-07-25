@@ -12,7 +12,14 @@ const ctx = (partial?: Partial<AccessContext>): AccessContext => ({
 });
 
 const FREE: Capability[] = ['today_home', 'morning_reminder', 'safety_guides'];
-const PLUS_ONLY: Capability[] = ['future_plan', 'automatic_location', 'extra_places', 'extra_children', 'widget'];
+const PLUS_ONLY: Capability[] = [
+  'future_plan',
+  'automatic_location',
+  'soon_preparation',
+  'extra_places',
+  'extra_children',
+  'widget',
+];
 const PLUS_AND_AUTH: Capability[] = ['family_sharing', 'personal_calibration', 'smart_notifications'];
 
 describe('decideAccess', () => {
@@ -38,9 +45,33 @@ describe('decideAccess', () => {
   });
 
   it('loading blokkerer alt uten paywall-trigger (aldri flash av feil tilstand)', () => {
-    for (const cap of [...FREE, ...PLUS_ONLY] as Capability[]) {
+    for (const cap of [...FREE, ...PLUS_ONLY, ...PLUS_AND_AUTH] as Capability[]) {
       const d = decideAccess(cap, ctx({ loading: true }));
       expect(d).toEqual({ allowed: false, reason: 'loading' });
     }
   });
+
+  it.each(['future_plan', 'automatic_location', 'soon_preparation'] as const)(
+    '%s har deterministiske Free, Plus, loading og utløpt-overganger',
+    (capability) => {
+      expect(decideAccess(capability, ctx())).toEqual({
+        allowed: false,
+        reason: 'expired',
+        paywallTrigger: capability,
+      });
+      expect(decideAccess(capability, ctx({ isPlus: true }))).toEqual({
+        allowed: true,
+        reason: 'plus',
+      });
+      expect(decideAccess(capability, ctx({ isPlus: true, loading: true }))).toEqual({
+        allowed: false,
+        reason: 'loading',
+      });
+      expect(decideAccess(capability, ctx({ isPlus: false, authenticated: true }))).toEqual({
+        allowed: false,
+        reason: 'expired',
+        paywallTrigger: capability,
+      });
+    },
+  );
 });

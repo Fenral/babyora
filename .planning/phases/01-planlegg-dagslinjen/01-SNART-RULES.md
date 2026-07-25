@@ -1,384 +1,327 @@
 ---
 phase: 01-planlegg-dagslinjen
-artifact: snart-rules-evidence
-ruleset_version: snart-v1.0-draft
-status: pending_approval
+artifact: snart-autonomous-rules
+ruleset_version: babyora-snart-heuristics@2
+derivation_version: babyora-monthly-normal-pack@2
+status: locked_for_autonomous_implementation
 created: 2026-07-19
+revised: 2026-07-24
 age_scope_months: 0-24
 timezone: Europe/Oslo
 target_window: D+28 through D+42 inclusive
+source_dataset: MET seNorge_2018
+normal_period: 1991-2020
+expected_new_cost_nok: 0
+formal_privacy_review: deferred
 ---
 
-# Snart v1 — konservativt regel- og evidensgrunnlag
+# Snart — autonomt, historisk forberedelsesgrunnlag
 
 ## Beslutningsstatus
 
-**Pending. Ingen regel i dette dokumentet er godkjent for produksjon ennå.**
+Dette dokumentet er den bindende produkt- og datakontrakten for plan 01-13–01-18. Den erstatter det tidligere `pending_approval`-utkastet og alle seks manuelle forhåndsgodkjenninger. Gjeldende eierfullmakt i `AGENTS.md` og `docs/DECISION-LOG.md` 2026-07-24 gjør arbeidslisten autonom så lenge scope, sannhet, kostnad og tekniske porter holdes.
 
-Dette er et pre-code-grunnlag for `Snart`, ikke en implementasjon og ikke en medisinsk retningslinje. Dokumentet avgrenser hvilke råd Babyora kan gi på en forsvarlig og etterprøvbar måte fire til seks uker frem i tid. Det endrer ikke dagens påkledningsmotor, temperaturterskler, sikkerhetsregler, plaggkatalog, Plus-tilgang eller andre appflater.
+Snart er **nøytral historisk forberedelse**, ikke et værvarsel, helseråd eller sikkerhetsråd. En teknisk port kan gi `FAIL`, holde `soon_preparation` av eller gjøre et sted `unavailable`; den skal ikke erstattes av eierbekreftelse eller en udokumentert antakelse.
 
-Før den kanoniske capability-en `soon_preparation` kan settes til tilgjengelig, må alle sju radene i godkjenningsjournalen være godkjent:
+## Låste beslutninger
 
-1. Produkteier godkjenner produktprinsipp og gruppesemantikk.
-2. Produkteier og høy-risiko-fagreview godkjenner de numeriske produktgrensene.
-3. Relevant norsk fagperson godkjenner helse-/sikkerhetscopy og avgrensninger.
-4. Data-/høy-risiko-reviewer godkjenner klimadatapakken, proveniens og validator.
-5. Produkteier og fagreview godkjenner størrelsesnotene.
-6. Produkteier og personvernreview godkjenner den session-only/no-persistence-kontrakten for `Har allerede`.
-7. En uavhengig høy-risiko-verifikator godkjenner implementasjonen på eksakt kandidat-SHA.
-
-Etter de seks første godkjenningene, men før modellkode eller kandidat-hash, skal dette dokumentet gjennomgå en eksplisitt, ikke-normativ statusovergang: `ruleset_version` blir `snart-v1.0-approved`, `status` blir `approved_for_model_candidate`, beslutningsstatus og regel-/størrelsesannotasjoner peker til de seks daterte bevisene, og delen med uavklarte beslutninger erstattes av et bevisbundet beslutningsreferat. Bare status, revieweridentitet, dato og evidensreferanser kan endres i denne overgangen; triggere, terskler, grupper, copy, kilde-ID-er, input-/resultatskjema og personvernsemantikk skal være uendret. En substansiell endring krever ny planlegging og fersk uavhengig kontroll. `Implementasjon` forblir alene `Pending` til eksakt kandidat er eksternt godkjent.
-
-Inntil da skal fanen være skjult eller vise en sannferdig `unavailable`-tilstand. Den skal ikke vise syntetiske eksempelråd som kan forveksles med personlige råd.
-
-## Formål og ikke-medisinsk grense
-
-`Snart` skal svare på et begrenset spørsmål:
-
-> Hvilke **plaggkategorier kan det være fornuftig å sjekke** før perioden 28–42 lokale kalenderdager fra i dag, basert på barnets alder, fast hjemsted og historisk klima?
-
-Funksjonen skal:
-
-- hjelpe med forberedelse, ikke stille diagnose eller fastsette en sikkerhetsgrense;
-- gi kategorier, ikke handlepåbud, merker, produkter eller affiliate-lenker;
-- bruke forsiktig språk som `kan bli aktuelt`, `sjekk at dere har`, og `ut fra normalen`;
-- skille historisk klimatologi fra et værvarsel;
-- forklare usikkerhet og be brukeren kontrollere korttidsvarsel, UV-varsel, passform og barnet nærmere dagen;
-- respektere at barn reagerer ulikt, beveger seg ulikt og vokser ulikt;
-- aldri gjøre nødvendig sikkerhetsinformasjon avhengig av Plus.
-
-Funksjonen skal ikke svare på om barnet er korrekt kledd i en konkret situasjon. Dagens anbefaling og den eksisterende påkledningsmotoren er fortsatt fasit for den konkrete dagen.
-
-## Kilder og hva de faktisk støtter
-
-Alle kilder ble kontrollert 2026-07-19. Kildene støtter generelle prinsipper. De støtter **ikke** Babyoras eksakte numeriske Snart-grenser; disse er eksplisitt merket produktpolicy og står Pending.
-
-| Kilde | Direkte støtte | Begrensning |
+| ID | Beslutning | Konsekvens |
 |---|---|---|
-| [Helsenorge: Sikkerhet for nyfødte og små barn](https://www.helsenorge.no/forstehjelp/sikkerhet-for-sma-barn/) | Barn blir raskere kalde enn voksne; vind øker kulderisiko; klær tilpasses aktivitet; lag-på-lag; romslige klær/sko; dekk hode/hals; økt oppmerksomhet ved omtrent −10 til −15 °C, særlig med vind. | Gir ikke en handleliste, sesonggrense eller fire–seks-ukers prediksjon. |
-| [Helsenorge: Solbeskyttelse – barn og sol](https://www.helsenorge.no/sykdom/hud-og-har/solbeskyttelse-barn-og-sol/) | Spedbarn under ett år bør ikke være i direkte sol; barn 1–3 år beskyttes hovedsakelig med klær, solhatt og solbriller; UV-varsel må sjekkes. | Temperatur og kalendermåned kan ikke brukes som erstatning for UV-varsel. |
-| [DSA: Solbeskyttelse i skoler og barnehager](https://www.dsa.no/sol-og-solarium/solbeskyttelse-i-skoler-og-barnehager) | Barn trenger ekstra solbeskyttelse; klær og hodeplagg beskytter; følg UV-varsel. | Underbygger ikke en bestemt solsesong eller solhatt fra en bestemt dato. |
-| [DSA: Kva slags klede gir best solbeskyttelse?](https://www.dsa.no/sol-og-solarium/kva-slags-klede-gir-best-solbeskyttelse) | Klær kan gi god UV-beskyttelse; beskyttelsen varierer med stoff, vev, farge og om plagget er vått. | Babyora kan derfor ikke love UV-beskyttelse bare ut fra generisk plaggnavn. |
-| [1177: Att klä barn för att vara ute](https://www.1177.se/Stockholm/barn--gravid/att-ta-hand-om-barn/praktiska-rad-i-vardagen/att-kla-barnet-for-att-vara-ute/) | Offentlig svensk helseinformasjon: klær avhenger av alder, vær og aktivitet; flere tynne lag; fukt kjøler; yngre/stillesittende barn trenger annen tilpasning; våte plagg byttes. | Sekundær nordisk støtte. Norske kilder har forrang ved konflikt. |
-| [MET: Hva er en klimanormal?](https://www.met.no/vaer-og-klima/ny-normal-i-klimaforskningen) | En klimanormal er et 30-årsgjennomsnitt som beskriver typisk klima på et sted. | En normal er ikke et konkret værvarsel og kan ikke love hva som skjer i målperioden. |
-| [MET: Klimadata](https://www.met.no/vaer-og-klima/sesongvarsel/klimadata) | MET bruker normalperioden 1991–2020 for temperatur og nedbør i dagens klimafremstilling. | Sesongoversikt er grov og må ikke presenteres som lokal dagsprognose. |
-| [MET Locationforecast 2.0](https://api.met.no/weatherapi/locationforecast/2.0/documentation) og [datamodellen](https://docs.api.met.no/doc/locationforecast/datamodel.html) | Locationforecast dekker omtrent ni dager; mellomlangt varsel bruker ensembledata. | De ni dagene kan ikke strekkes, kopieres eller interpoleres til D+28–D+42. |
-| [MET: Spørsmål og svar om sesongvarsel](https://www.met.no/vaer-og-klima/sesongvarsel/sporsmal-og-svar) | Lang horisont er sannsynlighetsvarsling; sesongvarsling er særlig usikker i våre områder; temperatur er generelt sikrere enn nedbør. | V1 bruker ikke sesongvarsel til konkrete plaggpåstander. |
-| [Frost API: historiske vær- og klimadata](https://frost.met.no/howto.html) og [Climate normals-endepunktet](https://frost.met.no/reference) | METs arkiv gir tilgang til kvalitetssikrede daglige/månedlige observasjoner og klimanormaler med kilde-/periodeproveniens. | Ingen ny runtime-API-avhengighet er godkjent. V1 krever en forhåndsbygget, versjonert datapakke. |
+| D-01 | Plan 01-13–01-18 kjøres autonomt. | Ingen menneskelig stopptask, eiergodkjenning, fagport eller manuelt gjenopptakssignal. |
+| D-02 | Snart beskriver historisk grunnlag, aldri prognose. | All synlig copy sier 1991–2020 og «ikke et værvarsel». |
+| D-03 | MET `seNorge_2018` er eneste klimakilde. | Uthenting skjer i en separat, reproduserbar build-time-pipeline; appen har ingen runtime klima-API. |
+| D-04 | Data skal aldri fabrikeres eller erstattes stille. | Manglende/ugyldig profil, kilde, dekning, schema, lisens eller hash gir `unavailable`. Ingen Frost-, forecast-, nabo- eller syntetisk fallback. |
+| D-05 | Tallgrensene eies av Babyora. | `babyora-snart-heuristics@2` er en versjonert produktheuristikk, ikke en MET-, helse- eller sikkerhetsgrense. |
+| D-06 | Sol-, helse-, kuldeeksponerings-, sikkerhets-, størrelse- og passformpåstander er ute. | Ingen solsignal, UV-copy, medisinsk rationale, eksponeringsråd, størrelsesinput eller passformnote finnes i modell eller UI. |
+| D-07 | `Har allerede` er session-only. | Ingen URL, storage, logger, analytics, backend, barn-ID eller tidspunktshistorikk; state nullstilles ved relevante grenser. |
+| D-08 | Høyrisiko krever determinisme og to uavhengige reviewer. | Root-orchestratoren innhenter to distinkte read-only reviewer på eksakt immutable kandidattuple; eksisterende agenter kan gjenbrukes når de ikke har implementert kandidaten. Identitetssignerte JSON-receipts er konsistensbevis, ikke kryptografisk proveniens. |
+| D-09 | Forventet ny kostnad er NOK 0. | Ingen betalt fallback eller ekstra kreditt. Ny enkelt- eller aggregert forpliktelse over NOK 1 000 krever separat eierbeslutning og pådras ikke av disse planene. |
+| D-10 | Capability aktiveres først når eksakt kandidat er grønn. | `soon_preparation=false` gjennom data-, modell- og UI-planene; en mislykket port ruller tilbake til false. |
+| D-11 | Ubygde løfter forblir av. | `family_sharing=false` og `personal_calibration=false`; de nevnes ikke som leverte fordeler. |
+| D-12 | Ingen ny appmedia mens flaten endres. | Tester bruker tekst, DOM, tilgjengelighet og E2E uten screenshot, video eller trace. Fase 4 eier senere fysisk/visuell konvergens. |
 
-## Samsvar med dagens produksjonsmodell
+## Formål og ikke-mål
 
-Snart velger planleggingskonsepter, ikke nye motorplagg. Konseptene må kunne spores til eksisterende produksjonsroller:
+Snart svarer bare på:
 
-| Snart-konsept | Eksisterende rolle/kategori | Eksempler som finnes i dagens katalog | Begrensning |
-|---|---|---|---|
-| `snart.base_layer` | `base_fullbody`, `base_top`, `base_bottom` / `innerst` | body, teknisk undertøysett, ullsett, T-skjorte, bukse | Snart velger ikke materiale eller eksakt variant. |
-| `snart.mid_layer` | `mid_fullbody`, `mid_top`, `mid_bottom` / `mellomlag` | mellomlag i ull eller fleece | Materialpreferanse og konkret vær avgjøres senere av motoren. |
-| `snart.weather_shell` | `shell_fullbody` / `yttertoy` | regndress, vinddress | Historisk nedbørsrisiko kan bare begrunne beredskap, ikke si at det vil regne. |
-| `snart.insulated_outer` | `insulated_fullbody` / `yttertoy` | lett/varm kjøredress eller vinterdress | Eksakt variant avhenger av situasjon, aktivitet og konkret vær; aldri anbefal tykk dress i bilstol. |
-| `snart.cold_headwear` | `headwear` / `ekstra` | tynn lue, lue, balaklava | Snart velger ikke varmegrad eller sier at balaklava er nødvendig. |
-| `snart.handwear` | `handwear` / `ekstra` | tynne/varme votter, regnvotter | Konkret type avgjøres nærmere dagen. |
-| `snart.sun_hat` | `headwear` / `ekstra` | solhatt | Solhatt erstatter ikke skygge eller kontroll av UV-varsel. |
-| `snart.sun_covering` | `base_*` / `innerst` | lette, dekkende klær | Ingen generell UPF-påstand uten dokumentert plaggdata. |
+> Hvilke eksisterende plaggkategorier kan det være nyttig å sjekke at er tilgjengelige for perioden 28–42 lokale kalenderdager fra i dag, basert på validerte historiske værmønstre ved fast hjemsted?
 
-Kildekode kontrollert uten endring:
+Funksjonen:
 
-- `src/lib/clothing-engine-v2/age.ts` støtter 0–24 måneder og beskriver aldersgrenser som produktgrenser.
-- `src/lib/clothing-engine-v2/types.ts` har eksplisitte roller og materialealternativer, inkludert ull, fukttransporterende syntet, fleece, bomull, skall og syntetisk isolasjon.
-- `src/lib/clothing-engine-v2/catalog.ts` inneholder eksisterende varianter for innerlag, mellomlag, skall, isolert yttertøy, hode, hender og føtter.
-- `src/data/garment-category.ts` grupperer dagens plagg i `innerst`, `mellomlag`, `yttertoy`, `ekstra` og `utstyr`.
-- Legacy-tabellene har konkrete temperaturgrenser som selv sier at de må fagvalideres. De er ikke faglig evidens for Snart og skal ikke kopieres ukritisk.
+- viser kategorier, ikke produkter, kjøpspåbud, materialrangering eller en konkret dags anbefaling;
+- bruker bare fast hjemsted og en forhåndsbygget klimatologiprofil;
+- viser eksakt målperiode og historisk kildegrunnlag;
+- lar brukeren markere handlingspunkter som `Har allerede` i aktiv React-session;
+- endrer ikke anbefalingsmotor, plaggkatalog, terskler, guardrails eller Motor V2.
 
-## V1-inndata
+Følgende finnes ikke i Snart v1:
 
-Alle felt valideres før en regel kjøres. Ukjent eller ugyldig verdi skal gi `unavailable`, ikke et standardråd.
+- helseråd, sikkerhetsråd, medisinske påstander eller råd om kuldeeksponering;
+- sol, UV, solhatt eller soldekkende regler;
+- størrelse, passform, vekst, fødselsdato eller aldersutledet plaggvalg;
+- automatisk telefonposisjon, korttidsvarsel, sesongvarsel eller runtime klimakall;
+- garderoberegister, barn-ID, navn, koordinathistorikk, tidsstempler fra brukerhandlinger eller telemetry.
 
-| Felt | Krav | Bruk |
-|---|---|---|
-| `asOfLocalDate` | Gyldig `YYYY-MM-DD` | D0 for kalenderregning. |
-| `timezone` | Eksakt `Europe/Oslo` i v1 | Hindrer DST- og dagsskiftfeil. |
-| `birthDate` | Gyldig lokal fødselsdato | Beregner hele måneder på hver dato i målperioden; aldri aldersbasert klesstørrelse. |
-| `homePlaceKey` | Fast hjemsted, ikke løpende telefonposisjon | Slår opp én godkjent klimaprofil uten posisjonshistorikk. |
-| `climateProfile` | `valid`, versjonert og proveniensmerket 1991–2020-profil | Eneste langhorisont-værgrunnlag i v1. |
-| `alreadyHaveConceptIds` | Mengde av stabile Snart-konsept-ID-er | Lettvektsvalget `Har allerede`; ikke en garderobedatabase. |
-| `currentSizeLabel` | Valgfri, behandles som ugjennomsiktig tekst | Kan vises i en forsiktig passformnote; brukes aldri i matematikk. |
-| `sizeCheckedAtLocalDate` | Valgfri gyldig lokal dato | Avgjør om størrelsesinformasjon er fersk nok til å omtales. |
-| `fitSignal` | Valgfri `roomy | fits | tight | unknown` | Brukerstyrt passformsignal; aldri utledet fra alder eller bilde. |
-| `materialPreference` | Eksisterende enum | Sikrer at senere konkret anbefaling ikke bryter brukerens ullpreferanse. Snart-teksten er materialnøytral. |
+## Klimakilde og build-time-kontrakt
 
-Ikke-inndata i v1:
+### Kilde
 
-- løpende GPS eller barnets posisjon;
-- ni-/ti-dagers værvarsel som bevis for målperioden;
-- bilder, merke, pris, beholdning, antall plagg eller kjøpshistorikk;
-- utviklingsmilepæler som antas fra alder, for eksempel at barnet går;
-- medisinske tilstander, diagnose eller individuell temperaturtoleranse.
+Pakken bygges kun fra METs offisielle, kompakte `seNorge_2018` månedsnormaler for 1991–2020:
 
-## Eksakt tidsvindu
+- `tg_normal_1991_2020_monthly_MM.nc` med variabel `tg`, enhet `Celsius`, `time: mean`, filversjon `1.0` og kildeversjon `v23_09`;
+- `rr_normal_1991_2020_monthly_MM.nc` med variabel `rr`, enhet `mm`, `time: sum`, filversjon `1.0` og kildeversjon `v23_11`.
 
-La `D0 = asOfLocalDate` i `Europe/Oslo`.
+`MM` er eksakt `01`–`12`. Katalog-URL-ene er attribusjon, ikke dynamiske redirect-/discoveryinnganger. Kontrakten genererer en eksakt allowlist med 24 dataset-URL-er — to variabelfamilier × tolv måneder — og ingen andre datasettnavn kan hentes.
 
-- Første måldato: `D0 + 28 kalenderdager`.
-- Siste måldato: `D0 + 42 kalenderdager`.
-- Begge ender er inkludert.
-- Vinduet har alltid 15 unike lokale datoer.
-- Regning skjer med lokale kalenderdatoer, ikke `24 * 60 * 60 * 1000`; overgang til/fra sommertid får derfor ikke duplisere eller hoppe over en dato.
-- Barnets alder må være 0–24 hele måneder på **alle** 15 datoer. Hvis vinduet krysser ut av støttet alder, blir resultatet `unavailable` for hele vinduet; v1 lager ikke et delvis råd.
-- Brukerrettet periodeetikett viser eksakte datoer, for eksempel `29. august–12. september`, og undertekst `historisk normal, ikke værvarsel`.
+Alle nettverkskall følger den maskinlesbare `httpPolicy` i autonomikontrakten:
 
-## Klimagrunnlag og avledede signaler
+- Builderens uforanderlige modulkonstanter og caller-kontrakten må være identiske for hvert eneste `httpPolicy`-felt før `fetch` kan kalles: metode er eksakt `GET`, URL-skjema er eksakt `https:`, hostname er eksakt ASCII `thredds.met.no`, effektiv port er 443 (`URL.port` bare tom eller `443`), username/password/hash er tomme, og alle body-, status-, retry-, timeout-, redirect-, samtidighets- og headergrenser er frosset uavhengig av caller;
+- pathname matcher eksakt `^/thredds/dodsC/senorge/seNorge_2018/aggregated_products/(tg|rr)/seNorge2018_(tg|rr)_normal_1991_2020_monthly_(0[1-9]|1[0-2])\.nc\.(dds|das|ascii)$`; mappefamilie og variabelnavn må være identiske, URL-en må finnes i den genererte 24-elementers allowlisten, og `.ascii`-query parses strukturelt og tillater bare `time,lat,lon,tg,rr` med heltallsindekser innen validerte DDS-dimensjoner;
+- `fetch` bruker `redirect: "manual"`; alle 3xx, off-host `Location`, HTTPS→HTTP-downgrade, ukjent status og manglende/ukjent content type er terminal FAIL og følges aldri. Medietypetokenet må være eksakt `text/plain` eller `application/octet-stream` uten prefix-lookalikes; gyldige `;`-parametere kan følge;
+- timeout er 20 000 ms per forsøk; body leses streaming med hard grense 2 MiB for DDS/DAS/punkt-ASCII og 96 MiB for den ene koordinatgrid-responsen; avbrutt, trunkert eller større body er FAIL og caches ikke;
+- bare HTTP 200 aksepteres. Bare 429, 500, 502, 503 og 504 kan retries, maksimalt tre totale forsøk med 1 s og 2 s eksponentiell venting. Gyldig numerisk eller IMF-date `Retry-After` brukes som `max(backoff, retryAfter)` og clampes til 0–30 s;
+- `User-Agent` er frosset til eksakt `klemeg/1.0 (sivertskotvold@gmail.com)`, samme verdi som `VITE_METNO_USER_AGENT` i `.env.example`; kontrakttesten feiler dersom repositoryverdien mangler eller avviker, og builderen sender bare den identiske modulkonstanten. Underliggende nettverksfeil serialiseres alltid som fast `FAIL_NETWORK`-tekst uten fremmed message, stack, URL eller credentialmetadata;
+- off-host redirect, downgrade, timeout, abort, trunkering, oversize, 429 med/uten `Retry-After`, retrybar 5xx, ikke-retrybar status og feil User-Agent har frosne boundary-fixtures og tester.
 
-### Datapakke
+Appens produksjonskode importerer bare den committede pakken. Den kan ikke importere builder, `fetch`, THREDDS, Frost eller andre klimaendepunkter.
 
-V1 skal ikke ringe Frost eller et nytt klima-API under bruk. En separat, godkjent build-prosess kan lage `snart-climate-1991-2020-v1` fra kvalitetssikrede MET-data. Hver profil må minst ha:
+### Støttede steder
 
-- stabil `profileId`, datapakkeversjon og normalperiode `1991/2020`;
-- sted-/stasjon-/rutenettproveniens og lisens;
-- metode og kvalitet/status fra en separat validator;
-- per lokal kalenderdag historisk `p10` for døgnminimum, `p50` for døgnmiddel og `p90` for døgnmaksimum;
-- per lokal kalenderdag historisk sannsynlighet for minst 1 mm døgnnedbør;
-- datadekning og antall gyldige år.
+`src/data/no-cities.ts#NO_CITIES` er kanonisk build-input. Kontroll 2026-07-24 fant 60 oppføringer og 60 unike kanoniske nøkler. Antallet avledes alltid fra kildearrayen og hardkodes aldri i builder eller validator.
 
-Hvis godkjent daglig 1991–2020-data ikke kan produseres for hjemstedet, skal resultatet være `unavailable`. Månedsgjennomsnitt må ikke late som det er en daglig fordeling. En eventuell månedlig fallback krever en ny beslutning og er ikke godkjent her.
+`home-place-key@1` er eksakt:
 
-### Avledning for de 15 datoene
+1. `nameNfc` = Unicode NFC etter trim og kollaps av enhver Unicode-whitespace-run til én U+0020; `nameKey` = locale-uavhengig `nameNfc.toLowerCase()`;
+2. `latE4`/`lonE4` er signed heltall i 10⁻⁴ grad. Kildeverdien må være endelig, innen gyldig lat/lon-område og ligge innen `1e-8` av et heltall etter multiplikasjon med 10 000; ellers avvises hele kontraktbyggingen;
+3. `homePlaceKey` = `no-city:v1:${encodeURIComponent(nameKey)}:${latE4}:${lonE4}`;
+4. den kanoniske projeksjonen er `{homePlaceKey,nameNfc,latE4,lonE4}` sortert stigende etter UTF-8-bytes i `homePlaceKey`, serialisert som canonical JSON UTF-8/LF og SHA-256-hashet;
+5. runtime-match krever samme normaliserte navn og eksakt samme `latE4`/`lonE4`. Ingen prefix-, fuzzy-, koordinat-radius- eller automatic/effective-place-match er tillatt. Samme koordinat med ulikt navn, som de eksisterende Rana-oppføringene, er distinkte nøkler.
 
-| Signal | Deterministisk definisjon | Betydning og begrensning |
-|---|---|---|
-| `coldTailC` | Minimum av de 15 dagverdiene for historisk `p10(døgnminimum)` | Konservativt planleggingssignal for kjølige utfall som historisk har forekommet. Ikke et temperaturvarsel. |
-| `warmTailC` | Maksimum av de 15 dagverdiene for historisk `p90(døgnmaksimum)` | Kun kontekst/QA i v1; brukes ikke til å love varme. |
-| `expectedWetDays` | Sum av de 15 historiske sannsynlighetene for `døgnnedbør ≥ 1 mm` | Forventningsverdi fra historikk, ikke antall dager det vil regne. |
-| `maxSolarElevationDeg` | Maksimal astronomisk solhøyde for hjemstedet blant de 15 datoene | Angir at solbeskyttelse kan bli relevant. Er ikke UV-indeks og erstatter ikke UV-varsel. |
+Gridbinding `nearest-grid-cell@1` er også eksakt:
 
-Locationforecast-data kan vises i `Uke` for datoer tjenesten faktisk dekker, men må aldri fylle, ekstrapolere eller overstyre disse Snart-signalene. Sesongvarsel er eksplisitt utelatt i v1 fordi MET beskriver høy usikkerhet i våre områder.
+- beregn Haversine-avstand med jordradius 6 371 008,8 m fra stedets `latE4/lonE4` til hver endelig gridkoordinat;
+- kvantiser positiv avstand til millimeter med half-away-from-zero, sorter på `[distanceMillimetres,Y,X]`, og velg bare første geometriske celle; lik millimeteravstand brytes med laveste `Y`, deretter `X`;
+- maksimal avstand er 5 000 000 mm. Over grensen gir eksplisitt `grid_too_far`;
+- koordinatgrid-responsens validerte projiserte `Y`-/`X`-akseverdier følger den valgte gridindeksen inn i punktparseren; alle `lat.Y/lon.Y/family.Y`- og `lat.X/lon.X/family.X`-kart må være eksakt lik disse valgte akseverdiene, ikke bare hverandre;
+- valgt celle må ha endelig lat/lon og en endelig, ikke-`_FillValue` verdi for både `tg` og `rr` i alle tolv måneder. Hav/ugyldig celle eller ett manglende månedsfelt gir eksplisitt `grid_invalid_or_sea`; builderen prøver aldri nest nærmeste celle i stillhet;
+- boundary-fixtures dekker eksakt treff, sub-millimeter/tie, Y/X-tiebreak, 5 000 000/5 000 001 mm, invalid/havcelle og to navn med samme koordinat.
 
-## Resultatmodell og tilstander
+Manifestet registrerer hele kanoniske projeksjonshashen, hver binding, faktisk `canonicalPlaceCount`, `supportedProfileCount` og én eksplisitt unavailable-grunn per ikke-støttet oppføring. Validatoren krever at støttet + unavailable er eksakt lik den aktuelle hashede `NO_CITIES`-projeksjonen.
 
-### Tre separate tilstander
+Ugyldig eller ikke-kanonisk hjemsted velger aldri nærmeste profil ved runtime. Det gir `unavailable`.
 
-| Tilstand | Eksakt kriterium | Presentasjon |
-|---|---|---|
-| `ready` | Alle obligatoriske inndata og klimaprofil er gyldige; minst ett synlig element finnes etter regelkjøring, deduplisering og `Har allerede`-behandling. | Vis eksakte måldatoer, `Ut fra historisk normal`, de tre gruppene i fast rekkefølge og en usikkerhetsnote. Tomme grupper kan vises med `Ingen punkter`. |
-| `empty` | Evidensen er gyldig, men ingen synlige elementer gjenstår i noen gruppe. | `Ingenting å forberede akkurat nå.` Hvis alle handlingspunkter er merket `Har allerede`, kan sekundær tekst være `Du har markert det aktuelle som klart.` |
-| `unavailable` | Ugyldig/ukjent alder, målperioden går utenfor 0–24 måneder, manglende fast hjemsted, manglende/ugyldig klimaprofil, ukjent tidssone eller regler/datakilde ikke godkjent. | `Vi har ikke godt nok grunnlag for råd fire til seks uker frem.` Ingen plagg, skjulte råd eller påstått eksempelresultat. |
+### Reproduserbarhet og proveniens
 
-Entitlement-loading er en separat tilgangstilstand og skal ikke tolkes som `unavailable`. Free skal ikke få regelresultatet beregnet og skjult i DOM/logg; Free får bare den godkjente, kontekstuelle Plus-forklaringen.
+Build-pipelinen skal:
 
-### Grupper
+1. preflighte alle 24 månedlige DDS/DAS-skjemaer, kildeinstitusjon, fil-/kildeversjoner, periode, enheter, aggregation-attributt, `_FillValue` og lisens gjennom den frosne HTTP-policyen;
+2. løse gridceller med `nearest-grid-cell@1` og aldri nabo-fallback;
+3. hente ett sted, én variabel og én måned om gangen med maksimal samtidighet én, begrenset retry/backoff og resumérbar cache under ignorert `tmp/`;
+4. parse bare validert DAP2-ASCII og binde hvert svar til kontraktens eksakte variabel, måned, gridindeks og den valgte cellens validerte projiserte Y/X-akseverdier;
+5. avvise ukjente felt, duplikate/manglende måneder, ikke-endelige tall og `_FillValue`;
+6. bevare eksakte endelige `tg`-/`rr`-kildeverdier (bare `-0`→`0`), derivere og terskelsammenligne på disse råverdiene, og ellers sortere/serialisere med stabile nøkler, UTF-8 og LF; én-desimals half-away-avrunding er kun presentasjon;
+7. bygge to ganger fra separate tomme outputmapper mot den samme hashede råkilde-cachen;
+8. kreve byte-identisk pack- og manifest-hash;
+9. validere pakken offline i vanlige tester og build;
+10. bevare siste validerte committede pakke dersom et senere refresh feiler; et mislykket refresh får aldri overskrive den.
 
-1. `must_have` → synlig overskrift **Bør ha**.
-2. `nice_to_have` → synlig overskrift **Kjekt å ha**.
-3. `not_yet` → synlig overskrift **Ikke prioritert nå** med fast forklaring: `Ikke prioritert for denne perioden ut fra historisk normal. Sjekk korttidsvarselet nærmere dagen.`
+Manifestet inneholder minst:
 
-`Ikke prioritert nå` betyr aldri at plagget garantert ikke blir nødvendig. Regler får bare plassere en kategori her når en sterk historisk hale ligger på den milde siden av grensen. Nedbørs- og solkategorier plasseres aldri her i v1.
+`schemaVersion`, `derivationVersion`, `rulesetVersion`, `normalPeriod`, `createdFromGitSha`, `sourceCatalogUrls`, eksakt 24 `sourceDatasets[{url,family,variable,month,metadataSha256,responseSha256[]}]`, `sourceFileVersions`, `sourceVariableVersions`, `sourceUnits`, `sourceAggregations`, `sourceInstitution`, `sourceLicenseUri`, eksakt `sourceAttribution`/`sourceDisclaimer` fra kontrakten, `httpPolicyVersion`, `homePlaceKeyVersion`, `gridPolicyVersion`, `targetWindowDerivationVersion`, `placeGridBindings`, `monthCount`, `roundingPolicy`, `canonicalPlacesSha256`, `packSha256`, `builderSha256` og `contractSha256`.
 
-## Regelregister
+`generatedAt` kan bare ligge i et ikke-identitetsbærende kjørespor. Kandidatidentiteten er Git-SHA + kontrakt-SHA + datapakke-SHA.
 
-### Felles regelkrav
+### Lisens og attribusjon
 
-- Alle numeriske grenser i tabellene under er **produktpolicy-only**. De er valgt for et testbart, konservativt utkast og er ikke medisinske grenser.
-- `Bør ha` betyr `sjekk at kategorien er tilgjengelig`, ikke `kjøp nå`.
-- Copy skal alltid etterfølges av global note: `Dette bygger på historisk normal, ikke et værvarsel. Sjekk været, aktiviteten og barnet nærmere dagen.`
-- En regel kan aldri velge materiale, varmegrad, TOG, spesifikt plagg eller produkt.
-- Alle regler har status `Pending` frem til godkjenningene øverst er registrert.
+Manifest og kildevisning skal vise:
 
-### Temperatur og kulde
+- `Meteorologisk institutt (MET Norway)`;
+- eksakt datasettnavn, variabelversjoner, normalperiode og kilde-URL-er;
+- lisens-URI fra faktisk MET-metadata;
+- `Bearbeidet av Babyora`;
+- forklaring om at kildefilene er METs offisielle månedsnormalprodukter, mens Babyoras målperiodeberegning og plaggheuristikker verken er et MET-varsel eller en MET-anbefaling.
 
-| Stabil regel-ID | Eksakt trigger | Gruppe | Konsept/kategori | Forsiktig norsk copy | Rasjonale og kilder | Eksklusjoner | Usikkerhet / godkjenning |
-|---|---|---|---|---|---|---|---|
-| `SNART-V1-COLD-BASE-001` | `coldTailC <= 10` | `must_have` | `snart.base_layer` / innerst | `Kjølige dager har forekommet ofte nok i denne perioden til at det er lurt å sjekke et lett, justerbart innerlag.` | Lag-på-lag og tørr/varmeregulering støttes av Helsenorge og 1177. | Ingen materialrangering; ingen ullpåstand; ikke søvn/TOG. | Grensen 10 °C og gruppen er produktpolicy-only. `Pending`. |
-| `SNART-V1-COLD-BASE-002` | `10 < coldTailC <= 16` | `nice_to_have` | `snart.base_layer` / innerst | `Et lett innerlag kan være nyttig hvis perioden blir kjøligere enn normalt.` | Samme lagprinsipp som over. | Ikke si at kulde er ventet. | 16 °C er produktpolicy-only. `Pending`. |
-| `SNART-V1-COLD-MID-003` | `coldTailC <= 5` | `must_have` | `snart.mid_layer` / mellomlag | `Sjekk at dere har et mellomlag som enkelt kan tas av og på.` | Flere tynne lag gjør justering mulig; aktivitet påvirker behovet. Helsenorge og 1177. | Ikke velg ull/fleece; ikke angi antall lag. | 5 °C er produktpolicy-only. `Pending`. |
-| `SNART-V1-COLD-MID-004` | `5 < coldTailC <= 10` | `nice_to_have` | `snart.mid_layer` / mellomlag | `Et lett mellomlag kan være fint å ha klart til kjølige dager.` | Helsenorge/1177 støtter justerbare lag, ikke terskelen. | Ingen kjøpsoppfordring. | Produktpolicy-only. `Pending`. |
-| `SNART-V1-COLD-MID-005` | `coldTailC > 10` | `not_yet` | `snart.mid_layer` / mellomlag | `Et eget varme-mellomlag er ikke prioritert for denne perioden ut fra historisk normal.` | Dette er en planleggingsfraværsregel, ikke helseråd. | Må ikke vises som garanti; fjernes hvis profilens datakvalitet ikke er godkjent. | Sterk-hale-metode og grense er produktpolicy-only. `Pending`. |
-| `SNART-V1-COLD-OUTER-006` | `coldTailC <= 0` | `must_have` | `snart.insulated_outer` / isolert yttertøy | `Sjekk at dere har isolerende yttertøy som kan tilpasses aktivitet og konkret vær.` | Barn blir raskere kalde; vind og aktivitet betyr noe. Helsenorge. | Ingen eksakt dress/varmegrad; aldri bilstolråd; ikke si `trygt`. | 0 °C er produktpolicy-only. `Pending`. |
-| `SNART-V1-COLD-OUTER-007` | `0 < coldTailC <= 5` | `nice_to_have` | `snart.insulated_outer` / isolert yttertøy | `Et varmere ytterplagg kan være nyttig hvis perioden blir kjøligere enn normalt.` | Generelt kuldeprinsipp fra Helsenorge; ikke terskelen. | Ikke anbefal vinterdress som eneste løsning. | Produktpolicy-only. `Pending`. |
-| `SNART-V1-COLD-OUTER-008` | `coldTailC > 10` | `not_yet` | `snart.insulated_outer` / isolert yttertøy | `Tungt isolert yttertøy er ikke prioritert for denne perioden ut fra historisk normal.` | Planleggingsfraværsregel. | Må ikke skjule at korttidsværet kan avvike; ingen fraværsregel mellom 5 og 10 °C. | Produktpolicy-only. `Pending`. |
-| `SNART-V1-COLD-HEAD-009` | `coldTailC <= 5` | `must_have` | `snart.cold_headwear` / hodeplagg | `Sjekk at et hodeplagg som kan tilpasses været er klart.` | Helsenorge peker på ører/hode/hals og vind som relevante i kulde. | Ikke velg balaklava eller varmegrad; ingen løse snorer/skjerf-råd. | 5 °C er produktpolicy-only. `Pending`. |
-| `SNART-V1-COLD-HEAD-010` | `5 < coldTailC <= 10` | `nice_to_have` | `snart.cold_headwear` / hodeplagg | `Et lett hodeplagg kan være fint å ha klart til kjølige dager.` | Helsenorge/1177 støtter værtilpasning. | Ikke påstå at barn under ett må bruke lue hele året. | Produktpolicy-only. `Pending`. |
-| `SNART-V1-COLD-HAND-011` | `coldTailC <= 5` | `must_have` | `snart.handwear` / håndplagg | `Sjekk at dere har votter som passer situasjonen og ikke sitter trangt.` | Hender er utsatt i kulde; passform og vind betyr noe. Helsenorge. | Ikke velg materiale, vanntetthet eller varmegrad fra klimatologi alene. | 5 °C er produktpolicy-only. `Pending`. |
-| `SNART-V1-COLD-HAND-012` | `5 < coldTailC <= 10` | `nice_to_have` | `snart.handwear` / håndplagg | `Et lett par votter kan være fint å ha klart hvis perioden blir kjølig.` | Generelt kuldeprinsipp; terskelen er ikke kildebestemt. | Ikke anta aktiv lek fra alder. | Produktpolicy-only. `Pending`. |
+## Datapakke `babyora-monthly-normal-pack@2`
 
-### Nedbør
-
-| Stabil regel-ID | Eksakt trigger | Gruppe | Konsept/kategori | Forsiktig norsk copy | Rasjonale og kilder | Eksklusjoner | Usikkerhet / godkjenning |
-|---|---|---|---|---|---|---|---|
-| `SNART-V1-WET-SHELL-013` | `expectedWetDays >= 4.0` | `must_have` | `snart.weather_shell` / værbeskyttende ytterlag | `Historikken viser flere våte dager i denne perioden. Sjekk at et værbeskyttende ytterlag er klart.` | Fukt kjøler, og ytterlag brukes for å holde barnet tørt; 1177. Frost/MET gir historisk nedbørsgrunnlag. | Ikke si at det vil regne; ikke velg regndress kontra vognregntrekk; ingen regnvotter uten konkret situasjon. | `≥4 av 15 forventede våtdager` er produktpolicy-only. Nedbør har høy usikkerhet. `Pending`. |
-| `SNART-V1-WET-SHELL-014` | `2.0 <= expectedWetDays < 4.0` | `nice_to_have` | `snart.weather_shell` / værbeskyttende ytterlag | `Et værbeskyttende ytterlag kan være nyttig hvis perioden blir våtere enn normalt.` | Samme fukt-/ytterlagsprinsipp. | Ingen `not_yet`-regel for regn; lav historisk verdi utelukker ikke regn. | Produktpolicy-only. `Pending`. |
-
-### Solbeskyttelse
-
-| Stabil regel-ID | Eksakt trigger | Gruppe | Konsept/kategori | Forsiktig norsk copy | Rasjonale og kilder | Eksklusjoner | Usikkerhet / godkjenning |
-|---|---|---|---|---|---|---|---|
-| `SNART-V1-SUN-HAT-015` | `maxSolarElevationDeg >= 30` | `must_have` | `snart.sun_hat` / solhatt | `Solbeskyttelse kan bli aktuelt i denne perioden. Ha gjerne solhatt klart og sjekk UV-varselet nærmere dagen.` | Helsenorge og DSA anbefaler klær/hodeplagg og kontroll av UV-varsel for barn. | Solhatt erstatter ikke skygge; ingen UPF-påstand; ingen direkte-sol-oppfordring. | 30° solhøyde er kun en produktpolicy for å vise forberedelsesrådet, ikke en UV-grense. `Pending`. |
-| `SNART-V1-SUN-COVER-016` | `maxSolarElevationDeg >= 30` | `must_have` | `snart.sun_covering` / lette, dekkende klær | Alder 0–11 mnd: `Spedbarn bør ikke være i direkte sol. Ha lette, dekkende klær klart og prioriter skygge.` Alder 12–24 mnd: `Ha lette, dekkende klær klart, og sjekk UV-varselet nærmere dagen.` | Direkte aldersavgrenset solråd fra Helsenorge; klær støttes av DSA. | Ikke anbefal en bestemt solkrem; ikke hevde at generisk klær har bestemt UPF. | Solhøyde-triggeren er produktpolicy-only; helseordlyden krever faglig kontroll. `Pending`. |
-
-### Bevisst utelatte regler
-
-Følgende er **ikke** v1-regler:
-
-- vindbasert handleliste: ingen godkjent lokal 28–42-dagers vindprofil og terskel;
-- sko/vintersko fra alder: alder er ikke bevis på at barnet går, og passform må prøves;
-- `overgangsdress`: dette er ikke et eget stabilt produksjonskonsept i dagens V2-katalog;
-- eksakt ull/bomull/syntet-anbefaling: konkret materiale avhenger av vær, aktivitet og preferanse;
-- frostkrem/ansiktskrem, hals/skjerf, bilstol, søvn, TOG eller vognpose: høyere sikkerhets- og situasjonsavhengighet enn denne planleggingsflaten kan bære;
-- generisk `regnvotter` til alle: behovet avhenger av om hendene faktisk eksponeres og av aktivitet;
-- utviklingsmilepæler, barnehagestart eller reisebehov utledet fra alder;
-- produkt-/butikkforslag og affiliate-lenker.
-
-## Størrelsesnoter — sannsynlighet uten falsk presisjon
-
-Størrelse utledes aldri fra alder, vekstkurve eller et standardisert alder–størrelse-kart. `currentSizeLabel` er en visningsverdi, ikke et tall motoren regner på.
-
-| Stabil regel-ID | Eksakt trigger | Resultat | Kilde/rasjonale | Status |
-|---|---|---|---|---|
-| `SNART-V1-SIZE-001` | `fitSignal == tight`, `currentSizeLabel` finnes, og `0 <= daysSince(sizeCheckedAtLocalDate) <= 30` | Gruppens fotnote: `Barn vokser ulikt. Hvis {size} allerede sitter trangt, kan neste størrelse bli aktuell før perioden begynner. Sjekk barnets mål og plaggets størrelsesguide.` | Helsenorge sier klær og sko må være romslige nok; for trangt kan gjøre barnet kaldere. Neste størrelse er en mulighet, ikke en prognose. | 30-dagersgrensen og copy er produktpolicy-only. `Pending`. |
-| `SNART-V1-SIZE-002` | `fitSignal in {fits, roomy, unknown}`, gyldig/fersk `currentSizeLabel` | Global note: `Størrelse kan endre seg før perioden. Sjekk passformen i {size} nærmere datoen.` | Ingen vekstantakelse. | `Pending`. |
-| `SNART-V1-SIZE-003` | størrelse mangler, dato mangler, eller `daysSince > 30` | `Størrelse er ikke anslått. Sjekk dagens passform og plaggets størrelsesguide før eventuelt kjøp.` | Hindrer falsk presisjon. | `Pending`. |
-
-Reglene skal aldri skrive `størrelse 86 om seks uker`, beregne `neste = nå + 6`, rangere merke eller anbefale å kjøpe større `for sikkerhets skyld`.
-
-## `Har allerede`
-
-- Brukeren kan merke et stabilt Snart-konsept som `Har allerede`.
-- Valget finnes kun som `alreadyHaveConceptIds` i aktiv Planlegg/Snart-minnetilstand. Det skrives aldri til lokal lagring, URL, logger, analyse eller backend og inneholder ingen `childId`, tidspunkt, bilde, merke, antall eller pris.
-- Tilstanden nullstilles når Snart avmonteres, barnet/profilen endres eller D+28–D+42-vinduet endres. Hvert nytt uforanderlig ID-sett sendes inn i den rene modellen; UI filtrerer aldri et allerede bygget resultat på egen hånd.
-- Et merket konsept fjernes fra `Bør ha`/`Kjekt å ha` og kan vises i en liten `Allerede klart`-oppsummering.
-- Valget endrer aldri dagens anbefalingsmotor og brukes ikke til å anta at hele garderoben er komplett.
-- `Har allerede` brukes ikke på `Ikke prioritert nå`.
-- Hvis alle handlingspunkter er merket og ingen synlige `not_yet`-konsepter gjenstår, blir tilstanden `empty`, ikke en ny salgsmelding. Hvis minst ett vinnende `not_yet`-konsept fortsatt er synlig, forblir resultatet `ready` med bare disse punktene.
-
-## Deterministisk prioritering og deduplisering
-
-### Gruppeprioritet
-
-`must_have` > `nice_to_have` > `not_yet`.
-
-Hvis flere regler produserer samme `conceptId`, beholdes konseptet bare i høyeste gruppe. Rasjonale og kilde-ID-er slås sammen i stigende regel-ID-rekkefølge. Copy kommer fra den vinnende regelen; ingen tilfeldig eller språkmodellgenerert sammenslåing.
-
-### Stabil konseptrekkefølge
-
-1. `snart.base_layer`
-2. `snart.mid_layer`
-3. `snart.weather_shell`
-4. `snart.insulated_outer`
-5. `snart.cold_headwear`
-6. `snart.handwear`
-7. `snart.sun_hat`
-8. `snart.sun_covering`
-
-Innen samme konsept brukes laveste stabile regel-ID som tie-breaker. Samme inndata og samme dataversjon skal gi byte-identisk domenerekkefølge uavhengig av innsettingsrekkefølge, enhetens språkinnstilling og klokkeslett.
-
-### Konflikter
-
-- `not_yet` taper alltid for `nice_to_have` eller `must_have` for samme konsept.
-- Solhatt og kaldt hodeplagg er separate konsepter og kan begge vises ved skiftende vår-/høstforhold; copy forklarer ulike formål.
-- `weather_shell` og `insulated_outer` er separate funksjoner og kan begge vises. UI skal ikke påstå at ett spesifikt plagg må dekke begge.
-- `alreadyHaveConceptIds` filtreres etter deduplisering, aldri før. Et konsept med vinnende `must_have`/`nice_to_have` som er merket, fjernes helt og kan ikke dukke opp igjen via en lavere `not_yet`-regel. Et konsept hvis vinnende resultat allerede er `not_yet`, filtreres aldri av `alreadyHaveConceptIds` og viser ingen `Har allerede`-handling.
-
-## Forbudte påstander
-
-Følgende ordlyd eller logikk blokkerer release:
-
-- `Dette er trygt`, `barnet vil ikke fryse`, `garantert`, eller andre sikkerhetsløfter;
-- `du må kjøpe`, `mangler`, `nødvendig` uten den avtalte, forsiktige gruppekonteksten;
-- eksakt vær, nedbør, temperatur, dato eller UV fire til seks uker frem;
-- å beskrive Locationforecast-data som dekning for D+28–D+42;
-- eksakt klesstørrelse eller veksttempo fra alder;
-- at ull alltid er tryggere eller at syntet/bomull er uakseptabelt;
-- at generiske klær har en bestemt UPF;
-- at `Ikke prioritert nå` betyr at plagget umulig blir nødvendig;
-- merke-, butikk-, pris- eller affiliateprioritering;
-- usynlig råd i DOM, logger eller analysehendelser til en Free-bruker;
-- koordinater, barnets navn/fødselsdato, plaggvalg eller `Har allerede` i analysepayload;
-- råd om bilstol, søvn/TOG, medisinske tilstander eller behandling;
-- å bruke alder som bevis på gange, aktivitet, barnehagestart eller annen milepæl.
-
-## Sporbarhet
-
-Hvert domeneelement må bære:
+Hver støttet hjemstedsprofil har eksakt tolv rader, sortert fra januar til desember:
 
 ```text
-rulesetVersion
-ruleIds[]
-conceptId
-group
-windowStartLocalDate
-windowEndLocalDate
-timezone
-climateProfileId
-climateDataVersion
-normalPeriod
-evidenceSourceIds[]
-uncertaintyCode
-sizeNoteRuleId?
+{month, meanTemperatureC, monthlyPrecipitationMm}
 ```
 
-`uncertaintyCode` er én av:
+`month` må være hvert heltall 1–12 nøyaktig én gang. Begge verdier må være endelige og ikke lik kildens `_FillValue`. Pakken serialiserer de eksakte endelige `tg`-/`rr`-kildeverdiene; bare `-0` normaliseres til `0`, og JSON bruker aldri eksponentform. Runtimeberegning og terskelsammenligning bruker disse lagrede råverdiene. Temperatur og nedbør avrundes først ved presentasjon til én desimal med half-away-from-zero; gridavstand lagres med null desimaler etter samme modus. Ett avvik gjør hele stedsprofilen `unavailable`; delvise råd er ikke tillatt.
 
-- `HISTORICAL_NORMAL_NOT_FORECAST`
-- `PRECIPITATION_HIGH_VARIABILITY`
-- `UV_REQUIRES_NEAR_DATE_CHECK`
-- `SIZE_REQUIRES_FIT_CHECK`
-- `PROFILE_UNAVAILABLE`
+## Modellinput og målperiode
 
-Brukerrettet copy skal komme fra versjonerte strenger knyttet til regel-ID. Ingen generativ tekstproduksjon er tillatt i denne funksjonen.
+Den rene modellen mottar bare:
 
-## Minimum testfixtures før implementasjonen kan godkjennes
+- `asOfLocalDate: YYYY-MM-DD`;
+- `timezone: "Europe/Oslo"`;
+- `homePlaceKey`;
+- `ageEligibleForWholeWindow: boolean`, beregnet oppstrøms uten at fødselsdato eller barn-ID krysser Snart-grensen;
+- `climateProfileId`;
+- et immutable sett `alreadyHaveConceptIds`.
 
-Alle fixtures fryser `Europe/Oslo`, `rulesetVersion`, klimadataversjon, fødselsdato, D0 og `alreadyHaveConceptIds`.
+Målperioden er D+28 til D+42, begge ender inkludert, alltid 15 unike lokale datoer. Kalenderregning bruker ISO-år/måned/dag i `Europe/Oslo`, ikke millisekunddøgn, og testes over begge DST-overganger.
 
-| Fixture | Inndata/signal | Påkrevd bevis |
+`ageEligibleForWholeWindow` er true bare når hele vinduet ligger i 0–24 måneder. Oppstrøms beregning lager 25-månedersdagen med kalender-månedsaddisjon og end-of-month-clamp; resultatet er eksakt `targetEndLocalDate < addCalendarMonthsClamped(birthLocalDate, 25)`. En 25-månedersdag på D+28, D+35 eller D+42 gjør hele resultatet `unavailable`; først D+43 er tillatt. Boundary-fixtures dekker dag 28/35/42/43 samt fødselsdag 29., 30. og 31. over februar/skuddår. Bare booleanen krysser Snart-grensen.
+
+## Avledede signaler
+
+`babyora-target-window-monthly-weighting@1` grupperer målperiodens 15 datoer etter kalendermåned:
+
+- `targetMeanTemperatureC = Σ(meanTemperatureC_month × targetDaysInMonth) / 15`;
+- `targetPrecipitationMm = Σ(monthlyPrecipitationMm_month / daysInMonth(targetYear, month) × targetDaysInMonth)`.
+
+Dette skalerer historiske månedsnormaler til den konkrete 15-dagersperioden. Det er aldri et værvarsel. Skuddår håndteres bare ved faktisk antall dager i den berørte februar; det finnes ingen 29.-februar-profil eller kalenderdagsfallback.
+
+## Produktheuristikk `babyora-snart-heuristics@2`
+
+Alle rader har `policyOwner: "Babyora"` og `evidenceType: "product_heuristic"`.
+
+| Regel-ID | Trigger | Intern gruppe | Konsept | Synlig setning |
+|---|---|---|---|---|
+| `SNART-H2-BASE-CHECK` | `targetMeanTemperatureC <= 12` | `check_first` | `snart.base_layer` | `Sjekk om dere har et lett innerlag tilgjengelig for perioden.` |
+| `SNART-H2-BASE-AVAILABLE` | `12 < targetMeanTemperatureC <= 16` | `available_if_needed` | `snart.base_layer` | `Et lett innerlag kan være greit å finne fram dersom perioden blir kjøligere enn det historiske mønsteret.` |
+| `SNART-H2-BASE-NOT-HIGHLIGHTED` | `targetMeanTemperatureC > 16` | `not_highlighted` | `snart.base_layer` | `Innerlag er ikke fremhevet av denne historiske perioden.` |
+| `SNART-H2-MID-CHECK` | `targetMeanTemperatureC <= 7` | `check_first` | `snart.mid_layer` | `Sjekk om dere har et mellomlag tilgjengelig for perioden.` |
+| `SNART-H2-MID-AVAILABLE` | `7 < targetMeanTemperatureC <= 12` | `available_if_needed` | `snart.mid_layer` | `Et mellomlag kan være greit å finne fram dersom perioden blir kjøligere enn det historiske mønsteret.` |
+| `SNART-H2-MID-NOT-HIGHLIGHTED` | `targetMeanTemperatureC > 12` | `not_highlighted` | `snart.mid_layer` | `Mellomlag er ikke fremhevet av denne historiske perioden.` |
+| `SNART-H2-OUTER-CHECK` | `targetMeanTemperatureC <= 2` | `check_first` | `snart.insulated_outer` | `Sjekk om dere har et isolert ytterlag tilgjengelig for perioden.` |
+| `SNART-H2-OUTER-AVAILABLE` | `2 < targetMeanTemperatureC <= 7` | `available_if_needed` | `snart.insulated_outer` | `Et isolert ytterlag kan være greit å ha tilgjengelig dersom perioden blir kjøligere enn det historiske mønsteret.` |
+| `SNART-H2-OUTER-NOT-HIGHLIGHTED` | `targetMeanTemperatureC > 7` | `not_highlighted` | `snart.insulated_outer` | `Isolert ytterlag er ikke fremhevet av denne historiske perioden.` |
+| `SNART-H2-HEAD-CHECK` | `targetMeanTemperatureC <= 7` | `check_first` | `snart.cold_headwear` | `Sjekk om dere har et hodeplagg tilgjengelig for perioden.` |
+| `SNART-H2-HEAD-AVAILABLE` | `7 < targetMeanTemperatureC <= 12` | `available_if_needed` | `snart.cold_headwear` | `Et hodeplagg kan være greit å ha tilgjengelig dersom perioden blir kjøligere enn det historiske mønsteret.` |
+| `SNART-H2-HEAD-NOT-HIGHLIGHTED` | `targetMeanTemperatureC > 12` | `not_highlighted` | `snart.cold_headwear` | `Hodeplagg er ikke fremhevet av denne historiske perioden.` |
+| `SNART-H2-HAND-CHECK` | `targetMeanTemperatureC <= 2` | `check_first` | `snart.handwear` | `Sjekk om dere har håndplagg tilgjengelig for perioden.` |
+| `SNART-H2-HAND-AVAILABLE` | `2 < targetMeanTemperatureC <= 7` | `available_if_needed` | `snart.handwear` | `Håndplagg kan være greit å ha tilgjengelig dersom perioden blir kjøligere enn det historiske mønsteret.` |
+| `SNART-H2-HAND-NOT-HIGHLIGHTED` | `targetMeanTemperatureC > 7` | `not_highlighted` | `snart.handwear` | `Håndplagg er ikke fremhevet av denne historiske perioden.` |
+| `SNART-H2-WET-CHECK` | `targetPrecipitationMm >= 50` | `check_first` | `snart.weather_shell` | `Historisk nedbørsmengde er høyere for perioden. Sjekk om et værbeskyttende ytterlag er tilgjengelig.` |
+| `SNART-H2-WET-AVAILABLE` | `20 <= targetPrecipitationMm < 50` | `available_if_needed` | `snart.weather_shell` | `Et værbeskyttende ytterlag kan være greit å ha tilgjengelig ut fra historisk nedbørsmengde.` |
+| `SNART-H2-WET-NOT-HIGHLIGHTED` | `targetPrecipitationMm < 20` | `not_highlighted` | `snart.weather_shell` | `Værbeskyttende ytterlag er ikke fremhevet av periodens historiske nedbørsmengde.` |
+
+Rekkefølge etter deduplisering:
+
+`snart.base_layer` → `snart.mid_layer` → `snart.insulated_outer` → `snart.cold_headwear` → `snart.handwear` → `snart.weather_shell`.
+
+Hvert konsept har nøyaktig én vinnende regel. Gruppeprioritet er `check_first` → `available_if_needed` → `not_highlighted`. Regler velger aldri materiale, varmegrad, antall lag, produkt eller kjøp.
+
+## Presentasjon og eksakt copy
+
+| Element | Copy |
+|---|---|
+| Tittel | `Planlegg for {fraDato}–{tilDato}` |
+| Undertekst | `Basert på månedlige normaler for 1991–2020, ikke et værvarsel.` |
+| Gruppe 1 | `Sjekk først` |
+| Gruppe 2 | `Kan være greit å ha tilgjengelig` |
+| Gruppe 3 | `Ikke fremhevet for perioden` |
+| Global note | `Dette er en Babyora-planleggingsregel basert på historiske månedsnormaler. Sjekk dagens vær og egne behov nærmere datoen.` |
+| Utilgjengelig | `Vi har ikke godt nok historisk grunnlag for dette stedet akkurat nå.` |
+| Tom | `Ingenting å forberede akkurat nå.` |
+| Kilde | `Månedsnormaler 1991–2020: Meteorologisk institutt (MET Norway). Bearbeidet av Babyora.` |
+
+Copykontrakten blokkerer påstander om sikkerhet, helse, medisin, eksponeringsfare, spedbarnsråd, sol/UV, størrelse/passform og MET-anbefaling. Testen skal dekke bøyninger og sammensatte varianter, ikke bare eksakt streng.
+
+## Resultatmodell
+
+| Tilstand | Kriterium | Payload |
 |---|---|---|
-| `S01-cool-wet-sun` | Gyldig alder; `coldTailC=7`, `expectedWetDays=5`, `maxSolarElevationDeg=35` | `base_layer` Bør ha; `mid_layer`, `cold_headwear`, `handwear` Kjekt å ha; `weather_shell`, `sun_hat`, `sun_covering` Bør ha; ingen `insulated_outer`. |
-| `S02-deep-cold` | `coldTailC=-12`, `expectedWetDays=1`, `maxSolarElevationDeg=5` | Base, mellomlag, isolert yttertøy, kaldt hodeplagg og håndplagg i Bør ha; ingen sol- eller regnregel. Global copy sier historisk normal, ikke varsel. |
-| `S03-mild-wet` | `coldTailC=12`, `expectedWetDays=6`, `maxSolarElevationDeg=10` | Base Kjekt å ha, skall Bør ha; mellomlag og isolert yttertøy i Ikke prioritert nå; ingen solregel. |
-| `S04-warm-sun` | `coldTailC=17`, `expectedWetDays=0.5`, `maxSolarElevationDeg=40` | Solhatt og dekkende klær Bør ha; mellomlag og isolert yttertøy Ikke prioritert nå; ingen base-/regnregel. |
-| `S05-owned-empty` | Alle ellers synlige handlingskonsepter i `alreadyHaveConceptIds`, ingen `not_yet` | `empty`, korrekt copy, ingen paywall/ny kjøpsoppfordring. |
-| `S18-owned-actionable-with-not-yet` | Alle vinnende `must_have`/`nice_to_have`-konsepter i `alreadyHaveConceptIds`, minst ett annet vinnende `not_yet`-konsept | `ready`; bare `not_yet` er synlig, ingen `Har allerede`-handling på disse punktene, og ingen merket handlingsregel gjenoppstår i lavere gruppe. |
-| `S06-missing-profile` | `climateProfile.status != valid` | `unavailable`; ingen regelresultat eller skjult plaggcopy. |
-| `S07-unsupported-age` | Barnet er 25 måneder på minst én måldato | `unavailable`; ingen delvis periode. |
-| `S08-DST-spring` | D0 slik at D+28–D+42 krysser siste søndag i mars | Eksakt 15 unike lokale datoer; ingen duplikat/hopp. |
-| `S09-DST-autumn` | D0 slik at vinduet krysser siste søndag i oktober | Samme invarians som S08. |
-| `S10-boundaries` | Separate cases for `coldTailC={0,5,10,16}`, `expectedWetDays={2,4}`, `maxSolarElevationDeg=30` | Inklusive/eksklusive grenser matcher tabellene eksakt. |
-| `S11-dedup-order` | Regler levert i reversert og tilfeldig rekkefølge | Identiske grupper, stable concept order og sammenslåtte source IDs. |
-| `S12-owned-no-resurface` | Konsept treffes av både høy og lav gruppe og er merket eid | Konseptet dukker ikke opp igjen i lavere gruppe. |
-| `S13-size-tight` | Fersk størrelse + `tight` | Kun probabilistisk `neste størrelse kan bli aktuell`; ingen tallberegning. |
-| `S14-size-stale` | Størrelsesdato >30 dager | Ingen størrelsesprognose; bare passform-/guidekontroll. |
-| `S15-age-solar-copy` | Samme solsignal med alder 10 og 14 måneder | Under ett-års-copy nevner å unngå direkte sol; 12–24-copy gjør ikke en falsk spedbarnspåstand. |
-| `S16-no-forecast-leak` | Ni-dagers forecast endres mens klimaprofilen er lik | Snart-domenet forblir byte-identisk. |
-| `S17-profile-version` | Samme data med ulik godkjent `climateDataVersion` | Resultatet bærer riktig versjon/proveniens; cache kan ikke gjenbrukes på tvers. |
+| `ready` | Alle innganger, versjoner, profil og dekning er valide, og minst ett synlig element finnes. | Eksakte datoer, kilde/versjon, grupper, elementer og sporbarhet. |
+| `empty` | Evidensen er valid, men ingen synlige elementer gjenstår etter deduplisering og sessionvalg. | Bare tom-copy, periode og kildeidentitet; ingen plaggpåstand. |
+| `unavailable` | Alderport, tidssone, hjemsted, profil, schema, hash, dekning eller versjon er ugyldig/mangler. | Bare nøytral utilgjengelig-copy og maskinlesbar grunn; ingen konsepter eller skjult råd. |
 
-I tillegg kreves property-/invarianttester for:
+Hvert `ready`-element bærer `rulesetVersion`, `ruleId`, `conceptId`, gruppe, målperiode, `profileId`, `packSha256`, signalnavn/verdi og `evidenceType`.
 
-- alle støttede datoer og DST-overganger gir 15 måldatoer;
-- ingen konsept-ID forekommer mer enn én gang;
-- hver synlig rad har minst én stabil regel-ID og kilde-ID;
-- ingen output inneholder forbudte ord som `garantert`, `trygt` eller `må kjøpe`;
-- alle 0–24-månedersaldre enten gir deterministisk resultat eller sannferdig `unavailable`;
-- ukjent enum, NaN, ugyldig dato, feil tidssone eller manglende proveniens feiler lukket;
-- Free-tilgang kan ikke materialisere rådgivningspayloaden;
-- resultatet endrer ikke dagens motorinput, motoroutput eller plaggkatalog.
+## `Har allerede` og teknisk personvern
 
-## Godkjenningsjournal
+- Kontroll vises bare for `check_first` og `available_if_needed`.
+- `not_highlighted` kan ikke markeres eller skjules med kontrollen.
+- Et markert handlingskonsept kan ikke komme tilbake gjennom en lavere prioritert regel.
+- Hvis alle handlingspunkter er markert og `not_highlighted` fortsatt finnes, er resultatet `ready` med bare denne gruppen.
+- `empty` brukes bare når ingen synlig rad finnes.
+- Mengden lever kun i React-minne for aktiv Snart-visning og nullstilles ved unmount, profilbytte, fast-hjem-profilbytte eller nytt D+28–D+42-vindu.
+- Modellen, komponenten, URL-en, historystate, `localStorage`, `sessionStorage`, IndexedDB, Cache API, logger, analytics, tracing, backend og reviewfixtures inneholder ingen barn-ID, navn, rå fødselsdato eller brukerhandlingstidspunkt.
+- Formell personverngjennomgang er utsatt; statiske og dynamiske tester av disse invariantene er releaseblokkerende for capability.
 
-| Beslutning | Eier | Status | Bevis som mangler |
-|---|---|---|---|
-| Produktprinsipp og gruppesemantikk | Produkteier | **Pending** | Eksplisitt godkjenning av `Bør ha`, `Kjekt å ha`, `Ikke prioritert nå`. |
-| Numeriske produktgrenser | Produkteier + høy-risiko-fagreview | **Pending** | Gjennomgang av 0/5/10/16 °C, 2/4 våtdager og 30° solhøyde. |
-| Helse-/sikkerhetscopy | Norsk relevant fagperson | **Pending** | Dokumentert gjennomgang mot Helsenorge/DSA. |
-| Klimadatapakke 1991–2020 | Data-/høy-risiko-reviewer | **Pending** | Reproduserbar byggemetode, lisens, dekning, kvalitetskontroll og profilvalidator. |
-| Størrelsesnoter | Produkteier + fagreview | **Pending** | Godkjenning av 30-dagers ferskhet og probabilistisk språk. |
-| Personvern for `Har allerede` | Produkteier + personvernreview | **Pending** | Godkjenning av eksakt session-only/no-persistence-kontrakt og kontroll av at ingen analysepayload lekker data. |
-| Implementasjon | Uavhengig høy-risiko-verifikator | **Pending** | Tester og PASS på eksakt kandidat-SHA. |
+## Capability, tilgang og fallback
 
-## Uavklarte beslutninger som må løses før koding av Snart
+- `soon_preparation` forblir false gjennom 01-13, 01-14 og 01-15.
+- I Plan 01-16 gjør den aktive executoren flagget true før siste test/build og kandidatcommit. Begge reviewer vurderer dermed den faktiske aktiverte SHA-en; ingen capability-byte kan endres etter PASS.
+- Free/loading evaluerer ikke modell eller profil og beholder ingen betalt payload.
+- Plus bruker kun aktivt barns validerte faste hjem. Automatisk/effective place er ikke representerbart i Snart-input.
+- `family_sharing` og `personal_calibration` forblir false og skal ikke vises i paywallcopy.
+- Enhver kilde-, schema-, hash-, dekning-, review- eller privacyfeil gjør resultatet `unavailable` eller holder capability av.
 
-1. Om de foreslåtte numeriske produktgrensene skal godkjennes, justeres eller fjernes.
-2. Hvem som er navngitt norsk fagperson for helse-/sikkerhetscopy.
-3. Hvordan den forhåndsbygde 1991–2020-klimadatapakken produseres, dekkes geografisk og versjoneres uten ny runtime-integrasjon.
-4. Om `currentSizeLabel` og `fitSignal` kan brukes som eksplisitte, session-only modellinndata innenfor godkjent personvern- og faseomfang; ingen av dem eller `Har allerede` kan persisteres i denne fasen.
+## Uavhengig review
 
-Avklart presentasjonsbeslutning: intern `not_yet`-semantikk beholdes, mens synlig overskrift er `Ikke prioritert nå`. Denne ordlydsavklaringen godkjenner ikke tersklene eller den øvrige produkt-/helsepolicyen.
+Plan 01-13 oppretter `scripts/snart/review-gate.ts` med subkommandoene `candidate`, `receipt` og `validate`. Hver plan 01-13–01-18 bruker eksakt:
 
-Ved manglende godkjenning skal Snart forbli `unavailable`; implementasjonen skal ikke fylle hull med magefølelse, butikkdata eller generert tekst.
+```text
+.planning/phases/01-planlegg-dagslinjen/evidence/{plan}-candidate.json
+.planning/phases/01-planlegg-dagslinjen/evidence/{plan}-review-a.json
+.planning/phases/01-planlegg-dagslinjen/evidence/{plan}-review-b.json
+```
+
+Etter taskverifikasjon og kandidatcommit kjører `candidate` en lokal, deterministisk kontroll som recomputer faktisk `git rev-parse HEAD`, tree/commit existence, clean worktree, `contractSha256`, `packSha256`, canonical `evidenceSha256` og changed paths:
+
+```text
+npx tsx scripts/snart/review-gate.ts candidate --plan <plan> --attempt <N> --evidence-dir .planning/phases/01-planlegg-dagslinjen/evidence
+```
+
+Root-orchestratoren innhenter deretter to distinkte, uavhengige og read-only reviewer på eksakt kandidattuple. Reviewer kan være nye eller allerede eksisterende agenter som ikke har implementert kandidaten. Det finnes ikke krav om samme agenttur, ny spawn, `fork_turns`, tool-transkript eller lokal rekonstruksjon av collaboration-events. Lane A eier data/proveniens/beregning; lane B eier sikkerhet/sannhet/privacy/scope.
+
+Hver reviewer returnerer og signerer med sin oppgitte canonical identitet én `babyora-independent-review-receipt@2`-payload. Root-orchestratoren lagrer payloaden uendret som `*-review-{a,b}.json`:
+
+```text
+schemaVersion: "babyora-independent-review-receipt@2"
+planId, lane: "A"|"B", attempt
+candidate: {gitSha, treeSha, contractSha256, packSha256, evidenceSha256}
+reviewer: {canonicalTaskName, agentId}
+signedByIdentity: {canonicalTaskName, agentId}
+verdict: "PASS"|"FAIL"
+findings: [{severity, code, message, resolved}]
+commands: [{command, exitCode}]
+cleanBefore, cleanAfter
+```
+
+Den lokale `review-gate.ts validate` kontrollerer bare schema, faktisk HEAD/tree/worktree, kandidat-/evidencetuple, at `reviewer` og `signedByIdentity` er identiske, to distinkte reviewer-agent-ID-er/canonical task names, `cleanBefore=true`, `cleanAfter=true`, `verdict=PASS`, exit 0 for oppgitte kommandoer og null uløste findings uansett alvorlighet. Den kan ikke kryptografisk autentisere revieweridentiteten eller Codex-output og skal aldri påstå slik proveniens; receipts er konsistensevidens.
+
+I Plan 01-16 aktiverer executoren bare `soon_preparation` etter at false-state/preflight-testene er grønne, kjører hele aktiverte testmatrisen og committer deretter kandidaten med flagget true. `candidate` og begge receipts binder denne faktiske aktiverte Git-SHA/tree. Ved review-/toolfeil setter executoren flagget false og verifiserer skjult rollback før reparasjon; en ny true-kandidat får ny SHA og to nye reviewer. Etter dobbel PASS er enhver sourcebyteendring forbudt, så ingen post-review flaggpatch kan ugyldiggjøre PASS.
+
+En byteendring i kode, kontrakt, pack eller command evidence ugyldiggjør reviewporten. Ved FAIL gjør executoren nødvendige reparasjoner og committer ny SHA; root-orchestratoren innhenter deretter to review på den nye tuple-en. Gamle PASS kan aldri gjenbrukes på en endret tuple. Maksimalt tre komplette kandidat/review-forsøk per plan. Etter tredje mislykkede forsøk setter executoren `gateStatus="FAIL_REVIEW_CYCLES_EXHAUSTED"` i candidatefilen, beholder/tilbakestiller `soon_preparation=false` og avslutter teknisk FAIL uten menneskelig port.
+
+Ved vedvarende ekstern kildefeil beholdes siste validerte pakke; uten en slik pakke forblir capability av. Bare faktisk scopeutvidelse, credential/betalt tjeneste eller kostnad over NOK 1 000 går utenfor den autonome fullmakten.
+
+## Plan- og testsporbarhet
+
+| Område | Eierplan | Minimumsport |
+|---|---|---|
+| Kontrakt, generator, proveniens, lisens, dekning, validator og datapakke | 01-13 | Fixturetester, full refresh, to byte-identiske bygg, offline validator, review A+B |
+| Runtime-decoder, D+28–D+42, heuristikker, copy og ren modell | 01-14 | Boundary/golden/property/copy/privacy-tester, review A+B |
+| UI, session-only state, fast-hjem- og access-first-orkestrering | 01-15 | Component/session/static privacy/access-tester, capability fortsatt false, review A+B |
+| Capability og dynamisk no-leak/E2E | 01-16 | Eksakt kandidat-tuple, full browsermatrise, rollback til false, review A+B |
+| Route-migrering | 01-17 | Kun etter grønn 01-16; typed én-gangsroute, høy-risiko regresjoner, review A+B |
+| Haptikk, navigasjon og endelig integrasjon | 01-18 | Full tekst/DOM/E2E/CI uten media og to distinkte read-only finalreviewer innhentet av root-orchestratoren |
+
+## Rollback og fail-closed
+
+- En refresh skriver til midlertidig output og bytter aldri inn en pakke før alle validatorer er grønne.
+- Den committede siste validerte pakken kan beholdes ved senere kildefeil; en gammel pakke med annen kontrakt-/rulesetversjon kan ikke brukes.
+- Modell/UI behandler ukjent/manglende profil som `unavailable`.
+- Capability kan slås av uten å slette pakken eller sessiondata; reload nullstiller sessiondata.
+- Route-migrering skjer først etter grønn capability-kandidat og kan reverseres uten å endre regler/data.
+- Ingen rollback introduserer runtime klima-API, syntetiske data, nabo-match eller helse-/sikkerhetscopy.
+- Hver autonom review-/repairloop stopper etter tre komplette forsøk. Uttømming registreres maskinelt som FAIL og holder capability false; den konverteres aldri til en menneskelig godkjennings- eller gjenopptaksport.
+
+## Kilder
+
+- `AGENTS.md`
+- `docs/DECISION-LOG.md` (2026-07-24)
+- `.planning/phases/01-planlegg-dagslinjen/01-SNART-AUTONOMOUS-RESEARCH.md`
+- `.planning/phases/01-planlegg-dagslinjen/01-UI-SPEC.md`
+- `src/data/no-cities.ts`
+- [MET seNorge_2018](https://github.com/metno/seNorge_docs/wiki/seNorge_2018)
+- [MET seNorge variables](https://github.com/metno/seNorge_docs/wiki/Variables)
+- [MET THREDDS temperatur-månedsnormaler](https://thredds.met.no/thredds/catalog/senorge/seNorge_2018/aggregated_products/tg/catalog.html)
+- [MET THREDDS nedbør-månedsnormaler](https://thredds.met.no/thredds/catalog/senorge/seNorge_2018/aggregated_products/rr/catalog.html)
+- [MET licensing and attribution](https://www.met.no/frie-meteorologiske-data/lisensiering-og-kreditering)

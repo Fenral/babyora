@@ -84,9 +84,6 @@ export function priceTransparencyText(key: ProductKey, priceFromStore?: string):
 /** Verdiforankrings-mikrocopy per Premium-plan §3 — godkjent verdianker for 299/år-hero. */
 export const VALUE_ANCHOR_COPY = 'Mindre enn én ullbody i året.';
 
-/** Tillitslinje under CTA — én Premium = familien. */
-export const TRUST_LINE_COPY = 'Én Premium — begge foreldre';
-
 /**
  * Paywall-trigger-strenger.
  * Bruk disse konstant for analytics-konsistens; aldri ad-hoc strings.
@@ -102,14 +99,7 @@ export const PAYWALL_TRIGGERS = {
   garderobe_tilpasning: 'garderobe_tilpasning',    // Tilpasser anbefaling til egne plagg
   barn_2: 'barn_2',                                // Legger til barn nr. 2
   forste_vinter: 'forste_vinter',                  // Åpner gated leksjon i Første vinter-programmet (F86)
+  snart: 'snart',                                  // Åpner nøytral historikk-preview for Snart-forberedelser
 } as const;
 
 export type PaywallTrigger = keyof typeof PAYWALL_TRIGGERS;
-
-/** Kontekst-overskrift per trigger — navngir det du prøvde, varm og ikke masete tone. */
-export const TRIGGER_HEADLINE: Record<PaywallTrigger, string> = {
-  imorgen: 'Se morgendagens antrekk i kveld',
-  garderobe_tilpasning: 'Anbefalinger fra dine egne plagg',
-  barn_2: 'Ett abonnement, alle barna',
-  forste_vinter: 'Lær vinterpåkledning, én leksjon i uka',
-};

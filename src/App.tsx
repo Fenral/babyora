@@ -8,16 +8,48 @@
  * canvas-skeleton som matcher app-shell (ingen layout-shift). Type-importen
  * `GuideHubTarget` blir værende statisk siden type-imports ikke trekker kode.
  */
-import { lazy, Suspense, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
+import { Capacitor } from '@capacitor/core';
 import { AnimatePresence, motion } from 'motion/react';
 import type { TabKey } from './types/nav';
 import { useChildren } from './state/children-store';
 import { useTheme } from './state/theme-store';
 import { useAutoLocationRefresh } from './hooks/useAutoLocationRefresh';
+import { useOutfitTransitionCoordinator } from './hooks/useOutfitTransitionCoordinator';
 import { BottomTabBar } from './components/BottomTabBar';
+import { OutfitTransitionOverlay } from './components/outfit-transition/OutfitTransitionOverlay';
 
 import type { GuideHubTarget } from './screens/GuideHubScreen';
-import type { Recommendation } from './lib/wool-layers/types';
+import {
+  isPlannedOutfitContext,
+  type PlannedOutfitContext,
+} from './lib/planning/planned-outfit-context';
+import {
+  produceOutfitBundle,
+  type OutfitBundleProducerResult,
+} from './lib/outfit/outfit-bundle-producer';
+import {
+  consumeRequestedPlanningView,
+  issueRequestedPlanningView,
+  shouldClosePlannedDrillOnAccess,
+  type RequestedPlanningViewState,
+} from './lib/planning/planning-interaction';
+import { decideAccess } from './lib/access/capabilities';
+import { useAccess } from './lib/premium/use-access';
+import { resolveRuntimeCapabilityAccess } from './lib/premium/gating';
+import { PLUS_FEATURE_AVAILABILITY } from './lib/premium/plus-features';
+import { useSubscription } from './state/subscription-store';
+import { useLocationPref } from './state/location-pref-store';
 
 const HjemScreen = lazy(() =>
   import('./screens/HjemScreen').then((m) => ({ default: m.HjemScreen })),
@@ -36,9 +68,6 @@ const FinnAntrekkScreen = lazy(() =>
 );
 const PlaggbibliotekScreen = lazy(() =>
   import('./screens/PlaggbibliotekScreen').then((m) => ({ default: m.PlaggbibliotekScreen })),
-);
-const MinGarderobeScreen = lazy(() =>
-  import('./screens/MinGarderobeScreen').then((m) => ({ default: m.MinGarderobeScreen })),
 );
 const TogGuideScreen = lazy(() =>
   import('./screens/TogGuideScreen').then((m) => ({ default: m.TogGuideScreen })),
@@ -92,15 +121,22 @@ const TAB_TITLES: Record<TabKey, string> = {
  * Sivert sine toggle-valg på Hjem. context kan være undefined for bakover-
  * kompatibilitet (test/preview-mounts uten payload).
  */
-type PaakledningContext = {
-  recommendation: Recommendation | null;
-  activity: 'utelek' | 'vogn';
-  vognMode: 'awake' | 'sleeping';
-};
-
 type Drill =
   | null
-  | { kind: 'paakledning'; context?: PaakledningContext }
+  | {
+      kind: 'paakledning';
+      source: 'current';
+      currentContext: PlannedOutfitContext;
+      outfitBundle?: OutfitBundleProducerResult;
+      origin: HTMLElement;
+    }
+  | {
+      kind: 'paakledning';
+      source: 'planned';
+      plannedContext: PlannedOutfitContext;
+      outfitBundle?: OutfitBundleProducerResult;
+      origin: HTMLElement;
+    }
   | { kind: 'guide'; target: GuideHubTarget };
 
 function prefersReducedMotion(): boolean {
@@ -110,24 +146,78 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+function useClosePlannedDrillOnAccess({
+  isPlannedDrill,
+  loading,
+  isPremium,
+  onClose,
+}: {
+  isPlannedDrill: boolean;
+  loading: boolean;
+  isPremium: boolean;
+  onClose: () => void;
+}): void {
+  useEffect(() => {
+    if (shouldClosePlannedDrillOnAccess(
+      isPlannedDrill,
+      { loading, isPremium },
+    )) {
+      onClose();
+    }
+  }, [isPlannedDrill, isPremium, loading, onClose]);
+}
+
 export default function App(): ReactElement {
   // Førstegangs-flyt: har familien ingen barn ennå, vises OnboardingScreen
   // i stedet for app-shellet. Vi styrer på egen `onboardingDone`-state (ikke
   // rått `needsOnboarding`), fordi OnboardingScreen kaller completeOnboarding()
   // ALLEREDE på steg 4 (som flipper needsOnboarding→false) men skal fortsatt
   // vise velkomst-steget før den melder ferdig via onComplete.
-  const { needsOnboarding } = useChildren();
+  const { needsOnboarding, active } = useChildren();
   const [onboardingDone, setOnboardingDone] = useState(!needsOnboarding);
-  // Stille GPS-oppslag ved app-åpning/forgrunn — kun når «Automatisk
-  // posisjon» er slått på i Innstillinger (locationMode==='auto'). Fikser
-  // at by/vær ble stående på forrige sted når familien reiser.
-  useAutoLocationRefresh();
+  const locationMode = useLocationPref((state) => state.mode);
   const [tab, setTab] = useState<TabKey>('hjem');
   const [drill, setDrill] = useState<Drill>(null);
+  const outfitTransition = useOutfitTransitionCoordinator();
+  const [requestedPlanViewState, setRequestedPlanViewState] = useState<RequestedPlanningViewState>({
+    nextToken: 0,
+    requestedView: null,
+  });
+  const mainRef = useRef<HTMLElement | null>(null);
   const themeMode = useTheme((s) => s.mode);
+  const { isPremium, loading: accessLoading } = useAccess();
+  const automaticLocationAccess = useMemo(
+    () => resolveRuntimeCapabilityAccess(
+      'automatic_location',
+      { isPlus: isPremium, authenticated: false, loading: accessLoading },
+      PLUS_FEATURE_AVAILABILITY,
+    ),
+    [accessLoading, isPremium],
+  );
+  useAutoLocationRefresh({
+    runtimeDecision: automaticLocationAccess,
+    mode: locationMode,
+    childId: active.id,
+    enabled: onboardingDone && !needsOnboarding,
+  });
+  const liveFutureAccess = decideAccess('future_plan', {
+    isPlus: isPremium,
+    authenticated: false,
+    loading: accessLoading,
+  });
 
   useEffect(() => {
     document.documentElement.lang = 'nb';
+  }, []);
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
+    const syncPersistedEntitlement = (event: StorageEvent) => {
+      if (event.key !== 'babyora.subscription') return;
+      void useSubscription.persist.rehydrate();
+    };
+    window.addEventListener('storage', syncPersistedEntitlement);
+    return () => window.removeEventListener('storage', syncPersistedEntitlement);
   }, []);
 
   // Theme-mode → data-theme på <html>. 'auto' fjerner attributtet slik at
@@ -147,15 +237,135 @@ export default function App(): ReactElement {
   }, [tab]);
 
   const onNavigate = (next: TabKey) => {
+    outfitTransition.abort('closed');
     setDrill(null);
     setTab(next);
   };
 
+  const onOpenGuideTarget = useCallback((target: GuideHubTarget | 'snart') => {
+    if (target === 'snart') {
+      setDrill(null);
+      setTab('plan');
+      setRequestedPlanViewState((current) => issueRequestedPlanningView(current, 'snart'));
+      window.requestAnimationFrame(() => mainRef.current?.focus());
+      return;
+    }
+    setDrill({ kind: 'guide', target });
+  }, []);
+
+  const onOpenWarmColdGuide = useCallback(() => {
+    setDrill({ kind: 'guide', target: 'varm-kald' });
+  }, []);
+
+  const onConsumeRequestedPlanView = useCallback((token: number) => {
+    setRequestedPlanViewState((current) => {
+      const { consumedView: _consumedView, ...next } = consumeRequestedPlanningView(
+        current,
+        token,
+      );
+      return next;
+    });
+  }, []);
+
+  const onOpenPlannedOutfit = (
+    plannedContext: PlannedOutfitContext,
+    origin: HTMLElement,
+  ) => {
+    if (!isPlannedOutfitContext(plannedContext) || !origin.isConnected) return;
+    if (
+      plannedContext.access.capability === 'future_plan'
+      && !liveFutureAccess.allowed
+    ) {
+      return;
+    }
+    const outfitBundle = plannedContext.sourceKind === 'phase2-outfit-truth'
+      ? produceOutfitBundle({
+          seed: plannedContext.producerSeed,
+          source: {
+            kind: 'planned',
+            sourceContextId: plannedContext.producerSeed.sourceContextId,
+            planningEventId: plannedContext.planningEventId,
+            plannedForIso: plannedContext.plannedForIso,
+          },
+        })
+      : undefined;
+    setDrill({
+      kind: 'paakledning',
+      source: 'planned',
+      plannedContext,
+      outfitBundle,
+      origin,
+    });
+  };
+
+  const createCurrentOutfitBundle = useCallback((
+    currentContext: PlannedOutfitContext,
+  ): OutfitBundleProducerResult | undefined => (
+    currentContext.sourceKind === 'phase2-outfit-truth'
+      ? produceOutfitBundle({
+          seed: currentContext.producerSeed,
+          source: {
+            kind: 'current',
+            sourceContextId: currentContext.producerSeed.sourceContextId,
+          },
+        })
+      : undefined
+  ), []);
+
+  const onOpenCurrentOutfit = (
+    currentContext: PlannedOutfitContext,
+    origin: HTMLElement,
+    outfitBundle: OutfitBundleProducerResult | undefined,
+  ) => {
+    if (!isPlannedOutfitContext(currentContext) || !origin.isConnected) return;
+    outfitTransition.captureBeforeNavigation(outfitBundle);
+    setDrill({
+      kind: 'paakledning',
+      source: 'current',
+      currentContext,
+      outfitBundle,
+      origin,
+    });
+  };
+
   const reduceMotion = prefersReducedMotion();
 
-  const mainRef = useRef<HTMLElement | null>(null);
   const onBackRef = useRef<(() => void) | null>(null);
-  const canGoBack = drill !== null || tab !== 'hjem';
+
+  const closePaakledning = useCallback(() => {
+    const origin = drill?.kind === 'paakledning' ? drill.origin : null;
+    const source = drill?.kind === 'paakledning' ? drill.source : null;
+    outfitTransition.abort('closed');
+    setDrill(null);
+    if (!origin) return;
+    window.requestAnimationFrame(() => {
+      if (origin.isConnected) {
+        origin.focus();
+      } else if (source === 'current') {
+        document.getElementById('hjem-current-outfit-trigger')?.focus();
+      } else {
+        mainRef.current?.focus();
+      }
+    });
+  }, [drill, outfitTransition]);
+
+  const isAccessGatedPlannedDrill = drill?.kind === 'paakledning'
+    && drill.source === 'planned'
+    && drill.plannedContext.access.capability === 'future_plan';
+  useClosePlannedDrillOnAccess({
+    isPlannedDrill: isAccessGatedPlannedDrill,
+    loading: accessLoading,
+    isPremium: liveFutureAccess.allowed,
+    onClose: closePaakledning,
+  });
+
+  const activeDrill = shouldClosePlannedDrillOnAccess(
+    isAccessGatedPlannedDrill,
+    { loading: accessLoading, isPremium: liveFutureAccess.allowed },
+  )
+    ? null
+    : drill;
+  const canGoBack = activeDrill !== null || tab !== 'hjem';
 
   // A11y (2026-07-11): når onboarding fullføres og app-shellet tar over, flytt
   // fokus til <main> så skjermlesere annonserer Hjem og tab-fokus ikke faller
@@ -175,13 +385,17 @@ export default function App(): ReactElement {
       return;
     }
     onBackRef.current = () => {
-      if (drill !== null) {
-        setDrill(null);
+      if (activeDrill !== null) {
+        if (activeDrill.kind === 'paakledning') {
+          closePaakledning();
+        } else {
+          setDrill(null);
+        }
       } else {
         setTab('hjem');
       }
     };
-  }, [drill, tab, canGoBack]);
+  }, [activeDrill, tab, canGoBack, closePaakledning]);
 
   useEffect(() => {
     const el = mainRef.current;
@@ -284,6 +498,43 @@ export default function App(): ReactElement {
 
   // Førstegangs-onboarding tar over hele skjermen (egen <main> + <h1>,
   // ingen BottomTabBar). onComplete melder ferdig etter velkomst-stegene.
+  const currentTransitionBundle = (
+    activeDrill?.kind === 'paakledning'
+    && activeDrill.source === 'current'
+  ) ? activeDrill.outfitBundle : undefined;
+  const selectTransitionHomeSources = outfitTransition.selectHomeSources;
+  const transitionPresentation = useMemo(() => {
+    if (currentTransitionBundle === undefined) return null;
+    const selection = selectTransitionHomeSources(
+      currentTransitionBundle,
+    );
+    return selection.kind === 'ready' ? selection.sources : null;
+  }, [currentTransitionBundle, selectTransitionHomeSources]);
+  const transitionSnapshot = (
+    outfitTransition.state.status === 'ready'
+    || outfitTransition.state.status === 'playing'
+  ) ? outfitTransition.state.snapshot : null;
+  const transitionIsLanding = (
+    transitionSnapshot !== null
+    && transitionPresentation !== null
+  );
+
+  useEffect(() => {
+    if (
+      outfitTransition.state.status === 'ready'
+      && transitionPresentation !== null
+    ) {
+      outfitTransition.beginPlayback();
+    }
+  }, [outfitTransition, transitionPresentation]);
+
+  const finishOutfitTransition = useCallback(() => {
+    outfitTransition.settle('completed');
+  }, [outfitTransition]);
+  const abortOutfitTransitionOverlay = useCallback(() => {
+    outfitTransition.abort('motion-ineligible');
+  }, [outfitTransition]);
+
   if (!onboardingDone) {
     return (
       <div className="app-shell">
@@ -303,9 +554,9 @@ export default function App(): ReactElement {
   //  - drill.kind === 'paakledning' → 'hjem' (åpnet via Hjem CTA;
   //    baren skjules uansett siden PaakledningScreen er native dialog modal)
   let activeTabForBar: TabKey;
-  if (drill === null) {
+  if (activeDrill === null) {
     activeTabForBar = tab;
-  } else if (drill.kind === 'guide') {
+  } else if (activeDrill.kind === 'guide') {
     activeTabForBar = 'guide';
   } else {
     activeTabForBar = 'hjem';
@@ -314,29 +565,25 @@ export default function App(): ReactElement {
   // PaakledningScreen mounter <dialog>.showModal() — native modal som
   // dekker hele skjermen. BottomTabBar skal IKKE være synlig / klikkbar
   // mens den er åpen. Vi dropper rendring helt for clarity.
-  const sheetOpen = drill?.kind === 'paakledning';
-
-  if (drill?.kind === 'guide' && drill.target === 'finn-antrekk') {
+  const sheetOpen = activeDrill?.kind === 'paakledning';
+  if (activeDrill?.kind === 'guide' && activeDrill.target === 'finn-antrekk') {
     routeKey = 'drill:guide:finn-antrekk';
     routeContent = <FinnAntrekkScreen onBack={() => setDrill(null)} />;
-  } else if (drill?.kind === 'guide' && drill.target === 'plaggbib') {
+  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'plaggbib') {
     routeKey = 'drill:guide:plaggbib';
     routeContent = <PlaggbibliotekScreen onBack={() => setDrill(null)} />;
-  } else if (drill?.kind === 'guide' && drill.target === 'min-garderobe') {
-    routeKey = 'drill:guide:min-garderobe';
-    routeContent = <MinGarderobeScreen onBack={() => setDrill(null)} />;
-  } else if (drill?.kind === 'guide' && drill.target === 'tog') {
+  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'tog') {
     routeKey = 'drill:guide:tog';
     routeContent = <TogGuideScreen onBack={() => setDrill(null)} />;
-  } else if (drill?.kind === 'guide' && drill.target === 'varm-kald') {
+  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'varm-kald') {
     routeKey = 'drill:guide:varm-kald';
     routeContent = <VarmEllerKaldScreen onBack={() => setDrill(null)} />;
-  } else if (drill?.kind === 'guide' && drill.target === 'forste-vinter') {
+  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'forste-vinter') {
     routeKey = 'drill:guide:forste-vinter';
     routeContent = (
       <VinterprogramScreen
         onBack={() => setDrill(null)}
-        onOpenTarget={(target) => setDrill({ kind: 'guide', target })}
+        onOpenTarget={onOpenGuideTarget}
       />
     );
   } else if (tab === 'hjem') {
@@ -344,9 +591,11 @@ export default function App(): ReactElement {
     routeContent = (
       <HjemScreen
         onNavigate={onNavigate}
-        onOpenSheet={(ctx) =>
-          setDrill({ kind: 'paakledning', context: ctx })
-        }
+        onOpenSheet={onOpenCurrentOutfit}
+        createCurrentOutfitBundle={createCurrentOutfitBundle}
+        selectHomeSources={outfitTransition.selectHomeSources}
+        registerHomeAnchor={outfitTransition.registerHomeAnchor}
+        observeTransitionBundle={outfitTransition.observeBundle}
       />
     );
   } else if (tab === 'plan') {
@@ -354,7 +603,11 @@ export default function App(): ReactElement {
     routeContent = (
       <UkeScreen
         onNavigate={onNavigate}
-        onOpenSheet={() => setDrill({ kind: 'paakledning' })}
+        onOpenSheet={() => undefined}
+        onOpenPlannedOutfit={onOpenPlannedOutfit}
+        requestedPlanView={requestedPlanViewState.requestedView?.view ?? null}
+        requestedPlanViewToken={requestedPlanViewState.requestedView?.token ?? null}
+        onConsumeRequestedPlanView={onConsumeRequestedPlanView}
       />
     );
   } else if (tab === 'guide') {
@@ -362,7 +615,7 @@ export default function App(): ReactElement {
     routeContent = (
       <GuideHubScreen
         onNavigate={onNavigate}
-        onOpenCard={(target) => setDrill({ kind: 'guide', target })}
+        onOpenCard={onOpenGuideTarget}
       />
     );
   } else {
@@ -373,7 +626,10 @@ export default function App(): ReactElement {
   }
 
   return (
-    <div className="app-shell">
+    <div
+      className="app-shell"
+      data-outfit-transition-state={outfitTransition.state.status}
+    >
       <a href="#main" className="skip-link">Hopp til hovedinnhold</a>
       <main id="main" tabIndex={-1} ref={mainRef}>
         <Suspense fallback={<RouteSkeleton />}>
@@ -415,15 +671,37 @@ export default function App(): ReactElement {
           focus-trap + ESC + aria-modal. Hjem forblir mounted bak så
           state/scroll-posisjon bevares og fokus returneres til CTA
           ved lukk. F72 fix 2026-06-29. */}
-      {sheetOpen && drill?.kind === 'paakledning' && (
+      {sheetOpen && activeDrill?.kind === 'paakledning' && (
         <Suspense fallback={null}>
-          <PaakledningScreen
-            onBack={() => setDrill(null)}
-            recommendation={drill.context?.recommendation ?? null}
-            vogn={drill.context?.activity}
-            vognMode={drill.context?.vognMode ?? 'awake'}
-          />
+          {activeDrill.source === 'planned' ? (
+            <PaakledningScreen
+              onBack={closePaakledning}
+              plannedContext={activeDrill.plannedContext}
+              outfitBundle={activeDrill.outfitBundle}
+              registerOutfitRow={outfitTransition.registerOutfitRow}
+              transitionVisualState={transitionIsLanding ? 'landing' : 'settled'}
+              onOpenWarmColdGuide={onOpenWarmColdGuide}
+            />
+          ) : (
+            <PaakledningScreen
+              onBack={closePaakledning}
+              currentContext={activeDrill.currentContext}
+              outfitBundle={activeDrill.outfitBundle}
+              registerOutfitRow={outfitTransition.registerOutfitRow}
+              transitionVisualState={transitionIsLanding ? 'landing' : 'settled'}
+              onOpenWarmColdGuide={onOpenWarmColdGuide}
+            />
+          )}
         </Suspense>
+      )}
+      {transitionIsLanding && transitionSnapshot !== null && (
+        <OutfitTransitionOverlay
+          snapshot={transitionSnapshot}
+          presentations={transitionPresentation}
+          reducedMotion={reduceMotion}
+          onFinish={finishOutfitTransition}
+          onAbort={abortOutfitTransitionOverlay}
+        />
       )}
     </div>
   );

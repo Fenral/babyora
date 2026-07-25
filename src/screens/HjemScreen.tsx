@@ -41,7 +41,14 @@
  *  - Canvas/atmos er aria-hidden; temp-endring annonseres av #temp-display.
  *  - Ingen transition ved RM (design-tokens.css .ba-temp-root + inline RM-gates).
  */
-import { type CSSProperties, useMemo, useState } from 'react';
+import {
+  type CSSProperties,
+  type MouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { motion } from 'motion/react';
 import type { TabKey } from '../types/nav';
 import { useChildren } from '../state/children-store';
@@ -60,9 +67,26 @@ import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { tempAxisFor } from '../lib/temp-axis';
 import { deriveSceneModelFromLegacy } from '../lib/recommendation/scene';
 import { VerifiedAvatarComposite } from '../components/outfit/VerifiedAvatarComposite';
+import { LivingHomeAtmosphere } from '../components/LivingHomeAtmosphere';
 // BottomTabBar er global (mounted i App.tsx) — ikke importer/mount her.
 import { MOTION } from '../styles/motion-grammar';
 import { useSwapOverride } from '../state/swap-override-store';
+import { useLocationPref, resolveEffectivePlace } from '../state/location-pref-store';
+import { useAccess } from '../lib/premium/use-access';
+import { resolveRuntimeCapabilityAccess } from '../lib/premium/gating';
+import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
+import {
+  createCurrentOutfitContext,
+  PLAN_TIME_ZONE,
+  type PlannedOutfitContext,
+} from '../lib/planning/planned-outfit-context';
+import type { OutfitBundleProducerResult } from '../lib/outfit/outfit-bundle-producer';
+import type {
+  Phase2HomeSourceDescriptor,
+  Phase2HomeSourceSelection,
+  Phase2TransitionAdapter,
+  RegisterHomeAnchor,
+} from '../lib/outfit-transition/phase2-adapter';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Konstanter / fallback
@@ -82,16 +106,86 @@ type VognMode = 'awake' | 'sleeping';
  * recommendation som Hjem allerede har beregnet (inkl. swap-overrides) +
  * gjeldende activity / vognMode. Uendret fra forrige iter.
  */
-type OpenSheetContext = {
-  recommendation: Recommendation | null;
-  activity: Activity;
-  vognMode: VognMode;
-};
-
 type HjemScreenProps = {
   onNavigate: (tab: TabKey) => void;
-  onOpenSheet: (ctx: OpenSheetContext) => void;
+  onOpenSheet: (
+    ctx: PlannedOutfitContext,
+    origin: HTMLButtonElement,
+    bundle: OutfitBundleProducerResult | undefined,
+  ) => void;
+  createCurrentOutfitBundle: (
+    ctx: PlannedOutfitContext,
+  ) => OutfitBundleProducerResult | undefined;
+  selectHomeSources: Phase2TransitionAdapter['selectHomeSources'];
+  registerHomeAnchor: RegisterHomeAnchor;
+  observeTransitionBundle: (
+    bundle: OutfitBundleProducerResult | undefined,
+  ) => void;
 };
+
+const MAX_HOME_GARMENT_PILLS = 5;
+
+function RegisteredHomeGarmentPill({
+  source,
+  style,
+  registerHomeAnchor,
+}: Readonly<{
+  source: Phase2HomeSourceDescriptor;
+  style: CSSProperties;
+  registerHomeAnchor: RegisterHomeAnchor;
+}>) {
+  const register = useCallback(
+    (element: HTMLSpanElement | null) => {
+      registerHomeAnchor(source.itemId, element);
+    },
+    [source.itemId, registerHomeAnchor],
+  );
+
+  return (
+    <span
+      ref={register}
+      data-outfit-transition-source={source.itemId}
+      style={style}
+    >
+      {source.label}
+    </span>
+  );
+}
+
+export function HomeGarmentPills({
+  selection,
+  fallbackAnchors,
+  registerHomeAnchor,
+  styleForIndex,
+}: Readonly<{
+  selection: Phase2HomeSourceSelection;
+  fallbackAnchors: readonly Readonly<{ label: string }>[];
+  registerHomeAnchor: RegisterHomeAnchor;
+  styleForIndex: (index: number, count: number) => CSSProperties;
+}>) {
+  if (
+    selection.kind !== 'ready'
+    || selection.sources.length > MAX_HOME_GARMENT_PILLS
+  ) {
+    return fallbackAnchors.map((anchor, index) => (
+      <span
+        key={`${anchor.label}:${index}`}
+        style={styleForIndex(index, fallbackAnchors.length)}
+      >
+        {anchor.label}
+      </span>
+    ));
+  }
+
+  return selection.sources.map((source, index) => (
+    <RegisteredHomeGarmentPill
+      key={source.itemId}
+      source={source}
+      style={styleForIndex(index, selection.sources.length)}
+      registerHomeAnchor={registerHomeAnchor}
+    />
+  ));
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -208,7 +302,14 @@ function WeatherFallbackIcon({ size }: { size: number }) {
 // HjemScreen
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenProps) {
+export function HjemScreen({
+  onNavigate: _onNavigate,
+  onOpenSheet,
+  createCurrentOutfitBundle,
+  selectHomeSources,
+  registerHomeAnchor,
+  observeTransitionBundle,
+}: HjemScreenProps) {
   // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
   // siden BottomTabBar nå mountes globalt i App.tsx.
   void _onNavigate;
@@ -218,12 +319,44 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
   // Swap-overrides for plagg-bytter (session-only) — driver avatar-tier
   // hvis Sivert har byttet base-laget i popupen. Uendret fra forrige iter.
   const swaps = useSwapOverride((s) => s.swaps);
+  const locationMode = useLocationPref((state) => state.mode);
+  const automaticPlace = useLocationPref((state) => state.automaticPlace);
+  const { isPremium, loading: accessLoading } = useAccess();
 
-  const lat = !needsOnboarding && active.lat ? active.lat : ELVERUM.lat;
-  const lon = !needsOnboarding && active.lon ? active.lon : ELVERUM.lon;
-  const cityLabel = !needsOnboarding && active.city ? active.city : ELVERUM.city;
+  const fixedHome = !needsOnboarding ? {
+    childId: active.id,
+    city: active.city,
+    lat: active.lat,
+    lon: active.lon,
+  } : {
+    childId: '__fallback__',
+    city: ELVERUM.city,
+    lat: ELVERUM.lat,
+    lon: ELVERUM.lon,
+  };
+  const locationAccess = resolveRuntimeCapabilityAccess(
+    'automatic_location',
+    { isPlus: isPremium, authenticated: false, loading: accessLoading },
+    PLUS_FEATURE_AVAILABILITY,
+  );
+  const effectivePlace = resolveEffectivePlace(
+    fixedHome,
+    locationMode,
+    locationAccess,
+    automaticPlace,
+  );
+  const lat = effectivePlace?.lat ?? 0;
+  const lon = effectivePlace?.lon ?? 0;
+  const cityLabel = effectivePlace === null
+    ? 'Sted mangler'
+    : effectivePlace.source === 'automatic'
+      ? `Nåværende sted · ${effectivePlace.city}`
+      : `Fast sted · ${effectivePlace.city}`;
 
-  const weather = useWeather(lat, lon);
+  const weather = useWeather(lat, lon, 12, 0, {
+    cacheScope: effectivePlace?.cacheScope ?? 'persistent',
+    source: effectivePlace?.source ?? 'fixed-home',
+  }, effectivePlace !== null);
   const [activity, setActivity] = useState<Activity>('utelek');
   // Søvn/våken-toggle på vogn fjernet (Sivert: ikke viktig nok). Antar våken.
   const vognMode: VognMode = 'awake';
@@ -275,19 +408,121 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     return applySwapsFinalized(engineInput, recommendation, swaps);
   }, [recommendation, engineInput, swaps]);
 
+  const currentOutfitContext = useMemo<PlannedOutfitContext | null>(() => {
+    const now = weather.now;
+    const evaluatedAt = weather.evidence?.metadata.evaluatedAt;
+    if (
+      !now
+      || !engineInput
+      || !resolvedRecommendation
+      || effectivePlace === null
+      || evaluatedAt === undefined
+      || !Number.isInteger(ageMonths)
+      || ageMonths < 0
+      || ageMonths > 24
+    ) {
+      return null;
+    }
+    const orderedGarments = resolvedRecommendation.layers
+      .filter((layer) => layer.category !== 'utstyr')
+      .flatMap((layer) => layer.items);
+    const equipment = resolvedRecommendation.layers
+      .filter((layer) => layer.category === 'utstyr')
+      .flatMap((layer) => layer.items);
+    if (orderedGarments.length === 0) return null;
+    const fingerprint = `current-finalized:${JSON.stringify([
+      orderedGarments,
+      equipment,
+      now.tempC,
+      now.feelsLikeC,
+      now.windMs,
+      now.precipMmH,
+      now.symbolCode,
+    ])}`;
+    const evaluatedAtIso = new Date(evaluatedAt).toISOString();
+    try {
+      return createCurrentOutfitContext({
+        planningEventId: `current-event:${evaluatedAtIso}:${fingerprint}`,
+        transitionContextId: `current-transition:${evaluatedAtIso}:${fingerprint}`,
+        child: {
+          id: active.id,
+          name: active.name,
+          ageMonths,
+        },
+        plannedForIso: evaluatedAtIso,
+        timeZone: PLAN_TIME_ZONE,
+        place: {
+          label: cityLabel,
+          lat,
+          lon,
+          source: effectivePlace.source,
+        },
+        activity,
+        vognMode: activity === 'vogn' ? vognMode : null,
+        weather: {
+          tempC: now.tempC,
+          feelsLikeC: now.feelsLikeC,
+          windMs: now.windMs,
+          precipMmH: now.precipMmH,
+          symbolCode: now.symbolCode,
+        },
+        recommendInput: engineInput,
+        finalizedRecommendation: resolvedRecommendation,
+        access: {
+          capability: 'today_home',
+          allowed: true,
+          reason: 'free',
+        },
+      });
+    } catch {
+      return null;
+    }
+  }, [
+    active.id,
+    active.name,
+    activity,
+    ageMonths,
+    cityLabel,
+    engineInput,
+    effectivePlace,
+    lat,
+    lon,
+    resolvedRecommendation,
+    vognMode,
+    weather.evidence?.metadata.evaluatedAt,
+    weather.now,
+  ]);
+
+  const currentOutfitBundle = useMemo(
+    () => (
+      currentOutfitContext === null
+        ? undefined
+        : createCurrentOutfitBundle(currentOutfitContext)
+    ),
+    [createCurrentOutfitBundle, currentOutfitContext],
+  );
+  const homeSourceSelection = useMemo(
+    () => selectHomeSources(currentOutfitBundle),
+    [currentOutfitBundle, selectHomeSources],
+  );
+  useEffect(() => {
+    observeTransitionBundle(currentOutfitBundle);
+  }, [currentOutfitBundle, observeTransitionBundle]);
+
   const handleActivityChange = (next: Activity) => {
     if (next === activity) return;
     setActivity(next);
     void fire('selection');
   };
 
-  const handleCta = () => {
+  const handleCta = (event: MouseEvent<HTMLButtonElement>) => {
+    if (!currentOutfitContext) return;
     void fire('medium');
-    onOpenSheet({
-      recommendation: resolvedRecommendation,
-      activity,
-      vognMode,
-    });
+    onOpenSheet(
+      currentOutfitContext,
+      event.currentTarget,
+      currentOutfitBundle,
+    );
   };
 
   // ─── Avledede verdier ─────────────────────────────────────────────────────
@@ -308,6 +543,12 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
       : { headline: 'Dagens antrekk', anchors: [], outerBodyLabel: null }),
     [resolvedRecommendation],
   );
+  const visibleAnchorLabels = (
+    homeSourceSelection.kind === 'ready'
+    && homeSourceSelection.sources.length <= MAX_HOME_GARMENT_PILLS
+  )
+    ? homeSourceSelection.sources.map(({ label }) => label)
+    : sceneModel.anchors.map(({ label }) => label);
 
   // Positur-nøkkel (brukt for silhuett-fallback + stabil data-key).
   const avatarPoseKey = useMemo(() => ({
@@ -497,6 +738,17 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     // gratis via [data-temp]-overrides (avatar-glow/bg-canvas).
     background: 'radial-gradient(ellipse 90% 70% at 50% 42%, var(--avatar-glow) 0%, transparent 72%)',
     borderRadius: 28,
+  };
+  const sceneForeground: CSSProperties = {
+    position: 'relative',
+    zIndex: 1,
+    width: '100%',
+    minHeight: 110,
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
   };
 
   // Orbital-ankere (dekorative — hele scenen er aria-hidden; sr-sammendraget
@@ -750,20 +1002,31 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
               (krav 2), sikkerhetslinje på solid flate (krav 4b). */}
           <div style={sceneSection}>
             <div style={scene} aria-hidden="true">
-              <VerifiedAvatarComposite
-                stateKey={avatarPoseKey}
-                assetOverride={verifiedAvatar}
-                outfitSummary={sceneModel.headline}
-                decorative
-                reducedMotion={reducedMotion}
-                size={188}
-              />
-              <div style={anchorRing}>
-                {sceneModel.anchors.map((anchor, i) => (
-                  <span key={anchor.label} style={anchorPill(i, sceneModel.anchors.length)}>
-                    {anchor.label}
-                  </span>
-                ))}
+              {now !== null && now !== undefined && (
+                <LivingHomeAtmosphere
+                  tempC={now.tempC}
+                  feelsLikeC={now.feelsLikeC}
+                  symbolCode={now.symbolCode}
+                  reducedMotion={reducedMotion}
+                />
+              )}
+              <div style={sceneForeground}>
+                <VerifiedAvatarComposite
+                  stateKey={avatarPoseKey}
+                  assetOverride={verifiedAvatar}
+                  outfitSummary={sceneModel.headline}
+                  decorative
+                  reducedMotion={reducedMotion}
+                  size={188}
+                />
+                <div style={anchorRing}>
+                  <HomeGarmentPills
+                    selection={homeSourceSelection}
+                    fallbackAnchors={sceneModel.anchors}
+                    registerHomeAnchor={registerHomeAnchor}
+                    styleForIndex={anchorPill}
+                  />
+                </div>
               </div>
             </div>
 
@@ -771,8 +1034,8 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
             {/* sr-sammendrag (a11y-lead krav 2): antrekket rekonstruerbart
                 uten grafikk — kilden er samme scenemodell, aldri re-telling. */}
             <span style={srOnly}>
-              {sceneModel.anchors.length > 0
-                ? `Ytterst: ${sceneModel.anchors.map((a) => a.label).join(', ')}.`
+              {visibleAnchorLabels.length > 0
+                ? `Ytterst: ${visibleAnchorLabels.join(', ')}.`
                 : 'Antrekket beregnes.'}
             </span>
 
@@ -786,8 +1049,10 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
                 Reduced-motion: CSS-pressede regler i .ba-hjem-press-cta */}
             {reducedMotion ? (
               <button
+                id="hjem-current-outfit-trigger"
                 type="button"
                 onClick={handleCta}
+                disabled={currentOutfitContext === null}
                 aria-haspopup="dialog"
                 className="ba-hjem-press-cta ba-hjem-focus"
                 style={cta}
@@ -796,8 +1061,10 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
               </button>
             ) : (
               <motion.button
+                id="hjem-current-outfit-trigger"
                 type="button"
                 onClick={handleCta}
+                disabled={currentOutfitContext === null}
                 aria-haspopup="dialog"
                 className="ba-hjem-focus"
                 style={cta}

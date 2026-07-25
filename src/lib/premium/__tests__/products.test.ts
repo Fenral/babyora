@@ -1,11 +1,11 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import {
   DEFAULT_PLAN,
   PAYWALL_TRIGGERS,
   PRODUCTS,
   PRODUCT_IDS,
-  TRIGGER_HEADLINE,
-  TRUST_LINE_COPY,
   VALUE_ANCHOR_COPY,
   priceTransparencyText,
 } from '../products';
@@ -60,34 +60,31 @@ describe('priceTransparencyText', () => {
 });
 
 describe('Paywall trigger-strenger', () => {
-  it('inneholder nøyaktig de 4 låste triggerne (R7 Task 7: morgenvarsel er gratis)', () => {
+  it('inneholder de låste triggerne inkludert Snart uten å endre produktkontrakten', () => {
     expect(PAYWALL_TRIGGERS).toEqual({
       imorgen: 'imorgen',
       garderobe_tilpasning: 'garderobe_tilpasning',
       barn_2: 'barn_2',
       forste_vinter: 'forste_vinter',
+      snart: 'snart',
     });
+  });
+
+  it('Snart-triggeren endrer ikke produkt-ID, pris, trial eller RevenueCat-ankere', () => {
+    expect(PRODUCT_IDS).toEqual({
+      yearly: 'no.klemeg.app.yearly',
+      quarterly: 'no.klemeg.app.quarterly',
+      monthly: 'no.klemeg.app.monthly',
+    });
+    expect(PRODUCTS.yearly).toMatchObject({ anchorPriceNok: 299, trialDays: 7 });
+    expect(PRODUCTS.quarterly).toMatchObject({ anchorPriceNok: 99, trialDays: 0 });
+    expect(PRODUCTS.monthly).toMatchObject({ anchorPriceNok: 39, trialDays: 0 });
   });
 
   it('morgenvarsel er IKKE en paywall-trigger (gratis-kapabilitet, jf. capabilities.ts)', () => {
     expect('morgenvarsel' in PAYWALL_TRIGGERS).toBe(false);
   });
 
-  it('hver trigger har kontekst-overskrift', () => {
-    for (const key of Object.keys(PAYWALL_TRIGGERS) as Array<keyof typeof PAYWALL_TRIGGERS>) {
-      expect(TRIGGER_HEADLINE[key]).toBeTruthy();
-      expect(TRIGGER_HEADLINE[key].length).toBeGreaterThan(5);
-      // Aldri generisk «Oppgrader til Premium»
-      expect(TRIGGER_HEADLINE[key]).not.toMatch(/oppgrader til premium/i);
-    }
-  });
-
-  it('forbidden-ord IKKE i kontekst-overskrifter', () => {
-    const forbidden = /låst|sperret|nektet|krever/i;
-    for (const headline of Object.values(TRIGGER_HEADLINE)) {
-      expect(headline).not.toMatch(forbidden);
-    }
-  });
 });
 
 describe('Copy-konstanter', () => {
@@ -95,7 +92,12 @@ describe('Copy-konstanter', () => {
     expect(VALUE_ANCHOR_COPY).toMatch(/ullbody/);
   });
 
-  it('tillitslinje nevner begge foreldre', () => {
-    expect(TRUST_LINE_COPY).toMatch(/begge foreldre/i);
+  it('legacy tillitslinje og familie/caregiver-løfter er fjernet fra products', () => {
+    const source = readFileSync(
+      fileURLToPath(new URL('../products.ts', import.meta.url)),
+      'utf8',
+    );
+    expect(source).not.toContain('TRUST_LINE_COPY');
+    expect(source).not.toMatch(/begge foreldre|alle som passer barnet|omsorgsperson/i);
   });
 });
