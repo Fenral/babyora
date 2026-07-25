@@ -40,7 +40,7 @@ const DEPENDENCIES = Object.freeze({
   dependency_02_08_sha: 'f1688a5799af2806b790ece790d9630438625b14',
 });
 
-const AMENDED_SCOPE = Object.freeze([
+const AMENDED_IMPLEMENTATION_SCOPE = Object.freeze([
   'e2e/fixtures/outfit-truth.html',
   'e2e/fixtures/outfit-truth.tsx',
   'e2e/outfit-truth.ts',
@@ -50,8 +50,17 @@ const AMENDED_SCOPE = Object.freeze([
   'src/App.tsx',
   'src/components/outfit/__tests__/OutfitTruthPanel.test.tsx',
   'src/lib/outfit/feature-flags.ts',
+  'src/lib/planning/__tests__/planned-outfit-resolver.test.ts',
   'src/screens/PaakledningScreen.tsx',
   'src/screens/__tests__/PaakledningScreen.outfit-truth.test.tsx',
+].sort());
+
+const PREACTIVATION_GOVERNANCE_PATH =
+  '.planning/phases/02-outfit-truth-antrekkskart/02-09-PREACTIVATION-TEST-AMENDMENT.md';
+
+const AMENDED_SCOPE_WITH_GOVERNANCE = Object.freeze([
+  ...AMENDED_IMPLEMENTATION_SCOPE,
+  PREACTIVATION_GOVERNANCE_PATH,
 ].sort());
 
 const ACTIVATION_DELTA = Object.freeze([
@@ -543,10 +552,10 @@ function verifyRecord(
   requireValue(
     record,
     'scope_attestation',
-    'amended-11-paths-only',
+    'amended-12-paths-only',
     'candidate record',
   );
-  requireValue(record, 'scope_file_count', '11', 'candidate record');
+  requireValue(record, 'scope_file_count', '12', 'candidate record');
   requireValue(
     record,
     'inventory_script_blob',
@@ -722,7 +731,7 @@ function runInventory(root: string, record: ScalarMap): void {
 }
 
 function assertNoMediaCapture(root: string, candidate: string): void {
-  const sourcePaths = AMENDED_SCOPE.filter(
+  const sourcePaths = AMENDED_IMPLEMENTATION_SCOPE.filter(
     (path) => path.startsWith('e2e/') || path.includes('__tests__'),
   );
   for (const path of sourcePaths) {
@@ -734,6 +743,16 @@ function assertNoMediaCapture(root: string, candidate: string): void {
     ) {
       fail(`prohibited media capture appears in ${path}`);
     }
+  }
+}
+
+function assertRequiredScopePathsExist(root: string, candidate: string): void {
+  for (const path of AMENDED_SCOPE_WITH_GOVERNANCE) {
+    runGit(
+      root,
+      ['cat-file', '-e', `${candidate}:${path}`],
+      `required amended scope path ${path}`,
+    );
   }
 }
 
@@ -870,7 +889,12 @@ export function verifyPhase2Evidence(argv: readonly string[]): void {
     ['diff', '--name-only', `${IMPLEMENTATION_BASE_SHA}..${arguments_.candidate}`],
     'amended scope',
   ).split(/\r?\n/u);
-  assertSameSorted(scopePaths, AMENDED_SCOPE, 'amended eleven-path scope');
+  assertSameSorted(
+    scopePaths,
+    AMENDED_SCOPE_WITH_GOVERNANCE,
+    'amended twelve-path implementation scope plus governance artifact',
+  );
+  assertRequiredScopePathsExist(root, arguments_.candidate);
   assertNoMediaCapture(root, arguments_.candidate);
 
   runGit(

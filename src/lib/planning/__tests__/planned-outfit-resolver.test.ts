@@ -378,7 +378,7 @@ describe('Planned Outfit resolver', () => {
     ]);
 
     expect(appSource).toMatch(
-      /source:\s*'planned';\s*plannedContext:\s*PlannedOutfitContext;\s*origin:\s*HTMLElement/u,
+      /source:\s*'planned';\s*plannedContext:\s*PlannedOutfitContext;\s*outfitBundle\?:\s*OutfitBundleProducerResult;\s*origin:\s*HTMLElement/u,
     );
     expect(appSource).toMatch(
       /source:\s*'current';\s*currentContext:\s*PlannedOutfitContext/u,

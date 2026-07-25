@@ -94,8 +94,8 @@ function recordValues(
     phase1_candidate_sha: PHASE1,
     contract_sha256: CONTRACT,
     pack_sha256: PACK,
-    scope_attestation: 'amended-11-paths-only',
-    scope_file_count: '11',
+    scope_attestation: 'amended-12-paths-only',
+    scope_file_count: '12',
     inventory_script_blob: 'd4af276900bdfbdde9a27a00f5620e49c294c41a',
     inventory_test_blob: '5c6a3db2adbbcddcaae956b56d17650e0110cb57',
     inventory_scenario_count: '2036160',
@@ -290,6 +290,8 @@ beforeAll(() => {
     'scripts/outfit/verify-phase2-evidence.ts',
     'scripts/outfit/run-phase2-evidence.ts',
     'scripts/outfit/__tests__/verify-phase2-evidence.test.ts',
+    'src/lib/planning/__tests__/planned-outfit-resolver.test.ts',
+    '.planning/phases/02-outfit-truth-antrekkskart/02-09-PREACTIVATION-TEST-AMENDMENT.md',
   ]) {
     mkdirSync(dirname(join(repo, path)), { recursive: true });
     copyFileSync(join(sourceRoot, path), join(repo, path));
@@ -475,7 +477,7 @@ describe('strict raw candidate frontmatter', () => {
     ['pack_sha256', '0'.repeat(64)],
     ['dependency_02_08_sha', DEPENDENCIES[6]],
     ['scope_attestation', 'trust-me'],
-    ['scope_file_count', '10'],
+    ['scope_file_count', '11'],
     ['inventory_scenario_count', '2036159'],
     ['pre_activation_build_exit', '1'],
     ['recorded_at', '2020-01-01T00:00:00Z'],
@@ -638,16 +640,44 @@ describe('inventory, amended scope and protected surfaces', () => {
     );
   });
 
-  it('rejects package, media and protected-screen drift outside eleven paths', () => {
+  it('rejects an omitted counted contract test from the twelve-path implementation scope', () => {
+    activateVariant(
+      'omitted contract test',
+      () => {
+        git(repo, [
+          'rm',
+          'src/lib/planning/__tests__/planned-outfit-resolver.test.ts',
+        ]);
+      },
+      'export const OUTFIT_TRUTH_V1_AVAILABLE = true as const;\n',
+      /required amended scope path src\/lib\/planning\/__tests__\/planned-outfit-resolver\.test\.ts/u,
+    );
+  });
+
+  it('rejects a mutated twelve-path scope attestation', () => {
+    writeEvidence({ ...recordValues(), scope_attestation: 'amended-11-paths-only' });
+    expectFailure(/scope_attestation/u);
+    writeEvidence();
+  });
+
+  it('rejects package, media and protected-screen drift outside the twelve paths', () => {
     activateVariant(
       'protected drift',
       () => {
         appendOwned('package.json', ' ');
         appendOwned('src/screens/HjemScreen.tsx', '// protected drift');
         writeFileSync(join(repo, 'e2e/forbidden-media.png'), 'not-media', 'utf8');
+        writeFileSync(
+          join(
+            repo,
+            '.planning/phases/02-outfit-truth-antrekkskart/02-09-UNAUTHORIZED-DRIFT.md',
+          ),
+          'unauthorized governance drift\n',
+          'utf8',
+        );
       },
       'export const OUTFIT_TRUTH_V1_AVAILABLE = true as const;\n',
-      /amended eleven-path scope differs/u,
+      /amended twelve-path implementation scope plus governance artifact differs/u,
     );
   });
 });
