@@ -320,6 +320,19 @@ function produceOutfitBundleUnchecked(
   ) {
     return unavailable('input-result-mismatch');
   }
+  if (
+    !Object.hasOwn(finalizedRecommendation, 'safetyFlags')
+    || !Object.hasOwn(finalizedRecommendation, 'severity')
+  ) {
+    return freezeDeep({
+      kind: 'supported' as const,
+      bundleVersion: 1 as const,
+      source,
+      weather,
+      base,
+      options: [] as const,
+    });
+  }
 
   let alternativeBuild;
   try {

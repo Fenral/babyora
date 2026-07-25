@@ -16,7 +16,10 @@ import {
   type OutfitBundleUnavailableReason,
   type ProduceOutfitBundleArgsV1,
 } from '../outfit-bundle-producer.js';
-import { isOutfitTruthSnapshot } from '../outfit-truth.js';
+import {
+  createOutfitTruthSnapshot,
+  isOutfitTruthSnapshot,
+} from '../outfit-truth.js';
 
 type ContextOptions = Readonly<{
   identity?: string;
@@ -607,16 +610,113 @@ describe('produceOutfitBundle', () => {
     assertRecursivelyFrozen(result);
   });
 
-  it('fails closed when an owned seed lacks complete finalizer ownership data', () => {
+  it.each([
+    [
+      'both optional finalizer fields are absent',
+      (recommendation: Recommendation) => {
+        delete recommendation.safetyFlags;
+        delete recommendation.severity;
+      },
+      false,
+      false,
+    ],
+    [
+      'only safetyFlags is absent',
+      (recommendation: Recommendation) => {
+        delete recommendation.safetyFlags;
+      },
+      false,
+      true,
+    ],
+    [
+      'only severity is absent',
+      (recommendation: Recommendation) => {
+        delete recommendation.severity;
+      },
+      true,
+      false,
+    ],
+  ] as const)(
+    'preserves supported base truth with no alternatives when %s',
+    (
+      _name,
+      removeOptionalFinalizerData,
+      hasSafetyFlags,
+      hasSeverity,
+    ) => {
+      const recommendInput = completeRecommendInput();
+      const finalizedRecommendation = recommend(recommendInput);
+      removeOptionalFinalizerData(finalizedRecommendation);
+      const context = exactCurrentContext({
+        identity: `optional-finalizer-${hasSafetyFlags}-${hasSeverity}`,
+        recommendInput,
+        finalizedRecommendation,
+      });
+      const source = currentSource(context);
+      const expectedTruth = createOutfitTruthSnapshot({
+        transitionContextId: context.producerSeed.transitionContextId,
+        input: context.producerSeed.input,
+        finalizedRecommendation:
+          context.producerSeed.finalizedRecommendation as Recommendation,
+        pose: 'sitting',
+      });
+      expect(expectedTruth.kind).toBe('supported');
+      if (expectedTruth.kind !== 'supported') {
+        throw new Error('expected supported base truth');
+      }
+
+      expect(Object.hasOwn(
+        context.producerSeed.finalizedRecommendation,
+        'safetyFlags',
+      )).toBe(hasSafetyFlags);
+      expect(Object.hasOwn(
+        context.producerSeed.finalizedRecommendation,
+        'severity',
+      )).toBe(hasSeverity);
+      const result = produceOutfitBundle({
+        seed: context.producerSeed,
+        source,
+      });
+      expect(result).toEqual({
+        kind: 'supported',
+        bundleVersion: 1,
+        source,
+        weather: {
+          tempC: recommendInput.weather.tempC,
+          feelsLikeC: recommendInput.weather.feelsLikeC,
+        },
+        base: expectedTruth.snapshot,
+        options: [],
+      });
+      if (result.kind !== 'supported') return;
+      expect(result.options).toEqual([]);
+      expect(Object.isFrozen(result.options)).toBe(true);
+      assertRecursivelyFrozen(result);
+    },
+  );
+
+  it('keeps a factory-owned both-present severity mismatch typed unavailable', () => {
     const recommendInput = completeRecommendInput();
     const finalizedRecommendation = recommend(recommendInput);
-    delete finalizedRecommendation.safetyFlags;
-    delete finalizedRecommendation.severity;
+    expect(finalizedRecommendation.safetyFlags).toBeDefined();
+    expect(finalizedRecommendation.severity).toBeDefined();
+    finalizedRecommendation.severity =
+      finalizedRecommendation.severity === 'CRITICAL'
+        ? 'NONE'
+        : 'CRITICAL';
     const context = exactCurrentContext({
-      identity: 'incomplete-finalizer',
+      identity: 'inconsistent-finalizer',
       recommendInput,
       finalizedRecommendation,
     });
+    const base = createOutfitTruthSnapshot({
+      transitionContextId: context.producerSeed.transitionContextId,
+      input: context.producerSeed.input,
+      finalizedRecommendation:
+        context.producerSeed.finalizedRecommendation as Recommendation,
+      pose: 'sitting',
+    });
+    expect(base.kind).toBe('supported');
 
     expect(produceOutfitBundle({
       seed: context.producerSeed,
@@ -627,6 +727,36 @@ describe('produceOutfitBundle', () => {
       reason: 'truth-build-failed',
     });
   });
+
+  it.each([
+    [
+      'safetyFlags',
+      (recommendation: Recommendation) => {
+        recommendation.safetyFlags = 'forged' as unknown as
+          Recommendation['safetyFlags'];
+      },
+    ],
+    [
+      'severity',
+      (recommendation: Recommendation) => {
+        recommendation.severity = 'SEVERE' as
+          NonNullable<Recommendation['severity']>;
+      },
+    ],
+  ] as const)(
+    'rejects an invalid %s type at the canonical context boundary',
+    (_name, makeInvalid) => {
+      const recommendInput = completeRecommendInput();
+      const finalizedRecommendation = recommend(recommendInput);
+      makeInvalid(finalizedRecommendation);
+
+      expect(() => exactCurrentContext({
+        identity: 'invalid-finalizer-type',
+        recommendInput,
+        finalizedRecommendation,
+      })).toThrow(/PlannedOutfitContext/u);
+    },
+  );
 
   it.each([
     [
