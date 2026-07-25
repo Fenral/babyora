@@ -84,13 +84,39 @@ afterEach(() => {
 });
 
 describe('PaakledningScreen outfit truth integration', () => {
-  it('keeps the false compile-time flag unable to mount the production bundle branch', () => {
+  it('keeps the production bundle branch behind one literal compile-time flag without recomputation', async () => {
     const screen = source(screenPath);
     const flags = source('src/lib/outfit/feature-flags.ts');
-    expect(flags).toMatch(/OUTFIT_TRUTH_V1_AVAILABLE\s*=\s*false/u);
+    expect(flags).toMatch(
+      /OUTFIT_TRUTH_V1_AVAILABLE\s*=\s*(?:false|true)\s+as\s+const/u,
+    );
+    expect(flags).not.toMatch(
+      /localStorage|sessionStorage|import\.meta\.env|URLSearchParams|process\.env/u,
+    );
     expect(screen).toContain('OUTFIT_TRUTH_V1_AVAILABLE && outfitBundle !== undefined');
     expect(screen).toContain('if (exactContext)');
     expect(screen).not.toMatch(/produceOutfitBundle\s*\(/u);
+
+    const { bundle, context } = supportedBundle();
+    const renderPanel = vi.fn(() => (
+      <section data-outfit-truth-panel="mocked">mocked panel</section>
+    ));
+    vi.doMock('../../lib/outfit/feature-flags.js', () => ({
+      OUTFIT_TRUTH_V1_AVAILABLE: false,
+    }));
+    vi.doMock('../../components/outfit/OutfitTruthPanel.js', () => ({
+      OutfitTruthPanel: renderPanel,
+    }));
+    const { PaakledningScreen } = await import('../PaakledningScreen.js');
+    const html = renderToStaticMarkup(
+      <PaakledningScreen
+        onBack={() => undefined}
+        currentContext={context}
+        outfitBundle={bundle}
+      />,
+    );
+    expect(renderPanel).not.toHaveBeenCalled();
+    expect(html).not.toContain('mocked panel');
   });
 
   it('forwards an exact real producer result and stable transition props only through the enabled branch', async () => {
