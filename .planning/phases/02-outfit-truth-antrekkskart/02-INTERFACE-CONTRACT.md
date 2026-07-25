@@ -1,6 +1,6 @@
 # Phase 2 → Phase 3: Outfit truth interface contract
 
-**Status:** FROZEN WITH APPROVED IDENTITY AMENDMENT
+**Status:** FROZEN WITH APPROVED IDENTITY AND WEATHER-OPTIONALITY AMENDMENTS
 **Date:** 2026-07-25
 **Owner:** Phase 2 owns outfit truth, responsive Antrekkskart, production `PaakledningScreen`, activation flag, Outfit-row registration, the serialized 02-05 Hjem/Uke preservation of full producer inputs after Phase-1 01-18, and the serialized 02-09 `App` current/planned bundle bootstrap. After 02-09 passes, Phase 3 extends `HjemScreen` and `App` for Home atmosphere/source registration, transient DOM measurement and transition orchestration without replacing the producer seed or editing Paakledning.
 
@@ -8,6 +8,11 @@ Identity semantics are amended by
 `02-IDENTITY-AMENDMENT.md`. That amendment has precedence only where the
 original text implied byte-equivalent IDs across different current, planned or
 planned-interval provenance.
+
+Optional weather-symbol preservation is amended by
+`02-WEATHER-OPTIONALITY-AMENDMENT.md`. That amendment has precedence only where
+the original text required a source `RecommendInput` that omits its optional
+`weather.symbolCode` to equal the display-facing context weather shape.
 
 ## Purpose
 
