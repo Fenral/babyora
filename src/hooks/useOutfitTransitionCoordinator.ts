@@ -17,6 +17,7 @@ import {
 import { decideTransitionEligibility } from '../lib/outfit-transition/eligibility.js';
 import {
   createPhase2TransitionAdapter,
+  type Phase2HomeSourceSelection,
   type RegisterHomeAnchor,
 } from '../lib/outfit-transition/phase2-adapter.js';
 import { createOutfitTransitionAttemptLedger } from '../lib/outfit-transition/replay-policy.js';
@@ -44,9 +45,9 @@ export type OutfitTransitionCoordinatorRuntimeEnvironment = Readonly<{
 export type OutfitTransitionCoordinatorRuntime = Readonly<{
   getState: () => OutfitTransitionCoordinatorState;
   subscribe: (listener: () => void) => () => void;
-  getHomeItemIds: (
+  selectHomeSources: (
     bundle: OutfitBundleProducerResult | null | undefined,
-  ) => readonly OutfitItemId[];
+  ) => Phase2HomeSourceSelection;
   registerHomeAnchor: RegisterHomeAnchor;
   registerOutfitRow: RegisterOutfitRow;
   captureBeforeNavigation: (
@@ -63,6 +64,15 @@ export type OutfitTransitionCoordinatorRuntime = Readonly<{
     reason: OutfitTransitionSettlementReason,
   ) => OutfitTransitionCoordinatorState;
   handleLifecycle: (reason: LifecycleEventReason) => void;
+  inspectRetention: () => Readonly<{
+    homeElementCount: number;
+    targetElementCount: number;
+    hasActiveBundle: boolean;
+    hasScheduledReadiness: boolean;
+    disposed: boolean;
+  }>;
+  referencesElement: (element: HTMLElement) => boolean;
+  dispose: () => void;
 }>;
 
 type LifecycleTargets = Readonly<{
@@ -97,26 +107,6 @@ function exactSupportedBundle(
     isOutfitBundleProducerResult(bundle)
     && bundle.kind === 'supported'
   ) ? bundle : null;
-}
-
-function visibleItemIds(
-  bundle: OutfitBundleProducerResult | null | undefined,
-): readonly OutfitItemId[] {
-  const supported = exactSupportedBundle(bundle);
-  if (supported === null) return Object.freeze([]);
-  const itemIds = supported.base.avatar.visibleGarmentIds;
-  if (
-    !Array.isArray(itemIds)
-    || itemIds.length === 0
-    || itemIds.length > 10
-    || itemIds.some(
-      (itemId) => typeof itemId !== 'string' || itemId.trim().length === 0,
-    )
-    || new Set(itemIds).size !== itemIds.length
-  ) {
-    return Object.freeze([]);
-  }
-  return itemIds;
 }
 
 function rectangleFor(element: HTMLElement): TransitionRectangle | null {
@@ -157,18 +147,31 @@ export function createOutfitTransitionCoordinatorRuntime(
   const adapter = createPhase2TransitionAdapter();
   const ledger = createOutfitTransitionAttemptLedger();
   const homeElements = new Map<OutfitItemId, HTMLElement>();
+  const targetElements = new Map<OutfitItemId, HTMLElement>();
   let activeBundle:
     | Extract<OutfitBundleProducerResult, { kind: 'supported' }>
     | null = null;
   let cancelTargetReadiness: (() => void) | null = null;
+  let disposed = false;
 
-  const clearTransient = (): void => {
-    cancelTargetReadiness?.();
+  const clearTransient = (releaseHome = false): void => {
+    if (cancelTargetReadiness !== null) {
+      cancelTargetReadiness();
+    }
     cancelTargetReadiness = null;
     activeBundle = null;
+    targetElements.clear();
     adapter.clear();
+    if (releaseHome) {
+      homeElements.clear();
+      return;
+    }
     for (const [itemId, element] of homeElements) {
-      adapter.registerHomeAnchor(itemId, element);
+      if (element.isConnected !== true) {
+        homeElements.delete(itemId);
+      } else {
+        adapter.registerHomeAnchor(itemId, element);
+      }
     }
   };
 
@@ -190,6 +193,7 @@ export function createOutfitTransitionCoordinatorRuntime(
 
   const evaluateTarget = (): void => {
     cancelTargetReadiness = null;
+    if (disposed) return;
     const state = coordinator.getState();
     if (state.status !== 'captured' || activeBundle === null) return;
 
@@ -236,19 +240,56 @@ export function createOutfitTransitionCoordinatorRuntime(
   };
 
   const scheduleEvaluation = (): void => {
-    if (coordinator.getState().status !== 'captured') return;
-    cancelTargetReadiness?.();
+    if (
+      disposed
+      || coordinator.getState().status !== 'captured'
+    ) {
+      return;
+    }
+    if (cancelTargetReadiness !== null) {
+      cancelTargetReadiness();
+    }
     cancelTargetReadiness =
       environment.scheduleTargetReadiness(evaluateTarget);
   };
 
   const registerHomeAnchor: RegisterHomeAnchor = (itemId, element) => {
-    adapter.registerHomeAnchor(itemId, element);
-    if (element === null) homeElements.delete(itemId);
-    else homeElements.set(itemId, element);
+    if (disposed) return;
+    const previous = homeElements.get(itemId);
+    if (previous !== undefined && previous !== element) {
+      adapter.registerHomeAnchor(itemId, null);
+    }
+    if (element === null) {
+      homeElements.delete(itemId);
+      adapter.registerHomeAnchor(itemId, null);
+    } else {
+      homeElements.set(itemId, element);
+      adapter.registerHomeAnchor(itemId, element);
+    }
   };
 
   const registerOutfitRow: RegisterOutfitRow = (itemId, element) => {
+    if (disposed) return;
+    const previous = targetElements.get(itemId);
+    if (element === null) {
+      targetElements.delete(itemId);
+      adapter.registerOutfitRow(itemId, null);
+      return;
+    }
+    const state = coordinator.getState();
+    if (
+      state.status !== 'captured'
+      && state.status !== 'ready'
+      && state.status !== 'playing'
+    ) {
+      targetElements.delete(itemId);
+      adapter.registerOutfitRow(itemId, null);
+      return;
+    }
+    if (previous !== undefined && previous !== element) {
+      adapter.registerOutfitRow(itemId, null);
+    }
+    targetElements.set(itemId, element);
     adapter.registerOutfitRow(itemId, element);
     scheduleEvaluation();
   };
@@ -256,17 +297,14 @@ export function createOutfitTransitionCoordinatorRuntime(
   const captureBeforeNavigation = (
     rawBundle: OutfitBundleProducerResult | null | undefined,
   ): OutfitTransitionCoordinatorState => {
+    if (disposed) return coordinator.getState();
     const bundle = exactSupportedBundle(rawBundle);
-    const itemIds = visibleItemIds(rawBundle);
-    if (bundle === null || itemIds.length === 0) {
+    const selection = adapter.selectHomeSources(rawBundle);
+    if (bundle === null || selection.kind !== 'ready') {
       return settle('invalid-bundle');
     }
 
-    const identity = Object.freeze({
-      snapshotId: bundle.base.snapshotId,
-      recommendationFingerprint: bundle.base.recommendationFingerprint,
-      transitionContextId: bundle.base.transitionContextId,
-    });
+    const identity = selection.identity;
     const replay = ledger.consume(identity, {
       animationEligible: !environment.getReducedMotion(),
     });
@@ -281,6 +319,18 @@ export function createOutfitTransitionCoordinatorRuntime(
       );
     }
 
+    const homeEvaluation = adapter.evaluate({
+      outfitBundle: bundle,
+      transitionVisualState: 'settled',
+    });
+    if (
+      homeEvaluation.kind === 'static-only'
+      && homeEvaluation.reason !== 'missing-outfit-row'
+    ) {
+      return settle('invalid-source');
+    }
+
+    const itemIds = selection.sources.map(({ itemId }) => itemId);
     const rectangles = new Map<OutfitItemId, TransitionRectangle>();
     for (const itemId of itemIds) {
       const element = homeElements.get(itemId);
@@ -303,7 +353,7 @@ export function createOutfitTransitionCoordinatorRuntime(
   return Object.freeze({
     getState: coordinator.getState,
     subscribe: coordinator.subscribe,
-    getHomeItemIds: visibleItemIds,
+    selectHomeSources: adapter.selectHomeSources,
     registerHomeAnchor,
     registerOutfitRow,
     captureBeforeNavigation,
@@ -326,10 +376,31 @@ export function createOutfitTransitionCoordinatorRuntime(
         abort('identity-changed');
       }
     },
-    beginPlayback: coordinator.beginPlayback,
+    beginPlayback: () => (
+      disposed ? coordinator.getState() : coordinator.beginPlayback()
+    ),
     settle,
     abort,
-    handleLifecycle: abort,
+    handleLifecycle: (reason) => {
+      if (!disposed) abort(reason);
+    },
+    inspectRetention: () => Object.freeze({
+      homeElementCount: homeElements.size,
+      targetElementCount: targetElements.size,
+      hasActiveBundle: activeBundle !== null,
+      hasScheduledReadiness: cancelTargetReadiness !== null,
+      disposed,
+    }),
+    referencesElement: (element) => (
+      [...homeElements.values()].includes(element)
+      || [...targetElements.values()].includes(element)
+    ),
+    dispose: () => {
+      if (disposed) return;
+      coordinator.abort('unmounted');
+      clearTransient(true);
+      disposed = true;
+    },
   });
 }
 
@@ -433,7 +504,7 @@ export function useOutfitTransitionCoordinator() {
     });
     return () => {
       unbind();
-      runtime.abort('unmounted');
+      runtime.dispose();
     };
   }, [runtime]);
 

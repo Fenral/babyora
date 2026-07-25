@@ -9,6 +9,7 @@ import type {
   RecommendInput,
   Recommendation,
 } from '../../lib/wool-layers/types.js';
+import { createPhase2TransitionAdapter } from '../../lib/outfit-transition/phase2-adapter.js';
 import {
   bindOutfitTransitionLifecycle,
   createOutfitTransitionCoordinatorRuntime,
@@ -23,11 +24,19 @@ const viewport = Object.freeze({
 });
 
 class TestElement {
-  readonly isConnected = true;
+  #connected = true;
   readonly #x: number;
 
   constructor(x: number) {
     this.#x = x;
+  }
+
+  get isConnected(): boolean {
+    return this.#connected;
+  }
+
+  disconnect(): void {
+    this.#connected = false;
   }
 
   getBoundingClientRect(): DOMRect {
@@ -165,15 +174,31 @@ function element(x: number): HTMLElement {
   return new TestElement(x) as unknown as HTMLElement;
 }
 
+function sourceIds(
+  exactBundle: Extract<
+    OutfitBundleProducerResult,
+    { kind: 'supported' }
+  >,
+) {
+  const selection = createPhase2TransitionAdapter()
+    .selectHomeSources(exactBundle);
+  if (selection.kind !== 'ready') throw new Error(selection.reason);
+  return selection.sources.map((source) => source.itemId);
+}
+
 function createRuntime(reducedMotion = false) {
   let scheduled: (() => void) | null = null;
+  let scheduleCalls = 0;
+  let cancelCalls = 0;
   const runtime = createOutfitTransitionCoordinatorRuntime({
     getViewport: () => viewport,
     getDocumentVisibility: () => 'visible',
     getReducedMotion: () => reducedMotion,
     scheduleTargetReadiness: (callback) => {
+      scheduleCalls += 1;
       scheduled = callback;
       return () => {
+        cancelCalls += 1;
         scheduled = null;
       };
     },
@@ -185,6 +210,8 @@ function createRuntime(reducedMotion = false) {
       scheduled = null;
       callback?.();
     },
+    scheduleCalls: () => scheduleCalls,
+    cancelCalls: () => cancelCalls,
   };
 }
 
@@ -192,7 +219,7 @@ describe('outfit transition coordinator runtime', () => {
   it('consumes replay, captures synchronously, and becomes ready only after exact targets', () => {
     const exactBundle = bundle();
     const { runtime, flushTarget } = createRuntime();
-    const itemIds = runtime.getHomeItemIds(exactBundle);
+    const itemIds = sourceIds(exactBundle);
     itemIds.forEach((itemId, index) => {
       runtime.registerHomeAnchor(itemId, element(20 + index * 80));
     });
@@ -214,7 +241,7 @@ describe('outfit transition coordinator runtime', () => {
   it('consumes reduced-motion attempts without capture or playback', () => {
     const exactBundle = bundle();
     const { runtime } = createRuntime(true);
-    runtime.getHomeItemIds(exactBundle).forEach((itemId, index) => {
+    sourceIds(exactBundle).forEach((itemId, index) => {
       runtime.registerHomeAnchor(itemId, element(20 + index * 80));
     });
 
@@ -232,8 +259,8 @@ describe('outfit transition coordinator runtime', () => {
     const firstBundle = bundle();
     const nextBundle = bundle('2026-07-25T11:00:00.000Z');
     const { runtime } = createRuntime();
-    const firstItemIds = runtime.getHomeItemIds(firstBundle);
-    const nextItemIds = runtime.getHomeItemIds(nextBundle);
+    const firstItemIds = sourceIds(firstBundle);
+    const nextItemIds = sourceIds(nextBundle);
     firstItemIds.forEach((itemId, index) => {
       runtime.registerHomeAnchor(itemId, element(20 + index * 80));
     });
@@ -249,6 +276,90 @@ describe('outfit transition coordinator runtime', () => {
     expect(runtime.captureBeforeNavigation(nextBundle)).toEqual(
       expect.objectContaining({ status: 'captured' }),
     );
+  });
+
+  it('settles rapid pre-readiness activation once and clears the pending attempt', () => {
+    const exactBundle = bundle();
+    const {
+      runtime,
+      flushTarget,
+      scheduleCalls,
+      cancelCalls,
+    } = createRuntime();
+    const itemIds = sourceIds(exactBundle);
+    itemIds.forEach((itemId, index) => {
+      runtime.registerHomeAnchor(itemId, element(20 + index * 80));
+    });
+
+    expect(runtime.captureBeforeNavigation(exactBundle).status).toBe('captured');
+    itemIds.forEach((itemId, index) => {
+      runtime.registerOutfitRow(itemId, element(40 + index * 80));
+    });
+    expect(scheduleCalls()).toBe(itemIds.length);
+    expect(runtime.captureBeforeNavigation(exactBundle)).toEqual({
+      status: 'settled',
+      reason: 'already-attempted',
+    });
+    expect(cancelCalls()).toBe(itemIds.length);
+    itemIds.forEach((itemId, index) => {
+      runtime.registerOutfitRow(itemId, element(60 + index * 80));
+    });
+    expect(runtime.inspectRetention()).toEqual({
+      homeElementCount: itemIds.length,
+      targetElementCount: 0,
+      hasActiveBundle: false,
+      hasScheduledReadiness: false,
+      disposed: false,
+    });
+
+    flushTarget();
+    expect(runtime.getState()).toEqual({
+      status: 'settled',
+      reason: 'already-attempted',
+    });
+  });
+
+  it('releases replaced, disconnected, terminal, and disposed DOM references', () => {
+    const exactBundle = bundle();
+    const { runtime } = createRuntime();
+    const itemIds = sourceIds(exactBundle);
+    const first = element(20);
+    const replacement = element(28);
+    runtime.registerHomeAnchor(itemIds[0]!, first);
+    runtime.registerHomeAnchor(itemIds[0]!, replacement);
+    expect(runtime.referencesElement(first)).toBe(false);
+    expect(runtime.referencesElement(replacement)).toBe(true);
+
+    const disconnected = element(100);
+    runtime.registerHomeAnchor(itemIds[1]!, disconnected);
+    expect(runtime.captureBeforeNavigation(exactBundle).status).toBe(
+      'captured',
+    );
+    const firstTarget = element(140);
+    const replacementTarget = element(148);
+    runtime.registerOutfitRow(itemIds[0]!, firstTarget);
+    runtime.registerOutfitRow(itemIds[0]!, replacementTarget);
+    expect(runtime.referencesElement(firstTarget)).toBe(false);
+    expect(runtime.referencesElement(replacementTarget)).toBe(true);
+    (disconnected as unknown as TestElement).disconnect();
+    runtime.settle('closed');
+    expect(runtime.referencesElement(disconnected)).toBe(false);
+    expect(runtime.referencesElement(replacementTarget)).toBe(false);
+    expect(runtime.inspectRetention()).toMatchObject({
+      targetElementCount: 0,
+      hasActiveBundle: false,
+      hasScheduledReadiness: false,
+    });
+
+    runtime.dispose();
+    expect(runtime.referencesElement(replacement)).toBe(false);
+    expect(runtime.inspectRetention()).toEqual({
+      homeElementCount: 0,
+      targetElementCount: 0,
+      hasActiveBundle: false,
+      hasScheduledReadiness: false,
+      disposed: true,
+    });
   });
 
   it('settles and clears transient registrations for every lifecycle invalidator', () => {
@@ -268,7 +379,7 @@ describe('outfit transition coordinator runtime', () => {
         windowTarget,
         getDocumentVisibility: () => 'hidden',
       });
-      runtime.getHomeItemIds(exactBundle).forEach((itemId, index) => {
+      sourceIds(exactBundle).forEach((itemId, index) => {
         runtime.registerHomeAnchor(itemId, element(20 + index * 80));
       });
       runtime.captureBeforeNavigation(exactBundle);
@@ -277,7 +388,33 @@ describe('outfit transition coordinator runtime', () => {
         eventName === 'visibilitychange' ? documentTarget : windowTarget;
       target.dispatchEvent(new Event(eventName));
       expect(runtime.getState().status).toBe('settled');
+      expect(runtime.inspectRetention()).toMatchObject({
+        targetElementCount: 0,
+        hasActiveBundle: false,
+        hasScheduledReadiness: false,
+      });
       unbind();
     }
+  });
+
+  it('removes lifecycle listeners so later events cannot mutate state', () => {
+    const exactBundle = bundle();
+    const { runtime } = createRuntime();
+    const documentTarget = new EventTarget();
+    const windowTarget = new EventTarget();
+    sourceIds(exactBundle).forEach((itemId, index) => {
+      runtime.registerHomeAnchor(itemId, element(20 + index * 80));
+    });
+    runtime.captureBeforeNavigation(exactBundle);
+    const unbind = bindOutfitTransitionLifecycle(runtime, {
+      documentTarget,
+      windowTarget,
+      getDocumentVisibility: () => 'hidden',
+    });
+    unbind();
+
+    documentTarget.dispatchEvent(new Event('visibilitychange'));
+    windowTarget.dispatchEvent(new Event('resize'));
+    expect(runtime.getState().status).toBe('captured');
   });
 });

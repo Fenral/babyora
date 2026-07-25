@@ -81,8 +81,12 @@ import {
   type PlannedOutfitContext,
 } from '../lib/planning/planned-outfit-context';
 import type { OutfitBundleProducerResult } from '../lib/outfit/outfit-bundle-producer';
-import type { OutfitItemId } from '../lib/outfit/outfit-truth';
-import type { RegisterHomeAnchor } from '../lib/outfit-transition/phase2-adapter';
+import type {
+  Phase2HomeSourceDescriptor,
+  Phase2HomeSourceSelection,
+  Phase2TransitionAdapter,
+  RegisterHomeAnchor,
+} from '../lib/outfit-transition/phase2-adapter';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Konstanter / fallback
@@ -112,48 +116,75 @@ type HjemScreenProps = {
   createCurrentOutfitBundle: (
     ctx: PlannedOutfitContext,
   ) => OutfitBundleProducerResult | undefined;
-  getHomeTransitionItemIds: (
-    bundle: OutfitBundleProducerResult | undefined,
-  ) => readonly OutfitItemId[];
+  selectHomeSources: Phase2TransitionAdapter['selectHomeSources'];
   registerHomeAnchor: RegisterHomeAnchor;
   observeTransitionBundle: (
     bundle: OutfitBundleProducerResult | undefined,
   ) => void;
 };
 
-function HomeTransitionAnchor({
-  itemId,
-  layoutIndex,
+const MAX_HOME_GARMENT_PILLS = 5;
+
+function RegisteredHomeGarmentPill({
+  source,
+  style,
   registerHomeAnchor,
 }: Readonly<{
-  itemId: OutfitItemId;
-  layoutIndex: number;
+  source: Phase2HomeSourceDescriptor;
+  style: CSSProperties;
   registerHomeAnchor: RegisterHomeAnchor;
 }>) {
   const register = useCallback(
     (element: HTMLSpanElement | null) => {
-      registerHomeAnchor(itemId, element);
+      registerHomeAnchor(source.itemId, element);
     },
-    [itemId, registerHomeAnchor],
+    [source.itemId, registerHomeAnchor],
   );
-  const column = layoutIndex % 5;
-  const row = Math.floor(layoutIndex / 5);
+
   return (
     <span
       ref={register}
-      data-outfit-transition-source={itemId}
-      aria-hidden="true"
-      style={{
-        position: 'absolute',
-        left: `${16 + column * 17}%`,
-        top: `${22 + row * 22}%`,
-        width: 24,
-        height: 24,
-        opacity: 0,
-        pointerEvents: 'none',
-      }}
-    />
+      data-outfit-transition-source={source.itemId}
+      style={style}
+    >
+      {source.label}
+    </span>
   );
+}
+
+export function HomeGarmentPills({
+  selection,
+  fallbackAnchors,
+  registerHomeAnchor,
+  styleForIndex,
+}: Readonly<{
+  selection: Phase2HomeSourceSelection;
+  fallbackAnchors: readonly Readonly<{ label: string }>[];
+  registerHomeAnchor: RegisterHomeAnchor;
+  styleForIndex: (index: number, count: number) => CSSProperties;
+}>) {
+  if (
+    selection.kind !== 'ready'
+    || selection.sources.length > MAX_HOME_GARMENT_PILLS
+  ) {
+    return fallbackAnchors.map((anchor, index) => (
+      <span
+        key={`${anchor.label}:${index}`}
+        style={styleForIndex(index, fallbackAnchors.length)}
+      >
+        {anchor.label}
+      </span>
+    ));
+  }
+
+  return selection.sources.map((source, index) => (
+    <RegisteredHomeGarmentPill
+      key={source.itemId}
+      source={source}
+      style={styleForIndex(index, selection.sources.length)}
+      registerHomeAnchor={registerHomeAnchor}
+    />
+  ));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -275,7 +306,7 @@ export function HjemScreen({
   onNavigate: _onNavigate,
   onOpenSheet,
   createCurrentOutfitBundle,
-  getHomeTransitionItemIds,
+  selectHomeSources,
   registerHomeAnchor,
   observeTransitionBundle,
 }: HjemScreenProps) {
@@ -470,9 +501,9 @@ export function HjemScreen({
     ),
     [createCurrentOutfitBundle, currentOutfitContext],
   );
-  const transitionItemIds = useMemo(
-    () => getHomeTransitionItemIds(currentOutfitBundle),
-    [currentOutfitBundle, getHomeTransitionItemIds],
+  const homeSourceSelection = useMemo(
+    () => selectHomeSources(currentOutfitBundle),
+    [currentOutfitBundle, selectHomeSources],
   );
   useEffect(() => {
     observeTransitionBundle(currentOutfitBundle);
@@ -512,6 +543,12 @@ export function HjemScreen({
       : { headline: 'Dagens antrekk', anchors: [], outerBodyLabel: null }),
     [resolvedRecommendation],
   );
+  const visibleAnchorLabels = (
+    homeSourceSelection.kind === 'ready'
+    && homeSourceSelection.sources.length <= MAX_HOME_GARMENT_PILLS
+  )
+    ? homeSourceSelection.sources.map(({ label }) => label)
+    : sceneModel.anchors.map(({ label }) => label);
 
   // Positur-nøkkel (brukt for silhuett-fallback + stabil data-key).
   const avatarPoseKey = useMemo(() => ({
@@ -983,20 +1020,13 @@ export function HjemScreen({
                   size={188}
                 />
                 <div style={anchorRing}>
-                  {sceneModel.anchors.map((anchor, i) => (
-                    <span key={anchor.label} style={anchorPill(i, sceneModel.anchors.length)}>
-                      {anchor.label}
-                    </span>
-                  ))}
-                </div>
-                {transitionItemIds.map((itemId, layoutIndex) => (
-                  <HomeTransitionAnchor
-                    key={itemId}
-                    itemId={itemId}
-                    layoutIndex={layoutIndex}
+                  <HomeGarmentPills
+                    selection={homeSourceSelection}
+                    fallbackAnchors={sceneModel.anchors}
                     registerHomeAnchor={registerHomeAnchor}
+                    styleForIndex={anchorPill}
                   />
-                ))}
+                </div>
               </div>
             </div>
 
@@ -1004,8 +1034,8 @@ export function HjemScreen({
             {/* sr-sammendrag (a11y-lead krav 2): antrekket rekonstruerbart
                 uten grafikk — kilden er samme scenemodell, aldri re-telling. */}
             <span style={srOnly}>
-              {sceneModel.anchors.length > 0
-                ? `Ytterst: ${sceneModel.anchors.map((a) => a.label).join(', ')}.`
+              {visibleAnchorLabels.length > 0
+                ? `Ytterst: ${visibleAnchorLabels.join(', ')}.`
                 : 'Antrekket beregnes.'}
             </span>
 

@@ -121,6 +121,38 @@ async function runCoordinatorCase(browser: Browser): Promise<void> {
         === await page.locator('[data-outfit-transition-target]').count(),
       `${width}px: source and target item sets diverged`,
     );
+    const sourceTruth = await page
+      .locator('[data-outfit-transition-source]')
+      .evaluateAll((nodes) => nodes.map((node) => {
+        const element = node as HTMLElement;
+        const style = getComputedStyle(element);
+        const rectangle = element.getBoundingClientRect();
+        return {
+          itemId: element.dataset.outfitTransitionSource,
+          label: element.textContent?.trim(),
+          visible: (
+            style.display !== 'none'
+            && style.visibility !== 'hidden'
+            && Number(style.opacity) > 0
+            && rectangle.width > 0
+            && rectangle.height > 0
+          ),
+        };
+      }));
+    const exactItemIds = await page.evaluate(
+      () => window.__homeOutfitMotionFixture?.itemIds ?? [],
+    );
+    assert(
+      JSON.stringify(sourceTruth.map(({ itemId }) => itemId))
+        === JSON.stringify(exactItemIds),
+      `${width}px: visible pill IDs diverged from adapter selection`,
+    );
+    assert(
+      sourceTruth.every(({ label, visible }) => (
+        visible && typeof label === 'string' && label.length > 0
+      )),
+      `${width}px: a transition source is not an actual visible labelled pill`,
+    );
     await page.click('#close-outfit');
     assert(
       await page.evaluate(() => document.activeElement?.id)
@@ -136,6 +168,85 @@ async function runCoordinatorCase(browser: Browser): Promise<void> {
     );
     await page.close();
   }
+
+  const rapidPage = await loadFixture(browser);
+  await rapidPage.evaluate(() => {
+    const opener = document.getElementById('open-outfit');
+    if (!(opener instanceof HTMLButtonElement)) {
+      throw new Error('missing opener');
+    }
+    opener.click();
+    opener.click();
+  });
+  assert(
+    await rapidPage.locator('dialog[open]').count() === 1,
+    'rapid activation created duplicate open dialogs',
+  );
+  assert(
+    await rapidPage.evaluate(
+      () => window.__homeOutfitMotionFixture?.semanticT0(),
+    ),
+    'rapid activation lost dialog semantics or initial focus',
+  );
+  assert(
+    await rapidPage.evaluate(
+      () => window.__homeOutfitMotionFixture?.openCount(),
+    ) === 2,
+    'rapid activation did not exercise two synchronous opener activations',
+  );
+  assert(
+    await rapidPage.evaluate(
+      () => window.__homeOutfitMotionFixture?.reason(),
+    ) === 'already-attempted',
+    'rapid activation did not settle the pending replay attempt',
+  );
+  const rapidRetention = await rapidPage.evaluate(
+    () => window.__homeOutfitMotionFixture?.retention(),
+  );
+  assert(
+    rapidRetention?.targetElementCount === 0
+      && rapidRetention.hasActiveBundle === false
+      && rapidRetention.hasScheduledReadiness === false,
+    `rapid activation retained transient state: ${
+      JSON.stringify(rapidRetention)
+    }`,
+  );
+  assert(
+    await rapidPage.evaluate(
+      () => window.__homeOutfitMotionFixture?.lifecycleBindings(),
+    ) === 1,
+    'rapid activation duplicated lifecycle bindings',
+  );
+  await rapidPage.click('#close-outfit');
+  assert(
+    await rapidPage.evaluate(() => document.activeElement?.id)
+      === 'open-outfit',
+    'rapid activation close did not restore opener focus',
+  );
+  await rapidPage.click('#open-outfit');
+  assert(
+    await rapidPage.locator('dialog[open]').count() === 1
+      && await rapidPage.evaluate(() => document.activeElement?.id)
+        === 'close-outfit',
+    'dialog did not reopen once with correct focus after rapid activation',
+  );
+  assert(
+    await rapidPage.evaluate(
+      () => window.__homeOutfitMotionFixture?.openCount(),
+    ) === 3,
+    'reopen after rapid activation did not remain single-path',
+  );
+  const reopenedRetention = await rapidPage.evaluate(
+    () => window.__homeOutfitMotionFixture?.retention(),
+  );
+  assert(
+    reopenedRetention?.targetElementCount === 0
+      && reopenedRetention.hasScheduledReadiness === false,
+    `already-attempted reopen retained target state: ${
+      JSON.stringify(reopenedRetention)
+    }`,
+  );
+  await rapidPage.close();
 
   for (const scenario of [
     { reducedMotion: 'reduce' as const },
@@ -181,11 +292,23 @@ async function runCoordinatorCase(browser: Browser): Promise<void> {
 
   const missingPage = await loadFixture(browser, { omitSource: true });
   await missingPage.click('#open-outfit');
+  const missingReason = await missingPage.evaluate(
+    () => window.__homeOutfitMotionFixture?.reason(),
+  );
+  const missingDiagnostic = await missingPage.evaluate(() => ({
+    state: window.__homeOutfitMotionFixture?.state(),
+    retention: window.__homeOutfitMotionFixture?.retention(),
+    omitApplied: document.body.dataset.omitApplied,
+    omitHomeCount: document.body.dataset.omitHomeCount,
+    sourceCount: document.querySelectorAll(
+      '[data-outfit-transition-source]',
+    ).length,
+  }));
   assert(
-    await missingPage.evaluate(
-      () => window.__homeOutfitMotionFixture?.reason(),
-    ) === 'invalid-source',
-    'missing source did not settle static',
+    missingReason === 'invalid-source',
+    `missing source did not settle static: ${missingReason ?? 'no reason'} ${
+      JSON.stringify(missingDiagnostic)
+    }`,
   );
   assert(
     await missingPage.locator('dialog[open]').count() === 1,
@@ -255,12 +378,23 @@ function assertProductionWiring(): void {
     'Home is not wired to the same-snapshot atmosphere',
   );
   assert(
-    home.includes('registerHomeAnchor'),
-    'Home does not register branded transition source nodes',
+    home.includes('HomeGarmentPills')
+      && home.includes('selectHomeSources')
+      && home.includes('data-outfit-transition-source={source.itemId}'),
+    'Home does not put adapter identity on its visible garment pills',
   );
   assert(
     !home.includes('base.garments'),
     'Home must not select transition identities from base.garments',
+  );
+  assert(
+    !home.includes('HomeTransitionAnchor')
+      && !home.includes('getHomeTransitionItemIds'),
+    'Home retains the hidden/index-guessed source path',
+  );
+  assert(
+    app.includes('selectHomeSources={outfitTransition.selectHomeSources}'),
+    'App does not pass adapter-owned Home source selection',
   );
 }
 

@@ -79,9 +79,29 @@ type StaticOnlyResult = Extract<
   { kind: 'static-only' }
 >;
 
+export type Phase2HomeSourceDescriptor = Readonly<{
+  itemId: OutfitItemId;
+  label: string;
+}>;
+
+export type Phase2HomeSourceSelection =
+  | Readonly<{
+      kind: 'ready';
+      identity: Readonly<{
+        snapshotId: string;
+        recommendationFingerprint: string;
+        transitionContextId: string;
+      }>;
+      sources: readonly Phase2HomeSourceDescriptor[];
+    }>
+  | StaticOnlyResult;
+
 export type Phase2TransitionAdapter = Readonly<{
   registerHomeAnchor: RegisterHomeAnchor;
   registerOutfitRow: RegisterOutfitRow;
+  selectHomeSources: (
+    outfitBundle: OutfitBundleProducerResult | null | undefined,
+  ) => Phase2HomeSourceSelection;
   evaluate: (input: Readonly<{
     outfitBundle: OutfitBundleProducerResult | null | undefined;
     transitionVisualState: OutfitTransitionVisualState;
@@ -118,6 +138,17 @@ type ResolvedGarment = OutfitTruthSnapshotV1['garments'][number];
 type ValidatedGarment = Readonly<{
   garment: ResolvedGarment;
   coverage: AvatarVisualCoverage;
+}>;
+
+type ResolvedSupportedTruth = Readonly<{
+  kind: 'resolved';
+  identity: Readonly<{
+    snapshotId: string;
+    recommendationFingerprint: string;
+    transitionContextId: string;
+  }>;
+  itemIds: readonly OutfitItemId[];
+  garments: readonly ValidatedGarment[];
 }>;
 
 function staticOnly(
@@ -342,6 +373,77 @@ function resolveVisibleGarments(
   });
 }
 
+function resolveSupportedTruth(
+  base: OutfitTruthSnapshotV1,
+): ResolvedSupportedTruth | StaticOnlyResult {
+  if (
+    typeof base.snapshotId !== 'string'
+    || base.snapshotId.length === 0
+    || typeof base.recommendationFingerprint !== 'string'
+    || base.recommendationFingerprint.length === 0
+    || typeof base.transitionContextId !== 'string'
+    || base.transitionContextId.length === 0
+  ) {
+    return staticOnly('invalid-identity');
+  }
+
+  const visible = resolveVisibleGarments(base);
+  if (visible.kind === 'static-only') return visible;
+  if (visible.garments.some(
+    ({ garment }) => (
+      typeof garment.label !== 'string'
+      || garment.label.trim().length === 0
+    ),
+  )) {
+    return staticOnly('invalid-bundle-content');
+  }
+
+  return Object.freeze({
+    kind: 'resolved',
+    identity: Object.freeze({
+      snapshotId: base.snapshotId,
+      recommendationFingerprint: base.recommendationFingerprint,
+      transitionContextId: base.transitionContextId,
+    }),
+    itemIds: visible.itemIds,
+    garments: visible.garments,
+  });
+}
+
+function selectHomeSources(
+  outfitBundle: unknown,
+): Phase2HomeSourceSelection {
+  try {
+    if (outfitBundle === null || outfitBundle === undefined) {
+      return staticOnly('absent-bundle');
+    }
+    if (!isOutfitBundleProducerResult(outfitBundle)) {
+      return staticOnly('invalid-bundle-provenance');
+    }
+    if (outfitBundle.kind === 'unsupported-cardinality') {
+      return staticOnly('unsupported-cardinality');
+    }
+    if (outfitBundle.kind === 'unavailable') {
+      return staticOnly('unavailable');
+    }
+
+    const truth = resolveSupportedTruth(outfitBundle.base);
+    if (truth.kind === 'static-only') return truth;
+    return Object.freeze({
+      kind: 'ready',
+      identity: truth.identity,
+      sources: Object.freeze(truth.garments.map(
+        ({ garment }) => Object.freeze({
+          itemId: garment.itemId,
+          label: garment.label,
+        }),
+      )),
+    });
+  } catch {
+    return staticOnly('invalid-bundle-content');
+  }
+}
+
 function createRegistry(): Readonly<{
   register: (
     itemId: OutfitItemId,
@@ -473,29 +575,18 @@ function evaluateSupportedBundle(
   homeRegistry: ReadonlyMap<OutfitItemId, readonly HTMLElement[]>,
   outfitRegistry: ReadonlyMap<OutfitItemId, readonly HTMLElement[]>,
 ): Phase2TransitionAdapterResult {
-  if (
-    typeof base.snapshotId !== 'string'
-    || base.snapshotId.length === 0
-    || typeof base.recommendationFingerprint !== 'string'
-    || base.recommendationFingerprint.length === 0
-    || typeof base.transitionContextId !== 'string'
-    || base.transitionContextId.length === 0
-  ) {
-    return staticOnly('invalid-identity');
-  }
-
-  const visible = resolveVisibleGarments(base);
-  if (visible.kind === 'static-only') return visible;
+  const truth = resolveSupportedTruth(base);
+  if (truth.kind === 'static-only') return truth;
 
   const home = resolveRegistrations(
-    visible.itemIds,
+    truth.itemIds,
     homeRegistry,
     'home',
   );
   if (home.kind === 'static-only') return home;
 
   const outfit = resolveRegistrations(
-    visible.itemIds,
+    truth.itemIds,
     outfitRegistry,
     'outfit',
   );
@@ -503,12 +594,8 @@ function evaluateSupportedBundle(
 
   return Object.freeze({
     kind: 'ready',
-    identity: Object.freeze({
-      snapshotId: base.snapshotId,
-      recommendationFingerprint: base.recommendationFingerprint,
-      transitionContextId: base.transitionContextId,
-    }),
-    itemIds: visible.itemIds,
+    identity: truth.identity,
+    itemIds: truth.itemIds,
     homeAnchors: home.registrations,
     outfitRows: outfit.registrations,
     transitionVisualState,
@@ -580,6 +667,7 @@ export function createPhase2TransitionAdapter(): Phase2TransitionAdapter {
   return Object.freeze({
     registerHomeAnchor: home.register,
     registerOutfitRow: outfit.register,
+    selectHomeSources,
     evaluate: (input): Phase2TransitionAdapterResult => {
       try {
         const envelope = readEvaluationEnvelope(input);

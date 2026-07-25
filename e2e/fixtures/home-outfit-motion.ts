@@ -1,6 +1,8 @@
 import { createElement } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { LivingHomeAtmosphere } from '../../src/components/LivingHomeAtmosphere.js';
+import { HomeGarmentPills } from '../../src/screens/HjemScreen.js';
 import {
   isOutfitBundleProducerResult,
   produceOutfitBundle,
@@ -25,6 +27,14 @@ declare global {
       itemIds: readonly string[];
       openCount: () => number;
       semanticT0: () => boolean;
+      retention: () => Readonly<{
+        homeElementCount: number;
+        targetElementCount: number;
+        hasActiveBundle: boolean;
+        hasScheduledReadiness: boolean;
+        disposed: boolean;
+      }>;
+      lifecycleBindings: () => number;
     }>;
   }
 }
@@ -164,6 +174,7 @@ const runtime = createOutfitTransitionCoordinatorRuntime({
     return () => window.cancelAnimationFrame(frame);
   },
 });
+let lifecycleBindings = 0;
 bindOutfitTransitionLifecycle(runtime, {
   documentTarget: document,
   windowTarget: window,
@@ -171,6 +182,7 @@ bindOutfitTransitionLifecycle(runtime, {
     document.visibilityState === 'hidden' ? 'hidden' : 'visible'
   ),
 });
+lifecycleBindings += 1;
 
 createRoot(document.getElementById('atmosphere')!).render(
   createElement(LivingHomeAtmosphere, {
@@ -182,18 +194,48 @@ createRoot(document.getElementById('atmosphere')!).render(
   }),
 );
 
-const itemIds = runtime.getHomeItemIds(bundle);
+const homeSourceSelection = runtime.selectHomeSources(bundle);
+const itemIds = homeSourceSelection.kind === 'ready'
+  ? homeSourceSelection.sources.map(({ itemId }) => itemId)
+  : [];
+document.body.dataset.homeSourceSelection = homeSourceSelection.kind;
+if (homeSourceSelection.kind === 'static-only') {
+  document.body.dataset.homeSourceReason = homeSourceSelection.reason;
+}
 const homeScene = document.getElementById('home-scene')!;
 const omitLast = document.body.dataset.omitSource === 'true';
-itemIds.forEach((itemId, index) => {
-  if (omitLast && index === itemIds.length - 1) return;
-  const anchor = document.createElement('span');
-  anchor.dataset.outfitTransitionSource = itemId;
-  anchor.style.cssText =
-    `display:block;width:48px;height:36px;margin:${8 + index}px`;
-  homeScene.append(anchor);
-  runtime.registerHomeAnchor(itemId, anchor);
+flushSync(() => {
+  createRoot(homeScene).render(createElement(HomeGarmentPills, {
+    selection: homeSourceSelection,
+    fallbackAnchors: [],
+    registerHomeAnchor: runtime.registerHomeAnchor,
+    styleForIndex: (index: number) => ({
+      position: 'relative',
+      display: 'inline-block',
+      width: 96,
+      height: 36,
+      margin: 8 + index,
+      padding: '6px 12px',
+      background: 'white',
+      color: 'black',
+    }),
+  }));
 });
+if (omitLast) {
+  const itemId = itemIds.at(-1);
+  const source = homeScene.querySelector(
+    '[data-outfit-transition-source]:last-child',
+  );
+  document.body.dataset.omitApplied = String(
+    itemId !== undefined && source !== null,
+  );
+  if (itemId !== undefined && source !== null) {
+    runtime.registerHomeAnchor(itemId, null);
+    source.remove();
+  }
+  document.body.dataset.omitHomeCount =
+    String(runtime.inspectRetention().homeElementCount);
+}
 
 const dialog = document.getElementById('outfit-dialog') as HTMLDialogElement;
 const rows = document.getElementById('outfit-rows')!;
@@ -211,6 +253,13 @@ function close(): void {
 opener.addEventListener('click', () => {
   runtime.captureBeforeNavigation(bundle);
   opens += 1;
+  if (dialog.open) {
+    openedWithSemantics = (
+      document.activeElement === closer
+      && dialog.querySelector('h1')?.textContent === 'Dagens antrekk'
+    );
+    return;
+  }
   rows.replaceChildren();
   for (const [index, itemId] of itemIds.entries()) {
     const row = document.createElement('div');
@@ -242,5 +291,7 @@ window.__homeOutfitMotionFixture = Object.freeze({
   itemIds,
   openCount: () => opens,
   semanticT0: () => openedWithSemantics,
+  retention: runtime.inspectRetention,
+  lifecycleBindings: () => lifecycleBindings,
 });
 document.body.dataset.fixtureReady = 'true';

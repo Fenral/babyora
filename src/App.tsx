@@ -556,7 +556,7 @@ export default function App(): ReactElement {
         onNavigate={onNavigate}
         onOpenSheet={onOpenCurrentOutfit}
         createCurrentOutfitBundle={createCurrentOutfitBundle}
-        getHomeTransitionItemIds={outfitTransition.getHomeItemIds}
+        selectHomeSources={outfitTransition.selectHomeSources}
         registerHomeAnchor={outfitTransition.registerHomeAnchor}
         observeTransitionBundle={outfitTransition.observeBundle}
       />

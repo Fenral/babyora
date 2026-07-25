@@ -433,6 +433,92 @@ describe('Phase 2 transition adapter contract', () => {
     expect(result.itemIds).not.toContain('unlisted-garment');
   });
 
+  it('selects exact visible Home source labels at the adapter boundary', () => {
+    const bundle = createSupportedBundle();
+    const adapter = createPhase2TransitionAdapter();
+
+    const result = adapter.selectHomeSources(bundle);
+
+    expect(result.kind).toBe('ready');
+    if (result.kind !== 'ready') return;
+    expect(result.sources.map((source) => source.itemId)).toEqual(
+      visibleIds(bundle),
+    );
+    expect(result.sources.every(
+      (source) => source.label.trim().length > 0,
+    )).toBe(true);
+    expect(Object.isFrozen(result)).toBe(true);
+    expect(Object.isFrozen(result.sources)).toBe(true);
+  });
+
+  it('keeps source selection independent of garment order, duplicate labels, and unlisted catalog peers', () => {
+    const bundle = createSupportedBundle();
+    const expected = createPhase2TransitionAdapter()
+      .selectHomeSources(bundle);
+    const candidate = trustedMutation(bundle, (mutable) => {
+      mutable.base.garments.reverse();
+      mutable.base.garments.push({
+        ...mutable.base.garments[0]!,
+        itemId: 'unlisted-duplicate-label',
+      });
+    });
+
+    expect(
+      createPhase2TransitionAdapter().selectHomeSources(candidate),
+    ).toEqual(expected);
+  });
+
+  it.each([
+    {
+      name: 'hidden listed garment',
+      mutate: (candidate: MutableSupportedBundle) => {
+        candidate.base.garments[0]!.visibleOnAvatar = false;
+      },
+      reason: 'garment-not-visible',
+    },
+    {
+      name: 'equipment collision',
+      mutate: (candidate: MutableSupportedBundle) => {
+        candidate.base.equipment.push({
+          itemId: candidate.base.avatar.visibleGarmentIds[0]!,
+        });
+      },
+      reason: 'equipment-collision',
+    },
+    {
+      name: 'ambiguous visible coverage',
+      mutate: (candidate: MutableSupportedBundle) => {
+        candidate.base.garments[0]!.avatarCoverage = coverage(
+          ['torso'],
+          ['torso'],
+          10,
+          ['torso'],
+        );
+        candidate.base.garments[1]!.avatarCoverage = coverage(
+          ['torso'],
+          ['torso'],
+          10,
+          ['torso'],
+        );
+      },
+      reason: 'ambiguous-avatar-coverage',
+    },
+    {
+      name: 'unknown visible ID',
+      mutate: (candidate: MutableSupportedBundle) => {
+        candidate.base.avatar.visibleGarmentIds[0] = 'unknown-id';
+      },
+      reason: 'missing-garment',
+    },
+  ])('selects no Home source for $name', ({ mutate, reason }) => {
+    const bundle = createSupportedBundle();
+    const candidate = trustedMutation(bundle, mutate);
+
+    expect(
+      createPhase2TransitionAdapter().selectHomeSources(candidate),
+    ).toEqual({ kind: 'static-only', reason });
+  });
+
   it('accepts multiple slots, disjoint layers, and explicit resolved partial occlusion', () => {
     const bundle = createSupportedBundle();
     const ids = visibleIds(bundle);
