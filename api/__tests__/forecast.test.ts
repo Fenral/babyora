@@ -14,6 +14,21 @@ afterEach(() => {
 });
 
 describe('forecast proxy cache policy', () => {
+  it('rejects non-GET methods before contacting met.no', async () => {
+    const upstream = vi.fn();
+    vi.stubGlobal('fetch', upstream);
+
+    const response = await handler(new Request(
+      'https://babyora.test/api/forecast?lat=63.4305&lon=10.3951',
+      { method: 'POST' },
+    ));
+
+    expect(response.status).toBe(405);
+    expect(response.headers.get('Allow')).toBe('GET, OPTIONS');
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store, max-age=0');
+    expect(upstream).not.toHaveBeenCalled();
+  });
+
   it('keeps fixed/manual GET responses on the reviewed shared-cache policy', async () => {
     const upstream = vi.fn().mockResolvedValue(new Response(upstreamBody));
     vi.stubGlobal('fetch', upstream);
@@ -86,5 +101,30 @@ describe('forecast proxy cache policy', () => {
     expect(response.headers.get('Cache-Control')).toBe('private, no-store, max-age=0');
     expect(response.headers.get('Vercel-CDN-Cache-Control')).toBe('no-store');
     expect(response.headers.get('CDN-Cache-Control')).toBe('no-store');
+  });
+
+  it('rate-limits repeated uncached requests from one client', async () => {
+    const upstream = vi.fn().mockImplementation(
+      () => Promise.resolve(new Response(upstreamBody)),
+    );
+    vi.stubGlobal('fetch', upstream);
+    vi.spyOn(Date, 'now').mockReturnValue(1_000_000);
+
+    const request = () => new Request(
+      'https://babyora.test/api/forecast?lat=69.6492&lon=18.9553&cacheScope=memory-only',
+      { headers: { 'x-forwarded-for': '198.51.100.42' } },
+    );
+
+    for (let index = 0; index < 30; index += 1) {
+      const response = await handler(request());
+      expect(response.status).toBe(200);
+    }
+
+    const response = await handler(request());
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get('Retry-After')).toBe('60');
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store, max-age=0');
+    expect(upstream).toHaveBeenCalledTimes(30);
   });
 });
