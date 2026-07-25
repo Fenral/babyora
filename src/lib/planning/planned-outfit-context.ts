@@ -9,6 +9,17 @@ const PLANNED_CONTEXT_SCHEMA_VERSION = 1 as const;
 const OUTFIT_BUNDLE_PRODUCER_SEED_VERSION = 1 as const;
 const ownedPlannedContexts = new WeakSet<object>();
 const ownedOutfitBundleProducerSeeds = new WeakSet<object>();
+type OutfitBundleProducerSeedSource =
+  | Readonly<{ kind: 'current' }>
+  | Readonly<{
+      kind: 'planned';
+      planningEventId: string;
+      plannedForIso: string;
+    }>;
+const ownedOutfitBundleProducerSeedSources = new WeakMap<
+  object,
+  OutfitBundleProducerSeedSource
+>();
 
 const ACTIVITIES: readonly Activity[] = ['vogn', 'baeresele', 'utelek', 'soevn'];
 const PLACE_SOURCES = ['configured-place', 'fixed-home', 'automatic'] as const;
@@ -703,7 +714,10 @@ function sameFrozenKnownShape(actual: unknown, expected: unknown): boolean {
   });
 }
 
-export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext {
+function createOutfitContext(
+  input: unknown,
+  producerSeedSource: 'current' | 'planned',
+): PlannedOutfitContext {
   try {
     const root = recordAt(input, 'root');
     const isCanonical = Object.hasOwn(root, 'recommendInput') || Object.hasOwn(root, 'finalizedRecommendation');
@@ -749,6 +763,16 @@ export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext
             finalizedRecommendation: canonical.finalizedRecommendation,
           });
           ownedOutfitBundleProducerSeeds.add(producerSeed);
+          ownedOutfitBundleProducerSeedSources.set(
+            producerSeed,
+            producerSeedSource === 'current'
+              ? Object.freeze({ kind: 'current' as const })
+              : Object.freeze({
+                  kind: 'planned' as const,
+                  planningEventId: canonical.planningEventId,
+                  plannedForIso: canonical.plannedForIso,
+                }),
+          );
           return recursivelyFreeze({
             ...base,
             sourceKind: 'phase2-outfit-truth' as const,
@@ -781,6 +805,18 @@ export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext
       cause: error,
     });
   }
+}
+
+export function createCurrentOutfitContext(
+  input: unknown,
+): PlannedOutfitContext {
+  return createOutfitContext(input, 'current');
+}
+
+export function createPlannedOutfitContext(
+  input: unknown,
+): PlannedOutfitContext {
+  return createOutfitContext(input, 'planned');
 }
 
 export function isPlannedOutfitContext(value: unknown): value is PlannedOutfitContext {
@@ -896,6 +932,44 @@ export function isOutfitBundleProducerSeedV1(value: unknown): value is OutfitBun
       && recommendationFingerprint === provenance.recommendationFingerprint
       && sameFrozenKnownShape(value, value)
     );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Confirms only the planned metadata recorded beside an authenticated seed.
+ * It neither accepts structural seed copies nor determines a source kind.
+ */
+export function matchesOutfitBundleProducerSeedPlannedSourceV1(
+  seed: unknown,
+  planningEventId: unknown,
+  plannedForIso: unknown,
+): boolean {
+  try {
+    if (!isOutfitBundleProducerSeedV1(seed)) return false;
+    const plannedSource =
+      ownedOutfitBundleProducerSeedSources.get(seed);
+    return (
+      plannedSource !== undefined
+      && plannedSource.kind === 'planned'
+      && typeof planningEventId === 'string'
+      && typeof plannedForIso === 'string'
+      && planningEventId === plannedSource.planningEventId
+      && plannedForIso === plannedSource.plannedForIso
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Confirms that an authenticated seed came from the trusted current factory. */
+export function matchesOutfitBundleProducerSeedCurrentSourceV1(
+  seed: unknown,
+): boolean {
+  try {
+    if (!isOutfitBundleProducerSeedV1(seed)) return false;
+    return ownedOutfitBundleProducerSeedSources.get(seed)?.kind === 'current';
   } catch {
     return false;
   }

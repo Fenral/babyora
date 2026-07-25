@@ -6,8 +6,8 @@ status: PASS
 subsystem: exact-outfit-context-handoff
 tags: [outfit, context, provenance, immutability, integration]
 
-candidate_sha: 3636337613b1f4d7a572b761fb2f066191e36c11
-candidate_tree: f31e4c3ccce1e8163011e63d592c0e55b50e9add
+candidate_sha: f7d94a156be70f86314dd478a1ad27b07b8515bb
+candidate_tree: c9cc35a635a1cb07efff55814828aad1be958076
 assembly_base_sha: 8ae3d5269e0df78ca87a1442ce9dca0cac69b8d0
 phase2_candidate_merge_sha: daae5349560f4586f914c8e94b9ec03d29d79925
 phase1_docs_merge_sha: 1c1819bd5f816ef0fb12ecc9c5960198f1d24102
@@ -43,27 +43,27 @@ inventory:
 
 scope_file_count: 4
 review_receipt_count: 2
-failed_review_attempt_count: 2
+failed_review_attempt_count: 3
 unresolved_p0: 0
 unresolved_p1: 0
 reviews:
   - lane: A
-    reviewer_id: /root/review_02_05_auth_a
-    canonical_task: /root/review_02_05_auth_a
-    session: phase2-02-05-auth-a-3636337
+    reviewer_id: /root/review_02_05_origin_a
+    canonical_task: /root/review_02_05_origin_a
+    session: review_02_05_origin_a-f7d94a1
     capability: high-verification
-    focus: factory-authentication-and-provenance-safety
+    focus: current-planned-origin-and-provenance-safety
     fresh_context: true
     independent_from_implementation: true
     verdict: PASS
     unresolved_p0: 0
     unresolved_p1: 0
   - lane: B
-    reviewer_id: /root/review_02_05_auth_b
-    canonical_task: /root/review_02_05_auth_b
-    session: phase2-02-05-auth-b-363633
+    reviewer_id: /root/review_02_05_origin_b
+    canonical_task: /root/review_02_05_origin_b
+    session: review_02_05_origin_b
     capability: high-verification
-    focus: downstream-consumer-sufficiency-and-bypass-resistance
+    focus: downstream-adapter-and-behavior-preservation
     fresh_context: true
     independent_from_implementation: true
     verdict: PASS
@@ -124,9 +124,9 @@ recomputation.**
 
 - **Plan ID:** `02-05`
 - **Implementation candidate:**
-  `3636337613b1f4d7a572b761fb2f066191e36c11`
+  `f7d94a156be70f86314dd478a1ad27b07b8515bb`
 - **Implementation tree:**
-  `f31e4c3ccce1e8163011e63d592c0e55b50e9add`
+  `c9cc35a635a1cb07efff55814828aad1be958076`
 - **Assembly base:**
   `8ae3d5269e0df78ca87a1442ce9dca0cac69b8d0`
 - **Dependency ancestry:** PASS for final Phase 1 and Plans 02-01 through
@@ -191,8 +191,14 @@ The factory:
 - clones and recursively freezes every nested array and record;
 - derives canonical recommendation provenance with the same sitting-pose
   content binding as `createOutfitTruthSnapshot`;
-- registers only the exact internally constructed seed in a private WeakSet
-  and exposes a read-only guard that rejects structural clones and forgeries;
+- registers only the exact internally constructed seed in a private WeakSet,
+  binds its route origin in a private WeakMap, and exposes read-only guards
+  that reject structural clones and forgeries;
+- uses separate current and planned factory entry points backed by the same
+  canonicalizer, so route origin is never a caller-supplied field, event-prefix
+  guess, or access inference;
+- authenticates planned seeds against their exact normalized planning event
+  and interval while current and planned matchers remain mutually exclusive;
 - keeps transition identity separate from recommendation content identity;
 - excludes layout boxes, connectors, DOM elements, selection state, storage
   and other runtime-only data.
@@ -239,6 +245,16 @@ behavior changed.
    read-only guard.
 8. Two further fresh high-verification reviewers passed the authentication
    candidate with no unresolved P0/P1.
+9. The first 02-06 producer review then showed that an owned seed could be
+   paired with arbitrary planned event/interval metadata.
+10. `db67bd8` bound exact planned metadata beside the owned seed. A fresh Lane
+    A review passed it, while Lane B correctly rejected its inability to
+    distinguish a Hjem/current seed from a planned seed.
+11. `f7d94a1` introduced separate trusted current/planned factory entry points
+    over the same canonicalizer, private mutually exclusive route-origin
+    binding, and switched only Hjem to the current entry point.
+12. Two new independent fresh-context reviewers passed the final source
+    candidate with zero unresolved P0/P1.
 
 Failed candidates were retained as immutable ancestors; none was amended.
 
@@ -246,8 +262,8 @@ Failed candidates were retained as immutable ancestors; none was amended.
 
 | Gate | Result |
 |---|---|
-| Focused planning/truth/options suite | Up to 117 tests passed in final review |
-| Full Vitest suite | 92 files, 1,209 tests passed, 1 todo |
+| Focused planning/truth/options suite | 121 tests passed in both final reviews |
+| Full Vitest suite | 92 files, 1,213 tests passed, 1 todo |
 | Tracked inventory assertion | PASS; 2,036,160 scenarios |
 | Standalone TypeScript | PASS |
 | ESLint | PASS |
@@ -261,9 +277,9 @@ Failed candidates were retained as immutable ancestors; none was amended.
 
 | Path | Candidate blob |
 |---|---|
-| `src/lib/planning/planned-outfit-context.ts` | `e2d884db96de2ec89aa2b5e0df11708e168970cc` |
-| `src/lib/planning/__tests__/planned-outfit-context.test.ts` | `86ce0c6518b7e4612128b9316d3ecc9b6e6873df` |
-| `src/screens/HjemScreen.tsx` | `661c47a409952248371fa6ce42b03abf585c1db8` |
+| `src/lib/planning/planned-outfit-context.ts` | `b6ae3f8150b87ca35a4c0583eaa3b2b6b36c322c` |
+| `src/lib/planning/__tests__/planned-outfit-context.test.ts` | `046045731463cff43fe5bedb58c31dbd4272e4f0` |
+| `src/screens/HjemScreen.tsx` | `112ed898f6d948dbfcefb814425a61839941a7bf` |
 | `src/screens/UkeScreen.tsx` | `6ca722bce8728e30ab79879b555caeabeae17e35` |
 
 No package manifest, lockfile, media, global token, App, Paakledning, route,
@@ -271,12 +287,14 @@ storage, network or engine-threshold path changed.
 
 ## Rollback
 
-Revert the three Plan 02-05 implementation commits in reverse order:
+Revert the Plan 02-05 implementation commits in reverse order:
 
-1. `3636337613b1f4d7a572b761fb2f066191e36c11`
-2. `87d2d586ac7a4ea9b18854116b2da0a38708df27`
-3. `1a8e48ac50364de0340c3e6429f642d3e551464c`
-4. `6be7192ddc0f06fca2ce1dc91a862fa65743db63`
+1. `f7d94a156be70f86314dd478a1ad27b07b8515bb`
+2. `db67bd816476fc7d11c951c734a044e62d0fab93`
+3. `3636337613b1f4d7a572b761fb2f066191e36c11`
+4. `87d2d586ac7a4ea9b18854116b2da0a38708df27`
+5. `1a8e48ac50364de0340c3e6429f642d3e551464c`
+6. `6be7192ddc0f06fca2ce1dc91a862fa65743db63`
 
 This returns to assembly base
 `8ae3d5269e0df78ca87a1442ce9dca0cac69b8d0` without altering the accepted

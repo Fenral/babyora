@@ -73,7 +73,7 @@ import { useAccess } from '../lib/premium/use-access';
 import { resolveRuntimeCapabilityAccess } from '../lib/premium/gating';
 import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
 import {
-  createPlannedOutfitContext,
+  createCurrentOutfitContext,
   PLAN_TIME_ZONE,
   type PlannedOutfitContext,
 } from '../lib/planning/planned-outfit-context';
@@ -348,7 +348,7 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     ])}`;
     const evaluatedAtIso = new Date(evaluatedAt).toISOString();
     try {
-      return createPlannedOutfitContext({
+      return createCurrentOutfitContext({
         planningEventId: `current-event:${evaluatedAtIso}:${fingerprint}`,
         transitionContextId: `current-transition:${evaluatedAtIso}:${fingerprint}`,
         child: {

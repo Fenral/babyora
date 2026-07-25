@@ -2,8 +2,8 @@
 
 ## Immutable target
 
-- Candidate: `3636337613b1f4d7a572b761fb2f066191e36c11`
-- Tree: `f31e4c3ccce1e8163011e63d592c0e55b50e9add`
+- Candidate: `f7d94a156be70f86314dd478a1ad27b07b8515bb`
+- Tree: `c9cc35a635a1cb07efff55814828aad1be958076`
 - Assembly base: `8ae3d5269e0df78ca87a1442ce9dca0cac69b8d0`
 - Canonical source bytes: LF
 - Package-lock blob: `31172f3a4be764f3d32bde12ecd5194f37a1a43d`
@@ -45,51 +45,55 @@ Accepted Phase-1 tuple:
 | 2 | `1a8e48ac50364de0340c3e6429f642d3e551464c` | Lane A PASS; Lane B FAIL, one P1 | Canonical identity was repaired, then Lane B found that Hjem no longer preserved fingerprint-bound event/transition identity. |
 | 3 | `87d2d586ac7a4ea9b18854116b2da0a38708df27` | Lane A PASS; Lane B PASS | Both repairs verified; zero unresolved P0/P1. |
 | 4 | `3636337613b1f4d7a572b761fb2f066191e36c11` | Authentication Lane A PASS; Lane B PASS | Added the factory-owned seed guard required by the downstream producer; zero unresolved P0/P1. |
+| 5 | `db67bd816476fc7d11c951c734a044e62d0fab93` | Origin Lane A PASS; Lane B FAIL, one P1 | Exact planned event/interval binding was added, then Lane B proved that current and planned route origin still crossed. |
+| 6 | `f7d94a156be70f86314dd478a1ad27b07b8515bb` | Origin Lane A PASS; Lane B PASS | Separate trusted current/planned factories and private mutually exclusive origin binding closed the route-confusion gap. |
 
 The failed candidates remain immutable ancestors. No candidate was amended or
 rewritten.
 
 ## Final review receipts
 
-### Lane A — factory authentication and provenance safety
+### Lane A — current/planned origin and provenance safety
 
-- Reviewer/canonical task: `/root/review_02_05_auth_a`
-- Session: `phase2-02-05-auth-a-3636337`
+- Reviewer/canonical task: `/root/review_02_05_origin_a`
+- Session: `review_02_05_origin_a-f7d94a1`
 - Capability: `high-verification`
 - Fresh context: true
 - Independent from implementation: true
 - Verdict: PASS
 - Unresolved P0/P1: 0/0
 
-Lane A verified that the module-private seed registry accepts only the exact
-internally constructed, recursively frozen object; the exported guard checks
-membership before reflective validation and rejects clones, frozen/mutable
-forgeries, proxies and legacy values. It also reran the full Plan 02-05
-behavioral and provenance matrix.
+Lane A verified that both public factories share the same canonicalizer while
+the module-private WeakMap binds each exact seed to a mutually exclusive
+current or planned origin. Planned matching requires the exact canonical event
+and ISO; ownership is checked before seed-shape/provenance access. Cross-kind
+use, clones, frozen/mutable forgeries, proxies, accessors and legacy values
+fail closed without changing public context bytes or identifiers.
 
-### Lane B — downstream consumer sufficiency and bypass resistance
+### Lane B — downstream adapter and behavior preservation
 
-- Reviewer/canonical task: `/root/review_02_05_auth_b`
-- Session: `phase2-02-05-auth-b-363633`
+- Reviewer/canonical task: `/root/review_02_05_origin_b`
+- Session: `review_02_05_origin_b`
 - Capability: `high-verification`
 - Fresh context: true
 - Independent from implementation: true
 - Verdict: PASS
 - Unresolved P0/P1: 0/0
 
-Lane B verified that Plan 02-06 can distinguish a genuine factory seed from a
-structurally identical frozen forgery without an untrusted caller flag, that no
-registration/mutation seam is exported, and that proxy/accessor traps cannot
-escape through the guard. It also reran ancestry, scope and full regression
-gates.
+Lane B verified that Plan 02-06 can authenticate current only from the current
+factory and planned only from the planned factory plus its exact event/ISO,
+without a raw flag, prefix/access inference, cyclic import, registration seam
+or serialized origin field. Hjem preserves its existing complete input and
+recommendation through the current factory; Uke remains on the planned factory.
+Generic context validation cannot mutate or leak the private origin record.
 
 ## Commands and results
 
 | Gate | Result |
 |---|---|
 | Tracked outfit inventory | PASS; 2,036,160 scenarios and all locked metrics |
-| Focused planning/truth/options suite | PASS; 117 tests in the widest final review |
-| Full Vitest suite | PASS; 92 files, 1,209 tests passed, 1 todo |
+| Focused planning/truth/options suite | PASS; 121 tests in both final reviews |
+| Full Vitest suite | PASS; 92 files, 1,213 tests passed, 1 todo |
 | Standalone TypeScript | PASS |
 | ESLint | PASS |
 | Main and bare production builds | PASS |
