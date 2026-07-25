@@ -1,5 +1,12 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import {
   createCurrentOutfitContext,
 } from '../planning/planned-outfit-context.js';
@@ -64,6 +71,61 @@ const VALID_RECT = Object.freeze({
   y: 24,
   width: 96,
   height: 48,
+});
+
+class TestElement {
+  readonly isConnected: boolean;
+  readonly #rect: Readonly<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }>;
+
+  constructor(
+    rect: Readonly<{
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }> = VALID_RECT,
+    isConnected = true,
+  ) {
+    this.#rect = rect;
+    this.isConnected = isConnected;
+  }
+
+  getBoundingClientRect(): DOMRect {
+    const rect = this.#rect;
+    return {
+      ...rect,
+      top: rect.y,
+      right: rect.x + rect.width,
+      bottom: rect.y + rect.height,
+      left: rect.x,
+      toJSON: () => ({ ...rect }),
+    } as DOMRect;
+  }
+}
+
+const originalElement = globalThis.Element;
+
+beforeAll(() => {
+  Object.defineProperty(globalThis, 'Element', {
+    configurable: true,
+    value: TestElement,
+  });
+});
+
+afterAll(() => {
+  if (originalElement === undefined) {
+    delete (globalThis as { Element?: typeof Element }).Element;
+    return;
+  }
+  Object.defineProperty(globalThis, 'Element', {
+    configurable: true,
+    value: originalElement,
+  });
 });
 
 function completeRecommendInput(): RecommendInput {
@@ -185,17 +247,7 @@ function element(
   }> = VALID_RECT,
   isConnected = true,
 ): HTMLElement {
-  return {
-    isConnected,
-    getBoundingClientRect: () => ({
-      ...rect,
-      top: rect.y,
-      right: rect.x + rect.width,
-      bottom: rect.y + rect.height,
-      left: rect.x,
-      toJSON: () => ({ ...rect }),
-    }),
-  } as unknown as HTMLElement;
+  return new TestElement(rect, isConnected) as unknown as HTMLElement;
 }
 
 function visibleIds(
@@ -223,6 +275,14 @@ function evaluate(
     outfitBundle,
     transitionVisualState,
   });
+}
+
+function evaluateUnknown(
+  adapter: Phase2TransitionAdapter,
+  input: unknown,
+): Phase2TransitionAdapterResult {
+  return Reflect.apply(adapter.evaluate, undefined, [input]) as
+    Phase2TransitionAdapterResult;
 }
 
 function trustedMutation(
@@ -484,6 +544,44 @@ describe('Phase 2 transition adapter contract', () => {
       reason: 'invalid-body-anchor',
     },
     {
+      name: 'body anchor pose mismatches the authoritative avatar pose',
+      mutate: (candidate: MutableSupportedBundle) => {
+        const anchor = candidate.base.garments[0]!.bodyAnchor;
+        candidate.base.garments[0]!.bodyAnchor = {
+          ...(anchor as object),
+          pose: candidate.base.avatar.pose === 'sitting'
+            ? 'standing'
+            : 'sitting',
+        };
+      },
+      reason: 'invalid-body-anchor',
+    },
+    {
+      name: 'body region is outside the runtime BodyRegion domain',
+      mutate: (candidate: MutableSupportedBundle) => {
+        candidate.base.garments[0]!.bodyRegion = 'shoulders';
+      },
+      reason: 'invalid-body-anchor',
+    },
+    {
+      name: 'body region is semantically inconsistent with the catalog garment',
+      mutate: (candidate: MutableSupportedBundle) => {
+        candidate.base.garments[0]!.bodyRegion = 'feet';
+      },
+      reason: 'invalid-body-anchor',
+    },
+    {
+      name: 'body anchor coordinates are semantically inconsistent with the catalog garment',
+      mutate: (candidate: MutableSupportedBundle) => {
+        const anchor = candidate.base.garments[0]!.bodyAnchor;
+        candidate.base.garments[0]!.bodyAnchor = {
+          ...(anchor as object),
+          y: 0.01,
+        };
+      },
+      reason: 'invalid-body-anchor',
+    },
+    {
       name: 'equipment collision',
       mutate: (candidate: MutableSupportedBundle) => {
         candidate.base.equipment.push({
@@ -642,6 +740,76 @@ describe('Phase 2 transition adapter contract', () => {
     expectStatic(evaluate(adapter, candidate), reason);
   });
 
+  it('settles for an invalid visual state without changing public scalar-state typing', () => {
+    const bundle = createSupportedBundle();
+    const adapter = createPhase2TransitionAdapter();
+    registerComplete(adapter, bundle);
+
+    expectStatic(
+      evaluateUnknown(adapter, {
+        outfitBundle: bundle,
+        transitionVisualState: 'animating',
+      }),
+      'invalid-visual-state',
+    );
+  });
+
+  it('settles for invalid identity and malformed supported bundle content', () => {
+    const bundle = createSupportedBundle();
+    const invalidIdentity = trustedMutation(bundle, (candidate) => {
+      candidate.base.snapshotId = '';
+    });
+    const malformedContent = trustedMutation(bundle, (candidate) => {
+      candidate.base.garments = null as unknown as MutableGarment[];
+    });
+    const adapter = createPhase2TransitionAdapter();
+    registerComplete(adapter, bundle);
+
+    expectStatic(evaluate(adapter, invalidIdentity), 'invalid-identity');
+    expectStatic(
+      evaluate(adapter, malformedContent),
+      'invalid-bundle-content',
+    );
+  });
+
+  it.each([
+    ['undefined envelope', undefined],
+    ['null envelope', null],
+    ['empty envelope', {}],
+    [
+      'throwing bundle getter',
+      Object.defineProperty({}, 'outfitBundle', {
+        enumerable: true,
+        get: () => {
+          throw new Error('forged bundle getter');
+        },
+      }),
+    ],
+    [
+      'throwing visual-state getter',
+      Object.defineProperties({}, {
+        outfitBundle: {
+          enumerable: true,
+          value: createSupportedBundle(),
+        },
+        transitionVisualState: {
+          enumerable: true,
+          get: () => {
+            throw new Error('forged visual-state getter');
+          },
+        },
+      }),
+    ],
+  ] as const)('fails closed for %s', (_name, envelope) => {
+    const adapter = createPhase2TransitionAdapter();
+
+    expect(() => evaluateUnknown(adapter, envelope)).not.toThrow();
+    expectStatic(
+      evaluateUnknown(adapter, envelope),
+      'invalid-bundle-content',
+    );
+  });
+
   it.each([
     ['unsupported-cardinality', 'unsupported-cardinality'],
     ['unavailable', 'unavailable'],
@@ -773,6 +941,67 @@ describe('Phase 2 transition adapter contract', () => {
 
     expectStatic(evaluate(adapter, bundle), reason);
   });
+
+  it.each([
+    ['Home source', 'home', 'invalid-home-anchor'],
+    ['Outfit row', 'outfit', 'invalid-outfit-row'],
+  ] as const)(
+    'rejects connected-looking plain-object forgery for %s',
+    (_name, side, reason) => {
+      const bundle = createSupportedBundle();
+      const ids = visibleIds(bundle);
+      const adapter = createPhase2TransitionAdapter();
+      const forgery = {
+        isConnected: true,
+        getBoundingClientRect: () => ({
+          ...VALID_RECT,
+          top: VALID_RECT.y,
+          right: VALID_RECT.x + VALID_RECT.width,
+          bottom: VALID_RECT.y + VALID_RECT.height,
+          left: VALID_RECT.x,
+        }),
+      } as unknown as HTMLElement;
+
+      for (const itemId of ids) {
+        adapter.registerHomeAnchor(
+          itemId,
+          side === 'home' && itemId === ids[0] ? forgery : element(),
+        );
+        adapter.registerOutfitRow(
+          itemId,
+          side === 'outfit' && itemId === ids[0] ? forgery : element(),
+        );
+      }
+
+      expectStatic(evaluate(adapter, bundle), reason);
+    },
+  );
+
+  it.each([
+    ['Home namespace', 'home', 'duplicate-home-anchor'],
+    ['Outfit namespace', 'outfit', 'duplicate-outfit-row'],
+  ] as const)(
+    'rejects one Element registered under multiple IDs in the %s',
+    (_name, side, reason) => {
+      const bundle = createSupportedBundle();
+      const ids = visibleIds(bundle);
+      const adapter = createPhase2TransitionAdapter();
+      const shared = element();
+
+      for (const itemId of ids) {
+        adapter.registerHomeAnchor(
+          itemId,
+          side === 'home' ? shared : element(),
+        );
+        adapter.registerOutfitRow(
+          itemId,
+          side === 'outfit' ? shared : element(),
+        );
+      }
+
+      expectStatic(evaluate(adapter, bundle), reason);
+    },
+  );
 
   it.each([
     ['unexpected Home registration', 'home'],

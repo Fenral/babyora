@@ -1,10 +1,15 @@
 import { isOutfitBundleProducerResult } from '../outfit/outfit-bundle-producer.js';
+import {
+  bodyRegionForCatalogGarment,
+  normalizedBodyAnchorFor,
+} from '../outfit/body-anchor-catalog.js';
 import type {
   OutfitBundleProducerResult,
 } from '../outfit/outfit-bundle-producer.js';
 import type {
   AvatarVisibleSlot,
   AvatarVisualCoverage,
+  BodyRegion,
   OutfitItemId,
   OutfitTruthSnapshotV1,
 } from '../outfit/outfit-truth.js';
@@ -95,6 +100,19 @@ const AVATAR_VISIBLE_SLOTS: ReadonlySet<AvatarVisibleSlot> = new Set([
   'feet',
 ]);
 
+const BODY_REGIONS: ReadonlySet<BodyRegion> = new Set([
+  'head',
+  'neck',
+  'torso',
+  'arms',
+  'hands',
+  'hips',
+  'legs',
+  'feet',
+  'whole_body',
+  'unknown',
+]);
+
 type ResolvedGarment = OutfitTruthSnapshotV1['garments'][number];
 
 type ValidatedGarment = Readonly<{
@@ -163,19 +181,44 @@ function validateCoverage(
   return value;
 }
 
-function hasValidBodyAnchor(garment: ResolvedGarment): boolean {
+function hasValidBodyAnchor(
+  garment: ResolvedGarment,
+  avatarPose: OutfitTruthSnapshotV1['avatar']['pose'],
+): boolean {
   const anchor = garment.bodyAnchor;
+  const region = garment.bodyRegion;
+  if (
+    !BODY_REGIONS.has(region)
+    || region === 'unknown'
+    || anchor === null
+    || anchor.anchorVersion !== 1
+    || (avatarPose !== 'sitting' && avatarPose !== 'standing')
+    || anchor.pose !== avatarPose
+    || !Number.isFinite(anchor.x)
+    || !Number.isFinite(anchor.y)
+    || anchor.x < 0
+    || anchor.x > 1
+    || anchor.y < 0
+    || anchor.y > 1
+    || typeof garment.catalogGarmentId !== 'string'
+  ) {
+    return false;
+  }
+
+  const catalogGarmentId = garment.catalogGarmentId as
+    Parameters<typeof bodyRegionForCatalogGarment>[0];
+  const expectedRegion = bodyRegionForCatalogGarment(catalogGarmentId);
+  const expectedAnchor = normalizedBodyAnchorFor(
+    catalogGarmentId,
+    avatarPose,
+  );
+
   return (
-    garment.bodyRegion !== 'unknown'
-    && anchor !== null
-    && anchor.anchorVersion === 1
-    && (anchor.pose === 'sitting' || anchor.pose === 'standing')
-    && Number.isFinite(anchor.x)
-    && Number.isFinite(anchor.y)
-    && anchor.x >= 0
-    && anchor.x <= 1
-    && anchor.y >= 0
-    && anchor.y <= 1
+    expectedRegion === region
+    && expectedAnchor !== null
+    && expectedAnchor.pose === anchor.pose
+    && expectedAnchor.x === anchor.x
+    && expectedAnchor.y === anchor.y
   );
 }
 
@@ -237,7 +280,7 @@ function resolveVisibleGarments(
     if (garment.visibleOnAvatar !== true) {
       return staticOnly('garment-not-visible');
     }
-    if (!hasValidBodyAnchor(garment)) {
+    if (!hasValidBodyAnchor(garment, base.avatar.pose)) {
       return staticOnly('invalid-body-anchor');
     }
     const coverage = validateCoverage(garment.avatarCoverage);
@@ -336,7 +379,13 @@ function createRegistry(): Readonly<{
 
 function hasUsableGeometry(element: HTMLElement): boolean {
   try {
-    if (element.isConnected !== true) return false;
+    if (
+      typeof Element === 'undefined'
+      || !(element instanceof Element)
+      || element.isConnected !== true
+    ) {
+      return false;
+    }
     const rectangle = element.getBoundingClientRect();
     return (
       Number.isFinite(rectangle.x)
@@ -376,6 +425,7 @@ function resolveRegistrations(
   }
 
   const resolved: Phase2TransitionRegistration[] = [];
+  const seenElements = new Set<HTMLElement>();
   for (const itemId of itemIds) {
     const elements = registrations.get(itemId);
     if (elements === undefined || elements.length === 0) {
@@ -393,6 +443,14 @@ function resolveRegistrations(
       );
     }
     const element = elements[0]!;
+    if (seenElements.has(element)) {
+      return staticOnly(
+        side === 'home'
+          ? 'duplicate-home-anchor'
+          : 'duplicate-outfit-row',
+      );
+    }
+    seenElements.add(element);
     if (!hasUsableGeometry(element)) {
       return staticOnly(
         side === 'home'
@@ -457,6 +515,64 @@ function evaluateSupportedBundle(
   });
 }
 
+function readEvaluationEnvelope(
+  input: unknown,
+): Readonly<{
+  outfitBundle: unknown;
+  transitionVisualState: unknown;
+}> | null {
+  try {
+    if (
+      input === null
+      || typeof input !== 'object'
+      || Array.isArray(input)
+      || Object.getPrototypeOf(input) !== Object.prototype
+    ) {
+      return null;
+    }
+
+    const expectedKeys = new Set([
+      'outfitBundle',
+      'transitionVisualState',
+    ]);
+    const keys = Reflect.ownKeys(input);
+    if (
+      keys.length !== expectedKeys.size
+      || keys.some(
+        (key) => typeof key !== 'string' || !expectedKeys.has(key),
+      )
+    ) {
+      return null;
+    }
+
+    const outfitBundle = Object.getOwnPropertyDescriptor(
+      input,
+      'outfitBundle',
+    );
+    const transitionVisualState = Object.getOwnPropertyDescriptor(
+      input,
+      'transitionVisualState',
+    );
+    if (
+      outfitBundle === undefined
+      || !Object.hasOwn(outfitBundle, 'value')
+      || outfitBundle.enumerable !== true
+      || transitionVisualState === undefined
+      || !Object.hasOwn(transitionVisualState, 'value')
+      || transitionVisualState.enumerable !== true
+    ) {
+      return null;
+    }
+
+    return {
+      outfitBundle: outfitBundle.value,
+      transitionVisualState: transitionVisualState.value,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function createPhase2TransitionAdapter(): Phase2TransitionAdapter {
   const home = createRegistry();
   const outfit = createRegistry();
@@ -464,24 +580,25 @@ export function createPhase2TransitionAdapter(): Phase2TransitionAdapter {
   return Object.freeze({
     registerHomeAnchor: home.register,
     registerOutfitRow: outfit.register,
-    evaluate: ({
-      outfitBundle,
-      transitionVisualState,
-    }): Phase2TransitionAdapterResult => {
-      if (
-        transitionVisualState !== 'settled'
-        && transitionVisualState !== 'landing'
-      ) {
-        return staticOnly('invalid-visual-state');
-      }
-      if (outfitBundle === null || outfitBundle === undefined) {
-        return staticOnly('absent-bundle');
-      }
-      if (!isOutfitBundleProducerResult(outfitBundle)) {
-        return staticOnly('invalid-bundle-provenance');
-      }
-
+    evaluate: (input): Phase2TransitionAdapterResult => {
       try {
+        const envelope = readEvaluationEnvelope(input);
+        if (envelope === null) {
+          return staticOnly('invalid-bundle-content');
+        }
+        const { outfitBundle, transitionVisualState } = envelope;
+        if (
+          transitionVisualState !== 'settled'
+          && transitionVisualState !== 'landing'
+        ) {
+          return staticOnly('invalid-visual-state');
+        }
+        if (outfitBundle === null || outfitBundle === undefined) {
+          return staticOnly('absent-bundle');
+        }
+        if (!isOutfitBundleProducerResult(outfitBundle)) {
+          return staticOnly('invalid-bundle-provenance');
+        }
         if (outfitBundle.kind === 'unsupported-cardinality') {
           return staticOnly('unsupported-cardinality');
         }
