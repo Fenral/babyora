@@ -412,10 +412,76 @@ describe('Planned Outfit exact-context contracts', () => {
     expect(hjemHandoff).toContain('recommendInput: engineInput');
     expect(hjemHandoff).toContain('finalizedRecommendation: resolvedRecommendation');
     expect(hjemHandoff).not.toMatch(/\brecommend\s*\(/u);
-    expect(hjemHandoff).not.toContain('orderedGarments = resolvedRecommendation.layers');
+    expect(hjemHandoff).toContain('const orderedGarments = resolvedRecommendation.layers');
+    expect(hjemHandoff).toContain('const equipment = resolvedRecommendation.layers');
+    expect(hjemHandoff).toContain(".filter((layer) => layer.category !== 'utstyr')");
+    expect(hjemHandoff).toContain(".filter((layer) => layer.category === 'utstyr')");
+    expect(hjemHandoff).toContain('if (orderedGarments.length === 0) return null;');
+    expect(hjemHandoff).toContain('const fingerprint = `current-finalized:${JSON.stringify([');
+    for (const fingerprintDimension of [
+      'orderedGarments',
+      'equipment',
+      'now.tempC',
+      'now.feelsLikeC',
+      'now.windMs',
+      'now.precipMmH',
+      'now.symbolCode',
+    ]) {
+      expect(hjemHandoff).toContain(fingerprintDimension);
+    }
+    expect(hjemHandoff).toContain(
+      'planningEventId: `current-event:${evaluatedAtIso}:${fingerprint}`',
+    );
+    expect(hjemHandoff).toContain(
+      'transitionContextId: `current-transition:${evaluatedAtIso}:${fingerprint}`',
+    );
+    expect(hjemHandoff).not.toMatch(/\brecommendation\s*:\s*\{/u);
     expect(ukeHandoff).toContain('recommendInput: fact.phase.engineInput');
     expect(ukeHandoff).toContain('finalizedRecommendation: fact.phase.recommendation');
     expect(ukeHandoff).not.toMatch(/\brecommend\s*\(/u);
+  });
+
+  it('keeps current transition identity distinct for changed finalized outfit or weather basis', () => {
+    const evaluatedAtIso = '2026-02-12T11:00:00.000Z';
+    const transitionId = (
+      orderedGarments: readonly string[],
+      equipment: readonly string[],
+      weather: Readonly<{
+        tempC: number;
+        feelsLikeC: number;
+        windMs: number;
+        precipMmH: number;
+        symbolCode: string;
+      }>,
+    ) => {
+      const fingerprint = `current-finalized:${JSON.stringify([
+        orderedGarments,
+        equipment,
+        weather.tempC,
+        weather.feelsLikeC,
+        weather.windMs,
+        weather.precipMmH,
+        weather.symbolCode,
+      ])}`;
+      return `current-transition:${evaluatedAtIso}:${fingerprint}`;
+    };
+    const weather = {
+      tempC: 1,
+      feelsLikeC: -2,
+      windMs: 3.1,
+      precipMmH: 0.4,
+      symbolCode: 'lightsnow',
+    };
+    const base = transitionId(['ullbody', 'vinterdress'], ['vognpose'], weather);
+
+    expect(transitionId(['ullbody', 'balaklava', 'vinterdress'], ['vognpose'], weather))
+      .not.toBe(base);
+    expect(transitionId(['ullbody', 'vinterdress'], ['regntrekk'], weather)).not.toBe(base);
+    expect(transitionId(['ullbody', 'vinterdress'], ['vognpose'], {
+      ...weather,
+      feelsLikeC: -3,
+    })).not.toBe(base);
+    expect(transitionId(['ullbody', 'vinterdress'], ['vognpose'], weather)).toBe(base);
   });
   it('exports the fixed timezone, strict constructor, and tolerant guard', () => {
     expect(PLAN_TIME_ZONE).toBe('Europe/Oslo');
