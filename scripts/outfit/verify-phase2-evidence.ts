@@ -44,6 +44,7 @@ const AMENDED_IMPLEMENTATION_SCOPE = Object.freeze([
   'e2e/fixtures/outfit-truth.html',
   'e2e/fixtures/outfit-truth.tsx',
   'e2e/outfit-truth.ts',
+  'e2e/planlegg.ts',
   'scripts/outfit/__tests__/verify-phase2-evidence.test.ts',
   'scripts/outfit/run-phase2-evidence.ts',
   'scripts/outfit/verify-phase2-evidence.ts',
@@ -55,12 +56,14 @@ const AMENDED_IMPLEMENTATION_SCOPE = Object.freeze([
   'src/screens/__tests__/PaakledningScreen.outfit-truth.test.tsx',
 ].sort());
 
-const PREACTIVATION_GOVERNANCE_PATH =
-  '.planning/phases/02-outfit-truth-antrekkskart/02-09-PREACTIVATION-TEST-AMENDMENT.md';
+const AMENDED_GOVERNANCE_SCOPE = Object.freeze([
+  '.planning/phases/02-outfit-truth-antrekkskart/02-09-ENABLED-CONTEXT-COMPATIBILITY-AMENDMENT.md',
+  '.planning/phases/02-outfit-truth-antrekkskart/02-09-PREACTIVATION-TEST-AMENDMENT.md',
+].sort());
 
 const AMENDED_SCOPE_WITH_GOVERNANCE = Object.freeze([
   ...AMENDED_IMPLEMENTATION_SCOPE,
-  PREACTIVATION_GOVERNANCE_PATH,
+  ...AMENDED_GOVERNANCE_SCOPE,
 ].sort());
 
 const ACTIVATION_DELTA = Object.freeze([
@@ -552,10 +555,10 @@ function verifyRecord(
   requireValue(
     record,
     'scope_attestation',
-    'amended-12-paths-only',
+    'amended-13-paths-only',
     'candidate record',
   );
-  requireValue(record, 'scope_file_count', '12', 'candidate record');
+  requireValue(record, 'scope_file_count', '13', 'candidate record');
   requireValue(
     record,
     'inventory_script_blob',
@@ -892,7 +895,7 @@ export function verifyPhase2Evidence(argv: readonly string[]): void {
   assertSameSorted(
     scopePaths,
     AMENDED_SCOPE_WITH_GOVERNANCE,
-    'amended twelve-path implementation scope plus governance artifact',
+    'amended thirteen-path implementation scope plus two governance artifacts',
   );
   assertRequiredScopePathsExist(root, arguments_.candidate);
   assertNoMediaCapture(root, arguments_.candidate);

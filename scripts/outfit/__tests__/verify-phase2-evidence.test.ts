@@ -94,8 +94,8 @@ function recordValues(
     phase1_candidate_sha: PHASE1,
     contract_sha256: CONTRACT,
     pack_sha256: PACK,
-    scope_attestation: 'amended-12-paths-only',
-    scope_file_count: '12',
+    scope_attestation: 'amended-13-paths-only',
+    scope_file_count: '13',
     inventory_script_blob: 'd4af276900bdfbdde9a27a00f5620e49c294c41a',
     inventory_test_blob: '5c6a3db2adbbcddcaae956b56d17650e0110cb57',
     inventory_scenario_count: '2036160',
@@ -286,11 +286,13 @@ beforeAll(() => {
     'src/screens/PaakledningScreen.tsx',
     "// Phase 2 fixture production integration.\nimport { OUTFIT_TRUTH_V1_AVAILABLE } from '../lib/outfit/feature-flags.js';\nvoid (OUTFIT_TRUTH_V1_AVAILABLE && true);",
   );
+  appendOwned('e2e/planlegg.ts', '// Phase 2 fixture exact-context compatibility.');
   for (const path of [
     'scripts/outfit/verify-phase2-evidence.ts',
     'scripts/outfit/run-phase2-evidence.ts',
     'scripts/outfit/__tests__/verify-phase2-evidence.test.ts',
     'src/lib/planning/__tests__/planned-outfit-resolver.test.ts',
+    '.planning/phases/02-outfit-truth-antrekkskart/02-09-ENABLED-CONTEXT-COMPATIBILITY-AMENDMENT.md',
     '.planning/phases/02-outfit-truth-antrekkskart/02-09-PREACTIVATION-TEST-AMENDMENT.md',
   ]) {
     mkdirSync(dirname(join(repo, path)), { recursive: true });
@@ -477,7 +479,7 @@ describe('strict raw candidate frontmatter', () => {
     ['pack_sha256', '0'.repeat(64)],
     ['dependency_02_08_sha', DEPENDENCIES[6]],
     ['scope_attestation', 'trust-me'],
-    ['scope_file_count', '11'],
+    ['scope_file_count', '12'],
     ['inventory_scenario_count', '2036159'],
     ['pre_activation_build_exit', '1'],
     ['recorded_at', '2020-01-01T00:00:00Z'],
@@ -640,7 +642,7 @@ describe('inventory, amended scope and protected surfaces', () => {
     );
   });
 
-  it('rejects an omitted counted contract test from the twelve-path implementation scope', () => {
+  it('rejects an omitted counted contract test from the thirteen-path implementation scope', () => {
     activateVariant(
       'omitted contract test',
       () => {
@@ -654,18 +656,62 @@ describe('inventory, amended scope and protected surfaces', () => {
     );
   });
 
-  it('rejects a mutated twelve-path scope attestation', () => {
-    writeEvidence({ ...recordValues(), scope_attestation: 'amended-11-paths-only' });
+  it('rejects an omitted e2e compatibility path and either approved governance artifact', () => {
+    activateVariant(
+      'omitted e2e compatibility',
+      () => {
+        git(repo, ['rm', 'e2e/planlegg.ts']);
+      },
+      'export const OUTFIT_TRUTH_V1_AVAILABLE = true as const;\n',
+      /required amended scope path e2e\/planlegg\.ts/u,
+    );
+    for (const path of [
+      '.planning/phases/02-outfit-truth-antrekkskart/02-09-PREACTIVATION-TEST-AMENDMENT.md',
+      '.planning/phases/02-outfit-truth-antrekkskart/02-09-ENABLED-CONTEXT-COMPATIBILITY-AMENDMENT.md',
+    ]) {
+      activateVariant(
+        `omitted ${path}`,
+        () => {
+          git(repo, ['rm', path]);
+        },
+        'export const OUTFIT_TRUTH_V1_AVAILABLE = true as const;\n',
+        /amended thirteen-path implementation scope plus two governance artifacts differs/u,
+      );
+    }
+  }, 20_000);
+
+  it('rejects a third governance artifact', () => {
+    activateVariant(
+      'third governance artifact',
+      () => {
+        writeFileSync(
+          join(
+            repo,
+            '.planning/phases/02-outfit-truth-antrekkskart/02-09-UNAUTHORIZED-DRIFT.md',
+          ),
+          'unauthorized governance drift\n',
+          'utf8',
+        );
+      },
+      'export const OUTFIT_TRUTH_V1_AVAILABLE = true as const;\n',
+      /amended thirteen-path implementation scope plus two governance artifacts differs/u,
+    );
+  });
+
+  it('rejects a mutated thirteen-path scope attestation', () => {
+    writeEvidence({ ...recordValues(), scope_attestation: 'amended-12-paths-only' });
     expectFailure(/scope_attestation/u);
     writeEvidence();
   });
 
-  it('rejects package, media and protected-screen drift outside the twelve paths', () => {
+  it('rejects package, media, Hjem, Uke and unrelated drift outside the thirteen paths', () => {
     activateVariant(
       'protected drift',
       () => {
         appendOwned('package.json', ' ');
         appendOwned('src/screens/HjemScreen.tsx', '// protected drift');
+        appendOwned('src/screens/UkeScreen.tsx', '// protected drift');
+        appendOwned('src/lib/unrelated-phase2-drift.ts', 'export const unrelated = true;');
         writeFileSync(join(repo, 'e2e/forbidden-media.png'), 'not-media', 'utf8');
         writeFileSync(
           join(
@@ -677,7 +723,7 @@ describe('inventory, amended scope and protected surfaces', () => {
         );
       },
       'export const OUTFIT_TRUTH_V1_AVAILABLE = true as const;\n',
-      /amended twelve-path implementation scope plus governance artifact differs/u,
+      /amended thirteen-path implementation scope plus two governance artifacts differs/u,
     );
   });
 });
@@ -717,12 +763,12 @@ describe('qualified post-candidate reviews', () => {
     );
     expectFailure(/distinct session IDs/u);
     writeEvidence();
-  });
+  }, 20_000);
 });
 
 describe('complete immutable candidate', () => {
   it(
-    'accepts the exact scope, ancestry, activation, inventory and two reviews',
+    'accepts exactly thirteen implementation paths, two governance artifacts, ancestry, activation, inventory and two reviews',
     () => {
       process.chdir(repo);
       expect(() => verifyPhase2Evidence(argv())).not.toThrow();
