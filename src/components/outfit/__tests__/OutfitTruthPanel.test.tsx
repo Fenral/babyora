@@ -4,10 +4,18 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import manifestJson from '../../../../public/avatars/verified/index.json?raw';
 import { recommend } from '../../../lib/wool-layers/recommend.js';
+import { runOutfitInventoryV1 } from '../../../../scripts/outfit/inventory-v1.js';
+import {
+  createCurrentOutfitContext,
+  createPlannedOutfitContext,
+} from '../../../lib/planning/planned-outfit-context.js';
 import { createOutfitTruthSnapshot } from '../../../lib/outfit/outfit-truth.js';
 import { bandForTemp } from '../../../lib/wool-layers/tables.js';
-import { buildOutfitAlternativeOptions } from '../../../lib/outfit/alternative-options.js';
-import type { OutfitBundleProducerResult } from '../../../lib/outfit/outfit-bundle-producer.js';
+import type { RecommendInput, Recommendation } from '../../../lib/wool-layers/types.js';
+import {
+  produceOutfitBundle,
+  type OutfitBundleProducerResult,
+} from '../../../lib/outfit/outfit-bundle-producer.js';
 import { OutfitTruthPanel } from '../OutfitTruthPanel.js';
 import { VerifiedAvatarComposite } from '../VerifiedAvatarComposite.js';
 import { OUTFIT_TRUTH_V1_AVAILABLE } from '../../../lib/outfit/feature-flags.js';
@@ -100,41 +108,105 @@ function snapshotForManifestRow(row: ManifestRow) {
   return result.snapshot;
 }
 
-function supportedBundle(): Extract<OutfitBundleProducerResult, { kind: 'supported' }> {
-  return Object.freeze({
-    kind: 'supported' as const,
-    bundleVersion: 1 as const,
-    source: Object.freeze({ kind: 'current' as const, sourceContextId: 'panel-fixture' }),
-    weather: Object.freeze({ tempC: 5, feelsLikeC: 4 }),
-    base: snapshot(),
-    options: Object.freeze([]),
-  });
+function completeInput(overrides: Partial<RecommendInput> = {}): RecommendInput {
+  return {
+    weather: {
+      tempC: 5,
+      feelsLikeC: 4,
+      windMs: 1,
+      precipMmH: 0,
+      humidity: 72,
+      symbolCode: 'cloudy',
+      uvIndex: 0,
+    },
+    child: { ageMonths: 10, canRoll: true },
+    activity: 'utelek',
+    exposureMin: 45,
+    innerJakke: false,
+    context: { bilstol: false },
+    childCalibration: 0,
+    ...overrides,
+  };
 }
 
-function unsupportedBundle(): OutfitBundleProducerResult {
-  return Object.freeze({
-    kind: 'unsupported-cardinality' as const,
-    bundleVersion: 1 as const,
-    source: Object.freeze({ kind: 'current' as const, sourceContextId: 'eleven-fixture' }),
-    weather: Object.freeze({ tempC: -18, feelsLikeC: -20 }),
-    truth: Object.freeze({
-      kind: 'unsupported-cardinality' as const,
-      reason: 'semantic-garment-count-outside-1-10' as const,
-      orderedGarments: Object.freeze(Array.from({ length: 11 }, (_, index) => Object.freeze({
-        itemId: `outfit-item-v1:unsupported-${index + 1}` as never,
-        sourceLabel: `Plagg ${index + 1}`,
-        label: `Plagg ${index + 1}`,
-        order: index + 1,
-      }))),
-      equipment: Object.freeze([Object.freeze({
-        itemId: 'outfit-item-v1:equipment-1' as never,
-        sourceLabel: 'Varmepose',
-        label: 'Varmepose',
-        catalogGarmentId: 'varmepose',
-        order: 1,
-      })]),
-    }),
+function canonicalTransition(
+  route: 'current' | 'planned',
+  plannedForIso: string,
+  input: RecommendInput,
+  recommendation: Recommendation,
+): string {
+  const garments = recommendation.layers
+    .filter((layer) => layer.category !== 'utstyr')
+    .flatMap((layer) => layer.items);
+  const equipment = recommendation.layers
+    .filter((layer) => layer.category === 'utstyr')
+    .flatMap((layer) => layer.items);
+  const fingerprint = route === 'current'
+    ? `current-finalized:${JSON.stringify([garments, equipment, input.weather.tempC, input.weather.feelsLikeC, input.weather.windMs, input.weather.precipMmH, input.weather.symbolCode ?? 'unknown'])}`
+    : `planned-finalized:${JSON.stringify([garments, equipment])}`;
+  return `${route === 'current' ? 'current' : 'planning'}-transition:${plannedForIso}:${fingerprint}`;
+}
+
+function factoryBundle(
+  route: 'current' | 'planned',
+  input: RecommendInput,
+  identity: string,
+): OutfitBundleProducerResult {
+  const finalizedRecommendation = recommend(input);
+  const plannedForIso = '2026-02-12T11:00:00.000Z';
+  const create = route === 'current'
+    ? createCurrentOutfitContext
+    : createPlannedOutfitContext;
+  const context = create({
+    planningEventId: `panel-event-${identity}`,
+    transitionContextId: canonicalTransition(route, plannedForIso, input, finalizedRecommendation),
+    child: { id: 'panel-child', name: 'Ada', ageMonths: input.child.ageMonths },
+    plannedForIso,
+    timeZone: 'Europe/Oslo',
+    place: { label: 'Hjemme', lat: 59.9139, lon: 10.7522, source: 'configured-place' },
+    activity: input.activity,
+    vognMode: input.activity === 'vogn' ? input.vognMode ?? 'awake' : null,
+    weather: {
+      tempC: input.weather.tempC,
+      feelsLikeC: input.weather.feelsLikeC,
+      windMs: input.weather.windMs,
+      precipMmH: input.weather.precipMmH,
+      symbolCode: input.weather.symbolCode ?? 'unknown',
+    },
+    recommendInput: input,
+    finalizedRecommendation,
+    access: { capability: 'future_plan', allowed: true, reason: 'plus' },
   });
+  if (context.sourceKind !== 'phase2-outfit-truth') throw new Error('expected producer context');
+  const source = route === 'current'
+    ? { kind: 'current' as const, sourceContextId: context.producerSeed.sourceContextId }
+    : {
+        kind: 'planned' as const,
+        sourceContextId: context.producerSeed.sourceContextId,
+        planningEventId: context.planningEventId,
+        plannedForIso: context.plannedForIso,
+      };
+  return produceOutfitBundle({ seed: context.producerSeed, source });
+}
+
+function supportedBundle(): Extract<OutfitBundleProducerResult, { kind: 'supported' }> {
+  const result = factoryBundle('current', completeInput(), 'supported');
+  if (result.kind !== 'supported') throw new Error('expected real supported bundle');
+  return result;
+}
+
+function unsupportedBundle(): Extract<OutfitBundleProducerResult, { kind: 'unsupported-cardinality' }> {
+  const max = runOutfitInventoryV1().maxGarmentCase;
+  if (max === null) throw new Error('inventory fixture unavailable');
+  const result = factoryBundle('planned', max, 'unsupported');
+  if (result.kind !== 'unsupported-cardinality') throw new Error('expected real unsupported bundle');
+  return result;
+}
+
+function unavailableBundle(): Extract<OutfitBundleProducerResult, { kind: 'unavailable' }> {
+  const result = produceOutfitBundle({} as never);
+  if (result.kind !== 'unavailable') throw new Error('expected real unavailable bundle');
+  return result;
 }
 
 function assertUnavailableOnly(html: string): void {
@@ -148,28 +220,15 @@ function assertUnavailableOnly(html: string): void {
 }
 
 function selectableBundle(): Extract<OutfitBundleProducerResult, { kind: 'supported' }> {
-  const input = {
-    weather: { feelsLikeC: -8, tempC: -5, windMs: 2, precipMmH: 0 },
-    child: { ageMonths: 10 },
+  const result = factoryBundle('current', completeInput({
+    weather: { tempC: -5, feelsLikeC: -8, windMs: 2, precipMmH: 0, humidity: 72, symbolCode: 'snow', uvIndex: 0 },
     activity: 'vogn',
-  } as const;
-  const alternatives = buildOutfitAlternativeOptions({
-    transitionContextId: 'selection-fixture',
-    input,
-    finalizedRecommendation: recommend(input),
-    pose: 'sitting',
-  });
-  if (alternatives.kind !== 'supported' || alternatives.options.length === 0) {
+    vognMode: 'sleeping',
+  }), 'selection');
+  if (result.kind !== 'supported' || result.options.length === 0) {
     throw new Error('selection fixture requires a finalized alternative');
   }
-  return Object.freeze({
-    kind: 'supported' as const,
-    bundleVersion: 1 as const,
-    source: Object.freeze({ kind: 'current' as const, sourceContextId: 'selection-fixture' }),
-    weather: Object.freeze({ tempC: input.weather.tempC, feelsLikeC: input.weather.feelsLikeC }),
-    base: alternatives.base,
-    options: alternatives.options,
-  });
+  return result;
 }
 
 describe('OutfitTruthPanel', () => {
@@ -205,16 +264,17 @@ describe('OutfitTruthPanel', () => {
     const bundle = unsupportedBundle();
     const html = renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} onOpenWarmColdGuide={() => undefined} />);
     expect(html).toContain('Ta på innerst først');
-    for (let index = 1; index <= 11; index += 1) expect(html).toContain(`Plagg ${index}`);
-    expect(html).toContain('Varmepose');
+    expect(bundle.truth.orderedGarments).toHaveLength(11);
+    for (const garment of bundle.truth.orderedGarments) expect(html).toContain(garment.label);
+    for (const equipment of bundle.truth.equipment) expect(html).toContain(equipment.label);
     expect(html).not.toContain('data-outfit-map-node=');
     expect(html).not.toContain('data-outfit-row=');
     expect(html).not.toContain('Se alternativ');
     expect(html).not.toContain('<img');
-  });
+  }, 120_000);
 
   it('renders unavailable results as neutral with no advice or injected callback control', () => {
-    const bundle: OutfitBundleProducerResult = Object.freeze({ kind: 'unavailable' as const, bundleVersion: 1 as const, reason: 'truth-build-failed' as const });
+    const bundle = unavailableBundle();
     const html = renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} onOpenWarmColdGuide={() => undefined} />);
     expect(html).toContain('Antrekksanbefalingen er ikke tilgjengelig');
     expect(html).not.toContain('Ta pÃ¥ innerst fÃ¸rst');
@@ -264,6 +324,51 @@ describe('OutfitTruthPanel', () => {
     assertUnavailableOnly(html);
   });
 
+  it('rejects all unowned top-level wrappers without reading their envelope or nested truth', () => {
+    const supported = supportedBundle();
+    const unsupported = unsupportedBundle();
+    const forgedSupported = Object.freeze({
+      ...supported,
+      source: Object.freeze({ kind: 'current' as const, sourceContextId: 'individually-valid-source' }),
+      weather: Object.freeze({ tempC: 8, feelsLikeC: 7 }),
+      options: Object.freeze([...supported.options, ...supported.options]),
+    });
+    const arbitraryUnsupported = Object.freeze({
+      ...unsupported,
+      truth: Object.freeze({
+        ...unsupported.truth,
+        orderedGarments: Object.freeze(unsupported.truth.orderedGarments.map((item, index) => Object.freeze({
+          ...item,
+          itemId: `outfit-item-v1:arbitrary-${index + 1}` as never,
+          sourceLabel: `Helt vilkÃ¥rlig ${index + 1}`,
+          label: `Helt vilkÃ¥rlig ${index + 1}`,
+        }))),
+      }),
+    });
+    let getterCalls = 0;
+    let trapCalls = 0;
+    const accessor = Object.freeze({ get kind() { getterCalls += 1; throw new Error('must not read'); } });
+    const throwingProxy = new Proxy(Object.freeze({}), {
+      get() { trapCalls += 1; throw new Error('must not trap'); },
+      ownKeys() { trapCalls += 1; throw new Error('must not trap'); },
+    });
+    for (const value of [
+      forgedSupported,
+      arbitraryUnsupported,
+      structuredClone(unavailableBundle()),
+      new Proxy(supported, {}),
+      accessor,
+      throwingProxy,
+      supported.base,
+      supported.options[0],
+    ]) {
+      const html = renderToStaticMarkup(<OutfitTruthPanel outfitBundle={value as never} />);
+      assertUnavailableOnly(html);
+    }
+    expect(getterCalls).toBe(0);
+    expect(trapCalls).toBe(0);
+  });
+
   it('rejects forged unsupported order and duplicate IDs instead of presenting arbitrary advice', () => {
     const valid = unsupportedBundle();
     if (valid.kind !== 'unsupported-cardinality') throw new Error('fixture mismatch');
@@ -296,7 +401,7 @@ describe('OutfitTruthPanel', () => {
     );
     const unavailable = renderToStaticMarkup(
       <OutfitTruthPanel
-        outfitBundle={Object.freeze({ kind: 'unavailable', bundleVersion: 1, reason: 'invalid-input' }) as never}
+        outfitBundle={unavailableBundle()}
         transitionVisualState="landing"
       />,
     );

@@ -88,6 +88,11 @@ const PLANNED_SOURCE_KEYS = Object.freeze([
   'plannedForIso',
 ]);
 
+// Public bundle results are process-local capabilities.  Their public shape is
+// intentionally not a trust signal: consumers must verify identity here before
+// inspecting any caller-provided envelope.
+const producerResults = new WeakSet<object>();
+
 function freezeDeep<T>(value: T): T {
   if (
     value !== null
@@ -110,6 +115,25 @@ function unavailable(
     bundleVersion: 1 as const,
     reason,
   });
+}
+
+function registerProducerResult<T extends OutfitBundleProducerResult>(
+  result: T,
+): T {
+  const frozen = freezeDeep(result);
+  producerResults.add(frozen as object);
+  return frozen;
+}
+
+/**
+ * Returns true only for the exact top-level object emitted by this module's
+ * public producer in this process.  Do not add structural checks here: this
+ * must be safe to call on accessors and proxies without touching their traps.
+ */
+export function isOutfitBundleProducerResult(
+  value: unknown,
+): value is OutfitBundleProducerResult {
+  return value !== null && typeof value === 'object' && producerResults.has(value);
 }
 
 function isExactOwnDataRecord(
@@ -383,8 +407,8 @@ export function produceOutfitBundle(
   args: ProduceOutfitBundleArgsV1,
 ): OutfitBundleProducerResult {
   try {
-    return produceOutfitBundleUnchecked(args);
+    return registerProducerResult(produceOutfitBundleUnchecked(args));
   } catch {
-    return unavailable('invalid-input');
+    return registerProducerResult(unavailable('invalid-input'));
   }
 }

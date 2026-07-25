@@ -12,6 +12,7 @@ import type {
 } from '../../wool-layers/types.js';
 import { isOutfitAlternativeOption } from '../alternative-options.js';
 import {
+  isOutfitBundleProducerResult,
   produceOutfitBundle,
   type OutfitBundleSourceV1,
   type OutfitBundleUnavailableReason,
@@ -214,6 +215,51 @@ function assertRecursivelyFrozen(
 }
 
 describe('produceOutfitBundle', () => {
+  it('brands only frozen top-level results emitted by this producer without reading hostile values', () => {
+    const supportedContext = exactCurrentContext({ identity: 'result-provenance' });
+    const supported = produceOutfitBundle({
+      seed: supportedContext.producerSeed,
+      source: currentSource(supportedContext),
+    });
+    const unsupportedContext = exactContext({
+      identity: 'result-provenance-eleven',
+      recommendInput: trackedElevenRecommendInput(),
+    });
+    const unsupported = produceOutfitBundle({
+      seed: unsupportedContext.producerSeed,
+      source: plannedSource(unsupportedContext),
+    });
+    const unavailable = produceOutfitBundle({} as ProduceOutfitBundleArgsV1);
+    for (const value of [supported, unsupported, unavailable]) {
+      expect(isOutfitBundleProducerResult(value)).toBe(true);
+      const clone = structuredClone(value);
+      const freezeClone = (candidate: unknown): unknown => {
+        if (candidate !== null && typeof candidate === 'object' && !Object.isFrozen(candidate)) {
+          for (const nested of Object.values(candidate)) freezeClone(nested);
+          Object.freeze(candidate);
+        }
+        return candidate;
+      };
+      expect(isOutfitBundleProducerResult(freezeClone(clone))).toBe(false);
+      expect(isOutfitBundleProducerResult(new Proxy(value, {}))).toBe(false);
+    }
+    let getterCalls = 0;
+    let trapCalls = 0;
+    const accessor = Object.freeze({ get kind() { getterCalls += 1; throw new Error('getter'); } });
+    const throwingProxy = new Proxy(Object.freeze({}), {
+      get() { trapCalls += 1; throw new Error('trap'); },
+      getPrototypeOf() { trapCalls += 1; throw new Error('trap'); },
+      ownKeys() { trapCalls += 1; throw new Error('trap'); },
+    });
+    expect(isOutfitBundleProducerResult(accessor)).toBe(false);
+    expect(isOutfitBundleProducerResult(throwingProxy)).toBe(false);
+    expect(getterCalls).toBe(0);
+    expect(trapCalls).toBe(0);
+    if (supported.kind !== 'supported') throw new Error('fixture must be supported');
+    expect(isOutfitBundleProducerResult(supported.base)).toBe(false);
+    expect(isOutfitBundleProducerResult(supported.options[0])).toBe(false);
+  }, 120_000);
+
   it('emits deterministic supported current truth with exact weather and options', () => {
     const context = exactCurrentContext();
     const mutableSource = {
