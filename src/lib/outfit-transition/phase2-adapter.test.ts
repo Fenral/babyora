@@ -335,6 +335,24 @@ describe('Phase 2 transition adapter contract', () => {
     expect(settled.transitionVisualState).toBe('settled');
   });
 
+  it('accepts one authoritative avatar-visible ID without selecting its unlisted peer', () => {
+    const bundle = createSupportedBundle();
+    const firstId = visibleIds(bundle)[0]!;
+    const single = trustedMutation(bundle, (candidate) => {
+      candidate.base.avatar.visibleGarmentIds = [firstId];
+    });
+    const adapter = createPhase2TransitionAdapter();
+    adapter.registerHomeAnchor(firstId, element());
+    adapter.registerOutfitRow(firstId, element());
+
+    const result = evaluate(adapter, single);
+
+    expect(result).toMatchObject({
+      kind: 'ready',
+      itemIds: [firstId],
+    });
+  });
+
   it('never promotes unlisted garments and preserves visible-ID order after garment reordering', () => {
     const bundle = createSupportedBundle();
     const reversed = trustedMutation(bundle, (candidate) => {
@@ -445,6 +463,25 @@ describe('Phase 2 transition adapter contract', () => {
         candidate.base.garments[0]!.visibleOnAvatar = false;
       },
       reason: 'garment-not-visible',
+    },
+    {
+      name: 'unknown body region with null anchor',
+      mutate: (candidate: MutableSupportedBundle) => {
+        candidate.base.garments[0]!.bodyRegion = 'unknown';
+        candidate.base.garments[0]!.bodyAnchor = null;
+      },
+      reason: 'invalid-body-anchor',
+    },
+    {
+      name: 'non-finite semantic body anchor',
+      mutate: (candidate: MutableSupportedBundle) => {
+        const anchor = candidate.base.garments[0]!.bodyAnchor;
+        candidate.base.garments[0]!.bodyAnchor = {
+          ...(anchor as object),
+          x: Number.NaN,
+        };
+      },
+      reason: 'invalid-body-anchor',
     },
     {
       name: 'equipment collision',
