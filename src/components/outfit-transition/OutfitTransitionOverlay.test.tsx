@@ -1,6 +1,51 @@
-import { describe, expect, it } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const motionHarness = vi.hoisted(() => ({
+  cleanups: [] as Array<() => void>,
+  divProps: [] as Array<Record<string, unknown>>,
+}));
+
+vi.mock('react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react')>();
+  return {
+    ...actual,
+    useEffect: (
+      effect: () => void | (() => void),
+    ) => {
+      const cleanup = effect();
+      if (typeof cleanup === 'function') motionHarness.cleanups.push(cleanup);
+    },
+  };
+});
+
+vi.mock('react-dom', () => ({
+  createPortal: (node: unknown) => node,
+}));
+
+vi.mock('motion/react', async () => {
+  const React = await import('react');
+  return {
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+    MotionConfig: ({ children }: { children: React.ReactNode }) => children,
+    motion: {
+      div: (props: Record<string, unknown>) => {
+        motionHarness.divProps.push(props);
+        const {
+          animate: _animate,
+          initial: _initial,
+          onAnimationComplete: _onAnimationComplete,
+          transition: _transition,
+          ...domProps
+        } = props;
+        return React.createElement('div', domProps);
+      },
+    },
+  };
+});
 import {
   createOutfitTransitionOverlayModel,
+  OutfitTransitionOverlay,
   type OutfitTransitionPresentation,
 } from './OutfitTransitionOverlay.js';
 import type { EligibleTransitionSnapshot } from '../../lib/outfit-transition/eligibility.js';
@@ -38,6 +83,16 @@ const presentations: readonly OutfitTransitionPresentation[] = Object.freeze([
 ]);
 
 describe('OutfitTransitionOverlay contract', () => {
+  beforeEach(() => {
+    motionHarness.cleanups.length = 0;
+    motionHarness.divProps.length = 0;
+    vi.stubGlobal('document', { body: {} });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('creates one immutable exact-ID transform clone per validated presentation', () => {
     const result = createOutfitTransitionOverlayModel(snapshot, presentations);
 
@@ -98,5 +153,96 @@ describe('OutfitTransitionOverlay contract', () => {
         [presentations[0]],
       ),
     ).toEqual({ kind: 'static-only' });
+  });
+
+  it('renders a semantic-hidden pointer-inert portal with no focusable descendants', () => {
+    const html = renderToStaticMarkup(
+      <OutfitTransitionOverlay
+        snapshot={snapshot}
+        presentations={presentations}
+        onFinish={() => undefined}
+        onAbort={() => undefined}
+      />,
+    );
+
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain('data-outfit-transition-overlay');
+    expect(html).not.toMatch(/tabindex|<a\b|<button\b|<input\b|<select\b|<textarea\b/u);
+    expect(html.match(/data-outfit-transition-clone=/gu)).toHaveLength(2);
+    expect(html.match(/pointer-events:none/gu)).toHaveLength(3);
+    expect(html).not.toMatch(
+      /\son(?:click|key(?:down|up|press)|focus|blur)=/u,
+    );
+  });
+
+  it('finishes once and does not abort again when the completed portal unmounts', () => {
+    const onFinish = vi.fn();
+    const onAbort = vi.fn();
+    renderToStaticMarkup(
+      <OutfitTransitionOverlay
+        snapshot={snapshot}
+        presentations={presentations}
+        onFinish={onFinish}
+        onAbort={onAbort}
+      />,
+    );
+
+    const completion = motionHarness.divProps.at(-1)?.onAnimationComplete;
+    expect(completion).toBeTypeOf('function');
+    (completion as () => void)();
+    (completion as () => void)();
+    motionHarness.cleanups.forEach((cleanup) => cleanup());
+    expect(onFinish).toHaveBeenCalledTimes(1);
+    expect(onAbort).not.toHaveBeenCalled();
+  });
+
+  it('aborts once on cancellation/unmount and leaves no active clone lifecycle', () => {
+    const onFinish = vi.fn();
+    const onAbort = vi.fn();
+    renderToStaticMarkup(
+      <OutfitTransitionOverlay
+        snapshot={snapshot}
+        presentations={presentations}
+        onFinish={onFinish}
+        onAbort={onAbort}
+      />,
+    );
+
+    motionHarness.cleanups.forEach((cleanup) => cleanup());
+    motionHarness.cleanups.forEach((cleanup) => cleanup());
+    const completion = motionHarness.divProps.at(-1)?.onAnimationComplete;
+    (completion as () => void)();
+    expect(onAbort).toHaveBeenCalledTimes(1);
+    expect(onFinish).not.toHaveBeenCalled();
+  });
+
+  it('settles reduced-motion and unavailable rendering statically once without clones', () => {
+    const reducedAbort = vi.fn();
+    const reduced = renderToStaticMarkup(
+      <OutfitTransitionOverlay
+        snapshot={snapshot}
+        presentations={presentations}
+        reducedMotion
+        onFinish={() => undefined}
+        onAbort={reducedAbort}
+      />,
+    );
+    expect(reduced).toBe('');
+    expect(reducedAbort).toHaveBeenCalledTimes(1);
+    expect(motionHarness.divProps).toHaveLength(0);
+
+    motionHarness.cleanups.length = 0;
+    vi.stubGlobal('document', undefined);
+    const unavailableAbort = vi.fn();
+    const unavailable = renderToStaticMarkup(
+      <OutfitTransitionOverlay
+        snapshot={snapshot}
+        presentations={presentations}
+        onFinish={() => undefined}
+        onAbort={unavailableAbort}
+      />,
+    );
+    expect(unavailable).toBe('');
+    expect(unavailableAbort).toHaveBeenCalledTimes(1);
   });
 });

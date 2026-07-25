@@ -455,6 +455,12 @@ async function assertProductionRoutes(page: Page, expectedFlag: ExpectedFlag): P
       return {
         itemId: element.dataset.outfitTransitionSource ?? '',
         label: element.textContent?.trim() ?? '',
+        rectangle: {
+          x: rectangle.x,
+          y: rectangle.y,
+          width: rectangle.width,
+          height: rectangle.height,
+        },
         visible: (
           rectangle.width > 0
           && rectangle.height > 0
@@ -476,6 +482,112 @@ async function assertProductionRoutes(page: Page, expectedFlag: ExpectedFlag): P
   if (new Set(expectedItemIds).size !== expectedItemIds.length) {
     throw new Error('Production Hjem transition source IDs are not unique');
   }
+  // tsx may preserve its local function-name helper in nested callbacks that
+  // Playwright serializes independently. Supply the inert helper in-page.
+  await page.evaluate('globalThis.__name ??= (value) => value');
+  await page.evaluate(() => {
+    type TraceSample = Readonly<{
+      state: string | null;
+      visualState: string | null;
+      headingFocused: boolean;
+      rowIds: readonly string[];
+      overlay: null | Readonly<{
+        ariaHidden: string | null;
+        pointerEvents: string;
+        durationMs: number;
+        clones: readonly Readonly<{
+          itemId: string;
+          source: Readonly<{
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+          }>;
+          target: Readonly<{
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+          }>;
+          endMs: number;
+          tabIndex: string | null;
+          pointerEvents: string;
+        }>[];
+      }>;
+    }>;
+    const tracedWindow = window as Window & {
+      __outfitTruthTransitionTrace?: {
+        samples: TraceSample[];
+        observer: MutationObserver;
+        focusListener: () => void;
+      };
+    };
+    const samples: TraceSample[] = [];
+    const record = () => {
+      const shell = document.querySelector<HTMLElement>('.app-shell');
+      const panel = document.querySelector<HTMLElement>('.outfit-truth-panel');
+      const heading = document.querySelector<HTMLElement>(
+        'dialog[open] h1, dialog[open] h2',
+      );
+      const overlay = document.querySelector<HTMLElement>(
+        '[data-outfit-transition-overlay]',
+      );
+      const sample: TraceSample = {
+        state: shell?.dataset.outfitTransitionState ?? null,
+        visualState: panel?.dataset.transitionVisualState ?? null,
+        headingFocused: heading !== null && document.activeElement === heading,
+        rowIds: [...document.querySelectorAll<HTMLElement>('[data-outfit-row]')]
+          .map((row) => row.dataset.outfitRow ?? ''),
+        overlay: overlay === null ? null : {
+          ariaHidden: overlay.getAttribute('aria-hidden'),
+          pointerEvents: getComputedStyle(overlay).pointerEvents,
+          durationMs: Number(overlay.dataset.outfitTransitionDurationMs),
+          clones: [...overlay.querySelectorAll<HTMLElement>(
+            '[data-outfit-transition-clone]',
+          )].map((clone) => ({
+            itemId: clone.dataset.outfitTransitionClone ?? '',
+            source: {
+              x: Number.parseFloat(clone.style.left),
+              y: Number.parseFloat(clone.style.top),
+              width: Number.parseFloat(clone.style.width),
+              height: Number.parseFloat(clone.style.height),
+            },
+            target: {
+              x: Number(clone.dataset.outfitTransitionTargetX),
+              y: Number(clone.dataset.outfitTransitionTargetY),
+              width: Number(clone.dataset.outfitTransitionTargetWidth),
+              height: Number(clone.dataset.outfitTransitionTargetHeight),
+            },
+            endMs: Number(clone.dataset.outfitTransitionEndMs),
+            tabIndex: clone.getAttribute('tabindex'),
+            pointerEvents: getComputedStyle(clone).pointerEvents,
+          })),
+        },
+      };
+      const previous = samples.at(-1);
+      if (JSON.stringify(previous) !== JSON.stringify(sample)) {
+        samples.push(sample);
+      }
+    };
+    const observer = new MutationObserver(record);
+    observer.observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: [
+        'data-outfit-transition-state',
+        'data-transition-visual-state',
+      ],
+    });
+    const focusListener = () => record();
+    document.addEventListener('focusin', focusListener);
+    tracedWindow.__outfitTruthTransitionTrace = {
+      samples,
+      observer,
+      focusListener,
+    };
+    record();
+  });
   await homeAction.waitFor({ state: 'visible', timeout: 10_000 });
   await homeAction.click();
   const currentDialog = page.getByRole('dialog', { name: 'Lillian', exact: true }).filter({
@@ -500,23 +612,115 @@ async function assertProductionRoutes(page: Page, expectedFlag: ExpectedFlag): P
   if (JSON.stringify(targetItemIds) !== JSON.stringify(expectedItemIds)) {
     throw new Error('Production Home/Outfit item order diverged');
   }
-  try {
-    await page.waitForFunction(
-      () => (
-        document.querySelector<HTMLElement>('.app-shell')
-          ?.dataset.outfitTransitionState === 'ready'
-      ),
-      undefined,
-      { timeout: 10_000 },
-    );
-  } catch (error) {
+  await page.waitForFunction(
+    () => (
+      document.querySelector<HTMLElement>('.app-shell')
+        ?.dataset.outfitTransitionState === 'settled'
+      && document.querySelector('[data-outfit-transition-overlay]') === null
+    ),
+    undefined,
+    { timeout: 10_000 },
+  );
+  const transitionTrace = await page.evaluate(() => {
+    const tracedWindow = window as Window & {
+      __outfitTruthTransitionTrace?: {
+        samples: unknown[];
+        observer: MutationObserver;
+        focusListener: () => void;
+      };
+    };
+    const trace = tracedWindow.__outfitTruthTransitionTrace;
+    trace?.observer.disconnect();
+    if (trace !== undefined) {
+      document.removeEventListener('focusin', trace.focusListener);
+    }
+    return trace?.samples ?? [];
+  }) as Array<{
+    state: string | null;
+    visualState: string | null;
+    headingFocused: boolean;
+    rowIds: string[];
+    overlay: null | {
+      ariaHidden: string | null;
+      pointerEvents: string;
+      durationMs: number;
+      clones: Array<{
+        itemId: string;
+        source: { x: number; y: number; width: number; height: number };
+        target: { x: number; y: number; width: number; height: number };
+        endMs: number;
+        tabIndex: string | null;
+        pointerEvents: string;
+      }>;
+    };
+  }>;
+  const semanticT0Index = transitionTrace.findIndex((sample) => (
+    sample.headingFocused
+    && JSON.stringify(sample.rowIds) === JSON.stringify(expectedItemIds)
+  ));
+  const playingIndex = transitionTrace.findIndex((sample) => (
+    sample.state === 'playing'
+    && sample.visualState === 'landing'
+    && sample.overlay !== null
+  ));
+  if (semanticT0Index < 0 || playingIndex < 0 || semanticT0Index > playingIndex) {
     throw new Error(
-      `Production App coordinator did not reach ready: ${
-        await page.locator('.app-shell').getAttribute(
-          'data-outfit-transition-state',
-        )
+      `Production semantic T0 did not precede validated playback: ${
+        JSON.stringify(transitionTrace)
       }`,
-      { cause: error },
+    );
+  }
+  const playing = transitionTrace[playingIndex]!;
+  const overlay = playing.overlay!;
+  if (
+    overlay.ariaHidden !== 'true'
+    || overlay.pointerEvents !== 'none'
+    || overlay.durationMs !== 1_250
+    || overlay.clones.length !== expectedItemIds.length
+  ) {
+    throw new Error(`Production overlay contract drifted: ${JSON.stringify(overlay)}`);
+  }
+  const targetRectangles = await currentDialog
+    .locator('[data-outfit-row]')
+    .evaluateAll((nodes) => nodes.map((node) => {
+      const rectangle = node.getBoundingClientRect();
+      return {
+        x: rectangle.x,
+        y: rectangle.y,
+        width: rectangle.width,
+        height: rectangle.height,
+      };
+    }));
+  const nearlyEqual = (left: number, right: number) =>
+    Math.abs(left - right) < 0.51;
+  overlay.clones.forEach((clone, index) => {
+    const home = homeSources[index]!;
+    const target = targetRectangles[index]!;
+    if (
+      clone.itemId !== expectedItemIds[index]
+      || clone.tabIndex !== null
+      || clone.pointerEvents !== 'none'
+      || clone.endMs !== 1_250
+      || !nearlyEqual(clone.source.x, home.rectangle.x)
+      || !nearlyEqual(clone.source.y, home.rectangle.y)
+      || !nearlyEqual(clone.source.width, home.rectangle.width)
+      || !nearlyEqual(clone.source.height, home.rectangle.height)
+      || !nearlyEqual(clone.target.x, target.x)
+      || !nearlyEqual(clone.target.y, target.y)
+      || !nearlyEqual(clone.target.width, target.width)
+      || !nearlyEqual(clone.target.height, target.height)
+    ) {
+      throw new Error(
+        `Production exact clone geometry drifted at ${index}: ${
+          JSON.stringify({ clone, home, target })
+        }`,
+      );
+    }
+  });
+  const terminal = transitionTrace.at(-1);
+  if (terminal?.state !== 'settled' || terminal.overlay !== null) {
+    throw new Error(
+      `Production transition did not terminate cleanly: ${JSON.stringify(terminal)}`,
     );
   }
   await page.getByRole('button', { name: 'Lukk dagens antrekk', exact: true }).click();

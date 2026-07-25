@@ -189,6 +189,7 @@ export function OutfitTransitionOverlay({
         <div
           className="outfit-transition-overlay"
           aria-hidden="true"
+          style={{ pointerEvents: 'none' }}
           data-outfit-transition-overlay=""
           data-outfit-transition-duration-ms={model.totalDurationMs}
         >
@@ -196,7 +197,6 @@ export function OutfitTransitionOverlay({
             <motion.div
               key={item.itemId}
               className="outfit-transition-overlay__clone"
-              tabIndex={-1}
               data-outfit-transition-clone={item.itemId}
               data-outfit-transition-end-ms={item.endMs}
               data-outfit-transition-target-x={
@@ -211,7 +211,7 @@ export function OutfitTransitionOverlay({
               data-outfit-transition-target-height={
                 item.sourceStyle.height * item.destination.scaleY
               }
-              style={item.sourceStyle}
+              style={{ ...item.sourceStyle, pointerEvents: 'none' }}
               initial={{ x: 0, y: 0, scaleX: 1, scaleY: 1, opacity: 1 }}
               animate={{
                 x: item.destination.x,
