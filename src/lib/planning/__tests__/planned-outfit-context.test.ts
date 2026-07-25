@@ -9,9 +9,11 @@ import {
   planningLocationFixture,
 } from './planlegg-fixtures.js';
 import {
+  createCurrentOutfitContext,
   createPlannedOutfitContext,
   isOutfitBundleProducerSeedV1,
   isPlannedOutfitContext,
+  matchesOutfitBundleProducerSeedCurrentSourceV1,
   matchesOutfitBundleProducerSeedPlannedSourceV1,
   PLAN_TIME_ZONE,
 } from '../planned-outfit-context.js';
@@ -242,6 +244,130 @@ describe('Planned Outfit exact-context contracts', () => {
       legacy.planningEventId,
       legacy.plannedForIso,
     )).toBe(false);
+  });
+
+  it('separates trusted current and planned seed origins without changing public context bytes', () => {
+    const input = canonicalCompleteInput();
+    const current = createCurrentOutfitContext(structuredClone(input));
+    const planned = createPlannedOutfitContext(structuredClone(input));
+    expect(current.sourceKind).toBe('phase2-outfit-truth');
+    expect(planned.sourceKind).toBe('phase2-outfit-truth');
+    if (
+      current.sourceKind !== 'phase2-outfit-truth'
+      || planned.sourceKind !== 'phase2-outfit-truth'
+    ) {
+      throw new Error('expected exact outfit-truth contexts');
+    }
+
+    expect(JSON.stringify(current)).toBe(JSON.stringify(planned));
+    expect(isPlannedOutfitContext(current)).toBe(true);
+    expect(isPlannedOutfitContext(planned)).toBe(true);
+    expect(Object.keys(current.producerSeed)).toEqual(
+      Object.keys(planned.producerSeed),
+    );
+    expect(matchesOutfitBundleProducerSeedCurrentSourceV1(
+      current.producerSeed,
+    )).toBe(true);
+    expect(matchesOutfitBundleProducerSeedPlannedSourceV1(
+      current.producerSeed,
+      current.planningEventId,
+      current.plannedForIso,
+    )).toBe(false);
+    expect(matchesOutfitBundleProducerSeedCurrentSourceV1(
+      planned.producerSeed,
+    )).toBe(false);
+    expect(matchesOutfitBundleProducerSeedPlannedSourceV1(
+      planned.producerSeed,
+      planned.planningEventId,
+      planned.plannedForIso,
+    )).toBe(true);
+
+    expect(current.planningEventId).toMatch(/^planning-event-/u);
+    expect(current.access.capability).toBe('future_plan');
+    expect(matchesOutfitBundleProducerSeedCurrentSourceV1(
+      current.producerSeed,
+    )).toBe(true);
+
+    const misleadingPlannedInput = canonicalCompleteInput();
+    misleadingPlannedInput.planningEventId = 'current-event-misleading';
+    misleadingPlannedInput.transitionContextId = 'current-transition-misleading';
+    const misleadingPlanned = createPlannedOutfitContext(
+      misleadingPlannedInput,
+    );
+    expect(misleadingPlanned.sourceKind).toBe('phase2-outfit-truth');
+    if (misleadingPlanned.sourceKind !== 'phase2-outfit-truth') {
+      throw new Error('expected exact planned context');
+    }
+    expect(matchesOutfitBundleProducerSeedPlannedSourceV1(
+      misleadingPlanned.producerSeed,
+      misleadingPlanned.planningEventId,
+      misleadingPlanned.plannedForIso,
+    )).toBe(true);
+    expect(matchesOutfitBundleProducerSeedCurrentSourceV1(
+      misleadingPlanned.producerSeed,
+    )).toBe(false);
+
+    for (const injected of [
+      { sourceKind: 'current' },
+      { producerSeedOrigin: 'planned' },
+      { producerSeedSource: 'planned' },
+    ]) {
+      expect(() => createCurrentOutfitContext({
+        ...canonicalCompleteInput(),
+        ...injected,
+      })).toThrow(/PlannedOutfitContext/u);
+      expect(() => createPlannedOutfitContext({
+        ...canonicalCompleteInput(),
+        ...injected,
+      })).toThrow(/PlannedOutfitContext/u);
+    }
+  });
+
+  it('rejects copies and hostile values through both origin matchers', () => {
+    const current = createCurrentOutfitContext(canonicalCompleteInput());
+    expect(current.sourceKind).toBe('phase2-outfit-truth');
+    if (current.sourceKind !== 'phase2-outfit-truth') {
+      throw new Error('expected exact current context');
+    }
+    const asserted = structuredClone(current.producerSeed);
+    const frozen = Object.freeze({ ...current.producerSeed });
+    const hostile = new Proxy(current.producerSeed, {
+      ownKeys() {
+        throw new Error('hostile ownKeys');
+      },
+      getPrototypeOf() {
+        throw new Error('hostile getPrototypeOf');
+      },
+    });
+    for (const value of [asserted, frozen, hostile]) {
+      expect(() => matchesOutfitBundleProducerSeedCurrentSourceV1(
+        value,
+      )).not.toThrow();
+      expect(matchesOutfitBundleProducerSeedCurrentSourceV1(value)).toBe(false);
+      expect(matchesOutfitBundleProducerSeedPlannedSourceV1(
+        value,
+        current.planningEventId,
+        current.plannedForIso,
+      )).toBe(false);
+    }
+  });
+
+  it('keeps Hjem on the current constructor and Uke on the planned constructor', async () => {
+    const [home, week] = await Promise.all([
+      import('../../../screens/HjemScreen.tsx?raw') as Promise<{ default: string }>,
+      import('../../../screens/UkeScreen.tsx?raw') as Promise<{ default: string }>,
+    ]);
+
+    expect(home.default).toMatch(/\bcreateCurrentOutfitContext\s*\(/u);
+    expect(home.default).not.toMatch(/\bcreatePlannedOutfitContext\s*\(/u);
+    expect(week.default).toMatch(/\bcreatePlannedOutfitContext\s*\(/u);
+    expect(week.default).not.toMatch(/\bcreateCurrentOutfitContext\s*\(/u);
+    expect(home.default).not.toMatch(
+      /(?:sourceKind|producerSeedOrigin|producerSeedSource)\s*:/u,
+    );
+    expect(week.default).not.toMatch(
+      /(?:sourceKind|producerSeedOrigin|producerSeedSource)\s*:/u,
+    );
   });
 
   it('owns one complete immutable Phase-2 producer seed and derives its projection', () => {
