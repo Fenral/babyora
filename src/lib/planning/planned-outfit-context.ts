@@ -7,6 +7,7 @@ export const PLAN_TIME_ZONE = 'Europe/Oslo' as const;
 
 const PLANNED_CONTEXT_SCHEMA_VERSION = 1 as const;
 const OUTFIT_BUNDLE_PRODUCER_SEED_VERSION = 1 as const;
+const MISSING_WEATHER_SYMBOL_CODE = 'unknown' as const;
 const ownedPlannedContexts = new WeakSet<object>();
 const ownedOutfitBundleProducerSeeds = new WeakSet<object>();
 type OutfitBundleProducerSeedSource =
@@ -574,7 +575,11 @@ function canonicalInput(input: unknown): CanonicalPlannedOutfitContextInput {
     || sourceInput.weather.feelsLikeC !== common.weather.feelsLikeC
     || sourceInput.weather.windMs !== common.weather.windMs
     || sourceInput.weather.precipMmH !== common.weather.precipMmH
-    || sourceInput.weather.symbolCode !== common.weather.symbolCode
+    || (
+      Object.hasOwn(sourceInput.weather, 'symbolCode')
+        ? sourceInput.weather.symbolCode !== common.weather.symbolCode
+        : common.weather.symbolCode !== MISSING_WEATHER_SYMBOL_CODE
+    )
   ) {
     fail('producerSeed', 'weather must agree with context');
   }

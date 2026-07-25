@@ -211,6 +211,17 @@ function canonicalCompleteInput(route: CanonicalFixtureRoute = 'planned') {
   return refreshCanonicalTransition(input, route);
 }
 
+function canonicalInputWithoutWeatherSymbol(
+  route: CanonicalFixtureRoute,
+) {
+  const input = canonicalCompleteInput(route);
+  delete (
+    input.recommendInput.weather as unknown as { symbolCode?: string }
+  ).symbolCode;
+  input.weather.symbolCode = 'unknown';
+  return refreshCanonicalTransition(input, route);
+}
+
 describe('Planned Outfit exact-context contracts', () => {
   it('authenticates only the exact internally registered producer seed', () => {
     const context = createPlannedOutfitContext(canonicalCompleteInput());
@@ -497,6 +508,100 @@ describe('Planned Outfit exact-context contracts', () => {
     refreshCanonicalTransition(staleCurrent, 'current');
     expect(() => createCurrentOutfitContext(staleCurrent)).not.toThrow();
   });
+
+  it.each([
+    'planned',
+    'current',
+  ] as const)(
+    'preserves an omitted source weather symbol through the %s factory',
+    (route) => {
+      const input = canonicalInputWithoutWeatherSymbol(route);
+      expect(input.transitionContextId).toBe(
+        canonicalRawTransition(input, route),
+      );
+      expect(Object.hasOwn(
+        input.recommendInput.weather,
+        'symbolCode',
+      )).toBe(false);
+      const create = route === 'current'
+        ? createCurrentOutfitContext
+        : createPlannedOutfitContext;
+      const context = create(structuredClone(input));
+      const same = create(structuredClone(input));
+      expect(context.sourceKind).toBe('phase2-outfit-truth');
+      expect(same.sourceKind).toBe('phase2-outfit-truth');
+      if (
+        context.sourceKind !== 'phase2-outfit-truth'
+        || same.sourceKind !== 'phase2-outfit-truth'
+      ) {
+        throw new Error('expected exact outfit-truth contexts');
+      }
+
+      expect(JSON.stringify(same)).toBe(JSON.stringify(context));
+      expect(context.weather.symbolCode).toBe('unknown');
+      expect(context.producerSeed.input).toEqual(input.recommendInput);
+      expect(Object.hasOwn(
+        context.producerSeed.input.weather,
+        'symbolCode',
+      )).toBe(false);
+      expect(isPlannedOutfitContext(context)).toBe(true);
+      expect(isOutfitBundleProducerSeedV1(context.producerSeed)).toBe(true);
+      expect(context.producerSeed.transitionContextId).toBe(
+        context.transitionContextId,
+      );
+      expect(matchesOutfitBundleProducerSeedCurrentSourceV1(
+        context.producerSeed,
+      )).toBe(route === 'current');
+      expect(matchesOutfitBundleProducerSeedPlannedSourceV1(
+        context.producerSeed,
+        context.planningEventId,
+        context.plannedForIso,
+      )).toBe(route === 'planned');
+      const truth = createOutfitTruthSnapshot({
+        transitionContextId: context.producerSeed.transitionContextId,
+        input: context.producerSeed.input,
+        finalizedRecommendation:
+          context.producerSeed.finalizedRecommendation as Recommendation,
+        pose: 'sitting',
+      });
+      expect(truth.kind).toBe('supported');
+      assertRecursivelyFrozen(context);
+    },
+  );
+
+  it.each([
+    'planned',
+    'current',
+  ] as const)(
+    'rejects a non-neutral context fallback when the %s source symbol is absent',
+    (route) => {
+      const input = canonicalInputWithoutWeatherSymbol(route);
+      input.weather.symbolCode = 'clearsky_day';
+      refreshCanonicalTransition(input, route);
+      const create = route === 'current'
+        ? createCurrentOutfitContext
+        : createPlannedOutfitContext;
+
+      expect(() => create(input)).toThrow(/PlannedOutfitContext/u);
+    },
+  );
+
+  it.each([
+    'planned',
+    'current',
+  ] as const)(
+    'keeps byte-exact context agreement when the %s source owns its symbol',
+    (route) => {
+      const input = canonicalCompleteInput(route);
+      input.weather.symbolCode = 'cloudy';
+      refreshCanonicalTransition(input, route);
+      const create = route === 'current'
+        ? createCurrentOutfitContext
+        : createPlannedOutfitContext;
+
+      expect(() => create(input)).toThrow(/PlannedOutfitContext/u);
+    },
+  );
 
   it('binds canonical planned ownership to the exact interval while preserving recommendation identity', () => {
     const firstInput = canonicalCompleteInput();
@@ -850,12 +955,15 @@ describe('Planned Outfit exact-context contracts', () => {
       symbolCode: 'cloudy',
       uvIndex: 0,
     };
+    delete (
+      source.recommendInput.weather as unknown as { symbolCode?: string }
+    ).symbolCode;
     source.weather = {
       feelsLikeC: -30,
       tempC: -30,
       windMs: 8,
       precipMmH: 0,
-      symbolCode: 'cloudy',
+      symbolCode: 'unknown',
     };
     source.recommendInput.child = { ageMonths: 0, canRoll: false };
     source.child.ageMonths = 0;
@@ -875,6 +983,8 @@ describe('Planned Outfit exact-context contracts', () => {
     expect(context.sourceKind).toBe('phase2-outfit-truth');
     if (context.sourceKind !== 'phase2-outfit-truth') throw new Error('expected Phase-2 context');
     expect(context.producerSeed.input).toEqual(source.recommendInput);
+    expect(Object.hasOwn(context.producerSeed.input.weather, 'symbolCode')).toBe(false);
+    expect(context.weather.symbolCode).toBe('unknown');
     expect(context.producerSeed.finalizedRecommendation).toEqual(source.finalizedRecommendation);
     expect(context.producerSeed.recommendationId).toMatch(/^outfit-recommendation-v1:[0-9a-f]{16}$/u);
     expect(context.producerSeed.recommendationFingerprint).toMatch(
