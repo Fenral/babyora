@@ -589,7 +589,10 @@ export default function App(): ReactElement {
   }
 
   return (
-    <div className="app-shell">
+    <div
+      className="app-shell"
+      data-outfit-transition-state={outfitTransition.state.status}
+    >
       <a href="#main" className="skip-link">Hopp til hovedinnhold</a>
       <main id="main" tabIndex={-1} ref={mainRef}>
         <Suspense fallback={<RouteSkeleton />}>

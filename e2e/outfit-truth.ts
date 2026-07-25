@@ -1,4 +1,8 @@
-import { spawn, type ChildProcess } from 'node:child_process';
+import {
+  spawn,
+  spawnSync,
+  type ChildProcess,
+} from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -13,7 +17,7 @@ const FIXTURE_PATH = '/e2e/fixtures/outfit-truth.html';
 const SUPPORTED_CASES = Object.freeze(['component-matrix', 'production-app-routes'] as const);
 type HarnessCase = typeof SUPPORTED_CASES[number];
 type ExpectedFlag = boolean | undefined;
-const PRODUCTION_ROUTE_NOW = new Date('2026-02-12T08:00:00.000Z');
+const PRODUCTION_ROUTE_NOW = new Date('2026-02-12T12:00:00.000Z');
 
 function deterministicProductionForecast(): unknown {
   const start = Date.parse('2026-02-11T23:00:00.000Z');
@@ -37,7 +41,7 @@ function deterministicProductionForecast(): unknown {
             details: {
               air_temperature: (() => {
                 const localHour = (new Date(start + index * 60 * 60 * 1000).getUTCHours() + 1) % 24;
-                return localHour < 8 ? -8 : localHour < 12 ? 1 : localHour < 16 ? 15 : -3;
+                return localHour < 8 ? -8 : localHour < 12 ? 1 : localHour < 16 ? 28 : -3;
               })(),
               wind_speed: 2,
               wind_from_direction: 180,
@@ -407,6 +411,71 @@ async function assertProductionRoutes(page: Page, expectedFlag: ExpectedFlag): P
   const homeAction = page.locator('#hjem-current-outfit-trigger');
   await homeAction.waitFor({ state: 'visible', timeout: 10_000 });
   if (await homeAction.count() !== 1) throw new Error('Production Hjem outfit action is missing');
+  const strollerActivity = page.getByRole('button', {
+    name: 'I vogn',
+    exact: true,
+  });
+  await strollerActivity.click();
+  if (await strollerActivity.getAttribute('aria-pressed') !== 'true') {
+    throw new Error('Production Hjem did not activate the eligible stroller context');
+  }
+  const productionHomeSources = page.locator(
+    '[data-outfit-transition-source]',
+  );
+  try {
+    await productionHomeSources.first().waitFor({
+      state: 'visible',
+      timeout: 10_000,
+    });
+  } catch (error) {
+    throw new Error(
+      `Production Hjem did not reach a source-eligible truth cell: ${
+        JSON.stringify(await page.evaluate(() => {
+          const action = document.getElementById(
+            'hjem-current-outfit-trigger',
+          );
+          return {
+            actionDisabled: action instanceof HTMLButtonElement
+              ? action.disabled
+              : null,
+            sourceCount: document.querySelectorAll(
+              '[data-outfit-transition-source]',
+            ).length,
+          };
+        }))
+      }`,
+      { cause: error },
+    );
+  }
+  const homeSources = await productionHomeSources
+    .evaluateAll((nodes) => nodes.map((node) => {
+      const element = node as HTMLElement;
+      const rectangle = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return {
+        itemId: element.dataset.outfitTransitionSource ?? '',
+        label: element.textContent?.trim() ?? '',
+        visible: (
+          rectangle.width > 0
+          && rectangle.height > 0
+          && style.display !== 'none'
+          && style.visibility !== 'hidden'
+          && Number(style.opacity) > 0
+        ),
+      };
+    }));
+  if (
+    homeSources.length === 0
+    || homeSources.some(({ itemId, label, visible }) => (
+      itemId.length === 0 || label.length === 0 || !visible
+    ))
+  ) {
+    throw new Error('Production Hjem lacks truthful visible transition sources');
+  }
+  const expectedItemIds = homeSources.map(({ itemId }) => itemId);
+  if (new Set(expectedItemIds).size !== expectedItemIds.length) {
+    throw new Error('Production Hjem transition source IDs are not unique');
+  }
   await homeAction.waitFor({ state: 'visible', timeout: 10_000 });
   await homeAction.click();
   const currentDialog = page.getByRole('dialog', { name: 'Lillian', exact: true }).filter({
@@ -414,11 +483,56 @@ async function assertProductionRoutes(page: Page, expectedFlag: ExpectedFlag): P
   });
   await currentDialog.waitFor({ state: 'visible', timeout: 10_000 });
   if (await currentDialog.locator('.outfit-truth-panel').count() !== 1) throw new Error('Current production dialog did not mount real panel');
+  const currentHeading = currentDialog.getByRole('heading', {
+    name: 'Lillian',
+    exact: true,
+  });
+  if (!await currentHeading.evaluate(
+    (element) => document.activeElement === element,
+  )) {
+    throw new Error('Current production dialog did not establish semantic T0 focus');
+  }
+  const targetItemIds = await currentDialog
+    .locator('[data-outfit-row]')
+    .evaluateAll((nodes) => nodes.map(
+      (node) => (node as HTMLElement).dataset.outfitRow ?? '',
+    ));
+  if (JSON.stringify(targetItemIds) !== JSON.stringify(expectedItemIds)) {
+    throw new Error('Production Home/Outfit item order diverged');
+  }
+  try {
+    await page.waitForFunction(
+      () => (
+        document.querySelector<HTMLElement>('.app-shell')
+          ?.dataset.outfitTransitionState === 'ready'
+      ),
+      undefined,
+      { timeout: 10_000 },
+    );
+  } catch (error) {
+    throw new Error(
+      `Production App coordinator did not reach ready: ${
+        await page.locator('.app-shell').getAttribute(
+          'data-outfit-transition-state',
+        )
+      }`,
+      { cause: error },
+    );
+  }
   await page.getByRole('button', { name: 'Lukk dagens antrekk', exact: true }).click();
   await currentDialog.waitFor({ state: 'hidden', timeout: 10_000 });
   if (!await homeAction.evaluate((element) => document.activeElement === element)) throw new Error('Current dialog did not restore trigger focus');
   await homeAction.click();
   await currentDialog.waitFor({ state: 'visible', timeout: 10_000 });
+  if (
+    await currentDialog.locator('.outfit-truth-panel').count() !== 1
+    || !await currentDialog.getByRole('heading', {
+      name: 'Lillian',
+      exact: true,
+    }).evaluate((element) => document.activeElement === element)
+  ) {
+    throw new Error('Current production dialog did not remain operable on reopen');
+  }
   await page.getByRole('button', { name: 'Lukk dagens antrekk', exact: true }).click();
   await page.getByRole('navigation').getByRole('button', { name: 'Planlegg', exact: true }).click();
   const disclosure = page.locator('.plan-change-rail__disclosure').first();
@@ -450,7 +564,32 @@ async function main(): Promise<void> {
   let server: ChildProcess | null = null;
   let browser: Browser | null = null;
   try {
-    server = spawn(process.execPath, [VITE_CLI, '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], {
+    const productionRoute = caseName === 'production-app-routes';
+    if (productionRoute) {
+      const build = spawnSync(process.execPath, [VITE_CLI, 'build'], {
+        cwd: process.cwd(),
+        shell: false,
+        windowsHide: true,
+        encoding: 'utf8',
+      });
+      if (build.status !== 0 || build.error !== undefined) {
+        throw new Error(
+          `Production App build failed: ${
+            `${build.stdout ?? ''}${build.stderr ?? ''}`.slice(-8_000)
+          }`,
+          { cause: build.error },
+        );
+      }
+    }
+    server = spawn(process.execPath, [
+      VITE_CLI,
+      ...(productionRoute ? ['preview'] : []),
+      '--host',
+      '127.0.0.1',
+      '--port',
+      String(PORT),
+      '--strictPort',
+    ], {
       cwd: process.cwd(), shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
     });
     const capture = (chunk: Buffer) => { output.push(chunk.toString()); if (output.join('').length > 12_000) output.splice(0, output.length - 12); };
