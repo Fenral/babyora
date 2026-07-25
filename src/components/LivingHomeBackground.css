@@ -1,0 +1,212 @@
+.ba-living-home-background {
+  --home-atmosphere-base: var(--bg-canvas);
+  --home-atmosphere-glow: var(--avatar-glow, var(--surface));
+  --home-atmosphere-accent: var(--accent-temp);
+  --home-atmosphere-opacity: 32%;
+
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  contain: paint;
+  isolation: isolate;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 92% 72% at 50% 38%,
+      color-mix(in srgb, var(--home-atmosphere-glow) 42%, transparent) 0%,
+      transparent 72%
+    ),
+    linear-gradient(160deg, var(--home-atmosphere-base) 0%, var(--bg-canvas) 100%);
+}
+
+.ba-living-home-background[data-palette='cold'] {
+  --home-atmosphere-base: var(--layer-base-kald, var(--bg-canvas));
+  --home-atmosphere-glow: var(--layer-glow-kald, var(--avatar-glow));
+  --home-atmosphere-accent: var(--layer-bg-kald, var(--accent-temp));
+}
+
+.ba-living-home-background[data-palette='mild'] {
+  --home-atmosphere-base: var(--layer-base-mild, var(--bg-canvas));
+  --home-atmosphere-glow: var(--layer-glow-mild, var(--avatar-glow));
+  --home-atmosphere-accent: var(--layer-bg-mild, var(--accent-temp));
+}
+
+.ba-living-home-background[data-palette='warm'] {
+  --home-atmosphere-base: var(--layer-base-varm, var(--bg-canvas));
+  --home-atmosphere-glow: var(--layer-glow-varm, var(--avatar-glow));
+  --home-atmosphere-accent: var(--layer-bg-varm, var(--accent-temp));
+}
+
+.ba-living-home-background[data-intensity='quiet'] {
+  --home-atmosphere-opacity: 20%;
+}
+
+.ba-living-home-background[data-intensity='present'] {
+  --home-atmosphere-opacity: 32%;
+}
+
+.ba-living-home-background[data-intensity='deep'] {
+  --home-atmosphere-opacity: 44%;
+}
+
+.ba-living-home-background__layer {
+  position: absolute;
+  inset: 0;
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  animation-name: ba-living-home-settle;
+  animation-duration: 180ms;
+  animation-timing-function: var(--ease-out);
+  animation-iteration-count: 1;
+  animation-fill-mode: both;
+}
+
+.ba-living-home-background__layer[data-home-atmosphere-layer='wash'] {
+  background:
+    radial-gradient(
+      ellipse 82% 62% at 50% 42%,
+      color-mix(
+          in srgb,
+          var(--home-atmosphere-glow) var(--home-atmosphere-opacity),
+          transparent
+        )
+        0%,
+      transparent 74%
+    ),
+    linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--home-atmosphere-accent) 18%, transparent) 0%,
+      transparent 58%
+    );
+}
+
+.ba-living-home-background__layer[data-home-atmosphere-layer='condition'] {
+  animation-delay: 30ms;
+}
+
+.ba-living-home-background__layer[data-variant='sun'] {
+  background: radial-gradient(
+    circle at 78% 14%,
+    color-mix(in srgb, var(--home-atmosphere-accent) 30%, transparent) 0%,
+    transparent 54%
+  );
+}
+
+.ba-living-home-background__layer[data-variant='cloud'] {
+  background:
+    radial-gradient(
+      ellipse 68% 30% at 36% 16%,
+      color-mix(in srgb, var(--surface) 24%, transparent) 0%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 58% 26% at 74% 28%,
+      color-mix(in srgb, var(--surface) 16%, transparent) 0%,
+      transparent 70%
+    );
+}
+
+.ba-living-home-background__layer[data-variant='rain'] {
+  background: linear-gradient(
+    172deg,
+    color-mix(in srgb, var(--home-atmosphere-accent) 22%, transparent) 0%,
+    transparent 62%
+  );
+}
+
+.ba-living-home-background__layer[data-variant='snow'] {
+  background: radial-gradient(
+    ellipse 86% 54% at 50% 18%,
+    color-mix(in srgb, var(--surface-pure) 30%, transparent) 0%,
+    transparent 72%
+  );
+}
+
+.ba-living-home-background__layer[data-variant='fog'] {
+  background: linear-gradient(
+    180deg,
+    transparent 8%,
+    color-mix(in srgb, var(--surface) 26%, transparent) 46%,
+    transparent 78%
+  );
+}
+
+.ba-living-home-background__layer[data-variant='storm'] {
+  background: radial-gradient(
+    ellipse 94% 52% at 50% 10%,
+    color-mix(in srgb, var(--ink-700) 26%, transparent) 0%,
+    transparent 72%
+  );
+}
+
+.ba-living-home-background__layer[data-variant='unknown'] {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 10%, transparent) 0%,
+    transparent 64%
+  );
+}
+
+.ba-living-home-background__layer[data-home-atmosphere-layer='lighting'] {
+  animation-delay: 60ms;
+}
+
+.ba-living-home-background__layer[data-variant='day'] {
+  background: radial-gradient(
+    circle at 76% 12%,
+    color-mix(in srgb, var(--surface-pure) 24%, transparent) 0%,
+    transparent 48%
+  );
+}
+
+.ba-living-home-background__layer[data-variant='night'] {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ink-900) 12%, transparent) 0%,
+    transparent 58%
+  );
+  mix-blend-mode: multiply;
+}
+
+.ba-living-home-background__layer[data-variant='polar-twilight'] {
+  background: radial-gradient(
+    ellipse 92% 54% at 50% 14%,
+    color-mix(in srgb, var(--accent-temp) 24%, transparent) 0%,
+    transparent 70%
+  );
+}
+
+@keyframes ba-living-home-settle {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 4px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.ba-living-home-background[data-motion='reduced'] .ba-living-home-background__layer {
+  animation: none;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ba-living-home-background__layer {
+    animation: none;
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .ba-living-home-background {
+    background: Canvas;
+  }
+
+  .ba-living-home-background__layer {
+    display: none;
+  }
+}
