@@ -55,6 +55,22 @@ function completeRecommendInput(
   };
 }
 
+function trackedElevenRecommendInput(): RecommendInput {
+  return completeRecommendInput({
+    activity: 'vogn',
+    weather: {
+      feelsLikeC: -30,
+      tempC: -30,
+      windMs: 8,
+      precipMmH: 0,
+      symbolCode: 'cloudy',
+    },
+    child: { ageMonths: 0 },
+    childCalibration: 0,
+    vognMode: 'awake',
+  });
+}
+
 function recommendationProjection(
   recommendation: Recommendation,
 ): Readonly<{
@@ -544,70 +560,125 @@ describe('produceOutfitBundle', () => {
     );
   });
 
-  it('preserves the tracked eleven-garment result as complete list-only truth', () => {
-    const recommendInput = completeRecommendInput({
-      activity: 'vogn',
-      weather: {
-        feelsLikeC: -30,
-        tempC: -30,
-        windMs: 8,
-        precipMmH: 0,
-        symbolCode: 'cloudy',
+  it.each([
+    [
+      'the complete optional pair is valid',
+      'complete',
+      (_recommendation: Recommendation) => {},
+    ],
+    [
+      'both optional fields are absent',
+      'both-absent',
+      (recommendation: Recommendation) => {
+        delete recommendation.safetyFlags;
+        delete recommendation.severity;
       },
-      child: { ageMonths: 0 },
-      childCalibration: 0,
-      vognMode: 'awake',
-    });
-    const context = exactContext({
-      identity: 'tracked-eleven',
-      recommendInput,
-    });
+    ],
+    [
+      'only safetyFlags is absent',
+      'safety-flags-absent',
+      (recommendation: Recommendation) => {
+        delete recommendation.safetyFlags;
+      },
+    ],
+    [
+      'only severity is absent',
+      'severity-absent',
+      (recommendation: Recommendation) => {
+        delete recommendation.severity;
+      },
+    ],
+  ] as const)(
+    'preserves the tracked eleven-garment result as complete list-only truth when %s',
+    (_name, identity, mutateFinalizerData) => {
+      const recommendInput = trackedElevenRecommendInput();
+      const finalizedRecommendation = recommend(recommendInput);
+      mutateFinalizerData(finalizedRecommendation);
+      const context = exactContext({
+        identity: `tracked-eleven-${identity}`,
+        recommendInput,
+        finalizedRecommendation,
+      });
 
-    const result = produceOutfitBundle({
+      const result = produceOutfitBundle({
+        seed: context.producerSeed,
+        source: plannedSource(context),
+      });
+
+      expect(result.kind).toBe('unsupported-cardinality');
+      expect(Object.keys(result)).toEqual([
+        'kind',
+        'bundleVersion',
+        'source',
+        'weather',
+        'truth',
+      ]);
+      if (result.kind !== 'unsupported-cardinality') return;
+      expect(result.truth.reason).toBe(
+        'semantic-garment-count-outside-1-10',
+      );
+      expect(result.truth.orderedGarments.map(
+        (garment) => garment.sourceLabel,
+      )).toEqual([
+        'to ullsett oppå hverandre',
+        'tykke ullstrømper',
+        'ullsokker',
+        'ull-jakke',
+        'ull-bukse',
+        'ekstra ull-lag',
+        'isolert vinterkjøredress',
+        'balaklava',
+        'votter dun',
+        'halsedisse',
+        'vindvotter (skall)',
+      ]);
+      expect(result.truth.equipment.map(
+        (equipment) => equipment.sourceLabel,
+      )).toEqual([
+        'varmepose dun',
+        'saueskinn i vogn',
+        'ansiktskrem',
+        'vognpose',
+      ]);
+      expect('base' in result).toBe(false);
+      expect('options' in result).toBe(false);
+      expect('snapshot' in result.truth).toBe(false);
+      expect('avatar' in result.truth).toBe(false);
+      assertRecursivelyFrozen(result);
+    },
+  );
+
+  it('rejects an inconsistent complete safety pair for tracked eleven-garment truth', () => {
+    const recommendInput = trackedElevenRecommendInput();
+    const finalizedRecommendation = recommend(recommendInput);
+    expect(finalizedRecommendation.safetyFlags).toBeDefined();
+    expect(finalizedRecommendation.severity).toBeDefined();
+    finalizedRecommendation.severity =
+      finalizedRecommendation.severity === 'CRITICAL'
+        ? 'NONE'
+        : 'CRITICAL';
+    const context = exactContext({
+      identity: 'tracked-eleven-inconsistent-safety',
+      recommendInput,
+      finalizedRecommendation,
+    });
+    const directTruth = createOutfitTruthSnapshot({
+      transitionContextId: context.producerSeed.transitionContextId,
+      input: context.producerSeed.input,
+      finalizedRecommendation:
+        context.producerSeed.finalizedRecommendation as Recommendation,
+      pose: 'sitting',
+    });
+    expect(directTruth.kind).toBe('unsupported-cardinality');
+
+    expect(produceOutfitBundle({
       seed: context.producerSeed,
       source: plannedSource(context),
+    })).toEqual({
+      kind: 'unavailable',
+      bundleVersion: 1,
+      reason: 'truth-build-failed',
     });
-
-    expect(result.kind).toBe('unsupported-cardinality');
-    expect(Object.keys(result)).toEqual([
-      'kind',
-      'bundleVersion',
-      'source',
-      'weather',
-      'truth',
-    ]);
-    if (result.kind !== 'unsupported-cardinality') return;
-    expect(result.truth.reason).toBe(
-      'semantic-garment-count-outside-1-10',
-    );
-    expect(result.truth.orderedGarments.map(
-      (garment) => garment.sourceLabel,
-    )).toEqual([
-      'to ullsett oppå hverandre',
-      'tykke ullstrømper',
-      'ullsokker',
-      'ull-jakke',
-      'ull-bukse',
-      'ekstra ull-lag',
-      'isolert vinterkjøredress',
-      'balaklava',
-      'votter dun',
-      'halsedisse',
-      'vindvotter (skall)',
-    ]);
-    expect(result.truth.equipment.map(
-      (equipment) => equipment.sourceLabel,
-    )).toEqual([
-      'varmepose dun',
-      'saueskinn i vogn',
-      'ansiktskrem',
-      'vognpose',
-    ]);
-    expect('base' in result).toBe(false);
-    expect('options' in result).toBe(false);
-    expect('snapshot' in result.truth).toBe(false);
-    expect('avatar' in result.truth).toBe(false);
-    assertRecursivelyFrozen(result);
   });
 
   it.each([
@@ -984,6 +1055,7 @@ describe('produceOutfitBundle', () => {
       '../met-no/types.js',
       '../planning/planned-outfit-context.js',
       './alternative-options.js',
+      './finalized-outfit-swap.js',
       './outfit-truth.js',
     ]);
     expect(source).not.toMatch(/\brecommend\s*\(/u);

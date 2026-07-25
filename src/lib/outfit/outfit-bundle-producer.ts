@@ -10,6 +10,7 @@ import {
   isOutfitAlternativeOption,
   type OutfitAlternativeOptionV1,
 } from './alternative-options.js';
+import { hasCompleteFinalizedSafetyData } from './finalized-outfit-swap.js';
 import {
   createOutfitTruthSnapshot,
   isOutfitTruthSnapshot,
@@ -291,6 +292,21 @@ function produceOutfitBundleUnchecked(
     finalizedRecommendation,
     pose: 'sitting' as const,
   };
+  const hasSafetyFlags = Object.hasOwn(
+    finalizedRecommendation,
+    'safetyFlags',
+  );
+  const hasSeverity = Object.hasOwn(
+    finalizedRecommendation,
+    'severity',
+  );
+  if (
+    hasSafetyFlags
+    && hasSeverity
+    && !hasCompleteFinalizedSafetyData(finalizedRecommendation)
+  ) {
+    return unavailable('truth-build-failed');
+  }
   let truth: OutfitTruthBuildResultV1;
   try {
     truth = createOutfitTruthSnapshot(truthArgs);
@@ -321,8 +337,8 @@ function produceOutfitBundleUnchecked(
     return unavailable('input-result-mismatch');
   }
   if (
-    !Object.hasOwn(finalizedRecommendation, 'safetyFlags')
-    || !Object.hasOwn(finalizedRecommendation, 'severity')
+    !hasSafetyFlags
+    || !hasSeverity
   ) {
     return freezeDeep({
       kind: 'supported' as const,
