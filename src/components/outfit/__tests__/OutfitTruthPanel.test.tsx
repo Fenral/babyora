@@ -1,16 +1,32 @@
 import { readFileSync } from 'node:fs';
+import type { ComponentType } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import manifestJson from '../../../../public/avatars/verified/index.json?raw';
 import { recommend } from '../../../lib/wool-layers/recommend.js';
 import { createOutfitTruthSnapshot } from '../../../lib/outfit/outfit-truth.js';
 import { bandForTemp } from '../../../lib/wool-layers/tables.js';
 import { buildOutfitAlternativeOptions } from '../../../lib/outfit/alternative-options.js';
 import type { OutfitBundleProducerResult } from '../../../lib/outfit/outfit-bundle-producer.js';
-import { OutfitTruthPanel, resolveSelectedAvatarSnapshot } from '../OutfitTruthPanel.js';
+import { OutfitTruthPanel } from '../OutfitTruthPanel.js';
 import { VerifiedAvatarComposite } from '../VerifiedAvatarComposite.js';
 import { OUTFIT_TRUTH_V1_AVAILABLE } from '../../../lib/outfit/feature-flags.js';
 import { useOutfitSelectionStore } from '../../../state/outfit-selection-store.js';
+
+vi.mock('../../../state/outfit-selection-store.js', async (importOriginal) => {
+  const actual = await importOriginal<
+    typeof import('../../../state/outfit-selection-store.js')
+  >();
+  const liveServerStore = Object.assign(
+    <T,>(selector: (state: ReturnType<typeof actual.useOutfitSelectionStore.getState>) => T): T =>
+      selector(actual.useOutfitSelectionStore.getState()),
+    actual.useOutfitSelectionStore,
+  ) as typeof actual.useOutfitSelectionStore;
+  return {
+    ...actual,
+    useOutfitSelectionStore: liveServerStore,
+  };
+});
 
 type ManifestRow = Readonly<{
   name: string;
@@ -105,13 +121,13 @@ function unsupportedBundle(): OutfitBundleProducerResult {
       kind: 'unsupported-cardinality' as const,
       reason: 'semantic-garment-count-outside-1-10' as const,
       orderedGarments: Object.freeze(Array.from({ length: 11 }, (_, index) => Object.freeze({
-        itemId: `item-${index + 1}` as never,
+        itemId: `outfit-item-v1:unsupported-${index + 1}` as never,
         sourceLabel: `Plagg ${index + 1}`,
         label: `Plagg ${index + 1}`,
         order: index + 1,
       }))),
       equipment: Object.freeze([Object.freeze({
-        itemId: 'equipment-1' as never,
+        itemId: 'outfit-item-v1:equipment-1' as never,
         sourceLabel: 'Varmepose',
         label: 'Varmepose',
         catalogGarmentId: 'varmepose',
@@ -119,6 +135,16 @@ function unsupportedBundle(): OutfitBundleProducerResult {
       })]),
     }),
   });
+}
+
+function assertUnavailableOnly(html: string): void {
+  expect(html).toContain('Antrekksanbefalingen er ikke tilgjengelig');
+  expect(html).not.toContain('Ta på innerst først');
+  expect(html).not.toContain('data-outfit-map-node=');
+  expect(html).not.toContain('data-outfit-row=');
+  expect(html).not.toContain('Kjenn nakken');
+  expect(html).not.toContain('<img');
+  expect(html).not.toContain('data-transition-visual-state=');
 }
 
 function selectableBundle(): Extract<OutfitBundleProducerResult, { kind: 'supported' }> {
@@ -193,6 +219,89 @@ describe('OutfitTruthPanel', () => {
     expect(html).toContain('Antrekksanbefalingen er ikke tilgjengelig');
     expect(html).not.toContain('Ta pÃ¥ innerst fÃ¸rst');
     expect(html).not.toContain('Kjenn nakken');
+    expect(html).not.toContain('data-transition-visual-state=');
+  });
+
+  it('fails closed without throwing for null, accessors, proxies and exact-shape violations', () => {
+    let getterCalls = 0;
+    const accessor = Object.freeze({
+      get kind() {
+        getterCalls += 1;
+        throw new Error('panel must not invoke producer accessors');
+      },
+    });
+    const hostile = new Proxy(Object.freeze({}), {
+      ownKeys() {
+        throw new Error('hostile ownKeys');
+      },
+    });
+    const values = [null, accessor, hostile, Object.freeze({ kind: 'unavailable', bundleVersion: 1, reason: 'invalid-input', extra: true })];
+    for (const value of values) {
+      let html = '';
+      expect(() => {
+        html = renderToStaticMarkup(<OutfitTruthPanel outfitBundle={value as never} />);
+      }).not.toThrow();
+      assertUnavailableOnly(html);
+    }
+    expect(getterCalls).toBe(0);
+  });
+
+  it('rejects forged supported producer metadata before avatar, rows, guide, registration or selection subscription', () => {
+    const valid = supportedBundle();
+    const forged = Object.freeze({
+      ...valid,
+      bundleVersion: 2,
+      source: Object.freeze({ kind: 'current', sourceContextId: '' }),
+    });
+    const html = renderToStaticMarkup(
+      <OutfitTruthPanel
+        outfitBundle={forged as never}
+        registerOutfitRow={() => { throw new Error('must not register'); }}
+        transitionVisualState="landing"
+        onOpenWarmColdGuide={() => { throw new Error('must not guide'); }}
+      />,
+    );
+    assertUnavailableOnly(html);
+  });
+
+  it('rejects forged unsupported order and duplicate IDs instead of presenting arbitrary advice', () => {
+    const valid = unsupportedBundle();
+    if (valid.kind !== 'unsupported-cardinality') throw new Error('fixture mismatch');
+    const badRows = Object.freeze(valid.truth.orderedGarments.map((row, index) => Object.freeze({
+      ...row,
+      itemId: 'outfit-item-v1:duplicate',
+      order: index === 0 ? 99 : row.order,
+    })));
+    const forged = Object.freeze({
+      ...valid,
+      truth: Object.freeze({ ...valid.truth, orderedGarments: badRows }),
+    });
+    assertUnavailableOnly(renderToStaticMarkup(
+      <OutfitTruthPanel outfitBundle={forged as never} transitionVisualState="landing" />,
+    ));
+  });
+
+  it('keeps recovery copy when the optional guide callback is absent but renders no inert action', () => {
+    const html = renderToStaticMarkup(
+      <OutfitTruthPanel outfitBundle={supportedBundle()} onOpenWarmColdGuide={undefined as never} />,
+    );
+    expect(html).toContain('Kjenn nakken');
+    expect(html).toContain('Stikk to fingre under genseren bak i nakken');
+    expect(html).not.toContain('Se varm eller kald-guiden');
+  });
+
+  it('does not expose landing motion eligibility for unsupported or unavailable truth', () => {
+    const unsupported = renderToStaticMarkup(
+      <OutfitTruthPanel outfitBundle={unsupportedBundle()} transitionVisualState="landing" />,
+    );
+    const unavailable = renderToStaticMarkup(
+      <OutfitTruthPanel
+        outfitBundle={Object.freeze({ kind: 'unavailable', bundleVersion: 1, reason: 'invalid-input' }) as never}
+        transitionVisualState="landing"
+      />,
+    );
+    expect(unsupported).not.toContain('data-transition-visual-state=');
+    expect(unavailable).not.toContain('data-transition-visual-state=');
   });
 
   it('uses only exact factory snapshot/avatar references for an image and ignores legacy asset overrides', () => {
@@ -205,6 +314,31 @@ describe('OutfitTruthPanel', () => {
     expect(forged).not.toContain('<img');
     expect(legacy).not.toContain('<img');
     expect(legacy).not.toContain('forged summary');
+  });
+
+  it('returns stable neutral markup for malformed canonical and legacy avatar props without reading nested data', () => {
+    const UnsafeAvatar = VerifiedAvatarComposite as unknown as ComponentType<Record<string, unknown>>;
+    let avatarReads = 0;
+    const malformedSnapshot = Object.freeze({
+      get avatar() {
+        avatarReads += 1;
+        throw new Error('untrusted snapshot avatar must not be read');
+      },
+    });
+    for (const props of [
+      { snapshot: null, avatarTruth: null },
+      { snapshot: malformedSnapshot, avatarTruth: Object.freeze({}) },
+      { stateKey: null, outfitSummary: 'forged', assetOverride: '/forged.png' },
+    ]) {
+      let html = '';
+      expect(() => {
+        html = renderToStaticMarkup(<UnsafeAvatar {...props} />);
+      }).not.toThrow();
+      expect(html).toContain('data-avatar-truth="neutral"');
+      expect(html).not.toContain('<img');
+      expect(html).not.toContain('forged');
+    }
+    expect(avatarReads).toBe(0);
   });
 
   it('renders only the exact trusted asset for every manifest result and leaves hidden inner garments unclaimed', () => {
@@ -243,19 +377,65 @@ describe('OutfitTruthPanel', () => {
     expect(innerAndOuter.avatar.visibleGarmentIds).toHaveLength(2);
   });
 
+  it('keeps hidden middle garments out of the verified composite and canonical neutral diagnostics image-free', () => {
+    const input = {
+      weather: { feelsLikeC: 10, tempC: 10, windMs: 0, precipMmH: 0 },
+      child: { ageMonths: 10 },
+      activity: 'utelek',
+    } as const;
+    const make = (identity: string, items: string[]) => {
+      const result = createOutfitTruthSnapshot({
+        transitionContextId: identity,
+        input,
+        finalizedRecommendation: {
+          activity: input.activity,
+          tempBand: bandForTemp(input.weather.feelsLikeC),
+          layers: [{ category: 'innerst', items }],
+          notes: [],
+          structuredNotes: [],
+          summary: '',
+        },
+        pose: 'standing',
+      });
+      if (result.kind !== 'supported') throw new Error('neutral fixture must be supported');
+      return result.snapshot;
+    };
+    const hiddenMiddle = make('hidden-middle', ['langermet body', 'ull-jakke', 'kjøredress', 'lue m/ ull']);
+    const middle = hiddenMiddle.garments.find((item) => item.catalogGarmentId === 'ull-jakke')!;
+    expect(hiddenMiddle.avatar.visibleGarmentIds).not.toContain(middle.itemId);
+    const verified = renderToStaticMarkup(<VerifiedAvatarComposite snapshot={hiddenMiddle} avatarTruth={hiddenMiddle.avatar} />);
+    expect(verified).toContain('/avatars/verified/std-4-kald.png');
+    expect(verified).not.toContain(middle.label);
+
+    const neutralCases = [
+      make('neutral-unknown', ['ukjent fremtidsplagg']),
+      make('neutral-duplicate', ['lue', 'lue']),
+      make('neutral-rank-tie', ['lue', 'solhatt']),
+      make('neutral-extra-set', ['kjøredress', 'lue m/ ull', 'ullsokker']),
+      make('neutral-missing-set', ['kjøredress']),
+    ];
+    for (const truth of neutralCases) {
+      expect(truth.avatar.verifiedAssetPath).toBeNull();
+      expect(truth.avatar.visibleGarmentIds).toEqual([]);
+      const html = renderToStaticMarkup(<VerifiedAvatarComposite snapshot={truth} avatarTruth={truth.avatar} />);
+      expect(html).toContain('data-avatar-truth="neutral"');
+      expect(html).not.toContain('<img');
+    }
+  });
+
   it('follows only an exact read-only selection session and fails closed for foreign or inconsistent sessions', () => {
     const bundle = selectableBundle();
     const option = bundle.options[0]!;
     try {
       useOutfitSelectionStore.getState().close();
-      expect(resolveSelectedAvatarSnapshot(bundle.base, bundle.options, useOutfitSelectionStore.getState().session)).toBe(bundle.base);
+      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-avatar-snapshot="${bundle.base.snapshotId}"`);
 
       expect(useOutfitSelectionStore.getState().open(bundle.base, bundle.options).ok).toBe(true);
       expect(useOutfitSelectionStore.getState().select(option).ok).toBe(true);
-      expect(resolveSelectedAvatarSnapshot(bundle.base, bundle.options, useOutfitSelectionStore.getState().session)).toBe(option.outcome);
+      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-avatar-snapshot="${option.outcome.snapshotId}"`);
 
       expect(useOutfitSelectionStore.getState().reset().ok).toBe(true);
-      expect(resolveSelectedAvatarSnapshot(bundle.base, bundle.options, useOutfitSelectionStore.getState().session)).toBe(bundle.base);
+      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-avatar-snapshot="${bundle.base.snapshotId}"`);
 
       useOutfitSelectionStore.setState({
         session: Object.freeze({
@@ -267,7 +447,7 @@ describe('OutfitTruthPanel', () => {
           diagnostics: Object.freeze([]),
         }),
       });
-      expect(resolveSelectedAvatarSnapshot(bundle.base, bundle.options, useOutfitSelectionStore.getState().session)).toBe(bundle.base);
+      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-avatar-snapshot="${bundle.base.snapshotId}"`);
 
       useOutfitSelectionStore.setState({
         session: Object.freeze({
@@ -279,7 +459,7 @@ describe('OutfitTruthPanel', () => {
           diagnostics: Object.freeze([]),
         }),
       });
-      expect(resolveSelectedAvatarSnapshot(bundle.base, bundle.options, useOutfitSelectionStore.getState().session)).toBeNull();
+      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).not.toContain('data-avatar-snapshot=');
     } finally {
       useOutfitSelectionStore.getState().close();
     }
@@ -290,6 +470,8 @@ describe('OutfitTruthPanel', () => {
     const avatar = readFileSync(new URL('../VerifiedAvatarComposite.tsx', import.meta.url), 'utf8');
     expect(panel).not.toMatch(/from ['"].*\/(?:App|HjemScreen|UkeScreen|PaakledningScreen|navigation)/u);
     expect(panel).not.toMatch(/\.open\(|\.select\(|\.reset\(|\.close\(/u);
+    expect(panel).not.toContain('eslint-disable-next-line react-refresh/only-export-components');
+    expect(panel).not.toMatch(/export function resolveSelectedAvatarSnapshot/u);
     expect(avatar).not.toMatch(/avatarAssetFor|avatarStateKeyId|verifiedAvatarAsset/u);
   });
 });

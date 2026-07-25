@@ -31,6 +31,38 @@ type LegacyProps = SharedProps & Readonly<{
 
 export type VerifiedAvatarCompositeProps = CanonicalProps | LegacyProps;
 
+function readOwnDataValue(
+  value: unknown,
+  key: string,
+): unknown {
+  try {
+    if (
+      value === null
+      || typeof value !== 'object'
+      || Array.isArray(value)
+    ) {
+      return undefined;
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return (
+      descriptor !== undefined
+      && Object.hasOwn(descriptor, 'value')
+      && descriptor.enumerable === true
+    )
+      ? descriptor.value
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function neutralPoseFromLegacy(value: unknown): OutfitAvatarPose {
+  const pose = readOwnDataValue(value, 'pose');
+  return pose === 'sitting' || pose === 'standing'
+    ? pose
+    : 'standing';
+}
+
 function NeutralAvatar({
   pose,
   decorative,
@@ -66,25 +98,53 @@ function NeutralAvatar({
 }
 
 export function VerifiedAvatarComposite(props: VerifiedAvatarCompositeProps) {
-  const decorative = props.decorative ?? false;
-  const size = props.size ?? 200;
-  if ('stateKey' in props && props.stateKey !== undefined) {
-    return <NeutralAvatar pose={props.stateKey.pose} decorative={decorative} size={size} />;
+  const decorative = readOwnDataValue(props, 'decorative') === true;
+  const rawSize = readOwnDataValue(props, 'size');
+  const size = (
+    typeof rawSize === 'number'
+    && Number.isFinite(rawSize)
+    && rawSize > 0
+  )
+    ? rawSize
+    : 200;
+  const legacyStateKey = readOwnDataValue(props, 'stateKey');
+  if (legacyStateKey !== undefined) {
+    return (
+      <NeutralAvatar
+        pose={neutralPoseFromLegacy(legacyStateKey)}
+        decorative={decorative}
+        size={size}
+      />
+    );
   }
 
-  const snapshot = props.snapshot;
-  const avatarTruth = props.avatarTruth;
-  const neutralPose = snapshot?.avatar.pose ?? 'standing';
+  const snapshot = readOwnDataValue(props, 'snapshot');
+  const avatarTruth = readOwnDataValue(props, 'avatarTruth');
+  if (!isOutfitTruthSnapshot(snapshot)) {
+    return (
+      <NeutralAvatar
+        pose="standing"
+        decorative={decorative}
+        size={size}
+      />
+    );
+  }
   if (
-    snapshot === undefined
-    || avatarTruth === undefined
-    || !isOutfitTruthSnapshot(snapshot)
-    || snapshot.avatar !== avatarTruth
-    || avatarTruth.verifiedAssetPath === null
+    snapshot.avatar !== avatarTruth
+    || snapshot.avatar.verifiedAssetPath === null
   ) {
-    return <NeutralAvatar pose={neutralPose} decorative={decorative} size={size} snapshotId={snapshot?.snapshotId} />;
+    return (
+      <NeutralAvatar
+        pose={snapshot.avatar.pose}
+        decorative={decorative}
+        size={size}
+        snapshotId={snapshot.snapshotId}
+      />
+    );
   }
 
+  const reducedMotion =
+    readOwnDataValue(props, 'reducedMotion') === true;
   return (
     <div
       style={{ width: size, height: size * 1.05, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
@@ -92,10 +152,10 @@ export function VerifiedAvatarComposite(props: VerifiedAvatarCompositeProps) {
       data-avatar-snapshot={snapshot.snapshotId}
     >
       <img
-        src={avatarTruth.verifiedAssetPath}
+        src={snapshot.avatar.verifiedAssetPath}
         alt={decorative ? '' : 'Verifisert antrekksillustrasjon'}
         aria-hidden={decorative || undefined}
-        style={{ maxWidth: '100%', maxHeight: '100%', transition: props.reducedMotion ? 'none' : 'opacity 220ms ease' }}
+        style={{ maxWidth: '100%', maxHeight: '100%', transition: reducedMotion ? 'none' : 'opacity 220ms ease' }}
       />
     </div>
   );
