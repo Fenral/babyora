@@ -633,6 +633,37 @@ afterEach(() => {
 });
 
 describe('pure exact-label and path guards', () => {
+  it('accepts canonical Phase 1 tree metadata without normalizing it as a candidate', () => {
+    const candidate = '1'.repeat(40);
+    const tree = '2'.repeat(40);
+    expect(parsePhase1CandidateSummary([
+      '---',
+      'status: PASS',
+      `candidate_sha: ${candidate}`,
+      `candidate_tree_sha: ${tree}`,
+      '---',
+      '',
+    ].join('\n'))).toEqual({ phase1CandidateSha: candidate });
+
+    for (const frontmatter of [
+      [`candidate_tree_sha: ${'A'.repeat(40)}`],
+      ['candidate_tree_sha: malformed'],
+      [`candidate_tree_sha: ${tree}`, `candidate_tree_sha: ${tree}`],
+      [`candidateTreeSha: ${tree}`],
+      [`candidate-tree-sha: ${tree}`],
+      [`candidate_tree_commit: ${tree}`],
+    ]) {
+      expect(() => parsePhase1CandidateSummary([
+        '---',
+        'status: PASS',
+        `candidate_sha: ${candidate}`,
+        ...frontmatter,
+        '---',
+        '',
+      ].join('\n'))).toThrow();
+    }
+  });
+
   it('accepts only exact Phase 1 candidate_sha and normalizes it internally', () => {
     const sha = '1'.repeat(40);
 

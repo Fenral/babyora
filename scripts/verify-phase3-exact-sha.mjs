@@ -18,7 +18,10 @@ const SHA_256 = /^[0-9a-f]{64}$/;
 const COMMIT_LIKE_SCALAR_40 = /^[0-9a-f]{40}$/i;
 const MAX_DEPENDENCIES = 100;
 const MAX_FRONTMATTER_STRUCTURE_DEPTH = 32;
-const PHASE1_COMMIT_SCALAR_KEYS = Object.freeze(['candidate_sha']);
+const PHASE1_COMMIT_SCALAR_KEYS = Object.freeze([
+  'candidate_sha',
+  'candidate_tree_sha',
+]);
 const PHASE2_COMMIT_SCALAR_KEYS = Object.freeze([
   'phase2_candidate_sha',
   'phase1_candidate_sha',
@@ -1084,6 +1087,15 @@ export function parsePhase1CandidateSummary(text) {
   invariant(
     typeof candidateSha === 'string' && SHA_40.test(candidateSha),
     'Phase 1 summary requires exact candidate_sha with 40 lowercase hex',
+  );
+  const candidateTreeSha = exactFrontmatterValue(
+    fields,
+    'candidate_tree_sha',
+    'Phase 1 summary',
+  );
+  invariant(
+    candidateTreeSha === undefined || SHA_40.test(candidateTreeSha),
+    'Phase 1 summary candidate_tree_sha must be 40 lowercase hex when present',
   );
 
   return Object.freeze({ phase1CandidateSha: candidateSha });
