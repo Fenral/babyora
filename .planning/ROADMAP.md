@@ -11,9 +11,9 @@ This roadmap delivers the bounded Planlegg candidate while allowing Outfit truth
 - Integer phases are planned milestone work.
 - Decimal phases are reserved for urgent inserted work.
 
-- [ ] **Phase 1: Planlegg/Dagslinjen** - Deliver the stable, truthful, capability-gated and accessible Dagslinjen candidate with deterministic checks green and the final media gate honestly pending.
-- [ ] **Phase 2: Outfit truth and Antrekkskart** - Deliver the scalable body-connected garment map, ordered interaction, real alternatives and warm/cold recovery.
-- [ ] **Phase 3: Living Home and signature transition** - Deliver calm weather ambience and the explanatory Home-to-Outfit garment transfer with static equivalence.
+- [x] **Phase 1: Planlegg/Dagslinjen** - Deliver the stable, truthful, capability-gated and accessible Dagslinjen candidate with deterministic checks green and the final media gate honestly pending.
+- [x] **Phase 2: Outfit truth and Antrekkskart** - Deliver the scalable body-connected garment map, ordered interaction, real alternatives and warm/cold recovery.
+- [x] **Phase 3: Living Home and signature transition** - Deliver calm weather ambience and the explanatory Home-to-Outfit garment transfer with static equivalence.
 - [ ] **Phase 4: Cross-surface convergence** - Complete accessibility, theme, motion, tactile, media and 90+ UX gates across the core journey.
 
 ## Phase Details
@@ -31,7 +31,7 @@ This roadmap delivers the bounded Planlegg candidate while allowing Outfit truth
   4. Planlegg remains operable across loading, error, offline, dark/temperature themes, forced colors, 200% text, keyboard, screen reader, reduced motion, haptic preference-off, web, iOS, and Android paths with one app-owned main landmark/page scroll, 44-point targets, focus-visible, correct reading order, shape-plus-text meaning, and regression-safe four-root navigation.
   5. The reviewed stable candidate passes deterministic truth, exact-context, access, accessibility, climate provenance/hash/coverage, session privacy, test, lint, build, source scans and no-media E2E on one immutable Git-SHA plus datapakkehash. Two independent fresh-context reviewers must PASS that same tuple. No owner checkpoint or appmedia is required to complete Phase 1; physical/media-based 90+ convergence is later Phase 4 scope and is not claimed here.
 
-**Plans**: 12/18 plans executed
+**Plans**: 18/18 plans executed
 
 - [x] 01-01-PLAN.md
 - [x] 01-02-PLAN.md
@@ -45,12 +45,12 @@ This roadmap delivers the bounded Planlegg candidate while allowing Outfit truth
 - [x] 01-10-PLAN.md
 - [x] 01-11-PLAN.md
 - [x] 01-12-PLAN.md
-- [ ] 01-13-PLAN.md
-- [ ] 01-14-PLAN.md
-- [ ] 01-15-PLAN.md
-- [ ] 01-16-PLAN.md
-- [ ] 01-17-PLAN.md
-- [ ] 01-18-PLAN.md
+- [x] 01-13-PLAN.md
+- [x] 01-14-PLAN.md
+- [x] 01-15-PLAN.md
+- [x] 01-16-PLAN.md
+- [x] 01-17-PLAN.md
+- [x] 01-18-PLAN.md
 
 - [x] `01-01-PLAN.md` — Wave 0 deterministic fixtures and no-media verification harness
 - [x] `01-02-PLAN.md` — Wave 1 forecast provenance/currentness/coverage and atomic weather-hook behavior (high risk; approved unified time contract with two independent PASS verdicts)
@@ -64,12 +64,12 @@ This roadmap delivers the bounded Planlegg candidate while allowing Outfit truth
 - [x] `01-10-PLAN.md` — Wave 5 capability-derived paywall plus Today/Uke/App access presentation (high risk)
 - [x] `01-11-PLAN.md` — Wave 5 automatic-location storage/cache/resolver foundation (high risk)
 - [x] `01-12-PLAN.md` — Wave 5 intent-aware automatic-location integration, exact current Outfit context and E2E (high risk)
-- [ ] `01-13-PLAN.md` — Wave 13 autonomous build-time MET generator, provenance, validator, reproducible climate package and dual review (high risk)
-- [ ] `01-14-PLAN.md` — Wave 14 strict decoder, D+28–D+42 calendar, versioned Babyora heuristics, neutral copy and pure model (high risk)
-- [ ] `01-15-PLAN.md` — Wave 15 accessible Snart UI, session-only privacy and access-first fixed-home orchestration with capability still off (high risk)
-- [ ] `01-16-PLAN.md` — Wave 16 capability activation, dynamic privacy/access E2E, rollback and dual review (high risk)
-- [ ] `01-17-PLAN.md` — Wave 17 typed Guide/program→Snart route migration with exact-context/access regressions (high integration risk)
-- [ ] `01-18-PLAN.md` — Wave 18 native haptics/navigation and full deterministic no-media final candidate with dual review
+- [x] `01-13-PLAN.md` — Wave 13 autonomous build-time MET generator, provenance, validator, reproducible climate package and dual review (high risk)
+- [x] `01-14-PLAN.md` — Wave 14 strict decoder, D+28–D+42 calendar, versioned Babyora heuristics, neutral copy and pure model (high risk)
+- [x] `01-15-PLAN.md` — Wave 15 accessible Snart UI, session-only privacy and access-first fixed-home orchestration with capability still off (high risk)
+- [x] `01-16-PLAN.md` — Wave 16 capability activation, dynamic privacy/access E2E, rollback and dual review (high risk)
+- [x] `01-17-PLAN.md` — Wave 17 typed Guide/program→Snart route migration with exact-context/access regressions (high integration risk)
+- [x] `01-18-PLAN.md` — Wave 18 native haptics/navigation and full deterministic no-media final candidate with dual review
 
 **UI hint**: yes
 
@@ -86,7 +86,7 @@ This roadmap delivers the bounded Planlegg candidate while allowing Outfit truth
   4. Warm/cold recovery is explicit, cautious and accessible without changing recommendation thresholds or activating Motor V2.
   5. Reduced motion, keyboard, screen reader, 200% text and canonical recommendation/avatar truth tests pass.
 
-**Plans**: 0/9 plans executed. Foundation plans may run in an isolated worktree while Phase 1 plans 01-13–01-18 finish; the serialized full-context integration waits for the Phase-1 candidate.
+**Plans**: 9/9 plans executed. Final candidate `7de4bf480c2b203937bb4093001df23a5d85f264` passed the exact-SHA gate.
 **UI hint**: yes
 
 ### Phase 3: Living Home and signature transition
@@ -102,7 +102,7 @@ This roadmap delivers the bounded Planlegg candidate while allowing Outfit truth
   4. Reduced motion and media failure resolve immediately to an equally understandable static state with correct focus.
   5. Dark/light and cold/mild/warm states remain intentional and readable.
 
-**Plans**: 0/8 plans executed. Foundation plans may proceed in parallel; integration plans encode the frozen Phase 2 interface dependency explicitly.
+**Plans**: 8/8 plans executed. Final candidate `8cc7e60a63c3314814f0024c3d0ff63f5141fd32` passed collection, dual fresh-context review, and exact-SHA verification.
 **UI hint**: yes
 
 ### Phase 4: Cross-surface convergence
@@ -123,11 +123,11 @@ This roadmap delivers the bounded Planlegg candidate while allowing Outfit truth
 
 ## Progress
 
-**Execution Order:** Continue Phase 1 strictly through the autonomous chain `01-13 → 01-14 → 01-15 → 01-16 → 01-17 → 01-18`. In parallel, Phase 2 may run in one isolated worktree and Phase 3 Living Home/motion foundation in another. Merge or start Home→Outfit integration only after Phase 2 freezes its shared interface. Phase 4 follows completed Phases 1–3.
+**Execution Order:** Phases 1–3 are complete on their immutable reviewed candidates. Phase 4 is the next planning boundary and owns physical-device, media, 90+ convergence, and release evidence.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Planlegg/Dagslinjen | 12/18 | In Progress|  |
-| 2. Outfit truth and Antrekkskart | 0/9 | Parallel foundation allowed; serialized integration waits for Phase 1 | - |
-| 3. Living Home and signature transition | 0/8 | Parallel foundation allowed; integration waits for frozen Phase 2 contract | - |
-| 4. Cross-surface convergence | 0/TBD | Pending Phases 1–3 | - |
+| 1. Planlegg/Dagslinjen | 18/18 | Complete | 2026-07-25 |
+| 2. Outfit truth and Antrekkskart | 9/9 | Complete | 2026-07-25 |
+| 3. Living Home and signature transition | 8/8 | Complete | 2026-07-25 |
+| 4. Cross-surface convergence | 0/TBD | Ready for planning | - |
