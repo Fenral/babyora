@@ -2,8 +2,8 @@
 
 ## Immutable target
 
-- Candidate: `87d2d586ac7a4ea9b18854116b2da0a38708df27`
-- Tree: `9d8bf40b2a374debe9190ec6e6f50a8012cb650a`
+- Candidate: `3636337613b1f4d7a572b761fb2f066191e36c11`
+- Tree: `f31e4c3ccce1e8163011e63d592c0e55b50e9add`
 - Assembly base: `8ae3d5269e0df78ca87a1442ce9dca0cac69b8d0`
 - Canonical source bytes: LF
 - Package-lock blob: `31172f3a4be764f3d32bde12ecd5194f37a1a43d`
@@ -44,52 +44,52 @@ Accepted Phase-1 tuple:
 | 1 | `6be7192ddc0f06fca2ce1dc91a862fa65743db63` | Lane A FAIL, one P1 | Producer-seed recommendation identity differed from the canonical outfit-truth producer. |
 | 2 | `1a8e48ac50364de0340c3e6429f642d3e551464c` | Lane A PASS; Lane B FAIL, one P1 | Canonical identity was repaired, then Lane B found that Hjem no longer preserved fingerprint-bound event/transition identity. |
 | 3 | `87d2d586ac7a4ea9b18854116b2da0a38708df27` | Lane A PASS; Lane B PASS | Both repairs verified; zero unresolved P0/P1. |
+| 4 | `3636337613b1f4d7a572b761fb2f066191e36c11` | Authentication Lane A PASS; Lane B PASS | Added the factory-owned seed guard required by the downstream producer; zero unresolved P0/P1. |
 
 The failed candidates remain immutable ancestors. No candidate was amended or
 rewritten.
 
 ## Final review receipts
 
-### Lane A — engine, finalizer and provenance safety
+### Lane A — factory authentication and provenance safety
 
-- Reviewer/canonical task: `/root/review_02_05_a3`
-- Session: `phase2-02-05-a3-87d2d58`
+- Reviewer/canonical task: `/root/review_02_05_auth_a`
+- Session: `phase2-02-05-auth-a-3636337`
 - Capability: `high-verification`
 - Fresh context: true
 - Independent from implementation: true
 - Verdict: PASS
 - Unresolved P0/P1: 0/0
 
-Lane A verified the exact frozen seed shape, direct canonical
-`createOutfitTruthSnapshot` recommendation identity parity, supported and
-11-garment behavior, changed input/recommendation/transition behavior, complete
-categorized/finalized data retention, hostile-data rejection, recursive
-clone/freeze, legacy fail-closed behavior, Hjem fingerprint-bound transition
-identity, and the no-recommend-rerun boundary.
+Lane A verified that the module-private seed registry accepts only the exact
+internally constructed, recursively frozen object; the exported guard checks
+membership before reflective validation and rejects clones, frozen/mutable
+forgeries, proxies and legacy values. It also reran the full Plan 02-05
+behavioral and provenance matrix.
 
-### Lane B — serialized screen ownership and tuple correctness
+### Lane B — downstream consumer sufficiency and bypass resistance
 
-- Reviewer/canonical task: `/root/review_02_05_b3`
-- Session: `phase2-02-05-b3-87d2d58`
+- Reviewer/canonical task: `/root/review_02_05_auth_b`
+- Session: `phase2-02-05-auth-b-363633`
 - Capability: `high-verification`
 - Fresh context: true
 - Independent from implementation: true
 - Verdict: PASS
 - Unresolved P0/P1: 0/0
 
-Lane B verified the strict raw-frontmatter tuple, all required ancestry, exact
-four-path scope, Hjem/Uke preservation of already-computed full objects,
-fingerprint-bound Hjem event/transition IDs, exact seed shape, recursive
-serialization, absence of layout/DOM/selection state, and absence of UI,
-navigation, access, swap, package, media, storage or network drift.
+Lane B verified that Plan 02-06 can distinguish a genuine factory seed from a
+structurally identical frozen forgery without an untrusted caller flag, that no
+registration/mutation seam is exported, and that proxy/accessor traps cannot
+escape through the guard. It also reran ancestry, scope and full regression
+gates.
 
 ## Commands and results
 
 | Gate | Result |
 |---|---|
 | Tracked outfit inventory | PASS; 2,036,160 scenarios and all locked metrics |
-| Focused planning/truth/options suite | PASS; 4 files, 116 tests |
-| Full Vitest suite | PASS; 92 files, 1,208 tests passed, 1 todo |
+| Focused planning/truth/options suite | PASS; 117 tests in the widest final review |
+| Full Vitest suite | PASS; 92 files, 1,209 tests passed, 1 todo |
 | Standalone TypeScript | PASS |
 | ESLint | PASS |
 | Main and bare production builds | PASS |
