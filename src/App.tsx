@@ -25,6 +25,7 @@ import type { TabKey } from './types/nav';
 import { useChildren } from './state/children-store';
 import { useTheme } from './state/theme-store';
 import { useAutoLocationRefresh } from './hooks/useAutoLocationRefresh';
+import { useOutfitTransitionCoordinator } from './hooks/useOutfitTransitionCoordinator';
 import { BottomTabBar } from './components/BottomTabBar';
 
 import type { GuideHubTarget } from './screens/GuideHubScreen';
@@ -36,10 +37,6 @@ import {
   produceOutfitBundle,
   type OutfitBundleProducerResult,
 } from './lib/outfit/outfit-bundle-producer';
-import {
-  createOutfitRowRegistrationRegistry,
-  type OutfitRowRegistrationRegistryV1,
-} from './lib/outfit/outfit-transition-contract';
 import {
   consumeRequestedPlanningView,
   issueRequestedPlanningView,
@@ -180,10 +177,7 @@ export default function App(): ReactElement {
   const locationMode = useLocationPref((state) => state.mode);
   const [tab, setTab] = useState<TabKey>('hjem');
   const [drill, setDrill] = useState<Drill>(null);
-  const [outfitRowRegistry] = useState<OutfitRowRegistrationRegistryV1>(
-    createOutfitRowRegistrationRegistry,
-  );
-  const registerOutfitRow = outfitRowRegistry.registerOutfitRow;
+  const outfitTransition = useOutfitTransitionCoordinator();
   const [requestedPlanViewState, setRequestedPlanViewState] = useState<RequestedPlanningViewState>({
     nextToken: 0,
     requestedView: null,
@@ -242,6 +236,7 @@ export default function App(): ReactElement {
   }, [tab]);
 
   const onNavigate = (next: TabKey) => {
+    outfitTransition.abort('closed');
     setDrill(null);
     setTab(next);
   };
@@ -302,12 +297,10 @@ export default function App(): ReactElement {
     });
   };
 
-  const onOpenCurrentOutfit = (
+  const createCurrentOutfitBundle = useCallback((
     currentContext: PlannedOutfitContext,
-    origin: HTMLElement,
-  ) => {
-    if (!isPlannedOutfitContext(currentContext) || !origin.isConnected) return;
-    const outfitBundle = currentContext.sourceKind === 'phase2-outfit-truth'
+  ): OutfitBundleProducerResult | undefined => (
+    currentContext.sourceKind === 'phase2-outfit-truth'
       ? produceOutfitBundle({
           seed: currentContext.producerSeed,
           source: {
@@ -315,7 +308,16 @@ export default function App(): ReactElement {
             sourceContextId: currentContext.producerSeed.sourceContextId,
           },
         })
-      : undefined;
+      : undefined
+  ), []);
+
+  const onOpenCurrentOutfit = (
+    currentContext: PlannedOutfitContext,
+    origin: HTMLElement,
+    outfitBundle: OutfitBundleProducerResult | undefined,
+  ) => {
+    if (!isPlannedOutfitContext(currentContext) || !origin.isConnected) return;
+    outfitTransition.captureBeforeNavigation(outfitBundle);
     setDrill({
       kind: 'paakledning',
       source: 'current',
@@ -332,6 +334,7 @@ export default function App(): ReactElement {
   const closePaakledning = useCallback(() => {
     const origin = drill?.kind === 'paakledning' ? drill.origin : null;
     const source = drill?.kind === 'paakledning' ? drill.source : null;
+    outfitTransition.abort('closed');
     setDrill(null);
     if (!origin) return;
     window.requestAnimationFrame(() => {
@@ -343,7 +346,7 @@ export default function App(): ReactElement {
         mainRef.current?.focus();
       }
     });
-  }, [drill]);
+  }, [drill, outfitTransition]);
 
   const isAccessGatedPlannedDrill = drill?.kind === 'paakledning'
     && drill.source === 'planned'
@@ -552,6 +555,10 @@ export default function App(): ReactElement {
       <HjemScreen
         onNavigate={onNavigate}
         onOpenSheet={onOpenCurrentOutfit}
+        createCurrentOutfitBundle={createCurrentOutfitBundle}
+        getHomeTransitionItemIds={outfitTransition.getHomeItemIds}
+        registerHomeAnchor={outfitTransition.registerHomeAnchor}
+        observeTransitionBundle={outfitTransition.observeBundle}
       />
     );
   } else if (tab === 'plan') {
@@ -631,7 +638,7 @@ export default function App(): ReactElement {
               onBack={closePaakledning}
               plannedContext={activeDrill.plannedContext}
               outfitBundle={activeDrill.outfitBundle}
-              registerOutfitRow={registerOutfitRow}
+              registerOutfitRow={outfitTransition.registerOutfitRow}
               transitionVisualState="settled"
               onOpenWarmColdGuide={onOpenWarmColdGuide}
             />
@@ -640,7 +647,7 @@ export default function App(): ReactElement {
               onBack={closePaakledning}
               currentContext={activeDrill.currentContext}
               outfitBundle={activeDrill.outfitBundle}
-              registerOutfitRow={registerOutfitRow}
+              registerOutfitRow={outfitTransition.registerOutfitRow}
               transitionVisualState="settled"
               onOpenWarmColdGuide={onOpenWarmColdGuide}
             />

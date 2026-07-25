@@ -97,14 +97,15 @@ function projection(recommendation: Recommendation) {
   };
 }
 
-function bundle(): Extract<
+function bundle(
+  plannedForIso = '2026-07-25T10:00:00.000Z',
+): Extract<
   OutfitBundleProducerResult,
   { kind: 'supported' }
 > {
   const recommendInput = input();
   const finalizedRecommendation = recommend(recommendInput);
   const recommendation = projection(finalizedRecommendation);
-  const plannedForIso = '2026-07-25T10:00:00.000Z';
   const transitionContextId =
     `current-transition:${plannedForIso}:current-finalized:${
       JSON.stringify([
@@ -225,6 +226,29 @@ describe('outfit transition coordinator runtime', () => {
       status: 'settled',
       reason: 'already-attempted',
     });
+  });
+
+  it('retains the next identity Home anchors registered before identity abort', () => {
+    const firstBundle = bundle();
+    const nextBundle = bundle('2026-07-25T11:00:00.000Z');
+    const { runtime } = createRuntime();
+    const firstItemIds = runtime.getHomeItemIds(firstBundle);
+    const nextItemIds = runtime.getHomeItemIds(nextBundle);
+    firstItemIds.forEach((itemId, index) => {
+      runtime.registerHomeAnchor(itemId, element(20 + index * 80));
+    });
+
+    expect(runtime.captureBeforeNavigation(firstBundle).status).toBe('captured');
+    firstItemIds.forEach((itemId) => {
+      runtime.registerHomeAnchor(itemId, null);
+    });
+    nextItemIds.forEach((itemId, index) => {
+      runtime.registerHomeAnchor(itemId, element(20 + index * 80));
+    });
+    runtime.abort('identity-changed');
+    expect(runtime.captureBeforeNavigation(nextBundle)).toEqual(
+      expect.objectContaining({ status: 'captured' }),
+    );
   });
 
   it('settles and clears transient registrations for every lifecycle invalidator', () => {

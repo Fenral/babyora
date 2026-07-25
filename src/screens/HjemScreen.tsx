@@ -44,6 +44,8 @@
 import {
   type CSSProperties,
   type MouseEvent,
+  useCallback,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -65,6 +67,7 @@ import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { tempAxisFor } from '../lib/temp-axis';
 import { deriveSceneModelFromLegacy } from '../lib/recommendation/scene';
 import { VerifiedAvatarComposite } from '../components/outfit/VerifiedAvatarComposite';
+import { LivingHomeAtmosphere } from '../components/LivingHomeAtmosphere';
 // BottomTabBar er global (mounted i App.tsx) — ikke importer/mount her.
 import { MOTION } from '../styles/motion-grammar';
 import { useSwapOverride } from '../state/swap-override-store';
@@ -77,6 +80,9 @@ import {
   PLAN_TIME_ZONE,
   type PlannedOutfitContext,
 } from '../lib/planning/planned-outfit-context';
+import type { OutfitBundleProducerResult } from '../lib/outfit/outfit-bundle-producer';
+import type { OutfitItemId } from '../lib/outfit/outfit-truth';
+import type { RegisterHomeAnchor } from '../lib/outfit-transition/phase2-adapter';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Konstanter / fallback
@@ -98,8 +104,57 @@ type VognMode = 'awake' | 'sleeping';
  */
 type HjemScreenProps = {
   onNavigate: (tab: TabKey) => void;
-  onOpenSheet: (ctx: PlannedOutfitContext, origin: HTMLButtonElement) => void;
+  onOpenSheet: (
+    ctx: PlannedOutfitContext,
+    origin: HTMLButtonElement,
+    bundle: OutfitBundleProducerResult | undefined,
+  ) => void;
+  createCurrentOutfitBundle: (
+    ctx: PlannedOutfitContext,
+  ) => OutfitBundleProducerResult | undefined;
+  getHomeTransitionItemIds: (
+    bundle: OutfitBundleProducerResult | undefined,
+  ) => readonly OutfitItemId[];
+  registerHomeAnchor: RegisterHomeAnchor;
+  observeTransitionBundle: (
+    bundle: OutfitBundleProducerResult | undefined,
+  ) => void;
 };
+
+function HomeTransitionAnchor({
+  itemId,
+  layoutIndex,
+  registerHomeAnchor,
+}: Readonly<{
+  itemId: OutfitItemId;
+  layoutIndex: number;
+  registerHomeAnchor: RegisterHomeAnchor;
+}>) {
+  const register = useCallback(
+    (element: HTMLSpanElement | null) => {
+      registerHomeAnchor(itemId, element);
+    },
+    [itemId, registerHomeAnchor],
+  );
+  const column = layoutIndex % 5;
+  const row = Math.floor(layoutIndex / 5);
+  return (
+    <span
+      ref={register}
+      data-outfit-transition-source={itemId}
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        left: `${16 + column * 17}%`,
+        top: `${22 + row * 22}%`,
+        width: 24,
+        height: 24,
+        opacity: 0,
+        pointerEvents: 'none',
+      }}
+    />
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -216,7 +271,14 @@ function WeatherFallbackIcon({ size }: { size: number }) {
 // HjemScreen
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenProps) {
+export function HjemScreen({
+  onNavigate: _onNavigate,
+  onOpenSheet,
+  createCurrentOutfitBundle,
+  getHomeTransitionItemIds,
+  registerHomeAnchor,
+  observeTransitionBundle,
+}: HjemScreenProps) {
   // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
   // siden BottomTabBar nå mountes globalt i App.tsx.
   void _onNavigate;
@@ -400,6 +462,22 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     weather.now,
   ]);
 
+  const currentOutfitBundle = useMemo(
+    () => (
+      currentOutfitContext === null
+        ? undefined
+        : createCurrentOutfitBundle(currentOutfitContext)
+    ),
+    [createCurrentOutfitBundle, currentOutfitContext],
+  );
+  const transitionItemIds = useMemo(
+    () => getHomeTransitionItemIds(currentOutfitBundle),
+    [currentOutfitBundle, getHomeTransitionItemIds],
+  );
+  useEffect(() => {
+    observeTransitionBundle(currentOutfitBundle);
+  }, [currentOutfitBundle, observeTransitionBundle]);
+
   const handleActivityChange = (next: Activity) => {
     if (next === activity) return;
     setActivity(next);
@@ -409,7 +487,11 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
   const handleCta = (event: MouseEvent<HTMLButtonElement>) => {
     if (!currentOutfitContext) return;
     void fire('medium');
-    onOpenSheet(currentOutfitContext, event.currentTarget);
+    onOpenSheet(
+      currentOutfitContext,
+      event.currentTarget,
+      currentOutfitBundle,
+    );
   };
 
   // ─── Avledede verdier ─────────────────────────────────────────────────────
@@ -619,6 +701,17 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
     // gratis via [data-temp]-overrides (avatar-glow/bg-canvas).
     background: 'radial-gradient(ellipse 90% 70% at 50% 42%, var(--avatar-glow) 0%, transparent 72%)',
     borderRadius: 28,
+  };
+  const sceneForeground: CSSProperties = {
+    position: 'relative',
+    zIndex: 1,
+    width: '100%',
+    minHeight: 110,
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
   };
 
   // Orbital-ankere (dekorative — hele scenen er aria-hidden; sr-sammendraget
@@ -872,19 +965,37 @@ export function HjemScreen({ onNavigate: _onNavigate, onOpenSheet }: HjemScreenP
               (krav 2), sikkerhetslinje på solid flate (krav 4b). */}
           <div style={sceneSection}>
             <div style={scene} aria-hidden="true">
-              <VerifiedAvatarComposite
-                stateKey={avatarPoseKey}
-                assetOverride={verifiedAvatar}
-                outfitSummary={sceneModel.headline}
-                decorative
-                reducedMotion={reducedMotion}
-                size={188}
-              />
-              <div style={anchorRing}>
-                {sceneModel.anchors.map((anchor, i) => (
-                  <span key={anchor.label} style={anchorPill(i, sceneModel.anchors.length)}>
-                    {anchor.label}
-                  </span>
+              {now !== null && now !== undefined && (
+                <LivingHomeAtmosphere
+                  tempC={now.tempC}
+                  feelsLikeC={now.feelsLikeC}
+                  symbolCode={now.symbolCode}
+                  reducedMotion={reducedMotion}
+                />
+              )}
+              <div style={sceneForeground}>
+                <VerifiedAvatarComposite
+                  stateKey={avatarPoseKey}
+                  assetOverride={verifiedAvatar}
+                  outfitSummary={sceneModel.headline}
+                  decorative
+                  reducedMotion={reducedMotion}
+                  size={188}
+                />
+                <div style={anchorRing}>
+                  {sceneModel.anchors.map((anchor, i) => (
+                    <span key={anchor.label} style={anchorPill(i, sceneModel.anchors.length)}>
+                      {anchor.label}
+                    </span>
+                  ))}
+                </div>
+                {transitionItemIds.map((itemId, layoutIndex) => (
+                  <HomeTransitionAnchor
+                    key={itemId}
+                    itemId={itemId}
+                    layoutIndex={layoutIndex}
+                    registerHomeAnchor={registerHomeAnchor}
+                  />
                 ))}
               </div>
             </div>

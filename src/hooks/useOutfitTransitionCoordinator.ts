@@ -1,7 +1,6 @@
 import {
   useEffect,
   useMemo,
-  useRef,
   useSyncExternalStore,
 } from 'react';
 import { useNativeSettings } from './useNativeSettings.js';
@@ -167,8 +166,10 @@ export function createOutfitTransitionCoordinatorRuntime(
     cancelTargetReadiness?.();
     cancelTargetReadiness = null;
     activeBundle = null;
-    homeElements.clear();
     adapter.clear();
+    for (const [itemId, element] of homeElements) {
+      adapter.registerHomeAnchor(itemId, element);
+    }
   };
 
   const settle = (
@@ -383,25 +384,39 @@ function browserViewport(): TransitionViewport {
   });
 }
 
+function createBrowserOutfitTransitionRuntime():
+OutfitTransitionCoordinatorRuntime & Readonly<{
+  syncReducedMotion: (reducedMotion: boolean) => void;
+}> {
+  let reducedMotion = false;
+  const runtime = createOutfitTransitionCoordinatorRuntime({
+    getViewport: browserViewport,
+    getDocumentVisibility: () => (
+      document.visibilityState === 'hidden' ? 'hidden' : 'visible'
+    ),
+    getReducedMotion: () => reducedMotion,
+    scheduleTargetReadiness: (callback) => {
+      const frame = window.requestAnimationFrame(callback);
+      return () => window.cancelAnimationFrame(frame);
+    },
+  });
+  return Object.freeze({
+    ...runtime,
+    syncReducedMotion: (nextReducedMotion) => {
+      reducedMotion = nextReducedMotion;
+    },
+  });
+}
+
 export function useOutfitTransitionCoordinator() {
   const { reducedMotion } = useNativeSettings();
-  const reducedMotionRef = useRef(reducedMotion);
-  reducedMotionRef.current = reducedMotion;
-
   const runtime = useMemo(
-    () => createOutfitTransitionCoordinatorRuntime({
-      getViewport: browserViewport,
-      getDocumentVisibility: () => (
-        document.visibilityState === 'hidden' ? 'hidden' : 'visible'
-      ),
-      getReducedMotion: () => reducedMotionRef.current,
-      scheduleTargetReadiness: (callback) => {
-        const frame = window.requestAnimationFrame(callback);
-        return () => window.cancelAnimationFrame(frame);
-      },
-    }),
+    () => createBrowserOutfitTransitionRuntime(),
     [],
   );
+  useEffect(() => {
+    runtime.syncReducedMotion(reducedMotion);
+  }, [reducedMotion, runtime]);
   const state = useSyncExternalStore(
     runtime.subscribe,
     runtime.getState,

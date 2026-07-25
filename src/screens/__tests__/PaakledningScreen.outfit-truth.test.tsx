@@ -279,8 +279,17 @@ describe('PaakledningScreen outfit truth integration', () => {
 
   it('keeps App production propagation event-owned, source-explicit, and free of render recomputation', () => {
     const app = source(appPath);
-    expect(app).toContain('createOutfitRowRegistrationRegistry,');
-    expect(app).toContain('const registerOutfitRow = outfitRowRegistry.registerOutfitRow;');
+    expect(app).toContain(
+      "import { useOutfitTransitionCoordinator } from './hooks/useOutfitTransitionCoordinator';",
+    );
+    expect(app).toContain(
+      'const outfitTransition = useOutfitTransitionCoordinator();',
+    );
+    expect(app).toContain(
+      'registerOutfitRow={outfitTransition.registerOutfitRow}',
+    );
+    expect(app).not.toContain('createOutfitRowRegistrationRegistry');
+    expect(app).not.toContain('outfitRowRegistry');
     expect(app).toContain("kind: 'current',");
     expect(app).toContain("kind: 'planned',");
     expect(app).toContain('seed: currentContext.producerSeed');
