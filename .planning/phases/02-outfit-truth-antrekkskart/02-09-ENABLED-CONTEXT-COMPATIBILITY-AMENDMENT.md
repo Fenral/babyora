@@ -2,7 +2,10 @@
 
 **Status:** LOCKED FOR 02-09 ENABLED REPAIR
 **Date:** 2026-07-25
-**Rejected activation candidate:** `319fb844500cb230e508c38929f184f7e1c3643e`
+**Rejected activation candidates:**
+
+- `319fb844500cb230e508c38929f184f7e1c3643e` — missing enabled exact-context shell
+- `41aaea33249bedd51c56e80e95e2107ab51dc285` — legacy access/composition selectors still required internal visible entitlement copy
 **Restored false-flag head:** `a02edbb6c8e6b92b3d205f9f07f691c229c37747`
 
 ## Reason
@@ -54,14 +57,22 @@ authorized. Add exactly one existing test path:
 
 - `e2e/planlegg.ts`
 
-It may change only where the exact-context and automatic-location cases bind
-to the replaced Outfit DOM. Both flag stages must remain testable:
+It may change only where the exact-context, automatic-location, access and
+composition-matrix cases bind to the replaced Outfit DOM. Both flag stages
+must remain testable:
 
 - with the flag false, the existing legacy exact-context surface remains
   byte-compatible and passes;
 - with the flag true, the same tests read ordered garment labels from the real
   Outfit rows, equipment from the real equipment section, and access from the
   production dialog attribute.
+
+Every access assertion must preserve the exact expected capability
+(`today_home` or `future_plan`). The legacy branch may keep reading the
+existing visible `Tilgang:` copy. When the genuine `.outfit-truth-panel` is
+present, the assertion must instead read `data-outfit-access-capability`;
+tests may not require internal entitlement names to be exposed as parent-facing
+copy.
 
 Every assertion for exact child, place, date/time, activity, vogn state, age,
 temperature, feels-like value, ordered garments, equipment, wind,

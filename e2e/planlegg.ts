@@ -3122,7 +3122,10 @@ async function runAccess(
   await freeTodayOutfit.click();
   const todayDialog = page.getByRole('dialog', { name: 'Lillian' });
   await todayDialog.waitFor({ state: 'visible', timeout: 15_000 });
-  if (!(await todayDialog.innerText()).includes('Tilgang: today_home')) {
+  const todayUsesTruthPanel = await todayDialog.locator('.outfit-truth-panel').count() === 1;
+  if (todayUsesTruthPanel
+    ? await todayDialog.getAttribute('data-outfit-access-capability') !== 'today_home'
+    : !(await todayDialog.innerText()).includes('Tilgang: today_home')) {
     throw new Error('Free I dag mistet komplett Outfit ved konfigurert sted');
   }
   await todayDialog.getByRole('button', { name: 'Lukk planlagt antrekk' }).click();
@@ -3331,7 +3334,10 @@ async function runAccess(
   const plannedDialog = page.getByRole('dialog', { name: 'Lillian' });
   await plannedDialog.waitFor({ state: 'visible', timeout: 15_000 });
   await page.waitForFunction(() => document.activeElement?.id === 'planned-outfit-title');
-  if (!(await plannedDialog.innerText()).includes('Tilgang: future_plan')) {
+  const plannedUsesTruthPanel = await plannedDialog.locator('.outfit-truth-panel').count() === 1;
+  if (plannedUsesTruthPanel
+    ? await plannedDialog.getAttribute('data-outfit-access-capability') !== 'future_plan'
+    : !(await plannedDialog.innerText()).includes('Tilgang: future_plan')) {
     throw new Error('Plus Uke åpnet ikke et autorisert fremtidig Outfit');
   }
 
@@ -3597,7 +3603,10 @@ async function runCompositionMatrix(
   await freeTodayOutfit.click();
   const freeTodayDialog = page.getByRole('dialog');
   await freeTodayDialog.waitFor({ state: 'visible', timeout: 15_000 });
-  if (!(await freeTodayDialog.innerText()).includes('Tilgang: today_home')) {
+  const freeTodayUsesTruthPanel = await freeTodayDialog.locator('.outfit-truth-panel').count() === 1;
+  if (freeTodayUsesTruthPanel
+    ? await freeTodayDialog.getAttribute('data-outfit-access-capability') !== 'today_home'
+    : !(await freeTodayDialog.innerText()).includes('Tilgang: today_home')) {
     throw new Error('Free I dag skal åpne exact Outfit med today_home-tilgang');
   }
   await freeTodayDialog.getByRole('button', { name: 'Lukk planlagt antrekk' }).click();
