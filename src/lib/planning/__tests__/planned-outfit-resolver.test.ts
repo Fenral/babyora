@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { PlanningChangeEvent } from '../change-events.js';
-import { createPlannedOutfitContext } from '../planned-outfit-context.js';
+import { recommend } from '../../wool-layers/recommend.js';
+import {
+  createCurrentOutfitContext,
+  createPlannedOutfitContext,
+} from '../planned-outfit-context.js';
 import { resolvePlannedOutfitContext } from '../planned-outfit-resolver.js';
 
 function planningEvent(
@@ -22,6 +26,24 @@ function plannedContext(
   event: PlanningChangeEvent = planningEvent(),
   overrides: Readonly<Record<string, unknown>> = {},
 ) {
+  const recommendInput = {
+    weather: {
+      tempC: 1,
+      feelsLikeC: -2,
+      windMs: 3.1,
+      precipMmH: 0.4,
+      humidity: 72,
+      symbolCode: 'lightsnow',
+      uvIndex: 0,
+    },
+    child: { ageMonths: 5, canRoll: false },
+    activity: 'vogn' as const,
+    exposureMin: 75,
+    innerJakke: false,
+    vognMode: 'sleeping' as const,
+    context: { bilstol: false },
+    childCalibration: 0 as const,
+  };
   return createPlannedOutfitContext({
     planningEventId: event.id,
     transitionContextId: event.transitionContextId,
@@ -47,19 +69,60 @@ function plannedContext(
       precipMmH: 0.4,
       symbolCode: 'lightsnow',
     },
-    recommendation: {
-      id: 'finalized-recommendation-01',
-      fingerprint: 'synthetic:planned-01',
-      orderedGarments: ['Ullbody', 'Ullbukse', 'Balaklava'],
-      equipment: ['Vognpose'],
-      finalized: true,
-    },
+    recommendInput,
+    finalizedRecommendation: recommend(recommendInput),
     access: {
       capability: 'future_plan',
       allowed: true,
       reason: 'plus',
     },
     ...overrides,
+  });
+}
+
+function currentContext(event: PlanningChangeEvent = planningEvent()) {
+  const recommendInput = {
+    weather: {
+      tempC: 1,
+      feelsLikeC: -2,
+      windMs: 3.1,
+      precipMmH: 0.4,
+      humidity: 72,
+      symbolCode: 'lightsnow',
+      uvIndex: 0,
+    },
+    child: { ageMonths: 5, canRoll: false },
+    activity: 'vogn' as const,
+    exposureMin: 75,
+    innerJakke: false,
+    vognMode: 'sleeping' as const,
+    context: { bilstol: false },
+    childCalibration: 0 as const,
+  };
+  return createCurrentOutfitContext({
+    planningEventId: event.id,
+    transitionContextId: event.transitionContextId,
+    child: { id: 'barn-01', name: 'Ada', ageMonths: 5 },
+    plannedForIso: event.atIso,
+    timeZone: 'Europe/Oslo',
+    place: {
+      label: 'Hjemme',
+      lat: 59.9139,
+      lon: 10.7522,
+      source: 'configured-place',
+    },
+    activity: 'vogn',
+    vognMode: 'sleeping',
+    weather: {
+      tempC: 1,
+      feelsLikeC: -2,
+      windMs: 3.1,
+      precipMmH: 0.4,
+      symbolCode: 'lightsnow',
+    },
+    recommendInput,
+    finalizedRecommendation: recommend(recommendInput),
+    access: { capability: 'future_plan', allowed: true, reason: 'plus' },
   });
 }
 
@@ -85,6 +148,14 @@ describe('Planned Outfit resolver', () => {
       currentEvents(event),
       contextMap([[event.id, context]]),
     )).toBe(context);
+    expect(context.transitionContextId).not.toBe(event.transitionContextId);
+    expect(context.sourceKind).toBe('phase2-outfit-truth');
+    if (context.sourceKind !== 'phase2-outfit-truth') {
+      throw new Error('expected exact outfit-truth context');
+    }
+    expect(context.producerSeed.transitionContextId).toBe(
+      context.transitionContextId,
+    );
     expect(new Set([
       context.plannedContextId,
       context.planningEventId,
@@ -107,6 +178,17 @@ describe('Planned Outfit resolver', () => {
     const transitionMismatch = plannedContext(event, {
       transitionContextId: 'transition-unrelated',
     });
+    const intervalMismatch = plannedContext(event, {
+      plannedForIso: '2026-02-12T12:00:00.000Z',
+    });
+    const staleIntervalEvent = planningEvent({
+      atIso: '2026-02-12T12:00:00.000Z',
+    });
+    const effectiveTransitionEvent = planningEvent({
+      transitionContextId: exact.transitionContextId,
+    });
+    const wrongKind = currentContext(event);
+    const contextProxy = new Proxy(exact, {});
 
     const rejected: ReadonlyArray<readonly [
       string,
@@ -118,8 +200,13 @@ describe('Planned Outfit resolver', () => {
       [event.id, currentEvents(other), contextMap([[event.id, exact]])],
       [event.id, currentEvents(event), contextMap([])],
       [event.id, currentEvents(event), contextMap([[event.id, invalidClone]])],
+      [event.id, currentEvents(event), contextMap([[event.id, contextProxy]])],
+      [event.id, currentEvents(event), contextMap([[event.id, wrongKind]])],
       [event.id, currentEvents(event), contextMap([[event.id, planningMismatch]])],
       [event.id, currentEvents(event), contextMap([[event.id, transitionMismatch]])],
+      [event.id, currentEvents(event), contextMap([[event.id, intervalMismatch]])],
+      [event.id, currentEvents(staleIntervalEvent), contextMap([[event.id, exact]])],
+      [event.id, currentEvents(effectiveTransitionEvent), contextMap([[event.id, exact]])],
       [event.id, currentEvents(event), contextMap([[other.id, plannedContext(other)]])],
     ];
 
@@ -342,14 +429,38 @@ describe('Planned Outfit resolver', () => {
 
   it('does not materialize planned advice when exact access is denied', async () => {
     const event = planningEvent();
-    const denied = plannedContext(event, {
-      recommendation: {
-        id: 'denied-recommendation',
-        fingerprint: 'denied:fingerprint',
-        orderedGarments: ['BETALT-PLAGG-SKAL-IKKE-VISES'],
-        equipment: ['BETALT-UTSTYR-SKAL-IKKE-VISES'],
-        finalized: true,
+    const deniedRecommendInput = {
+      weather: {
+        tempC: 1,
+        feelsLikeC: -2,
+        windMs: 3.1,
+        precipMmH: 0.4,
+        humidity: 72,
+        symbolCode: 'lightsnow',
+        uvIndex: 0,
       },
+      child: { ageMonths: 5, canRoll: false },
+      activity: 'vogn' as const,
+      exposureMin: 75,
+      innerJakke: false,
+      vognMode: 'sleeping' as const,
+      context: { bilstol: false },
+      childCalibration: 0 as const,
+    };
+    const deniedRecommendation = recommend(deniedRecommendInput);
+    deniedRecommendation.layers = [
+      {
+        category: 'innerst',
+        items: ['BETALT-PLAGG-SKAL-IKKE-VISES'],
+      },
+      {
+        category: 'utstyr',
+        items: ['BETALT-UTSTYR-SKAL-IKKE-VISES'],
+      },
+    ];
+    const denied = plannedContext(event, {
+      recommendInput: deniedRecommendInput,
+      finalizedRecommendation: deniedRecommendation,
       access: {
         capability: 'future_plan',
         allowed: false,

@@ -13,6 +13,7 @@ import {
   createPlannedOutfitContext,
   isOutfitBundleProducerSeedV1,
   isPlannedOutfitContext,
+  matchesPlannedOutfitContextEventV1,
   matchesOutfitBundleProducerSeedCurrentSourceV1,
   matchesOutfitBundleProducerSeedPlannedSourceV1,
   PLAN_TIME_ZONE,
@@ -246,20 +247,69 @@ describe('Planned Outfit exact-context contracts', () => {
     )).toBe(false);
   });
 
-  it('separates trusted current and planned seed origins without changing public context bytes', () => {
+  it('derives deterministic route-qualified canonical ownership without changing recommendation provenance', () => {
     const input = canonicalCompleteInput();
     const current = createCurrentOutfitContext(structuredClone(input));
     const planned = createPlannedOutfitContext(structuredClone(input));
+    const currentAgain = createCurrentOutfitContext(structuredClone(input));
+    const plannedAgain = createPlannedOutfitContext(structuredClone(input));
     expect(current.sourceKind).toBe('phase2-outfit-truth');
     expect(planned.sourceKind).toBe('phase2-outfit-truth');
     if (
       current.sourceKind !== 'phase2-outfit-truth'
       || planned.sourceKind !== 'phase2-outfit-truth'
+      || currentAgain.sourceKind !== 'phase2-outfit-truth'
+      || plannedAgain.sourceKind !== 'phase2-outfit-truth'
     ) {
       throw new Error('expected exact outfit-truth contexts');
     }
 
-    expect(JSON.stringify(current)).toBe(JSON.stringify(planned));
+    expect(JSON.stringify(currentAgain)).toBe(JSON.stringify(current));
+    expect(JSON.stringify(plannedAgain)).toBe(JSON.stringify(planned));
+    expect(current.plannedContextId).not.toBe(planned.plannedContextId);
+    expect(current.transitionContextId).not.toBe(planned.transitionContextId);
+    expect(current.producerSeed.sourceContextId).not.toBe(
+      planned.producerSeed.sourceContextId,
+    );
+    expect(current.transitionContextId).not.toBe(input.transitionContextId);
+    expect(planned.transitionContextId).not.toBe(input.transitionContextId);
+    expect(current.producerSeed.transitionContextId).toBe(
+      current.transitionContextId,
+    );
+    expect(planned.producerSeed.transitionContextId).toBe(
+      planned.transitionContextId,
+    );
+    expect(current.producerSeed.sourceContextId).toBe(current.plannedContextId);
+    expect(planned.producerSeed.sourceContextId).toBe(planned.plannedContextId);
+    expect(current.recommendation.id).toBe(planned.recommendation.id);
+    expect(current.recommendation.fingerprint).toBe(
+      planned.recommendation.fingerprint,
+    );
+    const currentTruth = createOutfitTruthSnapshot({
+      transitionContextId: current.producerSeed.transitionContextId,
+      input: current.producerSeed.input,
+      finalizedRecommendation:
+        current.producerSeed.finalizedRecommendation as Recommendation,
+      pose: 'sitting',
+    });
+    const plannedTruth = createOutfitTruthSnapshot({
+      transitionContextId: planned.producerSeed.transitionContextId,
+      input: planned.producerSeed.input,
+      finalizedRecommendation:
+        planned.producerSeed.finalizedRecommendation as Recommendation,
+      pose: 'sitting',
+    });
+    expect(currentTruth.kind).toBe('supported');
+    expect(plannedTruth.kind).toBe('supported');
+    if (currentTruth.kind !== 'supported' || plannedTruth.kind !== 'supported') {
+      throw new Error('expected supported outfit truth');
+    }
+    expect(currentTruth.snapshot.snapshotId).not.toBe(
+      plannedTruth.snapshot.snapshotId,
+    );
+    expect(currentTruth.snapshot.garments.map(({ itemId }) => itemId)).not.toEqual(
+      plannedTruth.snapshot.garments.map(({ itemId }) => itemId),
+    );
     expect(isPlannedOutfitContext(current)).toBe(true);
     expect(isPlannedOutfitContext(planned)).toBe(true);
     expect(Object.keys(current.producerSeed)).toEqual(
@@ -287,6 +337,13 @@ describe('Planned Outfit exact-context contracts', () => {
     expect(matchesOutfitBundleProducerSeedCurrentSourceV1(
       current.producerSeed,
     )).toBe(true);
+
+    const callerDerivedIdentityCollision = canonicalCompleteInput();
+    callerDerivedIdentityCollision.planningEventId =
+      current.transitionContextId;
+    expect(() => createCurrentOutfitContext(
+      callerDerivedIdentityCollision,
+    )).toThrow(/PlannedOutfitContext/u);
 
     const misleadingPlannedInput = canonicalCompleteInput();
     misleadingPlannedInput.planningEventId = 'current-event-misleading';
@@ -321,6 +378,148 @@ describe('Planned Outfit exact-context contracts', () => {
         ...injected,
       })).toThrow(/PlannedOutfitContext/u);
     }
+  });
+
+  it('binds canonical planned ownership to the exact interval while preserving recommendation identity', () => {
+    const firstInput = canonicalCompleteInput();
+    const secondInput = structuredClone(firstInput);
+    secondInput.plannedForIso = '2026-02-12T12:00:00.000Z';
+    const first = createPlannedOutfitContext(firstInput);
+    const second = createPlannedOutfitContext(secondInput);
+    expect(first.sourceKind).toBe('phase2-outfit-truth');
+    expect(second.sourceKind).toBe('phase2-outfit-truth');
+    if (
+      first.sourceKind !== 'phase2-outfit-truth'
+      || second.sourceKind !== 'phase2-outfit-truth'
+    ) {
+      throw new Error('expected exact outfit-truth contexts');
+    }
+
+    expect(first.plannedContextId).not.toBe(second.plannedContextId);
+    expect(first.producerSeed.sourceContextId).not.toBe(
+      second.producerSeed.sourceContextId,
+    );
+    expect(first.transitionContextId).not.toBe(second.transitionContextId);
+    expect(first.recommendation.id).toBe(second.recommendation.id);
+    expect(first.recommendation.fingerprint).toBe(
+      second.recommendation.fingerprint,
+    );
+
+    const firstTruth = createOutfitTruthSnapshot({
+      transitionContextId: first.producerSeed.transitionContextId,
+      input: first.producerSeed.input,
+      finalizedRecommendation:
+        first.producerSeed.finalizedRecommendation as Recommendation,
+      pose: 'sitting',
+    });
+    const secondTruth = createOutfitTruthSnapshot({
+      transitionContextId: second.producerSeed.transitionContextId,
+      input: second.producerSeed.input,
+      finalizedRecommendation:
+        second.producerSeed.finalizedRecommendation as Recommendation,
+      pose: 'sitting',
+    });
+    expect(firstTruth.kind).toBe('supported');
+    expect(secondTruth.kind).toBe('supported');
+    if (firstTruth.kind !== 'supported' || secondTruth.kind !== 'supported') {
+      throw new Error('expected supported outfit truth');
+    }
+    expect(firstTruth.snapshot.snapshotId).not.toBe(secondTruth.snapshot.snapshotId);
+    expect(firstTruth.snapshot.garments.map(({ itemId }) => itemId)).not.toEqual(
+      secondTruth.snapshot.garments.map(({ itemId }) => itemId),
+    );
+  });
+
+  it('matches only an owned planned canonical context to its exact raw event identity', () => {
+    const input = canonicalCompleteInput();
+    const planned = createPlannedOutfitContext(structuredClone(input));
+    const current = createCurrentOutfitContext(structuredClone(input));
+    const matches = (
+      context: unknown,
+      eventId: unknown,
+      rawTransitionContextId: unknown,
+      atIso: unknown,
+    ) => matchesPlannedOutfitContextEventV1(
+      context,
+      eventId,
+      rawTransitionContextId,
+      atIso,
+    );
+
+    expect(matches(
+      planned,
+      input.planningEventId,
+      input.transitionContextId,
+      input.plannedForIso,
+    )).toBe(true);
+    expect(matches(
+      current,
+      input.planningEventId,
+      input.transitionContextId,
+      input.plannedForIso,
+    )).toBe(false);
+    expect(matches(
+      planned,
+      'planning-event-unrelated',
+      input.transitionContextId,
+      input.plannedForIso,
+    )).toBe(false);
+    expect(matches(
+      planned,
+      input.planningEventId,
+      'transition-unrelated',
+      input.plannedForIso,
+    )).toBe(false);
+    expect(matches(
+      planned,
+      input.planningEventId,
+      input.transitionContextId,
+      '2026-02-12T12:00:00.000Z',
+    )).toBe(false);
+    expect(matches(
+      planned,
+      input.planningEventId,
+      planned.transitionContextId,
+      input.plannedForIso,
+    )).toBe(false);
+    expect(matches(
+      structuredClone(planned),
+      input.planningEventId,
+      input.transitionContextId,
+      input.plannedForIso,
+    )).toBe(false);
+    expect(matches(
+      new Proxy(planned, {}),
+      input.planningEventId,
+      input.transitionContextId,
+      input.plannedForIso,
+    )).toBe(false);
+    expect(matches(
+      createPlannedOutfitContext(completeInput()),
+      input.planningEventId,
+      input.transitionContextId,
+      input.plannedForIso,
+    )).toBe(false);
+    const hostile = new Proxy(planned, {
+      getPrototypeOf() {
+        throw new Error('hostile getPrototypeOf');
+      },
+      ownKeys() {
+        throw new Error('hostile ownKeys');
+      },
+    });
+    expect(() => matches(
+      hostile,
+      input.planningEventId,
+      input.transitionContextId,
+      input.plannedForIso,
+    )).not.toThrow();
+    expect(matches(
+      hostile,
+      input.planningEventId,
+      input.transitionContextId,
+      input.plannedForIso,
+    )).toBe(false);
   });
 
   it('rejects copies and hostile values through both origin matchers', () => {
@@ -608,11 +807,16 @@ describe('Planned Outfit exact-context contracts', () => {
   });
 
   it('keeps the Phase-1 string projection explicit and outside the outfit-truth guard', async () => {
-    const legacy = createPlannedOutfitContext(completeInput());
+    const input = completeInput();
+    const legacy = createPlannedOutfitContext(structuredClone(input));
+    const currentLegacy = createCurrentOutfitContext(structuredClone(input));
     const { isOutfitTruthPlannedOutfitContext } = await import('../planned-outfit-context.js');
     expect(legacy.sourceKind).toBe('phase1-legacy');
     expect(isPlannedOutfitContext(legacy)).toBe(true);
     expect(isOutfitTruthPlannedOutfitContext(legacy)).toBe(false);
+    expect(JSON.stringify(currentLegacy)).toBe(JSON.stringify(legacy));
+    expect(legacy.transitionContextId).toBe(input.transitionContextId);
+    expect(currentLegacy.transitionContextId).toBe(input.transitionContextId);
   });
 
   it('preserves existing full source objects at both screen handoffs without a handoff rerun', async () => {
