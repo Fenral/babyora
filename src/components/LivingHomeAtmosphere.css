@@ -1,0 +1,70 @@
+.ba-living-home-atmosphere {
+  --living-home-temperature-tone: var(--layer-bg-mild, var(--accent-temp));
+
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+  isolation: isolate;
+  contain: paint;
+  pointer-events: none;
+  background: var(--bg-canvas);
+}
+
+.ba-living-home-atmosphere[data-palette='cold'] {
+  --living-home-temperature-tone: var(--layer-bg-kald, var(--accent-temp));
+}
+
+.ba-living-home-atmosphere[data-palette='warm'] {
+  --living-home-temperature-tone: var(--layer-bg-varm, var(--accent-temp));
+}
+
+/*
+ * One quiet signature: a low-opacity temperature veil changes with the
+ * caller's current snapshot. Weather detail remains in the established
+ * LivingHomeBackground layers below it.
+ */
+.ba-living-home-atmosphere::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-color: color-mix(
+    in srgb,
+    var(--living-home-temperature-tone) 7%,
+    transparent
+  );
+  transition: background-color 180ms var(--ease-out);
+}
+
+.ba-living-home-atmosphere[data-motion='reduced']::after {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ba-living-home-atmosphere::after {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .ba-living-home-atmosphere::after {
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .ba-living-home-atmosphere {
+    background: Canvas;
+    forced-color-adjust: auto;
+  }
+
+  .ba-living-home-atmosphere::after {
+    display: none;
+  }
+}
