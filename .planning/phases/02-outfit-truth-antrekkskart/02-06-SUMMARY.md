@@ -187,7 +187,18 @@ All gates passed: focused 148/148; full suite 1,251 passed + 1 todo; inventory a
 
 The pure boundary has no screen/App/routes/engine/package/media changes and no forbidden `recommend`, IO, or planning-inventory dependency. The only implementation paths are the two listed in machine-readable scope above.
 
-To roll back runtime behavior, revert candidate `947be06ff2615482572567b4066ae0832f5d8dee`; the final parent repair is test-only. This closeout can be reverted separately as documentation. No external cost, push, or deployment occurred.
+To roll back Plan 02-06 while preserving the accepted dependency merges, revert
+its implementation commits in reverse order:
+
+1. `947be06ff2615482572567b4066ae0832f5d8dee` (exact inventory test binding)
+2. `11801e49e4623ec044722e76083f561e8976efbf` (safety-before-cardinality source/test)
+3. `19cbd4cf5a54e75c3a1abd11482a7be1717f85d6` (optional-safety base preservation source/test)
+4. `becc0f8c4ddc5ea8c2dacef87bb8eafb69903427` (raw-provenance fixture test)
+5. `8af5a7e42970bf5bcbdd68bb0ff8b70d3793d3b0` (source-provenance source/test)
+6. `a3d203a64f59348ea26c668a48ef5ecea33b9058` (initial producer source/test)
+
+The documentation closeout can be reverted separately. No external cost, push,
+or deployment occurred.
 
 ## Quality Check
 

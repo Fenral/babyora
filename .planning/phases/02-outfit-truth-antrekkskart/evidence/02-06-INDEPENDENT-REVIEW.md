@@ -93,4 +93,9 @@ Inventory bindings are script `d4af276900bdfbdde9a27a00f5620e49c294c41a` and tes
 
 Focused tests 148/148, full suite 1,251 passed + 1 todo, inventory, lint, typecheck, main/bare builds, scope/import scans, candidate diff, and clean-tree checks all passed. No screen, App, routes, engine, package, media, or planning inventory changes occurred; the producer has no forbidden recommendation or IO dependency.
 
-Rollback reverts runtime candidate `947be06ff2615482572567b4066ae0832f5d8dee`; its direct parent repair is test-only. The documentation closeout may be reverted separately. No install, push, deployment, publication, or external cost occurred.
+Rollback preserves accepted dependency merges and reverts the Plan 02-06
+implementation chain in reverse: `947be06`, `11801e49`, `19cbd4c`,
+`becc0f8`, `8af5a7e`, then `a3d203a`. Commits `947be06` and `becc0f8` are
+test-only; the other listed implementation commits contain the producer source
+evolution. The documentation closeout may be reverted separately. No install,
+push, deployment, publication, or external cost occurred.
