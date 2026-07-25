@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { runOutfitInventoryV1 } from '../../../../scripts/outfit/inventory-v1.js';
 import {
   createCurrentOutfitContext,
   createPlannedOutfitContext,
@@ -56,19 +57,11 @@ function completeRecommendInput(
 }
 
 function trackedElevenRecommendInput(): RecommendInput {
-  return completeRecommendInput({
-    activity: 'vogn',
-    weather: {
-      feelsLikeC: -30,
-      tempC: -30,
-      windMs: 8,
-      precipMmH: 0,
-      symbolCode: 'cloudy',
-    },
-    child: { ageMonths: 0 },
-    childCalibration: 0,
-    vognMode: 'awake',
-  });
+  const maxGarmentCase = runOutfitInventoryV1().maxGarmentCase;
+  if (maxGarmentCase === null) {
+    throw new Error('outfit inventory v1 did not produce a max garment case');
+  }
+  return maxGarmentCase;
 }
 
 function recommendationProjection(
@@ -103,7 +96,7 @@ function canonicalRawTransitionContextId(
         recommendInput.weather.feelsLikeC,
         recommendInput.weather.windMs,
         recommendInput.weather.precipMmH,
-        recommendInput.weather.symbolCode ?? 'clearsky_day',
+        recommendInput.weather.symbolCode ?? 'unknown',
       ])}`
     : `planned-finalized:${JSON.stringify([
         orderedGarments,
@@ -160,7 +153,7 @@ function exactContext(
       feelsLikeC: recommendInput.weather.feelsLikeC,
       windMs: recommendInput.weather.windMs,
       precipMmH: recommendInput.weather.precipMmH,
-      symbolCode: recommendInput.weather.symbolCode ?? 'clearsky_day',
+      symbolCode: recommendInput.weather.symbolCode ?? 'unknown',
     },
     recommendInput,
     finalizedRecommendation,
@@ -591,7 +584,26 @@ describe('produceOutfitBundle', () => {
   ] as const)(
     'preserves the tracked eleven-garment result as complete list-only truth when %s',
     (_name, identity, mutateFinalizerData) => {
+      const inventory = runOutfitInventoryV1();
       const recommendInput = trackedElevenRecommendInput();
+      if (inventory.maxGarmentCase === null) {
+        throw new Error('outfit inventory v1 did not produce a max garment case');
+      }
+      expect(recommendInput).toBe(inventory.maxGarmentCase);
+      expect(Object.hasOwn(recommendInput.weather, 'symbolCode')).toBe(false);
+      expect(inventory.maxGarmentItems).toEqual([
+        'to ullsett oppå hverandre',
+        'tykke ullstrømper',
+        'ullsokker',
+        'ull-jakke',
+        'ull-bukse',
+        'ekstra ull-lag',
+        'isolert vinterkjøredress',
+        'balaklava',
+        'votter dun',
+        'halsedisse',
+        'vindvotter (skall)',
+      ]);
       const finalizedRecommendation = recommend(recommendInput);
       mutateFinalizerData(finalizedRecommendation);
       const context = exactContext({
@@ -632,6 +644,10 @@ describe('produceOutfitBundle', () => {
         'halsedisse',
         'vindvotter (skall)',
       ]);
+      expect(result.truth.orderedGarments.map(
+        (garment) => garment.sourceLabel,
+      )).toEqual(inventory.maxGarmentItems);
+      expect(result.truth.orderedGarments).toHaveLength(11);
       expect(result.truth.equipment.map(
         (equipment) => equipment.sourceLabel,
       )).toEqual([
@@ -640,16 +656,25 @@ describe('produceOutfitBundle', () => {
         'ansiktskrem',
         'vognpose',
       ]);
+      expect(result.truth.equipment).toHaveLength(4);
       expect('base' in result).toBe(false);
       expect('options' in result).toBe(false);
       expect('snapshot' in result.truth).toBe(false);
       expect('avatar' in result.truth).toBe(false);
       assertRecursivelyFrozen(result);
     },
+    120_000,
   );
 
   it('rejects an inconsistent complete safety pair for tracked eleven-garment truth', () => {
+    const inventory = runOutfitInventoryV1();
     const recommendInput = trackedElevenRecommendInput();
+    if (inventory.maxGarmentCase === null) {
+      throw new Error('outfit inventory v1 did not produce a max garment case');
+    }
+    expect(recommendInput).toBe(inventory.maxGarmentCase);
+    expect(Object.hasOwn(recommendInput.weather, 'symbolCode')).toBe(false);
+    expect(inventory.maxGarmentItems).toHaveLength(11);
     const finalizedRecommendation = recommend(recommendInput);
     expect(finalizedRecommendation.safetyFlags).toBeDefined();
     expect(finalizedRecommendation.severity).toBeDefined();
@@ -679,7 +704,7 @@ describe('produceOutfitBundle', () => {
       bundleVersion: 1,
       reason: 'truth-build-failed',
     });
-  });
+  }, 120_000);
 
   it.each([
     [
