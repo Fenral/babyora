@@ -8,6 +8,7 @@ export const PLAN_TIME_ZONE = 'Europe/Oslo' as const;
 const PLANNED_CONTEXT_SCHEMA_VERSION = 1 as const;
 const OUTFIT_BUNDLE_PRODUCER_SEED_VERSION = 1 as const;
 const ownedPlannedContexts = new WeakSet<object>();
+const ownedOutfitBundleProducerSeeds = new WeakSet<object>();
 
 const ACTIVITIES: readonly Activity[] = ['vogn', 'baeresele', 'utelek', 'soevn'];
 const PLACE_SOURCES = ['configured-place', 'fixed-home', 'automatic'] as const;
@@ -738,6 +739,16 @@ export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext
               canonical.recommendInput,
               canonical.finalizedRecommendation,
             );
+          const producerSeed = recursivelyFreeze({
+            seedVersion: OUTFIT_BUNDLE_PRODUCER_SEED_VERSION,
+            sourceContextId: plannedContextId,
+            transitionContextId: canonical.transitionContextId,
+            recommendationId,
+            recommendationFingerprint,
+            input: canonical.recommendInput,
+            finalizedRecommendation: canonical.finalizedRecommendation,
+          });
+          ownedOutfitBundleProducerSeeds.add(producerSeed);
           return recursivelyFreeze({
             ...base,
             sourceKind: 'phase2-outfit-truth' as const,
@@ -748,15 +759,7 @@ export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext
               equipment: [...projection.equipment],
               finalized: true as const,
             },
-            producerSeed: {
-              seedVersion: OUTFIT_BUNDLE_PRODUCER_SEED_VERSION,
-              sourceContextId: plannedContextId,
-              transitionContextId: canonical.transitionContextId,
-              recommendationId,
-              recommendationFingerprint,
-              input: canonical.recommendInput,
-              finalizedRecommendation: canonical.finalizedRecommendation,
-            },
+            producerSeed,
           });
         })()
       : recursivelyFreeze({
@@ -823,4 +826,77 @@ export function isPlannedOutfitContext(value: unknown): value is PlannedOutfitCo
 
 export function isOutfitTruthPlannedOutfitContext(value: unknown): value is OutfitTruthPlannedOutfitContext {
   return isPlannedOutfitContext(value) && value.sourceKind === 'phase2-outfit-truth';
+}
+
+/**
+ * Authenticates the exact seed object created at the canonical planning
+ * boundary. Structural equality, freezing, and TypeScript assertions are not
+ * sufficient: callers cannot register a copy or a lookalike.
+ */
+export function isOutfitBundleProducerSeedV1(value: unknown): value is OutfitBundleProducerSeedV1 {
+  try {
+    if (
+      !isRecord(value)
+      || !ownedOutfitBundleProducerSeeds.has(value)
+      || !Object.isFrozen(value)
+    ) {
+      return false;
+    }
+    assertExactOwnKeys(value, 'producerSeed', [
+      'seedVersion',
+      'sourceContextId',
+      'transitionContextId',
+      'recommendationId',
+      'recommendationFingerprint',
+      'input',
+      'finalizedRecommendation',
+    ]);
+    const seedVersion = ownDataValue(value, 'seedVersion', 'producerSeed.seedVersion');
+    const sourceContextId = ownDataValue(value, 'sourceContextId', 'producerSeed.sourceContextId');
+    const transitionContextId = ownDataValue(
+      value,
+      'transitionContextId',
+      'producerSeed.transitionContextId',
+    );
+    const recommendationId = ownDataValue(value, 'recommendationId', 'producerSeed.recommendationId');
+    const recommendationFingerprint = ownDataValue(
+      value,
+      'recommendationFingerprint',
+      'producerSeed.recommendationFingerprint',
+    );
+    const input = ownDataValue(value, 'input', 'producerSeed.input') as RecommendInput;
+    const finalizedRecommendation = ownDataValue(
+      value,
+      'finalizedRecommendation',
+      'producerSeed.finalizedRecommendation',
+    ) as Recommendation;
+    if (
+      seedVersion !== OUTFIT_BUNDLE_PRODUCER_SEED_VERSION
+      || typeof sourceContextId !== 'string'
+      || sourceContextId.length === 0
+      || typeof transitionContextId !== 'string'
+      || transitionContextId.length === 0
+      || sourceContextId === transitionContextId
+      || typeof recommendationId !== 'string'
+      || typeof recommendationFingerprint !== 'string'
+    ) {
+      return false;
+    }
+    createOutfitTruthSnapshot({
+      transitionContextId,
+      input,
+      finalizedRecommendation,
+      pose: 'sitting',
+    });
+    const provenance = canonicalRecommendationProvenance(input, finalizedRecommendation);
+    return (
+      Object.isFrozen(input)
+      && Object.isFrozen(finalizedRecommendation)
+      && recommendationId === provenance.recommendationId
+      && recommendationFingerprint === provenance.recommendationFingerprint
+      && sameFrozenKnownShape(value, value)
+    );
+  } catch {
+    return false;
+  }
 }

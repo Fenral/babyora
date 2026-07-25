@@ -10,6 +10,7 @@ import {
 } from './planlegg-fixtures.js';
 import {
   createPlannedOutfitContext,
+  isOutfitBundleProducerSeedV1,
   isPlannedOutfitContext,
   PLAN_TIME_ZONE,
 } from '../planned-outfit-context.js';
@@ -152,6 +153,22 @@ function canonicalCompleteInput() {
 }
 
 describe('Planned Outfit exact-context contracts', () => {
+  it('authenticates only the exact internally registered producer seed', () => {
+    const context = createPlannedOutfitContext(canonicalCompleteInput());
+    expect(context.sourceKind).toBe('phase2-outfit-truth');
+    if (context.sourceKind !== 'phase2-outfit-truth') throw new Error('expected Phase-2 context');
+
+    expect(isOutfitBundleProducerSeedV1(context.producerSeed)).toBe(true);
+    expect(isOutfitBundleProducerSeedV1(structuredClone(context.producerSeed))).toBe(false);
+    expect(isOutfitBundleProducerSeedV1(Object.freeze({ ...context.producerSeed }))).toBe(false);
+    expect(isOutfitBundleProducerSeedV1({ ...context.producerSeed })).toBe(false);
+    expect(isOutfitBundleProducerSeedV1(new Proxy(context.producerSeed, {}))).toBe(false);
+
+    const legacy = createPlannedOutfitContext(completeInput());
+    expect(legacy.sourceKind).toBe('phase1-legacy');
+    expect(isOutfitBundleProducerSeedV1(legacy)).toBe(false);
+  });
+
   it('owns one complete immutable Phase-2 producer seed and derives its projection', () => {
     const input = canonicalCompleteInput();
     const original = structuredClone(input);
