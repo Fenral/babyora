@@ -9,6 +9,13 @@ const PLANNED_CONTEXT_SCHEMA_VERSION = 1 as const;
 const OUTFIT_BUNDLE_PRODUCER_SEED_VERSION = 1 as const;
 const ownedPlannedContexts = new WeakSet<object>();
 const ownedOutfitBundleProducerSeeds = new WeakSet<object>();
+const ownedOutfitBundleProducerSeedPlannedSources = new WeakMap<
+  object,
+  Readonly<{
+    planningEventId: string;
+    plannedForIso: string;
+  }>
+>();
 
 const ACTIVITIES: readonly Activity[] = ['vogn', 'baeresele', 'utelek', 'soevn'];
 const PLACE_SOURCES = ['configured-place', 'fixed-home', 'automatic'] as const;
@@ -749,6 +756,13 @@ export function createPlannedOutfitContext(input: unknown): PlannedOutfitContext
             finalizedRecommendation: canonical.finalizedRecommendation,
           });
           ownedOutfitBundleProducerSeeds.add(producerSeed);
+          ownedOutfitBundleProducerSeedPlannedSources.set(
+            producerSeed,
+            Object.freeze({
+              planningEventId: canonical.planningEventId,
+              plannedForIso: canonical.plannedForIso,
+            }),
+          );
           return recursivelyFreeze({
             ...base,
             sourceKind: 'phase2-outfit-truth' as const,
@@ -895,6 +909,31 @@ export function isOutfitBundleProducerSeedV1(value: unknown): value is OutfitBun
       && recommendationId === provenance.recommendationId
       && recommendationFingerprint === provenance.recommendationFingerprint
       && sameFrozenKnownShape(value, value)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Confirms only the planned metadata recorded beside an authenticated seed.
+ * It neither accepts structural seed copies nor determines a source kind.
+ */
+export function matchesOutfitBundleProducerSeedPlannedSourceV1(
+  seed: unknown,
+  planningEventId: unknown,
+  plannedForIso: unknown,
+): boolean {
+  try {
+    if (!isOutfitBundleProducerSeedV1(seed)) return false;
+    const plannedSource =
+      ownedOutfitBundleProducerSeedPlannedSources.get(seed);
+    return (
+      plannedSource !== undefined
+      && typeof planningEventId === 'string'
+      && typeof plannedForIso === 'string'
+      && planningEventId === plannedSource.planningEventId
+      && plannedForIso === plannedSource.plannedForIso
     );
   } catch {
     return false;

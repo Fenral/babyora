@@ -12,6 +12,7 @@ import {
   createPlannedOutfitContext,
   isOutfitBundleProducerSeedV1,
   isPlannedOutfitContext,
+  matchesOutfitBundleProducerSeedPlannedSourceV1,
   PLAN_TIME_ZONE,
 } from '../planned-outfit-context.js';
 
@@ -167,6 +168,80 @@ describe('Planned Outfit exact-context contracts', () => {
     const legacy = createPlannedOutfitContext(completeInput());
     expect(legacy.sourceKind).toBe('phase1-legacy');
     expect(isOutfitBundleProducerSeedV1(legacy)).toBe(false);
+  });
+
+  it('binds an owned seed to its exact canonical planned event and interval', () => {
+    const context = createPlannedOutfitContext(canonicalCompleteInput());
+    expect(context.sourceKind).toBe('phase2-outfit-truth');
+    if (context.sourceKind !== 'phase2-outfit-truth') throw new Error('expected Phase-2 context');
+
+    const matches = (seed: unknown, planningEventId: unknown, plannedForIso: unknown) =>
+      matchesOutfitBundleProducerSeedPlannedSourceV1(
+        seed,
+        planningEventId,
+        plannedForIso,
+      );
+    expect(matches(
+      context.producerSeed,
+      context.planningEventId,
+      context.plannedForIso,
+    )).toBe(true);
+    expect(matches(
+      context.producerSeed,
+      'planning-event-arbitrary',
+      context.plannedForIso,
+    )).toBe(false);
+    expect(matches(
+      context.producerSeed,
+      context.planningEventId,
+      '2026-02-12T12:00:00.000Z',
+    )).toBe(false);
+    expect(matches(
+      context.producerSeed,
+      context.planningEventId,
+      '2026-02-12T12:00:00.000+01:00',
+    )).toBe(false);
+    expect(matches(
+      structuredClone(context.producerSeed),
+      context.planningEventId,
+      context.plannedForIso,
+    )).toBe(false);
+    expect(matches(
+      { ...context.producerSeed },
+      context.planningEventId,
+      context.plannedForIso,
+    )).toBe(false);
+    expect(matches(
+      Object.freeze({ ...context.producerSeed }),
+      context.planningEventId,
+      context.plannedForIso,
+    )).toBe(false);
+
+    const hostile = new Proxy(context.producerSeed, {
+      getPrototypeOf() {
+        throw new Error('hostile getPrototypeOf');
+      },
+      ownKeys() {
+        throw new Error('hostile ownKeys');
+      },
+    });
+    expect(() => matches(
+      hostile,
+      context.planningEventId,
+      context.plannedForIso,
+    )).not.toThrow();
+    expect(matches(
+      hostile,
+      context.planningEventId,
+      context.plannedForIso,
+    )).toBe(false);
+
+    const legacy = createPlannedOutfitContext(completeInput());
+    expect(matches(
+      legacy,
+      legacy.planningEventId,
+      legacy.plannedForIso,
+    )).toBe(false);
   });
 
   it('owns one complete immutable Phase-2 producer seed and derives its projection', () => {
