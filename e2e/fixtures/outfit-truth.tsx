@@ -11,7 +11,6 @@ import {
 import { useOutfitSelectionStore } from '../../src/state/outfit-selection-store.js';
 import { recommend } from '../../src/lib/wool-layers/recommend.js';
 import type { RecommendInput, Recommendation } from '../../src/lib/wool-layers/types.js';
-import inventoryOracleSource from '../../scripts/outfit/inventory-v1.ts?raw';
 import '../../src/styles/design-tokens.css';
 
 type FixtureCase = 'one' | 'four' | 'five' | 'ten' | 'eleven' | 'unavailable';
@@ -19,7 +18,11 @@ type FixtureAxis = 'kald' | 'mild' | 'varm';
 type Registration = Readonly<{ itemId: string; connected: boolean }>;
 
 type OutfitTruthFixtureApi = Readonly<{
-  mount: (fixtureCase: FixtureCase, axis?: FixtureAxis) => Promise<Readonly<{
+  mount: (
+    fixtureCase: FixtureCase,
+    axis?: FixtureAxis,
+    inventoryGarments?: readonly string[],
+  ) => Promise<Readonly<{
     kind: OutfitBundleProducerResult['kind'];
     garmentCount: number;
     equipmentCount: number;
@@ -61,23 +64,6 @@ const ORDERED_GARMENTS = Object.freeze([
   'votter dun',
   'vintersko isolerte',
   'ullsokker',
-] as const);
-
-// Keep provenance local to the candidate artifact while the Node harness runs
-// the executable inventory oracle and compares this list-only DOM to it.
-const CANDIDATE_INVENTORY_ORACLE_PRESENT = inventoryOracleSource.includes('maxGarmentCase');
-const ELEVEN_GARMENTS = Object.freeze([
-  'to ullsett opp\u00e5 hverandre',
-  'tykke ullstr\u00f8mper',
-  'ullsokker',
-  'ull-jakke',
-  'ull-bukse',
-  'ekstra ull-lag',
-  'isolert vinterkj\u00f8redress',
-  'balaklava',
-  'votter dun',
-  'halsedisse',
-  'vindvotter (skall)',
 ] as const);
 
 function inputFor(axis: FixtureAxis): RecommendInput {
@@ -168,12 +154,20 @@ function supportedBundle(count: 1 | 4 | 5 | 10, axis: FixtureAxis) {
   return result;
 }
 
-function elevenBundle(axis: FixtureAxis) {
-  if (!CANDIDATE_INVENTORY_ORACLE_PRESENT) throw new Error('Candidate inventory oracle provenance is missing');
+function elevenBundle(axis: FixtureAxis, inventoryGarments: readonly string[] | undefined) {
+  // The Node harness extracts this exact list from the tracked candidate-local
+  // inventory artifact. The browser fixture deliberately owns no parallel copy.
+  if (
+    inventoryGarments === undefined
+    || inventoryGarments.length !== 11
+    || inventoryGarments.some((item) => typeof item !== 'string' || item.length === 0)
+  ) {
+    throw new Error('Exact eleven-item candidate inventory input is required');
+  }
   const input = inputFor(axis);
   const finalizedRecommendation: Recommendation = {
     ...recommend(input),
-    layers: [{ category: 'innerst', items: [...ELEVEN_GARMENTS] }],
+    layers: [{ category: 'innerst', items: [...inventoryGarments] }],
   };
   const result = bundleFrom('planned', input, finalizedRecommendation, `eleven-${axis}`);
   if (result.kind !== 'unsupported-cardinality' || result.truth.orderedGarments.length !== 11) {
@@ -182,8 +176,12 @@ function elevenBundle(axis: FixtureAxis) {
   return result;
 }
 
-function makeBundle(fixtureCase: FixtureCase, axis: FixtureAxis): OutfitBundleProducerResult {
-  if (fixtureCase === 'eleven') return elevenBundle(axis);
+function makeBundle(
+  fixtureCase: FixtureCase,
+  axis: FixtureAxis,
+  inventoryGarments: readonly string[] | undefined,
+): OutfitBundleProducerResult {
+  if (fixtureCase === 'eleven') return elevenBundle(axis, inventoryGarments);
   if (fixtureCase === 'unavailable') return produceOutfitBundle({} as never);
   return supportedBundle(
     fixtureCase === 'one' ? 1 : fixtureCase === 'four' ? 4 : fixtureCase === 'five' ? 5 : 10,
@@ -199,9 +197,13 @@ function reset() {
   rootElement.replaceChildren();
 }
 
-async function mount(fixtureCase: FixtureCase, axis: FixtureAxis = 'mild') {
+async function mount(
+  fixtureCase: FixtureCase,
+  axis: FixtureAxis = 'mild',
+  inventoryGarments?: readonly string[],
+) {
   reset();
-  const outfitBundle = makeBundle(fixtureCase, axis);
+  const outfitBundle = makeBundle(fixtureCase, axis, inventoryGarments);
   root = createRoot(rootElement);
   root.render(
     <OutfitTruthPanel

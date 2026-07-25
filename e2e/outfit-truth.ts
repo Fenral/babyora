@@ -13,6 +13,64 @@ const FIXTURE_PATH = '/e2e/fixtures/outfit-truth.html';
 const SUPPORTED_CASES = Object.freeze(['component-matrix', 'production-app-routes'] as const);
 type HarnessCase = typeof SUPPORTED_CASES[number];
 type ExpectedFlag = boolean | undefined;
+const PRODUCTION_ROUTE_NOW = new Date('2026-02-12T08:00:00.000Z');
+
+function deterministicProductionForecast(): unknown {
+  const start = Date.parse('2026-02-11T23:00:00.000Z');
+  return {
+    properties: {
+      meta: {
+        updated_at: PRODUCTION_ROUTE_NOW.toISOString(),
+        units: {
+          air_temperature: 'celsius',
+          wind_speed: 'm/s',
+          wind_from_direction: 'degrees',
+          relative_humidity: '%',
+          cloud_area_fraction: '%',
+          precipitation_amount: 'mm',
+        },
+      },
+      timeseries: Array.from({ length: 72 }, (_, index) => ({
+        time: new Date(start + index * 60 * 60 * 1000).toISOString(),
+        data: {
+          instant: {
+            details: {
+              air_temperature: (() => {
+                const localHour = (new Date(start + index * 60 * 60 * 1000).getUTCHours() + 1) % 24;
+                return localHour < 8 ? -8 : localHour < 12 ? 1 : localHour < 16 ? 15 : -3;
+              })(),
+              wind_speed: 2,
+              wind_from_direction: 180,
+              relative_humidity: 72,
+              cloud_area_fraction: 35,
+            },
+          },
+          next_1_hours: {
+            summary: { symbol_code: 'fair_day' },
+            details: { precipitation_amount: 0 },
+          },
+        },
+      })),
+    },
+  };
+}
+
+async function installProductionRouteInputs(page: Page): Promise<void> {
+  await page.clock.install({ time: PRODUCTION_ROUTE_NOW });
+  await page.addInitScript(() => {
+    localStorage.setItem('babyora.subscription', JSON.stringify({
+      state: { isPremium: true, lastSyncedAt: 1 },
+      version: 0,
+    }));
+  });
+  await page.route('**/api/forecast?**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(deterministicProductionForecast()),
+    });
+  });
+}
 
 function parseArguments(argv: readonly string[]): Readonly<{ caseName: HarnessCase; expectedFlag: ExpectedFlag }> {
   let caseName: string | undefined;
@@ -89,7 +147,12 @@ async function stopServer(server: ChildProcess): Promise<void> {
   if (server.exitCode === null && server.signalCode === null) server.kill('SIGKILL');
 }
 
-async function mount(page: Page, fixtureCase: 'one' | 'four' | 'five' | 'ten' | 'eleven' | 'unavailable', axis: 'kald' | 'mild' | 'varm') {
+async function mount(
+  page: Page,
+  fixtureCase: 'one' | 'four' | 'five' | 'ten' | 'eleven' | 'unavailable',
+  axis: 'kald' | 'mild' | 'varm',
+  inventoryGarments?: readonly string[],
+) {
   const fixtureErrors: string[] = [];
   const captureFixtureError = (error: Error) => fixtureErrors.push(error.message);
   page.on('pageerror', captureFixtureError);
@@ -102,11 +165,11 @@ async function mount(page: Page, fixtureCase: 'one' | 'four' | 'five' | 'ten' | 
   } finally {
     page.off('pageerror', captureFixtureError);
   }
-  return page.evaluate(async ({ fixtureCase: nextCase, axis: nextAxis }) => {
+  return page.evaluate(async ({ fixtureCase: nextCase, axis: nextAxis, inventoryGarments: nextInventoryGarments }) => {
     const api = window.__OUTFIT_TRUTH_FIXTURE__;
     if (api === undefined) throw new Error('fixture API missing');
-    return api.mount(nextCase, nextAxis);
-  }, { fixtureCase, axis });
+    return api.mount(nextCase, nextAxis, nextInventoryGarments);
+  }, { fixtureCase, axis, inventoryGarments });
 }
 
 async function assertSupportedCell(
@@ -212,13 +275,14 @@ async function assertSupportedCell(
 async function assertElevenListOnly(page: Page): Promise<void> {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.emulateMedia({ colorScheme: 'light', forcedColors: 'none', reducedMotion: 'reduce' });
-  const summary = await mount(page, 'eleven', 'mild');
-  if (summary.kind !== 'unsupported-cardinality' || summary.garmentCount !== 11) throw new Error('Exact 11 fixture missing');
-  if (await page.locator('.outfit-list > ol > li').count() !== 11) throw new Error('List-only fallback did not render all eleven rows');
   const oracle = runOutfitInventoryV1();
   if (oracle.maxGarmentCase === null || oracle.maxGarmentItems.length !== 11) throw new Error('Candidate-local inventory has no exact eleven case');
+  const exactElevenGarments = Object.freeze([...oracle.maxGarmentItems]);
+  const summary = await mount(page, 'eleven', 'mild', exactElevenGarments);
+  if (summary.kind !== 'unsupported-cardinality' || summary.garmentCount !== exactElevenGarments.length) throw new Error('Exact 11 fixture missing');
+  if (await page.locator('.outfit-list > ol > li').count() !== exactElevenGarments.length) throw new Error('List-only fallback did not render all eleven rows');
   const rendered = await page.locator('.outfit-list > ol > li').allTextContents();
-  const expected = oracle.maxGarmentItems.map((label, index) => `${index + 1}. ${label}`);
+  const expected = exactElevenGarments.map((label, index) => `${index + 1}. ${label}`);
   if (rendered.join('|') !== expected.join('|')) throw new Error('List-only fixture diverged from candidate-local inventory oracle');
   for (const forbidden of ['[data-outfit-map-mode]', '[data-outfit-connector]', '[data-avatar-truth]', '[data-outfit-row]', '.outfit-alternative']) {
     if (await page.locator(forbidden).count() !== 0) throw new Error(`List-only fallback rendered forbidden ${forbidden}`);
@@ -227,6 +291,30 @@ async function assertElevenListOnly(page: Page): Promise<void> {
   if (registrations.length !== 0) throw new Error('List-only fallback registered an outfit row');
   const motion = await page.locator('.outfit-truth-panel').evaluate((element) => getComputedStyle(element).transitionDuration);
   if (motion.split(',').some((value) => Number.parseFloat(value) > 0.001)) throw new Error(`List-only fallback has motion eligibility: ${motion}`);
+}
+
+async function assertUnavailableAtTrustedProducerBoundary(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.emulateMedia({ colorScheme: 'light', forcedColors: 'none', reducedMotion: 'reduce' });
+  const summary = await mount(page, 'unavailable', 'mild');
+  if (summary.kind !== 'unavailable' || summary.garmentCount !== 0 || summary.equipmentCount !== 0) {
+    throw new Error('Producer-emitted unavailable fixture drifted');
+  }
+  const unavailablePanel = page.locator('.outfit-truth-panel');
+  if (
+    await unavailablePanel.count() !== 1
+    || await unavailablePanel.getAttribute('aria-live') !== 'polite'
+    || (await unavailablePanel.innerText()).trim() !== 'Antrekksanbefalingen er ikke tilgjengelig.'
+  ) {
+    throw new Error('Unavailable producer result did not remain neutral recovery copy');
+  }
+  for (const forbidden of ['[data-outfit-map-mode]', '[data-outfit-connector]', '[data-avatar-truth]', '[data-outfit-row]', '.outfit-alternative', 'button']) {
+    if (await unavailablePanel.locator(forbidden).count() !== 0) {
+      throw new Error(`Unavailable producer result rendered forbidden ${forbidden}`);
+    }
+  }
+  const registrations = await page.evaluate(() => window.__OUTFIT_TRUTH_FIXTURE__?.registrations() ?? []);
+  if (registrations.length !== 0) throw new Error('Unavailable producer result registered an outfit row');
 }
 
 async function assertComponentMatrix(page: Page): Promise<void> {
@@ -248,6 +336,10 @@ async function assertComponentMatrix(page: Page): Promise<void> {
     }
   }
   await assertElevenListOnly(page);
+  // The real App routes accept only context-owned producer outputs. An invalid
+  // result cannot cross that boundary without forging props, so this is the
+  // closest authentic boundary: a producer-emitted unavailable result.
+  await assertUnavailableAtTrustedProducerBoundary(page);
   if (failures.length > 0) throw new Error(`Browser page errors: ${failures.join('\n')}`);
 }
 
@@ -257,9 +349,49 @@ async function assertProductionRoutes(page: Page, expectedFlag: ExpectedFlag): P
   if (expectedFlag !== undefined && enabled !== expectedFlag) {
     throw new Error(`Expected feature flag ${expectedFlag}, found ${enabled}`);
   }
+  await installProductionRouteInputs(page);
   await page.goto(`${BASE_URL}/?seed=demo`, { waitUntil: 'domcontentloaded' });
   if (!enabled) {
-    if (await page.locator('.outfit-truth-panel').count() !== 0) throw new Error('False flag mounted production OutfitTruthPanel');
+    // False-stage proof deliberately enters both real producers through their
+    // Hjem/Planlegg controls. It never mounts Paakledning or injects a bundle.
+    const assertNoMountedPanel = async (boundary: string) => {
+      if (await page.locator('.outfit-truth-panel').count() !== 0) {
+        throw new Error(`False flag mounted production OutfitTruthPanel at ${boundary}`);
+      }
+    };
+    await assertNoMountedPanel('initial app load');
+    const homeAction = page.locator('#hjem-current-outfit-trigger');
+    await homeAction.waitFor({ state: 'visible', timeout: 10_000 });
+    await homeAction.click();
+    const currentDialog = page.locator('dialog[open]').filter({ has: page.getByRole('button', { name: 'Lukk dagens antrekk', exact: true }) });
+    await currentDialog.waitFor({ state: 'visible', timeout: 10_000 });
+    await assertNoMountedPanel('real Hjem current opener');
+    await page.getByRole('button', { name: 'Lukk dagens antrekk', exact: true }).click();
+    await currentDialog.waitFor({ state: 'hidden', timeout: 10_000 });
+    await page.getByRole('navigation').getByRole('button', { name: 'Planlegg', exact: true }).click();
+    const disclosure = page.locator('.plan-change-rail__disclosure').first();
+    try {
+      await disclosure.waitFor({ state: 'visible', timeout: 10_000 });
+    } catch (error) {
+      throw new Error(`Production Planlegg route did not expose a planned opener: ${await page.locator('body').innerText()}`, { cause: error });
+    }
+    if (await disclosure.getAttribute('aria-expanded') !== 'true') {
+      await disclosure.click();
+      await disclosure.waitFor({ state: 'visible', timeout: 10_000 });
+    }
+    const plannedAction = page.getByRole('button', { name: 'Se hele antrekket', exact: true }).first();
+    if (await plannedAction.count() === 0 || await plannedAction.isDisabled()) {
+      throw new Error(`Production Planlegg route did not expose its outfit action: ${await page.locator('body').innerText()}`);
+    }
+    // The rail intentionally clips the just-expanded action during its height
+    // transition; dispatch through that real, enabled control rather than
+    // mounting a route or injecting a Paakledning prop.
+    await plannedAction.click({ force: true });
+    const plannedDialog = page.locator('dialog[open]').filter({ has: page.getByRole('button', { name: 'Lukk planlagt antrekk', exact: true }) });
+    await plannedDialog.waitFor({ state: 'visible', timeout: 10_000 });
+    await assertNoMountedPanel('real Planlegg planned opener');
+    await page.getByRole('button', { name: 'Lukk planlagt antrekk', exact: true }).click();
+    await plannedDialog.waitFor({ state: 'hidden', timeout: 10_000 });
     return;
   }
   const appSource = readFileSync(join(process.cwd(), 'src/App.tsx'), 'utf8');
@@ -269,6 +401,9 @@ async function assertProductionRoutes(page: Page, expectedFlag: ExpectedFlag): P
   }
   if (!screenSource.includes('OutfitTruthPanel')) throw new Error('Enabled Paakledning route lacks panel contract');
   // These are production UI contracts: no fixture mount and no bundle injection is allowed here.
+  // Current and planned demo contexts are supported. The exact 11-item and
+  // unavailable branches are exercised above at their closest authentic
+  // producer boundary because trusted UI contexts cannot naturally be invalid.
   const homeAction = page.locator('#hjem-current-outfit-trigger');
   if (await homeAction.count() !== 1) throw new Error('Production Hjem outfit action is missing');
   await homeAction.waitFor({ state: 'visible', timeout: 10_000 });
@@ -284,11 +419,20 @@ async function assertProductionRoutes(page: Page, expectedFlag: ExpectedFlag): P
   await page.getByRole('button', { name: 'Lukk dagens antrekk', exact: true }).click();
   await page.getByRole('navigation').getByRole('button', { name: 'Planlegg', exact: true }).click();
   const disclosure = page.locator('.plan-change-rail__disclosure').first();
-  await disclosure.waitFor({ state: 'visible', timeout: 10_000 });
-  await disclosure.click();
+  try {
+    await disclosure.waitFor({ state: 'visible', timeout: 10_000 });
+  } catch (error) {
+    throw new Error(`Production Planlegg route did not expose a planned opener: ${await page.locator('body').innerText()}`, { cause: error });
+  }
+  if (await disclosure.getAttribute('aria-expanded') !== 'true') {
+    await disclosure.click();
+    await disclosure.waitFor({ state: 'visible', timeout: 10_000 });
+  }
   const plannedAction = page.getByRole('button', { name: 'Se hele antrekket', exact: true }).first();
-  if (await plannedAction.count() === 0) throw new Error('Production Uke outfit action is missing');
-  await plannedAction.click();
+  if (await plannedAction.count() === 0 || await plannedAction.isDisabled()) {
+    throw new Error(`Production Planlegg route did not expose its outfit action: ${await page.locator('body').innerText()}`);
+  }
+  await plannedAction.click({ force: true });
   const plannedDialog = page.getByRole('dialog', { name: 'Planlagt antrekk', exact: true });
   await plannedDialog.waitFor({ state: 'visible', timeout: 10_000 });
   if (await plannedDialog.locator('.outfit-truth-panel').count() !== 1) throw new Error('Planned production dialog did not mount real panel');
