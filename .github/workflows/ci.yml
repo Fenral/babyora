@@ -14,6 +14,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Evidence-verification tests intentionally inspect reviewed ancestor
+          # commits, so CI needs the repository history rather than a shallow clone.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
