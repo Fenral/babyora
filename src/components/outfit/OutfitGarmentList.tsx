@@ -16,6 +16,16 @@ type Props = Readonly<{
   hasAlternative: (id: OutfitItemId) => boolean;
 }>;
 
+const BODY_REGION_LABEL: Readonly<Record<string, string>> = {
+  head: 'Hode', neck: 'Hals', torso: 'Overkropp', arms: 'Armer',
+  hands: 'Hender', hips: 'Hofter', legs: 'Ben', feet: 'Føtter',
+  whole_body: 'Hele kroppen', unknown: 'Kroppsplagg',
+};
+
+function bodyRegionLabel(region: string): string {
+  return BODY_REGION_LABEL[region] ?? 'Kroppsplagg';
+}
+
 function Row({ garment, props }: {
   garment: OutfitTruthSnapshotV1['garments'][number];
   props: Props;
@@ -48,7 +58,7 @@ function Row({ garment, props }: {
         <GarmentThumbnail label={garment.label} className="outfit-row__thumbnail" />
         <span className="outfit-row__label">{garment.label}</span>
         <span className="outfit-row__detail">
-          {garment.category} · {garment.bodyRegion}
+          {garment.category} · {bodyRegionLabel(garment.bodyRegion)}
         </span>
       </button>
       {props.hasAlternative(garment.itemId) && (

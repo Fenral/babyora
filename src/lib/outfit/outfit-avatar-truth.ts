@@ -47,9 +47,21 @@ const MANIFEST = Object.freeze(
 // Compatibility paths may only render assets from the checked-in verification
 // manifest. A string that merely resembles an avatar path must fail closed.
 const VERIFIED_ASSET_PATHS = new Set(MANIFEST.map((row) => row.asset));
+const ILLUSTRATIVE_ASSET_PATHS = new Set([
+  '/avatars/avatar-A1.png', '/avatars/avatar-A1-hat.png',
+  '/avatars/avatar-A2.png', '/avatars/avatar-A2-hat.png',
+  '/avatars/avatar-A3.png', '/avatars/avatar-A4.png',
+  '/avatars/avatar-A5.png', '/avatars/avatar-A6.png',
+  '/avatars/avatar-A7.png',
+]);
 
 export function isVerifiedAvatarAssetPath(value: unknown): value is string {
   return typeof value === 'string' && VERIFIED_ASSET_PATHS.has(value);
+}
+
+/** Tier art is safe to use as an illustration, but never as exact verification. */
+export function isIllustrativeAvatarAssetPath(value: unknown): value is string {
+  return typeof value === 'string' && ILLUSTRATIVE_ASSET_PATHS.has(value);
 }
 
 function readExactPlainDataRecord(

@@ -34,6 +34,14 @@ workflows:
         # må peke på den absolutte Vercel-funksjonen. Web bruker relativ /api.
         VITE_FORECAST_PROXY: 'https://wool-app.vercel.app/api/forecast'
       node: 22
+    # Warm-cache strategy: dependency downloads are the only safe, reusable
+    # part of a TestFlight archive on ephemeral builders. Enable Dependency
+    # caching once in Codemagic UI for this workflow to activate these paths.
+    cache:
+      cache_paths:
+        - ~/.npm
+        - ~/Library/Caches/org.swift.swiftpm
+        - $CM_BUILD_DIR/SourcePackages
     triggering:
       events:
         - push
@@ -43,7 +51,7 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          npm ci
+          npm ci --prefer-offline --no-audit
       - name: Verifiser env-keys (RevenueCat)
         script: |
           if [ -z "$VITE_REVENUECAT_PUBLIC_KEY_IOS" ]; then
@@ -125,7 +133,8 @@ workflows:
           # resource-bundle-targetet i stedet for hele framework-settet.
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --archive-xcargs "-clonedSourcePackagesDirPath $CM_BUILD_DIR/SourcePackages"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log

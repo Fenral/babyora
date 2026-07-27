@@ -59,6 +59,7 @@ import { recommend } from '../lib/wool-layers/recommend';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
 import { DISCLAIMER_SHORT } from '../lib/copy/disclaimer';
 import { verifiedAvatarAsset } from '../lib/recommendation/verified-avatar';
+import { avatarPng, headwearFromRecommendation, tierFromRecommendation } from '../lib/avatar-tier';
 import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 // Gamle A1-A7-PNG-ene er byttet ut med clay-verdenen fra F79/F80.
@@ -168,14 +169,25 @@ export function HomeGarmentPills({
   registerHomeAnchor: RegisterHomeAnchor;
   styleForIndex: (index: number, count: number) => CSSProperties;
 }>) {
+  const fallbackPills = fallbackAnchors.length > MAX_HOME_GARMENT_PILLS
+    ? [
+      ...fallbackAnchors.slice(0, MAX_HOME_GARMENT_PILLS - 1),
+      { label: `+ ${fallbackAnchors.length - (MAX_HOME_GARMENT_PILLS - 1)} plagg` },
+    ]
+    : fallbackAnchors;
   if (
     selection.kind !== 'ready'
     || selection.sources.length > MAX_HOME_GARMENT_PILLS
+    || (
+      fallbackAnchors.length > 0
+      && fallbackPills.length <= MAX_HOME_GARMENT_PILLS
+      && selection.sources.length !== fallbackAnchors.length
+    )
   ) {
-    return fallbackAnchors.map((anchor, index) => (
+    return fallbackPills.map((anchor, index) => (
       <span
         key={`${anchor.label}:${index}`}
-        style={{ ...styleForIndex(index, fallbackAnchors.length), alignItems: 'center', display: 'inline-flex', gap: 6 }}
+        style={{ ...styleForIndex(index, fallbackPills.length), alignItems: 'center', display: 'inline-flex', gap: 6 }}
       >
         <GarmentThumbnail
           label={anchor.label}
@@ -552,11 +564,12 @@ export function HjemScreen({
       : { headline: 'Dagens antrekk', anchors: [], outerBodyLabel: null }),
     [resolvedRecommendation],
   );
-  const visibleAnchorLabels = (
-    homeSourceSelection.kind === 'ready'
-    && homeSourceSelection.sources.length <= MAX_HOME_GARMENT_PILLS
-  )
-    ? homeSourceSelection.sources.map(({ label }) => label)
+  const allGarmentLabels = useMemo(
+    () => resolvedRecommendation?.layers.flatMap((layer) => layer.items) ?? [],
+    [resolvedRecommendation],
+  );
+  const visibleAnchorLabels = allGarmentLabels.length > 0
+    ? allGarmentLabels
     : sceneModel.anchors.map(({ label }) => label);
 
   // Positur-nøkkel (brukt for silhuett-fallback + stabil data-key).
@@ -576,6 +589,14 @@ export function HjemScreen({
       headwear,
     );
   }, [sceneModel, ageMonths]);
+  const illustrativeAvatar = useMemo(() => (
+    resolvedRecommendation
+      ? avatarPng(
+        tierFromRecommendation(resolvedRecommendation, activity === 'vogn' ? 'vogn' : 'utelek'),
+        headwearFromRecommendation(resolvedRecommendation),
+      )
+      : null
+  ), [resolvedRecommendation, activity]);
 
   // Sikkerhetslinje (a11y-lead krav 4b): synlig på solid flate ved ≥ MEDIUM.
   const safetyLineText = useMemo(() => {
@@ -1023,6 +1044,7 @@ export function HjemScreen({
                 <VerifiedAvatarComposite
                   stateKey={avatarPoseKey}
                   assetOverride={verifiedAvatar}
+                  illustrativeAssetOverride={illustrativeAvatar}
                   outfitSummary={sceneModel.headline}
                   decorative
                   reducedMotion={reducedMotion}
@@ -1031,7 +1053,7 @@ export function HjemScreen({
                 <div style={anchorRing}>
                   <HomeGarmentPills
                     selection={homeSourceSelection}
-                    fallbackAnchors={sceneModel.anchors}
+                    fallbackAnchors={visibleAnchorLabels.map((label) => ({ label }))}
                     registerHomeAnchor={registerHomeAnchor}
                     styleForIndex={anchorPill}
                   />

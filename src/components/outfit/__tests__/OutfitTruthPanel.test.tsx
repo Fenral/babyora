@@ -250,6 +250,20 @@ describe('OutfitTruthPanel', () => {
     for (const garment of bundle.base.garments) expect(html).toContain(garment.label);
   });
 
+  it('uses an approved illustrative avatar when the exact composite is unavailable, and never leaks engine region keys', () => {
+    const bundle = supportedBundle();
+    const html = renderToStaticMarkup(
+      <OutfitTruthPanel
+        outfitBundle={bundle}
+        illustrativeAvatarAsset="/avatars/avatar-A3.png"
+      />,
+    );
+
+    expect(html).toContain('data-avatar-source="illustrative"');
+    expect(html).toContain('/avatars/avatar-A3.png');
+    expect(html).not.toMatch(/whole_body|torso|head|feet/u);
+  });
+
   it('keeps landing semantic content and row lifecycle eligible without hidden layers', () => {
     const bundle = supportedBundle();
     const settled = renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} onOpenWarmColdGuide={() => undefined} />);

@@ -3,6 +3,12 @@ import { layoutOutfitMap } from '../../lib/outfit/outfit-map-layout.js';
 import type { OutfitItemId, OutfitTruthSnapshotV1 } from '../../lib/outfit/outfit-truth.js';
 import { GarmentThumbnail } from './GarmentThumbnail.js';
 
+const BODY_REGION_LABEL: Readonly<Record<string, string>> = {
+  head: 'hode', neck: 'hals', torso: 'overkropp', arms: 'armer',
+  hands: 'hender', hips: 'hofter', legs: 'ben', feet: 'føtter',
+  whole_body: 'hele kroppen', unknown: 'kroppsplagg',
+};
+
 type Props = Readonly<{
   snapshot: OutfitTruthSnapshotV1;
   selectedId: OutfitItemId | null;
@@ -30,7 +36,7 @@ export function Antrekkskart({ snapshot, selectedId, highlightedId, captionId, o
       const garment = garmentById.get(node.itemId)!;
       const active = highlightedId === node.itemId;
       const style = { insetInlineStart: `${(node.box.x / layout.width) * 100}%`, insetBlockStart: `${(node.box.y / layout.height) * 100}%`, inlineSize: `${(node.box.width / layout.width) * 100}%`, blockSize: `${(node.box.height / layout.height) * 100}%` } as CSSProperties;
-      return <button key={node.itemId} type="button" data-outfit-map-node={node.itemId} className={`outfit-map__node ${active ? 'is-highlighted' : ''}`} style={style} aria-describedby={captionId} aria-label={`${garment.order}. ${garment.label}, ${garment.category}, ${garment.bodyRegion}`} aria-pressed={selectedId === node.itemId} onClick={() => onActivate(node.itemId)} onFocus={() => onFocus(node.itemId)} onBlur={() => onFocus(null)} onPointerEnter={() => onHover(node.itemId)} onPointerLeave={() => onHover(null)}><GarmentThumbnail label={garment.label} className="outfit-map__thumbnail" /><span className="outfit-map__ordinal" aria-hidden="true">{garment.order}</span></button>;
+      return <button key={node.itemId} type="button" data-outfit-map-node={node.itemId} className={`outfit-map__node ${active ? 'is-highlighted' : ''}`} style={style} aria-describedby={captionId} aria-label={`${garment.order}. ${garment.label}, ${garment.category}, ${BODY_REGION_LABEL[garment.bodyRegion] ?? 'kroppsplagg'}`} aria-pressed={selectedId === node.itemId} onClick={() => onActivate(node.itemId)} onFocus={() => onFocus(node.itemId)} onBlur={() => onFocus(null)} onPointerEnter={() => onHover(node.itemId)} onPointerLeave={() => onHover(null)}><GarmentThumbnail label={garment.label} className="outfit-map__thumbnail" /><span className="outfit-map__ordinal" aria-hidden="true">{garment.order}</span></button>;
     })}
   </section>;
 }
