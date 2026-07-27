@@ -51,7 +51,10 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          npm ci --prefer-offline --no-audit
+          # npm bruker fortsatt sin lokale cache, men får revalidere metadata
+          # mot registret. `--prefer-offline` ga ETARGET i Codemagic selv om
+          # word-wrap@1.2.5 finnes i npm-registret.
+          npm ci --no-audit
       - name: Verifiser env-keys (RevenueCat)
         script: |
           if [ -z "$VITE_REVENUECAT_PUBLIC_KEY_IOS" ]; then
