@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<title>Babyora Hjem — resultat (Dagens antrekk)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,550&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --dw-canvas: #1E140C;
+    --dw-canvas-glow: #2B1D11;
+    --dw-panel: #113B3E;
+    --dw-raised: #2C1F13;
+    --dw-ink-hi: #F1E9DA;
+    --dw-ink-mid: #CDC0AB;
+    --dw-ink-low: #A79A82;
+    --dw-accent: #D98E5A;
+    --dw-accent-pressed: #C57C46;
+    --dw-ink-on-accent: #2A1708;
+    --dw-edge-light: #F2C08A;
+    --dw-focus: #E8B98C;
+    --dw-w-rain: #0D3037;
+    --dw-hairline: rgba(241, 233, 218, 0.12);
+    --dw-r-pill: 999px;
+    --dw-font-ui: 'Schibsted Grotesk', system-ui, sans-serif;
+    --dw-font-hero: 'Fraunces', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  :focus-visible { outline: 2px solid var(--dw-focus); outline-offset: 3px; border-radius: 4px; }
+  body { background: #0A0705; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
+
+  .stage {
+    width: 390px; height: 844px;
+    background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+    color: var(--dw-ink-hi);
+    font-family: var(--dw-font-ui);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .top { padding: 56px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-size: 13px; font-weight: 700; letter-spacing: 0.24em; color: var(--dw-ink-hi); }
+
+  /* Kompakt værstripe (instrumentet minimert etter beregning) */
+  .strip { border: 0; font-family: inherit; text-align: left; cursor: pointer; color: inherit; width: calc(100% - 40px);
+    position: relative;
+    margin: 14px 20px 0;
+    background: var(--dw-w-rain);
+    border-radius: 16px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.5);
+  }
+  .strip::before {
+    content: ""; position: absolute; top: 0; left: 8%; right: 8%; height: 1.5px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.9;
+  }
+  .strip .s-temp { font-family: var(--dw-font-hero); font-size: 30px; font-weight: 550; font-variant-numeric: lining-nums tabular-nums; }
+  .strip .s-meta { font-size: 13px; color: #DCD8C8; line-height: 1.4; flex: 1; }
+  .strip .s-check {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 650; color: #DCD8C8;
+  }
+  .strip .s-check svg { width: 14px; height: 14px; color: #DCD8C8; }
+
+  /* Antrekket */
+  .result { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; mask-image: linear-gradient(to bottom, black 92%, transparent 100%); padding: 14px 24px 0; display: flex; flex-direction: column; }
+  h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.012em; }
+  .sub { font-size: 14px; color: var(--dw-ink-low); margin-top: 4px; }
+
+  .rows { margin-top: 12px; display: flex; flex-direction: column; }
+  .row {
+    display: flex; align-items: center; gap: 13px;
+    padding: 6px 0; min-height: 57px;
+    text-decoration: none; color: inherit;
+    border: 0; background: none; font-family: inherit; text-align: left; width: 100%;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: row-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .row + .row { border-top: 1px solid var(--dw-hairline); }
+  .row:active { background: rgba(241, 233, 218, 0.05); transform: scale(0.985); transition: transform 0.1s ease-out, background 0.1s ease-out; }
+  /* Innslags-koreografien kjører KUN ved fersk beregning (.is-fresh settes av
+     scan-tilstandsmaskinen); cachede åpninger rendrer radene direkte. */
+  .stage:not(.is-fresh) .row { animation: none; opacity: 1; transform: none; }
+  .is-fresh .row:nth-child(1) { animation-delay: 0.05s; }
+  .is-fresh .row:nth-child(2) { animation-delay: 0.13s; }
+  .is-fresh .row:nth-child(3) { animation-delay: 0.21s; }
+  .is-fresh .row:nth-child(4) { animation-delay: 0.29s; }
+  .is-fresh .row:nth-child(5) { animation-delay: 0.37s; }
+  .is-fresh .row:nth-child(6) { animation-delay: 0.45s; }
+  .is-fresh .row:nth-child(7) { animation-delay: 0.53s; }
+  @keyframes row-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .row { animation: none; opacity: 1; transform: none; }
+  }
+
+  .num {
+    font-family: var(--dw-font-hero); font-style: italic;
+    font-size: 17px; color: var(--dw-ink-low);
+    min-width: 18px; text-align: center; flex: none;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .thumb {
+    width: 46px; height: 46px; border-radius: 11px; flex: none;
+    object-fit: cover; background: var(--dw-raised);
+    border: 1px solid var(--dw-hairline);
+  }
+  .row-text { flex: 1; min-width: 0; }
+  .g-name { font-size: 15.5px; font-weight: 650; display: block; }
+  .g-role { font-size: 12.5px; color: var(--dw-ink-low); display: block; margin-top: 1px; }
+  .swap { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 650; color: var(--dw-ink-low); flex: none; }
+  .swap svg { width: 15px; height: 15px; }
+
+  .actions { padding: 10px 24px 0; }
+  .cta {
+    border: 0; border-radius: 14px; width: 100%;
+    background: var(--dw-accent); color: var(--dw-ink-on-accent);
+    font-family: inherit; font-size: 17px; font-weight: 700;
+    padding: 16px 22px; min-height: 54px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+  }
+  .cta:active { background: var(--dw-accent-pressed); transform: translateY(1px); }
+  .cta svg { width: 18px; height: 18px; }
+  .why {
+    display: block; margin: 9px auto 0; background: none; border: 0;
+    color: var(--dw-ink-low); font-family: inherit; font-size: 13.5px; font-weight: 600;
+    text-decoration: underline; text-underline-offset: 3px;
+    padding: 10px 16px; min-height: 44px; cursor: pointer;
+  }
+
+  .tabs { border-top: 1px solid var(--dw-hairline); display: flex; justify-content: space-around; padding: 10px 10px 6px; margin-top: 8px; }
+  .tab { text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--dw-ink-low); min-width: 74px; padding: 4px 0; }
+  .tab.on { color: var(--dw-ink-hi); }
+  .tab svg { width: 22px; height: 22px; }
+  .tab span { font-size: 12px; font-weight: 600; }
+  .homebar { width: 128px; height: 5px; border-radius: 3px; background: rgba(241, 233, 218, 0.28); margin: 6px auto 8px; }
+</style>
+</head>
+<body>
+  <div class="stage is-fresh">
+    <div class="top">
+      <span class="brand">BABYORA</span>
+    </div>
+
+    <button class="strip" type="button" aria-label="Juster vær, sted eller aktivitet">
+      <span class="s-temp">4°</span>
+      <span class="s-meta">Føles som 1° · Lett yr<br />Trondheim · Utenfor vogn</span>
+      <span class="s-check">
+        Juster
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </span>
+    </button>
+
+    <div class="result">
+      <h1>Dagens antrekk</h1>
+      <p class="sub">7 plagg for Lillian, innerst til ytterst</p>
+      <div class="rows">
+        <button class="row" type="button">
+          <span class="num">1</span>
+          <img class="thumb" src="g1.png" alt="" />
+          <span class="row-text"><span class="g-name">Langermet ullbody</span><span class="g-role">Innerst</span></span>
+          <span class="swap">Bytt<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg></span>
+        </button>
+        <button class="row" type="button">
+          <span class="num">2</span>
+          <img class="thumb" src="g2.png" alt="" />
+          <span class="row-text"><span class="g-name">Ullgenser</span><span class="g-role">Mellomlag</span></span>
+          <span class="swap">Bytt<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg></span>
+        </button>
+        <button class="row" type="button">
+          <span class="num">3</span>
+          <img class="thumb" src="g3.png" alt="" />
+          <span class="row-text"><span class="g-name">Ullbukse</span><span class="g-role">Mellomlag</span></span>
+          <span class="swap">Bytt<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg></span>
+        </button>
+        <button class="row" type="button">
+          <span class="num">4</span>
+          <img class="thumb" src="g4.png" alt="" />
+          <span class="row-text"><span class="g-name">Regndress</span><span class="g-role">Ytterst</span></span>
+          <span class="swap">Bytt<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg></span>
+        </button>
+        <button class="row" type="button">
+          <span class="num">5</span>
+          <img class="thumb" src="g5.png" alt="" />
+          <span class="row-text"><span class="g-name">Lue med ull</span><span class="g-role">Tilbehør</span></span>
+          <span class="swap">Bytt<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg></span>
+        </button>
+        <button class="row" type="button">
+          <span class="num">6</span>
+          <img class="thumb" src="g6.png" alt="" />
+          <span class="row-text"><span class="g-name">Votter</span><span class="g-role">Tilbehør</span></span>
+          <span class="swap">Bytt<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg></span>
+        </button>
+        <button class="row" type="button">
+          <span class="num">7</span>
+          <img class="thumb" src="g7.png" alt="" />
+          <span class="row-text"><span class="g-name">Ullsokker</span><span class="g-role">Tilbehør</span></span>
+          <span class="swap">Bytt<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="cta" type="button">
+        Kle på, steg for steg
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+      <button class="why" type="button">Hvorfor akkurat dette?</button>
+    </div>
+
+    <nav class="tabs" aria-label="Hovednavigasjon">
+      <a class="tab on" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Hjem</span></a>
+      <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg><span>Planlegg</span></a>
+      <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 20c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="10" r="2.4"/><path d="M15.5 20c.4-2.2 1.6-3.6 3.3-3.9 1 .2 1.9.9 2.7 1.9"/></svg><span>Familie</span></a>
+    </nav>
+    <div class="homebar"></div>
+  </div>
+</body>
+</html>
