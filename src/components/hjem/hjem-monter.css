@@ -1,0 +1,581 @@
+/**
+ * hjem-monter.css — P4 "Monter" Hjem-UI.
+ *
+ * Transkribert 1:1 fra docs/mocks/monter/{hjem-weather-ready,hjem-states,
+ * hjem-result}.html. Regel fulgt gjennomgående: `var(--dw-*)` når en
+ * kanonisk token (src/styles/design-tokens-v2.css) finnes OG verdien
+ * numerisk/farge-messig matcher mocken; ellers hardkodes mockens bokstavelige
+ * verdi (aldri avrundet til nærmeste ikke-matchende token — mocken er
+ * kontrakten). Noen konkrete valg dette gir:
+ *  - `.hjm-rows` bruker `var(--dw-r-panel)` (20px) — samme TALL som mocken,
+ *    selv om navnet er "panel"; `--dw-r-raised` er 14px og ville avveket.
+ *  - `.hjm-strip` (16px) og `.hjm-thumb` (13px) har ingen matchende token →
+ *    hardkodet (thumb-vitrine-fargen #3A2A1A er DESIGN.md-doktrinen sin
+ *    egen hardkodede verdi, ikke en --dw-*-token).
+ *  - `.hjm-loc`/`.hjm-fresh` bruker `var(--dw-ink-panel-mid)` (kanonisk
+ *    #C6CFC4) i stedet for mockens lokale #DCD8C8 — kanonisk token vinner
+ *    per oppgavens regel når begge finnes.
+ */
+
+.hjem-monter {
+  font-family: var(--dw-font-ui);
+  color: var(--dw-ink-hi);
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  flex: 1 0 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+  padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px 14px;
+  overflow: hidden auto;
+}
+
+.hjm-top { flex: none; }
+.hjm-brand { font-size: 13px; font-weight: 700; letter-spacing: 0.24em; color: var(--dw-ink-hi); }
+
+.hjm-mascot-slot { position: relative; flex: none; height: 0; }
+/* Panelet ligger 106-130px ned for å gi rom til maskoten som henger over
+   toppkanten (mock: mascot top:50px, panel margin-top:130px, komprimert til
+   108px i innholdstunge tilstander). Uten maskot (resultat-stripen) trenger
+   den bare mockens egen 14px toppmargin. */
+.hjm-panel-slot { position: relative; flex: none; margin-top: 14px; }
+.hjm-panel-slot[data-with-mascot='true'] { margin-top: 130px; }
+.hjm-panel-slot[data-with-mascot='true'][data-compact='true'] { margin-top: 108px; }
+.hjm-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+.hjem-monter :focus-visible {
+  outline: 2px solid var(--dw-focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.hjm-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============ Instrument-panelet (WeatherScene + ScanOverlay) ============ */
+
+.hjm-panel {
+  position: relative;
+  margin: 0;
+  background: var(--dw-w-cloudy);
+  border-radius: var(--dw-r-panel);
+  padding: 24px 22px 18px;
+  overflow: hidden; /* D1: scan-koreografien klippes av panelet, aldri av flate lister */
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+}
+.hjm-panel[data-nuance='clear'] { background: var(--dw-w-clear); --hjm-nuance: var(--dw-w-clear); }
+.hjm-panel[data-nuance='cloudy'] { background: var(--dw-w-cloudy); --hjm-nuance: var(--dw-w-cloudy); }
+.hjm-panel[data-nuance='rain'] { background: var(--dw-w-rain); --hjm-nuance: var(--dw-w-rain); }
+.hjm-panel[data-nuance='snow'] { background: var(--dw-w-snow); --hjm-nuance: var(--dw-w-snow); }
+.hjm-panel[data-nuance='night'] { background: var(--dw-w-night); --hjm-nuance: var(--dw-w-night); }
+.hjm-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 7%;
+  right: 7%;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--dw-edge-light-gradient);
+  opacity: 1;
+}
+
+.hjm-loc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.hjm-loc {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dw-ink-panel-mid);
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 6px;
+  margin: -14px -6px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.hjm-loc[data-interactive='false'] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.hjm-loc svg { width: 13px; height: 13px; opacity: 0.8; }
+.hjm-fresh {
+  font-size: 12.5px;
+  color: var(--dw-ink-panel-mid);
+  opacity: 0.85;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.hjm-fresh i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dw-ink-panel-mid);
+  opacity: 0.7;
+  display: inline-block;
+}
+.hjm-fresh[data-warn='true'] { color: var(--dw-warning); opacity: 1; }
+.hjm-fresh[data-warn='true'] i { background: var(--dw-warning); opacity: 1; }
+
+.hjm-hero-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.hjm-temp {
+  font-family: var(--dw-font-hero);
+  font-size: 74px;
+  line-height: 0.94;
+  font-weight: 550;
+  letter-spacing: -0.015em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.hjm-temp sup { font-size: 34px; font-weight: 400; vertical-align: 30%; margin-left: 2px; }
+.hjm-temp[data-dim='true'] { color: var(--dw-ink-mid); }
+.hjm-wicon {
+  width: 76px;
+  height: auto;
+  margin: 4px -2px 0 0;
+  filter: saturate(0.8) brightness(0.96) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+}
+.hjm-wicon[data-dim='true'] { filter: saturate(0.35) brightness(0.8); opacity: 0.75; }
+
+.hjm-feels { font-size: 16.5px; font-weight: 600; color: var(--dw-ink-hi); margin-top: 6px; }
+.hjm-note {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--dw-ink-panel-mid);
+  margin-top: 5px;
+  max-width: 24ch;
+  text-wrap: balance;
+}
+
+.hjm-toggle {
+  display: flex;
+  background: rgba(241, 233, 218, 0.09);
+  border-radius: var(--dw-r-pill);
+  padding: 4px;
+  margin-top: 18px;
+}
+.hjm-toggle button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--dw-ink-panel-mid);
+  padding: 12px 0;
+  min-height: 46px;
+  border-radius: var(--dw-r-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+}
+.hjm-toggle button[aria-checked='true'] {
+  background: var(--dw-ink-hi);
+  color: var(--hjm-nuance, var(--dw-w-rain));
+}
+
+.hjm-stale-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--dw-hairline);
+  border-radius: var(--dw-r-pill);
+  color: var(--dw-ink-mid);
+  font-size: 12.5px;
+  font-weight: 650;
+  padding: 5px 11px;
+  margin-top: 10px;
+}
+.hjm-stale-badge svg { width: 13px; height: 13px; }
+
+/* ============ Mascot ============ */
+
+.hjm-mascot {
+  position: absolute;
+  top: 50px;
+  right: 8px;
+  width: 205px;
+  height: auto;
+  z-index: 3;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45));
+}
+.hjm-mascot[data-compact='true'] { width: 188px; top: 38px; }
+@media (max-height: 700px) {
+  .hjm-mascot { width: 164px; top: 36px; }
+}
+
+/* ============ Scan-koreografi (ScanOverlay) ============ */
+
+.hjm-scanline {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 12px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 4%, rgba(242, 192, 138, 0.75) 50%, transparent 96%);
+  z-index: 4;
+}
+.hjm-scanline[data-animate='true'] {
+  animation: hjm-scan-sweep var(--hjm-scan-duration, 2100ms) cubic-bezier(0.45, 0, 0.55, 1) 1 forwards;
+}
+@keyframes hjm-scan-sweep {
+  from { transform: translateY(0); opacity: 0.9; }
+  85% { opacity: 0.9; }
+  to { transform: translateY(238px); opacity: 0; }
+}
+
+.hjm-scan-rows { margin-top: 16px; display: flex; flex-direction: column; }
+.hjm-scan-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dw-ink-hi);
+}
+.hjm-scan-row + .hjm-scan-row { border-top: 1px dashed rgba(241, 233, 218, 0.14); }
+.hjm-scan-row .hjm-scan-val { margin-left: auto; font-weight: 500; color: var(--dw-ink-panel-mid); font-size: 14px; }
+
+.hjm-s-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(241, 233, 218, 0.14);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.hjm-s-check svg { width: 13px; height: 13px; color: var(--dw-ink-hi); }
+.hjm-s-check[data-done='true'] { background: var(--dw-ink-hi); }
+.hjm-s-check[data-done='true'] svg { color: var(--hjm-nuance, var(--dw-w-rain)); }
+.hjm-s-check[data-done='true'][data-animate='true'] svg {
+  animation: hjm-check-pop 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+}
+.hjm-s-spin { border: 2px solid rgba(241, 233, 218, 0.25); border-top-color: var(--dw-ink-hi); }
+.hjm-s-spin[data-animate='true'] { animation: hjm-spin 1s linear infinite; }
+@keyframes hjm-spin { to { transform: rotate(360deg); } }
+@keyframes hjm-check-pop {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.hjm-scan-status { font-size: 24px; font-weight: 700; letter-spacing: -0.012em; color: var(--dw-ink-hi); }
+.hjm-scan-sub { font-size: 14px; color: var(--dw-ink-low); margin-top: 5px; }
+.hjm-skip {
+  align-self: center;
+  margin-top: 14px;
+  background: none;
+  border: 0;
+  color: var(--dw-ink-low);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 15px 16px;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+/* Reduced motion — zero-duration, instant completion. Speiler RM-fallbacks
+   allerede skrevet i mocken (hjem-states.html), pluss JS-siden gate i
+   ScanOverlay.tsx/HjemMonter.tsx (ingen setTimeout-koreografi kjøres). */
+@media (prefers-reduced-motion: reduce) {
+  .hjm-scanline[data-animate='true'] { animation: none !important; opacity: 0; }
+  .hjm-s-spin[data-animate='true'] { animation: none !important; border-top-color: rgba(241, 233, 218, 0.25); }
+  .hjm-s-check[data-done='true'][data-animate='true'] svg { animation: none !important; }
+}
+
+/* ============ Ask-block (weather-ready / stale / offline) ============ */
+
+.hjm-ask-block {
+  padding: 10px 0 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.hjm-ask { font-size: 24px; font-weight: 700; letter-spacing: -0.012em; color: var(--dw-ink-hi); }
+.hjm-child { font-size: 14px; color: var(--dw-ink-low); margin-top: 5px; }
+
+.hjm-change-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--dw-hairline);
+  color: var(--dw-ink-mid);
+  font-size: 13px;
+  font-weight: 650;
+  border-radius: var(--dw-r-pill);
+  padding: 7px 13px;
+  margin-top: 10px;
+  width: fit-content;
+}
+.hjm-change-chip svg { width: 14px; height: 14px; flex: none; }
+.hjm-prev {
+  margin-top: 12px;
+  border-radius: var(--dw-r-raised);
+  background: var(--dw-raised);
+  padding: 13px 15px;
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 8px 18px -10px rgba(0, 0, 0, 0.55);
+}
+.hjm-prev .hjm-p-label { font-size: 12.5px; font-weight: 700; color: var(--dw-ink-low); letter-spacing: 0.04em; }
+.hjm-prev .hjm-p-text { font-size: 14.5px; color: var(--dw-ink-mid); margin-top: 3px; line-height: 1.45; }
+
+.hjm-cta {
+  margin-top: 18px;
+  border: 0;
+  border-radius: var(--dw-r-raised);
+  width: 100%;
+  background: var(--dw-accent);
+  color: var(--dw-ink-on-accent);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  padding: 17px 22px;
+  min-height: 54px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+}
+.hjm-cta:active:not(:disabled) { background: var(--dw-accent-pressed); transform: translateY(1px); }
+.hjm-cta:disabled { opacity: 0.5; cursor: default; }
+.hjm-cta svg { width: 18px; height: 18px; }
+.hjm-cta-ghost {
+  margin-top: 12px;
+  border: 1px solid var(--dw-hairline);
+  border-radius: var(--dw-r-raised);
+  background: transparent;
+  color: var(--dw-ink-hi);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px 20px;
+  min-height: 48px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.hjm-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 13px;
+  font-size: 12.5px;
+  color: var(--dw-ink-low);
+}
+.hjm-trust svg { width: 14px; height: 14px; color: var(--dw-ink-low); flex: none; }
+
+/* ============ Kompakt værstripe (WeatherStrip, etter resultat) ============ */
+
+.hjm-strip {
+  appearance: none;
+  border: 0;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  background: var(--dw-w-cloudy);
+  border-radius: 16px; /* ingen matchende token — hardkodet, se filhode */
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.5);
+}
+.hjm-strip[data-nuance='clear'] { background: var(--dw-w-clear); --hjm-nuance: var(--dw-w-clear); }
+.hjm-strip[data-nuance='cloudy'] { background: var(--dw-w-cloudy); --hjm-nuance: var(--dw-w-cloudy); }
+.hjm-strip[data-nuance='rain'] { background: var(--dw-w-rain); --hjm-nuance: var(--dw-w-rain); }
+.hjm-strip[data-nuance='snow'] { background: var(--dw-w-snow); --hjm-nuance: var(--dw-w-snow); }
+.hjm-strip[data-nuance='night'] { background: var(--dw-w-night); --hjm-nuance: var(--dw-w-night); }
+.hjm-strip::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--dw-edge-light-gradient);
+  opacity: 0.9;
+}
+.hjm-strip .hjm-s-temp {
+  font-family: var(--dw-font-hero);
+  font-size: 30px;
+  font-weight: 550;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.hjm-strip .hjm-s-meta { font-size: 13px; color: var(--dw-ink-panel-mid); line-height: 1.4; flex: 1; }
+.hjm-strip .hjm-s-adjust {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--dw-ink-panel-mid);
+}
+.hjm-strip .hjm-s-adjust svg { width: 14px; height: 14px; color: var(--dw-ink-panel-mid); }
+
+/* ============ Resultatflaten (ResultSurface + MonterGarmentRow) ============ */
+
+.hjm-result { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.hjm-result h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.012em; margin: 0; }
+.hjm-result .hjm-sub { font-size: 14px; color: var(--dw-ink-low); margin-top: 4px; }
+
+/* Dybdedoktrinen (D1/D2): HELE listen på Ã‰N hevet flate (nivÃ¥ 2), kantlys +
+   tintet skygge. Aldri rader rett pÃ¥ canvas. */
+.hjm-rows {
+  position: relative;
+  margin: 14px 0 0;
+  padding: 6px 14px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(178deg, #33241674 0%, var(--dw-raised) 14%);
+  background-color: var(--dw-raised);
+  border-radius: var(--dw-r-panel); /* 20px — samme tall som mocken, se filhode */
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 34px -18px rgba(0, 0, 0, 0.6);
+}
+.hjm-rows::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--dw-edge-light-gradient);
+  opacity: 0.55;
+}
+.hjm-row-item + .hjm-row-item { border-top: 1px solid rgba(241, 233, 218, 0.09); }
+.hjm-row {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 8px 4px;
+  min-height: 62px; /* D5: rader aldri under 62px */
+  text-decoration: none;
+  color: inherit;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  opacity: 1;
+  transform: none;
+}
+.hjm-rows[data-fresh='true'] .hjm-row {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: hjm-row-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hjm-row:active { background: rgba(241, 233, 218, 0.05); transform: scale(0.985); transition: transform 0.1s ease-out, background 0.1s ease-out; }
+@keyframes hjm-row-in { to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .hjm-rows[data-fresh='true'] .hjm-row { animation: none !important; opacity: 1; transform: none; }
+}
+
+/* Duell-adopsjon §5 (sol-duel-2026-07-31.md): sekvensnumre er sekundær rolle,
+   IKKE hero-tall — Schibsted tabulær, aldri Fraunces. */
+.hjm-num {
+  font-family: var(--dw-font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--dw-ink-low);
+  min-width: 18px;
+  text-align: center;
+  flex: none;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+/* D3: vitrine-behandling — lysere flate enn omgivende .hjm-raised, varm
+   1px topplyskant, myk løfteskygge. #3A2A1A er doktrinens egen hardkodede
+   vitrine-verdi (ikke en --dw-*-token). */
+.hjm-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 13px;
+  flex: none;
+  object-fit: cover;
+  background: #3A2A1A;
+  border: 1px solid rgba(242, 192, 138, 0.16);
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.22) inset, 0 6px 12px -6px rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  color: var(--dw-ink-mid);
+  font-family: var(--dw-font-ui);
+  font-weight: 700;
+  font-size: 20px;
+  overflow: hidden;
+}
+.hjm-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.hjm-row-text { flex: 1; min-width: 0; }
+.hjm-g-name { font-size: 15.5px; font-weight: 650; display: block; }
+.hjm-g-role { font-size: 12.5px; color: var(--dw-ink-low); display: block; margin-top: 1px; }
+.hjm-swap { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 650; color: var(--dw-ink-low); flex: none; }
+.hjm-swap svg { width: 15px; height: 15px; }
+
+.hjm-actions { padding: 10px 0 0; }
+.hjm-why {
+  display: block;
+  margin: 9px auto 0;
+  background: none;
+  border: 0;
+  color: var(--dw-ink-low);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 10px 16px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+/* Scroll-affordance (D4): bunn-fade i stedet for hard klipp. */
+.hjm-result[data-scrollable='true'] {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(to bottom, black 92%, transparent 100%);
+}

@@ -630,6 +630,7 @@ export default function App(): ReactElement {
         selectHomeSources={outfitTransition.selectHomeSources}
         registerHomeAnchor={outfitTransition.registerHomeAnchor}
         observeTransitionBundle={outfitTransition.observeBundle}
+        outfitTransitionStatus={outfitTransition.state.status}
       />
     );
   } else if (tab === 'plan') {

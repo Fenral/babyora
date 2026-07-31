@@ -90,6 +90,12 @@ import type {
   Phase2TransitionAdapter,
   RegisterHomeAnchor,
 } from '../lib/outfit-transition/phase2-adapter';
+import type { OutfitTransitionCoordinatorState } from '../lib/outfit-transition/coordinator';
+// P4 (Monter): flag-gated new render tree. Read directly (not copied to a
+// module-local const) so `vi.mock('../components/hjem/flags.js', ...)` can
+// force the legacy branch in tests without touching anything else here.
+import { HJEM_SCAN_UI_ENABLED } from '../components/hjem/flags';
+import { HjemMonter } from '../components/hjem/HjemMonter';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Konstanter / fallback
@@ -124,6 +130,15 @@ type HjemScreenProps = {
   observeTransitionBundle: (
     bundle: OutfitBundleProducerResult | undefined,
   ) => void;
+  /**
+   * P4 (Monter): outfit-transition-koordinatorens status, KUN brukt til å
+   * garantere at ScanOverlay aldri rendres samtidig med en pågående
+   * garment-flyv-transition (se ScanOverlay.tsx sin isScanOverlaySuppressed).
+   * Selve koordinator-hooken (useOutfitTransitionCoordinator, App.tsx) er
+   * uendret av denne pakken — dette er kun en ny status-avlesning videreført
+   * som prop, samme mønster som selectHomeSources/registerHomeAnchor over.
+   */
+  outfitTransitionStatus: OutfitTransitionCoordinatorState['status'];
 };
 
 const MAX_HOME_GARMENT_PILLS = 5;
@@ -331,6 +346,7 @@ export function HjemScreen({
   selectHomeSources,
   registerHomeAnchor,
   observeTransitionBundle,
+  outfitTransitionStatus,
 }: HjemScreenProps) {
   // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
   // siden BottomTabBar nå mountes globalt i App.tsx.
@@ -918,7 +934,33 @@ export function HjemScreen({
     border: 0,
   };
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // ─── P4 (Monter): flag-gated new render tree ───────────────────────────────
+  // Alt OVENFOR (vær/motor/context/outfit-transition-kjeden) er HELT uendret —
+  // kun selve JSX-treet forgrener seg her. Den gamle grenen under forblir
+  // kompilerbar/urørt for rask rollback (sett HJEM_SCAN_UI_ENABLED = false).
+  if (HJEM_SCAN_UI_ENABLED) {
+    return (
+      <HjemMonter
+        cityLabel={cityLabel}
+        lat={lat}
+        lon={lon}
+        now={now}
+        weatherStatus={weather.status}
+        activity={activity}
+        onActivityChange={handleActivityChange}
+        childId={active.id}
+        childName={active.name}
+        ageMonths={ageMonths}
+        recommendation={resolvedRecommendation}
+        onStartDressing={handleCta}
+        startDressingDisabled={currentOutfitContext === null}
+        reducedMotion={reducedMotion}
+        outfitTransitionStatus={outfitTransitionStatus}
+      />
+    );
+  }
+
+  // ─── Render (legacy) ────────────────────────────────────────────────────────
 
   return (
     <>
