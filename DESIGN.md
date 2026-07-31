@@ -84,3 +84,15 @@ Canonical file: `src/styles/design-tokens-v2.css` (new `--dw-*` vocabulary). New
 - Weather nuances (panel only): clear #155054, cloudy #113B3E, rain #0D3037, snow #2C4A50, night #092326.
 - Typography: Schibsted Grotesk for all UI; tabular mono for data rows; Fraunces ONLY on the hero temperature (the single brand moment); fixed rem scale ratio 1.2 (13/16/19/23/28 + hero 76).
 - Contrast: all 22 pairs computed and passing (weakest 5.2:1 CTA-pressed; primary text 7.5-15:1 across all surfaces incl. all five weather nuances). Verification script pattern: WCAG 2.1 relative luminance.
+
+## Depth doctrine (added 2026-07-31 after the flat-list finding)
+
+Component-level rules that prevent flatness in the dark-warm world. These are system rules, not per-screen choices:
+
+1. **Content never sits directly on canvas.** Recommendation/reading content lives on ONE raised espresso surface (level 2, `--dw-raised`) per screen, with hairlines INSIDE it. Hairline-rows directly on canvas read flat and are banned.
+2. **Every raised material carries light logic:** a 1px warm inner top-light (`rgba(242,192,138,~.15)` inset) + the edge-light gradient on its top edge (opacity ~0.5 for level 2, 0.9-1.0 for the panel) + a tinted drop shadow. No light logic = no material = flat.
+3. **Asset vitrine treatment:** garment/weather imagery sits in a thumb frame slightly LIGHTER than its surface (#3A2A1A on raised), with warm 1px top-light border and a small lift shadow, so assets read as lit objects, not icons.
+4. **Scroll is communicated with a bottom fade mask** (mask-image to transparent over the last ~8%), and a partially visible row is a feature: it is the scroll affordance.
+5. **Breathing beats cramming:** rows are min 62px; if content exceeds the surface, it scrolls behind the fade. Never compress rows below 57px to force-fit.
+
+Status of the design system: tokens v2 (colors, depth ramp, type, radii, edge light) and these doctrine rules live here; the full component library (specs + states matrix for row, strip, toggle, CTA, tabs) is extracted from the validated mock screens during implementation package P4, into reusable components consuming only `--dw-*` tokens.

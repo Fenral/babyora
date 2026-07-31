@@ -71,10 +71,27 @@
   h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.012em; }
   .sub { font-size: 14px; color: var(--dw-ink-low); margin-top: 4px; }
 
-  .rows { margin-top: 12px; display: flex; flex-direction: column; }
+  /* Dybdedoktrinen: HELE listen ligger på én hevet resultatflate (nivå 2),
+     med kantlys på toppkanten og tintet skygge — aldri rader rett på canvas. */
+  .rows {
+    position: relative;
+    margin-top: 14px;
+    display: flex; flex-direction: column;
+    background: linear-gradient(178deg, #33241674 0%, var(--dw-raised) 14%);
+    background-color: var(--dw-raised);
+    border-radius: 20px;
+    padding: 6px 14px;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 34px -18px rgba(0, 0, 0, 0.6);
+  }
+  .rows::before {
+    content: ""; position: absolute; top: 0; left: 8%; right: 8%; height: 1.5px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.55;
+  }
   .row {
     display: flex; align-items: center; gap: 13px;
-    padding: 6px 0; min-height: 57px;
+    padding: 8px 4px; min-height: 62px;
     text-decoration: none; color: inherit;
     border: 0; background: none; font-family: inherit; text-align: left; width: 100%;
     cursor: pointer;
@@ -82,7 +99,7 @@
     transform: translateY(10px);
     animation: row-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  .row + .row { border-top: 1px solid var(--dw-hairline); }
+  .row + .row { border-top: 1px solid rgba(241, 233, 218, 0.09); }
   .row:active { background: rgba(241, 233, 218, 0.05); transform: scale(0.985); transition: transform 0.1s ease-out, background 0.1s ease-out; }
   /* Innslags-koreografien kjører KUN ved fersk beregning (.is-fresh settes av
      scan-tilstandsmaskinen); cachede åpninger rendrer radene direkte. */
@@ -107,10 +124,13 @@
     min-width: 18px; text-align: center; flex: none;
     font-variant-numeric: lining-nums tabular-nums;
   }
+  /* Monter-behandling på plaggbildet: lysere vitrine-flate bak plagget,
+     1px varm topplyskant, myk løfteskygge — gjenstand, ikke ikon. */
   .thumb {
-    width: 46px; height: 46px; border-radius: 11px; flex: none;
-    object-fit: cover; background: var(--dw-raised);
-    border: 1px solid var(--dw-hairline);
+    width: 56px; height: 56px; border-radius: 13px; flex: none;
+    object-fit: cover; background: #3A2A1A;
+    border: 1px solid rgba(242, 192, 138, 0.16);
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.22) inset, 0 6px 12px -6px rgba(0, 0, 0, 0.55);
   }
   .row-text { flex: 1; min-width: 0; }
   .g-name { font-size: 15.5px; font-weight: 650; display: block; }
