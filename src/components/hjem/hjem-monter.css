@@ -80,7 +80,7 @@
 .hjm-top { flex: none; }
 .hjm-brand { font-size: 13px; font-weight: 700; letter-spacing: 0.24em; color: var(--dw-ink-hi); }
 
-.hjm-mascot-slot { position: relative; flex: none; height: 0; }
+/* .hjm-mascot-slot fjernet: maskoten ankres direkte i .hjm-panel-slot (P9-eierfunn: grepet gled fra kanten via margin-kollaps gjennom det tomme ankeret) */
 /* Panelet ligger 106-130px ned for å gi rom til maskoten som henger over
    toppkanten (mock: mascot top:50px, panel margin-top:130px, komprimert til
    108px i innholdstunge tilstander). Uten maskot (resultat-stripen) trenger
@@ -267,7 +267,7 @@
 
 .hjm-mascot {
   position: absolute;
-  top: 50px;
+  top: -152px; /* fingertuppene (79 % av bildehøyden, målt fra alfa-bbox) lander 10px over panelkanten */
   right: 8px;
   width: 205px;
   height: auto;
@@ -275,9 +275,9 @@
   pointer-events: none;
   filter: drop-shadow(var(--hjm-mascot-shadow));
 }
-.hjm-mascot[data-compact='true'] { width: 188px; top: 38px; }
+.hjm-mascot[data-compact='true'] { width: 188px; top: -140px; }
 @media (max-height: 700px) {
-  .hjm-mascot { width: 164px; top: 36px; }
+  .hjm-mascot { width: 164px; top: -122px; }
 }
 
 /* ============ Scan-koreografi (ScanOverlay) ============ */

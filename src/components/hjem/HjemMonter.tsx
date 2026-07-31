@@ -503,8 +503,8 @@ export function HjemMonter({
     return (
       <div className="hjem-monter">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
-        <div className="hjm-mascot-slot"><MascotPeek /></div>
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="false">
+          <MascotPeek />
           <WeatherScene
             cityLabel={cityLabel}
             nuance={nuance}
@@ -537,8 +537,8 @@ export function HjemMonter({
     return (
       <div className="hjem-monter">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
-        <div className="hjm-mascot-slot"><MascotPeek compact /></div>
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
+          <MascotPeek compact />
           <ScanOverlay
             cityLabel={cityLabel}
             nuance={nuance}
@@ -617,8 +617,8 @@ export function HjemMonter({
     return (
       <div className="hjem-monter">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
-        <div className="hjm-mascot-slot"><MascotPeek compact /></div>
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
+          <MascotPeek compact />
           <WeatherScene
             cityLabel={cityLabel}
             nuance={nuance}
@@ -678,8 +678,8 @@ export function HjemMonter({
     return (
       <div className="hjem-monter">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
-        <div className="hjm-mascot-slot"><MascotPeek compact /></div>
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
+          <MascotPeek compact />
           <WeatherScene
             cityLabel={cityLabel}
             nuance={nuance}
@@ -721,8 +721,8 @@ export function HjemMonter({
   return (
     <div className="hjem-monter">
       <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
-      <div className="hjm-mascot-slot"><MascotPeek /></div>
       <div className="hjm-panel-slot" data-with-mascot="true" data-compact="false">
+        <MascotPeek />
         <WeatherScene
           cityLabel={cityLabel}
           nuance={nuance}
