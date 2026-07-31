@@ -122,12 +122,41 @@
   .homebar { width: 128px; height: 5px; border-radius: 3px; background: rgba(241, 233, 218, 0.28); margin: 6px auto 8px; }
 
   /* ============ Scan-tilstanden ============ */
+  /* Koreografi: skannelinjen sveiper rolig over instrumentet (1.8s frem/tilbake),
+     spinneren roterer, ferdige haker lander med et lite popp. Bevegelsen
+     KOMMUNISERER beregning (Motion Bible) — ingen evig dekorasjon utenfor
+     scan-tilstanden, og alt erstattes av øyeblikkelig overgang ved redusert
+     bevegelse. */
+  /* Skannelinjen bor INNE i instrumentet, gar EN rolig pass nedover og stopper.
+     Noytralt varmt lys (ikke aksent-amber) sa amber = trykk-kontrakten bestar.
+     Hver hake lander idet linjen passerer sin rad (synkede delays). */
+  .panel { overflow: hidden; }
   .scanline {
-    position: absolute; left: 0; right: 0; top: 54%;
+    position: absolute; left: 6%; right: 6%; top: 12px;
     height: 2px;
-    background: linear-gradient(90deg, transparent 4%, var(--dw-accent) 50%, transparent 96%);
-    opacity: 0.9;
+    background: linear-gradient(90deg, transparent 4%, rgba(242, 192, 138, 0.75) 50%, transparent 96%);
     z-index: 4;
+    animation: scan-sweep 2.1s cubic-bezier(0.45, 0, 0.55, 1) 1 forwards;
+  }
+  @keyframes scan-sweep {
+    from { transform: translateY(0); opacity: 0.9; }
+    85% { opacity: 0.9; }
+    to { transform: translateY(238px); opacity: 0; }
+  }
+  .s-spin { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .s-check.done { animation: check-pop 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) backwards; }
+  .scan-row:nth-child(1) .s-check.done { animation-delay: 0.55s; }
+  .scan-row:nth-child(2) .s-check.done { animation-delay: 1.05s; }
+  .scan-row:nth-child(3) .s-check.done { animation-delay: 1.55s; }
+  @keyframes check-pop {
+    from { transform: scale(0.4); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scanline { animation: none; opacity: 0; }
+    .s-spin { animation: none; border-top-color: rgba(241, 233, 218, 0.25); }
+    .s-check.done { animation: none; }
   }
   .scan-rows { margin-top: 16px; display: flex; flex-direction: column; }
   .scan-row {
@@ -185,8 +214,8 @@
   <div class="stage" id="stage-scan">
     <div class="top"><span class="brand">BABYORA</span></div>
     <img class="mascot" src="maskot.png" alt="" />
-    <div class="scanline"></div>
     <section class="panel" aria-label="Beregner antrekk" aria-busy="true">
+      <div class="scanline" aria-hidden="true"></div>
       <div class="loc-row">
         <span class="loc dim">Trondheim
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
