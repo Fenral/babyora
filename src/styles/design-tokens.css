@@ -146,10 +146,17 @@
      også nøytral (ink-basert). shadow-cta-primary er derimot fargetonet mot
      GAMMEL grønn CTA — den flyttes til amber via color-mix() slik at
      skyggen alltid følger --dw-accent, i begge tema. */
-  --shadow-1: 0 1px 3px rgba(23, 16, 46, 0.09);
-  --shadow-2: 0 4px 14px rgba(23, 16, 46, 0.09);
-  --shadow-3: 0 4px 16px rgba(23, 16, 46, 0.12);
-  --shadow-cta: 0 1px 2px rgba(23, 16, 46, 0.05), 0 4px 14px rgba(23, 16, 46, 0.09);
+  /* P8 (ekstern designgjennomgang, lys-kalibrering): disse fire var tidligere
+     ankret til rgba(23,16,46,*) — en kald indigo/lilla, IKKE Monter sin varme
+     espresso. Lys modus arvet den ufiltrert (kun mørk modus fikk en egen
+     nøytral-svart overstyring lenger ned), så kort/skygger i lys modus leste
+     som "kald grå" i stedet for varmt papir. Ankret til samme varme brun-tone
+     som --dw-hairline/--dw-shadow-raise (rgba(42,29,18,*)) — nøytral svart i
+     mørk modus, varm espresso i lys modus, ALDRI kald lilla i noen av dem. */
+  --shadow-1: 0 1px 3px rgba(42, 29, 18, 0.09);
+  --shadow-2: 0 4px 14px rgba(42, 29, 18, 0.09);
+  --shadow-3: 0 4px 16px rgba(42, 29, 18, 0.12);
+  --shadow-cta: 0 1px 2px rgba(42, 29, 18, 0.05), 0 4px 14px rgba(42, 29, 18, 0.09);
   --shadow-cta-primary: 0 12px 26px -14px color-mix(in srgb, var(--dw-accent) 55%, transparent);
   --shadow-frame: 0 40px 90px -30px rgba(23, 16, 46, 0.45), 0 12px 30px -14px rgba(23, 16, 46, 0.35);
 
@@ -567,6 +574,14 @@ img {
   -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
+  /* P8: BottomTabBar floats (position: fixed) over the shell instead of
+     taking its own flex row, so content now scrolls BEHIND it. This
+     clearance keeps the last row of every screen from permanently hiding
+     under the bar. --dw-tabbar-clearance is defined once in
+     design-tokens-v2.css and consumed here (custom-property resolution is
+     cascade-based, not import-order-based, so referencing it from this
+     legacy file is safe regardless of stylesheet load order). */
+  padding-bottom: var(--dw-tabbar-clearance, 90px);
 }
 /* motion-wrapperen (route-transition) må videreføre høyden til skjermen */
 .app-shell > main > div {

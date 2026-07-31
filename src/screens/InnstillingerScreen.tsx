@@ -329,15 +329,23 @@ const rowLabelStyle: CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
+// P8 (ekstern designgjennomgang): én-linjes ellipsis kappet hjelpetekster
+// midt i meningen (f.eks. "...hjem-skje..." under Referansetime,
+// "...påkled..." under Morgenvarsel). rowBase har kun min-height (52), ikke
+// fast høyde, så radene kan vokse — bytter til en 2-linjers klipp i stedet
+// for 1-linjes avkutting.
 const rowSubStyle: CSSProperties = {
   fontSize: '0.75rem',
   fontWeight: 500,
   color: C.ink500,
   letterSpacing: '.05px',
-  lineHeight: 1.2,
+  lineHeight: 1.3,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical',
+  whiteSpace: 'normal',
 };
 
 // F81.5-W2: delt "Pluss"-chip — a11y-krav (accessibility-lead pre-clearance)
@@ -878,7 +886,13 @@ function TogglePill({
     width: 46,
     height: 28,
     borderRadius: 999,
-    background: on ? C.orange500 : C.ink200,
+    // P8 (ekstern designgjennomgang): C.ink200 (--ink-200 → --dw-hairline,
+    // en ~14% rgba-linje beregnet for KANTER, ikke flater) ga et nesten
+    // usynlig av-spor i lys modus — hvit knapp på ~#EAE8E8 (~1,2:1). ink300
+    // (--dw-ink-low) er en heldekkende opak farge i begge tema (lys 6,6:1 /
+    // mørk solid varm tan), så av-sporet blir faktisk synlig regardless av
+    // tema, ikke bare i mørk modus der det tilfeldigvis fungerte.
+    background: on ? C.orange500 : C.ink300,
     border: 'none',
     position: 'relative',
     cursor: disabled ? 'not-allowed' : 'pointer',
@@ -898,7 +912,10 @@ function TogglePill({
     height: 24,
     borderRadius: '50%',
     background: '#FFF',
-    boxShadow: '0 1px 3px rgba(0,0,0,.18)',
+    // P8: la til en fast tynn ring (0 0 0 1px) i tillegg til løfteskyggen —
+    // gir kula en synlig egen kant mot sporet UANSETT sporfarge/tema, i
+    // stedet for å stole utelukkende på fyll-mot-fyll-kontrast.
+    boxShadow: '0 0 0 1px rgba(0,0,0,.14), 0 1px 3px rgba(0,0,0,.18)',
     transform: on ? 'translateX(18px)' : 'translateX(0)',
     // F83: iOS-switch-fysikk — iosDrawer-kurven (ease-standard) + 320ms gir
     // den karakteristiske raskt-ut/myk-landing-følelsen fra native switches.

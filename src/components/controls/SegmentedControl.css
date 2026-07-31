@@ -1,3 +1,14 @@
+/**
+ * SegmentedControl.css — P8 Monter re-skin.
+ *
+ * Only consumer is Planlegg's I dag/Uke/Snart segment (UkeScreen.tsx).
+ * Pattern lifted 1:1 from the approved mock (docs/mocks/monter/
+ * planlegg-imorgen.html .seg) and the Hjem activity toggle (hjem-monter.css
+ * .hjm-toggle): a cream-on-canvas active thumb — token-driven via
+ * color-mix(--dw-ink-hi) so the track/active-pill pairing flips correctly
+ * in light mode (dark pill + cream text) without any invented hues.
+ */
+
 .segmented-control {
   min-width: 0;
   margin: 0;
@@ -23,9 +34,8 @@
   gap: 4px;
   max-width: 100%;
   padding: 4px;
-  border: 1px solid var(--ink-200);
-  border-radius: 999px;
-  background: var(--surface);
+  border-radius: var(--dw-r-pill);
+  background: color-mix(in srgb, var(--dw-ink-hi) 9%, transparent);
 }
 
 .segmented-control__segment {
@@ -34,11 +44,11 @@
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  color: var(--ink-700);
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--dw-r-pill);
+  color: var(--dw-ink-mid);
+  font-size: var(--dw-text-meta);
+  font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
   transition:
@@ -47,8 +57,8 @@
 }
 
 .segmented-control__segment.is-checked {
-  background: var(--accent-cta);
-  color: var(--accent-cta-ink);
+  background: var(--dw-ink-hi);
+  color: var(--dw-canvas);
   font-weight: 640;
 }
 

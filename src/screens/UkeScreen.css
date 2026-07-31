@@ -1,11 +1,28 @@
+/**
+ * UkeScreen.css — P8 Planlegg re-skin on Monter (--dw-* tokens).
+ *
+ * Depth doctrine applied: content never sits directly on canvas. Two raised
+ * modules replace the previous flat hairline rows —
+ *  - .planlegg-weather: the petrol instrument (weather/date), houses the
+ *    day-hero temperature (Fraunces, the one allowed serif moment) and the
+ *    forecast disclosure nested inside it (review item 8 — the forecast no
+ *    longer floats free at the bottom of the screen).
+ *  - .planlegg-advice: ONE raised espresso surface for verdict + next
+ *    action + the Dagslinjen timeline (review item 7/9).
+ * Color roles preserved per sol-duel-2026-07-31.md §13: petrol=weather/date,
+ * espresso surface=advice/preparation, amber=next action, cream=info.
+ * Typography: Schibsted everywhere (var(--dw-font-ui)); Fraunces appears in
+ * exactly one place — the hero temperature.
+ */
+
 .planlegg-screen {
   width: 100%;
   max-width: 560px;
   margin-inline: auto;
-  padding: calc(16px + env(safe-area-inset-top, 0px)) 24px 64px;
-  background: var(--bg-canvas);
-  color: var(--ink-900);
-  font-family: var(--font-sans);
+  padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px 24px;
+  background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+  color: var(--dw-ink-hi);
+  font-family: var(--dw-font-ui);
   overflow-wrap: anywhere;
   transition: background-color 280ms var(--ease-standard);
 }
@@ -14,46 +31,55 @@
 .planlegg-screen h2,
 .planlegg-screen p {
   margin: 0;
+  font-family: inherit;
 }
 
 .planlegg-screen__header {
   display: grid;
-  gap: 8px;
+  gap: 4px;
 }
 
 .planlegg-screen__header h1 {
-  font-size: 1.25rem;
-  font-weight: 640;
-  line-height: 1.25;
+  font-size: var(--dw-text-display);
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  color: var(--dw-ink-hi);
 }
 
 .planlegg-screen__context {
-  color: var(--ink-700);
-  font-size: 0.875rem;
+  color: var(--dw-ink-low);
+  font-size: var(--dw-text-meta);
   font-weight: 500;
   line-height: 1.4;
 }
 
 .planlegg-screen__views {
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
+/* ============ Statusvarsler (PlanleggStatusNotice) ============
+   D1: aldri en naken hairline-rad rett på canvas — egen liten hevet flate
+   med samme lyslogikk-mønster som resten av systemet. */
 .planlegg-status {
   display: grid;
   gap: 8px;
-  margin-top: 24px;
-  padding-block: 16px;
-  border-block: 1px solid var(--ink-200);
-  color: var(--ink-700);
-  font-size: 1rem;
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: var(--dw-r-raised);
+  background: var(--dw-raised);
+  color: var(--dw-ink-mid);
+  font-size: var(--dw-text-body);
   font-weight: 500;
   line-height: 1.5;
+  box-shadow: var(--dw-shadow-raise);
 }
 
 .planlegg-status h2 {
-  color: var(--ink-900);
-  font-size: 1.25rem;
-  font-weight: 640;
+  color: var(--dw-ink-hi);
+  font-size: var(--dw-text-heading);
+  font-weight: 700;
   line-height: 1.25;
 }
 
@@ -65,16 +91,16 @@
   padding: 8px 0;
   border: 0;
   background: transparent;
-  color: var(--accent-cta);
+  color: var(--dw-accent);
   font: inherit;
-  font-weight: 640;
+  font-weight: 700;
   text-align: left;
   cursor: pointer;
 }
 
 .planlegg-status button:focus-visible,
 .planlegg-forecast__toggle:focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline: 3px solid var(--dw-focus);
   outline-offset: 4px;
 }
 
@@ -87,8 +113,8 @@
 .planlegg-status__skeleton > span,
 .planlegg-status__skeleton-rail span {
   display: block;
-  border-radius: var(--r-sm);
-  background: var(--surface-soft);
+  border-radius: var(--dw-r-control);
+  background: var(--dw-interactive);
 }
 
 .planlegg-status__skeleton-verdict {
@@ -106,7 +132,7 @@
   gap: 12px;
   margin-top: 16px;
   padding-left: 20px;
-  border-left: 2px solid var(--ink-200);
+  border-left: 2px solid var(--dw-hairline);
 }
 
 .planlegg-status__skeleton-rail span {
@@ -118,75 +144,201 @@
   width: 100%;
 }
 
+/* ============ Petrol værmodul (day-hero + værprognose) ============
+   Samme instrument-panel-vokabular som Hjem sitt .hjm-panel: kun
+   værnyansen (data-nuance) endrer bakgrunnen, canvas/ink/aksent står fast.
+   Instrument-tekstrampen (--dw-ink-panel-*) brukes for ALL tekst her —
+   ALDRI opacity-demping av tekst på petrol (egen regel, DESIGN.md). */
+.planlegg-weather {
+  position: relative;
+  margin-top: 14px;
+  padding: 20px 20px 6px;
+  border-radius: var(--dw-r-panel);
+  background: var(--dw-w-cloudy);
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.planlegg-weather[data-nuance='clear'] { background: var(--dw-w-clear); }
+.planlegg-weather[data-nuance='cloudy'] { background: var(--dw-w-cloudy); }
+.planlegg-weather[data-nuance='rain'] { background: var(--dw-w-rain); }
+.planlegg-weather[data-nuance='snow'] { background: var(--dw-w-snow); }
+.planlegg-weather[data-nuance='night'] { background: var(--dw-w-night); }
+
+/* Hero-flate: monter-lyset her får full styrke (0.9), per §6-unntaket for
+   hero/valgt tilstand — i motsetning til rådgivnings-modulens dempede kant. */
+.planlegg-weather::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--dw-edge-light-gradient);
+  opacity: 0.9;
+}
+
+.planlegg-weather__day {
+  font-size: var(--dw-text-meta);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--dw-ink-panel-mid);
+}
+
+.planlegg-weather__hero-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* Den ENE tillatte serif-rollen: hero-temperaturen. Wonk=0, sifre i faktisk
+   størrelse (duell §5 — 7° skal aldri kunne leses som ?°). */
+.planlegg-weather__temp {
+  font-family: var(--dw-font-hero);
+  font-size: 3rem;
+  line-height: 0.95;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  color: var(--dw-ink-panel-hi);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-optical-sizing: auto;
+  font-variation-settings: 'WONK' 0;
+}
+
+.planlegg-weather__temp sup {
+  font-size: 1.375rem;
+  font-weight: 400;
+  vertical-align: 28%;
+  margin-left: 1px;
+}
+
+.planlegg-weather__icon {
+  width: 44px;
+  height: auto;
+  margin-top: 2px;
+  filter: saturate(0.8) brightness(0.96) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+}
+
+.planlegg-weather__condition {
+  margin-top: 4px;
+  font-size: var(--dw-text-title);
+  font-weight: 600;
+  color: var(--dw-ink-panel-hi);
+}
+
+.planlegg-weather__meta {
+  margin-top: 3px;
+  font-size: var(--dw-text-meta);
+  color: var(--dw-ink-panel-mid);
+}
+
+/* ForecastDisclosure nested inni værmodulen (review item 8) — samme
+   instrument-tekstrampe, aldri canvas-tekstfarger. */
+.planlegg-weather .planlegg-forecast {
+  margin-top: 14px;
+  border-top: 1px solid rgba(241, 233, 218, 0.16);
+}
+
+.planlegg-weather .planlegg-forecast__toggle {
+  color: var(--dw-ink-panel-hi);
+}
+
+.planlegg-weather .planlegg-forecast__toggle:focus-visible {
+  outline-color: var(--dw-focus);
+}
+
+.planlegg-weather .planlegg-forecast__rows li {
+  border-top-color: rgba(241, 233, 218, 0.12);
+  color: var(--dw-ink-panel-mid);
+}
+
+/* ============ Rådgivnings-modulen (verdict + neste handling + tidslinje) ============
+   D1/D2: ÉN hevet espresso-flate, kantlys + tintet skygge — aldri rader
+   direkte på canvas. */
+.planlegg-advice {
+  position: relative;
+  margin-top: 14px;
+  padding: 18px 18px 14px;
+  border-radius: var(--dw-r-panel);
+  background: var(--dw-raised);
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 32px -18px rgba(0, 0, 0, 0.45);
+}
+
+.planlegg-advice::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--dw-edge-light-gradient);
+  opacity: 0.55;
+}
+
 .planlegg-screen__answer {
   display: grid;
-  gap: 8px;
-  margin-top: 24px;
+  gap: 6px;
 }
 
 .planlegg-screen__verdict {
-  font-family: var(--font-display, var(--font-serif));
-  font-size: 2rem;
-  font-weight: 640;
-  line-height: 1.15;
+  font-family: var(--dw-font-ui);
+  font-size: var(--dw-text-heading);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--dw-ink-hi);
 }
 
 .planlegg-screen__action,
 .planlegg-screen__empty,
 .planlegg-screen__week-weather {
-  color: var(--ink-700);
-  font-size: 1rem;
+  color: var(--dw-ink-mid);
+  font-size: var(--dw-text-body);
   font-weight: 500;
   line-height: 1.5;
 }
 
 .planlegg-screen__week-weather {
-  margin-top: 24px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: var(--dw-r-raised);
+  background: var(--dw-raised);
+  box-shadow: var(--dw-shadow-raise);
 }
 
 .planlegg-screen__rail {
-  margin-top: 24px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--dw-hairline);
 }
 
 .planlegg-screen__rail h2 {
-  margin-bottom: 16px;
-  font-size: 1.25rem;
-  font-weight: 640;
-  line-height: 1.25;
-}
-
-.planlegg-screen .plan-change-rail__disclosure {
-  border-width: 0 0 1px;
-  border-radius: 0;
-  background: transparent;
-}
-
-.planlegg-screen .plan-change-rail__detail-inner {
-  padding-inline: 0;
+  margin-bottom: 12px;
+  color: var(--dw-ink-hi);
 }
 
 .planlegg-screen .plan-change-rail__preview img {
-  background: var(--surface-soft);
+  background: var(--dw-interactive);
 }
 
 .planlegg-screen .plan-change-rail__outfit {
-  color: var(--ink-900);
+  color: var(--dw-ink-hi);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
 
-.planlegg-forecast {
-  margin-top: 24px;
-  border-top: 1px solid var(--ink-200);
-}
-
+/* ============ Værprognose-disclosure (delt struktur: kan leve på canvas
+   ELLER inni petrol-modulen — se .planlegg-weather-overstyringene over) ============ */
 .planlegg-forecast__toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  color: var(--ink-900);
+  color: var(--dw-ink-hi);
 }
 
 .planlegg-forecast__toggle span {
@@ -209,11 +361,12 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 4px 16px;
-  padding-block: 16px;
-  border-top: 1px solid var(--ink-100);
-  font-size: 0.875rem;
+  padding-block: 14px;
+  border-top: 1px solid var(--dw-hairline);
+  font-size: var(--dw-text-meta);
   font-weight: 500;
   line-height: 1.4;
+  font-variant-numeric: tabular-nums;
 }
 
 .planlegg-forecast__rows li > :nth-child(even) {
@@ -247,4 +400,37 @@
     border: 1px solid CanvasText;
     background: Canvas;
   }
+
+  .planlegg-weather,
+  .planlegg-advice {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* Plagg-strip i rådmodulen (eierfunn IMG_9105): dom + vitrine-thumbs i
+   stedet for plaggliste som prosa. Samme vitrine-verdi (#3A2A1A) og
+   topplys-logikk som Hjem-resultatets thumbs — tema-konstant. */
+.planlegg-garments {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.planlegg-garments__item { flex: none; display: flex; }
+.planlegg-garments__thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  object-fit: cover;
+  background: #3A2A1A;
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.18) inset, 0 4px 8px -4px rgba(0, 0, 0, 0.45);
+}
+.planlegg-garments__thumb--letter {
+  display: grid;
+  place-items: center;
+  font-size: var(--dw-text-body);
+  font-weight: 700;
+  color: var(--dw-ink-mid);
 }

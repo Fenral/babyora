@@ -765,12 +765,19 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
         {/* ─── BOTTOM CTA ─── */}
         <div className="ob-cta-zone">
           {step === 1 && (
+            /* P8 (ekstern designgjennomgang + duell §11, ADOPTERT): navnefeltet
+               er frivillig personalisering, ikke påkrevd profilinformasjon —
+               «Fortsett» skal ALLTID se aktiv ut og ALLTID være aktiv på steg 1.
+               Tidligere `disabled={!nameOk}` gjorde knappen utilgjengelig-
+               utseende (opacity .55) i normal bruk (tomt navnefelt er
+               starttilstanden), som komprimerte kontrasten mellom
+               --ob-accent-cta og --ob-accent-cta-ink til under 3:1 — IKKE en
+               feil i selve fargeparet (det gir 6,86:1/4,6:1 udempet), men et
+               resultat av at en gyldig CTA ble feilaktig visuelt dempet. */
             <button
               className="ob-btn-primary"
               type="button"
               onClick={goNext}
-              disabled={!nameOk}
-              aria-disabled={!nameOk}
             >
               Fortsett <ChevronRight />
             </button>

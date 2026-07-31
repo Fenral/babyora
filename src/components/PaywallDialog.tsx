@@ -478,14 +478,25 @@ const linksRowStyle: CSSProperties = {
 
 const legalRowStyle: CSSProperties = {
   display: 'flex',
-  flexDirection: 'column',
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
   alignItems: 'center',
-  gap: 4,
+  gap: 2,
   marginTop: 2,
 };
 
+// P8 (ekstern designgjennomgang): 0.6875rem (11px) var under duellens
+// leselighetsgulv (min. 13-14pt, §8) OG lenkene manglet et reelt 44pt
+// trykkmål (kun tekstens egen linjehøyde var target). Egen font-size-bump +
+// padding/min-height gir et ekte 44pt mål uten å endre linkens visuelle
+// tetthet (padding trekkes inn med negativ margin i onboarding-mønsteret).
 const legalLinkStyle: CSSProperties = {
-  fontSize: '0.6875rem',
+  minHeight: 44,
+  display: 'inline-flex',
+  alignItems: 'center',
+  padding: '4px 10px',
+  fontSize: '0.8125rem',
   fontWeight: 500,
   color: 'var(--ink-500)',
   letterSpacing: '.05px',

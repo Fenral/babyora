@@ -83,6 +83,22 @@
   --dw-shadow-raise: 0 1px 2px rgba(0, 0, 0, 0.5);
   --dw-edge-light-gradient: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
 
+  /* ============ Flytende tab-bar (P8, duel §7) ============
+     Solid varm flate ~16px sideinnrykk, 56-60pt + safe-area, radius ~28.
+     Overflate + blur-fallback er DERIVERT fra --dw-raised via color-mix
+     (98%/78% alfa) i stedet for hardkodet rgba — gir korrekt varm flate i
+     BEGGE tema uten egne lys-verdier (raised flipper allerede per tema). */
+  --dw-tabbar-height: 60px;
+  --dw-tabbar-radius: 28px;
+  --dw-tabbar-inset: 16px;
+  --dw-tabbar-gap: 16px;
+  --dw-tabbar-surface: color-mix(in srgb, var(--dw-raised) 98%, transparent);
+  --dw-tabbar-surface-blur: color-mix(in srgb, var(--dw-raised) 78%, transparent);
+  /* Klaring nederst på hver skjerms scroll-container slik at innhold aldri
+     blir permanent skjult bak den flytende baren (innhold scroller BAK,
+     ikke under, baren). */
+  --dw-tabbar-clearance: calc(var(--dw-tabbar-height) + var(--dw-tabbar-gap) + env(safe-area-inset-bottom, 0px) + 14px);
+
   /* ============ Typografi ============ */
   /* Schibsted Grotesk: alt UI (self-hostet via @fontsource).               */
   /* Fraunces: KUN hero-temperatur + pris, wonk 0. Mono: tabellsifre.       */
@@ -114,9 +130,13 @@
   :root:not([data-theme="dark"]) {
     --dw-canvas: #F9F5EB;
     --dw-canvas-glow: #F1E9DA;
-    --dw-raised: #FFFFFF;
+    /* P8 lys-kalibrering: varm off-white i stedet for rent #FFFFFF — hevede
+       flater skal lese som "varmt papir", ikke som inverterte mørk-modus-
+       kort. Kontrast uendret/bedre (ink-hi 15.97:1, ink-mid 6.0:1 på denne
+       flaten — verifisert). */
+    --dw-raised: #FFFCF4;
     --dw-interactive: #F3ECDD;
-    --dw-overlay: #FFFFFF;
+    --dw-overlay: #FFFCF4;
     --dw-accent-surface: #F1DED0;  /* valgt flate lys · mørk tekst 10.6:1 */
 
     --dw-ink-hi: #2A1D12;
@@ -130,6 +150,14 @@
     --dw-hairline: rgba(42, 29, 18, 0.14);
     --dw-shadow-raise: 0 1px 2px rgba(42, 29, 18, 0.18);
     /* --dw-panel, --dw-w-*, --dw-ink-panel-*: uendret (tema-konstant instrument) */
+
+    /* P8 (ekstern designgjennomgang): semantikk-tokens hadde INGEN lys-
+       variant — --dw-success #9DBF9A målt ~2.03:1 på hvit (paywall-forsøks-
+       linjen). Egne, mørkere lys-verdier innenfor samme farsefamilie, alle
+       ≥4.5:1 mot både canvas og hevet flate (verifisert maskinelt). */
+    --dw-success: #2F6B45;   /* 6.19:1 på --dw-raised, 5.83:1 på canvas */
+    --dw-warning: #8C6212;   /* 5.43:1 på --dw-raised, 4.98:1 på canvas */
+    --dw-danger: #B8341F;    /* 5.92:1 på --dw-raised, 5.43:1 på canvas */
   }
 }
 
@@ -139,9 +167,9 @@
 :root[data-theme="light"] {
   --dw-canvas: #F9F5EB;
   --dw-canvas-glow: #F1E9DA;
-  --dw-raised: #FFFFFF;
+  --dw-raised: #FFFCF4;
   --dw-interactive: #F3ECDD;
-  --dw-overlay: #FFFFFF;
+  --dw-overlay: #FFFCF4;
   --dw-accent-surface: #F1DED0;
 
   --dw-ink-hi: #2A1D12;
@@ -154,4 +182,8 @@
 
   --dw-hairline: rgba(42, 29, 18, 0.14);
   --dw-shadow-raise: 0 1px 2px rgba(42, 29, 18, 0.18);
+
+  --dw-success: #2F6B45;
+  --dw-warning: #8C6212;
+  --dw-danger: #B8341F;
 }

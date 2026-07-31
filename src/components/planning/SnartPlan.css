@@ -1,50 +1,100 @@
+/**
+ * SnartPlan.css — P8 Monter re-skin.
+ *
+ * "Snart" is Planlegg's compact next-week deviation summary — the same role
+ * as the mock's .week-surface (docs/mocks/monter/planlegg-imorgen.html):
+ * ONE raised espresso surface for the whole section, dividers between
+ * items instead of nested cards (D1). Typography moves to Schibsted;
+ * no hardcoded font-size/weight literals besides the --dw-text-* scale.
+ */
+
 .snart-plan {
-  color: var(--ink-900);
+  position: relative;
+  margin-top: 14px;
+  padding: 16px 18px 14px;
+  border-radius: var(--dw-r-panel);
+  background: var(--dw-raised);
+  color: var(--dw-ink-hi);
+  font-family: var(--dw-font-ui);
   overflow-wrap: anywhere;
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 32px -18px rgba(0, 0, 0, 0.45);
+}
+
+.snart-plan::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--dw-edge-light-gradient);
+  opacity: 0.55;
 }
 
 .snart-plan h2,
 .snart-plan h3 {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   line-height: 1.25;
+  color: var(--dw-ink-hi);
 }
 
 .snart-plan h2 {
-  font-size: 1.25rem;
-  font-weight: 640;
+  font-size: var(--dw-text-heading);
+  font-weight: 700;
 }
 
 .snart-plan h3 {
-  font-size: 1rem;
-  font-weight: 640;
+  font-size: var(--dw-text-meta);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--dw-ink-low);
 }
 
 .snart-plan p {
   margin: 0 0 8px;
+  color: var(--dw-ink-mid);
+  font-size: var(--dw-text-body);
   line-height: 1.5;
 }
 
 .snart-plan__group {
-  margin-top: 24px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--dw-hairline);
 }
 
 .snart-plan ul {
   margin: 0;
-  padding-left: 20px;
+  padding-left: 0;
+  list-style: none;
 }
 
 .snart-plan li {
-  margin: 0 0 16px;
+  margin: 0;
+  padding: 10px 0;
+}
+
+.snart-plan li + li {
+  border-top: 1px solid var(--dw-hairline);
+}
+
+.snart-plan li p {
+  margin: 0;
+  color: var(--dw-ink-hi);
+  font-weight: 500;
 }
 
 .snart-plan button {
   min-width: 44px;
   min-height: 44px;
+  margin-top: 8px;
   padding: 8px 14px;
-  border: 1px solid var(--accent-cta);
-  border-radius: 999px;
+  border: 1px solid var(--dw-accent);
+  border-radius: var(--dw-r-pill);
   background: transparent;
-  color: var(--accent-cta);
+  color: var(--dw-accent);
   font: inherit;
   font-weight: 640;
 }
@@ -55,6 +105,10 @@
 }
 
 @media (forced-colors: active) {
+  .snart-plan {
+    border: 1px solid CanvasText;
+  }
+
   .snart-plan button {
     border-color: ButtonText;
     color: ButtonText;

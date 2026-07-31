@@ -67,4 +67,70 @@ describe('BottomTabBar root navigation', () => {
     expect(css).toMatch(/@media\s*\(forced-colors:\s*active\)/u);
     expect(source).not.toMatch(/useState|onFocus|onBlur|style=/u);
   });
+
+  it('P8: floats per duel §7 — fixed position, side inset, pill radius, warm shadow, one muted edge-light', async () => {
+    const css = await readFile(fileURLToPath(new URL('../BottomTabBar.css', import.meta.url)), 'utf8');
+
+    expect(css).toMatch(/\.bottom-tab-bar\s*\{[^}]*position:\s*fixed/su);
+    // ~16px side inset (duel spec), not edge-to-edge.
+    expect(css).toMatch(/left:\s*var\(--dw-tabbar-inset/u);
+    expect(css).toMatch(/right:\s*var\(--dw-tabbar-inset/u);
+    // radius ~28pt.
+    expect(css).toMatch(/border-radius:\s*var\(--dw-tabbar-radius,\s*28px\)/u);
+    // exactly one edge-light pseudo-element, muted (not hero-strength 0.9-1.0).
+    const edgeLightOpacities = [...css.matchAll(/\.bottom-tab-bar::before\s*\{[\s\S]*?opacity:\s*([\d.]+)/gu)];
+    expect(edgeLightOpacities).toHaveLength(1);
+    expect(Number(edgeLightOpacities[0]![1])).toBeLessThan(0.5);
+    // warm low shadow (not a neutral/cool tone).
+    expect(css).toMatch(/box-shadow:\s*0\s+18px\s+36px\s+-16px\s+rgba\(20,\s*12,\s*4,/u);
+  });
+
+  it('P8: renders with a blur-fallback structure — opaque solid default, translucent+blur behind @supports', async () => {
+    const css = await readFile(fileURLToPath(new URL('../BottomTabBar.css', import.meta.url)), 'utf8');
+
+    // Base rule (no @supports) declares the SOLID, non-transparent-reading
+    // fallback background before any @supports block appears.
+    const baseRuleIndex = css.indexOf('.bottom-tab-bar {');
+    const supportsIndex = css.indexOf('@supports');
+    expect(baseRuleIndex).toBeGreaterThanOrEqual(0);
+    expect(supportsIndex).toBeGreaterThan(baseRuleIndex);
+    const baseRule = css.slice(baseRuleIndex, supportsIndex);
+    expect(baseRule).toMatch(/background:\s*var\(--dw-tabbar-surface,/u);
+
+    // @supports gate covers both the standard and -webkit- prefixed forms
+    // (Safari/iOS still needs the prefix) and upgrades to the translucent +
+    // blur(20px) saturate(1.08) surface from the duel spec.
+    expect(css).toMatch(
+      /@supports\s*\(backdrop-filter:\s*blur\(20px\)\)\s*or\s*\(-webkit-backdrop-filter:\s*blur\(20px\)\)/u,
+    );
+    const supportsBlock = css.slice(supportsIndex);
+    expect(supportsBlock).toMatch(/background:\s*var\(--dw-tabbar-surface-blur,/u);
+    expect(supportsBlock).toMatch(/backdrop-filter:\s*blur\(20px\)\s+saturate\(1\.08\)/u);
+    expect(supportsBlock).toMatch(/-webkit-backdrop-filter:\s*blur\(20px\)\s+saturate\(1\.08\)/u);
+  });
+
+  it('P8: selected tab reads as icon+text+subtle accent-surface pill, never a separate button (no border/box-shadow on the pill)', async () => {
+    const css = await readFile(fileURLToPath(new URL('../BottomTabBar.css', import.meta.url)), 'utf8');
+    const indicatorRuleMatch = css.match(/\.bottom-tab-bar__indicator\s*\{[^}]*\}/su);
+
+    expect(indicatorRuleMatch).not.toBeNull();
+    const indicatorRule = indicatorRuleMatch![0];
+    expect(indicatorRule).toMatch(/background:\s*var\(--dw-accent-surface,/u);
+    expect(indicatorRule).not.toMatch(/border(?!-radius):/u);
+    expect(indicatorRule).not.toMatch(/box-shadow/u);
+  });
+
+  it('P8: app shell scroll container carries matching bottom clearance so floated content is never permanently hidden', async () => {
+    const tokens = await readFile(
+      fileURLToPath(new URL('../../styles/design-tokens-v2.css', import.meta.url)),
+      'utf8',
+    );
+    const shell = await readFile(
+      fileURLToPath(new URL('../../styles/design-tokens.css', import.meta.url)),
+      'utf8',
+    );
+
+    expect(tokens).toMatch(/--dw-tabbar-clearance:\s*calc\(/u);
+    expect(shell).toMatch(/\.app-shell > main\s*\{[\s\S]*?padding-bottom:\s*var\(--dw-tabbar-clearance/u);
+  });
 });

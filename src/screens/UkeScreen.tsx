@@ -59,6 +59,13 @@ import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
 import { recommend } from '../lib/wool-layers/recommend';
 import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
+import {
+  getConditionLabel,
+  getGarmentImage,
+  getWeatherIcon,
+  getWeatherNuance,
+} from '../lib/monter-assets';
+import { garmentIdFor } from '../data/garment-illustrations.js';
 import { useChildren } from '../state/children-store';
 import { useSwapOverride } from '../state/swap-override-store';
 import { resolveEffectivePlace, useLocationPref } from '../state/location-pref-store';
@@ -183,6 +190,49 @@ function conditionLabel(symbolCode: string): string {
   if (normalized.includes('fair')) return 'Lettskyet';
   if (normalized.includes('clear')) return 'Klarvær';
   return 'Vær';
+}
+
+// P8 (Monter re-skin): presentation-only date/time formatters for the day-
+// hero petrol panel and the improved empty-state line. Pure functions, no
+// planning-domain logic — same nb-NO/Europe/Oslo pattern already used by
+// PlanChangeRail's timeLabel() and ForecastDisclosure's timeLabel().
+const heroDayFormatter = new Intl.DateTimeFormat('nb-NO', {
+  timeZone: PLAN_TIME_ZONE,
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+});
+
+const heroShortTimeFormatter = new Intl.DateTimeFormat('nb-NO', {
+  timeZone: PLAN_TIME_ZONE,
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+function capitalize(value: string): string {
+  return value.length > 0 ? value.charAt(0).toLocaleUpperCase('nb-NO') + value.slice(1) : value;
+}
+
+function heroDayLabel(atIso: string | null, isToday: boolean): string {
+  if (isToday) return 'I dag';
+  if (!atIso) return '';
+  const instant = new Date(atIso);
+  if (Number.isNaN(instant.getTime())) return '';
+  return capitalize(heroDayFormatter.format(instant));
+}
+
+function shortTimeLabel(atIso: string | undefined): string | null {
+  if (!atIso) return null;
+  const instant = new Date(atIso);
+  if (Number.isNaN(instant.getTime())) return null;
+  return heroShortTimeFormatter.format(instant).replace('.', ':');
+}
+
+function formatHeroTemp(tempC: number | null | undefined): string {
+  if (tempC === null || tempC === undefined || Number.isNaN(tempC)) return '–';
+  const rounded = Math.round(tempC);
+  return rounded < 0 ? `−${Math.abs(rounded)}` : `${rounded}`;
 }
 
 function finalizedFingerprint(
@@ -838,6 +888,33 @@ function PlanleggData({
         symbolCode: row.symbolCode,
       }));
 
+  // P8 (Monter re-skin, review items 7-9): ÉN petrol værmodul (dagens/valgt
+  // dags hero + værprognosen nested inni, i stedet for at "Vis full
+  // værprognose" fløt fritt nederst på skjermen). Gatingen er IDENTISK med
+  // den gamle frittstående ForecastDisclosure-visningen (samme fire vilkår)
+  // — kun plasseringen og en valgfri hero-visning oppå den er nytt. Alle
+  // verdiene under leser KUN presentation-laget sine allerede eksponerte
+  // felter (temperatureContext/selectedContext/fallbackPhase/forecastRows) —
+  // ingen nye selectors i src/lib/planning.
+  const showWeatherHero = !isSoonView
+    && !isAccessGatedView
+    && statusState.status !== 'loading'
+    && statusState.status !== 'error';
+  const heroWeather = temperatureContext ?? null;
+  const heroNuance = getWeatherNuance(heroWeather?.symbolCode);
+  const heroCondition = getConditionLabel(heroWeather?.symbolCode);
+  const heroIcon = getWeatherIcon(heroWeather?.symbolCode);
+  const heroAtIso = selectedContext?.plannedForIso
+    ?? fallbackPhase?.weather.atIso
+    ?? (weather.now ? weather.now.observedAt.toISOString() : null);
+  const heroDay = heroDayLabel(heroAtIso, isTodayView);
+  // Review item 7 (nyttig tomtilstand): "empty" har likevel et ekte
+  // verdict.summary (plan-view-model.ts sin EvaluatedAdvice-gren dekker
+  // 'empty' også) — det ble bare aldri lest ut i visningen. Bruker samme
+  // allerede-eksponerte forecastRows til en "stabilt til HH:MM"-linje i
+  // stedet for en generisk "ingen endringer"-tekst. Ingen ny selector.
+  const emptyStableUntil = shortTimeLabel(forecastRows.at(-1)?.atIso);
+
   return (
     <section
       className="planlegg-screen ba-temp-root"
@@ -876,6 +953,42 @@ function PlanleggData({
         />
       )}
 
+      {/* Petrol værmodul — dagens/valgt dags hero (kun når vi faktisk har et
+          vurdert værpunkt) + værprognosen alltid nested inni, aldri fritt-
+          flytende (review-item 8). Fargen kommer KUN fra vær-nyansen — én
+          instrument-flate, samme regel som Hjem sitt panel. */}
+      {showWeatherHero && (
+        <section
+          className="planlegg-weather"
+          data-nuance={heroNuance}
+          aria-label={heroWeather ? `Været ${heroDay || 'valgt dag'}`.trim() : 'Værprognose'}
+        >
+          {heroWeather && (
+            <>
+              <p className="planlegg-weather__day">{heroDay}</p>
+              <div className="planlegg-weather__hero-row">
+                <span className="planlegg-weather__temp">
+                  {formatHeroTemp(heroWeather.tempC)}
+                  <sup>°</sup>
+                </span>
+                {heroIcon && (
+                  <img className="planlegg-weather__icon" src={heroIcon} alt="" draggable={false} />
+                )}
+              </div>
+              <p className="planlegg-weather__condition">{heroCondition}</p>
+              <p className="planlegg-weather__meta">
+                Føles som {formatHeroTemp(heroWeather.feelsLikeC)}° · Vind {Math.round(heroWeather.windMs)} m/s
+              </p>
+            </>
+          )}
+          <ForecastDisclosure
+            open={forecastOpen}
+            onToggle={() => setForecastOpen((current) => !current)}
+            rows={forecastRows}
+          />
+        </section>
+      )}
+
       {isSoonView
         && soonAccess.presentation === 'full'
         && snartResult && (
@@ -891,23 +1004,78 @@ function PlanleggData({
         </p>
       )}
 
+      {/* Dybdedoktrinen D1: verdikt + neste handling + tidslinjen deler NÅ
+          ÉN hevet espresso-flate (rådgivnings-modulen) i stedet for å stå
+          direkte på canvas — det var nettopp "naked hairline rows on
+          canvas"-funnet doktrinen forbyr. Review-item 7: tomtilstanden viser
+          nå det faktiske verdict.summary (alltid tilgjengelig for 'empty'
+          også, se plan-view-model.ts sin EvaluatedAdvice) i stedet for en
+          generisk "ingen endringer"-setning, pluss en "stabilt til HH:MM"-
+          linje utledet av den allerede eksponerte forecast-listen. */}
       {showAdvice && (
-        <>
+        <section className="planlegg-advice">
           <div className="planlegg-screen__answer">
+            {/* Eierfunn (IMG_9105): plagglisten som løpende prosa i verdikt-
+                setningen ble «masse tekst uten å skjønne hva det er». Plagg
+                presenteres som plagg: kort dom + vitrine-thumbs (samme
+                bildesti som Hjem: garmentIdFor → getGarmentImage, bokstav-
+                fallback uten bilde). Full liste ligger for skjermlesere. */}
             {planningEvaluation.status === 'empty' ? (
               <>
-                <p className="planlegg-screen__verdict">Ingen antrekksendringer</p>
+                <p className="planlegg-screen__verdict">Antrekket holder</p>
+                {planningEvaluation.verdict && (
+                  <ul
+                    className="planlegg-garments"
+                    aria-label={`Dagens antrekk: ${planningEvaluation.verdict.summary}`}
+                  >
+                    {planningEvaluation.verdict.orderedGarments.map((label) => {
+                      const image = getGarmentImage(garmentIdFor(label));
+                      return (
+                        <li key={label} className="planlegg-garments__item" title={label}>
+                          {image ? (
+                            <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
+                          ) : (
+                            <span className="planlegg-garments__thumb planlegg-garments__thumb--letter" aria-hidden="true">
+                              {label.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                          <span className="hjm-sr-only">{label}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
                 <p className="planlegg-screen__empty">
-                  Babyora fant ingen endringer i perioden som er vurdert.
+                  {emptyStableUntil
+                    ? `Ingen endringer frem til kl. ${emptyStableUntil}.`
+                    : 'Babyora fant ingen endringer i perioden som er vurdert.'}
                 </p>
               </>
             ) : (
               <>
-                <p className="planlegg-screen__verdict">
-                  {planningEvaluation.verdict
-                    ? `Planlagt antrekk: ${planningEvaluation.verdict.summary}.`
-                    : 'Antrekket holder i de vurderte tidspunktene.'}
-                </p>
+                <p className="planlegg-screen__verdict">Planlagt antrekk</p>
+                {planningEvaluation.verdict && (
+                  <ul
+                    className="planlegg-garments"
+                    aria-label={`Planlagt antrekk: ${planningEvaluation.verdict.summary}`}
+                  >
+                    {planningEvaluation.verdict.orderedGarments.map((label) => {
+                      const image = getGarmentImage(garmentIdFor(label));
+                      return (
+                        <li key={label} className="planlegg-garments__item" title={label}>
+                          {image ? (
+                            <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
+                          ) : (
+                            <span className="planlegg-garments__thumb planlegg-garments__thumb--letter" aria-hidden="true">
+                              {label.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                          <span className="hjm-sr-only">{label}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
                 {planningEvaluation.nextAction && (
                   <p className="planlegg-screen__action">
                     {planningEvaluation.nextAction}
@@ -926,7 +1094,7 @@ function PlanleggData({
               onOpenOutfit={openPlannedOutfit}
             />
           </section>
-        </>
+        </section>
       )}
 
       {isWeekNeutral && (
@@ -945,18 +1113,6 @@ function PlanleggData({
         >
           Sjekker tilgang til dagens plan.
         </p>
-      )}
-
-      {!isSoonView
-        && !isAccessGatedView
-        && statusState.status !== 'loading'
-        && statusState.status !== 'error'
-        && (
-        <ForecastDisclosure
-          open={forecastOpen}
-          onToggle={() => setForecastOpen((current) => !current)}
-          rows={forecastRows}
-        />
       )}
     </section>
   );

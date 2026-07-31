@@ -29,8 +29,46 @@
   flex-direction: column;
   box-sizing: border-box;
   background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
-  padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px 14px;
+  /* P8: bunn-padding matcher den flytende tab-baren sin klaring — dette
+     skjermrotet kan eie sin egen interne scroll (overflow: hidden auto
+     under), så den kan ikke stole på .app-shell > main sin padding alene. */
+  padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px var(--dw-tabbar-clearance, 90px);
   overflow: hidden auto;
+
+  /* P8 lys-kalibrering: disse skygge-verdiene var hardkodet rgba(0,0,0,*) —
+     stemte kun for mørk canvas. Egne komponent-tokens (mørk-default her,
+     lys-overstyring lenger ned) gir "mindre/skarpere skygger" i lys modus
+     (duellens lys-prinsipp) i stedet for tunge svarte skygger på varmt
+     papir. De varme innfelte topplyskantene (rgba(242,192,138,*) inset)
+     er BEVISST uendret i begge tema — doktrinens lyslogikk er tema-konstant. */
+  --hjm-shadow-panel: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+  --hjm-shadow-lift: 0 16px 34px -18px rgba(0, 0, 0, 0.6);
+  --hjm-shadow-cta: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+  --hjm-shadow-thumb: 0 6px 12px -6px rgba(0, 0, 0, 0.55);
+  --hjm-shadow-prev: 0 8px 18px -10px rgba(0, 0, 0, 0.55);
+  --hjm-shadow-strip: 0 10px 26px -14px rgba(0, 0, 0, 0.5);
+}
+
+/* P8 lys-kalibrering: samme mønster som design-tokens-v2.css sin
+   data-theme-vakt (auto-lys respekterer manuell data-theme="dark"-
+   overstyring; eksplisitt data-theme="light" speiler auto-blokken). */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .hjem-monter {
+    --hjm-shadow-panel: 0 14px 28px -16px rgba(42, 29, 18, 0.28);
+    --hjm-shadow-lift: 0 10px 20px -14px rgba(42, 29, 18, 0.22);
+    --hjm-shadow-cta: 0 8px 16px -10px rgba(42, 29, 18, 0.28);
+    --hjm-shadow-thumb: 0 4px 8px -4px rgba(42, 29, 18, 0.22);
+    --hjm-shadow-prev: 0 6px 12px -8px rgba(42, 29, 18, 0.2);
+    --hjm-shadow-strip: 0 8px 18px -12px rgba(42, 29, 18, 0.22);
+  }
+}
+:root[data-theme="light"] .hjem-monter {
+  --hjm-shadow-panel: 0 14px 28px -16px rgba(42, 29, 18, 0.28);
+  --hjm-shadow-lift: 0 10px 20px -14px rgba(42, 29, 18, 0.22);
+  --hjm-shadow-cta: 0 8px 16px -10px rgba(42, 29, 18, 0.28);
+  --hjm-shadow-thumb: 0 4px 8px -4px rgba(42, 29, 18, 0.22);
+  --hjm-shadow-prev: 0 6px 12px -8px rgba(42, 29, 18, 0.2);
+  --hjm-shadow-strip: 0 8px 18px -12px rgba(42, 29, 18, 0.22);
 }
 
 .hjm-top { flex: none; }
@@ -73,7 +111,8 @@
   border-radius: var(--dw-r-panel);
   padding: 24px 22px 18px;
   overflow: hidden; /* D1: scan-koreografien klippes av panelet, aldri av flate lister */
-  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+  color: var(--dw-ink-panel-hi); /* tema-konstant instrument-tekst (lys-modus-regelen fra eiers telefonfunn) */
+  box-shadow: var(--hjm-shadow-panel);
 }
 .hjm-panel[data-nuance='clear'] { background: var(--dw-w-clear); --hjm-nuance: var(--dw-w-clear); }
 .hjm-panel[data-nuance='cloudy'] { background: var(--dw-w-cloudy); --hjm-nuance: var(--dw-w-cloudy); }
@@ -153,7 +192,7 @@
   font-variant-numeric: lining-nums tabular-nums;
 }
 .hjm-temp sup { font-size: 34px; font-weight: 400; vertical-align: 30%; margin-left: 2px; }
-.hjm-temp[data-dim='true'] { color: var(--dw-ink-mid); }
+.hjm-temp[data-dim='true'] { color: var(--dw-ink-panel-mid); }
 .hjm-wicon {
   width: 76px;
   height: auto;
@@ -162,7 +201,7 @@
 }
 .hjm-wicon[data-dim='true'] { filter: saturate(0.35) brightness(0.8); opacity: 0.75; }
 
-.hjm-feels { font-size: 16.5px; font-weight: 600; color: var(--dw-ink-hi); margin-top: 6px; }
+.hjm-feels { font-size: 16.5px; font-weight: 600; color: var(--dw-ink-panel-hi); margin-top: 6px; }
 .hjm-note {
   font-size: 14.5px;
   line-height: 1.5;
@@ -197,7 +236,7 @@
   cursor: pointer;
 }
 .hjm-toggle button[aria-checked='true'] {
-  background: var(--dw-ink-hi);
+  background: var(--dw-ink-panel-hi);
   color: var(--hjm-nuance, var(--dw-w-rain));
 }
 
@@ -260,7 +299,7 @@
   padding: 11px 0;
   font-size: 15px;
   font-weight: 600;
-  color: var(--dw-ink-hi);
+  color: var(--dw-ink-panel-hi);
 }
 .hjm-scan-row + .hjm-scan-row { border-top: 1px dashed rgba(241, 233, 218, 0.14); }
 .hjm-scan-row .hjm-scan-val { margin-left: auto; font-weight: 500; color: var(--dw-ink-panel-mid); font-size: 14px; }
@@ -274,13 +313,13 @@
   place-items: center;
   flex: none;
 }
-.hjm-s-check svg { width: 13px; height: 13px; color: var(--dw-ink-hi); }
-.hjm-s-check[data-done='true'] { background: var(--dw-ink-hi); }
+.hjm-s-check svg { width: 13px; height: 13px; color: var(--dw-ink-panel-hi); }
+.hjm-s-check[data-done='true'] { background: var(--dw-ink-panel-hi); }
 .hjm-s-check[data-done='true'] svg { color: var(--hjm-nuance, var(--dw-w-rain)); }
 .hjm-s-check[data-done='true'][data-animate='true'] svg {
   animation: hjm-check-pop 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
 }
-.hjm-s-spin { border: 2px solid rgba(241, 233, 218, 0.25); border-top-color: var(--dw-ink-hi); }
+.hjm-s-spin { border: 2px solid rgba(241, 233, 218, 0.25); border-top-color: var(--dw-ink-panel-hi); }
 .hjm-s-spin[data-animate='true'] { animation: hjm-spin 1s linear infinite; }
 @keyframes hjm-spin { to { transform: rotate(360deg); } }
 @keyframes hjm-check-pop {
@@ -288,8 +327,8 @@
   to { transform: scale(1); opacity: 1; }
 }
 
-.hjm-scan-status { font-size: 24px; font-weight: 700; letter-spacing: -0.012em; color: var(--dw-ink-hi); }
-.hjm-scan-sub { font-size: 14px; color: var(--dw-ink-low); margin-top: 5px; }
+.hjm-scan-status { font-size: 24px; font-weight: 700; letter-spacing: -0.012em; color: var(--dw-ink-panel-hi); }
+.hjm-scan-sub { font-size: 14px; color: var(--dw-ink-panel-mid); margin-top: 5px; }
 .hjm-skip {
   align-self: center;
   margin-top: 14px;
@@ -346,7 +385,7 @@
   border-radius: var(--dw-r-raised);
   background: var(--dw-raised);
   padding: 13px 15px;
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 8px 18px -10px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--hjm-shadow-prev);
 }
 .hjm-prev .hjm-p-label { font-size: 12.5px; font-weight: 700; color: var(--dw-ink-low); letter-spacing: 0.04em; }
 .hjm-prev .hjm-p-text { font-size: 14.5px; color: var(--dw-ink-mid); margin-top: 3px; line-height: 1.45; }
@@ -369,7 +408,7 @@
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--hjm-shadow-cta);
 }
 .hjm-cta:active:not(:disabled) { background: var(--dw-accent-pressed); transform: translateY(1px); }
 .hjm-cta:disabled { opacity: 0.5; cursor: default; }
@@ -419,7 +458,7 @@
   align-items: center;
   gap: 12px;
   min-height: 44px;
-  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--hjm-shadow-strip);
 }
 .hjm-strip[data-nuance='clear'] { background: var(--dw-w-clear); --hjm-nuance: var(--dw-w-clear); }
 .hjm-strip[data-nuance='cloudy'] { background: var(--dw-w-cloudy); --hjm-nuance: var(--dw-w-cloudy); }
@@ -469,10 +508,15 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(178deg, #33241674 0%, var(--dw-raised) 14%);
+  /* P8: var(--dw-canvas-glow) i stedet for et hardkodet #332416-literal —
+     canvas-glow er ALLEREDE den riktige "varm gradient-topp"-tonen for
+     nivå-0-flater i begge tema (mørk: #24180F, lys: #F1E9DA), så denne
+     flipper korrekt med temaet i stedet for å blø et mørk-modus-literal
+     inn i lys modus. */
+  background: linear-gradient(178deg, color-mix(in srgb, var(--dw-canvas-glow) 45%, transparent) 0%, var(--dw-raised) 14%);
   background-color: var(--dw-raised);
   border-radius: var(--dw-r-panel); /* 20px — samme tall som mocken, se filhode */
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 34px -18px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--hjm-shadow-lift);
 }
 .hjm-rows::before {
   content: '';
@@ -539,7 +583,7 @@
   object-fit: cover;
   background: #3A2A1A;
   border: 1px solid rgba(242, 192, 138, 0.16);
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.22) inset, 0 6px 12px -6px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.22) inset, var(--hjm-shadow-thumb);
   display: grid;
   place-items: center;
   color: var(--dw-ink-mid);

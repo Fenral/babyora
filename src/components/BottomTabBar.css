@@ -1,35 +1,86 @@
+/**
+ * BottomTabBar.css — P8 floating tab bar (duel §7, sol-duel-2026-07-31.md).
+ *
+ * Floating warm surface: ~16px side inset, 56-60pt + safe-area, radius ~28,
+ * warm low shadow, ONE muted edge-light. Solid rgba fallback upgraded to a
+ * translucent blur where supported. Content scrolls BEHIND the bar — the
+ * app shell's scroll container carries the matching bottom clearance (see
+ * `.app-shell > main` in design-tokens.css, padding-bottom:
+ * var(--dw-tabbar-clearance)).
+ *
+ * Surface + blur-fallback are DERIVED from --dw-raised via color-mix (98% /
+ * 78% alpha — the exact ratios from the duel's rgba(44,31,19,0.98/0.78)
+ * spec, since #2C1F13 === --dw-raised in dark mode). Light mode gets the
+ * same pattern automatically because --dw-raised already flips per theme —
+ * no separate light block needed, no invented hues.
+ */
+
 .bottom-tab-bar {
-  position: sticky;
-  bottom: 0;
+  position: fixed;
+  left: var(--dw-tabbar-inset, 16px);
+  right: var(--dw-tabbar-inset, 16px);
+  bottom: calc(var(--dw-tabbar-gap, 16px) + env(safe-area-inset-bottom, 0px));
   z-index: 50;
   display: flex;
-  flex: none;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: space-around;
-  inline-size: 100%;
+  gap: 4px;
   box-sizing: border-box;
-  padding: 10px 8px calc(env(safe-area-inset-bottom, 0px) + 12px);
-  background: var(--surface-elevated, var(--surface));
-  border-top: 1px solid var(--ink-300);
+  min-inline-size: 44px;
+  min-block-size: var(--dw-tabbar-height, 60px);
+  padding: 6px 8px;
+  border-radius: var(--dw-tabbar-radius, 28px);
+  /* Solid fallback (no backdrop-filter support): opaque warm raised tint —
+     never transparent enough to read content through it. */
+  background: var(--dw-tabbar-surface, rgba(44, 31, 19, 0.98));
+  box-shadow: 0 18px 36px -16px rgba(20, 12, 4, 0.55);
+}
+
+/* Doktrinen: hver hevet flate bærer lyslogikk. Tab-baren er en "viktig
+   interaktiv flate" (duel §6), men monter-lyset her skal være DEMPET
+   (~0.3-0.35) — ikke heltFull hero-styrke (0.9-1.0 er reservert panelet). */
+.bottom-tab-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  border-radius: 2px;
+  background: var(--dw-edge-light-gradient, linear-gradient(90deg, transparent, rgba(242, 192, 138, 0.6), transparent));
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+/* Blur upgrade — translucent surface + saturate, exact ratios from the duel
+   spec. @supports gate covers both the standard and -webkit- prefixed forms
+   so Safari/iOS (still needs the prefix) gets the upgrade too. */
+@supports (backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px)) {
+  .bottom-tab-bar {
+    background: var(--dw-tabbar-surface-blur, rgba(44, 31, 19, 0.78));
+    backdrop-filter: blur(20px) saturate(1.08);
+    -webkit-backdrop-filter: blur(20px) saturate(1.08);
+  }
 }
 
 .bottom-tab-bar__button {
   position: relative;
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   min-inline-size: 44px;
   min-block-size: 44px;
-  padding: 4px 10px;
-  color: var(--ink-500);
+  padding: 4px 6px;
+  color: var(--dw-ink-low, var(--ink-500));
   font: inherit;
   cursor: pointer;
   touch-action: manipulation;
   background: transparent;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--dw-r-control, 12px);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -42,17 +93,23 @@
   outline-offset: 3px;
 }
 
+/* Selected tab = icon + text + subtle accent-surface pill. No separate
+   "button" look (no border, no shadow) — just a soft warm fill hugging the
+   content, per duel §7. Text/icon itself stays bright ink-hi (not amber) —
+   amber is reserved for genuine user actions (§13 color ownership), not
+   chrome/navigation state. */
 .bottom-tab-bar__button--active {
-  color: var(--warm-orange-500);
+  color: var(--dw-ink-hi, var(--warm-orange-500));
 }
 
 .bottom-tab-bar__indicator {
   position: absolute;
-  inset: 4px;
+  inset: 2px 6px;
   z-index: 0;
   pointer-events: none;
-  background: color-mix(in srgb, var(--accent-cta) 16%, transparent);
-  border-radius: 10px;
+  background: var(--dw-accent-surface, color-mix(in srgb, var(--accent-cta) 16%, transparent));
+  opacity: 0.55;
+  border-radius: var(--dw-r-control, 12px);
 }
 
 .bottom-tab-bar__content {
@@ -61,7 +118,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .bottom-tab-bar__icon {
@@ -85,6 +142,11 @@
 }
 
 @media (forced-colors: active) {
+  .bottom-tab-bar {
+    background: Canvas;
+    border: 1px solid CanvasText;
+  }
+
   .bottom-tab-bar__button--active {
     color: Highlight;
     border: 2px solid Highlight;
@@ -97,5 +159,6 @@
   .bottom-tab-bar__indicator {
     background: transparent;
     border: 1px solid Highlight;
+    opacity: 1;
   }
 }
