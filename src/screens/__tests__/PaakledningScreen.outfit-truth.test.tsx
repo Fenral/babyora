@@ -14,7 +14,8 @@ const screenPath = 'src/screens/PaakledningScreen.tsx';
 const appPath = 'src/App.tsx';
 
 function source(path: string): string {
-  return readFileSync(resolve(process.cwd(), path), 'utf8');
+  // Normaliser linjeskift så kilde-asserts med \n også holder på CRLF-checkouts (Windows).
+  return readFileSync(resolve(process.cwd(), path), 'utf8').replace(/\r\n/g, '\n');
 }
 
 function supportedBundle(
