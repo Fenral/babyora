@@ -76,3 +76,5 @@ Not brand register: we are not a marketing site, not a campaign, not an editoria
 - 4 tabs: Hjem (today's recommendation), Plan (10-day forecast), Guide (interactive calculator), Innstillinger
 - Iter 32 active: mockup-locked layout (per ChatGPT-mock) applied to Hjem, Plan refactor pending
 - Iter 32g (current): dark theme reverted from P1b experiment, multi-skill design consensus analysis incoming
+
+**Owner decision 2026-07-31 (Familie IA):** the tab keeps the name "Familie" (child profile and caregivers are its core; the warm framing is brand-bearing). The migrated guide tools additionally get contextual entry points at their point of need: "Hvorfor akkurat dette?" on the result screen links into Varm eller kald / relevant guides, and Soveguiden surfaces in evening/night context. Tools thus have two paths: contextual (primary) and Familie > Verktøy (browsing).
