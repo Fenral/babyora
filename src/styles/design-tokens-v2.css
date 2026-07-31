@@ -101,9 +101,17 @@
 /* ============ Lys modus (eier 2026-07-31: følger systemtema fra v1;
    full kalibrering + QA i P8. Petrol-panelet er TEMA-KONSTANT: samme
    panel/vær/instrument-tekst i begge moduser). Sekundærtekster er
-   dypere enn en ren invertering — verifisert 5.65:1/6.59:1. ============ */
+   dypere enn en ren invertering — verifisert 5.65:1/6.59:1. ============
+   P7 (2026-07-31): la til [data-theme] SAMSPILL med den manuelle
+   theme-toggle-en (theme-store.ts / InnstillingerScreen, samme mønster som
+   allerede fantes i src/styles/design-tokens.css sin dark-mode-blokk).
+   Uten dette ville :root[data-theme="dark"] på et system i lys-modus få
+   FEIL (lyse) --dw-*-verdier, fordi @media(prefers-color-scheme) kun bryr
+   seg om OS-preferansen — aldri om data-theme-attributtet. Nødvendig for at
+   design-tokens.css sitt alias-lag (P7) skal arve korrekt tema i alle fire
+   tilstander: auto-lys, auto-mørk, data-theme="light", data-theme="dark". */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --dw-canvas: #F9F5EB;
     --dw-canvas-glow: #F1E9DA;
     --dw-raised: #FFFFFF;
@@ -123,4 +131,27 @@
     --dw-shadow-raise: 0 1px 2px rgba(42, 29, 18, 0.18);
     /* --dw-panel, --dw-w-*, --dw-ink-panel-*: uendret (tema-konstant instrument) */
   }
+}
+
+/* Eksplisitt lys (data-theme="light"): brukeren har valgt "light" i
+   Innstillinger, uavhengig av system — speiler blokken over 1:1 (samme
+   mønster som :root[data-theme="dark"] i design-tokens.css). */
+:root[data-theme="light"] {
+  --dw-canvas: #F9F5EB;
+  --dw-canvas-glow: #F1E9DA;
+  --dw-raised: #FFFFFF;
+  --dw-interactive: #F3ECDD;
+  --dw-overlay: #FFFFFF;
+  --dw-accent-surface: #F1DED0;
+
+  --dw-ink-hi: #2A1D12;
+  --dw-ink-mid: #7A5B47;
+  --dw-ink-low: #6F5140;
+
+  --dw-accent: #9E5529;
+  --dw-accent-pressed: #8A4A24;
+  --dw-ink-on-accent: #FDF6EC;
+
+  --dw-hairline: rgba(42, 29, 18, 0.14);
+  --dw-shadow-raise: 0 1px 2px rgba(42, 29, 18, 0.18);
 }

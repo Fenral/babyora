@@ -456,6 +456,16 @@ describe('OutfitExperience', () => {
   });
 
   it('uses the current ink token for AA map-status text on every light temperature canvas', () => {
+    // P7 (2026-07-31, legacy token alias layer): design-tokens.css no longer
+    // defines --ink-700 / --bg-canvas as literal hex — they are alias
+    // declarations pointing at Monter (design-tokens-v2.css, --dw-*). The
+    // three .ba-temp-root[data-temp] canvases used to diverge by hue; the
+    // Monter doctrine (DESIGN.md "Depth doctrine": "canvas and ink stay
+    // constant") intentionally makes all three resolve to the SAME
+    // --dw-canvas now. This test asserts the alias wiring in
+    // design-tokens.css, then reuses Monter's own (already-verified)
+    // ink-mid/canvas contrast from the canonical v2 file instead of
+    // asserting three now-identical literal hex values.
     const css = readFileSync(
       new URL('../Antrekkskart.css', import.meta.url),
       'utf8',
@@ -464,40 +474,39 @@ describe('OutfitExperience', () => {
       new URL('../../../styles/design-tokens.css', import.meta.url),
       'utf8',
     );
-    const ink700 = tokens.match(
-      /:root\s*\{[\s\S]*?--ink-700:\s*(#[0-9a-f]{6});/i,
+    const tokensV2 = readFileSync(
+      new URL('../../../styles/design-tokens-v2.css', import.meta.url),
+      'utf8',
+    );
+
+    expect(tokens).toMatch(/--ink-700:\s*var\(--dw-ink-mid\);/);
+    expect(tokens).toMatch(/--bg-canvas:\s*var\(--dw-canvas\);/);
+    for (const temperature of ['kald', 'varm'] as const) {
+      expect(
+        tokens,
+        `${temperature} .ba-temp-root canvas must alias --dw-canvas (doctrine: canvas stays constant)`,
+      ).toMatch(
+        new RegExp(
+          `\\.ba-temp-root\\[data-temp="${temperature}"\\]\\s*\\{\\s*--bg-canvas:\\s*var\\(--dw-canvas\\);`,
+        ),
+      );
+    }
+
+    const dwInkMid = tokensV2.match(
+      /:root\s*\{[\s\S]*?--dw-ink-mid:\s*(#[0-9a-f]{6});/i,
     )?.[1];
-    const canvases = [
-      [
-        'mild',
-        tokens.match(
-          /:root\s*\{[\s\S]*?--bg-canvas:\s*(#[0-9a-f]{6});/i,
-        )?.[1],
-      ],
-      [
-        'kald',
-        tokens.match(
-          /\.ba-temp-root\[data-temp="kald"\]\s*\{[\s\S]*?--bg-canvas:\s*(#[0-9a-f]{6});/i,
-        )?.[1],
-      ],
-      [
-        'varm',
-        tokens.match(
-          /\.ba-temp-root\[data-temp="varm"\]\s*\{[\s\S]*?--bg-canvas:\s*(#[0-9a-f]{6});/i,
-        )?.[1],
-      ],
-    ] as const;
+    const dwCanvas = tokensV2.match(
+      /:root\s*\{[\s\S]*?--dw-canvas:\s*(#[0-9a-f]{6});/i,
+    )?.[1];
+    expect(dwInkMid, 'dw-ink-mid literal in design-tokens-v2.css').toBeDefined();
+    expect(dwCanvas, 'dw-canvas literal in design-tokens-v2.css').toBeDefined();
 
     expect(css).toMatch(
       /\.outfit-map-status\s*\{\s*color:\s*var\(--ink-700\);\s*\}/,
     );
-    expect(ink700).toBeDefined();
-    for (const [temperature, canvas] of canvases) {
-      expect(canvas, `${temperature} light canvas token`).toBeDefined();
-      expect(
-        wcagContrast(ink700!, canvas!),
-        `${temperature} light map-status contrast`,
-      ).toBeGreaterThanOrEqual(4.5);
-    }
+    expect(
+      wcagContrast(dwInkMid!, dwCanvas!),
+      'Monter ink-mid vs canvas contrast (shared by mild/kald/varm now that canvas is constant)',
+    ).toBeGreaterThanOrEqual(4.5);
   });
 });

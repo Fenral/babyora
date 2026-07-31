@@ -10,34 +10,52 @@
  * @fontsource-variable i src/main.tsx. Fraunces er IKKE self-hosted ennå
  * (kun brukt på temp-masten) — lastes via Google Fonts @import her, samme
  * mønster som mocken (public/design-2026/f79-hjem-a/index.html).
+ *
+ * P7 (2026-07-31, alias-lag): denne filens fargeverdier ble et alias-lag
+ * over Monter (`src/styles/design-tokens-v2.css`, `--dw-*`) i stedet for et
+ * big-bang-navnebytte i ~480 forekomster/36 filer. Alt som IKKE er en
+ * fargeverdi (infrastruktur: .app-shell, .ba-press, .ba-temp-root-transition,
+ * reduced-motion-killswitch, forced-colors, spacing/radius/motion/safe-area)
+ * er UENDRET. Se docs-notatet i DESIGN.md §"Tokens v2" for kontrakten.
+ * Kun VERDI-siden av custom properties er endret i denne porten — samme
+ * selektorer, samme blokkstruktur, samme antall linjer i fargeseksjonene.
+ * Hver var(--dw-*)-referanse resolves per cascade på bruksstedet, så det er
+ * trygt å gjenta samme uttrykk i :root, @media(dark) og [data-theme="dark"]
+ * — resultatet blir riktig i alle fire theme-tilstander (auto-lys,
+ * auto-mørk, data-theme="light", data-theme="dark") uten at disse
+ * blokkene må ha ulike literal-verdier lenger.
  */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,420;9..144,560;9..144,640&display=swap');
 
 :root {
   /* ============ Morgennatt — light / mild (default) ============ */
-  --bg-canvas: #DAD8EE; /* oklch(0.89 0.030 290) */
-  --bg-canvas-warm: #DAD8EE;
-  --bg-canvas-soft: #DAD8EE;
-  --surface: #F3F2FB; /* oklch(0.965 0.012 290) */
-  --surface-pure: #FFFFFF;
-  --surface-soft: #F3F2FB;
-  --surface-elevated: #FFFFFF;
+  /* P7: canvas/surface pekes til Monter sin espresso-canvas/raised-flate. */
+  --bg-canvas: var(--dw-canvas);
+  --bg-canvas-warm: var(--dw-canvas);
+  --bg-canvas-soft: var(--dw-canvas);
+  --surface: var(--dw-raised);
+  --surface-pure: var(--dw-overlay);
+  --surface-soft: var(--dw-raised);
+  --surface-elevated: var(--dw-overlay);
 
   /* Granmynte CTA (F79 — «eneste grønne objekt på skjermen») */
-  --warm-orange-500: #267147; /* legacy alias beholdt for uendrede skjermer, peker nå på CTA-grønn */
-  --warm-orange-700: #267147;
-  --accent-cta: #267147; /* oklch(0.49 0.100 155) */
-  --accent-cta-ink: #F2FBF5; /* oklch(0.98 0.012 157) */
+  /* P7: CTA-rollen pekes til Monter sin amber-aksent (--dw-accent), ikke lenger grønn. */
+  --warm-orange-500: var(--accent-cta); /* legacy alias beholdt for uendrede skjermer, peker nå på Monter-amber via --accent-cta */
+  --warm-orange-700: var(--accent-cta);
+  --accent-cta: var(--dw-accent);
+  --accent-cta-ink: var(--dw-ink-on-accent);
 
   /* Ink-ramp (Morgennatt) */
-  --ink-900: #211B32; /* oklch(0.24 0.045 295) */
-  --ink-800: #211B32;
-  --ink-700: #56506F; /* oklch(0.45 0.050 292) */
-  --ink-500: #56506F;
-  --ink-400: #6B6584;
-  --ink-300: #837D9C;
-  --ink-200: rgba(33, 27, 50, 0.16);
-  --ink-100: rgba(33, 27, 50, 0.08);
+  /* P7: 900/800→ink-hi, 700/500→ink-mid, 400/300→ink-low (4 legacy-steg
+     komprimert til Monter sin 3-stegs ullkrem-rampe). */
+  --ink-900: var(--dw-ink-hi);
+  --ink-800: var(--dw-ink-hi);
+  --ink-700: var(--dw-ink-mid);
+  --ink-500: var(--dw-ink-mid);
+  --ink-400: var(--dw-ink-low);
+  --ink-300: var(--dw-ink-low);
+  --ink-200: var(--dw-hairline);
+  --ink-100: var(--dw-hairline);
 
   /* Kompat-aliaser (F80.3): komponenter fra før porten (PlaggDetailSheet m.fl.)
      bruker disse navnene — uten dem faller de tilbake til lys-modus-hex i
@@ -45,42 +63,59 @@
   --ink: var(--ink-900);
   --border: var(--ink-200);
   --surface-2: var(--ink-100);
-  --ink-on-pos-tint: #6E3820;
+  --ink-on-pos-tint: var(--dw-accent);
   --ink-on-neg-tint: var(--ink-700);
 
   /* Terracotta accent — beholdt som alias for skjermer utenfor F80b-scope
      (PaakledningScreen del 2 osv.), pekt til plagg-korall for visuell kontinuitet. */
-  --terracotta-700: #6E3820;
-  --terracotta-600: #AF5331;
-  --terracotta-500: #AF5331;
-  --terracotta-400: #AF5331;
-  --terracotta-200: #F4B49C;
-  --terracotta-100: #F3F2FB;
+  /* P7: terracotta fungerer i praksis som en sekundær varm aksent (icon-
+     badges/chip-ringer på tvers av Familie/TogGuide/Onboarding/MinGarderobe
+     — se grep-funn), ikke en bokstavelig plaggfarge. Pekes derfor til
+     amber-familien (samme rolle som --accent-cta, bare lysere skygger). */
+  --terracotta-700: var(--dw-accent);
+  --terracotta-600: var(--dw-accent);
+  --terracotta-500: var(--dw-accent);
+  --terracotta-400: var(--dw-accent);
+  --terracotta-200: var(--dw-accent-300);
+  --terracotta-100: var(--dw-accent-surface);
 
   /* Lag-farger — plagg-alignerte huer (innerst=korall 40°, mellom=oker 80°, ytterst=petrol 215°) */
-  --layer-ytterst: #285E6A; /* oklch(0.45 0.060 214), re-gen fra #1E4750 */
-  --layer-mellom: #93690D; /* oklch(0.55 0.110 80) */
-  --layer-innerst: #AF5331; /* oklch(0.55 0.130 40) */
-  --lag-korall: #AF5331;
-  --lag-petrolgra: #5A7480;
-  --lag-marigold: #93690D;
-  --lag-dyppetrol: #285E6A;
-  --chip-edge-korall: #6E3820;
-  --chip-edge-petrolgra: #22343C;
-  --chip-edge-marigold: #5C4409;
-  --chip-edge-dyppetrol: #163F48;
+  /* P7: ingen egen plagg-fargefamilie i Monter ennå (kommer i P4-
+     komponentbiblioteket). Beholder tre-veis varm→kjølig-inndelingen ved å
+     bruke Monter sin eksisterende amber/petrol-vokabular: innerst=amber
+     (menneske-nær, varm), ytterst=petrol (skall/instrument, kjølig), mellom
+     får en lysere amber-tone mellom de to. */
+  --layer-ytterst: var(--dw-panel);
+  --layer-mellom: var(--dw-accent-300);
+  --layer-innerst: var(--dw-accent);
+  --lag-korall: var(--dw-accent);
+  --lag-petrolgra: var(--dw-w-cloudy);
+  --lag-marigold: var(--dw-accent-300);
+  --lag-dyppetrol: var(--dw-panel);
+  --chip-edge-korall: var(--dw-accent-pressed);
+  --chip-edge-petrolgra: var(--dw-w-rain);
+  --chip-edge-marigold: var(--dw-edge-light);
+  --chip-edge-dyppetrol: var(--dw-w-night);
 
   /* Temp-akse (isblå 262° kald ← indigo 290° mild → lyng/rosé 345° varm) */
-  --focus-ring: #6750AB; /* oklch(0.50 0.140 292) */
-  --avatar-glow: #EFECFC;
-  --accent-temp: #6654A1;
-  --layer-bg-kald: #2B5C97;    --layer-glow-kald: #E1ECFC;   --layer-base-kald: #CCDCF7;
-  --layer-bg-mild: #6654A1;    --layer-glow-mild: #EFECFC;   --layer-base-mild: #DAD8EE;
-  --layer-bg-varm: #B54436;    --layer-glow-varm: #FDE5E1;   --layer-base-varm: #EED1E0;
+  /* P7: Monter-doktrinen (DESIGN.md «Depth doctrine») sier canvas/ink skal
+     stå fast — vær/temp-reaktivitet bor KUN i panel-nyansen. bg-canvas og
+     accent-temp holdes derfor konstante her (samme verdi i alle temp-
+     tilstander); kun avatar-glow beholder en liten variasjon som ikke rører
+     canvas. accent-temp = --dw-accent fordi dette er nøyaktig Monter sin
+     "hero-temperatur"-rolle (Fraunces-masten), se DESIGN.md §"Tokens v2". */
+  --focus-ring: var(--dw-focus);
+  --avatar-glow: var(--dw-canvas-glow);
+  --accent-temp: var(--dw-accent);
+  --layer-bg-kald: var(--dw-w-rain);    --layer-glow-kald: var(--dw-ink-panel-mid);   --layer-base-kald: var(--dw-panel);
+  --layer-bg-mild: var(--dw-panel);     --layer-glow-mild: var(--dw-edge-light);      --layer-base-mild: var(--dw-raised);
+  --layer-bg-varm: var(--dw-accent);    --layer-glow-varm: var(--dw-accent-300);      --layer-base-varm: var(--dw-accent-surface);
 
   /* Typografi */
   /* A2 (Sivert 2026-07-12): UI-font = OS-systemfont (SF Pro / Roboto) for maks
-     native-følelse + instant render. Fraunces beholdes på display/tall (--font-serif). */
+     native-følelse + instant render. Fraunces beholdes på display/tall (--font-serif).
+     P7: typografi er UTENFOR paletteflyttingen (kun farger er i scope for
+     alias-laget) — uendret. */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
   --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
@@ -106,11 +141,16 @@
   --sp-8: 40px;
 
   /* Skygger */
+  /* P7: shadow-1/2/3/frame er nøytrale ink-baserte skygger (ikke aksent-
+     tonet) — de klasjer ikke med Monter og er derfor uendret. shadow-cta er
+     også nøytral (ink-basert). shadow-cta-primary er derimot fargetonet mot
+     GAMMEL grønn CTA — den flyttes til amber via color-mix() slik at
+     skyggen alltid følger --dw-accent, i begge tema. */
   --shadow-1: 0 1px 3px rgba(23, 16, 46, 0.09);
   --shadow-2: 0 4px 14px rgba(23, 16, 46, 0.09);
   --shadow-3: 0 4px 16px rgba(23, 16, 46, 0.12);
   --shadow-cta: 0 1px 2px rgba(23, 16, 46, 0.05), 0 4px 14px rgba(23, 16, 46, 0.09);
-  --shadow-cta-primary: 0 12px 26px -14px rgba(38, 113, 71, 0.55);
+  --shadow-cta-primary: 0 12px 26px -14px color-mix(in srgb, var(--dw-accent) 55%, transparent);
   --shadow-frame: 0 40px 90px -30px rgba(23, 16, 46, 0.45), 0 12px 30px -14px rgba(23, 16, 46, 0.35);
 
   /* Motion */
@@ -131,15 +171,21 @@
   --safe-right: env(safe-area-inset-right, 0px);
 
   /* Status-tokens (warm / cold / ok) — semantiske farger for badges, pills og status-chips. */
-  --status-warm: #B14328; /* oklch(0.53 0.150 35) */
-  --status-warm-bg: var(--surface-soft);
-  --status-cold: #265B8D; /* oklch(0.46 0.100 250) */
-  --status-cold-bg: var(--surface-soft);
-  --status-ok: #267147;
-  --status-ok-bg: var(--surface-soft);
+  /* P7: status-ok→dw-success (positivt), status-warm→dw-danger (brukes i
+     PlaggDetailSheet som "cons"/negativ-indikator, og "for varmt" er en
+     reell sikkerhetsbekymring), status-cold→dw-warning (ingen kald/blå
+     Monter-semantikk finnes, så den får den gjenværende, fortsatt visuelt
+     distinkte varsel-tonen — se rapport for begrunnelse). *-bg pekes til
+     --dw-raised (samme nøytrale panel-bak-ikon som før, uavhengig av status). */
+  --status-warm: var(--dw-danger);
+  --status-warm-bg: var(--dw-raised);
+  --status-cold: var(--dw-warning);
+  --status-cold-bg: var(--dw-raised);
+  --status-ok: var(--dw-success);
+  --status-ok-bg: var(--dw-raised);
 
   /* Semantisk: ink-on tinted backgrounds (for pros/cons pills) */
-  --ink-on-pos-tint: var(--terracotta-700);  /* ink når bg er terracotta-100 */
+  --ink-on-pos-tint: var(--dw-accent);  /* ink når bg er terracotta-100 */
   --ink-on-neg-tint: var(--ink-700);          /* ink på cons-tint */
 
   color-scheme: light;
@@ -152,14 +198,14 @@
    hele aksen var død siden F80b. Nå scopet til .ba-temp-root (Sivert-godkjent
    å vekke den). Transition 600ms via .ba-temp-root; RM → instant snap. */
 .ba-temp-root[data-temp="kald"] {
-  --bg-canvas: #CCDCF7; /* oklch(0.89 0.042 262) */
-  --avatar-glow: #E1ECFC;
-  --accent-temp: #2B5C97;
+  --bg-canvas: var(--dw-canvas);
+  --avatar-glow: var(--dw-w-rain);
+  --accent-temp: var(--dw-accent);
 }
 .ba-temp-root[data-temp="varm"] {
-  --bg-canvas: #EED1E0; /* oklch(0.89 0.038 345) */
-  --avatar-glow: #FDE5E1;
-  --accent-temp: #B54436;
+  --bg-canvas: var(--dw-canvas);
+  --avatar-glow: var(--dw-accent-300);
+  --accent-temp: var(--dw-accent);
 }
 
 /**
@@ -181,6 +227,11 @@
  *  - ink-900:          oklch(0.94 0.012 70)
  *  - terracotta-600:   oklch(0.62 0.135 38)
  *  - warm-orange-500:  oklch(0.74 0.175 45)
+ *
+ * P7 (2026-07-31): tallene over er historiske (Morgennatt). Fargeverdiene i
+ * blokkene under er nå var(--dw-*)-referanser — kontrasten arves fra Monter
+ * sin egen verifiserte matrise (DESIGN.md §"Tokens v2": 22 par, 5.2–15:1),
+ * ikke fra AA-notatene over.
  */
 /**
  * Morgennatt Dark-mode (F80b port fra F79 mock) + theme-toggle.
@@ -192,6 +243,17 @@
  *
  * Begge blokker (auto-media + eksplisitt data-theme) speiler hverandre —
  * hold dem i sync ved fremtidige endringer (samme mønster som forrige palett).
+ *
+ * P7-reconciliation: begge disse blokkene satte tidligere HARDKODEDE
+ * Morgennatt-hex-verdier, som ville «kjempet mot» design-tokens-v2.css sin
+ * egen @media(prefers-color-scheme:light)-blokk (constraint #3). Nå som hver
+ * linje under er en var(--dw-*)-referanse, avgjøres alltid resultatet av
+ * Monter sin EGEN cascade (v2-filen), ikke av en literal verdi her — v2
+ * «vinner» per konstruksjon. For at data-theme="dark"/"light" (manuell
+ * theme-toggle i Innstillinger, se theme-store.ts) fortsatt skal virke
+ * korrekt uavhengig av system-fargeskjema, er design-tokens-v2.css utvidet
+ * med en tilsvarende data-theme-vakt (se den filen for detaljer) — samme
+ * mønster som ALLEREDE fantes her (:not([data-theme="light"])-vakten under).
  */
 
 /* Auto-mode: følg systemets dark-preferanse, men la data-theme="light"
@@ -199,90 +261,91 @@
    prefers-color-scheme: dark. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg-canvas: #1A1828; /* oklch(0.22 0.030 290) */
-    --bg-canvas-warm: #1A1828;
-    --bg-canvas-soft: #1A1828;
-    --surface: #282639; /* oklch(0.28 0.035 290) */
-    --surface-elevated: #33314A;
-    --surface-pure: #282639;
-    --surface-soft: #282639;
-    --ink-900: #EBEAF5; /* oklch(0.94 0.015 290) */
-    --ink-800: #EBEAF5;
+    --bg-canvas: var(--dw-canvas);
+    --bg-canvas-warm: var(--dw-canvas);
+    --bg-canvas-soft: var(--dw-canvas);
+    --surface: var(--dw-raised);
+    --surface-elevated: var(--dw-overlay);
+    --surface-pure: var(--dw-overlay);
+    --surface-soft: var(--dw-raised);
+    --ink-900: var(--dw-ink-hi);
+    --ink-800: var(--dw-ink-hi);
     /* F80.3 (Sivert dark-kontrast): 700/500 bumpet #B3B2C5→#C6C5D8
-       (8.4:1→10.3:1 mot canvas) — OLED-dim perceptuelt, ikke bare matte */
-    --ink-700: #C6C5D8;
-    --ink-500: #C6C5D8;
-    --ink-400: #9E9CB5;
-    --ink-300: #6D6B87;
-    --ink-200: rgba(235, 234, 245, 0.18);
-    --ink-100: rgba(235, 234, 245, 0.09);
+       (8.4:1→10.3:1 mot canvas) — OLED-dim perceptuelt, ikke bare matte.
+       P7: nå var(--dw-ink-mid) — kontrasten arves fra Monter (10.1:1). */
+    --ink-700: var(--dw-ink-mid);
+    --ink-500: var(--dw-ink-mid);
+    --ink-400: var(--dw-ink-low);
+    --ink-300: var(--dw-ink-low);
+    --ink-200: var(--dw-hairline);
+    --ink-100: var(--dw-hairline);
 
     /* Kompat-aliaser, mørk (F80.3) */
     --ink: var(--ink-900);
     --border: var(--ink-200);
     --surface-2: var(--ink-100);
-    --ink-on-pos-tint: #F4B49C;
+    --ink-on-pos-tint: var(--dw-accent);
     --ink-on-neg-tint: var(--ink-700);
 
-    --accent-cta: #65D097; /* oklch(0.78 0.130 158) — 7.97/8.99+ */
-    --accent-cta-ink: #0F2B1D;
-    --warm-orange-500: #65D097;
-    --warm-orange-700: #65D097;
+    --accent-cta: var(--dw-accent); /* oklch(0.78 0.130 158) — 7.97/8.99+ */
+    --accent-cta-ink: var(--dw-ink-on-accent);
+    --warm-orange-500: var(--accent-cta);
+    --warm-orange-700: var(--accent-cta);
 
-    --terracotta-700: #F4B49C;
-    --terracotta-600: #EE9373;
-    --terracotta-500: #EE9373;
-    --terracotta-400: #EE9373;
-    --terracotta-200: #6E3820;
-    --terracotta-100: #282639;
+    --terracotta-700: var(--dw-accent);
+    --terracotta-600: var(--dw-accent);
+    --terracotta-500: var(--dw-accent);
+    --terracotta-400: var(--dw-accent);
+    --terracotta-200: var(--dw-accent-300);
+    --terracotta-100: var(--dw-accent-surface);
 
-    --layer-ytterst: #6FB0C0; /* oklch(0.72 0.070 215) — 6.06 vs surface */
-    --layer-mellom: #DBB155; /* oklch(0.78 0.120 85) — 7.31 vs surface */
-    --layer-innerst: #EE9373; /* oklch(0.75 0.119 40) — 6.35 vs surface */
-    --lag-korall: #EE9373;
-    --lag-petrolgra: #9BB4BE;
-    --lag-marigold: #DBB155;
-    --lag-dyppetrol: #6FB0C0;
-    --chip-edge-korall: #F4B49C;
-    --chip-edge-petrolgra: #C7D6DC;
-    --chip-edge-marigold: #EAC57E;
-    --chip-edge-dyppetrol: #9BCCD8;
+    --layer-ytterst: var(--dw-panel); /* oklch(0.72 0.070 215) — 6.06 vs surface */
+    --layer-mellom: var(--dw-accent-300); /* oklch(0.78 0.120 85) — 7.31 vs surface */
+    --layer-innerst: var(--dw-accent); /* oklch(0.75 0.119 40) — 6.35 vs surface */
+    --lag-korall: var(--dw-accent);
+    --lag-petrolgra: var(--dw-w-cloudy);
+    --lag-marigold: var(--dw-accent-300);
+    --lag-dyppetrol: var(--dw-panel);
+    --chip-edge-korall: var(--dw-accent-pressed);
+    --chip-edge-petrolgra: var(--dw-w-rain);
+    --chip-edge-marigold: var(--dw-edge-light);
+    --chip-edge-dyppetrol: var(--dw-w-night);
 
-    --focus-ring: #A48FE1; /* oklch(0.70 0.120 295) */
-    --avatar-glow: #4D4869;
-    --accent-temp: #A89AD7;
-    --layer-bg-kald: #79B0E8;    --layer-glow-kald: #384D73;   --layer-base-kald: #131A2D;
-    --layer-bg-mild: #A89AD7;    --layer-glow-mild: #4D4869;   --layer-base-mild: #1A1828;
-    --layer-bg-varm: #F8907C;    --layer-glow-varm: #6E4358;   --layer-base-varm: #251724;
+    --focus-ring: var(--dw-focus); /* oklch(0.70 0.120 295) */
+    --avatar-glow: var(--dw-canvas-glow);
+    --accent-temp: var(--dw-accent);
+    --layer-bg-kald: var(--dw-w-rain);    --layer-glow-kald: var(--dw-ink-panel-mid);   --layer-base-kald: var(--dw-panel);
+    --layer-bg-mild: var(--dw-panel);     --layer-glow-mild: var(--dw-edge-light);      --layer-base-mild: var(--dw-raised);
+    --layer-bg-varm: var(--dw-accent);    --layer-glow-varm: var(--dw-accent-300);      --layer-base-varm: var(--dw-accent-surface);
 
     /* Skygger — mørkere base, mer transparent for å unngå halo */
     --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
     --shadow-2: 0 4px 14px rgba(0, 0, 0, 0.45);
     --shadow-3: 0 4px 16px rgba(0, 0, 0, 0.5);
     --shadow-cta: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.4);
-    --shadow-cta-primary: 0 14px 30px -12px rgba(101, 208, 151, 0.55);
+    --shadow-cta-primary: 0 14px 30px -12px color-mix(in srgb, var(--dw-accent) 55%, transparent);
     --shadow-frame: 0 44px 100px -30px rgba(0, 0, 0, 0.75), 0 14px 34px -14px rgba(0, 0, 0, 0.6);
 
     /* Status-tokens i dark — lysere hues for AA-kontrast på mørk canvas.
        status-warm bruker korall-familien KUN for små indikatorer, aldri knapper
        (jf. morgennatt-cta-analyse verifikasjonsnotat). */
-    --status-warm: #FF987E; /* oklch(0.78 0.130 35) */
-    --status-cold: #79B1E0; /* oklch(0.74 0.090 245) */
-    --status-ok: #65D097;
+    --status-warm: var(--dw-danger);
+    --status-cold: var(--dw-warning);
+    --status-ok: var(--dw-success);
 
-    --ink-on-pos-tint: var(--terracotta-200);
+    --ink-on-pos-tint: var(--dw-accent);
     --ink-on-neg-tint: var(--ink-700);
   }
   /* F83 M1: data-temp bor på .ba-temp-root (skjerm-roten), ikke :root. */
   :root:not([data-theme="light"]) .ba-temp-root[data-temp="kald"] {
-    --bg-canvas: #131A2D; /* oklch(0.22 0.040 268) */
-    --avatar-glow: #384D73;
-    --accent-temp: #79B0E8;
+    --bg-canvas: var(--dw-canvas);
+    --avatar-glow: var(--dw-w-rain);
+    --accent-temp: var(--dw-accent);
   }
   :root:not([data-theme="light"]) .ba-temp-root[data-temp="varm"] {
-    --bg-canvas: #251724; /* oklch(0.23 0.032 330) */
-    --avatar-glow: #6E4358;
-    --accent-temp: #F8907C;
+    --bg-canvas: var(--dw-canvas);
+    --avatar-glow: var(--dw-accent-300);
+    --accent-temp: var(--dw-accent);
   }
   :root { color-scheme: light dark; }
 }
@@ -290,87 +353,87 @@
 /* Eksplisitt dark: brukeren har valgt "dark" i settings — uavhengig av
    system. Samme tokens som dark-media-blokken. */
 :root[data-theme="dark"] {
-  --bg-canvas: #1A1828; /* oklch(0.22 0.030 290) */
-  --bg-canvas-warm: #1A1828;
-  --bg-canvas-soft: #1A1828;
-  --surface: #282639; /* oklch(0.28 0.035 290) */
-  --surface-elevated: #33314A;
-  --surface-pure: #282639;
-  --surface-soft: #282639;
-  --ink-900: #EBEAF5; /* oklch(0.94 0.015 290) */
-  --ink-800: #EBEAF5;
-  --ink-700: #C6C5D8; /* F80.3 bump (10.3:1) */
-  --ink-500: #C6C5D8;
-  --ink-400: #9E9CB5;
-  --ink-300: #6D6B87;
-  --ink-200: rgba(235, 234, 245, 0.18);
-  --ink-100: rgba(235, 234, 245, 0.09);
+  --bg-canvas: var(--dw-canvas);
+  --bg-canvas-warm: var(--dw-canvas);
+  --bg-canvas-soft: var(--dw-canvas);
+  --surface: var(--dw-raised);
+  --surface-elevated: var(--dw-overlay);
+  --surface-pure: var(--dw-overlay);
+  --surface-soft: var(--dw-raised);
+  --ink-900: var(--dw-ink-hi);
+  --ink-800: var(--dw-ink-hi);
+  --ink-700: var(--dw-ink-mid); /* F80.3 bump (10.3:1) — P7: nå Monter ink-mid (10.1:1) */
+  --ink-500: var(--dw-ink-mid);
+  --ink-400: var(--dw-ink-low);
+  --ink-300: var(--dw-ink-low);
+  --ink-200: var(--dw-hairline);
+  --ink-100: var(--dw-hairline);
 
   /* Kompat-aliaser, mørk (F80.3) */
   --ink: var(--ink-900);
   --border: var(--ink-200);
   --surface-2: var(--ink-100);
-  --ink-on-pos-tint: #F4B49C;
+  --ink-on-pos-tint: var(--dw-accent);
   --ink-on-neg-tint: var(--ink-700);
 
-  --accent-cta: #65D097; /* oklch(0.78 0.130 158) — 7.97/8.99+ */
-  --accent-cta-ink: #0F2B1D;
-  --warm-orange-500: #65D097;
-  --warm-orange-700: #65D097;
+  --accent-cta: var(--dw-accent); /* oklch(0.78 0.130 158) — 7.97/8.99+ */
+  --accent-cta-ink: var(--dw-ink-on-accent);
+  --warm-orange-500: var(--accent-cta);
+  --warm-orange-700: var(--accent-cta);
 
-  --terracotta-700: #F4B49C;
-  --terracotta-600: #EE9373;
-  --terracotta-500: #EE9373;
-  --terracotta-400: #EE9373;
-  --terracotta-200: #6E3820;
-  --terracotta-100: #282639;
+  --terracotta-700: var(--dw-accent);
+  --terracotta-600: var(--dw-accent);
+  --terracotta-500: var(--dw-accent);
+  --terracotta-400: var(--dw-accent);
+  --terracotta-200: var(--dw-accent-300);
+  --terracotta-100: var(--dw-accent-surface);
 
-  --layer-ytterst: #6FB0C0; /* oklch(0.72 0.070 215) — 6.06 vs surface */
-  --layer-mellom: #DBB155; /* oklch(0.78 0.120 85) — 7.31 vs surface */
-  --layer-innerst: #EE9373; /* oklch(0.75 0.119 40) — 6.35 vs surface */
-  --lag-korall: #EE9373;
-  --lag-petrolgra: #9BB4BE;
-  --lag-marigold: #DBB155;
-  --lag-dyppetrol: #6FB0C0;
-  --chip-edge-korall: #F4B49C;
-  --chip-edge-petrolgra: #C7D6DC;
-  --chip-edge-marigold: #EAC57E;
-  --chip-edge-dyppetrol: #9BCCD8;
+  --layer-ytterst: var(--dw-panel); /* oklch(0.72 0.070 215) — 6.06 vs surface */
+  --layer-mellom: var(--dw-accent-300); /* oklch(0.78 0.120 85) — 7.31 vs surface */
+  --layer-innerst: var(--dw-accent); /* oklch(0.75 0.119 40) — 6.35 vs surface */
+  --lag-korall: var(--dw-accent);
+  --lag-petrolgra: var(--dw-w-cloudy);
+  --lag-marigold: var(--dw-accent-300);
+  --lag-dyppetrol: var(--dw-panel);
+  --chip-edge-korall: var(--dw-accent-pressed);
+  --chip-edge-petrolgra: var(--dw-w-rain);
+  --chip-edge-marigold: var(--dw-edge-light);
+  --chip-edge-dyppetrol: var(--dw-w-night);
 
-  --focus-ring: #A48FE1; /* oklch(0.70 0.120 295) */
-  --avatar-glow: #4D4869;
-  --accent-temp: #A89AD7;
-  --layer-bg-kald: #79B0E8;    --layer-glow-kald: #384D73;   --layer-base-kald: #131A2D;
-  --layer-bg-mild: #A89AD7;    --layer-glow-mild: #4D4869;   --layer-base-mild: #1A1828;
-  --layer-bg-varm: #F8907C;    --layer-glow-varm: #6E4358;   --layer-base-varm: #251724;
+  --focus-ring: var(--dw-focus); /* oklch(0.70 0.120 295) */
+  --avatar-glow: var(--dw-canvas-glow);
+  --accent-temp: var(--dw-accent);
+  --layer-bg-kald: var(--dw-w-rain);    --layer-glow-kald: var(--dw-ink-panel-mid);   --layer-base-kald: var(--dw-panel);
+  --layer-bg-mild: var(--dw-panel);     --layer-glow-mild: var(--dw-edge-light);      --layer-base-mild: var(--dw-raised);
+  --layer-bg-varm: var(--dw-accent);    --layer-glow-varm: var(--dw-accent-300);      --layer-base-varm: var(--dw-accent-surface);
 
   /* Skygger — mørkere base, mer transparent for å unngå halo */
   --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-2: 0 4px 14px rgba(0, 0, 0, 0.45);
   --shadow-3: 0 4px 16px rgba(0, 0, 0, 0.5);
   --shadow-cta: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.4);
-  --shadow-cta-primary: 0 14px 30px -12px rgba(101, 208, 151, 0.55);
+  --shadow-cta-primary: 0 14px 30px -12px color-mix(in srgb, var(--dw-accent) 55%, transparent);
   --shadow-frame: 0 44px 100px -30px rgba(0, 0, 0, 0.75), 0 14px 34px -14px rgba(0, 0, 0, 0.6);
 
-  --status-warm: #FF987E; /* oklch(0.78 0.130 35) */
-  --status-cold: #79B1E0; /* oklch(0.74 0.090 245) */
-  --status-ok: #65D097;
+  --status-warm: var(--dw-danger);
+  --status-cold: var(--dw-warning);
+  --status-ok: var(--dw-success);
 
-  --ink-on-pos-tint: var(--terracotta-200);
+  --ink-on-pos-tint: var(--dw-accent);
   --ink-on-neg-tint: var(--ink-700);
 
   color-scheme: dark;
 }
 /* F83 M1: data-temp bor på .ba-temp-root (skjerm-roten), ikke :root. */
 :root[data-theme="dark"] .ba-temp-root[data-temp="kald"] {
-  --bg-canvas: #131A2D; /* oklch(0.22 0.040 268) */
-  --avatar-glow: #384D73;
-  --accent-temp: #79B0E8;
+  --bg-canvas: var(--dw-canvas);
+  --avatar-glow: var(--dw-w-rain);
+  --accent-temp: var(--dw-accent);
 }
 :root[data-theme="dark"] .ba-temp-root[data-temp="varm"] {
-  --bg-canvas: #251724; /* oklch(0.23 0.032 330) */
-  --avatar-glow: #6E4358;
-  --accent-temp: #F8907C;
+  --bg-canvas: var(--dw-canvas);
+  --avatar-glow: var(--dw-accent-300);
+  --accent-temp: var(--dw-accent);
 }
 
 /* Forced-colors / Windows high-contrast mode: la system overstyre alle
