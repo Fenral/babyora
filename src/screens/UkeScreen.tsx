@@ -8,7 +8,6 @@ import {
   useSyncExternalStore,
   type CSSProperties,
 } from 'react';
-import { PaywallDialog } from '../components/PaywallDialog';
 import { ForecastDisclosure } from '../components/planning/ForecastDisclosure';
 import { PlanChangeRail, type PlanChangeRailRow, type PlanningRailEvent } from '../components/planning/PlanChangeRail';
 import { SnartPlan } from '../components/planning/SnartPlan';
@@ -55,7 +54,6 @@ import {
   resolveRuntimeCapabilityAccess,
 } from '../lib/premium/gating';
 import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
-import type { PaywallTrigger } from '../lib/premium/products';
 import { useAccess } from '../lib/premium/use-access';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
@@ -360,11 +358,6 @@ function PlanleggData({
     onConsumeRequestedPlanView(requestedPlanViewToken);
   }, [onConsumeRequestedPlanView, requestedPlanView, requestedPlanViewToken]);
   const [forecastOpen, setForecastOpen] = useState(false);
-  const [paywallOpen, setPaywallOpen] = useState(false);
-  const [paywallTrigger, setPaywallTrigger] = useState<HTMLElement | null>(null);
-  const [paywallTriggerType, setPaywallTriggerType] = useState<PaywallTrigger>('imorgen');
-  const [paywallAccessGeneration, setPaywallAccessGeneration] = useState(0);
-  const paywallActionRef = useRef<HTMLButtonElement | null>(null);
   const availability = planningAvailability();
   const weekAccess = useMemo(() => resolvePlanningViewAccess('week', {
     isPlus: isPremium,
@@ -451,71 +444,24 @@ function PlanleggData({
   const markSnartAlreadyHave = useCallback((conceptId: string) => {
     snartEvaluator.markAlreadyHave(conceptId);
   }, [snartEvaluator]);
-  const [weekAccessTransition, setWeekAccessTransition] = useState(() => ({
-    state: weekAccess.access.state,
-    generation: 0,
-    lastResolved: weekAccess.access.state === 'allowed'
-      ? 'allowed' as const
-      : 'denied' as const,
-    paywallFocusPending: false,
-  }));
-  let currentWeekAccessTransition = weekAccessTransition;
-  if (weekAccessTransition.state !== weekAccess.access.state) {
-    const nextAccessState = weekAccess.access.state;
-    const lostLiveWeekAccess = weekAccessTransition.lastResolved === 'allowed'
-      && nextAccessState === 'denied';
-    currentWeekAccessTransition = {
-      state: nextAccessState,
-      generation: nextAccessState === 'neutral'
-        ? weekAccessTransition.generation + 1
-        : weekAccessTransition.generation,
-      lastResolved: nextAccessState === 'neutral'
-        ? weekAccessTransition.lastResolved
-        : nextAccessState,
-      paywallFocusPending: nextAccessState === 'neutral'
-        ? paywallOpen
-          && paywallAccessGeneration === weekAccessTransition.generation
-        : weekAccessTransition.state === 'neutral'
-          && weekAccessTransition.paywallFocusPending,
-    };
-    setWeekAccessTransition(currentWeekAccessTransition);
-    if (nextAccessState === 'neutral') setForecastOpen(false);
-    if (lostLiveWeekAccess) {
+  // P2 hard paywall (PRODUCT.md, 2026-07-31): det finnes ikke lenger noen
+  // kontekstuell paywall å åpne herfra — AppPaywallGate (App.tsx) er den
+  // ENESTE håndhevingen av entitlement på appnivå. Denne skjermen bounser
+  // bare vekk fra en Uke-visning som akkurat mistet levende tilgang (f.eks.
+  // et entitlement som utløper mens brukeren står på fanen), slik at hun
+  // ikke blir stående på en tom fane.
+  const lastResolvedWeekAccessRef = useRef<'allowed' | 'denied'>(
+    weekAccess.access.state === 'allowed' ? 'allowed' : 'denied',
+  );
+  useEffect(() => {
+    if (weekAccess.access.state === 'neutral') return;
+    const previous = lastResolvedWeekAccessRef.current;
+    lastResolvedWeekAccessRef.current = weekAccess.access.state;
+    if (previous === 'allowed' && weekAccess.access.state === 'denied') {
       setForecastOpen(false);
       setTab('today');
     }
-  }
-  useLayoutEffect(() => {
-    if (
-      weekAccess.access.state === 'neutral'
-      || !currentWeekAccessTransition.paywallFocusPending
-    ) {
-      return;
-    }
-    const focusTarget = paywallActionRef.current
-      ?? document.getElementById('main');
-    if (focusTarget) {
-      focusTarget.focus();
-    }
-  }, [
-    currentWeekAccessTransition.generation,
-    currentWeekAccessTransition.paywallFocusPending,
-    weekAccess.access.state,
-  ]);
-  const closePaywall = useCallback(() => {
-    setPaywallOpen(false);
-    window.requestAnimationFrame(() => {
-      const focusTarget = paywallActionRef.current
-        ?? document.getElementById('main');
-      focusTarget?.focus();
-    });
-  }, [setPaywallOpen]);
-  const openPaywall = useCallback((trigger: PaywallTrigger, element: HTMLButtonElement) => {
-    setPaywallTrigger(element);
-    setPaywallTriggerType(trigger);
-    setPaywallAccessGeneration(currentWeekAccessTransition.generation);
-    setPaywallOpen(true);
-  }, [currentWeekAccessTransition.generation]);
+  }, [weekAccess.access.state]);
   const changeRailHeadStyle: CSSProperties = {
     fontSize: '1.25rem',
     fontWeight: 640,
@@ -538,7 +484,10 @@ function PlanleggData({
 
   const phases = useMemo<readonly Phase[]>(() => {
     if (weather.status !== 'ready' && weather.status !== 'offline') return Object.freeze([]);
-    if (tab === 'tenday' && viewAccess.presentation !== 'full') {
+    // P2 hard paywall: I dag og Uke gates likt nå (ingen gratis baseline) —
+    // begge trenger presentation === 'full' før vi beregner faser. Snart
+    // håndteres separat lenger ned (egen tab, aldri via phases).
+    if (tab !== 'soon' && viewAccess.presentation !== 'full') {
       return Object.freeze([]);
     }
     if (!Number.isInteger(ageMonths) || ageMonths < 0 || ageMonths > 24) {
@@ -581,7 +530,7 @@ function PlanleggData({
   const planningEvaluation = useMemo<PlanningEvaluation>(() => {
     if (
       tab === 'soon'
-      || (tab === 'tenday' && viewAccess.presentation !== 'full')
+      || viewAccess.presentation !== 'full'
       || !weather.evidence
       || effectivePlace === null
       || weather.evidence.coverage.status === 'unavailable'
@@ -672,10 +621,18 @@ function PlanleggData({
         },
         recommendInput: fact.phase.engineInput,
         finalizedRecommendation: fact.phase.recommendation,
+        // planned-outfit-context.ts (planning/ — ikke rørt av P2) holder sin
+        // EGEN lokale FREE_CAPABILITIES-liste og krever strengt reason:'free'
+        // for 'today_home' når allowed er true; alle andre kapabiliteter
+        // (her: 'future_plan') krever reason:'plus'. Denne grenen kjøres kun
+        // når viewAccess.presentation === 'full' (early-return over), så
+        // access.allowed er alltid true her — kun reason-strengen må matche
+        // kapabiliteten today_home fortsatt uttrykker som gratis i den
+        // uendrede kontekst-fabrikken.
         access: {
           capability: planCapability,
           allowed: access.allowed,
-          reason: access.reason,
+          reason: planCapability === 'today_home' ? 'free' : access.reason,
         },
       });
       contextEntries.push([event.id, context]);
@@ -803,18 +760,26 @@ function PlanleggData({
     setRefreshKey((current) => current + 1);
   }, [setRefreshKey]);
   const isWeekView = tab === 'tenday';
+  const isTodayView = tab === 'today';
   const isWeekFull = isWeekView && viewAccess.presentation === 'full';
-  const isWeekTeaser = isWeekView && viewAccess.presentation === 'teaser';
   const isWeekNeutral = isWeekView && viewAccess.presentation === 'neutral';
+  const isTodayNeutral = isTodayView && viewAccess.presentation === 'neutral';
   const isSoonView = tab === 'soon';
+  // P2 hard paywall: I dag og Uke gates likt nå — «access-gated» betyr her
+  // «denne planvisningen er ikke presentation:'full' akkurat nå» (enten
+  // fordi entitlement-oppslaget fortsatt laster, eller fordi den er
+  // avslått). Ingen egen teaser-tilstand lenger; en gated visning viser
+  // ingenting ekstra her — AppPaywallGate (App.tsx) er den faktiske
+  // håndhevingen på appnivå.
+  const isAccessGatedView = (isWeekView || isTodayView) && viewAccess.presentation !== 'full';
   if (weather.status === 'loading' || weather.status === 'idle') {
     statusState = { status: 'loading' };
   } else if (
-    (weather.status === 'error' && !isWeekTeaser && !isWeekNeutral)
+    (weather.status === 'error' && !isAccessGatedView)
     || (
       (weather.status === 'ready' || weather.status === 'offline')
       && !planningEvaluation.hasEvaluatedPlan
-      && (!isWeekView || isWeekFull)
+      && !isAccessGatedView
     )
   ) {
     statusState = { status: 'error', onRetry };
@@ -830,40 +795,6 @@ function PlanleggData({
   ) {
     statusState = { status: 'partial' };
   }
-
-  const freeWeekComparison = useMemo(() => {
-    if (
-      viewAccess.presentation !== 'teaser'
-      || (weather.status !== 'ready' && weather.status !== 'offline')
-      || !weather.evidence
-      || weather.evidence.coverage.status === 'unavailable'
-    ) {
-      return null;
-    }
-    const localDate = (date: Date) => date.toLocaleDateString('en-CA', {
-      timeZone: PLAN_TIME_ZONE,
-    });
-    const evaluatedDate = localDate(new Date(weather.evidence.metadata.evaluatedAt));
-    const [year, month, day] = evaluatedDate.split('-').map(Number);
-    if (!year || !month || !day) return null;
-    const nextCalendarDate = new Date(Date.UTC(year, month - 1, day + 1))
-      .toISOString()
-      .slice(0, 10);
-    const today = activeDaily.find((day) => localDate(day.date) === evaluatedDate);
-    const future = activeDaily.find(
-      (day) => localDate(day.date) === nextCalendarDate,
-    );
-    if (!today || !future) return null;
-    return Object.freeze({
-      todayC: Math.round(today.tempC),
-      futureC: Math.round(future.tempC),
-    });
-  }, [
-    activeDaily,
-    viewAccess.presentation,
-    weather.evidence,
-    weather.status,
-  ]);
 
   const onViewChange = (nextTab: ViewTab) => {
     dispatchPlanningInteraction(
@@ -884,7 +815,7 @@ function PlanleggData({
   const showAdvice = statusState.status !== 'loading'
     && statusState.status !== 'error'
     && !isSoonView
-    && (!isWeekView || isWeekFull)
+    && !isAccessGatedView
     && planningEvaluation.hasEvaluatedPlan;
   const forecastRows = planningEvaluation.hasEvaluatedPlan
     ? planningEvaluation.forecast
@@ -908,7 +839,6 @@ function PlanleggData({
       }));
 
   return (
-    <>
     <section
       className="planlegg-screen ba-temp-root"
       aria-labelledby="planlegg-title"
@@ -942,7 +872,7 @@ function PlanleggData({
       {!isSoonView && (
         <PlanleggStatusNotice
           state={statusState}
-          subject={isWeekView && !isWeekFull ? 'weather' : 'plan'}
+          subject={isAccessGatedView ? 'weather' : 'plan'}
         />
       )}
 
@@ -959,20 +889,6 @@ function PlanleggData({
         <p className="planlegg-screen__week-weather" data-planlegg-access="neutral">
           Sjekker tilgang til Snart.
         </p>
-      )}
-
-      {isSoonView && soonAccess.presentation === 'teaser' && (
-        <section className="planlegg-screen__week-weather" data-planlegg-access="soon-teaser">
-          <h2>Snart</h2>
-          <p>Se historiske forberedelser med Babyora Plus.</p>
-          <button
-            ref={paywallActionRef}
-            type="button"
-            onClick={(event) => openPaywall('snart', event.currentTarget)}
-          >
-            Se historiske forberedelser med Babyora Plus
-          </button>
-        </section>
       )}
 
       {showAdvice && (
@@ -1022,37 +938,17 @@ function PlanleggData({
         </p>
       )}
 
-      {isWeekTeaser
-        && statusState.status !== 'loading'
-        && (
-          <section
-            className="planlegg-screen__week-weather"
-            aria-labelledby="planlegg-free-week-title"
-            data-planlegg-access={freeWeekComparison
-              ? 'free-week-comparison'
-              : 'free-week-unavailable'}
-          >
-            <h2 id="planlegg-free-week-title">Ukevær</h2>
-            {freeWeekComparison ? (
-              <p data-weather-comparison>
-                I morgen ved middagstid: {freeWeekComparison.futureC}°.
-                {' '}I dag ved middagstid: {freeWeekComparison.todayC}°.
-              </p>
-            ) : (
-              <p>Værsammenligning er ikke tilgjengelig akkurat nå.</p>
-            )}
-            <button
-              ref={paywallActionRef}
-              type="button"
-              onClick={(event) => openPaywall('imorgen', event.currentTarget)}
-            >
-              Se uke med Babyora Plus
-            </button>
-          </section>
-        )}
+      {isTodayNeutral && (
+        <p
+          className="planlegg-screen__week-weather"
+          data-planlegg-access="neutral"
+        >
+          Sjekker tilgang til dagens plan.
+        </p>
+      )}
 
       {!isSoonView
-        && (!isWeekView || isWeekFull)
+        && !isAccessGatedView
         && statusState.status !== 'loading'
         && statusState.status !== 'error'
         && (
@@ -1063,16 +959,6 @@ function PlanleggData({
         />
       )}
     </section>
-    {paywallOpen && viewAccess.access.state !== 'neutral'
-      && paywallAccessGeneration === currentWeekAccessTransition.generation && (
-      <PaywallDialog
-        open
-        trigger={paywallTriggerType}
-        onClose={closePaywall}
-        returnFocusTo={paywallTrigger}
-      />
-    )}
-    </>
   );
 }
 

@@ -27,16 +27,16 @@ describe('PRODUCT_IDS (provisjonert — STATUS.md, juni 2026)', () => {
     expect(PRODUCTS.yearly.description).toMatch(/24,90/);
   });
 
-  it('quarterly: 99 kr, 3 mnd (pappaperm), auto-renews, ingen trial', () => {
+  it('quarterly: 99 kr, 3 mnd (pappaperm), auto-renews, 7 dager trial (P2: trial på alle tre planer)', () => {
     expect(PRODUCTS.quarterly.anchorPriceNok).toBe(99);
     expect(PRODUCTS.quarterly.periodLabel).toBe('/3 mnd');
     expect(PRODUCTS.quarterly.autoRenews).toBe(true);
-    expect(PRODUCTS.quarterly.trialDays).toBe(0);
+    expect(PRODUCTS.quarterly.trialDays).toBe(7);
     expect(PRODUCTS.quarterly.description).toMatch(/pappaperm/);
   });
 
-  it('monthly: 39 kr, ingen trial', () => {
-    expect(PRODUCTS.monthly.trialDays).toBe(0);
+  it('monthly: 39 kr, 7 dager trial (P2: trial på alle tre planer, aldri kun årlig)', () => {
+    expect(PRODUCTS.monthly.trialDays).toBe(7);
     expect(PRODUCTS.monthly.anchorPriceNok).toBe(39);
   });
 });
@@ -46,12 +46,12 @@ describe('priceTransparencyText', () => {
     expect(priceTransparencyText('yearly')).toBe('Deretter 299 kr/år. Avslutt når som helst.');
   });
 
-  it('monthly uten trial — bruker direkte pris', () => {
-    expect(priceTransparencyText('monthly')).toBe('39 kr/mnd. Avslutt når som helst.');
+  it('monthly med trial (P2) — bruker også "Deretter X"', () => {
+    expect(priceTransparencyText('monthly')).toBe('Deretter 39 kr/mnd. Avslutt når som helst.');
   });
 
-  it('quarterly uten trial — direkte pris per 3 mnd', () => {
-    expect(priceTransparencyText('quarterly')).toBe('99 kr/3 mnd. Avslutt når som helst.');
+  it('quarterly med trial (P2) — bruker også "Deretter X" per 3 mnd', () => {
+    expect(priceTransparencyText('quarterly')).toBe('Deretter 99 kr/3 mnd. Avslutt når som helst.');
   });
 
   it('respekterer pris fra StoreKit hvis levert', () => {
@@ -77,8 +77,8 @@ describe('Paywall trigger-strenger', () => {
       monthly: 'no.klemeg.app.monthly',
     });
     expect(PRODUCTS.yearly).toMatchObject({ anchorPriceNok: 299, trialDays: 7 });
-    expect(PRODUCTS.quarterly).toMatchObject({ anchorPriceNok: 99, trialDays: 0 });
-    expect(PRODUCTS.monthly).toMatchObject({ anchorPriceNok: 39, trialDays: 0 });
+    expect(PRODUCTS.quarterly).toMatchObject({ anchorPriceNok: 99, trialDays: 7 });
+    expect(PRODUCTS.monthly).toMatchObject({ anchorPriceNok: 39, trialDays: 7 });
   });
 
   it('morgenvarsel er IKKE en paywall-trigger (gratis-kapabilitet, jf. capabilities.ts)', () => {

@@ -2168,22 +2168,24 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
             aria-label={
               isPremium
                 ? 'Babyora Pluss aktiv — administrer abonnement og fakturering'
-                : 'Gratis-versjon — oppgrader til Babyora Pluss'
+                : 'Ikke aktivert — start 7 dager gratis med Babyora Pluss'
             }
             aria-haspopup={isPremium ? undefined : 'dialog'}
           >
             <span aria-hidden="true" style={premiumShineStyle} />
             <span style={premiumBodyStyle}>
-              {/* Status som TEKST (aldri farge alene) — dotten er kun dekorativ. */}
+              {/* Status som TEKST (aldri farge alene) — dotten er kun dekorativ.
+                  P2 hard paywall: «Gratis-versjon» er fjernet — det finnes
+                  ikke lenger et gratis-nivå å beskrive her. */}
               <span style={premiumEyebrowStyle}>
                 <span aria-hidden="true" style={premiumStatusDotStyle} />
-                {isPremium ? 'Babyora Pluss aktiv' : 'Gratis-versjon'}
+                {isPremium ? 'Babyora Pluss aktiv' : 'Ikke aktivert'}
               </span>
               <span style={premiumTitleStyle}>Babyora Pluss</span>
               <span style={premiumSubStyle}>
                 {isPremium
                   ? 'Administrer abonnement og fakturering'
-                  : 'I morgen + 10 dager, garderobe-tilpasning, flere barn'}
+                  : 'Dagens antrekk, planer fremover og alle som passer barnet'}
               </span>
             </span>
             <span style={premiumArrowStyle}>

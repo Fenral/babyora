@@ -1,8 +1,10 @@
 /**
- * R7/UI-plan Task 1 — sentralisert capability-kontrakt.
- * Gratis = i dag hjemme + sikkerhet + morgenpåminnelse; Plus = fremover,
- * overalt og sammen; familiedeling krever i tillegg autentisering.
- * FORVENTET RED: modulen finnes ikke.
+ * P2 hard paywall (PRODUCT.md, 2026-07-31) — decideAccess er nå en ren
+ * entitlement-sjekk: loading vinner alltid, ellers avgjør kun isPlus.
+ * REQUIRES_AUTH er fortsatt et ortogonalt lag OVENPÅ en aktiv Plus-
+ * entitlement. Det finnes ikke lenger noen FREE_CAPABILITIES-liste — ALLE
+ * kapabiliteter (inkl. today_home/morning_reminder/safety_guides) gater nå
+ * likt på isPlus.
  */
 import { describe, expect, it } from 'vitest';
 import { decideAccess, type AccessContext, type Capability } from '../capabilities.js';
@@ -11,8 +13,10 @@ const ctx = (partial?: Partial<AccessContext>): AccessContext => ({
   isPlus: false, authenticated: false, loading: false, ...partial,
 });
 
-const FREE: Capability[] = ['today_home', 'morning_reminder', 'safety_guides'];
-const PLUS_ONLY: Capability[] = [
+const ALL_CAPABILITIES: Capability[] = [
+  'today_home',
+  'morning_reminder',
+  'safety_guides',
   'future_plan',
   'automatic_location',
   'soon_preparation',
@@ -23,36 +27,35 @@ const PLUS_ONLY: Capability[] = [
 const PLUS_AND_AUTH: Capability[] = ['family_sharing', 'personal_calibration', 'smart_notifications'];
 
 describe('decideAccess', () => {
-  it.each(FREE)('%s er alltid gratis — også utlogget', (cap) => {
-    expect(decideAccess(cap, ctx())).toEqual({ allowed: true, reason: 'free' });
-    expect(decideAccess(cap, ctx({ isPlus: true, authenticated: true })).allowed).toBe(true);
-  });
-
-  it.each([...PLUS_ONLY, ...PLUS_AND_AUTH])('%s krever aktivt Plus-entitlement', (cap) => {
+  it.each(ALL_CAPABILITIES)('%s krever aktivt Plus-entitlement — ingen gratis-nivå lenger', (cap) => {
     const denied = decideAccess(cap, ctx());
     expect(denied.allowed).toBe(false);
     expect(denied.reason).toBe('expired');
     expect(denied.paywallTrigger).toBe(cap);
   });
 
-  it.each(PLUS_ONLY)('%s er tilgjengelig med Plus uten innlogging', (cap) => {
+  it.each(ALL_CAPABILITIES)('%s er tilgjengelig med Plus uten innlogging', (cap) => {
     expect(decideAccess(cap, ctx({ isPlus: true }))).toEqual({ allowed: true, reason: 'plus' });
   });
 
-  it.each(PLUS_AND_AUTH)('%s krever OGSÅ autentisering (delt/servertilstand)', (cap) => {
+  it.each([...ALL_CAPABILITIES, ...PLUS_AND_AUTH])(
+    '%s: loading blokkerer alt uten paywall-trigger (aldri flash av feil tilstand)',
+    (cap) => {
+      const d = decideAccess(cap, ctx({ loading: true }));
+      expect(d).toEqual({ allowed: false, reason: 'loading' });
+      const dPlus = decideAccess(cap, ctx({ isPlus: true, loading: true }));
+      expect(dPlus).toEqual({ allowed: false, reason: 'loading' });
+    },
+  );
+
+  it.each(PLUS_AND_AUTH)('%s krever Plus OG autentisering (delt/servertilstand)', (cap) => {
+    expect(decideAccess(cap, ctx())).toEqual({ allowed: false, reason: 'expired', paywallTrigger: cap });
     expect(decideAccess(cap, ctx({ isPlus: true }))).toEqual({ allowed: false, reason: 'signed_out' });
     expect(decideAccess(cap, ctx({ isPlus: true, authenticated: true }))).toEqual({ allowed: true, reason: 'plus' });
   });
 
-  it('loading blokkerer alt uten paywall-trigger (aldri flash av feil tilstand)', () => {
-    for (const cap of [...FREE, ...PLUS_ONLY, ...PLUS_AND_AUTH] as Capability[]) {
-      const d = decideAccess(cap, ctx({ loading: true }));
-      expect(d).toEqual({ allowed: false, reason: 'loading' });
-    }
-  });
-
-  it.each(['future_plan', 'automatic_location', 'soon_preparation'] as const)(
-    '%s har deterministiske Free, Plus, loading og utløpt-overganger',
+  it.each(['today_home', 'future_plan', 'automatic_location', 'soon_preparation'] as const)(
+    '%s har deterministiske Plus- og loading-overganger',
     (capability) => {
       expect(decideAccess(capability, ctx())).toEqual({
         allowed: false,

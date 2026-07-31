@@ -4,7 +4,6 @@ import {
   isChildSwitchGated,
   resolvePlanningViewAccess,
   resolveRuntimeCapabilityAccess,
-  shouldShowTenDayTeaser,
 } from '../gating';
 import type { PlusFeatureAvailability } from '../plus-features';
 
@@ -102,11 +101,18 @@ describe('resolveRuntimeCapabilityAccess', () => {
   });
 });
 
-describe('resolvePlanningViewAccess', () => {
-  it('gir full Today for Free og nøytral Today mens tilgang laster', () => {
+describe('resolvePlanningViewAccess (P2 hard paywall — ingen teaser-presentasjon)', () => {
+  it('I dag krever nå Plus akkurat som alt annet: skjult uten, full med, nøytral under lasting', () => {
     expect(resolvePlanningViewAccess('today', context(), availability())).toMatchObject({
       view: 'today',
       capability: 'today_home',
+      presentation: 'hidden',
+    });
+    expect(resolvePlanningViewAccess(
+      'today',
+      context({ isPlus: true }),
+      availability(),
+    )).toMatchObject({
       presentation: 'full',
     });
     expect(resolvePlanningViewAccess(
@@ -119,10 +125,10 @@ describe('resolvePlanningViewAccess', () => {
     });
   });
 
-  it('gir Week teaser for Free, full for implementert Plus og skjult ved rollback', () => {
+  it('Uke er skjult for ikke-Plus, full for implementert Plus og skjult ved rollback', () => {
     expect(resolvePlanningViewAccess('week', context(), availability())).toMatchObject({
       capability: 'future_plan',
-      presentation: 'teaser',
+      presentation: 'hidden',
     });
     expect(resolvePlanningViewAccess(
       'week',
@@ -177,13 +183,15 @@ describe('resolvePlanningViewAccess', () => {
       access: { state: 'neutral', implementationAvailable: false },
     });
   });
-});
 
-describe('shouldShowTenDayTeaser compatibility wrapper', () => {
-  it('beholder den eksisterende Uke-signaturen via view-resolveren', () => {
-    expect(shouldShowTenDayTeaser('today', false)).toBe(false);
-    expect(shouldShowTenDayTeaser('today', true)).toBe(false);
-    expect(shouldShowTenDayTeaser('tenday', false)).toBe(true);
-    expect(shouldShowTenDayTeaser('tenday', true)).toBe(false);
+  it('Snart er full for Plus når soon_preparation er implementert', () => {
+    expect(resolvePlanningViewAccess(
+      'soon',
+      context({ isPlus: true }),
+      availability({ soon_preparation: true }),
+    )).toMatchObject({
+      presentation: 'full',
+      access: { state: 'allowed' },
+    });
   });
 });

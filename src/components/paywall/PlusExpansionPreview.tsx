@@ -1,14 +1,11 @@
 /**
- * PlusExpansionPreview — paywallens verdi-seksjon (R7 Task 7).
+ * PlusExpansionPreview — paywallens verdi-seksjon.
  *
- * Viser Free→Plus som en «verden som utvider seg»: gratis-tilstanden til
- * venstre, Plus-tilstanden til høyre, med ÉN 500–700ms ekspansjon når
- * seksjonen mountes. Ved reduced-motion vises slutt-tilstanden umiddelbart
- * (ingen animasjon).
- *
- * SANNFERDIGHET: rendrer bare elementene den capability-avledede
- * `buildCapabilityPaywallCopy`-grensen har godkjent. Returnerer null hvis
- * ingen aktiv kapabilitet gir et leverbart løfte.
+ * Hard paywall (2026-07-31, PRODUCT.md): reframet fra Free→Plus-delta
+ * («utvider seg»-visualisering) til en enkel, hele-produktet bullet-liste —
+ * det finnes ikke lenger en gratis-tilstand å utvide fra. Beholder én
+ * kort 500–600ms inn-animasjon når seksjonen mountes (ved reduced-motion
+ * vises slutt-tilstanden umiddelbart).
  */
 import type { CSSProperties, ReactElement } from 'react';
 import type { CapabilityPaywallPreviewItem } from '../../lib/premium/paywall-copy';
@@ -36,45 +33,28 @@ const wrapStyle: CSSProperties = {
   border: '1px solid var(--ink-100)',
 };
 
-const eyebrowStyle: CSSProperties = {
-  fontSize: 14,
-  fontWeight: 500,
-  lineHeight: 1.4,
-  color: 'var(--ink-500)',
-  margin: 0,
-};
-
 const listStyle: CSSProperties = {
   listStyle: 'none',
   margin: 0,
   padding: 0,
   display: 'flex',
   flexDirection: 'column',
-  gap: 6,
-};
-
-const rowStyle: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr auto 1fr',
-  alignItems: 'center',
   gap: 8,
 };
 
-const fromStyle: CSSProperties = {
-  fontSize: 14,
-  fontWeight: 500,
-  lineHeight: 1.4,
-  color: 'var(--ink-500)',
-  textAlign: 'right',
+const rowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 8,
 };
 
-const arrowStyle: CSSProperties = {
-  fontSize: 14,
-  color: 'var(--ink-400)',
+const checkStyle: CSSProperties = {
   flex: 'none',
+  color: 'var(--accent-cta)',
+  lineHeight: 1.4,
 };
 
-const toStyle: CSSProperties = {
+const labelStyle: CSSProperties = {
   fontSize: 14,
   fontWeight: 640,
   lineHeight: 1.4,
@@ -98,13 +78,11 @@ export function PlusExpansionPreview({
       aria-label="Dette får du med Babyora Pluss"
     >
       <style>{STYLE_CSS}</style>
-      <p style={eyebrowStyle}>Med Pluss</p>
       <ul style={listStyle}>
-        {items.map((e) => (
-          <li key={e.key} style={rowStyle}>
-            <span style={fromStyle}>{e.from}</span>
-            <span aria-hidden="true" style={arrowStyle}>→</span>
-            <span style={toStyle}>{e.to}</span>
+        {items.map((item) => (
+          <li key={item.key} style={rowStyle}>
+            <span aria-hidden="true" style={checkStyle}>✓</span>
+            <span style={labelStyle}>{item.label}</span>
           </li>
         ))}
       </ul>

@@ -77,6 +77,7 @@ import { useLocationPref, resolveEffectivePlace } from '../state/location-pref-s
 import { useAccess } from '../lib/premium/use-access';
 import { resolveRuntimeCapabilityAccess } from '../lib/premium/gating';
 import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
+import { useSubscription } from '../state/subscription-store';
 import {
   createCurrentOutfitContext,
   PLAN_TIME_ZONE,
@@ -428,6 +429,19 @@ export function HjemScreen({
     if (!recommendation || !engineInput) return recommendation;
     return applySwapsFinalized(engineInput, recommendation, swaps);
   }, [recommendation, engineInput, swaps]);
+
+  // P2 hard paywall (PRODUCT.md, 2026-07-31): Hjem er der «den første reelle
+  // anbefalingen» faktisk vises — scenen under rendrer resolvedRecommendation
+  // direkte (sceneModel.headline + garment-pills), uten noen egen
+  // isPremium-sjekk (bevisst — dette ER bootstrap-visningen som senere
+  // avgjør om AppPaywallGate skal slå inn). markFirstRecommendationSeen()
+  // er selv idempotent (setter kun ved første kall), så denne effekten kan
+  // trygt fyre på nytt ved hver ny anbefaling uten å skrive over tidspunktet.
+  const markFirstRecommendationSeen = useSubscription((s) => s.markFirstRecommendationSeen);
+  useEffect(() => {
+    if (resolvedRecommendation === null) return;
+    markFirstRecommendationSeen();
+  }, [resolvedRecommendation, markFirstRecommendationSeen]);
 
   const currentOutfitContext = useMemo<PlannedOutfitContext | null>(() => {
     const now = weather.now;

@@ -58,7 +58,13 @@ export function resolveRuntimeCapabilityAccess(
 }
 
 export type PlanningView = 'today' | 'week' | 'soon';
-export type PlanningViewPresentation = 'neutral' | 'full' | 'teaser' | 'hidden';
+/**
+ * Hard paywall (PRODUCT.md, 2026-07-31): det finnes ingen delvis/teaser-
+ * presentasjon lenger. En planvisning er enten fullt tilgjengelig, skjult
+ * (implementasjon mangler ELLER tilgang er avslått), eller nøytral mens
+ * entitlement-status fortsatt laster.
+ */
+export type PlanningViewPresentation = 'neutral' | 'full' | 'hidden';
 
 export type PlanningViewAccess = Readonly<{
   view: PlanningView;
@@ -88,7 +94,7 @@ export function resolvePlanningViewAccess(
   } else if (access.allowed) {
     presentation = 'full';
   } else {
-    presentation = view === 'today' ? 'hidden' : 'teaser';
+    presentation = 'hidden';
   }
   return { view, capability, presentation, access };
 }
@@ -103,19 +109,4 @@ export function isChildSwitchGated(
 ): boolean {
   if (isPremium || isActive) return false;
   return index > 0;
-}
-
-/**
- * Compatibility bridge for UkeScreen until its atomic 01-10 migration.
- */
-export function shouldShowTenDayTeaser(
-  tab: 'today' | 'tenday',
-  isPremium: boolean,
-): boolean {
-  const view = tab === 'today' ? 'today' : 'week';
-  return resolvePlanningViewAccess(view, {
-    isPlus: isPremium,
-    authenticated: false,
-    loading: false,
-  }).presentation === 'teaser';
 }

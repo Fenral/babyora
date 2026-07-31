@@ -1,12 +1,43 @@
 /**
- * R7/Task 8 — E2E kjøpsflyt-verifisering (dev/web-mock, uten fysisk enhet).
+ * R7/Task 8 → P2 hard paywall (PRODUCT.md, 2026-07-31) — E2E kjøpsflyt-
+ * verifisering (dev/web-mock, uten fysisk enhet).
  *
  * Verifiserer RevenueCat-flyten så langt den KAN verifiseres uten StoreKit:
  * PaywallDialog sin web/dev-mock simulerer kjøp når appen ikke er native.
- * Tre scenarioer i isolerte browser-kontekster (egen localStorage hver):
- *   1. Årsplan (standard) → kjøp → «aktivert (testmodus)» → abonnementsrad «aktiv».
- *   2. Månedsplan → velg → kjøp → aktivert (annen CTA-gren).
- *   3. Gjenopprett uten tidligere kjøp → dev-only-melding (ikke krasj).
+ *
+ * P2 innførte et HARD paywall: hele appen krever et aktivt Premium-
+ * entitlement etter at onboarding er fullført OG den første reelle
+ * anbefalingen er vist én gang (AppPaywallGate, mountet i App.tsx). Det
+ * finnes ikke lenger noen kontekstuell paywall å klikke seg til fra
+ * Innstillinger/Uke — testene her driver derfor kjøpsflyten DIREKTE via den
+ * automatisk viste, ikke-avviselige gaten.
+ *
+ * Testhåndtak (dokumentert i src/state/subscription-store.ts):
+ *   ?seed=demo                    → demo-barn + MOCK PREMIUM (smoke/audit-
+ *                                    kompatibel — AppPaywallGate slår aldri
+ *                                    inn, se scenario «familie-manage»).
+ *   ?seed=demo&entitlement=none   → demo-barn + IKKE-abonnerende bruker.
+ *                                    Demo-barna hopper over onboarding, og
+ *                                    Hjem viser sin første anbefaling nesten
+ *                                    umiddelbart → AppPaywallGate sin
+ *                                    ikke-avviselige paywall vises automatisk
+ *                                    uten noen ekstra klikk.
+ *
+ * Scenarioer (isolerte browser-kontekster — egen localStorage hver):
+ *   1. gate-yearly   — gaten vises automatisk, ikke-avviselig (ingen
+ *                       lukk-knapp, ESC/backdrop lukker IKKE) → kjøp årsplan
+ *                       (default) → «aktivert (testmodus)» → gaten lukker
+ *                       seg selv når kjøpet går gjennom.
+ *   2. gate-monthly  — samme gate, velg månedsplan først → kjøp → aktivert.
+ *   3. gate-restore  — samme gate → «Gjenopprett kjøp» uten tidligere kjøp
+ *                       → dev-only-melding, gaten forblir åpen (ingen krasj,
+ *                       ingen falsk fremgang).
+ *   4. familie-manage — ?seed=demo (default mock-abonnent) → AppPaywallGate
+ *                       vises ALDRI → Familie-raden viser «Babyora Pluss
+ *                       aktiv» og «Administrer abonnement» åpner
+ *                       plattformens abonnements-URL i stedet for en
+ *                       paywall (isPremium=true-grenen i
+ *                       handlePremiumCtaClick).
  *
  * IKKE dekket (krever enhet/App Store Connect/sandbox): ekte StoreKit-kjøp,
  * kvitteringsvalidering, restore mot ekte Apple-ID, trial→belastning. Se
@@ -47,16 +78,6 @@ async function clickByName(page: Page, pattern: RegExp, label: string): Promise<
   }
 }
 
-/** seed=demo app-skall → Familie-rot → oppgrader-rad → paywall åpen. */
-async function openPaywall(page: Page): Promise<void> {
-  await page.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
-  await page.locator('text=Hjem').first().waitFor({ state: 'visible', timeout: 15_000 });
-  await clickByName(page, /Familie|Innst/i, 'Familie-fane');
-  await page.waitForTimeout(400);
-  await clickByName(page, /oppgrader|Babyora Pluss|Premium/i, 'oppgrader-rad');
-  await page.getByRole('dialog').waitFor({ state: 'visible', timeout: 8_000 });
-}
-
 async function expectVisible(page: Page, rx: RegExp, whatFailed: string): Promise<void> {
   try {
     await page.locator(`text=${rx.toString()}`).first().waitFor({ state: 'visible', timeout: 8_000 });
@@ -65,38 +86,197 @@ async function expectVisible(page: Page, rx: RegExp, whatFailed: string): Promis
   }
 }
 
-async function scenarioPurchase(browser: Browser, plan: 'yearly' | 'monthly'): Promise<void> {
+/** Record window.open(...) calls into a page-local array instead of letting
+ *  Chromium actually try to open a popup — robust, no extra-page plumbing. */
+async function installWindowOpenSpy(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    (window as unknown as { __openedUrls: string[] }).__openedUrls = [];
+    const native = window.open.bind(window);
+    window.open = (...args: Parameters<typeof window.open>) => {
+      (window as unknown as { __openedUrls: string[] }).__openedUrls.push(String(args[0] ?? ''));
+      return native(...args);
+    };
+  });
+}
+
+async function readOpenedUrls(page: Page): Promise<string[]> {
+  return page.evaluate(() => (window as unknown as { __openedUrls?: string[] }).__openedUrls ?? []);
+}
+
+/**
+ * `vite preview` doesn't serve `/api/forecast` (it's a serverless function —
+ * see smoke.ts's own comment on this). Hjem only computes+shows a
+ * recommendation once `useWeather` resolves real weather, and P2's
+ * firstRecommendationSeenAt (which drives the auto-shown gate) is only set
+ * once that recommendation is actually displayed — so every scenario here
+ * needs a deterministic, always-successful forecast fixture, mirroring the
+ * met.no LocationForecast shape (see e2e/planlegg.ts's own buildForecast for
+ * the fuller version this is trimmed from).
+ */
+function buildFixedForecast(): unknown {
+  // `updated_at` must be recent — the client marks a forecast "stale" (and
+  // therefore never extracts `now`/status:'ready') once it's older than
+  // MAX_SOURCE_AGE_MS (6h, src/lib/met-no/client.ts). The timeseries itself
+  // starts a bit before "now" so extractNow() always finds a covering point.
+  const start = Date.now() - 60 * 60 * 1000;
+  const timeseries = Array.from({ length: 10 * 24 }, (_, index) => ({
+    time: new Date(start + index * 60 * 60 * 1000).toISOString(),
+    data: {
+      instant: {
+        details: {
+          air_temperature: 5,
+          wind_speed: 2,
+          wind_from_direction: 180,
+          relative_humidity: 70,
+          cloud_area_fraction: 40,
+        },
+      },
+      next_1_hours: {
+        summary: { symbol_code: 'partlycloudy_day' },
+        details: { precipitation_amount: 0 },
+      },
+    },
+  }));
+  return {
+    properties: {
+      meta: {
+        updated_at: new Date().toISOString(),
+        units: {
+          air_temperature: 'celsius',
+          wind_speed: 'm/s',
+          wind_from_direction: 'degrees',
+          relative_humidity: '%',
+          cloud_area_fraction: '%',
+          precipitation_amount: 'mm',
+        },
+      },
+      timeseries,
+    },
+  };
+}
+
+async function installFixedForecastRoute(page: Page): Promise<void> {
+  await page.route('**/api/forecast?**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(buildFixedForecast()),
+    });
+  });
+}
+
+/** ?seed=demo&entitlement=none → onboarding hoppes over (demo-barn) og Hjem
+ *  viser sin første anbefaling nesten umiddelbart (fast værfixture over),
+ *  som setter firstRecommendationSeenAt og dermed slår AppPaywallGate
+ *  automatisk på (ikke-premium demo-bruker). Ingen klikk kreves for å åpne
+ *  den. */
+async function waitForAutoShownGate(page: Page): Promise<void> {
+  await installFixedForecastRoute(page);
+  await page.goto(`${BASE}/?seed=demo&entitlement=none`, { waitUntil: 'domcontentloaded' });
+  await page.getByRole('dialog').waitFor({ state: 'visible', timeout: 15_000 });
+}
+
+async function assertGateIsNonDismissable(page: Page): Promise<void> {
+  const dialog = page.getByRole('dialog');
+  if (await page.getByRole('button', { name: 'Lukk' }).count() > 0) {
+    fail('ikke-avviselig gate rendret en lukk-knapp — dismissable=false er ikke wired');
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  if (!(await dialog.isVisible())) {
+    fail('ikke-avviselig gate lukket seg via ESC — dismissable=false er ikke håndhevet');
+  }
+  // Klikk et hjørne av viewporten — native <dialog> sin ::backdrop registrerer
+  // klikket som target === dialogen selv (ikke et av dets barn).
+  await page.mouse.click(4, 4);
+  await page.waitForTimeout(200);
+  if (!(await dialog.isVisible())) {
+    fail('ikke-avviselig gate lukket seg via backdrop-klikk — dismissable=false er ikke håndhevet');
+  }
+}
+
+async function scenarioGatePurchase(browser: Browser, plan: 'yearly' | 'monthly'): Promise<void> {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
-  await openPaywall(page);
+
+  await waitForAutoShownGate(page);
+  await assertGateIsNonDismissable(page);
 
   if (plan === 'monthly') {
-    // Radioen er visuelt skjult (sr-only-klipp) → klikk den synlige etiketten.
     try {
       await page.locator('label.pw-plan-label').filter({ hasText: 'Månedlig' }).first().click({ timeout: 6_000 });
     } catch {
-      fail('kunne ikke velge månedsplan i paywall');
+      fail('kunne ikke velge månedsplan i den ikke-avviselige gaten');
     }
   }
-  await clickByName(page, /Start 7 dager gratis|Kjøp Babyora Pluss/i, 'kjøps-CTA');
-  await expectVisible(page, /aktivert \(testmodus\)/i, `${plan}: kjøps-status «aktivert (testmodus)» dukket aldri opp`);
-  console.log(`PURCHASE OK: ${plan} — kjøp simulert, Premium aktivert`);
+  await clickByName(page, /Start 7 dager gratis/i, 'kjøps-CTA (plan-agnostisk trial)');
+  await expectVisible(page, /aktivert \(testmodus\)/i, `${plan}: kjøps-status «aktivert (testmodus)» dukket aldri opp i gaten`);
+  console.log(`PURCHASE OK: gate-${plan} — kjøp simulert via den automatisk viste gaten, Premium aktivert`);
+
+  // Gaten skal lukke seg selv (PaywallDialog sin egen suksess-animasjon) når
+  // kjøpet har gått gjennom — appen bak (bunn-nav «Hjem») blir da nåbar.
+  try {
+    await page.getByRole('dialog').waitFor({ state: 'hidden', timeout: 6_000 });
+  } catch {
+    fail(`${plan}: gaten forble synlig etter vellykket kjøp — den skal lukke seg selv`);
+  }
+  await page.locator('text=Hjem').first().waitFor({ state: 'visible', timeout: 10_000 });
+  console.log(`PURCHASE OK: gate-${plan} — gaten lukket seg selv, appen er igjen tilgjengelig`);
 
   const fatal = errors.filter((e) => !/met\.no|forecast|Failed to fetch|NetworkError/i.test(e));
-  if (fatal.length) fail(`${plan}: uncaught errors:\n  ${fatal.join('\n  ')}`);
+  if (fatal.length) fail(`gate-${plan}: uncaught errors:\n  ${fatal.join('\n  ')}`);
   await ctx.close();
 }
 
-async function scenarioRestore(browser: Browser): Promise<void> {
+async function scenarioGateRestoreEmpty(browser: Browser): Promise<void> {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
-  await openPaywall(page);
-  await clickByName(page, /Gjenopprett kjøp/i, 'gjenopprett-knapp');
-  // Uten tidligere kjøp i dev → tydelig dev-only-melding, ingen krasj.
-  await expectVisible(page, /Gjenoppretting fungerer først/i, 'restore: dev-only-melding uteble');
-  console.log('PURCHASE OK: restore uten kjøp → dev-only-melding (ingen krasj)');
+
+  await waitForAutoShownGate(page);
+  await assertGateIsNonDismissable(page);
+
+  await clickByName(page, /Gjenopprett kjøp/i, 'gjenopprett-knapp i gaten');
+  await expectVisible(page, /Gjenoppretting fungerer først/i, 'gate-restore: dev-only-melding uteble');
+  // Ingen falsk fremgang: gaten skal IKKE ha lukket seg — det finnes fortsatt
+  // ikke noe aktivt kjøp.
+  if (!(await page.getByRole('dialog').isVisible())) {
+    fail('gate-restore: gaten forsvant etter en mislykket gjenoppretting — kun vellykket kjøp/gjenoppretting skal avansere');
+  }
+  console.log('PURCHASE OK: gate-restore — restore uten kjøp gir dev-only-melding, gaten forblir åpen (ingen krasj, ingen falsk fremgang)');
+  await ctx.close();
+}
+
+/** ?seed=demo (uten entitlement-overstyring) → mock-abonnent som standard —
+ *  AppPaywallGate skal ALDRI vises, og Familie-raden skal tilby «administrer
+ *  abonnement» (ikke en paywall). Dekker «smoke/audit-flyter forblir grønne»
+ *  fra oppgavebeskrivelsen. */
+async function scenarioFamilieManageWhenPremium(browser: Browser): Promise<void> {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await ctx.newPage();
+  await installWindowOpenSpy(page);
+
+  await page.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
+  await page.locator('text=Hjem').first().waitFor({ state: 'visible', timeout: 15_000 });
+
+  if (await page.getByRole('dialog').count() > 0 && await page.getByRole('dialog').isVisible()) {
+    fail('familie-manage: AppPaywallGate viste seg for en ?seed=demo mock-abonnent — default demo-entitlement er ikke wired');
+  }
+
+  await clickByName(page, /Familie|Innst/i, 'Familie-fane');
+  await expectVisible(page, /Babyora Pluss aktiv/i, 'familie-manage: premium-raden viste ikke «Babyora Pluss aktiv»');
+  await clickByName(page, /Babyora Pluss aktiv|administrer abonnement/i, 'administrer abonnement-raden');
+  await page.waitForTimeout(300);
+
+  if (await page.getByRole('dialog').count() > 0 && await page.getByRole('dialog').isVisible()) {
+    fail('familie-manage: klikk på en allerede-aktiv Premium-rad åpnet en paywall i stedet for abonnementsadministrasjon');
+  }
+  const opened = await readOpenedUrls(page);
+  if (!opened.some((url) => /apple\.com\/account\/subscriptions|play\.google\.com\/store\/account\/subscriptions/i.test(url))) {
+    fail(`familie-manage: forventet at «administrer abonnement» åpnet en butikk-URL, fikk: ${JSON.stringify(opened)}`);
+  }
+  console.log('PURCHASE OK: familie-manage — mock-abonnent unngår gaten og «administrer abonnement» åpner butikk-URL');
   await ctx.close();
 }
 
@@ -111,11 +291,12 @@ async function main(): Promise<void> {
     await waitForServer(BASE);
     browser = await chromium.launch();
 
-    await scenarioPurchase(browser, 'yearly');
-    await scenarioPurchase(browser, 'monthly');
-    await scenarioRestore(browser);
+    await scenarioGatePurchase(browser, 'yearly');
+    await scenarioGatePurchase(browser, 'monthly');
+    await scenarioGateRestoreEmpty(browser);
+    await scenarioFamilieManageWhenPremium(browser);
 
-    console.log('PURCHASE PASS: 3/3 kjøpsflyt-scenarioer grønne (dev-mock, uten enhet)');
+    console.log('PURCHASE PASS: 4/4 kjøpsflyt-scenarioer grønne (dev-mock, uten enhet)');
   } finally {
     await browser?.close();
     if (server && !server.killed) server.kill();

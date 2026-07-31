@@ -11,6 +11,13 @@
  * Provisjonert (STATUS.md):
  * 39 kr/mnd · 99 kr/3 mnd («pappaperm») · 299 kr/år (HERO).
  * Alle tre auto-renewable, entitlement «premium», offering «default».
+ *
+ * Eierbeslutning 2026-07-31 (PRODUCT.md, hard paywall): 7 dagers gratis
+ * prøveperiode via StoreKit intro-trial gjelder nå ALLE tre planene, ikke
+ * bare årlig. Selve trial-konfigurasjonen skjer i App Store Connect, ikke i
+ * kode — trialDays her er kun UI-signalet («X dager gratis»-merket per plan
+ * + pristransparens-teksten), og må derfor aldri antyde at prøveperioden
+ * kun gjelder årsplanen.
  */
 
 export const PRODUCT_IDS = {
@@ -51,7 +58,7 @@ export const PRODUCTS: Record<ProductKey, ProductDescriptor> = {
     anchorPriceNok: 99,
     periodLabel: '/3 mnd',
     autoRenews: true,
-    trialDays: 0,
+    trialDays: 7,
     description: 'Tilsvarer 33 kr/mnd · pappaperm',
   },
   monthly: {
@@ -59,7 +66,7 @@ export const PRODUCTS: Record<ProductKey, ProductDescriptor> = {
     anchorPriceNok: 39,
     periodLabel: '/mnd',
     autoRenews: true,
-    trialDays: 0,
+    trialDays: 7,
   },
 };
 

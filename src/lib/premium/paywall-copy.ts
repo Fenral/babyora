@@ -11,14 +11,16 @@
  * priser/prosenter her — de utledes fra PRODUCTS, bortsett fra
  * månedlig-ekvivalent-teksten som parses fra PRODUCTS.yearly.description
  * (samme godkjente tekst som F81.1 allerede har låst i products.test.ts).
+ *
+ * Eierbeslutning 2026-07-31 (PRODUCT.md, hard paywall): copyen er reframet
+ * fra DELTA («I dag → 10 dager») til HELE PRODUKTET — det finnes ikke
+ * lenger en gratis baseline å sammenligne mot, så paywallen selger alltid
+ * det komplette produktet, uansett hvilken skjerm/trigger som åpnet den.
  */
 import {
   PRODUCTS,
-  priceTransparencyText,
-  type PaywallTrigger,
   type ProductKey,
 } from './products';
-import type { PlusFeatureAvailability } from './plus-features';
 
 /** Paywallen viser årlig (hero) + månedlig. Kvartal («pappaperm») er
  *  provisjonert og definert i products.ts, men ikke surfaced her ennå —
@@ -34,13 +36,19 @@ export const PLAN_DISPLAY_NAME: Record<ProductKey, string> = {
 /**
  * Statisk, ikke-parametrisert brukervendt copy — én kilde for både
  * PaywallDialog-rendring og copy-lint-testen (paywall-copy.test.ts).
+ *
+ * `trialLine` MÅ være plan-agnostisk (P2 hard paywall-krav): alle tre planer
+ * har 7 dagers gratis prøveperiode (StoreKit intro-trial, App Store
+ * Connect-side), så teksten skal aldri antyde at prøveperioden kun gjelder
+ * årsplanen.
  */
 export const PAYWALL_COPY = {
   legend: 'Velg plan',
   closeLabel: 'Lukk',
   genericHeadline: 'Babyora Pluss',
-  ctaYearly: 'Start 7 dager gratis',
-  ctaOther: 'Kjøp Babyora Pluss',
+  /** Plan-agnostisk CTA — samme tekst uansett valgt plan, siden alle tre
+   *  planer har 7 dagers trial (aldri kun årsplanen). */
+  cta: 'Start 7 dager gratis',
   ctaPending: 'Behandler …',
   restoreLabel: 'Gjenopprett kjøp',
   statusProcessing: 'Behandler kjøp …',
@@ -54,14 +62,12 @@ export const PAYWALL_COPY = {
   errorRestoreException: 'Kunne ikke gjenopprette akkurat nå. Sjekk nettilkoblingen og prøv igjen.',
   privacyLinkLabel: 'Personvernerklæring (åpnes i nettleser)',
   termsLinkLabel: 'Vilkår for bruk (åpnes i nettleser)',
+  trialLine: 'Start med 7 gratisdager uansett plan, deretter prisen for planen du velger. Avslutt når som helst i App Store.',
 } as const;
 
-type ClaimCapability = Exclude<keyof PlusFeatureAvailability, 'today_home'>;
-
 export type CapabilityPaywallPreviewItem = Readonly<{
-  key: ClaimCapability;
-  from: string;
-  to: string;
+  key: string;
+  label: string;
 }>;
 
 export type CapabilityPaywallCopy = Readonly<{
@@ -71,84 +77,30 @@ export type CapabilityPaywallCopy = Readonly<{
   previewItems: readonly CapabilityPaywallPreviewItem[];
 }>;
 
-type ClaimDefinition = CapabilityPaywallPreviewItem & Readonly<{
-  body: string;
-  triggers?: readonly PaywallTrigger[];
-  contextualHeading?: string;
-}>;
-
-const CAPABILITY_CLAIMS: readonly ClaimDefinition[] = [
-  {
-    key: 'future_plan',
-    from: 'I dag',
-    to: '10 dager fremover',
-    body: 'Se ukeplanen lenger frem.',
-    triggers: ['imorgen'],
-    contextualHeading: 'Se morgendagens antrekk i kveld',
-  },
-  {
-    key: 'automatic_location',
-    from: 'Valgt sted',
-    to: 'Automatisk sted',
-    body: 'Bruk automatisk sted i planleggingen.',
-  },
-  {
-    key: 'extra_children',
-    from: 'Ett barn',
-    to: 'Flere barn',
-    body: 'Legg til flere barn i samme app.',
-    triggers: ['barn_2'],
-    contextualHeading: 'Planlegg for flere barn',
-  },
-  {
-    key: 'family_sharing',
-    from: 'Bare deg',
-    to: 'Del med omsorgspersoner',
-    body: 'Del barnets plan med inviterte omsorgspersoner.',
-  },
-  {
-    key: 'personal_calibration',
-    from: 'Standardråd',
-    to: 'Tilpasset barnet',
-    body: 'Tilpass rådene med personlig kalibrering.',
-    triggers: ['garderobe_tilpasning'],
-    contextualHeading: 'Tilpass rådene til barnet',
-  },
-  {
-    key: 'soon_preparation',
-    from: 'Dagens plan',
-    to: 'Historiske forberedelser',
-    body: 'Se historiske forberedelser for fire–seks uker basert på 1991–2020-historikk, ikke et varsel.',
-    triggers: ['snart'],
-    contextualHeading: 'Se historiske forberedelser med Babyora Plus',
-  },
+/**
+ * De tre faste verdi-punktene i hard-paywall-modellen — hele produktet,
+ * alltid i denne rekkefølgen, uavhengig av hvilken skjerm/trigger som åpnet
+ * paywallen. Erstatter den forrige delta-drevne CAPABILITY_CLAIMS-listen
+ * (som filtrerte løfter per PlusFeatureAvailability-flagg).
+ */
+export const PAYWALL_VALUE_BULLETS: readonly CapabilityPaywallPreviewItem[] = [
+  { key: 'today', label: 'Dagens antrekk, klart hver eneste morgen' },
+  { key: 'week', label: 'I morgen og hele neste uke, ferdig planlagt' },
+  { key: 'family', label: 'Del med alle som passer barnet' },
 ] as const;
 
 /**
  * Den eneste kilden til brukervendte Plus-løfter.
  *
- * Hvert konkret løfte og hver kontekstoverskrift filtreres gjennom samme
- * tilgjengelighetskart. Et tomt kart gir bare nøytral abonnementstekst.
+ * Hard paywall (2026-07-31): ingen gratis baseline å sammenligne mot lenger,
+ * så copyen er alltid hele-produktet-pitchen — den varierer ikke lenger med
+ * trigger eller feature-flagg.
  */
-export function buildCapabilityPaywallCopy(
-  flags: Readonly<PlusFeatureAvailability>,
-  trigger: PaywallTrigger | null = null,
-): CapabilityPaywallCopy {
-  const enabled = CAPABILITY_CLAIMS.filter((claim) => flags[claim.key]);
-  const contextualClaim = trigger
-    ? enabled.find((claim) => claim.triggers?.includes(trigger))
-    : undefined;
-  const previewItems = enabled.map(({ key, from, to }) => ({ key, from, to }));
-
+export function buildCapabilityPaywallCopy(): CapabilityPaywallCopy {
   return {
-    heading: contextualClaim?.contextualHeading ?? 'Mer med Babyora Pluss',
-    body: enabled.length > 0
-      ? enabled.map((claim) => claim.body).join(' ')
-      : 'Velg en plan og administrer abonnementet på ett sted.',
-    trustLine: flags.family_sharing
-      ? 'Én Plus — alle som passer barnet'
-      : undefined,
-    previewItems,
+    heading: 'Hele Babyora, samlet i én plan',
+    body: 'Ett abonnement gir deg alt Babyora kan gjøre — ingen gratis-nivå ved siden av.',
+    previewItems: PAYWALL_VALUE_BULLETS,
   };
 }
 
@@ -167,11 +119,6 @@ export function extractMonthlyEquivalent(): string {
   return (PRODUCTS.yearly.anchorPriceNok / 12).toFixed(2).replace('.', ',');
 }
 
-function lowerFirst(text: string): string {
-  if (!text) return text;
-  return text.charAt(0).toLowerCase() + text.slice(1);
-}
-
 export function formatPlanPrice(key: ProductKey): string {
   const product = PRODUCTS[key];
   return `${product.anchorPriceNok} kr${product.periodLabel}`;
@@ -180,25 +127,23 @@ export function formatPlanPrice(key: ProductKey): string {
 /**
  * Tilgjengelig navn (aria-label) for plan-kortet — må inneholde ALT som
  * vises visuelt i kortet (P2 a11y-krav, F81.5-W1-spec §Oppgave 3).
+ *
+ * Hard paywall: trial-suffikset er nå plan-agnostisk (alle tre planer har
+ * trialDays > 0) — aria-labelen sier derfor aldri at prøveperioden kun
+ * gjelder årsplanen.
  */
 export function buildPlanAriaLabel(key: ProductKey): string {
   const product = PRODUCTS[key];
   const name = PLAN_DISPLAY_NAME[key];
+  const trialSuffix = product.trialDays > 0 ? `, ${product.trialDays} dager gratis først` : '';
   if (key === 'yearly') {
     const monthlyEq = extractMonthlyEquivalent();
     const savings = computeYearlySavingsPercent();
-    return `${name}, ${product.anchorPriceNok} kroner per år, tilsvarer ${monthlyEq} kroner per måned, spar ${savings} prosent, ${product.trialDays} dager gratis først`;
+    return `${name}, ${product.anchorPriceNok} kroner per år, tilsvarer ${monthlyEq} kroner per måned, spar ${savings} prosent${trialSuffix}`;
   }
   if (key === 'monthly') {
-    return `${name}, ${product.anchorPriceNok} kroner per måned`;
+    return `${name}, ${product.anchorPriceNok} kroner per måned${trialSuffix}`;
   }
   // quarterly (ikke i PLAN_ORDER, men støttet)
-  return `${name}, ${product.anchorPriceNok} kroner per 3 måneder`;
-}
-
-/** Total-transparens-linje vist under plan-velgeren. */
-export function buildTransparencyLine(key: ProductKey): string {
-  const base = priceTransparencyText(key);
-  if (key !== 'yearly') return base;
-  return `7 dager gratis, ${lowerFirst(base)}`;
+  return `${name}, ${product.anchorPriceNok} kroner per 3 måneder${trialSuffix}`;
 }

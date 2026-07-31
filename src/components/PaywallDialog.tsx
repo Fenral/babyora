@@ -67,11 +67,9 @@ import {
   PLAN_ORDER,
   buildPlanAriaLabel,
   buildCapabilityPaywallCopy,
-  buildTransparencyLine,
   computeYearlySavingsPercent,
   formatPlanPrice,
 } from '../lib/premium/paywall-copy';
-import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
 import { PlusExpansionPreview } from './paywall/PlusExpansionPreview';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,6 +83,15 @@ export interface PaywallDialogProps {
   onClose: () => void;
   /** Fokus-retur ved lukk. */
   returnFocusTo?: HTMLElement | null;
+  /**
+   * P2 hard paywall: default true (uendret atferd for alle eksisterende
+   * kall-steder). Sett til false for AppPaywallGate sin blokkerende
+   * inngang — da finnes ingen lukk-knapp, ESC/backdrop ('cancel'-eventet)
+   * avbrytes med preventDefault, og det native 'close'-eventet kaller
+   * ALDRI onClose. Eneste vei videre er et vellykket kjøp eller en
+   * vellykket gjenoppretting.
+   */
+  dismissable?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -513,6 +520,7 @@ export function PaywallDialog({
   trigger,
   onClose,
   returnFocusTo,
+  dismissable = true,
 }: PaywallDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -524,10 +532,7 @@ export function PaywallDialog({
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const capabilityCopy = buildCapabilityPaywallCopy(
-    PLUS_FEATURE_AVAILABILITY,
-    trigger,
-  );
+  const capabilityCopy = buildCapabilityPaywallCopy();
 
   const clearAutoClose = useCallback(() => {
     if (autoCloseTimerRef.current) {
@@ -575,6 +580,12 @@ export function PaywallDialog({
   }, [reducedMotion]);
 
   const handleCancel = (e: ReactSyntheticEvent<HTMLDialogElement>) => {
+    if (!dismissable) {
+      // P2 hard paywall: ESC må ALDRI lukke en ikke-avviselig paywall —
+      // ingen ESC-nr.2-luke, ingen RM-unntak.
+      e.preventDefault();
+      return;
+    }
     if (reducedMotion) return;
     if (closingRef.current) return; // ESC nr. 2 → native close
     e.preventDefault();
@@ -628,7 +639,12 @@ export function PaywallDialog({
     }
   }, [open]);
 
-  // Når <dialog> lukkes (ESC, .close(), backdrop) → focus-return + onClose
+  // Når <dialog> lukkes (ESC, .close(), backdrop) → focus-return + onClose.
+  // P2 hard paywall: når dismissable=false kaller det native 'close'-
+  // eventet ALDRI onClose — en ikke-avviselig paywall skal bare forsvinne
+  // fordi den overliggende `open`-tilstanden (isPremium) faktisk endret seg
+  // etter et vellykket kjøp/gjenoppretting, aldri fordi selve dialogen
+  // rapporterte at den lukket seg.
   useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
@@ -641,6 +657,7 @@ export function PaywallDialog({
         window.clearTimeout(exitTimerRef.current);
         exitTimerRef.current = null;
       }
+      if (!dismissable) return;
       onClose();
       requestAnimationFrame(() => {
         returnFocusTo?.focus?.();
@@ -648,11 +665,12 @@ export function PaywallDialog({
     };
     dlg.addEventListener('close', handleClose);
     return () => dlg.removeEventListener('close', handleClose);
-  }, [onClose, returnFocusTo, clearAutoClose]);
+  }, [onClose, returnFocusTo, clearAutoClose, dismissable]);
 
   useEffect(() => clearAutoClose, [clearAutoClose]);
 
   const handleBackdropClick = (e: ReactMouseEvent<HTMLDialogElement>) => {
+    if (!dismissable) return; // P2 hard paywall: backdrop-klikk lukker aldri
     const dlg = dialogRef.current;
     if (!dlg) return;
     if (e.target === dlg) {
@@ -747,11 +765,7 @@ export function PaywallDialog({
     void handleRestore();
   };
 
-  const ctaLabel = pending
-    ? PAYWALL_COPY.ctaPending
-    : selectedPlan === 'yearly'
-      ? PAYWALL_COPY.ctaYearly
-      : PAYWALL_COPY.ctaOther;
+  const ctaLabel = pending ? PAYWALL_COPY.ctaPending : PAYWALL_COPY.cta;
 
   return (
     <dialog
@@ -772,15 +786,17 @@ export function PaywallDialog({
             <span id="paywall-eyebrow" style={eyebrowStyle}>
               {PAYWALL_COPY.genericHeadline}
             </span>
-            <button
-              type="button"
-              className="pw-close-btn"
-              aria-label={PAYWALL_COPY.closeLabel}
-              onClick={requestClose}
-              style={closeBtnStyle}
-            >
-              <span aria-hidden="true">×</span>
-            </button>
+            {dismissable && (
+              <button
+                type="button"
+                className="pw-close-btn"
+                aria-label={PAYWALL_COPY.closeLabel}
+                onClick={requestClose}
+                style={closeBtnStyle}
+              >
+                <span aria-hidden="true">×</span>
+              </button>
+            )}
           </div>
           <h2 id="paywall-title" style={titleStyle}>
             {capabilityCopy.heading}
@@ -830,7 +846,7 @@ export function PaywallDialog({
                       <span style={planPriceBigStyle}>{formatPlanPrice(key)}</span>
                     </span>
                     {product.description && <span style={planSubStyle}>{product.description}</span>}
-                    {key === 'yearly' && product.trialDays > 0 && (
+                    {product.trialDays > 0 && (
                       <span style={trialLineStyle}>{product.trialDays} dager gratis</span>
                     )}
                   </span>
@@ -839,7 +855,7 @@ export function PaywallDialog({
             })}
           </fieldset>
 
-          <p style={transparencyStyle}>{buildTransparencyLine(selectedPlan)}</p>
+          <p style={transparencyStyle}>{PAYWALL_COPY.trialLine}</p>
 
           <p role="status" style={statusRegionStyle}>
             {statusMessage}

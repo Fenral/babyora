@@ -28,6 +28,7 @@ import { useAutoLocationRefresh } from './hooks/useAutoLocationRefresh';
 import { useOutfitTransitionCoordinator } from './hooks/useOutfitTransitionCoordinator';
 import { BottomTabBar } from './components/BottomTabBar';
 import { OutfitTransitionOverlay } from './components/outfit-transition/OutfitTransitionOverlay';
+import { AppPaywallGate } from './components/AppPaywallGate';
 
 import type { GuideHubTarget } from './screens/GuideHubScreen';
 import {
@@ -657,6 +658,11 @@ export default function App(): ReactElement {
       className="app-shell"
       data-outfit-transition-state={outfitTransition.state.status}
     >
+      {/* P2 hard paywall (PRODUCT.md, 2026-07-31): mountes over hele
+          tab-routingen. Rendrer sin egen (ikke-avviselig, native <dialog>)
+          overlay kun når onboarding er fullført + første anbefaling er vist
+          + brukeren ikke er Premium — se AppPaywallGate.tsx. */}
+      <AppPaywallGate onboardingDone={onboardingDone} />
       <a href="#main" className="skip-link">Hopp til hovedinnhold</a>
       <main id="main" tabIndex={-1} ref={mainRef}>
         <Suspense fallback={<RouteSkeleton />}>
