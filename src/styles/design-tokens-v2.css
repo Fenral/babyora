@@ -2,55 +2,77 @@
  * Babyora design-tokens v2 — «Monter» (mørk-først, varm)
  *
  * Låst 2026-07-31 etter Steg 2a-fargeanalysen og eiers valg av S1.
+ * Kalibrert 2026-07-31 etter fargearkitektur-analysen (sol-duel-notatet §13):
+ * valørstige med 3–5 L-poeng mellom fysiske nivåer, instrument-tekstrampe,
+ * strammere værfamilie (hue ±15°, chroma < .05), amber-RAMPE i stedet for
+ * én hex. Eier 2026-07-31: appen følger systemtema fra v1 — lys-verdier
+ * defineres i lys-blokken nederst (kalibreres ferdig i P8).
+ *
  * Kjerneidé: to varme mørke i lag — espresso er ROMMET (canvas),
  * dyp varm petrol er INSTRUMENTET (panelet, kun væravlesning/beregning).
- * Varm hud/ullkrem separerer maksimalt mot kjølig panel; espresso holder
- * helheten varm. Været flytter KUN panel-nyansen; canvas/ink/aksent står fast.
+ * Været flytter KUN panel-nyansen; canvas/ink/aksent står fast.
  *
- * Alle kontrastpar er beregnet (WCAG 2.1) og dokumentert i DESIGN.md —
- * 22/22 PASS, svakeste par 5.2:1 (CTA-tekst på trykket aksent).
+ * Fargeeierskap (hver forekomst skal fortelle noe):
+ *  - Espresso  = menneskelig kontekst, struktur, miljø. Aldri værstatus/handling.
+ *  - Petrol    = ekstern data, vær, beregning. Aldri dekorative kort.
+ *  - Amber     = brukerhandling, valgt tilstand, fokus. Aldri brødtekst.
+ *  - Ullkrem   = informasjon/typografi. Aldri store dekorative bakgrunner.
+ *  - Plaggfarger = faktisk innhold. Aldri navigasjon/UI-status.
+ *  - Semantikk = feil/varsel/bekreftelse. Sjelden, alltid med ikon+tekst.
  *
  * Regler:
  *  - Nye komponenter bruker KUN --dw-*-navn, aldri legacy-tokens.
  *  - Infrastruktur-CSS (.app-shell, .ba-press, reduced-motion-killswitch,
  *    forced-colors) bor fortsatt i design-tokens.css og røres ikke herfra.
- *  - Serif (Fraunces) er tillatt i NØYAKTIG én rolle: hero-temperaturen.
- *  - Kantlyset («monter-lys») er systemets signaturdetalj: 1.5px gradient
- *    transparent → rav-lys → transparent på panelets toppkant.
+ *  - Serif (Fraunces) er tillatt i NØYAKTIG én rolle: hero-temperatur + pris.
+ *  - Kantlys («monter-lys»): KUN hero, valgt tilstand og viktige interaktive
+ *    flater, ~1px ved 12–20 % opasitet. 0.9–1.0 er reservert petrol-panelet.
+ *  - Tekst på petrol dimmes ALDRI med opacity — bruk panel-tekstrampen.
+ *  - --dw-accent-300 er FORBUDT som tekstfarge (lys, ikke typografi).
  */
 
 :root {
-  /* ============ Dybderampe (4 nivåer, 2 materialer) ============ */
-  --dw-canvas: #1E140C;        /* nivå 0 · espresso-rom     · oklch(.202 .022 60)  */
-  --dw-canvas-glow: #2B1D11;   /* nivå 0 · glød bak maskot  · oklch(.245 .030 61)  */
-  --dw-panel: #113B3E;         /* nivå 1 · petrol-instrument· oklch(.325 .046 202) */
-  --dw-raised: #2C1F13;        /* nivå 2 · hevet resultat   · oklch(.252 .029 64)  */
-  --dw-overlay: #382817;       /* nivå 3 · sheets/dialog    · oklch(.291 .037 67)  */
+  /* ============ Valørstige mørk (L-verdier i OKLCH, 3–5 poeng per nivå) ============ */
+  --dw-canvas: #1E140C;        /* nivå 0 · espresso-rom      · L 20.2 */
+  --dw-canvas-glow: #24180F;   /* nivå 0 · gradient-topp     · L 22.2 (var #2B1D11/L24.5 — lå 0.7 fra raised; glød bak maskot legges lokalt/radialt, ikke som generell lysning) */
+  --dw-panel: #113B3E;         /* nivå 1 · petrol-instrument · L 32.5 (kjølig - skiller seg i hue, ikke valør) */
+  --dw-raised: #2C1F13;        /* nivå 2 · hevet gruppeflate · L 25.2 */
+  --dw-interactive: #35261A;   /* nivå 2b· interaktiv flate  · L 28.3 */
+  --dw-overlay: #382817;       /* nivå 3 · sheets/dialog     · L 29.1 */
+  --dw-accent-surface: #4A2F21;/* nivå 4 · valgt flate       · L 33.4 · ink-hi 10.1:1 */
 
-  /* ============ Ink (ullkrem-rampe) ============ */
+  /* ============ Ink (ullkrem-rampe — espresso-flater) ============ */
   --dw-ink-hi: #F1E9DA;        /* primærtekst   · 15.0:1 på canvas, 10.1:1 på panel */
-  --dw-ink-mid: #CDC0AB;       /* sekundærtekst · 10.1:1 på canvas, 6.8:1 på panel  */
+  --dw-ink-mid: #CDC0AB;       /* sekundærtekst · 10.1:1 på canvas                  */
   --dw-ink-low: #A79A82;       /* tertiær/meta  · 6.5:1 på canvas                   */
-  --dw-ink-panel-mid: #C6CFC4; /* kjølig sekundær, kun på panel · 7.6:1             */
 
-  /* ============ Aksent + interaksjon ============ */
-  --dw-accent: #D98E5A;          /* rav · oklch(.712 .114 55) · metning < 80 %  */
+  /* ============ Instrument-tekstrampe (KUN på petrol — egen kjølig rampe,
+     aldri espresso-rampen ukritisk på panelet) ============ */
+  --dw-ink-panel-hi: #F1E9DA;    /* primær på panel · 10.1:1 */
+  --dw-ink-panel-mid: #C6CFC4;   /* sekundær på panel · 7.6:1 (sterkere enn foreslåtte B8C7C2/7.0 — beholdt) */
+  --dw-ink-panel-muted: #91A5A0; /* dempet metadata på panel · 4.7:1 · minst kritiske nivå */
+
+  /* ============ Amber-rampe (én aksentFAMILIE, duell §1) ============ */
+  --dw-accent-300: #E7B087;      /* fokuslys, valgt kant, highlights · ALDRI tekst */
+  --dw-accent: #D98E5A;          /* = accent-500 · handling mørk modus · espresso på: 6.9:1 */
+  --dw-accent-700: #9E5529;      /* handling lys modus · krem på: 4.6:1 */
   --dw-accent-pressed: #C57C46;
-  --dw-ink-on-accent: #2A1708;   /* 6.5:1 på rav, 5.2:1 på trykket              */
-  --dw-edge-light: #F2C08A;      /* monter-lysets kjerne                        */
-  --dw-focus: #E8B98C;           /* fokusring · 10.1:1 canvas, 6.8:1 panel      */
+  --dw-ink-on-accent: #2A1708;   /* 6.5:1 på rav, 5.2:1 på trykket */
+  --dw-edge-light: #F2C08A;      /* monter-lysets kjerne */
+  --dw-focus: #E8B98C;           /* fokusring · 10.1:1 canvas, 6.8:1 panel */
 
-  /* ============ Semantikk (tekstnivå på canvas) ============ */
+  /* ============ Semantikk (sjelden, alltid ikon+tekst, lavmettet) ============ */
   --dw-success: #9DBF9A;  /* 8.9:1 */
   --dw-warning: #E0B45C;  /* 9.4:1 */
   --dw-danger: #E58A72;   /* 7.1:1 */
 
-  /* ============ Værnyanser (KUN panelflaten) ============ */
-  --dw-w-clear: #155054;   /* klarvær · ullkrem 7.5:1  */
-  --dw-w-cloudy: #113B3E;  /* skyet (basis) · 10.1:1   */
-  --dw-w-rain: #0D3037;    /* regn · 11.6:1            */
-  --dw-w-snow: #2C4A50;    /* snø · 7.9:1              */
-  --dw-w-night: #092326;   /* natt · 13.6:1            */
+  /* ============ Værfamilie (KUN panelflaten · hue ±15° · chroma < .05 ·
+     været endrer lyshet/atmosfære, aldri appens hue) ============ */
+  --dw-w-clear: #114143;   /* klart · litt lysere og renere    */
+  --dw-w-cloudy: #1E3638;  /* skyet · lavere metning           */
+  --dw-w-rain: #0D3036;    /* regn · dypere og tettere         */
+  --dw-w-snow: #2C4040;    /* snø · lysere, diffus, ikke blå   */
+  --dw-w-night: #0C272D;   /* natt · dypest og roligst         */
 
   /* ============ Linjer, radier, skygger ============ */
   --dw-hairline: rgba(241, 233, 218, 0.12);
@@ -62,8 +84,8 @@
   --dw-edge-light-gradient: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
 
   /* ============ Typografi ============ */
-  /* Schibsted Grotesk: alt UI (self-hostet via @fontsource-variable).      */
-  /* Fraunces: KUN hero-temperatur. Mono: datarekker med tabellsifre.       */
+  /* Schibsted Grotesk: alt UI (self-hostet via @fontsource).               */
+  /* Fraunces: KUN hero-temperatur + pris, wonk 0. Mono: tabellsifre.       */
   --dw-font-ui: 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
   --dw-font-hero: 'Fraunces', Georgia, serif;
   --dw-font-data: ui-monospace, 'SF Mono', Consolas, monospace;
@@ -74,4 +96,31 @@
   --dw-text-heading: 1.4375rem;/* 23   */
   --dw-text-display: 1.75rem;  /* 28   */
   --dw-text-hero: 4.75rem;     /* 76 · kun temperatur */
+}
+
+/* ============ Lys modus (eier 2026-07-31: følger systemtema fra v1;
+   full kalibrering + QA i P8. Petrol-panelet er TEMA-KONSTANT: samme
+   panel/vær/instrument-tekst i begge moduser). Sekundærtekster er
+   dypere enn en ren invertering — verifisert 5.65:1/6.59:1. ============ */
+@media (prefers-color-scheme: light) {
+  :root {
+    --dw-canvas: #F9F5EB;
+    --dw-canvas-glow: #F1E9DA;
+    --dw-raised: #FFFFFF;
+    --dw-interactive: #F3ECDD;
+    --dw-overlay: #FFFFFF;
+    --dw-accent-surface: #F1DED0;  /* valgt flate lys · mørk tekst 10.6:1 */
+
+    --dw-ink-hi: #2A1D12;
+    --dw-ink-mid: #7A5B47;         /* 5.65:1 på canvas (var ~#9B7057/3.98 i mock) */
+    --dw-ink-low: #6F5140;         /* 6.6:1 · små metadata */
+
+    --dw-accent: #9E5529;          /* = accent-700 · krem på: 4.6:1 */
+    --dw-accent-pressed: #8A4A24;
+    --dw-ink-on-accent: #FDF6EC;
+
+    --dw-hairline: rgba(42, 29, 18, 0.14);
+    --dw-shadow-raise: 0 1px 2px rgba(42, 29, 18, 0.18);
+    /* --dw-panel, --dw-w-*, --dw-ink-panel-*: uendret (tema-konstant instrument) */
+  }
 }
