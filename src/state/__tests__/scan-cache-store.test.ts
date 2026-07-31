@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ScanCacheSlot, ScanIdentity } from '../../lib/scan/types.js';
 import {
+  deriveHasPlayedFullScanEver,
   getSlotForIdentity,
   markScanPlayed,
   mergeScanCache,
@@ -29,7 +30,7 @@ function slot(overrides: Partial<ScanCacheSlot> = {}): ScanCacheSlot {
 
 describe('useScanCache store actions', () => {
   beforeEach(() => {
-    useScanCache.setState({ slots: {} });
+    useScanCache.setState({ slots: {}, hasPlayedFullScanEver: false });
   });
 
   it('commitSlot stores the slot keyed by identity.childId', () => {
@@ -96,6 +97,19 @@ describe('useScanCache store actions', () => {
     useScanCache.getState().clearAll();
     expect(useScanCache.getState().slots).toEqual({});
   });
+
+  it('markFullScanPlayedEver flips hasPlayedFullScanEver to true', () => {
+    expect(useScanCache.getState().hasPlayedFullScanEver).toBe(false);
+    useScanCache.getState().markFullScanPlayedEver();
+    expect(useScanCache.getState().hasPlayedFullScanEver).toBe(true);
+  });
+
+  it('markFullScanPlayedEver is idempotent (no-op once already true)', () => {
+    useScanCache.getState().markFullScanPlayedEver();
+    const before = useScanCache.getState();
+    useScanCache.getState().markFullScanPlayedEver();
+    expect(useScanCache.getState()).toBe(before);
+  });
 });
 
 describe('markScanPlayed (pure helper)', () => {
@@ -138,42 +152,53 @@ describe('getSlotForIdentity', () => {
   });
 });
 
-describe('shouldPlayFullScan', () => {
-  it('is true when there is no cached slot', () => {
-    expect(shouldPlayFullScan(null, IDENTITY)).toBe(true);
+describe('shouldPlayFullScan (P9 duel §2 — lifetime, not per-day)', () => {
+  it('is true when the full choreography has never played on this device', () => {
+    expect(shouldPlayFullScan(false)).toBe(true);
   });
 
-  it('is true when the cached slot is from a previous date (rollover)', () => {
-    const yesterday = slot({ identity: { ...IDENTITY, dateKey: '2026-07-29' } });
-    expect(shouldPlayFullScan(yesterday, IDENTITY)).toBe(true);
+  it('is false once the full choreography has played, regardless of anything else (e.g. date rollover)', () => {
+    expect(shouldPlayFullScan(true)).toBe(false);
+  });
+});
+
+describe('deriveHasPlayedFullScanEver (pre-P9 → P9 migration)', () => {
+  it('trusts an explicit persisted hasPlayedFullScanEver boolean over any slot inference', () => {
+    expect(deriveHasPlayedFullScanEver({ hasPlayedFullScanEver: true }, {})).toBe(true);
+    expect(deriveHasPlayedFullScanEver(
+      { hasPlayedFullScanEver: false },
+      { 'barn-01': slot({ scanPlayedInFullToday: true }) },
+    )).toBe(false);
   });
 
-  it('is false when the cached slot is from the same date, even if other identity fields differ', () => {
-    const sameDayDifferentActivity = slot({
-      identity: { ...IDENTITY, activity: 'vogn' },
-    });
-    expect(shouldPlayFullScan(sameDayDifferentActivity, IDENTITY)).toBe(false);
+  it('legacy data (no explicit field): derives true when ANY slot already completed a full daily choreography', () => {
+    expect(deriveHasPlayedFullScanEver(null, { 'barn-01': slot({ scanPlayedInFullToday: true }) })).toBe(true);
+    expect(deriveHasPlayedFullScanEver({}, { 'barn-01': slot({ scanPlayedInFullToday: true }) })).toBe(true);
   });
 
-  it('is false when the cached slot exactly matches today', () => {
-    expect(shouldPlayFullScan(slot(), IDENTITY)).toBe(false);
+  it('legacy data: derives false when no slot ever completed a full daily choreography (or there are no slots)', () => {
+    expect(deriveHasPlayedFullScanEver(null, {})).toBe(false);
+    expect(deriveHasPlayedFullScanEver({}, { 'barn-01': slot({ scanPlayedInFullToday: false }) })).toBe(false);
   });
 });
 
 describe('partializeScanCache / mergeScanCache — persistence roundtrip', () => {
   beforeEach(() => {
-    useScanCache.setState({ slots: {} });
+    useScanCache.setState({ slots: {}, hasPlayedFullScanEver: false });
   });
 
-  it('partializeScanCache exposes exactly {slots}', () => {
+  it('partializeScanCache exposes exactly {slots, hasPlayedFullScanEver}', () => {
     useScanCache.getState().commitSlot(slot());
+    useScanCache.getState().markFullScanPlayedEver();
     expect(partializeScanCache(useScanCache.getState())).toEqual({
       slots: { 'barn-01': slot() },
+      hasPlayedFullScanEver: true,
     });
   });
 
-  it('round-trips through JSON.stringify/JSON.parse and mergeScanCache with the slot intact', () => {
+  it('round-trips through JSON.stringify/JSON.parse and mergeScanCache with the slot AND the lifetime flag intact', () => {
     useScanCache.getState().commitSlot(slot());
+    useScanCache.getState().markFullScanPlayedEver();
     const otherIdentity: ScanIdentity = { ...IDENTITY, childId: 'barn-02' };
     useScanCache.getState().commitSlot(slot({
       identity: otherIdentity,
@@ -185,16 +210,26 @@ describe('partializeScanCache / mergeScanCache — persistence roundtrip', () =>
     const serialized = JSON.stringify(persisted);
     const rehydratedJson: unknown = JSON.parse(serialized);
 
-    const freshState = { ...useScanCache.getState(), slots: {} };
+    const freshState = { ...useScanCache.getState(), slots: {}, hasPlayedFullScanEver: false };
     const merged = mergeScanCache(rehydratedJson, freshState);
 
     expect(merged.slots).toEqual(persisted.slots);
+    expect(merged.hasPlayedFullScanEver).toBe(true);
     expect(merged.slots['barn-01']).toEqual(slot());
     expect(merged.slots['barn-02']).toEqual(slot({
       identity: otherIdentity,
       resultKey: 'current-finalized:["b"]',
       scanPlayedInFullToday: true,
     }));
+  });
+
+  it('legacy persisted JSON (no hasPlayedFullScanEver key) migrates the flag from existing slot data', () => {
+    const legacyRaw = JSON.stringify({
+      slots: { 'barn-01': slot({ scanPlayedInFullToday: true }) },
+    });
+    const freshState = { ...useScanCache.getState(), slots: {}, hasPlayedFullScanEver: false };
+    const merged = mergeScanCache(JSON.parse(legacyRaw), freshState);
+    expect(merged.hasPlayedFullScanEver).toBe(true);
   });
 
   it('falls back to the current slots when persisted data is not an object', () => {

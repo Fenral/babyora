@@ -75,8 +75,10 @@ export function ScanOverlay({
       <div className="hjm-scanline" data-animate={animate ? 'true' : 'false'} aria-hidden="true" />
       <div className="hjm-loc-row">
         <span className="hjm-loc" data-interactive="false" aria-hidden="true">{cityLabel}</span>
-        <span className="hjm-fresh" data-warn="false"><i aria-hidden="true" />Oppdatert nå</span>
       </div>
+      {/* P9 (ekstern P8-review, funn A): se WeatherScene.tsx — samme flytting
+         ut av mascot-sonen, aria/live-semantikk uendret. */}
+      <span className="hjm-fresh" data-warn="false"><i aria-hidden="true" />Oppdatert nå</span>
       <div className="hjm-scan-rows">
         {rows.map((row, index) => (
           <div className="hjm-scan-row" key={row.label}>

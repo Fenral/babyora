@@ -409,11 +409,14 @@
 
 /* Plagg-strip i rådmodulen (eierfunn IMG_9105): dom + vitrine-thumbs i
    stedet for plaggliste som prosa. Samme vitrine-verdi (#3A2A1A) og
-   topplys-logikk som Hjem-resultatets thumbs — tema-konstant. */
+   topplys-logikk som Hjem-resultatets thumbs — tema-konstant.
+   P9 (ekstern P8-review, funn C): flex-wrap ga et vilkårlig 6+1-linjeskift
+   for 7 plagg (leser som uferdig/tilfeldig) — et FAST 4-kolonners rutenett
+   gir en forutsigbar 4+3-balanse uansett antall plagg. */
 .planlegg-garments {
   list-style: none;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 44px);
   gap: 8px;
   margin: 12px 0 0;
   padding: 0;

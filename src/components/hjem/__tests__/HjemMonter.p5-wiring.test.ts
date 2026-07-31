@@ -38,10 +38,10 @@ describe('HjemMonter — P5 stub wiring', () => {
     expect(contents.slice(stripStart, stripEnd)).toContain('onAdjust={handleOpenAdjust}');
   });
 
-  it('the weather-ready panel\'s place pill opens the same drill in BOTH sub-branches (normal + offline)', () => {
+  it('the weather-ready panel\'s place pill opens the same drill in every sub-branch that renders it (normal, offline, and P9\'s micropass)', () => {
     const contents = source(hjemMonterPath);
     const onAdjustLocationSites = contents.match(/onAdjustLocation=\{handleOpenAdjust\}/gu) ?? [];
-    expect(onAdjustLocationSites.length).toBe(2);
+    expect(onAdjustLocationSites.length).toBe(3);
   });
 
   it('"Hvorfor akkurat dette?" (ResultSurface.onWhy) opens the Varm-eller-kald guide via the same callback PaakledningScreen uses', () => {

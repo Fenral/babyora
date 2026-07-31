@@ -1,21 +1,30 @@
 /**
- * AppPaywallGate — P2 hard paywall (PRODUCT.md, 2026-07-31, §Owner decisions).
+ * AppPaywallGate — P2 hard paywall (PRODUCT.md, 2026-07-31, §Owner decisions),
+ * armering presisert i P9 (docs/design-notes/sol-duel-2026-07-31.md §8).
  *
  * Mountes fra App.tsx OVENPÅ hele tab-routingen. Blokkerer hele appen med en
- * ikke-avviselig PaywallDialog (dismissable=false) når ALLE fire holder:
+ * ikke-avviselig PaywallDialog (dismissable=false) når ALLE fem holder:
  *   1. onboarding er fullført,
  *   2. den første reelle anbefalingen er vist én gang på Hjem
  *      (subscription-store.firstRecommendationSeenAt !== null — satt av
  *      HjemScreen selv, se markFirstRecommendationSeen),
- *   3. brukeren har IKKE et aktivt Premium-entitlement, og
- *   4. entitlement-status har sluttet å laste (unngår et flash av gaten
+ *   3. denne appøkten sitt "les ferdig"-vindu er stengt
+ *      (!recommendationGraceWindowActive — se subscription-store.ts.
+ *      ØKTEN som først satte firstRecommendationSeenAt får ALDRI se gaten
+ *      automatisk; brukeren leser den ene anbefalingen ferdig. Vinduet
+ *      stenges enten ved en låst verdihandling denne økten
+ *      (consumeRecommendationGraceWindow — «Planlegg»-fanen i App.tsx) ELLER
+ *      helt enkelt ved neste kalde app-åpning, som viser veggen direkte),
+ *   4. brukeren har IKKE et aktivt Premium-entitlement, og
+ *   5. entitlement-status har sluttet å laste (unngår et flash av gaten
  *      mens RevenueCat-oppslaget fortsatt pågår ved appstart).
  *
  * Det finnes ikke lenger et gratis-nivå å falle tilbake til (PRODUCT.md):
  * gaten er den ENESTE håndhevingen av det — capabilities.ts/gating.ts
  * gater fortsatt hver enkelt kapabilitet på isPlus, men UI-skjermene bak
  * gaten stoler på at brukeren aldri når dem uten enten (a) ikke ha sett sin
- * første anbefaling ennå, eller (b) være Premium.
+ * første anbefaling ennå, (b) stå i denne øktens les-ferdig-vindu, eller
+ * (c) være Premium.
  *
  * HARD_PAYWALL_ENABLED er en enkelt eksportert bryter for hele gaten — sett
  * til false for å deaktivere den uten å røre capabilities.ts/gating.ts sin
@@ -53,6 +62,8 @@ export type HardPaywallDueParams = Readonly<{
   firstRecommendationSeenAt: number | null;
   isPremium: boolean;
   loading: boolean;
+  /** P9 (duel §8): sann → denne økten er fortsatt i "les ferdig"-vinduet, gaten er ALDRI due uansett de andre feltene. */
+  recommendationGraceWindowActive: boolean;
 }>;
 
 /**
@@ -67,6 +78,7 @@ export function isHardPaywallDue(params: HardPaywallDueParams): boolean {
     params.enabled
     && params.onboardingDone
     && params.firstRecommendationSeenAt !== null
+    && !params.recommendationGraceWindowActive
     && !params.isPremium
     && !params.loading
   );
@@ -75,6 +87,7 @@ export function isHardPaywallDue(params: HardPaywallDueParams): boolean {
 export function AppPaywallGate({ onboardingDone }: AppPaywallGateProps): ReactElement {
   const { isPremium, loading } = useAccess();
   const firstRecommendationSeenAt = useSubscription((s) => s.firstRecommendationSeenAt);
+  const recommendationGraceWindowActive = useSubscription((s) => s.recommendationGraceWindowActive);
 
   const due = isHardPaywallDue({
     enabled: HARD_PAYWALL_ENABLED,
@@ -82,6 +95,7 @@ export function AppPaywallGate({ onboardingDone }: AppPaywallGateProps): ReactEl
     firstRecommendationSeenAt,
     isPremium,
     loading,
+    recommendationGraceWindowActive,
   });
 
   // Latch-on umiddelbart (render-time state-justering — samme mønster som

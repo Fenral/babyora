@@ -67,20 +67,31 @@ import {
   getWeatherIcon,
   getWeatherNuance,
 } from '../../lib/monter-assets.js';
+import {
+  impactSoft,
+  impactMedium,
+  prepare as hapticPrepare,
+  selection as hapticSelection,
+} from '../../lib/haptics.js';
 import { WeatherScene, type MonterActivity } from './WeatherScene.js';
 import { WeatherStrip } from './WeatherStrip.js';
 import { MascotPeek } from './MascotPeek.js';
 import { ScanOverlay, ScanStatusBlock } from './ScanOverlay.js';
+import { ScanMicropass } from './ScanMicropass.js';
 import type { OutfitTransitionStatusLike } from './scan-overlay-guard.js';
 import { ResultSurface } from './ResultSurface.js';
 import { deriveResultRows, type ResultRow } from './result-rows.js';
 import {
   activityChangeChip,
   decideScanEntry,
+  fullScanHapticSchedule,
   FULL_SCAN_DURATION_MS,
+  MICROPASS_DURATION_MS,
   QUICK_RECALC_DURATION_MS,
   staleCtaLabel,
   staleHeadline,
+  type ScanHapticCue,
+  type ScanHapticEvent,
 } from './scan-orchestration.js';
 import { buildAdjustPrefill } from './adjust-prefill.js';
 import type { FinnAntrekkPrefill } from '../../screens/finn-antrekk-prefill.js';
@@ -186,6 +197,11 @@ export function HjemMonter({
   const scan = useScanCoordinator();
   const slots = useScanCache((state) => state.slots);
   const commitSlot = useScanCache((state) => state.commitSlot);
+  // P9 (duel §2): livstids-flagget som avgjør full-koreografi (1,1s, kun
+  // aller første gang) vs. mikropass (400ms, alle senere trykk) — erstatter
+  // det gamle per-dags-feltet (`daySlot`/`scanPlayedInFullToday`).
+  const hasPlayedFullScanEver = useScanCache((state) => state.hasPlayedFullScanEver);
+  const markFullScanPlayedEver = useScanCache((state) => state.markFullScanPlayedEver);
 
   const identity = useMemo<ScanIdentity>(() => ({
     childId,
@@ -245,6 +261,15 @@ export function HjemMonter({
    * en ref) siden verdien faktisk LESES under render (ResultSurface-propen).
    */
   const [isFresh, setIsFresh] = useState(false);
+  /**
+   * P9 (duel §2): sann når mikropassets 400ms-timer fyrte MENS motoren ikke
+   * hadde et resultat klart ennå — «Data ikke klare etter 400ms → ærlig
+   * lastetilstand». ScanMicropass viser da «Oppdaterer værdata» i stedet for
+   * værsammendraget; effekten under fullfører automatisk idet resultatet
+   * blir klart, uten et nytt trykk. ALDRI satt sann for en cachet
+   * umiddelbar visning (show-cached-grenen kaller `completeScan` aldri).
+   */
+  const [awaitingScanData, setAwaitingScanData] = useState(false);
 
   const clearTimer = useCallback(() => {
     timerCancelRef.current?.();
@@ -262,18 +287,74 @@ export function HjemMonter({
     timerCancelRef.current = () => clearTimeout(timeoutId);
   }, [clearTimer, reducedMotion]);
 
+  // ── P9 duel §3: haptikk-tidsplan-dispatch ────────────────────────────────
+  // Kun avhukingene (soft ved start + selection per sjekk-rad) planlegges her
+  // som reelle timere — landings-haptikken (prepare+medium) eies av
+  // completeScan under, siden den KUN skal spilles når scanningen faktisk
+  // lander et resultat (aldri når awaitingScanData-fallbacken slår inn).
+  const hapticTimerIdsRef = useRef<number[]>([]);
+  const clearHapticTimers = useCallback(() => {
+    for (const id of hapticTimerIdsRef.current) clearTimeout(id);
+    hapticTimerIdsRef.current = [];
+  }, []);
+  useEffect(() => clearHapticTimers, [clearHapticTimers]);
+
+  const dispatchHapticCue = useCallback((cue: ScanHapticCue) => {
+    if (cue === 'soft') { void impactSoft(); return; }
+    if (cue === 'selection') { void hapticSelection(); }
+    // 'prepare'/'medium' dispatches via completeScan, not the pre-landing
+    // schedule below — see the comment on hapticTimerIdsRef.
+  }, []);
+
+  const runPreLandingHapticSchedule = useCallback((events: readonly ScanHapticEvent[]) => {
+    clearHapticTimers();
+    const preLanding = events.filter((event) => event.cue === 'soft' || event.cue === 'selection');
+    if (preLanding.length === 0) return;
+    if (reducedMotion) {
+      // Instant completion — intet tidsvindu å synkronisere avhukinger mot;
+      // spill dem øyeblikkelig i stedet for å la dem stå igjen som
+      // etterslepende timere som ville fyrt lenge etter at resultatet
+      // allerede vises (haptikk er BEVISST uavhengig av redusert bevegelse,
+      // se lib/haptics/system.ts, men skal likevel aldri "etterslepe" et
+      // fasebytte som allerede har skjedd).
+      for (const event of preLanding) dispatchHapticCue(event.cue);
+      return;
+    }
+    hapticTimerIdsRef.current = preLanding.map(
+      (event) => window.setTimeout(() => dispatchHapticCue(event.cue), event.atMs),
+    );
+  }, [clearHapticTimers, dispatchHapticCue, reducedMotion]);
+
   const completeScan = useCallback(() => {
     const resultKey = currentResultKeyRef.current;
-    if (resultKey === null) return; // motor ikke klar ennå — bli stående i scanning, ingen krasj.
+    if (resultKey === null) {
+      // P9 (duel §2): motor ikke klar ved 400ms/1,1s-grensen — ærlig
+      // lastetilstand i stedet for å bli stående i en stille "scanning" uten
+      // forklaring. ALDRI landings-haptikk her — ingenting landet.
+      setAwaitingScanData(true);
+      return;
+    }
+    setAwaitingScanData(false);
     setIsFresh(true);
+    // Landing: prepare() rett før medium (duel §3 — "prepare() først").
+    void hapticPrepare().then(() => { void impactMedium(); });
     scan.scanCompleted(resultKey);
+    if (pendingFullScanRef.current) markFullScanPlayedEver();
     commitSlot({
       identity,
       resultKey,
       completedAt: Date.now(),
       scanPlayedInFullToday: pendingFullScanRef.current || slots[identity.childId]?.scanPlayedInFullToday === true,
     });
-  }, [scan, commitSlot, identity, slots]);
+  }, [scan, commitSlot, identity, slots, markFullScanPlayedEver]);
+
+  // Auto-fullfører mikropasset (uten et nytt trykk) idet motoren ENDELIG har
+  // et resultat, hvis 400ms-grensen rakk å gå ut mens vi ventet (se
+  // awaitingScanData-kommentaren over).
+  useEffect(() => {
+    if (!awaitingScanData || currentResultKey === null) return;
+    completeScan();
+  }, [awaitingScanData, currentResultKey, completeScan]);
 
   const completeRecalc = useCallback(() => {
     const resultKey = currentResultKeyRef.current;
@@ -299,8 +380,7 @@ export function HjemMonter({
     if (phase === 'weather-ready') {
       if (seenIdentityRef.current === null) {
         const exact = getSlotForIdentity(slots, identity);
-        const daySlot = slots[identity.childId] ?? null;
-        const decision = decideScanEntry(exact, daySlot, identity);
+        const decision = decideScanEntry(exact, hasPlayedFullScanEver);
         if (decision.kind === 'show-cached') {
           // isFresh er allerede false fra useState(false) — cachet
           // umiddelbar visning skal ALDRI trigge inn-animasjonen.
@@ -319,16 +399,19 @@ export function HjemMonter({
       scan.identityChanged(identity, { autoRecalculate: true });
       runTimer(QUICK_RECALC_DURATION_MS, completeRecalc);
     }
-  }, [identity, now, scan, slots, runTimer, completeRecalc, recommendation]);
+  }, [identity, now, scan, slots, hasPlayedFullScanEver, runTimer, completeRecalc, recommendation]);
 
   const handleFindOutfitTap = useCallback(() => {
     if (currentResultKeyRef.current === null) return;
-    const daySlot = slots[identity.childId] ?? null;
-    const playFull = shouldPlayFullScan(daySlot, identity);
+    const playFull = shouldPlayFullScan(hasPlayedFullScanEver);
     pendingFullScanRef.current = playFull;
+    setAwaitingScanData(false);
     scan.scanStarted(identity);
-    runTimer(playFull ? FULL_SCAN_DURATION_MS : QUICK_RECALC_DURATION_MS, completeScan);
-  }, [slots, identity, scan, runTimer, completeScan]);
+    runPreLandingHapticSchedule(
+      playFull ? fullScanHapticSchedule(FULL_SCAN_DURATION_MS) : [],
+    );
+    runTimer(playFull ? FULL_SCAN_DURATION_MS : MICROPASS_DURATION_MS, completeScan);
+  }, [hasPlayedFullScanEver, identity, scan, runTimer, completeScan, runPreLandingHapticSchedule]);
 
   const handleStaleCtaTap = useCallback(() => {
     scan.recalcStarted();
@@ -337,16 +420,31 @@ export function HjemMonter({
 
   const handleSkip = useCallback(() => {
     clearTimer();
+    // Duel §2: "Berøring når som helst: hopp rett til resultat, spill kun
+    // landingen" — kanseller ev. gjenstående avhukings-haptikk (soft/
+    // selection) som ellers ville fyrt SENERE enn selve resultatet.
+    // Landingen (prepare+medium) eies allerede utelukkende av completeScan.
+    clearHapticTimers();
     if (scan.state.phase === 'scanning') completeScan();
     else if (scan.state.phase === 'recalculating') completeRecalc();
-  }, [clearTimer, scan, completeScan, completeRecalc]);
+  }, [clearTimer, clearHapticTimers, scan, completeScan, completeRecalc]);
 
   // P5: Juster (WeatherStrip + vær-panelets sted-pille) → onOpenAdjust,
   // Hvorfor akkurat dette? → onOpenWarmColdGuide, Prøv å hente været igjen →
   // onRetryWeather (refreshKey inn i HjemScreen sin useWeather-kalling) er
-  // kablet, se under. Bytt fikk sin kabling i P6 (rett under). «Vis forrige
-  // antrekk» har fortsatt ingen eksisterende drill å koble til — forblir
-  // no-op-stub til en senere pakke.
+  // kablet, se under. Bytt fikk sin kabling i P6 (rett under).
+  //
+  // P9 tilstands-audit (bevisst FORTSATT no-op, ikke en glemt stub): «Vis
+  // forrige antrekk» (result-stale) har ingen eksisterende drill å koble
+  // til. `previousResultCount` (over) holder KUN et plagg-ANTALL beregnet i
+  // selve staleness-øyeblikket — ikke det forrige resultatets faktiske
+  // Recommendation/resultKey — så en ekte "vis forrige antrekk"-visning
+  // krever enten (a) at scan-cache-store beholder FORRIGE slot (ikke bare
+  // gjeldende) per barn, eller (b) en egen liten "siste kjente"-cache her,
+  // PLUSS en visningsflate (gjenbruk ResultSurface? egen kompakt liste?).
+  // Reelt scope-arbeid, ikke en ledningsfeil — derfor stående som
+  // dokumentert no-op til produkt spesifiserer visningen, ikke en
+  // implementeringsdetalj som mangler.
   const noopStub = useCallback(() => {}, []);
 
   // P6: "Bytt" (MonterGarmentRow, resultat-lista) → PlaggDetailSheet, samme
@@ -392,6 +490,45 @@ export function HjemMonter({
   const canScan = currentResultKey !== null;
 
   const phase = scan.state.phase;
+
+  // P9 (duel §2): mikropasset er en EGEN gren, ikke en ScanOverlay-variant —
+  // det erstatter kun ask-blokken (WeatherScene over står uendret), ikke
+  // hele panelet. `hasPlayedFullScanEver` avgjør dette entydig MENS
+  // phase==='scanning' (den kan bare flippe sann i samme batch som
+  // completeScan tar fasen ut av 'scanning', se completeScan/markFullScanPlayedEver).
+  if (phase === 'scanning' && hasPlayedFullScanEver) {
+    const summaryText = awaitingScanData || now === null
+      ? null
+      : `${formatTemp(now.tempC)}° · ${cityLabel} · ${ACTIVITY_TOGGLE_LABEL[activity]}`;
+    return (
+      <div className="hjem-monter">
+        <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
+        <div className="hjm-mascot-slot"><MascotPeek /></div>
+        <div className="hjm-panel-slot" data-with-mascot="true" data-compact="false">
+          <WeatherScene
+            cityLabel={cityLabel}
+            nuance={nuance}
+            tempC={now?.tempC ?? null}
+            feelsLikeC={now?.feelsLikeC ?? null}
+            noteText={now ? `${conditionLabel} — sjekk antrekket før dere går ut.` : 'Henter vær…'}
+            weatherIconSrc={weatherIconSrc}
+            weatherIconAlt={conditionLabel}
+            freshnessLabel="Oppdatert nå"
+            activity={activity}
+            onActivityChange={onActivityChange}
+            onAdjustLocation={handleOpenAdjust}
+          />
+        </div>
+        <div className="hjm-body">
+          <ScanMicropass
+            summaryText={summaryText}
+            reducedMotion={reducedMotion}
+            onTapAnywhere={handleSkip}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (phase === 'scanning' || phase === 'recalculating') {
     const isFullScan = phase === 'scanning';
@@ -525,7 +662,16 @@ export function HjemMonter({
 
   // phase === 'weather-ready'
   const daySlot = slots[identity.childId] ?? null;
-  const offline = weatherStatus === 'offline'
+  // P9 state-audit: a hard network failure with NO usable fallback cache
+  // (useWeather → 'error', e.g. offline on a brand-new device/profile with
+  // nothing cached yet) previously fell through to the DEFAULT branch below
+  // (identical to 'loading' — `now` is null either way), leaving the user
+  // stuck on a permanent "Henter vær…" with a disabled CTA and no retry
+  // affordance. Treating 'error' the same as 'offline' here reuses the
+  // already-correct retry UI ("Prøv å hente været igjen") instead of a dead
+  // end. Both statuses share the same `now === null` shape, so nothing else
+  // downstream needs to change.
+  const offline = (weatherStatus === 'offline' || weatherStatus === 'error')
     && (daySlot === null || daySlot.identity.dateKey !== identity.dateKey);
 
   if (offline) {

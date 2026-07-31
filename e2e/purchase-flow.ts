@@ -12,6 +12,11 @@
  * Innstillinger/Uke — testene her driver derfor kjøpsflyten DIREKTE via den
  * automatisk viste, ikke-avviselige gaten.
  *
+ * P9 (duel §8 — paywall-armering, docs/design-notes/sol-duel-2026-07-31.md):
+ * gaten vises IKKE lenger automatisk i SAMME økt som brukerens første
+ * anbefaling — hun får lese den ferdig. Først NESTE app-økt (her: en
+ * `page.reload()`, se waitForAutoShownGate under) viser veggen direkte.
+ *
  * Testhåndtak (dokumentert i src/state/subscription-store.ts):
  *   ?seed=demo                    → demo-barn + MOCK PREMIUM (smoke/audit-
  *                                    kompatibel — AppPaywallGate slår aldri
@@ -19,12 +24,13 @@
  *   ?seed=demo&entitlement=none   → demo-barn + IKKE-abonnerende bruker.
  *                                    Demo-barna hopper over onboarding, og
  *                                    Hjem viser sin første anbefaling nesten
- *                                    umiddelbart → AppPaywallGate sin
- *                                    ikke-avviselige paywall vises automatisk
- *                                    uten noen ekstra klikk.
+ *                                    umiddelbart (økt 1 — fritt lesevindu,
+ *                                    ingen gate ennå) → en reload (økt 2)
+ *                                    viser AppPaywallGate sin ikke-avviselige
+ *                                    paywall automatisk, uten noen ekstra klikk.
  *
  * Scenarioer (isolerte browser-kontekster — egen localStorage hver):
- *   1. gate-yearly   — gaten vises automatisk, ikke-avviselig (ingen
+ *   1. gate-yearly   — gaten vises automatisk økt 2, ikke-avviselig (ingen
  *                       lukk-knapp, ESC/backdrop lukker IKKE) → kjøp årsplan
  *                       (default) → «aktivert (testmodus)» → gaten lukker
  *                       seg selv når kjøpet går gjennom.
@@ -165,14 +171,34 @@ async function installFixedForecastRoute(page: Page): Promise<void> {
   });
 }
 
-/** ?seed=demo&entitlement=none → onboarding hoppes over (demo-barn) og Hjem
- *  viser sin første anbefaling nesten umiddelbart (fast værfixture over),
- *  som setter firstRecommendationSeenAt og dermed slår AppPaywallGate
- *  automatisk på (ikke-premium demo-bruker). Ingen klikk kreves for å åpne
- *  den. */
+/**
+ * ?seed=demo&entitlement=none → onboarding hoppes over (demo-barn) og Hjem
+ * viser sin første anbefaling nesten umiddelbart (fast værfixture over),
+ * som setter firstRecommendationSeenAt.
+ *
+ * P9 (duel §8 — paywall-armering, sol-duel-2026-07-31.md): AppPaywallGate
+ * viser seg IKKE lenger automatisk i SAMME økt som den første anbefalingen
+ * — brukeren får lese den ferdig («les ferdig»-vinduet,
+ * subscription-store.ts sin recommendationGraceWindowActive). Først NESTE
+ * app-økt (her: en `page.reload()` — samme localStorage/query-streng, fersk
+ * modul-boot, samme prinsipp som en reell kald app-åpning) viser veggen
+ * direkte, uten noe klikk. Denne hjelperen bekrefter BEGGE halvdelene:
+ * ingen gate i økt 1 (fritt lesevindu), gate synlig i økt 2.
+ */
 async function waitForAutoShownGate(page: Page): Promise<void> {
   await installFixedForecastRoute(page);
-  await page.goto(`${BASE}/?seed=demo&entitlement=none`, { waitUntil: 'domcontentloaded' });
+  const url = `${BASE}/?seed=demo&entitlement=none`;
+
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await page.locator('text=Hjem').first().waitFor({ state: 'visible', timeout: 15_000 });
+  // La weather-ready-renderet (og dermed markFirstRecommendationSeen-
+  // effekten) rekke å kjøre ferdig før vi sjekker at gaten IKKE dukket opp.
+  await page.waitForTimeout(500);
+  if (await page.getByRole('dialog').count() > 0 && await page.getByRole('dialog').isVisible()) {
+    fail('paywall-armering (duel §8): gaten viste seg automatisk i SAMME økt som brukerens første anbefaling — hun skal få lese den ferdig først, gaten skal først vise seg NESTE app-økt');
+  }
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await page.getByRole('dialog').waitFor({ state: 'visible', timeout: 15_000 });
 }
 

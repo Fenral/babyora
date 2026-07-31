@@ -35,7 +35,14 @@ function readMotion(): MotionPref {
   }
 }
 
-function readHaptics(): HapticsPref {
+/**
+ * Eksportert (ikke bare intern til hooken) slik at ikke-React-kallere kan
+ * lese preferansen synkront — brukt av lib/haptics.ts (P9 duel §3 scan/
+ * kjøps-vokabularet), som må gate hver enkelt haptikk-dispatch mot samme
+ * "vibrasjon ved trykk"-innstilling som resten av appen, uten å kunne
+ * kalle en React-hook fra sine rene funksjoner.
+ */
+export function readHaptics(): HapticsPref {
   try {
     const v = window.localStorage.getItem(STORAGE_PREFIX + 'haptics');
     if (v === 'on' || v === 'off') return v;

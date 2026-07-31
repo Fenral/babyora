@@ -1,0 +1,254 @@
+{
+  "plagg-badebukse.png": {
+    "hash": "c48db08b6da107b70d7eedc68fda3a002741ddcdaedeb57a793bc9c8e65f90f8",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.489Z"
+  },
+  "plagg-balaklava.png": {
+    "hash": "16bd61e0059a1a9dea322dd2f40d759d96be281c4ef576c1845beb8d681a8b69",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.513Z"
+  },
+  "plagg-cardigan.png": {
+    "hash": "1f099eac6c93e07dc54f3aa76f53a249e5917551fe3c180c1c2cfc8e8c54e70a",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.537Z"
+  },
+  "plagg-dunjakke.png": {
+    "hash": "d07289544be90e5f830033cf94df65943ea65201da48a44f11de1007bf8d26a2",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.560Z"
+  },
+  "plagg-fleecebukse.png": {
+    "hash": "0ef255f861412290685541100f249b6db1341daf68ee51fc17c18ecea4f2f2cf",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.583Z"
+  },
+  "plagg-fleecejakke.png": {
+    "hash": "c51d965acb063ab8ed828499e1d3716073f2956398a6940c44759ea1ef61c353",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.607Z"
+  },
+  "plagg-halsedisse.png": {
+    "hash": "19fa3ecae94c850a54c4713d2e4a43dc38522e05284aee4a1f034970d5026735",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.633Z"
+  },
+  "plagg-kortermet-ullbody.png": {
+    "hash": "6dd5602968db1cc5f8d4d180e71a3a97dca9e37b70a35333b1e24beb1515bc71",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.656Z"
+  },
+  "plagg-kyse.png": {
+    "hash": "1f76449482adb5c5f5828838765ddca903a6511d4a195d3622bff63881ca5ccc",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.681Z"
+  },
+  "plagg-langermet-bomullsbody.png": {
+    "hash": "44748e2bd738d016d7b1d5be0e09a7afa5269ea8507551d6c791c69329a3fe1a",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.703Z"
+  },
+  "plagg-langermet-ullbody.png": {
+    "hash": "943f6f8e6cf71d771a2795d87f7cbe5fc439abd0c4d131cca0ba624d651e182d",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.724Z"
+  },
+  "plagg-lue-med-ull.png": {
+    "hash": "11918ef651252921090909bc80248e6cba6bad00d7a2411c119f6086e526c27e",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.748Z"
+  },
+  "plagg-pysjamas.png": {
+    "hash": "1cbecb5798671f63038ee0d702006c89ab07d5e93e4e6242d90ef464789e3ef3",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.771Z"
+  },
+  "plagg-regnbukse.png": {
+    "hash": "b2f1899003eb55da9f5fbe3209a3073221ad3f12d8463d0190c7c60c8c236096",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.792Z"
+  },
+  "plagg-regndress.png": {
+    "hash": "a2999f018c9827520c004703d40da8eaab14c9336dd8d55354ebb7dc156c3fa0",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.814Z"
+  },
+  "plagg-regnhatt-innerlue.png": {
+    "hash": "385a24715d8cf4fd7a269a2288cce641d0115ffb45ff46962a3cc2cf4fc5e23d",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.837Z"
+  },
+  "plagg-regnvotter.png": {
+    "hash": "361412e6e50f21ad4afd7b9acac62d6f93e6b460abbb27981eba7c308f30cc27",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.857Z"
+  },
+  "plagg-shorts.png": {
+    "hash": "9e66fe192e34dc9f00134d91289263d50344b163e527b2c6781892669b6e1e3d",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.880Z"
+  },
+  "plagg-skallbukse.png": {
+    "hash": "217169d2f0e78908aff8f7cbe994a8a335bcf77e80f2b9669b5c082d82255a50",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.902Z"
+  },
+  "plagg-skalljakke.png": {
+    "hash": "e9bd975b12cc006cd33aec851592bdecdb4bcccaa75e69b787ff0e36fe709ca5",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.925Z"
+  },
+  "plagg-solhatt.png": {
+    "hash": "76751a04e88dab302cb15c6240589fbf1c065cf5b640ec48e8fba4a5600c0e1b",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.951Z"
+  },
+  "plagg-sommerbody.png": {
+    "hash": "4f613919f92b729a7afe8b1857e5982dcfac72e571040e24f8c1558c8665473e",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.974Z"
+  },
+  "plagg-sommerbukse.png": {
+    "hash": "0aaa191ec61df4e617d88c31e1a3fb93f3f39ff7ef4cb0dc806a44840ec73064",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:35.999Z"
+  },
+  "plagg-sovepose.png": {
+    "hash": "3a228f051af3d1c2d118c8ff2e1bb8979bc306d1df48f8bc263644593df4c7d5",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.023Z"
+  },
+  "plagg-stroempebukse.png": {
+    "hash": "3ad514c51f4a31440b498c5513a00eac8c007442dc3360b412ba0270547b4d5a",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.045Z"
+  },
+  "plagg-sydvest.png": {
+    "hash": "d327f329ea21c953d90164646ad0435789ab9f60af7bf52dd5985b2ae549af19",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.069Z"
+  },
+  "plagg-toffelsko.png": {
+    "hash": "e72ebf2197100a2e03b3a19d6ce078f45e9ec99a09e33c6e028a561f93d8215b",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.091Z"
+  },
+  "plagg-tskjorte.png": {
+    "hash": "4ebea478c491ff095c1119cdd40aaa9fbfd88cd3d657a91e91311ccdadad1739",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.116Z"
+  },
+  "plagg-tykt-ullsett.png": {
+    "hash": "7b2a78061d64cfa8785baaad345d170cf09e6cb063a5c28106bf8f69fe858e96",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.138Z"
+  },
+  "plagg-tynn-lue.png": {
+    "hash": "334c23d761e66d4fb0ac21f49dafe536916df9bbff7d4d1754991c70f8b2e985",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.160Z"
+  },
+  "plagg-tynne-ullvotter.png": {
+    "hash": "8f012699bfd36a2a21d75996702b8bfad605a04537d794f0e52536f0babd66b1",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.183Z"
+  },
+  "plagg-ull-mellomlag.png": {
+    "hash": "a19e76f82ccd22f6e754eed8a52bca37e2c76f9293d4196ab958a5e7677ac30c",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.206Z"
+  },
+  "plagg-ullbukse.png": {
+    "hash": "f902e76cc5a64df9d857f708f29c7acaeb3df346ae07335107cf59283b04f22a",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.229Z"
+  },
+  "plagg-ullhals-tynn.png": {
+    "hash": "d5c58dabd88688f6b14669d1c92485b52aa70c6737ba6cfe2bdb96be6c8b2339",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.253Z"
+  },
+  "plagg-ullkjeledress.png": {
+    "hash": "e520fcc86123320049fabca8851373b016d9ffbbdce17244ca7f5d39d1301cf8",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.276Z"
+  },
+  "plagg-ullsokker.png": {
+    "hash": "0c433e1939361fe5aa1e29fcff24c460947390ef5d76ff3f872652bc55cf6e46",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.297Z"
+  },
+  "plagg-uvtroye.png": {
+    "hash": "8e6ab90ffef28d33ef962d7717700432bc36d694a2ed4130b1df48673fb7ab8b",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.322Z"
+  },
+  "plagg-varparkdress.png": {
+    "hash": "ef5d307d3982e23ef1d61f886117753bd96faf14c4a3a01b9c660075453bf82d",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.344Z"
+  },
+  "plagg-vindjakke.png": {
+    "hash": "67ef4b9ddcf50e44c52957743bc3a0346254a8fe65838b6291e2ee731e1728df",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.364Z"
+  },
+  "plagg-vinterdress.png": {
+    "hash": "30a5db20b16eba14344ba75d182d2b9e57ab354152b1af8b4522fdadf7328908",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.384Z"
+  },
+  "plagg-vintersokker.png": {
+    "hash": "f294e7ced818d8617877e4dd96f35a029b5f0d734f684a2b60acc3f59e9312d2",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.408Z"
+  },
+  "plagg-votter.png": {
+    "hash": "31d134bf21be1301e9f8af3884c5aa7cf11da45bf5ebddd8c41ac856fa0af8c0",
+    "saturation": 0.88,
+    "maxDimension": 512,
+    "gradedAt": "2026-07-31T20:17:36.429Z"
+  }
+}

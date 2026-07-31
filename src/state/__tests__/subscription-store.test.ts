@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { resolveDemoEntitlementOverride, useSubscription } from '../subscription-store';
+import { hadFirstRecommendationBeforeBoot, resolveDemoEntitlementOverride, useSubscription } from '../subscription-store';
 
 describe('resolveDemoEntitlementOverride (P2 hard paywall demo/e2e-håndtak)', () => {
   it('uten seed-parameter: ingen overstyring (ordinære brukere upåvirket)', () => {
@@ -51,5 +51,44 @@ describe('useSubscription (P2 hard paywall)', () => {
     expect(useSubscription.getState().isPremium).toBe(true);
     expect(useSubscription.getState().lastSyncedAt).not.toBeNull();
     expect(useSubscription.getState().firstRecommendationSeenAt).toBe(seenAt);
+  });
+});
+
+describe('hadFirstRecommendationBeforeBoot (P9 duel §8 — paywall-armering)', () => {
+  it('null (ingenting persistert ennå) → false', () => {
+    expect(hadFirstRecommendationBeforeBoot(null)).toBe(false);
+  });
+
+  it('persistert JSON UTEN firstRecommendationSeenAt (aldri sett) → false', () => {
+    expect(hadFirstRecommendationBeforeBoot(JSON.stringify({ state: { isPremium: false } }))).toBe(false);
+    expect(hadFirstRecommendationBeforeBoot(JSON.stringify({ state: { firstRecommendationSeenAt: null } }))).toBe(false);
+  });
+
+  it('persistert JSON MED et gyldig firstRecommendationSeenAt-tidspunkt → true', () => {
+    expect(hadFirstRecommendationBeforeBoot(JSON.stringify({ state: { firstRecommendationSeenAt: 1_753_000_000_000 } }))).toBe(true);
+  });
+
+  it('korrupt/uparsbar JSON faller trygt tilbake til false (aldri en krasj)', () => {
+    expect(hadFirstRecommendationBeforeBoot('{ not json')).toBe(false);
+    expect(hadFirstRecommendationBeforeBoot('null')).toBe(false);
+    expect(hadFirstRecommendationBeforeBoot('"just a string"')).toBe(false);
+  });
+});
+
+describe('consumeRecommendationGraceWindow (P9 duel §8)', () => {
+  beforeEach(() => {
+    useSubscription.setState({ recommendationGraceWindowActive: true });
+  });
+
+  it('flipper recommendationGraceWindowActive til false', () => {
+    useSubscription.getState().consumeRecommendationGraceWindow();
+    expect(useSubscription.getState().recommendationGraceWindowActive).toBe(false);
+  });
+
+  it('er idempotent (no-op, samme store-referanse) når vinduet allerede er lukket', () => {
+    useSubscription.getState().consumeRecommendationGraceWindow();
+    const before = useSubscription.getState();
+    useSubscription.getState().consumeRecommendationGraceWindow();
+    expect(useSubscription.getState()).toBe(before);
   });
 });

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useNativeSettings } from '../../hooks/useNativeSettings';
 
-export type HapticTier = 'selection' | 'light' | 'medium' | 'success';
+export type HapticTier = 'selection' | 'light' | 'medium' | 'success' | 'error';
 
 export interface HapticNativeModule {
   Haptics: {
@@ -17,7 +17,13 @@ export interface HapticNativeModule {
     notification: (options: { type: unknown }) => Promise<void>;
   };
   ImpactStyle: { Light: unknown; Medium: unknown };
-  NotificationType: { Success: unknown };
+  /**
+   * `Error` er lagt til for P9 (duel §3 — «Kjøp feiler»-varselet). Optional
+   * (ikke alle historiske kall-steder/tester bygger et fullt NotificationType
+   * med alle tre native varianter) — `fire('error')` er selv robust mot at
+   * den mangler, se kommentaren ved case 'error' under.
+   */
+  NotificationType: { Success: unknown; Error?: unknown };
 }
 
 export interface HapticSystemAdapters {
@@ -85,6 +91,14 @@ export function createHapticSystem(adapters: HapticSystemAdapters): HapticSystem
           return;
         case 'success':
           await Haptics.notification({ type: NotificationType.Success });
+          return;
+        case 'error':
+          // P9 (duel §3): «Kjøp feiler». NotificationType.Error is optional
+          // on the adapter type (see HapticNativeModule) for back-compat with
+          // partial test doubles — a real @capacitor/haptics module always
+          // has it, and an absent value still resolves to a no-op-safe
+          // no-throw call rather than a crash.
+          await Haptics.notification({ type: NotificationType.Error });
           return;
       }
     } catch {

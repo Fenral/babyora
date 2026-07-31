@@ -4,8 +4,9 @@
  * `.strip`). Hele stripen ER «Juster»-knappen (mock: én <button> med
  * aria-label «Juster vær, sted eller aktivitet»).
  *
- * TODO(P5): onAdjust er en no-op-stub her — P5 kobler den til vær/sted/
- * aktivitet-justeringsdrillen. Selve knappen/a11y-kontrakten er ferdig.
+ * onAdjust: kablet av kalleren (HjemMonter → handleOpenAdjust, P5) til
+ * vær/sted/aktivitet-justeringsdrillen (FinnAntrekkScreen med live-værgrunn-
+ * fylling) — ferdig siden P5, ikke lenger en stub.
  */
 import './hjem-monter.css';
 import type { WeatherNuance } from './WeatherScene.js';

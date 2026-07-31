@@ -103,11 +103,15 @@ export function WeatherScene({
             <ChevronIcon />
           </span>
         )}
-        <span className="hjm-fresh" data-warn={freshnessWarn ? 'true' : 'false'}>
-          <i aria-hidden="true" />
-          {freshnessLabel}
-        </span>
       </div>
+      {/* P9 (ekstern P8-review, funn A): sto tidligere høyrestilt i
+         hjm-loc-row, rett der maskoten henger over panelkanten — delvis
+         skjult i begge tema. Egen venstrestilt andrelinje under stedet i
+         stedet, aria/live-semantikk uendret (ingen fantes fra før). */}
+      <span className="hjm-fresh" data-warn={freshnessWarn ? 'true' : 'false'}>
+        <i aria-hidden="true" />
+        {freshnessLabel}
+      </span>
 
       <div className="hjm-hero-row">
         <span className="hjm-temp" data-dim={dimmed ? 'true' : 'false'}>

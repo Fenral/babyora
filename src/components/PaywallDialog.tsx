@@ -46,7 +46,12 @@ import {
 } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useSubscription } from '../state/subscription-store';
-import { useHapticSystem } from '../lib/haptics/system';
+import {
+  notifyError,
+  notifySuccess,
+  prepare as prepareHaptics,
+  selection as fireSelection,
+} from '../lib/haptics.js';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { track } from '../lib/analytics/track';
 import {
@@ -535,8 +540,15 @@ export function PaywallDialog({
 }: PaywallDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { fire } = useHapticSystem();
   const setPremium = useSubscription((s) => s.setPremium);
+
+  // P9 (duel §3): varmer opp den native haptikk-motoren idet dialogen
+  // mountes — samme mønster som useHapticSystem() sin egen mount-effekt
+  // hadde (fjernet herfra siden denne filen nå bruker lib/haptics.ts
+  // direkte, ikke hooken).
+  useEffect(() => {
+    void prepareHaptics();
+  }, []);
 
   const [selectedPlan, setSelectedPlan] = useState<ProductKey>(DEFAULT_PLAN);
   const [pending, setPending] = useState(false);
@@ -689,17 +701,20 @@ export function PaywallDialog({
     }
   };
 
+  // P9 (duel §3): «Prisplan velges» — selection, samme språk som andre valg.
   const handleSelectPlan = useCallback(
     (key: ProductKey) => {
-      void fire('selection');
+      void fireSelection();
       setSelectedPlan(key);
     },
-    [fire],
+    [],
   );
 
   const handlePurchase = useCallback(async () => {
     if (pending) return;
-    void fire('medium');
+    // P9 (duel §3): INGEN haptikk på selve kjøpsknapp-trykket (forbudt —
+    // "kjøpsknapp-trykk" står eksplisitt i forbuds-listen). Suksess/feil
+    // varsles KUN etter at StoreKit/RevenueCat faktisk har svart, under.
     setPending(true);
     setErrorMessage(null);
     setStatusMessage(PAYWALL_COPY.statusProcessing);
@@ -711,7 +726,7 @@ export function PaywallDialog({
         setStatusMessage(PAYWALL_COPY.statusActivatedTestmode);
         track({ type: 'paywall_converted', plan: selectedPlan });
         if (selectedPlan === 'yearly') track({ type: 'trial_started', plan: selectedPlan });
-        void fire('success');
+        void notifySuccess();
         scheduleAutoClose();
         return;
       }
@@ -721,24 +736,27 @@ export function PaywallDialog({
         setStatusMessage(PAYWALL_COPY.statusActivated);
         track({ type: 'paywall_converted', plan: selectedPlan });
         if (selectedPlan === 'yearly') track({ type: 'trial_started', plan: selectedPlan });
-        void fire('success');
+        void notifySuccess();
         scheduleAutoClose();
       } else {
         setStatusMessage('');
         setErrorMessage(PAYWALL_COPY.errorPurchaseFailed);
+        void notifyError();
       }
     } catch (err) {
       console.error('[Babyora] PaywallDialog purchase feilet', err);
       setStatusMessage('');
       setErrorMessage(PAYWALL_COPY.errorPurchaseException);
+      void notifyError();
     } finally {
       setPending(false);
     }
-  }, [pending, fire, selectedPlan, setPremium, scheduleAutoClose]);
+  }, [pending, selectedPlan, setPremium, scheduleAutoClose]);
 
   const handleRestore = useCallback(async () => {
     if (pending) return;
-    void fire('selection');
+    // P9 (duel §3): samme regel som kjøpsknappen — ingen haptikk på selve
+    // trykket, kun på et faktisk resultat (nedenfor).
     setPending(true);
     setErrorMessage(null);
     setStatusMessage(PAYWALL_COPY.statusRestoreChecking);
@@ -746,13 +764,14 @@ export function PaywallDialog({
       if (!isRevenueCatConfigured() || !Capacitor.isNativePlatform()) {
         setStatusMessage('');
         setErrorMessage(PAYWALL_COPY.errorRestoreDevOnly);
+        void notifyError();
         return;
       }
       const restored = await restorePurchases();
       if (restored) {
         setPremium(true);
         setStatusMessage(PAYWALL_COPY.statusActivated);
-        void fire('success');
+        void notifySuccess();
         scheduleAutoClose();
       } else {
         setStatusMessage(PAYWALL_COPY.statusNoRestore);
@@ -761,10 +780,11 @@ export function PaywallDialog({
       console.error('[Babyora] PaywallDialog restore feilet', err);
       setStatusMessage('');
       setErrorMessage(PAYWALL_COPY.errorRestoreException);
+      void notifyError();
     } finally {
       setPending(false);
     }
-  }, [pending, fire, setPremium, scheduleAutoClose]);
+  }, [pending, setPremium, scheduleAutoClose]);
 
   const onCtaClick = () => {
     if (pending) return;

@@ -234,6 +234,16 @@ describe('HjemMonter — phase-driven view switching', () => {
     const html = renderToStaticMarkup(<HjemMonter {...baseProps()} weatherStatus="offline" now={null} />);
     expect(html).toContain('Vi klarer oss med sist kjente vær');
   });
+
+  it('P9 state-audit: weatherStatus="error" (hard network failure, nothing cached — useWeather has no other status to report) ALSO shows the offline notice + retry, not a permanent "Henter vær…" dead end', () => {
+    mockedState = { phase: 'weather-ready' };
+    mockedSlots = {};
+    const html = renderToStaticMarkup(
+      <HjemMonter {...baseProps()} weatherStatus="error" now={null} />,
+    );
+    expect(html).toContain('Vi klarer oss med sist kjente vær');
+    expect(html).toContain('Prøv å hente været igjen');
+  });
 });
 
 describe('HjemMonter — mutual-exclusion guard against outfit-transition, at the orchestrator level', () => {

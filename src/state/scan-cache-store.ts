@@ -6,7 +6,20 @@
  * beregnet for, resultKey-fingerprinten (gjenbruker HjemScreen sin
  * "current-finalized"-fingerprint via lib/scan/result-key.ts), tidspunktet
  * beregningen fullførte, og om full 2.1s scan-koreografi allerede er spilt
- * for barnet i dag.
+ * for barnet i dag (`ScanCacheSlot.scanPlayedInFullToday` — beholdt for
+ * bakoverkompatibilitet/migrering, se `hasPlayedFullScanEver` under).
+ *
+ * P9 (docs/design-notes/sol-duel-2026-07-31.md §2): full scan-koreografien
+ * spilles nå «første gang noensinne», ikke «første gang i dag» — dette
+ * håndheves av `hasPlayedFullScanEver`, ETT felt for HELE storen (ikke per
+ * barn/slot, i motsetning til det gamle per-dag-feltet), pluss
+ * `markFullScanPlayedEver()`. Migrering fra pre-P9-lagret tilstand: hvis
+ * ingen eksplisitt `hasPlayedFullScanEver` finnes i det persisterte
+ * JSON-et, men MINST ÉN eksisterende slot allerede har
+ * `scanPlayedInFullToday: true`, avledes flagget til `true` — en
+ * eksisterende bruker som allerede har sittet gjennom minst én daglig
+ * full-koreografi før oppdateringen, skal ALDRI vises "første gang
+ * noensinne"-intro-en på nytt (se `mergeScanCache`).
  *
  * P3 er REN lager-kode — ingen UI-kobling her (det er P4). HjemScreen bruker
  * ikke denne storen ennå og er uendret av denne pakken.
@@ -19,7 +32,8 @@
  * faller tilbake til tom cache i stedet for å krasje.
  *
  * Persistert format (zustand/persist v4):
- *   { state: { slots: Record<childId, ScanCacheSlot> }, version: 0 }
+ *   { state: { slots: Record<childId, ScanCacheSlot>,
+ *              hasPlayedFullScanEver: boolean }, version: 0 }
  */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -32,16 +46,21 @@ import {
 
 export type ScanCacheState = Readonly<{
   slots: Readonly<Record<string, ScanCacheSlot>>;
+  /** P9 (duel §2): har den 1,1s full-koreografien blitt spilt NOENSINNE (ikke per dag)? */
+  hasPlayedFullScanEver: boolean;
   /** Lagrer/overskriver slotten for slot.identity.childId. */
   commitSlot: (slot: ScanCacheSlot) => void;
   /** No-op hvis ingen slot finnes for barnet, eller den allerede er markert spilt. */
   markScanPlayed: (childId: string) => void;
+  /** P9: setter livstids-flagget. Idempotent — no-op hvis allerede sann. */
+  markFullScanPlayedEver: () => void;
   clearSlotForChild: (childId: string) => void;
   clearAll: () => void;
 }>;
 
 export type PersistedScanCache = Readonly<{
   slots: Readonly<Record<string, ScanCacheSlot>>;
+  hasPlayedFullScanEver: boolean;
 }>;
 
 function isValidSlotRecord(
@@ -61,7 +80,24 @@ function isValidSlotRecord(
 export function partializeScanCache(
   state: ScanCacheState,
 ): PersistedScanCache {
-  return { slots: state.slots };
+  return { slots: state.slots, hasPlayedFullScanEver: state.hasPlayedFullScanEver };
+}
+
+/**
+ * Migrering (pre-P9 → P9): eldre persistert JSON har ingen
+ * `hasPlayedFullScanEver`-nøkkel i det hele tatt. I så fall avledes den fra
+ * `storedSlots` — sann hvis MINST ÉN slot allerede har
+ * `scanPlayedInFullToday: true` (se filhode-kommentaren). Rent hjelpe-
+ * funksjon, testbar isolert.
+ */
+export function deriveHasPlayedFullScanEver(
+  record: Record<string, unknown> | null,
+  storedSlots: Readonly<Record<string, ScanCacheSlot>>,
+): boolean {
+  if (record !== null && typeof record.hasPlayedFullScanEver === 'boolean') {
+    return record.hasPlayedFullScanEver;
+  }
+  return Object.values(storedSlots).some((slot) => slot.scanPlayedInFullToday === true);
 }
 
 export function mergeScanCache(
@@ -74,7 +110,8 @@ export function mergeScanCache(
   const storedSlots = record !== null && isValidSlotRecord(record.slots)
     ? record.slots
     : current.slots;
-  return { ...current, slots: storedSlots };
+  const hasPlayedFullScanEver = deriveHasPlayedFullScanEver(record, storedSlots);
+  return { ...current, slots: storedSlots, hasPlayedFullScanEver };
 }
 
 /** Ren transformasjon — brukt både av store-actionen under og av testene. */
@@ -98,27 +135,25 @@ export function getSlotForIdentity(
 }
 
 /**
- * true når det IKKE finnes en cachet slot for dagens dato (ingen slot i det
- * hele tatt, ELLER slotten er fra en tidligere dato — dato-rollover).
- * Kun dato sammenlignes her (ikke resten av identiteten) — det er
- * "har vi vist scan-koreografien for dette barnet i dag ennå" som
- * shouldPlayFullScan svarer på, ikke "matcher cachen eksakt".
+ * P9 (duel §2): true når den 1,1s full-koreografien ALDRI har blitt spilt på
+ * denne enheten — livstids-grense, ikke lenger en dags-grense (se
+ * filhode-kommentaren for migreringen fra det gamle per-dag-feltet).
  */
-export function shouldPlayFullScan(
-  slot: ScanCacheSlot | null,
-  identity: ScanIdentity,
-): boolean {
-  if (slot === null) return true;
-  return slot.identity.dateKey !== identity.dateKey;
+export function shouldPlayFullScan(hasPlayedFullScanEver: boolean): boolean {
+  return !hasPlayedFullScanEver;
 }
 
 export const useScanCache = create<ScanCacheState>()(
   persist(
     (set) => ({
       slots: {},
+      hasPlayedFullScanEver: false,
       commitSlot: (slot) => set((current) => ({
         slots: { ...current.slots, [slot.identity.childId]: slot },
       })),
+      markFullScanPlayedEver: () => set((current) => (
+        current.hasPlayedFullScanEver ? current : { hasPlayedFullScanEver: true }
+      )),
       markScanPlayed: (childId) => set((current) => {
         const existing = current.slots[childId];
         if (existing === undefined || existing.scanPlayedInFullToday) {

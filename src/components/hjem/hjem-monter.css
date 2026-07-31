@@ -47,6 +47,10 @@
   --hjm-shadow-thumb: 0 6px 12px -6px rgba(0, 0, 0, 0.55);
   --hjm-shadow-prev: 0 8px 18px -10px rgba(0, 0, 0, 0.55);
   --hjm-shadow-strip: 0 10px 26px -14px rgba(0, 0, 0, 0.5);
+  /* P9 (ekstern P8-review, funn B): maskotens drop-shadow var hardkodet
+     svart/kald — stemte kun mørk canvas, ga en tung grå glorie på lyst
+     papir. Egen token, samme lys/mørk-mønster som skyggene over. */
+  --hjm-mascot-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
 }
 
 /* P8 lys-kalibrering: samme mønster som design-tokens-v2.css sin
@@ -60,6 +64,7 @@
     --hjm-shadow-thumb: 0 4px 8px -4px rgba(42, 29, 18, 0.22);
     --hjm-shadow-prev: 0 6px 12px -8px rgba(42, 29, 18, 0.2);
     --hjm-shadow-strip: 0 8px 18px -12px rgba(42, 29, 18, 0.22);
+    --hjm-mascot-shadow: 0 6px 12px rgba(42, 29, 18, 0.25);
   }
 }
 :root[data-theme="light"] .hjem-monter {
@@ -69,6 +74,7 @@
   --hjm-shadow-thumb: 0 4px 8px -4px rgba(42, 29, 18, 0.22);
   --hjm-shadow-prev: 0 6px 12px -8px rgba(42, 29, 18, 0.2);
   --hjm-shadow-strip: 0 8px 18px -12px rgba(42, 29, 18, 0.22);
+  --hjm-mascot-shadow: 0 6px 12px rgba(42, 29, 18, 0.25);
 }
 
 .hjm-top { flex: none; }
@@ -134,7 +140,6 @@
 .hjm-loc-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 .hjm-loc {
   appearance: none;
@@ -158,7 +163,11 @@
   pointer-events: none;
 }
 .hjm-loc svg { width: 13px; height: 13px; opacity: 0.8; }
+/* P9 (ekstern P8-review, funn A): egen venstrestilt linje UNDER hjm-loc-row
+   (var tidligere høyrestilt inni loc-row, delvis skjult bak maskoten som
+   henger over panelets øvre høyre hjørne i begge tema). */
 .hjm-fresh {
+  margin-top: 4px;
   font-size: 12.5px;
   color: var(--dw-ink-panel-mid);
   opacity: 0.85;
@@ -264,7 +273,7 @@
   height: auto;
   z-index: 3;
   pointer-events: none;
-  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(var(--hjm-mascot-shadow));
 }
 .hjm-mascot[data-compact='true'] { width: 188px; top: 38px; }
 @media (max-height: 700px) {
@@ -438,6 +447,75 @@
   color: var(--dw-ink-low);
 }
 .hjm-trust svg { width: 14px; height: 14px; color: var(--dw-ink-low); flex: none; }
+
+/* ============ Mikropass (P9 duel §2 — 400ms, alle trykk etter det aller
+   første) ============
+   Se ScanMicropass.tsx sin filhode-kommentar for de to bevisste
+   forenklingene her (ingen literal venstre→høyre lys-sveip-gradient, ingen
+   FLIP-geometri-morph mot resultat-headeren). */
+.hjm-micropass { cursor: pointer; }
+.hjm-micropass-cta {
+  pointer-events: none; /* dekorativ under mikropasset — selve trykket har allerede skjedd */
+}
+.hjm-micropass[data-animate='true'] .hjm-micropass-cta {
+  animation: hjm-micropass-cta-press var(--hjm-micropass-duration, 400ms) cubic-bezier(0.3, 0, 0.2, 1) 1 both;
+}
+@keyframes hjm-micropass-cta-press {
+  0% { transform: scale(0.985); box-shadow: none; }
+  17.5% { transform: scale(0.985); box-shadow: none; } /* ~70ms/400ms — duellens presset-vindu */
+  32% { transform: scale(1); box-shadow: var(--hjm-shadow-cta); }
+  100% { transform: scale(1); box-shadow: var(--hjm-shadow-cta); }
+}
+
+.hjm-micropass-waiting { color: var(--dw-warning); }
+
+.hjm-micropass-trust-wrap { position: relative; }
+.hjm-micropass-trust { flex-wrap: wrap; }
+.hjm-micropass-segment {
+  opacity: 0.55;
+  color: var(--dw-ink-low);
+}
+.hjm-micropass[data-animate='true'] .hjm-micropass-segment {
+  animation: hjm-micropass-segment-on 90ms ease-out both;
+}
+@keyframes hjm-micropass-segment-on {
+  to { opacity: 1; color: var(--dw-ink-hi); }
+}
+.hjm-micropass-summary {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin-top: 13px; /* speiler .hjm-trust sin egen margin-top siden posisjonen nå er absolutt */
+}
+.hjm-micropass[data-animate='true'] .hjm-micropass-trust {
+  animation: hjm-micropass-trust-out 130ms ease-in 270ms both;
+}
+.hjm-micropass[data-animate='true'] .hjm-micropass-summary {
+  animation: hjm-micropass-summary-in 130ms ease-out 270ms both;
+}
+@keyframes hjm-micropass-trust-out { to { opacity: 0; } }
+@keyframes hjm-micropass-summary-in { to { opacity: 1; } }
+
+/* Redusert bevegelse (JS-styrt data-animate, se ScanMicropass.tsx) — samme
+   "instant completion" som resten av Hjem: hopp rett til SLUTTilstanden
+   (full sammendrags-tekst, ingen ledd-sekvens) i stedet for å bli stående
+   fast i mikropassets MIDT-tilstand (dempet/usynlig) uten animasjonen som
+   ellers ville fullført den. */
+.hjm-micropass[data-animate='false'] .hjm-micropass-segment { opacity: 1; color: var(--dw-ink-hi); }
+.hjm-micropass[data-animate='false'] .hjm-micropass-trust { display: none; }
+.hjm-micropass[data-animate='false'] .hjm-micropass-summary { position: static; opacity: 1; margin-top: 13px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hjm-micropass-cta,
+  .hjm-micropass-segment,
+  .hjm-micropass-trust,
+  .hjm-micropass-summary {
+    animation: none !important;
+  }
+  .hjm-micropass-segment { opacity: 1; color: var(--dw-ink-hi); }
+  .hjm-micropass-summary { position: static; opacity: 1; margin-top: 13px; }
+  .hjm-micropass-trust { display: none; }
+}
 
 /* ============ Kompakt værstripe (WeatherStrip, etter resultat) ============ */
 

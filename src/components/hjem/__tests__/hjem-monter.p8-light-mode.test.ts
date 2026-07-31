@@ -45,7 +45,7 @@ describe('hjem-monter.css — P8 light-mode token consumption', () => {
   it('surface shadows are component-scoped custom properties with a light-mode override, not raw rgba(0,0,0,*) baked into each rule', async () => {
     const css = await hjemMonterCss();
 
-    for (const token of ['--hjm-shadow-panel', '--hjm-shadow-lift', '--hjm-shadow-cta', '--hjm-shadow-thumb', '--hjm-shadow-prev', '--hjm-shadow-strip']) {
+    for (const token of ['--hjm-shadow-panel', '--hjm-shadow-lift', '--hjm-shadow-cta', '--hjm-shadow-thumb', '--hjm-shadow-prev', '--hjm-shadow-strip', '--hjm-mascot-shadow']) {
       // Declared once with a dark default...
       expect(css, `${token} missing a default declaration`).toContain(`${token}: 0`);
       // ...and consumed via var() at its use site instead of a literal
@@ -66,7 +66,7 @@ describe('hjem-monter.css — P8 light-mode token consumption', () => {
     expect(lightBlockMatch).not.toBeNull();
     const lightBlock = lightBlockMatch![1]!;
     expect(lightBlock).not.toMatch(/rgba\(0,\s*0,\s*0,/u);
-    expect(lightBlock.match(/rgba\(42,\s*29,\s*18,/gu)?.length).toBe(6);
+    expect(lightBlock.match(/rgba\(42,\s*29,\s*18,/gu)?.length).toBe(7);
   });
 
   it('the top-of-card gradient stop is derived from the theme-aware canvas-glow token, not a dark-mode-only literal', async () => {

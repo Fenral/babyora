@@ -4,6 +4,11 @@ import {
   activityChangeChip,
   decideScanEntry,
   FULL_SCAN_DURATION_MS,
+  fullScanHapticSchedule,
+  micropassHapticSchedule,
+  MICROPASS_DURATION_MS,
+  MICROPASS_LANDING_MS,
+  MICROPASS_PREPARE_MS,
   scanCheckDelaysMs,
   staleCtaLabel,
   staleHeadline,
@@ -30,34 +35,27 @@ function slot(overrides: Partial<ScanCacheSlot> = {}): ScanCacheSlot {
   };
 }
 
-describe('decideScanEntry', () => {
+describe('decideScanEntry (P9 duel §2 — lifetime, not per-day)', () => {
   it('shows the cached result instantly when an exact identity match exists (no overlay at all)', () => {
     const exact = slot({ resultKey: 'cached-result' });
-    const decision = decideScanEntry(exact, exact, identity());
+    const decision = decideScanEntry(exact, true);
     expect(decision).toEqual({ kind: 'show-cached', resultKey: 'cached-result' });
   });
 
-  it('waits for a tap and plays the FULL choreography on the very first scan of the day', () => {
-    const decision = decideScanEntry(null, null, identity());
+  it('waits for a tap and plays the FULL choreography the very first time ever', () => {
+    const decision = decideScanEntry(null, false);
     expect(decision).toEqual({ kind: 'await-tap', playFull: true });
   });
 
-  it('waits for a tap but plays the QUICK choreography when the day-slot exists but identity differs (e.g. activity drifted)', () => {
-    const todaySlotForOtherActivity = slot({ identity: identity({ activity: 'vogn' }) });
-    const decision = decideScanEntry(null, todaySlotForOtherActivity, identity({ activity: 'utelek' }));
+  it('waits for a tap but plays the MICROPASS once the full choreography has already played before, EVEN on a fresh identity (e.g. activity drifted, or a day rollover)', () => {
+    const decision = decideScanEntry(null, true);
     expect(decision).toEqual({ kind: 'await-tap', playFull: false });
-  });
-
-  it('plays the full choreography again after a day rollover even if a stale day-slot exists', () => {
-    const yesterday = slot({ identity: identity({ dateKey: '2026-07-30' }) });
-    const decision = decideScanEntry(null, yesterday, identity({ dateKey: '2026-07-31' }));
-    expect(decision).toEqual({ kind: 'await-tap', playFull: true });
   });
 });
 
 describe('scanCheckDelaysMs', () => {
-  it('reproduces the mock choreography delays (0.55s/1.05s/1.55s of a 2.1s pass)', () => {
-    expect(scanCheckDelaysMs(FULL_SCAN_DURATION_MS)).toEqual([550, 1050, 1550]);
+  it('reproduces the mock choreography delays scaled to the new 1.1s full-scan duration', () => {
+    expect(scanCheckDelaysMs(FULL_SCAN_DURATION_MS)).toEqual([288, 550, 812]);
   });
 
   it('scales proportionally for a shorter (quick recalc) duration', () => {
@@ -65,6 +63,36 @@ describe('scanCheckDelaysMs', () => {
     expect(a).toBeLessThan(b);
     expect(b).toBeLessThan(c);
     expect(c).toBeLessThanOrEqual(220);
+  });
+});
+
+describe('fullScanHapticSchedule (P9 duel §3 — up to 5 felt signals)', () => {
+  it('schedules soft(start) + selection x3 (one per checkmark) + prepare + medium(landing), in order', () => {
+    const schedule = fullScanHapticSchedule(FULL_SCAN_DURATION_MS);
+    expect(schedule.map((e) => e.cue)).toEqual(['soft', 'selection', 'selection', 'selection', 'prepare', 'medium']);
+    expect(schedule.map((e) => e.atMs)).toEqual([0, 288, 550, 812, 990, 1100]);
+    // Strictly increasing — never re-orders relative to the visual checkmarks.
+    for (let i = 1; i < schedule.length; i += 1) {
+      expect(schedule[i]!.atMs).toBeGreaterThanOrEqual(schedule[i - 1]!.atMs);
+    }
+  });
+
+  it('never schedules prepare() before t=0, even for a very short duration', () => {
+    const schedule = fullScanHapticSchedule(50);
+    const prepare = schedule.find((e) => e.cue === 'prepare');
+    expect(prepare?.atMs).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('micropassHapticSchedule (P9 duel §3 — exactly ONE felt signal)', () => {
+  it('schedules prepare then medium, ~110ms apart, matching the duel\'s exact timestamps', () => {
+    const schedule = micropassHapticSchedule();
+    expect(schedule).toEqual([
+      { atMs: MICROPASS_PREPARE_MS, cue: 'prepare' },
+      { atMs: MICROPASS_LANDING_MS, cue: 'medium' },
+    ]);
+    expect(MICROPASS_LANDING_MS - MICROPASS_PREPARE_MS).toBe(110);
+    expect(MICROPASS_LANDING_MS).toBeLessThan(MICROPASS_DURATION_MS);
   });
 });
 

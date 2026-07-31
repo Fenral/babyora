@@ -258,10 +258,18 @@ export default function App(): ReactElement {
     document.title = TAB_TITLES[tab];
   }, [tab]);
 
+  // P9 (duel §8 — paywall-armering): "Planlegg" (i morgen og resten av uken)
+  // er den fremste låsemerkede verdihandlingen etter at gratis-vinduet er
+  // brukt opp — et trykk hit stenger denne øktens "les ferdig"-vindu, som
+  // umiddelbart gjør AppPaywallGate due (samme ENESTE mount, ingen ny
+  // paywall-instans — se subscription-store.ts sin egen kommentar). No-op
+  // hvis vinduet allerede var stengt (Premium/ingen anbefaling ennå/tidligere
+  // konsumert), se consumeRecommendationGraceWindow.
   const onNavigate = (next: TabKey) => {
     outfitTransition.abort('closed');
     setDrill(null);
     setTab(next);
+    if (next === 'plan') useSubscription.getState().consumeRecommendationGraceWindow();
   };
 
   // P1: navnet `onOpenGuideTarget` beholdes (fortsatt sendt til VinterprogramScreen
