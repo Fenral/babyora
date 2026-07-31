@@ -214,3 +214,13 @@ After that review, choose and explicitly approve the first implementation packag
 3. Ask Claude to read `AGENTS.md` and `docs/CLAUDE-START-HERE.md`.
 4. Use the safe opening prompt in that file.
 5. Start in planning/review mode. Do not begin coding until the first implementation package is explicitly approved.
+
+---
+
+# Superseding design handoff
+
+For the current Hjem, scan, clothing-result and Planlegg direction, start with:
+
+[`BABYORA-DESIGN-HANDOFF-2026-07-31.md`](BABYORA-DESIGN-HANDOFF-2026-07-31.md)
+
+That document supersedes older visual decisions in this file where they conflict. Owner decisions 2026-07-31 (recorded in PRODUCT.md) additionally override the handoff on: commercial model (hard paywall, 7-day trial on all plans), navigation (3 tabs), theme (dark-first warm) and mascot production (style shootout before asset batch).

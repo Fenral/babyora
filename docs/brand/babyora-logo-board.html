@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Babyora — logo og ordmerke</title>
+  <style>
+    *{box-sizing:border-box}
+    :root{
+      --night:#1A1828;--plum:#211B32;--lavender:#DAD8EE;
+      --surface:#F3F2FB;--coral:#EE9373;--mint:#65D097;
+    }
+    html,body{margin:0;min-height:100%;background:#11101a;color:var(--plum)}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:28px}
+    main{width:min(1480px,100%);margin:auto;display:grid;grid-template-columns:1.3fr .8fr .8fr;gap:18px}
+    section{position:relative;min-height:340px;border-radius:28px;overflow:hidden;padding:34px;background:var(--surface)}
+    .label{position:absolute;top:24px;left:28px;margin:0;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;opacity:.58}
+    .cover{grid-column:span 2;min-height:470px;background:var(--night);display:grid;place-items:center}
+    .cover img{width:min(76%,760px)}
+    .symbol{background:var(--lavender);display:grid;place-items:center}
+    .symbol img{width:62%}
+    .icon{background:#2b293c;display:grid;place-items:center}
+    .icon img{width:62%;border-radius:25%;box-shadow:0 30px 70px rgba(0,0,0,.35)}
+    .wordmark{grid-column:span 2;display:grid;place-items:center;background:#fff}
+    .wordmark img{width:min(78%,860px)}
+    .essence{background:var(--coral);display:flex;flex-direction:column;justify-content:flex-end}
+    .essence h1{font-family:Georgia,serif;font-size:clamp(38px,4vw,62px);line-height:.98;letter-spacing:-.035em;margin:0;max-width:9ch;font-weight:500}
+    .system{grid-column:span 3;min-height:250px;background:var(--night);color:var(--surface);display:grid;grid-template-columns:1fr 1.2fr 1fr;align-items:center;gap:28px}
+    .system .mark{width:126px;color:var(--surface)}
+    .system h2{font-family:Georgia,serif;font-size:34px;font-weight:500;line-height:1.08;margin:0 0 10px}
+    .system p{max-width:48ch;color:#c6c5d8;line-height:1.5;margin:0;font-size:15px}
+    .swatches{display:flex;justify-content:flex-end;gap:12px}
+    .swatch{width:54px;height:82px;border-radius:999px;border:1px solid rgba(255,255,255,.15)}
+    .s1{background:var(--plum)}.s2{background:var(--coral)}.s3{background:var(--lavender)}.s4{background:var(--surface)}
+    @media(max-width:900px){body{padding:12px}main{grid-template-columns:1fr}.cover,.wordmark,.system{grid-column:auto}.system{grid-template-columns:1fr}.swatches{justify-content:flex-start}}
+  </style>
+</head>
+<body>
+  <main aria-label="Babyora logo og ordmerke">
+    <section class="cover">
+      <p class="label" style="color:#c6c5d8">Primær signatur</p>
+      <img src="../../public/brand/babyora-lockup-horizontal-reverse.svg" alt="Babyora" />
+    </section>
+    <section class="symbol">
+      <p class="label">Beskyttet kjerne</p>
+      <img src="../../public/brand/babyora-symbol.svg" alt="Babyora-symbol" />
+    </section>
+    <section class="icon">
+      <p class="label" style="color:#c6c5d8">Appikon</p>
+      <img src="../../public/brand/babyora-app-icon.svg" alt="Babyora appikon" />
+    </section>
+    <section class="wordmark">
+      <p class="label">Ordmerke</p>
+      <img src="../../public/brand/babyora-wordmark.svg" alt="Babyora" />
+    </section>
+    <section class="essence">
+      <p class="label">Løftet</p>
+      <h1>Barnet i sentrum. Været rundt.</h1>
+    </section>
+    <section class="system">
+      <img class="mark" src="../../public/brand/babyora-symbol-reverse.svg" alt="" />
+      <div>
+        <h2>Varm omsorg. Presis veiledning.</h2>
+        <p>Den varme kjernen er barnet. De to beskyttende formene er klærne, omsorgen og tilpasningen til været.</p>
+      </div>
+      <div class="swatches" aria-label="Fargepalett">
+        <span class="swatch s1" title="Morgennatt"></span>
+        <span class="swatch s2" title="Varm kjerne"></span>
+        <span class="swatch s3" title="Lavendel"></span>
+        <span class="swatch s4" title="Krem"></span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
