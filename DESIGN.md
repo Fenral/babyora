@@ -68,3 +68,7 @@ Babyora should feel like a calm, capable companion that briefly shows its reason
 - Final mascot and garment asset production (pending shootout).
 - Haptic vocabulary.
 - Exact scan choreography and sound policy.
+
+## Color system locked 2026-07-31: S1 "Monter"
+
+Chosen after the Steg 2a analysis (category evidence, figure/ground insight, three candidate systems, two generated Hjem mocks). Core idea: **two warm darks in layers** — espresso as the spatial canvas (the room), deep warm petrol as the instrument panel (the machine). Warm skin/cream separates maximally against the cool-leaning panel while the espresso canvas keeps the whole warm. Weather reactivity lives ONLY in the panel nuance (clear/cloudy/rain/snow/night within the petrol family); canvas and ink stay constant. A warm amber rim light along the panel's top edge ("monter-lys") is part of the system. Exact OKLCH token values are defined in Steg 2b and verified with a computed contrast matrix before implementation.
