@@ -30,6 +30,7 @@
     --dw-font-data: ui-monospace, 'SF Mono', Consolas, monospace;
   }
   * { box-sizing: border-box; margin: 0; }
+  :focus-visible { outline: 2px solid var(--dw-focus); outline-offset: 3px; border-radius: 4px; }
   body { background: #0A0705; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
 
   .stage {
@@ -159,7 +160,7 @@
 
     <section class="panel" aria-label="Været nå">
       <div class="loc-row">
-        <a class="loc" href="#">Trondheim · Fast sted
+        <a class="loc" href="#">Trondheim
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
         </a>
         <span class="fresh"><i></i>Oppdatert nå</span>
@@ -170,9 +171,9 @@
       </div>
       <p class="feels">Føles som 1°</p>
       <p class="note">Lett yr i lufta, kjølig og fuktig.</p>
-      <div class="toggle" role="group" aria-label="Aktivitet">
-        <button class="on" type="button">Utenfor vogn</button>
-        <button type="button">I vogn</button>
+      <div class="toggle" role="radiogroup" aria-label="Aktivitet">
+        <button class="on" type="button" role="radio" aria-checked="true">Utenfor vogn</button>
+        <button type="button" role="radio" aria-checked="false">I vogn</button>
       </div>
     </section>
 
