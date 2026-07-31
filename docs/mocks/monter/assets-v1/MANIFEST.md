@@ -13,3 +13,9 @@ halsedisse (melert), toffelsko (rust).
 
 Batch 2b (resterende ~51 plagg fra plagg-katalog.json) genereres med samme
 prompt-skjelett når settet er eier-godkjent.
+
+Batch 2b pulje 3 (2026-07-31): langermet-bomullsbody, sydvest, tynne-ullvotter,
+fleecebukse, ullhals-tynn, vintersokker, kyse, vindjakke, varparkdress,
+badebukse, shorts, regnhatt-innerlue. Totalt 51 assets (49 plagg/ikoner +
+2 maskotposer). Gjenstaaende fra plagg-katalog.json mappes mot katalog-ID-er
+ved implementering; enkelte katalogplagg dekkes av eksisterende varianter.
