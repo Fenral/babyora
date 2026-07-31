@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<title>Babyora App Store-rammer (1290x2796)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700&family=Fraunces:opsz,wght@9..144,550&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --dw-canvas: #1E140C;
+    --dw-canvas-glow: #2B1D11;
+    --dw-panel: #113B3E;
+    --dw-ink-hi: #F1E9DA;
+    --dw-ink-mid: #CDC0AB;
+    --dw-accent: #D98E5A;
+    --dw-edge-light: #F2C08A;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #0A0705; display: flex; gap: 40px; padding: 40px; font-family: 'Schibsted Grotesk', sans-serif; }
+
+  .frame {
+    width: 1290px; height: 2796px; flex: none;
+    background:
+      radial-gradient(120% 46% at 50% -8%, rgba(43, 29, 17, 0.95), transparent 60%),
+      linear-gradient(172deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 52%);
+    color: var(--dw-ink-hi);
+    display: flex; flex-direction: column; align-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .brand {
+    margin-top: 128px;
+    font-size: 40px; font-weight: 700; letter-spacing: 0.28em;
+    color: var(--dw-ink-mid);
+  }
+  h1 {
+    margin: 44px 90px 0;
+    font-size: 104px; line-height: 1.06; font-weight: 750;
+    letter-spacing: -0.015em; text-align: center; text-wrap: balance;
+  }
+  h1 em { font-style: normal; color: var(--dw-accent); }
+
+  .device {
+    position: relative;
+    margin-top: 96px;
+    width: 1010px;
+    border-radius: 132px;
+    padding: 26px;
+    background: #0C0805;
+    box-shadow:
+      0 2px 0 rgba(242, 192, 138, 0.22) inset,
+      0 90px 160px -60px rgba(0, 0, 0, 0.85);
+  }
+  .device::before {
+    content: ""; position: absolute; top: 0; left: 18%; right: 18%; height: 2.5px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.7;
+  }
+  .device img {
+    display: block; width: 100%; height: auto;
+    border-radius: 106px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="frame" id="f1">
+    <span class="brand">BABYORA</span>
+    <h1>Vit hva barnet skal ha på. <em>Hver morgen.</em></h1>
+    <div class="device"><img src="final.png" alt="" /></div>
+  </div>
+
+  <div class="frame" id="f2">
+    <span class="brand">BABYORA</span>
+    <h1>Fra vær til antrekk på <em>sekunder</em></h1>
+    <div class="device"><img src="result.png" alt="" /></div>
+  </div>
+
+  <div class="frame" id="f3">
+    <span class="brand">BABYORA</span>
+    <h1>I morgen er allerede <em>planlagt</em></h1>
+    <div class="device"><img src="planlegg.png" alt="" /></div>
+  </div>
+
+</body>
+</html>
