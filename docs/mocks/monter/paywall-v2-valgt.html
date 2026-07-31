@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<title>Babyora — Betalingsvegg v2 · Årlig valgt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,550&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --dw-canvas: #1E140C;
+    --dw-canvas-glow: #2B1D11;
+    --dw-raised: #2C1F13;
+    --dw-ink-hi: #F1E9DA;
+    --dw-ink-mid: #CDC0AB;
+    --dw-ink-low: #A79A82;
+
+    /* Amber-rampe (docs/design-notes/sol-duel-2026-07-31.md §1) — én aksentfamilie.
+       300 er FORBUDT som tekstfarge; kun kant/glans. */
+    --dw-accent-300: #E7B087;
+    --dw-accent-500: #D98E5A;
+    --dw-accent-pressed: #C57C46;
+    --dw-accent-surface: #4A2F21; /* valgt rad, mørk modus · ink-hi 10.12:1 */
+    --dw-ink-on-accent: #2A1708;
+    --dw-edge-light: #F2C08A;
+    --dw-focus: #E8B98C;
+    --dw-hairline: rgba(241, 233, 218, 0.12);
+    --dw-r-pill: 999px;
+    --dw-font-ui: 'Schibsted Grotesk', system-ui, sans-serif;
+    --dw-font-hero: 'Fraunces', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  :focus-visible { outline: 2px solid var(--dw-focus); outline-offset: 3px; border-radius: 4px; }
+  body { background: #0A0705; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
+
+  .stage {
+    width: 390px; height: 844px;
+    background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+    color: var(--dw-ink-hi);
+    font-family: var(--dw-font-ui);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .top { padding: 46px 24px 0; }
+  .brand { font-size: 13px; font-weight: 700; letter-spacing: 0.24em; color: var(--dw-ink-mid); }
+
+  /* ÉN hevet flate for hele skjermen (Depth Doctrine regel 1): verdiblokk og
+     planvelger er seksjoner i samme ark, skilt med hairline INNI flaten.
+     Kantlys kun øverst (skjermens hero-punkt), 16 % (duell §6). Ingen maskot. */
+  .sheet {
+    position: relative;
+    margin: 26px 20px 0;
+    background: var(--dw-raised);
+    border-radius: 20px;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 34px -18px rgba(52, 30, 12, 0.65);
+  }
+  .sheet::before {
+    content: ""; position: absolute; top: 0; left: 7%; right: 7%; height: 1px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.16;
+  }
+  .value { padding: 22px 20px 18px; }
+  .v-head { font-size: 23px; font-weight: 700; letter-spacing: -0.012em; line-height: 1.18; }
+  .v-sub { font-size: 16px; line-height: 1.5; color: var(--dw-ink-mid); margin-top: 8px; max-width: 30ch; }
+  .v-list { margin: 14px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .v-list li { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; line-height: 1.45; color: var(--dw-ink-mid); }
+  .v-list svg { width: 15px; height: 15px; flex: none; margin-top: 1px; color: var(--dw-ink-hi); }
+  .v-list b { color: var(--dw-ink-hi); font-weight: 600; }
+
+  /* Planvelger-seksjon i samme ark. Tre likeverdige rader, ingen glød. */
+  .plans { padding: 4px 14px; border-top: 1px solid var(--dw-hairline); }
+  .plans > *:not(:first-child) { border-top: 1px solid var(--dw-hairline); }
+
+  .plan-unit { border-radius: 12px; }
+  /* Valgt tilstand (se paywall-v2-valgt.html): accent-surface + fylt radio.
+     INGEN kant-ring — §8 forbyr glød utover selve tilstandsflaten. */
+  .plan-unit.selected { background: var(--dw-accent-surface); }
+
+  .plan {
+    position: relative;
+    display: flex; align-items: center; gap: 12px;
+    background: none; border: 0; border-radius: 12px;
+    padding: 13px 6px; min-height: 62px;
+    font-family: inherit; color: inherit; text-align: left; width: 100%;
+    cursor: pointer;
+  }
+  .plan:active { transform: scale(0.99); }
+  .p-radio {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--dw-ink-low); flex: none;
+  }
+  .plan-unit.selected .p-radio {
+    border-color: var(--dw-accent-300);
+    background: var(--dw-accent-500);
+    box-shadow: inset 0 0 0 4px var(--dw-accent-surface);
+  }
+  .p-name { font-size: 16px; font-weight: 700; display: block; }
+  .p-note { font-size: 13px; color: var(--dw-ink-mid); display: block; margin-top: 1px; }
+  .p-text { flex: 1; }
+  .p-price { text-align: right; }
+  .p-sum {
+    font-family: var(--dw-font-hero); font-variation-settings: 'WONK' 0;
+    font-size: 23px; font-weight: 550; display: block;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .p-per { font-size: 13px; color: var(--dw-ink-low); display: block; }
+  .p-badge {
+    display: inline-block;
+    border: 1px solid rgba(231, 176, 135, 0.45);
+    color: var(--dw-ink-mid);
+    font-size: 12px; font-weight: 700; letter-spacing: 0.03em;
+    border-radius: var(--dw-r-pill); padding: 2px 8px; margin-left: 7px;
+    vertical-align: 2px;
+  }
+
+  /* Transparensblokk — kun under valgt rad (se -valgt-varianten). */
+  .breakdown { padding: 2px 14px 13px 46px; }
+  .bd-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px; color: var(--dw-ink-mid); padding: 2.5px 0;
+  }
+  .bd-row .bd-amt { font-weight: 600; color: var(--dw-ink-hi); font-variant-numeric: tabular-nums; }
+  .bd-note {
+    font-size: 13px; line-height: 1.5; color: var(--dw-ink-low);
+    margin-top: 5px; padding-top: 7px; border-top: 1px solid rgba(241, 233, 218, 0.08);
+  }
+
+  .choose-hint { text-align: center; font-size: 13px; color: var(--dw-ink-low); padding: 14px 24px 0; }
+
+  .actions { padding: 10px 24px 0; margin-top: auto; }
+  .cta {
+    border: 0; border-radius: 14px; width: 100%;
+    font-family: inherit; font-size: 16px; font-weight: 700;
+    padding: 17px 22px; min-height: 54px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  /* Default: ingen plan valgt → CTA hviler (aktivt valg kreves, §8). */
+  .cta.resting {
+    background: rgba(241, 233, 218, 0.10);
+    color: var(--dw-ink-mid);
+    cursor: default;
+  }
+  .cta.armed {
+    background: var(--dw-accent-500); color: var(--dw-ink-on-accent);
+    cursor: pointer;
+    box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+  }
+  .cta.armed:active { background: var(--dw-accent-pressed); transform: translateY(1px); }
+  .links { display: flex; justify-content: center; gap: 18px; padding: 10px 0 0; }
+  .links button {
+    background: none; border: 0; font-family: inherit;
+    color: var(--dw-ink-mid); font-size: 13px; font-weight: 600;
+    text-decoration: underline; text-underline-offset: 3px;
+    padding: 12px 6px; min-height: 44px; cursor: pointer;
+  }
+  .dot { color: var(--dw-ink-low); font-size: 13px; align-self: center; }
+  .homebar { width: 128px; height: 5px; border-radius: 3px; background: rgba(241, 233, 218, 0.28); margin: 8px auto 8px; }
+</style>
+</head>
+<body>
+  <!--
+    Babyora — betalingsvegg v2, VALGT-TILSTAND (Årlig aktivt valgt av brukeren).
+    Bygget fra docs/design-notes/sol-duel-2026-07-31.md §8.
+    Hard vegg: ingen lukkeknapp (eierlåst). Ingen maskot. Ingen countdown/puls/konfetti.
+    Etter aktivt valg: accent-surface på raden, fylt radio, transparensblokk, armert CTA.
+  -->
+  <div class="stage">
+    <div class="top"><span class="brand">BABYORA</span></div>
+
+    <section class="sheet" aria-label="Fortsett med Babyora">
+      <div class="value">
+        <h1 class="v-head">Du har sett dagens gratis antrekk</h1>
+        <p class="v-sub">Fortsett med Babyora for morgendagen, uken og alle som passer Lillian.</p>
+        <ul class="v-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>Daglige antrekk</b> basert på vær og aktivitet</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>Planlegging</b> for i morgen og resten av uken</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>Flere steder</b> og deling med omsorgspersoner</span></li>
+        </ul>
+      </div>
+
+      <div class="plans" role="radiogroup" aria-label="Velg plan">
+        <div class="plan-unit selected">
+          <button class="plan" type="button" role="radio" aria-checked="true">
+            <span class="p-radio" aria-hidden="true"></span>
+            <span class="p-text">
+              <span class="p-name">Årlig<span class="p-badge">Best verdi</span></span>
+              <span class="p-note">25 kr per måned · spar 36 % mot månedsplan</span>
+            </span>
+            <span class="p-price"><span class="p-sum">299 kr</span><span class="p-per">per år</span></span>
+          </button>
+          <div class="breakdown" aria-label="Prisoversikt for Årlig">
+            <div class="bd-row"><span>I dag</span><span class="bd-amt">0 kr</span></div>
+            <div class="bd-row"><span>7. august</span><span class="bd-amt">299 kr</span></div>
+            <p class="bd-note">Fornyes deretter årlig til samme pris. Avsluttes i App Store.</p>
+          </div>
+        </div>
+        <button class="plan" type="button" role="radio" aria-checked="false">
+          <span class="p-radio" aria-hidden="true"></span>
+          <span class="p-text">
+            <span class="p-name">Kvartal</span>
+            <span class="p-note">33 kr per måned</span>
+          </span>
+          <span class="p-price"><span class="p-sum">99 kr</span><span class="p-per">per kvartal</span></span>
+        </button>
+        <button class="plan" type="button" role="radio" aria-checked="false">
+          <span class="p-radio" aria-hidden="true"></span>
+          <span class="p-text">
+            <span class="p-name">Månedlig</span>
+            <span class="p-note">Fornyes månedlig</span>
+          </span>
+          <span class="p-price"><span class="p-sum">39 kr</span><span class="p-per">per måned</span></span>
+        </button>
+      </div>
+    </section>
+
+    <p class="choose-hint">Alle planer starter med 7 gratisdager.</p>
+
+    <div class="actions">
+      <button class="cta armed" type="button">Start gratis &#8211; deretter 299 kr/år</button>
+      <div class="links">
+        <button type="button">Gjenopprett kjøp</button>
+        <span class="dot">&middot;</span>
+        <button type="button">Personvern</button>
+        <span class="dot">&middot;</span>
+        <button type="button">Vilkår</button>
+      </div>
+    </div>
+    <div class="homebar"></div>
+  </div>
+</body>
+</html>

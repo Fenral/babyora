@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<title>Babyora — Onboarding steg 1 v2 (runde 3-forlik)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,550&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --dw-canvas: #1E140C;
+    --dw-canvas-glow: #2B1D11;
+    --dw-panel: #113B3E;
+    --dw-raised: #2C1F13;
+    --dw-ink-hi: #F1E9DA;
+    --dw-ink-mid: #CDC0AB;
+    --dw-ink-low: #A79A82;
+    --dw-accent: #D98E5A;
+    --dw-accent-pressed: #C57C46;
+    --dw-ink-on-accent: #2A1708;
+    --dw-edge-light: #F2C08A;
+    --dw-focus: #E8B98C;
+    --dw-hairline: rgba(241, 233, 218, 0.12);
+    --dw-r-pill: 999px;
+    --dw-font-ui: 'Schibsted Grotesk', system-ui, sans-serif;
+    --dw-font-hero: 'Fraunces', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  :focus-visible { outline: 2px solid var(--dw-focus); outline-offset: 3px; border-radius: 4px; }
+  body { background: #0A0705; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
+
+  .stage {
+    width: 390px; height: 844px;
+    background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+    color: var(--dw-ink-hi);
+    font-family: var(--dw-font-ui);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .top { padding: 54px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+  .progress { display: flex; gap: 6px; margin: 14px 24px 0; }
+  .progress i { height: 4px; border-radius: 2px; flex: 1; background: rgba(241, 233, 218, 0.14); }
+  .progress i.done { background: var(--dw-accent); }
+
+  /* Stående maskot (DESIGN.md: stående/sittende er de godkjente variantene for
+     onboarding — henge-posituren er reservert Hjem-panelet). Føttene hviler
+     på kortets øvre kant. */
+  .mascot {
+    position: absolute; top: 92px; right: 30px;
+    height: 178px; width: auto; z-index: 3; pointer-events: none;
+    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45));
+  }
+
+  .card {
+    position: relative;
+    margin: 172px 20px 0;
+    background: var(--dw-raised);
+    border-radius: 20px;
+    padding: 24px 22px;
+    z-index: 2;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 34px -18px rgba(52, 30, 12, 0.6);
+  }
+  .card::before {
+    content: ""; position: absolute; top: 0; left: 7%; right: 7%; height: 1px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.18; /* duell §6: 12–20 % på hevede flater; 0.9+ er reservert petrol-panelet */
+  }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.012em; }
+  .sub { font-size: 16px; color: var(--dw-ink-mid); margin-top: 6px; line-height: 1.5; }
+
+  label { display: block; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dw-ink-low); margin-top: 18px; }
+  input {
+    width: 100%; margin-top: 8px;
+    background: rgba(241, 233, 218, 0.08);
+    border: 1px solid rgba(241, 233, 218, 0.18);
+    border-radius: 12px;
+    font-family: inherit; font-size: 16px; font-weight: 600;
+    color: var(--dw-ink-hi);
+    padding: 15px 16px; min-height: 52px;
+  }
+  input::placeholder { color: var(--dw-ink-low); font-weight: 500; }
+  input:focus { outline: 2px solid var(--dw-focus); outline-offset: 1px; border-color: transparent; }
+  .hint { font-size: 13px; color: var(--dw-ink-mid); opacity: 0.85; margin-top: 8px; }
+
+  /* Tomrommet gjør arbeid: en dempet forhåndsvisning av hva navnet påvirker.
+     Ikke pynt — den ene setningen som faktisk endres når feltet fylles ut. */
+  .preview {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--dw-hairline);
+  }
+  .preview .tag {
+    display: block;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--dw-ink-low);
+  }
+  .preview .line {
+    display: block;
+    margin-top: 6px;
+    font-size: 16px; font-weight: 500; color: var(--dw-ink-mid);
+    line-height: 1.55;
+  }
+  .preview .named { color: var(--dw-ink-hi); font-weight: 600; }
+
+  .actions { padding: 20px 24px 0; margin-top: auto; }
+  .cta {
+    border: 0; border-radius: 14px; width: 100%;
+    background: var(--dw-accent); color: var(--dw-ink-on-accent);
+    font-family: inherit; font-size: 17px; font-weight: 700;
+    padding: 17px 22px; min-height: 54px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+  }
+  .cta:active { background: var(--dw-accent-pressed); transform: translateY(1px); }
+  .cta svg { width: 18px; height: 18px; }
+  .homebar { width: 128px; height: 5px; border-radius: 3px; background: rgba(241, 233, 218, 0.28); margin: 16px auto 8px; }
+</style>
+</head>
+<body>
+  <!-- Mock-konvensjon: fast 390x844-artboard. Implementeringen MÅ verifiseres
+       responsivt på 320x568 / 390x844 / 430x932 med CTA synlig uten scroll
+       (docs/ONBOARDING-REDESIGN-2026-07-22.md). -->
+  <div class="stage">
+    <div class="top">
+      <span class="brand" style="font-size:13px; font-weight:700; letter-spacing:0.24em;">BABYORA</span>
+    </div>
+    <div class="progress" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="4" aria-label="Steg 1 av 4"><i class="done"></i><i></i><i></i><i></i></div>
+
+    <img class="mascot" src="maskot-staaende-cut-360.png" alt="" />
+
+    <section class="card" aria-label="Navn eller kallenavn">
+      <h1>Hvem kler vi på?</h1>
+      <p class="sub">Bruk navn eller kallenavn hvis du vil gjøre rådene personlige.</p>
+      <label for="name">Navn eller kallenavn · Valgfritt</label>
+      <input id="name" type="text" value="Lillian" autocomplete="off" />
+      <p class="hint">Brukes bare i teksten og lagres på denne iPhonen.</p>
+
+      <div class="preview">
+        <span class="tag">Navnet brukes i rådene</span>
+        <span class="line">«Da er vi klare for <span class="named">Lillian</span>»</span>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="cta" type="button">
+        Fortsett
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="homebar"></div>
+  </div>
+</body>
+</html>

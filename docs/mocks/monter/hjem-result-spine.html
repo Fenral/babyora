@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<title>Babyora Hjem — resultat lagspine (Dagens antrekk)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,550&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --dw-canvas: #1E140C;
+    --dw-canvas-glow: #2B1D11;
+    --dw-panel: #113B3E;
+    --dw-raised: #2C1F13;
+    --dw-ink-hi: #F1E9DA;
+    --dw-ink-mid: #CDC0AB;
+    --dw-ink-low: #A79A82;
+    --dw-accent: #D98E5A;
+    --dw-accent-pressed: #C57C46;
+    --dw-ink-on-accent: #2A1708;
+    --dw-edge-light: #F2C08A;
+    --dw-focus: #E8B98C;
+    --dw-w-rain: #0D3037;
+    --dw-hairline: rgba(241, 233, 218, 0.12);
+    --dw-r-pill: 999px;
+    --dw-font-ui: 'Schibsted Grotesk', system-ui, sans-serif;
+    --dw-font-hero: 'Fraunces', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  :focus-visible { outline: 2px solid var(--dw-focus); outline-offset: 3px; border-radius: 4px; }
+  body { background: #0A0705; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
+
+  .stage {
+    width: 390px; height: 844px;
+    background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+    color: var(--dw-ink-hi);
+    font-family: var(--dw-font-ui);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .top { padding: 56px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-size: 13px; font-weight: 700; letter-spacing: 0.24em; color: var(--dw-ink-hi); }
+
+  /* Kompakt værstripe. Seksjon 6: lyskant kun 12-20% opasitet, kun interaktive/hevede flater. */
+  .strip { border: 0; font-family: inherit; text-align: left; cursor: pointer; color: inherit; width: calc(100% - 48px);
+    position: relative;
+    margin: 14px 24px 0;
+    background: var(--dw-w-rain);
+    border-radius: 16px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.5);
+  }
+  .strip::before {
+    content: ""; position: absolute; top: 0; left: 8%; right: 8%; height: 1px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.18;
+  }
+  .strip .s-temp { font-family: var(--dw-font-hero); font-size: 30px; font-weight: 550; font-variant-numeric: lining-nums tabular-nums; }
+  .strip .s-meta { font-size: 13px; color: #DCD8C8; line-height: 1.4; flex: 1; }
+  .strip .s-check {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 13px; font-weight: 600; color: #DCD8C8;
+  }
+  .strip .s-check svg { width: 14px; height: 14px; color: #DCD8C8; }
+
+  /* Resultat — lagspine-utfordreren (duell seksjon 12/9). Ingen ytre kortflate:
+     tekst og noder ligger direkte på canvas. Kun plaggminiaturene er hevede flater. */
+  .result { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; mask-image: linear-gradient(to bottom, black 92%, transparent 100%); padding: 10px 0 242px; }
+  .spine-page { width: 375px; margin: 0 auto; padding: 0 24px; }
+  h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.012em; }
+  .sub { font-size: 14px; color: var(--dw-ink-low); margin-top: 4px; }
+
+  /* Faseetiketter avbryter spinen mellom gruppene. */
+  .phase-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--dw-ink-low);
+    margin: 16px 0 2px 32px;
+  }
+  h1 + .sub + .phase-label { margin-top: 14px; }
+
+  /* Hver fasegruppe eier sitt eget spine-segment: linjen stopper ved etiketten. */
+  .phase-group { position: relative; }
+  .spine-line {
+    position: absolute; left: 34px; top: 0; bottom: 0; width: 2px;
+    background: rgba(241, 233, 218, 0.16);
+    z-index: 1;
+  }
+
+  .lrow { display: flex; align-items: center; min-height: 66px; position: relative; z-index: 2; }
+
+  /* Nummernode: 28pt, Schibsted tabulær (IKKE Fraunces), ikke interaktiv, ingen falsk touch-target. */
+  .node {
+    width: 28px; height: 28px; border-radius: 50%; flex: none;
+    background: var(--dw-canvas-glow); border: 1px solid rgba(241, 233, 218, 0.22);
+    display: flex; align-items: center; justify-content: center;
+    margin-left: 20px;
+    font-size: 13px; font-weight: 700; color: var(--dw-ink-mid);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .node--dot {
+    width: 12px; height: 12px; margin-left: 28px;
+    border: 1.5px solid rgba(241, 233, 218, 0.5); background: transparent;
+  }
+
+  /* Eneste småflate på skjermen: hevet plaggvitrine (monter-dybde). */
+  .tap {
+    margin-left: 8px; flex: 1 1 auto; min-width: 0;
+    display: flex; align-items: center; gap: 12px;
+    border: 0; background: none; padding: 0; text-align: left; cursor: pointer;
+    color: inherit; font-family: inherit;
+  }
+  .thumb {
+    width: 56px; height: 56px; border-radius: 13px; flex: none;
+    object-fit: cover; background: #3A2A1A;
+    border: 0;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.18) inset, 0 6px 12px -6px rgba(0, 0, 0, 0.55);
+  }
+  .rtext { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .g-name { font-size: 15px; font-weight: 600; line-height: 1.18; }
+  .g-role { font-size: 12px; color: var(--dw-ink-low); line-height: 1.3; }
+
+  /* Bytt — ekte 64x44pt knapp, ikke bare tekst. Ingen vitrine-behandling (kun thumbs eier den). */
+  .swap {
+    margin-left: 8px; flex: none; width: 64px; min-height: 44px;
+    border-radius: 12px; border: 1px solid rgba(241, 233, 218, 0.16); background: none;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    color: var(--dw-ink-low); font-family: inherit; cursor: pointer; padding: 4px 6px;
+  }
+  .swap:active { background: rgba(241, 233, 218, 0.06); }
+  .swap span { font-size: 13px; font-weight: 600; }
+  .swap svg { width: 13px; height: 13px; flex: none; }
+
+  /* Sticky CTA — eget fysisk nivå, ikke sammensmeltet med tab-baren. */
+  .cta-dock {
+    position: absolute; left: 16px; right: 16px; bottom: 112px; z-index: 5;
+    background: var(--dw-raised);
+    border: 1px solid rgba(241, 233, 218, 0.08);
+    border-radius: 22px;
+    padding: 12px 16px 8px;
+    box-shadow: 0 16px 30px -18px rgba(0, 0, 0, 0.65);
+  }
+  .cta-dock::before {
+    content: ""; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.18;
+  }
+  .cta {
+    border: 0; border-radius: 14px; width: 100%;
+    background: var(--dw-accent); color: var(--dw-ink-on-accent);
+    font-family: inherit; font-size: 16.5px; font-weight: 700;
+    padding: 15px 20px; min-height: 52px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    cursor: pointer;
+  }
+  .cta:active { background: var(--dw-accent-pressed); transform: translateY(1px); }
+  .cta svg { width: 18px; height: 18px; }
+  .why {
+    display: block; margin: 2px auto 0; background: none; border: 0;
+    color: var(--dw-ink-low); font-family: inherit; font-size: 12.5px; font-weight: 600;
+    text-decoration: underline; text-underline-offset: 3px;
+    padding: 12px 16px; min-height: 44px; cursor: pointer;
+  }
+
+  /* Flytende tab-bar — seksjon 7. Egen hevet flate, innhold scroller bak den. */
+  .tabbar {
+    position: absolute; left: 16px; right: 16px; bottom: 10px; z-index: 6;
+    height: 92px; border-radius: 28px; overflow: hidden;
+    padding: 10px 6px 0;
+    background: rgba(44, 31, 19, 0.98);
+    box-shadow: 0 18px 34px -18px rgba(0, 0, 0, 0.7);
+  }
+  @supports (backdrop-filter: blur(20px)) {
+    .tabbar { background: rgba(44, 31, 19, 0.78); backdrop-filter: blur(20px) saturate(1.08); -webkit-backdrop-filter: blur(20px) saturate(1.08); }
+  }
+  .tabbar::before {
+    content: ""; position: absolute; top: 0; left: 14%; right: 14%; height: 1px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.2;
+  }
+  .tabbar-row { display: flex; justify-content: space-around; }
+  .tab {
+    text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: var(--dw-ink-low); min-width: 74px; padding: 5px 0 4px; border-radius: 14px;
+  }
+  .tab.on { color: var(--dw-ink-hi); background: rgba(242, 192, 138, 0.12); }
+  .tab svg { width: 21px; height: 21px; }
+  .tab span { font-size: 11.5px; font-weight: 600; }
+  .homebar { width: 120px; height: 5px; border-radius: 3px; background: rgba(241, 233, 218, 0.28); margin: 9px auto 0; }
+</style>
+</head>
+<body>
+  <div class="stage is-fresh">
+    <div class="top">
+      <span class="brand">BABYORA</span>
+    </div>
+
+    <button class="strip" type="button" aria-label="Juster vær, sted eller aktivitet">
+      <span class="s-temp">4°</span>
+      <span class="s-meta">Føles som 1° · Lett yr<br />Trondheim · Utenfor vogn</span>
+      <span class="s-check">
+        Juster
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </span>
+    </button>
+
+    <div class="result">
+      <div class="spine-page">
+        <h1>Dagens antrekk</h1>
+        <p class="sub">5 lag i rekkefølge · 2 tilbehør</p>
+
+        <div class="phase-label">Innerst</div>
+        <div class="phase-group">
+          <span class="spine-line" aria-hidden="true"></span>
+          <div class="lrow">
+            <span class="node" aria-hidden="true">1</span>
+            <button class="tap" type="button">
+              <img class="thumb" src="assets-v1/plagg-langermet-ullbody.png" alt="" />
+              <span class="rtext"><span class="g-name">Langermet ullbody</span><span class="g-role">Fuktavvisende innerlag</span></span>
+            </button>
+            <button class="swap" type="button" aria-label="Bytt langermet ullbody">
+              <span>Bytt</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg>
+            </button>
+          </div>
+          <div class="lrow">
+            <span class="node" aria-hidden="true">2</span>
+            <button class="tap" type="button">
+              <img class="thumb" src="assets-v1/plagg-ullsokker.png" alt="" />
+              <span class="rtext"><span class="g-name">Ullsokker</span><span class="g-role">Varme til føttene</span></span>
+            </button>
+            <button class="swap" type="button" aria-label="Bytt ullsokker">
+              <span>Bytt</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="phase-label">Mellomlag</div>
+        <div class="phase-group">
+          <span class="spine-line" aria-hidden="true"></span>
+          <div class="lrow">
+            <span class="node" aria-hidden="true">3</span>
+            <button class="tap" type="button">
+              <img class="thumb" src="assets-v1/plagg-ull-mellomlag.png" alt="" />
+              <span class="rtext"><span class="g-name">Ullgenser</span><span class="g-role">Isolerende lag</span></span>
+            </button>
+            <button class="swap" type="button" aria-label="Bytt ullgenser">
+              <span>Bytt</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg>
+            </button>
+          </div>
+          <div class="lrow">
+            <span class="node" aria-hidden="true">4</span>
+            <button class="tap" type="button">
+              <img class="thumb" src="assets-v1/plagg-ullbukse.png" alt="" />
+              <span class="rtext"><span class="g-name">Ullbukse</span><span class="g-role">Isolerende lag</span></span>
+            </button>
+            <button class="swap" type="button" aria-label="Bytt ullbukse">
+              <span>Bytt</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="phase-label">Ytterst</div>
+        <div class="phase-group">
+          <span class="spine-line" aria-hidden="true"></span>
+          <div class="lrow">
+            <span class="node" aria-hidden="true">5</span>
+            <button class="tap" type="button">
+              <img class="thumb" src="assets-v1/plagg-regndress.png" alt="" />
+              <span class="rtext"><span class="g-name">Regndress</span><span class="g-role">Vind- og vanntett</span></span>
+            </button>
+            <button class="swap" type="button" aria-label="Bytt regndress">
+              <span>Bytt</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="phase-label">Tilbehør</div>
+        <div class="phase-group">
+          <span class="spine-line" aria-hidden="true"></span>
+          <div class="lrow">
+            <span class="node node--dot" aria-hidden="true"></span>
+            <button class="tap" type="button">
+              <img class="thumb" src="assets-v1/plagg-lue-med-ull.png" alt="" />
+              <span class="rtext"><span class="g-name">Lue med ull</span><span class="g-role">Beskytter hodet</span></span>
+            </button>
+            <button class="swap" type="button" aria-label="Bytt lue med ull">
+              <span>Bytt</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg>
+            </button>
+          </div>
+          <div class="lrow">
+            <span class="node node--dot" aria-hidden="true"></span>
+            <button class="tap" type="button">
+              <img class="thumb" src="assets-v1/plagg-votter.png" alt="" />
+              <span class="rtext"><span class="g-name">Votter</span><span class="g-role">Beskytter hendene</span></span>
+            </button>
+            <button class="swap" type="button" aria-label="Bytt votter">
+              <span>Bytt</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-dock">
+      <button class="cta" type="button">
+        Kle på, steg for steg
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+      <button class="why" type="button">Hvorfor akkurat dette?</button>
+    </div>
+
+    <nav class="tabbar" aria-label="Hovednavigasjon">
+      <div class="tabbar-row">
+        <a class="tab on" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Hjem</span></a>
+        <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg><span>Planlegg</span></a>
+        <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 20c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="10" r="2.4"/><path d="M15.5 20c.4-2.2 1.6-3.6 3.3-3.9 1 .2 1.9.9 2.7 1.9"/></svg><span>Familie</span></a>
+      </div>
+      <div class="homebar"></div>
+    </nav>
+  </div>
+</body>
+</html>
