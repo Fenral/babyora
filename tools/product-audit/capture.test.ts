@@ -3,7 +3,10 @@ import { assertReadOnlyAction, buildCapturePlan, buildForecastFixture } from './
 
 describe('capture plan', () => {
   it('covers all page families', () => {
-    expect(new Set(buildCapturePlan().map((item) => item.pageId)).size).toBe(13);
+    // P1 (nav 4→3 skeleton): 'guide'/'find-outfit'/'clothing-library'/'wardrobe'
+    // were removed from PAGE_CATALOG (see config.ts) — the Guide-tab root is
+    // gone and those three had no reachable entry point without it.
+    expect(new Set(buildCapturePlan().map((item) => item.pageId)).size).toBe(9);
   });
 
   it('blocks dangerous actions', () => {

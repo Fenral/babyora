@@ -10,20 +10,28 @@ import {
 import { TAB_DEFS } from '../../types/nav.js';
 
 describe('BottomTabBar root navigation', () => {
-  it('renders the four canonical roots in order with exactly one current page', () => {
+  it('renders the three canonical roots in order with exactly one current page', () => {
     const markup = renderToStaticMarkup(
       <BottomTabBar active="plan" onNavigate={vi.fn()} />,
     );
 
-    expect(TAB_DEFS.map(({ label }) => label)).toEqual(['Hjem', 'Planlegg', 'Guide', 'Familie']);
-    expect(markup).toMatch(/Hjem.*Planlegg.*Guide.*Familie/u);
+    expect(TAB_DEFS.map(({ label }) => label)).toEqual(['Hjem', 'Planlegg', 'Familie']);
+    expect(markup).toMatch(/Hjem.*Planlegg.*Familie/u);
     expect((markup.match(/aria-current="page"/gu) ?? [])).toHaveLength(1);
     expect(markup).toContain('aria-current="page"');
     expect(markup).toContain('bottom-tab-bar__indicator');
   });
 
+  it('no longer renders a Guide root (P1: nav 4→3 skeleton)', () => {
+    const markup = renderToStaticMarkup(
+      <BottomTabBar active="hjem" onNavigate={vi.fn()} />,
+    );
+
+    expect(markup).not.toMatch(/Guide/u);
+  });
+
   it('makes repeat activation a pure no-op', () => {
-    expect(decideRootChange('guide', 'guide')).toBeNull();
+    expect(decideRootChange('familie', 'familie')).toBeNull();
 
     const onNavigate = vi.fn();
     const onCue = vi.fn();

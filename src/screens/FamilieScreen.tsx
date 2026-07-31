@@ -6,12 +6,15 @@
  */
 
 import { InnstillingerScreen } from './InnstillingerScreen';
-import type { TabKey } from '../types/nav';
+import type { FamilieToolTarget, TabKey } from '../types/nav';
 
 type Props = {
   onNavigate: (tab: TabKey) => void;
+  /** P1: åpner en av de tidligere Guide-"kunnskap"-skjermene (uendret) via
+   *  Familie sin nye "Verktøy"-seksjon — se ToolsSection.tsx. */
+  onOpenTool: (target: FamilieToolTarget) => void;
 };
 
-export function FamilieScreen({ onNavigate }: Props) {
-  return <InnstillingerScreen onNavigate={onNavigate} />;
+export function FamilieScreen({ onNavigate, onOpenTool }: Props) {
+  return <InnstillingerScreen onNavigate={onNavigate} onOpenTool={onOpenTool} />;
 }

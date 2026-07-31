@@ -21,7 +21,7 @@ import {
 } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { AnimatePresence, motion } from 'motion/react';
-import type { TabKey } from './types/nav';
+import type { FamilieToolTarget, TabKey } from './types/nav';
 import { useChildren } from './state/children-store';
 import { useTheme } from './state/theme-store';
 import { useAutoLocationRefresh } from './hooks/useAutoLocationRefresh';
@@ -60,9 +60,12 @@ const PaakledningScreen = lazy(() =>
 const UkeScreen = lazy(() =>
   import('./screens/UkeScreen').then((m) => ({ default: m.UkeScreen })),
 );
-const GuideHubScreen = lazy(() =>
-  import('./screens/GuideHubScreen').then((m) => ({ default: m.GuideHubScreen })),
-);
+// P1 (nav 4→3 skeleton): GuideHubScreen er ikke lenger mountet fra tab-
+// navigasjon (Guide-roten er fjernet, se types/nav.ts). Filen består
+// uendret — de gamle Guide-sub-sidene rutes nå direkte som drills under —
+// men den lazy-importerte komponenten fjernes herfra siden ingenting
+// lenger mounter den. `GuideHubTarget`-TYPEN importeres fortsatt lenger
+// ned (type-imports trekker ikke kode inn i bundlen).
 const FinnAntrekkScreen = lazy(() =>
   import('./screens/FinnAntrekkScreen').then((m) => ({ default: m.FinnAntrekkScreen })),
 );
@@ -110,7 +113,6 @@ function RouteSkeleton(): ReactElement {
 const TAB_TITLES: Record<TabKey, string> = {
   hjem: 'Hjem · Babyora',
   plan: 'Planlegg · Babyora',
-  guide: 'Guide · Babyora',
   familie: 'Familie · Babyora',
 };
 
@@ -137,7 +139,17 @@ type Drill =
       outfitBundle?: OutfitBundleProducerResult;
       origin: HTMLElement;
     }
-  | { kind: 'guide'; target: GuideHubTarget };
+  // P1: tidligere ETT samlet guide-drill-kind med et GuideHubTarget — splittet
+  // i tre etter Guide-tab-fjerningen. tog/varm-kald/forste-vinter (FamilieToolTarget)
+  // åpnes nå fra Familie sin "Verktøy"-seksjon → mappes til 'familie' i
+  // activeTabForBar. finn-antrekk/plaggbib har IKKE en synlig opener ennå
+  // (før var de KUN nåbare via Guide-huben) — drill-kinden er wired ferdig her
+  // slik at P5/P6 kan koble på en CTA fra Hjem/PaakledningScreen uten å røre
+  // App.tsx sin routing igjen. De mappes til 'hjem' i activeTabForBar siden
+  // det er deres fremtidige opener-kontekst.
+  | { kind: 'familie-tool'; target: FamilieToolTarget }
+  | { kind: 'finn-antrekk' }
+  | { kind: 'plaggbib' };
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -242,6 +254,9 @@ export default function App(): ReactElement {
     setTab(next);
   };
 
+  // P1: navnet `onOpenGuideTarget` beholdes (fortsatt sendt til VinterprogramScreen
+  // som onOpenTarget) — targets ruter nå til tre ulike drill-kinder i stedet for
+  // ett samlet `guide`-kind, se Drill-unionen over.
   const onOpenGuideTarget = useCallback((target: GuideHubTarget | 'snart') => {
     if (target === 'snart') {
       setDrill(null);
@@ -250,11 +265,26 @@ export default function App(): ReactElement {
       window.requestAnimationFrame(() => mainRef.current?.focus());
       return;
     }
-    setDrill({ kind: 'guide', target });
+    if (target === 'finn-antrekk') {
+      setDrill({ kind: 'finn-antrekk' });
+      return;
+    }
+    if (target === 'plaggbib') {
+      setDrill({ kind: 'plaggbib' });
+      return;
+    }
+    setDrill({ kind: 'familie-tool', target });
   }, []);
 
   const onOpenWarmColdGuide = useCallback(() => {
-    setDrill({ kind: 'guide', target: 'varm-kald' });
+    setDrill({ kind: 'familie-tool', target: 'varm-kald' });
+  }, []);
+
+  // P1: opener for Familie sin nye "Verktøy"-seksjon (ToolsSection) — samme
+  // drill-kind som onOpenWarmColdGuide/onOpenGuideTarget bruker for
+  // tog/varm-kald/forste-vinter.
+  const onOpenTool = useCallback((target: FamilieToolTarget) => {
+    setDrill({ kind: 'familie-tool', target });
   }, []);
 
   const onConsumeRequestedPlanView = useCallback((token: number) => {
@@ -549,15 +579,18 @@ export default function App(): ReactElement {
   let routeContent: ReactNode;
 
   // Active tab for global BottomTabBar:
-  //  - drill === null            → use current tab
-  //  - drill.kind === 'guide'    → 'guide' (sub-side i guide-flow)
-  //  - drill.kind === 'paakledning' → 'hjem' (åpnet via Hjem CTA;
+  //  - drill === null                 → use current tab
+  //  - drill.kind === 'familie-tool'  → 'familie' (åpnet via Familie sin
+  //    Verktøy-seksjon — tog/varm-kald/forste-vinter)
+  //  - drill.kind === 'finn-antrekk' / 'plaggbib' → 'hjem' (ingen synlig
+  //    opener ennå, se Drill-union-kommentaren; 'hjem' er fremtidig opener)
+  //  - drill.kind === 'paakledning'   → 'hjem' (åpnet via Hjem CTA;
   //    baren skjules uansett siden PaakledningScreen er native dialog modal)
   let activeTabForBar: TabKey;
   if (activeDrill === null) {
     activeTabForBar = tab;
-  } else if (activeDrill.kind === 'guide') {
-    activeTabForBar = 'guide';
+  } else if (activeDrill.kind === 'familie-tool') {
+    activeTabForBar = 'familie';
   } else {
     activeTabForBar = 'hjem';
   }
@@ -566,20 +599,20 @@ export default function App(): ReactElement {
   // dekker hele skjermen. BottomTabBar skal IKKE være synlig / klikkbar
   // mens den er åpen. Vi dropper rendring helt for clarity.
   const sheetOpen = activeDrill?.kind === 'paakledning';
-  if (activeDrill?.kind === 'guide' && activeDrill.target === 'finn-antrekk') {
-    routeKey = 'drill:guide:finn-antrekk';
+  if (activeDrill?.kind === 'finn-antrekk') {
+    routeKey = 'drill:finn-antrekk';
     routeContent = <FinnAntrekkScreen onBack={() => setDrill(null)} />;
-  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'plaggbib') {
-    routeKey = 'drill:guide:plaggbib';
+  } else if (activeDrill?.kind === 'plaggbib') {
+    routeKey = 'drill:plaggbib';
     routeContent = <PlaggbibliotekScreen onBack={() => setDrill(null)} />;
-  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'tog') {
-    routeKey = 'drill:guide:tog';
+  } else if (activeDrill?.kind === 'familie-tool' && activeDrill.target === 'tog') {
+    routeKey = 'drill:familie-tool:tog';
     routeContent = <TogGuideScreen onBack={() => setDrill(null)} />;
-  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'varm-kald') {
-    routeKey = 'drill:guide:varm-kald';
+  } else if (activeDrill?.kind === 'familie-tool' && activeDrill.target === 'varm-kald') {
+    routeKey = 'drill:familie-tool:varm-kald';
     routeContent = <VarmEllerKaldScreen onBack={() => setDrill(null)} />;
-  } else if (activeDrill?.kind === 'guide' && activeDrill.target === 'forste-vinter') {
-    routeKey = 'drill:guide:forste-vinter';
+  } else if (activeDrill?.kind === 'familie-tool' && activeDrill.target === 'forste-vinter') {
+    routeKey = 'drill:familie-tool:forste-vinter';
     routeContent = (
       <VinterprogramScreen
         onBack={() => setDrill(null)}
@@ -610,19 +643,13 @@ export default function App(): ReactElement {
         onConsumeRequestedPlanView={onConsumeRequestedPlanView}
       />
     );
-  } else if (tab === 'guide') {
-    routeKey = 'tab:guide';
-    routeContent = (
-      <GuideHubScreen
-        onNavigate={onNavigate}
-        onOpenCard={onOpenGuideTarget}
-      />
-    );
   } else {
     // R7 Task 3: Familie-roten hoster innstillingsinnholdet til Task 7
     // restrukturerer den (barn/omsorgspersoner/steder/Plus-seksjoner).
+    // P1: FamilieScreen får nå onOpenTool for sin "Verktøy"-seksjon (de
+    // tidligere Guide-"kunnskap"-kortene tog/varm-kald/forste-vinter).
     routeKey = 'tab:familie';
-    routeContent = <FamilieScreen onNavigate={onNavigate} />;
+    routeContent = <FamilieScreen onNavigate={onNavigate} onOpenTool={onOpenTool} />;
   }
 
   return (

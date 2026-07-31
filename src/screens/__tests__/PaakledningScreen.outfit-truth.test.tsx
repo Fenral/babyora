@@ -307,7 +307,7 @@ describe('PaakledningScreen outfit truth integration', () => {
     expect(app.match(/transitionVisualState=/gu)).toHaveLength(2);
     expect(app).toContain("outfitTransition.settle('completed')");
     expect(app).toContain("outfitTransition.abort('motion-ineligible')");
-    expect(app).toContain("setDrill({ kind: 'guide', target: 'varm-kald' });");
+    expect(app).toContain("setDrill({ kind: 'familie-tool', target: 'varm-kald' });");
     expect(app).not.toContain('outfitProducerSeed');
     expect((app.match(/produceOutfitBundle\s*\(/gu) ?? [])).toHaveLength(2);
   });

@@ -39,44 +39,36 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
     role: 'Gjøre Plus-verdien fremover konkret uten å svekke dagens gratisverdi.',
     states: [{ id: 'default', label: 'Dags- og ukeplan', required: true, actions: [tab('Uke|Plan'), wait] }],
   },
-  {
-    id: 'guide', label: 'Guide', appWeight: 7,
-    role: 'Organisere verktøy og kunnskap uten å skjule den daglige hovedoppgaven.',
-    states: [{ id: 'hub', label: 'Guideoversikt', required: true, actions: [tab('Guide'), wait] }],
-  },
-  {
-    id: 'find-outfit', label: 'Finn antrekk', appWeight: 6,
-    role: 'La forelderen utforske vær og situasjon med tydelig årsak–virkning.',
-    states: [{ id: 'default', label: 'Standard kalkulator', required: true, actions: [tab('Guide'), button('Kleskalkulatoren'), wait] }],
-  },
-  {
-    id: 'clothing-library', label: 'Plaggbibliotek', appWeight: 3,
-    role: 'Gi et lavfriksjons oppslagsverk som bygger forståelse og tillit.',
-    states: [{ id: 'overview', label: 'Bibliotekoversikt', required: true, actions: [tab('Guide'), text('Plaggbibliotek'), wait] }],
-  },
-  {
-    id: 'wardrobe', label: 'Min garderobe', appWeight: 3,
-    role: 'Vise om registreringsarbeidet gir nok personlig verdi til å forsvares.',
-    states: [{ id: 'default', label: 'Garderobeoversikt', required: true, actions: [tab('Guide'), text('Min garderobe'), wait] }],
-  },
+  // P1 (nav 4→3 skeleton, 2026-07-30): Guide-tab-roten er fjernet (se
+  // src/types/nav.ts). Guide-huben selv (id 'guide') hadde ingen egen
+  // destinasjon utenom seg selv, så den er fjernet uten erstatning.
+  // find-outfit/clothing-library/wardrobe var KUN nåbare via Guide-huben og
+  // har ingen synlig opener ennå etter fjerningen — FinnAntrekkScreen og
+  // PlaggbibliotekScreen er wired som drills i App.tsx, men uten en CTA som
+  // åpner dem (se App.tsx sin Drill-union-kommentar). MinGarderobeScreen var
+  // allerede utilgjengelig fra Guide-huben før denne endringen. Alle tre
+  // gjeninnføres i katalogen når P5/P6 gir dem et entry-point fra Hjem. De
+  // fjernede sidenes appWeight (7+6+3+3=19) er flyttet til 'settings' under,
+  // siden Familie/Innstillinger nå er hjemmet for de gjenværende
+  // Guide-"kunnskap"-verktøyene (tog/warm-cold/first-winter).
   {
     id: 'tog', label: 'TOG', appWeight: 5,
     role: 'Gi forsiktig og forståelig søvnveiledning uten å blande TOG inn i utendørspåkledning.',
-    states: [{ id: 'default', label: 'TOG-veileder', required: true, actions: [tab('Guide'), button('Soving innendørs'), wait], expectedText: 'Soving innendørs' }],
+    states: [{ id: 'default', label: 'TOG-veileder', required: true, actions: [tab('Familie'), button('Soveguiden'), wait], expectedText: 'Soving innendørs' }],
   },
   {
     id: 'warm-cold', label: 'Varm eller kald', appWeight: 5,
     role: 'Lære forelderen en enkel kontroll som øker trygghet og kan gi personlig tilpasning.',
-    states: [{ id: 'default', label: 'Nakkesjekk', required: true, actions: [tab('Guide'), text('Varm eller kald'), wait] }],
+    states: [{ id: 'default', label: 'Nakkesjekk', required: true, actions: [tab('Familie'), text('Varm eller kald'), wait] }],
   },
   {
     id: 'first-winter', label: 'Første vinter', appWeight: 5,
     role: 'Bygge tillit og sesongverdi uten å gjøre tekstinnhold til hele Plus-produktet.',
-    states: [{ id: 'overview', label: 'Programoversikt', required: true, actions: [tab('Guide'), text('Første vinter'), wait] }],
+    states: [{ id: 'overview', label: 'Programoversikt', required: true, actions: [tab('Familie'), text('Første vinter'), wait] }],
   },
   {
-    id: 'settings', label: 'Innstillinger', appWeight: 5,
-    role: 'Gjøre barn, sted, varsler, personvern og abonnement forståelig og kontrollerbart.',
+    id: 'settings', label: 'Innstillinger', appWeight: 24,
+    role: 'Gjøre barn, sted, varsler, verktøy, personvern og abonnement forståelig og kontrollerbart.',
     states: [{ id: 'default', label: 'Innstillingsoversikt', required: true, actions: [tab('Familie|Innst'), wait] }],
   },
   {

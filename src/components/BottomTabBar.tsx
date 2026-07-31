@@ -58,10 +58,6 @@ function IconWeek(): ReactElement {
   return <svg {...iconProps()}><rect x={3} y={5} width={18} height={16} rx={2} /><path d="M3 11h18M8 3v4M16 3v4" /></svg>;
 }
 
-function IconGuide(): ReactElement {
-  return <svg {...iconProps()}><path d="M4 5h7v15H4zM13 5h7v15h-7z" /><path d="M11 5v15M13 5v15" /></svg>;
-}
-
 function IconFamily(): ReactElement {
   return <svg {...iconProps()}><circle cx={9} cy={8} r={3} /><circle cx={17} cy={9.5} r={2.3} /><path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5" /><path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2" /></svg>;
 }
@@ -69,7 +65,6 @@ function IconFamily(): ReactElement {
 const TAB_ICONS: Record<TabKey, TabIcon> = {
   hjem: IconHome,
   plan: IconWeek,
-  guide: IconGuide,
   familie: IconFamily,
 };
 
