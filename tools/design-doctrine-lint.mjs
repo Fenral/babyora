@@ -34,13 +34,16 @@ const report = (file, rule, msg) => {
 for (const file of files) {
   const css = readFileSync(file, 'utf8');
 
-  // D1: hairline-rader krever en hevet listeflate i samme fil
-  const hasHairlineRows = /\.row\s*\+\s*\.row\s*{[^}]*border-top/.test(css);
+  // D1: hairline-rader (border-top ELLER border-bottom pa *row*-klasser) krever
+  // en godkjent hevet gruppeflate i samme fil. Godkjente container-klasser er
+  // doktrinens register: rows, week-surface, plans, group.
+  const hasHairlineRows =
+    /\.[\w-]*row[\w-]*[^{]*{[^}]*border-(top|bottom):\s*1px solid/.test(css);
   const hasRaisedListSurface =
-    /\.rows\s*{[^}]*background[^}]*}/s.test(css) &&
-    /\.rows\s*{[^}]*box-shadow[^}]*inset/s.test(css);
+    /\.(rows|week-surface|plans|group)\s*{[^}]*background[^}]*}/s.test(css) &&
+    /\.(rows|week-surface|plans|group)\s*{[^}]*box-shadow[^}]*inset/s.test(css);
   if (hasHairlineRows && !hasRaisedListSurface) {
-    report(file, 'D1', 'Rad-liste med hairlines uten hevet flate rundt (.rows trenger raised bakgrunn + inset topplys).');
+    report(file, 'D1', 'Rad-liste med hairlines uten godkjent hevet gruppeflate (rows/week-surface/plans/group med raised bakgrunn + inset topplys).');
   }
 
   // D2: hver bruk av --dw-raised som bakgrunn skal ha inset-lys i samme regel

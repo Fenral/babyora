@@ -2,26 +2,26 @@
 <html lang="nb">
 <head>
 <meta charset="utf-8" />
-<title>Babyora Hjem — Monter (weather-ready)</title>
+<title>Babyora Hjem — Monter dag (lys modus)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,550&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --dw-canvas: #1E140C;
-    --dw-canvas-glow: #2B1D11;
+    --dw-canvas: #F3EEE3;
+    --dw-canvas-glow: #FAF6ED;
     --dw-panel: #113B3E;
-    --dw-raised: #2C1F13;
-    --dw-ink-hi: #F1E9DA;
-    --dw-ink-mid: #CDC0AB;
-    --dw-ink-low: #A79A82;
+    --dw-raised: #FFFDF7;
+    --dw-ink-hi: #2A1D12;
+    --dw-ink-mid: #5C4F3E;
+    --dw-ink-low: #75604A;
     --dw-ink-panel-mid: #DCD8C8;
-    --dw-accent: #D98E5A;
-    --dw-accent-pressed: #C57C46;
-    --dw-ink-on-accent: #2A1708;
+    --dw-accent: #A65D2C;
+    --dw-accent-pressed: #91501F;
+    --dw-ink-on-accent: #FFF4E8;
     --dw-edge-light: #F2C08A;
-    --dw-focus: #E8B98C;
+    --dw-focus: #8A4F1E;
     --dw-w-rain: #0D3037;
-    --dw-hairline: rgba(241, 233, 218, 0.12);
+    --dw-hairline: rgba(42, 29, 18, 0.14);
     --dw-r-panel: 20px;
     --dw-r-control: 12px;
     --dw-r-pill: 999px;
@@ -31,7 +31,7 @@
   }
   * { box-sizing: border-box; margin: 0; }
   :focus-visible { outline: 2px solid var(--dw-focus); outline-offset: 3px; border-radius: 4px; }
-  body { background: #0A0705; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
+  body { background: #E8E1D2; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
 
   .stage {
     width: 390px; height: 844px;
@@ -55,7 +55,7 @@
     width: 205px; height: auto;
     z-index: 3;
     pointer-events: none;
-    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45));
+    filter: drop-shadow(0 10px 22px rgba(96, 74, 50, 0.35));
   }
 
   /* Panelet (instrumentet) — regn-nyanse */
@@ -66,7 +66,7 @@
     border-radius: var(--dw-r-panel);
     padding: 24px 22px 18px;
     z-index: 2;
-    box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 18px 40px -18px rgba(96, 74, 50, 0.45);
   }
   .panel::before {
     content: "";
@@ -122,7 +122,7 @@
     padding: 17px 22px;
     display: flex; align-items: center; justify-content: center; gap: 10px;
     cursor: pointer;
-    box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 10px 22px -12px rgba(96, 74, 50, 0.5);
   }
   .cta:active { background: var(--dw-accent-pressed); transform: translateY(1px); }
   .cta svg { width: 18px; height: 18px; }
@@ -140,7 +140,7 @@
   .tab.on { color: var(--dw-ink-hi); }
   .tab svg { width: 22px; height: 22px; }
   .tab span { font-size: 12px; font-weight: 600; }
-  .homebar { width: 128px; height: 5px; border-radius: 3px; background: rgba(241, 233, 218, 0.28); margin: 6px auto 8px; }
+  .homebar { width: 128px; height: 5px; border-radius: 3px; background: rgba(42, 29, 18, 0.25); margin: 6px auto 8px; }
 
   /* Kompresjon for lave viewporter (SE-klassen): CTA skal nås uten scroll */
   @media (max-height: 700px) {
@@ -150,6 +150,10 @@
     .temp { font-size: 60px; }
     .ask-block { padding-top: 6px; padding-bottom: 16px; }
   }
+  /* Instrumentet er temakonstant: interioret star i krem uansett modus */
+  .panel { color: #F1E9DA; }
+  .panel .temp, .panel .feels { color: #F1E9DA; }
+  .toggle button.on { background: #F1E9DA; color: #0D3037; }
 </style>
 </head>
 <body>
