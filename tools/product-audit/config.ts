@@ -35,6 +35,14 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
     states: [{ id: 'recommendation', label: 'Antrekksdetaljer', required: true, actions: [tab('Hjem'), button('Se dagens antrekk|Se påkledning|Påkledning'), wait] }],
   },
   {
+    id: 'find-outfit', label: 'Juster', appWeight: 6,
+    role: 'Bevise at antrekket kan justeres manuelt fra dagens vær og aktivitet uten å forlate den fasit-baserte anbefalingen.',
+    states: [{
+      id: 'default', label: 'Juster-drillen (sliders prefylt fra Hjems resultat)', required: true,
+      actions: [tab('Hjem'), wait, button('Finn dagens antrekk'), wait, button('Juster'), wait],
+    }],
+  },
+  {
     id: 'plan', label: 'Uke / Planlegg', appWeight: 10,
     role: 'Gjøre Plus-verdien fremover konkret uten å svekke dagens gratisverdi.',
     states: [{ id: 'default', label: 'Dags- og ukeplan', required: true, actions: [tab('Uke|Plan'), wait] }],
@@ -43,14 +51,18 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
   // src/types/nav.ts). Guide-huben selv (id 'guide') hadde ingen egen
   // destinasjon utenom seg selv, så den er fjernet uten erstatning.
   // find-outfit/clothing-library/wardrobe var KUN nåbare via Guide-huben og
-  // har ingen synlig opener ennå etter fjerningen — FinnAntrekkScreen og
-  // PlaggbibliotekScreen er wired som drills i App.tsx, men uten en CTA som
-  // åpner dem (se App.tsx sin Drill-union-kommentar). MinGarderobeScreen var
-  // allerede utilgjengelig fra Guide-huben før denne endringen. Alle tre
-  // gjeninnføres i katalogen når P5/P6 gir dem et entry-point fra Hjem. De
-  // fjernede sidenes appWeight (7+6+3+3=19) er flyttet til 'settings' under,
-  // siden Familie/Innstillinger nå er hjemmet for de gjenværende
-  // Guide-"kunnskap"-verktøyene (tog/warm-cold/first-winter).
+  // hadde ingen synlig opener etter fjerningen — FinnAntrekkScreen og
+  // PlaggbibliotekScreen ble wired som drills i App.tsx, men uten en CTA som
+  // åpnet dem (se App.tsx sin Drill-union-kommentar). MinGarderobeScreen var
+  // allerede utilgjengelig fra Guide-huben før denne endringen.
+  //
+  // P5 (2026-07-31): FinnAntrekkScreen fikk sin CTA — WeatherStrip sin
+  // "Juster"-knapp + vær-panelets sted-pille på Hjems resultat (App.tsx sin
+  // onOpenAdjust) — så 'find-outfit' er gjeninnført over, med sin historiske
+  // appWeight (6, hentet tilbake fra 'settings' under: 24 → 18).
+  // clothing-library/wardrobe venter fortsatt på en opener (P6+) og forblir
+  // utenfor katalogen — deres andel av de opprinnelige 19 blir værende i
+  // 'settings' (18) inntil de får en.
   {
     id: 'tog', label: 'TOG', appWeight: 5,
     role: 'Gi forsiktig og forståelig søvnveiledning uten å blande TOG inn i utendørspåkledning.',
@@ -67,7 +79,7 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
     states: [{ id: 'overview', label: 'Programoversikt', required: true, actions: [tab('Familie'), text('Første vinter'), wait] }],
   },
   {
-    id: 'settings', label: 'Innstillinger', appWeight: 24,
+    id: 'settings', label: 'Innstillinger', appWeight: 18,
     role: 'Gjøre barn, sted, varsler, verktøy, personvern og abonnement forståelig og kontrollerbart.',
     states: [{ id: 'default', label: 'Innstillingsoversikt', required: true, actions: [tab('Familie|Innst'), wait] }],
   },

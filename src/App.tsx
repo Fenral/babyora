@@ -31,6 +31,7 @@ import { OutfitTransitionOverlay } from './components/outfit-transition/OutfitTr
 import { AppPaywallGate } from './components/AppPaywallGate';
 
 import type { GuideHubTarget } from './screens/GuideHubScreen';
+import type { FinnAntrekkPrefill } from './screens/finn-antrekk-prefill';
 import {
   isPlannedOutfitContext,
   type PlannedOutfitContext,
@@ -143,13 +144,18 @@ type Drill =
   // P1: tidligere ETT samlet guide-drill-kind med et GuideHubTarget — splittet
   // i tre etter Guide-tab-fjerningen. tog/varm-kald/forste-vinter (FamilieToolTarget)
   // åpnes nå fra Familie sin "Verktøy"-seksjon → mappes til 'familie' i
-  // activeTabForBar. finn-antrekk/plaggbib har IKKE en synlig opener ennå
-  // (før var de KUN nåbare via Guide-huben) — drill-kinden er wired ferdig her
-  // slik at P5/P6 kan koble på en CTA fra Hjem/PaakledningScreen uten å røre
-  // App.tsx sin routing igjen. De mappes til 'hjem' i activeTabForBar siden
-  // det er deres fremtidige opener-kontekst.
+  // activeTabForBar. finn-antrekk har nå en synlig opener (P5: onOpenAdjust,
+  // wired fra Hjems resultat via HjemMonter/HjemScreen) — plaggbib har
+  // fortsatt IKKE en (før var begge KUN nåbare via Guide-huben). Begge
+  // mappes til 'hjem' i activeTabForBar siden det er (eller blir, for
+  // plaggbib) deres opener-kontekst.
   | { kind: 'familie-tool'; target: FamilieToolTarget }
-  | { kind: 'finn-antrekk' }
+  // P5: prefill er valgfri — satt når drillen åpnes SOM "Juster" fra Hjems
+  // cachede resultat (WeatherStrip/vær-panelet, via HjemMonter → HjemScreen
+  // → onOpenAdjust under). Fraværende ved den generiske GuideHubTarget-
+  // åpneren (onOpenGuideTarget) — samme skjerm, bare uten live-værkontekst
+  // å seede fra.
+  | { kind: 'finn-antrekk'; prefill?: FinnAntrekkPrefill }
   | { kind: 'plaggbib' };
 
 function prefersReducedMotion(): boolean {
@@ -279,6 +285,15 @@ export default function App(): ReactElement {
 
   const onOpenWarmColdGuide = useCallback(() => {
     setDrill({ kind: 'familie-tool', target: 'varm-kald' });
+  }, []);
+
+  // P5: Hjem's opener for the "Juster" drill (WeatherStrip's Juster button +
+  // the weather-ready panel's place pill, threaded HjemMonter → HjemScreen →
+  // here) — same drill-kind as onOpenGuideTarget's 'finn-antrekk' branch
+  // above, but carries a live-weather prefill so FinnAntrekkScreen's sliders
+  // open already matching what Hjem just showed (PRODUCT.md, locked).
+  const onOpenAdjust = useCallback((prefill: FinnAntrekkPrefill) => {
+    setDrill({ kind: 'finn-antrekk', prefill });
   }, []);
 
   // P1: opener for Familie sin nye "Verktøy"-seksjon (ToolsSection) — samme
@@ -583,8 +598,9 @@ export default function App(): ReactElement {
   //  - drill === null                 → use current tab
   //  - drill.kind === 'familie-tool'  → 'familie' (åpnet via Familie sin
   //    Verktøy-seksjon — tog/varm-kald/forste-vinter)
-  //  - drill.kind === 'finn-antrekk' / 'plaggbib' → 'hjem' (ingen synlig
-  //    opener ennå, se Drill-union-kommentaren; 'hjem' er fremtidig opener)
+  //  - drill.kind === 'finn-antrekk' / 'plaggbib' → 'hjem' (åpnet via Hjems
+  //    resultat — finn-antrekk siden P5; plaggbib venter fortsatt på en
+  //    synlig opener, se Drill-union-kommentaren)
   //  - drill.kind === 'paakledning'   → 'hjem' (åpnet via Hjem CTA;
   //    baren skjules uansett siden PaakledningScreen er native dialog modal)
   let activeTabForBar: TabKey;
@@ -602,7 +618,9 @@ export default function App(): ReactElement {
   const sheetOpen = activeDrill?.kind === 'paakledning';
   if (activeDrill?.kind === 'finn-antrekk') {
     routeKey = 'drill:finn-antrekk';
-    routeContent = <FinnAntrekkScreen onBack={() => setDrill(null)} />;
+    routeContent = (
+      <FinnAntrekkScreen onBack={() => setDrill(null)} prefill={activeDrill.prefill} />
+    );
   } else if (activeDrill?.kind === 'plaggbib') {
     routeKey = 'drill:plaggbib';
     routeContent = <PlaggbibliotekScreen onBack={() => setDrill(null)} />;
@@ -631,6 +649,8 @@ export default function App(): ReactElement {
         registerHomeAnchor={outfitTransition.registerHomeAnchor}
         observeTransitionBundle={outfitTransition.observeBundle}
         outfitTransitionStatus={outfitTransition.state.status}
+        onOpenAdjust={onOpenAdjust}
+        onOpenWarmColdGuide={onOpenWarmColdGuide}
       />
     );
   } else if (tab === 'plan') {

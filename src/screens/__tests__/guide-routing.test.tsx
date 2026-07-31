@@ -60,7 +60,10 @@ describe('Guide route migration', () => {
       expect(app).not.toContain("kind: 'guide'");
       expect(app).not.toContain("kind === 'guide'");
       expect(app).toContain("| { kind: 'familie-tool'; target: FamilieToolTarget }");
-      expect(app).toContain("| { kind: 'finn-antrekk' }");
+      // P5: finn-antrekk carries an optional live-weather prefill now (the
+      // "Juster" drill, opened from Hjem's result) — the plain guide-target
+      // opener below still constructs it without one.
+      expect(app).toContain("| { kind: 'finn-antrekk'; prefill?: FinnAntrekkPrefill }");
       expect(app).toContain("| { kind: 'plaggbib' }");
     });
 

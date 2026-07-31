@@ -82,6 +82,8 @@ import {
   staleCtaLabel,
   staleHeadline,
 } from './scan-orchestration.js';
+import { buildAdjustPrefill } from './adjust-prefill.js';
+import type { FinnAntrekkPrefill } from '../../screens/finn-antrekk-prefill.js';
 
 const ACTIVITY_CHILD_LINE: Readonly<Record<MonterActivity, string>> = { utelek: 'Utelek', vogn: 'Vogn' };
 const ACTIVITY_TOGGLE_LABEL: Readonly<Record<MonterActivity, string>> = { utelek: 'Utenfor vogn', vogn: 'I vogn' };
@@ -134,6 +136,21 @@ export type HjemMonterProps = Readonly<{
   startDressingDisabled: boolean;
   reducedMotion: boolean;
   outfitTransitionStatus: OutfitTransitionStatusLike;
+  /**
+   * P5: opens the "Juster" drill (FinnAntrekkScreen) with a live-weather
+   * prefill — wired to WeatherStrip's Juster button (result-current) and
+   * the weather-ready panel's place pill (both weather-ready sub-branches).
+   */
+  onOpenAdjust: (prefill: FinnAntrekkPrefill) => void;
+  /**
+   * P5: "Hvorfor akkurat dette?" (ResultSurface) — contextual entry into the
+   * Varm-eller-kald guide (PRODUCT.md, 2026-07-31 Familie IA decision: "the
+   * migrated guide tools ... get contextual entry points at their point of
+   * need"). Same callback App.tsx already threads into PaakledningScreen.
+   */
+  onOpenWarmColdGuide: () => void;
+  /** P5: manual weather-refetch trigger for the offline ask-block's "Prøv å hente været igjen". */
+  onRetryWeather: () => void;
 }>;
 
 export function HjemMonter({
@@ -152,6 +169,9 @@ export function HjemMonter({
   startDressingDisabled,
   reducedMotion,
   outfitTransitionStatus,
+  onOpenAdjust,
+  onOpenWarmColdGuide,
+  onRetryWeather,
 }: HjemMonterProps) {
   const scan = useScanCoordinator();
   const slots = useScanCache((state) => state.slots);
@@ -311,12 +331,26 @@ export function HjemMonter({
     else if (scan.state.phase === 'recalculating') completeRecalc();
   }, [clearTimer, scan, completeScan, completeRecalc]);
 
-  // TODO(P5): Juster/Bytt/Hvorfor/Vis forrige antrekk/Prøv å hente været igjen
-  // er alle no-op-stubber her — P5 kobler dem til de faktiske drillene
-  // (vær/sted/aktivitet-justering, plagg-bytte-arket, forklarings-arket,
-  // og en manuell vær-refetch-trigger som krever en refreshKey inn i
-  // HjemScreen sin UENDREDE useWeather-kalling, utenfor denne pakkens scope).
+  // P5: Juster (WeatherStrip + vær-panelets sted-pille) → onOpenAdjust,
+  // Hvorfor akkurat dette? → onOpenWarmColdGuide, Prøv å hente været igjen →
+  // onRetryWeather (refreshKey inn i HjemScreen sin useWeather-kalling) er nå
+  // kablet, se under. Bytt (plagg-bytte-arket) og «Vis forrige antrekk» har
+  // ingen eksisterende drill å koble til ennå — forblir no-op-stubber til
+  // P6+.
   const noopStub = useCallback(() => {}, []);
+
+  // P5: bygger prefill-payloaden fra de samme rå ingrediensene HjemMonter
+  // allerede har som props (buildAdjustPrefill er ren/testet separat,
+  // adjust-prefill.ts). `now ?? lastKnownNow` lar sted-pillen i BEGGE
+  // weather-ready-underveiene (normal + offline) åpne drillen — offline
+  // seeder da fra sist kjente værmåling, samme «manuell overstyring»-formål
+  // som selve Juster-verktøyet har. null (ingen vær i det hele tatt ennå)
+  // gjør knappen et no-op — ingenting å seede fra.
+  const adjustSource = now ?? lastKnownNow;
+  const handleOpenAdjust = useCallback(() => {
+    const prefill = buildAdjustPrefill(adjustSource, activity, cityLabel);
+    if (prefill !== null) onOpenAdjust(prefill);
+  }, [adjustSource, activity, cityLabel, onOpenAdjust]);
 
   const nuance = getWeatherNuance(now?.symbolCode ?? lastKnownNow?.symbolCode);
   const conditionLabel = getConditionLabel(now?.symbolCode ?? lastKnownNow?.symbolCode);
@@ -376,7 +410,7 @@ export function HjemMonter({
               conditionLabel={conditionLabel}
               cityLabel={cityLabel}
               activityToggleLabel={ACTIVITY_TOGGLE_LABEL[activity]}
-              onAdjust={noopStub}
+              onAdjust={handleOpenAdjust}
             />
           )}
         </div>
@@ -389,7 +423,7 @@ export function HjemMonter({
             onSwapRow={noopStub}
             onStartDressing={onStartDressing}
             startDressingDisabled={startDressingDisabled}
-            onWhy={noopStub}
+            onWhy={onOpenWarmColdGuide}
           />
         </div>
       </div>
@@ -472,6 +506,7 @@ export function HjemMonter({
             staleBadgeLabel={lastKnownAt !== null ? `Sist kjente vær · ${formatClock(lastKnownAt)}` : null}
             activity={activity}
             onActivityChange={onActivityChange}
+            onAdjustLocation={handleOpenAdjust}
           />
         </div>
         <div className="hjm-body">
@@ -486,7 +521,7 @@ export function HjemMonter({
               Finn dagens antrekk
               <ArrowIcon />
             </button>
-            <button type="button" className="hjm-cta-ghost" onClick={noopStub}>
+            <button type="button" className="hjm-cta-ghost" onClick={onRetryWeather}>
               Prøv å hente været igjen
             </button>
           </div>
@@ -511,6 +546,7 @@ export function HjemMonter({
           freshnessLabel="Oppdatert nå"
           activity={activity}
           onActivityChange={onActivityChange}
+          onAdjustLocation={handleOpenAdjust}
         />
       </div>
       <div className="hjm-body">

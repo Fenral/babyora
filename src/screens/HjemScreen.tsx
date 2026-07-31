@@ -96,6 +96,7 @@ import type { OutfitTransitionCoordinatorState } from '../lib/outfit-transition/
 // force the legacy branch in tests without touching anything else here.
 import { HJEM_SCAN_UI_ENABLED } from '../components/hjem/flags';
 import { HjemMonter } from '../components/hjem/HjemMonter';
+import type { FinnAntrekkPrefill } from './finn-antrekk-prefill';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Konstanter / fallback
@@ -139,6 +140,14 @@ type HjemScreenProps = {
    * som prop, samme mønster som selectHomeSources/registerHomeAnchor over.
    */
   outfitTransitionStatus: OutfitTransitionCoordinatorState['status'];
+  /**
+   * P5: opens the "Juster" drill (FinnAntrekkScreen) with a live-weather
+   * prefill — threaded straight through to HjemMonter, which wires it to
+   * WeatherStrip's Juster button + the weather-ready panel's place pill.
+   */
+  onOpenAdjust: (prefill: FinnAntrekkPrefill) => void;
+  /** P5: "Hvorfor akkurat dette?" contextual entry — same callback App.tsx already threads into PaakledningScreen. */
+  onOpenWarmColdGuide: () => void;
 };
 
 const MAX_HOME_GARMENT_PILLS = 5;
@@ -347,6 +356,8 @@ export function HjemScreen({
   registerHomeAnchor,
   observeTransitionBundle,
   outfitTransitionStatus,
+  onOpenAdjust,
+  onOpenWarmColdGuide,
 }: HjemScreenProps) {
   // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
   // siden BottomTabBar nå mountes globalt i App.tsx.
@@ -391,10 +402,21 @@ export function HjemScreen({
       ? `Nåværende sted · ${effectivePlace.city}`
       : `Fast sted · ${effectivePlace.city}`;
 
-  const weather = useWeather(lat, lon, 12, 0, {
+  // P5: manual weather-refetch trigger for the offline ask-block's "Prøv å
+  // hente været igjen" (HjemMonter → onRetryWeather). useWeather's refreshKey
+  // param already existed (4th positional arg) — this is the first call site
+  // to actually drive it; bumping it re-runs the hook's fetch effect with the
+  // SAME fetchKey (identity unchanged), replacing whatever offline/error
+  // state is cached with a fresh attempt. The hook itself lives in
+  // src/hooks/ (not an engine dir) and is untouched by this change.
+  const [weatherRefreshKey, setWeatherRefreshKey] = useState(0);
+  const weather = useWeather(lat, lon, 12, weatherRefreshKey, {
     cacheScope: effectivePlace?.cacheScope ?? 'persistent',
     source: effectivePlace?.source ?? 'fixed-home',
   }, effectivePlace !== null);
+  const handleRetryWeather = useCallback(() => {
+    setWeatherRefreshKey((key) => key + 1);
+  }, []);
   const [activity, setActivity] = useState<Activity>('utelek');
   // Søvn/våken-toggle på vogn fjernet (Sivert: ikke viktig nok). Antar våken.
   const vognMode: VognMode = 'awake';
@@ -956,6 +978,9 @@ export function HjemScreen({
         startDressingDisabled={currentOutfitContext === null}
         reducedMotion={reducedMotion}
         outfitTransitionStatus={outfitTransitionStatus}
+        onOpenAdjust={onOpenAdjust}
+        onOpenWarmColdGuide={onOpenWarmColdGuide}
+        onRetryWeather={handleRetryWeather}
       />
     );
   }

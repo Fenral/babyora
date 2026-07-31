@@ -60,9 +60,21 @@ import type { Activity, Layer, LayerCategory } from '../lib/wool-layers/types';
 import { garmentIdFor, garmentPng, type GarmentId } from '../data/garment-illustrations';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
 import { TemperatureInstrument } from '../components/instrument/TemperatureInstrument';
+import { seedFromPrefill, type FinnAntrekkPrefill } from './finn-antrekk-prefill';
+
+export type { FinnAntrekkPrefill };
 
 export type FinnAntrekkScreenProps = {
   onBack: () => void;
+  /**
+   * P5: present when the screen is opened as the "Juster" drill from Hjem's
+   * cached result (WeatherStrip's Juster button / the weather-ready panel's
+   * place pill) — seeds the sliders from the live weather + activity the
+   * user was already looking at. SEED WINS over the screen's own internal
+   * defaults AND its own useWeather() call (see finn-antrekk-prefill.ts).
+   * Absent when opened standalone (no live-weather context to seed from).
+   */
+  prefill?: FinnAntrekkPrefill;
 };
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -250,7 +262,7 @@ function buildWhyDetails(
 const FALLBACK_LAT = 60.8867;
 const FALLBACK_LON = 11.5614;
 
-export function FinnAntrekkScreen({ onBack }: FinnAntrekkScreenProps): ReactElement {
+export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): ReactElement {
   const { active, needsOnboarding } = useChildren();
   const { fire } = useHapticSystem();
   const { reducedMotion } = useNativeSettings();
@@ -260,17 +272,27 @@ export function FinnAntrekkScreen({ onBack }: FinnAntrekkScreenProps): ReactElem
   const lon = active.lon || FALLBACK_LON;
   const weather = useWeather(lat, lon);
 
-  // Slider/knapp-state — initialiseres ved første ready-respons fra useWeather.
-  const [tempC, setTempC] = useState<number>(-4);
-  const [windMs, setWindMs] = useState<number>(3);
-  const [precipMmH, setPrecipMmH] = useState<number>(0);
-  const [activityUi, setActivityUi] = useState<ActivityUi>('lek');
+  // P5: SEED WINS — når skjermen åpnes som "Juster"-drillen fra Hjem, seedes
+  // sliderne fra `prefill` (live vær Hjem allerede hadde) via LAZY
+  // useState-initializere, slik at prefillet er selve FØRSTE render (ingen
+  // default-så-overskriv-flash). seedFromPrefill() er ren/testet separat
+  // (finn-antrekk-prefill.ts — komponentfiler kan ikke eksportere den selv,
+  // se filens header). Uten prefill er seed uendret fra før: -4°/3 m/s/0 mm/t/Lek.
+  const seed = seedFromPrefill(prefill);
+
+  const [tempC, setTempC] = useState<number>(() => seed.tempC);
+  const [windMs, setWindMs] = useState<number>(() => seed.windMs);
+  const [precipMmH, setPrecipMmH] = useState<number>(() => seed.precipMmH);
+  const [activityUi, setActivityUi] = useState<ActivityUi>(() => seed.activityUi);
 
   // Track om bruker har dratt slidere — etter første interaksjon skal vi ikke
-  // overskrive verdier når weather oppdateres.
+  // overskrive verdier når weather oppdateres. Starter allerede `true` når et
+  // prefill ble gitt: sliderne er ALT seedet fra Hjems levende vær, så
+  // skjermens EGEN useWeather()-kall (linje over) skal ALDRI få overskrive
+  // dem — selv om det lander med litt andre tall (annen fetch, samme sted).
   // R3 (2026-07-14): state (ikke ref) — guarden leses under render av
   // engangsinit-justeringen under, og refs kan ikke leses under render.
-  const [initedFromWeather, setInitedFromWeather] = useState(false);
+  const [initedFromWeather, setInitedFromWeather] = useState(() => seed.initedFromWeather);
 
   /* ── Detalj-sheet state (F62 PlaggDetailSheet) ── */
   const [openGarmentId, setOpenGarmentId] = useState<GarmentId | null>(null);
@@ -486,15 +508,24 @@ export function FinnAntrekkScreen({ onBack }: FinnAntrekkScreenProps): ReactElem
   }
 
   const childName = active.name && active.name.trim().length > 0 ? active.name : 'barnet';
+  // P5: drill-appropriate header — når skjermen er åpnet SOM "Juster"-
+  // drillen (prefill gitt) heter den "Juster", ikke "Finn antrekk". Tilbake-
+  // knappen selv er uendret (onBack er allerede satt opp av App.tsx til å
+  // returnere til Hjems cachede resultat — se App.tsx sin Drill-union).
+  const isDrillContext = prefill !== undefined;
+  const screenTitle = isDrillContext ? 'Juster' : 'Finn antrekk';
   // Copy-fix (Guide-løftet tiltak 3, guide-analyse.md linje 68-69): "juster
   // fritt" rammet verktøyet som lekegrind. Instrument-tone i stedet.
+  const placeSuffix = prefill?.placeLabel ? ` · ${prefill.placeLabel}` : '';
   const subLine = needsOnboarding || !active.dob
-    ? `${childName} · basert på været nå — juster og se svaret endre seg`
-    : `${childName}, ${ageMonths} mnd · basert på været nå — juster og se svaret endre seg`;
+    ? `${childName}${placeSuffix} · basert på været nå — juster og se svaret endre seg`
+    : `${childName}, ${ageMonths} mnd${placeSuffix} · basert på været nå — juster og se svaret endre seg`;
 
   return (
-    <main style={rootStyle} className="ba-temp-root" data-temp={tempAxis} aria-label="Finn antrekk">
-      <h1 style={srOnlyStyle}>Finn antrekk for barnet ditt</h1>
+    <main style={rootStyle} className="ba-temp-root" data-temp={tempAxis} aria-label={screenTitle}>
+      <h1 style={srOnlyStyle}>
+        {isDrillContext ? 'Juster antrekket for barnet ditt' : 'Finn antrekk for barnet ditt'}
+      </h1>
 
       <header style={topbarStyle}>
         <button
@@ -509,7 +540,7 @@ export function FinnAntrekkScreen({ onBack }: FinnAntrekkScreenProps): ReactElem
           </svg>
         </button>
         <div style={titleWrapStyle}>
-          <p style={titleStyle}>Finn antrekk</p>
+          <p style={titleStyle}>{screenTitle}</p>
           <p style={subtitleStyle}>{subLine}</p>
         </div>
       </header>

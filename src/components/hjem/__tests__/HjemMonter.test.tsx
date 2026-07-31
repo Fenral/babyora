@@ -110,6 +110,10 @@ function baseProps() {
     startDressingDisabled: false,
     reducedMotion: false,
     outfitTransitionStatus: 'idle' as const,
+    // P5
+    onOpenAdjust: vi.fn(),
+    onOpenWarmColdGuide: vi.fn(),
+    onRetryWeather: vi.fn(),
   };
 }
 

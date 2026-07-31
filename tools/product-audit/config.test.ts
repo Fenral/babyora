@@ -13,10 +13,13 @@ describe('product audit configuration', () => {
   it('contains every approved page family', () => {
     // P1 (nav 4→3 skeleton): Guide-tab-roten er fjernet. 'guide' (huben) er
     // fjernet uten erstatning; 'find-outfit'/'clothing-library'/'wardrobe'
-    // var kun nåbare via Guide-huben og har ingen synlig opener ennå — de
+    // var kun nåbare via Guide-huben og hadde ingen synlig opener — de
     // gjeninnføres når P5/P6 gir dem et entry-point fra Hjem.
+    // P5: 'find-outfit' (FinnAntrekkScreen, nå "Juster") fikk sin CTA
+    // (WeatherStrip + vær-panelet på Hjems resultat) og er tilbake.
+    // clothing-library/wardrobe venter fortsatt på P6+.
     expect(PAGE_CATALOG.map((page) => page.id)).toEqual([
-      'onboarding', 'home', 'outfit', 'plan',
+      'onboarding', 'home', 'outfit', 'find-outfit', 'plan',
       'tog', 'warm-cold', 'first-winter',
       'settings', 'paywall',
     ]);
