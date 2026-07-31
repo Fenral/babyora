@@ -11,6 +11,16 @@
  *   - getAlternatives(id)    → { pros, cons, alternatives[] }  (primær item)
  *   - garmentPng(id)         → PNG-sti (hero + thumb)
  *
+ * P6 (Plaggbibliotek-tilgang): valgfri `onOpenLibrary`-affordance nederst i
+ * arket — "Se alternativer i biblioteket" — som åpner Plaggbibliotek-drillen
+ * (App.tsx {kind:'plaggbib'}, forberedt av P1 uten en opener). Prop er
+ * OPTIONAL og bakoverkompatibel: uten den vises ingen knapp (eksisterende
+ * kallsteder uendret). Kun HjemMonter sin "Bytt"-rad kobler den til i P6 —
+ * se docs/design-notes/sol-duel-2026-07-31.md §12 for hvor det fulle
+ * Bytt-arket (med konsekvensetiketter) etter hvert skal leve; dette er
+ * kun første-versjons-lenken til biblioteket, IKKE selve valg-handlingen
+ * (se warm-cold-recovery.test.ts — denne sheeten skal aldri gjøre selve
+ * byttet, kun informere).
  */
 import { useCallback, useEffect, useRef, type JSX, type RefObject } from 'react';
 
@@ -43,6 +53,8 @@ export type PlaggDetailSheetProps = {
   isOpen: boolean;
   onClose: () => void;
   triggerRef: RefObject<HTMLElement | null>;
+  /** P6: opens the Plaggbibliotek drill. Omit to render no library link at all. */
+  onOpenLibrary?: () => void;
 };
 
 export function PlaggDetailSheet({
@@ -50,6 +62,7 @@ export function PlaggDetailSheet({
   isOpen,
   onClose,
   triggerRef,
+  onOpenLibrary,
 }: PlaggDetailSheetProps): JSX.Element | null {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const { reducedMotion } = useNativeSettings();
@@ -469,6 +482,21 @@ export function PlaggDetailSheet({
               </ul>
             </section>
           ) : null}
+
+          {/* P6: Plaggbibliotek-lenke — alltid nederst (§12-mønsteret), synlig
+              uansett om alternatives.length > 0 siden biblioteket viser ALLE
+              plagg, ikke bare dette itemets registrerte alternativer. */}
+          {onOpenLibrary ? (
+            <button
+              type="button"
+              className={reducedMotion ? undefined : 'plagg-stagger'}
+              style={{ ...libraryLinkStyle, '--stagger-i': 5 } as React.CSSProperties}
+              onClick={onOpenLibrary}
+            >
+              <span>Se alternativer i biblioteket</span>
+              <ChevronRightIcon />
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -547,6 +575,19 @@ export function PlaggDetailSheet({
 }
 
 /* ── Sub-components ───────────────────────────────────────────────────── */
+
+function ChevronRightIcon(): JSX.Element {
+  return (
+    <svg
+      width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      aria-hidden="true" focusable="false"
+      style={{ flexShrink: 0 }}
+    >
+      <path d="M9 6l6 6-6 6" />
+    </svg>
+  );
+}
 
 function ClockIcon({ color }: { color: string }): JSX.Element {
   return (
@@ -676,6 +717,25 @@ const miniConsStyle: React.CSSProperties = {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
+};
+
+const libraryLinkStyle: React.CSSProperties = {
+  width: '100%',
+  marginTop: 'var(--sp-3)',
+  padding: '14px 16px',
+  border: '1px solid var(--ink-100)',
+  borderRadius: 'var(--r-lg)',
+  background: 'var(--surface-soft)',
+  color: 'var(--ink-900)',
+  fontFamily: 'var(--font-sans)',
+  fontSize: 14,
+  fontWeight: 600,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 8,
+  cursor: 'pointer',
+  textAlign: 'left',
 };
 
 export default PlaggDetailSheet;

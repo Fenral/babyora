@@ -7,9 +7,11 @@ describe('capture plan', () => {
     // were removed from PAGE_CATALOG (see config.ts) — the Guide-tab root is
     // gone and those three had no reachable entry point without it.
     // P5: 'find-outfit' is back (WeatherStrip's Juster button on Hjem's
-    // result gives it a CTA again) — clothing-library/wardrobe still don't
-    // have one, so the count is 10, not the original 12.
-    expect(new Set(buildCapturePlan().map((item) => item.pageId)).size).toBe(10);
+    // result gives it a CTA again).
+    // P6: 'clothing-library' is back too (PlaggDetailSheet's "Se
+    // alternativer i biblioteket", opened from Hjem's Bytt row) — 'wardrobe'
+    // still doesn't have one, so the count is 11, not the original 12.
+    expect(new Set(buildCapturePlan().map((item) => item.pageId)).size).toBe(11);
   });
 
   it('blocks dangerous actions', () => {

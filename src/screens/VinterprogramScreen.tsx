@@ -37,12 +37,12 @@ import {
   openLessonCount,
   type Lesson,
 } from '../data/vinterprogram';
-import type { GuideHubTarget } from './GuideHubScreen';
+import type { GuideTarget } from '../types/nav';
 
 export interface VinterprogramScreenProps {
   onBack: () => void;
   /** «Prøv selv»-CTA navigerer til en annen Guide-flate (kalkulator m.m.). */
-  onOpenTarget: (target: GuideHubTarget) => void;
+  onOpenTarget: (target: GuideTarget) => void;
 }
 
 type RowState =
@@ -68,8 +68,8 @@ export function VinterprogramScreen({ onBack, onOpenTarget }: VinterprogramScree
   const skipH1Focus = useRef(false);
 
   // C3: fokus til visningens h1 ved view-swap (også første mount er OK —
-  // drill-inn fra Guide-hub gir samme mønster). Hoppes over når retur-fokus
-  // til raden er planlagt (unngår dobbel SR-annonsering h1 → rad).
+  // drill-inn fra Familie sin Verktøy-seksjon gir samme mønster). Hoppes over
+  // når retur-fokus til raden er planlagt (unngår dobbel SR-annonsering h1 → rad).
   useEffect(() => {
     if (skipH1Focus.current) {
       skipH1Focus.current = false;
@@ -124,7 +124,7 @@ export function VinterprogramScreen({ onBack, onOpenTarget }: VinterprogramScree
   }, [fire, onBack]);
 
   const handleTryDet = useCallback(
-    (target: GuideHubTarget) => {
+    (target: GuideTarget) => {
       void fire('medium');
       onOpenTarget(target);
     },

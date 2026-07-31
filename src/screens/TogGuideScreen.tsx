@@ -834,7 +834,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
   });
 
   // Layer-ikon per variant — Morgennatt lag-alignerte tokens (samme
-  // innerst/mellom/ytterst-familie som LAYER_STRIPE og GuideHubScreen).
+  // innerst/mellom/ytterst-familie som LAYER_STRIPE).
   const renderLayerIcon = (variant: LayerItem['variant']) => {
     if (variant === 'inner') {
       return (

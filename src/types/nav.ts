@@ -26,3 +26,14 @@ export const TAB_DEFS: ReadonlyArray<TabDefData> = [
  * VarmEllerKaldScreen, VinterprogramScreen) er uendret.
  */
 export type FamilieToolTarget = 'tog' | 'varm-kald' | 'forste-vinter';
+
+/**
+ * P6 (GuideHubScreen-sletting): union for de seks drill-målene som tidligere
+ * ble eksportert som `GuideHubTarget` fra GuideHubScreen.tsx. Selve
+ * GuideHub-skjermen ble avmontert i P1 og er nå slettet i P6 — men typen
+ * lever videre her siden App.tsx (`onOpenGuideTarget`), VinterprogramScreen
+ * sin `onOpenTarget`-prop og data/vinterprogram.ts sine `tryDet.target`
+ * fortsatt trenger et felles union for målene: de tre Familie-verktøyene
+ * over + Hjem-drillene finn-antrekk/plaggbib + planlegg-viewet 'snart'.
+ */
+export type GuideTarget = FamilieToolTarget | 'finn-antrekk' | 'plaggbib' | 'snart';

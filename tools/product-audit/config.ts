@@ -54,15 +54,28 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
   // hadde ingen synlig opener etter fjerningen — FinnAntrekkScreen og
   // PlaggbibliotekScreen ble wired som drills i App.tsx, men uten en CTA som
   // åpnet dem (se App.tsx sin Drill-union-kommentar). MinGarderobeScreen var
-  // allerede utilgjengelig fra Guide-huben før denne endringen.
+  // allerede utilgjengelig fra Guide-huben før denne endringen, og forblir
+  // det (ikke en del av dette katalog-oppryddet — se PRODUCT.md).
   //
   // P5 (2026-07-31): FinnAntrekkScreen fikk sin CTA — WeatherStrip sin
   // "Juster"-knapp + vær-panelets sted-pille på Hjems resultat (App.tsx sin
   // onOpenAdjust) — så 'find-outfit' er gjeninnført over, med sin historiske
   // appWeight (6, hentet tilbake fra 'settings' under: 24 → 18).
-  // clothing-library/wardrobe venter fortsatt på en opener (P6+) og forblir
-  // utenfor katalogen — deres andel av de opprinnelige 19 blir værende i
-  // 'settings' (18) inntil de får en.
+  //
+  // P6 (2026-07-31): PlaggbibliotekScreen fikk sin CTA — PlaggDetailSheet sin
+  // "Se alternativer i biblioteket" (App.tsx sin onOpenPlaggbib), åpnet fra
+  // Hjems Monter-resultat via garment-raden "Bytt" (PRODUCT.md: "Plaggbibliotek
+  // is reached from garment rows"). 'clothing-library' gjeninnføres under med
+  // appWeight 4 (hentet fra 'settings': 18 → 14). wardrobe (MinGarderobeScreen)
+  // fikk ingen opener i denne pakken og forblir utenfor katalogen.
+  {
+    id: 'clothing-library', label: 'Plaggbibliotek', appWeight: 4,
+    role: 'Vise plagg som informativ referanse når «Bytt» eller plagg-detaljen ikke dekker det brukeren leter etter.',
+    states: [{
+      id: 'default', label: 'Biblioteket via garment-radens Bytt → Se alternativer i biblioteket', required: true,
+      actions: [tab('Hjem'), wait, button('Finn dagens antrekk'), wait, button('Bytt'), wait, button('Se alternativer i biblioteket'), wait],
+    }],
+  },
   {
     id: 'tog', label: 'TOG', appWeight: 5,
     role: 'Gi forsiktig og forståelig søvnveiledning uten å blande TOG inn i utendørspåkledning.',
@@ -79,7 +92,7 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
     states: [{ id: 'overview', label: 'Programoversikt', required: true, actions: [tab('Familie'), text('Første vinter'), wait] }],
   },
   {
-    id: 'settings', label: 'Innstillinger', appWeight: 18,
+    id: 'settings', label: 'Innstillinger', appWeight: 14,
     role: 'Gjøre barn, sted, varsler, verktøy, personvern og abonnement forståelig og kontrollerbart.',
     states: [{ id: 'default', label: 'Innstillingsoversikt', required: true, actions: [tab('Familie|Innst'), wait] }],
   },

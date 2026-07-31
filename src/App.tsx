@@ -5,8 +5,10 @@
  *
  * Native-feel #9 (2026-06-26): screens lastes nå via React.lazy + Suspense.
  * Reduserer initial JS-bundle: bare aktiv rute hentes. Fallback er en minimal
- * canvas-skeleton som matcher app-shell (ingen layout-shift). Type-importen
- * `GuideHubTarget` blir værende statisk siden type-imports ikke trekker kode.
+ * canvas-skeleton som matcher app-shell (ingen layout-shift).
+ *
+ * P6: GuideHubScreen.tsx er slettet (avmontert siden P1). `GuideTarget`
+ * (tidligere `GuideHubTarget`, eksportert derfra) bor nå i types/nav.ts.
  */
 import {
   lazy,
@@ -21,7 +23,7 @@ import {
 } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { AnimatePresence, motion } from 'motion/react';
-import type { FamilieToolTarget, TabKey } from './types/nav';
+import type { FamilieToolTarget, GuideTarget, TabKey } from './types/nav';
 import { useChildren } from './state/children-store';
 import { useTheme } from './state/theme-store';
 import { useAutoLocationRefresh } from './hooks/useAutoLocationRefresh';
@@ -30,7 +32,6 @@ import { BottomTabBar } from './components/BottomTabBar';
 import { OutfitTransitionOverlay } from './components/outfit-transition/OutfitTransitionOverlay';
 import { AppPaywallGate } from './components/AppPaywallGate';
 
-import type { GuideHubTarget } from './screens/GuideHubScreen';
 import type { FinnAntrekkPrefill } from './screens/finn-antrekk-prefill';
 import {
   isPlannedOutfitContext,
@@ -62,12 +63,10 @@ const PaakledningScreen = lazy(() =>
 const UkeScreen = lazy(() =>
   import('./screens/UkeScreen').then((m) => ({ default: m.UkeScreen })),
 );
-// P1 (nav 4→3 skeleton): GuideHubScreen er ikke lenger mountet fra tab-
-// navigasjon (Guide-roten er fjernet, se types/nav.ts). Filen består
-// uendret — de gamle Guide-sub-sidene rutes nå direkte som drills under —
-// men den lazy-importerte komponenten fjernes herfra siden ingenting
-// lenger mounter den. `GuideHubTarget`-TYPEN importeres fortsatt lenger
-// ned (type-imports trekker ikke kode inn i bundlen).
+// P1 (nav 4→3 skeleton): Guide-roten er fjernet (se types/nav.ts) — de gamle
+// Guide-sub-sidene rutes direkte som drills under i stedet. GuideHubScreen.tsx
+// selv var avmontert siden P1 og er slettet i P6 (`GuideTarget`, tidligere
+// `GuideHubTarget` eksportert derfra, bor nå i types/nav.ts).
 const FinnAntrekkScreen = lazy(() =>
   import('./screens/FinnAntrekkScreen').then((m) => ({ default: m.FinnAntrekkScreen })),
 );
@@ -141,21 +140,25 @@ type Drill =
       outfitBundle?: OutfitBundleProducerResult;
       origin: HTMLElement;
     }
-  // P1: tidligere ETT samlet guide-drill-kind med et GuideHubTarget — splittet
-  // i tre etter Guide-tab-fjerningen. tog/varm-kald/forste-vinter (FamilieToolTarget)
-  // åpnes nå fra Familie sin "Verktøy"-seksjon → mappes til 'familie' i
-  // activeTabForBar. finn-antrekk har nå en synlig opener (P5: onOpenAdjust,
-  // wired fra Hjems resultat via HjemMonter/HjemScreen) — plaggbib har
-  // fortsatt IKKE en (før var begge KUN nåbare via Guide-huben). Begge
-  // mappes til 'hjem' i activeTabForBar siden det er (eller blir, for
-  // plaggbib) deres opener-kontekst.
+  // P1: tidligere ETT samlet guide-drill-kind med et GuideTarget (den gang
+  // eksportert som GuideHubTarget fra GuideHubScreen.tsx, siden slettet i P6)
+  // — splittet i tre etter Guide-tab-fjerningen. tog/varm-kald/forste-vinter
+  // (FamilieToolTarget) åpnes nå fra Familie sin "Verktøy"-seksjon → mappes
+  // til 'familie' i activeTabForBar. finn-antrekk har en synlig opener (P5:
+  // onOpenAdjust, wired fra Hjems resultat via HjemMonter/HjemScreen) —
+  // plaggbib fikk sin (P6: onOpenPlaggbib, wired fra PlaggDetailSheet sin
+  // "Se alternativer i biblioteket", åpnet via Hjems Bytt-rad). Begge mappes
+  // til 'hjem' i activeTabForBar siden det er deres opener-kontekst.
   | { kind: 'familie-tool'; target: FamilieToolTarget }
   // P5: prefill er valgfri — satt når drillen åpnes SOM "Juster" fra Hjems
   // cachede resultat (WeatherStrip/vær-panelet, via HjemMonter → HjemScreen
-  // → onOpenAdjust under). Fraværende ved den generiske GuideHubTarget-
-  // åpneren (onOpenGuideTarget) — samme skjerm, bare uten live-værkontekst
-  // å seede fra.
+  // → onOpenAdjust under). Fraværende ved den generiske GuideTarget-åpneren
+  // (onOpenGuideTarget) — samme skjerm, bare uten live-værkontekst å seede fra.
   | { kind: 'finn-antrekk'; prefill?: FinnAntrekkPrefill }
+  // P6: fikk sin opener — onOpenPlaggbib, wired fra PlaggDetailSheet sin
+  // "Se alternativer i biblioteket" (åpnet via Hjems Bytt-rad, HjemMonter) —
+  // i tillegg til den allerede eksisterende onOpenGuideTarget('plaggbib')-
+  // veien fra Første vinter sine leksjoner.
   | { kind: 'plaggbib' };
 
 function prefersReducedMotion(): boolean {
@@ -264,7 +267,7 @@ export default function App(): ReactElement {
   // P1: navnet `onOpenGuideTarget` beholdes (fortsatt sendt til VinterprogramScreen
   // som onOpenTarget) — targets ruter nå til tre ulike drill-kinder i stedet for
   // ett samlet `guide`-kind, se Drill-unionen over.
-  const onOpenGuideTarget = useCallback((target: GuideHubTarget | 'snart') => {
+  const onOpenGuideTarget = useCallback((target: GuideTarget) => {
     if (target === 'snart') {
       setDrill(null);
       setTab('plan');
@@ -285,6 +288,24 @@ export default function App(): ReactElement {
 
   const onOpenWarmColdGuide = useCallback(() => {
     setDrill({ kind: 'familie-tool', target: 'varm-kald' });
+  }, []);
+
+  // P6: contextual opener for the Plaggbibliotek drill — same replace-in-
+  // place pattern as onOpenWarmColdGuide above ('plaggbib' was already a
+  // drill kind since P1, it just had no opener). Wired to PlaggDetailSheet's
+  // "Se alternativer i biblioteket" affordance from Hjem's Monter-result
+  // "Bytt" row (HjemMonter → HjemScreen). NOT threaded into PaakledningScreen:
+  // its live branch (PlannedPaakledningScreen) renders no PlaggDetailSheet at
+  // all — planned/current outfits' own alternative-picking UI is
+  // OutfitExperience/OutfitGarmentList's "Se alternativer" (via
+  // OutfitTruthPanel), which is engine-connected (src/lib/outfit) and
+  // deliberately a separate, committed-swap flow from PlaggDetailSheet's
+  // informational-only pattern (see warm-cold-recovery.test.ts).
+  // PaakledningScreen's OWN PlaggDetailSheet instance lives only in
+  // CurrentPaakledningScreen, which is unreachable dead code (every caller
+  // supplies currentContext/plannedContext).
+  const onOpenPlaggbib = useCallback(() => {
+    setDrill({ kind: 'plaggbib' });
   }, []);
 
   // P5: Hjem's opener for the "Juster" drill (WeatherStrip's Juster button +
@@ -651,6 +672,7 @@ export default function App(): ReactElement {
         outfitTransitionStatus={outfitTransition.state.status}
         onOpenAdjust={onOpenAdjust}
         onOpenWarmColdGuide={onOpenWarmColdGuide}
+        onOpenPlaggbib={onOpenPlaggbib}
       />
     );
   } else if (tab === 'plan') {

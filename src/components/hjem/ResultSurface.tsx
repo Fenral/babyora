@@ -37,7 +37,13 @@ export type ResultSurfaceProps = Readonly<{
   childLabel: string;
   isFresh: boolean;
   reducedMotion: boolean;
-  onSwapRow: (row: ResultRow) => void;
+  /**
+   * P6: receives the row's own click event too (not just the row data) so
+   * the caller can capture `event.currentTarget` as the focus-return target
+   * for whatever it opens (PlaggDetailSheet, same pattern PaakledningScreen/
+   * MinGarderobeScreen already use).
+   */
+  onSwapRow: (row: ResultRow, event: MouseEvent<HTMLButtonElement>) => void;
   onStartDressing: (event: MouseEvent<HTMLButtonElement>) => void;
   startDressingDisabled: boolean;
   onWhy: () => void;
@@ -67,7 +73,7 @@ export function ResultSurface({
             label={row.label}
             roleLabel={row.roleLabel}
             imageSrc={getGarmentImage(row.garmentId)}
-            onSwap={() => onSwapRow(row)}
+            onSwap={(event) => onSwapRow(row, event)}
             animationDelayMs={animateRows ? ROW_STAGGER_START_MS + index * ROW_STAGGER_MS : null}
           />
         ))}

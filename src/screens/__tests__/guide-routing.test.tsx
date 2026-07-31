@@ -1,24 +1,10 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8');
 
 describe('Guide route migration', () => {
-  it('offers only truthful Guide targets and routes Snart through the App dispatcher', () => {
-    const guide = source('src/screens/GuideHubScreen.tsx');
-    const app = source('src/App.tsx');
-
-    expect(guide).toContain("| 'snart'");
-    expect(guide).toContain("target: 'snart'");
-    expect(guide).not.toContain("'min-garderobe'");
-    expect(guide).not.toMatch(/Min garderobe|Mine plagg/u);
-    expect(app).toContain("const onOpenGuideTarget");
-    expect(app).toContain("target === 'snart'");
-    expect(app).not.toContain('MinGarderobeScreen');
-    expect(app).not.toContain("target === 'min-garderobe'");
-  });
-
   it('keeps all eight lesson identities while its CTA labels match real targets', () => {
     const program = source('src/data/vinterprogram.ts');
 
@@ -38,20 +24,47 @@ describe('Guide route migration', () => {
     expect(program).not.toMatch(/Mine plagg|egne plagg|personliggjør/u);
   });
 
-  // P1 (nav 4→3 skeleton, 2026-07-30): Guide-tab-roten er fjernet. Denne
-  // beskrivelsen dekker hva som erstattet den — GuideHubScreen.tsx består
-  // uendret (leksjons-/tryDet-dataene over refererer den fortsatt via
-  // GuideHubTarget-typen), men mountes ikke lenger fra tab-navigasjon.
-  describe('nav 4→3: Guide-huben er avmontert, ikke slettet', () => {
-    it('App.tsx mounter ikke lenger GuideHubScreen fra fanenavigasjon', () => {
-      const app = source('src/App.tsx');
+  it('MinGarderobeScreen forblir umontert (App.tsx refererer den aldri)', () => {
+    const app = source('src/App.tsx');
+    expect(app).not.toContain('MinGarderobeScreen');
+    expect(app).not.toContain("target === 'min-garderobe'");
+  });
 
-      expect(app).not.toMatch(/const GuideHubScreen = lazy/u);
+  // P1 (nav 4→3 skeleton, 2026-07-30) avmonterte GuideHubScreen fra tab-
+  // navigasjonen uten å slette filen. P6 (2026-07-31) fullfører retirement-et:
+  // filen er nå slettet, og `GuideHubTarget`-typen den eksporterte lever
+  // videre som `GuideTarget` i src/types/nav.ts (samme union, nytt hjem).
+  describe('P6: Guide-huben er slettet, ikke bare avmontert', () => {
+    it('GuideHubScreen.tsx eksisterer ikke lenger', () => {
+      expect(existsSync(resolve(process.cwd(), 'src/screens/GuideHubScreen.tsx'))).toBe(false);
+    });
+
+    it('ingen kildefil importerer fra det slettede GuideHubScreen-modulet lenger, og GuideHubTarget brukes kun i historikk-kommentarer, aldri som type', () => {
+      const app = source('src/App.tsx');
+      const vinterprogram = source('src/data/vinterprogram.ts');
+      const vinterprogramScreen = source('src/screens/VinterprogramScreen.tsx');
+
+      for (const contents of [app, vinterprogram, vinterprogramScreen]) {
+        expect(contents).not.toMatch(/from ['"].*GuideHubScreen['"]/u);
+        // GuideHubTarget kan nevnes i forklarende kommentarer (historikk),
+        // men skal ALDRI brukes som en faktisk type-annotasjon lenger.
+        expect(contents).not.toMatch(/[:<]\s*GuideHubTarget\b/u);
+      }
       expect(app).not.toContain('<GuideHubScreen');
       expect(app).not.toContain("tab === 'guide'");
-      // Type-only import av GuideHubTarget skal fortsatt stå — VinterprogramScreen
-      // og vinterprogram.ts bruker den fortsatt (type-imports trekker ikke kode).
-      expect(app).toContain("import type { GuideHubTarget } from './screens/GuideHubScreen';");
+    });
+
+    it('App.tsx / vinterprogram.ts / VinterprogramScreen.tsx bruker GuideTarget fra types/nav.ts i stedet', () => {
+      const app = source('src/App.tsx');
+      const vinterprogram = source('src/data/vinterprogram.ts');
+      const vinterprogramScreen = source('src/screens/VinterprogramScreen.tsx');
+
+      expect(app).toContain("import type { FamilieToolTarget, GuideTarget, TabKey } from './types/nav';");
+      expect(vinterprogram).toContain("import type { GuideTarget } from '../types/nav';");
+      expect(vinterprogramScreen).toContain("import type { GuideTarget } from '../types/nav';");
+
+      const nav = source('src/types/nav.ts');
+      expect(nav).toContain('export type GuideTarget = FamilieToolTarget');
     });
 
     it('Drill-unionen har ingen guide-kind lenger — tog/varm-kald/forste-vinter er familie-tool', () => {
@@ -64,12 +77,13 @@ describe('Guide route migration', () => {
       // "Juster" drill, opened from Hjem's result) — the plain guide-target
       // opener below still constructs it without one.
       expect(app).toContain("| { kind: 'finn-antrekk'; prefill?: FinnAntrekkPrefill }");
-      expect(app).toContain("| { kind: 'plaggbib' }");
+      expect(app).toContain("| { kind: 'plaggbib' };");
     });
 
     it('onOpenGuideTarget ruter finn-antrekk/plaggbib til egne drill-kinder, resten til familie-tool', () => {
       const app = source('src/App.tsx');
 
+      expect(app).toContain('const onOpenGuideTarget = useCallback((target: GuideTarget) => {');
       expect(app).toContain("setDrill({ kind: 'finn-antrekk' });");
       expect(app).toContain("setDrill({ kind: 'plaggbib' });");
       expect(app).toContain("setDrill({ kind: 'familie-tool', target });");

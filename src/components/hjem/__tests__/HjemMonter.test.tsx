@@ -114,6 +114,8 @@ function baseProps() {
     onOpenAdjust: vi.fn(),
     onOpenWarmColdGuide: vi.fn(),
     onRetryWeather: vi.fn(),
+    // P6
+    onOpenPlaggbib: vi.fn(),
   };
 }
 

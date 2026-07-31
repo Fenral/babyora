@@ -73,7 +73,7 @@ import { MascotPeek } from './MascotPeek.js';
 import { ScanOverlay, ScanStatusBlock } from './ScanOverlay.js';
 import type { OutfitTransitionStatusLike } from './scan-overlay-guard.js';
 import { ResultSurface } from './ResultSurface.js';
-import { deriveResultRows } from './result-rows.js';
+import { deriveResultRows, type ResultRow } from './result-rows.js';
 import {
   activityChangeChip,
   decideScanEntry,
@@ -84,6 +84,9 @@ import {
 } from './scan-orchestration.js';
 import { buildAdjustPrefill } from './adjust-prefill.js';
 import type { FinnAntrekkPrefill } from '../../screens/finn-antrekk-prefill.js';
+import { resolveSwapTarget } from './swap-row.js';
+import { PlaggDetailSheet } from '../PlaggDetailSheet.js';
+import type { GarmentId } from '../../data/garment-illustrations.js';
 
 const ACTIVITY_CHILD_LINE: Readonly<Record<MonterActivity, string>> = { utelek: 'Utelek', vogn: 'Vogn' };
 const ACTIVITY_TOGGLE_LABEL: Readonly<Record<MonterActivity, string>> = { utelek: 'Utenfor vogn', vogn: 'I vogn' };
@@ -151,6 +154,12 @@ export type HjemMonterProps = Readonly<{
   onOpenWarmColdGuide: () => void;
   /** P5: manual weather-refetch trigger for the offline ask-block's "Prøv å hente været igjen". */
   onRetryWeather: () => void;
+  /**
+   * P6: opens the Plaggbibliotek drill — used both as PlaggDetailSheet's
+   * "Se alternativer i biblioteket" affordance and as the no-dead-end
+   * fallback when a "Bytt" row's garmentId never resolved (see swap-row.ts).
+   */
+  onOpenPlaggbib: () => void;
 }>;
 
 export function HjemMonter({
@@ -172,6 +181,7 @@ export function HjemMonter({
   onOpenAdjust,
   onOpenWarmColdGuide,
   onRetryWeather,
+  onOpenPlaggbib,
 }: HjemMonterProps) {
   const scan = useScanCoordinator();
   const slots = useScanCache((state) => state.slots);
@@ -333,11 +343,34 @@ export function HjemMonter({
 
   // P5: Juster (WeatherStrip + vær-panelets sted-pille) → onOpenAdjust,
   // Hvorfor akkurat dette? → onOpenWarmColdGuide, Prøv å hente været igjen →
-  // onRetryWeather (refreshKey inn i HjemScreen sin useWeather-kalling) er nå
-  // kablet, se under. Bytt (plagg-bytte-arket) og «Vis forrige antrekk» har
-  // ingen eksisterende drill å koble til ennå — forblir no-op-stubber til
-  // P6+.
+  // onRetryWeather (refreshKey inn i HjemScreen sin useWeather-kalling) er
+  // kablet, se under. Bytt fikk sin kabling i P6 (rett under). «Vis forrige
+  // antrekk» har fortsatt ingen eksisterende drill å koble til — forblir
+  // no-op-stub til en senere pakke.
   const noopStub = useCallback(() => {}, []);
+
+  // P6: "Bytt" (MonterGarmentRow, resultat-lista) → PlaggDetailSheet, samme
+  // datavei som den LEGACY resultatlisten (PaakledningScreen sin
+  // handleOpenNode) allerede bruker — se swap-row.ts sin filhode-kommentar.
+  // resolveSwapTarget() er den rene beslutningen (testet separat,
+  // swap-row.test.ts); onOpenPlaggbib er no-dead-end-fallbacket for en rad
+  // hvis garmentId aldri løste seg (ukjent/udekket etikett).
+  const [detailGarmentId, setDetailGarmentId] = useState<GarmentId | null>(null);
+  const detailTriggerRef = useRef<HTMLElement | null>(null);
+
+  const handleSwapRow = useCallback((row: ResultRow, event: MouseEvent<HTMLButtonElement>) => {
+    const resolution = resolveSwapTarget(row);
+    if (resolution.kind === 'library') {
+      onOpenPlaggbib();
+      return;
+    }
+    detailTriggerRef.current = event.currentTarget;
+    setDetailGarmentId(resolution.garmentId);
+  }, [onOpenPlaggbib]);
+
+  const handleCloseDetail = useCallback(() => {
+    setDetailGarmentId(null);
+  }, []);
 
   // P5: bygger prefill-payloaden fra de samme rå ingrediensene HjemMonter
   // allerede har som props (buildAdjustPrefill er ren/testet separat,
@@ -420,12 +453,21 @@ export function HjemMonter({
             childLabel={`${rows.length} plagg for ${childName}, innerst til ytterst`}
             isFresh={isFresh}
             reducedMotion={reducedMotion}
-            onSwapRow={noopStub}
+            onSwapRow={handleSwapRow}
             onStartDressing={onStartDressing}
             startDressingDisabled={startDressingDisabled}
             onWhy={onOpenWarmColdGuide}
           />
         </div>
+        {detailGarmentId && (
+          <PlaggDetailSheet
+            garmentId={detailGarmentId}
+            isOpen={detailGarmentId !== null}
+            onClose={handleCloseDetail}
+            triggerRef={detailTriggerRef}
+            onOpenLibrary={onOpenPlaggbib}
+          />
+        )}
       </div>
     );
   }

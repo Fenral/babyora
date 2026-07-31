@@ -391,16 +391,37 @@ const dividerStyle: CSSProperties = {
   margin: '0 14px',
 };
 
+// P6 (Familie-kortsuppe, duel-notat §9): "Barn"-seksjonen hadde tidligere TO
+// stablede kort — profil-hero (profileHeroStyle, egen bakgrunn/kant/skygge)
+// og en separat handlings-liste (groupCardStyle) rett under. Doktrinen sier
+// «sections on ONE raised group surface, ytterbokser rundt enkeltelementer
+// fjernes». barnSectionSurfaceStyle er den ENE ytre flaten som nå huser
+// begge (se render-stedet), med en divider mellom. profileHeroStyle mistet
+// derfor sin egen bakgrunn/kant/skygge/radius — rent visuelt, ingen
+// data/props/aria endret.
+const barnSectionSurfaceStyle: CSSProperties = {
+  background: C.cardBg,
+  borderRadius: 18,
+  border: `1px solid ${C.hairline}`,
+  boxShadow: C.cardShadow,
+  overflow: 'hidden',
+};
+
 const profileHeroStyle: CSSProperties = {
   position: 'relative',
   display: 'flex',
   alignItems: 'center',
   gap: 14,
   padding: '14px 14px',
-  borderRadius: 18,
-  background: C.cardBg,
-  border: `1px solid ${C.hairline}`,
-  boxShadow: C.cardShadow,
+};
+
+// Bar liste-reset for lister som lever INNI barnSectionSurfaceStyle (samme
+// visuelle overflate som resten av "Barn"-seksjonen) — groupCardStyle sin
+// EGEN bakgrunn/kant/skygge ville dobbeltkortet.
+const groupListBareStyle: CSSProperties = {
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
 };
 
 const profileAvatarStyle: CSSProperties = {
@@ -1788,89 +1809,97 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
         <section style={sectionStyle} aria-labelledby="sec-profil">
           <h2 id="sec-profil" style={sectionEyebrowStyle}>Barn</h2>
 
-          <div style={profileHeroStyle} role="group" aria-label="Aktiv barn-profil">
-            <div style={profileAvatarStyle} role="img" aria-label={`Avatar: ${childName}`}>
-              <span
-                aria-hidden="true"
-                style={{
-                  fontFamily: C.fontSerif,
-                  fontSize: '1.5rem',
-                  color: C.ink700,
-                  lineHeight: 1,
-                }}
-              >
-                {childName !== '—' ? childName.charAt(0).toUpperCase() : '·'}
-              </span>
+          {/* P6: én ytre flate for hele "Barn"-seksjonen (duel-notat §9) — se
+              barnSectionSurfaceStyle sin filhode-kommentar. Profil-hero og
+              handlings-listen under er nå INNHOLD på samme kort, ikke to
+              stablede kort. */}
+          <div style={barnSectionSurfaceStyle}>
+            <div style={profileHeroStyle} role="group" aria-label="Aktiv barn-profil">
+              <div style={profileAvatarStyle} role="img" aria-label={`Avatar: ${childName}`}>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    fontFamily: C.fontSerif,
+                    fontSize: '1.5rem',
+                    color: C.ink700,
+                    lineHeight: 1,
+                  }}
+                >
+                  {childName !== '—' ? childName.charAt(0).toUpperCase() : '·'}
+                </span>
+              </div>
+              <div style={profileBodyStyle}>
+                <p style={profileNameStyle}>{childName}</p>
+                {profileMetaItems.length > 0 ? (
+                  <div style={profileMetaStyle}>
+                    {profileMetaItems.map((item, i) => (
+                      <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {item}
+                        {i < profileMetaItems.length - 1 ? (
+                          <span style={profileMetaDotStyle} aria-hidden="true" />
+                        ) : null}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <button type="button" style={profileEditStyle} aria-label="Rediger profil" onClick={noop}>
+                <IconEdit />
+              </button>
             </div>
-            <div style={profileBodyStyle}>
-              <p style={profileNameStyle}>{childName}</p>
-              {profileMetaItems.length > 0 ? (
-                <div style={profileMetaStyle}>
-                  {profileMetaItems.map((item, i) => (
-                    <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {item}
-                      {i < profileMetaItems.length - 1 ? (
-                        <span style={profileMetaDotStyle} aria-hidden="true" />
-                      ) : null}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-            <button type="button" style={profileEditStyle} aria-label="Rediger profil" onClick={noop}>
-              <IconEdit />
-            </button>
-          </div>
 
-          <ul role="list" style={groupCardStyle} aria-label="Barn-administrasjon">
-            <li style={{ listStyle: 'none' }}>
-              <button
-                type="button"
-                ref={switchChildRowRef}
-                style={rowBase}
-                onClick={handleOpenSwitchChild}
-                aria-haspopup="dialog"
-                aria-label={`Bytt barn — ${allChildren.length} barn`}
-                disabled={needsOnboarding || allChildren.length < 2}
-              >
-                <span style={rowIconBase} aria-hidden="true">
-                  <IconSwap />
-                </span>
-                <span style={rowBodyStyle}>
-                  <span style={rowLabelStyle}>Bytt barn</span>
-                  {childName !== '—' ? (
-                    <span style={rowSubStyle}>{childName}</span>
-                  ) : null}
-                </span>
-                <span style={rowValueStyle}>
-                  {`${allChildren.length} barn`}
-                </span>
-                <Chevron />
-              </button>
-            </li>
-            <li aria-hidden="true" style={{ listStyle: 'none' }}>
-              <div style={dividerStyle} />
-            </li>
-            <li style={{ listStyle: 'none' }}>
-              <button
-                type="button"
-                ref={addChildRowRef}
-                style={rowBase}
-                onClick={handleOpenAddChild}
-                aria-haspopup="dialog"
-                aria-label="Legg til nytt barn — åpne dialog"
-              >
-                <span style={rowIconAccent} aria-hidden="true">
-                  <IconPlus />
-                </span>
-                <span style={rowBodyStyle}>
-                  <span style={rowLabelStyle}>Legg til nytt barn</span>
-                  <span style={rowSubStyle}>Egen profil for søsken</span>
-                </span>
-                <Chevron />
-              </button>
-            </li>
-          </ul>
+            <div aria-hidden="true" style={dividerStyle} />
+
+            <ul role="list" style={groupListBareStyle} aria-label="Barn-administrasjon">
+              <li style={{ listStyle: 'none' }}>
+                <button
+                  type="button"
+                  ref={switchChildRowRef}
+                  style={rowBase}
+                  onClick={handleOpenSwitchChild}
+                  aria-haspopup="dialog"
+                  aria-label={`Bytt barn — ${allChildren.length} barn`}
+                  disabled={needsOnboarding || allChildren.length < 2}
+                >
+                  <span style={rowIconBase} aria-hidden="true">
+                    <IconSwap />
+                  </span>
+                  <span style={rowBodyStyle}>
+                    <span style={rowLabelStyle}>Bytt barn</span>
+                    {childName !== '—' ? (
+                      <span style={rowSubStyle}>{childName}</span>
+                    ) : null}
+                  </span>
+                  <span style={rowValueStyle}>
+                    {`${allChildren.length} barn`}
+                  </span>
+                  <Chevron />
+                </button>
+              </li>
+              <li aria-hidden="true" style={{ listStyle: 'none' }}>
+                <div style={dividerStyle} />
+              </li>
+              <li style={{ listStyle: 'none' }}>
+                <button
+                  type="button"
+                  ref={addChildRowRef}
+                  style={rowBase}
+                  onClick={handleOpenAddChild}
+                  aria-haspopup="dialog"
+                  aria-label="Legg til nytt barn — åpne dialog"
+                >
+                  <span style={rowIconAccent} aria-hidden="true">
+                    <IconPlus />
+                  </span>
+                  <span style={rowBodyStyle}>
+                    <span style={rowLabelStyle}>Legg til nytt barn</span>
+                    <span style={rowSubStyle}>Egen profil for søsken</span>
+                  </span>
+                  <Chevron />
+                </button>
+              </li>
+            </ul>
+          </div>
         </section>
 
         {/* DE SOM PASSER — R9-forhåndsvisning, KUN i utvikling (import.meta.env.DEV).

@@ -10,7 +10,16 @@
  * nøytral forbokstav på #3A2A1A i stedet for et <img>. Listen MÅ fungere
  * uten bilder — det er derfor `imageSrc` er `string | null`, ikke en
  * påkrevd streng.
+ *
+ * P6: `onSwap` mottar nå det native klikk-eventet (ikke bare et no-arg-kall)
+ * slik at opperen (HjemMonter) kan fange `event.currentTarget` som
+ * focus-retur-mål for PlaggDetailSheet — samme mønster som resten av appens
+ * PlaggDetailSheet-åpnere (se PaakledningScreen/MinGarderobeScreen).
+ * `aria-label` legges på hele rad-knappen siden den synlige "Bytt"-chippen
+ * er aria-hidden (dekorativ) — uten den hadde raden hatt et utydelig
+ * tilgjengelig navn nå som trykk faktisk åpner noe.
  */
+import type { MouseEvent } from 'react';
 import './hjem-monter.css';
 
 function SwapIcon() {
@@ -26,7 +35,7 @@ export type MonterGarmentRowProps = Readonly<{
   label: string;
   roleLabel: string;
   imageSrc: string | null;
-  onSwap: () => void;
+  onSwap: (event: MouseEvent<HTMLButtonElement>) => void;
   /** ms — null når raden ikke skal animere inn (cachet åpning, ikke fersk). */
   animationDelayMs: number | null;
 }>;
@@ -46,6 +55,7 @@ export function MonterGarmentRow({
         type="button"
         className="hjm-row"
         onClick={onSwap}
+        aria-label={`${label}, ${roleLabel}. Bytt.`}
         style={animationDelayMs !== null ? { animationDelay: `${animationDelayMs}ms` } : undefined}
       >
         <span className="hjm-num" aria-hidden="true">{position}</span>

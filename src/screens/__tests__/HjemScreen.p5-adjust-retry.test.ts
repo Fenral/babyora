@@ -30,6 +30,18 @@ describe('HjemScreen — P5 onOpenAdjust / onOpenWarmColdGuide threading', () =>
   });
 });
 
+describe('HjemScreen — P6 onOpenPlaggbib threading', () => {
+  it('accepts onOpenPlaggbib as a prop and forwards it straight into HjemMonter', () => {
+    const contents = source(screenPath);
+    expect(contents).toContain('onOpenPlaggbib: () => void;');
+
+    const monterCallStart = contents.indexOf('<HjemMonter');
+    const monterCallEnd = contents.indexOf('/>', monterCallStart);
+    const monterCall = contents.slice(monterCallStart, monterCallEnd);
+    expect(monterCall).toContain('onOpenPlaggbib={onOpenPlaggbib}');
+  });
+});
+
 describe('HjemScreen — P5 offline weather retry (refreshKey)', () => {
   it('drives useWeather\'s existing refreshKey param from a bump-only counter, not touching the hook itself', () => {
     const contents = source(screenPath);

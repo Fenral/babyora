@@ -24,7 +24,7 @@ function renderScreen(prefill?: FinnAntrekkPrefill): string {
   );
 }
 
-describe('FinnAntrekkScreen — no prefill (standalone / GuideHubTarget opener)', () => {
+describe('FinnAntrekkScreen — no prefill (standalone / generic GuideTarget opener)', () => {
   it('renders the internal defaults and the plain "Finn antrekk" header', () => {
     const html = renderScreen(undefined);
     expect(html).toContain('aria-label="Finn antrekk"');

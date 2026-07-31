@@ -148,6 +148,13 @@ type HjemScreenProps = {
   onOpenAdjust: (prefill: FinnAntrekkPrefill) => void;
   /** P5: "Hvorfor akkurat dette?" contextual entry — same callback App.tsx already threads into PaakledningScreen. */
   onOpenWarmColdGuide: () => void;
+  /**
+   * P6: opens the Plaggbibliotek drill — threaded straight through to
+   * HjemMonter, which wires it as PlaggDetailSheet's "Se alternativer i
+   * biblioteket" affordance AND as the no-dead-end fallback for a "Bytt" row
+   * whose garmentId never resolved.
+   */
+  onOpenPlaggbib: () => void;
 };
 
 const MAX_HOME_GARMENT_PILLS = 5;
@@ -358,6 +365,7 @@ export function HjemScreen({
   outfitTransitionStatus,
   onOpenAdjust,
   onOpenWarmColdGuide,
+  onOpenPlaggbib,
 }: HjemScreenProps) {
   // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
   // siden BottomTabBar nå mountes globalt i App.tsx.
@@ -980,6 +988,7 @@ export function HjemScreen({
         outfitTransitionStatus={outfitTransitionStatus}
         onOpenAdjust={onOpenAdjust}
         onOpenWarmColdGuide={onOpenWarmColdGuide}
+        onOpenPlaggbib={onOpenPlaggbib}
         onRetryWeather={handleRetryWeather}
       />
     );

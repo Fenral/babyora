@@ -12,7 +12,7 @@
  * krever Babyora Pluss (gating i UI via useAccess — IKKE her; datalaget er
  * tilgangs-agnostisk).
  */
-import type { GuideHubTarget } from '../screens/GuideHubScreen';
+import type { GuideTarget } from '../types/nav';
 
 export type LessonSection = {
   heading: string;
@@ -25,7 +25,7 @@ export type Lesson = {
   title: string;
   lead: string;
   sections: LessonSection[];
-  tryDet: { label: string; target: GuideHubTarget };
+  tryDet: { label: string; target: GuideTarget };
   /** Intern kildesporing (vises aldri i UI). */
   kilde: string;
 };
