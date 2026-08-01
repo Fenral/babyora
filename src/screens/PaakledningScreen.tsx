@@ -366,7 +366,11 @@ function PlannedPaakledningScreen({
               id="planned-outfit-title"
               ref={titleRef}
               tabIndex={-1}
-              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
+              // Programmatisk fokus (titleRef.focus() for skjermleser-kontekst)
+              // skal aldri tegne WebKits blå standard-ring for berørings-
+              // brukere (eier-funn TestFlight 2026-08-01). tabIndex=-1 kan
+              // ikke nås med Tab, så ingen synlig fokus går tapt.
+              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400, outline: 'none' }}
             >
               Planlagt antrekk er ikke tilgjengelig
             </h2>
@@ -430,7 +434,10 @@ function PlannedPaakledningScreen({
                 id="planned-outfit-title"
                 ref={titleRef}
                 tabIndex={-1}
-                style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
+                // Programmatisk fokus skal aldri tegne WebKits blå standard-
+                // ring (eier-funn TestFlight 2026-08-01); tabIndex=-1 nås
+                // ikke med Tab, så ingen synlig fokus går tapt.
+                style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400, outline: 'none' }}
               >
                 {plannedContext.child.name}
               </h2>
@@ -528,7 +535,11 @@ function PlannedPaakledningScreen({
               id="planned-outfit-title"
               ref={titleRef}
               tabIndex={-1}
-              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
+              // Programmatisk fokus (titleRef.focus() for skjermleser-kontekst)
+              // skal aldri tegne WebKits blå standard-ring for berørings-
+              // brukere (eier-funn TestFlight 2026-08-01). tabIndex=-1 kan
+              // ikke nås med Tab, så ingen synlig fokus går tapt.
+              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400, outline: 'none' }}
             >
               {plannedContext.child.name}
             </h2>
