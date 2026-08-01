@@ -2,65 +2,100 @@
  * FinnAntrekkScreen — F80b PROD-PORT av "Morgennatt" + VERDIKT-HERO
  * (fasit-tiltaket, docs/F79/guide-analyse.md).
  *
+ * P10/JOB4 (owner redesign, 2026-08-01): the "discovery-kalkulator" live-
+ * update model (drag a slider, watch the answer change) is REPLACED by an
+ * instrument-panel + CTA-driven model, matching the owner's explicit
+ * rejection of the old mixed vertical-thermometer + two-horizontal-sliders
+ * layout:
+ *
+ *  1. THREE VERTICAL GAUGES in one row (Temperatur/Vind/Nedbør) — same
+ *     column structure top-to-bottom (uppercase label → tabular-nums value
+ *     → vertical track with min/max at the ends → +/- 44pt fine-step
+ *     buttons). See VerticalGauge.tsx. Temperatur keeps its own cold→warm
+ *     gradient identity; Vind/Nedbør use a flat warm amber fill.
+ *  2. CTA-DRIVEN SCAN: adjusting sliders no longer recomputes the answer
+ *     live. A "Finn antrekk" CTA (same amber CTA class as Hjem, `.hjm-cta`)
+ *     sits below the activity toggle. Tapping it snapshots the CURRENT
+ *     slider values and runs the P9 400ms micropass choreography (reusing
+ *     scan-orchestration.ts's timing constants + the same haptics
+ *     vocabulary — `prepare()` then ONE `impactMedium()` landing). Once a
+ *     result exists, touching ANY slider re-arms the CTA ("Beregn på
+ *     nytt") and visually demotes (not hides) the existing result — same
+ *     stale model HjemMonter already uses for its own result-stale phase.
+ *  3. RESULT = THE CLOTHES: the answer is presented as numbered garment
+ *     rows (reusing HjemMonter's own `MonterGarmentRow` + `deriveResultRows`
+ *     — same vitrine-thumb presentation, same dressing order, same
+ *     `hjem-monter.css` surface classes) plus a small raised explanation
+ *     box (`.hjm-prev`, --dw-raised/14px radius/edge-light — already within
+ *     the §6 monter-lys limit) holding the engine's own derived "why" copy
+ *     (unchanged logic, still `buildWhyLine`/`buildWhyDetails` below).
+ *
+ * Everything NOT called out above (weather-seeded slider defaults, prefill/
+ * SEED WINS, activity radiogroup + roving tabindex, PlaggDetailSheet
+ * wiring, a11y valuetext vocabulary, haptic band-crossing ticks) is
+ * unchanged from the pre-JOB4 version.
+ *
  * Kilder (les FØR endring):
  *  - docs/F80/a11y-preclearance.md — §5: verdikt-hero aria-mønster
  *  - docs/F79/guide-analyse.md — fasit-autoritet-tiltak 1+2+3+5
- *  - src/styles/design-tokens.css — Morgennatt-vars
- *  - src/screens/HjemScreen.tsx — porterte Morgennatt-mønstre
+ *  - docs/design-notes/sol-duel-2026-07-31.md — §2 (scan-koreografi v2),
+ *    §3 (haptikk-vokabular), §6 (monter-lys-restriksjon)
+ *  - src/components/hjem/HjemMonter.tsx / scan-orchestration.ts — mikropass-
+ *    mønsteret dette skjermbildet nå speiler (egen kopi, ikke literal
+ *    gjenbruk — copyen her er kalkulator-spesifikk, ikke Hjem-spesifikk).
  *
- * Pivot fra wizard-pattern (chips + 2×2 grid) til **discovery-kalkulator** med
- * native <input type="range"> slidere + 2-knapps radiogroup. Bruker drar
- * slidere og ser anbefalingen oppdatere seg live. Vær-symbol utledes fra
- * nedbør-slider (mm/t > 0 = regn, ellers klarvær).
- *
- * Mønster portet fra iter 32a GuideScreen (commit 951985b):
- *  - Native <input type="range"> for temp / vind / nedbør, restylet til
- *    Morgennatt (accent-cta thumb, ink-200 track), touch ≥44px
- *  - role="status" aria-live="polite" debounced via useLiveStatus
- *    (800ms — a11y-preclearance §5: annonsér hvilende verdi, aldri hver tick)
- *  - Roving-tabindex radiogroup for aktivitet (arrow-key-nav)
- *  - aria-valuetext med tempband / vindband / nedbørband (menneskelig enhet)
- *
- * VERDIKT-HERO (fasit-tiltak 1+2, guide-analyse.md linje 78-94):
- *  - «N lag» som stort display-tall (Fraunces, tabular-nums) — dommen, ikke
- *    en fotnote nederst i scroll.
- *  - Én alltid-synlig hvorfor-linje generert fra slider-state (samme logikk
- *    som HjemScreen/summary.ts sin "sannferdig, ikke hardkodet"-regel).
- *  - «Vis hvorfor»-inline-ekspander med full regel-begrunnelse.
- *  - Kilde-linje UTENFOR live-regionen (a11y-preclearance §5), diskret ink-500.
- *  - Ingen hedging («kanskje», «vurder») og ingen tom-tilstand — motoren
- *    dekker hele slider-domenet (guide-analyse.md tiltak 5).
- *
- * Sone 2 (kalkulator): temp-akse-hint OK — kalkulatoren utforsker jo
- * temperatur. data-temp settes fra slider-temp med samme terskler som Hjem.
- *
- * Output-card bruker V2-skannbar-liste-pattern fra PaakledningScreen
- * (gruppert per innerst/mellom/ytterst/tilbehør med lag-stripe + thumb).
+ * Output-card bruker nå SAMME rad-presentasjon som Hjems resultatflate
+ * (MonterGarmentRow/ResultSurface-mønsteret) i stedet for det tidligere
+ * PaakledningScreen-inspirerte gruppert-per-kategori-mønsteret.
  *
  * Defaults hentes fra useWeather hvis tilgjengelig, ellers
  * -4° / 3 m/s / 0 mm/t / klarvær.
  */
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type ReactElement,
 } from 'react';
 import { useChildren } from '../state/children-store';
 import { useWeather } from '../hooks/useWeather';
 import { useHapticSystem } from '../lib/haptics/system';
+import { impactMedium, prepare as hapticPrepare } from '../lib/haptics.js';
 import { useNativeSettings } from '../hooks/useNativeSettings';
-import { useLiveStatus } from '../hooks/useLiveStatus';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { recommend } from '../lib/wool-layers/recommend';
-import type { Activity, Layer, LayerCategory } from '../lib/wool-layers/types';
-import { garmentIdFor, garmentPng, type GarmentId } from '../data/garment-illustrations';
+import type { Activity } from '../lib/wool-layers/types';
+import type { GarmentId } from '../data/garment-illustrations';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
-import { TemperatureInstrument } from '../components/instrument/TemperatureInstrument';
+import { VerticalGauge } from '../components/instrument/VerticalGauge';
+import {
+  INSTRUMENT_MAX_C, INSTRUMENT_MIN_C, bandAt, instrumentValueText, snapDegree,
+} from '../components/instrument/instrument-logic';
+import '../components/hjem/hjem-monter.css';
+import { MonterGarmentRow } from '../components/hjem/MonterGarmentRow';
+import { getGarmentImage } from '../lib/monter-assets';
+import { deriveResultRows, type ResultRow } from '../components/hjem/result-rows';
+import {
+  MICROPASS_DURATION_MS,
+  MICROPASS_LANDING_MS,
+  MICROPASS_PREPARE_MS,
+  MICROPASS_SEGMENT_DELAYS_MS,
+} from '../components/hjem/scan-orchestration';
 import { seedFromPrefill, type FinnAntrekkPrefill } from './finn-antrekk-prefill';
+import {
+  ctaLabelFor,
+  nextPhaseAfterParamChange,
+  resultDemotedFor,
+  showCtaFor,
+  showResultFor,
+  type CalcPhase,
+  type CommittedParams,
+} from './finn-antrekk-calc';
 
 export type { FinnAntrekkPrefill };
 
@@ -103,33 +138,6 @@ const ACTIVITY_OPTIONS: ActivityOption[] = [
   { ui: 'lek', label: 'Lek ute', engine: 'utelek' },
   { ui: 'vogn', label: 'I vogn', engine: 'vogn' },
 ];
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Output-grupper (V2-skannbar-liste, samme som PaakledningScreen)
-   ────────────────────────────────────────────────────────────────────────── */
-
-type GroupKey = 'innerst' | 'mellom' | 'ytterst' | 'tilbehor';
-
-type GroupSpec = {
-  key: GroupKey;
-  label: string;
-  /** Lag-stripe-farge (3px venstre). */
-  color: string;
-};
-
-const GROUPS: GroupSpec[] = [
-  { key: 'innerst', label: 'Innerst', color: 'var(--layer-innerst)' },
-  { key: 'mellom', label: 'Mellom', color: 'var(--layer-mellom)' },
-  { key: 'ytterst', label: 'Ytterst', color: 'var(--layer-ytterst)' },
-  { key: 'tilbehor', label: 'Tilbehør', color: 'var(--ink-400)' },
-];
-
-function categoryToGroup(c: LayerCategory): GroupKey {
-  if (c === 'innerst') return 'innerst';
-  if (c === 'mellomlag') return 'mellom';
-  if (c === 'yttertoy') return 'ytterst';
-  return 'tilbehor';
-}
 
 /* ──────────────────────────────────────────────────────────────────────────
    Verdi-tekst for a11y (aria-valuetext)
@@ -180,6 +188,8 @@ function tempBandHeadline(c: number): string {
 /* ──────────────────────────────────────────────────────────────────────────
    Temp-akse (Sone 2 — samme terskler som HjemScreen: kald <5°, varm >18°).
    Kalkulatoren utforsker jo temperatur, så data-temp-hint er tillatt her.
+   Live-drevet (ikke committed) — rent visuelt canvas-hint, uavhengig av
+   CTA-arming.
    ────────────────────────────────────────────────────────────────────────── */
 
 const TEMP_AXIS_COLD_MAX = 5;
@@ -194,11 +204,10 @@ function tempAxisFor(tempC: number): TempAxis {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   VERDIKT-HERO — hvorfor-tekst (fasit-tiltak 2, guide-analyse.md linje 82-85).
-   Kompakt versjon av HjemScreen/lib/summary.ts sitt "sannferdig, aldri
-   hardkodet"-prinsipp: én alltid-synlig linje bygget av faktisk slider-state,
-   pluss en fyldigere liste med regel-utslag til "Vis hvorfor"-ekspanderen.
-   Ingen hedging ("kanskje", "vurder") — dette er dommen, ikke et forslag.
+   Forklarings-boks — hvorfor-tekst (fasit-tiltak 2, guide-analyse.md linje
+   82-85). Uendret avledningslogikk fra pre-JOB4: én alltid-synlig linje
+   bygget av faktiske (nå: COMMITTED) parametre, pluss en fyldigere liste med
+   regel-utslag til "Vis hvorfor"-ekspanderen. Ingen hedging.
    ────────────────────────────────────────────────────────────────────────── */
 
 /** Én alltid-synlig hvorfor-linje, f.eks. «Føles som −9° · vind krever vindtett ytterlag». */
@@ -228,7 +237,7 @@ function buildWhyDetails(
   windMs: number,
   precipMmH: number,
   activityUi: ActivityUi,
-  layerCount: number,
+  garmentCount: number,
 ): string[] {
   const details: string[] = [
     `Temperaturen føles som ${formatTemp(tempC)} (${tempBandText(tempC)}) — det avgjør hvor mange lag som trengs.`,
@@ -250,9 +259,96 @@ function buildWhyDetails(
     details.push('Barnet er i aktiv lek og lager egen varme — det er tatt med i beregningen.');
   }
 
-  details.push(`Til sammen gir dette ${layerCount} ${layerCount === 1 ? 'lag' : 'lag'} mot ${tempBandHeadline(tempC)}.`);
+  details.push(`Til sammen gir dette ${garmentCount} ${garmentCount === 1 ? 'plagg' : 'plagg'}, tilpasset ${tempBandHeadline(tempC)} vær.`);
 
   return details;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Ikoner
+   ────────────────────────────────────────────────────────────────────────── */
+
+function ArrowIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+function CheckIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+/** Chevron for "Vis hvorfor"-ekspanderen — roterer 180° når åpen. */
+function ChevronDown({ expanded }: { expanded: boolean }): ReactElement {
+  return (
+    <svg
+      width={12}
+      height={12}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.4}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      style={{
+        flex: 'none',
+        transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+        transition: 'transform 160ms ease',
+      }}
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Mikropass — P10/JOB4 lokal kopi av HjemMonter/ScanMicropass sitt 400ms-
+   mønster (scan-orchestration.ts's timing-konstanter gjenbrukes, selve
+   copyen er kalkulator-spesifikk — se filhode). Erstatter KUN CTA-området,
+   ikke sliderne (de forblir synlige/interaktive under mikropasset).
+   ────────────────────────────────────────────────────────────────────────── */
+
+const MICROPASS_TRUST_SEGMENTS = ['Temperatur,', 'vind og', 'nedbør vurderes sammen'] as const;
+
+function CalcMicropass({
+  summaryText,
+  reducedMotion,
+}: {
+  summaryText: string;
+  reducedMotion: boolean;
+}): ReactElement {
+  const animate = !reducedMotion;
+  return (
+    <div className="hjm-micropass" data-animate={animate ? 'true' : 'false'}>
+      <span className="hjm-sr-only" role="status" aria-live="polite">Beregner antrekk</span>
+      <button type="button" className="hjm-cta hjm-micropass-cta" aria-hidden="true" tabIndex={-1}>
+        Finn antrekk
+      </button>
+      <div className="hjm-micropass-trust-wrap" aria-hidden="true">
+        <p className="hjm-trust hjm-micropass-trust">
+          {MICROPASS_TRUST_SEGMENTS.map((segment, index) => (
+            <span
+              key={segment}
+              className="hjm-micropass-segment"
+              style={animate ? { animationDelay: `${MICROPASS_SEGMENT_DELAYS_MS[index]}ms` } : undefined}
+            >
+              {segment}
+              {index < MICROPASS_TRUST_SEGMENTS.length - 1 ? ' ' : ''}
+            </span>
+          ))}
+        </p>
+        <p className="hjm-trust hjm-micropass-summary">{summaryText}</p>
+      </div>
+    </div>
+  );
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -261,6 +357,21 @@ function buildWhyDetails(
 
 const FALLBACK_LAT = 60.8867;
 const FALLBACK_LON = 11.5614;
+
+const GAUGE_HEIGHT = 208;
+
+/** Kolonnefarge for temperatur-gaugens gradient (kald→bånd-farge) — samme rampe som TemperatureInstrument.tsx (R7 Task 3A). */
+const TEMP_BAND_FILL_COLOR: Record<string, string> = {
+  ekstrem: 'var(--layer-bg-kald)',
+  streng_frost: 'var(--layer-bg-kald)',
+  frost: 'var(--layer-bg-kald)',
+  kald: 'var(--layer-bg-kald)',
+  kjolig: 'var(--accent-temp)',
+  mild: 'var(--accent-temp)',
+  varm: 'var(--layer-bg-varm)',
+  tropisk: 'var(--layer-bg-varm)',
+  ekstrem_varme: 'var(--layer-bg-varm)',
+};
 
 export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): ReactElement {
   const { active, needsOnboarding } = useChildren();
@@ -290,27 +401,20 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
   // prefill ble gitt: sliderne er ALT seedet fra Hjems levende vær, så
   // skjermens EGEN useWeather()-kall (linje over) skal ALDRI få overskrive
   // dem — selv om det lander med litt andre tall (annen fetch, samme sted).
-  // R3 (2026-07-14): state (ikke ref) — guarden leses under render av
-  // engangsinit-justeringen under, og refs kan ikke leses under render.
   const [initedFromWeather, setInitedFromWeather] = useState(() => seed.initedFromWeather);
 
   /* ── Detalj-sheet state (F62 PlaggDetailSheet) ── */
   const [openGarmentId, setOpenGarmentId] = useState<GarmentId | null>(null);
-  const detailTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const rowRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const detailTriggerRef = useRef<HTMLElement | null>(null);
 
-  function handleOpenPlagg(rowKey: string, itemName: string): void {
-    const gid = garmentIdFor(itemName);
-    if (!gid) {
-      // Ingen illustrasjon mappet → ingen detail-sheet å vise.
-      return;
-    }
+  function handleOpenGarmentRow(row: ResultRow, event: ReactMouseEvent<HTMLButtonElement>): void {
+    if (!row.garmentId) return;
     void fire('light');
-    detailTriggerRef.current = rowRefs.current[rowKey] ?? null;
-    setOpenGarmentId(gid);
+    detailTriggerRef.current = event.currentTarget;
+    setOpenGarmentId(row.garmentId as GarmentId);
   }
 
-  function handleClosePlagg(): void {
+  function handleCloseDetail(): void {
     setOpenGarmentId(null);
   }
 
@@ -341,9 +445,9 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
     [activityUi],
   );
 
-  const symbolCode = useMemo(() => symbolCodeFromPrecip(precipMmH), [precipMmH]);
-
-  const recommendation = useMemo(() => {
+  // LIVE (ikke committed) — kun brukt til (a) motor-feil-vakt/CTA-disabled,
+  // (b) data-temp-canvashintet. Vises ALDRI direkte — se P10/JOB4 filhode.
+  const liveRecommendation = useMemo(() => {
     try {
       return recommend({
         weather: {
@@ -351,7 +455,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
           feelsLikeC: tempC,
           windMs,
           precipMmH,
-          symbolCode,
+          symbolCode: symbolCodeFromPrecip(precipMmH),
         },
         child: { ageMonths },
         activity: selectedActivity.engine,
@@ -359,90 +463,128 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
     } catch {
       return null;
     }
-  }, [tempC, windMs, precipMmH, symbolCode, ageMonths, selectedActivity]);
-
-  // Gruppér layers etter de 4 group-keys (V2-skannbar-liste).
-  const grouped = useMemo<Map<GroupKey, Layer[]>>(() => {
-    const m = new Map<GroupKey, Layer[]>();
-    GROUPS.forEach((g) => m.set(g.key, []));
-    if (!recommendation) return m;
-    for (const l of recommendation.layers) {
-      if (l.items.length === 0) continue;
-      const k = categoryToGroup(l.category);
-      m.get(k)!.push(l);
-    }
-    return m;
-  }, [recommendation]);
-
-  // Antall lag — motoren dekker hele slider-domenet (guide-analyse.md
-  // tiltak 5); recommendation er kun null ved en logget motor-feil, ikke
-  // ved gyldige slider-verdier. Ekskluderer 'utstyr' (ikke klær PÅ barnet).
-  const layerCount = useMemo(() => {
-    if (!recommendation) return 0;
-    return recommendation.layers.reduce((sum, l) => {
-      if (l.category === 'utstyr') return sum;
-      return sum + (l.items.length > 0 ? 1 : 0);
-    }, 0);
-  }, [recommendation]);
-
-  const whyLine = useMemo(
-    () => buildWhyLine(tempC, windMs, precipMmH, activityUi),
-    [tempC, windMs, precipMmH, activityUi],
-  );
-
-  const whyDetails = useMemo(
-    () => buildWhyDetails(tempC, windMs, precipMmH, activityUi, layerCount),
-    [tempC, windMs, precipMmH, activityUi, layerCount],
-  );
-
-  const tempAxis = tempAxisFor(tempC);
+  }, [tempC, windMs, precipMmH, ageMonths, selectedActivity]);
 
   // Logget motor-feil — ikke en gyldig tom-tilstand (tiltak 5: motoren
   // dekker hele slider-domenet, recommendation er kun null ved faktisk
   // motor-feil). Ingen hedging i UI.
   useEffect(() => {
-    if (recommendation) return;
+    if (liveRecommendation) return;
     console.error('FinnAntrekk: recommend() feilet for gyldige slider-verdier', {
       tempC,
       windMs,
       precipMmH,
       activity: selectedActivity.engine,
     });
-  }, [recommendation, tempC, windMs, precipMmH, selectedActivity.engine]);
+  }, [liveRecommendation, tempC, windMs, precipMmH, selectedActivity.engine]);
 
-  // VERDIKT-HERO (a11y-preclearance §5): tallet + hvorfor-linjen bor i ÉN
-  // aria-live="polite" aria-atomic="true"-region og oppdateres KUN når
-  // sliderne har vært i ro i 900ms — annonsér hvilende verdi, aldri hver
-  // tick. useLiveStatus debouncer selve visningsverdien (ikke bare en
-  // skjult sr-only-tvilling), slik at det finnes én sannhetskilde.
-  const { announcement: debouncedKey, setMessage: scheduleVerdict } = useLiveStatus(900);
-  useEffect(() => {
-    scheduleVerdict(`${layerCount}|${whyLine}`);
-  }, [layerCount, whyLine, scheduleVerdict]);
+  const tempAxis = tempAxisFor(tempC);
 
-  const [displayLayerCount, displayWhyLine] = useMemo(() => {
-    const sep = debouncedKey.indexOf('|');
-    if (sep === -1) return [layerCount, whyLine] as const;
-    return [Number(debouncedKey.slice(0, sep)), debouncedKey.slice(sep + 1)] as const;
-  }, [debouncedKey, layerCount, whyLine]);
+  /* ── P10/JOB4: CTA-drevet scan-tilstand ─────────────────────────────────
+     idle → (trykk) → scanning → (400ms/mikropass) → fresh
+     fresh → (en slider/aktivitet endres) → stale → (trykk) → scanning → … */
+  const [phase, setPhase] = useState<CalcPhase>('idle');
+  const [committed, setCommitted] = useState<CommittedParams | null>(null);
 
-  // F83: verdikt-pop når dommen endres — payoff-øyeblikket. WAAPI på SAMME
-  // DOM-node (a11y-preclearance vilkår 4: aldri key-remount/element-swap i
-  // live-regionen → ingen dobbel-annonsering). Gated på debounced verdi (samme
-  // transition som SR-annonseringen) + reducedMotion. Første render popper ikke.
-  const verdictNumRef = useRef<HTMLSpanElement | null>(null);
-  const verdictPopInitRef = useRef(false);
-  useEffect(() => {
-    if (!verdictPopInitRef.current) {
-      verdictPopInitRef.current = true;
+  const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hapticTimerIdsRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
+
+  const clearScanTimers = useCallback(() => {
+    if (scanTimerRef.current !== null) {
+      clearTimeout(scanTimerRef.current);
+      scanTimerRef.current = null;
+    }
+    for (const id of hapticTimerIdsRef.current) clearTimeout(id);
+    hapticTimerIdsRef.current = [];
+  }, []);
+  useEffect(() => clearScanTimers, [clearScanTimers]);
+
+  // Re-arm: en committed resultat finnes, og MINST én av de fire
+  // parametrene har endret seg siden det ble beregnet → tilbake til CTA,
+  // resultatet forblir synlig (demotert), ikke skjult. React-anbefalt
+  // "adjusting state when a value changes"-mønster (render-tids setState,
+  // ikke i en effekt — samme idiom som HjemMonter sin `lastKnown`/`now` og
+  // PaywallDialog sin `prevOpen`/`open`) — unngår react-hooks/
+  // set-state-in-effect OG unngår et unødvendig ekstra flash-render.
+  const [prevTrackedParams, setPrevTrackedParams] = useState<CommittedParams>(
+    () => ({ tempC, windMs, precipMmH, activityUi }),
+  );
+  const trackedParamsChanged = prevTrackedParams.tempC !== tempC
+    || prevTrackedParams.windMs !== windMs
+    || prevTrackedParams.precipMmH !== precipMmH
+    || prevTrackedParams.activityUi !== activityUi;
+  if (trackedParamsChanged) {
+    setPrevTrackedParams({ tempC, windMs, precipMmH, activityUi });
+    const nextPhase = nextPhaseAfterParamChange(phase, committed, { tempC, windMs, precipMmH, activityUi });
+    if (nextPhase !== phase) setPhase(nextPhase);
+  }
+
+  function handleFindOutfit(): void {
+    if (phase === 'scanning') return;
+    if (liveRecommendation === null) return;
+    clearScanTimers();
+    // Snapshot NÅ (trykk-tidspunktet) — duel §2: "berøring hopper til
+    // resultat, spiller kun landingen"-prinsippet gjelder retningen, ikke
+    // TIDSPUNKTET data hentes fra; scanningen prosesserer verdiene SLIK DE
+    // VAR da brukeren trykket, ikke hva de måtte ha driftet til 400ms senere.
+    const snapshot: CommittedParams = { tempC, windMs, precipMmH, activityUi };
+    setPhase('scanning');
+
+    if (reducedMotion) {
+      void hapticPrepare().then(() => { void impactMedium(); });
+      setCommitted(snapshot);
+      setPhase('fresh');
       return;
     }
-    if (reducedMotion) return;
-    verdictNumRef.current?.animate(
-      [{ transform: 'scale(1)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }],
-      { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
-    );
-  }, [displayLayerCount, reducedMotion]);
+
+    hapticTimerIdsRef.current = [
+      setTimeout(() => { void hapticPrepare(); }, MICROPASS_PREPARE_MS),
+      setTimeout(() => { void impactMedium(); }, MICROPASS_LANDING_MS),
+    ];
+    scanTimerRef.current = setTimeout(() => {
+      setCommitted(snapshot);
+      setPhase('fresh');
+    }, MICROPASS_DURATION_MS);
+  }
+
+  const committedActivityOption = useMemo(
+    () => (committed ? ACTIVITY_OPTIONS.find((a) => a.ui === committed.activityUi) ?? ACTIVITY_OPTIONS[0]! : null),
+    [committed],
+  );
+
+  const committedRecommendation = useMemo(() => {
+    if (!committed || !committedActivityOption) return null;
+    try {
+      return recommend({
+        weather: {
+          tempC: committed.tempC,
+          feelsLikeC: committed.tempC,
+          windMs: committed.windMs,
+          precipMmH: committed.precipMmH,
+          symbolCode: symbolCodeFromPrecip(committed.precipMmH),
+        },
+        child: { ageMonths },
+        activity: committedActivityOption.engine,
+      });
+    } catch {
+      return null;
+    }
+  }, [committed, committedActivityOption, ageMonths]);
+
+  // RESULT = THE CLOTHES — samme avledning/presentasjon som Hjems egen
+  // resultatflate (deriveResultRows + MonterGarmentRow, se filhode).
+  const rows = useMemo(() => deriveResultRows(committedRecommendation), [committedRecommendation]);
+
+  const committedWhyLine = useMemo(
+    () => (committed ? buildWhyLine(committed.tempC, committed.windMs, committed.precipMmH, committed.activityUi) : ''),
+    [committed],
+  );
+  const committedWhyDetails = useMemo(
+    () => (committed
+      ? buildWhyDetails(committed.tempC, committed.windMs, committed.precipMmH, committed.activityUi, rows.length)
+      : []),
+    [committed, rows.length],
+  );
 
   /* ────── Handlers ────── */
 
@@ -514,12 +656,18 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
   // returnere til Hjems cachede resultat — se App.tsx sin Drill-union).
   const isDrillContext = prefill !== undefined;
   const screenTitle = isDrillContext ? 'Juster' : 'Finn antrekk';
-  // Copy-fix (Guide-løftet tiltak 3, guide-analyse.md linje 68-69): "juster
-  // fritt" rammet verktøyet som lekegrind. Instrument-tone i stedet.
   const placeSuffix = prefill?.placeLabel ? ` · ${prefill.placeLabel}` : '';
+  // P10/JOB4: "juster og se svaret endre seg" fjernet — CTA-en (ikke live
+  // sliderdrag) er nå det som faktisk beregner svaret.
   const subLine = needsOnboarding || !active.dob
-    ? `${childName}${placeSuffix} · basert på været nå — juster og se svaret endre seg`
-    : `${childName}, ${ageMonths} mnd${placeSuffix} · basert på været nå — juster og se svaret endre seg`;
+    ? `${childName}${placeSuffix} · basert på været nå`
+    : `${childName}, ${ageMonths} mnd${placeSuffix} · basert på været nå`;
+
+  const ctaLabel = ctaLabelFor(phase);
+  const showCta = showCtaFor(phase);
+  const showResult = showResultFor(committed);
+  const resultDemoted = resultDemotedFor(phase);
+  const summaryText = `${formatTemp(tempC)} · ${windMs} m/s · ${selectedActivity.label}`;
 
   return (
     <main style={rootStyle} className="ba-temp-root" data-temp={tempAxis} aria-label={screenTitle}>
@@ -547,79 +695,73 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
 
       <div style={scrollStyle} className="ba-scroll-native">
 
-        {/* TEMP — R7 Task 3A: signatur-instrumentet (spec §3) erstatter
-            generisk slider. Verdi-avlesningen (DM Serif) beholdes øverst;
-            handleSliderChange-haptikken (bånd-kryssing) gjenbrukes uendret. */}
-        <section aria-labelledby="finn-temp-label">
-          <p id="finn-temp-label" style={eyebrowStyle}>Temperatur</p>
-          <div style={tempValueWrapStyle}>
-            <span style={tempValueStyle} aria-hidden>{formatTemp(tempC)}</span>
-          </div>
-          <TemperatureInstrument
-            valueC={tempC}
-            bandText={tempBandText}
-            onChange={(v) => handleSliderChange('temp', tempBandText, setTempC, v)}
-            height={280}
-          />
-        </section>
-
-        {/* VIND */}
-        <section aria-labelledby="finn-vind-label">
-          <div style={sliderHeaderRow}>
-            <p id="finn-vind-label" style={eyebrowStyle}>Vind</p>
-            <span style={sliderValuePillStyle} aria-hidden>{windMs} m/s</span>
-          </div>
-          <input
-            id="finn-vind-slider"
-            type="range"
-            min={0}
-            max={15}
-            step={1}
-            value={windMs}
-            onChange={(e) => handleSliderChange('vind', windBandText, setWindMs, Number(e.target.value))}
-            aria-valuetext={`${windMs} meter per sekund, ${windBandText(windMs)}`}
-            aria-labelledby="finn-vind-label"
-            style={{ ...sliderStyle, ...sliderFillVars(windMs / 15, 'var(--ink-400)') }}
-            className="finn-slider"
-          />
-          <div style={sliderScaleStyle}>
-            <span>0</span>
-            <span>15 m/s</span>
-          </div>
-        </section>
-
-        {/* NEDBØR */}
-        <section aria-labelledby="finn-nedbor-label">
-          <div style={sliderHeaderRow}>
-            <p id="finn-nedbor-label" style={eyebrowStyle}>Nedbør</p>
-            <span style={sliderValuePillStyle} aria-hidden>{precipMmH.toFixed(1)} mm/t</span>
-          </div>
-          <input
-            id="finn-nedbor-slider"
-            type="range"
-            min={0}
-            max={10}
-            step={0.5}
-            value={precipMmH}
-            onChange={(e) => handleSliderChange('nedbor', precipBandText, setPrecipMmH, Number(e.target.value))}
-            aria-valuetext={`${precipMmH.toFixed(1)} millimeter per time, ${precipBandText(precipMmH)}`}
-            aria-labelledby="finn-nedbor-label"
-            style={{ ...sliderStyle, ...sliderFillVars(precipMmH / 10, 'var(--ink-400)') }}
-            className="finn-slider"
-          />
-          <div style={sliderScaleStyle}>
-            <span>0</span>
-            <span>10 mm/t</span>
+        {/* INSTRUMENT-PANEL — tre likeverdige vertikale gauger (P10/JOB4:
+            erstatter 1 vertikal termometer + 2 horisontale slidere, som
+            eier eksplisitt underkjente). Samme kolonnestruktur topp-bunn i
+            alle tre: etikett → verdi → vertikalt spor → +/- under. */}
+        <section aria-labelledby="finn-instrument-label">
+          <h2 id="finn-instrument-label" style={srOnlyStyle}>Vær-instrumenter</h2>
+          <div style={gaugeRowStyle}>
+            <VerticalGauge
+              label="Temperatur"
+              valueLabel={formatTemp(tempC)}
+              min={INSTRUMENT_MIN_C}
+              max={INSTRUMENT_MAX_C}
+              step={1}
+              value={snapDegree(tempC)}
+              onChange={(v) => handleSliderChange('temp', tempBandText, setTempC, v)}
+              ariaLabel="Temperatur i celsius"
+              ariaValueText={instrumentValueText(tempC, tempBandText(tempC))}
+              minLabel={`${INSTRUMENT_MIN_C}°`}
+              maxLabel={`${INSTRUMENT_MAX_C}°`}
+              fillBottomColor="var(--layer-bg-kald)"
+              fillTopColor={TEMP_BAND_FILL_COLOR[bandAt(tempC)] ?? 'var(--accent-temp)'}
+              incrementLabel="Én grad varmere"
+              decrementLabel="Én grad kaldere"
+              height={GAUGE_HEIGHT}
+            />
+            <VerticalGauge
+              label="Vind"
+              valueLabel={`${windMs} m/s`}
+              min={0}
+              max={15}
+              step={1}
+              value={windMs}
+              onChange={(v) => handleSliderChange('vind', windBandText, setWindMs, v)}
+              ariaLabel="Vindstyrke i meter per sekund"
+              ariaValueText={`${windMs} meter per sekund, ${windBandText(windMs)}`}
+              minLabel="0"
+              maxLabel="15 m/s"
+              fillBottomColor="var(--dw-accent)"
+              fillTopColor="var(--dw-accent)"
+              incrementLabel="Sterkere vind"
+              decrementLabel="Svakere vind"
+              height={GAUGE_HEIGHT}
+            />
+            <VerticalGauge
+              label="Nedbør"
+              valueLabel={`${precipMmH.toFixed(1)} mm/t`}
+              min={0}
+              max={10}
+              step={0.5}
+              value={precipMmH}
+              onChange={(v) => handleSliderChange('nedbor', precipBandText, setPrecipMmH, v)}
+              ariaLabel="Nedbør i millimeter per time"
+              ariaValueText={`${precipMmH.toFixed(1)} millimeter per time, ${precipBandText(precipMmH)}`}
+              minLabel="0"
+              maxLabel="10 mm/t"
+              fillBottomColor="var(--dw-accent)"
+              fillTopColor="var(--dw-accent)"
+              incrementLabel="Mer nedbør"
+              decrementLabel="Mindre nedbør"
+              height={GAUGE_HEIGHT}
+            />
           </div>
         </section>
 
         {/* AKTIVITET — 2-knapps radiogroup med roving-tabindex */}
         <section aria-labelledby="finn-aktivitet-label">
           <p id="finn-aktivitet-label" style={eyebrowStyle}>Aktivitet</p>
-          {/* F83: glidende pill (Hjem-segmented = fasit). ARIA byte-identisk:
-              role=radiogroup + radio + roving tabindex + piltaster. aria-checked
-              flipper umiddelbart på valg; pillen er aria-hidden dekor som
-              glir etter (RM → ingen transition). A11y-preclearance vilkår 6. */}
           <div
             role="radiogroup"
             aria-labelledby="finn-aktivitet-label"
@@ -651,106 +793,88 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
           </div>
         </section>
 
-        {/* VERDIKT-HERO — fasit-tiltak 1+2 (guide-analyse.md linje 78-94).
-            «N lag» som stort display-tall er dommen, ikke en fotnote.
-            Tallet + hvorfor-linjen ligger i ÉN aria-live="polite"
-            aria-atomic="true"-region (a11y-preclearance §5), debounced
-            900ms. Kilde-linjen ligger UTENFOR denne regionen. */}
-        <section aria-label="Antrekk-dom" style={verdictHeroStyle}>
-          <div
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-            style={verdictLiveRegionStyle}
-          >
-            <p style={verdictNumberStyle}>
-              <span ref={verdictNumRef} style={verdictNumberBig}>{displayLayerCount}</span>{' '}
-              <span style={verdictNumberUnit}>lag</span>
+        {/* CTA-DREVET SCAN (P10/JOB4) — «Finn antrekk» / «Beregn på nytt».
+            Skjules helt når resultatet allerede er ferskt (speiler Hjems
+            egen result-current: ingen CTA når svaret allerede stemmer). */}
+        {phase === 'scanning' ? (
+          <CalcMicropass summaryText={summaryText} reducedMotion={reducedMotion} />
+        ) : showCta ? (
+          <div>
+            <button
+              type="button"
+              className="hjm-cta"
+              onClick={handleFindOutfit}
+              disabled={liveRecommendation === null}
+            >
+              {ctaLabel}
+              <ArrowIcon />
+            </button>
+            <p className="hjm-trust">
+              <CheckIcon />
+              Temperatur, vind og nedbør vurderes sammen
             </p>
-            <p style={verdictWhyStyle}>{displayWhyLine}.</p>
           </div>
+        ) : null}
 
-          <button
-            type="button"
-            onClick={() => setWhyExpanded((v) => !v)}
-            aria-expanded={whyExpanded}
-            aria-controls="finn-why-details"
-            className="ba-press"
-            style={whyToggleStyle(reducedMotion)}
-          >
-            {whyExpanded ? 'Skjul hvorfor' : 'Vis hvorfor'}
-            <ChevronDown expanded={whyExpanded} />
-          </button>
+        {/* RESULT = THE CLOTHES — numrerte plaggrader (samme presentasjon
+            som Hjems ResultSurface) + en liten hevet forklaringsboks. Vises
+            kun etter FØRSTE fullførte beregning; demotert (ikke skjult) når
+            sliderne er endret siden. */}
+        {showResult && (
+          <section aria-labelledby="finn-output-label" style={resultOpacityStyle(resultDemoted, reducedMotion)}>
+            <div style={outputHeaderStyle}>
+              <h2 id="finn-output-label" style={outputTitleStyle}>Antrekket</h2>
+              <span style={outputMetaStyle} aria-hidden>
+                {rows.length} plagg · {selectedActivity.label.toLowerCase()}
+              </span>
+            </div>
 
-          {whyExpanded && (
-            <ul id="finn-why-details" role="list" style={whyDetailsListStyle}>
-              {whyDetails.map((line, i) => (
-                <li key={i} style={whyDetailItemStyle}>
-                  {line}
-                </li>
+            <ol className="hjm-rows" data-fresh={phase === 'fresh' && !reducedMotion ? 'true' : 'false'}>
+              {rows.map((row) => (
+                <MonterGarmentRow
+                  key={row.key}
+                  position={row.position}
+                  label={row.label}
+                  roleLabel={row.roleLabel}
+                  imageSrc={getGarmentImage(row.garmentId)}
+                  onSwap={(event) => handleOpenGarmentRow(row, event)}
+                  animationDelayMs={null}
+                />
               ))}
-            </ul>
-          )}
+            </ol>
 
-          {/* Kilde-linje — UTENFOR live-regionen (a11y-preclearance §5).
-              Troverdighet nivå 1 (guide-analyse.md linje 182-184). */}
-          <p style={kildeLineStyle}>
-            Basert på norske helsesøster-råd · TOG-standarden · vær fra met.no
-          </p>
-        </section>
+            <div className="hjm-prev" style={explanationBoxStyle}>
+              <span className="hjm-p-label">HVORFOR</span>
+              <p className="hjm-p-text">{committedWhyLine}.</p>
 
-        {/* OUTPUT — V2 Skannbar liste */}
-        <section aria-labelledby="finn-output-label" style={outputSectionStyle}>
-          <header style={outputHeaderStyle}>
-            <h2 id="finn-output-label" style={outputTitleStyle}>Antrekket</h2>
-            <span style={outputMetaStyle} aria-hidden>
-              {selectedActivity.label.toLowerCase()} · {tempBandHeadline(tempC)}
-            </span>
-          </header>
+              <button
+                type="button"
+                onClick={() => setWhyExpanded((v) => !v)}
+                aria-expanded={whyExpanded}
+                aria-controls="finn-why-details"
+                className="ba-press"
+                style={whyToggleStyle(reducedMotion)}
+              >
+                {whyExpanded ? 'Skjul hvorfor' : 'Vis hvorfor'}
+                <ChevronDown expanded={whyExpanded} />
+              </button>
 
-          <div style={groupListStyle}>
-              {GROUPS.map((group) => {
-                const layers = grouped.get(group.key) ?? [];
-                if (layers.length === 0) return null;
-                const items = layers.flatMap((l) => l.items);
-                return (
-                  <section key={group.key} aria-labelledby={`group-${group.key}`}>
-                    <h3 id={`group-${group.key}`} style={groupHeaderStyle}>
-                      {group.label}
-                    </h3>
-                    <ul role="list" style={itemListStyle}>
-                      {items.map((item, i) => {
-                        const rowKey = `${group.key}-${i}-${item}`;
-                        const isLast = i === items.length - 1;
-                        const gid = garmentIdFor(item);
-                        const isClickable = gid !== null;
-                        return (
-                          <li key={rowKey} style={itemLiStyle}>
-                            <button
-                              type="button"
-                              ref={(el) => {
-                                rowRefs.current[rowKey] = el;
-                              }}
-                              onClick={() => handleOpenPlagg(rowKey, item)}
-                              disabled={!isClickable}
-                              aria-label={`Vis detalj for ${capitalize(item)}`}
-                              className="ba-row-press"
-                              style={itemButtonStyle(group.color, isLast, isClickable)}
-                            >
-                              <span aria-hidden style={thumbStyle}>
-                                <ItemThumb name={item} />
-                              </span>
-                              <span style={itemNameStyle}>{capitalize(item)}</span>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </section>
-                );
-              })}
-          </div>
-        </section>
+              {whyExpanded && (
+                <ul id="finn-why-details" role="list" style={whyDetailsListStyle}>
+                  {committedWhyDetails.map((line, i) => (
+                    <li key={i} style={whyDetailItemStyle}>
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <p style={kildeLineStyle}>
+                Basert på norske helsesøster-råd · TOG-standarden · vær fra met.no
+              </p>
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Plagg-detalj (F62 PlaggDetailSheet) — focus returnerer til klikket rad-knapp. */}
@@ -758,152 +882,12 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
         <PlaggDetailSheet
           garmentId={openGarmentId}
           isOpen={openGarmentId !== null}
-          onClose={handleClosePlagg}
+          onClose={handleCloseDetail}
           triggerRef={detailTriggerRef}
         />
       )}
-
-      {/* Inline-CSS for slider thumb (44px+ touch-target). */}
-      <style>{`
-        .finn-slider {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 100%;
-          height: 28px;
-          background: transparent;
-          margin: 4px 0;
-          padding: 0;
-          touch-action: pan-y;
-        }
-        .finn-slider:focus { outline: none; }
-        .finn-slider:focus-visible::-webkit-slider-thumb {
-          outline: 3px solid var(--focus-ring);
-          outline-offset: 2px;
-        }
-        .finn-slider:focus-visible::-moz-range-thumb {
-          outline: 3px solid var(--focus-ring);
-          outline-offset: 2px;
-        }
-        /* F83 termometer: fylt spor-del t.o.m. thumben (--fill settes inline
-           per slider; temp bruker var(--accent-temp) = bånd-reaktiv farge,
-           vind/nedbør nøytral ink-400). Ufylt del bevisst ink-200 — thumben
-           (28px accent-cta + surface-ring) bærer affordancen (a11y-preclearance
-           vilkår 2: thumb-spec/focus-ring uendret). */
-        .finn-slider::-webkit-slider-runnable-track {
-          height: 8px;
-          background: linear-gradient(
-            to right,
-            var(--fill-color, var(--ink-400)) var(--fill, 0%),
-            var(--ink-200) var(--fill, 0%)
-          );
-          border-radius: 999px;
-        }
-        .finn-slider::-moz-range-track {
-          height: 8px;
-          background: var(--ink-200);
-          border-radius: 999px;
-          border: 0;
-        }
-        .finn-slider::-moz-range-progress {
-          height: 8px;
-          background: var(--fill-color, var(--ink-400));
-          border-radius: 999px;
-        }
-        .finn-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          background: var(--accent-cta);
-          border: 3px solid var(--surface);
-          box-shadow: var(--shadow-cta);
-          margin-top: -10px;
-          cursor: pointer;
-        }
-        .finn-slider::-moz-range-thumb {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          background: var(--accent-cta);
-          border: 3px solid var(--surface);
-          box-shadow: var(--shadow-cta);
-          cursor: pointer;
-        }
-        .finn-slider:disabled::-webkit-slider-thumb {
-          background: var(--ink-300);
-          box-shadow: none;
-          cursor: not-allowed;
-        }
-        .finn-slider:disabled::-moz-range-thumb {
-          background: var(--ink-300);
-          box-shadow: none;
-          cursor: not-allowed;
-        }
-      `}</style>
     </main>
   );
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Subkomponenter
-   ────────────────────────────────────────────────────────────────────────── */
-
-/** Chevron for "Vis hvorfor"-ekspanderen — roterer 180° når åpen. */
-function ChevronDown({ expanded }: { expanded: boolean }): ReactElement {
-  return (
-    <svg
-      width={12}
-      height={12}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2.4}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-      style={{
-        flex: 'none',
-        transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-        transition: 'transform 160ms ease',
-      }}
-    >
-      <path d="M6 9l6 6 6-6" />
-    </svg>
-  );
-}
-
-/** Item-thumbnail — bruker garmentIdFor → garmentPng, faller tilbake til
- *  emoji ved mismatch eller 404. */
-function ItemThumb({ name }: { name: string }): ReactElement {
-  const [errored, setErrored] = useState(false);
-  const id = garmentIdFor(name);
-  if (!id || errored) {
-    return <span style={{ fontSize: 26, lineHeight: 1 }}>🧦</span>;
-  }
-  return (
-    <img
-      src={garmentPng(id)}
-      alt=""
-      onError={() => setErrored(true)}
-      style={{
-        width: '100%',
-        height: '100%',
-        objectFit: 'contain',
-        display: 'block',
-      }}
-    />
-  );
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   utils
-   ────────────────────────────────────────────────────────────────────────── */
-
-function capitalize(s: string): string {
-  if (!s) return s;
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -913,17 +897,11 @@ function capitalize(s: string): string {
 const TOKENS = {
   bgCanvas: 'var(--bg-canvas)',
   surface: 'var(--surface)',
-  orange500: 'var(--accent-cta)',
-  orange100: 'var(--accent-cta)',
-  orangeOn100: 'var(--terracotta-700)',
   ink900: 'var(--ink-900)',
   ink700: 'var(--ink-700)',
   ink500: 'var(--ink-500)',
-  ink300: 'var(--ink-300)',
   hairline: 'var(--ink-100)',
-  hairlineStrong: 'var(--ink-200)',
   fontSans: 'var(--font-sans)',
-  fontSerif: 'var(--font-serif)',
   safeTop: 'env(safe-area-inset-top, 0px)',
   safeBottom: 'env(safe-area-inset-bottom, 0px)',
   easeStandard: 'var(--ease-standard)',
@@ -1023,7 +1001,14 @@ const scrollStyle: CSSProperties = {
   minHeight: 0,
   overflowY: 'auto',
   overflowX: 'hidden',
-  padding: '0 16px 32px',
+  padding: '0 16px',
+  // P10 (Juster clearance, folded into JOB4): this screen owns its own
+  // internal scroll container (like .hjem-monter, see hjem-monter.css's own
+  // comment) — it can't rely on `.app-shell > main`'s padding-bottom alone,
+  // since THIS div (not the outer <main>) is the element that actually
+  // scrolls. Same --dw-tabbar-clearance token as P8's `.app-shell > main`
+  // rule, added on top of the screen's own 32px breathing room.
+  paddingBottom: 'calc(32px + var(--dw-tabbar-clearance, 90px))',
   display: 'flex',
   flexDirection: 'column',
   gap: 22,
@@ -1038,58 +1023,16 @@ const eyebrowStyle: CSSProperties = {
   margin: '0 2px 10px',
 };
 
-/* ---- VERDIKT-HERO (fasit-tiltak 1+2) ---- */
+/* ---- Instrument-panel-rad (P10/JOB4) ---- */
 
-const verdictHeroStyle: CSSProperties = {
-  marginTop: 4,
-  padding: '22px 18px 18px',
-  borderRadius: 20,
-  background: 'var(--surface)',
-  border: `1px solid ${TOKENS.hairline}`,
-  boxShadow: 'var(--shadow-2)',
-  textAlign: 'center',
-};
-
-const verdictLiveRegionStyle: CSSProperties = {
+const gaugeRowStyle: CSSProperties = {
   display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: 6,
+  alignItems: 'stretch',
+  justifyContent: 'space-between',
+  gap: 10,
 };
 
-const verdictNumberStyle: CSSProperties = {
-  margin: 0,
-  display: 'flex',
-  alignItems: 'baseline',
-  justifyContent: 'center',
-  gap: 8,
-};
-
-const verdictNumberBig: CSSProperties = {
-  fontFamily: TOKENS.fontSerif,
-  fontSize: 'clamp(56px, 18vw, 76px)',
-  fontWeight: 560,
-  lineHeight: 1,
-  letterSpacing: '-0.02em',
-  fontVariantNumeric: 'tabular-nums',
-  color: TOKENS.ink900,
-};
-
-const verdictNumberUnit: CSSProperties = {
-  fontFamily: TOKENS.fontSerif,
-  fontSize: '1.375rem',
-  fontWeight: 420,
-  color: TOKENS.ink700,
-};
-
-const verdictWhyStyle: CSSProperties = {
-  margin: '2px 0 0',
-  fontSize: '0.9375rem',
-  fontWeight: 600,
-  color: TOKENS.ink900,
-  lineHeight: 1.4,
-  maxWidth: '32ch',
-};
+/* ---- Forklarings-boks / "Vis hvorfor" ---- */
 
 function whyToggleStyle(reduceMotion: boolean): CSSProperties {
   return {
@@ -1098,10 +1041,10 @@ function whyToggleStyle(reduceMotion: boolean): CSSProperties {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    margin: '14px auto 0',
+    margin: '10px auto 0',
     padding: '10px 16px',
     minHeight: 44,
-    border: `1px solid ${TOKENS.hairlineStrong}`,
+    border: '1px solid rgba(241, 233, 218, 0.16)',
     borderRadius: 999,
     background: 'transparent',
     color: TOKENS.ink700,
@@ -1117,9 +1060,9 @@ function whyToggleStyle(reduceMotion: boolean): CSSProperties {
 
 const whyDetailsListStyle: CSSProperties = {
   listStyle: 'none',
-  margin: '14px 0 0',
-  padding: '14px 4px 0',
-  borderTop: `1px solid ${TOKENS.hairline}`,
+  margin: '12px 0 0',
+  padding: '12px 2px 0',
+  borderTop: '1px solid rgba(241, 233, 218, 0.1)',
   display: 'flex',
   flexDirection: 'column',
   gap: 8,
@@ -1133,80 +1076,25 @@ const whyDetailItemStyle: CSSProperties = {
 };
 
 const kildeLineStyle: CSSProperties = {
-  margin: '16px 0 0',
+  margin: '14px 0 0',
   fontSize: '0.71875rem',
   color: TOKENS.ink500,
   lineHeight: 1.4,
 };
 
-/* ---- TEMP-verdi (DM Serif Display) ---- */
-
-const tempValueWrapStyle: CSSProperties = {
-  display: 'flex',
-  justifyContent: 'center',
-  marginBottom: 6,
+const explanationBoxStyle: CSSProperties = {
+  marginTop: 12,
 };
 
-const tempValueStyle: CSSProperties = {
-  fontFamily: TOKENS.fontSerif,
-  fontSize: 32,
-  fontWeight: 400,
-  fontVariantNumeric: 'tabular-nums',
-  color: TOKENS.ink900,
-  lineHeight: 1,
-  letterSpacing: '-0.5px',
-};
-
-/* ---- Slider-shared ---- */
-
-const sliderStyle: CSSProperties = {
-  width: '100%',
-  minHeight: 44,
-};
-
-/** F83: CSS-vars for fylt spor-del. Fraksjonen kompenserer for thumb-bredden
- *  (28px) så fyllet treffer thumb-senteret over hele domenet. */
-function sliderFillVars(frac: number, color: string): CSSProperties {
-  const f = Math.max(0, Math.min(1, frac));
+function resultOpacityStyle(demoted: boolean, reduceMotion: boolean): CSSProperties {
   return {
-    '--fill': `calc(14px + (100% - 28px) * ${f.toFixed(4)})`,
-    '--fill-color': color,
-  } as CSSProperties;
+    opacity: demoted ? 0.55 : 1,
+    transition: reduceMotion ? 'none' : 'opacity 160ms ease',
+  };
 }
-
-// R7 Task 3A: sliderTrackWrapStyle + frostTickStyle fjernet — temp-slideren
-// er erstattet av TemperatureInstrument (bånd-markørene bor i instrumentet).
-
-const sliderHeaderRow: CSSProperties = {
-  display: 'flex',
-  alignItems: 'baseline',
-  justifyContent: 'space-between',
-  marginBottom: 0,
-};
-
-const sliderValuePillStyle: CSSProperties = {
-  fontFamily: TOKENS.fontSans,
-  fontSize: '1.125rem',
-  fontWeight: 600,
-  fontVariantNumeric: 'tabular-nums',
-  color: TOKENS.ink900,
-  marginRight: 2,
-  marginBottom: 10,
-  letterSpacing: '-0.2px',
-};
-
-const sliderScaleStyle: CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  fontSize: '0.6875rem',
-  color: TOKENS.ink500,
-  marginTop: 2,
-  fontVariantNumeric: 'tabular-nums',
-};
 
 /* ---- AKTIVITET ---- */
 
-/* F83: glidende-pill-wrap (Hjem-segmented-mønsteret). */
 const activityRowStyle: CSSProperties = {
   position: 'relative',
   display: 'flex',
@@ -1256,18 +1144,7 @@ function activityButtonStyle(active: boolean, reduceMotion: boolean): CSSPropert
   };
 }
 
-/* ---- OUTPUT-card (V2 skannbar) ---- */
-
-const outputSectionStyle: CSSProperties = {
-  marginTop: 4,
-  background: TOKENS.surface,
-  borderRadius: 16,
-  border: `1px solid ${TOKENS.hairline}`,
-  padding: '14px 14px 4px',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 10,
-};
+/* ---- OUTPUT-header (RESULT = THE CLOTHES) ---- */
 
 const outputHeaderStyle: CSSProperties = {
   display: 'flex',
@@ -1289,85 +1166,7 @@ const outputMetaStyle: CSSProperties = {
   fontWeight: 600,
   letterSpacing: '0.8px',
   textTransform: 'uppercase',
-  color: TOKENS.orangeOn100,
-};
-
-const groupListStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 6,
-};
-
-const groupHeaderStyle: CSSProperties = {
-  margin: '8px 0 4px',
-  fontSize: '0.65625rem',
-  fontWeight: 700,
-  letterSpacing: '1.2px',
-  textTransform: 'uppercase',
   color: TOKENS.ink500,
-};
-
-const itemListStyle: CSSProperties = {
-  listStyle: 'none',
-  margin: 0,
-  padding: 0,
-  display: 'flex',
-  flexDirection: 'column',
-};
-
-const itemLiStyle: CSSProperties = {
-  display: 'block',
-  width: '100%',
-};
-
-function itemButtonStyle(
-  stripeColor: string,
-  isLast: boolean,
-  isClickable: boolean,
-): CSSProperties {
-  return {
-    ...TOUCH_RESET,
-    appearance: 'none',
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    padding: '8px 4px 8px 14px',
-    borderBottom: isLast ? '0' : `1px solid ${TOKENS.hairline}`,
-    minHeight: 60,
-    borderTop: 0,
-    borderRight: 0,
-    borderLeft: `3px solid ${stripeColor}`,
-    background: 'transparent',
-    width: '100%',
-    cursor: isClickable ? 'pointer' : 'default',
-    textAlign: 'left',
-    color: TOKENS.ink900,
-    fontFamily: 'inherit',
-    fontSize: 'inherit',
-  };
-}
-
-const thumbStyle: CSSProperties = {
-  width: 60,
-  height: 60,
-  minWidth: 60,
-  flex: 'none',
-  borderRadius: 10,
-  background: 'var(--ink-100)',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  overflow: 'hidden',
-};
-
-const itemNameStyle: CSSProperties = {
-  fontSize: '0.875rem',
-  fontWeight: 600,
-  color: TOKENS.ink900,
-  letterSpacing: '-0.1px',
-  flex: 1,
-  minWidth: 0,
 };
 
 export default FinnAntrekkScreen;

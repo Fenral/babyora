@@ -31,6 +31,7 @@ import type { RecommendInput } from '../../../lib/wool-layers/types.js';
 import type { ScanCoordinatorState } from '../../../lib/scan/coordinator.js';
 import type { ScanCacheSlot } from '../../../lib/scan/types.js';
 import { localDateKey } from '../../../lib/scan/types.js';
+import { __resetOpeningBootSlotForTests } from '../../../state/ui-store.js';
 
 const scanMethods = {
   weatherReady: vi.fn(),
@@ -123,6 +124,11 @@ beforeEach(() => {
   mockedSlots = {};
   commitSlot.mockClear();
   for (const fn of Object.values(scanMethods)) (fn as Mock).mockClear();
+  // P10/JOB1: the opening sequence's per-boot dedup slot (ui-store.ts) is
+  // module-level, not component state — reset it before every test so
+  // these renders don't depend on which test happened to run first (see
+  // ui-store.ts's own doc comment on why a reset hook is legitimate here).
+  __resetOpeningBootSlotForTests();
 });
 afterEach(() => {
   mockedSlots = {};

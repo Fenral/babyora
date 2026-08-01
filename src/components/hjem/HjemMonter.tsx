@@ -98,6 +98,9 @@ import type { FinnAntrekkPrefill } from '../../screens/finn-antrekk-prefill.js';
 import { resolveSwapTarget } from './swap-row.js';
 import { PlaggDetailSheet } from '../PlaggDetailSheet.js';
 import type { GarmentId } from '../../data/garment-illustrations.js';
+import { decideOpeningVariant, type OpeningVariant } from './opening-sequence.js';
+import { OpeningSequence } from './OpeningSequence.js';
+import { consumeOpeningBootSlot, useUiStore } from '../../state/ui-store.js';
 
 const ACTIVITY_CHILD_LINE: Readonly<Record<MonterActivity, string>> = { utelek: 'Utelek', vogn: 'Vogn' };
 const ACTIVITY_TOGGLE_LABEL: Readonly<Record<MonterActivity, string>> = { utelek: 'Utenfor vogn', vogn: 'I vogn' };
@@ -202,6 +205,11 @@ export function HjemMonter({
   // det gamle per-dags-feltet (`daySlot`/`scanPlayedInFullToday`).
   const hasPlayedFullScanEver = useScanCache((state) => state.hasPlayedFullScanEver);
   const markFullScanPlayedEver = useScanCache((state) => state.markFullScanPlayedEver);
+  // P10/JOB1 (aapningssekvens-2026-08-01.md): livstids-flagget for den
+  // FULLE ~900ms førstegangs-åpningssekvensen — samme mønster som
+  // hasPlayedFullScanEver over, egen liten store (ui-store.ts).
+  const hasSeenOpeningEver = useUiStore((state) => state.hasSeenOpeningEver);
+  const markOpeningSeenEver = useUiStore((state) => state.markOpeningSeenEver);
 
   const identity = useMemo<ScanIdentity>(() => ({
     childId,
@@ -210,6 +218,33 @@ export function HjemMonter({
     activity,
     engineVersion: WOOL_LAYERS_ENGINE_VERSION,
   }), [childId, lat, lon, activity]);
+
+  // ── P10/JOB1: åpningssekvens ─────────────────────────────────────────────
+  // Avgjøres NØYAKTIG ÉN gang per HjemMonter-mount (lazy useState-
+  // initializer, samme "kjør kun ved første render"-garanti som resten av
+  // komponentens seed-mønstre) — IKKE via scan.state.phase (som først
+  // flipper til 'result-current' i en effekt ETTER commit, ett render-slag
+  // for sent for et treffsikkert varmstart-avgjørelse). getSlotForIdentity
+  // kalles derfor direkte her (ren funksjon, trygt under render) i stedet
+  // for å lese den asynkrone scan-fasen.
+  const [openingVariant] = useState<OpeningVariant>(() => decideOpeningVariant({
+    bootSlotClaimed: consumeOpeningBootSlot(),
+    reducedMotion,
+    isWarmCacheHit: getSlotForIdentity(slots, identity) !== null,
+    hasSeenOpeningEver,
+  }));
+  const [openingActive, setOpeningActive] = useState(openingVariant !== 'none');
+  const panelLiftRef = useRef<HTMLDivElement | null>(null);
+  const handleOpeningComplete = useCallback(() => {
+    if (openingVariant === 'first-ever') markOpeningSeenEver();
+    setOpeningActive(false);
+    // TODO (duel §4 — maskot idle-loop, IKKE integrert av denne pakken):
+    // start idle-loopen her, IDLE_LOOP_MIN_DELAY_MS–IDLE_LOOP_MAX_DELAY_MS
+    // (opening-sequence.ts) etter siste brukerinteraksjon på Hjem — se
+    // samme fil + OpeningSequence.tsx sin filhode-kommentar for konteksten
+    // idle-loopen selv (pause ved reducedMotion/bakgrunn/Low Power Mode)
+    // må respektere når den bygges.
+  }, [openingVariant, markOpeningSeenEver]);
 
   const currentResultKey = useMemo(() => {
     if (recommendation === null || now === null) return null;
@@ -722,20 +757,36 @@ export function HjemMonter({
     <div className="hjem-monter">
       <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
       <div className="hjm-panel-slot" data-with-mascot="true" data-compact="false">
-        <MascotPeek />
-        <WeatherScene
-          cityLabel={cityLabel}
-          nuance={nuance}
-          tempC={now?.tempC ?? null}
-          feelsLikeC={now?.feelsLikeC ?? null}
-          noteText={now ? `${conditionLabel} — sjekk antrekket før dere går ut.` : 'Henter vær…'}
-          weatherIconSrc={weatherIconSrc}
-          weatherIconAlt={conditionLabel}
-          freshnessLabel="Oppdatert nå"
-          activity={activity}
-          onActivityChange={onActivityChange}
-          onAdjustLocation={handleOpenAdjust}
-        />
+        {/* P10/JOB1: OpeningSequence renders ONLY the extra body/hands
+            layers + edge-light, alongside the ALWAYS-mounted MascotPeek
+            (visually hidden, never unmounted) and the panel-lift-wrap
+            (ALWAYS present too) — see OpeningSequence.tsx's own header
+            comment for why <WeatherScene/> must never remount across the
+            opening→normal hand-off. */}
+        {openingActive && (
+          <OpeningSequence
+            variant={openingVariant as Exclude<OpeningVariant, 'none'>}
+            reducedMotion={reducedMotion}
+            onComplete={handleOpeningComplete}
+            panelRef={panelLiftRef}
+          />
+        )}
+        <MascotPeek hidden={openingActive} />
+        <div ref={panelLiftRef} className="hjm-panel-lift-wrap">
+          <WeatherScene
+            cityLabel={cityLabel}
+            nuance={nuance}
+            tempC={now?.tempC ?? null}
+            feelsLikeC={now?.feelsLikeC ?? null}
+            noteText={now ? `${conditionLabel} — sjekk antrekket før dere går ut.` : 'Henter vær…'}
+            weatherIconSrc={weatherIconSrc}
+            weatherIconAlt={conditionLabel}
+            freshnessLabel="Oppdatert nå"
+            activity={activity}
+            onActivityChange={onActivityChange}
+            onAdjustLocation={handleOpenAdjust}
+          />
+        </div>
       </div>
       <div className="hjm-body">
         <div className="hjm-ask-block">

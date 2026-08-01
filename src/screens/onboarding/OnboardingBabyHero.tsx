@@ -1,6 +1,18 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 
-const POSTER_SRC = '/illustrations/onboarding/babyora-intro-v3.webp';
+/**
+ * P10/JOB5 (2026-08-01): swapped from the old lilac sitting-doll
+ * illustration (babyora-intro-v3.webp/mp4) to the standing Monter mascot —
+ * "old doll asset" was one of the three named violations to sweep from
+ * every onboarding step, not just step 1 (which no longer uses this
+ * component at all — see OnboardingScreen.tsx's own step-1 markup). This
+ * component is now only reached via the 'compact' (steps 2-4) and
+ * 'welcome' (step 5) variants; `object-fit: contain` (hjem-monter.css-style
+ * "vitrine" treatment, see .ob-baby-media in OnboardingScreen.tsx) shows
+ * the whole standing figure instead of cropping it like the old
+ * pre-framed square illustration needed.
+ */
+const POSTER_SRC = '/monter/maskot-staaende-cut-360.png';
 const VIDEO_SRC = '/illustrations/onboarding/babyora-intro-v3.mp4';
 
 export type OnboardingBabyHeroProps = {

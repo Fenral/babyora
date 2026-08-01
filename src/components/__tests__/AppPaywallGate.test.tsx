@@ -124,13 +124,19 @@ describe('AppPaywallGate rendering', () => {
     expect(html).not.toContain('aria-label="Lukk"');
   });
 
-  it('inneholder de tre hele-produktet-bulletsene og den plan-agnostiske trial-linjen', () => {
+  it('inneholder de tre hele-produktet-bulletsene og den plan-agnostiske «7 gratisdager»-meldingen', () => {
     useSubscription.setState({ firstRecommendationSeenAt: Date.now(), isPremium: false });
     const html = renderToStaticMarkup(<AppPaywallGate onboardingDone />);
     expect(html).toContain('Dagens antrekk, klart hver eneste morgen');
     expect(html).toContain('I morgen og hele neste uke, ferdig planlagt');
     expect(html).toContain('Del med alle som passer barnet');
-    expect(html).toContain('Start med 7 gratisdager uansett plan');
+    // v2 (P10/JOB2 re-skin, docs/mocks/monter/paywall-v2.html): den gamle
+    // PAYWALL_COPY.trialLine-avsnittet under CTA-en er erstattet av
+    // choose-hint-linjen mellom planvelgeren og CTA-en — samme plan-
+    // agnostiske «7 dager gratis uansett plan»-budskap, ny plassering/ordlyd.
+    // PAYWALL_COPY.trialLine-KONSTANTEN selv (uendret verdi) er fortsatt
+    // låst i paywall-copy.test.ts — kun DENNE render-testen er oppdatert.
+    expect(html).toContain('Alle planer starter med 7 gratisdager');
   });
 });
 

@@ -70,7 +70,13 @@ describe('FinnAntrekkScreen — prefill given (the "Juster" drill, opened from H
     expect(html).toContain('aria-label="Juster"');
     expect(html).toContain('>Juster<');
     expect(html).toContain('Juster antrekket for barnet ditt');
-    expect(html).not.toContain('>Finn antrekk<');
+    // P10/JOB4 (owner redesign, CTA-driven scan): the amber CTA now ALWAYS
+    // reads "Finn antrekk" — same label as Hjem's own CTA, per owner spec —
+    // regardless of whether the screen was opened as the "Juster" drill or
+    // standalone. Only the header TITLE paragraph is drill-aware, so assert
+    // that specifically instead of a blanket absence of the phrase.
+    const titleMatch = html.match(/<p style="margin:0;font-size:1\.25rem[^>]*>([^<]*)<\/p>/);
+    expect(titleMatch?.[1]).toBe('Juster');
   });
 
   it('shows the place label from the prefill in the header sub-line', () => {

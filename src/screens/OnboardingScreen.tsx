@@ -64,6 +64,16 @@ const DEFAULT_LOCATION = {
 
 const AVATAR_COLOR_DEFAULT = '#C25450';
 
+/**
+ * P10/JOB5 (2026-08-01, docs/mocks/monter/onboarding-steg1-v2.html): the
+ * STANDING Monter mascot for onboarding — feet resting on the step-1 card's
+ * top edge. NOT the old lilac sitting-doll illustration (OnboardingBabyHero
+ * — still used for steps 2-4/5's smaller "compact"/"welcome" chip, now
+ * pointed at this same asset, see OnboardingBabyHero.tsx), and NOT the
+ * hanging pose (`MascotPeek`/hjm-mascot — reserved for the Hjem panel).
+ */
+const MASCOT_STANDING_SRC = `${import.meta.env.BASE_URL}monter/maskot-staaende-cut-360.png`;
+
 const MONTHS_NB = [
   'januar', 'februar', 'mars', 'april', 'mai', 'juni',
   'juli', 'august', 'september', 'oktober', 'november', 'desember',
@@ -227,7 +237,6 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
   // ─── Step + felt-state ───────────────────────────────────────────────────
   const [step, setStep] = useState<Step>(1);
-  const [introMotionPlayed, setIntroMotionPlayed] = useState(false);
 
   const [name, setName] = useState<string>('');
 
@@ -273,9 +282,8 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
   // ─── Step-navigasjon ─────────────────────────────────────────────────────
   const advanceStep = useCallback((lastStep: Step) => {
-    if (step === 1) setIntroMotionPlayed(true);
     setStep((current) => (current < lastStep ? ((current + 1) as Step) : current));
-  }, [step]);
+  }, []);
 
   const goNext = useCallback(() => {
     fire('medium').catch(() => {});
@@ -286,10 +294,6 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
     fire('light').catch(() => {});
     setStep((s) => (s > 1 ? ((s - 1) as Step) : s));
   }, [fire]);
-
-  const handleIntroMotionDone = useCallback(() => {
-    setIntroMotionPlayed(true);
-  }, []);
 
   const goEdit = useCallback(
     (target: Step) => {
@@ -448,23 +452,28 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
           <div className="ob-top-center">
             {step !== 1 && <span className="ob-top-brand">Babyora</span>}
-            {step < 5 && <span className="ob-top-step">{step} av {totalSteps}</span>}
           </div>
 
           <span className="ob-top-spacer" aria-hidden="true" />
         </div>
 
-        {/* Én lavmælt, horisontal fremdriftsindikator. */}
+        {/* P10/JOB5: segment-bar ALENE — den forrige "N av 4"-tekstlinjen
+            (over) var en duplikat av akkurat denne informasjonen. Amber
+            KUN på det aktive segmentet (docs/mocks/monter/
+            onboarding-steg1-v2.html: kun segment[0] får .done ved steg 1),
+            ikke en akkumulerende "fullført"-fylling. */}
         {step < 5 && (
           <div
-            className="ob-progress"
+            className="ob-seg-progress"
             role="progressbar"
             aria-valuenow={step}
             aria-valuemin={1}
             aria-valuemax={totalSteps}
             aria-label={`Steg ${step} av ${totalSteps}`}
           >
-            <span className="ob-progress-fill" style={{ width: `${(step / totalSteps) * 100}%` }} aria-hidden="true" />
+            {Array.from({ length: totalSteps }, (_, i) => (
+              <i key={i} className={i === step - 1 ? 'active' : ''} aria-hidden="true" />
+            ))}
           </div>
         )}
 
@@ -472,39 +481,56 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
         <div className="ob-body">
           {step === 1 && (
             <>
-              <OnboardingBabyHero
-                reducedMotion={reducedMotion}
-                playMotion={!introMotionPlayed}
-                onMotionDone={handleIntroMotionDone}
+              {/* P10/JOB5 v2 re-skin (docs/mocks/monter/onboarding-steg1-v2.html
+                  + sol-duel-2026-07-31.md §11, owner-confirmed 2026-08-01):
+                  standing mascot with feet resting on the card's top edge,
+                  ONE raised card holding headline+field+preview (not the old
+                  bare-canvas hero+copy+field stack). */}
+              <img
+                className="ob-s1-mascot"
+                src={MASCOT_STANDING_SRC}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
               />
 
-              <div className="ob-copy">
-                <p className="ob-eyebrow">La oss bli kjent</p>
-                <h1 id="ob-title" className="ob-h2">Hva heter <em>babyen</em>?</h1>
-                <p>Navnet brukes bare for å gjøre rådene personlige.</p>
-              </div>
+              <section className="ob-s1-card" aria-label="Navn eller kallenavn">
+                <h1 id="ob-title" className="ob-s1-h1">Hvem kler vi på?</h1>
+                <p className="ob-s1-sub">Bruk navn eller kallenavn hvis du vil gjøre rådene personlige.</p>
 
-              <div className="ob-field">
-                <label htmlFor="ob-name-input">Babyens navn</label>
-                <div className="ob-input-shell">
-                  <span className="ob-input-icon" aria-hidden="true"><UserIcon /></span>
-                  <input
-                    id="ob-name-input"
-                    type="text"
-                    inputMode="text"
-                    autoComplete="off"
-                    autoCapitalize="words"
-                    placeholder="F.eks. Iver"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && nameOk) goNext();
-                    }}
-                    aria-describedby="ob-name-hint"
-                  />
+                <div className="ob-field ob-s1-field">
+                  <label htmlFor="ob-name-input">Navn eller kallenavn · Valgfritt</label>
+                  <div className="ob-input-shell">
+                    <span className="ob-input-icon" aria-hidden="true"><UserIcon /></span>
+                    <input
+                      id="ob-name-input"
+                      type="text"
+                      inputMode="text"
+                      autoComplete="off"
+                      autoCapitalize="words"
+                      placeholder="F.eks. Iver"
+                      value={name}
+                      // §11: feltet autofokuseres IKKE (tastaturet tvinges
+                      // ikke opp) — ingen autoFocus-prop her, med vilje.
+                      onChange={(e) => setName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') goNext();
+                      }}
+                      aria-describedby="ob-name-hint"
+                    />
+                  </div>
+                  <div id="ob-name-hint" className="ob-hint">Brukes bare i teksten og lagres på denne iPhonen.</div>
                 </div>
-                <div id="ob-name-hint" className="ob-hint">Lagres på telefonen din og kan endres senere.</div>
-              </div>
+
+                {/* §11: "tomrommet gjør arbeid" — dempet forhåndsvisning av
+                    hva navnet faktisk påvirker, oppdatert live fra feltet. */}
+                <div className="ob-s1-preview">
+                  <span className="ob-s1-preview-tag">Navnet brukes i rådene</span>
+                  <span className="ob-s1-preview-line">
+                    «Da er vi klare for <span className="ob-s1-preview-named">{nameTrim || 'babyen'}</span>»
+                  </span>
+                </div>
+              </section>
             </>
           )}
 
@@ -947,11 +973,6 @@ const STYLE_CSS = `
 }
 .ob-top-back svg{width:18px;height:18px;}
 .ob-top-back.ghost{visibility:hidden;}
-.ob-top-step{
-  font-family:var(--ob-font-sans);font-size:11.5px;font-weight:600;
-  letter-spacing:1.4px;text-transform:uppercase;color:var(--ob-ink-500);
-}
-.ob-top-step em{font-style:normal;color:var(--ob-terracotta-700);}
 .ob-top-skip{
   font-family:var(--ob-font-sans);font-size:13.5px;font-weight:600;
   color:var(--ob-ink-500);background:transparent;border:none;cursor:pointer;
@@ -1000,12 +1021,17 @@ const STYLE_CSS = `
 .ob-body::-webkit-scrollbar{display:none;}
 
 /* ── ILLUSTRATION ── */
+/* P10/JOB5 (2026-08-01): the hardcoded #eee9f3 (lilac) card behind the old
+   sitting-doll asset was a design-system violation on its own (a theme-
+   invariant literal, never following dark/light) — token-aliased
+   --ob-surface-raised (= --dw-raised) now flips correctly with the rest of
+   the app in both themes. */
 .ob-baby-hero{
   flex:none;margin:10px auto 0;
   width:min(100%, 300px);aspect-ratio:1;
   position:relative;isolation:isolate;overflow:hidden;
   border-radius:36px;
-  background:#eee9f3;
+  background:var(--ob-surface-raised);
   border:1px solid var(--ob-line);
   box-shadow:var(--ob-shadow-illu);
 }
@@ -1020,9 +1046,14 @@ const STYLE_CSS = `
   margin-top:14px;
   border-radius:34px;
 }
+/* P10/JOB5: object-fit:contain (not cover) — the standing-mascot PNG now
+   used here (compact/welcome variants, see OnboardingBabyHero.tsx) is a
+   tall, transparent-background portrait, not a pre-cropped square
+   illustration; contain shows the whole figure centered on the card
+   instead of cropping its head/feet. */
 .ob-baby-media{
   position:absolute;inset:0;width:100%;height:100%;
-  object-fit:cover;display:block;pointer-events:none;
+  object-fit:contain;display:block;pointer-events:none;
   user-select:none;-webkit-user-drag:none;
 }
 .ob-baby-poster{z-index:0;}
@@ -1107,19 +1138,27 @@ const STYLE_CSS = `
   letter-spacing:1.6px;text-transform:uppercase;color:var(--ob-terracotta-600);
   margin:0;
 }
+/* P10/JOB5 (2026-08-01): Fraunces is reserved for hero-numbers/price only
+   (sol-duel-2026-07-31.md §5) — these onboarding headlines are prose, not a
+   hero number, so they move to Schibsted (--ob-font-sans) at weight 700
+   instead of the old Fraunces-400 treatment. The <em> word inside them
+   previously ADDED italic + an amber (terracotta) text color — both
+   forbidden for running text (amber is edge/glow/icon-only, never prose) —
+   so emphasis is now purely typographic inheritance (no italic, no color),
+   same font/weight as the rest of the sentence. */
 .ob-h2{
-  font-family:var(--ob-font-serif);font-weight:400;
+  font-family:var(--ob-font-sans);font-weight:700;
   font-size:34px;line-height:1.08;letter-spacing:-.5px;
   color:var(--ob-ink-900);margin:0;
   text-wrap:balance;
 }
-.ob-h2 em{font-style:italic;color:var(--ob-terracotta-700);}
+.ob-h2 em{font-style:normal;font-weight:inherit;color:inherit;}
 .ob-h2-hero{
-  font-family:var(--ob-font-serif);font-weight:400;
+  font-family:var(--ob-font-sans);font-weight:700;
   font-size:40px;line-height:1.02;letter-spacing:-.7px;
   color:var(--ob-ink-900);margin:0;text-wrap:balance;
 }
-.ob-h2-hero em{font-style:italic;color:var(--ob-terracotta-700);}
+.ob-h2-hero em{font-style:normal;font-weight:inherit;color:inherit;}
 .ob-copy p, .ob-welcome-greet p{
   font-family:var(--ob-font-sans);font-size:15px;line-height:1.5;
   color:var(--ob-ink-700);margin:0;
@@ -1131,6 +1170,61 @@ const STYLE_CSS = `
   flex:none;margin-top:22px;text-align:center;
   display:flex;flex-direction:column;gap:12px;
 }
+
+/* ── STEG 1 v2 (P10/JOB5, docs/mocks/monter/onboarding-steg1-v2.html) ──
+   Stående maskot med føttene på kortets øvre kant + ÉN hevet flate
+   (headline+felt+forhåndsvisning) — erstatter det gamle
+   hero-boks+ledig-tekst+felt-stacket for STEG 1 spesifikt (steg 2-4/5
+   beholder sitt eksisterende .ob-copy/.ob-baby-hero-oppsett uendret). */
+.ob-s1-mascot{
+  position:relative;
+  display:block;
+  height:150px;width:auto;
+  margin:14px auto -50px;
+  z-index:3;pointer-events:none;
+  filter:drop-shadow(0 10px 22px color-mix(in srgb, var(--ink-900) 45%, transparent));
+}
+.ob-s1-card{
+  position:relative;z-index:2;
+  margin-top:0;
+  background:var(--ob-surface-raised);
+  border-radius:20px;
+  padding:26px 22px 22px;
+  text-align:left;
+  box-shadow:0 1px 0 rgba(242, 192, 138, .14) inset, var(--ob-shadow-illu);
+}
+.ob-s1-card::before{
+  content:"";position:absolute;top:0;left:7%;right:7%;height:1px;
+  border-radius:2px;
+  background:linear-gradient(90deg, transparent, #F2C08A, transparent);
+  opacity:.18; /* duell §6: 12–20 % på hevede flater */
+  pointer-events:none;
+}
+.ob-s1-h1{
+  font-family:var(--ob-font-sans);font-weight:700;
+  font-size:clamp(24px, 7vw, 28px);line-height:1.14;
+  letter-spacing:-.012em;color:var(--ob-ink-900);margin:0;
+  text-wrap:balance;
+}
+.ob-s1-sub{
+  font-family:var(--ob-font-sans);font-size:15px;line-height:1.5;
+  color:var(--ob-ink-700);margin:8px 0 0;
+}
+.ob-s1-field{margin-top:20px;}
+.ob-s1-preview{
+  margin-top:16px;padding-top:14px;
+  border-top:1px solid var(--ob-line);
+}
+.ob-s1-preview-tag{
+  display:block;
+  font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ob-ink-500);
+}
+.ob-s1-preview-line{
+  display:block;margin-top:6px;
+  font-size:15px;font-weight:500;color:var(--ob-ink-700);line-height:1.55;
+}
+.ob-s1-preview-named{color:var(--ob-ink-900);font-weight:700;}
 
 /* ── INPUT ── */
 .ob-field{
@@ -1454,29 +1548,36 @@ const STYLE_CSS = `
   letter-spacing:-.2px;
   color:var(--ob-ink-900);
 }
-.ob-top-step{
-  font-size:11px;
-  letter-spacing:.08em;
-  color:var(--ob-ink-500);
-}
 .ob-top-spacer{width:44px;height:44px;}
-.ob-screen > .ob-progress{
-  position:relative;
+/* P10/JOB5: segment-bar (docs/mocks/monter/onboarding-steg1-v2.html
+   .progress/.progress i) — replaces the old single continuous fill-bar AND
+   the "N av 4" text span it duplicated. Amber (--dw-accent, via
+   --ob-terracotta-600 which already resolves to the same accent ramp) only
+   on the .active segment. */
+.ob-screen > .ob-seg-progress{
+  /* flex-direction MUST be explicit: design-tokens.css's global
+     ".app-shell > main > div{flex-direction:column;flex:1 0 auto;
+     display:flex;}" (P8 — carries the route-transition wrapper's height to
+     the screen) ALSO matches this element (.ob-screen IS the <main>, this
+     div IS a direct child, and .ob-screen sits directly under .app-shell
+     pre-onboarding) — found via QA screenshotting: the segments rendered
+     with 0 height because nothing here was overriding flex-direction, so
+     the browser used the global rule's "column" instead of the row layout
+     this element actually needs. This selector's specificity (2 classes)
+     already beats that rule's (1 class + 2 types) for any property BOTH
+     declare, so declaring flex-direction here is enough to win. */
   flex:none;
+  display:flex;flex-direction:row;gap:6px;
   width:min(calc(100% - 48px), 512px);
-  height:3px;
   margin:2px auto 0;
-  overflow:hidden;
-  border-radius:999px;
+}
+.ob-seg-progress i{
+  flex:1;
+  height:4px;
+  border-radius:2px;
   background:var(--ob-line-strong);
 }
-.ob-progress-fill{
-  display:block;
-  height:100%;
-  border-radius:inherit;
-  background:var(--ob-terracotta-600);
-  transition:width 320ms var(--ob-ease-standard);
-}
+.ob-seg-progress i.active{background:var(--ob-terracotta-600);}
 .ob-screen > .ob-body{
   width:min(100%, 560px);
   margin:0 auto;

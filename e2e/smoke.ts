@@ -146,7 +146,14 @@ async function main(): Promise<void> {
     await waitForServer(BASE, server);
 
     browser = await chromium.launch();
-    // 1) Fersk bruker → onboarding (main-landemerke med h1 per steg)
+    // 1) Fersk bruker → onboarding (main-landemerke med h1 per steg).
+    // P10/JOB5 (2026-08-01, docs/mocks/monter/onboarding-steg1-v2.html):
+    // steg 1 er re-skinnet til en stående maskot + «Hvem kler vi på?»-kort
+    // — den gamle signatur-INTRO-VIDEOEN (OnboardingBabyHero variant=
+    // 'signature', .ob-baby-video) er ikke lenger nådd fra noe kall-sted
+    // (steg 2-4/5 bruker fortsatt OnboardingBabyHero, men alltid med
+    // playMotion={false} — kompakt stillbilde, aldri video), så den er
+    // fjernet herfra i stedet for å teste død funksjonalitet.
     await checkPage(browser, BASE, 'main h1', 'onboarding rendrer', async (page) => {
       const cta = await page.getByRole('button', { name: /Fortsett/ }).boundingBox();
       const viewport = page.viewportSize();
@@ -154,50 +161,20 @@ async function main(): Promise<void> {
         fail('onboarding: Fortsett-knappen er ikke fullt synlig ved 390x844');
       }
 
-      const video = page.locator('.ob-baby-video');
-      await video.waitFor({ state: 'attached', timeout: 5_000 });
-      await page.waitForFunction(() => {
-        const element = document.querySelector<HTMLVideoElement>('.ob-baby-video');
-        return Boolean(element && !element.paused);
-      });
+      await page.locator('.ob-s1-mascot').waitFor({ state: 'visible', timeout: 5_000 });
+      await page.getByRole('heading', { name: 'Hvem kler vi på?' }).waitFor();
 
       await page.locator('#ob-name-input').fill('Test');
       await page.getByRole('button', { name: /Fortsett/ }).click();
       await page.locator('.ob-baby-hero.compact .ob-baby-poster').waitFor({ state: 'visible' });
-      if (await page.locator('.ob-baby-video').count()) {
-        fail('onboarding: signaturvideoen skal ikke repeteres paa senere steg');
-      }
       await page.getByRole('button', { name: 'Tilbake' }).click();
-      await page.getByRole('heading', { name: 'Hva heter babyen?' }).waitFor();
-
-      if (await page.locator('.ob-baby-video').count()) {
-        fail('onboarding: signaturvideoen startet paa nytt etter frem og tilbake');
-      }
+      await page.getByRole('heading', { name: 'Hvem kler vi på?' }).waitFor();
     });
 
-    // 2) Videoen avsluttes til det rolige stillbildet.
-    const settledPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
-    await settledPage.goto(BASE, { waitUntil: 'domcontentloaded' });
-    const settledVideo = settledPage.locator('.ob-baby-video');
-    await settledVideo.waitFor({ state: 'attached', timeout: 5_000 });
-    await settledVideo.waitFor({ state: 'detached', timeout: 6_000 });
-    await settledPage.locator('.ob-baby-poster').waitFor({ state: 'visible' });
-    await settledPage.close();
-    console.log('SMOKE OK: onboarding-video avsluttes til stillbilde');
-
-    // 3) Mediefeil fjerner videoen, mens stillbildet blir staaende.
-    const fallbackPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
-    await fallbackPage.route('**/babyora-intro-v3.mp4', (route) => route.abort());
-    await fallbackPage.goto(BASE, { waitUntil: 'domcontentloaded' });
-    await fallbackPage.locator('.ob-baby-poster').waitFor({ state: 'visible' });
-    await fallbackPage.locator('.ob-baby-video').waitFor({ state: 'detached', timeout: 5_000 });
-    await fallbackPage.close();
-    console.log('SMOKE OK: onboarding-video har stillbilde-fallback');
-
-    // 4) Demo-seed → app-skall med bunn-nav
+    // 2) Demo-seed → app-skall med bunn-nav
     await checkPage(browser, `${BASE}/?seed=demo`, 'text=Hjem', 'app-skall (demo) rendrer');
 
-    console.log('SMOKE PASS: 4/4 scenarioer grønne');
+    console.log('SMOKE PASS: 2/2 scenarioer grønne');
   } finally {
     try {
       await browser?.close();

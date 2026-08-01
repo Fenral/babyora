@@ -31,10 +31,11 @@
  *
  * Scenarioer (isolerte browser-kontekster — egen localStorage hver):
  *   1. gate-yearly   — gaten vises automatisk økt 2, ikke-avviselig (ingen
- *                       lukk-knapp, ESC/backdrop lukker IKKE) → kjøp årsplan
- *                       (default) → «aktivert (testmodus)» → gaten lukker
- *                       seg selv når kjøpet går gjennom.
- *   2. gate-monthly  — samme gate, velg månedsplan først → kjøp → aktivert.
+ *                       lukk-knapp, ESC/backdrop lukker IKKE). Betalingsvegg
+ *                       v2 (§8): ingen forhåndsvalgt plan lenger — velger
+ *                       Årlig aktivt, deretter kjøp → «aktivert (testmodus)»
+ *                       → gaten lukker seg selv når kjøpet går gjennom.
+ *   2. gate-monthly  — samme gate, velger Månedlig aktivt → kjøp → aktivert.
  *   3. gate-restore  — samme gate → «Gjenopprett kjøp» uten tidligere kjøp
  *                       → dev-only-melding, gaten forblir åpen (ingen krasj,
  *                       ingen falsk fremgang).
@@ -230,14 +231,18 @@ async function scenarioGatePurchase(browser: Browser, plan: 'yearly' | 'monthly'
   await waitForAutoShownGate(page);
   await assertGateIsNonDismissable(page);
 
-  if (plan === 'monthly') {
-    try {
-      await page.locator('label.pw-plan-label').filter({ hasText: 'Månedlig' }).first().click({ timeout: 6_000 });
-    } catch {
-      fail('kunne ikke velge månedsplan i den ikke-avviselige gaten');
-    }
+  // Betalingsvegg v2 (P10/JOB2, §8): INGEN forhåndsvalgt plan lenger — et
+  // aktivt valg kreves for BEGGE scenarioene (også årlig, som tidligere var
+  // default-forhåndsvalgt). CTA-en hviler («Velg en plan for å starte
+  // gratis») til raden er valgt, deretter armeres den med plan+pris
+  // («Start gratis – deretter …»).
+  const planLabelText = plan === 'monthly' ? 'Månedlig' : 'Årlig';
+  try {
+    await page.locator('label.pw-plan-label').filter({ hasText: planLabelText }).first().click({ timeout: 6_000 });
+  } catch {
+    fail(`kunne ikke velge ${planLabelText}-planen i den ikke-avviselige gaten (v2: ingen forhåndsvalgt plan)`);
   }
-  await clickByName(page, /Start 7 dager gratis/i, 'kjøps-CTA (plan-agnostisk trial)');
+  await clickByName(page, /Start gratis –/, `armert kjøps-CTA (${planLabelText} valgt)`);
   await expectVisible(page, /aktivert \(testmodus\)/i, `${plan}: kjøps-status «aktivert (testmodus)» dukket aldri opp i gaten`);
   console.log(`PURCHASE OK: gate-${plan} — kjøp simulert via den automatisk viste gaten, Premium aktivert`);
 

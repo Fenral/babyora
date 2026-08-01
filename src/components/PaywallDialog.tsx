@@ -1,9 +1,36 @@
 /**
  * PaywallDialog — F81.5-W1: delt Premium-paywall (native <dialog>).
  *
+ * P10/JOB2 (2026-08-01): re-skinnet til betalingsvegg v2
+ * (docs/mocks/monter/paywall-v2.html + paywall-v2-valgt.html,
+ * docs/design-notes/sol-duel-2026-07-31.md §8) — DEN gamle serif-hero-en
+ * («Hele Babyora, samlet i én plan», grønn tillitslinje, forhåndsvalgt
+ * Årlig, glødende kant, hvit ytterramme) er fjernet. Ny kontrakt:
+ *  - ÉN hevet flate («ark»/`.pw-sheet`) — verdiseksjon + planvelger delt av
+ *    en INTERN hairline, ingen egen farget hero-boks.
+ *  - Overskrift «Du har sett dagens gratis antrekk» + underlinje, tre
+ *    hake-verdipunkter (PAYWALL_VALUE_BULLETS, uendret innhold/rekkefølge —
+ *    kun ny visuell ramme).
+ *  - TRE likeverdige prisrader (Årlig/Kvartal/Månedlig) — Årlig har en
+ *    tekst-badge «Best verdi» + «X kr per måned · spar Y % mot månedsplan»,
+ *    ALDRI et forhåndsvalgt kort. Fraunces WONK 0 KUN på prissummene.
+ *  - Valgt tilstand: --dw-accent-surface-bakgrunn + fylt radio — INGEN
+ *    kant-ring/glød (§8: doktrinen forbyr glød utover selve flaten).
+ *  - Fornyelses-breakdown («I dag 0 kr / <ekte dato +7 dager> <pris> /
+ *    Fornyes deretter …») vises KUN under den valgte raden.
+ *  - Dynamisk, ARMERT CTA («Start gratis – deretter 299 kr/år») — hviler
+ *    («Velg en plan for å starte gratis») til et AKTIVT valg er gjort.
+ *  - Lenkerad: Gjenopprett kjøp · Personvern · Vilkår, ≥13px/44pt.
+ *
+ * ALT av eksisterende ATFERD er UENDRET av denne re-skinningen: dismissable-
+ * kontrakten, kjøps-/gjenopprettingsflyten, subscription-store-oppdatering,
+ * P9-haptikk-vokabularet, analytics (paywall_viewed/paywall_converted/
+ * trial_started), F83 modal-pop-animasjonen (kun kosmetisk restylet — samme
+ * enter/exit-mekanikk), fokus-retur, ESC/backdrop-håndtering.
+ *
  * Ekstrahert fra InnstillingerScreen slik at ethvert trigger-punkt i appen
- * (Innstillinger, onboarding, feature-gates i F81.5-W2) kan åpne SAMME
- * dialog med samme copy/analytics/kjøpslogikk — kun `trigger` varierer.
+ * (Innstillinger, onboarding, feature-gates) kan åpne SAMME dialog med
+ * samme copy/analytics/kjøpslogikk — kun `trigger` varierer.
  *
  * Eier hele kjøpsflyten selv (plan-valg, purchasePackage/restorePurchases,
  * subscription-store, analytics) — kall-steder trenger kun
@@ -16,21 +43,15 @@
  *    design-tokens.css (transition-duration: 0.01ms !important) — vi
  *    trenger ingen egen media-query for det.
  *
- * A11y (P2/SHIP-blockers fra F81.5-W1-spec):
+ * A11y (P2/SHIP-blockers fra F81.5-W1-spec, uendret av v2-re-skinningen):
  *  - <fieldset>/<legend> + native <input type="radio"> (roving tabindex +
  *    piltaster gratis) — radio visuelt skjult med sr-only-klipp-teknikk
- *    (IKKE display:none, forblir fokuserbar), stylet synlig <label>-kort.
+ *    (IKKE display:none, forblir fokuserbar), stylet synlig rad.
  *  - Hvert kort sitt aria-label inneholder ALT som vises visuelt i kortet.
- *  - Valgt tilstand vises med tykkere ramme (2px→3px, ≥3:1 fargekontrast)
- *    OG et aria-hidden hake-ikon — aldri farge alene.
- *  - CTA bruker aria-disabled + klikk-guard under pending — ALDRI
+ *  - Valgt tilstand vises med accent-surface-bakgrunn OG et fylt
+ *    radio-punkt — aldri farge alene.
+ *  - CTA bruker aria-disabled + klikk-guard under pending/uvalgt — ALDRI
  *    disabled-attributt (ville fjernet fokus fra knappen midt i et trykk).
- *  - Hero + CTA bruker udelte, heldekkende tekstfarger fra
- *    accent-cta/accent-cta-ink-paret (ingen semi-transparent hvit tekst).
- *  - Fokus-ring på kontroller oppå den grønne bakgrunnen bruker
- *    accent-cta-ink (lys i light-mode, mørk i dark-mode — token flipper
- *    automatisk) i stedet for det vanlige --focus-ring, som ellers ikke
- *    er garantert 3:1 mot grønn i begge temaer.
  *  - role="status" (tom fra åpning) for behandling/suksess,
  *    role="alert" (mountes kun ved feil) for feilmeldinger + konkret råd.
  */
@@ -60,22 +81,19 @@ import {
   restorePurchases,
 } from '../lib/billing/revenuecat';
 import {
-  DEFAULT_PLAN,
-  PRODUCTS,
   PRODUCT_IDS,
   type PaywallTrigger,
   type ProductKey,
 } from '../lib/premium/products';
 import {
   PAYWALL_COPY,
-  PLAN_DISPLAY_NAME,
   PLAN_ORDER,
-  buildPlanAriaLabel,
+  buildArmedCtaLabel,
   buildCapabilityPaywallCopy,
-  computeYearlySavingsPercent,
-  formatPlanPrice,
+  buildPlanAriaLabel,
+  buildPlanBreakdown,
+  buildPlanRowContent,
 } from '../lib/premium/paywall-copy';
-import { PlusExpansionPreview } from './paywall/PlusExpansionPreview';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Props — W2 bygger mot denne kontrakten. IKKE avvik.
@@ -121,47 +139,126 @@ const STYLE_CSS = `
   white-space: nowrap;
   border: 0;
 }
-.pw-plan-card {
+/* v2 (§8): valgt tilstand = accent-surface-bakgrunn + fylt radio. INGEN
+   kant-ring/glød — doktrinen forbyr effekt-inflasjon utover selve flaten. */
+.pw-plan-unit {
+  /* MUST be block: this is a <span> (kept inline-default so the sr-only
+     radio-input + label wrapping stays valid HTML), but it contains
+     display:flex/block children (.pw-plan-row, .pw-breakdown). An inline
+     box that contains block-level children gets its background/
+     border-radius painted PER ANONYMOUS-BLOCK FRAGMENT (before/after each
+     block child) instead of as one continuous shape — which is exactly
+     what produced small stray accent-surface padding-box artifacts above
+     "I dag" and below "Avsluttes i App Store" during v2 QA. */
+  display: block;
+  border-radius: 12px;
+  transition: background 160ms var(--ease-standard);
+}
+.pw-plan-input:checked + .pw-plan-unit {
+  background: var(--dw-accent-surface);
+}
+.pw-plan-input:focus-visible + .pw-plan-unit {
+  outline: 3px solid var(--dw-focus);
+  outline-offset: 2px;
+}
+.pw-plan-row {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 13px 14px;
-  border: 2px solid var(--ink-200);
-  border-radius: 14px;
-  background: var(--surface);
+  align-items: center;
+  gap: 12px;
+  padding: 13px 6px;
+  min-height: 62px;
   cursor: pointer;
-  transition: border-color 160ms var(--ease-standard), background 160ms var(--ease-standard);
 }
-.pw-plan-input:checked + .pw-plan-card {
-  border-width: 3px;
-  border-color: var(--accent-cta);
-  background: var(--surface-soft);
-  padding: 12px 13px;
+.pw-p-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--dw-ink-low);
+  flex: none;
+  box-sizing: border-box;
 }
-.pw-plan-input:focus-visible + .pw-plan-card {
-  outline: 3px solid var(--focus-ring);
-  outline-offset: 2px;
+.pw-plan-input:checked + .pw-plan-unit .pw-p-radio {
+  border-color: var(--dw-accent-300);
+  background: var(--dw-accent);
+  box-shadow: inset 0 0 0 4px var(--dw-accent-surface);
 }
-/* Lukk-knappen ligger på grønn hero → lys ring (--accent-cta-ink) synlig der. */
+.pw-p-text { flex: 1; min-width: 0; }
+.pw-p-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--dw-ink-hi);
+  display: block;
+  letter-spacing: -0.1px;
+}
+.pw-p-badge {
+  display: inline-block;
+  border: 1px solid rgba(231, 176, 135, 0.45);
+  color: var(--dw-ink-mid);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border-radius: var(--dw-r-pill);
+  padding: 2px 8px;
+  margin-left: 7px;
+  vertical-align: 2px;
+}
+.pw-p-note {
+  font-size: 0.8125rem;
+  color: var(--dw-ink-mid);
+  display: block;
+  margin-top: 1px;
+  line-height: 1.35;
+}
+.pw-p-price { text-align: right; flex: none; }
+.pw-p-sum {
+  font-family: var(--dw-font-hero);
+  font-variation-settings: 'WONK' 0;
+  font-size: 1.4375rem;
+  font-weight: 550;
+  display: block;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--dw-ink-hi);
+  letter-spacing: -0.01em;
+}
+.pw-p-per { font-size: 0.8125rem; color: var(--dw-ink-low); display: block; }
+.pw-breakdown { display: block; padding: 2px 6px 14px 38px; }
+.pw-bd-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.8125rem;
+  color: var(--dw-ink-mid);
+  padding: 2.5px 0;
+}
+.pw-bd-amt { font-weight: 600; color: var(--dw-ink-hi); font-variant-numeric: tabular-nums; }
+.pw-bd-note {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--dw-ink-low);
+  margin-top: 5px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(241, 233, 218, 0.08);
+  display: block;
+}
+/* Lukk-knappen ligger på canvas-bakgrunnen. */
 .pw-close-btn:focus-visible {
-  outline: 3px solid var(--accent-cta-ink);
+  outline: 3px solid var(--dw-focus);
   outline-offset: 2px;
 }
-/* CTA ligger i footeren på --surface, IKKE på grønt → --focus-ring er
-   kalibrert mot den flaten (--accent-cta-ink ville vært usynlig, ~1,05:1). */
 .pw-cta-btn:focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline: 3px solid var(--dw-focus);
   outline-offset: 2px;
 }
 .pw-restore-btn:focus-visible,
 .pw-link:focus-visible {
-  outline: 2px solid var(--focus-ring);
+  outline: 2px solid var(--dw-focus);
   outline-offset: 2px;
 }
 /* F83: modal-pop enter/exit (sentrert kort → pop, ikke sheet-slide).
    data-closing settes av requestClose; animationend → close(). RM → instant. */
 .pw-dialog::backdrop {
-  background: rgba(23, 16, 46, 0.35);
+  background: rgba(10, 7, 5, 0.55);
 }
 .pw-dialog[open] {
   animation: pw-modal-in 300ms var(--ease-standard);
@@ -182,6 +279,7 @@ const STYLE_CSS = `
   .pw-dialog[data-closing]::backdrop {
     animation: none;
   }
+  .pw-plan-unit { transition: none; }
 }
 @keyframes pw-modal-in {
   from { transform: translateY(16px) scale(0.97); opacity: 0; }
@@ -207,56 +305,47 @@ const STYLE_CSS = `
 
 const dialogStyle: CSSProperties = {
   padding: 0,
-  border: '1px solid var(--ink-100)',
+  border: 'none',
   borderRadius: 22,
   maxWidth: 440,
   width: 'calc(100% - 24px)',
   maxHeight: 'calc(100dvh - 32px)',
   margin: 'auto',
-  background: 'var(--surface)',
-  color: 'var(--ink-900)',
-  boxShadow: 'var(--shadow-cta-primary)',
-  fontFamily: 'var(--font-sans)',
+  background: 'linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%)',
+  color: 'var(--dw-ink-hi)',
+  boxShadow: '0 24px 60px -20px rgba(0, 0, 0, 0.6)',
+  fontFamily: 'var(--dw-font-ui)',
   overflow: 'hidden',
 };
 
 const innerSurfaceStyle: CSSProperties = {
+  position: 'relative',
   display: 'flex',
   flexDirection: 'column',
   maxHeight: 'calc(100dvh - 32px)',
 };
 
-const heroStyle: CSSProperties = {
-  position: 'relative',
-  padding: '20px 20px 22px',
-  background: 'var(--accent-cta)',
+const scrollAreaStyle: CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  overflowY: 'auto',
+  padding: '20px 20px 6px',
+  WebkitOverflowScrolling: 'touch',
 };
 
-const heroTopRowStyle: CSSProperties = {
+const topRowStyle: CSSProperties = {
   display: 'flex',
-  alignItems: 'flex-start',
+  alignItems: 'center',
   justifyContent: 'space-between',
   gap: 12,
+  marginBottom: 12,
 };
 
-const eyebrowStyle: CSSProperties = {
-  fontSize: '0.625rem',
+const brandStyle: CSSProperties = {
+  fontSize: '0.8125rem',
   fontWeight: 700,
-  letterSpacing: '1.8px',
-  textTransform: 'uppercase',
-  color: 'var(--accent-cta-ink)',
-  lineHeight: 1,
-};
-
-const titleStyle: CSSProperties = {
-  margin: '10px 0 0',
-  fontFamily: 'var(--font-serif)',
-  fontStyle: 'italic',
-  fontWeight: 400,
-  fontSize: '1.5rem',
-  letterSpacing: '-0.4px',
-  lineHeight: 1.15,
-  color: 'var(--accent-cta-ink)',
+  letterSpacing: '0.24em',
+  color: 'var(--dw-ink-hi)',
 };
 
 const closeBtnStyle: CSSProperties = {
@@ -264,213 +353,180 @@ const closeBtnStyle: CSSProperties = {
   width: 36,
   height: 36,
   borderRadius: 11,
-  border: '1px solid color-mix(in srgb, var(--accent-cta-ink) 35%, transparent)',
-  background: 'color-mix(in srgb, var(--accent-cta-ink) 16%, transparent)',
-  color: 'var(--accent-cta-ink)',
+  border: '1px solid rgba(241, 233, 218, 0.16)',
+  background: 'rgba(241, 233, 218, 0.08)',
+  color: 'var(--dw-ink-hi)',
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   padding: 0,
   fontFamily: 'inherit',
-  fontSize: 20,
+  fontSize: 18,
   lineHeight: 1,
   WebkitTapHighlightColor: 'transparent',
   touchAction: 'manipulation',
 };
 
-const bodyStyle: CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  overflowY: 'auto',
-  padding: '18px 20px 8px',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 12,
-  WebkitOverflowScrolling: 'touch',
+// ÉN hevet flate (Dybdedoktrinen regel 1): verdiseksjon + planvelger er
+// seksjoner i SAMME ark, delt av en intern hairline — ikke to separate
+// bokser. Kantlys kun øverst (§6: hero-punktet), 16% opasitet.
+const sheetStyle: CSSProperties = {
+  position: 'relative',
+  background: 'var(--dw-raised)',
+  borderRadius: 20,
+  boxShadow: '0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 34px -18px rgba(52, 30, 12, 0.65)',
 };
 
-const benefitBodyStyle: CSSProperties = {
+const sheetEdgeLightStyle: CSSProperties = {
+  content: '""',
+  position: 'absolute',
+  top: 0,
+  left: '7%',
+  right: '7%',
+  height: 1,
+  borderRadius: 2,
+  background: 'linear-gradient(90deg, transparent, var(--dw-edge-light), transparent)',
+  opacity: 0.16,
+  pointerEvents: 'none',
+};
+
+const valueStyle: CSSProperties = {
+  padding: '20px 18px 16px',
+};
+
+const vHeadStyle: CSSProperties = {
   margin: 0,
-  fontSize: 14,
-  fontWeight: 500,
-  lineHeight: 1.4,
-  color: 'var(--ink-700)',
+  fontSize: '1.375rem',
+  fontWeight: 700,
+  letterSpacing: '-0.012em',
+  lineHeight: 1.18,
+  color: 'var(--dw-ink-hi)',
+};
+
+const vSubStyle: CSSProperties = {
+  margin: '8px 0 0',
+  fontSize: '0.9375rem',
+  lineHeight: 1.5,
+  color: 'var(--dw-ink-mid)',
+  maxWidth: '30ch',
+};
+
+const vListStyle: CSSProperties = {
+  margin: '14px 0 0',
+  padding: 0,
+  listStyle: 'none',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 9,
+};
+
+const vListItemStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 9,
+  fontSize: '0.8125rem',
+  lineHeight: 1.45,
+  color: 'var(--dw-ink-mid)',
+};
+
+const vListIconStyle: CSSProperties = {
+  width: 15,
+  height: 15,
+  flex: 'none',
+  marginTop: 1,
+  color: 'var(--dw-ink-hi)',
 };
 
 const fieldsetStyle: CSSProperties = {
   border: 'none',
   margin: 0,
+  padding: '4px 12px',
+  borderTop: '1px solid var(--dw-hairline)',
+};
+
+const srOnlyStyle: CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
   padding: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 10,
-};
-
-const legendStyle: CSSProperties = {
-  padding: 0,
-  marginBottom: 2,
-  fontSize: '0.65625rem',
-  fontWeight: 600,
-  letterSpacing: '1.6px',
-  textTransform: 'uppercase',
-  color: 'var(--ink-500)',
-};
-
-const planTopRowStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: 8,
-};
-
-const planNameStyle: CSSProperties = {
-  fontSize: '0.9375rem',
-  fontWeight: 700,
-  color: 'var(--ink-900)',
-  letterSpacing: '-0.1px',
-};
-
-const planBadgeRowStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 6,
-};
-
-const savingsBadgeStyle: CSSProperties = {
-  flex: 'none',
-  padding: '3px 8px',
-  borderRadius: 999,
-  background: 'var(--accent-cta)',
-  color: 'var(--accent-cta-ink)',
-  fontSize: '0.625rem',
-  fontWeight: 700,
-  letterSpacing: '0.4px',
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
   whiteSpace: 'nowrap',
+  border: 0,
 };
 
-const checkBadgeStyle: CSSProperties = {
-  flex: 'none',
-  width: 20,
-  height: 20,
-  borderRadius: '50%',
-  background: 'var(--accent-cta)',
-  color: 'var(--accent-cta-ink)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
-const planPriceRowStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'baseline',
-  gap: 4,
-};
-
-const planPriceBigStyle: CSSProperties = {
-  fontSize: '1.125rem',
-  fontWeight: 700,
-  color: 'var(--ink-900)',
-  letterSpacing: '-0.2px',
-};
-
-const planSubStyle: CSSProperties = {
-  fontSize: '0.75rem',
-  fontWeight: 500,
-  color: 'var(--ink-500)',
-  letterSpacing: '.05px',
-  lineHeight: 1.3,
-};
-
-const trialLineStyle: CSSProperties = {
-  fontSize: '0.75rem',
-  fontWeight: 600,
-  color: 'var(--status-ok)',
-  letterSpacing: '.05px',
-};
-
-const transparencyStyle: CSSProperties = {
-  margin: '2px 2px 0',
-  fontSize: '0.75rem',
-  fontWeight: 500,
-  color: 'var(--ink-500)',
-  letterSpacing: '.05px',
-  lineHeight: 1.35,
+const chooseHintStyle: CSSProperties = {
+  margin: 0,
+  textAlign: 'center',
+  fontSize: '0.8125rem',
+  color: 'var(--dw-ink-low)',
+  padding: '14px 4px 0',
 };
 
 const statusRegionStyle: CSSProperties = {
-  margin: '0 2px',
+  margin: '10px 2px 0',
   minHeight: 0,
-  flexShrink: 0,
-  fontSize: '0.75rem',
+  fontSize: '0.8125rem',
   fontWeight: 600,
   color: 'var(--status-ok)',
-  letterSpacing: '.05px',
   lineHeight: 1.3,
+  textAlign: 'center',
 };
 
 const errorRegionStyle: CSSProperties = {
-  margin: '0 2px',
-  fontSize: '0.75rem',
+  margin: '10px 2px 0',
+  fontSize: '0.8125rem',
   fontWeight: 600,
   color: 'var(--status-warm)',
-  letterSpacing: '.05px',
   lineHeight: 1.35,
+  textAlign: 'center',
 };
 
 const footerStyle: CSSProperties = {
   flex: 'none',
   padding: '12px 20px calc(env(safe-area-inset-bottom, 0px) + 16px)',
-  borderTop: '1px solid var(--ink-100)',
   display: 'flex',
   flexDirection: 'column',
-  gap: 10,
-  background: 'var(--surface)',
+  gap: 4,
 };
 
-function ctaBtnStyle(pending: boolean): CSSProperties {
+function ctaBtnStyle(armed: boolean, pending: boolean): CSSProperties {
   return {
     width: '100%',
-    minHeight: 52,
+    minHeight: 54,
     padding: '14px 16px',
     borderRadius: 14,
     border: 'none',
-    background: 'var(--accent-cta)',
-    color: 'var(--accent-cta-ink)',
+    background: armed ? 'var(--dw-accent)' : 'rgba(241, 233, 218, 0.10)',
+    color: armed ? 'var(--dw-ink-on-accent)' : 'var(--dw-ink-mid)',
     fontFamily: 'inherit',
     fontSize: '1rem',
-    fontWeight: 600,
+    fontWeight: 700,
     letterSpacing: '-0.1px',
-    cursor: pending ? 'wait' : 'pointer',
-    boxShadow: 'var(--shadow-cta-primary)',
-    // 0.92 (ikke 0.85): «Behandler …»-teksten holder ≥4,5:1 under pending.
+    cursor: pending ? 'wait' : armed ? 'pointer' : 'default',
+    boxShadow: armed ? '0 10px 22px -12px rgba(0, 0, 0, 0.55)' : 'none',
     opacity: pending ? 0.92 : 1,
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
   };
 }
 
-const trustLineStyle: CSSProperties = {
-  margin: 0,
-  fontSize: '0.71875rem',
-  fontWeight: 500,
-  color: 'var(--ink-500)',
-  letterSpacing: '.05px',
-  textAlign: 'center',
-};
-
 function restoreBtnStyle(pending: boolean): CSSProperties {
   return {
     background: 'transparent',
     border: 'none',
-    color: 'var(--ink-700)',
+    color: 'var(--dw-ink-mid)',
     fontFamily: 'inherit',
     fontSize: '0.8125rem',
     fontWeight: 600,
     letterSpacing: '-0.05px',
+    textDecoration: 'underline',
+    textUnderlineOffset: 3,
     cursor: pending ? 'wait' : 'pointer',
-    padding: '6px 8px',
-    minHeight: 32,
+    padding: '12px 6px',
+    minHeight: 44,
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
   };
@@ -479,50 +535,45 @@ function restoreBtnStyle(pending: boolean): CSSProperties {
 const linksRowStyle: CSSProperties = {
   display: 'flex',
   justifyContent: 'center',
-};
-
-const legalRowStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  justifyContent: 'center',
   alignItems: 'center',
-  gap: 2,
-  marginTop: 2,
+  gap: 4,
+  marginTop: 4,
+  flexWrap: 'wrap',
 };
 
-// P8 (ekstern designgjennomgang): 0.6875rem (11px) var under duellens
-// leselighetsgulv (min. 13-14pt, §8) OG lenkene manglet et reelt 44pt
-// trykkmål (kun tekstens egen linjehøyde var target). Egen font-size-bump +
-// padding/min-height gir et ekte 44pt mål uten å endre linkens visuelle
-// tetthet (padding trekkes inn med negativ margin i onboarding-mønsteret).
+const dotStyle: CSSProperties = {
+  color: 'var(--dw-ink-low)',
+  fontSize: '0.8125rem',
+};
+
 const legalLinkStyle: CSSProperties = {
   minHeight: 44,
   display: 'inline-flex',
   alignItems: 'center',
   padding: '4px 10px',
   fontSize: '0.8125rem',
-  fontWeight: 500,
-  color: 'var(--ink-500)',
+  fontWeight: 600,
+  color: 'var(--dw-ink-mid)',
   letterSpacing: '.05px',
   textDecoration: 'underline',
-  textUnderlineOffset: 2,
+  textUnderlineOffset: 3,
 };
 
 function CheckIcon(): ReactElement {
   return (
     <svg
-      width={12}
-      height={12}
-      viewBox="0 0 16 16"
+      width={15}
+      height={15}
+      viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2.5}
+      strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
+      style={vListIconStyle}
     >
-      <path d="M3 8.5l3 3 7-7" />
+      <path d="M20 6 9 17l-5-5" />
     </svg>
   );
 }
@@ -539,6 +590,7 @@ export function PaywallDialog({
   dismissable = true,
 }: PaywallDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const ctaRef = useRef<HTMLButtonElement | null>(null);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const setPremium = useSubscription((s) => s.setPremium);
 
@@ -550,10 +602,16 @@ export function PaywallDialog({
     void prepareHaptics();
   }, []);
 
-  const [selectedPlan, setSelectedPlan] = useState<ProductKey>(DEFAULT_PLAN);
+  // v2 (§8): INGEN forhåndsvalgt plan — CTA hviler til et AKTIVT valg er
+  // gjort. `null` = ingen rad valgt ennå.
+  const [selectedPlan, setSelectedPlan] = useState<ProductKey | null>(null);
   const [pending, setPending] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // v2: "i dag" for fornyelses-breakdownen — fanget ved åpne-overgangen
+  // (render-tids state-justering under, IKKE Date.now() lest inni JSX),
+  // slik at «I dag / <dato+7 dager>» er stabil gjennom hele den åpne økten.
+  const [renewalBaseMs, setRenewalBaseMs] = useState(() => Date.now());
 
   const capabilityCopy = buildCapabilityPaywallCopy();
 
@@ -634,10 +692,17 @@ export function PaywallDialog({
   if (open !== prevOpen) {
     setPrevOpen(open);
     if (open) {
-      setSelectedPlan(DEFAULT_PLAN);
+      setSelectedPlan(null);
       setPending(false);
       setStatusMessage('');
       setErrorMessage(null);
+      // `renewalBaseMs` ("i dag" i breakdownen) er BEVISST IKKE nullstilt
+      // her — `Date.now()` er en impur funksjon (react-hooks/purity forbyr
+      // å kalle den i render-kroppen, selv i en betinget render-tids
+      // state-justering som denne). Fanges i stedet i den EKSISTERENDE
+      // native <dialog>-åpne-effekten rett under (som allerede gjør et
+      // impurt DOM-kall, showModal() — samme arbeidsdeling som resten av
+      // denne render-tids-justeringen/effekt-splitten i filen).
     }
   }
 
@@ -651,12 +716,28 @@ export function PaywallDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Åpne/lukk det native <dialog>-elementet i takt med `open`
+  // Åpne/lukk det native <dialog>-elementet i takt med `open`. Fanger også
+  // `renewalBaseMs` ("i dag" for fornyelses-breakdownen) her — SAMME effekt
+  // som allerede gjør det ene impure DOM-kallet (showModal()) denne
+  // komponenten trenger, i stedet for en egen effekt hvis eneste jobb ville
+  // vært "speile open inn i en tidsstempel-state" (nettopp mønsteret
+  // react-hooks/set-state-in-effect advarer mot).
   useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
     if (open && !dlg.open) {
       dlg.showModal();
+      setRenewalBaseMs(Date.now());
+      // showModal()'s OWN default-focus algorithm runs synchronously here
+      // and — since React's `autoFocus` prop never sets a real `autofocus`
+      // HTML attribute (it does an imperative .focus() on commit instead,
+      // which can lose this race) — it was landing on the fieldset's FIRST
+      // radio input (Årlig) instead of the CTA, drawing a stray
+      // :focus-visible ring around the Årlig row on the RESTING screen
+      // (found during P10/JOB2 screenshot QA: the row looked "highlighted"
+      // even though §8 requires NO preselected/highlighted plan). Focusing
+      // the CTA explicitly, AFTER showModal(), wins the race reliably.
+      ctaRef.current?.focus();
     } else if (!open && dlg.open) {
       dlg.close();
     }
@@ -711,7 +792,8 @@ export function PaywallDialog({
   );
 
   const handlePurchase = useCallback(async () => {
-    if (pending) return;
+    if (pending || selectedPlan === null) return;
+    const plan = selectedPlan;
     // P9 (duel §3): INGEN haptikk på selve kjøpsknapp-trykket (forbudt —
     // "kjøpsknapp-trykk" står eksplisitt i forbuds-listen). Suksess/feil
     // varsles KUN etter at StoreKit/RevenueCat faktisk har svart, under.
@@ -724,18 +806,18 @@ export function PaywallDialog({
         // uten et ekte RevenueCat-oppsett.
         setPremium(true);
         setStatusMessage(PAYWALL_COPY.statusActivatedTestmode);
-        track({ type: 'paywall_converted', plan: selectedPlan });
-        if (selectedPlan === 'yearly') track({ type: 'trial_started', plan: selectedPlan });
+        track({ type: 'paywall_converted', plan });
+        if (plan === 'yearly') track({ type: 'trial_started', plan });
         void notifySuccess();
         scheduleAutoClose();
         return;
       }
-      const result = await purchasePackage(PRODUCT_IDS[selectedPlan]);
+      const result = await purchasePackage(PRODUCT_IDS[plan]);
       if (result.success) {
         setPremium(true);
         setStatusMessage(PAYWALL_COPY.statusActivated);
-        track({ type: 'paywall_converted', plan: selectedPlan });
-        if (selectedPlan === 'yearly') track({ type: 'trial_started', plan: selectedPlan });
+        track({ type: 'paywall_converted', plan });
+        if (plan === 'yearly') track({ type: 'trial_started', plan });
         void notifySuccess();
         scheduleAutoClose();
       } else {
@@ -787,7 +869,7 @@ export function PaywallDialog({
   }, [pending, setPremium, scheduleAutoClose]);
 
   const onCtaClick = () => {
-    if (pending) return;
+    if (pending || selectedPlan === null) return;
     void handlePurchase();
   };
 
@@ -796,27 +878,28 @@ export function PaywallDialog({
     void handleRestore();
   };
 
-  const ctaLabel = pending ? PAYWALL_COPY.ctaPending : PAYWALL_COPY.cta;
+  const armed = selectedPlan !== null;
+  const ctaLabel = pending
+    ? PAYWALL_COPY.ctaPending
+    : armed
+      ? buildArmedCtaLabel(selectedPlan)
+      : PAYWALL_COPY.ctaResting;
+  const breakdown = selectedPlan !== null ? buildPlanBreakdown(selectedPlan, renewalBaseMs) : null;
 
   return (
     <dialog
       ref={dialogRef}
       className="pw-dialog"
-      aria-labelledby="paywall-eyebrow paywall-title"
+      aria-labelledby="paywall-title"
       onClick={handleBackdropClick}
       onCancel={handleCancel}
       style={dialogStyle}
     >
       <style>{STYLE_CSS}</style>
       <div style={innerSurfaceStyle}>
-        <header style={heroStyle}>
-          <div style={heroTopRowStyle}>
-            {/* F86-F1 (a11y-preclearance): eyebrow bærer nå ENESTE forekomst av
-               produktnavnet ved generiske åpninger (h2 = flaggskip-verdi) →
-               inn i tilgjengelig navn, ikke aria-hidden. */}
-            <span id="paywall-eyebrow" style={eyebrowStyle}>
-              {PAYWALL_COPY.genericHeadline}
-            </span>
+        <div style={scrollAreaStyle}>
+          <div style={topRowStyle}>
+            <span style={brandStyle}>BABYORA</span>
             {dismissable && (
               <button
                 type="button"
@@ -829,64 +912,80 @@ export function PaywallDialog({
               </button>
             )}
           </div>
-          <h2 id="paywall-title" style={titleStyle}>
-            {capabilityCopy.heading}
-          </h2>
-        </header>
 
-        <div style={bodyStyle}>
-          <p style={benefitBodyStyle}>{capabilityCopy.body}</p>
-          <PlusExpansionPreview
-            items={capabilityCopy.previewItems}
-            reducedMotion={reducedMotion}
-          />
+          <section style={sheetStyle} aria-label={PAYWALL_COPY.sheetAriaLabel}>
+            <span aria-hidden="true" style={sheetEdgeLightStyle} />
+            <div style={valueStyle}>
+              <h2 id="paywall-title" style={vHeadStyle}>{capabilityCopy.heading}</h2>
+              <p style={vSubStyle}>{capabilityCopy.body}</p>
+              <ul style={vListStyle}>
+                {capabilityCopy.previewItems.map((item) => (
+                  <li key={item.key} style={vListItemStyle}>
+                    <CheckIcon />
+                    <span>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          <fieldset style={fieldsetStyle}>
-            <legend style={legendStyle}>{PAYWALL_COPY.legend}</legend>
-            {PLAN_ORDER.map((key) => {
-              const product = PRODUCTS[key];
-              const selected = selectedPlan === key;
-              return (
-                <label key={key} className="pw-plan-label">
-                  <input
-                    type="radio"
-                    name="babyora-plan"
-                    className="pw-plan-input"
-                    value={key}
-                    checked={selected}
-                    onChange={() => handleSelectPlan(key)}
-                    aria-label={buildPlanAriaLabel(key)}
-                  />
-                  <span className="pw-plan-card">
-                    <span style={planTopRowStyle}>
-                      <span style={planNameStyle}>{PLAN_DISPLAY_NAME[key]}</span>
-                      <span style={planBadgeRowStyle}>
-                        {key === 'yearly' && (
-                          <span aria-hidden="true" style={savingsBadgeStyle}>
-                            SPAR {computeYearlySavingsPercent()} %
+            <fieldset style={fieldsetStyle} role="radiogroup" aria-label={PAYWALL_COPY.legend}>
+              <legend style={srOnlyStyle}>{PAYWALL_COPY.legend}</legend>
+              {PLAN_ORDER.map((key) => {
+                const row = buildPlanRowContent(key);
+                const selected = selectedPlan === key;
+                return (
+                  <label key={key} className="pw-plan-label">
+                    <input
+                      type="radio"
+                      name="babyora-plan"
+                      className="pw-plan-input"
+                      value={key}
+                      checked={selected}
+                      onChange={() => handleSelectPlan(key)}
+                      aria-label={buildPlanAriaLabel(key)}
+                    />
+                    <span className="pw-plan-unit">
+                      <span className="pw-plan-row">
+                        <span className="pw-p-radio" aria-hidden="true" />
+                        <span className="pw-p-text">
+                          <span className="pw-p-name">
+                            {row.name}
+                            {row.badge && <span className="pw-p-badge">{row.badge}</span>}
                           </span>
-                        )}
-                        {selected && (
-                          <span aria-hidden="true" style={checkBadgeStyle}>
-                            <CheckIcon />
-                          </span>
-                        )}
+                          <span className="pw-p-note">{row.note}</span>
+                        </span>
+                        <span className="pw-p-price">
+                          <span className="pw-p-sum">{row.sum}</span>
+                          <span className="pw-p-per">{row.per}</span>
+                        </span>
                       </span>
+                      {selected && breakdown && (
+                        <span
+                          className="pw-breakdown"
+                          role="group"
+                          aria-label={`${PAYWALL_COPY.breakdownAriaPrefix} ${row.name}`}
+                        >
+                          <span className="pw-bd-row">
+                            <span>{breakdown.todayLabel}</span>
+                            <span className="pw-bd-amt">{breakdown.todayAmount}</span>
+                          </span>
+                          <span className="pw-bd-row">
+                            <span>{breakdown.renewalDateLabel}</span>
+                            <span className="pw-bd-amt">{breakdown.renewalAmount}</span>
+                          </span>
+                          <span className="pw-bd-note">{breakdown.note}</span>
+                        </span>
+                      )}
                     </span>
-                    <span style={planPriceRowStyle}>
-                      <span style={planPriceBigStyle}>{formatPlanPrice(key)}</span>
-                    </span>
-                    {product.description && <span style={planSubStyle}>{product.description}</span>}
-                    {product.trialDays > 0 && (
-                      <span style={trialLineStyle}>{product.trialDays} dager gratis</span>
-                    )}
-                  </span>
-                </label>
-              );
-            })}
-          </fieldset>
+                  </label>
+                );
+              })}
+            </fieldset>
+          </section>
 
-          <p style={transparencyStyle}>{PAYWALL_COPY.trialLine}</p>
+          <p style={chooseHintStyle}>
+            {armed ? PAYWALL_COPY.chooseHintSelected : PAYWALL_COPY.chooseHintDefault}
+          </p>
 
           <p role="status" style={statusRegionStyle}>
             {statusMessage}
@@ -900,18 +999,16 @@ export function PaywallDialog({
 
         <footer style={footerStyle}>
           <button
+            ref={ctaRef}
             type="button"
             className="pw-cta-btn"
-            style={ctaBtnStyle(pending)}
+            style={ctaBtnStyle(armed, pending)}
             onClick={onCtaClick}
-            aria-disabled={pending}
+            aria-disabled={pending || !armed}
             autoFocus
           >
             {ctaLabel}
           </button>
-          {capabilityCopy.trustLine && (
-            <p style={trustLineStyle}>{capabilityCopy.trustLine}</p>
-          )}
           <div style={linksRowStyle}>
             <button
               type="button"
@@ -922,22 +1019,24 @@ export function PaywallDialog({
             >
               {PAYWALL_COPY.restoreLabel}
             </button>
-          </div>
-          <div style={legalRowStyle}>
+            <span aria-hidden="true" style={dotStyle}>·</span>
             <a
               className="pw-link"
               href="https://babyora.no/personvern"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={PAYWALL_COPY.privacyLinkAriaLabel}
               style={legalLinkStyle}
             >
               {PAYWALL_COPY.privacyLinkLabel}
             </a>
+            <span aria-hidden="true" style={dotStyle}>·</span>
             <a
               className="pw-link"
               href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={PAYWALL_COPY.termsLinkAriaLabel}
               style={legalLinkStyle}
             >
               {PAYWALL_COPY.termsLinkLabel}

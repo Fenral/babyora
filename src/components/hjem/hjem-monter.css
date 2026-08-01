@@ -279,6 +279,65 @@
 @media (max-height: 700px) {
   .hjm-mascot { width: 164px; top: -122px; }
 }
+/* P10/JOB1: visually hidden (not unmounted) while OpeningSequence's own
+   body/hands layers stand in for it — see MascotPeek.tsx's own doc. */
+.hjm-mascot[data-opening-hidden='true'] { visibility: hidden; }
+
+/* ============ Åpningssekvens (OpeningSequence, P10/JOB1) ============
+   docs/design-notes/aapningssekvens-2026-08-01.md. Egne body/hender-lag
+   kuttet fra samme maskot.png langs den alfa-målte fingertupp-linjen
+   (tools/split-mascot-layers.mjs) — SAMME ankrings-geometri som
+   .hjm-mascot over (top/right/width), slik at sluttbildet er
+   pikselidentisk med MascotPeek når sekvensen fullfører og MascotPeek
+   (uendret, hele tiden montert — se MascotPeek.tsx) tar over synlig.
+   Stabling (bak→front): body(1) < panel-lift-wrap(2) < .hjm-mascot(3,
+   skjult under sekvensen) < hender(4) < kantlys(5). */
+.hjm-opening-mascot-body,
+.hjm-opening-mascot-hands {
+  position: absolute;
+  right: 8px;
+  width: 205px;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(var(--hjm-mascot-shadow));
+}
+.hjm-opening-mascot-body { top: -152px; z-index: 1; }
+/* 329/512 = hender-laget sin topp-rad i kildebildet (512px bredt), som
+   ANDEL av bredden — skalerer korrekt på tvers av bredde-breakpointene
+   under siden begge lag deler samme kilde-bredde/skaleringsfaktor. */
+.hjm-opening-mascot-hands { top: calc(-152px + 205px * 0.642578125); z-index: 4; }
+@media (max-height: 700px) {
+  .hjm-opening-mascot-body,
+  .hjm-opening-mascot-hands { width: 164px; }
+  .hjm-opening-mascot-body { top: -122px; }
+  .hjm-opening-mascot-hands { top: calc(-122px + 164px * 0.642578125); }
+}
+.hjm-panel-lift-wrap { position: relative; z-index: 2; }
+.hjm-opening-edge-light {
+  position: absolute;
+  top: 0;
+  left: 7%;
+  right: 7%;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--dw-edge-light-gradient);
+  opacity: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Forsvars-vakt: OpeningSequence selv mountes ALDRI når reducedMotion er
+     sann (se opening-sequence.ts sin decideOpeningVariant), men denne
+     dobbel-vakten speiler doktrinen ellers i filen (RM dreper animasjon
+     selv om noe skulle rekke å starte). */
+  .hjm-opening-mascot-body,
+  .hjm-opening-mascot-hands,
+  .hjm-panel-lift-wrap,
+  .hjm-opening-edge-light {
+    animation: none !important;
+    transition: none !important;
+  }
+}
 
 /* ============ Scan-koreografi (ScanOverlay) ============ */
 

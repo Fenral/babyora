@@ -8,7 +8,7 @@ describe('OnboardingBabyHero', () => {
 
     expect(html).toContain('>Babyora<');
     expect(html).toContain('/illustrations/onboarding/babyora-intro-v3.mp4');
-    expect(html).toContain('/illustrations/onboarding/babyora-intro-v3.webp');
+    expect(html).toContain('/monter/maskot-staaende-cut-360.png');
     expect(html).toContain('autoPlay');
     expect(html).toContain('playsInline');
     expect(html).not.toContain('loop');
@@ -18,7 +18,7 @@ describe('OnboardingBabyHero', () => {
     const html = renderToStaticMarkup(<OnboardingBabyHero reducedMotion />);
 
     expect(html).toContain('>Babyora<');
-    expect(html).toContain('/illustrations/onboarding/babyora-intro-v3.webp');
+    expect(html).toContain('/monter/maskot-staaende-cut-360.png');
     expect(html).not.toContain('<video');
   });
 
@@ -27,7 +27,7 @@ describe('OnboardingBabyHero', () => {
       <OnboardingBabyHero reducedMotion={false} playMotion={false} />,
     );
 
-    expect(html).toContain('/illustrations/onboarding/babyora-intro-v3.webp');
+    expect(html).toContain('/monter/maskot-staaende-cut-360.png');
     expect(html).not.toContain('<video');
   });
 
@@ -43,7 +43,7 @@ describe('OnboardingBabyHero', () => {
 
     expect(html).toContain('ob-baby-hero compact');
     expect(html).toContain('ob-baby-context birthday');
-    expect(html).toContain('/illustrations/onboarding/babyora-intro-v3.webp');
+    expect(html).toContain('/monter/maskot-staaende-cut-360.png');
     expect(html).not.toContain('/illustrations/onboarding/onboarding-step2-birthday.png');
     expect(html).not.toContain('<video');
     expect(html).not.toContain('>Babyora<');
