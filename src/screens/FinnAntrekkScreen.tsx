@@ -11,8 +11,13 @@
  *  1. THREE VERTICAL GAUGES in one row (Temperatur/Vind/Nedbør) — same
  *     column structure top-to-bottom (uppercase label → tabular-nums value
  *     → vertical track with min/max at the ends → +/- 44pt fine-step
- *     buttons). See VerticalGauge.tsx. Temperatur keeps its own cold→warm
- *     gradient identity; Vind/Nedbør use a flat warm amber fill.
+ *     buttons). See VerticalGauge.tsx. P10.2 (2026-08-01): each gauge now
+ *     fills with its own MATERIAL (`material` prop) — Temperatur
+ *     interpolates cold→warm colour from the live value itself (gauge-
+ *     material.ts), Vind gets an airy fill (angled top + drag-only gust
+ *     streaks), Nedbør gets a water-like fill (meniscus cap + one-shot
+ *     WAAPI slosh on value change). Geometry stays identical across all
+ *     three — see VerticalGauge.tsx's own header for the full breakdown.
  *  2. CTA-DRIVEN SCAN: adjusting sliders no longer recomputes the answer
  *     live. A "Finn antrekk" CTA (same amber CTA class as Hjem, `.hjm-cta`)
  *     sits below the activity toggle. Tapping it snapshots the CURRENT
@@ -373,6 +378,13 @@ const GAUGE_HEIGHT = 208;
  * with the theme-constant petrol family (`--dw-panel`/`--dw-w-clear`) —
  * "consistent across all three ... temperature's legacy band colours
  * replaced too".
+ *
+ * P10.2 (2026-08-01): Temperatur's gauge now IGNORES these two (its
+ * `material="thermal"` computes its own gradient from the live value —
+ * see gauge-material.ts) — still passed for prop-shape consistency and as
+ * the harmless fallback VerticalGauge uses when `material` is omitted.
+ * Vind ('air') and Nedbør ('water') still use these petrol tokens as-is;
+ * only their fill's decorative MATERIAL differs, not its colour.
  */
 const GAUGE_FILL_BOTTOM = 'var(--dw-panel)';
 const GAUGE_FILL_TOP = 'var(--dw-w-clear)';
@@ -757,6 +769,8 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
                 maxLabel={`${INSTRUMENT_MAX_C}°`}
                 fillBottomColor={GAUGE_FILL_BOTTOM}
                 fillTopColor={GAUGE_FILL_TOP}
+                material="thermal"
+                reducedMotion={reducedMotion}
                 incrementLabel="Én grad varmere"
                 decrementLabel="Én grad kaldere"
                 height={GAUGE_HEIGHT}
@@ -777,6 +791,8 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
                 maxLabel="15 m/s"
                 fillBottomColor={GAUGE_FILL_BOTTOM}
                 fillTopColor={GAUGE_FILL_TOP}
+                material="air"
+                reducedMotion={reducedMotion}
                 incrementLabel="Sterkere vind"
                 decrementLabel="Svakere vind"
                 height={GAUGE_HEIGHT}
@@ -797,6 +813,8 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
                 maxLabel="10 mm/t"
                 fillBottomColor={GAUGE_FILL_BOTTOM}
                 fillTopColor={GAUGE_FILL_TOP}
+                material="water"
+                reducedMotion={reducedMotion}
                 incrementLabel="Mer nedbør"
                 decrementLabel="Mindre nedbør"
                 height={GAUGE_HEIGHT}

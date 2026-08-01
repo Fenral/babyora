@@ -1,5 +1,5 @@
 /**
- * vertical-gauge.css — VerticalGauge.tsx (P10/JOB4, revised P10.1).
+ * vertical-gauge.css — VerticalGauge.tsx (P10/JOB4, revised P10.1, P10.2).
  *
  * P10.1 (judge finding C6): this file previously reused legacy tokens
  * (--surface-elevated, --ink-*) and hardcoded dark-only hairline colours
@@ -15,6 +15,13 @@
  * panel material is THEME-CONSTANT (DESIGN.md: "Petrol-panelet er
  * TEMA-KONSTANT") — so, correctly, none of the colours below need a
  * light-mode override block; they are the same in both themes by design.
+ *
+ * P10.2 (owner redesign, 2026-08-01) — "material fills": .fa-gauge-fill--*
+ * modifiers style the SAME fill box three different ways (thermal's own
+ * colours are computed in VerticalGauge.tsx, see gauge-material.ts; the
+ * rgba(0,0,0,*)/rgba(241,233,218,*) values below are shading/highlight
+ * EFFECTS, not new colour tokens — same technique this file's own
+ * `.fa-gauge-track` inset box-shadow already used pre-P10.2).
  */
 
 .fa-gauge {
@@ -96,6 +103,78 @@
   bottom: 6px;
   border-radius: 18px;
   transition: height 160ms ease-out;
+  /* No overflow:hidden here on purpose — the water variant's meniscus
+     (below) deliberately pokes a few px ABOVE this box to read as a
+     curved surface rather than a flat cut; the outer .fa-gauge-track
+     still clips at the track boundary. The air variant's clip-path
+     already clips itself (and its streak children) on its own. */
+}
+
+/* ---- P10.2 material fills ------------------------------------------- */
+
+/* Temperatur ('thermal'): geometry only — the gradient colours themselves
+   are computed per-value in VerticalGauge.tsx (gauge-material.ts). No
+   extra class rules needed here beyond the shared .fa-gauge-fill above. */
+
+/* Vind ('air'): a slightly angled/gusty top edge instead of the flat
+   rounded top, plus 2-3 faint horizontal streak lines. Both are STATIC at
+   rest — the calm doctrine only lets the streaks move while the user is
+   actively dragging (`.is-dragging`, applied by VerticalGauge.tsx on
+   pointerdown/up), never idle. */
+.fa-gauge-fill--air {
+  clip-path: polygon(0 7px, 100% 0, 100% 100%, 0 100%);
+}
+
+.fa-gauge-streak {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 1.5px;
+  border-radius: 1px;
+  pointer-events: none;
+}
+/* rgba cream at ~8-12% opacity per spec, baked into each streak's own
+   alpha (not a separate `opacity` property) so the number stays literal. */
+.fa-gauge-streak--1 { top: 22%; background: rgba(241, 233, 218, 0.08); }
+.fa-gauge-streak--2 { top: 46%; right: 15px; background: rgba(241, 233, 218, 0.12); }
+.fa-gauge-streak--3 { top: 68%; left: 13px; background: rgba(241, 233, 218, 0.1); }
+
+@keyframes fa-gauge-gust-shift {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+/* ONLY while pointer is down (see VerticalGauge.tsx) — never at rest. */
+.fa-gauge-fill--air.is-dragging .fa-gauge-streak {
+  animation: fa-gauge-gust-shift 1.6s ease-in-out infinite;
+}
+
+/* Nedbør ('water'): a gentle meniscus curve at the top edge (SVG, see
+   VerticalGauge.tsx) and a slightly deeper tone at the bottom of the fill
+   (shading overlay below — not a new colour). The height transition is
+   turned OFF here on purpose: the WAAPI "slosh" (VerticalGauge.tsx) is
+   what sells the value-change, a competing CSS transition would fight it. */
+.fa-gauge-fill--water {
+  transition: none;
+  transform-origin: bottom center;
+}
+.fa-gauge-fill--water::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(to top, rgba(5, 3, 2, 0.28), transparent 60%);
+  pointer-events: none;
+}
+
+.fa-gauge-meniscus {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -4px;
+  width: 100%;
+  height: 10px;
+  display: block;
+  pointer-events: none;
 }
 
 /* P10.1 (judge finding C9): a thin met.no baseline marker so the chosen
@@ -171,4 +250,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .fa-gauge-fill { transition: none; }
+  /* P10.2: OS-level fallback for the drag-gust shift — VerticalGauge.tsx
+     already refuses to add `.is-dragging` when its `reducedMotion` prop is
+     true (the app's own Innstillinger override merged with this same OS
+     signal), this is the belt-and-suspenders CSS-only guard. */
+  .fa-gauge-fill--air.is-dragging .fa-gauge-streak { animation: none; }
 }

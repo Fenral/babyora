@@ -18,6 +18,10 @@ export const MOTION = {
   easeOutExpo: 'cubic-bezier(0.19, 1, 0.22, 1)',      // CTA, sheet exit
   iosDrawer: 'cubic-bezier(0.32, 0.72, 0, 1)',        // segmented slider, sheet enter
   natural: 'cubic-bezier(0.4, 0, 0.2, 1)',            // generic, last-resort
+  // P10.2 (2026-08-01): gauge "slosh" — a slight spring overshoot, NOT a
+  // standard ease-out. Used exactly once per value-change on the Nedbør
+  // (water) gauge's fill, WAAPI-driven — see VerticalGauge.tsx.
+  backOvershoot: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
 
   /** ─── Durations (ms) ─── */
   press: 160,             // CTA + button press scale-feedback
@@ -50,6 +54,9 @@ export const MOTION = {
   tempBurst: 700,         // ms — temp-bytte radial-glimt / atmos-lag crossfade
   tempTransition: 600,    // ms — bg/glow/accent-temp CSS-transition (se --dur-temp)
   chipPop: 260,           // ms — lag-chip pop-inn i popup (F80.2-arv, gjenbrukbar)
+
+  /** ─── P10.2 Juster gauge materials (2026-08-01) ─── */
+  gaugeSlosh: 300,        // ms — Nedbør (water) fill's one-shot WAAPI overshoot on value change
 } as const;
 
 export type MotionToken = keyof typeof MOTION;
