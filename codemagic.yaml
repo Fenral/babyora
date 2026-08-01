@@ -23,8 +23,12 @@ workflows:
       # revoked/expired (build #20 + #21 feilet). Auto-generering via ASC API
       # eliminerer manuelt cert-vedlikehold — samme pattern som StrikeArc/Swinglab.
       groups:
-        - klemeg_revenuecat   # VITE_REVENUECAT_PUBLIC_KEY_IOS, VITE_REVENUECAT_PUBLIC_KEY_ANDROID
-        - appstore_credentials # CERT_PRIVATE_KEY (stabil signering-nøkkel, satt via API 2026-08-01)
+        # klemeg_revenuecat holder også CERT_PRIVATE_KEY (stabil signering-
+        # nøkkel, lagt til via API 2026-08-01). IKKE legg til en egen app-
+        # nivå-gruppe på babyora-appen: appens egne grupper SKYGGER for de
+        # konto-delte gruppene, og da slutter klemeg_revenuecat å resolve
+        # (bevist av build 6a6e5762, «unknown variable group»).
+        - klemeg_revenuecat   # VITE_REVENUECAT_PUBLIC_KEY_IOS/_ANDROID + CERT_PRIVATE_KEY
       vars:
         XCODE_PROJECT: 'ios/App/App.xcodeproj'
         XCODE_SCHEME: 'App'
