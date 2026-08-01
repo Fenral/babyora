@@ -33,6 +33,15 @@ de kan beregnes; basisrad i Hjem-pakken; synlig Soveposeguide før faglig
 godkjenning; global designsystem-retrofit i MVP (kun berørte komponenter
 + migreringsregel); falsk progress-semantikk i scannen.
 
+**Addendum (eier-funn på TestFlight samme kveld):** «Kle på, steg for
+steg»-flyten (PaakledningScreen + outfit/-komponentene: Antrekkskart,
+VerifiedAvatarComposite) var aldri del av noen redesignpakke og kjører
+fortsatt hele legacy-designet — midt i den daglige verdikjeden Hjem →
+scan → resultat → Kle på. Foreslått som **T2B i MVP-scopet**: MVP-ens ene
+spørsmål («stoler forelderen på rådet?») avgjøres i selve
+påkledningsøyeblikket, og et registerbrudd der undergraver testen.
+Fokusring-buggen på dialogoverskriften ble fikset umiddelbart (bb67533).
+
 **Sols tre ting til eieren:** (1) Tillit ER produktet — ett feil
 produktbilde eller én usann forklaring skader mer enn en uferdig skygge;
 kjeden er korrekt kontekst → konkrete plagg → riktig rekkefølge →
