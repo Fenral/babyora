@@ -60,7 +60,10 @@ export const MASCOT_RISE_EASING = 'cubic-bezier(.16,1,.3,1)';
 /** 620–820 ms: hender/fingre-laget kommer foran kanten; grepet lander på fingertupp-linjen. */
 export const FIRST_EVER_HANDS_LAND_START_MS = 620;
 export const FIRST_EVER_HANDS_LAND_END_MS = 820;
-export const HANDS_LAND_RISE_PX = 14;
+/* P10.1 (judge finding A2): HANDS_LAND_RISE_PX (the old translateY "rise
+   into place" distance) is retired — the landing is now communicated by a
+   clip-path reveal (OpeningSequence.tsx), not by a physical rise, so there
+   is no separate rise-distance constant anymore. */
 
 /** 820–900 ms: 2px mikrosettling, deretter helt stille. */
 export const FIRST_EVER_SETTLE_START_MS = 820;

@@ -110,6 +110,15 @@ export const PAYWALL_COPY = {
 export type CapabilityPaywallPreviewItem = Readonly<{
   key: string;
   label: string;
+  /**
+   * P10.1 (judge finding B3): the leading keyword phrase rendered in the
+   * heavier ink-hi/600 weight (paywall-v2.html's own `<b>` treatment
+   * inside `.v-list`); the remainder of `label` renders in the regular
+   * ink-mid body weight. Always an exact PREFIX of `label` — `label`
+   * itself stays the one full, plain-text sentence (a11y/copy-lint see a
+   * single string; only the visual weighting is split in the renderer).
+   */
+  lead: string;
 }>;
 
 export type CapabilityPaywallCopy = Readonly<{
@@ -126,9 +135,9 @@ export type CapabilityPaywallCopy = Readonly<{
  * (som filtrerte løfter per PlusFeatureAvailability-flagg).
  */
 export const PAYWALL_VALUE_BULLETS: readonly CapabilityPaywallPreviewItem[] = [
-  { key: 'today', label: 'Dagens antrekk, klart hver eneste morgen' },
-  { key: 'week', label: 'I morgen og hele neste uke, ferdig planlagt' },
-  { key: 'family', label: 'Del med alle som passer barnet' },
+  { key: 'today', label: 'Dagens antrekk, klart hver eneste morgen', lead: 'Dagens antrekk' },
+  { key: 'week', label: 'I morgen og hele neste uke, ferdig planlagt', lead: 'I morgen og hele neste uke' },
+  { key: 'family', label: 'Del med alle som passer barnet', lead: 'Del med alle' },
 ] as const;
 
 /**

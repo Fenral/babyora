@@ -15,17 +15,32 @@
  * slik at opperen (HjemMonter) kan fange `event.currentTarget` som
  * focus-retur-mål for PlaggDetailSheet — samme mønster som resten av appens
  * PlaggDetailSheet-åpnere (se PaakledningScreen/MinGarderobeScreen).
- * `aria-label` legges på hele rad-knappen siden den synlige "Bytt"-chippen
- * er aria-hidden (dekorativ) — uten den hadde raden hatt et utydelig
+ * `aria-label` legges på hele rad-knappen siden den synlige chippen er
+ * aria-hidden (dekorativ) — uten den hadde raden hatt et utydelig
  * tilgjengelig navn nå som trykk faktisk åpner noe.
+ *
+ * P10.1 (judge finding C10, "Bytt = ENDRE, always" — duel §12): denne raden
+ * åpner PlaggDetailSheet, som er UTTALT informasjons-only (swap-row.ts sin
+ * egen filhode-kommentar; håndhevet av warm-cold-recovery.test.ts — arket
+ * skal ALDRI utføre selve byttet). Chippen het tidligere "Bytt" her — et
+ * løfte arket ikke innfrir. Denne komponenten er DELT av BÅDE Hjem
+ * (ResultSurface) og Juster (FinnAntrekkScreen) sin resultatliste, så
+ * denne ene rettelsen holder begge skjermene ærlige OG innbyrdes
+ * konsistente i samme slag (ingen risiko for at de to driver fra hverandre
+ * igjen). "Detaljer" er ærlig om hva trykket faktisk gjør i dag; §12 sin
+ * fulle Bytt=ENDRE-spesifikasjon (3–5 alternativer, konsekvensetikett,
+ * ekte bytte) er en egen, betydelig fremtidig oppgave — ikke del av dette
+ * rettelses-paknaget (rører ikke motor-koden byttet faktisk ville krevd).
  */
 import type { MouseEvent } from 'react';
 import './hjem-monter.css';
 
-function SwapIcon() {
+function InfoIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <path d="M7 8h10M14 5l3 3-3 3M17 16H7M10 13l-3 3 3 3" />
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5" />
+      <path d="M12 8.2v.1" strokeLinecap="round" />
     </svg>
   );
 }
@@ -55,7 +70,7 @@ export function MonterGarmentRow({
         type="button"
         className="hjm-row"
         onClick={onSwap}
-        aria-label={`${label}, ${roleLabel}. Bytt.`}
+        aria-label={`${label}, ${roleLabel}. Detaljer.`}
         style={animationDelayMs !== null ? { animationDelay: `${animationDelayMs}ms` } : undefined}
       >
         <span className="hjm-num" aria-hidden="true">{position}</span>
@@ -67,8 +82,8 @@ export function MonterGarmentRow({
           <span className="hjm-g-role">{roleLabel}</span>
         </span>
         <span className="hjm-swap" aria-hidden="true">
-          Bytt
-          <SwapIcon />
+          Detaljer
+          <InfoIcon />
         </span>
       </button>
     </li>

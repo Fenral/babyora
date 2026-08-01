@@ -44,8 +44,11 @@ describe('OpeningSequence — layer structure (both variants render the same two
     expect(html).toContain('class="hjm-opening-edge-light"');
     expect(html).toContain('src="/monter/maskot-body.png"');
     expect(html).toContain('src="/monter/maskot-hands.png"');
+    // P10.1 (judge finding A2): a fourth decorative layer, the tight
+    // landing contact-shadow under the hands (hjm-opening-hands-contact).
+    expect(html).toContain('class="hjm-opening-hands-contact"');
     // Decorative — never announced, never focusable, never blocks pointer events on real controls underneath.
-    expect(html.match(/aria-hidden="true"/gu)?.length).toBe(3);
+    expect(html.match(/aria-hidden="true"/gu)?.length).toBe(4);
     expect(html).not.toContain('tabindex');
   });
 

@@ -127,9 +127,16 @@ describe('AppPaywallGate rendering', () => {
   it('inneholder de tre hele-produktet-bulletsene og den plan-agnostiske «7 gratisdager»-meldingen', () => {
     useSubscription.setState({ firstRecommendationSeenAt: Date.now(), isPremium: false });
     const html = renderToStaticMarkup(<AppPaywallGate onboardingDone />);
-    expect(html).toContain('Dagens antrekk, klart hver eneste morgen');
-    expect(html).toContain('I morgen og hele neste uke, ferdig planlagt');
-    expect(html).toContain('Del med alle som passer barnet');
+    // P10.1 (judge finding B3): the leading keyword phrase now renders as
+    // its own <b> (two-tone weighting) — the sentence itself is unchanged,
+    // just split across a tag boundary, so the full-string containment
+    // check is split accordingly too.
+    expect(html).toContain('Dagens antrekk');
+    expect(html).toContain(', klart hver eneste morgen');
+    expect(html).toContain('I morgen og hele neste uke');
+    expect(html).toContain(', ferdig planlagt');
+    expect(html).toContain('Del med alle');
+    expect(html).toContain(' som passer barnet');
     // v2 (P10/JOB2 re-skin, docs/mocks/monter/paywall-v2.html): den gamle
     // PAYWALL_COPY.trialLine-avsnittet under CTA-en er erstattet av
     // choose-hint-linjen mellom planvelgeren og CTA-en — samme plan-

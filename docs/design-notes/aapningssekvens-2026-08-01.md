@@ -42,3 +42,31 @@ Seedance/video eier ALDRI hovedbevegelsen: fingre/kant må lande geometrisk
 eksakt, sluttbildet må matche Hjem uten crossfade-avvik, panelet må reagere
 på faktisk værnyanse og tema. Seedance kan senere utforske blunk/hodebevegelse
 til idle-loopen, isolert og manuelt renset.
+
+## Akseptansekriterium for sluttbildet (revidert P10.1, 2026-08-01)
+
+**Endret av eksternt review-funn A5.** Den opprinnelige akseptansen
+("sluttbildet er PIKSELIDENTISK med Hjem", linje 5) ble verifisert mot
+`docs/mocks/monter/hjem-weather-ready.html` — en STATISK mock. Funnet: den
+mocken er pre-P9 og har utdatert header-geometri (blant annet P9-eierfunn A,
+`.hjm-fresh`-linjen flyttet under `.hjm-loc-row` — se `fix(hjem)`-commit
+7fdfa15), så en pixel-diff mot den mocken sammenligner sekvensens sluttbilde
+mot en referanse appen selv aldri lenger produserer. Et bestått avvik der
+beviser ingenting; et strøket avvik der kan være en falsk alarm.
+
+**Ny akseptanse:** sluttbildet verifiseres mot APPENS EGEN weather-ready-
+rendering med sekvensen undertrykt — samme build, samme tema, samme faktiske
+DOM/CSS som brukeren faktisk ser (`decideOpeningVariant` returnerer `'none'`
+når `reducedMotion` er sann, se `opening-sequence.ts` — det ER appens egen
+"sekvens undertrykt"-tilstand, ingen egen debug-gren trengs). Referanse-
+capture: samme URL, `prefers-reduced-motion: reduce` emulert, vent til
+weather-ready. Sammenlignes mot: samme URL, normal (`no-preference`) motion,
+første-gang-variant kjørt til fullført (`onComplete`), sluttbilde tatt rett
+etter. Pixel-diff-verktøy: `scripts/verify-opening-sequence-endframe.mjs`
+(Playwright + `sharp`-basert rå-piksel-diff, ingen ny avhengighet) —
+forventet diff ~0 utenom selve friskhets-tidsstempel-teksten (`.hjm-fresh`,
+klokkeslett/dato-tekst som naturlig avviker mellom to separate capture-kjøringer
+noen millisekunder fra hverandre) og eventuell vær-ikon-flakring dersom
+`useWeather()` sitt faktiske nettverkskall (met.no) leverer et annet resultat
+mellom de to kjøringene — kjøres derfor med samme deterministiske vær-fixture
+i begge grener (se scriptets egen `--fixture`-flagg).

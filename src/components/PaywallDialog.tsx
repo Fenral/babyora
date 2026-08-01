@@ -223,15 +223,22 @@ const STYLE_CSS = `
 }
 .pw-p-per { font-size: 0.8125rem; color: var(--dw-ink-low); display: block; }
 .pw-breakdown { display: block; padding: 2px 6px 14px 38px; }
+/* P10.1 (judge finding B5): CSS grid (not flex space-between) so the
+   label/amount columns share one strict alignment axis across BOTH rows —
+   reads as a tight two-column table instead of loose prose. tabular-nums
+   on the ROW (not just .pw-bd-amt) so the date label ("7. august") and
+   the amount both use fixed-width digits. */
 .pw-bd-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 12px;
   align-items: baseline;
   font-size: 0.8125rem;
   color: var(--dw-ink-mid);
   padding: 2.5px 0;
+  font-variant-numeric: tabular-nums;
 }
-.pw-bd-amt { font-weight: 600; color: var(--dw-ink-hi); font-variant-numeric: tabular-nums; }
+.pw-bd-amt { font-weight: 600; color: var(--dw-ink-hi); font-variant-numeric: tabular-nums; text-align: right; }
 .pw-bd-note {
   font-size: 0.8125rem;
   line-height: 1.5;
@@ -250,6 +257,19 @@ const STYLE_CSS = `
   outline: 3px solid var(--dw-focus);
   outline-offset: 2px;
 }
+/* P10.1 (judge finding B1): the RESTING (unarmed) CTA is showModal()'s
+   auto-focus target (see the comment above this component's own
+   showModal()-effect) but is deliberately aria-disabled/click-guarded
+   until a plan is chosen — a non-interactive control still wearing a
+   2px amber focus ring reads as a broken button ("contract says
+   border:0"). Suppressed ONLY while resting; a genuinely armed CTA the
+   user tabs to keeps its normal focus ring. */
+.pw-cta-btn[aria-disabled='true'] {
+  border: 0;
+}
+.pw-cta-btn[aria-disabled='true']:focus-visible {
+  outline: none;
+}
 .pw-restore-btn:focus-visible,
 .pw-link:focus-visible {
   outline: 2px solid var(--dw-focus);
@@ -259,6 +279,14 @@ const STYLE_CSS = `
    data-closing settes av requestClose; animationend → close(). RM → instant. */
 .pw-dialog::backdrop {
   background: rgba(10, 7, 5, 0.55);
+}
+/* P10.1 (judge finding B2): the non-dismissable gate (dismissable=false)
+   is a FULL-BLEED stage per paywall-v2.html's contract — canvas
+   background fills the whole viewport, so there is nothing "behind" it
+   left to dim. A visible grey scrim there reads as a centered card
+   floating over the app, not as the screen itself. */
+.pw-dialog[data-fullbleed='true']::backdrop {
+  background: transparent;
 }
 .pw-dialog[open] {
   animation: pw-modal-in 300ms var(--ease-standard);
@@ -303,35 +331,74 @@ const STYLE_CSS = `
 // Styles (inline — samme konvensjon som resten av InnstillingerScreen.tsx)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const dialogStyle: CSSProperties = {
-  padding: 0,
-  border: 'none',
-  borderRadius: 22,
-  maxWidth: 440,
-  width: 'calc(100% - 24px)',
-  maxHeight: 'calc(100dvh - 32px)',
-  margin: 'auto',
-  background: 'linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%)',
-  color: 'var(--dw-ink-hi)',
-  boxShadow: '0 24px 60px -20px rgba(0, 0, 0, 0.6)',
-  fontFamily: 'var(--dw-font-ui)',
-  overflow: 'hidden',
-};
+/**
+ * P10.1 (judge finding B2): the non-dismissable gate (AppPaywallGate,
+ * `dismissable=false`) rendered as a small CENTERED CARD over a grey
+ * scrim — the actual contract (paywall-v2.html) is a FULL-BLEED STAGE:
+ * width/height 100% of the viewport, no backdrop needed (see the
+ * `[data-fullbleed]::backdrop` rule above), canvas background per theme.
+ * `dismissable=true` call-sites (Innstillinger, onboarding, feature
+ * gates) are UNCHANGED — they keep the original centered-card dialog
+ * styling; only the hard, non-dismissable gate becomes the stage.
+ */
+function dialogStyle(dismissable: boolean): CSSProperties {
+  if (!dismissable) {
+    return {
+      padding: 0,
+      border: 'none',
+      borderRadius: 0,
+      inset: 0,
+      width: '100%',
+      height: '100%',
+      maxWidth: 'none',
+      maxHeight: 'none',
+      margin: 0,
+      background: 'linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%)',
+      color: 'var(--dw-ink-hi)',
+      boxShadow: 'none',
+      fontFamily: 'var(--dw-font-ui)',
+      overflow: 'hidden',
+    };
+  }
+  return {
+    padding: 0,
+    border: 'none',
+    borderRadius: 22,
+    maxWidth: 440,
+    width: 'calc(100% - 24px)',
+    maxHeight: 'calc(100dvh - 32px)',
+    margin: 'auto',
+    background: 'linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%)',
+    color: 'var(--dw-ink-hi)',
+    boxShadow: '0 24px 60px -20px rgba(0, 0, 0, 0.6)',
+    fontFamily: 'var(--dw-font-ui)',
+    overflow: 'hidden',
+  };
+}
 
-const innerSurfaceStyle: CSSProperties = {
-  position: 'relative',
-  display: 'flex',
-  flexDirection: 'column',
-  maxHeight: 'calc(100dvh - 32px)',
-};
+function innerSurfaceStyle(dismissable: boolean): CSSProperties {
+  return {
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    maxHeight: dismissable ? 'calc(100dvh - 32px)' : '100%',
+    height: dismissable ? undefined : '100%',
+  };
+}
 
-const scrollAreaStyle: CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  overflowY: 'auto',
-  padding: '20px 20px 6px',
-  WebkitOverflowScrolling: 'touch',
-};
+/** Fullbleed (B2): the outer dialog no longer carries its own top margin, so
+ *  the brand row needs its own safe-area-aware top clearance to stay clear
+ *  of the status bar/notch — the centered-card variant already gets that
+ *  for free from the dialog's own `margin: auto` breathing room. */
+function scrollAreaStyle(dismissable: boolean): CSSProperties {
+  return {
+    flex: 1,
+    minHeight: 0,
+    overflowY: 'auto',
+    padding: dismissable ? '20px 20px 6px' : 'max(20px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px 6px',
+    WebkitOverflowScrolling: 'touch',
+  };
+}
 
 const topRowStyle: CSSProperties = {
   display: 'flex',
@@ -438,6 +505,13 @@ const vListIconStyle: CSSProperties = {
   color: 'var(--dw-ink-hi)',
 };
 
+/** P10.1 (judge finding B3): the bold keyword lead, ink-hi/600 vs. the
+ *  ink-mid/regular body it sits in (paywall-v2.html's own `.v-list b`). */
+const vListLeadStyle: CSSProperties = {
+  color: 'var(--dw-ink-hi)',
+  fontWeight: 600,
+};
+
 const fieldsetStyle: CSSProperties = {
   border: 'none',
   margin: 0,
@@ -484,9 +558,14 @@ const errorRegionStyle: CSSProperties = {
   textAlign: 'center',
 };
 
+// P10.1 (judge finding B4): the selected/breakdown state pushed the legal
+// links to ~17pt from the bottom edge — too close to the safe-area/Dynamic
+// Type collision zone. Bumped to a firm ~24pt (env() + 24px) floor; content
+// above scrolls (scrollAreaStyle already owns its own overflow-y) so the
+// footer + this clearance are ALWAYS fully visible, never compressed.
 const footerStyle: CSSProperties = {
   flex: 'none',
-  padding: '12px 20px calc(env(safe-area-inset-bottom, 0px) + 16px)',
+  padding: '12px 20px calc(env(safe-area-inset-bottom, 0px) + 24px)',
   display: 'flex',
   flexDirection: 'column',
   gap: 4,
@@ -890,14 +969,15 @@ export function PaywallDialog({
     <dialog
       ref={dialogRef}
       className="pw-dialog"
+      data-fullbleed={dismissable ? undefined : 'true'}
       aria-labelledby="paywall-title"
       onClick={handleBackdropClick}
       onCancel={handleCancel}
-      style={dialogStyle}
+      style={dialogStyle(dismissable)}
     >
       <style>{STYLE_CSS}</style>
-      <div style={innerSurfaceStyle}>
-        <div style={scrollAreaStyle}>
+      <div style={innerSurfaceStyle(dismissable)}>
+        <div style={scrollAreaStyle(dismissable)}>
           <div style={topRowStyle}>
             <span style={brandStyle}>BABYORA</span>
             {dismissable && (
@@ -922,7 +1002,10 @@ export function PaywallDialog({
                 {capabilityCopy.previewItems.map((item) => (
                   <li key={item.key} style={vListItemStyle}>
                     <CheckIcon />
-                    <span>{item.label}</span>
+                    <span>
+                      <b style={vListLeadStyle}>{item.lead}</b>
+                      {item.label.slice(item.lead.length)}
+                    </span>
                   </li>
                 ))}
               </ul>

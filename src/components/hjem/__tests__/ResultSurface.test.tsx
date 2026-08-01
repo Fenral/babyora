@@ -86,7 +86,7 @@ describe('ResultSurface', () => {
     expect(html).toContain('>U<');
   });
 
-  it('the whole row is one tappable button containing the swap affordance ("Bytt") — never a nested interactive element', () => {
+  it('the whole row is one tappable button containing the info affordance ("Detaljer") — never a nested interactive element', () => {
     const html = renderToStaticMarkup(
       <ResultSurface
         rows={[row({})]}
@@ -100,7 +100,11 @@ describe('ResultSurface', () => {
       />,
     );
     expect((html.match(/<button/g) ?? []).length).toBe(3); // 1 row + Kle på + Hvorfor
-    expect(html).toContain('Bytt');
+    // P10.1 (judge finding C10, "Bytt = ENDRE, always"): the chip opens
+    // PlaggDetailSheet, which is deliberately informational-only (never
+    // performs the swap itself) — "Bytt" was a false promise here.
+    expect(html).toContain('Detaljer');
+    expect(html).not.toContain('>Bytt<');
   });
 
   it('gates the .is-fresh row-in stagger animation on isFresh AND reducedMotion together', () => {

@@ -12,7 +12,7 @@
  * screen is opened as that drill, the opener (HjemMonter, via HjemScreen /
  * App.tsx) already has the exact weather+activity the user was just looking
  * at — this seed must WIN over the screen's own internal defaults (-4° /
- * 3 m/s / 0 mm/t / "Lek ute") AND over its own useWeather() call, which may
+ * 3 m/s / 0 mm/t / "Utenfor vogn") AND over its own useWeather() call, which may
  * resolve slightly later or with slightly different numbers (different
  * fetch, same lat/lon). FinnAntrekkScreen achieves the "win" by (a) seeding
  * useState via these values through a LAZY initializer (so the seed is the

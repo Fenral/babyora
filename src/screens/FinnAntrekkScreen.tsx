@@ -74,7 +74,7 @@ import type { GarmentId } from '../data/garment-illustrations';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
 import { VerticalGauge } from '../components/instrument/VerticalGauge';
 import {
-  INSTRUMENT_MAX_C, INSTRUMENT_MIN_C, bandAt, instrumentValueText, snapDegree,
+  INSTRUMENT_MAX_C, INSTRUMENT_MIN_C, instrumentValueText, snapDegree,
 } from '../components/instrument/instrument-logic';
 import '../components/hjem/hjem-monter.css';
 import { MonterGarmentRow } from '../components/hjem/MonterGarmentRow';
@@ -134,8 +134,12 @@ type ActivityOption = {
   engine: Activity;
 };
 
+// P10.1 (judge finding C1): same engine value, same name everywhere — Hjem
+// calls `utelek` "Utenfor vogn" (HjemMonter.tsx/WeatherScene.tsx's own
+// ACTIVITY_TOGGLE_LABEL), this screen previously called the SAME engine
+// value "Lek ute". Aligned to Hjem's vocabulary.
 const ACTIVITY_OPTIONS: ActivityOption[] = [
-  { ui: 'lek', label: 'Lek ute', engine: 'utelek' },
+  { ui: 'lek', label: 'Utenfor vogn', engine: 'utelek' },
   { ui: 'vogn', label: 'I vogn', engine: 'vogn' },
 ];
 
@@ -360,18 +364,18 @@ const FALLBACK_LON = 11.5614;
 
 const GAUGE_HEIGHT = 208;
 
-/** Kolonnefarge for temperatur-gaugens gradient (kald→bånd-farge) — samme rampe som TemperatureInstrument.tsx (R7 Task 3A). */
-const TEMP_BAND_FILL_COLOR: Record<string, string> = {
-  ekstrem: 'var(--layer-bg-kald)',
-  streng_frost: 'var(--layer-bg-kald)',
-  frost: 'var(--layer-bg-kald)',
-  kald: 'var(--layer-bg-kald)',
-  kjolig: 'var(--accent-temp)',
-  mild: 'var(--accent-temp)',
-  varm: 'var(--layer-bg-varm)',
-  tropisk: 'var(--layer-bg-varm)',
-  ekstrem_varme: 'var(--layer-bg-varm)',
-};
+/**
+ * P10.1 (judge finding C5): a SINGLE shared petrol/instrument fill for all
+ * three gauges — wind/nedbør previously used `--dw-accent` (amber, a
+ * USER-ACTION colour per DESIGN.md's colour-ownership table) on a WEATHER
+ * DATA readout, and temperature used its own separate legacy
+ * `--layer-bg-kald`/`--accent-temp`/`--layer-bg-varm` band ramp. Replaced
+ * with the theme-constant petrol family (`--dw-panel`/`--dw-w-clear`) —
+ * "consistent across all three ... temperature's legacy band colours
+ * replaced too".
+ */
+const GAUGE_FILL_BOTTOM = 'var(--dw-panel)';
+const GAUGE_FILL_TOP = 'var(--dw-w-clear)';
 
 export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): ReactElement {
   const { active, needsOnboarding } = useChildren();
@@ -403,6 +407,15 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
   // dem — selv om det lander med litt andre tall (annen fetch, samme sted).
   const [initedFromWeather, setInitedFromWeather] = useState(() => seed.initedFromWeather);
 
+  // P10.1 (judge finding C9): the live met.no reading, captured ONCE and
+  // held separately from the mutable slider state above — so it survives
+  // as a stable gauge baseline marker even after the user drags a slider
+  // away from it. `seed.initedFromWeather` true means `seed.*` already
+  // WAS the live weather at seed time (SEED WINS, see the comment above).
+  const [weatherBaseline, setWeatherBaseline] = useState<{ tempC: number; windMs: number; precipMmH: number } | null>(
+    () => (seed.initedFromWeather ? { tempC: seed.tempC, windMs: seed.windMs, precipMmH: seed.precipMmH } : null),
+  );
+
   /* ── Detalj-sheet state (F62 PlaggDetailSheet) ── */
   const [openGarmentId, setOpenGarmentId] = useState<GarmentId | null>(null);
   const detailTriggerRef = useRef<HTMLElement | null>(null);
@@ -432,6 +445,17 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
     }
     if (typeof now.precipMmH === 'number') {
       setPrecipMmH(Math.round(now.precipMmH * 2) / 2);
+    }
+    if (
+      typeof now.tempC === 'number'
+      && typeof now.windMs === 'number'
+      && typeof now.precipMmH === 'number'
+    ) {
+      setWeatherBaseline({
+        tempC: Math.round(now.tempC),
+        windMs: Math.round(now.windMs),
+        precipMmH: Math.round(now.precipMmH * 2) / 2,
+      });
     }
   }
 
@@ -693,69 +717,93 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
         </div>
       </header>
 
-      <div style={scrollStyle} className="ba-scroll-native">
+      {/* P10.1 (judge finding C3): the floating tab bar covered the last
+          garment row in the result capture — reuses Hjem's OWN canonical
+          scrollable-result vocabulary (`.hjm-result[data-scrollable='true']`,
+          hjem-monter.css, already imported) for its doctrine bottom-fade
+          mask + tabbar-clearance treatment, instead of a bespoke container
+          that only had the clearance padding and no fade affordance. */}
+      <div style={scrollStyle} className="ba-scroll-native hjm-result" data-scrollable="true">
 
         {/* INSTRUMENT-PANEL — tre likeverdige vertikale gauger (P10/JOB4:
             erstatter 1 vertikal termometer + 2 horisontale slidere, som
             eier eksplisitt underkjente). Samme kolonnestruktur topp-bunn i
-            alle tre: etikett → verdi → vertikalt spor → +/- under. */}
+            alle tre: etikett → verdi → vertikalt spor → +/- under.
+            P10.1 (judge finding C5): gaugene ligger nå PÅ petrol-
+            instrumentmaterialet (samme `--dw-panel`-flate + kantlys som
+            `.hjm-panel`) — DESIGN.mds kjerneidé "petrol = vær/beregning" —
+            i stedet for å flyte fritt på espresso-canvasen. */}
         <section aria-labelledby="finn-instrument-label">
           <h2 id="finn-instrument-label" style={srOnlyStyle}>Vær-instrumenter</h2>
-          <div style={gaugeRowStyle}>
-            <VerticalGauge
-              label="Temperatur"
-              valueLabel={formatTemp(tempC)}
-              min={INSTRUMENT_MIN_C}
-              max={INSTRUMENT_MAX_C}
-              step={1}
-              value={snapDegree(tempC)}
-              onChange={(v) => handleSliderChange('temp', tempBandText, setTempC, v)}
-              ariaLabel="Temperatur i celsius"
-              ariaValueText={instrumentValueText(tempC, tempBandText(tempC))}
-              minLabel={`${INSTRUMENT_MIN_C}°`}
-              maxLabel={`${INSTRUMENT_MAX_C}°`}
-              fillBottomColor="var(--layer-bg-kald)"
-              fillTopColor={TEMP_BAND_FILL_COLOR[bandAt(tempC)] ?? 'var(--accent-temp)'}
-              incrementLabel="Én grad varmere"
-              decrementLabel="Én grad kaldere"
-              height={GAUGE_HEIGHT}
-            />
-            <VerticalGauge
-              label="Vind"
-              valueLabel={`${windMs} m/s`}
-              min={0}
-              max={15}
-              step={1}
-              value={windMs}
-              onChange={(v) => handleSliderChange('vind', windBandText, setWindMs, v)}
-              ariaLabel="Vindstyrke i meter per sekund"
-              ariaValueText={`${windMs} meter per sekund, ${windBandText(windMs)}`}
-              minLabel="0"
-              maxLabel="15 m/s"
-              fillBottomColor="var(--dw-accent)"
-              fillTopColor="var(--dw-accent)"
-              incrementLabel="Sterkere vind"
-              decrementLabel="Svakere vind"
-              height={GAUGE_HEIGHT}
-            />
-            <VerticalGauge
-              label="Nedbør"
-              valueLabel={`${precipMmH.toFixed(1)} mm/t`}
-              min={0}
-              max={10}
-              step={0.5}
-              value={precipMmH}
-              onChange={(v) => handleSliderChange('nedbor', precipBandText, setPrecipMmH, v)}
-              ariaLabel="Nedbør i millimeter per time"
-              ariaValueText={`${precipMmH.toFixed(1)} millimeter per time, ${precipBandText(precipMmH)}`}
-              minLabel="0"
-              maxLabel="10 mm/t"
-              fillBottomColor="var(--dw-accent)"
-              fillTopColor="var(--dw-accent)"
-              incrementLabel="Mer nedbør"
-              decrementLabel="Mindre nedbør"
-              height={GAUGE_HEIGHT}
-            />
+          {/* Reuses `.hjm-panel` (hjem-monter.css, already imported) for the
+              petrol background/radius/edge-light `::before` — box-shadow is
+              overridden inline since `.hjm-panel`'s own shadow token
+              (`--hjm-shadow-panel`) is scoped to `.hjem-monter`, which this
+              screen's root doesn't carry; `--dw-shadow-raise` is the
+              equivalent GLOBAL, theme-aware token. */}
+          <div className="hjm-panel" style={gaugePanelStyle}>
+            <div style={gaugeRowStyle}>
+              <VerticalGauge
+                label="Temperatur"
+                valueLabel={formatTemp(tempC)}
+                min={INSTRUMENT_MIN_C}
+                max={INSTRUMENT_MAX_C}
+                step={1}
+                value={snapDegree(tempC)}
+                onChange={(v) => handleSliderChange('temp', tempBandText, setTempC, v)}
+                ariaLabel="Temperatur i celsius"
+                ariaValueText={instrumentValueText(tempC, tempBandText(tempC))}
+                minLabel={`${INSTRUMENT_MIN_C}°`}
+                maxLabel={`${INSTRUMENT_MAX_C}°`}
+                fillBottomColor={GAUGE_FILL_BOTTOM}
+                fillTopColor={GAUGE_FILL_TOP}
+                incrementLabel="Én grad varmere"
+                decrementLabel="Én grad kaldere"
+                height={GAUGE_HEIGHT}
+                baselineValue={weatherBaseline?.tempC ?? null}
+                baselineLabel={weatherBaseline ? `Faktisk vær nå: ${formatTemp(weatherBaseline.tempC)}` : undefined}
+              />
+              <VerticalGauge
+                label="Vind"
+                valueLabel={`${windMs} m/s`}
+                min={0}
+                max={15}
+                step={1}
+                value={windMs}
+                onChange={(v) => handleSliderChange('vind', windBandText, setWindMs, v)}
+                ariaLabel="Vindstyrke i meter per sekund"
+                ariaValueText={`${windMs} meter per sekund, ${windBandText(windMs)}`}
+                minLabel="0"
+                maxLabel="15 m/s"
+                fillBottomColor={GAUGE_FILL_BOTTOM}
+                fillTopColor={GAUGE_FILL_TOP}
+                incrementLabel="Sterkere vind"
+                decrementLabel="Svakere vind"
+                height={GAUGE_HEIGHT}
+                baselineValue={weatherBaseline?.windMs ?? null}
+                baselineLabel={weatherBaseline ? `Faktisk vær nå: ${weatherBaseline.windMs} m/s` : undefined}
+              />
+              <VerticalGauge
+                label="Nedbør"
+                valueLabel={`${precipMmH.toFixed(1)} mm/t`}
+                min={0}
+                max={10}
+                step={0.5}
+                value={precipMmH}
+                onChange={(v) => handleSliderChange('nedbor', precipBandText, setPrecipMmH, v)}
+                ariaLabel="Nedbør i millimeter per time"
+                ariaValueText={`${precipMmH.toFixed(1)} millimeter per time, ${precipBandText(precipMmH)}`}
+                minLabel="0"
+                maxLabel="10 mm/t"
+                fillBottomColor={GAUGE_FILL_BOTTOM}
+                fillTopColor={GAUGE_FILL_TOP}
+                incrementLabel="Mer nedbør"
+                decrementLabel="Mindre nedbør"
+                height={GAUGE_HEIGHT}
+                baselineValue={weatherBaseline?.precipMmH ?? null}
+                baselineLabel={weatherBaseline ? `Faktisk vær nå: ${weatherBaseline.precipMmH.toFixed(1)} mm/t` : undefined}
+              />
+            </div>
           </div>
         </section>
 
@@ -819,13 +867,20 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
         {/* RESULT = THE CLOTHES — numrerte plaggrader (samme presentasjon
             som Hjems ResultSurface) + en liten hevet forklaringsboks. Vises
             kun etter FØRSTE fullførte beregning; demotert (ikke skjult) når
-            sliderne er endret siden. */}
+            sliderne er endret siden.
+            P10.1 (judge finding C2): headeren MÅ beskrive det COMMITTED
+            resultatet (samme snapshot `rows` selv er avledet fra), aldri
+            den LIVE `selectedActivity` — ellers kan meta-linjen påstå en
+            aktivitet raden under ikke faktisk er beregnet for (f.eks. rett
+            etter at brukeren har endret aktivitet-toggeln uten å trykke
+            «Beregn på nytt» ennå). `committedActivityOption` finnes alltid
+            når `showResult` er sann (begge avledes fra samme `committed`). */}
         {showResult && (
           <section aria-labelledby="finn-output-label" style={resultOpacityStyle(resultDemoted, reducedMotion)}>
             <div style={outputHeaderStyle}>
               <h2 id="finn-output-label" style={outputTitleStyle}>Antrekket</h2>
               <span style={outputMetaStyle} aria-hidden>
-                {rows.length} plagg · {selectedActivity.label.toLowerCase()}
+                {rows.length} plagg · {(committedActivityOption ?? selectedActivity).label.toLowerCase()}
               </span>
             </div>
 
@@ -1023,7 +1078,16 @@ const eyebrowStyle: CSSProperties = {
   margin: '0 2px 10px',
 };
 
-/* ---- Instrument-panel-rad (P10/JOB4) ---- */
+/* ---- Instrument-panel-rad (P10/JOB4, revised P10.1 finding C5) ---- */
+
+/** The petrol instrument-panel material the three gauges now sit ON —
+ *  `.hjm-panel` (hjem-monter.css) supplies background/radius/edge-light;
+ *  this overrides ONLY box-shadow (see the JSX comment on why) and adds
+ *  this call-site's own spacing. */
+const gaugePanelStyle: CSSProperties = {
+  position: 'relative',
+  boxShadow: '0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-shadow-raise)',
+};
 
 const gaugeRowStyle: CSSProperties = {
   display: 'flex',

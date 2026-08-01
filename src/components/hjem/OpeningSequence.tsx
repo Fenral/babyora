@@ -52,7 +52,6 @@ import {
   FIRST_EVER_SETTLE_END_MS,
   FIRST_EVER_SETTLE_START_MS,
   FIRST_EVER_TOTAL_MS,
-  HANDS_LAND_RISE_PX,
   MASCOT_RISE_EASING,
   SETTLE_PX,
   type OpeningVariant,
@@ -77,6 +76,7 @@ function frac(atMs: number, windowStartMs: number, windowDurationMs: number): nu
 export function OpeningSequence({ variant, reducedMotion, onComplete, panelRef }: OpeningSequenceProps): ReactElement | null {
   const bodyRef = useRef<HTMLImageElement | null>(null);
   const handsRef = useRef<HTMLImageElement | null>(null);
+  const handsContactRef = useRef<HTMLSpanElement | null>(null);
   const edgeLightRef = useRef<HTMLSpanElement | null>(null);
   const animationsRef = useRef<Animation[]>([]);
   const completedRef = useRef(false);
@@ -120,24 +120,53 @@ export function OpeningSequence({ variant, reducedMotion, onComplete, panelRef }
     if (reducedMotion) return; // already completed synchronously above
     const body = bodyRef.current;
     const hands = handsRef.current;
+    const handsContact = handsContactRef.current;
     const edgeLight = edgeLightRef.current;
     const panel = panelRef.current;
-    if (!body || !hands || !edgeLight || !panel) {
+    if (!body || !hands || !handsContact || !edgeLight || !panel) {
       complete();
       return;
+    }
+
+    // P10.1 (judge finding A4): "panel text shifts anti-aliasing during the
+    // sequence" — holding the panel-lift's WAAPI animation with fill:'both'
+    // for the ENTIRE sequence (100-900ms) keeps the panel promoted to its
+    // own compositor layer long after the 8px lift itself finished at
+    // 280ms, which subtly changes subpixel text rendering for the whole
+    // remaining ~600ms. Fix: once the lift's own active duration ends,
+    // write its final computed style inline (commitStyles) then cancel the
+    // Animation object outright — this releases the WAAPI-held layer
+    // promotion instead of holding `fill` indefinitely. `complete()`'s own
+    // `anim.finish()` loop already tolerates an already-cancelled
+    // Animation (see its try/catch below), so this is safe even if the
+    // user taps-to-skip before the lift's own window elapses.
+    function releaseCompositingWhenDone(anim: Animation): void {
+      anim.finished.then(() => {
+        try {
+          anim.commitStyles();
+          anim.cancel();
+        } catch {
+          // Element unmounted, or already cancelled by tap-to-skip — harmless.
+        }
+      }).catch(() => {
+        // finished rejects if the animation is cancelled before completing
+        // (tap-to-skip) — nothing to release, complete() already handles it.
+      });
     }
 
     const anims: Animation[] = [];
 
     if (variant === 'first-ever') {
       const panelWindow = FIRST_EVER_PANEL_LIFT_END_MS - FIRST_EVER_PANEL_LIFT_START_MS;
-      anims.push(panel.animate(
+      const panelAnim = panel.animate(
         [
           { transform: `translateY(${FIRST_EVER_PANEL_LIFT_PX}px)` },
           { transform: 'translateY(0)' },
         ],
         { duration: panelWindow, delay: FIRST_EVER_PANEL_LIFT_START_MS, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'both' },
-      ));
+      );
+      releaseCompositingWhenDone(panelAnim);
+      anims.push(panelAnim);
       anims.push(edgeLight.animate(
         [
           { opacity: 0, transform: 'translateX(-30%)' },
@@ -167,15 +196,45 @@ export function OpeningSequence({ variant, reducedMotion, onComplete, panelRef }
       ));
 
       // Hands: land (620–820ms) → 2px settle bounce (820–900ms).
+      //
+      // P10.1 (judge finding A2): replaces the old opacity 0→1 fade (which
+      // read as "dukker opp i stedet for å gripe" — the hand shape simply
+      // materialising in place) with a clip-path reveal. The element is
+      // pinned at its FINAL position throughout (no translateY rise) and
+      // instead unclips top-down: `inset(0 0 100% 0)` (nothing visible,
+      // clipped away from the bottom) → `inset(0 0 0% 0)` (fully visible).
+      // Since the hands layer's own top edge sits right at the panel's
+      // fingertip/grip line, this reads as the grip landing there FIRST and
+      // the rest of the hand following — a reveal "from behind the panel
+      // edge", not a pop-in. The 2px settle bounce (820-900ms) still moves
+      // the (now fully revealed) element via transform only.
       const handsWindow = FIRST_EVER_SETTLE_END_MS - FIRST_EVER_HANDS_LAND_START_MS;
+      const landOffset = frac(FIRST_EVER_HANDS_LAND_END_MS, FIRST_EVER_HANDS_LAND_START_MS, handsWindow);
+      const settleMidOffset = frac(
+        (FIRST_EVER_SETTLE_START_MS + FIRST_EVER_SETTLE_END_MS) / 2,
+        FIRST_EVER_HANDS_LAND_START_MS,
+        handsWindow,
+      );
       anims.push(hands.animate(
         [
-          { offset: 0, transform: `translateY(${HANDS_LAND_RISE_PX}px)`, opacity: 0 },
-          { offset: frac(FIRST_EVER_HANDS_LAND_END_MS, FIRST_EVER_HANDS_LAND_START_MS, handsWindow), transform: 'translateY(0)', opacity: 1 },
-          { offset: frac((FIRST_EVER_SETTLE_START_MS + FIRST_EVER_SETTLE_END_MS) / 2, FIRST_EVER_HANDS_LAND_START_MS, handsWindow), transform: `translateY(${SETTLE_PX}px)`, opacity: 1 },
-          { offset: 1, transform: 'translateY(0)', opacity: 1 },
+          { offset: 0, transform: 'translateY(0)', clipPath: 'inset(0 0 100% 0)' },
+          { offset: landOffset, transform: 'translateY(0)', clipPath: 'inset(0 0 0% 0)' },
+          { offset: settleMidOffset, transform: `translateY(${SETTLE_PX}px)`, clipPath: 'inset(0 0 0% 0)' },
+          { offset: 1, transform: 'translateY(0)', clipPath: 'inset(0 0 0% 0)' },
         ],
         { duration: handsWindow, delay: FIRST_EVER_HANDS_LAND_START_MS, easing: MASCOT_RISE_EASING, fill: 'both' },
+      ));
+
+      // Contact shadow (judge finding A2): a very tight shadow under the
+      // fingers, appearing EXACTLY at landing (820ms) — a plain opacity
+      // fade-in with NO transform keyframes, so it never bounces along with
+      // the hands' own 2px settle above.
+      anims.push(handsContact.animate(
+        [
+          { offset: 0, opacity: 0 },
+          { offset: 1, opacity: 1 },
+        ],
+        { duration: FIRST_EVER_SETTLE_END_MS - FIRST_EVER_HANDS_LAND_END_MS, delay: FIRST_EVER_HANDS_LAND_END_MS, easing: 'ease-out', fill: 'both' },
       ));
 
       animationsRef.current = anims;
@@ -189,10 +248,12 @@ export function OpeningSequence({ variant, reducedMotion, onComplete, panelRef }
     // 'cold' — later cold starts: short, no full climb. Body+hands are
     // already in place (opacity 1 throughout, no separate landing beat) —
     // just a small joint settle + a brief panel lift + edge light.
-    anims.push(panel.animate(
+    const coldPanelAnim = panel.animate(
       [{ transform: `translateY(${COLD_PANEL_LIFT_PX}px)` }, { transform: 'translateY(0)' }],
       { duration: COLD_PANEL_LIFT_END_MS, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'both' },
-    ));
+    );
+    releaseCompositingWhenDone(coldPanelAnim);
+    anims.push(coldPanelAnim);
     anims.push(edgeLight.animate(
       [{ opacity: 0 }, { opacity: 0.9, offset: 0.5 }, { opacity: 0 }],
       { duration: COLD_EDGE_LIGHT_END_MS, easing: 'ease-out', fill: 'both' },
@@ -232,6 +293,7 @@ export function OpeningSequence({ variant, reducedMotion, onComplete, panelRef }
         aria-hidden="true"
         draggable={false}
       />
+      <span ref={handsContactRef} className="hjm-opening-hands-contact" aria-hidden="true" />
       <span ref={edgeLightRef} className="hjm-opening-edge-light" aria-hidden="true" />
     </>
   );

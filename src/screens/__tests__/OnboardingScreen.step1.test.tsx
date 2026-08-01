@@ -92,6 +92,48 @@ describe('OnboardingScreen — step 1 v2 (Monter re-skin)', () => {
     expect(html).not.toMatch(/>1 av 4</);
   });
 
+  it('P10.1 (judge finding D3): the BABYORA brand row is present on step 1 (was previously suppressed entirely)', () => {
+    const html = renderScreen();
+    expect(html).toContain('class="ob-s1-brand">BABYORA<');
+  });
+
+  it('P10.1 (judge finding D4): no leading person-icon inside the name input — not in the contract, amber is action-only', () => {
+    const html = renderScreen();
+    expect(html).not.toContain('class="ob-input-icon"');
+  });
+
+  it('P10.1 (judge finding D5, rule §13): helper/sub text is never opacity-dimmed', () => {
+    const contents = source();
+    const hintRuleStart = contents.indexOf('.ob-hint{');
+    expect(hintRuleStart).toBeGreaterThan(-1);
+    const hintRule = contents.slice(hintRuleStart, contents.indexOf('}', hintRuleStart));
+    expect(hintRule).not.toContain('opacity');
+    const subRuleStart = contents.indexOf('.ob-s1-sub{');
+    expect(subRuleStart).toBeGreaterThan(-1);
+    const subRule = contents.slice(subRuleStart, contents.indexOf('}', subRuleStart));
+    expect(subRule).not.toContain('opacity');
+  });
+
+  it('P10.1 (judge finding D2): mascot+card share an explicit docking container that blocks margin-collapse (flow-root), right-aligned per contract, no deep negative-margin sink', () => {
+    const contents = source();
+    const heroRuleStart = contents.indexOf('.ob-s1-hero{');
+    expect(heroRuleStart).toBeGreaterThan(-1);
+    const heroRule = contents.slice(heroRuleStart, contents.indexOf('}', heroRuleStart));
+    expect(heroRule).toContain('display:flow-root');
+    const mascotRuleStart = contents.indexOf('.ob-s1-mascot{');
+    expect(mascotRuleStart).toBeGreaterThan(-1);
+    const mascotRule = contents.slice(mascotRuleStart, contents.indexOf('}', mascotRuleStart));
+    expect(mascotRule).toContain('right:30px');
+    expect(mascotRule).not.toContain('margin:14px auto -50px');
+  });
+
+  it('P10.1 (judge finding D7): the CTA zone stays a normal flex-column member (never position:fixed) on a dvh-sized, overflow-hidden root — content scrolls, the CTA/hint/preview are never independently hidden by the keyboard', () => {
+    const contents = source();
+    expect(contents).not.toMatch(/\.ob-cta-zone\s*\{[^}]*position:\s*fixed/);
+    expect(contents).toContain('height:100dvh');
+    expect(contents).toContain('min-height:100dvh');
+  });
+
   it('REGRESSION: .ob-seg-progress declares flex-direction:row explicitly — design-tokens.css\'s global ".app-shell > main > div{flex-direction:column;...}" rule ALSO matches this element (.ob-screen is the <main>, this div is a direct child, .ob-screen sits directly under .app-shell pre-onboarding) and has higher specificity than a property .ob-seg-progress never used to declare, which silently zeroed the segments\' height (found during P10/JOB1-5 screenshot QA: an invisible progress bar)', () => {
     const contents = source();
     const ruleStart = contents.indexOf('.ob-screen > .ob-seg-progress{');

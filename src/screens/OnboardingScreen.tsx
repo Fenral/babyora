@@ -451,6 +451,13 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
           )}
 
           <div className="ob-top-center">
+            {/* P10.1 (judge finding D3): the contract's `.top` section
+                (docs/mocks/monter/onboarding-steg1-v2.html) always shows the
+                BABYORA brand row — it was previously suppressed on step 1
+                entirely. Step 1 gets the mock's own micro-brand treatment
+                (13px/700/0.24em tracking, uppercase); steps 2-4/5 keep their
+                existing larger serif wordmark unchanged. */}
+            {step === 1 && <span className="ob-s1-brand">BABYORA</span>}
             {step !== 1 && <span className="ob-top-brand">Babyora</span>}
           </div>
 
@@ -485,52 +492,67 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                   + sol-duel-2026-07-31.md §11, owner-confirmed 2026-08-01):
                   standing mascot with feet resting on the card's top edge,
                   ONE raised card holding headline+field+preview (not the old
-                  bare-canvas hero+copy+field stack). */}
-              <img
-                className="ob-s1-mascot"
-                src={MASCOT_STANDING_SRC}
-                alt=""
-                aria-hidden="true"
-                draggable={false}
-              />
+                  bare-canvas hero+copy+field stack).
+                  P10.1 (judge finding D2): mascot+card now share an explicit
+                  DOCKING container (`.ob-s1-hero`, `position:relative` +
+                  `display:flow-root` so the card's own margin-top can never
+                  collapse THROUGH the wrapper into the page flow — the exact
+                  bug class hjem-monter.css's own history warns about, "grepet
+                  gled fra kanten via margin-kollaps gjennom det tomme
+                  ankeret") instead of the previous bare negative-margin
+                  overlap (-50px — deep enough to nearly touch the H1). */}
+              <div className="ob-s1-hero">
+                <img
+                  className="ob-s1-mascot"
+                  src={MASCOT_STANDING_SRC}
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                />
 
-              <section className="ob-s1-card" aria-label="Navn eller kallenavn">
-                <h1 id="ob-title" className="ob-s1-h1">Hvem kler vi på?</h1>
-                <p className="ob-s1-sub">Bruk navn eller kallenavn hvis du vil gjøre rådene personlige.</p>
+                <section className="ob-s1-card" aria-label="Navn eller kallenavn">
+                  <h1 id="ob-title" className="ob-s1-h1">Hvem kler vi på?</h1>
+                  <p className="ob-s1-sub">Bruk navn eller kallenavn hvis du vil gjøre rådene personlige.</p>
 
-                <div className="ob-field ob-s1-field">
-                  <label htmlFor="ob-name-input">Navn eller kallenavn · Valgfritt</label>
-                  <div className="ob-input-shell">
-                    <span className="ob-input-icon" aria-hidden="true"><UserIcon /></span>
-                    <input
-                      id="ob-name-input"
-                      type="text"
-                      inputMode="text"
-                      autoComplete="off"
-                      autoCapitalize="words"
-                      placeholder="F.eks. Iver"
-                      value={name}
-                      // §11: feltet autofokuseres IKKE (tastaturet tvinges
-                      // ikke opp) — ingen autoFocus-prop her, med vilje.
-                      onChange={(e) => setName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') goNext();
-                      }}
-                      aria-describedby="ob-name-hint"
-                    />
+                  <div className="ob-field ob-s1-field">
+                    <label htmlFor="ob-name-input">Navn eller kallenavn · Valgfritt</label>
+                    {/* P10.1 (judge finding D4): the leading person-icon inside
+                        the input is NOT in the contract (onboarding-steg1-v2.html's
+                        `<input>` has no icon) — amber is action-only, and a
+                        leading-icon-in-input is a generic AI pattern the
+                        contract deliberately omitted. Removed; the input
+                        itself + its label already carry the field's identity. */}
+                    <div className="ob-input-shell">
+                      <input
+                        id="ob-name-input"
+                        type="text"
+                        inputMode="text"
+                        autoComplete="off"
+                        autoCapitalize="words"
+                        placeholder="F.eks. Iver"
+                        value={name}
+                        // §11: feltet autofokuseres IKKE (tastaturet tvinges
+                        // ikke opp) — ingen autoFocus-prop her, med vilje.
+                        onChange={(e) => setName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') goNext();
+                        }}
+                        aria-describedby="ob-name-hint"
+                      />
+                    </div>
+                    <div id="ob-name-hint" className="ob-hint">Brukes bare i teksten og lagres på denne iPhonen.</div>
                   </div>
-                  <div id="ob-name-hint" className="ob-hint">Brukes bare i teksten og lagres på denne iPhonen.</div>
-                </div>
 
-                {/* §11: "tomrommet gjør arbeid" — dempet forhåndsvisning av
-                    hva navnet faktisk påvirker, oppdatert live fra feltet. */}
-                <div className="ob-s1-preview">
-                  <span className="ob-s1-preview-tag">Navnet brukes i rådene</span>
-                  <span className="ob-s1-preview-line">
-                    «Da er vi klare for <span className="ob-s1-preview-named">{nameTrim || 'babyen'}</span>»
-                  </span>
-                </div>
-              </section>
+                  {/* §11: "tomrommet gjør arbeid" — dempet forhåndsvisning av
+                      hva navnet faktisk påvirker, oppdatert live fra feltet. */}
+                  <div className="ob-s1-preview">
+                    <span className="ob-s1-preview-tag">Navnet brukes i rådene</span>
+                    <span className="ob-s1-preview-line">
+                      «Da er vi klare for <span className="ob-s1-preview-named">{nameTrim || 'babyen'}</span>»
+                    </span>
+                  </div>
+                </section>
+              </div>
             </>
           )}
 
@@ -1171,22 +1193,41 @@ const STYLE_CSS = `
   display:flex;flex-direction:column;gap:12px;
 }
 
-/* ── STEG 1 v2 (P10/JOB5, docs/mocks/monter/onboarding-steg1-v2.html) ──
+/* ── STEG 1 v2 (P10/JOB5, docs/mocks/monter/onboarding-steg1-v2.html;
+   revidert P10.1 etter judge-funn D2) ──
    Stående maskot med føttene på kortets øvre kant + ÉN hevet flate
    (headline+felt+forhåndsvisning) — erstatter det gamle
    hero-boks+ledig-tekst+felt-stacket for STEG 1 spesifikt (steg 2-4/5
-   beholder sitt eksisterende .ob-copy/.ob-baby-hero-oppsett uendret). */
-.ob-s1-mascot{
+   beholder sitt eksisterende .ob-copy/.ob-baby-hero-oppsett uendret).
+   .ob-s1-hero er den EKSPLISITTE dokkings-beholderen (judge-funn D2):
+   display:flow-root hindrer .ob-s1-card sin margin-top fra å
+   kollapse GJENNOM wrapperen og ut i side-flyten (samme bugklasse som
+   hjem-monter.css sin egen "P9-eierfunn: grepet gled fra kanten via
+   margin-kollaps"-historie). Maskoten er høyrestilt (right:30px, per
+   mock) og kortet reserverer NØYAKTIG maskotens høyde minus et lite,
+   kontrollert fot-overlapp — IKKE et vilkårlig negativt marg-hack som
+   kunne senke maskoten dypt inn i kortet uansett innholdshøyde. */
+.ob-s1-hero{
   position:relative;
-  display:block;
+  display:flow-root;
+  flex:none;
+  margin-top:14px;
+}
+.ob-s1-mascot{
+  position:absolute;
+  top:0;
+  right:30px;
   height:150px;width:auto;
-  margin:14px auto -50px;
   z-index:3;pointer-events:none;
   filter:drop-shadow(0 10px 22px color-mix(in srgb, var(--ink-900) 45%, transparent));
 }
 .ob-s1-card{
   position:relative;z-index:2;
-  margin-top:0;
+  /* Maskotens høyde (150px) minus et ~18px kontrollert fot-overlapp inn i
+     kortets EGEN toppolstring (26px) — føttene "hviler på" kanten, langt
+     unna H1-teksten som først starter etter polstringen, uansett
+     Dynamic-Type-størrelse. */
+  margin-top:132px;
   background:var(--ob-surface-raised);
   border-radius:20px;
   padding:26px 22px 22px;
@@ -1244,10 +1285,10 @@ const STYLE_CSS = `
   box-shadow:0 0 0 4px color-mix(in srgb, var(--ob-terracotta-600) 10%, transparent), var(--ob-shadow-1);
   transition:box-shadow .2s var(--ob-ease-standard);
 }
-.ob-input-icon{
-  flex:none;display:flex;width:22px;height:22px;color:var(--ob-terracotta-600);margin-right:12px;
-}
-.ob-input-icon svg{width:22px;height:22px;}
+/* P10.1 (judge finding D4): .ob-input-icon removed — no leading icon in
+   the contract's input (onboarding-steg1-v2.html), and it was previously
+   coloured with the terracotta/amber accent (action-only per DESIGN.md's
+   colour-ownership table). */
 .ob-input-shell input{
   flex:1;font:inherit;font-size:18px;font-weight:500;color:var(--ob-ink-900);
   background:transparent;border:none;outline:none;width:100%;
@@ -1546,6 +1587,17 @@ const STYLE_CSS = `
   font-family:var(--ob-font-serif);
   font-size:18px;
   letter-spacing:-.2px;
+  color:var(--ob-ink-900);
+}
+/* P10.1 (judge finding D3): step 1's own brand-row treatment, transcribed
+   1:1 from onboarding-steg1-v2.html's .brand (13px/700/0.24em tracking,
+   sans, uppercase) — deliberately NOT the larger serif .ob-top-brand
+   steps 2-4/5 use. */
+.ob-s1-brand{
+  font-family:var(--ob-font-sans);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:0.24em;
   color:var(--ob-ink-900);
 }
 .ob-top-spacer{width:44px;height:44px;}

@@ -33,8 +33,10 @@ describe('FinnAntrekkScreen — no prefill (standalone / generic GuideTarget ope
     expect(html).toContain('−4°');
     expect(html).toContain('3 m/s');
     expect(html).toContain('0.0 mm/t');
-    // "Lek ute" (first ACTIVITY_OPTIONS entry) is the default-active radio.
-    expect(html).toMatch(/aria-checked="true"[^>]*>Lek ute/);
+    // "Utenfor vogn" (first ACTIVITY_OPTIONS entry — P10.1 finding C1:
+    // renamed from "Lek ute" to match Hjem's own vocabulary for the same
+    // engine value) is the default-active radio.
+    expect(html).toMatch(/aria-checked="true"[^>]*>Utenfor vogn/);
   });
 });
 
@@ -62,7 +64,7 @@ describe('FinnAntrekkScreen — prefill given (the "Juster" drill, opened from H
     expect(html).not.toContain('−4°');
     expect(html).not.toContain('>3 m/s<');
     expect(html).not.toContain('0.0 mm/t');
-    expect(html).not.toMatch(/aria-checked="true"[^>]*>Lek ute/);
+    expect(html).not.toMatch(/aria-checked="true"[^>]*>Utenfor vogn/);
   });
 
   it('renders the drill-appropriate "Juster" header instead of "Finn antrekk"', () => {
