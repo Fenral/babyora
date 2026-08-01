@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<title>Babyora Planlegg — Dagslinjen v2 (Monter)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,550&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --dw-canvas: #1E140C;
+    --dw-canvas-glow: #24180F;
+    --dw-panel: #113B3E;
+    --dw-raised: #2C1F13;
+    --dw-interactive: #35261A;
+    --dw-overlay: #382817;
+    --dw-accent-surface: #4A2F21;
+    --dw-ink-hi: #F1E9DA;
+    --dw-ink-mid: #CDC0AB;
+    --dw-ink-low: #A79A82;
+    --dw-ink-panel-mid: #C6CFC4;
+    --dw-accent-300: #E7B087;
+    --dw-accent: #D98E5A;
+    --dw-accent-pressed: #C57C46;
+    --dw-ink-on-accent: #2A1708;
+    --dw-edge-light: #F2C08A;
+    --dw-focus: #E8B98C;
+    --dw-w-cloudy: #1E3638;
+    --dw-w-rain: #0D3036;
+    --dw-hairline: rgba(241, 233, 218, 0.12);
+    --dw-r-pill: 999px;
+    --dw-font-ui: 'Schibsted Grotesk', system-ui, sans-serif;
+    --dw-font-hero: 'Fraunces', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  :focus-visible { outline: 2px solid var(--dw-focus); outline-offset: 3px; border-radius: 4px; }
+  body { background: #0A0705; display: flex; gap: 28px; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 24px; flex-wrap: wrap; }
+
+  .stage {
+    width: 390px; height: 844px; flex: none;
+    background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+    color: var(--dw-ink-hi);
+    font-family: var(--dw-font-ui);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .top { padding: 52px 24px 0; flex: none; }
+  h1 { font-size: 26px; font-weight: 750; letter-spacing: -0.015em; }
+  .ctx { font-size: 14px; color: var(--dw-ink-low); margin-top: 3px; }
+
+  .seg {
+    display: flex; background: rgba(241, 233, 218, 0.09);
+    border-radius: var(--dw-r-pill); padding: 4px;
+    margin: 12px 24px 0; flex: none;
+  }
+  .seg button {
+    flex: 1; border: 0; background: transparent;
+    font-family: inherit; font-size: 14.5px; font-weight: 650;
+    color: var(--dw-ink-mid); padding: 10px 0; min-height: 44px;
+    border-radius: var(--dw-r-pill); cursor: pointer;
+  }
+  .seg button.on { background: var(--dw-ink-hi); color: var(--dw-canvas); }
+
+  /* ============ Scrollende midtsone ============ */
+  .scroll {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+    padding: 0 0 128px;
+  }
+
+  /* ============ Ett dagskort: petrol-instrumentet smelter inn i leseflaten
+     (låst Planlegg-punkt 5). Én delt flate/geometri — heroen ligger øverst i
+     samme kort som Dagslinjen, med gradientovergang petrol -> espresso.
+     Kortet er den hevede flaten: inset top-light + TONET varm skygge.
+     Monter-lyskanten sitter kun på toppen (petrol-panelets kant, 0.9 er
+     reservert petrol jf. design-tokens-v2.css). ============ */
+  .day-card {
+    position: relative;
+    margin: 14px 20px 0;
+    background: var(--dw-raised);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 36px -18px rgba(52, 30, 12, 0.62);
+  }
+  .day-card::before {
+    content: ""; position: absolute; top: 0; left: 7%; right: 7%; height: 1.5px;
+    border-radius: 2px; z-index: 3;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.9;
+  }
+  /* Dagens vær: petrol-instrument (skyet nyanse) — fader til transparent
+     slik at espresso-leseflaten under tar over uten kant eller gap */
+  .hero {
+    position: relative;
+    background: linear-gradient(180deg, var(--dw-w-cloudy) 0%, var(--dw-w-cloudy) 52%, rgba(30, 54, 56, 0) 100%);
+    padding: 16px 18px 30px;
+  }
+  .h-day { font-size: 13.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dw-ink-panel-mid); }
+  .h-row { display: flex; align-items: baseline; gap: 12px; margin-top: 6px; }
+  .h-temp { font-family: var(--dw-font-hero); font-size: 50px; line-height: 1; font-weight: 550; font-variant-numeric: lining-nums tabular-nums; }
+  .h-desc { font-size: 15px; font-weight: 600; }
+  .h-meta { font-size: 13.5px; color: var(--dw-ink-panel-mid); margin-top: 5px; }
+
+  /* ============ Dagslinjen: leseflate-delen av samme kort — ingen egen
+     flate, radius, skygge eller lyskant (vanlig innholdsflate) ============ */
+  .rail-surface {
+    position: relative;
+    padding: 0 18px 6px;
+  }
+  .d-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .d-label { font-size: 12px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--dw-ink-low); }
+  .d-count {
+    font-size: 12.5px; font-weight: 650; color: var(--dw-ink-hi);
+    background: var(--dw-accent-surface);
+    padding: 4px 11px; border-radius: var(--dw-r-pill);
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.16) inset;
+  }
+
+  .rail { position: relative; }
+  .spine {
+    position: absolute; left: 63px; top: 11px; bottom: 11px; width: 2px;
+    background: rgba(241, 233, 218, 0.14); z-index: 1;
+  }
+
+  .d-row { display: flex; align-items: flex-start; position: relative; z-index: 2; padding: 7px 0; }
+  .d-time { flex: 0 0 42px; text-align: right; padding-top: 2px; font-size: 12px; font-weight: 700; color: var(--dw-ink-low); font-variant-numeric: lining-nums tabular-nums; }
+  .d-node-col { flex: 0 0 22px; display: flex; justify-content: center; margin: 0 10px; padding-top: 3px; }
+  .d-node { width: 13px; height: 13px; border-radius: 50%; background: var(--dw-canvas-glow); border: 1.5px solid rgba(241, 233, 218, 0.4); }
+  .d-row.is-change .d-node { width: 20px; height: 20px; margin-top: -3px; background: var(--dw-accent); border: none; box-shadow: 0 0 0 4px rgba(217, 142, 90, 0.18); }
+  .d-content { flex: 1; min-width: 0; padding-top: 1px; }
+
+  .d-title { display: block; font-size: 14.5px; font-weight: 650; color: var(--dw-ink-hi); }
+  .d-quiet { display: block; font-size: 13px; color: var(--dw-ink-low); margin-top: 2px; line-height: 1.4; }
+
+  .d-row.is-change { padding: 11px 8px; margin: 0 -8px; border-radius: 14px; background: rgba(217, 142, 90, 0.07); }
+  .d-row.is-change .d-title { font-size: 15.5px; font-weight: 700; }
+  .d-change { display: block; font-size: 14px; font-weight: 600; color: var(--dw-ink-hi); margin-top: 3px; }
+  .d-reason { display: block; font-size: 12.5px; color: var(--dw-ink-low); margin-top: 2px; line-height: 1.4; }
+
+  .d-thumbs { display: flex; gap: 10px; margin-top: 11px; }
+  .d-thumb-item { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 54px; }
+  .d-thumb {
+    width: 54px; height: 54px; border-radius: 12px;
+    object-fit: cover; background: #3A2A1A;
+    border: 1px solid rgba(242, 192, 138, 0.16);
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.22) inset, 0 6px 12px -6px rgba(52, 30, 12, 0.58);
+  }
+  .d-thumb-label { font-size: 10.5px; font-weight: 600; color: var(--dw-ink-low); text-align: center; line-height: 1.15; }
+
+  /* NÅ-markør: samme rad-geometri som resten av linjen, krysser spinen.
+     FORM-differensiert fra endringsnodene: HUL ring (accent-300 kun som
+     kant/lys — aldri fyll/tekst) vs endringenes FYLTE accent-prikk */
+  .d-row.d-now { padding: 3px 0; }
+  .d-now .d-time { color: var(--dw-ink-mid); font-weight: 700; }
+  .d-now .d-node { width: 13px; height: 13px; background: var(--dw-raised); border: 2px solid var(--dw-accent-300); box-shadow: 0 0 0 3px rgba(231, 176, 135, 0.16); }
+  .now-line {
+    display: block; height: 1px; margin-top: 7px;
+    background-image: repeating-linear-gradient(90deg, rgba(231, 176, 135, 0.5) 0 4px, transparent 4px 8px);
+  }
+
+  .d-gap { display: flex; align-items: center; min-height: 22px; padding-left: 74px; }
+  .d-gap span { font-size: 12px; color: var(--dw-ink-low); }
+
+  /* Vis full værprognose — ekte rad, ekte 44pt trykkmål */
+  .d-forecast {
+    width: 100%; margin-top: 8px; border: 0; border-top: 1px solid var(--dw-hairline);
+    background: none; font-family: inherit; color: var(--dw-ink-hi);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 0; min-height: 44px; font-size: 15px; font-weight: 650; cursor: pointer;
+  }
+  .d-chev-target {
+    width: 44px; height: 44px; margin: -13px -10px -13px 0; flex: none;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: var(--dw-ink-low);
+  }
+  .d-forecast:active .d-chev-target { background: rgba(241, 233, 218, 0.08); }
+  .d-chev-target svg { width: 17px; height: 17px; }
+
+  /* ============ Flytende tab-bar ============ */
+  .tabbar {
+    position: absolute; left: 16px; right: 16px; bottom: 10px; z-index: 6;
+    height: 92px; border-radius: 28px; overflow: hidden;
+    padding: 10px 6px 0;
+    background: rgba(44, 31, 19, 0.98);
+    box-shadow: 0 18px 34px -18px rgba(52, 30, 12, 0.72);
+  }
+  @supports (backdrop-filter: blur(20px)) {
+    .tabbar { background: rgba(44, 31, 19, 0.78); backdrop-filter: blur(20px) saturate(1.08); -webkit-backdrop-filter: blur(20px) saturate(1.08); }
+  }
+  .tabbar::before {
+    content: ""; position: absolute; top: 0; left: 14%; right: 14%; height: 1px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.2;
+  }
+  .tabbar-row { display: flex; justify-content: space-around; }
+  .tab {
+    text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: var(--dw-ink-low); min-width: 74px; padding: 5px 0 4px; border-radius: 14px;
+  }
+  .tab.on { color: var(--dw-ink-hi); background: var(--dw-accent-surface); box-shadow: 0 1px 0 rgba(242, 192, 138, 0.16) inset; }
+  .tab svg { width: 21px; height: 21px; }
+  .tab span { font-size: 11.5px; font-weight: 600; }
+  .homebar { width: 120px; height: 5px; border-radius: 3px; background: rgba(241, 233, 218, 0.28); margin: 9px auto 0; }
+
+  /* ============ Sheet: Full værprognose ============ */
+  .scrim { position: absolute; inset: 0; background: rgba(10, 7, 5, 0.6); z-index: 10; }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 11;
+    max-height: 74%; display: flex; flex-direction: column;
+    background: var(--dw-overlay);
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -18px 40px -14px rgba(52, 30, 12, 0.62);
+  }
+  .sheet::before {
+    content: ""; position: absolute; top: 0; left: 10%; right: 10%; height: 1.5px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.16;
+  }
+  .sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: rgba(241, 233, 218, 0.28); margin: 10px auto 4px; flex: none; }
+  .sheet-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 8px 20px 2px; flex: none; }
+  .sheet-title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .sheet-sub { font-size: 12.5px; color: var(--dw-ink-low); margin-top: 2px; }
+  .sheet-close { border: 0; background: none; color: var(--dw-accent); font-family: inherit; font-size: 15px; font-weight: 650; min-height: 44px; min-width: 44px; padding: 0; cursor: pointer; }
+
+  .sheet-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 20px 26px; mask-image: linear-gradient(to bottom, black 92%, transparent 100%); }
+  .f-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; min-height: 44px; border-top: 1px solid var(--dw-hairline); }
+  .f-row:first-child { border-top: 0; }
+  .f-dot { flex: 0 0 6px; width: 6px; height: 6px; border-radius: 50%; background: transparent; }
+  .f-row.is-change .f-dot { background: var(--dw-accent); }
+  .f-time { flex: 0 0 40px; font-size: 13.5px; font-weight: 700; color: var(--dw-ink-mid); font-variant-numeric: lining-nums tabular-nums; }
+  .f-row.is-now .f-time { color: var(--dw-ink-hi); }
+  .f-desc { flex: 1; font-size: 13.5px; color: var(--dw-ink-hi); }
+  .f-row.is-now .f-desc { font-weight: 650; }
+  .f-temp { flex: 0 0 auto; font-size: 14px; font-weight: 700; color: var(--dw-ink-hi); font-variant-numeric: lining-nums tabular-nums; }
+</style>
+</head>
+<body>
+
+  <!-- ============ TILSTAND 1: DAGSLINJEN (I dag) ============ -->
+  <div class="stage">
+    <div class="top">
+      <h1>Planlegg</h1>
+      <p class="ctx">Lillian · Trondheim</p>
+    </div>
+
+    <div class="seg" role="radiogroup" aria-label="Dag">
+      <button class="on" type="button" role="radio" aria-checked="true">I dag</button>
+      <button type="button" role="radio" aria-checked="false">I morgen</button>
+    </div>
+
+    <div class="scroll">
+      <section class="day-card" aria-label="I dag: vær og dagslinje">
+        <div class="hero" aria-label="Været i dag">
+          <span class="h-day">Fredag 1. august</span>
+          <div class="h-row">
+            <span class="h-temp">9°</span>
+            <span class="h-desc">Delvis skyet, regn fra kl. 14</span>
+          </div>
+          <p class="h-meta">Føles som 6° · Vind 4 m/s</p>
+        </div>
+
+        <div class="rail-surface" aria-labelledby="dagslinjen-h">
+          <div class="d-head">
+            <h2 class="d-label" id="dagslinjen-h">Dagslinjen</h2>
+            <span class="d-count">2 endringer i dag</span>
+          </div>
+
+          <div class="rail">
+          <span class="spine" aria-hidden="true"></span>
+
+          <ol style="list-style:none; padding:0; margin:0;">
+          <li class="d-row">
+            <span class="d-time">07:00</span>
+            <span class="d-node-col"><span class="d-node" aria-hidden="true"></span></span>
+            <span class="d-content">
+              <span class="d-title">Morgenstell</span>
+              <span class="d-quiet">Innendørs, samme antrekk som i natt.</span>
+            </span>
+          </li>
+
+          <li class="d-gap"><span>Ingen endring i 2 t 15 min</span></li>
+
+          <li class="d-row d-now">
+            <span class="d-time">Nå</span>
+            <span class="d-node-col"><span class="d-node" aria-hidden="true"></span></span>
+            <span class="d-content"><span class="now-line" aria-hidden="true"></span></span>
+          </li>
+
+          <li class="d-gap"><span>Ingen endring i 1 t 15 min</span></li>
+
+          <li class="d-row is-change">
+            <span class="d-time">10:30</span>
+            <span class="d-node-col"><span class="d-node" aria-hidden="true"></span></span>
+            <span class="d-content">
+              <span class="d-title">Ute i vogn</span>
+              <span class="d-change">Vindjakke og tynn lue legges til</span>
+              <span class="d-reason">Vinden tar tak når dere er ute</span>
+              <span class="d-thumbs">
+                <span class="d-thumb-item">
+                  <img class="d-thumb" src="assets-v1/plagg-vindjakke.png" alt="" />
+                  <span class="d-thumb-label">Vindjakke</span>
+                </span>
+                <span class="d-thumb-item">
+                  <img class="d-thumb" src="assets-v1/plagg-tynn-lue.png" alt="" />
+                  <span class="d-thumb-label">Tynn lue</span>
+                </span>
+              </span>
+            </span>
+          </li>
+
+          <li class="d-gap"><span>Ingen endring i 3 t 30 min</span></li>
+
+          <li class="d-row is-change">
+            <span class="d-time">14:00</span>
+            <span class="d-node-col"><span class="d-node" aria-hidden="true"></span></span>
+            <span class="d-content">
+              <span class="d-title">Regn kommer</span>
+              <span class="d-change">Regntrekk over vogna</span>
+              <span class="d-reason">Regnet holder seg resten av ettermiddagen</span>
+              <span class="d-thumbs">
+                <span class="d-thumb-item">
+                  <img class="d-thumb" src="assets-v1/plagg-regndress.png" alt="" />
+                  <span class="d-thumb-label">Regntrekk (vogn)</span>
+                </span>
+              </span>
+            </span>
+          </li>
+
+          <li class="d-gap"><span>Ingen endring i 3 t</span></li>
+
+          <li class="d-row">
+            <span class="d-time">17:00</span>
+            <span class="d-node-col"><span class="d-node" aria-hidden="true"></span></span>
+            <span class="d-content">
+              <span class="d-title">Inne</span>
+              <span class="d-quiet">Tilbake innendørs — ytterlag og regntrekk av.</span>
+            </span>
+          </li>
+          </ol>
+        </div>
+
+          <button class="d-forecast" type="button" aria-haspopup="dialog">
+            <span>Vis full værprognose</span>
+            <span class="d-chev-target" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </span>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <nav class="tabbar" aria-label="Hovednavigasjon">
+      <div class="tabbar-row">
+        <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Hjem</span></a>
+        <a class="tab on" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg><span>Planlegg</span></a>
+        <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 20c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="10" r="2.4"/><path d="M15.5 20c.4-2.2 1.6-3.6 3.3-3.9 1 .2 1.9.9 2.7 1.9"/></svg><span>Familie</span></a>
+      </div>
+      <div class="homebar"></div>
+    </nav>
+  </div>
+
+  <!-- ============ TILSTAND 2: SHEET ÅPEN (Full værprognose) ============ -->
+  <div class="stage">
+    <div class="top">
+      <h1>Planlegg</h1>
+      <p class="ctx">Lillian · Trondheim</p>
+    </div>
+
+    <div class="seg" role="radiogroup" aria-label="Dag">
+      <button class="on" type="button" role="radio" aria-checked="true">I dag</button>
+      <button type="button" role="radio" aria-checked="false">I morgen</button>
+    </div>
+
+    <div class="scroll">
+      <section class="day-card" aria-label="I dag: vær og dagslinje">
+        <div class="hero" aria-label="Været i dag">
+          <span class="h-day">Fredag 1. august</span>
+          <div class="h-row">
+            <span class="h-temp">9°</span>
+            <span class="h-desc">Delvis skyet, regn fra kl. 14</span>
+          </div>
+          <p class="h-meta">Føles som 6° · Vind 4 m/s</p>
+        </div>
+
+        <div class="rail-surface" aria-labelledby="dagslinjen-h-2">
+          <div class="d-head">
+            <h2 class="d-label" id="dagslinjen-h-2">Dagslinjen</h2>
+            <span class="d-count">2 endringer i dag</span>
+          </div>
+          <div class="rail" style="opacity:.35">
+            <span class="spine" aria-hidden="true"></span>
+            <ol style="list-style:none; padding:0; margin:0;">
+            <li class="d-row">
+              <span class="d-time">07:00</span>
+              <span class="d-node-col"><span class="d-node" aria-hidden="true"></span></span>
+              <span class="d-content"><span class="d-title">Morgenstell</span></span>
+            </li>
+            </ol>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="tabbar" aria-label="Hovednavigasjon">
+      <div class="tabbar-row">
+        <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Hjem</span></a>
+        <a class="tab on" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg><span>Planlegg</span></a>
+        <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 20c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="10" r="2.4"/><path d="M15.5 20c.4-2.2 1.6-3.6 3.3-3.9 1 .2 1.9.9 2.7 1.9"/></svg><span>Familie</span></a>
+      </div>
+      <div class="homebar"></div>
+    </nav>
+
+    <div class="scrim" aria-hidden="true"></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-head">
+        <div>
+          <p class="sheet-title" id="sheet-title">Værprognose i dag</p>
+          <p class="sheet-sub">Fredag 1. august · Trondheim</p>
+        </div>
+        <button class="sheet-close" type="button">Ferdig</button>
+      </div>
+      <div class="sheet-list">
+        <div class="f-row"><span class="f-dot" aria-hidden="true"></span><span class="f-time">07:00</span><span class="f-desc">Klart</span><span class="f-temp">6°</span></div>
+        <div class="f-row"><span class="f-dot" aria-hidden="true"></span><span class="f-time">08:00</span><span class="f-desc">Klart</span><span class="f-temp">7°</span></div>
+        <div class="f-row is-now"><span class="f-dot" aria-hidden="true"></span><span class="f-time">Nå</span><span class="f-desc">Delvis skyet</span><span class="f-temp">8°</span></div>
+        <div class="f-row is-change"><span class="f-dot" aria-hidden="true"></span><span class="f-time">10:00</span><span class="f-desc">Delvis skyet, mer vind</span><span class="f-temp">8°</span></div>
+        <div class="f-row"><span class="f-dot" aria-hidden="true"></span><span class="f-time">11:00</span><span class="f-desc">Skyet</span><span class="f-temp">9°</span></div>
+        <div class="f-row"><span class="f-dot" aria-hidden="true"></span><span class="f-time">12:00</span><span class="f-desc">Skyet</span><span class="f-temp">9°</span></div>
+        <div class="f-row"><span class="f-dot" aria-hidden="true"></span><span class="f-time">13:00</span><span class="f-desc">Skyet, regn nærmer seg</span><span class="f-temp">9°</span></div>
+        <div class="f-row is-change"><span class="f-dot" aria-hidden="true"></span><span class="f-time">14:00</span><span class="f-desc">Regn begynner</span><span class="f-temp">8°</span></div>
+        <div class="f-row"><span class="f-dot" aria-hidden="true"></span><span class="f-time">15:00</span><span class="f-desc">Regn</span><span class="f-temp">8°</span></div>
+        <div class="f-row"><span class="f-dot" aria-hidden="true"></span><span class="f-time">16:00</span><span class="f-desc">Regn</span><span class="f-temp">8°</span></div>
+        <div class="f-row"><span class="f-dot" aria-hidden="true"></span><span class="f-time">17:00</span><span class="f-desc">Regn avtar</span><span class="f-temp">7°</span></div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

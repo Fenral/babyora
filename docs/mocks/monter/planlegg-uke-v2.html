@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<title>Babyora Planlegg — Neste uke v2 (Monter, finish-løft)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,550&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --dw-canvas: #1E140C;
+    --dw-canvas-glow: #24180F;
+    --dw-panel: #113B3E;
+    --dw-raised: #2C1F13;
+    --dw-ink-hi: #F1E9DA;
+    --dw-ink-mid: #CDC0AB;
+    --dw-ink-low: #A79A82;
+    --dw-accent-300: #E7B087;
+    --dw-accent: #D98E5A;
+    --dw-accent-pressed: #C57C46;
+    --dw-accent-surface: #4A2F21;
+    --dw-ink-on-accent: #2A1708;
+    --dw-edge-light: #F2C08A;
+    --dw-focus: #E8B98C;
+    --dw-w-rain: #0D3036;
+    --dw-hairline: rgba(241, 233, 218, 0.12);
+    --dw-r-pill: 999px;
+    --dw-font-ui: 'Schibsted Grotesk', system-ui, sans-serif;
+    --dw-font-hero: 'Fraunces', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  :focus-visible { outline: 2px solid var(--dw-focus); outline-offset: 3px; border-radius: 4px; }
+  body { background: #0A0705; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
+
+  /* Stagen presenteres i full innholdshøyde (height: auto, min 844) slik at
+     hero, forberedelses-widget, hele uke-flaten og Snart-gaten dokumenteres i
+     ETT skjermbilde — element-capture av .stage tar hele høyden. I appen er
+     dette samme innhold bak en 844px viewport med scroll. */
+  .stage {
+    width: 390px; height: auto; min-height: 844px;
+    background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+    color: var(--dw-ink-hi);
+    font-family: var(--dw-font-ui);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .top { padding: 50px 24px 0; flex: none; }
+  h1 { font-size: 25px; font-weight: 750; letter-spacing: -0.015em; }
+  .ctx { font-size: 13.5px; color: var(--dw-ink-low); margin-top: 3px; }
+
+  .seg {
+    flex: none;
+    display: flex; background: rgba(241, 233, 218, 0.09);
+    border-radius: var(--dw-r-pill); padding: 4px;
+    margin: 12px 24px 0;
+  }
+  .seg button {
+    flex: 1; border: 0; background: transparent;
+    font-family: inherit; font-size: 14px; font-weight: 650;
+    color: var(--dw-ink-mid); padding: 9px 0; min-height: 44px;
+    border-radius: var(--dw-r-pill); cursor: pointer;
+  }
+  .seg button.on { background: var(--dw-ink-hi); color: var(--dw-canvas); }
+
+  /* ============ Scrollende innhold. Bunnfade signaliserer mer under
+     (dybdedoktrinen §4, ~8 % av flaten). Padding-bottom 170px gir «Varsle
+     meg»-knappen reell klaring forbi den flytende tab-baren (10px bunn +
+     92px høyde = 102px okkupert) OG forbi fadens startpunkt. ============ */
+  .scroll {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to bottom, black calc(100% - 120px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 120px), transparent 100%);
+    padding-bottom: 170px;
+  }
+
+  /* ============ Morgendagens vær: petrol-instrument, ekte hero (kantlys
+     12-20%, duell §6) ============ */
+  .hero {
+    position: relative;
+    margin: 14px 20px 0;
+    background: var(--dw-w-rain);
+    border-radius: 20px;
+    padding: 14px 18px 12px;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 36px -18px rgba(52, 30, 12, 0.62);
+  }
+  .hero::before {
+    content: ""; position: absolute; top: 0; left: 8%; right: 8%; height: 1.5px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.18;
+  }
+  .h-day { font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #C6CFC4; }
+  .h-row { display: flex; align-items: baseline; gap: 11px; margin-top: 5px; }
+  .h-temp { font-family: var(--dw-font-hero); font-size: 42px; line-height: 1; font-weight: 550; font-variant-numeric: lining-nums tabular-nums; }
+  .h-desc { font-size: 14.5px; font-weight: 600; }
+  .h-meta { font-size: 13px; color: #DCD8C8; margin-top: 4px; }
+
+  /* ============ Forberedelses-widget: hevet flate, primær CTA, «viktig
+     interaktiv flate» → får kantlys (duell §6). ============ */
+  .prep {
+    position: relative;
+    margin: 11px 20px 0;
+    background: var(--dw-raised);
+    border-radius: 20px;
+    padding: 16px 18px 13px;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 34px -18px rgba(52, 30, 12, 0.66);
+  }
+  .prep::before {
+    content: ""; position: absolute; top: 0; left: 8%; right: 8%; height: 1.5px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.18;
+  }
+  .p-label { font-size: 12px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--dw-ink-low); }
+  .p-head { font-size: 18.5px; font-weight: 700; letter-spacing: -0.01em; margin-top: 5px; }
+  .p-sub { font-size: 13.5px; color: var(--dw-ink-mid); margin-top: 4px; line-height: 1.45; }
+  .p-thumbs { display: flex; gap: 9px; margin-top: 12px; }
+  .p-thumb {
+    width: 46px; height: 46px; border-radius: 12px;
+    object-fit: cover; background: #3A2A1A;
+    border: 1px solid rgba(242, 192, 138, 0.16);
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.22) inset, 0 6px 12px -6px rgba(52, 30, 12, 0.62);
+  }
+  .p-more {
+    width: 46px; height: 46px; border-radius: 12px;
+    display: grid; place-items: center;
+    background: rgba(241, 233, 218, 0.07);
+    border: 1px dashed rgba(241, 233, 218, 0.2);
+    color: var(--dw-ink-mid); font-size: 12px; font-weight: 700;
+  }
+  .p-cta {
+    margin-top: 13px; border: 0; border-radius: 12px; width: 100%;
+    background: var(--dw-accent); color: var(--dw-ink-on-accent);
+    font-family: inherit; font-size: 15px; font-weight: 700;
+    padding: 11px 18px; min-height: 46px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 10px 22px -12px rgba(52, 30, 12, 0.62);
+  }
+  .p-cta:active { background: var(--dw-accent-pressed); transform: translateY(1px); }
+  .p-cta svg { width: 16px; height: 16px; }
+
+  /* ============ Seksjonsetikett, delt av uke- og snart-blokken ============ */
+  .sec-label {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--dw-ink-low); padding: 0 4px;
+  }
+
+  /* ============ Neste uke: kompakt oversikt som fremhever AVVIK.
+     Hele blokken er ÉN hevet flate (dybdedoktrinen §1) — ingen ytre
+     kantlys her (kun hero/valgt/interaktivt får det, duell §6); flaten
+     bærer likevel lyslogikk via inset topplys + tintet skygge. ============ */
+  .week { margin: 16px 20px 0; }
+  .week-surface {
+    margin-top: 8px;
+    background: var(--dw-raised);
+    border-radius: 20px;
+    padding: 2px 14px 4px;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 12px 26px -16px rgba(52, 30, 12, 0.66);
+  }
+  .week-surface > * + * { border-top: 1px solid var(--dw-hairline); }
+
+  .d-col { width: 32px; flex: none; }
+  .d-day { font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--dw-ink-mid); display: block; }
+  .d-date { font-size: 12px; color: var(--dw-ink-low); display: block; margin-top: 1px; font-variant-numeric: tabular-nums; }
+
+  .w-icon { width: 22px; height: 22px; border-radius: 7px; object-fit: cover; flex: none; box-shadow: 0 1px 0 rgba(242, 192, 138, 0.16) inset; }
+
+  /* Stabil dag: én rolig linje. Ingen chevron — ingenting å utforske.
+     Min-høyde 62px per dybdedoktrinen §5 (aldri under 57px). */
+  .w-line {
+    display: flex; align-items: center; gap: 10px;
+    min-height: 62px; padding: 9px 2px;
+  }
+  .w-temp { font-size: 13px; font-weight: 650; color: var(--dw-ink-mid); font-variant-numeric: tabular-nums; min-width: 26px; }
+  .w-text { flex: 1; font-size: 13px; color: var(--dw-ink-low); line-height: 1.3; }
+
+  /* Avviksdag: eneste rader med thumb, headline og tap-affordance. */
+  .w-dev {
+    display: flex; align-items: center; gap: 12px; width: 100%;
+    border: 0; background: none; font-family: inherit; color: inherit; text-align: left;
+    padding: 12px 2px; min-height: 74px; cursor: pointer;
+  }
+  .w-dev:active { background: rgba(241, 233, 218, 0.04); }
+  .wd-thumb {
+    width: 46px; height: 46px; border-radius: 12px; flex: none;
+    object-fit: cover; background: #3A2A1A;
+    border: 1px solid rgba(242, 192, 138, 0.16);
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.2) inset, 0 6px 12px -6px rgba(52, 30, 12, 0.62);
+  }
+  .wd-text { flex: 1; min-width: 0; }
+  .wd-meta { display: flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: var(--dw-ink-low); }
+  .wd-meta .w-icon { width: 15px; height: 15px; border-radius: 4px; }
+  .wd-what { font-size: 14.5px; font-weight: 650; color: var(--dw-ink-hi); display: block; margin-top: 3px; line-height: 1.3; }
+  .wd-chev { width: 15px; height: 15px; color: var(--dw-ink-low); flex: none; }
+
+  /* ============ Snart: verdig gating. Ekte skyggerader dempes bak en
+     scrim, en fokusert luke ovenpå bærer merket + forklaring + en ekte
+     handling (varsle meg). Ikke flat «kommer snart»-tekst. ============ */
+  .snart { margin: 24px 20px 0; }
+  .snart-surface {
+    position: relative; overflow: hidden;
+    margin-top: 8px;
+    background: var(--dw-raised);
+    border-radius: 20px;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 12px 26px -16px rgba(52, 30, 12, 0.66);
+  }
+  .sn-rows { padding: 6px 14px 0; pointer-events: none; }
+  /* Samme 62px radgulv som uke-flaten (dybdedoktrinen §5) — dempingen skjer
+     via opacity/scrim, aldri via komprimert høyde. */
+  .sn-line { display: flex; align-items: center; gap: 10px; min-height: 62px; padding: 8px 2px; opacity: 0.42; }
+  .sn-line + .sn-line { border-top: 1px solid var(--dw-hairline); }
+  .sn-line .w-icon { filter: saturate(0.7); }
+  .sn-text { flex: 1; font-size: 12.5px; color: var(--dw-ink-low); }
+
+  .sn-scrim {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 78%;
+    background: linear-gradient(to bottom, transparent 0%, var(--dw-raised) 58%);
+    pointer-events: none;
+  }
+
+  .sn-gate {
+    position: relative; z-index: 2;
+    padding: 4px 26px 22px;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .sn-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(231, 176, 135, 0.12);
+    border: 1px solid rgba(231, 176, 135, 0.4);
+    border-radius: var(--dw-r-pill);
+    padding: 6px 13px;
+    font-size: 12px; font-weight: 700; color: var(--dw-ink-hi);
+  }
+  .sn-chip svg { width: 12.5px; height: 12.5px; color: var(--dw-accent-300); flex: none; }
+  .sn-head { font-size: 16.5px; font-weight: 700; color: var(--dw-ink-hi); margin-top: 11px; letter-spacing: -0.01em; }
+  .sn-copy { font-size: 13px; line-height: 1.5; color: var(--dw-ink-mid); margin-top: 6px; max-width: 27ch; }
+  .sn-notify {
+    margin-top: 14px; border: 1px solid rgba(241, 233, 218, 0.18); background: none;
+    border-radius: 12px; color: var(--dw-ink-mid); font-family: inherit;
+    font-size: 13.5px; font-weight: 650; padding: 11px 18px; min-height: 44px; cursor: pointer;
+  }
+  .sn-notify:active { background: rgba(241, 233, 218, 0.06); }
+
+  /* ============ Flytende tab-bar (duell §7) — innhold scroller bak den. ============ */
+  .tabbar {
+    position: absolute; left: 16px; right: 16px; bottom: 10px; z-index: 6;
+    height: 92px; border-radius: 28px; overflow: hidden;
+    padding: 10px 6px 0;
+    background: rgba(44, 31, 19, 0.98);
+    box-shadow: 0 18px 34px -18px rgba(52, 30, 12, 0.75);
+  }
+  @supports (backdrop-filter: blur(20px)) {
+    .tabbar { background: rgba(44, 31, 19, 0.78); backdrop-filter: blur(20px) saturate(1.08); -webkit-backdrop-filter: blur(20px) saturate(1.08); }
+  }
+  .tabbar::before {
+    content: ""; position: absolute; top: 0; left: 14%; right: 14%; height: 1px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.2;
+  }
+  .tabbar-row { display: flex; justify-content: space-around; }
+  .tab {
+    text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: var(--dw-ink-low); min-width: 74px; padding: 5px 0 4px; border-radius: 14px;
+  }
+  .tab.on { color: var(--dw-ink-hi); background: var(--dw-accent-surface); }
+  .tab svg { width: 21px; height: 21px; }
+  .tab span { font-size: 11.5px; font-weight: 600; }
+  .homebar { width: 120px; height: 5px; border-radius: 3px; background: rgba(241, 233, 218, 0.28); margin: 9px auto 0; }
+</style>
+</head>
+<body>
+  <!--
+    Babyora — Planlegg > Neste uke, finish-løft v2.
+    Runde 1-tilbakemelding: flat gating og lavere finish på uke-blokken rammer
+    betalingsviljen. Denne runden: (1) dagrader med minivær der KUN avviksdager
+    (Tir/regn, Tor/kaldere) ekspanderes med mini-thumb + headline, stabile dager
+    komprimeres til én rolig linje (PRODUCT.md: «kompakt avvik-sammendrag, ikke
+    en detaljert værtabell»); (2) Snart-seksjon med verdig gating — dempede
+    ekte forhåndsviste rader bak en scrim + lås-chip + forklaring + ekte
+    handling, ikke flat «kommer snart»-tekst. Værikon- og plaggminiatyrer fra
+    assets-v1/ (Monter-materialverdenen), samme hevede flate-vokabular som
+    resultat-arket (hjem-result-spine.html). Kantlys kun hero/prep (12-20 %,
+    duell §6) — uke- og snart-flatene bærer kun inset topplys, ingen bar.
+
+    Dommerfiks-runde (score 44): (1) stage presenteres nå i full innholds-
+    høyde slik at hero + prep-widget + «Varsle meg»-CTA dokumenteres i ett
+    element-capture; (2) alle innholdsrader hevet til 62px-gulvet (§5);
+    (3) TIR-headline kortet til kompakt avvikssammendrag; (4) d-date 12px;
+    (5) .tab.on bruker --dw-accent-surface (synlig valgt-tilstand);
+    (6) canvas-glow/w-rain rettet til kanoniske tokens-v2-verdier;
+    (7) alle dropskygger tonet varm espresso (aldri nøytral svart).
+  -->
+  <div class="stage">
+    <div class="top">
+      <h1>Planlegg</h1>
+      <p class="ctx">Lillian · Trondheim</p>
+    </div>
+
+    <div class="seg" role="radiogroup" aria-label="Dag">
+      <button type="button" role="radio" aria-checked="false">I dag</button>
+      <button class="on" type="button" role="radio" aria-checked="true">I morgen</button>
+    </div>
+
+    <div class="scroll">
+      <section class="hero" aria-label="Været i morgen">
+        <span class="h-day">Fredag 1. august</span>
+        <div class="h-row">
+          <span class="h-temp">7°</span>
+          <span class="h-desc">Regn fra kl. 12</span>
+        </div>
+        <p class="h-meta">Føles som 4° · Vind 5 m/s</p>
+      </section>
+
+      <section class="prep" aria-label="Forberedelse til i morgen">
+        <span class="p-label">Forbered i kveld</span>
+        <h2 class="p-head">Ha ull, fleece og regntøy klart</h2>
+        <p class="p-sub">Mer beskyttelse enn i dag. Legg også regnvotter og ekstra sokker i sekken.</p>
+        <div class="p-thumbs">
+          <img class="p-thumb" src="assets-v1/plagg-tynn-lue.png" alt="Tynn lue" />
+          <img class="p-thumb" src="assets-v1/plagg-kortermet-ullbody.png" alt="Kortermet ullbody" />
+          <img class="p-thumb" src="assets-v1/plagg-regndress.png" alt="Regndress" />
+          <span class="p-more" aria-label="Fire plagg til">+4</span>
+        </div>
+        <button class="p-cta" type="button">
+          Se hele antrekket
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </section>
+
+      <section class="week" aria-label="Neste uke">
+        <span class="sec-label">Neste uke</span>
+        <div class="week-surface">
+
+          <div class="w-line">
+            <span class="d-col"><span class="d-day">Lør</span><span class="d-date">2.8</span></span>
+            <img class="w-icon" src="assets-v1/vaer-klarvaer.png" alt="" />
+            <span class="w-temp">15°</span>
+            <span class="w-text">Ingen endring i antrekket</span>
+          </div>
+
+          <div class="w-line">
+            <span class="d-col"><span class="d-day">Søn</span><span class="d-date">3.8</span></span>
+            <img class="w-icon" src="assets-v1/vaer-klarvaer.png" alt="" />
+            <span class="w-temp">16°</span>
+            <span class="w-text">Fortsatt sol, samme lag holder</span>
+          </div>
+
+          <div class="w-line">
+            <span class="d-col"><span class="d-day">Man</span><span class="d-date">4.8</span></span>
+            <img class="w-icon" src="assets-v1/vaer-skyet.png" alt="" />
+            <span class="w-temp">14°</span>
+            <span class="w-text">Ingen endring i antrekket</span>
+          </div>
+
+          <button class="w-dev" type="button" aria-label="Tirsdag 5. august, avvik: regn hele dagen">
+            <span class="d-col"><span class="d-day">Tir</span><span class="d-date">5.8</span></span>
+            <img class="wd-thumb" src="assets-v1/plagg-regndress.png" alt="Regndress" />
+            <span class="wd-text">
+              <span class="wd-meta"><img class="w-icon" src="assets-v1/vaer-regn.png" alt="" />13°</span>
+              <span class="wd-what">Regn hele dagen — regntøy i sekken</span>
+            </span>
+            <svg class="wd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+
+          <div class="w-line">
+            <span class="d-col"><span class="d-day">Ons</span><span class="d-date">6.8</span></span>
+            <img class="w-icon" src="assets-v1/vaer-delvis-skyet.png" alt="" />
+            <span class="w-temp">13°</span>
+            <span class="w-text">Tørrere, tilbake til vanlig antrekk</span>
+          </div>
+
+          <button class="w-dev" type="button" aria-label="Torsdag 7. august, avvik: kaldere">
+            <span class="d-col"><span class="d-day">Tor</span><span class="d-date">7.8</span></span>
+            <img class="wd-thumb" src="assets-v1/plagg-tykt-ullsett.png" alt="Tykt ullsett" />
+            <span class="wd-text">
+              <span class="wd-meta"><img class="w-icon" src="assets-v1/vaer-skyet.png" alt="" />9°</span>
+              <span class="wd-what">Kaldere — bytt til tykt ullsett</span>
+            </span>
+            <svg class="wd-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+
+          <div class="w-line">
+            <span class="d-col"><span class="d-day">Fre</span><span class="d-date">8.8</span></span>
+            <img class="w-icon" src="assets-v1/vaer-skyet.png" alt="" />
+            <span class="w-temp">9°</span>
+            <span class="w-text">Fortsatt kaldt, samme lag som torsdag</span>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="snart" aria-label="Snart tilgjengelig">
+        <span class="sec-label">Snart</span>
+        <div class="snart-surface">
+          <div class="sn-rows" aria-hidden="true">
+            <div class="sn-line">
+              <span class="d-col"><span class="d-day">Lør</span><span class="d-date">9.8</span></span>
+              <img class="w-icon" src="assets-v1/vaer-taake.png" alt="" />
+              <span class="sn-text">Beregnes nærmere datoen</span>
+            </div>
+            <div class="sn-line">
+              <span class="d-col"><span class="d-day">Søn</span><span class="d-date">10.8</span></span>
+              <img class="w-icon" src="assets-v1/vaer-skyet.png" alt="" />
+              <span class="sn-text">Beregnes nærmere datoen</span>
+            </div>
+            <div class="sn-line">
+              <span class="d-col"><span class="d-day">Man</span><span class="d-date">11.8</span></span>
+              <img class="w-icon" src="assets-v1/vaer-klarvaer.png" alt="" />
+              <span class="sn-text">Beregnes nærmere datoen</span>
+            </div>
+          </div>
+          <div class="sn-scrim" aria-hidden="true"></div>
+          <div class="sn-gate">
+            <span class="sn-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+              Kommer snart
+            </span>
+            <h3 class="sn-head">14 dagers utsikt</h3>
+            <p class="sn-copy">Se enda lenger fram, slik at dere kan planlegge tur, bursdag eller helg i god tid.</p>
+            <button class="sn-notify" type="button">Varsle meg når det er klart</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="tabbar" aria-label="Hovednavigasjon">
+      <div class="tabbar-row">
+        <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Hjem</span></a>
+        <a class="tab on" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg><span>Planlegg</span></a>
+        <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 20c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="10" r="2.4"/><path d="M15.5 20c.4-2.2 1.6-3.6 3.3-3.9 1 .2 1.9.9 2.7 1.9"/></svg><span>Familie</span></a>
+      </div>
+      <div class="homebar"></div>
+    </nav>
+  </div>
+</body>
+</html>

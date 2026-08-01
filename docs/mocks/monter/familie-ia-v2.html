@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<title>Babyora Familie — IA-redesign v2 (Monter)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,550&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Valørstige (design-tokens-v2.css, korrigert 2026-07-31: 3–5 L-poeng
+       mellom nivåer — canvas-glow løftet fra #2B1D11 til #24180F). */
+    --dw-canvas: #1E140C;
+    --dw-canvas-glow: #24180F;
+    --dw-raised: #2C1F13;
+    --dw-interactive: #35261A;
+    --dw-accent-surface: #4A2F21;
+
+    --dw-ink-hi: #F1E9DA;
+    --dw-ink-mid: #CDC0AB;
+    --dw-ink-low: #A79A82;
+
+    /* Amber-rampe (sol-duel-2026-07-31.md §1) — én aksentfamilie.
+       300 er FORBUDT som tekstfarge; kun kant/glans/dashed invitasjon. */
+    --dw-accent-300: #E7B087;
+    --dw-accent-500: #D98E5A;
+    --dw-accent-pressed: #C57C46;
+    --dw-ink-on-accent: #2A1708;
+    --dw-edge-light: #F2C08A;
+    --dw-focus: #E8B98C;
+
+    --dw-hairline: rgba(241, 233, 218, 0.12);
+    --dw-r-pill: 999px;
+    /* Flytende tab-bar (sol-duel §7 / design-tokens-v2.css) */
+    --dw-tabbar-height: 60px;
+    --dw-tabbar-radius: 28px;
+    --dw-tabbar-inset: 16px;
+    --dw-font-ui: 'Schibsted Grotesk', system-ui, sans-serif;
+    --dw-font-hero: 'Fraunces', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  :focus-visible { outline: 2px solid var(--dw-focus); outline-offset: 3px; border-radius: 4px; }
+  body { background: #0A0705; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
+
+  .stage {
+    width: 390px; height: 844px;
+    background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+    color: var(--dw-ink-hi);
+    font-family: var(--dw-font-ui);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .top { padding: 42px 24px 0; }
+  h1 { font-size: 26px; font-weight: 750; letter-spacing: -0.015em; }
+
+  /* Fademaske ~8 % av flatens høyde (dybdedoktrinen pkt. 4) — prosent, ikke
+     fast px. Bunn-padding = tabbar-klaring (60 + 16 + 14) slik at innhold
+     scroller BAK, aldri permanent under, den flytende baren. */
+  .scroll { flex: 1; overflow-y: auto; mask-image: linear-gradient(to bottom, black 92%, transparent 100%); padding: 2px 20px 90px; }
+
+  .sec-label { font-size: 12px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--dw-ink-low); margin: 14px 4px 8px; }
+
+  /* ============================================================
+     TIER 1 — HERO: familien. Størst, varmest, sterkeste tillatte
+     lyskant (12–20 %, doktrinens øvre grense — reservert hero/valgt/
+     interaktiv). Amber-varme blandes svakt inn i toppen av flaten;
+     ellers nøytral. Én flate, tre seksjoner adskilt med hairline.
+     ============================================================ */
+  .fam-hero {
+    position: relative;
+    margin: 8px 0 0;
+    background: linear-gradient(165deg, var(--dw-accent-surface) 0%, var(--dw-raised) 58%);
+    border-radius: 24px;
+    box-shadow: 0 2px 0 rgba(242, 192, 138, 0.2) inset, 0 20px 44px -20px rgba(52, 30, 12, 0.75);
+  }
+  .fam-hero::before {
+    content: ""; position: absolute; top: 0; left: 6%; right: 6%; height: 1.5px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.2;
+  }
+  /* 0.2 = øvre grense for hero/valgt/interaktiv (sol-duel §6). 0.9–1.0 er
+     reservert petrol-panelet, som ikke finnes på denne skjermen. */
+
+  .fam-id { display: flex; align-items: center; gap: 14px; padding: 18px 20px 2px; }
+  .fam-avatar {
+    width: 60px; height: 60px; border-radius: 50%; flex: none;
+    display: grid; place-items: center;
+    background: var(--dw-interactive);
+    border: 1px solid rgba(242, 192, 138, 0.22);
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.28) inset, 0 8px 18px -8px rgba(52, 30, 12, 0.6);
+    font-size: 24px; font-weight: 700; letter-spacing: -0.01em;
+  }
+  .fam-id-text { min-width: 0; }
+  .fam-name { font-size: 26px; font-weight: 750; letter-spacing: -0.015em; display: block; }
+  .fam-meta { font-size: 14px; color: var(--dw-ink-mid); margin-top: 3px; display: block; }
+
+  .fam-actions { display: flex; gap: 8px; padding: 12px 20px 12px; }
+  /* Alle interaktive mål i heroen ≥ 44px (DESIGN.md, ingen unntak) —
+     høyden tas av min-height + vertikal sentrering, ikke ekstra padding,
+     så kortet ikke klumper seg. */
+  .fam-pill {
+    display: flex; align-items: center; gap: 6px;
+    border-radius: var(--dw-r-pill); font-family: inherit;
+    font-size: 13.5px; font-weight: 650; color: var(--dw-ink-mid);
+    background: rgba(241, 233, 218, 0.09);
+    border: 1px solid rgba(241, 233, 218, 0.14);
+    padding: 0 16px; min-height: 44px; cursor: pointer;
+  }
+  .fam-pill svg { width: 14px; height: 14px; }
+  .fam-pill:active { background: rgba(241, 233, 218, 0.14); }
+  /* Felles «utvid familien»-grammatikk (Legg til barn / Inviter / Legg til
+     sted): amber DASHED kant i accent-300 sin dokumenterte kant-rolle
+     (ALDRI som tekst — teksten forblir ink-hi) + svak accent-500-tint. */
+  .fam-pill--add {
+    color: var(--dw-ink-hi);
+    background: rgba(217, 142, 90, 0.12);
+    border: 1px dashed rgba(231, 176, 135, 0.45);
+  }
+
+  .fam-sub { border-top: 1px solid var(--dw-hairline); padding: 12px 20px 14px; display: flex; flex-direction: column; gap: 11px; }
+  .fam-sub-row { display: flex; flex-direction: column; gap: 7px; }
+  .fam-sub-label { font-size: 11.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--dw-ink-low); }
+  .fam-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: flex; align-items: center; gap: 7px;
+    border-radius: var(--dw-r-pill);
+    background: var(--dw-interactive);
+    font-size: 13px; font-weight: 600; color: var(--dw-ink-hi);
+    padding: 0 13px 0 8px; min-height: 44px;
+    border: 0; font-family: inherit;
+  }
+  .chip svg { width: 15px; height: 15px; color: var(--dw-ink-mid); margin-left: 3px; }
+  .chip-avatar {
+    width: 26px; height: 26px; border-radius: 50%; flex: none;
+    display: grid; place-items: center;
+    background: var(--dw-accent-surface);
+    font-size: 11px; font-weight: 700;
+  }
+  /* Samme amber-dashed grammatikk som .fam-pill--add — én visuell stemme
+     for alt som utvider familien. */
+  .chip--add {
+    color: var(--dw-ink-hi);
+    background: rgba(217, 142, 90, 0.12);
+    border: 1px dashed rgba(231, 176, 135, 0.45);
+    padding: 0 14px;
+    cursor: pointer;
+  }
+  .chip--add svg { width: 13px; height: 13px; margin-left: 0; }
+
+  /* ============================================================
+     TIER 2 — MELLOMNIVÅ: verktøy. Standard gruppeflate, som i dag.
+     ============================================================ */
+  .group {
+    position: relative;
+    background: var(--dw-raised);
+    border-radius: 20px;
+    padding: 2px 14px;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 10px 24px -16px rgba(52, 30, 12, 0.6);
+  }
+  /* Ingen ::before-lyskant her: sol-duel §6 reserverer monter-lyset til
+     hero/valgt/viktige interaktive flater. Tier 2 er en vanlig innholds-
+     flate og bærer kun ordinær lyslogikk (inset top-light + varm skygge). */
+
+  .row {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; border: 0; background: none; font-family: inherit; color: inherit;
+    text-align: left; cursor: pointer;
+    padding: 12px 2px; min-height: 62px;
+  }
+  .row + .row { border-top: 1px solid var(--dw-hairline); }
+  .row:active { background: rgba(241, 233, 218, 0.04); }
+  .r-icon { width: 40px; height: 40px; border-radius: 12px; flex: none; display: grid; place-items: center; background: rgba(241, 233, 218, 0.07); }
+  .r-icon svg { width: 20px; height: 20px; color: var(--dw-ink-mid); }
+  .r-text { flex: 1; min-width: 0; }
+  .r-name { font-size: 15.5px; font-weight: 650; display: block; }
+  .r-sub { font-size: 12.5px; color: var(--dw-ink-low); display: block; margin-top: 1px; }
+  .chev { width: 15px; height: 15px; color: var(--dw-ink-low); flex: none; }
+
+  /* ============================================================
+     TIER 3 — MINIMAL: innstillinger og abonnement. Ingen seksjons-
+     etikett, ingen ikonboks, ingen lyskant (utenfor hero/valgt/
+     interaktiv), kun en svak tint som skiller den fra bar canvas.
+     Samler konto/varsler/værkilde/abonnement/juridisk bak ÉN inngang.
+     ============================================================ */
+  .fam-settings { margin-top: 12px; }
+  .settings-row {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; border: 0; font-family: inherit; color: inherit;
+    text-align: left; cursor: pointer;
+    background: rgba(241, 233, 218, 0.05);
+    border-radius: 16px;
+    padding: 13px 14px; min-height: 56px;
+  }
+  .settings-row:active { background: rgba(241, 233, 218, 0.08); }
+  .settings-row svg.gear { width: 18px; height: 18px; color: var(--dw-ink-low); flex: none; }
+  .settings-text { flex: 1; min-width: 0; }
+  .settings-title { font-size: 14.5px; font-weight: 650; color: var(--dw-ink-mid); display: block; }
+  .settings-sub { font-size: 11.5px; color: var(--dw-ink-low); display: block; margin-top: 1px; }
+
+  .version { text-align: center; font-size: 11.5px; color: var(--dw-ink-low); opacity: 0.7; padding: 8px 0 0; font-variant-numeric: tabular-nums; }
+
+  /* Flytende tab-bar (sol-duel §7, ADOPTERT): 16px sideinnrykk, radius 28,
+     backdrop-blur over innholdet som scroller bak, VARMTONET lav skygge
+     (aldri nøytral svart). Viktig interaktiv flate → svak inset top-light. */
+  .tabs {
+    position: absolute; left: var(--dw-tabbar-inset); right: var(--dw-tabbar-inset);
+    bottom: 28px; height: var(--dw-tabbar-height); z-index: 5;
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 0 8px;
+    border-radius: var(--dw-tabbar-radius);
+    background: color-mix(in srgb, var(--dw-raised) 78%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(1.1);
+    backdrop-filter: blur(18px) saturate(1.1);
+    border: 1px solid rgba(241, 233, 218, 0.08);
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.1) inset, 0 18px 34px -18px rgba(52, 30, 12, 0.75);
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .tabs { background: color-mix(in srgb, var(--dw-raised) 98%, transparent); }
+  }
+  .tab { text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--dw-ink-low); min-width: 74px; min-height: 44px; padding: 2px 0; }
+  .tab.on { color: var(--dw-ink-hi); }
+  .tab svg { width: 22px; height: 22px; }
+  .tab span { font-size: 12px; font-weight: 600; }
+  .homebar { position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%); z-index: 6; width: 128px; height: 5px; border-radius: 3px; background: rgba(241, 233, 218, 0.28); }
+</style>
+</head>
+<body>
+  <!--
+    Familie-fanens IA-redesign (runde 1-funn: "fanen heter Familie men
+    lander på Innstillinger"). Ny struktur, tre klart adskilte tempi:
+      TOPP  — hero: familien selv (barn, omsorgspersoner, steder)
+      MIDT  — mellomnivå: verktøy (uendret gruppeflate-stil)
+      BUNN  — minimal: én diskret inngang til innstillinger/abonnement
+    Fortsatt dybdedoktrinen (docs/DESIGN.md + sol-duel-2026-07-31.md §9):
+    ingen ytterbokser rundt enkeltelementer, ingen naken hairline-liste
+    rett på canvas, lyskant kun hero/valgt/interaktiv 12–20 %.
+    Runde 2-fikser (dommerrapport 2026-08-01):
+      - Tier 2-lyskanten (.group::before, 0.45) FJERNET — §6 reserverer
+        monter-lyset til hero/valgt/interaktiv; hero står igjen på 0.2.
+      - Alle interaktive mål i heroen hevet til min 44px (.fam-pill, .chip).
+      - Flytende tab-bar per §7 implementert (16px innrykk, radius 28,
+        backdrop-blur, varmtonet skygge) — dette ER ment som referanse nå.
+      - Scroll-fademaske i prosent (~8 %), ikke fast 24px.
+      - Ensrettet «legg til»-grammatikk: Legg til barn / Inviter / Legg til
+        sted deler amber-dashed kant (accent-300 i kant-rollen) + ink-hi-tekst.
+      - Nøytrale svarte dropskygger varmtonet (rgba(52,30,12,…)).
+  -->
+  <div class="stage">
+    <div class="top"><h1>Familie</h1></div>
+
+    <div class="scroll">
+
+      <!-- TIER 1 — hero: familien -->
+      <section class="fam-hero" aria-label="Lillian">
+        <div class="fam-id">
+          <span class="fam-avatar" aria-hidden="true">L</span>
+          <div class="fam-id-text">
+            <span class="fam-name">Lillian</span>
+            <span class="fam-meta">9 måneder · født 3. oktober 2025</span>
+          </div>
+        </div>
+
+        <div class="fam-actions">
+          <button class="fam-pill" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/></svg>
+            Bytt barn
+          </button>
+          <button class="fam-pill fam-pill--add" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Legg til barn
+          </button>
+        </div>
+
+        <div class="fam-sub">
+          <div class="fam-sub-row">
+            <span class="fam-sub-label">Omsorgspersoner</span>
+            <div class="fam-chips">
+              <span class="chip"><span class="chip-avatar" aria-hidden="true">D</span>Deg · Eier</span>
+              <button class="chip chip--add" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                Inviter
+              </button>
+            </div>
+          </div>
+          <div class="fam-sub-row">
+            <span class="fam-sub-label">Steder</span>
+            <div class="fam-chips">
+              <button class="chip" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+                Trondheim · Fast sted
+              </button>
+              <button class="chip chip--add" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                Legg til sted
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TIER 2 — mellomnivå: verktøy (som i dag) -->
+      <p class="sec-label">Verktøy</p>
+      <div class="group">
+        <button class="row" type="button">
+          <span class="r-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16a7.5 7.5 0 0 1 15 0"/><path d="M12 16l3.2-3.6"/><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"/></svg></span>
+          <span class="r-text">
+            <span class="r-name">TOG-kalkulator</span>
+            <span class="r-sub">Riktig sovepose for romtemperaturen</span>
+          </span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button class="row" type="button">
+          <span class="r-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 5v9.5a3.5 3.5 0 1 1-4-3.45V5a2 2 0 0 1 4 0z"/></svg></span>
+          <span class="r-text">
+            <span class="r-name">Varm eller kald?</span>
+            <span class="r-sub">2-finger-testen i nakken</span>
+          </span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button class="row" type="button">
+          <span class="r-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4 6l16 12M20 6 4 18M12 6l-2.5-1.5M12 6l2.5-1.5M12 18l-2.5 1.5M12 18l2.5 1.5"/></svg></span>
+          <span class="r-text">
+            <span class="r-name">Første vinter med baby</span>
+            <span class="r-sub">Åtte korte leksjoner</span>
+          </span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <!-- TIER 3 — minimal: innstillinger og abonnement -->
+      <div class="fam-settings">
+        <button class="settings-row" type="button">
+          <svg class="gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20v-6M4 10V4M12 20v-9M12 7V4M20 20v-4M20 12V4"/><circle cx="4" cy="12" r="2"/><circle cx="12" cy="9" r="2"/><circle cx="20" cy="14" r="2"/></svg>
+          <span class="settings-text">
+            <span class="settings-title">Innstillinger og abonnement</span>
+            <span class="settings-sub">Konto, varsler, værkilde, abonnement, juridisk</span>
+          </span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <p class="version">Babyora 1.0 · bygg 2107</p>
+    </div>
+
+    <nav class="tabs" aria-label="Hovednavigasjon">
+      <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Hjem</span></a>
+      <a class="tab" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg><span>Planlegg</span></a>
+      <a class="tab on" href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 20c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="10" r="2.4"/><path d="M15.5 20c.4-2.2 1.6-3.6 3.3-3.9 1 .2 1.9.9 2.7 1.9"/></svg><span>Familie</span></a>
+    </nav>
+    <div class="homebar"></div>
+  </div>
+</body>
+</html>

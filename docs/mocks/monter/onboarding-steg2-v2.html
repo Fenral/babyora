@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8" />
+<title>Babyora — Onboarding steg 2 v2 (fødselsdato)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,550&display=swap" rel="stylesheet" />
+<style>
+  /* Tokens hentet 1:1 fra src/styles/design-tokens-v2.css (kanonisk fil,
+     §13-kalibreringen 2026-07-31). canvas-glow er den KALIBRERTE #24180F —
+     gamle #2B1D11 lå 0,7 L-poeng fra raised og fikk kortet til å lese flatt. */
+  :root {
+    --dw-canvas: #1E140C;
+    --dw-canvas-glow: #24180F;
+    --dw-panel: #113B3E;
+    --dw-raised: #2C1F13;
+    --dw-interactive: #35261A;   /* nivå 2b · interaktiv flate (trigger-raden) */
+    --dw-ink-hi: #F1E9DA;
+    --dw-ink-mid: #CDC0AB;
+    --dw-ink-low: #A79A82;
+    --dw-accent: #D98E5A;        /* accent-500 · brukerhandling */
+    --dw-accent-pressed: #C57C46;
+    --dw-ink-on-accent: #2A1708;
+    --dw-edge-light: #F2C08A;
+    --dw-focus: #E8B98C;
+    --dw-hairline: rgba(241, 233, 218, 0.12);
+    --dw-r-pill: 999px;
+    --dw-r-raised: 14px;         /* kanonisk (var lokalt 16px — tokendrift) */
+    --dw-r-control: 12px;
+    --dw-font-ui: 'Schibsted Grotesk', system-ui, sans-serif;
+    --dw-font-hero: 'Fraunces', Georgia, serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  :focus-visible { outline: 2px solid var(--dw-focus); outline-offset: 3px; border-radius: 4px; }
+  body { background: #0A0705; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
+
+  .stage {
+    width: 390px; height: 844px;
+    background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+    color: var(--dw-ink-hi);
+    font-family: var(--dw-font-ui);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .top { padding: 48px 20px 0; display: flex; align-items: center; justify-content: space-between; }
+
+  /* Synlig tilbakekontroll (manglet i forrige runde): 44x44 sirkulær,
+     hevet interaktiv flate med lyslogikk (inset topplys + VARM tonet
+     skygge). Ingen lyskant — den er reservert hero/valgt/viktigste
+     interaktive flate, og det er trigger-raden på denne skjermen. */
+  .back {
+    width: 44px; height: 44px; flex: 0 0 44px;
+    border: 0; border-radius: var(--dw-r-pill);
+    background: var(--dw-interactive); color: var(--dw-ink-hi);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.08) inset, 0 6px 14px -8px rgba(52, 30, 12, 0.55);
+  }
+  .back svg { width: 18px; height: 18px; }
+  .top-spacer { width: 44px; flex: 0 0 44px; }
+
+  /* Segmentbar (vedtak sol-duel §13 + review-runde 3): KUN aktivt segment i
+     full amber; fullførte segmenter i DEMPET amber; fremtidige i nøytral
+     espresso-valør (ingen amber-inflasjon). */
+  .progress { display: flex; gap: 6px; margin: 14px 24px 0; }
+  .progress i { height: 4px; border-radius: 2px; flex: 1; background: var(--dw-interactive); }
+  .progress i.done { background: rgba(217, 142, 90, 0.42); }
+  .progress i.active { background: var(--dw-accent); }
+
+  /* Stående maskot — samme plassering/beskjæring som steg 1 (DESIGN.md:
+     stående/sittende er godkjent i onboarding). */
+  .mascot {
+    position: absolute; top: 92px; right: 30px;
+    height: 178px; width: auto; z-index: 3; pointer-events: none;
+    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.45));
+  }
+
+  .card {
+    position: relative;
+    margin: 172px 20px 0;
+    background: var(--dw-raised);
+    border-radius: 20px;
+    padding: 24px 22px;
+    z-index: 2;
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 34px -18px rgba(52, 30, 12, 0.6);
+  }
+  .card::before {
+    content: ""; position: absolute; top: 0; left: 7%; right: 7%; height: 1px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.18; /* duell §6: hero-kortet, 12–20 % */
+  }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.012em; }
+
+  /* ===== Nativ-trigger-mønsteret (vedtatt i ekstern review-runde 3,
+     ERSTATTER det egenbygde 3-kolonners datohjulet — DESIGN.md: «Use
+     familiar native controls». Trykk på raden åpner systemets egen
+     date-picker; denne mocken viser satt tilstand.) ===== */
+  .trigger {
+    position: relative;
+    width: 100%; min-height: 56px;
+    margin-top: 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 11px 16px;
+    background: var(--dw-interactive);
+    border: 0; border-radius: var(--dw-r-raised);
+    font-family: inherit; text-align: left;
+    color: var(--dw-ink-hi);
+    cursor: pointer;
+    /* Lyslogikk for hevet interaktiv flate: inset topplys + TONET varm
+       skygge (espresso-brun, aldri nøytral svart — dybdedoktrinen). */
+    box-shadow: 0 1px 0 rgba(242, 192, 138, 0.10) inset, 0 10px 22px -14px rgba(52, 30, 12, 0.55);
+  }
+  .trigger::before {
+    content: ""; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
+    opacity: 0.14; /* skjermens viktigste interaktive flate — innenfor 12–20 % */
+  }
+  .trigger:active { background: #3B2B1D; transform: translateY(1px); }
+  .t-label {
+    display: block;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.01em;
+    color: var(--dw-ink-low);
+  }
+  .t-value {
+    display: block; margin-top: 2px;
+    font-size: 19px; font-weight: 700;
+    font-variant-numeric: lining-nums; /* IKKE tabular-nums — menneskelig formatert dato, ikke datakolonne */
+    color: var(--dw-ink-hi);
+  }
+  .t-icons { display: flex; align-items: center; gap: 10px; color: var(--dw-ink-low); flex: 0 0 auto; }
+  .t-icons svg { display: block; }
+
+  /* Avledet tolkning — annen visuell rolle enn input: ingen flate, dempet
+     amber-hake (glyf, ikke tekst — accent-300 er uansett forbudt som
+     tekstfarge) + kremtekst. Viser resonneringen, jf. steg 1s preview. */
+  .confirm {
+    display: flex; align-items: center; gap: 9px;
+    margin-top: 18px;
+    font-size: 16px; font-weight: 600; color: var(--dw-ink-hi);
+  }
+  .confirm svg { width: 16px; height: 16px; flex: 0 0 16px; stroke: rgba(217, 142, 90, 0.75); }
+
+  .hint { font-size: 16px; color: var(--dw-ink-mid); margin-top: 8px; line-height: 1.5; }
+
+  .actions { padding: 20px 24px 0; margin-top: auto; }
+  .cta {
+    border: 0; border-radius: 14px; width: 100%;
+    background: var(--dw-accent); color: var(--dw-ink-on-accent);
+    font-family: inherit; font-size: 16px; font-weight: 700;
+    padding: 17px 22px; min-height: 54px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 10px 22px -12px rgba(52, 30, 12, 0.55);
+  }
+  /* Inaktiv variant (referanse — ikke vist her, se «vis satt tilstand»):
+     opacity:.45; box-shadow:none; cursor:not-allowed; bakgrunn uendret. */
+  .cta:active { background: var(--dw-accent-pressed); transform: translateY(1px); }
+  .cta svg { width: 18px; height: 18px; }
+  .homebar { width: 128px; height: 5px; border-radius: 3px; background: rgba(241, 233, 218, 0.28); margin: 16px auto 8px; }
+</style>
+</head>
+<body>
+  <!-- Mock-konvensjon: fast 390x844-artboard. Implementeringen MÅ verifiseres
+       responsivt på 320x568 / 390x844 / 430x932 med CTA synlig uten scroll
+       (docs/ONBOARDING-REDESIGN-2026-07-22.md). -->
+  <div class="stage">
+    <div class="top">
+      <button class="back" type="button" aria-label="Tilbake til steg 1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="brand" style="font-size:13px; font-weight:700; letter-spacing:0.24em;">BABYORA</span>
+      <span class="top-spacer" aria-hidden="true"></span>
+    </div>
+    <div class="progress" role="progressbar" aria-valuenow="2" aria-valuemin="1" aria-valuemax="4" aria-label="Steg 2 av 4"><i class="done"></i><i class="active"></i><i></i><i></i></div>
+
+    <img class="mascot" src="maskot-staaende-cut-360.png" alt="" />
+
+    <section class="card" aria-label="Fødselsdato">
+      <h1>Når er Lillian født?</h1>
+
+      <button class="trigger" type="button" aria-label="Fødselsdato, 3. oktober 2025. Trykk for å endre">
+        <span class="t-text">
+          <span class="t-label">Fødselsdato</span>
+          <span class="t-value">3. oktober 2025</span>
+        </span>
+        <span class="t-icons" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+        </span>
+      </button>
+
+      <p class="confirm">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5.2 5.2L20 6.5"/></svg>
+        <span>Lillian er 9 måneder nå</span>
+      </p>
+      <p class="hint">Alderen brukes til å tilpasse lag og størrelser.</p>
+    </section>
+
+    <div class="actions">
+      <button class="cta" type="button">
+        Fortsett
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="homebar"></div>
+  </div>
+</body>
+</html>
