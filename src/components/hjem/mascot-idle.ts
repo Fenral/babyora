@@ -33,23 +33,28 @@
  */
 
 /**
- * Første glimt noensinne (ved mount, eller rett etter at en interaksjon har
- * nullstilt hvile-klokken): 4–5s stillhet — samme vindu som den opprinnelige
- * idle-loop-spesifikasjonen («starter tidligst 4–5s uten interaksjon»,
- * docs/design-notes/aapningssekvens-2026-08-01.md).
+ * Første glimt (ved mount, eller rett etter at en interaksjon har nullstilt
+ * hvile-klokken): 35–55 s REELL inaktivitet. REVIDERT #3 (analysesløyfen
+ * runde 8, 2026-08-01): det opprinnelige 4–5 s-vinduet var for tidlig for en
+ * rolig app — glimtet skal være en sjelden livstegn-detalj, ikke en hilsen.
  */
-export const IDLE_LOOP_MIN_DELAY_MS = 4000;
-export const IDLE_LOOP_MAX_DELAY_MS = 5000;
+export const IDLE_LOOP_MIN_DELAY_MS = 35000;
+export const IDLE_LOOP_MAX_DELAY_MS = 55000;
 
 /**
- * Senere glimt, når maskoten allerede har vært i ro en stund: sjeldnere enn
- * det aller første — maks ett glimt per 20–30s total stillhet, «85–90 %
- * visuell stillhet»-prinsippet fra den opprinnelige duel §4-spesifikasjonen
- * (docs/design-notes/sol-duel-2026-07-31.md §4) videreført til det nye
- * glimt-baserte uttrykket.
+ * Senere glimt: tilfeldig 60–120 s mellom hvert (runde 8-kontrakten,
+ * erstatter det gamle 20–30 s-vinduet). Se også MAX_GLANCES_PER_SESSION.
  */
-export const IDLE_GLANCE_REST_MIN_MS = 20000;
-export const IDLE_GLANCE_REST_MAX_MS = 30000;
+export const IDLE_GLANCE_REST_MIN_MS = 60000;
+export const IDLE_GLANCE_REST_MAX_MS = 120000;
+
+/**
+ * Maks antall glimt per foreground-sesjon (runde 8): etter to glimt er
+ * maskoten stille til appen har vært i bakgrunnen og kommer tilbake
+ * (MascotIdle.tsx nullstiller telleren ved bakgrunn→forgrunn-overgang,
+ * ETTER at RESUME_COOLDOWN_MS har passert).
+ */
+export const MAX_GLANCES_PER_SESSION = 2;
 
 /** Selve glimtets egen koreografi: crossfade inn → hold nysgjerrig → crossfade ut. */
 export const IDLE_GLANCE_FADE_MS = 300;

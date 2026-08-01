@@ -37,11 +37,12 @@
  * planlegger bare et nytt forsøk (`'rest'`-vinduet) i stedet for å gå
  * stille for godt.
  *
- * Et enkelt ~1,8s glimt maks hvert 20–30s er momentan, ikke-repeterende
- * bevegelse godt under WCAG 2.2.2 sin 5s-grense for når en egen pause/
- * stopp-KONTROLL kreves utover Reduce Motion — derfor ingen egen
- * pause-knapp her (kravet gjaldt den opprinnelige, nå retirerte,
- * kontinuerlig LØPENDE videoen).
+ * Et enkelt ~1,8s glimt (første etter 35–55 s ro, deretter 60–120 s mellom
+ * hvert, maks to per foreground-sesjon — runde 8-kontrakten fra
+ * analysesløyfen 2026-08-01) er momentan, ikke-repeterende bevegelse godt
+ * under WCAG 2.2.2 sin 5s-grense for når en egen pause/stopp-KONTROLL
+ * kreves utover Reduce Motion — derfor ingen egen pause-knapp her (kravet
+ * gjaldt den opprinnelige, nå retirerte, kontinuerlig LØPENDE videoen).
  */
 import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 import { MascotPeek } from './MascotPeek.js';
@@ -50,6 +51,7 @@ import {
   idleGlanceEligible,
   IDLE_GLANCE_FADE_MS,
   IDLE_GLANCE_HOLD_MS,
+  MAX_GLANCES_PER_SESSION,
   RESUME_COOLDOWN_MS,
   type IdleGlanceWindow,
 } from './mascot-idle.js';
@@ -87,6 +89,11 @@ export function MascotIdle({ reducedMotion }: MascotIdleProps): ReactElement {
   // Epoch ms — Date.now() < denne betyr "innenfor kjøletiden etter resume".
   // 0 (initialverdien) er alltid i fortiden, altså "ingen aktiv kjøletid".
   const resumeCooldownUntilRef = useRef(0);
+  // Runde 8 (analysesløyfen): maks MAX_GLANCES_PER_SESSION glimt per
+  // foreground-sesjon — deretter stillhet til bakgrunn→forgrunn-overgangen
+  // nullstiller telleren (handleVisibility under). Interaksjoner nullstiller
+  // hvile-KLOKKEN, men ikke sesjonstelleren.
+  const glanceCountRef = useRef(0);
 
   const clearAllTimers = useCallback(() => {
     if (glanceTimerRef.current !== null) { window.clearTimeout(glanceTimerRef.current); glanceTimerRef.current = null; }
@@ -118,6 +125,11 @@ export function MascotIdle({ reducedMotion }: MascotIdleProps): ReactElement {
     clearAllTimers();
     const delay = idleGlanceDelayMs(window_, Math.random);
     glanceTimerRef.current = window.setTimeout(() => {
+      if (glanceCountRef.current >= MAX_GLANCES_PER_SESSION) {
+        // Sesjonsbudsjettet er brukt opp (runde 8) — gå stille uten å
+        // planlegge mer; kun en ny foreground-sesjon nullstiller.
+        return;
+      }
       if (!currentlyEligible()) {
         // Vakt feilet akkurat idet timeren fyrte (dialog/tastatur/skjult
         // fane/kjøletid) — glimt ALDRI likevel, planlegg bare et nytt
@@ -125,6 +137,7 @@ export function MascotIdle({ reducedMotion }: MascotIdleProps): ReactElement {
         scheduleGlanceRef.current('rest');
         return;
       }
+      glanceCountRef.current += 1;
       setGlancing(true);
       holdTimerRef.current = window.setTimeout(() => {
         setGlancing(false);
@@ -184,6 +197,8 @@ export function MascotIdle({ reducedMotion }: MascotIdleProps): ReactElement {
         clearAllTimers();
       } else {
         resumeCooldownUntilRef.current = Date.now() + RESUME_COOLDOWN_MS;
+        // Ny foreground-sesjon: nullstill glimt-budsjettet (runde 8).
+        glanceCountRef.current = 0;
         scheduleGlance('first');
       }
     };

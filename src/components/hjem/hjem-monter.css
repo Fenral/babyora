@@ -300,7 +300,11 @@
    seg") — KUN i scanning/recalculating sin KOMPAKTE kontekst, der curious-
    posen faktisk har noe å se ned på. */
 .hjm-mascot-curious[data-compact='true'][data-pose='curious'] {
-  transform-origin: 50% 88%; /* nær hendene/fingertupp-linjen nederst i bildet */
+  /* Runde 8 (analysesløyfen): lean roterer rundt GRIPELINJEN, ikke
+     bildesenteret — alfa-målt: hendene/grepet bunner på y403 av 512-lerretet
+     (79 %), innholdssenter x268 (52 %). 88 % lå under hendene i transparent
+     luft og brøt den maskinbeviste kontakten med panelkanten. */
+  transform-origin: 52% 79%;
   transform: rotate(3deg) translateY(4px);
 }
 

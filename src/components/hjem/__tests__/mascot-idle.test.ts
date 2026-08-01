@@ -17,6 +17,7 @@ import {
   IDLE_GLANCE_TOTAL_MS,
   IDLE_LOOP_MAX_DELAY_MS,
   IDLE_LOOP_MIN_DELAY_MS,
+  MAX_GLANCES_PER_SESSION,
   RESUME_COOLDOWN_MS,
 } from '../mascot-idle.js';
 
@@ -30,15 +31,19 @@ const ELIGIBLE = Object.freeze({
 });
 
 describe('timing constants', () => {
-  it('first-glance window matches the original idle-loop spec (4-5s)', () => {
-    expect(IDLE_LOOP_MIN_DELAY_MS).toBe(4000);
-    expect(IDLE_LOOP_MAX_DELAY_MS).toBe(5000);
+  it('first-glance window is 35-55s of real inactivity (analysesløyfen runde 8 — the original 4-5s was too eager)', () => {
+    expect(IDLE_LOOP_MIN_DELAY_MS).toBe(35000);
+    expect(IDLE_LOOP_MAX_DELAY_MS).toBe(55000);
   });
 
-  it('rest window (subsequent glances) is 20-30s — sparser than the first', () => {
-    expect(IDLE_GLANCE_REST_MIN_MS).toBe(20000);
-    expect(IDLE_GLANCE_REST_MAX_MS).toBe(30000);
+  it('rest window (subsequent glances) is 60-120s — sparser than the first', () => {
+    expect(IDLE_GLANCE_REST_MIN_MS).toBe(60000);
+    expect(IDLE_GLANCE_REST_MAX_MS).toBe(120000);
     expect(IDLE_GLANCE_REST_MIN_MS).toBeGreaterThan(IDLE_LOOP_MAX_DELAY_MS);
+  });
+
+  it('at most two glances per foreground session (runde 8)', () => {
+    expect(MAX_GLANCES_PER_SESSION).toBe(2);
   });
 
   it('a single glance totals fade-in + hold + fade-out', () => {
@@ -58,13 +63,13 @@ describe('timing constants', () => {
 describe('idleGlanceDelayMs', () => {
   it('"first" window: random()=0 returns the minimum, random() near 1 approaches the maximum', () => {
     expect(idleGlanceDelayMs('first', () => 0)).toBe(IDLE_LOOP_MIN_DELAY_MS);
-    expect(idleGlanceDelayMs('first', () => 0.5)).toBe(4500);
+    expect(idleGlanceDelayMs('first', () => 0.5)).toBe(45000);
     expect(idleGlanceDelayMs('first', () => 1)).toBe(IDLE_LOOP_MAX_DELAY_MS);
   });
 
   it('"rest" window: random()=0 returns the minimum, random()=1 the maximum', () => {
     expect(idleGlanceDelayMs('rest', () => 0)).toBe(IDLE_GLANCE_REST_MIN_MS);
-    expect(idleGlanceDelayMs('rest', () => 0.5)).toBe(25000);
+    expect(idleGlanceDelayMs('rest', () => 0.5)).toBe(90000);
     expect(idleGlanceDelayMs('rest', () => 1)).toBe(IDLE_GLANCE_REST_MAX_MS);
   });
 

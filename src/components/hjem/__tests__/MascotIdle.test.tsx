@@ -78,6 +78,13 @@ describe('MascotIdle — timing/eligibility wiring (source-text contract)', () =
     expect(contents).toContain("scheduleGlanceRef.current('rest');");
   });
 
+  it('enforces the max-two-glances-per-foreground-session budget (runde 8): counted at fire, quiet when spent, reset only on tab-return', () => {
+    const contents = source();
+    expect(contents).toContain('glanceCountRef.current >= MAX_GLANCES_PER_SESSION');
+    expect(contents).toContain('glanceCountRef.current += 1;');
+    expect(contents).toContain('glanceCountRef.current = 0;');
+  });
+
   it('schedules the very first glance attempt with the "first" window, and re-arms with "first" after any interaction or tab-return', () => {
     const contents = source();
     expect(contents).toContain("scheduleGlance('first')");
