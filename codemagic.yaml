@@ -23,12 +23,11 @@ workflows:
       # revoked/expired (build #20 + #21 feilet). Auto-generering via ASC API
       # eliminerer manuelt cert-vedlikehold — samme pattern som StrikeArc/Swinglab.
       groups:
-        # klemeg_revenuecat holder også CERT_PRIVATE_KEY (stabil signering-
-        # nøkkel, lagt til via API 2026-08-01). IKKE legg til en egen app-
-        # nivå-gruppe på babyora-appen: appens egne grupper SKYGGER for de
-        # konto-delte gruppene, og da slutter klemeg_revenuecat å resolve
-        # (bevist av build 6a6e5762, «unknown variable group»).
-        - klemeg_revenuecat   # VITE_REVENUECAT_PUBLIC_KEY_IOS/_ANDROID + CERT_PRIVATE_KEY
+        # klemeg_revenuecat er en TEAM-nivå-gruppe (VITE_REVENUECAT-nøklene).
+        # IKKE legg til egne app-nivå-grupper på babyora-appen: appens egne
+        # grupper SKYGGER for team-gruppene, og da slutter klemeg_revenuecat
+        # å resolve (bevist av bygg 6a6e5762, «unknown variable group»).
+        - klemeg_revenuecat   # VITE_REVENUECAT_PUBLIC_KEY_IOS, VITE_REVENUECAT_PUBLIC_KEY_ANDROID
       vars:
         XCODE_PROJECT: 'ios/App/App.xcodeproj'
         XCODE_SCHEME: 'App'
@@ -94,23 +93,27 @@ workflows:
           # Uten dette feiler codesign med errSecInternalComponent
           # senere i Build IPA (build #22 demonstrert).
           keychain initialize
-      - name: Write certificate private key
+      - name: Generate certificate private key
         script: |
           set -ex
-          # 2026-08-01: STABIL nøkkel fra secret (gruppe appstore_credentials).
-          # Den gamle per-build `openssl genrsa` lagde et NYTT distribusjons-
-          # sertifikat på hvert bygg — Apple har tak på 2, så bygg #3 fikk
-          # 409 "You already have a current Distribution certificate".
-          echo "$CERT_PRIVATE_KEY" > /tmp/cert_private_key.pem
+          # fetch-signing-files --create trenger en privatnøkkel via
+          # --certificate-key. Genereres per bygg. (En stabil nøkkel via
+          # variabelgruppe ble forsøkt 2026-08-01, men klemeg_revenuecat er
+          # en TEAM-nivå-gruppe som API-et ikke kan skrive til, og egne
+          # app-nivå-grupper SKYGGER for team-gruppene — se bygg 6a6e5762.)
+          openssl genrsa -out /tmp/cert_private_key.pem 2048
       - name: Fetch signing files (create cert + profile if missing)
         script: |
           set -ex
-          # ASC API auto-genererer cert + provisioning profile hvis ikke
-          # finnes, og laster ned begge til builderen. Bypasser revoked cert.
-          # Selvhelbredende: første kjøring med den stabile nøkkelen kan møte
-          # sertifikat-taket (2 foreldreløse CI-certs fra genrsa-æraen) —
-          # da slettes det eldste og forsøket gjentas én gang. Etter første
-          # grønne bygg matcher nøkkelen sitt cert permanent og grenen er død.
+          # ASC API auto-genererer cert + provisioning profile og laster
+          # begge ned til builderen. Fersk nøkkel per bygg betyr at det
+          # opprettes et NYTT distribusjonssertifikat hver gang — Apple har
+          # tak på 2, så ved 409 slettes det eldste foreldreløse CI-certet
+          # (alle distribusjonscerts i kontoen er CI-genererte engangs-
+          # nøkler) og forsøket gjentas. Sertifikatpoolen roterer dermed
+          # selvhelbredende på taket. NB: certs er type DISTRIBUTION
+          # (Apples universelle), IKKE IOS_DISTRIBUTION — feil filter gir
+          # tom liste (bevist av bygg 6a6e589d).
           fetch() {
             app-store-connect fetch-signing-files "$BUNDLE_ID" \
               --certificate-key=@file:/tmp/cert_private_key.pem \
@@ -120,10 +123,12 @@ workflows:
           }
           if ! fetch; then
             OLDEST=$(app-store-connect certificates list \
-              --type IOS_DISTRIBUTION --json \
-              | python3 -c 'import sys,json;c=json.load(sys.stdin);c.sort(key=lambda x:x["attributes"]["expirationDate"]);print(c[0]["id"])')
-            echo "Sert-tak nådd — sletter eldste foreldreløse cert: $OLDEST"
-            app-store-connect certificates delete "$OLDEST"
+              --type DISTRIBUTION --json \
+              | python3 -c 'import sys,json;c=json.load(sys.stdin);c.sort(key=lambda x:x["attributes"]["expirationDate"]);print(c[0]["id"] if c else "")')
+            if [ -n "$OLDEST" ]; then
+              echo "Sert-tak nådd — sletter eldste foreldreløse cert: $OLDEST"
+              app-store-connect certificates delete "$OLDEST"
+            fi
             fetch
           fi
       - name: Add certificates to keychain
