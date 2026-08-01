@@ -165,6 +165,36 @@ Det genererer alle størrelser for iOS + Android.
 - [ ] Sandbox-bruker testet kjøp på iOS
 - [ ] Lisens-tekst i app: "Vær fra met.no" (synlig i Settings → Om appen)
 
+## 10. iOS code signing i Codemagic (engangsoppsett)
+
+TestFlight-bygg signeres med ÉT gjenbrukbart Apple Distribution-sertifikat.
+Codemagic henter det via App Store Connect-API-et ved hjelp av privatnøkkelen
+som hører til sertifikatet.
+
+**Hvorfor dette oppsettet:** en tidligere variant genererte en fersk RSA-nøkkel
+i hvert bygg. Ingen eksisterende sertifikat matcher en fersk nøkkel, så hvert
+bygg ba Apple om et *nytt* Distribution-sertifikat. Apple tillater bare noen få
+aktive om gangen og svarer til slutt med HTTP 409 ("already an active or pending
+certificate request"), som blokkerer alle iOS-bygg.
+
+**Engangsoppsett (gjøres i Codemagic UI — ikke i Git):**
+
+1. Skaff PEM-privatnøkkelen til det Apple Distribution-sertifikatet Babyora skal
+   bruke. Enten
+   - eksporter det eksisterende sertifikatet som `.p12` fra nøkkelringen på Mac
+     og hent ut nøkkelen, eller
+   - revoker ett tydelig ubrukt sertifikat i Apple Developer → Certificates,
+     opprett ett nytt, og ta vare på nøkkelen.
+2. Opprett env-gruppen `klemeg_ios_signing` i Codemagic → Environment variables.
+3. Legg inn `CERTIFICATE_PRIVATE_KEY` med PEM-innholdet, merket **secure**.
+
+Nøkkelen skal aldri committes. Bygget feiler med en tydelig melding hvis
+variabelen mangler, i stedet for å lage enda et sertifikat.
+
+**Ved nytt 409:** steget «List existing distribution certificates» i bygget
+skriver ut aktive sertifikater (kun offentlig metadata). Bruk den listen til å
+se hvilke som kan gjenbrukes eller revokeres.
+
 ## Kontaktinfo
 
 - **Teknisk:** Sivert Skotvold-Sende
