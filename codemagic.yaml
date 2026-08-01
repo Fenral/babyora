@@ -24,6 +24,7 @@ workflows:
       # eliminerer manuelt cert-vedlikehold — samme pattern som StrikeArc/Swinglab.
       groups:
         - klemeg_revenuecat   # VITE_REVENUECAT_PUBLIC_KEY_IOS, VITE_REVENUECAT_PUBLIC_KEY_ANDROID
+        - appstore_credentials # CERT_PRIVATE_KEY (stabil signering-nøkkel, satt via API 2026-08-01)
       vars:
         XCODE_PROJECT: 'ios/App/App.xcodeproj'
         XCODE_SCHEME: 'App'
@@ -89,22 +90,38 @@ workflows:
           # Uten dette feiler codesign med errSecInternalComponent
           # senere i Build IPA (build #22 demonstrert).
           keychain initialize
-      - name: Generate certificate private key
+      - name: Write certificate private key
         script: |
           set -ex
-          # fetch-signing-files --create trenger en privatnøkkel via
-          # --certificate-key. Genererer en fersk RSA-2048-nøkkel her.
-          openssl genrsa -out /tmp/cert_private_key.pem 2048
+          # 2026-08-01: STABIL nøkkel fra secret (gruppe appstore_credentials).
+          # Den gamle per-build `openssl genrsa` lagde et NYTT distribusjons-
+          # sertifikat på hvert bygg — Apple har tak på 2, så bygg #3 fikk
+          # 409 "You already have a current Distribution certificate".
+          echo "$CERT_PRIVATE_KEY" > /tmp/cert_private_key.pem
       - name: Fetch signing files (create cert + profile if missing)
         script: |
           set -ex
           # ASC API auto-genererer cert + provisioning profile hvis ikke
           # finnes, og laster ned begge til builderen. Bypasser revoked cert.
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --certificate-key=@file:/tmp/cert_private_key.pem \
-            --type IOS_APP_STORE \
-            --create \
-            --verbose
+          # Selvhelbredende: første kjøring med den stabile nøkkelen kan møte
+          # sertifikat-taket (2 foreldreløse CI-certs fra genrsa-æraen) —
+          # da slettes det eldste og forsøket gjentas én gang. Etter første
+          # grønne bygg matcher nøkkelen sitt cert permanent og grenen er død.
+          fetch() {
+            app-store-connect fetch-signing-files "$BUNDLE_ID" \
+              --certificate-key=@file:/tmp/cert_private_key.pem \
+              --type IOS_APP_STORE \
+              --create \
+              --verbose
+          }
+          if ! fetch; then
+            OLDEST=$(app-store-connect certificates list \
+              --type IOS_DISTRIBUTION --json \
+              | python3 -c 'import sys,json;c=json.load(sys.stdin);c.sort(key=lambda x:x["attributes"]["expirationDate"]);print(c[0]["id"])')
+            echo "Sert-tak nådd — sletter eldste foreldreløse cert: $OLDEST"
+            app-store-connect certificates delete "$OLDEST"
+            fetch
+          fi
       - name: Add certificates to keychain
         script: |
           keychain add-certificates
