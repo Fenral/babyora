@@ -263,7 +263,9 @@
 }
 .hjm-stale-badge svg { width: 13px; height: 13px; }
 
-/* ============ Mascot ============ */
+/* ============ Mascot (MascotPeek: normal/curious crossfade, MascotIdle: glance overlay — v3-pakken) ============
+   Eier-override v3 (2026-08-01): åpningsklatringen (OpeningSequence) og
+   dens egne body/hands-lag er FJERNET — Hjem er statisk til CTA-trykk. */
 
 .hjm-mascot {
   position: absolute;
@@ -279,102 +281,58 @@
 @media (max-height: 700px) {
   .hjm-mascot { width: 164px; top: -122px; }
 }
-/* P10/JOB1: visually hidden (not unmounted) while OpeningSequence's own
-   body/hands layers stand in for it — see MascotPeek.tsx's own doc. */
-.hjm-mascot[data-opening-hidden='true'] { visibility: hidden; }
 
-/* ============ Åpningssekvens (OpeningSequence, P10/JOB1, P10.1-revidert) ============
-   docs/design-notes/aapningssekvens-2026-08-01.md. Egne body/hender-lag
-   kuttet fra samme maskot.png langs den alfa-målte fingertupp-linjen
-   (tools/split-mascot-layers.mjs) — SAMME ankrings-geometri som
-   .hjm-mascot over (top/right/width), slik at sluttbildet er
-   pikselidentisk med MascotPeek når sekvensen fullfører og MascotPeek
-   (uendret, hele tiden montert — se MascotPeek.tsx) tar over synlig.
-   Stabling (bak→front): body(1) < panel-lift-wrap(2) < .hjm-mascot(3,
-   skjult under sekvensen) < hender-kontaktskygge(3) < hender(4) < kantlys(5). */
-.hjm-opening-mascot-body,
-.hjm-opening-mascot-hands {
-  position: absolute;
-  right: 8px;
-  width: 205px;
-  height: auto;
-  pointer-events: none;
+/* Del 3 (nysgjerrig maskot under scannen): MascotPeek.tsx rendrer to
+   stablede <img>, begge bærende .hjm-mascot (samme geometri/ankring som
+   over) pluss én av disse to klassene — crossfade via opacity, styrt av
+   den delte `data-pose`-attributten begge bærer. RESERVERT for scanning/
+   recalculating (HjemMonter.tsx) — MascotIdle bruker ALDRI `pose="curious"`,
+   se `.hjm-mascot-glance` under for glimtet i hvile sin egen, separate pose. */
+.hjm-mascot-normal,
+.hjm-mascot-curious {
+  transition: opacity 300ms ease-out, transform 350ms ease-out;
 }
-/* P10.1 (judge finding A1): body-laget er nå det FULLE, ukuttede bildet
-   (tools/split-mascot-layers.mjs skriver ikke lenger et kuttet canvas) og
-   okkluderes UTELUKKENDE av det ugjennomsiktige panelet sin z-index over —
-   body-laget skal derfor ALDRI ha sin egen drop-shadow (den var nettopp det
-   som gjorde den gamle kutt-kanten synlig som en «svevende dukke»-skygge i
-   gapet over panelet). Filter er bevisst UTELATT her (arves ikke fra den
-   delte selektoren over — den har ingen `filter`-linje lenger). */
-.hjm-opening-mascot-body { top: -152px; z-index: 1; }
-/* 329/512 = hender-laget sin topp-rad i kildebildet (512px bredt), som
-   ANDEL av bredden — skalerer korrekt på tvers av bredde-breakpointene
-   under siden begge lag deler samme kilde-bredde/skaleringsfaktor. */
-.hjm-opening-mascot-hands {
-  top: calc(-152px + 205px * 0.642578125);
-  z-index: 4;
-  filter: drop-shadow(var(--hjm-mascot-shadow));
+.hjm-mascot-curious { opacity: 0; }
+.hjm-mascot-normal[data-pose='curious'] { opacity: 0; }
+.hjm-mascot-curious[data-pose='curious'] { opacity: 1; }
+
+/* Lean-in ("bøyer seg ned og retter blikket mot scan-animasjonen under
+   seg") — KUN i scanning/recalculating sin KOMPAKTE kontekst, der curious-
+   posen faktisk har noe å se ned på. */
+.hjm-mascot-curious[data-compact='true'][data-pose='curious'] {
+  transform-origin: 50% 88%; /* nær hendene/fingertupp-linjen nederst i bildet */
+  transform: rotate(3deg) translateY(4px);
 }
-@media (max-height: 700px) {
-  .hjm-opening-mascot-body,
-  .hjm-opening-mascot-hands { width: 164px; }
-  .hjm-opening-mascot-body { top: -122px; }
-  .hjm-opening-mascot-hands { top: calc(-122px + 164px * 0.642578125); }
-}
-/* P10.1 (judge finding A2): «dukker opp i stedet for å gripe» — erstatter
-   opacity-fade-avsløringen med en clip-path-avsløring styrt fra
-   OpeningSequence.tsx (WAAPI, `clip-path: inset(0 0 <pct>% 0)` fra 100 % →
-   0 %). Toppen av hender-laget (nærmest fingertupp-/gripe-linjen) blir
-   synlig FØRST og avsløringen brer seg nedover — leser som at grepet
-   lander på kanten og henderne følger etter, ikke som at et bilde bare
-   dukker opp i luften. */
-.hjm-opening-hands-contact {
-  position: absolute;
-  top: 3px;
-  right: 8px;
-  width: 205px;
-  height: 9px;
-  z-index: 3;
-  pointer-events: none;
-  opacity: 0;
-  /* To smale, tette skygge-klatter — omtrent der de to hendene griper
-     kanten (se den alfa-målte kildegeometrien) — i stedet for én bred
-     stripe over hele bredden ("very TIGHT contact shadow under the
-     fingers"). */
-  background:
-    radial-gradient(22px 6px at 24% 50%, rgba(10, 7, 5, 0.42), transparent 75%),
-    radial-gradient(22px 6px at 74% 50%, rgba(10, 7, 5, 0.42), transparent 75%);
-}
-@media (max-height: 700px) {
-  .hjm-opening-hands-contact { width: 164px; }
-}
-.hjm-panel-lift-wrap { position: relative; z-index: 2; }
-.hjm-opening-edge-light {
-  position: absolute;
-  top: 0;
-  left: 7%;
-  right: 7%;
-  height: 1.5px;
-  border-radius: 2px;
-  background: var(--dw-edge-light-gradient);
-  opacity: 0;
-  z-index: 5;
-  pointer-events: none;
+
+/* Redusert bevegelse: pose-bytte UTEN transition (instant), samme
+   doktrine som resten av Hjem — dobbel vakt (JS-styrt data-animate fra
+   MascotPeek.tsx OG CSS-medieforespørselen). */
+.hjm-mascot-normal[data-animate='false'],
+.hjm-mascot-curious[data-animate='false'] {
+  transition: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
-  /* Forsvars-vakt: OpeningSequence selv mountes ALDRI når reducedMotion er
-     sann (se opening-sequence.ts sin decideOpeningVariant), men denne
-     dobbel-vakten speiler doktrinen ellers i filen (RM dreper animasjon
-     selv om noe skulle rekke å starte). */
-  .hjm-opening-mascot-body,
-  .hjm-opening-mascot-hands,
-  .hjm-opening-hands-contact,
-  .hjm-panel-lift-wrap,
-  .hjm-opening-edge-light {
-    animation: none !important;
+  .hjm-mascot-normal,
+  .hjm-mascot-curious {
     transition: none !important;
   }
+}
+
+/* Del 4 (MascotIdle — nysgjerrig-glimt i hvile, ekstern review 2026-08-01):
+   EGEN pose-asset (maskot-glimt.png), reservert bort fra scan-koreografiens
+   maskot-nysgjerrig.png over. Lagt oppå den alltid-normalposerte MascotPeek
+   som et uavhengig crossfadet lag — samme .hjm-mascot-geometri, høyere
+   z-index (over normalposen når det fades inn). Kun weather-ready
+   (data-compact='false') — MascotIdle mountes aldri kompakt. */
+.hjm-mascot-glance {
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+.hjm-mascot-glance[data-glancing='true'] { opacity: 1; }
+.hjm-mascot-glance[data-animate='false'] { transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .hjm-mascot-glance { transition: none !important; }
 }
 
 /* ============ Scan-koreografi (ScanOverlay) ============ */
@@ -544,75 +502,6 @@
   color: var(--dw-ink-low);
 }
 .hjm-trust svg { width: 14px; height: 14px; color: var(--dw-ink-low); flex: none; }
-
-/* ============ Mikropass (P9 duel §2 — 400ms, alle trykk etter det aller
-   første) ============
-   Se ScanMicropass.tsx sin filhode-kommentar for de to bevisste
-   forenklingene her (ingen literal venstre→høyre lys-sveip-gradient, ingen
-   FLIP-geometri-morph mot resultat-headeren). */
-.hjm-micropass { cursor: pointer; }
-.hjm-micropass-cta {
-  pointer-events: none; /* dekorativ under mikropasset — selve trykket har allerede skjedd */
-}
-.hjm-micropass[data-animate='true'] .hjm-micropass-cta {
-  animation: hjm-micropass-cta-press var(--hjm-micropass-duration, 400ms) cubic-bezier(0.3, 0, 0.2, 1) 1 both;
-}
-@keyframes hjm-micropass-cta-press {
-  0% { transform: scale(0.985); box-shadow: none; }
-  17.5% { transform: scale(0.985); box-shadow: none; } /* ~70ms/400ms — duellens presset-vindu */
-  32% { transform: scale(1); box-shadow: var(--hjm-shadow-cta); }
-  100% { transform: scale(1); box-shadow: var(--hjm-shadow-cta); }
-}
-
-.hjm-micropass-waiting { color: var(--dw-warning); }
-
-.hjm-micropass-trust-wrap { position: relative; }
-.hjm-micropass-trust { flex-wrap: wrap; }
-.hjm-micropass-segment {
-  opacity: 0.55;
-  color: var(--dw-ink-low);
-}
-.hjm-micropass[data-animate='true'] .hjm-micropass-segment {
-  animation: hjm-micropass-segment-on 90ms ease-out both;
-}
-@keyframes hjm-micropass-segment-on {
-  to { opacity: 1; color: var(--dw-ink-hi); }
-}
-.hjm-micropass-summary {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  margin-top: 13px; /* speiler .hjm-trust sin egen margin-top siden posisjonen nå er absolutt */
-}
-.hjm-micropass[data-animate='true'] .hjm-micropass-trust {
-  animation: hjm-micropass-trust-out 130ms ease-in 270ms both;
-}
-.hjm-micropass[data-animate='true'] .hjm-micropass-summary {
-  animation: hjm-micropass-summary-in 130ms ease-out 270ms both;
-}
-@keyframes hjm-micropass-trust-out { to { opacity: 0; } }
-@keyframes hjm-micropass-summary-in { to { opacity: 1; } }
-
-/* Redusert bevegelse (JS-styrt data-animate, se ScanMicropass.tsx) — samme
-   "instant completion" som resten av Hjem: hopp rett til SLUTTilstanden
-   (full sammendrags-tekst, ingen ledd-sekvens) i stedet for å bli stående
-   fast i mikropassets MIDT-tilstand (dempet/usynlig) uten animasjonen som
-   ellers ville fullført den. */
-.hjm-micropass[data-animate='false'] .hjm-micropass-segment { opacity: 1; color: var(--dw-ink-hi); }
-.hjm-micropass[data-animate='false'] .hjm-micropass-trust { display: none; }
-.hjm-micropass[data-animate='false'] .hjm-micropass-summary { position: static; opacity: 1; margin-top: 13px; }
-
-@media (prefers-reduced-motion: reduce) {
-  .hjm-micropass-cta,
-  .hjm-micropass-segment,
-  .hjm-micropass-trust,
-  .hjm-micropass-summary {
-    animation: none !important;
-  }
-  .hjm-micropass-segment { opacity: 1; color: var(--dw-ink-hi); }
-  .hjm-micropass-summary { position: static; opacity: 1; margin-top: 13px; }
-  .hjm-micropass-trust { display: none; }
-}
 
 /* ============ Kompakt værstripe (WeatherStrip, etter resultat) ============ */
 

@@ -21,9 +21,11 @@
  *  2. CTA-DRIVEN SCAN: adjusting sliders no longer recomputes the answer
  *     live. A "Finn antrekk" CTA (same amber CTA class as Hjem, `.hjm-cta`)
  *     sits below the activity toggle. Tapping it snapshots the CURRENT
- *     slider values and runs the P9 400ms micropass choreography (reusing
- *     scan-orchestration.ts's timing constants + the same haptics
- *     vocabulary — `prepare()` then ONE `impactMedium()` landing). Once a
+ *     slider values and — eier-override v3, 2026-08-01 — runs the SAME
+ *     full 3,2s scan-koreografi as Hjem (reusing `ScanOverlay` itself, with
+ *     Juster-specific rows, in place of the instrument-panel gauges; see
+ *     scan-orchestration.ts's `FULL_SCAN_DURATION_MS`/`fullScanHapticSchedule`
+ *     — the P9 400ms mikropass this screen used to run is RETIRED). Once a
  *     result exists, touching ANY slider re-arms the CTA ("Beregn på
  *     nytt") and visually demotes (not hides) the existing result — same
  *     stale model HjemMonter already uses for its own result-stale phase.
@@ -43,11 +45,12 @@
  * Kilder (les FØR endring):
  *  - docs/F80/a11y-preclearance.md — §5: verdikt-hero aria-mønster
  *  - docs/F79/guide-analyse.md — fasit-autoritet-tiltak 1+2+3+5
- *  - docs/design-notes/sol-duel-2026-07-31.md — §2 (scan-koreografi v2),
- *    §3 (haptikk-vokabular), §6 (monter-lys-restriksjon)
- *  - src/components/hjem/HjemMonter.tsx / scan-orchestration.ts — mikropass-
- *    mønsteret dette skjermbildet nå speiler (egen kopi, ikke literal
- *    gjenbruk — copyen her er kalkulator-spesifikk, ikke Hjem-spesifikk).
+ *  - docs/design-notes/sol-duel-2026-07-31.md — §2 (scan-koreografi, eier-
+ *    override v3-notis øverst), §3 (haptikk-vokabular), §6 (monter-lys-
+ *    restriksjon)
+ *  - src/components/hjem/HjemMonter.tsx / scan-orchestration.ts / ScanOverlay.tsx
+ *    — samme full-koreografi denne skjermen nå gjenbruker direkte (ScanOverlay
+ *    er en delt komponent; kun radene/etikettene er Juster-spesifikke).
  *
  * Output-card bruker nå SAMME rad-presentasjon som Hjems resultatflate
  * (MonterGarmentRow/ResultSurface-mønsteret) i stedet for det tidligere
@@ -70,7 +73,12 @@ import {
 import { useChildren } from '../state/children-store';
 import { useWeather } from '../hooks/useWeather';
 import { useHapticSystem } from '../lib/haptics/system';
-import { impactMedium, prepare as hapticPrepare } from '../lib/haptics.js';
+import {
+  impactMedium,
+  impactSoft,
+  prepare as hapticPrepare,
+  selection as hapticSelection,
+} from '../lib/haptics.js';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { recommend } from '../lib/wool-layers/recommend';
@@ -85,11 +93,10 @@ import '../components/hjem/hjem-monter.css';
 import { MonterGarmentRow } from '../components/hjem/MonterGarmentRow';
 import { getGarmentImage } from '../lib/monter-assets';
 import { deriveResultRows, type ResultRow } from '../components/hjem/result-rows';
+import { ScanOverlay } from '../components/hjem/ScanOverlay';
 import {
-  MICROPASS_DURATION_MS,
-  MICROPASS_LANDING_MS,
-  MICROPASS_PREPARE_MS,
-  MICROPASS_SEGMENT_DELAYS_MS,
+  FULL_SCAN_DURATION_MS,
+  fullScanHapticSchedule,
 } from '../components/hjem/scan-orchestration';
 import { seedFromPrefill, type FinnAntrekkPrefill } from './finn-antrekk-prefill';
 import {
@@ -319,48 +326,6 @@ function ChevronDown({ expanded }: { expanded: boolean }): ReactElement {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Mikropass — P10/JOB4 lokal kopi av HjemMonter/ScanMicropass sitt 400ms-
-   mønster (scan-orchestration.ts's timing-konstanter gjenbrukes, selve
-   copyen er kalkulator-spesifikk — se filhode). Erstatter KUN CTA-området,
-   ikke sliderne (de forblir synlige/interaktive under mikropasset).
-   ────────────────────────────────────────────────────────────────────────── */
-
-const MICROPASS_TRUST_SEGMENTS = ['Temperatur,', 'vind og', 'nedbør vurderes sammen'] as const;
-
-function CalcMicropass({
-  summaryText,
-  reducedMotion,
-}: {
-  summaryText: string;
-  reducedMotion: boolean;
-}): ReactElement {
-  const animate = !reducedMotion;
-  return (
-    <div className="hjm-micropass" data-animate={animate ? 'true' : 'false'}>
-      <span className="hjm-sr-only" role="status" aria-live="polite">Beregner antrekk</span>
-      <button type="button" className="hjm-cta hjm-micropass-cta" aria-hidden="true" tabIndex={-1}>
-        Finn antrekk
-      </button>
-      <div className="hjm-micropass-trust-wrap" aria-hidden="true">
-        <p className="hjm-trust hjm-micropass-trust">
-          {MICROPASS_TRUST_SEGMENTS.map((segment, index) => (
-            <span
-              key={segment}
-              className="hjm-micropass-segment"
-              style={animate ? { animationDelay: `${MICROPASS_SEGMENT_DELAYS_MS[index]}ms` } : undefined}
-            >
-              {segment}
-              {index < MICROPASS_TRUST_SEGMENTS.length - 1 ? ' ' : ''}
-            </span>
-          ))}
-        </p>
-        <p className="hjm-trust hjm-micropass-summary">{summaryText}</p>
-      </div>
-    </div>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
    Komponent
    ────────────────────────────────────────────────────────────────────────── */
 
@@ -516,11 +481,18 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
 
   const tempAxis = tempAxisFor(tempC);
 
-  /* ── P10/JOB4: CTA-drevet scan-tilstand ─────────────────────────────────
-     idle → (trykk) → scanning → (400ms/mikropass) → fresh
+  /* ── P10/JOB4, eier-override v3 (2026-08-01): CTA-drevet scan-tilstand ───
+     idle → (trykk) → scanning → (3,2s full koreografi) → fresh
      fresh → (en slider/aktivitet endres) → stale → (trykk) → scanning → … */
   const [phase, setPhase] = useState<CalcPhase>('idle');
   const [committed, setCommitted] = useState<CommittedParams | null>(null);
+  // Frosset ved selve trykket — ScanOverlay sine rader viser ALLTID denne
+  // (aldri de live slider-verdiene), samme "berøring hopper til resultat,
+  // spiller kun landingen"-prinsipp som kommentaren i handleFindOutfit
+  // under beskriver. Sliderne er uansett unmountet (erstattet av
+  // ScanOverlay) mens scanning pågår, så de kan ikke drifte i praksis —
+  // snapshotet er likevel eksplisitt for å aldri stille implisitt på det.
+  const [scanSnapshot, setScanSnapshot] = useState<CommittedParams | null>(null);
 
   const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hapticTimerIdsRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
@@ -562,8 +534,9 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
     // Snapshot NÅ (trykk-tidspunktet) — duel §2: "berøring hopper til
     // resultat, spiller kun landingen"-prinsippet gjelder retningen, ikke
     // TIDSPUNKTET data hentes fra; scanningen prosesserer verdiene SLIK DE
-    // VAR da brukeren trykket, ikke hva de måtte ha driftet til 400ms senere.
+    // VAR da brukeren trykket, ikke hva de måtte ha driftet til 3,2s senere.
     const snapshot: CommittedParams = { tempC, windMs, precipMmH, activityUi };
+    setScanSnapshot(snapshot);
     setPhase('scanning');
 
     if (reducedMotion) {
@@ -573,14 +546,24 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
       return;
     }
 
-    hapticTimerIdsRef.current = [
-      setTimeout(() => { void hapticPrepare(); }, MICROPASS_PREPARE_MS),
-      setTimeout(() => { void impactMedium(); }, MICROPASS_LANDING_MS),
-    ];
+    // Eier-override v3: samme fulle 3,2s-koreografi (og haptikk-skjema) som
+    // Hjem — se scan-orchestration.ts's fullScanHapticSchedule. Avhukingene
+    // (soft/selection) planlegges her; landingen (prepare+medium) eies av
+    // fullføringstimeren under, samme arbeidsdeling som HjemMonter.tsx sin
+    // egen completeScan/runPreLandingHapticSchedule-splitt.
+    const preLanding = fullScanHapticSchedule(FULL_SCAN_DURATION_MS).filter(
+      (event) => event.cue === 'soft' || event.cue === 'selection',
+    );
+    hapticTimerIdsRef.current = preLanding.map((event) => setTimeout(() => {
+      if (event.cue === 'soft') void impactSoft();
+      else void hapticSelection();
+    }, event.atMs));
+
     scanTimerRef.current = setTimeout(() => {
+      void hapticPrepare().then(() => { void impactMedium(); });
       setCommitted(snapshot);
       setPhase('fresh');
-    }, MICROPASS_DURATION_MS);
+    }, FULL_SCAN_DURATION_MS);
   }
 
   const committedActivityOption = useMemo(
@@ -703,7 +686,11 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
   const showCta = showCtaFor(phase);
   const showResult = showResultFor(committed);
   const resultDemoted = resultDemotedFor(phase);
-  const summaryText = `${formatTemp(tempC)} · ${windMs} m/s · ${selectedActivity.label}`;
+  // ScanOverlay sine Juster-rader under (kun rendret mens phase==='scanning')
+  // leser ALLTID `scanSnapshot` — frosset ved selve trykket, se
+  // handleFindOutfit. Fallbacken til de live verdiene er defensiv/aldri
+  // reelt nådd (scanSnapshot settes alltid FØR phase blir 'scanning').
+  const scanRows = scanSnapshot ?? { tempC, windMs, precipMmH, activityUi };
 
   return (
     <main style={rootStyle} className="ba-temp-root" data-temp={tempAxis} aria-label={screenTitle}>
@@ -744,86 +731,117 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
             P10.1 (judge finding C5): gaugene ligger nå PÅ petrol-
             instrumentmaterialet (samme `--dw-panel`-flate + kantlys som
             `.hjm-panel`) — DESIGN.mds kjerneidé "petrol = vær/beregning" —
-            i stedet for å flyte fritt på espresso-canvasen. */}
-        <section aria-labelledby="finn-instrument-label">
-          <h2 id="finn-instrument-label" style={srOnlyStyle}>Vær-instrumenter</h2>
-          {/* Reuses `.hjm-panel` (hjem-monter.css, already imported) for the
-              petrol background/radius/edge-light `::before` — box-shadow is
-              overridden inline since `.hjm-panel`'s own shadow token
-              (`--hjm-shadow-panel`) is scoped to `.hjem-monter`, which this
-              screen's root doesn't carry; `--dw-shadow-raise` is the
-              equivalent GLOBAL, theme-aware token. */}
-          <div className="hjm-panel" style={gaugePanelStyle}>
-            <div style={gaugeRowStyle}>
-              <VerticalGauge
-                label="Temperatur"
-                valueLabel={formatTemp(tempC)}
-                min={INSTRUMENT_MIN_C}
-                max={INSTRUMENT_MAX_C}
-                step={1}
-                value={snapDegree(tempC)}
-                onChange={(v) => handleSliderChange('temp', tempBandText, setTempC, v)}
-                ariaLabel="Temperatur i celsius"
-                ariaValueText={instrumentValueText(tempC, tempBandText(tempC))}
-                minLabel={`${INSTRUMENT_MIN_C}°`}
-                maxLabel={`${INSTRUMENT_MAX_C}°`}
-                fillBottomColor={GAUGE_FILL_BOTTOM}
-                fillTopColor={GAUGE_FILL_TOP}
-                material="thermal"
-                reducedMotion={reducedMotion}
-                incrementLabel="Én grad varmere"
-                decrementLabel="Én grad kaldere"
-                height={GAUGE_HEIGHT}
-                baselineValue={weatherBaseline?.tempC ?? null}
-                baselineLabel={weatherBaseline ? `Faktisk vær nå: ${formatTemp(weatherBaseline.tempC)}` : undefined}
-              />
-              <VerticalGauge
-                label="Vind"
-                valueLabel={`${windMs} m/s`}
-                min={0}
-                max={15}
-                step={1}
-                value={windMs}
-                onChange={(v) => handleSliderChange('vind', windBandText, setWindMs, v)}
-                ariaLabel="Vindstyrke i meter per sekund"
-                ariaValueText={`${windMs} meter per sekund, ${windBandText(windMs)}`}
-                minLabel="0"
-                maxLabel="15 m/s"
-                fillBottomColor={GAUGE_FILL_BOTTOM}
-                fillTopColor={GAUGE_FILL_TOP}
-                material="air"
-                reducedMotion={reducedMotion}
-                incrementLabel="Sterkere vind"
-                decrementLabel="Svakere vind"
-                height={GAUGE_HEIGHT}
-                baselineValue={weatherBaseline?.windMs ?? null}
-                baselineLabel={weatherBaseline ? `Faktisk vær nå: ${weatherBaseline.windMs} m/s` : undefined}
-              />
-              <VerticalGauge
-                label="Nedbør"
-                valueLabel={`${precipMmH.toFixed(1)} mm/t`}
-                min={0}
-                max={10}
-                step={0.5}
-                value={precipMmH}
-                onChange={(v) => handleSliderChange('nedbor', precipBandText, setPrecipMmH, v)}
-                ariaLabel="Nedbør i millimeter per time"
-                ariaValueText={`${precipMmH.toFixed(1)} millimeter per time, ${precipBandText(precipMmH)}`}
-                minLabel="0"
-                maxLabel="10 mm/t"
-                fillBottomColor={GAUGE_FILL_BOTTOM}
-                fillTopColor={GAUGE_FILL_TOP}
-                material="water"
-                reducedMotion={reducedMotion}
-                incrementLabel="Mer nedbør"
-                decrementLabel="Mindre nedbør"
-                height={GAUGE_HEIGHT}
-                baselineValue={weatherBaseline?.precipMmH ?? null}
-                baselineLabel={weatherBaseline ? `Faktisk vær nå: ${weatherBaseline.precipMmH.toFixed(1)} mm/t` : undefined}
-              />
-            </div>
+            i stedet for å flyte fritt på espresso-canvasen.
+            Eier-override v3 (2026-08-01): mens phase==='scanning' erstatter
+            den DELTE ScanOverlay-komponenten (samme fulle 3,2s-koreografi
+            som Hjem) hele gauge-flaten, i stedet for det gamle 400ms-
+            mikropasset som kun erstattet CTA-området (sliderne var da
+            fortsatt synlige/interaktive). Sliderne rendres derfor ALDRI
+            samtidig med scanningen nå — samme "hele panelet erstattes"-
+            mønster som HjemMonter sin egen scanning-fase. */}
+        {phase === 'scanning' ? (
+          // `--hjm-shadow-panel` (ScanOverlay sin `.hjm-panel`) er scoped
+          // til `.hjem-monter` i hjem-monter.css — denne skjermens rot bærer
+          // ikke den klassen, se `gaugePanelStyle` sin egen kommentar under
+          // for hvorfor. Wrapperen speiler samme token lokalt via en inline
+          // CSS custom property, slik at ScanOverlay beholder løfteskyggen.
+          <div style={{ '--hjm-shadow-panel': 'var(--dw-shadow-raise)' } as CSSProperties}>
+            <ScanOverlay
+              cityLabel={prefill?.placeLabel ?? childName}
+              nuance="cloudy"
+              rows={[
+                { label: 'Temperatur', value: formatTemp(scanRows.tempC) },
+                { label: 'Vind', value: `${scanRows.windMs} m/s` },
+                { label: 'Nedbør', value: `${scanRows.precipMmH.toFixed(1)} mm/t` },
+              ] as const}
+              spinningLabel="Lag for lag"
+              spinningValue="setter sammen…"
+              totalDurationMs={FULL_SCAN_DURATION_MS}
+              reducedMotion={reducedMotion}
+              outfitTransitionStatus="idle"
+            />
           </div>
-        </section>
+        ) : (
+          <section aria-labelledby="finn-instrument-label">
+            <h2 id="finn-instrument-label" style={srOnlyStyle}>Vær-instrumenter</h2>
+            {/* Reuses `.hjm-panel` (hjem-monter.css, already imported) for the
+                petrol background/radius/edge-light `::before` — box-shadow is
+                overridden inline since `.hjm-panel`'s own shadow token
+                (`--hjm-shadow-panel`) is scoped to `.hjem-monter`, which this
+                screen's root doesn't carry; `--dw-shadow-raise` is the
+                equivalent GLOBAL, theme-aware token. */}
+            <div className="hjm-panel" style={gaugePanelStyle}>
+              <div style={gaugeRowStyle}>
+                <VerticalGauge
+                  label="Temperatur"
+                  valueLabel={formatTemp(tempC)}
+                  min={INSTRUMENT_MIN_C}
+                  max={INSTRUMENT_MAX_C}
+                  step={1}
+                  value={snapDegree(tempC)}
+                  onChange={(v) => handleSliderChange('temp', tempBandText, setTempC, v)}
+                  ariaLabel="Temperatur i celsius"
+                  ariaValueText={instrumentValueText(tempC, tempBandText(tempC))}
+                  minLabel={`${INSTRUMENT_MIN_C}°`}
+                  maxLabel={`${INSTRUMENT_MAX_C}°`}
+                  fillBottomColor={GAUGE_FILL_BOTTOM}
+                  fillTopColor={GAUGE_FILL_TOP}
+                  material="thermal"
+                  reducedMotion={reducedMotion}
+                  incrementLabel="Én grad varmere"
+                  decrementLabel="Én grad kaldere"
+                  height={GAUGE_HEIGHT}
+                  baselineValue={weatherBaseline?.tempC ?? null}
+                  baselineLabel={weatherBaseline ? `Faktisk vær nå: ${formatTemp(weatherBaseline.tempC)}` : undefined}
+                />
+                <VerticalGauge
+                  label="Vind"
+                  valueLabel={`${windMs} m/s`}
+                  min={0}
+                  max={15}
+                  step={1}
+                  value={windMs}
+                  onChange={(v) => handleSliderChange('vind', windBandText, setWindMs, v)}
+                  ariaLabel="Vindstyrke i meter per sekund"
+                  ariaValueText={`${windMs} meter per sekund, ${windBandText(windMs)}`}
+                  minLabel="0"
+                  maxLabel="15 m/s"
+                  fillBottomColor={GAUGE_FILL_BOTTOM}
+                  fillTopColor={GAUGE_FILL_TOP}
+                  material="air"
+                  reducedMotion={reducedMotion}
+                  incrementLabel="Sterkere vind"
+                  decrementLabel="Svakere vind"
+                  height={GAUGE_HEIGHT}
+                  baselineValue={weatherBaseline?.windMs ?? null}
+                  baselineLabel={weatherBaseline ? `Faktisk vær nå: ${weatherBaseline.windMs} m/s` : undefined}
+                />
+                <VerticalGauge
+                  label="Nedbør"
+                  valueLabel={`${precipMmH.toFixed(1)} mm/t`}
+                  min={0}
+                  max={10}
+                  step={0.5}
+                  value={precipMmH}
+                  onChange={(v) => handleSliderChange('nedbor', precipBandText, setPrecipMmH, v)}
+                  ariaLabel="Nedbør i millimeter per time"
+                  ariaValueText={`${precipMmH.toFixed(1)} millimeter per time, ${precipBandText(precipMmH)}`}
+                  minLabel="0"
+                  maxLabel="10 mm/t"
+                  fillBottomColor={GAUGE_FILL_BOTTOM}
+                  fillTopColor={GAUGE_FILL_TOP}
+                  material="water"
+                  reducedMotion={reducedMotion}
+                  incrementLabel="Mer nedbør"
+                  decrementLabel="Mindre nedbør"
+                  height={GAUGE_HEIGHT}
+                  baselineValue={weatherBaseline?.precipMmH ?? null}
+                  baselineLabel={weatherBaseline ? `Faktisk vær nå: ${weatherBaseline.precipMmH.toFixed(1)} mm/t` : undefined}
+                />
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* AKTIVITET — 2-knapps radiogroup med roving-tabindex */}
         <section aria-labelledby="finn-aktivitet-label">
@@ -861,10 +879,11 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
 
         {/* CTA-DREVET SCAN (P10/JOB4) — «Finn antrekk» / «Beregn på nytt».
             Skjules helt når resultatet allerede er ferskt (speiler Hjems
-            egen result-current: ingen CTA når svaret allerede stemmer). */}
-        {phase === 'scanning' ? (
-          <CalcMicropass summaryText={summaryText} reducedMotion={reducedMotion} />
-        ) : showCta ? (
+            egen result-current: ingen CTA når svaret allerede stemmer) OG
+            mens phase==='scanning' (showCtaFor returnerer false der — den
+            fulle koreografien over, ikke dette området, kommuniserer
+            scanning-tilstanden nå, eier-override v3). */}
+        {showCta ? (
           <div>
             <button
               type="button"

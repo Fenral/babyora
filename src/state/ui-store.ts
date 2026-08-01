@@ -1,9 +1,22 @@
 /**
  * ui-store — P10/JOB1 (docs/design-notes/aapningssekvens-2026-08-01.md):
  * small persisted store for cross-screen, cross-session UI flags that don't
- * belong in a feature-specific store. First (and so far only) tenant:
+ * belong in a feature-specific store. Original (and so far only) tenant:
  * `hasSeenOpeningEver` — the opening-sequence's lifetime "have we ever
  * shown the full ~900ms first-ever hybrid" flag.
+ *
+ * RETIRED, KEPT DEAD (eier-override v3, 2026-08-01): the opening climb
+ * (OpeningSequence.tsx/opening-sequence.ts) itself was removed — Hjem is
+ * now static until the CTA is pressed, see
+ * docs/design-notes/aapningssekvens-2026-08-01.md's eier-override notice.
+ * `hasSeenOpeningEver`/`markOpeningSeenEver`/`consumeOpeningBootSlot` below
+ * have NO remaining consumer anywhere in the app — left in place rather
+ * than removed ("feltet kan ligge dødt i persist for ro", v3 plan): any
+ * already-persisted `babyora.ui` JSON on a real device stays exactly as
+ * harmless dead data instead of needing a migration/cleanup pass. Do not
+ * wire new features into this store without first checking whether the
+ * feature actually needs a NEW field — this file is not itself deleted
+ * only because a completely empty persisted store is not worth the churn.
  *
  * Mirrors scan-cache-store.ts's `hasPlayedFullScanEver` pattern exactly
  * (P9, docs/design-notes/sol-duel-2026-07-31.md §2): ONE boolean, defaults
@@ -11,18 +24,12 @@
  * persistence (zustand/persist default storage) so it's readable before
  * the first render — safe for native kill/resume, no async race.
  *
- * Per-boot (NOT persisted) opening-sequence dedup lives here too, as a
+ * Per-boot (NOT persisted) opening-sequence dedup lived here too, as a
  * plain module-level mutable slot — same PATTERN as subscription-store.ts's
  * `HAD_FIRST_RECOMMENDATION_BEFORE_THIS_BOOT`/`recommendationGraceWindowActive`
- * (a value computed once per JS boot, distinct from the persisted flag):
- * the opening sequence must resolve (play-or-skip) EXACTLY ONCE per app
- * boot — a user tabbing away from and back to Hjem within the same session
- * must never replay it, even the short "later cold start" micro variant.
- * `consumeOpeningBootSlot()` returns `true` for the first caller each boot,
- * `false` for every subsequent call — HjemMonter/OpeningSequence's mount
- * logic uses this (not React state) so it survives HjemMonter remounting
- * (tab switches) without needing to live in a persisted store or in a
- * parent component that never unmounts.
+ * (a value computed once per JS boot, distinct from the persisted flag).
+ * `consumeOpeningBootSlot()` is likewise unconsumed now — kept for the same
+ * "dead, not deleted" reason above.
  *
  * Persistert format (zustand/persist v4):
  *   { state: { hasSeenOpeningEver: boolean }, version: 0 }

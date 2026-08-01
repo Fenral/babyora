@@ -129,15 +129,33 @@ describe('FinnAntrekkScreen — result-as-clothes wiring (source-text: only reac
     expect(contents).toContain('resultOpacityStyle(resultDemoted, reducedMotion)');
   });
 
-  it('runs the 400ms micropass choreography on tap, reusing scan-orchestration.ts\'s own timing constants and the prepare()+medium haptics vocabulary', () => {
+  it('eier-override v3: runs the SAME full 3,2s scan-koreografi as Hjem on tap (ScanOverlay + FULL_SCAN_DURATION_MS + fullScanHapticSchedule), the old 400ms micropass is retired', () => {
     const contents = source(screenPath);
+    expect(contents).toContain("import { ScanOverlay } from '../components/hjem/ScanOverlay';");
     expect(contents).toContain("from '../components/hjem/scan-orchestration';");
-    expect(contents).toContain('MICROPASS_DURATION_MS');
-    expect(contents).toContain('MICROPASS_PREPARE_MS');
-    expect(contents).toContain('MICROPASS_LANDING_MS');
-    expect(contents).toContain("import { impactMedium, prepare as hapticPrepare } from '../lib/haptics.js';");
+    expect(contents).toContain('FULL_SCAN_DURATION_MS');
+    expect(contents).toContain('fullScanHapticSchedule(FULL_SCAN_DURATION_MS)');
+    expect(contents).not.toContain('MICROPASS_DURATION_MS');
+    expect(contents).not.toContain('MICROPASS_PREPARE_MS');
+    expect(contents).not.toContain('MICROPASS_LANDING_MS');
+    expect(contents).not.toContain('CalcMicropass');
     expect(contents).toContain('void hapticPrepare()');
     expect(contents).toContain('void impactMedium()');
+    expect(contents).toContain('void impactSoft()');
+    expect(contents).toContain('void hapticSelection()');
+  });
+
+  it('the instrument-panel gauges are replaced by the shared ScanOverlay (Juster-labelled rows) while scanning, not just the CTA area', () => {
+    const contents = source(screenPath);
+    const scanBranchStart = contents.indexOf("phase === 'scanning' ? (");
+    const scanBranchEnd = contents.indexOf(') : (', scanBranchStart);
+    const scanBranch = contents.slice(scanBranchStart, scanBranchEnd);
+    expect(scanBranch).toContain('<ScanOverlay');
+    expect(scanBranch).toContain("{ label: 'Temperatur', value: formatTemp(scanRows.tempC) }");
+    expect(scanBranch).toContain("{ label: 'Vind', value: `${scanRows.windMs} m/s` }");
+    expect(scanBranch).toContain("{ label: 'Nedbør', value: `${scanRows.precipMmH.toFixed(1)} mm/t` }");
+    expect(scanBranch).toContain('spinningLabel="Lag for lag"');
+    expect(scanBranch).toContain('totalDurationMs={FULL_SCAN_DURATION_MS}');
   });
 
   it('reduced motion lands the result instantly (no micropass timers) — same double-guard convention as the rest of the app', () => {

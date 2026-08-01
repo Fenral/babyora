@@ -9,35 +9,65 @@
  * `compact` speiler mocken sitt innholdstunge-kompresjonsmønster
  * (`#stage-stale .mascot, #stage-offline .mascot { width:188px; top:38px }`)
  * — brukt i stale/offline-tilstandene der ask-blokken har mer tekst.
+ *
+ * Del 3 (nysgjerrig maskot, sol-duel v3-pakken 2026-08-01): `pose` velger
+ * mellom to stablede <img> (maskot.png / maskot-nysgjerrig.png), begge
+ * ALLTID montert, crossfadet via CSS opacity (hjem-monter.css — se
+ * `.hjm-mascot-normal`/`.hjm-mascot-curious`). HjemMonter.tsx setter
+ * `pose="curious"` (kompakt) mens phase er 'scanning'/'recalculating' —
+ * maskoten bøyer hodet ned og retter blikket mot scan-animasjonen under
+ * seg (kun en liten CSS-lean, se CSS-filens egen kommentar; ingen
+ * generativ video). Tilbake til 'normal' i alle andre faser/grener (default
+ * prop-verdi — kallerne trenger ikke eksplisitt sette den).
+ *
+ * MascotIdle.tsx (den hvilende weather-ready-varianten) rendrer DENNE
+ * komponenten direkte og styrer kun `pose` fra sin egen timer — ingen egen
+ * bilde-rendering der.
  */
 import './hjem-monter.css';
 
+export type MascotPose = 'normal' | 'curious';
+
 export type MascotPeekProps = Readonly<{
   compact?: boolean;
+  pose?: MascotPose;
   /**
-   * P10/JOB1 (docs/design-notes/aapningssekvens-2026-08-01.md): visually
-   * hidden (NOT unmounted — `visibility:hidden`, still occupies its slot)
-   * while OpeningSequence's own body/hands layers stand in for it during
-   * the opening choreography. Kept mounted throughout so the hand-off at
-   * the end of the sequence is a plain visibility toggle, not a mount —
-   * guaranteed pixel-identical to MascotPeek's own anchored position,
-   * since it IS MascotPeek the whole time.
+   * Dobbel vakt (samme mønster som ScanOverlay/ResultSurface): pose-BYTTET
+   * skjer fortsatt (blir aldri "fastlåst" i feil pose), men CROSSFADEN
+   * (og scanning-konktekstens lean-transform) hopper til slutt-tilstanden
+   * uten transition — «instant completion», ikke en animert overgang.
    */
-  hidden?: boolean;
+  reducedMotion?: boolean;
 }>;
 
 const MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot.png`;
+const MASCOT_CURIOUS_SRC = `${import.meta.env.BASE_URL}monter/maskot-nysgjerrig.png`;
 
-export function MascotPeek({ compact = false, hidden = false }: MascotPeekProps) {
+export function MascotPeek({ compact = false, pose = 'normal', reducedMotion = false }: MascotPeekProps) {
+  const compactAttr = compact ? 'true' : 'false';
+  const animateAttr = reducedMotion ? 'false' : 'true';
   return (
-    <img
-      className="hjm-mascot"
-      data-compact={compact ? 'true' : 'false'}
-      data-opening-hidden={hidden ? 'true' : 'false'}
-      src={MASCOT_SRC}
-      alt=""
-      aria-hidden="true"
-      draggable={false}
-    />
+    <>
+      <img
+        className="hjm-mascot hjm-mascot-normal"
+        data-compact={compactAttr}
+        data-pose={pose}
+        data-animate={animateAttr}
+        src={MASCOT_SRC}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+      />
+      <img
+        className="hjm-mascot hjm-mascot-curious"
+        data-compact={compactAttr}
+        data-pose={pose}
+        data-animate={animateAttr}
+        src={MASCOT_CURIOUS_SRC}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+      />
+    </>
   );
 }

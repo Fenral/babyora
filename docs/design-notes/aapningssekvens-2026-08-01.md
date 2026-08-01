@@ -1,5 +1,23 @@
 # Åpningssekvensen — spec (forhandlet med ekstern kritiker 2026-08-01)
 
+> **EIER-OVERRIDE (2026-08-01) — FJERNET, statisk til CTA.** Eieren så den
+> ekte appen i samme runde som scan-koreografi-override-en
+> (`sol-duel-2026-07-31.md` §2): Hjem skal være HELT statisk til brukeren
+> trykker CTA-en — ingen klatring, ingen "åpningsøyeblikk" i det hele tatt.
+> `OpeningSequence.tsx`/`opening-sequence.ts`, `ui-store.ts` sitt
+> `hasSeenOpeningEver`-flagg/boot-slot, og
+> `public/monter/maskot-{body,hands}.png` er fjernet fra kodebasen (feltene
+> i `ui-store.ts` blir stående ulest, se den filens egen kommentar — ingen
+> migrasjonsstøy). Denne spec-en står ELLERS uendret under, som HISTORIKK
+> over hva som faktisk ble bygget og siden revet ut — ikke som en gjeldende
+> kontrakt. `IDLE_LOOP_MIN_DELAY_MS`/`IDLE_LOOP_MAX_DELAY_MS` (nevnt under)
+> lever videre i `src/components/hjem/mascot-idle.ts` (Del 4 sitt
+> nysgjerrig-glimt i hvile — se `sol-duel-2026-07-31.md` §4 sin egen
+> revisjonsnotis for hvorfor det ble et PNG-glimt, ikke en video-loop).
+>
+> `scripts/verify-opening-sequence-endframe.mjs` (nevnt under, §"Akseptanse-
+> kriterium for sluttbildet") er slettet sammen med det den verifiserte.
+
 Eierbestilling: animert side når appen åpnes. Landet som A+B-hybrid:
 monter-lyset markerer overgangen fra launch screen, maskoten trekker seg
 kontrollert opp bak panelkanten, sluttbildet er PIKSELIDENTISK med Hjem.

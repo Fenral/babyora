@@ -5,28 +5,34 @@
  * Ingen React, ingen DOM, ingen timere her — alt er rene funksjoner av
  * eksplisitte input, testbare uten jsdom (samme stil som lib/scan/*.test.ts
  * og lib/outfit-transition/*.test.ts allerede bruker i denne kodebasen).
- * HjemMonter.tsx står for selve kablingen (useEffect + setTimeout).
+ * HjemMonter.tsx (og FinnAntrekkScreen.tsx sin egen Juster-kopi) står for
+ * selve kablingen (useEffect + setTimeout).
  *
- * P9 (docs/design-notes/sol-duel-2026-07-31.md §2 — "Scan-koreografi v2"):
- * erstatter P3s per-dag 2,1s-koreografi med "første gang noensinne" (1,1s,
- * scan-cache-store sin nye `hasPlayedFullScanEver`-flagg) + et 400ms
- * mikropass for alle senere trykk. Haptikk-TIDSPUNKTENE (§3) er ren data
- * her også — selve dispatchen (kall mot lib/haptics.ts) hører hjemme i
- * HjemMonter.tsx, samme arbeidsdeling som timer-varighetene over.
+ * Eier-override v3 (2026-08-01, «slik den er nå er det ingen som ser det —
+ * minimum tre sekunder»): erstatter P9s «første gang noensinne 1,1s, deretter
+ * 400ms mikropass»-modell (docs/design-notes/sol-duel-2026-07-31.md §2) med
+ * ÉN regel — HVERT trykk på «Finn dagens antrekk» (Hjem) / «Finn antrekk»
+ * («Beregn på nytt», Juster) spiller den FULLE 3,2s-koreografien, alltid.
+ * Mikropasset (ScanMicropass.tsx, CalcMicropass i FinnAntrekkScreen.tsx) er
+ * pensjonert og slettet. `hasPlayedFullScanEver` (scan-cache-store.ts)
+ * leses ikke lenger noe sted — feltet blir stående ulest i storen med
+ * vilje (ingen migrasjonsstøy), se HjemMonter.tsx sin egen kommentar.
+ * Haptikk-TIDSPUNKTENE (§3) er ren data her også — selve dispatchen (kall
+ * mot lib/haptics.ts) hører hjemme i kallerne, samme arbeidsdeling som
+ * timer-varighetene over.
  */
 import type { ScanCacheSlot, ScanStaleReason } from '../../lib/scan/types.js';
-import { shouldPlayFullScan } from '../../state/scan-cache-store.js';
 
 /**
- * Første scan NOENSINNE (ikke per dag — duel §2 supersederer P3s
- * 2,1s/dag-variant): full koreografi, 1,1s, separate avhukinger.
+ * Eier-override v3: HVERT trykk (ikke bare «første gang noensinne»)
+ * spiller den fulle koreografien, nå 3,2s (opp fra P9s 1,1s) — «ingen som
+ * ser det» ved kortere varigheter var eierens begrunnelse.
  */
-export const FULL_SCAN_DURATION_MS = 1100;
+export const FULL_SCAN_DURATION_MS = 3200;
 /**
  * Sjekk-poppene sine forsinkelser, som andel av total varighet. Ingen egen
- * 1,1s-mock finnes (duellen spesifiserer kun totalvarigheten + "separate
- * avhukinger") — de proporsjonale forholdstallene fra P3s 2,1s-mock
- * (0.55s/1.05s/1.55s av 2.1s) beholdes uendret og skaleres ned via
+ * 3,2s-mock finnes — de proporsjonale forholdstallene fra P3s 2,1s-mock
+ * (0.55s/1.05s/1.55s av 2.1s) beholdes uendret og skaleres opp via
  * `scanCheckDelaysMs`, slik at avhukingene fortsatt er jevnt fordelt
  * gjennom hele sekvensen.
  */
@@ -39,31 +45,15 @@ export const FULL_SCAN_CHECK_DELAY_RATIOS = Object.freeze([
 /**
  * Aktivitets-toggle → auto-rekalkulering: kort, «normal transition»
  * (DESIGN.md: «Normal transitions should complete in 150 to 250 ms»).
- * UBERØRT av duel §2 (som kun gjelder CTA-trykkets scan/mikropass) — ingen
+ * UBERØRT av eier-override v3 (som kun gjelder CTA-trykkets scan) — ingen
  * egen mock finnes for denne, samme visuelle koreografi som full scan, bare
  * komprimert, så formen (ikke varigheten) er identisk. Ingen haptikk her
  * (§3-tabellen sin "Aktivitet byttes"-rad er allerede dekket separat, ved
  * selve toggle-trykket i HjemScreen.tsx — ikke ved denne rekalkuleringen).
+ * Inline omberegning (aktivitets-toggle) er IKKE et CTA-trykk — eieren ba
+ * spesifikt om full scan-koreografi «på hvert CTA-trykk», ikke her.
  */
 export const QUICK_RECALC_DURATION_MS = 220;
-
-/**
- * P9 duel §2: 400ms mikropass — spilles ved ETHVERT trykk på «Finn dagens
- * antrekk» ETTER at `hasPlayedFullScanEver` er sann. Eksakte millisekund-
- * grenser fra spesifikasjonen (ikke proporsjonale/avledet som full-scan-
- * ratioene over — duellen oppgir disse som faste tall).
- */
-export const MICROPASS_DURATION_MS = 400;
-/** 0–70ms: CTA presset tilstand (skala 0.985, redusert skygge). Ingen haptikk. */
-export const MICROPASS_PRESS_MS = 70;
-/** 70–270ms: tillitslinjens tre ledd går sekundær→primær ved disse tidspunktene. */
-export const MICROPASS_SEGMENT_DELAYS_MS = Object.freeze([110, 175, 240] as const);
-/** 270–400ms: leddene komprimeres til værsammendraget. */
-export const MICROPASS_SUMMARY_START_MS = 270;
-/** `prepare()` varmer opp haptikk-motoren før landingen. */
-export const MICROPASS_PREPARE_MS = 280;
-/** ÉN medium resultatlanding. */
-export const MICROPASS_LANDING_MS = 390;
 
 export function scanCheckDelaysMs(totalDurationMs: number): readonly [number, number, number] {
   const [a, b, c] = FULL_SCAN_CHECK_DELAY_RATIOS;
@@ -85,10 +75,12 @@ export type ScanHapticCue = 'soft' | 'selection' | 'prepare' | 'medium';
 export type ScanHapticEvent = Readonly<{ atMs: number; cue: ScanHapticCue }>;
 
 /**
- * Førstegangs-sekvensen (full 1,1s-koreografi): myk puls ved start, ett
- * selection-tick per avhuket delstatus (Vær/Sted/Aktivitet — de tre
- * `rows`-radene i ScanOverlay), `prepare()` ~110ms før landingen, og ÉN
- * medium landing ved slutt. 5 følte signaler totalt (duellens "opptil 5"-tak).
+ * Full 3,2s-koreografi (eier-override v3 — spilles nå på HVERT trykk, ikke
+ * bare «første gang noensinne»): myk puls ved start, ett selection-tick per
+ * avhuket delstatus (Vær/Sted/Aktivitet — de tre `rows`-radene i
+ * ScanOverlay), `prepare()` ~110ms før landingen, og ÉN medium landing ved
+ * slutt. 5 følte signaler totalt (duellens "opptil 5"-tak, uendret av
+ * varighets-økningen).
  */
 export function fullScanHapticSchedule(totalDurationMs: number): readonly ScanHapticEvent[] {
   const [a, b, c] = scanCheckDelaysMs(totalDurationMs);
@@ -100,18 +92,6 @@ export function fullScanHapticSchedule(totalDurationMs: number): readonly ScanHa
     { atMs: c, cue: 'selection' },
     { atMs: prepareAtMs, cue: 'prepare' },
     { atMs: totalDurationMs, cue: 'medium' },
-  ] as const);
-}
-
-/**
- * Mikropasset (alle trykk etter det aller første): NULL haptiske ticks
- * underveis — kun ÉN medium landing, `prepare()`d ~110ms i forveien (280ms
- * → 390ms, jf. duellens eksakte tidspunkter).
- */
-export function micropassHapticSchedule(): readonly ScanHapticEvent[] {
-  return Object.freeze([
-    { atMs: MICROPASS_PREPARE_MS, cue: 'prepare' },
-    { atMs: MICROPASS_LANDING_MS, cue: 'medium' },
   ] as const);
 }
 
@@ -127,20 +107,17 @@ export type HjemMonterScanEntry =
  *    aktivitet) finnes → vis cachet resultat UMIDDELBART, ingen
  *    scan-koreografi i det hele tatt («later openings use cached result
  *    immediately», DESIGN.md).
- *  - Ellers → vent på trykk på «Finn dagens antrekk». `playFull` avgjør
- *    varigheten NÅR brukeren trykker: full koreografi (1,1s) kun hvis
- *    `shouldPlayFullScan` (duel §2: livstids-grense, IKKE lenger en
- *    dags-grense) sier at brukeren aldri har sett den før; ellers 400ms
- *    mikropass.
+ *  - Ellers → vent på trykk på «Finn dagens antrekk». Eier-override v3:
+ *    `playFull` er alltid `true` nå — livstidsgaten (P9s
+ *    `shouldPlayFullScan`/`hasPlayedFullScanEver`) er fjernet, mikropasset
+ *    er pensjonert. Feltet beholdes i returtypen (i stedet for å fjernes)
+ *    for å holde kallerne (HjemMonter.tsx) sitt grensesnitt stabilt.
  */
-export function decideScanEntry(
-  exactSlot: ScanCacheSlot | null,
-  hasPlayedFullScanEver: boolean,
-): HjemMonterScanEntry {
+export function decideScanEntry(exactSlot: ScanCacheSlot | null): HjemMonterScanEntry {
   if (exactSlot !== null) {
     return { kind: 'show-cached', resultKey: exactSlot.resultKey };
   }
-  return { kind: 'await-tap', playFull: shouldPlayFullScan(hasPlayedFullScanEver) };
+  return { kind: 'await-tap', playFull: true };
 }
 
 /** Kort form, brukt i «endret fra X til Y»-chip og stale-CTA-en. */

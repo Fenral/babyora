@@ -6,15 +6,15 @@
  * src/components/hjem/scan-orchestration.ts sine "rene beslutningsfunksjoner"
  * (FinnAntrekkScreen.tsx selv gjenbruker disse, gjenimplementerer dem ikke).
  *
- * Modellen (owner-redesign 2026-08-01 — erstatter "juster og se svaret
- * endre seg"-live-modellen):
- *   idle → (trykk «Finn antrekk») → scanning → (400ms mikropass) → fresh
+ * Modellen (owner-redesign 2026-08-01, presisert av eier-override v3 samme
+ * dag — erstatter "juster og se svaret endre seg"-live-modellen):
+ *   idle → (trykk «Finn antrekk») → scanning → (3,2s full koreografi, ScanOverlay) → fresh
  *   fresh → (én slider/aktivitet endres) → stale → (trykk «Beregn på nytt») → scanning → …
  *
- * 'idle' (ingenting beregnet ennå) og 'scanning' (mikropasset kjører) er
- * UPÅVIRKET av at sliderne endres — kun et allerede FERSKT resultat re-armes
- * til 'stale'. Resultatet forblir alltid synlig (demotert, aldri skjult) fra
- * det øyeblikket noe er committed.
+ * 'idle' (ingenting beregnet ennå) og 'scanning' (den fulle koreografien
+ * kjører) er UPÅVIRKET av at sliderne endres — kun et allerede FERSKT
+ * resultat re-armes til 'stale'. Resultatet forblir alltid synlig (demotert,
+ * aldri skjult) fra det øyeblikket noe er committed.
  */
 
 export type CalcPhase = 'idle' | 'scanning' | 'fresh' | 'stale';

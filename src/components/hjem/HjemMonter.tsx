@@ -5,23 +5,28 @@
  * uendret av denne pakken) og de nye presentasjonskomponentene.
  *
  * ── Faseoppløsning (docs/mocks/monter/hjem-*.html) ──────────────────────
- *  weather-ready  → WeatherScene (full panel) + MascotPeek + ask-block
- *                   («Klar for en liten tur?» / offline-varianten)
+ *  weather-ready  → WeatherScene (full panel) + MascotIdle (nysgjerrig-glimt
+ *                   i hvile, se MascotIdle.tsx) + ask-block («Klar for en
+ *                   liten tur?» / offline-varianten)
  *  scanning /
- *  recalculating  → ScanOverlay (erstatter panelet helt) + MascotPeek(kompakt)
- *                   + ScanStatusBlock
+ *  recalculating  → ScanOverlay (erstatter panelet helt) + MascotPeek(kompakt,
+ *                   pose="curious" — bøyer seg ned mot scan-animasjonen, se
+ *                   MascotPeek.tsx) + ScanStatusBlock
  *  result-current → WeatherStrip (komprimert) + ResultSurface (INGEN maskot —
  *                   hjem-result.html mangler den bevisst)
  *  result-stale   → WeatherScene (full panel) + MascotPeek(kompakt) +
  *                   ask-block (kontekstuell «Nytt antrekk for …?» / retry)
  *
- * ── Første scan i dag vs. cachet gjenåpning ─────────────────────────────
+ * ── Cachet gjenåpning vs. hvert CTA-trykk (eier-override 2026-08-01, v3) ──
  * Ved mount: `decideScanEntry` (scan-orchestration.ts, rent/testet) avgjør
  * om et EKSAKT cachet resultat (samme barn+dag+sted+aktivitet+motorversjon)
  * finnes → hopp rett til resultatet, ingen koreografi i det hele tatt.
- * Ellers venter skjermen på trykk på «Finn dagens antrekk»; `shouldPlayFullScan`
- * (scan-cache-store, P3) avgjør DA om trykket spiller full 2.1s-koreografi
- * (dagens første) eller en kort variant.
+ * Ellers venter skjermen på trykk på «Finn dagens antrekk»; HVERT trykk
+ * spiller nå den FULLE 3,2s-koreografien — eiers begrunnelse: «slik den er
+ * nå er det ingen som ser det». Mikropasset er pensjonert (se
+ * scan-orchestration.ts sin filhode), og åpningsklatringen (OpeningSequence)
+ * er fjernet i samme runde — Hjem er nå statisk til CTA-trykk (se
+ * docs/design-notes/aapningssekvens-2026-08-01.md sin eier-override-notis).
  *
  * ── Aktivitets-toggle → auto-rekalkulering ───────────────────────────────
  * En identitetsendring MENS en fase allerede er etablert (kun aktivitet kan
@@ -50,7 +55,6 @@ import './hjem-monter.css';
 import { useScanCoordinator } from '../../hooks/useScanCoordinator.js';
 import {
   getSlotForIdentity,
-  shouldPlayFullScan,
   useScanCache,
 } from '../../state/scan-cache-store.js';
 import {
@@ -76,8 +80,8 @@ import {
 import { WeatherScene, type MonterActivity } from './WeatherScene.js';
 import { WeatherStrip } from './WeatherStrip.js';
 import { MascotPeek } from './MascotPeek.js';
+import { MascotIdle } from './MascotIdle.js';
 import { ScanOverlay, ScanStatusBlock } from './ScanOverlay.js';
-import { ScanMicropass } from './ScanMicropass.js';
 import type { OutfitTransitionStatusLike } from './scan-overlay-guard.js';
 import { ResultSurface } from './ResultSurface.js';
 import { deriveResultRows, type ResultRow } from './result-rows.js';
@@ -86,7 +90,6 @@ import {
   decideScanEntry,
   fullScanHapticSchedule,
   FULL_SCAN_DURATION_MS,
-  MICROPASS_DURATION_MS,
   QUICK_RECALC_DURATION_MS,
   staleCtaLabel,
   staleHeadline,
@@ -98,9 +101,6 @@ import type { FinnAntrekkPrefill } from '../../screens/finn-antrekk-prefill.js';
 import { resolveSwapTarget } from './swap-row.js';
 import { PlaggDetailSheet } from '../PlaggDetailSheet.js';
 import type { GarmentId } from '../../data/garment-illustrations.js';
-import { decideOpeningVariant, type OpeningVariant } from './opening-sequence.js';
-import { OpeningSequence } from './OpeningSequence.js';
-import { consumeOpeningBootSlot, useUiStore } from '../../state/ui-store.js';
 
 const ACTIVITY_CHILD_LINE: Readonly<Record<MonterActivity, string>> = { utelek: 'Utelek', vogn: 'Vogn' };
 const ACTIVITY_TOGGLE_LABEL: Readonly<Record<MonterActivity, string>> = { utelek: 'Utenfor vogn', vogn: 'I vogn' };
@@ -200,16 +200,13 @@ export function HjemMonter({
   const scan = useScanCoordinator();
   const slots = useScanCache((state) => state.slots);
   const commitSlot = useScanCache((state) => state.commitSlot);
-  // P9 (duel §2): livstids-flagget som avgjør full-koreografi (1,1s, kun
-  // aller første gang) vs. mikropass (400ms, alle senere trykk) — erstatter
-  // det gamle per-dags-feltet (`daySlot`/`scanPlayedInFullToday`).
-  const hasPlayedFullScanEver = useScanCache((state) => state.hasPlayedFullScanEver);
+  // Eier-override v3 (2026-08-01): hvert CTA-trykk spiller nå den FULLE
+  // koreografien (se scan-orchestration.ts) — livstidsflagget over hvorvidt
+  // full-koreografien ALLEREDE er spilt (`hasPlayedFullScanEver`) leses ikke
+  // lenger her (ingen mikropass-gren igjen å velge mellom); feltet selv blir
+  // stående ulest i scan-cache-store.ts (ingen migrasjonsstøy). Skriveren
+  // (`markFullScanPlayedEver`) beholdes — se completeScan under.
   const markFullScanPlayedEver = useScanCache((state) => state.markFullScanPlayedEver);
-  // P10/JOB1 (aapningssekvens-2026-08-01.md): livstids-flagget for den
-  // FULLE ~900ms førstegangs-åpningssekvensen — samme mønster som
-  // hasPlayedFullScanEver over, egen liten store (ui-store.ts).
-  const hasSeenOpeningEver = useUiStore((state) => state.hasSeenOpeningEver);
-  const markOpeningSeenEver = useUiStore((state) => state.markOpeningSeenEver);
 
   const identity = useMemo<ScanIdentity>(() => ({
     childId,
@@ -218,33 +215,6 @@ export function HjemMonter({
     activity,
     engineVersion: WOOL_LAYERS_ENGINE_VERSION,
   }), [childId, lat, lon, activity]);
-
-  // ── P10/JOB1: åpningssekvens ─────────────────────────────────────────────
-  // Avgjøres NØYAKTIG ÉN gang per HjemMonter-mount (lazy useState-
-  // initializer, samme "kjør kun ved første render"-garanti som resten av
-  // komponentens seed-mønstre) — IKKE via scan.state.phase (som først
-  // flipper til 'result-current' i en effekt ETTER commit, ett render-slag
-  // for sent for et treffsikkert varmstart-avgjørelse). getSlotForIdentity
-  // kalles derfor direkte her (ren funksjon, trygt under render) i stedet
-  // for å lese den asynkrone scan-fasen.
-  const [openingVariant] = useState<OpeningVariant>(() => decideOpeningVariant({
-    bootSlotClaimed: consumeOpeningBootSlot(),
-    reducedMotion,
-    isWarmCacheHit: getSlotForIdentity(slots, identity) !== null,
-    hasSeenOpeningEver,
-  }));
-  const [openingActive, setOpeningActive] = useState(openingVariant !== 'none');
-  const panelLiftRef = useRef<HTMLDivElement | null>(null);
-  const handleOpeningComplete = useCallback(() => {
-    if (openingVariant === 'first-ever') markOpeningSeenEver();
-    setOpeningActive(false);
-    // TODO (duel §4 — maskot idle-loop, IKKE integrert av denne pakken):
-    // start idle-loopen her, IDLE_LOOP_MIN_DELAY_MS–IDLE_LOOP_MAX_DELAY_MS
-    // (opening-sequence.ts) etter siste brukerinteraksjon på Hjem — se
-    // samme fil + OpeningSequence.tsx sin filhode-kommentar for konteksten
-    // idle-loopen selv (pause ved reducedMotion/bakgrunn/Low Power Mode)
-    // må respektere når den bygges.
-  }, [openingVariant, markOpeningSeenEver]);
 
   const currentResultKey = useMemo(() => {
     if (recommendation === null || now === null) return null;
@@ -283,7 +253,6 @@ export function HjemMonter({
 
   // ── Timer-håndtak for scan/recalc-fullføring ────────────────────────────
   const timerCancelRef = useRef<(() => void) | null>(null);
-  const pendingFullScanRef = useRef(false);
   const seenIdentityRef = useRef<ScanIdentity | null>(null);
   const [previousActivity, setPreviousActivity] = useState<MonterActivity | null>(null);
   const [previousResultCount, setPreviousResultCount] = useState<number | null>(null);
@@ -297,12 +266,12 @@ export function HjemMonter({
    */
   const [isFresh, setIsFresh] = useState(false);
   /**
-   * P9 (duel §2): sann når mikropassets 400ms-timer fyrte MENS motoren ikke
-   * hadde et resultat klart ennå — «Data ikke klare etter 400ms → ærlig
-   * lastetilstand». ScanMicropass viser da «Oppdaterer værdata» i stedet for
-   * værsammendraget; effekten under fullfører automatisk idet resultatet
-   * blir klart, uten et nytt trykk. ALDRI satt sann for en cachet
-   * umiddelbar visning (show-cached-grenen kaller `completeScan` aldri).
+   * Eier-override v3: sann når 3,2s-scanningens timer fyrte MENS motoren
+   * ikke hadde et resultat klart ennå — «ærlig lastetilstand» i stedet for
+   * en stille "scanning" uten forklaring. Effekten under fullfører
+   * automatisk idet resultatet blir klart, uten et nytt trykk. ALDRI satt
+   * sann for en cachet umiddelbar visning (show-cached-grenen kaller
+   * `completeScan` aldri).
    */
   const [awaitingScanData, setAwaitingScanData] = useState(false);
 
@@ -363,7 +332,7 @@ export function HjemMonter({
   const completeScan = useCallback(() => {
     const resultKey = currentResultKeyRef.current;
     if (resultKey === null) {
-      // P9 (duel §2): motor ikke klar ved 400ms/1,1s-grensen — ærlig
+      // Eier-override v3: motor ikke klar ved 3,2s-grensen — ærlig
       // lastetilstand i stedet for å bli stående i en stille "scanning" uten
       // forklaring. ALDRI landings-haptikk her — ingenting landet.
       setAwaitingScanData(true);
@@ -374,17 +343,20 @@ export function HjemMonter({
     // Landing: prepare() rett før medium (duel §3 — "prepare() først").
     void hapticPrepare().then(() => { void impactMedium(); });
     scan.scanCompleted(resultKey);
-    if (pendingFullScanRef.current) markFullScanPlayedEver();
+    // Eier-override v3: ETHVERT trykk spiller nå den fulle koreografien —
+    // markFullScanPlayedEver() kalles derfor ubetinget (feltet selv leses
+    // ikke lenger noe sted, se useScanCache-kommentaren over).
+    markFullScanPlayedEver();
     commitSlot({
       identity,
       resultKey,
       completedAt: Date.now(),
-      scanPlayedInFullToday: pendingFullScanRef.current || slots[identity.childId]?.scanPlayedInFullToday === true,
+      scanPlayedInFullToday: true,
     });
-  }, [scan, commitSlot, identity, slots, markFullScanPlayedEver]);
+  }, [scan, commitSlot, identity, markFullScanPlayedEver]);
 
-  // Auto-fullfører mikropasset (uten et nytt trykk) idet motoren ENDELIG har
-  // et resultat, hvis 400ms-grensen rakk å gå ut mens vi ventet (se
+  // Auto-fullfører scanningen (uten et nytt trykk) idet motoren ENDELIG har
+  // et resultat, hvis 3,2s-grensen rakk å gå ut mens vi ventet (se
   // awaitingScanData-kommentaren over).
   useEffect(() => {
     if (!awaitingScanData || currentResultKey === null) return;
@@ -415,7 +387,7 @@ export function HjemMonter({
     if (phase === 'weather-ready') {
       if (seenIdentityRef.current === null) {
         const exact = getSlotForIdentity(slots, identity);
-        const decision = decideScanEntry(exact, hasPlayedFullScanEver);
+        const decision = decideScanEntry(exact);
         if (decision.kind === 'show-cached') {
           // isFresh er allerede false fra useState(false) — cachet
           // umiddelbar visning skal ALDRI trigge inn-animasjonen.
@@ -434,19 +406,17 @@ export function HjemMonter({
       scan.identityChanged(identity, { autoRecalculate: true });
       runTimer(QUICK_RECALC_DURATION_MS, completeRecalc);
     }
-  }, [identity, now, scan, slots, hasPlayedFullScanEver, runTimer, completeRecalc, recommendation]);
+  }, [identity, now, scan, slots, runTimer, completeRecalc, recommendation]);
 
   const handleFindOutfitTap = useCallback(() => {
     if (currentResultKeyRef.current === null) return;
-    const playFull = shouldPlayFullScan(hasPlayedFullScanEver);
-    pendingFullScanRef.current = playFull;
+    // Eier-override v3: HVERT trykk spiller den fulle 3,2s-koreografien —
+    // ingen playFull-forgrening igjen (mikropasset er pensjonert).
     setAwaitingScanData(false);
     scan.scanStarted(identity);
-    runPreLandingHapticSchedule(
-      playFull ? fullScanHapticSchedule(FULL_SCAN_DURATION_MS) : [],
-    );
-    runTimer(playFull ? FULL_SCAN_DURATION_MS : MICROPASS_DURATION_MS, completeScan);
-  }, [hasPlayedFullScanEver, identity, scan, runTimer, completeScan, runPreLandingHapticSchedule]);
+    runPreLandingHapticSchedule(fullScanHapticSchedule(FULL_SCAN_DURATION_MS));
+    runTimer(FULL_SCAN_DURATION_MS, completeScan);
+  }, [identity, scan, runTimer, completeScan, runPreLandingHapticSchedule]);
 
   const handleStaleCtaTap = useCallback(() => {
     scan.recalcStarted();
@@ -526,45 +496,6 @@ export function HjemMonter({
 
   const phase = scan.state.phase;
 
-  // P9 (duel §2): mikropasset er en EGEN gren, ikke en ScanOverlay-variant —
-  // det erstatter kun ask-blokken (WeatherScene over står uendret), ikke
-  // hele panelet. `hasPlayedFullScanEver` avgjør dette entydig MENS
-  // phase==='scanning' (den kan bare flippe sann i samme batch som
-  // completeScan tar fasen ut av 'scanning', se completeScan/markFullScanPlayedEver).
-  if (phase === 'scanning' && hasPlayedFullScanEver) {
-    const summaryText = awaitingScanData || now === null
-      ? null
-      : `${formatTemp(now.tempC)}° · ${cityLabel} · ${ACTIVITY_TOGGLE_LABEL[activity]}`;
-    return (
-      <div className="hjem-monter">
-        <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
-        <div className="hjm-panel-slot" data-with-mascot="true" data-compact="false">
-          <MascotPeek />
-          <WeatherScene
-            cityLabel={cityLabel}
-            nuance={nuance}
-            tempC={now?.tempC ?? null}
-            feelsLikeC={now?.feelsLikeC ?? null}
-            noteText={now ? `${conditionLabel} — sjekk antrekket før dere går ut.` : 'Henter vær…'}
-            weatherIconSrc={weatherIconSrc}
-            weatherIconAlt={conditionLabel}
-            freshnessLabel="Oppdatert nå"
-            activity={activity}
-            onActivityChange={onActivityChange}
-            onAdjustLocation={handleOpenAdjust}
-          />
-        </div>
-        <div className="hjm-body">
-          <ScanMicropass
-            summaryText={summaryText}
-            reducedMotion={reducedMotion}
-            onTapAnywhere={handleSkip}
-          />
-        </div>
-      </div>
-    );
-  }
-
   if (phase === 'scanning' || phase === 'recalculating') {
     const isFullScan = phase === 'scanning';
     const totalDurationMs = isFullScan ? FULL_SCAN_DURATION_MS : QUICK_RECALC_DURATION_MS;
@@ -573,7 +504,12 @@ export function HjemMonter({
       <div className="hjem-monter">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
-          <MascotPeek compact />
+          {/* Del 3 (nysgjerrig maskot under scannen): bøyer hodet ned og
+              retter blikket mot scan-animasjonen under seg — se
+              MascotPeek.tsx sin crossfade-dokumentasjon. Tilbake til
+              'normal' skjer implisitt idet fasen forlater scanning/
+              recalculating (andre grener kaller MascotPeek uten pose). */}
+          <MascotPeek compact pose="curious" reducedMotion={reducedMotion} />
           <ScanOverlay
             cityLabel={cityLabel}
             nuance={nuance}
@@ -757,36 +693,24 @@ export function HjemMonter({
     <div className="hjem-monter">
       <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
       <div className="hjm-panel-slot" data-with-mascot="true" data-compact="false">
-        {/* P10/JOB1: OpeningSequence renders ONLY the extra body/hands
-            layers + edge-light, alongside the ALWAYS-mounted MascotPeek
-            (visually hidden, never unmounted) and the panel-lift-wrap
-            (ALWAYS present too) — see OpeningSequence.tsx's own header
-            comment for why <WeatherScene/> must never remount across the
-            opening→normal hand-off. */}
-        {openingActive && (
-          <OpeningSequence
-            variant={openingVariant as Exclude<OpeningVariant, 'none'>}
-            reducedMotion={reducedMotion}
-            onComplete={handleOpeningComplete}
-            panelRef={panelLiftRef}
-          />
-        )}
-        <MascotPeek hidden={openingActive} />
-        <div ref={panelLiftRef} className="hjm-panel-lift-wrap">
-          <WeatherScene
-            cityLabel={cityLabel}
-            nuance={nuance}
-            tempC={now?.tempC ?? null}
-            feelsLikeC={now?.feelsLikeC ?? null}
-            noteText={now ? `${conditionLabel} — sjekk antrekket før dere går ut.` : 'Henter vær…'}
-            weatherIconSrc={weatherIconSrc}
-            weatherIconAlt={conditionLabel}
-            freshnessLabel="Oppdatert nå"
-            activity={activity}
-            onActivityChange={onActivityChange}
-            onAdjustLocation={handleOpenAdjust}
-          />
-        </div>
+        {/* Eier-override v3 (2026-08-01): Hjem er statisk til CTA-trykk —
+            åpningsklatringen (OpeningSequence) er fjernet. MascotIdle tar
+            over MascotPeeks normale visning her: samme statiske bilde i
+            hvile, med et sjeldent nysgjerrig-glimt (se MascotIdle.tsx). */}
+        <MascotIdle reducedMotion={reducedMotion} />
+        <WeatherScene
+          cityLabel={cityLabel}
+          nuance={nuance}
+          tempC={now?.tempC ?? null}
+          feelsLikeC={now?.feelsLikeC ?? null}
+          noteText={now ? `${conditionLabel} — sjekk antrekket før dere går ut.` : 'Henter vær…'}
+          weatherIconSrc={weatherIconSrc}
+          weatherIconAlt={conditionLabel}
+          freshnessLabel="Oppdatert nå"
+          activity={activity}
+          onActivityChange={onActivityChange}
+          onAdjustLocation={handleOpenAdjust}
+        />
       </div>
       <div className="hjm-body">
         <div className="hjm-ask-block">

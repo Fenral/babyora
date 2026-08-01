@@ -40,19 +40,19 @@ function hapticsEnabled(): boolean {
   return readHaptics() === 'on';
 }
 
-/** Scan starter — KUN den aller første, fulle 1,1s-koreografien (§3). */
+/** Scan starter — eier-override v3: HVERT scan-trykk (Hjem + Juster), ikke lenger kun "første gang noensinne" (§3). */
 export function impactSoft(): Promise<void> {
   if (!hapticsEnabled()) return Promise.resolve();
   return systemFire('light');
 }
 
-/** Resultat lander — full scan OG mikropass, ring med prepare() ~110ms først. */
+/** Resultat lander — full scan-koreografi, ring med prepare() ~110ms først. */
 export function impactMedium(): Promise<void> {
   if (!hapticsEnabled()) return Promise.resolve();
   return systemFire('medium');
 }
 
-/** Avhuking (førstegangs-sekvens) / aktivitet byttes / prisplan velges. */
+/** Avhuking (hvert scan-trykk) / aktivitet byttes / prisplan velges. */
 export function selection(): Promise<void> {
   if (!hapticsEnabled()) return Promise.resolve();
   return systemFire('selection');

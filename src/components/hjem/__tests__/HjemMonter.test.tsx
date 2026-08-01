@@ -12,9 +12,9 @@
  * via the real zustand/persist store because persist's rehydration timing
  * is asynchronous and races with the synchronous render in a plain
  * renderToStaticMarkup test — a controllable fake keeps these tests fast
- * and deterministic. `getSlotForIdentity`/`shouldPlayFullScan` (the actual
- * P3 cache-matching logic) stay real via importOriginal, so the render-time
- * offline/cached-slot branches in HjemMonter still exercise real logic.
+ * and deterministic. `getSlotForIdentity` (the actual P3 cache-matching
+ * logic) stays real via importOriginal, so the render-time offline/cached-
+ * slot branches in HjemMonter still exercise real logic.
  */
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
@@ -31,7 +31,6 @@ import type { RecommendInput } from '../../../lib/wool-layers/types.js';
 import type { ScanCoordinatorState } from '../../../lib/scan/coordinator.js';
 import type { ScanCacheSlot } from '../../../lib/scan/types.js';
 import { localDateKey } from '../../../lib/scan/types.js';
-import { __resetOpeningBootSlotForTests } from '../../../state/ui-store.js';
 
 const scanMethods = {
   weatherReady: vi.fn(),
@@ -58,13 +57,19 @@ vi.mock('../../../hooks/useScanCoordinator.js', () => ({
 
 let mockedSlots: Record<string, ScanCacheSlot> = {};
 const commitSlot = vi.fn();
+const markFullScanPlayedEver = vi.fn();
 
 vi.mock('../../../state/scan-cache-store.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../state/scan-cache-store.js')>();
   return {
-    ...actual, // keep the REAL getSlotForIdentity/shouldPlayFullScan/markScanPlayed
-    useScanCache: (selector: (state: { slots: Record<string, ScanCacheSlot>; commitSlot: typeof commitSlot }) => unknown) =>
-      selector({ slots: mockedSlots, commitSlot }),
+    ...actual, // keep the REAL getSlotForIdentity/markScanPlayed
+    useScanCache: (
+      selector: (state: {
+        slots: Record<string, ScanCacheSlot>;
+        commitSlot: typeof commitSlot;
+        markFullScanPlayedEver: typeof markFullScanPlayedEver;
+      }) => unknown,
+    ) => selector({ slots: mockedSlots, commitSlot, markFullScanPlayedEver }),
   };
 });
 
@@ -123,19 +128,15 @@ function baseProps() {
 beforeEach(() => {
   mockedSlots = {};
   commitSlot.mockClear();
+  markFullScanPlayedEver.mockClear();
   for (const fn of Object.values(scanMethods)) (fn as Mock).mockClear();
-  // P10/JOB1: the opening sequence's per-boot dedup slot (ui-store.ts) is
-  // module-level, not component state — reset it before every test so
-  // these renders don't depend on which test happened to run first (see
-  // ui-store.ts's own doc comment on why a reset hook is legitimate here).
-  __resetOpeningBootSlotForTests();
 });
 afterEach(() => {
   mockedSlots = {};
 });
 
 describe('HjemMonter — phase-driven view switching', () => {
-  it('weather-ready: renders the WeatherScene panel + "Klar for en liten tur?" ask screen', () => {
+  it('weather-ready: renders the WeatherScene panel + "Klar for en liten tur?" ask screen, statisk (ingen OpeningSequence), MascotIdle i hvile', () => {
     mockedState = { phase: 'weather-ready' };
     const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
     expect(html).toContain('Klar for en liten tur?');
@@ -143,9 +144,24 @@ describe('HjemMonter — phase-driven view switching', () => {
     expect(html).toContain('Lillian · 9 måneder · Utelek');
     expect(html).toContain('data-nuance="rain"');
     expect(html).toContain('BABYORA');
+    // Eier-override v3: åpningsklatringen er fjernet — ingen ekstra
+    // body/hands-lag, ingen kantlys, ingen panel-lift-wrapper.
+    expect(html).not.toContain('hjm-opening-mascot-body');
+    expect(html).not.toContain('hjm-opening-mascot-hands');
+    expect(html).not.toContain('hjm-opening-edge-light');
+    expect(html).not.toContain('hjm-panel-lift-wrap');
+    // MascotIdle renders MascotPeek's normal-pose markup (SSR always shows
+    // pose='normal' — the idle glance timer never fires during a static
+    // render) PLUS its own dedicated (reserved) glance overlay, initially
+    // invisible. Never the scan-reserved curious pose here.
+    expect(html).toContain('/monter/maskot.png');
+    expect(html).toContain('data-pose="normal"');
+    expect(html).not.toContain('data-pose="curious"');
+    expect(html).toContain('/monter/maskot-glimt.png');
+    expect(html).toContain('data-glancing="false"');
   });
 
-  it('scanning: renders the ScanOverlay choreography + status block, not the ask screen', () => {
+  it('scanning: renders the ScanOverlay choreography + status block + the curious mascot pose, not the ask screen', () => {
     mockedState = {
       phase: 'scanning',
       identity: { childId: 'child-1', dateKey: '2026-07-31', placeKey: 'place:63.430,10.390', activity: 'utelek', engineVersion: 'v' },
@@ -154,6 +170,9 @@ describe('HjemMonter — phase-driven view switching', () => {
     expect(html).toContain('aria-label="Beregner antrekk"');
     expect(html).toContain('Kler på Lillian i tankene…');
     expect(html).not.toContain('Klar for en liten tur?');
+    // Del 3: nysgjerrig maskot-pose under scanningen.
+    expect(html).toContain('data-pose="curious"');
+    expect(html).toContain('/monter/maskot-nysgjerrig.png');
   });
 
   it('recalculating: renders the same choreography with the "på nytt" copy', () => {
