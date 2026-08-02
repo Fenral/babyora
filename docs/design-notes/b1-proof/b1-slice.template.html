@@ -42,8 +42,23 @@
   html,body { margin:0; height:100%; }
   body { background:var(--canvas); font-family:'Schibsted',system-ui,sans-serif; color:var(--ink-mid);
          overflow:hidden; user-select:none; }
+  /* Stagen er en storrelsescontainer: kompakt-tieren skal male APPENS
+     tilgjengelige hoyde, ikke nettleservinduets. Uten dette ville
+     fullskjerm-forhandsvisningen fatt kompaktversjonen likevel, siden
+     vinduet er lavt selv om den simulerte appen er hoy. */
   #stage { position:fixed; inset:0; max-width:520px; margin:0 auto; overflow:hidden;
-           background:var(--canvas); }
+           background:var(--canvas); container-type:size; container-name:app; }
+  /* Fullskjerm-forhandsvisning: viser den EKTE app-flaten (430x932) skalert
+     til a passe i nettleseren, sa komposisjonen kan bedommes pa telefon selv
+     med Safari-krom som spiser hoyde. */
+  body.preview { background:#0B0705; }
+  body.preview #stage { inset:auto; top:50%; left:50%; width:430px; height:932px;
+           max-width:none; transform:translate(-50%,-50%) scale(var(--fit,1));
+           border-radius:26px; box-shadow:0 0 0 2px rgba(231,176,135,.22), 0 40px 90px -20px rgba(0,0,0,.9); }
+  .previewbtn { position:fixed; top:8px; left:50%; transform:translateX(-50%); z-index:99;
+           background:rgba(53,38,26,.9); color:#F2E9DC; border:1px solid rgba(231,176,135,.28);
+           border-radius:999px; padding:7px 15px; font-size:12.5px; font-family:inherit;
+           backdrop-filter:blur(10px); }
   #stage::before { content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
            background:radial-gradient(160% 110% at 80% 118%, rgba(0,0,0,.38), transparent 55%); }
   /* Eierprinsipp (B1-kalibrering): key-lyset sikter på skjermens HOVEDMOTIV
@@ -389,7 +404,7 @@
      rekkefolgen jeg tenkte i.
      Panelet maler sin egen hoyde ved oppstart, sa lasen plukker opp disse
      verdiene selv. */
-  @media (max-height: 780px) {
+  @container app (max-height: 780px) {
     .trust { display:none; }                          /* forsikring, ikke innhold */
     .srow { padding:8px 0; }                          /* 3 rader × 10 px = −30 */
     .synth { margin-top:8px; }                        /*                  −6  */
@@ -397,6 +412,7 @@
   }
 </style>
 
+<button class="previewbtn" onclick="togglePreview()">⤢ Vis som fullskjerm-app</button>
 <div id="stage" data-mode="dark">
   <div class="brand" id="brand">B A B Y O R A</div>
   <div class="atmo on" id="atmo-hjem"></div>
@@ -826,6 +842,20 @@ let stepBusy=false;
   sc.addEventListener('pointercancel',()=>{drag=false;dir=0;stepBusy=false;},{passive:true});
 })();
 function closeKlePaa(){ pushTo('s-res','down',PUSH_BACK); }
+
+/* Fullskjerm-forhandsvisning: skalerer den ekte app-flaten ned til a passe. */
+function fitPreview(){
+  if(!document.body.classList.contains('preview')) return;
+  const f=Math.min(innerWidth/430,(innerHeight-56)/932);
+  document.documentElement.style.setProperty('--fit',f.toFixed(4));
+}
+function togglePreview(){
+  const på=document.body.classList.toggle('preview');
+  document.querySelector('.previewbtn').textContent = på ? '⤢ Tilbake til faktisk størrelse' : '⤢ Vis som fullskjerm-app';
+  fitPreview();
+  requestAnimationFrame(()=>measurePanel());
+}
+addEventListener('resize',fitPreview);
 
 /* Mal begge panelhoydene for forste trykk. */
 measurePanel();
