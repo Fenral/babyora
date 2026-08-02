@@ -60,3 +60,9 @@ tools/avatar-gen/out/
 # App Store Connect innloggings-profil (Playwright — inneholder session)
 .asc-profile/
 .gstack/
+
+# Installerte agent-skills er verktoy, ikke kildekode — som node_modules.
+# skills-lock.json pinner versjonene og ER sjekket inn; innholdet er ikke.
+# Gjenopprett med: npx skills add vercel-labs/agent-skills
+.agents/skills/
+.claude/skills/
