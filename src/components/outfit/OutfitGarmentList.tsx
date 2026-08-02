@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { displayNameForDbString } from '../../data/garment-display-names.js';
 import type { RegisterOutfitRow } from '../../lib/outfit/outfit-transition-contract.js';
 import type { OutfitItemId, OutfitTruthSnapshotV1 } from '../../lib/outfit/outfit-truth.js';
 import { GarmentThumbnail } from './GarmentThumbnail.js';
@@ -55,8 +56,10 @@ function Row({ garment, props }: {
         onPointerLeave={() => props.onHover(null)}
       >
         <span className="outfit-row__ordinal">{garment.order}</span>
+        {/* T1A: thumbnail beholder RÅ label (bilde-oppslagsnøkkel);
+            den synlige teksten bruker det kanoniske visningsnavnet. */}
         <GarmentThumbnail label={garment.label} className="outfit-row__thumbnail" />
-        <span className="outfit-row__label">{garment.label}</span>
+        <span className="outfit-row__label">{displayNameForDbString(garment.label)}</span>
         <span className="outfit-row__detail">
           {garment.category} · {bodyRegionLabel(garment.bodyRegion)}
         </span>
@@ -87,7 +90,9 @@ export function OutfitGarmentList(props: Props) {
         <section aria-label="Utstyr">
           <h3>Utstyr</h3>
           <ul>
-            {props.snapshot.equipment.map((item) => <li key={item.itemId}>{item.label}</li>)}
+            {props.snapshot.equipment.map((item) => (
+              <li key={item.itemId}>{displayNameForDbString(item.label)}</li>
+            ))}
           </ul>
         </section>
       )}

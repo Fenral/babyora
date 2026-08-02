@@ -13,14 +13,16 @@ import { resolveSwapTarget } from '../swap-row.js';
 import type { ResultRow } from '../result-rows.js';
 
 function row(overrides: Partial<ResultRow>): ResultRow {
-  return {
+  // T1A: displayLabel speiler label når testen ikke sier noe annet.
+  const base = {
     key: 'k1',
     position: 1,
     label: 'Ullsokker',
     roleLabel: 'Innerst',
-    garmentId: 'ullsokker',
+    garmentId: 'ullsokker' as string | null,
     ...overrides,
   };
+  return { displayLabel: base.label, ...base };
 }
 
 describe('resolveSwapTarget', () => {

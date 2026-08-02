@@ -7,7 +7,8 @@
  * gjenbruke SAMME lesbare-navn- og materiale-heuristikk i stedet for å
  * duplisere/drifte fra den.
  */
-import { dbStringFor, type GarmentId } from './garment-illustrations';
+import { garmentDisplayName } from './garment-display-names';
+import type { GarmentId } from './garment-illustrations';
 
 export type MaterialKey = 'ull' | 'bomull' | 'vanntett' | 'mix';
 
@@ -15,17 +16,11 @@ export function capitalize(s: string): string {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
-/** Lesbart navn: kanonisk db-streng, ellers humanisert id (sovepose-2-5-tog
- *  → «Sovepose 2,5 TOG»). */
+/** Lesbart navn — T1A: kanonisk visningsnavn fra garment-display-names.ts
+ *  (rå db-streng/humanisert id er kun fallback for ikke-katalog-id-er,
+ *  håndtert inne i garmentDisplayName). */
 export function titleFor(id: GarmentId): string {
-  const db = dbStringFor(id);
-  if (db !== id) return capitalize(db);
-  const humanized = id
-    .replace(/-(\d)-(\d)-tog\b/g, ' $1,$2 tog')
-    .replace(/-(\d)-tog\b/g, ' $1,0 tog')
-    .replace(/-/g, ' ')
-    .replace(/\btog\b/g, 'TOG');
-  return capitalize(humanized);
+  return garmentDisplayName(id);
 }
 
 /** Heuristisk materiale fra plagg-id. null = tilbehør uten tydelig materiale

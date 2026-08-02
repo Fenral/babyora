@@ -13,11 +13,15 @@
  */
 import type { LayerCategory, Recommendation } from '../../lib/wool-layers/types.js';
 import { garmentIdFor } from '../../data/garment-illustrations.js';
+import { displayNameForDbString } from '../../data/garment-display-names.js';
 
 export type ResultRow = Readonly<{
   key: string;
   position: number;
+  /** Rå motor-streng ORDRETT (aldri parafrasert) — data-/oppslagsverdi. */
   label: string;
+  /** T1A: brukersynlig navn (garment-display-names.ts) — det UI faktisk viser. */
+  displayLabel: string;
   roleLabel: string;
   garmentId: string | null;
 }>;
@@ -47,6 +51,7 @@ export function deriveResultRows(
         key: `${category}:${indexInLayer}:${label}`,
         position: rows.length + 1,
         label,
+        displayLabel: displayNameForDbString(label),
         roleLabel: ROLE_LABEL_BY_CATEGORY[category],
         garmentId: garmentIdFor(label),
       });

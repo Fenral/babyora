@@ -4,10 +4,13 @@ import { ResultSurface } from '../ResultSurface.js';
 import type { ResultRow } from '../result-rows.js';
 
 function row(overrides: Partial<ResultRow>): ResultRow {
-  return {
+  // T1A: displayLabel er det UI faktisk viser (result-rows.ts avleder den
+  // fra visningsnavn-kilden); testen speiler label når intet annet er gitt.
+  const base = {
     key: 'k1', position: 1, label: 'Langermet ullbody', roleLabel: 'Innerst', garmentId: 'langermet-ullbody',
     ...overrides,
   };
+  return { displayLabel: base.label, ...base };
 }
 
 describe('ResultSurface', () => {

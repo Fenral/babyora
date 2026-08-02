@@ -1,0 +1,78 @@
+/**
+ * fonts.css — T9A fontberedskap (aapningskontrakt-2026-08-01 §4).
+ *
+ * Kontrakten: lokalt pakket subset-WOFF2, preload av nøyaktig brukte vekter,
+ * metrisk tilpasset fallback (size-adjust + ascent/descent-overrides), og
+ * ingen tekst som endrer bredde/baseline etter første synlige frame.
+ *
+ * Implementasjon:
+ *  - ÉN variabel WOFF2 per familie (latin-subset, wght-akse) self-hostet i
+ *    public/fonts/ med STABILE filnavn — det gjør <link rel="preload"> i
+ *    index.html mulig uten Vite-hash-oppslag, og dekker ALLE vektene appen
+ *    faktisk bruker (Grotesk 400–700 + 650; Fraunces 400/550/560) eksakt,
+ *    der de gamle statiske kuttene (400/500/600/700 + 400/500) rundet
+ *    550→500 og 560→500.
+ *  - Kilde: node_modules/@fontsource-variable/{schibsted-grotesk,fraunces}/
+ *    files/*-latin-wght-normal.woff2 (kopiert 2026-08-02; pakkene står i
+ *    package.json som proveniens/oppgraderingskilde). Latin-subsettet
+ *    dekker norsk (æøå U+00E6/F8/E5), °(U+00B0) og −(U+2212).
+ *  - Familienavnene beholdes som 'Schibsted Grotesk'/'Fraunces' (fontsource-
+ *    variable sine egne CSS-filer registrerer '* Variable'-navn — vi
+ *    deklarerer selv for å slippe å endre alle tokens/stacks).
+ *  - font-display: swap + metrisk fallback (§4 avviser 'optional' — fallback
+ *    kunne blitt stående hele økten). Med preload fra index.html er fonten
+ *    i praksis klar før første paint; skulle swap likevel skje, gjør
+ *    fallback-metrikkene at bredde/baseline står stille.
+ *  - Fallback-metrikker er MÅLT med fontkit mot de faktiske filene
+ *    (2026-08-02): Fraunces upm 2000, ascent 1956, descent 510, snitt-
+ *    fremrykk 0.5507 em; Georgia 0.4736 em → size-adjust 116.28%,
+ *    ascent 97.8%/1.1628 = 84.11%, descent 25.5%/1.1628 = 21.93%.
+ *    Schibsted Grotesk upm 2048, ascent 2000, descent 528, snitt 0.4914 em;
+ *    Arial/Helvetica 0.4750 em → size-adjust 103.45%, ascent 94.40%,
+ *    descent 24.92%. line-gap 0 i begge kildefontene.
+ */
+
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 900;
+  src: url('/fonts/schibsted-grotesk-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/fraunces-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Metrisk tilpassede fallbacks (§4 punkt 3) — ligger i font-stackene RETT
+   bak hovedfonten (se design-tokens.css / design-tokens-v2.css), slik at en
+   eventuell swap ikke flytter bredde eller baseline (temperatur-heroen er
+   kontraktens kritiske flate). */
+
+@font-face {
+  font-family: 'Fraunces Fallback';
+  src: local('Georgia');
+  size-adjust: 116.28%;
+  ascent-override: 84.11%;
+  descent-override: 21.93%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Schibsted Grotesk Fallback';
+  src: local('Helvetica Neue'), local('Arial');
+  size-adjust: 103.45%;
+  ascent-override: 94.4%;
+  descent-override: 24.92%;
+  line-gap-override: 0%;
+}

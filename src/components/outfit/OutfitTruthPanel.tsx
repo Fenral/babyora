@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { displayNameForDbString } from '../../data/garment-display-names.js';
 import { WARM_COLD_RECOVERY_COPY } from '../../lib/copy/warm-cold-recovery.js';
 import {
   isOutfitBundleProducerResult,
@@ -89,7 +90,7 @@ function UnsupportedCardinalityPanel({
         <ol>
           {orderedGarments.map((garment) => (
             <li key={garment.itemId}>
-              <span>{garment.order}.</span> {garment.label}
+              <span>{garment.order}.</span> {displayNameForDbString(garment.label)}
             </li>
           ))}
         </ol>
@@ -97,7 +98,9 @@ function UnsupportedCardinalityPanel({
           <section aria-label="Utstyr">
             <h3>Utstyr</h3>
             <ul>
-              {equipment.map((item) => <li key={item.itemId}>{item.label}</li>)}
+              {equipment.map((item) => (
+                <li key={item.itemId}>{displayNameForDbString(item.label)}</li>
+              ))}
             </ul>
           </section>
         )}

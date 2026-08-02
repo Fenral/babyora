@@ -28,7 +28,6 @@ const MAP: Record<string, GarmentId> = {
   'ullsokker': 'ullsokker',
   'tykke ullsokker': 'ullsokker',
   'tykke ullsokker (vinterdress dekker)': 'ullsokker',
-  'tøffel-sko + tykke ullsokker': 'ullsokker',
   'ullstrømper': 'ullsokker',
   'tykke ullstrømper': 'ullsokker',
 
@@ -80,6 +79,14 @@ const MAP: Record<string, GarmentId> = {
   // Ekstra · føtter
   'sko': 'sko',
   'tøffel-sko': 'toffel-sko',
+  // T1A (katalog-audit 1a, 2026-08-01): den sammensatte anbefalingen viste
+  // tidligere KUN sokken ('ullsokker') — katalogen selv (plagg-katalog.json,
+  // id toffel-sko) lister denne strengen som alias til toffel-sko, og
+  // toffel-sko.png viser faktisk skoen. Ligger BEVISST etter 'tøffel-sko'
+  // over: ID_TO_DB tar FØRSTE treff per id, og dbStringFor('toffel-sko')
+  // må forbli den kanoniske korte strengen (brukes som motor-/alternativ-
+  // oppslagsnøkkel i PlaggDetailSheet/getAlternatives).
+  'tøffel-sko + tykke ullsokker': 'toffel-sko',
   'sandaler': 'sandaler',
   'vintersko': 'vintersko',
   'vintersko isolerte': 'vintersko-isolerte',
@@ -132,9 +139,13 @@ export function garmentIdFor(dbString: string): GarmentId | null {
   return MAP[dbString.trim()] ?? null;
 }
 
-/** Invers: id → kanonisk database-streng (første treff i MAP). Brukt av
- *  Plaggbiblioteket/Min garderobe for å vise lesbart navn + sende `dbString`
- *  videre til GarmentDetailScreen. */
+/** Invers: id → kanonisk database-streng (første treff i MAP).
+ *
+ *  T1A (2026-08-02): dbStringFor er nå KUN en motor-/db-oppslagsnøkkel
+ *  (getAlternatives, eierskaps-nøkler i Min garderobe, GarmentDetail-
+ *  navigasjon). Brukersynlige plaggnavn kommer ALLTID fra
+ *  src/data/garment-display-names.ts (garmentDisplayName /
+ *  displayNameForDbString) — aldri herfra. */
 const ID_TO_DB: Record<GarmentId, string> = (() => {
   const out: Record<string, string> = {};
   for (const [db, id] of Object.entries(MAP)) {

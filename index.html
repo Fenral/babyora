@@ -34,10 +34,29 @@
       })();
     </script>
     <title>Babyora</title>
-    <!-- Native-feel #9 (2026-06-26): alle brand-fonter (Inter, Schibsted
-         Grotesk, DM Serif Display) blir self-hosted via @fontsource(-variable)
-         i src/main.tsx. Google Fonts <link> + Lottie CDN <script> fjernet
-         for raskere cold start + offline-feel (Capacitor). -->
+    <!-- T9A fontberedskap (aapningskontrakt §4): preload av NØYAKTIG de
+         woff2-filene appen bruker — variable latin-subset self-hostet i
+         public/fonts/ med stabile navn (deklarert i src/styles/fonts.css).
+         crossorigin er påkrevd for font-preload (anonym modus) — uten den
+         dobbeltlastes fonten. Dekker Schibsted Grotesk (alt UI, vekter
+         400–700+650) og Fraunces (temperatur-hero 550, arktitler 560). -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/schibsted-grotesk-latin-wght-normal.woff2"
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/fonts/fraunces-latin-wght-normal.woff2"
+    />
+    <!-- Native-feel #9 (2026-06-26): øvrige brand-fonter (DM Serif Display)
+         self-hostes via @fontsource i src/main.tsx. Google Fonts + Lottie
+         CDN er fjernet for raskere cold start + offline-feel (Capacitor). -->
   </head>
   <body>
     <!-- CSS-AUDIT.A-2: byttet fra Tailwind-utility-skip-link (brukte

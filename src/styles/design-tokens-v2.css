@@ -100,10 +100,11 @@
   --dw-tabbar-clearance: calc(var(--dw-tabbar-height) + var(--dw-tabbar-gap) + env(safe-area-inset-bottom, 0px) + 14px);
 
   /* ============ Typografi ============ */
-  /* Schibsted Grotesk: alt UI (self-hostet via @fontsource).               */
+  /* Schibsted Grotesk: alt UI (self-hostet variabel, styles/fonts.css).    */
   /* Fraunces: KUN hero-temperatur + pris, wonk 0. Mono: tabellsifre.       */
-  --dw-font-ui: 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
-  --dw-font-hero: 'Fraunces', Georgia, serif;
+  /* T9A §4: metrisk tilpasset fallback rett bak hovedfonten.               */
+  --dw-font-ui: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', system-ui, -apple-system, sans-serif;
+  --dw-font-hero: 'Fraunces', 'Fraunces Fallback', Georgia, serif;
   --dw-font-data: ui-monospace, 'SF Mono', Consolas, monospace;
   /* Fast rem-skala, ratio 1.2 */
   --dw-text-meta: 0.8125rem;   /* 13   */

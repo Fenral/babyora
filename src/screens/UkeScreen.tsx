@@ -66,6 +66,7 @@ import {
   getWeatherNuance,
 } from '../lib/monter-assets';
 import { garmentIdFor } from '../data/garment-illustrations.js';
+import { displayNameForDbString } from '../data/garment-display-names.js';
 import { useChildren } from '../state/children-store';
 import { useSwapOverride } from '../state/swap-override-store';
 import { resolveEffectivePlace, useLocationPref } from '../state/location-pref-store';
@@ -1028,18 +1029,21 @@ function PlanleggData({
                     className="planlegg-garments"
                     aria-label={`Dagens antrekk: ${planningEvaluation.verdict.summary}`}
                   >
+                    {/* T1A: rå label beholdes som bilde-oppslagsnøkkel;
+                        title/sr-tekst bruker visningsnavnet. */}
                     {planningEvaluation.verdict.orderedGarments.map((label) => {
                       const image = getGarmentImage(garmentIdFor(label));
+                      const displayName = displayNameForDbString(label);
                       return (
-                        <li key={label} className="planlegg-garments__item" title={label}>
+                        <li key={label} className="planlegg-garments__item" title={displayName}>
                           {image ? (
                             <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
                           ) : (
                             <span className="planlegg-garments__thumb planlegg-garments__thumb--letter" aria-hidden="true">
-                              {label.charAt(0).toUpperCase()}
+                              {displayName.charAt(0).toUpperCase()}
                             </span>
                           )}
-                          <span className="hjm-sr-only">{label}</span>
+                          <span className="hjm-sr-only">{displayName}</span>
                         </li>
                       );
                     })}
@@ -1059,18 +1063,21 @@ function PlanleggData({
                     className="planlegg-garments"
                     aria-label={`Planlagt antrekk: ${planningEvaluation.verdict.summary}`}
                   >
+                    {/* T1A: rå label beholdes som bilde-oppslagsnøkkel;
+                        title/sr-tekst bruker visningsnavnet. */}
                     {planningEvaluation.verdict.orderedGarments.map((label) => {
                       const image = getGarmentImage(garmentIdFor(label));
+                      const displayName = displayNameForDbString(label);
                       return (
-                        <li key={label} className="planlegg-garments__item" title={label}>
+                        <li key={label} className="planlegg-garments__item" title={displayName}>
                           {image ? (
                             <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
                           ) : (
                             <span className="planlegg-garments__thumb planlegg-garments__thumb--letter" aria-hidden="true">
-                              {label.charAt(0).toUpperCase()}
+                              {displayName.charAt(0).toUpperCase()}
                             </span>
                           )}
-                          <span className="hjm-sr-only">{label}</span>
+                          <span className="hjm-sr-only">{displayName}</span>
                         </li>
                       );
                     })}

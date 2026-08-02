@@ -926,7 +926,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
                 <MonterGarmentRow
                   key={row.key}
                   position={row.position}
-                  label={row.label}
+                  label={row.displayLabel}
                   roleLabel={row.roleLabel}
                   imageSrc={getGarmentImage(row.garmentId)}
                   onSwap={(event) => handleOpenGarmentRow(row, event)}

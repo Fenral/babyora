@@ -4,6 +4,7 @@ import {
   garmentIdFor,
   garmentPngSafe,
 } from '../../data/garment-illustrations.js';
+import { displayNameForDbString } from '../../data/garment-display-names.js';
 import { useHapticSystem } from '../../lib/haptics/system.js';
 import type {
   PlanningChangeEvent,
@@ -122,7 +123,9 @@ function GarmentPreview({ garment }: { garment: string }) {
           }
         }}
       />
-      <figcaption>{garment}</figcaption>
+      {/* T1A: synlig navn via visningsnavn-kilden (rå streng forblir
+          bilde-oppslagsnøkkel over). */}
+      <figcaption>{displayNameForDbString(garment)}</figcaption>
     </figure>
   );
 }

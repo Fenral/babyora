@@ -58,14 +58,12 @@ const GARMENT_ID_TO_SLUG: Readonly<Record<string, MonterGarmentSlug>> = {
   'langermet-body': 'langermet-bomullsbody',
   'langermet-ullbody': 'langermet-ullbody',
   'langermet-ullbody-tynn': 'langermet-ullbody',
-  'ullsett-tynt': 'ullkjeledress',
   'ullsett-tykt': 'tykt-ullsett',
   't-skjorte': 'tskjorte',
   'shorts': 'shorts',
   'lett-bukse': 'sommerbukse',
   'ullsokker': 'ullsokker',
   'tynn-bukse': 'fleecebukse',
-  'tynn-ull-mellomlag': 'fleecejakke',
   'ull-mellomlag': 'ull-mellomlag',
   'ull-mellomlag-tykt': 'ull-mellomlag',
   'ull-jakke': 'cardigan',
@@ -74,7 +72,6 @@ const GARMENT_ID_TO_SLUG: Readonly<Record<string, MonterGarmentSlug>> = {
   'pyjamas': 'pysjamas',
   'ull-pyjamas': 'pysjamas',
   'lett-kjoredress': 'varparkdress',
-  'kjoredress': 'dunjakke',
   'vinterkjoredress': 'vinterdress',
   'vinterkjoredress-isolert': 'vinterdress',
   'vinterdress': 'vinterdress',
@@ -83,7 +80,6 @@ const GARMENT_ID_TO_SLUG: Readonly<Record<string, MonterGarmentSlug>> = {
   'vindtett-skall': 'vindjakke',
   'solhatt': 'solhatt',
   'lue-tynn': 'tynn-lue',
-  'lue': 'kyse',
   'lue-m-ull': 'lue-med-ull',
   'balaklava': 'balaklava',
   'votter-tynne': 'tynne-ullvotter',
@@ -95,8 +91,6 @@ const GARMENT_ID_TO_SLUG: Readonly<Record<string, MonterGarmentSlug>> = {
   'toffel-sko': 'toffelsko',
   'sovepose-0-5-tog': 'sovepose',
   'sovepose-1-0-tog': 'sovepose',
-  'sovepose-1-5-tog': 'sovepose',
-  'sovepose-2-0-tog': 'sovepose',
   'sovepose-2-5-tog': 'sovepose',
   'sovepose-3-0-3-5-tog': 'sovepose',
   'sovepose-3-5-tog': 'sovepose',
@@ -204,13 +198,28 @@ export function getConditionLabel(symbolCode: string | undefined | null): string
 }
 
 /*
- * ── Mappings-notater (2026-07-31, P4 asset-pipeline) ──────────────────────
+ * ── Mappings-notater (2026-07-31, P4 asset-pipeline; revidert T1A 2026-08-02
+ *    etter katalog-audit/rapport.md) ────────────────────────────────────────
  *
- * 32 av de 42 tilgjengelige plagg-bildene er bundet til minst én katalog-id
+ * T1A-oppryddingen fjernet fire koblinger som brøt modulens eget «heller
+ * ingen bilde enn feil bilde»-prinsipp (alle visuelt verifisert i auditen):
+ *   - kjoredress → dunjakke        (jakke uten bein vs. heldress; også
+ *     vurdert mot plagg-vinterdress.png: den er en QUILTET vinterdress med
+ *     fotposer — feil varme-/materialsignal for en mellomtykk kjøredress,
+ *     og ville kollapset kjoredress/vinterkjoredress/vinterdress-stigen
+ *     visuelt. Derfor nøytral plassholder.)
+ *   - ullsett-tynt → ullkjeledress (to-delt sett vs. en-delt strikket)
+ *   - lue → kyse                   (pull-over-lue vs. knyte-kyse)
+ *   - tynn-ull-mellomlag → fleecejakke (ull vs. fleece — feil materialsignal
+ *     i en ull-spesifikk app)
+ * I tillegg ble de to døde nøklene sovepose-1-5-tog/sovepose-2-0-tog fjernet
+ * (id-ene finnes ikke i katalogen — uoppnåelig kode).
+ *
+ * 28 av de 42 tilgjengelige plagg-bildene er bundet til minst én katalog-id
  * over (flere sovepose-/vinterdress-/pysjamas-variant-id-er gjenbruker
  * bevisst samme bilde — kun tykkelse/isolasjon skiller dem, ikke silhuett).
  *
- * 10 bilder er IKKE bundet til noen katalog-id (ingen match god nok til at
+ * 14 bilder er IKKE bundet til noen katalog-id (ingen match god nok til at
  * vi tør bruke dem — heller ingen bilde enn feil bilde):
  *   - badebukse, stroempebukse, uvtroye, vintersokker — ingen tilsvarende
  *     id finnes i plagg-katalog.json sitt nåværende vokabular.
@@ -219,11 +228,14 @@ export function getConditionLabel(symbolCode: string | undefined | null): string
  *     alternative visuelle varianter av samme konsept uten egen id.
  *   - regnhatt-innerlue, sydvest — regn-hodeplagg uten egen katalog-id.
  *   - ullhals-tynn — «hals» er allerede bundet til halsedisse (buff-varianten).
+ *   - kyse, dunjakke, ullkjeledress, fleecejakke — ble frigjort av T1A-
+ *     oppryddingen over (de var kun bundet via de fire fjernede koblingene).
  *
  * Følgende katalog-id-er har BEVISST `null` (ingen visuell match, uansett
  * hvilket av de 42 bildene): to-ullsett (representerer et lag-PRINSIPP, ikke
  * et enkeltplagg), bleie, sko, sandaler, vintersko, vintersko-isolerte,
  * tynt-teppe, dunteppe, varmepose-lett/varmepose/varmepose-dun (fotpose ≠
  * sovepose visuelt, og vi har bare ett sovepose-bilde), sauekinn-i-vogn,
- * regntrekk, regnponcho-over-baeresele, ansiktskrem.
+ * regntrekk, regnponcho-over-baeresele, ansiktskrem — og etter T1A også
+ * kjoredress, ullsett-tynt, lue og tynn-ull-mellomlag (se over).
  */

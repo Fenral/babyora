@@ -43,6 +43,7 @@ import {
   garmentClayPng,
   type GarmentId,
 } from '../data/garment-illustrations';
+import { displayNameForDbString } from '../data/garment-display-names';
 import { getAlternatives } from '../lib/wool-layers/alternatives';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { feelsLikeC } from '../lib/met-no/feels-like';
@@ -118,10 +119,8 @@ function categoryToGroup(c: LayerCategory): GroupKey {
   return 'tilbehor';
 }
 
-function titleCase(s: string): string {
-  if (!s) return s;
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
+// T1A: titleCase fjernet — brukersynlige plaggnavn kommer nå fra
+// displayNameForDbString (garment-display-names.ts), aldri rå db-streng.
 
 const HEAD_RE = /(\blue\b|hatt|balaklava|solhatt|caps)/i;
 const SLEEP_RE = /sovepose/i;
@@ -224,7 +223,10 @@ function whyText(
   const condLabel = symbolToLabel(symbolCode);
   const t = Math.round(tempC);
   const f = feelsC !== null && feelsC !== undefined ? Math.round(feelsC) : t;
-  const list = itemNames.map((n) => n.toLowerCase()).join(', ');
+  // T1A: navnene er nå kanoniske visningsnavn («Ullsett, tynt») — de kan
+  // inneholde komma, så listen skilles med « · » og navnene beholder sin
+  // formatering (lowercase av «Ullsett, tynt» ville gitt tvetydig prosa).
+  const list = itemNames.join(' · ');
   const cold = f < 5;
   const warm = f > 18;
   let tail: string;
@@ -689,7 +691,9 @@ function CurrentPaakledningScreen({
         key: `n-${idx}-${entry.item}`,
         order: idx + 1,
         item: entry.item,
-        name: titleCase(entry.item),
+        // T1A: brukersynlig navn fra visningsnavn-kilden (ikke rå db-streng
+        // med stor forbokstav — «Tykt ullsett» → «Ullsett, tykt»).
+        name: displayNameForDbString(entry.item),
         group: entry.group,
         gid,
         img,

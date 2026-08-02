@@ -9,6 +9,10 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
+    /* T1A: garment-display-names.json importeres som modul (kanonisk
+       visningsnavn-kilde) — Vite støtter JSON-import native, tsc trenger
+       flagget for typesjekken. */
+    "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",

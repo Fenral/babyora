@@ -76,7 +76,8 @@ export interface PlaggbibliotekScreenProps {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Katalog-drevet data — HELE plagg-katalogen (GARMENTS_BY_CATEGORY), ikke en
-// hardkodet mock-delmengde. Navn fra dbStringFor, bilder fra garmentPng.
+// hardkodet mock-delmengde. Navn fra titleFor (kanoniske visningsnavn,
+// garment-display-names.ts — T1A), bilder fra garmentPng.
 // Ekte per-plagg-TOG finnes ikke → ingen oppdiktet TOG-verdi (baby-app).
 // titleFor/materialFor delt med MinGarderobeScreen via garment-catalog-helpers
 // (F85) — unngår at de to skjermene drifter fra hverandre.

@@ -62,6 +62,7 @@ import { verifiedAvatarAsset } from '../lib/recommendation/verified-avatar';
 import { avatarPng, headwearFromRecommendation, tierFromRecommendation } from '../lib/avatar-tier';
 import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
+import { displayNameForDbString } from '../data/garment-display-names';
 // Gamle A1-A7-PNG-ene er byttet ut med clay-verdenen fra F79/F80.
 // tier/headwear-logikken GJENBRUKES for å velge riktig clay-antrekk:
 // hodeplagg + vær-tier på avataren er kjernesignalet.
@@ -185,7 +186,8 @@ function RegisteredHomeGarmentPill({
         label={source.label}
         style={{ blockSize: 24, inlineSize: 24, flex: '0 0 24px', objectFit: 'contain' }}
       />
-      <span>{source.label}</span>
+      {/* T1A: synlig tekst via visningsnavn — thumbnail beholder rå label. */}
+      <span>{displayNameForDbString(source.label)}</span>
     </span>
   );
 }
@@ -225,7 +227,8 @@ export function HomeGarmentPills({
           label={anchor.label}
           style={{ blockSize: 24, inlineSize: 24, flex: '0 0 24px', objectFit: 'contain' }}
         />
-        <span>{anchor.label}</span>
+        {/* T1A: synlig tekst via visningsnavn — thumbnail beholder rå label. */}
+        <span>{displayNameForDbString(anchor.label)}</span>
       </span>
     ));
   }
@@ -628,9 +631,12 @@ export function HjemScreen({
     () => resolvedRecommendation?.layers.flatMap((layer) => layer.items) ?? [],
     [resolvedRecommendation],
   );
+  // T1A: rå motor-strenger beholdes for oppslag (GarmentThumbnail); de
+  // BRUKERSYNLIGE pill-/sr-tekstene bruker kanoniske visningsnavn.
   const visibleAnchorLabels = allGarmentLabels.length > 0
     ? allGarmentLabels
     : sceneModel.anchors.map(({ label }) => label);
+  const visibleAnchorDisplayNames = visibleAnchorLabels.map(displayNameForDbString);
 
   // Positur-nøkkel (brukt for silhuett-fallback + stabil data-key).
   const avatarPoseKey = useMemo(() => ({
@@ -976,6 +982,9 @@ export function HjemScreen({
         lon={lon}
         now={now}
         weatherStatus={weather.status}
+        weatherFreshness={weather.freshness}
+        weatherLastKnown={weather.lastKnownNow}
+        weatherLastKnownAt={weather.lastKnownAt}
         activity={activity}
         onActivityChange={handleActivityChange}
         childId={active.id}
@@ -1155,8 +1164,8 @@ export function HjemScreen({
             {/* sr-sammendrag (a11y-lead krav 2): antrekket rekonstruerbart
                 uten grafikk — kilden er samme scenemodell, aldri re-telling. */}
             <span style={srOnly}>
-              {visibleAnchorLabels.length > 0
-                ? `Ytterst: ${visibleAnchorLabels.join(', ')}.`
+              {visibleAnchorDisplayNames.length > 0
+                ? `Ytterst: ${visibleAnchorDisplayNames.join(', ')}.`
                 : 'Antrekket beregnes.'}
             </span>
 

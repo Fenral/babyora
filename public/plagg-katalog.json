@@ -158,7 +158,7 @@
     {
       "id": "tynn-ull-mellomlag",
       "category": "mellomlag",
-      "label": "Tynn ull-mellomlag",
+      "label": "Ull-mellomlag, tynt",
       "aliases": ["tynn ull-mellomlag", "ekstra ull-lag"],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/tynn-ull-mellomlag.png",
       "what": "Tynt ull-mellomlag - gir litt ekstra varme uten å bygge volum.",
@@ -513,10 +513,10 @@
       "id": "sauekinn-i-vogn",
       "category": "ekstra",
       "subcategory": "vogn",
-      "label": "Sauekinn (lammeskinn)",
+      "label": "Saueskinn (lammeskinn)",
       "aliases": ["sauekinn i vogn"],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/sauekinn-i-vogn.png",
-      "what": "Sauekinn (lammeskinn) som ligger i vognen og varmer fra under.",
+      "what": "Saueskinn (lammeskinn) som ligger i vognen og varmer fra under.",
       "when": "Vinterhalvåret - gjør vognen koselig og varm."
     },
     {

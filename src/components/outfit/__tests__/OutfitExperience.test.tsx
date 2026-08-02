@@ -8,6 +8,7 @@ import {
   type OutfitAlternativeOptionV1,
 } from '../../../lib/outfit/alternative-options.js';
 import { createOutfitTruthSnapshot } from '../../../lib/outfit/outfit-truth.js';
+import { displayNameForDbString } from '../../../data/garment-display-names.js';
 import { useOutfitSelectionStore } from '../../../state/outfit-selection-store.js';
 import {
   attachOutfitEscapeListener,
@@ -232,15 +233,19 @@ describe('OutfitExperience', () => {
       /<h4[^>]*>Utstyr<\/h4><ul[^>]*data-outfit-comparison-equipment/,
     );
 
+    // T1A: dialogen viser visningsnavn (displayNameForDbString), ikke rå
+    // motor-strenger — assertér mot det brukeren faktisk ser.
     for (const garment of fixture.option.outcome.garments) {
-      const labelAt = html.indexOf(garment.label, garmentListAt);
-      expect(labelAt, garment.label).toBeGreaterThan(garmentListAt);
-      expect(labelAt, garment.label).toBeLessThan(equipmentListAt);
+      const displayName = displayNameForDbString(garment.label);
+      const labelAt = html.indexOf(displayName, garmentListAt);
+      expect(labelAt, displayName).toBeGreaterThan(garmentListAt);
+      expect(labelAt, displayName).toBeLessThan(equipmentListAt);
     }
     for (const equipment of fixture.option.outcome.equipment) {
-      const labelAt = html.indexOf(equipment.label, equipmentListAt);
-      expect(labelAt, equipment.label).toBeGreaterThan(equipmentListAt);
-      expect(labelAt, equipment.label).toBeLessThan(confirmationAt);
+      const displayName = displayNameForDbString(equipment.label);
+      const labelAt = html.indexOf(displayName, equipmentListAt);
+      expect(labelAt, displayName).toBeGreaterThan(equipmentListAt);
+      expect(labelAt, displayName).toBeLessThan(confirmationAt);
     }
   });
 
@@ -299,7 +304,9 @@ describe('OutfitExperience', () => {
     );
 
     expect(html).toContain(
-      `<span class="outfit-row__label">${LONGEST_INVENTORY_GARMENT_LABEL}</span>`,
+      // T1A: den synlige raden viser visningsnavnet (sentence-case av
+      // alias-strengen — semantikk beholdes, kun stor forbokstav).
+      `<span class="outfit-row__label">${displayNameForDbString(LONGEST_INVENTORY_GARMENT_LABEL)}</span>`,
     );
     expect(css).toMatch(
       /\.outfit-row\s*\{[^}]*min-inline-size:\s*0;[^}]*flex-wrap:\s*wrap;/,

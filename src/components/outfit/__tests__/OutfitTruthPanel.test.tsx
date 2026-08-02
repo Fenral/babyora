@@ -16,6 +16,7 @@ import {
   produceOutfitBundle,
   type OutfitBundleProducerResult,
 } from '../../../lib/outfit/outfit-bundle-producer.js';
+import { displayNameForDbString } from '../../../data/garment-display-names.js';
 import { OutfitTruthPanel } from '../OutfitTruthPanel.js';
 import { VerifiedAvatarComposite } from '../VerifiedAvatarComposite.js';
 import { OUTFIT_TRUTH_V1_AVAILABLE } from '../../../lib/outfit/feature-flags.js';
@@ -247,7 +248,11 @@ describe('OutfitTruthPanel', () => {
     expect(html).toContain('Ta på innerst først');
     expect(html).toContain('Kjenn nakken');
     expect(html).toContain('Stikk to fingre under genseren bak i nakken');
-    for (const garment of bundle.base.garments) expect(html).toContain(garment.label);
+    // T1A: panelet viser visningsnavn (displayNameForDbString), ikke rå
+    // motor-strenger.
+    for (const garment of bundle.base.garments) {
+      expect(html).toContain(displayNameForDbString(garment.label));
+    }
   });
 
   it('uses an approved illustrative avatar when the exact composite is unavailable, and never leaks engine region keys', () => {
@@ -279,8 +284,13 @@ describe('OutfitTruthPanel', () => {
     const html = renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} onOpenWarmColdGuide={() => undefined} />);
     expect(html).toContain('Ta på innerst først');
     expect(bundle.truth.orderedGarments).toHaveLength(11);
-    for (const garment of bundle.truth.orderedGarments) expect(html).toContain(garment.label);
-    for (const equipment of bundle.truth.equipment) expect(html).toContain(equipment.label);
+    // T1A: visningsnavn — se over.
+    for (const garment of bundle.truth.orderedGarments) {
+      expect(html).toContain(displayNameForDbString(garment.label));
+    }
+    for (const equipment of bundle.truth.equipment) {
+      expect(html).toContain(displayNameForDbString(equipment.label));
+    }
     expect(html).not.toContain('data-outfit-map-node=');
     expect(html).not.toContain('data-outfit-row=');
     expect(html).not.toContain('Se alternativ');

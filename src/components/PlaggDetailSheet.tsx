@@ -27,6 +27,10 @@ import { useCallback, useEffect, useRef, type JSX, type RefObject } from 'react'
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { infoFor } from '../data/garment-info';
 import {
+  displayNameForDbString,
+  garmentDisplayName,
+} from '../data/garment-display-names';
+import {
   GENERIC_GARMENT_SVG,
   dbStringFor,
   garmentIdFor,
@@ -165,15 +169,15 @@ export function PlaggDetailSheet({
   // keyed på norske db-strenger MED mellomrom ('kortermet body'), mens
   // garmentId er kebab-case ('kortermet-body') — getAlternatives(garmentId)
   // matchet derfor ALDRI. dbStringFor() konverterer tilbake til riktig format.
+  // T1A: dbStringFor beholdes HER kun som oppslagsnøkkel — aldri som visning.
   const alt = getAlternatives(dbStringFor(garmentId));
   const pros = alt?.pros ?? [];
   const cons = alt?.cons ?? [];
   const alternatives = alt?.alternatives ?? [];
 
-  // Lesbar tittel (norsk db-streng, f.eks. «kortermet body») i stedet for
-  // rå kebab-case garmentId («kortermet-body»). textTransform:capitalize
-  // i JSX-styling under håndterer stor forbokstav.
-  const title = dbStringFor(garmentId);
+  // T1A: brukersynlig tittel kommer fra den kanoniske visningsnavn-kilden
+  // (garment-display-names.ts), ikke rå db-streng («tykt ullsett»-mønsteret).
+  const title = garmentDisplayName(garmentId);
 
   // F84: kategori → lag-farge (aldri eneste signal — CATEGORY_LABEL-teksten
   // følger alltid med badgen).
@@ -259,6 +263,8 @@ export function PlaggDetailSheet({
           >
             <span aria-hidden="true">×</span>
           </button>
+          {/* T1A: textTransform:capitalize fjernet — visningsnavnene er
+              allerede korrekt formatert («Lue med ull», ikke «Lue Med Ull»). */}
           <h2
             id="plagg-detail-title"
             style={{
@@ -268,7 +274,6 @@ export function PlaggDetailSheet({
               fontWeight: 560,
               lineHeight: 1.2,
               letterSpacing: '-0.3px',
-              textTransform: 'capitalize',
             }}
           >
             {title}
@@ -449,17 +454,18 @@ export function PlaggDetailSheet({
                         />
                       </span>
                       <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                        {/* T1A: visningsnavn i stedet for rå db-streng +
+                            capitalize-each-word. */}
                         <div
                           style={{
                             fontFamily: 'var(--font-sans)',
                             fontSize: 15,
                             fontWeight: 600,
                             color: 'var(--ink-900)',
-                            textTransform: 'capitalize',
                             lineHeight: 1.25,
                           }}
                         >
-                          {a.name}
+                          {displayNameForDbString(a.name)}
                         </div>
                         {a.pros?.[0] ? (
                           <div style={miniProsStyle}>

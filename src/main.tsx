@@ -5,15 +5,12 @@ import { createRoot } from 'react-dom/client'
 // serif-fallback bak Fraunces (offline i Capacitor).
 import '@fontsource/dm-serif-display/400.css'
 import '@fontsource/dm-serif-display/400-italic.css'
-// P4 Monter: Schibsted Grotesk (UI) + Fraunces (hero-tall) self-hosted for
-// Capacitor-offline; --dw-*-tokens må lastes for at hjem-monter.css skal
-// rendre Monter-flaten (ellers faller var() tilbake til legacy-arv).
-import '@fontsource/schibsted-grotesk/400.css'
-import '@fontsource/schibsted-grotesk/500.css'
-import '@fontsource/schibsted-grotesk/600.css'
-import '@fontsource/schibsted-grotesk/700.css'
-import '@fontsource/fraunces/400.css'
-import '@fontsource/fraunces/500.css'
+// T9A fontberedskap (§4): Schibsted Grotesk (UI) + Fraunces (hero-tall) er
+// self-hostet som variable latin-subset i public/fonts/ med egne @font-face
+// i styles/fonts.css (stabile filnavn → preload-links i index.html, eksakte
+// vekter 550/560/650, metrisk fallback). Erstatter de statiske
+// @fontsource-kuttene som lå her (400/500/600/700 + 400/500).
+import './styles/fonts.css'
 import './styles/design-tokens.css'
 import './styles/design-tokens-v2.css'
 import './i18n'

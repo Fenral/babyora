@@ -66,6 +66,7 @@ import {
 import { computeScanResultKey } from '../../lib/scan/result-key.js';
 import type { Recommendation } from '../../lib/wool-layers/types.js';
 import type { WeatherNow } from '../../lib/met-no/types.js';
+import type { WeatherFreshness } from '../../hooks/useWeather.js';
 import {
   getConditionLabel,
   getWeatherIcon,
@@ -137,12 +138,48 @@ function formatClock(epochMs: number): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
+/**
+ * T9A: friskhetslinjen speiler §5-cachematrisen i stedet for den tidligere
+ * hardkodede «Oppdatert nå»-påstanden. KUN minimal korrekt tekst — de fire
+ * redaksjonelle friskhetstekstene (runde 4) er T2 (visuelt) og styles ikke
+ * her. Uten freshness-prop (eldre kallsteder/tester) beholdes gammel adferd.
+ */
+function freshnessLineFor(
+  freshness: WeatherFreshness | undefined,
+  hasNow: boolean,
+): Readonly<{ label: string; warn: boolean }> {
+  if (freshness === undefined) {
+    return { label: hasNow ? 'Oppdatert nå' : 'Henter vær …', warn: false };
+  }
+  switch (freshness.kind) {
+    case 'fresh':
+      return { label: 'Oppdatert nå', warn: false };
+    case 'stale':
+      return { label: `Sist oppdatert ${formatClock(freshness.fetchedAt)}`, warn: true };
+    case 'missing':
+      return { label: 'Henter vær …', warn: false };
+    case 'error':
+      return {
+        label: freshness.lastFetchedAt !== null
+          ? `Sist oppdatert ${formatClock(freshness.lastFetchedAt)}`
+          : 'Henter vær …',
+        warn: true,
+      };
+  }
+}
+
 export type HjemMonterProps = Readonly<{
   cityLabel: string;
   lat: number;
   lon: number;
   now: WeatherNow | null;
   weatherStatus: 'idle' | 'loading' | 'ready' | 'offline' | 'error';
+  /** T9A: §5-cachematrisens tilstand fra useWeather — driver friskhetslinjen. */
+  weatherFreshness?: WeatherFreshness;
+  /** T9A: sist-kjente værmåling fra persistent cache (visning, aldri motor). */
+  weatherLastKnown?: WeatherNow | null;
+  /** T9A: epoch ms for når sist-kjente data ble hentet (persistent cache). */
+  weatherLastKnownAt?: number | null;
   activity: MonterActivity;
   onActivityChange: (next: MonterActivity) => void;
   childId: string;
@@ -182,6 +219,9 @@ export function HjemMonter({
   lon,
   now,
   weatherStatus,
+  weatherFreshness,
+  weatherLastKnown = null,
+  weatherLastKnownAt = null,
   activity,
   onActivityChange,
   childId,
@@ -248,8 +288,13 @@ export function HjemMonter({
   if (now !== null && lastKnown !== now) {
     setLastKnown(now);
   }
-  const lastKnownNow = lastKnown;
-  const lastKnownAt = lastKnown?.observedAt.getTime() ?? null;
+  // T9A: hookens persistente sist-kjente (weatherLastKnown) dekker KALD
+  // oppstart uten nett — komponent-minnet (lastKnown) dekker som før tap av
+  // vær i en levende økt. Fortsatt kun visning, aldri motor-input.
+  const lastKnownNow = lastKnown ?? weatherLastKnown;
+  const lastKnownAt = lastKnown?.observedAt.getTime()
+    ?? weatherLastKnown?.observedAt.getTime()
+    ?? weatherLastKnownAt;
 
   // ── Timer-håndtak for scan/recalc-fullføring ────────────────────────────
   const timerCancelRef = useRef<(() => void) | null>(null);
@@ -493,6 +538,8 @@ export function HjemMonter({
   const weatherIconSrc = getWeatherIcon(now?.symbolCode ?? lastKnownNow?.symbolCode);
   const childLine = `${childName} · ${ageMonths} måneder · ${ACTIVITY_CHILD_LINE[activity]}`;
   const canScan = currentResultKey !== null;
+  // T9A: sann friskhetslinje (erstatter hardkodet «Oppdatert nå»).
+  const freshnessLine = freshnessLineFor(weatherFreshness, now !== null);
 
   const phase = scan.state.phase;
 
@@ -598,7 +645,8 @@ export function HjemMonter({
             noteText={now ? `Værbasert: ${conditionLabel.toLowerCase()}.` : 'Henter vær…'}
             weatherIconSrc={weatherIconSrc}
             weatherIconAlt={conditionLabel}
-            freshnessLabel="Oppdatert nå"
+            freshnessLabel={freshnessLine.label}
+            freshnessWarn={freshnessLine.warn}
             activity={activity}
             onActivityChange={onActivityChange}
           />
@@ -706,7 +754,8 @@ export function HjemMonter({
           noteText={now ? `${conditionLabel} — sjekk antrekket før dere går ut.` : 'Henter vær…'}
           weatherIconSrc={weatherIconSrc}
           weatherIconAlt={conditionLabel}
-          freshnessLabel="Oppdatert nå"
+          freshnessLabel={freshnessLine.label}
+          freshnessWarn={freshnessLine.warn}
           activity={activity}
           onActivityChange={onActivityChange}
           onAdjustLocation={handleOpenAdjust}
