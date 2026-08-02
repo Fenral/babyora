@@ -1,5 +1,16 @@
 # Plan: Designløftet — fra veloppdragent til dyrt (v2, 2026-08-02)
 
+> **EIERBESLUTNING 2026-08-02 (STOPP 1+2 samlet):** Eieren så tre
+> genererte stemningsmål av Hjem og valgte **Atelier × Quiet Instrument**
+> som vinner, med **Nordic Editorial Care som god nummer to**. Syntesen:
+> Atelier × Quiet Instrument er primærverdenen (mørk modus — varmt
+> studiolys, instrumentpanel, kontaktskygger), og Nordic-kandidatens
+> diffuse morgenlys blir LYSMODUS-TESEN i samme verden — samme rom,
+> natt og morgen, samme fysikk. «Finale»-leveransene (resultat, Kle på,
+> stale, begge temaer, bevegelsesprototype, nattest) gjennomføres som
+> VALIDERING av denne syntesen. Neste STOPP: produksjonsbeviset på
+> telefon (B1).
+
 Bakgrunn: eiers referansesammenligning (Ferrari/Any Distance/pinnsvin-app
 m.fl.) + kritisk analyse. V2 etter ekstern review (Sol): planen godkjent
 med tre endringer — Scene nedgradert fra verden til virkemiddel, full
