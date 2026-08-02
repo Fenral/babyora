@@ -24,7 +24,7 @@ const angleOf = (t) => {
 // ── 1. Sampler hver frame gjennom CTA-momentet ────────────────────────────
 const samples = await page.evaluate(async () => {
   const out = [];
-  const norm = document.querySelector('.mascot.m-normal'), wrap = document.querySelector('.mascotwrap');
+  const norm = document.querySelector('.mascot.m-normal'), wrap = document.querySelector('.mascotpose');
   const cur = document.querySelector('.mascot.m-curious');
   const panel = document.getElementById('hjempanel');
   const t0 = performance.now();

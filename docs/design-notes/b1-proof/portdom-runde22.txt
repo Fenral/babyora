@@ -1,0 +1,11 @@
+Portdom: Bestått
+
+a) Godkjent. rotate(1.2deg) + scaleY(.975) rundt korrekt kontaktlinje er bedre enn tidligere løsning. Faktisk måling på komponert resultat trumfer enkeltgeometrien: 0,72–0,73 px håndgli er innenfor kontrakten.
+
+b) 3,41 px er nok sammen med pose- og blikkbyttet. Kontinuitet krever synlig interpolasjon, ikke stor vandring. Ikke åpne for håndsplitting i B1 eller B2 uten nytt fysisk funn.
+
+c) 2,5 % setting er innenfor. Lås .975 som nedre grense; mer kan begynne å gjøre ansikt og tekstiler bredere/sammenpresset. Kontakt- og håndskyggen må ligge utenfor wrapperen og ikke skaleres.
+
+d) Begrunnelsen er god. En dokumentert 1,5 px silhuettknekk er verre enn målt subpikselgli. Raster-splitting av hendene ville også øke risikoen for søm, ulik antialiasing og lysbrudd.
+
+Kun siste enhetssjekk: se etter teksturflimmer i hår og øyevipper under scaleY. Hvis det ikke forekommer, er løsningen produksjonsklar.

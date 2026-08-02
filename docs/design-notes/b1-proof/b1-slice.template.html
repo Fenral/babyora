@@ -105,15 +105,23 @@
      transition-property og dreper transform-transisjonen. Da hopper
      boyningen rett til sluttvinkelen, som er nettopp «ingen animasjon».
      Wrapperen boyer; bildene inni krysstoner. */
+  /* TRE lag med hvert sitt ansvar (portdom runde 21+22):
+     .mascotwrap  — posisjon og SKYGGE. Transformeres aldri under boyningen,
+                    sa kontakt-/handskyggen ikke skaleres med. Ligger skyggen
+                    inne i det skalerte laget, blir offset og blur presset
+                    sammen og skyggen «puster» selv om lyset star stille.
+     .mascotpose  — selve bevegelsen (rotasjon + vertikal setting).
+     .mascot      — de to posene, som kun krysstoner. */
+  .mascotwrap { position:absolute; left:50%; top:-153px; width:205px; height:205px; z-index:2;
+            transform:translateX(-25%); pointer-events:none;
+            filter:drop-shadow(0 2px 2px rgba(10,5,2,.42)) drop-shadow(0 6px 10px rgba(10,5,2,.28)); }
+  [data-mode="light"] .mascotwrap { filter:drop-shadow(0 6px 12px rgba(96,64,32,.3)); }
   /* Pivot pa den faktiske KONTAKTLINJEN — der handa hviler pa panelkanten
      (bilde-y 382/512 = 74,6 %), ikke pa fingertuppene (78,7 %) som henger
      nedenfor kanten. */
-  .mascotwrap { position:absolute; left:50%; top:-153px; width:205px; height:205px; z-index:2;
-            transform-origin:52% 74.6%;
-            transform:translateX(-25%) rotate(0deg) scaleY(1);
-            transition:transform var(--m-bow,420ms) var(--ease); pointer-events:none;
-            filter:drop-shadow(0 2px 2px rgba(10,5,2,.42)) drop-shadow(0 6px 10px rgba(10,5,2,.28)); }
-  [data-mode="light"] .mascotwrap { filter:drop-shadow(0 6px 12px rgba(96,64,32,.3)); }
+  .mascotpose { position:absolute; inset:0; transform-origin:52% 74.6%;
+            transform:rotate(0deg) scaleY(1);
+            transition:transform var(--m-bow,420ms) var(--ease); }
   .mascot { position:absolute; inset:0; width:100%; height:100%; }
   /* BOYNINGEN er selve animasjonen. Sols portkrav (runde 21): transform-origin
      er ETT punkt, ikke en linje — to hender pa hver side beveger seg i buer,
@@ -124,8 +132,10 @@
      en vertikal setting (scaleY .975) om kontaktlinjen — den koster hendene
      ~0,2 px fordi de ligger i pivoten, men flytter hodet 2,6 px ned. Samlet
      hodevandring ~3,4 px, og hendene blir staende.
-     Poseskiftet ligger INNE i bevegelsen — bevegelse maskerer byttet. */
-  #s-hjem.bowing .mascotwrap { transform:translateX(-25%) rotate(1.2deg) scaleY(.975); }
+     Poseskiftet ligger INNE i bevegelsen — bevegelse maskerer byttet.
+     .975 er LAST NEDRE GRENSE (portdom runde 22): mer setting begynner a
+     gjore ansikt og tekstiler bredere/sammenpresset. */
+  #s-hjem.bowing .mascotpose { transform:rotate(1.2deg) scaleY(.975); }
   /* Kompenserte kurver i BEGGE retninger (krysstoningsregelen): den som
      kommer INN fader normalt 150 ms; den som gar UT holder full dekning til
      120 ms og kuttes forst da. Samlet dekning faller aldri under 1. */
@@ -134,7 +144,7 @@
   #s-hjem.bowing .mascot.m-normal  { opacity:0; transition:opacity 40ms linear 120ms; }
   #s-hjem.bowing .mascot.m-curious { opacity:1; transition:opacity 150ms var(--ease); }
   @media (prefers-reduced-motion: reduce) {
-    .mascotwrap { transition:none; transform:translateX(-25%) !important; }
+    .mascotpose { transition:none; transform:none !important; }
     .mascot.m-normal, .mascot.m-curious { transition:none; }
   }
   /* Panelet bytter TILSTAND, ikke side. Hoyden er last til den storste av de
@@ -344,10 +354,10 @@
   <div class="screen on" id="s-hjem">
     <div class="screen-pad"></div>
     <div class="panel" id="hjempanel">
-      <div class="mascotwrap">
+      <div class="mascotwrap"><div class="mascotpose">
         <img class="mascot m-normal" src="{{IMG_maskot}}" alt="">
         <img class="mascot m-curious" src="{{IMG_maskot-nysgjerrig}}" alt="">
-      </div>
+      </div></div>
       <div class="scanclip"><div class="scanline" id="scanline"></div></div>
       <div class="loc" id="loc">Trondheim ›</div>
       <div class="fresh">Oppdatert nå</div>
