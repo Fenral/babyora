@@ -18,9 +18,18 @@
     --shadow-contact:0 10px 22px -10px rgba(12,6,2,.65);
     --sh-contact:rgba(8,4,2,.45); --sh-mid:rgba(8,4,2,.5); --sh-broad:rgba(4,2,1,.62);
     --sh-contact-cta:rgba(120,60,20,.4); --sh-broad-cta:rgba(105,62,36,.46);
-    /* Portdom (ekstern kritiker, B1-kalibrering): B=.32, kjerne 37%%/-10%% mot
-       maskoten, ordmerket i lysets skulder, aldri hoyere enn .32. */
-    --atmo:radial-gradient(110% 75% at 37% -10%, rgba(232,178,122,.32), transparent 52%),
+    /* Portdom (B1-kalibrering): alpha .32 — aldri hoyere. Kjernen SIKTER pa
+       hovedmotivet; ordmerket ligger i lysets skulder.
+       Eierfunn 2026-08-03: «gir lyset i bakgrunnen noen mening na?» Nei — det
+       gjorde det ikke. Kjernen var ankret til en fast PROSENT av skjermen
+       (-10 %), men da lufta ble fordelt (portdom 24) flyttet hero-gruppen seg
+       nedover, og motivet sitter ikke lenger pa den prosenten: malt 254 px
+       mellom veggens lyseste punkt og maskotens hode pa hoy skjerm.
+       Y-anker folger na maskoten (--atmo-y, satt fra faktisk layout).
+       X blir staende pa 37 %: key-lyset kommer ovre venstre, og hele
+       dybdekontrakten skygger ned-hoyre ut fra nettopp det. */
+    --atmo-y:-10%;
+    --atmo:radial-gradient(110% 75% at 37% var(--atmo-y), rgba(232,178,122,.32), transparent 52%),
            linear-gradient(205deg, rgba(126,90,58,.28), transparent 46%),
            radial-gradient(160% 110% at 80% 115%, rgba(0,0,0,.5), transparent 55%);
     --m-feedback:120ms; --m-state:220ms; --m-handoff:280ms; --ease:cubic-bezier(.2,.7,.2,1);
@@ -40,7 +49,7 @@
     --sh-contact-cta:rgba(120,60,20,.32); --sh-broad-cta:rgba(140,80,40,.24);
     /* Lys modus (portdom): bredere og mykere, lokal alpha .12-.18 — morgen
        gjennom temperatur og diffus retning, ikke ekstra luminans. */
-    --atmo:radial-gradient(160% 100% at 32% -12%, rgba(255,248,235,.16), transparent 68%),
+    --atmo:radial-gradient(160% 100% at 32% calc(var(--atmo-y) - 2%), rgba(255,248,235,.16), transparent 68%),
            linear-gradient(165deg, rgba(214,186,150,.14), transparent 52%);
   }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -927,6 +936,26 @@ let stepBusy=false;
 })();
 function closeKlePaa(){ pushTo('s-res','down',PUSH_BACK); }
 
+/* Lyspoolen SIKTER pa hovedmotivet. Maskotens plassering avhenger na av
+   skjermhoyden (toppluften vokser), sa siktet ma regnes ut — ikke settes som
+   en fast prosent. Kjernen legges like OVER hodet, slik at falloffet lander
+   pa ansikt og skuldre. Poolen settes én gang per layout og beveger seg
+   aldri under navigasjon (portdom: «statisk per skjerm»). */
+function siktLyset(){
+  const stage=document.getElementById('stage');
+  const wrap=document.querySelector('.mascotwrap');
+  if(!wrap) return;
+  const s=stage.getBoundingClientRect(), m=wrap.getBoundingClientRect();
+  const hodeY=(m.top - s.top) + m.height*0.35;
+  /* MA settes pa :root, ikke pa #stage. En custom property med var() inni
+     substitueres pa elementet der den er DEKLARERT — og --atmo er deklarert
+     pa :root. Satt pa #stage fikk mork modus aldri verdien (lys modus fikk
+     den, fordi [data-mode="light"] tilfeldigvis ER #stage). Det kostet meg
+     to malinger som sa «ingen endring». */
+  document.documentElement.style.setProperty('--atmo-y', ((hodeY/s.height)*100 - 8).toFixed(1)+'%');
+}
+addEventListener('resize',siktLyset);
+
 /* Fullskjerm-forhandsvisning: skalerer den ekte app-flaten ned til a passe. */
 function fitPreview(){
   if(!document.body.classList.contains('preview')) return;
@@ -937,7 +966,7 @@ function togglePreview(){
   const på=document.body.classList.toggle('preview');
   document.querySelector('.previewbtn').textContent = på ? '⤢ Faktisk størrelse' : '⤢ Fullskjerm';
   fitPreview();
-  requestAnimationFrame(()=>measurePanel());
+  requestAnimationFrame(()=>{ measurePanel(); siktLyset(); });
 }
 addEventListener('resize',fitPreview);
 
@@ -945,5 +974,6 @@ addEventListener('resize',fitPreview);
 measurePanel();
 window.PANEL_H = PANEL_H;
 oppdaterCta();
+siktLyset();
 addEventListener('resize',()=>{ if(!document.getElementById('s-hjem').classList.contains('scanning')) measurePanel(); });
 </script>
