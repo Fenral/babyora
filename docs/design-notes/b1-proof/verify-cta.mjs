@@ -59,10 +59,37 @@ const posFixed =
 const panelFixed = new Set(samples.map((s) => s.panelH)).size === 1;
 const screensFixed = new Set(samples.map((s) => s.screensOn));
 
+// Sols portkrav: mal begge handkontaktpunktene separat, maks 1px vertikal gli.
+// Handenes posisjon er alfa-malt (measure-hands.mjs), uttrykt i elementets
+// lokale koordinater relativt til transform-origin.
+const HANDS = { venstre: [-34.5, 0.1], hoyre: [34.3, 0.1] };
+const matOf = (t) => {
+  const m = t.match(/matrix\(([^)]+)\)/);
+  return m ? m[1].split(',').map(Number) : [1, 0, 0, 1, 0, 0];
+};
+const yOffset = (t, [px, py]) => { const [, b, , d] = matOf(t); return b * px + d * py; };
+const rest = samples[0].transform;
+const bowed = samples[samples.length - 1].transform;
+const slip = Object.fromEntries(
+  Object.entries(HANDS).map(([n, p]) => [n, Math.abs(yOffset(bowed, p) - yOffset(rest, p))]),
+);
+
 console.log('── CTA-momentet ──');
 console.log(`  rotasjon: ${angles[0].toFixed(2)}° → ${Math.max(...angles).toFixed(2)}°, ` +
             `${uniq.length} distinkte mellomverdier (bevegelse, ikke hopp)`);
 console.log(`  laveste samlede maskot-dekning: ${minCover.toFixed(3)} (krav ≥ 0,999)`);
+const worstSlip = Math.max(...Object.values(slip));
+console.log(`  handgli (portkrav ≤ 1,00 px): ` +
+  Object.entries(slip).map(([n, v]) => `${n} ${v.toFixed(2)} px`).join(', ') +
+  `  ${worstSlip <= 1 ? '✓ BESTATT' : '✗ STRYKER'}`);
+const headTravel = (() => {
+  const p = [0, -105]; // hodesenter relativt til pivot, i CSS-px
+  const dy = yOffset(bowed, p) - yOffset(rest, p);
+  const xOf = (t) => { const [a, , c] = matOf(t); return a * p[0] + c * p[1]; };
+  const dx = xOf(bowed) - xOf(rest);
+  return Math.hypot(dx, dy);
+})();
+console.log(`  hodets vandring gjennom boyningen: ${headTravel.toFixed(2)} px`);
 console.log(`  maskotens layoutposisjon konstant: ${posFixed ? 'JA' : 'NEI'}`);
 console.log(`  panelhoyde konstant: ${panelFixed ? 'JA' : 'NEI'} (${samples[0].panelH}px)`);
 console.log(`  synlige skjermer gjennom hele momentet: ${[...screensFixed].join(' | ')}`);

@@ -1,0 +1,59 @@
+a) Scanbevegelsen
+
+Godkjent med én matematisk reservasjon. Eierfunnet overstyrer den tidligere implementeringsdommen: CSS-rotasjonen gir nå faktisk kontinuitet, mens posebyttet bærer uttrykket.
+
+3,2° er riktig amplitude. Ikke øk.
+
+Men en CSS transform-origin er ett punkt, ikke en hel gripelinje. Bare pivotpunktet står automatisk stille; to hender på hver side vil bevege seg i små buer. Krav:
+
+Mål begge kontaktpunktene separat.
+
+Maks 1 px vertikal gli per hånd.
+
+Overskrides dette: behold hendene som statisk lag og roter bare hode/overkropp, eventuelt reduser til cirka 2°.
+
+coverage: 1.000 beviser fravær av hull, ikke stabil håndkontakt.
+
+b) Opprettingen
+
+Den skal lande på fullføringsmarkøren, slik den gjør nå. Hvis opprettingen starter der, sier UI-et «klart» mens karakteren fortsatt beveger seg.
+
+672 ms full stillhet før push er mer enn nok og gir markøren det manglende punktumet.
+
+c) Alternativene
+
+Ordlyden bør endres fra «Kan erstattes med» til:
+
+Alternativ som passer nå
+
+Det gjør tydelig at vurderingen gjelder dagens temperatur, aktivitet og antrekk – ikke en universell produktekvivalens.
+
+Tykt ullsett → to tynne: Betinget godkjent. Skriv «To tynne ullsett kan gi omtrent tilsvarende varme.» Ikke «samme lag». Motoren må også validere passform og at lagene ikke blir trange.
+
+Tykt mellomlag → ulljakke + ullbukse: Godkjent dersom begge delene behandles som én samlet erstatning og dekning/varme er validert.
+
+Ullue → balaklava: Ikke en ren ekvivalens; balaklava gir mer dekning. Vis den bare under «Alternativ som passer nå», med konsekvensen «Mer dekning rundt ører og hals». Hvis motorfunnet strengt betyr likeverdig, skal den ut.
+
+Offisielle råd støtter lette lag og løpende kontroll av om barnet blir for varmt, men dokumenterer ikke disse konkrete plaggene som eksakte ekvivalenter. Derfor må Babyoras påstander forbli omtrentlige og motorvaliderte. NHS
+, American Academy of Pediatrics
+.
+
+d) Ingen treff
+
+Fravær av blokken er riktig. Brukeren trenger ikke en statusrapport om et automatisk søk de ikke ba om. En tom/deaktivert blokk ville tilføre støy og antyde manglende innhold.
+
+Bare en eksplisitt «Finn alternativ»-handling ville krevd tilbakemeldingen «Ingen passende alternativer funnet».
+
+e) Trusler mot tidligere kontrakter
+
+320px må være reservert minimumshøyde, ikke låst maksimum. Dynamic Type og lange stedsnavn må kunne utvide panelet.
+
+Revalider åpningens sluttframe etter at Hjem-strukturen er endret.
+
+Chevronen på alternativkortet må føre til en virkelig handling eller detalj. Hvis kortet ikke kan åpnes, fjern chevronen.
+
+Reduce Motion skal fortsatt hoppe direkte til resultat uten bøy/posekoreografi.
+
+Mål håndkontakt, luminanspumping og doble øyne på fysisk telefon.
+
+Samlet dom: Omleggingen er klart bedre og gjenoppretter både fysisk kontinuitet og katalogsannhet. Godkjent etter håndanker-testen og den kontekstuelle alternativetiketten.
