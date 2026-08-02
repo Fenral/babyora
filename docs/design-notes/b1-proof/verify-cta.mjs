@@ -14,6 +14,18 @@ page.on('pageerror', (e) => errors.push(String(e)));
 await page.goto(url);
 await page.waitForTimeout(500);
 
+// Ingenting skal bevege seg i det HVILENDE panelet. Analysestreken animerte
+// ved sidelast og sveipet over vaeret for den forsvant (eierfunn i mock).
+const hvile = await page.evaluate(async () => {
+  const line = document.querySelector('.scanline');
+  const les = () => getComputedStyle(line).transform + '|' + getComputedStyle(line).opacity;
+  const a = les();
+  await new Promise((r) => setTimeout(r, 700));
+  return { for: a, etter: les() };
+});
+console.log('── Hvile for CTA ──');
+console.log(`  analysestreken i ro: ${hvile.for === hvile.etter ? '✓ JA' : '✗ NEI — den beveger seg'} (${hvile.etter})`);
+
 const angleOf = (t) => {
   const m = t.match(/matrix\(([^)]+)\)/);
   if (!m) return 0;

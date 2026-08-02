@@ -154,6 +154,13 @@
   }
   /* Panelet bytter TILSTAND, ikke side. Hoyden er last til den storste av de
      to tilstandene ved oppstart, sa instrumentet aldri hopper i hoyde. */
+  /* Panelet er last til den STORSTE av de to tilstandene, sa den korteste
+     (vaer) ville ellers fatt et dodt felt nederst. Innholdet strekker seg i
+     stedet, og bryteren legger seg mot underkanten — der en kontroll horer
+     hjemme. Ingen tom sone i den tilstanden brukeren ser mest. */
+  .panel { display:flex; flex-direction:column; }
+  .pstate { flex:1; display:flex; flex-direction:column; }
+  .pstate .toggle { margin-top:auto; }
   .pstate[hidden], .below[hidden] { display:none; }
   .below { animation:statein 200ms var(--ease) both; }
   @keyframes statein { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
@@ -175,9 +182,15 @@
                        box-shadow:0 2px 3px rgba(0,0,0,.3), 2px 6px 14px -3px rgba(0,0,0,.4), inset 0 1px 0 #fff; }
   .toggle button:active { transform:translateY(1px); }
 
+  /* Plassbudsjett (eierfunn 2026-08-02: «det er ikke plass til CTA»).
+     Barnet flyttet INN i panelet — hvem beregningen gjelder er kontekst for
+     instrumentet, ikke en bildetekst under det. Aktiviteten sto to steder i
+     to ordforrad («Utelek» og «Utenfor vogn»); na kun i bryteren. */
+  .phead { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+  .who { text-align:right; font-size:14.5px; font-weight:600; color:var(--p-hi); line-height:1.25; }
+  .who small { display:block; font-size:12.5px; font-weight:500; color:var(--p-muted); }
   .h-serif { font-family:'Fraunces',Georgia,serif; font-weight:520; font-size:34px; line-height:1.1;
-             color:var(--ink-hi); margin:26px 0 6px; letter-spacing:-.01em; }
-  .subline { font-size:15px; color:var(--ink-muted); margin:0 0 18px; }
+             color:var(--ink-hi); margin:16px 0 14px; letter-spacing:-.01em; }
   .cta { display:block; width:100%; border:0; border-radius:18px; padding:18px 0; font-size:18px; font-weight:700;
          font-family:inherit; background:linear-gradient(178deg, #E39A66, var(--amber) 55%, #C77E48);
          color:var(--amber-ink); box-shadow:inset 0 1px 0 rgba(255,235,215,.55), 0 2px 4px var(--sh-contact-cta),
@@ -218,9 +231,15 @@
               pointer-events:none; z-index:1; }
   /* 2,5 s = streken forlater boksen NOYAKTIG nar fullforingsmarkoren lander,
      sa holdet etterpa er helt uten bevegelse. */
+  /* Streken skal IKKE animere ved sidelast. Med animasjonen pa selve
+     elementet startet den i det panelet ble tegnet, og sveipet en gang over
+     det HVILENDE vaeret — en strek som glir over temperaturen hver gang
+     appen apnes. Den henger na pa .scanning, sa den finnes bare mens
+     instrumentet faktisk jobber. */
   .scanline { position:absolute; left:8px; right:8px; top:0; height:2px; border-radius:2px;
               background:linear-gradient(90deg, transparent, rgba(241,233,218,.75), transparent);
-              animation:sweep 2.5s linear forwards; }
+              opacity:0; }
+  #s-hjem.scanning .scanline { opacity:1; animation:sweep 2.5s linear forwards; }
   @keyframes sweep { from { transform:translateY(-4px);} to { transform:translateY(var(--scan-travel,460px));} }
   .synth { margin-top:14px; font-size:15px; color:var(--p-mid); opacity:0; transition:opacity var(--m-state) var(--ease); }
   .synth.onrow { opacity:1; }
@@ -351,6 +370,22 @@
     .scanline { animation:none; opacity:0; }
     * { transition-duration:1ms !important; }
   }
+
+  /* ── KOMPAKT TIER for lave viewporter ───────────────────────────────────
+     iPhone SE (375x667) og Safari med nettleserkrom. Ikke en permanent
+     nedgradering: den fulle rytmen star urort pa vanlige telefoner.
+     MA STA SIST i arket. Forste forsok la den for basisreglene, og siden
+     spesifisiteten er lik vant den SENERE regelen — tieren gjorde ingenting,
+     og malingen viste 12 px spart i stedet for 41. Kaskaden avgjor, ikke
+     rekkefolgen jeg tenkte i.
+     Panelet maler sin egen hoyde ved oppstart, sa lasen plukker opp disse
+     verdiene selv. */
+  @media (max-height: 700px) {
+    .trust { display:none; }                          /* forsikring, ikke innhold */
+    .srow { padding:8px 0; }                          /* 3 rader × 10 px = −30 */
+    .synth { margin-top:8px; }                        /*                  −6  */
+    .h-serif { font-size:30px; margin:12px 0 10px; }  /*                  −11 */
+  }
 </style>
 
 <div id="stage" data-mode="dark">
@@ -369,15 +404,19 @@
         <img class="mascot m-curious" src="{{IMG_maskot-nysgjerrig}}" alt="">
       </div></div>
       <div class="scanclip"><div class="scanline" id="scanline"></div></div>
-      <div class="loc" id="loc">Trondheim ›</div>
-      <div class="fresh">Oppdatert nå</div>
+      <div class="phead">
+        <div>
+          <div class="loc" id="loc">Trondheim ›</div>
+          <div class="fresh">Oppdatert nå</div>
+        </div>
+        <div class="who">Lillian<small>4 måneder</small></div>
+      </div>
       <div class="pstate" id="p-weather">
         <div class="temp-row">
           <div class="temp">1<sup>°</sup></div>
           <img class="wicon" src="{{IMG_vaer}}" alt="">
         </div>
         <div class="feels">Føles som −3°</div>
-        <p class="desc">Delvis skyet — sjekk antrekket før dere går ut.</p>
         <div class="toggle"><button class="sel">Utenfor vogn</button><button>I vogn</button></div>
       </div>
       <div class="pstate" id="p-scan" hidden>
@@ -395,7 +434,6 @@
     </div>
     <div class="below" id="b-hjem">
       <div class="h-serif">Klar for en liten tur?</div>
-      <p class="subline">Lillian · 4 måneder · Utelek</p>
       <button class="cta" onclick="startScan()">Finn dagens antrekk&nbsp;&nbsp;→</button>
       <p class="trust">Vær, sted og aktivitet vurderes sammen</p>
     </div>
