@@ -173,6 +173,7 @@
   .temp sup { font-size:36px; vertical-align:28px; font-weight:400; }
   .wicon { width:84px; height:84px; filter:drop-shadow(0 5px 8px rgba(0,0,0,.3)); }
   .feels { font-size:19px; font-weight:650; color:var(--p-hi); margin:2px 0 6px; }
+  .feels span { font-weight:500; color:var(--p-mid); }
   .desc { font-size:15px; line-height:1.5; margin:0 0 14px; }
   .toggle { display:flex; background:rgba(241,233,218,.10); border-radius:999px; padding:4px; }
   .toggle button { flex:1; border:0; border-radius:999px; padding:11px 0; font-size:15px; font-weight:650;
@@ -380,7 +381,7 @@
      rekkefolgen jeg tenkte i.
      Panelet maler sin egen hoyde ved oppstart, sa lasen plukker opp disse
      verdiene selv. */
-  @media (max-height: 700px) {
+  @media (max-height: 780px) {
     .trust { display:none; }                          /* forsikring, ikke innhold */
     .srow { padding:8px 0; }                          /* 3 rader × 10 px = −30 */
     .synth { margin-top:8px; }                        /*                  −6  */
@@ -409,14 +410,21 @@
           <div class="loc" id="loc">Trondheim ›</div>
           <div class="fresh">Oppdatert nå</div>
         </div>
-        <div class="who">Lillian<small>4 måneder</small></div>
+        <!-- Portdom 23: alderen trenger ikke sta i HVILEtilstanden — scannen
+             viser den eksplisitt («Lillian / 4 maneder»). Hvilen navngir
+             barnet; scannen legger fram grunnlaget. -->
+        <div class="who">Lillian</div>
       </div>
       <div class="pstate" id="p-weather">
         <div class="temp-row">
           <div class="temp">1<sup>°</sup></div>
           <img class="wicon" src="{{IMG_vaer}}" alt="">
         </div>
-        <div class="feels">Føles som −3°</div>
+        <!-- Portdom 23: vartilstanden er REELL DATA og kan ikke baeres av
+             ikonet alene — bare handlingsdelen («sjekk antrekket for dere gar
+             ut») var overflodig, siden knappen under sier nettopp det.
+             Slatt sammen til en linje i stedet for a fjernes. -->
+        <div class="feels">Føles som −3° <span>· Delvis skyet</span></div>
         <div class="toggle"><button class="sel">Utenfor vogn</button><button>I vogn</button></div>
       </div>
       <div class="pstate" id="p-scan" hidden>

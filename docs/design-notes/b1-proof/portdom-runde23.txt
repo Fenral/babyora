@@ -1,0 +1,19 @@
+Dom
+
+Ikke bruk a+b+c+d helt bokstavelig. Lag en kompakt høydevariant i denne rekkefølgen:
+
+b) Stram marginene.
+
+a, modifisert: Slå sammen til én linje: Føles som −3° · Delvis skyet. Fjern bare «sjekk antrekket …».
+
+d) Skjul trust-linjen ved lav tilgjengelig høyde; scannen viser allerede vær, aktivitet og barn eksplisitt.
+
+c) Flytt Lillian · Utelek inn som kompakt kontekstlinje i panelet. Alder kan vises under scannen og trenger ikke stå i hviletilstanden.
+
+Hele .desc er ikke overflødig. Værtilstanden er reell data og kan ikke bæres av ikonet alene. Handlingsdelen er redundant og skal bort.
+
+CTA over fold gjelder også 375×667 så lenge enheten støttes. Definer kravet etter 100dvh minus safe areas/tabbar, ikke etter iPhone-modell. Ved standard tekststørrelse bør CTA ha minst 12–16 px klaring til tabbaren. Ved stor Dynamic Type er scrolling akseptabelt.
+
+Ikke bruk h nå. CTA før spørsmålet gir feil leserekkefølge. Hvis kompaktvarianten fortsatt feiler, er det bedre å utelate den retoriske overskriften helt på ekstremt lave viewporter enn å plassere svaret før spørsmålet.
+
+Funn A og den nye gradientsjekken er godkjent.
