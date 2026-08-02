@@ -38,7 +38,10 @@
        de 10,3 luminanstrinnene er onsket lokal modellering. */
     --pool:80% 52%; --pool-stop:58%;
     --pool-l:116% 69%; --pool-stop-l:74%;
-    --atmo:radial-gradient(var(--pool) at 37% var(--atmo-y), rgba(232,178,122,.32), transparent var(--pool-stop)),
+    --pool-gr:rgba(232,178,122,.32), transparent var(--pool-stop);
+    --vignett:transparent;
+    --atmo:radial-gradient(var(--pool) at 37% var(--atmo-y), var(--pool-gr)),
+           radial-gradient(120% 118% at 50% 42%, transparent 52%, var(--vignett) 100%),
            /* Ambient fill — DEMPET fra .28 (portdom 26): «.28 gir na to
               konkurrerende lyskilder». Retningen holdes samstemt med key,
               men laget skal ikke ha egen synlig kjerne. Beholdes, sa ovre rom
@@ -713,17 +716,28 @@ function settAktivitet(el,navn){
 }
 /* Tre lyskarakterer a kjenne pa. Malt lokal kontrast mellom skjermtopp og
    motiv: A 6,4 · B 10,3 · C 14,6 luminanstrinn. */
+/* Malt pa B: falloffet er en RETT LINJE (steg -4,1/-4,1/-3,4/-4,1 …) som
+   flater ut pa 21,5 og blir staende. Ekte lys faller invers-kvadratisk —
+   bratt ved kjernen, langt hale, aldri hard stopp. En konstant helning er
+   nettopp det oyet leser som «gradient pafort».
+   «Fysisk» legger inn flerstopps falloff + hue-vandring mot noytralt i halen
+   + vignett som lukker rommet + korn. */
+const FYSISK='rgba(238,184,126,.32) 0%, rgba(228,170,114,.225) 17%,'
+           + 'rgba(198,143,97,.125) 37%, rgba(152,108,76,.052) 62%, transparent 100%';
+const FLATT='rgba(232,178,122,.32), transparent var(--pool-stop)';
 const LYS=[
-  {id:'B', d:'80% 52%',  ds:'58%', l:'116% 69%',  ls:'74%', korn:'av'},   // portdom 26
-  {id:'B+korn', d:'80% 52%', ds:'58%', l:'116% 69%', ls:'74%', korn:'pa'},
-  {id:'C', d:'60% 38%',  ds:'62%', l:'87% 51%',   ls:'78%', korn:'av'},
-  {id:'A', d:'110% 75%', ds:'52%', l:'160% 100%', ls:'68%', korn:'av'},
+  {id:'B', d:'80% 52%',  ds:'58%', l:'116% 69%',  ls:'74%', korn:'av', gr:FLATT,  vig:'transparent'},
+  {id:'Fysisk', d:'86% 56%', ds:'58%', l:'120% 72%', ls:'74%', korn:'pa', gr:FYSISK, vig:'rgba(6,3,1,.34)'},
+  {id:'B+korn', d:'80% 52%', ds:'58%', l:'116% 69%', ls:'74%', korn:'pa', gr:FLATT, vig:'transparent'},
+  {id:'C', d:'60% 38%',  ds:'62%', l:'87% 51%',   ls:'78%', korn:'av', gr:FLATT, vig:'transparent'},
+  {id:'A', d:'110% 75%', ds:'52%', l:'160% 100%', ls:'68%', korn:'av', gr:FLATT, vig:'transparent'},
 ];
 let lysIdx=0;   // B er standard (portdom 26)
 function settLys(){
   const v=LYS[lysIdx], r=document.documentElement.style;
   r.setProperty('--pool',v.d); r.setProperty('--pool-stop',v.ds);
   r.setProperty('--pool-l',v.l); r.setProperty('--pool-stop-l',v.ls);
+  r.setProperty('--pool-gr',v.gr); r.setProperty('--vignett',v.vig);
   document.getElementById('stage').dataset.korn=v.korn;
   const e=document.getElementById('lys-id'); if(e) e.textContent=v.id;
 }
