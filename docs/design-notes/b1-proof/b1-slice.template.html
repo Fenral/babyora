@@ -7,7 +7,12 @@
     --ink-hi:#F2E9DC; --ink-mid:#C9BBAA; --ink-muted:#96887A;
     --petrol:#113B3E; --petrol-deep:#0D3036; --p-hi:#F1E9DA; --p-mid:#C6CFC4; --p-muted:#91A5A0;
     --amber:#D98E5A; --amber-ink:#241505; --line:rgba(231,176,135,.14);
-    --plate-light:#3A2B1B; --plate-dark:#4A3A28; --raised-top:#322418;
+    /* --raised-top er vitrinens LYSMOTTAKENDE topp. Den ble utilsiktet
+       morknet fra lum 46 til 38 da tokenet ble gjort tema-bevisst (20:49),
+       og fallet i listen falt fra 13,1 til 4,8 luminanstrinn — under
+       terskelen for a leses pa en telefon. Eierfunn 2026-08-02: «mener det
+       gikk fra lyst til morkt pa listen». Gjenopprettet til 46. */
+    --plate-light:#3A2B1B; --plate-dark:#4A3A28; --raised-top:#3B2C1C;
     --shadow-contact:0 10px 22px -10px rgba(12,6,2,.65);
     --sh-contact:rgba(8,4,2,.45); --sh-mid:rgba(8,4,2,.5); --sh-broad:rgba(4,2,1,.62);
     --sh-contact-cta:rgba(120,60,20,.4); --sh-broad-cta:rgba(105,62,36,.46);
@@ -182,6 +187,11 @@
   .trust { text-align:center; font-size:13px; color:var(--ink-muted); margin:12px 0 0; }
   .trust::before { content:'✓  '; color:var(--amber); }
 
+  /* Tabbaren FLYTER over innholdet. Da ma innholdet slutte over den — ellers
+     glir CTA og trust-linja under. Malt (measure-fold.mjs) etter eierfunn pa
+     telefon 2026-08-02: 55 px av CTA-en la bak tabbaren i Safari, og 69 px pa
+     iPhone SE — ogsa i den EKTE appen, sa dette er ikke bare nettleseren. */
+  #s-hjem { padding-bottom:calc(71px + max(12px, env(safe-area-inset-bottom)) + 16px); }
   .tabbar { position:absolute; left:16px; right:16px; bottom:max(12px,env(safe-area-inset-bottom));
             display:flex; background:color-mix(in srgb, var(--raised) 82%, transparent);
             backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
