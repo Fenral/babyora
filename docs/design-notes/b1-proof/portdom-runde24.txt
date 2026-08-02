@@ -1,0 +1,13 @@
+Ja, ekspansjonen er godkjent. Den tidligere regelen forbød et umotivert hopp, ikke en brukerutløst åpning av instrumentet. Topkant/gripelinje skal stå fast, bunnen åpnes nedover uten oversving, og Reduce Motion bytter direkte.
+
+Velg b. 230 px mellom panel og spørsmål bryter den semantiske forbindelsen mellom instrument og handling. Det mangler ikke innhold, og panelet skal ikke strekkes for å absorbere viewporten.
+
+Begrens panel→overskrift til omtrent 80–96 px.
+
+Legg resten av overskuddshøyden over maskot/panel-gruppen.
+
+Behold 20–24 px visuell klaring mellom handlingsblokken og tabbaren.
+
+Ikke c. Panelhøyden skal følge innholdet, ikke skjermhøyden. Hvis svært høye skjermer senere trenger mer autoritet, skaler hele hero-gruppen forsiktig, maksimalt ca. 4–6 %—aldri bare panelhøyden eller temperaturtallet.
+
+Dom: Meningsbærende panelåpning består; tall-layouten trenger distribuert luft, ikke større komponenter.

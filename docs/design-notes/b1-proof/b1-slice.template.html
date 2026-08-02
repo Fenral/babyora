@@ -55,7 +55,9 @@
   body.preview #stage { inset:auto; top:50%; left:50%; width:430px; height:932px;
            max-width:none; transform:translate(-50%,-50%) scale(var(--fit,1));
            border-radius:26px; box-shadow:0 0 0 2px rgba(231,176,135,.22), 0 40px 90px -20px rgba(0,0,0,.9); }
-  .previewbtn { position:fixed; top:8px; left:50%; transform:translateX(-50%); z-index:99;
+  /* Proof-kontroll — skal ALDRI sta i produktets vei. Sto forst sentrert i
+     toppen og dekket ordmerket. */
+  .previewbtn { position:fixed; left:14px; bottom:14px; z-index:99;
            background:rgba(53,38,26,.9); color:#F2E9DC; border:1px solid rgba(231,176,135,.28);
            border-radius:999px; padding:7px 15px; font-size:12.5px; font-family:inherit;
            backdrop-filter:blur(10px); }
@@ -89,7 +91,10 @@
            font-size:12px; font-weight:700; letter-spacing:.28em; color:var(--ink-hi);
            transition:opacity 200ms var(--ease); }
   .brand[data-hidden="true"] { opacity:0; }
-  .screen-pad { height:34px; flex:none; }
+  /* Overskuddshoyden legges OVER maskot/panel-gruppen (portdom 24), ikke i
+     ett stort hull mellom instrumentet og handlingen. Toppluften vokser;
+     avstanden panel→overskrift holdes fast. */
+  .screen-pad { flex:1 1 34px; min-height:34px; }
   .modebtn { position:absolute; top:max(12px,env(safe-area-inset-top)); right:16px; z-index:9;
              background:var(--interactive); color:var(--ink-mid); border:1px solid var(--line);
              border-radius:999px; padding:6px 12px; font-size:12px; font-family:inherit; }
@@ -180,10 +185,14 @@
            transition:height var(--m-bow,420ms) var(--ease); }
   .pstate { flex:1; display:flex; flex-direction:column; }
   .pstate .toggle { margin-top:auto; }
-  /* Handlingsblokken hviler mot tabbaren i stedet for a klistre seg under
-     panelet. Lufta havner MELLOM instrumentet og handlingen — der den leser
-     som pust — og knappen havner der tommelen er. */
-  .below { margin-top:auto; }
+  /* Portdom 24: «230 px mellom panel og sporsmal bryter den semantiske
+     forbindelsen mellom instrument og handling.» Avstanden har TAK pa 88 px;
+     alt overskudd utover det gar til toppluften over hero-gruppen.
+     Elastisk med tak, ikke fast marg: en fast marg kolliderte pa 630 px
+     fordi den ikke kan krympe nar det ikke finnes overskudd. */
+  .gap { flex:1 1 24px; max-height:88px; }
+  .below { margin-top:0; }
+  .below .h-serif { margin-top:0; }
   .pstate[hidden], .below[hidden] { display:none; }
   .below { animation:statein 200ms var(--ease) both; }
   @keyframes statein { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
@@ -228,7 +237,8 @@
      glir CTA og trust-linja under. Malt (measure-fold.mjs) etter eierfunn pa
      telefon 2026-08-02: 55 px av CTA-en la bak tabbaren i Safari, og 69 px pa
      iPhone SE — ogsa i den EKTE appen, sa dette er ikke bare nettleseren. */
-  #s-hjem { padding-bottom:calc(71px + max(12px, env(safe-area-inset-bottom)) + 16px); }
+  /* 22 px visuell klaring mellom handlingsblokken og tabbaren (portdom 24). */
+  #s-hjem { padding-bottom:calc(71px + max(12px, env(safe-area-inset-bottom)) + 22px); }
   .tabbar { position:absolute; left:16px; right:16px; bottom:max(12px,env(safe-area-inset-bottom));
             display:flex; background:color-mix(in srgb, var(--raised) 82%, transparent);
             backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
@@ -409,10 +419,11 @@
     .srow { padding:8px 0; }                          /* 3 rader × 10 px = −30 */
     .synth { margin-top:8px; }                        /*                  −6  */
     .h-serif { font-size:30px; margin:12px 0 10px; }  /*                  −11 */
+    .gap { flex:1 1 16px; max-height:36px; }          /* lav skjerm: strammere */
   }
 </style>
 
-<button class="previewbtn" onclick="togglePreview()">⤢ Vis som fullskjerm-app</button>
+<button class="previewbtn" onclick="togglePreview()">⤢ Fullskjerm</button>
 <div id="stage" data-mode="dark">
   <div class="brand" id="brand">B A B Y O R A</div>
   <div class="atmo on" id="atmo-hjem"></div>
@@ -464,6 +475,7 @@
         </div>
       </div>
     </div>
+    <div class="gap"></div>
     <div class="below" id="b-hjem">
       <div class="h-serif">Klar for en liten tur?</div>
       <button class="cta" onclick="startScan()">Finn dagens antrekk&nbsp;&nbsp;→</button>
@@ -851,7 +863,7 @@ function fitPreview(){
 }
 function togglePreview(){
   const på=document.body.classList.toggle('preview');
-  document.querySelector('.previewbtn').textContent = på ? '⤢ Tilbake til faktisk størrelse' : '⤢ Vis som fullskjerm-app';
+  document.querySelector('.previewbtn').textContent = på ? '⤢ Faktisk størrelse' : '⤢ Fullskjerm';
   fitPreview();
   requestAnimationFrame(()=>measurePanel());
 }
