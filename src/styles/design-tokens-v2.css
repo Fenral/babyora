@@ -81,6 +81,30 @@
   --dw-r-control: 12px;
   --dw-r-pill: 999px;
   --dw-shadow-raise: 0 1px 2px rgba(0, 0, 0, 0.5);
+
+  /* ============ Dybdekontrakten (B1-kalibrering 2026-08-02) ============
+     Retningsbestemt lagdelt skygge: key-lyset star ovre venstre, sa ALLE
+     skyggelag forskyves ned-hoyre. Fire hoydenivaer (hero/raised/action/
+     selected) deler samme STRUKTUR — kun fargen flipper per tema.
+
+     ABSOLUTT REGEL: en tema-selektor (@media prefers-color-scheme /
+     [data-theme]) far ALDRI erstatte hele box-shadow-stabelen. Den far
+     kun overstyre --dw-sh-*-fargene. Bakgrunn: lys modus falt stille ut
+     av dybdekontrakten fordi en tema-overstyring byttet hele stabelen mot
+     en flat treskygge (eierfunn: "den lyse foles flatere enn den morke").
+     Handhevet av design-tokens-v2.depth.test.ts. */
+  --dw-sh-contact: rgba(8, 4, 2, 0.45);
+  --dw-sh-mid: rgba(8, 4, 2, 0.5);
+  --dw-sh-broad: rgba(4, 2, 1, 0.62);
+  /* CTA: bred skygge dempet ~25 % mot --dw-sh-broad — sterkere leser som
+     amberglod, ikke dybde (portdom). */
+  --dw-sh-contact-cta: rgba(120, 60, 20, 0.4);
+  --dw-sh-broad-cta: rgba(105, 62, 36, 0.46);
+
+  --dw-depth-hero: 0 2px 4px var(--dw-sh-contact), 3px 14px 24px -10px var(--dw-sh-mid), 8px 34px 70px -16px var(--dw-sh-broad);
+  --dw-depth-raised: 0 2px 3px var(--dw-sh-contact), 3px 12px 20px -10px var(--dw-sh-mid), 7px 28px 56px -16px var(--dw-sh-broad);
+  --dw-depth-action: 0 2px 4px var(--dw-sh-contact-cta), 4px 16px 32px -12px var(--dw-sh-broad-cta);
+  --dw-depth-selected: 0 2px 3px var(--dw-sh-contact), 2px 6px 14px -3px var(--dw-sh-mid);
   --dw-edge-light-gradient: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
 
   /* ============ Flytende tab-bar (P8, duel §7) ============
@@ -150,6 +174,15 @@
 
     --dw-hairline: rgba(42, 29, 18, 0.14);
     --dw-shadow-raise: 0 1px 2px rgba(42, 29, 18, 0.18);
+    /* Dybdekontrakten: KUN fargene flipper — strukturen (--dw-depth-*)
+       er definert en gang i :root. Varme brune skygger; nesten-svart
+       leser som gratt skitt pa krem. */
+    --dw-sh-contact: rgba(104, 72, 40, 0.3);
+    --dw-sh-mid: rgba(104, 72, 40, 0.26);
+    --dw-sh-broad: rgba(122, 88, 52, 0.3);
+    --dw-sh-contact-cta: rgba(120, 60, 20, 0.32);
+    --dw-sh-broad-cta: rgba(140, 80, 40, 0.24);
+
     /* --dw-panel, --dw-w-*, --dw-ink-panel-*: uendret (tema-konstant instrument) */
 
     /* P8 (ekstern designgjennomgang): semantikk-tokens hadde INGEN lys-
@@ -183,6 +216,14 @@
 
   --dw-hairline: rgba(42, 29, 18, 0.14);
   --dw-shadow-raise: 0 1px 2px rgba(42, 29, 18, 0.18);
+  /* Dybdekontrakten: KUN fargene flipper — strukturen (--dw-depth-*)
+     er definert en gang i :root. Varme brune skygger; nesten-svart
+     leser som gratt skitt pa krem. */
+  --dw-sh-contact: rgba(104, 72, 40, 0.3);
+  --dw-sh-mid: rgba(104, 72, 40, 0.26);
+  --dw-sh-broad: rgba(122, 88, 52, 0.3);
+  --dw-sh-contact-cta: rgba(120, 60, 20, 0.32);
+  --dw-sh-broad-cta: rgba(140, 80, 40, 0.24);
 
   --dw-success: #2F6B45;
   --dw-warning: #8C6212;
