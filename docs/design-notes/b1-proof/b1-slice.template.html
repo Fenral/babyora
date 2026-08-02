@@ -1,0 +1,725 @@
+<title>Babyora — B1 on-device proof</title>
+<style>
+  @font-face { font-family:'Fraunces'; src:url({{FONT_FRAUNCES}}) format('woff2'); font-weight:100 900; font-display:block; }
+  @font-face { font-family:'Schibsted'; src:url({{FONT_SCHIBSTED}}) format('woff2'); font-weight:100 900; font-display:block; }
+  :root {
+    --canvas:#1E140C; --raised:#2C1F13; --interactive:#35261A;
+    --ink-hi:#F2E9DC; --ink-mid:#C9BBAA; --ink-muted:#96887A;
+    --petrol:#113B3E; --petrol-deep:#0D3036; --p-hi:#F1E9DA; --p-mid:#C6CFC4; --p-muted:#91A5A0;
+    --amber:#D98E5A; --amber-ink:#241505; --line:rgba(231,176,135,.14);
+    --plate-light:#3A2B1B; --plate-dark:#4A3A28; --raised-top:#322418;
+    --shadow-contact:0 10px 22px -10px rgba(12,6,2,.65);
+    --sh-contact:rgba(8,4,2,.45); --sh-mid:rgba(8,4,2,.5); --sh-broad:rgba(4,2,1,.62);
+    --sh-contact-cta:rgba(120,60,20,.4); --sh-broad-cta:rgba(105,62,36,.46);
+    /* Portdom (ekstern kritiker, B1-kalibrering): B=.32, kjerne 37%%/-10%% mot
+       maskoten, ordmerket i lysets skulder, aldri hoyere enn .32. */
+    --atmo:radial-gradient(110% 75% at 37% -10%, rgba(232,178,122,.32), transparent 52%),
+           linear-gradient(205deg, rgba(126,90,58,.28), transparent 46%),
+           radial-gradient(160% 110% at 80% 115%, rgba(0,0,0,.5), transparent 55%);
+    --m-feedback:120ms; --m-state:220ms; --m-handoff:280ms; --ease:cubic-bezier(.2,.7,.2,1);
+  }
+  [data-mode="light"] {
+    --canvas:#F1E9DB; --raised:#FBF6EC; --interactive:#E9DFCE;
+    --ink-hi:#2A1C10; --ink-mid:#5C4A38; --ink-muted:#8A7660;
+    --amber:#B4622F; --line:rgba(158,85,41,.18);
+    --plate-light:#FFFFFF; --plate-dark:#E3D5C0; --raised-top:#FFFFFF;
+    --shadow-contact:0 10px 22px -12px rgba(96,64,32,.35);
+    /* Lys modus: VARME skygger (nesten-svart leser som gratt skitt pa krem),
+       samme struktur som mork — kun fargen endres. */
+    --sh-contact:rgba(104,72,40,.30); --sh-mid:rgba(104,72,40,.26); --sh-broad:rgba(122,88,52,.30);
+    --sh-contact-cta:rgba(120,60,20,.32); --sh-broad-cta:rgba(140,80,40,.24);
+    /* Lys modus (portdom): bredere og mykere, lokal alpha .12-.18 — morgen
+       gjennom temperatur og diffus retning, ikke ekstra luminans. */
+    --atmo:radial-gradient(160% 100% at 32% -12%, rgba(255,248,235,.16), transparent 68%),
+           linear-gradient(165deg, rgba(214,186,150,.14), transparent 52%);
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; height:100%; }
+  body { background:var(--canvas); font-family:'Schibsted',system-ui,sans-serif; color:var(--ink-mid);
+         overflow:hidden; user-select:none; }
+  #stage { position:fixed; inset:0; max-width:520px; margin:0 auto; overflow:hidden;
+           background:var(--canvas); }
+  #stage::before { content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
+           background:radial-gradient(160% 110% at 80% 118%, rgba(0,0,0,.38), transparent 55%); }
+  /* Eierprinsipp (B1-kalibrering): key-lyset sikter på skjermens HOVEDMOTIV
+     (Hjem = maskoten, resultat = vitrinen, Kle paa = plagg-platen) — MEN
+     lyset tilhorer ROMMET, ikke siden: det ligger i stagen og KRYSSTONER
+     ved sideskift. Det far aldri gli med pushen (portdom: «poolen er
+     statisk per skjerm og flytter seg aldri synlig under navigasjon»). */
+  .atmo { position:absolute; inset:0; pointer-events:none; z-index:0; opacity:0;
+          transition:opacity 300ms var(--ease); }
+  .atmo.on { opacity:1; }
+  #atmo-hjem { background:var(--atmo); }
+  #atmo-res { background:radial-gradient(120% 70% at 50% 6%, rgba(232,178,122,.20), transparent 58%),
+           linear-gradient(205deg, rgba(126,90,58,.16), transparent 40%); }
+  #atmo-kp { background:radial-gradient(95% 60% at 50% 30%, rgba(232,178,122,.26), transparent 60%); }
+  [data-mode="light"] #atmo-res, [data-mode="light"] #atmo-kp { background:var(--atmo); }
+  .screen { position:absolute; inset:0; display:flex; flex-direction:column; padding:max(14px,env(safe-area-inset-top)) 20px 0;
+            opacity:0; pointer-events:none; transition:opacity var(--m-handoff) var(--ease); z-index:1; overflow-y:auto;
+            transform:translate3d(0,0,0); }
+  .screen.on { opacity:1; pointer-events:auto; }
+  /* Fysisk push: begge flater er synlige og BEVEGER seg samtidig — den ene
+     skyves ut mens den andre kommer inn (eierkrav 2026-08-02: «hvis man
+     hadde senket hastigheten hadde man sett det fysisk»). Ingen opacity-
+     fade pa selve bevegelsen; det er forflytning, ikke oppløsning. */
+  .screen.pushing { opacity:1; transition:transform var(--push-dur,300ms) var(--ease); will-change:transform; }
+  /* Permanent skall (portdom): ordmerket tilhorer ROMMET og star helt stille
+     under sideskift — to glidende ordmerker leser billig. */
+  .brand { position:absolute; top:calc(max(14px,env(safe-area-inset-top)) + 10px); left:20px; z-index:6;
+           font-size:12px; font-weight:700; letter-spacing:.28em; color:var(--ink-hi);
+           transition:opacity 200ms var(--ease); }
+  .brand[data-hidden="true"] { opacity:0; }
+  .screen-pad { height:34px; flex:none; }
+  .modebtn { position:absolute; top:max(12px,env(safe-area-inset-top)); right:16px; z-index:9;
+             background:var(--interactive); color:var(--ink-mid); border:1px solid var(--line);
+             border-radius:999px; padding:6px 12px; font-size:12px; font-family:inherit; }
+
+  /* ── panel som materiale ── */
+  .panel { position:relative; margin-top:118px; background:linear-gradient(178deg, #14454a 0%, var(--petrol) 26%, var(--petrol-deep) 100%);
+           border-radius:20px; padding:20px 22px 18px; color:var(--p-mid);
+           box-shadow:inset 0 1px 0 rgba(241,233,218,.20), inset 1px 0 0 rgba(241,233,218,.07),
+                      inset 0 -10px 24px rgba(0,0,0,.22),
+                      0 2px 4px var(--sh-contact),
+                      3px 14px 24px -10px var(--sh-mid),
+                      8px 34px 70px -16px var(--sh-broad); }
+  .panel::before { content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+           background:linear-gradient(215deg, rgba(241,233,218,.09), transparent 32%); }
+  /* Lys modus arver HELE dybdekontrakten via --sh-*-tokenene; kun det indre
+     bunnfallet dempes litt (paperflate reflekterer mer lys inn i panelet). */
+  [data-mode="light"] .panel { box-shadow:inset 0 1px 0 rgba(241,233,218,.22), inset 1px 0 0 rgba(241,233,218,.09),
+                      inset 0 -10px 24px rgba(0,0,0,.16),
+                      0 2px 4px var(--sh-contact),
+                      3px 14px 24px -10px var(--sh-mid),
+                      8px 34px 70px -16px var(--sh-broad); }
+  /* Gripelinjen i asseten ligger på y403/512 = 78,7 % av bildehøyden
+     (alfa-målt, samme regel som appens MascotPeek: 205px × 0,787 ≈ 161px).
+     top = -(161 - 8) så fingertuppene draperer ~8px over panelkanten. */
+  /* Maskoten er ETT objekt som ALDRI re-mountes. Scan er en TILSTAND i Hjem,
+     ikke en egen skjerm — derfor bytter panelet innhold under maskoten mens
+     maskoten selv star i ro. (Eierfunn 2026-08-02: «det er ingen animasjon.
+     Det er et bilde som bytter til et nytt bilde. Den holder seg ikke pa
+     samme plass heller.» Rotarsaken var at slicen modellerte scan som egen
+     skjerm; da ble poseskiftet et bildebytte mellom to stillbilder.) */
+  /* BEVEGELSE og OPASITET bor i hvert sitt lag. Grunn: `transition` er en
+     shorthand — en `transition:opacity …` pa pose-bildene nullstiller
+     transition-property og dreper transform-transisjonen. Da hopper
+     boyningen rett til sluttvinkelen, som er nettopp «ingen animasjon».
+     Wrapperen boyer; bildene inni krysstoner. */
+  .mascotwrap { position:absolute; left:50%; top:-153px; width:205px; height:205px; z-index:2;
+            transform-origin:52% 79%;            /* alfa-malt gripelinje = fingrene */
+            transform:translateX(-25%) rotate(0deg);
+            transition:transform var(--m-bow,420ms) var(--ease); pointer-events:none;
+            filter:drop-shadow(0 2px 2px rgba(10,5,2,.42)) drop-shadow(0 6px 10px rgba(10,5,2,.28)); }
+  [data-mode="light"] .mascotwrap { filter:drop-shadow(0 6px 12px rgba(96,64,32,.3)); }
+  .mascot { position:absolute; inset:0; width:100%; height:100%; }
+  /* BOYNINGEN er selve animasjonen: rotasjon rundt gripelinjen, sa fingrene
+     er dreiepunktet og blir staende pa panelkanten (Sols krav om stabil
+     gripelinje er oppfylt per definisjon nar den ER pivoten). Poseskiftet
+     skjer INNE i bevegelsen — bevegelse maskerer byttet, sa oyet leser ett
+     objekt som boyer seg, ikke to bilder som veksler. */
+  #s-hjem.bowing .mascotwrap { transform:translateX(-25%) rotate(3.2deg); }
+  /* Kompenserte kurver i BEGGE retninger (krysstoningsregelen): den som
+     kommer INN fader normalt 150 ms; den som gar UT holder full dekning til
+     120 ms og kuttes forst da. Samlet dekning faller aldri under 1. */
+  .mascot.m-normal  { opacity:1; transition:opacity 150ms var(--ease); }
+  .mascot.m-curious { opacity:0; transition:opacity 40ms linear 120ms; }
+  #s-hjem.bowing .mascot.m-normal  { opacity:0; transition:opacity 40ms linear 120ms; }
+  #s-hjem.bowing .mascot.m-curious { opacity:1; transition:opacity 150ms var(--ease); }
+  @media (prefers-reduced-motion: reduce) {
+    .mascotwrap { transition:none; transform:translateX(-25%) !important; }
+    .mascot.m-normal, .mascot.m-curious { transition:none; }
+  }
+  /* Panelet bytter TILSTAND, ikke side. Hoyden er last til den storste av de
+     to tilstandene ved oppstart, sa instrumentet aldri hopper i hoyde. */
+  .pstate[hidden], .below[hidden] { display:none; }
+  .below { animation:statein 200ms var(--ease) both; }
+  @keyframes statein { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+  .loc { font-size:14.5px; font-weight:600; color:var(--p-hi); }
+  .fresh { font-size:12.5px; color:var(--p-muted); margin-top:3px; }
+  .fresh::before { content:'●'; font-size:8px; vertical-align:2px; margin-right:5px; color:#7FA98B; }
+  .temp-row { display:flex; align-items:center; justify-content:space-between; margin:6px 0 2px; }
+  .temp { font-family:'Fraunces',Georgia,serif; font-weight:550; font-size:76px; line-height:1; color:var(--p-hi);
+          font-variant-numeric:lining-nums; }
+  .temp sup { font-size:36px; vertical-align:28px; font-weight:400; }
+  .wicon { width:84px; height:84px; filter:drop-shadow(0 5px 8px rgba(0,0,0,.3)); }
+  .feels { font-size:19px; font-weight:650; color:var(--p-hi); margin:2px 0 6px; }
+  .desc { font-size:15px; line-height:1.5; margin:0 0 14px; }
+  .toggle { display:flex; background:rgba(241,233,218,.10); border-radius:999px; padding:4px; }
+  .toggle button { flex:1; border:0; border-radius:999px; padding:11px 0; font-size:15px; font-weight:650;
+                   background:transparent; color:var(--p-mid); font-family:inherit;
+                   transition:transform var(--m-feedback) var(--ease); }
+  .toggle button.sel { background:var(--p-hi); color:#1E2B22;
+                       box-shadow:0 2px 3px rgba(0,0,0,.3), 2px 6px 14px -3px rgba(0,0,0,.4), inset 0 1px 0 #fff; }
+  .toggle button:active { transform:translateY(1px); }
+
+  .h-serif { font-family:'Fraunces',Georgia,serif; font-weight:520; font-size:34px; line-height:1.1;
+             color:var(--ink-hi); margin:26px 0 6px; letter-spacing:-.01em; }
+  .subline { font-size:15px; color:var(--ink-muted); margin:0 0 18px; }
+  .cta { display:block; width:100%; border:0; border-radius:18px; padding:18px 0; font-size:18px; font-weight:700;
+         font-family:inherit; background:linear-gradient(178deg, #E39A66, var(--amber) 55%, #C77E48);
+         color:var(--amber-ink); box-shadow:inset 0 1px 0 rgba(255,235,215,.55), 0 2px 4px var(--sh-contact-cta),
+                4px 16px 32px -12px var(--sh-broad-cta);
+         transition:transform var(--m-feedback) var(--ease), box-shadow var(--m-feedback) var(--ease); }
+  .cta:active { transform:translateY(1px); box-shadow:inset 0 1px 0 rgba(255,235,215,.55), 0 8px 18px -10px rgba(160,90,40,.5); }
+  .trust { text-align:center; font-size:13px; color:var(--ink-muted); margin:12px 0 0; }
+  .trust::before { content:'✓  '; color:var(--amber); }
+
+  .tabbar { position:absolute; left:16px; right:16px; bottom:max(12px,env(safe-area-inset-bottom));
+            display:flex; background:color-mix(in srgb, var(--raised) 82%, transparent);
+            backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+            border:1px solid var(--line); border-radius:26px; padding:8px; z-index:5;
+            box-shadow:0 2px 4px var(--sh-contact), 6px 20px 36px -16px var(--sh-broad); }
+  .tabbar div { flex:1; text-align:center; font-size:12px; color:var(--ink-muted); padding:8px 0 6px; border-radius:18px; }
+  .tabbar div.on { background:var(--interactive); color:var(--ink-hi); font-weight:650; }
+  .tabbar svg { display:block; margin:0 auto 3px; width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.7; }
+
+  /* ── scan ── */
+  #p-scan .rows { margin-top:8px; }
+  .srow { display:flex; align-items:center; justify-content:space-between; padding:13px 0;
+          border-bottom:1px solid rgba(241,233,218,.08); opacity:.28; transition:opacity var(--m-state) var(--ease); }
+  .srow.onrow { opacity:1; }
+  .srow .l { display:flex; align-items:center; gap:11px; font-size:16px; font-weight:650; color:var(--p-hi); }
+  .dot { width:22px; height:22px; border-radius:50%; border:2px solid var(--p-muted); display:grid; place-items:center;
+         font-size:12px; color:#1E2B22; transition:background var(--m-state) var(--ease), border-color var(--m-state) var(--ease); }
+  .srow.done .dot { background:var(--p-hi); border-color:var(--p-hi); }
+  .srow .v { font-size:14px; color:var(--p-mid); }
+  /* Egen klippeflate: panelet selv kan ikke klippe (maskoten stikker over
+     kanten), men streken MA ga helt ned og ut av boksen for den stopper
+     (eierkrav 2026-08-02). --scan-travel settes fra panelets faktiske hoyde. */
+  .scanclip { position:absolute; inset:0; border-radius:inherit; overflow:hidden;
+              pointer-events:none; z-index:1; }
+  /* 2,5 s = streken forlater boksen NOYAKTIG nar fullforingsmarkoren lander,
+     sa holdet etterpa er helt uten bevegelse. */
+  .scanline { position:absolute; left:8px; right:8px; top:0; height:2px; border-radius:2px;
+              background:linear-gradient(90deg, transparent, rgba(241,233,218,.75), transparent);
+              animation:sweep 2.5s linear forwards; }
+  @keyframes sweep { from { transform:translateY(-4px);} to { transform:translateY(var(--scan-travel,460px));} }
+  .synth { margin-top:14px; font-size:15px; color:var(--p-mid); opacity:0; transition:opacity var(--m-state) var(--ease); }
+  .synth.onrow { opacity:1; }
+  .synth .sil { display:flex; gap:10px; margin-top:10px; }
+  .synth .sil img { width:44px; height:44px; opacity:0; transform:translateY(6px);
+                    transition:opacity var(--m-state) var(--ease), transform var(--m-state) var(--ease);
+                    filter:saturate(.4) brightness(.8) drop-shadow(0 4px 6px rgba(0,0,0,.3)); }
+  .synth.onrow .sil img { opacity:.9; transform:none; }
+  /* Fullforingsmarkor: ceremonien far et synlig punktum for skjermen bytter
+     (eierfunn 2026-08-02: siste del av animasjonen ble ikke oppfattet). */
+  /* Raskere enn --m-state: markoren skal LANDE, ikke gli, sa det stille
+     holdet etterpa blir sa langt som mulig. */
+  .synth .s-dot, .synth .s-txt, .synth .s-val { transition-duration:180ms !important; }
+  .synth .s-dot { display:inline-grid; place-items:center; width:20px; height:20px; border-radius:50%;
+           border:2px solid var(--p-muted); margin-right:9px; vertical-align:-4px; font-size:11px; color:#1E2B22;
+           transition:background var(--m-state) var(--ease), border-color var(--m-state) var(--ease); }
+  .synth.done .s-dot { background:var(--p-hi); border-color:var(--p-hi); }
+  .synth.done .s-txt { color:var(--p-hi); font-weight:650; }
+  .synth .s-txt { transition:color var(--m-state) var(--ease); }
+  .synth .s-head { display:flex; align-items:center; }
+  .synth .s-val { margin-left:auto; font-size:14px; color:var(--p-mid); opacity:0;
+           transition:opacity var(--m-state) var(--ease); }
+  .synth.done .s-val { opacity:1; }
+  .synth.done .sil img { opacity:1; filter:none; }
+  .skip { display:block; margin:20px auto 0; background:none; border:0; color:var(--ink-muted);
+          font-size:14.5px; font-family:inherit; text-decoration:underline; text-underline-offset:3px;
+          opacity:0; transition:opacity var(--m-state) var(--ease); }
+  .skip.onrow { opacity:1; }
+  .scanh { font-family:'Fraunces',Georgia,serif; font-weight:520; font-size:27px; color:var(--ink-hi); margin:26px 0 4px; }
+  .scansub { font-size:14.5px; color:var(--ink-muted); }
+
+  /* ── resultat ── */
+  .sumstrip { display:flex; align-items:center; gap:14px; background:linear-gradient(178deg,#14454a, var(--petrol) 40%, var(--petrol-deep));
+              border-radius:16px; padding:12px 16px; margin-top:8px; color:var(--p-mid); font-size:13.5px;
+              box-shadow:inset 0 1px 0 rgba(241,233,218,.12), 0 14px 28px -16px rgba(8,4,2,.6); }
+  .sumstrip .t { font-family:'Fraunces',Georgia,serif; font-size:30px; font-weight:550; color:var(--p-hi); }
+  .sumstrip .j { margin-left:auto; color:var(--p-hi); font-weight:650; font-size:14px; white-space:nowrap; }
+  .res-h { font-family:'Fraunces',Georgia,serif; font-weight:520; font-size:30px; color:var(--ink-hi); margin:18px 0 2px; }
+  .res-sub { font-size:14px; color:var(--ink-muted); margin:0 0 12px; }
+  .vitrine { background:linear-gradient(178deg, var(--raised-top), var(--raised) 55%); border:1px solid rgba(231,176,135,.22); border-radius:18px; padding:6px 16px;
+             box-shadow:inset 0 1px 0 rgba(241,233,218,.13), inset 1px 0 0 rgba(241,233,218,.05),
+                        0 2px 3px var(--sh-contact),
+                        3px 12px 20px -10px var(--sh-mid),
+                        7px 28px 56px -16px var(--sh-broad); margin-bottom:14px; }
+  .row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid var(--line); min-height:62px; }
+  .row:last-child { border-bottom:0; }
+  .row .n { font-family:'Fraunces',Georgia,serif; font-size:19px; color:var(--amber); width:20px; text-align:center; }
+  .plate { width:58px; height:58px; border-radius:14px; display:grid; place-items:center; background:var(--plate-light);
+           box-shadow:inset 0 1px 0 rgba(255,255,255,.08), var(--shadow-contact); }
+  /* Mørke plagg (kun vinterdress i B1): uniform platefarge + myk inner-halo
+     bak plagget — separasjon uten synlig plateforskjell (eierfunn: lysere
+     plate leste som inkonsistens). */
+  .plate.dark { background:radial-gradient(closest-side, rgba(240,225,205,.18), transparent 78%), var(--plate-light); }
+  [data-mode="light"] .plate.dark { background:var(--plate-light); }
+  [data-mode="light"] .plate { box-shadow:inset 0 0 0 1px rgba(158,85,41,.12), var(--shadow-contact); }
+  .plate img { width:50px; height:50px; filter:drop-shadow(0 3px 5px rgba(10,5,2,.35)); }
+  .row .name { font-size:16.5px; font-weight:650; color:var(--ink-hi); }
+  .row .role { font-size:12.5px; color:var(--ink-muted); margin-top:1px; }
+  .row .det { margin-left:auto; font-size:13.5px; color:var(--ink-muted); }
+  .why { text-align:center; font-size:14.5px; color:var(--ink-muted); text-decoration:underline;
+         text-underline-offset:3px; margin:2px 0 90px; }
+
+  /* ── kle på ── */
+  .kp-top { display:flex; align-items:center; gap:14px; padding-top:6px; }
+  .kp-x { width:40px; height:40px; border-radius:50%; background:var(--interactive); border:1px solid var(--line);
+          color:var(--ink-mid); font-size:16px; display:grid; place-items:center; }
+  .kp-titles .a { font-size:12.5px; color:var(--ink-muted); }
+  .kp-titles .b { font-family:'Fraunces',Georgia,serif; font-size:21px; font-weight:550; color:var(--ink-hi); }
+  .kp-strip { display:inline-flex; gap:8px; align-items:center; background:var(--petrol); color:var(--p-mid);
+              border-radius:999px; padding:7px 15px; font-size:13px; margin:14px auto 0; align-self:center;
+              box-shadow:inset 0 1px 0 rgba(241,233,218,.12); }
+  .kp-scene { flex:1; position:relative; overflow:hidden; touch-action:pan-y; }
+  /* Toppforankret, IKKE sentrert. Nar alternativ-blokken bare finnes pa noen
+     steg, varierer innholdshoyden — og med justify-content:center ville
+     plaggplaten hoppe ~125px mellom et steg med funn og et uten. Platen er
+     stegets faste punkt: den skal ligge likt gjennom hele sekvensen, og
+     luften nedenfor er det som varierer. */
+  .kp-layer { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+              justify-content:flex-start; padding:26px 0 12px; opacity:0; pointer-events:none;
+              overflow-y:auto; transform:translate3d(0,0,0); transition:transform var(--m-step,260ms) var(--ease); }
+  .kp-layer.on { opacity:1; pointer-events:auto; }
+  .kp-plate { width:216px; height:216px; border-radius:50%;
+              background:radial-gradient(closest-side, rgba(240,225,205,.10), transparent 80%), var(--plate-light);
+              display:grid; place-items:center;
+              box-shadow:inset 0 2px 0 rgba(255,255,255,.07), 0 26px 48px -22px rgba(8,4,2,.75); }
+  .kp-plate img { width:180px; height:180px; filter:drop-shadow(0 10px 16px rgba(10,5,2,.4));
+                  transition:opacity var(--m-handoff) var(--ease), transform var(--m-handoff) var(--ease); }
+  .kp-step { font-family:'Fraunces',Georgia,serif; font-weight:520; font-size:31px; color:var(--ink-hi);
+             margin:22px 0 3px; text-align:center; }
+  .kp-name { font-family:'Fraunces',Georgia,serif; font-size:19px; color:var(--amber); text-align:center; }
+  .kp-instr { font-size:14.5px; color:var(--ink-muted); text-align:center; max-width:32ch; margin:7px auto 0; line-height:1.5; }
+  /* Plagginfo + bytt-inngang: bruker det tomme rommet under instruksjonen til
+     ETT konkret materialpoeng og en tydelig inngang til alternativer. Kunnskap
+     hører hjemme her — i det ventende oyeblikket per plagg — ikke som bobler
+     i resultatlisten (der konkurrerer den med selve beslutningen). */
+  .kp-info { width:min(100%,340px); margin:22px auto 0; border-top:1px solid var(--line); padding-top:16px; }
+  .kp-why { display:flex; gap:10px; font-size:14px; line-height:1.5; color:var(--ink-mid); margin:0; }
+  .kp-why::before { content:""; flex:none; width:6px; height:6px; border-radius:50%; margin-top:8px;
+                    background:var(--amber); opacity:.75; }
+  /* Alternativ vises KUN nar motoren faktisk finner et plagg som kan erstatte
+     (eierkrav 2026-08-02: «ha alternativ kun om motoren finner noe som kan
+     erstattes»). Ingen tom tilstand, ingen deaktivert knapp, ingen teller —
+     finnes det ingenting, finnes ikke blokken. Og den NAVNGIR plagget:
+     «3 andre passer i dette laget» er en teller, ikke kunnskap. */
+  .kp-alt-label { display:block; font-size:11.5px; font-weight:650; letter-spacing:.12em;
+                  text-transform:uppercase; color:var(--ink-muted); margin:17px 0 7px; }
+  .kp-swap { display:flex; align-items:center; gap:12px; width:100%; min-height:56px;
+             background:var(--interactive); border:1px solid var(--line); border-radius:var(--r,16px);
+             padding:11px 14px; color:var(--ink-hi); font-family:inherit; font-size:15px; text-align:left;
+             box-shadow:var(--dw-depth-selected, 0 2px 3px var(--sh-contact));
+             transition:transform var(--m-feedback) var(--ease); }
+  .kp-swap:active { transform:translateY(1px); }
+  .kp-swap .sw-txt { line-height:1.32; }
+  .kp-swap .sw-txt b { font-weight:650; }
+  .kp-swap .sw-txt small { display:block; font-size:12.5px; font-weight:500; color:var(--ink-muted); margin-top:2px; }
+  .kp-swap .sw-chev { margin-left:auto; flex:none; color:var(--ink-muted); font-size:18px; }
+  .kp-nav { display:flex; align-items:center; justify-content:space-between; padding:0 4px 20px; }
+  .kp-dots { display:flex; gap:7px; }
+  .kp-dots i { width:8px; height:8px; border-radius:50%; background:var(--interactive); }
+  .kp-dots i.on { background:var(--amber); }
+  .kp-next { background:none; border:0; color:var(--amber); font-family:'Fraunces',Georgia,serif;
+             font-size:19px; padding:12px 4px; min-height:44px; }
+  .kp-prev { background:none; border:0; color:var(--ink-muted); font-family:'Fraunces',Georgia,serif;
+             font-size:17px; padding:12px 4px; min-height:44px; }
+  .kp-prev[data-hidden="true"] { visibility:hidden; }
+  .kp-skip { display:block; margin:2px auto 0; background:none; border:0; color:var(--ink-muted);
+             font-size:13.5px; font-family:'Schibsted',system-ui,sans-serif; text-decoration:underline;
+             text-underline-offset:3px; padding:8px 12px; min-height:40px; }
+  @media (prefers-reduced-motion: reduce) {
+    .scanline { animation:none; opacity:0; }
+    * { transition-duration:1ms !important; }
+  }
+</style>
+
+<div id="stage" data-mode="dark">
+  <div class="brand" id="brand">B A B Y O R A</div>
+  <div class="atmo on" id="atmo-hjem"></div>
+  <div class="atmo" id="atmo-res"></div>
+  <div class="atmo" id="atmo-kp"></div>
+  <button class="modebtn" onclick="toggleMode()">☾ / ☀</button>
+
+  <!-- HJEM (scan er en TILSTAND her, ikke en egen skjerm) -->
+  <div class="screen on" id="s-hjem">
+    <div class="screen-pad"></div>
+    <div class="panel" id="hjempanel">
+      <div class="mascotwrap">
+        <img class="mascot m-normal" src="{{IMG_maskot}}" alt="">
+        <img class="mascot m-curious" src="{{IMG_maskot-nysgjerrig}}" alt="">
+      </div>
+      <div class="scanclip"><div class="scanline" id="scanline"></div></div>
+      <div class="loc" id="loc">Trondheim ›</div>
+      <div class="fresh">Oppdatert nå</div>
+      <div class="pstate" id="p-weather">
+        <div class="temp-row">
+          <div class="temp">1<sup>°</sup></div>
+          <img class="wicon" src="{{IMG_vaer}}" alt="">
+        </div>
+        <div class="feels">Føles som −3°</div>
+        <p class="desc">Delvis skyet — sjekk antrekket før dere går ut.</p>
+        <div class="toggle"><button class="sel">Utenfor vogn</button><button>I vogn</button></div>
+      </div>
+      <div class="pstate" id="p-scan" hidden>
+        <div class="rows">
+          <div class="srow" id="c1"><div class="l"><span class="dot">✓</span>Været nå</div><div class="v">1°, delvis skyet</div></div>
+          <div class="srow" id="c2"><div class="l"><span class="dot">✓</span>Aktivitet</div><div class="v">Utenfor vogn</div></div>
+          <div class="srow" id="c3"><div class="l"><span class="dot">✓</span>Lillian</div><div class="v">4 måneder</div></div>
+        </div>
+        <div class="synth" id="synth"><span class="s-head"><span class="s-dot" id="s-dot"></span><span class="s-txt" id="s-txt">Setter sammen lagene …</span><span class="s-val" id="s-val"></span></span>
+          <div class="sil">
+            <img src="{{IMG_ullsett-tykt}}"><img src="{{IMG_ull-mellomlag-tykt}}"><img src="{{IMG_vinterdress}}"><img src="{{IMG_lue-m-ull}}">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="below" id="b-hjem">
+      <div class="h-serif">Klar for en liten tur?</div>
+      <p class="subline">Lillian · 4 måneder · Utelek</p>
+      <button class="cta" onclick="startScan()">Finn dagens antrekk&nbsp;&nbsp;→</button>
+      <p class="trust">Vær, sted og aktivitet vurderes sammen</p>
+    </div>
+    <div class="below" id="b-scan" hidden>
+      <div class="scanh">Kler på Lillian i tankene …</div>
+      <div class="scansub">Tar bare et lite øyeblikk.</div>
+      <button class="skip" id="skip" onclick="finishScan(true)">Vis antrekket nå</button>
+    </div>
+    <div class="tabbar">
+      <div class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-6h-6v6H5a2 2 0 0 1-2-2z"/></svg>Hjem</div>
+      <div><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Planlegg</div>
+      <div><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.2 15.4c2.4.2 4.3 1.7 4.9 4.6"/></svg>Familie</div>
+    </div>
+  </div>
+
+  <!-- RESULTAT -->
+  <div class="screen" id="s-res">
+    <div class="screen-pad"></div>
+    <div class="sumstrip"><span class="t">1°</span><span>Føles som −3° · Delvis skyet<br>Trondheim · Utenfor vogn</span><span class="j">Juster ›</span></div>
+    <div class="res-h">Dagens antrekk</div>
+    <p class="res-sub">6 plagg for Lillian, innerst til ytterst</p>
+    <div class="vitrine">
+      <div class="row"><span class="n">1</span><span class="plate"><img src="{{IMG_ullsett-tykt}}"></span><span><div class="name">Ullsett, tykt</div><div class="role">Innerst</div></span><span class="det">Detaljer ⓘ</span></div>
+      <div class="row"><span class="n">2</span><span class="plate"><img src="{{IMG_ullsokker}}"></span><span><div class="name">Ullsokker</div><div class="role">Innerst</div></span><span class="det">Detaljer ⓘ</span></div>
+      <div class="row"><span class="n">3</span><span class="plate"><img src="{{IMG_ull-mellomlag-tykt}}"></span><span><div class="name">Ull-mellomlag, tykt</div><div class="role">Mellomlag</div></span><span class="det">Detaljer ⓘ</span></div>
+      <div class="row"><span class="n">4</span><span class="plate dark"><img src="{{IMG_vinterdress}}"></span><span><div class="name">Vinterdress</div><div class="role">Ytterst</div></span><span class="det">Detaljer ⓘ</span></div>
+      <div class="row"><span class="n">5</span><span class="plate"><img src="{{IMG_lue-m-ull}}"></span><span><div class="name">Lue med ull</div><div class="role">Tilbehør</div></span><span class="det">Detaljer ⓘ</span></div>
+      <div class="row"><span class="n">6</span><span class="plate"><img src="{{IMG_votter-tykke}}"></span><span><div class="name">Votter, tykke</div><div class="role">Tilbehør</div></span><span class="det">Detaljer ⓘ</span></div>
+    </div>
+    <button class="cta" onclick="openKlePaa()">Kle på, steg for steg&nbsp;&nbsp;→</button>
+    <div class="why">Hvorfor akkurat dette?</div>
+  </div>
+
+  <!-- KLE PÅ -->
+  <div class="screen" id="s-kp">
+    <div class="kp-top">
+      <div class="kp-x" onclick="closeKlePaa()">✕</div>
+      <div class="kp-titles"><div class="a">Dagens antrekk</div><div class="b">Lillian</div></div>
+    </div>
+    <div class="kp-strip">Lørdag · 1° · Føles som −3°</div>
+    <div class="kp-scene" id="kp-scene">
+      <div class="kp-layer" id="kp-l0"></div>
+      <div class="kp-layer" id="kp-l1"></div>
+    </div>
+    <div class="kp-nav">
+      <button class="kp-prev" id="kp-prev" onclick="prevStep()">← Forrige</button>
+      <div class="kp-dots" id="kp-dots"></div>
+      <button class="kp-next" id="kp-next" onclick="nextStep()">Neste →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const stage=document.getElementById('stage');
+function toggleMode(){ stage.dataset.mode = stage.dataset.mode==='dark'?'light':'dark'; }
+if (matchMedia('(prefers-color-scheme: light)').matches) stage.dataset.mode='light';
+
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on'); }
+
+/* Panelhoyden lases til den STORSTE av de to tilstandene, malt i faktisk
+   layout ved oppstart. Uten dette hopper instrumentet i hoyde i det CTA
+   trykkes — og et instrument som endrer storrelse leser som en ny side,
+   ikke som samme apparat i arbeid. */
+function lockPanelHeight(){
+  const panel=document.getElementById('hjempanel');
+  const w=document.getElementById('p-weather'), s=document.getElementById('p-scan');
+  const hWeather=panel.offsetHeight;
+  w.hidden=true; s.hidden=false;
+  const hScan=panel.offsetHeight;
+  s.hidden=true; w.hidden=false;
+  panel.style.minHeight=Math.max(hWeather,hScan)+'px';
+  return {hWeather,hScan};
+}
+
+/* Varigheter (Sols bevegelseskontrakt): sideskift 340ms (sheet-token),
+   tilbake 280ms (asymmetrisk — ut skal vare raskere enn inn), steg 260ms. */
+const PUSH_PAGE=340, PUSH_BACK=280;
+const ATMO={'s-hjem':'atmo-hjem','s-res':'atmo-res','s-kp':'atmo-kp'};
+function setAtmo(screenId){
+  document.getElementById('brand').dataset.hidden = (screenId==='s-kp') ? 'true' : 'false';
+  const want=ATMO[screenId]||'atmo-hjem';
+  document.querySelectorAll('.atmo').forEach(a=>a.classList.toggle('on',a.id===want));
+}
+const VEC={up:['0,-100%','0,100%'],down:['0,100%','0,-100%'],
+           left:['-100%,0','100%,0'],right:['100%,0','-100%,0']};
+function pushTo(id,dir,dur){
+  const from=document.querySelector('.screen.on');
+  const to=document.getElementById(id);
+  if(!to||from===to) return;
+  setAtmo(id);
+  if(RM||!from){ show(id); return; }           // Reduce Motion: aldri romlig bevegelse
+  const v=VEC[dir];
+  to.style.setProperty('--push-dur',dur+'ms');
+  from.style.setProperty('--push-dur',dur+'ms');
+  to.style.transition='none';
+  to.style.transform='translate3d('+v[1]+',0)';
+  to.classList.add('on','pushing');
+  from.classList.add('pushing');
+  void to.offsetWidth;                          // tving reflow for animasjon
+  to.style.transition='';
+  to.style.transform='translate3d(0,0,0)';
+  from.style.transform='translate3d('+v[0]+',0)';
+  setTimeout(()=>{
+    from.classList.remove('on','pushing');
+    from.style.transform=''; from.style.transition='';
+    to.classList.remove('pushing'); to.style.transform='';
+  },dur);
+}
+
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let scanTimers=[];
+function setScanState(on){
+  const hjem=document.getElementById('s-hjem');
+  document.getElementById('p-weather').hidden=on;
+  document.getElementById('p-scan').hidden=!on;
+  document.getElementById('b-hjem').hidden=on;
+  document.getElementById('b-scan').hidden=!on;
+  document.getElementById('loc').textContent = on ? 'Trondheim' : 'Trondheim ›';
+  /* .scanning = panelet viser scan-innhold (star til resultatet skyves inn).
+     .bowing   = maskoten er boyd (slippes ved fullforingsmarkoren, 2500).
+     To adskilte tilstander: babyen retter seg opp FOR siden skifter. */
+  hjem.classList.toggle('scanning',on);
+  if(!on) hjem.classList.remove('bowing');
+}
+function startScan(){
+  if(RM){ setScanState(true); pushTo('s-res','up',PUSH_PAGE); return; }
+  /* Ingen skjermbytte i det hele tatt: samme side, panelet skifter tilstand
+     under en maskot som star stille og BOYER seg. */
+  setScanState(true);
+  /* Boyningen starter i SAMME frame som trykket — den er svaret pa trykket. */
+  document.querySelector('.mascotwrap').style.removeProperty('--m-bow');
+  document.getElementById('s-hjem').classList.add('bowing');
+  ['c1','c2','c3','synth','skip'].forEach(id=>{document.getElementById(id).classList.remove('onrow','done');});
+  document.getElementById('s-dot').textContent='';
+  document.getElementById('s-txt').textContent='Setter sammen lagene …';
+  document.getElementById('s-val').textContent='';
+  document.querySelector('.scanh').textContent='Kler på Lillian i tankene …';
+  document.querySelector('.scansub').textContent='Tar bare et lite øyeblikk.';
+  const line=document.getElementById('scanline');
+  const panel=document.getElementById('hjempanel');
+  /* +6px sa streken er HELT ute av boksen nar den stopper. */
+  line.style.setProperty('--scan-travel',(panel.offsetHeight+6)+'px');
+  line.style.animation='none'; void line.offsetWidth; line.style.animation='';
+  scanTimers.forEach(clearTimeout); scanTimers=[];
+  const at=(t,fn)=>scanTimers.push(setTimeout(fn,t));
+  at(450,()=>mark('c1')); at(950,()=>mark('c2')); at(1450,()=>mark('c3'));
+  at(700,()=>document.getElementById('skip').classList.add('onrow'));
+  at(1950,()=>document.getElementById('synth').classList.add('onrow'));
+  /* Opprettingen LANDER pa fullforingsmarkoren (240ms fra 2260 → oppreist
+     nøyaktig 2500). Sols krav om samtidighet er oppfylt, og hele pausen
+     etterpa blir ekte stillstand: 3200 − 2500 = 700 ms uten bevegelse.
+     Slippet er raskere enn boyningen (240 mot 420) — samme asymmetri som
+     sideskiftene: inn skal kjennes, ut skal ikke koste tid. */
+  at(2260,()=>{ document.querySelector('.mascotwrap').style.setProperty('--m-bow','240ms');
+    document.getElementById('s-hjem').classList.remove('bowing'); });
+  at(2500,()=>{ const sy=document.getElementById('synth'); sy.classList.add('done');
+    document.getElementById('s-dot').textContent='✓';
+    document.getElementById('s-txt').textContent='Lag for lag';
+    document.getElementById('s-val').textContent='6 plagg';
+    document.querySelector('.scanh').textContent='Antrekket er klart';
+    document.querySelector('.scansub').textContent='Innerst til ytterst, klart for Lillian.';
+    /* Sols dom: INGEN success her — kun en lett prepare. Success kommer
+       nar resultatet star stabilt (ett signal, ikke to). */
+    if(navigator.vibrate)navigator.vibrate(4); });
+  at(3200,()=>finishScan(false));
+  if(navigator.vibrate) navigator.vibrate(10);
+}
+function mark(id){const el=document.getElementById(id);el.classList.add('onrow','done');
+  if(navigator.vibrate)navigator.vibrate(6);}
+function finishScan(skipped){ scanTimers.forEach(clearTimeout); scanTimers=[];
+  /* Vertikal: resultatet er UTFALLET av scannen — neste i sekvensen, ikke
+     et rom ved siden av. Fullforingsmarkoren (2500) gir holdet for skiftet. */
+  pushTo('s-res','up',PUSH_PAGE);
+  /* Hjem tilbakestilles FORST etter at siden er ute av syne — ellers ser man
+     panelet falle tilbake til vaertilstand mens det fortsatt skyves ut. */
+  setTimeout(()=>setScanState(false),PUSH_PAGE+40);
+  if(navigator.vibrate)navigator.vibrate([12,60,18]); }
+
+/* `alt` er MOTORENS FUNN, ikke et UI-element. Null = motoren fant ingenting
+   som gir samme lag ved 1°/foles som −3°, og da skal ingenting vises.
+   De tre treffene er ekte ekvivalenser i Babyoras egen katalog
+   (to-ullsett, ull-jakke + ull-bukse, balaklava) — ikke oppdiktede naboer.
+   De tre uten er ekte ogsa: katalogen har ingen erstatning for ullsokker,
+   og vinterdress/votter-tykke har bare VARMERE varianter, ikke likeverdige. */
+const steps=[
+ {img:'{{IMG_ullsett-tykt}}',step:'Ta på innerst først',name:'Ullsett, tykt',instr:'Start med det myke ullsettet som holder Lillian varm og tørr.',why:'Ull holder på varmen selv når den blir fuktig — derfor innerst.',
+  alt:{name:'To ullsett oppå hverandre',note:'To tynne sett gir samme lag som ett tykt.'}},
+ {img:'{{IMG_ullsokker}}',step:'Varme til føttene',name:'Ullsokker',instr:'Trekk sokkene godt opp over anklene.',why:'Føttene mister varme raskest. Ull puster og holder dem tørre.',
+  alt:null},
+ {img:'{{IMG_ull-mellomlag-tykt}}',step:'Mellomlaget',name:'Ull-mellomlag, tykt',instr:'Genseren går utenpå ullsettet — den fanger varmen.',why:'Mellomlaget fanger luft mellom lagene. Det er lufta som varmer.',
+  alt:{name:'Ull-jakke + ull-bukse',note:'To deler gjør samme jobb som ett mellomlag.'}},
+ {img:'{{IMG_vinterdress}}',step:'Ytterst mot været',name:'Vinterdress',instr:'Dressen stenger vind og kulde ute. La det være litt rom over tærne.',why:'Ytterlaget stenger vind og fukt ute — uten å stenge fukt inne.',
+  alt:null},
+ {img:'{{IMG_lue-m-ull}}',step:'Lua til slutt',name:'Lue med ull',instr:'Lua skal dekke ørene uten å stramme.',why:'Et lite hode mister mye varme. Lua betyr mer enn ett ekstra lag.',
+  alt:{name:'Balaklava',note:'Dekker hode, ører og hals i ett.'}},
+ {img:'{{IMG_votter-tykke}}',step:'Og hendene',name:'Votter, tykke',instr:'Kjenn etter i nakken når dere er ute: passe varm og tørr.',why:'Votter varmer bedre enn hansker — fingrene deler varmen.',
+  alt:null},
+];
+let step=0, activeLayer=0;
+const STEP_DUR=260;
+function renderDots(){const d=document.getElementById('kp-dots');
+  d.innerHTML=steps.map((_,i)=>'<i class="'+(i<=step?'on':'')+'"></i>').join('');}
+function layerHTML(s){
+  /* Blokken bygges kun nar motoren har et funn. Ingen `else`-gren med tom
+     tilstand — fravaer ER svaret nar det ikke finnes en erstatning. */
+  const alt = s.alt
+    ? '<span class="kp-alt-label">Kan erstattes med</span>'+
+      '<button class="kp-swap" type="button">'+
+        '<span class="sw-txt"><b>'+s.alt.name+'</b><small>'+s.alt.note+'</small></span>'+
+        '<span class="sw-chev">›</span>'+
+      '</button>'
+    : '';
+  return '<div class="kp-plate"><img src="'+s.img+'" alt=""></div>'+
+         '<div class="kp-step">'+s.step+'</div>'+
+         '<div class="kp-name">'+s.name+'</div>'+
+         '<p class="kp-instr">'+s.instr+'</p>'+
+         '<div class="kp-info">'+
+           '<p class="kp-why">'+s.why+'</p>'+
+           alt+
+         '</div>';}
+function renderChrome(){
+  document.getElementById('kp-next').textContent = step===steps.length-1 ? 'Ferdig ✓' : 'Neste →';
+  document.getElementById('kp-prev').dataset.hidden = step===0 ? 'true' : 'false';
+  renderDots();}
+/* dir: 0 = ingen bevegelse (forste steg), 1 = neste (skyver mot venstre),
+   -1 = forrige (skyver mot hoyre). To lag som beveger seg SAMTIDIG — det ene
+   ut, det andre inn — sa bevegelsen er fysisk, ikke en oppløsning. */
+function renderStep(dir){
+  const cur=document.getElementById('kp-l'+activeLayer);
+  const nxt=document.getElementById('kp-l'+(1-activeLayer));
+  nxt.innerHTML=layerHTML(steps[step]);
+  renderChrome();
+  if(!dir||RM){
+    cur.classList.remove('on'); cur.innerHTML='';
+    nxt.style.transition='none'; nxt.style.transform='translate3d(0,0,0)';
+    nxt.classList.add('on'); void nxt.offsetWidth; nxt.style.transition='';
+    activeLayer=1-activeLayer; return;}
+  const outX = dir>0 ? '-100%' : '100%';
+  const inX  = dir>0 ? '100%'  : '-100%';
+  nxt.style.transition='none';
+  nxt.style.transform='translate3d('+inX+',0,0)';
+  nxt.classList.add('on');
+  void nxt.offsetWidth;
+  nxt.style.transition='';
+  nxt.style.transform='translate3d(0,0,0)';
+  cur.style.transform='translate3d('+outX+',0,0)';
+  const leaving=cur;
+  setTimeout(()=>{ leaving.classList.remove('on'); leaving.style.transition='none';
+    leaving.style.transform='translate3d(0,0,0)'; leaving.innerHTML='';
+    void leaving.offsetWidth; leaving.style.transition=''; },STEP_DUR);
+  activeLayer=1-activeLayer;}
+function openKlePaa(){ step=0; activeLayer=1; stepBusy=false; renderStep(0);
+  steps.forEach(s=>{ const i=new Image(); i.src=s.img; });   // forhandsdekod (portdom)
+  pushTo('s-kp','up',PUSH_PAGE); }
+function prevStep(){ if(stepBusy||step<=0) return; stepBusy=true; step--; renderStep(-1);
+  if(navigator.vibrate)navigator.vibrate(6); setTimeout(()=>{stepBusy=false;},STEP_DUR); }
+function nextStep(){ if(stepBusy) return;
+  if(step<steps.length-1){ stepBusy=true; step++; renderStep(1);
+    if(navigator.vibrate)navigator.vibrate(6); setTimeout(()=>{stepBusy=false;},STEP_DUR); }
+  else { closeKlePaa(); } }
+
+/* Swipe (portdom): innholdet folger fingeren 1:1; etter slipp settles det
+   dynamisk 120-260 ms etter hastighet og restavstand. Gesten starter ALDRI i
+   iOS' venstre kantsone (tilbake-gesten eier de forste 24 px). Gjentatte
+   trykk laases mens en overgang pagar. */
+let stepBusy=false;
+(function(){
+  const sc=document.getElementById('kp-scene');
+  if(!sc) return;
+  let x0=0,y0=0,t0=0,dir=0,drag=false,W=0,curEl=null,nbrEl=null,lastDx=0,lastT=0,vel=0;
+
+  function settle(el,to,dur){
+    el.style.transition='transform '+dur+'ms cubic-bezier(.22,.7,.2,1)';
+    el.style.transform='translate3d('+to+',0,0)';
+  }
+
+  sc.addEventListener('pointerdown',e=>{
+    if(RM||stepBusy) return;
+    if(e.clientX<24) return;                 // iOS tilbake-gest eier kantsonen
+    drag=true; dir=0; x0=e.clientX; y0=e.clientY; t0=performance.now();
+    lastDx=0; lastT=t0; vel=0;
+    W=sc.clientWidth;
+    curEl=document.getElementById('kp-l'+activeLayer);
+    nbrEl=null;
+  },{passive:true});
+
+  sc.addEventListener('pointermove',e=>{
+    if(!drag) return;
+    const dx=e.clientX-x0, dy=e.clientY-y0;
+    if(!dir){
+      if(Math.abs(dx)<8) return;
+      if(Math.abs(dx)<Math.abs(dy)*1.2){ drag=false; return; }  // vertikal scroll vinner
+      dir = dx<0 ? 1 : -1;
+      const target=step+dir;
+      if(target<0||target>=steps.length){                        // ingen nabo — kun gummi
+        nbrEl=null;
+      } else {
+        nbrEl=document.getElementById('kp-l'+(1-activeLayer));
+        nbrEl.innerHTML=layerHTML(steps[target]);
+        nbrEl.style.transition='none';
+        nbrEl.style.transform='translate3d('+(dir>0?W:-W)+'px,0,0)';
+        nbrEl.classList.add('on');
+        void nbrEl.offsetWidth;
+      }
+      curEl.style.transition='none';
+    }
+    const now=performance.now();
+    if(now-lastT>8){ vel=(dx-lastDx)/(now-lastT); lastDx=dx; lastT=now; }
+    const eff = nbrEl ? dx : dx*0.28;        // uten nabo: motstand, ikke fri bevegelse
+    curEl.style.transform='translate3d('+eff+'px,0,0)';
+    if(nbrEl) nbrEl.style.transform='translate3d('+(eff+(dir>0?W:-W))+'px,0,0)';
+  },{passive:true});
+
+  function release(e){
+    if(!drag) return; drag=false;
+    if(!dir||!curEl) return;
+    const dx=(e.clientX||x0)-x0;
+    const commit = nbrEl && (Math.abs(dx)>W*0.28 || Math.abs(vel)>0.5);
+    const rest = commit ? W-Math.abs(dx) : Math.abs(dx);
+    const dur = Math.max(120,Math.min(260, Math.round(rest/Math.max(0.6,Math.abs(vel)*1.6))));
+    stepBusy=true;
+    if(commit){
+      settle(curEl,(dir>0?-W:W)+'px',dur);
+      settle(nbrEl,'0px',dur);
+      const leaving=curEl, arriving=nbrEl;
+      step+=dir; activeLayer=1-activeLayer; renderChrome();
+      if(navigator.vibrate)navigator.vibrate(6);
+      setTimeout(()=>{
+        leaving.classList.remove('on'); leaving.style.transition='none';
+        leaving.style.transform='translate3d(0,0,0)'; leaving.innerHTML='';
+        arriving.style.transition=''; void leaving.offsetWidth; leaving.style.transition='';
+        stepBusy=false;
+      },dur);
+    } else {
+      settle(curEl,'0px',dur);
+      if(nbrEl){ settle(nbrEl,(dir>0?W:-W)+'px',dur);
+        const cancelled=nbrEl;
+        setTimeout(()=>{ cancelled.classList.remove('on'); cancelled.style.transition='none';
+          cancelled.style.transform='translate3d(0,0,0)'; cancelled.innerHTML=''; },dur);
+      }
+      setTimeout(()=>{ curEl.style.transition=''; stepBusy=false; },dur);
+    }
+    dir=0; nbrEl=null;
+  }
+  sc.addEventListener('pointerup',release,{passive:true});
+  sc.addEventListener('pointercancel',()=>{drag=false;dir=0;stepBusy=false;},{passive:true});
+})();
+function closeKlePaa(){ pushTo('s-res','down',PUSH_BACK); }
+
+/* Las panelhoyden for forste trykk, sa CTA aldri endrer instrumentets storrelse. */
+window.PANEL_H = lockPanelHeight();
+</script>
