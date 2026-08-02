@@ -62,6 +62,14 @@
            border-radius:26px; box-shadow:0 0 0 2px rgba(231,176,135,.22), 0 40px 90px -20px rgba(0,0,0,.9); }
   /* Proof-kontroll — skal ALDRI sta i produktets vei. Sto forst sentrert i
      toppen og dekket ordmerket. */
+  /* Proof-kontroll: viser fingeravtrykk-tilstanden sa eieren kan SE hvorfor
+     knappen sier det den sier. Aldri en del av produktet. */
+  .demobtn { position:fixed; right:14px; bottom:14px; z-index:99; text-align:right;
+           background:rgba(53,38,26,.9); color:#F2E9DC; border:1px solid rgba(231,176,135,.28);
+           border-radius:14px; padding:6px 12px; font-family:inherit; line-height:1.25;
+           backdrop-filter:blur(10px); }
+  .demobtn b { display:block; font-size:12.5px; font-weight:650; }
+  .demobtn small { font-size:10.5px; opacity:.6; }
   .previewbtn { position:fixed; left:14px; bottom:14px; z-index:99;
            background:rgba(53,38,26,.9); color:#F2E9DC; border:1px solid rgba(231,176,135,.28);
            border-radius:999px; padding:7px 15px; font-size:12.5px; font-family:inherit;
@@ -441,6 +449,7 @@
 </style>
 
 <button class="previewbtn" onclick="togglePreview()">⤢ Fullskjerm</button>
+<button class="demobtn" onclick="nullstillCache()"><b id="demo-state">ingen cache</b><small>trykk for å nullstille</small></button>
 <div id="stage" data-mode="dark">
   <div class="brand" id="brand">B A B Y O R A</div>
   <div class="atmo on" id="atmo-hjem"></div>
@@ -477,7 +486,7 @@
              ut») var overflodig, siden knappen under sier nettopp det.
              Slatt sammen til en linje i stedet for a fjernes. -->
         <div class="feels">Føles som −3° <span>· Delvis skyet</span></div>
-        <div class="toggle"><button class="sel">Utenfor vogn</button><button>I vogn</button></div>
+        <div class="toggle" id="akt"><button class="sel" onclick="settAktivitet(this,'Utenfor vogn')">Utenfor vogn</button><button onclick="settAktivitet(this,'I vogn')">I vogn</button></div>
       </div>
       <div class="pstate" id="p-scan" hidden>
         <div class="rows">
@@ -495,8 +504,8 @@
     <div class="gap"></div>
     <div class="below" id="b-hjem">
       <div class="h-serif">Klar for en liten tur?</div>
-      <button class="cta" onclick="startScan()">Finn dagens antrekk&nbsp;&nbsp;→</button>
-      <p class="trust">Vær, sted og aktivitet vurderes sammen</p>
+      <button class="cta" id="cta" onclick="trykkCta()">Finn dagens antrekk&nbsp;&nbsp;→</button>
+      <p class="trust" id="trust">Vær, sted og aktivitet vurderes sammen</p>
     </div>
     <div class="below" id="b-scan" hidden>
       <div class="scanh">Kler på Lillian i tankene …</div>
@@ -513,7 +522,7 @@
   <!-- RESULTAT -->
   <div class="screen" id="s-res">
     <div class="screen-pad"></div>
-    <div class="sumstrip"><span class="t">1°</span><span>Føles som −3° · Delvis skyet<br>Trondheim · Utenfor vogn</span><span class="j">Juster ›</span></div>
+    <div class="sumstrip" onclick="tilbakeTilHjem()"><span class="t">1°</span><span>Føles som −3° · Delvis skyet<br>Trondheim · <span id="sum-akt">Utenfor vogn</span></span><span class="j">Juster ›</span></div>
     <div class="res-h">Dagens antrekk</div>
     <p class="res-sub">6 plagg for Lillian, innerst til ytterst</p>
     <div class="vitrine">
@@ -631,6 +640,52 @@ function setScanState(on){
   setPanelHeight(on);
   if(!on) hjem.classList.remove('bowing');
 }
+/* ── Anbefalingsfingerprint (portdom 25) ──────────────────────────────────
+   «Riktig skille er ikke tid, men NY BEREGNING mot GJENAPNING av et gyldig
+   resultat.» Signaturen er deterministisk: barn, vaerreferanse, sted,
+   aktivitet, justering, motorversjon. Her modellerer proofen aktivitet og
+   sted; resten er konstant i mocken.
+   Ny/endret signatur  -> «Finn dagens antrekk» -> full 3,2 s seremoni.
+   Uendret signatur    -> «Vis dagens antrekk»  -> direkte push til cachet svar. */
+let aktivitet='Utenfor vogn';
+/* NOKKELOPPSLAG, ikke én plass. Med bare én cache-plass ville et bytte
+   fram og tilbake mellom «utenfor vogn» og «i vogn» spilt seremonien pa nytt
+   for et svar appen allerede HAR — nettopp det doktrinen vil bort fra:
+   «appen skal aldri late som den analyserer det samme pa nytt». */
+let cache=new Set();
+const signatur=()=>['Lillian','4mnd','Trondheim','1°/delvis skyet',aktivitet,'motor-v2'].join('|');
+const harGyldigCache=()=>cache.has(signatur());
+
+function oppdaterCta(){
+  const c=harGyldigCache();
+  document.getElementById('cta').innerHTML=(c?'Vis dagens antrekk':'Finn dagens antrekk')+'&nbsp;&nbsp;→';
+  /* Linja under knappen forteller sannheten om hvilken vei du er pa. */
+  document.getElementById('trust').textContent=c
+    ? 'Samme forhold som sist — svaret er klart'
+    : 'Vær, sted og aktivitet vurderes sammen';
+  const d=document.getElementById('demo-state');
+  if(d) d.textContent = (c ? 'cache gyldig · «Vis»' : 'ny signatur · «Finn»') + '  ('+cache.size+' lagret)';
+}
+function settAktivitet(el,navn){
+  aktivitet=navn;
+  [...document.getElementById('akt').children].forEach(b=>b.classList.toggle('sel',b===el));
+  document.getElementById('sum-akt').textContent=navn;
+  oppdaterCta();                       // signaturen endret seg -> knappen skifter
+  if(navigator.vibrate)navigator.vibrate(6);
+}
+function nullstillCache(){ cache.clear(); oppdaterCta(); }
+function tilbakeTilHjem(){ pushTo('s-hjem','down',PUSH_BACK); }
+
+function trykkCta(){
+  if(harGyldigCache()){
+    /* Ingen seremoni. Appen later aldri som den analyserer det samme pa nytt. */
+    pushTo('s-res','up',PUSH_PAGE);
+    if(navigator.vibrate)navigator.vibrate(10);
+    return;
+  }
+  startScan();
+}
+
 function startScan(){
   /* Reduce Motion: rett til resultat — ingen boy, ingen posekoreografi,
      ingen scan-tilstand a se pa (portdom). */
@@ -673,7 +728,7 @@ function startScan(){
     /* Sols dom: INGEN success her — kun en lett prepare. Success kommer
        nar resultatet star stabilt (ett signal, ikke to). */
     if(navigator.vibrate)navigator.vibrate(4); });
-  at(3200,()=>finishScan(false));
+  at(3200,()=>{ cache.add(signatur()); oppdaterCta(); finishScan(false); });
   if(navigator.vibrate) navigator.vibrate(10);
 }
 function mark(id){const el=document.getElementById(id);el.classList.add('onrow','done');
@@ -889,5 +944,6 @@ addEventListener('resize',fitPreview);
 /* Mal begge panelhoydene for forste trykk. */
 measurePanel();
 window.PANEL_H = PANEL_H;
+oppdaterCta();
 addEventListener('resize',()=>{ if(!document.getElementById('s-hjem').classList.contains('scanning')) measurePanel(); });
 </script>
