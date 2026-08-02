@@ -1,83 +1,146 @@
-# Plan: Designløftet — fra veloppdragent til dyrt (2026-08-02)
+# Plan: Designløftet — fra veloppdragent til dyrt (v2, 2026-08-02)
 
 Bakgrunn: eiers referansesammenligning (Ferrari/Any Distance/pinnsvin-app
-m.fl.) + kritisk analyse 2026-08-02. Diagnose: gapet sitter i bildekvalitet,
-lys som materiale og komposisjonsmot — ikke i reglene. Planen kombinerer
-designløftet med den allerede vedtatte MVP-en (T1+T9A+T2+T2B+T4).
+m.fl.) + kritisk analyse. V2 etter ekstern review (Sol): planen godkjent
+med tre endringer — Scene nedgradert fra verden til virkemiddel, full
+billedproduksjon flyttet til ETTER en on-device proof-slice, og T1/T9A
+fortsetter parallelt mens merkevarelaget avgjøres.
 
 Stegvis godkjenning: hvert steg har synlig leveranse og STOPP der eier
 velger. Godkjenning gjelder kun neste steg.
 
+## Diagnosen (revidert etter ekstern review)
+
+Gapet mot referansene sitter i:
+
+1. **Eierskap, ikke bare bildekvalitet.** Et skarpere AI-bilde er ikke
+   dyrere — det kan fortsatt se generisk ut. Babyora trenger en egen,
+   gjenkjennelig karakter- og tekstilverden. Maskoten er største
+   merkevareressurs OG største premiumrisiko: en generisk «Pixar-baby»
+   med flood-fill-kant holder igjen alt annet.
+2. **Materialkoherens.** Maskot, værikoner, plagg, petrolpanel og skygger
+   har i dag ulik lys-/materiallogikk (frontbelyst maskot, varmt
+   stoffbelyst værikon, matt panel, flat CTA — på samme skjerm). Alt må
+   dele lyskilde, fargetemperatur, kamerafølelse og skyggeadferd.
+3. **Lys som komposisjon** — ikke bare som kant og skygge. Espresso har
+   farge men lite atmosfærisk dybde; lys modus er funksjonell men ikke
+   kunstnerisk formulert.
+4. **Typografisk/ikonografisk forfatterskap.** Størrelseskontrast,
+   tallmateriale, etikettbehandling, optiske innrykk, ikonform/strekvekt
+   er trygge. Utfordres i bake-offen (betyr ikke automatisk ny font).
+5. **Fokal autoritet, ikke nødvendigvis brutt kolonne** (korrigert):
+   Hjem har allerede et godt grep (maskoten overlapper panelet); problemet
+   er at ansikt, temperaturtall og CTA konkurrerer. Premium krever
+   tydeligere RANGERING, ikke mer asymmetri. Kolonnen brytes kun der det
+   forklarer hierarki eller rom.
+6. **Referansene er delvis kampanjeflater** (Ferrari-foto, Perpetra-
+   landing). Bake-offen dømmes derfor mot referansenes visuelle autoritet
+   OG Babyoras virkelighet: lange navn, stale data, syv plagg, lav
+   lysstyrke, Reduce Motion, lys modus.
+
 ## Ligger fast uansett utfall
 
-Fredningshierarkiet fra analysesløyfen: produktgrunnloven (sannhet,
-flatenes jobber, tilgjengelighet, katalogsannhet, motorgrensen),
-3,2 s-scannen, haptikk-kontrakten, no.klemeg.app, motoren røres aldri.
-Bake-offen utfordrer MERKEVAREKONTRAKTEN (farger, atmosfære, bilder,
-komposisjon) — det er nivået som KAN endres ved eksplisitt eierbeslutning,
-og dette er den beslutningen.
+Produktgrunnloven (sannhet, flatenes jobber, tilgjengelighet,
+katalogsannhet, motorgrensen), 3,2 s-scannen, no.klemeg.app. Det er
+merkevarekontrakt-nivået som utfordres — via eksplisitt eierbeslutning.
 
-## Fase A — Art direction-bake-off (ingen kodeendring)
+**Nattgrensen («atmosfære uten spektakel») gjelder alle kandidater:**
+Tillatt: én implisitt lyskilde per viewport; statisk lavfrekvent
+atmosfærefelt; kontakt-/bakkeskygge som forankrer maskoten; lokal
+kantrespons ved berøring; materialdybde i panel og plagg; ETT dominerende
+bevegelsesøyeblikk (scannen). Ikke tillatt: kontinuerlig glød/puls;
+parallax/gyro-scene; store lyse gradienter bak tekst; glasskort over
+kompliserte bakgrunner; flere konkurrerende lyskilder; animert
+maskotscene i ro; glow som bærer semantikk; økt luminans som
+«premium»-signal. Kjerneinfo står alltid på opake, kontrastkontrollerte
+flater. Dommerregel: *hvis atmosfæren fortsatt er det brukeren legger
+merke til etter at temperatur og råd er lest, er den for sterk.* Alle
+finalister testes i mørkt rom på 1–5 % skjermstyrke.
 
-**A1 Referansegrunnlag.** Eiers fem referanser + premium-mønstre fra
-Mobbin settes opp som eksplisitt målestokk med kriterier (lys/atmosfære,
-billedkvalitet, komposisjon, typografisk mot, materialfølelse).
-Leveranse: referansetavle (artifact). Ingen STOPP — går rett i A2.
+## Spor 1 (starter umiddelbart): T1 + T9A
 
-**A2 Fire verdener.** Samme tre skjermer (Hjem, resultat, Kle på) bygges
-som high-fidelity mocks i fire ulike verdener, parallelle agenter +
-smaksdommere som scorer MOT referansene (ikke mot egen doktrine):
+Uavhengige av art direction — fryses IKKE:
+- **T1 Katalogsannhet:** 5 bilde-mismatcher, 60/60 visningsnavn,
+  språkfeil, katalogfelt-validering (T1B: lagrolle/dekning/varme/
+  funksjon/avhengigheter).
+- **T9A Oppstart/datatilstand:** cachematrise, resume ≠ ny prosess,
+  fontberedskap, korrekt første tilstand.
 
-| Verden | Tese |
+Visuell implementering av T2/T4 er frosset til verden er valgt.
+
+## Spor 2: Art direction-bake-off
+
+**A1 Referansegrunnlag.** Eiers referanser + premium-mønstre (Mobbin)
+som målestokk, med låne/avstå-tabellen fra reviewen (Ferrari: lån ett
+heroobjekt + én aksent + instrumentdetaljer, avstå fra foto som
+overskygger funksjon; Any Distance: lån proprietær karakter + studiolys +
+typografisk mot, avstå fra LED-glød og gamification; pinnsvin: lån felles
+lys + kontaktskygge + karakter som hører til i rommet, avstå fra
+kontinuerlig sceneaktivitet; osv.).
+
+**A2 Semifinale: Hjem (mørk + lys) i tre kandidater + kontroll:**
+
+| Retning | Tese |
 |---|---|
-| Atelier | Varmt studiolys, stoff-makro, maskoten i scene med kontaktskygge |
-| Nattinstrument | Nesten-svart, selvlysende petrol-glass, LED-aktig tallmateriale |
-| Scene | Maskoten bor i et renderert rom (à la pinnsvin-appen), UI oppå scenen |
-| Monter+ | Dagens retning med atmosfærelag, materialrendret panel, scene-vitrine |
+| **Textile Atelier** | Retningsbestemt varmt studiolys, troverdige tekstilmaterialer, plagg som produktfoto/render, maskot og klær i samme lysrigg. Sterkeste domenetreff. |
+| **Quiet Instrument** | Dyp espresso/nesten-svart, petrol med presise kanter og kontrollert materialdybde, selvsikre tall, svært begrenset glød. Raffinert — lyser ikke opp rommet. Ingen krypto/gaming-assosiasjon. |
+| **Nordic Editorial Care** | LYSMODUS-FØRST som egen tese: diffust dagslys, papir-/tekstiltoner, store utsnitt, redaksjonell ro. Premium gjennom kvalitet og luft, ikke filmatisk 3D. Korrigerer mørk/neon-skjevheten i referansene. |
+| **Monter+ (kontroll)** | Dagens retning med felles atmosfærisk lys, bedre panelmateriale, autorisert billedproduksjon, sterkere typografisk hierarki. Må bevise at radikal redesign gir mer enn bedre utførelse av det vi har. |
 
-Begge temaer per verden (lys modus får egen tese, ikke inversjon).
-Leveranse: artifact-galleri side-om-side med referansene.
-**STOPP 1: eier velger verden (eller hybrid).**
+Scene er IKKE egen verden — brukes som mulig hero-grep inne i Atelier/
+Nordic. Ekstern reviewers forhåndsfavoritt: hybrid Atelier × Quiet
+Instrument (tekstil/maskot får varm studioautoritet; data/kontroller
+forblir rolige og presise) — men Nordic må få bevise lysmodus.
+**STOPP 1: eier velger TO finalister.**
 
-**A3 Vinnerens designkontrakt.** DESIGN.md/tokens oppdateres: hva endres,
-hva består. Leveranse: kontrast-/RM-verifisert tokenutkast + notat.
-**STOPP 2: eier godkjenner kontrakten.**
+**A3 Finale (kun de to):** resultat + Kle på + stale-tilstand + begge
+temaer + én kort bevegelsesprototype per finalist (uten produksjonskode).
+Testes på fysisk telefon ved lav lysstyrke.
+**STOPP 2: eier velger verden.** (Eier velger merkevare; eventuelle
+testbrukere tester glanselesing/tillit/nattkomfort — ikke «penest».)
 
-## Fase B — Billedpipeline (størst «dyrt»-effekt)
+## Spor 3: Produksjonsbevis før full billedproduksjon
 
-**B1 Billedkontrakt + prøvebatch.** Bindende art direction for ALLE
-bilder: lysrigg, kameravinkel, materialvokabular, skala, kontaktskygge,
-bakgrunnsfarge for utklipp. Prøvebatch: 6 representative plagg + maskoten
-re-rendret i vinnerverdenens lys. Leveranse: side-om-side gammel/ny.
-**STOPP 3: eier godkjenner utseendet.**
+**B1 Proof-pakke for vinneren:** 6 representative plagg + én komplett
+maskotpose + 2 værikoner + panelmateriale/skyggekontrakt — og en liten
+**on-device vertikal slice**: Hjem → scan → resultat → Kle på med de nye
+assetene, på telefonen.
+**STOPP 3: holder retningen når den er ekte, dynamisk og på telefon?**
+Deretter låses art bible (bindende billedkontrakt: lysrigg, kamera,
+materialvokabular, skala, kontaktskygge).
 
-**B2 Full batch.** Alle 60 plagg + 3 maskotposer + værikoner regenerert i
-én batch med identisk rigg. Automatisert QA per Sol runde 7 (alfakutt,
-normalisert skala, fargeprofil, backplate-klasse) + katalogintegrasjon.
-Leveranse: komplett bildebibliotek-artifact. Ingen STOPP (kontrakten fra
-B1 styrer).
+**B2 Gatede delbatcher** (IKKE alle 60 i én batch — irreversibel risiko):
+innerlag → mellomlag → yttertøy → tilbehør → værikoner → maskotposer.
+Samme lysverden, kategorijustert kamera/skala, gylne referanser per
+kategori. Automatisert QA (alfakutt, skala, luminans, backplate-klasse)
++ MENNESKELIG art direction-sjekk per batch (QA måler kant og utsnitt,
+ikke om ull ser plastisk ut).
 
-## Fase C — MVP i vinnerverdenen
+## Spor 4: Resten av MVP-en i vinnerverdenen
 
-Rekkefølge per Sol runde 10, nå med designløftet vevd inn:
+- **T2 Hjem-troverdighet** + vinnerens atmosfære/panelmateriale + fokal
+  rangering (ansikt vs. tall vs. CTA).
+- **T2B Kle på-porten:** KUN visuell port av eksisterende flyt til
+  vinnerverdenen — ingen skjult funksjonell redesign, ingen
+  forskuttering av tillitssløyfen (T8).
+- **T4 Scan v3.1:** syntesebeat, «Vis antrekket nå», ærlig ventetilstand,
+  samlet landing.
 
-| Pakke | Innhold |
-|---|---|
-| C1 = T1 | Katalogsannhet: 5 mismatcher, 60/60 visningsnavn, B2-bildene inn, katalogfelt-validering (T1B) |
-| C2 = T9A | Oppstart/datatilstand: cachematrise, resume ≠ ny prosess, fontberedskap |
-| C3 = T2 | Hjem-troverdighet + vinnerens atmosfærelag og materialrendret panel |
-| C4 = T2B | Kle på-flytens port: antrekks-avsløringen som komponert scene (Antrekkskart-idéen oppgradert, ikke slettet) |
-| C5 = T4 | Scan v3.1: syntesebeat, «Vis antrekket nå», ærlig ventetilstand, samlet landing |
-
-Hver pakke: grønne porter (test/lint/build/e2e) + smaksdommere med
-referansebilder i prompten + Sol-sjekk + skjermbilder i full
-enhetsoppløsning begge temaer + commit/push → TestFlight.
-**STOPP 4: eier tester C1–C3 på telefon før C4–C5.**
+Hver pakke: grønne porter + smaksdommere med referansebilder OG
+Babyora-virkelighetstilstander i prompten + Sol-sjekk + skjermbilder i
+full enhetsoppløsning begge temaer + TestFlight.
+**STOPP 4: eier tester på telefon.**
 
 ## Prosessendringer (gjelder alt videre arbeid)
 
-1. Hver skjerm benchmarkes mot navngitte referanser, ikke bare doktrine.
-2. Dommerpaneler får egen smaks-lane med referansebilder i prompten.
-3. Mocks vurderes i full enhetsoppløsning før de vises eier.
-4. Ambisiøs variant bygges FØRST, doktrinen redigerer etterpå.
-5. Billedarbeid skjer aldri uten billedkontrakten fra B1.
+1. Hver skjerm benchmarkes mot navngitte referanser + Babyoras
+   virkelighetstilstander (lange navn, stale, RM, lav lysstyrke).
+2. Dommerpaneler får smaks-lane med referansebilder i prompten.
+3. Mocks vurderes i full enhetsoppløsning før eier ser dem.
+4. Ambisiøs variant først; doktrinen redigerer etterpå.
+5. Billedarbeid aldri uten låst art bible; batcher gates med menneskelig
+   art direction-sjekk.
+6. «Dyrt» for Babyora = proprietært (ingen generisk AI-baby/standard-
+   ikoner), felles fysikk (lys/kamera/material/skala/skygge), ingenting
+   tilfeldig, omsorg og presisjon samtidig, og produktet blir STILLE
+   etter at det har levert verdien.
