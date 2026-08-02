@@ -154,13 +154,21 @@
   }
   /* Panelet bytter TILSTAND, ikke side. Hoyden er last til den storste av de
      to tilstandene ved oppstart, sa instrumentet aldri hopper i hoyde. */
-  /* Panelet er last til den STORSTE av de to tilstandene, sa den korteste
-     (vaer) ville ellers fatt et dodt felt nederst. Innholdet strekker seg i
-     stedet, og bryteren legger seg mot underkanten — der en kontroll horer
-     hjemme. Ingen tom sone i den tilstanden brukeren ser mest. */
-  .panel { display:flex; flex-direction:column; }
+  /* Panelet APNER SEG nar det begynner a jobbe, i stedet for a sta last til
+     scan-hoyden hele tiden. Last hoyde ga et hull inne i vaertilstanden pa
+     store skjermer — 83 px tom petrol mellom vaerlinja og bryteren, som
+     leser som en feil, ikke som ro.
+     Sols regel var at instrumentet ikke skal HOPPE i storrelse. En malt,
+     eased ekspansjon er ikke et hopp: det er samme apparat som apner seg.
+     Hoyden settes i px fra faktisk maling, sa den folger Dynamic Type. */
+  .panel { display:flex; flex-direction:column;
+           transition:height var(--m-bow,420ms) var(--ease); }
   .pstate { flex:1; display:flex; flex-direction:column; }
   .pstate .toggle { margin-top:auto; }
+  /* Handlingsblokken hviler mot tabbaren i stedet for a klistre seg under
+     panelet. Lufta havner MELLOM instrumentet og handlingen — der den leser
+     som pust — og knappen havner der tommelen er. */
+  .below { margin-top:auto; }
   .pstate[hidden], .below[hidden] { display:none; }
   .below { animation:statein 200ms var(--ease) both; }
   @keyframes statein { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
@@ -506,15 +514,25 @@ function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.r
    layout ved oppstart. Uten dette hopper instrumentet i hoyde i det CTA
    trykkes — og et instrument som endrer storrelse leser som en ny side,
    ikke som samme apparat i arbeid. */
-function lockPanelHeight(){
+/* Maler BEGGE tilstandenes naturlige hoyde og setter hvilehoyden. Panelet
+   vokser til scan-hoyden nar scannen starter, og faller tilbake etterpa —
+   malt, ikke gjettet, sa den folger tekststorrelse og lange stedsnavn. */
+let PANEL_H={hWeather:0,hScan:0};
+function measurePanel(){
   const panel=document.getElementById('hjempanel');
   const w=document.getElementById('p-weather'), s=document.getElementById('p-scan');
+  panel.style.height='';
   const hWeather=panel.offsetHeight;
   w.hidden=true; s.hidden=false;
   const hScan=panel.offsetHeight;
   s.hidden=true; w.hidden=false;
-  panel.style.minHeight=Math.max(hWeather,hScan)+'px';
-  return {hWeather,hScan};
+  PANEL_H={hWeather,hScan};
+  panel.style.height=hWeather+'px';
+  return PANEL_H;
+}
+function setPanelHeight(scanning){
+  document.getElementById('hjempanel').style.height=
+    (scanning?PANEL_H.hScan:PANEL_H.hWeather)+'px';
 }
 
 /* Varigheter (Sols bevegelseskontrakt): sideskift 340ms (sheet-token),
@@ -565,6 +583,7 @@ function setScanState(on){
      .bowing   = maskoten er boyd (slippes ved fullforingsmarkoren, 2500).
      To adskilte tilstander: babyen retter seg opp FOR siden skifter. */
   hjem.classList.toggle('scanning',on);
+  setPanelHeight(on);
   if(!on) hjem.classList.remove('bowing');
 }
 function startScan(){
@@ -584,9 +603,9 @@ function startScan(){
   document.querySelector('.scanh').textContent='Kler på Lillian i tankene …';
   document.querySelector('.scansub').textContent='Tar bare et lite øyeblikk.';
   const line=document.getElementById('scanline');
-  const panel=document.getElementById('hjempanel');
-  /* +6px sa streken er HELT ute av boksen nar den stopper. */
-  line.style.setProperty('--scan-travel',(panel.offsetHeight+6)+'px');
+  /* +6px sa streken er HELT ute av boksen nar den stopper. Bruker SCAN-
+     hoyden, ikke den malte na — panelet er fortsatt midt i ekspansjonen. */
+  line.style.setProperty('--scan-travel',(PANEL_H.hScan+6)+'px');
   line.style.animation='none'; void line.offsetWidth; line.style.animation='';
   scanTimers.forEach(clearTimeout); scanTimers=[];
   const at=(t,fn)=>scanTimers.push(setTimeout(fn,t));
@@ -808,6 +827,8 @@ let stepBusy=false;
 })();
 function closeKlePaa(){ pushTo('s-res','down',PUSH_BACK); }
 
-/* Las panelhoyden for forste trykk, sa CTA aldri endrer instrumentets storrelse. */
-window.PANEL_H = lockPanelHeight();
+/* Mal begge panelhoydene for forste trykk. */
+measurePanel();
+window.PANEL_H = PANEL_H;
+addEventListener('resize',()=>{ if(!document.getElementById('s-hjem').classList.contains('scanning')) measurePanel(); });
 </script>

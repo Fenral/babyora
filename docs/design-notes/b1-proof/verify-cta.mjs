@@ -68,7 +68,10 @@ const uniq = [...new Set(angles.map((a) => a.toFixed(2)))];
 const minCover = Math.min(...samples.map((s) => s.oNorm + s.oCur));
 const posFixed =
   new Set(samples.map((s) => s.offsetTop + '/' + s.offsetLeft)).size === 1;
-const panelFixed = new Set(samples.map((s) => s.panelH)).size === 1;
+/* Panelet APNER seg nar det begynner a jobbe. Kravet er ikke lenger «last
+   hoyde», men «ingen hopp»: mange mellomverdier, ikke to. */
+const panelHoyder = [...new Set(samples.map((s) => s.panelH))];
+const panelSmooth = panelHoyder.length > 8;
 const screensFixed = new Set(samples.map((s) => s.screensOn));
 
 // Sols portkrav: mal begge handkontaktpunktene separat, maks 1px vertikal gli.
@@ -103,7 +106,8 @@ const headTravel = (() => {
 })();
 console.log(`  hodets vandring gjennom boyningen: ${headTravel.toFixed(2)} px`);
 console.log(`  maskotens layoutposisjon konstant: ${posFixed ? 'JA' : 'NEI'}`);
-console.log(`  panelhoyde konstant: ${panelFixed ? 'JA' : 'NEI'} (${samples[0].panelH}px)`);
+console.log(`  panelet apner seg jevnt: ${panelSmooth ? '✓ JA' : '✗ NEI — hopper'} ` +
+  `(${samples[0].panelH} → ${Math.max(...panelHoyder)} px, ${panelHoyder.length} mellomverdier)`);
 console.log(`  synlige skjermer gjennom hele momentet: ${[...screensFixed].join(' | ')}`);
 
 // ── 2. Stopp-pausen: ekte stillstand mellom markor og push ───────────────
