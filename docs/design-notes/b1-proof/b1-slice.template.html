@@ -68,7 +68,17 @@
     --atmo:radial-gradient(var(--pool-l) at 32% calc(var(--atmo-y) - 2%), rgba(255,248,235,.16), transparent var(--pool-stop-l)),
            linear-gradient(165deg, rgba(214,186,150,.14), transparent 52%);
   }
+  /* Web Interface Guidelines:
+     - color-scheme forteller nettleseren om temaet, sa scrollbars og native
+       kontroller folger med i stedet for a bli hvite i mork modus
+     - touch-action:manipulation fjerner 300 ms dobbelttrykk-forsinkelsen
+     - tabular-nums der tall star i kolonne (radnumrene i vitrinen) eller
+       skal sammenlignes (temperaturen)
+     - text-wrap:balance hindrer enkeltord pa siste linje i overskrifter */
+  :root { color-scheme:dark; }
+  [data-mode="light"] { color-scheme:light; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  button, [role="button"] { touch-action:manipulation; }
   html,body { margin:0; height:100%; }
   body { background:var(--canvas); font-family:'Schibsted',system-ui,sans-serif; color:var(--ink-mid);
          overflow:hidden; user-select:none; }
@@ -251,7 +261,7 @@
   .fresh { font-size:12.5px; color:var(--p-muted); margin-top:3px; }
   .fresh::before { content:'●'; font-size:8px; vertical-align:2px; margin-right:5px; color:#7FA98B; }
   .temp-row { display:flex; align-items:center; justify-content:space-between; margin:6px 0 2px; }
-  .temp { font-family:'Fraunces',Georgia,serif; font-weight:550; font-size:76px; line-height:1; color:var(--p-hi);
+  .temp { font-variant-numeric:tabular-nums; font-family:'Fraunces',Georgia,serif; font-weight:550; font-size:76px; line-height:1; color:var(--p-hi);
           font-variant-numeric:lining-nums; }
   .temp sup { font-size:36px; vertical-align:28px; font-weight:400; }
   .wicon { width:84px; height:84px; filter:drop-shadow(0 5px 8px rgba(0,0,0,.3)); }
@@ -273,13 +283,18 @@
   .phead { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
   .who { text-align:right; font-size:14.5px; font-weight:600; color:var(--p-hi); line-height:1.25; }
   .who small { display:block; font-size:12.5px; font-weight:500; color:var(--p-muted); }
-  .h-serif { font-family:'Fraunces',Georgia,serif; font-weight:520; font-size:34px; line-height:1.1;
+  .h-serif { text-wrap:balance; font-family:'Fraunces',Georgia,serif; font-weight:520; font-size:34px; line-height:1.1;
              color:var(--ink-hi); margin:16px 0 14px; letter-spacing:-.01em; }
   .cta { display:block; width:100%; border:0; border-radius:18px; padding:18px 0; font-size:18px; font-weight:700;
          font-family:inherit; background:linear-gradient(178deg, #E39A66, var(--amber) 55%, #C77E48);
          color:var(--amber-ink); box-shadow:inset 0 1px 0 rgba(255,235,215,.55), 0 2px 4px var(--sh-contact-cta),
                 4px 16px 32px -12px var(--sh-broad-cta);
          transition:transform var(--m-feedback) var(--ease), box-shadow var(--m-feedback) var(--ease); }
+  @media (hover:hover) {
+    .cta:hover { filter:brightness(1.04); }
+    .toggle button:hover:not(.sel) { color:var(--p-hi); }
+    .kp-next:hover, .kp-prev:hover { opacity:.82; }
+  }
   .cta:active { transform:translateY(1px); box-shadow:inset 0 1px 0 rgba(255,235,215,.55), 0 8px 18px -10px rgba(160,90,40,.5); }
   .trust { text-align:center; font-size:13px; color:var(--ink-muted); margin:12px 0 0; }
   .trust::before { content:'✓  '; color:var(--amber); }
@@ -371,7 +386,7 @@
                         7px 28px 56px -16px var(--sh-broad); margin-bottom:14px; }
   .row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid var(--line); min-height:62px; }
   .row:last-child { border-bottom:0; }
-  .row .n { font-family:'Fraunces',Georgia,serif; font-size:19px; color:var(--amber); width:20px; text-align:center; }
+  .row .n { font-variant-numeric:tabular-nums; font-family:'Fraunces',Georgia,serif; font-size:19px; color:var(--amber); width:20px; text-align:center; }
   .plate { width:58px; height:58px; border-radius:14px; display:grid; place-items:center; background:var(--plate-light);
            box-shadow:inset 0 1px 0 rgba(255,255,255,.08), var(--shadow-contact); }
   /* Mørke plagg (kun vinterdress i B1): uniform platefarge + myk inner-halo
@@ -412,7 +427,7 @@
               box-shadow:inset 0 2px 0 rgba(255,255,255,.07), 0 26px 48px -22px rgba(8,4,2,.75); }
   .kp-plate img { width:180px; height:180px; filter:drop-shadow(0 10px 16px rgba(10,5,2,.4));
                   transition:opacity var(--m-handoff) var(--ease), transform var(--m-handoff) var(--ease); }
-  .kp-step { font-family:'Fraunces',Georgia,serif; font-weight:520; font-size:31px; color:var(--ink-hi);
+  .kp-step { text-wrap:balance; font-family:'Fraunces',Georgia,serif; font-weight:520; font-size:31px; color:var(--ink-hi);
              margin:22px 0 3px; text-align:center; }
   .kp-name { font-family:'Fraunces',Georgia,serif; font-size:19px; color:var(--amber); text-align:center; }
   .kp-instr { font-size:14.5px; color:var(--ink-muted); text-align:center; max-width:32ch; margin:7px auto 0; line-height:1.5; }
@@ -536,8 +551,8 @@
           <div class="srow" id="c3"><div class="l"><span class="dot">✓</span>Lillian</div><div class="v">4 måneder</div></div>
         </div>
         <div class="synth" id="synth"><span class="s-head"><span class="s-dot" id="s-dot"></span><span class="s-txt" id="s-txt">Setter sammen lagene …</span><span class="s-val" id="s-val"></span></span>
-          <div class="sil">
-            <img src="{{IMG_ullsett-tykt}}"><img src="{{IMG_ull-mellomlag-tykt}}"><img src="{{IMG_vinterdress}}"><img src="{{IMG_lue-m-ull}}">
+          <div class="sil" aria-hidden="true">
+            <img src="{{IMG_ullsett-tykt}}" alt=""><img src="{{IMG_ull-mellomlag-tykt}}" alt=""><img src="{{IMG_vinterdress}}" alt=""><img src="{{IMG_lue-m-ull}}" alt="">
           </div>
         </div>
       </div>
@@ -563,16 +578,16 @@
   <!-- RESULTAT -->
   <div class="screen" id="s-res">
     <div class="screen-pad"></div>
-    <div class="sumstrip" onclick="tilbakeTilHjem()"><span class="t">1°</span><span>Føles som −3° · Delvis skyet<br>Trondheim · <span id="sum-akt">Utenfor vogn</span></span><span class="j">Juster ›</span></div>
+    <button class="sumstrip" type="button" onclick="tilbakeTilHjem()" aria-label="Juster vær, sted og aktivitet"><span class="t">1°</span><span>Føles som −3° · Delvis skyet<br>Trondheim · <span id="sum-akt">Utenfor vogn</span></span><span class="j">Juster ›</span></button>
     <div class="res-h">Dagens antrekk</div>
     <p class="res-sub">6 plagg for Lillian, innerst til ytterst</p>
     <div class="vitrine">
-      <div class="row"><span class="n">1</span><span class="plate"><img src="{{IMG_ullsett-tykt}}"></span><span><div class="name">Ullsett, tykt</div><div class="role">Innerst</div></span><span class="det">Detaljer ⓘ</span></div>
-      <div class="row"><span class="n">2</span><span class="plate"><img src="{{IMG_ullsokker}}"></span><span><div class="name">Ullsokker</div><div class="role">Innerst</div></span><span class="det">Detaljer ⓘ</span></div>
-      <div class="row"><span class="n">3</span><span class="plate"><img src="{{IMG_ull-mellomlag-tykt}}"></span><span><div class="name">Ull-mellomlag, tykt</div><div class="role">Mellomlag</div></span><span class="det">Detaljer ⓘ</span></div>
-      <div class="row"><span class="n">4</span><span class="plate dark"><img src="{{IMG_vinterdress}}"></span><span><div class="name">Vinterdress</div><div class="role">Ytterst</div></span><span class="det">Detaljer ⓘ</span></div>
-      <div class="row"><span class="n">5</span><span class="plate"><img src="{{IMG_lue-m-ull}}"></span><span><div class="name">Lue med ull</div><div class="role">Tilbehør</div></span><span class="det">Detaljer ⓘ</span></div>
-      <div class="row"><span class="n">6</span><span class="plate"><img src="{{IMG_votter-tykke}}"></span><span><div class="name">Votter, tykke</div><div class="role">Tilbehør</div></span><span class="det">Detaljer ⓘ</span></div>
+      <div class="row"><span class="n">1</span><span class="plate"><img src="{{IMG_ullsett-tykt}}" alt="Ullsett, tykt"></span><span><div class="name">Ullsett, tykt</div><div class="role">Innerst</div></span><span class="det">Detaljer ⓘ</span></div>
+      <div class="row"><span class="n">2</span><span class="plate"><img src="{{IMG_ullsokker}}" alt="Ullsokker"></span><span><div class="name">Ullsokker</div><div class="role">Innerst</div></span><span class="det">Detaljer ⓘ</span></div>
+      <div class="row"><span class="n">3</span><span class="plate"><img src="{{IMG_ull-mellomlag-tykt}}" alt="Ull-mellomlag, tykt"></span><span><div class="name">Ull-mellomlag, tykt</div><div class="role">Mellomlag</div></span><span class="det">Detaljer ⓘ</span></div>
+      <div class="row"><span class="n">4</span><span class="plate dark"><img src="{{IMG_vinterdress}}" alt="Vinterdress"></span><span><div class="name">Vinterdress</div><div class="role">Ytterst</div></span><span class="det">Detaljer ⓘ</span></div>
+      <div class="row"><span class="n">5</span><span class="plate"><img src="{{IMG_lue-m-ull}}" alt="Lue med ull"></span><span><div class="name">Lue med ull</div><div class="role">Tilbehør</div></span><span class="det">Detaljer ⓘ</span></div>
+      <div class="row"><span class="n">6</span><span class="plate"><img src="{{IMG_votter-tykke}}" alt="Votter, tykke"></span><span><div class="name">Votter, tykke</div><div class="role">Tilbehør</div></span><span class="det">Detaljer ⓘ</span></div>
     </div>
     <button class="cta" onclick="openKlePaa()">Kle på, steg for steg&nbsp;&nbsp;→</button>
     <div class="why">Hvorfor akkurat dette?</div>
@@ -581,7 +596,7 @@
   <!-- KLE PÅ -->
   <div class="screen" id="s-kp">
     <div class="kp-top">
-      <div class="kp-x" onclick="closeKlePaa()">✕</div>
+      <button class="kp-x" type="button" onclick="closeKlePaa()" aria-label="Lukk påkledningen"><span aria-hidden="true">✕</span></button>
       <div class="kp-titles"><div class="a">Dagens antrekk</div><div class="b">Lillian</div></div>
     </div>
     <div class="kp-strip">Lørdag · 1° · Føles som −3°</div>
@@ -860,7 +875,7 @@ function layerHTML(s){
         '<span class="sw-txt"><b>'+s.alt.name+'</b><small>'+s.alt.note+'</small></span>'+
       '</div>'
     : '';
-  return '<div class="kp-plate"><img src="'+s.img+'" alt=""></div>'+
+  return '<div class="kp-plate"><img src="'+s.img+'" alt="'+s.name+'"></div>'+
          '<div class="kp-step">'+s.step+'</div>'+
          '<div class="kp-name">'+s.name+'</div>'+
          '<p class="kp-instr">'+s.instr+'</p>'+
