@@ -27,7 +27,11 @@
     --canvas:#F1E9DB; --raised:#FBF6EC; --interactive:#E9DFCE;
     --ink-hi:#2A1C10; --ink-mid:#5C4A38; --ink-muted:#8A7660;
     --amber:#B4622F; --line:rgba(158,85,41,.18);
-    --plate-light:#FFFFFF; --plate-dark:#E3D5C0; --raised-top:#FFFFFF;
+    /* Ren hvit er forbudt, og her er den ogsa faglig gal: kremfarget ull mot
+       ren hvit er nettopp kanttilfellet art bible-en navngir. Varmet mot
+       merkevarens hue. --raised-top star igjen til palett-passet, fordi den
+       er koblet til den malte gradientamplituden i vitrinen. */
+    --plate-light:#FDF9F2; --plate-dark:#E3D5C0; --raised-top:#FFFFFF;
     --shadow-contact:0 10px 22px -12px rgba(96,64,32,.35);
     /* Lys modus: VARME skygger (nesten-svart leser som gratt skitt pa krem),
        samme struktur som mork — kun fargen endres. */
@@ -392,14 +396,26 @@
   .kp-dots { display:flex; gap:7px; }
   .kp-dots i { width:8px; height:8px; border-radius:50%; background:var(--interactive); }
   .kp-dots i.on { background:var(--amber); }
-  .kp-next { background:none; border:0; color:var(--amber); font-family:'Fraunces',Georgia,serif;
-             font-size:19px; padding:12px 4px; min-height:44px; }
-  .kp-prev { background:none; border:0; color:var(--ink-muted); font-family:'Fraunces',Georgia,serif;
-             font-size:17px; padding:12px 4px; min-height:44px; }
+  /* Produktforbud: «Display fonts in UI labels, buttons, data.» Fraunces
+     tilhorer INNHOLDET (stegtittel, plaggnavn, temperatur) — ikke kontrollene.
+     Med serif konkurrerte «Neste →» med stegtittelen den star under. */
+  .kp-next { background:none; border:0; color:var(--amber); font-family:inherit;
+             font-size:16px; font-weight:650; letter-spacing:.01em; padding:12px 4px; min-height:44px; }
+  .kp-prev { background:none; border:0; color:var(--ink-muted); font-family:inherit;
+             font-size:15px; font-weight:600; padding:12px 4px; min-height:44px; }
   .kp-prev[data-hidden="true"] { visibility:hidden; }
   .kp-skip { display:block; margin:2px auto 0; background:none; border:0; color:var(--ink-muted);
              font-size:13.5px; font-family:'Schibsted',system-ui,sans-serif; text-decoration:underline;
              text-underline-offset:3px; padding:8px 12px; min-height:40px; }
+  /* FOKUS — produktloven krever det pa hver interaktiv komponent, og vi hadde
+     null. Verre: tidligere i kveld «fikset» jeg en blaa WebKit-fokusring i den
+     ekte appen med outline:none. Det var a slette en tilstand, ikke a designe
+     den. Her er den designet: amber ring med luft, samme aksentfarge som CTA. */
+  :is(button, [tabindex]):focus-visible {
+    outline:2px solid var(--amber); outline-offset:3px; border-radius:inherit; }
+  .cta:focus-visible { outline-offset:4px; }
+  /* Tastatur/VoiceOver-brukere skal se hvor de er ogsa nar musa aldri rorer noe. */
+
   @media (prefers-reduced-motion: reduce) {
     .scanline { animation:none; opacity:0; }
     * { transition-duration:1ms !important; }
