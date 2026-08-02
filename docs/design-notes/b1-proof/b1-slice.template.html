@@ -567,27 +567,36 @@ function finishScan(skipped){ scanTimers.forEach(clearTimeout); scanTimers=[];
   setTimeout(()=>setScanState(false),PUSH_PAGE+40);
   if(navigator.vibrate)navigator.vibrate([12,60,18]); }
 
-/* `alt` er MOTORENS FUNN, ikke et UI-element. Null = motoren fant ingenting
-   som gir samme lag ved 1°/foles som −3°, og da skal ingenting vises.
-   De tre treffene er ekte ekvivalenser i Babyoras egen katalog
-   (to-ullsett, ull-jakke + ull-bukse, balaklava) — ikke oppdiktede naboer.
-   De tre uten er ekte ogsa: katalogen har ingen erstatning for ullsokker,
-   og vinterdress/votter-tykke har bare VARMERE varianter, ikke likeverdige. */
+/* `alt` er MOTORENS FUNN, ikke et UI-element. Null = ingenting vises.
+   KORRIGERT 2026-08-02: forste utkast fant jeg opp «ekvivalenser» ut fra
+   plaggnavn (to-ullsett, ull-jakke+ull-bukse, balaklava). Ingen av dem
+   finnes i motoren. Verdiene under er hentet ORDRETT fra motorens egen
+   tabell, src/lib/wool-layers/alternatives.ts (lest, aldri endret):
+     tykt ullsett      -> bomullssett   («Mindre varme enn ull», «Kjoler nar vat»)
+     ullsokker         -> bomullssokker («Kald og klam nar svett/vat»)
+     tykt ull-mellomlag-> tykk fleece   («Rimeligere», «Robust og rask-torkende»)
+     tykke votter      -> votter dun    («Maks varme», «Lette»)
+     lue m/ ull        -> tynn lue      («For lite varme i frost»)
+     vinterdress       -> star ikke i tabellen i det hele tatt
+   Motorens modell er ARLIG ALTERNATIV MED AVVEIING (ull -> bomull/fleece/dun),
+   ikke «samme lag». Filen sier det selv: «Poenget er IKKE ull-dogme.»
+
+   Filterregel ved 1°/foles som −3°: et alternativ hvis EGNE cons motsier
+   dagens forhold, passer ikke na. Bomull kjoler nar vat og tynn lue har
+   «for lite varme i frost» — de faller. Fleece og dun star. */
 const steps=[
  {img:'{{IMG_ullsett-tykt}}',step:'Ta på innerst først',name:'Ullsett, tykt',instr:'Start med det myke ullsettet som holder Lillian varm og tørr.',why:'Ull holder på varmen selv når den blir fuktig — derfor innerst.',
-  alt:{name:'To ullsett oppå hverandre',note:'To tynne ullsett kan gi omtrent tilsvarende varme.'}},
+  alt:null},   // bomullssett faller: «Mindre varme enn ull», «Kjøler når våt»
  {img:'{{IMG_ullsokker}}',step:'Varme til føttene',name:'Ullsokker',instr:'Trekk sokkene godt opp over anklene.',why:'Føttene mister varme raskest. Ull puster og holder dem tørre.',
   alt:null},
  {img:'{{IMG_ull-mellomlag-tykt}}',step:'Mellomlaget',name:'Ull-mellomlag, tykt',instr:'Genseren går utenpå ullsettet — den fanger varmen.',why:'Mellomlaget fanger luft mellom lagene. Det er lufta som varmer.',
-  alt:{name:'Ull-jakke + ull-bukse',note:'To deler gjør samme jobb som ett mellomlag.'}},
+  alt:{name:'Tykk fleece',note:'Rimeligere og robust, men bygger mer volum.'}},
  {img:'{{IMG_vinterdress}}',step:'Ytterst mot været',name:'Vinterdress',instr:'Dressen stenger vind og kulde ute. La det være litt rom over tærne.',why:'Ytterlaget stenger vind og fukt ute — uten å stenge fukt inne.',
   alt:null},
  {img:'{{IMG_lue-m-ull}}',step:'Lua til slutt',name:'Lue med ull',instr:'Lua skal dekke ørene uten å stramme.',why:'Et lite hode mister mye varme. Lua betyr mer enn ett ekstra lag.',
-  /* Ikke en ren ekvivalens (portdom): balaklava gir MER dekning. Da skal
-     konsekvensen sta, ikke skjules bak et likhetstegn. */
-  alt:{name:'Balaklava',note:'Mer dekning rundt ører og hals.'}},
+  alt:null},   // tynn lue faller: «For lite varme i frost»
  {img:'{{IMG_votter-tykke}}',step:'Og hendene',name:'Votter, tykke',instr:'Kjenn etter i nakken når dere er ute: passe varm og tørr.',why:'Votter varmer bedre enn hansker — fingrene deler varmen.',
-  alt:null},
+  alt:{name:'Votter dun',note:'Maks varme og lettere, men tåler våt dårligere.'}},
 ];
 let step=0, activeLayer=0;
 const STEP_DUR=260;
