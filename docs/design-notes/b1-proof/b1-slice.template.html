@@ -32,10 +32,18 @@
     /* Poolens GEOMETRI som egne variabler, sa A/B/C kan bles gjennom pa
        enheten. Bredden avgjor om lyset har en KJERNE eller bare er en flate:
        110%x75% er sa bredt at falloffet aldri lander innenfor skjermen. */
-    --pool:110% 75%; --pool-stop:52%;
-    --pool-l:160% 100%; --pool-stop-l:68%;
+    /* Portdom 26: B. «A er romfarge uten tydelig kilde; C blir scenelys og
+       gjor hjornene og CTA-en kompositorisk frakoblet. B gir en lesbar lampe
+       uten at brukeren legger merke til lampen.» Alpha blir staende pa .32 —
+       de 10,3 luminanstrinnene er onsket lokal modellering. */
+    --pool:80% 52%; --pool-stop:58%;
+    --pool-l:116% 69%; --pool-stop-l:74%;
     --atmo:radial-gradient(var(--pool) at 37% var(--atmo-y), rgba(232,178,122,.32), transparent var(--pool-stop)),
-           linear-gradient(205deg, rgba(126,90,58,.28), transparent 46%),
+           /* Ambient fill — DEMPET fra .28 (portdom 26): «.28 gir na to
+              konkurrerende lyskilder». Retningen holdes samstemt med key,
+              men laget skal ikke ha egen synlig kjerne. Beholdes, sa ovre rom
+              ikke kollapser til sort. */
+           linear-gradient(205deg, rgba(126,90,58,.12), transparent 46%),
            radial-gradient(160% 110% at 80% 115%, rgba(0,0,0,.5), transparent 55%);
     --m-feedback:120ms; --m-state:220ms; --m-handoff:280ms; --ease:cubic-bezier(.2,.7,.2,1);
   }
@@ -99,9 +107,12 @@
           transition:opacity 300ms var(--ease); }
   .atmo.on { opacity:1; }
   #atmo-hjem { background:var(--atmo); }
-  #atmo-res { background:radial-gradient(120% 70% at 50% 6%, rgba(232,178,122,.20), transparent 58%),
-           linear-gradient(205deg, rgba(126,90,58,.16), transparent 40%); }
-  #atmo-kp { background:radial-gradient(95% 60% at 50% 30%, rgba(232,178,122,.26), transparent 60%); }
+    /* Skjermspesifikke, STATISKE ankere (portdom 26) — ikke kontinuerlig
+     motivsporing. Resultat: ovre del av vitrinen, sa gradient og skygger far
+     veggluminans a lese mot. Kle pa: plaggplaten. */
+  #atmo-res { background:radial-gradient(80% 46% at 42% 30%, rgba(232,178,122,.22), transparent 58%),
+           linear-gradient(205deg, rgba(126,90,58,.10), transparent 40%); }
+    #atmo-kp { background:radial-gradient(70% 40% at 46% 22%, rgba(232,178,122,.26), transparent 60%); }
   [data-mode="light"] #atmo-res, [data-mode="light"] #atmo-kp { background:var(--atmo); }
   .screen { position:absolute; inset:0; display:flex; flex-direction:column; padding:max(14px,env(safe-area-inset-top)) 20px 0;
             opacity:0; pointer-events:none; transition:opacity var(--m-handoff) var(--ease); z-index:1; overflow-y:auto;
@@ -697,7 +708,7 @@ const LYS=[
   {id:'B', d:'80% 52%',  ds:'58%', l:'116% 69%',  ls:'74%'},
   {id:'C', d:'60% 38%',  ds:'62%', l:'87% 51%',   ls:'78%'},
 ];
-let lysIdx=0;
+let lysIdx=1;   // B er na standard (portdom 26)
 function settLys(){
   const v=LYS[lysIdx], r=document.documentElement.style;
   r.setProperty('--pool',v.d); r.setProperty('--pool-stop',v.ds);
@@ -979,6 +990,9 @@ function siktLyset(){
   document.documentElement.style.setProperty('--atmo-y', ((hodeY/s.height)*100 - 8).toFixed(1)+'%');
 }
 addEventListener('resize',siktLyset);
+/* Ankeret settes én gang per layout — ikke per frame. «Statiske
+   skjermspesifikke ankere, ikke kontinuerlig motivsporing» (portdom 26):
+   poolen folger ALDRI boyningen eller pushen. */
 
 /* Fullskjerm-forhandsvisning: skalerer den ekte app-flaten ned til a passe. */
 function fitPreview(){
@@ -998,6 +1012,7 @@ addEventListener('resize',fitPreview);
 measurePanel();
 window.PANEL_H = PANEL_H;
 oppdaterCta();
+settLys();   // etiketten ma stemme med CSS-standarden (B)
 siktLyset();
 addEventListener('resize',()=>{ if(!document.getElementById('s-hjem').classList.contains('scanning')) measurePanel(); });
 </script>

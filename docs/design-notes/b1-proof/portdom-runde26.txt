@@ -1,0 +1,19 @@
+Portdom: B.
+
+a) B (80 × 52 %, .32). A er romfarge uten tydelig kilde; C blir scenelys/spotlight og gjør hjørnene og CTA-en kompositorisk frakoblet. B gir en lesbar lampe uten at brukeren legger merke til lampen. Det er også rammeverkets riktige nivå: lyset støtter oppgaven, ikke forestillingen.
+
+b) Behold .32 på B. De 10,3 luminanstrinnene er ønsket lokal modellering. Ikke kompenser ned. Hvis C likevel velges, må alpha ned mot .26–.28.
+
+c) Demp vaskelaget kraftig, omtrent .10–.14. Behold retningen samstemt med key-lyset, men la det være ambient fill uten egen synlig kjerne. .28 gir nå to konkurrerende lyskilder. Ikke fjern det helt før nattest; det hindrer at øvre rom kollapser til sort.
+
+d) Ja, samme prinsipp på alle skjermene, men statiske skjermspesifikke ankere, ikke kontinuerlig motivsporing:
+
+Hjem: maskot + instrumentkant.
+
+Resultat: øvre del av vitrinen, slik at gradient og skygger får veggluminans.
+
+Kle på: plaggplaten.
+
+Overgang: rommet står stille; poolene krysstoner.
+
+Mål dessuten kontrast mellom motivets kant og nærmeste vegg, ikke skjermtopp mot motiv. Det er den lokale separasjonen som avgjør om lyset faktisk gjør arbeid.
