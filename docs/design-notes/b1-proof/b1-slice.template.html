@@ -7,12 +7,14 @@
     --ink-hi:#F2E9DC; --ink-mid:#C9BBAA; --ink-muted:#96887A;
     --petrol:#113B3E; --petrol-deep:#0D3036; --p-hi:#F1E9DA; --p-mid:#C6CFC4; --p-muted:#91A5A0;
     --amber:#D98E5A; --amber-ink:#241505; --line:rgba(231,176,135,.14);
-    /* --raised-top er vitrinens LYSMOTTAKENDE topp. Den ble utilsiktet
-       morknet fra lum 46 til 38 da tokenet ble gjort tema-bevisst (20:49),
-       og fallet i listen falt fra 13,1 til 4,8 luminanstrinn — under
-       terskelen for a leses pa en telefon. Eierfunn 2026-08-02: «mener det
-       gikk fra lyst til morkt pa listen». Gjenopprettet til 46. */
-    --plate-light:#3A2B1B; --plate-dark:#4A3A28; --raised-top:#3B2C1C;
+    /* LOKALE vitrinetokens (portdom 25): «Maleterskelen skal verifisere
+       dybden, ikke tvinge globale tokens til a lose et lokalt problem.»
+       Vitrinens gradient eide tidligere --raised-top, som ogsa er en global
+       flatefarge — da matte hele lys-paletten flytte seg for at EN komponent
+       skulle besta amplitudetesten. Na eier vitrinen sine egne to verdier,
+       og tabbaren beholder globale --raised. */
+    --plate-light:#3A2B1B; --plate-dark:#4A3A28;
+    --vitrine-top:#3B2C1C; --vitrine-bottom:#2C1F13;   /* fall 12,7 trinn */
     --shadow-contact:0 10px 22px -10px rgba(12,6,2,.65);
     --sh-contact:rgba(8,4,2,.45); --sh-mid:rgba(8,4,2,.5); --sh-broad:rgba(4,2,1,.62);
     --sh-contact-cta:rgba(120,60,20,.4); --sh-broad-cta:rgba(105,62,36,.46);
@@ -27,11 +29,10 @@
     --canvas:#F1E9DB; --raised:#FBF6EC; --interactive:#E9DFCE;
     --ink-hi:#2A1C10; --ink-mid:#5C4A38; --ink-muted:#8A7660;
     --amber:#B4622F; --line:rgba(158,85,41,.18);
-    /* Ren hvit er forbudt, og her er den ogsa faglig gal: kremfarget ull mot
-       ren hvit er nettopp kanttilfellet art bible-en navngir. Varmet mot
-       merkevarens hue. --raised-top star igjen til palett-passet, fordi den
-       er koblet til den malte gradientamplituden i vitrinen. */
-    --plate-light:#FDF9F2; --plate-dark:#E3D5C0; --raised-top:#FFFFFF;
+    /* Ingen ren hvit som FLATEFARGE noe sted (portdom 25). Ren hvit kan
+       finnes som et svakt spekulaert kantlys, aldri som flate. */
+    --plate-light:#FDF9F2; --plate-dark:#E3D5C0;
+    --vitrine-top:#FFFCF7; --vitrine-bottom:#F8F2E7;   /* fall 9,7 trinn */
     --shadow-contact:0 10px 22px -12px rgba(96,64,32,.35);
     /* Lys modus: VARME skygger (nesten-svart leser som gratt skitt pa krem),
        samme struktur som mork — kun fargen endres. */
@@ -317,7 +318,7 @@
   .sumstrip .j { margin-left:auto; color:var(--p-hi); font-weight:650; font-size:14px; white-space:nowrap; }
   .res-h { font-family:'Fraunces',Georgia,serif; font-weight:520; font-size:30px; color:var(--ink-hi); margin:18px 0 2px; }
   .res-sub { font-size:14px; color:var(--ink-muted); margin:0 0 12px; }
-  .vitrine { background:linear-gradient(178deg, var(--raised-top), var(--raised) 55%); border:1px solid rgba(231,176,135,.22); border-radius:18px; padding:6px 16px;
+  .vitrine { background:linear-gradient(178deg, var(--vitrine-top), var(--vitrine-bottom) 55%); border:1px solid rgba(231,176,135,.22); border-radius:18px; padding:6px 16px;
              box-shadow:inset 0 1px 0 rgba(241,233,218,.13), inset 1px 0 0 rgba(241,233,218,.05),
                         0 2px 3px var(--sh-contact),
                         3px 12px 20px -10px var(--sh-mid),

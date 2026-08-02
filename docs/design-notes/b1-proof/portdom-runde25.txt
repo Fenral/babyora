@@ -1,0 +1,77 @@
+1. --raised-top
+
+Velg c: lag lokale vitrinetokens.
+
+Ikke behold ren hvit som stor gradientflate, og ikke flytt hele lys-paletten for å bestå én komponents amplitudetest.
+
+--vitrine-top: varm nær-hvit, eksempelvis rundt #FFFCF7
+
+--vitrine-bottom: egen eksplisitt sRGB-verdi, mørk nok til 8–10 luminanstrinn
+
+Tabbaren fortsetter å bruke global --raised
+
+Ren hvit kan eventuelt finnes som et svært svakt spekulært kantlys, ikke som flatefarge
+
+Måleterskelen skal verifisere dybden, ikke tvinge globale tokens til å løse et lokalt problem.
+
+2. Animert height
+
+Måling kan begrunne et unntak, men desktopmålingen er ikke nok. Snitt 16,4 ms og topp 17,9 ms på desktop gir praktisk talt ingen reserve mot en 16,7 ms-frame.
+
+Portkrav før ekte app:
+
+Eldste støttede iPhone
+
+WKWebView/Capacitor
+
+begge temaer og ferdige assets
+
+Low Power Mode
+
+gjentatt scan mens annen dataoppdatering skjer
+
+ingen synlig jank og 95-persentil under framebudsjettet
+
+Består dette, behold height. En transform/clip-løsning er ikke automatisk bedre; den kan gi forvrengt panel, feil hitområde og hopp i etterfølgende innhold. Bruk FLIP/visuelt skall bare dersom iPhone-testen faktisk stryker.
+
+Dom nå: godkjent i proof, ikke ferdig portgodkjent.
+
+3. Scanlengden
+
+Den riktige tredje veien er ikke «første gang per dag». Den er å skille mellom ny beregning og gjenåpning av et gyldig resultat.
+
+Ny eller endret anbefalingssignatur → Finn dagens antrekk → full 3,2 s.
+
+Samme barn, værreferanse, sted, aktivitet, justering og motorversjon → Vis dagens antrekk → direkte fysisk push til cachet resultat.
+
+Inline-endringer → fortsatt 220 ms quick-recalc.
+
+Eksplisitt «Beregn på nytt» → full seremoni.
+
+Skip og den vedtatte preferansedialogen beholdes.
+
+Bruk en deterministisk anbefalingsfingerprint, ikke en tilfeldig tidsregel. Da blir 3,2 sekunder brukt når Babyora faktisk skaper ny verdi, mens appen aldri later som den analyserer det samme på nytt.
+
+Dette krever en eksplisitt endring av eierlåsen, men det ivaretar eierens egentlige innsikt bedre: En ny beregning skal oppleves; et eksisterende svar skal ikke forsinkes kunstig.
+
+4. Instrumentmetaforen
+
+Jeg er enig. Originaliteten sitter i omsorgsinstrumentet, ikke i 3D-babyen alene.
+
+La instrumentet bære mer gjennom bindende regler:
+
+Én dominerende petrol-instrumentflate per dataorientert skjerm.
+
+Instrumentet har skjermens skarpeste kanter, høyeste presisjon og tydeligste tallhierarki.
+
+Form, lys og bevegelse skal reagere på ekte tilstand: vær → scan → syntese → resultat.
+
+Referansemarkører og skalaer brukes bare når de viser reelle verdier.
+
+Maskoten er observatør og emosjonell inngang, aldri datakilde eller viktigere enn instrumentet utenfor onboarding.
+
+Atelieret er rommet; instrumentet er produktet.
+
+Familie skal fortsatt være kontrollsenter, ikke tvinges inn i dashboardestetikk.
+
+Det mest proprietære bildet Babyora har, er ikke «søt baby i varmt lys». Det er babyen som fysisk griper et presist vær- og påkledningsinstrument. Fred akkurat den kombinasjonen.
