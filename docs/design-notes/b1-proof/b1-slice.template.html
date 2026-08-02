@@ -98,6 +98,16 @@
   .proofbar b { color:var(--amber); font-weight:700; }
   #stage::before { content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
            background:radial-gradient(160% 110% at 80% 118%, rgba(0,0,0,.38), transparent 55%); }
+  /* KORN pa veggen. Rammeverkets §5 tillater det kun pa et fast, pointer-
+     events-none lag — aldri i en scrollende container. Poenget: en ren
+     CSS-gradient leser som en gradient. Et fint korn gjor den samme flaten
+     til MATERIALE, og det er nettopp der «designet lys» skiller seg fra
+     «radial-gradient pa mork bakgrunn» — som er et av rammeverkets tells. */
+  #stage::after { content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
+           opacity:0; transition:opacity 200ms var(--ease);
+           background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+           mix-blend-mode:overlay; }
+  #stage[data-korn="pa"]::after { opacity:.055; }
   /* Eierprinsipp (B1-kalibrering): key-lyset sikter på skjermens HOVEDMOTIV
      (Hjem = maskoten, resultat = vitrinen, Kle paa = plagg-platen) — MEN
      lyset tilhorer ROMMET, ikke siden: det ligger i stagen og KRYSSTONER
@@ -483,7 +493,7 @@
   <div class="atmo on" id="atmo-hjem"></div>
   <div class="atmo" id="atmo-res"></div>
   <div class="atmo" id="atmo-kp"></div>
-  <button class="modebtn" onclick="toggleMode()">☾ / ☀</button>
+  <button class="modebtn" onclick="toggleMode()" aria-label="Bytt lys/mørk">Lys / Mørk</button>
 
   <!-- HJEM (scan er en TILSTAND her, ikke en egen skjerm) -->
   <div class="screen on" id="s-hjem">
@@ -704,15 +714,17 @@ function settAktivitet(el,navn){
 /* Tre lyskarakterer a kjenne pa. Malt lokal kontrast mellom skjermtopp og
    motiv: A 6,4 · B 10,3 · C 14,6 luminanstrinn. */
 const LYS=[
-  {id:'A', d:'110% 75%', ds:'52%', l:'160% 100%', ls:'68%'},
-  {id:'B', d:'80% 52%',  ds:'58%', l:'116% 69%',  ls:'74%'},
-  {id:'C', d:'60% 38%',  ds:'62%', l:'87% 51%',   ls:'78%'},
+  {id:'B', d:'80% 52%',  ds:'58%', l:'116% 69%',  ls:'74%', korn:'av'},   // portdom 26
+  {id:'B+korn', d:'80% 52%', ds:'58%', l:'116% 69%', ls:'74%', korn:'pa'},
+  {id:'C', d:'60% 38%',  ds:'62%', l:'87% 51%',   ls:'78%', korn:'av'},
+  {id:'A', d:'110% 75%', ds:'52%', l:'160% 100%', ls:'68%', korn:'av'},
 ];
-let lysIdx=1;   // B er na standard (portdom 26)
+let lysIdx=0;   // B er standard (portdom 26)
 function settLys(){
   const v=LYS[lysIdx], r=document.documentElement.style;
   r.setProperty('--pool',v.d); r.setProperty('--pool-stop',v.ds);
   r.setProperty('--pool-l',v.l); r.setProperty('--pool-stop-l',v.ls);
+  document.getElementById('stage').dataset.korn=v.korn;
   const e=document.getElementById('lys-id'); if(e) e.textContent=v.id;
 }
 function byttLys(){ lysIdx=(lysIdx+1)%LYS.length; settLys(); if(navigator.vibrate)navigator.vibrate(6); }
