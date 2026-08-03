@@ -40,6 +40,21 @@ Excluded for v1: Toddlers 2–6 år (planned v2 product "Babyora Junior").
 - **The mascot turns curious during the scan:** it bows its head and looks down toward the scan animation beneath it (a second static pose, crossfaded in — no generative video).
 - **The resting mascot occasionally glances**, a brief (~1.8s) crossfade to its own dedicated resting-glance pose (a separate asset from the scanning pose above — that one stays reserved for the "Babyora is checking" scan moment) at most every 20–30s of stillness (first glance 4–5s after the last interaction). Reduced motion, a backgrounded tab, an open sheet/paywall/dialog, a likely-open software keyboard, any interaction, or the first 30s after the app resumes from background all suppress/reset it. (The originally-planned continuously-looping idle video was dropped after frame-QA found the exported asset has a baked-in opaque background with no alpha channel, incompatible with the weather-tinted panel.)
 
+**Owner-override v4 (2026-08-03) — scan-lengden styres av anbefalings-fingerprint (supersedes v3's "same full 3.2s on EVERY CTA press"):**
+
+The 3.2s ceremony no longer plays on every press. It plays when Babyora is actually doing new work.
+
+- The app already computes a deterministic result fingerprint (`src/lib/scan/result-key.ts`, `computeScanResultKey`), keyed on the resulting garment list plus tempC, feelsLikeC, windMs, precipMmH and symbolCode. `scan-cache-store` already keys on it. This decision wires that existing key to the ceremony instead of building new machinery.
+- **New or unknown fingerprint** -> the CTA reads **"Finn dagens antrekk"** -> full 3.2s choreography, unchanged.
+- **Known fingerprint** (a valid cached result for exactly these conditions) -> the CTA reads **"Vis dagens antrekk"** -> direct physical push to the cached result, no ceremony.
+- The line under the CTA tells the truth about which path you are on.
+- Cache is a KEY LOOKUP, not one slot: toggling activity back and forth must not replay the ceremony for an answer the app already holds.
+- Explicit "Beregn på nytt" always plays the full ceremony. Inline adjustments keep the 220ms quick recalc. The skip button stays.
+
+Rationale, owner's own: a new calculation must be experienced, but a finished answer must not be delayed artificially. A time rule ("first time per day") lies in both directions -- it would replay the ceremony at midnight with nothing changed, and skip it at 14:00 when the weather had actually turned. The fingerprint is exact.
+
+Note the app's key is OUTCOME-based (which garments came out), not input-based. That is stricter in a useful way: change the activity but get an identical outfit, and there is nothing new to show.
+
 **Outfit result (locked jul 2026):** clothes are the primary content. Show a numbered vertical list in dressing order, inner to outer. Each row contains garment image, garment name, role ("Innerst", "Mellomlag", "Ytterst", "Tilbehør") and access to alternatives. The whole row is tappable. Do not rely on the mascot to visualize garment combinations.
 
 **Planlegg experience (locked jul 2026):** use two explicit segments, "I dag" and "I morgen". "I morgen" always presents one preparation widget. "I dag" only shows meaningful changes in clothing requirements later that day. A compact next-week view highlights deviations rather than repeating detailed daily forecasts.

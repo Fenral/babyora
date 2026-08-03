@@ -243,6 +243,69 @@ function whyText(
 const DRESSING_SESSION_KEY = 'babyora.takeover.played';
 
 /* ──────────────────────────────────────────────────────────────────────────
+   FOKUSRINGEN — en DESIGNET tilstand, ikke en slettet tilstand
+   ──────────────────────────────────────────────────────────────────────────
+
+   Historikk: WebKit tegnet sin blå standardring når `titleRef.current?.focus()`
+   flyttet fokus til overskriften (eier-funn TestFlight 2026-08-01). «Fiksen»
+   var `outline: 'none'` inline på de tre overskriftene. Det fjernet symptomet
+   OG tilstanden i samme slag: en inline outline gjelder alle fokusmodus og kan
+   ikke overstyres av et stilark, så tastatur- og VoiceOver-brukere mistet den
+   eneste indikatoren på hvor de var. Web Interface Guidelines: «Never
+   outline-none without focus replacement.»
+
+   Erstatningen står her, og skillet gjøres av :focus-visible — aldri :focus:
+     · trykk/museklikk (og programmatisk focus() rett etter et trykk) matcher
+       IKKE → overskriften får ingen ring, som var poenget med det opprinnelige
+       funnet;
+     · tastatur og VoiceOver matcher → ringen tegnes.
+
+   Ringens form følger b1-proofen (`b1-slice.template.html:494-496`): amber,
+   2 px strek, luft rundt via outline-offset slik at ringen leser som et EGET
+   LAG over flaten — ikke som en ny kant på komponenten.
+
+   Fargen er --dw-accent, altså nøyaktig CTA-ens aksentfarge (design-tokens.css
+   aliaserer `--accent-cta: var(--dw-accent)`). Den er tema-vekslende og bærer
+   derfor lys modus også: --dw-focus (#E8B98C) er kalibrert for espresso og
+   ligger på ~1,7:1 mot krem-lerretet — en ring ingen ser. --dw-accent gir
+   5,1-7,0:1 mot både lerret og dialogflate i BEGGE temaer. Håndhevet i
+   __tests__/PaakledningScreen.focus-ring.test.tsx.
+
+   Selektorene er bevisst smale (.pkl-title / .pkl-close). En generell
+   `.pkl-dialog :focus-visible` ville hatt samme spesifisitet som
+   `.outfit-row:focus-visible` (Antrekkskart.css:12) og — fordi denne <style>-en
+   ligger i <body>, etter <head> — stille overtatt fokusringen til
+   OutfitTruthPanel, som er en annen agents flate.
+   ────────────────────────────────────────────────────────────────────────── */
+const PKL_FOCUS_RING_CSS = `
+/* Programmatisk fokus tegner ingenting. Dette er den ENESTE lovlige
+   outline-slettingen i denne filen: erstatningen står rett under, i samme
+   regelsett, og slettingen gjelder kun tilstanden «fokusert uten at brukeren
+   navigerer med tastatur». */
+.pkl-title:focus:not(:focus-visible) { outline: none; }
+
+/* ERSTATNINGEN. */
+.pkl-title:focus-visible,
+.pkl-close:focus-visible {
+  outline: 2px solid var(--dw-accent, var(--accent-cta));
+  outline-offset: 3px;
+}
+
+/* Overskriften har ingen egen form; uten radius leser ringen som en boks rundt
+   teksten. Radiusen bor her og ikke i regelen over — der ville den endret
+   formen på hver flate som fikk fokus. */
+.pkl-title:focus-visible { border-radius: 5px; }
+
+/* Den runde lukkeknappen: outline arver formen, men en sirkel ligger visuelt
+   nærmere ringen enn et rektangel gjør og trenger et hakk mer luft. */
+.pkl-close:focus-visible { outline-offset: 4px; }
+`;
+
+function PklFocusRing(): ReactElement {
+  return <style>{PKL_FOCUS_RING_CSS}</style>;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
    Komponent
    ────────────────────────────────────────────────────────────────────────── */
 
@@ -347,10 +410,12 @@ function PlannedPaakledningScreen({
           color: 'var(--ink-900)',
         }}
       >
+        <PklFocusRing />
         <div style={{ maxWidth: 680, margin: '0 auto', padding: 'max(18px, env(safe-area-inset-top)) 18px 32px' }}>
           <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <button
               type="button"
+              className="pkl-close"
               onClick={onBack}
               aria-label="Lukk planlagt antrekk"
               style={{
@@ -366,13 +431,13 @@ function PlannedPaakledningScreen({
             </button>
             <h2
               id="planned-outfit-title"
+              className="pkl-title"
               ref={titleRef}
               tabIndex={-1}
-              // Programmatisk fokus (titleRef.focus() for skjermleser-kontekst)
-              // skal aldri tegne WebKits blå standard-ring for berørings-
-              // brukere (eier-funn TestFlight 2026-08-01). tabIndex=-1 kan
-              // ikke nås med Tab, så ingen synlig fokus går tapt.
-              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400, outline: 'none' }}
+              // Ingen outline her. Fokustilstanden er designet i
+              // PKL_FOCUS_RING_CSS: programmatisk fokus etter et trykk tegner
+              // ingenting, tastatur/VoiceOver får amber ring med luft.
+              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
             >
               Planlagt antrekk er ikke tilgjengelig
             </h2>
@@ -411,10 +476,12 @@ function PlannedPaakledningScreen({
           overflow: 'auto',
         }}
       >
+        <PklFocusRing />
         <div style={{ maxWidth: 680, margin: '0 auto', padding: 'max(18px, env(safe-area-inset-top)) 18px 32px' }}>
           <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <button
               type="button"
+              className="pkl-close"
               onClick={onBack}
               aria-label={isCurrentContext ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
               style={{
@@ -434,12 +501,12 @@ function PlannedPaakledningScreen({
               </p>
               <h2
                 id="planned-outfit-title"
+                className="pkl-title"
                 ref={titleRef}
                 tabIndex={-1}
-                // Programmatisk fokus skal aldri tegne WebKits blå standard-
-                // ring (eier-funn TestFlight 2026-08-01); tabIndex=-1 nås
-                // ikke med Tab, så ingen synlig fokus går tapt.
-                style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400, outline: 'none' }}
+                // Ingen outline her — se PKL_FOCUS_RING_CSS for den designede
+                // fokustilstanden (:focus-visible, aldri :focus).
+                style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
               >
                 {plannedContext.child.name}
               </h2>
@@ -512,10 +579,12 @@ function PlannedPaakledningScreen({
         overflow: 'auto',
       }}
     >
+      <PklFocusRing />
       <div style={{ maxWidth: 680, margin: '0 auto', padding: 'max(18px, env(safe-area-inset-top)) 18px 32px' }}>
         <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <button
             type="button"
+            className="pkl-close"
             onClick={onBack}
             aria-label={isCurrentContext ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
             style={{
@@ -535,13 +604,12 @@ function PlannedPaakledningScreen({
             </p>
             <h2
               id="planned-outfit-title"
+              className="pkl-title"
               ref={titleRef}
               tabIndex={-1}
-              // Programmatisk fokus (titleRef.focus() for skjermleser-kontekst)
-              // skal aldri tegne WebKits blå standard-ring for berørings-
-              // brukere (eier-funn TestFlight 2026-08-01). tabIndex=-1 kan
-              // ikke nås med Tab, så ingen synlig fokus går tapt.
-              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400, outline: 'none' }}
+              // Ingen outline her — se PKL_FOCUS_RING_CSS for den designede
+              // fokustilstanden (:focus-visible, aldri :focus).
+              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
             >
               {plannedContext.child.name}
             </h2>
@@ -888,7 +956,10 @@ function CurrentPaakledningScreen({
   return (
     <>
       <style>{`
-        .pkl-btn:focus-visible { outline: 3px solid var(--focus-ring, var(--terracotta-400)); outline-offset: 2px; }
+        /* Samme ring som PKL_FOCUS_RING_CSS: --dw-accent, ikke --focus-ring.
+           --focus-ring peker på --dw-focus (#E8B98C), som er kalibrert for
+           espresso og forsvinner mot krem-lerretet i lys modus (~1,7:1). */
+        .pkl-btn:focus-visible { outline: 2px solid var(--dw-accent, var(--accent-cta)); outline-offset: 3px; }
         .pkl-press:active { transform: scale(var(--press-scale, .97)); }
         .pkl-scroll::-webkit-scrollbar { display: none; }
         /* Fullskjerm + MYK cross-fade (Sivert): backdrop transparent så Hjem

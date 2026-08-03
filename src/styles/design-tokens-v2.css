@@ -82,10 +82,42 @@
   --dw-r-pill: 999px;
   --dw-shadow-raise: 0 1px 2px rgba(0, 0, 0, 0.5);
 
+  /* ============ FAST LYSVEKTOR (portdom 27, 2026-08-03) ============
+     «Poolankeret kan variere per skjerm; lysretningen skal ikke gjore det.»
+
+     Poolen (veggens lyspool) har et STATISK anker per skjerm — Hjem sikter
+     pa maskoten, resultat pa vitrinen, Kle pa pa plaggplaten. Men RETNINGEN
+     er én verdi for hele appen, og tre systemer avledes av den:
+       1. veggens lyspool         — gradientens fallretning
+       2. panelets kantlys        — linear-gradient(var(--dw-lys-vinkel), key → fill)
+       3. dybdekontraktens skygger — forskyvning ned-hoyre (se blokken under)
+
+     135deg er en CSS-gradientvinkel: gradientlinjen peker ned-HOYRE, altsa
+     ligger kjernen (kant-key) ovre venstre og faller mot nedre hoyre. Det
+     er samme vektor som gir dybdekontrakten positiv x og positiv y.
+     Handhevet mot --dw-depth-* av design-tokens-v2.motion.test.ts, som
+     regner vinkelen om til en enhetsvektor og sammenligner fortegn.
+
+     Portdom 27 rangerte kantlyset som VIKTIGST: «Veggen sier key-lys ovre
+     venstre, mens panelet svarer med jevnt, syntetisk kantlys. Da blir
+     poolen bakgrunnsdekor.» Rimmen skal derfor vare sterkest der lyset
+     treffer og nesten borte pa nedre kant — aldri en jevn 1px-ramme.
+     «Element-for-element-dynamisk lys gjor UI-et teatralsk og skjort.»
+
+     TEMA-KONSTANT, med vilje: kantlyset bor pa petrol-instrumentet, som er
+     tema-konstant. Derivering fra --dw-ink-hi via color-mix ville flippet
+     rimmen til espresso i lys modus og gitt et MORKT «lys» pa panelet.
+     Ren hvit er dessuten forbudt som flate (portdom 25) — dette er et svakt
+     spekulaert kantlys av ullkrem, ikke en flate. */
+  --dw-lys-vinkel: 135deg;
+  --dw-kant-key: rgba(241, 233, 218, 0.3);   /* sterkest der lyset treffer */
+  --dw-kant-fill: rgba(241, 233, 218, 0.1);  /* ambient, midtveis */
+
   /* ============ Dybdekontrakten (B1-kalibrering 2026-08-02) ============
-     Retningsbestemt lagdelt skygge: key-lyset star ovre venstre, sa ALLE
-     skyggelag forskyves ned-hoyre. Fire hoydenivaer (hero/raised/action/
-     selected) deler samme STRUKTUR — kun fargen flipper per tema.
+     Retningsbestemt lagdelt skygge avledet av lysvektoren over: key-lyset
+     star ovre venstre, sa ALLE skyggelag forskyves ned-hoyre. Fire
+     hoydenivaer (hero/raised/action/selected) deler samme STRUKTUR — kun
+     fargen flipper per tema.
 
      ABSOLUTT REGEL: en tema-selektor (@media prefers-color-scheme /
      [data-theme]) far ALDRI erstatte hele box-shadow-stabelen. Den far
@@ -122,6 +154,57 @@
      blir permanent skjult bak den flytende baren (innhold scroller BAK,
      ikke under, baren). */
   --dw-tabbar-clearance: calc(var(--dw-tabbar-height) + var(--dw-tabbar-gap) + env(safe-area-inset-bottom, 0px) + 14px);
+
+  /* ============ Bevegelseskontrakten (B1-proofen, portdom 2026-08-02) ============
+     Verdiene er HENTET FRA den beviste proofen (b1-slice.template.html),
+     ikke gjenoppfunnet: --m-feedback/--m-state/--m-handoff/--ease staar i
+     proofens :root, --m-bow veksler 420→240 midt i koreografien, --m-step er
+     260, PUSH_PAGE/PUSH_BACK er 340/280, markorraden overstyrer til 180, og
+     .atmo krysstoner pa 300.
+
+     Hvorfor tokens og ikke tall: driften var allerede i gang — cubic-bezier
+     (.2,.7,.2,1) sto hardkodet i OnboardingScreen.tsx og (.2,.7,.3,1) i
+     VarmEllerKaldScreen.tsx. To kurver som ligner pa hverandre uten a vare
+     like er ikke et designsprak; de leser som slurv i bevegelse.
+
+     Kontraktens tre regler (alle maskinhandhevet i
+     design-tokens-v2.motion.test.ts):
+      1. UT er alltid raskere enn INN — push-back < push, bow-out < bow-in.
+         «Ut skal aldri koste tid.»
+      2. Markoren LANDER, den glir ikke: marker < state. Fullforingen er
+         ceremoniens punktum og ma lese som et anslag.
+      3. Bevegelse er ikke en temaegenskap — hvert token deklareres NOYAKTIG
+         én gang, aldri i en @media- eller [data-theme]-blokk.
+
+     Semantikk, ikke storrelse (bruk navnet som beskriver HANDLINGEN):
+      feedback   trykkrespons pa selve elementet (scale/translate)
+      state      tilstandsbytte inne i en flate (rad blir aktiv, verdi lander)
+      handoff    innhold byttes i samme ramme (opacity-overlevering)
+      push       sideskift inn — resultat/Kle pa, vertikal 340
+      push-back  sideskift ut — tilbake, 280 (regel 1)
+      step       steg → steg i Kle pa, horisontal
+      bow-in     maskoten boyer seg ned i scan
+      bow-out    maskoten retter seg opp pa fullforingsmarkoren (regel 1)
+      marker     fullforingsmarkorens egen landing (regel 2)
+      atmo       lyspoolens krysstoning ved skjermbytte — ALDRI transform;
+                 poolen tilhorer rommet og far aldri gli med pushen
+
+     IKKE herfra: hovedfane ↔ hovedfane (100-120 ms crossfade, ingen push) og
+     swipe-settlingen i Kle pa (1:1 med fingeren + 120-260 ms beregnet av
+     hastighet og restavstand) — begge er variable/utenfor T2s flater.
+     src/styles/motion-grammar.ts er F26-arven for de gamle skjermene og
+     erstattes ikke av denne blokken; nye v2-flater bruker KUN --dw-m-*. */
+  --dw-m-feedback: 120ms;
+  --dw-m-state: 220ms;
+  --dw-m-handoff: 280ms;
+  --dw-m-push: 340ms;
+  --dw-m-push-back: 280ms;
+  --dw-m-step: 260ms;
+  --dw-m-bow-in: 420ms;
+  --dw-m-bow-out: 240ms;
+  --dw-m-marker: 180ms;
+  --dw-m-atmo: 300ms;
+  --dw-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
   /* ============ Typografi ============ */
   /* Schibsted Grotesk: alt UI (self-hostet variabel, styles/fonts.css).    */

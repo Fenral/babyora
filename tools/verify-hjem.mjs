@@ -30,6 +30,7 @@
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { forecastPartlyCloudy1C } from '../e2e/fixtures/forecast-1c-partlycloudy.js';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -75,13 +76,15 @@ try {
   const jsFeil = [];
   page.on('pageerror', (e) => jsFeil.push(String(e)));
 
-  // Deterministisk vær — met.no er låst motormappe, så vi avskjærer på nettverket
-  // i stedet for å endre appkode.
-  await page.route('**/api/forecast*', (route) =>
-    route.fulfill({ contentType: 'application/json', body: JSON.stringify({
-      tempC: 1, feelsLikeC: -3, symbol: 'partlycloudy_day', windMs: 2.4, precipMmPerHour: 0,
-      updatedAt: new Date('2026-08-03T08:00:00Z').toISOString(), place: 'Trondheim',
-    }) }));
+  // Deterministisk vær i met.no sitt EGNE format. Første utkast fant opp et
+  // flatt objekt; klienten forkastet det, appen falt til «sist kjente vær» og
+  // CTA-en sto disabled — så alle portene stryk fordi knappen aldri ble
+  // trykket. met-no/ er låst; vi svarer riktig i stedet for å endre den.
+  let ruteTruffet = 0;
+  await page.route('**/api/forecast*', (route) => {
+    ruteTruffet += 1;
+    route.fulfill({ contentType: 'application/json', body: JSON.stringify(forecastPartlyCloudy1C()) });
+  });
 
   await page.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1500);
@@ -90,9 +93,15 @@ try {
     maskot: !!document.querySelector('.hjm-mascot-normal'),
     panel: !!document.querySelector('.hjm-panel-slot'),
     cta: !!document.querySelector('.hjm-cta'),
+    ctaAktiv: !!document.querySelector('.hjm-cta') && !document.querySelector('.hjm-cta').disabled,
+    h1: document.querySelector('h1')?.textContent?.trim() ?? '(ingen)',
   }));
-  if (!finnes.maskot || !finnes.panel || !finnes.cta) {
-    port('flaten finnes', false, `maskot=${finnes.maskot} panel=${finnes.panel} cta=${finnes.cta}`);
+  // RIGGPORT: uten denne måler resten ingenting. Den fanger nøyaktig feilen
+  // første utkast hadde — grønne porter på en flate som aldri kom i gang.
+  port('0. riggen virker: vær kom fram og CTA er aktiv', finnes.ctaAktiv,
+    `rute truffet ${ruteTruffet}x · h1 «${finnes.h1}» · CTA ${finnes.ctaAktiv ? 'aktiv' : 'DEAKTIVERT'}`);
+  if (!finnes.maskot || !finnes.panel || !finnes.ctaAktiv) {
+    port('flaten er målbar', false, `maskot=${finnes.maskot} panel=${finnes.panel} cta-aktiv=${finnes.ctaAktiv}`);
   } else {
     // ── 8. hvile ──────────────────────────────────────────────────────────
     const hvile = await page.evaluate(async () => {
@@ -113,7 +122,7 @@ try {
       const panel = document.querySelector('.hjm-panel-slot');
       const t0 = performance.now();
       window.__t0 = t0;
-      document.querySelector('.hjm-cta').click();
+      document.querySelector('.hjm-cta').click();   // aktiv, verifisert av port 0
       await new Promise((res) => {
         const tikk = () => {
           const cs = getComputedStyle(beveger);
