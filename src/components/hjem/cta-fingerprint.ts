@@ -48,7 +48,7 @@ export const CTA_CEREMONY_LINE = 'Vær, sted og aktivitet vurderes sammen';
    og får samme antrekk, traff cachen med rette, men linja løy: aktiviteten
    VAR endret. Verifisert live: utelek → vogn ga «uendret siden sist».
    Linja snakker nå om UTFALLET, som er det nøkkelen faktisk vet noe om. */
-export const CTA_REVEAL_LINE = 'Samme antrekk som sist — det er klart';
+export const CTA_REVEAL_LINE = 'Samme antrekk som sist – det er klart';
 
 const CEREMONY_PLAN: CtaPlan = Object.freeze({
   path: 'ceremony', label: CTA_CEREMONY_LABEL, line: CTA_CEREMONY_LINE,

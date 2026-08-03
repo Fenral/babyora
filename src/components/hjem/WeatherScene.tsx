@@ -45,7 +45,18 @@ export type WeatherSceneProps = Readonly<{
   /** null → «henter vær»-tilstand (stiplet temperatur, ingen ikon). */
   tempC: number | null;
   feelsLikeC: number | null;
-  noteText: string;
+  /**
+   * Værtilstanden («Delvis skyet»), slått sammen på føles-som-linjen.
+   *
+   * Portdom 23 (B1): «Slå sammen til én linje: Føles som −3° · Delvis skyet.
+   * Fjern bare "sjekk antrekket …".» Værtilstanden er REELL DATA og kan ikke
+   * bæres av ikonet alene — men handlingsdelen var overflødig, siden knappen
+   * rett under sier nettopp det. Vedtatt i proofen, portet til appen 2026-08-03.
+   */
+  conditionText?: string | null;
+  /** Egen notatlinje. Kun for tilstander som faktisk har noe å SI utover
+   *  været selv (feil, henting) — hviletilstanden bruker conditionText. */
+  noteText?: string | null;
   weatherIconSrc: string | null;
   weatherIconAlt: string;
   freshnessLabel: string;
@@ -72,7 +83,8 @@ export function WeatherScene({
   nuance,
   tempC,
   feelsLikeC,
-  noteText,
+  conditionText = null,
+  noteText = null,
   weatherIconSrc,
   weatherIconAlt,
   freshnessLabel,
@@ -137,9 +149,16 @@ export function WeatherScene({
       )}
 
       <p className="hjm-feels" style={dimmed ? { color: 'var(--dw-ink-mid)' } : undefined}>
-        {feelsLikeC === null ? 'Henter vær …' : `Føles som ${formatTempDisplay(feelsLikeC)}°`}
+        {feelsLikeC === null ? (
+          'Henter vær …'
+        ) : (
+          <>
+            {`Føles som ${formatTempDisplay(feelsLikeC)}°`}
+            {conditionText ? <span className="hjm-cond">{` · ${conditionText}`}</span> : null}
+          </>
+        )}
       </p>
-      <p className="hjm-note">{noteText}</p>
+      {noteText ? <p className="hjm-note">{noteText}</p> : null}
 
       <div className="hjm-toggle" role="radiogroup" aria-label="Aktivitet">
         {(Object.keys(ACTIVITY_TOGGLE_LABEL) as MonterActivity[]).map((value) => (

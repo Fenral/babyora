@@ -322,6 +322,13 @@
    Innstillinger, uavhengig av system — speiler blokken over 1:1 (samme
    mønster som :root[data-theme="dark"] i design-tokens.css). */
 :root[data-theme="light"] {
+  /* R1-retting 2026-08-03: disse to stod KUN i auto-lys-blokken. Velger
+     brukeren «Lys» manuelt pa et morkt OS, arvet plaggplatene den MORKE
+     verdien og garderoben marsjerte nedover den kremfargede lista som morke
+     firkanter — nettopp eierfunnet som ble rettet en gang for. Blokkens egen
+     kommentar sier regelen: begge lys-inngangene skal gi NOYAKTIG det samme. */
+  --dw-plate: #FBF6EA;
+  --dw-plate-kant: rgba(122, 88, 52, 0.22);
   --dw-canvas: #F9F5EB;
   --dw-canvas-glow: #F1E9DA;
   --dw-raised: #FFFCF4;

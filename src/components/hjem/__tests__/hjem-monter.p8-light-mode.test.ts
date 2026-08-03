@@ -42,31 +42,55 @@ describe('hjem-monter.css — P8 light-mode token consumption', () => {
     expect(undeclared, `unexpected hardcoded hex literal(s) in hjem-monter.css: ${undeclared.join(', ')}`).toEqual([]);
   });
 
-  it('surface shadows are component-scoped custom properties with a light-mode override, not raw rgba(0,0,0,*) baked into each rule', async () => {
+  /**
+   * R1 (2026-08-03) — MIGRERT, ikke svekket.
+   *
+   * P8 krevde her at skjermen hadde EGNE --hjm-shadow-*-tokens med en egen
+   * lys-blokk. Det var riktig mot problemet P8 så (hardkodet rgba(0,0,0,*)),
+   * men det sementerte to feil:
+   *
+   *  1. Skyggene falt RETT NED (0 18px 40px) mens art bible og resten av
+   *     appen lyser fra øvre venstre og kaster mot høyre (3px 14px).
+   *     Hovedskjermen motsa lysretningen assetene måles mot.
+   *  2. Dybdekontrakten (--dw-depth-*) — skrevet nettopp etter eierfunnet
+   *     «den lyse føles flatere enn den mørke» — hadde NULL forbrukere.
+   *
+   * Kontraktens regel er «strukturen defineres én gang; temaene overstyrer
+   * kun fargetokens». Denne testen håndhever nå DEN regelen på skjermen, som
+   * er strengere enn den gamle: en egen per-tema skyggeblokk her er ikke
+   * lenger tillatt i det hele tatt.
+   */
+  it('surfaces consume the shared depth contract instead of declaring their own per-theme shadow stacks', async () => {
     const css = await hjemMonterCss();
+    const withoutComments = css.replace(/\/\*[\s\S]*?\*\//gu, '');
 
-    for (const token of ['--hjm-shadow-panel', '--hjm-shadow-lift', '--hjm-shadow-cta', '--hjm-shadow-thumb', '--hjm-shadow-prev', '--hjm-shadow-strip', '--hjm-mascot-shadow']) {
-      // Declared once with a dark default...
-      expect(css, `${token} missing a default declaration`).toContain(`${token}: 0`);
-      // ...and consumed via var() at its use site instead of a literal
-      // rgba(0,0,0,*) baked directly into .hjm-panel/.hjm-rows/etc.
-      expect(css, `${token} is declared but never consumed via var()`).toContain(`var(${token})`);
+    // FORUTSETNING: flatene finnes. Uten den ville testen bestå på en tom fil.
+    for (const surface of ['.hjm-panel', '.hjm-cta', '.hjm-rows', '.hjm-thumb', '.hjm-prev', '.hjm-strip']) {
+      expect(withoutComments, `${surface} mangler i arket`).toContain(`${surface} {`);
     }
 
-    // Both the auto (prefers-color-scheme) and explicit data-theme="light"
-    // paths must override these — same two-block pattern already used by
-    // design-tokens-v2.css for --dw-raised etc.
-    expect(css).toMatch(/@media \(prefers-color-scheme: light\)\s*\{\s*:root:not\(\[data-theme="dark"\]\) \.hjem-monter/u);
-    expect(css).toMatch(/:root\[data-theme="light"\] \.hjem-monter\s*\{/u);
+    // Hver box-shadow-erklæring må hente høydenivået fra kontrakten. Innfelte
+    // topplyskanter (…inset) er tema-konstant lyslogikk og teller ikke som
+    // høyde — de får stå som literal.
+    const skygger = [...withoutComments.matchAll(/box-shadow:\s*([^;]+);/gu)].map((m) => m[1]!);
+    expect(skygger.length, 'ingen box-shadow å måle — porten kan ikke bestå på fravær').toBeGreaterThan(0);
+    const utenKontrakt = skygger
+      .map((v) => v.split(',').filter((del) => !del.includes('inset')).join(','))
+      .filter((v) => /\d+px/u.test(v) && !v.includes('var(--dw-depth-'));
+    expect(utenKontrakt, `box-shadow uten dybdekontrakt: ${utenKontrakt.join(' | ')}`).toEqual([]);
 
-    // Light shadows must actually be smaller/sharper AND warm-toned
-    // (rgba(42, 29, 18, *) — the same warm-brown anchor as --dw-hairline /
-    // --dw-shadow-raise), never a bare black shadow inherited unchanged.
-    const lightBlockMatch = css.match(/:root\[data-theme="light"\] \.hjem-monter\s*\{([\s\S]*?)\}/u);
-    expect(lightBlockMatch).not.toBeNull();
-    const lightBlock = lightBlockMatch![1]!;
-    expect(lightBlock).not.toMatch(/rgba\(0,\s*0,\s*0,/u);
-    expect(lightBlock.match(/rgba\(42,\s*29,\s*18,/gu)?.length).toBe(7);
+    // Ingen egen skyggeblokk per tema i dette arket. Temaflippen skjer i
+    // design-tokens-v2.css, håndhevet av design-tokens-v2.depth.test.ts.
+    expect(withoutComments).not.toMatch(/--hjm-shadow-/u);
+    expect(withoutComments).not.toMatch(/:root\[data-theme="light"\] \.hjem-monter\s*\{/u);
+
+    // Maskoten kan ikke bruke --dw-depth-* (drop-shadow støtter ikke spread),
+    // men må hente FARGEN fra de samme tokenene så den flipper med temaet —
+    // og kaste mot høyre, ikke rett ned.
+    const maskot = css.match(/--hjm-mascot-shadow:([\s\S]*?);/u)?.[1] ?? '';
+    expect(maskot, 'maskotskyggen henter ikke farge fra de delte skyggetokenene').toMatch(/var\(--dw-sh-/u);
+    expect(maskot, 'maskotskyggen kaster rett ned — art bible krever lys fra øvre venstre')
+      .toMatch(/drop-shadow\(\s*[1-9]\d*px/u);
   });
 
   it('the top-of-card gradient stop is derived from the theme-aware canvas-glow token, not a dark-mode-only literal', async () => {

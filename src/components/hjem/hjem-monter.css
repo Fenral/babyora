@@ -35,46 +35,32 @@
   padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px var(--dw-tabbar-clearance, 90px);
   overflow: hidden auto;
 
-  /* P8 lys-kalibrering: disse skygge-verdiene var hardkodet rgba(0,0,0,*) —
-     stemte kun for mørk canvas. Egne komponent-tokens (mørk-default her,
-     lys-overstyring lenger ned) gir "mindre/skarpere skygger" i lys modus
-     (duellens lys-prinsipp) i stedet for tunge svarte skygger på varmt
-     papir. De varme innfelte topplyskantene (rgba(242,192,138,*) inset)
-     er BEVISST uendret i begge tema — doktrinens lyslogikk er tema-konstant. */
-  --hjm-shadow-panel: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
-  --hjm-shadow-lift: 0 16px 34px -18px rgba(0, 0, 0, 0.6);
-  --hjm-shadow-cta: 0 10px 22px -12px rgba(0, 0, 0, 0.55);
-  --hjm-shadow-thumb: 0 6px 12px -6px rgba(0, 0, 0, 0.55);
-  --hjm-shadow-prev: 0 8px 18px -10px rgba(0, 0, 0, 0.55);
-  --hjm-shadow-strip: 0 10px 26px -14px rgba(0, 0, 0, 0.5);
-  /* P9 (ekstern P8-review, funn B): maskotens drop-shadow var hardkodet
-     svart/kald — stemte kun mørk canvas, ga en tung grå glorie på lyst
-     papir. Egen token, samme lys/mørk-mønster som skyggene over. */
-  --hjm-mascot-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
-}
+  /* R1 (2026-08-03): flatene her forbruker DYBDEKONTRAKTEN (--dw-depth-*),
+     ikke sine egne skygger.
 
-/* P8 lys-kalibrering: samme mønster som design-tokens-v2.css sin
-   data-theme-vakt (auto-lys respekterer manuell data-theme="dark"-
-   overstyring; eksplisitt data-theme="light" speiler auto-blokken). */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) .hjem-monter {
-    --hjm-shadow-panel: 0 14px 28px -16px rgba(42, 29, 18, 0.28);
-    --hjm-shadow-lift: 0 10px 20px -14px rgba(42, 29, 18, 0.22);
-    --hjm-shadow-cta: 0 8px 16px -10px rgba(42, 29, 18, 0.28);
-    --hjm-shadow-thumb: 0 4px 8px -4px rgba(42, 29, 18, 0.22);
-    --hjm-shadow-prev: 0 6px 12px -8px rgba(42, 29, 18, 0.2);
-    --hjm-shadow-strip: 0 8px 18px -12px rgba(42, 29, 18, 0.22);
-    --hjm-mascot-shadow: 0 6px 12px rgba(42, 29, 18, 0.25);
-  }
-}
-:root[data-theme="light"] .hjem-monter {
-  --hjm-shadow-panel: 0 14px 28px -16px rgba(42, 29, 18, 0.28);
-  --hjm-shadow-lift: 0 10px 20px -14px rgba(42, 29, 18, 0.22);
-  --hjm-shadow-cta: 0 8px 16px -10px rgba(42, 29, 18, 0.28);
-  --hjm-shadow-thumb: 0 4px 8px -4px rgba(42, 29, 18, 0.22);
-  --hjm-shadow-prev: 0 6px 12px -8px rgba(42, 29, 18, 0.2);
-  --hjm-shadow-strip: 0 8px 18px -12px rgba(42, 29, 18, 0.22);
-  --hjm-mascot-shadow: 0 6px 12px rgba(42, 29, 18, 0.25);
+     P8 ga skjermen komponent-tokens --hjm-shadow-* med en egen lys- og en
+     egen mørk-blokk. Det løste den hardkodede rgba(0,0,0,*), men skapte et
+     verre problem: skyggene falt RETT NED (0 18px 40px), mens resten av
+     appen — og art bible — lyser fra ØVRE VENSTRE og kaster mot høyre
+     (3px 14px). Hovedskjermen motsa altså den samme lysretningen jeg måler
+     plaggassetene mot. I tillegg hadde kontrakten NULL forbrukere: den ble
+     skrevet etter eierfunnet «den lyse føles flatere enn den mørke», og
+     skjermen som utløste funnet stod utenfor den.
+
+     Kontraktens regel er «strukturen defineres ÉN gang; temaene overstyrer
+     kun fargetokens». Derfor er begge tema-blokkene her borte: --dw-depth-*
+     flipper allerede farge globalt, håndhevet av design-tokens-v2.depth.test.ts.
+
+     De varme innfelte topplyskantene (rgba(242,192,138,*) inset) blir
+     BEVISST stående i begge tema — doktrinens lyslogikk er tema-konstant.
+
+     Maskoten beholder en egen token fordi drop-shadow() ikke støtter spread
+     og derfor ikke kan konsumere --dw-depth-* direkte. Den henter i stedet
+     FARGENE fra de samme kontakt/mid-tokenene, så den flipper med temaet, og
+     får samme lysvektor mot høyre som resten. */
+  --hjm-mascot-shadow:
+    drop-shadow(1px 2px 2px var(--dw-sh-contact))
+    drop-shadow(3px 8px 12px var(--dw-sh-mid));
 }
 
 .hjm-top { flex: none; }
@@ -91,12 +77,19 @@
    leser som en ny side; en malt, eased endring leser som samme apparat i
    arbeid (portdom 24 om panelapningen).
    min-height holder gulvet slik at ingenting KLIPPES, mens transitionen
-   gjor selve endringen synlig som bevegelse i stedet for et sprang. */
+   gjor selve endringen synlig som bevegelse i stedet for et sprang.
+
+   Gulvet er MALT, ikke gjettet: etter at portdom 23 slo vaertilstanden inn
+   pa foles-som-linjen falt vaerpanelet fra 329 til 269 px, og scan-panelet
+   ligger pa 276. Gulvet settes derfor til den hoyeste av de to. Et for hoyt
+   gulv gir dodt rom under panelet (60 px for denne malingen); et for lavt
+   gulv slipper hoppet tilbake. Endres innholdet i panelet, skal dette tallet
+   MALES pa nytt — port 2 i verify-hjem feller et hopp, ikke et dodt rom. */
 .hjm-panel-slot {
   position: relative;
   flex: none;
   margin-top: 14px;
-  min-height: 329px;
+  min-height: 276px;
   transition: min-height var(--dw-m-bow-in) var(--dw-ease);
 }
 @media (prefers-reduced-motion: reduce) {
@@ -134,7 +127,7 @@
   padding: 24px 22px 18px;
   overflow: hidden; /* D1: scan-koreografien klippes av panelet, aldri av flate lister */
   color: var(--dw-ink-panel-hi); /* tema-konstant instrument-tekst (lys-modus-regelen fra eiers telefonfunn) */
-  box-shadow: var(--hjm-shadow-panel);
+  box-shadow: var(--dw-depth-hero);
   /* …og av samme grunn en tema-konstant FOKUSRING. Panelets bakteppe er
      petrol i begge temaer, så knappene inni (.hjm-loc, aktivitetsvalget)
      skal ha instrumentringen — ikke den papirkalibrerte. Ombindingen skjer
@@ -230,11 +223,20 @@
   width: 76px;
   height: auto;
   margin: 4px -2px 0 0;
-  filter: saturate(0.8) brightness(0.96) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+  /* R1-etterslep: denne stod igjen som enkeltlags, rett ned og ren svart —
+     inne i panelet som na kaster varmt og mot hoyre. Samme behandling som
+     maskoten: farge fra de delte tokenene, lysvektor mot hoyre. */
+  filter: saturate(0.8) brightness(0.96)
+    drop-shadow(1px 2px 3px var(--dw-sh-contact))
+    drop-shadow(3px 7px 11px var(--dw-sh-mid));
 }
 .hjm-wicon[data-dim='true'] { filter: saturate(0.35) brightness(0.8); opacity: 0.75; }
 
 .hjm-feels { font-size: 16.5px; font-weight: 600; color: var(--dw-ink-panel-hi); margin-top: 6px; }
+/* Portdom 23: vaertilstanden staar PAA foles-som-linjen, dempet — den er
+   reell data, men underordnet tallet. Handlingsdelen («sjekk antrekket for
+   dere gar ut») er borte; knappen rett under sier nettopp det. */
+.hjm-cond { font-weight: 500; color: var(--dw-ink-panel-mid); }
 .hjm-note {
   font-size: 14.5px;
   line-height: 1.5;
@@ -301,7 +303,7 @@
   /* Skyggen bor HER — på laget som ALDRI transformeres. Ligger den inne i det
      skalerte laget, presses offset og blur sammen, og skyggen «puster» selv om
      lyset står helt stille (portdom 22). */
-  filter: drop-shadow(var(--hjm-mascot-shadow));
+  filter: var(--hjm-mascot-shadow);
 }
 .hjm-mascot-anchor[data-compact='true'] { width: 188px; top: -140px; }
 @media (max-height: 700px) {
@@ -512,7 +514,7 @@
   border-radius: var(--dw-r-raised);
   background: var(--dw-raised);
   padding: 13px 15px;
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--hjm-shadow-prev);
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-depth-selected);
 }
 .hjm-prev .hjm-p-label { font-size: 12.5px; font-weight: 700; color: var(--dw-ink-low); letter-spacing: 0.04em; }
 .hjm-prev .hjm-p-text { font-size: 14.5px; color: var(--dw-ink-mid); margin-top: 3px; line-height: 1.45; }
@@ -535,7 +537,7 @@
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  box-shadow: var(--hjm-shadow-cta);
+  box-shadow: var(--dw-depth-action);
 }
 .hjm-cta:active:not(:disabled) { background: var(--dw-accent-pressed); transform: translateY(1px); }
 .hjm-cta:disabled { opacity: 0.5; cursor: default; }
@@ -585,7 +587,7 @@
   align-items: center;
   gap: 12px;
   min-height: 44px;
-  box-shadow: var(--hjm-shadow-strip);
+  box-shadow: var(--dw-depth-raised);
 }
 .hjm-strip[data-nuance='clear'] { background: var(--dw-w-clear); --hjm-nuance: var(--dw-w-clear); }
 .hjm-strip[data-nuance='cloudy'] { background: var(--dw-w-cloudy); --hjm-nuance: var(--dw-w-cloudy); }
@@ -643,7 +645,7 @@
   background: linear-gradient(178deg, color-mix(in srgb, var(--dw-canvas-glow) 45%, transparent) 0%, var(--dw-raised) 14%);
   background-color: var(--dw-raised);
   border-radius: var(--dw-r-panel); /* 20px — samme tall som mocken, se filhode */
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--hjm-shadow-lift);
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-depth-raised);
 }
 .hjm-rows::before {
   content: '';
@@ -715,7 +717,7 @@
      nødvendig, men ikke tilstrekkelig — platen bak måtte følge temaet. */
   background: var(--dw-plate);
   border: 1px solid var(--dw-plate-kant);
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.22) inset, var(--hjm-shadow-thumb);
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.22) inset, var(--dw-depth-selected);
   display: grid;
   place-items: center;
   color: var(--dw-ink-mid);

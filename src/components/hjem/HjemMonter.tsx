@@ -887,7 +887,7 @@ export function HjemMonter({
           nuance={nuance}
           tempC={now?.tempC ?? null}
           feelsLikeC={now?.feelsLikeC ?? null}
-          noteText={now ? `${conditionLabel} — sjekk antrekket før dere går ut.` : 'Henter vær…'}
+          conditionText={now ? conditionLabel : null}
           weatherIconSrc={weatherIconSrc}
           weatherIconAlt={conditionLabel}
           freshnessLabel={freshnessLine.label}
