@@ -85,7 +85,23 @@
    toppkanten (mock: mascot top:50px, panel margin-top:130px, komprimert til
    108px i innholdstunge tilstander). Uten maskot (resultat-stripen) trenger
    den bare mockens egen 14px toppmargin. */
-.hjm-panel-slot { position: relative; flex: none; margin-top: 14px; }
+/* SLOTEN APNER SEG, den hopper ikke. Vartilstanden er 329 px og
+   scan-tilstanden 276 — 53 px forskjell som slo inn momentant i selve
+   trykkoyeblikket. Et instrument som endrer storrelse i det du trykker,
+   leser som en ny side; en malt, eased endring leser som samme apparat i
+   arbeid (portdom 24 om panelapningen).
+   min-height holder gulvet slik at ingenting KLIPPES, mens transitionen
+   gjor selve endringen synlig som bevegelse i stedet for et sprang. */
+.hjm-panel-slot {
+  position: relative;
+  flex: none;
+  margin-top: 14px;
+  min-height: 329px;
+  transition: min-height var(--dw-m-bow-in) var(--dw-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hjm-panel-slot { transition: none; }
+}
 .hjm-panel-slot[data-with-mascot='true'] { margin-top: 130px; }
 .hjm-panel-slot[data-with-mascot='true'][data-compact='true'] { margin-top: 108px; }
 .hjm-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
@@ -307,7 +323,11 @@
   transform: rotate(0deg) scaleY(1);
   transition: transform var(--dw-m-bow-in) var(--dw-ease);
 }
-.hjm-mascot-pose[data-compact='true'][data-pose='curious'] {
+/* Boyningen gates pa POSEN, ikke pa compact. For var den bundet til den
+   kompakte konteksten, og da matte scanning ogsa bytte geometri — maskoten
+   hoppet 10 px opp, 17 px til hoyre og krympet 17 px i selve trykkoyeblikket.
+   Eieren sa det med oyet: «bildet flytter plass». */
+.hjm-mascot-pose[data-pose='curious'] {
   transform: rotate(1.2deg) scaleY(0.975);
 }
 .hjm-mascot-pose[data-animate='false'] { transition: none; }

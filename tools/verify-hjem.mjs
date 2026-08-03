@@ -117,9 +117,27 @@ try {
     const prover = await page.evaluate(async () => {
       const ut = [];
       const norm = document.querySelector('.hjm-mascot-normal');
+      /* Ankeret er det som FLYTTER SEG. Bildene ligger inset:0 inni det og
+         rapporterer alltid 0 — porten min besto derfor pa fravaer selv mens
+         eieren sa maskoten hoppe 10 px opp og 17 px til hoyre. Tredje gang
+         samme feilklasse: mal det oyet ser, ikke det som er lettest a lese. */
+      const anker = document.querySelector('.hjm-mascot-anchor');
       const cur = document.querySelector('.hjm-mascot-curious');
       const beveger = norm?.parentElement ?? norm;
       const panel = document.querySelector('.hjm-panel-slot');
+      /* BASELINE FOR TRYKKET. Uten den er en endring som skjer I selve
+         trykkoyeblikket usynlig: forste rAF-prove kommer etter at layouten
+         allerede har skiftet, og porten melder «1 posisjon» mens eieren ser
+         maskoten hoppe. */
+      {
+        const a = anker.getBoundingClientRect();
+        ut.push({ transform: getComputedStyle(beveger).transform,
+          oNorm: Number(getComputedStyle(norm).opacity),
+          oCur: cur ? Number(getComputedStyle(cur).opacity) : 0,
+          top: Math.round(a.top), left: Math.round(a.left), bredde: Math.round(a.width),
+          panelH: panel.offsetHeight,
+          flater: document.querySelectorAll('[data-screen]:not([hidden])').length || 1 });
+      }
       const t0 = performance.now();
       window.__t0 = t0;
       document.querySelector('.hjm-cta').click();   // aktiv, verifisert av port 0
@@ -130,7 +148,9 @@ try {
             transform: cs.transform,
             oNorm: Number(getComputedStyle(norm).opacity),
             oCur: cur ? Number(getComputedStyle(cur).opacity) : 0,
-            top: norm.offsetTop, left: norm.offsetLeft,
+            top: Math.round(anker.getBoundingClientRect().top),
+            left: Math.round(anker.getBoundingClientRect().left),
+            bredde: Math.round(anker.getBoundingClientRect().width),
             panelH: panel.offsetHeight,
             flater: document.querySelectorAll('[data-screen]:not([hidden])').length || 1,
           });
@@ -141,7 +161,7 @@ try {
       return ut;
     });
 
-    const posisjoner = new Set(prover.map((p) => `${p.top}/${p.left}`)).size;
+    const posisjoner = new Set(prover.map((p) => `${p.top}/${p.left}/${p.bredde}`)).size;
     const vinklerAlle = [...new Set(prover.map((p) => vinkel(p.transform).toFixed(2)))];
     const boyerSeg = vinklerAlle.length > 1;          // FORUTSETNING: noe skjer
     port('1. maskoten bøyer seg OG står forankret', boyerSeg && posisjoner === 1,
@@ -173,27 +193,51 @@ try {
       `${[...new Set(prover.map((p) => p.flater))].join('/')} samtidige flater`);
 
     // ── 6. stillstand ─────────────────────────────────────────────────────
+    // Første utgave sammenlignet ÉN streng bygget av alle elementene. Da leste
+    // porten resultatøyeblikket som «bevegelse»: scanline og radene forsvinner
+    // fra DOM-en når svaret kommer, strengen endrer seg, og porten strøk på
+    // selve hendelsen den skulle måle stillheten FØR. Nå spores hvert element
+    // for seg, og bare elementer som finnes i BEGGE nabobilder sammenlignes —
+    // da er montering og avmontering ikke bevegelse.
     const stille = await page.evaluate(async () => {
+      const VELG = ['.hjm-mascot', '.hjm-scanline', '.hjm-panel-slot', '.hjm-rows', '.hjm-synth'];
+      const se = () => VELG.flatMap((v) => [...document.querySelectorAll(v)].map((e, i) => {
+        const c = getComputedStyle(e);
+        return { id: `${v}#${i}`, s: `${c.transform}|${c.opacity}` };
+      }));
       const ut = [];
-      const se = () => [...document.querySelectorAll('.hjm-mascot, .hjm-scanline, .hjm-panel-slot, .hjm-rows, .hjm-synth')]
-        .map((e) => { const c = getComputedStyle(e); return c.transform + '|' + c.opacity; }).join(' ');
       await new Promise((res) => {
         const tikk = () => {
           const t = performance.now() - window.__t0;
-          if (t >= 2000) ut.push({ t: Math.round(t), s: se() });
-          if (t < 3400) requestAnimationFrame(tikk); else res();
+          ut.push({ t: Math.round(t), v: se() });
+          if (t < 3600) requestAnimationFrame(tikk); else res();
         };
         requestAnimationFrame(tikk);
       });
       return ut;
     });
-    let sisteEndring = stille.length ? stille[0].t : 0;
-    for (let i = 1; i < stille.length; i += 1) if (stille[i].s !== stille[i - 1].s) sisteEndring = stille[i].t;
     // Appens egen scanlengde, ikke en antatt verdi.
     const scanMs = await page.evaluate(() => window.__scanDuration ?? 3200);
+    let sisteEndring = 0;
+    let bevegelserTotalt = 0;
+    for (let i = 1; i < stille.length; i += 1) {
+      if (stille[i].t > scanMs) break;               // etter svaret måler vi ikke
+      for (const e of stille[i].v) {
+        const f = stille[i - 1].v.find((x) => x.id === e.id);
+        if (!f || f.s === e.s) continue;             // nytt element ≠ bevegelse
+        bevegelserTotalt += 1;
+        sisteEndring = stille[i].t;
+      }
+    }
     const stillhet = scanMs - sisteEndring;
-    port(`6. ≥ ${MIN_STILLHET_MS} ms stillstand før resultatet`, stillhet >= MIN_STILLHET_MS,
-      `${stillhet} ms (siste bevegelse ${sisteEndring} ms)`);
+    // FORUTSETNING: porten skal ikke kunne bestå på fravær. Kom svaret aldri,
+    // eller beveget ingenting seg i det hele tatt, er «stillhet» meningsløst.
+    const rakkOver = stille.length > 0 && stille[stille.length - 1].t >= scanMs;
+    port(`6. ≥ ${MIN_STILLHET_MS} ms stillstand før resultatet`,
+      rakkOver && bevegelserTotalt > 0 && stillhet >= MIN_STILLHET_MS,
+      !rakkOver ? 'målevinduet dekket ikke svaret — ikke målt'
+        : bevegelserTotalt === 0 ? 'ingen bevegelse i det hele tatt — porten kan ikke bestå på fravær'
+          : `${stillhet} ms (siste av ${bevegelserTotalt} bevegelser: ${sisteEndring} ms)`);
 
     if (jsFeil.length) port('ingen JS-feil', false, jsFeil.join('; '));
   }

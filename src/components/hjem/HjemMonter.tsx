@@ -670,13 +670,17 @@ export function HjemMonter({
     return (
       <div className="hjem-monter">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
-        <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
+        <div className="hjm-panel-slot" data-with-mascot="true" data-compact="false">
           {/* Del 3 (nysgjerrig maskot under scannen): bøyer hodet ned og
               retter blikket mot scan-animasjonen under seg — se
               MascotPeek.tsx sin crossfade-dokumentasjon. Tilbake til
               'normal' skjer implisitt idet fasen forlater scanning/
               recalculating (andre grener kaller MascotPeek uten pose). */}
-          <MascotIdle compact pose="curious" reducedMotion={reducedMotion} />
+          {/* IKKE `compact` her: den kompakte geometrien (188px, top -140)
+              er en kompensasjon for tekstunge stale/offline-tilstander. Under
+              scanning kommer man RETT fra weather-ready, og et bytte av
+              geometri midt i boyningen leser som at maskoten hopper. */}
+          <MascotIdle pose="curious" reducedMotion={reducedMotion} />
           <ScanOverlay
             cityLabel={cityLabel}
             nuance={nuance}
