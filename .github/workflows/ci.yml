@@ -44,3 +44,12 @@ jobs:
 
       - name: E2E smoke
         run: npm run e2e
+
+      # Ni atferdsporter mot den BYGDE appen: maskoten star forankret gjennom
+      # CTA-trykket, panelet hopper ikke, krysstoningen dekker, handgli under
+      # 1 px, bevegelsen er interpolert, og det er stille for svaret kommer.
+      # Kravene er andeler og geometri, ikke bildetellinger, sa de skal tale en
+      # tregere runner enn utviklingsmaskinen. Stryker den her og ikke lokalt,
+      # er det terskelen som er feil — ikke noe a hoppe over.
+      - name: Hjem-porter
+        run: npm run verify:hjem

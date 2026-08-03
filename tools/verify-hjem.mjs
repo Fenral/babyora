@@ -167,9 +167,20 @@ try {
     port('1. maskoten bøyer seg OG står forankret', boyerSeg && posisjoner === 1,
       boyerSeg ? `${posisjoner} layoutposisjoner` : 'INGEN BØYNING — funksjonen finnes ikke');
 
+    // Samme frekvensfelle som port 5: «> 8 høyder» målte maskinen, ikke
+    // apningen. Låst (én høyde) er alltid godkjent; endrer den seg, må
+    // endringen være jevn — andel nye verdier blant prøvene der høyden faktisk
+    // beveger seg.
     const hoyder = [...new Set(prover.map((p) => p.panelH))];
-    port('2. instrumentet hopper ikke i høyde', hoyder.length === 1 || hoyder.length > 8,
-      `${hoyder.length} høyder (1 = låst, >8 = jevn åpning, 2-8 = HOPP)`);
+    const hEndrer = [];
+    for (let i = 1; i < prover.length; i += 1) if (prover[i].panelH !== prover[i - 1].panelH) hEndrer.push(i);
+    const hUnderveis = hEndrer.length
+      ? prover.slice(hEndrer[0], hEndrer[hEndrer.length - 1] + 1) : [];
+    const hAndel = hUnderveis.length > 1
+      ? new Set(hUnderveis.map((p) => p.panelH)).size / hUnderveis.length : 0;
+    port('2. instrumentet hopper ikke i høyde', hoyder.length === 1 || hAndel >= 0.5,
+      hoyder.length === 1 ? '1 høyde — låst'
+        : `${hoyder.length} høyder, andel ${hAndel.toFixed(2)} (krav ≥ 0,50, ellers HOPP)`);
 
     const minDekning = Math.min(...prover.map((p) => p.oNorm + p.oCur));
     const harPoseskifte = new Set(prover.map((p) => p.oCur.toFixed(2))).size > 1;
@@ -184,9 +195,30 @@ try {
     port(`4. rotasjon finnes OG håndgli ≤ ${MAKS_HANDGLI_PX} px`, roterer && verst <= MAKS_HANDGLI_PX,
       roterer ? gli.map(([n, v]) => `${n} ${v.toFixed(2)}`).join(', ') : 'INGEN ROTASJON å måle gli mot');
 
-    const vinkler = [...new Set(prover.map((p) => vinkel(p.transform).toFixed(2)))];
-    port('5. bevegelsen er interpolert, ikke et hopp', vinkler.length > 8,
-      `${vinkler.length} distinkte vinkler`);
+    // «Interpolert» er ikke et antall — det er en ANDEL. Et fast krav om > 8
+    // distinkte vinkler måler egentlig bildefrekvensen: på en treg maskin gir
+    // ekte interpolasjon 8 prøver og stryker, mens et hopp på en rask maskin
+    // gir 2 vinkler uansett hvor mange prøver som tas. Derfor måles andelen
+    // NYE vinkler blant prøvene mens bevegelsen faktisk pågår. Et hopp gir 2
+    // vinkler uansett frekvens; interpolasjon gir en ny verdi nesten hver
+    // prøve. Terskel 0,5 tåler halvert bildefrekvens uten å slippe hoppet
+    // gjennom. Minst 4 distinkte verdier kreves i tillegg, så et hopp med
+    // ett mellomsteg ikke kan bestå på et lite utvalg.
+    const iBevegelse = [];
+    for (let i = 1; i < prover.length; i += 1) {
+      const a = vinkel(prover[i - 1].transform).toFixed(2);
+      const b = vinkel(prover[i].transform).toFixed(2);
+      if (a !== b) iBevegelse.push(i);
+    }
+    const forste = iBevegelse[0] ?? 0;
+    const siste = iBevegelse[iBevegelse.length - 1] ?? 0;
+    const underveis = prover.slice(forste, siste + 1);
+    const vinkler = [...new Set(underveis.map((p) => vinkel(p.transform).toFixed(2)))];
+    const andel = underveis.length > 1 ? vinkler.length / underveis.length : 0;
+    port('5. bevegelsen er interpolert, ikke et hopp',
+      vinkler.length >= 4 && andel >= 0.5,
+      underveis.length < 2 ? 'ingen bevegelse å måle — porten kan ikke bestå på fravær'
+        : `${vinkler.length} vinkler på ${underveis.length} prøver (andel ${andel.toFixed(2)}, krav ≥ 0,50)`);
 
     port('7. kun én flate synlig gjennom momentet',
       new Set(prover.map((p) => p.flater)).size === 1 && prover[0].flater === 1,
