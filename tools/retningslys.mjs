@@ -106,14 +106,14 @@ const SETT = [
   ['proof', 'docs/design-notes/b1-proof/vinterdress.png'],
   ['proof', 'docs/design-notes/b1-proof/lue-m-ull.png'],
   ['proof', 'docs/design-notes/b1-proof/votter-tykke.png'],
-  ['app', 'public/monter/klippet/plagg-tykt-ullsett.png'],
-  ['app', 'public/monter/klippet/plagg-ullsokker.png'],
-  ['app', 'public/monter/klippet/plagg-ull-mellomlag.png'],
-  ['app', 'public/monter/klippet/plagg-vinterdress.png'],
-  ['app', 'public/monter/klippet/plagg-balaklava.png'],
-  ['app', 'public/monter/klippet/plagg-langermet-ullbody.png'],
-  ['app', 'public/monter/klippet/plagg-cardigan.png'],
-  ['app', 'public/monter/klippet/plagg-dunjakke.png'],
+  ['app', 'public/monter/plagg-tykt-ullsett.png'],
+  ['app', 'public/monter/plagg-ullsokker.png'],
+  ['app', 'public/monter/plagg-ull-mellomlag.png'],
+  ['app', 'public/monter/plagg-vinterdress.png'],
+  ['app', 'public/monter/plagg-balaklava.png'],
+  ['app', 'public/monter/plagg-langermet-ullbody.png'],
+  ['app', 'public/monter/plagg-cardigan.png'],
+  ['app', 'public/monter/plagg-dunjakke.png'],
 ];
 
 const rader = [];

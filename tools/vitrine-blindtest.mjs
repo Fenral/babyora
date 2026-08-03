@@ -37,16 +37,16 @@ const UT = 'tools/garment-audit';
 /** Blandet sett: begge batcher, seks samtidig, inkludert krem og marine. */
 const SETT = [
   { fil: 'docs/design-notes/b1-proof/ullsett-tykt.png', batch: 'proof' },
-  { fil: 'public/monter/klippet/plagg-ullsokker.png', batch: 'app' },
+  { fil: 'public/monter/plagg-ullsokker.png', batch: 'app' },
   { fil: 'docs/design-notes/b1-proof/ull-mellomlag-tykt.png', batch: 'proof' },
-  { fil: 'public/monter/klippet/plagg-vinterdress.png', batch: 'app' },
+  { fil: 'public/monter/plagg-vinterdress.png', batch: 'app' },
   { fil: 'docs/design-notes/b1-proof/lue-m-ull.png', batch: 'proof' },
-  { fil: 'public/monter/klippet/plagg-balaklava.png', batch: 'app' },
-  { fil: 'public/monter/klippet/plagg-tykt-ullsett.png', batch: 'app' },
+  { fil: 'public/monter/plagg-balaklava.png', batch: 'app' },
+  { fil: 'public/monter/plagg-tykt-ullsett.png', batch: 'app' },
   { fil: 'docs/design-notes/b1-proof/votter-tykke.png', batch: 'proof' },
-  { fil: 'public/monter/klippet/plagg-ull-mellomlag.png', batch: 'app' },
+  { fil: 'public/monter/plagg-ull-mellomlag.png', batch: 'app' },
   { fil: 'docs/design-notes/b1-proof/vinterdress.png', batch: 'proof' },
-  { fil: 'public/monter/klippet/plagg-langermet-ullbody.png', batch: 'app' },
+  { fil: 'public/monter/plagg-langermet-ullbody.png', batch: 'app' },
   { fil: 'docs/design-notes/b1-proof/ullsokker.png', batch: 'proof' },
 ];
 
