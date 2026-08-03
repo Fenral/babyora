@@ -1,0 +1,117 @@
+{
+  "_": "VEDTAKSREGISTERET. Et vedtak er ikke ferdig for det finnes en sjekk som feller HELE KLASSEN, ikke instansen. Prosa dekker ikke de andre stedene og melder ikke fra nar den brytes - derfor forfaller rettinger og vi moter dem igjen. Handheves av src/styles/__tests__/vedtak-register.test.ts, som kjorer i CI. Status 'laast' krever at handhevesAv peker pa en test som FINNES. Antall laste kan bare ga opp: se laastGulv.",
+  "laastGulv": 9,
+  "vedtak": [
+    {
+      "id": "dybdekontrakt",
+      "vedtak": "Flater henter hoydeniva fra var(--dw-depth-*). Strukturen defineres en gang; temaene overstyrer kun fargetokens.",
+      "kilde": "eierfunn «den lyse foles flatere enn den morke» + portdom",
+      "handhevesAv": "src/styles/__tests__/design-tokens-v2.depth.test.ts",
+      "status": "laast",
+      "merknad": "Dekker strukturen. Dekker IKKE fortegnet: se vedtaket 'skygge-fortegn'."
+    },
+    {
+      "id": "dybdekontrakt-forbrukes",
+      "vedtak": "Hjem-skjermens flater forbruker kontrakten i stedet for egne per-tema skyggestabler.",
+      "kilde": "R1 2026-08-03 - kontrakten hadde null forbrukere i src/",
+      "handhevesAv": "src/components/hjem/__tests__/hjem-monter.p8-light-mode.test.ts",
+      "status": "laast"
+    },
+    {
+      "id": "lys-symmetri",
+      "vedtak": "@media (prefers-color-scheme: light) og :root[data-theme=\"light\"] ma deklarere NOYAKTIG de samme tokenene.",
+      "kilde": "eierfunn: morke plaggplater pa krem liste, rettet en gang og kom tilbake gjennom den andre inngangen",
+      "handhevesAv": "src/styles/__tests__/design-tokens-v2.lys-symmetri.test.ts",
+      "status": "laast"
+    },
+    {
+      "id": "bevegelsestokens",
+      "vedtak": "Bevegelse bruker var(--dw-m-*) og var(--dw-ease). Ingen hardkodede millisekunder eller kurver.",
+      "kilde": "portdom 25 + ratchet mot teknisk gjeld",
+      "handhevesAv": "src/styles/__tests__/design-tokens-v2.motion.test.ts",
+      "status": "laast"
+    },
+    {
+      "id": "fokusring",
+      "vedtak": "Fokusringen bruker --dw-focus-panel pa petrol-panelet og den papirkalibrerte pa lerretet.",
+      "kilde": "Impeccable-funn: en fokusring var «rettet» ved a slette den",
+      "handhevesAv": "src/styles/__tests__/design-tokens-v2.focus.test.ts",
+      "status": "laast"
+    },
+    {
+      "id": "maskot-forankret",
+      "vedtak": "Maskoten star forankret gjennom CTA-trykket: ankeret eier geometrien, positurlaget bevegelsen, bildene kun opasitet.",
+      "kilde": "eierfunn «bildet flytter plass» 2026-08-03",
+      "handhevesAv": "tools/verify-hjem.mjs",
+      "status": "laast"
+    },
+    {
+      "id": "krysstoning",
+      "vedtak": "De to maskotposene dekker alltid minst 0,999 til sammen - aldri et glimt av bakgrunnen.",
+      "kilde": "eierfunn «bildet flimrer»",
+      "handhevesAv": "tools/verify-hjem.mjs",
+      "status": "laast"
+    },
+    {
+      "id": "stillstand-for-svar",
+      "vedtak": "Minst 500 ms full stillstand for resultatet kommer.",
+      "kilde": "eierkrav",
+      "handhevesAv": "tools/verify-hjem.mjs",
+      "status": "laast"
+    },
+    {
+      "id": "portdom-23-en-linje",
+      "vedtak": "Vaertilstanden star pa foles-som-linjen. Handlingsdelen «sjekk antrekket for dere gar ut» er fjernet - knappen rett under sier det.",
+      "kilde": "portdom 23 (B1), portert til appen 2026-08-03 etter eierfunn",
+      "handhevesAv": null,
+      "status": "uportert-sjekk",
+      "merknad": "Selve endringen ER gjort. Det som mangler er sjekken som hindrer at handlingsdelen kommer tilbake."
+    },
+    {
+      "id": "skygge-fortegn",
+      "vedtak": "Enhver --dw-sh-*, komposittert over --dw-canvas, skal ha LAVERE luminans enn lerretet. En skygge som lysner er en glod.",
+      "kilde": "Impeccable 2026-08-03: --dw-depth-action er 3,3x LYSERE enn lerretet i mork modus, og dybdetesten melder gront pa at den er «dempet»",
+      "handhevesAv": null,
+      "status": "uportert-sjekk",
+      "merknad": "BLOKKERER. Dempingen pa 25 % kunne aldri lose dette - fortegnet er feil, ikke styrken."
+    },
+    {
+      "id": "kontrakt-har-forbruker",
+      "vedtak": "En test som sjekker at et token EKSISTERER, ma ogsa sjekke at noe FORBRUKER det.",
+      "kilde": "dybdekontrakten hadde null forbrukere; portdom 27s --dw-lys-vinkel/--dw-kant-key/--dw-kant-fill har det fortsatt",
+      "handhevesAv": null,
+      "status": "uportert-sjekk"
+    },
+    {
+      "id": "panel-tekstrampe",
+      "vedtak": "Tekst pa det tema-konstante petrol-panelet bruker panel-tekstrampen, aldri --dw-ink-* fra espresso-rampen.",
+      "kilde": "Impeccable 2026-08-03: tre regler gir 1,78-2,88:1 i lys modus, alle i tilstandene som baerer darlige nyheter",
+      "handhevesAv": null,
+      "status": "uportert-sjekk",
+      "merknad": "BLOKKERER. p8-light-mode-testen greper etter hex-litteraler og er derfor strukturelt blind for var()-baserte feil."
+    },
+    {
+      "id": "port-mutasjonstestes",
+      "vedtak": "En ny port far ikke melde gront for den er mutasjonstestet: injiser feilen den skal fange, og se den stryke.",
+      "kilde": "sju porter som ikke kunne stryke - se laerdom-hjem-2026-08-03.md",
+      "handhevesAv": null,
+      "status": "uportert-sjekk",
+      "merknad": "Kan neppe handheves maskinelt. Handheves som rutine: mutasjonsresultatet limes inn i commit-meldingen, slik det ble gjort for port 5 og 6."
+    },
+    {
+      "id": "skjermbilde-safe-area",
+      "vedtak": "Hvert skjermbilde som skal vurderes av et menneske ma ha safe-area simulert.",
+      "kilde": "eierfunn «jeg trodde avataren var ca pa midten» - desktop-Chromium gir env(safe-area-inset-top)=0, sa bildene manglet 20-59 px",
+      "handhevesAv": "tools/skjermbilde-hjem.mjs",
+      "status": "laast"
+    },
+    {
+      "id": "cta-over-fold",
+      "vedtak": "CTA-en skal vaere over fold definert som 100dvh minus safe areas og tabbar, med minst 12 px klaring. Gjelder ogsa 375x667.",
+      "kilde": "portdom 23",
+      "handhevesAv": null,
+      "status": "brutt",
+      "merknad": "BLOKKERER. Malt -48 px pa iPhone SE. Portdom 23s gjenstaende steg: b) stram marginene, d) skjul trust-linjen ved lav hoyde, c) flytt Lillian-linjen inn i panelet."
+    }
+  ]
+}
