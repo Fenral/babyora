@@ -119,6 +119,14 @@
   overflow: hidden; /* D1: scan-koreografien klippes av panelet, aldri av flate lister */
   color: var(--dw-ink-panel-hi); /* tema-konstant instrument-tekst (lys-modus-regelen fra eiers telefonfunn) */
   box-shadow: var(--hjm-shadow-panel);
+  /* …og av samme grunn en tema-konstant FOKUSRING. Panelets bakteppe er
+     petrol i begge temaer, så knappene inni (.hjm-loc, aktivitetsvalget)
+     skal ha instrumentringen — ikke den papirkalibrerte. Ombindingen skjer
+     på custom-property-nivå, så .hjem-monter :focus-visible under arver
+     riktig verdi uten at regelen selv vet om panelet.
+     NB: .hjm-strip gjør IKKE dette. Den er selv en <button> på krem-
+     lerretet — ringen rundt den ligger på canvas, ikke på petrol. */
+  --dw-focus: var(--dw-focus-panel);
 }
 .hjm-panel[data-nuance='clear'] { background: var(--dw-w-clear); --hjm-nuance: var(--dw-w-clear); }
 .hjm-panel[data-nuance='cloudy'] { background: var(--dw-w-cloudy); --hjm-nuance: var(--dw-w-cloudy); }
@@ -649,8 +657,13 @@
   border-radius: 13px;
   flex: none;
   object-fit: cover;
-  background: #3A2A1A;
-  border: 1px solid rgba(242, 192, 138, 0.16);
+  /* TEMA-BUNDET PLATE. Sto hardkodet #3A2A1A og var derfor mørk i BEGGE
+     temaer — 12,64:1 mot lys canvas. Da de 41 plaggene ble klippet fri av sin
+     innbakte bakgrunn, ble resultatet usynlig for eieren: garderoben marsjerte
+     fortsatt nedover den kremfargede lista som mørke firkanter. Utklippet var
+     nødvendig, men ikke tilstrekkelig — platen bak måtte følge temaet. */
+  background: var(--dw-plate);
+  border: 1px solid var(--dw-plate-kant);
   box-shadow: 0 1px 0 rgba(242, 192, 138, 0.22) inset, var(--hjm-shadow-thumb);
   display: grid;
   place-items: center;

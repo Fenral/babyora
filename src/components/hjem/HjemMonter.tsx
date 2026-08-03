@@ -21,12 +21,27 @@
  * Ved mount: `decideScanEntry` (scan-orchestration.ts, rent/testet) avgjør
  * om et EKSAKT cachet resultat (samme barn+dag+sted+aktivitet+motorversjon)
  * finnes → hopp rett til resultatet, ingen koreografi i det hele tatt.
- * Ellers venter skjermen på trykk på «Finn dagens antrekk»; HVERT trykk
- * spiller nå den FULLE 3,2s-koreografien — eiers begrunnelse: «slik den er
- * nå er det ingen som ser det». Mikropasset er pensjonert (se
- * scan-orchestration.ts sin filhode), og åpningsklatringen (OpeningSequence)
- * er fjernet i samme runde — Hjem er nå statisk til CTA-trykk (se
+ * Ellers venter skjermen på trykk på «Finn dagens antrekk»; åpningsklatringen
+ * (OpeningSequence) er fjernet — Hjem er statisk til CTA-trykk (se
  * docs/design-notes/aapningssekvens-2026-08-01.md sin eier-override-notis).
+ *
+ * ── Eier-override v4 (2026-08-03): FINGERPRINTET styrer seremonien ────────
+ * v3-regelen «HVERT trykk spiller full 3,2s» er opphevet (PRODUCT.md,
+ * «Owner-override v4»): seremonien spilles når Babyora faktisk gjør NYTT
+ * arbeid, ikke ved hvert trykk. Maskineriet er det som allerede fantes —
+ * `computeScanResultKey` (lib/scan/result-key.ts) er en deterministisk
+ * fingerprint over plaggutfallet + værgrunnlaget. Det nye er at nøkkelen
+ * LESES FØR trykket (`planCta` under) og velger både TEKST og VEI:
+ *   ukjent nøkkel → «Finn dagens antrekk» → full 3,2s-koreografi
+ *   kjent nøkkel  → «Vis dagens antrekk»  → rett til det cachede resultatet
+ * Linja under CTA-en forteller hvilken vei du er på (CTA_*_LINE).
+ * Oppslaget er et NØKKELOPPSLAG, ikke én plass: `sessionResultKeys` husker
+ * hver nøkkel appen har landet i denne økten, i tillegg til den ene
+ * persisterte slotten i scan-cache-store. Bytter man aktivitet fram og
+ * tilbake, treffer man derfor svaret appen allerede holder — selv om
+ * slotten i mellomtiden er overskrevet av den andre aktiviteten.
+ * Eksplisitt «Beregn på nytt» (result-stale, ikke identitets-endring)
+ * spiller fortsatt full seremoni; inline omberegning beholder 220 ms.
  *
  * ── Aktivitets-toggle → auto-rekalkulering ───────────────────────────────
  * En identitetsendring MENS en fase allerede er etablert (kun aktivitet kan
@@ -62,6 +77,7 @@ import {
   sameScanIdentity,
   WOOL_LAYERS_ENGINE_VERSION,
   type ScanIdentity,
+  type ScanStaleReason,
 } from '../../lib/scan/types.js';
 import { computeScanResultKey } from '../../lib/scan/result-key.js';
 import type { Recommendation } from '../../lib/wool-layers/types.js';
@@ -97,6 +113,13 @@ import {
   type ScanHapticCue,
   type ScanHapticEvent,
 } from './scan-orchestration.js';
+import {
+  planCta,
+  planRecalc,
+  rememberResultKey,
+  resultKeyScope,
+  sessionResultKeys,
+} from './cta-fingerprint.js';
 import { buildAdjustPrefill } from './adjust-prefill.js';
 import type { FinnAntrekkPrefill } from '../../screens/finn-antrekk-prefill.js';
 import { resolveSwapTarget } from './swap-row.js';
@@ -256,6 +279,11 @@ export function HjemMonter({
     engineVersion: WOOL_LAYERS_ENGINE_VERSION,
   }), [childId, lat, lon, activity]);
 
+  /** v4: nøkkelminnet er scopet til barn+dag — aktivitet/sted er BEVISST
+   *  utenfor, siden det er nettopp de to som kan bytte fram og tilbake og
+   *  likevel lande på et svar appen allerede holder. */
+  const resultKeyMemoryScope = resultKeyScope(childId, identity.dateKey);
+
   const currentResultKey = useMemo(() => {
     if (recommendation === null || now === null) return null;
     return computeScanResultKey(recommendation, {
@@ -274,6 +302,23 @@ export function HjemMonter({
   useEffect(() => {
     currentResultKeyRef.current = currentResultKey;
   }, [currentResultKey]);
+
+  // ── v4: nøkkelen leses FØR trykket ───────────────────────────────────────
+  // Dette er hele poenget med eier-override v4: `ctaPlan` er beregnet på
+  // render-tid, av fingerprinten som allerede fantes, og bestemmer både
+  // knappeteksten, linja under den, OG hvilken vei `handleFindOutfitTap`
+  // tar. Slottet er ETT oppslag (barnets persisterte svar); `sessionResult-
+  // Keys` er resten av øktens nøkler — sammen utgjør de nøkkeloppslaget.
+  const daySlot = slots[identity.childId] ?? null;
+  const persistedResultKey = daySlot !== null && daySlot.identity.dateKey === identity.dateKey
+    ? daySlot.resultKey
+    : null;
+  const ctaPlan = planCta(
+    currentResultKey,
+    persistedResultKey,
+    sessionResultKeys,
+    resultKeyMemoryScope,
+  );
 
   // Siste kjente værmåling — kun brukt til DISPLAY i offline-tilstanden.
   // Motorens uendrede engine-kjede får ALDRI denne (den ser bare det
@@ -319,6 +364,15 @@ export function HjemMonter({
    * `completeScan` aldri).
    */
   const [awaitingScanData, setAwaitingScanData] = useState(false);
+  /**
+   * v4: 'recalculating' har ikke lenger ÉN lengde. Inline justering
+   * (aktivitets-toggle) er fortsatt 220 ms, mens eksplisitt «Beregn på nytt»
+   * spiller den fulle koreografien — og da må ScanOverlay få den SAMME
+   * lengden som timeren, ellers stopper scanlinjen etter 220 ms og panelet
+   * blir stående dødt i tre sekunder. Settes ved hver start av en
+   * omberegning (se planRecalc-kallerne under).
+   */
+  const [recalcDurationMs, setRecalcDurationMs] = useState<number>(QUICK_RECALC_DURATION_MS);
 
   const clearTimer = useCallback(() => {
     timerCancelRef.current?.();
@@ -387,6 +441,9 @@ export function HjemMonter({
     setIsFresh(true);
     // Landing: prepare() rett før medium (duel §3 — "prepare() først").
     void hapticPrepare().then(() => { void impactMedium(); });
+    // v4: nøkkelen appen nettopp landet er nå et svar den HOLDER — neste
+    // gang den dukker opp skal seremonien ikke spilles på nytt.
+    rememberResultKey(sessionResultKeys, resultKeyMemoryScope, resultKey);
     scan.scanCompleted(resultKey);
     // Eier-override v3: ETHVERT trykk spiller nå den fulle koreografien —
     // markFullScanPlayedEver() kalles derfor ubetinget (feltet selv leses
@@ -398,7 +455,7 @@ export function HjemMonter({
       completedAt: Date.now(),
       scanPlayedInFullToday: true,
     });
-  }, [scan, commitSlot, identity, markFullScanPlayedEver]);
+  }, [scan, commitSlot, identity, markFullScanPlayedEver, resultKeyMemoryScope]);
 
   // Auto-fullfører scanningen (uten et nytt trykk) idet motoren ENDELIG har
   // et resultat, hvis 3,2s-grensen rakk å gå ut mens vi ventet (se
@@ -408,13 +465,22 @@ export function HjemMonter({
     completeScan();
   }, [awaitingScanData, currentResultKey, completeScan]);
 
-  const completeRecalc = useCallback(() => {
+  /**
+   * `withLanding` er sann kun for den EKSPLISITTE «Beregn på nytt»-veien
+   * (planRecalc → ceremony: true), som spiller den fulle koreografien og
+   * derfor skal lande med samme haptikk som en vanlig scan. Den inline
+   * 220 ms-omberegningen (aktivitets-toggle) har bevisst ingen haptikk —
+   * se scan-orchestration.ts sin QUICK_RECALC_DURATION_MS-kommentar.
+   */
+  const completeRecalc = useCallback((withLanding = false) => {
     const resultKey = currentResultKeyRef.current;
     if (resultKey === null) {
       scan.recalcFailed();
       return;
     }
     setIsFresh(true);
+    if (withLanding) void hapticPrepare().then(() => { void impactMedium(); });
+    rememberResultKey(sessionResultKeys, resultKeyMemoryScope, resultKey);
     scan.recalcCompleted(resultKey);
     commitSlot({
       identity,
@@ -422,7 +488,7 @@ export function HjemMonter({
       completedAt: Date.now(),
       scanPlayedInFullToday: slots[identity.childId]?.scanPlayedInFullToday === true,
     });
-  }, [scan, commitSlot, identity, slots]);
+  }, [scan, commitSlot, identity, slots, resultKeyMemoryScope]);
 
   // ── Mount / identitetsendring ────────────────────────────────────────────
   useEffect(() => {
@@ -438,6 +504,9 @@ export function HjemMonter({
           // umiddelbar visning skal ALDRI trigge inn-animasjonen.
           scan.scanStarted(identity);
           scan.scanCompleted(decision.resultKey);
+          // v4: også et svar appen holder — legges i nøkkelminnet slik at et
+          // senere aktivitetsbytte som lander på samme antrekk gjenkjennes.
+          rememberResultKey(sessionResultKeys, resultKeyMemoryScope, decision.resultKey);
         }
       }
       seenIdentityRef.current = identity;
@@ -448,25 +517,72 @@ export function HjemMonter({
       setPreviousActivity(seenIdentityRef.current.activity as MonterActivity);
       setPreviousResultCount(recommendation ? deriveResultRows(recommendation).length : null);
       seenIdentityRef.current = identity;
+      // Inline justering — 220 ms, uendret av v4. Lengden settes eksplisitt
+      // slik at en tidligere «Beregn på nytt» ikke etterlater 3,2 s her.
+      setRecalcDurationMs(QUICK_RECALC_DURATION_MS);
       scan.identityChanged(identity, { autoRecalculate: true });
       runTimer(QUICK_RECALC_DURATION_MS, completeRecalc);
     }
-  }, [identity, now, scan, slots, runTimer, completeRecalc, recommendation]);
+  }, [identity, now, scan, slots, runTimer, completeRecalc, recommendation, resultKeyMemoryScope]);
+
+  /**
+   * v4 «reveal»-veien: fingerprinten er kjent, altså holder appen allerede
+   * svaret. Ingen timer, ingen avhukings-haptikk, ingen `.is-fresh` (et
+   * cachet svar skal stå der, ikke animere inn — samme regel som den
+   * cachede gjenåpningen i mount-effekten). Landings-haptikken er den
+   * SAMME som en ekte scan har, fordi resultatet står stabilt i samme
+   * øyeblikk: ett følt signal, ikke to (art bible, fullføringsmarkøren).
+   */
+  const revealCachedResult = useCallback((resultKey: string) => {
+    clearTimer();
+    clearHapticTimers();
+    setAwaitingScanData(false);
+    setIsFresh(false);
+    void hapticPrepare().then(() => { void impactMedium(); });
+    scan.scanStarted(identity);
+    scan.scanCompleted(resultKey);
+    rememberResultKey(sessionResultKeys, resultKeyMemoryScope, resultKey);
+    commitSlot({
+      identity,
+      resultKey,
+      completedAt: Date.now(),
+      scanPlayedInFullToday: slots[identity.childId]?.scanPlayedInFullToday === true,
+    });
+  }, [clearTimer, clearHapticTimers, scan, identity, commitSlot, slots, resultKeyMemoryScope]);
 
   const handleFindOutfitTap = useCallback(() => {
-    if (currentResultKeyRef.current === null) return;
-    // Eier-override v3: HVERT trykk spiller den fulle 3,2s-koreografien —
-    // ingen playFull-forgrening igjen (mikropasset er pensjonert).
+    const resultKey = currentResultKeyRef.current;
+    if (resultKey === null) return;
+    // Eier-override v4: fingerprinten — lest FØR trykket, se ctaPlan over —
+    // avgjør veien. Kjent nøkkel → rett til svaret. Ukjent nøkkel → full
+    // 3,2s-koreografi, uendret fra v3.
+    if (ctaPlan.path === 'reveal') {
+      revealCachedResult(resultKey);
+      return;
+    }
     setAwaitingScanData(false);
     scan.scanStarted(identity);
     runPreLandingHapticSchedule(fullScanHapticSchedule(FULL_SCAN_DURATION_MS));
     runTimer(FULL_SCAN_DURATION_MS, completeScan);
-  }, [identity, scan, runTimer, completeScan, runPreLandingHapticSchedule]);
+  }, [ctaPlan, revealCachedResult, identity, scan, runTimer, completeScan, runPreLandingHapticSchedule]);
 
-  const handleStaleCtaTap = useCallback(() => {
+  /**
+   * v4: «Beregn på nytt» (vær-basis / mislykket omberegning) er en eksplisitt
+   * bestilling av nytt arbeid og spiller full seremoni; «Se antrekk for
+   * vogn» (identitets-endring brukeren nettopp gjorde) er en inline
+   * justering og beholder 220 ms. Se planRecalc.
+   */
+  const handleStaleCtaTap = useCallback((reason: ScanStaleReason) => {
+    const plan = planRecalc(reason);
+    setRecalcDurationMs(plan.durationMs);
     scan.recalcStarted();
-    runTimer(QUICK_RECALC_DURATION_MS, completeRecalc);
-  }, [scan, runTimer, completeRecalc]);
+    if (plan.ceremony) {
+      runPreLandingHapticSchedule(fullScanHapticSchedule(plan.durationMs));
+      runTimer(plan.durationMs, () => completeRecalc(true));
+      return;
+    }
+    runTimer(plan.durationMs, completeRecalc);
+  }, [scan, runTimer, completeRecalc, runPreLandingHapticSchedule]);
 
   const handleSkip = useCallback(() => {
     clearTimer();
@@ -476,7 +592,10 @@ export function HjemMonter({
     // Landingen (prepare+medium) eies allerede utelukkende av completeScan.
     clearHapticTimers();
     if (scan.state.phase === 'scanning') completeScan();
-    else if (scan.state.phase === 'recalculating') completeRecalc();
+    // v4: `true` fordi «Beregn på nytt» nå kan være en FULL seremoni — duel
+    // §2 sier «hopp rett til resultat, spill kun landingen», og en skippet
+    // omberegning skal ikke lande stillere enn en som fikk gå ferdig.
+    else if (scan.state.phase === 'recalculating') completeRecalc(true);
   }, [clearTimer, clearHapticTimers, scan, completeScan, completeRecalc]);
 
   // P5: Juster (WeatherStrip + vær-panelets sted-pille) → onOpenAdjust,
@@ -545,7 +664,9 @@ export function HjemMonter({
 
   if (phase === 'scanning' || phase === 'recalculating') {
     const isFullScan = phase === 'scanning';
-    const totalDurationMs = isFullScan ? FULL_SCAN_DURATION_MS : QUICK_RECALC_DURATION_MS;
+    // v4: omberegningen har to lengder (se recalcDurationMs) — overlayen må
+    // få den som faktisk kjører, ikke en antatt konstant.
+    const totalDurationMs = isFullScan ? FULL_SCAN_DURATION_MS : recalcDurationMs;
     const tempLabel = now ? `${formatTemp(now.tempC)}°, ${conditionLabel.toLowerCase()}` : '–';
     return (
       <div className="hjem-monter">
@@ -666,7 +787,12 @@ export function HjemMonter({
                 <p className="hjm-p-text">{`${previousResultCount} plagg beregnet.`}</p>
               </div>
             )}
-            <button type="button" className="hjm-cta" onClick={handleStaleCtaTap}>
+            <button
+              type="button"
+              className="hjm-cta"
+              data-cta-path={planRecalc(reason).ceremony ? 'ceremony' : 'inline'}
+              onClick={() => handleStaleCtaTap(reason)}
+            >
               {staleCtaLabel(reason, activity)}
               <ArrowIcon />
             </button>
@@ -680,7 +806,8 @@ export function HjemMonter({
   }
 
   // phase === 'weather-ready'
-  const daySlot = slots[identity.childId] ?? null;
+  // (`daySlot` er hentet lenger opp — v4s nøkkeloppslag trenger den før
+  // fase-grenene, se `persistedResultKey`.)
   // P9 state-audit: a hard network failure with NO usable fallback cache
   // (useWeather → 'error', e.g. offline on a brand-new device/profile with
   // nothing cached yet) previously fell through to the DEFAULT branch below
@@ -724,8 +851,14 @@ export function HjemMonter({
                 ? `Fra ${formatClock(lastKnownAt)} · endringer ute er som regel små på en time`
                 : 'Henter vær …'}
             </p>
-            <button type="button" className="hjm-cta" onClick={handleFindOutfitTap} disabled={!canScan}>
-              Finn dagens antrekk
+            <button
+              type="button"
+              className="hjm-cta"
+              data-cta-path={ctaPlan.path}
+              onClick={handleFindOutfitTap}
+              disabled={!canScan}
+            >
+              {ctaPlan.label}
               <ArrowIcon />
             </button>
             <button type="button" className="hjm-cta-ghost" onClick={onRetryWeather}>
@@ -765,13 +898,22 @@ export function HjemMonter({
         <div className="hjm-ask-block">
           <h1 className="hjm-ask">Klar for en liten tur?</h1>
           <p className="hjm-child">{childLine}</p>
-          <button type="button" className="hjm-cta" onClick={handleFindOutfitTap} disabled={!canScan}>
-            Finn dagens antrekk
+          {/* v4: teksten OG veien kommer fra samme plan — en knapp som sier
+              «Vis» men spiller 3,2 s ville vært den løgnen overrideen
+              handler om. data-cta-path gjør valget maskinmålbart. */}
+          <button
+            type="button"
+            className="hjm-cta"
+            data-cta-path={ctaPlan.path}
+            onClick={handleFindOutfitTap}
+            disabled={!canScan}
+          >
+            {ctaPlan.label}
             <ArrowIcon />
           </button>
           <p className="hjm-trust">
             <CheckIcon />
-            Vær, sted og aktivitet vurderes sammen
+            {ctaPlan.line}
           </p>
         </div>
       </div>

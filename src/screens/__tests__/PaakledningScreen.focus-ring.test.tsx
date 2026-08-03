@@ -13,8 +13,19 @@
  * Testene under er skrevet slik at de STRYKER på koden som var her før:
  *   · test 1 og 6 feiler på `outline: 'none'` i inline style (kilde og markup),
  *   · test 2 feiler på enhver outline-sletting utenfor `:focus:not(:focus-visible)`,
- *   · test 5 og 7 feiler hvis ringen males i --dw-focus/--focus-ring, som er
- *     kalibrert for espresso og ligger på ~1,7:1 mot krem-lerretet i lys modus.
+ *   · test 5 og 7 feiler hvis ringen ikke MÅLER 3:1 mot flatene den ligger på.
+ *
+ * ATOM C (2026-08-03) — test 7 er snudd. Den forbød tidligere tokennavnene
+ * --dw-focus/--focus-ring, fordi --dw-focus manglet lys-modus-verdi og arvet
+ * en espresso-ring på ~1,7:1 mot krem. Et navneforbud er feil instrument:
+ *   · det måler ingenting — en ring i en annen usynlig farge slipper gjennom,
+ *   · det er permanent — tokenet har nå en målt lys-verdi (#C26C2B, 3,18:1
+ *     mot både papir og petrol), og forbudet ville hindret bruk av den
+ *     riktige, delte ringen for alltid,
+ *   · det beskyttet én skjerm mens de fire andre forbrukerne sto knekt.
+ * Kravet er nå det samme som test 5, men gjelder HVER fokusring i filen:
+ * målt WCAG-kontrast ≥ 3:1 i begge temaer. Kilden bestemmes av tallet, ikke
+ * av navnet. (Tokenselv håndheves i design-tokens-v2.focus.test.ts.)
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -316,15 +327,40 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
     }
   });
 
-  it('7 · ingen fokusring i filen males i --dw-focus/--focus-ring (usynlig mot krem)', () => {
+  it('7 · HVER fokusring i filen måler ≥ 3:1 i begge temaer — uansett hvilket token', () => {
     const screen = source(screenPath);
+
+    // FORUTSETNING 1: det finnes faktisk ringer å måle. Uten denne ville
+    // porten passert på en fil der alle fokusringer var slettet.
     const focusRingOutlines = [...screen.matchAll(/:focus-visible[^{}]*\{[^}]*\}/gu)]
       .map((m) => m[0])
       .filter((rule) => /outline\s*:\s*[\d.]+px/u.test(rule));
     expect(focusRingOutlines.length).toBeGreaterThanOrEqual(2);
+
+    // FORUTSETNING 2: tema-tabellene er GENUINT forskjellige. Faller lys
+    // stille tilbake til mørk, ville vi målt mørk to ganger og bestått
+    // nettopp den feilen testen finnes for.
+    const dark = tokenTable('dark');
+    const light = tokenTable('light');
+    const surfaces = ['var(--bg-canvas)', 'var(--surface-pure)'];
+    for (const surface of surfaces) {
+      expect(resolveHex(surface, light)).not.toBe(resolveHex(surface, dark));
+    }
+
+    // KRAVET: målt kontrast, ikke tokennavn.
     for (const rule of focusRingOutlines) {
-      expect(rule, 'fokusringen må bruke CTA-aksenten, ikke espresso-kalibrert --dw-focus')
-        .not.toMatch(/--dw-focus|--focus-ring/u);
+      const colour = /outline:\s*[\d.]+px\s+solid\s+([^;]+);/u.exec(rule)?.[1];
+      expect(colour, `fant ingen farge i «${rule.trim()}»`).toBeDefined();
+      for (const [theme, tokens] of [['dark', dark], ['light', light]] as const) {
+        const ring = resolveHex(colour as string, tokens);
+        for (const surface of surfaces) {
+          const behind = resolveHex(surface, tokens);
+          expect(
+            contrast(ring, behind),
+            `${theme}: ${colour} (${ring}) mot ${surface} (${behind})`,
+          ).toBeGreaterThanOrEqual(3);
+        }
+      }
     }
   });
 });

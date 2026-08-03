@@ -159,6 +159,12 @@
   overflow: hidden;
 }
 
+/* Fokusringen males mot varflaten, ikke mot canvas. --dw-focus (#C26C2B) gir
+   2,86:1 mot --dw-w-snow og 2,94:1 mot --dw-w-clear — under kravet på 3:1, og
+   en regresjon fra 6,14:1. Panelvarianten er kalibrert for nettopp slike
+   flater. Én binding, ikke fem overstyringer. */
+.planlegg-weather { --dw-focus: var(--dw-focus-panel); }
+
 .planlegg-weather[data-nuance='clear'] { background: var(--dw-w-clear); }
 .planlegg-weather[data-nuance='cloudy'] { background: var(--dw-w-cloudy); }
 .planlegg-weather[data-nuance='rain'] { background: var(--dw-w-rain); }

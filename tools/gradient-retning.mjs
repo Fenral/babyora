@@ -13,6 +13,30 @@
  * Derfor sjekker denne bade RETNING og AMPLITUDE. Portert fra den beviste
  * referansen docs/design-notes/b1-proof/gradient-retning.mjs.
  *
+ * ── UNNTAKET SOM BLE FJERNET (2026-08-03) ───────────────────────────────
+ * Denne sjekken hadde et unntak: «~horisontale gradienter har ingen
+ * lysretning og domres ikke». Det unntaket frikjente --dw-edge-light-gradient
+ * — linear-gradient(90deg, transparent, …, transparent), altsa sterkest i
+ * MIDTEN — som bor pa 7 flater, inkludert instrumentets egen topprand.
+ *
+ * Portdom 27 innforte en FAST LYSVEKTOR (--dw-lys-vinkel: 135deg): key ovre
+ * venstre, skygge ned-hoyre. Med en fast lysvektor baerer x-aksen lys, og
+ * pastanden «horisontal medforer ingen lysretning» er derfor falsk. Portdom
+ * 27 sier det ordrett om nettopp kantlyset: «Rimmen skal vare sterkest der
+ * lyset treffer og nesten borte pa nedre kant — aldri en jevn 1px-ramme.»
+ *
+ * Unntaket er ikke slettet, det er FLYTTET til riktig akse: den eneste
+ * retningen uten lysinnhold er den som star VINKELRETT pa lysvektoren
+ * (135 - 90 = 45deg), ikke x-aksen. Sammenligningen skjer derfor mot
+ * projeksjonen pa lysvektoren, ikke mot y-aksen.
+ *
+ * To folgefeil falt sammen med unntaket:
+ *   - Slor-regelen sammenlignet bare ENDEPUNKTENE. En gradient med like
+ *     ender og lys midte fikk «dekorativt slor» selv om midten la 150
+ *     luminanstrinn over. Na males hele SPENNET (max - min).
+ *   - «Sterkest i midten» hadde ingen egen dom. Den heter na `midt` og
+ *     teller som funn — det er nemlig den formen saken faktisk gjaldt.
+ *
  * ── LARDOMMEN SOM STYRER HELE PARSEREN ──────────────────────────────────
  * Forste versjon av proof-sjekken hoppet STILLTIENDE over `.vitrine` fordi
  * regexet ikke taklet var() inne i gradienten — altsa nettopp flaten saken
@@ -34,9 +58,17 @@
  *   node tools/gradient-retning.mjs [filer...]     (uten arg: standardfilene)
  *   node tools/gradient-retning.mjs --selftest     (kun selvtesten, ordrikt)
  *
- * Exit: 0 = rent · 1 = funn (feil retning / for svakt fall) · 2 = sjekken
- * selv er odelagt (selvtest ryker, regnskap avviker, eller en farge kan ikke
- * leses — da vet vi ikke hva flaten gjor, og det skal aldri lese som «rent»).
+ * Exit — SAMME KONTRAKT SOM SOSKENVERKTOYENE (design-doctrine-lint.mjs,
+ * asset-rig-check.mjs), sa en port aldri leser «blindt instrument» som
+ * ordinare funn:
+ *   0 = rent
+ *   1 = SJEKKEN SELV ER ODELAGT (selvtest ryker, regnskapet avviker,
+ *       lysvektoren kan ikke leses, en farge kan ikke leses, eller lys modus
+ *       er definert to steder med ulike verdier). Da vet vi ikke hva flatene
+ *       gjor, og det skal aldri lese som «rent» — men det er heller ikke et
+ *       designfunn.
+ *   2 = FUNN (feil lysende, sterkest i midten, eller for svakt fall)
+ * (Foran 2026-08-03 var 1 og 2 byttet om her — motsatt av soskenene.)
  *
  * Modellvalg (dokumentert, ikke skjult):
  *  - Luminans = 0.2126R + 0.7152G + 0.0722B pa sRGB-byte, samme skala som
@@ -45,9 +77,15 @@
  *    background-color (ellers --dw-canvas for temaet). Proofen komponerte
  *    implisitt mot svart, som gir meningslost store fall i lys modus.
  *    Bakgrunnen som ble brukt star i utskriften.
- *  - 0deg peker mot toppen, 180deg mot bunnen; forste fargestopp ligger i
- *    motsatt ende av retningen. Gradienter uten vertikal komponent
- *    (~horisontale) har ingen lysretning og domres ikke — men de TELLES.
+ *  - 0deg peker mot toppen, 90deg mot hoyre, 180deg mot bunnen; forste
+ *    fargestopp ligger i motsatt ende av retningen. Lyskomponenten er
+ *    projeksjonen av gradientretningen pa lysvektoren — cos(v - lysvinkel).
+ *    Er den positiv, ligger FORSTE fargestopp i lyset. Er den ~0, star
+ *    gradienten vinkelrett pa lysvektoren og domres ikke — men den TELLES.
+ *  - Lysvinkelen HENTES fra --dw-lys-vinkel i design-tokens-v2.css. Den er
+ *    ikke duplisert her: flytter portdommen vektoren, flytter sjekken seg
+ *    med. Mangler tokenet, eller sier temaene ulike ting, er instrumentet
+ *    blindt (exit 1) — det antar aldri 135.
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -57,10 +95,13 @@ const ROT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** Luminanstrinn (0-255). Under dette leser flaten som flat pa en telefon. */
 const MIN_FALL = 8;
-/** Endepunkter naermere hverandre enn dette er dekorativt slor, ikke en lysflate. */
+/** Ligger HELE spennet (max - min over alle stopp) under dette, er flaten
+ *  dekorativt slor og ikke en lysflate. Malt pa spennet, ikke pa endepunktene:
+ *  transparent → lys → transparent har like ENDER og en glodende midte. */
 const SLOR = 0.5;
-/** Innenfor 5 grader av horisontalen finnes det ingen «overst». */
-const HORISONTAL_GRENSE = Math.sin((5 * Math.PI) / 180);
+/** Innenfor 5 grader av lysvektorens NORMAL finnes det ingen lyskomponent.
+ *  Med lysvinkel 135deg er det 45deg/225deg — IKKE 90deg/270deg. */
+const TVERRLYS_GRENSE = Math.sin((5 * Math.PI) / 180);
 
 const STANDARDFILER = [
   'src/components/hjem/hjem-monter.css',
@@ -69,6 +110,8 @@ const STANDARDFILER = [
 /** Tokenkilden — hva var() faktisk peker pa, per tema. */
 const TOKENFIL = 'src/styles/design-tokens-v2.css';
 const TEMAER = ['dark', 'light'];
+/** Portdom 27s faste lysvektor. Leses, aldri antatt (se filhodet). */
+const LYSVEKTOR_TOKEN = '--dw-lys-vinkel';
 
 /* ══════════════════════════════════════════════════════════════════════════
    1. Skjelett: kommentarer bort, strengers STRUKTURTEGN bort
@@ -484,10 +527,45 @@ function tolkRetning(forsteDel, tema, tokens) {
   return { grader: 180, eksplisitt: false, erStopp: true }; // CSS-standard «to bottom»
 }
 
-/** dy > 0 = retningen peker NEDOVER = forste fargestopp ligger OVERST. */
-function vertikalKomponent(grader) {
-  const n = (((grader % 360) + 360) % 360) * (Math.PI / 180);
-  return -Math.cos(n);
+/**
+ * Lysvinkelen slik APPEN definerer den — hentet fra --dw-lys-vinkel.
+ * Returnerer null nar den ikke KAN avgjores (tokenet mangler, er uleselig,
+ * eller temaene sier ulike ting). Da er instrumentet blindt, og kalleren
+ * roper i stedet for a anta 135. Lysvektoren er tema-konstant med vilje
+ * (portdom 27): et «lys» som flipper med temaet er ikke en lysvektor.
+ */
+function lysvektorAv(tokens) {
+  const funn = new Map();
+  for (const tema of TEMAER) {
+    const ra = tokens?.[tema]?.[LYSVEKTOR_TOKEN];
+    const tolket = ra ? tolkVinkeltekst(String(ra).trim()) : null;
+    if (!tolket) continue;
+    const grader = (((tolket.grader % 360) + 360) % 360);
+    if (!funn.has(grader)) funn.set(grader, []);
+    funn.get(grader).push(tema);
+  }
+  if (funn.size !== 1) return null;
+  return [...funn.keys()][0];
+}
+
+/**
+ * Gradientretningens projeksjon pa lysvektoren = cos(v - lysvinkel).
+ *
+ * Utledning (skjermkoordinater, y peker NED): en CSS-gradient med vinkel v
+ * har retningsvektor (sin v, -cos v) — 0deg mot toppen, 90deg mot hoyre.
+ * Lysvektoren har samme form. Prikkproduktet blir
+ *   sin v · sin L + cos v · cos L = cos(v - L).
+ *
+ * > 0 = retningen folger lysfallet = FORSTE fargestopp ligger i lyset.
+ * < 0 = SISTE fargestopp ligger i lyset.
+ * ~ 0 = gradienten star vinkelrett pa lysvektoren og baerer ingen lysretning.
+ *
+ * Den gamle modellen var spesialtilfellet L = 180 (lys rett ovenfra), og
+ * gjorde derfor 90deg til «ingen lysretning». Med L = 135 er 90deg tvert imot
+ * cos(-45) = +0,71 — over to tredjedeler av full lyskomponent.
+ */
+function lyskomponent(grader, lysvinkel) {
+  return Math.cos(((grader - lysvinkel) * Math.PI) / 180);
 }
 
 /** Et posisjonsledd. Enheten er VALGFRI — «#E8E2D6 0 4px» har et bart 0, og
@@ -592,7 +670,10 @@ function bakgrunnFor(kilde, blokkIdx, tema, tokens) {
  * Dom en enkelt gradient i ett tema.
  * Returnerer alltid en post — aldri undefined, aldri et stille hopp.
  */
-function domGradient(g, tema, tokens, bakgrunn) {
+function domGradient(g, tema, tokens, bakgrunn, lysvinkel) {
+  if (typeof lysvinkel !== 'number' || !Number.isFinite(lysvinkel)) {
+    return { status: 'blind', tekst: `lysvektoren (${LYSVEKTOR_TOKEN}) er ikke lest` };
+  }
   const deler = deleTopp(g.innhold);
   const retning = tolkRetning(deler[0], tema, tokens);
   if (!retning) {
@@ -602,12 +683,15 @@ function domGradient(g, tema, tokens, bakgrunn) {
   if (stoppRa.length < 2) {
     return { status: 'hopp', tekst: `under to fargestopp (${stoppRa.length})` };
   }
-  const dy = vertikalKomponent(retning.grader);
+  const p = lyskomponent(retning.grader, lysvinkel);
   const retningsTekst = retning.eksplisitt
     ? `${Math.round(retning.grader)}deg`
     : `${Math.round(retning.grader)}deg (underforstatt «to bottom»)`;
-  if (Math.abs(dy) < HORISONTAL_GRENSE) {
-    return { status: 'horisontal', tekst: `${retningsTekst} — horisontal, ingen lysretning` };
+  if (Math.abs(p) < TVERRLYS_GRENSE) {
+    return {
+      status: 'tverrlys',
+      tekst: `${retningsTekst} — vinkelrett pa lysvektoren (${lysvinkel}deg), ingen lyskomponent`,
+    };
   }
 
   const farger = [];
@@ -617,43 +701,65 @@ function domGradient(g, tema, tokens, bakgrunn) {
     if (!f) return { status: 'blind', tekst: `kan ikke lese fargen «${uttrykk}»` };
     farger.push({ uttrykk, f, lum: lumOver(f, bakgrunn.farge) });
   }
-  // dy > 0: forste stopp ligger overst. dy < 0: siste stopp ligger overst.
-  const fraTopp = dy > 0 ? farger : [...farger].reverse();
-  const overst = fraTopp[0];
-  const nederst = fraTopp[fraTopp.length - 1];
-  const fall = overst.lum - nederst.lum;
+  // p > 0: forste stopp ligger i lyset. p < 0: siste stopp ligger i lyset.
+  const fraLys = p > 0 ? farger : [...farger].reverse();
+  const iLys = fraLys[0];
+  const iSkygge = fraLys[fraLys.length - 1];
+  const fall = iLys.lum - iSkygge.lum;
   const gjennomsiktig = farger.some((x) => x.f.a < 1);
+  // HELE spennet, ikke bare endepunktene. Males kun endene, gjemmer en
+  // gradient med lys midte og like ender seg i «dekorativt slor» — og det var
+  // nettopp slik --dw-edge-light-gradient slapp unna to ganger.
+  const lumener = farger.map((x) => x.lum);
+  const spenn = Math.max(...lumener) - Math.min(...lumener);
+  const felles = {
+    iLys: iLys.lum, iSkygge: iSkygge.lum, fall, spenn, retningsTekst, gjennomsiktig,
+    bakgrunn: bakgrunn.kilde, lysvinkel,
+  };
 
-  if (Math.abs(fall) < SLOR) {
+  if (spenn < SLOR) {
     return {
-      status: 'slor',
-      tekst: `${retningsTekst} — endepunktene er like (fall ${fall.toFixed(1)}), dekorativt slor`,
-      overst: overst.lum, nederst: nederst.lum, fall, retningsTekst, gjennomsiktig,
+      ...felles, status: 'slor',
+      tekst: `${retningsTekst} — hele spennet er ${spenn.toFixed(1)}, dekorativt slor`,
     };
   }
 
-  const lysere = fraTopp.slice(1).find((x) => x.lum > overst.lum + 0.5);
-  const felles = {
-    overst: overst.lum, nederst: nederst.lum, fall, retningsTekst, gjennomsiktig,
-    bakgrunn: bakgrunn.kilde,
-  };
   if (fall < 0) {
-    return { ...felles, status: 'invertert', tekst: `MORKT OVERST (fall ${fall.toFixed(1)})` };
-  }
-  if (lysere) {
     return {
       ...felles, status: 'invertert',
-      tekst: `et stopp lenger ned er lysere enn toppen («${lysere.uttrykk}», ${lysere.lum.toFixed(1)} > ${overst.lum.toFixed(1)})`,
+      tekst: `MORKT DER LYSET TREFFER (fall ${fall.toFixed(1)})`,
+    };
+  }
+  // Et stopp lenger inne i gradienten som er lysere enn den lyssatte enden.
+  // Er ENDEN lysere, har fall allerede fanget det over — sa dette er alltid
+  // en midte: flaten gloder der lyset ikke er.
+  const lysere = fraLys.slice(1).find((x) => x.lum > iLys.lum + 0.5);
+  if (lysere) {
+    return {
+      ...felles, status: 'midt',
+      tekst: `STERKEST I MIDTEN, ikke der lyset treffer («${lysere.uttrykk}», ${lysere.lum.toFixed(1)} > ${iLys.lum.toFixed(1)})`,
     };
   }
   if (fall < MIN_FALL) {
-    return { ...felles, status: 'svak', tekst: `for svakt fall (${fall.toFixed(1)} < ${MIN_FALL})` };
+    // Spennet kan vare stort selv om FALLET er null — da varierer flaten, men
+    // ikke langs lysvektoren (typisk et band midt i, som en kantlysstripe som
+    // blir MORKERE enn flaten den ligger pa i lys modus). «Fall 0,0» alene
+    // ville lest som «nesten flat», og det er en annen feil enn den ekte.
+    const tvers = spenn - Math.abs(fall) >= MIN_FALL
+      ? ` — men flaten varierer ${spenn.toFixed(1)} trinn PA TVERS av lysvektoren`
+      : '';
+    return {
+      ...felles, status: 'svak',
+      tekst: `for svakt fall (${fall.toFixed(1)} < ${MIN_FALL})${tvers}`,
+    };
   }
-  return { ...felles, status: 'ok', tekst: 'lyst overst' };
+  return { ...felles, status: 'ok', tekst: 'lyst der lyset treffer' };
 }
 
-function analyser(kilder, tokens, { skrivUt = true } = {}) {
-  const resultat = { domt: 0, invertert: 0, svak: 0, blind: 0, sett: 0, regnskap: [], linjer: [] };
+function analyser(kilder, tokens, lysvinkel, { skrivUt = true } = {}) {
+  const resultat = {
+    domt: 0, invertert: 0, midt: 0, svak: 0, blind: 0, sett: 0, regnskap: [], linjer: [],
+  };
   const skriv = (s) => { resultat.linjer.push(s); if (skrivUt) console.log(s); };
 
   for (const kilde of kilder) {
@@ -682,23 +788,28 @@ function analyser(kilder, tokens, { skrivUt = true } = {}) {
       }
       for (const tema of g.temaer) {
         const bakgrunn = bakgrunnFor(kilde, g.blokk, tema, tokens);
-        const d = domGradient(g, tema, tokens, bakgrunn);
-        const merkelapp = { ok: '✓', invertert: '✗', svak: '✗', blind: '‼', horisontal: '·', slor: '·', hopp: '·' }[d.status];
-        if (d.status === 'ok' || d.status === 'invertert' || d.status === 'svak') {
+        const d = domGradient(g, tema, tokens, bakgrunn, lysvinkel);
+        const merkelapp = {
+          ok: '✓', invertert: '✗', midt: '✗', svak: '✗',
+          blind: '‼', tverrlys: '·', slor: '·', hopp: '·',
+        }[d.status];
+        if (d.status === 'ok' || d.status === 'invertert' || d.status === 'midt' || d.status === 'svak') {
           resultat.domt += 1;
           if (d.status === 'invertert') resultat.invertert += 1;
+          if (d.status === 'midt') resultat.midt += 1;
           if (d.status === 'svak') resultat.svak += 1;
           const bak = d.gjennomsiktig ? `  [pa ${d.bakgrunn}]` : '';
           skriv(
-            `         ${merkelapp} ${tema.padEnd(5)} ${d.overst.toFixed(1).padStart(6)} → ${d.nederst.toFixed(1).padEnd(6)}` +
+            `         ${merkelapp} ${tema.padEnd(5)} lys ${d.iLys.toFixed(1).padStart(6)} → skygge ${d.iSkygge.toFixed(1).padEnd(6)}` +
             ` fall ${(d.fall >= 0 ? '+' : '') + d.fall.toFixed(1)}   ${d.tekst}${bak}`,
           );
         } else {
           if (d.status === 'blind') resultat.blind += 1;
           skriv(`         ${merkelapp} ${tema.padEnd(5)} ${d.tekst}`);
         }
-        // Horisontale/slor-gradienter er tema-uavhengige — én linje holder.
-        if (d.status === 'horisontal' || d.status === 'hopp') break;
+        // Tverrlys-dommen faller FOR fargene leses og er derfor tema-uavhengig
+        // — én linje holder. Det samme gjelder «under to fargestopp».
+        if (d.status === 'tverrlys' || d.status === 'hopp') break;
       }
     }
   }
@@ -721,6 +832,8 @@ const FIKSTUR = `
   --tok-flate: #2C1F13;
   --tok-vinkel: 168deg;
   --dw-canvas: #1E140C;
+  /* Lysvektoren instrumentet maler mot — SAMME token som appen bruker. */
+  --dw-lys-vinkel: 135deg;
   --kant: linear-gradient(90deg, transparent, #F2C08A, transparent);
 }
 :root[data-theme="light"] {
@@ -763,8 +876,21 @@ const FIKSTUR = `
 /* Maske og repeating: telles, domres ikke som lysflate */
 .maske { mask-image: linear-gradient(to bottom, black 92%, transparent 100%); }
 .stripet { background: repeating-linear-gradient(180deg, #E8E2D6 0 4px, #241A10 4px 8px); }
-/* Horisontal: ingen lysretning */
-.horisontal { background: linear-gradient(90deg, transparent 4%, rgba(242, 192, 138, 0.75) 50%, transparent 96%); }
+/* HORISONTAL, sterkest i MIDTEN — nettopp formen det gamle unntaket frikjente.
+   Dette er --dw-edge-light-gradient sin form (og .hjm-scanline sin). */
+.kantlys-midt { background: linear-gradient(90deg, transparent 4%, rgba(242, 192, 138, 0.75) 50%, transparent 96%); }
+/* Horisontal MED lyset der lysvektoren sier at det kommer fra (venstre).
+   FORUTSETNINGEN for regelen over: sjekken feller ikke alt som er horisontalt. */
+.venstrelys { background: linear-gradient(90deg, #E8E2D6, #241A10); }
+/* Horisontal med lyset i motsatt ende av lysvektoren */
+.hoyrelys { background: linear-gradient(90deg, #241A10, #E8E2D6); }
+/* Like endepunkter, lys midte: slor-regelen leste dette som «dekorativt slor» */
+.midt-topp { background: linear-gradient(180deg, #241A10, #E8E2D6, #241A10); }
+/* EKTE flat flate — forutsetningen for at slor-regelen fortsatt skal finnes */
+.flat-flate { background: linear-gradient(180deg, #241A10, #241A10); }
+/* Vinkelrett PA lysvektoren (135-90 = 45deg): her finnes det faktisk ingen
+   lyskomponent. Det er DENNE aksen som er unntatt — ikke x-aksen. */
+.tverrlys { background: linear-gradient(45deg, #E8E2D6, #241A10); }
 /* Inne i @media — skal fanges, og bare i lys modus */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) .kun-lys { background: linear-gradient(180deg, #FFFCF4, #E4DBC9); }
@@ -783,6 +909,15 @@ function selvtest({ ordrik = false } = {}) {
   const gradienter = finnGradienter(kilde);
   const ra = raTelling(kilde.skjelett);
 
+  // Lysvektoren LESES, den antas ikke. Kravet og forutsetningen i par:
+  // uten tokenet skal instrumentet rope, ikke falle tilbake pa 135.
+  const lysvinkel = lysvektorAv(tokens);
+  krev(lysvinkel === 135, `lysvektoren leses fra ${LYSVEKTOR_TOKEN} (fikk ${lysvinkel})`);
+  krev(lysvektorAv({ dark: {}, light: {} }) === null,
+    `manglende ${LYSVEKTOR_TOKEN} gir blindt instrument, ikke en antatt 135`);
+  krev(lysvektorAv({ dark: { [LYSVEKTOR_TOKEN]: '135deg' }, light: { [LYSVEKTOR_TOKEN]: '315deg' } }) === null,
+    'lysvektor som spriker mellom temaene gir blindt instrument (den er tema-konstant)');
+
   // B-regelen: fasit == sett. Ingen stille hopp.
   krev(ra === gradienter.length,
     `regnskapet stemmer: ${ra} linear-gradient i fiksturen, ${gradienter.length} sett av parseren`);
@@ -796,7 +931,8 @@ function selvtest({ ordrik = false } = {}) {
   const forventet = [
     '.var-stopp', '.mix-stopp', '.uten-retning', '.nokkelord', '.hjorne',
     '.desimal', '.turn', '.var-retning', '.blind-retning', '.to-lag',
-    '.invertert', '.for-svak', '.maske', '.stripet', '.horisontal',
+    '.invertert', '.for-svak', '.maske', '.stripet', '.kantlys-midt',
+    '.venstrelys', '.hoyrelys', '.midt-topp', '.flat-flate', '.tverrlys',
     '.kun-lys', ':root',
   ];
   for (const sel of forventet) {
@@ -811,18 +947,67 @@ function selvtest({ ordrik = false } = {}) {
     `naiv «(\\d+)deg»-regex ville sett ${naivt} av ${gradienter.length} — parenteselling ser resten`);
 
   // Domsformene: alle tre skal kunne inntreffe.
-  const dom = (sel, tema) => {
+  const dom = (sel, tema, vinkel = lysvinkel, tok = tokens) => {
     const g = gradienter.find((x) => x.selektor.includes(sel));
     if (!g) return { status: '(ikke funnet)' };
-    return domGradient(g, tema, tokens, bakgrunnFor(kilde, g.blokk, tema, tokens));
+    return domGradient(g, tema, tok, bakgrunnFor(kilde, g.blokk, tema, tok), vinkel);
   };
   krev(dom('.var-stopp', 'dark').status === 'ok', 'var()-gradient med stort fall domres ok');
   krev(dom('.invertert', 'dark').status === 'invertert', 'morkt-overst fanges (eierfunn 1)');
   krev(dom('.for-svak', 'dark').status === 'svak', 'for lite fall fanges (eierfunn 2)');
-  krev(dom('.horisontal', 'dark').status === 'horisontal', 'horisontal gradient domres ikke');
+
+  // ── LYSVEKTOREN (portdom 27) ────────────────────────────────────────────
+  // Det gamle unntaket sa «90deg = ingen lysretning». Med en FAST lysvektor
+  // pa 135deg baerer x-aksen lys, og pastanden er falsk. Disse fem portene
+  // kommer i par: en som skal FELLES, og en som skal SLIPPE — ellers ville
+  // «fell alt horisontalt» bestatt like godt som den riktige regelen.
+  krev(dom('.kantlys-midt', 'dark').status === 'midt',
+    'horisontal gradient som er sterkest i MIDTEN felles (unntaket er borte)');
+  krev(dom('.venstrelys', 'dark').status === 'ok',
+    'horisontal gradient med lyset i lysvektorens ende slipper — sjekken feller ikke alt horisontalt');
+  krev(dom('.hoyrelys', 'dark').status === 'invertert',
+    'horisontal gradient med lyset i motsatt ende av lysvektoren felles');
+  krev(dom('.midt-topp', 'dark').status === 'midt',
+    'like endepunkter skjuler ikke lenger en lys midte bak slor-regelen');
+  krev(dom('.flat-flate', 'dark').status === 'slor',
+    'en ekte flat gradient er fortsatt slor (forutsetningen for regelen over)');
+  // Samme flate i lys modus: kantlyset er MORKERE enn flaten det ligger pa,
+  // sa fallet er 0 mens spennet er stort. «Fall 0,0» alene ville lest som
+  // «nesten flat» — feil diagnose pa en flate som varierer godt synlig.
+  const kantILys = dom('.kantlys-midt', 'light');
+  krev(kantILys.status === 'svak' && kantILys.spenn >= MIN_FALL
+    && / PA TVERS /.test(kantILys.tekst),
+    `spenn PA TVERS av lysvektoren rapporteres, ikke bare fallet (spenn ${kantILys.spenn?.toFixed(1)}, fall ${kantILys.fall?.toFixed(1)})`);
+  krev(dom('.tverrlys', 'dark').status === 'tverrlys',
+    'gradient vinkelrett PA lysvektoren (45deg) har ingen lyskomponent — DET er unntaket');
+  // Beviset for at vektoren faktisk BRUKES og ikke bare leses: snur vi lyset
+  // til nedre hoyre, ma de to horisontale dommene bytte plass. En hardkodet
+  // 135 ville bestatt alt over, men ikke dette.
+  krev(dom('.venstrelys', 'dark', 315).status === 'invertert'
+    && dom('.hoyrelys', 'dark', 315).status === 'ok',
+    'snus lysvektoren til 315deg, snur dommene — vektoren brukes, den er ikke pynt');
+  krev(dom('.venstrelys', 'dark', 180).status === 'tverrlys',
+    'med lys rett ovenfra (180deg) er 90deg tverrlys igjen — den gamle modellen er spesialtilfellet');
+  krev(dom('.venstrelys', 'dark', null).status === 'blind',
+    'uten lysvinkel domres ingenting (blind) — det gjettes ikke');
+  // Unntaket skal vare borte fra HELE instrumentet, ikke bare fra de tre
+  // selektorene portene over navngir. Kravet kommer med sin forutsetning:
+  // det MA finnes horisontale gradienter i fiksturen, ellers besto porten
+  // pa fravaer — nettopp feilen T2-planen advarer mot.
+  const horisontale = gradienter.filter((g) => /(^|[(,\s])90deg\b/.test(g.innhold));
+  krev(horisontale.length >= 4,
+    `fiksturen inneholder horisontale gradienter a domme (${horisontale.length})`);
+  const DOMTE_FORMER = new Set(['ok', 'invertert', 'midt', 'svak']);
+  const udomte = horisontale.filter((g) => !DOMTE_FORMER.has(
+    domGradient(g, 'dark', tokens, bakgrunnFor(kilde, g.blokk, 'dark', tokens), lysvinkel).status,
+  ));
+  krev(udomte.length === 0,
+    `alle ${horisontale.length} horisontale gradientene far en dom${udomte.length ? ' — unntatt ' + udomte.map((g) => g.selektor).join(', ') : ''}`);
+
   krev(dom('.uten-retning', 'dark').status === 'ok', 'gradient uten retning leses som «to bottom»');
   krev(dom('.nokkelord', 'dark').status === 'ok', '«to bottom» leses som 180deg');
-  krev(dom('.hjorne', 'dark').status === 'ok', '«to bottom right» har nedovergaende komponent');
+  krev(dom('.hjorne', 'dark').status === 'ok',
+    '«to bottom right» = 135deg = full lyskomponent (den ligger PA lysvektoren)');
   krev(dom('.desimal', 'dark').status === 'ok', 'desimalvinkel (177.5deg) tolkes');
   krev(dom('.turn', 'dark').status === 'ok', 'turn-enheten tolkes');
   krev(dom('.var-retning', 'dark').status === 'ok', 'retning hentet fra et token slas opp (var(--tok-vinkel) = 168deg)');
@@ -834,8 +1019,8 @@ function selvtest({ ordrik = false } = {}) {
   const mixLys = dom('.mix-stopp', 'light');
   krev(mixMork.status !== 'blind' && mixLys.status !== 'blind',
     'color-mix(in srgb, var(...) 45%, transparent) leses i begge tema');
-  krev(mixLys.overst !== undefined && mixLys.overst > 200,
-    `halvgjennomsiktig stopp komponeres mot flaten, ikke mot svart (lys topp = ${mixLys.overst?.toFixed(1)})`);
+  krev(mixLys.iLys !== undefined && mixLys.iLys > 200,
+    `halvgjennomsiktig stopp komponeres mot flaten, ikke mot svart (lys topp = ${mixLys.iLys?.toFixed(1)})`);
 
   // Tema: @media-blokken gjelder kun lys.
   const kunLys = gradienter.find((g) => g.selektor.includes('.kun-lys'));
@@ -850,7 +1035,7 @@ function selvtest({ ordrik = false } = {}) {
     if (IKKE_FLATE[g.egenskap] || !FLATEEGENSKAPER.test(g.egenskap)) continue;
     if (g.selektor.includes('.blind-retning')) continue; // bevisst kontrolltilfelle
     for (const tema of g.temaer) {
-      if (domGradient(g, tema, tokens, bakgrunnFor(kilde, g.blokk, tema, tokens)).status === 'blind') {
+      if (domGradient(g, tema, tokens, bakgrunnFor(kilde, g.blokk, tema, tokens), lysvinkel).status === 'blind') {
         blinde.push(`${g.selektor} (${tema})`);
       }
     }
@@ -863,22 +1048,26 @@ function selvtest({ ordrik = false } = {}) {
 /* ══════════════════════════════════════════════════════════════════════════
    8. Kjoring
    ══════════════════════════════════════════════════════════════════════════ */
+/** Exit-kontrakten, ett sted. Samme koder som design-doctrine-lint.mjs og
+ *  asset-rig-check.mjs: 0 rent · 1 instrumentet er odelagt · 2 funn. */
+const EXIT = { RENT: 0, ODELAGT: 1, FUNN: 2 };
+
 function main() {
   const argv = process.argv.slice(2);
   const kunSelvtest = argv.includes('--selftest') || argv.includes('--selvtest');
   const filer = argv.filter((a) => !a.startsWith('--'));
 
-  console.log('gradient-retning — lyset kommer ovenfra: lysest overst, fall ≥ ' + MIN_FALL + ' luminanstrinn');
+  console.log(`gradient-retning — fast lysvektor: lysest der lyset treffer, fall ≥ ${MIN_FALL} luminanstrinn`);
 
   const selvtestFeil = selvtest({ ordrik: kunSelvtest });
   if (selvtestFeil.length) {
     console.log('\nSELVTESTEN RYKER — sjekken kan ikke stoles pa:');
     for (const f of selvtestFeil) console.log(`  ✗ ${f}`);
     console.log('\nEn sjekk som ikke ser alle gradientene, sier «rent» om dem den ikke ser.');
-    return 2;
+    return EXIT.ODELAGT;
   }
   console.log('selvtest: OK (parseren ser alle formene i fiksturen, og kan bli rod)');
-  if (kunSelvtest) return 0;
+  if (kunSelvtest) return EXIT.RENT;
 
   const stier = (filer.length ? filer : STANDARDFILER).map((f) => (isAbsolute(f) ? f : resolve(ROT, f)));
   const kilder = stier.map((s) => lesKilde(relative(ROT, s).replace(/\\/g, '/'), readFileSync(s, 'utf8')));
@@ -889,8 +1078,22 @@ function main() {
   const { tokens, lysBlokker } = byggTokens([tokenKilde]);
   console.log(`tokenkilde: ${TOKENFIL} — ${Object.keys(tokens.dark).length} mork, ${Object.keys(tokens.light).length} lys`);
 
+  // Lysvektoren FOR noe domres. Uten den vet vi ikke hvor lyset kommer fra,
+  // og da er instrumentet blindt — ikke flatene rene.
+  const lysvinkel = lysvektorAv(tokens);
+  if (lysvinkel === null) {
+    console.log(
+      `\nLYSVEKTOREN KAN IKKE LESES (${LYSVEKTOR_TOKEN} i ${TOKENFIL}).\n` +
+      '  Mangler den, eller sier temaene ulike ting, vet ikke sjekken hvor lyset\n' +
+      '  kommer fra. Den antar ikke 135 — da ville en flyttet portdom gjort hver\n' +
+      '  eneste dom stille feil.',
+    );
+    return EXIT.ODELAGT;
+  }
+  console.log(`lysvektor: ${LYSVEKTOR_TOKEN} = ${lysvinkel}deg (key ovre venstre, fall mot nedre hoyre — portdom 27)`);
+
   const dublettAvvik = sjekkLysDublett(lysBlokker);
-  const res = analyser(kilder, tokens);
+  const res = analyser(kilder, tokens, lysvinkel);
 
   console.log('');
   console.log('─'.repeat(78));
@@ -902,7 +1105,8 @@ function main() {
     );
   }
   console.log(
-    `${res.domt} domte lysflate-tilfeller · ${res.invertert} invertert · ${res.svak} for svake` +
+    `${res.domt} domte lysflate-tilfeller · ${res.invertert} invertert · ` +
+    `${res.midt} sterkest i midten · ${res.svak} for svake` +
     (res.blind ? ` · ${res.blind} uleselige` : ''),
   );
 
@@ -912,8 +1116,8 @@ function main() {
   }
 
   const regnskapAvvik = res.regnskap.filter((r) => r.ra !== r.sett);
-  if (regnskapAvvik.length || res.blind || dublettAvvik.length) return 2;
-  return res.invertert + res.svak ? 1 : 0;
+  if (regnskapAvvik.length || res.blind || dublettAvvik.length) return EXIT.ODELAGT;
+  return res.invertert + res.midt + res.svak ? EXIT.FUNN : EXIT.RENT;
 }
 
 /* Kjor kun som CLI. Eksporten under lar en test (eller en kryssjekk mot
@@ -923,8 +1127,8 @@ const kjortDirekte = process.argv[1]
 if (kjortDirekte) process.exit(main());
 
 export {
-  MIN_FALL, SLOR, HORISONTAL_GRENSE,
+  MIN_FALL, SLOR, TVERRLYS_GRENSE, LYSVEKTOR_TOKEN, EXIT,
   lesKilde, byggTokens, finnGradienter, bakgrunnFor, domGradient,
-  losFarge, lumRGB, lumOver, tolkRetning, vertikalKomponent,
+  losFarge, lumRGB, lumOver, tolkRetning, lyskomponent, lysvektorAv,
   raTelling, analyser, selvtest, main,
 };

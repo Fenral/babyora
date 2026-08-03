@@ -20,6 +20,15 @@
  *
  * Se BUNNEN av filen for mappings-notatene (hvilke av de 42 plagg-bildene som
  * IKKE er bundet til en katalog-id, og hvorfor).
+ *
+ * ASSET-KONTRAKT (2026-08-03): filene disse stiene peker på er UTKLIPP med
+ * gjennomsiktig bakgrunn — art bible: «Skygger bor i UI-laget, ikke i asseten;
+ * assetene forblir rene utklipp.» Kalleren eier altså flaten OG skyggen bak
+ * plagget; asseten leverer bare motivet, og kan derfor vises i både mørk og
+ * lys modus. Et nytt plagg-PNG med innbakt bakgrunn stryker
+ * __tests__/monter-assets.alfa.test.ts. Ett dokumentert unntak i dag:
+ * plagg-sydvest.png venter på manuell maske (MANUELL-listen i
+ * tools/cut-plagg.mjs) og er fortsatt ugjennomsiktig.
  */
 
 const MONTER_BASE = `${import.meta.env.BASE_URL}monter/`;

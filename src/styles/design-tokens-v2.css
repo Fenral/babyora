@@ -37,6 +37,10 @@
   --dw-canvas-glow: #24180F;   /* nivå 0 · gradient-topp     · L 22.2 (var #2B1D11/L24.5 — lå 0.7 fra raised; glød bak maskot legges lokalt/radialt, ikke som generell lysning) */
   --dw-panel: #113B3E;         /* nivå 1 · petrol-instrument · L 32.5 (kjølig - skiller seg i hue, ikke valør) */
   --dw-raised: #2C1F13;        /* nivå 2 · hevet gruppeflate · L 25.2 */
+  /* Plaggplaten. Egne tokens fordi terskelen er LOKAL: platen skal gi kremull
+     nok kontrast uten at hele --dw-raised må flytte seg (portdom 25). */
+  --dw-plate: #3A2A1A;
+  --dw-plate-kant: rgba(242, 192, 138, 0.16);
   --dw-interactive: #35261A;   /* nivå 2b· interaktiv flate  · L 28.3 */
   --dw-overlay: #382817;       /* nivå 3 · sheets/dialog     · L 29.1 */
   --dw-accent-surface: #4A2F21;/* nivå 4 · valgt flate       · L 33.4 · ink-hi 10.1:1 */
@@ -59,7 +63,28 @@
   --dw-accent-pressed: #C57C46;
   --dw-ink-on-accent: #2A1708;   /* 6.5:1 på rav, 5.2:1 på trykket */
   --dw-edge-light: #F2C08A;      /* monter-lysets kjerne */
-  --dw-focus: #E8B98C;           /* fokusring · 10.1:1 canvas, 6.8:1 panel */
+
+  /* ============ Fokusringen — WCAG 2.1 SC 1.4.11 (3:1), MÅLT ============
+     To tokens, fordi appen har to slags bakteppe og bare det ene flipper:
+
+       --dw-focus        espresso-/papirsiden. Flipper med temaet.
+       --dw-focus-panel  petrol-instrumentet. TEMA-KONSTANT, som flaten.
+
+     Hvorfor ikke ett token: en fokusring på Hjem kan lande både på krem
+     (#F9F5EB) og på værfamiliens lyseste petrol (#2C4040, snø). Måler man
+     luminansvinduet der ÉN flat farge klarer 3:1 mot begge, er det 0,0030
+     bredt — og den eneste fargen i vinduet er en neonrød-oransje som leser
+     som fare, ikke fokus. Portdom 25 («Lokale tokens der terskelen er
+     lokal») gir svaret: instrumentet er tema-konstant og eier sin egen
+     ring, akkurat som det eier sin egen tekstrampe (--dw-ink-panel-*).
+     Uten delingen ville lys-kalibreringen DEGRADERT panelringen fra målte
+     6,8:1 til 3,2:1 — en «tilgjengelighetsfiks» som gjorde det verre.
+
+     Håndhevet av design-tokens-v2.focus.test.ts, som regner WCAG-kontrast
+     ut av hex-verdiene her mot hver flate ringen kan tegnes på, i begge
+     temaer. Tallene under er den testens utskrift, ikke et anslag. */
+  --dw-focus: #E8B98C;           /* mørk · canvas 10.1:1 · raised 9.0:1 · panel 6.8:1 */
+  --dw-focus-panel: #E8B98C;     /* petrol, tema-konstant · panel 6.8:1 · snø 6.1:1 · natt 8.7:1 */
 
   /* ============ Semantikk (sjelden, alltid ikon+tekst, lavmettet) ============ */
   --dw-success: #9DBF9A;  /* 8.9:1 */
@@ -243,6 +268,11 @@
        kort. Kontrast uendret/bedre (ink-hi 15.97:1, ink-mid 6.0:1 på denne
        flaten — verifisert). */
     --dw-raised: #FFFCF4;
+    /* Lys plate: varm nær-hvit, ikke ren hvit (portdom 25: ingen ren hvit som
+       flatefarge). Kremull mot krem er kanttilfellet lysriggen selv navngir,
+       så kanten må bære separasjonen. */
+    --dw-plate: #FBF6EA;
+    --dw-plate-kant: rgba(122, 88, 52, 0.22);
     --dw-interactive: #F3ECDD;
     --dw-overlay: #FFFCF4;
     --dw-accent-surface: #F1DED0;  /* valgt flate lys · mørk tekst 10.6:1 */
@@ -254,6 +284,16 @@
     --dw-accent: #9E5529;          /* = accent-700 · krem på: 4.6:1 */
     --dw-accent-pressed: #8A4A24;
     --dw-ink-on-accent: #FDF6EC;
+
+    /* Fokusringen manglet lys-verdi og arvet espresso-ringen #E8B98C, som
+       målte 1,48–1,64:1 mot krem — under WCAG 3:1, altså en indikator som
+       var i DOM-en og borte for øyet. Verdien under er valgt ved å måle
+       hele amber-familien mot alle papirflater OG det tema-konstante
+       petrol-panelet: 3,18:1 er det høyeste en amber kommer på begge sider
+       samtidig (canvas 3,52 · canvas-glow 3,18 · raised 3,74 ·
+       interactive 3,26 · overlay 3,74 · panel 3,18). Værnyansene inne i
+       instrumentet dekkes av --dw-focus-panel, ikke av denne. */
+    --dw-focus: #C26C2B;
 
     --dw-hairline: rgba(42, 29, 18, 0.14);
     --dw-shadow-raise: 0 1px 2px rgba(42, 29, 18, 0.18);
@@ -296,6 +336,11 @@
   --dw-accent: #9E5529;
   --dw-accent-pressed: #8A4A24;
   --dw-ink-on-accent: #FDF6EC;
+
+  /* Fokusringen: se begrunnelsen i @media-blokken over — begge lys-
+     inngangene må gi NØYAKTIG samme ring, ellers avhenger tilgjengelighet
+     av om brukeren valgte lys selv eller arvet den fra OS. */
+  --dw-focus: #C26C2B;
 
   --dw-hairline: rgba(42, 29, 18, 0.14);
   --dw-shadow-raise: 0 1px 2px rgba(42, 29, 18, 0.18);
