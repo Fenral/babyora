@@ -1,0 +1,39 @@
+Dommen: Den leser litt påført fordi lyskilden og objektene ikke helt tilhører samme rom. Ikke fordi gradienten mangler nok effekter.
+
+Rangering:
+
+Punkt 3 — klart viktigst. Veggen sier «key-lys øvre venstre», mens panelet svarer med jevnt, syntetisk kantlys. Da blir poolen bakgrunnsdekor.
+
+Punkt 1. Ett relativt kort falloff gir airbrush-flekk. Bruk 3–4 stopp: definert, men myk kjerne → raskere mellomfall → lang svak hale. Ikke simuler invers-kvadratisk bokstavelig.
+
+Punkt 4. En svært bred, svak vignett kan samle rommet, men er etterbehandling — ikke løsningen.
+
+Punkt 2. Nesten en feildiagnose. Synlig kjølig hue-vandring vil fort gi brungrønt slam eller en farget ring. La kjernen være varm og halen mer nøytral, ikke aktivt kjølig.
+
+b) Korn er riktig som siste materiallag, ikke som reparasjon. .055 overlay er for kraftig. Start rundt .018–.028, statisk, kun på veggen og aldri over tekst/UI. Det skal merkes når det fjernes, ikke sees når det er på.
+
+c) Ja, panelet bør få retningsbestemt respons, men ikke dynamisk kobling til poolens eksakte posisjon. Begge skal avledes fra samme faste lysvektor:
+
+sterkest rim øvre venstre,
+
+gradvis svakere mot høyre,
+
+nesten ingen på nedre kant,
+
+skygge ned–høyre.
+
+Lag dette som en maskert kantgradient/pseudo-element og tokens for key-edge, fill-edge og fast lysretning. Poolankeret kan variere per skjerm; lysretningen skal ikke gjøre det.
+
+d) Fellene er reelle:
+
+Bokstavelig lysfysikk gir hotspot og CGI-scene, ikke rolig atelier.
+
+Kjølig falloff kan forurense espresso/petrol-paletten.
+
+Vignett kan knuse hjørnene til sort søl ved 1–5 % lysstyrke.
+
+For mye korn leses som filter eller kompresjonsstøy.
+
+Element-for-element-dynamisk lys gjør UI-et teatralsk og skjørt.
+
+Riktig neste test: flerstopp-ramp + retningsbestemt panelrim, uten korn først. Hvis rommet da henger sammen, legg på svært svakt korn som finish.

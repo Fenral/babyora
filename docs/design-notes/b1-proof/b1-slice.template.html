@@ -38,6 +38,13 @@
        de 10,3 luminanstrinnene er onsket lokal modellering. */
     --pool:80% 52%; --pool-stop:58%;
     --pool-l:116% 69%; --pool-stop-l:74%;
+    /* FAST LYSVEKTOR (portdom 27). Poolen kan flytte seg per skjerm;
+       retningen skal aldri gjore det. Bade veggens pool, panelets kantlys og
+       hele dybdekontraktens skygger avledes av den samme vektoren:
+       key ovre venstre → skygge ned-hoyre. */
+    --lys-vinkel:135deg;
+    --kant-key:rgba(241,233,218,.30);   /* sterkest der lyset treffer */
+    --kant-fill:rgba(241,233,218,.10);  /* ambient, midtveis */
     --pool-gr:rgba(232,178,122,.32), transparent var(--pool-stop);
     --vignett:transparent;
     --atmo:radial-gradient(var(--pool) at 37% var(--atmo-y), var(--pool-gr)),
@@ -120,7 +127,7 @@
            opacity:0; transition:opacity 200ms var(--ease);
            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
            mix-blend-mode:overlay; }
-  #stage[data-korn="pa"]::after { opacity:.055; }
+  #stage[data-korn="pa"]::after { opacity:.022; }   /* portdom 27 */
   /* Eierprinsipp (B1-kalibrering): key-lyset sikter på skjermens HOVEDMOTIV
      (Hjem = maskoten, resultat = vitrinen, Kle paa = plagg-platen) — MEN
      lyset tilhorer ROMMET, ikke siden: det ligger i stagen og KRYSSTONER
@@ -163,17 +170,28 @@
   /* ── panel som materiale ── */
   .panel { position:relative; margin-top:118px; background:linear-gradient(178deg, #14454a 0%, var(--petrol) 26%, var(--petrol-deep) 100%);
            border-radius:20px; padding:20px 22px 18px; color:var(--p-mid);
-           box-shadow:inset 0 1px 0 rgba(241,233,218,.20), inset 1px 0 0 rgba(241,233,218,.07),
-                      inset 0 -10px 24px rgba(0,0,0,.22),
+           box-shadow:inset 0 -10px 24px rgba(0,0,0,.22),
                       0 2px 4px var(--sh-contact),
                       3px 14px 24px -10px var(--sh-mid),
                       8px 34px 70px -16px var(--sh-broad); }
   .panel::before { content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
            background:linear-gradient(215deg, rgba(241,233,218,.09), transparent 32%); }
+  /* RETNINGSBESTEMT KANTLYS (portdom 27, rangert som VIKTIGST):
+     «Veggen sier key-lys ovre venstre, mens panelet svarer med jevnt,
+     syntetisk kantlys. Da blir poolen bakgrunnsdekor.»
+     Rimmen er sterkest ovre venstre, svakere mot hoyre, nesten borte pa
+     nedre kant — avledet av den FASTE lysvektoren, ikke av poolens
+     posisjon. «Element-for-element-dynamisk lys gjor UI-et teatralsk og
+     skjort.» */
+  .panel::after { content:''; position:absolute; inset:0; border-radius:inherit;
+           pointer-events:none; padding:1px;
+           background:linear-gradient(var(--lys-vinkel), var(--kant-key) 0%, var(--kant-fill) 40%, transparent 74%);
+           -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+           -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+           mask-composite:exclude; }
   /* Lys modus arver HELE dybdekontrakten via --sh-*-tokenene; kun det indre
      bunnfallet dempes litt (paperflate reflekterer mer lys inn i panelet). */
-  [data-mode="light"] .panel { box-shadow:inset 0 1px 0 rgba(241,233,218,.22), inset 1px 0 0 rgba(241,233,218,.09),
-                      inset 0 -10px 24px rgba(0,0,0,.16),
+  [data-mode="light"] .panel { box-shadow:inset 0 -10px 24px rgba(0,0,0,.16),
                       0 2px 4px var(--sh-contact),
                       3px 14px 24px -10px var(--sh-mid),
                       8px 34px 70px -16px var(--sh-broad); }
@@ -737,10 +755,22 @@ function settAktivitet(el,navn){
    nettopp det oyet leser som «gradient pafort».
    «Fysisk» legger inn flerstopps falloff + hue-vandring mot noytralt i halen
    + vignett som lukker rommet + korn. */
+/* Portdom 27: «3-4 stopp: definert, men MYK kjerne → raskere mellomfall →
+   lang svak hale. Ikke simuler invers-kvadratisk bokstavelig.» Min forrige
+   variant var for bratt — «bokstavelig lysfysikk gir hotspot og CGI-scene,
+   ikke rolig atelier». Halen er mer NOYTRAL, ikke aktivt kjolig: «synlig
+   kjolig hue-vandring vil fort gi brungront slam eller en farget ring». */
+const ROM='rgba(234,180,124,.32) 0%, rgba(226,171,116,.235) 22%,'
+        + 'rgba(196,143,100,.105) 48%, transparent 100%';
 const FYSISK='rgba(238,184,126,.32) 0%, rgba(228,170,114,.225) 17%,'
            + 'rgba(198,143,97,.125) 37%, rgba(152,108,76,.052) 62%, transparent 100%';
 const FLATT='rgba(232,178,122,.32), transparent var(--pool-stop)';
 const LYS=[
+  /* Portdommens foreskrevne neste test: flerstopps rampe + retningsbestemt
+     panelrim, UTEN korn forst. Holder rommet sammen da, legges svakt korn pa
+     som finish. */
+  {id:'Rom', d:'84% 55%', ds:'58%', l:'120% 72%', ls:'74%', korn:'av', gr:ROM, vig:'transparent'},
+  {id:'Rom+korn', d:'84% 55%', ds:'58%', l:'120% 72%', ls:'74%', korn:'pa', gr:ROM, vig:'transparent'},
   {id:'B', d:'80% 52%',  ds:'58%', l:'116% 69%',  ls:'74%', korn:'av', gr:FLATT,  vig:'transparent'},
   {id:'Fysisk', d:'86% 56%', ds:'58%', l:'120% 72%', ls:'74%', korn:'pa', gr:FYSISK, vig:'rgba(6,3,1,.34)'},
   {id:'B+korn', d:'80% 52%', ds:'58%', l:'116% 69%', ls:'74%', korn:'pa', gr:FLATT, vig:'transparent'},
