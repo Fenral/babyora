@@ -23,7 +23,8 @@
 import type { CSSProperties } from 'react';
 import './hjem-monter.css';
 import type { WeatherNuance } from './WeatherScene.js';
-import { scanCheckDelaysMs } from './scan-orchestration.js';
+import {
+  SCANLINE_DURATION_MS, scanCheckDelaysMs } from './scan-orchestration.js';
 import { isScanOverlaySuppressed, type OutfitTransitionStatusLike } from './scan-overlay-guard.js';
 
 function CheckIcon() {
@@ -62,7 +63,12 @@ export function ScanOverlay({
 
   const animate = !reducedMotion;
   const delays = scanCheckDelaysMs(totalDurationMs);
-  const scanDurationStyle = { '--hjm-scan-duration': `${totalDurationMs}ms` } as CSSProperties;
+  /* Streken bruker sin EGEN lengde, ikke seremoniens. Sveipet den helt til
+     slutt, fantes det ingen stillstand foran resultatet — bare en pause på
+     papiret. Ved omberegning (kortere enn full scan) tas den korteste, så
+     streken aldri overlever sin egen kontekst. */
+  const scanlineMs = Math.min(SCANLINE_DURATION_MS, totalDurationMs);
+  const scanDurationStyle = { '--hjm-scan-duration': `${scanlineMs}ms` } as CSSProperties;
 
   return (
     <section

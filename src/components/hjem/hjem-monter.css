@@ -275,20 +275,52 @@
    Eier-override v3 (2026-08-01): åpningsklatringen (OpeningSequence) og
    dens egne body/hands-lag er FJERNET — Hjem er statisk til CTA-trykk. */
 
-.hjm-mascot {
+.hjm-mascot-anchor {
   position: absolute;
   top: -152px; /* fingertuppene (79 % av bildehøyden, målt fra alfa-bbox) lander 10px over panelkanten */
   right: 8px;
   width: 205px;
-  height: auto;
   z-index: 3;
   pointer-events: none;
+  /* Skyggen bor HER — på laget som ALDRI transformeres. Ligger den inne i det
+     skalerte laget, presses offset og blur sammen, og skyggen «puster» selv om
+     lyset står helt stille (portdom 22). */
   filter: drop-shadow(var(--hjm-mascot-shadow));
 }
-.hjm-mascot[data-compact='true'] { width: 188px; top: -140px; }
+.hjm-mascot-anchor[data-compact='true'] { width: 188px; top: -140px; }
 @media (max-height: 700px) {
-  .hjm-mascot { width: 164px; top: -122px; }
+  .hjm-mascot-anchor { width: 164px; top: -122px; }
 }
+
+/* BØYNINGEN bor på sitt eget lag. Pivot på den faktiske KONTAKTLINJEN — der
+   hånda hviler på panelkanten (bilde-y 382/512 = 74,6 %), ikke på
+   fingertuppene (78,7 %) som henger nedenfor kanten.
+   Amplituden er MÅLT, ikke valgt: hånda ligger 44,3 CSS-px ut fra pivot, og
+   gliet er d·sin(θ). 3,2° gir 2,46 px og bryter portkravet på maks 1 px per
+   hånd; taket er 1,29°. Derfor TO kanaler i stedet for ett kompromiss:
+   rotasjon 1,2° pluss vertikal setting scaleY(.975) om kontaktlinjen, som
+   nesten ikke koster hendene noe fordi de ligger I pivoten. Målt: håndgli
+   0,73 px, hodevandring 3,41 px. .975 er LÅST NEDRE GRENSE (portdom 22). */
+.hjm-mascot-pose {
+  display: block;
+  transform-origin: 52% 74.6%;
+  transform: rotate(0deg) scaleY(1);
+  transition: transform var(--dw-m-bow-in) var(--dw-ease);
+}
+.hjm-mascot-pose[data-compact='true'][data-pose='curious'] {
+  transform: rotate(1.2deg) scaleY(0.975);
+}
+.hjm-mascot-pose[data-animate='false'] { transition: none; }
+
+.hjm-mascot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+/* Første bilde holder høyden på ankeret; de stablede ligger oppå. */
+.hjm-mascot-normal { position: relative; }
 
 /* Del 3 (nysgjerrig maskot under scannen): MascotPeek.tsx rendrer to
    stablede <img>, begge bærende .hjm-mascot (samme geometri/ankring som
@@ -298,23 +330,22 @@
    se `.hjm-mascot-glance` under for glimtet i hvile sin egen, separate pose. */
 .hjm-mascot-normal,
 .hjm-mascot-curious {
-  transition: opacity 300ms ease-out, transform 350ms ease-out;
+  /* KUN opasitet her. `transition` er en shorthand, så en transform i samme
+     regel ville nullstilt transition-property på pose-laget over — og da
+     hopper bøyningen rett til sluttvinkelen, som er nettopp «ingen
+     animasjon». Bevegelse og opasitet bor i hvert sitt lag. */
+  transition: opacity var(--dw-m-state) var(--dw-ease);
 }
 .hjm-mascot-curious { opacity: 0; }
 .hjm-mascot-normal[data-pose='curious'] { opacity: 0; }
 .hjm-mascot-curious[data-pose='curious'] { opacity: 1; }
 
-/* Lean-in ("bøyer seg ned og retter blikket mot scan-animasjonen under
-   seg") — KUN i scanning/recalculating sin KOMPAKTE kontekst, der curious-
-   posen faktisk har noe å se ned på. */
-.hjm-mascot-curious[data-compact='true'][data-pose='curious'] {
-  /* Runde 8 (analysesløyfen): lean roterer rundt GRIPELINJEN, ikke
-     bildesenteret — alfa-målt: hendene/grepet bunner på y403 av 512-lerretet
-     (79 %), innholdssenter x268 (52 %). 88 % lå under hendene i transparent
-     luft og brøt den maskinbeviste kontakten med panelkanten. */
-  transform-origin: 52% 79%;
-  transform: rotate(3deg) translateY(4px);
-}
+/* Lean-in flyttet til .hjm-mascot-pose over. Den lå på det SAMME <img> som
+   fader inn fra opacity 0 — altså var elementet allerede i sluttvinkelen når
+   det ble synlig, og øyet så aldri noen bevegelse. Målt: én eneste distinkt
+   vinkel gjennom hele momentet. Pivoten var dessuten 79 % (fingertuppene) i
+   stedet for 74,6 % (kontaktlinjen), og 3° gir 2,46 px håndgli mot taket
+   på 1 px. */
 
 /* Redusert bevegelse: pose-bytte UTEN transition (instant), samme
    doktrine som resten av Hjem — dobbel vakt (JS-styrt data-animate fra

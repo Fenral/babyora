@@ -45,7 +45,7 @@
  * gjaldt den opprinnelige, nå retirerte, kontinuerlig LØPENDE videoen).
  */
 import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
-import { MascotPeek } from './MascotPeek.js';
+import { MascotPeek, type MascotPose } from './MascotPeek.js';
 import {
   idleGlanceDelayMs,
   idleGlanceEligible,
@@ -79,9 +79,32 @@ function isKeyboardLikelyOpen(): boolean {
 
 export type MascotIdleProps = Readonly<{
   reducedMotion: boolean;
+  /** Videresendes til MascotPeek — kompakt i scan/stale/offline. */
+  compact?: boolean;
+  /**
+   * Videresendes til MascotPeek. 'curious' under scanning/recalculating.
+   * Glimtet undertrykkes automatisk da: scan-posen er RESERVERT for
+   * «Babyora undersøker», og et hvileglimt oppå den ville stjålet den
+   * betydningen (analysesløyfe-runde 8).
+   */
+  pose?: MascotPose;
 }>;
 
-export function MascotIdle({ reducedMotion }: MascotIdleProps): ReactElement {
+/**
+ * MASKOTENS ENESTE VERT. Rendres i ALLE faser av HjemMonter — også under
+ * scanning — nettopp fordi komponenttypen på denne plassen i treet må være
+ * KONSTANT.
+ *
+ * Før: weather-ready rendret <MascotIdle>, mens scanning rendret
+ * <MascotPeek compact pose="curious"> direkte. Ulik komponenttype på samme
+ * posisjon får React til å rive den ene og montere den andre — maskoten
+ * RE-MOUNTES ved CTA-trykk. Konsekvensen var målbar: nysgjerrig-posen hadde
+ * ÉN eneste transform gjennom hele momentet (sluttilstanden fra frame 1),
+ * ingen interpolasjon, og ingen krysstoning i det hele tatt. Fire porter i
+ * tools/verify-hjem.mjs strøk på det, og art bible kaller det bindende:
+ * «Maskoten er ETT objekt som ALDRI re-mountes.»
+ */
+export function MascotIdle({ reducedMotion, compact = false, pose = 'normal' }: MascotIdleProps): ReactElement {
   const [glancing, setGlancing] = useState(false);
   const glanceTimerRef = useRef<number | null>(null);
   const holdTimerRef = useRef<number | null>(null);
@@ -210,14 +233,15 @@ export function MascotIdle({ reducedMotion }: MascotIdleProps): ReactElement {
   // mens disabled, se effektene over): selv om `glancing` skulle stå igjen
   // `true` fra rett før reducedMotion/asset-status endret seg, VISES det
   // aldri — ingen synkron setState trengs i effektene for å garantere dette.
-  const showGlance = glancing && !reducedMotion && GLANCE_ASSET_READY;
+  // Scan-posen er reservert. Glimter vi oppå den, mister «Babyora
+  // undersøker» eierskapet til uttrykket (analysesløyfe-runde 8).
+  const showGlance = glancing && !reducedMotion && GLANCE_ASSET_READY && pose === 'normal';
 
   return (
     <>
-      {/* MascotPeek sin pose forblir ALLTID 'normal' her — den scan-
-          reserverte curious-posen (maskot-nysgjerrig.png) styres
-          utelukkende av HjemMonter sin scanning/recalculating-gren. */}
-      <MascotPeek pose="normal" reducedMotion={reducedMotion} />
+      {/* Posen kommer fra HjemMonter (scanning ⇒ 'curious'); glimt-laget
+          under er alltid montert, men vises bare i hvile. */}
+      <MascotPeek compact={compact} pose={pose} reducedMotion={reducedMotion} />
       {GLANCE_ASSET_READY && (
         <img
           className="hjm-mascot hjm-mascot-glance"

@@ -26,7 +26,7 @@
  *    plagg er plaggets egen farge. Art bible §«Materialer»: «ALDRI recoloring
  *    av plagg for å passe tema. Plaggets farge er INNHOLD.» Å felle
  *    plagg-badebukse på h 219° er å felle den for å være blå.
- *    Kontrollmåling: mot de RENE utklippene i `public/monter/klippet/` — der
+ *    Kontrollmåling: mot de RENE utklippene i `public/monter/` — der
  *    utklippsforskjellen er borte og bare fargen står igjen — faller
  *    41 av 41, inkludert plagg-tykt-ullsett, som er samme plaggtype som
  *    kalibratoren. Et bånd som feller sin egen plaggtype måler noe annet
@@ -82,7 +82,7 @@
  * Da målingene over ble tatt hadde alle 42 plagg-PNG-ene i public/monter/
  * 0,0 % gjennomsiktighet — rommet og bakkeskyggen var bakt inn i filen appen
  * serverer — mens et rent utklipp av 41 av dem allerede lå i
- * public/monter/klippet/. Underveis ble de 41 promotert (commit «Assets: 41 av
+ * public/monter/. Underveis ble de 41 promotert (commit «Assets: 41 av
  * 42 klippet — sydvesten trenger manuell maske»). Etter promoteringen står
  * ÉN igjen: plagg-sydvest.png. Poenget står uansett: dette var aldri en
  * re-genereringsjobb på 42 assets — renderingene fantes, alfakanalen manglet.
@@ -106,7 +106,12 @@ import sharp from 'sharp';
 const HER = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROT = resolve(HER, '..');
 export const MONTER_KATALOG = join(REPO_ROT, 'public', 'monter');
-export const KLIPPET_KATALOG = join(MONTER_KATALOG, 'klippet');
+/* Assetene er PROMOTERT: de klippede ble byttet inn i public/monter/ og
+   public/monter/klippet/ fjernet. Katalogen peker derfor på samme sted som
+   MONTER_KATALOG. Kommentaren i testen lovet nettopp dette («så saken ikke
+   råtner når assets promoteres») — men konstanten fulgte ikke med, og CI
+   var rød i tre commits på ENOENT. */
+export const KLIPPET_KATALOG = MONTER_KATALOG;
 export const PROOF_KATALOG = join(REPO_ROT, 'docs', 'design-notes', 'b1-proof');
 
 /**
@@ -871,7 +876,7 @@ function skrivRapport({ vakt, band, rader, utenfor, ferdige, manglerUtklipp, har
     `INNENFOR:           ${innenfor.length}` +
       (visAlle && innenfor.length ? ` (${innenfor.map((r) => r.maaling.fil).join(', ')})` : ''),
   );
-  console.log(`\n  · ${ferdige.length} har allerede et FERDIG UTKLIPP i public/monter/klippet/, bevist samme rendering`);
+  console.log(`\n  · ${ferdige.length} har allerede et FERDIG UTKLIPP i public/monter/, bevist samme rendering`);
   console.log(`  · ${manglerUtklipp.length} mangler utklipp${manglerUtklipp.length ? `: ${manglerUtklipp.map((r) => r.maaling.fil).join(', ')}` : ''}`);
   console.log('\n  Dette er en KLIPPE-jobb, ikke en re-genereringsjobb: renderingene');
   console.log('  finnes allerede, det er alfakanalen som mangler i filen appen serverer.');

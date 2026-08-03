@@ -29,6 +29,21 @@ import type { ScanCacheSlot, ScanStaleReason } from '../../lib/scan/types.js';
  * ser det» ved kortere varigheter var eierens begrunnelse.
  */
 export const FULL_SCAN_DURATION_MS = 3200;
+
+/**
+ * SCANLINJENS EGEN LENGDE — kortere enn seremonien, med vilje.
+ *
+ * Eierkrav: «det mangler fortsatt en liten stopp etter at analysen er ferdig.
+ * La den stå i 0,5 sekund og deretter scroll.» Pausen fantes på papiret, men
+ * ikke i appen: streken sveipet helt til 3200, så MÅLT var siste bevegelse
+ * 3216 ms og stillstanden −16 ms. Et hold der noe fortsatt beveger seg, er
+ * ikke et hold.
+ *
+ * Streken stopper nå på fullføringsmarkøren, og de resterende 700 ms er ekte
+ * stillstand før resultatet skyves inn. Verifisert av port 6 i
+ * tools/verify-hjem.mjs, som måler siste bevegelse i ETHVERT element.
+ */
+export const SCANLINE_DURATION_MS = 2500;
 /**
  * Sjekk-poppene sine forsinkelser, som andel av total varighet. Ingen egen
  * 3,2s-mock finnes — de proporsjonale forholdstallene fra P3s 2,1s-mock

@@ -46,11 +46,22 @@ const MASCOT_CURIOUS_SRC = `${import.meta.env.BASE_URL}monter/maskot-nysgjerrig.
 export function MascotPeek({ compact = false, pose = 'normal', reducedMotion = false }: MascotPeekProps) {
   const compactAttr = compact ? 'true' : 'false';
   const animateAttr = reducedMotion ? 'false' : 'true';
+  /* TRE LAG med hvert sitt ansvar (art bible, portdom 21+22):
+     .hjm-mascot-anchor — posisjon og SKYGGE. Transformeres ALDRI, så
+       kontakt-/håndskyggen ikke skaleres med bøyningen; ligger skyggen inne i
+       det skalerte laget, presses offset og blur sammen og skyggen «puster»
+       selv om lyset står helt stille.
+     .hjm-mascot-pose   — selve BEVEGELSEN (rotasjon + vertikal setting).
+     .hjm-mascot        — de to posene, som kun krysstoner.
+     Bevegelse og opasitet MÅ bo i hvert sitt lag: `transition` er en
+     shorthand, og en opacity-regel på pose-bildene nullstiller
+     transition-property og dreper transform-transisjonen. Da hopper
+     bøyningen rett til sluttvinkelen — som er nettopp «ingen animasjon». */
   return (
-    <>
+    <div className="hjm-mascot-anchor" data-compact={compactAttr} aria-hidden="true">
+      <div className="hjm-mascot-pose" data-pose={pose} data-compact={compactAttr} data-animate={animateAttr}>
       <img
         className="hjm-mascot hjm-mascot-normal"
-        data-compact={compactAttr}
         data-pose={pose}
         data-animate={animateAttr}
         src={MASCOT_SRC}
@@ -60,7 +71,6 @@ export function MascotPeek({ compact = false, pose = 'normal', reducedMotion = f
       />
       <img
         className="hjm-mascot hjm-mascot-curious"
-        data-compact={compactAttr}
         data-pose={pose}
         data-animate={animateAttr}
         src={MASCOT_CURIOUS_SRC}
@@ -68,6 +78,7 @@ export function MascotPeek({ compact = false, pose = 'normal', reducedMotion = f
         aria-hidden="true"
         draggable={false}
       />
-    </>
+      </div>
+    </div>
   );
 }

@@ -274,7 +274,9 @@ describe('lysvektoren — én retning for hele appen', () => {
  */
 const KJENT_GJELD: readonly string[] = [
   // Steg 6 (bøyningen skrives om): maskotens pose-krysstoning.
-  'transition: opacity 300ms ease-out, transform 350ms ease-out',
+  /* NEDBETALT 2026-08-03: bevegelsen flyttet til .hjm-mascot-pose og bruker
+     na var(--dw-m-bow-in)/var(--dw-ease); bildene har kun opacity via
+     var(--dw-m-state). Ratsjetten fanget at jeg forst skrev nye literaler. */
   'transition: opacity 300ms ease-out',
   // Steg 9 (analysestreken): varighet skal bli var(--dw-m-*), reisevei måles.
   'animation: hjm-scan-sweep var(--hjm-scan-duration, 2100ms) cubic-bezier(0.45, 0, 0.55, 1) 1 forwards',

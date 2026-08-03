@@ -96,7 +96,6 @@ import {
 } from '../../lib/haptics.js';
 import { WeatherScene, type MonterActivity } from './WeatherScene.js';
 import { WeatherStrip } from './WeatherStrip.js';
-import { MascotPeek } from './MascotPeek.js';
 import { MascotIdle } from './MascotIdle.js';
 import { ScanOverlay, ScanStatusBlock } from './ScanOverlay.js';
 import type { OutfitTransitionStatusLike } from './scan-overlay-guard.js';
@@ -677,7 +676,7 @@ export function HjemMonter({
               MascotPeek.tsx sin crossfade-dokumentasjon. Tilbake til
               'normal' skjer implisitt idet fasen forlater scanning/
               recalculating (andre grener kaller MascotPeek uten pose). */}
-          <MascotPeek compact pose="curious" reducedMotion={reducedMotion} />
+          <MascotIdle compact pose="curious" reducedMotion={reducedMotion} />
           <ScanOverlay
             cityLabel={cityLabel}
             nuance={nuance}
@@ -757,7 +756,7 @@ export function HjemMonter({
       <div className="hjem-monter">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
-          <MascotPeek compact />
+          <MascotIdle compact reducedMotion={reducedMotion} />
           <WeatherScene
             cityLabel={cityLabel}
             nuance={nuance}
@@ -825,7 +824,7 @@ export function HjemMonter({
       <div className="hjem-monter">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
-          <MascotPeek compact />
+          <MascotIdle compact reducedMotion={reducedMotion} />
           <WeatherScene
             cityLabel={cityLabel}
             nuance={nuance}
