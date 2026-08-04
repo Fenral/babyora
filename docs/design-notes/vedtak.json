@@ -128,6 +128,38 @@
       "handhevesAv": null,
       "status": "brutt",
       "merknad": "BLOKKERER. Knappen i ResultSurface.tsx:84 heter «Kle pa, steg for steg», men fører til Paakledning-dialogen som viser ALT paa en gang. Stepperen er aldri bygget. Dette er grunnen til at begge gamle grener ble felt: ingen av dem ER stepperen. Bygges i fase 4 sammen med gjenoppbyggingen."
+    },
+    {
+      "id": "proofen-er-fasit",
+      "vedtak": "B1-proofen (docs/design-notes/b1-proof/b1-slice.template.html + artifact b2fbb612) er FASIT for Hjem, scan, resultat og Kle paa. Appens hjem-monter.css er en DELVIS port av den og skal aldri brukes som malestokk.",
+      "kilde": "eier 2026-08-04: «Jeg skjonner ikke hvorfor det som i utgangspunktet var en plan er borte dagen etterpa» — malbilde-mockene ble bygget mot appen i stedet for proofen, og mistet bade sirkelplaten og portdom 24",
+      "handhevesAv": null,
+      "status": "brutt",
+      "merknad": "BLOKKERER. Enhver mock eller migrering skal male mot proofen. Avvik mellom app og proof er ETTERSLEP som skal lukkes, ikke en ny sannhet."
+    },
+    {
+      "id": "klepaa-sirkelplate",
+      "vedtak": "Plagget i Kle pa-stegene staar paa en SIRKEL: 216 px, border-radius 50 %, radial-gradient closest-side + plate-farge, plagget 180 px med drop-shadow. Ikke avrundet firkant.",
+      "kilde": "B1-proofen .kp-plate; eier 2026-08-04: «Denne hadde ogsa en sirkel ikke firkant rundt seg»",
+      "handhevesAv": null,
+      "status": "brutt",
+      "merknad": "Gjelder KUN Kle pa-stegets store plate. Listeminiatyrene (.hjm-thumb / .b-thumb) er og forblir 13 px avrundet firkant — de er en annen komponent."
+    },
+    {
+      "id": "portdom-24-luftfordeling",
+      "vedtak": "Overskuddshoyden legges OVER maskot/panel-gruppen, ikke i et hull mellom instrument og handling. Avstanden panel til overskrift har TAK paa 88 px og er elastisk ned til 24. Toppluften vokser; hero-gruppen synker mot midten.",
+      "kilde": "portdom 24 i B1-proofen (.screen-pad / .gap); eier 2026-08-04: «Vaerkart med avatar ble flyttet naermere midten»",
+      "handhevesAv": null,
+      "status": "brutt",
+      "merknad": "Det var DENNE flyttingen som gjorde at lyspoolen pekte pa tom vegg og utloste gradient-jobben. Appen har fast margin-top 130 og har aldri fatt fordelingen."
+    },
+    {
+      "id": "lyspool-folger-motivet",
+      "vedtak": "Lyspoolens Y-anker folger skjermens hovedmotiv (Hjem: maskoten) via --atmo-y satt fra faktisk layout, aldri en fast prosent av skjermen. X staar fast paa 37 % — key kommer fra ovre venstre.",
+      "kilde": "B1-proofen; eierfunn 2026-08-03 «gir lyset i bakgrunnen noen mening na?» — malt 254 px mellom veggens lyseste punkt og maskotens hode",
+      "handhevesAv": null,
+      "status": "brutt",
+      "merknad": "Folger av portdom 24: flyttes hero-gruppen uten at poolen folger med, sikter lyset pa ingenting."
     }
   ]
 }
