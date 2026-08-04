@@ -232,7 +232,18 @@ try {
     // for seg, og bare elementer som finnes i BEGGE nabobilder sammenlignes —
     // da er montering og avmontering ikke bevegelse.
     const stille = await page.evaluate(async () => {
-      const VELG = ['.hjm-mascot', '.hjm-scanline', '.hjm-panel-slot', '.hjm-rows', '.hjm-synth'];
+      /* SJETTE forekomst av «en port som bestar pa fravaer» — og denne gangen
+         INNE i porten som ble skrevet for a bevise stillhet.
+         `.hjm-synth` finnes ikke i src/ i det hele tatt (0 treff) — den er
+         arvet fra B1-proofen. Og de to elementene som FAKTISK beveger seg
+         gjennom det pastatte holdet stod ikke i lista: `.hjm-s-spin` snurrer
+         `hjm-spin 1s linear infinite`, og `.hjm-s-check` er raden som skal
+         lande med hake ved 2500 ms.
+         Eieren rapporterte «det mangler fortsatt en liten stopp» TO ganger.
+         Porten meldte 674 ms stillhet begge gangene — malt over et utvalg som
+         ekskluderte hvert eneste element inne i panelet som animerer. */
+      const VELG = ['.hjm-mascot', '.hjm-scanline', '.hjm-panel-slot', '.hjm-rows',
+        '.hjm-s-check', '.hjm-s-spin', '.hjm-scan-status'];
       const se = () => VELG.flatMap((v) => [...document.querySelectorAll(v)].map((e, i) => {
         const c = getComputedStyle(e);
         return { id: `${v}#${i}`, s: `${c.transform}|${c.opacity}` };
