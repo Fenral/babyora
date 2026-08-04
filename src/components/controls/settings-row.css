@@ -47,6 +47,20 @@
 
 .dw-rad--trykkbar { cursor: pointer; }
 
+/* FOKUSRINGEN LEGGES INNOVER HER, og bare her.
+   Funnet på et skjermbilde, ikke i en måling: raden går i full bredde inne
+   i et kort med `overflow: hidden`. Den globale ringen ligger 3 px UTENFOR
+   kanten — og kortet klipper den vekk. Bare underkanten slapp gjennom.
+
+   Negativ offset legger ringen like INNENFOR radens kant, der ingenting
+   klipper den. Kontrasten måles da mot radens eget bakteppe i stedet for
+   mot lerretet, og den holder: 8,95:1 mørk, 3,74:1 lys (krav 3:1).
+
+   Dette er IKKE en generell oppmykning av regelen. På den oransje CTA-en må
+   ringen fortsatt ligge utenfor, fordi den bare måler 1,47:1 mot selve
+   knappeflaten. Unntaket gjelder flater som er klippet av en forelder. */
+.dw-rad--trykkbar:focus-visible { outline-offset: -3px; }
+
 .dw-rad--trykkbar:active {
   background: color-mix(in srgb, var(--dw-ink-hi) 5%, transparent);
 }
