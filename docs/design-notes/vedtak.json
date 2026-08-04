@@ -1,6 +1,6 @@
 {
   "_": "VEDTAKSREGISTERET. Et vedtak er ikke ferdig for det finnes en sjekk som feller HELE KLASSEN, ikke instansen. Prosa dekker ikke de andre stedene og melder ikke fra nar den brytes - derfor forfaller rettinger og vi moter dem igjen. Handheves av src/styles/__tests__/vedtak-register.test.ts, som kjorer i CI. Status 'laast' krever at handhevesAv peker pa en test som FINNES. Antall laste kan bare ga opp: se laastGulv.",
-  "laastGulv": 9,
+  "laastGulv": 10,
   "vedtak": [
     {
       "id": "dybdekontrakt",
@@ -72,9 +72,9 @@
       "id": "skygge-fortegn",
       "vedtak": "Enhver --dw-sh-*, komposittert over --dw-canvas, skal ha LAVERE luminans enn lerretet. En skygge som lysner er en glod.",
       "kilde": "Impeccable 2026-08-03: --dw-depth-action er 3,3x LYSERE enn lerretet i mork modus, og dybdetesten melder gront pa at den er «dempet»",
-      "handhevesAv": null,
-      "status": "uportert-sjekk",
-      "merknad": "BLOKKERER. Dempingen pa 25 % kunne aldri lose dette - fortegnet er feil, ikke styrken."
+      "handhevesAv": "src/styles/__tests__/design-tokens-v2.skygge-fortegn.test.ts",
+      "status": "laast",
+      "merknad": "LAST 2026-08-04. Mork modus rettet: contact-cta 3,06x LYSERE -> 0,73x morkere, broad-cta 3,29x -> 0,56x. Varm-noytral espresso, ikke amber. Lys modus var allerede riktig (0,56x og 0,69x) og er uroert. CTA-ens brede skygge er fortsatt DEMPET mot den generelle (0,56x mot heroens 0,37x), saa den opprinnelige portdommen star. Mutasjonskontrakt, to ledd: injisert dagens amber -> ROD med begge tokens navngitt; gjenopprettet -> GRONN. Porten rapporterer antall malte tokens (ikke-vakuositet)."
     },
     {
       "id": "kontrakt-har-forbruker",

@@ -66,7 +66,7 @@ gate er målt til 165 s, hvorav 127 s er motorens suite.
 
 Mål: de målte tokenfeilene rettet + CTA over fold på minste støttede enhet.
 
-- [ ] `--dw-sh-*-cta` får mørk-verdier som komposittert over `--dw-canvas` er
+- [x] `--dw-sh-*-cta` får mørk-verdier som komposittert over `--dw-canvas` er
       MØRKERE enn lerretet (varm-nøytral espresso, ikke amber — Sols dom B fra
       2026-08-03). Verifiser: ny assertion i `design-tokens-v2.depth.test.ts`
       som komposittert-luminans-sjekker ALLE `--dw-sh-*` i begge tema;

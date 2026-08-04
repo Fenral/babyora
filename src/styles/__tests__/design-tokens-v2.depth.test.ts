@@ -45,11 +45,6 @@ function declaredValue(token: string, occurrence = 0): string {
   return found![1]!.trim();
 }
 
-function alphaOf(rgba: string): number {
-  const m = rgba.match(/rgba\([^)]*?,\s*([\d.]+)\s*\)/);
-  expect(m, `fant ingen alfa i «${rgba}»`).not.toBeNull();
-  return Number(m![1]);
-}
 
 describe('dybdekontrakten — struktur defineres én gang', () => {
   it.each(['--dw-depth-hero', '--dw-depth-raised', '--dw-depth-action', '--dw-depth-selected'])(
@@ -103,13 +98,22 @@ describe('dybdekontrakten — temaene overstyrer KUN farger', () => {
     expect(count).toBe(3);
   });
 
-  it('CTA-ens brede skygge er dempet mot den generelle brede i BEGGE temaer', () => {
-    for (let block = 0; block < 3; block += 1) {
-      const broad = alphaOf(declaredValue('--dw-sh-broad', block));
-      const broadCta = alphaOf(declaredValue('--dw-sh-broad-cta', block));
-      expect(broadCta, `blokk ${block}: CTA-skyggen leser som amberglød, ikke dybde`).toBeLessThan(broad);
-    }
-  });
+  /* MIGRERT 2026-08-04, ikke svekket.
+   *
+   * Denne assertionen sammenlignet ALFA: `alpha(broad-cta) < alpha(broad)`.
+   * Alfa alene sier ingenting om hvorvidt en skygge mørkner. Med amber-
+   * verdiene var CTA-skyggen 3,29x LYSERE enn lerretet — en glød — og denne
+   * testen meldte grønt fordi alfaen var lavere. Den målte styrken på noe som
+   * pekte motsatt vei, og det var nettopp derfor feilen overlevde.
+   *
+   * Egenskapen håndheves nå av `design-tokens-v2.skygge-fortegn.test.ts` med
+   * riktig mål: skyggefargen KOMPOSITTERT over sitt temas lerret ved sin egen
+   * alfa, sammenlignet i relativ luminans. Den sjekker både at ALLE --dw-sh-*
+   * mørkner, og at CTA-ens brede fortsatt er mindre mørk enn den generelle
+   * (0,56x mot 0,37x) — altså den opprinnelige dempingen, målt på riktig side
+   * av lerretet. Strengt sterkere enn alfa-proxyen.
+   *
+   * Se vedtak `skygge-fortegn` i docs/design-notes/vedtak.json. */
 
   it('lys modus bruker VARME skygger — aldri nesten-svart (leser som grått skitt på krem)', () => {
     for (const block of [1, 2]) {

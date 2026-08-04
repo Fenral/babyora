@@ -155,8 +155,18 @@
   --dw-sh-broad: rgba(4, 2, 1, 0.62);
   /* CTA: bred skygge dempet ~25 % mot --dw-sh-broad — sterkere leser som
      amberglod, ikke dybde (portdom). */
-  --dw-sh-contact-cta: rgba(120, 60, 20, 0.4);
-  --dw-sh-broad-cta: rgba(105, 62, 36, 0.46);
+  /* FORTEGNET, ikke styrken (Sols dom 2026-08-03, Impeccable v4 craft floor:
+     «a zero-offset colored halo is decoration»). Dagens amber-verdier
+     KOMPOSITTERT over lerretet ga L 0,0246 og 0,0264 mot lerretets 0,0080 —
+     altsa 3,06x og 3,29x LYSERE. Det var ingen skygge; det var en glod, og
+     dempingen paa 25 % kunne aldri lose det fordi fortegnet var feil.
+     Na varm-noytral espresso: 0,73x og 0,56x, altsa morkere. Bredskyggen er
+     fortsatt dempet mot den generelle brede (0,56x mot heroens 0,37x), saa
+     den opprinnelige portdommen om at CTA-en ikke skal rope, staar.
+     Amber beholdes der den horer hjemme: i CTA-FLATEN og ovre kantlys.
+     LYS MODUS var allerede riktig (0,56x og 0,69x) og er uroert. */
+  --dw-sh-contact-cta: rgba(26, 10, 3, 0.55);
+  --dw-sh-broad-cta: rgba(18, 7, 2, 0.62);
 
   --dw-depth-hero: 0 2px 4px var(--dw-sh-contact), 3px 14px 24px -10px var(--dw-sh-mid), 8px 34px 70px -16px var(--dw-sh-broad);
   --dw-depth-raised: 0 2px 3px var(--dw-sh-contact), 3px 12px 20px -10px var(--dw-sh-mid), 7px 28px 56px -16px var(--dw-sh-broad);
