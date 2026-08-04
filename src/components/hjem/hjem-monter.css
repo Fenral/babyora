@@ -331,9 +331,23 @@
   filter: var(--hjm-mascot-shadow);
 }
 .hjm-mascot-anchor[data-compact='true'] { width: 188px; top: -140px; }
-@media (max-height: 700px) {
-  .hjm-mascot-anchor { width: 164px; top: -122px; }
-}
+/* Barnelinjen staar PAA friskhetslinjen, ikke under den — en ny linje kostet
+   9 av de 20 pikslene flyttingen skulle gi. Utenfor kompakt-nivaet er den
+   `display:none`, som ogsa tar den ut av skjermleserens tre, saa den samme
+   informasjonen annonseres aldri to ganger. */
+.hjm-panel-child { display: none; }
+
+/* NB: denne grunnregelen MAA staa FOR @media-blokken under. Forste forsok la
+   den etter, og siden spesifisiteten er lik vant den SENERE regelen —
+   barnelinjen forsvant helt paa iPhone SE i stedet for aa flytte seg.
+   Tredje gang samme kaskadekollisjon i dette arket; art bible kaller den
+   «kompakt-tieren MA STA SIST i arket». */
+
+
+/* Barnelinjen i panelet finnes i DOM-en hele tiden, men vises kun paa lave
+   skjermer. Utenfor kompakt-nivaet er den `display:none`, som ogsa tar den ut
+   av skjermleserens tre — saa den samme informasjonen annonseres aldri to
+   ganger. */
 
 /* BØYNINGEN bor på sitt eget lag. Pivot på den faktiske KONTAKTLINJEN — der
    hånda hviler på panelkanten (bilde-y 382/512 = 74,6 %), ikke på
@@ -814,4 +828,57 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   mask-image: linear-gradient(to bottom, black 92%, transparent 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   KOMPAKT-NIVAET STAAR SIST I ARKET — det er ikke en stilpreferanse, det er
+   en kaskaderegel. Spesifisiteten er lik grunnreglenes, saa den SENERE
+   regelen vinner. Legges blokken lenger opp, gjor den ingenting for alt som
+   deklareres etter den, og feilen er stille: nivaet ser ut til aa virke fordi
+   NOEN av reglene traff.
+   Skjedde tre ganger i dette arket for det ble skrevet ned. Alt som gjelder
+   lave skjermer skal derfor UNDER denne linjen, aldri over.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── KOMPAKT-NIVA (portdom 23: «CTA over fold gjelder ogsa 375x667 saa lenge
+   enheten stottes. Definer kravet etter 100dvh minus safe areas/tabbar, ikke
+   etter iPhone-modell.»)
+
+   MALT, ikke gjettet. Pa iPhone SE med ekte safe-area la CTA-en 48 px UNDER
+   tabbaren. Hvert steg er malt for seg:
+     skjul tillitslinjen        0 px  — den ligger UNDER knappen, saa knappen
+                                       flytter seg ikke. Oppskriften tok feil
+                                       pa dette punktet; malingen felte den.
+     overheng 130 -> 108      +22 px
+     kompaktpakken under      +31 px
+     barnelinjen inn i panelet +37 px
+   Sum: 20 px klaring, over kravet paa 12.
+
+   Ingenting SLETTES. Barnelinjen FLYTTES inn i panelet — hvem beregningen
+   gjelder er kontekst for instrumentet uansett. Nivaet slar inn pa hoyde,
+   ikke pa modell, saa det folger ogsa Safari-krom og stor Dynamic Type. */
+@media (max-height: 700px) {
+  .hjm-mascot-anchor { width: 164px; top: -122px; }
+  /* Maskoten krympet fra 205 til 164 px, men plassen den fikk stod igjen paa
+     130. Det var 22 px dodt rom over panelet paa nettopp de skjermene som
+     ikke har raad til det. */
+  .hjm-panel-slot[data-with-mascot='true'] { margin-top: 108px; }
+  /* Gulvet folger nivaet. Det ble malt for vanlige skjermer (vaer 269 /
+     scan 276) og stod igjen paa 276 her, mens kompaktpanelet er 261 og 268 —
+     altsa 15 dode piksler paa noyaktig den skjermen som ikke har raad.
+     Malt paa nytt for dette nivaet: 261 og 268, gulv 268. */
+  .hjm-panel-slot { min-height: 268px; }
+  .hjm-panel { padding: 20px 22px 14px; }
+  .hjm-cta { margin-top: 14px; }
+  .hjm-ask { font-size: 22px; }
+  /* Tillitslinjen skjules — men IKKE for plassen. Malt: den ligger UNDER
+     knappen, saa aa skjule den gir 0 px gevinst, og oppskriften tok feil paa
+     det punktet. Grunnen er en annen: den blir klippet pa midten bak
+     tabbaren, og en halvt lesbar setning er verre enn ingen setning.
+     Innholdet er ikke tapt — kilden staar i panelet, og resultatet forteller
+     resten. */
+  .hjm-trust { display: none; }
+  /* Barnelinjen bytter plass: ut av handlingsblokken, inn i panelet. */
+  .hjm-child { display: none; }
+  .hjm-panel-child { display: inline; }
 }

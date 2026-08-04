@@ -1,6 +1,6 @@
 {
   "_": "VEDTAKSREGISTERET. Et vedtak er ikke ferdig for det finnes en sjekk som feller HELE KLASSEN, ikke instansen. Prosa dekker ikke de andre stedene og melder ikke fra nar den brytes - derfor forfaller rettinger og vi moter dem igjen. Handheves av src/styles/__tests__/vedtak-register.test.ts, som kjorer i CI. Status 'laast' krever at handhevesAv peker pa en test som FINNES. Antall laste kan bare ga opp: se laastGulv.",
-  "laastGulv": 15,
+  "laastGulv": 16,
   "vedtak": [
     {
       "id": "dybdekontrakt",
@@ -110,9 +110,9 @@
       "id": "cta-over-fold",
       "vedtak": "CTA-en skal vaere over fold definert som 100dvh minus safe areas og tabbar, med minst 12 px klaring. Gjelder ogsa 375x667.",
       "kilde": "portdom 23",
-      "handhevesAv": null,
-      "status": "brutt",
-      "merknad": "BLOKKERER. Malt -48 px pa iPhone SE. Portdom 23s gjenstaende steg: b) stram marginene, d) skjul trust-linjen ved lav hoyde, c) flytt Lillian-linjen inn i panelet."
+      "handhevesAv": "tools/verify-hjem.mjs",
+      "status": "laast",
+      "merknad": "LAST 2026-08-04. Malt -48 px -> +28 px paa iPhone SE med ekte safe-area. Ingenting slettet: barnelinjen FLYTTET inn i panelet, paa friskhetslinjen. Malingen felte oppskriften paa ett punkt — aa skjule tillitslinjen gir 0 px, den ligger UNDER knappen. Den skjules likevel i kompakt, fordi den ble klippet pa midten bak tabbaren. Port 9 har forutsetning om at barnelinjen FINNES, saa den kan ikke bestaa ved at informasjon slettes. Mutasjonskontrakt: fjernet kompakt-nivaet -> ROD paa -48 px; gjenopprettet -> GRONN."
     },
     {
       "id": "paakledning-gjenoppbygges",

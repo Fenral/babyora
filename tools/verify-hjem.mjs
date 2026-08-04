@@ -321,6 +321,47 @@ try {
         : bevegelserTotalt === 0 ? 'ingen bevegelse i det hele tatt — porten kan ikke bestå på fravær'
           : `${stillhet} ms (siste av ${bevegelserTotalt} bevegelser: ${sisteEndring} ms)`);
 
+    // ── 9. CTA over fold paa minste stottede enhet ────────────────────────
+    /* Portdom 23: «CTA over fold gjelder ogsa 375x667 saa lenge enheten
+       stottes. Definer kravet etter 100dvh minus safe areas/tabbar, ikke
+       etter iPhone-modell.» Malt for kompakt-nivaet ble bygget: -48 px. */
+    {
+      const liten = await browser.newPage({ viewport: { width: 375, height: 667 }, deviceScaleFactor: 2 });
+      liten.on('pageerror', (e) => jsFeil.push(String(e)));
+      await liten.route('**/api/forecast*', (r) => r.fulfill({
+        contentType: 'application/json', body: JSON.stringify(forecastPartlyCloudy1C()) }));
+      await liten.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
+      // Ekte safe-area: desktop-Chromium rapporterer env() som 0. iPhone SE = 20 px.
+      await liten.addStyleTag({ content: '.hjem-monter{padding-top:32px !important}' });
+      await liten.waitForTimeout(2200);
+      const m = await liten.evaluate(() => {
+        const cta = document.querySelector('.hjm-cta');
+        if (!cta) return null;
+        const barer = [...document.querySelectorAll('nav,[class*="tab"]')]
+          .map((e) => e.getBoundingClientRect())
+          .filter((b) => b.height > 40 && b.top > window.innerHeight * 0.6);
+        const bar = barer.length ? Math.min(...barer.map((b) => b.top)) : window.innerHeight;
+        const synlig = (sel) => {
+          const e = document.querySelector(sel);
+          return !!e && getComputedStyle(e).display !== 'none';
+        };
+        return {
+          klaring: Math.round(bar - cta.getBoundingClientRect().bottom),
+          barnelinjeFinnes: synlig('.hjm-panel-child') || synlig('.hjm-child'),
+        };
+      });
+      await liten.close();
+      /* FORUTSETNING: bade CTA-en og barnelinjen ma FINNES. Uten den siste
+         kunne porten bestatt ved at informasjon rett og slett ble slettet —
+         som er nettopp det den skal hindre. Det skjedde under byggingen:
+         en kaskadekollisjon fjernet linjen helt i stedet for a flytte den. */
+      port('9. CTA over fold paa 375x667, uten a miste informasjon',
+        m !== null && m.klaring >= 12 && m.barnelinjeFinnes,
+        m === null ? 'CTA finnes ikke — ikke malt'
+          : !m.barnelinjeFinnes ? 'barnelinjen forsvant helt i stedet for a flytte seg'
+            : `${m.klaring} px klaring (krav 12)`);
+    }
+
     if (jsFeil.length) port('ingen JS-feil', false, jsFeil.join('; '));
   }
 } catch (e) {

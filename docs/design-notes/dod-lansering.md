@@ -96,7 +96,7 @@ Mål: de målte tokenfeilene rettet + CTA over fold på minste støttede enhet.
       bruk). Tog og Varm/kald flyttes til riktig teksttoken. Ny port: forbud
       mot `--dw-accent-300` i `color`. Verifiser: målt ≥ 4,5:1 der 1,87:1 og
       1,47:1 ble målt; porten mutasjonstestet.
-- [ ] CTA ≥ 12 px klaring til tabbar på 375×667 med simulert safe-area, i
+- [x] CTA ≥ 12 px klaring til tabbar på 375×667 med simulert safe-area, i
       Sols rekkefølge: skjul trust-linjen ved kompakt høyde → overheng
       130→108 uten å skalere maskoten → mål; bare hvis < 12 px: flytt
       Lillian-linjen inn i panelets metadataområde. Verifiser: ny port i

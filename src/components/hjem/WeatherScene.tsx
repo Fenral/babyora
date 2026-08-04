@@ -57,6 +57,14 @@ export type WeatherSceneProps = Readonly<{
   /** Egen notatlinje. Kun for tilstander som faktisk har noe å SI utover
    *  været selv (feil, henting) — hviletilstanden bruker conditionText. */
   noteText?: string | null;
+  /**
+   * Barnelinjen, vist KUN på lave skjermer (portdom 23: «flytt Lillian ·
+   * Utelek inn som kompakt kontekstlinje i panelet»). Den bor normalt under
+   * overskriften; på iPhone SE koster den de siste pikslene CTA-en trenger
+   * for å stå over fold. Den flyttes altså, den slettes ikke — hvem
+   * beregningen gjelder er kontekst for instrumentet uansett.
+   */
+  compactChildLine?: string | null;
   weatherIconSrc: string | null;
   weatherIconAlt: string;
   freshnessLabel: string;
@@ -85,6 +93,7 @@ export function WeatherScene({
   feelsLikeC,
   conditionText = null,
   noteText = null,
+  compactChildLine = null,
   weatherIconSrc,
   weatherIconAlt,
   freshnessLabel,
@@ -123,6 +132,11 @@ export function WeatherScene({
       <span className="hjm-fresh" data-warn={freshnessWarn ? 'true' : 'false'}>
         <i aria-hidden="true" />
         {freshnessLabel}
+        {/* Barnelinjen legges PAA friskhetslinjen, ikke under den. En ny linje
+            inne i panelet spiser 9 av de 20 pikslene flyttingen skulle gi —
+            samme grep som portdom 23 brukte da vaertilstanden ble slaatt sammen
+            med foles-som. Vises kun paa lave skjermer. */}
+        {compactChildLine ? <span className="hjm-panel-child">{` · ${compactChildLine}`}</span> : null}
       </span>
 
       <div className="hjm-hero-row">

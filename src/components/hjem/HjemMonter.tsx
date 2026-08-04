@@ -913,6 +913,7 @@ export function HjemMonter({
           tempC={now?.tempC ?? null}
           feelsLikeC={now?.feelsLikeC ?? null}
           conditionText={now ? conditionLabel : null}
+          compactChildLine={childLine}
           weatherIconSrc={weatherIconSrc}
           weatherIconAlt={conditionLabel}
           freshnessLabel={freshnessLine.label}
