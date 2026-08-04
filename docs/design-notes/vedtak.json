@@ -1,6 +1,6 @@
 {
   "_": "VEDTAKSREGISTERET. Et vedtak er ikke ferdig for det finnes en sjekk som feller HELE KLASSEN, ikke instansen. Prosa dekker ikke de andre stedene og melder ikke fra nar den brytes - derfor forfaller rettinger og vi moter dem igjen. Handheves av src/styles/__tests__/vedtak-register.test.ts, som kjorer i CI. Status 'laast' krever at handhevesAv peker pa en test som FINNES. Antall laste kan bare ga opp: se laastGulv.",
-  "laastGulv": 12,
+  "laastGulv": 13,
   "vedtak": [
     {
       "id": "dybdekontrakt",
@@ -201,6 +201,14 @@
       "handhevesAv": null,
       "status": "uportert-sjekk",
       "merknad": "EIERBESLUTNING GJENSTAR paa CTA-flaten. Impeccables tall felte mitt eget premiss: amber holder 6,55-7,13:1 gjennom bade protanopi og deuteranopi, saa «aksent = handling er sarbart for fargeblindhet» er USANT for denne aksenten. Utfordrerens nal gir 1,38:1 for en protanop, og dens valgte aktivitet 1,12:1 mot dagens 7,24:1. Sol: endringen er lov, men bryter merkevarekontrakten «amber = handlingsflate» og ma da gjelde ALLE primaere CTA-er. BEGGE dommere: ambernalen kan ALDRI vaere eneste valgtmarkor. FORKASTET av begge: filmkornet og hero-storrelsen 5,75rem."
+    },
+    {
+      "id": "min-garderobe-slettet",
+      "vedtak": "Min garderobe er SLETTET, ikke bare umontert. 932 linjer umontert kode med sju defekter av blokkerende klasse. Historikken beholder filen om den skal hentes tilbake.",
+      "kilde": "eiervedtak 2026-08-04: «Min garderobe ble spurt om vi skulle beholde. Jeg stemmer for a fjerne den. Behold om vi henter senere.»",
+      "handhevesAv": "src/screens/__tests__/guide-routing.test.tsx",
+      "status": "laast",
+      "merknad": "Testen sjekket for at skjermen forble UMONTERT; na sjekker den at filen er BORTE — samme monster som GuideHubScreen fikk i P6. Delte hjelpere (garment-catalog-helpers) staar igjen fordi Plaggbiblioteket bruker dem."
     }
   ]
 }

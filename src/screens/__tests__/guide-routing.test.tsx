@@ -24,7 +24,15 @@ describe('Guide route migration', () => {
     expect(program).not.toMatch(/Mine plagg|egne plagg|personliggjør/u);
   });
 
-  it('MinGarderobeScreen forblir umontert (App.tsx refererer den aldri)', () => {
+  /* SLETTET 2026-08-04 pa eiervedtak: «Min garderobe ble spurt om vi skulle
+     beholde. Jeg stemmer for a fjerne den.»
+     Skjermen var 932 linjer umontert kode med sju defekter av blokkerende
+     klasse, og den la som eneste apne punkt i fase 6B. Testen sjekket for at
+     den forble UMONTERT; na sjekker den at den er BORTE — samme monster som
+     GuideHubScreen fikk i P6. Historikken beholder filen om vi vil hente den
+     tilbake. */
+  it('MinGarderobeScreen er slettet, ikke bare umontert', () => {
+    expect(existsSync(resolve(process.cwd(), 'src/screens/MinGarderobeScreen.tsx'))).toBe(false);
     const app = source('src/App.tsx');
     expect(app).not.toContain('MinGarderobeScreen');
     expect(app).not.toContain("target === 'min-garderobe'");

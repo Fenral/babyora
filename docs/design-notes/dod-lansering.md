@@ -276,7 +276,7 @@ føles feil.
 ## FASE 6B — Utbedring + release-porten
 
 - [ ] Alle låste 6A-funn utbedret, verifisert per punkt.
-- [ ] Min garderobe: eiers vedtak (sletting eller port) gjennomført.
+- [x] Min garderobe SLETTET 2026-08-04 på eiervedtak. Historikken beholder filen.
 - [ ] Sydvesten: manuell maske.
 - [ ] **RELEASE-PORTEN** (Sol-blokker 6, siste DoD-punkt før lansering):
       - build, typecheck, lint, full testpakke + `verify:hjem` grønne på samme SHA
