@@ -46,11 +46,20 @@ workflows:
         - ~/.npm
         - ~/Library/Caches/org.swift.swiftpm
         - $CM_BUILD_DIR/SourcePackages
+    # BYGG BARE NAAR DET FINNES NOE A SE (eier 2026-08-04: «er det nodvendig
+    # a starte nye bygg hver gang?»). Nei. Hver push til main startet for et
+    # fullt iOS-bygg og en TestFlight-opplasting — ti bygg pa en dag med
+    # designsystem-arbeid som ikke endrer noe synlig i appen.
+    #
+    # Na bygges det kun paa TAG. Slik lager du et bygg naar du vil ha et:
+    #   git tag v1.0.12 && git push origin v1.0.12
+    # Det gjor hvert bygg til en bevisst handling med et versjonsnummer,
+    # i stedet for en bivirkning av a lagre arbeid.
     triggering:
       events:
-        - push
-      branch_patterns:
-        - pattern: main
+        - tag
+      tag_patterns:
+        - pattern: 'v*'
           include: true
     scripts:
       - name: Install dependencies

@@ -474,7 +474,21 @@
   animation: hjm-check-pop 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
 }
 .hjm-s-spin { border: 2px solid rgba(241, 233, 218, 0.25); border-top-color: var(--dw-ink-panel-hi); }
-.hjm-s-spin[data-animate='true'] { animation: hjm-spin 1s linear infinite; }
+/* FULLFORINGSMARKOREN. Spinneren snurret `infinite` gjennom hele det
+   pastatte holdet: port 6 malte 8 ms stillstand der kravet er 500, og
+   eieren rapporterte to ganger at stoppen manglet.
+   Na snurrer den KUN mens markoren ikke har landet, og landingen bruker
+   --dw-m-marker (180 ms) — raskere enn --dw-m-state med vilje: markoren
+   skal LANDE, ikke gli, saa holdet etterpa blir saa langt som mulig. */
+.hjm-s-marker[data-animate='true'][data-done='false'] { animation: hjm-spin 1s linear infinite; }
+.hjm-s-marker[data-done='true'] { animation: none; background: var(--dw-ink-panel-hi); }
+.hjm-s-marker[data-done='true'] svg { color: var(--hjm-nuance, var(--dw-w-rain)); }
+.hjm-s-marker[data-done='true'][data-animate='true'] {
+  transition: background var(--dw-m-marker) var(--dw-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hjm-s-marker { animation: none !important; transition: none !important; }
+}
 @keyframes hjm-spin { to { transform: rotate(360deg); } }
 @keyframes hjm-check-pop {
   from { transform: scale(0.4); opacity: 0; }

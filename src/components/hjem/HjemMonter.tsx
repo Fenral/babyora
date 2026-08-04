@@ -106,6 +106,7 @@ import {
   decideScanEntry,
   fullScanHapticSchedule,
   FULL_SCAN_DURATION_MS,
+  MARKER_AT_MS,
   QUICK_RECALC_DURATION_MS,
   staleCtaLabel,
   staleHeadline,
@@ -379,6 +380,26 @@ export function HjemMonter({
   }, []);
   useEffect(() => clearTimer, [clearTimer]);
 
+  /* FULLFORINGSMARKOREN (art bible: seremonien skal ha et synlig punktum).
+     Egen timer, ikke fase-timeren: markoren lander ved MARKER_AT_MS mens
+     resultatet forst kommer ved FULL_SCAN_DURATION_MS. Det er nettopp
+     mellomrommet som er «den lille stoppen» eieren savnet to ganger. */
+  const [markerDone, setMarkerDone] = useState(false);
+  const markerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearMarkerTimer = useCallback(() => {
+    if (markerTimerRef.current !== null) {
+      clearTimeout(markerTimerRef.current);
+      markerTimerRef.current = null;
+    }
+  }, []);
+  const armMarker = useCallback((totalMs: number) => {
+    clearMarkerTimer();
+    setMarkerDone(false);
+    // Reduced motion: ferdig med en gang, ingen ventetid a se paa.
+    if (reducedMotion || totalMs <= MARKER_AT_MS) { setMarkerDone(true); return; }
+    markerTimerRef.current = setTimeout(() => setMarkerDone(true), MARKER_AT_MS);
+  }, [clearMarkerTimer, reducedMotion]);
+
   const runTimer = useCallback((durationMs: number, onFire: () => void) => {
     clearTimer();
     if (reducedMotion || durationMs <= 0) {
@@ -562,8 +583,9 @@ export function HjemMonter({
     setAwaitingScanData(false);
     scan.scanStarted(identity);
     runPreLandingHapticSchedule(fullScanHapticSchedule(FULL_SCAN_DURATION_MS));
+    armMarker(FULL_SCAN_DURATION_MS);
     runTimer(FULL_SCAN_DURATION_MS, completeScan);
-  }, [ctaPlan, revealCachedResult, identity, scan, runTimer, completeScan, runPreLandingHapticSchedule]);
+  }, [ctaPlan, revealCachedResult, identity, scan, runTimer, completeScan, runPreLandingHapticSchedule, armMarker]);
 
   /**
    * v4: «Beregn på nytt» (vær-basis / mislykket omberegning) er en eksplisitt
@@ -694,11 +716,14 @@ export function HjemMonter({
             totalDurationMs={totalDurationMs}
             reducedMotion={reducedMotion}
             outfitTransitionStatus={outfitTransitionStatus}
+            markerDone={markerDone}
           />
         </div>
         <div className="hjm-body">
           <ScanStatusBlock
-            headline={isFullScan ? `Kler på ${childName} i tankene…` : `Kler på ${childName} på nytt…`}
+            headline={markerDone
+              ? 'Antrekket er klart'
+              : isFullScan ? `Kler på ${childName} i tankene…` : `Kler på ${childName} på nytt…`}
             subline="Tar bare et lite øyeblikk."
             onSkip={handleSkip}
             outfitTransitionStatus={outfitTransitionStatus}

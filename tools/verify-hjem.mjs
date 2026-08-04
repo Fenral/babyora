@@ -258,12 +258,35 @@ try {
          Eieren rapporterte «det mangler fortsatt en liten stopp» TO ganger.
          Porten meldte 674 ms stillhet begge gangene — malt over et utvalg som
          ekskluderte hvert eneste element inne i panelet som animerer. */
-      const VELG = ['.hjm-mascot', '.hjm-scanline', '.hjm-panel-slot', '.hjm-rows',
-        '.hjm-s-check', '.hjm-s-spin', '.hjm-scan-status'];
-      const se = () => VELG.flatMap((v) => [...document.querySelectorAll(v)].map((e, i) => {
+      /* AVLEDET MALMENGDE, ikke en handskrevet liste.
+         Den handskrevne lista var arsaken til at porten var blind to ganger:
+         forst sporet den '.hjm-synth' (0 treff, arvet fra proofen), og i det
+         oyeblikket spinneren ble omdopt fra .hjm-s-spin til .hjm-s-marker ble
+         lista foreldet PA NYTT — uten at noe sa fra, fordi de andre
+         selektorene fortsatt ga treff. En «null mal = rodt»-regel fanger ikke
+         det: feilklassen er FEIL SIKTET, ikke tom.
+         Na utledes skopet fra artefakten selv: alt som faktisk animerer i
+         panelet og statusblokken, hentet fra Web Animations API, PLUSS de
+         faste ankrene. Legges det til et nytt animert element i fase 3 eller
+         4, er det dekket automatisk. */
+      const ANKRE = ['.hjm-mascot', '.hjm-panel-slot', '.hjm-rows'];
+      const ROTER = ['.hjm-panel', '.hjm-ask-block'];
+      const animerte = new Set();
+      for (const rot of ROTER) {
+        for (const el of document.querySelectorAll(rot)) {
+          for (const a of el.getAnimations({ subtree: true })) {
+            if (a.effect && a.effect.target) animerte.add(a.effect.target);
+          }
+        }
+      }
+      const maal = [...document.querySelectorAll(ANKRE.join(','))];
+      for (const el of animerte) if (!maal.includes(el)) maal.push(el);
+      window.__maalAntall = maal.length;
+      window.__animerteAntall = animerte.size;
+      const se = () => maal.map((e, i) => {
         const c = getComputedStyle(e);
-        return { id: `${v}#${i}`, s: `${c.transform}|${c.opacity}` };
-      }));
+        return { id: `${e.className || e.tagName}#${i}`, s: `${c.transform}|${c.opacity}` };
+      });
       const ut = [];
       await new Promise((res) => {
         const tikk = () => {

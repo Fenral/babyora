@@ -46,6 +46,8 @@ export type ScanOverlayProps = Readonly<{
   totalDurationMs: number;
   reducedMotion: boolean;
   outfitTransitionStatus: OutfitTransitionStatusLike;
+  /** Har fullforingsmarkoren landet? Settes av HjemMonter ved MARKER_AT_MS. */
+  markerDone?: boolean;
 }>;
 
 /** Panel-interne delen: sted-rad (dempet) + skannelinje + 3 sjekk-rader + 1 spinnende rad. */
@@ -58,6 +60,7 @@ export function ScanOverlay({
   totalDurationMs,
   reducedMotion,
   outfitTransitionStatus,
+  markerDone = false,
 }: ScanOverlayProps) {
   if (isScanOverlaySuppressed(outfitTransitionStatus)) return null;
 
@@ -100,10 +103,22 @@ export function ScanOverlay({
             <span className="hjm-scan-val">{row.value}</span>
           </div>
         ))}
+        {/* FULLFORINGSMARKOREN. Spinneren snurret `infinite` gjennom hele
+            det pastatte holdet — den var det som gjorde at eieren ikke
+            kjente noen stopp. Na LANDER den paa markortidspunktet: hake,
+            verdi og stopp, alt paa --dw-m-marker (180 ms, «lander, glir
+            ikke»). Reduced motion: ferdig fra forste frame. */}
         <div className="hjm-scan-row">
-          <span className="hjm-s-check hjm-s-spin" data-animate={animate ? 'true' : 'false'} aria-hidden="true" />
+          <span
+            className="hjm-s-check hjm-s-marker"
+            data-done={markerDone ? 'true' : 'false'}
+            data-animate={animate ? 'true' : 'false'}
+            aria-hidden="true"
+          >
+            {markerDone ? <CheckIcon /> : null}
+          </span>
           {spinningLabel}
-          <span className="hjm-scan-val">{spinningValue}</span>
+          <span className="hjm-scan-val">{markerDone ? spinningValue : ''}</span>
         </div>
       </div>
     </section>

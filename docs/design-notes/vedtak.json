@@ -1,6 +1,6 @@
 {
   "_": "VEDTAKSREGISTERET. Et vedtak er ikke ferdig for det finnes en sjekk som feller HELE KLASSEN, ikke instansen. Prosa dekker ikke de andre stedene og melder ikke fra nar den brytes - derfor forfaller rettinger og vi moter dem igjen. Handheves av src/styles/__tests__/vedtak-register.test.ts, som kjorer i CI. Status 'laast' krever at handhevesAv peker pa en test som FINNES. Antall laste kan bare ga opp: se laastGulv.",
-  "laastGulv": 10,
+  "laastGulv": 12,
   "vedtak": [
     {
       "id": "dybdekontrakt",
@@ -57,8 +57,8 @@
       "vedtak": "Minst 500 ms full stillstand for resultatet kommer.",
       "kilde": "eierkrav",
       "handhevesAv": "tools/verify-hjem.mjs",
-      "status": "brutt",
-      "merknad": "BRUTT, avdekket 2026-08-04. Porten sporet '.hjm-synth' (finnes IKKE i src/, arvet fra proofen) og manglet '.hjm-s-spin' som snurrer infinite gjennom hele det pastatte holdet. Malt med riktig utvalg: 8 ms stillstand, siste av 404 bevegelser pa 3192 ms — resultatet lander pa 3200. Eieren rapporterte «det mangler fortsatt en liten stopp» TO ganger og fikk gront begge gangene. Fullforingsmarkoren art bible foreskriver ved 2500 ms (rad 4 far hake + verdi, overskrift bytter, maskoten retter seg opp) er aldri bygget; --dw-m-marker har null forbrukere."
+      "status": "laast",
+      "merknad": "LAST igjen 2026-08-04 etter at markoren ble bygget. 663 ms malt over en AVLEDET malmengde (Web Animations API over panelet + statusblokken), ikke en handskrevet selektorliste. Den gamle lista rakk a bli foreldet TO ganger: forst .hjm-synth med 0 treff, sa igjen da spinneren ble omdopt til .hjm-s-marker."
     },
     {
       "id": "portdom-23-en-linje",
@@ -191,8 +191,8 @@
       "vedtak": "Ved 2500 ms lander fullforingsmarkoren: rad 4 far hake og verdi, overskriften bytter til «Antrekket er klart», og maskoten retter seg opp med --dw-m-bow-out. Markoren LANDER pa --dw-m-marker (180 ms) — den glir ikke. Deretter ekte stillhet til resultatet pa 3200.",
       "kilde": "art bible §Scan-koreografiens fullforingsmarkor; eierfunn gjentatt TO ganger: «det mangler fortsatt en liten stopp etter at analysen er ferdig»",
       "handhevesAv": "tools/verify-hjem.mjs",
-      "status": "brutt",
-      "merknad": "BLOKKERER. Uten punktum er de siste 700 ms stall, ikke seremoni — og da faller hele begrunnelsen for 3,2 s bort. Porten ser na elementene og stryker korrekt (8 ms mot krav 500)."
+      "status": "laast",
+      "merknad": "LAST 2026-08-04. Siste rad lander med hake og verdi ved MARKER_AT_MS (2500), overskriften bytter til «Antrekket er klart», og spinneren STOPPER. Malt: port 6 gikk fra 8 ms til 663 ms stillstand (krav 500). Reduced motion: ferdig fra forste frame."
     },
     {
       "id": "blekk-og-lys-delvis-adoptert",

@@ -44,6 +44,20 @@ export const FULL_SCAN_DURATION_MS = 3200;
  * tools/verify-hjem.mjs, som måler siste bevegelse i ETHVERT element.
  */
 export const SCANLINE_DURATION_MS = 2500;
+
+/**
+ * FULLFORINGSMARKOREN. Art bible foreskriver den ved 2500 ms: siste rad far
+ * hake og verdi, overskriften bytter, og maskoten retter seg opp.
+ *
+ * Den var aldri bygget, og det er rotarsaken bak eierens gjentatte funn
+ * «det mangler fortsatt en liten stopp etter at analysen er ferdig».
+ * Uten punktum er de siste 700 ms ikke et hold, men en stall: spinneren
+ * roterte `hjm-spin 1s linear infinite` helt fram til resultatet.
+ *
+ * Samme tall som scanlinjen med vilje: streken forlater boksen NOYAKTIG
+ * naar markoren lander, saa holdet etterpa er helt uten bevegelse.
+ */
+export const MARKER_AT_MS = SCANLINE_DURATION_MS;
 /**
  * Sjekk-poppene sine forsinkelser, som andel av total varighet. Ingen egen
  * 3,2s-mock finnes — de proporsjonale forholdstallene fra P3s 2,1s-mock
