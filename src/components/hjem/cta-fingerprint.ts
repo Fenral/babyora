@@ -41,7 +41,9 @@ export const CTA_REVEAL_LABEL = 'Vis dagens antrekk';
  * which path you are on.» Ingen motorspråk (art bible forbyr «analysert»);
  * dette er vær, sted og aktivitet — brukerens egne ord.
  */
-export const CTA_CEREMONY_LINE = 'Vær, sted og aktivitet vurderes sammen';
+/* Sier KILDEN, ikke prosessen (begge dommere 2026-08-04). «vurderes sammen»
+ * beskriver hva appen gjor; brukeren trenger a vite hva den bygger pa. */
+export const CTA_CEREMONY_LINE = 'Været fra met.no, rådet tilpasset barnet ditt';
 /* MÅTTE RETTES: sto «Vær, sted og aktivitet er uendret siden sist». Det er en
    påstand om INPUTENE, og den er usann — nøkkelen (computeScanResultKey)
    inneholder plaggene og været, ikke sted og aktivitet. Bytter man aktivitet

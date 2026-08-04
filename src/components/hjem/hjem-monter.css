@@ -64,7 +64,9 @@
 }
 
 .hjm-top { flex: none; }
-.hjm-brand { font-size: 13px; font-weight: 700; letter-spacing: 0.24em; color: var(--dw-ink-hi); }
+/* Dekor skal ikke sta hoyere enn informasjon: ordmerket sto paa 15,00:1
+   mens barnelinjen (ekte data) star paa 6,54:1. */
+.hjm-brand { font-size: 13px; font-weight: 700; letter-spacing: 0.24em; color: var(--dw-ink-low); }
 
 /* .hjm-mascot-slot fjernet: maskoten ankres direkte i .hjm-panel-slot (P9-eierfunn: grepet gled fra kanten via margin-kollaps gjennom det tomme ankeret) */
 /* Panelet ligger 106-130px ned for å gi rom til maskoten som henger over
@@ -142,16 +144,28 @@
 .hjm-panel[data-nuance='rain'] { background: var(--dw-w-rain); --hjm-nuance: var(--dw-w-rain); }
 .hjm-panel[data-nuance='snow'] { background: var(--dw-w-snow); --hjm-nuance: var(--dw-w-snow); }
 .hjm-panel[data-nuance='night'] { background: var(--dw-w-night); --hjm-nuance: var(--dw-w-night); }
+/* PORTDOM 27 ENDELIG FORBRUKT (2026-08-04, adoptert fra utfordreren).
+   Var: en symmetrisk 1,5 px stripe langs overkanten med toppunkt paa MIDTEN
+   — altsa sterkest der lyset IKKE treffer. Portdommen sa det rett ut:
+   «Veggen sier key-lys ovre venstre, mens panelet svarer med jevnt,
+   syntetisk kantlys. Da blir poolen bakgrunnsdekor.»
+   Na en MASKERT RING avledet av den faste lysvektoren: sterkest ovre
+   venstre, ambient midtveis, nesten borte nedre hoyre.
+   --dw-lys-vinkel / --dw-kant-key / --dw-kant-fill hadde NULL forbrukere i
+   src/ for dette — kontrakten var skrevet, unit-testet og aldri rendret. */
 .hjm-panel::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 7%;
-  right: 7%;
-  height: 1.5px;
-  border-radius: 2px;
-  background: var(--dw-edge-light-gradient);
-  opacity: 1;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 1.2px;
+  background: linear-gradient(var(--dw-lys-vinkel),
+    var(--dw-kant-key) 0%, var(--dw-kant-fill) 42%, transparent 74%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
 }
 
 .hjm-loc-row {
@@ -246,12 +260,23 @@
   text-wrap: balance;
 }
 
+/* SPORET ER FREST, ikke tintet (adoptert fra utfordreren). Var en flat
+   rgba-tint uten lyslogikk — DESIGN.md-doktrine 2: «No light logic =
+   no material = flat.» Na innfelt skygge + nedre kantlys, saa velgeren
+   leser som et spor i instrumentet. Malt: uvalgt tekst gaar fra 6,26:1
+   til 10,05:1 mot det morkere sporet.
+   VALGT FLATE BEHOLDES som i dag (--dw-ink-panel-hi): begge dommere felte
+   utfordrerens #24444A, som gir 1,53:1 valgt mot uvalgt (1,12:1 for en
+   protanop) mot dagens 8,30:1. Tilstanden skal baeres av valor, ikke av en
+   3 px nal. */
 .hjm-toggle {
   display: flex;
-  background: rgba(241, 233, 218, 0.09);
+  background: rgba(4, 15, 17, 0.45);
   border-radius: var(--dw-r-pill);
   padding: 4px;
   margin-top: 18px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4),
+              inset 0 -1px 0 rgba(241, 233, 218, 0.05);
 }
 .hjm-toggle button {
   flex: 1;
@@ -539,8 +564,26 @@
   cursor: pointer;
   box-shadow: var(--dw-depth-action);
 }
+/* Slippet skal SETTLE, ikke snappe. --dw-m-feedback ble deklarert nettopp
+   for dette og hadde null forbrukere. Transitionen ligger paa grunnregelen,
+   ikke inne i :active — ellers forsvinner den i samme frame som klassen og
+   bare NEDTRYKKET animeres. */
+.hjm-cta { transition: transform var(--dw-m-feedback) var(--dw-ease),
+                       background var(--dw-m-feedback) var(--dw-ease); }
 .hjm-cta:active:not(:disabled) { background: var(--dw-accent-pressed); transform: translateY(1px); }
-.hjm-cta:disabled { opacity: 0.5; cursor: default; }
+/* Opacity paa en farget flate er den late disabled-en: den komprimerte
+   knappen til 2,58:1 tekst og 2,65:1 flate (fra 6,51 og 6,86).
+   REGNET, ikke gjettet: ingen blanding av accent mot lerretet naar 4,5:1
+   med den MORKE inken — naar flaten dempes mot et mork lerret, kollapser
+   kontrasten med mork tekst. Losningen er a bytte ink, ikke a demme flaten:
+   dempet flate 40 % + --dw-ink-hi gir 7,02:1 tekst, og flaten selv faller
+   fra 6,86:1 til 2,14:1 mot lerretet — altsa tydelig deaktivert OG lesbar. */
+.hjm-cta:disabled {
+  background: color-mix(in srgb, var(--dw-accent) 40%, var(--dw-canvas));
+  color: var(--dw-ink-hi);
+  box-shadow: none;
+  cursor: default;
+}
 .hjm-cta svg { width: 18px; height: 18px; }
 .hjm-cta-ghost {
   margin-top: 12px;
@@ -683,7 +726,8 @@
   transform: translateY(10px);
   animation: hjm-row-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-.hjm-row:active { background: rgba(241, 233, 218, 0.05); transform: scale(0.985); transition: transform 0.1s ease-out, background 0.1s ease-out; }
+.hjm-row { transition: transform var(--dw-m-feedback) var(--dw-ease), background var(--dw-m-feedback) var(--dw-ease); }
+.hjm-row:active { background: rgba(241, 233, 218, 0.05); transform: scale(0.985); }
 @keyframes hjm-row-in { to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) {
   .hjm-rows[data-fresh='true'] .hjm-row { animation: none !important; opacity: 1; transform: none; }

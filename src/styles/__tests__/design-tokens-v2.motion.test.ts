@@ -285,7 +285,9 @@ const KJENT_GJELD: readonly string[] = [
   'animation: hjm-spin 1s linear infinite',
   // Resultatlistens innslag + radens trykkrespons.
   'animation: hjm-row-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-  'transition: transform 0.1s ease-out, background 0.1s ease-out',
+  /* NEDBETALT 2026-08-04: .hjm-row konsumerer na var(--dw-m-feedback)
+     var(--dw-ease). Transitionen la dessuten INNE i :active, saa bare
+     nedtrykket animerte og slippet snappet. */
 ];
 
 const MOTION_DEKLARASJON =
