@@ -50,6 +50,21 @@ rapporterte den manglende stoppen to ganger og fikk grønt begge gangene.
 gulv. Uten dette ville fase 2 vært rød ved fødsel og regelen «ingen fremdrift
 på rødt» umulig.
 
+**MODELLRUTING** (eier 2026-08-04: «fable 5 er tilgjengelig når vi bygger nå
+til det det bør brukes til»). Ikke en preferanse, en arbeidsdeling:
+
+| oppgave | modell | hvorfor |
+|---|---|---|
+| Retning, art direction, utfordrere, kopi-tone | **Fable 5** | Fant 2026-08-04 samme diagnose uavhengig, gikk lenger, avledet temaflippen fra eksisterende tokens så den ble gratis, og fant værnyanse-feilen uprovosert |
+| Måling, verifikasjon, porter, mutasjonskontrakt, sporing av defekter | **Opus** | Samme runde: målingen felte fire ting i Fables forslag — aktivitetsvelgeren 1,53:1, nålen 1,38:1 for protanoper, filmkornet (eksplisitt forbud), hero +21 % utenfor skalaen |
+| Mekaniske sveip (token-erstatning, filflytting) | lav effort | Ingen skjønn involvert |
+
+Regelen er **Fable foreslår, målingen avgjør**. Et Fable-forslag går ALDRI
+rett i kodebasen — det måles mot craft floor, kontrastmatrisen og
+tilgjengelighet først, og domsforslaget føres i vedtak.json. Omvendt: en
+måling er ikke en retning. Å bare måle gir ingen tese, og det var nettopp
+derfor utfordreren var verdt å be om.
+
 Regler ellers: spec-en er normativ (DESIGN.md + art bible + vedtak.json).
 Avgjørelser som ikke er dekket → rimelig skjønn, ført i vedtak.json med kilde,
 aldri bare i prosa. Feiler en verifikasjon: **et DoD-punkt kan ikke lukkes, merges eller
