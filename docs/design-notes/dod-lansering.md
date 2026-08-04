@@ -81,11 +81,16 @@ gate er målt til 165 s, hvorav 127 s er motorens suite.
 
 Mål: de målte tokenfeilene rettet + CTA over fold på minste støttede enhet.
 
+- [x] **FULLFØRINGSMARKØREN ved 2500 ms** — BYGGET 2026-08-04. Siste rad får
+      hake og verdi, teksten blir «Antrekket er klart», spinneren stopper.
+      Målt: port 6 fra 8 ms til 663 ms stillstand (krav 500). Porten utleder
+      nå målmengden fra Web Animations API over panelet, ikke fra en
+      håndskrevet liste.
 - [x] `--dw-sh-*-cta` får mørk-verdier som komposittert over `--dw-canvas` er
       MØRKERE enn lerretet (varm-nøytral espresso, ikke amber — Sols dom B fra
       2026-08-03). Verifiser: ny assertion i `design-tokens-v2.depth.test.ts`
       som komposittert-luminans-sjekker ALLE `--dw-sh-*` i begge tema;
-      mutasjonskontrakt alle tre veier (dagens verdier er injeksjonen).
+      mutasjonskontrakt (to ledd; dagens verdier er injeksjonen).
 - [x] `--dw-accent-300`-feilbruken repareres på FORBRUKERNIVÅ (Sol-blokker 3:
       300 er kant/lys, aldri tekst — tokenet omdefineres ikke for å redde feil
       bruk). Tog og Varm/kald flyttes til riktig teksttoken. Ny port: forbud
@@ -137,8 +142,10 @@ mutasjonskontrakt.
       ingenting). Hvert token klassifiseres i tokenfilen som
       `obligatorisk-kontrakt` / `primitiv` / `reservert` / `deprecated`.
       Klassifisering på PREFIKS/FAMILIE, ikke per token — kun `reservert` og
-      `deprecated` føres som eksplisitte lister. Primitiver kan stå ubrukt. Verifiser: feller `--dw-lys-vinkel`-trioen i dag
-      (reservert uten begrunnelse); mutasjonskontrakt.
+      `deprecated` føres som eksplisitte lister. Primitiver kan stå ubrukt.
+      Verifiser: en SYNTETISK fjernet obligatorisk forbruker feller porten.
+      (`--dw-lys-vinkel`-trioen duger ikke lenger som eksempel — den ble
+      forbrukt 2026-08-04 da kantlyset ble bygget.) Mutasjonskontrakt, to ledd.
 - [ ] Kontrastmatrisen sjekkes inn som CI-TEST med baseline (Impeccable-
       blokker 5 + Sols ratchet: en måling ratsjeteres ikke — det var slik
       dybdekontrakten kunne stå «låst» med feil fortegn). Regner WCAG av
@@ -158,7 +165,12 @@ mutasjonskontrakt.
 - [ ] `vedtak.json`: `panel-tekstrampe`, `kontrakt-har-forbruker`,
       `portdom-23-en-linje` → `laast`, gulvet heves.
 
-## FASE 2B — Systemgrunnmuren (Sol-blokker 5; FØR migreringen)
+## FASE 2B — Systemgrunnmuren (FØR migreringen)
+
+**INNGANGSKRAV:** CTA-grammatikken må være låst før `ActionButton` ekstraheres.
+Ellers sementerer komponentlaget en uavklart merkevarebeslutning, og fase 3 må
+migreres på nytt. **OPPFYLT 2026-08-04: eier valgte ORANSJE** etter å ha sett
+begge i den ekte appen, begge tema. Ført som `blekk-og-lys-delvis-adoptert`.
 
 Mål: det sveipen skal migrere TIL, finnes. Bygges før fase 3 så de ni
 skjermene ikke må refaktoreres to ganger. (Impeccable la dette som fase 3
@@ -198,6 +210,26 @@ Kjøres som én feiesveip per mønster på tvers av alle skjermer i manifestet.
 - [ ] CTA-er → `ActionButton`-primitiven; ark → `Sheet`.
 - [ ] `:focus-visible` med riktig `--dw-focus` overalt; `outline:none` uten
       erstatning er forbudt.
+- [ ] Inline stiler flyttes til CSS-fil der mønsteret krever det
+      (`::before`-kantlys, `:focus-visible`, media queries).
+- [ ] SLUTT: alle fase 2-baselines = 0, og null settes som nytt låst gulv.
+      Verifikasjon for alle punktene: fase 2-portene grønne, grep-tellinger
+      = 0 utenfor manifestets unntak, kontrastmatrise-testen grønn i begge
+      tema, full suite + `verify:hjem`.
+
+## FASE 3B — Drilloverganger (ETTER at migreringsbaselinene er null)
+
+Fase 3 skal være **mekanisk og målbar**. Ny navigasjonsatferd samtidig gjør
+visuelle avvik umulige å tilskrive — er det migreringen eller bevegelsen som
+flyttet noe? Derfor egen fase, automatisk etter 3. Ingen ny eierport.
+
+Eksplisitt skop:
+- scan → resultat: vertikal push
+- resultat → Påkledning: vertikal inn, raskere ut
+- hovedfanene: fortsatt tapp + crossfade. **Ingen horisontal karusell, ingen
+  sveip mellom faner.**
+- Påkledning-stegene håndteres i fase 4, ikke her
+
 - [ ] **SIDESKIFTENE bygges** (eierfunn 2026-08-04). `--dw-m-push`/
       `--dw-m-push-back` har null forbrukere; appen bytter skjerm uten
       bevegelse. Port fra B1-proofens `pushTo()`: begge flater beveger seg
@@ -209,12 +241,6 @@ Kjøres som én feiesveip per mønster på tvers av alle skjermer i manifestet.
       direkte bytte. Verifiser: port som maaler at BEGGE flater har
       transform under skiftet og at ordmerket staar stille;
       mutasjonskontrakt. Fører `sideskift-er-fysiske` → `laast`.
-- [ ] Inline stiler flyttes til CSS-fil der mønsteret krever det
-      (`::before`-kantlys, `:focus-visible`, media queries).
-- [ ] SLUTT: alle fase 2-baselines = 0, og null settes som nytt låst gulv.
-      Verifikasjon for alle punktene: fase 2-portene grønne, grep-tellinger
-      = 0 utenfor manifestets unntak, kontrastmatrise-testen grønn i begge
-      tema, full suite + `verify:hjem`.
 
 ## FASE 4 — Påkledning gjenoppbygges (eiervedtak 2026-08-04)
 
