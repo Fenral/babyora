@@ -120,6 +120,14 @@
       "handhevesAv": null,
       "status": "uportert-sjekk",
       "merknad": "Beslutningen er tatt; sjekken kommer med fase 4-implementasjonen (test: PaakledningScreen bruker monter-komponentene og ingen legacy-tokens). Gamle grener slettes forst nar erstatningen finnes — «Se hele antrekket» skal aldri peke pa ingenting."
+    },
+    {
+      "id": "kle-paa-stepper",
+      "vedtak": "Etter CTA og resultat skal hvert plagg komme opp ETT OM GANGEN med «Neste» eller sveip (Kle paa-stepperen). Ett materialpoeng per steg, Bytt-inngang som hevet rad, «Hopp over» finnes ikke.",
+      "kilde": "eier 2026-08-04: «Hvert plagg kom opp med Neste eller swipe etter CTA» + art bible «Kle pa: plagginfo per steg» og «swipe finnes KUN i Kle pa-stegene»",
+      "handhevesAv": null,
+      "status": "brutt",
+      "merknad": "BLOKKERER. Knappen i ResultSurface.tsx:84 heter «Kle pa, steg for steg», men fører til Paakledning-dialogen som viser ALT paa en gang. Stepperen er aldri bygget. Dette er grunnen til at begge gamle grener ble felt: ingen av dem ER stepperen. Bygges i fase 4 sammen med gjenoppbyggingen."
     }
   ]
 }

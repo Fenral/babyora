@@ -168,6 +168,16 @@ monter-språket fra Hjem — ingen av de gamle grenene beholdes.
 - [ ] Ny Påkledning-visning bygges av monter-komponentene: plaggrader med
       utskårne bilder (`MonterGarmentRow`), plater (`--dw-plate`),
       værstripe-mønsteret, dybdekontrakten, primitivene fra 2B.
+- [ ] **KLE PÅ-STEPPEREN bygges** (eierfunn 2026-08-04: «hvert plagg kom opp
+      med Neste eller swipe etter CTA»). I dag heter knappen
+      `ResultSurface.tsx:84` «Kle på, steg for steg» og fører til en visning
+      som gir ALT på én gang — knappen lover noe destinasjonen ikke har.
+      Per art bible: ett plagg per steg, ETT materialpoeng med amber-punkt,
+      Bytt-inngang som hevet rad med overlappende miniatyrer, ingen «Hopp
+      over», horisontal sveip 1:1 med 120-260 ms settling, skallet står
+      stille, Reduce Motion kollapser til direkte bytte.
+      Verifiser: port som måler at stegantallet = antall plagg, at sveip
+      følger fingeren 1:1, og at «Hopp over» ikke finnes; mutasjonskontrakt.
 - [ ] FØRST når erstatningen er grønn: begge gamle grener slettes
       (PlannedPaakledningScreen-fallbacken OG CurrentPaakledningScreen),
       sammen med `Antrekkskart.css` sine 13 rå hex og legacy-tokenene.
