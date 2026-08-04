@@ -110,6 +110,14 @@ mutasjonskontrakt.
       1,78–2,88:1-parene; mutasjonskontrakt. Føres som `kontrastmatrise-ci`.
 - [ ] Portdom-23-port: handlingsdelen («sjekk antrekket») kan ikke komme
       tilbake i hviletilstanden. Verifiser: mutasjonskontrakt.
+- [ ] **PROOF-DIFF-PORTEN** (eierspørsmål 2026-08-04: «er animasjonen som ble
+      lagd med i planen»). Kjør B1-proofen og appen side om side i Playwright,
+      sample transform/opacity per frame gjennom hele scan-seremonien, og
+      rapporter hvert avvik. Dagens terskelporter måler håndgli, dekning og
+      stillstand — de fanget IKKE at panelet åpner seg i proofen og står låst
+      i appen. Hvert avvik ender som dokumentert avvik i vedtak.json eller som
+      etterslep i fase 3. Verifiser: porten feller den kjente panel-divergensen
+      i dag; mutasjonskontrakt. Fører `animasjon-males-mot-proofen` → `laast`.
 - [ ] `vedtak.json`: `panel-tekstrampe`, `kontrakt-har-forbruker`,
       `portdom-23-en-linje` → `laast`, gulvet heves.
 

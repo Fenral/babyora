@@ -1,6 +1,6 @@
 {
   "_": "VEDTAKSREGISTERET. Et vedtak er ikke ferdig for det finnes en sjekk som feller HELE KLASSEN, ikke instansen. Prosa dekker ikke de andre stedene og melder ikke fra nar den brytes - derfor forfaller rettinger og vi moter dem igjen. Handheves av src/styles/__tests__/vedtak-register.test.ts, som kjorer i CI. Status 'laast' krever at handhevesAv peker pa en test som FINNES. Antall laste kan bare ga opp: se laastGulv.",
-  "laastGulv": 9,
+  "laastGulv": 10,
   "vedtak": [
     {
       "id": "dybdekontrakt",
@@ -160,6 +160,22 @@
       "handhevesAv": null,
       "status": "brutt",
       "merknad": "Folger av portdom 24: flyttes hero-gruppen uten at poolen folger med, sikter lyset pa ingenting."
+    },
+    {
+      "id": "animasjon-males-mot-proofen",
+      "vedtak": "Scan-koreografien i appen skal verifiseres mot B1-PROOFENS faktiske bevegelse, ikke bare mot terskler. Hver divergens er enten et dokumentert avvik med begrunnelse eller et etterslep som skal lukkes.",
+      "kilde": "eier 2026-08-04: «Er animasjonen som ble lagd med i planen» — verify-hjem maler terskler (handgli, dekning, stillstand), aldri appen mot proofen",
+      "handhevesAv": null,
+      "status": "uportert-sjekk",
+      "merknad": "Konkret sjekk: kjor proofen og appen side om side i Playwright, sample transform/opacity per frame gjennom hele seremonien, og rapporter hvert avvik. Terskelportene fanget IKKE at panelet apner seg i proofen og staar last i appen."
+    },
+    {
+      "id": "panelet-last-ikke-apnet",
+      "vedtak": "Panelsloten staar LAST paa 276 px i stedet for a apne seg som i proofen. Bevisst avvik: etter portdom 23 er vaerpanelet 269 og scan 276, altsa 7 px fra hverandre. Proofens begrunnelse for apning var et 83 px hull som ikke lenger finnes.",
+      "kilde": "malt 2026-08-04; proofens .panel har transition:height 420ms, appen har min-height:276px last",
+      "handhevesAv": "tools/verify-hjem.mjs",
+      "status": "laast",
+      "merknad": "Dokumentert avvik, ikke etterslep. Endres innholdet i panelet slik at forskjellen igjen blir stor, skal dette males paa nytt og apningen vurderes tilbake. Port 2 i verify-hjem melder «1 hoyde — last»."
     }
   ]
 }
