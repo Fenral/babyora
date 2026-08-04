@@ -115,6 +115,75 @@
   --dw-r-raised: 14px;
   --dw-r-control: 12px;
   --dw-r-pill: 999px;
+
+  /* ============ AVSTANDSSKALAEN (fase 2B, 2026-08-04) ============
+     UTLEDET AV KODEN, ikke hentet fra en lærebok. `tools/spacing-detektor.mjs`
+     er instrumentet og kan kjøres på nytt; `docs/design-notes/spacing-
+     histogram.json` er målingen den skrev.
+
+     Målt: 56 filer, 750 avstandsverdier, 42 distinkte. Ingen skala fantes —
+     hver eneste heltallsverdi fra 1 til 20 er i bruk.
+
+     VALGET, med tallene som felte alternativene:
+       4-punktsrutenett (4/8/12/16/20/24/28/32)  dekker  46,3 %
+       8-punkt med halvtrinn                      dekker  44,3 %
+       2-punkt 2..24 pluss 32                     dekker  89,2 %
+
+     Bransjestandarden er altså FEIL for denne appen: den ville gjort ~390
+     avstander til migreringsoppgaver i fase 3 og endret den visuelle
+     rytmen på hver skjerm. Appen er bygget på et 2-punktsrutenett, og
+     skalaen sier det den er.
+
+     MÅLINGEN MÅTTE GJØRES TO GANGER. Første runde ble utført som en
+     engangsjobb og kunne ikke reproduseres av dommerpanelet: 464 av
+     verdiene er unitless React-inline-stiler (`padding: 12`), usynlige for
+     en px-detektor. Korpuset var nesten dobbelt så stort som antatt, og
+     modusen snur når de telles med — 12px (91), ikke 14px (81).
+
+     STØRRELSE ER IKKE AVSTAND. Forrige forslag talte 44px som et
+     avstandstrinn med «19 treff». Det finnes NULL 44px i en
+     avstandsegenskap; alle 89 er høyde eller bredde. Å telle en høyde som
+     en avstand kjøper dekning man ikke har. De to skalaene holdes derfor
+     fra hverandre, med hver sin dekningsberegning.
+
+     GJENSTÅENDE DRIFT: 67 forekomster (9,3 %) står utenfor rutenettet —
+     5px×13, 13px×12, 1px×10, 3px×8, 11px×8, 7px×7, 9px×4, 15px×3, 17px×2.
+     Det er fase 3s migreringsmål, ført som gulv som bare kan krympe.
+
+     Å stramme fra 2-punkt til 4-punkt er en VISUELL beslutning, ikke en
+     tokenbeslutning: 12/14/16/18 bærer 312 av 724 avstander, og å slå dem
+     sammen flytter rytmen på hver skjerm. Den avgjørelsen hører til eier,
+     med disse tallene på bordet — ikke til et token-commit. */
+  --dw-space-2: 2px;    /* 35 forekomster */
+  --dw-space-4: 4px;    /* 74 */
+  --dw-space-6: 6px;    /* 58 */
+  --dw-space-8: 8px;    /* 69 */
+  --dw-space-10: 10px;  /* 61 */
+  --dw-space-12: 12px;  /* 91 — mest brukte avstand i appen */
+  --dw-space-14: 14px;  /* 81 */
+  --dw-space-16: 16px;  /* 73 */
+  --dw-space-18: 18px;  /* 67 */
+  --dw-space-20: 20px;  /* 13 */
+  --dw-space-22: 22px;  /* 10 */
+  --dw-space-24: 24px;  /* 12 */
+  --dw-space-32: 32px;  /* 3 — beholdt som seksjonsavstand, ikke som frekvens */
+
+  /* ============ STØRRELSESMÅL (egen skala, egen dekning) ============
+     Trykkmål og radhøyder er GEOMETRI, ikke avstand. De sto som prosa i
+     doktrinen uten noe å migrere til.
+
+     --dw-size-touch: 44px er målt 89 ganger som høyde/bredde og håndheves
+     globalt i dag kun som `button { min-height: 44px }` (design-tokens.css)
+     — altså bare den ene aksen. Doktrinen krever 44x44.
+
+     ADVARSEL, målt: tre flater ligger i dag OVER kravet (.hjm-cta-ghost på
+     48, to på 64). Et forslag om å «normalisere» dem til 44 ble felt av
+     tilgjengelighetsdommeren: det ville vært tre reduksjoner og null
+     økninger, solgt som at trykkmålet ble tokenisert. Tokenet er et GULV,
+     aldri et tak. */
+  --dw-size-touch: 44px;   /* WCAG 2.5.8 / Apple HIG — gulv, aldri tak */
+  --dw-size-cta: 54px;     /* referanse-CTA-ens høyde (.hjm-cta) */
+  --dw-size-row: 62px;     /* radhøyde-gulvet — målt 3 steder i dag */
   --dw-shadow-raise: 0 1px 2px rgba(0, 0, 0, 0.5);
 
   /* ============ FAST LYSVEKTOR (portdom 27, 2026-08-03) ============

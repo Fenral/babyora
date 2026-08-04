@@ -217,6 +217,14 @@
       "handhevesAv": "src/styles/__tests__/design-tokens-v2.accent-300-forbud.test.ts",
       "status": "laast",
       "merknad": "Malt: #E7B087 gir 9,44:1 pa morkt lerret, men bare 1,76:1 pa krem — og den deklareres bare EN gang, saa den stod uendret i lys modus. Aliasene --lag-marigold, --layer-mellom og --terracotta-200 peker na paa --dw-accent (5,10:1) i standard-blokken. Mork modus uroert. Mutasjonskontrakt: injisert brudd -> ROD med alias navngitt; gjenopprettet -> GRONN."
+    },
+    {
+      "id": "avstandsskala-er-malt",
+      "vedtak": "--dw-space-* er 2-punkts rutenett 2..24 pluss 32, UTLEDET av kodens egne tall via tools/spacing-detektor.mjs. Storrelsesmaal (--dw-size-touch/-cta/-row) er en EGEN skala med egen dekningsberegning: en hoyde er ikke en avstand. Trykkmaalet er et gulv, aldri et tak.",
+      "kilde": "fase 2B, workflow med fem maalinger og tre dommere 2026-08-04",
+      "handhevesAv": "src/styles/__tests__/spacing-skala.test.ts",
+      "status": "laast",
+      "merknad": "LAST 2026-08-04. Bransjestandarden ble MALT og forkastet: 4-punktsrutenett dekker 46,3 %, 8-punkt med halvtrinn 44,3 %, 2-punkt 89,2 %. Et 4-punktsrutenett ville gjort ~390 avstander til migreringsoppgaver og endret den visuelle rytmen paa hver skjerm. MALINGEN MATTE GJORES TO GANGER: forste runde var en engangsjobb som dommerpanelet ikke klarte aa reprodusere over 72 kombinasjoner av skop og telleform. Arsaken var 464 unitless React-inline-stiler (padding: 12) som er usynlige for en px-detektor — korpuset var nesten dobbelt saa stort, og modusen snur naar de telles med (12px x91, ikke 14px x81). Forste forslag talte ogsaa 44px som et avstandstrinn med «19 treff»; det finnes NULL 44px i en avstandsegenskap, alle 89 er hoyde/bredde. Detektoren er derfor en FIL i repoet med eksplisitt erklaert skop, ikke et tall i en rapport, og porten kjorer den mot KILDEN — ikke mot en lagret JSON, som kunne vaert foreldet. Drift-gulv 78 av 724 (10,8 %), kan bare krympe. Mutasjonskontrakt: padding 21px injisert -> ROD (79 mot 78); gjenopprettet -> GRONN. Aa stramme til 4-punkt er en VISUELL beslutning for eier, ikke en tokenbeslutning: 12/14/16/18 baerer 312 av 724 avstander."
     }
   ]
 }

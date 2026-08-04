@@ -109,6 +109,8 @@ const PRIMITIV: Readonly<Record<string, string>> = {
   edge: 'monter-lysets kjerne',
   hairline: 'linjefarge',
   r: 'radie-skalaen',
+  space: 'avstandsskalaen — utledet av tools/spacing-detektor.mjs. Foedes som primitiv (DoD fase 2B)',
+  size: 'stoerrelsesmaal: trykkmaal, CTA-hoeyde, radhoeyde-gulv. Geometri, ikke avstand',
   shadow: 'legacy flat hev-skygge (--dw-shadow-raise)',
   success: 'semantikk',
   warning: 'semantikk',
@@ -173,6 +175,29 @@ const UBRUKTE_PRIMITIVER: readonly string[] = [
   '--dw-sh-broad', // avledning: bygger --dw-depth-hero / --dw-depth-raised
   '--dw-sh-broad-cta', // avledning: bygger --dw-depth-action
   '--dw-sh-contact-cta', // avledning: bygger --dw-depth-action
+  /* AVSTANDSSKALAEN + STORRELSESMAALENE, fodt 2026-08-04 (DoD fase 2B:
+     «ny skala fodes som primitiv»). De har null forbrukere FORDI ingenting
+     er migrert enna — fase 3 er sveipen som gir dem forbrukere.
+     Ratsjetten: far et trinn en forbruker, SLETT linjen her. Da kan lista
+     bare krympe, og en skala som aldri ble tatt i bruk blir synlig i stedet
+     for a ligge stille i tokenfilen. Skalaen er MALT, ikke valgt:
+     tools/spacing-detektor.mjs, 2-punkt dekker 89,2 % mot 4-punktets 46,3 %. */
+  '--dw-space-2',
+  '--dw-space-4',
+  '--dw-space-6',
+  '--dw-space-8',
+  '--dw-space-10',
+  '--dw-space-12',
+  '--dw-space-14',
+  '--dw-space-16',
+  '--dw-space-18',
+  '--dw-space-20',
+  '--dw-space-22',
+  '--dw-space-24',
+  '--dw-space-32',
+  '--dw-size-touch', // trykkmaal-gulv 44px; handheves i dag kun som button{min-height}
+  '--dw-size-cta', // referanse-CTA-ens hoyde; forbrukes naar Button ekstraheres
+  '--dw-size-row', // radhoyde-gulv 62px; malt 3 steder, var prosa i doktrinen
 ];
 
 /* ────────────────────────────────────────────────────────────────────────
