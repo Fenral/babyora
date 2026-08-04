@@ -13,7 +13,21 @@ const { chromium } = require('playwright');
 const VITE = join(dirname(require.resolve('vite/package.json')), 'bin', 'vite.js');
 const MERKE = process.argv[2] ?? 'na';
 const UT = 'tools/hjem-skjermbilder';
-const PORT = 4211;
+/** Ledig port fra OS-et. Faste porter + --strictPort betyr at to samtidige
+ *  workflows dreper hverandre; eieren vil kjore mange parallelt. */
+async function ledigPort(fallback) {
+  const net = await import('node:net');
+  return new Promise((res) => {
+    const s = net.createServer();
+    s.listen(0, '127.0.0.1', () => {
+      const p = s.address().port;
+      s.close(() => res(p));
+    });
+    s.on('error', () => res(fallback));
+  });
+}
+
+const PORT = await ledigPort(4211);
 
 mkdirSync(UT, { recursive: true });
 const srv = spawn(process.execPath, [VITE, 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore' });

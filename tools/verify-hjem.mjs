@@ -36,7 +36,23 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const VITE_CLI = join(dirname(require.resolve('vite/package.json')), 'bin', 'vite.js');
 
-const PORT = Number(process.env.VERIFY_PORT ?? 4183);
+/** Ledig port fra OS-et. Faste porter + --strictPort betyr at to samtidige
+ *  workflows dreper hverandre; eieren vil kjore mange parallelt. */
+async function ledigPort(fallback) {
+  const net = await import('node:net');
+  return new Promise((res) => {
+    const s = net.createServer();
+    s.listen(0, '127.0.0.1', () => {
+      const p = s.address().port;
+      s.close(() => res(p));
+    });
+    s.on('error', () => res(fallback));
+  });
+}
+
+/* VERIFY_PORT overstyrer fortsatt; ellers ledig port fra OS-et saa flere
+   workflows kan kjore portene samtidig uten a kollidere. */
+const PORT = Number(process.env.VERIFY_PORT ?? await ledigPort(4183));
 const BASE = `http://localhost:${PORT}`;
 const MIN_STILLHET_MS = 500;
 const MAKS_HANDGLI_PX = 1.0;
