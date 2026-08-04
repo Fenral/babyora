@@ -19,15 +19,30 @@ Dømt av to uavhengige dommere 2026-08-04:
    verifikasjon KAN IKKE krysses av.
 4. **RAPPORTER**: hva ble gjort, hva viste verifikasjonen, hvilket punkt er nå
    avkrysset.
-5. **STOPP-SJEKK**: er alle punkter i fasen grønne → meld «FASE n FERDIG» med
-   hvordan eier selv kan verifisere, og STOPP. Neste fase starter ikke uten
-   eiers klarsignal (jf. stegvis godkjenning). Ellers → neste iterasjon.
+5. **STOPP-SJEKK**: er alle punkter i fasen grønne → meld «FASE n FERDIG»
+   med evidenspakken. **Fase 1, 2, 2B, 3 og 5 fortsetter automatisk** — eier
+   får rapporten, men trenger ikke svare for at arbeidet skal gå videre.
 
-**Mutasjonskontrakten** (Sol-blokker 2 — presis, tre veier):
+   **TRE ekte eierporter** (revidert fra seks):
+   - Påkledning-grenvalget før fase 4 *(tatt 2026-08-04)*
+   - Låsing av funnlisten etter 6A-auditen
+   - Endelig release go/no-go
+
+**Mutasjonskontrakten** (revidert 2026-08-04 — TO ledd, ikke tre):
 1. injiser bruddet porten skal fange → porten er RØD;
-2. gjenopprett koden → porten er GRØNN;
-3. deaktiver selve regelen/parseren → mutasjonstesten er RØD.
-En port som ikke består alle tre, får ikke melde grønt.
+2. gjenopprett koden → porten er GRØNN.
+
+Det tredje leddet («deaktiver parseren → mutasjonstesten rød») er fjernet:
+det er å teste testen av testen, per port. Det erstattes av EN sentral regel:
+
+**IKKE-VAKUØSITET.** Hver port rapporterer *filer skannet*, *mål funnet* og
+*assertions kjørt*. **Null mål = RØDT.** En port som ikke fant noe å måle,
+har ikke bestått — den har vært taus.
+
+Ikke teori: port 6 sporet `.hjm-synth`, en selektor med null treff i `src/`,
+og manglet `.hjm-s-spin` som snurrer `infinite` gjennom hele det påståtte
+holdet. Den meldte 674 ms stillhet. Riktig utvalg gir 8 ms. Eieren
+rapporterte den manglende stoppen to ganger og fikk grønt begge gangene.
 
 **Baseline/ratchet-regelen** (Sol-blokker 1): porter som avdekker
 *eksisterende* brudd fødes med en baseline av dagens antall. CI feiler kun ved
@@ -37,8 +52,13 @@ på rødt» umulig.
 
 Regler ellers: spec-en er normativ (DESIGN.md + art bible + vedtak.json).
 Avgjørelser som ikke er dekket → rimelig skjønn, ført i vedtak.json med kilde,
-aldri bare i prosa. Feiler en verifikasjon: fikses i samme iterasjon.
-Motor-mappene røres aldri.
+aldri bare i prosa. Feiler en verifikasjon: **et DoD-punkt kan ikke lukkes, merges eller
+releases mens verifikasjonen for DEN endringen er rød** — uavhengig arbeid
+kan fortsette. Motor-mappene røres aldri.
+
+**Lokal gate vs. CI:** lokalt kjøres *berørt* suite; full suite +
+`verify:hjem` i CI, og lokalt kun ved faseavslutning og release. Full lokal
+gate er målt til 165 s, hvorav 127 s er motorens suite.
 
 ---
 
@@ -78,6 +98,7 @@ mutasjonskontrakt.
 - [ ] **Skjermmanifest** (Sol-blokker 6): `docs/design-notes/skjermmanifest.md`
       lister alle 11 shipping-skjermer med filstier, hvilke ni som migreres,
       hvorfor to er unntatt, ansvarlig fase og godkjente unntak per skjerm.
+      GENERERES fra skjermregisteret; kun unntak skrives for hånd.
       «T-01-lista», «adresselista» og «kosmetisk-lista» løftes fra
       lanseringsstatusen inn i manifestet som konkrete fil/linje-punkter.
       Manifestet er valideringsgrunnlaget for portene under.
@@ -99,9 +120,9 @@ mutasjonskontrakt.
 - [ ] Forbruker-port med TOKENKLASSER (Sol-forbedring av Impeccables port:
       «brukt minst én gang» kan tilfredsstilles av tilfeldig bruk og beviser
       ingenting). Hvert token klassifiseres i tokenfilen som
-      `obligatorisk-kontrakt` / `primitiv` / `reservert` / `deprecated`;
-      obligatoriske kontrakter valideres mot skjermmanifestet, reserverte
-      krever begrunnelse. Verifiser: feller `--dw-lys-vinkel`-trioen i dag
+      `obligatorisk-kontrakt` / `primitiv` / `reservert` / `deprecated`.
+      Klassifisering på PREFIKS/FAMILIE, ikke per token — kun `reservert` og
+      `deprecated` føres som eksplisitte lister. Primitiver kan stå ubrukt. Verifiser: feller `--dw-lys-vinkel`-trioen i dag
       (reservert uten begrunnelse); mutasjonskontrakt.
 - [ ] Kontrastmatrisen sjekkes inn som CI-TEST med baseline (Impeccable-
       blokker 5 + Sols ratchet: en måling ratsjeteres ikke — det var slik
@@ -110,8 +131,9 @@ mutasjonskontrakt.
       1,78–2,88:1-parene; mutasjonskontrakt. Føres som `kontrastmatrise-ci`.
 - [ ] Portdom-23-port: handlingsdelen («sjekk antrekket») kan ikke komme
       tilbake i hviletilstanden. Verifiser: mutasjonskontrakt.
-- [ ] **PROOF-DIFF-PORTEN** (eierspørsmål 2026-08-04: «er animasjonen som ble
-      lagd med i planen»). Kjør B1-proofen og appen side om side i Playwright,
+- [ ] **PROOF-DIFF-EN, kjørt ÉN gang ved B1→T2-aksept** (ikke stående
+      CI-port; kjøres på nytt kun når scan-geometri, timing eller maskot
+      endres). Kjør B1-proofen og appen side om side i Playwright,
       sample transform/opacity per frame gjennom hele scan-seremonien, og
       rapporter hvert avvik. Dagens terskelporter måler håndgli, dekning og
       stillstand — de fanget IKKE at panelet åpner seg i proofen og står låst
@@ -216,6 +238,16 @@ monter-språket fra Hjem — ingen av de gamle grenene beholdes.
 - [ ] Gauge-kontrasten opp til målt ≥ 4,5:1.
       Verifiser: kontrastmatrise + full suite.
 
+## VED HVER FASEAVSLUTNING — endringsstyrt visuell røykpakke
+
+Ny kontroll. Ingen lint kan avgjøre om en CTA har ravglød eller om 60 px luft
+føles feil.
+
+- [ ] Git-diffen bestemmer berørte flater. Den BYGDE appen rendrer dem i
+      relevante temaer, viewporter og tilstander — med video der bevegelse er
+      berørt — og eier får ett før/etter-ark. Menneskelig dom på det binære
+      porter ikke kan se.
+
 ## FASE 6A — Sluttrevisjon (analyse, ikke utbedring)
 
 - [ ] Innstillinger-revisjonen kjøres på nytt (falt på API-feil 2026-08-03);
@@ -236,5 +268,13 @@ monter-språket fra Hjem — ingen av de gamle grenene beholdes.
       - skjermregresjon i alle fire tematilstander (mørk/lys × auto/manuell)
       - 375×667, 390×844 og 430×932 med simulert safe-area
       - Dynamic Type, Reduce Motion, VoiceOver/fokusrekkefølge, trykkmål ≥ 44×44
-      - fysisk test på eldste støttede iPhone OG eiers telefon
-      - mørkt rom ved 1–5 % lysstyrke for Hjem, scan og Påkledning
+      **FØRSTE lansering:** full kontroll — begge telefoner, begge temaer,
+      mørkt rom ved 1–5 % lysstyrke for Hjem, scan og Påkledning.
+
+      **SENERE lanseringer, risikobasert:**
+      - automatisert release-port på samme SHA, hver gang
+      - 5 min røyktest av pakket app på ÉN fysisk telefon, hver gang
+      - to telefoner + mørkt rom KUN ved endringer i tema, globale tokens,
+        dybde, safe-area/fold, scan, maskot, navigasjonsbevegelse, Påkledning
+      - eldste støttede iPhone ved layout-, ytelses- eller WebView-endringer
+      - ikke fullt nattlaboratorium for tekst-, data- eller motorendringer
