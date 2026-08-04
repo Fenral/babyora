@@ -90,7 +90,6 @@ describe('vedtaksregisteret', () => {
   it('rapporterer hva som gjenstår (informativ — feiler aldri)', () => {
     const apne = REGISTER.vedtak.filter((v) => v.status !== 'laast');
     const brutt = apne.filter((v) => v.status === 'brutt');
-    // eslint-disable-next-line no-console
     console.log(
       `\n  vedtaksregister: ${REGISTER.vedtak.length - apne.length} låst · ${apne.length} åpne` +
       (brutt.length ? ` · ${brutt.length} BRUTT: ${brutt.map((v) => v.id).join(', ')}` : '') +
