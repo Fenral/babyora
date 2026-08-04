@@ -182,7 +182,6 @@ const UBRUKTE_PRIMITIVER: readonly string[] = [
      bare krympe, og en skala som aldri ble tatt i bruk blir synlig i stedet
      for a ligge stille i tokenfilen. Skalaen er MALT, ikke valgt:
      tools/spacing-detektor.mjs, 2-punkt dekker 89,2 % mot 4-punktets 46,3 %. */
-  '--dw-space-2',
   '--dw-space-4',
   '--dw-space-6',
   '--dw-size-row', // radhoyde-gulv 62px; malt 3 steder, var prosa i doktrinen

@@ -15,6 +15,7 @@
  */
 import type { CSSProperties, ReactElement } from 'react';
 import type { FamilieToolTarget } from '../../types/nav';
+import { SettingsRow } from '../controls/SettingsRow';
 
 export interface ToolsSectionProps {
   onOpenTool: (target: FamilieToolTarget) => void;
@@ -59,82 +60,18 @@ const groupCardStyle: CSSProperties = {
   boxShadow: 'var(--shadow-cta)',
 };
 
-const rowStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 12,
-  padding: '13px 14px',
-  minHeight: 52,
-  width: '100%',
-  background: 'transparent',
-  border: 'none',
-  textAlign: 'left',
-  font: 'inherit',
-  color: 'var(--ink-800)',
-  cursor: 'pointer',
-  touchAction: 'manipulation',
-  WebkitTapHighlightColor: 'transparent',
-};
 
-const rowIconStyle: CSSProperties = {
-  flex: 'none',
-  width: 32,
-  height: 32,
-  borderRadius: 9,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: 'var(--bg-canvas-soft)',
-  color: 'var(--ink-700)',
-  border: '1px solid var(--ink-100)',
-};
 
-const rowBodyStyle: CSSProperties = {
-  flex: 1,
-  minWidth: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 1,
-};
 
-const rowLabelStyle: CSSProperties = {
-  fontSize: '0.90625rem',
-  fontWeight: 500,
-  color: 'var(--ink-900)',
-  letterSpacing: '-0.1px',
-  lineHeight: 1.15,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-};
 
-const rowSubStyle: CSSProperties = {
-  fontSize: '0.75rem',
-  fontWeight: 500,
-  color: 'var(--ink-500)',
-  letterSpacing: '.05px',
-  lineHeight: 1.2,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-};
 
-const rowChevronStyle: CSSProperties = {
-  flex: 'none',
-  color: 'var(--ink-300)',
-  display: 'flex',
-  alignItems: 'center',
-};
 
-const dividerStyle: CSSProperties = {
-  height: 1,
-  background: 'var(--ink-100)',
-  margin: '0 14px',
-};
 
 function Chevron(): ReactElement {
   return (
-    <span style={rowChevronStyle} aria-hidden="true">
+    /* Pila trenger ingen egen wrapper-stil lenger — primitivens
+       høyre-slot eier plasseringen. */
+    <span aria-hidden="true" style={{ display: 'flex', alignItems: 'center' }}>
       <svg
         width={7}
         height={12}
@@ -165,26 +102,19 @@ export function ToolsSection({ onOpenTool }: ToolsSectionProps): ReactElement {
     <section style={sectionStyle} aria-labelledby="sec-verktoy">
       <h2 id="sec-verktoy" style={sectionEyebrowStyle}>Verktøy</h2>
       <ul role="list" style={groupCardStyle} aria-label="Verktøy fra Guide">
+        {/* Radene her var en ORDRETT kopi av Innstillingers seks stilobjekter,
+            tegn for tegn. Nå samme primitiv, så en endring ett sted ikke lar
+            det andre stedet drive fra hverandre i stillhet. */}
         {TOOL_ROWS.map((row, i) => (
           <li key={row.target} style={{ listStyle: 'none' }}>
-            <button
-              type="button"
-              style={rowStyle}
+            <SettingsRow
+              icon={<ToolIcon />}
+              label={row.label}
+              sub={row.sub}
+              trailing={<Chevron />}
+              divider={i < TOOL_ROWS.length - 1}
               onClick={() => onOpenTool(row.target)}
-              aria-label={`${row.label} — ${row.sub}`}
-            >
-              <span style={rowIconStyle} aria-hidden="true">
-                <ToolIcon />
-              </span>
-              <span style={rowBodyStyle}>
-                <span style={rowLabelStyle}>{row.label}</span>
-                <span style={rowSubStyle}>{row.sub}</span>
-              </span>
-              <Chevron />
-            </button>
-            {i < TOOL_ROWS.length - 1 ? (
-              <div aria-hidden="true" style={dividerStyle} />
-            ) : null}
+            />
           </li>
         ))}
       </ul>

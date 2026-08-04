@@ -1,0 +1,119 @@
+/**
+ * settings-row.css — INNSTILLINGSRADEN.
+ *
+ * Fase 2B målte 16 radlignende komponenter i appen og stilte ett spørsmål:
+ * deler de faktisk struktur, eller ser de bare like ut? Svaret var NEI for
+ * de fleste, og et entydig JA for én.
+ *
+ * DEN ENE SOM ER EKTE. Målt identisk til 0,06 px over 22 forekomster fra 15
+ * kallsteder: 11 navigasjonsrader, 5 bryterrader, 1 bar rad, 3 verktøyrader
+ * og 2 lenkerader. Geometrien er den samme i alle: padding 13/14, gap 12,
+ * ikon 32x32 med radius 9, målt høyde 58,00–59,27 px. Det eneste som
+ * varierer er hva som står til høyre.
+ *
+ * `ToolsSection` sine rader er i dag en ORDRETT kopi av Innstillingers —
+ * seks stilobjekter, tegn for tegn. Det er den slags duplisering som gjør at
+ * en endring ett sted stille lar det andre stedet drive fra hverandre.
+ *
+ * DEN SOM IKKE ER EKTE: plaggraden. Fire uavhengige implementasjoner måler
+ * 72,00 / 66,00 / 97,58 / 102,00 px — 36 px spredning. Ingen deler ledende
+ * slot-oppsett, høyre side eller padding. En felles «GarmentRow» ville
+ * erstattet fire kallsteder, men bare ved å ENDRE geometrien på tre av dem.
+ * Det er et designvedtak om at de SKAL bli like, ikke en observasjon om at
+ * de allerede er det — og da hører det hjemme i en synlig runde, ikke i et
+ * komponent-commit.
+ *
+ * Høyden er IKKE satt av min-height. Målt: 32 px ikon + 26 px padding = 58,
+ * så `min-height: 52` er aldri bindende. Gulvet står likevel, fordi en rad
+ * uten ikon ellers ville falt under trykkmålet.
+ */
+
+.dw-rad {
+  display: flex;
+  align-items: center;
+  gap: var(--dw-space-12);
+  padding: 13px var(--dw-space-14);
+  min-height: var(--dw-size-touch);
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  color: var(--dw-ink-hi);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.dw-rad--trykkbar { cursor: pointer; }
+
+.dw-rad--trykkbar:active {
+  background: color-mix(in srgb, var(--dw-ink-hi) 5%, transparent);
+}
+
+.dw-rad-ikon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dw-raised);
+  /* D2: en hevet flate skal ha lyslogikk, ikke bare fyll. Ikonboksen er
+     liten, saa lyset er tilsvarende svakt — men det skal vaere der. */
+  box-shadow: inset 0 1px 0 rgba(242, 192, 138, 0.08);
+  color: var(--dw-ink-mid);
+}
+
+.dw-rad-kropp {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dw-space-2);
+}
+
+.dw-rad-etikett {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--dw-ink-hi);
+}
+
+/* Underteksten klippes til to linjer. Målt i dag: en rad med to linjer blir
+   74,86 px, altså 29 % høyere enn nabo-radene — lista mister rytmen sin. */
+.dw-rad-under {
+  font-size: 12.5px;
+  color: var(--dw-ink-low);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dw-rad-hoyre {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--dw-space-8);
+  color: var(--dw-ink-low);
+}
+
+/* Verdien til høyre får aldri spise hele raden fra etiketten. */
+.dw-rad-verdi {
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+}
+
+.dw-rad-skille {
+  height: 1px;
+  background: var(--dw-hairline);
+  margin-left: calc(var(--dw-space-14) + 32px + var(--dw-space-12));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dw-rad--trykkbar:active { background: transparent; }
+}

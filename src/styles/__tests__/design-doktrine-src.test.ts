@@ -383,7 +383,18 @@ const kandidat = (regel: string, x: { fil: string; sel: string; linje: number })
  * Ekte fiks er en DOM-avledet radmengde (som panel-porten gjør for panel-
  * skopet); det hører hjemme i fase 3, ikke i et korpusbytte.
  */
-const ER_RAD = /(^|[\s.>+~])[\w-]*row[\w-]*(\[|:|\s|$)|__row|-rad\b/iu;
+/* `-rad(?![\w-])`, ikke `-rad\b`: `\b` matchet også DELENE av en rad.
+   Radprimitivens `.dw-rad-ikon` (en 32 px ikonboks) og `.dw-rad-skille`
+   (en 1 px strek) ble meldt som «rader under 62 px» — de er ikke rader.
+   Lookaheaden krever at navnet SLUTTER på «rad», så `.dw-rad` måles mens
+   delene av den ikke gjør det.
+
+   KJENT GJENSTÅENDE HULL, notert i stedet for skjult: høyder satt via
+   `var(--dw-size-touch)` telles ikke, fordi målingen krever et literalt
+   px-tall. `.dw-rad` slipper derfor unna D5 selv om den skulle vært målt.
+   Ekte fiks er den DOM-avledede radmengden som allerede er notert til
+   fase 3 — ikke enda en navneregel oppå den forrige. */
+const ER_RAD = /(^|[\s.>+~])[\w-]*row[\w-]*(\[|:|\s|$)|__row|-rad(?![\w-])/iu;
 /** Interaktiv selektor. */
 const ER_INTERAKTIV = /(btn|button|cta|skip|toggle|tab|chip|pill|knapp|fab|opt|choice|nav)/iu;
 /**
