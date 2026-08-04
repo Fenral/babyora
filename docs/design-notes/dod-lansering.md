@@ -86,7 +86,7 @@ Mål: de målte tokenfeilene rettet + CTA over fold på minste støttede enhet.
       2026-08-03). Verifiser: ny assertion i `design-tokens-v2.depth.test.ts`
       som komposittert-luminans-sjekker ALLE `--dw-sh-*` i begge tema;
       mutasjonskontrakt alle tre veier (dagens verdier er injeksjonen).
-- [ ] `--dw-accent-300`-feilbruken repareres på FORBRUKERNIVÅ (Sol-blokker 3:
+- [x] `--dw-accent-300`-feilbruken repareres på FORBRUKERNIVÅ (Sol-blokker 3:
       300 er kant/lys, aldri tekst — tokenet omdefineres ikke for å redde feil
       bruk). Tog og Varm/kald flyttes til riktig teksttoken. Ny port: forbud
       mot `--dw-accent-300` i `color`. Verifiser: målt ≥ 4,5:1 der 1,87:1 og

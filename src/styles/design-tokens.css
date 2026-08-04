@@ -77,7 +77,13 @@
   --terracotta-600: var(--dw-accent);
   --terracotta-500: var(--dw-accent);
   --terracotta-400: var(--dw-accent);
-  --terracotta-200: var(--dw-accent-300);
+  /* LYS MODUS (denne filen er lys-forst; dark er overstyringen under).
+     --dw-accent-300 er LYS amber #E7B087 og deklareres bare EN gang, saa
+     den star uendret pa kremhvitt lerret: 1,76:1. Aliasene som brukes som
+     lagfarge og tekst i guidene peker derfor pa den morke aksenten her
+     (5,10:1). Selve --dw-accent-300 forblir fokuslys og valgt kant.
+     I dark-blokkene under staar den som for — der er den riktig (9,44:1). */
+  --terracotta-200: var(--dw-accent);
   --terracotta-100: var(--dw-accent-surface);
 
   /* Lag-farger — plagg-alignerte huer (innerst=korall 40°, mellom=oker 80°, ytterst=petrol 215°) */
@@ -87,11 +93,11 @@
      (menneske-nær, varm), ytterst=petrol (skall/instrument, kjølig), mellom
      får en lysere amber-tone mellom de to. */
   --layer-ytterst: var(--dw-panel);
-  --layer-mellom: var(--dw-accent-300);
+  --layer-mellom: var(--dw-accent);
   --layer-innerst: var(--dw-accent);
   --lag-korall: var(--dw-accent);
   --lag-petrolgra: var(--dw-w-cloudy);
-  --lag-marigold: var(--dw-accent-300);
+  --lag-marigold: var(--dw-accent);
   --lag-dyppetrol: var(--dw-panel);
   --chip-edge-korall: var(--dw-accent-pressed);
   --chip-edge-petrolgra: var(--dw-w-rain);

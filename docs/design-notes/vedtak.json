@@ -1,6 +1,6 @@
 {
   "_": "VEDTAKSREGISTERET. Et vedtak er ikke ferdig for det finnes en sjekk som feller HELE KLASSEN, ikke instansen. Prosa dekker ikke de andre stedene og melder ikke fra nar den brytes - derfor forfaller rettinger og vi moter dem igjen. Handheves av src/styles/__tests__/vedtak-register.test.ts, som kjorer i CI. Status 'laast' krever at handhevesAv peker pa en test som FINNES. Antall laste kan bare ga opp: se laastGulv.",
-  "laastGulv": 13,
+  "laastGulv": 15,
   "vedtak": [
     {
       "id": "dybdekontrakt",
@@ -198,9 +198,9 @@
       "id": "blekk-og-lys-delvis-adoptert",
       "vedtak": "Utfordreren «Blekk og lys» er DELVIS adoptert: lysarbeidet inn (retningsbestemt kantlys, frest spor, feedback-tokenet, ordmerket ned, tillitslinjen). CTA-flaten star uavklart.",
       "kilde": "Fable-utfordrer 2026-08-04, domt av Sol (ADOPTER) og Impeccable (ADOPTER DELVIS)",
-      "handhevesAv": null,
-      "status": "uportert-sjekk",
-      "merknad": "EIERBESLUTNING GJENSTAR paa CTA-flaten. Impeccables tall felte mitt eget premiss: amber holder 6,55-7,13:1 gjennom bade protanopi og deuteranopi, saa «aksent = handling er sarbart for fargeblindhet» er USANT for denne aksenten. Utfordrerens nal gir 1,38:1 for en protanop, og dens valgte aktivitet 1,12:1 mot dagens 7,24:1. Sol: endringen er lov, men bryter merkevarekontrakten «amber = handlingsflate» og ma da gjelde ALLE primaere CTA-er. BEGGE dommere: ambernalen kan ALDRI vaere eneste valgtmarkor. FORKASTET av begge: filmkornet og hero-storrelsen 5,75rem."
+      "handhevesAv": "src/components/hjem/hjem-monter.css",
+      "status": "laast",
+      "merknad": "AVGJORT 2026-08-04. Eier saa begge alternativer i den ekte appen, begge tema, og valgte OFRANSJE. Lysarbeidet er adoptert; CTA-flaten star. Kan tas opp igjen naar Paakledning er gjenoppbygget — hovedargumentet for krem var at knappen konkurrerer med plaggene, og den skjermen finnes ikke enna. Impeccables maling felte premisset for utfordringen: amber holder 6,55-7,13:1 gjennom bade protanopi og deuteranopi, saa den er ikke sarbar for fargeblindhet."
     },
     {
       "id": "min-garderobe-slettet",
@@ -209,6 +209,14 @@
       "handhevesAv": "src/screens/__tests__/guide-routing.test.tsx",
       "status": "laast",
       "merknad": "Testen sjekket for at skjermen forble UMONTERT; na sjekker den at filen er BORTE — samme monster som GuideHubScreen fikk i P6. Delte hjelpere (garment-catalog-helpers) staar igjen fordi Plaggbiblioteket bruker dem."
+    },
+    {
+      "id": "accent-300-er-lys",
+      "vedtak": "--dw-accent-300 er fokuslys og valgt kant, ALDRI tekst. Legacy-aliasene som brukes som lagfarge peker paa den morke aksenten der lerretet er lyst.",
+      "kilde": "tokenfilens egen regel (linje 31, 60) som var prosa; Sols dom: repareres paa FORBRUKERNIVA, tokenet omdefineres ikke for a redde feil bruk",
+      "handhevesAv": "src/styles/__tests__/design-tokens-v2.accent-300-forbud.test.ts",
+      "status": "laast",
+      "merknad": "Malt: #E7B087 gir 9,44:1 pa morkt lerret, men bare 1,76:1 pa krem — og den deklareres bare EN gang, saa den stod uendret i lys modus. Aliasene --lag-marigold, --layer-mellom og --terracotta-200 peker na paa --dw-accent (5,10:1) i standard-blokken. Mork modus uroert. Mutasjonskontrakt: injisert brudd -> ROD med alias navngitt; gjenopprettet -> GRONN."
     }
   ]
 }
