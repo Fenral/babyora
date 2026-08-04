@@ -160,7 +160,7 @@
       "kilde": "B1-proofen; eierfunn 2026-08-03 «gir lyset i bakgrunnen noen mening na?» — malt 254 px mellom veggens lyseste punkt og maskotens hode",
       "handhevesAv": null,
       "status": "brutt",
-      "merknad": "Folger av portdom 24: flyttes hero-gruppen uten at poolen folger med, sikter lyset pa ingenting."
+      "merknad": "Folger av portdom 24: flyttes hero-gruppen uten at poolen folger med, sikter lyset pa ingenting. DELVIS 2026-08-04: kantlyset forbruker na --dw-lys-vinkel/--dw-kant-key/--dw-kant-fill (portdom 27, hadde null forbrukere). Selve poolen gjenstar og ma ligge UTENFOR overflow-containeren."
     },
     {
       "id": "animasjon-males-mot-proofen",
@@ -193,6 +193,14 @@
       "handhevesAv": "tools/verify-hjem.mjs",
       "status": "brutt",
       "merknad": "BLOKKERER. Uten punktum er de siste 700 ms stall, ikke seremoni — og da faller hele begrunnelsen for 3,2 s bort. Porten ser na elementene og stryker korrekt (8 ms mot krav 500)."
+    },
+    {
+      "id": "blekk-og-lys-delvis-adoptert",
+      "vedtak": "Utfordreren «Blekk og lys» er DELVIS adoptert: lysarbeidet inn (retningsbestemt kantlys, frest spor, feedback-tokenet, ordmerket ned, tillitslinjen). CTA-flaten star uavklart.",
+      "kilde": "Fable-utfordrer 2026-08-04, domt av Sol (ADOPTER) og Impeccable (ADOPTER DELVIS)",
+      "handhevesAv": null,
+      "status": "uportert-sjekk",
+      "merknad": "EIERBESLUTNING GJENSTAR paa CTA-flaten. Impeccables tall felte mitt eget premiss: amber holder 6,55-7,13:1 gjennom bade protanopi og deuteranopi, saa «aksent = handling er sarbart for fargeblindhet» er USANT for denne aksenten. Utfordrerens nal gir 1,38:1 for en protanop, og dens valgte aktivitet 1,12:1 mot dagens 7,24:1. Sol: endringen er lov, men bryter merkevarekontrakten «amber = handlingsflate» og ma da gjelde ALLE primaere CTA-er. BEGGE dommere: ambernalen kan ALDRI vaere eneste valgtmarkor. FORKASTET av begge: filmkornet og hero-storrelsen 5,75rem."
     }
   ]
 }
