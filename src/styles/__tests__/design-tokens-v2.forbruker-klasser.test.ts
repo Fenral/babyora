@@ -185,18 +185,11 @@ const UBRUKTE_PRIMITIVER: readonly string[] = [
   '--dw-space-2',
   '--dw-space-4',
   '--dw-space-6',
-  '--dw-space-8',
-  '--dw-space-10',
   '--dw-space-12',
   '--dw-space-14',
-  '--dw-space-16',
-  '--dw-space-18',
   '--dw-space-20',
-  '--dw-space-22',
   '--dw-space-24',
   '--dw-space-32',
-  '--dw-size-touch', // trykkmaal-gulv 44px; handheves i dag kun som button{min-height}
-  '--dw-size-cta', // referanse-CTA-ens hoyde; forbrukes naar Button ekstraheres
   '--dw-size-row', // radhoyde-gulv 62px; malt 3 steder, var prosa i doktrinen
 ];
 

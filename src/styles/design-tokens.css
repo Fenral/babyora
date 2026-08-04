@@ -507,6 +507,37 @@ button {
   min-height: 44px;
 }
 
+/* ============ GLOBAL FOKUSRING (2026-08-04) ============
+   Funnet av tilgjengelighetsdommeren i fase 2B: appen hadde NULL
+   `:focus-visible`-regler i noen global stilflate. Den eneste ringen som
+   fantes var scopet til `.hjem-monter`. Tastaturbrukere fikk altså
+   nettleserens standardring — eller ingenting — på 12 lukkeknapper i
+   Innstillinger, alle fire tilbakeknappene, og et titalls andre flater.
+
+   MÅLT, og dette er hele grunnen til at `outline-offset` ikke er valgfri:
+     ringen mot lerretet   10,12:1 mørk · 3,52:1 lys   (krav 3:1, WCAG 1.4.11)
+     ringen mot KNAPPEN     1,47:1 mørk · 1,45:1 lys   — stryker glatt
+   Ringen overlever bare fordi den ligger UTENFOR kanten og derfor måles mot
+   lerretet. Settes offset til 0, forsvinner den inn i den oransje flaten.
+
+   `:where()` gir null spesifisitet med vilje: hver eksisterende ring vinner
+   over denne. Regelen legger bare til der ingenting fantes, så den kan ikke
+   endre utseendet på flater som allerede var tenkt igjennom.
+
+   Den setter heller ikke `border-radius`. Den scopede regelen i
+   hjem-monter.css gjør det (4px), og siden den er mer spesifikk enn
+   knappens egen radius, firkantes en 14px-knapp mens den har fokus. Den
+   arven skal ikke spres til hele appen.
+
+   `--dw-focus` er papir/espresso-ringen. Flater med tema-konstant bakgrunn
+   — petrol-instrumentet — binder den om til `--dw-focus-panel` lokalt;
+   regelen her trenger ikke vite om dem. */
+:where(button, [role='button'], a[href], summary, select, input, textarea,
+       [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--dw-focus);
+  outline-offset: 3px;
+}
+
 /* Polish (#10): drop long-press "lagre bilde"-menyen på illustrasjoner / avatarer
    så appen føles native og ikke nettleser-aktig. */
 img {

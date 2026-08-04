@@ -15,6 +15,7 @@ import { useEffect, useRef, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { track } from '../../lib/analytics/track.js';
 import type { MaterialPreference } from '../../lib/clothing-engine-v2/types.js';
+import { Button } from '../controls/Button';
 
 const PREFERENCES: MaterialPreference[] = ['best_for_conditions', 'prefer_wool', 'avoid_wool'];
 
@@ -103,17 +104,12 @@ export function MaterialPreferenceSheet({ open, value, onChange, onClose, trigge
           </label>
         ))}
       </fieldset>
-      <button
-        type="button"
-        onClick={() => dialogRef.current?.close()}
-        style={{
-          marginTop: 16, minHeight: 44, width: '100%', borderRadius: 12, border: 0,
-          background: 'var(--accent-cta)', color: 'var(--accent-cta-ink)',
-          fontSize: 15, fontWeight: 700, cursor: 'pointer',
-        }}
-      >
+      {/* Første forbruker av knappeprimitiven. Hadde null tilstander før:
+          ingen press, ingen fokusring, ingen disabled, ingen reduced-motion,
+          og en radius (12) som ingen annen primærknapp i appen brukte. */}
+      <Button full style={{ marginTop: 16 }} onClick={() => dialogRef.current?.close()}>
         {t('engineV2.materialSheet.done')}
-      </button>
+      </Button>
     </dialog>
   );
 }

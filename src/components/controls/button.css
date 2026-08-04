@@ -1,0 +1,171 @@
+/**
+ * button.css — KNAPPEPRIMITIVEN. Ekstrahert fra `.hjm-cta`, ikke oppfunnet.
+ *
+ * Fase 2B målte 37 knappevarianter i appen. Samme rolle i samme fil hadde
+ * driftet til to størrelser og to radiusverdier; «lukk» fantes i tolv
+ * kopier. Radius alene forekom i verdiene 10, 11, 12, 14, 16, 18, 22, 24 og
+ * 999. Dette er flaten alt skal migreres TIL.
+ *
+ * KILDEN er `.hjm-cta` (hjem-monter.css), referanseskjermen som er målt og
+ * portet: bakgrunn --dw-accent, blekk --dw-ink-on-accent, radius
+ * --dw-r-raised, høyde 54, vekt 700.
+ *
+ * TILSTANDENE ER REGNET, IKKE GJETTET. En tidligere runde gjettet en
+ * color-mix for disabled og tok knappen fra 2,58:1 til 1,91:1 — verre enn
+ * utgangspunktet. Hvert tall under er målt i BEGGE temaer:
+ *
+ *   primary aktiv         6,51:1 mørk · 5,17:1 lys
+ *   primary disabled      7,00:1 mørk · 8,52:1 lys   (40 % aksent i lerret)
+ *   ghost/quiet aktiv    15,00:1 mørk · 15,03:1 lys
+ *   ghost/quiet disabled  6,54:1 mørk · 6,59:1 lys   (--dw-ink-low)
+ *   destructive aktiv     6,70:1 mørk · 5,51:1 lys
+ *   destructive disabled  6,92:1 mørk · 7,95:1 lys
+ *
+ * OPACITY ER FORBUDT PÅ DISABLED. Fire steder i onboarding bruker den i
+ * dag og lander på 1,32–3,12:1. En dempet FARGE kan regnes; en dempet
+ * gjennomsiktighet arver hva som enn ligger bak.
+ *
+ * TRYKKMÅLET ER ET GULV. Et forslag om å «normalisere» tre flater fra
+ * 48/64 ned til 44 ble felt: tre reduksjoner, null økninger, solgt som at
+ * trykkmålet ble tokenisert.
+ */
+
+.dw-btn {
+  /* Geometri fra størrelsesskalaen, ikke fra tall */
+  min-height: var(--dw-size-touch);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dw-space-8);
+  box-sizing: border-box;
+  border: 0;
+  border-radius: var(--dw-r-raised);
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  /* Kun transform og background — aldri layout-egenskaper. */
+  transition:
+    transform var(--dw-m-feedback) var(--dw-ease),
+    background var(--dw-m-feedback) var(--dw-ease);
+}
+
+.dw-btn--full { width: 100%; }
+
+/* ── STØRRELSER ─────────────────────────────────────────────────────────
+   `cta` er referansens mål. `compact` treffer trykkmål-gulvet uten å gå
+   under det. */
+.dw-btn--cta {
+  min-height: var(--dw-size-cta);
+  padding: var(--dw-space-16) var(--dw-space-22);
+  font-size: 17px;
+}
+.dw-btn--compact {
+  padding: var(--dw-space-10) var(--dw-space-18);
+  font-size: 15px;
+}
+
+/* ── PRIMARY ────────────────────────────────────────────────────────────
+   Eiervedtak 2026-08-04: oransje er eneste CTA-farge. Grønn er reservert
+   til status. */
+.dw-btn--primary {
+  background: var(--dw-accent);
+  color: var(--dw-ink-on-accent);
+  box-shadow: var(--dw-depth-action);
+}
+.dw-btn--primary:active:not(:disabled):not([aria-busy='true']) {
+  background: var(--dw-accent-pressed);
+  transform: translateY(1px);
+}
+.dw-btn--primary:disabled,
+.dw-btn--primary[aria-disabled='true'] {
+  background: color-mix(in srgb, var(--dw-accent) 40%, var(--dw-canvas));
+  color: var(--dw-ink-hi);
+  box-shadow: none;
+}
+
+/* ── GHOST ── kant, ingen flate. */
+.dw-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--dw-hairline);
+  color: var(--dw-ink-hi);
+  font-weight: 600;
+}
+.dw-btn--ghost:active:not(:disabled):not([aria-busy='true']) {
+  background: color-mix(in srgb, var(--dw-ink-hi) 8%, transparent);
+  transform: translateY(1px);
+}
+
+/* ── QUIET ── ren tekstknapp. */
+.dw-btn--quiet {
+  background: transparent;
+  color: var(--dw-ink-hi);
+  font-weight: 600;
+}
+.dw-btn--quiet:active:not(:disabled):not([aria-busy='true']) {
+  background: color-mix(in srgb, var(--dw-ink-hi) 6%, transparent);
+}
+
+/* ── DESTRUCTIVE ────────────────────────────────────────────────────────
+   Målt problem: dagens destruktive knapp bruker --terracotta-700, som er
+   aliaset til --dw-accent. «Slett» og «Finn dagens antrekk» hadde altså
+   NØYAKTIG samme farge. Semantikkfargen skiller dem — og doktrinen krever
+   ikon+tekst ved siden av fargen, aldri farge alene. */
+.dw-btn--destructive {
+  background: var(--dw-danger);
+  color: var(--dw-ink-on-accent);
+  box-shadow: var(--dw-depth-action);
+}
+.dw-btn--destructive:active:not(:disabled):not([aria-busy='true']) {
+  transform: translateY(1px);
+}
+.dw-btn--destructive:disabled,
+.dw-btn--destructive[aria-disabled='true'] {
+  background: color-mix(in srgb, var(--dw-danger) 40%, var(--dw-canvas));
+  color: var(--dw-ink-hi);
+  box-shadow: none;
+}
+
+/* Felles disabled for de flateløse variantene: en dempet FARGE, ikke
+   gjennomsiktighet. --dw-ink-low holder 6,54:1 / 6,59:1 på lerretet. */
+.dw-btn--ghost:disabled,
+.dw-btn--ghost[aria-disabled='true'],
+.dw-btn--quiet:disabled,
+.dw-btn--quiet[aria-disabled='true'] {
+  color: var(--dw-ink-low);
+  border-color: color-mix(in srgb, var(--dw-hairline) 50%, transparent);
+}
+
+.dw-btn:disabled,
+.dw-btn[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* ── VENTER ─────────────────────────────────────────────────────────────
+   Egen tilstand, ALDRI native `disabled`. En disabled knapp forsvinner ut
+   av tabrekkefølgen midt i en handling, og skjermleseren mister den flaten
+   brukeren nettopp trykket på. `aria-busy` beholder fokus og annonserer at
+   noe skjer. Dette var det største enkelthullet i dagens knapper: 28
+   navngitte knappestiler i Innstillinger kan ikke migrere uten den. */
+.dw-btn[aria-busy='true'] {
+  cursor: progress;
+}
+
+/* Bevegelse er en preferanse, ikke en dekorasjon. Referanse-CTA-en manglet
+   denne vakten — den ble kopiert til ~35 knappedefinisjoner uten at noen
+   hadde skrudd den av. */
+@media (prefers-reduced-motion: reduce) {
+  .dw-btn {
+    transition: none;
+  }
+  .dw-btn:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* Høykontrastmodus tegner sine egne flater; kanten må overleve. */
+@media (forced-colors: active) {
+  .dw-btn {
+    border: 1px solid ButtonText;
+  }
+}
