@@ -112,6 +112,14 @@
       "handhevesAv": null,
       "status": "brutt",
       "merknad": "BLOKKERER. Malt -48 px pa iPhone SE. Portdom 23s gjenstaende steg: b) stram marginene, d) skjul trust-linjen ved lav hoyde, c) flytt Lillian-linjen inn i panelet."
+    },
+    {
+      "id": "paakledning-gjenoppbygges",
+      "vedtak": "BEGGE de gamle Paakledning-grenene (antrekkskartet og listen) slettes. Skjermen gjenoppbygges i monter-spraket fra Hjem: plaggrader med utskarne bilder, plater, vaerstripe, dybdekontrakt. Ingen av grenene var arbeidet fra 2026-08-03.",
+      "kilde": "eier 2026-08-04: «Dette kan du bare slette» + «Ingen av disse var de vi jobbet med i gar» — begge variantene vist pa telefon forst",
+      "handhevesAv": null,
+      "status": "uportert-sjekk",
+      "merknad": "Beslutningen er tatt; sjekken kommer med fase 4-implementasjonen (test: PaakledningScreen bruker monter-komponentene og ingen legacy-tokens). Gamle grener slettes forst nar erstatningen finnes — «Se hele antrekket» skal aldri peke pa ingenting."
     }
   ]
 }

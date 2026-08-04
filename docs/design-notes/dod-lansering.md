@@ -62,9 +62,10 @@ Mål: de målte tokenfeilene rettet + CTA over fold på minste støttede enhet.
       Lillian-linjen inn i panelets metadataområde. Verifiser: ny port i
       `verify-hjem` som måler CTA-bunn mot tabbar-topp (med baseline før
       trykk), grønn på 375/390/430; mutasjonskontrakt.
-- [ ] EIER VELGER hvilken Påkledning-gren som ER skjermen (kun beslutningen —
-      implementasjonen ligger i fase 4; Impeccable-blokker 3: sveipen skal
-      ikke migrere en gren som skal slettes). Føres i vedtak.json.
+- [x] EIER VALGTE 2026-08-04: INGEN av grenene — begge er gammelt design.
+      «Dette kan du bare slette» + «Ingen av disse var de vi jobbet med i
+      går.» Skjermen gjenoppbygges i fase 4 i monter-språket fra Hjem.
+      Ført i vedtak.json som `paakledning-gjenoppbygges`.
 - [ ] `vedtak.json`: `skygge-fortegn` og `cta-over-fold` → `laast`, gulvet
       heves. Verifiser: vedtak-register-testen.
 
@@ -159,13 +160,20 @@ Kjøres som én feiesveip per mønster på tvers av alle skjermer i manifestet.
       = 0 utenfor manifestets unntak, kontrastmatrise-testen grønn i begge
       tema, full suite + `verify:hjem`.
 
-## FASE 4 — Påkledning-implementasjonen
+## FASE 4 — Påkledning gjenoppbygges (eiervedtak 2026-08-04)
 
-Mål: kjerneleveransen (18 % av vekten, i dag 32 %) har ÉN gren, stylet av
-systemet. (Grenvalget ble tatt i fase 1.)
+Mål: kjerneleveransen (18 % av vekten, i dag 32 %) gjenoppbygges i
+monter-språket fra Hjem — ingen av de gamle grenene beholdes.
 
-- [ ] Den døde grenen slettes; `.outfit-truth-panel` får CSS via systemet;
-      de 13 rå hexene erstattes; CTA-er via primitiven.
+- [ ] Ny Påkledning-visning bygges av monter-komponentene: plaggrader med
+      utskårne bilder (`MonterGarmentRow`), plater (`--dw-plate`),
+      værstripe-mønsteret, dybdekontrakten, primitivene fra 2B.
+- [ ] FØRST når erstatningen er grønn: begge gamle grener slettes
+      (PlannedPaakledningScreen-fallbacken OG CurrentPaakledningScreen),
+      sammen med `Antrekkskart.css` sine 13 rå hex og legacy-tokenene.
+      «Se hele antrekket» peker aldri på ingenting underveis.
+- [ ] Sjekk som håndhever vedtaket: skjermen bruker monter-komponentene og
+      null legacy-tokens; `paakledning-gjenoppbygges` → `laast`.
       Verifiser: fase 2-porter + kontrastmatrise + e2e grønne.
 
 ## FASE 5 — Juster-feilene (eneste skjerm der bruker kan stå fast)
