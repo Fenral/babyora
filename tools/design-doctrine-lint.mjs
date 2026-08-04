@@ -1,4 +1,21 @@
 /**
+ * ⚠ DENNE LINTEN MÅLER MOCKENE, IKKE APPEN.
+ *
+ * Fase 2 (2026-08-04) flyttet doktrinesjekken til KODEN:
+ *   src/styles/__tests__/design-doktrine-src.test.ts
+ * Den leser `alle .css og .tsx under src/` over alle tre stilflater (css-filer, CSS i
+ * template-literaler, inline CSSProperties), har baseline per regel og
+ * ikke-vakuøsitets-assert på at den fant målene sine. Den kjøres av `npm test`
+ * og er dermed CI-gate.
+ *
+ * Denne filen beholdes KUN som mock-verktøy under `docs/mocks/monter/`.
+ * Registrene under (`.rows`/`.week-surface`/`.plans`/`.group`,
+ * `class="thumb"`) finnes ikke i `src/` — kjører du den mot appen, melder den
+ * grønt på fravær. Det er nøyaktig feilklassen fase 2 ble opprettet for å
+ * stoppe. Grønt herfra er IKKE dekning av appen.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *
  * Dybdedoktrine-lint — mekanisk tripwire for DESIGN.md-doktrinen (2026-07-31).
  *
  * Heuristiske sjekker på mock-/komponent-filer i Monter-verdenen. Fanger de
