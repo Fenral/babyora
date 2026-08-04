@@ -1,0 +1,142 @@
+/**
+ * sheet.css — ARK-PRIMITIVEN (sentrert).
+ *
+ * Fase 2B målte 19 dialogflater i 12 varianter. Innstillinger alene har tolv
+ * dialoger i tre ulike oppskrifter, som varierer i radius (20 mot 22), bredde
+ * (420 mot 460) og om de i det hele tatt har maksimal høyde. Radius på tvers
+ * av appen: 24, 22, 20 og 0.
+ *
+ * SENTRERT, IKKE EN TRE-VEIS AKSE. Abstraksjonsdommeren felte et forslag om
+ * `presentation='bottom'|'center'|'fullscreen'`: bare `center` har volum
+ * (de tolv), `bottom` betjener nøyaktig ÉN komponent, og `fullscreen`
+ * betjener kode som allerede er vedtatt gjenoppbygget. En akse med to tomme
+ * grener er en abstraksjon som skjuler at det bare finnes ett mønster.
+ * `PlaggDetailSheet` blir stående som bunnark-referanse.
+ *
+ * TOKENENE SOM ALLEREDE FANTES, MEN INGEN BRUKTE:
+ *   --dw-overlay      «nivå 3 · sheets/dialog» — traff 2 av 19 flater
+ *   --dw-depth-hero   dybdekontrakten — traff 0 av 19. Tre konkurrerende
+ *                     hardkodede skygge-oppskrifter i stedet.
+ *
+ * VARIGHETEN kommer fra bevegelseskontrakten (--dw-m-state, 220 ms), ikke
+ * fra et nytt token med hardkodet reserveverdi. Forste utkast skrev
+ * var(--dw-m-sheet, 240ms); kontrakten felte begge deler — tokenet fantes
+ * ikke, og reserveverdien var hardkodet bevegelse.
+ *
+ * ::BACKDROP OG REDUSERT BEVEGELSE. Den globale killswitchen i
+ * design-tokens.css bruker `*, *::before, *::after` — den treffer IKKE
+ * `::backdrop`, som ikke er et vanlig pseudoelement. Derfor har denne filen
+ * en EGEN reduced-motion-regel for backdroppen. Uten den fader teppet inn
+ * selv om brukeren har bedt om ro.
+ */
+
+.dw-sheet {
+  padding: 0;
+  border: 0;
+  margin: auto;
+  width: calc(100% - var(--dw-space-24));
+  max-width: 440px;
+  max-height: calc(100dvh - var(--dw-space-32));
+  border-radius: var(--dw-r-panel);
+  background: var(--dw-overlay);
+  color: var(--dw-ink-hi);
+  /* D2: en hevet flate skal ha BADE ytre skygge og et indre topplys.
+     Skyggen alene gjor flaten flat — lyset er det som forteller at den er
+     lofte fra lerretet. Samme varme kant som resten av appens hevede
+     flater, og tema-konstant av samme grunn som panelets kantlys. */
+  box-shadow: var(--dw-depth-hero), inset 0 1px 0 rgba(242, 192, 138, 0.10);
+  overflow: hidden;
+  animation: dw-sheet-inn var(--dw-m-state) var(--dw-ease) both;
+}
+
+.dw-sheet::backdrop {
+  background: rgba(10, 7, 5, 0.55);
+  animation: dw-sheet-teppe var(--dw-m-state) var(--dw-ease) both;
+}
+
+/* Ytre flate klipper, indre flate scroller. Scroller man på selve
+   <dialog>-elementet — slik en av dagens flater gjør — mister man både
+   overscroll-containment og et fast bunnfelt. Da drar en rulling i arket
+   siden bak med seg. */
+.dw-sheet-kropp {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - var(--dw-space-32));
+}
+
+.dw-sheet-innhold {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: var(--dw-space-24);
+  /* Bunnen må klare hjemindikatoren. Tre av tolv dialoger i dag gjør ikke
+     det, og innholdet deres kan havne under den. */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dw-space-16));
+  /* D4: en rulleflate som kuttes hardt, sier ikke at det er mer under.
+     Samme oppskrift som appens ovrige rulleflater. */
+  mask-image: linear-gradient(to bottom, black 92%, transparent 100%);
+}
+
+.dw-sheet-topp {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--dw-space-12);
+  padding: var(--dw-space-20) var(--dw-space-24) 0;
+}
+
+.dw-sheet-tittel {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--dw-ink-hi);
+}
+
+.dw-sheet-lukk {
+  flex: none;
+  /* Trykkmålet er et gulv. Tolv lukkeknapper i appen har driftet til to
+     størrelser; fem av dem er 36 px brede og reddes bare av den globale
+     `button { min-height: 44px }` — altså 36x44, ikke 44x44. */
+  min-width: var(--dw-size-touch);
+  min-height: var(--dw-size-touch);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--dw-r-control);
+  background: transparent;
+  color: var(--dw-ink-mid);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.dw-sheet-bunn {
+  flex: none;
+  padding: var(--dw-space-12) var(--dw-space-24)
+    calc(env(safe-area-inset-bottom, 0px) + var(--dw-space-14));
+  border-top: 1px solid var(--dw-hairline);
+}
+
+@keyframes dw-sheet-inn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes dw-sheet-teppe {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Egen regel for BEGGE — se filhodet: `*` treffer ikke ::backdrop. */
+@media (prefers-reduced-motion: reduce) {
+  .dw-sheet,
+  .dw-sheet::backdrop {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .dw-sheet {
+    border: 1px solid CanvasText;
+  }
+}

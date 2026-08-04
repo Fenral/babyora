@@ -185,11 +185,6 @@ const UBRUKTE_PRIMITIVER: readonly string[] = [
   '--dw-space-2',
   '--dw-space-4',
   '--dw-space-6',
-  '--dw-space-12',
-  '--dw-space-14',
-  '--dw-space-20',
-  '--dw-space-24',
-  '--dw-space-32',
   '--dw-size-row', // radhoyde-gulv 62px; malt 3 steder, var prosa i doktrinen
 ];
 

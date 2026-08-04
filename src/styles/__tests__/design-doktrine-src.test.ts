@@ -129,7 +129,7 @@ const BASELINE: Record<string, number> = {
      (OnboardingScreen ×5, PaakledningScreen ×3), altså samme gjeld talt to
      ganger. Her er template-CSS-områdene ekskludert fra inline-flaten:
      21 + 38 = 59. css/tsx-css-siden stemmer eksakt med kartleggingen. */
-  D2: 59,
+  D2: 58,
   D3: 0,
   /* 21, ikke kartleggingens 20: `.hjem-monter { overflow: hidden auto }` er
      en scroll-container like fullt som `overflow-y: auto`. Toverdiformen var
@@ -194,9 +194,7 @@ const BASELINE_SETT: Record<string, number> = {
   'D2|src/components/controls/AgeAdaptiveSituationPicker.tsx|(inline)': 1,
   'D2|src/components/family/CareCircle.tsx|(inline)': 2,
   'D2|src/components/family/ToolsSection.tsx|(inline)': 1,
-  'D2|src/components/instrument/TemperatureInstrument.tsx|(inline)': 1,
-  'D2|src/components/profile/MaterialPreferenceSheet.tsx|(inline)': 1,
-  'D2|src/screens/HjemScreen.tsx|(inline)': 4,
+  'D2|src/components/instrument/TemperatureInstrument.tsx|(inline)': 1,  'D2|src/screens/HjemScreen.tsx|(inline)': 4,
   'D2|src/screens/PaakledningScreen.tsx|(inline)': 8,
   'D2|src/screens/PlaggbibliotekScreen.tsx|(inline)': 1,
   'D2|src/screens/TogGuideScreen.tsx|(inline)': 4,
