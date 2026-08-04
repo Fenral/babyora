@@ -1,0 +1,73 @@
+{
+  "_": "HANDSKREVNE UNNTAK til skjermmanifestet. Alt annet i docs/design-notes/skjermmanifest.md GENERERES av tools/skjermmanifest.mjs fra src/screens/*.tsx krysset mot ruterens fem kilder. Kun det som ikke kan utledes av kode staar her: visningsnavn, hvem som er unntatt fra fase 3-migreringen og hvorfor, hvilke heldekkende flater som IKKE er skjermer, og hvilke eierrapporterte vedtak som eier hvilken skjerm. Et handskrevet MANIFEST ratner - derfor er dette en unntaksliste, ikke et register. Hver oppforing her valideres av src/styles/__tests__/skjermmanifest.test.ts: peker den paa en fil som ikke finnes, eller en vedtak-id som ikke finnes i vedtak.json, er porten ROD.",
+
+  "visningsnavn": {
+    "src/screens/FamilieScreen.tsx": "Familie (skall)",
+    "src/screens/FinnAntrekkScreen.tsx": "Finn antrekk / Juster",
+    "src/screens/HjemScreen.tsx": "Hjem (referanse)",
+    "src/screens/InnstillingerScreen.tsx": "Innstillinger",
+    "src/screens/OnboardingScreen.tsx": "Onboarding",
+    "src/screens/PaakledningScreen.tsx": "Påkledning",
+    "src/screens/PlaggbibliotekScreen.tsx": "Plaggbibliotek",
+    "src/screens/TogGuideScreen.tsx": "Tog-guide",
+    "src/screens/UkeScreen.tsx": "Planlegg / Uke",
+    "src/screens/VarmEllerKaldScreen.tsx": "Varm eller kald",
+    "src/screens/VinterprogramScreen.tsx": "Vinterprogram"
+  },
+
+  "_lanseringsstatusnavn": "Navnet lanseringsstatus-2026-08-03.md bruker om skjermen. Trengs fordi T-01-lista navngir skjermene med VISNINGSNAVN og ikke filsti («Juster `:989-1000`, Familie `:133`»). MERK: lanseringsstatusens «Familie» er innholdet, altsa InnstillingerScreen - FamilieScreen.tsx er 21 linjer og kan ikke ha en linje 133.",
+  "lanseringsstatusnavn": {
+    "src/screens/FinnAntrekkScreen.tsx": "Juster",
+    "src/screens/InnstillingerScreen.tsx": "Familie",
+    "src/screens/OnboardingScreen.tsx": "Onboarding",
+    "src/screens/PaakledningScreen.tsx": "Påkledning",
+    "src/screens/PlaggbibliotekScreen.tsx": "Plaggbibliotek",
+    "src/screens/TogGuideScreen.tsx": "Tog",
+    "src/screens/VarmEllerKaldScreen.tsx": "Varm/kald",
+    "src/screens/VinterprogramScreen.tsx": "Vinterprogram"
+  },
+
+  "_unntak": "De TO skjermene som IKKE gaar i fase 3-migreringen. De ni andre gaar dit automatisk - de staar bevisst ikke oppfort noe sted, slik at en ny skjerm arver fase 3 uten at noen husker aa skrive den inn.",
+  "unntak": {
+    "src/screens/FamilieScreen.tsx": {
+      "fase": "—",
+      "grunn": "21-linjers passthrough uten egen stilflate: null CSS-fil, null <style>-blokk, null CSSProperties, null var(). Den rendrer InnstillingerScreen og har bokstavelig talt ingenting aa migrere. Flaten brukeren ser migreres som InnstillingerScreen."
+    },
+    "src/screens/PaakledningScreen.tsx": {
+      "fase": "4",
+      "grunn": "Gjenoppbygges, ikke migreres. Eiervedtak 2026-08-04 («Dette kan du bare slette» + «Ingen av disse var de vi jobbet med i gaar») felte BEGGE de gamle grenene - PlannedPaakledningScreen og CurrentPaakledningScreen ligger i samme fil. Aa migrere tokens i kode som skal slettes er sloesing. Se vedtak paakledning-gjenoppbygges og kle-paa-stepper."
+    }
+  },
+
+  "_tilleggsfase": "Skjermer som i tillegg til sin egen fase har et apent ansvar et annet sted.",
+  "tilleggsfase": {
+    "src/screens/InnstillingerScreen.tsx": {
+      "fase": "6A",
+      "grunn": "Innstillinger-revisjonen falt ut paa en API-feil 2026-08-03 og mangler i tallgrunnlaget (lanseringsstatusen sier det selv, linje 9). Skjermen er 6230 linjer med 190 CSSProperties-objekter og 0 var(--dw-*) - den STOERSTE umaalte flaten i appen. Revisjonen kjores paa nytt i fase 6A og funnene foeres inn i dette manifestet. Det er ogsaa denne skjermen som forsvinner helt hvis noen genererer skjermlista fra lazy()-registeret."
+    }
+  },
+
+  "_eierpunkter": "Eierrapporterte funn kan ALDRI baselines. De telles utenfor gulvet og lukkes forst naar vedtaket staar 'laast' i vedtak.json. Verdiene er vedtak-id-er; generatoren henter status og tekst derfra, saa denne fila kan ikke komme ut av takt med registeret.",
+  "eierpunkter": {
+    "src/screens/PaakledningScreen.tsx": [
+      "paakledning-gjenoppbygges",
+      "kle-paa-stepper"
+    ]
+  },
+
+  "_ikkeSkjermer": "Heldekkende flater som ikke er «skjermer» i noen av de fem rutekildene. De staar her som EKSPLISITTE unntak, ikke som utelatelser - ellers er forskjellen mellom «vurdert og holdt utenfor» og «glemt» usynlig.",
+  "ikkeSkjermer": [
+    {
+      "fil": "src/screens/onboarding/OnboardingBabyHero.tsx",
+      "grunn": "Heldekkende hero-flate INNE i OnboardingScreen sitt foerste steg. Ligger i en underkatalog og fanges derfor ikke av src/screens/*.tsx. Har ingen rutenoekkel og kan ikke naas direkte."
+    },
+    {
+      "fil": "src/components/AppPaywallGate.tsx",
+      "grunn": "Ikke-avviselig native <dialog> mountet OVER hele tab-routingen (App.tsx:716). Dekker skjermen helt, men er en gate over ruteren - ikke en rute."
+    },
+    {
+      "fil": "src/components/PaywallDialog.tsx",
+      "grunn": "Heldekkende ark aapnet fra flere skjermer. Samme klasse som AppPaywallGate: overlay, ikke rute."
+    }
+  ]
+}
