@@ -161,6 +161,17 @@ Kjøres som én feiesveip per mønster på tvers av alle skjermer i manifestet.
 - [ ] CTA-er → `ActionButton`-primitiven; ark → `Sheet`.
 - [ ] `:focus-visible` med riktig `--dw-focus` overalt; `outline:none` uten
       erstatning er forbudt.
+- [ ] **SIDESKIFTENE bygges** (eierfunn 2026-08-04). `--dw-m-push`/
+      `--dw-m-push-back` har null forbrukere; appen bytter skjerm uten
+      bevegelse. Port fra B1-proofens `pushTo()`: begge flater beveger seg
+      samtidig, kun transform (aldri scrollTop), viewporten klippes, neste
+      side forhaandsrendres, gjentatte trykk laases mens en overgang paagaar,
+      sveip starter aldri i iOS' venstre kantsone (foerste 24 px tilhoerer
+      tilbake-gesten). Skallet og lyspoolen staar stille; poolen KRYSSTONER
+      (300 ms) i stedet for aa gli med pushen. Reduced Motion kollapser til
+      direkte bytte. Verifiser: port som maaler at BEGGE flater har
+      transform under skiftet og at ordmerket staar stille;
+      mutasjonskontrakt. Fører `sideskift-er-fysiske` → `laast`.
 - [ ] Inline stiler flyttes til CSS-fil der mønsteret krever det
       (`::before`-kantlys, `:focus-visible`, media queries).
 - [ ] SLUTT: alle fase 2-baselines = 0, og null settes som nytt låst gulv.
