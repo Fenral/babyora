@@ -33,7 +33,7 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 | Påkledning | `src/screens/PaakledningScreen.tsx` | 1194 | 1 `<style>` + 7 CSSProperties + 48 `style={{` | 2 | 18 | App.tsx lazy()-register | nei | 4 |
 | Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 895 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 0 | 27 | App.tsx lazy()-register | ja | 3 |
 | Tog-guide | `src/screens/TogGuideScreen.tsx` | 1147 | 55 CSSProperties + 3 `style={{` | 0 | 34 | App.tsx lazy()-register | ja | 3 |
-| Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1147 | `UkeScreen.css` + 1 CSSProperties | 60 | 1 | App.tsx lazy()-register | ja | 3 |
+| Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1147 | `UkeScreen.css` + 1 CSSProperties | 61 | 1 | App.tsx lazy()-register | ja | 3 |
 | Varm eller kald | `src/screens/VarmEllerKaldScreen.tsx` | 745 | 1 `<style>` + 29 CSSProperties + 4 `style={{` | 0 | 25 | App.tsx lazy()-register | ja | 3 |
 | Vinterprogram | `src/screens/VinterprogramScreen.tsx` | 513 | 24 CSSProperties + 1 `style={{` | 0 | 16 | App.tsx lazy()-register | ja | 3 |
 
@@ -51,7 +51,7 @@ objekter og `style={{`-attributter. 10 av 11 skjermer har ingen CSS-fil.
 | Påkledning | umigrert (18 legacy-token, 1 rå hex, 2 `--dw-*`) |
 | Plaggbibliotek | umigrert (27 legacy-token, 0 rå hex, 0 `--dw-*`) |
 | Tog-guide | umigrert (34 legacy-token, 5 rå hex, 0 `--dw-*`) |
-| Planlegg / Uke | umigrert (1 legacy-token, 1 rå hex, 60 `--dw-*`) |
+| Planlegg / Uke | umigrert (1 legacy-token, 1 rå hex, 61 `--dw-*`) |
 | Varm eller kald | umigrert (25 legacy-token, 2 rå hex, 0 `--dw-*`) |
 | Vinterprogram | umigrert (16 legacy-token, 0 rå hex, 0 `--dw-*`) |
 

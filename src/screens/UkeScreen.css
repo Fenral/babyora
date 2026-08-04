@@ -20,7 +20,7 @@
   max-width: 560px;
   margin-inline: auto;
   padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px 24px;
-  background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+  background: linear-gradient(var(--dw-lys-vinkel), var(--dw-rom-naer) 0%, var(--dw-rom-fjern) 46%);
   color: var(--dw-ink-hi);
   font-family: var(--dw-font-ui);
   overflow-wrap: anywhere;

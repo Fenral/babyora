@@ -28,7 +28,11 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  background: linear-gradient(168deg, var(--dw-canvas-glow) 0%, var(--dw-canvas) 46%);
+  background: linear-gradient(var(--dw-lys-vinkel), var(--dw-rom-naer) 0%, var(--dw-rom-fjern) 46%);
+  /* Lyspoolen tegnes i ::before under, ikke her — den ma ligge FAST i
+     viewporten. isolation gir ::before sin egen stablingskontekst saa den
+     aldri legger seg over innhold. */
+  isolation: isolate;
   /* P8: bunn-padding matcher den flytende tab-baren sin klaring — dette
      skjermrotet kan eie sin egen interne scroll (overflow: hidden auto
      under), så den kan ikke stole på .app-shell > main sin padding alene. */
@@ -62,6 +66,64 @@
     drop-shadow(1px 2px 2px var(--dw-sh-contact))
     drop-shadow(3px 8px 12px var(--dw-sh-mid));
 }
+
+/* ── LYSPOOLEN ────────────────────────────────────────────────────────────
+   Kjernen sikter paa maskoten, skjermens hovedmotiv. Y-ankeret settes per
+   nivaa fra FAKTISK layout, ikke fra en fast prosent av skjermen — det var
+   nettopp den feilen eieren fanget: «gir lyset i bakgrunnen noen mening na?»
+   Da lufta ble omfordelt flyttet hero-gruppen seg nedover, og lyset ble
+   staaende og sikte paa tom vegg.
+
+   position: fixed, ikke absolute. `.hjem-monter` er sin EGEN rullecontainer
+   (overflow: hidden auto), saa et absolutt lag ville glidd med innholdet naar
+   du scroller — og et lys som flytter seg naar du drar med fingeren, lyver om
+   hvor lyskilden staar. Doktrinen sier det rett ut: «poolen tilhorer rommet og
+   far aldri gli med pushen.»
+
+   pointer-events: none saa den aldri stjeler et trykk. z-index 0 med
+   isolation paa forelderen: bak alt innhold, foran lerretet. */
+.hjem-monter {
+  /* MOTIVETS Y, REGNET FRA FAKTISK LAYOUT — ikke en prosent av skjermen.
+     Maskotens senter ligger:
+       toppmargin + ordmerkeraden (20) + slotens margin (130) - halve
+       maskoten over panelkanten (153 - 102 = 51)
+     Malt: senter 174 px paa 430x932 med 71 px toppmargin. Formelen gir
+     71 + 20 + 130 - 51 = 170, altsa 4 px unna — innenfor stopp-radiusen.
+     Endres slotens margin (kompakt-nivaet), folger lyset med av seg selv. */
+  --dw-motiv-y: 99px;
+
+  /* LOFTET MOT LAMPEN. Eierfunn 2026-08-04: «Bildet du delte er morkt i
+     toppen. Hvor er det tenkt at lyset kommer fra?»
+
+     Poolen satt DEAD ON motivet. En radial gradient faller like mye i alle
+     retninger, sa alt OVER motivet ble morkere enn motivet — malt ovre
+     venstre 27 mot maskotens 36. Rommet leste som belyst fra midten, mens
+     --dw-lys-vinkel og hele dybdekontrakten sier ovre venstre. To systemer
+     var uenige om hvor lampen star, og oyet tror pa det det ser.
+
+     Loftet flytter poolens toppunkt mot lyskilden uten a forlate motivet:
+     malt etter endringen ligger maskoten pa 50 mot toppunktets 51 (98 %),
+     sa vedtaket «poolen sikter pa motivet» star. max(8px, ...) hindrer at
+     kompakt-nivaet — der motivet allerede sitter hoyt — dytter senteret ut
+     over skjermkanten og gjor gradienten til en hard kant. */
+  --dw-pool-loft: 77px;
+  --dw-pool-y: calc(
+    max(24px, env(safe-area-inset-top, 0px) + 12px)
+    + max(8px, var(--dw-motiv-y) - var(--dw-pool-loft)));
+}
+
+.hjem-monter::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    var(--dw-pool) at var(--dw-pool-x) var(--dw-pool-y),
+    var(--dw-pool-farge),
+    var(--dw-pool-ytre) var(--dw-pool-stopp));
+}
+.hjem-monter > * { position: relative; z-index: 1; }
 
 .hjm-top { flex: none; }
 /* Dekor skal ikke sta hoyere enn informasjon: ordmerket sto paa 15,00:1
@@ -863,6 +925,10 @@
      130. Det var 22 px dodt rom over panelet paa nettopp de skjermene som
      ikke har raad til det. */
   .hjm-panel-slot[data-with-mascot='true'] { margin-top: 108px; }
+  /* Lyset folger maskoten ned naar sloten krymper: 130 -> 108 er 22 px. */
+  /* Kun motivets posisjon overstyres — loftet og formelen arves. Sloten er
+     108 i stedet for 130, saa motivet star 22 px hoyere. */
+  .hjem-monter { --dw-motiv-y: 77px; }
   /* Gulvet folger nivaet. Det ble malt for vanlige skjermer (vaer 269 /
      scan 276) og stod igjen paa 276 her, mens kompaktpanelet er 261 og 268 —
      altsa 15 dode piksler paa noyaktig den skjermen som ikke har raad.

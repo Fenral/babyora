@@ -74,6 +74,8 @@ const OBLIGATORISK: Readonly<Record<string, string>> = {
   depth: 'dybdekontrakten (vedtak «dybdekontrakt» + «dybdekontrakt-forbrukes»)',
   lys: 'lysvektoren, portdom 27 — «lysretningen skal ikke variere»',
   kant: 'kantlyset, portdom 27 — avledet av lysvektoren',
+  pool: 'veggens lyspool (vedtak «lyspool-folger-motivet», last 2026-08-04, port 10 i verify-hjem)',
+  rom: 'rommets fall — naer/fjern ende av lysvektoren. Snur roller per tema (vedtak «lyspool-folger-motivet»)',
   focus: 'fokusringen (vedtak «fokusring», WCAG 1.4.11)',
   plate: 'plaggplaten, portdom 25 — lokal terskel, egne tokens',
   tabbar: 'den flytende tab-baren + klaringen (DoD fase 3: «gjettede bunn-tall → --dw-tabbar-clearance»)',

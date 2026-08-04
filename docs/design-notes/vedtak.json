@@ -156,11 +156,11 @@
     },
     {
       "id": "lyspool-folger-motivet",
-      "vedtak": "Lyspoolens Y-anker folger skjermens hovedmotiv (Hjem: maskoten) via --atmo-y satt fra faktisk layout, aldri en fast prosent av skjermen. X staar fast paa 37 % — key kommer fra ovre venstre.",
+      "vedtak": "Lyspoolens anker folger skjermens hovedmotiv (Hjem: maskoten) via faktisk layout, aldri en fast prosent av skjermen. Poolen LOFTES mot lyskilden (--dw-pool-loft) slik at rommets lyseste punkt ligger ovre venstre og motivet ligger i lyset uten a vaere lyskilden selv: motivet skal male 80-102 % av ovre venstre hjorne. Ogsa lerretets egen gradient utleder fallretningen sin av --dw-lys-vinkel, ikke av en hardkodet vinkel.",
       "kilde": "B1-proofen; eierfunn 2026-08-03 «gir lyset i bakgrunnen noen mening na?» — malt 254 px mellom veggens lyseste punkt og maskotens hode",
-      "handhevesAv": null,
-      "status": "brutt",
-      "merknad": "Folger av portdom 24: flyttes hero-gruppen uten at poolen folger med, sikter lyset pa ingenting. DELVIS 2026-08-04: kantlyset forbruker na --dw-lys-vinkel/--dw-kant-key/--dw-kant-fill (portdom 27, hadde null forbrukere). Selve poolen gjenstar og ma ligge UTENFOR overflow-containeren."
+      "handhevesAv": "tools/verify-hjem.mjs",
+      "status": "laast",
+      "merknad": "LAST 2026-08-04 pa eierfunn «Bildet du delte er morkt i toppen. Hvor er det tenkt at lyset kommer fra?» Malt for: ovre venstre 27 mot maskotens 36 — rommet leste som belyst fra MIDTEN, mens --dw-lys-vinkel og hele dybdekontrakten sier ovre venstre. Tre feil fantes samtidig: (1) poolen satt dead on motivet, og en radial gradient faller like mye i alle retninger; (2) lerretets gradient stod pa en hardkodet 168deg som ikke stemte med noen av de tre systemene doktrinen utleder; (3) i LYS modus var polariteten invertert — poolen er varm brun og MORKNET der lampen treffer, og canvas-glow er 1,17x MORKERE enn canvas, sa toppen var skyggelagt. Kremen ligger 2,3 L* fra hevede flater og har ingen lysstyrke igjen a gi, sa lys modus uttrykker na retningen med SKYGGE: --dw-canvas-naer/-fjern bytter roller per tema, og poolen legger skygge i ytterkanten i stedet for lys i kjernen. Malt etter: mork ov 52 oh 22 nh 21 motiv 46 (88 %); lys ov 239 oh 225 nh 229 motiv 234 (98 %). Mutasjonskontrakt, to ledd i BEGGE retninger: loft 0 -> ROD (motiv 107 % av hjornet); lys-polaritet snudd -> ROD (nedre hoyre 241 mot ovre venstres 235); gjenopprettet -> GRONN. Porten maler den ferdige skjermen, ikke tokenverdier, fordi hvert lag saa riktig ut for seg — det var SUMMEN som pekte feil vei. Leg 1 i doktrinen («veggens lyspool — gradientens fallretning») hadde til na null handhevelse, mens leg 2 og 3 hadde porter; det var den ene som var feil."
     },
     {
       "id": "animasjon-males-mot-proofen",

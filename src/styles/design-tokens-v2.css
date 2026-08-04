@@ -34,7 +34,17 @@
 :root {
   /* ============ Valørstige mørk (L-verdier i OKLCH, 3–5 poeng per nivå) ============ */
   --dw-canvas: #1E140C;        /* nivå 0 · espresso-rom      · L 20.2 */
-  --dw-canvas-glow: #24180F;   /* nivå 0 · gradient-topp     · L 22.2 (var #2B1D11/L24.5 — lå 0.7 fra raised; glød bak maskot legges lokalt/radialt, ikke som generell lysning) */
+  --dw-canvas-glow: #24180F;   /* nivå 0 · gradient-topp · L 22.2 (var #2B1D11/L24.5 — lå 0.7 fra raised) */
+  /* ROMMETS FALL, UTLEDET AV LYSVEKTOREN (eierfunn 2026-08-04).
+     naer = enden mot lampen, fjern = enden bort fra den. Morkt lerret har
+     lysstyrke igjen a gi, sa naer er den LYSERE tonen. Lys modus snur
+     rollene: kremen ligger 2,3 L* fra hevede flater og har ingen lysstyrke
+     igjen, sa der er naer den rene kremen og fjern den varme tonen —
+     retningen uttrykkes med skygge i stedet for lys. Samme vektor, samme
+     tokenverdier, motsatt polaritet. Erstatter en hardkodet 168deg som
+     ikke stemte med noen av de tre systemene doktrinen utleder. */
+  --dw-rom-naer: var(--dw-canvas-glow);
+  --dw-rom-fjern: var(--dw-canvas);
   --dw-panel: #113B3E;         /* nivå 1 · petrol-instrument · L 32.5 (kjølig - skiller seg i hue, ikke valør) */
   --dw-raised: #2C1F13;        /* nivå 2 · hevet gruppeflate · L 25.2 */
   /* Plaggplaten. Egne tokens fordi terskelen er LOKAL: platen skal gi kremull
@@ -172,6 +182,42 @@
   --dw-depth-raised: 0 2px 3px var(--dw-sh-contact), 3px 12px 20px -10px var(--dw-sh-mid), 7px 28px 56px -16px var(--dw-sh-broad);
   --dw-depth-action: 0 2px 4px var(--dw-sh-contact-cta), 4px 16px 32px -12px var(--dw-sh-broad-cta);
   --dw-depth-selected: 0 2px 3px var(--dw-sh-contact), 2px 6px 14px -3px var(--dw-sh-mid);
+  /* ── LYSPOOLEN (vedtak lyspool-folger-motivet, hentet fra B1-proofen) ──
+     Poolen sikter paa skjermens HOVEDMOTIV — paa Hjem er det maskoten.
+     Eierfunn 2026-08-03: «gir lyset i bakgrunnen noen mening na?» Nei, fordi
+     kjernen var ankret til en fast PROSENT av skjermen mens hero-gruppen
+     flyttet seg. Y-ankeret folger derfor motivet, ikke skjermen.
+     X staar fast paa 37 %: key kommer fra ovre venstre, og hele
+     dybdekontrakten skygger ned-hoyre ut fra nettopp det.
+     Portdom 26 valgte geometri B: «A er romfarge uten tydelig kilde; C blir
+     scenelys. B gir en lesbar lampe uten at brukeren legger merke til
+     lampen.» Alpha 0,32 er taket. */
+  /* EIERFUNN 2026-08-04: «Bildet du delte er mørkt i toppen. Hvor er det
+     tenkt at lyset kommer fra?» Målt på 430x932, mørk modus: øvre venstre
+     hjørne 27, maskoten 36. Toppen var MØRKERE enn motivet — altså leste
+     rommet som belyst fra midten, ikke fra øvre venstre. Doktrinen over
+     lover det motsatte, og dybdekontrakten skygger ned-høyre ut fra nettopp
+     den lovnaden. To systemer var uenige om hvor lampen står.
+
+     Årsaken: poolen satt DEAD ON motivet, og en radial gradient faller like
+     mye i alle retninger. Da blir alt over motivet mørkere enn motivet, og
+     leg 1 i doktrinen over («veggens lyspool — gradientens fallretning»)
+     hadde ingen implementasjon i det hele tatt. Samme feilklasse som
+     dybdekontrakten: kontrakt skrevet, ingen forbruker.
+
+     Rettet ved å LØFTE poolen mot lampen (se --dw-pool-loft i
+     hjem-monter.css) og utvide rekkevidden, slik at feltet åpner seg opp mot
+     øvre venstre mens motivet fortsatt ligger i kjernen. Målt etter:
+     øvre venstre 51, maskot 50, øvre HØYRE 26, nedre hjørner 21 — lysest
+     oppe til venstre, faller mot høyre og ned. Motivet er 98 % av toppunktet,
+     så vedtaket «poolen sikter på motivet» står. Alpha 0,32 er fortsatt
+     taket; det er geometrien som er endret, ikke styrken. */
+  --dw-pool: 92% 62%;
+  --dw-pool-stopp: 68%;
+  --dw-pool-farge: rgba(232, 178, 122, 0.32);
+  --dw-pool-ytre: transparent;
+  --dw-pool-x: 30%;
+  --dw-pool-y: -10%;
   --dw-edge-light-gradient: linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
 
   /* ============ Flytende tab-bar (P8, duel §7) ============
@@ -272,7 +318,25 @@
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
     --dw-canvas: #F9F5EB;
+    /* Malt 2026-08-04 paa eierfunn «den lyse gradienten, forsvant den?»:
+       #F1E9DA mot #F9F5EB ga 1,019x — to prosent, under det oyet oppfatter.
+       Gradienten fantes i koden og gjorde ingenting.
+       #EFE4D2 gir 1,06x: fortsatt rolig, men den LESER som lys ovenfra i
+       stedet for a vaere flatt papir. Mork modus staar paa 1,32x. */
     --dw-canvas-glow: #F1E9DA;
+    --dw-rom-naer: var(--dw-canvas);
+    --dw-rom-fjern: var(--dw-canvas-glow);
+    /* Poolen i lys modus: bredere og mykere, lav alfa. Morgen gjennom
+       temperatur og diffus retning, ikke gjennom mer lysstyrke (proofen). */
+    --dw-pool: 116% 69%;
+    --dw-pool-stopp: 74%;
+    /* Ikke lysere — VARMERE. Malt: nesten-hvitt lys pa kremhvitt papir ga
+     styrke 1,4 og en toppunkt 138 px feil, altsa stoy. Lerretet er allerede
+     #F9F5EB; det finnes ingen lysstyrke igjen a gi. Paa papir leser lys som
+     varme, ikke som luminans — samme verdi proofen bruker i sitt andre lag. */
+    --dw-pool-farge: transparent;
+    --dw-pool-ytre: rgba(214, 186, 150, 0.22);
+    --dw-pool-x: 30%;
     /* P8 lys-kalibrering: varm off-white i stedet for rent #FFFFFF — hevede
        flater skal lese som "varmt papir", ikke som inverterte mørk-modus-
        kort. Kontrast uendret/bedre (ink-hi 15.97:1, ink-mid 6.0:1 på denne
@@ -340,7 +404,22 @@
   --dw-plate: #FBF6EA;
   --dw-plate-kant: rgba(122, 88, 52, 0.22);
   --dw-canvas: #F9F5EB;
+  /* Se @media-lys over: samme retting, samme grunn. Begge lys-inngangene skal
+     gi NOYAKTIG det samme. */
   --dw-canvas-glow: #F1E9DA;
+  --dw-rom-naer: var(--dw-canvas);
+  --dw-rom-fjern: var(--dw-canvas-glow);
+  /* Poolen i lys modus: bredere og mykere, lav alfa. Morgen gjennom
+     temperatur og diffus retning, ikke gjennom mer lysstyrke (proofen). */
+  --dw-pool: 116% 69%;
+  --dw-pool-stopp: 74%;
+  /* Ikke lysere — VARMERE. Malt: nesten-hvitt lys pa kremhvitt papir ga
+     styrke 1,4 og en toppunkt 138 px feil, altsa stoy. Lerretet er allerede
+     #F9F5EB; det finnes ingen lysstyrke igjen a gi. Paa papir leser lys som
+     varme, ikke som luminans — samme verdi proofen bruker i sitt andre lag. */
+    --dw-pool-farge: transparent;
+    --dw-pool-ytre: rgba(214, 186, 150, 0.22);
+  --dw-pool-x: 30%;
   --dw-raised: #FFFCF4;
   --dw-interactive: #F3ECDD;
   --dw-overlay: #FFFCF4;

@@ -362,6 +362,94 @@ try {
             : `${m.klaring} px klaring (krav 12)`);
     }
 
+    /* ── PORT 10: LYSET KOMMER FRA OVRE VENSTRE ────────────────────────────
+       Eierfunn 2026-08-04: «Bildet du delte er morkt i toppen. Hvor er det
+       tenkt at lyset kommer fra?»
+
+       Doktrinen i design-tokens-v2.css utleder TRE systemer av
+       --dw-lys-vinkel, og leg 1 er «veggens lyspool — gradientens
+       fallretning». Kantlyset (leg 2) og skyggene (leg 3) hadde porter.
+       Leg 1 hadde ingen, og var derfor den ene som var feil: malt ovre
+       venstre 27 mot maskotens 36 — rommet leste som belyst fra MIDTEN.
+       Sjuende gang samme feilklasse: en kontrakt skrevet i prosa, uten
+       forbruker og uten port.
+
+       Porten maler den faktiske skjermen, ikke tokenverdier, fordi det var
+       nettopp summen av lag (lerretets gradient + poolen) som pekte feil
+       vei — hvert lag for seg saa riktig ut. Begge temaer, fordi lys modus
+       var INVERTERT: der er poolen varm brun og MORKNER der den treffer, saa
+       samme tokenverdi gir motsatt fortegn. */
+    {
+      const sharp = require('sharp');
+      const HJORNE = 10;
+      const målt = [];
+      for (const tema of ['dark', 'light']) {
+        const s = await browser.newPage({
+          viewport: { width: 430, height: 932 }, deviceScaleFactor: 1, colorScheme: tema,
+        });
+        s.on('pageerror', (e) => jsFeil.push(String(e)));
+        await s.route('**/api/forecast*', (r) => r.fulfill({
+          contentType: 'application/json', body: JSON.stringify(forecastPartlyCloudy1C()) }));
+        await s.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
+        // Ekte safe-area: desktop-Chromium rapporterer env() som 0.
+        await s.addStyleTag({ content: '.hjem-monter{padding-top:71px !important}' });
+        await s.waitForTimeout(2600);
+        /* Motivets FAKTISKE senter, lest av DOM-en — ikke tallet 174 hardkodet.
+           Flyttes maskoten, folger porten med, og kravet «motivet ligger i
+           lyset» fortsetter a male motivet i stedet for et gammelt punkt. */
+        const motivY = await s.evaluate(() => {
+          const m = document.querySelector('.hjm-mascot, .hjm-mascot-anchor');
+          if (!m) return null;
+          const b = m.getBoundingClientRect();
+          return Math.round(Math.max(2, Math.min(929, b.top + b.height / 2)));
+        });
+        const { data, info } = await sharp(await s.screenshot()).raw().toBuffer({ resolveWithObject: true });
+        await s.close();
+        const lum = (x, y) => {
+          const i = (y * info.width + x) * info.channels;
+          return 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+        };
+        const h = info.height - HJORNE;
+        const b = info.width - HJORNE;
+        målt.push({
+          tema,
+          motivY,
+          ov: lum(HJORNE, HJORNE),
+          oh: lum(b, HJORNE),
+          nv: lum(HJORNE, h),
+          nh: lum(b, h),
+          motiv: motivY === null ? null : lum(HJORNE, motivY),
+        });
+      }
+
+      /* FORUTSETNING 1: motivet ma finnes i begge temaer. Uten den kunne
+         porten bestatt pa en skjerm uten maskot — og kravet «poolen sikter
+         pa motivet» ville malt tom vegg, som er nettopp feilen vedtaket
+         lyspool-folger-motivet ble skrevet for a hindre.
+         FORUTSETNING 2: rommet ma faktisk ha VARIASJON. Et helt flatt lerret
+         ville passert «ov er stoerst» pa likhet i flyttall og gitt gront pa
+         at det ikke finnes lys i det hele tatt. */
+      const utenMotiv = målt.filter((m) => m.motiv === null).map((m) => m.tema);
+      const flate = målt.filter((m) => Math.max(m.ov, m.oh, m.nv, m.nh) - Math.min(m.ov, m.oh, m.nv, m.nh) < 4);
+      /* Kravet er et BAND, ikke et gulv. Forste utkast krevde bare at motivet
+         var minst 80 % av hjornet — og bestod mutasjonen, der motivet malte
+         107 % av hjornet. Det er PRESIS eierfunnet: veggen naermest lampen er
+         morkere enn motivet, altsa lyser motivet selv. Taket sier at motivet
+         belyses AV lampen; det er ikke lampen. 1,02 gir malestoy rom. */
+      const brudd = målt.filter((m) => !(
+        m.ov > m.oh && m.ov > m.nh && m.motiv >= m.ov * 0.8 && m.motiv <= m.ov * 1.02));
+
+      const beskriv = (m) => `${m.tema} ov ${Math.round(m.ov)} oh ${Math.round(m.oh)} nh ${
+        Math.round(m.nh)} motiv ${Math.round(m.motiv)} (${Math.round((m.motiv / m.ov) * 100)}% av ov)`;
+
+      port('10. lyset kommer fra ovre venstre, i begge temaer',
+        utenMotiv.length === 0 && flate.length === 0 && brudd.length === 0,
+        utenMotiv.length ? `motivet ikke funnet i: ${utenMotiv.join(', ')} — ikke malt`
+          : flate.length ? `lerretet er flatt i ${flate.map((m) => m.tema).join(', ')} — ingen lysretning a male`
+            : brudd.length ? `feil lysretning: ${brudd.map(beskriv).join(' | ')}`
+              : målt.map(beskriv).join(' | '));
+    }
+
     if (jsFeil.length) port('ingen JS-feil', false, jsFeil.join('; '));
   }
 } catch (e) {

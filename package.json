@@ -19,7 +19,7 @@
     "e2e": "tsx e2e/smoke.ts",
     "e2e:purchase": "tsx e2e/purchase-flow.ts",
     "engine:v2:review": "tsx scripts/export-engine-v2-review.ts",
-    "verify:hjem": "node tools/verify-hjem.mjs",
+    "verify:hjem": "npm run build && node tools/verify-hjem.mjs",
     "diag:retningslys": "node tools/retningslys.mjs",
     "diag:gradient": "node tools/gradient-retning.mjs",
     "diag:vitrine": "node tools/vitrine-blindtest.mjs"
