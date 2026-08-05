@@ -85,9 +85,9 @@ try {
       if (await tab.count()) { await tab.click(); await p.waitForTimeout(1500); }
     },
   });
-  await shoot('04-innstillinger', `${BASE}/?seed=demo`, {
+  await shoot('04-familie', `${BASE}/?seed=demo`, {
     beforeShot: async (p) => {
-      const tab = p.locator('nav button, [role="tablist"] button, nav a').filter({ hasText: /innstill|mer|profil/i }).first();
+      const tab = p.locator('nav button, [role="tablist"] button, nav a').filter({ hasText: /familie/i }).first();
       if (await tab.count()) { await tab.click(); await p.waitForTimeout(1500); }
     },
   });
