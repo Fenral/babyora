@@ -67,6 +67,30 @@ funksjonelt trygge. Vurderes og committes/forkastes eksplisitt i Fase 1 (product
   rundtur (klikk → naviger → les meldinger) verifisert.
 - **Regel fra eier:** ChatGPT-relaterte prosesser skal ALDRI lukkes for å frigjøre minne.
 
+## ui-ux-pro-max — verifisert funksjonelt (supplement til Mobbin og Apple HIG)
+
+Oppdatert til v2.11.0 og testet med reelle søk 2026-08-05 (eierinstruks). Verktøyet er en
+lokal, søkbar designdatabase (`scripts/search.py`, Python, ingen avhengigheter).
+
+**Konkrete testfunn:**
+
+1. `--design-system "parenting baby app warm trustworthy"` → returnerte komplett forslag:
+   stil «Claymorphism (Mobile)», palett «soft pink + trust blue» (#EC4899/#0284C7),
+   typografi Fredoka/Nunito, effekt- og sjekklisteanbefalinger.
+   **Vurdering:** databasen leverer, men dette konkrete treffet er generisk «barneapp»-estetikk
+   — nettopp det masterprompten forbyr å kopiere ukritisk. Brukes som *motreferanse* og
+   idékilde i Fase 4/7, aldri som fasit. Designretning låses først i Fase 8.
+2. `--domain ux "subscription paywall onboarding trust"` → 1 treff (skipbar onboarding,
+   severity medium). UX-databasen er reell men tynn på nisjespørringer — bredere nøkkelord
+   trengs (98 retningslinjer totalt).
+3. Styrken ligger i de prioriterte regelkategoriene (kontrast 4.5:1, 44×44 px touchmål,
+   150–300 ms animasjon, reduced-motion) — disse overlapper og forsterker repoets egen
+   doktrine-lint (D1–D5) og blir en del av verifikasjonsløypa per skjerm.
+
+**Rolle videre:** Mobbin gir *hva andre faktisk shipper* (skjermbevis), Apple HIG gir
+*plattformnormen*, ui-ux-pro-max gir *søkbare tommelfingerregler og anti-mønstre*. De tre
+brukes som triangulering i Fase 4–5; ingen av dem er beslutningsmyndighet alene.
+
 ## Skills og MCP-kapabiliteter
 
 - **Designskills tilgjengelig:** impeccable, ui-ux-pro-max (**oppdatert til v2.11.0 fra
