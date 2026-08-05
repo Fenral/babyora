@@ -82,6 +82,7 @@ import {
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { recommend } from '../lib/wool-layers/recommend';
+import { feelsLikeC as computeFeelsLikeC } from '../lib/met-no/feels-like';
 import type { Activity } from '../lib/wool-layers/types';
 import type { GarmentId } from '../data/garment-illustrations';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
@@ -453,7 +454,10 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
       return recommend({
         weather: {
           tempC,
-          feelsLikeC: tempC,
+          // Sol-review P0-2 (2026-08-05): samme værkontrakt som Hjem — føles-som
+          // avledes av temp+vind med formelen i met-no/feels-like, aldri rå temp.
+          // Uten dette kunne samme vær gi ulikt temperaturbånd på de to flatene.
+          feelsLikeC: computeFeelsLikeC(tempC, windMs),
           windMs,
           precipMmH,
           symbolCode: symbolCodeFromPrecip(precipMmH),
@@ -602,7 +606,8 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
       return recommend({
         weather: {
           tempC: committed.tempC,
-          feelsLikeC: committed.tempC,
+          // P0-2: normalisert kontrakt — se liveRecommendation over.
+          feelsLikeC: computeFeelsLikeC(committed.tempC, committed.windMs),
           windMs: committed.windMs,
           precipMmH: committed.precipMmH,
           symbolCode: symbolCodeFromPrecip(committed.precipMmH),
