@@ -1,8 +1,14 @@
 {
   "updated": "2026-08-05",
-  "activePhase": 7,
-  "phaseName": "Three Radical Directions (forberedelse: fase 5-krav)",
-  "completedPhases": [0, 1, 2, 3, 4, 5, 6],
+  "activePhase": 9,
+  "phaseName": "Representative Prototype (4 kandidater)",
+  "completedPhases": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+  "eierport2": {
+    "dato": "2026-08-05",
+    "vedtak": "Alle tre + syntesen prototypes (Protokollen, Spennet, Ambient Briefing, Ambient Protokoll)",
+    "claudesForbehold": "Spennets prototype tester forståelse/interaksjon, ikke faglig intervallvaliditet (P0 består som lanseringsforutsetning)",
+    "reversibelt": true
+  },
   "approvedDecisions": [
     "Fase 0 ferdig 2026-08-05: miljø, Mobbin, ChatGPT Work-driver, ui-ux-pro-max v2.11.0 og prosjektminne verifisert/opprettet",
     "Fase 1 ferdig 2026-08-05: audit (5 agenter) + 6 screenshots + Sol-review REVIDER; P0-4 og P0-6 implementert samme dag; DoD kvittert i 11-independent-review.md",
@@ -39,5 +45,5 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "Fase 7-forberedelse (Sols r5-krav): komprimer 68 prinsipper til 10\u201312 Babyora-invarianter med kopi-audit; \u00e9n researchrunde utenfor Mobbin (h\u00f8y-konsekvens-beslutningsst\u00f8tte, kulde/PPE, closed-loop handoff, degraderte tilstander, lav lese-/funksjonsevne); fullf\u00f8r fase 4-gap. Deretter fase 7: tre BESLUTNINGSARKITEKTURER (retningskandidater: Protokollen, Confidence Instrument, Closed-loop Briefing, Physical-first Layering) \u2014 \u00e9n unng\u00e5r bevisst kort/chip-dashbord; hver tar \u00e9n produktrisiko + \u00e9n representasjonsrisiko; lab-fritak fra Monter-doktrinen etableres f\u00f8rst; B-rammen (gratis sikkerhetskjerne) er prim\u00e6rhypotese fra eierport 1"
+  "nextAction": "Fase 9: skriv 12-prototype-spec.md (fire navnl\u00f8se prototyper \u2014 Protokollen/Spennet/Ambient/Ambient Protokoll \u2014 i docs/design-lab/lab/ utenfor doktrine-skanning; delt scenariosett: normal dag, grensev\u00e6r, sovende vogn, bilstol, manglende data, endret v\u00e6r, utl\u00f8pt r\u00e5d, ny omsorgsperson, Dynamic Type, utend\u00f8rslys; lik visuell kvalitet; identisk gratis sikkerhetslag; m\u00e5leprotokoll: korrekt f\u00f8rste handling, farlig utelatelse, beslutningstid, svakeste-premiss-gjenfortelling, stale-forst\u00e5else; nullmodell obligatorisk) \u2192 Sol f\u00f8r-implementeringsreview av spec \u2192 bygg prototypene \u2192 fase 10/11 review-loop \u2192 eierport 3"
 }
