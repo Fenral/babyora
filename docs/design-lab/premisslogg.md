@@ -1,0 +1,24 @@
+# Premisslogg — Babyora Design Lab
+
+> Opprettet 2026-08-05 (Sol-krav, fase 1-review). Felt: premiss · eksisterende bevis ·
+> motbevis · planlagt test · eier · frist · status. Frister angis som fasegrenser, ikke
+> kalenderdatoer — loggen oppdateres hver gang et premiss får nytt bevis eller vedtak.
+> Terskler og full begrunnelse: `appendix/fase2/*.md` og `02-current-product-audit.md`.
+
+| # | Premiss | Eksisterende bevis | Motbevis | Planlagt test | Eier | Frist | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Påkledning 0–24 mnd er et hyppig, uløst usikkerhetsproblem | Fysiologisk vanskelighet reell (RESEARCH.md); fagkilder spriker | AAPs «+1 lag»-regel er 9 ord; læringskurve; ingen frekvensdata | Dagbokstudie 7 dager, ≥12 husholdninger (usikkerhet ≥3/7 dager hos ≥50 % førstegangs) | Eier (rekruttering) + Claude (protokoll) | Før fase 8-port | ÅPEN |
+| 2 | «3–8 åpninger/dag» | Ingen — usitert tall i PRODUCT.md | Fingerprint-cachen antar selv få nye svar/dag | Analytics på → median åpninger/aktiv dag ≥2 | Eier (PostHog-nøkkel) + Claude (events) | Før fase 6-port | ÅPEN — tallet skal ikke siteres som fakta |
+| 3 | Foreldre vil forskrives (autoritativ liste), ikke valideres | Dagens produktform; ingen brukerdata | Tone-doktrinen lover validering; Sols premiss #4 | Konseptduell 3 CTA-varianter per segment; kandidat-antrekk-andel i dagbok | Claude (prototype) + eier (deltakere) | Før fase 8-port | ÅPEN — avgjør produktform |
+| 4 | Én korrekt plaggliste finnes per værpunkt | Deterministisk motor | ~40 % ull-intoleranse (F62); garderobevariasjon; fagkilder spriker | Faglig blindtest (≥2 fagpersoner, nulltoleranse falsk grønn) | Eier (fagpersoner) + Claude (scenariosett) | Før fase 9 (prototype) | ÅPEN — lanseringsblokker allerede i kode-kommentar |
+| 5 | Motorens råd er trygge og treffsikre | 10 evidensmerkede hard blocks; ren funksjon | Terskler «MÅ valideres av helsesøster»; treffsikkerhet aldri målt | Samme blindtest som #4 + varm/kald-feedback når kablet | Eier + Claude | Før fase 13 (lansering) | ÅPEN — HARD BLOKKER |
+| 6 | Hard paywall etter én anbefaling maksimerer verdi | Eiervedtak 2026-07-31 | Sol P0-3: tillit kan ikke opptjenes på én anbefaling; ingen konverteringsdata | Trial-variant som dekker ≥1 værskifte; funnel-måling (krever #2) | Eier (port fase 6) | Fase 6-port | ÅPEN — akseptert risiko m/ motkandidatplikt |
+| 7 | 39/99/299 kr og tre planer er riktig prisarkitektur | Ankerpriser satt; RevenueCat provisjonert | Pulsbehov → sesongpass/livsfasepris kan passe bedre; ingen betalingsdata | Van Westendorp/valgeksperiment med tre innramminger | Eier + Claude (design av test) | Fase 6-port | ÅPEN |
+| 8 | 0–24 mnd er ett behovssegment | — | S1–S4-modellen; barnehagestart ~12 mnd; toppoppgaver divergerer | Segmentkodet dagbok/intervju over 8–12-grensen | Claude (analyse) + eier (data) | Før fase 8-port | SVEKKET — revidert modell i 03 |
+| 9 | Sekundæromsorg kan betjenes senere («Familie» kan vente) | Lokal-first-arkitektur | Handoff kan være mest betalingsverdige jobb (Sol); CareCircle-preview lover det alt | MVH-test: delknapp native share, ≥5 % ukentlig deling; separat handoff-studie | Claude (MVH) + eier (felttest) | Før fase 8-port | ÅPEN |
+| 10 | Lokal-only uten backend er forenlig med produktløftene | GDPR-enkelhet; ingen serverdata | Deling/enhetsbytte/gjenoppretting umulig; WebView-storage kan tømmes av OS | Avhenger av #9; enhetsbytte-scenario dokumenteres | Claude | Fase 8-beslutning | ÅPEN |
+| 11 | Maskot + varm tone + 3,2 s-seremoni bygger tillit | Eiervedtak (låst produksjonsretning) | Sol: kan maskere manglende validering; helsenært verktøy kan miste faglighet; kognitiv kost hos søvndepriverte | Tillitsmåling i konsepttest (maskot vs. faglig avsender); skip-rate på seremoni | Claude (test) + eier (vedtak) | Fase 8-port | ÅPEN — på REMOVE/KEEP/TEST-listen |
+| 12 | Trial-lengde 7 dager lar brukeren oppleve verdien | StoreKit-standard | Dekker ikke garantert et værskifte; verdi observeres først etter turer | Konverteringsdata per vær-eksponering (krever #2) | Eier | Fase 6-port | ÅPEN |
+| 13 | Navn-først-onboarding er riktig prioritering | Emosjonell binding (design-rasjonale) | Sol P2: beslutningskritiske variabler (ull-toleranse, kontekst) viktigere; 40 %-problemet udekket | A/B onboarding-rekkefølge i prototype | Claude | Fase 9 | ÅPEN |
+| 14 | Planlegg/fremtid er en betalingsdriver | Skjermen er bygget og visuelt utviklet | Sol P2: «ta med et ekstra lag» kan dekke behovet; 595 kB chunk for ubevist verdi | Bruk/verdi-måling + dagbok («planla du klær i går for i morgen?») | Claude + eier | Fase 8-port | ÅPEN |
+| 15 | Vinterhansker-bruk er reelt krav | PRODUCT.md persona-prosa | Kapasitive skjermer virker ikke med ullhansker | Feltobservasjon; omformuler til «store mål + null presisjonsgester» | Claude | Fase 7 (designretninger) | SVEKKET |
