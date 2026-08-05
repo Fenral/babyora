@@ -54,6 +54,7 @@ import { PLUS_FEATURE_AVAILABILITY } from './lib/premium/plus-features';
 import { useSubscription } from './state/subscription-store';
 import { useLocationPref } from './state/location-pref-store';
 import { useSceneHeight } from './hooks/useSceneHeight';
+import { slippLaunch } from './lib/launch-handoff';
 import { klePaaKildeFor } from './components/klepaa/kle-paa-rute';
 
 /**
@@ -225,6 +226,15 @@ function useClosePlannedDrillOnAccess({
 }
 
 export default function App(): ReactElement {
+  /* ÅPNINGSFLATEN slippes her, ikke i main.tsx. Forskjellen er reell:
+     main.tsx kaller `render()`, men React har ikke MALT noe på det
+     tidspunktet. Slipper man der, forsvinner flaten før det ligger noe under.
+     En effekt i App kjører etter commit — da finnes det en skjerm å avsløre.
+     Se src/lib/launch-handoff.ts for hvorfor det ikke er en timer. */
+  useEffect(() => {
+    slippLaunch();
+  }, []);
+
   // Førstegangs-flyt: har familien ingen barn ennå, vises OnboardingScreen
   // i stedet for app-shellet. Vi styrer på egen `onboardingDone`-state (ikke
   // rått `needsOnboarding`), fordi OnboardingScreen kaller completeOnboarding()

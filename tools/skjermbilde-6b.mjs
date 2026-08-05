@@ -68,6 +68,16 @@ const tilResultat = async (p) => {
 
 const RUTER = [
   {
+    navn: '00a-landing',
+    tekst: 'NY: aapningsflaten. Malt fra aller forste frame, for React finnes.',
+    url: '?seed=demo',
+    /* Knipses MENS flaten staar. Den slipper naar appen har malt, saa vi
+       maa ta bildet for den rekker det — derfor commit, ikke load. */
+    raa: true,
+    vei: async () => true,
+    anker: '#launch',
+  },
+  {
     navn: '00-onboarding',
     tekst: 'Onboarding. Forste skjerm en ny bruker ser — appens standardtema er morkt.',
     url: '',
@@ -167,7 +177,7 @@ for (const rute of RUTER) {
     /* Onboarding vises bare uten barn i familien, sa den ruten ma IKKE
        seede. De ovrige seeder, ellers havner de i onboarding i stedet. */
     await p.goto(`${BASE}/${rute.url ?? '?seed=demo'}`, { waitUntil: 'domcontentloaded' });
-    await p.waitForTimeout(2400);
+    await p.waitForTimeout(rute.raa === true ? 90 : 2400);
 
     let kom = false;
     try { kom = await rute.vei(p); } catch { kom = false; }

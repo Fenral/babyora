@@ -18,6 +18,7 @@ import App from './App.tsx'
 import { ChildrenProvider } from './state/children-provider.tsx'
 import { initAnalytics, track } from './lib/analytics/track'
 import { initNative } from './lib/native-init'
+import { armerLaunchFrist } from './lib/launch-handoff'
 import { initRevenueCat } from './lib/billing/revenuecat'
 import { syncPremiumEntitlement } from './lib/premium/use-access'
 
@@ -55,3 +56,8 @@ createRoot(document.getElementById('root')!).render(
 // Android back-knapp. No-op på web (gated på Capacitor.isNativePlatform()).
 // Kjøres etter render slik at ChildrenProvider er montert.
 void initNative();
+
+// AApningsflatens nodutgang. Kaster noe for App rekker a montere, ville
+// flaten blitt staende for alltid — appen ville sett ut som den hang, paa
+// merkevaren, uten en eneste feilmelding. Se lib/launch-handoff.ts.
+armerLaunchFrist();
