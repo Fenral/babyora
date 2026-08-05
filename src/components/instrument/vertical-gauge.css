@@ -256,15 +256,15 @@
    `aria-disabled` i markup, så dempingen er forsterkning — ikke det eneste
    signalet, slik alpha var. */
 .fa-gauge-step[aria-disabled='true'] {
-  /* Bakgrunnen GJENTAS her, og det er ikke overflødig. Panel-porten fritar
-     `.fa-gauge-step` for forbudet mot espresso-blekk i panel-skopet, men
-     unntaket er BUNDET til premisset sitt: blekket får flippe med temaet
-     fordi flaten under gjør det samme. Porten krever derfor at
-     `background: var(--dw-raised)` står i SAMME regel som blekket — arv fra
-     grunnregelen kan den ikke se, og skal den ikke stole på. Uten denne
-     linjen ble porten rød (4 brudd mot gulvet 3), og den hadde rett i at
-     den ikke kunne verifisere premisset. */
-  background: var(--dw-raised);
+  /* INGEN egen bakgrunn her — se panel-tekstrampe.test.ts sin HEVEDE_ØYER.
+     Første forsøk gjentok `background: var(--dw-raised)` for å gjøre
+     øy-premisset synlig for panel-porten. Det virket der, og skapte NY
+     doktrinegjeld i D2: en hevet flate uten inset topplys + skygge. To
+     porter dro i hver sin retning, og jeg hadde løst den ene ved å bryte
+     den andre.
+     Riktig svar var å la CSS-en være enkel og lære panel-porten at premisset
+     kan stå i grunnregelen for SAMME klasse i samme fil — flaten er der,
+     porten så bare ikke etter den. */
   color: var(--dw-ink-low);
   cursor: default;
 }

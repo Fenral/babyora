@@ -1059,14 +1059,53 @@ function finnVern(regel: Regel, ledd: string, egenskap: string): Regel | null {
 
 const ØY_BRUKT = new Set<string>();
 
+/**
+ * Har KLASSEN sin egen flate — i denne regelen eller i en annen regel for
+ * samme klasse i samme fil?
+ *
+ * ═══ HVORFOR IKKE BARE «SAMME REGEL» ══════════════════════════════════════
+ * Kravet var opprinnelig at `background: var(--dw-raised)` sto i NØYAKTIG den
+ * regelen som bruker espresso-blekket. Det er strengt på riktig sted —
+ * unntaket skal være bundet til premisset sitt — men det målte feil ting.
+ *
+ * MÅLT 2026-08-05: en tilstandsregel for samme klasse
+ * (`.fa-gauge-step[aria-disabled='true']`) ARVER flaten fra grunnregelen.
+ * Elementet HAR sin egen hevede bakgrunn; porten så bare ikke etter den.
+ * Følgen var konkret og gal: for å bli grønn her gjentok jeg bakgrunnen i
+ * tilstandsregelen — og skapte NY doktrinegjeld i D2 (hevet flate uten inset
+ * topplys + skygge). To porter dro i hver sin retning, og den ene ble løst
+ * ved å bryte den andre.
+ *
+ * PREMISSET ER FORTSATT BUNDET, bare på riktig nivå: flaten må finnes for
+ * KLASSEN, i samme fil. Slettes `background: var(--dw-raised)` fra
+ * grunnregelen, forsvinner unntaket for alle tilstandene også — det er
+ * mutasjonstestet.
+ */
+function klassenHarEgenFlate(
+  regel: Regel,
+  øy: (typeof HEVEDE_ØYER)[number],
+): boolean {
+  const flateIRegel = (r: Regel): boolean =>
+    deklarasjoner(r).some((d) => /^background(-color)?$/u.test(egenskapAv(d.tekst))
+      && new RegExp(`var\\(\\s*${øy.flate}(?![\\w-])`, 'u').test(d.tekst));
+
+  if (flateIRegel(regel)) return true;
+
+  /* Ellers: en annen regel i SAMME fil hvis nøkkelkompound bærer samme
+     klasse. Filgrensen er med vilje — en flate deklarert i et helt annet
+     stilark er ikke et premiss denne porten kan verifisere. */
+  return ALLE_REGLER.some((r) => r.fil === regel.fil
+    && splittLedd(r.selektor).some((l) => kompounddeler(nøkkelkompound(l))
+      .some((d) => d === `.${øy.klasse}`))
+    && flateIRegel(r));
+}
+
 /** Er hele deklarasjonen dekket av et registrert HEVET ØY? */
 function hevetØy(regel: Regel, skopledd: string[]): (typeof HEVEDE_ØYER)[number] | null {
   for (const øy of HEVEDE_ØYER) {
     if (!skopledd.every((l) => kompounddeler(nøkkelkompound(l))
       .some((d) => d === `.${øy.klasse}`))) continue;
-    const harFlate = deklarasjoner(regel).some((d) => /^background(-color)?$/u.test(egenskapAv(d.tekst))
-      && new RegExp(`var\\(\\s*${øy.flate}(?![\\w-])`, 'u').test(d.tekst));
-    if (!harFlate) continue;
+    if (!klassenHarEgenFlate(regel, øy)) continue;
     ØY_BRUKT.add(øy.klasse);
     return øy;
   }
