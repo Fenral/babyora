@@ -913,10 +913,21 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
             «Beregn på nytt» ennå). `committedActivityOption` finnes alltid
             når `showResult` er sann (begge avledes fra samme `committed`). */}
         {showResult && (
-          <section aria-labelledby="finn-output-label" style={resultOpacityStyle(resultDemoted, reducedMotion)}>
+          <section aria-labelledby="finn-output-label">
             <div style={outputHeaderStyle}>
-              <h2 id="finn-output-label" style={outputTitleStyle}>Antrekket</h2>
-              <span style={outputMetaStyle} aria-hidden>
+              <h2
+                id="finn-output-label"
+                style={{ ...outputTitleStyle, ...demotedTextStyle(resultDemoted, reducedMotion) }}
+              >
+                Antrekket
+              </h2>
+              {/* IKKE aria-hidden lenger. Linjen bar før bare dekor (antall +
+                  aktivitet), og demoteringen var ren opacity — altså usynlig
+                  for skjermleser. Nå bærer den ORDET «utdatert», og da er den
+                  informasjon: den eneste beskjeden om at svaret ikke gjelder
+                  parametrene som står på skjermen. */}
+              <span style={{ ...outputMetaStyle, ...demotedTextStyle(resultDemoted, reducedMotion) }}>
+                {resultDemoted ? 'Utdatert · ' : ''}
                 {rows.length} plagg · {(committedActivityOption ?? selectedActivity).label.toLowerCase()}
               </span>
             </div>
@@ -1194,10 +1205,46 @@ const explanationBoxStyle: CSSProperties = {
   marginTop: 'var(--dw-space-12)',
 };
 
-function resultOpacityStyle(demoted: boolean, reduceMotion: boolean): CSSProperties {
+/**
+ * «Svaret er ikke lenger ferskt» — uttrykt i FARGE, ikke i alpha.
+ *
+ * ═══ HVA SOM VAR GALT ═════════════════════════════════════════════════════
+ * Her sto `opacity: demoted ? 0.55 : 1` på HELE resultatseksjonen. MÅLT
+ * 2026-08-05, mot lerretet i begge temaer:
+ *
+ *              full       ved 0.55
+ *   ink-hi     15,0:1  →  5,25:1   (mørk, holder)
+ *   ink-mid    10,1:1  →  3,89:1   ← under 4,5
+ *   ink-low     6,5:1  →  2,85:1   ← under 4,5
+ *   ink-hi     15,0:1  →  3,66:1   ← under 4,5 (LYS — selv sterkeste tekst)
+ *   ink-mid     5,7:1  →  2,31:1   ← under
+ *   ink-low     6,6:1  →  2,46:1   ← under
+ *
+ * Fem av seks nivåer under kravet. Petrol-panelet har hatt forbudet mot
+ * opacity-dempet tekst hele tiden (design-tokens-v2.css:30); espresso-siden
+ * hadde det ikke, og det er nøyaktig den asymmetrien Impeccable fant (A1).
+ *
+ * ═══ TO GRUNNER TIL AT ALPHA ER FEIL VERKTØY HER ══════════════════════════
+ * 1. Den rammer ALT den treffer — også plaggbildene, som ikke har noe
+ *    kontrastkrav å bryte, men som blir grumsete uten grunn.
+ * 2. Den sier INGENTING til en skjermleser. En blind bruker fikk null
+ *    indikasjon på at svaret var utdatert. Signalet fantes bare som lavere
+ *    alpha, altså bare for den som ser.
+ *
+ * ═══ HVA SOM ERSTATTER DEN ════════════════════════════════════════════════
+ * Overskriften og metalinjen bytter til `--dw-ink-demoted` (4,8:1 i begge
+ * temaer) — RAMMEN blir stille. INNHOLDET (plaggnavn, hvorfor-teksten) står
+ * i full kontrast, for et utdatert svar skal fortsatt kunne leses.
+ * Metalinjen sier i tillegg «utdatert» i klartekst, og den teksten er ikke
+ * lenger aria-hidden. Da hører skjermleseren det samme som øyet ser.
+ *
+ * Bevegelsen krysstoner farge i stedet for alpha — samme varighet, samme
+ * kurve, og fortsatt av ved redusert bevegelse.
+ */
+function demotedTextStyle(demoted: boolean, reduceMotion: boolean): CSSProperties {
   return {
-    opacity: demoted ? 0.55 : 1,
-    transition: reduceMotion ? 'none' : 'opacity 160ms ease',
+    color: demoted ? 'var(--dw-ink-demoted)' : undefined,
+    transition: reduceMotion ? 'none' : 'color var(--dw-m-state) var(--dw-ease)',
   };
 }
 

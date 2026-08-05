@@ -126,7 +126,35 @@ describe('FinnAntrekkScreen — result-as-clothes wiring (source-text: only reac
     const contents = source(screenPath);
     expect(contents).toContain("from './finn-antrekk-calc'");
     expect(contents).toContain('nextPhaseAfterParamChange(phase, committed,');
-    expect(contents).toContain('resultOpacityStyle(resultDemoted, reducedMotion)');
+    /* Het `resultOpacityStyle` til 2026-08-05. Demoteringen er nå en FARGE,
+       ikke alpha — se `demotedTextStyle` og opacity-demping.test.ts. */
+    expect(contents).toContain('demotedTextStyle(resultDemoted, reducedMotion)');
+  });
+
+  it('DoD fase 5: det utdaterte svaret sier «Utdatert» — signalet er ikke bare visuelt', () => {
+    /* HVORFOR DENNE FINNES. Signalet var `opacity: 0.55` på hele flaten. Det
+       tok fem av seks tekstnivåer under 4,5:1, OG det sa ingenting til en
+       skjermleser: alpha har ingen tilgjengelig representasjon. En blind
+       bruker fikk null indikasjon på at svaret ikke lenger gjaldt.
+       Fjerner man alpha uten å erstatte signalet, mister også seende det.
+       Derfor bærer ORDET beskjeden nå, og fargen er bare støtte — og derfor
+       må ordet måles, ikke bare dempingen. */
+    const contents = source(screenPath);
+    expect(
+      contents.includes("resultDemoted ? 'Utdatert · ' : ''"),
+      'ordet «Utdatert» er borte fra metalinjen. Da er det ingen beskjed igjen '
+      + 'om at svaret ikke gjelder parametrene på skjermen — verken for øyet '
+      + 'eller for skjermleseren.',
+    ).toBe(true);
+    /* Metalinjen bar `aria-hidden` da den bare var dekor. Nå er den den ENESTE
+       beskjeden om utdatert svar, og da kan den ikke være skjult for
+       hjelpemidler. */
+    const meta = contents.slice(contents.indexOf('outputMetaStyle'), contents.indexOf('hjm-rows'));
+    expect(
+      /aria-hidden/u.test(meta),
+      'metalinjen er aria-hidden igjen. Den bærer nå «Utdatert» — skjuler man '
+      + 'den, er stale-signalet tilbake til å være rent visuelt.',
+    ).toBe(false);
   });
 
   it('eier-override v3: runs the SAME full 3,2s scan-koreografi as Hjem on tap (ScanOverlay + FULL_SCAN_DURATION_MS + fullScanHapticSchedule), the old 400ms micropass is retired', () => {

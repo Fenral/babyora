@@ -169,6 +169,25 @@ const PETROLFLATER = [
 ] as const;
 
 const ESPRESSORAMPE = ['--dw-ink-hi', '--dw-ink-mid', '--dw-ink-low'] as const;
+
+/**
+ * ROMMETS TO TONER — flatene demotert tekst faktisk lander på.
+ *
+ * `--dw-ink-demoted` (DoD fase 5) er IKKE et fjerde rampetrinn og står derfor
+ * ikke i ESPRESSORAMPE. Målt 2026-08-05: ink-low ligger allerede på 4,41:1
+ * mot --dw-accent-surface, altså under kravet. Et token som er STILLERE enn
+ * ink-low kan ikke klare den flaten — og løser man for alle sju papirflatene,
+ * blir svaret LYSERE enn ink-low, som er en selvmotsigelse for et demotert
+ * nivå.
+ *
+ * Portdom 25, «lokale tokens der terskelen er lokal», gir hjemmelen — samme
+ * som --dw-plate og --dw-focus-panel. Men et lokalt skop er bare ærlig hvis
+ * det er SANT: resultatoverskriften i Juster sitter på skjermbakgrunnen.
+ * Flyttes demotert tekst til en hevet flate, må denne listen utvides FØR
+ * flyttingen — ellers måler matrisen et par som ikke lenger finnes i appen.
+ */
+const ROMTONER = ['--dw-canvas', '--dw-canvas-glow'] as const;
+const DEMOTERT = ['--dw-ink-demoted'] as const;
 const PANELRAMPE = ['--dw-ink-panel-hi', '--dw-ink-panel-mid', '--dw-ink-panel-muted'] as const;
 const SEMANTIKK = ['--dw-success', '--dw-warning', '--dw-danger'] as const;
 
@@ -194,6 +213,13 @@ const MATRISE: readonly Gruppe[] = [
     hvorfor: 'ullkrem-rampen på espresso-flatene — appens brødtekst',
     tekst: ESPRESSORAMPE,
     flate: PAPIRFLATER,
+    krav: WCAG_TEKST,
+  },
+  {
+    id: 'demotert-paa-rommet',
+    hvorfor: 'utdatert svar på rommets to toner — lokalt skop, se ROMTONER',
+    tekst: DEMOTERT,
+    flate: ROMTONER,
     krav: WCAG_TEKST,
   },
   {
@@ -446,7 +472,11 @@ describe('kontrastmatrisen — forutsetninger for at målingen betyr noe', () =>
   it('antall målte par er NØYAKTIG den deklarerte kardinaliteten', () => {
     // Krymper en familie — én værnyanse slettet, én ink-verdi fjernet —
     // skal porten bli RØD, ikke stille måle færre par og melde grønt.
-    expect(PAR_PER_TEMA, 'kardinaliteten per tema har endret seg').toBe(100);
+    //
+    // 100 → 102 den 2026-08-05: gruppen «demotert-paa-rommet» kom til
+    // (1 token × 2 romtoner). Tallet HEVES bare når et par legges til, aldri
+    // for å få porten grønn — og hevingen står i samme endring som gruppen.
+    expect(PAR_PER_TEMA, 'kardinaliteten per tema har endret seg').toBe(102);
     expect(MAALINGER.length, 'matrisen målte ikke det den lovet').toBe(PAR_PER_TEMA * TEMAER.length);
     for (const tema of TEMAER) {
       expect(MAALINGER.filter((m) => m.tema === tema).length, `${tema} mangler par`).toBe(PAR_PER_TEMA);

@@ -59,6 +59,38 @@
   --dw-ink-hi: #F1E9DA;        /* primærtekst   · 15.0:1 på canvas, 10.1:1 på panel */
   --dw-ink-mid: #CDC0AB;       /* sekundærtekst · 10.1:1 på canvas                  */
   --dw-ink-low: #A79A82;       /* tertiær/meta  · 6.5:1 på canvas                   */
+  /* DEMOTERT tekst — «synlig, men ikke lenger ferskt». En FARGE, ikke lavere
+     opacity. Espresso-siden fikk samme forbud som petrol-panelet 2026-08-05
+     (linje 30), etter måling: `opacity: 0.55` på Justers resultatflate tok
+     ink-mid fra 10,1:1 til 3,89:1 og ink-low fra 6,5:1 til 2,85:1 — og i lys
+     modus falt selv ink-hi fra 15,0:1 til 3,66:1. Fem av seks nivåer under
+     kravet. Alpha rammer dessuten ALT den treffer, også bilder, og sier
+     ingenting til en skjermleser.
+
+     ═══ HVORFOR DETTE ER ET LOKALT TOKEN, IKKE ET FJERDE RAMPETRINN ═══════
+     MÅLT 2026-08-05: espresso-rampen har INGEN plass igjen under ink-low.
+     Mot den strengeste flaten, --dw-accent-surface #4A2F21, ligger ink-low
+     allerede på 4,41:1 — under kravet, og ført i matrisens eget register.
+     Enhver farge som er STILLERE enn ink-low faller altså der.
+     Løser man i stedet for «≥ 4,5:1 mot alle sju papirflater», får man
+     #AA9D84 = 6,78:1 på lerret, som er LYSERE enn ink-lows 6,54:1. Et
+     demotert nivå kan ikke være mer prominent enn nivået det ligger under;
+     da har man ikke et fjerde trinn, man har en selvmotsigelse.
+
+     SVARET ER PORTDOM 25, «lokale tokens der terskelen er lokal» — samme
+     hjemmel som --dw-plate og --dw-focus-panel står på. Demotert tekst
+     lander på ROMMETS to toner (lerret + glød) og ingen andre steder;
+     resultatoverskriften i Juster sitter på skjermbakgrunnen, aldri på en
+     hevet eller valgt flate. Kalibrert mot NØYAKTIG de to, og matrisen måler
+     den mot NØYAKTIG de to — ikke mot flater den aldri møter, og ikke mot
+     færre enn den faktisk møter.
+
+     FØLGEN, og den er en designbeslutning: SIGNALET BÆRES AV ORDET
+     «Utdatert», ikke av fargen. Selv med lokal kalibrering er avstanden til
+     ink-low bare 6,0 mot 6,5 på lerret — knapt synlig. Fargen er en
+     støttende hvisking. Et signal som bare finnes som en nyanseforskjell er
+     uansett usynlig for en skjermleser, og det var nettopp feilen her. */
+  --dw-ink-demoted: #A0937C;   /* utdatert svar · lerret 6.0:1 · glød 5.7:1         */
 
   /* ============ Instrument-tekstrampe (KUN på petrol — egen kjølig rampe,
      aldri espresso-rampen ukritisk på panelet) ============ */
@@ -423,6 +455,7 @@
     --dw-ink-hi: #2A1D12;
     --dw-ink-mid: #7A5B47;         /* 5.65:1 på canvas (var ~#9B7057/3.98 i mock) */
     --dw-ink-low: #6F5140;         /* 6.6:1 · små metadata */
+    --dw-ink-demoted: #83624C;     /* utdatert svar · 4.8:1 på krem */
 
     --dw-accent: #9E5529;          /* = accent-700 · krem på: 4.6:1 */
     --dw-accent-pressed: #8A4A24;
@@ -497,6 +530,7 @@
   --dw-ink-hi: #2A1D12;
   --dw-ink-mid: #7A5B47;
   --dw-ink-low: #6F5140;
+  --dw-ink-demoted: #83624C;
 
   --dw-accent: #9E5529;
   --dw-accent-pressed: #8A4A24;

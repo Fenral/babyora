@@ -974,7 +974,10 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
   { fil: 'src/screens/FinnAntrekkScreen.tsx', decl: "transition: 'transform 160ms ease'" }, // linje 320
   { fil: 'src/screens/FinnAntrekkScreen.tsx', decl: "transition: reduceMotion ? 'none' : `transform 160ms ${TOKENS.easeStandard}`" }, // linje 1065
   { fil: 'src/screens/FinnAntrekkScreen.tsx', decl: "transition: reduceMotion ? 'none' : `background 160ms ${TOKENS.easeStandard}, transform 160ms ${TOKENS.easeStandard}`" }, // linje 1156
-  { fil: 'src/screens/FinnAntrekkScreen.tsx', decl: "transition: reduceMotion ? 'none' : 'opacity 160ms ease'" }, // linje 1193
+  /* NEDBETALT 2026-08-05:  i Juster. Demoteringen gikk
+     fra alpha til FARGE (DoD fase 5), og den nye transitionen henter bade
+     varighet og kurve fra kontrakten: var(--dw-m-state) var(--dw-ease).
+     Gulvet 63 -> 62 i samme endring. */
   { fil: 'src/screens/FinnAntrekkScreen.tsx', decl: "transition: reduceMotion ? 'none' : `transform 280ms ${TOKENS.easeStandard}`" }, // linje 1220
   { fil: 'src/screens/FinnAntrekkScreen.tsx', decl: "transition: reduceMotion ? 'none' : `color 160ms ${TOKENS.easeStandard}`" }, // linje 1244
   // ── src/screens/HjemScreen.tsx
@@ -1062,7 +1065,7 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
  * den DOMINERENDE inline-formen i denne kodebasen (39 til). Grenen for
  * reduced motion er handtert, men varigheten og kurven er like hardkodet.
  */
-const BASELINE = 63;
+const BASELINE = 62;
 
 /** Nokkel: fil + normalisert deklarasjon. */
 const nokkel = (t: { fil: string; decl: string }): string => `${t.fil} :: ${t.decl}`;
