@@ -12,7 +12,5 @@ interface ImportMeta {
 }
 
 // Side-effect imports for font/style-only packages som ikke har egne types
-declare module '@fontsource-variable/inter';
-declare module '@fontsource-variable/schibsted-grotesk';
 declare module '@fontsource/dm-serif-display/400.css';
 declare module '@fontsource/dm-serif-display/400-italic.css';
