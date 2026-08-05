@@ -1,8 +1,8 @@
 {
   "updated": "2026-08-05",
-  "activePhase": 4,
-  "phaseName": "Global Native Design Research",
-  "completedPhases": [0, 1, 2, 3],
+  "activePhase": 7,
+  "phaseName": "Three Radical Directions (forberedelse: fase 5-krav)",
+  "completedPhases": [0, 1, 2, 3, 4, 5, 6],
   "approvedDecisions": [
     "Fase 0 ferdig 2026-08-05: miljø, Mobbin, ChatGPT Work-driver, ui-ux-pro-max v2.11.0 og prosjektminne verifisert/opprettet",
     "Fase 1 ferdig 2026-08-05: audit (5 agenter) + 6 screenshots + Sol-review REVIDER; P0-4 og P0-6 implementert samme dag; DoD kvittert i 11-independent-review.md",
@@ -10,11 +10,18 @@
     "Fase 3 ferdig 2026-08-05: 28 antakelser/12 muligheter/6 fjerningskandidater; Sol runde 3 REVIDER innarbeidet — kilevalg nedgradert til H1, Beslutningsrouteren (H2) og Delta-tjenesten (H3) likeverdige, briefmål = finn sterkeste inngangsjobb OG distribusjonsform; teknisk opprydding 294 MB + 9 døde deps (9cc96ff)"
   ],
   "pendingOwnerGates": [
-    "Fase 6: monetiseringsretning",
     "Fase 8: endelig designretning",
     "Fase 11: godkjenn representativ prototype",
     "Fase 13: lansering"
   ],
+  "eierport1": {
+    "dato": "2026-08-05",
+    "maalrangering": "Rekkevidde og tillit",
+    "tillatteRammer": ["A Evalueringsport (betinget)", "B Gratis sikkerhetskjerne", "C Institusjonell finansiering", "Delta-komponenten"],
+    "primaerhypotese": "B (målkongruent + Sols standardgrense)",
+    "motkandidat": "A (må bestå amputasjonstest + tredelt port)",
+    "reversibelt": true
+  },
   "openFindings": [
     "Sol P0-1: motorens treffsikkerhet ikke validert — blind fagsammenligning kreves (fase 2/3)",
     "Sol P0-2: LUKKET 2026-08-05 (commit 7caf353) — Juster avleder føles-som med Hjems formel, låst med kontrakttest",
@@ -32,5 +39,5 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "Fase 4 (Global Native Design Research) med Sols r3-rekkef\u00f8lge: F\u00d8RST installasjonsutl\u00f8sere/distribusjonsformer (app vs. delt lenke vs. widget vs. v\u00e6rutl\u00f8st kort) og alternativlandskap, S\u00c5 HIG/ADA/Material 3/premium-apper for de tre produktmodellene H1/H2/H3, abonnements-/paywall-m\u00f8nstre, emosjonell design; klassifiser etablert/fremvoksende/eksperimentelt/fallende med adopt/adapt/reinvent/reject per funn; deretter fase 5 Mobbin"
+  "nextAction": "Fase 7-forberedelse (Sols r5-krav): komprimer 68 prinsipper til 10\u201312 Babyora-invarianter med kopi-audit; \u00e9n researchrunde utenfor Mobbin (h\u00f8y-konsekvens-beslutningsst\u00f8tte, kulde/PPE, closed-loop handoff, degraderte tilstander, lav lese-/funksjonsevne); fullf\u00f8r fase 4-gap. Deretter fase 7: tre BESLUTNINGSARKITEKTURER (retningskandidater: Protokollen, Confidence Instrument, Closed-loop Briefing, Physical-first Layering) \u2014 \u00e9n unng\u00e5r bevisst kort/chip-dashbord; hver tar \u00e9n produktrisiko + \u00e9n representasjonsrisiko; lab-fritak fra Monter-doktrinen etableres f\u00f8rst; B-rammen (gratis sikkerhetskjerne) er prim\u00e6rhypotese fra eierport 1"
 }
