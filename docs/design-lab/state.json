@@ -15,7 +15,7 @@
   ],
   "openFindings": [
     "Sol P0-1: motorens treffsikkerhet ikke validert — blind fagsammenligning kreves (fase 2/3)",
-    "Sol P0-2: føles-som-inkonsistens Hjem vs Juster — normalisert værkontrakt, egen teknisk pakke (Claude)",
+    "Sol P0-2: LUKKET 2026-08-05 (commit 7caf353) — Juster avleder føles-som med Hjems formel, låst med kontrakttest",
     "Sol P0-3: hard paywall før opptjent tillit — akseptert risiko, obligatorisk motkandidat i fase 6 (eierport)",
     "Sol P0-5: analytics død — VITE_POSTHOG_KEY i Codemagic (eier) + event-pakke (Claude), forutsetning for fase 6",
     "Sol P1-4: begrense parallell skjermpolering — løftet til eier",
