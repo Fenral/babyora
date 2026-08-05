@@ -42,6 +42,28 @@ REMOVE/KEEP/TEST-liste for Planlegg, Familie, maskot, scan, navn-onboarding og p
 premisslogg med eier/frist/status. Ingen fase 3-godkjenning før hvert P0 er lukket eller
 akseptert som dokumentert risiko.
 
+## Runde 5 — Fase 5 bredde-review (2026-08-05) · Runde 6 — Fase 6 modellreview (2026-08-05)
+
+**Begge verdikt: REVIDER.** Fullsvar: `appendix/fase5/sol-review-svar-fase5.md` og
+`appendix/fase6/sol-review-svar-fase6.md`.
+
+**Runde 5-kjerne (fase 5):** Mobbin er selv ekkokammeret (kategoribredde ≠ beslutningsbredde);
+høy-konsekvens-rommet mangler (klinisk beslutningsstøtte, PPE/kuldevern, luftfartsjekklister,
+closed-loop handoff); flere «prinsipper» er skjermkopier med abstrakt navn; «~40 i stedet
+for ~60 min» avvist som falsk numerisk presisjon; Citizens eskalering-som-default kan gi
+alarmtretthet i gjentatt bruk; skjelett-først kan gjenta seremonifeilen. **Aksepterte krav
+(planlagt før fase 7):** komprimer 68 prinsipper til 10–12 Babyora-invarianter med
+kopi-audit; én researchrunde utenfor Mobbin i fem rom; fullfør fase 4-gapene; fire nye
+retningskandidater notert (Protokollen, Confidence Instrument, Closed-loop Briefing,
+Physical-first Layering — én fase 7-retning skal bevisst unngå kort/chip-dashbord).
+
+**Runde 6-kjerne (fase 6):** A-anbefalingen gjentok fase 3-feilen — **alle åtte krav
+akseptert og innarbeidet i 07-revisjonsblokken** (A betinget, B standardgrense, tredelt
+port, retorikk-forbud, deterministisk evalueringsregel, C omklassifisert, arkitekturkost
+synlig, portens form: målrangering → tillatte rammer → reversibelt risikovalg).
+Begge runder konvergerer: porten kårer IKKE vinner; pris/paywall låses ikke før
+fase 7-prototyper er testet.
+
 ## Runde 4 — Fase 4 trendkritikk (2026-08-05)
 
 **Verdikt: REVIDER.** Fullt svar: `appendix/fase4/sol-review-svar-fase4.md`. Tese: sterkt

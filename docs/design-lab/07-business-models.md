@@ -1,5 +1,35 @@
 # 07 — Business Models (Fase 6)
 
+> **REVIDERT 2026-08-05 etter Sols runde 6-review (REVIDER, `appendix/fase6/sol-review-svar-fase6.md`):**
+> 1. **A er NEDGRADERT fra anbefalt til «betinget tillatt»** — anbefalingen gjentok
+>    fase 3-feilen (bevarer eiervedtak/kode). **B er «sikkerhetsmessig standardgrense
+>    inntil motbevist»**: bevisbyrden ligger hos A, og samme amputasjonstest gjelder
+>    begge (kan en uerfaren forelder velge trygt antrekk med KUN gratispakken, i
+>    samtlige in-scope-scenarier?).
+> 2. **Fagpanel-bryteren erstattes av tredelt port:** faglig suffisiens + observert
+>    foreldreoppgaveutførelse + scenario-/feilanalyse. Ett avvik der gratispakken leder
+>    til farlig handling stopper A.
+> 3. **«Stemte 2 av 2» og ordet «verifisert» er FORBUDT** — konverteringsretorikk bygget
+>    på barnets sikkerhet. Nøktern form: «Du har brukt Babyora i to ulike situasjoner»
+>    + brukerens egen rapport. Etter-tur-status skiller «komfortabel»/«passet»/«sikker».
+> 4. **Evalueringsregelen gjort deterministisk** (motsigelsen gulv/tak løst): evalueringen
+>    STARTER ved første kvalifiserte bruk, har synlig status hele veien, og avsluttes
+>    etter forhåndsforklart antall opplevelser eller fast periode derfra. Været er aldri
+>    en skjult forbruksmåler.
+> 5. **C omklassifisert til monetiseringskomponent** (kan selges under både A og B);
+>    reell tredje modell er **institusjonelt finansiert sikkerhetsverktøy** (kommune/
+>    arbeidsgiver/forsikring betaler; klesbransje-sponsor avvist som interessekonflikt).
+> 6. **Bs arkitekturkostnad synliggjort:** koordinering/historikk krever identitet+backend
+>    — porten velger produktarkitektur, ikke bare monetisering.
+> 7. **Portens form (bindende, konvergerer med fase 5-reviewens krav):** eier RANGERER
+>    FØRST målene (lønnsomhet / læringshastighet / sikkerhetsrekkevidde / offentlig
+>    distribusjon), velger deretter 2–3 TILLATTE rammemodeller + én primærhypotese med
+>    motkandidat, dato, budsjett og kill-switch — som **reversibelt risikovalg**, aldri
+>    som validert strategi. Pris/paywall låses IKKE før fase 7-prototypene er testet.
+> 8. Gjenstående Sol-krav til neste runde: økonomiske spenn (nødvendig betalende andel,
+>    realistisk rekkevidde, kostnader, maks CAC), sammenligningsakser på tvers, Bs
+>    exiter med terskel/dato/maksinvestering.
+
 > Utført 2026-08-05 av Claude (CD/TL) med fire agenter (336k tokens). Fullrapporter med
 > modellkort, etiske innvendinger og suksesskriterier i `appendix/fase6/`. Status:
 > **TIL SOL-REVIEW, deretter EIERPORT** — eier velger monetiseringsretning.
