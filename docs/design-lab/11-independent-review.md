@@ -42,6 +42,35 @@ REMOVE/KEEP/TEST-liste for Planlegg, Familie, maskot, scan, navn-onboarding og p
 premisslogg med eier/frist/status. Ingen fase 3-godkjenning før hvert P0 er lukket eller
 akseptert som dokumentert risiko.
 
+## Runde 4 — Fase 4 trendkritikk (2026-08-05)
+
+**Verdikt: REVIDER.** Fullt svar: `appendix/fase4/sol-review-svar-fase4.md`. Tese: sterkt
+mulighetskart, ikke beslutningsgrunnlag — fire ulike beviskategorier blandet under
+«trender»; Nørs, værtrial, adaptiv lys og H3-systemflater trukket lenger enn bevisene.
+
+### Claudes respons per P0/P1
+
+| Funn | Respons | Status |
+| --- | --- | --- |
+| P0 Nørs overtolket (leverandørtall; betaling diskvalifiserer ikke kanalen — sikkerhetsminimum bak betaling gjør) | **AKSEPTERT.** Korrigert i 05-revisjonsblokken; tre kanalmodeller (rent forbrukerprodukt / gratis offentlig sikkerhetskjerne / kommunalt finansiert nytteflate) bygges i fase 6-underlaget | ✅ Revidert |
+| P0 «Sikkerhetslag gratis» mangler operasjonell grense | **AKSEPTERT — tyngste enkeltfunn.** Entitlement-matrise (gratis/evaluering/betalt/utløpt/offline/utdatert) kreves; erkjent at grensen kan tvinge frem ny forretningsmodell. → fase 6-portmateriale til eier | → fase 6 |
+| P1 Værskifte-trial ≠ StoreKit-trial | **AKSEPTERT.** Reformulert til gratis evalueringsperiode før kjøp («to relevante situasjoner, senest 14 dager») | ✅ Revidert |
+| P1 Adaptiv lys-default forkastes | **AKSEPTERT.** Erstattet med testbar eksplisitt utendørsmodus innenfor systemtema; kreativ lysrisiko flyttes til semantisk lag | ✅ Revidert |
+| P1 H3 er kanalpakke, ikke produktmodell | **AKSEPTERT.** Stale-safe-kontrakt + plattformparitet + selvstendig-verdi-vilkår lagt på H3; nedgraderes til distribusjonslag hvis den ikke består | ✅ Vilkår satt |
+| P1 «Ingen prisvinnere bruker seremoni» er trendretorikk | **AKSEPTERT.** Skillet presisert: falskt arbeid avvises, sannferdig «pust» med progressiv begrunnelse beholdes som særpreg-kandidat | ✅ Revidert |
+
+P2/P3 innarbeidet: sesongpass testes mot engangskjøp/abonnement/gratis kjerne (ikke bare
+mot tre planer); 65 %-ASO-tallet nedgradert til billig opsjon; M3 kun som dokumentasjon;
+MET/Yr-anatomi reservert reelle avvik (alarm-budsjettet gjelder også anatomien); App Clip
+gjenåpnet som senere motkandidat for mottakerfriksjon; maskot-fravær (ikke bare taushet)
+på sikkerhetsflater. 12 nye antakelser inn i premissloggens univers via appendiks.
+
+### DoD-kvittering fase 4
+
+- [x] Sporbar trendrapport med kilder (41 oppføringer, omklassifisering pålagt og planlagt)
+- [x] Eksplisitt Babyora-beslutning per trend
+- [x] Sols dokumenterte kritikk av de fem viktigste trendvalgene foreligger og er besvart
+
 ## Runde 3 — Fase 3 motpart-review av brief-utfordring og kilevalg (2026-08-05)
 
 **Verdikt: REVIDER.** Fullt svar: `appendix/fase3/sol-review-svar-fase3.md`. Tese: briefen

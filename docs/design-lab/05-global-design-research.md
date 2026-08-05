@@ -1,5 +1,44 @@
 # 05 — Global Native Design Research (Fase 4)
 
+> **REVIDERT 2026-08-05 etter Sols runde 4-trendkritikk (verdikt REVIDER,
+> `appendix/fase4/sol-review-svar-fase4.md`). Bindende korreksjoner:**
+> 1. **Klasseinndeling:** de 41 oppføringene skal deles i fem klasser — plattformkrav /
+>    tilgjengelighetskrav / dokumentert brukerfunn / analogi-presedens / uprøvd hypotese.
+>    **Kun dokumenterte brukerfunn kan avgjøre produktmodell.** App Intents og Dynamic
+>    Type tas ut av trendpoenggivningen (infrastruktur/kvalitetskrav, ikke trender).
+> 2. **Nørs-korreksjon:** 101/85-tallene er leverandørpåstander, merkes slik. Riktig
+>    konklusjon: *sikkerhetsminimum kan ikke ligge bak betaling hvis helsestasjonen skal
+>    anbefale* — ikke at kommersiell modell er umulig. Tredje vei identifisert:
+>    institusjonelt isolert gratis sikkerhetsprotokoll («Public Safety Utility») med
+>    governance-/merkevareseparasjon fra kommersiell app.
+> 3. **Gratis beslutningsminimum trenger operasjonell grense:** en hard block uten den
+>    konkrete anbefalingen kan være juridisk gratis men praktisk ubrukelig — er den
+>    nummererte listen nødvendig for trygg handling, ER listen del av gratislaget.
+>    Entitlement-matrise (gratis/evaluering/betalt/utløpt/offline/utdatert) kreves —
+>    kan tvinge frem ny forretningsmodell. → fase 6-portmateriale.
+> 4. **Trial-korreksjon:** StoreKit har kun faste prøveperioder — «værskifte-trial»
+>    implementeres som gratis evalueringsperiode FØR kjøp («to relevante situasjoner,
+>    senest 14 dager»), ikke som StoreKit-trial.
+> 5. **Adaptiv lys-default VEDTAS IKKE:** test i stedet eksplisitt utendørsmodus (høy
+>    kontrast, redusert transparens, høyere luminans) innenfor valgt systemtema.
+>    Kreativ lysrisiko tas SEMANTISK (lys som uttrykker rådets gyldighetshorisont —
+>    «lyset skal kommunisere noe sant»), ikke tematisk.
+> 6. **H3-vilkår:** i dag en kanalpakke, ikke produktmodell. Live Activity kvalifiserer
+>    etter start/planlagt tur (med utløp), ikke som vedvarende værkort. «Stale-safe»-
+>    kontrakt kreves før visuell research (utløpt råd på låseskjerm er farligere enn
+>    ingen); plattformparitet iOS/Android må avklares. Gir H3 ikke verdi uten H1/H2,
+>    nedgraderes den til distribusjonslag.
+> 7. **Seremoni-nyansering:** avvis iscenesatt beregning, behold én sannferdig «pust» —
+>    resultat umiddelbart, begrunnelse/kontrolltegn organisert progressivt. Kandidat til
+>    Babyoras særpreg.
+> 8. **Fase 7-porten skjerpet:** tre ulike BESLUTNINGSARKITEKTURER (H1 gir svar, H2
+>    diagnostiserer, H3 leverer endring uten appåpning); hver retning tar nøyaktig én
+>    kreativ produktrisiko + én representasjonsrisiko; ingen retning får bruke
+>    animasjon/gradient/maskot/systemflate som primær differensiering. Sols to nye
+>    retningskandidater: «Confidence Instrument» (trygt intervall + usikkerhetsdrivere +
+>    kontrolltegn, usikkerhet representert fysisk/visuelt) og «Ambient Handoff» (delt
+>    kort som primærartefakt).
+
 > Utført 2026-08-05 av Claude (CD/TL) med fire research-agenter med webtilgang (285k
 > tokens, kilder oppgitt per rapport). Fullrapporter med trendtabeller og kilder i
 > `appendix/fase4/`. 41 trender klassifisert (etablert/fremvoksende/eksperimentelt/
