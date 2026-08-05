@@ -916,11 +916,7 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
      kurve via tilordning (`=`), som ingen uttrekker sa. Linje 733–739 er
      motion/react-overgangene mellom ruter. */
   { fil: 'src/App.tsx', decl: "transition = 'transform 200ms ease-out'" }, // linje 492 [tilordning]
-  { fil: 'src/App.tsx', decl: 'duration: 0.1' }, // linje 733 [js] — tab-exit
-  { fil: 'src/App.tsx', antall: 2, decl: "ease: 'easeOut'" }, // linje 733, 738 [js]
-  { fil: 'src/App.tsx', decl: 'duration: 0.14' }, // linje 738 [js] — tab-enter
-  { fil: 'src/App.tsx', decl: 'stiffness: 300' }, // linje 739 [js] — drill-push-fjaeren
-  { fil: 'src/App.tsx', decl: 'damping: 30' }, // linje 739 [js]
+  { fil: 'src/App.tsx', decl: "ease: 'easeOut'" }, // linje 733, 738 [js]
   // ── src/components/BottomTabBar.tsx (fjaer nr. 2 — ulik App-fjaeren)
   { fil: 'src/components/BottomTabBar.tsx', decl: 'stiffness: 500' }, // linje 106 [js]
   { fil: 'src/components/BottomTabBar.tsx', decl: 'damping: 25' }, // linje 106 [js]
@@ -1077,7 +1073,7 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
  * den DOMINERENDE inline-formen i denne kodebasen (39 til). Grenen for
  * reduced motion er handtert, men varigheten og kurven er like hardkodet.
  */
-const BASELINE = 82;
+const BASELINE = 77;
 
 /** Nokkel: fil + normalisert deklarasjon. */
 const nokkel = (t: { fil: string; decl: string }): string => `${t.fil} :: ${t.decl}`;

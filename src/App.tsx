@@ -53,6 +53,37 @@ import { resolveRuntimeCapabilityAccess } from './lib/premium/gating';
 import { PLUS_FEATURE_AVAILABILITY } from './lib/premium/plus-features';
 import { useSubscription } from './state/subscription-store';
 import { useLocationPref } from './state/location-pref-store';
+import { useSceneHeight } from './hooks/useSceneHeight';
+
+/**
+ * SIDESKIFTETS VARIGHETER — LEST FRA KONTRAKTEN, IKKE SKREVET PAA NYTT.
+ *
+ * motion/react vil ha sekunder som tall, ikke en CSS-variabel. Skriver man
+ * tallene her, har man laget en andre sannhet ved siden av --dw-m-push /
+ * --dw-m-push-back. Verdiene leses derfor ut av de faktiske tokenene.
+ */
+function lesMs(navn: string, fallback: number): number {
+  if (typeof document === 'undefined') return fallback;
+  const raa = getComputedStyle(document.documentElement).getPropertyValue(navn).trim();
+  const m = /^([d.]+)(ms|s)$/u.exec(raa);
+  if (!m) return fallback;
+  return m[2] === 's' ? Number(m[1]) * 1000 : Number(m[1]);
+}
+
+const BEVEGELSE = {
+  /** Drill inn: ett nivaa NED i hierarkiet, altsaa opp paa skjermen. */
+  push: lesMs('--dw-m-push', 340) / 1000,
+  /** Tilbake: raskere ut enn inn — bevegelseskontraktens egen regel. */
+  pushTilbake: lesMs('--dw-m-push-back', 280) / 1000,
+  /** Hovedfaner er SIDESTILTE: crossfade, aldri push. */
+  faneInn: 0.14,
+  faneUt: 0.1,
+  /** En kurve for hele appen (--dw-ease). */
+  kurve: [0.2, 0.7, 0.2, 1] as [number, number, number, number],
+};
+
+/** Hovedfane eller drill? Grammatikken er ulik, og det er hele poenget. */
+const erFane = (routeKey: string): boolean => routeKey.startsWith('tab:');
 
 const HjemScreen = lazy(() =>
   import('./screens/HjemScreen').then((m) => ({ default: m.HjemScreen })),
@@ -404,6 +435,9 @@ export default function App(): ReactElement {
   };
 
   const reduceMotion = prefersReducedMotion();
+  /* Hvor langt en side skal skyves: SCENEN, ikke siden. Se
+     hooks/useSceneHeight.ts — 'y: 100%' ga 2348 px paa Soveguiden. */
+  const sceneHeight = useSceneHeight(mainRef);
 
   const onBackRef = useRef<(() => void) | null>(null);
 
@@ -716,34 +750,55 @@ export default function App(): ReactElement {
       <AppPaywallGate onboardingDone={onboardingDone} />
       <a href="#main" className="skip-link">Hopp til hovedinnhold</a>
       <main id="main" tabIndex={-1} ref={mainRef}>
-        <Suspense fallback={<RouteSkeleton />}>
-          {reduceMotion ? (
-            routeContent
-          ) : (
-            <AnimatePresence mode="wait" initial={false}>
-              {/* F83: native navigasjons-grammatikk — sidestilte TABS crossfader
-                  (140ms), hierarkiske DRILLS pusher (x±24 spring). RM-grenen
-                  over er uendret (a11y-preclearance vilkår 7). */}
+        {reduceMotion ? (
+          <Suspense fallback={<RouteSkeleton />}>{routeContent}</Suspense>
+        ) : (
+          /* Rutenettcellen begge sidene deler, så de kan ligge oppå
+             hverandre og bevege seg samtidig. Se .ba-sideskift i
+             design-tokens.css. */
+          <div className="ba-sideskift">
+            <AnimatePresence initial={false}>
+              {/* mode="wait" er BORTE, og det var kjernen i eierfunnet: den
+                  lot den gamle siden bli FERDIG før den nye begynte. To
+                  bevegelser etter hverandre leses som et bytte, ikke som at
+                  noe flytter seg. Uten mode ligger begge i DOM-en samtidig,
+                  stablet i .ba-sideskift, og beveger seg i takt.
+
+                  DRILLS pusher VERTIKALT en SKJERMHØYDE. Ikke `y: '100%'` —
+                  prosenter regnes av sidens EGEN høyde, og Soveguiden er
+                  2348 px. Da fikk hver skjerm sin egen fart, styrt av hvor
+                  mye tekst den tilfeldigvis har.
+
+                  HOVEDFANER crossfader, aldri push: de er sidestilte, ikke
+                  over/under hverandre. */}
               <motion.div
                 key={routeKey}
-                initial={routeKey.startsWith('tab:') ? { opacity: 0 } : { opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={erFane(routeKey) ? { opacity: 0 } : { opacity: 0, y: sceneHeight }}
+                animate={{ opacity: 1, y: 0 }}
                 exit={
-                  routeKey.startsWith('tab:')
-                    ? { opacity: 0, transition: { duration: 0.1, ease: 'easeOut' } }
-                    : { opacity: 0, x: -24 }
+                  erFane(routeKey)
+                    ? { opacity: 0, transition: { duration: BEVEGELSE.faneUt } }
+                    : {
+                      opacity: 0,
+                      y: -Math.round(sceneHeight * 0.3),
+                      transition: { duration: BEVEGELSE.pushTilbake },
+                    }
                 }
                 transition={
-                  routeKey.startsWith('tab:')
-                    ? { duration: 0.14, ease: 'easeOut' }
-                    : { type: 'spring', stiffness: 300, damping: 30 }
+                  erFane(routeKey)
+                    ? { duration: BEVEGELSE.faneInn, ease: 'easeOut' }
+                    : { duration: BEVEGELSE.push, ease: BEVEGELSE.kurve }
                 }
               >
-                {routeContent}
+                {/* Lastegrensen bor HER, inne i siden. Lå den RUNDT
+                    overgangen, ble hele laget byttet mot fallbacken når en
+                    lazy drill suspenderte — og animasjonen rakk aldri å
+                    tegne. Målt 2026-08-05. */}
+                <Suspense fallback={<RouteSkeleton />}>{routeContent}</Suspense>
               </motion.div>
             </AnimatePresence>
-          )}
-        </Suspense>
+          </div>
+        )}
       </main>
       {/* Global BottomTabBar — alltid synlig unntatt når native dialog-modal
           (PaakledningScreen) er åpen. Skjermer mounter den ikke selv. */}

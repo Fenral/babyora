@@ -1,41 +1,37 @@
 /**
- * Maaler sideskiftet i den EKTE appen.
+ * mal-sideskift.mjs — maaler om sideskiftet er FYSISK.
  *
- * FUNN 2026-08-05, og grunnen til at verktoyet finnes:
+ * ══ HVORFOR DETTE VERKTOEYET BLE SKREVET OM ══
  *
- * Eierfunnet «appen bytter skjerm uten bevegelse» var for hardt formulert.
- * Malt paa den lagrede versjonen: 13 bilder med forflytning og 38 med fade
- * gjennom en drill. Appen ANIMERER — men bare 24 px sidelengs pluss en
- * crossfade, saa den leses ikke som at en side fysisk skyves ut mens en
- * annen kommer inn. Det stemmer med hvordan eieren beskrev opplevelsen.
+ * Foerste utgave produserte en FALSK NEGATIV som kostet en tilbakerulling av
+ * kode som virket. Et dommerpanel felte den med et minimalt eksperiment paa
+ * samme pakkeversjoner. Tre feil, alle i MAALINGEN:
  *
- * Vedtaket krever at BEGGE flater beveger seg SAMTIDIG. Det gjor de ikke:
- * AnimatePresence staar i mode="wait", saa den gamle blir ferdig FOR den nye
- * begynner. To bevegelser etter hverandre, ikke en forflytning.
+ *   1. DEN LESTE ETT BILDE OG RAPPORTERTE DET SOM EN SERIE.
+ *      `opacity` og `getAnimations()` ble hentet fra det FOERSTE bildet der
+ *      to sider laa i DOM-en — der animasjonen ennaa ikke har startet. Det
+ *      bildet er alltid «opacity 1.00/0.00, animasjoner 0/0», i enhver
+ *      korrekt overgang. Jeg leste det som «opacity 1 hele veien» og «null
+ *      animasjoner», og konkluderte med at ingenting animerte. Bildet ETTER
+ *      viste 0,76 og én animasjon.
  *
- * FORSOK 1, RULLET TILBAKE. Fjernet mode="wait" og stablet sidene i en
- * rutenettcelle. Begge la da i DOM-en samtidig — men ingenting animerte.
- * Arsaken ble malt fram ved halvering: <Suspense> laa RUNDT overgangen, og
- * drill-skjermene lastes paa forespoersel. Naar en ny side suspenderte, ble
- * hele overgangslaget byttet mot fallbacken, og animasjonen rakk aldri aa
- * tegne. Flyttet lastegrensen inn i hver side: da animerte den NYE siden —
- * men den gamle stod stille i alle bilder, og avstanden ble 2346 px fordi
- * y: 100% regnes av sidens egen hoyde, ikke skjermens.
+ *   2. DEN MALTE FEIL OVERGANG. Familie -> Soveguiden er FANE -> DRILL.
+ *      AnimatePresence fryser den avgaaende sidens props slik de var ved
+ *      dens siste render (framer-motion/dist/es/components/AnimatePresence/
+ *      index.mjs, linja som spleiser det gamle elementet tilbake inn). Den
+ *      avgaaende var en FANE, og faner skal crossfade UTEN forflytning — med
+ *      vilje. y = 0 var altsaa fasit, ikke feil. Ingen kode kunne bestaa den
+ *      maalingen.
  *
- * TO TING GJENSTAAR:
- *   1. exit-animasjonen kjorer ikke i sync-modus — arsaken er ikke funnet
- *   2. avstanden maa vaere en SKJERMHOYDE, ikke en sidehoyde
+ *   3. `yAv` HADDE UESCAPEDE PARENTESER og traff bare `matrix(...)`.
+ *      For `matrix3d(...)` ga den 0 — «ingen bevegelse» for noe som beveger
+ *      seg.
  *
- * VERKTOYET RETTET SEG SELV TO GANGER underveis, og begge feilene er verdt
- * aa huske: forste maaling brukte «Finn dagens antrekk», som IKKE bytter
- * side (den kjorer scannen inne paa Hjem) — riktig svar paa feil sporsmaal.
- * Andre maaling brukte .hjm-brand som «skallet», men den bor INNE i siden
- * som forsvinner, saa jeg malte sideskiftet og kalte det skallet.
- *
- * Vedtaket «sideskift-er-fysiske» sier tre ting som kan males:
- *   1. BEGGE flater beveger seg samtidig — ikke etter hverandre
- *   2. Skallet (ordmerket, tabbaren) staar stille
- *   3. Reduced Motion kollapser til direkte bytte, uten bevegelse
+ * Laerdommen er den samme som har gaatt igjen i hele dette arbeidet, men et
+ * hakk verre: jeg krevde ikke-vakuoesitet av hver port i src/, og ga saa mitt
+ * eget maaleverktoey fritak. Et instrument uten fasit er ikke et instrument.
+ * Derfor har hver overgangstype under en FORVENTNING, og verktoeyet sier fra
+ * naar virkeligheten avviker fra den — i begge retninger.
  */
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -60,7 +56,49 @@ for (let i = 0; i < 100; i += 1) {
 const { forecastPartlyCloudy1C } = await import('../e2e/fixtures/forecast-1c-partlycloudy.js');
 const browser = await chromium.launch();
 
-async function mål(reducedMotion) {
+/**
+ * OVERGANGENE, hver med sin FASIT.
+ *
+ * `beggeFlytter` er kjernen: for drill -> drill SKAL begge sider ha et
+ * y-ledd ulik null i samme bilde. For fane -> drill skal bare den nye — en
+ * fane som gaar ut crossfader, den skyves ikke.
+ */
+const OVERGANGER = [
+  {
+    navn: 'fane -> drill (Familie -> Soveguiden)',
+    vei: [{ fane: 'Familie' }, { trykk: 'Soveguiden' }],
+    beggeFlytter: false,
+    hvorfor: 'den avgaaende er en FANE — den crossfader med vilje, uten forflytning',
+  },
+  {
+    navn: 'drill -> fane (tilbake fra Soveguiden)',
+    vei: [{ fane: 'Familie' }, { trykk: 'Soveguiden' }, { tilbake: true }],
+    /* Her er den AVGAAENDE en drill, og det er den eneste overgangen i appen
+       som tester UTGANGS-pushen. */
+    utgangFlytter: true,
+    hvorfor: 'den avgaaende er en DRILL — den skal skyves ut mens fanen tones inn',
+  },
+];
+
+/* DRILL -> DRILL FINNES IKKE I APPEN, og det ble malt fram 2026-08-05:
+   hver drill-skjerm far bare `onBack={() => setDrill(null)}` (App.tsx), saa
+   veien ut av en drill gaar alltid tilbake til en fane. Foerste utgave av
+   dette verktoeyet hadde en fasit for drill -> drill og meldte AVVIK i det
+   uendelige — en port som krever en overgang appen ikke har, kan aldri
+   bestaa. Kommer en drill-til-drill-vei senere, skal den inn her. */
+
+/** y-leddet ut av en transform. Haandterer bade matrix og matrix3d. */
+function yAv(t) {
+  if (!t || t === 'none') return 0;
+  const m3 = /matrix3d\(([^)]+)\)/u.exec(t);
+  if (m3) { const d = m3[1].split(',').map(Number); return d.length === 16 ? d[13] : 0; }
+  const m = /matrix\(([^)]+)\)/u.exec(t);
+  if (!m) return 0;
+  const d = m[1].split(',').map(Number);
+  return d.length === 6 ? d[5] : 0;
+}
+
+async function mål(overgang, reducedMotion) {
   const p = await browser.newPage({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 1,
@@ -71,97 +109,133 @@ async function mål(reducedMotion) {
     contentType: 'application/json', body: JSON.stringify(forecastPartlyCloudy1C()) }));
   await p.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(2400);
-  /* Naviger til Familie forst, der drill-radene bor. */
-  const fane = p.locator('nav button, [class*="tab"] button').filter({ hasText: /Familie/iu }).first();
-  if (await fane.count() > 0) { await fane.click(); await p.waitForTimeout(800); }
 
-  /* Start en drill og prøv 30 ganger gjennom overgangen. */
-  const prøver = await p.evaluate(async () => {
-    /* «Finn dagens antrekk» bytter IKKE side — den kjorer scannen inne paa
-       Hjem. Forste maaling brukte den og fant null bevegelse, som var riktig
-       svar paa feil sporsmaal. En ekte DRILL er verktoyradene paa Familie. */
-    if (!document.querySelector('.ba-sideskift')) {
-      return { feil: 'wrapperen .ba-sideskift finnes ikke i DOM-en' };
+  /* Alle steg UNNTATT det siste er navigering. Det siste er det vi maaler. */
+  const steg = overgang.vei;
+  for (const s of steg.slice(0, -1)) {
+    if (s.fane) {
+      const b = p.locator('nav button, [class*="tab"] button').filter({ hasText: new RegExp(s.fane, 'iu') }).first();
+      if (await b.count() === 0) { await p.close(); return { feil: `fant ikke fanen ${s.fane}` }; }
+      await b.click();
+    } else if (s.trykk) {
+      const b = p.locator('button, [role="button"]').filter({ hasText: new RegExp(s.trykk, 'iu') }).first();
+      if (await b.count() === 0) { await p.close(); return { feil: `fant ikke «${s.trykk}»` }; }
+      await b.scrollIntoViewIfNeeded().catch(() => {});
+      await b.click();
+    } else if (s.tilbake) {
+      /* Tilbake-knappen har aria-label="Tilbake" (ScreenHeader.tsx:50 og
+         TogGuideScreen.tsx:883). Første utgave lette etter TEKST i knappen
+         — men den har bare et ikon, så den fant aldri noe, og drill -> drill
+         kunne ikke måles i det hele tatt. */
+      const b = p.getByLabel('Tilbake').first();
+      if (await b.count() === 0) { await p.close(); return { feil: 'fant ikke tilbake-knappen' }; }
+      await b.click();
     }
-    const knapp = [...document.querySelectorAll('button')]
-      .find((b) => /Soveguiden/iu.test(b.textContent || ''));
-    if (!knapp) return { feil: 'fant ikke verktoyraden — kom jeg til Familie?' };
-    const sider = () => [...document.querySelectorAll('.ba-sideskift > *')];
-    /* Skallet er det som IKKE bytter: tabbaren. Forste maaling brukte
-       .hjm-brand, som bor INNE i Hjem — den flyttet seg fordi hele siden
-       gjorde det. Da malte jeg sideskiftet og kalte det skallet. */
-    const brand = document.querySelector('nav, [class*="tabbar"], [class*="TabBar"]');
-    const brandFør = brand ? brand.getBoundingClientRect().top : null;
+    await p.waitForTimeout(900);
+  }
 
+  const siste = steg[steg.length - 1];
+  const r = await p.evaluate(async ({ tekst, erTilbake }) => {
+    /* SELEKTOREN MAA IKKE TREFFE WRAPPEREN SELV.
+       Tredje falske negativ fra dette verktoeyet, 2026-08-05: `.ba-sideskift`
+       ER en `main > div`, saa en kombinert selektor plukket BADE cellen og
+       sidene i den. Cellen staar alltid stille, og siden den kom foerst i
+       dokumentet, ble den lest som «den avgaaende siden» — som dermed aldri
+       flyttet seg, uansett hvor riktig koden var.
+       Er cellen der, er sidene barna hennes. Ellers (gammel struktur eller
+       redusert bevegelse) er de main > div. Aldri begge deler. */
+    const sider = () => {
+      const celle = document.querySelector('.ba-sideskift');
+      return celle
+        ? [...celle.children]
+        : [...document.querySelectorAll('.app-shell > main > div')];
+    };
+    const skall = document.querySelector('nav, [class*="tabbar"], [class*="TabBar"]');
+    const skallFør = skall ? Math.round(skall.getBoundingClientRect().top) : null;
+
+    const knapp = erTilbake
+      ? document.querySelector('[aria-label="Tilbake"]')
+      : [...document.querySelectorAll('button, [role="button"]')]
+        .find((b) => new RegExp(tekst, 'iu').test(b.textContent || ''));
+    if (!knapp) return { feil: erTilbake ? 'fant ikke tilbake-knappen' : `fant ikke «${tekst}»` };
     knapp.click();
-    const ut = [];
-    for (let i = 0; i < 40; i += 1) {
+
+    /* HELE SERIEN, ikke ett bilde. Det var feil nummer én. */
+    const serie = [];
+    for (let i = 0; i < 60; i += 1) {
       const s = sider();
-      ut.push({
+      serie.push({
         antall: s.length,
-        transformer: s.map((e) => getComputedStyle(e).transform),
-        raa: s.map((e) => e.style.transform || '(ingen inline)'),
-        opacity: s.map((e) => getComputedStyle(e).opacity),
-        animasjoner: s.map((e) => e.getAnimations ? e.getAnimations().length : -1),
-        klasser: s.map((e) => e.className),
-        topp: s.map((e) => Math.round(e.getBoundingClientRect().top)),
-        brandTop: brand ? Math.round(brand.getBoundingClientRect().top) : null,
+        transform: s.map((e) => getComputedStyle(e).transform),
+        opacity: s.map((e) => Number(getComputedStyle(e).opacity)),
+        animasjoner: s.map((e) => (e.getAnimations ? e.getAnimations().length : -1)),
+        skallTop: skall ? Math.round(skall.getBoundingClientRect().top) : null,
       });
-      await new Promise((r) => requestAnimationFrame(r));
+      await new Promise((res) => requestAnimationFrame(res));
     }
-    return { prøver: ut, brandFør: brandFør === null ? null : Math.round(brandFør) };
-  });
+    return { serie, skallFør };
+  }, { tekst: siste.trykk || siste.fane || '', erTilbake: Boolean(siste.tilbake) });
+
   await p.close();
-  return prøver;
+  return r;
 }
 
-for (const rm of [false, true]) {
-  const r = await mål(rm);
-  const merkelapp = rm ? 'REDUSERT BEVEGELSE' : 'NORMAL';
-  if (r.feil) { console.log(`${merkelapp}: ${r.feil}`); continue; }
+let stryk = 0;
+for (const o of OVERGANGER) {
+  const r = await mål(o, false);
+  console.log(`\n── ${o.navn} ──`);
+  if (r.feil) { console.log(`  KOM IKKE FRAM: ${r.feil}`); stryk += 1; continue; }
 
-  /* Bilder der TO sider er i DOM-en OG begge har en transform ulik none. */
-  /* «transform !== none» duger ikke: den som har kommet FRAM star paa
-     matrix(1,0,0,1,0,0), som er en transform men ikke en forflytning.
-     Vi maaler y-leddet: begge ma vaere FLYTTET samtidig. */
-  const yAv = (t) => {
-    const m = /matrix(([^)]+))/u.exec(t || '');
-    if (!m) return 0;
-    const d = m[1].split(',').map(Number);
-    return d.length === 6 ? d[5] : 0;
-  };
-  const samtidig = r.prøver.filter((f) => f.antall === 2
-    && f.transformer.every((t) => Math.abs(yAv(t)) > 1));
-  const eksempel = r.prøver.find((f) => f.antall === 2);
-  if (eksempel) {
-    console.log('  computed transform : ' + eksempel.transformer.join('  |  '));
-    console.log('  inline transform   : ' + eksempel.raa.join('  |  '));
-    console.log('  klasser            : ' + eksempel.klasser.join('  |  '));
-    console.log('  topp-posisjon      : ' + eksempel.topp.join(' px  |  ') + ' px');
-    console.log('  opacity            : ' + eksempel.opacity.join('  |  '));
-    console.log('  antall animasjoner : ' + eksempel.animasjoner.join('  |  '));
-    const yAlle = r.prøver.filter((x) => x.antall === 2)
-      .map((x) => x.transformer.map((t) => Math.round(yAv(t))).join('/'));
-    console.log('  y-forflytning gjennom overgangen (side1/side2):');
-    console.log('    ' + yAlle.join('   '));
+  const to = r.serie.filter((f) => f.antall === 2);
+  if (to.length === 0) {
+    console.log('  FORUTSETNING FEILET: aldri to sider i DOM-en — ingen overgang aa maale');
+    stryk += 1;
+    continue;
   }
-  const toSider = r.prøver.filter((f) => f.antall === 2).length;
-  const brandFlytt = r.prøver
-    .map((f) => f.brandTop)
-    .filter((v) => v !== null)
-    .reduce((maks, v) => Math.max(maks, Math.abs(v - r.brandFør)), 0);
 
-  console.log(`\n${merkelapp}`);
-  console.log(`  bilder med to sider i DOM-en : ${toSider} av ${r.prøver.length}`);
-  console.log(`  bilder der BEGGE har transform: ${samtidig.length}`);
-  console.log(`  ordmerket flyttet seg maks   : ${brandFlytt} px`);
-  if (rm) {
-    console.log(`  -> ${samtidig.length === 0 ? 'OK: ingen bevegelse ved redusert bevegelse' : 'FEIL: noe beveger seg'}`);
-  } else {
-    console.log(`  -> ${samtidig.length > 0 ? 'OK: begge flater beveger seg SAMTIDIG' : 'FEIL: de beveger seg ikke samtidig'}`);
-    console.log(`  -> ${brandFlytt <= 1 ? 'OK: skallet star stille' : 'FEIL: skallet flytter seg'}`);
+  const begge = to.filter((f) => f.transform.every((t) => Math.abs(yAv(t)) > 1));
+  const énFlytter = to.filter((f) => f.transform.some((t) => Math.abs(yAv(t)) > 1));
+  const fadet = to.filter((f) => f.opacity.some((v) => v < 0.99));
+  const animert = to.filter((f) => f.animasjoner.some((n) => n > 0));
+  const skallFlytt = r.serie.map((f) => f.skallTop).filter((v) => v !== null)
+    .reduce((maks, v) => Math.max(maks, Math.abs(v - r.skallFør)), 0);
+
+  console.log(`  bilder med to sider           : ${to.length}`);
+  console.log(`  y-serie (gammel/ny)           : ${to.slice(0, 10).map((f) => f.transform.map((t) => Math.round(yAv(t))).join('/')).join('  ')}`);
+  console.log(`  opacity-serie                 : ${to.slice(0, 6).map((f) => f.opacity.map((v) => v.toFixed(2)).join('/')).join('  ')}`);
+  console.log(`  bilder der BEGGE flytter seg  : ${begge.length}`);
+  console.log(`  bilder der minst EN flytter   : ${énFlytter.length}`);
+  console.log(`  bilder med fade / animasjon   : ${fadet.length} / ${animert.length}`);
+  console.log(`  skallet flyttet seg maks      : ${skallFlytt} px`);
+
+  /* For utgangs-testen holder det ikke at «minst én» flytter seg — det ville
+     den nye siden gjort uansett. Kravet er at den AVGÅENDE (indeks 0, den
+     som ble spleiset tilbake inn av AnimatePresence) har flyttet seg. */
+  const utgangFlyttet = to.filter((f) => Math.abs(yAv(f.transform[0])) > 1);
+  const ok = o.utgangFlytter
+    ? utgangFlyttet.length > 0
+    : (o.beggeFlytter ? begge.length > 0 : (énFlytter.length > 0 && begge.length === 0));
+  if (o.utgangFlytter) console.log(`  bilder der UTGANGEN flytter seg: ${utgangFlyttet.length}`);
+  console.log(`  FASIT: ${o.hvorfor}`);
+  console.log(`  -> ${ok ? 'OK' : 'AVVIK'}`);
+  if (!ok) stryk += 1;
+  if (skallFlytt > 1) { console.log('  -> AVVIK: skallet skal staa stille'); stryk += 1; }
+}
+
+/* Redusert bevegelse: ingenting skal bevege seg. */
+{
+  const r = await mål(OVERGANGER[0], true);
+  console.log('\n── redusert bevegelse ──');
+  if (r.feil) { console.log(`  ${r.feil}`); }
+  else {
+    const beveget = r.serie.filter((f) => f.transform.some((t) => Math.abs(yAv(t)) > 1));
+    console.log(`  bilder med forflytning: ${beveget.length}`);
+    console.log(`  -> ${beveget.length === 0 ? 'OK: direkte bytte' : 'AVVIK: noe beveger seg'}`);
+    if (beveget.length > 0) stryk += 1;
   }
 }
 
 await browser.close();
 server.kill();
+console.log(`\n${stryk === 0 ? 'Alle overgangene stemmer med fasiten.' : `${stryk} avvik.`}`);
+process.exit(stryk ? 1 : 0);

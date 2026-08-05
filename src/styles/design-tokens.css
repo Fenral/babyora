@@ -623,6 +623,43 @@ img {
   padding-bottom: var(--dw-tabbar-clearance, 90px);
 }
 /* motion-wrapperen (route-transition) må videreføre høyden til skjermen */
+/* ============ SIDESKIFTET (fase 3B, 2026-08-05) ============
+   Eierfunn: «appen bytter skjerm uten bevegelse». Vedtak
+   `sideskift-er-fysiske`: begge flater skal bevege seg SAMTIDIG.
+
+   Foer laa de to sidene etter hverandre i TID (AnimatePresence
+   mode="wait"), saa den nye startet foerst naar den gamle var ferdig.
+   To bevegelser etter hverandre leses som et bytte, ikke som at noe
+   flytter seg. Na stables de i SAMME rutenettcelle.
+
+   Rutenett, ikke position:absolute: absolutt posisjonering tar sidene
+   ut av flyten og river bort hoyden main gir dem. Grid-stabling
+   beholder den naturlige stoerrelsen.
+
+   FRIKJENT AV MAALING 2026-08-05: et dommerpanel bygde en frittstaaende
+   side med noeyaktig denne CSS-en og la to elementer oppa hverandre.
+   Begge flyttet seg. Stablingen hindrer ikke transform.
+
+   overflow: clip — ikke hidden. hidden ville gjort dette til en
+   rullecontainer og stjaalet rullingen fra skjermene under. */
+.app-shell > main > .ba-sideskift {
+  display: grid;
+  grid-template-areas: 'side';
+  flex: 1 0 auto;
+  min-height: 0;
+  overflow: clip;
+}
+/* Barna MAA arve det `.app-shell > main > div` ga dem foer. De matcher
+   ikke lenger den selektoren — det er na et barnebarn — og uten disse
+   tre egenskapene mister hver skjerm hoyden sin. */
+.app-shell > main > .ba-sideskift > * {
+  grid-area: side;
+  min-width: 0;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
 .app-shell > main > div {
   flex: 1 0 auto;
   display: flex;
