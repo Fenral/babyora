@@ -988,13 +988,6 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
   { fil: 'src/screens/HjemScreen.tsx', decl: 'damping: 26' }, // linje 1202 [js]
   { fil: 'src/screens/HjemScreen.tsx', decl: 'mass: 0.6' }, // linje 1202 [js]
   // ── src/screens/InnstillingerScreen.tsx (6230 linjer, ingen CSS-fil)
-  { fil: 'src/screens/InnstillingerScreen.tsx', decl: "transition: reducedMotion ? 'none' : `background 200ms ${C.ease}`" }, // linje 902
-  { fil: 'src/screens/InnstillingerScreen.tsx', decl: "transition: reducedMotion ? 'none' : 'transform var(--dur-toggle, 320ms) var(--ease-standard)'" }, // linje 922
-  { fil: 'src/screens/InnstillingerScreen.tsx', decl: "transition: reducedMotion ? 'none' : `background 180ms ${C.ease}, color 180ms ${C.ease}`" }, // linje 1107
-  { fil: 'src/screens/InnstillingerScreen.tsx', decl: "transition: reducedMotion ? 'none' : 'opacity 200ms var(--ease-standard)'" }, // linje 2602
-  { fil: 'src/screens/InnstillingerScreen.tsx', antall: 2, decl: "transition: reducedMotion ? 'none' : `background 160ms ${C.ease}, color 160ms ${C.ease}, border-color 160ms ${C.ease}`" }, // linje 2767, 4344
-  { fil: 'src/screens/InnstillingerScreen.tsx', antall: 17, decl: "transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`" }, // linje 3074, 3352, 3370, 3769, 4071, 4670, 4688, 5016, 5035, 5296, 5315, 5576, 5594, 5849, 5867, 6131, 6149
-  { fil: 'src/screens/InnstillingerScreen.tsx', decl: "transition: reducedMotion ? 'none' : `border-color 160ms ${C.ease}`" }, // linje 4632
   /* ── src/screens/OnboardingScreen.tsx (egen ease-familie parallelt med --dw-ease)
      De to forste er SELVE definisjonene av den parallelle familien, forst
      malt 2026-08-04: verdiene ble vasket gjennom egne custom properties og
@@ -1084,7 +1077,7 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
  * den DOMINERENDE inline-formen i denne kodebasen (39 til). Grenen for
  * reduced motion er handtert, men varigheten og kurven er like hardkodet.
  */
-const BASELINE = 106;
+const BASELINE = 82;
 
 /** Nokkel: fil + normalisert deklarasjon. */
 const nokkel = (t: { fil: string; decl: string }): string => `${t.fil} :: ${t.decl}`;

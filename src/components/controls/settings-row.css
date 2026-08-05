@@ -32,7 +32,11 @@
   display: flex;
   align-items: center;
   gap: var(--dw-space-12);
-  padding: 13px var(--dw-space-14);
+  /* Symmetrisk 14/14. Var 13 px vertikalt — mellom to skalatrinn, valgt av
+     noen uten at valget stod noe sted. 14 er et ekte trinn, gjor paddingen
+     symmetrisk, og flytter raden MOT doktrinens hoydegulv paa 62 px
+     (58 -> 60) i stedet for bort fra det. */
+  padding: var(--dw-space-14);
   min-height: var(--dw-size-touch);
   width: 100%;
   box-sizing: border-box;

@@ -142,7 +142,9 @@ const C = {
   cardShadow: 'var(--shadow-cta)',
   fontSans: "var(--dw-font-ui)",
   fontSerif: "var(--font-serif)",
-  ease: 'var(--ease-standard)',
+  // Kontrakten: EN kurve for hele appen. Var var(--ease-standard)
+  // = cubic-bezier(0.32,0.72,0,1); --dw-ease er (0.2,0.7,0.2,1).
+  ease: 'var(--dw-ease)',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -272,7 +274,7 @@ const rowBase: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 'var(--dw-space-12)',
-  padding: '13px var(--dw-space-14)',
+  padding: 'var(--dw-space-14)',
   minHeight: 52,
   width: '100%',
   background: 'transparent',
@@ -899,7 +901,7 @@ function TogglePill({
     opacity: disabled ? 0.55 : 1,
     flex: 'none',
     padding: 0,
-    transition: reducedMotion ? 'none' : `background 200ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-state) ${C.ease}`,
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
   };
@@ -921,7 +923,7 @@ function TogglePill({
     // den karakteristiske raskt-ut/myk-landing-følelsen fra native switches.
     transition: reducedMotion
       ? 'none'
-      : 'transform var(--dur-toggle, 320ms) var(--ease-standard)',
+      : 'transform var(--dw-m-state) var(--ease-standard)',
   };
 
   return (
@@ -1104,7 +1106,7 @@ function ThemeSegment({ mode, onChange, reducedMotion }: ThemeSegmentProps): Rea
     cursor: 'pointer',
     touchAction: 'manipulation',
     WebkitTapHighlightColor: 'transparent',
-    transition: reducedMotion ? 'none' : `background 180ms ${C.ease}, color 180ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-state) ${C.ease}, color var(--dw-m-state) ${C.ease}`,
   };
 
   const segBtnActive: CSSProperties = {
@@ -2599,7 +2601,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
           textAlign: 'center',
           opacity: toast ? 1 : 0,
           pointerEvents: toast ? 'auto' : 'none',
-          transition: reducedMotion ? 'none' : 'opacity 200ms var(--ease-standard)',
+          transition: reducedMotion ? 'none' : 'opacity var(--dw-m-state) var(--ease-standard)',
           zIndex: 50,
         }}
       >
@@ -2766,7 +2768,7 @@ function MorningHourDialog({
     WebkitTapHighlightColor: 'transparent',
     transition: reducedMotion
       ? 'none'
-      : `background 160ms ${C.ease}, color 160ms ${C.ease}, border-color 160ms ${C.ease}`,
+      : `background var(--dw-m-state) ${C.ease}, color var(--dw-m-state) ${C.ease}, border-color var(--dw-m-state) ${C.ease}`,
   };
 
   const optionActive: CSSProperties = {
@@ -3071,7 +3073,7 @@ function HelpDialog({
     boxShadow: 'var(--shadow-1)',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   return (
@@ -3349,7 +3351,7 @@ function FeedbackDialog({
     boxShadow: 'var(--shadow-cta-primary)',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   const secondaryBtnStyle: CSSProperties = {
@@ -3367,7 +3369,7 @@ function FeedbackDialog({
     cursor: 'pointer',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   return (
@@ -3717,7 +3719,7 @@ function PrivacyDialog({
 
   const externalLinkRowStyle: CSSProperties = {
     ...rowBase,
-    padding: '13px var(--dw-space-14)',
+    padding: 'var(--dw-space-14)',
   };
 
   const externalLinkIconStyle: CSSProperties = {
@@ -3766,7 +3768,7 @@ function PrivacyDialog({
     boxShadow: 'var(--shadow-1)',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   // Liten ekstern-link-ikon (NE-pil), brukt på link-rader for å signalisere
@@ -4068,7 +4070,7 @@ function SwitchChildDialog({
     touchAction: 'manipulation',
     WebkitTapHighlightColor: 'transparent',
     textAlign: 'left',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   const optionActive: CSSProperties = {
@@ -4343,7 +4345,7 @@ function RefHourPickerDialog({
     WebkitTapHighlightColor: 'transparent',
     transition: reducedMotion
       ? 'none'
-      : `background 160ms ${C.ease}, color 160ms ${C.ease}, border-color 160ms ${C.ease}`,
+      : `background var(--dw-m-state) ${C.ease}, color var(--dw-m-state) ${C.ease}, border-color var(--dw-m-state) ${C.ease}`,
   };
 
   const optionActive: CSSProperties = {
@@ -4633,7 +4635,7 @@ function AddChildDialog({
     boxSizing: 'border-box',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `border-color 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `border-color var(--dw-m-feedback) ${C.ease}`,
   };
 
   const errorStyle: CSSProperties = {
@@ -4671,7 +4673,7 @@ function AddChildDialog({
     boxShadow: canSubmit ? 'var(--shadow-cta-primary)' : 'none',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   const secondaryBtnStyle: CSSProperties = {
@@ -4689,7 +4691,7 @@ function AddChildDialog({
     cursor: 'pointer',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   const today = new Date().toISOString().slice(0, 10);
@@ -5017,7 +5019,7 @@ function AutoLocationDialog({
     boxShadow: pending ? 'none' : 'var(--shadow-cta-primary)',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   const secondaryBtnStyle: CSSProperties = {
@@ -5036,7 +5038,7 @@ function AutoLocationDialog({
     opacity: pending ? 0.5 : 1,
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   return (
@@ -5297,7 +5299,7 @@ function WeatherChangeDialog({
     boxShadow: pending ? 'none' : 'var(--shadow-cta-primary)',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   const secondaryBtnStyle: CSSProperties = {
@@ -5316,7 +5318,7 @@ function WeatherChangeDialog({
     opacity: pending ? 0.5 : 1,
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   return (
@@ -5577,7 +5579,7 @@ function DeleteDataDialog({
     boxShadow: 'var(--shadow-cta-primary)',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   const secondaryBtnStyle: CSSProperties = {
@@ -5595,7 +5597,7 @@ function DeleteDataDialog({
     cursor: 'pointer',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   return (
@@ -5850,7 +5852,7 @@ function WeatherSourceDialog({
     boxShadow: 'var(--shadow-cta-primary)',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   const secondaryBtnStyle: CSSProperties = {
@@ -5868,7 +5870,7 @@ function WeatherSourceDialog({
     cursor: 'pointer',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   return (
@@ -6132,7 +6134,7 @@ function RateAppDialog({
     boxShadow: 'var(--shadow-cta-primary)',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   const secondaryBtnStyle: CSSProperties = {
@@ -6150,7 +6152,7 @@ function RateAppDialog({
     cursor: pending ? 'wait' : 'pointer',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
-    transition: reducedMotion ? 'none' : `background 160ms ${C.ease}`,
+    transition: reducedMotion ? 'none' : `background var(--dw-m-feedback) ${C.ease}`,
   };
 
   return (
