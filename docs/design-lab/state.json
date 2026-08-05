@@ -1,8 +1,18 @@
 {
-  "updated": "2026-08-05",
+  "updated": "2026-08-06",
   "activePhase": 9,
   "phaseName": "Representative Prototype (4 kandidater)",
-  "completedPhases": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+  "completedPhases": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
   "eierport2": {
     "dato": "2026-08-05",
     "vedtak": "Alle tre + syntesen prototypes (Protokollen, Spennet, Ambient Briefing, Ambient Protokoll)",
@@ -23,7 +33,12 @@
   "eierport1": {
     "dato": "2026-08-05",
     "maalrangering": "Rekkevidde og tillit",
-    "tillatteRammer": ["A Evalueringsport (betinget)", "B Gratis sikkerhetskjerne", "C Institusjonell finansiering", "Delta-komponenten"],
+    "tillatteRammer": [
+      "A Evalueringsport (betinget)",
+      "B Gratis sikkerhetskjerne",
+      "C Institusjonell finansiering",
+      "Delta-komponenten"
+    ],
     "primaerhypotese": "B (målkongruent + Sols standardgrense)",
     "motkandidat": "A (må bestå amputasjonstest + tredelt port)",
     "reversibelt": true
@@ -35,15 +50,15 @@
     "Sol P0-5: analytics død — VITE_POSTHOG_KEY i Codemagic (eier) + event-pakke (Claude), forutsetning for fase 6",
     "Sol P1-4: begrense parallell skjermpolering — løftet til eier",
     "Parallell økt jobber i src/screens — koordiner før redigering av skjermfiler",
-    "2 flaky filsystemtester i verify-phase3-exact-sha.test.ts under full parallell vitest-last"
+    "Klassifiserer-margin: endret-vaer (−5,9°) er normal ved ±1°-regel — vurderes m/Sol i fase 10"
   ],
   "blockers": [],
   "workThread": {
     "name": "Designkritikk Babyora App",
     "url": "https://chatgpt.com/c/6a6cb297-fc20-83ed-ae8e-429fd510ac74",
-    "model": "GPT-5.6 Sol / Ekstra h\u00f8y",
+    "model": "GPT-5.6 Sol / Ekstra høy",
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "Fase 9: skriv 12-prototype-spec.md (fire navnl\u00f8se prototyper \u2014 Protokollen/Spennet/Ambient/Ambient Protokoll \u2014 i docs/design-lab/lab/ utenfor doktrine-skanning; delt scenariosett: normal dag, grensev\u00e6r, sovende vogn, bilstol, manglende data, endret v\u00e6r, utl\u00f8pt r\u00e5d, ny omsorgsperson, Dynamic Type, utend\u00f8rslys; lik visuell kvalitet; identisk gratis sikkerhetslag; m\u00e5leprotokoll: korrekt f\u00f8rste handling, farlig utelatelse, beslutningstid, svakeste-premiss-gjenfortelling, stale-forst\u00e5else; nullmodell obligatorisk) \u2192 Sol f\u00f8r-implementeringsreview av spec \u2192 bygg prototypene \u2192 fase 10/11 review-loop \u2192 eierport 3"
+  "nextAction": "Fase 9 pågår: kontraktlag ferdig (1d87d37, 47/47 mutasjonsbevist); Sol ga PASS m/byggeklarsignal på spec v2 (77ae6e4); P1/P2/P3 → P4+testsele bygges nå i workflow wf_24faa46c-11a. Etter bygging: samlet verifisering + commit, skjermbevis alle 4×10 scenarier (merket gyldig-i-web vs. krever-native), fase 10-bevispakke til Sol. Sperret til native-spike: leveringstid, cache app/widget, systemflate-a11y."
 }
