@@ -102,7 +102,11 @@
   right: 6px;
   bottom: 6px;
   border-radius: 18px;
-  transition: height 160ms ease-out;
+  /* Bevegelse fra kontrakten, ikke fra tall: fyllet foelger fingeren mens
+     brukeren drar, altsaa direkte tilbakemelding. --dw-m-feedback (120 ms)
+     er ogsaa det maalte tokenet naermest den gamle raa verdien (160 ms):
+     --dw-m-state er 220 ms i design-tokens-v2.css, ikke 180. */
+  transition: height var(--dw-m-feedback) var(--dw-ease);
   /* No overflow:hidden here on purpose — the water variant's meniscus
      (below) deliberately pokes a few px ABOVE this box to read as a
      curved surface rather than a flat cut; the outer .fa-gauge-track
@@ -230,7 +234,13 @@
   height: 44px;
   border-radius: 14px;
   border: 1.5px solid var(--dw-hairline);
+  /* D2 (2026-08-05): flaten BLIR staaende hevet — den er finsteg-knappens
+     egen oey paa petrol-panelet (panel-tekstrampe.test.ts sin HEVEDE_OEYER,
+     13,26:1 moerk / 15,97:1 lys mot 1,34:1 uten egen flate), saa den har en
+     hierarkisk grunn og skal ikke flates ut. Den manglet bare lyslogikken:
+     inset topplys + dybdestabel, i doktrinens kompatible form. */
   background: var(--dw-raised);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised);
   color: var(--dw-ink-hi);
   font-size: 20px;
   font-weight: 700;

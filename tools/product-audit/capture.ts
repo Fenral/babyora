@@ -9,22 +9,24 @@ const BLOCKED_ACTIONS = new Set([
   'enable-notifications', 'write-production', 'apply',
 ]);
 
-export function buildForecastFixture(start = new Date('2026-01-15T06:00:00.000Z')) {
-  const timeseries = Array.from({ length: 72 }, (_, index) => {
-    const time = new Date(start.getTime() + index * 60 * 60 * 1000);
-    const localHour = (6 + index) % 24;
-    const temperature = -4 + Math.round(Math.sin((localHour - 6) / 24 * Math.PI * 2) * 3);
-    return {
-      time: time.toISOString(),
-      data: {
-        instant: { details: { air_temperature: temperature, wind_speed: 3.2, wind_from_direction: 180, relative_humidity: 78, cloud_area_fraction: 62 } },
-        next_1_hours: { summary: { symbol_code: 'partlycloudy_day' }, details: { precipitation_amount: 0 } },
-        next_6_hours: { summary: { symbol_code: 'partlycloudy_day' }, details: { precipitation_amount: 0 } },
-      },
-    };
-  });
-  return { properties: { meta: { updated_at: start.toISOString(), units: {} }, timeseries } };
-}
+/**
+ * VÆRFIXTUREN — lånt fra e2e, ikke skrevet på nytt.
+ *
+ * FUNN 2026-08-05: revisjonen bygde sin EGEN fixtur, og den sendte
+ * `properties.meta.units: {}`. Klienten (src/lib/met-no/client.ts) krever at
+ * units matcher CONSUMED_UNIT_CONTRACT EKSAKT — svaret ble derfor forkastet,
+ * appen falt til «sist kjente vær», og CTA-en sto DEAKTIVERT.
+ *
+ * Følgen var stille og alvorlig: tre av elleve skjermer kunne ikke nås, og
+ * revisjonen rapporterte «8/11 fanget» uten å si at de tre manglet FORDI
+ * fixturen var feil. Den målte åtte skjermer og sa god for seg selv.
+ *
+ * e2e/fixtures/forecast-1c-partlycloudy.js løste dette for lenge siden, og
+ * dens eget filhode beskriver NØYAKTIG samme feil: «CTA-en sto disabled.
+ * Alle portene strøk fordi knappen aldri ble trykket, ikke fordi funksjonen
+ * manglet.» To fixturer for samme kontrakt er én fixtur for mye.
+ */
+export { forecastPartlyCloudy1C as buildForecastFixture } from '../../e2e/fixtures/forecast-1c-partlycloudy.js';
 
 export function assertReadOnlyAction(action: string): void {
   if (BLOCKED_ACTIONS.has(action)) {

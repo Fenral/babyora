@@ -57,7 +57,11 @@ const groupCardStyle: CSSProperties = {
   borderRadius: 16,
   overflow: 'hidden',
   border: '1px solid var(--ink-100)',
-  boxShadow: 'var(--shadow-cta)',
+  /* D2: kortet ER en ekte hevet gruppeflate — det er nettopp flaten D1 krever
+     at hårstrek-radene under sitter på. Riktig retting er derfor lyslogikk,
+     ikke å fjerne fyllet. `var(--shadow-cta)` var kun YTRE skygge; den
+     kompatible formen legger til det 1 px varme innerlyset på toppkanten. */
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
 };
 
 

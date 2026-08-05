@@ -40,15 +40,22 @@
   line-height: 1.4;
 }
 
+/* D2, og igjen er fiksen å FJERNE det hevede fyllet, ikke å pynte det: en
+   8 px tidslinjeprikk er ingen hevet flate — --dw-raised sto her bare for å
+   stanse rail-streken bak prikken. Formen var dessuten invertert mot
+   .plan-change-rail__marker rett under, som er den samme noden i stor
+   utgave: blekkfyll + raised RING som knockout. Prikken følger nå markørens
+   form, så knockouten ligger i ringen der den hører hjemme og fyllet slipper
+   å late som det er et materiale. */
 .plan-change-rail__unchanged-dot {
   position: absolute;
   top: var(--dw-space-18);
   left: -22px;
   width: 8px;
   height: 8px;
-  border: 2px solid var(--dw-ink-low);
+  border: 2px solid var(--dw-raised);
   border-radius: 50%;
-  background: var(--dw-raised);
+  background: var(--dw-ink-low);
 }
 
 .plan-change-rail__change + .plan-change-rail__change {
@@ -71,7 +78,7 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--dw-m-feedback) var(--ease-standard);
+  transition: background-color var(--dw-m-feedback) var(--dw-ease);
 }
 
 .plan-change-rail__disclosure:active {
@@ -161,26 +168,31 @@
   grid-row: 1 / 3;
   color: var(--dw-ink-low);
   font-size: 1.25rem;
-  transition: transform 240ms ease;
+  transition: transform var(--dw-m-state) var(--dw-ease);
 }
 
 .plan-change-rail__disclosure[aria-expanded="true"] .plan-change-rail__chevron {
   transform: rotate(180deg);
 }
 
+/* Chevronen og panelet er ÉN tilstandsendring og går nå i samme takt fra
+   --dw-m-state. Før løp de 240 ms mot 200/240 ms med bar `ease` — tre
+   varigheter og en kurve utenfor kontrakten på én gest. Den gamle
+   asymmetrien (200 ut / 240 inn) er BEVISST oppgitt: «ut er raskere enn inn»
+   er kontraktens regel for sideskift og bue-seremonien, ikke for en
+   disclosure som åpner og lukker samme flate. */
 .plan-change-rail__detail {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
   transition:
-    grid-template-rows 200ms ease,
-    opacity 200ms ease;
+    grid-template-rows var(--dw-m-state) var(--dw-ease),
+    opacity var(--dw-m-state) var(--dw-ease);
 }
 
 .plan-change-rail__detail.is-expanded {
   grid-template-rows: 1fr;
   opacity: 1;
-  transition-duration: 240ms;
 }
 
 .plan-change-rail__detail-inner {
@@ -221,6 +233,11 @@
   margin: 0;
 }
 
+/* D3 krever at thumb-rammen HAR en flate — fyllet blir derfor stående. Den
+   manglet bare lyslogikken (D2), og kanten var --dw-plate-kant skrevet ut
+   for hånd. Samme vitrine-form som referanseskjermens .hjm-thumb; den
+   stramme --dw-depth-selected av samme grunn som der: en 52 px brikke skal
+   ikke bære gruppeflatens 56 px slør. */
 .plan-change-rail__preview img {
   display: block;
   width: 52px;
@@ -228,7 +245,8 @@
   max-width: 100%;
   border-radius: var(--dw-r-control);
   background: var(--dw-interactive);
-  border: 1px solid rgba(242, 192, 138, 0.16);
+  border: 1px solid var(--dw-plate-kant);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected);
   object-fit: contain;
 }
 

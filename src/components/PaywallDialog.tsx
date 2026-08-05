@@ -152,7 +152,12 @@ const STYLE_CSS = `
      "I dag" and below "Avsluttes i App Store" during v2 QA. */
   display: block;
   border-radius: 12px;
-  transition: background 160ms var(--ease-standard);
+  /* --dw-m-state, ikke -feedback: kontrakten definerer state som
+     «tilstandsbytte inne i en flate (rad blir aktiv)», som er nøyaktig det
+     som skjer når en plan velges. -feedback er trykkrespons (scale/translate)
+     og ville vært valgt på tallet (120 mot 160), ikke på handlingen.
+     --ease-standard er legacy-familiens egen kurve; kontraktens er --dw-ease. */
+  transition: background var(--dw-m-state) var(--dw-ease);
 }
 .pw-plan-input:checked + .pw-plan-unit {
   background: var(--dw-accent-surface);
@@ -302,17 +307,30 @@ const STYLE_CSS = `
 .pw-dialog[data-fullbleed='true']::backdrop {
   background: transparent;
 }
+/* Bevegelseskontrakten sier «semantikk, ikke størrelse — bruk navnet som
+   beskriver HANDLINGEN» (design-tokens-v2.css). Modalen kommer inn som en
+   vertikal push (translateY + scale) og går ut igjen: --dw-m-push / -push-back,
+   samme par som PlaggDetailSheet allerede lukker med. Kontraktens regel 1 —
+   ut er raskere enn inn — holder (280 < 340).
+
+   BACKDROPEN følger sin egen dialog i stedet for å få eget tall: et scrim er
+   ikke et selvstendig objekt, det er rommet dialogen kaster. --dw-m-atmo ble
+   prøvd og forkastet — det tokenet er reservert lyspoolens krysstoning og
+   sier uttrykkelig «ALDRI transform».
+
+   Kurvene går alle til --dw-ease; --ease-standard og ease-out var to
+   parallelle dialekter ved siden av kontrakten. */
 .pw-dialog[open] {
-  animation: pw-modal-in 300ms var(--ease-standard);
+  animation: pw-modal-in var(--dw-m-push) var(--dw-ease);
 }
 .pw-dialog[open]::backdrop {
-  animation: pw-backdrop-in 250ms ease-out;
+  animation: pw-backdrop-in var(--dw-m-push) var(--dw-ease);
 }
 .pw-dialog[data-closing] {
-  animation: pw-modal-out 220ms ease-out forwards;
+  animation: pw-modal-out var(--dw-m-push-back) var(--dw-ease) forwards;
 }
 .pw-dialog[data-closing]::backdrop {
-  animation: pw-backdrop-out 220ms ease-out forwards;
+  animation: pw-backdrop-out var(--dw-m-push-back) var(--dw-ease) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .pw-dialog[open],
@@ -413,6 +431,11 @@ function scrollAreaStyle(dismissable: boolean): CSSProperties {
       ? 'var(--dw-space-20) var(--dw-space-20) var(--dw-space-6)'
       : 'max(20px, calc(env(safe-area-inset-top, 0px) + 12px)) var(--dw-space-20) var(--dw-space-6)',
     WebkitOverflowScrolling: 'touch',
+    // D4: innholdet forsvinner opp under <footer>, og kanten må si fra at
+    // det er mer. Husets egen rampe (sheet.css, hjem-monter.css,
+    // kle-paa-stepper.css bruker nøyaktig samme) — ingen ny verdi.
+    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
   };
 }
 

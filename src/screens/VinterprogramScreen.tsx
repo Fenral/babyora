@@ -315,6 +315,9 @@ const backBtnStyle: CSSProperties = {
   borderRadius: 12,
   border: '1px solid var(--dw-hairline)',
   background: 'var(--dw-overlay)',
+  // D2: hevet fyll uten lyslogikk. Knappen er et materiale man trykker på og
+  // beholder derfor hevingen — den får lyset den manglet.
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
   color: 'var(--dw-ink-hi)',
   display: 'inline-flex',
   alignItems: 'center',
@@ -341,6 +344,10 @@ const scrollStyle: CSSProperties = {
   // bunn-tallet (max(safe-area, 120px)) er byttet mot klaringstokenet, som
   // regner høyde + gap + safe-area ut av tab-barens egne mål.
   padding: '0 var(--dw-space-20) var(--dw-tabbar-clearance, 90px)',
+  // D4: bunn-fade i stedet for hardt klipp — husmønsteret fra
+  // hjem-monter.css / sheet.css / kle-paa-stepper.css.
+  maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+  WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
 };
 
 const titleStyle: CSSProperties = {
@@ -405,12 +412,15 @@ const rowStyle: CSSProperties = {
   alignItems: 'center',
   gap: 'var(--dw-space-12)',
   width: '100%',
-  minHeight: 60,
+  // D5: 60 px lå under radhøyde-gulvet. Porten måler bare CSS-selektorer, så
+  // denne inline-raden slapp unna — gulvet gjelder like fullt.
+  minHeight: 'var(--dw-size-row)',
   padding: 'var(--dw-space-10) var(--dw-space-14)',
   border: '1px solid var(--dw-hairline)',
   borderRadius: 'var(--r-lg)',
   background: 'var(--dw-overlay)',
-  boxShadow: 'var(--shadow-1)',
+  // D2: --shadow-1 var ett flatt legacy-lag uten inset topplys.
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
   color: 'inherit',
   font: 'inherit',
   textAlign: 'left',
@@ -429,8 +439,14 @@ const weekBadgeStyle: CSSProperties = {
   fontWeight: 700,
   fontSize: 13,
   fontVariantNumeric: 'tabular-nums',
-  background: 'var(--dw-raised)',
-  border: '1px solid var(--dw-hairline)',
+  // D2: fyllet var --dw-raised (nivå 2) inne i en rad på --dw-overlay
+  // (nivå 3) — en lavere flate som lå oppå en høyere. Husets plate-behandling
+  // (.hjm-thumb) setter merket ett hakk OVER verten, med topplys og den
+  // tettere dybden som hører små flater til.
+  background: 'var(--dw-plate)',
+  border: '1px solid var(--dw-plate-kant)',
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected)',
+  boxSizing: 'border-box',
   color: 'var(--dw-ink-mid)',
 };
 
@@ -471,6 +487,9 @@ const leadStyle: CSSProperties = {
 const sectionCardStyle: CSSProperties = {
   background: 'var(--dw-raised)',
   border: '1px solid var(--dw-hairline)',
+  // D2: hevet fyll helt uten skygge. Kortet er en ekte gruppeflate og
+  // beholder hevingen — den får dybdekontraktens form.
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
   borderRadius: 'var(--r-lg)',
   padding: 'var(--dw-space-16)',
   marginBottom: 'var(--dw-space-14)',

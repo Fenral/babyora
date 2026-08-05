@@ -26,6 +26,16 @@
  * Verdiene er derfor flyttet, ikke endret. Å bytte hue er en
  * DESIGNBESLUTNING, og den hører hjemme hos eier — ikke i en opprydding.
  *
+ * ═══ D2-RUNDEN 2026-08-05: FIRE HEVEDE FLATER, TRE SVAR ═══════════════════
+ * Fire regler hadde hevet fyll uten lyslogikk. De fikk IKKE samme behandling,
+ * fordi de ikke er samme sak:
+ *   · `.outfit-map__node`    → hevet med grunn (ligger oppå linjene) → lys+dybde
+ *   · `.outfit-map__ordinal` → fyllet er lesbarhet, ikke nivå → beholdt + lys
+ *   · `.outfit-comparison`   → dialog over panelet → lys+dybde
+ *   · `.outfit-row`          → --dw-raised INNE i en --dw-raised-plate. En
+ *     plate som ikke kan ses. Her var riktig retting å FJERNE fyllet, ikke å
+ *     pynte det. Se regelen selv.
+ *
  * ═══ LEGACY-TOKENS MIGRERT ════════════════════════════════════════════════
  * `--surface-border` → `--dw-hairline`, `--muted-foreground` → `--dw-ink-mid`.
  * Begge hadde rå hex-fallback og var de siste to legacy-navnene i filen.
@@ -40,6 +50,12 @@
      regelen — og fordi SVG-en leser `--outfit-connector` direkte. */
   --outfit-connector: var(--dw-kart-linje);
   --outfit-active: var(--dw-kart-valgt);
+  /* MARKERINGSRINGEN, flyttet hit 2026-08-05. Den sto som en literal verdi
+     inne i `.is-highlighted`-regelen, som er ÉN box-shadow-egenskap delt av
+     rad og node. Da noden fikk egen dybde måtte ringen kunne gjentas ved
+     siden av dybden uten at verdien ble skrevet to ganger. Verdien er
+     URØRT — bare flyttet til ett sted. */
+  --outfit-ring: 0 0 0 3px color-mix(in srgb, var(--outfit-active) 24%, transparent);
 }
 .outfit-experience[data-temp='kald'] { --outfit-connector: var(--dw-kart-linje-kald); }
 .outfit-experience[data-temp='varm'] { --outfit-connector: var(--dw-kart-linje-varm); }
@@ -68,14 +84,38 @@
 .outfit-map__connectors { inset: 0; position: absolute; inline-size: 100%; block-size: 100%; overflow: visible; pointer-events: none; }
 .outfit-map__connectors polyline { fill: none; stroke: var(--outfit-connector); stroke-width: 3; vector-effect: non-scaling-stroke; }
 .outfit-map__connectors polyline.is-highlighted { stroke: var(--outfit-active); stroke-width: 5; stroke-dasharray: 8 4; }
-.outfit-map__node { align-items: center; background: var(--dw-raised); border: 2px solid var(--outfit-connector); border-radius: 999px; box-sizing: border-box; color: inherit; display: flex; font-weight: 700; justify-content: center; min-block-size: 44px; min-inline-size: 44px; overflow: visible; padding: .18rem; position: absolute; }
+/* D2 2026-08-05: noden bar hevet fyll uten lyslogikk. Den SKAL være hevet —
+   den er en fysisk brikke som ligger oppå forbindelseslinjene og må dekke
+   dem. Da må den også kaste skygge og fange lys, ellers er «hevet» bare en
+   farge. Fyllet er urørt; bare den kompatible formen er lagt til. */
+.outfit-map__node { align-items: center; background: var(--dw-raised); border: 2px solid var(--outfit-connector); border-radius: 999px; box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised); box-sizing: border-box; color: inherit; display: flex; font-weight: 700; justify-content: center; min-block-size: 44px; min-inline-size: 44px; overflow: visible; padding: .18rem; position: absolute; }
 .outfit-map__thumbnail { block-size: 100%; inline-size: 100%; max-block-size: 4.25rem; max-inline-size: 4.25rem; object-fit: contain; pointer-events: none; }
-.outfit-map__ordinal { align-items: center; background: var(--dw-overlay); border: 1px solid currentColor; border-radius: 999px; display: flex; font-size: .7rem; block-size: 1.35rem; inline-size: 1.35rem; justify-content: center; position: absolute; inset-block-start: -.45rem; inset-inline-start: -.45rem; }
-.outfit-map__node.is-highlighted, .outfit-row.is-highlighted { border-color: var(--outfit-active); box-shadow: 0 0 0 3px color-mix(in srgb, var(--outfit-active) 24%, transparent); text-decoration: underline; }
+/* D2 2026-08-05: rekkefølgemerket hadde hevet fyll uten lyslogikk. FYLLET ER
+   BEHOLDT, ikke fjernet: merket ligger på hjørnet av noden, halvt utenfor
+   den, og et gjennomsiktig merke ville fått nodekanten og en
+   forbindelseslinje til å krysse rett gjennom sifferet. Opakheten er
+   lesbarhet, ikke pynt — og da må flaten bære lys som alle andre.
+   MERKNAD: --dw-depth-raised er dimensjonert for paneler (56 px ytre uskarp-
+   het). På en 21 px brikke er den for stor. Se rapporten: her mangler et
+   dybdetoken i brikkeskala. */
+.outfit-map__ordinal { align-items: center; background: var(--dw-overlay); border: 1px solid currentColor; border-radius: 999px; box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised); display: flex; font-size: .7rem; block-size: 1.35rem; inline-size: 1.35rem; justify-content: center; position: absolute; inset-block-start: -.45rem; inset-inline-start: -.45rem; }
+.outfit-map__node.is-highlighted, .outfit-row.is-highlighted { border-color: var(--outfit-active); box-shadow: var(--outfit-ring); text-decoration: underline; }
+/* box-shadow er ÉN egenskap: ringen over slettet nodens nye dybde i det den
+   ble markert, altså ville brikken flatet ut nøyaktig når den er i fokus.
+   Her settes begge deler samtidig, med --dw-depth-selected fordi flaten da
+   ER den valgte. */
+.outfit-map__node.is-highlighted { box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--outfit-ring), var(--dw-depth-selected); }
 .outfit-map__node:focus-visible, .outfit-row:focus-visible, .outfit-alternative:focus-visible { outline: 3px solid var(--dw-focus); outline-offset: 3px; }
 .outfit-list ol, .outfit-list ul { padding-inline-start: 0; }
 .outfit-list li { list-style: none; margin-block: .55rem; }
-.outfit-row { align-items: center; background: var(--dw-raised); border: 1px solid var(--dw-hairline); box-sizing: border-box; color: inherit; display: flex; gap: .75rem; inline-size: 100%; min-block-size: 44px; min-inline-size: 0; flex-wrap: wrap; padding: .65rem; text-align: start; }
+/* D2 2026-08-05: raden hadde hevet fyll uten lyslogikk — og svaret var IKKE
+   å pynte den. `.outfit-row` ligger inne i `.outfit-truth-panel`, som selv er
+   --dw-raised. Raden malte altså samme valør oppå seg selv: en plate som
+   ikke kunne SES som plate uansett hvor mye lys den fikk. Doktrinens egen
+   form for innhold inne i en plate er hårstreksraden — samme som
+   radprimitiven `.dw-rad`, som også står `background: transparent`.
+   Fyllet er fjernet, hårstreken beholdt. */
+.outfit-row { align-items: center; background: transparent; border: 1px solid var(--dw-hairline); box-sizing: border-box; color: inherit; display: flex; gap: .75rem; inline-size: 100%; min-block-size: 44px; min-inline-size: 0; flex-wrap: wrap; padding: .65rem; text-align: start; }
 .outfit-row__ordinal { border: 1px solid currentColor; border-radius: 50%; flex: 0 0 1.65rem; line-height: 1.55rem; text-align: center; }
 .outfit-row__thumbnail { block-size: 2.8rem; flex: 0 0 2.8rem; inline-size: 2.8rem; object-fit: contain; }
 .outfit-row__label { flex: 1 1 12rem; min-inline-size: 0; overflow-wrap: anywhere; }
@@ -83,7 +123,13 @@
 .outfit-alternative { min-block-size: 44px; margin-block-start: .25rem; }
 .outfit-active-caption { margin-block: 1rem; min-block-size: 1.5rem; }
 .outfit-map-status { color: var(--dw-ink-mid); }
-.outfit-comparison { background: var(--dw-raised); border: 1px solid var(--dw-hairline); color: inherit; inline-size: auto; margin-block: 1rem; max-inline-size: 100%; padding: 1rem; position: static; }
+/* D2 2026-08-05: sammenligningsdialogen. Denne SKAL være hevet — den er et
+   <dialog> som folder seg ut oppå panelet og skal leses som «over», ikke
+   «i». Fyllet er beholdt som --dw-raised og lyslogikken lagt til.
+   MERKNAD: tokenkontrakten kaller --dw-overlay «nivå 3 · sheets/dialog», og
+   det er trolig den riktige valøren for denne flaten. Å bytte nivå er en
+   designbeslutning, ikke en opprydding — den ligger i rapporten, ikke her. */
+.outfit-comparison { background: var(--dw-raised); border: 1px solid var(--dw-hairline); box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised); color: inherit; inline-size: auto; margin-block: 1rem; max-inline-size: 100%; padding: 1rem; position: static; }
 /* Under 448 px legges detaljen på egen linje. Radhøyden blir da ~98 px, og
    det er MENINGEN — se DoD-notatet: to linjer er designet, ikke en brist. */
 @media (max-width: 28rem) { .outfit-row { align-items: flex-start; } .outfit-row__detail { flex-basis: calc(100% - 5.95rem); margin-inline-start: 5.95rem; text-align: start; } }

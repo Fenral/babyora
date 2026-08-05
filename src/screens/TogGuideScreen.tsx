@@ -321,6 +321,9 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     borderRadius: 14,
     background: 'var(--dw-raised)',
     border: '1px solid var(--dw-hairline)',
+    // D2: hevet fyll uten lyslogikk. Knappen ER et materiale man trykker på,
+    // så retten er å gi den lyset — ikke å fjerne fyllet.
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -333,7 +336,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     WebkitBackdropFilter: 'blur(12px)',
     transition: reducedMotion
       ? 'none'
-      : 'transform var(--dw-m-feedback) var(--ease-standard)',
+      : 'transform var(--dw-m-feedback) var(--dw-ease)',
   };
 
   const topbarTitleStyle: CSSProperties = {
@@ -361,6 +364,10 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     overflowY: 'auto',
     overflowX: 'hidden',
     WebkitOverflowScrolling: 'touch',
+    // D4: scroll kommuniseres med bunn-fade, ikke med hardt klipp.
+    // Husmønsteret (hjem-monter.css, sheet.css, kle-paa-stepper.css).
+    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
     padding: '8px 20px calc(40px + env(safe-area-inset-bottom, 0px))',
     display: 'flex',
     flexDirection: 'column',
@@ -427,7 +434,9 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     padding: 'var(--dw-space-24) var(--dw-space-22) var(--dw-space-22)',
     background: 'var(--dw-raised)',
     border: '1px solid var(--dw-hairline)',
-    boxShadow: 'var(--shadow-3)',
+    // D2: --shadow-3 var ett flatt lag fra det parallelle legacy-settet og bar
+    // ikke inset topplys. Erstattet av dybdekontraktens egen stabel.
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
     overflow: 'hidden',
@@ -606,7 +615,11 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     borderRadius: '50%',
     background: 'var(--dw-overlay)',
     border: '3px solid var(--dw-accent)',
-    boxShadow: 'var(--shadow-2), 0 0 0 1px var(--dw-hairline)',
+    // D2: knotten er en hevet flate. Hårstreksringen beholdes uendret; det
+    // som byttes er det flate legacy-laget --shadow-2 → dybdekontrakten,
+    // og topplyset som manglet.
+    boxShadow:
+      'inset 0 1px 0 var(--dw-plate-kant), 0 0 0 1px var(--dw-hairline), var(--dw-depth-raised)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -616,7 +629,11 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     color: 'var(--dw-accent)',
     fontVariantNumeric: 'tabular-nums',
     pointerEvents: 'none',
-    transition: reducedMotion ? 'none' : 'left 160ms var(--ease-standard)',
+    // 160 ms rått → nærmeste token er --dw-m-marker (180 ms), som dessuten er
+    // den semantisk riktige: knotten ER en markør som flytter seg.
+    transition: reducedMotion
+      ? 'none'
+      : 'left var(--dw-m-marker) var(--dw-ease)',
   };
 
   // Native range-input ligger usynlig over track for ekte input-events.
@@ -658,7 +675,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     WebkitTapHighlightColor: 'transparent',
     transition: reducedMotion
       ? 'none'
-      : 'background var(--dw-m-feedback) var(--ease-standard)',
+      : 'background var(--dw-m-feedback) var(--dw-ease)',
   };
 
   // Section eyebrow ------------------------------------------------------
@@ -713,7 +730,10 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     borderRadius: 22,
     background: 'var(--dw-raised)',
     border: '1px solid var(--dw-hairline)',
-    boxShadow: 'var(--shadow-2)',
+    // D2: usynlig for porten (objektet har en ${…}-interpolasjon, så
+    // inline-regexet slipper det), men samme gjeld — legacy --shadow-2 uten
+    // topplys. Rettet med den kompatible formen.
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
     overflow: 'hidden',
     borderLeft: `4px solid ${LAYER_STRIPE[variant]}`,
     // Button-reset for klikkbar lag-rad
@@ -728,19 +748,24 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     WebkitTapHighlightColor: 'transparent',
     transition: reducedMotion
       ? 'none'
-      : 'transform var(--dw-m-feedback) var(--ease-standard), border-color var(--dw-m-feedback) var(--ease-standard)',
+      : 'transform var(--dw-m-feedback) var(--dw-ease), border-color var(--dw-m-feedback) var(--dw-ease)',
   });
 
+  // D2 + D3: fyllet var --dw-raised — NØYAKTIG samme flate som kortet den
+  // ligger på, altså en plate som ikke fantes visuelt. Vitrinen får husets
+  // plate-behandling (.hjm-thumb / .kps-alt-thumb): --dw-plate ett hakk over
+  // verten, med topplys og den tettere dybden som hører små flater til.
   const layerThumbStyle: CSSProperties = {
     width: 64,
     height: 64,
     flex: 'none',
     borderRadius: 18,
-    background: 'var(--dw-raised)',
+    background: 'var(--dw-plate)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    border: '1px solid var(--dw-hairline)',
+    border: '1px solid var(--dw-plate-kant)',
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected)',
   };
 
   const layerMetaStyle: CSSProperties = {
@@ -788,12 +813,16 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     border: '1px solid var(--terracotta-200)',
   };
 
+  // D2, løst ved å FJERNE hevingen, ikke ved å pynte den: boksen lå med
+  // nivå-2-fyll (--dw-raised) oppå sikkerhetsnotisens nivå-4-flate
+  // (--dw-accent-surface). En lavere flate kan ikke ligge over en høyere, og
+  // ikonrammen har ingen hierarkisk grunn til å heve seg over sin egen notis.
+  // Ringen blir stående; det er den som gir ikonet en ramme.
   const safetyIconWrapStyle: CSSProperties = {
     width: 40,
     height: 40,
     flex: 'none',
     borderRadius: 14,
-    background: 'var(--dw-raised)',
     border: '1px solid var(--terracotta-200)',
     display: 'flex',
     alignItems: 'center',

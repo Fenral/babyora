@@ -38,6 +38,14 @@
      under), så den kan ikke stole på .app-shell > main sin padding alene. */
   padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px var(--dw-tabbar-clearance, 90px);
   overflow: hidden auto;
+  /* D4: skjermrotet ER en rullecontainer (linjen over), og en rulleflate som
+     kuttes hardt sier ikke at det er mer under. Samme oppskrift som resten av
+     appen (.hjm-result nede i arket, .dw-sheet-innhold, Plaggbiblioteket).
+     Faden treffer ogsa flatens EGEN gradient, men koster ingenting: nederst
+     er gradienten --dw-rom-fjern, som i morkt tema ER --dw-canvas — altsa
+     noyaktig samme farge som body under. Sonen (nederste 8 %) ligger dessuten
+     bak den flytende tab-baren. */
+  mask-image: linear-gradient(to bottom, black 92%, transparent 100%);
 
   /* R1 (2026-08-03): flatene her forbruker DYBDEKONTRAKTEN (--dw-depth-*),
      ikke sine egne skygger.
@@ -493,7 +501,9 @@
 .hjm-mascot-glance {
   z-index: 4;
   opacity: 0;
-  transition: opacity 300ms ease-out;
+  /* Glimtet er atmosfaere, ikke tilstand: --dw-m-atmo er noyaktig de 300 ms
+     som stod her ra, og kurven kommer fra kontrakten som alt annet. */
+  transition: opacity var(--dw-m-atmo) var(--dw-ease);
 }
 .hjm-mascot-glance[data-glancing='true'] { opacity: 1; }
 .hjm-mascot-glance[data-animate='false'] { transition: none !important; }
@@ -814,7 +824,11 @@
 .hjm-rows[data-fresh='true'] .hjm-row {
   opacity: 0;
   transform: translateY(10px);
-  animation: hjm-row-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* 0.42s var eksakt --dw-m-bow-in (420 ms); kurven kommer na fra --dw-ease.
+     NB om NAVNET: tokenet heter «bow» etter maskotens boyning, men det er
+     kontraktens 420 ms — samme tall, ikke et nytt. Se rapporten: et
+     --dw-m-entry med samme verdi ville sagt det bedre. */
+  animation: hjm-row-in var(--dw-m-bow-in) var(--dw-ease) forwards;
 }
 .hjm-row { transition: transform var(--dw-m-feedback) var(--dw-ease), background var(--dw-m-feedback) var(--dw-ease); }
 .hjm-row:active { background: rgba(241, 233, 218, 0.05); transform: scale(0.985); }

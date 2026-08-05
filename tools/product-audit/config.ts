@@ -14,6 +14,13 @@ export const RUBRIC: ReadonlyArray<AuditDimension> = [
 ] as const;
 
 const wait = { type: 'wait', milliseconds: 700 } as const;
+/**
+ * Seremonien etter «Finn dagens antrekk» tar 3,2 s (FULL_SCAN_DURATION_MS).
+ * MÅLT 2026-08-05: to av tre falne ruter falt her — de ventet 700 ms og lette
+ * så etter en knapp som ennå ikke fantes. Feilen så ut som en manglende
+ * knapp; den var en for utålmodig klokke.
+ */
+const ventScan = { type: 'wait', milliseconds: 3900 } as const;
 const tab = (name: string) => ({ type: 'tab', name } as const);
 const text = (pattern: string) => ({ type: 'text', pattern } as const);
 const button = (pattern: string) => ({ type: 'button', pattern } as const);
@@ -32,14 +39,22 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
   {
     id: 'outfit', label: 'Påkledning', appWeight: 12,
     role: 'Gjøre Babyoras kjerneanbefaling presis, forståelig og tillitsvekkende.',
-    states: [{ id: 'recommendation', label: 'Antrekksdetaljer', required: true, actions: [tab('Hjem'), button('Se dagens antrekk|Se påkledning|Påkledning'), wait] }],
+    /* RETTET 2026-08-05. Lette etter «Se dagens antrekk|Se påkledning|
+       Påkledning» — ingen av dem finnes. Knappen på Hjem heter «Kle på,
+       steg for steg», og fra fase 4 fører den til Kle på-stepperen, ikke
+       til den gamle listeflaten. Det ER kjerneanbefalingens flate nå, så
+       revisjonen skal måle den. */
+    states: [{
+      id: 'recommendation', label: 'Antrekket, steg for steg', required: true,
+      actions: [tab('Hjem'), wait, button('Finn dagens antrekk'), ventScan, button('Kle på, steg for steg'), wait],
+    }],
   },
   {
     id: 'find-outfit', label: 'Juster', appWeight: 6,
     role: 'Bevise at antrekket kan justeres manuelt fra dagens vær og aktivitet uten å forlate den fasit-baserte anbefalingen.',
     states: [{
       id: 'default', label: 'Juster-drillen (sliders prefylt fra Hjems resultat)', required: true,
-      actions: [tab('Hjem'), wait, button('Finn dagens antrekk'), wait, button('Juster'), wait],
+      actions: [tab('Hjem'), wait, button('Finn dagens antrekk'), ventScan, button('Juster'), wait],
     }],
   },
   {
@@ -73,7 +88,12 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
     role: 'Vise plagg som informativ referanse når «Bytt» eller plagg-detaljen ikke dekker det brukeren leter etter.',
     states: [{
       id: 'default', label: 'Biblioteket via garment-radens Bytt → Se alternativer i biblioteket', required: true,
-      actions: [tab('Hjem'), wait, button('Finn dagens antrekk'), wait, button('Bytt'), wait, button('Se alternativer i biblioteket'), wait],
+      /* RETTET 2026-08-05: ventet 700 ms på et resultat som tar 3,2 s, OG
+         lette etter en knapp merket «Bytt». Raden het «Bytt» én gang, men
+         ble døpt om (se MonterGarmentRow-hodet, P10.1) — den tilgjengelige
+         etiketten er nå «<plagg>, <rolle>. Detaljer.». Vi treffer den på
+         «Detaljer», som er den delen som ikke varierer med plagget. */
+      actions: [tab('Hjem'), wait, button('Finn dagens antrekk'), ventScan, button('Detaljer'), wait, button('Se alternativer i biblioteket'), wait],
     }],
   },
   {

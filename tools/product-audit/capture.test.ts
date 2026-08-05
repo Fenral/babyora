@@ -24,9 +24,43 @@ describe('capture plan', () => {
     expect(() => assertReadOnlyAction('text')).not.toThrow();
   });
 
-  it('builds deterministic local weather instead of loading the Vercel function through Vite', () => {
-    const fixture = buildForecastFixture(new Date('2026-01-15T06:00:00.000Z'));
-    expect(fixture.properties.timeseries).toHaveLength(72);
-    expect(fixture.properties.timeseries[0]?.data.instant.details.air_temperature).toBe(-4);
+  it('bruker den DELTE værfixturen, og den er gyldig for klienten', () => {
+    /* OMSKREVET 2026-08-05. Testen låste tidligere revisjonens EGEN fixtur:
+       72 punkter, første på -4 °C. Den fixturen sendte `units: {}`, som
+       klienten forkaster — så testen bevoktet formen på noe som ikke virket.
+       Nå deles e2e-fixturen. Assertionene måler derfor det som FAKTISK
+       avgjør om appen får vær: at kontrakten er oppfylt. */
+    const fixture = buildForecastFixture();
+    const ts = fixture.properties.timeseries;
+
+    expect(ts.length, "en tom serie ville gitt appen ingen vær").toBeGreaterThan(0);
+
+    /* DET SOM VELTET DEN GAMLE: klienten krever at units matcher
+       CONSUMED_UNIT_CONTRACT eksakt. Er dette tomt, forkastes hele svaret,
+       CTA-en står disabled, og skjermer blir uoppnåelige — stille. */
+    const units = fixture.properties.meta.units;
+    for (const felt of [
+      'air_temperature', 'precipitation_amount', 'wind_speed',
+      'wind_from_direction', 'relative_humidity', 'cloud_area_fraction',
+    ]) {
+      expect(units, `units.${felt} mangler — klienten forkaster svaret`)
+        .toHaveProperty(felt);
+    }
+
+    /* Hvert punkt må bære det motoren leser. */
+    const forste = ts[0];
+    expect(forste?.data.instant.details.air_temperature).toBeTypeOf("number");
+    expect(forste?.data.next_1_hours?.summary.symbol_code).toBeTypeOf("string");
+
+    /* Tidsaksen må dekke NÅ. En fixtur forankret til en fast dato driver inn
+       i fortiden, og da har appen ingen prognose for øyeblikket den står i.
+       Det var nøyaktig den andre halvdelen av funnet 2026-08-05. */
+    const forsteTid = new Date(forste.time).getTime();
+    const sisteTid = new Date(ts[ts.length - 1].time).getTime();
+    const naa = Date.now();
+    expect(forsteTid, "serien starter etter nå — appen får ingen prognose")
+      .toBeLessThanOrEqual(naa);
+    expect(sisteTid, "serien slutter før nå — fixturen har drevet i fortiden")
+      .toBeGreaterThan(naa);
   });
 });

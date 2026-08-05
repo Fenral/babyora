@@ -12,11 +12,25 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--ink, #2b2b2b) 18%, transparent);
+  /* ═══ RÅ VERDIER UT 2026-08-05 (D7 + D2) ════════════════════════════════
+   * Klonen er plagget i FLUKT: en brikke som ligger over hele appen mens den
+   * flyr fra listen til avataren. Den bar fire rå verdier — #2b2b2b to
+   * ganger, #fff, og en px-skygge i rgb() — alle bak legacy-tokens (--ink,
+   * --surface) som ikke lenger flipper med temaet. I mørk modus tegnet
+   * fallbacken en HVIT brikke på et espresso-lerret dersom legacy-laget ikke
+   * var lastet.
+   * MÅLT: fargene er identiske etter oppslag — legacy-laget sier selv
+   * `--surface: var(--dw-raised)` og `--ink-900: var(--dw-ink-hi)`. Det som
+   * FAKTISK endrer seg er tre ting, sagt rett ut: brikken er nå helt opak
+   * (var 92 %), kanten er hårstreken (0.12 mot 0.18), og skyggen er
+   * dybdekontraktens i stedet for en flat px-verdi. Opakheten er med vilje:
+   * en brikke i flukt er en gjenstand, ikke et kalkerpapir — og den fader
+   * uansett ut via opacity-animasjonen i komponenten. */
+  border: 1px solid var(--dw-hairline);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--surface, #fff) 92%, transparent);
-  box-shadow: 0 8px 24px rgb(43 43 43 / 14%);
-  color: var(--ink, #2b2b2b);
+  background: var(--dw-raised);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised);
+  color: var(--dw-ink-hi);
   font: inherit;
   line-height: 1;
   transform-origin: 0 0;

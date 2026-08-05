@@ -52,7 +52,9 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
   {
     ...WARM_COLD_RECOVERY_COPY.statuses.warm,
     num: '1',
-    iconBg: 'var(--dw-raised)',
+    // --dw-plate, ikke --dw-raised: ikonrammen ligger PÅ statuskortet, som
+    // selv er --dw-raised. Se iconWrapStyle.
+    iconBg: 'var(--dw-plate)',
     iconColor: 'var(--dw-danger)',
     dotColor: 'var(--dw-danger)',
     actionColor: 'var(--dw-ink-mid)',
@@ -69,7 +71,7 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
   {
     ...WARM_COLD_RECOVERY_COPY.statuses.perfekt,
     num: '2',
-    iconBg: 'var(--dw-raised)',
+    iconBg: 'var(--dw-plate)',
     iconColor: 'var(--dw-success)',
     dotColor: 'var(--dw-success)',
     actionColor: 'var(--dw-accent)',
@@ -83,7 +85,7 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
   {
     ...WARM_COLD_RECOVERY_COPY.statuses.cold,
     num: '3',
-    iconBg: 'var(--dw-raised)',
+    iconBg: 'var(--dw-plate)',
     iconColor: 'var(--dw-warning)',
     dotColor: 'var(--dw-warning)',
     actionColor: 'var(--dw-ink-mid)',
@@ -161,6 +163,10 @@ export function VarmEllerKaldScreen({
     background:
       pressedKey === 'back' ? 'var(--dw-overlay)' : 'var(--dw-raised)',
     border: '1px solid var(--dw-hairline)',
+    // D2: usynlig for porten (fyllet står bak en ternær, ikke bak et
+    // strenglitteral), men samme gjeld som de to andre tilbakeknappene i
+    // guidene. Samme rett: knappen er et materiale, den får lyset.
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -197,6 +203,10 @@ export function VarmEllerKaldScreen({
     flexDirection: 'column',
     gap: 'var(--dw-space-14)',
     WebkitOverflowScrolling: 'touch',
+    // D4: bunn-fade i stedet for hardt klipp — husmønsteret fra
+    // hjem-monter.css / sheet.css / kle-paa-stepper.css.
+    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
   };
 
   // ── Hero card ──
@@ -206,9 +216,11 @@ export function VarmEllerKaldScreen({
     border: '1px solid var(--dw-hairline)',
     borderRadius: 22,
     padding: 'var(--dw-space-16) var(--dw-space-16) var(--dw-space-14)',
-    // --shadow-2 IKKE migrert: 0 4px 14px (ett lag) mot --dw-depth-raised sine tre
-    // retningsbestemte lag — ulik verdi, ville endret kortets dybde synlig.
-    boxShadow: 'var(--shadow-2)',
+    // D2. Merknaden her sa at --shadow-2 IKKE ble migrert fordi verdien ville
+    // endret seg synlig. Det er riktig observert og feil konklusjon: ett
+    // retningsløst lag uten inset topplys ER bruddet, og at retten synes er
+    // hele poenget. Migrert til dybdekontraktens form.
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
     display: 'flex',
     gap: 'var(--dw-space-14)',
     alignItems: 'center',
@@ -299,8 +311,8 @@ export function VarmEllerKaldScreen({
     background: 'var(--dw-raised)',
     border: '1px solid var(--dw-hairline)',
     borderRadius: 18,
-    // --shadow-2 IKKE migrert, se heroStyle.
-    boxShadow: 'var(--shadow-2)',
+    // D2, se heroStyle.
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
     overflow: 'hidden',
     listStyle: 'none',
     padding: 0,
@@ -308,6 +320,10 @@ export function VarmEllerKaldScreen({
   };
 
   // ── Footnote ──
+  // D2, løst ved å FJERNE hevingen. Fotnoten er den mest underordnede teksten
+  // på skjermen; med hevet fyll lå den i samme materiale som heltekortet og
+  // statuslista den skal stå TILBAKE for. Den har ingen hierarkisk grunn til å
+  // løftes, så fyllet er borte og hårstreken blir stående som ramme på lerretet.
   const footnoteStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'flex-start',
@@ -315,7 +331,6 @@ export function VarmEllerKaldScreen({
     // 11px/13px står utenfor 2-punktsskalaen — ikke avrundet.
     padding: '11px 13px',
     borderRadius: 14,
-    background: 'var(--dw-raised)',
     border: '1px solid var(--dw-hairline)',
   };
 
@@ -530,17 +545,16 @@ export function VarmEllerKaldScreen({
                   cy={16}
                   r={13}
                   fill="none"
-                  stroke="var(--dw-accent-surface, #F4E4D8)"
+                  stroke="var(--dw-accent-surface)"
                   strokeOpacity={0.5}
                   strokeWidth={2}
                 />
                 {/* Orb (14px diameter → r=7, terracotta-600) */}
-                <circle
-                  cx={16}
-                  cy={16}
-                  r={7}
-                  fill="var(--dw-accent, #B4502E)"
-                />
+                {/* D7: fallbackene (#F4E4D8 / #B4502E) er fjernet. Tokenene
+                    finnes i design-tokens-v2.css, så fallbacken var en kopi
+                    som ikke fulgte med når tokenet flippet tema — samme
+                    dødvekt som ble ryddet i Antrekkskart.css (fase 6B). */}
+                <circle cx={16} cy={16} r={7} fill="var(--dw-accent)" />
               </svg>
             </div>
           </div>
@@ -602,8 +616,14 @@ export function VarmEllerKaldScreen({
               fontWeight: 700,
               letterSpacing: '0.2px',
               color: 'var(--dw-ink-mid)',
-              background: 'var(--dw-raised)',
-              border: '1px solid var(--dw-hairline)',
+              // D2: fyllet var --dw-raised — samme flate som statuskortet
+              // merket ligger på, altså en plate uten synlig eksistens.
+              // Husets plate-behandling (.hjm-thumb) gir den ett hakk over
+              // verten, med topplys og den tettere dybden for små flater.
+              background: 'var(--dw-plate)',
+              border: '1px solid var(--dw-plate-kant)',
+              boxShadow:
+                'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected)',
             };
 
             const iconWrapStyle: CSSProperties = {
@@ -614,7 +634,13 @@ export function VarmEllerKaldScreen({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              // Samme plate-behandling som numStyle, så de to brikkene i raden
+              // leser som ett materiale i stedet for to.
               background: row.iconBg,
+              border: '1px solid var(--dw-plate-kant)',
+              boxShadow:
+                'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected)',
+              boxSizing: 'border-box',
               color: row.iconColor,
             };
 

@@ -20,7 +20,7 @@
  * Tap på rad → PlaggDetailSheet (pros/cons + alternativer). Focus returneres
  * til rad-trigger ved lukk.
  */
-import { useEffect, useRef, type ReactElement } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactElement } from 'react';
 import type { Recommendation } from '../lib/wool-layers/types';
 import {
   avatarPng,
@@ -188,6 +188,57 @@ function PklFocusRing(): ReactElement {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
+   FLATENE — to svar på D2, ikke ett
+   ──────────────────────────────────────────────────────────────────────────
+
+   Åtte inline-objekter i denne filen bar hevet fyll uten lyslogikk. De er
+   ikke samme sak, og de får derfor ikke samme retting:
+
+   1) SEKSJONSPLATENE (fem stykker) ER gruppeflater. Hver samler et eget
+      innholdshierarki — situasjon, rekkefølge, hvorfor — på et lerret. At de
+      er hevet er riktig; det som manglet var lyset. De får husets kompatible
+      form: inset topplys + dybde i SAMME box-shadow. Fyllet står urørt
+      (--surface-pure/--surface-soft), så fargen på skjermen endres ikke.
+
+   2) LUKKEKNAPPEN (tre steder) er en KONTROLL, ikke et materiale. Den bar
+      pure-fyll og en hairline-kant, altså et lite hevet fat uten lys. Å pynte
+      det med --dw-depth-raised ville lagt en 56 px bred skygge under en 44 px
+      sirkel — dybden ville sagt «her ligger et lag» der det bare ligger en
+      knapp. Riktig retting er å FJERNE det hevede fyllet. Husets egen
+      lukkeknapp gjør nettopp dette (.kps-close i kle-paa-stepper.css:69:
+      transparent, ingen kant, 44×44). Trykkmålet og den designede
+      fokusringen (PKL_FOCUS_RING_CSS) står uendret; radius 999 blir igjen
+      slik at ringen fortsatt leser som en sirkel.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Tallene som sto her (18 / 20 / 44 / 999) var råverdier som TILFELDIGVIS
+   traff skalaen. De går nå gjennom tokenet som eier verdien, med samme px:
+   --dw-space-18 = 18, --dw-r-panel = 20, --dw-size-touch = 44, --dw-r-pill
+   = 999. Ingen piksel flytter seg; verdien slutter bare å være en kopi. */
+const PKL_PLATE: CSSProperties = {
+  padding: 'var(--dw-space-18)',
+  borderRadius: 'var(--dw-r-panel)',
+  background: 'var(--surface-pure)',
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
+};
+
+const PKL_PLATE_SOFT: CSSProperties = {
+  padding: 'var(--dw-space-18)',
+  borderRadius: 'var(--dw-r-panel)',
+  background: 'var(--surface-soft)',
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
+};
+
+const PKL_CLOSE: CSSProperties = {
+  width: 'var(--dw-size-touch)',
+  height: 'var(--dw-size-touch)',
+  borderRadius: 'var(--dw-r-pill)',
+  border: 0,
+  background: 'transparent',
+  color: 'var(--ink-900)',
+};
+
+/* ──────────────────────────────────────────────────────────────────────────
    Komponent
    ────────────────────────────────────────────────────────────────────────── */
 
@@ -300,14 +351,7 @@ function PlannedPaakledningScreen({
               className="pkl-close"
               onClick={onBack}
               aria-label="Lukk planlagt antrekk"
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 999,
-                border: '1px solid var(--ink-100)',
-                background: 'var(--surface-pure)',
-                color: 'var(--ink-900)',
-              }}
+              style={PKL_CLOSE}
             >
               <CloseIcon />
             </button>
@@ -366,14 +410,7 @@ function PlannedPaakledningScreen({
               className="pkl-close"
               onClick={onBack}
               aria-label={isCurrentContext ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 999,
-                border: '1px solid var(--ink-100)',
-                background: 'var(--surface-pure)',
-                color: 'var(--ink-900)',
-              }}
+              style={PKL_CLOSE}
             >
               <CloseIcon />
             </button>
@@ -397,7 +434,7 @@ function PlannedPaakledningScreen({
 
           <section
             aria-label={isCurrentContext ? 'Dagens situasjon' : 'Planlagt situasjon'}
-            style={{ padding: 18, borderRadius: 20, background: 'var(--surface-pure)', marginBottom: 16 }}
+            style={{ ...PKL_PLATE, marginBottom: 'var(--dw-space-16)' }}
           >
             <p style={{ margin: '0 0 8px', fontWeight: 700, textTransform: 'capitalize' }}>
               {plannedDateTime}
@@ -423,7 +460,7 @@ function PlannedPaakledningScreen({
 
           <section
             aria-labelledby="planned-why-title"
-            style={{ padding: 18, borderRadius: 20, background: 'var(--surface-soft)', marginTop: 16 }}
+            style={{ ...PKL_PLATE_SOFT, marginTop: 'var(--dw-space-16)' }}
           >
             <h3 id="planned-why-title" style={{ margin: '0 0 8px' }}>Hvorfor dette antrekket?</h3>
             <p style={{ margin: 0, lineHeight: 1.55 }}>
@@ -469,14 +506,7 @@ function PlannedPaakledningScreen({
             className="pkl-close"
             onClick={onBack}
             aria-label={isCurrentContext ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 999,
-              border: '1px solid var(--ink-100)',
-              background: 'var(--surface-pure)',
-              color: 'var(--ink-900)',
-            }}
+            style={PKL_CLOSE}
           >
             <CloseIcon />
           </button>
@@ -500,7 +530,7 @@ function PlannedPaakledningScreen({
 
         <section
           aria-label={isCurrentContext ? 'Dagens situasjon' : 'Planlagt situasjon'}
-          style={{ padding: 18, borderRadius: 20, background: 'var(--surface-pure)', marginBottom: 16 }}
+          style={{ ...PKL_PLATE, marginBottom: 'var(--dw-space-16)' }}
         >
           <p style={{ margin: '0 0 8px', fontWeight: 700, textTransform: 'capitalize' }}>
             {plannedDateTime}
@@ -518,7 +548,7 @@ function PlannedPaakledningScreen({
 
         <section
           aria-labelledby="planned-garments-title"
-          style={{ padding: 18, borderRadius: 20, background: 'var(--surface-pure)', marginBottom: 16 }}
+          style={{ ...PKL_PLATE, marginBottom: 'var(--dw-space-16)' }}
         >
           <h3 id="planned-garments-title" style={{ margin: '0 0 12px' }}>
             Påkledningsrekkefølge
@@ -542,7 +572,7 @@ function PlannedPaakledningScreen({
 
         <section
           aria-labelledby="planned-why-title"
-          style={{ padding: 18, borderRadius: 20, background: 'var(--surface-soft)' }}
+          style={PKL_PLATE_SOFT}
         >
           <h3 id="planned-why-title" style={{ margin: '0 0 8px' }}>Hvorfor dette antrekket?</h3>
           <p style={{ margin: 0, lineHeight: 1.55 }}>

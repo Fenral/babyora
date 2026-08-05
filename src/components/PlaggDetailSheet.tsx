@@ -205,6 +205,10 @@ export function PlaggDetailSheet({
         color: 'var(--dw-ink-hi)',
         maxHeight: '92vh',
         overflow: 'hidden',
+        // D2: arket ER den hevede flaten i denne skjermen — det svever over
+        // appen. Da skal det bære lyslogikk, ikke bare et fyll: inset topplys
+        // på overkanten (som er den kanten brukeren ser gli inn) + dybden.
+        boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
       }}
     >
       <div
@@ -229,7 +233,16 @@ export function PlaggDetailSheet({
           }}
         />
 
-        {/* Topbar */}
+        {/* Topbar.
+            D2: headeren hadde `background: var(--dw-overlay)` — nøyaktig
+            samme farge som dialogen den ligger rett oppå. Det var altså ikke
+            en ny hevet flate, bare arkets eget materiale malt en gang til, og
+            å gi den lyslogikk ville skapt et andre plan som ikke finnes.
+            Fyllet er derfor FJERNET, ikke pyntet (null pikselendring).
+            `position: sticky` fulgte med ut: headeren er SØSKEN av
+            scroll-diven under, ikke barn av den, så ingenting har noen gang
+            scrollet under den — stickyen kunne aldri feste seg, og et
+            gjennomsiktig sticky-felt hadde vært en felle for neste leser. */}
         <header
           style={{
             display: 'flex',
@@ -237,10 +250,6 @@ export function PlaggDetailSheet({
             gap: 'var(--dw-space-12)',
             padding: 'var(--dw-space-8) var(--dw-space-20) var(--dw-space-12)',
             borderBottom: '1px solid var(--dw-hairline)',
-            position: 'sticky',
-            top: 0,
-            background: 'var(--dw-overlay)',
-            zIndex: 1,
           }}
         >
           <button
@@ -283,8 +292,18 @@ export function PlaggDetailSheet({
           </h2>
         </header>
 
-        {/* Scrollable body */}
-        <div style={{ overflowY: 'auto', padding: 'var(--dw-space-8) var(--dw-space-20) var(--dw-space-24)' }}>
+        {/* Scrollable body.
+            D4: en scroll-flate skal si fra at det er mer under. Bunn-faden er
+            husets egen (samme rampe som sheet.css, hjem-monter.css og
+            kle-paa-stepper.css) — ikke en ny verdi. */}
+        <div
+          style={{
+            overflowY: 'auto',
+            padding: 'var(--dw-space-8) var(--dw-space-20) var(--dw-space-24)',
+            maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+          }}
+        >
           {/* Hero — glow + kategori-fargede skygge + kategori-badge (F84) */}
           <div
             className={reducedMotion ? undefined : 'plagg-stagger'}
@@ -417,24 +436,14 @@ export function PlaggDetailSheet({
               style={{ marginBottom: 0, '--stagger-i': 4 } as React.CSSProperties}
             >
               <h3 style={eyebrowStyle}>Alternative plagg</h3>
-              <ul
-                role="list"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 'var(--dw-space-10)',
-                  listStyle: 'none',
-                  padding: 0,
-                  margin: 0,
-                }}
-              >
-                {alternatives.map((a) => {
+              <ul role="list" style={alternativesGroupStyle}>
+                {alternatives.map((a, i) => {
                   // a.name kan være enten en database-streng (norsk) eller en
                   // GarmentId. Prøv garmentIdFor() først; ellers bruk navnet
                   // direkte (mest sannsynlig allerede en gyldig id).
                   const altId = garmentIdFor(a.name) ?? (a.name as GarmentId);
                   return (
-                  <li key={a.name} style={alternativeInfoRowStyle}>
+                  <li key={a.name} style={alternativeInfoRowStyle(i === 0)}>
                       <span aria-hidden="true" style={altThumbWrapStyle}>
                         <img
                           src={garmentPng(altId)}
@@ -520,17 +529,20 @@ export function PlaggDetailSheet({
         .plagg-detail-sheet[open] {
           animation: plagg-sheet-in 400ms cubic-bezier(0.32, 0.72, 0, 1);
         }
+        /* Backdropen følger arket sitt i stedet for å ha eget tall: --dw-m-push
+           inn, --dw-m-push-back ut. Kontrakten har ikke noe eget scrim-token,
+           og --dw-m-atmo er reservert lyspoolen («ALDRI transform»). */
         .plagg-detail-sheet[open]::backdrop {
-          animation: plagg-backdrop-in 250ms ease-out;
+          animation: plagg-backdrop-in var(--dw-m-push) var(--dw-ease);
         }
-        /* 280ms === --dw-m-push-back («ut», eksakt samme tall) — kun navnet
-           er byttet, varigheten er uendret. Kurvene står som de var: ingen
-           av dem er lik --dw-ease (0.2, 0.7, 0.2, 1). */
+        /* 280ms === --dw-m-push-back («ut», eksakt samme tall). Kurvene er nå
+           også kontraktens: begge var egne dialekter (0.19,1,0.22,1 og
+           ease-out) uten annen begrunnelse enn at de ble skrevet der. */
         .plagg-detail-sheet[data-closing] {
-          animation: plagg-sheet-out var(--dw-m-push-back) cubic-bezier(0.19, 1, 0.22, 1) forwards;
+          animation: plagg-sheet-out var(--dw-m-push-back) var(--dw-ease) forwards;
         }
         .plagg-detail-sheet[data-closing]::backdrop {
-          animation: plagg-backdrop-out var(--dw-m-push-back) ease-out forwards;
+          animation: plagg-backdrop-out var(--dw-m-push-back) var(--dw-ease) forwards;
         }
         @media (prefers-reduced-motion: reduce) {
           .plagg-detail-sheet[open],
@@ -575,11 +587,14 @@ export function PlaggDetailSheet({
           from { opacity: 0; transform: translateY(14px); }
           to   { opacity: 1; transform: none; }
         }
-        /* 340ms === --dw-m-push (vertikal inn, eksakt samme tall). Kurven og
-           forsinkelsen står uendret — --ease-out er ikke --dw-ease, og 45ms
-           finnes ikke i bevegelseskontrakten. */
+        /* 340ms === --dw-m-push (vertikal inn, eksakt samme tall), og kurven
+           er nå kontraktens --dw-ease i stedet for legacy-familiens
+           --ease-out. FORSINKELSEN står igjen som gjeld med vilje: 45ms er et
+           stagger-STEG, og bevegelseskontrakten starter på 120ms — det finnes
+           ikke noe token å bruke, og å oppfinne ett her ville laget en
+           kontrakt på siden av kontrakten. Rapportert som manglende token. */
         .plagg-stagger {
-          animation: plagg-item-in var(--dw-m-push) var(--ease-out) both;
+          animation: plagg-item-in var(--dw-m-push) var(--dw-ease) both;
           animation-delay: calc(120ms + var(--stagger-i, 0) * 45ms);
         }
         @media (prefers-reduced-motion: reduce) {
@@ -640,6 +655,9 @@ const leadStyle: React.CSSProperties = {
   margin: '0 0 var(--dw-space-24)',
 };
 
+/* D2: ekte hevede gruppeflater (et faktakort og et avveiningskort er egne
+   soner i arket, ikke bare tekst) — så de skal bære lyslogikk: inset topplys
+   på overkanten + dybden under. Samme form på begge, med vilje. */
 const factCardStyle: React.CSSProperties = {
   background: 'var(--dw-raised)',
   border: '1px solid var(--dw-hairline)',
@@ -648,6 +666,7 @@ const factCardStyle: React.CSSProperties = {
   display: 'flex',
   gap: 'var(--dw-space-12)',
   marginBottom: 'var(--dw-space-24)',
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
 };
 
 const factBodyStyle: React.CSSProperties = {
@@ -666,6 +685,7 @@ const traitCardStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
   gap: 'var(--dw-space-16)',
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
 };
 
 const traitListStyle: React.CSSProperties = {
@@ -690,6 +710,16 @@ const traitGlyphStyle: React.CSSProperties = {
   fontWeight: 700,
 };
 
+/**
+ * Vitrinen rundt alternativ-thumben (D3).
+ *
+ * Var `var(--dw-raised)` — nivå 2, altså en HEVET plate. Men den er 56 px,
+ * ligger inne i en flate som nå selv er nivå 2, og rendret hele tiden MØRKERE
+ * enn forelderen: en brønn som het «hevet». Å gi den dybde ville lagt en
+ * slagskygge på hver eneste miniatyr, som er nettopp effekt-inflasjonen
+ * doktrinen advarer mot. Riktig materiale for et utstillingsskrin er rommet
+ * bak — `var(--dw-canvas)` — så plagget står I flaten, ikke oppå den.
+ */
 const altThumbWrapStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
@@ -697,25 +727,42 @@ const altThumbWrapStyle: React.CSSProperties = {
   width: 56,
   height: 56,
   flexShrink: 0,
-  background: 'var(--dw-raised)',
+  background: 'var(--dw-canvas)',
   borderRadius: 'var(--r-md)',
   padding: 'var(--dw-space-6)',
 };
 
-const alternativeInfoRowStyle: React.CSSProperties = {
+/**
+ * D1/D2: alternativ-listen var N frittstående kort — hver rad med egen kant,
+ * egen `--shadow-1` (et legacy-token utenfor --dw-*) og et fyll som var
+ * IDENTISK med arkets eget (`--dw-overlay` på `--dw-overlay`). Fem kort som
+ * svever hver for seg er fem hierarkier; doktrinen vil ha ÉN hevet
+ * gruppeflate med hårstreker imellom — samme form som PaywallDialogs
+ * `sheetStyle` allerede bruker. Gruppen bærer dybden, radene bærer skillet.
+ */
+const alternativesGroupStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  listStyle: 'none',
+  padding: 0,
+  margin: 0,
+  background: 'var(--dw-raised)',
+  borderRadius: 'var(--r-lg)',
+  overflow: 'hidden',
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
+};
+
+const alternativeInfoRowStyle = (first: boolean): React.CSSProperties => ({
   display: 'flex',
   alignItems: 'center',
   gap: 'var(--dw-space-12)',
   width: '100%',
   minHeight: 64,
   padding: 'var(--dw-space-12)',
-  border: '1px solid var(--dw-hairline)',
-  borderRadius: 'var(--r-lg)',
-  boxShadow: 'var(--shadow-1)',
-  background: 'var(--dw-overlay)',
+  borderTop: first ? 'none' : '1px solid var(--dw-hairline)',
   color: 'inherit',
   textAlign: 'left',
-};
+});
 
 const miniProsStyle: React.CSSProperties = {
   fontSize: 12,
@@ -735,6 +782,8 @@ const miniConsStyle: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
+/* D2: en trykkbar, hevet kontroll — den skal se ut som den kan trykkes ned,
+   altså ha en overkant som fanger lys og en skygge den kan miste. */
 const libraryLinkStyle: React.CSSProperties = {
   width: '100%',
   marginTop: 'var(--dw-space-12)',
@@ -742,6 +791,7 @@ const libraryLinkStyle: React.CSSProperties = {
   border: '1px solid var(--dw-hairline)',
   borderRadius: 'var(--r-lg)',
   background: 'var(--dw-raised)',
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
   color: 'var(--dw-ink-hi)',
   fontFamily: 'var(--dw-font-ui)',
   fontSize: 14,

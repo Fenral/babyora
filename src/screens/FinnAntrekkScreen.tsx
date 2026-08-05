@@ -318,7 +318,7 @@ function ChevronDown({ expanded }: { expanded: boolean }): ReactElement {
       style={{
         flex: 'none',
         transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-        transition: 'transform 160ms ease',
+        transition: 'transform var(--dw-m-feedback) var(--dw-ease)',
       }}
     >
       <path d="M6 9l6 6 6-6" />
@@ -1044,9 +1044,16 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
    design-tokens.css (--bg-canvas → --dw-canvas, --surface → --dw-raised,
    --ink-900 → --dw-ink-hi, --ink-700/--ink-500 → --dw-ink-mid, --ink-100 →
    --dw-hairline). Samme verdi i alle fire tematilstander, så flaten er
-   uendret. `easeStandard` er IKKE byttet: cubic-bezier(0.32,0.72,0,1) er en
-   annen kurve enn --dw-ease (0.2,0.7,0.2,1), og et bytte ville endret
-   bevegelsen. */
+   uendret.
+
+   2026-08-06: `easeStandard` er BORTE. Fase 3 lot den stå fordi
+   cubic-bezier(0.32,0.72,0,1) er en annen kurve enn --dw-ease (0.2,0.7,0.2,1)
+   og et bytte «ville endret bevegelsen» — det stemmer, og det er nettopp
+   poenget: to kurver som gjør samme jobb er to kontrakter, ikke én. Alle fem
+   forbrukerne henter nå både varighet og kurve fra kontrakten, slik
+   demoteringen (demotedTextStyle) allerede gjorde. Da har aliaset ingen
+   forbrukere igjen, og et token uten forbrukere er bare et sted ny gjeld kan
+   snike seg inn. */
 const TOKENS = {
   bgCanvas: 'var(--dw-canvas)',
   surface: 'var(--dw-raised)',
@@ -1057,7 +1064,6 @@ const TOKENS = {
   fontSans: 'var(--dw-font-ui)',
   safeTop: 'env(safe-area-inset-top, 0px)',
   safeBottom: 'env(safe-area-inset-bottom, 0px)',
-  easeStandard: 'var(--ease-standard)',
 };
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -1123,7 +1129,7 @@ function backButtonStyle(reduceMotion: boolean): CSSProperties {
     cursor: 'pointer',
     color: TOKENS.ink900,
     padding: 0,
-    transition: reduceMotion ? 'none' : `transform 160ms ${TOKENS.easeStandard}`,
+    transition: reduceMotion ? 'none' : 'transform var(--dw-m-feedback) var(--dw-ease)',
   };
 }
 
@@ -1154,6 +1160,11 @@ const scrollStyle: CSSProperties = {
   minHeight: 0,
   overflowY: 'auto',
   overflowX: 'hidden',
+  // D4: rulleflaten skal si at det er mer under, ikke kuttes hardt. Samme
+  // oppskrift som resten av appen (.dw-sheet-innhold, .hjm-result,
+  // Plaggbiblioteket). Flaten maler ingen egen bakgrunn, sa faden treffer
+  // bare innholdet.
+  maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
   padding: '0 var(--dw-space-16)',
   // P10 (Juster clearance, folded into JOB4): this screen owns its own
   // internal scroll container (like .hjem-monter, see hjem-monter.css's own
@@ -1216,7 +1227,7 @@ function whyToggleStyle(reduceMotion: boolean): CSSProperties {
     cursor: 'pointer',
     transition: reduceMotion
       ? 'none'
-      : `background 160ms ${TOKENS.easeStandard}, transform 160ms ${TOKENS.easeStandard}`,
+      : 'background var(--dw-m-feedback) var(--dw-ease), transform var(--dw-m-feedback) var(--dw-ease)',
   };
 }
 
@@ -1312,9 +1323,15 @@ function activityPillStyle(second: boolean, reduceMotion: boolean): CSSPropertie
     width: 'calc(50% - 4px)',
     borderRadius: 10,
     background: 'var(--dw-overlay)',
-    boxShadow: 'var(--shadow-1)',
+    // D2 på en VALGT flate: pillen ER det valgte segmentet, så den bærer
+    // --dw-depth-selected (ikke -raised) pluss innfelt topplys. Den gamle
+    // `var(--shadow-1)` var legacy-arv utenfor dybdekontrakten og hadde
+    // verken lysretning eller temaflipp.
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected)',
     transform: second ? 'translateX(100%)' : 'translateX(0)',
-    transition: reduceMotion ? 'none' : `transform 280ms ${TOKENS.easeStandard}`,
+    // 280 ms var eksakt --dw-m-handoff: pillen gir valget videre fra ett
+    // segment til det andre.
+    transition: reduceMotion ? 'none' : 'transform var(--dw-m-handoff) var(--dw-ease)',
     pointerEvents: 'none',
   };
 }
@@ -1338,7 +1355,7 @@ function activityButtonStyle(active: boolean, reduceMotion: boolean): CSSPropert
     fontWeight: active ? 700 : 600,
     letterSpacing: '-0.1px',
     textAlign: 'center',
-    transition: reduceMotion ? 'none' : `color 160ms ${TOKENS.easeStandard}`,
+    transition: reduceMotion ? 'none' : 'color var(--dw-m-feedback) var(--dw-ease)',
   };
 }
 

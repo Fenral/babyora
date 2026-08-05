@@ -11,12 +11,21 @@
  *  - prefers-reduced-motion: shimmer-animasjon dropper, ren grå plass-holder
  *    beholdes (semantikken er fortsatt korrekt).
  *
- * Brand-tokens (F60.14 dark-mode bump):
- *  - Base-farge: var(--surface-soft) — semantisk token som auto-flipper i dark.
- *    Faller tilbake til warm-grey-2 hvis token mangler.
- *  - Shimmer-highlight: var(--ink-200) — gjennomsiktig ink-overlay som virker
- *    både på lys og mørk base (ren rgba(255,255,255,…) blir for sterkt i light
- *    og fremdeles synlig på dark — vi vil ha en subtil "luft som glir over").
+ * Materiale (doktrine D2/D7, 2026-08-05):
+ *  - Skjelettet er IKKE en hevet flate. Det står i stedet for innhold som
+ *    ennå ikke har landet, og skal ligge i SAMME plan som innholdet det
+ *    erstatter. Tidligere fylte det var(--surface-soft) — et legacy-alias for
+ *    var(--dw-raised), altså nivå 2-materialet. En plassholder som er hevet
+ *    over det ferdige innholdet er et falskt hierarki, så fyllet er nå
+ *    var(--dw-hairline): et gjennomsiktig skjær som tar farge av flaten under
+ *    og flipper med temaet (lysner på mørk, mørkner på lys).
+ *  - Shimmeren er SAMME token lagt oppå seg selv: gradienten går transparent
+ *    → hairline → transparent over et hairline-fyll, så skjæret dobles der
+ *    sveipet er (0,12 → 0,23 alfa) og faller tilbake. Ett token, to lag —
+ *    ingen egen highlight-farge å holde i synk.
+ *  - De tre #E6E3DD-fallbackene er borte: --surface-soft er definert i
+ *    design-tokens.css i begge tema, så fallbacken kunne aldri tre i kraft.
+ *    Den var en kopi som ikke fulgte med når tokenet endret seg.
  *  - Border-radius default 10px (gjenbrukbar for både tall, pills og rader)
  */
 import type { CSSProperties } from 'react';
@@ -58,20 +67,20 @@ function ensureStyleInjected() {
     .ba-skeleton-shimmer {
       background-image: linear-gradient(
         90deg,
-        var(--surface-soft, #E6E3DD) 0%,
-        var(--ink-200) 50%,
-        var(--surface-soft, #E6E3DD) 100%
+        transparent 0%,
+        var(--dw-hairline) 50%,
+        transparent 100%
       );
       background-size: 200% 100%;
       background-repeat: no-repeat;
-      background-color: var(--surface-soft, #E6E3DD);
+      background-color: var(--dw-hairline);
       animation: baSkeletonShimmer 1.5s linear infinite;
     }
     @media (prefers-reduced-motion: reduce) {
       .ba-skeleton-shimmer {
         animation: none !important;
         background-image: none !important;
-        background-color: var(--surface-soft, #E6E3DD) !important;
+        background-color: var(--dw-hairline) !important;
       }
     }
   `;

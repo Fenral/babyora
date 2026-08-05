@@ -31,19 +31,32 @@ const srOnly: CSSProperties = {
   overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0,
 };
 const row: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 8 };
-const labelBase: CSSProperties = {
+/* Geometrien alene — ingen materiale. `moreBtn` er en BEVISST flat
+   ghost-affordanse (stiplet kant, gjennomsiktig), og skal ikke arve verken
+   fyll eller skygge fra brikkene. Uten dette skillet ville den fått en
+   dropshadow uten materiale under seg da lyslogikken kom på `labelBase`. */
+const chipBase: CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
   minHeight: 44, padding: '10px 16px', borderRadius: 999,
-  border: '1.5px solid var(--ink-200)', background: 'var(--surface)',
+  border: '1.5px solid var(--ink-200)',
   color: 'var(--ink-900)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
 };
+/* D2: brikken er et trykkbart materiale, ikke en etikett — den skal være
+   hevet, og da må den bære lyslogikk (inset topplys + dybde). */
+const labelBase: CSSProperties = {
+  ...chipBase,
+  background: 'var(--surface)',
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
+};
+/* Valgt brikke: samme materiale, men -selected i stedet for -raised. */
 const labelChecked: CSSProperties = {
   ...labelBase,
   border: '1.5px solid var(--accent-cta)', background: 'var(--accent-cta)',
   color: 'var(--accent-cta-ink)', fontWeight: 700,
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected)',
 };
 const moreBtn: CSSProperties = {
-  ...labelBase, border: '1.5px dashed var(--ink-200)', background: 'transparent',
+  ...chipBase, border: '1.5px dashed var(--ink-200)', background: 'transparent',
   color: 'var(--ink-700)', fontWeight: 600,
 };
 

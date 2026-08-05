@@ -38,10 +38,17 @@ const wrapStyle: CSSProperties = {
 
 const svgStyle: CSSProperties = { width: 176, height: 176, flex: 'none' };
 
+/* D2: pillen hadde `background: var(--surface-soft)`. Det tokenet løser opp i
+   var(--dw-raised) — NØYAKTIG samme farge som groupCardStyle-kortet den
+   rendres inni (InnstillingerScreen l. 266: `background: C.cardBg` =
+   var(--dw-raised)). Fyllet malte altså raised på raised og var usynlig; det
+   eneste det gjorde var å påstå «hevet materiale» uten lyslogikk. En
+   aria-hidden telle-etikett er ingen hevet flate — den er en merkelapp på
+   platen den ligger på. Fyllet er derfor FJERNET, ikke pyntet med dybde:
+   hårstrek-ringen bærer formen, og pikslene er identiske som før. */
 const overflowPillStyle: CSSProperties = {
   padding: '4px 10px',
   borderRadius: 999,
-  background: 'var(--surface-soft)',
   border: '1px solid var(--ink-200)',
   fontSize: '0.75rem',
   fontWeight: 600,
@@ -64,12 +71,17 @@ const roleRowStyle: CSSProperties = {
   gap: 10,
 };
 
+/* D2, samme grunn som pillen over: `var(--surface)` = var(--dw-raised) = fargen
+   på kortet skiven ligger oppå. Initial-skiven er en identitets-etikett, ikke
+   et materiale, og en 32 px sirkel skal ikke bære var(--dw-depth-raised) (som
+   er en 56 px kort-skygge med x-forskyvning). Fyllet er fjernet; ringen bærer
+   formen. SVG-noden over beholder sin `fill` — der okkluderer fyllet enden av
+   eiker-linjen og gjør faktisk arbeid. */
 const roleTokenStyle: CSSProperties = {
   flex: 'none',
   width: 32,
   height: 32,
   borderRadius: '50%',
-  background: 'var(--surface)',
   border: '1px solid var(--ink-200)',
   display: 'flex',
   alignItems: 'center',

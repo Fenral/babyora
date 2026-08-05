@@ -928,7 +928,13 @@ const STYLE_CSS = `
   --ob-feat-bg:color-mix(in srgb, var(--dw-overlay) 50%, transparent);
   --ob-loc-action-bg:var(--dw-hairline);
   --ob-cta-gradient-stop:color-mix(in srgb, var(--dw-canvas) 92%, transparent);
-  --ob-ease-standard:var(--dw-ease);
+  /* --ob-ease-standard er slettet: den var --dw-ease skrevet en gang til, og
+     et alias som vasker et token gjør bare tokenet usynlig for portene.
+     Bruksstedene henter nå var(--dw-ease) direkte.
+     --ob-ease-spring STÅR IGJEN, men er ikke lenger i bruk: den er navngitt
+     målprøve («variabel»-flaten) i design-tokens-v2.motion.test.ts. Slettes
+     den her alene, blir motion-porten TAUS i stedet for rød. Den skal ut
+     sammen med sin registerlinje, ikke før. */
   --ob-ease-spring:cubic-bezier(.34,1.32,.64,1);
   --ob-font-sans:var(--dw-font-ui);
   --ob-font-serif:var(--font-serif);
@@ -1017,21 +1023,11 @@ const STYLE_CSS = `
   letter-spacing:.4px;
 }
 
-/* ── DOT PROGRESS ── */
-.ob-screen > .ob-dots{
-  flex:none;display:flex;justify-content:center;align-items:center;gap:var(--dw-space-8);
-  padding:var(--dw-space-8) var(--dw-space-24) var(--dw-space-4);
-}
-.ob-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:var(--ob-ink-300);
-  transition:all .35s var(--ob-ease-spring);
-}
-.ob-dot.done{background:var(--ob-terracotta-300);}
-.ob-dot.active{
-  width:30px;border-radius:999px;
-  background:var(--ob-terracotta-600);
-}
+/* ── DOT PROGRESS ──
+   SLETTET: .ob-dots/.ob-dot ble aldri rendret. Fremdriften tegnes av
+   .ob-seg-progress lenger ned, og prikkene stod igjen som død CSS — med
+   filens eneste rå transition (350 ms + spring-kurve) i seg. Gjelden
+   forsvant med flaten, den ble ikke tokenisert bort. */
 
 /* ── BODY ── */
 .ob-screen > .ob-body{
@@ -1039,6 +1035,9 @@ const STYLE_CSS = `
   padding:var(--dw-space-6) 28px 0;
   display:flex;flex-direction:column;
   -webkit-overflow-scrolling:touch;
+  /* D4: rullingen får bunn-fade — samme form som sheet.css/hjem-monter.css. */
+  mask-image:linear-gradient(to bottom, black 92%, transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom, black 92%, transparent 100%);
 }
 .ob-body::-webkit-scrollbar{display:none;}
 
@@ -1084,8 +1083,12 @@ const STYLE_CSS = `
   position:absolute;z-index:3;top:7%;left:14px;right:14px;
   font-family:var(--ob-font-serif);font-size:clamp(32px, 9vw, 40px);
   font-weight:400;line-height:1;letter-spacing:-.7px;text-align:center;
-  color:#2d2438;
-  text-shadow:0 1px 18px rgba(255,255,255,.78);
+  /* D7: #2d2438 var tema-invariant og ble USYNLIG i mørk modus (kortet under
+     er --dw-raised = #2C1F13). Glorien var hardkodet hvit av samme grunn.
+     Begge henter nå fra tokenet: inken flipper, og glorien er kortets egen
+     flate som blør gjennom — lys i lys modus, varm mørk i mørk. */
+  color:var(--dw-ink-hi);
+  text-shadow:0 1px 18px color-mix(in srgb, var(--dw-raised) 78%, transparent);
   pointer-events:none;
 }
 .ob-baby-frame{
@@ -1292,7 +1295,7 @@ const STYLE_CSS = `
   border:1.5px solid var(--ob-terracotta-600);
   border-radius:18px;padding:var(--dw-space-16) var(--dw-space-18);
   box-shadow:0 0 0 4px color-mix(in srgb, var(--ob-terracotta-600) 10%, transparent), var(--ob-shadow-1);
-  transition:box-shadow var(--dw-m-state) var(--ob-ease-standard);
+  transition:box-shadow var(--dw-m-state) var(--dw-ease);
 }
 /* P10.1 (judge finding D4): .ob-input-icon removed — no leading icon in
    the contract's input (onboarding-steg1-v2.html), and it was previously
@@ -1313,47 +1316,24 @@ const STYLE_CSS = `
 }
 .ob-hint-center strong{color:var(--ob-terracotta-700);font-weight:700;}
 
-/* ── DATE GRID ── */
-.ob-date-grid{
-  display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:var(--dw-space-10);
-  margin-top:var(--dw-space-22);
-}
-.ob-date-cell{display:flex;flex-direction:column;gap:var(--dw-space-6);}
-.ob-date-cell label{
-  font-size:10.5px;font-weight:700;letter-spacing:1.2px;
-  text-transform:uppercase;color:var(--ob-ink-500);
-  padding-left:var(--dw-space-4);
-}
-.ob-date-input{
-  display:flex;align-items:center;justify-content:center;
-  background:var(--ob-surface-raised);
-  border:1.5px solid var(--ob-line-strong);
-  border-radius:16px;padding:var(--dw-space-18) var(--dw-space-8);
-  font-family:var(--ob-font-serif);font-size:24px;color:var(--ob-ink-900);
-  line-height:1;letter-spacing:-.3px;
-  box-shadow:var(--ob-shadow-1);
-  text-align:center;width:100%;outline:none;
-  appearance:none;-moz-appearance:textfield;
-}
-.ob-date-input::-webkit-outer-spin-button,
-.ob-date-input::-webkit-inner-spin-button{ -webkit-appearance:none;margin:0; }
-.ob-date-input.filled{
-  border-color:var(--ob-terracotta-600);
-  background:var(--dw-overlay);
-  box-shadow:0 0 0 4px color-mix(in srgb, var(--ob-terracotta-600) 8%, transparent), var(--ob-shadow-1);
-}
-.ob-date-input:focus-visible{
-  border-color:var(--ob-terracotta-600);
-  box-shadow:0 0 0 4px color-mix(in srgb, var(--ob-terracotta-600) 18%, transparent), var(--ob-shadow-1);
-}
+/* ── DATE GRID ──
+   SLETTET: .ob-date-grid/.ob-date-cell/.ob-date-input ble aldri rendret.
+   Steg 2 bruker plattformens egen datovelger (.ob-date-picker), og det
+   tredelte dag/måned/år-rutenettet stod igjen som død CSS. D2-funnet på
+   .ob-date-input.filled var altså en hevet flate ingen noensinne så: riktig
+   retting er å fjerne flaten, ikke å gi den lyslogikk. */
 
 /* ── LOCATION CARD ── */
+/* D1: .ob-loc-row er en hårstrek-rad, og en hårstrek trenger en flate å ligge
+   PÅ. Kortet henter derfor fyllet fra --dw-raised direkte (ikke via
+   --ob-surface-raised, som vasket tokenet og gjorde flaten usynlig for
+   dybdekontrakten) og bærer den kompatible formen: inset topplys + dybde. */
 .ob-loc-card{
   margin-top:var(--dw-space-22);display:flex;flex-direction:column;gap:var(--dw-space-18);
   padding:var(--dw-space-22);border-radius:24px;
-  background:var(--ob-surface-raised);
+  background:var(--dw-raised);
   border:1px solid var(--ob-line);
-  box-shadow:var(--ob-shadow-2);
+  box-shadow:inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised);
 }
 .ob-loc-row{display:flex;align-items:center;gap:var(--dw-space-14);}
 .ob-loc-pin{
@@ -1396,9 +1376,14 @@ const STYLE_CSS = `
   display:flex;gap:var(--dw-space-8);align-items:stretch;
   padding-top:var(--dw-space-4);
 }
+/* D2, med skjønn: feltet var fylt med --dw-overlay (nivå 3, ark/dialog) inne
+   i et kort på nivå 2. Det er ikke en hevet flate — et skrivefelt er en BRØNN
+   i kortet. Riktig retting er derfor å ta bort det hevede fyllet, ikke å
+   pynte det med topplys: --dw-canvas ligger under kortet og leser som senket
+   i begge temaer. */
 .ob-manual input{
   flex:1;font:inherit;font-size:14px;color:var(--ob-ink-900);
-  background:var(--dw-overlay);border:1px solid var(--ob-line-strong);border-radius:10px;
+  background:var(--dw-canvas);border:1px solid var(--ob-line-strong);border-radius:10px;
   padding:var(--dw-space-10) var(--dw-space-12);outline:none;
 }
 .ob-manual input:focus-visible{border-color:var(--ob-terracotta-600);box-shadow:0 0 0 3px color-mix(in srgb, var(--ob-terracotta-600) 15%, transparent);}
@@ -1421,59 +1406,35 @@ const STYLE_CSS = `
   background:color-mix(in srgb, var(--ob-terracotta-600) 8%, transparent);
 }
 
-/* ── KALENDER (steg 2) ── */
-.ob-cal{
-  background:var(--dw-overlay);border:1px solid var(--ob-line);
-  border-radius:20px;padding:var(--dw-space-14) var(--dw-space-14) var(--dw-space-16);margin-top:var(--dw-space-4);
-  box-shadow:var(--ob-shadow-1);
-}
-.ob-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--dw-space-10);}
-.ob-cal-title{font-family:var(--font-serif);font-weight:560;font-size:17px;color:var(--ob-ink-900);}
-.ob-cal-nav{display:flex;gap:var(--dw-space-8);}
-.ob-cal-nav button{
-  width:38px;height:38px;border-radius:11px;border:1px solid var(--ob-line-strong);
-  background:var(--ob-surface);color:var(--ob-ink-900);font-size:18px;line-height:1;
-  cursor:pointer;display:grid;place-items:center;
-}
-/* KONTRASTRETTING (fase 3). Denne knappen er NOYTRAL (--dw-raised-flate,
-   --dw-ink-hi-tekst), ikke amber, saa dempingen horer hjemme i inken:
-   opacity:.35 mot .ob-cal (--dw-overlay) MALT til 2,89:1. --dw-ink-low
-   paa uendret flate MALT til 5,78:1 mork / 7,00:1 lys — tydelig dempet
-   fra ink-hi, fortsatt godt over 4,5:1. */
-.ob-cal-nav button:disabled{color:var(--dw-ink-low);cursor:default;}
-.ob-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.ob-cal-wd{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--ob-ink-700);
-  text-align:center;padding:var(--dw-space-4) 0 var(--dw-space-6);text-transform:uppercase;}
-.ob-cal-empty{min-height:40px;}
-.ob-cal-day{
-  aspect-ratio:1;min-height:40px;border:none;background:none;font:inherit;font-size:14px;
-  color:var(--ob-ink-900);border-radius:11px;cursor:pointer;display:grid;place-items:center;
-  position:relative;
-}
-.ob-cal-day:disabled{color:var(--ob-line-strong);cursor:default;}
-.ob-cal-day.sel{background:var(--ob-accent-cta);}
-.ob-cal-day.sel .ob-cal-num{color:var(--ob-accent-cta-ink);font-weight:700;}
-/* non-color-cue for VALGT: liten prikk under tallet (redundant med grønt fyll) */
-.ob-cal-day.sel::after{content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
-  width:4px;height:4px;border-radius:50%;background:var(--ob-accent-cta-ink);}
-/* I DAG: terrakotta-ring + non-color-cue (understreket tall) */
-.ob-cal-day.today{box-shadow:inset 0 0 0 1.5px var(--ob-terracotta-600);}
-.ob-cal-day.today .ob-cal-num{text-decoration:underline;text-underline-offset:2px;}
-.ob-cal-day.sel.today{box-shadow:inset 0 0 0 1.5px var(--ob-accent-cta-ink);}
+/* ── KALENDER (steg 2) ──
+   SLETTET: hele .ob-cal*-blokken ble aldri rendret. Steg 2 åpner
+   plattformens datovelger via .ob-date-picker; den håndskrevne kalenderen
+   ble erstattet, men CSS-en ble liggende. Med den forsvinner både
+   D2-funnet (.ob-cal, hevet fyll uten lyslogikk) og D6-funnet
+   (.ob-cal-nav button, 38x38 px) — ingen av dem var flater brukeren kunne
+   nå, så retting nummer én er å fjerne dem. */
 
 /* ── STED-COMBOBOX (steg 3, APG-typeahead) ── */
 .ob-manual{flex-direction:column;align-items:stretch;}
 .ob-combo{position:relative;width:100%;}
+/* D2: samme brønn-vurdering som .ob-manual input over — søkefeltet er ikke
+   hevet over kortet det står i. */
 .ob-combo input{
   width:100%;font:inherit;font-size:14px;color:var(--ob-ink-900);
-  background:var(--dw-overlay);border:1px solid var(--ob-line-strong);border-radius:10px;
+  background:var(--dw-canvas);border:1px solid var(--ob-line-strong);border-radius:10px;
   padding:11px var(--dw-space-12);outline:none;box-sizing:border-box;
 }
 .ob-combo input:focus-visible{border-color:var(--ob-terracotta-600);
   box-shadow:0 0 0 3px color-mix(in srgb, var(--ob-terracotta-600) 15%, transparent);}
+/* D2 + D4: treffliste. Denne ER hevet med god grunn — den legger seg OVER
+   innholdet, så --dw-overlay blir stående, men da må den også bære
+   lyslogikken. Og den ruller (max-height), så den får bunn-fade. */
 .ob-combo-list{list-style:none;margin:var(--dw-space-6) 0 0;padding:5px;background:var(--dw-overlay);
-  border:1px solid var(--ob-line);border-radius:14px;box-shadow:var(--ob-shadow-2, var(--ob-shadow-1));
-  max-height:230px;overflow-y:auto;}
+  border:1px solid var(--ob-line);border-radius:14px;
+  box-shadow:inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised);
+  max-height:230px;overflow-y:auto;
+  mask-image:linear-gradient(to bottom, black 92%, transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom, black 92%, transparent 100%);}
 .ob-combo-list:empty{display:none;}
 .ob-combo-opt{display:flex;align-items:center;gap:9px;padding:11px var(--dw-space-10);border-radius:9px;
   font-size:14px;color:var(--ob-ink-900);cursor:pointer;}
@@ -1484,12 +1445,15 @@ const STYLE_CSS = `
   clip:rect(0 0 0 0);white-space:nowrap;border:0;}
 
 /* ── SUMMARY ── */
+/* D1: .ob-sum-row + .ob-sum-row skiller radene med en hårstrek. Hårstreken
+   forutsetter en hevet gruppeflate under seg — listen henter derfor fyllet
+   fra --dw-raised direkte og bærer den kompatible formen. */
 .ob-summary{
   margin:var(--dw-space-22) 0 0;padding:0;list-style:none;
   display:flex;flex-direction:column;
-  background:var(--ob-surface);border:1px solid var(--ob-line);
+  background:var(--dw-raised);border:1px solid var(--ob-line);
   border-radius:22px;overflow:hidden;
-  box-shadow:var(--ob-shadow-1);
+  box-shadow:inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised);
 }
 .ob-sum-row{
   display:flex;align-items:center;gap:var(--dw-space-14);
@@ -1561,7 +1525,7 @@ const STYLE_CSS = `
   font-family:var(--ob-font-sans);font-size:16px;font-weight:700;letter-spacing:.1px;
   border:none;cursor:pointer;
   box-shadow:var(--ob-shadow-cta-primary);
-  transition:transform .18s var(--ob-ease-spring), box-shadow .18s var(--ob-ease-standard);
+  transition:transform var(--dw-m-state) var(--dw-ease), box-shadow var(--dw-m-state) var(--dw-ease);
   -webkit-tap-highlight-color:transparent;
 }
 .ob-btn-primary:active{
@@ -1682,7 +1646,7 @@ const STYLE_CSS = `
   scroll-padding-bottom:28px;
 }
 .ob-body > *{
-  animation:ob-content-in var(--dw-m-handoff) var(--ob-ease-standard) both;
+  animation:ob-content-in var(--dw-m-handoff) var(--dw-ease) both;
 }
 @keyframes ob-content-in{
   from{opacity:0;transform:translateY(8px)}
@@ -1775,12 +1739,15 @@ const STYLE_CSS = `
   position:absolute;inset:0;width:100%;height:100%;opacity:.001;
   cursor:pointer;color:transparent;background:transparent;border:0;
 }
+/* box-shadow:var(--ob-shadow-1) er FJERNET her: den overstyrte kortets
+   inset-topplys og lot flaten stå igjen uten lyslogikk i akkurat den
+   layouten skjermen faktisk bruker. Størrelsen på et kort skal ikke
+   bestemme om det har lys. */
 .ob-loc-card{
   margin-top:var(--dw-space-18);
   gap:var(--dw-space-12);
   padding:var(--dw-space-14);
   border-radius:20px;
-  box-shadow:var(--ob-shadow-1);
 }
 .ob-loc-row{
   padding:var(--dw-space-2) var(--dw-space-2) var(--dw-space-10);
@@ -1803,7 +1770,8 @@ const STYLE_CSS = `
 .ob-manual{padding-top:0;}
 .ob-combo input{min-height:50px;border-radius:14px;padding:13px var(--dw-space-14);}
 .ob-summary{margin-top:var(--dw-space-18);border-radius:18px;}
-.ob-sum-row{min-height:58px;padding:var(--dw-space-12) var(--dw-space-14);}
+/* D5: 58px lå under radgulvet på 62. Padding-komprimeringen beholdes. */
+.ob-sum-row{min-height:62px;padding:var(--dw-space-12) var(--dw-space-14);}
 .ob-sum-icon{width:36px;height:36px;}
 .ob-welcome-greet{margin-top:var(--dw-space-16);gap:var(--dw-space-8);}
 .ob-feats{margin-top:var(--dw-space-18);gap:var(--dw-space-8);}
@@ -1832,7 +1800,10 @@ const STYLE_CSS = `
   .ob-screen.step-4 .ob-baby-hero{display:none;}
   .ob-screen.step-4 .ob-copy{margin-top:var(--dw-space-8);}
   .ob-screen.step-4 .ob-summary{margin-top:var(--dw-space-10);}
-  .ob-screen.step-4 .ob-sum-row{min-height:46px;padding:7px var(--dw-space-12);gap:var(--dw-space-10);}
+  /* D5: min-height:46px er FJERNET — radgulvet på 62 px gjelder også på lave
+     skjermer. Oppsummeringen får heller rulle i .ob-body enn å presses under
+     gulvet; komprimeringen ligger fortsatt i padding, gap og ikonstørrelse. */
+  .ob-screen.step-4 .ob-sum-row{padding:7px var(--dw-space-12);gap:var(--dw-space-10);}
   .ob-screen.step-4 .ob-sum-icon{width:28px;height:28px;border-radius:9px;}
   .ob-screen.step-4 .ob-sum-icon svg{width:15px;height:15px;}
   .ob-screen.step-4 .ob-sum-value{font-size:15px;}

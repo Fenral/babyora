@@ -1,0 +1,93 @@
+{
+ "src/screens/OnboardingScreen.tsx": [
+  "D1 x1  .ob-sum-row + .ob-sum-row",
+  "D1 x1  .ob-loc-row",
+  "D2 x1  .ob-date-input.filled",
+  "D2 x1  .ob-manual input",
+  "D2 x1  .ob-cal",
+  "D2 x1  .ob-combo input",
+  "D2 x1  .ob-combo-list",
+  "D4 x1  .ob-screen > .ob-body",
+  "D4 x1  .ob-combo-list",
+  "D5 x1  .ob-sum-row",
+  "D5 x1  .ob-screen.step-4 .ob-sum-row",
+  "D6 x1  .ob-cal-nav button",
+  "D7 x1  .ob-baby-wordmark"
+ ],
+ "src/components/instrument/vertical-gauge.css": [
+  "D2 x1  .fa-gauge-step"
+ ],
+ "src/components/outfit/Antrekkskart.css": [
+  "D2 x1  .outfit-map__node",
+  "D2 x1  .outfit-map__ordinal",
+  "D2 x1  .outfit-row",
+  "D2 x1  .outfit-comparison"
+ ],
+ "src/components/planning/PlanChangeRail.css": [
+  "D2 x1  .plan-change-rail__unchanged-dot",
+  "D2 x1  .plan-change-rail__preview img"
+ ],
+ "src/screens/UkeScreen.css": [
+  "D2 x1  .planlegg-status",
+  "D2 x1  .planlegg-status__skeleton > span, .planlegg-status__skeleton-rail span",
+  "D2 x1  .planlegg-screen__week-weather",
+  "D2 x1  .planlegg-screen .plan-change-rail__preview img"
+ ],
+ "src/components/Skeleton.tsx": [
+  "D2 x2  .ba-skeleton-shimmer",
+  "D7 x3  .ba-skeleton-shimmer"
+ ],
+ "src/components/PlaggDetailSheet.tsx": [
+  "D2 x7  (inline)",
+  "D4 x1  (inline)"
+ ],
+ "src/components/controls/AgeAdaptiveSituationPicker.tsx": [
+  "D2 x1  (inline)"
+ ],
+ "src/components/family/CareCircle.tsx": [
+  "D2 x2  (inline)"
+ ],
+ "src/components/family/ToolsSection.tsx": [
+  "D2 x1  (inline)"
+ ],
+ "src/components/instrument/TemperatureInstrument.tsx": [
+  "D2 x1  (inline)"
+ ],
+ "src/screens/HjemScreen.tsx": [
+  "D2 x4  (inline)"
+ ],
+ "src/screens/PaakledningScreen.tsx": [
+  "D2 x8  (inline)"
+ ],
+ "src/screens/PlaggbibliotekScreen.tsx": [
+  "D2 x1  (inline)",
+  "D4 x1  (inline)"
+ ],
+ "src/screens/TogGuideScreen.tsx": [
+  "D2 x4  (inline)",
+  "D4 x1  (inline)"
+ ],
+ "src/screens/VarmEllerKaldScreen.tsx": [
+  "D2 x4  (inline)",
+  "D4 x1  (inline)"
+ ],
+ "src/screens/VinterprogramScreen.tsx": [
+  "D2 x4  (inline)",
+  "D4 x1  (inline)"
+ ],
+ "src/components/hjem/hjem-monter.css": [
+  "D4 x1  .hjem-monter"
+ ],
+ "src/components/PaywallDialog.tsx": [
+  "D4 x1  (inline)"
+ ],
+ "src/screens/FinnAntrekkScreen.tsx": [
+  "D4 x1  (inline)"
+ ],
+ "src/screens/InnstillingerScreen.tsx": [
+  "D4 x10  (inline)"
+ ],
+ "src/components/outfit-transition/OutfitTransitionOverlay.css": [
+  "D7 x3  .outfit-transition-overlay__clone"
+ ]
+}

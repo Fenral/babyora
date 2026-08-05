@@ -50,7 +50,11 @@ const columnStyle = (fraction: number, color: string): CSSProperties => ({
   borderRadius: 22,
   background: `linear-gradient(to top, var(--layer-bg-kald), ${color})`,
   boxShadow: `0 0 14px color-mix(in oklab, ${color} 35%, transparent)`,
-  transition: 'height 160ms ease-out',
+  /* Bevegelse fra kontrakten: kolonnen følger fingeren på range-inputen, så
+     dette er direkte tilbakemelding. --dw-m-feedback (120 ms) er også det
+     målte tokenet nærmest den gamle rå verdien (160 ms) — --dw-m-state er
+     220 ms i design-tokens-v2.css. */
+  transition: 'height var(--dw-m-feedback) var(--dw-ease)',
 });
 const rangeStyle: CSSProperties = {
   position: 'absolute', inset: 0, width: '100%', height: '100%',
@@ -61,9 +65,19 @@ const scaleCol: CSSProperties = {
   position: 'relative', width: 34, flex: 'none',
   fontVariantNumeric: 'tabular-nums', fontSize: 11, color: 'var(--ink-500)',
 };
+/* D2 (2026-08-05): ± -knappen BLIR staaende hevet — den er instrumentets
+   eneste trykkflate ved siden av den usynlige range-inputen, saa den har en
+   hierarkisk grunn til aa staa opp fra flaten. Det som manglet var lyslogikken:
+   inset topplys + dybdestabel, i doktrinens kompatible form.
+   Fargene gaar samtidig direkte paa --dw-* i stedet for legacy-aliasene
+   (--surface/--ink-900/--ink-200 er rene alias for nøyaktig disse tre i
+   design-tokens.css, saa uttrykket er uendret) — en --dw-dybdestabel over et
+   legacy-fyll ville vaert to sannheter om samme flate. */
 const stepBtn: CSSProperties = {
-  width: 44, height: 44, borderRadius: 14, border: '1.5px solid var(--ink-200)',
-  background: 'var(--surface)', color: 'var(--ink-900)', fontSize: 20, fontWeight: 700,
+  width: 44, height: 44, borderRadius: 14, border: '1.5px solid var(--dw-hairline)',
+  background: 'var(--dw-raised)',
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
+  color: 'var(--dw-ink-hi)', fontSize: 20, fontWeight: 700,
   cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
 };
 

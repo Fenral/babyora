@@ -728,6 +728,9 @@ export function HjemScreen({
     borderRadius: 999,
     background: 'var(--surface-pure)',
     border: '1px solid var(--ink-100)',
+    // D2: pillen ER en hevet flate (den grupperer ikon + sted i en egen
+    // plate over lerretet), så den må bære lyslogikk og ikke bare farge.
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
     minHeight: 44,
     color: 'var(--ink-900)',
   };
@@ -774,7 +777,13 @@ export function HjemScreen({
     marginTop: 10,
     padding: 4,
     borderRadius: 13,
-    background: 'var(--surface-soft)',
+    // D2, med skjønn: sporet i en segmentkontroll er IKKE en hevet flate —
+    // det er sporet den valgte pillen ligger OPPÅ. Å gi det inset-topplys
+    // og skygge ville løftet både sporet og pillen, og da forsvinner
+    // dybdehistorien. Riktig retting er derfor å fjerne det hevede fyllet.
+    // Formen er løftet 1:1 fra den kanoniske segmentkontrollen
+    // (SegmentedControl.css `.segmented-control__group`).
+    background: 'color-mix(in srgb, var(--dw-ink-hi) 9%, transparent)',
     minHeight: 44,
   };
 
@@ -867,7 +876,11 @@ export function HjemScreen({
     borderRadius: 999,
     background: 'var(--surface-elevated)',
     border: '1px solid var(--ink-200)',
-    boxShadow: '0 4px 12px color-mix(in oklab, var(--ink-900) 12%, transparent)',
+    // D2: pillene SVEVER over scenen, så her er hevet fyll riktig — men den
+    // egenskrevne skyggen falt rett ned (0 4px 12px) og motsa lysvektoren
+    // (--dw-lys-vinkel, øvre venstre → mot høyre). Dybdekontrakten kaster
+    // riktig vei og flipper med temaet.
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
     fontSize: '0.75rem',
     fontWeight: 650,
     color: 'var(--ink-900)',
@@ -898,6 +911,9 @@ export function HjemScreen({
     background: 'var(--surface-elevated)',
     border: '1px solid var(--ink-200)',
     borderLeft: '4px solid var(--terracotta-600)',
+    // D2: callouten er en egen plate over lerretet (nettopp derfor er den
+    // «alltid solid flate»), så den skal bære lyslogikk og ikke bare farge.
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
     color: 'var(--ink-900)',
     fontSize: '0.8125rem',
     lineHeight: 1.45,
@@ -944,9 +960,14 @@ export function HjemScreen({
     background: 'var(--accent-cta)',
     color: 'var(--accent-cta-ink)',
     boxShadow: 'var(--shadow-cta-primary)',
+    // Trykk og skygge kommer nå fra bevegelseskontrakten (160→--dw-m-feedback,
+    // 200ms→--dw-m-state). Farge-krysstoningen gjør det IKKE, med vilje: de
+    // 600 ms er --dur-temp, samme verdi som .ba-temp-root bruker på
+    // bakgrunnen, og ligger langt utenfor --dw-m-*-båndet (topp 420 ms).
+    // Kutter man dem til 220 ms, glir CTA-en fra rommet den ligger i.
     transition: reducedMotion
       ? 'none'
-      : `transform ${MOTION.press}ms ${MOTION.easeOut}, box-shadow 200ms ${MOTION.easeOut}, background-color ${MOTION.tempTransition}ms ${MOTION.easeOut}, color ${MOTION.tempTransition}ms ${MOTION.easeOut}`,
+      : `transform var(--dw-m-feedback) var(--dw-ease), box-shadow var(--dw-m-state) var(--dw-ease), background-color ${MOTION.tempTransition}ms ${MOTION.easeOut}, color ${MOTION.tempTransition}ms ${MOTION.easeOut}`,
     fontFamily: 'var(--font-sans)',
     touchAction: 'manipulation',
     WebkitTapHighlightColor: 'transparent',

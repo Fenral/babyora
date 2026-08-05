@@ -357,8 +357,22 @@ const styles = {
     // ganger i denne skjermen, så FAB-en og siste rad lå bak tab-baren.
     // Samme mønster som .hjem-monter og .app-shell > main allerede bruker.
     paddingBottom: 'var(--dw-tabbar-clearance)',
+    // D4 (DoD): bunn-faden er nå en MASKE på selve scroll-flaten, ikke et
+    // søskenelement malt i lerretsfargen. Den gamle .scrollFade la et
+    // bgCanvas-gradientlokk over de nederste 96 px — den skjulte innholdet i
+    // stedet for å tone det ut, og løgnen ble synlig i det øyeblikket noe
+    // annet enn ren lerretsfarge lå bak. Formen er husets egen
+    // (sheet.css:78, hjem-monter.css:892, kle-paa-stepper.css:164).
+    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
   } satisfies CSSProperties,
 
+  // D2 (DoD): PLATEN ER GRIDET, IKKE CELLEN. Det hevede fyllet lå på hver
+  // enkelt <li> (GarmentLi.liStyle) uten lyslogikk. Doktrinens svar er ikke å
+  // gi tjue celler hver sin skygge — et rutenett av hairline-delte celler ER
+  // én plate. Fyllet er derfor flyttet hit, og lyslogikken følger med:
+  // inset topplys + dybde i samme box-shadow. Cellene bærer nå bare
+  // hairline-delingene sine.
   grid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
@@ -366,6 +380,8 @@ const styles = {
     margin: 0,
     padding: 0,
     borderTop: '1px solid var(--dw-hairline)',
+    background: 'var(--dw-raised)',
+    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
   } satisfies CSSProperties,
 
   fabWrap: {
@@ -405,16 +421,10 @@ const styles = {
     WebkitTapHighlightColor: 'transparent',
   } satisfies CSSProperties,
 
-  scrollFade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 'max(env(safe-area-inset-bottom, 0px), 0px)',
-    height: 96,
-    pointerEvents: 'none',
-    background: `linear-gradient(180deg, color-mix(in srgb, ${TOKENS.bgCanvas} 0%, transparent) 0%, ${TOKENS.bgCanvas} 70%)`,
-    zIndex: 30,
-  } satisfies CSSProperties,
+  /* FJERNET 2026-08-05 (DoD): scrollFade. Et absolutt plassert
+     lerretsfarget gradientlokk over de nederste 96 px. Bunn-faden bor nå i
+     styles.scroll som maskImage — samme signal, men den toner INNHOLDET ut i
+     stedet for å male over det. */
 
   srOnly: {
     position: 'absolute',
@@ -699,8 +709,8 @@ export function PlaggbibliotekScreen({
         <div style={{ height: 120 }} aria-hidden="true" />
       </div>
 
-      {/* Fade-mask + FAB */}
-      <div style={styles.scrollFade} aria-hidden="true" />
+      {/* FAB. Bunn-faden er ikke lenger et element her — den er maskImage på
+          styles.scroll (se der). */}
       <div style={styles.fabWrap}>
         <button
           type="button"
@@ -784,11 +794,14 @@ function GarmentLi({ garment, isRightCol, reducedMotion, onSelect, buttonRef }: 
   // med PlaggDetailSheet). garmentPng gir alltid en sti.
   const [imgSrc, setImgSrc] = useState(garment.image);
 
-  // Grid-kort-kontrakt: var(--dw-raised) + var(--dw-hairline)-border (a11y-preclearance).
+  // Grid-kort-kontrakt: var(--dw-hairline)-delinger (a11y-preclearance).
+  // Det hevede fyllet er IKKE her lenger — det bor på styles.grid, som er den
+  // ene platen cellene deler. En celle uten eget fyll kan ikke være en hevet
+  // flate uten lyslogikk (D2), og hairline-delingen leser fortsatt likt fordi
+  // platen ligger rett bak.
   const liStyle: CSSProperties = {
     borderRight: isRightCol ? 0 : '1px solid var(--dw-hairline)',
     borderBottom: '1px solid var(--dw-hairline)',
-    background: 'var(--dw-raised)',
     listStyle: 'none',
   };
 

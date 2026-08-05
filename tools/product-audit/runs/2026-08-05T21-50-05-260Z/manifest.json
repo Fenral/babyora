@@ -1,0 +1,134 @@
+{
+  "runId": "2026-08-05T21-50-05-260Z",
+  "rubricVersion": "1.0.0",
+  "baseUrl": "http://127.0.0.1:5199",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "locale": "nb-NO",
+  "createdAt": "2026-08-05T21:51:02.216Z",
+  "captures": [
+    {
+      "pageId": "onboarding",
+      "pageLabel": "Onboarding",
+      "stateId": "start",
+      "stateLabel": "Første steg",
+      "required": true,
+      "file": "screenshots/onboarding--start.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-08-05T21:50:08.734Z"
+    },
+    {
+      "pageId": "home",
+      "pageLabel": "Hjem",
+      "stateId": "default",
+      "stateLabel": "Standard anbefaling",
+      "required": true,
+      "file": "screenshots/home--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-08-05T21:50:11.567Z"
+    },
+    {
+      "pageId": "outfit",
+      "pageLabel": "Påkledning",
+      "stateId": "recommendation",
+      "stateLabel": "Antrekket, steg for steg",
+      "required": true,
+      "file": null,
+      "status": "failed",
+      "error": "locator.click: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Finn dagens antrekk/i }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"hjm-cta\" data-cta-path=\"ceremony\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    15 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+      "capturedAt": "2026-08-05T21:50:22.258Z"
+    },
+    {
+      "pageId": "find-outfit",
+      "pageLabel": "Juster",
+      "stateId": "default",
+      "stateLabel": "Juster-drillen (sliders prefylt fra Hjems resultat)",
+      "required": true,
+      "file": null,
+      "status": "failed",
+      "error": "locator.click: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Finn dagens antrekk/i }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"hjm-cta\" data-cta-path=\"ceremony\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    15 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+      "capturedAt": "2026-08-05T21:50:32.975Z"
+    },
+    {
+      "pageId": "plan",
+      "pageLabel": "Uke / Planlegg",
+      "stateId": "default",
+      "stateLabel": "Dags- og ukeplan",
+      "required": true,
+      "file": "screenshots/plan--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-08-05T21:50:35.743Z"
+    },
+    {
+      "pageId": "clothing-library",
+      "pageLabel": "Plaggbibliotek",
+      "stateId": "default",
+      "stateLabel": "Biblioteket via garment-radens Bytt → Se alternativer i biblioteket",
+      "required": true,
+      "file": null,
+      "status": "failed",
+      "error": "locator.click: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Finn dagens antrekk/i }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"hjm-cta\" data-cta-path=\"ceremony\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    15 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+      "capturedAt": "2026-08-05T21:50:46.445Z"
+    },
+    {
+      "pageId": "tog",
+      "pageLabel": "TOG",
+      "stateId": "default",
+      "stateLabel": "TOG-veileder",
+      "required": true,
+      "file": "screenshots/tog--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-08-05T21:50:49.677Z"
+    },
+    {
+      "pageId": "warm-cold",
+      "pageLabel": "Varm eller kald",
+      "stateId": "default",
+      "stateLabel": "Nakkesjekk",
+      "required": true,
+      "file": "screenshots/warm-cold--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-08-05T21:50:52.905Z"
+    },
+    {
+      "pageId": "first-winter",
+      "pageLabel": "Første vinter",
+      "stateId": "overview",
+      "stateLabel": "Programoversikt",
+      "required": true,
+      "file": "screenshots/first-winter--overview.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-08-05T21:50:56.109Z"
+    },
+    {
+      "pageId": "settings",
+      "pageLabel": "Innstillinger",
+      "stateId": "default",
+      "stateLabel": "Innstillingsoversikt",
+      "required": true,
+      "file": "screenshots/settings--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-08-05T21:50:58.948Z"
+    },
+    {
+      "pageId": "paywall",
+      "pageLabel": "Betalingsvegg",
+      "stateId": "default",
+      "stateLabel": "Standard Plus-tilbud",
+      "required": true,
+      "file": "screenshots/paywall--default.png",
+      "status": "captured",
+      "error": null,
+      "capturedAt": "2026-08-05T21:51:02.151Z"
+    }
+  ]
+}
