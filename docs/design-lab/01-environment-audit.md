@@ -20,8 +20,12 @@ Endret: `docs/design-notes/skjermmanifest.md`, `src/screens/FinnAntrekkScreen.ts
 `src/styles/__tests__/design-tokens-v2.motion.test.ts`.
 Nytt: `src/styles/__tests__/opacity-demping.test.ts`, `tools/mal-demoted.mjs`, `tools/opacity-detektor.mjs`.
 
-**Disposisjon:** ikke rørt i Fase 0. Bygg og tester er grønne MED disse endringene, så de er
-funksjonelt trygge. Vurderes og committes/forkastes eksplisitt i Fase 1 (product audit).
+**Disposisjon:** ikke rørt av Fase 0-arbeidet. Under audit-økten viste det seg at en **parallell
+økt jobber aktivt i repoet**: den committet WIP-en selv i `0d7cfb2` («Fase 5, punkt 1» —
+kontrastmålt håndtering av utdatert-tilstand) 2026-08-05 12:17, og `FinnAntrekkScreen.tsx` er
+fortsatt under endring der. Design Lab-arbeidet må koordineres med denne skjermløypa: ikke
+rediger `src/screens/`- eller `src/styles/`-filer uten å sjekke `git status` først, og Fase 1-
+auditen dokumenterer flytene som de ER committet, ikke arbeidsflaten midt i et grep.
 
 ## Bygg, test og kjøring — verifisert
 

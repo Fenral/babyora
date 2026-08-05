@@ -13,7 +13,7 @@
     "Fase 13: lansering"
   ],
   "openFindings": [
-    "Uncommittet Fase 4-arbeid fra forrige økt må disponeres (commit/forkast) i Fase 1",
+    "Parallell økt jobber aktivt i src/screens (committet 0d7cfb2 under auditen) — koordiner før redigering av skjermfiler",
     "2 flaky filsystemtester i verify-phase3-exact-sha.test.ts under full parallell vitest-last"
   ],
   "blockers": [],
