@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:bare": "vite --config apps/bare/vite.config.ts",
+    "dev:lab": "vite --config docs/design-lab/lab/vite.config.ts",
+    "build:lab": "vite build --config docs/design-lab/lab/vite.config.ts",
     "build": "tsc -b && vite build && npm run build:bare",
     "build:bare": "vite build --config apps/bare/vite.config.ts",
     "lint": "eslint .",
