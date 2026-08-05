@@ -42,8 +42,9 @@ egenskap (fødselsmåned × kalender) appen kjenner fra fødselsdatoen men aldri
 
 Appen er i dag presist bygget for: *primær, førstegangs, norskspråklig forelder i permisjon,
 barn 0–12 mnd, én enhet, forskrivende liste nå, betaler etter én gratis anbefaling.* Usynlige:
-all sekundæromsorg (strukturelt umulig — men CareCircle-previewen viser fiktive «Deler»-
-statuser: samme klasse løftefeil som paywall-P0-4), barn med ull-intoleranse (~40 % per F62,
+all sekundæromsorg (strukturelt umulig — CareCircle-previewen med fiktive «Deler»-statuser
+er dog dev-only, gated på `import.meta.env.DEV` i InnstillingerScreen.tsx:1932: verifisert
+2026-08-05, IKKE en produksjonsløftefeil slik fase 2-agenten antok), barn med ull-intoleranse (~40 % per F62,
 intet profilflagg, ull-first-default), sovende vognbarn (`vognMode='sleeping'` bygget,
 ukablet — trolig hverdagens vanligste S1–S2-situasjon), bil-familien (HB-9 bilstol-regelen
 bygget, usynlig), erfarne som vil validere, 12–24-hverdagen, ikke-norskspråklige, Dynamic
