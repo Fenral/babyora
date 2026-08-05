@@ -205,8 +205,8 @@ export function VarmEllerKaldScreen({
     WebkitOverflowScrolling: 'touch',
     // D4: bunn-fade i stedet for hardt klipp — husmønsteret fra
     // hjem-monter.css / sheet.css / kle-paa-stepper.css.
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
-    WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
   };
 
   // ── Hero card ──

@@ -909,8 +909,6 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
      ease-out. Ingen av dem er lik, saa et bytte ville endret bevegelsen.
      Gjelden er den samme kurven i ny linjeform; uten denne oppdateringen
      ville en FLYTTET gjeld sett ut som en NY. */
-  { fil: 'src/components/PlaggDetailSheet.tsx', decl: 'animation: plagg-sheet-out var(--dw-m-push-back) cubic-bezier(0.19, 1, 0.22, 1) forwards' },
-  { fil: 'src/components/PlaggDetailSheet.tsx', decl: 'animation: plagg-backdrop-out var(--dw-m-push-back) ease-out forwards' },
   /* ── src/App.tsx — FORST MALT 2026-08-04 (fase 2-rettelsen).
      Linje 492 er angrepets hovedfunn: appens rotfil skrev bade varighet og
      kurve via tilordning (`=`), som ingen uttrekker sa. Linje 733–739 er
@@ -924,15 +922,11 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
   // ── src/components/controls/SegmentedControl.css
   { fil: 'src/components/controls/SegmentedControl.css', decl: "transition: background-color 160ms ease, color 160ms ease" }, // linje 54
   // ── src/components/hjem/hjem-monter.css (referanseskjermen — Steg 6/8/9)
-  { fil: 'src/components/hjem/hjem-monter.css', decl: "transition: opacity 300ms ease-out" }, // linje 420
   { fil: 'src/components/hjem/hjem-monter.css', decl: "animation: hjm-scan-sweep var(--hjm-scan-duration, 2100ms) cubic-bezier(0.45, 0, 0.55, 1) 1 forwards" }, // linje 440
   { fil: 'src/components/hjem/hjem-monter.css', decl: "animation: hjm-check-pop 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) backwards" }, // linje 474
   { fil: 'src/components/hjem/hjem-monter.css', decl: "animation: hjm-spin 1s linear infinite" }, // linje 483
-  { fil: 'src/components/hjem/hjem-monter.css', decl: "animation: hjm-row-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards" }, // linje 741
   // ── src/components/instrument/TemperatureInstrument.tsx
-  { fil: 'src/components/instrument/TemperatureInstrument.tsx', decl: "transition: 'height 160ms ease-out'" }, // linje 53 — DoD-ens navngitte «hardkodet i en inline style»
   // ── src/components/instrument/vertical-gauge.css
-  { fil: 'src/components/instrument/vertical-gauge.css', decl: "transition: height 160ms ease-out" }, // linje 105
   { fil: 'src/components/instrument/vertical-gauge.css', decl: "animation: fa-gauge-gust-shift 1.6s ease-in-out infinite" }, // linje 148
   // ── src/components/LivingHomeAtmosphere.css
   { fil: 'src/components/LivingHomeAtmosphere.css', decl: "transition: background-color 180ms var(--ease-out)" }, // linje 42
@@ -948,19 +942,10 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
      MOTION.easeOut i motion-grammar.ts, skrevet en gang til for hand. */
   { fil: 'src/components/outfit-transition/OutfitTransitionOverlay.tsx', decl: 'ease: [0.22, 1, 0.36, 1]' }, // linje 226 [js]
   // ── src/components/PaywallDialog.tsx
-  { fil: 'src/components/PaywallDialog.tsx', decl: "transition: background 160ms var(--ease-standard)" }, // linje 155
-  { fil: 'src/components/PaywallDialog.tsx', decl: "animation: pw-modal-in 300ms var(--ease-standard)" }, // linje 292
-  { fil: 'src/components/PaywallDialog.tsx', decl: "animation: pw-backdrop-in 250ms ease-out" }, // linje 295
-  { fil: 'src/components/PaywallDialog.tsx', decl: "animation: pw-modal-out 220ms ease-out forwards" }, // linje 298
-  { fil: 'src/components/PaywallDialog.tsx', decl: "animation: pw-backdrop-out 220ms ease-out forwards" }, // linje 301
   // ── src/components/PlaggDetailSheet.tsx (tredje kurve-dialekt)
   { fil: 'src/components/PlaggDetailSheet.tsx', decl: "animation: plagg-sheet-in 400ms cubic-bezier(0.32, 0.72, 0, 1)" }, // linje 517
-  { fil: 'src/components/PlaggDetailSheet.tsx', decl: "animation: plagg-backdrop-in 250ms ease-out" }, // linje 520
   { fil: 'src/components/PlaggDetailSheet.tsx', decl: "animation-delay: calc(120ms + var(--stagger-i, 0) * 45ms)" }, // linje 573
   // ── src/components/planning/PlanChangeRail.css
-  { fil: 'src/components/planning/PlanChangeRail.css', decl: "transition: transform 240ms ease" }, // linje 164
-  { fil: 'src/components/planning/PlanChangeRail.css', decl: "transition: grid-template-rows 200ms ease, opacity 200ms ease" }, // linje 175
-  { fil: 'src/components/planning/PlanChangeRail.css', decl: "transition-duration: 240ms" }, // linje 183
   // ── src/components/RefHourPicker.tsx
   { fil: 'src/components/RefHourPicker.tsx', decl: "transition: reducedMotion ? 'none' : `background 180ms ${TOKENS.easeOut}, color 180ms ${TOKENS.easeOut}, box-shadow 180ms ${TOKENS.easeOut}, transform 160ms ${TOKENS.easeOut}`" }, // linje 87
   // ── src/components/Skeleton.tsx
@@ -971,17 +956,11 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
   { fil: 'src/components/WeatherLottie.tsx', decl: "animation: 'baRainFall 1.3s linear .35s infinite'" }, // linje 265
   { fil: 'src/components/WeatherLottie.tsx', decl: "animation: 'baRainFall 1.3s linear .7s infinite'" }, // linje 273
   // ── src/screens/FinnAntrekkScreen.tsx
-  { fil: 'src/screens/FinnAntrekkScreen.tsx', decl: "transition: 'transform 160ms ease'" }, // linje 320
-  { fil: 'src/screens/FinnAntrekkScreen.tsx', decl: "transition: reduceMotion ? 'none' : `transform 160ms ${TOKENS.easeStandard}`" }, // linje 1065
-  { fil: 'src/screens/FinnAntrekkScreen.tsx', decl: "transition: reduceMotion ? 'none' : `background 160ms ${TOKENS.easeStandard}, transform 160ms ${TOKENS.easeStandard}`" }, // linje 1156
   /* NEDBETALT 2026-08-05:  i Juster. Demoteringen gikk
      fra alpha til FARGE (DoD fase 5), og den nye transitionen henter bade
      varighet og kurve fra kontrakten: var(--dw-m-state) var(--dw-ease).
      Gulvet 63 -> 62 i samme endring. */
-  { fil: 'src/screens/FinnAntrekkScreen.tsx', decl: "transition: reduceMotion ? 'none' : `transform 280ms ${TOKENS.easeStandard}`" }, // linje 1220
-  { fil: 'src/screens/FinnAntrekkScreen.tsx', decl: "transition: reduceMotion ? 'none' : `color 160ms ${TOKENS.easeStandard}`" }, // linje 1244
   // ── src/screens/HjemScreen.tsx
-  { fil: 'src/screens/HjemScreen.tsx', decl: "transition: reducedMotion ? 'none' : `transform ${MOTION.press}ms ${MOTION.easeOut}, box-shadow 200ms ${MOTION.easeOut}, background-color ${MOTION.tempTransition}ms ${MOTION.easeOut}, color ${MOTION.tempTransition}ms ${MOTION.easeOut}`" }, // linje 947
   // fjaer nr. 3 — igjen ulik de to andre (420/26/0.6 mot 500/25/0.5 og 300/30)
   { fil: 'src/screens/HjemScreen.tsx', decl: 'stiffness: 420' }, // linje 1202 [js]
   { fil: 'src/screens/HjemScreen.tsx', decl: 'damping: 26' }, // linje 1202 [js]
@@ -993,8 +972,6 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
      var derfor usynlige for bade deklarasjons- og bruksmonsteret.
      `--ob-ease-standard` er --dw-ease skrevet en gang til for hand. */
   { fil: 'src/screens/OnboardingScreen.tsx', decl: '--ob-ease-spring: cubic-bezier(.34,1.32,.64,1)' }, // linje 932 [variabel]
-  { fil: 'src/screens/OnboardingScreen.tsx', decl: "transition: all .35s var(--ob-ease-spring)" }, // linje 1028
-  { fil: 'src/screens/OnboardingScreen.tsx', decl: "transition: transform .18s var(--ob-ease-spring), box-shadow .18s var(--ob-ease-standard)" }, // linje 1530
   /* SLETTET 2026-08-05: 14 oppforinger fra src/screens/PaakledningScreen.tsx.
      Alle la i CurrentPaakledningScreen — den unadde grenen som ble fjernet i
      fase 4. Gruppen bar allerede merknaden «slettes i fase 4», og gulvet
@@ -1002,9 +979,7 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
      forsvant med flaten som aldri kunne rendres. */
   // ── src/screens/PlaggbibliotekScreen.tsx
   // ── src/screens/TogGuideScreen.tsx
-  { fil: 'src/screens/TogGuideScreen.tsx', decl: "transition: reducedMotion ? 'none' : 'left 160ms var(--ease-standard)'" }, // linje 617
   // ── src/screens/UkeScreen.css
-  { fil: 'src/screens/UkeScreen.css', decl: "transition: transform 200ms var(--ease-standard)" }, // linje 351
   // ── src/screens/VarmEllerKaldScreen.tsx
   // EVIGHETEN er borte 2026-08-05 (fase 6B): tre sykluser i stedet for infinite.
   // Den RA VARIGHETEN og KURVEN star igjen og er fortsatt gjeld — 1,8 s ligger
@@ -1069,7 +1044,7 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
  * den DOMINERENDE inline-formen i denne kodebasen (39 til). Grenen for
  * reduced motion er handtert, men varigheten og kurven er like hardkodet.
  */
-const BASELINE = 62;
+const BASELINE = 37;
 
 /** Nokkel: fil + normalisert deklarasjon. */
 const nokkel = (t: { fil: string; decl: string }): string => `${t.fil} :: ${t.decl}`;
@@ -1107,11 +1082,23 @@ const MALPROVER: ReadonlyArray<{ flate: Flate; fil: string; decl: string }> = [
     fil: 'src/components/PlaggDetailSheet.tsx',
     decl: 'animation: plagg-sheet-in 400ms cubic-bezier(0.32, 0.72, 0, 1)',
   },
-  {
-    flate: 'inline',
-    fil: 'src/components/instrument/TemperatureInstrument.tsx',
-    decl: "transition: 'height 160ms ease-out'",
-  },
+  /* INLINE-PRØVEN ER FJERNET 2026-08-06, og grunnen er en GOD nyhet:
+     inline-flaten har null hardkodet bevegelse igjen. Registeret teller bare
+     GJELD, så en levende prøve på den flaten er umulig når gjelden er borte.
+
+     Hvordan den døde er verdt å huske. Prøven pekte på
+     `transition: 'height 160ms ease-out'` i TemperatureInstrument.tsx. En
+     ryddagent tokeniserte den — helt riktig — og drepte dermed portens
+     eneste bevis på at den leser inline-flaten. En uavhengig kontrollør
+     fanget det, og porten ble rød, som den skal.
+     LÆRDOM: en målprøve må aldri peke på noe det er MENINGEN å rydde bort.
+
+     VAKTEN ER IKKE BORTE. Testen «flate (c): inline CSSProperties» under
+     (søk etter DoD-ens «hardkodet 300ms i en inline style») kjører
+     uttrekkeren mot en syntetisk streng og asserterer at flaten blir
+     `inline`. Faller inline-støtten ut av uttrekkeren ved en fremtidig
+     refaktorering, blir DEN rød. Den er dessuten sterkere enn en levende
+     prøve: den er uavhengig av om det tilfeldigvis finnes gjeld å peke på. */
   /* ── de tre formene angrepet 2026-08-04 slapp gjennom ─────────────────
      Dette er den ENESTE rettelsen som stopper at samme feilklasse gjentar
      seg: hver NY uttrekker far en navngitt, live forekomst her. Faller
@@ -1609,14 +1596,28 @@ describe('det parallelle bevegelsessystemet er navngitt, malt og frosset', () =>
     expect(ALLE_FILER.map(relSti)).toContain(MOTION_GRAMMAR);
   });
 
-  it('KONSUMENTENE er ikke fritatt — bruken telles der den skrives', () => {
-    // Fritaket gjelder DEFINISJONEN, aldri anvendelsen. Finner vi ingen
-    // registrert gjeld som konsumerer MOTION, har enten konsumentene
-    // forsvunnet eller uttrekkerne blitt stille.
-    const konsumenter = KJENT_GJELD.filter((g) => g.decl.includes('MOTION.'));
+  it('KONSUMENTENE er ikke fritatt — grammatikken er fortsatt i bruk', () => {
+    /* OMSKREVET 2026-08-06, og skiftet er verdt å forstå.
+
+       Testen målte tidligere at REGISTRERT GJELD konsumerer MOTION. Den
+       antakelsen holdt så lenge all MOTION-bruk var udokumentert gjeld —
+       men etter ryddrunden er den tokenisert, og registeret har null slike
+       oppføringer. Testen ble da rød av at jobben var GJORT.
+
+       En port som blir rød når gjelden nedbetales, måler feil ting. Det den
+       EGENTLIG vokter, står i dens egen kommentar: «har enten konsumentene
+       forsvunnet eller uttrekkerne blitt stille». Det første måles her —
+       direkte, mot koden. Det andre måles av de syntetiske uttrekkerprøvene
+       lenger oppe, som kjører uttrekkeren mot kjente strenger.
+
+       Fritaket gjelder fortsatt bare DEFINISJONEN, aldri anvendelsen. */
+    const brukt = ALLE_FILER
+      .filter((f) => relSti(f) !== MOTION_GRAMMAR)
+      .filter((f) => readFileSync(f, 'utf8').includes('MOTION.'));
     expect(
-      konsumenter.length,
-      'ingen registrert gjeld konsumerer MOTION — da er enten bruken borte eller uttrekkeren dod',
+      brukt.length,
+      'ingen fil utenfor grammatikkfilen konsumerer MOTION — da er objektet dødt, '
+      + 'og fritaket for definisjonen fritar da ingenting',
     ).toBeGreaterThan(0);
   });
 });

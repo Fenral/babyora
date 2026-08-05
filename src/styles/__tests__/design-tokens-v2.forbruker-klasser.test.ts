@@ -100,6 +100,7 @@ const AVLEDNINGSPRIMITIV: Readonly<Record<string, string>> = {
 const PRIMITIV: Readonly<Record<string, string>> = {
   zone: 'soneskalaen · Tog-guidens temperaturslider (DATA-farge, tema-konstant)',
   kart: 'antrekkskartets forbindelseslinjer · tema- OG temperaturvariant',
+  fade: 'D4s bunn-maske · én verdi, 31 kopier erstattet (2026-08-06)',
   canvas: 'valørstigen · nivå 0',
   panel: 'valørstigen · petrol-instrument',
   raised: 'valørstigen · nivå 2',
@@ -159,9 +160,10 @@ const BASELINE_BRUDD: readonly string[] = [
      sveipets settling i kle-paa-stepper.css er dens forste forbruker.
      Linjen slettes og gulvet senkes i SAMME endring - hele ratsjettregelen. */
   '--dw-m-bow-out', // maskoten retter seg opp; bow-in brukes, bow-out ikke
-  '--dw-m-atmo', // lyspoolens krysstoning ved skjermbytte (fase 3B)
+  /* NEDBETALT 2026-08-06: --dw-m-atmo fikk sin forste forbruker i
+     hjem-monter.css under ryddrunden. Gulvet senkes i SAMME endring. */
 ];
-const BASELINE = 2;
+const BASELINE = 1;
 
 /**
  * Primitiver uten forbruker i dag. IKKE brudd — primitiver kan stå ubrukt.

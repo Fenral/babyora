@@ -98,7 +98,7 @@
    MERKNAD: --dw-depth-raised er dimensjonert for paneler (56 px ytre uskarp-
    het). På en 21 px brikke er den for stor. Se rapporten: her mangler et
    dybdetoken i brikkeskala. */
-.outfit-map__ordinal { align-items: center; background: var(--dw-overlay); border: 1px solid currentColor; border-radius: 999px; box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised); display: flex; font-size: .7rem; block-size: 1.35rem; inline-size: 1.35rem; justify-content: center; position: absolute; inset-block-start: -.45rem; inset-inline-start: -.45rem; }
+.outfit-map__ordinal { align-items: center; background: var(--dw-overlay); border: 1px solid currentColor; border-radius: 999px; box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-chip); display: flex; font-size: .7rem; block-size: 1.35rem; inline-size: 1.35rem; justify-content: center; position: absolute; inset-block-start: -.45rem; inset-inline-start: -.45rem; }
 .outfit-map__node.is-highlighted, .outfit-row.is-highlighted { border-color: var(--outfit-active); box-shadow: var(--outfit-ring); text-decoration: underline; }
 /* box-shadow er ÉN egenskap: ringen over slettet nodens nye dybde i det den
    ble markert, altså ville brikken flatet ut nøyaktig når den er i fokus.

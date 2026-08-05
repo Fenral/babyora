@@ -1164,7 +1164,8 @@ const scrollStyle: CSSProperties = {
   // oppskrift som resten av appen (.dw-sheet-innhold, .hjm-result,
   // Plaggbiblioteket). Flaten maler ingen egen bakgrunn, sa faden treffer
   // bare innholdet.
-  maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+  WebkitMaskImage: 'var(--dw-fade-bunn)',
+  maskImage: 'var(--dw-fade-bunn)',
   padding: '0 var(--dw-space-16)',
   // P10 (Juster clearance, folded into JOB4): this screen owns its own
   // internal scroll container (like .hjem-monter, see hjem-monter.css's own

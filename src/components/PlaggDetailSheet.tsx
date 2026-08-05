@@ -300,8 +300,8 @@ export function PlaggDetailSheet({
           style={{
             overflowY: 'auto',
             padding: 'var(--dw-space-8) var(--dw-space-20) var(--dw-space-24)',
-            maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+            WebkitMaskImage: 'var(--dw-fade-bunn)',
+            maskImage: 'var(--dw-fade-bunn)',
           }}
         >
           {/* Hero — glow + kategori-fargede skygge + kategori-badge (F84) */}

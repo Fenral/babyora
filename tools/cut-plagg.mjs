@@ -235,14 +235,22 @@ function randethet(maske, W, H) {
  *  «manuell maske forst — det bevarer noyaktig plagg, farge og form.
  *  Regenerer bare nar selve originalen er faglig eller visuelt ubrukelig.»
  *  Disse skrives ikke; originalen blir staaende til den er maskert for hand. */
-const MANUELL = {
-  'plagg-sydvest.png':
-    'morkegronn hakestropp ligger innenfor toleransen mot morkebrun bakgrunn — '
-    + 'flood-fill gaar tvers gjennom stroppen og etterlater tenner. Ekte '
-    + 'mattingsproblem, ikke terskelproblem. Selvkorrigerende toleranse (24/18/13) '
-    + 'loste det ikke: kanten er ikke flisete nok til aa utlose retesten, '
-    + 'fordi selve stroppen forsvinner i stedet for aa bli oppflist.',
-};
+/* TOM SIDEN 2026-08-06.
+ *
+ * 'plagg-sydvest.png' sto her med begrunnelsen «morkegronn hakestropp ligger
+ * innenfor toleransen mot morkebrun bakgrunn — flood-fill gaar tvers gjennom
+ * stroppen. Ekte mattingsproblem, ikke terskelproblem.»
+ *
+ * Diagnosen var riktig, og det var derfor en strammere terskel aldri hjalp:
+ * AKSEN var feil, ikke tallet. tools/cut-sydvest.mjs bytter fra RGB-avstand
+ * til FARGETONE (bakgrunn 25°, stropp 50-70°) og klipper den rent — 76,9 %
+ * gjennomsiktig, residue 0,4 %, stroppen intakt.
+ *
+ * Oppforingen er FJERNET, ikke bare oppdatert, og porten
+ * `monter-assets.alfa.test.ts` krevde det: «et unntak som overlever sin egen
+ * grunn skjuler neste regresjon.» En liste over kjente unntak som inneholder
+ * noe som ikke lenger er et unntak, gjor at neste ekte unntak ser normalt ut. */
+const MANUELL = {};
 
 const filer = readdirSync(INN).filter((f) => f.startsWith('plagg-') && f.endsWith('.png'));
 if (!KUN_SJEKK) { mkdirSync(UT, { recursive: true }); mkdirSync(ARK, { recursive: true }); }

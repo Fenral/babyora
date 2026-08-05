@@ -363,8 +363,8 @@ const styles = {
     // stedet for å tone det ut, og løgnen ble synlig i det øyeblikket noe
     // annet enn ren lerretsfarge lå bak. Formen er husets egen
     // (sheet.css:78, hjem-monter.css:892, kle-paa-stepper.css:164).
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
-    WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
   } satisfies CSSProperties,
 
   // D2 (DoD): PLATEN ER GRIDET, IKKE CELLEN. Det hevede fyllet lå på hver

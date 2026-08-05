@@ -1,10 +1,21 @@
 /**
- * Lab-shell: scenariovelger + fire ruter (P1–P4, bygges etter Sols review)
- * + FELLES-fanen som demonstrerer alle delte komponenter mot valgt scenario,
- * slik at fundamentet kan verifiseres visuelt før prototypene bygges.
+ * Lab-shell — TESTSELEN eier eksperimentet (spec v2 §1 pkt. 4):
+ * scenario, virtuell klokke, logging, rekkefølge (Williams-design),
+ * forskningsdisclaimer og nullmodell-armen.
+ *
+ * Rutene P1–P3 kobles fra lab/pN/index.tsx ({ manifest, Prototype });
+ * P4 kobles automatisk når lab/p4/index.tsx finnes (komposisjon av P1+P3,
+ * bygges etter at P1/P3-kontraktene er godkjent). FELLES-fanen er
+ * demokatalogen for de retningsnøytrale komponentene.
  */
 
-import { useMemo, useState, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentType,
+  type CSSProperties,
+} from 'react';
 import { SCENARIER, scenarioForId, type Scenario } from './felles/scenarier';
 import { kjorMotor, kjorMotorForVaer, delFlags } from './felles/motor';
 import {
@@ -21,8 +32,48 @@ import {
   usikrestPremiss,
   deltaSetning,
 } from './felles/tekst';
+import { klokkeForScenario, type LabKlokke } from './felles/sele/klokke';
+import { lagLogg } from './felles/sele/logging';
+import {
+  ARM_NAVN,
+  SCENARIOFAMILIER,
+  WILLIAMS_ARMSEKVENSER,
+  erCarryoverBalansert,
+  erPosisjonsbalansert,
+  rekkefolgeForDeltaker,
+  tildelScenarier,
+  type Arm,
+} from './felles/sele/rekkefolge';
+import { Nullmodell } from './felles/sele/nullmodell';
+import { Disclaimer } from './felles/sele/disclaimer';
+import * as P1Modul from './p1/index';
+import * as P2Modul from './p2/index';
+import * as P3Modul from './p3/index';
 
-type Rute = 'felles' | 'p1' | 'p2' | 'p3' | 'p4';
+type SeleLogg = (...args: unknown[]) => void;
+
+type PrototypeModul = {
+  manifest: { navn: string };
+  Prototype: ComponentType<{
+    scenario: Scenario;
+    klokke: LabKlokke;
+    logg?: SeleLogg;
+  }>;
+};
+
+/** P4 finnes først når komposisjonsagenten har levert lab/p4/index.tsx. */
+const P4_GLOB = import.meta.glob('./p4/index.tsx', {
+  eager: true,
+}) as Record<string, PrototypeModul>;
+
+const MODULER: Partial<Record<Arm, PrototypeModul>> = {
+  p1: P1Modul as unknown as PrototypeModul,
+  p2: P2Modul as unknown as PrototypeModul,
+  p3: P3Modul as unknown as PrototypeModul,
+  p4: P4_GLOB['./p4/index.tsx'],
+};
+
+type Rute = 'felles' | Arm;
 
 const RUTER: { id: Rute; navn: string }[] = [
   { id: 'felles', navn: 'FELLES' },
@@ -30,30 +81,84 @@ const RUTER: { id: Rute; navn: string }[] = [
   { id: 'p2', navn: 'P2' },
   { id: 'p3', navn: 'P3' },
   { id: 'p4', navn: 'P4' },
+  { id: 'null', navn: 'NULL' },
 ];
 
 const SYSTEMFONT =
   'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
-const knapp = (aktiv: boolean): CSSProperties => ({
+const knapp = (aktiv: boolean, deaktivert = false): CSSProperties => ({
   minHeight: 48,
   minWidth: 48,
   padding: '0 16px',
   fontSize: 16,
   fontFamily: 'inherit',
   fontWeight: aktiv ? 700 : 400,
-  color: '#1a1a1a',
+  color: deaktivert ? '#767676' : '#1a1a1a',
   background: aktiv ? '#e6e6e6' : '#ffffff',
   border: aktiv ? '2px solid #1a1a1a' : '1px solid #b3b3b3',
   borderRadius: 6,
-  cursor: 'pointer',
+  cursor: deaktivert ? 'default' : 'pointer',
 });
+
+const panel: CSSProperties = {
+  border: '1px solid #b3b3b3',
+  borderRadius: 8,
+  padding: 12,
+  marginBottom: 12,
+  background: '#fafafa',
+};
+
+const REKKEFOLGE_BALANSERT =
+  erCarryoverBalansert(WILLIAMS_ARMSEKVENSER) &&
+  erPosisjonsbalansert(WILLIAMS_ARMSEKVENSER);
 
 export function LabShell() {
   const [scenarioId, setScenarioId] = useState<string>(SCENARIER[0].id);
   const [rute, setRute] = useState<Rute>('felles');
+  const [deltakerNr, setDeltakerNr] = useState(1);
+  const [bekreftede, setBekreftede] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
 
   const scenario = scenarioForId(scenarioId) ?? SCENARIER[0];
+
+  // Selen eier klokka: ny klokke fiksert til scenariets «nå» per scenario.
+  const klokke = useMemo(() => klokkeForScenario(scenario), [scenario]);
+  const [naa, setNaa] = useState('');
+  useEffect(() => {
+    setNaa(klokke.naaISO());
+    return klokke.onTick(() => setNaa(klokke.naaISO()));
+  }, [klokke]);
+
+  // Selen eier loggen: én logg for hele økten.
+  const [logg] = useState(() => lagLogg());
+  const seleLogg = useMemo(
+    () => logg.loggerFor('sele', scenario.id, klokke),
+    [logg, scenario.id, klokke],
+  );
+  const ruteLogg = useMemo(
+    () =>
+      rute === 'felles' ? null : logg.loggerFor(rute, scenario.id, klokke),
+    [logg, rute, scenario.id, klokke],
+  );
+
+  const oppgaveNokkel = `${rute}|${scenario.id}`;
+  const trengerDisclaimer = rute !== 'felles';
+  const erBekreftet = bekreftede.has(oppgaveNokkel);
+
+  function bekreftDisclaimer(): void {
+    seleLogg('sele:disclaimer_bekreftet', { rute, scenarioId: scenario.id });
+    seleLogg('sele:oppgave_start', { rute, scenarioId: scenario.id });
+    setBekreftede((prev) => new Set(prev).add(oppgaveNokkel));
+  }
+
+  function spol(min: number): void {
+    klokke.spol(min);
+    seleLogg('sele:spol', { min, rute });
+  }
+
+  const modul = rute === 'felles' ? undefined : MODULER[rute as Arm];
 
   return (
     <div
@@ -68,9 +173,12 @@ export function LabShell() {
       }}
     >
       <header style={{ maxWidth: 640, margin: '0 auto 16px' }}>
-        <h1 style={{ margin: '0 0 4px', fontSize: 20 }}>Babyora — Design-lab (fase 9)</h1>
+        <h1 style={{ margin: '0 0 4px', fontSize: 20 }}>
+          Babyora — Design-lab (fase 9)
+        </h1>
         <p style={{ margin: '0 0 12px', color: '#4d4d4d', fontSize: 14 }}>
-          Delt fundament: motoradapter, ti scenarier, retningsnøytrale komponenter.
+          Testselen eier scenario, klokke, rekkefølge og logg. Retningene
+          eier beslutningspresentasjonen.
         </p>
 
         <label style={{ display: 'block', marginBottom: 12 }}>
@@ -100,29 +208,254 @@ export function LabShell() {
           </select>
         </label>
 
-        <nav aria-label="Prototyper" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {RUTER.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => setRute(r.id)}
-              aria-pressed={rute === r.id}
-              style={knapp(rute === r.id)}
-            >
-              {r.navn}
-            </button>
-          ))}
+        <nav
+          aria-label="Prototyper"
+          style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}
+        >
+          {RUTER.map((r) => {
+            const mangler = r.id !== 'felles' && r.id !== 'null' && !MODULER[r.id as Arm];
+            return (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => !mangler && setRute(r.id)}
+                aria-pressed={rute === r.id}
+                disabled={mangler}
+                title={
+                  mangler
+                    ? 'P4 kobles automatisk når lab/p4/index.tsx finnes (komposisjon av P1+P3).'
+                    : r.id === 'null'
+                      ? ARM_NAVN.null
+                      : r.id !== 'felles'
+                        ? MODULER[r.id as Arm]?.manifest.navn
+                        : undefined
+                }
+                style={knapp(rute === r.id, mangler)}
+              >
+                {r.navn}
+              </button>
+            );
+          })}
         </nav>
       </header>
 
       <main style={{ maxWidth: 640, margin: '0 auto' }}>
-        {rute === 'felles' ? (
-          <FellesDemo scenario={scenario} />
-        ) : (
-          <Plassholder kode={rute.toUpperCase()} />
+        <Klokkekontroll naaISO={naa} gyldigTil={scenario.gyldigTil} spol={spol} />
+        <Rekkefolgepanel
+          deltakerNr={deltakerNr}
+          setDeltakerNr={setDeltakerNr}
+        />
+
+        {rute === 'felles' && <FellesDemo scenario={scenario} />}
+
+        {trengerDisclaimer && !erBekreftet && (
+          <Disclaimer
+            oppgaveNavn={
+              rute === 'null'
+                ? 'nullmodell-oppgaven'
+                : `oppgaven (${rute.toUpperCase()})`
+            }
+            storTekst={scenario.flags.storTekst}
+            hoyKontrast={scenario.flags.hoyKontrast}
+            onBekreft={bekreftDisclaimer}
+          />
         )}
+
+        {trengerDisclaimer && erBekreftet && rute === 'null' && (
+          <Nullmodell
+            scenario={scenario}
+            klokke={klokke}
+            logg={ruteLogg ?? undefined}
+          />
+        )}
+
+        {trengerDisclaimer && erBekreftet && rute !== 'null' && (
+          modul ? (
+            <modul.Prototype
+              scenario={scenario}
+              klokke={klokke}
+              logg={ruteLogg ?? undefined}
+            />
+          ) : (
+            <Plassholder kode={rute.toUpperCase()} />
+          )
+        )}
+
+        <Loggpanel logg={logg} />
       </main>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Selens paneler
+ * ------------------------------------------------------------------ */
+
+function Klokkekontroll({
+  naaISO,
+  gyldigTil,
+  spol,
+}: {
+  naaISO: string;
+  gyldigTil: string;
+  spol: (min: number) => void;
+}) {
+  return (
+    <section style={panel} aria-label="Virtuell klokke">
+      <p style={{ margin: '0 0 8px' }}>
+        <strong>Klokka i laben: {naaISO.slice(11, 16)}</strong>
+        <span style={{ color: '#4d4d4d' }}>
+          {' '}
+          · rådet gjelder til {gyldigTil}
+        </span>
+      </p>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {[30, 60, 120].map((min) => (
+          <button
+            key={min}
+            type="button"
+            onClick={() => spol(min)}
+            style={knapp(false)}
+          >
+            Spol +{min} min
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Rekkefolgepanel({
+  deltakerNr,
+  setDeltakerNr,
+}: {
+  deltakerNr: number;
+  setDeltakerNr: (n: number) => void;
+}) {
+  const [vis, setVis] = useState(false);
+  const sekvens = rekkefolgeForDeltaker(deltakerNr);
+
+  return (
+    <section style={panel} aria-label="Rekkefølge (Williams-design)">
+      <button
+        type="button"
+        onClick={() => setVis((v) => !v)}
+        aria-expanded={vis}
+        style={knapp(false)}
+      >
+        {vis ? 'Skjul rekkefølge' : 'Vis rekkefølge (Williams-design)'}
+      </button>
+      {vis && (
+        <div style={{ marginTop: 12 }}>
+          <p style={{ margin: '0 0 8px', fontSize: 14, color: '#4d4d4d' }}>
+            {WILLIAMS_ARMSEKVENSER.length} sekvenser à{' '}
+            {WILLIAMS_ARMSEKVENSER[0].length} eksponeringer. Balansert for
+            posisjon og førsteordens carryover:{' '}
+            {REKKEFOLGE_BALANSERT ? 'ja' : 'NEI — sjekk rekkefolge.ts'}.
+          </p>
+          <label style={{ display: 'block', marginBottom: 8 }}>
+            <span style={{ fontWeight: 600 }}>Deltakernummer </span>
+            <input
+              type="number"
+              min={1}
+              value={deltakerNr}
+              onChange={(e) => setDeltakerNr(Number(e.target.value) || 1)}
+              style={{
+                minHeight: 48,
+                width: 96,
+                fontSize: 16,
+                fontFamily: 'inherit',
+                padding: '0 8px',
+                border: '1px solid #b3b3b3',
+                borderRadius: 6,
+              }}
+            />
+          </label>
+          <ol style={{ margin: '0 0 8px', paddingLeft: '1.5em' }}>
+            {sekvens.map((arm, posisjon) => {
+              const tildeling = tildelScenarier(deltakerNr, posisjon);
+              return (
+                <li key={`${arm}-${posisjon}`} style={{ marginBottom: 4 }}>
+                  <strong>{ARM_NAVN[arm]}</strong>
+                  <span style={{ color: '#4d4d4d', fontSize: 14 }}>
+                    {' '}
+                    · måling: {tildeling.maaling.join(', ')}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+          <p style={{ margin: '0 0 4px', fontSize: 14, color: '#4d4d4d' }}>
+            Treningsscenarier (skåres aldri):{' '}
+            {SCENARIOFAMILIER.map((f) => f.trening).join(', ')}.
+          </p>
+          <details style={{ fontSize: 14, color: '#4d4d4d' }}>
+            <summary style={{ cursor: 'pointer', minHeight: 24 }}>
+              Scenariofamilier og ekvivalensbegrunnelse
+            </summary>
+            <ul style={{ margin: '8px 0 0', paddingLeft: '1.2em' }}>
+              {SCENARIOFAMILIER.map((f) => (
+                <li key={f.id} style={{ marginBottom: 4 }}>
+                  <strong>{f.id}</strong>: {f.begrunnelse}
+                </li>
+              ))}
+            </ul>
+          </details>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Loggpanel({ logg }: { logg: ReturnType<typeof lagLogg> }) {
+  const [, setVersjon] = useState(0);
+  useEffect(() => logg.abonner(() => setVersjon((v) => v + 1)), [logg]);
+
+  const alle = logg.innslag();
+  const siste = alle.slice(-10);
+
+  function lastNed(): void {
+    const blob = new Blob([logg.tilJSON()], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'babyora-lab-logg.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <section style={{ ...panel, marginTop: 16 }} aria-label="Hendelseslogg">
+      <p style={{ margin: '0 0 8px' }}>
+        <strong>Hendelseslogg</strong>
+        <span style={{ color: '#4d4d4d' }}> · {alle.length} innslag</span>
+      </p>
+      {siste.length > 0 && (
+        <ul
+          style={{
+            margin: '0 0 8px',
+            paddingLeft: '1.2em',
+            fontSize: 14,
+            color: '#4d4d4d',
+          }}
+        >
+          {siste.map((i, idx) => (
+            <li key={`${i.tidISO}-${idx}`}>
+              [{i.tidISO.slice(11, 16)}] {i.prototype}/{i.scenario} —{' '}
+              {i.event}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button type="button" onClick={lastNed} style={knapp(false)}>
+          Last ned logg (JSON)
+        </button>
+        <button type="button" onClick={() => logg.toem()} style={knapp(false)}>
+          Tøm logg
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -138,15 +471,18 @@ function Plassholder({ kode }: { kode: string }) {
       }}
     >
       <p style={{ margin: 0, fontWeight: 700, color: '#1a1a1a' }}>{kode}</p>
-      <p style={{ margin: '8px 0 0' }}>Bygges etter Sols review.</p>
+      <p style={{ margin: '8px 0 0' }}>
+        Kobles automatisk når lab/{kode.toLowerCase()}/index.tsx finnes.
+      </p>
     </section>
   );
 }
 
-/**
+/* ------------------------------------------------------------------ *
  * FELLES-fanen: kjører motoren for valgt scenario og viser alle delte
  * komponenter i INV-rekkefølge (sikkerhet → råd → gyldighet → kvittering).
- */
+ * ------------------------------------------------------------------ */
+
 function FellesDemo({ scenario }: { scenario: Scenario }) {
   const resultat = useMemo(() => kjorMotor(scenario), [scenario]);
 

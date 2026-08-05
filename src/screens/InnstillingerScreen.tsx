@@ -238,7 +238,8 @@ const scrollStyle: CSSProperties = {
   // D4: bunn-fade i stedet for hardt kutt — samme oppskrift som resten av
   // appen (.dw-sheet-innhold, .hjm-result, Plaggbiblioteket). Uten den sier
   // en skjerm som er lengre enn skjermen ingenting om at det er mer under.
-  maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+  WebkitMaskImage: 'var(--dw-fade-bunn)',
+  maskImage: 'var(--dw-fade-bunn)',
   padding: '14px 16px calc(env(safe-area-inset-bottom, 0px) + 110px)',
   display: 'flex',
   flexDirection: 'column',
@@ -3012,7 +3013,8 @@ function HelpDialog({
     overflowY: 'auto',
     // D4: bunn-fade sa arket sier at det er mer under — samme oppskrift som
     // .dw-sheet-innhold i sheet.css og resten av appens rulleflater.
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
     padding: 'var(--dw-space-14) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
@@ -3302,7 +3304,8 @@ function FeedbackDialog({
     overflowY: 'auto',
     // D4: bunn-fade sa arket sier at det er mer under — samme oppskrift som
     // .dw-sheet-innhold i sheet.css og resten av appens rulleflater.
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
     padding: 'var(--dw-space-14) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
@@ -3674,7 +3677,8 @@ function PrivacyDialog({
     overflowY: 'auto',
     // D4: bunn-fade sa arket sier at det er mer under — samme oppskrift som
     // .dw-sheet-innhold i sheet.css og resten av appens rulleflater.
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
     padding: 'var(--dw-space-14) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
@@ -4625,7 +4629,8 @@ function AddChildDialog({
     overflowY: 'auto',
     // D4: bunn-fade sa arket sier at det er mer under — samme oppskrift som
     // .dw-sheet-innhold i sheet.css og resten av appens rulleflater.
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
     padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
@@ -5011,7 +5016,8 @@ function AutoLocationDialog({
     overflowY: 'auto',
     // D4: bunn-fade sa arket sier at det er mer under — samme oppskrift som
     // .dw-sheet-innhold i sheet.css og resten av appens rulleflater.
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
     padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
@@ -5294,7 +5300,8 @@ function WeatherChangeDialog({
     overflowY: 'auto',
     // D4: bunn-fade sa arket sier at det er mer under — samme oppskrift som
     // .dw-sheet-innhold i sheet.css og resten av appens rulleflater.
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
     padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
@@ -5564,7 +5571,8 @@ function DeleteDataDialog({
     overflowY: 'auto',
     // D4: bunn-fade sa arket sier at det er mer under — samme oppskrift som
     // .dw-sheet-innhold i sheet.css og resten av appens rulleflater.
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
     padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
@@ -5853,7 +5861,8 @@ function WeatherSourceDialog({
     overflowY: 'auto',
     // D4: bunn-fade sa arket sier at det er mer under — samme oppskrift som
     // .dw-sheet-innhold i sheet.css og resten av appens rulleflater.
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
     padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
@@ -6124,7 +6133,8 @@ function RateAppDialog({
     overflowY: 'auto',
     // D4: bunn-fade sa arket sier at det er mer under — samme oppskrift som
     // .dw-sheet-innhold i sheet.css og resten av appens rulleflater.
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
     padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',

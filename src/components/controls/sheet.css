@@ -75,7 +75,8 @@
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--dw-space-16));
   /* D4: en rulleflate som kuttes hardt, sier ikke at det er mer under.
      Samme oppskrift som appens ovrige rulleflater. */
-  mask-image: linear-gradient(to bottom, black 92%, transparent 100%);
+  -webkit-mask-image: var(--dw-fade-bunn);
+  mask-image: var(--dw-fade-bunn);
 }
 
 .dw-sheet-topp {

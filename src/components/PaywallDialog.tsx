@@ -434,8 +434,8 @@ function scrollAreaStyle(dismissable: boolean): CSSProperties {
     // D4: innholdet forsvinner opp under <footer>, og kanten må si fra at
     // det er mer. Husets egen rampe (sheet.css, hjem-monter.css,
     // kle-paa-stepper.css bruker nøyaktig samme) — ingen ny verdi.
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
-    WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
   };
 }
 

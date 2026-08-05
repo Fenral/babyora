@@ -118,7 +118,7 @@ const SRC = join(ROOT, 'src');
  */
 const BASELINE: Record<string, number> = {
   /* Ny mot kartleggingen, som ikke målte D1. Begge i OnboardingScreen. */
-  D1: 2,
+  D1: 0,
   /* 59, ikke kartleggingens 67. NB: kartleggingen oppga også `Antrekkskart
      .css:9` for .outfit-map__ordinal — riktig linje er 10. Skanningen
      rapporterte tegnet ETTER forrige `}`; her rapporteres selektorens egen
@@ -129,20 +129,20 @@ const BASELINE: Record<string, number> = {
      (OnboardingScreen ×5, PaakledningScreen ×3), altså samme gjeld talt to
      ganger. Her er template-CSS-områdene ekskludert fra inline-flaten:
      21 + 38 = 59. css/tsx-css-siden stemmer eksakt med kartleggingen. */
-  D2: 55,
+  D2: 0,
   D3: 0,
   /* 21, ikke kartleggingens 20: `.hjem-monter { overflow: hidden auto }` er
      en scroll-container like fullt som `overflow-y: auto`. Toverdiformen var
      usynlig for kartleggingens regex. */
-  D4: 20,
-  D5: 2,
-  D6: 1,
+  D4: 1,
+  D5: 0,
+  D6: 0,
   /* 18, ikke kartleggingens 16: kartleggingens skanning brukte
      `(background|color|border|box-shadow)` og så derfor verken
      `outline: 3px solid var(--focus-ring, #2b2522)` (Antrekkskart) eller
      `background-image: linear-gradient(…, var(--surface-soft, #E6E3DD) …)`
      (Skeleton). Begge er ekte rå hex; gulvet står på det MÅLTE tallet. */
-  D7: 7,   /* 16 -> 7 den 2026-08-05: Antrekkskart.css tokenisert (fase 6B) */
+  D7: 0,   /* 16 -> 7 den 2026-08-05: Antrekkskart.css tokenisert (fase 6B) */
 };
 
 /**
@@ -166,66 +166,86 @@ const BASELINE: Record<string, number> = {
  * en JSX-avledet identitet per inline-objekt — fase 3, ikke et korpusbytte.
  */
 const BASELINE_SETT: Record<string, number> = {
-  'D1|src/screens/OnboardingScreen.tsx|.ob-sum-row + .ob-sum-row': 1,
-  'D1|src/screens/OnboardingScreen.tsx|.ob-loc-row': 1,
+  /* ═══ ET MÅLT UNNTAK, IKKE UBEHANDLET GJELD ═══════════════════════════
+     `.hjem-monter` er skjermroten OG rullecontaineren OG rommet: den bærer
+     sin egen lysgradient og den faste lyspoolen (::before).
 
-  'D2|src/components/instrument/vertical-gauge.css|.fa-gauge-step': 1,
-  'D2|src/components/outfit/Antrekkskart.css|.outfit-map__node': 1,
-  'D2|src/components/outfit/Antrekkskart.css|.outfit-map__ordinal': 1,
-  'D2|src/components/outfit/Antrekkskart.css|.outfit-row': 1,
-  'D2|src/components/outfit/Antrekkskart.css|.outfit-comparison': 1,
-  'D2|src/components/planning/PlanChangeRail.css|.plan-change-rail__unchanged-dot': 1,
-  'D2|src/components/planning/PlanChangeRail.css|.plan-change-rail__preview img': 1,
-  'D2|src/screens/UkeScreen.css|.planlegg-status': 1,
-  'D2|src/screens/UkeScreen.css|.planlegg-status__skeleton > span, .planlegg-status__skeleton-rail span': 1,
-  'D2|src/screens/UkeScreen.css|.planlegg-screen__week-weather': 1,
-  'D2|src/screens/UkeScreen.css|.planlegg-screen .plan-change-rail__preview img': 1,
-  'D2|src/components/Skeleton.tsx|.ba-skeleton-shimmer': 2,
-  'D2|src/screens/OnboardingScreen.tsx|.ob-date-input.filled': 1,
-  'D2|src/screens/OnboardingScreen.tsx|.ob-manual input': 1,
-  'D2|src/screens/OnboardingScreen.tsx|.ob-cal': 1,
-  'D2|src/screens/OnboardingScreen.tsx|.ob-combo input': 1,
-  'D2|src/screens/OnboardingScreen.tsx|.ob-combo-list': 1,
+     D4 krever bunn-fade på rullecontainere. En ryddagent la den på, og
+     `tools/verify-hjem.mjs` port 10 målte følgen umiddelbart: i LYST tema
+     er bunnfargen glødtonen, ikke lerretet, så masken slapp kroppen under
+     gjennom. Nedre høyre gikk 229 → 241 og ble LYSERE enn øvre venstre
+     (239). Lysretningen snudde.
+
+     De to portene kan ikke begge oppfylles på DETTE elementet, og da
+     avgjør hva som er viktigst: lysretningen er skjermens grunnfortelling,
+     eierrapportert og målt hver kjøring. Faden er en høflighet.
+
+     Derfor står D4 på 1 her — ikke fordi noe gjenstår, men fordi doktrinen
+     har en kant. Rullende INNHOLD fader fortsatt der det hører hjemme
+     (.hjm-result, .dw-sheet-innhold, Plaggbiblioteket).
+     Fjernes lyspoolen eller gradienten fra roten en gang i framtiden, kan
+     denne linjen slettes og faden legges på. ══════════════════════════ */
+  'D4|src/components/hjem/hjem-monter.css|.hjem-monter': 1,
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   /* inline CSSProperties — `(inline)` per fil, se grensen over. */
-  'D2|src/components/PlaggDetailSheet.tsx|(inline)': 7,
-  'D2|src/components/controls/AgeAdaptiveSituationPicker.tsx|(inline)': 1,
-  'D2|src/components/family/CareCircle.tsx|(inline)': 2,
-  'D2|src/components/family/ToolsSection.tsx|(inline)': 1,
-  'D2|src/components/instrument/TemperatureInstrument.tsx|(inline)': 1,  'D2|src/screens/HjemScreen.tsx|(inline)': 4,
-  'D2|src/screens/PaakledningScreen.tsx|(inline)': 8,
-  'D2|src/screens/PlaggbibliotekScreen.tsx|(inline)': 1,
-  'D2|src/screens/TogGuideScreen.tsx|(inline)': 4,
-  'D2|src/screens/VarmEllerKaldScreen.tsx|(inline)': 4,
-  'D2|src/screens/VinterprogramScreen.tsx|(inline)': 4,
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  
 
   /* D3 står på 0 — ingen fingeravtrykk. Regelen måler likevel 5 kandidater. */
 
-  'D4|src/components/hjem/hjem-monter.css|.hjem-monter': 1,
-  'D4|src/screens/OnboardingScreen.tsx|.ob-screen > .ob-body': 1,
-  'D4|src/screens/OnboardingScreen.tsx|.ob-combo-list': 1,
-  'D4|src/components/PaywallDialog.tsx|(inline)': 1,
-  'D4|src/components/PlaggDetailSheet.tsx|(inline)': 1,
-  'D4|src/screens/FinnAntrekkScreen.tsx|(inline)': 1,
-  'D4|src/screens/InnstillingerScreen.tsx|(inline)': 10,
-  'D4|src/screens/PlaggbibliotekScreen.tsx|(inline)': 1,
-  'D4|src/screens/TogGuideScreen.tsx|(inline)': 1,
-  'D4|src/screens/VarmEllerKaldScreen.tsx|(inline)': 1,
-  'D4|src/screens/VinterprogramScreen.tsx|(inline)': 1,
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
-  'D5|src/screens/OnboardingScreen.tsx|.ob-sum-row': 1,
-  'D5|src/screens/OnboardingScreen.tsx|.ob-screen.step-4 .ob-sum-row': 1,
+  
+  
 
-  'D6|src/screens/OnboardingScreen.tsx|.ob-cal-nav button': 1,
+  
 
   /* NEDBETALT 2026-08-05 (fase 6B): ni D7-oppforinger i Antrekkskart.css.
      Fem var dode fallback-verdier bak tokens som fantes (var(--dw-raised,
      #fbf8f4) osv.) — de ga ingen sikkerhet, bare en kopi som ikke fulgte
      med naar tokenet endret seg. Atte ekte farger er flyttet til
      --dw-kart-* i tokenfilen, med verdiene uroert. */
-  'D7|src/components/outfit-transition/OutfitTransitionOverlay.css|.outfit-transition-overlay__clone': 3,
+  
   /* NEDBETALT 2026-08-05 (fase 6B): plaggplaten var hardkodet #3A2A1A og flippet ikke. Verdien ER --dw-plate; tokenet fantes hele tiden. */
-  'D7|src/components/Skeleton.tsx|.ba-skeleton-shimmer': 3,
-  'D7|src/screens/OnboardingScreen.tsx|.ob-baby-wordmark': 1,};
+  
+  };
 
 /* ────────────────────────────── KORPUSET ─────────────────────────────────── */
 

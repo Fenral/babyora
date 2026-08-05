@@ -161,7 +161,8 @@
   overflow: hidden auto;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
-  mask-image: linear-gradient(to bottom, black 92%, transparent 100%);
+  -webkit-mask-image: var(--dw-fade-bunn);
+  mask-image: var(--dw-fade-bunn);
 }
 
 /* ═══════════════════════════ PLAGGET ═══════════════════════════════════════ */
@@ -181,7 +182,7 @@
   padding: var(--dw-space-16);
   background: var(--dw-plate);
   border: 1px solid var(--dw-plate-kant);
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-depth-raised);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-chip);
   overflow: hidden;
 }
 .kps-plate-img {

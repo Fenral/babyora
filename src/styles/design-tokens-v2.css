@@ -191,6 +191,27 @@
   --dw-w-snow: #2C4040;    /* snø · lysere, diffus, ikke blå   */
   --dw-w-night: #0C272D;   /* natt · dypest og roligst         */
 
+
+  /* BUNN-FADEN — D4s egen form, endelig med et navn.
+
+     FUNN 2026-08-05: doktrinen krever at scroll-flater fader ut i bunnen
+     (D4), men hadde ALDRI et token for hvordan. Følgen var at «å rette D4»
+     betydde å kopiere den samme rå strengen; etter ryddrunden sto den
+     ORDRETT 31 steder i src/. En agent sa det rett ut: «D4 kan ikke ratsjes
+     til null på ærlig vis før faden har et navn — ellers er rettingen bare
+     å kopiere en rå verdi sju ganger.»
+
+     92 % er en designbeslutning: faden begynner der, ikke ved 90 eller 95.
+     Som rå streng eide ingen det tallet, og å endre det ville betydd 31
+     redigeringer. Nå er det ett sted.
+
+     MERK for bruk: mask-image trenger fortsatt BEGGE egenskapene —
+     `-webkit-mask-image` først, så `mask-image`. iOS WebView (som er der
+     appen faktisk kjører gjennom Capacitor) forstår bare den prefiksede.
+     26 av ryddrundens fader manglet den og var funksjonelt døde på
+     målplattformen. Et token gir verdien, ikke prefikset. */
+  --dw-fade-bunn: linear-gradient(to bottom, black 92%, transparent 100%);
+
   /* ============ Linjer, radier, skygger ============ */
   --dw-hairline: rgba(241, 233, 218, 0.12);
   --dw-r-panel: 20px;
@@ -342,6 +363,24 @@
      Bygget av samme primitiv som resten av dybden, sa den flipper med
      temaet: mork i BEGGE (rgba(4,2,1,.62) mork · rgba(122,88,52,.3) lys). */
   --dw-depth-image: var(--dw-sh-broad);
+  /* BRIKKEDYBDE — for flater under ~56 px.
+
+     FUNN 2026-08-05, av fire uavhengige kontrollører i samme runde:
+     --dw-depth-raised er PANELdimensjonert (56 px uskarphet, 7 px
+     sideforskyvning). Lagt på en 44 px pille eller et 21 px rekkefølgemerke
+     blir skyggen bredere enn selve brikken — den ser ut som etterlevelse og
+     er en designfeil. Antrekkskart.css:98 skrev det inn i sin egen kode:
+     «--dw-depth-raised er dimensjonert for paneler. På en 21 px brikke er
+     den for stor.»
+
+     Agentene hadde ikke lov til å lage tokenet (regelen var «finn ikke på
+     nye»), så de brukte det gale med åpne øyne og rapporterte mangelen.
+     Det var riktig av dem. Mangelen var min.
+
+     Samme tre lag, samme skyggeprimitiver, skalert til brikke: kontakt
+     strammes, mellomlaget halveres, det brede laget kuttes helt — en brikke
+     kaster ikke romskygge. */
+  --dw-depth-chip: 0 1px 2px var(--dw-sh-contact), 1px 3px 6px -2px var(--dw-sh-mid);
   --dw-depth-selected: 0 2px 3px var(--dw-sh-contact), 2px 6px 14px -3px var(--dw-sh-mid);
   /* ── LYSPOOLEN (vedtak lyspool-folger-motivet, hentet fra B1-proofen) ──
      Poolen sikter paa skjermens HOVEDMOTIV — paa Hjem er det maskoten.

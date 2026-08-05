@@ -109,11 +109,15 @@ const beskriv = (m: AlfaMaal) =>
 /** MANUELL-listen i tools/cut-plagg.mjs — assets der automatisk klipping ikke
  *  holder og som venter på håndmaskering. Leses fra kilden i stedet for å
  *  kopieres, slik at unntakslisten ikke kan vokse to steder uavhengig. */
-function manuellListeFraCutter(): readonly string[] {
+function manuellListeFraCutter(): readonly string[] | null {
   const kilde = readFileSync(CUTTER, 'utf8');
   const start = kilde.indexOf('const MANUELL = {');
-  const slutt = kilde.indexOf('\n};', start);
-  if (start < 0 || slutt < 0) return [];
+  /* En TOM liste skrives `const MANUELL = {};` — da finnes ingen `\n};`.
+     Uten dette returnerte parseren [] både når lista var tom OG når den
+     ikke ble funnet, og de to tilstandene betyr stikk motsatte ting. */
+  if (start < 0) return null;
+  const slutt = kilde.indexOf('};', start);
+  if (slutt < 0) return null;
   return [...kilde.slice(start, slutt).matchAll(/'(plagg-[a-z0-9-]+\.png)'\s*:/g)]
     .map((treff) => treff[1]);
 }
@@ -189,11 +193,23 @@ describe('monter plagg-assets er rene utklipp', () => {
     }
   });
 
-  it('FORUTSETNING 4: unntaket i MANUELL-listen er fortsatt nødvendig (ingen foreldede fritak)', () => {
+  it('FORUTSETNING 4: MANUELL-listen inneholder ingen foreldede fritak', () => {
+    /* OMSKREVET 2026-08-06. Testen krevde at lista IKKE var tom, som en
+       ikke-vakuøsitetsvakt: «finner vi ingenting, har parsingen røket».
+       Den antakelsen holdt så lenge det FANTES et unntak. Da sydvesten ble
+       klippet og lista ble lovlig tom, ble testen rød av at jobben var
+       gjort — akkurat den feilen dette filhodet selv advarer mot, bare med
+       motsatt fortegn.
+       Nå skiller parseren de to tilstandene: `null` = fant ikke lista
+       (parsingen røk), `[]` = lista finnes og er tom (alt er klippet).
+       Vakten står altså igjen — den måler bare riktig ting. */
     const unntak = manuellListeFraCutter();
     expect(existsSync(CUTTER), `${CUTTER} finnes ikke — unntakslisten kan ikke verifiseres`).toBe(true);
-    expect(unntak, 'fant ingen MANUELL-oppføringer i tools/cut-plagg.mjs — parsingen har røket').not.toEqual([]);
-    for (const fil of unntak) {
+    expect(
+      unntak,
+      'fant ikke MANUELL-erklæringen i tools/cut-plagg.mjs — parsingen har røket',
+    ).not.toBeNull();
+    for (const fil of unntak ?? []) {
       const m = maalt.find((x) => x.fil === fil);
       expect(m, `${fil} står i MANUELL-listen, men finnes ikke i public/monter/`).toBeDefined();
       expect(

@@ -46,7 +46,14 @@ const chipBase: CSSProperties = {
 const labelBase: CSSProperties = {
   ...chipBase,
   background: 'var(--surface)',
-  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
+  /* HIERARKIET STO PÅ HODET, funnet av en uavhengig kontrollør 2026-08-05.
+     Den UVALGTE brikken bar --dw-depth-raised (tre lag, 56 px uskarphet,
+     7 px sideforskyvning) mens den VALGTE bar --dw-depth-selected (to lag,
+     14 px). Uvalgt lå altså høyere enn valgt — motsatt av hva et valg betyr.
+     Feilen var min: briefen sa «kopier den kompatible formen» og forbød å
+     lage nye tokens, og da fantes det ingen dybde i brikkeskala å velge.
+     Nå --dw-depth-chip (6 px) uvalgt, --dw-depth-selected (14 px) valgt. */
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-chip)',
 };
 /* Valgt brikke: samme materiale, men -selected i stedet for -raised. */
 const labelChecked: CSSProperties = {

@@ -1036,8 +1036,10 @@ const STYLE_CSS = `
   display:flex;flex-direction:column;
   -webkit-overflow-scrolling:touch;
   /* D4: rullingen får bunn-fade — samme form som sheet.css/hjem-monter.css. */
-  mask-image:linear-gradient(to bottom, black 92%, transparent 100%);
-  -webkit-mask-image:linear-gradient(to bottom, black 92%, transparent 100%);
+  -webkit-mask-image: var(--dw-fade-bunn);
+  mask-image: var(--dw-fade-bunn);
+  -webkit--webkit-mask-image: var(--dw-fade-bunn);
+mask-image: var(--dw-fade-bunn);
 }
 .ob-body::-webkit-scrollbar{display:none;}
 
@@ -1433,8 +1435,10 @@ const STYLE_CSS = `
   border:1px solid var(--ob-line);border-radius:14px;
   box-shadow:inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised);
   max-height:230px;overflow-y:auto;
-  mask-image:linear-gradient(to bottom, black 92%, transparent 100%);
-  -webkit-mask-image:linear-gradient(to bottom, black 92%, transparent 100%);}
+  -webkit-mask-image: var(--dw-fade-bunn);
+  mask-image: var(--dw-fade-bunn);
+  -webkit--webkit-mask-image: var(--dw-fade-bunn);
+mask-image: var(--dw-fade-bunn);}
 .ob-combo-list:empty{display:none;}
 .ob-combo-opt{display:flex;align-items:center;gap:9px;padding:11px var(--dw-space-10);border-radius:9px;
   font-size:14px;color:var(--ob-ink-900);cursor:pointer;}

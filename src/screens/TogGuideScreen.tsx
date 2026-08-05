@@ -366,8 +366,8 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     WebkitOverflowScrolling: 'touch',
     // D4: scroll kommuniseres med bunn-fade, ikke med hardt klipp.
     // Husmønsteret (hjem-monter.css, sheet.css, kle-paa-stepper.css).
-    maskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
-    WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 100%)',
+    WebkitMaskImage: 'var(--dw-fade-bunn)',
+    maskImage: 'var(--dw-fade-bunn)',
     padding: '8px 20px calc(40px + env(safe-area-inset-bottom, 0px))',
     display: 'flex',
     flexDirection: 'column',

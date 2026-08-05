@@ -38,14 +38,22 @@
      under), så den kan ikke stole på .app-shell > main sin padding alene. */
   padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px var(--dw-tabbar-clearance, 90px);
   overflow: hidden auto;
-  /* D4: skjermrotet ER en rullecontainer (linjen over), og en rulleflate som
-     kuttes hardt sier ikke at det er mer under. Samme oppskrift som resten av
-     appen (.hjm-result nede i arket, .dw-sheet-innhold, Plaggbiblioteket).
-     Faden treffer ogsa flatens EGEN gradient, men koster ingenting: nederst
-     er gradienten --dw-rom-fjern, som i morkt tema ER --dw-canvas — altsa
-     noyaktig samme farge som body under. Sonen (nederste 8 %) ligger dessuten
-     bak den flytende tab-baren. */
-  mask-image: linear-gradient(to bottom, black 92%, transparent 100%);
+  /* D4 GJELDER IKKE HER, og det er MALT — ikke en unnlatelse.
+
+     En ryddagent la bunn-faden pa skjermroten 2026-08-06 med begrunnelsen
+     at den «koster ingenting: nederst er gradienten --dw-rom-fjern, som i
+     morkt tema ER --dw-canvas». Resonnementet gjaldt bare MORKT tema.
+
+     I LYST tema er --dw-rom-fjern glodtonen, ikke lerretet. Faden slipper
+     da kroppen under gjennom i bunnen, og den er en annen farge.
+     verify-hjem port 10 malte folgen: nedre hoyre gikk fra 229 til 241 og
+     ble LYSERE enn ovre venstre (239). Lysretningen snudde — hele skjermens
+     grunnfortelling, felt av en maske ment som en hoflighet.
+
+     Roten er ROMMET. Den barer bade sin egen gradient og den faste
+     lyspoolen (::before). En fade over dem fader lyset, ikke innholdet.
+     Rullende INNHOLD fader der det hoerer hjemme: .hjm-result, .dw-sheet-
+     innhold, Plaggbiblioteket. */
 
   /* R1 (2026-08-03): flatene her forbruker DYBDEKONTRAKTEN (--dw-depth-*),
      ikke sine egne skygger.
@@ -903,7 +911,8 @@
 .hjm-result[data-scrollable='true'] {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  mask-image: linear-gradient(to bottom, black 92%, transparent 100%);
+  -webkit-mask-image: var(--dw-fade-bunn);
+  mask-image: var(--dw-fade-bunn);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
