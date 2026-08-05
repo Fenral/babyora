@@ -487,8 +487,12 @@ const profileMetaDotStyle: CSSProperties = {
 
 const profileEditStyle: CSSProperties = {
   flex: 'none',
-  width: 36,
-  height: 36,
+  /* 44, ikke 36: trykkmaalet er et gulv i BEGGE akser (WCAG 2.5.8).
+     Hoyden ble reddet av den globale button{min-height:44px}, saa
+     knappen var 36x44 - ikke 44x44. De sju andre lukkeknappene i
+     filen var allerede riktige: dette var drift bort fra normen. */
+  width: 'var(--dw-size-touch)',
+  height: 'var(--dw-size-touch)',
   borderRadius: 11,
   background: C.bgCanvasSoft,
   border: `1px solid ${C.hairline}`,
@@ -2712,8 +2716,12 @@ function MorningHourDialog({
 
   const closeBtnStyle: CSSProperties = {
     flex: 'none',
-    width: 36,
-    height: 36,
+    /* 44, ikke 36: trykkmaalet er et gulv i BEGGE akser (WCAG 2.5.8).
+       Hoyden ble reddet av den globale button{min-height:44px}, saa
+       knappen var 36x44 - ikke 44x44. De sju andre lukkeknappene i
+       filen var allerede riktige: dette var drift bort fra normen. */
+    width: 'var(--dw-size-touch)',
+    height: 'var(--dw-size-touch)',
     borderRadius: 11,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -2972,8 +2980,12 @@ function HelpDialog({
 
   const closeBtnStyle: CSSProperties = {
     flex: 'none',
-    width: 36,
-    height: 36,
+    /* 44, ikke 36: trykkmaalet er et gulv i BEGGE akser (WCAG 2.5.8).
+       Hoyden ble reddet av den globale button{min-height:44px}, saa
+       knappen var 36x44 - ikke 44x44. De sju andre lukkeknappene i
+       filen var allerede riktige: dette var drift bort fra normen. */
+    width: 'var(--dw-size-touch)',
+    height: 'var(--dw-size-touch)',
     borderRadius: 11,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -3255,8 +3267,12 @@ function FeedbackDialog({
 
   const closeBtnStyle: CSSProperties = {
     flex: 'none',
-    width: 36,
-    height: 36,
+    /* 44, ikke 36: trykkmaalet er et gulv i BEGGE akser (WCAG 2.5.8).
+       Hoyden ble reddet av den globale button{min-height:44px}, saa
+       knappen var 36x44 - ikke 44x44. De sju andre lukkeknappene i
+       filen var allerede riktige: dette var drift bort fra normen. */
+    width: 'var(--dw-size-touch)',
+    height: 'var(--dw-size-touch)',
     borderRadius: 11,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -3620,8 +3636,12 @@ function PrivacyDialog({
 
   const closeBtnStyle: CSSProperties = {
     flex: 'none',
-    width: 36,
-    height: 36,
+    /* 44, ikke 36: trykkmaalet er et gulv i BEGGE akser (WCAG 2.5.8).
+       Hoyden ble reddet av den globale button{min-height:44px}, saa
+       knappen var 36x44 - ikke 44x44. De sju andre lukkeknappene i
+       filen var allerede riktige: dette var drift bort fra normen. */
+    width: 'var(--dw-size-touch)',
+    height: 'var(--dw-size-touch)',
     borderRadius: 11,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -4289,8 +4309,12 @@ function RefHourPickerDialog({
 
   const closeBtnStyle: CSSProperties = {
     flex: 'none',
-    width: 36,
-    height: 36,
+    /* 44, ikke 36: trykkmaalet er et gulv i BEGGE akser (WCAG 2.5.8).
+       Hoyden ble reddet av den globale button{min-height:44px}, saa
+       knappen var 36x44 - ikke 44x44. De sju andre lukkeknappene i
+       filen var allerede riktige: dette var drift bort fra normen. */
+    width: 'var(--dw-size-touch)',
+    height: 'var(--dw-size-touch)',
     borderRadius: 11,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -4663,8 +4687,8 @@ function AddChildDialog({
     padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
-    background: canSubmit ? C.orange500 : C.ink300,
-    color: canSubmit ? 'var(--dw-ink-on-accent)' : '#FFF',
+    background: canSubmit ? C.orange500 : 'color-mix(in srgb, var(--dw-accent) 40%, var(--dw-canvas))',
+    color: canSubmit ? 'var(--dw-ink-on-accent)' : 'var(--dw-ink-hi)',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 600,
@@ -5009,8 +5033,8 @@ function AutoLocationDialog({
     padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
-    background: pending ? C.ink300 : C.orange500,
-    color: pending ? '#FFF' : 'var(--dw-ink-on-accent)',
+    background: pending ? 'color-mix(in srgb, var(--dw-accent) 40%, var(--dw-canvas))' : C.orange500,
+    color: pending ? 'var(--dw-ink-hi)' : 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 600,
@@ -5289,8 +5313,8 @@ function WeatherChangeDialog({
     padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
-    background: pending ? C.ink300 : C.orange500,
-    color: pending ? '#FFF' : 'var(--dw-ink-on-accent)',
+    background: pending ? 'color-mix(in srgb, var(--dw-accent) 40%, var(--dw-canvas))' : C.orange500,
+    color: pending ? 'var(--dw-ink-hi)' : 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 600,
@@ -6124,8 +6148,8 @@ function RateAppDialog({
     padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
-    background: pending ? C.ink300 : C.orange500,
-    color: pending ? '#FFF' : 'var(--dw-ink-on-accent)',
+    background: pending ? 'color-mix(in srgb, var(--dw-accent) 40%, var(--dw-canvas))' : C.orange500,
+    color: pending ? 'var(--dw-ink-hi)' : 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 600,

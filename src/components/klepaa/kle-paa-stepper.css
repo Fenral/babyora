@@ -1,0 +1,356 @@
+/**
+ * kle-paa-stepper.css — ETT plagg per steg.
+ *
+ * VERDIENE ER TOKENS, IKKE TALL. Avstander kommer fra `--dw-space-*`
+ * (2-punktsrutenettet som ble MÅLT ut av kodebasen, ikke hentet fra en
+ * lærebok), geometri fra `--dw-size-*`, bevegelse fra `--dw-m-*` og ÉN kurve
+ * `--dw-ease` for hele appen. Farger fra `--dw-*`; ingen rå hex.
+ *
+ * DEN ENE LITERALEN som står igjen er den varme innfelte topplyskanten
+ * `rgba(242, 192, 138, 0.14)`. Den er doktrinens EGEN verdi (DESIGN.md
+ * l. 93, «a 1px warm inner top-light»), den er tema-konstant med vilje —
+ * lyslogikken snur ikke når temaet snur — og den står ordrett slik i
+ * hjem-monter.css (.hjm-rows, .hjm-prev, .hjm-thumb). Å avvike her ville gitt
+ * to ulike topplys i samme app, som er nøyaktig driften tokenene finnes for.
+ *
+ * SKALLET STÅR STILLE. Header (.kps-top) og bunnraden (.kps-bottom) ligger
+ * UTENFOR .kps-viewport og transformeres aldri. Bare .kps-track flytter seg.
+ * Et skall som glir med sveipet leser som en ny side; det skal lese som det
+ * samme apparatet som viser neste plagg.
+ */
+
+.kle-paa-stepper {
+  font-family: var(--dw-font-ui);
+  color: var(--dw-ink-hi);
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  /* Samme rom som Hjem: lysvektoren er én verdi for hele appen. */
+  background: linear-gradient(var(--dw-lys-vinkel), var(--dw-rom-naer) 0%, var(--dw-rom-fjern) 46%);
+  padding:
+    max(var(--dw-space-16), calc(env(safe-area-inset-top, 0px) + var(--dw-space-12)))
+    var(--dw-space-20)
+    max(var(--dw-space-16), calc(env(safe-area-inset-bottom, 0px) + var(--dw-space-12)));
+}
+
+.kps-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.kps-tomt {
+  margin: var(--dw-space-24) 0 0;
+  font-size: 15px;
+  color: var(--dw-ink-mid);
+}
+
+/* ═══════════════════════════ SKALLET: TOPPEN ═══════════════════════════════ */
+
+.kps-top {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--dw-space-12);
+}
+
+/* Trykkmålet er et GULV, aldri et tak — 44x44 på begge akser, ikke bare
+   høyden (den globale `button { min-height: 44px }` dekker én akse). */
+.kps-close {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--dw-ink-mid);
+  min-width: var(--dw-size-touch);
+  min-height: var(--dw-size-touch);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: calc(var(--dw-space-10) * -1);
+  cursor: pointer;
+}
+.kps-close svg { width: 22px; height: 22px; }
+
+.kps-count {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--dw-ink-low);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* Prikkene sier HVOR LANGT, ikke hvor mange igjen. Aktiv prikk bæres av
+   valør (amber mot dempet blekk), ikke av størrelse alene. */
+.kps-dots {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dw-space-4);
+}
+.kps-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--dw-r-pill);
+  background: color-mix(in srgb, var(--dw-ink-low) 45%, transparent);
+  display: inline-block;
+  transition: background var(--dw-m-state) var(--dw-ease);
+}
+.kps-dot[data-active='true'] { background: var(--dw-accent); }
+
+/* ═══════════════════════════ SPORET ════════════════════════════════════════ */
+
+.kps-viewport {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  margin-top: var(--dw-space-14);
+  /* pan-y: den vertikale rullingen tilhører fortsatt innholdet, den
+     horisontale tilhører oss. Uten dette slåss nettleseren og gesten om
+     samme finger. */
+  touch-action: pan-y;
+}
+
+/* ETT STEG = ÉN VIEWPORT-BREDDE. Sporet er selv 100 % bredt og lar barna
+   flyte utenfor, så `-100%` på transformen er nøyaktig ett steg — ikke en
+   andel av N steg, som ville endret betydning hver gang antallet endret seg.
+   Fingerens råe forskyvning legges til som ren px: 1:1, ingen demping.
+
+   SETTLINGEN bor HER, ikke i JS. `--dw-m-step` er 260 ms, innenfor
+   120-260-vinduet, og finnes dermed ett sted. Under dragingen skrus
+   transitionen AV (data-dragging), ellers ville sporet henge etter fingeren. */
+.kps-track {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  will-change: transform;
+  transform: translate3d(calc(var(--kps-index, 0) * -100% + var(--kps-drag, 0px)), 0, 0);
+  transition: transform var(--dw-m-step) var(--dw-ease);
+}
+.kps-track[data-dragging='true'] { transition: none; }
+
+.kps-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scroll-affordance (doktrine D4): bunn-fade i stedet for hardt klipp, samme
+   behandling som resultatflaten på Hjem. Steget skal kunne bli høyere enn
+   skjermen på små enheter uten at noe forsvinner uten forvarsel. */
+.kps-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-top: var(--dw-space-8);
+  overflow: hidden auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  mask-image: linear-gradient(to bottom, black 92%, transparent 100%);
+}
+
+/* ═══════════════════════════ PLAGGET ═══════════════════════════════════════ */
+
+/* VITRINE-BEHANDLING (doktrine D3): plagget står på en egen plate, aldri
+   nakent mot rommet. Platen er tema-bundet (--dw-plate), fordi de fritklipte
+   plaggene ellers blir mørke firkanter på det kremfargede lerretet. */
+.kps-plate {
+  align-self: center;
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--dw-r-panel);
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  padding: var(--dw-space-16);
+  background: var(--dw-plate);
+  border: 1px solid var(--dw-plate-kant);
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-depth-raised);
+  overflow: hidden;
+}
+.kps-plate-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.kps-role {
+  margin-top: var(--dw-space-18);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dw-ink-low);
+}
+
+.kps-name {
+  margin: var(--dw-space-4) 0 0;
+  font-size: var(--dw-text-display);
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+/* ═══════════════════════ MATERIALPOENGET ═══════════════════════════════════
+   ÉN linje. Aldri to. Punktet er en MARKØR, ikke et ikon: dempet amber,
+   regnet mot flaten den ligger på i stedet for satt med opacity (en dempet
+   alfa arver hva som enn ligger bak, en dempet farge kan måles).
+   `--dw-accent` og ikke `--dw-accent-300`: sistnevnte deklareres bare én gang
+   og står uendret i lys modus, der den kollapser mot kremen. Aksenten flipper
+   med temaet. */
+.kps-material {
+  margin: var(--dw-space-12) 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--dw-space-10);
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--dw-ink-mid);
+  max-width: 32ch;
+}
+.kps-material-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--dw-r-pill);
+  background: color-mix(in srgb, var(--dw-accent) 70%, var(--dw-canvas));
+  /* Punktet skal ligge på tekstens x-høyde, ikke på grunnlinjen. */
+  transform: translateY(-2px);
+}
+
+/* ═════════════════════════ BYTT-INNGANGEN ══════════════════════════════════
+   HEVET RAD. Den er den eneste hevede flaten i steget ved siden av
+   plaggplaten, og det er meningen: den er det eneste stedet et valg finnes.
+
+   INGEN ANTALLSETIKETT. Se KlePaaStepper.tsx sitt filhode — katalogen bærer
+   ikke flertallsformen «N andre passer», og en etikett motoren ikke kan
+   bevise skal ikke vises. Raden rendres ikke i det hele tatt når plagget er
+   uten alternativer, så den lover aldri noe som ikke finnes.
+
+   Radhøyden står på doktrinens gulv (--dw-size-row, 62 px). */
+.kps-swap-row {
+  appearance: none;
+  border: 0;
+  font-family: inherit;
+  text-align: left;
+  color: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: var(--dw-space-20);
+  display: flex;
+  align-items: center;
+  gap: var(--dw-space-12);
+  padding: var(--dw-space-10) var(--dw-space-14);
+  min-height: var(--dw-size-row);
+  border-radius: var(--dw-r-raised);
+  background: var(--dw-raised);
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-depth-raised);
+  cursor: pointer;
+  /* Kun transform og bakgrunn — aldri layout-egenskaper. Slippet skal
+     SETTLE, ikke snappe, derfor ligger transitionen på grunnregelen og ikke
+     inne i :active. */
+  transition:
+    transform var(--dw-m-feedback) var(--dw-ease),
+    background var(--dw-m-feedback) var(--dw-ease);
+}
+.kps-swap-row:active { transform: scale(0.985); }
+
+/* FOKUSRINGEN LEGGES INNOVER. Raden ligger inne i .kps-stage, som klipper
+   (overflow + mask-image). Den globale ringen ligger 3 px UTENFOR kanten og
+   ville blitt klippet vekk — bare underkanten slapp gjennom. Negativ offset
+   legger den like innenfor, der ingenting klipper. */
+.kps-swap-row:focus-visible { outline-offset: -3px; }
+
+/* Overlappende miniatyrer: stabelen ANTYDER at det finnes valg. Den er ikke
+   en liste, og den teller ikke — hvert bilde er et ekte katalogplagg
+   (targetCatalogGarmentId), ingenting mer påstås. */
+.kps-alt-stack {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+}
+.kps-alt-thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--dw-r-control);
+  flex: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--dw-plate);
+  border: 1px solid var(--dw-plate-kant);
+  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-depth-selected);
+}
+.kps-alt-thumb + .kps-alt-thumb { margin-left: calc(var(--dw-space-12) * -1); }
+.kps-alt-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.kps-swap-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 15.5px;
+  font-weight: 650;
+}
+.kps-swap-chevron {
+  flex: none;
+  display: inline-flex;
+  color: var(--dw-ink-low);
+}
+.kps-swap-chevron svg { width: 18px; height: 18px; }
+
+/* ═══════════════════════ SKALLET: BUNNEN ═══════════════════════════════════
+   «Forrige» + «Neste». INGEN «Hopp over»: i en lineær stepper gjør den
+   nøyaktig det samme som «Neste», og to knapper som gjør det samme — der den
+   ene antyder at du gjør noe galt — er verre enn én. */
+.kps-bottom {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--dw-space-12);
+  padding-top: var(--dw-space-14);
+}
+
+/* ═════════════════════════ REDUSERT BEVEGELSE ══════════════════════════════
+   DIREKTE BYTTE, INGEN FORFLYTNING. Dobbel vakt, som resten av appen:
+   JS-siden setter aldri --kps-drag, og denne blokken fjerner settlingen selv
+   om noe skulle sette den. */
+@media (prefers-reduced-motion: reduce) {
+  .kps-track { transition: none; }
+  .kps-dot { transition: none; }
+  .kps-swap-row { transition: none; }
+  .kps-swap-row:active { transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   KOMPAKT-NIVÅET STÅR SIST I ARKET. Det er ikke en stilpreferanse, det er en
+   kaskaderegel: spesifisiteten er lik grunnreglenes, så den SENERE regelen
+   vinner. Legges blokken lenger opp, gjør den ingenting for det som
+   deklareres etter den — og feilen er stille, fordi NOEN av reglene traff.
+   Samme lærdom som hjem-monter.css bærer.
+
+   Nivået slår inn på HØYDE, ikke på modell, så det følger også Safari-krom og
+   stor Dynamic Type.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-height: 700px) {
+  .kps-plate { max-width: 150px; }
+  .kps-role { margin-top: var(--dw-space-12); }
+  .kps-name { font-size: var(--dw-text-heading); }
+  .kps-material { margin-top: var(--dw-space-8); }
+  .kps-swap-row { margin-top: var(--dw-space-12); }
+}

@@ -54,6 +54,7 @@ import { PLUS_FEATURE_AVAILABILITY } from './lib/premium/plus-features';
 import { useSubscription } from './state/subscription-store';
 import { useLocationPref } from './state/location-pref-store';
 import { useSceneHeight } from './hooks/useSceneHeight';
+import { klePaaKildeFor } from './components/klepaa/kle-paa-rute';
 
 /**
  * SIDESKIFTETS VARIGHETER — LEST FRA KONTRAKTEN, IKKE SKREVET PAA NYTT.
@@ -90,6 +91,9 @@ const HjemScreen = lazy(() =>
 );
 const PaakledningScreen = lazy(() =>
   import('./screens/PaakledningScreen').then((m) => ({ default: m.PaakledningScreen })),
+);
+const KlePaaOverlay = lazy(() =>
+  import('./components/klepaa/KlePaaOverlay').then((m) => ({ default: m.KlePaaOverlay })),
 );
 const UkeScreen = lazy(() =>
   import('./screens/UkeScreen').then((m) => ({ default: m.UkeScreen })),
@@ -679,6 +683,12 @@ export default function App(): ReactElement {
   // dekker hele skjermen. BottomTabBar skal IKKE være synlig / klikkbar
   // mens den er åpen. Vi dropper rendring helt for clarity.
   const sheetOpen = activeDrill?.kind === 'paakledning';
+
+  /* Rutevalget bor i `kle-paa-rute.ts`, ikke her: en betingelse skrevet inn i
+     JSX kan ikke måles uten å rendre hele denne filen — og det var nettopp en
+     umålt vei som gjorde at stepperen sto ferdig og unådd. */
+  const klePaaSteg = klePaaKildeFor(activeDrill);
+
   if (activeDrill?.kind === 'finn-antrekk') {
     routeKey = 'drill:finn-antrekk';
     routeContent = (
@@ -821,7 +831,18 @@ export default function App(): ReactElement {
               transitionVisualState={transitionIsLanding ? 'landing' : 'settled'}
               onOpenWarmColdGuide={onOpenWarmColdGuide}
             />
+          ) : klePaaSteg !== null ? (
+            /* CTA-en heter «Kle på, steg for steg». Fra 2026-08-05 fører den
+               dit navnet sier: ETT plagg per steg. Før dette landet den på
+               Påkledning, som viser hele antrekket som en liste — knappen
+               lovet en sekvens og flaten ga et oppslagsverk (eierfunn).
+               Den PLANLAGTE veien over er urørt: der er listen riktig, for
+               der leser man et antrekk man ikke skal på med akkurat nå. */
+            <KlePaaOverlay bundle={klePaaSteg} onClose={closePaakledning} />
           ) : (
+            /* Uten en støttet bundel finnes det ingen sekvens å vise — da er
+               den gamle flaten fortsatt det ærligste svaret, ikke en tom
+               stepper. */
             <PaakledningScreen
               onBack={closePaakledning}
               currentContext={activeDrill.currentContext}

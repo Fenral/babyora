@@ -152,11 +152,14 @@ const EIERRAPPORTERT_VEDTAK = 'sideskift-er-fysiske';
  * SAMME endring — ellers lyver registeret om hvor mye som gjenstår, og det er
  * nøyaktig slik `.hjm-synth` fikk stå i port 6 med null treff.
  */
-const BASELINE_BRUDD: readonly string[] = [  '--dw-m-step', // steg → steg i Kle på; stepperen er ikke bygget (fase 4)
+const BASELINE_BRUDD: readonly string[] = [
+  /* NEDBETALT 2026-08-05: «--dw-m-step». Stepperen er bygget (fase 4), og
+     sveipets settling i kle-paa-stepper.css er dens forste forbruker.
+     Linjen slettes og gulvet senkes i SAMME endring - hele ratsjettregelen. */
   '--dw-m-bow-out', // maskoten retter seg opp; bow-in brukes, bow-out ikke
   '--dw-m-atmo', // lyspoolens krysstoning ved skjermbytte (fase 3B)
 ];
-const BASELINE = 3;
+const BASELINE = 2;
 
 /**
  * Primitiver uten forbruker i dag. IKKE brudd — primitiver kan stå ubrukt.
@@ -180,7 +183,8 @@ const UBRUKTE_PRIMITIVER: readonly string[] = [
      bare krympe, og en skala som aldri ble tatt i bruk blir synlig i stedet
      for a ligge stille i tokenfilen. Skalaen er MALT, ikke valgt:
      tools/spacing-detektor.mjs, 2-punkt dekker 89,2 % mot 4-punktets 46,3 %. */
-  '--dw-size-row', // radhoyde-gulv 62px; malt 3 steder, var prosa i doktrinen
+  /* NEDBETALT 2026-08-05: «--dw-size-row». Kle pa-stepperens rader er
+     forste forbruker. Primitivlista kan bare krympe. */
 ];
 
 /* ────────────────────────────────────────────────────────────────────────

@@ -1,0 +1,33 @@
+/**
+ * Det modale skallet rundt sekvensen.
+ *
+ * Overlayet har INGEN egen krom: header, bunnrad og lyspool eies av
+ * `KlePaaStepper`. Denne filen gjør nøyaktig to ting — fyller flaten, og
+ * gir backdroppen husets dempning. Alt annet ville vært en andre mening om
+ * hvordan skjermen ser ut.
+ */
+
+.kle-paa-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--dw-canvas);
+  color: var(--dw-ink-hi);
+  /* Sekvensen scroller INNE i steget, ikke i skallet: et skall som scroller
+     ville flyttet header og bunnrad ut av syne midt i en påkledning. */
+  overflow: hidden;
+}
+
+/* Skallet er ugjennomsiktig og dekker hele flaten, så backdroppen ses ALDRI.
+   Den settes likevel — til samme lerret — for å hindre et hvitt glimt i det
+   dialogen åpner. Ingen dempningsfarge her: et teppe ingen kan se er ikke et
+   sted å innføre en ny rå verdi. */
+.kle-paa-overlay::backdrop {
+  background: var(--dw-canvas);
+}
