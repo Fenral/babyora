@@ -42,6 +42,39 @@ REMOVE/KEEP/TEST-liste for Planlegg, Familie, maskot, scan, navn-onboarding og p
 premisslogg med eier/frist/status. Ingen fase 3-godkjenning før hvert P0 er lukket eller
 akseptert som dokumentert risiko.
 
+## Runde 2 — Fase 2 red-team av brukerbildet (2026-08-05)
+
+**Verdikt: REVIDER.** Fullt svar: `appendix/fase2/sol-review-svar-fase2.md`. Tese: fase 2 er
+vesentlig bedre enn fase 1, men brukerbildet er «fortsatt for narrativt» — kjeden alder →
+fysiologisk fase → JTBD → produktform er ubevist, og segmentene blander akser.
+
+### Claudes respons per P0/P1
+
+| Funn | Respons | Status |
+| --- | --- | --- |
+| P0-1 «Overopphetingstopp 8–9 mnd» kan ikke være medisinsk segmentgrense | **AKSEPTERT.** Trukket fra faktalaget i `03`; står som OMSTRIDT i premisslogg (repoets kilde PMC12386404 vs. Sols SUDI-innvending) — avgjøres i faglig blindtest, brukes ikke som grense før da | ✅ Revidert |
+| P0-2 «~40 % ull-intoleranse» må trekkes som prevalenstall | **AKSEPTERT.** Trukket; behovet remodellert som toleranse-/preferansevalg (fire fenomener måles separat). Profilflagg-idéen består uten tallet | ✅ Revidert |
+| P0-3 Fiktive CareCircle-statuser skal fjernes/merkes NÅ | **ALLEREDE OPPFYLT — BEGRUNNET AVVIK FRA «FJERN».** Verifisert 2026-08-05: komponenten er dobbelt sikret — `import.meta.env.DEV`-gate (aldri i produksjon) OG eksplisitt caption «Forhåndsvisning — kommer med familiedeling. Ikke aktiv ennå» (InnstillingerScreen.tsx:1930–1949). Sols eget krav var «fjernes ELLER tydelig merkes» — merkingen fantes | ✅ Lukket m/bevis |
+| P1 Segmentmodellen blander akser | **AKSEPTERT.** Omklassifisert til foreløpig kohorthypotese; Sols tilstandsmodell + aktør×øyeblikk-kart tas inn som fase 3-arbeidsmodell; separat risikomodell (prematuritet/korrigert alder/sykdom) opprettes | ✅ Revidert |
+| P1 Prematuritet/korrigert alder mangler | **AKSEPTERT.** Inn i risikomodellen + rekrutteringskravene | → fase 3 |
+| P1 Pappaperm ikke strukturelt garantert ved 8–9 mnd | **AKSEPTERT.** «Strukturelt garantert» strøket; NAV-variasjonen anerkjent; scenariet består som hypotese med intervjukrav | ✅ Revidert |
+| P1 Livsløpssyntesen smugler sekvens | **AKSEPTERT.** Nedgradert til ekspansjonshypotese; fase 3 forpliktes til å velge én inngangskile | ✅ Revidert |
+| P1 Metodespråket overselger («strukturelt garantert», «vanligste», «mest differensierende») | **AKSEPTERT.** Formuleringene strøket/moderert i `03`; regelen «motor-tilstedeværelse ≠ brukerbevis» føres videre | ✅ Revidert |
+| P1 Terskler måler produktbruk, ikke problemverdi | **AKSEPTERT.** Alle terskler skjerpet (se `03` §4): beslutningsøyeblikk per kvalifisert dag, kalibreringstest i stedet for lydighetsprosent, p75 ≤8 s, ≥90 % garderobe, MVH per kvalifisert handoff 20–25 %, blindtest med konfidensrapportering | ✅ Revidert |
+
+P2/P3 (første vinter må konkurrere, fingerprint ≠ brukerbevis, barnehage-jobben er pakking,
+share-terskel, valideringens inputfriksjon, ull som preferanse, hanske-premisset snudd,
+«to produkter» for tidlig) er alle innarbeidet i `03` eller premissloggen. Sols blindsone-
+liste (familiestrukturer, sosioøkonomi, klimakompetanse uten proxy-antakelser, tvillinger,
+sykdom-ut-av-scope, etter-turen-øyeblikket, substitusjon, overgangsreisen, emosjonell
+friksjon utover usikkerhet) er lagt til rekrutterings-/protokollkravene for studiene.
+
+### DoD-kvittering fase 2
+
+- [x] Tydelige målgrupper og toppoppgaver (som kohort-/arbeidshypoteser, ærlig merket)
+- [x] ≥5 kritiske brukerantakelser testbare eller merket uverifisert (10, med skjerpede terskler)
+- [x] Work har vurdert blindsoner; Claude har oppdatert analysen eller begrunnet avvik (tabellen over — ett begrunnet avvik: P0-3 var allerede oppfylt)
+
 ### DoD-kvittering fase 1
 
 - [x] Alle viktige flyter og begrensninger dokumentert (`02` + appendiks)

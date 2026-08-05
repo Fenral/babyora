@@ -1,5 +1,16 @@
 # 03 — User Reality (Fase 2)
 
+> **REVIDERT 2026-08-05 etter Sols runde 2-review (verdikt REVIDER, `appendix/fase2/sol-review-svar-fase2.md`):**
+> (1) «Overopphetingstopp 8–9 mnd» og «~40 % ull-intoleranse» er TRUKKET fra faktalaget —
+> begge står nå som omstridte hypoteser i premissloggen med kildekrav før gjenbruk.
+> (2) S1–S4 er omklassifisert fra «segmentmodell» til **foreløpig kohorthypotese** — den
+> blander fysiologi-, rolle-, kontekst- og institusjonsakser og er fire kuraterte historier,
+> ikke gjensidig utelukkende segmenter. (3) Livsløpssyntesen er nedgradert til
+> **ekspansjonshypotese**: jobbene er mer sannsynlig aktør- og situasjonsavhengige enn
+> alderssekvensielle, og syntesen får ikke erstatte fase 3-kravet om å velge ÉN inngangskile.
+> (4) Falsifiseringsterskler skjerpet (se §4). Original tekst under er beholdt der den
+> fortsatt gjelder; alt som leser som fakta skal krysswhiskes mot premissloggen.
+
 > Utført 2026-08-05 av Claude (CD/TL) med fire parallelle hypotese-agenter (288k tokens).
 > Fullanalyser i `appendix/fase2/`. **Dette er hypotesearbeid, ikke brukerresearch** —
 > analytics er død og null brukerkontakt er gjort. Hver påstand i appendiksene er merket
@@ -14,38 +25,55 @@
 | **Validering** («Verifiereren») | «Bekreft at det jeg selv valgte er trygt — og si fra hvis ikke» | Merkevarens egen tone lover allerede dette («parent knows their child best»); løser garderobeproblemet strukturelt; billigst å teste (inngangsinversjon over samme motor) | Grønt lys er en *sertifisering* — falsk trygghet skjerper kravet til fagsignatur, ikke reduserer det; inputfriksjon ved døren (>15 s dreper modellen) |
 | **Koordinering** («Omsorgshandoff») | «Sørg for at alle som passer barnet gjør samme vurdering — uten at jeg må instruere» | Eneste hypotese som overlever «graduation» (hver ny omsorgsperson nullstiller behovet); norsk pappaperm-bytte er en strukturelt garantert kompetanseoverføring midt i overopphetings-peaken | Konkurrenten er en fire-sekunders tekstmelding; arkitekturen er delings-udyktig i dag; barnehage-scenariet er sannsynligvis en annen jobb (pakking) og må avgrenses bort |
 
-**Syntese-hypotesen (viktigste enkeltinnsikt):** valget er sannsynligvis ikke enten/eller —
-jobbene er **faser av samme livsløp**: forskrivning (første sesong/første barn) → validering
-(etter læring) → koordinering (når andre overtar). Og de er **aldersfordelt**: forskrivning
-vinner i S1–S3, validering hos erfarne på tvers, handoff i S4. En fase 3-brief som velger
-én form for hele 0–24 mnd gjentar «0–24 er ett segment»-feilen på produktformnivå.
+**Syntese-hypotesen — NEDGRADERT til ekspansjonshypotese etter runde 2:** vi foreslo at
+jobbene er faser av samme livsløp (forskrivning → validering → koordinering). Sol felte
+sekvensen: jobbene kan eksistere samme dag i samme husholdning (erfaren mor validerer ved
+første kuldeperiode; besteforelder trenger forskrivning ved 18 mnd; koordinering starter ved
+første omsorgsbytte) — de er **aktør- og situasjonsavhengige**, ikke alderssekvensielle.
+Konsekvens for fase 3: syntesen kan beholdes som ekspansjonshypotese, men **fase 3 MÅ velge
+én inngangskile** (første-sesong-forskrivning / kandidatvalidering ved døren / tur- og
+overgangsplanlegging / omsorgshandoff) og eksplisitt si hva som ikke er primærjobben.
+Aktør×øyeblikk-kartet (planlegge/velge/validere/pakke/overføre/justere/lære) erstatter
+sekvensantakelsen som arbeidsmodell.
 
-## 2. Revidert segmentmodell
+## 2. Foreløpig kohorthypotese (IKKE segmentmodell — omklassifisert etter runde 2)
 
-Sols tredeling (ikke-mobil/overgang/mobil) ble prøvd og **forkastet med begrunnelse**:
-den blander fysiologi- og atferdsaksen og bommer på begge de medisinsk viktigste grensene.
+Sols tredeling (ikke-mobil/overgang/mobil) ble prøvd og forkastet med begrunnelse; vår
+firedeling under er selv felt av Sol for å blande akser (fysiologi + foreldrerolle +
+kontekst + institusjon). Den beholdes kun som **kohorthypotese for rekruttering** til
+studiene. Sols alternative modell — flerdimensjonal tilstandsmodell (barn × eksponering ×
+beslutningstaker × husholdning, med alder som én variabel) + aktør×øyeblikk-kart
+(planlegge/velge/validere/pakke/overføre/justere/lære) — tas inn som arbeidsmodell i fase 3.
+En separat **risikomodell** (søvn, prematuritet, korrigert alder, sykdom-ut-av-scope) skal
+holdes adskilt fra JTBD-arbeidet.
 
 | Segment | Alder | Driver (belagt i repo-research) | Beslutningsproblem |
 | --- | --- | --- | --- |
 | S1 Nyfødt | 0–3 mnd | Umoden termoregulering, kulderisiko, tidsgrenser | Sikkerhetsangst: «Er dette *trygt*?» |
 | S2 Passiv passasjer | 3–8 mnd | Modnes; barnet melder ikke fra; nakketest eneste feedback | Kalibrering: «Er dette *riktig*?» |
-| S3 Peakbarn | 8–12 mnd | **Overopphetingstopp 8–9 mnd** (PMC12386404) — repoets eneste «ikke i konkurrenter»-funn | Motintuitivt: *færre* lag enn forelderen tror |
+| S3 Peakbarn | 8–12 mnd | ~~Overopphetingstopp 8–9 mnd~~ **OMSTRIDT** (repoets kilde PMC12386404 vs. Sols SUDI-innvending: sårbarhet peker mot 2–4 mnd, og søvnevidens ≠ utekledning) — avgjøres i faglig blindtest, brukes ikke som grense før da | Motintuitivt-hypotesen står, men uten tallfestet peak |
 | S4 Mobil smårolling | 12–24 mnd | Voksen-lik termoregulering; barnehagestart ~12 mnd | Logistikk/koordinering — behovet skifter karakter |
 
-**Ubehagelig konsekvens:** termoreguleringsverdien er størst 0–12 mnd og faller bratt idet
-barnehagen overtar det meste av påkledningen. «0–24» er i praksis to produkter; dagens app
-er bare det første. Kryssaksene førstegangs/erfaren og primær/sekundær omsorg forsterker
-dette: **«første vinter» er sannsynligvis det egentlige høyverdi-øyeblikket — en kohort-
-egenskap (fødselsmåned × kalender) appen kjenner fra fødselsdatoen men aldri bruker.**
+**Ubehagelig konsekvens (moderert i runde 2):** termoreguleringsverdien er størst 0–12 mnd
+og behovet skifter karakter mot logistikk/koordinering når barnehagen overtar. Sols P3 står:
+«to produkter» er for tidlig — det kan like gjerne være to verdiforslag, fire situasjoner
+eller ett produkt med progressiv modus; produktgrensen følger ikke automatisk aldersgrensen.
+«Første vinter» beholdes som **rekrutterings- og personaliseringshypotese** (kohort =
+fødselsmåned × kalender, som appen kjenner men aldri bruker) — men den skal testes mot tre
+motkandidater (første kuldeperiode, første omsorgsbytte, første søvn-/aktivitetsovergang),
+ikke krones på forhånd.
 
 ## 3. Usynlige segmenter og ukablet kontekst
 
 Appen er i dag presist bygget for: *primær, førstegangs, norskspråklig forelder i permisjon,
 barn 0–12 mnd, én enhet, forskrivende liste nå, betaler etter én gratis anbefaling.* Usynlige:
 all sekundæromsorg (strukturelt umulig — CareCircle-previewen med fiktive «Deler»-statuser
-er dog dev-only, gated på `import.meta.env.DEV` i InnstillingerScreen.tsx:1932: verifisert
-2026-08-05, IKKE en produksjonsløftefeil slik fase 2-agenten antok), barn med ull-intoleranse (~40 % per F62,
-intet profilflagg, ull-first-default), sovende vognbarn (`vognMode='sleeping'` bygget,
+er dog dev-only, gated på `import.meta.env.DEV` i InnstillingerScreen.tsx:1932 OG eksplisitt
+merket «Forhåndsvisning … Ikke aktiv ennå» — Sols P0-3-krav var dermed allerede oppfylt,
+verifisert 2026-08-05), barn som unngår ull (~~40 %~~ prevalenstall TRUKKET etter runde 2 —
+hudreaksjon/sensorisk ubehag/foreldrepraksis/allergi er fire ulike fenomener som må måles
+separat; behovet modelleres som **toleranse-/preferansevalg**, ikke diagnose; intet
+profilflagg finnes, ull-first-default består), sovende vognbarn (`vognMode='sleeping'` bygget,
 ukablet — trolig hverdagens vanligste S1–S2-situasjon), bil-familien (HB-9 bilstol-regelen
 bygget, usynlig), erfarne som vil validere, 12–24-hverdagen, ikke-norskspråklige, Dynamic
 Type-brukere. Mønsteret fra fase 1 igjen: **motoren kjenner kontekstene, UI-et gjør ikke.**
@@ -53,6 +81,17 @@ Type-brukere. Mønsteret fra fase 1 igjen: **motoren kjenner kontekstene, UI-et 
 ## 4. Kritiske brukerantakelser (DoD-krav: ≥5 testbare — her er de ti viktigste)
 
 Fullstendig liste med terskler i appendiksene; felt for bevis/eier/status i `premisslogg.md`.
+**Terskler skjerpet etter Sols runde 2:** frekvens måles som *beslutningsøyeblikk per
+kvalifisert dag* (definert uavhengig av app-åpning), ikke åpninger; autoritetsaksept
+erstattes av **kalibreringstest** (følg korrekte advarsler OG avvis plantede tvilsomme råd —
+blind lydighet er ikke suksess); verifier-input p75 ≤ **8 sekunder** målt med barn på armen
+(15 var for snilt mot konkurrentene null-input og tekstmelding); garderobekrav hevet til
+**≥90 %** kategoriekvivalens eller umiddelbar substitusjon; MVH-deling måles per
+**kvalifisert handoff** (mål: 20–25 %), ikke per uke; faglig blindtest må rapportere
+scenarioantall, konfidens og uenighetshåndtering — ikke bare null røde; «første vinter»
+testes mot tre motkandidater (første kuldeperiode, første omsorgsbytte, første
+søvn-/aktivitetsovergang); ingen kodebasert bruksmåling omtales som brukerbevis før
+analytics er aktiv.
 
 1. **Frekvens:** «3–8 åpninger/dag» (PRODUCT.md) er aldri målt. Testbar: median ≥2 åpninger
    per aktiv dag når analytics er på; falsifisert ved <1 — da faller hele abonnementslogikken.
