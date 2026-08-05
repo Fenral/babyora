@@ -1,0 +1,81 @@
+# Fase 5 Mobbin-research: Paywalls, prøvetid og premiumkommunikasjon
+
+Vurdert mot fase 4-beslutningene: værskifte-trial (REINVENT — N kvalifiserte beslutningsøyeblikk, kalendertak 14 dager), ikke-fornyende sesongpass (ADOPT, Slopes-modellen), sesongpass+månedlig i stedet for tre-plans årsanker, sikkerhetslag aldri bak paywall, mørke mønstre-forbudslisten, og Sols P0 om at researchprototyper testes uten hard paywall.
+
+## 1. «Slik virker prøvetiden»-tidslinjen er en moden, homogen sjanger
+
+Ti av ti treff deler samme anatomi: vertikal tidslinje med tre–fire milepæler (i dag: full tilgang / dag X: påminnelse med bjelleikon / dag Y: betaling starter), pluss en eksplisitt nullforpliktelse («You won't be charged anything today»).
+
+- [Vocabulary](https://mobbin.com/screens/32238af5-552f-4ac3-bede-16981f4c23d3) har det mest tillitsbyggende enkeltgrepet i utvalget: en faktisk **toggle** «Reminder before trial ends» — påminnelsen er et valg brukeren gjør, ikke bare et løfte i tekst.
+- [N26](https://mobbin.com/screens/e3c08810-b4c7-46c1-9a3f-d98ed02c910a) eskalerer til **tre påminnelser** (10 dager, 5 dager, 24 timer) — sterkeste anti-«glemt fornyelse»-variant, direkte relevant siden fase 4 forkastet årsanker nettopp fordi det priser mot glemt fornyelse.
+- [Strava](https://mobbin.com/screens/40d104f8-8f25-4ae3-90eb-373e30e35acd) kobler tidslinjen til en «What you'll unlock»-liste og oppgir eksakt beløp og dato («charged S$169 ... You won't be charged until Jul 1»), med avbestillingsfrist i klartekst.
+- [Kitchen Stories](https://mobbin.com/screens/8d0a33c4-54d1-406d-b502-7cf17b997e91), [Headway](https://mobbin.com/screens/c550c1aa-b7d4-4b06-b4f3-ef448c07419f), [Nibble](https://mobbin.com/screens/e722f5a0-b638-4060-86cc-2a05426b3f17), [Origin](https://mobbin.com/screens/b3ebe000-42ff-431e-9d6b-8b27338ba9c5), [Dropbox](https://mobbin.com/screens/5ea4e218-270a-4fd8-b086-67ed9bb9ea55) (med FAQ-accordion under tidslinjen) og [foodpanda](https://mobbin.com/screens/5c330e96-9e24-4420-a703-7612ab830a4b) (tidslinje inne i selve betalingsarket) bekrefter at anatomien er konvensjon, ikke differensiator.
+
+**Kritisk funn for værskifte-trialen:** samtlige eksempler er kalenderdag-baserte. Jeg fant **ingen** app som kommuniserer en hendelsesbasert trial («prøv til du har opplevd ett værskifte og én verifisert tur»). Babyoras REINVENT har altså ingen lært konvensjon å lene seg på — anatomien (løfte → påminnelse → beslutningspunkt) kan overføres, men enhetene må oversettes fra dager til øyeblikk, og det må testes at brukere forstår en trial uten fast sluttdato (kalendertaket på 14 dager blir da sikkerhetsnettet som KAN kommuniseres som dato).
+
+## 2. Engangskjøp kommuniseres med eget språk og eget visuelt spor — og har en tydelig antimal
+
+- [timespent](https://mobbin.com/screens/b00fa672-0e18-4d18-8040-8912c0af8ca7) er utvalgets ærlighetsreferanse: håndskrevet løfteliste («meaningful free tier», «no dark patterns», «no long ass sign-up flow that forces you to subscribe, betting you'll forget to cancel») og priser som tre likestilte stempler (monthly/yearly/forever). Verdiargumentet ER etikken.
+- [one year](https://mobbin.com/screens/df0d769a-48b0-46b0-beb4-9f8225d4ce5a) viser personlig brev + kun to ærlige valg (månedlig eller lifetime) — beviser at få planer med tydelig karakter slår plan-matrise.
+- [Orbit](https://mobbin.com/screens/521769df-d360-452b-baf3-e6329b58a842) («Lifetime — Pay once and enjoy forever»), [Tide Guide](https://mobbin.com/screens/0a7fe4f5-58f1-46f5-a498-af07baa409fe), [GO Club](https://mobbin.com/screens/8b81d613-fe17-43b2-9471-a17613425fb6), [pillowtalk](https://mobbin.com/screens/4139d31a-e861-4982-b075-7e8d5ffd1468) og [5 Minute Journal](https://mobbin.com/screens/a5c6819f-de01-4e15-9aef-70d3dc1e6044) («One time payment, yours forever») viser at engangskjøpet alltid merkes med eksplisitt «one time»-språk i selve plankortet.
+- **Antimalen:** [Feeld](https://mobbin.com/screens/a5389b5c-f2c4-433a-b1ca-55db7bef5ba2) selger «30 days / 90 days / 1 year» som ser ut som tidsavgrensede pass — men hvert kort har «then S$X» i liten tekst: passet auto-fornyer. Dette er nøyaktig forvekslingen Babyoras sesongpass må gjøre umulig: et sesongpass som ligner abonnement (eller omvendt) brenner tilliten sesongpasset skal bære.
+- **Ærlig begrensning:** søket på Slopes' faktiske engangskjøp (day/season pass) ga bare [kontoflaten](https://mobbin.com/screens/46724427-448a-4d3f-9797-a9808f5e3b74) og [premium-oversikten](https://mobbin.com/screens/5619dab1-815d-464a-80bb-a7f0a14e90b8) — selve pass-kjøpsskjermen finnes ikke i Mobbin-utvalget. Fase 4-vedtakets Slopes-presedens hviler dermed på kunnskap utenfor dette bildematerialet og bør verifiseres direkte i appen før fase 6-porten.
+
+## 3. Myk gating ved intensjon, ikke ved inngang
+
+- [Apple News-flyten](https://mobbin.com/flows/671e3f4d-bd4d-4d0e-b229-fec56d4e215f) er den rene soft-modellen: brukeren lander i fullt fungerende innhold, News+ tilbys som kontekstuell knapp og lukkbart ark. Støtter direkte Sols P0 og «paywall etter første verifikasjonsøyeblikk».
+- [bless.-flyten](https://mobbin.com/flows/e13dcdd7-ceb8-4577-8ed4-f89251fd47c3) viser motsatsen: onboarding rett i «Unlock bless» med App Store-ark — men selv her prøver appen først å demonstrere kjerneinteraksjonen.
+- Kontekstuelle gates ved funksjonsintensjon: [X](https://mobbin.com/screens/75cb81aa-fece-4712-8091-5bd61675d5cb) («Unlock Offline videos» med «Maybe later»), [Photoroom](https://mobbin.com/screens/a3eb113c-d162-4aa6-a90d-2b753eb23f5a) (blurret forhåndsvisning bak modal), [Chime](https://mobbin.com/screens/0e29a294-8d13-4980-8ab2-44bf9550a129) (blurret seksjon med «Learn more» som likeverdig valg), [Character AI](https://mobbin.com/screens/fcc95941-3971-4a4b-ad65-07f1897bedf6) («Skip for now» under CTA). Blur-mønsteret fungerer for **verdilag** — for Babyora er grensen absolutt: anbefalingens sikkerhetsbærende del (hard blocks, TOG, ut-av-scope) kan aldri være det blurrede. I H2 betyr dette gating **per inngang** (f.eks. «Vi skal være ute en stund»-planlegging kan gates), aldri per app.
+
+## 4. Utløp og nedgradering: vis hva som består, ikke hva som tapes
+
+- [Oportun](https://mobbin.com/screens/b041f1f7-07e0-4b6b-87a0-bcd7e46c3da7) er malen: nåværende plan med sluttdato, kommende tilstand, nøytral varselboks og lenken «What happens after you cancel?» — tilstandsmaskinen er synlig og udramatisk.
+- [GoPro Quik](https://mobbin.com/screens/ce18fcf4-62a9-4617-932a-c78d0d04dc08) viser nøktern «ends on 4 March» + renew-knapp uten teater.
+- Antimalene: [Headway](https://mobbin.com/screens/8f29fa3f-1c57-4ba5-9e02-0b47f5db478d) («WITHOUT PREMIUM, YOU LOSE» med kryssliste + rabatt), [foodpanda](https://mobbin.com/screens/d46917e5-0b4b-46e4-b7b2-5c9d6a76e7da) (avbrytelsesmodal der «Stay pro» er primærknapp og selve avbrytelsen demotert), [DoorDash](https://mobbin.com/screens/b3adc067-f84e-4bfb-a01b-9c1a911c3a2f) («If you cancel, you'll lose access right now» — umiddelbar-taps-trussel). Alle tre bryter skamfri tekstdoktrine og forbudslisten. For H1 er dette avgjørende: graduation/utløp er *designet utfall* — utløpsflaten skal si «dette kan dere nå» + hva som fortsatt virker (sikkerhetslaget, alltid), ikke true med tap.
+
+## 5. Målt bruk (presedens for øyeblikksbasert trial)
+
+- [Fuse](https://mobbin.com/screens/3a516a4b-f477-4eba-ae3a-7f18b2cdcf4c) («You have 5 free transactions remaining» med «Got it» som likeverdig valg), [Photoroom](https://mobbin.com/screens/1e1b9135-afc7-4935-a8fd-b2b576b385e8) (bruksring med «renews on»-dato på egen statusflate) og [ElevenLabs](https://mobbin.com/screens/3d335c1f-c269-4328-9c7a-503e52c6a0d3)/[Suno](https://mobbin.com/screens/058c5472-7d02-4c6a-956d-4fb780f436a3) (kreditsaldo) viser at telling av kvalifiserte enheter er en etablert mekanikk brukere forstår — men i verktøy- og AI-apper, ikke i konsumentabonnement. Det gir værskifte-trialen gjenbrukbar form (statusflate med «øyeblikk brukt», ikke nedtelling), med én hard regel: telleren skal aldri vises i selve beslutningsøyeblikket — der står barnets påkledning, og barnets sikkerhet er aldri konverteringsagn.
+
+## 6. Familiedeling og restore: null-arkitektur-mønsteret finnes ferdig
+
+- [Tide Guide](https://mobbin.com/screens/0a7fe4f5-58f1-46f5-a498-af07baa409fe) er nærmeste nabo til Babyora (værdata, widgets/Live Activities i funksjonslisten) og løser familiedeling som én toggle på paywallen: «Share with Family via iCloud Family», pluss «Already Purchased? Restore Purchase» som egen tydelig blokk. Dette er fase 4-vedtaket (Apple/Google familiedeling ADOPT) i ferdig form — dekker partnerraden i matrisen uten å forskuttere handoff-jobben.
+- [GO Club](https://mobbin.com/screens/8b81d613-fe17-43b2-9471-a17613425fb6) («Show Family Sharing Plans»-toggle), [Slopes](https://mobbin.com/screens/68bd28d4-b6b1-4a29-baec-63d54c0dbd69) («Upgrade to Family Plan» i innstillinger), [Duolingo](https://mobbin.com/screens/c7ad1e3d-b6cb-403d-a0f8-707799365e2d) (medlemsliste med plass-teller) og [DoorDash Household Sharing](https://mobbin.com/screens/7693d432-1c14-48a1-b4ea-ba8b6fd29728) (invite-lenke, illustrert, én ekstra person) viser spennet fra null-kost (OS-native) til egen invitasjonsarkitektur. Invite-lenke-mønsteret (DoorDash/[Citizen](https://mobbin.com/screens/bddb8527-b094-48a8-a524-48c32215f30a)) er formmessig samme muskel som handoff-kortet B4 — men det hører til retention-sporet, ikke paywallen.
+
+## 7. Ekkokammer-varsel (Sols angrepsflate — eksplisitt)
+
+1. **Utvalget er 100 % anglo-amerikansk abonnements-idiom.** Ingen nordiske helse-/barneapper, og Mobbin kan per definisjon ikke vise Nørs-modellen (invertert betaling — kommunen betaler, gratis for foreldre) som fase 4 identifiserte som Norges sterkeste distribusjonsmaskin. Alt over optimaliserer B2C-konvertering; Babyoras viktigste monetiseringsalternativ er kanskje ikke en paywall i det hele tatt. Denne researchen kan ikke avgjøre det.
+2. **Trial-tidslinje-sjangeren er ekstremt homogen** (10/10 identisk anatomi, dominert av selvutviklings-/vaneapper). Å følge den er trygt men udifferensiert; å hendelsesbasere den er udokumentert terreng. Begge risikoer må navngis i fase 7, ikke bare den første.
+3. **Slopes-presedensens kjøpsskjerm mangler i bildematerialet** (pkt. 2) — ADOPT-vedtaket står på sekundærkunnskap til det er verifisert i appen.
+4. Vektingen min mot «ærlighets-appene» (timespent, one year) er selv en smak-bias: dette er små indie-apper uten dokumentert konverteringsbevis. De beviser at formen finnes, ikke at den bærer en forretning.
+
+## OVERFØRBARE PRINSIPPER
+- P1 Trial-anatomien (løfte om null betaling nå → eksplisitt påminnelse → tydelig beslutningsdag) overføres, men enhetene oversettes fra kalenderdager til kvalifiserte beslutningsøyeblikk; kalendertaket på 14 dager er sikkerhetsnettet som kan kommuniseres som dato. Begrunnelse: H1s værskifte-trial har ingen lært konvensjon — anatomien er det eneste overførbare laget (Vocabulary, N26, Strava).
+- P2 Påminnelse som brukerens valg, ikke appens løfte: en synlig toggle/flertrinnsplan for trial-påminnelser (Vocabulary-toggle, N26s 10/5/1-dagers trapp) er sterkeste enkeltgrep mot glemt-fornyelse-inntekt — som fase 4 alt har forbudt. Gjelder H1 og månedsplanen i alle hypoteser.
+- P3 Engangskjøp krever eget visuelt spor OG eget språk: sesongpasset skal aldri stå i samme kortliste som fornyende planer uten strukturell markering («betales én gang — fornyes ikke») à la timespent/Orbit. Begrunnelse: H1s graduation-ærlighet er hele sesongpassets poeng; Feeld viser hvor lett formen forfalskes.
+- P4 Beroligelseslinje ved CTA med konkrete tall: eksakt beløp, eksakt dato, avbestillingsfrist (Strava-mønsteret «charged S$169 on Jul 1, cancel up to 24hrs before») — aldri per-uke-maskering. Bygger tilliten et helsenært produkt trenger i alle tre hypoteser.
+- P5 Gate ved funksjonsintensjon, aldri ved appinngang: verdilag kan blurres/låses i det øyeblikket brukeren ber om det (X/Photoroom/Chime), med én-taps ærlig exit. For H2 betyr det gating per router-inngang; sikkerhetsbærende innhold rendres alltid — blur-mønsteret er eksplisitt forbudt der.
+- P6 Utløpsflaten viser hva som består, ikke hva som tapes: Oportuns tilstandsmaskin (nåværende plan + sluttdato + «hva skjer etterpå») er malen. For H1 er utløp designet utfall («dere kan dette nå») — tapslister og retention-modaler bryter skamfri doktrine.
+- P7 Øyeblikkstelleren lever på en statusflate, aldri i beslutningsøyeblikket: målt-bruk-mønsteret (Fuse/Photoroom) gir værskifte-trialen ferdig form, men telleren i selve påkledningssvaret ville gjøre barnets sikkerhet til konverteringsagn — absolutt grense fra forbudslisten.
+- P8 Familiedeling som paywall-toggle (Tide Guide «Share with Family via iCloud Family») + tydelig restore-blokk: null arkitekturkost, dekker partnerraden i matrisen uten å forskuttere handoff-jobben — implementerer fase 4s ADOPT direkte. Invite-lenke-varianten (DoorDash/Citizen) reserveres til handoff-kortet B4, ikke paywallen.
+- P9 Soft-first sekvensering: Apple News-modellen (fullt fungerende produkt først, premium som kontekstuelt, lukkbart ark) er den eneste flyten i utvalget som er forenlig med Sols P0 (prototyper uten hard paywall) og «paywall etter første verifikasjonsøyeblikk» — hard-paywall-flyten (bless.) beholdes kun som sammenligningsreferanse.
+
+## IKKE KOPIER
+- Peanut: nedtellingsrabatt («39% off ends in 47:27:13») — fabrikkert hastverk, direkte brudd på fase 4s forbudsliste (https://mobbin.com/screens/fea3b0ed-9377-41d6-8282-8146146daefc)
+- Feeld: tidsavgrensede «pass» (30/90 dager) som auto-fornyer med «then S$X» i småtekst — forvekslingen mellom pass og abonnement er nøyaktig det Babyoras ikke-fornyende sesongpass må gjøre umulig (https://mobbin.com/screens/a5389b5c-f2c4-433a-b1ca-55db7bef5ba2)
+- Headway: «WITHOUT PREMIUM, YOU LOSE»-kryssliste ved trial-utløp — tapsaversjon som skamlegger valget; bryter skamfri tekstdoktrine (https://mobbin.com/screens/8f29fa3f-1c57-4ba5-9e02-0b47f5db478d)
+- foodpanda: avbrytelsesmodal der «Stay pro» er primærknapp og selve avbrytelsen visuelt demotert — manipulert hierarki i en flyt brukeren startet for å avslutte (https://mobbin.com/screens/d46917e5-0b4b-46e4-b7b2-5c9d6a76e7da)
+- DoorDash: «If you cancel, you'll lose access right now» — umiddelbar-taps-trussel i cancel-flyt (https://mobbin.com/screens/b3adc067-f84e-4bfb-a01b-9c1a911c3a2f)
+- Bloom: awards/«Loved by 2 million»-vegg som bakteppe for kjøpet — sosial proof er feil bevisform for et produkt der anbefalingen er sikkerhetsbærende (fase 4 REJECT) (https://mobbin.com/screens/db6e7f44-adcb-48a5-a585-48df56e93efe)
+- Kalenderdag-tidslinjen kopiert rått (Vocabulary/Headway/Nibble-sjangeren): rå kopi ville reintrodusere kalenderlogikken fase 4 eksplisitt forkastet til fordel for kvalifiserte beslutningsøyeblikk
+- Peanut/pillowtalk per-uke-prising («$3.46/wk») som maskerer reell fakturering — totalbeløp og faktureringsdato skal alltid stå sammen
+
+## SØKELOGG
+- screens: «paywall screen explaining how free trial works with timeline of reminder day and charge day» (ios, deep) — 10 treff, 10 relevante
+- screens: «Slopes app season pass or day pass purchase screen with one-time pricing options» (ios, deep) — 2 treff, 2 delvis relevante (selve engangskjøps-skjermen ikke i utvalget — flagget som hull)
+- screens: «paywall with lifetime one-time purchase option next to monthly and yearly subscription plans» (ios, deep) — 8 treff, 8 relevante
+- screens: «weather app premium subscription upgrade screen with feature list» (ios, deep) — 8 treff, ca. 4 relevante (ingen rene værapper; Feeld/happn-støy, men Feeld ble nyttig som antimal)
+- screens: «trial expired screen offering downgrade to free plan or resubscribe» (ios, deep) — 8 treff, 6 relevante
+- flows: «onboarding that ends in a hard paywall blocking app access until subscribing» (ios) — 4 flows, 3 relevante (Apple News soft, bless. hard, Bloomberg konto-først)
+- screens: «subscription settings with family sharing and restore purchase options» (ios, deep) — 8 treff, 7 relevante
+- screens: «free usage limit counter showing remaining credits before upgrade required» (ios, deep) — 8 treff, 6 relevante
