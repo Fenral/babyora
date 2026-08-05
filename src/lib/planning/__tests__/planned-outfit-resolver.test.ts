@@ -395,11 +395,23 @@ describe('Planned Outfit resolver', () => {
       /(?:localStorage|sessionStorage|indexedDB|JSON\.stringify|URLSearchParams|pushState|replaceState|console|posthog|analytics|track)\s*\([^)]*plannedContext/u,
     );
 
+    /* Sluttmarkøren var `function CurrentPaakledningScreen` til 2026-08-05.
+       Den grenen kunne aldri rendres og ble slettet i fase 4, så markøren
+       pekte på -1 og hele utsnittet kollapset. Wrapperen er den nye — og en
+       BEDRE — grense: den ligger definisjonsmessig rett etter branchen, og
+       den kan ikke forsvinne uten at filen slutter å ha et offentlig API. */
     const plannedStart = outfitSource.indexOf('function PlannedPaakledningScreen');
-    const currentStart = outfitSource.indexOf('function CurrentPaakledningScreen');
+    const wrapperStart = outfitSource.indexOf('export function PaakledningScreen');
     expect(plannedStart).toBeGreaterThan(-1);
-    expect(currentStart).toBeGreaterThan(plannedStart);
-    const plannedBranch = outfitSource.slice(plannedStart, currentStart);
+    expect(
+      wrapperStart,
+      'fant ikke wrapperen — utsnittet av den planlagte grenen har ingen slutt',
+    ).toBeGreaterThan(plannedStart);
+    const plannedBranch = outfitSource.slice(plannedStart, wrapperStart);
+    expect(
+      plannedBranch.length,
+      'utsnittet er tomt — da ville hver eneste feltsjekk under vært vakuøs',
+    ).toBeGreaterThan(1000);
     for (const exactField of [
       'plannedContext.child',
       'plannedContext.plannedForIso',

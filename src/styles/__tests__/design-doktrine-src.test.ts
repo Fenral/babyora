@@ -129,14 +129,14 @@ const BASELINE: Record<string, number> = {
      (OnboardingScreen ×5, PaakledningScreen ×3), altså samme gjeld talt to
      ganger. Her er template-CSS-områdene ekskludert fra inline-flaten:
      21 + 38 = 59. css/tsx-css-siden stemmer eksakt med kartleggingen. */
-  D2: 58,
+  D2: 55,
   D3: 0,
   /* 21, ikke kartleggingens 20: `.hjem-monter { overflow: hidden auto }` er
      en scroll-container like fullt som `overflow-y: auto`. Toverdiformen var
      usynlig for kartleggingens regex. */
-  D4: 21,
-  D5: 5,
-  D6: 2,
+  D4: 20,
+  D5: 2,
+  D6: 1,
   /* 18, ikke kartleggingens 16: kartleggingens skanning brukte
      `(background|color|border|box-shadow)` og så derfor verken
      `outline: 3px solid var(--focus-ring, #2b2522)` (Antrekkskart) eller
@@ -186,9 +186,6 @@ const BASELINE_SETT: Record<string, number> = {
   'D2|src/screens/OnboardingScreen.tsx|.ob-cal': 1,
   'D2|src/screens/OnboardingScreen.tsx|.ob-combo input': 1,
   'D2|src/screens/OnboardingScreen.tsx|.ob-combo-list': 1,
-  'D2|src/screens/PaakledningScreen.tsx|.pkl-chip .thumb': 1,
-  'D2|src/screens/PaakledningScreen.tsx|.pkl-row': 1,
-  'D2|src/screens/PaakledningScreen.tsx|.pkl-row .rthumb': 1,
   /* inline CSSProperties — `(inline)` per fil, se grensen over. */
   'D2|src/components/PlaggDetailSheet.tsx|(inline)': 7,
   'D2|src/components/controls/AgeAdaptiveSituationPicker.tsx|(inline)': 1,
@@ -210,7 +207,6 @@ const BASELINE_SETT: Record<string, number> = {
   'D4|src/components/PlaggDetailSheet.tsx|(inline)': 1,
   'D4|src/screens/FinnAntrekkScreen.tsx|(inline)': 1,
   'D4|src/screens/InnstillingerScreen.tsx|(inline)': 10,
-  'D4|src/screens/PaakledningScreen.tsx|(inline)': 1,
   'D4|src/screens/PlaggbibliotekScreen.tsx|(inline)': 1,
   'D4|src/screens/TogGuideScreen.tsx|(inline)': 1,
   'D4|src/screens/VarmEllerKaldScreen.tsx|(inline)': 1,
@@ -218,12 +214,8 @@ const BASELINE_SETT: Record<string, number> = {
 
   'D5|src/screens/OnboardingScreen.tsx|.ob-sum-row': 1,
   'D5|src/screens/OnboardingScreen.tsx|.ob-screen.step-4 .ob-sum-row': 1,
-  'D5|src/screens/PaakledningScreen.tsx|.pkl-row': 1,
-  'D5|src/screens/PaakledningScreen.tsx|.pkl-row .num': 1,
-  'D5|src/screens/PaakledningScreen.tsx|.pkl-row .rthumb': 1,
 
   'D6|src/screens/OnboardingScreen.tsx|.ob-cal-nav button': 1,
-  'D6|src/screens/PaakledningScreen.tsx|.pkl-chip .badge': 1,
 
   'D7|src/components/outfit-transition/OutfitTransitionOverlay.css|.outfit-transition-overlay__clone': 3,
   'D7|src/components/outfit/Antrekkskart.css|.outfit-experience': 1,
@@ -591,7 +583,13 @@ const ANKRE: { regel: string; fil: string; sel?: string; hvorfor: string }[] = [
   { regel: 'D2', fil: 'src/components/family/ToolsSection.tsx', hvorfor: 'kjent D2-funn i inline CSSProperties' },
   { regel: 'D2', fil: 'src/components/hjem/hjem-monter.css', sel: '.hjm-rows', hvorfor: 'referanseskjermens hevede flate — skal måles, ikke felles' },
   { regel: 'D4', fil: 'src/screens/InnstillingerScreen.tsx', hvorfor: 'skjermen som falt ut av revisjonen 2026-08-03; 10 av 18 inline-D4' },
-  { regel: 'D5', fil: 'src/screens/PaakledningScreen.tsx', sel: '.pkl-row', hvorfor: 'kjent D5-funn i tsx-template-CSS' },
+  /* Ankeret pekte på `.pkl-row` i PaakledningScreen til 2026-08-05. Raden lå i
+     CurrentPaakledningScreen — den unådde grenen som ble slettet i fase 4 — så
+     ankeret ville pekt på tomrom. ERSTATTET, ikke fjernet: hensikten er å
+     bevise at parseren leser CSS inne i template-literaler i .tsx, og
+     `.ob-sum-row` er nøyaktig samme flate og fortsatt et levende D5-funn. Et
+     anker som bare forsvinner tar bevisbyrden med seg. */
+  { regel: 'D5', fil: 'src/screens/OnboardingScreen.tsx', sel: '.ob-sum-row', hvorfor: 'kjent D5-funn i tsx-template-CSS' },
   {
     regel: 'D7',
     fil: 'src/components/outfit/Antrekkskart.css',
@@ -616,7 +614,14 @@ const PAAKREVDE_FILER = [
 const PAAKREVDE_SELEKTORER: { sel: string; flate: string }[] = [
   { sel: '.hjm-panel', flate: 'css' },
   { sel: '.planlegg-screen__week-weather', flate: 'css' },
-  { sel: '.pkl-row', flate: 'tsx-css' },
+  /* `.pkl-row` sto her til 2026-08-05, som bevis på at tsx-template-CSS ble
+     parset. Den døde med CurrentPaakledningScreen. `.ob-sum-row` bærer samme
+     bevis på samme flate.
+     MÅLT: `.pkl-title` ble prøvd som erstatter og virket IKKE — hver eneste
+     forekomst i den gjenværende CSS-en står med pseudoklasse
+     (`.pkl-title:focus-visible`), så parseren registrerer aldri det bare
+     navnet. PaakledningScreen holdes i stedet i korpuset av PAAKREVDE_FILER,
+     som er det riktige stedet for «denne filen skal være lest». */
   { sel: '.ob-sum-row', flate: 'tsx-css' },
 ];
 

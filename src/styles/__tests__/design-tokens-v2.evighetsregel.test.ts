@@ -542,25 +542,13 @@ const UNNTAK: readonly Unntak[] = [
     },
     hjemmel: 'kalm-doktrinen: streker star stille i hvile; VerticalGauge.test.tsx asserterer fravar av .is-dragging ved forste paint',
   },
-  {
-    // Analyse-prikkene i Paakledning. Lasteren RENDRES ikke nar den er ferdig
-    // ({!loaderHidden && …}), sa animasjonen avmonteres med den.
-    // MERK: skjermen skal gjenoppbygges i fase 4 (vedtak
-    // `paakledning-gjenoppbygges`). Nar filen forsvinner, blir denne
-    // oppforingen foreldet og porten ROD til linjen slettes. Det er meningen.
-    fil: 'src/screens/PaakledningScreen.tsx',
-    navn: 'pkl-blink',
-    eierSelektor: '.pkl-loader .dots i',
-    gateSelektor: '.pkl-loader',
-    antall: 1,
-    gateKilde: '{!loaderHidden && (',
-    stopp: '.pkl-loader .dots i, .pkl-ring-guide { transition: none !important; animation: none !important; }',
-    tilstandsstopp: {
-      fil: 'src/screens/PaakledningScreen.tsx',
-      tekst: '{!loaderHidden && (',
-    },
-    hjemmel: 'lastetilstand — lasteren avmonteres nar analysen er ferdig',
-  },
+  /* SLETTET 2026-08-05: «pkl-blink» — analyse-prikkene i Paakledning.
+     Oppforingen bar sin egen utlopsdato: «skjermen skal gjenoppbygges i fase
+     4 … nar filen forsvinner, blir denne oppforingen foreldet og porten ROD
+     til linjen slettes. Det er meningen.» Det skjedde: lasteren la i
+     CurrentPaakledningScreen, den unadde grenen som ble slettet i fase 4.
+     Bevegelsen er borte sammen med flaten, ikke frikjent — og «lovet»-tallet
+     regnes ut av registrene, sa det folger med av seg selv. */
 ];
 
 /**

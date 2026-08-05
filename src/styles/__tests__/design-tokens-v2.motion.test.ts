@@ -992,22 +992,11 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
   { fil: 'src/screens/OnboardingScreen.tsx', decl: '--ob-ease-spring: cubic-bezier(.34,1.32,.64,1)' }, // linje 932 [variabel]
   { fil: 'src/screens/OnboardingScreen.tsx', decl: "transition: all .35s var(--ob-ease-spring)" }, // linje 1028
   { fil: 'src/screens/OnboardingScreen.tsx', decl: "transition: transform .18s var(--ob-ease-spring), box-shadow .18s var(--ob-ease-standard)" }, // linje 1530
-  // ── src/screens/PaakledningScreen.tsx (slettes i fase 4 — gjenoppbygges)
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "transition: 'transform 260ms var(--ease-out, cubic-bezier(0.22,1,0.36,1))'" }, // linje 176
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "animation: pkl-canvas-in 260ms var(--ease-out, cubic-bezier(.22,1,.36,1)) both" }, // linje 971
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "transition: opacity .5s ease" }, // linje 975
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "transition: opacity .5s cubic-bezier(.22,1,.36,1)" }, // linje 980
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "transition: opacity .5s cubic-bezier(.16,1,.3,1), transform .56s cubic-bezier(.34,1.35,.5,1)" }, // linje 983 — to egne kurver i én deklarasjon
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "transition: opacity .35s ease" }, // linje 989
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "animation: pkl-blink 1s infinite ease-in-out" }, // linje 993
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "animation-delay: .16s" }, // linje 994
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "animation-delay: .32s" }, // linje 994
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "transition: opacity .3s ease" }, // linje 998
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "transition: transform 160ms var(--ease-out, cubic-bezier(.22,1,.36,1)), box-shadow 160ms var(--ease-out, cubic-bezier(.22,1,.36,1))" }, // linje 1009
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: "transition: grid-template-rows 300ms var(--ease-out, cubic-bezier(.22,1,.36,1))" }, // linje 1024
-  // fjaer nr. 4. `{ duration: 0 }`-grenen ved siden av er JS-drapsbryteren og telles ikke.
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: 'stiffness: 460' }, // linje 1114 [js]
-  { fil: 'src/screens/PaakledningScreen.tsx', decl: 'damping: 24' }, // linje 1114 [js]
+  /* SLETTET 2026-08-05: 14 oppforinger fra src/screens/PaakledningScreen.tsx.
+     Alle la i CurrentPaakledningScreen — den unadde grenen som ble fjernet i
+     fase 4. Gruppen bar allerede merknaden «slettes i fase 4», og gulvet
+     senkes 77 -> 63 i SAMME endring. Gjelden er BORTE, ikke frikjent: den
+     forsvant med flaten som aldri kunne rendres. */
   // ── src/screens/PlaggbibliotekScreen.tsx
   // ── src/screens/TogGuideScreen.tsx
   { fil: 'src/screens/TogGuideScreen.tsx', decl: "transition: reducedMotion ? 'none' : 'left 160ms var(--ease-standard)'" }, // linje 617
@@ -1073,7 +1062,7 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
  * den DOMINERENDE inline-formen i denne kodebasen (39 til). Grenen for
  * reduced motion er handtert, men varigheten og kurven er like hardkodet.
  */
-const BASELINE = 77;
+const BASELINE = 63;
 
 /** Nokkel: fil + normalisert deklarasjon. */
 const nokkel = (t: { fil: string; decl: string }): string => `${t.fil} :: ${t.decl}`;
@@ -1099,16 +1088,13 @@ const MALPROVER: ReadonlyArray<{ flate: Flate; fil: string; decl: string }> = [
     fil: 'src/components/hjem/hjem-monter.css',
     decl: 'animation: hjm-spin 1s linear infinite',
   },
+  /* SLETTET 2026-08-05: malproven mot PaakledningScreen.tsx. Den bar sin egen
+     instruks — «fase 4 sletter denne filen. Da slettes ogsa denne provelinjen,
+     i samme endring» — og deklarasjonen la i CurrentPaakledningScreen, grenen
+     som ble fjernet. Proven under holder mal-flaten bevoktet videre, akkurat
+     som den ble skrevet for a gjore. */
   {
-    // To egne kurver i ÉN deklarasjon — kartleggingens hodeeksempel.
-    // NB: fase 4 sletter denne filen. Da slettes ogsa denne provelinjen, i
-    // samme endring — nøyaktig samme disiplin som registeret.
-    flate: 'mal',
-    fil: 'src/screens/PaakledningScreen.tsx',
-    decl: 'transition: opacity .5s cubic-bezier(.16,1,.3,1), transform .56s cubic-bezier(.34,1.35,.5,1)',
-  },
-  {
-    // …og en mal-prøve som IKKE star pa slettelista, sa flaten beholder en
+    // …en mal-prøve som IKKE star pa slettelista, sa flaten beholder en
     // vakt ogsa etter fase 4.
     flate: 'mal',
     fil: 'src/components/PlaggDetailSheet.tsx',

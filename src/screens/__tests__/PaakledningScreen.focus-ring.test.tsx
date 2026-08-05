@@ -332,10 +332,35 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
 
     // FORUTSETNING 1: det finnes faktisk ringer å måle. Uten denne ville
     // porten passert på en fil der alle fokusringer var slettet.
-    const focusRingOutlines = [...screen.matchAll(/:focus-visible[^{}]*\{[^}]*\}/gu)]
+    //
+    // GULVET GIKK FRA 2 TIL 1 den 2026-08-05, og det skal stå hvorfor: den
+    // andre ringen var `.pkl-btn:focus-visible` INNE i CurrentPaakledningScreen
+    // — grenen som ble slettet fordi den ikke kunne rendres. Ringen forsvant
+    // altså sammen med flaten den satt på, ikke fra en flate som fortsatt
+    // finnes. Et gulv som senkes uten begrunnelse er en port som gir etter.
+    //
+    // Derfor er tellingen erstattet med noe STRENGERE enn den var: begge
+    // fokuserbare flater navngis. Et tall kan tilfredsstilles av hvilken som
+    // helst ring; navnene kan bare tilfredsstilles av de riktige.
+    // Mønsteret starter FØR `:focus-visible`, ikke på det: en regel som
+    // begynner å matche midt i selektoren mister `.pkl-title`-delen, og en
+    // navnesjekk mot den ville alltid vært falsk. (Målt: første forsøk her
+    // gjorde nettopp det.)
+    const focusRingOutlines = [...screen.matchAll(/[^{}]*:focus-visible[^{}]*\{[^}]*\}/gu)]
       .map((m) => m[0])
       .filter((rule) => /outline\s*:\s*[\d.]+px/u.test(rule));
-    expect(focusRingOutlines.length).toBeGreaterThanOrEqual(2);
+    expect(focusRingOutlines.length).toBeGreaterThanOrEqual(1);
+
+    const ringSelektorer = focusRingOutlines.join('\n');
+    for (const flate of ['.pkl-title', '.pkl-close']) {
+      expect(
+        ringSelektorer.includes(flate),
+        `${flate} har ingen fokusring med outline. Begge er fokuserbare: `
+        + 'overskriften får programmatisk fokus ved åpning, lukkeknappen er '
+        + 'første tab-stopp. En av dem uten ring er en tastaturbruker som '
+        + 'ikke vet hvor de er.',
+      ).toBe(true);
+    }
 
     // FORUTSETNING 2: tema-tabellene er GENUINT forskjellige. Faller lys
     // stille tilbake til mørk, ville vi målt mørk to ganger og bestått
