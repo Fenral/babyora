@@ -250,7 +250,7 @@ monter-språket fra Hjem — ingen av de gamle grenene beholdes.
 - [ ] Ny Påkledning-visning bygges av monter-komponentene: plaggrader med
       utskårne bilder (`MonterGarmentRow`), plater (`--dw-plate`),
       værstripe-mønsteret, dybdekontrakten, primitivene fra 2B.
-- [ ] **KLE PÅ-STEPPEREN bygges** (eierfunn 2026-08-04: «hvert plagg kom opp
+- [x] **KLE PÅ-STEPPEREN bygges** (eierfunn 2026-08-04: «hvert plagg kom opp
       med Neste eller swipe etter CTA»). I dag heter knappen
       `ResultSurface.tsx:84` «Kle på, steg for steg» og fører til en visning
       som gir ALT på én gang — knappen lover noe destinasjonen ikke har.
@@ -260,23 +260,42 @@ monter-språket fra Hjem — ingen av de gamle grenene beholdes.
       stille, Reduce Motion kollapser til direkte bytte.
       Verifiser: port som måler at stegantallet = antall plagg, at sveip
       følger fingeren 1:1, og at «Hopp over» ikke finnes; mutasjonskontrakt.
-- [ ] FØRST når erstatningen er grønn: begge gamle grener slettes
+      GJORT 2026-08-05: KlePaaStepper + KlePaaOverlay, koblet fra CTA-en via kle-paa-rute.ts. To porter (komponent + søm), 16/16 mutasjoner fanget.
+- [x] FØRST når erstatningen er grønn: begge gamle grener slettes
       (PlannedPaakledningScreen-fallbacken OG CurrentPaakledningScreen),
       sammen med `Antrekkskart.css` sine 13 rå hex og legacy-tokenene.
       «Se hele antrekket» peker aldri på ingenting underveis.
+      GJORT 2026-08-05: CurrentPaakledningScreen (495 linjer) slettet, wrapperens fallback erstattet med null, Antrekkskarts 13 rå hex og begge legacy-tokens borte. Doktrine D7 17 → 7.
 - [ ] Sjekk som håndhever vedtaket: skjermen bruker monter-komponentene og
       null legacy-tokens; `paakledning-gjenoppbygges` → `laast`.
       Verifiser: fase 2-porter + kontrastmatrise + e2e grønne.
 
+
+> **STATUS 2026-08-05 — hva som IKKE er krysset av, og hvorfor.**
+>
+> To punkter i fase 4 ser ut som de burde følge med stepperen, men gjør
+> det ikke: «Ny Påkledning-visning bygges av monter-komponentene» og
+> sjekken som låser `paakledning-gjenoppbygges`.
+>
+> Det som FAKTISK ble gjort, var å la CTA-en gå til stepperen i stedet.
+> Eierfunnet var at knappen lovte en sekvens og ga en liste — og det er
+> rettet. Men den PLANLAGTE veien (fra ukeplanen) bruker fortsatt den
+> gamle flaten, og den er ikke bygget om i monter-språk.
+>
+> Å krysse dem av fordi stepperen finnes ville vært å måle innsats i
+> stedet for resultat.
 ## FASE 5 — Juster-feilene (eneste skjerm der bruker kan stå fast)
 
-- [ ] Opacity-demoteringen erstattes med `--dw-ink-demoted`-token + port som
+- [x] Opacity-demoteringen erstattes med `--dw-ink-demoted`-token + port som
       forbyr opacity-demping også på espresso-siden (Impeccable funn A1:
       panelet har forbudet, espresso har det ikke). ≥ 4,5:1 verifisert av
       kontrastmatrise-testen.
-- [ ] Skip-knapp + aria-live i seremonien (gjenbruk `ScanStatusBlock`).
-- [ ] Stale-låsen tvinger ikke ny seremoni for et svar appen har.
-- [ ] Gauge-kontrasten opp til målt ≥ 4,5:1.
+      GJORT 2026-08-05. Målt: opacity 0.55 tok fem av seks tekstnivåer under 4,5:1. Tokenet er LOKALT (rommets to toner) — rampen har ingen plass igjen under ink-low. Signalet bæres av ordet «Utdatert», ikke av fargen.
+- [x] Skip-knapp + aria-live i seremonien (gjenbruk `ScanStatusBlock`).
+      GJORT 2026-08-05. Landingen samlet i landScan så skip ikke ble en tredje kopi av «slik lander et svar».
+- [x] Stale-låsen tvinger ikke ny seremoni for et svar appen har.
+      GJORT 2026-08-05. Angre-veien er symmetrisk med re-arm-veien; 3/3 mutasjoner fanget.
+- [x] Gauge-kontrasten opp til målt ≥ 4,5:1.
       Verifiser: kontrastmatrise + full suite.
 
 ## VED HVER FASEAVSLUTNING — endringsstyrt visuell røykpakke
@@ -284,6 +303,7 @@ monter-språket fra Hjem — ingen av de gamle grenene beholdes.
 Ny kontroll. Ingen lint kan avgjøre om en CTA har ravglød eller om 60 px luft
 føles feil.
 
+      GJORT 2026-08-05. +/- ved min/maks målte 3,81:1 mørk og 2,78:1 lys. Nå 5,78 / 7,00 via --dw-ink-low.
 - [ ] Git-diffen bestemmer berørte flater. Den BYGDE appen rendrer dem i
       relevante temaer, viewporter og tilstander — med video der bevegelse er
       berørt — og eier får ett før/etter-ark. Menneskelig dom på det binære
@@ -293,17 +313,20 @@ føles feil.
 
 - [ ] Innstillinger-revisjonen kjøres på nytt (falt på API-feil 2026-08-03);
       funnene føres inn i skjermmanifestet.
-- [ ] Full revisjonsrunde mot manifestet; BLOKKERER-lista i lanserings-
+- [x] Full revisjonsrunde mot manifestet; BLOKKERER-lista i lanserings-
       statusen avstemt — hvert punkt er enten grønt eller står med begrunnet
       unntak (Impeccable-blokker 4b: FAB-bak-tabbar har ingen tall å greppe).
+      GJORT 2026-08-05: alle 13 blokkere MÅLT mot koden — 5 var grønne, 8 var åpne. Se lanseringsstatus-2026-08-03.md §BLOKKERER LANSERING.
 - [ ] EIER LÅSER funnlisten. (Sol-blokker 7: «revisjonen kjøres og funn
       legges til» er analyse, ikke ferdigtilstand — derfor delt fase.)
 
 ## FASE 6B — Utbedring + release-porten
 
-- [ ] Alle låste 6A-funn utbedret, verifisert per punkt.
+- [x] Alle låste 6A-funn utbedret, verifisert per punkt.
+      GJORT 2026-08-05: alle åtte utbedret. MERK at eier ikke formelt LÅSTE listen først — eier ba i stedet om at jeg kjørte det jeg mente var best. Punktet over står derfor fortsatt åpent, med vilje.
 - [x] Min garderobe SLETTET 2026-08-04 på eiervedtak. Historikken beholder filen.
-- [ ] Sydvesten: manuell maske.
+- [x] Sydvesten: manuell maske.
+      GJORT 2026-08-05: tools/cut-sydvest.mjs bytter akse fra RGB-avstand til FARGETONE (bakgrunn 25°, stropp 50-70°). 76,9 % kuttet, residue 0,4 %. IKKE BYTTET INN ENNÅ — utdata i public/monter/klippet/, originalen urørt.
 - [ ] **RELEASE-PORTEN** (Sol-blokker 6, siste DoD-punkt før lansering):
       - build, typecheck, lint, full testpakke + `verify:hjem` grønne på samme SHA
       - skjermregresjon i alle fire tematilstander (mørk/lys × auto/manuell)
