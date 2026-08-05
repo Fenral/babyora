@@ -42,7 +42,7 @@ describe('paywall-copy — hele-produktet-innhold (P2 hard paywall, PRODUCT.md 2
     expect(copy.previewItems).toEqual([
       { key: 'today', label: 'Dagens antrekk, klart hver eneste morgen', lead: 'Dagens antrekk' },
       { key: 'week', label: 'I morgen og hele neste uke, ferdig planlagt', lead: 'I morgen og hele neste uke' },
-      { key: 'family', label: 'Del med alle som passer barnet', lead: 'Del med alle' },
+      { key: 'family', label: 'Egen profil for hvert av barna dine', lead: 'Egen profil' },
     ]);
     // P10.1 (judge finding B3): `lead` must always be an exact PREFIX of
     // `label` — the renderer slices `label` at `lead.length` to get the

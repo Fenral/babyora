@@ -1,10 +1,11 @@
 {
   "updated": "2026-08-05",
-  "activePhase": 1,
-  "phaseName": "Product Audit",
-  "completedPhases": [0],
+  "activePhase": 2,
+  "phaseName": "User Reality",
+  "completedPhases": [0, 1],
   "approvedDecisions": [
-    "Fase 0 ferdig 2026-08-05: miljø, Mobbin, ChatGPT Work-driver, ui-ux-pro-max v2.11.0 og prosjektminne verifisert/opprettet"
+    "Fase 0 ferdig 2026-08-05: miljø, Mobbin, ChatGPT Work-driver, ui-ux-pro-max v2.11.0 og prosjektminne verifisert/opprettet",
+    "Fase 1 ferdig 2026-08-05: audit (5 agenter) + 6 screenshots + Sol-review REVIDER; P0-4 og P0-6 implementert samme dag; DoD kvittert i 11-independent-review.md"
   ],
   "pendingOwnerGates": [
     "Fase 6: monetiseringsretning",
@@ -13,7 +14,12 @@
     "Fase 13: lansering"
   ],
   "openFindings": [
-    "Parallell økt jobber aktivt i src/screens (committet 0d7cfb2 under auditen) — koordiner før redigering av skjermfiler",
+    "Sol P0-1: motorens treffsikkerhet ikke validert — blind fagsammenligning kreves (fase 2/3)",
+    "Sol P0-2: føles-som-inkonsistens Hjem vs Juster — normalisert værkontrakt, egen teknisk pakke (Claude)",
+    "Sol P0-3: hard paywall før opptjent tillit — akseptert risiko, obligatorisk motkandidat i fase 6 (eierport)",
+    "Sol P0-5: analytics død — VITE_POSTHOG_KEY i Codemagic (eier) + event-pakke (Claude), forutsetning for fase 6",
+    "Sol P1-4: begrense parallell skjermpolering — løftet til eier",
+    "Parallell økt jobber i src/screens — koordiner før redigering av skjermfiler",
     "2 flaky filsystemtester i verify-phase3-exact-sha.test.ts under full parallell vitest-last"
   ],
   "blockers": [],
@@ -24,5 +30,5 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "Fase 1: kj\u00f8r appen, screenshot kjerneflytene (onboarding, hjem, anbefaling, premium), dokumenter IA/arkitektur/teknisk gjeld i 02-current-product-audit.md, send problemformulerings-review til Work"
+  "nextAction": "Fase 2 (User Reality): m\u00e5lgrupper segmentert (ikke-mobil/overgang/mobil \u00d7 f\u00f8rstegangs/erfaren), \u22653 konkurrerende JTBD-hypoteser (forskrivning/validering/koordinering), \u22655 kritiske brukerantakelser testbare eller merket uverifisert, premisslogg opprettet; deretter red-team-review hos Sol"
 }

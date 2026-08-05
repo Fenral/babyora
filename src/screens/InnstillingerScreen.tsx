@@ -2237,7 +2237,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               <span style={premiumSubStyle}>
                 {isPremium
                   ? 'Administrer abonnement og fakturering'
-                  : 'Dagens antrekk, planer fremover og alle som passer barnet'}
+                  : 'Dagens antrekk, planer fremover og egen profil for hvert barn'}
               </span>
             </span>
             <span style={premiumArrowStyle}>

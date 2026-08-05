@@ -16,7 +16,23 @@
  * Brukes fra InnstillingerScreen sin GDPR-seksjon.
  */
 
-const BABYORA_PREFIXES = ['babyora:', 'klemeg:'] as const;
+/**
+ * Sol-review P0-6 (2026-08-05): listen dekket kun `babyora:`/`klemeg:` og
+ * fanget dermed ikke zustand/persist-nøklene (`babyora.` med punktum),
+ * værcachen (`metno:` — koordinathistorikk), geokode-cachen (`nominatim:`),
+ * native-innstillingene (`native-settings:`) eller PostHogs egen persistens
+ * (`ph_`). Innsyn og sletting skal dekke ALT appen selv har lagt i
+ * localStorage — webviewen er vår alene, så prefiksene kan trygt være brede.
+ */
+const BABYORA_PREFIXES = [
+  'babyora:',
+  'babyora.',
+  'klemeg:',
+  'metno:',
+  'nominatim:',
+  'native-settings:',
+  'ph_',
+] as const;
 
 /** Sjekk om en localStorage-nøkkel hører til Babyora-app (incl. legacy klemeg:). */
 function isBabyoraKey(key: string): boolean {

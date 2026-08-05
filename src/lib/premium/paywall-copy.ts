@@ -137,7 +137,10 @@ export type CapabilityPaywallCopy = Readonly<{
 export const PAYWALL_VALUE_BULLETS: readonly CapabilityPaywallPreviewItem[] = [
   { key: 'today', label: 'Dagens antrekk, klart hver eneste morgen', lead: 'Dagens antrekk' },
   { key: 'week', label: 'I morgen og hele neste uke, ferdig planlagt', lead: 'I morgen og hele neste uke' },
-  { key: 'family', label: 'Del med alle som passer barnet', lead: 'Del med alle' },
+  // Sol-review P0-4 (2026-08-05): «Del med alle som passer barnet» lovet
+  // deling som ikke finnes (family_sharing=false, lokal-only). Løftet byttet
+  // til noe produktet faktisk leverer: egne profiler per barn (extra_children).
+  { key: 'family', label: 'Egen profil for hvert av barna dine', lead: 'Egen profil' },
 ] as const;
 
 /**
@@ -152,7 +155,7 @@ export function buildCapabilityPaywallCopy(): CapabilityPaywallCopy {
     // v2 (§8): "Du har sett dagens gratis antrekk" — samme headline uansett
     // trigger (hele-produktet-pitchen varierer aldri, se testen under).
     heading: 'Du har sett dagens gratis antrekk',
-    body: 'Fortsett med Babyora for morgendagen, uken og alle som passer barnet ditt.',
+    body: 'Fortsett med Babyora for morgendagen, uken og hvert av barna dine.',
     previewItems: PAYWALL_VALUE_BULLETS,
   };
 }

@@ -135,8 +135,8 @@ describe('AppPaywallGate rendering', () => {
     expect(html).toContain(', klart hver eneste morgen');
     expect(html).toContain('I morgen og hele neste uke');
     expect(html).toContain(', ferdig planlagt');
-    expect(html).toContain('Del med alle');
-    expect(html).toContain(' som passer barnet');
+    expect(html).toContain('Egen profil');
+    expect(html).toContain(' for hvert av barna dine');
     // v2 (P10/JOB2 re-skin, docs/mocks/monter/paywall-v2.html): den gamle
     // PAYWALL_COPY.trialLine-avsnittet under CTA-en er erstattet av
     // choose-hint-linjen mellom planvelgeren og CTA-en — samme plan-
