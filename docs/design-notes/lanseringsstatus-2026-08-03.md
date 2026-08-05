@@ -42,6 +42,80 @@ Vekt = skjermens andel av produktet, ikke antall linjer. Min garderobe er holdt 
 
 ### BLOKKERER LANSERING
 
+> **REVIDERT 2026-08-05 (DoD fase 6A).** Hvert punkt er MÅLT mot koden slik
+> den står nå, ikke antatt rettet. Fem er grønne, åtte står åpne.
+>
+> Skillet er ikke pedanteri. Ved forrige runde krysset jeg av et punkt fordi
+> jeg hadde jobbet med det, ikke fordi jeg hadde målt det — og tok feil.
+> Hvert punkt under bærer derfor tallet eller kommandoen som ga svaret.
+
+**GRØNT — målt, ikke antatt:**
+
+- [x] `--dw-depth-action`: CTA-skyggen er nå MØRKERE enn lerretet —
+      0,73× og 0,56× lerretets luminans. Var 3,3× lysere.
+- [x] Hjems CTA over fold på 375×667: **28 px klaring** (krav 12).
+      Målt av `tools/verify-hjem.mjs` port 9, ved hver kjøring.
+- [x] Juster: opacity-demoteringen er borte. Farge + ordet «Utdatert»,
+      håndhevet av `src/styles/__tests__/opacity-demping.test.ts` (fase 5).
+- [x] Juster: `ScanStatusBlock` rendres — skip-knapp OG aria-live (fase 5).
+- [x] Juster: stale-låsen slipper taket når parametrene settes tilbake.
+      `finn-antrekk-calc.ts`, mutasjonstestet 3/3 (fase 5).
+
+**ÅPENT — målt 2026-08-05, venter på at eier låser listen:**
+
+- [ ] `--dw-accent-300` har fortsatt INGEN lys-verdi: null deklarasjoner i
+      begge lys-blokkene. Lys modus arver derfor mørk-verdien `#E7B087`.
+- [ ] `.outfit-truth-panel` har fortsatt ingen CSS-regel i hele `src/`.
+      To-gren-spørsmålet er derimot løst: den unådde grenen ble slettet i
+      fase 4, og porten holder den borte.
+- [ ] `Antrekkskart.css`: 13 rå hex, deriblant kald blå `#79b1e0` og `#fff`.
+- [ ] `UkeScreen.css:436`: hardkodet `#3A2A1A` på plaggplaten.
+- [ ] Onboardings maskotskygge: tokenet er byttet fra `--ink-900` til
+      `--dw-ink-hi` — men `--dw-ink-hi` ER kremfarget i mørk modus, så
+      glorien er nøyaktig den samme. **Byttet flyttet symptomet fra et
+      legacy-token til et nytt uten å røre årsaken.** Verdt å merke seg som
+      mønster: en tokenmigrering er ikke en retting.
+- [ ] Plaggbibliotek: `--dw-tabbar-clearance` brukes null ganger i skjermen.
+      FAB og siste rad ligger fortsatt bak tab-baren.
+- [ ] Varm eller kald: `neck-orb-pulse ... infinite` kjører fortsatt —
+      evighetsbevegelse i hvile.
+- [ ] Tog-guide: `--zone-*` brukes fem steder og er deklarert INGEN steder.
+      Fallback-hexene treffer derfor alltid, og fargene er identiske i
+      begge temaer — tokenet er en fasade.
+
+> **REVIDERT 2026-08-05 (DoD fase 6A).** Hvert punkt er MÅLT mot koden slik
+> den star na, ikke antatt rettet. Fem er gronne, atte star apne. Statusen
+> er skrevet av revisjonen, ikke av en hukommelse — kommandoen som gav
+> hvert tall star i punktet.
+
+**GRONT — malt, ikke antatt:**
+
+- [x] : CTA-skyggen er na MORKERE enn lerretet
+      (0,73x og 0,56x lerretets luminans). Var 3,3x lysere.
+- [x] Hjems CTA over fold pa 375x667: **28 px klaring** (krav 12).
+      Malt av  port 9, hver kjoring.
+- [x] Juster: opacity-demotering fjernet. Farge + ordet «Utdatert»,
+      handhevet av  (fase 5).
+- [x] Juster:  rendres — skip-knapp OG aria-live (fase 5).
+- [x] Juster: stale-lasen slipper taket nar parametrene settes tilbake
+      (, mutasjonstestet, fase 5).
+
+**APENT — malt 2026-08-05, venter pa eiervedtak:**
+
+- [ ]  har fortsatt INGEN lys-verdi: 0 deklarasjoner i
+      begge lys-blokkene. Lys modus arver darfor mork-verdien #E7B087.
+- [ ]  har fortsatt ingen CSS-regel i hele .
+      (To-gren-sporsmalet er lost: den unadde grenen ble slettet i fase 4.)
+- [ ] : 13 raa hex, deriblant kald bla  og .
+- [ ] : hardkodet  pa plaggplaten.
+- [ ] Onboarding maskotskygge: tokenet er byttet fra  til
+      , men problemet star — ink-hi ER kremfarget i mork modus,
+      sa glorien er den samme. Byttet flyttet symptomet, ikke arsaken.
+- [ ] Plaggbibliotek:  brukes 0 ganger i skjermen.
+- [ ] Varm eller kald:  kjorer fortsatt.
+- [ ] Tog-guide:  brukes 5 steder og er deklarert INGEN steder.
+      Fallbacken treffer alltid, sa fargene er identiske i begge tema.
+
 - [ ] `--dw-depth-action` gir i mørk modus en skygge 3,3× lysere enn lerretet — treffer CTA på alle skjermer — `src/styles/design-tokens-v2.css:161-164`
 - [ ] `--dw-accent-300` mangler lys-verdi i begge lys-inngangene → målt 1,87:1 (Tog) og 1,47:1 (Varm/kald) — `src/styles/design-tokens-v2.css:262-318` + `:324-366`
 - [ ] Hjems CTA ligger −48 px under fold på iPhone SE 375×667 — `src/components/hjem/hjem-monter.css:35` (kjent defekt, ikke re-målt)
