@@ -432,31 +432,64 @@ describe('OutfitExperience', () => {
     expect(focusCount).toBe(0);
   });
 
-  it('keeps every local dark connector variable above 3:1 and forced colors intact', () => {
+  it('keeps every dark connector above 3:1 on the REAL canvas, and forced colors intact', () => {
+    /* ═══ OMSKREVET 2026-08-05 (DoD fase 6B) ════════════════════════════════
+     * Testen låste den gamle strukturen: lokale `--outfit-connector-dark-*`
+     * i Antrekkskart.css. De åtte fargene er flyttet til tokenfilen som
+     * `--dw-kart-*` (raw hex ut av komponentfiler, doktrine D7), så
+     * assertionen leser dem der de nå bor.
+     *
+     * OG DEN MÅLTE MOT LERRETER APPEN IKKE HAR. Matrisen brukte `#1a1828`,
+     * `#131a2d` og `#251724` — tre ulike mørke canvaser per temperatur. Men
+     * Monter-doktrinen gjorde canvas KONSTANT for lengst: alle tre er
+     * `--dw-canvas` #1E140C i dag, og testen rett under sier det selv om
+     * lys-siden. Kontrasten ble altså regnet mot bakgrunner som ikke finnes.
+     * Tallene var tilfeldigvis trygge, men målingen var det ikke.
+     * Nå måles hver linje mot den EKTE flaten den tegnes på: lerretet, og
+     * noden (`--dw-raised`) som streken går inntil.
+     */
     const css = readFileSync(
       new URL('../Antrekkskart.css', import.meta.url),
       'utf8',
     );
-    const darkMatrix = [
-      ['mild', '#c6c5d8', '#1a1828'],
-      ['kald', '#79b1e0', '#131a2d'],
-      ['varm', '#ff987e', '#251724'],
-    ] as const;
+    const tokens = readFileSync(
+      new URL('../../../styles/design-tokens-v2.css', import.meta.url),
+      'utf8',
+    );
 
-    for (const [temperature, connector, canvas] of darkMatrix) {
-      expect(
-        wcagContrast(connector, canvas),
-        `${temperature} dark connector contrast`,
-      ).toBeGreaterThanOrEqual(3);
-      expect(css).toContain(`--outfit-connector-dark-${temperature}: ${connector}`);
+    /** Mørk er `:root` i tokenfilen — første forekomst er derfor mørk-verdien. */
+    const morkVerdi = (navn: string): string => {
+      const m = new RegExp(`${navn}:\\s*(#[0-9A-Fa-f]{6})`, 'u').exec(tokens);
+      expect(m, `${navn} er ikke deklarert i design-tokens-v2.css`).not.toBeNull();
+      return m![1]!.toLowerCase();
+    };
+
+    const LERRET = '#1e140c'; // --dw-canvas, mørk
+    const NODE = '#2c1f13'; // --dw-raised, flaten streken går inntil
+
+    for (const navn of [
+      '--dw-kart-linje',
+      '--dw-kart-linje-kald',
+      '--dw-kart-linje-varm',
+      '--dw-kart-valgt',
+    ]) {
+      const farge = morkVerdi(navn);
+      for (const [flate, hex] of [['lerret', LERRET], ['node', NODE]] as const) {
+        expect(
+          wcagContrast(farge, hex),
+          `${navn} (${farge}) mot ${flate} (${hex})`,
+        ).toBeGreaterThanOrEqual(3);
+      }
     }
 
-    expect(css).toContain(
-      ':root[data-theme="dark"] .outfit-experience',
-    );
-    expect(css).toContain(
-      ':root:not([data-theme="light"]) .outfit-experience',
-    );
+    /* Komponentfilen skal PEKE på familien, ikke bære verdiene. */
+    expect(css).toContain('--outfit-connector: var(--dw-kart-linje)');
+    expect(css).toContain('--outfit-active: var(--dw-kart-valgt)');
+    expect(
+      /#[0-9a-fA-F]{3,6}/u.test(css.replace(/\/\*[\s\S]*?\*\//gu, '')),
+      'Antrekkskart.css har rå hex igjen — familien skulle tømme filen for dem',
+    ).toBe(false);
+
     expect(css).toMatch(
       /@media \(forced-colors: active\)[\s\S]*stroke: ButtonText;[\s\S]*stroke: Highlight;/,
     );

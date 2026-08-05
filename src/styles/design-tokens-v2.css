@@ -134,6 +134,27 @@
   --dw-danger: #E58A72;   /* 7.1:1 */
 
 
+
+  /* ============ ANTREKKSKARTET (forbindelseslinjer) ============
+     Flyttet hit 2026-08-05 (DoD fase 6B) fra Antrekkskart.css, der de sto
+     som atte raa hex. Verdiene er UROERT — bare flyttet.
+
+     MAALT: alle atte klarer 3:1 mot bade lerret og node (5,05-10,67), sa
+     lesbarheten var aldri problemet. Men to av dem, #C6C5D8 (lilla) og
+     #79B1E0 (kald blaa), ligger utenfor eierskapstabellen over: appen eier
+     espresso (rom), petrol (data) og amber (handling) — ingen kald blaa.
+     A bytte hue er en DESIGNBESLUTNING og hoerer hjemme hos eier, ikke i
+     en opprydding. Derfor staar de her, deklarerte og maalbare, i stedet
+     for a ligge gjemt i en komponentfil.
+
+     NB: filen de kom fra hadde LYS som grunnverdi og moerk som overstyring
+     — motsatt av denne filen. To stilark med motsatt polaritet er en felle
+     i seg selv, og det var en egen grunn til a flytte dem. ============ */
+  --dw-kart-linje: #C6C5D8;        /* mild · 10,67:1 lerret · 9,43:1 node */
+  --dw-kart-linje-kald: #79B1E0;   /* 7,91 · 6,99 — kald blaa, se merknad */
+  --dw-kart-linje-varm: #FF987E;   /* 8,65 · 7,65 */
+  --dw-kart-valgt: #EE9373;        /* valgt forbindelse · 7,80 · 6,90 */
+
   /* ============ SONESKALAEN (Tog-guidens temperaturslider) ============
      FUNN 2026-08-05 (DoD fase 6A): `--zone-*` ble brukt fem steder i
      TogGuideScreen og deklarert INGEN steder. Fallback-hexene traff derfor
@@ -506,6 +527,18 @@
        tema-bytte D98E5A → 9E5529. */
 
     --dw-accent-300: #A57D60;
+
+
+    --dw-kart-linje: #5A514C;       /* mild · 7,10:1 krem · 7,54:1 node */
+
+
+    --dw-kart-linje-kald: #36566D;  /* 7,12 · 7,56 */
+
+
+    --dw-kart-linje-varm: #7B3521;  /* 8,13 · 8,63 */
+
+
+    --dw-kart-valgt: #AD4B2A;       /* 5,05 · 5,37 */
     --dw-ink-on-accent: #FDF6EC;
 
     /* Fokusringen manglet lys-verdi og arvet espresso-ringen #E8B98C, som
@@ -583,6 +616,18 @@
   --dw-accent-pressed: #8A4A24;
 
   --dw-accent-300: #A57D60;
+
+
+  --dw-kart-linje: #5A514C;       /* mild · 7,10:1 krem · 7,54:1 node */
+
+
+  --dw-kart-linje-kald: #36566D;  /* 7,12 · 7,56 */
+
+
+  --dw-kart-linje-varm: #7B3521;  /* 8,13 · 8,63 */
+
+
+  --dw-kart-valgt: #AD4B2A;       /* 5,05 · 5,37 */
   --dw-ink-on-accent: #FDF6EC;
 
   /* Fokusringen: se begrunnelsen i @media-blokken over — begge lys-

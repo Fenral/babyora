@@ -99,6 +99,7 @@ const AVLEDNINGSPRIMITIV: Readonly<Record<string, string>> = {
  */
 const PRIMITIV: Readonly<Record<string, string>> = {
   zone: 'soneskalaen · Tog-guidens temperaturslider (DATA-farge, tema-konstant)',
+  kart: 'antrekkskartets forbindelseslinjer · tema- OG temperaturvariant',
   canvas: 'valørstigen · nivå 0',
   panel: 'valørstigen · petrol-instrument',
   raised: 'valørstigen · nivå 2',

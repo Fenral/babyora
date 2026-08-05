@@ -1,34 +1,91 @@
-.outfit-experience { --outfit-connector: #5a514c; --outfit-active: #ad4b2a; --outfit-connector-dark-mild: #c6c5d8; --outfit-connector-dark-kald: #79b1e0; --outfit-connector-dark-varm: #ff987e; --outfit-active-dark: #ee9373; color: var(--dw-ink-hi, #2b2522); max-inline-size: 42rem; margin-inline: auto; }
-.outfit-experience[data-temp='kald'] { --outfit-connector: #36566d; }
-.outfit-experience[data-temp='varm'] { --outfit-connector: #7b3521; }
+/**
+ * Antrekkskartet.
+ *
+ * ═══ RÅ HEX FJERNET 2026-08-05 (DoD fase 6A/6B) ═══════════════════════════
+ * Filen bar 13 rå hex — den siste store samlingen i src/. De var to helt
+ * ulike ting, og det er verdt å skille dem:
+ *
+ * 1. FEM DØDE FALLBACK-VERDIER: `var(--dw-raised, #fbf8f4)`,
+ *    `var(--dw-overlay, #fff)`, `var(--dw-ink-hi, #2b2522)`,
+ *    `var(--dw-focus, #2b2522)`. Alle fire tokenene ER deklarert i
+ *    design-tokens-v2.css, så fallbacken kunne bare treffe hvis hele
+ *    tokenfilen manglet — og da er en enkelt farge det minste problemet.
+ *    De ga ingen sikkerhet; de ga en KOPI av tokenverdien som ikke fulgte
+ *    med når tokenet endret seg. Fjernet.
+ *
+ * 2. ÅTTE EKTE FARGER — kartets forbindelseslinjer, med både tema- og
+ *    temperaturvariant. Et lokalt system, ikke slurv. De er flyttet til
+ *    design-tokens-v2.css som familien `--dw-kart-*`, med verdiene URØRT.
+ *
+ * ═══ ET SPØRSMÅL SOM IKKE ER MITT Å AVGJØRE ═══════════════════════════════
+ * MÅLT: alle åtte klarer 3:1 med god margin (5,05-10,67). Lesbarheten er
+ * altså ikke problemet. Men to av dem — #C6C5D8 (lilla) og #79B1E0 (kald
+ * blå) — ligger UTENFOR appens egen fargeeierskapstabell, som sier
+ * «espresso = rom/struktur · petrol = data · amber = handling». En kald blå
+ * strek i en varm espresso-app hører til ingen av familiene.
+ * Verdiene er derfor flyttet, ikke endret. Å bytte hue er en
+ * DESIGNBESLUTNING, og den hører hjemme hos eier — ikke i en opprydding.
+ *
+ * ═══ LEGACY-TOKENS MIGRERT ════════════════════════════════════════════════
+ * `--surface-border` → `--dw-hairline`, `--muted-foreground` → `--dw-ink-mid`.
+ * Begge hadde rå hex-fallback og var de siste to legacy-navnene i filen.
+ */
+
+.outfit-experience {
+  color: var(--dw-ink-hi);
+  max-inline-size: 42rem;
+  margin-inline: auto;
+  /* Lokale aliaser mot den deklarerte familien. De to linjene finnes fordi
+     temperaturvariantene under bare skal bytte ÉN verdi, ikke gjenta hele
+     regelen — og fordi SVG-en leser `--outfit-connector` direkte. */
+  --outfit-connector: var(--dw-kart-linje);
+  --outfit-active: var(--dw-kart-valgt);
+}
+.outfit-experience[data-temp='kald'] { --outfit-connector: var(--dw-kart-linje-kald); }
+.outfit-experience[data-temp='varm'] { --outfit-connector: var(--dw-kart-linje-varm); }
+
+/**
+ * PANELETS EGEN FLATE.
+ *
+ * FUNN 2026-08-05: `.outfit-truth-panel` er drill-flatens ytterste element og
+ * hadde INGEN CSS-regel i hele src/. Panelet lå altså rett på lerretet og
+ * arvet alt fra foreldrenes inline-stiler — nøyaktig doktrinens D1,
+ * «innhold rett på canvas uten hevet gruppeflate».
+ * Regelen gir den en hevet flate med lyslogikk, som resten av systemet:
+ * inset topplys øverst (lyset kommer fra øvre venstre) + dybdekontraktens
+ * egen skygge. Ingen nye verdier — bare tokens som allerede finnes.
+ */
+.outfit-truth-panel {
+  background: var(--dw-raised);
+  border-radius: var(--dw-r-panel);
+  padding: var(--dw-space-18);
+  box-shadow:
+    inset 0 1px 0 var(--dw-plate-kant),
+    var(--dw-depth-raised);
+}
+
 .outfit-map { position: relative; inline-size: 100%; max-inline-size: 100%; min-inline-size: 0; contain: inline-size; }
 .outfit-map__connectors { inset: 0; position: absolute; inline-size: 100%; block-size: 100%; overflow: visible; pointer-events: none; }
 .outfit-map__connectors polyline { fill: none; stroke: var(--outfit-connector); stroke-width: 3; vector-effect: non-scaling-stroke; }
 .outfit-map__connectors polyline.is-highlighted { stroke: var(--outfit-active); stroke-width: 5; stroke-dasharray: 8 4; }
-.outfit-map__node { align-items: center; background: var(--dw-raised, #fbf8f4); border: 2px solid var(--outfit-connector); border-radius: 999px; box-sizing: border-box; color: inherit; display: flex; font-weight: 700; justify-content: center; min-block-size: 44px; min-inline-size: 44px; overflow: visible; padding: .18rem; position: absolute; }
+.outfit-map__node { align-items: center; background: var(--dw-raised); border: 2px solid var(--outfit-connector); border-radius: 999px; box-sizing: border-box; color: inherit; display: flex; font-weight: 700; justify-content: center; min-block-size: 44px; min-inline-size: 44px; overflow: visible; padding: .18rem; position: absolute; }
 .outfit-map__thumbnail { block-size: 100%; inline-size: 100%; max-block-size: 4.25rem; max-inline-size: 4.25rem; object-fit: contain; pointer-events: none; }
-.outfit-map__ordinal { align-items: center; background: var(--dw-overlay, #fff); border: 1px solid currentColor; border-radius: 999px; display: flex; font-size: .7rem; block-size: 1.35rem; inline-size: 1.35rem; justify-content: center; position: absolute; inset-block-start: -.45rem; inset-inline-start: -.45rem; }
+.outfit-map__ordinal { align-items: center; background: var(--dw-overlay); border: 1px solid currentColor; border-radius: 999px; display: flex; font-size: .7rem; block-size: 1.35rem; inline-size: 1.35rem; justify-content: center; position: absolute; inset-block-start: -.45rem; inset-inline-start: -.45rem; }
 .outfit-map__node.is-highlighted, .outfit-row.is-highlighted { border-color: var(--outfit-active); box-shadow: 0 0 0 3px color-mix(in srgb, var(--outfit-active) 24%, transparent); text-decoration: underline; }
-.outfit-map__node:focus-visible, .outfit-row:focus-visible, .outfit-alternative:focus-visible { outline: 3px solid var(--dw-focus, #2b2522); outline-offset: 3px; }
+.outfit-map__node:focus-visible, .outfit-row:focus-visible, .outfit-alternative:focus-visible { outline: 3px solid var(--dw-focus); outline-offset: 3px; }
 .outfit-list ol, .outfit-list ul { padding-inline-start: 0; }
 .outfit-list li { list-style: none; margin-block: .55rem; }
-.outfit-row { align-items: center; background: var(--dw-raised, #fbf8f4); border: 1px solid var(--surface-border, #c9c0b9); box-sizing: border-box; color: inherit; display: flex; gap: .75rem; inline-size: 100%; min-block-size: 44px; min-inline-size: 0; flex-wrap: wrap; padding: .65rem; text-align: start; }
+.outfit-row { align-items: center; background: var(--dw-raised); border: 1px solid var(--dw-hairline); box-sizing: border-box; color: inherit; display: flex; gap: .75rem; inline-size: 100%; min-block-size: 44px; min-inline-size: 0; flex-wrap: wrap; padding: .65rem; text-align: start; }
 .outfit-row__ordinal { border: 1px solid currentColor; border-radius: 50%; flex: 0 0 1.65rem; line-height: 1.55rem; text-align: center; }
 .outfit-row__thumbnail { block-size: 2.8rem; flex: 0 0 2.8rem; inline-size: 2.8rem; object-fit: contain; }
 .outfit-row__label { flex: 1 1 12rem; min-inline-size: 0; overflow-wrap: anywhere; }
-.outfit-row__detail { color: var(--muted-foreground, #776c66); flex: 1 1 10rem; margin-inline-start: auto; min-inline-size: 0; overflow-wrap: anywhere; text-align: end; }
+.outfit-row__detail { color: var(--dw-ink-mid); flex: 1 1 10rem; margin-inline-start: auto; min-inline-size: 0; overflow-wrap: anywhere; text-align: end; }
 .outfit-alternative { min-block-size: 44px; margin-block-start: .25rem; }
 .outfit-active-caption { margin-block: 1rem; min-block-size: 1.5rem; }
 .outfit-map-status { color: var(--dw-ink-mid); }
-.outfit-comparison { background: var(--dw-raised, #fbf8f4); border: 1px solid var(--surface-border, #c9c0b9); color: inherit; inline-size: auto; margin-block: 1rem; max-inline-size: 100%; padding: 1rem; position: static; }
+.outfit-comparison { background: var(--dw-raised); border: 1px solid var(--dw-hairline); color: inherit; inline-size: auto; margin-block: 1rem; max-inline-size: 100%; padding: 1rem; position: static; }
+/* Under 448 px legges detaljen på egen linje. Radhøyden blir da ~98 px, og
+   det er MENINGEN — se DoD-notatet: to linjer er designet, ikke en brist. */
 @media (max-width: 28rem) { .outfit-row { align-items: flex-start; } .outfit-row__detail { flex-basis: calc(100% - 5.95rem); margin-inline-start: 5.95rem; text-align: start; } }
 @media (prefers-reduced-motion: reduce) { .outfit-experience *, .outfit-experience *::before, .outfit-experience *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .outfit-experience { --outfit-connector: var(--outfit-connector-dark-mild); --outfit-active: var(--outfit-active-dark); }
-  :root:not([data-theme="light"]) .outfit-experience[data-temp='kald'] { --outfit-connector: var(--outfit-connector-dark-kald); }
-  :root:not([data-theme="light"]) .outfit-experience[data-temp='varm'] { --outfit-connector: var(--outfit-connector-dark-varm); }
-}
-:root[data-theme="dark"] .outfit-experience { --outfit-connector: var(--outfit-connector-dark-mild); --outfit-active: var(--outfit-active-dark); }
-:root[data-theme="dark"] .outfit-experience[data-temp='kald'] { --outfit-connector: var(--outfit-connector-dark-kald); }
-:root[data-theme="dark"] .outfit-experience[data-temp='varm'] { --outfit-connector: var(--outfit-connector-dark-varm); }
 @media (forced-colors: active) { .outfit-experience { color: CanvasText; } .outfit-map__node, .outfit-row, .outfit-comparison { background: Canvas; border-color: ButtonText; color: CanvasText; } .outfit-map__connectors polyline { stroke: ButtonText; } .outfit-map__connectors polyline.is-highlighted { stroke: Highlight; stroke-dasharray: 8 4; } .outfit-map__node.is-highlighted, .outfit-row.is-highlighted { outline: 2px solid Highlight; } }

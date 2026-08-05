@@ -142,7 +142,7 @@ const BASELINE: Record<string, number> = {
      `outline: 3px solid var(--focus-ring, #2b2522)` (Antrekkskart) eller
      `background-image: linear-gradient(…, var(--surface-soft, #E6E3DD) …)`
      (Skeleton). Begge er ekte rå hex; gulvet står på det MÅLTE tallet. */
-  D7: 16,  /* 17 -> 16 den 2026-08-05: UkeScreens plaggplate bruker na --dw-plate */
+  D7: 7,   /* 16 -> 7 den 2026-08-05: Antrekkskart.css tokenisert (fase 6B) */
 };
 
 /**
@@ -217,14 +217,12 @@ const BASELINE_SETT: Record<string, number> = {
 
   'D6|src/screens/OnboardingScreen.tsx|.ob-cal-nav button': 1,
 
+  /* NEDBETALT 2026-08-05 (fase 6B): ni D7-oppforinger i Antrekkskart.css.
+     Fem var dode fallback-verdier bak tokens som fantes (var(--dw-raised,
+     #fbf8f4) osv.) — de ga ingen sikkerhet, bare en kopi som ikke fulgte
+     med naar tokenet endret seg. Atte ekte farger er flyttet til
+     --dw-kart-* i tokenfilen, med verdiene uroert. */
   'D7|src/components/outfit-transition/OutfitTransitionOverlay.css|.outfit-transition-overlay__clone': 3,
-  'D7|src/components/outfit/Antrekkskart.css|.outfit-experience': 1,
-  'D7|src/components/outfit/Antrekkskart.css|.outfit-map__node': 1,
-  'D7|src/components/outfit/Antrekkskart.css|.outfit-map__ordinal': 1,
-  'D7|src/components/outfit/Antrekkskart.css|.outfit-map__node:focus-visible, .outfit-row:focus-visible, .outfit-alternative:focus-visible': 1,
-  'D7|src/components/outfit/Antrekkskart.css|.outfit-row': 2,
-  'D7|src/components/outfit/Antrekkskart.css|.outfit-row__detail': 1,
-  'D7|src/components/outfit/Antrekkskart.css|.outfit-comparison': 2,
   /* NEDBETALT 2026-08-05 (fase 6B): plaggplaten var hardkodet #3A2A1A og flippet ikke. Verdien ER --dw-plate; tokenet fantes hele tiden. */
   'D7|src/components/Skeleton.tsx|.ba-skeleton-shimmer': 3,
   'D7|src/screens/OnboardingScreen.tsx|.ob-baby-wordmark': 1,};
@@ -758,8 +756,16 @@ describe('doktrine-porten leser src/ (D1–D7)', () => {
        Antrekkskart.css har `inset-block-start` men INGEN box-shadow, og skal
        derfor ikke fungere som filens bevis på lyslogikk. */
     expect(
-      filerMedHevetGruppeflate.has('src/components/outfit/Antrekkskart.css'),
-      'Antrekkskart.css fritas fra D1 på en posisjonerings-inset — det var nettopp hullet',
+      /* ANKERET FLYTTET 2026-08-05. Antrekkskart.css sto her fordi den hadde
+         inset-POSISJONERING og ingen box-shadow. Fase 6B ga
+         `.outfit-truth-panel` en ekte hevet flate med inset topplys, så filen
+         har nå lyslogikk på ordentlig — premisset for ankeret er BORTE, ikke
+         omgått. LivingHomeAtmosphere.css har fortsatt inset-posisjonering
+         uten en eneste box-shadow og bærer derfor samme bevis.
+         FLYTTET, ikke slettet: et anker som bare forsvinner tar bevisbyrden
+         med seg. */
+      filerMedHevetGruppeflate.has('src/components/LivingHomeAtmosphere.css'),
+      'en posisjonerings-inset fritar fra D1 — det var nettopp hullet',
     ).toBe(false);
   });
 
