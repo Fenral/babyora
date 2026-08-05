@@ -1,6 +1,37 @@
 /**
  * Maaler sideskiftet i den EKTE appen.
  *
+ * FUNN 2026-08-05, og grunnen til at verktoyet finnes:
+ *
+ * Eierfunnet «appen bytter skjerm uten bevegelse» var for hardt formulert.
+ * Malt paa den lagrede versjonen: 13 bilder med forflytning og 38 med fade
+ * gjennom en drill. Appen ANIMERER — men bare 24 px sidelengs pluss en
+ * crossfade, saa den leses ikke som at en side fysisk skyves ut mens en
+ * annen kommer inn. Det stemmer med hvordan eieren beskrev opplevelsen.
+ *
+ * Vedtaket krever at BEGGE flater beveger seg SAMTIDIG. Det gjor de ikke:
+ * AnimatePresence staar i mode="wait", saa den gamle blir ferdig FOR den nye
+ * begynner. To bevegelser etter hverandre, ikke en forflytning.
+ *
+ * FORSOK 1, RULLET TILBAKE. Fjernet mode="wait" og stablet sidene i en
+ * rutenettcelle. Begge la da i DOM-en samtidig — men ingenting animerte.
+ * Arsaken ble malt fram ved halvering: <Suspense> laa RUNDT overgangen, og
+ * drill-skjermene lastes paa forespoersel. Naar en ny side suspenderte, ble
+ * hele overgangslaget byttet mot fallbacken, og animasjonen rakk aldri aa
+ * tegne. Flyttet lastegrensen inn i hver side: da animerte den NYE siden —
+ * men den gamle stod stille i alle bilder, og avstanden ble 2346 px fordi
+ * y: 100% regnes av sidens egen hoyde, ikke skjermens.
+ *
+ * TO TING GJENSTAAR:
+ *   1. exit-animasjonen kjorer ikke i sync-modus — arsaken er ikke funnet
+ *   2. avstanden maa vaere en SKJERMHOYDE, ikke en sidehoyde
+ *
+ * VERKTOYET RETTET SEG SELV TO GANGER underveis, og begge feilene er verdt
+ * aa huske: forste maaling brukte «Finn dagens antrekk», som IKKE bytter
+ * side (den kjorer scannen inne paa Hjem) — riktig svar paa feil sporsmaal.
+ * Andre maaling brukte .hjm-brand som «skallet», men den bor INNE i siden
+ * som forsvinner, saa jeg malte sideskiftet og kalte det skallet.
+ *
  * Vedtaket «sideskift-er-fysiske» sier tre ting som kan males:
  *   1. BEGGE flater beveger seg samtidig — ikke etter hverandre
  *   2. Skallet (ordmerket, tabbaren) staar stille
