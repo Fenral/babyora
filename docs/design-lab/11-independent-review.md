@@ -42,6 +42,28 @@ REMOVE/KEEP/TEST-liste for Planlegg, Familie, maskot, scan, navn-onboarding og p
 premisslogg med eier/frist/status. Ingen fase 3-godkjenning før hvert P0 er lukket eller
 akseptert som dokumentert risiko.
 
+## Runde 7 — Fase 7 retningsscoring (2026-08-05)
+
+**Verdikt: REVIDER.** Fullt svar: `appendix/fase7/sol-review-svar-fase7.md`. Uvektet sum:
+Protokollen 36/50 (klarhet 5, betalingsvilje 2), Spennet 37/50 (originalitet/differensiering
+5, klarhet/tilgjengelighet 2), Ambient 39/50 (native 5) — med eksplisitt advarsel mot å
+bruke tabellen som automatisk rangering.
+
+**Claudes respons på P0/P1 (alle AKSEPTERT, innarbeidet i fase 8-underlaget):**
+risikoregisteret utvides til fem klasser per retning (Sols tre skjulte modellrisikoer —
+Protokollens modusklassifisering, Spennets intervallvaliditet («UI-spenn ≠ faglig
+kalibrert intervall»), Ambients distribuerte tilstandskonsistens — er tatt inn som
+P0-forutsetninger); betalt jobb defineres likt presist per retning under B; degradering
+må kunne ende i «Babyora kan ikke gi råd nå» med konkret neste sikre handling;
+autoritetsfrasen kobles til hva forelderen faktisk observerer. **Differensierings-
+grensene vedtatt:** Protokollen eier én anbefalt sekvens, Spennet eier sammenligning/
+usikkerhet uten fasit-kollaps, Ambient eier komplett tidsbegrenset beslutning uten
+appåpning — brytes de, testes bare tre innganger til samme motorresultat. **Kun én
+syntesekandidat tillatt i fase 8: «Ambient Protokoll»** (briefens handling = første
+komplette trygge protokollsteg; ingen router, intet spenn) — konkurrerer, arver ingen
+plass. Spennet testes rent. Sikkerhet og forståelse er ikke-kompenserbare porter;
+prototyper testes navnløse, med lik kvalitet, mot delt scenariosett + nullmodell.
+
 ## Runde 5 — Fase 5 bredde-review (2026-08-05) · Runde 6 — Fase 6 modellreview (2026-08-05)
 
 **Begge verdikt: REVIDER.** Fullsvar: `appendix/fase5/sol-review-svar-fase5.md` og

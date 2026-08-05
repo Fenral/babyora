@@ -68,6 +68,13 @@ const tilResultat = async (p) => {
 
 const RUTER = [
   {
+    navn: '00-onboarding',
+    tekst: 'Onboarding. Forste skjerm en ny bruker ser — appens standardtema er morkt.',
+    url: '',
+    vei: async () => true,
+    anker: '.ob-screen, h1, h2',
+  },
+  {
     navn: '01-hjem',
     tekst: 'Hjem i hvile. Maskoten står stille; lyset kommer fra øvre venstre.',
     vei: async () => true,
@@ -104,6 +111,12 @@ const RUTER = [
     navn: '06-juster',
     tekst: 'Juster. Dra en måler og svaret merkes «Utdatert» — i ord, ikke bare i farge.',
     vei: async (p) => (await tilResultat(p)) && trykk(p, 'Juster'),
+    anker: 'h1, h2',
+  },
+  {
+    navn: '06b-familie',
+    tekst: 'Familie er Innstillinger — fanen rendrer den skjermen direkte.',
+    vei: (p) => tab(p, 'Familie'),
     anker: 'h1, h2',
   },
   {
@@ -151,7 +164,9 @@ for (const rute of RUTER) {
     await p.route('**/api/forecast*', (r) => r.fulfill({
       contentType: 'application/json', body: JSON.stringify(forecastPartlyCloudy1C()),
     }));
-    await p.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
+    /* Onboarding vises bare uten barn i familien, sa den ruten ma IKKE
+       seede. De ovrige seeder, ellers havner de i onboarding i stedet. */
+    await p.goto(`${BASE}/${rute.url ?? '?seed=demo'}`, { waitUntil: 'domcontentloaded' });
     await p.waitForTimeout(2400);
 
     let kom = false;
