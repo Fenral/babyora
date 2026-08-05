@@ -391,7 +391,13 @@ export function VarmEllerKaldScreen({
         }
         .neck-orb {
           transform-origin: center;
-          animation: neck-orb-pulse 1.8s ease-in-out infinite;
+          /* FUNN 2026-08-05 (DoD fase 6A): kjorte infinite — evighets-
+             bevegelse i hvile, mot kalm-doktrinen. Orben LÆRER hvor man
+             kjenner på nakken; en lærdom som gjentas i det uendelige er
+             ikke lenger en lærdom, den er støy. Tre sykluser (5,4 s) er
+             nok til å bli sett, og both lar den bli staende i
+             sluttbildet i stedet for å hoppe tilbake. */
+          animation: neck-orb-pulse 1.8s ease-in-out 3 both;
         }
         @media (prefers-reduced-motion: reduce) {
           .neck-orb {

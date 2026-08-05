@@ -142,7 +142,7 @@ const BASELINE: Record<string, number> = {
      `outline: 3px solid var(--focus-ring, #2b2522)` (Antrekkskart) eller
      `background-image: linear-gradient(…, var(--surface-soft, #E6E3DD) …)`
      (Skeleton). Begge er ekte rå hex; gulvet står på det MÅLTE tallet. */
-  D7: 17,
+  D7: 16,  /* 17 -> 16 den 2026-08-05: UkeScreens plaggplate bruker na --dw-plate */
 };
 
 /**
@@ -225,7 +225,7 @@ const BASELINE_SETT: Record<string, number> = {
   'D7|src/components/outfit/Antrekkskart.css|.outfit-row': 2,
   'D7|src/components/outfit/Antrekkskart.css|.outfit-row__detail': 1,
   'D7|src/components/outfit/Antrekkskart.css|.outfit-comparison': 2,
-  'D7|src/screens/UkeScreen.css|.planlegg-garments__thumb': 1,
+  /* NEDBETALT 2026-08-05 (fase 6B): plaggplaten var hardkodet #3A2A1A og flippet ikke. Verdien ER --dw-plate; tokenet fantes hele tiden. */
   'D7|src/components/Skeleton.tsx|.ba-skeleton-shimmer': 3,
   'D7|src/screens/OnboardingScreen.tsx|.ob-baby-wordmark': 1,};
 

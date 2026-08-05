@@ -1219,7 +1219,16 @@ const STYLE_CSS = `
   right:30px;
   height:150px;width:auto;
   z-index:3;pointer-events:none;
-  filter:drop-shadow(0 10px 22px color-mix(in srgb, var(--dw-ink-hi) 45%, transparent));
+  /* FUNN 2026-08-05 (DoD fase 6A): hentet --dw-ink-hi, som ER kremfarget
+     i mørk modus — altså en LYS glorie under maskoten, på appens
+     standardtema, i det aller første bildet en ny bruker ser.
+     Blokkeren het opprinnelig «--ink-900». Tokenet var byttet til
+     --dw-ink-hi underveis, og det SÅ ut som en migrering. Det var det
+     ikke: begge er den lyseste teksten i mørk modus, så glorien var
+     nøyaktig den samme. En tokenmigrering er ikke en retting.
+     --dw-depth-image er dybdekontraktens bildeskygge og er mørk i
+     BEGGE temaer — den bærer alfaen selv, så color-mix er unødvendig. */
+  filter:drop-shadow(0 10px 22px var(--dw-depth-image));
 }
 .ob-s1-card{
   position:relative;z-index:2;

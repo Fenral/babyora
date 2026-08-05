@@ -353,6 +353,10 @@ const styles = {
     // Native-feel #10: pull-to-refresh / overscroll-contain — taktilt drag-feedback
     // uten å chaine scroll til body/parent.
     overscrollBehaviorY: 'contain',
+    // FUNN 2026-08-05 (DoD fase 6A): --dw-tabbar-clearance ble brukt NULL
+    // ganger i denne skjermen, så FAB-en og siste rad lå bak tab-baren.
+    // Samme mønster som .hjem-monter og .app-shell > main allerede bruker.
+    paddingBottom: 'var(--dw-tabbar-clearance)',
   } satisfies CSSProperties,
 
   grid: {

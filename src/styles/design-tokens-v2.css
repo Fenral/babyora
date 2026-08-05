@@ -133,6 +133,35 @@
   --dw-warning: #E0B45C;  /* 9.4:1 */
   --dw-danger: #E58A72;   /* 7.1:1 */
 
+
+  /* ============ SONESKALAEN (Tog-guidens temperaturslider) ============
+     FUNN 2026-08-05 (DoD fase 6A): `--zone-*` ble brukt fem steder i
+     TogGuideScreen og deklarert INGEN steder. Fallback-hexene traff derfor
+     alltid, i begge temaer — tokenet var en fasade. Verre: tre av fem falt
+     under 3:1 mot krem-lerretet (cool 2,26 · mid 1,63 · warm 1,92), så
+     midten av slideren nesten forsvant i lys modus.
+
+     TEMA-KONSTANT, som --dw-w-* og gauge-material.ts: samme temperatur
+     skal ikke ha to farger. Da må hvert trinn ligge i luminansvinduet der
+     BEGGE lerreter gir 3:1 — regnet ut, ikke gjettet:
+       mot espresso:  (L+0.05)/(0.008+0.05) >= 3  →  L >= 0.124
+       mot krem:      (0.898+0.05)/(L+0.05) >= 3  →  L <= 0.266
+
+     Følgen er at progresjonen bæres av HUE, ikke av lyshet: alle fem
+     ligger på L ~ 0.187 og måler 4,06-4,09:1 mot begge lerreter. Det er
+     ikke en svakhet — en skala der lysheten også varierer ville hatt et
+     trinn som forsvant i det ene temaet uansett hvor den ble plassert.
+     Verdien leses uansett av slider-håndtakets posisjon og etiketten,
+     aldri av fargen alene (WCAG 1.4.1).
+
+     DATA-farge, ikke UI-farge — samme unntak som gauge-material.ts
+     allerede står på i tokenfilens eierskapstabell. ============ */
+  --dw-zone-cold: #5C7B96;  /* kaldest · 4,07 mørk · 4,08 lys */
+  --dw-zone-cool: #687A85;  /* 4,06 · 4,09 */
+  --dw-zone-mid: #7B786C;   /* 4,09 · 4,06 */
+  --dw-zone-warm: #967050;  /* 4,08 · 4,08 */
+  --dw-zone-hot: #B95F2D;   /* varmest · 4,08 · 4,07 */
+
   /* ============ Værfamilie (KUN panelflaten · hue ±15° · chroma < .05 ·
      været endrer lyshet/atmosfære, aldri appens hue) ============ */
   --dw-w-clear: #114143;   /* klart · litt lysere og renere    */
@@ -282,6 +311,16 @@
   --dw-depth-hero: 0 2px 4px var(--dw-sh-contact), 3px 14px 24px -10px var(--dw-sh-mid), 8px 34px 70px -16px var(--dw-sh-broad);
   --dw-depth-raised: 0 2px 3px var(--dw-sh-contact), 3px 12px 20px -10px var(--dw-sh-mid), 7px 28px 56px -16px var(--dw-sh-broad);
   --dw-depth-action: 0 2px 4px var(--dw-sh-contact-cta), 4px 16px 32px -12px var(--dw-sh-broad-cta);
+  /* BILDESKYGGEN — en FARGE, ikke en stabel.
+     FUNN 2026-08-05 (fase 6B): Onboardings maskotskygge er en
+     `drop-shadow()` pa et bilde, og den kan ikke bruke --dw-depth-*:
+     de er ferdige box-shadow-stabler. Forsoket pa a bruke --dw-sh-broad
+     direkte brot en annen kontrakt — sh-familien er en AVLEDNINGS-
+     primitiv som --dw-depth-* bygges av, ikke noe komponenter forbruker.
+     Det var et ekte hull: bildeskygger hadde ingen lovlig token.
+     Bygget av samme primitiv som resten av dybden, sa den flipper med
+     temaet: mork i BEGGE (rgba(4,2,1,.62) mork · rgba(122,88,52,.3) lys). */
+  --dw-depth-image: var(--dw-sh-broad);
   --dw-depth-selected: 0 2px 3px var(--dw-sh-contact), 2px 6px 14px -3px var(--dw-sh-mid);
   /* ── LYSPOOLEN (vedtak lyspool-folger-motivet, hentet fra B1-proofen) ──
      Poolen sikter paa skjermens HOVEDMOTIV — paa Hjem er det maskoten.
@@ -459,6 +498,14 @@
 
     --dw-accent: #9E5529;          /* = accent-700 · krem på: 4.6:1 */
     --dw-accent-pressed: #8A4A24;
+    /* FUNN 2026-08-05 (DoD fase 6A): --dw-accent-300 hadde INGEN lys-verdi,
+       så lys modus arvet mørk-verdien #E7B087 og målte 1,59-1,87:1 mot
+       kremflatene — under kravet 3:1 for ikke-tekst (WCAG 1.4.11).
+       #A57D60 er samme amber-familie, mørknet til den klarer 3:1 mot den
+       VERSTE lysflaten (glød, 3,05:1). Speiler --dw-accent sitt eget
+       tema-bytte D98E5A → 9E5529. */
+
+    --dw-accent-300: #A57D60;
     --dw-ink-on-accent: #FDF6EC;
 
     /* Fokusringen manglet lys-verdi og arvet espresso-ringen #E8B98C, som
@@ -534,6 +581,8 @@
 
   --dw-accent: #9E5529;
   --dw-accent-pressed: #8A4A24;
+
+  --dw-accent-300: #A57D60;
   --dw-ink-on-accent: #FDF6EC;
 
   /* Fokusringen: se begrunnelsen i @media-blokken over — begge lys-

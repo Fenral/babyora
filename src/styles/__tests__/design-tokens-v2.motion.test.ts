@@ -1006,7 +1006,11 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
   // ── src/screens/UkeScreen.css
   { fil: 'src/screens/UkeScreen.css', decl: "transition: transform 200ms var(--ease-standard)" }, // linje 351
   // ── src/screens/VarmEllerKaldScreen.tsx
-  { fil: 'src/screens/VarmEllerKaldScreen.tsx', decl: "animation: neck-orb-pulse 1.8s ease-in-out infinite" }, // linje 384 — evigheten selv felles av evighetsregelen, ikke her
+  // EVIGHETEN er borte 2026-08-05 (fase 6B): tre sykluser i stedet for infinite.
+  // Den RA VARIGHETEN og KURVEN star igjen og er fortsatt gjeld — 1,8 s ligger
+  // langt utenfor --dw-m-*-baandet, som topper paa 340 ms. En laerepuls trenger
+  // et eget token for a bli tokenisert ordentlig; til da staar den her, malt.
+  { fil: 'src/screens/VarmEllerKaldScreen.tsx', decl: "animation: neck-orb-pulse 1.8s ease-in-out 3 both" }, // linje 400
   // ── src/screens/VinterprogramScreen.tsx
   /* ── src/styles/design-tokens.css (legacy-tokenfilen)
      De seks forste er selve det parallelle tokensettet, forst malt

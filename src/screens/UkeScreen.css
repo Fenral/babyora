@@ -433,7 +433,12 @@
   height: 44px;
   border-radius: 11px;
   object-fit: cover;
-  background: #3A2A1A;
+  /* FUNN 2026-08-05 (DoD fase 6A): sto som hardkodet #3A2A1A og flippet
+     derfor ikke — en mørk firkant midt i lys modus, målt 12,64:1 mot
+     krem-lerretet. Verdien ER --dw-plate mørk; tokenet fantes hele tiden
+     og hadde en lys-verdi. Dette var ikke en manglende farge, det var en
+     kopi av én. */
+  background: var(--dw-plate);
   box-shadow: 0 1px 0 rgba(242, 192, 138, 0.18) inset, 0 4px 8px -4px rgba(0, 0, 0, 0.45);
 }
 .planlegg-garments__thumb--letter {

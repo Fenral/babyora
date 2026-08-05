@@ -565,11 +565,11 @@ const UNNTAK: readonly Unntak[] = [
  * samme endring.
  */
 const HARDE_FUNN: readonly { fil: string; navn: string; hjemmel: string }[] = [
-  {
-    fil: 'src/screens/VarmEllerKaldScreen.tsx',
-    navn: 'neck-orb-pulse',
-    hjemmel: 'DoD fase 2 («feller VarmEllerKaldScreen.tsx:384») + lanseringsstatus 2026-08-03 §BLOKKERER LANSERING',
-  },
+  /* NEDBETALT 2026-08-05 (DoD fase 6B): neck-orb-pulse kjorte `infinite`.
+     Orben LAERER hvor man kjenner paa nakken; en lardom som gjentas i det
+     uendelige er ikke lenger en lardom. Na tre sykluser (5,4 s) og saa ro.
+     Var et HARDT FUNN (DoD fase 2 + lanseringsstatus) og kunne derfor ALDRI
+     baselines bort — bare rettes. Det er nettopp det som skjedde. */
 ];
 
 type Baseline = { fil: string; navn: string; antall: number; hardtFunn?: true; merknad?: string };
@@ -625,13 +625,7 @@ const BASELINE_REGISTER: readonly Baseline[] = [
     antall: 1,
     merknad: 'nytt mal 2026-08-04: fenomenet fantes i appen for, detektoren malte bare ordet «infinite»',
   },
-  {
-    fil: 'src/screens/VarmEllerKaldScreen.tsx',
-    navn: 'neck-orb-pulse',
-    antall: 1,
-    hardtFunn: true,
-    merknad: 'BLOKKERER LANSERING — se HARDE_FUNN',
-  },
+  /* NEDBETALT 2026-08-05 — se merknaden i HARDE_FUNN over. */
 ];
 
 const BASELINE_BRUDD = BASELINE_REGISTER.reduce((s, b) => s + b.antall, 0);
@@ -665,7 +659,9 @@ const KJENTE_BRUDDFILER: readonly string[] = [
   'src/components/AtmosphereBackground.tsx',
   'src/components/Skeleton.tsx',
   'src/components/WeatherLottie.tsx',
-  'src/screens/VarmEllerKaldScreen.tsx',
+  /* VarmEllerKaldScreen.tsx ute 2026-08-05: neck-orb-pulse er begrenset
+     til tre sykluser, sa filen har ingen evighetsbevegelse igjen. En fil
+     som blir staende her ville hatt staende tillatelse til a fa ny. */
 ];
 
 /* ────────────────────────────────────────────────────────────────────────

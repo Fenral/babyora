@@ -98,6 +98,7 @@ const AVLEDNINGSPRIMITIV: Readonly<Record<string, string>> = {
  * fargen er ubrukt. DoD fase 2B fødes `--dw-space-*` bevisst som primitiv.
  */
 const PRIMITIV: Readonly<Record<string, string>> = {
+  zone: 'soneskalaen · Tog-guidens temperaturslider (DATA-farge, tema-konstant)',
   canvas: 'valørstigen · nivå 0',
   panel: 'valørstigen · petrol-instrument',
   raised: 'valørstigen · nivå 2',

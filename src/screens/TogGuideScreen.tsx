@@ -569,11 +569,11 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     borderRadius: 999,
     background:
       'linear-gradient(90deg,' +
-      'var(--zone-cold, #5B7A95) 0%,' +
-      'var(--zone-cool, #8FA9B8) 28%,' +
-      'var(--zone-mid, #C8C2B0) 50%,' +
-      'var(--zone-warm, #E0A878) 72%,' +
-      'var(--zone-hot, #C0632F) 100%)',
+      'var(--dw-zone-cold) 0%,' +
+      'var(--dw-zone-cool) 28%,' +
+      'var(--dw-zone-mid) 50%,' +
+      'var(--dw-zone-warm) 72%,' +
+      'var(--dw-zone-hot) 100%)',
     boxShadow:
       'inset 0 1px 2px rgba(0,0,0,.18), inset 0 -1px 1px rgba(255,255,255,.35)',
   };

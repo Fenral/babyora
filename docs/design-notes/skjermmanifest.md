@@ -26,15 +26,15 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 | Skjerm | Filsti | Linjer | Stilflate | `--dw-*` | legacy | Nås via | Migreres | Fase |
 |---|---|---:|---|---:|---:|---|---|---|
 | Familie (skall) | `src/screens/FamilieScreen.tsx` | 21 | — | 0 | 0 | App.tsx lazy()-register | nei | — |
-| Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1366 | 19 CSSProperties + 4 `style={{` | 43 | 2 | App.tsx lazy()-register | ja | 3 |
+| Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1371 | 19 CSSProperties + 4 `style={{` | 43 | 2 | App.tsx lazy()-register | ja | 3 |
 | Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1236 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 0 | 23 | App.tsx lazy()-register | ja | 3 |
 | Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6260 | 190 CSSProperties + 51 `style={{` | 318 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
-| Onboarding | `src/screens/OnboardingScreen.tsx` | 1854 | 1 CSSProperties | 221 | 39 | App.tsx lazy()-register | ja | 3 |
+| Onboarding | `src/screens/OnboardingScreen.tsx` | 1863 | 1 CSSProperties | 221 | 39 | App.tsx lazy()-register | ja | 3 |
 | Påkledning | `src/screens/PaakledningScreen.tsx` | 599 | 39 `style={{` | 1 | 10 | App.tsx lazy()-register | nei | 4 |
-| Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 904 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 97 | 5 | App.tsx lazy()-register | ja | 3 |
-| Tog-guide | `src/screens/TogGuideScreen.tsx` | 1151 | 55 CSSProperties + 3 `style={{` | 105 | 19 | App.tsx lazy()-register | ja | 3 |
-| Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1147 | `UkeScreen.css` + 1 CSSProperties | 101 | 1 | App.tsx lazy()-register | ja | 3 |
-| Varm eller kald | `src/screens/VarmEllerKaldScreen.tsx` | 756 | 1 `<style>` + 29 CSSProperties + 4 `style={{` | 84 | 4 | App.tsx lazy()-register | ja | 3 |
+| Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 908 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 98 | 5 | App.tsx lazy()-register | ja | 3 |
+| Tog-guide | `src/screens/TogGuideScreen.tsx` | 1151 | 55 CSSProperties + 3 `style={{` | 110 | 14 | App.tsx lazy()-register | ja | 3 |
+| Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1147 | `UkeScreen.css` + 1 CSSProperties | 102 | 1 | App.tsx lazy()-register | ja | 3 |
+| Varm eller kald | `src/screens/VarmEllerKaldScreen.tsx` | 762 | 1 `<style>` + 29 CSSProperties + 4 `style={{` | 84 | 4 | App.tsx lazy()-register | ja | 3 |
 | Vinterprogram | `src/screens/VinterprogramScreen.tsx` | 516 | 24 CSSProperties + 1 `style={{` | 53 | 4 | App.tsx lazy()-register | ja | 3 |
 
 «legacy» = antall UNIKE `var(--…)` som ikke er `--dw-*`. «Stilflate» teller
@@ -49,9 +49,9 @@ objekter og `style={{`-attributter. 10 av 11 skjermer har ingen CSS-fil.
 | Innstillinger | umigrert (5 legacy-token, 7 rå hex, 318 `--dw-*`) |
 | Onboarding | umigrert (39 legacy-token, 2 rå hex, 221 `--dw-*`) |
 | Påkledning | umigrert (10 legacy-token, 0 rå hex, 1 `--dw-*`) |
-| Plaggbibliotek | umigrert (5 legacy-token, 0 rå hex, 97 `--dw-*`) |
-| Tog-guide | umigrert (19 legacy-token, 5 rå hex, 105 `--dw-*`) |
-| Planlegg / Uke | umigrert (1 legacy-token, 1 rå hex, 101 `--dw-*`) |
+| Plaggbibliotek | umigrert (5 legacy-token, 0 rå hex, 98 `--dw-*`) |
+| Tog-guide | umigrert (14 legacy-token, 0 rå hex, 110 `--dw-*`) |
+| Planlegg / Uke | umigrert (1 legacy-token, 0 rå hex, 102 `--dw-*`) |
 | Varm eller kald | umigrert (4 legacy-token, 2 rå hex, 84 `--dw-*`) |
 | Vinterprogram | umigrert (4 legacy-token, 0 rå hex, 53 `--dw-*`) |
 
@@ -203,6 +203,7 @@ Ingen punkter i lanseringsstatusen.
 
 ### Planlegg / Uke — `src/screens/UkeScreen.tsx`
 
+- [ ] **BLOKKERER** `src/screens/UkeScreen.css:436` — `UkeScreen.css:436`: hardkodet `#3A2A1A` på plaggplaten.
 - [ ] **BLOKKERER** `src/screens/UkeScreen.css:436` — Planlegg: hardkodet `#3A2A1A` på plaggplaten → mørke firkanter i lys modus + 2,24:1 bokstav-fallback
 - [ ] **BØR RETTES** _(adresseliste)_ `src/screens/UkeScreen.css:158` — Dybdekontrakt: egne skyggestabler → `var(--dw-depth-*)`
 - [ ] **BØR RETTES** `src/screens/UkeScreen.css:76` — Lyslogikk på hver hevet flate (inset topplys + `::before` kantlys + depth)
