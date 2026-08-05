@@ -84,7 +84,10 @@ const REGISTER: Readonly<Record<string, string>> = {
      current), ikke det eneste signalet. */
   'src/components/BottomTabBar.css::0.55': 'inaktiv fane — aria-current bærer tilstanden',
   'src/components/BottomTabBar.css::0.32': 'inaktiv fane, ikondel',
-  'src/components/instrument/vertical-gauge.css::0.45': 'aria-disabled steg — tilstanden står i markup',
+  /* NEDBETALT 2026-08-05 (DoD fase 5, punkt 4):
+     'src/components/instrument/vertical-gauge.css::0.45'. Deaktivert
+     steg-knapp målte 3,81:1 mørk og 2,78:1 lys — begge under kravet.
+     Erstattet med --dw-ink-low (5,78 / 7,00). */
 
   /* ── FUNNET DA INSTRUMENTET BLE SKARPERE, 2026-08-05 ──────────────────
      Detektoren krevde først et TALL rett etter `opacity:` og var derfor
@@ -161,7 +164,7 @@ describe('opacity-forbudet — hvilende demping på espresso-siden', () => {
   });
 
   it('gulvet kan bare krympe', () => {
-    /* 22 → 26 den 2026-08-05, ÉN gang, og ikke fordi koden ble verre:
+    /* 22 → 26 den 2026-08-05, deretter 26 → 25 samme dag, ÉN gang, og ikke fordi koden ble verre:
        detektoren var blind for betingede verdier og fant fem dempinger til da
        den lærte å lese dem. Det er den eneste lovlige grunnen til å heve et
        gulv — at instrumentet ble skarpere — og den skal stå skrevet, ellers
@@ -170,7 +173,7 @@ describe('opacity-forbudet — hvilende demping på espresso-siden', () => {
       Object.keys(REGISTER).length,
       'registeret er utvidet. Det kan bare KRYMPE — en ny oppføring skal være '
       + 'en dokumentert dekorasjon eller et ikon, aldri dempet tekst.',
-    ).toBeLessThanOrEqual(26);
+    ).toBeLessThanOrEqual(25);
   });
 
   it('Juster demper IKKE lenger med opacity', () => {

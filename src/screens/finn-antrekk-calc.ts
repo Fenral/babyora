@@ -38,10 +38,28 @@ export function paramsChanged(committed: CommittedParams | null, current: Commit
 }
 
 /**
- * Re-arm-beslutningen: kun et ALLEREDE FERSKT (landet) resultat demoteres
- * til 'stale' når de underliggende parametrene drifter. 'idle' (ingenting
- * committed ennå) og 'scanning' (mikropasset pågår) er uendret av at
- * sliderne beveger seg.
+ * Re-arm-beslutningen — OG angre-beslutningen.
+ *
+ * Kun et ALLEREDE FERSKT (landet) resultat demoteres til 'stale' når de
+ * underliggende parametrene drifter. 'idle' (ingenting committed ennå) og
+ * 'scanning' (koreografien pågår) er uendret av at sliderne beveger seg.
+ *
+ * ═══ STALE-LÅSEN, RETTET 2026-08-05 (DoD fase 5, punkt 3) ═════════════════
+ * Overgangen gikk bare ÉN vei: `fresh → stale`. Kom parametrene TILBAKE til
+ * nøyaktig de committede verdiene, ble fasen stående på 'stale'.
+ *
+ * I praksis: dra temperaturen ett hakk og dra den tilbake. Appen har da
+ * nøyaktig det svaret liggende — det er det samme snapshotet den allerede
+ * har regnet på — men CTA-en sier «Beregn på nytt», og et trykk brenner
+ * 3,2 sekunders seremoni på å produsere et resultat som er bit for bit
+ * identisk med det som allerede står på skjermen.
+ *
+ * Det er ikke bare bortkastet tid. Det lærer brukeren at appen ikke vet hva
+ * den vet, og en seremoni som kjører uten å endre noe undergraver
+ * seremonien de gangene den faktisk betyr noe.
+ *
+ * Retningen tilbake er derfor symmetrisk med retningen fram: samme
+ * `paramsChanged`, samme snapshot, motsatt fortegn. Ingen ny sannhetskilde.
  */
 export function nextPhaseAfterParamChange(
   phase: CalcPhase,
@@ -49,6 +67,9 @@ export function nextPhaseAfterParamChange(
   current: CommittedParams,
 ): CalcPhase {
   if (phase === 'fresh' && paramsChanged(committed, current)) return 'stale';
+  /* Angret: parametrene står igjen nøyaktig der det committede svaret ble
+     regnet. Da ER svaret ferskt, og seremonien har ingenting å gjøre. */
+  if (phase === 'stale' && committed !== null && !paramsChanged(committed, current)) return 'fresh';
   return phase;
 }
 

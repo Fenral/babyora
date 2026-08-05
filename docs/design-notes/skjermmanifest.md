@@ -26,7 +26,7 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 | Skjerm | Filsti | Linjer | Stilflate | `--dw-*` | legacy | Nås via | Migreres | Fase |
 |---|---|---:|---|---:|---:|---|---|---|
 | Familie (skall) | `src/screens/FamilieScreen.tsx` | 21 | — | 0 | 0 | App.tsx lazy()-register | nei | — |
-| Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1328 | 19 CSSProperties + 4 `style={{` | 43 | 2 | App.tsx lazy()-register | ja | 3 |
+| Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1366 | 19 CSSProperties + 4 `style={{` | 43 | 2 | App.tsx lazy()-register | ja | 3 |
 | Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1236 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 0 | 23 | App.tsx lazy()-register | ja | 3 |
 | Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6260 | 190 CSSProperties + 51 `style={{` | 318 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
 | Onboarding | `src/screens/OnboardingScreen.tsx` | 1854 | 1 CSSProperties | 221 | 39 | App.tsx lazy()-register | ja | 3 |

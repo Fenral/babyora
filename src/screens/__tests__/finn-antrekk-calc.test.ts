@@ -58,6 +58,51 @@ describe('nextPhaseAfterParamChange — CTA-driven flow: no recompute on slider 
   it('fresh with no committed snapshot at all is a defensive no-op (stays fresh, never crashes)', () => {
     expect(nextPhaseAfterParamChange('fresh', null, BASE)).toBe('fresh');
   });
+
+  /* ══ DoD fase 5, punkt 3: STALE-LÅSEN SLIPPER TAKET ══════════════════════
+     Overgangen gikk bare én vei. Dro man en slider og dro den TILBAKE, sto
+     fasen på 'stale' selv om appen hadde nøyaktig det svaret liggende — og
+     et CTA-trykk brente 3,2 sekunders seremoni på å produsere et resultat
+     som var bit for bit identisk med det som allerede sto på skjermen.
+     En seremoni som kjører uten å endre noe undergraver seremonien de
+     gangene den faktisk betyr noe. */
+
+  it('stale + parametrene tilbake til det committede snapshotet blir fresh igjen', () => {
+    expect(
+      nextPhaseAfterParamChange('stale', BASE, { ...BASE }),
+      'stale-låsen holder fast i et svar appen allerede har',
+    ).toBe('fresh');
+  });
+
+  it('angre-veien er symmetrisk med re-arm-veien — samme snapshot, motsatt fortegn', () => {
+    /* Rundturen må lukke seg: fram, tilbake, og tilbake til utgangspunktet.
+       Uten denne kunne én retning virke mens den andre stille sto stille. */
+    const endret = { ...BASE, tempC: BASE.tempC + 3 };
+    expect(nextPhaseAfterParamChange('fresh', BASE, endret)).toBe('stale');
+    expect(nextPhaseAfterParamChange('stale', BASE, endret)).toBe('stale');
+    expect(nextPhaseAfterParamChange('stale', BASE, { ...BASE })).toBe('fresh');
+  });
+
+  it('hver enkelt parameter kan angres, ikke bare temperaturen', () => {
+    /* Uten denne kunne implementasjonen sammenlignet ÉTT felt og bestått.
+       Fire felt, fire runturer. */
+    const felter = [
+      { ...BASE, tempC: BASE.tempC + 1 },
+      { ...BASE, windMs: BASE.windMs + 1 },
+      { ...BASE, precipMmH: BASE.precipMmH + 1 },
+      { ...BASE, activityUi: BASE.activityUi === 'lek' ? 'vogn' : 'lek' } as typeof BASE,
+    ];
+    for (const endret of felter) {
+      expect(nextPhaseAfterParamChange('fresh', BASE, endret)).toBe('stale');
+      expect(nextPhaseAfterParamChange('stale', BASE, { ...BASE })).toBe('fresh');
+    }
+  });
+
+  it('stale UTEN committed snapshot rører seg ikke — det finnes intet svar å kalle ferskt', () => {
+    /* Defensiv: `committed === null` betyr at ingenting er beregnet. Å kalle
+       den tilstanden 'fresh' ville påstått at et svar finnes. */
+    expect(nextPhaseAfterParamChange('stale', null, BASE)).toBe('stale');
+  });
 });
 
 describe('ctaLabelFor', () => {

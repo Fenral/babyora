@@ -246,7 +246,28 @@
   outline: 3px solid var(--dw-focus);
   outline-offset: 2px;
 }
-.fa-gauge-step[aria-disabled='true'] { opacity: 0.45; cursor: default; }
+/* DEAKTIVERT STEG-KNAPP — en FARGE, ikke lavere alpha.
+   MÅLT 2026-08-05 (DoD fase 5, punkt 4): `opacity: 0.45` på --dw-ink-hi over
+   --dw-raised ga 3,81:1 i mørk og 2,78:1 i lys. Begge under 4,5:1, og lys var
+   verst — som nesten alltid, fordi mørk tekst mister mer på å blandes med et
+   lyst underlag enn omvendt.
+   --dw-ink-low på samme flate måler 5,78:1 mørk / 7,00:1 lys, og er fortsatt
+   et tydelig trinn ned fra ink-his 13,26:1. Tilstanden bæres uansett av
+   `aria-disabled` i markup, så dempingen er forsterkning — ikke det eneste
+   signalet, slik alpha var. */
+.fa-gauge-step[aria-disabled='true'] {
+  /* Bakgrunnen GJENTAS her, og det er ikke overflødig. Panel-porten fritar
+     `.fa-gauge-step` for forbudet mot espresso-blekk i panel-skopet, men
+     unntaket er BUNDET til premisset sitt: blekket får flippe med temaet
+     fordi flaten under gjør det samme. Porten krever derfor at
+     `background: var(--dw-raised)` står i SAMME regel som blekket — arv fra
+     grunnregelen kan den ikke se, og skal den ikke stole på. Uten denne
+     linjen ble porten rød (4 brudd mot gulvet 3), og den hadde rett i at
+     den ikke kunne verifisere premisset. */
+  background: var(--dw-raised);
+  color: var(--dw-ink-low);
+  cursor: default;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .fa-gauge-fill { transition: none; }

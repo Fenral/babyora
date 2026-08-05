@@ -93,7 +93,7 @@ import '../components/hjem/hjem-monter.css';
 import { MonterGarmentRow } from '../components/hjem/MonterGarmentRow';
 import { getGarmentImage } from '../lib/monter-assets';
 import { deriveResultRows, type ResultRow } from '../components/hjem/result-rows';
-import { ScanOverlay } from '../components/hjem/ScanOverlay';
+import { ScanOverlay, ScanStatusBlock } from '../components/hjem/ScanOverlay';
 import {
   FULL_SCAN_DURATION_MS,
   fullScanHapticSchedule,
@@ -527,6 +527,37 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
     if (nextPhase !== phase) setPhase(nextPhase);
   }
 
+  /**
+   * Landingen — ETT sted, ikke tre.
+   *
+   * Sto før duplisert i redusert-bevegelse-grenen og i fullføringstimeren.
+   * Skip-knappen ville blitt en tredje kopi, og tre kopier av «slik lander et
+   * svar» drifter fra hverandre: én får haptikken, en annen glemmer den.
+   */
+  const landScan = useCallback((snapshot: CommittedParams) => {
+    void hapticPrepare().then(() => { void impactMedium(); });
+    setCommitted(snapshot);
+    setPhase('fresh');
+  }, []);
+
+  /**
+   * «Vis svaret med en gang» — DoD fase 5, punkt 2.
+   *
+   * Hjem har hatt snarveien siden seremonien ble 3,2 s (ScanStatusBlock).
+   * Juster kjører NØYAKTIG samme koreografi og hadde den ikke: brukeren sto
+   * fast i 3,2 sekunder uten vei ut. Duell §2 er utvetydig — «berøring når
+   * som helst: hopp rett til resultat, spill kun landingen».
+   *
+   * Landingen spilles altså FULLT ut, også når man hopper over. Et skippet
+   * svar skal ikke lande stillere enn et som fikk gå ferdig; det ville lært
+   * brukeren at snarveien koster noe.
+   */
+  const handleSkip = useCallback(() => {
+    if (phase !== 'scanning' || scanSnapshot === null) return;
+    clearScanTimers();
+    landScan(scanSnapshot);
+  }, [phase, scanSnapshot, clearScanTimers, landScan]);
+
   function handleFindOutfit(): void {
     if (phase === 'scanning') return;
     if (liveRecommendation === null) return;
@@ -540,9 +571,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
     setPhase('scanning');
 
     if (reducedMotion) {
-      void hapticPrepare().then(() => { void impactMedium(); });
-      setCommitted(snapshot);
-      setPhase('fresh');
+      landScan(snapshot);
       return;
     }
 
@@ -559,11 +588,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
       else void hapticSelection();
     }, event.atMs));
 
-    scanTimerRef.current = setTimeout(() => {
-      void hapticPrepare().then(() => { void impactMedium(); });
-      setCommitted(snapshot);
-      setPhase('fresh');
-    }, FULL_SCAN_DURATION_MS);
+    scanTimerRef.current = setTimeout(() => landScan(snapshot), FULL_SCAN_DURATION_MS);
   }
 
   const committedActivityOption = useMemo(
@@ -758,6 +783,19 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
               spinningValue="setter sammen…"
               totalDurationMs={FULL_SCAN_DURATION_MS}
               reducedMotion={reducedMotion}
+              outfitTransitionStatus="idle"
+            />
+            {/* DoD fase 5, punkt 2. Blokken bærer TO ting Juster manglet:
+                «Vis svaret med en gang», og en aria-live-region som sier
+                «Beregner antrekk». Uten den siste var 3,2 sekunder med
+                seremoni fullstendig taus for en skjermleser — brukeren visste
+                ikke om appen jobbet eller hadde stoppet.
+                Samme komponent som Hjem, ikke en kopi: to seremonier som skal
+                være like, men vedlikeholdes hver for seg, blir ulike. */}
+            <ScanStatusBlock
+              headline="Regner ut antrekket…"
+              subline="Tar bare et lite øyeblikk."
+              onSkip={handleSkip}
               outfitTransitionStatus="idle"
             />
           </div>

@@ -159,7 +159,9 @@ describe('FinnAntrekkScreen — result-as-clothes wiring (source-text: only reac
 
   it('eier-override v3: runs the SAME full 3,2s scan-koreografi as Hjem on tap (ScanOverlay + FULL_SCAN_DURATION_MS + fullScanHapticSchedule), the old 400ms micropass is retired', () => {
     const contents = source(screenPath);
-    expect(contents).toContain("import { ScanOverlay } from '../components/hjem/ScanOverlay';");
+    /* ScanStatusBlock kom med 2026-08-05 (DoD fase 5, punkt 2): skip-knappen
+       og aria-live-regionen Juster manglet. Samme import, samme fil. */
+    expect(contents).toContain("import { ScanOverlay, ScanStatusBlock } from '../components/hjem/ScanOverlay';");
     expect(contents).toContain("from '../components/hjem/scan-orchestration';");
     expect(contents).toContain('FULL_SCAN_DURATION_MS');
     expect(contents).toContain('fullScanHapticSchedule(FULL_SCAN_DURATION_MS)');
@@ -192,7 +194,45 @@ describe('FinnAntrekkScreen — result-as-clothes wiring (source-text: only reac
     const fnEnd = contents.indexOf('\n  }\n\n  const committedActivityOption');
     const body = contents.slice(fnStart, fnEnd === -1 ? undefined : fnEnd);
     expect(body).toContain('if (reducedMotion) {');
-    expect(body).toContain("setPhase('fresh');");
+    /* Landingen ble samlet i `landScan` 2026-08-05: den sto duplisert i
+       redusert-bevegelse-grenen og i fullføringstimeren, og skip-knappen
+       ville blitt en tredje kopi. Tre kopier av «slik lander et svar»
+       drifter fra hverandre — én får haptikken, en annen glemmer den.
+       Assertionen følger derfor kallet, ikke den innlimte kroppen. */
+    expect(body).toContain('landScan(snapshot);');
+  });
+
+  it('DoD fase 5, punkt 2: seremonien har en vei ut OG en stemme', () => {
+    /* Hjem har hatt «Vis svaret med en gang» siden seremonien ble 3,2 s.
+       Juster kjørte NØYAKTIG samme koreografi uten den: brukeren sto fast i
+       3,2 sekunder. Verre — uten aria-live var hele seremonien taus for en
+       skjermleser, som dermed ikke visste om appen jobbet eller hadde
+       stoppet. ScanStatusBlock bærer begge deler. */
+    const contents = source(screenPath);
+    expect(
+      contents.includes('<ScanStatusBlock'),
+      'Juster rendrer ikke ScanStatusBlock — da er 3,2 s seremoni uten vei ut '
+      + 'og uten annonsering.',
+    ).toBe(true);
+    expect(
+      contents.includes('onSkip={handleSkip}'),
+      'skip-knappen er ikke koblet til noe. En knapp som ikke gjør noe er '
+      + 'verre enn ingen knapp.',
+    ).toBe(true);
+
+    /* Skip-en må LANDE svaret, ikke bare stoppe klokka. Duell §2: «hopp rett
+       til resultat, spill kun landingen» — et skippet svar skal ikke lande
+       stillere enn et som fikk gå ferdig. */
+    const skip = contents.slice(
+      contents.indexOf('const handleSkip'),
+      contents.indexOf('function handleFindOutfit'),
+    );
+    expect(skip).toContain('clearScanTimers();');
+    expect(
+      skip.includes('landScan(scanSnapshot);'),
+      'skip stopper timerne uten å lande svaret — brukeren sitter igjen med '
+      + 'en seremoni som bare stanset.',
+    ).toBe(true);
   });
 });
 
