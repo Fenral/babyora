@@ -42,6 +42,38 @@ REMOVE/KEEP/TEST-liste for Planlegg, Familie, maskot, scan, navn-onboarding og p
 premisslogg med eier/frist/status. Ingen fase 3-godkjenning før hvert P0 er lukket eller
 akseptert som dokumentert risiko.
 
+## Runde 3 — Fase 3 motpart-review av brief-utfordring og kilevalg (2026-08-05)
+
+**Verdikt: REVIDER.** Fullt svar: `appendix/fase3/sol-review-svar-fase3.md`. Tese: briefen
+er reelt utfordret, men kilevalget er «eksisterende Babyora omformulert som tidsavgrenset
+produkt» — implementerbarhet forkledd som strategi.
+
+### Claudes respons per P0/P1
+
+| Funn | Respons | Status |
+| --- | --- | --- |
+| P0 Kilen valgt på implementerbarhet, ikke problemstyrke | **AKSEPTERT.** Jeg flagget selv statusquo-risikoen men lot den likevel bære anbefalingen — Sols diagnose holder. Kilen nedgradert til H1; Beslutningsrouteren (H2) og Delta-tjenesten (H3) tatt inn som likeverdige produktmodeller; briefmålet omskrevet til «finn sterkeste inngangsjobb og distribusjonsform» | ✅ Revidert |
+| P0 Hard paywall forurenser kiletesten | **AKSEPTERT.** Researchprototyper (fase 4/5-testing) kjøres uten hard paywall; produktrisiko og research holdes adskilt. Berører IKKE eiervedtaket om paywall i produksjonsappen (fase 6-port) | ✅ Bindende for research |
+| P0 Sikkerhetskritisk info underordnet (A20/A21) | **AKSEPTERT.** Løftet foran seremoni/maskot/tema i bevislisten; kontrolltegn/gyldighetsvindu/overstyring/risikoforklaring er kjerneleveranse i alle tre produktmodeller | ✅ Revidert |
+| P0 «Første sesong» blander marked, trigger og produktform | **AKSEPTERT.** Kohorten beholdes som rekrutteringsramme; produktform avgjøres av fase 4/5-funn + H2-routerens preferansedata | ✅ Revidert |
+| P1 Installasjonsargumentet er utestet kanalpåstand | **AKSEPTERT.** Handoff-akkvisisjon (mottaker installerer) og før-problemet-kanaler (graviditet, helsestasjon, vinterdress-kjøp) inn i fase 4-research; router-fravær er P2-arkitekturgjeld, ikke jobbevis | → fase 4 |
+| P1 Livsløpsretorikk lever videre i kilevalget | **AKSEPTERT.** H2-routeren måler jobbpreferanse spontant i stedet for å anta sekvens | ✅ Revidert |
+| P1 Exit-løfte kolliderer med årsplan (A27 strategisk) | **AKSEPTERT.** Prisarkitektur løftes til strategisk fase 6-spørsmål; testes etter at brukeren har observert minst ett reelt utfall | → fase 6 |
+| P1 Lab-fritak fra Monter (A24) | **AKSEPTERT.** Etableres som teknisk pakke før fase 7 | → før fase 7 |
+| P1 Kill-switchene isolerer ikke årsak | **AKSEPTERT.** Alle seks revidert per Sols spesifikasjon (signal+spontanvalg, kvalifisert beslutningsmulighet, adjudikasjon, verdiport, nullmodell-baseline, 90 %-garderobe) | ✅ Revidert |
+
+P2/P3: R1/R3 støttet; R2 (Planlegg) og R6 (prisarkitektur) omgjort fra forhåndsbeslutning
+til fase 7-retning/fase 6-test; R5 omformulert til progressiv innhenting; A18 nedprioritert
+til verifiserbar presentasjonsbeslutning; A7 nedgradert til P2-arkitekturgjeld. Sols
+blindsonar (nullmodell, designfordel til polert forskrivning i prototypetester,
+akkvisisjon før problemet, verdi ≠ frekvens, etter-tur-bias) er innarbeidet i bevislisten.
+
+### DoD-kvittering fase 3
+
+- [x] ≥20 utfordrede antakelser (28), ≥10 muligheter (12), ≥5 fjerningskandidater (6)
+- [x] Prioritert bevisliste (revidert til Sols rekkefølge)
+- [x] Motparten har krevd og fått alternative produktmodeller — to av Sols tre motmodeller er opphøyd til likeverdige hypoteser (H2/H3)
+
 ## Runde 2 — Fase 2 red-team av brukerbildet (2026-08-05)
 
 **Verdikt: REVIDER.** Fullt svar: `appendix/fase2/sol-review-svar-fase2.md`. Tese: fase 2 er

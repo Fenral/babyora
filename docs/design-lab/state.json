@@ -1,12 +1,13 @@
 {
   "updated": "2026-08-05",
-  "activePhase": 3,
-  "phaseName": "Challenge the Brief",
-  "completedPhases": [0, 1, 2],
+  "activePhase": 4,
+  "phaseName": "Global Native Design Research",
+  "completedPhases": [0, 1, 2, 3],
   "approvedDecisions": [
     "Fase 0 ferdig 2026-08-05: miljø, Mobbin, ChatGPT Work-driver, ui-ux-pro-max v2.11.0 og prosjektminne verifisert/opprettet",
     "Fase 1 ferdig 2026-08-05: audit (5 agenter) + 6 screenshots + Sol-review REVIDER; P0-4 og P0-6 implementert samme dag; DoD kvittert i 11-independent-review.md",
-    "Fase 2 ferdig 2026-08-05: tre JTBD-hypoteser + kohorthypotese + premisslogg; Sol runde 2 REVIDER innarbeidet (to tallpåstander trukket, segmentmodell omklassifisert, terskler skjerpet); DoD kvittert"
+    "Fase 2 ferdig 2026-08-05: tre JTBD-hypoteser + kohorthypotese + premisslogg; Sol runde 2 REVIDER innarbeidet (to tallpåstander trukket, segmentmodell omklassifisert, terskler skjerpet); DoD kvittert",
+    "Fase 3 ferdig 2026-08-05: 28 antakelser/12 muligheter/6 fjerningskandidater; Sol runde 3 REVIDER innarbeidet — kilevalg nedgradert til H1, Beslutningsrouteren (H2) og Delta-tjenesten (H3) likeverdige, briefmål = finn sterkeste inngangsjobb OG distribusjonsform; teknisk opprydding 294 MB + 9 døde deps (9cc96ff)"
   ],
   "pendingOwnerGates": [
     "Fase 6: monetiseringsretning",
@@ -31,5 +32,5 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "Fase 3 (Challenge the Brief): \u226520 utfordrede antakelser, \u226510 produktmuligheter, \u22655 fjerningskandidater, prioritert bevisliste \u2014 OG Sols bindende r2-krav: velg \u00c9N anbefalt inngangskile (f\u00f8rste-sesong-forskrivning / kandidatvalidering / turprotokoll / omsorgshandoff) med eksplisitt hva som IKKE er prim\u00e6rjobben; bygg akt\u00f8r\u00d7\u00f8yeblikk-matrise + separat risikomodell; Sol opptrer som motpart"
+  "nextAction": "Fase 4 (Global Native Design Research) med Sols r3-rekkef\u00f8lge: F\u00d8RST installasjonsutl\u00f8sere/distribusjonsformer (app vs. delt lenke vs. widget vs. v\u00e6rutl\u00f8st kort) og alternativlandskap, S\u00c5 HIG/ADA/Material 3/premium-apper for de tre produktmodellene H1/H2/H3, abonnements-/paywall-m\u00f8nstre, emosjonell design; klassifiser etablert/fremvoksende/eksperimentelt/fallende med adopt/adapt/reinvent/reject per funn; deretter fase 5 Mobbin"
 }
