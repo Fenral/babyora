@@ -891,46 +891,46 @@ const STYLE_CSS = `
   /* Mappet til globale design-tokens slik at dark-mode (auto + data-theme="dark")
      cascader inn. Lokale ob-tokens beholdes som alias så all eksisterende CSS
      under fortsatt fungerer 1:1. */
-  --ob-bg-canvas:var(--bg-canvas);
-  --ob-bg-canvas-soft:var(--bg-canvas-soft);
-  --ob-bg-canvas-warm:var(--bg-canvas-warm);
-  --ob-surface:var(--surface-soft);
-  --ob-surface-raised:var(--surface);
-  --ob-terracotta-500:var(--terracotta-500);
-  --ob-terracotta-600:var(--terracotta-600);
-  --ob-terracotta-700:var(--terracotta-700);
+  --ob-bg-canvas:var(--dw-canvas);
+  --ob-bg-canvas-soft:var(--dw-canvas);
+  --ob-bg-canvas-warm:var(--dw-canvas);
+  --ob-surface:var(--dw-raised);
+  --ob-surface-raised:var(--dw-raised);
+  --ob-terracotta-500:var(--dw-accent);
+  --ob-terracotta-600:var(--dw-accent);
+  --ob-terracotta-700:var(--dw-accent);
   --ob-terracotta-300:var(--terracotta-200);
-  --ob-terracotta-100:var(--terracotta-100);
-  --ob-warm-orange:var(--warm-orange-500);
+  --ob-terracotta-100:var(--dw-accent-surface);
+  --ob-warm-orange:var(--dw-accent);
   /* Granmynte-CTA (F80c): primær-knappene bruker samme grønn+ink-par som
      HjemScreen sin CTA, ikke terracotta-stigen (den er nå kun for ikon/aksent). */
-  --ob-accent-cta:var(--accent-cta);
-  --ob-accent-cta-ink:var(--accent-cta-ink);
+  --ob-accent-cta:var(--dw-accent);
+  --ob-accent-cta-ink:var(--dw-ink-on-accent);
   --ob-shadow-cta:var(--shadow-cta);
   --ob-shadow-cta-primary:var(--shadow-cta-primary);
-  --ob-ink-900:var(--ink-900);
-  --ob-ink-800:var(--ink-800);
-  --ob-ink-700:var(--ink-700);
-  --ob-ink-500:var(--ink-500);
-  --ob-ink-400:var(--ink-400);
-  --ob-ink-300:var(--ink-300);
-  --ob-ink-200:var(--ink-200);
-  --ob-line:var(--ink-100);
-  --ob-line-strong:var(--ink-200);
+  --ob-ink-900:var(--dw-ink-hi);
+  --ob-ink-800:var(--dw-ink-hi);
+  --ob-ink-700:var(--dw-ink-mid);
+  --ob-ink-500:var(--dw-ink-mid);
+  --ob-ink-400:var(--dw-ink-low);
+  --ob-ink-300:var(--dw-ink-low);
+  --ob-ink-200:var(--dw-hairline);
+  --ob-line:var(--dw-hairline);
+  --ob-line-strong:var(--dw-hairline);
   --ob-shadow-1:var(--shadow-1);
   --ob-shadow-2:var(--shadow-2);
-  --ob-shadow-illu:0 24px 60px color-mix(in srgb, var(--chip-edge-korall) 18%, transparent), 0 8px 20px color-mix(in srgb, var(--ink-900) 10%, transparent);
+  --ob-shadow-illu:0 24px 60px color-mix(in srgb, var(--dw-accent-pressed) 18%, transparent), 0 8px 20px color-mix(in srgb, var(--dw-ink-hi) 10%, transparent);
   /* Glow-overlay på illu/welcome-bg: lys i light-mode, transparent i dark
      (overstyres lenger ned). */
-  --ob-glow-overlay:color-mix(in srgb, var(--surface-pure) 55%, transparent);
-  --ob-glow-overlay-strong:color-mix(in srgb, var(--surface-pure) 65%, transparent);
-  --ob-glow-shine:color-mix(in srgb, var(--surface-pure) 65%, transparent);
-  --ob-feat-bg:color-mix(in srgb, var(--surface-pure) 50%, transparent);
-  --ob-loc-action-bg:var(--ink-100);
-  --ob-cta-gradient-stop:color-mix(in srgb, var(--bg-canvas) 92%, transparent);
-  --ob-ease-standard:cubic-bezier(.2,.7,.2,1);
+  --ob-glow-overlay:color-mix(in srgb, var(--dw-overlay) 55%, transparent);
+  --ob-glow-overlay-strong:color-mix(in srgb, var(--dw-overlay) 65%, transparent);
+  --ob-glow-shine:color-mix(in srgb, var(--dw-overlay) 65%, transparent);
+  --ob-feat-bg:color-mix(in srgb, var(--dw-overlay) 50%, transparent);
+  --ob-loc-action-bg:var(--dw-hairline);
+  --ob-cta-gradient-stop:color-mix(in srgb, var(--dw-canvas) 92%, transparent);
+  --ob-ease-standard:var(--dw-ease);
   --ob-ease-spring:cubic-bezier(.34,1.32,.64,1);
-  --ob-font-sans:var(--font-sans);
+  --ob-font-sans:var(--dw-font-ui);
   --ob-font-serif:var(--font-serif);
 
   position:relative;
@@ -961,22 +961,22 @@ const STYLE_CSS = `
    shine/feat-bg/action-bg slik at de fungerer mot mørk warm-grey canvas. */
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]) .ob-screen{
-    --ob-glow-overlay:color-mix(in srgb, var(--ink-900) 8%, transparent);
-    --ob-glow-overlay-strong:color-mix(in srgb, var(--ink-900) 10%, transparent);
-    --ob-glow-shine:color-mix(in srgb, var(--ink-900) 10%, transparent);
-    --ob-feat-bg:color-mix(in srgb, var(--ink-900) 5%, transparent);
-    --ob-loc-action-bg:color-mix(in srgb, var(--ink-900) 6%, transparent);
-    --ob-cta-gradient-stop:color-mix(in oklab, var(--bg-canvas) 88%, transparent);
+    --ob-glow-overlay:color-mix(in srgb, var(--dw-ink-hi) 8%, transparent);
+    --ob-glow-overlay-strong:color-mix(in srgb, var(--dw-ink-hi) 10%, transparent);
+    --ob-glow-shine:color-mix(in srgb, var(--dw-ink-hi) 10%, transparent);
+    --ob-feat-bg:color-mix(in srgb, var(--dw-ink-hi) 5%, transparent);
+    --ob-loc-action-bg:color-mix(in srgb, var(--dw-ink-hi) 6%, transparent);
+    --ob-cta-gradient-stop:color-mix(in oklab, var(--dw-canvas) 88%, transparent);
     --ob-shadow-illu:0 24px 60px color-mix(in srgb, black 55%, transparent), 0 8px 20px color-mix(in srgb, black 40%, transparent);
   }
 }
 :root[data-theme="dark"] .ob-screen{
-  --ob-glow-overlay:color-mix(in srgb, var(--ink-900) 8%, transparent);
-  --ob-glow-overlay-strong:color-mix(in srgb, var(--ink-900) 10%, transparent);
-  --ob-glow-shine:color-mix(in srgb, var(--ink-900) 10%, transparent);
-  --ob-feat-bg:color-mix(in srgb, var(--ink-900) 5%, transparent);
-  --ob-loc-action-bg:color-mix(in srgb, var(--ink-900) 6%, transparent);
-  --ob-cta-gradient-stop:color-mix(in oklab, var(--bg-canvas) 88%, transparent);
+  --ob-glow-overlay:color-mix(in srgb, var(--dw-ink-hi) 8%, transparent);
+  --ob-glow-overlay-strong:color-mix(in srgb, var(--dw-ink-hi) 10%, transparent);
+  --ob-glow-shine:color-mix(in srgb, var(--dw-ink-hi) 10%, transparent);
+  --ob-feat-bg:color-mix(in srgb, var(--dw-ink-hi) 5%, transparent);
+  --ob-loc-action-bg:color-mix(in srgb, var(--dw-ink-hi) 6%, transparent);
+  --ob-cta-gradient-stop:color-mix(in oklab, var(--dw-canvas) 88%, transparent);
   --ob-shadow-illu:0 24px 60px color-mix(in srgb, black 55%, transparent), 0 8px 20px color-mix(in srgb, black 40%, transparent);
 }
 .ob-screen *,.ob-screen *::before,.ob-screen *::after{box-sizing:border-box}
@@ -984,7 +984,7 @@ const STYLE_CSS = `
 /* ── TOP BAR ── */
 .ob-screen > .ob-topbar{
   flex:none;display:flex;align-items:center;justify-content:space-between;
-  padding:4px 22px 8px;min-height:40px;
+  padding:var(--dw-space-4) var(--dw-space-22) var(--dw-space-8);min-height:40px;
 }
 .ob-top-back{
   width:40px;height:40px;border-radius:50%;
@@ -998,19 +998,19 @@ const STYLE_CSS = `
 .ob-top-skip{
   font-family:var(--ob-font-sans);font-size:13.5px;font-weight:600;
   color:var(--ob-ink-500);background:transparent;border:none;cursor:pointer;
-  padding:8px 6px;-webkit-tap-highlight-color:transparent;
+  padding:var(--dw-space-8) var(--dw-space-6);-webkit-tap-highlight-color:transparent;
 }
 
 /* Welcome brand */
 .ob-welcome-brand{
-  display:flex;flex-direction:column;align-items:center;gap:6px;
+  display:flex;flex-direction:column;align-items:center;gap:var(--dw-space-6);
 }
 .ob-brand-mark{
   width:48px;height:48px;border-radius:14px;
   background:linear-gradient(160deg, var(--ob-terracotta-500), var(--ob-terracotta-700));
-  color:var(--surface-pure);display:flex;align-items:center;justify-content:center;
+  color:var(--dw-overlay);display:flex;align-items:center;justify-content:center;
   font-family:var(--ob-font-serif);font-size:24px;line-height:1;
-  box-shadow:0 6px 16px color-mix(in srgb, var(--chip-edge-korall) 32%, transparent), inset 0 -2px 0 color-mix(in srgb, black 15%, transparent);
+  box-shadow:0 6px 16px color-mix(in srgb, var(--dw-accent-pressed) 32%, transparent), inset 0 -2px 0 color-mix(in srgb, black 15%, transparent);
 }
 .ob-brand-name{
   font-family:var(--ob-font-serif);font-size:14px;color:var(--ob-ink-700);
@@ -1019,8 +1019,8 @@ const STYLE_CSS = `
 
 /* ── DOT PROGRESS ── */
 .ob-screen > .ob-dots{
-  flex:none;display:flex;justify-content:center;align-items:center;gap:8px;
-  padding:8px 24px 4px;
+  flex:none;display:flex;justify-content:center;align-items:center;gap:var(--dw-space-8);
+  padding:var(--dw-space-8) var(--dw-space-24) var(--dw-space-4);
 }
 .ob-dot{
   width:8px;height:8px;border-radius:50%;
@@ -1036,7 +1036,7 @@ const STYLE_CSS = `
 /* ── BODY ── */
 .ob-screen > .ob-body{
   flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
-  padding:6px 28px 0;
+  padding:var(--dw-space-6) 28px 0;
   display:flex;flex-direction:column;
   -webkit-overflow-scrolling:touch;
 }
@@ -1049,7 +1049,7 @@ const STYLE_CSS = `
    --ob-surface-raised (= --dw-raised) now flips correctly with the rest of
    the app in both themes. */
 .ob-baby-hero{
-  flex:none;margin:10px auto 0;
+  flex:none;margin:var(--dw-space-10) auto 0;
   width:min(100%, 300px);aspect-ratio:1;
   position:relative;isolation:isolate;overflow:hidden;
   border-radius:36px;
@@ -1059,13 +1059,13 @@ const STYLE_CSS = `
 }
 .ob-baby-hero.compact{
   width:156px;
-  margin-top:8px;
+  margin-top:var(--dw-space-8);
   border-radius:28px;
-  box-shadow:0 16px 36px color-mix(in srgb, var(--chip-edge-korall) 15%, transparent), 0 6px 14px color-mix(in srgb, var(--ink-900) 9%, transparent);
+  box-shadow:0 16px 36px color-mix(in srgb, var(--dw-accent-pressed) 15%, transparent), 0 6px 14px color-mix(in srgb, var(--dw-ink-hi) 9%, transparent);
 }
 .ob-baby-hero.welcome{
   width:min(58vw, 224px);
-  margin-top:14px;
+  margin-top:var(--dw-space-14);
   border-radius:34px;
 }
 /* P10/JOB5: object-fit:contain (not cover) — the standing-mascot PNG now
@@ -1101,9 +1101,9 @@ const STYLE_CSS = `
   width:42px;height:42px;border-radius:50%;
   display:grid;place-items:center;
   color:var(--ob-terracotta-700);
-  background:color-mix(in srgb, var(--surface-pure) 88%, transparent);
-  border:1px solid color-mix(in srgb, var(--surface-pure) 72%, var(--ob-line));
-  box-shadow:0 7px 18px color-mix(in srgb, var(--ink-900) 16%, transparent);
+  background:color-mix(in srgb, var(--dw-overlay) 88%, transparent);
+  border:1px solid color-mix(in srgb, var(--dw-overlay) 72%, var(--ob-line));
+  box-shadow:0 7px 18px color-mix(in srgb, var(--dw-ink-hi) 16%, transparent);
   backdrop-filter:blur(10px);
 }
 .ob-baby-context svg{
@@ -1118,7 +1118,7 @@ const STYLE_CSS = `
 }
 
 .ob-illu{
-  flex:none;margin:10px auto 0;
+  flex:none;margin:var(--dw-space-10) auto 0;
   width:100%;max-width:300px;aspect-ratio:1/1;
   border-radius:36px;
   background:
@@ -1145,14 +1145,14 @@ const STYLE_CSS = `
 .ob-illu.hero{
   max-width:340px;aspect-ratio:1/1.02;
   border-radius:48px;
-  box-shadow:0 32px 70px color-mix(in srgb, var(--chip-edge-korall) 22%, transparent), 0 12px 24px color-mix(in srgb, var(--ink-900) 12%, transparent);
-  margin-top:18px;
+  box-shadow:0 32px 70px color-mix(in srgb, var(--dw-accent-pressed) 22%, transparent), 0 12px 24px color-mix(in srgb, var(--dw-ink-hi) 12%, transparent);
+  margin-top:var(--dw-space-18);
 }
 
 /* ── COPY ── */
 .ob-copy{
   flex:none;margin-top:26px;
-  display:flex;flex-direction:column;gap:10px;
+  display:flex;flex-direction:column;gap:var(--dw-space-10);
   text-align:center;
 }
 .ob-eyebrow{
@@ -1189,8 +1189,8 @@ const STYLE_CSS = `
 }
 
 .ob-welcome-greet{
-  flex:none;margin-top:22px;text-align:center;
-  display:flex;flex-direction:column;gap:12px;
+  flex:none;margin-top:var(--dw-space-22);text-align:center;
+  display:flex;flex-direction:column;gap:var(--dw-space-12);
 }
 
 /* ── STEG 1 v2 (P10/JOB5, docs/mocks/monter/onboarding-steg1-v2.html;
@@ -1211,7 +1211,7 @@ const STYLE_CSS = `
   position:relative;
   display:flow-root;
   flex:none;
-  margin-top:14px;
+  margin-top:var(--dw-space-14);
 }
 .ob-s1-mascot{
   position:absolute;
@@ -1219,7 +1219,7 @@ const STYLE_CSS = `
   right:30px;
   height:150px;width:auto;
   z-index:3;pointer-events:none;
-  filter:drop-shadow(0 10px 22px color-mix(in srgb, var(--ink-900) 45%, transparent));
+  filter:drop-shadow(0 10px 22px color-mix(in srgb, var(--dw-ink-hi) 45%, transparent));
 }
 .ob-s1-card{
   position:relative;z-index:2;
@@ -1230,14 +1230,14 @@ const STYLE_CSS = `
   margin-top:132px;
   background:var(--ob-surface-raised);
   border-radius:20px;
-  padding:26px 22px 22px;
+  padding:26px var(--dw-space-22) var(--dw-space-22);
   text-align:left;
-  box-shadow:0 1px 0 rgba(242, 192, 138, .14) inset, var(--ob-shadow-illu);
+  box-shadow:0 1px 0 color-mix(in srgb, var(--dw-edge-light) 14%, transparent) inset, var(--ob-shadow-illu);
 }
 .ob-s1-card::before{
   content:"";position:absolute;top:0;left:7%;right:7%;height:1px;
   border-radius:2px;
-  background:linear-gradient(90deg, transparent, #F2C08A, transparent);
+  background:linear-gradient(90deg, transparent, var(--dw-edge-light), transparent);
   opacity:.18; /* duell §6: 12–20 % på hevede flater */
   pointer-events:none;
 }
@@ -1249,11 +1249,11 @@ const STYLE_CSS = `
 }
 .ob-s1-sub{
   font-family:var(--ob-font-sans);font-size:15px;line-height:1.5;
-  color:var(--ob-ink-700);margin:8px 0 0;
+  color:var(--ob-ink-700);margin:var(--dw-space-8) 0 0;
 }
-.ob-s1-field{margin-top:20px;}
+.ob-s1-field{margin-top:var(--dw-space-20);}
 .ob-s1-preview{
-  margin-top:16px;padding-top:14px;
+  margin-top:var(--dw-space-16);padding-top:var(--dw-space-14);
   border-top:1px solid var(--ob-line);
 }
 .ob-s1-preview-tag{
@@ -1262,28 +1262,28 @@ const STYLE_CSS = `
   color:var(--ob-ink-500);
 }
 .ob-s1-preview-line{
-  display:block;margin-top:6px;
+  display:block;margin-top:var(--dw-space-6);
   font-size:15px;font-weight:500;color:var(--ob-ink-700);line-height:1.55;
 }
 .ob-s1-preview-named{color:var(--ob-ink-900);font-weight:700;}
 
 /* ── INPUT ── */
 .ob-field{
-  flex:none;margin-top:22px;
-  display:flex;flex-direction:column;gap:8px;
+  flex:none;margin-top:var(--dw-space-22);
+  display:flex;flex-direction:column;gap:var(--dw-space-8);
 }
 .ob-field label{
   font-size:11.5px;font-weight:700;letter-spacing:1.2px;
   text-transform:uppercase;color:var(--ob-ink-500);
-  padding-left:4px;
+  padding-left:var(--dw-space-4);
 }
 .ob-input-shell{
   position:relative;display:flex;align-items:center;
   background:var(--ob-surface-raised);
   border:1.5px solid var(--ob-terracotta-600);
-  border-radius:18px;padding:16px 18px;
+  border-radius:18px;padding:var(--dw-space-16) var(--dw-space-18);
   box-shadow:0 0 0 4px color-mix(in srgb, var(--ob-terracotta-600) 10%, transparent), var(--ob-shadow-1);
-  transition:box-shadow .2s var(--ob-ease-standard);
+  transition:box-shadow var(--dw-m-state) var(--ob-ease-standard);
 }
 /* P10.1 (judge finding D4): .ob-input-icon removed — no leading icon in
    the contract's input (onboarding-steg1-v2.html), and it was previously
@@ -1297,29 +1297,29 @@ const STYLE_CSS = `
 .ob-input-shell input::placeholder{color:var(--ob-ink-400);font-weight:400;}
 .ob-hint{
   font-size:12.5px;color:var(--ob-ink-500);
-  padding-left:4px;
+  padding-left:var(--dw-space-4);
 }
 .ob-hint-center{
-  text-align:center;margin-top:14px;padding-left:0;font-size:13px;
+  text-align:center;margin-top:var(--dw-space-14);padding-left:0;font-size:13px;
 }
 .ob-hint-center strong{color:var(--ob-terracotta-700);font-weight:700;}
 
 /* ── DATE GRID ── */
 .ob-date-grid{
-  display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:10px;
-  margin-top:22px;
+  display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:var(--dw-space-10);
+  margin-top:var(--dw-space-22);
 }
-.ob-date-cell{display:flex;flex-direction:column;gap:6px;}
+.ob-date-cell{display:flex;flex-direction:column;gap:var(--dw-space-6);}
 .ob-date-cell label{
   font-size:10.5px;font-weight:700;letter-spacing:1.2px;
   text-transform:uppercase;color:var(--ob-ink-500);
-  padding-left:4px;
+  padding-left:var(--dw-space-4);
 }
 .ob-date-input{
   display:flex;align-items:center;justify-content:center;
   background:var(--ob-surface-raised);
   border:1.5px solid var(--ob-line-strong);
-  border-radius:16px;padding:18px 8px;
+  border-radius:16px;padding:var(--dw-space-18) var(--dw-space-8);
   font-family:var(--ob-font-serif);font-size:24px;color:var(--ob-ink-900);
   line-height:1;letter-spacing:-.3px;
   box-shadow:var(--ob-shadow-1);
@@ -1330,7 +1330,7 @@ const STYLE_CSS = `
 .ob-date-input::-webkit-inner-spin-button{ -webkit-appearance:none;margin:0; }
 .ob-date-input.filled{
   border-color:var(--ob-terracotta-600);
-  background:var(--surface-pure);
+  background:var(--dw-overlay);
   box-shadow:0 0 0 4px color-mix(in srgb, var(--ob-terracotta-600) 8%, transparent), var(--ob-shadow-1);
 }
 .ob-date-input:focus-visible{
@@ -1340,76 +1340,101 @@ const STYLE_CSS = `
 
 /* ── LOCATION CARD ── */
 .ob-loc-card{
-  margin-top:22px;display:flex;flex-direction:column;gap:18px;
-  padding:22px;border-radius:24px;
+  margin-top:var(--dw-space-22);display:flex;flex-direction:column;gap:var(--dw-space-18);
+  padding:var(--dw-space-22);border-radius:24px;
   background:var(--ob-surface-raised);
   border:1px solid var(--ob-line);
   box-shadow:var(--ob-shadow-2);
 }
-.ob-loc-row{display:flex;align-items:center;gap:14px;}
+.ob-loc-row{display:flex;align-items:center;gap:var(--dw-space-14);}
 .ob-loc-pin{
   flex:none;width:48px;height:48px;border-radius:50%;
   background:var(--ob-terracotta-100);color:var(--ob-terracotta-700);
   display:flex;align-items:center;justify-content:center;
-  box-shadow:inset 0 -2px 4px color-mix(in srgb, var(--chip-edge-korall) 8%, transparent);
+  box-shadow:inset 0 -2px 4px color-mix(in srgb, var(--dw-accent-pressed) 8%, transparent);
 }
 .ob-loc-pin svg{width:22px;height:22px;}
-.ob-loc-id{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+.ob-loc-id{display:flex;flex-direction:column;gap:var(--dw-space-2);flex:1;min-width:0;}
 .ob-loc-city{
   font-family:var(--ob-font-serif);font-size:22px;color:var(--ob-ink-900);
   line-height:1.05;letter-spacing:-.2px;
 }
 .ob-loc-coord{font-size:12.5px;font-weight:500;color:var(--ob-ink-500);letter-spacing:.1px;}
-.ob-loc-actions{display:flex;gap:8px;}
+.ob-loc-actions{display:flex;gap:var(--dw-space-8);}
 .ob-loc-actions button{
-  flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
-  padding:11px 8px;border-radius:12px;
+  flex:1;display:flex;align-items:center;justify-content:center;gap:var(--dw-space-6);
+  padding:11px var(--dw-space-8);border-radius:12px;
   font:inherit;font-size:13px;font-weight:600;color:var(--ob-ink-700);
   background:var(--ob-loc-action-bg);border:1px solid var(--ob-line);cursor:pointer;
   -webkit-tap-highlight-color:transparent;
 }
-.ob-loc-actions button:disabled{opacity:.5;cursor:not-allowed;}
+/* KONTRASTRETTING (fase 3). Knappen som faktisk deaktiveres her er
+   :first-child — amber flate + mork ink. opacity:.5 over .ob-loc-card
+   (--dw-raised) MALT til 2,67:1 mellom tekst og flate. Samme losning som
+   .hjm-cta:disabled: demp FLATEN mot flaten under og bytt ink, ikke demp
+   hele knappen. MALT etter: 6,33:1 mork, 8,88:1 lys.
+   Den andre selektoren er ikke pynt — ".ob-loc-actions button:first-child"
+   staar lenger ned i filen med SAMME spesifisitet som ":disabled", og ville
+   ellers vunnet paa kilderekkefolge og satt amber tilbake. */
+.ob-loc-actions button:disabled,
+.ob-loc-actions button:first-child:disabled{
+  background:color-mix(in srgb, var(--dw-accent) 40%, var(--dw-raised));
+  color:var(--dw-ink-hi);
+  cursor:not-allowed;
+}
 .ob-loc-actions button svg{width:14px;height:14px;}
 .ob-manual{
-  display:flex;gap:8px;align-items:stretch;
-  padding-top:4px;
+  display:flex;gap:var(--dw-space-8);align-items:stretch;
+  padding-top:var(--dw-space-4);
 }
 .ob-manual input{
   flex:1;font:inherit;font-size:14px;color:var(--ob-ink-900);
-  background:var(--surface-pure);border:1px solid var(--ob-line-strong);border-radius:10px;
-  padding:10px 12px;outline:none;
+  background:var(--dw-overlay);border:1px solid var(--ob-line-strong);border-radius:10px;
+  padding:var(--dw-space-10) var(--dw-space-12);outline:none;
 }
 .ob-manual input:focus-visible{border-color:var(--ob-terracotta-600);box-shadow:0 0 0 3px color-mix(in srgb, var(--ob-terracotta-600) 15%, transparent);}
 .ob-manual button{
-  font:inherit;font-size:13px;font-weight:600;color:var(--surface-pure);
+  font:inherit;font-size:13px;font-weight:600;color:var(--dw-overlay);
   background:var(--ob-terracotta-500);border:none;border-radius:10px;
-  padding:10px 14px;cursor:pointer;
+  padding:var(--dw-space-10) var(--dw-space-14);cursor:pointer;
 }
-.ob-manual button:disabled{opacity:.5;cursor:not-allowed;}
+/* KONTRASTRETTING (fase 3). Samme knapptype som over — amber flate paa
+   .ob-loc-card. opacity:.5 MALT til 2,67:1; dempet flate + --dw-ink-hi
+   MALT til 6,33:1 mork / 8,88:1 lys. */
+.ob-manual button:disabled{
+  background:color-mix(in srgb, var(--dw-accent) 40%, var(--dw-raised));
+  color:var(--dw-ink-hi);
+  cursor:not-allowed;
+}
 .ob-loc-error{
   font-size:12.5px;color:var(--ob-terracotta-700);
-  padding:8px 12px;border-radius:10px;
+  padding:var(--dw-space-8) var(--dw-space-12);border-radius:10px;
   background:color-mix(in srgb, var(--ob-terracotta-600) 8%, transparent);
 }
 
 /* ── KALENDER (steg 2) ── */
 .ob-cal{
-  background:var(--surface-pure);border:1px solid var(--ob-line);
-  border-radius:20px;padding:14px 14px 16px;margin-top:4px;
+  background:var(--dw-overlay);border:1px solid var(--ob-line);
+  border-radius:20px;padding:var(--dw-space-14) var(--dw-space-14) var(--dw-space-16);margin-top:var(--dw-space-4);
   box-shadow:var(--ob-shadow-1);
 }
-.ob-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ob-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--dw-space-10);}
 .ob-cal-title{font-family:var(--font-serif);font-weight:560;font-size:17px;color:var(--ob-ink-900);}
-.ob-cal-nav{display:flex;gap:8px;}
+.ob-cal-nav{display:flex;gap:var(--dw-space-8);}
 .ob-cal-nav button{
   width:38px;height:38px;border-radius:11px;border:1px solid var(--ob-line-strong);
   background:var(--ob-surface);color:var(--ob-ink-900);font-size:18px;line-height:1;
   cursor:pointer;display:grid;place-items:center;
 }
-.ob-cal-nav button:disabled{opacity:.35;cursor:default;}
+/* KONTRASTRETTING (fase 3). Denne knappen er NOYTRAL (--dw-raised-flate,
+   --dw-ink-hi-tekst), ikke amber, saa dempingen horer hjemme i inken:
+   opacity:.35 mot .ob-cal (--dw-overlay) MALT til 2,89:1. --dw-ink-low
+   paa uendret flate MALT til 5,78:1 mork / 7,00:1 lys — tydelig dempet
+   fra ink-hi, fortsatt godt over 4,5:1. */
+.ob-cal-nav button:disabled{color:var(--dw-ink-low);cursor:default;}
 .ob-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
 .ob-cal-wd{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--ob-ink-700);
-  text-align:center;padding:4px 0 6px;text-transform:uppercase;}
+  text-align:center;padding:var(--dw-space-4) 0 var(--dw-space-6);text-transform:uppercase;}
 .ob-cal-empty{min-height:40px;}
 .ob-cal-day{
   aspect-ratio:1;min-height:40px;border:none;background:none;font:inherit;font-size:14px;
@@ -1432,34 +1457,34 @@ const STYLE_CSS = `
 .ob-combo{position:relative;width:100%;}
 .ob-combo input{
   width:100%;font:inherit;font-size:14px;color:var(--ob-ink-900);
-  background:var(--surface-pure);border:1px solid var(--ob-line-strong);border-radius:10px;
-  padding:11px 12px;outline:none;box-sizing:border-box;
+  background:var(--dw-overlay);border:1px solid var(--ob-line-strong);border-radius:10px;
+  padding:11px var(--dw-space-12);outline:none;box-sizing:border-box;
 }
 .ob-combo input:focus-visible{border-color:var(--ob-terracotta-600);
   box-shadow:0 0 0 3px color-mix(in srgb, var(--ob-terracotta-600) 15%, transparent);}
-.ob-combo-list{list-style:none;margin:6px 0 0;padding:5px;background:var(--surface-pure);
+.ob-combo-list{list-style:none;margin:var(--dw-space-6) 0 0;padding:5px;background:var(--dw-overlay);
   border:1px solid var(--ob-line);border-radius:14px;box-shadow:var(--ob-shadow-2, var(--ob-shadow-1));
   max-height:230px;overflow-y:auto;}
 .ob-combo-list:empty{display:none;}
-.ob-combo-opt{display:flex;align-items:center;gap:9px;padding:11px 10px;border-radius:9px;
+.ob-combo-opt{display:flex;align-items:center;gap:9px;padding:11px var(--dw-space-10);border-radius:9px;
   font-size:14px;color:var(--ob-ink-900);cursor:pointer;}
 .ob-combo-opt.active,.ob-combo-opt:hover{background:var(--ob-surface);}
 .ob-combo-opt svg{width:15px;height:15px;opacity:.7;flex:none;}
-.ob-combo-none{padding:11px 10px;font-size:13px;color:var(--ob-ink-700);}
+.ob-combo-none{padding:11px var(--dw-space-10);font-size:13px;color:var(--ob-ink-700);}
 .ob-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip:rect(0 0 0 0);white-space:nowrap;border:0;}
 
 /* ── SUMMARY ── */
 .ob-summary{
-  margin:22px 0 0;padding:0;list-style:none;
+  margin:var(--dw-space-22) 0 0;padding:0;list-style:none;
   display:flex;flex-direction:column;
   background:var(--ob-surface);border:1px solid var(--ob-line);
   border-radius:22px;overflow:hidden;
   box-shadow:var(--ob-shadow-1);
 }
 .ob-sum-row{
-  display:flex;align-items:center;gap:14px;
-  padding:16px 18px;min-height:62px;
+  display:flex;align-items:center;gap:var(--dw-space-14);
+  padding:var(--dw-space-16) var(--dw-space-18);min-height:62px;
 }
 .ob-sum-row + .ob-sum-row{border-top:1px solid var(--ob-line);}
 .ob-sum-icon{
@@ -1468,7 +1493,7 @@ const STYLE_CSS = `
   display:flex;align-items:center;justify-content:center;
 }
 .ob-sum-icon svg{width:18px;height:18px;}
-.ob-sum-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.ob-sum-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:var(--dw-space-2);}
 .ob-sum-label{
   font-size:11px;font-weight:700;letter-spacing:1px;
   text-transform:uppercase;color:var(--ob-ink-500);
@@ -1487,12 +1512,12 @@ const STYLE_CSS = `
 
 /* ── WELCOME FEATS ── */
 .ob-feats{
-  margin:22px 0 0;padding:0;list-style:none;
-  display:flex;flex-direction:column;gap:12px;
+  margin:var(--dw-space-22) 0 0;padding:0;list-style:none;
+  display:flex;flex-direction:column;gap:var(--dw-space-12);
 }
 .ob-feat{
-  display:flex;align-items:center;gap:14px;
-  padding:14px 16px;border-radius:18px;
+  display:flex;align-items:center;gap:var(--dw-space-14);
+  padding:var(--dw-space-14) var(--dw-space-16);border-radius:18px;
   background:var(--ob-feat-bg);
   border:1px solid var(--ob-line);
 }
@@ -1500,12 +1525,12 @@ const STYLE_CSS = `
   flex:none;width:42px;height:42px;border-radius:13px;
   display:flex;align-items:center;justify-content:center;
   background:var(--ob-terracotta-100);color:var(--ob-terracotta-700);
-  box-shadow:inset 0 -2px 4px color-mix(in srgb, var(--chip-edge-korall) 8%, transparent);
+  box-shadow:inset 0 -2px 4px color-mix(in srgb, var(--dw-accent-pressed) 8%, transparent);
 }
-.ob-feat-icon.sun{background:color-mix(in srgb, var(--status-warm) 16%, var(--surface-pure)); color:var(--status-warm);}
-.ob-feat-icon.rain{background:color-mix(in srgb, var(--status-cold) 16%, var(--surface-pure)); color:var(--status-cold);}
+.ob-feat-icon.sun{background:color-mix(in srgb, var(--dw-danger) 16%, var(--dw-overlay)); color:var(--dw-danger);}
+.ob-feat-icon.rain{background:color-mix(in srgb, var(--dw-warning) 16%, var(--dw-overlay)); color:var(--dw-warning);}
 .ob-feat-icon svg{width:20px;height:20px;}
-.ob-feat-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.ob-feat-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:var(--dw-space-2);}
 .ob-feat-title{font-size:14.5px;font-weight:600;color:var(--ob-ink-900);line-height:1.2;}
 .ob-feat-sub{font-size:12.5px;color:var(--ob-ink-500);line-height:1.3;}
 
@@ -1513,7 +1538,7 @@ const STYLE_CSS = `
 .ob-screen > .ob-cta-zone{
   flex:none;
   padding:18px 24px calc(env(safe-area-inset-bottom, 0px) + 28px);
-  display:flex;flex-direction:column;gap:10px;
+  display:flex;flex-direction:column;gap:var(--dw-space-10);
   background:linear-gradient(180deg, transparent 0%, var(--ob-cta-gradient-stop) 30%, var(--ob-bg-canvas) 60%);
 }
 /* Granmynte-CTA-mønster (F80c, jf. HjemScreen): var(--accent-cta) + accent-cta-ink,
@@ -1521,8 +1546,8 @@ const STYLE_CSS = `
    (loc-pin, sum-icon, feat-icon, brand-mark), ikke for primær-CTA-er. */
 .ob-btn-primary{
   width:100%;min-height:56px;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  padding:16px 20px;border-radius:18px;
+  display:flex;align-items:center;justify-content:center;gap:var(--dw-space-10);
+  padding:var(--dw-space-16) var(--dw-space-20);border-radius:18px;
   background:var(--ob-accent-cta);color:var(--ob-accent-cta-ink);
   font-family:var(--ob-font-sans);font-size:16px;font-weight:700;letter-spacing:.1px;
   border:none;cursor:pointer;
@@ -1534,8 +1559,19 @@ const STYLE_CSS = `
   transform:translateY(1px);
   box-shadow:var(--ob-shadow-cta);
 }
+/* KONTRASTRETTING (fase 3). Dette er skjermens synligste deaktiverte flate
+   (steg 2/3/4 for feltene er fylt ut). opacity:.55 la amber-flaten og
+   --dw-ink-on-accent oppa lerretet samtidig og MALTE 2,85:1 mellom dem —
+   fra 6,86:1 udempet. Demping av en farget flate kan ikke lose det, fordi
+   MORK ink mister kontrast i takt med at flaten morkner mot lerretet;
+   losningen er a bytte ink. Samme regnestykke som .hjm-cta:disabled.
+   MALT etter: 7,00:1 mork, 8,52:1 lys. Flaten selv faller til 2,14:1 mot
+   lerretet (mork), saa knappen leser fortsatt tydelig som deaktivert.
+   box-shadow beholdes uendret — bare fargen er i scope her. */
 .ob-btn-primary:disabled,.ob-btn-primary[aria-disabled="true"]{
-  opacity:.55;cursor:not-allowed;transform:none;
+  background:color-mix(in srgb, var(--dw-accent) 40%, var(--dw-canvas));
+  color:var(--dw-ink-hi);
+  cursor:not-allowed;transform:none;
   box-shadow:var(--ob-shadow-cta);
 }
 .ob-btn-primary svg{width:18px;height:18px;}
@@ -1543,7 +1579,7 @@ const STYLE_CSS = `
 
 .ob-btn-ghost{
   width:100%;min-height:46px;
-  display:flex;align-items:center;justify-content:center;gap:6px;
+  display:flex;align-items:center;justify-content:center;gap:var(--dw-space-6);
   background:transparent;border:none;
   font-family:var(--ob-font-sans);font-size:14px;font-weight:600;color:var(--ob-ink-500);
   cursor:pointer;letter-spacing:.1px;
@@ -1564,7 +1600,7 @@ const STYLE_CSS = `
   width:min(100%, 560px);
   min-height:48px;
   margin:0 auto;
-  padding:4px 20px;
+  padding:var(--dw-space-4) var(--dw-space-20);
   display:grid;
   grid-template-columns:44px minmax(0, 1fr) 44px;
   align-items:center;
@@ -1581,7 +1617,7 @@ const STYLE_CSS = `
   display:flex;
   align-items:baseline;
   justify-content:center;
-  gap:8px;
+  gap:var(--dw-space-8);
 }
 .ob-top-brand{
   font-family:var(--ob-font-serif);
@@ -1619,9 +1655,9 @@ const STYLE_CSS = `
      already beats that rule's (1 class + 2 types) for any property BOTH
      declare, so declaring flex-direction here is enough to win. */
   flex:none;
-  display:flex;flex-direction:row;gap:6px;
+  display:flex;flex-direction:row;gap:var(--dw-space-6);
   width:min(calc(100% - 48px), 512px);
-  margin:2px auto 0;
+  margin:var(--dw-space-2) auto 0;
 }
 .ob-seg-progress i{
   flex:1;
@@ -1633,11 +1669,11 @@ const STYLE_CSS = `
 .ob-screen > .ob-body{
   width:min(100%, 560px);
   margin:0 auto;
-  padding:10px 24px 20px;
+  padding:var(--dw-space-10) var(--dw-space-24) var(--dw-space-20);
   scroll-padding-bottom:28px;
 }
 .ob-body > *{
-  animation:ob-content-in 280ms var(--ob-ease-standard) both;
+  animation:ob-content-in var(--dw-m-handoff) var(--ob-ease-standard) both;
 }
 @keyframes ob-content-in{
   from{opacity:0;transform:translateY(8px)}
@@ -1645,19 +1681,19 @@ const STYLE_CSS = `
 }
 .ob-baby-hero{
   width:clamp(158px, 25dvh, 218px);
-  margin-top:6px;
+  margin-top:var(--dw-space-6);
   border-radius:28px;
-  box-shadow:0 16px 42px color-mix(in srgb, var(--chip-edge-korall) 14%, transparent), 0 6px 16px color-mix(in srgb, var(--ink-900) 10%, transparent);
+  box-shadow:0 16px 42px color-mix(in srgb, var(--dw-accent-pressed) 14%, transparent), 0 6px 16px color-mix(in srgb, var(--dw-ink-hi) 10%, transparent);
 }
 .ob-baby-hero.compact{
   width:clamp(96px, 15dvh, 122px);
-  margin-top:8px;
+  margin-top:var(--dw-space-8);
   border-radius:24px;
-  box-shadow:0 10px 26px color-mix(in srgb, var(--ink-900) 12%, transparent);
+  box-shadow:0 10px 26px color-mix(in srgb, var(--dw-ink-hi) 12%, transparent);
 }
 .ob-baby-hero.welcome{
   width:clamp(178px, 28dvh, 224px);
-  margin-top:14px;
+  margin-top:var(--dw-space-14);
   border-radius:30px;
 }
 .ob-baby-wordmark{
@@ -1672,7 +1708,7 @@ const STYLE_CSS = `
 }
 .ob-baby-context svg{width:17px;height:17px;}
 .ob-copy{
-  margin-top:16px;
+  margin-top:var(--dw-space-16);
   gap:7px;
 }
 .ob-h2{
@@ -1688,10 +1724,10 @@ const STYLE_CSS = `
   font-size:14px;
   line-height:1.42;
 }
-.ob-field{margin-top:18px;gap:7px;}
+.ob-field{margin-top:var(--dw-space-18);gap:7px;}
 .ob-input-shell{
   min-height:58px;
-  padding:14px 16px;
+  padding:var(--dw-space-14) var(--dw-space-16);
   border-radius:16px;
   border-color:var(--ob-line-strong);
   box-shadow:var(--ob-shadow-1);
@@ -1703,11 +1739,11 @@ const STYLE_CSS = `
 .ob-date-picker{
   position:relative;
   min-height:68px;
-  margin-top:20px;
-  padding:12px 16px;
+  margin-top:var(--dw-space-20);
+  padding:var(--dw-space-12) var(--dw-space-16);
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:var(--dw-space-12);
   overflow:hidden;
   border:1px solid var(--ob-line-strong);
   border-radius:18px;
@@ -1731,21 +1767,21 @@ const STYLE_CSS = `
   cursor:pointer;color:transparent;background:transparent;border:0;
 }
 .ob-loc-card{
-  margin-top:18px;
-  gap:12px;
-  padding:14px;
+  margin-top:var(--dw-space-18);
+  gap:var(--dw-space-12);
+  padding:var(--dw-space-14);
   border-radius:20px;
   box-shadow:var(--ob-shadow-1);
 }
 .ob-loc-row{
-  padding:2px 2px 10px;
+  padding:var(--dw-space-2) var(--dw-space-2) var(--dw-space-10);
   border-bottom:1px solid var(--ob-line);
 }
-.ob-loc-actions{flex-direction:column;gap:8px;}
+.ob-loc-actions{flex-direction:column;gap:var(--dw-space-8);}
 .ob-loc-actions button{
   min-height:50px;
   justify-content:flex-start;
-  padding:12px 14px;
+  padding:var(--dw-space-12) var(--dw-space-14);
   border-radius:14px;
   font-size:14px;
   background:var(--ob-surface);
@@ -1756,13 +1792,13 @@ const STYLE_CSS = `
   border-color:transparent;
 }
 .ob-manual{padding-top:0;}
-.ob-combo input{min-height:50px;border-radius:14px;padding:13px 14px;}
-.ob-summary{margin-top:18px;border-radius:18px;}
-.ob-sum-row{min-height:58px;padding:12px 14px;}
+.ob-combo input{min-height:50px;border-radius:14px;padding:13px var(--dw-space-14);}
+.ob-summary{margin-top:var(--dw-space-18);border-radius:18px;}
+.ob-sum-row{min-height:58px;padding:var(--dw-space-12) var(--dw-space-14);}
 .ob-sum-icon{width:36px;height:36px;}
-.ob-welcome-greet{margin-top:16px;gap:8px;}
-.ob-feats{margin-top:18px;gap:8px;}
-.ob-feat{padding:12px 14px;border-radius:16px;}
+.ob-welcome-greet{margin-top:var(--dw-space-16);gap:var(--dw-space-8);}
+.ob-feats{margin-top:var(--dw-space-18);gap:var(--dw-space-8);}
+.ob-feat{padding:var(--dw-space-12) var(--dw-space-14);border-radius:16px;}
 .ob-screen > .ob-cta-zone{
   width:min(100%, 560px);
   margin:0 auto;
@@ -1774,20 +1810,20 @@ const STYLE_CSS = `
 
 @media (max-height:740px){
   .ob-screen > .ob-topbar{min-height:44px;}
-  .ob-screen > .ob-body{padding-top:6px;padding-bottom:12px;}
+  .ob-screen > .ob-body{padding-top:var(--dw-space-6);padding-bottom:var(--dw-space-12);}
   .ob-baby-hero{width:clamp(128px, 21dvh, 158px);}
-  .ob-baby-hero.compact{width:82px;margin-top:4px;border-radius:19px;}
-  .ob-baby-hero.welcome{width:142px;margin-top:6px;}
+  .ob-baby-hero.compact{width:82px;margin-top:var(--dw-space-4);border-radius:19px;}
+  .ob-baby-hero.welcome{width:142px;margin-top:var(--dw-space-6);}
   .ob-copy{margin-top:11px;gap:5px;}
   .ob-h2{font-size:28px;}
   .ob-h2-hero{font-size:32px;}
-  .ob-field,.ob-date-picker,.ob-loc-card,.ob-summary{margin-top:12px;}
-  .ob-hint-center{margin-top:8px;}
-  .ob-screen > .ob-cta-zone{padding-top:8px;}
+  .ob-field,.ob-date-picker,.ob-loc-card,.ob-summary{margin-top:var(--dw-space-12);}
+  .ob-hint-center{margin-top:var(--dw-space-8);}
+  .ob-screen > .ob-cta-zone{padding-top:var(--dw-space-8);}
   .ob-screen.step-4 .ob-baby-hero{display:none;}
-  .ob-screen.step-4 .ob-copy{margin-top:8px;}
-  .ob-screen.step-4 .ob-summary{margin-top:10px;}
-  .ob-screen.step-4 .ob-sum-row{min-height:46px;padding:7px 12px;gap:10px;}
+  .ob-screen.step-4 .ob-copy{margin-top:var(--dw-space-8);}
+  .ob-screen.step-4 .ob-summary{margin-top:var(--dw-space-10);}
+  .ob-screen.step-4 .ob-sum-row{min-height:46px;padding:7px var(--dw-space-12);gap:var(--dw-space-10);}
   .ob-screen.step-4 .ob-sum-icon{width:28px;height:28px;border-radius:9px;}
   .ob-screen.step-4 .ob-sum-icon svg{width:15px;height:15px;}
   .ob-screen.step-4 .ob-sum-value{font-size:15px;}
@@ -1796,15 +1832,15 @@ const STYLE_CSS = `
 }
 @media (orientation:landscape) and (max-height:560px){
   .ob-screen > .ob-body{padding-inline:28px;}
-  .ob-baby-hero,.ob-baby-hero.compact{width:72px;margin-top:2px;border-radius:18px;}
+  .ob-baby-hero,.ob-baby-hero.compact{width:72px;margin-top:var(--dw-space-2);border-radius:18px;}
   .ob-baby-hero.welcome{width:90px;}
-  .ob-copy{margin-top:8px;}
+  .ob-copy{margin-top:var(--dw-space-8);}
   .ob-copy p{display:none;}
 }
 
 /* Focus visibility — Morgennatt-fokusring (samme token som HjemScreen). */
 .ob-screen :focus-visible{
-  outline:2.5px solid var(--focus-ring, var(--accent-cta));
+  outline:2.5px solid var(--dw-focus, var(--dw-accent));
   outline-offset:2px;border-radius:8px;
 }
 

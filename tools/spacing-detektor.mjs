@@ -91,6 +91,22 @@ function tallI(verdi, kilde) {
   const harVar = /\bvar\(\s*--/u.test(verdi);
 
   if (harSafeArea) { hoppet.safeArea += 1; return ut; }
+
+  /* MIGRERTE AVSTANDER TELLES MED (2026-08-05).
+     Etter fase 3 ble 502 av 750 rå avstander byttet mot `var(--dw-space-N)`.
+     Da kollapset dekningstallet fra 89 % til 70 % — ikke fordi noe ble
+     verre, men fordi de EKSAKTE treffene forsvant ut av nevneren og bare
+     restene ble igjen. Målet endret betydning uten at tallet sa fra.
+
+     Et skalatrinn brukt gjennom sitt navn er fortsatt en avstand på
+     skalaen. Vi leser N ut av tokenet og teller den som et treff, med
+     `fraToken` satt, så drift-tellingen kan holde de to fra hverandre. */
+  const tokenTreff = [...verdi.matchAll(/var\(\s*--dw-space-(\d+)\s*\)/gu)];
+  if (tokenTreff.length > 0) {
+    for (const t of tokenTreff) ut.push({ px: Number(t[1]), iCalc: harCalc, fraToken: true });
+    return ut;
+  }
+
   if (harVar && !harCalc) { hoppet.variabel += 1; return ut; }
 
   for (const m of verdi.matchAll(/(-?\d*\.?\d+)(px|rem|em|%|vh|vw|dvh|ch)?(?![\w.])/gu)) {

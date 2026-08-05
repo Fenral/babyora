@@ -986,14 +986,21 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
    Tokens
    ────────────────────────────────────────────────────────────────────────── */
 
+/* Fase 3: legacy-aliasene er byttet mot navnet de allerede pekte på i
+   design-tokens.css (--bg-canvas → --dw-canvas, --surface → --dw-raised,
+   --ink-900 → --dw-ink-hi, --ink-700/--ink-500 → --dw-ink-mid, --ink-100 →
+   --dw-hairline). Samme verdi i alle fire tematilstander, så flaten er
+   uendret. `easeStandard` er IKKE byttet: cubic-bezier(0.32,0.72,0,1) er en
+   annen kurve enn --dw-ease (0.2,0.7,0.2,1), og et bytte ville endret
+   bevegelsen. */
 const TOKENS = {
-  bgCanvas: 'var(--bg-canvas)',
-  surface: 'var(--surface)',
-  ink900: 'var(--ink-900)',
-  ink700: 'var(--ink-700)',
-  ink500: 'var(--ink-500)',
-  hairline: 'var(--ink-100)',
-  fontSans: 'var(--font-sans)',
+  bgCanvas: 'var(--dw-canvas)',
+  surface: 'var(--dw-raised)',
+  ink900: 'var(--dw-ink-hi)',
+  ink700: 'var(--dw-ink-mid)',
+  ink500: 'var(--dw-ink-mid)',
+  hairline: 'var(--dw-hairline)',
+  fontSans: 'var(--dw-font-ui)',
   safeTop: 'env(safe-area-inset-top, 0px)',
   safeBottom: 'env(safe-area-inset-bottom, 0px)',
   easeStandard: 'var(--ease-standard)',
@@ -1040,8 +1047,8 @@ const topbarStyle: CSSProperties = {
   flex: 'none',
   display: 'flex',
   alignItems: 'center',
-  gap: 10,
-  padding: '6px 16px 14px',
+  gap: 'var(--dw-space-10)',
+  padding: 'var(--dw-space-6) var(--dw-space-16) var(--dw-space-14)',
 };
 
 function backButtonStyle(reduceMotion: boolean): CSSProperties {
@@ -1093,7 +1100,7 @@ const scrollStyle: CSSProperties = {
   minHeight: 0,
   overflowY: 'auto',
   overflowX: 'hidden',
-  padding: '0 16px',
+  padding: '0 var(--dw-space-16)',
   // P10 (Juster clearance, folded into JOB4): this screen owns its own
   // internal scroll container (like .hjem-monter, see hjem-monter.css's own
   // comment) — it can't rely on `.app-shell > main`'s padding-bottom alone,
@@ -1103,7 +1110,7 @@ const scrollStyle: CSSProperties = {
   paddingBottom: 'calc(32px + var(--dw-tabbar-clearance, 90px))',
   display: 'flex',
   flexDirection: 'column',
-  gap: 22,
+  gap: 'var(--dw-space-22)',
 };
 
 const eyebrowStyle: CSSProperties = {
@@ -1112,7 +1119,7 @@ const eyebrowStyle: CSSProperties = {
   letterSpacing: '1.4px',
   textTransform: 'uppercase',
   color: TOKENS.ink500,
-  margin: '0 2px 10px',
+  margin: '0 var(--dw-space-2) var(--dw-space-10)',
 };
 
 /* ---- Instrument-panel-rad (P10/JOB4, revised P10.1 finding C5) ---- */
@@ -1130,7 +1137,7 @@ const gaugeRowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'stretch',
   justifyContent: 'space-between',
-  gap: 10,
+  gap: 'var(--dw-space-10)',
 };
 
 /* ---- Forklarings-boks / "Vis hvorfor" ---- */
@@ -1141,9 +1148,9 @@ function whyToggleStyle(reduceMotion: boolean): CSSProperties {
     appearance: 'none',
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 6,
-    margin: '10px auto 0',
-    padding: '10px 16px',
+    gap: 'var(--dw-space-6)',
+    margin: 'var(--dw-space-10) auto 0',
+    padding: 'var(--dw-space-10) var(--dw-space-16)',
     minHeight: 44,
     border: '1px solid rgba(241, 233, 218, 0.16)',
     borderRadius: 999,
@@ -1161,12 +1168,12 @@ function whyToggleStyle(reduceMotion: boolean): CSSProperties {
 
 const whyDetailsListStyle: CSSProperties = {
   listStyle: 'none',
-  margin: '12px 0 0',
-  padding: '12px 2px 0',
+  margin: 'var(--dw-space-12) 0 0',
+  padding: 'var(--dw-space-12) var(--dw-space-2) 0',
   borderTop: '1px solid rgba(241, 233, 218, 0.1)',
   display: 'flex',
   flexDirection: 'column',
-  gap: 8,
+  gap: 'var(--dw-space-8)',
   textAlign: 'left',
 };
 
@@ -1177,14 +1184,14 @@ const whyDetailItemStyle: CSSProperties = {
 };
 
 const kildeLineStyle: CSSProperties = {
-  margin: '14px 0 0',
+  margin: 'var(--dw-space-14) 0 0',
   fontSize: '0.71875rem',
   color: TOKENS.ink500,
   lineHeight: 1.4,
 };
 
 const explanationBoxStyle: CSSProperties = {
-  marginTop: 12,
+  marginTop: 'var(--dw-space-12)',
 };
 
 function resultOpacityStyle(demoted: boolean, reduceMotion: boolean): CSSProperties {
@@ -1199,9 +1206,9 @@ function resultOpacityStyle(demoted: boolean, reduceMotion: boolean): CSSPropert
 const activityRowStyle: CSSProperties = {
   position: 'relative',
   display: 'flex',
-  padding: 4,
+  padding: 'var(--dw-space-4)',
   borderRadius: 14,
-  background: 'var(--surface-soft)',
+  background: 'var(--dw-raised)',
   border: `1px solid ${TOKENS.hairline}`,
 };
 
@@ -1209,12 +1216,12 @@ const activityRowStyle: CSSProperties = {
 function activityPillStyle(second: boolean, reduceMotion: boolean): CSSProperties {
   return {
     position: 'absolute',
-    top: 4,
-    bottom: 4,
-    left: 4,
+    top: 'var(--dw-space-4)',
+    bottom: 'var(--dw-space-4)',
+    left: 'var(--dw-space-4)',
     width: 'calc(50% - 4px)',
     borderRadius: 10,
-    background: 'var(--surface-pure)',
+    background: 'var(--dw-overlay)',
     boxShadow: 'var(--shadow-1)',
     transform: second ? 'translateX(100%)' : 'translateX(0)',
     transition: reduceMotion ? 'none' : `transform 280ms ${TOKENS.easeStandard}`,
@@ -1231,7 +1238,7 @@ function activityButtonStyle(active: boolean, reduceMotion: boolean): CSSPropert
     flex: 1,
     cursor: 'pointer',
     minHeight: 48,
-    padding: '12px 14px',
+    padding: 'var(--dw-space-12) var(--dw-space-14)',
     borderRadius: 10,
     border: 'none',
     background: 'transparent',
@@ -1251,7 +1258,7 @@ const outputHeaderStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'baseline',
   justifyContent: 'space-between',
-  gap: 10,
+  gap: 'var(--dw-space-10)',
 };
 
 const outputTitleStyle: CSSProperties = {

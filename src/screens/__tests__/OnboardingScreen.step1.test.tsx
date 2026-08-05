@@ -142,6 +142,10 @@ describe('OnboardingScreen — step 1 v2 (Monter re-skin)', () => {
     // above the declarations — simplest robust check: the actual property
     // declaration string appears somewhere after the selector.
     const ruleSlice = contents.slice(ruleStart, ruleStart + 1400);
-    expect(ruleSlice).toContain('display:flex;flex-direction:row;gap:6px;');
+    /* FASE 3 (2026-08-05): `gap:6px` ble `gap:var(--dw-space-6)` — samme
+       verdi, kanonisk navn. Regresjonsvakten her handler om at
+       `flex-direction:row` er EKSPLISITT deklarert, ikke om hvordan gapet
+       skrives; strengheten er derfor uendret. */
+    expect(ruleSlice).toContain('display:flex;flex-direction:row;gap:var(--dw-space-6);');
   });
 });

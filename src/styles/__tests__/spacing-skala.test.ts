@@ -40,7 +40,7 @@ function deklarertSkala(): number[] {
   return ut.sort((a, b) => a - b);
 }
 
-const avstander = (funn as Array<{ px: number; klasse: string; fil: string; linje: number }>)
+const avstander = (funn as Array<{ px: number; klasse: string; fil: string; linje: number; fraToken?: boolean }>)
   .filter((f) => f.klasse === 'avstand');
 
 /* Negative verdier er OPTISKE nudger, ikke avstander. De står på
@@ -49,13 +49,22 @@ const avstander = (funn as Array<{ px: number; klasse: string; fil: string; linj
 const positive = avstander.filter((f) => f.px > 0);
 
 /**
- * DAGENS DRIFT, målt av porten selv 2026-08-04: 78 av 724 avstander (10,8 %)
+ * ETTER MIGRERINGSSVEIPEN (fase 3, 2026-08-05): 67 av 732 avstander (9,2 %),
+ * ned fra 78. Dekningen gikk fra 89,2 % til 90,8 %.
+ *
+ * DETEKTOREN TELLER NÅ TOKENBRUK. Uten det kollapset dekningen til 70 % rett
+ * etter sveipen — ikke fordi noe ble verre, men fordi de eksakte treffene
+ * ble til `var(--dw-space-N)` og forsvant ut av nevneren, så bare restene
+ * ble igjen. Målet endret betydning uten å si fra. Et skalatrinn brukt
+ * gjennom navnet sitt er fortsatt en avstand på skalaen.
+ *
+ * FØR SVEIPEN, malt 2026-08-04: 78 av 724 avstander (10,8 %)
  * treffer ikke et trinn. Ni av dem er store engangsverdier (108, 130, 100,
  * 90, 50, 40, 30, 28, 26) som hører hjemme på unntakslisten — detektoren
  * leser den ikke ennå, så de teller med i gulvet inntil videre. Tallet er et GULV. Fase 3 driver det mot null; det skal aldri
  * heves for å få porten grønn.
  */
-const DRIFT_GULV = 78;
+const DRIFT_GULV = 67;
 
 describe('avstandsskalaen', () => {
   it('IKKE-VAKUØSITET: detektoren fant faktisk avstander å måle', () => {
@@ -64,6 +73,12 @@ describe('avstandsskalaen', () => {
     const filer = new Set(avstander.map((f) => f.fil));
     expect(filer.size, 'avstander funnet i under 10 filer — skopet er for smalt')
       .toBeGreaterThan(10);
+    /* Etter sveipen MÅ en stor del av avstandene komme fra skalaen. Går det
+       tallet til null, er enten migreringen rullet tilbake eller detektoren
+       sluttet å telle tokenbruk — og da lyver dekningstallet. */
+    const fraToken = (avstander as Array<{ fraToken?: boolean }>).filter((f) => f.fraToken).length;
+    expect(fraToken, 'ingen avstander bruker skalaen — migreringen er borte, '
+      + 'eller detektoren teller ikke tokenbruk lenger').toBeGreaterThan(200);
     console.log(`\n  spacing-skala: ${avstander.length} avstander i ${filer.size} filer\n`);
   });
 

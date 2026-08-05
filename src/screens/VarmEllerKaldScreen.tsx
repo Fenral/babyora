@@ -52,12 +52,12 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
   {
     ...WARM_COLD_RECOVERY_COPY.statuses.warm,
     num: '1',
-    iconBg: 'var(--status-warm-bg)',
-    iconColor: 'var(--status-warm)',
-    dotColor: 'var(--status-warm)',
-    actionColor: 'var(--ink-700)',
-    actionBg: 'var(--surface-soft)',
-    actionBorder: '1px solid var(--ink-200)',
+    iconBg: 'var(--dw-raised)',
+    iconColor: 'var(--dw-danger)',
+    dotColor: 'var(--dw-danger)',
+    actionColor: 'var(--dw-ink-mid)',
+    actionBg: 'var(--dw-raised)',
+    actionBorder: '1px solid var(--dw-hairline)',
     iconStrokeWidth: 2,
     iconPaths: (
       <>
@@ -69,11 +69,13 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
   {
     ...WARM_COLD_RECOVERY_COPY.statuses.perfekt,
     num: '2',
-    iconBg: 'var(--status-ok-bg)',
-    iconColor: 'var(--status-ok)',
-    dotColor: 'var(--status-ok)',
-    actionColor: 'var(--ink-on-pos-tint)',
-    actionBg: 'var(--terracotta-100)',
+    iconBg: 'var(--dw-raised)',
+    iconColor: 'var(--dw-success)',
+    dotColor: 'var(--dw-success)',
+    actionColor: 'var(--dw-accent)',
+    actionBg: 'var(--dw-accent-surface)',
+    // --terracotta-200 IKKE migrert: aliaset er tema-avhengig (lys → --dw-accent,
+    // mørk → --dw-accent-300). Ett --dw-navn ville endret kanten i ett av temaene.
     actionBorder: '1px solid var(--terracotta-200)',
     iconStrokeWidth: 2.4,
     iconPaths: <path d="M5 12.5l4.5 4.5L19 7" />,
@@ -81,12 +83,12 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
   {
     ...WARM_COLD_RECOVERY_COPY.statuses.cold,
     num: '3',
-    iconBg: 'var(--status-cold-bg)',
-    iconColor: 'var(--status-cold)',
-    dotColor: 'var(--status-cold)',
-    actionColor: 'var(--ink-700)',
-    actionBg: 'var(--surface-soft)',
-    actionBorder: '1px solid var(--ink-200)',
+    iconBg: 'var(--dw-raised)',
+    iconColor: 'var(--dw-warning)',
+    dotColor: 'var(--dw-warning)',
+    actionColor: 'var(--dw-ink-mid)',
+    actionBg: 'var(--dw-raised)',
+    actionBorder: '1px solid var(--dw-hairline)',
     iconStrokeWidth: 1.9,
     iconPaths: (
       <>
@@ -132,9 +134,9 @@ export function VarmEllerKaldScreen({
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
-    fontFamily: 'var(--font-sans)',
-    color: 'var(--ink-800)',
-    background: 'var(--bg-canvas)',
+    fontFamily: 'var(--dw-font-ui)',
+    color: 'var(--dw-ink-hi)',
+    background: 'var(--dw-canvas)',
     paddingTop: 'max(54px, env(safe-area-inset-top, 54px))',
     paddingBottom: 'env(safe-area-inset-bottom, 24px)',
     overflow: 'hidden',
@@ -144,11 +146,11 @@ export function VarmEllerKaldScreen({
     position: 'relative',
     zIndex: 5,
     flex: 'none',
-    padding: '6px 16px 10px',
+    padding: 'var(--dw-space-6) var(--dw-space-16) var(--dw-space-10)',
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
-    marginTop: 8,
+    gap: 'var(--dw-space-10)',
+    marginTop: 'var(--dw-space-8)',
   };
 
   const backBtnStyle: CSSProperties = {
@@ -157,29 +159,29 @@ export function VarmEllerKaldScreen({
     flex: 'none',
     borderRadius: 11,
     background:
-      pressedKey === 'back' ? 'var(--surface-pure)' : 'var(--surface)',
-    border: '1px solid var(--ink-200)',
+      pressedKey === 'back' ? 'var(--dw-overlay)' : 'var(--dw-raised)',
+    border: '1px solid var(--dw-hairline)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
     padding: 0,
-    color: 'var(--ink-800)',
+    color: 'var(--dw-ink-hi)',
     transform: pressTransform('back'),
     transition: reducedMotion
       ? 'none'
-      : 'transform 120ms cubic-bezier(.2,.7,.3,1), background 120ms',
+      : 'transform var(--dw-m-feedback) var(--dw-ease), background var(--dw-m-feedback)',
     touchAction: 'manipulation',
     WebkitTapHighlightColor: 'transparent',
   };
 
   const titleStyle: CSSProperties = {
-    fontFamily: 'var(--font-sans)',
+    fontFamily: 'var(--dw-font-ui)',
     fontSize: '1.125rem',
     fontWeight: 700,
     letterSpacing: '-0.3px',
     margin: 0,
-    color: 'var(--ink-900)',
+    color: 'var(--dw-ink-hi)',
     flex: 1,
   };
 
@@ -190,23 +192,25 @@ export function VarmEllerKaldScreen({
     minHeight: 0,
     overflowY: 'auto',
     overflowX: 'hidden',
-    padding: '0 16px 16px',
+    padding: '0 var(--dw-space-16) var(--dw-space-16)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 14,
+    gap: 'var(--dw-space-14)',
     WebkitOverflowScrolling: 'touch',
   };
 
   // ── Hero card ──
   const heroStyle: CSSProperties = {
     position: 'relative',
-    background: 'var(--surface)',
-    border: '1px solid var(--ink-200)',
+    background: 'var(--dw-raised)',
+    border: '1px solid var(--dw-hairline)',
     borderRadius: 22,
-    padding: '16px 16px 14px',
+    padding: 'var(--dw-space-16) var(--dw-space-16) var(--dw-space-14)',
+    // --shadow-2 IKKE migrert: 0 4px 14px (ett lag) mot --dw-depth-raised sine tre
+    // retningsbestemte lag — ulik verdi, ville endret kortets dybde synlig.
     boxShadow: 'var(--shadow-2)',
     display: 'flex',
-    gap: 14,
+    gap: 'var(--dw-space-14)',
     alignItems: 'center',
   };
 
@@ -242,9 +246,9 @@ export function VarmEllerKaldScreen({
     fontWeight: 700,
     letterSpacing: '1.2px',
     textTransform: 'uppercase',
-    color: 'var(--terracotta-600)',
+    color: 'var(--dw-accent)',
     // F67-B collision-fix: eyebrow→h2 ≥12px
-    margin: '0 0 12px',
+    margin: '0 0 var(--dw-space-12)',
   };
 
   const heroTitleStyle: CSSProperties = {
@@ -253,16 +257,16 @@ export function VarmEllerKaldScreen({
     fontSize: '1.375rem',
     lineHeight: 1.1,
     letterSpacing: '-0.4px',
-    color: 'var(--ink-900)',
+    color: 'var(--dw-ink-hi)',
     // F67-B collision-fix: h2→body ≥8px
-    margin: '0 0 8px',
+    margin: '0 0 var(--dw-space-8)',
   };
 
   const heroSubStyle: CSSProperties = {
     fontSize: '0.8125rem',
     lineHeight: 1.4,
     fontWeight: 500,
-    color: 'var(--ink-700)',
+    color: 'var(--dw-ink-mid)',
     margin: 0,
   };
 
@@ -270,9 +274,9 @@ export function VarmEllerKaldScreen({
   const sectionHeadingStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
-    padding: '2px 4px',
-    marginTop: 2,
+    gap: 'var(--dw-space-10)',
+    padding: 'var(--dw-space-2) var(--dw-space-4)',
+    marginTop: 'var(--dw-space-2)',
   };
 
   const sectionHeadingTextStyle: CSSProperties = {
@@ -280,21 +284,22 @@ export function VarmEllerKaldScreen({
     fontWeight: 700,
     letterSpacing: '1.1px',
     textTransform: 'uppercase',
-    color: 'var(--ink-500)',
+    color: 'var(--dw-ink-mid)',
     margin: 0,
   };
 
   const sectionRuleStyle: CSSProperties = {
     flex: 1,
     height: 1,
-    background: 'var(--ink-200)',
+    background: 'var(--dw-hairline)',
   };
 
   // ── Status card (grouped list w/ hairline dividers) ──
   const statusCardStyle: CSSProperties = {
-    background: 'var(--surface)',
-    border: '1px solid var(--ink-200)',
+    background: 'var(--dw-raised)',
+    border: '1px solid var(--dw-hairline)',
     borderRadius: 18,
+    // --shadow-2 IKKE migrert, se heroStyle.
     boxShadow: 'var(--shadow-2)',
     overflow: 'hidden',
     listStyle: 'none',
@@ -306,18 +311,19 @@ export function VarmEllerKaldScreen({
   const footnoteStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'flex-start',
-    gap: 10,
+    gap: 'var(--dw-space-10)',
+    // 11px/13px står utenfor 2-punktsskalaen — ikke avrundet.
     padding: '11px 13px',
     borderRadius: 14,
-    background: 'var(--surface-soft)',
-    border: '1px solid var(--ink-200)',
+    background: 'var(--dw-raised)',
+    border: '1px solid var(--dw-hairline)',
   };
 
   const footnoteIconStyle: CSSProperties = {
     flex: 'none',
     width: 18,
     height: 18,
-    color: 'var(--ink-500)',
+    color: 'var(--dw-ink-mid)',
     marginTop: 1,
   };
 
@@ -326,14 +332,14 @@ export function VarmEllerKaldScreen({
     fontSize: '0.75rem',
     lineHeight: 1.4,
     fontWeight: 500,
-    color: 'var(--ink-700)',
+    color: 'var(--dw-ink-mid)',
   };
 
   // ── CTA ──
   const ctaBarStyle: CSSProperties = {
     flex: 'none',
-    padding: '8px 16px 14px',
-    background: 'var(--bg-canvas)',
+    padding: 'var(--dw-space-8) var(--dw-space-16) var(--dw-space-14)',
+    background: 'var(--dw-canvas)',
   };
 
   const ctaStyle: CSSProperties = {
@@ -346,8 +352,10 @@ export function VarmEllerKaldScreen({
     // F80-port: tekstfarge byttet fra hardkodet '#FFFFFF' → --accent-cta-ink —
     // --warm-orange-700 er Morgennatt-aliaset for Granmynte-CTA-en og blir lys
     // mint i dark mode, der hvit tekst ville feilet kontrast.
-    background: pressedKey === 'cta' ? 'oklch(0.55 0.18 38)' : 'var(--warm-orange-700)',
-    color: 'var(--accent-cta-ink)',
+    // Press-fargen oklch(0.55 0.18 38) ≈ #C33C00 og treffer INGEN token eksakt
+    // (--dw-accent-pressed er #C57C46 mørk / #8A4A24 lys) — står urørt, rapportert.
+    background: pressedKey === 'cta' ? 'oklch(0.55 0.18 38)' : 'var(--dw-accent)',
+    color: 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 700,
@@ -355,13 +363,15 @@ export function VarmEllerKaldScreen({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 'var(--dw-space-8)',
     cursor: 'pointer',
+    // --shadow-cta-primary IKKE migrert: ett lag 0 12px 26px -14px mot
+    // --dw-depth-action sine to lag — ulik verdi.
     boxShadow: 'var(--shadow-cta-primary)',
     transform: pressTransform('cta'),
     transition: reducedMotion
       ? 'none'
-      : 'transform 120ms cubic-bezier(.2,.7,.3,1), background 120ms',
+      : 'transform var(--dw-m-feedback) var(--dw-ease), background var(--dw-m-feedback)',
     touchAction: 'manipulation',
     WebkitTapHighlightColor: 'transparent',
   };
@@ -514,7 +524,7 @@ export function VarmEllerKaldScreen({
                   cy={16}
                   r={13}
                   fill="none"
-                  stroke="var(--terracotta-100, #F4E4D8)"
+                  stroke="var(--dw-accent-surface, #F4E4D8)"
                   strokeOpacity={0.5}
                   strokeWidth={2}
                 />
@@ -523,7 +533,7 @@ export function VarmEllerKaldScreen({
                   cx={16}
                   cy={16}
                   r={7}
-                  fill="var(--terracotta-600, #B4502E)"
+                  fill="var(--dw-accent, #B4502E)"
                 />
               </svg>
             </div>
@@ -559,12 +569,13 @@ export function VarmEllerKaldScreen({
             const rowStyle: CSSProperties = {
               display: 'flex',
               alignItems: 'center',
+              // 13px står utenfor 2-punktsskalaen — ikke avrundet.
               gap: 13,
-              padding: '13px 14px',
+              padding: '13px var(--dw-space-14)',
               width: '100%',
               border: 0,
               borderTop:
-                idx === 0 ? 'none' : '1px solid var(--ink-200)',
+                idx === 0 ? 'none' : '1px solid var(--dw-hairline)',
               background: 'transparent',
               textAlign: 'left',
               cursor: 'default',
@@ -584,9 +595,9 @@ export function VarmEllerKaldScreen({
               fontSize: '0.75rem',
               fontWeight: 700,
               letterSpacing: '0.2px',
-              color: 'var(--ink-700)',
-              background: 'var(--surface-soft)',
-              border: '1px solid var(--ink-200)',
+              color: 'var(--dw-ink-mid)',
+              background: 'var(--dw-raised)',
+              border: '1px solid var(--dw-hairline)',
             };
 
             const iconWrapStyle: CSSProperties = {
@@ -609,11 +620,11 @@ export function VarmEllerKaldScreen({
             const titleRowStyle: CSSProperties = {
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
+              gap: 'var(--dw-space-8)',
               fontSize: '0.9375rem',
               fontWeight: 600,
-              color: 'var(--ink-900)',
-              margin: '0 0 2px',
+              color: 'var(--dw-ink-hi)',
+              margin: '0 0 var(--dw-space-2)',
               letterSpacing: '-0.2px',
             };
 
@@ -629,7 +640,7 @@ export function VarmEllerKaldScreen({
               fontSize: '0.78125rem',
               fontWeight: 500,
               lineHeight: 1.35,
-              color: 'var(--ink-700)',
+              color: 'var(--dw-ink-mid)',
               margin: 0,
             };
 
@@ -640,7 +651,7 @@ export function VarmEllerKaldScreen({
               letterSpacing: '0.4px',
               color: row.actionColor,
               textTransform: 'uppercase',
-              padding: '4px 8px',
+              padding: 'var(--dw-space-4) var(--dw-space-8)',
               borderRadius: 6,
               background: row.actionBg,
               border: row.actionBorder,

@@ -509,7 +509,12 @@ describe('OutfitExperience', () => {
     expect(dwCanvas, 'dw-canvas literal in design-tokens-v2.css').toBeDefined();
 
     expect(css).toMatch(
-      /\.outfit-map-status\s*\{\s*color:\s*var\(--ink-700\);\s*\}/,
+      /* FASE 3 (2026-08-05): kontrakten er den samme, navnet er kanonisk.
+         `--ink-700` er DEKLARERT som `var(--dw-ink-mid)` i design-tokens.css
+         — et alias, ikke en egen verdi. Sveipen byttet forbrukeren til det
+         kanoniske navnet; her byttes assertionen tilsvarende. Strengheten er
+         uendret: samme regel, samme farge, ett ledd færre å følge. */
+      /\.outfit-map-status\s*\{\s*color:\s*var\(--dw-ink-mid\);\s*\}/,
     );
     expect(
       wcagContrast(dwInkMid!, dwCanvas!),

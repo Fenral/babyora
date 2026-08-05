@@ -903,6 +903,14 @@ const FRITATT: Treff[] = SKANNET.flatMap((s) => s.unntak);
 type Gjeldslinje = { fil: string; antall?: number; decl: string };
 
 const KJENT_GJELD: readonly Gjeldslinje[] = [
+  /* FLYTTET, IKKE BORTE (fase 3, 2026-08-05): sveipen byttet VARIGHETEN til
+     et token, men lot KURVEN staa — riktig, for --dw-ease er
+     cubic-bezier(0.2,0.7,0.2,1) mens disse er cubic-bezier(0.19,1,0.22,1) og
+     ease-out. Ingen av dem er lik, saa et bytte ville endret bevegelsen.
+     Gjelden er den samme kurven i ny linjeform; uten denne oppdateringen
+     ville en FLYTTET gjeld sett ut som en NY. */
+  { fil: 'src/components/PlaggDetailSheet.tsx', decl: 'animation: plagg-sheet-out var(--dw-m-push-back) cubic-bezier(0.19, 1, 0.22, 1) forwards' },
+  { fil: 'src/components/PlaggDetailSheet.tsx', decl: 'animation: plagg-backdrop-out var(--dw-m-push-back) ease-out forwards' },
   /* ── src/App.tsx — FORST MALT 2026-08-04 (fase 2-rettelsen).
      Linje 492 er angrepets hovedfunn: appens rotfil skrev bade varighet og
      kurve via tilordning (`=`), som ingen uttrekker sa. Linje 733–739 er
@@ -952,12 +960,8 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
   // ── src/components/PlaggDetailSheet.tsx (tredje kurve-dialekt)
   { fil: 'src/components/PlaggDetailSheet.tsx', decl: "animation: plagg-sheet-in 400ms cubic-bezier(0.32, 0.72, 0, 1)" }, // linje 517
   { fil: 'src/components/PlaggDetailSheet.tsx', decl: "animation: plagg-backdrop-in 250ms ease-out" }, // linje 520
-  { fil: 'src/components/PlaggDetailSheet.tsx', decl: "animation: plagg-sheet-out 280ms cubic-bezier(0.19, 1, 0.22, 1) forwards" }, // linje 523
-  { fil: 'src/components/PlaggDetailSheet.tsx', decl: "animation: plagg-backdrop-out 280ms ease-out forwards" }, // linje 526
-  { fil: 'src/components/PlaggDetailSheet.tsx', decl: "animation: plagg-item-in 340ms var(--ease-out) both" }, // linje 572
   { fil: 'src/components/PlaggDetailSheet.tsx', decl: "animation-delay: calc(120ms + var(--stagger-i, 0) * 45ms)" }, // linje 573
   // ── src/components/planning/PlanChangeRail.css
-  { fil: 'src/components/planning/PlanChangeRail.css', decl: "transition: background-color 120ms var(--ease-standard)" }, // linje 74
   { fil: 'src/components/planning/PlanChangeRail.css', decl: "transition: transform 240ms ease" }, // linje 164
   { fil: 'src/components/planning/PlanChangeRail.css', decl: "transition: grid-template-rows 200ms ease, opacity 200ms ease" }, // linje 175
   { fil: 'src/components/planning/PlanChangeRail.css', decl: "transition-duration: 240ms" }, // linje 183
@@ -996,12 +1000,9 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
      malt 2026-08-04: verdiene ble vasket gjennom egne custom properties og
      var derfor usynlige for bade deklarasjons- og bruksmonsteret.
      `--ob-ease-standard` er --dw-ease skrevet en gang til for hand. */
-  { fil: 'src/screens/OnboardingScreen.tsx', decl: '--ob-ease-standard: cubic-bezier(.2,.7,.2,1)' }, // linje 931 [variabel]
   { fil: 'src/screens/OnboardingScreen.tsx', decl: '--ob-ease-spring: cubic-bezier(.34,1.32,.64,1)' }, // linje 932 [variabel]
   { fil: 'src/screens/OnboardingScreen.tsx', decl: "transition: all .35s var(--ob-ease-spring)" }, // linje 1028
-  { fil: 'src/screens/OnboardingScreen.tsx', decl: "transition: box-shadow .2s var(--ob-ease-standard)" }, // linje 1286
   { fil: 'src/screens/OnboardingScreen.tsx', decl: "transition: transform .18s var(--ob-ease-spring), box-shadow .18s var(--ob-ease-standard)" }, // linje 1530
-  { fil: 'src/screens/OnboardingScreen.tsx', decl: "animation: ob-content-in 280ms var(--ob-ease-standard) both" }, // linje 1640
   // ── src/screens/PaakledningScreen.tsx (slettes i fase 4 — gjenoppbygges)
   { fil: 'src/screens/PaakledningScreen.tsx', decl: "transition: 'transform 260ms var(--ease-out, cubic-bezier(0.22,1,0.36,1))'" }, // linje 176
   { fil: 'src/screens/PaakledningScreen.tsx', decl: "animation: pkl-canvas-in 260ms var(--ease-out, cubic-bezier(.22,1,.36,1)) both" }, // linje 971
@@ -1019,23 +1020,13 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
   { fil: 'src/screens/PaakledningScreen.tsx', decl: 'stiffness: 460' }, // linje 1114 [js]
   { fil: 'src/screens/PaakledningScreen.tsx', decl: 'damping: 24' }, // linje 1114 [js]
   // ── src/screens/PlaggbibliotekScreen.tsx
-  { fil: 'src/screens/PlaggbibliotekScreen.tsx', decl: "transition: reducedMotion ? 'none' : 'background 120ms cubic-bezier(0.32,0.72,0,1), color 120ms cubic-bezier(0.32,0.72,0,1), border-color 120ms cubic-bezier(0.32,0.72,0,1)'" }, // linje 616
-  { fil: 'src/screens/PlaggbibliotekScreen.tsx', decl: "transition: background 120ms cubic-bezier(0.32,0.72,0,1), transform 120ms cubic-bezier(0.32,0.72,0,1)" }, // linje 714
-  { fil: 'src/screens/PlaggbibliotekScreen.tsx', decl: "transition: transform 140ms cubic-bezier(0.32,0.72,0,1), box-shadow 140ms cubic-bezier(0.32,0.72,0,1)" }, // linje 716
-  { fil: 'src/screens/PlaggbibliotekScreen.tsx', decl: "transition: background 120ms cubic-bezier(0.32,0.72,0,1)" }, // linje 726
   // ── src/screens/TogGuideScreen.tsx
-  { fil: 'src/screens/TogGuideScreen.tsx', decl: "transition: reducedMotion ? 'none' : 'transform 120ms var(--ease-standard)'" }, // linje 334
   { fil: 'src/screens/TogGuideScreen.tsx', decl: "transition: reducedMotion ? 'none' : 'left 160ms var(--ease-standard)'" }, // linje 617
-  { fil: 'src/screens/TogGuideScreen.tsx', decl: "transition: reducedMotion ? 'none' : 'background 120ms var(--ease-standard)'" }, // linje 657
-  { fil: 'src/screens/TogGuideScreen.tsx', decl: "transition: reducedMotion ? 'none' : 'transform 140ms var(--ease-standard), border-color 140ms var(--ease-standard)'" }, // linje 725
   // ── src/screens/UkeScreen.css
-  { fil: 'src/screens/UkeScreen.css', decl: "transition: background-color 280ms var(--ease-standard)" }, // linje 27
   { fil: 'src/screens/UkeScreen.css', decl: "transition: transform 200ms var(--ease-standard)" }, // linje 351
   // ── src/screens/VarmEllerKaldScreen.tsx
-  { fil: 'src/screens/VarmEllerKaldScreen.tsx', antall: 2, decl: "transition: reducedMotion ? 'none' : 'transform 120ms cubic-bezier(.2,.7,.3,1), background 120ms'" }, // linje 169, 362
   { fil: 'src/screens/VarmEllerKaldScreen.tsx', decl: "animation: neck-orb-pulse 1.8s ease-in-out infinite" }, // linje 384 — evigheten selv felles av evighetsregelen, ikke her
   // ── src/screens/VinterprogramScreen.tsx
-  { fil: 'src/screens/VinterprogramScreen.tsx', decl: "transition: 'background 120ms ease'" }, // linje 416
   /* ── src/styles/design-tokens.css (legacy-tokenfilen)
      De seks forste er selve det parallelle tokensettet, forst malt
      2026-08-04. `--ease-out` er MOTION.easeOut er OutfitTransitionOverlays
@@ -1093,7 +1084,7 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
  * den DOMINERENDE inline-formen i denne kodebasen (39 til). Grenen for
  * reduced motion er handtert, men varigheten og kurven er like hardkodet.
  */
-const BASELINE = 122;
+const BASELINE = 106;
 
 /** Nokkel: fil + normalisert deklarasjon. */
 const nokkel = (t: { fil: string; decl: string }): string => `${t.fil} :: ${t.decl}`;
@@ -1155,11 +1146,17 @@ const MALPROVER: ReadonlyArray<{ flate: Flate; fil: string; decl: string }> = [
     decl: "transition = 'transform 200ms ease-out'",
   },
   {
-    // Vaskingen gjennom egne custom properties. Denne kurven ER --dw-ease,
-    // skrevet en gang til med et annet navn.
+    // Vaskingen gjennom egne custom properties.
+    // Var --ob-ease-standard, men den ble migrert bort av fase 3-sveipen
+    // 2026-08-05. Et anker som ikke finnes lenger gjor porten TAUS — den
+    // ville bestatt paa fravaer. Byttet til --ob-ease-spring, som fortsatt
+    // star og maler noyaktig samme flate.
     flate: 'variabel',
     fil: 'src/screens/OnboardingScreen.tsx',
-    decl: '--ob-ease-standard: cubic-bezier(.2,.7,.2,1)',
+    // NB: utrekkeren normaliserer til mellomrom etter kolon, selv om kilden
+    // skriver `--ob-ease-spring:cubic-bezier(...)` uten. Ankeret må matche
+    // utrekkerens form, ikke kildens.
+    decl: '--ob-ease-spring: cubic-bezier(.34,1.32,.64,1)',
   },
   {
     // JS-bevegelsen: en kurve skrevet som tall-array, aldri innom CSS.

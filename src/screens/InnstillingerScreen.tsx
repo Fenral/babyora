@@ -124,23 +124,23 @@ function ageInMonths(dob: string): number | null {
 // automatisk uten å re-render React-treet. Skygger/hairlines bruker også
 // tokens slik at de blir mykere/lysere i dark.
 const C = {
-  bgCanvas: 'var(--bg-canvas)',
-  bgCanvasSoft: 'var(--bg-canvas-soft)',
-  orange500: 'var(--warm-orange-500)',
-  orange600: 'var(--warm-orange-700)',
-  orange700: 'var(--terracotta-700)',
-  orange100: 'var(--terracotta-100)',
-  terracotta700: 'var(--terracotta-700)',
-  ink900: 'var(--ink-900)',
-  ink800: 'var(--ink-800)',
-  ink700: 'var(--ink-700)',
-  ink500: 'var(--ink-500)',
-  ink300: 'var(--ink-300)',
-  ink200: 'var(--ink-200)',
-  cardBg: 'var(--surface)',
-  hairline: 'var(--ink-100)',
+  bgCanvas: 'var(--dw-canvas)',
+  bgCanvasSoft: 'var(--dw-canvas)',
+  orange500: 'var(--dw-accent)',
+  orange600: 'var(--dw-accent)',
+  orange700: 'var(--dw-accent)',
+  orange100: 'var(--dw-accent-surface)',
+  terracotta700: 'var(--dw-accent)',
+  ink900: 'var(--dw-ink-hi)',
+  ink800: 'var(--dw-ink-hi)',
+  ink700: 'var(--dw-ink-mid)',
+  ink500: 'var(--dw-ink-mid)',
+  ink300: 'var(--dw-ink-low)',
+  ink200: 'var(--dw-hairline)',
+  cardBg: 'var(--dw-raised)',
+  hairline: 'var(--dw-hairline)',
   cardShadow: 'var(--shadow-cta)',
-  fontSans: "var(--font-sans)",
+  fontSans: "var(--dw-font-ui)",
   fontSerif: "var(--font-serif)",
   ease: 'var(--ease-standard)',
 };
@@ -168,24 +168,24 @@ const subtleHighlightStyle: CSSProperties = {
   inset: 0,
   pointerEvents: 'none',
   background:
-    'radial-gradient(120% 46% at 50% -8%, var(--avatar-glow, rgba(255,255,255,.55)), transparent 60%)',
+    'radial-gradient(120% 46% at 50% -8%, var(--dw-canvas-glow), transparent 60%)',
 };
 
 const headerStyle: CSSProperties = {
   position: 'relative',
   zIndex: 5,
   flex: 'none',
-  padding: '20px 22px 8px',
+  padding: 'var(--dw-space-20) var(--dw-space-22) var(--dw-space-8)',
   display: 'flex',
   alignItems: 'flex-end',
   justifyContent: 'space-between',
-  gap: 12,
+  gap: 'var(--dw-space-12)',
 };
 
 const titlesStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 2,
+  gap: 'var(--dw-space-2)',
   minWidth: 0,
 };
 
@@ -212,10 +212,10 @@ const metaPillStyle: CSSProperties = {
   flex: 'none',
   display: 'flex',
   alignItems: 'center',
-  gap: 8,
-  padding: '8px 12px',
+  gap: 'var(--dw-space-8)',
+  padding: 'var(--dw-space-8) var(--dw-space-12)',
   borderRadius: 12,
-  background: 'var(--surface-soft)',
+  background: 'var(--dw-raised)',
   border: `1px solid ${C.hairline}`,
   fontSize: '0.71875rem',
   fontWeight: 600,
@@ -236,7 +236,7 @@ const scrollStyle: CSSProperties = {
   padding: '14px 16px calc(env(safe-area-inset-bottom, 0px) + 110px)',
   display: 'flex',
   flexDirection: 'column',
-  gap: 18,
+  gap: 'var(--dw-space-18)',
   WebkitOverflowScrolling: 'touch',
   scrollbarWidth: 'none',
 };
@@ -244,7 +244,7 @@ const scrollStyle: CSSProperties = {
 const sectionStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 8,
+  gap: 'var(--dw-space-8)',
 };
 
 const sectionEyebrowStyle: CSSProperties = {
@@ -253,7 +253,7 @@ const sectionEyebrowStyle: CSSProperties = {
   letterSpacing: '1.6px',
   textTransform: 'uppercase',
   color: C.ink500,
-  margin: '0 4px',
+  margin: '0 var(--dw-space-4)',
   lineHeight: 1,
 };
 
@@ -271,8 +271,8 @@ const groupCardStyle: CSSProperties = {
 const rowBase: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 12,
-  padding: '13px 14px',
+  gap: 'var(--dw-space-12)',
+  padding: '13px var(--dw-space-14)',
   minHeight: 52,
   width: '100%',
   background: 'transparent',
@@ -307,7 +307,7 @@ const rowIconAccent: CSSProperties = {
   ...rowIconBase,
   background: C.orange100,
   color: C.orange700,
-  borderColor: 'var(--ink-200)',
+  borderColor: 'var(--dw-hairline)',
 };
 
 const rowBodyStyle: CSSProperties = {
@@ -357,15 +357,15 @@ const plussChipStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   flex: 'none',
-  marginLeft: 6,
-  padding: '2px 7px',
+  marginLeft: 'var(--dw-space-6)',
+  padding: 'var(--dw-space-2) 7px',
   borderRadius: 999,
   fontSize: '0.625rem',
   fontWeight: 700,
   letterSpacing: '0.4px',
   textTransform: 'uppercase',
-  color: 'var(--accent-cta-ink)',
-  background: 'var(--accent-cta)',
+  color: 'var(--dw-ink-on-accent)',
+  background: 'var(--dw-accent)',
 };
 
 const rowValueStyle: CSSProperties = {
@@ -396,7 +396,7 @@ const rowChevronStyle: CSSProperties = {
 const dividerStyle: CSSProperties = {
   height: 1,
   background: C.hairline,
-  margin: '0 14px',
+  margin: '0 var(--dw-space-14)',
 };
 
 // P6 (Familie-kortsuppe, duel-notat §9): "Barn"-seksjonen hadde tidligere TO
@@ -419,8 +419,8 @@ const profileHeroStyle: CSSProperties = {
   position: 'relative',
   display: 'flex',
   alignItems: 'center',
-  gap: 14,
-  padding: '14px 14px',
+  gap: 'var(--dw-space-14)',
+  padding: 'var(--dw-space-14) var(--dw-space-14)',
 };
 
 // Bar liste-reset for lister som lever INNI barnSectionSurfaceStyle (samme
@@ -437,7 +437,7 @@ const profileAvatarStyle: CSSProperties = {
   height: 56,
   flex: 'none',
   borderRadius: '50%',
-  background: 'var(--surface-soft)',
+  background: 'var(--dw-raised)',
   border: `1px solid ${C.hairline}`,
   position: 'relative',
   display: 'flex',
@@ -451,7 +451,7 @@ const profileBodyStyle: CSSProperties = {
   minWidth: 0,
   display: 'flex',
   flexDirection: 'column',
-  gap: 2,
+  gap: 'var(--dw-space-2)',
 };
 
 const profileNameStyle: CSSProperties = {
@@ -471,7 +471,7 @@ const profileMetaStyle: CSSProperties = {
   letterSpacing: '.1px',
   display: 'flex',
   alignItems: 'center',
-  gap: 6,
+  gap: 'var(--dw-space-6)',
   flexWrap: 'wrap',
 };
 
@@ -512,7 +512,7 @@ const premiumCardStyle: CSSProperties = {
   boxShadow: 'var(--shadow-cta-primary)',
   border: 'none',
   cursor: 'pointer',
-  color: 'var(--accent-cta-ink)',
+  color: 'var(--dw-ink-on-accent)',
   textAlign: 'left',
   font: 'inherit',
   width: '100%',
@@ -537,10 +537,10 @@ const premiumShineStyle: CSSProperties = {
 const premiumBodyStyle: CSSProperties = {
   flex: 1,
   minWidth: 0,
-  padding: '16px 14px 16px 18px',
+  padding: 'var(--dw-space-16) var(--dw-space-14) var(--dw-space-16) var(--dw-space-18)',
   display: 'flex',
   flexDirection: 'column',
-  gap: 4,
+  gap: 'var(--dw-space-4)',
   position: 'relative',
   zIndex: 1,
 };
@@ -548,17 +548,17 @@ const premiumBodyStyle: CSSProperties = {
 const premiumEyebrowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 6,
+  gap: 'var(--dw-space-6)',
   fontSize: '0.625rem',
   fontWeight: 700,
   letterSpacing: '1.8px',
   textTransform: 'uppercase',
-  // F81.5-W2 SHIP-blocker-fiks: var(--accent-cta-ink) er en udelt, heldekkende
+  // F81.5-W2 SHIP-blocker-fiks: var(--dw-ink-on-accent) er en udelt, heldekkende
   // tekstfarge kalibrert MOT nettopp denne gradient-familien (samme par
   // brukes allerede av premiumTitleStyle/premiumArrowStyle under, og av
   // PaywallDialog sin hero) — erstatter semi-transparent hvit (samme
   // kontrast-antipattern som ble felt i pre-clearance).
-  color: 'var(--accent-cta-ink)',
+  color: 'var(--dw-ink-on-accent)',
   lineHeight: 1,
 };
 
@@ -579,7 +579,7 @@ const premiumTitleStyle: CSSProperties = {
   fontSize: '1.375rem',
   letterSpacing: '-0.4px',
   lineHeight: 1.1,
-  color: 'var(--accent-cta-ink)',
+  color: 'var(--dw-ink-on-accent)',
   margin: 0,
 };
 
@@ -587,7 +587,7 @@ const premiumSubStyle: CSSProperties = {
   fontSize: '0.8125rem',
   fontWeight: 500,
   // F81.5-W2 SHIP-blocker-fiks: se premiumEyebrowStyle-kommentaren over.
-  color: 'var(--accent-cta-ink)',
+  color: 'var(--dw-ink-on-accent)',
   letterSpacing: '.05px',
   lineHeight: 1.3,
 };
@@ -600,17 +600,17 @@ const premiumArrowStyle: CSSProperties = {
   justifyContent: 'center',
   position: 'relative',
   zIndex: 1,
-  color: 'var(--accent-cta-ink)',
+  color: 'var(--dw-ink-on-accent)',
 };
 
 const logoutBtnStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 8,
+  gap: 'var(--dw-space-8)',
   width: '100%',
   minHeight: 52,
-  padding: 14,
+  padding: 'var(--dw-space-14)',
   border: `1px solid ${C.hairline}`,
   borderRadius: 16,
   background: C.cardBg,
@@ -628,8 +628,8 @@ const footerMetaStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  gap: 2,
-  padding: '4px 0 2px',
+  gap: 'var(--dw-space-2)',
+  padding: 'var(--dw-space-4) 0 var(--dw-space-2)',
   color: C.ink500,
   fontSize: '0.71875rem',
   fontWeight: 500,
@@ -835,7 +835,7 @@ function IconEdit(): ReactElement {
 }
 
 function IconHeaderPin(): ReactElement {
-  // Bruker currentColor slik at <span style={{color: var(--ink-700)}}> rundt
+  // Bruker currentColor slik at <span style={{color: var(--dw-ink-mid)}}> rundt
   // SVG-en automatisk fanger dark-mode-override. SVG-attributter (stroke/fill)
   // godtar ikke var() direkte — currentColor er den portable broen.
   return (
@@ -848,7 +848,7 @@ function IconHeaderPin(): ReactElement {
 
 function ArrowLong(): ReactElement {
   return (
-    <svg width={22} height={13} viewBox="0 0 26 14" fill="none" stroke="var(--accent-cta-ink)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width={22} height={13} viewBox="0 0 26 14" fill="none" stroke="var(--dw-ink-on-accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M2 7h20" />
       <path d="M17 2l5 5-5 5" />
     </svg>
@@ -1077,9 +1077,9 @@ const THEME_OPTIONS: ThemeOption[] = [
 function ThemeSegment({ mode, onChange, reducedMotion }: ThemeSegmentProps): ReactElement {
   const trackStyle: CSSProperties = {
     display: 'flex',
-    gap: 4,
-    padding: 4,
-    margin: '4px 12px 12px',
+    gap: 'var(--dw-space-4)',
+    padding: 'var(--dw-space-4)',
+    margin: 'var(--dw-space-4) var(--dw-space-12) var(--dw-space-12)',
     background: C.bgCanvasSoft,
     borderRadius: 12,
     border: `1px solid ${C.hairline}`,
@@ -1091,8 +1091,8 @@ function ThemeSegment({ mode, onChange, reducedMotion }: ThemeSegmentProps): Rea
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    padding: '8px 10px',
+    gap: 'var(--dw-space-6)',
+    padding: 'var(--dw-space-8) var(--dw-space-10)',
     border: 'none',
     borderRadius: 9,
     background: 'transparent',
@@ -1110,7 +1110,7 @@ function ThemeSegment({ mode, onChange, reducedMotion }: ThemeSegmentProps): Rea
   const segBtnActive: CSSProperties = {
     ...segBtnBase,
     background: C.orange500,
-    color: 'var(--accent-cta-ink)',
+    color: 'var(--dw-ink-on-accent)',
     boxShadow: 'var(--shadow-1)',
   };
 
@@ -1850,7 +1850,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                 {profileMetaItems.length > 0 ? (
                   <div style={profileMetaStyle}>
                     {profileMetaItems.map((item, i) => (
-                      <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--dw-space-6)' }}>
                         {item}
                         {i < profileMetaItems.length - 1 ? (
                           <span style={profileMetaDotStyle} aria-hidden="true" />
@@ -1929,7 +1929,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
             <div style={groupCardStyle}>
               <p
                 style={{
-                  margin: '0 0 6px',
+                  margin: '0 0 var(--dw-space-6)',
                   fontSize: '0.75rem',
                   color: C.ink500,
                   lineHeight: 1.4,
@@ -2150,7 +2150,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
         <ToolsSection onOpenTool={onOpenTool} />
 
         {/* UTSEENDE */}
-        <div aria-hidden="true" style={{ height: 1, background: C.hairline, margin: '4px 4px 0' }} />
+        <div aria-hidden="true" style={{ height: 1, background: C.hairline, margin: 'var(--dw-space-4) var(--dw-space-4) 0' }} />
         <section style={sectionStyle} aria-labelledby="sec-utseende">
           <h2 id="sec-utseende" style={sectionEyebrowStyle}>Utseende</h2>
           <div style={groupCardStyle}>
@@ -2369,7 +2369,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                   ...rowIconBase,
                   background: C.orange100,
                   color: C.terracotta700,
-                  borderColor: 'var(--ink-200)',
+                  borderColor: 'var(--dw-hairline)',
                 }}
                 aria-hidden="true"
               >
@@ -2387,7 +2387,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
         </Section>
 
         {/* Veiledende-disclaimer (eierbeslutning 2026-07-15) — juridisk sone. */}
-        <p style={{ margin: '2px 6px 0', fontSize: '0.75rem', lineHeight: 1.45, color: C.ink500 }}>
+        <p style={{ margin: 'var(--dw-space-2) var(--dw-space-6) 0', fontSize: '0.75rem', lineHeight: 1.45, color: C.ink500 }}>
           {DISCLAIMER_FULL}
         </p>
 
@@ -2588,9 +2588,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
           transform: 'translateX(-50%)',
           maxWidth: 360,
           width: 'calc(100% - 32px)',
-          padding: toast ? '12px 16px' : 0,
-          background: 'var(--ink-900)',
-          color: 'var(--surface)',
+          padding: toast ? 'var(--dw-space-12) var(--dw-space-16)' : 0,
+          background: 'var(--dw-ink-hi)',
+          color: 'var(--dw-raised)',
           borderRadius: 12,
           boxShadow: 'var(--shadow-cta)',
           fontSize: '0.84375rem',
@@ -2690,8 +2690,8 @@ function MorningHourDialog({
   const headerStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
   };
 
@@ -2729,10 +2729,10 @@ function MorningHourDialog({
   };
 
   const bodyStyle: CSSProperties = {
-    padding: '14px 18px 18px',
+    padding: 'var(--dw-space-14) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 10,
+    gap: 'var(--dw-space-10)',
   };
 
   const helpStyle: CSSProperties = {
@@ -2746,13 +2746,13 @@ function MorningHourDialog({
   const optionsGridStyle: CSSProperties = {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: 8,
-    marginTop: 4,
+    gap: 'var(--dw-space-8)',
+    marginTop: 'var(--dw-space-4)',
   };
 
   const optionBase: CSSProperties = {
     minHeight: 52,
-    padding: '10px 8px',
+    padding: 'var(--dw-space-10) var(--dw-space-8)',
     borderRadius: 12,
     background: C.bgCanvasSoft,
     border: `1px solid ${C.hairline}`,
@@ -2772,7 +2772,7 @@ function MorningHourDialog({
   const optionActive: CSSProperties = {
     ...optionBase,
     background: C.orange500,
-    color: 'var(--accent-cta-ink)',
+    color: 'var(--dw-ink-on-accent)',
     borderColor: C.orange500,
     boxShadow: 'var(--shadow-1)',
   };
@@ -2949,8 +2949,8 @@ function HelpDialog({
   const headerStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
     flex: 'none',
   };
@@ -2992,10 +2992,10 @@ function HelpDialog({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    padding: '14px 18px 18px',
+    padding: 'var(--dw-space-14) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 14,
+    gap: 'var(--dw-space-14)',
     WebkitOverflowScrolling: 'touch',
   };
 
@@ -3022,10 +3022,10 @@ function HelpDialog({
 
   const faqItemStyle: CSSProperties = {
     listStyle: 'none',
-    padding: '14px 14px',
+    padding: 'var(--dw-space-14) var(--dw-space-14)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 6,
+    gap: 'var(--dw-space-6)',
   };
 
   const faqQStyle: CSSProperties = {
@@ -3058,11 +3058,11 @@ function HelpDialog({
 
   const doneBtnStyle: CSSProperties = {
     minHeight: 44,
-    padding: '10px 18px',
+    padding: 'var(--dw-space-10) var(--dw-space-18)',
     borderRadius: 12,
     border: 'none',
     background: C.orange500,
-    color: 'var(--accent-cta-ink)',
+    color: 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '0.9375rem',
     fontWeight: 600,
@@ -3232,8 +3232,8 @@ function FeedbackDialog({
   const headerStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
     flex: 'none',
   };
@@ -3275,10 +3275,10 @@ function FeedbackDialog({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    padding: '14px 18px 18px',
+    padding: 'var(--dw-space-14) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 14,
+    gap: 'var(--dw-space-14)',
     WebkitOverflowScrolling: 'touch',
   };
 
@@ -3313,7 +3313,7 @@ function FeedbackDialog({
 
   const metaRowStyle: CSSProperties = {
     ...rowStaticBase,
-    padding: '12px 14px',
+    padding: 'var(--dw-space-12) var(--dw-space-14)',
     minHeight: 48,
   };
 
@@ -3329,18 +3329,18 @@ function FeedbackDialog({
     borderTop: `1px solid ${C.hairline}`,
     display: 'flex',
     flexDirection: 'column',
-    gap: 8,
+    gap: 'var(--dw-space-8)',
     background: C.cardBg,
   };
 
   const primaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 52,
-    padding: '14px 16px',
+    padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
     background: C.orange500,
-    color: 'var(--accent-cta-ink)',
+    color: 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 600,
@@ -3355,7 +3355,7 @@ function FeedbackDialog({
   const secondaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 44,
-    padding: '10px 16px',
+    padding: 'var(--dw-space-10) var(--dw-space-16)',
     borderRadius: 12,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -3597,8 +3597,8 @@ function PrivacyDialog({
   const headerStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
     flex: 'none',
   };
@@ -3640,10 +3640,10 @@ function PrivacyDialog({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    padding: '14px 18px 18px',
+    padding: 'var(--dw-space-14) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 16,
+    gap: 'var(--dw-space-16)',
     WebkitOverflowScrolling: 'touch',
   };
 
@@ -3661,7 +3661,7 @@ function PrivacyDialog({
     letterSpacing: '1.6px',
     textTransform: 'uppercase',
     color: C.ink500,
-    margin: '4px 4px 0',
+    margin: 'var(--dw-space-4) var(--dw-space-4) 0',
     lineHeight: 1,
   };
 
@@ -3680,10 +3680,10 @@ function PrivacyDialog({
 
   const summaryItemStyle: CSSProperties = {
     listStyle: 'none',
-    padding: '14px 14px',
+    padding: 'var(--dw-space-14) var(--dw-space-14)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 6,
+    gap: 'var(--dw-space-6)',
   };
 
   const summaryQStyle: CSSProperties = {
@@ -3717,7 +3717,7 @@ function PrivacyDialog({
 
   const externalLinkRowStyle: CSSProperties = {
     ...rowBase,
-    padding: '13px 14px',
+    padding: '13px var(--dw-space-14)',
   };
 
   const externalLinkIconStyle: CSSProperties = {
@@ -3738,7 +3738,7 @@ function PrivacyDialog({
 
   const thirdPartyRowStyle: CSSProperties = {
     ...rowStaticBase,
-    padding: '12px 14px',
+    padding: 'var(--dw-space-12) var(--dw-space-14)',
     minHeight: 48,
   };
 
@@ -3753,11 +3753,11 @@ function PrivacyDialog({
 
   const doneBtnStyle: CSSProperties = {
     minHeight: 44,
-    padding: '10px 18px',
+    padding: 'var(--dw-space-10) var(--dw-space-18)',
     borderRadius: 12,
     border: 'none',
     background: C.orange500,
-    color: 'var(--accent-cta-ink)',
+    color: 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '0.9375rem',
     fontWeight: 600,
@@ -4004,8 +4004,8 @@ function SwitchChildDialog({
   const headerStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
   };
 
@@ -4043,18 +4043,18 @@ function SwitchChildDialog({
   };
 
   const bodyStyle: CSSProperties = {
-    padding: '12px 12px 16px',
+    padding: 'var(--dw-space-12) var(--dw-space-12) var(--dw-space-16)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 4,
+    gap: 'var(--dw-space-4)',
   };
 
   const optionBase: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
-    padding: '12px 14px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-12) var(--dw-space-14)',
     minHeight: 52,
     borderRadius: 12,
     background: 'transparent',
@@ -4111,7 +4111,7 @@ function SwitchChildDialog({
         id="switch-child-desc"
         style={{
           margin: 0,
-          padding: '10px 18px 0',
+          padding: 'var(--dw-space-10) var(--dw-space-18) 0',
           fontSize: '0.84375rem',
           fontWeight: 500,
           color: C.ink700,
@@ -4124,7 +4124,7 @@ function SwitchChildDialog({
         <p
           style={{
             margin: 0,
-            padding: '8px 18px 0',
+            padding: 'var(--dw-space-8) var(--dw-space-18) 0',
             fontSize: '0.78125rem',
             fontWeight: 500,
             color: C.ink500,
@@ -4139,7 +4139,7 @@ function SwitchChildDialog({
           <p
             style={{
               margin: 0,
-              padding: '12px 14px',
+              padding: 'var(--dw-space-12) var(--dw-space-14)',
               fontSize: '0.875rem',
               color: C.ink500,
             }}
@@ -4267,8 +4267,8 @@ function RefHourPickerDialog({
   const headerStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
   };
 
@@ -4306,10 +4306,10 @@ function RefHourPickerDialog({
   };
 
   const bodyStyle: CSSProperties = {
-    padding: '14px 18px 18px',
+    padding: 'var(--dw-space-14) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 10,
+    gap: 'var(--dw-space-10)',
   };
 
   const helpStyle: CSSProperties = {
@@ -4323,13 +4323,13 @@ function RefHourPickerDialog({
   const optionsGridStyle: CSSProperties = {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: 8,
-    marginTop: 4,
+    gap: 'var(--dw-space-8)',
+    marginTop: 'var(--dw-space-4)',
   };
 
   const optionBase: CSSProperties = {
     minHeight: 52,
-    padding: '10px 8px',
+    padding: 'var(--dw-space-10) var(--dw-space-8)',
     borderRadius: 12,
     background: C.bgCanvasSoft,
     border: `1px solid ${C.hairline}`,
@@ -4349,7 +4349,7 @@ function RefHourPickerDialog({
   const optionActive: CSSProperties = {
     ...optionBase,
     background: C.orange500,
-    color: 'var(--accent-cta-ink)',
+    color: 'var(--dw-ink-on-accent)',
     borderColor: C.orange500,
     boxShadow: 'var(--shadow-1)',
   };
@@ -4541,8 +4541,8 @@ function AddChildDialog({
   const headerStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
     flex: 'none',
   };
@@ -4584,10 +4584,10 @@ function AddChildDialog({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    padding: '16px 18px 18px',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 14,
+    gap: 'var(--dw-space-14)',
     WebkitOverflowScrolling: 'touch',
   };
 
@@ -4602,7 +4602,7 @@ function AddChildDialog({
   const fieldStyle: CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: 6,
+    gap: 'var(--dw-space-6)',
   };
 
   const labelStyle: CSSProperties = {
@@ -4613,10 +4613,15 @@ function AddChildDialog({
     textTransform: 'uppercase',
   };
 
+  // Fase 3-migrering: `outline: 'none'` sto her uten erstatning. Som inline-stil
+  // slo den ut den globale :focus-visible-ringen i design-tokens.css (inline
+  // vinner over :where()), så de tre feltene hadde INGEN synlig fokusmarkør for
+  // tastatur. Deklarasjonen er fjernet — flatene arver nå den ekte ringen
+  // (2px solid var(--dw-focus), offset 3px). Uendret utenfor fokus.
   const inputStyle: CSSProperties = {
     width: '100%',
     minHeight: 48,
-    padding: '12px 14px',
+    padding: 'var(--dw-space-12) var(--dw-space-14)',
     borderRadius: 12,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -4625,7 +4630,6 @@ function AddChildDialog({
     fontSize: '1rem',
     fontWeight: 500,
     letterSpacing: '-0.05px',
-    outline: 'none',
     boxSizing: 'border-box',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
@@ -4647,18 +4651,18 @@ function AddChildDialog({
     borderTop: `1px solid ${C.hairline}`,
     display: 'flex',
     flexDirection: 'column',
-    gap: 8,
+    gap: 'var(--dw-space-8)',
     background: C.cardBg,
   };
 
   const primaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 52,
-    padding: '14px 16px',
+    padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
     background: canSubmit ? C.orange500 : C.ink300,
-    color: canSubmit ? 'var(--accent-cta-ink)' : '#FFF',
+    color: canSubmit ? 'var(--dw-ink-on-accent)' : '#FFF',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 600,
@@ -4673,7 +4677,7 @@ function AddChildDialog({
   const secondaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 44,
-    padding: '10px 16px',
+    padding: 'var(--dw-space-10) var(--dw-space-16)',
     borderRadius: 12,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -4919,8 +4923,8 @@ function AutoLocationDialog({
   const headerStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
     flex: 'none',
   };
@@ -4963,10 +4967,10 @@ function AutoLocationDialog({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    padding: '16px 18px 18px',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
+    gap: 'var(--dw-space-12)',
     WebkitOverflowScrolling: 'touch',
   };
 
@@ -4993,18 +4997,18 @@ function AutoLocationDialog({
     borderTop: `1px solid ${C.hairline}`,
     display: 'flex',
     flexDirection: 'column',
-    gap: 8,
+    gap: 'var(--dw-space-8)',
     background: C.cardBg,
   };
 
   const primaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 52,
-    padding: '14px 16px',
+    padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
     background: pending ? C.ink300 : C.orange500,
-    color: pending ? '#FFF' : 'var(--accent-cta-ink)',
+    color: pending ? '#FFF' : 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 600,
@@ -5019,7 +5023,7 @@ function AutoLocationDialog({
   const secondaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 44,
-    padding: '10px 16px',
+    padding: 'var(--dw-space-10) var(--dw-space-16)',
     borderRadius: 12,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -5199,8 +5203,8 @@ function WeatherChangeDialog({
   const headerStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
     flex: 'none',
   };
@@ -5243,10 +5247,10 @@ function WeatherChangeDialog({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    padding: '16px 18px 18px',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
+    gap: 'var(--dw-space-12)',
     WebkitOverflowScrolling: 'touch',
   };
 
@@ -5273,18 +5277,18 @@ function WeatherChangeDialog({
     borderTop: `1px solid ${C.hairline}`,
     display: 'flex',
     flexDirection: 'column',
-    gap: 8,
+    gap: 'var(--dw-space-8)',
     background: C.cardBg,
   };
 
   const primaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 52,
-    padding: '14px 16px',
+    padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
     background: pending ? C.ink300 : C.orange500,
-    color: pending ? '#FFF' : 'var(--accent-cta-ink)',
+    color: pending ? '#FFF' : 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 600,
@@ -5299,7 +5303,7 @@ function WeatherChangeDialog({
   const secondaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 44,
-    padding: '10px 16px',
+    padding: 'var(--dw-space-10) var(--dw-space-16)',
     borderRadius: 12,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -5467,8 +5471,8 @@ function DeleteDataDialog({
   const headerStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
     flex: 'none',
   };
@@ -5510,10 +5514,10 @@ function DeleteDataDialog({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    padding: '16px 18px 18px',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
+    gap: 'var(--dw-space-12)',
     WebkitOverflowScrolling: 'touch',
   };
 
@@ -5535,15 +5539,15 @@ function DeleteDataDialog({
   };
 
   const bulletListStyle: CSSProperties = {
-    margin: '4px 0 0',
-    paddingLeft: 18,
+    margin: 'var(--dw-space-4) 0 0',
+    paddingLeft: 'var(--dw-space-18)',
     color: C.ink700,
     fontSize: '0.84375rem',
     fontWeight: 500,
     lineHeight: 1.5,
     display: 'flex',
     flexDirection: 'column',
-    gap: 4,
+    gap: 'var(--dw-space-4)',
   };
 
   const footerStyle: CSSProperties = {
@@ -5552,7 +5556,7 @@ function DeleteDataDialog({
     borderTop: `1px solid ${C.hairline}`,
     display: 'flex',
     flexDirection: 'column',
-    gap: 8,
+    gap: 'var(--dw-space-8)',
     background: C.cardBg,
   };
 
@@ -5560,11 +5564,11 @@ function DeleteDataDialog({
   const destructiveBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 52,
-    padding: '14px 16px',
+    padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
     background: C.terracotta700,
-    color: 'var(--accent-cta-ink)',
+    color: 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 600,
@@ -5579,7 +5583,7 @@ function DeleteDataDialog({
   const secondaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 44,
-    padding: '10px 16px',
+    padding: 'var(--dw-space-10) var(--dw-space-16)',
     borderRadius: 12,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -5753,8 +5757,8 @@ function WeatherSourceDialog({
   const dialogHeaderStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
     flex: 'none',
   };
@@ -5796,10 +5800,10 @@ function WeatherSourceDialog({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    padding: '16px 18px 18px',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
+    gap: 'var(--dw-space-12)',
     WebkitOverflowScrolling: 'touch',
   };
 
@@ -5826,18 +5830,18 @@ function WeatherSourceDialog({
     borderTop: `1px solid ${C.hairline}`,
     display: 'flex',
     flexDirection: 'column',
-    gap: 8,
+    gap: 'var(--dw-space-8)',
     background: C.cardBg,
   };
 
   const primaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 52,
-    padding: '14px 16px',
+    padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
     background: C.orange500,
-    color: 'var(--accent-cta-ink)',
+    color: 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 600,
@@ -5852,7 +5856,7 @@ function WeatherSourceDialog({
   const secondaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 44,
-    padding: '10px 16px',
+    padding: 'var(--dw-space-10) var(--dw-space-16)',
     borderRadius: 12,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,
@@ -6021,8 +6025,8 @@ function RateAppDialog({
   const dialogHeaderStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    padding: '16px 18px 12px',
+    gap: 'var(--dw-space-12)',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-12)',
     borderBottom: `1px solid ${C.hairline}`,
     flex: 'none',
   };
@@ -6064,10 +6068,10 @@ function RateAppDialog({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    padding: '16px 18px 18px',
+    padding: 'var(--dw-space-16) var(--dw-space-18) var(--dw-space-18)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
+    gap: 'var(--dw-space-12)',
     WebkitOverflowScrolling: 'touch',
   };
 
@@ -6077,11 +6081,11 @@ function RateAppDialog({
     borderRadius: 16,
     background: C.orange100,
     color: C.orange700,
-    border: `1px solid var(--ink-200)`,
+    border: `1px solid var(--dw-hairline)`,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 4px',
+    margin: '0 auto var(--dw-space-4)',
   };
 
   const introStyle: CSSProperties = {
@@ -6108,18 +6112,18 @@ function RateAppDialog({
     borderTop: `1px solid ${C.hairline}`,
     display: 'flex',
     flexDirection: 'column',
-    gap: 8,
+    gap: 'var(--dw-space-8)',
     background: C.cardBg,
   };
 
   const primaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 52,
-    padding: '14px 16px',
+    padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
     background: pending ? C.ink300 : C.orange500,
-    color: pending ? '#FFF' : 'var(--accent-cta-ink)',
+    color: pending ? '#FFF' : 'var(--dw-ink-on-accent)',
     fontFamily: 'inherit',
     fontSize: '1rem',
     fontWeight: 600,
@@ -6134,7 +6138,7 @@ function RateAppDialog({
   const secondaryBtnStyle: CSSProperties = {
     width: '100%',
     minHeight: 44,
-    padding: '10px 16px',
+    padding: 'var(--dw-space-10) var(--dw-space-16)',
     borderRadius: 12,
     border: `1px solid ${C.hairline}`,
     background: C.bgCanvasSoft,

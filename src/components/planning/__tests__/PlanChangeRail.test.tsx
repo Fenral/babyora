@@ -265,7 +265,7 @@ describe('PlanChangeRail controlled semantic contract', () => {
       import(/* @vite-ignore */ '../../../screens/UkeScreen.tsx?raw') as Promise<{ default: string }>,
     ]);
 
-    expect(`${railCss}\n${controlCss}`).toContain('var(--focus-ring)');
+    expect(`${railCss}\n${controlCss}`).toContain('var(--dw-focus)');
     expect(`${railCss}\n${controlCss}`).not.toMatch(
       /(?:font-size:\s*(?:0\.6875|0\.72|0\.8125|0\.9375)rem|font-weight:\s*(?:650|700))/u,
     );

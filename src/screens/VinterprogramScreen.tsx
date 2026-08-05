@@ -294,17 +294,17 @@ const rootStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   paddingTop: 'max(50px, calc(env(safe-area-inset-top, 0px) + 12px))',
-  fontFamily: 'var(--font-sans)',
-  color: 'var(--ink-900)',
-  background: 'var(--bg-canvas)',
+  fontFamily: 'var(--dw-font-ui)',
+  color: 'var(--dw-ink-hi)',
+  background: 'var(--dw-canvas)',
 };
 
 const topbarStyle: CSSProperties = {
   flex: 'none',
   display: 'flex',
   alignItems: 'center',
-  gap: 10,
-  padding: '6px 16px 12px',
+  gap: 'var(--dw-space-10)',
+  padding: 'var(--dw-space-6) var(--dw-space-16) var(--dw-space-12)',
 };
 
 const backBtnStyle: CSSProperties = {
@@ -313,9 +313,9 @@ const backBtnStyle: CSSProperties = {
   minWidth: 44,
   flex: 'none',
   borderRadius: 12,
-  border: '1px solid var(--ink-100)',
-  background: 'var(--surface-pure)',
-  color: 'var(--ink-900)',
+  border: '1px solid var(--dw-hairline)',
+  background: 'var(--dw-overlay)',
+  color: 'var(--dw-ink-hi)',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -330,19 +330,21 @@ const crumbStyle: CSSProperties = {
   fontFamily: 'var(--font-serif)',
   fontStyle: 'italic',
   fontSize: '0.8125rem',
-  color: 'var(--ink-500)',
+  color: 'var(--dw-ink-mid)',
 };
 
 const scrollStyle: CSSProperties = {
   flex: 1,
   minHeight: 0,
   overflowY: 'auto',
-  // C3: siste rad må aldri gjemmes bak global tab-bar.
-  padding: '0 20px max(env(safe-area-inset-bottom, 0px), 120px)',
+  // C3: siste rad må aldri gjemmes bak global tab-bar. Fase 3: det gjettede
+  // bunn-tallet (max(safe-area, 120px)) er byttet mot klaringstokenet, som
+  // regner høyde + gap + safe-area ut av tab-barens egne mål.
+  padding: '0 var(--dw-space-20) var(--dw-tabbar-clearance, 90px)',
 };
 
 const titleStyle: CSSProperties = {
-  margin: '4px 0 8px',
+  margin: 'var(--dw-space-4) 0 var(--dw-space-8)',
   fontFamily: 'var(--font-serif)',
   fontWeight: 560,
   fontSize: 30,
@@ -357,7 +359,8 @@ const coverStyle: CSSProperties = {
   display: 'block',
   width: 132,
   height: 132,
-  margin: '2px 0 4px -6px',
+  // -6px er en optisk nudge (clay-heroens venstre luft) — står urørt.
+  margin: 'var(--dw-space-2) 0 var(--dw-space-4) -6px',
   objectFit: 'contain',
 };
 
@@ -365,23 +368,23 @@ const lessonHeroStyle: CSSProperties = {
   display: 'block',
   width: 168,
   height: 168,
-  margin: '2px auto 8px',
+  margin: 'var(--dw-space-2) auto var(--dw-space-8)',
   objectFit: 'contain',
 };
 
 const introStyle: CSSProperties = {
-  margin: '0 0 6px',
+  margin: '0 0 var(--dw-space-6)',
   fontSize: 15,
   lineHeight: 1.5,
-  color: 'var(--ink-700)',
+  color: 'var(--dw-ink-mid)',
   maxWidth: '38ch',
 };
 
 const progressStyle: CSSProperties = {
-  margin: '0 0 16px',
+  margin: '0 0 var(--dw-space-16)',
   fontSize: 13,
   fontWeight: 600,
-  color: 'var(--ink-500)',
+  color: 'var(--dw-ink-mid)',
   letterSpacing: '0.4px',
   textTransform: 'uppercase',
 };
@@ -392,7 +395,7 @@ const listStyle: CSSProperties = {
   padding: 0,
   display: 'flex',
   flexDirection: 'column',
-  gap: 10,
+  gap: 'var(--dw-space-10)',
 };
 
 const liStyle: CSSProperties = { listStyle: 'none' };
@@ -400,20 +403,20 @@ const liStyle: CSSProperties = { listStyle: 'none' };
 const rowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 12,
+  gap: 'var(--dw-space-12)',
   width: '100%',
   minHeight: 60,
-  padding: '10px 14px',
-  border: '1px solid var(--ink-100)',
+  padding: 'var(--dw-space-10) var(--dw-space-14)',
+  border: '1px solid var(--dw-hairline)',
   borderRadius: 'var(--r-lg)',
-  background: 'var(--surface-pure)',
+  background: 'var(--dw-overlay)',
   boxShadow: 'var(--shadow-1)',
   color: 'inherit',
   font: 'inherit',
   textAlign: 'left',
   touchAction: 'manipulation',
   WebkitTapHighlightColor: 'transparent',
-  transition: 'background 120ms ease',
+  transition: 'background var(--dw-m-feedback) var(--dw-ease)',
 };
 
 const weekBadgeStyle: CSSProperties = {
@@ -426,9 +429,9 @@ const weekBadgeStyle: CSSProperties = {
   fontWeight: 700,
   fontSize: 13,
   fontVariantNumeric: 'tabular-nums',
-  background: 'var(--surface-soft)',
-  border: '1px solid var(--ink-200)',
-  color: 'var(--ink-700)',
+  background: 'var(--dw-raised)',
+  border: '1px solid var(--dw-hairline)',
+  color: 'var(--dw-ink-mid)',
 };
 
 const rowTextStyle: CSSProperties = {
@@ -436,71 +439,71 @@ const rowTextStyle: CSSProperties = {
   minWidth: 0,
   display: 'flex',
   flexDirection: 'column',
-  gap: 2,
+  gap: 'var(--dw-space-2)',
 };
 
 const rowTitleStyle: CSSProperties = {
   fontWeight: 600,
   fontSize: 15,
   lineHeight: 1.25,
-  color: 'var(--ink-900)',
+  color: 'var(--dw-ink-hi)',
 };
 
 const rowStateStyle: CSSProperties = {
   fontSize: 12.5,
-  color: 'var(--ink-500)',
+  color: 'var(--dw-ink-mid)',
 };
 
 const chevStyle: CSSProperties = {
   flex: 'none',
   fontSize: 22,
   lineHeight: 1,
-  color: 'var(--ink-500)',
+  color: 'var(--dw-ink-mid)',
 };
 
 const leadStyle: CSSProperties = {
-  margin: '0 0 18px',
+  margin: '0 0 var(--dw-space-18)',
   fontSize: 16,
   lineHeight: 1.55,
-  color: 'var(--ink-900)',
+  color: 'var(--dw-ink-hi)',
 };
 
 const sectionCardStyle: CSSProperties = {
-  background: 'var(--surface-soft)',
-  border: '1px solid var(--ink-100)',
+  background: 'var(--dw-raised)',
+  border: '1px solid var(--dw-hairline)',
   borderRadius: 'var(--r-lg)',
-  padding: 'var(--sp-4)',
-  marginBottom: 14,
+  padding: 'var(--dw-space-16)',
+  marginBottom: 'var(--dw-space-14)',
 };
 
 const eyebrowH2Style: CSSProperties = {
-  margin: '0 0 4px',
-  fontFamily: 'var(--font-sans)',
+  margin: '0 0 var(--dw-space-4)',
+  fontFamily: 'var(--dw-font-ui)',
   fontSize: 11,
   fontWeight: 700,
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
-  color: 'var(--ink-500)',
+  color: 'var(--dw-ink-mid)',
 };
 
 const sectionBodyStyle: CSSProperties = {
   margin: 0,
   fontSize: 14.5,
   lineHeight: 1.55,
-  color: 'var(--ink-700)',
+  color: 'var(--dw-ink-mid)',
 };
 
 const ctaStyle: CSSProperties = {
   display: 'block',
   width: '100%',
   minHeight: 56,
-  marginTop: 8,
-  padding: '16px 24px',
+  marginTop: 'var(--dw-space-8)',
+  padding: 'var(--dw-space-16) var(--dw-space-24)',
   borderRadius: 24,
   border: 'none',
   cursor: 'pointer',
-  background: 'var(--accent-cta)',
-  color: 'var(--accent-cta-ink)',
+  background: 'var(--dw-accent)',
+  color: 'var(--dw-ink-on-accent)',
   fontFamily: 'inherit',
   fontSize: 15,
   fontWeight: 700,

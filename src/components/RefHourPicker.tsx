@@ -25,14 +25,19 @@ import { useNativeSettings } from '../hooks/useNativeSettings';
 
 const REF_HOURS: readonly RefHour[] = [6, 9, 12, 15, 18, 21] as const;
 
+/* Fase 3: verdiene peker nå direkte på de kanoniske --dw-*-tokenene.
+   Nøkkelnavnene (ink900/ink700/…) er BEVISST uendret — de er referanser til
+   den gamle rampen på ~20 bruksteder i denne filen, og et navnebytte hadde
+   vært restrukturering, ikke migrering. --ink-700 og --ink-500 aliaserte
+   BEGGE til --dw-ink-mid, så ink700/ink500 har nå samme verdi (som før). */
 const TOKENS = {
-  ink900: 'var(--ink-900)',
-  ink700: 'var(--ink-700)',
-  ink500: 'var(--ink-500)',
-  ink100: 'var(--ink-100)',
-  surfaceSoft: 'var(--surface-soft)',
-  surfacePure: 'var(--surface-pure)',
-  fontSans: 'var(--font-sans)',
+  ink900: 'var(--dw-ink-hi)',
+  ink700: 'var(--dw-ink-mid)',
+  ink500: 'var(--dw-ink-mid)',
+  ink100: 'var(--dw-hairline)',
+  surfaceSoft: 'var(--dw-raised)',
+  surfacePure: 'var(--dw-overlay)',
+  fontSans: 'var(--dw-font-ui)',
   easeOut: 'var(--ease-out)',
   shadow1: 'var(--shadow-1)',
 } as const;
@@ -50,8 +55,9 @@ export type RefHourPickerProps = {
  */
 function wrapStyle(compact: boolean, extra: CSSProperties = {}): CSSProperties {
   return {
-    margin: '12px 22px 0',
-    padding: compact ? 4 : 5,
+    margin: 'var(--dw-space-12) var(--dw-space-22) 0',
+    // 5px står utenfor skalaen og er derfor IKKE avrundet — rapportert.
+    padding: compact ? 'var(--dw-space-4)' : 5,
     display: 'flex',
     gap: 3,
     borderRadius: 999,
@@ -94,7 +100,7 @@ function segStyle(isActive: boolean, reducedMotion: boolean, compact: boolean): 
 }
 
 const eyebrowStyle: CSSProperties = {
-  margin: '14px 22px 0',
+  margin: 'var(--dw-space-14) var(--dw-space-22) 0',
   fontFamily: TOKENS.fontSans,
   fontSize: '0.6875rem',
   fontWeight: 600,

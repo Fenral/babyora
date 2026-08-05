@@ -152,13 +152,11 @@ const EIERRAPPORTERT_VEDTAK = 'sideskift-er-fysiske';
  * SAMME endring — ellers lyver registeret om hvor mye som gjenstår, og det er
  * nøyaktig slik `.hjm-synth` fikk stå i port 6 med null treff.
  */
-const BASELINE_BRUDD: readonly string[] = [
-  '--dw-m-handoff', // innhold byttes i samme ramme — ingen flate gjør det ennå
-  '--dw-m-step', // steg → steg i Kle på; stepperen er ikke bygget (fase 4)
+const BASELINE_BRUDD: readonly string[] = [  '--dw-m-step', // steg → steg i Kle på; stepperen er ikke bygget (fase 4)
   '--dw-m-bow-out', // maskoten retter seg opp; bow-in brukes, bow-out ikke
   '--dw-m-atmo', // lyspoolens krysstoning ved skjermbytte (fase 3B)
 ];
-const BASELINE = 4;
+const BASELINE = 3;
 
 /**
  * Primitiver uten forbruker i dag. IKKE brudd — primitiver kan stå ubrukt.
@@ -182,8 +180,6 @@ const UBRUKTE_PRIMITIVER: readonly string[] = [
      bare krympe, og en skala som aldri ble tatt i bruk blir synlig i stedet
      for a ligge stille i tokenfilen. Skalaen er MALT, ikke valgt:
      tools/spacing-detektor.mjs, 2-punkt dekker 89,2 % mot 4-punktets 46,3 %. */
-  '--dw-space-4',
-  '--dw-space-6',
   '--dw-size-row', // radhoyde-gulv 62px; malt 3 steder, var prosa i doktrinen
 ];
 
@@ -321,6 +317,27 @@ function klasse(token: string): Klasse | 'ukjent' {
 }
 
 const utenForbruker = (t: string): boolean => (FORBRUKERE.get(t) ?? []).length === 0;
+
+/**
+ * NAVIGASJONSLAGET — filene som faktisk bytter skjerm.
+ *
+ * Vedtaket `sideskift-er-fysiske` handler om at APPEN BYTTER SKJERM uten
+ * bevegelse. Beviset var at `--dw-m-push` ikke hadde noen forbruker i det
+ * hele tatt. Migreringssveipen 2026-08-05 gjorde det beviset ugyldig uten
+ * å oppfylle vedtaket: en agent byttet `280ms` mot `var(--dw-m-push-back)`
+ * på ARKET som lukkes i PlaggDetailSheet. Verdien er identisk og byttet er
+ * riktig — men et ark som lukkes er ikke et sideskift.
+ *
+ * Hadde vakten stått urørt, ville den sagt at vedtaket kunne låses. Den
+ * målte «brukes tokenet noensteds», mens vedtaket sier «beveger skjermene
+ * seg». Den måler nå det siste: forbruk i laget som eier skjermbyttet.
+ *
+ * Dette er en SMALERE, ikke en svakere, vakt — den kan ikke tilfredsstilles
+ * av en tilfeldig forbruker et annet sted i appen.
+ */
+const NAVIGASJONSLAGET = /^src\/(App\.tsx|components\/navigation\/|screens\/[A-Za-z]+Screen\.(tsx|css))/u;
+const utenForbrukerISideskiftet = (t: string): boolean =>
+  (FORBRUKERE.get(t) ?? []).every((f) => !NAVIGASJONSLAGET.test(f.replace(/\\/gu, '/')));
 
 const ALLE_TOKENS = [...DEKLARERT.keys()].sort();
 const UTEN_FORBRUKER = ALLE_TOKENS.filter(utenForbruker);
@@ -577,7 +594,9 @@ describe('eierrapporterte funn kan aldri baselines', () => {
   it(`er bundet til vedtak «${EIERRAPPORTERT_VEDTAK}» og frigjøres først når det låses`, () => {
     const v = REGISTER.vedtak.find((x) => x.id === EIERRAPPORTERT_VEDTAK);
     expect(v, `vedtak «${EIERRAPPORTERT_VEDTAK}» finnes ikke i registeret`).toBeDefined();
-    const uten = EIERRAPPORTERT.filter(utenForbruker);
+    /* Måles i NAVIGASJONSLAGET, ikke globalt — se kommentaren ved
+       utenForbrukerISideskiftet. Et ark som lukkes er ikke et sideskift. */
+    const uten = EIERRAPPORTERT.filter(utenForbrukerISideskiftet);
     if (v!.status === 'laast') {
       // Låst vedtak + null forbrukere = nøyaktig løgnen dybdekontrakten fortalte.
       expect(

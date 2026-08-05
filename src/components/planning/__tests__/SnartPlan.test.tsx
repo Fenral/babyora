@@ -129,7 +129,7 @@ describe('SnartPlan authoritative renderer', () => {
     expect(componentSource.default).not.toMatch(/\buseState\b|\buseMemo\b/u);
     expect(css).toMatch(/min-(?:width|height):\s*44px/gu);
     expect(css).toContain(':focus-visible');
-    expect(css).toContain('var(--focus-ring)');
+    expect(css).toContain('var(--dw-focus)');
     expect(css).toContain('@media (forced-colors: active)');
     expect(css).toContain('overflow-wrap: anywhere');
     expect(css).not.toMatch(/overflow(?:-y)?:\s*(?:auto|scroll)|text-overflow:\s*ellipsis/iu);

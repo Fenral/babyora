@@ -29,7 +29,7 @@
  *  - Semantic HTML; <h1 class="sr-only"> for skjult side-tittel, editorial <h2> synlig
  *  - aria-label på icon-only knapper (Tilbake, Sorter, Legg til plagg)
  *  - aria-pressed på filter-chips
- *  - focus-visible ring (var(--focus-ring, var(--accent-cta)), 2px, offset 2px)
+ *  - focus-visible ring (var(--dw-focus), 2px, offset 2px)
  *  - prefers-reduced-motion respektert
  */
 import { useState, useMemo, useRef, useCallback, type CSSProperties } from 'react';
@@ -115,28 +115,31 @@ const TOTAL_COUNT = GROUPS.reduce((n, g) => n + g.items.length, 0);
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TOKENS = {
-  bgCanvas:        'var(--bg-canvas)',
-  bgElevated:      'var(--surface)',
-  bgRowAlt:        'var(--surface-soft)',
-  ink900:          'var(--ink-900)',
-  ink700:          'var(--ink-700)',
-  ink500:          'var(--ink-500)',
-  ink400:          'var(--ink-400)',
-  ink300:          'var(--ink-300)',
-  hairline:        'var(--ink-100)',
-  hairlineStrong:  'var(--ink-200)',
+  bgCanvas:        'var(--dw-canvas)',
+  bgElevated:      'var(--dw-raised)',
+  bgRowAlt:        'var(--dw-raised)',
+  ink900:          'var(--dw-ink-hi)',
+  ink700:          'var(--dw-ink-mid)',
+  ink500:          'var(--dw-ink-mid)',
+  ink400:          'var(--dw-ink-low)',
+  ink300:          'var(--dw-ink-low)',
+  hairline:        'var(--dw-hairline)',
+  hairlineStrong:  'var(--dw-hairline)',
   // Granmynte CTA-grønn (FAB) — samme mønster som HjemScreen-CTA-en.
-  orange700:       'var(--chip-edge-korall)',
-  orange600:       'var(--accent-cta)',
-  orange500:       'var(--accent-cta)',
+  orange700:       'var(--dw-accent-pressed)',
+  orange600:       'var(--dw-accent)',
+  orange500:       'var(--dw-accent)',
+  // --terracotta-200 er TEMA-DELT (lys: --dw-accent, mørk: --dw-accent-300) —
+  // ingen enkelt --dw-verdi er lik i begge tema, så aliaset står.
   orange200:       'var(--terracotta-200)',
-  orange50:        'var(--terracotta-100)',
+  orange50:        'var(--dw-accent-surface)',
   // Material-swatches → lag-alignerte tokens (ull=marigold/mellomlag, bomull=petrolgrå-nøytral, vanntett=dyppetrol/ytterst)
+  // --lag-marigold er TEMA-DELT (lys: --dw-accent, mørk: --dw-accent-300) — se over.
   wool:            'var(--lag-marigold)',
-  cotton:          'var(--lag-petrolgra)',
-  waterproof:      'var(--lag-dyppetrol)',
+  cotton:          'var(--dw-w-cloudy)',
+  waterproof:      'var(--dw-panel)',
   fontSerif:       'var(--font-serif)',
-  fontSans:        'var(--font-sans)',
+  fontSans:        'var(--dw-font-ui)',
 } as const;
 
 const styles = {
@@ -158,10 +161,10 @@ const styles = {
 
   topbar: {
     flex: 'none',
-    padding: '4px 18px 10px',
+    padding: 'var(--dw-space-4) var(--dw-space-18) var(--dw-space-10)',
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
+    gap: 'var(--dw-space-12)',
   } satisfies CSSProperties,
 
   backBtn: {
@@ -169,7 +172,7 @@ const styles = {
     height: 44,
     flex: 'none',
     borderRadius: 12,
-    background: 'var(--surface-pure)',
+    background: 'var(--dw-overlay)',
     border: `1px solid ${TOKENS.hairline}`,
     display: 'flex',
     alignItems: 'center',
@@ -185,7 +188,7 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: 2,
+    gap: 'var(--dw-space-2)',
     minWidth: 0,
   } satisfies CSSProperties,
 
@@ -206,7 +209,7 @@ const styles = {
     borderRadius: '50%',
     background: TOKENS.ink400,
     verticalAlign: 'middle',
-    margin: '0 6px',
+    margin: '0 var(--dw-space-6)',
   } satisfies CSSProperties,
 
   topbarAction: {
@@ -228,7 +231,7 @@ const styles = {
 
   display: {
     flex: 'none',
-    padding: '2px 20px 8px',
+    padding: 'var(--dw-space-2) var(--dw-space-20) var(--dw-space-8)',
   } satisfies CSSProperties,
 
   displayH2: {
@@ -243,7 +246,7 @@ const styles = {
 
   displayCount: {
     display: 'inline-block',
-    marginLeft: 8,
+    marginLeft: 'var(--dw-space-8)',
     fontFamily: TOKENS.fontSans,
     fontSize: '0.8125rem',
     fontWeight: 500,
@@ -254,24 +257,27 @@ const styles = {
 
   searchWrap: {
     flex: 'none',
-    padding: '8px 16px 6px',
+    padding: 'var(--dw-space-8) var(--dw-space-16) var(--dw-space-6)',
   } satisfies CSSProperties,
 
   search: {
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
-    padding: '10px 14px',
+    gap: 'var(--dw-space-10)',
+    padding: 'var(--dw-space-10) var(--dw-space-14)',
     borderRadius: 14,
-    background: 'var(--surface-pure)',
+    background: 'var(--dw-overlay)',
     border: `1px solid ${TOKENS.hairline}`,
     minHeight: 44,
   } satisfies CSSProperties,
 
+  // `outline: none` sto her UTEN erstatning: en inline-stil slår enhver
+  // stilarkregel, så den globale :focus-visible-ringen i design-tokens.css
+  // (2px var(--dw-focus), offset 3px) ble aldri tegnet på søkefeltet.
+  // Deklarasjonen er fjernet slik at den ekte ringen kommer fram.
   searchInput: {
     flex: 1,
     border: 'none',
-    outline: 'none',
     background: 'transparent',
     fontSize: '0.90625rem',
     fontWeight: 500,
@@ -284,10 +290,11 @@ const styles = {
   kbd: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 4,
-    padding: '3px 6px',
+    gap: 'var(--dw-space-4)',
+    // 3px står utenfor 2-punktsskalaen og avrundes IKKE.
+    padding: '3px var(--dw-space-6)',
     borderRadius: 6,
-    background: 'var(--ink-100)',
+    background: 'var(--dw-hairline)',
     fontSize: '0.6875rem',
     fontWeight: 600,
     color: TOKENS.ink500,
@@ -295,7 +302,7 @@ const styles = {
 
   filters: {
     flex: 'none',
-    padding: '8px 0 10px',
+    padding: 'var(--dw-space-8) 0 var(--dw-space-10)',
     overflowX: 'auto',
     overflowY: 'hidden',
     scrollbarWidth: 'none',
@@ -303,8 +310,8 @@ const styles = {
 
   filtersUl: {
     display: 'flex',
-    gap: 8,
-    padding: '0 16px',
+    gap: 'var(--dw-space-8)',
+    padding: '0 var(--dw-space-16)',
     margin: 0,
     listStyle: 'none',
     width: 'max-content',
@@ -314,7 +321,7 @@ const styles = {
     display: 'flex',
     alignItems: 'baseline',
     justifyContent: 'space-between',
-    padding: '14px 18px 6px',
+    padding: 'var(--dw-space-14) var(--dw-space-18) var(--dw-space-6)',
   } satisfies CSSProperties,
 
   groupHeadH3: {
@@ -354,7 +361,7 @@ const styles = {
     listStyle: 'none',
     margin: 0,
     padding: 0,
-    borderTop: '1px solid var(--ink-200)',
+    borderTop: '1px solid var(--dw-hairline)',
   } satisfies CSSProperties,
 
   fabWrap: {
@@ -364,7 +371,7 @@ const styles = {
     bottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
     display: 'flex',
     justifyContent: 'center',
-    padding: '0 20px',
+    padding: '0 var(--dw-space-20)',
     zIndex: 40,
     pointerEvents: 'none',
   } satisfies CSSProperties,
@@ -377,12 +384,12 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 'var(--dw-space-10)',
     minHeight: 56,
-    padding: '14px 24px 14px 20px',
+    padding: 'var(--dw-space-14) var(--dw-space-24) var(--dw-space-14) var(--dw-space-20)',
     borderRadius: 999,
-    background: 'var(--accent-cta)',
-    color: 'var(--accent-cta-ink)',
+    background: 'var(--dw-accent)',
+    color: 'var(--dw-ink-on-accent)',
     fontFamily: TOKENS.fontSans,
     fontSize: '0.9375rem',
     fontWeight: 700,
@@ -552,7 +559,7 @@ export function PlaggbibliotekScreen({
       {/* Search */}
       <div style={styles.searchWrap}>
         <div role="search" style={styles.search}>
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ink-400)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--dw-ink-low)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="7" />
             <path d="M20 20l-3.5-3.5" />
           </svg>
@@ -584,9 +591,9 @@ export function PlaggbibliotekScreen({
             // Chip-edge-token følger samme lag-aligning som swatch-fargen
             // (ull=marigold, bomull=petrolgrå, vanntett=dyppetrol).
             const swatchEdge =
-              f.mat === 'ull' ? 'var(--chip-edge-marigold)' :
-              f.mat === 'bomull' ? 'var(--chip-edge-petrolgra)' :
-              f.mat === 'vanntett' ? 'var(--chip-edge-dyppetrol)' : null;
+              f.mat === 'ull' ? 'var(--dw-edge-light)' :
+              f.mat === 'bomull' ? 'var(--dw-w-rain)' :
+              f.mat === 'vanntett' ? 'var(--dw-w-night)' : null;
 
             return (
               <li key={f.key} style={{ listStyle: 'none' }}>
@@ -598,12 +605,13 @@ export function PlaggbibliotekScreen({
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 6,
+                    gap: 'var(--dw-space-6)',
+                    // 7px/13px står utenfor 2-punktsskalaen og avrundes IKKE.
                     padding: '7px 13px',
                     borderRadius: 999,
-                    background: isActive ? TOKENS.ink900 : 'var(--surface-pure)',
+                    background: isActive ? TOKENS.ink900 : 'var(--dw-overlay)',
                     border: `1px solid ${isActive ? TOKENS.ink900 : TOKENS.hairline}`,
-                    color: isActive ? 'var(--surface-pure)' : TOKENS.ink700,
+                    color: isActive ? 'var(--dw-overlay)' : TOKENS.ink700,
                     fontFamily: TOKENS.fontSans,
                     fontSize: '0.8125rem',
                     fontWeight: 500,
@@ -615,7 +623,7 @@ export function PlaggbibliotekScreen({
                     WebkitTapHighlightColor: 'transparent',
                     transition: reducedMotion
                       ? 'none'
-                      : 'background 120ms cubic-bezier(0.32,0.72,0,1), color 120ms cubic-bezier(0.32,0.72,0,1), border-color 120ms cubic-bezier(0.32,0.72,0,1)',
+                      : 'background var(--dw-m-feedback) var(--dw-ease), color var(--dw-m-feedback) var(--dw-ease), border-color var(--dw-m-feedback) var(--dw-ease)',
                   }}
                 >
                   {swatchColor && (
@@ -627,7 +635,7 @@ export function PlaggbibliotekScreen({
                         borderRadius: '50%',
                         background: swatchColor,
                         border: swatchEdge ? `1px solid ${swatchEdge}` : undefined,
-                        boxShadow: isActive ? '0 0 0 2px var(--surface-pure)' : 'none',
+                        boxShadow: isActive ? '0 0 0 2px var(--dw-overlay)' : 'none',
                         flex: 'none',
                       }}
                     />
@@ -648,7 +656,8 @@ export function PlaggbibliotekScreen({
               fontSize: '0.875rem',
               color: TOKENS.ink500,
               textAlign: 'center',
-              padding: '40px 24px',
+              // 40px står utenfor skalaen (som stopper på 32) og avrundes IKKE.
+              padding: '40px var(--dw-space-24)',
               margin: 0,
             }}
           >
@@ -707,27 +716,27 @@ export function PlaggbibliotekScreen({
       <style>{`
         .plaggbib-focus:focus { outline: none; }
         .plaggbib-focus:focus-visible {
-          outline: 2px solid var(--focus-ring, var(--accent-cta));
+          outline: 2px solid var(--dw-focus);
           outline-offset: 2px;
           border-radius: 12px;
         }
-        .plaggbib-press { transition: background 120ms cubic-bezier(0.32,0.72,0,1), transform 120ms cubic-bezier(0.32,0.72,0,1); }
+        .plaggbib-press { transition: background var(--dw-m-feedback) var(--dw-ease), transform var(--dw-m-feedback) var(--dw-ease); }
         .plaggbib-press:active { transform: scale(.96); }
-        .plaggbib-fab { transition: transform 140ms cubic-bezier(0.32,0.72,0,1), box-shadow 140ms cubic-bezier(0.32,0.72,0,1); }
+        .plaggbib-fab { transition: transform var(--dw-m-feedback) var(--dw-ease), box-shadow var(--dw-m-feedback) var(--dw-ease); }
         .plaggbib-fab:active {
           transform: translateY(1px) scale(.985);
           box-shadow: var(--shadow-cta);
         }
         .plaggbib-fab:focus-visible {
-          outline: 2px solid var(--surface-pure);
+          outline: 2px solid var(--dw-overlay);
           outline-offset: 3px;
-          box-shadow: 0 0 0 4px var(--accent-cta), var(--shadow-cta-primary);
+          box-shadow: 0 0 0 4px var(--dw-accent), var(--shadow-cta-primary);
         }
-        .plaggbib-card { transition: background 120ms cubic-bezier(0.32,0.72,0,1); }
-        .plaggbib-card:active { background: var(--ink-100); }
+        .plaggbib-card { transition: background var(--dw-m-feedback) var(--dw-ease); }
+        .plaggbib-card:active { background: var(--dw-hairline); }
         .plaggbib-card:focus { outline: none; }
         .plaggbib-card:focus-visible {
-          outline: 2px solid var(--focus-ring, var(--accent-cta));
+          outline: 2px solid var(--dw-focus);
           outline-offset: -3px;
           border-radius: 4px;
         }
@@ -771,11 +780,11 @@ function GarmentLi({ garment, isRightCol, reducedMotion, onSelect, buttonRef }: 
   // med PlaggDetailSheet). garmentPng gir alltid en sti.
   const [imgSrc, setImgSrc] = useState(garment.image);
 
-  // Grid-kort-kontrakt: var(--surface) + var(--ink-200)-border (a11y-preclearance).
+  // Grid-kort-kontrakt: var(--dw-raised) + var(--dw-hairline)-border (a11y-preclearance).
   const liStyle: CSSProperties = {
-    borderRight: isRightCol ? 0 : '1px solid var(--ink-200)',
-    borderBottom: '1px solid var(--ink-200)',
-    background: 'var(--surface)',
+    borderRight: isRightCol ? 0 : '1px solid var(--dw-hairline)',
+    borderBottom: '1px solid var(--dw-hairline)',
+    background: 'var(--dw-raised)',
     listStyle: 'none',
   };
 
@@ -797,7 +806,7 @@ function GarmentLi({ garment, isRightCol, reducedMotion, onSelect, buttonRef }: 
           display: 'flex',
           flexDirection: 'column',
           width: '100%',
-          padding: '12px 12px 14px',
+          padding: 'var(--dw-space-12) var(--dw-space-12) var(--dw-space-14)',
           background: 'transparent',
           border: 0,
           textAlign: 'left',
@@ -834,10 +843,10 @@ function GarmentLi({ garment, isRightCol, reducedMotion, onSelect, buttonRef }: 
           style={{
             width: '100%',
             aspectRatio: '1 / 1',
-            margin: '10px 0 12px',
+            margin: 'var(--dw-space-10) 0 var(--dw-space-12)',
             borderRadius: 14,
             background:
-              'radial-gradient(120% 80% at 50% 18%, var(--surface-pure), color-mix(in srgb, var(--surface-pure) 0%, transparent) 70%), linear-gradient(180deg, var(--surface) 0%, var(--surface-soft) 100%)',
+              'radial-gradient(120% 80% at 50% 18%, var(--dw-overlay), color-mix(in srgb, var(--dw-overlay) 0%, transparent) 70%), linear-gradient(180deg, var(--dw-raised) 0%, var(--dw-raised) 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -867,7 +876,7 @@ function GarmentLi({ garment, isRightCol, reducedMotion, onSelect, buttonRef }: 
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
+              gap: 'var(--dw-space-6)',
               fontFamily: TOKENS.fontSans,
               fontSize: '0.75rem',
               fontWeight: 500,

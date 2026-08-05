@@ -28,7 +28,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: var(--dw-space-6);
   flex: 1;
   min-width: 0;
 }
@@ -71,8 +71,8 @@
   font-variant-numeric: tabular-nums;
   line-height: 1.3;
 }
-.fa-gauge-end-label:first-child { margin-bottom: 4px; }
-.fa-gauge-end-label:last-child { margin-top: 4px; }
+.fa-gauge-end-label:first-child { margin-bottom: var(--dw-space-4); }
+.fa-gauge-end-label:last-child { margin-top: var(--dw-space-4); }
 
 .fa-gauge-track {
   position: relative;
@@ -221,8 +221,8 @@
   display: flex;
   /* P10.1 (judge finding C7): 8px was a mis-tap risk with gloves — >=16px
      between the two 44pt targets. */
-  gap: 16px;
-  margin-top: 2px;
+  gap: var(--dw-space-16);
+  margin-top: var(--dw-space-2);
 }
 
 .fa-gauge-step {

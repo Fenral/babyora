@@ -165,8 +165,8 @@ const STYLE_CSS = `
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 13px 6px;
+  gap: var(--dw-space-12);
+  padding: 13px var(--dw-space-6);
   min-height: 62px;
   cursor: pointer;
 }
@@ -193,13 +193,17 @@ const STYLE_CSS = `
 }
 .pw-p-badge {
   display: inline-block;
-  border: 1px solid rgba(231, 176, 135, 0.45);
+  /* rgba(231, 176, 135, .45) === --dw-accent-300 (#E7B087) ved 45 % alfa.
+     color-mix mot transparent gir bit-identisk resultat (premultiplisert
+     sRGB), og --dw-accent-300 deklareres kun én gang, så verdien er lik i
+     begge tema — samme piksler som før. */
+  border: 1px solid color-mix(in srgb, var(--dw-accent-300) 45%, transparent);
   color: var(--dw-ink-mid);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   border-radius: var(--dw-r-pill);
-  padding: 2px 8px;
+  padding: var(--dw-space-2) var(--dw-space-8);
   margin-left: 7px;
   vertical-align: 2px;
 }
@@ -222,7 +226,7 @@ const STYLE_CSS = `
   letter-spacing: -0.01em;
 }
 .pw-p-per { font-size: 0.8125rem; color: var(--dw-ink-low); display: block; }
-.pw-breakdown { display: block; padding: 2px 6px 14px 38px; }
+.pw-breakdown { display: block; padding: var(--dw-space-2) var(--dw-space-6) var(--dw-space-14) 38px; }
 /* P10.1 (judge finding B5): CSS grid (not flex space-between) so the
    label/amount columns share one strict alignment axis across BOTH rows —
    reads as a tight two-column table instead of loose prose. tabular-nums
@@ -231,7 +235,7 @@ const STYLE_CSS = `
 .pw-bd-row {
   display: grid;
   grid-template-columns: 1fr auto;
-  column-gap: 12px;
+  column-gap: var(--dw-space-12);
   align-items: baseline;
   font-size: 0.8125rem;
   color: var(--dw-ink-mid);
@@ -267,8 +271,18 @@ const STYLE_CSS = `
 .pw-cta-btn[aria-disabled='true'] {
   border: 0;
 }
+/* Fase 3-fokusregel: "outline: none" uten erstatning er forbudt. INGEN
+   backticks i denne kommentaren — hele blokken bor inne i en
+   template-streng, så et backtick-par lukker og gjenåpner den og river
+   filen i to. Den
+   hvilende CTA-en er fortsatt tastaturmål (aria-disabled, ikke disabled),
+   så den skal ha en ekte ring. Ringen ligger UTENFOR knappen (offset 3px)
+   og måles derfor mot arket, ikke mot knappeflaten — samme geometri som den
+   globale regelen i design-tokens.css. Den klippes ikke av dialogens
+   overflow:hidden fordi bunnfeltet allerede har 20px sideinnrykk. */
 .pw-cta-btn[aria-disabled='true']:focus-visible {
-  outline: none;
+  outline: 2px solid var(--dw-focus);
+  outline-offset: 3px;
 }
 .pw-restore-btn:focus-visible,
 .pw-link:focus-visible {
@@ -395,7 +409,9 @@ function scrollAreaStyle(dismissable: boolean): CSSProperties {
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    padding: dismissable ? '20px 20px 6px' : 'max(20px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px 6px',
+    padding: dismissable
+      ? 'var(--dw-space-20) var(--dw-space-20) var(--dw-space-6)'
+      : 'max(20px, calc(env(safe-area-inset-top, 0px) + 12px)) var(--dw-space-20) var(--dw-space-6)',
     WebkitOverflowScrolling: 'touch',
   };
 }
@@ -404,8 +420,8 @@ const topRowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  gap: 12,
-  marginBottom: 12,
+  gap: 'var(--dw-space-12)',
+  marginBottom: 'var(--dw-space-12)',
 };
 
 const brandStyle: CSSProperties = {
@@ -442,7 +458,10 @@ const sheetStyle: CSSProperties = {
   position: 'relative',
   background: 'var(--dw-raised)',
   borderRadius: 20,
-  boxShadow: '0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 34px -18px rgba(52, 30, 12, 0.65)',
+  // rgba(242, 192, 138, .14) === --dw-edge-light (#F2C08A) ved 14 % alfa;
+  // tokenet deklareres kun én gang, så verdien er lik i begge tema.
+  boxShadow:
+    '0 1px 0 color-mix(in srgb, var(--dw-edge-light) 14%, transparent) inset, 0 16px 34px -18px rgba(52, 30, 12, 0.65)',
 };
 
 const sheetEdgeLightStyle: CSSProperties = {
@@ -453,13 +472,14 @@ const sheetEdgeLightStyle: CSSProperties = {
   right: '7%',
   height: 1,
   borderRadius: 2,
-  background: 'linear-gradient(90deg, transparent, var(--dw-edge-light), transparent)',
+  // Identisk uttrykk som --dw-edge-light-gradient i design-tokens-v2.css.
+  background: 'var(--dw-edge-light-gradient)',
   opacity: 0.16,
   pointerEvents: 'none',
 };
 
 const valueStyle: CSSProperties = {
-  padding: '20px 18px 16px',
+  padding: 'var(--dw-space-20) var(--dw-space-18) var(--dw-space-16)',
 };
 
 const vHeadStyle: CSSProperties = {
@@ -472,7 +492,7 @@ const vHeadStyle: CSSProperties = {
 };
 
 const vSubStyle: CSSProperties = {
-  margin: '8px 0 0',
+  margin: 'var(--dw-space-8) 0 0',
   fontSize: '0.9375rem',
   lineHeight: 1.5,
   color: 'var(--dw-ink-mid)',
@@ -480,7 +500,7 @@ const vSubStyle: CSSProperties = {
 };
 
 const vListStyle: CSSProperties = {
-  margin: '14px 0 0',
+  margin: 'var(--dw-space-14) 0 0',
   padding: 0,
   listStyle: 'none',
   display: 'flex',
@@ -515,7 +535,7 @@ const vListLeadStyle: CSSProperties = {
 const fieldsetStyle: CSSProperties = {
   border: 'none',
   margin: 0,
-  padding: '4px 12px',
+  padding: 'var(--dw-space-4) var(--dw-space-12)',
   borderTop: '1px solid var(--dw-hairline)',
 };
 
@@ -536,24 +556,24 @@ const chooseHintStyle: CSSProperties = {
   textAlign: 'center',
   fontSize: '0.8125rem',
   color: 'var(--dw-ink-low)',
-  padding: '14px 4px 0',
+  padding: 'var(--dw-space-14) var(--dw-space-4) 0',
 };
 
 const statusRegionStyle: CSSProperties = {
-  margin: '10px 2px 0',
+  margin: 'var(--dw-space-10) var(--dw-space-2) 0',
   minHeight: 0,
   fontSize: '0.8125rem',
   fontWeight: 600,
-  color: 'var(--status-ok)',
+  color: 'var(--dw-success)',
   lineHeight: 1.3,
   textAlign: 'center',
 };
 
 const errorRegionStyle: CSSProperties = {
-  margin: '10px 2px 0',
+  margin: 'var(--dw-space-10) var(--dw-space-2) 0',
   fontSize: '0.8125rem',
   fontWeight: 600,
-  color: 'var(--status-warm)',
+  color: 'var(--dw-danger)',
   lineHeight: 1.35,
   textAlign: 'center',
 };
@@ -565,17 +585,17 @@ const errorRegionStyle: CSSProperties = {
 // footer + this clearance are ALWAYS fully visible, never compressed.
 const footerStyle: CSSProperties = {
   flex: 'none',
-  padding: '12px 20px calc(env(safe-area-inset-bottom, 0px) + 24px)',
+  padding: 'var(--dw-space-12) var(--dw-space-20) calc(env(safe-area-inset-bottom, 0px) + 24px)',
   display: 'flex',
   flexDirection: 'column',
-  gap: 4,
+  gap: 'var(--dw-space-4)',
 };
 
 function ctaBtnStyle(armed: boolean, pending: boolean): CSSProperties {
   return {
     width: '100%',
     minHeight: 54,
-    padding: '14px 16px',
+    padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
     background: armed ? 'var(--dw-accent)' : 'rgba(241, 233, 218, 0.10)',
@@ -604,7 +624,7 @@ function restoreBtnStyle(pending: boolean): CSSProperties {
     textDecoration: 'underline',
     textUnderlineOffset: 3,
     cursor: pending ? 'wait' : 'pointer',
-    padding: '12px 6px',
+    padding: 'var(--dw-space-12) var(--dw-space-6)',
     minHeight: 44,
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
@@ -615,8 +635,8 @@ const linksRowStyle: CSSProperties = {
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  gap: 4,
-  marginTop: 4,
+  gap: 'var(--dw-space-4)',
+  marginTop: 'var(--dw-space-4)',
   flexWrap: 'wrap',
 };
 
@@ -629,7 +649,7 @@ const legalLinkStyle: CSSProperties = {
   minHeight: 44,
   display: 'inline-flex',
   alignItems: 'center',
-  padding: '4px 10px',
+  padding: 'var(--dw-space-4) var(--dw-space-10)',
   fontSize: '0.8125rem',
   fontWeight: 600,
   color: 'var(--dw-ink-mid)',

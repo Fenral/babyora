@@ -19,12 +19,12 @@
   width: 100%;
   max-width: 560px;
   margin-inline: auto;
-  padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px 24px;
+  padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) var(--dw-space-20) var(--dw-space-24);
   background: linear-gradient(var(--dw-lys-vinkel), var(--dw-rom-naer) 0%, var(--dw-rom-fjern) 46%);
   color: var(--dw-ink-hi);
   font-family: var(--dw-font-ui);
   overflow-wrap: anywhere;
-  transition: background-color 280ms var(--ease-standard);
+  transition: background-color var(--dw-m-handoff) var(--ease-standard);
 }
 
 .planlegg-screen h1,
@@ -36,7 +36,7 @@
 
 .planlegg-screen__header {
   display: grid;
-  gap: 4px;
+  gap: var(--dw-space-4);
 }
 
 .planlegg-screen__header h1 {
@@ -55,7 +55,7 @@
 }
 
 .planlegg-screen__views {
-  margin-top: 14px;
+  margin-top: var(--dw-space-14);
 }
 
 /* ============ Statusvarsler (PlanleggStatusNotice) ============
@@ -63,9 +63,9 @@
    med samme lyslogikk-mønster som resten av systemet. */
 .planlegg-status {
   display: grid;
-  gap: 8px;
-  margin-top: 14px;
-  padding: 16px 18px;
+  gap: var(--dw-space-8);
+  margin-top: var(--dw-space-14);
+  padding: var(--dw-space-16) var(--dw-space-18);
   border: 0;
   border-radius: var(--dw-r-raised);
   background: var(--dw-raised);
@@ -88,7 +88,7 @@
   width: fit-content;
   min-width: 44px;
   min-height: 44px;
-  padding: 8px 0;
+  padding: var(--dw-space-8) 0;
   border: 0;
   background: transparent;
   color: var(--dw-accent);
@@ -106,8 +106,8 @@
 
 .planlegg-status__skeleton {
   display: grid;
-  gap: 8px;
-  padding-block: 8px;
+  gap: var(--dw-space-8);
+  padding-block: var(--dw-space-8);
 }
 
 .planlegg-status__skeleton > span,
@@ -129,9 +129,9 @@
 
 .planlegg-status__skeleton-rail {
   display: grid;
-  gap: 12px;
-  margin-top: 16px;
-  padding-left: 20px;
+  gap: var(--dw-space-12);
+  margin-top: var(--dw-space-16);
+  padding-left: var(--dw-space-20);
   border-left: 2px solid var(--dw-hairline);
 }
 
@@ -151,8 +151,8 @@
    ALDRI opacity-demping av tekst på petrol (egen regel, DESIGN.md). */
 .planlegg-weather {
   position: relative;
-  margin-top: 14px;
-  padding: 20px 20px 6px;
+  margin-top: var(--dw-space-14);
+  padding: var(--dw-space-20) var(--dw-space-20) var(--dw-space-6);
   border-radius: var(--dw-r-panel);
   background: var(--dw-w-cloudy);
   box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.5);
@@ -196,8 +196,8 @@
 .planlegg-weather__hero-row {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  margin-top: 6px;
+  gap: var(--dw-space-10);
+  margin-top: var(--dw-space-6);
 }
 
 /* Den ENE tillatte serif-rollen: hero-temperaturen. Wonk=0, sifre i faktisk
@@ -224,12 +224,12 @@
 .planlegg-weather__icon {
   width: 44px;
   height: auto;
-  margin-top: 2px;
+  margin-top: var(--dw-space-2);
   filter: saturate(0.8) brightness(0.96) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
 }
 
 .planlegg-weather__condition {
-  margin-top: 4px;
+  margin-top: var(--dw-space-4);
   font-size: var(--dw-text-title);
   font-weight: 600;
   color: var(--dw-ink-panel-hi);
@@ -244,7 +244,7 @@
 /* ForecastDisclosure nested inni værmodulen (review item 8) — samme
    instrument-tekstrampe, aldri canvas-tekstfarger. */
 .planlegg-weather .planlegg-forecast {
-  margin-top: 14px;
+  margin-top: var(--dw-space-14);
   border-top: 1px solid rgba(241, 233, 218, 0.16);
 }
 
@@ -266,8 +266,8 @@
    direkte på canvas. */
 .planlegg-advice {
   position: relative;
-  margin-top: 14px;
-  padding: 18px 18px 14px;
+  margin-top: var(--dw-space-14);
+  padding: var(--dw-space-18) var(--dw-space-18) var(--dw-space-14);
   border-radius: var(--dw-r-panel);
   background: var(--dw-raised);
   box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 32px -18px rgba(0, 0, 0, 0.45);
@@ -287,7 +287,7 @@
 
 .planlegg-screen__answer {
   display: grid;
-  gap: 6px;
+  gap: var(--dw-space-6);
 }
 
 .planlegg-screen__verdict {
@@ -308,21 +308,21 @@
 }
 
 .planlegg-screen__week-weather {
-  margin-top: 14px;
-  padding: 14px 16px;
+  margin-top: var(--dw-space-14);
+  padding: var(--dw-space-14) var(--dw-space-16);
   border-radius: var(--dw-r-raised);
   background: var(--dw-raised);
   box-shadow: var(--dw-shadow-raise);
 }
 
 .planlegg-screen__rail {
-  margin-top: 18px;
-  padding-top: 14px;
+  margin-top: var(--dw-space-18);
+  padding-top: var(--dw-space-14);
   border-top: 1px solid var(--dw-hairline);
 }
 
 .planlegg-screen__rail h2 {
-  margin-bottom: 12px;
+  margin-bottom: var(--dw-space-12);
   color: var(--dw-ink-hi);
 }
 
@@ -366,8 +366,8 @@
 .planlegg-forecast__rows li {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px 16px;
-  padding-block: 14px;
+  gap: var(--dw-space-4) var(--dw-space-16);
+  padding-block: var(--dw-space-14);
   border-top: 1px solid var(--dw-hairline);
   font-size: var(--dw-text-meta);
   font-weight: 500;
@@ -423,8 +423,8 @@
   list-style: none;
   display: grid;
   grid-template-columns: repeat(4, 44px);
-  gap: 8px;
-  margin: 12px 0 0;
+  gap: var(--dw-space-8);
+  margin: var(--dw-space-12) 0 0;
   padding: 0;
 }
 .planlegg-garments__item { flex: none; display: flex; }

@@ -142,7 +142,7 @@ const BASELINE: Record<string, number> = {
      `outline: 3px solid var(--focus-ring, #2b2522)` (Antrekkskart) eller
      `background-image: linear-gradient(…, var(--surface-soft, #E6E3DD) …)`
      (Skeleton). Begge er ekte rå hex; gulvet står på det MÅLTE tallet. */
-  D7: 18,
+  D7: 17,
 };
 
 /**
@@ -235,9 +235,7 @@ const BASELINE_SETT: Record<string, number> = {
   'D7|src/components/outfit/Antrekkskart.css|.outfit-comparison': 2,
   'D7|src/screens/UkeScreen.css|.planlegg-garments__thumb': 1,
   'D7|src/components/Skeleton.tsx|.ba-skeleton-shimmer': 3,
-  'D7|src/screens/OnboardingScreen.tsx|.ob-baby-wordmark': 1,
-  'D7|src/screens/OnboardingScreen.tsx|.ob-s1-card::before': 1,
-};
+  'D7|src/screens/OnboardingScreen.tsx|.ob-baby-wordmark': 1,};
 
 /* ────────────────────────────── KORPUSET ─────────────────────────────────── */
 

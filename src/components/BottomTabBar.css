@@ -24,11 +24,11 @@
   display: flex;
   align-items: stretch;
   justify-content: space-around;
-  gap: 4px;
+  gap: var(--dw-space-4);
   box-sizing: border-box;
   min-inline-size: 44px;
   min-block-size: var(--dw-tabbar-height, 60px);
-  padding: 6px 8px;
+  padding: var(--dw-space-6) var(--dw-space-8);
   border-radius: var(--dw-tabbar-radius, 28px);
   /* Solid fallback (no backdrop-filter support): opaque warm raised tint —
      never transparent enough to read content through it. */
@@ -70,11 +70,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--dw-space-2);
   min-inline-size: 44px;
   min-block-size: 44px;
-  padding: 4px 6px;
-  color: var(--dw-ink-low, var(--ink-500));
+  padding: var(--dw-space-4) var(--dw-space-6);
+  color: var(--dw-ink-low, var(--dw-ink-mid));
   font: inherit;
   cursor: pointer;
   touch-action: manipulation;
@@ -88,8 +88,13 @@
   outline: none;
 }
 
+/* MÅLT, IKKE BYTTET TIL --dw-focus: --warm-orange-500 → --accent-cta →
+   --dw-accent (#D98E5A mørk / #9E5529 lys). --dw-focus er #E8B98C mørk /
+   #C26C2B lys. Verdiene er IKKE like, så et bytte hadde endret ringens
+   farge på hver fane — det er en egen, synlig beslutning. Her migreres kun
+   legacy-navnet til det kanoniske tokenet med SAMME verdi. Rapportert. */
 .bottom-tab-bar__button:focus-visible {
-  outline: 3px solid var(--warm-orange-500);
+  outline: 3px solid var(--dw-accent);
   outline-offset: 3px;
 }
 
@@ -99,7 +104,7 @@
    amber is reserved for genuine user actions (§13 color ownership), not
    chrome/navigation state. */
 .bottom-tab-bar__button--active {
-  color: var(--dw-ink-hi, var(--warm-orange-500));
+  color: var(--dw-ink-hi, var(--dw-accent));
 }
 
 .bottom-tab-bar__indicator {
@@ -107,7 +112,7 @@
   inset: 2px 6px;
   z-index: 0;
   pointer-events: none;
-  background: var(--dw-accent-surface, color-mix(in srgb, var(--accent-cta) 16%, transparent));
+  background: var(--dw-accent-surface, color-mix(in srgb, var(--dw-accent) 16%, transparent));
   opacity: 0.55;
   border-radius: var(--dw-r-control, 12px);
 }

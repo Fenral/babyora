@@ -26,16 +26,16 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 | Skjerm | Filsti | Linjer | Stilflate | `--dw-*` | legacy | Nås via | Migreres | Fase |
 |---|---|---:|---|---:|---:|---|---|---|
 | Familie (skall) | `src/screens/FamilieScreen.tsx` | 21 | — | 0 | 0 | App.tsx lazy()-register | nei | — |
-| Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1274 | 19 CSSProperties + 2 `style={{` | 5 | 11 | App.tsx lazy()-register | ja | 3 |
+| Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1281 | 19 CSSProperties + 2 `style={{` | 40 | 2 | App.tsx lazy()-register | ja | 3 |
 | Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1236 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 0 | 23 | App.tsx lazy()-register | ja | 3 |
-| Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6230 | 190 CSSProperties + 51 `style={{` | 0 | 25 | rendres av FamilieScreen.tsx | ja | 3 |
-| Onboarding | `src/screens/OnboardingScreen.tsx` | 1818 | 1 CSSProperties | 0 | 65 | App.tsx lazy()-register | ja | 3 |
+| Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6234 | 190 CSSProperties + 51 `style={{` | 264 | 6 | rendres av FamilieScreen.tsx | ja | 3 |
+| Onboarding | `src/screens/OnboardingScreen.tsx` | 1854 | 1 CSSProperties | 221 | 39 | App.tsx lazy()-register | ja | 3 |
 | Påkledning | `src/screens/PaakledningScreen.tsx` | 1194 | 1 `<style>` + 7 CSSProperties + 48 `style={{` | 2 | 18 | App.tsx lazy()-register | nei | 4 |
-| Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 895 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 0 | 27 | App.tsx lazy()-register | ja | 3 |
-| Tog-guide | `src/screens/TogGuideScreen.tsx` | 1147 | 55 CSSProperties + 3 `style={{` | 0 | 34 | App.tsx lazy()-register | ja | 3 |
-| Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1147 | `UkeScreen.css` + 1 CSSProperties | 61 | 1 | App.tsx lazy()-register | ja | 3 |
-| Varm eller kald | `src/screens/VarmEllerKaldScreen.tsx` | 745 | 1 `<style>` + 29 CSSProperties + 4 `style={{` | 0 | 25 | App.tsx lazy()-register | ja | 3 |
-| Vinterprogram | `src/screens/VinterprogramScreen.tsx` | 513 | 24 CSSProperties + 1 `style={{` | 0 | 16 | App.tsx lazy()-register | ja | 3 |
+| Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 904 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 97 | 5 | App.tsx lazy()-register | ja | 3 |
+| Tog-guide | `src/screens/TogGuideScreen.tsx` | 1151 | 55 CSSProperties + 3 `style={{` | 105 | 19 | App.tsx lazy()-register | ja | 3 |
+| Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1147 | `UkeScreen.css` + 1 CSSProperties | 101 | 1 | App.tsx lazy()-register | ja | 3 |
+| Varm eller kald | `src/screens/VarmEllerKaldScreen.tsx` | 756 | 1 `<style>` + 29 CSSProperties + 4 `style={{` | 84 | 4 | App.tsx lazy()-register | ja | 3 |
+| Vinterprogram | `src/screens/VinterprogramScreen.tsx` | 516 | 24 CSSProperties + 1 `style={{` | 53 | 4 | App.tsx lazy()-register | ja | 3 |
 
 «legacy» = antall UNIKE `var(--…)` som ikke er `--dw-*`. «Stilflate» teller
 kommentarstrippet kilde: egen `.css`-fil, `<style>{`-blokker, `CSSProperties`-
@@ -44,16 +44,16 @@ objekter og `style={{`-attributter. 10 av 11 skjermer har ingen CSS-fil.
 | Skjerm | Migreringsgjeld i dag |
 |---|---|
 | Familie (skall) | ingen stilflate — ingenting å migrere |
-| Finn antrekk / Juster | umigrert (11 legacy-token, 0 rå hex, 5 `--dw-*`) |
+| Finn antrekk / Juster | umigrert (2 legacy-token, 0 rå hex, 40 `--dw-*`) |
 | Hjem (referanse) | umigrert (23 legacy-token, 0 rå hex, 0 `--dw-*`) |
-| Innstillinger | umigrert (25 legacy-token, 11 rå hex, 0 `--dw-*`) |
-| Onboarding | umigrert (65 legacy-token, 3 rå hex, 0 `--dw-*`) |
+| Innstillinger | umigrert (6 legacy-token, 11 rå hex, 264 `--dw-*`) |
+| Onboarding | umigrert (39 legacy-token, 2 rå hex, 221 `--dw-*`) |
 | Påkledning | umigrert (18 legacy-token, 1 rå hex, 2 `--dw-*`) |
-| Plaggbibliotek | umigrert (27 legacy-token, 0 rå hex, 0 `--dw-*`) |
-| Tog-guide | umigrert (34 legacy-token, 5 rå hex, 0 `--dw-*`) |
-| Planlegg / Uke | umigrert (1 legacy-token, 1 rå hex, 61 `--dw-*`) |
-| Varm eller kald | umigrert (25 legacy-token, 2 rå hex, 0 `--dw-*`) |
-| Vinterprogram | umigrert (16 legacy-token, 0 rå hex, 0 `--dw-*`) |
+| Plaggbibliotek | umigrert (5 legacy-token, 0 rå hex, 97 `--dw-*`) |
+| Tog-guide | umigrert (19 legacy-token, 5 rå hex, 105 `--dw-*`) |
+| Planlegg / Uke | umigrert (1 legacy-token, 1 rå hex, 101 `--dw-*`) |
+| Varm eller kald | umigrert (4 legacy-token, 2 rå hex, 84 `--dw-*`) |
+| Vinterprogram | umigrert (4 legacy-token, 0 rå hex, 53 `--dw-*`) |
 
 ## 3. Unntakene (håndskrevet)
 

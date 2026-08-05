@@ -22,17 +22,17 @@ type Props = {
 };
 
 const bar: CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 10,
-  padding: '10px 12px', minHeight: 56,
+  display: 'flex', alignItems: 'center', gap: 'var(--dw-space-10)',
+  padding: 'var(--dw-space-10) var(--dw-space-12)', minHeight: 56,
 };
 const backBtn: CSSProperties = {
   width: 44, height: 44, flex: 'none', display: 'inline-flex',
   alignItems: 'center', justifyContent: 'center',
   border: 0, borderRadius: 14, background: 'transparent',
-  color: 'var(--ink-900)', cursor: 'pointer',
+  color: 'var(--dw-ink-hi)', cursor: 'pointer',
 };
 const titleStyle: CSSProperties = {
-  margin: 0, fontSize: 19, fontWeight: 700, color: 'var(--ink-900)',
+  margin: 0, fontSize: 19, fontWeight: 700, color: 'var(--dw-ink-hi)',
   outline: 'none', // programmatisk fokus-mål — ingen synlig ring
   flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
 };

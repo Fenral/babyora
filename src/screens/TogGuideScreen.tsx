@@ -287,9 +287,9 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     display: 'flex',
     flexDirection: 'column',
     paddingTop: 'max(54px, env(safe-area-inset-top, 54px))',
-    fontFamily: 'var(--font-sans)',
-    color: 'var(--ink-800)',
-    background: 'var(--bg-canvas)',
+    fontFamily: 'var(--dw-font-ui)',
+    color: 'var(--dw-ink-hi)',
+    background: 'var(--dw-canvas)',
   };
 
   const sheenStyle: CSSProperties = {
@@ -297,8 +297,8 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     inset: 0,
     pointerEvents: 'none',
     background:
-      'radial-gradient(140% 40% at 50% -10%, var(--ink-100), transparent 60%),' +
-      'radial-gradient(80% 50% at 20% 110%, var(--terracotta-100), transparent 60%)',
+      'radial-gradient(140% 40% at 50% -10%, var(--dw-hairline), transparent 60%),' +
+      'radial-gradient(80% 50% at 20% 110%, var(--dw-accent-surface), transparent 60%)',
     opacity: 0.6,
   };
 
@@ -307,11 +307,11 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     zIndex: 5,
     flex: 'none',
     height: 56,
-    marginTop: 12,
-    padding: '0 16px',
+    marginTop: 'var(--dw-space-12)',
+    padding: '0 var(--dw-space-16)',
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
+    gap: 'var(--dw-space-12)',
   };
 
   const backBtnStyle: CSSProperties = {
@@ -319,19 +319,21 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     height: 44,
     flex: 'none',
     borderRadius: 14,
-    background: 'var(--surface)',
-    border: '1px solid var(--ink-200)',
+    background: 'var(--dw-raised)',
+    border: '1px solid var(--dw-hairline)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
     padding: 0,
-    color: 'var(--ink-900)',
+    color: 'var(--dw-ink-hi)',
     touchAction: 'manipulation',
     WebkitTapHighlightColor: 'transparent',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
-    transition: reducedMotion ? 'none' : 'transform 120ms var(--ease-standard)',
+    transition: reducedMotion
+      ? 'none'
+      : 'transform var(--dw-m-feedback) var(--ease-standard)',
   };
 
   const topbarTitleStyle: CSSProperties = {
@@ -339,7 +341,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontSize: '0.71875rem',
     fontWeight: 600,
     letterSpacing: '1.4px',
-    color: 'var(--ink-700)',
+    color: 'var(--dw-ink-mid)',
     textAlign: 'center',
     textTransform: 'uppercase',
     margin: 0,
@@ -369,7 +371,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
   // Hero -----------------------------------------------------------------
   const heroStyle: CSSProperties = {
     position: 'relative',
-    padding: '12px 4px 0',
+    padding: 'var(--dw-space-12) var(--dw-space-4) 0',
     textAlign: 'center',
   };
 
@@ -379,11 +381,11 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontWeight: 700,
     letterSpacing: '2px',
     textTransform: 'uppercase',
-    color: 'var(--terracotta-600)',
-    padding: '6px 12px',
+    color: 'var(--dw-accent)',
+    padding: 'var(--dw-space-6) var(--dw-space-12)',
     borderRadius: 999,
-    background: 'var(--terracotta-100)',
-    marginBottom: 18,
+    background: 'var(--dw-accent-surface)',
+    marginBottom: 'var(--dw-space-18)',
   };
 
   const heroTitleStyle: CSSProperties = {
@@ -392,19 +394,19 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     lineHeight: 1.05,
     letterSpacing: '-0.8px',
     fontWeight: 400,
-    color: 'var(--ink-900)',
-    margin: '0 0 8px',
+    color: 'var(--dw-ink-hi)',
+    margin: '0 0 var(--dw-space-8)',
   };
 
   const heroEmStyle: CSSProperties = {
     fontStyle: 'italic',
-    color: 'var(--terracotta-700)',
+    color: 'var(--dw-accent)',
   };
 
   const heroSubStyle: CSSProperties = {
     fontSize: '0.90625rem',
     lineHeight: 1.5,
-    color: 'var(--ink-700)',
+    color: 'var(--dw-ink-mid)',
     maxWidth: 280,
     margin: '0 auto',
   };
@@ -422,9 +424,9 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
   const togHeroStyle: CSSProperties = {
     position: 'relative',
     borderRadius: 28,
-    padding: '24px 22px 22px',
-    background: 'var(--surface)',
-    border: '1px solid var(--ink-100)',
+    padding: 'var(--dw-space-24) var(--dw-space-22) var(--dw-space-22)',
+    background: 'var(--dw-raised)',
+    border: '1px solid var(--dw-hairline)',
     boxShadow: 'var(--shadow-3)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
@@ -435,13 +437,13 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     display: 'flex',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    gap: 18,
+    gap: 'var(--dw-space-18)',
   };
 
   const togHeroLeftStyle: CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: 6,
+    gap: 'var(--dw-space-6)',
     minWidth: 0,
   };
 
@@ -450,7 +452,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontWeight: 700,
     letterSpacing: '1.8px',
     textTransform: 'uppercase',
-    color: 'var(--ink-500)',
+    color: 'var(--dw-ink-mid)',
   };
 
   const togHeroNumberStyle: CSSProperties = {
@@ -459,17 +461,17 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     lineHeight: 0.88,
     fontWeight: 400,
     letterSpacing: '-3px',
-    color: 'var(--terracotta-700)',
+    color: 'var(--dw-accent)',
     fontVariantNumeric: 'tabular-nums',
   };
 
   const togHeroUnitStyle: CSSProperties = {
-    fontFamily: 'var(--font-sans)',
+    fontFamily: 'var(--dw-font-ui)',
     fontSize: '1.25rem',
     fontWeight: 600,
     letterSpacing: '-0.4px',
-    color: 'var(--terracotta-600)',
-    marginLeft: 6,
+    color: 'var(--dw-accent)',
+    marginLeft: 'var(--dw-space-6)',
     verticalAlign: 8,
   };
 
@@ -478,8 +480,8 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     flexDirection: 'column',
     alignItems: 'flex-end',
     textAlign: 'right',
-    gap: 4,
-    paddingBottom: 6,
+    gap: 'var(--dw-space-4)',
+    paddingBottom: 'var(--dw-space-6)',
   };
 
   const togHeroTempLabelStyle: CSSProperties = {
@@ -487,7 +489,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontWeight: 700,
     letterSpacing: '1.6px',
     textTransform: 'uppercase',
-    color: 'var(--ink-500)',
+    color: 'var(--dw-ink-mid)',
   };
 
   const togHeroTempStyle: CSSProperties = {
@@ -495,28 +497,28 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontSize: 32,
     lineHeight: 1,
     letterSpacing: '-0.5px',
-    color: 'var(--ink-900)',
+    color: 'var(--dw-ink-hi)',
     fontVariantNumeric: 'tabular-nums',
   };
 
   const togHeroTempUnitStyle: CSSProperties = {
     fontStyle: 'normal',
     fontSize: '1.125rem',
-    color: 'var(--ink-500)',
+    color: 'var(--dw-ink-mid)',
     verticalAlign: 6,
     marginLeft: 1,
   };
 
   const togHeroZoneStyle: CSSProperties = {
-    marginTop: 18,
-    paddingTop: 16,
-    borderTop: '1px solid var(--ink-200)',
+    marginTop: 'var(--dw-space-18)',
+    paddingTop: 'var(--dw-space-16)',
+    borderTop: '1px solid var(--dw-hairline)',
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
+    gap: 'var(--dw-space-10)',
     fontSize: '0.84375rem',
     fontWeight: 500,
-    color: 'var(--ink-700)',
+    color: 'var(--dw-ink-mid)',
   };
 
   const togHeroZoneDotStyle: CSSProperties = {
@@ -524,22 +526,22 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     height: 10,
     borderRadius: '50%',
     flex: 'none',
-    background: 'var(--terracotta-500)',
-    boxShadow: '0 0 0 4px var(--terracotta-100)',
+    background: 'var(--dw-accent)',
+    boxShadow: '0 0 0 4px var(--dw-accent-surface)',
   };
 
   // Slider section -------------------------------------------------------
   const sliderSectionStyle: CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: 18,
+    gap: 'var(--dw-space-18)',
   };
 
   const sliderHeadStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'baseline',
     justifyContent: 'space-between',
-    padding: '0 2px',
+    padding: '0 var(--dw-space-2)',
   };
 
   const sliderLabelStyle: CSSProperties = {
@@ -547,18 +549,18 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontWeight: 700,
     letterSpacing: '1.8px',
     textTransform: 'uppercase',
-    color: 'var(--ink-500)',
+    color: 'var(--dw-ink-mid)',
   };
 
   const sliderHintStyle: CSSProperties = {
     fontSize: '0.78125rem',
     fontWeight: 500,
-    color: 'var(--ink-700)',
+    color: 'var(--dw-ink-mid)',
   };
 
   const sliderTrackWrapStyle: CSSProperties = {
     position: 'relative',
-    padding: '18px 6px 26px',
+    padding: 'var(--dw-space-18) var(--dw-space-6) 26px',
   };
 
   const sliderTrackStyle: CSSProperties = {
@@ -578,9 +580,9 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
 
   const sliderTicksStyle: CSSProperties = {
     position: 'absolute',
-    left: 6,
-    right: 6,
-    top: 6,
+    left: 'var(--dw-space-6)',
+    right: 'var(--dw-space-6)',
+    top: 'var(--dw-space-6)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -602,16 +604,16 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     width: 36,
     height: 36,
     borderRadius: '50%',
-    background: 'var(--surface-pure)',
-    border: '3px solid var(--terracotta-500)',
-    boxShadow: 'var(--shadow-2), 0 0 0 1px var(--ink-100)',
+    background: 'var(--dw-overlay)',
+    border: '3px solid var(--dw-accent)',
+    boxShadow: 'var(--shadow-2), 0 0 0 1px var(--dw-hairline)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontFamily: 'var(--font-sans)',
+    fontFamily: 'var(--dw-font-ui)',
     fontSize: '0.71875rem',
     fontWeight: 700,
-    color: 'var(--terracotta-700)',
+    color: 'var(--dw-accent)',
     fontVariantNumeric: 'tabular-nums',
     pointerEvents: 'none',
     transition: reducedMotion ? 'none' : 'left 160ms var(--ease-standard)',
@@ -631,22 +633,22 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
   };
 
   const stepLabelsStyle: CSSProperties = {
-    marginTop: 14,
+    marginTop: 'var(--dw-space-14)',
     display: 'grid',
     gridTemplateColumns: 'repeat(5, 1fr)',
-    gap: 4,
-    padding: '0 4px',
+    gap: 'var(--dw-space-4)',
+    padding: '0 var(--dw-space-4)',
   };
 
   const stepButtonBaseStyle: CSSProperties = {
     appearance: 'none',
     border: 0,
     background: 'transparent',
-    padding: '6px 2px',
+    padding: 'var(--dw-space-6) var(--dw-space-2)',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: 4,
+    gap: 'var(--dw-space-4)',
     cursor: 'pointer',
     borderRadius: 10,
     fontFamily: 'inherit',
@@ -654,7 +656,9 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     minHeight: 44,
     touchAction: 'manipulation',
     WebkitTapHighlightColor: 'transparent',
-    transition: reducedMotion ? 'none' : 'background 120ms var(--ease-standard)',
+    transition: reducedMotion
+      ? 'none'
+      : 'background var(--dw-m-feedback) var(--ease-standard)',
   };
 
   // Section eyebrow ------------------------------------------------------
@@ -662,8 +666,8 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     display: 'flex',
     alignItems: 'baseline',
     justifyContent: 'space-between',
-    padding: '0 4px',
-    marginBottom: 14,
+    padding: '0 var(--dw-space-4)',
+    marginBottom: 'var(--dw-space-14)',
   };
 
   const sectionTitleStyle: CSSProperties = {
@@ -672,13 +676,13 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontSize: '1.375rem',
     lineHeight: 1.15,
     letterSpacing: '-0.4px',
-    color: 'var(--ink-900)',
+    color: 'var(--dw-ink-hi)',
     margin: 0,
   };
 
   const sectionEmStyle: CSSProperties = {
     fontStyle: 'italic',
-    color: 'var(--terracotta-700)',
+    color: 'var(--dw-accent)',
   };
 
   const sectionCountStyle: CSSProperties = {
@@ -686,7 +690,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontWeight: 700,
     letterSpacing: '1.6px',
     textTransform: 'uppercase',
-    color: 'var(--ink-500)',
+    color: 'var(--dw-ink-mid)',
   };
 
   // Layer cards ----------------------------------------------------------
@@ -696,19 +700,19 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     padding: 0,
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
+    gap: 'var(--dw-space-12)',
   };
 
   const layerCardStyle = (variant: LayerItem['variant']): CSSProperties => ({
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    gap: 16,
-    padding: 18,
-    paddingLeft: 22,
+    gap: 'var(--dw-space-16)',
+    padding: 'var(--dw-space-18)',
+    paddingLeft: 'var(--dw-space-22)',
     borderRadius: 22,
-    background: 'var(--surface)',
-    border: '1px solid var(--ink-100)',
+    background: 'var(--dw-raised)',
+    border: '1px solid var(--dw-hairline)',
     boxShadow: 'var(--shadow-2)',
     overflow: 'hidden',
     borderLeft: `4px solid ${LAYER_STRIPE[variant]}`,
@@ -724,7 +728,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     WebkitTapHighlightColor: 'transparent',
     transition: reducedMotion
       ? 'none'
-      : 'transform 140ms var(--ease-standard), border-color 140ms var(--ease-standard)',
+      : 'transform var(--dw-m-feedback) var(--ease-standard), border-color var(--dw-m-feedback) var(--ease-standard)',
   });
 
   const layerThumbStyle: CSSProperties = {
@@ -732,11 +736,11 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     height: 64,
     flex: 'none',
     borderRadius: 18,
-    background: 'var(--surface-soft)',
+    background: 'var(--dw-raised)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    border: '1px solid var(--ink-100)',
+    border: '1px solid var(--dw-hairline)',
   };
 
   const layerMetaStyle: CSSProperties = {
@@ -744,7 +748,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     minWidth: 0,
     display: 'flex',
     flexDirection: 'column',
-    gap: 4,
+    gap: 'var(--dw-space-4)',
   };
 
   const layerStepStyle: CSSProperties = {
@@ -752,35 +756,35 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontWeight: 700,
     letterSpacing: '1.6px',
     textTransform: 'uppercase',
-    color: 'var(--ink-500)',
+    color: 'var(--dw-ink-mid)',
   };
 
   const layerNameStyle: CSSProperties = {
     fontSize: '1rem',
     fontWeight: 600,
     letterSpacing: '-0.2px',
-    color: 'var(--ink-900)',
+    color: 'var(--dw-ink-hi)',
     lineHeight: 1.25,
   };
 
   const layerChipStyle: CSSProperties = {
     flex: 'none',
-    padding: '6px 11px',
+    padding: 'var(--dw-space-6) 11px',
     borderRadius: 999,
-    background: 'var(--terracotta-100)',
+    background: 'var(--dw-accent-surface)',
     fontSize: '0.6875rem',
     fontWeight: 700,
     letterSpacing: '0.4px',
-    color: 'var(--terracotta-700)',
+    color: 'var(--dw-accent)',
   };
 
   // Safety ---------------------------------------------------------------
   const safetyStyle: CSSProperties = {
     display: 'flex',
-    gap: 14,
-    padding: 18,
+    gap: 'var(--dw-space-14)',
+    padding: 'var(--dw-space-18)',
     borderRadius: 22,
-    background: 'var(--terracotta-100)',
+    background: 'var(--dw-accent-surface)',
     border: '1px solid var(--terracotta-200)',
   };
 
@@ -789,7 +793,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     height: 40,
     flex: 'none',
     borderRadius: 14,
-    background: 'var(--surface)',
+    background: 'var(--dw-raised)',
     border: '1px solid var(--terracotta-200)',
     display: 'flex',
     alignItems: 'center',
@@ -805,14 +809,14 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontSize: '0.8125rem',
     fontWeight: 700,
     letterSpacing: '0.1px',
-    color: 'var(--ink-900)',
-    margin: '0 0 4px',
+    color: 'var(--dw-ink-hi)',
+    margin: '0 0 var(--dw-space-4)',
   };
 
   const safetyBodyStyle: CSSProperties = {
     fontSize: '0.8125rem',
     lineHeight: 1.5,
-    color: 'var(--ink-700)',
+    color: 'var(--dw-ink-mid)',
     margin: 0,
   };
 
@@ -821,7 +825,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontFamily: 'var(--font-serif), "DM Serif Display", Georgia, serif',
     fontSize: '0.9375rem',
     letterSpacing: '-0.3px',
-    color: active ? 'var(--terracotta-700)' : 'var(--ink-800)',
+    color: active ? 'var(--dw-accent)' : 'var(--dw-ink-hi)',
     fontVariantNumeric: 'tabular-nums',
   });
 
@@ -830,7 +834,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontWeight: 700,
     letterSpacing: '1.2px',
     textTransform: 'uppercase',
-    color: active ? 'var(--terracotta-600)' : 'var(--ink-500)',
+    color: active ? 'var(--dw-accent)' : 'var(--dw-ink-mid)',
   });
 
   // Layer-ikon per variant — Morgennatt lag-alignerte tokens (samme
@@ -879,7 +883,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
           aria-label="Tilbake"
           style={backBtnStyle}
           onFocus={(e) => {
-            e.currentTarget.style.outline = '2px solid var(--terracotta-600)';
+            e.currentTarget.style.outline = '2px solid var(--dw-accent)';
             e.currentTarget.style.outlineOffset = '2px';
           }}
           onBlur={(e) => {
@@ -1011,7 +1015,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
                     style={stepButtonBaseStyle}
                     onFocus={(e) => {
                       e.currentTarget.style.outline =
-                        '2px solid var(--terracotta-600)';
+                        '2px solid var(--dw-accent)';
                       e.currentTarget.style.outlineOffset = '2px';
                     }}
                     onBlur={(e) => {
@@ -1061,7 +1065,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
                     style={layerCardStyle(layer.variant)}
                     onFocus={(e) => {
                       e.currentTarget.style.outline =
-                        '2px solid var(--terracotta-600)';
+                        '2px solid var(--dw-accent)';
                       e.currentTarget.style.outlineOffset = '2px';
                     }}
                     onBlur={(e) => {
@@ -1108,7 +1112,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
               height={20}
               viewBox="0 0 24 24"
               fill="none"
-              stroke="var(--terracotta-700)"
+              stroke="var(--dw-accent)"
               strokeWidth={1.8}
               strokeLinecap="round"
               strokeLinejoin="round"

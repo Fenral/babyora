@@ -44,13 +44,16 @@ import { getAlternatives } from '../lib/wool-layers/alternatives';
    Kategori → lag-triade farge (samme som PaakledningScreen/Plaggbiblioteket). */
 type CatColorSpec = { bg: string; edge: string };
 const CAT_COLOR: Record<GarmentCategory, CatColorSpec> = {
-  innerst: { bg: 'var(--layer-innerst)', edge: 'var(--chip-edge-korall)' },
-  mellomlag: { bg: 'var(--layer-mellom)', edge: 'var(--chip-edge-marigold)' },
-  yttertoy: { bg: 'var(--layer-ytterst)', edge: 'var(--chip-edge-dyppetrol)' },
-  ekstra: { bg: 'var(--lag-petrolgra)', edge: 'var(--chip-edge-petrolgra)' },
-  utstyr: { bg: 'var(--lag-petrolgra)', edge: 'var(--chip-edge-petrolgra)' },
+  innerst: { bg: 'var(--dw-accent)', edge: 'var(--dw-accent-pressed)' },
+  // --layer-mellom er BEVISST ikke migrert: aliaset peker på --dw-accent i
+  // lys modus og --dw-accent-300 i mørk. Det finnes ingen enkelt --dw-verdi
+  // som gir samme piksler i begge tema. Rapportert.
+  mellomlag: { bg: 'var(--layer-mellom)', edge: 'var(--dw-edge-light)' },
+  yttertoy: { bg: 'var(--dw-panel)', edge: 'var(--dw-w-night)' },
+  ekstra: { bg: 'var(--dw-w-cloudy)', edge: 'var(--dw-w-rain)' },
+  utstyr: { bg: 'var(--dw-w-cloudy)', edge: 'var(--dw-w-rain)' },
 };
-const CAT_COLOR_FALLBACK: CatColorSpec = { bg: 'var(--ink-400)', edge: 'var(--ink-700)' };
+const CAT_COLOR_FALLBACK: CatColorSpec = { bg: 'var(--dw-ink-low)', edge: 'var(--dw-ink-mid)' };
 
 export type PlaggDetailSheetProps = {
   garmentId: GarmentId;
@@ -198,8 +201,8 @@ export function PlaggDetailSheet({
         maxWidth: '560px',
         width: '100%',
         margin: 'auto auto 0',
-        background: 'var(--surface-elevated)',
-        color: 'var(--ink-900)',
+        background: 'var(--dw-overlay)',
+        color: 'var(--dw-ink-hi)',
         maxHeight: '92vh',
         overflow: 'hidden',
       }}
@@ -218,9 +221,9 @@ export function PlaggDetailSheet({
           style={{
             width: 36,
             height: 5,
-            borderRadius: 'var(--r-pill)',
-            background: 'var(--ink-200)',
-            margin: '8px auto 0',
+            borderRadius: 'var(--dw-r-pill)',
+            background: 'var(--dw-hairline)',
+            margin: 'var(--dw-space-8) auto 0',
             flexShrink: 0,
             pointerEvents: 'none',
           }}
@@ -231,12 +234,12 @@ export function PlaggDetailSheet({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 12,
-            padding: '8px 20px 12px',
-            borderBottom: '1px solid var(--ink-100)',
+            gap: 'var(--dw-space-12)',
+            padding: 'var(--dw-space-8) var(--dw-space-20) var(--dw-space-12)',
+            borderBottom: '1px solid var(--dw-hairline)',
             position: 'sticky',
             top: 0,
-            background: 'var(--surface-elevated)',
+            background: 'var(--dw-overlay)',
             zIndex: 1,
           }}
         >
@@ -250,7 +253,7 @@ export function PlaggDetailSheet({
               height: 44,
               borderRadius: 22,
               border: 'none',
-              background: 'var(--ink-100)',
+              background: 'var(--dw-hairline)',
               color: 'inherit',
               fontSize: 20,
               lineHeight: 1,
@@ -281,7 +284,7 @@ export function PlaggDetailSheet({
         </header>
 
         {/* Scrollable body */}
-        <div style={{ overflowY: 'auto', padding: '8px 20px 24px' }}>
+        <div style={{ overflowY: 'auto', padding: 'var(--dw-space-8) var(--dw-space-20) var(--dw-space-24)' }}>
           {/* Hero — glow + kategori-fargede skygge + kategori-badge (F84) */}
           <div
             className={reducedMotion ? undefined : 'plagg-stagger'}
@@ -290,7 +293,7 @@ export function PlaggDetailSheet({
               position: 'relative',
               display: 'grid',
               placeItems: 'center',
-              padding: '12px 0 4px',
+              padding: 'var(--dw-space-12) 0 var(--dw-space-4)',
             } as React.CSSProperties}
           >
             <div
@@ -330,15 +333,16 @@ export function PlaggDetailSheet({
               <span
                 style={{
                   position: 'relative',
-                  marginTop: 'var(--sp-3)',
-                  fontFamily: 'var(--font-sans)',
+                  marginTop: 'var(--dw-space-12)',
+                  fontFamily: 'var(--dw-font-ui)',
                   fontSize: 11,
                   fontWeight: 700,
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
-                  padding: '5px 12px',
-                  borderRadius: 'var(--r-pill)',
-                  background: `color-mix(in srgb, ${catColor.bg} 15%, var(--surface-elevated))`,
+                  // 5px står utenfor skalaen — ikke avrundet. Rapportert.
+                  padding: '5px var(--dw-space-12)',
+                  borderRadius: 'var(--dw-r-pill)',
+                  background: `color-mix(in srgb, ${catColor.bg} 15%, var(--dw-overlay))`,
                   color: catColor.edge,
                 }}
               >
@@ -383,7 +387,7 @@ export function PlaggDetailSheet({
                   <ul role="list" style={traitListStyle}>
                     {pros.map((p, i) => (
                       <li key={i} style={traitRowStyle}>
-                        <span aria-hidden="true" style={{ ...traitGlyphStyle, color: 'var(--status-ok)' }}>✓</span>
+                        <span aria-hidden="true" style={{ ...traitGlyphStyle, color: 'var(--dw-success)' }}>✓</span>
                         <span>{p}</span>
                       </li>
                     ))}
@@ -396,7 +400,7 @@ export function PlaggDetailSheet({
                   <ul role="list" style={traitListStyle}>
                     {cons.map((c, i) => (
                       <li key={i} style={traitRowStyle}>
-                        <span aria-hidden="true" style={{ ...traitGlyphStyle, color: 'var(--status-warm)' }}>−</span>
+                        <span aria-hidden="true" style={{ ...traitGlyphStyle, color: 'var(--dw-danger)' }}>−</span>
                         <span>{c}</span>
                       </li>
                     ))}
@@ -418,7 +422,7 @@ export function PlaggDetailSheet({
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 10,
+                  gap: 'var(--dw-space-10)',
                   listStyle: 'none',
                   padding: 0,
                   margin: 0,
@@ -458,10 +462,10 @@ export function PlaggDetailSheet({
                             capitalize-each-word. */}
                         <div
                           style={{
-                            fontFamily: 'var(--font-sans)',
+                            fontFamily: 'var(--dw-font-ui)',
                             fontSize: 15,
                             fontWeight: 600,
-                            color: 'var(--ink-900)',
+                            color: 'var(--dw-ink-hi)',
                             lineHeight: 1.25,
                           }}
                         >
@@ -469,14 +473,14 @@ export function PlaggDetailSheet({
                         </div>
                         {a.pros?.[0] ? (
                           <div style={miniProsStyle}>
-                            <span aria-hidden="true" style={{ color: 'var(--status-ok)', fontWeight: 700 }}>+</span>{' '}
+                            <span aria-hidden="true" style={{ color: 'var(--dw-success)', fontWeight: 700 }}>+</span>{' '}
                             <span className="sr-only">Fordel: </span>
                             {a.pros[0]}
                           </div>
                         ) : null}
                         {a.cons?.[0] ? (
                           <div style={miniConsStyle}>
-                            <span aria-hidden="true" style={{ color: 'var(--status-warm)', fontWeight: 700 }}>−</span>{' '}
+                            <span aria-hidden="true" style={{ color: 'var(--dw-danger)', fontWeight: 700 }}>−</span>{' '}
                             <span className="sr-only">Ulempe: </span>
                             {a.cons[0]}
                           </div>
@@ -519,11 +523,14 @@ export function PlaggDetailSheet({
         .plagg-detail-sheet[open]::backdrop {
           animation: plagg-backdrop-in 250ms ease-out;
         }
+        /* 280ms === --dw-m-push-back («ut», eksakt samme tall) — kun navnet
+           er byttet, varigheten er uendret. Kurvene står som de var: ingen
+           av dem er lik --dw-ease (0.2, 0.7, 0.2, 1). */
         .plagg-detail-sheet[data-closing] {
-          animation: plagg-sheet-out 280ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
+          animation: plagg-sheet-out var(--dw-m-push-back) cubic-bezier(0.19, 1, 0.22, 1) forwards;
         }
         .plagg-detail-sheet[data-closing]::backdrop {
-          animation: plagg-backdrop-out 280ms ease-out forwards;
+          animation: plagg-backdrop-out var(--dw-m-push-back) ease-out forwards;
         }
         @media (prefers-reduced-motion: reduce) {
           .plagg-detail-sheet[open],
@@ -560,7 +567,7 @@ export function PlaggDetailSheet({
            derfor aldri animationend-filteret i requestClose (linje 90).
            Dobbel RM-gate: betinget className (reducedMotion) + media query. */
         .plagg-detail-sheet .ba-press:focus-visible {
-          outline: 2px solid var(--focus-ring, var(--accent-cta));
+          outline: 2px solid var(--dw-focus, var(--dw-accent));
           outline-offset: 2px;
         }
 
@@ -568,8 +575,11 @@ export function PlaggDetailSheet({
           from { opacity: 0; transform: translateY(14px); }
           to   { opacity: 1; transform: none; }
         }
+        /* 340ms === --dw-m-push (vertikal inn, eksakt samme tall). Kurven og
+           forsinkelsen står uendret — --ease-out er ikke --dw-ease, og 45ms
+           finnes ikke i bevegelseskontrakten. */
         .plagg-stagger {
-          animation: plagg-item-in 340ms var(--ease-out) both;
+          animation: plagg-item-in var(--dw-m-push) var(--ease-out) both;
           animation-delay: calc(120ms + var(--stagger-i, 0) * 45ms);
         }
         @media (prefers-reduced-motion: reduce) {
@@ -612,50 +622,50 @@ function ClockIcon({ color }: { color: string }): JSX.Element {
 /* ── Inline styles (avoid global CSS dep) ─────────────────────────────── */
 
 const eyebrowStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-sans)',
+  fontFamily: 'var(--dw-font-ui)',
   fontSize: 11,
   fontWeight: 700,
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
-  color: 'var(--ink-500)',
-  margin: '0 0 4px',
+  color: 'var(--dw-ink-mid)',
+  margin: '0 0 var(--dw-space-4)',
 };
 
 const leadStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-sans)',
+  fontFamily: 'var(--dw-font-ui)',
   fontSize: 16,
   lineHeight: 1.55,
-  color: 'var(--ink-900)',
+  color: 'var(--dw-ink-hi)',
   textAlign: 'left',
-  margin: '0 0 var(--sp-6)',
+  margin: '0 0 var(--dw-space-24)',
 };
 
 const factCardStyle: React.CSSProperties = {
-  background: 'var(--surface-soft)',
-  border: '1px solid var(--ink-100)',
+  background: 'var(--dw-raised)',
+  border: '1px solid var(--dw-hairline)',
   borderRadius: 'var(--r-lg)',
-  padding: 'var(--sp-4)',
+  padding: 'var(--dw-space-16)',
   display: 'flex',
-  gap: 'var(--sp-3)',
-  marginBottom: 'var(--sp-6)',
+  gap: 'var(--dw-space-12)',
+  marginBottom: 'var(--dw-space-24)',
 };
 
 const factBodyStyle: React.CSSProperties = {
   margin: 0,
   fontSize: 14,
   lineHeight: 1.55,
-  color: 'var(--ink-700)',
+  color: 'var(--dw-ink-mid)',
 };
 
 const traitCardStyle: React.CSSProperties = {
-  background: 'var(--surface-soft)',
-  border: '1px solid var(--ink-100)',
+  background: 'var(--dw-raised)',
+  border: '1px solid var(--dw-hairline)',
   borderRadius: 'var(--r-lg)',
-  padding: 'var(--sp-4)',
-  marginBottom: 'var(--sp-6)',
+  padding: 'var(--dw-space-16)',
+  marginBottom: 'var(--dw-space-24)',
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-  gap: 'var(--sp-4)',
+  gap: 'var(--dw-space-16)',
 };
 
 const traitListStyle: React.CSSProperties = {
@@ -664,15 +674,15 @@ const traitListStyle: React.CSSProperties = {
   margin: 0,
   display: 'flex',
   flexDirection: 'column',
-  gap: 6,
+  gap: 'var(--dw-space-6)',
 };
 
 const traitRowStyle: React.CSSProperties = {
   display: 'flex',
-  gap: 8,
+  gap: 'var(--dw-space-8)',
   fontSize: 13.5,
   lineHeight: 1.45,
-  color: 'var(--ink-700)',
+  color: 'var(--dw-ink-mid)',
 };
 
 const traitGlyphStyle: React.CSSProperties = {
@@ -687,30 +697,30 @@ const altThumbWrapStyle: React.CSSProperties = {
   width: 56,
   height: 56,
   flexShrink: 0,
-  background: 'var(--surface-soft)',
+  background: 'var(--dw-raised)',
   borderRadius: 'var(--r-md)',
-  padding: 6,
+  padding: 'var(--dw-space-6)',
 };
 
 const alternativeInfoRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 'var(--sp-3)',
+  gap: 'var(--dw-space-12)',
   width: '100%',
   minHeight: 64,
-  padding: 'var(--sp-3)',
-  border: '1px solid var(--ink-100)',
+  padding: 'var(--dw-space-12)',
+  border: '1px solid var(--dw-hairline)',
   borderRadius: 'var(--r-lg)',
   boxShadow: 'var(--shadow-1)',
-  background: 'var(--surface-pure)',
+  background: 'var(--dw-overlay)',
   color: 'inherit',
   textAlign: 'left',
 };
 
 const miniProsStyle: React.CSSProperties = {
   fontSize: 12,
-  color: 'var(--ink-500)',
-  marginTop: 2,
+  color: 'var(--dw-ink-mid)',
+  marginTop: 'var(--dw-space-2)',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
@@ -718,8 +728,8 @@ const miniProsStyle: React.CSSProperties = {
 
 const miniConsStyle: React.CSSProperties = {
   fontSize: 12,
-  color: 'var(--ink-500)',
-  marginTop: 2,
+  color: 'var(--dw-ink-mid)',
+  marginTop: 'var(--dw-space-2)',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
@@ -727,19 +737,19 @@ const miniConsStyle: React.CSSProperties = {
 
 const libraryLinkStyle: React.CSSProperties = {
   width: '100%',
-  marginTop: 'var(--sp-3)',
-  padding: '14px 16px',
-  border: '1px solid var(--ink-100)',
+  marginTop: 'var(--dw-space-12)',
+  padding: 'var(--dw-space-14) var(--dw-space-16)',
+  border: '1px solid var(--dw-hairline)',
   borderRadius: 'var(--r-lg)',
-  background: 'var(--surface-soft)',
-  color: 'var(--ink-900)',
-  fontFamily: 'var(--font-sans)',
+  background: 'var(--dw-raised)',
+  color: 'var(--dw-ink-hi)',
+  fontFamily: 'var(--dw-font-ui)',
   fontSize: 14,
   fontWeight: 600,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  gap: 8,
+  gap: 'var(--dw-space-8)',
   cursor: 'pointer',
   textAlign: 'left',
 };

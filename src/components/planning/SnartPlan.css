@@ -10,8 +10,8 @@
 
 .snart-plan {
   position: relative;
-  margin-top: 14px;
-  padding: 16px 18px 14px;
+  margin-top: var(--dw-space-14);
+  padding: var(--dw-space-16) var(--dw-space-18) var(--dw-space-14);
   border-radius: var(--dw-r-panel);
   background: var(--dw-raised);
   color: var(--dw-ink-hi);
@@ -34,7 +34,7 @@
 
 .snart-plan h2,
 .snart-plan h3 {
-  margin: 0 0 6px;
+  margin: 0 0 var(--dw-space-6);
   line-height: 1.25;
   color: var(--dw-ink-hi);
 }
@@ -53,15 +53,15 @@
 }
 
 .snart-plan p {
-  margin: 0 0 8px;
+  margin: 0 0 var(--dw-space-8);
   color: var(--dw-ink-mid);
   font-size: var(--dw-text-body);
   line-height: 1.5;
 }
 
 .snart-plan__group {
-  margin-top: 18px;
-  padding-top: 14px;
+  margin-top: var(--dw-space-18);
+  padding-top: var(--dw-space-14);
   border-top: 1px solid var(--dw-hairline);
 }
 
@@ -73,7 +73,7 @@
 
 .snart-plan li {
   margin: 0;
-  padding: 10px 0;
+  padding: var(--dw-space-10) 0;
 }
 
 .snart-plan li + li {
@@ -89,8 +89,8 @@
 .snart-plan button {
   min-width: 44px;
   min-height: 44px;
-  margin-top: 8px;
-  padding: 8px 14px;
+  margin-top: var(--dw-space-8);
+  padding: var(--dw-space-8) var(--dw-space-14);
   border: 1px solid var(--dw-accent);
   border-radius: var(--dw-r-pill);
   background: transparent;
@@ -100,7 +100,7 @@
 }
 
 .snart-plan button:focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline: 3px solid var(--dw-focus);
   outline-offset: 4px;
 }
 
