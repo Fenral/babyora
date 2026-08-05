@@ -68,7 +68,28 @@ funnene er layout-utledet, ikke atferdsbelagt — må testes. (d) Ingen norsk ap
 korpuset utover det fase 4 dekket (Nørs/Reima via web) — Mobbin-utvalget er globalt/
 engelskspråklig, norsk konvensjonskalibrering hviler på MET/Yr-vedtaket fra fase 4.
 
-## 5. Work-review
+## 5. Gap-supplering (Sols runde 4-krav — utført 2026-08-05)
 
-Sendes til Sol sammen med fase 4-responsen (vurder bredde/originalitetsrisiko per
-fase 5-mandatet). Verdikt: `11-independent-review.md` runde 4/5.
+Fire pålagte gap fylt med to ekstra agenter (`appendix/fase5/gap-*.md`, 29 nye
+prinsipper). Utvalg:
+
+- **Triage under tidspress:** Citizens omvendte samtykke (eskalering er default,
+  trygghet er det aktive valget), <5 s-anatomien (ett tall/én tilstand, maks to
+  fargekodede utganger med verb, null krom), eskaleringslinje med fast plass gjennom
+  hele flyten, «sikre situasjonen FØR appen»-rekkefølgen (Cuvva), spatial triage
+  (pek på barnefigur i stedet for tekstliste), gradert fallback (Wysa).
+- **Korrigerbare anbefalinger:** alternativet som likeverdig kort i samme valuta
+  (Kakao T/Apple Maps), råd som innrømmer motargumentet (Google Maps «despite heavier
+  traffic»), **den redigerbare setningen** (Stake — MET/Yr-anatomien gjort justerbar i
+  rådets egen grammatikk), konsekvens som konkret hverdagsscene før bekreftelse
+  (GoHenry/Acorns → «med ett lag mindre: ~40 min i stedet for ~60»), intervall som
+  førsteklasses form med navn (Opendoor/Zillow/N26) — direkte materiale til Sols
+  «Confidence Instrument»-retning.
+- **Låseskjerm→app-kontinuitet og verifier-input:** se `gap-laseskjerm-verifier.md` —
+  stale-håndtering på distribuerte flater og chip-/forhåndsutfyllings-mønstre målt mot
+  p75 ≤8 s-kravet.
+
+## 6. Work-review
+
+Sendes til Sol som samlet fase 5-review (bredde/originalitetsrisiko + gap-dekning).
+Verdikt: `11-independent-review.md` runde 5.
