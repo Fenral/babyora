@@ -916,14 +916,32 @@ function TogglePill({
     width: 46,
     height: 28,
     borderRadius: 999,
-    // P8 (ekstern designgjennomgang): C.ink200 (--ink-200 → --dw-hairline,
-    // en ~14% rgba-linje beregnet for KANTER, ikke flater) ga et nesten
-    // usynlig av-spor i lys modus — hvit knapp på ~#EAE8E8 (~1,2:1). ink300
-    // (--dw-ink-low) er en heldekkende opak farge i begge tema (lys 6,6:1 /
-    // mørk solid varm tan), så av-sporet blir faktisk synlig regardless av
-    // tema, ikke bare i mørk modus der det tilfeldigvis fungerte.
-    background: on ? C.orange500 : C.ink300,
-    border: 'none',
+    /* ═══ AV ER NEDSENKET, IKKE LYST ═══════════════════════════════════════
+
+       Historikken står her fordi begge feilene er lærerike.
+
+       P8 byttet fra C.ink200 (--dw-hairline, en ~14 % rgba-LINJE beregnet
+       for kanter) fordi av-sporet var nesten usynlig i lys modus — hvit
+       knott på ~#EAE8E8, ~1,2:1. Riktig diagnose. Men erstatningen ble
+       --dw-ink-low: et BLEKK-token brukt som FLATE.
+
+       Følgen ble målt 2026-08-06: i mørkt tema er --dw-ink-low #A79A82,
+       altså lys varm tan på et mørkebrunt kort. Alt annet inaktivt på
+       skjermen er mørkt, så bryteren leste som PÅ mens den var AV — med
+       underteksten «Bruker valgt sted» rett ved siden av. En kontroll som
+       motsier seg selv er verre enn en utydelig kontroll: forelderen tror
+       hun har skrudd på noe hun ikke har.
+
+       P8 løste «usynlig i lys» og skapte «ser påslått ut i mørk». Begge
+       kommer av at av-tilstanden ble tenkt som en FARGE. Den er en
+       TILSTAND: av = nedsenket, på = hevet og aksentuert.
+
+       --dw-canvas er mørkere enn kortet (--dw-raised) i mørkt tema OG
+       nedsenket i lyst. Kanten holder den lesbar der forskjellen er liten
+       — som er nettopp problemet P8 fant. */
+    background: on ? C.orange500 : 'var(--dw-canvas)',
+    border: on ? 'none' : `1px solid ${C.hairline}`,
+    boxShadow: on ? 'none' : 'inset 0 1px 2px rgba(0, 0, 0, 0.28)',
     position: 'relative',
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.55 : 1,
