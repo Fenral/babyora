@@ -5,7 +5,14 @@
 > meldte blant annet BLOKKERENDE på «De som passer»-listen, som ligger bak
 > `import.meta.env.DEV` og aldri sendes til en forelder.
 
-**46 funn: 4 blokkerende, 10 alvorlige, 32 mindre.** (Forrige runde: 62 / 7.)
+**46 funn: 4 blokkerende, 10 alvorlige, 32 mindre.**
+
+> RETTET 2026-08-06: skjermen het «Garderobe» i denne rapporten. Det var
+> MITT navn — workflow-skriptet mitt kalte den det, og kritikeren gjentok
+> det. Skjermen heter **Plaggbiblioteket**. «Min garderobe»
+> (MinGarderobeScreen) er en ANNEN skjerm som ble slettet; den finnes ikke
+> lenger i kodebasen. Feil navn i en funnrapport sender neste runde til
+> feil sted. (Forrige runde: 62 / 7.)
 
 Tre av de fire blokkerende var SAMME feil — innhold bak tab-baren. Målt med
 `tools/verify-tabbar-klaring.mjs` viste det seg å gjelde FEM skjermer, ikke tre:
@@ -14,14 +21,14 @@ Innstillinger, TOG, Varm eller kald, Første vinter og Plaggbiblioteket.
 Alle fem bare I HVILE — ingen etter rulling. Portens første utgave rullet
 før den målte og var derfor grønn på 7/7 mens feilene sto der.
 
-## [BLOKKERENDE] Garderobe (Plaggbiblioteket)
+## [BLOKKERENDE] Plaggbiblioteket
 **«+ Legg til plagg»-knappen ligger oppå tab-baren og dekker Planlegg-fanen helt**
 
 - *Hvorfor:* Midtfanen er den lettest tilgjengelige med tommelen når man holder barnet med den andre armen. Den er nå fysisk utilgjengelig — et trykk der treffer «Legg til plagg» i stedet. Forelderen ser ikonet, trykker på det, og havner et helt annet sted enn ventet.
 - *Bevis:* Ved y=1560 går tab-bar-bakgrunnen (#3B2719) fra x=67 til x=737, mens knappepillen (#523723) ligger over den fra x=253 til x=549 og vertikalt fra y=1536 til y=1648. Planlegg-fanen er sentrert på x≈390 — midt i pillen. Kalenderikonet og ordet «Planlegg» (#A79A82) skinner gjennom pillen i akkurat de samme pikslene som knappeteksten.
 - *Forslag:* Løft knappen ut av tab-bar-sonen (plasser den over baren med margin, eller gjør den til en ikon-FAB nederst til høyre), eller flytt «Legg til plagg» inn i sidehodet ved siden av sorteringsikonet.
 
-## [BLOKKERENDE] Garderobe (Plaggbiblioteket)
+## [BLOKKERENDE] Plaggbiblioteket
 **Teksten «+ Legg til plagg» er mørkere enn knappen den står på — kontrast 1,5:1**
 
 - *Hvorfor:* Skjermens eneste handlingsknapp er praktisk talt usynlig. Kl. 07 i dårlig lys ser forelderen bare en brun flekk over menyen; ingen forklarende tekst redder dette, for teksten er selve problemet.
@@ -63,7 +70,7 @@ før den målte og var derfor grønn på 7/7 mens feilene sto der.
 - *Bevis:* Under skillelinjen ved y≈1160 står overskriften «Dagslinjen» (tekstrad y 1194–1234), og deretter finnes nøyaktig én tekstrad i kortet: y 1294–1318 («Samme antrekk i de vurderte tidspunktene»). Kortet slutter ved y≈1376, og pikslene under er ren bakgrunn (RGB 29,19,11) helt ned til den flytende tab-baren ved y≈1530 – ingenting er klippet bort eller skjult under folden, seksjonen har faktisk bare denne ene linjen.
 - *Forslag:* Vis faktiske tidspunkt i Dagslinjen (f.eks. 07 / 12 / 18 med temperatur og et lite antrekksmerke per punkt), eller fjern overskriften og la «Ingen endringer frem til kl. 18:00» stå alene. En overskrift som lover en linje må vise en linje.
 
-## [ALVORLIG] Garderobe (Plaggbiblioteket)
+## [ALVORLIG] Plaggbiblioteket
 **Materialprikkene for Bomull og Vanntett er usynlige, mens Ull sin lyser**
 
 - *Hvorfor:* Fargeprikken er systemets raske materialsignal — det du skal lese før teksten. Den virker for ett av tre materialer. Forelderen får en tom sirkel ved to av kategoriene og må lese ordet likevel, samtidig som Ull framstår som «uthevet» uten at det er ment.
@@ -244,21 +251,21 @@ før den målte og var derfor grønn på 7/7 mens feilene sto der.
 - *Bevis:* Den aktive pillen «I dag» dekker y 193–285 (hvit flate RGB 241,233,218, x 44–178). Etiketten «I DAG» inne i det teal kortet ligger på y 365–383 (RGB 198,207,196) – ca. 40 px CSS under fanen, med samme ord.
 - *Forslag:* Fjern «I DAG»-etiketten i kortet når fanen «I dag» er aktiv, eller erstatt den med noe som faktisk tilfører kontekst (f.eks. «Trondheim nå kl. 07»).
 
-## [MINDRE] Garderobe (Plaggbiblioteket)
+## [MINDRE] Plaggbiblioteket
 **«⌘K»-hurtigtastbadge i søkefeltet på en telefonskjerm**
 
 - *Hvorfor:* Det er en desktop-detalj som har fulgt med til mobil. En forelder med telefon i én hånd har ingen ⌘-tast. Badgen ser trykkbar ut og gjør ingenting, og den okkuperer plassen der en tøm-/diktér-knapp ville hørt hjemme.
 - *Bevis:* Badge med teksten «⌘K» ligger inne i søkefeltet ved x≈655–715, y≈352–392, i et 780×1688 px portrettbilde med tab-bar nederst — altså en ren mobilflate.
 - *Forslag:* Skjul badgen når peker/tastatur ikke er tilgjengelig (pointer: coarse), eller bytt den ut med en mikrofon-/tøm-knapp.
 
-## [MINDRE] Garderobe (Plaggbiblioteket)
+## [MINDRE] Plaggbiblioteket
 **Hvert plaggkort bruker ~538 px høyde på et plagg som tegnes i ~150 px**
 
 - *Hvorfor:* Med 63 plagg i katalogen ser forelderen bare fire kort (to rader) om gangen, og bare den øverste raden er komplett med materialetikett. Å finne riktig plagg krever mye scrolling med den ene hånden som er ledig.
 - *Bevis:* Radavstand målt fra tittel «Kortermet body» (y≈662) til «Langermet body» (y≈1200) = 538 px. Selve plaggillustrasjonen dekker bare ca. y=840–970 inne i en tom ramme fra y=735 til y=1070.
 - *Forslag:* Stram inn bilderammens sideforhold (f.eks. 4:5 i stedet for tilnærmet kvadrat) og la illustrasjonen fylle mer av rammen, slik at tre rader får plass over folden.
 
-## [MINDRE] Garderobe (Plaggbiblioteket)
+## [MINDRE] Plaggbiblioteket
 **Antallet 63 gjentas to ganger i toppen, og sorteringskontrollen er en 35 px glyf uten ramme**
 
 - *Hvorfor:* «Hele katalogen · 63 plagg» og «Plaggbiblioteket 63» sier det samme innenfor 100 px, mens den eneste kontrollen for å sortere 63 plagg leses som dekor ved siden av en tilbakeknapp som har tydelig 88 px flate. Vekten ligger på repetisjon i stedet for på handlingen.
