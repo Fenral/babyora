@@ -80,6 +80,7 @@ markert i parentes; de øvrige 30 har ingenting).
 | `sandaler` | ekstra (subcategory: fotter) |
 | `vintersko` | ekstra (subcategory: fotter) |
 | `vintersko-isolerte` | ekstra (subcategory: fotter) |
+| `vintersokker` | ekstra (subcategory: fotter) |
 | `tynt-teppe` | ekstra (subcategory: vogn) |
 | `dunteppe` | ekstra (subcategory: vogn) |
 | `varmepose-lett` | ekstra (subcategory: vogn) |

@@ -103,6 +103,12 @@ const GARMENT_ID_TO_SLUG: Readonly<Record<string, MonterGarmentSlug>> = {
   'sovepose-2-5-tog': 'sovepose',
   'sovepose-3-0-3-5-tog': 'sovepose',
   'sovepose-3-5-tog': 'sovepose',
+  /* FRIGJORT 2026-08-06. Filhodets eget notat sa: «vintersokker — ingen
+     tilsvarende id finnes i plagg-katalog.json sitt naavaerende
+     vokabular». Bildet laa altsaa ubundet fordi raden ikke fantes.
+     Eierbeslutningen «faa egen rad» lager den id-en, og bildet faar
+     hjemmet sitt. Ingen ny asset var noedvendig i vitrinen. */
+  vintersokker: 'vintersokker',
 };
 
 /**

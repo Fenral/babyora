@@ -214,6 +214,13 @@ const INFO: Record<GarmentId, GarmentInfo> = {
     what: 'Tykt isolerte vintersko for streng kulde.',
     when: 'Frost og kaldere ved utelek, fra ca −7 °C — eller lang tid utendørs i snø.',
   },
+  /* Teksten forklarer HVORFOR det står to sokkerader i lista. Det er hele
+     grunnen til at plagget fikk egen id: uten forklaringen leser rad 8 som
+     et andre par sokker, og forelderen må gjette om appen mener det. */
+  'vintersokker': {
+    what: 'Tykke ullsokker som tar fottøyets plass. Vinterdressen har fottak som dekker foten, så barnet trenger ikke sko utenpå.',
+    when: 'Fra ca 9 måneder når vinterdressen dekker foten. Kommer i stedet for isolerte vintersko — de tynne ullsokkene innerst blir stående.',
+  },
 
   // Ekstra · vogn-tilbehør
   'tynt-teppe': {
