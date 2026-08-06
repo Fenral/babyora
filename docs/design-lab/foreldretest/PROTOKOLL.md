@@ -530,12 +530,12 @@ klokkeslett — bruk den ikke som tidsmåler, og ikke bygg analysen på den.
 
 ## 12. Kjente begrensninger (meld fra før testdag hvis de må løses)
 
-1. **P2-kandidaten er alltid «trygg» i deltakermodus.** URL-kontrakten har
-   ingen `&kandidat=`-parameter, og selen sender ikke kandidatvalg til P2.
-   Testen måler dermed avlesning og respons på et antrekk som stemmer — ikke
-   diagnose av «kald»/«varm»-kandidatene. Hvis diagnosen skal testes, må
-   laben få et kandidat-parameter først (liten kodeendring, utenfor denne
-   protokollen).
+1. ~~P2-kandidaten er alltid «trygg»~~ **LØST 2026-08-06 (commit 933e43e):**
+   P2-oppgaven styres nå med `&kandidat=kald`, `&kandidat=trygg` eller
+   `&kandidat=varm` på deltaker-URL-en. For P2-eksponeringen i kjøreplanen:
+   bruk **kald** som måleoppgave (den tester diagnosen — ser deltakeren at
+   antrekket er for tynt?), og trygg som treningsoppgave. Eksempel:
+   `...?modus=deltaker&arm=p2&scenario=normal-dag&kandidat=kald`
 2. **Web måler kvittering og gjenfortelling, ikke fysisk handling.** At noen
    trykker «nakkesjekk bekreftet» beviser ikke at en nakkesjekk ville blitt
    gjort hjemme.
