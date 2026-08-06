@@ -19,8 +19,15 @@ import {
   byggSpenn,
   kandidatposisjon,
   spennSetning,
+  forhaandsdefinertKandidat,
+  endringsForklaring,
+  BEREGNET_FRA_TEKST,
   EKSTRA_KANDIDATER,
+  GJENOPPRETTING_TEKST,
   HYPOTESE_ETIKETT,
+  KAN_IKKE_BEREGNES_TITTEL,
+  UTLOPT_TITTEL,
+  type KandidatId,
   type Spenn,
   type SpennOk,
   type SpennHendelse,
@@ -39,6 +46,13 @@ export type PrototypeProps = {
   scenario: Scenario;
   klokke: LabKlokke;
   logg?: (event: string, detaljer?: Record<string, unknown>) => void;
+  /**
+   * Hvilken forhåndsdefinert kandidat testselen laster (Sols P2-P0):
+   * 'kald' (under gulvet), 'trygg' (anbefalingen) eller 'varm' (over
+   * taket). Standard er 'trygg'. UI-et merker ALDRI noen som riktig —
+   * deltakeren må lese posisjonen selv.
+   */
+  kandidatId?: KandidatId;
 };
 
 type Oppgave = 'holder-dette' | 'forskrivning';
@@ -72,16 +86,23 @@ function plaggNokkel(p: BasePlagg): string {
 
 /* ---------- hovedkomponent ---------- */
 
-export function Prototype({ scenario, klokke, logg }: PrototypeProps) {
+export function Prototype({ scenario, klokke, logg, kandidatId = 'trygg' }: PrototypeProps) {
   const fakta = useMemo(() => hentFakta(scenario), [scenario]);
   const spenn = useMemo(() => byggSpenn(fakta), [fakta]);
 
   const [oppgave, setOppgave] = useState<Oppgave>('holder-dette');
 
+  useEffect(() => {
+    logg?.('p2:kandidat-lastet', { kandidatId });
+  }, [kandidatId, logg]);
+
   // Virtuell klokke: utløp skjer som OVERGANG i samme oppgave (spec §1.1).
-  const [, setTikk] = useState(0);
-  useEffect(() => klokke.onTick(() => setTikk((t) => t + 1)), [klokke]);
-  const utloptNaa = klokke.naaISO() > spenn.gyldigTilISO;
+  // Halvåpent intervall (Sols avvik e): gyldig FØR tidspunktet, ikke gjennom
+  // det — derfor >=. Manglende datagrunnlag er IKKE utløp: der finnes ingen
+  // gyldighet å passere, så 'mangler' vinner alltid over klokka.
+  const manglerData = spenn.status === 'degradert' && spenn.aarsakstype === 'mangler';
+  const utloptNaa = !manglerData && klokke.naaISO() >= spenn.gyldigTilISO;
+  const maskert = spenn.status === 'degradert' || utloptNaa;
 
   const flags = scenario.flags;
   const pal = palett(!!flags.hoyKontrast);
@@ -126,9 +147,10 @@ export function Prototype({ scenario, klokke, logg }: PrototypeProps) {
           logg?.('p2:oppgave-valgt', { oppgave: o });
         }}
         pal={pal}
+        deaktivert={maskert}
       />
 
-      {spenn.status === 'degradert' || utloptNaa ? (
+      {maskert ? (
         <Maskert
           spenn={spenn}
           utloptNaa={utloptNaa}
@@ -136,9 +158,9 @@ export function Prototype({ scenario, klokke, logg }: PrototypeProps) {
           logg={logg}
         />
       ) : oppgave === 'holder-dette' ? (
-        <HolderDette spenn={spenn} pal={pal} logg={logg} />
+        <HolderDette spenn={spenn as SpennOk} kandidatId={kandidatId} pal={pal} logg={logg} />
       ) : (
-        <Forskrivning spenn={spenn} pal={pal} />
+        <Forskrivning spenn={spenn as SpennOk} pal={pal} />
       )}
     </div>
   );
@@ -150,10 +172,13 @@ function OppgaveVelger({
   oppgave,
   onVelg,
   pal,
+  deaktivert = false,
 }: {
   oppgave: Oppgave;
   onVelg: (o: Oppgave) => void;
   pal: Palett;
+  /** true i maskert tilstand: instrumentet kan ikke brukes → valgene stenges. */
+  deaktivert?: boolean;
 }) {
   const knapp = (aktiv: boolean): CSSProperties => ({
     minHeight: 48,
@@ -161,18 +186,18 @@ function OppgaveVelger({
     fontSize: '1em',
     fontFamily: 'inherit',
     fontWeight: aktiv ? 700 : 400,
-    color: pal.ink,
+    color: deaktivert ? pal.kant : pal.ink,
     background: aktiv ? pal.flate : pal.grunn,
-    border: aktiv ? `3px solid ${pal.ink}` : `1px solid ${pal.kant}`,
+    border: aktiv ? `3px solid ${deaktivert ? pal.kant : pal.ink}` : `1px solid ${pal.kant}`,
     borderRadius: '0.4em',
-    cursor: 'pointer',
+    cursor: deaktivert ? 'not-allowed' : 'pointer',
   });
   return (
     <nav aria-label="Oppgave" style={{ display: 'flex', gap: '0.5em', flexWrap: 'wrap', marginBottom: '1em' }}>
-      <button type="button" aria-pressed={oppgave === 'holder-dette'} style={knapp(oppgave === 'holder-dette')} onClick={() => onVelg('holder-dette')}>
+      <button type="button" disabled={deaktivert} aria-pressed={oppgave === 'holder-dette'} style={knapp(oppgave === 'holder-dette')} onClick={() => onVelg('holder-dette')}>
         Holder dette?
       </button>
-      <button type="button" aria-pressed={oppgave === 'forskrivning'} style={knapp(oppgave === 'forskrivning')} onClick={() => onVelg('forskrivning')}>
+      <button type="button" disabled={deaktivert} aria-pressed={oppgave === 'forskrivning'} style={knapp(oppgave === 'forskrivning')} onClick={() => onVelg('forskrivning')}>
         Hva skal hen ha på?
       </button>
     </nav>
@@ -192,17 +217,35 @@ function Maskert({
   pal: Palett;
   logg?: PrototypeProps['logg'];
 }) {
+  // To ulike tilstander med ulik semantikk (Sols P2-P1):
+  // 'mangler' → «Kan ikke beregnes», ALDRI utløpssemantikk eller gammel
+  // gyldighet. 'utlopt' (eller klokka passerte gyldigheten) → «Spennet er
+  // utløpt» med når det gjaldt til.
+  const modus: 'mangler' | 'utlopt' =
+    spenn.status === 'degradert' && spenn.aarsakstype === 'mangler'
+      ? 'mangler'
+      : 'utlopt';
+
+  const tittel = modus === 'mangler' ? KAN_IKKE_BEREGNES_TITTEL : UTLOPT_TITTEL;
   const aarsak =
-    spenn.status === 'degradert'
-      ? spenn.aarsak
-      : `Spennet gjaldt til ${hhmm(spenn.gyldigTilISO)} og gyldigheten er passert.`;
+    modus === 'mangler'
+      ? spenn.status === 'degradert'
+        ? spenn.aarsak
+        : ''
+      : `Spennet gjaldt til ${hhmm(spenn.gyldigTilISO)}.`;
 
   useEffect(() => {
-    logg?.('p2:maskert-vist', { aarsak, utloptNaa });
-  }, [aarsak, utloptNaa, logg]);
+    logg?.('p2:maskert-vist', { modus, aarsak, utloptNaa });
+  }, [modus, aarsak, utloptNaa, logg]);
+
+  // Chips vises DEAKTIVERT: interaksjonen er stengt, ikke gjemt.
+  const chips: BasePlagg[] = [
+    ...(spenn.status === 'ok' ? spenn.basePlagg : []),
+    ...EKSTRA_KANDIDATER,
+  ];
 
   return (
-    <section aria-label="Spennet er maskert">
+    <section aria-label={tittel}>
       {/* Strukturell maskering: terrengskravur over hele figuren, aldri dimming. */}
       <div
         style={{
@@ -216,24 +259,78 @@ function Maskert({
           style={{
             margin: 0,
             fontWeight: 700,
+            fontSize: '1.15em',
             background: pal.grunn,
             display: 'inline-block',
             padding: '0.2em 0.4em',
           }}
         >
-          Spennet er maskert
+          {tittel}
         </p>
-        <p style={{ margin: '0.5em 0 0', background: pal.grunn, padding: '0.2em 0.4em' }}>
-          {aarsak}
-        </p>
+        {aarsak && (
+          <p style={{ margin: '0.5em 0 0', background: pal.grunn, display: 'inline-block', padding: '0.2em 0.4em' }}>
+            {aarsak}
+          </p>
+        )}
       </div>
+
+      {/* Deaktiverte chips: kandidaten kan ikke dømmes uten spenn. */}
+      <div
+        role="group"
+        aria-label="Kandidat-antrekk (kan ikke brukes nå)"
+        aria-disabled="true"
+        style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5em', margin: '0.75em 0 0' }}
+      >
+        {chips.map((p) => (
+          <button
+            key={plaggNokkel(p)}
+            type="button"
+            disabled
+            style={{
+              minHeight: 48,
+              padding: '0 0.9em',
+              fontSize: '0.95em',
+              fontFamily: 'inherit',
+              color: pal.kant,
+              background: pal.grunn,
+              border: `1px dashed ${pal.kant}`,
+              borderRadius: '1.5em',
+              cursor: 'not-allowed',
+            }}
+          >
+            {p.plagg}
+          </button>
+        ))}
+      </div>
+
+      {/* Én gjenopprettingshandling + fallback-regelen. */}
+      <button
+        type="button"
+        onClick={() => logg?.('p2:gjenoppretting-forsokt', { modus, handling: GJENOPPRETTING_TEKST[modus] })}
+        style={{
+          minHeight: 48,
+          padding: '0 1.2em',
+          margin: '0.75em 0 0',
+          fontSize: '1em',
+          fontFamily: 'inherit',
+          fontWeight: 700,
+          color: pal.grunn,
+          background: pal.ink,
+          border: `3px solid ${pal.ink}`,
+          borderRadius: '0.4em',
+          cursor: 'pointer',
+        }}
+      >
+        {GJENOPPRETTING_TEKST[modus]}
+      </button>
       <p style={{ margin: '0.75em 0 0', fontWeight: 700, fontSize: '1.1em' }}>
-        {DEGRADERT_NESTE_HANDLING}
+        Inntil da: {DEGRADERT_NESTE_HANDLING}
       </p>
-      <p style={{ margin: '0.5em 0 0', fontSize: '0.85em', color: pal.dus }}>
-        Usikrest: hele værgrunnlaget. Beregnet {hhmm(spenn.utstedtISO)} · gjaldt til{' '}
-        {hhmm(spenn.gyldigTilISO)}.
-      </p>
+      {modus === 'utlopt' && (
+        <p style={{ margin: '0.5em 0 0', fontSize: '0.85em', color: pal.dus }}>
+          Beregnet {hhmm(spenn.utstedtISO)} · gjaldt til {hhmm(spenn.gyldigTilISO)}.
+        </p>
+      )}
       <HendelsesListe hendelser={spenn.hendelser} pal={pal} logg={logg} />
     </section>
   );
@@ -243,10 +340,12 @@ function Maskert({
 
 function HolderDette({
   spenn,
+  kandidatId,
   pal,
   logg,
 }: {
   spenn: SpennOk;
+  kandidatId: KandidatId;
   pal: Palett;
   logg?: PrototypeProps['logg'];
 }) {
@@ -255,13 +354,19 @@ function HolderDette({
     [spenn.basePlagg],
   );
 
-  // Forhåndsutfylt fra basePlagg (mål: rask korrigering av avvik).
+  // Forhåndsutfylt fra den forhåndsdefinerte kandidaten testselen valgte
+  // (kald/trygg/varm — Sols P2-P0). Ingen av dem merkes som riktig i UI.
   const [valgte, setValgte] = useState<Set<string>>(
-    () => new Set(spenn.basePlagg.map(plaggNokkel)),
+    () => new Set(forhaandsdefinertKandidat(spenn, kandidatId).map(plaggNokkel)),
   );
+
+  // Årsakskjeden (Sols P2-P1): hva flyttet markøren sist?
+  const [sisteEndring, setSisteEndring] = useState<string | null>(null);
+
   useEffect(() => {
-    setValgte(new Set(spenn.basePlagg.map(plaggNokkel)));
-  }, [spenn.basePlagg]);
+    setValgte(new Set(forhaandsdefinertKandidat(spenn, kandidatId).map(plaggNokkel)));
+    setSisteEndring(null);
+  }, [spenn, kandidatId]);
 
   const kandidat = alleChips.filter((p) => valgte.has(plaggNokkel(p)));
   const dom = kandidatposisjon(spenn, kandidat);
@@ -281,7 +386,10 @@ function HolderDette({
       const valgt = !neste.has(nokkel);
       if (valgt) neste.add(nokkel);
       else neste.delete(nokkel);
+      const forklaring = endringsForklaring(p, valgt);
+      setSisteEndring(forklaring);
       logg?.('p2:chip-endret', { plagg: p.plagg, valgt });
+      logg?.('p2:endring-vist', { forklaring });
       return neste;
     });
   };
@@ -322,6 +430,14 @@ function HolderDette({
         })}
       </div>
 
+      {/* Årsakskjeden: markøren er en KONSEKVENS av klesvalget. */}
+      <p style={{ margin: '0 0 0.25em', fontSize: '0.85em', fontWeight: 700 }}>
+        {BEREGNET_FRA_TEKST}
+      </p>
+      <p aria-live="polite" style={{ margin: '0 0 0.5em', fontSize: '0.9em', minHeight: '1.5em' }}>
+        {sisteEndring ?? 'Markøren flytter seg når du endrer klærne over.'}
+      </p>
+
       <SpennFigur spenn={spenn} domSetning={dom.setning} markorPosisjon={dom} pal={pal} />
 
       {/* Fastkoblet respons — kanonisk setningsform (tekstparitet). */}
@@ -338,10 +454,20 @@ function HolderDette({
         <p style={{ margin: '0.4em 0 0' }}>{dom.kontrolltegn}</p>
       </div>
 
-      <p style={{ margin: '0.75em 0 0', fontWeight: 700 }}>
-        Usikrest: {spenn.usikrestPremiss}.
+      {/* Svakeste premiss løftes OVER sekundær metadata (Sols P2-P1). */}
+      <p
+        style={{
+          margin: '0.75em 0 0',
+          padding: '0.4em 0.75em',
+          borderLeft: `6px solid ${pal.ink}`,
+          fontWeight: 700,
+          fontSize: '1em',
+          background: pal.flate,
+        }}
+      >
+        Usikrest premiss: {spenn.usikrestPremiss}
       </p>
-      <p style={{ margin: '0.25em 0 0', fontSize: '0.85em', color: pal.dus }}>
+      <p style={{ margin: '0.25em 0 0', fontSize: '0.8em', color: pal.dus }}>
         Beregnet {hhmm(spenn.utstedtISO)} · gjelder til {hhmm(spenn.gyldigTilISO)}.
       </p>
 

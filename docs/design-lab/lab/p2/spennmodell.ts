@@ -33,6 +33,21 @@ import { usikrestPremiss, DEGRADERT_NESTE_HANDLING } from '../felles/tekst';
 export const HYPOTESE_ETIKETT = 'Veiledende område — ikke fagvalidert';
 
 /**
+ * Topptekst når datagrunnlaget MANGLER — aldri utløpssemantikk, aldri
+ * referanse til en gammel gyldighet (Sols fase 10-review, P2-P1).
+ */
+export const KAN_IKKE_BEREGNES_TITTEL = 'Kan ikke beregnes';
+
+/** Topptekst når gyldigheten er PASSERT — egen tilstand, ikke datamangel. */
+export const UTLOPT_TITTEL = 'Spennet er utløpt';
+
+/** Én gjenopprettingshandling per degradert tilstand (recovery). */
+export const GJENOPPRETTING_TEKST: Record<'mangler' | 'utlopt', string> = {
+  mangler: 'Hent værdata på nytt',
+  utlopt: 'Beregn spennet på nytt',
+};
+
+/**
  * HYPOTESE: temperaturbåndenes grenser i føles-som °C.
  * Speiler bandForTemp() i tables.ts; de åpne endene (ekstrem,
  * ekstrem_varme) er kappet ved lab-valgte verdier.
@@ -75,7 +90,12 @@ export const KATEGORI_VARMEPOENG: Record<BasePlagg['kategori'], number> = {
   utstyr: 0,
 };
 
-/** HYPOTESE: hvor mange °C ett varmepoeng flytter kandidaten i spennet. */
+/**
+ * HYPOTESE: hvor mange °C ett varmepoeng flytter kandidaten i spennet.
+ * Avvik c (Sols fase 10-review): poeng→grader er INTERN prototypekalibrering
+ * — aldri et faglig eller sikkerhetsmessig utsagn. Kandidatens ekvivalente
+ * gradtall (ekvivalentC) skal aldri vises i UI eller setningsform.
+ */
 export const GRADER_PER_POENG = 1.5;
 
 /** HYPOTESE: avstand til hard grense som regnes som «nær» (økt sjekk). */
@@ -84,9 +104,97 @@ export const NAER_GRENSE_C = 1.5;
 /** Ekstra kandidat-plagg (chips som ikke er i basePlagg). */
 export const EKSTRA_KANDIDATER: BasePlagg[] = [
   { kategori: 'mellomlag', plagg: 'ekstra ullgenser' },
+  { kategori: 'mellomlag', plagg: 'ekstra fleecegenser' },
   { kategori: 'ekstra', plagg: 'ekstra teppe' },
   { kategori: 'utstyr', plagg: 'regntrekk' },
 ];
+
+/* ------------------------------------------------------------------ *
+ * Tre forhåndsdefinerte kandidater (Sols fase 10-review, P2-P0):
+ * anbefalingen alene tester BEKREFTELSE, ikke diagnose. Testselen
+ * velger kandidat via kandidatId — ingen av dem merkes som «riktig»
+ * i UI; deltakeren må lese posisjonen selv.
+ * ------------------------------------------------------------------ */
+
+export type KandidatId = 'kald' | 'trygg' | 'varm';
+
+export const KANDIDAT_IDER: readonly KandidatId[] = ['kald', 'trygg', 'varm'];
+
+/** De to lagene «varm»-kandidaten legger til (finnes også som chips). */
+export const VARM_TILLEGG: BasePlagg[] = [
+  { kategori: 'mellomlag', plagg: 'ekstra ullgenser' },
+  { kategori: 'mellomlag', plagg: 'ekstra fleecegenser' },
+];
+
+/** «Kald» fjerner ett kritisk lag — varmest kategori først. */
+const KRITISK_FJERNINGSREKKEFOLGE: BasePlagg['kategori'][] = [
+  'yttertoy',
+  'mellomlag',
+  'innerst',
+  'ekstra',
+];
+
+/**
+ * Bygger den forhåndsdefinerte kandidaten:
+ *  - kald:  anbefalingen minus kritiske lag (yttertøy først) til kandidaten
+ *           står UNDER gulvet — normalt ett lag. Der anbefalingen ikke har
+ *           yttertøy (søvntabellens pose, HB-9 fjernet dressen) fortsetter
+ *           fjerningen til gulvet faktisk er brutt, ellers ville «kald»
+ *           bare bekrefte spennet i stedet for å teste diagnose.
+ *  - trygg: anbefalingen uendret → i spennet
+ *  - varm:  anbefalingen pluss to mellomlag → over taket
+ * Ren funksjon — muterer aldri spennet.
+ */
+export function forhaandsdefinertKandidat(
+  spenn: SpennOk,
+  id: KandidatId,
+): BasePlagg[] {
+  if (id === 'trygg') return [...spenn.basePlagg];
+  if (id === 'varm') return [...spenn.basePlagg, ...VARM_TILLEGG];
+
+  const kopi = [...spenn.basePlagg];
+  // Så mye må kandidaten falle for å stå UNDER kaldgulvet (strengt).
+  const trengsC = spenn.midtC - spenn.kaldgulvC;
+  let fjernetPoeng = 0;
+  const fjernEttKritiskLag = (): boolean => {
+    for (const kategori of KRITISK_FJERNINGSREKKEFOLGE) {
+      const i = kopi.findIndex((p) => p.kategori === kategori);
+      if (i >= 0) {
+        fjernetPoeng += KATEGORI_VARMEPOENG[kategori];
+        kopi.splice(i, 1);
+        return true;
+      }
+    }
+    return false;
+  };
+  do {
+    if (!fjernEttKritiskLag()) break;
+  } while (fjernetPoeng * GRADER_PER_POENG <= trengsC);
+  return kopi;
+}
+
+/* ------------------------------------------------------------------ *
+ * Årsakskjeden (Sols fase 10-review, P2-P1): markørens posisjon skal
+ * kunne leses som konsekvens av klesvalget, ikke som dekorasjon.
+ * ------------------------------------------------------------------ */
+
+/** Fast tekst som binder markøren til klesvalget (vises ved figuren). */
+export const BEREGNET_FRA_TEKST = 'Beregnet fra klærne du valgte';
+
+/**
+ * Klarspråk-forklaring av hva ett chip-valg gjorde med markøren:
+ * «Minus ullsokker — markøren falt mot gulvet.» Plagg uten varmebidrag
+ * (utstyr) flytter ikke markøren, og det sies eksplisitt.
+ */
+export function endringsForklaring(plagg: BasePlagg, valgt: boolean): string {
+  const fortegn = valgt ? 'Pluss' : 'Minus';
+  const poeng = KATEGORI_VARMEPOENG[plagg.kategori];
+  if (poeng === 0) {
+    return `${fortegn} ${plagg.plagg} — markøren sto i ro: plagget beskytter, men varmer ikke.`;
+  }
+  const bevegelse = valgt ? 'steg mot taket' : 'falt mot gulvet';
+  return `${fortegn} ${plagg.plagg} — markøren ${bevegelse}.`;
+}
 
 /** En sikkerhetshendelse slik spennet bærer den (innhold uendret). */
 export type SpennHendelse = {
@@ -121,6 +229,13 @@ export type SpennOk = {
 
 export type SpennDegradert = {
   status: 'degradert';
+  /**
+   * HVORFOR spennet ikke finnes — to ulike tilstander med ulik semantikk:
+   * 'mangler' = datagrunnlag finnes ikke → «Kan ikke beregnes» (ALDRI
+   * utløpssemantikk eller gammel gyldighet); 'utlopt' = gyldigheten er
+   * passert → «Spennet er utløpt».
+   */
+  aarsakstype: 'mangler' | 'utlopt';
   /** Klarspråk-årsak (datakvalitetens svakeste premiss). */
   aarsak: string;
   hendelser: SpennHendelse[];
@@ -156,6 +271,7 @@ export function byggSpenn(fakta: NoytraleFakta): Spenn {
   if (fakta.vaergrunnlag === null || fakta.datakvalitet.status !== 'ok') {
     return {
       status: 'degradert',
+      aarsakstype: fakta.datakvalitet.status === 'utlopt' ? 'utlopt' : 'mangler',
       aarsak: fakta.datakvalitet.svakestePremiss,
       hendelser,
       utstedtISO,
@@ -347,7 +463,12 @@ export function kandidatposisjon(spenn: SpennOk, kandidat: BasePlagg[]): Posisjo
  */
 export function spennSetning(spenn: Spenn): string {
   if (spenn.status === 'degradert') {
-    return `Spennet er maskert: ${spenn.aarsak} ${DEGRADERT_NESTE_HANDLING}`;
+    // 'mangler' skal ALDRI bære utløpssemantikk eller gammel gyldighet:
+    // det finnes ikke noe tidligere spenn å referere til.
+    if (spenn.aarsakstype === 'mangler') {
+      return `${KAN_IKKE_BEREGNES_TITTEL}: ${spenn.aarsak} ${DEGRADERT_NESTE_HANDLING}`;
+    }
+    return `${UTLOPT_TITTEL} og maskert: ${spenn.aarsak} ${DEGRADERT_NESTE_HANDLING}`;
   }
   const hard =
     spenn.hardSide === 'kald'

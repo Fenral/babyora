@@ -28,7 +28,9 @@ function fakta(id: string, overstyr: Partial<Scenario> = {}): NoytraleFakta {
  *  sovende-vognbarn  −8.3 / streng_frost / ingen      → avvik (sover i frost)
  *  bilstol          −13.1 / streng_frost / HB-9 m.fl. → avvik (bilstol-regel)
  *  manglende-vaerdata  —  / —            / —          → degradert
- *  endret-vaer       −5.9 / frost        / ingen      → normal (>1° fra grense)
+ *  endret-vaer       −5.9 / frost        / ingen      → folg-med (1,1° fra
+ *    −7-grensen ≤ vindmålingens deklarerte usikkerhetsbånd ±2° ved 7 m/s —
+ *    grensevær-marginen er maks(hysterese 1°, usikkerhetsbånd), Sols avvik a)
  *  utlopt-raad         —  / —            / —          → degradert
  *  ny-omsorgsperson   2.5 / kald         / ingen      → normal
  *  dynamic-type       2.5 / kald         / ingen      → normal
@@ -40,7 +42,7 @@ const SCENARIO_FASIT: ReadonlyArray<[id: string, forventet: Modus]> = [
   ['sovende-vognbarn', 'avvik'],
   ['bilstol', 'avvik'],
   ['manglende-vaerdata', 'degradert'],
-  ['endret-vaer', 'normal'],
+  ['endret-vaer', 'folg-med'],
   ['utlopt-raad', 'degradert'],
   ['ny-omsorgsperson', 'normal'],
   ['dynamic-type', 'normal'],

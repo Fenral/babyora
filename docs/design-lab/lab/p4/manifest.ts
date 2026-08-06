@@ -91,8 +91,11 @@ export const manifest: P4Manifest = {
       'Steg 1 er den konservative fallbacken («Kle etter årstid») — aldri gjettede plagg; ' +
       'brukeren identifiserer at grunnlaget mangler.',
     'endret-vaer':
-      'Utfører steg 1 uten å rekonstruere gårsdagens baseline — hele antrekket står i ' +
-      'protokollen, deltaet trengs ikke for å handle riktig (kjernehypotesen).',
+      'Leser BÅDE deltaet (værleddet + den konkrete, navngitte lagendringen mot ' +
+      'gårsdagens antrekksbaseline) OG første protokollhandling på brief-flaten; ' +
+      'utfører steg 1 uten å rekonstruere gårsdagens grunnlag. Etter V2 skal ' +
+      'deltakeren oppgi at handlingen ENDRET seg (samme antrekk holder → legg ' +
+      'det navngitte laget på riktig plass).',
     'utlopt-raad':
       'Identifiserer den maskerte tilstanden som utløpt («må beregnes på nytt») — ikke som ' +
       'feil eller ødelagt app — og oppgir fallback-regelen. Aldri innhold fra maskert brief.',
@@ -130,6 +133,7 @@ export const manifest: P4Manifest = {
     'maskert',
     'spol',
     'protokoll-aapnet',
+    'protokoll-lukket',
     'versjonsbrudd',
     'kontrollpunkt-bekreftet',
   ],
@@ -146,7 +150,7 @@ export const manifest: P4Manifest = {
   ],
 
   antagelser: [
-    'Protokollen kompileres én gang per scenario (fakta er deterministiske); alle briefversjoner i tidslinjen peker på samme kompilat, og versjonsstempelet følger briefen atomisk (pakkMedProtokoll er eneste konstruktør).',
+    'Protokollen kompileres én gang per PROGNOSEGRUNNLAG (fakta er deterministiske); hver brief pakker protokollen for samme fakta som briefen selv ble bygget fra, og versjonsstempelet følger briefen atomisk (pakkMedProtokoll er eneste konstruktør). I delta-scenariet har V1 (morgenprognosen, uendret fra i går) og V2 (oppdatert prognose) derfor hver sin protokoll.',
     'Tidslinjen (V1 → V2 etter 20 min → forsinket V1 etter 30 min) arves uendret fra P3 — P4 endrer ikke leveringssimuleringen, kun innpakningen.',
     '«Første komplette trygge steg» er per definisjon protokollens steg 1 slik P1s kompilator ordnet sekvensen (harde hendelser først, bilstol før ytterlag, fallback i degradert modus) — P4 gjør ingen egen prioritering.',
     'Semantikk-porten håndheves som SNITT av brief- og protokolluttrykket: begge flater må bære hele sikkerhetssemantikken for at porten skal bestå.',

@@ -74,7 +74,10 @@ export const manifest: P3Manifest = {
     'manglende-vaerdata':
       'Identifiserer at grunnlaget mangler, gjetter aldri plagg, og oppgir den konservative fallback-handlingen.',
     'endret-vaer':
-      'Leser deltaet med den versjonerte baselinen («i går V1: føltes …») og legger TIL et lag. ' +
+      'Leser deltaet med den versjonerte ANTREKKS-baselinen («i går V1 (føltes …): ' +
+      'tykt ullsett, ull-mellomlag, kjøredress») og oppgir den KONKRETE endringen med ' +
+      'lagnavn og plassering (legg det navngitte laget på riktig plass). Etter V2 skal ' +
+      'endringen fra V1 («samme antrekk holder») oppdages. ' +
       'Å ta av et lag (delta lest i feil retning) er farlig feil.',
     'utlopt-raad':
       'Identifiserer den maskerte tilstanden som utløpt («må beregnes på nytt») — ikke som feil eller ødelagt app — ' +
@@ -125,8 +128,8 @@ export const manifest: P3Manifest = {
   ],
 
   antagelser: [
-    'Versjonstelleren er per dag i laben; baseline-etiketten navngir gårsdagens briefversjon eksplisitt med «i går»-prefiks («i går V1: føltes 5 °C»).',
-    'V2 ankommer 20 minutter etter V1 og forsinket V1 ankommer på nytt 30 minutter etter V1 — faste, dokumenterte simuleringstider.',
+    'Versjonstelleren er per dag i laben; baseline-etiketten navngir gårsdagens briefversjon OG gårsdagens antrekk eksplisitt («i går V1 (føltes 5 °C): tykt ullsett, ull-mellomlag, kjøredress») — baseline er et antrekk, ikke bare en temperatur.',
+    'V2 ankommer 20 minutter etter V1 og forsinket V1 ankommer på nytt 30 minutter etter V1 — faste, dokumenterte simuleringstider. I delta-scenariet bygger V1 på morgenprognosen (uendret fra i går) og V2 på oppdatert prognose, slik at V2 ENDRER handlingen reelt.',
     'Delta-form brukes kun når scenariet har gårsdagens vær (endret-vaer); uten baseline-data leveres full-liste-form — deltaet dikter aldri en gårsdag.',
     'Degraderte scenarier (manglende værdata, utløpt råd) leverer kun V1; maskinen maskerer den selv ved ankomst.',
   ],

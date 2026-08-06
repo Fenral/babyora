@@ -5,13 +5,18 @@
  *  - Tilstandslinjen øverst: Vanlig dag / Følg med / Avvik + én setnings
  *    hvorfor + absolutt gyldighet. Strukturelt signal (ramme/inversjon),
  *    aldri farge alene.
- *  - Normalmodus (normal + følg med): hele stabelen synlig, ETT bekreft-
- *    trykk, deretter nakkesjekk-kontrollen og kvittering.
+ *  - Normalmodus (normal + følg med): stabelen gruppert i faser med
+ *    overskrifter («På barnet» innerst→ytterst, «I vognen / uteklart»
+ *    yttertøy + utstyr), ETT bekreft-trykk, deretter nakkekontroll-flaten
+ *    med Alt vel / Noe stemmer ikke (minste reversible korreksjon) og
+ *    kvittering.
  *  - Avviksmodus: ett steg om gangen, bekreft per kritisk steg, stopp-
  *    kriteriet i steget selv.
- *  - Degradert: konservativ fallback («Kle etter årstid. Kjenn på nakken
- *    før dere går.») — også som OVERGANG når selens klokke passerer
- *    gyldighet midt i oppgaven.
+ *  - Utilgjengelig (SEPARAT fra beslutningsmodus): topptekst «Rådet er
+ *    utløpt» / «Kan ikke beregnes» + ÉN forklaring + konservativ fallback
+ *    («Kle etter årstid. Kjenn på nakken før dere går.») + «Beregn på
+ *    nytt» — også som OVERGANG når selens klokke passerer gyldighet
+ *    midt i oppgaven.
  *
  * Systemfont, lys grunn, AA-kontrast, ≥48px treffmål, ingen animasjon,
  * ingen maskot. storTekst skalerer all tekst 1.4×.
@@ -28,11 +33,16 @@ import type { Scenario } from '../felles/scenarier';
 import { hentFakta } from '../felles/fakta';
 import {
   AUTORITETSLINJE,
+  BEREGN_PAA_NYTT,
+  FASE_OVERSKRIFT,
   NAKKESJEKK_ID,
+  TOPPTEKST_FOR_TILGJENGELIGHET,
   erUtloptNaa,
   kompilerProtokoll,
   type Protokoll,
+  type ProtokollFase,
   type ProtokollSteg,
+  type Topptekst,
 } from './protokollkompilator';
 import { manifest, type P1LoggEvent } from './manifest';
 
@@ -135,16 +145,26 @@ function Sloyfe({
     logg?.({ type: 'stemmer_ikke', scenarioId: scenario.id, stegId: steg.id });
   };
 
+  const beregnPaaNytt = () => {
+    logg?.({ type: 'beregn_paa_nytt', scenarioId: scenario.id, naaISO });
+  };
+
   return (
     <section aria-label="Protokollen">
-      <Tilstandslinje protokoll={protokoll} naaISO={naaISO} utlopt={utlopt} p={p} />
+      <Tilstandslinje protokoll={protokoll} utlopt={utlopt} p={p} />
 
       {protokoll.degradert !== null ? (
-        <DegradertFlate aarsak={protokoll.degradert.aarsak} fallback={protokoll.degradert.fallback} p={p} />
+        <UtilgjengeligFlate
+          forklaring={protokoll.degradert.aarsak}
+          fallback={protokoll.degradert.fallback}
+          onBeregnPaaNytt={beregnPaaNytt}
+          p={p}
+        />
       ) : utlopt ? (
-        <DegradertFlate
-          aarsak={`Protokollen gjaldt til ${klokkeslett(protokoll.gyldigTilISO)} og må beregnes på nytt.`}
+        <UtilgjengeligFlate
+          forklaring={`Protokollen gjaldt til ${klokkeslett(protokoll.gyldigTilISO)} og må beregnes på nytt.`}
           fallback="Kle etter årstid. Kjenn på nakken før dere går."
+          onBeregnPaaNytt={beregnPaaNytt}
           p={p}
         />
       ) : protokoll.modus === 'avvik' ? (
@@ -186,16 +206,42 @@ function Sloyfe({
 
 function Tilstandslinje({
   protokoll,
-  naaISO,
   utlopt,
   p,
 }: {
   protokoll: Protokoll;
-  naaISO: string;
   utlopt: boolean;
   p: Palett;
 }) {
-  const avvik = protokoll.tilstand.frase === 'Avvik' || utlopt;
+  // Tilgjengelighetsstatus er en SEPARAT akse: når rådet er utilgjengelig,
+  // erstattes modusfrasen av toppteksten — aldri «Avvik»-drakten, og
+  // aldri en «Gjelder til»-linje for et råd som ikke gjelder.
+  const utilgjengelig = utlopt || protokoll.tilgjengelighet !== 'aktiv';
+  if (utilgjengelig) {
+    const topptekst: Topptekst = utlopt
+      ? TOPPTEKST_FOR_TILGJENGELIGHET.utlopt
+      : (protokoll.tilstand.frase as Topptekst);
+    return (
+      <header style={{ marginBottom: '1em' }}>
+        <p
+          style={{
+            margin: 0,
+            padding: '0.35em 0.5em',
+            fontSize: '1.35em',
+            fontWeight: 800,
+            letterSpacing: '0.02em',
+            color: p.tekst,
+            border: `3px solid ${p.tekst}`,
+            borderRadius: 6,
+          }}
+        >
+          {topptekst}
+        </p>
+      </header>
+    );
+  }
+
+  const avvik = protokoll.tilstand.frase === 'Avvik';
   const folgMed = protokoll.tilstand.frase === 'Følg med';
   return (
     <header style={{ marginBottom: '1em' }}>
@@ -212,12 +258,10 @@ function Tilstandslinje({
           borderRadius: 6,
         }}
       >
-        {utlopt ? 'Avvik' : protokoll.tilstand.frase}
+        {protokoll.tilstand.frase}
       </p>
       <p style={{ margin: '0.4em 0 0', color: p.demper }}>
-        {utlopt
-          ? `Klokka er ${klokkeslett(naaISO)} — gyldigheten gikk ut ${klokkeslett(protokoll.gyldigTilISO)}.`
-          : protokoll.tilstand.hvorfor}{' '}
+        {protokoll.tilstand.hvorfor}{' '}
         <span style={{ whiteSpace: 'nowrap' }}>
           Gjelder til {klokkeslett(protokoll.gyldigTilISO)}.
         </span>
@@ -227,13 +271,25 @@ function Tilstandslinje({
 }
 
 /* ------------------------------------------------------------------ *
- * Degradert — konservativ fallback, ekstra synlig modusskifte
+ * Utilgjengelig råd — ÉN forklaring, konservativ fallback og
+ * gjenopprettingshandlingen «Beregn på nytt»
  * ------------------------------------------------------------------ */
 
-function DegradertFlate({ aarsak, fallback, p }: { aarsak: string; fallback: string; p: Palett }) {
+function UtilgjengeligFlate({
+  forklaring,
+  fallback,
+  onBeregnPaaNytt,
+  p,
+}: {
+  forklaring: string;
+  fallback: string;
+  onBeregnPaaNytt: () => void;
+  p: Palett;
+}) {
+  const [bedt, settBedt] = useState(false);
   return (
     <div>
-      <p style={{ margin: '0 0 0.75em', color: p.demper }}>{aarsak}</p>
+      <p style={{ margin: '0 0 0.75em', color: p.demper }}>{forklaring}</p>
       <p
         style={{
           margin: 0,
@@ -246,10 +302,23 @@ function DegradertFlate({ aarsak, fallback, p }: { aarsak: string; fallback: str
       >
         {fallback}
       </p>
-      <p style={{ margin: '0.75em 0 0', fontWeight: 600 }}>{AUTORITETSLINJE}</p>
-      <p style={{ margin: '0.25em 0 0', color: p.demper }}>
-        Akkurat nå ser den ikke været — derfor det generelle svaret over.
-      </p>
+      <div style={{ marginTop: '0.75em' }}>
+        <Knapp
+          primar
+          p={p}
+          onClick={() => {
+            settBedt(true);
+            onBeregnPaaNytt();
+          }}
+        >
+          {BEREGN_PAA_NYTT}
+        </Knapp>
+      </div>
+      {bedt && (
+        <p style={{ margin: '0.5em 0 0', color: p.demper }}>
+          Et nytt råd beregnes så snart værdata er tilgjengelig.
+        </p>
+      )}
     </div>
   );
 }
@@ -290,46 +359,73 @@ function NormalModus({
           logg?.({ type: 'sloyfe_fullfort', scenarioId: scenario.id });
           settFase('ferdig');
         }}
+        korrigert={korrigert === nakkesjekk.id}
+        onStemmerIkke={() => stemmerIkke(nakkesjekk)}
         p={p}
       />
     );
   }
 
+  // Faseinndelt stabel (Sols P1-funn: ikke én flat liste): «På barnet»
+  // innerst→ytterst, deretter «I vognen / uteklart» med yttertøy + utstyr.
+  const faser = (['paa-barnet', 'uteklart'] as ProtokollFase[])
+    .map((f) => ({
+      fase: f,
+      steg: stabel.filter((s) => (s.fase ?? 'paa-barnet') === f),
+    }))
+    .filter((gruppe) => gruppe.steg.length > 0);
+
   return (
     <div>
-      <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-        {stabel.map((steg) => (
-          <li
-            key={steg.id}
+      {faser.map((gruppe) => (
+        <section key={gruppe.fase} aria-label={FASE_OVERSKRIFT[gruppe.fase]}>
+          <h3
             style={{
-              padding: '0.5em 0.6em',
-              marginBottom: '0.4em',
-              background: steg.sone === 'sikkerhet' ? p.grunn : p.flate,
-              border:
-                steg.sone === 'sikkerhet'
-                  ? `3px solid ${p.tekst}`
-                  : `1px solid ${p.kant}`,
-              borderRadius: 6,
+              margin: '0 0 0.35em',
+              fontSize: '0.85em',
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: p.demper,
             }}
           >
-            {steg.sone === 'sikkerhet' && (
-              <p style={{ margin: 0, fontSize: '0.8em', fontWeight: 800, letterSpacing: '0.08em' }}>
-                SIKKERHET
-              </p>
-            )}
-            <p style={{ margin: 0, fontWeight: 600 }}>{steg.handling}</p>
-            {steg.stoppkriterium && (
-              <p style={{ margin: '0.25em 0 0', color: p.demper }}>
-                <strong>Stopp hvis:</strong> {steg.stoppkriterium}
-              </p>
-            )}
-            {steg.kontrollpunkt && (
-              <p style={{ margin: '0.25em 0 0', color: p.demper }}>{steg.kontrollpunkt}</p>
-            )}
-            {korrigert === steg.id && <KorrigeringsLinje p={p} />}
-          </li>
-        ))}
-      </ol>
+            {FASE_OVERSKRIFT[gruppe.fase]}
+          </h3>
+          <ol style={{ listStyle: 'none', margin: '0 0 0.75em', padding: 0 }}>
+            {gruppe.steg.map((steg) => (
+              <li
+                key={steg.id}
+                style={{
+                  padding: '0.5em 0.6em',
+                  marginBottom: '0.4em',
+                  background: steg.sone === 'sikkerhet' ? p.grunn : p.flate,
+                  border:
+                    steg.sone === 'sikkerhet'
+                      ? `3px solid ${p.tekst}`
+                      : `1px solid ${p.kant}`,
+                  borderRadius: 6,
+                }}
+              >
+                {steg.sone === 'sikkerhet' && (
+                  <p style={{ margin: 0, fontSize: '0.8em', fontWeight: 800, letterSpacing: '0.08em' }}>
+                    SIKKERHET
+                  </p>
+                )}
+                <p style={{ margin: 0, fontWeight: 600 }}>{steg.handling}</p>
+                {steg.stoppkriterium && (
+                  <p style={{ margin: '0.25em 0 0', color: p.demper }}>
+                    <strong>Stopp hvis:</strong> {steg.stoppkriterium}
+                  </p>
+                )}
+                {steg.kontrollpunkt && (
+                  <p style={{ margin: '0.25em 0 0', color: p.demper }}>{steg.kontrollpunkt}</p>
+                )}
+                {korrigert === steg.id && <KorrigeringsLinje p={p} />}
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5em', marginTop: '0.75em' }}>
         <Knapp
@@ -392,6 +488,8 @@ function AvviksModus({
         steg={steg[steg.length - 1]}
         bekreftet
         onBekreft={() => {}}
+        korrigert={false}
+        onStemmerIkke={() => {}}
         p={p}
       />
     );
@@ -474,11 +572,16 @@ function NakkesjekkKontroll({
   steg,
   bekreftet,
   onBekreft,
+  korrigert,
+  onStemmerIkke,
   p,
 }: {
   steg: ProtokollSteg;
   bekreftet: boolean;
   onBekreft: () => void;
+  /** «Noe stemmer ikke» er valgt — korreksjonslinjen vises. */
+  korrigert: boolean;
+  onStemmerIkke: () => void;
   p: Palett;
 }) {
   return (
@@ -497,12 +600,16 @@ function NakkesjekkKontroll({
           <strong>Stopp hvis:</strong> {steg.stoppkriterium}
         </p>
       )}
+      {korrigert && !bekreftet && <KorrigeringsLinje p={p} />}
       {bekreftet ? (
         <p style={{ margin: '0.75em 0 0', fontWeight: 600 }}>Nakken er kjent på — god tur.</p>
       ) : (
-        <div style={{ marginTop: '0.75em' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5em', marginTop: '0.75em' }}>
           <Knapp primar p={p} onClick={onBekreft}>
-            Nakken er sjekket
+            Alt vel — nakken er sjekket
+          </Knapp>
+          <Knapp p={p} onClick={onStemmerIkke}>
+            Noe stemmer ikke
           </Knapp>
         </div>
       )}

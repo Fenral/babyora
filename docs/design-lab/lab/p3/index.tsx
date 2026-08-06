@@ -35,6 +35,7 @@ import {
 } from './brief-maskin';
 import {
   byggTidslinje,
+  deltaVaerDel,
   lesBriefInnhold,
   KVITTERING_ETIKETT,
   type BriefInnhold,
@@ -488,10 +489,11 @@ function WidgetInnhold({
         {innhold.handling}
       </p>
 
-      {/* Delta med synlig versjonert baseline (INV-6). */}
+      {/* Delta (kun værleddet — handlingen er alltid den konkrete over)
+          med synlig versjonert ANTREKKS-baseline (INV-6 + P3-P0). */}
       {innhold.delta && (
         <p style={{ margin: '0 0 0.4em' }}>
-          {innhold.delta.setning}
+          {deltaVaerDel(innhold.delta.setning)}
           <br />
           <span style={{ fontSize: '0.85em', color: dus }}>
             Referanse — {innhold.delta.baseline.etikett}
@@ -514,6 +516,15 @@ function WidgetInnhold({
           {e.stoppkriterium && <p style={{ margin: 0 }}>{e.stoppkriterium}</p>}
         </div>
       ))}
+
+      {/* Dominerer hard sikkerhet, vises den konkrete antrekkshandlingen
+          rett etter — briefen forblir handlingskomplett (P3-P0). */}
+      {innhold.komfortHandling !== null &&
+        innhold.komfortHandling !== innhold.handling && (
+          <p style={{ margin: '0 0 0.4em', fontWeight: 600 }}>
+            {innhold.komfortHandling}
+          </p>
+        )}
       {myke.map((e) => (
         <p key={e.id} style={{ margin: '0 0 0.4em', fontSize: '0.9em' }}>
           {e.innhold} {e.forventetHandling}

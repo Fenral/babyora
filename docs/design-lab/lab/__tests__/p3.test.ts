@@ -47,6 +47,11 @@ function fakta(id: string): NoytraleFakta {
   return hentFakta(scenario(id));
 }
 
+/** Gårsdagens motorberegnede antrekk for et delta-scenario. */
+function antrekkIGaar(s: Scenario) {
+  return hentFakta({ ...s, weather: s.weatherIGaar! }).basePlagg;
+}
+
 /* ------------------------------------------------------------------ *
  * Del 1 — semantikk-porten for alle ti scenarier
  * ------------------------------------------------------------------ */
@@ -78,7 +83,7 @@ describe('P3-briefbyggeren består semantikk-porten (alle ti scenarier)', () => 
       versjon: 2,
       scenarioFingerprint: 'test#endret-vaer',
       supersedes: 'endret-vaer-b1',
-      baseline: { versjon: 1, vaer: s.weatherIGaar! },
+      baseline: { versjon: 1, vaer: s.weatherIGaar!, antrekk: antrekkIGaar(s) },
     });
     const resultat = sjekkSemantikk(tilRetningsUttrykk(lesBriefInnhold(brief)), f);
     expect(resultat.mangler).toEqual([]);
@@ -131,16 +136,17 @@ describe('P3-briefbyggeren består semantikk-porten (alle ti scenarier)', () => 
  * Del 2 — retningsspesifikk atferd
  * ------------------------------------------------------------------ */
 
-describe('atferd 1: delta med synlig versjonert baseline (INV-6)', () => {
-  it('endret-vaer: deltaSetning + «i går V1: føltes X °C» + riktig retning', () => {
+describe('atferd 1: delta med synlig versjonert ANTREKKS-baseline (INV-6 + P3-P0)', () => {
+  it('endret-vaer: deltaSetning + konkret lagendring med posisjon + antrekksbaseline', () => {
     const s = scenario('endret-vaer');
     const f = hentFakta(s);
+    const iGaar = antrekkIGaar(s);
     const brief = byggBrief(f, {
       briefId: 'b2',
       versjon: 2,
       scenarioFingerprint: 'test',
       supersedes: 'b1',
-      baseline: { versjon: 1, vaer: s.weatherIGaar! },
+      baseline: { versjon: 1, vaer: s.weatherIGaar!, antrekk: iGaar },
     });
     const innhold = lesBriefInnhold(brief);
 
@@ -150,11 +156,28 @@ describe('atferd 1: delta med synlig versjonert baseline (INV-6)', () => {
     expect(innhold.delta!.setning).toBe(deltaSetning(s.weatherIGaar!, s.weather!));
     // Mildt→vind/kulde: deltaet skal peke MOT flere lag, aldri færre.
     expect(innhold.delta!.setning).toContain('Kaldere enn i går');
-    expect(innhold.delta!.setning).toContain('legg til et lag');
-    expect(innhold.handling).toBe('Legg til et lag.');
-    // Synlig, VERSJONERT baseline med gårsdagens følt-verdi.
+
+    // HANDLINGSKOMPLETT (Sols P3-P0): konkret lag, posisjon og basePlagg-navn
+    // — aldri det vage «Legg til et lag».
+    expect(innhold.handling).toBe(
+      'Legg ull-jakke mellom ull-mellomlag og vinterkjøredress.',
+    );
+    expect(innhold.komfortHandling).toBe(innhold.handling);
+    expect(/^legg til et lag\.?$/i.test(innhold.handling)).toBe(false);
+    // Lagnavnet er et faktisk basePlagg i dagens antrekk.
+    expect(innhold.basePlagg.some((p) => innhold.handling.includes(p.plagg))).toBe(true);
+
+    // Synlig, VERSJONERT baseline: gårsdagens følt-verdi OG antrekk (2–3
+    // nøkkelplagg) — baseline er et antrekk, ikke bare en temperatur.
     expect(innhold.delta!.baseline.versjon).toBe(1);
-    expect(innhold.delta!.baseline.etikett).toMatch(/^i går V1: føltes -?\d+ °C$/);
+    expect(innhold.delta!.baseline.etikett).toMatch(
+      /^i går V1 \(føltes -?\d+ °C\): .+/,
+    );
+    const etikettNavn = iGaar.filter((p) =>
+      innhold.delta!.baseline.etikett.includes(p.plagg),
+    );
+    expect(etikettNavn.length).toBeGreaterThanOrEqual(2); // minst 2 nøkkelplagg
+    expect(innhold.delta!.baseline.antrekk).toEqual(iGaar);
     expect(brief.baselineVersjon).toBe(1);
   });
 
@@ -163,6 +186,83 @@ describe('atferd 1: delta med synlig versjonert baseline (INV-6)', () => {
     expect(innhold.form).toBe('full-liste');
     expect(innhold.delta).toBeNull();
     expect(JSON.stringify(innhold)).not.toMatch(/i går V\d/);
+  });
+});
+
+describe('atferd 1b: briefen er HANDLINGSKOMPLETT for alle ti scenarier (Sols P3-P0)', () => {
+  it('hver brief i hver tidslinje bærer en konkret handling med basePlagg-navn', () => {
+    let antallIkkeDegradert = 0;
+    for (const s of SCENARIER) {
+      for (const steg of byggTidslinje(s)) {
+        if (steg.hendelse.type !== 'brief') continue;
+        const innhold = lesBriefInnhold(steg.hendelse.brief);
+        const ctx = `${s.id} / ${steg.hendelse.brief.briefId}`;
+
+        // Det vage «legg til et lag» finnes ikke som handling noe sted.
+        expect(/^legg til et lag\.?$/i.test(innhold.handling), ctx).toBe(false);
+
+        if (innhold.form === 'degradert') {
+          // Degradert: konservativ fallback ER handlingen — aldri plagg.
+          expect(innhold.handling, ctx).toBe(DEGRADERT_NESTE_HANDLING);
+          expect(innhold.komfortHandling, ctx).toBeNull();
+          continue;
+        }
+
+        antallIkkeDegradert += 1;
+        // Konkret antrekkshandling finnes alltid og navngir minst ett
+        // faktisk basePlagg fra briefens egen liste.
+        expect(innhold.komfortHandling, ctx).not.toBeNull();
+        expect(
+          innhold.basePlagg.some((p) => innhold.komfortHandling!.includes(p.plagg)),
+          `${ctx}: «${innhold.komfortHandling}» navngir ingen basePlagg`,
+        ).toBe(true);
+
+        // Dominansregelen: hard sikkerhet vinner handlingen, ellers er
+        // handlingen selve den konkrete antrekkshandlingen.
+        const harde = innhold.sikkerhet.filter((e) => e.prioritet === 'hard');
+        expect(innhold.handling, ctx).toBe(
+          harde.length > 0 ? harde[0].innhold : innhold.komfortHandling,
+        );
+
+        // Semantikk-porten består mot briefens EGET faktagrunnlag
+        // (V1 i delta-scenariet har morgenprognosens fakta).
+        const resultat = sjekkSemantikk(tilRetningsUttrykk(innhold), steg.fakta);
+        expect(resultat.mangler, ctx).toEqual([]);
+      }
+    }
+    expect(antallIkkeDegradert).toBeGreaterThanOrEqual(8 * 3); // ikke-vakuøst
+  });
+});
+
+describe('atferd 1c: V2 ENDRER handlingen i endret-vaer (Sols P3-P1)', () => {
+  it('V1 (morgenprognose = i går): samme antrekk holder → V2: konkret lagendring', () => {
+    const s = scenario('endret-vaer');
+    const tidslinje = byggTidslinje(s);
+    const briefs = tidslinje.flatMap((st) =>
+      st.hendelse.type === 'brief' ? [st.hendelse.brief] : [],
+    );
+    const v1 = lesBriefInnhold(briefs.find((b) => b.versjon === 1)!);
+    const v2 = lesBriefInnhold(briefs.find((b) => b.versjon === 2)!);
+
+    // Begge er delta-form mot samme versjonerte baseline.
+    expect(v1.form).toBe('delta');
+    expect(v2.form).toBe('delta');
+    expect(v1.delta!.baseline.versjon).toBe(1);
+    expect(v2.delta!.baseline.versjon).toBe(1);
+
+    // V1: prognosen er ennå uendret fra i går → bekreft antrekket.
+    expect(v1.handling).toMatch(/^Samme antrekk som i går holder — .+/);
+    expect(v1.basePlagg.some((p) => v1.handling.includes(p.plagg))).toBe(true);
+
+    // V2: oppdatert prognose → handlingen ENDRES til en konkret lagendring
+    // med navngitt lag og posisjon.
+    expect(v2.handling).toBe(
+      'Legg ull-jakke mellom ull-mellomlag og vinterkjøredress.',
+    );
+    expect(v2.handling).not.toBe(v1.handling);
+
+    // Endringen er reell: V2s antrekk skiller seg fra V1s (flere lag).
+    expect(v2.basePlagg.length).toBeGreaterThan(v1.basePlagg.length);
   });
 });
 

@@ -33,6 +33,7 @@ import {
   type Brief,
   type BriefTilstand,
 } from '../p3/brief-maskin';
+import { deltaVaerDel } from '../p3/briefbygger';
 import {
   ambientTidslinje,
   forsteTryggeSteg,
@@ -228,11 +229,20 @@ function P4Sloyfe({ scenario, klokke, logg }: PrototypeProps) {
               if (!protokollAapen) {
                 logg?.('protokoll-aapnet', {
                   tidISO: naaISO,
+                  briefId: brief.briefId,
                   briefVersjon: versjonssjekk?.briefVersjon,
                   protokollVersjon: versjonssjekk?.protokollVersjon,
                   brudd: versjonssjekk?.brudd,
                 });
                 if (versjonssjekk?.brudd) logg?.('versjonsbrudd', versjonssjekk);
+              } else {
+                // Returen: samme brief (id + versjon) skal stå på flaten
+                // etter lukking — kontinuiteten logges begge veier (P4-P0).
+                logg?.('protokoll-lukket', {
+                  tidISO: naaISO,
+                  briefId: brief.briefId,
+                  briefVersjon: brief.versjon,
+                });
               }
               setProtokollAapen(!protokollAapen);
             }}
@@ -288,10 +298,15 @@ function P4Sloyfe({ scenario, klokke, logg }: PrototypeProps) {
  * Brief-flaten — handlingen ER protokollens steg 1
  * ------------------------------------------------------------------ */
 
+/**
+ * Stempellinjen navngir BÅDE briefId og versjon og brukes uendret på
+ * begge flater (brief-flaten OG den åpnede protokollen) — kontinuiteten
+ * i overgangen er dermed synlig, ikke bare påstått (P4-P0).
+ */
 function Stempellinje({ brief, utlopt, dus }: { brief: Brief; utlopt?: boolean; dus: string }) {
   return (
     <p style={{ margin: '0 0 0.4em', fontSize: '0.85em', color: dus, fontVariantNumeric: 'tabular-nums' }}>
-      Brief #{brief.versjon} · utstedt {klokkeslett(brief.issuedAtISO)} ·{' '}
+      Brief #{brief.versjon} · {brief.briefId} · utstedt {klokkeslett(brief.issuedAtISO)} ·{' '}
       {utlopt
         ? `gjaldt til ${klokkeslett(brief.expiresAtISO)} — utløpt`
         : `gjelder til ${klokkeslett(brief.expiresAtISO)}`}
@@ -364,6 +379,26 @@ function BriefFlate({
         </p>
       )}
 
+      {/* Endret vær: briefen uttrykker BÅDE deltaet (P3s innhold — værledd,
+          antrekksbaseline og konkret endring) OG første protokollhandling
+          over — ingen ny anbefaling introduseres (P4-P1). */}
+      {innhold.briefInnhold.delta && (
+        <div style={{ margin: '0 0 0.4em' }}>
+          <p style={{ margin: 0 }}>
+            {deltaVaerDel(innhold.briefInnhold.delta.setning)}
+          </p>
+          {innhold.briefInnhold.komfortHandling !== null &&
+            innhold.briefInnhold.komfortHandling !== steg1.handling && (
+              <p style={{ margin: 0, fontWeight: 600 }}>
+                {innhold.briefInnhold.komfortHandling}
+              </p>
+            )}
+          <p style={{ margin: 0, fontSize: '0.85em', color: p.dus }}>
+            Referanse — {innhold.briefInnhold.delta.baseline.etikett}
+          </p>
+        </div>
+      )}
+
       <p
         style={{
           margin: 0,
@@ -405,7 +440,7 @@ function ProtokollVisning({
     <div style={{ marginTop: '0.8em', border: `1px solid ${p.kant}`, borderRadius: '0.6em', padding: '0.8em' }}>
       <Stempellinje brief={brief} dus={p.dus} />
       <p style={{ margin: '0 0 0.6em', fontSize: '0.85em', fontWeight: 700 }}>
-        {P4_TEKST.sammeVersjon(brief.versjon)}
+        {P4_TEKST.sammeVersjon(brief.briefId, brief.versjon)}
       </p>
 
       <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>

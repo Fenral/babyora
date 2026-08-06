@@ -39,6 +39,20 @@ export type Sone =
   | 'sikkerhet'
   | 'kontroll';
 
+/**
+ * Normalmodusens faseinndeling (Sols P1-funn: normalmodus skal ikke være
+ * én flat liste). Grensen går ved ytterlaget: alt før («på barnet») er
+ * kroppens innerste lag, alt fra og med ytterlaget («i vognen / uteklart»)
+ * er yttertøy + hode/hender/føtter + utstyr. Sekvensen er uendret —
+ * fasene er overskrifter over den samme påkledningsrekkefølgen.
+ */
+export type ProtokollFase = 'paa-barnet' | 'uteklart';
+
+export const FASE_OVERSKRIFT: Record<ProtokollFase, string> = {
+  'paa-barnet': 'På barnet',
+  uteklart: 'I vognen / uteklart',
+};
+
 export type ProtokollSteg = {
   id: string;
   sone: Sone;
@@ -52,12 +66,38 @@ export type ProtokollSteg = {
   kritisk: boolean;
   /** Satt når steget bærer en safety-hendelse fra faktalaget. */
   safetyEventId?: string;
+  /** Normalmodusens fasegruppe. Udefinert for nakkesjekk/degradert-steg. */
+  fase?: ProtokollFase;
 };
 
 export type Tilstandsfrase = 'Vanlig dag' | 'Følg med' | 'Avvik';
 
+/**
+ * Tilgjengelighetsstatus — SEPARAT akse fra beslutningsmodusen (Sols
+ * avvik b): når rådet er utløpt eller grunnlaget mangler, erstattes
+ * modusfrasen av toppteksten for tilgjengelighet. «Avvik» er en aktiv
+ * værmodus og brukes aldri om et utilgjengelig råd.
+ */
+export type Tilgjengelighet = 'aktiv' | 'utlopt' | 'kan-ikke-beregnes';
+
+export type Topptekst = 'Rådet er utløpt' | 'Kan ikke beregnes';
+
+export const TOPPTEKST_FOR_TILGJENGELIGHET: Record<
+  Exclude<Tilgjengelighet, 'aktiv'>,
+  Topptekst
+> = {
+  utlopt: 'Rådet er utløpt',
+  'kan-ikke-beregnes': 'Kan ikke beregnes',
+};
+
+/** Gjenopprettingshandlingen i utilgjengelig tilstand. */
+export const BEREGN_PAA_NYTT = 'Beregn på nytt';
+
+/** Topplinjen viser modusfrase (aktiv) ELLER tilgjengelighetstopptekst. */
+export type Topplinjetekst = Tilstandsfrase | Topptekst;
+
 export type Tilstandslinje = {
-  frase: Tilstandsfrase;
+  frase: Topplinjetekst;
   /** Én setnings hvorfor — koblet til regelen som avgjorde modusen. */
   hvorfor: string;
 };
@@ -66,6 +106,8 @@ export type Protokoll = {
   modus: Modus;
   /** Regelen som avgjorde modusen (sporbarhet i logg/tester). */
   regelId: string;
+  /** Tilgjengelighetsstatus — egen akse, aldri en fjerde beslutningsmodus. */
+  tilgjengelighet: Tilgjengelighet;
   tilstand: Tilstandslinje;
   steg: ProtokollSteg[];
   gyldigTilISO: string;
@@ -180,11 +222,10 @@ function tilSafetySteg(event: SafetyEvent): ProtokollSteg {
  * Tilstandslinjen — frase + én setnings hvorfor
  * ------------------------------------------------------------------ */
 
-const FRASE_FOR_MODUS: Record<Modus, Tilstandsfrase> = {
+const FRASE_FOR_MODUS: Record<Exclude<Modus, 'degradert'>, Tilstandsfrase> = {
   normal: 'Vanlig dag',
   'folg-med': 'Følg med',
   avvik: 'Avvik',
-  degradert: 'Avvik',
 };
 
 const HVORFOR_FOR_REGEL: Record<string, string> = {
@@ -207,7 +248,15 @@ function tilstandslinje(
   fakta: NoytraleFakta,
 ): Tilstandslinje {
   if (modus === 'degradert') {
-    return { frase: 'Avvik', hvorfor: fakta.datakvalitet.svakestePremiss };
+    // Tilgjengelighetsstatus, ikke beslutningsmodus: toppteksten sier at
+    // rådet er utilgjengelig, med datakvalitetens svakeste premiss som
+    // den ENE forklaringen (Sols avvik b).
+    const status =
+      fakta.datakvalitet.status === 'mangler' ? 'kan-ikke-beregnes' : 'utlopt';
+    return {
+      frase: TOPPTEKST_FOR_TILGJENGELIGHET[status],
+      hvorfor: fakta.datakvalitet.svakestePremiss,
+    };
   }
   return {
     frase: FRASE_FOR_MODUS[modus],
@@ -228,6 +277,8 @@ export function kompilerProtokoll(fakta: NoytraleFakta): Protokoll {
     return {
       modus,
       regelId: regel.id,
+      tilgjengelighet:
+        fakta.datakvalitet.status === 'mangler' ? 'kan-ikke-beregnes' : 'utlopt',
       tilstand,
       gyldigTilISO,
       degradert: {
@@ -248,23 +299,29 @@ export function kompilerProtokoll(fakta: NoytraleFakta): Protokoll {
 
   // 1) Plaggsteg i påkledningsrekkefølge (stabil sortering: posisjon,
   //    deretter opprinnelig motor-rekkefølge innen samme posisjon).
+  //    Fasegrensen går ved ytterlaget: posisjon < yttertoy → «på barnet»,
+  //    posisjon >= yttertoy → «i vognen / uteklart».
   const plaggSteg = fakta.basePlagg
     .map((bp, indeks) => {
       const { posisjon, sone } = plasserPlagg(bp.kategori, bp.plagg);
-      return { posisjon, indeks, steg: lagPlaggSteg(sone, bp.plagg, indeks) };
+      const fase: ProtokollFase =
+        posisjon >= KATEGORI_POSISJON.yttertoy ? 'uteklart' : 'paa-barnet';
+      return { posisjon, indeks, steg: lagPlaggSteg(sone, bp.plagg, indeks, fase) };
     })
     .sort((a, b) => a.posisjon - b.posisjon || a.indeks - b.indeks);
 
-  // 2) Safety-hendelser fordeles på plassering i sekvensen.
+  // 2) Safety-hendelser fordeles på plassering i sekvensen. Fasen følger
+  //    plasseringen: «først»-hendelser leses før påkledningen starter
+  //    (på barnet), ytterlags- og kontrollhendelser hører til uteklart.
   const forst: ProtokollSteg[] = [];
   const foerYtterlag: ProtokollSteg[] = [];
   const kontrollTilSlutt: ProtokollSteg[] = [];
   for (const event of fakta.safetyEvents) {
-    const steg = tilSafetySteg(event);
     const plassering = plasserSafetyEvent(event, fakta);
-    if (plassering === 'forst') forst.push(steg);
-    else if (plassering === 'foer-ytterlag') foerYtterlag.push(steg);
-    else kontrollTilSlutt.push(steg);
+    const steg = tilSafetySteg(event);
+    if (plassering === 'forst') forst.push({ ...steg, fase: 'paa-barnet' });
+    else if (plassering === 'foer-ytterlag') foerYtterlag.push({ ...steg, fase: 'uteklart' });
+    else kontrollTilSlutt.push({ ...steg, fase: 'uteklart' });
   }
 
   // 3) Sett inn foer-ytterlag-gruppen rett før første steg fra og med
@@ -284,15 +341,29 @@ export function kompilerProtokoll(fakta: NoytraleFakta): Protokoll {
   steg.push(...kontrollTilSlutt);
   steg.push(lagNakkesjekkSteg());
 
-  return { modus, regelId: regel.id, tilstand, gyldigTilISO, degradert: null, steg };
+  return {
+    modus,
+    regelId: regel.id,
+    tilgjengelighet: 'aktiv',
+    tilstand,
+    gyldigTilISO,
+    degradert: null,
+    steg,
+  };
 }
 
-function lagPlaggSteg(sone: Sone, plagg: string, indeks: number): ProtokollSteg {
+function lagPlaggSteg(
+  sone: Sone,
+  plagg: string,
+  indeks: number,
+  fase: ProtokollFase,
+): ProtokollSteg {
   return {
     id: `plagg-${indeks}-${plagg.replace(/[^a-zæøå0-9]+/gi, '-').toLowerCase()}`,
     sone,
     handling: plaggHandling(sone, plagg),
     kritisk: false,
+    fase,
   };
 }
 
@@ -328,5 +399,7 @@ export function erUtloptNaa(protokoll: Protokoll, naaISO: string): boolean {
   const naa = Date.parse(naaISO);
   const til = Date.parse(protokoll.gyldigTilISO);
   if (!Number.isFinite(naa) || !Number.isFinite(til)) return true; // fail-safe
-  return naa > til;
+  // Halvåpent intervall (Sols avvik e): rådet er gyldig FØR gyldigTil,
+  // ikke gjennom det — et råd merket «til 09:30» er utløpt klokken 09:30.
+  return naa >= til;
 }

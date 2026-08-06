@@ -12,6 +12,9 @@
  *       selv om klokken stilles tilbake
  *   I3  aktiv ⇒ innenfor [validFrom, expiresAt) ved gjeldende klokke
  *   I4  supersedes respekteres — en supersedet briefId blir aldri aktiv igjen
+ *   I5  stale er MONOTONT (Sols avvik d) — en briefId som én gang er
+ *       observert stale blir aldri 'aktiv' igjen uten nyere gyldig versjon;
+ *       klokketilbakerulling reaktiverer aldri
  */
 
 import { describe, expect, it } from 'vitest';
@@ -114,11 +117,41 @@ describe('brief-maskinen — rettede cacheregler', () => {
     expect(t.status).toBe('stale');
     expect(t.gjeldende?.briefId).toBe('B1'); // beholdt, ikke kastet
     expect(t.maskerte).not.toContain('B1');
+    expect(t.staleObserverte).toContain('B1'); // I5: observasjonen er varig
 
     // Tilbake online mens fortsatt utløpt → maskert.
     t = motta(t, { type: 'online' }, klokke(210));
     expect(t.status).toBe('maskert');
     expect(t.maskerte).toContain('B1');
+  });
+
+  it('I5 (avvik d): stale er monotont — klokketilbakerulling reaktiverer aldri', () => {
+    // B1 aktiv → offline → utløper (stale observert).
+    let t = motta(START_TILSTAND, { type: 'brief', brief: lagBrief(1) }, klokke(15));
+    t = motta(t, { type: 'offline' }, klokke(20));
+    t = motta(t, { type: 'klokke' }, klokke(200));
+    expect(t.status).toBe('stale');
+
+    // Klokken rulles TILBAKE innenfor gyldighetsvinduet — B1 er observert
+    // stale og blir aldri autoritativ (aktiv) igjen; offline forblir den
+    // synlig som stale-fallback.
+    t = motta(t, { type: 'klokke' }, klokke(30));
+    expect(t.status).toBe('stale');
+    expect(t.status).not.toBe('aktiv');
+
+    // Online med tilbakerullet klokke: maskeres permanent (enveis).
+    t = motta(t, { type: 'online' }, klokke(30));
+    expect(t.status).toBe('maskert');
+    expect(t.maskerte).toContain('B1');
+
+    // Ny klokketilbakerulling endrer ingenting.
+    t = motta(t, { type: 'klokke' }, klokke(16));
+    expect(t.status).toBe('maskert');
+
+    // KUN en NYERE gyldig versjon kan bli autoritativ igjen.
+    t = motta(t, { type: 'brief', brief: lagBrief(2) }, klokke(35));
+    expect(t.status).toBe('aktiv');
+    expect(t.gjeldende?.versjon).toBe(2);
   });
 
   it('revokering maskerer umiddelbart', () => {
@@ -234,6 +267,7 @@ describe('brief-maskinen — property-invarianter (250 seedede sekvenser)', () =
     let antallMaskeringer = 0;
     let antallAktiv = 0;
     let antallStale = 0;
+    let antallI5Utfordret = 0; // stale-observert brief + klokke i gyldig vindu
 
     for (let tilfelle = 0; tilfelle < ANTALL_TILFELLER; tilfelle++) {
       const rnd = mulberry32(0xb4b70a + tilfelle);
@@ -241,6 +275,7 @@ describe('brief-maskinen — property-invarianter (250 seedede sekvenser)', () =
 
       let tilstand: BriefTilstand = START_TILSTAND;
       const noensinneMaskert = new Set<string>();
+      const noensinneStale = new Set<string>();
       const supersedet = new Set<string>();
 
       for (const steg of sekvens) {
@@ -263,12 +298,31 @@ describe('brief-maskinen — property-invarianter (250 seedede sekvenser)', () =
           }
         }
 
+        // I5 (avvik d): en stale-observert brief blir aldri aktiv igjen —
+        // heller ikke når klokken ruller tilbake inn i gyldighetsvinduet.
+        if (tilstand.status === 'stale') {
+          noensinneStale.add(tilstand.gjeldende!.briefId);
+        }
+        for (const id of tilstand.staleObserverte) noensinneStale.add(id);
+        if (
+          tilstand.gjeldende !== null &&
+          noensinneStale.has(tilstand.gjeldende.briefId)
+        ) {
+          const naaMs = Date.parse(steg.klokke.naaISO);
+          const innenforVindu =
+            naaMs >= Date.parse(tilstand.gjeldende.validFromISO) &&
+            naaMs < Date.parse(tilstand.gjeldende.expiresAtISO);
+          if (innenforVindu) antallI5Utfordret++;
+          expect(tilstand.status, `I5 ${ctx}`).not.toBe('aktiv');
+        }
+
         // I2 + I4: aktiv brief er aldri en maskert/supersedet id.
         if (tilstand.status === 'aktiv') {
           antallAktiv++;
           const aktivId = tilstand.gjeldende!.briefId;
           expect(noensinneMaskert.has(aktivId), `I2 ${ctx} id=${aktivId}`).toBe(false);
           expect(supersedet.has(aktivId), `I4 ${ctx} id=${aktivId}`).toBe(false);
+          expect(noensinneStale.has(aktivId), `I5 ${ctx} id=${aktivId}`).toBe(false);
 
           // I3: aktiv ⇒ innenfor gyldighetsvinduet ved gjeldende klokke.
           const naaMs = Date.parse(steg.klokke.naaISO);
@@ -297,6 +351,9 @@ describe('brief-maskinen — property-invarianter (250 seedede sekvenser)', () =
     expect(antallMaskeringer).toBeGreaterThan(100);
     expect(antallAktiv).toBeGreaterThan(200);
     expect(antallStale).toBeGreaterThan(10);
+    // I5 må faktisk ha blitt utfordret: minst én stale-observert brief
+    // sto i et gyldig klokkevindu uten å bli re-autorisert.
+    expect(antallI5Utfordret).toBeGreaterThan(0);
   });
 
   it('samme seed → samme forløp (deterministisk testgrunnlag)', () => {

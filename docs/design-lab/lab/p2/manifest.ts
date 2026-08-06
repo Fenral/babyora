@@ -14,11 +14,20 @@ export type ManifestOppgave = {
   scorbar: boolean;
 };
 
+export type FasitPosisjon = 'under-gulv' | 'i-spennet' | 'over-tak' | 'maskert';
+
 export type ScoringsFasit = {
   /** Entydig korrekt handling i scenariet (scoringsfasit). */
   forventetKorrektHandling: string;
   /** Forventet instrumentavlesning med uendret kandidat (der relevant). */
-  forventetPosisjon?: 'under-gulv' | 'i-spennet' | 'over-tak' | 'maskert';
+  forventetPosisjon?: FasitPosisjon;
+  /**
+   * Forventet posisjon for hver av de tre forhåndsdefinerte kandidatene
+   * (Sols fase 10-review, P2-P0): 'kald' skal stå under gulvet, 'trygg'
+   * i spennet, 'varm' over taket — diagnose og korrigering testes, ikke
+   * bare bekreftelse. I maskerte scenarier finnes ingen posisjon.
+   */
+  forventetPosisjonPerKandidat: Record<'kald' | 'trygg' | 'varm', FasitPosisjon>;
   /** Feil som i dette scenariet regnes som farlig (nulltoleranse). */
   farligFeil?: string;
 };
@@ -36,6 +45,20 @@ export type EksperimentManifest = {
   stoppregel: string;
   loggedeEvents: string[];
   ikkeStottet: string[];
+};
+
+/** Fasit for de tre forhåndsdefinerte kandidatene i scenarier med gyldig spenn. */
+const KANDIDAT_FASIT_OK: ScoringsFasit['forventetPosisjonPerKandidat'] = {
+  kald: 'under-gulv',
+  trygg: 'i-spennet',
+  varm: 'over-tak',
+};
+
+/** I maskerte scenarier finnes ingen posisjon — uansett kandidat. */
+const KANDIDAT_FASIT_MASKERT: ScoringsFasit['forventetPosisjonPerKandidat'] = {
+  kald: 'maskert',
+  trygg: 'maskert',
+  varm: 'maskert',
 };
 
 export const manifest: EksperimentManifest = {
@@ -58,16 +81,22 @@ export const manifest: EksperimentManifest = {
     'Hypotese-etiketten («Veiledende område — ikke fagvalidert») reduserer feillesningen ' +
     'vi måler: testen måler forståelse og interaksjon, ikke produksjonsrealistisk tillit ' +
     '(spec v2 §2). Web-bevis dekker ikke native haptikk (detent under gulvet) eller ' +
-    'utendørs lesbarhet på ekte skjerm.',
+    'utendørs lesbarhet på ekte skjerm. Poeng→grader (GRADER_PER_POENG) er intern ' +
+    'prototypekalibrering — aldri et faglig eller sikkerhetsmessig utsagn; kandidatens ' +
+    'ekvivalente gradtall vises aldri i UI (Sols fase 10-review, avvik c).',
 
   oppgaver: [
     {
       id: 'holder-dette',
       navn: '«Holder dette?» (instrument — aktiv måloppgave)',
       beskrivelse:
-        'Kandidat-antrekket står forhåndsutfylt som chips fra motorens basePlagg. ' +
-        'Deltakeren korrigerer avvik (fjerner/legger til plagg), leser kandidatens ' +
-        'posisjon i det vertikale spennet og utfører den fastkoblede responsen.',
+        'Testselen laster én av TRE forhåndsdefinerte kandidater (kandidatId): ' +
+        '«kald» (anbefalingen minus kritiske lag, normalt ett — under gulvet), ' +
+        '«trygg» (anbefalingen — i spennet) eller «varm» (anbefalingen pluss to lag ' +
+        '— over taket). Ingen merkes som riktig i UI. Deltakeren korrigerer avvik ' +
+        '(fjerner/legger til plagg), leser kandidatens posisjon i det vertikale ' +
+        'spennet og utfører den fastkoblede responsen — diagnose og korrigering ' +
+        'testes, ikke bare bekreftelse.',
       maal: 'Rask korrigering: p75 ≤ 8 s fra oppgavestart til kandidat stemmer (spec v2 §3).',
       scorbar: true,
     },
@@ -85,11 +114,13 @@ export const manifest: EksperimentManifest = {
   scoringsfasit: {
     'normal-dag': {
       forventetPosisjon: 'i-spennet',
+      forventetPosisjonPerKandidat: KANDIDAT_FASIT_OK,
       forventetKorrektHandling:
         'Lese «i trygt spenn» → gå ut som planlagt, kjenne på nakken underveis.',
     },
     grensevaer: {
       forventetPosisjon: 'i-spennet',
+      forventetPosisjonPerKandidat: KANDIDAT_FASIT_OK,
       forventetKorrektHandling:
         'Lese posisjonen og nedbørs-/kuldehendelsene → tett ytterlag, og følge ' +
         'stoppkriteriet ved våte klær.',
@@ -97,6 +128,7 @@ export const manifest: EksperimentManifest = {
     },
     'sovende-vognbarn': {
       forventetPosisjon: 'i-spennet',
+      forventetPosisjonPerKandidat: KANDIDAT_FASIT_OK,
       forventetKorrektHandling:
         'Forstå at instrumentet er INVERTERT: varmetaket er den harde grensen når ' +
         'barnet sover. Ved «over taket»: fjerne ett lag straks.',
@@ -105,6 +137,7 @@ export const manifest: EksperimentManifest = {
     },
     bilstol: {
       forventetPosisjon: 'i-spennet',
+      forventetPosisjonPerKandidat: KANDIDAT_FASIT_OK,
       forventetKorrektHandling:
         'Uansett posisjon i spennet: følge den harde bilstolhendelsen (HB-9) — fjerne ' +
         'vattert dress før bilstolen, deretter lese spennet.',
@@ -112,19 +145,22 @@ export const manifest: EksperimentManifest = {
     },
     'manglende-vaerdata': {
       forventetPosisjon: 'maskert',
+      forventetPosisjonPerKandidat: KANDIDAT_FASIT_MASKERT,
       forventetKorrektHandling:
-        'Lese maskeringen som trygg degradering: kle etter årstid, kjenne på nakken før ' +
-        'dere går — ikke lete etter et skjult spenn.',
+        'Lese «Kan ikke beregnes» som trygg degradering: kle etter årstid, kjenne på ' +
+        'nakken før dere går — ikke lete etter et skjult spenn eller et gammelt råd.',
       farligFeil: 'Å behandle den maskerte figuren som et gyldig spenn.',
     },
     'endret-vaer': {
       forventetPosisjon: 'i-spennet',
+      forventetPosisjonPerKandidat: KANDIDAT_FASIT_OK,
       forventetKorrektHandling:
         'Dømme kandidaten mot DAGENS spenn (vind og kulde), ikke gårsdagens følelse — ' +
         'legge til laget responsen ber om hvis kandidaten står under gulvet.',
     },
     'utlopt-raad': {
       forventetPosisjon: 'maskert',
+      forventetPosisjonPerKandidat: KANDIDAT_FASIT_MASKERT,
       forventetKorrektHandling:
         'Lese at spennet er utløpt og maskert → falle tilbake til årstid + nakkesjekk. ' +
         'Ikke gjenbruke det gamle spennet.',
@@ -132,18 +168,21 @@ export const manifest: EksperimentManifest = {
     },
     'ny-omsorgsperson': {
       forventetPosisjon: 'i-spennet',
+      forventetPosisjonPerKandidat: KANDIDAT_FASIT_OK,
       forventetKorrektHandling:
         'Uten forhistorie: lese posisjon, «Usikrest: …» og gyldighet direkte fra flaten ' +
         'og utføre samme respons som primærbrukeren ville gjort.',
     },
     'dynamic-type': {
       forventetPosisjon: 'i-spennet',
+      forventetPosisjonPerKandidat: KANDIDAT_FASIT_OK,
       forventetKorrektHandling:
         'Samme beslutning som normal-dag i 1.4× tekst — setningsformen bærer hele ' +
         'dommen uten figuren.',
     },
     utendorslys: {
       forventetPosisjon: 'i-spennet',
+      forventetPosisjonPerKandidat: KANDIDAT_FASIT_OK,
       forventetKorrektHandling:
         'Samme avlesning i høykontrast: sonene bæres av skravur, form og tekst — ikke ' +
         'gråtoner. Vindhendelsen (halsedisse) følges.',
@@ -165,10 +204,13 @@ export const manifest: EksperimentManifest = {
     'sikkerhetsbærende tilstand (spec v2 §4 pkt. 4).',
 
   loggedeEvents: [
+    'p2:kandidat-lastet {kandidatId}',
     'p2:oppgave-valgt {oppgave}',
     'p2:chip-endret {plagg, valgt}',
+    'p2:endring-vist {forklaring}',
     'p2:posisjon-vist {posisjon, naerHardGrense, invertert}',
-    'p2:maskert-vist {aarsak}',
+    'p2:maskert-vist {modus, aarsak, utloptNaa}',
+    'p2:gjenoppretting-forsokt {modus, handling}',
     'p2:hendelse-vist {id, prioritet}',
   ],
 

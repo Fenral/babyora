@@ -34,12 +34,28 @@ import {
 import { lagLogg, normaliserEvent } from '../felles/sele/logging';
 import {
   NI_ORDS_REGELEN,
+  nullarmTekster,
   nullmodellTekster,
 } from '../felles/sele/nullmodell';
+import {
+  ALLE_NULLARMER,
+  NULLARMER,
+  nullarmFraParam,
+  standardNullarm,
+} from '../felles/sele/nullarmer';
+import {
+  forsteSetning,
+  lesLabParametre,
+  oppgavePromptFraManifest,
+} from '../felles/sele/deltakermodus';
 import {
   DISCLAIMER_TEKST,
   DISCLAIMER_TITTEL,
 } from '../felles/sele/disclaimer';
+import { manifest as p1Manifest } from '../p1/manifest';
+import { manifest as p2Manifest } from '../p2/manifest';
+import { manifest as p3Manifest } from '../p3/manifest';
+import { manifest as p4Manifest } from '../p4/manifest';
 
 /* ------------------------------------------------------------------ *
  * Virtuell klokke
@@ -326,6 +342,204 @@ describe('nullmodell — værapp-rådata uten motor-semantikk', () => {
     expect(tekster).toContain('4 m/s');
     expect(tekster).toContain('1.2 mm/t');
     expect(tekster).toContain('sludd');
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * Nullarmer — oppgavespesifikke kontrollarmer (Sols fase 10-review,
+ * nullmodell-P2: «påkledning, validering og handoff må ha hver sin
+ * sammenlignbare slutt»)
+ * ------------------------------------------------------------------ */
+
+describe('nullarmer — oppgavespesifikke kontrollarmer', () => {
+  it('tre armer med nøyaktig spec-komponentene: rådata+regel / regel+egen vurdering / meldingsfelt', () => {
+    expect(ALLE_NULLARMER).toEqual([
+      'null-paakledning',
+      'null-validering',
+      'null-handoff',
+    ]);
+    expect(NULLARMER['null-paakledning'].komponenter).toEqual([
+      'raadata',
+      'regel',
+    ]);
+    expect(NULLARMER['null-validering'].komponenter).toEqual([
+      'regel',
+      'egen-vurdering',
+    ]);
+    expect(NULLARMER['null-handoff'].komponenter).toEqual(['meldingsfelt']);
+  });
+
+  it('hver arm har unik sluttEvent (sammenlignbar slutt) og noterer hva som inngår i beslutningstiden', () => {
+    const sluttEvents = ALLE_NULLARMER.map((a) => NULLARMER[a].sluttEvent);
+    expect(new Set(sluttEvents).size).toBe(3);
+    for (const arm of ALLE_NULLARMER) {
+      const spec = NULLARMER[arm];
+      expect(spec.beslutningstidInkluderer.length, arm).toBeGreaterThan(20);
+      for (const tekst of [
+        spec.navn,
+        spec.oppgavePrompt,
+        spec.beslutningstidInkluderer,
+      ]) {
+        expect(harForbudtSprak(tekst), `${arm}: ${tekst}`).toBe(false);
+      }
+      // Oppgaveprompten er én setning (ingen setningsgrense inni).
+      expect(spec.oppgavePrompt, arm).not.toMatch(/\.\s+\S/);
+    }
+  });
+
+  it('standardNullarm per oppgavetype: ny-omsorgsperson er handoff (overlevering), resten påkledning', () => {
+    for (const scenario of SCENARIER) {
+      expect(standardNullarm(scenario.id), scenario.id).toBe(
+        scenario.id === 'ny-omsorgsperson'
+          ? 'null-handoff'
+          : 'null-paakledning',
+      );
+    }
+  });
+
+  it('armene er disjunkte flater: kun påkledning bærer rådata, kun handoff mangler regelen', () => {
+    const scenario = scenarioForId('grensevaer')!;
+    const paakledning = nullarmTekster(scenario, 'null-paakledning').join(' ');
+    const validering = nullarmTekster(scenario, 'null-validering').join(' ');
+    const handoff = nullarmTekster(scenario, 'null-handoff').join(' ');
+
+    expect(paakledning).toContain('°C');
+    expect(paakledning).toContain(NI_ORDS_REGELEN);
+    expect(validering).not.toContain('°C'); // regel + egen vurdering, ingen rådata
+    expect(validering).toContain(NI_ORDS_REGELEN);
+    expect(handoff).not.toContain('°C'); // kun meldingsfeltet
+    expect(handoff).not.toContain(NI_ORDS_REGELEN);
+  });
+
+  it('ingen arm lekker safety-innhold/stoppkriterier/plagg eller bruker forbudt språk — alle ti scenarier', () => {
+    for (const scenario of SCENARIER) {
+      for (const arm of ALLE_NULLARMER) {
+        const tekster = nullarmTekster(scenario, arm);
+        for (const t of tekster) {
+          expect(harForbudtSprak(t), `${scenario.id}/${arm}: ${t}`).toBe(false);
+        }
+        expect(lekkasjer(tekster, scenario.id), `${scenario.id}/${arm}`).toEqual(
+          [],
+        );
+      }
+    }
+  });
+
+  it('nullarmFraParam godtar oppgavetype og full arm-id; MUTASJONSBEVIS: ukjent verdi avvises', () => {
+    expect(nullarmFraParam('paakledning')).toBe('null-paakledning');
+    expect(nullarmFraParam('validering')).toBe('null-validering');
+    expect(nullarmFraParam('handoff')).toBe('null-handoff');
+    expect(nullarmFraParam('null-validering')).toBe('null-validering');
+    expect(nullarmFraParam('protokoll')).toBe(null);
+    expect(nullarmFraParam('')).toBe(null);
+    expect(nullarmFraParam(null)).toBe(null);
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * Deltakermodus — URL-kontrakt og oppgaveprompt (Sols fase 10-review,
+ * FELLES-P0: «Første viewport skal vise oppgaveprompt og retningens
+ * kjerne» — låst modus styrt av skjermbevis-skriptets URL-parametre)
+ * ------------------------------------------------------------------ */
+
+describe('deltakermodus — URL-kontrakt (skjermbevis-skriptet)', () => {
+  it('parser skjermbevis-URL-en nøyaktig: ?modus=deltaker&arm=p1&scenario=bilstol', () => {
+    expect(lesLabParametre('?modus=deltaker&arm=p1&scenario=bilstol')).toEqual({
+      modus: 'deltaker',
+      arm: 'p1',
+      scenarioId: 'bilstol',
+      nullarm: null,
+      forhandsbekreftet: false,
+    });
+  });
+
+  it('alle fem armer kan låses — null-armen med tildelt oppgavetype', () => {
+    for (const arm of ARMER) {
+      const p = lesLabParametre(`?modus=deltaker&arm=${arm}&scenario=normal-dag`);
+      expect(p.modus, arm).toBe('deltaker');
+      expect(p.arm, arm).toBe(arm);
+    }
+    const nullP = lesLabParametre(
+      '?modus=deltaker&arm=null&scenario=ny-omsorgsperson&oppgave=handoff',
+    );
+    expect(nullP.modus).toBe('deltaker');
+    expect(nullP.arm).toBe('null');
+    expect(nullP.nullarm).toBe('null-handoff');
+  });
+
+  it('MUTASJONSBEVIS: ugyldig/manglende arm degraderes til operatørmodus — låst modus krever definert oppgave', () => {
+    expect(
+      lesLabParametre('?modus=deltaker&arm=p9&scenario=bilstol'),
+    ).toMatchObject({ modus: 'operator', arm: null });
+    expect(lesLabParametre('?modus=deltaker')).toMatchObject({
+      modus: 'operator',
+      arm: null,
+    });
+    expect(lesLabParametre('')).toEqual({
+      modus: 'operator',
+      arm: null,
+      scenarioId: null,
+      nullarm: null,
+      forhandsbekreftet: false,
+    });
+  });
+
+  it('&bekreftet=1 forhåndsbekrefter disclaimer (kun for skjermbevis); alle andre verdier gjør ikke', () => {
+    expect(
+      lesLabParametre('?modus=deltaker&arm=p1&scenario=bilstol&bekreftet=1')
+        .forhandsbekreftet,
+    ).toBe(true);
+    expect(
+      lesLabParametre('?modus=deltaker&arm=p1&scenario=bilstol&bekreftet=0')
+        .forhandsbekreftet,
+    ).toBe(false);
+    expect(
+      lesLabParametre('?modus=deltaker&arm=p1&scenario=bilstol')
+        .forhandsbekreftet,
+    ).toBe(false);
+  });
+});
+
+describe('deltakermodus — oppgaveprompt fra manifestets aktive oppgave', () => {
+  it('forsteSetning kutter til én setning, stryker metodenotat i parentes og normaliserer punktum', () => {
+    expect(forsteSetning('Gjør A. Gjør B.')).toBe('Gjør A.');
+    expect(forsteSetning('Les linjen og gjenfortell (teach-back).')).toBe(
+      'Les linjen og gjenfortell.',
+    );
+    expect(forsteSetning('Uten punktum')).toBe('Uten punktum.');
+    expect(forsteSetning('  Med luft rundt.  ')).toBe('Med luft rundt.');
+  });
+
+  it('gir én setning fra hvert ekte manifest — ikke-vakuøst mot faktisk manifestinnhold', () => {
+    const p1 = oppgavePromptFraManifest(p1Manifest);
+    const p2 = oppgavePromptFraManifest(p2Manifest);
+    const p3 = oppgavePromptFraManifest(p3Manifest);
+    const p4 = oppgavePromptFraManifest(p4Manifest);
+
+    // P1/P3/P4: første oppgave i string-listen, redusert til én setning.
+    expect(p1).toBe(forsteSetning(p1Manifest.oppgaver[0]));
+    expect(p1).toContain('tilstandslinjen');
+    expect(p3).toBe(forsteSetning(p3Manifest.oppgaver[0]));
+    expect(p3).toContain('brief');
+    expect(p4).toBe(forsteSetning(p4Manifest.oppgaver[0]));
+    expect(p4).toContain('brief');
+
+    // P2: den AKTIVE (scorbare) oppgavens navn uten metodenotat.
+    expect(p2).toBe('«Holder dette?»');
+
+    for (const prompt of [p1, p2, p3, p4]) {
+      expect(prompt).not.toBeNull();
+      expect(harForbudtSprak(prompt!)).toBe(false);
+      expect(prompt!).not.toMatch(/\.\s+\S/); // én setning
+    }
+  });
+
+  it('MUTASJONSBEVIS: manifest uten (gyldige) oppgaver gir null — prompten diktes aldri opp', () => {
+    expect(oppgavePromptFraManifest(undefined)).toBe(null);
+    expect(oppgavePromptFraManifest(null)).toBe(null);
+    expect(oppgavePromptFraManifest({})).toBe(null);
+    expect(oppgavePromptFraManifest({ oppgaver: [] })).toBe(null);
+    expect(oppgavePromptFraManifest({ oppgaver: [42] })).toBe(null);
   });
 });
 

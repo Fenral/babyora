@@ -34,8 +34,46 @@ export const BAND_GRENSER = [28, 22, 16, 10, 5, 0, -7, -15];
 /** Skalaens ytterkant: utenfor det motoren er kalibrert for å nyansere. */
 export const YTTERKANT_BAND = new Set(['ekstrem', 'ekstrem_varme']);
 
-/** Hvor nær en bandgrense (±°C) føles-som må være før det er grensevær. */
-export const GRENSEVAER_MARGIN_C = 1;
+/** Hysterese: minste grensevær-margin (±°C) uansett datakvalitet. */
+export const GRENSEVAER_HYSTERESE_C = 1;
+
+/**
+ * Deklarerte usikkerhetsbånd (±°C) per svakeste premiss — DELTE konstanter
+ * (Sols avvik a: en fast ±1°-margin er utilstrekkelig når erklært
+ * måleusikkerhet kan krysse terskelen). Premissvalget speiler
+ * usikrestPremiss i felles/tekst.ts: vind ≥ 4 m/s → vindmålingen,
+ * ellers nedbør > 0 → nedbørsmengden, ellers temperaturen om to timer.
+ */
+export const USIKKERHETSBAAND_C = {
+  vindmaaling: 2,
+  nedboersmengde: 1.5,
+  temperaturOmToTimer: 1,
+} as const;
+
+/** Terskler for hvilket premiss som er svakest (delt med felles/tekst.ts). */
+export const VIND_PREMISS_TERSKEL_MS = 4;
+
+/** Usikkerhetsbåndet (±°C) deklarert av det svakeste premisset. */
+export function usikkerhetsbaandC(v: {
+  windMs: number;
+  precipMmH: number;
+}): number {
+  if (v.windMs >= VIND_PREMISS_TERSKEL_MS) return USIKKERHETSBAAND_C.vindmaaling;
+  if (v.precipMmH > 0) return USIKKERHETSBAAND_C.nedboersmengde;
+  return USIKKERHETSBAAND_C.temperaturOmToTimer;
+}
+
+/**
+ * Effektiv grensevær-margin: maks(hysterese, deklarert usikkerhetsbånd fra
+ * svakeste premiss). Aldri smalere enn hysteresen, aldri smalere enn det
+ * grunnlaget selv innrømmer av usikkerhet.
+ */
+export function grensevaerMarginC(v: {
+  windMs: number;
+  precipMmH: number;
+}): number {
+  return Math.max(GRENSEVAER_HYSTERESE_C, usikkerhetsbaandC(v));
+}
 
 function harUkjentInput(fakta: NoytraleFakta): boolean {
   if (!fakta.kontekst || !fakta.datakvalitet) return true;
@@ -142,12 +180,16 @@ export const REGELTABELL: Regel[] = [
     id: 'grensevaer',
     prioritet: 41,
     modus: 'folg-med',
-    beskrivelse: `Føles-som ligger innenfor ±${GRENSEVAER_MARGIN_C} °C av en bandgrense — anbefalingen står på vippen.`,
+    beskrivelse:
+      'Føles-som ligger innenfor grensevær-marginen (maks av hysterese ' +
+      `±${GRENSEVAER_HYSTERESE_C} °C og deklarert usikkerhetsbånd fra svakeste ` +
+      'premiss) av en bandgrense — anbefalingen står på vippen.',
     treffer: (fakta) => {
-      const feels = feelsLike(fakta);
-      if (feels === null) return false;
+      const v = fakta.vaergrunnlag;
+      if (v === null || !Number.isFinite(v.feelsLikeC)) return false;
+      const margin = grensevaerMarginC(v);
       return BAND_GRENSER.some(
-        (grense) => Math.abs(feels - grense) <= GRENSEVAER_MARGIN_C,
+        (grense) => Math.abs(v.feelsLikeC - grense) <= margin,
       );
     },
   },

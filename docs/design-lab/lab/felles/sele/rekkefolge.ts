@@ -33,7 +33,7 @@ export const ARM_NAVN: Record<Arm, string> = {
   p2: 'P2 — Spennet (instrumenttest)',
   p3: 'P3 — Briefen (tidslinje)',
   p4: 'P4 — Komposisjonen (brief → protokoll)',
-  null: 'Nullmodell — værapp + ni-ords-regelen + melding',
+  null: 'Nullmodell — oppgavespesifikk kontrollarm (påkledning / validering / handoff)',
 };
 
 /* ------------------------------------------------------------------ *

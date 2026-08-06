@@ -7,7 +7,7 @@
  */
 
 import type { Modus } from './regeltabell';
-import type { Tilstandsfrase } from './protokollkompilator';
+import type { Topplinjetekst } from './protokollkompilator';
 
 export type P1LoggEvent = {
   type:
@@ -17,6 +17,7 @@ export type P1LoggEvent = {
     | 'steg_bekreftet'
     | 'stemmer_ikke'
     | 'degradert_overgang'
+    | 'beregn_paa_nytt'
     | 'nakkesjekk_bekreftet'
     | 'sloyfe_fullfort';
   scenarioId: string;
@@ -27,7 +28,11 @@ export type P1LoggEvent = {
 
 export type ScenarioFasit = {
   forventetModus: Modus;
-  forventetFrase: Tilstandsfrase;
+  /**
+   * Topplinjen: modusfrase for aktive råd, tilgjengelighetstopptekst
+   * («Rådet er utløpt» / «Kan ikke beregnes») for utilgjengelige.
+   */
+  forventetFrase: Topplinjetekst;
   /** Entydig scoringsfasit: den korrekte handlingen i sløyfen. */
   korrektHandling: string;
 };
@@ -66,11 +71,15 @@ export const manifest: EksperimentManifest = {
   beslutningssloyfe:
     'Utløser: selen åpner protokollen for scenariet. Forstått situasjon: ' +
     'tilstandslinjen (Vanlig dag / Følg med / Avvik) med én setnings hvorfor. ' +
-    'Første handling: normalmodus = hele stabelen synlig + ett bekreft-trykk; ' +
-    'avviksmodus = ett steg om gangen med bekreft per kritisk steg. ' +
-    'Korrigering: «Stemmer ikke» på steget (minste reversible endring, kun for ' +
-    'i dag). Kontroll/avslutning: nakkesjekk-steget sist, deretter kvittering. ' +
-    'Feilstate: klokka passerer gyldighet → konservativ fallback som overgang.',
+    'Første handling: normalmodus = stabelen gruppert i faser («På barnet» ' +
+    'innerst→ytterst, «I vognen / uteklart» yttertøy + utstyr) + ett ' +
+    'bekreft-trykk; avviksmodus = ett steg om gangen med bekreft per kritisk ' +
+    'steg. Kontroll: nakkekontroll-flaten med kontrollpunktet og grenen ' +
+    'Alt vel / Noe stemmer ikke. Korrigering: «Noe stemmer ikke» gir minste ' +
+    'reversible endring, kun for i dag. Avslutning: kvittering. ' +
+    'Feilstate: klokka passerer gyldighet → toppteksten «Rådet er utløpt» ' +
+    'med én forklaring, konservativ fallback og «Beregn på nytt» som ' +
+    'overgang (tilgjengelighetsstatus, aldri en fjerde beslutningsmodus).',
 
   oppgaver: [
     'Les tilstandslinjen og gjenfortell hvorfor dagen er vanlig / krever ' +
@@ -79,8 +88,9 @@ export const manifest: EksperimentManifest = {
     'Avviksmodus: gå gjennom stegene i rekkefølge og bekreft hvert kritiske ' +
       'steg — inkludert bilstol-steget der det inngår.',
     'Reager på stoppkriteriet: forklar hva du gjør hvis nakken er klam.',
-    'Når rådet utløper midt i oppgaven (spolt klokke): forklar hva appen nå ' +
-      'ber deg gjøre, og hvorfor det ikke er en feil.',
+    'Når rådet utløper midt i oppgaven (spolt klokke): les toppteksten ' +
+      '«Rådet er utløpt», forklar hva appen nå ber deg gjøre («Beregn på ' +
+      'nytt» + fallback), og hvorfor det ikke er en feil.',
   ],
 
   /** Nøkler = de ti scenario-id-ene i felles/scenarier.ts. */
@@ -114,23 +124,26 @@ export const manifest: EksperimentManifest = {
     },
     'manglende-vaerdata': {
       forventetModus: 'degradert',
-      forventetFrase: 'Avvik',
+      forventetFrase: 'Kan ikke beregnes',
       korrektHandling:
         'Gjenfortelle fallbacken «Kle etter årstid. Kjenn på nakken før dere ' +
-        'går.» og forstå den som trygg degradering, ikke feil.',
+        'går.», forstå den som trygg degradering (ikke feil), og bruke ' +
+        '«Beregn på nytt» som gjenoppretting.',
     },
     'endret-vaer': {
-      forventetModus: 'normal',
-      forventetFrase: 'Vanlig dag',
+      forventetModus: 'folg-med',
+      forventetFrase: 'Følg med',
       korrektHandling:
-        'Bekrefte stabelen; deltaet leses som neste handling, aldri som dom ' +
-        'over gårsdagens valg.',
+        'Bekrefte stabelen OG kjenne på nakken underveis (grensevær: ' +
+        'vindmålingens usikkerhet krysser bandgrensen); deltaet leses som ' +
+        'neste handling, aldri som dom over gårsdagens valg.',
     },
     'utlopt-raad': {
       forventetModus: 'degradert',
-      forventetFrase: 'Avvik',
+      forventetFrase: 'Rådet er utløpt',
       korrektHandling:
-        'Ikke gjenbruke den gamle listen; følge fallbacken og kjenne på nakken.',
+        'Ikke gjenbruke den gamle listen; følge fallbacken, kjenne på nakken ' +
+        'og bruke «Beregn på nytt».',
     },
     'ny-omsorgsperson': {
       forventetModus: 'normal',
@@ -179,6 +192,7 @@ export const manifest: EksperimentManifest = {
     { type: 'steg_bekreftet', naar: 'Avviksmodus: et kritisk steg bekreftes.' },
     { type: 'stemmer_ikke', naar: 'Brukeren korrigerer et steg (minste endring, kun i dag).' },
     { type: 'degradert_overgang', naar: 'Klokka passerer gyldighet → fallback vises.' },
+    { type: 'beregn_paa_nytt', naar: 'Utilgjengelig råd: brukeren ber om ny beregning.' },
     { type: 'nakkesjekk_bekreftet', naar: 'Det avsluttende kontrollsteget bekreftes.' },
     { type: 'sloyfe_fullfort', naar: 'Kvitteringen vises (sløyfens sluttstate).' },
   ],

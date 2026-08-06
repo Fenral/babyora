@@ -13,6 +13,11 @@
  *  I3  Offline beholdes gjeldende brief med stale-flagg når expiresAt
  *      passeres; ved online-overgang maskeres den hvis fortsatt utløpt.
  *  I4  Revokering maskerer umiddelbart.
+ *  I5  Stale er MONOTONT (Sols avvik d): en brief som én gang er observert
+ *      stale/utløpt/maskert/revokert blir aldri autoritativ (aktiv) igjen
+ *      uten en NYERE gyldig versjon — klokketilbakerulling reaktiverer
+ *      aldri. Offline forblir den synlig som stale-fallback; online
+ *      maskeres den permanent.
  *
  * Maskinen er en ren funksjon: motta(tilstand, hendelse, klokke) →
  * ny tilstand. Ingen IO, ingen Date.now() — all tid kommer fra den
@@ -71,6 +76,11 @@ export type BriefTilstand = {
   offline: boolean;
   /** briefIds som er maskert for alltid (enveis — krymper aldri). */
   maskerte: readonly string[];
+  /**
+   * briefIds som noen gang er observert stale (I5 — krymper aldri).
+   * En slik brief kan aldri bli 'aktiv' igjen, uansett klokke.
+   */
+  staleObserverte: readonly string[];
   /** Høyeste versjon noensinne akseptert — eldre kan aldri vinne. */
   hoyesteVersjon: number;
   /** Logg over forkastede briefs (for tester og selens hendelseslogg). */
@@ -82,6 +92,7 @@ export const START_TILSTAND: BriefTilstand = {
   status: 'ingen',
   offline: false,
   maskerte: [],
+  staleObserverte: [],
   hoyesteVersjon: 0,
   forkastede: [],
 };
@@ -187,13 +198,26 @@ function reevaluer(tilstand: BriefTilstand, klokke: VirtuellKlokke): BriefTilsta
 
   if (erUtlopt(brief, klokke)) {
     // I3: offline beholder briefen med stale-flagg; online maskerer.
+    // Stale-observasjonen registreres permanent (I5 — monotont).
+    if (tilstand.offline) {
+      return {
+        ...tilstand,
+        status: 'stale',
+        staleObserverte: maskerteMed(tilstand.staleObserverte, brief.briefId),
+      };
+    }
+    return maskerGjeldende(tilstand);
+  }
+
+  // Ikke utløpt — men klokken kan ha gått TILBAKE. I5 (Sols avvik d):
+  // en brief som én gang er observert stale blir aldri autoritativ igjen
+  // uten en nyere gyldig versjon. Offline forblir den synlig som stale-
+  // fallback; online maskeres den permanent (enveis).
+  if (tilstand.staleObserverte.includes(brief.briefId)) {
     if (tilstand.offline) return { ...tilstand, status: 'stale' };
     return maskerGjeldende(tilstand);
   }
 
-  // Ikke utløpt (klokken kan ha gått tilbake): stale kan friskne til aktiv
-  // igjen SÅ LENGE briefen aldri ble maskert — men var den maskert, er den
-  // fanget av terminal-sjekken over.
   if (erForTidlig(brief, klokke)) return { ...tilstand, status: 'ventende' };
   return { ...tilstand, status: 'aktiv' };
 }

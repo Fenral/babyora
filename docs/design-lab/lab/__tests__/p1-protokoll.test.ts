@@ -18,11 +18,18 @@ import {
   type NoytraleFakta,
 } from '../felles/fakta';
 import { DEGRADERT_NESTE_HANDLING, harForbudtSprak } from '../felles/tekst';
-import { klassifiser } from '../p1/klassifiserer';
-import type { Modus } from '../p1/regeltabell';
+import { klassifiser, klassifiserDetaljert } from '../p1/klassifiserer';
+import {
+  GRENSEVAER_HYSTERESE_C,
+  USIKKERHETSBAAND_C,
+  grensevaerMarginC,
+  usikkerhetsbaandC,
+  type Modus,
+} from '../p1/regeltabell';
 import {
   AUTORITETSLINJE,
   NAKKESJEKK_ID,
+  TOPPTEKST_FOR_TILGJENGELIGHET,
   erUtloptNaa,
   kompilerProtokoll,
   uttrykkFraProtokoll,
@@ -41,14 +48,20 @@ function protokollFor(id: string): Protokoll {
   return kompilerProtokoll(fakta(id));
 }
 
-/** Uavhengig fasit (samme kilde som klassifiserer-testens motorprobe). */
+/**
+ * Uavhengig fasit (samme kilde som klassifiserer-testens motorprobe).
+ * endret-vaer: føles-som −5,9 °C ligger 1,1 °C fra −7-grensen — innenfor
+ * vindmålingens deklarerte usikkerhetsbånd (±2 °C, vind 7 m/s) → Følg med
+ * (Sols avvik a: maks(hysterese, usikkerhetsbånd), aldri «Vanlig dag»
+ * når erklært måleusikkerhet kan krysse terskelen).
+ */
 const MODUS_FASIT: ReadonlyArray<[id: string, modus: Modus]> = [
   ['normal-dag', 'normal'],
   ['grensevaer', 'folg-med'],
   ['sovende-vognbarn', 'avvik'],
   ['bilstol', 'avvik'],
   ['manglende-vaerdata', 'degradert'],
-  ['endret-vaer', 'normal'],
+  ['endret-vaer', 'folg-med'],
   ['utlopt-raad', 'degradert'],
   ['ny-omsorgsperson', 'normal'],
   ['dynamic-type', 'normal'],
@@ -118,9 +131,14 @@ describe('modus og tilstandslinje', () => {
     expect(protokoll.modus).toBe(klassifiser(fakta(id)));
   });
 
-  it.each(ALLE_IDER)('%s: tilstandslinjen har fast frase + ikke-tomt hvorfor', (id) => {
-    const { tilstand } = protokollFor(id);
-    expect(['Vanlig dag', 'Følg med', 'Avvik']).toContain(tilstand.frase);
+  it.each(ALLE_IDER)('%s: tilstandslinjen har fast topplinje + ikke-tomt hvorfor', (id) => {
+    const { tilstand, tilgjengelighet } = protokollFor(id);
+    if (tilgjengelighet === 'aktiv') {
+      expect(['Vanlig dag', 'Følg med', 'Avvik']).toContain(tilstand.frase);
+    } else {
+      // Utilgjengelig råd bruker tilgjengelighetstopptekst — aldri «Avvik».
+      expect(['Rådet er utløpt', 'Kan ikke beregnes']).toContain(tilstand.frase);
+    }
     expect(tilstand.hvorfor.length).toBeGreaterThan(10);
   });
 
@@ -131,6 +149,66 @@ describe('modus og tilstandslinje', () => {
     expect(protokollFor('bilstol').tilstand.hvorfor).toBe(
       'Bilstol i kulde endrer hva som er trygt.',
     );
+  });
+
+  it('tilgjengelighet er en SEPARAT akse: aktive råd er aktiv, utilgjengelige aldri «Avvik»', () => {
+    for (const id of ALLE_IDER) {
+      const protokoll = protokollFor(id);
+      if (protokoll.modus === 'degradert') {
+        expect(protokoll.tilgjengelighet, id).not.toBe('aktiv');
+        expect(protokoll.tilstand.frase, id).not.toBe('Avvik');
+      } else {
+        expect(protokoll.tilgjengelighet, id).toBe('aktiv');
+      }
+    }
+    // Manglende data ≠ utløpt: to forskjellige topptekster.
+    const mangler = protokollFor('manglende-vaerdata');
+    expect(mangler.tilgjengelighet).toBe('kan-ikke-beregnes');
+    expect(mangler.tilstand.frase).toBe('Kan ikke beregnes');
+    const utlopt = protokollFor('utlopt-raad');
+    expect(utlopt.tilgjengelighet).toBe('utlopt');
+    expect(utlopt.tilstand.frase).toBe('Rådet er utløpt');
+    expect(TOPPTEKST_FOR_TILGJENGELIGHET.utlopt).toBe('Rådet er utløpt');
+    expect(TOPPTEKST_FOR_TILGJENGELIGHET['kan-ikke-beregnes']).toBe('Kan ikke beregnes');
+  });
+});
+
+/* ================================================================== *
+ * 2b) Grensevær-marginen — maks(hysterese, deklarert usikkerhetsbånd)
+ * ================================================================== */
+
+describe('grensevær-marginen (Sols avvik a)', () => {
+  it('usikkerhetsbåndet følger svakeste premiss: vind 2°, nedbør 1,5°, temperatur 1°', () => {
+    expect(usikkerhetsbaandC({ windMs: 7, precipMmH: 0 })).toBe(
+      USIKKERHETSBAAND_C.vindmaaling,
+    );
+    expect(usikkerhetsbaandC({ windMs: 0, precipMmH: 1.2 })).toBe(
+      USIKKERHETSBAAND_C.nedboersmengde,
+    );
+    expect(usikkerhetsbaandC({ windMs: 0, precipMmH: 0 })).toBe(
+      USIKKERHETSBAAND_C.temperaturOmToTimer,
+    );
+    expect(USIKKERHETSBAAND_C.vindmaaling).toBe(2);
+    expect(USIKKERHETSBAAND_C.nedboersmengde).toBe(1.5);
+    expect(USIKKERHETSBAAND_C.temperaturOmToTimer).toBe(1);
+  });
+
+  it('marginen er aldri smalere enn hysteresen (±1 °C)', () => {
+    expect(GRENSEVAER_HYSTERESE_C).toBe(1);
+    expect(grensevaerMarginC({ windMs: 0, precipMmH: 0 })).toBe(1);
+    expect(grensevaerMarginC({ windMs: 7, precipMmH: 0 })).toBe(2);
+    expect(grensevaerMarginC({ windMs: 0, precipMmH: 0.5 })).toBe(1.5);
+  });
+
+  it('endret-vaer klassifiseres Følg med via grensevær-regelen (ikke Vanlig dag)', () => {
+    const resultat = klassifiserDetaljert(fakta('endret-vaer'));
+    expect(resultat.modus).toBe('folg-med');
+    expect(resultat.regel.id).toBe('grensevaer');
+    // Ikke-vakuøst: −5,9 er UTENFOR den gamle faste ±1°-marginen fra −7,
+    // men innenfor vindmålingens deklarerte bånd (±2 °C).
+    const feels = fakta('endret-vaer').vaergrunnlag!.feelsLikeC;
+    expect(Math.abs(feels - -7)).toBeGreaterThan(1);
+    expect(Math.abs(feels - -7)).toBeLessThanOrEqual(2);
   });
 });
 
@@ -173,6 +251,60 @@ describe('påkledningsrekkefølgen (innerst→ytterst)', () => {
     for (const s of steg) {
       expect(s.handling).toMatch(/^(Ta på|Gjør klar) /);
     }
+  });
+});
+
+describe('faseinndelingen i normalmodus (Sols P1-funn: ikke én flat liste)', () => {
+  it('normal-dag: alle steg utenom nakkesjekken har fase, begge faser finnes', () => {
+    const steg = protokollFor('normal-dag').steg;
+    const stabel = steg.filter((s) => s.id !== NAKKESJEKK_ID);
+    expect(stabel.length).toBeGreaterThanOrEqual(4); // ikke-vakuøst
+    for (const s of stabel) {
+      expect(s.fase, s.id).toMatch(/^(paa-barnet|uteklart)$/);
+    }
+    const faser = new Set(stabel.map((s) => s.fase));
+    expect(faser.has('paa-barnet')).toBe(true);
+    expect(faser.has('uteklart')).toBe(true);
+    // Nakkesjekken tilhører ingen fase — den er egen kontrollflate.
+    expect(steg[steg.length - 1].fase).toBeUndefined();
+  });
+
+  it.each(['normal-dag', 'grensevaer', 'endret-vaer'])(
+    '%s: fasene er sammenhengende — alt «på barnet» kommer før alt «uteklart»',
+    (id) => {
+      const stabel = protokollFor(id).steg.filter((s) => s.id !== NAKKESJEKK_ID);
+      const sisteInnerst = stabel.map((s) => s.fase).lastIndexOf('paa-barnet');
+      const forsteUteklart = stabel.map((s) => s.fase).indexOf('uteklart');
+      expect(sisteInnerst).toBeGreaterThanOrEqual(0);
+      expect(forsteUteklart).toBeGreaterThan(sisteInnerst);
+    },
+  );
+
+  it('fasegrensen går ved ytterlaget: yttertøy og utstyr er «uteklart», innerst er «på barnet»', () => {
+    const f = fakta('normal-dag');
+    const medYtterlag = kompilerProtokoll({
+      ...f,
+      basePlagg: [...f.basePlagg, { kategori: 'yttertoy', plagg: 'testytterlag' }],
+    });
+    const ytterlag = medYtterlag.steg.find((s) => s.handling === 'Ta på testytterlag');
+    expect(ytterlag?.fase).toBe('uteklart');
+    for (const s of medYtterlag.steg) {
+      if (s.sone === 'utstyr') expect(s.fase, s.id).toBe('uteklart');
+    }
+    // Første plaggsteg (innerst) hører til «på barnet».
+    const forstePlagg = medYtterlag.steg.find((s) => s.id.startsWith('plagg-'));
+    expect(forstePlagg?.fase).toBe('paa-barnet');
+  });
+
+  it('bilstol-sikkerhetssteget (HB-9, før ytterlag) bærer fasen «uteklart»', () => {
+    const f = fakta('bilstol');
+    const medYtterlag = kompilerProtokoll({
+      ...f,
+      basePlagg: [...f.basePlagg, { kategori: 'yttertoy', plagg: 'testytterlag' }],
+    });
+    const hb9 = medYtterlag.steg.find((s) => s.safetyEventId === 'HB-9');
+    expect(hb9).toBeTruthy();
+    expect(hb9!.fase).toBe('uteklart');
   });
 });
 
@@ -273,10 +405,13 @@ describe('degradert tilstand', () => {
     expect(protokoll.steg[protokoll.steg.length - 1].id).toBe(NAKKESJEKK_ID);
   });
 
-  it('OVERGANG: gyldig protokoll blir utløpt når klokka spoles forbi gyldighet', () => {
+  it('OVERGANG: halvåpent intervall — utløpt fra og med gyldigTil (Sols avvik e)', () => {
     const protokoll = protokollFor('normal-dag'); // gjelder til 12:00
     expect(erUtloptNaa(protokoll, '2026-01-15T10:15:00+01:00')).toBe(false);
-    expect(erUtloptNaa(protokoll, '2026-01-15T12:00:00+01:00')).toBe(false); // grensen inklusiv
+    expect(erUtloptNaa(protokoll, '2026-01-15T11:59:00+01:00')).toBe(false);
+    // Rådet er gyldig FØR tidspunktet, ikke gjennom det: «til 09:30» betyr
+    // utløpt klokken 09:30 — ingen grensetilstand der begge gjelder.
+    expect(erUtloptNaa(protokoll, '2026-01-15T12:00:00+01:00')).toBe(true);
     expect(erUtloptNaa(protokoll, '2026-01-15T12:01:00+01:00')).toBe(true);
   });
 
@@ -311,6 +446,7 @@ describe('FORBUDTE_MONSTRE og manifestet', () => {
       expect(fasit.forventetModus, id).toBe(forventet);
       const protokoll = protokollFor(id);
       expect(protokoll.modus, id).toBe(fasit.forventetModus);
+      expect(protokoll.tilstand.frase, id).toBe(fasit.forventetFrase);
       expect(fasit.korrektHandling.length).toBeGreaterThan(20);
     }
   });

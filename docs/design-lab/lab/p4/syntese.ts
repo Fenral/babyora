@@ -142,21 +142,34 @@ export type AmbientTidslinje = {
 
 /**
  * Komposisjonens leveranse: P3s tidslinje (V1 → V2 → forsinket V1),
- * der hver brief bærer P1s protokoll for samme fakta. Protokollen
- * kompileres ÉN gang — alle versjoner av briefen peker på samme
- * kompilat, og versjonsstempelet følger briefen atomisk.
+ * der hver brief bærer P1s protokoll for SAMME FAKTAGRUNNLAG som briefen
+ * selv ble bygget fra (steg.fakta). Protokollen kompileres én gang per
+ * prognosegrunnlag — i delta-scenariet har V1 (morgenprognosen) og V2
+ * (oppdatert prognose) derfor hver sin protokoll, og versjonsstempelet
+ * følger briefen atomisk. Slik er V2s handlingsendring reell også i P4.
  */
 export function ambientTidslinje(scenario: Scenario): AmbientTidslinje {
   const fakta = hentFakta(scenario);
-  const protokoll = kompilerProtokoll(fakta);
+  const kompilater = new Map<NoytraleFakta, Protokoll>();
+  const kompilatFor = (f: NoytraleFakta): Protokoll => {
+    let p = kompilater.get(f);
+    if (!p) {
+      p = kompilerProtokoll(f);
+      kompilater.set(f, p);
+    }
+    return p;
+  };
   const steg = byggTidslinje(scenario).map((s): TidslinjeSteg => {
     if (s.hendelse.type !== 'brief') return s;
     return {
       ...s,
-      hendelse: { type: 'brief', brief: pakkMedProtokoll(s.hendelse.brief, protokoll) },
+      hendelse: {
+        type: 'brief',
+        brief: pakkMedProtokoll(s.hendelse.brief, kompilatFor(s.fakta)),
+      },
     };
   });
-  return { fakta, protokoll, steg };
+  return { fakta, protokoll: kompilatFor(fakta), steg };
 }
 
 /* ------------------------------------------------------------------ *
@@ -169,8 +182,12 @@ export const P4_TEKST = {
   aapneProtokoll: (antallSteg: number) => `Åpne hele protokollen (${antallSteg} steg)`,
   lukkProtokoll: 'Lukk protokollen',
   stegEnAv: (antallSteg: number) => `Steg 1 av ${antallSteg}`,
-  sammeVersjon: (versjon: number) =>
-    `Samme versjon som briefen — Brief #${versjon}.`,
+  /**
+   * Kontinuitetslinjen på protokollflaten: navngir BÅDE briefId og
+   * versjon, slik at begge flater beviselig viser samme brief (P4-P0).
+   */
+  sammeVersjon: (briefId: string, versjon: number) =>
+    `Samme brief som flaten — ${briefId} · Brief #${versjon}.`,
   versjonsbrudd: (briefVersjon: number, protokollVersjon: number) =>
     `Feiltilstand: briefen er #${briefVersjon}, protokollen er #${protokollVersjon}. ` +
     'Syntesen har feilet — protokollen vises ikke.',

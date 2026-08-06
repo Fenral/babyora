@@ -20,7 +20,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { SCENARIER, scenarioForId, type Scenario } from '../felles/scenarier';
-import { hentFakta, labISO, sjekkSemantikk } from '../felles/fakta';
+import { hentFakta, labISO, sjekkSemantikk, type NoytraleFakta } from '../felles/fakta';
 import { DEGRADERT_NESTE_HANDLING, harForbudtSprak } from '../felles/tekst';
 import { kompilerProtokoll, NAKKESJEKK_ID } from '../p1/protokollkompilator';
 import { motta, START_TILSTAND, type Brief, type BriefTilstand } from '../p3/brief-maskin';
@@ -42,11 +42,21 @@ function scenario(id: string): Scenario {
   return s;
 }
 
-/** Alle briefs komposisjonen produserer for et scenario (V1, V2, forsinket V1). */
-function alleBriefs(s: Scenario): Brief[] {
+/**
+ * Alle briefs komposisjonen produserer for et scenario (V1, V2, forsinket
+ * V1) — sammen med faktagrunnlaget hver brief ble bygget/pakket fra
+ * (V1 i delta-scenariet bygger på morgenprognosen, V2 på oppdatert).
+ */
+function alleBriefsMedFakta(s: Scenario): { brief: Brief; fakta: NoytraleFakta }[] {
   return ambientTidslinje(s).steg.flatMap((steg) =>
-    steg.hendelse.type === 'brief' ? [steg.hendelse.brief] : [],
+    steg.hendelse.type === 'brief'
+      ? [{ brief: steg.hendelse.brief, fakta: steg.fakta }]
+      : [],
   );
+}
+
+function alleBriefs(s: Scenario): Brief[] {
+  return alleBriefsMedFakta(s).map((r) => r.brief);
 }
 
 /* ------------------------------------------------------------------ *
@@ -60,11 +70,12 @@ describe('P4-komposisjonen består semantikk-porten (alle ti scenarier)', () => 
 
   for (const s of SCENARIER) {
     it(`hver brief i tidslinjen bærer full semantikk i BEGGE flater — ${s.id}`, () => {
-      const f = hentFakta(s);
-      const briefs = alleBriefs(s);
-      expect(briefs.length).toBeGreaterThan(0); // ikke-vakuøst
-      for (const brief of briefs) {
-        const resultat = sjekkSemantikk(uttrykkFraAmbient(lesP4Innhold(brief)), f);
+      const rader = alleBriefsMedFakta(s);
+      expect(rader.length).toBeGreaterThan(0); // ikke-vakuøst
+      for (const { brief, fakta } of rader) {
+        // Porten sjekkes mot briefens EGET faktagrunnlag — V1 i
+        // delta-scenariet bærer morgenprognosens semantikk fullt ut.
+        const resultat = sjekkSemantikk(uttrykkFraAmbient(lesP4Innhold(brief)), fakta);
         expect(resultat.mangler, `${s.id} / ${brief.briefId}`).toEqual([]);
         expect(resultat.ok).toBe(true);
       }
@@ -136,10 +147,13 @@ describe('P4-komposisjonen består semantikk-porten (alle ti scenarier)', () => 
 describe('atferd 1: brief-flatens handling er alltid protokollens steg 1', () => {
   for (const s of SCENARIER) {
     it(`steg 1 er identisk med P1-kompilatets steg 1 — ${s.id}`, () => {
-      const fasit = kompilerProtokoll(hentFakta(s)).steg[0];
-      const briefs = alleBriefs(s);
-      expect(briefs.length).toBeGreaterThan(0);
-      for (const brief of briefs) {
+      const rader = alleBriefsMedFakta(s);
+      expect(rader.length).toBeGreaterThan(0);
+      for (const { brief, fakta } of rader) {
+        // Fasiten kompileres fra briefens EGET faktagrunnlag — V1 og V2 i
+        // delta-scenariet har hver sin protokoll (morgen- vs. oppdatert
+        // prognose), og steg 1 skal alltid stemme med P1s kompilat.
+        const fasit = kompilerProtokoll(fakta).steg[0];
         const steg1 = forsteTryggeSteg(lesP4Innhold(brief));
         expect(steg1, `${s.id} / ${brief.briefId}`).toEqual(fasit);
       }
@@ -256,6 +270,110 @@ describe('atferd 3: P3s maskinregler overlever innpakningen (enveis maskering)',
 });
 
 /* ------------------------------------------------------------------ *
+ * Del 3c — atferd: overgangen brief→protokoll er kontinuerlig (P4-P0)
+ * ------------------------------------------------------------------ */
+
+describe('atferd 4: overgangskontinuitet — samme briefId+versjon før, under og etter åpning', () => {
+  it('for hvert akseptert punkt i tidslinjen viser begge flater samme brief, og retur endrer ingenting', () => {
+    let antallAapninger = 0;
+    for (const s of SCENARIER) {
+      const { steg } = ambientTidslinje(s);
+      let t: BriefTilstand = START_TILSTAND;
+      for (const st of steg) {
+        t = motta(t, st.hendelse, { naaISO: st.tidISO });
+        if (t.gjeldende === null || t.status === 'maskert') continue;
+        antallAapninger += 1;
+
+        // FØR åpning: brief-flatens identitet.
+        const foer = t.gjeldende;
+
+        // ÅPNING: protokollflaten bygges av NØYAKTIG samme brief-objekt —
+        // versjonssjekken består og det pakkede stempelet er identisk.
+        const sjekk = sjekkVersjonsbrudd(foer);
+        expect(sjekk.brudd, `${s.id} / ${foer.briefId}`).toBe(false);
+        const innhold = lesP4Innhold(foer);
+        expect(innhold.protokollVersjon).toBe(foer.versjon);
+
+        // Kontinuitetslinjen på protokollflaten navngir BÅDE briefId og
+        // versjon — samme identitet som brief-flatens stempellinje.
+        const linje = P4_TEKST.sammeVersjon(foer.briefId, foer.versjon);
+        expect(linje).toContain(foer.briefId);
+        expect(linje).toContain(`#${foer.versjon}`);
+
+        // RETUR: åpning/lukking er rene lesninger — maskintilstanden og
+        // dermed brief-flatens identitet er uendret etterpå.
+        const etter = t.gjeldende;
+        expect(etter.briefId).toBe(foer.briefId);
+        expect(etter.versjon).toBe(foer.versjon);
+      }
+    }
+    expect(antallAapninger).toBeGreaterThan(0); // ikke-vakuøst
+  });
+
+  it('kontinuiteten holder over versjonsskiftet: etter V2 viser begge flater V2', () => {
+    const s = scenario('endret-vaer');
+    const { steg } = ambientTidslinje(s);
+    let t: BriefTilstand = START_TILSTAND;
+    t = motta(t, steg[0].hendelse, { naaISO: steg[0].tidISO });
+    expect(t.gjeldende?.versjon).toBe(1);
+    expect(lesP4Innhold(t.gjeldende!).protokollVersjon).toBe(1);
+
+    t = motta(t, steg[1].hendelse, { naaISO: steg[1].tidISO });
+    expect(t.gjeldende?.versjon).toBe(2);
+    // Begge flater (brief + åpnet protokoll) leser samme objekt → V2.
+    expect(lesP4Innhold(t.gjeldende!).protokollVersjon).toBe(2);
+    expect(sjekkVersjonsbrudd(t.gjeldende!).brudd).toBe(false);
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * Del 3d — atferd: endret-vaer-briefen uttrykker BÅDE delta og første
+ * protokollhandling (P4-P1), og V2 endrer handlingen reelt
+ * ------------------------------------------------------------------ */
+
+describe('atferd 5: endret-vaer — delta OG første protokollhandling, uten ny anbefaling', () => {
+  it('V2-briefen bærer deltaet, den konkrete lagendringen og protokollens steg 1', () => {
+    const rader = alleBriefsMedFakta(scenario('endret-vaer'));
+    const v2 = rader.find((r) => r.brief.versjon === 2)!;
+    const innhold = lesP4Innhold(v2.brief);
+
+    // Deltaet er til stede med antrekksbaseline.
+    expect(innhold.briefInnhold.delta).not.toBeNull();
+    expect(innhold.briefInnhold.delta!.setning).toContain('Kaldere enn i går');
+    expect(innhold.briefInnhold.delta!.baseline.etikett).toMatch(
+      /^i går V1 \(føltes -?\d+ °C\): .+/,
+    );
+
+    // Den konkrete endringen navngir laget og posisjonen …
+    expect(innhold.briefInnhold.komfortHandling).toBe(
+      'Legg ull-jakke mellom ull-mellomlag og vinterkjøredress.',
+    );
+
+    // … og introduserer INGEN ny anbefaling: det navngitte laget finnes
+    // som eget steg i protokollen briefen selv bærer.
+    expect(
+      innhold.protokoll.steg.some((st) => st.handling === 'Ta på ull-jakke'),
+    ).toBe(true);
+
+    // Første protokollhandling er fortsatt P1s steg 1 for samme fakta.
+    expect(forsteTryggeSteg(innhold)).toEqual(kompilerProtokoll(v2.fakta).steg[0]);
+  });
+
+  it('V2 endrer handlingsinnholdet reelt fra V1 (samme antrekk holder → legg laget)', () => {
+    const rader = alleBriefsMedFakta(scenario('endret-vaer'));
+    const v1 = lesP4Innhold(rader.find((r) => r.brief.versjon === 1)!.brief);
+    const v2 = lesP4Innhold(rader.find((r) => r.brief.versjon === 2)!.brief);
+
+    expect(v1.briefInnhold.komfortHandling).toMatch(/^Samme antrekk som i går holder/);
+    expect(v2.briefInnhold.komfortHandling).toMatch(/^Legg /);
+    expect(v2.briefInnhold.komfortHandling).not.toBe(v1.briefInnhold.komfortHandling);
+
+    // Protokollen endres tilsvarende: V2s kompilat har flere plaggsteg.
+    expect(v2.protokoll.steg.length).toBeGreaterThan(v1.protokoll.steg.length);
+  });
+});
+
+/* ------------------------------------------------------------------ *
  * Del 4 — tekstdoktrinen og manifestets kompletthet
  * ------------------------------------------------------------------ */
 
@@ -273,7 +391,7 @@ describe('tekstdoktrinen: FORBUDTE_MONSTRE gjelder all P4-tekst', () => {
       P4_TEKST.aapneProtokoll(7),
       P4_TEKST.lukkProtokoll,
       P4_TEKST.stegEnAv(7),
-      P4_TEKST.sammeVersjon(2),
+      P4_TEKST.sammeVersjon('endret-vaer-b2', 2),
       P4_TEKST.versjonsbrudd(2, 1),
       P4_TEKST.maskert,
       P4_TEKST.ventende('06:30'),
@@ -298,6 +416,9 @@ describe('tekstdoktrinen: FORBUDTE_MONSTRE gjelder all P4-tekst', () => {
     expect(manifest.stoppregel).toBeTruthy();
     expect(manifest.loggedeEvents).toContain('versjonsbrudd');
     expect(manifest.loggedeEvents).toContain('kontrollpunkt-bekreftet');
+    // Overgangen logges begge veier (P4-P0: åpning OG retur).
+    expect(manifest.loggedeEvents).toContain('protokoll-aapnet');
+    expect(manifest.loggedeEvents).toContain('protokoll-lukket');
     expect(manifest.ikkeStottet.length).toBeGreaterThanOrEqual(3);
   });
 });

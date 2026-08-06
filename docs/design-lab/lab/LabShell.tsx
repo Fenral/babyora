@@ -1,13 +1,29 @@
 /**
  * Lab-shell — TESTSELEN eier eksperimentet (spec v2 §1 pkt. 4):
  * scenario, virtuell klokke, logging, rekkefølge (Williams-design),
- * forskningsdisclaimer og nullmodell-armen.
+ * forskningsdisclaimer og nullarmene.
+ *
+ * To moduser (Sols fase 10-review, FELLES-P0):
+ *  - OPERATØRMODUS (standard): alt operatørutstyr (scenariovelger,
+ *    armknapper, klokkepanel, Williams-rekkefølge, hendelseslogg) ligger i
+ *    ett kollapsbart Operatør-panel — deltakerflaten dominerer.
+ *  - DELTAKERMODUS (låst, styrt av URL:
+ *    ?modus=deltaker&arm=p1&scenario=bilstol — skjermbevis-skriptets
+ *    kontrakt): ALT operatørutstyr er skjult. Første viewport viser
+ *    oppgaveprompten (én setning fra manifestets aktive oppgave) og
+ *    retningens kjerneflate. Kun et diskret klokkemerke beholdes for
+ *    skjermbevis.
+ *
+ * Hierarki (Sols hierarki-P2): selens egne flater bruker typografi og
+ * avstand, ikke rammer; sterke grenser er forbeholdt interaktive
+ * elementer (knapper, felter) og disclaimer-porten.
  *
  * Rutene P1–P3 kobles fra lab/pN/index.tsx ({ manifest, Prototype });
- * P4 kobles automatisk når lab/p4/index.tsx finnes (komposisjon av P1+P3,
- * bygges etter at P1/P3-kontraktene er godkjent). FELLES-fanen er
+ * P4 kobles automatisk når lab/p4/index.tsx finnes. FELLES-fanen er
  * demokatalogen for de retningsnøytrale komponentene.
  */
+
+/// <reference types="vite/client" />
 
 import {
   useEffect,
@@ -15,6 +31,7 @@ import {
   useState,
   type ComponentType,
   type CSSProperties,
+  type ReactNode,
 } from 'react';
 import { SCENARIER, scenarioForId, type Scenario } from './felles/scenarier';
 import { kjorMotor, kjorMotorForVaer, delFlags } from './felles/motor';
@@ -44,6 +61,16 @@ import {
   tildelScenarier,
   type Arm,
 } from './felles/sele/rekkefolge';
+import {
+  ALLE_NULLARMER,
+  NULLARMER,
+  standardNullarm,
+  type Nullarm,
+} from './felles/sele/nullarmer';
+import {
+  lesLabParametre,
+  oppgavePromptFraManifest,
+} from './felles/sele/deltakermodus';
 import { Nullmodell } from './felles/sele/nullmodell';
 import { Disclaimer } from './felles/sele/disclaimer';
 import * as P1Modul from './p1/index';
@@ -101,27 +128,42 @@ const knapp = (aktiv: boolean, deaktivert = false): CSSProperties => ({
   cursor: deaktivert ? 'default' : 'pointer',
 });
 
-const panel: CSSProperties = {
-  border: '1px solid #b3b3b3',
-  borderRadius: 8,
-  padding: 12,
-  marginBottom: 12,
-  background: '#fafafa',
-};
+/** Selens seksjoner: typografi + avstand, ingen ramme (hierarki-P2). */
+const seleSeksjon: CSSProperties = { margin: '0 0 20px' };
 
 const REKKEFOLGE_BALANSERT =
   erCarryoverBalansert(WILLIAMS_ARMSEKVENSER) &&
   erPosisjonsbalansert(WILLIAMS_ARMSEKVENSER);
 
 export function LabShell() {
-  const [scenarioId, setScenarioId] = useState<string>(SCENARIER[0].id);
-  const [rute, setRute] = useState<Rute>('felles');
+  // URL-parametrene leses én gang ved oppstart — deltakermodus er LÅST.
+  const params = useMemo(
+    () =>
+      lesLabParametre(
+        typeof window === 'undefined' ? '' : window.location.search,
+      ),
+    [],
+  );
+  const deltaker = params.modus === 'deltaker' && params.arm !== null;
+
+  const [scenarioId, setScenarioId] = useState<string>(() =>
+    params.scenarioId && scenarioForId(params.scenarioId)
+      ? params.scenarioId
+      : SCENARIER[0].id,
+  );
+  const [rute, setRute] = useState<Rute>(() =>
+    deltaker ? (params.arm as Rute) : 'felles',
+  );
   const [deltakerNr, setDeltakerNr] = useState(1);
+  const [nullarmValg, setNullarmValg] = useState<Nullarm | null>(
+    params.nullarm,
+  );
   const [bekreftede, setBekreftede] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
 
   const scenario = scenarioForId(scenarioId) ?? SCENARIER[0];
+  const nullarm: Nullarm = nullarmValg ?? standardNullarm(scenario.id);
 
   // Selen eier klokka: ny klokke fiksert til scenariets «nå» per scenario.
   const klokke = useMemo(() => klokkeForScenario(scenario), [scenario]);
@@ -145,7 +187,28 @@ export function LabShell() {
 
   const oppgaveNokkel = `${rute}|${scenario.id}`;
   const trengerDisclaimer = rute !== 'felles';
-  const erBekreftet = bekreftede.has(oppgaveNokkel);
+  const erBekreftet =
+    bekreftede.has(oppgaveNokkel) || (deltaker && params.forhandsbekreftet);
+
+  // Deltakermodus logges ved oppstart; forhåndsbekreftet disclaimer
+  // (&bekreftet=1, kun for skjermbevis) logges eksplisitt for revisjon.
+  useEffect(() => {
+    if (!deltaker) return;
+    seleLogg('sele:deltakermodus', {
+      arm: params.arm,
+      scenarioId: scenario.id,
+      ...(params.arm === 'null' ? { nullarm } : {}),
+    });
+    if (params.forhandsbekreftet) {
+      seleLogg('sele:disclaimer_forhandsbekreftet', {
+        rute,
+        scenarioId: scenario.id,
+      });
+      seleLogg('sele:oppgave_start', { rute, scenarioId: scenario.id });
+    }
+    // Kun ved oppstart — deltakermodus er låst til én oppgave.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deltaker]);
 
   function bekreftDisclaimer(): void {
     seleLogg('sele:disclaimer_bekreftet', { rute, scenarioId: scenario.id });
@@ -160,6 +223,88 @@ export function LabShell() {
 
   const modul = rute === 'felles' ? undefined : MODULER[rute as Arm];
 
+  // Oppgaveprompten: én setning fra manifestets aktive oppgave (FELLES-P0).
+  const oppgavePrompt =
+    rute === 'null'
+      ? NULLARMER[nullarm].oppgavePrompt
+      : rute === 'felles'
+        ? null
+        : oppgavePromptFraManifest(modul?.manifest);
+
+  const kjerneflate =
+    rute === 'felles' ? (
+      <FellesDemo scenario={scenario} />
+    ) : !erBekreftet ? (
+      <Disclaimer
+        oppgaveNavn={
+          rute === 'null'
+            ? `nullmodell-oppgaven (${NULLARMER[nullarm].oppgavetype})`
+            : `oppgaven (${rute.toUpperCase()})`
+        }
+        storTekst={scenario.flags.storTekst}
+        hoyKontrast={scenario.flags.hoyKontrast}
+        onBekreft={bekreftDisclaimer}
+      />
+    ) : (
+      <>
+        {oppgavePrompt && (
+          <p
+            style={{
+              margin: '0 auto 16px',
+              maxWidth: 480,
+              fontSize: 18,
+              fontWeight: 700,
+            }}
+          >
+            {oppgavePrompt}
+          </p>
+        )}
+        {rute === 'null' ? (
+          <Nullmodell
+            scenario={scenario}
+            klokke={klokke}
+            nullarm={nullarm}
+            logg={ruteLogg ?? undefined}
+          />
+        ) : modul ? (
+          <modul.Prototype
+            scenario={scenario}
+            klokke={klokke}
+            logg={ruteLogg ?? undefined}
+          />
+        ) : (
+          <Plassholder kode={rute.toUpperCase()} />
+        )}
+      </>
+    );
+
+  /* -------------------------------------------------------------- *
+   * DELTAKERMODUS: låst flate uten operatørutstyr. Første viewport =
+   * oppgaveprompt + kjerneflate; kun et diskret klokkemerke i tillegg.
+   * -------------------------------------------------------------- */
+  if (deltaker) {
+    return (
+      <div
+        style={{
+          fontFamily: SYSTEMFONT,
+          fontSize: 16,
+          lineHeight: 1.5,
+          color: '#1a1a1a',
+          background: '#ffffff',
+          minHeight: '100vh',
+          padding: 16,
+        }}
+      >
+        <Klokkemerke naaISO={naa} />
+        <main style={{ maxWidth: 640, margin: '0 auto' }}>{kjerneflate}</main>
+      </div>
+    );
+  }
+
+  /* -------------------------------------------------------------- *
+   * OPERATØRMODUS: alt operatørutstyr i ett kollapsbart panel —
+   * deltakerflaten dominerer også her.
+   * -------------------------------------------------------------- */
   return (
     <div
       style={{
@@ -173,116 +318,115 @@ export function LabShell() {
       }}
     >
       <header style={{ maxWidth: 640, margin: '0 auto 16px' }}>
+        <Klokkemerke naaISO={naa} />
         <h1 style={{ margin: '0 0 4px', fontSize: 20 }}>
           Babyora — Design-lab (fase 9)
         </h1>
         <p style={{ margin: '0 0 12px', color: '#4d4d4d', fontSize: 14 }}>
-          Testselen eier scenario, klokke, rekkefølge og logg. Retningene
-          eier beslutningspresentasjonen.
+          Operatørmodus. Deltakere kjøres i låst deltakermodus via
+          ?modus=deltaker&amp;arm=…&amp;scenario=…
         </p>
-
-        <label style={{ display: 'block', marginBottom: 12 }}>
-          <span style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}>
-            Scenario
-          </span>
-          <select
-            value={scenarioId}
-            onChange={(e) => setScenarioId(e.target.value)}
-            style={{
-              minHeight: 48,
-              width: '100%',
-              fontSize: 16,
-              fontFamily: 'inherit',
-              padding: '0 8px',
-              border: '1px solid #b3b3b3',
-              borderRadius: 6,
-              background: '#ffffff',
-              color: '#1a1a1a',
-            }}
-          >
-            {SCENARIER.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.navn}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <nav
-          aria-label="Prototyper"
-          style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}
-        >
-          {RUTER.map((r) => {
-            const mangler = r.id !== 'felles' && r.id !== 'null' && !MODULER[r.id as Arm];
-            return (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => !mangler && setRute(r.id)}
-                aria-pressed={rute === r.id}
-                disabled={mangler}
-                title={
-                  mangler
-                    ? 'P4 kobles automatisk når lab/p4/index.tsx finnes (komposisjon av P1+P3).'
-                    : r.id === 'null'
-                      ? ARM_NAVN.null
-                      : r.id !== 'felles'
-                        ? MODULER[r.id as Arm]?.manifest.navn
-                        : undefined
-                }
-                style={knapp(rute === r.id, mangler)}
+        <OperatorPanel>
+          <section style={seleSeksjon} aria-label="Scenario og arm">
+            <label style={{ display: 'block', marginBottom: 12 }}>
+              <span
+                style={{ display: 'block', fontWeight: 600, marginBottom: 4 }}
               >
-                {r.navn}
-              </button>
-            );
-          })}
-        </nav>
+                Scenario
+              </span>
+              <select
+                value={scenarioId}
+                onChange={(e) => setScenarioId(e.target.value)}
+                style={{
+                  minHeight: 48,
+                  width: '100%',
+                  fontSize: 16,
+                  fontFamily: 'inherit',
+                  padding: '0 8px',
+                  border: '1px solid #b3b3b3',
+                  borderRadius: 6,
+                  background: '#ffffff',
+                  color: '#1a1a1a',
+                }}
+              >
+                {SCENARIER.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.navn}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <nav
+              aria-label="Prototyper"
+              style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}
+            >
+              {RUTER.map((r) => {
+                const mangler =
+                  r.id !== 'felles' && r.id !== 'null' && !MODULER[r.id as Arm];
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => !mangler && setRute(r.id)}
+                    aria-pressed={rute === r.id}
+                    disabled={mangler}
+                    title={
+                      mangler
+                        ? 'P4 kobles automatisk når lab/p4/index.tsx finnes (komposisjon av P1+P3).'
+                        : r.id === 'null'
+                          ? ARM_NAVN.null
+                          : r.id !== 'felles'
+                            ? MODULER[r.id as Arm]?.manifest.navn
+                            : undefined
+                    }
+                    style={knapp(rute === r.id, mangler)}
+                  >
+                    {r.navn}
+                  </button>
+                );
+              })}
+            </nav>
+          </section>
+
+          <section style={seleSeksjon} aria-label="Nullarm (oppgavetype)">
+            <p style={{ margin: '0 0 8px' }}>
+              <strong>Nullarm</strong>
+              <span style={{ color: '#4d4d4d', fontSize: 14 }}>
+                {' '}
+                · oppgavespesifikk kontrollarm (aktiv: {nullarm})
+              </span>
+            </p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {ALLE_NULLARMER.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => setNullarmValg(a)}
+                  aria-pressed={nullarm === a}
+                  title={NULLARMER[a].navn}
+                  style={knapp(nullarm === a)}
+                >
+                  {NULLARMER[a].oppgavetype}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <Klokkekontroll
+            naaISO={naa}
+            gyldigTil={scenario.gyldigTil}
+            spol={spol}
+          />
+          <Rekkefolgepanel
+            deltakerNr={deltakerNr}
+            setDeltakerNr={setDeltakerNr}
+          />
+          <Loggpanel logg={logg} />
+        </OperatorPanel>
       </header>
 
-      <main style={{ maxWidth: 640, margin: '0 auto' }}>
-        <Klokkekontroll naaISO={naa} gyldigTil={scenario.gyldigTil} spol={spol} />
-        <Rekkefolgepanel
-          deltakerNr={deltakerNr}
-          setDeltakerNr={setDeltakerNr}
-        />
-
-        {rute === 'felles' && <FellesDemo scenario={scenario} />}
-
-        {trengerDisclaimer && !erBekreftet && (
-          <Disclaimer
-            oppgaveNavn={
-              rute === 'null'
-                ? 'nullmodell-oppgaven'
-                : `oppgaven (${rute.toUpperCase()})`
-            }
-            storTekst={scenario.flags.storTekst}
-            hoyKontrast={scenario.flags.hoyKontrast}
-            onBekreft={bekreftDisclaimer}
-          />
-        )}
-
-        {trengerDisclaimer && erBekreftet && rute === 'null' && (
-          <Nullmodell
-            scenario={scenario}
-            klokke={klokke}
-            logg={ruteLogg ?? undefined}
-          />
-        )}
-
-        {trengerDisclaimer && erBekreftet && rute !== 'null' && (
-          modul ? (
-            <modul.Prototype
-              scenario={scenario}
-              klokke={klokke}
-              logg={ruteLogg ?? undefined}
-            />
-          ) : (
-            <Plassholder kode={rute.toUpperCase()} />
-          )
-        )}
-
-        <Loggpanel logg={logg} />
-      </main>
+      <main style={{ maxWidth: 640, margin: '0 auto' }}>{kjerneflate}</main>
     </div>
   );
 }
@@ -290,6 +434,49 @@ export function LabShell() {
 /* ------------------------------------------------------------------ *
  * Selens paneler
  * ------------------------------------------------------------------ */
+
+/**
+ * Diskret klokkemerke — beholdes i begge moduser for skjermbevis
+ * (FELLES-P0: klokkepanelet er operatørutstyr, men bevisene trenger
+ * synlig labtid). Ingen ramme, ingen kontroller.
+ */
+function Klokkemerke({ naaISO }: { naaISO: string }) {
+  if (!naaISO) return null;
+  return (
+    <p
+      aria-label="Labklokke"
+      style={{
+        margin: '0 0 8px',
+        maxWidth: 640,
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        textAlign: 'right',
+        fontSize: 12,
+        color: '#767676',
+      }}
+    >
+      kl. {naaISO.slice(11, 16)} · lab
+    </p>
+  );
+}
+
+/** Kollapsbart panel for ALT operatørutstyr (FELLES-P0). */
+function OperatorPanel({ children }: { children: ReactNode }) {
+  const [aapen, setAapen] = useState(false);
+  return (
+    <section aria-label="Operatør">
+      <button
+        type="button"
+        onClick={() => setAapen((v) => !v)}
+        aria-expanded={aapen}
+        style={knapp(aapen)}
+      >
+        {aapen ? 'Skjul operatørpanel' : 'Operatør — scenario, klokke, logg'}
+      </button>
+      {aapen && <div style={{ marginTop: 16 }}>{children}</div>}
+    </section>
+  );
+}
 
 function Klokkekontroll({
   naaISO,
@@ -301,7 +488,7 @@ function Klokkekontroll({
   spol: (min: number) => void;
 }) {
   return (
-    <section style={panel} aria-label="Virtuell klokke">
+    <section style={seleSeksjon} aria-label="Virtuell klokke">
       <p style={{ margin: '0 0 8px' }}>
         <strong>Klokka i laben: {naaISO.slice(11, 16)}</strong>
         <span style={{ color: '#4d4d4d' }}>
@@ -336,7 +523,7 @@ function Rekkefolgepanel({
   const sekvens = rekkefolgeForDeltaker(deltakerNr);
 
   return (
-    <section style={panel} aria-label="Rekkefølge (Williams-design)">
+    <section style={seleSeksjon} aria-label="Rekkefølge (Williams-design)">
       <button
         type="button"
         onClick={() => setVis((v) => !v)}
@@ -425,7 +612,7 @@ function Loggpanel({ logg }: { logg: ReturnType<typeof lagLogg> }) {
   }
 
   return (
-    <section style={{ ...panel, marginTop: 16 }} aria-label="Hendelseslogg">
+    <section style={seleSeksjon} aria-label="Hendelseslogg">
       <p style={{ margin: '0 0 8px' }}>
         <strong>Hendelseslogg</strong>
         <span style={{ color: '#4d4d4d' }}> · {alle.length} innslag</span>
