@@ -97,6 +97,15 @@ const REGION_CATALOG_IDS = {
   legs: ['shorts', 'lett-bukse', 'tynn-bukse', 'ull-bukse'],
   feet: [
     'ullsokker',
+    /* `vintersokker` er FOTTØY, ikke et ekstra par sokker. Motoren døper
+       om «vintersko isolerte» til «tykke ullsokker (vinterdress dekker)»
+       for barn 9-15 mnd fordi vinterdressen dekker foten
+       (modifiers.ts:539) — plagget beholder altså fottøyets plass.
+
+       Uten denne oppføringen får id-en bodyRegion: null, og
+       outfit-map-layout.ts:207 hopper over den: plagget står i listen,
+       men tegnes ALDRI på avataren. Målt som 69/70 i inventory-v1. */
+    'vintersokker',
     'sko',
     'toffel-sko',
     'sandaler',

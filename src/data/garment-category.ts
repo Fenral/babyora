@@ -91,6 +91,12 @@ export const GARMENTS_BY_CATEGORY: Record<GarmentCategory, GarmentId[]> = {
     'sandaler',
     'vintersko',
     'vintersko-isolerte',
+    /* «Tykke ullsokker (vinterdress dekker)» — fottøyets plass, ikke et
+       ekstra par sokker. Uten oppføring her gir categoryFor() null, og
+       classifyOutfitItem() (body-anchor-catalog.ts:221) forkaster hele
+       klassifiseringen: plagget teller som umappet både mot katalogen og
+       mot kroppen. Målt som 69/70 i inventory-v1 før denne linjen. */
+    'vintersokker',
   ],
   utstyr: [
     'tynt-teppe',

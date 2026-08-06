@@ -94,6 +94,19 @@ const COVERAGE_BY_CATALOG_ID: Readonly<
   sandaler: coverage(SLOT_SETS.feet, 40),
   vintersko: coverage(SLOT_SETS.feet, 40),
   'vintersko-isolerte': coverage(SLOT_SETS.feet, 50),
+  /* RANG 50, IKKE 10 — samme som plagget den erstatter.
+
+     `vintersokker` er «tykke ullsokker (vinterdress dekker)»: motoren
+     bytter ut «vintersko isolerte» med den for barn 9-15 mnd fordi
+     vinterdressen dekker foten (modifiers.ts:539). Den bæres altså
+     UTENPÅ grunnsokken og har fottøyets plass i lagrekkefølgen.
+
+     Å speile `ullsokker` (rang 10) hadde vært den nærliggende feilen —
+     navnet sier «ullsokker», så tallet ville sett riktig ut. Men rangen
+     styrer tegnerekkefølge og okklusjon: med 10 ville plagget blitt
+     tegnet UNDER sokken det ligger utenpå, og de to sokkeradene ville
+     byttet plass på avataren. Rangen følger funksjonen, ikke navnet. */
+  vintersokker: coverage(SLOT_SETS.feet, 50),
 });
 
 export function avatarCoverageForCatalogGarment(
