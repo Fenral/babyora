@@ -158,16 +158,37 @@ workflows:
               --create \
               --verbose
           }
-          if ! fetch; then
-            OLDEST=$(app-store-connect certificates list \
-              --type DISTRIBUTION --json \
-              | python3 -c 'import sys,json;c=json.load(sys.stdin);c.sort(key=lambda x:x["attributes"]["expirationDate"]);print(c[0]["id"] if c else "")')
-            if [ -n "$OLDEST" ]; then
-              echo "Sert-tak nådd — sletter eldste foreldreløse cert: $OLDEST"
-              app-store-connect certificates delete "$OLDEST"
+          # Bygg 84 (2026-08-06) feilet fordi opprydningen slettet ETT cert og
+          # ga opp: poolen sto på 3, ble 2 etter slettingen, og Apple svarte
+          # 409 igjen — taket er 2, ikke 3. Ett vellykket bygg legger til ett
+          # cert, så poolen kryper oppover og «slett én» slutter å holde av
+          # seg selv. Sletter nå til fetch går gjennom, med et tak så en ekte
+          # feil ikke tømmer kontoen i en løkke.
+          #
+          # NB: ASC-nøkkelen (JQVPW4D944) deles med Ryddy/StrikeArc/Swinglab,
+          # så poolen er felles. Det er trygt fordi hvert bygg lager sin egen
+          # engangsnøkkel og aldri gjenbruker et cert — de andre prosjektene
+          # genererer nytt på samme måte ved neste bygg. Skulle noen legge inn
+          # et cert med en privatnøkkel de tar vare på, må denne logikken
+          # skrives om: da er ikke lenger alle certs foreldreløse.
+          MAKS_SLETT=2
+          slettet=0
+          until fetch; do
+            if [ "$slettet" -ge "$MAKS_SLETT" ]; then
+              echo "Ga opp etter $slettet sletting(er). Feilen er trolig ikke sert-taket — les 409-teksten over."
+              exit 1
             fi
-            fetch
-          fi
+            CERTS_JSON=$(app-store-connect certificates list --type DISTRIBUTION --json)
+            OLDEST=$(printf '%s' "$CERTS_JSON" | python3 -c 'import sys,json;c=json.load(sys.stdin);c.sort(key=lambda x:x["attributes"]["expirationDate"]);print(c[0]["id"] if c else "")')
+            ANTALL=$(printf '%s' "$CERTS_JSON" | python3 -c 'import sys,json;print(len(json.load(sys.stdin)))')
+            if [ -z "$OLDEST" ]; then
+              echo "Ingen distribusjonssertifikater å slette — 409-en kommer fra noe annet enn taket."
+              exit 1
+            fi
+            echo "Sert-tak nådd (poolen har $ANTALL) — sletter eldste foreldreløse cert: $OLDEST"
+            app-store-connect certificates delete "$OLDEST"
+            slettet=$((slettet + 1))
+          done
       - name: Add certificates to keychain
         script: |
           keychain add-certificates
