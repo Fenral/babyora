@@ -85,6 +85,8 @@ export async function pushWidgetSnapshot(snapshot: WidgetSnapshot, nowMs: number
  * - Forrige snapshot > 60 min gammel
  * - Snapshot innhold har endret seg meningsfullt (layerCount,
  *   layerBadgeBand, conditionKey, activity, eller topGarments-set)
+ * - v2 (native spike): brief-identiteten har endret seg (briefId,
+ *   versjon eller expiresAtISO) — en ny/reutstedt brief skal alltid ut
  */
 export function shouldPushSnapshot(next: WidgetSnapshot, nowMs: number): boolean {
   const last = readLast();
@@ -97,6 +99,9 @@ export function shouldPushSnapshot(next: WidgetSnapshot, nowMs: number): boolean
     a.conditionKey !== next.conditionKey ||
     a.activity !== next.activity ||
     a.topGarments.join('|') !== next.topGarments.join('|') ||
-    a.toppTilTaa.join('|') !== next.toppTilTaa.join('|')
+    a.toppTilTaa.join('|') !== next.toppTilTaa.join('|') ||
+    a.briefId !== next.briefId ||
+    a.versjon !== next.versjon ||
+    a.expiresAtISO !== next.expiresAtISO
   );
 }

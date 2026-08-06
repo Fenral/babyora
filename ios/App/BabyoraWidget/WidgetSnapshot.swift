@@ -1,7 +1,13 @@
-// P9.2 (stub for widget-sesjonen).
+// P9.2 + native spike (2026-08-06).
 //
-// WidgetSnapshot Swift-modell — speil av docs/widget-contract.md v=1.
+// WidgetSnapshot Swift-modell — speil av docs/widget-contract.md.
+// v1-felter uendret; v2 legger til brief-feltene (expiresAtISO, versjon,
+// briefId, deltaTekst) som OPTIONALS slik at v1-JSON fortsatt dekoder.
 // Leses fra App Group `group.no.klemeg.app` / `widget-snapshot.json`.
+//
+// Utløpssemantikk (speiler src/lib/widget/snapshot.ts erSnapshotUtlopt
+// og brief-maskinens halvåpne intervall, Sols avvik e):
+// briefen er utløpt når nå >= expiresAt.
 
 import Foundation
 
@@ -42,6 +48,36 @@ struct WidgetSnapshot: Decodable {
     let toppTilTaa: [String]
     let activity: WidgetActivity
     let deepLink: String
+
+    // v2 (native spike) — optionals: mangler i v1-JSON, dekoder fortsatt.
+    let expiresAtISO: String?
+    let versjon: Int?
+    let briefId: String?
+    let deltaTekst: String?
+
+    /// Parset utløpstidspunkt, eller nil for v1-snapshots.
+    var expiresAtDate: Date? {
+        guard let iso = expiresAtISO else { return nil }
+        return WidgetSnapshot.parseISO(iso)
+    }
+
+    /// Halvåpent intervall: utløpt når nå >= expiresAt.
+    /// v1 (uten expiresAt) har ingen utløpstilstand.
+    func erUtlopt(naa: Date) -> Bool {
+        guard let expiry = expiresAtDate else { return false }
+        return naa >= expiry
+    }
+
+    /// ISO-8601 fra JS `Date.toISOString()` har brøkdelssekunder;
+    /// tåler også varianten uten.
+    static func parseISO(_ iso: String) -> Date? {
+        let medBrok = ISO8601DateFormatter()
+        medBrok.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = medBrok.date(from: iso) { return d }
+        let utenBrok = ISO8601DateFormatter()
+        utenBrok.formatOptions = [.withInternetDateTime]
+        return utenBrok.date(from: iso)
+    }
 }
 
 enum WidgetSnapshotLoader {
@@ -64,11 +100,9 @@ enum WidgetSnapshotLoader {
         guard let snap = try? JSONDecoder().decode(WidgetSnapshot.self, from: data) else {
             return .missing
         }
-        guard snap.v == 1 else { return .missing }
-        // ISO-8601 → Date for utdatert-sjekk
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let updated = formatter.date(from: snap.updatedAtISO),
+        // v1 og v2 aksepteres — ukjente fremtidige versjoner avvises.
+        guard snap.v == 1 || snap.v == 2 else { return .missing }
+        if let updated = WidgetSnapshot.parseISO(snap.updatedAtISO),
            Date().timeIntervalSince(updated) > staleAfterSeconds {
             return .stale(snap)
         }

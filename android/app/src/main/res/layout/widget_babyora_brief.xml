@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Native spike (2026-08-06): upolert brief-widget. All tekst settes i
+     kode (BabyoraBriefWidget.byggViews) — layouten er bare skjelettet. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_rot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@android:color/background_light">
+
+    <TextView
+        android:id="@+id/widget_tittel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="11sp"
+        android:textColor="@android:color/darker_gray" />
+
+    <TextView
+        android:id="@+id/widget_hoved"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black" />
+
+    <TextView
+        android:id="@+id/widget_brief"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:textColor="@android:color/black" />
+
+    <TextView
+        android:id="@+id/widget_gyldighet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="11sp"
+        android:textColor="@android:color/darker_gray" />
+
+    <TextView
+        android:id="@+id/widget_fallback"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="11sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textColor="@android:color/darker_gray" />
+
+</LinearLayout>

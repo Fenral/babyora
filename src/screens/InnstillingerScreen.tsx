@@ -71,6 +71,7 @@ import { CareCircle } from '../components/family/CareCircle';
 import type { Caregiver } from '../components/family/care-circle-model';
 import { ToolsSection } from '../components/family/ToolsSection';
 import { DISCLAIMER_FULL } from '../lib/copy/disclaimer';
+import { WidgetSpikePanel } from '../lib/widget/WidgetSpikePanel';
 // BottomTabBar er nå global (mounted i App.tsx) — ikke importer/mount her.
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2412,6 +2413,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
           <IconLogout />
           <span>Logg ut</span>
         </button>
+
+        {/* Native spike (2026-08-06): widget-testpanel — fjernes etter spiken. */}
+        <WidgetSpikePanel />
 
         <div
           style={footerMetaStyle}

@@ -85,9 +85,13 @@ workflows:
           npx cap sync ios
       # P9.2 widget-target-injection FJERNET fra CI etter build #35-feil:
       # xcodeproj-Ruby-scriptet ga 'Unexpected duplicate tasks' og tomme
-      # product-paths. Widget-target legges til på Mac av widget-sesjonen
-      # (feature/widget-ios) med Xcode-GUI istedenfor xcodeproj-gem.
-      # scripts/add-widget-target.rb beholdes som referanse i repoet.
+      # product-paths. scripts/add-widget-target.rb beholdes som referanse.
+      #
+      # Native spike (2026-08-06): widget-targetet BabyoraWidgetExtension er
+      # nå lagt DIREKTE inn i project.pbxproj (håndredigert, ikke script).
+      # Krever at App Groups-capability (group.no.klemeg.app) er aktivert på
+      # BÅDE no.klemeg.app og no.klemeg.app.widget i developer.apple.com →
+      # Identifiers, ellers feiler provisioning på entitlements.
       - name: Set build number + marketing version
         script: |
           cd ios/App
@@ -123,8 +127,16 @@ workflows:
           # selvhelbredende på taket. NB: certs er type DISTRIBUTION
           # (Apples universelle), IKKE IOS_DISTRIBUTION — feil filter gir
           # tom liste (bevist av bygg 6a6e589d).
+          # Native spike (2026-08-06): widget-extension trenger EGEN
+          # provisioning profile (no.klemeg.app.widget) — hentes/opprettes
+          # i samme steg slik at use-profiles finner begge.
           fetch() {
             app-store-connect fetch-signing-files "$BUNDLE_ID" \
+              --certificate-key=@file:/tmp/cert_private_key.pem \
+              --type IOS_APP_STORE \
+              --create \
+              --verbose
+            app-store-connect fetch-signing-files "$WIDGET_BUNDLE_ID" \
               --certificate-key=@file:/tmp/cert_private_key.pem \
               --type IOS_APP_STORE \
               --create \
@@ -195,7 +207,10 @@ workflows:
       vars:
         PACKAGE_NAME: 'no.klemeg.app'
       node: 22
-      java: 17
+      # Native spike (2026-08-06): Capacitor 8 genererer
+      # sourceCompatibility 21 (capacitor.build.gradle) — java 17 ville
+      # feilet i javac/kotlinc (jvmTarget 21).
+      java: 21
     # Auto-trigger disabled inntil klemeg_keystore er opprettet i Codemagic UI.
     # Manuell trigger via Codemagic-dashboard fungerer fortsatt.
     # triggering:

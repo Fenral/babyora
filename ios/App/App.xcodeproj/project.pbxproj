@@ -15,6 +15,12 @@
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		BA0700000000000000000011 /* WidgetBridgePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0700000000000000000001 /* WidgetBridgePlugin.swift */; };
+		BA0700000000000000000012 /* WidgetBridgePlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = BA0700000000000000000002 /* WidgetBridgePlugin.m */; };
+		BA0700000000000000000013 /* BabyoraWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0700000000000000000004 /* BabyoraWidget.swift */; };
+		BA0700000000000000000014 /* BabyoraWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0700000000000000000005 /* BabyoraWidgetBundle.swift */; };
+		BA0700000000000000000015 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0700000000000000000006 /* WidgetSnapshot.swift */; };
+		BA0700000000000000000016 /* BabyoraWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BA0700000000000000000009 /* BabyoraWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +34,15 @@
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		BA0700000000000000000001 /* WidgetBridgePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetBridgePlugin.swift; sourceTree = "<group>"; };
+		BA0700000000000000000002 /* WidgetBridgePlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WidgetBridgePlugin.m; sourceTree = "<group>"; };
+		BA0700000000000000000003 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
+		BA0700000000000000000004 /* BabyoraWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabyoraWidget.swift; sourceTree = "<group>"; };
+		BA0700000000000000000005 /* BabyoraWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabyoraWidgetBundle.swift; sourceTree = "<group>"; };
+		BA0700000000000000000006 /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
+		BA0700000000000000000007 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BA0700000000000000000008 /* BabyoraWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BabyoraWidget.entitlements; sourceTree = "<group>"; };
+		BA0700000000000000000009 /* BabyoraWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BabyoraWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,7 +54,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA0700000000000000000033 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BA0700000000000000000035 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BA0700000000000000000016 /* BabyoraWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXGroup section */
 		504EC2FB1FED79650016851F = {
@@ -47,6 +83,7 @@
 			children = (
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
+				BA0700000000000000000022 /* BabyoraWidget */,
 				504EC3051FED79650016851F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -55,6 +92,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				BA0700000000000000000009 /* BabyoraWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -64,6 +102,8 @@
 			children = (
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
+				BA0700000000000000000003 /* App.entitlements */,
+				BA0700000000000000000021 /* Plugins */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -72,6 +112,27 @@
 				50B271D01FEDC1A000F3C39B /* public */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		BA0700000000000000000021 /* Plugins */ = {
+			isa = PBXGroup;
+			children = (
+				BA0700000000000000000001 /* WidgetBridgePlugin.swift */,
+				BA0700000000000000000002 /* WidgetBridgePlugin.m */,
+			);
+			path = Plugins;
+			sourceTree = "<group>";
+		};
+		BA0700000000000000000022 /* BabyoraWidget */ = {
+			isa = PBXGroup;
+			children = (
+				BA0700000000000000000004 /* BabyoraWidget.swift */,
+				BA0700000000000000000005 /* BabyoraWidgetBundle.swift */,
+				BA0700000000000000000006 /* WidgetSnapshot.swift */,
+				BA0700000000000000000007 /* Info.plist */,
+				BA0700000000000000000008 /* BabyoraWidget.entitlements */,
+			);
+			path = BabyoraWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -84,10 +145,12 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				BA0700000000000000000035 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				BA0700000000000000000037 /* PBXTargetDependency */,
 			);
 			name = App;
 			packageProductDependencies = (
@@ -96,6 +159,23 @@
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		BA0700000000000000000031 /* BabyoraWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BA0700000000000000000043 /* Build configuration list for PBXNativeTarget "BabyoraWidgetExtension" */;
+			buildPhases = (
+				BA0700000000000000000032 /* Sources */,
+				BA0700000000000000000033 /* Frameworks */,
+				BA0700000000000000000034 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BabyoraWidgetExtension;
+			productName = BabyoraWidgetExtension;
+			productReference = BA0700000000000000000009 /* BabyoraWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -109,6 +189,10 @@
 					504EC3031FED79650016851F = {
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1100;
+						ProvisioningStyle = Automatic;
+					};
+					BA0700000000000000000031 = {
+						CreatedOnToolsVersion = 15.0;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -130,6 +214,7 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				BA0700000000000000000031 /* BabyoraWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -148,6 +233,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA0700000000000000000034 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -156,10 +248,40 @@
 			buildActionMask = 2147483647;
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
+				BA0700000000000000000011 /* WidgetBridgePlugin.swift in Sources */,
+				BA0700000000000000000012 /* WidgetBridgePlugin.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BA0700000000000000000032 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA0700000000000000000013 /* BabyoraWidget.swift in Sources */,
+				BA0700000000000000000014 /* BabyoraWidgetBundle.swift in Sources */,
+				BA0700000000000000000015 /* WidgetSnapshot.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BA0700000000000000000037 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BA0700000000000000000031 /* BabyoraWidgetExtension */;
+			targetProxy = BA0700000000000000000036 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXContainerItemProxy section */
+		BA0700000000000000000036 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BA0700000000000000000031;
+			remoteInfo = BabyoraWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXVariantGroup section */
 		504EC30B1FED79650016851F /* Main.storyboard */ = {
@@ -295,6 +417,7 @@
 			baseConfigurationReference = 958DCC722DB07C7200EA8C5F /* debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = App/Info.plist;
@@ -317,6 +440,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = App/Info.plist;
@@ -329,6 +453,53 @@
 				PRODUCT_BUNDLE_IDENTIFIER = no.klemeg.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BA0700000000000000000041 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = BabyoraWidget/BabyoraWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BabyoraWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = no.klemeg.app.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BA0700000000000000000042 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = BabyoraWidget/BabyoraWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BabyoraWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = no.klemeg.app.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -351,6 +522,15 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BA0700000000000000000043 /* Build configuration list for PBXNativeTarget "BabyoraWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BA0700000000000000000041 /* Debug */,
+				BA0700000000000000000042 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

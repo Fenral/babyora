@@ -1,7 +1,13 @@
 apply plugin: 'com.android.application'
+// Native spike (2026-08-06): Kotlin for widget-provider + WidgetBridgePlugin.
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
     namespace = "no.klemeg.app"
+    kotlinOptions {
+        // Matcher capacitor.build.gradle (JavaVersion.VERSION_21).
+        jvmTarget = "21"
+    }
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "no.klemeg.app"
