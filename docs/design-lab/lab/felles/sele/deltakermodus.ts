@@ -50,7 +50,15 @@ export type LabParametre = {
   nullarm: Nullarm | null;
   /** Disclaimer forhåndsbekreftet via &bekreftet=1 (skjermbevis). */
   forhandsbekreftet: boolean;
+  /**
+   * P2-kandidat via &kandidat=kald|trygg|varm (foreldretest-protokollens
+   * funn: uten URL-styring tester deltakermodus alltid «trygg»). Ignoreres
+   * av andre armer. Ugyldig verdi → null → P2s default (trygg).
+   */
+  kandidat: 'kald' | 'trygg' | 'varm' | null;
 };
+
+const KANDIDATER = ['kald', 'trygg', 'varm'] as const;
 
 export function lesLabParametre(search: string): LabParametre {
   const p = new URLSearchParams(search);
@@ -60,12 +68,16 @@ export function lesLabParametre(search: string): LabParametre {
     : null;
   const modus: LabModus =
     p.get('modus') === 'deltaker' && arm !== null ? 'deltaker' : 'operator';
+  const kandidatRaa = p.get('kandidat');
   return {
     modus,
     arm,
     scenarioId: p.get('scenario'),
     nullarm: nullarmFraParam(p.get('oppgave')),
     forhandsbekreftet: p.get('bekreftet') === '1',
+    kandidat: (KANDIDATER as readonly string[]).includes(kandidatRaa ?? '')
+      ? (kandidatRaa as 'kald' | 'trygg' | 'varm')
+      : null,
   };
 }
 

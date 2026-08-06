@@ -293,6 +293,9 @@ export function LabShell() {
             scenario={scenario}
             klokke={klokke}
             logg={ruteLogg ?? undefined}
+            {...(rute === 'p2' && params.kandidat
+              ? { kandidatId: params.kandidat }
+              : {})}
           />
         ) : (
           <Plassholder kode={rute.toUpperCase()} />

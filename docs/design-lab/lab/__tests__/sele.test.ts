@@ -450,7 +450,20 @@ describe('deltakermodus — URL-kontrakt (skjermbevis-skriptet)', () => {
       scenarioId: 'bilstol',
       nullarm: null,
       forhandsbekreftet: false,
+      kandidat: null,
     });
+  });
+
+  it('kandidat-parameteren (foreldretest-funnet): gyldig verdi parses, ugyldig blir null', () => {
+    expect(
+      lesLabParametre('?modus=deltaker&arm=p2&scenario=normal-dag&kandidat=kald').kandidat,
+    ).toBe('kald');
+    expect(
+      lesLabParametre('?modus=deltaker&arm=p2&scenario=normal-dag&kandidat=varm').kandidat,
+    ).toBe('varm');
+    expect(
+      lesLabParametre('?modus=deltaker&arm=p2&scenario=normal-dag&kandidat=lunken').kandidat,
+    ).toBeNull();
   });
 
   it('alle fem armer kan låses — null-armen med tildelt oppgavetype', () => {
@@ -481,6 +494,7 @@ describe('deltakermodus — URL-kontrakt (skjermbevis-skriptet)', () => {
       scenarioId: null,
       nullarm: null,
       forhandsbekreftet: false,
+      kandidat: null,
     });
   });
 
