@@ -107,15 +107,31 @@ Utløpssemantikk overalt: **halvåpent intervall** — utløpt når `nå >= expi
 - **Android (manuell trigger i Codemagic-dashboard, `android-internal`):**
   AAB til Play Internal (draft) med widgeten «Babyora» i widget-velgeren.
 
-### Én manuell forutsetning FØR første iOS-bygg (ingen Mac nødvendig)
-1. Logg inn på developer.apple.com → Certificates, Identifiers & Profiles →
-   Identifiers.
-2. Åpne `no.klemeg.app` → huk av **App Groups** → Configure → velg/legg til
-   `group.no.klemeg.app` → lagre.
-3. Registrer `no.klemeg.app.widget` hvis den ikke finnes (fetch-steget kan
-   opprette den, men uten App Groups-capability) → samme App Groups-oppsett.
-4. Uten dette feiler `xcode-project use-profiles`/codesign på entitlements —
-   det er forventet førstegangsfeil, ikke en kodebug.
+### Forutsetningen på developer.apple.com — UTFØRT 2026-08-06
+
+Gjort via Playwright etter at eieren logget inn manuelt (passord + 2FA kan
+ikke automatiseres, og skal ikke være det).
+
+Funnet ved gjennomgang — ikke det NATIVE-SPIKE.md antok:
+
+| App ID | Før | Handling |
+|--------|-----|----------|
+| `no.klemeg.app` (Klemeg) | App Groups påslått, `group.no.klemeg.app` allerede tilordnet | ingen |
+| `no.klemeg.app.widget` (Babyora Widget Extension) | App Groups **påslått, men «Enabled App Groups (0)»** | `group.no.klemeg.app` krysset av → Continue → Save → Confirm |
+
+Den halvferdige tilstanden på widget-ID-en er den farlige varianten: haken
+sto på, så en rask titt ville lest det som «ordnet», mens entitlementen
+peker på null grupper og codesign feiler først i byggesteget.
+
+**Verifisert etter full sideomlasting** (ikke bare i skjemaets minne):
+`Enabled App Groups (1)`, og dialogen viser `group.no.klemeg.app` avkrysset,
+«1 of 1 item(s) selected». Bevis: `docs/design-lab/appendix/fase-spike-bevis/`
+(01 = før, 02 = etter omlasting).
+
+Apple varslet ved lagring at eksisterende provisioning-profiler for denne
+App ID-en blir ugyldige og må lages på nytt. Det er forventet — Codemagics
+`fetch-signing-files`-steg henter/oppretter profiler for både
+`no.klemeg.app` og `no.klemeg.app.widget` ved hvert bygg.
 
 Kjente spike-avgrensninger (bevisst utenfor): lock screen-widget, pen design,
 i18n i widgeten, WorkManager-persistens over reboot på Android (alarm settes på
