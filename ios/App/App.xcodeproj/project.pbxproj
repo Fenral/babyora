@@ -16,6 +16,7 @@
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		BA0700000000000000000011 /* WidgetBridgePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0700000000000000000001 /* WidgetBridgePlugin.swift */; };
+		BA07000000000000000000A1 /* BabyoraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA07000000000000000000A2 /* BabyoraViewController.swift */; };
 		BA0700000000000000000012 /* WidgetBridgePlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = BA0700000000000000000002 /* WidgetBridgePlugin.m */; };
 		BA0700000000000000000013 /* BabyoraWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0700000000000000000004 /* BabyoraWidget.swift */; };
 		BA0700000000000000000014 /* BabyoraWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0700000000000000000005 /* BabyoraWidgetBundle.swift */; };
@@ -35,6 +36,7 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		BA0700000000000000000001 /* WidgetBridgePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetBridgePlugin.swift; sourceTree = "<group>"; };
+		BA07000000000000000000A2 /* BabyoraViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabyoraViewController.swift; sourceTree = "<group>"; };
 		BA0700000000000000000002 /* WidgetBridgePlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WidgetBridgePlugin.m; sourceTree = "<group>"; };
 		BA0700000000000000000003 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		BA0700000000000000000004 /* BabyoraWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BabyoraWidget.swift; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 			children = (
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
+				BA07000000000000000000A2 /* BabyoraViewController.swift */,
 				BA0700000000000000000003 /* App.entitlements */,
 				BA0700000000000000000021 /* Plugins */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -248,6 +251,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
+				BA07000000000000000000A1 /* BabyoraViewController.swift in Sources */,
 				BA0700000000000000000011 /* WidgetBridgePlugin.swift in Sources */,
 				BA0700000000000000000012 /* WidgetBridgePlugin.m in Sources */,
 			);
