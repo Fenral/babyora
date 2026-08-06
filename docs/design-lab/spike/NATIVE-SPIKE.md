@@ -174,6 +174,22 @@ i18n i widgeten, WorkManager-persistens over reboot på Android (alarm settes p�
 nytt ved neste `onUpdate`/push, ikke ved boot), og selve brief-innholdet (P3s
 «komplett beslutningsenhet»-P0 løses i retningsarbeidet, ikke her).
 
+## Enhetsprotokollen — resultater så langt
+
+| Dato | Steg | Resultat |
+|------|------|----------|
+| 2026-08-07 01:34 | 1 · Legg widget (iOS) | **PASS.** «Babyora» fantes i widgetgalleriet. Eier la på BÅDE small og medium på samme hjemskjerm — bredere enn protokollen ba om, og begge rendret. Bekrefter at `BabyoraWidgetExtension.appex` ble embeddet og at begge familiene i `supportedFamilies` faktisk vises. |
+| 2026-08-07 01:34 | 2 · Tomtilstand | **PASS.** Begge widgetene viser «Åpne Babyora for dagens antrekk». |
+| | 3 · Sett test-snapshot | venter |
+| | 4 · Utløpsdegradering (kjernebeviset) | venter |
+| | 5 · Deep link | venter |
+| | 6 · Re-aktivering | venter |
+
+Merk til tolkningen: tomtilstanden i steg 2 beviser at widgeten kjører og
+tegner, men **ikke** at App Group-lesingen virker — den fallbacken vises
+også når snapshot-fila mangler eller ikke kan leses. Kontrakten (c)
+avgjøres først i steg 3.
+
 ## Eier-testprotokoll på enhet
 
 > **Gjelder build 83 (tag v1.0.12) — ikke senere bygg.** Den parallelle økten
