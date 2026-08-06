@@ -133,6 +133,42 @@ App ID-en blir ugyldige og må lages på nytt. Det er forventet — Codemagics
 `fetch-signing-files`-steg henter/oppretter profiler for både
 `no.klemeg.app` og `no.klemeg.app.widget` ved hvert bygg.
 
+## Byggresultat 2026-08-06
+
+### iOS — bygg 6a74e7f3052b204a9a5eb450, tag v1.0.12, build 83
+
+Alle 19 steg `success`, inkludert `Fetch signing files` (begge bundle-ID-er),
+`Apply signing profiles`, `Build IPA` og `Publishing`. Artefakter: `App.ipa`
+(333 MB) + `babyora_83_artifacts.zip`. Bygget lastet opp til TestFlight.
+
+**Grønne steg beviser ikke innhold.** IPA-en ble derfor lastet ned og
+inspisert med `tools/ipa-bevis.ps1` (feiler med exit 1 hvis en påstand
+mangler dekning; inneholder et mutasjonsledd så testen ikke er vakuøs):
+
+| Påstand | Fasit i fila |
+|---------|--------------|
+| Widget-utvidelsen er embeddet med egen binær | `Payload/App.app/PlugIns/BabyoraWidgetExtension.appex/BabyoraWidgetExtension` |
+| Widgetens profil har app-gruppen | `group.no.klemeg.app` i widgetens `embedded.mobileprovision` |
+| Widgetens profil gjelder riktig bundle | `no.klemeg.app.widget` i samme profil |
+| Appens profil har SAMME app-gruppe | `group.no.klemeg.app` i appens `embedded.mobileprovision` |
+| `babyora://` har en mottaker | `babyora` i appens `Info.plist` |
+
+Alle fem har dekning. Det som gjenstår er nettopp det bare en enhet kan
+avgjøre: om timelinen faktisk degraderer ved `expiresAt` uten app-åpning,
+om deep link lander, og om App Group-fila leses i praksis. Kjør protokollen
+under.
+
+### Android — bygg 6a74ecea5fa8ce34a92f94aa: FEILET før første steg
+
+`No keystores with reference 'klemeg_keystore' were found from code signing
+identities.` Ingen kodefeil — signeringsnøkkelen er aldri lastet opp i
+Codemagic (samme forbehold som `codemagic.yaml` linje 221 dokumenterer).
+
+Dette **sperrer ikke spiken**: tolkningsregelen krever PASS på minst én
+plattform, og iOS er nede. Android krever en eierbeslutning før den kan
+bygges — en keystore binder appens identitet i Play for alltid, så valget
+mellom «gjenbruk Ryddys» og «lag en ny for Babyora» er ikke Claudes å ta.
+
 Kjente spike-avgrensninger (bevisst utenfor): lock screen-widget, pen design,
 i18n i widgeten, WorkManager-persistens over reboot på Android (alarm settes på
 nytt ved neste `onUpdate`/push, ikke ved boot), og selve brief-innholdet (P3s

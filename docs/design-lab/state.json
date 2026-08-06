@@ -61,7 +61,7 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "App Groups UTFØRT 2026-08-06 (widget-ID hadde capability men 0 grupper — fikset og verifisert etter omlasting, bevis i appendix/fase-spike-bevis/). Tag v1.0.12 pushet → Codemagic iOS-bygg skal gå til TestFlight. VENTER PÅ EIER (tre ting): (1) Logg inn på codemagic.io (e-post forhåndsutfylt i Playwright-vinduet, eller GitHub-knappen) så byggstatus kan leses og Android-workflow 'android-internal' trigges manuelt. (2) Kjør enhetsprotokollen i docs/design-lab/spike/NATIVE-SPIKE.md når TestFlight-bygget er nede. (3) Rekrutter 5–8 foreldre per foreldretest/REKRUTTERING.md; laben ligger nå på https://babyora-lab.vercel.app/ (ingen PC nødvendig). Sperret til disse: retningsvalg (fase 12), fagvalidering P2 (eiervendt fagperson).",
+  "nextAction": "iOS-bygget (v1.0.12, build 83) er PÅ TESTFLIGHT og maskinelt verifisert til widgetnivå. VENTER PÅ EIER: (1) kjør enhetsprotokollen i docs/design-lab/spike/NATIVE-SPIKE.md på iPhone — steg 3 (degradering ved utløp uten app-åpning) er kjernebeviset. (2) Rekrutter 5–8 foreldre; laben ligger på https://babyora-lab.vercel.app/. (3) EIERVALG for Android: keystore gjenbrukes fra Ryddy eller lages ny — sperrer ikke spiken. Sperret til (1)+(2): retningsvalg (fase 12).",
   "labLenke": {
     "url": "https://babyora-lab.vercel.app/",
     "vercelProsjekt": "babyora-lab",
@@ -78,5 +78,19 @@
     "dato": "2026-08-06",
     "vedtak": "Prototypene GODKJENT som representativt grunnlag (web-loop PASS); mobilprøve (native spike) kjøres først, foreldretest forberedes parallelt",
     "reversibelt": true
+  },
+  "iosBygg": {
+    "bygg": "6a74e7f3052b204a9a5eb450",
+    "tag": "v1.0.12",
+    "buildnummer": 83,
+    "status": "finished — 19/19 steg, publisert til TestFlight",
+    "verifisert": "tools/ipa-bevis.ps1 mot nedlastet IPA: widget embeddet, begge profiler har group.no.klemeg.app, babyora-scheme i Info.plist"
+  },
+  "androidBygg": {
+    "bygg": "6a74ecea5fa8ce34a92f94aa",
+    "status": "failed",
+    "aarsak": "No keystores with reference 'klemeg_keystore'",
+    "sperrerSpiken": false,
+    "eierbeslutning": "gjenbruk Ryddys keystore eller lag ny for Babyora — binder Play-identiteten permanent"
   }
 }
