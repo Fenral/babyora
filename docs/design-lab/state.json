@@ -61,7 +61,7 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "Native feasibility-spike (Sols avgrensning: én widgetfamilie, én deep link, én utløpstilstand — upolert): snapshot v2-felt + WidgetKit-timeline m/utløps-degradering (iOS) + Android-ekvivalent, bygges via Codemagic; eier tester på enhet. Parallelt: foreldretest-protokoll + rekrutteringsguide skrives.",
+  "nextAction": "VENTER PÅ EIER (to ting): (1) Aktiver App Groups-capability for no.klemeg.app + no.klemeg.app.widget på developer.apple.com (5 min, se docs/design-lab/spike/NATIVE-SPIKE.md) — deretter tagger Claude v1.0.12 så Codemagic bygger TestFlight m/widget; eier kjører enhetsprotokollen. (2) Rekrutter 5–8 foreldre per docs/design-lab/foreldretest/REKRUTTERING.md; kjør PROTOKOLL.md. Sperret til disse: retningsvalg (fase 12), fagvalidering P2 (eiervendt fagperson).",
   "eierport3": {
     "dato": "2026-08-06",
     "vedtak": "Prototypene GODKJENT som representativt grunnlag (web-loop PASS); mobilprøve (native spike) kjøres først, foreldretest forberedes parallelt",
