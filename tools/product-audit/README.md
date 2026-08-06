@@ -2,17 +2,31 @@
 
 Read-only UI/UX and purchase-willingness audit for every Babyora page. It creates screenshots, a structured vision-analysis prompt, validated scores, a total report, and one bounded improvement prompt. It never applies the prompt or edits the product.
 
-## 1. Start Babyora locally
+## 1. Bygg og server PRODUKSJONSBYGGET (ikke dev)
 
 ```powershell
-npm run dev -- --host 127.0.0.1
+npm run build
+npm run preview -- --port 4173
 ```
+
+> **Ikke bruk `npm run dev`.** Dev-bygget viser flater som aldri sendes til
+> en forelder — «De som passer»-forhåndsvisningen og widget-spike-panelet
+> ligger begge bak `import.meta.env.DEV`. Målt 2026-08-06 meldte et
+> dommerpanel BLOKKERENDE på en av dem, og funnet var umulig å skille fra
+> et ekte: et bevis fra feil bygg er ikke et svakere bevis, det er et bevis
+> for noe annet. `capture.ts` nekter derfor å revidere en dev-server.
+>
+> Bruk `localhost`, ikke `127.0.0.1` — Vite binder til `::1`, og IPv4 gir
+> ERR_CONNECTION_REFUSED på alle elleve fangster.
 
 ## 2. Prepare a run
 
 ```powershell
-npm run audit:prepare -- --base-url http://127.0.0.1:5173
+npm run audit:prepare
 ```
+
+(Standard base-url er `http://localhost:4173`. Bruk `-- --base-url ...`
+bare hvis preview kjører på en annen port.)
 
 The command creates `tools/product-audit/runs/<timestamp>/` containing:
 

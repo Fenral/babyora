@@ -154,6 +154,41 @@ async function ventTilRo(page: Page): Promise<void> {
   }
 }
 
+/**
+ * Nekter å revidere en UTVIKLINGSSERVER.
+ *
+ * FUNN 2026-08-06: revisjonen kjørte mot `vite dev`, og et dommerpanel meldte
+ * BLOKKERENDE på «De som passer»-listen i Innstillinger — teksten var klippet
+ * og siste rad lå bak tab-baren.
+ *
+ * Hele seksjonen ligger bak `import.meta.env.DEV` (InnstillingerScreen.tsx:
+ * 1956). Den sendes ALDRI til en forelder. Det samme gjelder widget-spike-
+ * panelet. Målt mot produksjonsbygget viser skjermen noe helt annet: «Vær &
+ * sted» der forhåndsvisningen sto.
+ *
+ * Revisjonen målte altså en app som ikke finnes, og funnene var umulige å
+ * skille fra ekte — begge har «bevis i pikslene». Et bevis fra feil bygg er
+ * ikke et svakere bevis; det er et bevis for noe annet.
+ *
+ * Vite injiserer `/@vite/client` i dev og aldri i et bygg. Vi ser derfor
+ * etter den, og stopper med en navngitt feil i stedet for å revidere videre.
+ */
+async function avvisUtviklingsserver(page: Page, baseUrl: string): Promise<void> {
+  const erDev = await page.evaluate(() =>
+    Boolean(document.querySelector('script[src*="/@vite/client"]'))
+    || Boolean((window as unknown as { __vite_plugin_react_preamble_installed__?: boolean })
+      .__vite_plugin_react_preamble_installed__));
+  if (!erDev) return;
+  throw new Error(
+    'Revisjonen peker på en UTVIKLINGSSERVER (' + baseUrl + '). '
+    + 'Dev-bygget viser flater som aldri sendes til en forelder — '
+    + '«De som passer»-forhåndsvisningen og widget-spike-panelet er begge '
+    + 'bak import.meta.env.DEV. Funn derfra kan ikke skilles fra ekte funn. '
+    + 'Kjør «npm run build && npm run preview -- --port 4173» og pek hit med '
+    + '--base-url http://localhost:4173.',
+  );
+}
+
 async function validateScreenshot(file: string): Promise<void> {
   const info = await stat(file);
   if (info.size < 10_000) throw new Error(`Screenshot is unexpectedly small (${info.size} bytes)`);
@@ -206,6 +241,7 @@ export async function captureAudit(options: {
           try { localStorage.clear(); sessionStorage.clear(); } catch { /* ikke tilgjengelig */ }
         });
         await page.goto(seededUrl(options.baseUrl, item.pageId === 'onboarding'), { waitUntil: 'networkidle', timeout: 30_000 });
+        await avvisUtviklingsserver(page, options.baseUrl);
         await page.waitForTimeout(1200);
         for (const action of item.actions) await performAction(page, action);
         /* ═══ LAYOUTEN MÅ HA SATT SEG FØR VI SKYTER ═══════════════════════

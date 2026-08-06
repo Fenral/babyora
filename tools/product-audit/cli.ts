@@ -27,7 +27,20 @@ export function parseArgs(argv: string[]): CliArgs {
   if (command === 'finalize' && !run) throw new Error('finalize requires --run <directory>');
   return {
     command,
-    baseUrl: valueAfter('--base-url') ?? 'http://127.0.0.1:5173',
+    /* STANDARD ER PRODUKSJONSBYGGET, IKKE DEV.
+
+       Sto på 127.0.0.1:5173 — vite dev. Det ga to konsekvenser, begge
+       målt 2026-08-06:
+         1. dev viser flater som aldri sendes til en forelder
+            (import.meta.env.DEV), og et dommerpanel meldte BLOKKERENDE
+            på en av dem;
+         2. 127.0.0.1 traff ikke i det hele tatt — Vite binder til ::1 på
+            denne maskinen, og alle elleve fangster ga
+            ERR_CONNECTION_REFUSED.
+
+       Standarden peker nå på preview-porten. capture.ts nekter dessuten
+       å revidere en dev-server uansett hva som sendes inn. */
+    baseUrl: valueAfter('--base-url') ?? 'http://localhost:4173',
     run,
     previous: valueAfter('--previous'),
   };
