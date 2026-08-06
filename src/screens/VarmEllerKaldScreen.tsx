@@ -41,8 +41,11 @@ interface StatusRowSpec {
   iconColor: string;
   dotColor: string;
   actionColor: string;
-  actionBg: string;
-  actionBorder: string;
+  /* actionBg er fjernet 2026-08-06 sammen med actionBorder — se
+     actionStyle. Fargekodingen bor i actionColor. */
+  /* actionBorder er fjernet 2026-08-06 — se actionStyle for hvorfor.
+     Et ubrukt felt som blir stående er en invitasjon til å sette kanten
+     tilbake uten å lese begrunnelsen. */
   iconPaths: ReactElement;
   iconStrokeWidth: number;
   ariaLabel: string;
@@ -58,8 +61,6 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
     iconColor: 'var(--dw-danger)',
     dotColor: 'var(--dw-danger)',
     actionColor: 'var(--dw-ink-mid)',
-    actionBg: 'var(--dw-raised)',
-    actionBorder: '1px solid var(--dw-hairline)',
     iconStrokeWidth: 2,
     iconPaths: (
       <>
@@ -75,10 +76,11 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
     iconColor: 'var(--dw-success)',
     dotColor: 'var(--dw-success)',
     actionColor: 'var(--dw-accent)',
-    actionBg: 'var(--dw-accent-surface)',
-    // --terracotta-200 IKKE migrert: aliaset er tema-avhengig (lys → --dw-accent,
-    // mørk → --dw-accent-300). Ett --dw-navn ville endret kanten i ett av temaene.
-    actionBorder: '1px solid var(--terracotta-200)',
+    /* Her sto en kant i --terracotta-200, med et notat om at aliaset ikke
+       kunne migreres fordi det er tema-avhengig. Notatet var riktig og
+       spørsmålet falt bort: kanten er borte, ikke migrert. «Perfekt»-raden
+       hadde den sterkeste knappeformen av de tre — aksentkant OG
+       aksenttekst — og var derfor den som løy mest. */
     iconStrokeWidth: 2.4,
     iconPaths: <path d="M5 12.5l4.5 4.5L19 7" />,
   },
@@ -89,8 +91,6 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
     iconColor: 'var(--dw-warning)',
     dotColor: 'var(--dw-warning)',
     actionColor: 'var(--dw-ink-mid)',
-    actionBg: 'var(--dw-raised)',
-    actionBorder: '1px solid var(--dw-hairline)',
     iconStrokeWidth: 1.9,
     iconPaths: (
       <>
@@ -693,8 +693,46 @@ export function VarmEllerKaldScreen({
               textTransform: 'uppercase',
               padding: 'var(--dw-space-4) var(--dw-space-8)',
               borderRadius: 6,
-              background: row.actionBg,
-              border: row.actionBorder,
+              /* FYLLET GIKK SAMME VEI SOM KANTEN, OG DET MÅTTE DET.
+
+                 Å bare fjerne kanten gjorde settet INKONSEKVENT: «TA AV» og
+                 «LEGG TIL» har --dw-raised som fyll, som er usynlig på et
+                 raised kort, så de ble ren tekst. «BEHOLD» har
+                 --dw-accent-surface, som er synlig — og sto igjen som den
+                 ene brikken med knappeform.
+
+                 Resultatet var verre enn utgangspunktet: to etiketter og
+                 én som så ut som den eneste handlingen. En halv opprydding
+                 lager en ny løgn.
+
+                 Alle tre er nå rene tekstetiketter. Fargekodingen ligger i
+                 TEKSTFARGEN (row.actionColor: dempet / aksent / dempet),
+                 som er nok — de tre radene har allerede tallsirkel, ikon og
+                 farget prikk til å skille seg. */
+              /* ═══ KANTEN ER FJERNET — DEN LØY OM HVA DETTE ER ══════════════
+
+                 Revisjonen meldte alvorlig: «TA AV» / «BEHOLD» / «LEGG TIL»
+                 er formet som trykknapper, men måler bare ~52×23 px — under
+                 44×44-kravet.
+
+                 Observasjonen var riktig, diagnosen ikke. Elementet er et
+                 <span aria-hidden="true">. Det er ikke trykkbart i det hele
+                 tatt, så trykkmålet gjelder det ikke.
+
+                 Den ekte feilen er at det SER trykkbart ut. En forelder som
+                 leser «For varm · svett eller fuktig nakke» og ser «TA AV» i
+                 en pille med kant, vil trykke — og ingenting skjer. Å gjøre
+                 den 44 px høy hadde gjort løgnen større, ikke mindre.
+
+                 Filhodet sier at radene ALLEREDE ble avinteraktivisert i F80
+                 av nøyaktig denne grunnen: «klikk gjorde ingenting synlig —
+                 ærligere enn å late som de er interaktive». Kanten på
+                 handlingsbrikken overlevde den oppryddingen.
+
+                 Kanten er det sterkeste knappesignalet. Uten den leser
+                 brikken som en TILSTANDSETIKETT — «dette betyr: ta av et
+                 lag» — som er det den er. Fyllet beholdes, for det bærer
+                 fargekodingen (varm/perfekt/kald). */
               whiteSpace: 'nowrap',
             };
 
