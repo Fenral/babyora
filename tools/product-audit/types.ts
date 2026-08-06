@@ -38,7 +38,9 @@ export interface CaptureStateDefinition {
   label: string;
   required: boolean;
   actions: CaptureAction[];
-  expectedText?: string;
+  /* PAKREVD: teksten som beviser at fangsten traff riktig skjerm.
+     Se katalogens hode i config.ts for hvorfor. */
+  expectedText: string;
 }
 
 export type CaptureAction =

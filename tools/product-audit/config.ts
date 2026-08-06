@@ -25,16 +25,37 @@ const tab = (name: string) => ({ type: 'tab', name } as const);
 const text = (pattern: string) => ({ type: 'text', pattern } as const);
 const button = (pattern: string) => ({ type: 'button', pattern } as const);
 
+/* ═══ HVER FANGST MÅ BEVISE AT DEN FANGET RIKTIG SKJERM ═══════════════════
+
+   FUNN 2026-08-06: revisjonen meldte 11/11 fangster mens minst én av dem
+   var feil skjerm. «Betalingsvegg» navigerte til Innstillinger, trykket på
+   Pluss-kortet — og landet på abonnementsadministrasjon, fordi fiksturet
+   har Pluss AKTIV. Det finnes ingen betalingsmur å vise for en som
+   allerede betaler. Knappen fantes, klikket lyktes, skjermbildet ble tatt,
+   og revisjonen rapporterte grønt på en skjerm den aldri nådde.
+
+   clickFirst kunne ikke fange det: den melder når et mål ikke FINNES, ikke
+   når et mål finnes og fører et annet sted.
+
+   Mekanismen for å oppdage dette har ligget her hele tiden — capture.ts
+   venter på expectedText før den skyter. Den var brukt på ÉN av elleve
+   oppføringer. Nå er feltet påkrevd i CaptureState, så en ny skjerm ikke
+   kan legges til uten å si hva som beviser at den er seg selv.
+
+   Teksten skal være noe MÅLSKJERMEN har og de andre ikke har. Er den lik
+   ordet man klikket på for å komme dit, beviser den lite — da kan en
+   mislykket navigering matche på kilden i stedet for målet.
+   ══════════════════════════════════════════════════════════════════════ */
 export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
   {
     id: 'onboarding', label: 'Onboarding', appWeight: 10,
     role: 'Føre en ny forelder til første ekte antrekksverdi før betaling eller tillatelser.',
-    states: [{ id: 'start', label: 'Første steg', required: true, actions: [{ type: 'clear-storage' }, { type: 'reload' }, wait] }],
+    states: [{ id: 'start', label: 'Første steg', required: true, actions: [{ type: 'clear-storage' }, { type: 'reload' }, wait], expectedText: 'Navn eller kallenavn' }],
   },
   {
     id: 'home', label: 'Hjem', appWeight: 15,
     role: 'Bevise løftet om en komplett anbefaling for i dag hjemme.',
-    states: [{ id: 'default', label: 'Standard anbefaling', required: true, actions: [tab('Hjem'), wait] }],
+    states: [{ id: 'default', label: 'Standard anbefaling', required: true, actions: [tab('Hjem'), wait], expectedText: 'Finn dagens antrekk' }],
   },
   {
     id: 'outfit', label: 'Påkledning', appWeight: 12,
@@ -47,6 +68,7 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
     states: [{
       id: 'recommendation', label: 'Antrekket, steg for steg', required: true,
       actions: [tab('Hjem'), wait, button('Finn dagens antrekk'), ventScan, button('Kle på, steg for steg'), wait],
+      expectedText: 'Hvorfor akkurat dette',
     }],
   },
   {
@@ -55,12 +77,13 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
     states: [{
       id: 'default', label: 'Juster-drillen (sliders prefylt fra Hjems resultat)', required: true,
       actions: [tab('Hjem'), wait, button('Finn dagens antrekk'), ventScan, button('Juster'), wait],
+      expectedText: 'Juster',
     }],
   },
   {
     id: 'plan', label: 'Uke / Planlegg', appWeight: 10,
     role: 'Gjøre Plus-verdien fremover konkret uten å svekke dagens gratisverdi.',
-    states: [{ id: 'default', label: 'Dags- og ukeplan', required: true, actions: [tab('Uke|Plan'), wait] }],
+    states: [{ id: 'default', label: 'Dags- og ukeplan', required: true, actions: [tab('Uke|Plan'), wait], expectedText: 'Snart' }],
   },
   // P1 (nav 4→3 skeleton, 2026-07-30): Guide-tab-roten er fjernet (se
   // src/types/nav.ts). Guide-huben selv (id 'guide') hadde ingen egen
@@ -94,6 +117,7 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
          etiketten er nå «<plagg>, <rolle>. Detaljer.». Vi treffer den på
          «Detaljer», som er den delen som ikke varierer med plagget. */
       actions: [tab('Hjem'), wait, button('Finn dagens antrekk'), ventScan, button('Detaljer'), wait, button('Se alternativer i biblioteket'), wait],
+      expectedText: 'Plaggbibliotek',
     }],
   },
   {
@@ -104,22 +128,22 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
   {
     id: 'warm-cold', label: 'Varm eller kald', appWeight: 5,
     role: 'Lære forelderen en enkel kontroll som øker trygghet og kan gi personlig tilpasning.',
-    states: [{ id: 'default', label: 'Nakkesjekk', required: true, actions: [tab('Familie'), text('Varm eller kald'), wait] }],
+    states: [{ id: 'default', label: 'Nakkesjekk', required: true, actions: [tab('Familie'), text('Varm eller kald'), wait], expectedText: 'Nakken' }],
   },
   {
     id: 'first-winter', label: 'Første vinter', appWeight: 5,
     role: 'Bygge tillit og sesongverdi uten å gjøre tekstinnhold til hele Plus-produktet.',
-    states: [{ id: 'overview', label: 'Programoversikt', required: true, actions: [tab('Familie'), text('Første vinter'), wait] }],
+    states: [{ id: 'overview', label: 'Programoversikt', required: true, actions: [tab('Familie'), text('Første vinter'), wait], expectedText: 'Første vinter' }],
   },
   {
     id: 'settings', label: 'Innstillinger', appWeight: 14,
     role: 'Gjøre barn, sted, varsler, verktøy, personvern og abonnement forståelig og kontrollerbart.',
-    states: [{ id: 'default', label: 'Innstillingsoversikt', required: true, actions: [tab('Familie|Innst'), wait] }],
+    states: [{ id: 'default', label: 'Innstillingsoversikt', required: true, actions: [tab('Familie|Innst'), wait], expectedText: 'Innstillinger' }],
   },
   {
     id: 'paywall', label: 'Betalingsvegg', appWeight: 14,
     role: 'Selge fremover, overalt og familie gjennom konkrete utfall, tydelig pris og lav opplevd risiko.',
-    states: [{ id: 'default', label: 'Standard Plus-tilbud', required: true, actions: [tab('Familie|Innst'), button('Plus|Premium|Oppgrader|Se abonnement'), wait] }],
+    states: [{ id: 'default', label: 'Standard Plus-tilbud', required: true, actions: [tab('Familie|Innst'), button('Plus|Premium|Oppgrader|Se abonnement'), wait], expectedText: 'Best verdi' }],
   },
 ] as const;
 
