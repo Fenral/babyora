@@ -907,12 +907,47 @@
   cursor: pointer;
 }
 
-/* Scroll-affordance (D4): bunn-fade i stedet for hard klipp. */
+/* ═══ SCROLL-AFFORDANCE (D4): BUNN-FADE I STEDET FOR HARDT KLIPP ═══════════
+
+   FUNN 2026-08-06, målt: faden spiste tillitslenken.
+
+   «Hvorfor akkurat dette?» er skjermens eneste vei til begrunnelsen, og
+   den er SISTE element i denne rullecontaineren. Når forelderen har rullet
+   til bunns, hviler den derfor midt i faden. Målt i det levende DOM-et:
+   containeren spente y 334–1161, faden startet på 92 % (y 1095), og lenken
+   lå på y 1117–1161 — bunnen nøyaktig der masken er blitt helt
+   gjennomsiktig. Teksten er #A79A82 med opacity 1, altså 6,5:1 mot
+   lerretet. Ut av masken kom den som ~2,1:1.
+
+   Et dommerpanel målte den som skjermens svakeste element — svakere enn
+   dekorativ metatekst — uten å kunne se hvorfor, fordi fargen i koden er
+   riktig. Faden er ikke synlig noe sted i kilden til lenken.
+
+   TO TING ENDRES, OG DE HENGER SAMMEN:
+
+   1. Faden går fra PROSENT til PIKSLER. 8 % av en container betyr ulik
+      høyde for hvert antrekk — et barn med fire plagg får en annen fade
+      enn et med åtte. En affordance som endrer seg med innholdet kan ikke
+      dimensjoneres mot noe. 64 px er fast og gjelder alltid.
+
+   2. Containeren får like mye bunn-luft som faden er høy. Da lander faden
+      ALLTID på tom plass når man er rullet til bunns, aldri på innhold.
+      Den gjør fortsatt jobben sin mens man ruller — innhold passerer
+      gjennom den og antyder at det er mer — men den kan ikke lenger dempe
+      noe som står stille.
+
+   Regelen bak: en fade skal si «det er mer under». Den skal aldri være
+   det eneste som står mellom en forelder og en trykkflate.
+   ══════════════════════════════════════════════════════════════════════ */
 .hjm-result[data-scrollable='true'] {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  -webkit-mask-image: var(--dw-fade-bunn);
-  mask-image: var(--dw-fade-bunn);
+  --hjm-fade-hoyde: 64px;
+  -webkit-mask-image: linear-gradient(
+    to bottom, black calc(100% - var(--hjm-fade-hoyde)), transparent 100%);
+  mask-image: linear-gradient(
+    to bottom, black calc(100% - var(--hjm-fade-hoyde)), transparent 100%);
+  padding-bottom: var(--hjm-fade-hoyde);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
