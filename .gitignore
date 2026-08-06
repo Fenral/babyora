@@ -66,3 +66,6 @@ tools/avatar-gen/out/
 # Gjenopprett med: npx skills add vercel-labs/agent-skills
 .agents/skills/
 .claude/skills/
+
+# Revisjonskjøringer er lokale artefakter (skjermbilder), ikke kildekode
+tools/product-audit/runs/

@@ -29,7 +29,7 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 | Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1389 | 19 CSSProperties + 4 `style={{` | 59 | 0 | App.tsx lazy()-register | ja | 3 |
 | Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1257 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 11 | 22 | App.tsx lazy()-register | ja | 3 |
 | Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6301 | 190 CSSProperties + 51 `style={{` | 338 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
-| Onboarding | `src/screens/OnboardingScreen.tsx` | 1838 | 1 CSSProperties | 223 | 34 | App.tsx lazy()-register | ja | 3 |
+| Onboarding | `src/screens/OnboardingScreen.tsx` | 1853 | 1 CSSProperties | 223 | 34 | App.tsx lazy()-register | ja | 3 |
 | Påkledning | `src/screens/PaakledningScreen.tsx` | 629 | 3 CSSProperties + 35 `style={{` | 16 | 9 | App.tsx lazy()-register | nei | 4 |
 | Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 921 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 102 | 5 | App.tsx lazy()-register | ja | 3 |
 | Tog-guide | `src/screens/TogGuideScreen.tsx` | 1180 | 55 CSSProperties + 3 `style={{` | 127 | 11 | App.tsx lazy()-register | ja | 3 |

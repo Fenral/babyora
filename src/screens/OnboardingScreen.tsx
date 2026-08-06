@@ -1589,11 +1589,26 @@ mask-image: var(--dw-fade-bunn);}
   background:color-mix(in srgb, var(--ob-surface-raised) 74%, transparent);
   box-shadow:none;
 }
+/* ORDMERKET STÅR TIL VENSTRE, IKKE I MIDTEN.
+
+   Åpningskontrakten §1 er utvetydig: ordmerket har «IDENTISK ankring på
+   det globale gridet i launch, onboarding (alle steg) og Hjem», og det
+   flytter seg «maks 1 pt mellom native og web». Kontrakten navngir til og
+   med denne feilen: «Dagens tilstand bryter dette (onboarding sentrert,
+   Hjem venstre) — onboarding flyttes til venstre.»
+
+   Punktet ble MER synlig da åpningsflaten kom (2026-08-06): den venstre-
+   justerer ordmerket, så merket HOPPET fra venstre til midten i det
+   overleveringen skjedde — akkurat den bevegelsen kontrakten finnes for å
+   hindre. Å bygge én side av broen gjorde den andre siden verre.
+
+   flex-start i stedet for center. Spacer-elementet til høyre beholdes
+   så tilbakeknappens plass er reservert og linjen ikke hopper mellom steg. */
 .ob-top-center{
   min-width:0;
   display:flex;
   align-items:baseline;
-  justify-content:center;
+  justify-content:flex-start;
   gap:var(--dw-space-8);
 }
 .ob-top-brand{

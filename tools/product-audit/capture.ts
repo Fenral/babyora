@@ -26,7 +26,10 @@ const BLOCKED_ACTIONS = new Set([
  * Alle portene strøk fordi knappen aldri ble trykket, ikke fordi funksjonen
  * manglet.» To fixturer for samme kontrakt er én fixtur for mye.
  */
-export { forecastPartlyCloudy1C as buildForecastFixture } from '../../e2e/fixtures/forecast-1c-partlycloudy.js';
+import { forecastPartlyCloudy1C } from '../../e2e/fixtures/forecast-1c-partlycloudy.js';
+
+/* Re-eksporteres saa testene kan proeve NOYAKTIG den fixturen appen far. */
+export const buildForecastFixture = forecastPartlyCloudy1C;
 
 export function assertReadOnlyAction(action: string): void {
   if (BLOCKED_ACTIONS.has(action)) {
@@ -62,14 +65,17 @@ function seededUrl(baseUrl: string, onboarding: boolean): string {
   return url.toString();
 }
 
-async function clickFirst(page: Page, candidates: ReturnType<Page['locator']>[]): Promise<void> {
+async function clickFirst(page: Page, candidates: ReturnType<Page['locator']>[], merkelapp?: string): Promise<void> {
   for (const candidate of candidates) {
     if (await candidate.count()) {
       await candidate.first().click({ timeout: 8_000 });
       return;
     }
   }
-  throw new Error('Navigation target not found');
+  /* Feilmeldingen NAVNGIR hva som ikke ble funnet. «Navigation target not
+     found» sa ingenting om hvilken handling som feilet, og en revisjon som
+     ikke kan si hva den lette etter, kan ikke rettes uten gjetting. */
+  throw new Error('Navigation target not found: ' + (merkelapp ?? '(uten merkelapp)'));
 }
 
 async function performAction(page: Page, action: CaptureAction): Promise<void> {
@@ -91,16 +97,24 @@ async function performAction(page: Page, action: CaptureAction): Promise<void> {
     await clickFirst(page, [
       page.getByRole('button', { name: pattern }),
       page.locator('nav[aria-label="Hovednavigasjon"] button').filter({ hasText: pattern }),
-    ]);
+    ], `fane «${action.name}»`);
     await page.waitForTimeout(350);
     return;
   }
   if (action.type === 'button') {
-    await clickFirst(page, [page.getByRole('button', { name: pattern }), page.locator('button').filter({ hasText: pattern })]);
+    /* Tre kandidater, ikke to. FUNN 2026-08-06: «Juster» og bibliotekets
+       inngang er IKONKNAPPER uten synlig tekst — de bar bare en aria-label.
+       getByRole traff ikke, hasText traff ikke (ingen tekst), og revisjonen
+       meldte «Navigation target not found» for to av elleve skjermer. */
+    await clickFirst(page, [
+      page.getByRole('button', { name: pattern }),
+      page.locator('button').filter({ hasText: pattern }),
+      page.locator(`button[aria-label*="${action.pattern}" i], [role="button"][aria-label*="${action.pattern}" i]`),
+    ], `knapp «${action.pattern}»`);
     await page.waitForTimeout(350);
     return;
   }
-  await clickFirst(page, [page.getByText(pattern), page.locator('button, a').filter({ hasText: pattern })]);
+  await clickFirst(page, [page.getByText(pattern), page.locator('button, a').filter({ hasText: pattern })], `tekst «${action.pattern}»`);
   await page.waitForTimeout(350);
 }
 
@@ -135,8 +149,28 @@ export async function captureAudit(options: {
       const page = await context.newPage();
       const file = join(screenshotsDir, `${item.pageId}--${item.stateId}.png`);
       try {
+        /* ═══ HVER FANGST STARTER RENT ═══════════════════════════════════
+           FUNN 2026-08-06: revisjonen var REKKEFØLGEAVHENGIG, og feilen så
+           ut som noe annet.
+
+           Sidene deler nettleserkontekst, og appen HUSKER forrige svar. Når
+           «Påkledning» hadde kjørt seremonien, lå resultatet i lageret — og
+           neste side hoppet rett til svaret, slik appen skal
+           (`decideScanEntry`: eksakt cachet resultat → ingen koreografi).
+           Da fantes ikke «Finn dagens antrekk», og to skjermer kunne ikke
+           nås. Feilmeldingen pekte på «Juster», som var uskyldig.
+
+           En revisjon der resultatet avhenger av hvilken side som kjørte
+           først, kan ikke sammenlignes med seg selv. Lageret tømmes derfor
+           før hver fangst. Skal en cachet tilstand revideres, må den være
+           en DEKLARERT tilstand i katalogen — ikke et sideutslag av
+           rekkefølgen. ══════════════════════════════════════════════════ */
+        await page.goto(seededUrl(options.baseUrl, item.pageId === 'onboarding'), { waitUntil: 'domcontentloaded', timeout: 30_000 });
+        await page.evaluate(() => {
+          try { localStorage.clear(); sessionStorage.clear(); } catch { /* ikke tilgjengelig */ }
+        });
         await page.goto(seededUrl(options.baseUrl, item.pageId === 'onboarding'), { waitUntil: 'networkidle', timeout: 30_000 });
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(1200);
         for (const action of item.actions) await performAction(page, action);
         await page.evaluate(() => document.fonts.ready);
         if (item.expectedText) await page.getByText(new RegExp(item.expectedText, 'i')).first().waitFor({ timeout: 5_000 });
