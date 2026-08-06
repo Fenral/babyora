@@ -77,6 +77,13 @@ workflows:
         script: |
           rm -rf dist
           rm -rf ios/App/App/public
+      # Lar INTERNE bygg gaa igjennom, men skriver ut hva som gjenstaar.
+      # Med LANSERING=1 i miljoet nekter steget i stedet. Flagget settes
+      # naar det bygges for butikk — da kan widget-spike-panelet og alt
+      # annet paa listen ikke bli med. Se filhodet i skriptet.
+      - name: Verifiser lanseringsklar
+        script: |
+          node tools/verify-lanseringsklar.mjs
       - name: Build web
         script: |
           npm run build
@@ -223,6 +230,13 @@ workflows:
       - name: Install dependencies
         script: |
           npm ci
+      # Lar INTERNE bygg gaa igjennom, men skriver ut hva som gjenstaar.
+      # Med LANSERING=1 i miljoet nekter steget i stedet. Flagget settes
+      # naar det bygges for butikk — da kan widget-spike-panelet og alt
+      # annet paa listen ikke bli med. Se filhodet i skriptet.
+      - name: Verifiser lanseringsklar
+        script: |
+          node tools/verify-lanseringsklar.mjs
       - name: Build web
         script: |
           npm run build
