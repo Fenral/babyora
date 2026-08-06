@@ -27,7 +27,24 @@ const MAP: Record<string, GarmentId> = {
   'bleie': 'bleie',
   'ullsokker': 'ullsokker',
   'tykke ullsokker': 'ullsokker',
-  'tykke ullsokker (vinterdress dekker)': 'ullsokker',
+  /* EGEN ID, IKKE ET ALIAS FOR ULLSOKKER (2026-08-06, eierbeslutning).
+
+     Motoren dooper om «vintersko isolerte» til dette navnet for barn
+     9-15 mnd, fordi vinterdressen dekker foten (modifiers.ts:539). Det
+     er FOTTOEYETS plass, ikke et ekstra par sokker — men raden laa paa
+     samme id som «ullsokker» og fikk derfor samme bilde.
+
+     Foelgen var maalt i revisjonen 2026-08-06: rad 2 «Ullsokker» og rad
+     8 «Tykke ullsokker (vinterdress dekker)» hadde pikselidentiske
+     miniatyrer, men ble telt som to av aatte plagg. En forelder som
+     skanner listen med en haand ser samme sokk to ganger og maa stoppe
+     opp for aa avgjoere om appen mener det.
+
+     Merk at aliaset «tykke ullsokker» UTEN parentes blir staaende paa
+     ullsokker. Det er en annen sak: der ERSTATTER motoren «ullsokker»
+     (modifiers.ts:522-523), saa de to kan aldri opptre samtidig og det
+     finnes ingen dublett aa skille. */
+  'tykke ullsokker (vinterdress dekker)': 'vintersokker',
   'ullstrømper': 'ullsokker',
   'tykke ullstrømper': 'ullsokker',
 

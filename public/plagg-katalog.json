@@ -7,17 +7,67 @@
     "targetAge": "0-24 months",
     "climate": "Norwegian (rain, wind, frost)",
     "weatherSource": "met.no LocationForecast",
-    "activities": ["vogn", "baeresele", "utelek", "soevn"],
+    "activities": [
+      "vogn",
+      "baeresele",
+      "utelek",
+      "soevn"
+    ],
     "tempBands": [
-      {"id": "ekstrem_varme", "feelsLikeMin": 28, "feelsLikeMax": null, "label": "Ekstrem varme"},
-      {"id": "tropisk", "feelsLikeMin": 22, "feelsLikeMax": 27, "label": "Tropisk"},
-      {"id": "varm", "feelsLikeMin": 16, "feelsLikeMax": 21, "label": "Varm"},
-      {"id": "mild", "feelsLikeMin": 10, "feelsLikeMax": 15, "label": "Mild"},
-      {"id": "kjolig", "feelsLikeMin": 5, "feelsLikeMax": 9, "label": "Kjølig"},
-      {"id": "kald", "feelsLikeMin": 0, "feelsLikeMax": 4, "label": "Kald"},
-      {"id": "frost", "feelsLikeMin": -7, "feelsLikeMax": -1, "label": "Frost"},
-      {"id": "streng_frost", "feelsLikeMin": -15, "feelsLikeMax": -8, "label": "Streng frost"},
-      {"id": "ekstrem", "feelsLikeMin": null, "feelsLikeMax": -16, "label": "Ekstrem kulde"}
+      {
+        "id": "ekstrem_varme",
+        "feelsLikeMin": 28,
+        "feelsLikeMax": null,
+        "label": "Ekstrem varme"
+      },
+      {
+        "id": "tropisk",
+        "feelsLikeMin": 22,
+        "feelsLikeMax": 27,
+        "label": "Tropisk"
+      },
+      {
+        "id": "varm",
+        "feelsLikeMin": 16,
+        "feelsLikeMax": 21,
+        "label": "Varm"
+      },
+      {
+        "id": "mild",
+        "feelsLikeMin": 10,
+        "feelsLikeMax": 15,
+        "label": "Mild"
+      },
+      {
+        "id": "kjolig",
+        "feelsLikeMin": 5,
+        "feelsLikeMax": 9,
+        "label": "Kjølig"
+      },
+      {
+        "id": "kald",
+        "feelsLikeMin": 0,
+        "feelsLikeMax": 4,
+        "label": "Kald"
+      },
+      {
+        "id": "frost",
+        "feelsLikeMin": -7,
+        "feelsLikeMax": -1,
+        "label": "Frost"
+      },
+      {
+        "id": "streng_frost",
+        "feelsLikeMin": -15,
+        "feelsLikeMax": -8,
+        "label": "Streng frost"
+      },
+      {
+        "id": "ekstrem",
+        "feelsLikeMin": null,
+        "feelsLikeMax": -16,
+        "label": "Ekstrem kulde"
+      }
     ],
     "ageModifiers": {
       "lt_3_months": "max 30 min outside in sub-zero, peak thermoregulation risk",
@@ -33,7 +83,10 @@
       "id": "kortermet-body",
       "category": "innerst",
       "label": "Kortermet body",
-      "aliases": ["kortermet body", "lett kortermet body (valgfritt)"],
+      "aliases": [
+        "kortermet body",
+        "lett kortermet body (valgfritt)"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/kortermet-body.png",
       "what": "Lett bomullsbody med kort arm og knepping mellom beina. Klassisk under-plagg som ligger mot huden.",
       "when": "Brukes ved varme dager eller som tynt grunnlag under andre plagg innendørs."
@@ -42,7 +95,9 @@
       "id": "kortermet-ullbody",
       "category": "innerst",
       "label": "Kortermet ullbody",
-      "aliases": ["kortermet ullbody"],
+      "aliases": [
+        "kortermet ullbody"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/kortermet-ullbody.png",
       "what": "Body i myk merinoull med kort arm. Ull mot huden temperatur-regulerer både ved varme og kjølige forhold.",
       "when": "Lett ull-base i varme måneder, eller som innerst lag på milde høstdager."
@@ -51,7 +106,9 @@
       "id": "langermet-body",
       "category": "innerst",
       "label": "Langermet body",
-      "aliases": ["langermet body"],
+      "aliases": [
+        "langermet body"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/langermet-body.png",
       "what": "Bomullsbody med lang arm og knepping mellom beina. Holder torsoen dekket uten å bygge mye varme.",
       "when": "God som inner lag innendørs eller på milde dager."
@@ -60,7 +117,9 @@
       "id": "langermet-ullbody",
       "category": "innerst",
       "label": "Langermet ullbody",
-      "aliases": ["langermet ullbody"],
+      "aliases": [
+        "langermet ullbody"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/langermet-ullbody.png",
       "what": "Body i myk merinoull med lang arm. Den mest brukte base-en i Norge for barn 0-2 år.",
       "when": "Hele året - alene på varme dager, eller som første lag under mellomlag og yttertøy."
@@ -69,7 +128,9 @@
       "id": "langermet-ullbody-tynn",
       "category": "innerst",
       "label": "Langermet ullbody, tynn",
-      "aliases": ["langermet ullbody tynn"],
+      "aliases": [
+        "langermet ullbody tynn"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/langermet-ullbody-tynn.png",
       "what": "Tynn ull-body med lang arm. Mindre varmeisolasjon enn vanlig ullbody.",
       "when": "Milde dager der full ullbody ville blitt for varmt."
@@ -78,7 +139,9 @@
       "id": "ullsett-tynt",
       "category": "innerst",
       "label": "Ullsett, tynt",
-      "aliases": ["ullsett tynt"],
+      "aliases": [
+        "ullsett tynt"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/ullsett-tynt.png",
       "what": "To-delt sett - overdel og leggings - i tynn merinoull. Mer fleksibel enn body når barnet beveger seg mye.",
       "when": "Ute fra ca 8-14 grader, eller som lag under yttertøy i kjølige forhold."
@@ -87,7 +150,9 @@
       "id": "ullsett-tykt",
       "category": "innerst",
       "label": "Ullsett, tykt",
-      "aliases": ["ullsett tykt"],
+      "aliases": [
+        "ullsett tykt"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/ullsett-tykt.png",
       "what": "To-delt sett i tykkere merinoull med mer varme. Gir solid base mot kjølige dager.",
       "when": "Vinter og senhøst - som varmt inner lag under mellomlag og yttertøy."
@@ -96,7 +161,9 @@
       "id": "to-ullsett",
       "category": "innerst",
       "label": "To ullsett oppå hverandre",
-      "aliases": ["to ullsett oppå hverandre"],
+      "aliases": [
+        "to ullsett oppå hverandre"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/to-ullsett.png",
       "what": "To ullsett oppå hverandre - dobbel base-lag for ekstrem kulde.",
       "when": "Streng frost og lavere - når enkel ull ikke holder."
@@ -105,7 +172,9 @@
       "id": "t-skjorte",
       "category": "innerst",
       "label": "T-skjorte",
-      "aliases": ["t-skjorte"],
+      "aliases": [
+        "t-skjorte"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/t-skjorte.png",
       "what": "Vanlig kortermet t-skjorte i bomull. Tynt og luftig.",
       "when": "Varme sommerdager med utelek."
@@ -114,7 +183,9 @@
       "id": "shorts",
       "category": "innerst",
       "label": "Shorts",
-      "aliases": ["shorts"],
+      "aliases": [
+        "shorts"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/shorts.png",
       "what": "Bomullsshorts med strikk i livet. Lett og bevegelses-vennlig.",
       "when": "Sommervarme dager med utelek eller turer."
@@ -123,7 +194,9 @@
       "id": "lett-bukse",
       "category": "innerst",
       "label": "Lett bukse",
-      "aliases": ["lett bukse"],
+      "aliases": [
+        "lett bukse"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/lett-bukse.png",
       "what": "Lett, behagelig bukse i bomull eller jersey.",
       "when": "Milde sommerdager og tidlig høst."
@@ -132,7 +205,9 @@
       "id": "bleie",
       "category": "innerst",
       "label": "Bleie",
-      "aliases": ["bleie"],
+      "aliases": [
+        "bleie"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/bleie.png",
       "what": "Bleie alene - vanligvis kun i ekstrem varme der annet tøy blir for varmt.",
       "when": "Innendørs i tropiske forhold (>26 grader) eller helt korte sov-stunder."
@@ -141,7 +216,12 @@
       "id": "ullsokker",
       "category": "innerst",
       "label": "Ullsokker",
-      "aliases": ["ullsokker", "ullstrømper", "ullstrømper tykke", "tykke ullsokker", "tykke ullsokker (vinterdress dekker)"],
+      "aliases": [
+        "ullsokker",
+        "ullstrømper",
+        "ullstrømper tykke",
+        "tykke ullsokker"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/ullsokker.png",
       "what": "Ullsokker som holder føttene varme. Ull regulerer fuktighet bedre enn bomull.",
       "when": "Alltid synlig anbefalt fra ca 5 grader og lavere."
@@ -150,7 +230,9 @@
       "id": "tynn-bukse",
       "category": "mellomlag",
       "label": "Tynn bukse",
-      "aliases": ["tynn bukse"],
+      "aliases": [
+        "tynn bukse"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/tynn-bukse.png",
       "what": "Tynn jersey- eller fleecebukse som lar barnet bevege seg fritt.",
       "when": "Som mellomlag på milde dager med yttertøy."
@@ -159,7 +241,10 @@
       "id": "tynn-ull-mellomlag",
       "category": "mellomlag",
       "label": "Ull-mellomlag, tynt",
-      "aliases": ["tynn ull-mellomlag", "ekstra ull-lag"],
+      "aliases": [
+        "tynn ull-mellomlag",
+        "ekstra ull-lag"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/tynn-ull-mellomlag.png",
       "what": "Tynt ull-mellomlag - gir litt ekstra varme uten å bygge volum.",
       "when": "Kjølige dager der ren base ikke er nok."
@@ -168,7 +253,9 @@
       "id": "ull-mellomlag",
       "category": "mellomlag",
       "label": "Ull-mellomlag",
-      "aliases": ["ull-mellomlag"],
+      "aliases": [
+        "ull-mellomlag"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/ull-mellomlag.png",
       "what": "Standard ull-mellomlag - den klassiske ull-genseren mellom base og yttertøy.",
       "when": "Hele vinterhalvåret som essensielt isolasjons-lag."
@@ -177,7 +264,9 @@
       "id": "ull-mellomlag-tykt",
       "category": "mellomlag",
       "label": "Ull-mellomlag, tykt",
-      "aliases": ["ull-mellomlag tykt"],
+      "aliases": [
+        "ull-mellomlag tykt"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/ull-mellomlag-tykt.png",
       "what": "Tykkere ull-mellomlag for ekstra varme.",
       "when": "Streng kulde eller lang eksponering utendørs."
@@ -186,7 +275,9 @@
       "id": "ull-jakke",
       "category": "mellomlag",
       "label": "Ull-jakke",
-      "aliases": ["ull-jakke"],
+      "aliases": [
+        "ull-jakke"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/ull-jakke.png",
       "what": "Ull-jakke med glidelås - gjør det enkelt å regulere temperaturen.",
       "when": "Som mellomlag under skall eller alene på milde høstdager."
@@ -195,7 +286,9 @@
       "id": "ull-bukse",
       "category": "mellomlag",
       "label": "Ull-bukse",
-      "aliases": ["ull-bukse"],
+      "aliases": [
+        "ull-bukse"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/ull-bukse.png",
       "what": "Strikket ullbukse med strikk i livet. Varmer beina godt.",
       "when": "Vinterhalvåret som mellomlag under yttertøy."
@@ -204,7 +297,9 @@
       "id": "tynn-pyjamas",
       "category": "mellomlag",
       "label": "Tynn pyjamas",
-      "aliases": ["tynn pyjamas"],
+      "aliases": [
+        "tynn pyjamas"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/tynn-pyjamas.png",
       "what": "Tynn to-delt nattøy i bomull. Lett å komme i og ut av.",
       "when": "Varme rom (>22 grader) i kombinasjon med sovepose lett."
@@ -213,7 +308,9 @@
       "id": "pyjamas",
       "category": "mellomlag",
       "label": "Pyjamas",
-      "aliases": ["pyjamas"],
+      "aliases": [
+        "pyjamas"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/pyjamas.png",
       "what": "Standard pyjamas i bomull.",
       "when": "Romtemperatur 18-21 grader med sovepose ca 1.0 TOG."
@@ -222,7 +319,9 @@
       "id": "ull-pyjamas",
       "category": "mellomlag",
       "label": "Ull-pyjamas",
-      "aliases": ["ull-pyjamas"],
+      "aliases": [
+        "ull-pyjamas"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/ull-pyjamas.png",
       "what": "Ull-pyjamas for kjølige soverom. Holder varmen jevnt gjennom natten.",
       "when": "Kjølige rom (<18 grader) eller frost-grader om natta."
@@ -231,7 +330,9 @@
       "id": "lett-kjoredress",
       "category": "yttertoy",
       "label": "Lett kjøredress",
-      "aliases": ["lett kjøredress"],
+      "aliases": [
+        "lett kjøredress"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/lett-kjoredress.png",
       "what": "Lett kjøredress - én-deler med tynt skall. Vind- og litt regntett.",
       "when": "Milde dager i vogn fra ca 5-12 grader."
@@ -240,7 +341,9 @@
       "id": "kjoredress",
       "category": "yttertoy",
       "label": "Kjøredress",
-      "aliases": ["kjøredress"],
+      "aliases": [
+        "kjøredress"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/kjoredress.png",
       "what": "Standard kjøredress med moderat fôring og hette.",
       "when": "Kjølige dager i vogn fra ca 0-8 grader."
@@ -249,7 +352,9 @@
       "id": "vinterkjoredress",
       "category": "yttertoy",
       "label": "Vinterkjøredress",
-      "aliases": ["vinterkjøredress"],
+      "aliases": [
+        "vinterkjøredress"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/vinterkjoredress.png",
       "what": "Vinterkjøredress med god fôring og hette.",
       "when": "Frost-dager i vogn fra ca -5 til 0 grader."
@@ -258,7 +363,9 @@
       "id": "vinterkjoredress-isolert",
       "category": "yttertoy",
       "label": "Vinterkjøredress, isolert",
-      "aliases": ["vinterkjøredress isolert"],
+      "aliases": [
+        "vinterkjøredress isolert"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/vinterkjoredress-isolert.png",
       "what": "Maksimalt fôret vinterkjøredress - for streng frost.",
       "when": "Under -10 grader eller lang tid utendørs i vogn."
@@ -267,7 +374,9 @@
       "id": "vinterdress",
       "category": "yttertoy",
       "label": "Vinterdress",
-      "aliases": ["vinterdress"],
+      "aliases": [
+        "vinterdress"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/vinterdress.png",
       "what": "To-delt eller én-delt vinterdress for utelek - robust og bevegelig.",
       "when": "Lek ute i ca -5 til 5 grader."
@@ -276,7 +385,9 @@
       "id": "vinterdress-isolert",
       "category": "yttertoy",
       "label": "Vinterdress, isolert",
-      "aliases": ["vinterdress isolert"],
+      "aliases": [
+        "vinterdress isolert"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/vinterdress-isolert.png",
       "what": "Isolert vinterdress for utelek i streng kulde.",
       "when": "Lek ute under -10 grader."
@@ -285,7 +396,9 @@
       "id": "regntoy-skall",
       "category": "yttertoy",
       "label": "Regntøy / skall",
-      "aliases": ["regntøy / skall"],
+      "aliases": [
+        "regntøy / skall"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/regntoy-skall.png",
       "what": "Regntøy med tette sømmer - to-delt eller én-delt.",
       "when": "Når det regner - uavhengig av temperatur."
@@ -294,7 +407,9 @@
       "id": "vindtett-skall",
       "category": "yttertoy",
       "label": "Vindtett skall",
-      "aliases": ["vindtett skall"],
+      "aliases": [
+        "vindtett skall"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/vindtett-skall.png",
       "what": "Vindtett skall-jakke som blokkerer vind effektivt.",
       "when": "Vind over 5 m/s med kjølig vær (under 10 grader)."
@@ -304,7 +419,10 @@
       "category": "ekstra",
       "subcategory": "hodeplagg",
       "label": "Solhatt",
-      "aliases": ["solhatt", "caps eller solhatt"],
+      "aliases": [
+        "solhatt",
+        "caps eller solhatt"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/solhatt.png",
       "what": "Solhatt med brem som beskytter ansikt, nakke og ører.",
       "when": "Solrike dager fra ca 10 grader og oppover."
@@ -314,7 +432,9 @@
       "category": "ekstra",
       "subcategory": "hodeplagg",
       "label": "Lue, tynn",
-      "aliases": ["lue tynn"],
+      "aliases": [
+        "lue tynn"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/lue-tynn.png",
       "what": "Tynn strikket lue.",
       "when": "Milde dager fra ca 8-14 grader."
@@ -324,7 +444,9 @@
       "category": "ekstra",
       "subcategory": "hodeplagg",
       "label": "Lue",
-      "aliases": ["lue"],
+      "aliases": [
+        "lue"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/lue.png",
       "what": "Standard strikket lue som dekker ørene.",
       "when": "Fra ca 5 grader og nedover."
@@ -334,7 +456,9 @@
       "category": "ekstra",
       "subcategory": "hodeplagg",
       "label": "Lue med ull",
-      "aliases": ["lue m/ ull"],
+      "aliases": [
+        "lue m/ ull"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/lue-m-ull.png",
       "what": "Tykk ull-lue med øre-klaffer.",
       "when": "Frost og lavere temperaturer."
@@ -344,7 +468,9 @@
       "category": "ekstra",
       "subcategory": "hodeplagg",
       "label": "Balaklava (finlandshette)",
-      "aliases": ["balaklava"],
+      "aliases": [
+        "balaklava"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/balaklava.png",
       "what": "Balaklava (finlandshette) dekker hele hode, hals og deler av ansiktet.",
       "when": "Streng frost og kald vind."
@@ -354,7 +480,9 @@
       "category": "ekstra",
       "subcategory": "hender",
       "label": "Votter, tynne",
-      "aliases": ["votter tynne"],
+      "aliases": [
+        "votter tynne"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/votter-tynne.png",
       "what": "Tynne strikkede votter.",
       "when": "Kjølige dager fra ca 5 grader og nedover."
@@ -364,7 +492,9 @@
       "category": "ekstra",
       "subcategory": "hender",
       "label": "Votter",
-      "aliases": ["votter"],
+      "aliases": [
+        "votter"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/votter.png",
       "what": "Standard ullvotter med ribbet strikk.",
       "when": "Fra 0 grader og nedover."
@@ -374,7 +504,9 @@
       "category": "ekstra",
       "subcategory": "hender",
       "label": "Votter, tykke",
-      "aliases": ["votter tykke"],
+      "aliases": [
+        "votter tykke"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/votter-tykke.png",
       "what": "Tykke ullvotter med ekstra isolasjon.",
       "when": "Frost-dager med kjenn-på-fingrene."
@@ -384,7 +516,9 @@
       "category": "ekstra",
       "subcategory": "hender",
       "label": "Votter, dun",
-      "aliases": ["votter dun"],
+      "aliases": [
+        "votter dun"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/votter-dun.png",
       "what": "Dun-fylte votter for maksimal varme.",
       "when": "Streng frost og under -15 grader."
@@ -394,7 +528,9 @@
       "category": "ekstra",
       "subcategory": "hender",
       "label": "Vindvotter (skall)",
-      "aliases": ["vindvotter (skall)"],
+      "aliases": [
+        "vindvotter (skall)"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/vindvotter-skall.png",
       "what": "Vindtette skall-votter - kan brukes over tynne votter.",
       "when": "Sterk vind (>=8 m/s) med kulde (under 0 grader)."
@@ -404,7 +540,9 @@
       "category": "ekstra",
       "subcategory": "hals",
       "label": "Hals (buff)",
-      "aliases": ["hals"],
+      "aliases": [
+        "hals"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/hals.png",
       "what": "Halsvarmer / buff som dekker nakke og munn ved behov.",
       "when": "Vind og kulde - eller når jakkekanten alene ikke er nok."
@@ -414,7 +552,9 @@
       "category": "ekstra",
       "subcategory": "fotter",
       "label": "Sko",
-      "aliases": ["sko"],
+      "aliases": [
+        "sko"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/sko.png",
       "what": "Vanlige hverdags-sko med borrelås.",
       "when": "Innendørs eller på tørre, milde dager ute. Babyora age-modifier bruker tøffel-sko for 9-15 mnd, ingen sko for <9 mnd."
@@ -424,7 +564,10 @@
       "category": "ekstra",
       "subcategory": "fotter",
       "label": "Tøffel-sko",
-      "aliases": ["tøffel-sko", "tøffel-sko + tykke ullsokker"],
+      "aliases": [
+        "tøffel-sko",
+        "tøffel-sko + tykke ullsokker"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/toffel-sko.png",
       "what": "Myke tøffel-sko i filtet ull eller mykt skinn.",
       "when": "Inn i bæresele, eller varme dager når føttene ikke trenger isolering."
@@ -434,7 +577,10 @@
       "category": "ekstra",
       "subcategory": "fotter",
       "label": "Sandaler",
-      "aliases": ["sandaler", "barfot eller tynne tøfler"],
+      "aliases": [
+        "sandaler",
+        "barfot eller tynne tøfler"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/sandaler.png",
       "what": "Sommer-sandaler med myke remmer.",
       "when": "Varme sommerdager. Babyora age-modifier: <9 mnd barfot, 9-15 mnd tynne tøfler."
@@ -444,7 +590,9 @@
       "category": "ekstra",
       "subcategory": "fotter",
       "label": "Vintersko",
-      "aliases": ["vintersko"],
+      "aliases": [
+        "vintersko"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/vintersko.png",
       "what": "Vintersko med matt gummi-såle.",
       "when": "Frost-dager med utelek. Babyora kun fra 16 mnd; <16 mnd får tykke ullsokker eller tøffel-sko."
@@ -454,17 +602,32 @@
       "category": "ekstra",
       "subcategory": "fotter",
       "label": "Vintersko, isolerte",
-      "aliases": ["vintersko isolerte"],
+      "aliases": [
+        "vintersko isolerte"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/vintersko-isolerte.png",
       "what": "Tykt isolerte vintersko for streng kulde.",
       "when": "Under -10 grader eller lang tid utendørs i snø. Samme aldersregel som vintersko."
+    },
+    {
+      "id": "vintersokker",
+      "category": "ekstra",
+      "label": "Tykke ullsokker",
+      "aliases": [
+        "tykke ullsokker (vinterdress dekker)"
+      ],
+      "illustration": "https://wool-app.vercel.app/illustrations/garments/vintersokker.png",
+      "what": "Tykke ullsokker som tar fottoyets plass naar vinterdressen har integrerte fottak. Ull holder pa varmen selv om foten svetter.",
+      "when": "Fra ca 9 maneder naar barnet har vinterdress som dekker foten, i stedet for isolerte vintersko."
     },
     {
       "id": "tynt-teppe",
       "category": "ekstra",
       "subcategory": "vogn",
       "label": "Tynt teppe",
-      "aliases": ["tynt teppe"],
+      "aliases": [
+        "tynt teppe"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/tynt-teppe.png",
       "what": "Tynt bomulls- eller muslin-teppe. Tilfører litt komfort uten å bygge varme.",
       "when": "Varme dager i vogn - som lett tildekking."
@@ -474,7 +637,9 @@
       "category": "ekstra",
       "subcategory": "vogn",
       "label": "Dunteppe",
-      "aliases": ["dunteppe"],
+      "aliases": [
+        "dunteppe"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/dunteppe.png",
       "what": "Tykt dunteppe for ekstra varme i vogn. Bruk aldri OVER kalesjen.",
       "when": "Kjølige til kalde dager i vogn - som tillegg, ikke alene."
@@ -484,7 +649,9 @@
       "category": "ekstra",
       "subcategory": "vogn",
       "label": "Varmepose, lett",
-      "aliases": ["varmepose lett"],
+      "aliases": [
+        "varmepose lett"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/varmepose-lett.png",
       "what": "Lett varmepose / fotmuff til vogn - tynt skall med fôr.",
       "when": "Milde dager der barn ligger i vogn."
@@ -494,7 +661,9 @@
       "category": "ekstra",
       "subcategory": "vogn",
       "label": "Varmepose",
-      "aliases": ["varmepose"],
+      "aliases": [
+        "varmepose"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/varmepose.png",
       "what": "Standard varmepose med fôr og glidelås. Holder barnet jevnt varmt.",
       "when": "Kjølige til kalde dager i vogn."
@@ -504,7 +673,9 @@
       "category": "ekstra",
       "subcategory": "vogn",
       "label": "Varmepose, dun",
-      "aliases": ["varmepose dun"],
+      "aliases": [
+        "varmepose dun"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/varmepose-dun.png",
       "what": "Dun-fylt varmepose for ekstrem kulde.",
       "when": "Streng frost. Pass på å ikke kombinere med løse tepper."
@@ -514,7 +685,9 @@
       "category": "ekstra",
       "subcategory": "vogn",
       "label": "Saueskinn (lammeskinn)",
-      "aliases": ["sauekinn i vogn"],
+      "aliases": [
+        "sauekinn i vogn"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/sauekinn-i-vogn.png",
       "what": "Saueskinn (lammeskinn) som ligger i vognen og varmer fra under.",
       "when": "Vinterhalvåret - gjør vognen koselig og varm."
@@ -524,7 +697,9 @@
       "category": "ekstra",
       "subcategory": "vogn",
       "label": "Regntrekk",
-      "aliases": ["regntrekk"],
+      "aliases": [
+        "regntrekk"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/regntrekk.png",
       "what": "Gjennomsiktig regntrekk over kalesjen. Hold luftigheten i tankene - aldri tett over.",
       "when": "Når det regner mer enn yr i vogn."
@@ -534,7 +709,9 @@
       "category": "ekstra",
       "subcategory": "vogn",
       "label": "Regnponcho over bæresele",
-      "aliases": ["regnponcho over bæresele"],
+      "aliases": [
+        "regnponcho over bæresele"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/regnponcho-over-baeresele.png",
       "what": "Regnponcho som dekker både den voksne og barnet i bæresele.",
       "when": "Når det regner og du bærer barnet i sele eller bæremeis."
@@ -544,7 +721,9 @@
       "category": "ekstra",
       "subcategory": "soevn",
       "label": "Sovepose 0.5 TOG",
-      "aliases": ["sovepose 0.5 TOG"],
+      "aliases": [
+        "sovepose 0.5 TOG"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/sovepose-0-5-tog.png",
       "what": "Veldig tynn sovepose (0.5 TOG) - minimal varme.",
       "when": "Varme rom (>24 grader)."
@@ -554,7 +733,9 @@
       "category": "ekstra",
       "subcategory": "soevn",
       "label": "Sovepose 1.0 TOG",
-      "aliases": ["sovepose 1.0 TOG"],
+      "aliases": [
+        "sovepose 1.0 TOG"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/sovepose-1-0-tog.png",
       "what": "Lett sovepose (1.0 TOG) for milde rom.",
       "when": "Romtemperatur 18-21 grader."
@@ -564,7 +745,9 @@
       "category": "ekstra",
       "subcategory": "soevn",
       "label": "Sovepose 2.5 TOG",
-      "aliases": ["sovepose 2.5 TOG"],
+      "aliases": [
+        "sovepose 2.5 TOG"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/sovepose-2-5-tog.png",
       "what": "Medium sovepose (2.5 TOG). Den vanligste hjemmemonn-varmen.",
       "when": "Romtemperatur 16-18 grader."
@@ -574,7 +757,9 @@
       "category": "ekstra",
       "subcategory": "soevn",
       "label": "Sovepose 3.0-3.5 TOG",
-      "aliases": ["sovepose 3.0–3.5 TOG"],
+      "aliases": [
+        "sovepose 3.0–3.5 TOG"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/sovepose-3-0-3-5-tog.png",
       "what": "Tykk sovepose (3.0-3.5 TOG) for kjølige soverom.",
       "when": "Romtemperatur under 16 grader."
@@ -584,7 +769,9 @@
       "category": "ekstra",
       "subcategory": "soevn",
       "label": "Sovepose 3.5 TOG",
-      "aliases": ["sovepose 3.5 TOG"],
+      "aliases": [
+        "sovepose 3.5 TOG"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/sovepose-3-5-tog.png",
       "what": "Tykkeste sovepose (3.5 TOG) - for kalde rom.",
       "when": "Romtemperatur under 14 grader."
@@ -594,7 +781,9 @@
       "category": "ekstra",
       "subcategory": "hud",
       "label": "Ansiktskrem",
-      "aliases": ["ansiktskrem"],
+      "aliases": [
+        "ansiktskrem"
+      ],
       "illustration": "https://wool-app.vercel.app/illustrations/garments/ansiktskrem.png",
       "what": "Fet ansiktskrem som beskytter huden mot frost og vind.",
       "when": "Bruk en halvtime før utetur i frost. Reduserer risiko for frostskader."

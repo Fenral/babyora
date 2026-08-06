@@ -58,15 +58,22 @@ const KNOWN_CATEGORIES = new Set(['innerst', 'mellomlag', 'yttertoy', 'ekstra', 
 const BYTT_FIELDS = ['kroppsdekning', 'varmebidrag', 'funksjon', 'avhengigheter', 'lagrolle'] as const;
 
 describe('plagg-katalog-integritet (T1B)', () => {
-  it('katalogen har nøyaktig 60 objekter med unike id-er', () => {
-    expect(katalog.items).toHaveLength(60);
+  /* 60 -> 61 den 2026-08-06: `vintersokker` kom til.
+
+     Tallet er ikke et maal, det er en RATSJE — det skal bare endres naar
+     katalogen faktisk endres, og i samme commit. Et katalogtall som
+     stille foelger med, vokter ingenting. */
+  const ANTALL_PLAGG = 61;
+
+  it('katalogen har nøyaktig 61 objekter med unike id-er', () => {
+    expect(katalog.items).toHaveLength(ANTALL_PLAGG);
     const ids = katalog.items.map((item) => item.id);
-    expect(new Set(ids).size).toBe(60);
+    expect(new Set(ids).size).toBe(ANTALL_PLAGG);
   });
 
-  it('(a) alle tre visningsnavn-kildene er identiske for alle 60 id-er', () => {
-    expect(Object.keys(auditDisplayNames)).toHaveLength(60);
-    expect(Object.keys(GARMENT_DISPLAY_NAMES)).toHaveLength(60);
+  it('(a) alle tre visningsnavn-kildene er identiske for alle 61 id-er', () => {
+    expect(Object.keys(auditDisplayNames)).toHaveLength(ANTALL_PLAGG);
+    expect(Object.keys(GARMENT_DISPLAY_NAMES)).toHaveLength(ANTALL_PLAGG);
     for (const item of katalog.items) {
       // katalog-audit-fasiten ↔ src-modulen (kopien kan aldri drive).
       expect(GARMENT_DISPLAY_NAMES[item.id], item.id).toBe(auditDisplayNames[item.id]);
