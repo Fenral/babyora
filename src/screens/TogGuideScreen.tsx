@@ -440,6 +440,26 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
     overflow: 'hidden',
+    /* ═══ SVARET SKAL ALDRI KRYMPES ═══════════════════════════════════════
+       FUNN 2026-08-06, målt: under prefers-reduced-motion: reduce kollapset
+       dette kortet fra 350×193 til 350×48. Padding alene er 46 px, så
+       innholdsboksen var 2 px. «2.5 tog» og «Romtemperatur 20 °C» lå der
+       fortsatt — tallets egen boks målte 109×103 hele tiden — men ble
+       klippet bort av overflow: hidden over. Skjermens svar var borte for
+       alle som har redusert bevegelse påslått.
+
+       Årsaken er ikke bevegelse. Rullecontaineren er en flex-KOLONNE, og
+       når innholdet blir høyere enn den, krymper flex-barna. Normalt
+       hindrer min-height: auto det — men SPESIFIKASJONEN slår av den
+       beskyttelsen for elementer med overflow ≠ visible. Dette kortet er
+       det eneste barnet med overflow: hidden, og absorberte derfor HELE
+       krympingen alene. Redusert bevegelse utløste det bare ved å gjøre
+       innholdet over litt høyere.
+
+       flex-shrink: 0 sier det som gjelder uansett årsak: kortet bærer
+       svaret skjermen finnes for, og det er det siste som skal gi etter
+       for plassmangel — ikke det første. ══════════════════════════════ */
+    flexShrink: 0,
   };
 
   const togHeroRowStyle: CSSProperties = {

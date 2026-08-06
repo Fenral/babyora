@@ -118,6 +118,42 @@ async function performAction(page: Page, action: CaptureAction): Promise<void> {
   await page.waitForTimeout(350);
 }
 
+/**
+ * Venter til layouten står stille — måler settling i stedet for å anta den.
+ *
+ * Avlesningen er en signatur av det som flytter seg når en skjerm setter seg:
+ * dokumenthøyden, og boksen til hovedinnholdet. Tre like avlesninger på rad
+ * betyr at ingenting lenger vokser, laster eller animerer inn.
+ *
+ * Taket på 4 s er en NØDBREMS, ikke en tidsplan. Slår den inn, er skjermen
+ * enten fortsatt i bevegelse (uendelig animasjon) eller treg — og da skal
+ * fangsten tas uansett, slik at bildet finnes å se på. Vi bytter altså aldri
+ * et manglende bilde mot et for tidlig bilde; vi gjør det for tidlige bildet
+ * sjeldent.
+ */
+async function ventTilRo(page: Page): Promise<void> {
+  const les = async (): Promise<string> => page.evaluate(() => {
+    const hoved = document.querySelector('main, [role="main"], #root') ?? document.body;
+    const r = hoved.getBoundingClientRect();
+    return [
+      document.documentElement.scrollHeight,
+      Math.round(r.width), Math.round(r.height), Math.round(r.top),
+      document.querySelectorAll('img:not([complete])').length,
+    ].join('|');
+  });
+
+  const frist = Date.now() + 4_000;
+  let forrige = await les();
+  let like = 0;
+  while (Date.now() < frist) {
+    await page.waitForTimeout(120);
+    const na = await les();
+    like = na === forrige ? like + 1 : 0;
+    forrige = na;
+    if (like >= 3) return;
+  }
+}
+
 async function validateScreenshot(file: string): Promise<void> {
   const info = await stat(file);
   if (info.size < 10_000) throw new Error(`Screenshot is unexpectedly small (${info.size} bytes)`);
@@ -172,8 +208,37 @@ export async function captureAudit(options: {
         await page.goto(seededUrl(options.baseUrl, item.pageId === 'onboarding'), { waitUntil: 'networkidle', timeout: 30_000 });
         await page.waitForTimeout(1200);
         for (const action of item.actions) await performAction(page, action);
-        await page.evaluate(() => document.fonts.ready);
+        /* ═══ LAYOUTEN MÅ HA SATT SEG FØR VI SKYTER ═══════════════════════
+           FUNN 2026-08-06, og det er et alvorlig et: revisjonen fanget TOG-
+           skjermen mens den ennå ikke var ferdig. «ANBEFALT TOG»-kortet ble
+           48 px høyt og inneholdt kun etiketten. Et dommerpanel leste bildet
+           og meldte BLOKKERENDE: «selve svaret skjermen finnes for mangler».
+
+           Kortet manglet ingenting. Målt i det levende DOM-et er seksjonen
+           350×193 med «2.5», «tog», «Romtemperatur» og «20 °C» på plass, i
+           BEGGE temaer. Med nøyaktig samme animations: 'disabled' — men
+           1500 ms senere — er kortet fullt i skjermbildet også.
+
+           Linjen som sto her så ut som en beskyttelse mot nettopp dette:
+               await page.evaluate(() => document.fonts.ready)
+           Den er verdiløs. document.fonts.ready løses med et FontFaceSet,
+           som ikke kan serialiseres over CDP. Playwright får ikke ventet på
+           noe meningsfullt, og kallet returnerer uansett. En vakt som ser
+           riktig ut og måler ingenting.
+
+           Dette er dyrere enn en vanlig feil, for skjermbildene ER
+           bevisgrunnlaget. Et bilde tatt for tidlig produserer funn som
+           ikke finnes, og de er umulige å skille fra ekte funn — begge har
+           «bevis i pikslene».
+
+           Vi venter derfor på at layouten faktisk STÅR STILLE: samme
+           dokumenthøyde og samme boks på hovedinnholdet i tre påfølgende
+           avlesninger. Det måler settling i stedet for å anta den.
+           ══════════════════════════════════════════════════════════════ */
+        await page.evaluate(async () => { await document.fonts.ready; });
+        await ventTilRo(page);
         if (item.expectedText) await page.getByText(new RegExp(item.expectedText, 'i')).first().waitFor({ timeout: 5_000 });
+        await ventTilRo(page);
         await page.screenshot({ path: file, fullPage: false, animations: 'disabled' });
         await validateScreenshot(file);
         captures.push({
