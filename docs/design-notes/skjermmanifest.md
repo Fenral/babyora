@@ -28,7 +28,7 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 | Familie (skall) | `src/screens/FamilieScreen.tsx` | 21 | — | 0 | 0 | App.tsx lazy()-register | nei | — |
 | Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1389 | 19 CSSProperties + 4 `style={{` | 59 | 0 | App.tsx lazy()-register | ja | 3 |
 | Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1257 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 11 | 22 | App.tsx lazy()-register | ja | 3 |
-| Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6305 | 190 CSSProperties + 51 `style={{` | 338 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
+| Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6323 | 190 CSSProperties + 51 `style={{` | 339 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
 | Onboarding | `src/screens/OnboardingScreen.tsx` | 1853 | 1 CSSProperties | 223 | 34 | App.tsx lazy()-register | ja | 3 |
 | Påkledning | `src/screens/PaakledningScreen.tsx` | 523 | — | 0 | 0 | App.tsx lazy()-register | nei | 4 |
 | Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 921 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 102 | 5 | App.tsx lazy()-register | ja | 3 |
@@ -46,7 +46,7 @@ objekter og `style={{`-attributter. 10 av 11 skjermer har ingen CSS-fil.
 | Familie (skall) | ingen stilflate — ingenting å migrere |
 | Finn antrekk / Juster | migrert |
 | Hjem (referanse) | umigrert (22 legacy-token, 0 rå hex, 11 `--dw-*`) |
-| Innstillinger | umigrert (5 legacy-token, 7 rå hex, 338 `--dw-*`) |
+| Innstillinger | umigrert (5 legacy-token, 7 rå hex, 339 `--dw-*`) |
 | Onboarding | umigrert (34 legacy-token, 1 rå hex, 223 `--dw-*`) |
 | Påkledning | ingen stilflate — ingenting å migrere |
 | Plaggbibliotek | umigrert (5 legacy-token, 0 rå hex, 102 `--dw-*`) |

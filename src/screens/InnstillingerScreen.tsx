@@ -163,6 +163,24 @@ const rootStyle: CSSProperties = {
   background: C.bgCanvas,
   boxSizing: 'border-box',
   paddingTop: 'max(54px, env(safe-area-inset-top, 54px))',
+  /* ═══ KLARING FOR DEN FLYTENDE TAB-BAREN ═══════════════════════════════
+     FUNN 2026-08-06, sett i revisjonens skjermbilde: siste rad i «De som
+     passer» — «Ida · Dagmamma / Venter på svar» — lå BAK tab-baren og ble
+     kuttet av skjermkanten. Den var verken lesbar eller trykkbar.
+
+     Skjermen hadde paddingTop, men ingen paddingBottom. Tab-baren flyter
+     over innholdet, så uten klaring nederst ender alltid det siste
+     elementet under den. Hvor mange rader som forsvinner avhenger av hvor
+     mange som passer barnet — altså av dataene. Det er den verste
+     varianten: feilen finnes ikke for en familie med to voksne, og finnes
+     for en med fire.
+
+     --dw-tabbar-clearance er husets eget svar (høyde + gap + safe-area +
+     14 px) og brukes allerede av Hjem, Juster, Plaggbiblioteket og
+     Vinterprogrammet. Denne skjermen brukte den ikke. Samme funn som
+     Plaggbiblioteket fikk 2026-08-05: tokenet fantes, og skjermen som
+     trengte det sto utenfor. ══════════════════════════════════════════ */
+  paddingBottom: 'var(--dw-tabbar-clearance, 90px)',
 };
 
 const subtleHighlightStyle: CSSProperties = {
