@@ -1,0 +1,216 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   PÅKLEDNING — flaten i monter-språk
+   ══════════════════════════════════════════════════════════════════════════
+
+   HVORFOR DENNE FILEN FINNES
+
+   Skjermen var stylet inline: 35 style-objekter, 46 råtall, 19 v1-tokens.
+   Den kompilerte, den så riktig ut, og den var likevel USYNLIG for hver
+   eneste port huset har. Doktrine-linten, forbruker-porten og bevegelses-
+   porten leser CSS. En React-inline-stil er et JavaScript-objekt; ingen av
+   dem ser inn i det. Skjermen kunne bryte hvilken som helst regel i huset
+   uten at én port ble rød.
+
+   Det er samme feilklasse som stepperen i går: en komponent som ikke nås,
+   har ikke fikset noe. Her var det portene som ikke nådde flaten.
+
+   Å flytte stilen hit er derfor ikke opprydding. Det er å KOBLE skjermen
+   til måleapparatet.
+
+   ── HVA SOM IKKE ENDRER SEG ──────────────────────────────────────────────
+   De 19 v1-tokenene er rene aliaser: --ink-900 ER var(--dw-ink-hi),
+   --bg-canvas ER var(--dw-canvas), --surface-pure ER var(--dw-overlay).
+   Å bytte navn flytter derfor ikke én piksel. Verdien slutter bare å gå
+   via et mellomledd.
+
+   ── HVA SOM ENDRER SEG, OG HVORFOR ───────────────────────────────────────
+   1. ETIKETTEN OVER NAVNET fikk --dw-ink-demoted. Den sto på --ink-500,
+      som er alias for --dw-ink-mid — NØYAKTIG samme farge som brødteksten
+      under. Skjermen trodde den hadde tre blekknivåer (900/700/500) og
+      hadde to. Etiketten var altså aldri dempet; den var bare mindre.
+      Nå er den faktisk dempet.
+
+   2. FEM RÅTALL LÅ UTENFOR SKALAEN (3px og 5px). De går til nærmeste
+      trinn oppover: --dw-space-4 og --dw-space-6. Radene i rekkefølge-
+      listen blir 1px høyere hver. Det er den prisen skalaen koster, og
+      den betales én gang.
+
+   3. SKALLET STO KOPIERT TRE GANGER — de samme tolv egenskapene i tre
+      dialoger. Nå står det ett sted. Tre kopier av en sannhet er tre
+      steder den kan slutte å være sann.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.pkl-dialog {
+  /* LOKALE TOKENS — eier bare denne flaten, hører ikke hjemme i huset.
+     Spaltebredden er en layoutkonstant, ikke et designtrinn; etikett-
+     størrelsen ligger mellom husets trinn og har ingen andre forbrukere. */
+  --pkl-spalte: 680px;
+  --pkl-etikett-str: 0.8125rem;   /* 13px */
+
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--dw-canvas);
+  color: var(--dw-ink-hi);
+  overflow: auto;
+}
+
+.pkl-spalte {
+  max-width: var(--pkl-spalte);
+  margin: 0 auto;
+  padding:
+    max(var(--dw-space-18), env(safe-area-inset-top))
+    var(--dw-space-18)
+    var(--dw-space-32);
+}
+
+/* ── TOPPLINJEN ─────────────────────────────────────────────────────────── */
+
+.pkl-topp {
+  display: flex;
+  align-items: center;
+  gap: var(--dw-space-12);
+  margin-bottom: var(--dw-space-24);
+}
+
+.pkl-close {
+  width: var(--dw-size-touch);
+  height: var(--dw-size-touch);
+  border-radius: var(--dw-r-pill);
+  border: 0;
+  background: transparent;
+  color: var(--dw-ink-hi);
+}
+
+/* Etiketten over navnet. Se punkt 1 i filhodet: den var ikke dempet før. */
+.pkl-etikett {
+  margin: 0 0 var(--dw-space-4);
+  color: var(--dw-ink-demoted);
+  font-size: var(--pkl-etikett-str);
+}
+
+.pkl-title {
+  margin: 0;
+  font-family: var(--dw-font-hero);
+  font-weight: 400;
+}
+
+/* Programmatisk fokus tegner ingenting. Dette er den ENESTE lovlige
+   outline-slettingen i filen: erstatningen står rett under, i samme
+   regelsett, og slettingen gjelder kun tilstanden «fokusert uten at
+   brukeren navigerer med tastatur». */
+.pkl-title:focus:not(:focus-visible) { outline: none; }
+
+/* ERSTATNINGEN. */
+.pkl-title:focus-visible,
+.pkl-close:focus-visible {
+  outline: 2px solid var(--dw-accent);
+  outline-offset: 3px;
+}
+
+/* Overskriften har ingen egen form; uten radius leser ringen som en boks
+   rundt teksten. Radiusen bor her og ikke i regelen over — der ville den
+   endret formen på hver flate som fikk fokus. */
+.pkl-title:focus-visible { border-radius: 5px; }
+
+/* Den runde lukkeknappen: outline arver formen, men en sirkel ligger
+   visuelt nærmere ringen enn et rektangel og trenger et hakk mer luft. */
+.pkl-close:focus-visible { outline-offset: 4px; }
+
+/* ── PLATENE ────────────────────────────────────────────────────────────── */
+
+/* Seksjonsplatene ER gruppeflater: hver samler et eget innholdshierarki —
+   situasjon, rekkefølge, hvorfor — på et lerret. At de er hevet er riktig.
+   Det som manglet var lyset: inset topplys og dybde i SAMME box-shadow,
+   slik huset krever (D2). */
+/* HVERT FYLL BÆRER SITT EGET LYS, I SAMME REGEL.
+
+   Første utkast delte dette: form og skygge i en felles regel, fyllet i to
+   små regler under. Gyldig CSS, og doktrine-porten ble RØD på det. Jeg
+   trodde først den tok feil.
+
+   Den hadde rett. Doktrinens innhold er at man ALDRI ser et hevet fyll uten
+   lyset som forklarer hvorfor det er hevet. Med delingen kunne man lese
+   «.pkl-plate { background: var(--dw-overlay) }» og se en hevet flate uten
+   lys — og legge til en tredje plate på samme måte uten at noe protesterte.
+   Gjentakelsen under er ikke duplisering; den er at regelen holder lokalt. */
+.pkl-plate {
+  padding: var(--dw-space-18);
+  border-radius: var(--dw-r-panel);
+  background: var(--dw-overlay);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised);
+}
+
+.pkl-plate-myk {
+  padding: var(--dw-space-18);
+  border-radius: var(--dw-r-panel);
+  background: var(--dw-raised);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised);
+}
+
+/* RYTMEN LIGGER I SLEKTSKAPET, IKKE PÅ HVER PLATE.
+   Avstanden sto som marginBottom på fire seksjoner. Den siste hadde den
+   ikke — en forskjell ingen kunne se i koden uten å telle. Nå sier regelen
+   det den mener: plater som FØLGER en annen plate får luft over seg. Den
+   første får ingenting, den siste drar ingen luft med seg ned. */
+.pkl-plate + .pkl-plate,
+.pkl-plate + .pkl-plate-myk,
+.pkl-plate-myk + .pkl-plate,
+.pkl-plate-myk + .pkl-plate-myk {
+  margin-top: var(--dw-space-16);
+}
+
+/* NÅR EN FREMMED FLATE STÅR IMELLOM.
+   I én gren skyter OutfitTruthPanel inn mellom to plater. Den er en annen
+   komponent og skal ikke måtte bære min klasse for at min rytme skal virke
+   — da ville rytmen min blitt hennes ansvar. Platen etter sier det selv. */
+.pkl-luft { margin-top: var(--dw-space-16); }
+
+/* ── INNHOLD I PLATENE ──────────────────────────────────────────────────── */
+
+.pkl-naa {
+  margin: 0 0 var(--dw-space-8);
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.pkl-linje { margin: 0 0 var(--dw-space-6); }
+
+.pkl-detalj {
+  margin: 0;
+  color: var(--dw-ink-mid);
+}
+
+.pkl-plate h3,
+.pkl-plate-myk h3 { margin: 0 0 var(--dw-space-8); }
+
+/* Overskriften over en LISTE trenger et hakk mer enn en over løpende tekst:
+   punktene starter med en innrykket kolonne, og 8px legger dem for tett. */
+.pkl-plate h3.pkl-overskrift-liste { margin-bottom: var(--dw-space-12); }
+
+/* Utstyrsoverskriften kommer ETTER en liste og trenger luft over seg. */
+.pkl-plate h3.pkl-utstyr { margin: var(--dw-space-18) 0 var(--dw-space-8); }
+
+.pkl-liste {
+  margin: 0;
+  padding-left: var(--dw-space-24);
+}
+
+/* 5px lå utenfor skalaen. Se punkt 2 i filhodet. */
+.pkl-liste li { padding: var(--dw-space-6) 0; }
+
+.pkl-brodtekst {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.pkl-brodtekst-dempet {
+  line-height: 1.55;
+  color: var(--dw-ink-mid);
+}

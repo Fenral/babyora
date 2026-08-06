@@ -134,7 +134,7 @@ const BASELINE: Record<string, number> = {
   /* 21, ikke kartleggingens 20: `.hjem-monter { overflow: hidden auto }` er
      en scroll-container like fullt som `overflow-y: auto`. Toverdiformen var
      usynlig for kartleggingens regex. */
-  D4: 1,
+  D4: 2,   /* .hjem-monter (lyset) + .pkl-dialog (top-layer) — begge begrunnet i BASELINE_SETT */
   D5: 0,
   D6: 0,
   /* 18, ikke kartleggingens 16: kartleggingens skanning brukte
@@ -186,7 +186,29 @@ const BASELINE_SETT: Record<string, number> = {
      Fjernes lyspoolen eller gradienten fra roten en gang i framtiden, kan
      denne linjen slettes og faden legges på. ══════════════════════════ */
   'D4|src/components/hjem/hjem-monter.css|.hjem-monter': 1,
-  
+
+  /* ═══ ANDRE UNNTAK, ANNEN GRUNN ═══════════════════════════════════════
+     `.pkl-dialog` er et native <dialog> som fyller viewporten og ruller.
+     D4 vil ha bunn-fade. Den kan ikke få den, og grunnen er IKKE den samme
+     som for .hjem-monter over — dette er verdt å si eksplisitt, fordi to
+     unntak med samme begrunnelse ville betydd at REGELEN var feil, ikke at
+     det fantes to kanter.
+
+     .hjem-monter er unntatt fordi den bærer lyset. .pkl-dialog bærer flatt
+     lerret (--dw-canvas) og har ikke det problemet.
+
+     Grunnen her er at masken virker på FEIL LAG. mask-image gjør bunnen av
+     elementet gjennomsiktig. På et innvendig rullefelt betyr det at
+     innholdet toner ut mot panelet sitt. På en dialog i top-layer betyr det
+     at DIALOGEN toner ut — og det som kommer til syne under er appen bak,
+     ikke mer av dialogen. Faden ville altså ikke antydet «det er mer å
+     rulle»; den ville vist Hjem-skjermen gjennom bunnen av et modalvindu.
+
+     Riktig sted for en fade her er et rullefelt INNE i dialogen, den dagen
+     innholdet får et eget slikt felt. Roten kan ikke være det.
+     ══════════════════════════════════════════════════════════════════ */
+  'D4|src/screens/paakledning.css|.pkl-dialog': 1,
+
   
 
   
@@ -680,15 +702,28 @@ describe('doktrine-porten leser src/ (D1–D7)', () => {
        713→712 mens denne porten ble etterprøvd, og et gulv som ryker på slikt
        blir skrudd av i stedet for respektert. Den EGENTLIGE ikke-vakuøsiteten
        ligger uansett i ankrene og kandidatmengdene — et antall er lett å
-       tilfredsstille, et navngitt mål er det ikke. */
+       tilfredsstille, et navngitt mål er det ikke.
+
+       SENKET 2026-08-06: 650 → 600. PaakledningScreen ble migrert til
+       monter-språk, og 35 inline-objekter forsvant fra flate (c) samtidig
+       som en .css-fil kom til i flate (a). Korpuset ble ikke mindre; det
+       flyttet seg — fra en flate porten må parse ut av JavaScript til en
+       flate den leser direkte.
+
+       Nettopp derfor er et krympende inline-tall ikke i seg selv et
+       faresignal her: det er retningen arbeidet skal gå. Gulvet står
+       fortsatt for å fange at parseren kollapser, og cssFiler-gulvet under
+       er hevet 12 → 13 i samme slag, så flyttingen må være ekte. Forsvinner
+       inline-objektene UTEN at en CSS-fil kommer til, ryker fortsatt en av
+       de to. */
     expect(
       inlineObjekter.length,
-      'inline CSSProperties-flaten har krympet (var 692). Er det tilsiktet, senk gulvet her i samme commit.',
-    ).toBeGreaterThan(650);
+      'inline CSSProperties-flaten har krympet (var 640). Er det tilsiktet, senk gulvet her i samme commit.',
+    ).toBeGreaterThan(600);
     expect(
       cssFiler.length,
-      'en .css-fil har forlatt korpuset (var 12). Er det tilsiktet, senk gulvet her i samme commit.',
-    ).toBeGreaterThanOrEqual(12);
+      'en .css-fil har forlatt korpuset (var 13). Er det tilsiktet, senk gulvet her i samme commit.',
+    ).toBeGreaterThanOrEqual(13);
     expect(
       tsxFiler.length,
       'en .tsx-fil har forlatt korpuset (var 55). Er det tilsiktet, senk gulvet her i samme commit.',

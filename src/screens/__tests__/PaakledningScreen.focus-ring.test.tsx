@@ -42,15 +42,26 @@ function source(path: string): string {
   return readFileSync(resolve(process.cwd(), path), 'utf8').replace(/\r\n/g, '\n');
 }
 
-/** Henter innholdet i en template-literal-konstant ut av kildeteksten. */
-function templateConstant(src: string, name: string): string {
-  const marker = `const ${name} = \``;
-  const start = src.indexOf(marker);
-  if (start < 0) throw new Error(`fant ikke ${name} i kilden`);
-  const from = start + marker.length;
-  const end = src.indexOf('`;', from);
-  if (end < 0) throw new Error(`fant ikke slutten på ${name}`);
-  return src.slice(from, end);
+/* PORTEN LESER NÅ CSS-FILEN, IKKE EN TEMPLATE-LITERAL.
+
+   Fokusreglene lå i konstanten PKL_FOCUS_RING_CSS og ble sprøytet inn med
+   en style-tag. Porten hentet dem ut av KILDETEKSTEN ved å lete seg frem
+   til literalen etter likhetstegnet. Den leste altså en streng i en
+   TSX-fil og stolte på at nettleseren fikk den samme strengen.
+
+   Etter monter-migreringen (2026-08-06) bor reglene i paakledning.css, og
+   porten leser filen direkte. To ting bedres:
+
+   1. Mellomleddet forsvinner. Det som måles ER det nettleseren laster.
+      Før kunne style-taggen fjernes fra JSX-en uten at konstanten ble
+      rørt — porten hadde vært grønn mens ringen var borte fra skjermen.
+
+   2. Backtick-fellen avvæpnes. Reglene ligger ikke lenger i en literal
+      som en backtick i en kommentar kan avslutte. */
+const PKL_CSS_STI = 'src/screens/paakledning.css';
+
+function fokusCss(): string {
+  return source(PKL_CSS_STI);
 }
 
 function stripComments(css: string): string {
@@ -209,6 +220,8 @@ afterEach(() => {
 
 describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
   it('1 · ingen av de programmatisk fokuserte overskriftene slår av outline inline', () => {
+    // Denne testen leser JSX-en, ikke CSS-en: det er inline-attributter på
+    // overskriftene den er bygget for å fange.
     const screen = source(screenPath);
 
     // En inline outline vinner over ethvert stilark og kan derfor ALDRI være en
@@ -229,7 +242,7 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
   });
 
   it('2 · outline slettes kun i :focus:not(:focus-visible), og erstatningen finnes', () => {
-    const css = templateConstant(source(screenPath), 'PKL_FOCUS_RING_CSS');
+    const css = fokusCss();
     const parsed = rules(css);
     expect(parsed.length).toBeGreaterThan(0);
 
@@ -247,7 +260,7 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
   });
 
   it('3 · ringen tegnes av :focus-visible, aldri av bar :focus (museklikk skal ikke utløse den)', () => {
-    const css = templateConstant(source(screenPath), 'PKL_FOCUS_RING_CSS');
+    const css = fokusCss();
     for (const { selector } of rules(css)) {
       const bareFocus = selector
         // Den sanksjonerte «ingen ring ved programmatisk fokus»-formen først …
@@ -259,7 +272,7 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
   });
 
   it('4 · ringen har 2px strek og luft rundt (outline-offset ≥ 3px)', () => {
-    const css = templateConstant(source(screenPath), 'PKL_FOCUS_RING_CSS');
+    const css = fokusCss();
     const ring = rules(css).find(
       ({ selector, body }) =>
         selector.includes(':focus-visible')
@@ -273,7 +286,7 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
   });
 
   it('5 · ringen er synlig i BEGGE temaer — ≥ 3:1 mot lerret og dialogflate', () => {
-    const css = templateConstant(source(screenPath), 'PKL_FOCUS_RING_CSS');
+    const css = fokusCss();
     const colour = /outline:\s*[\d.]+px\s+solid\s+([^;]+);/u.exec(css)?.[1];
     expect(colour).toBeDefined();
 
@@ -320,15 +333,39 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
       expect(heading).toContain('class="pkl-title"');
       expect(heading, 'overskriften har fått en inline outline tilbake').not.toMatch(/outline/u);
 
-      // Erstatningen skal faktisk være med i markupen — ikke bare i kilden.
-      expect(html).toContain('.pkl-title:focus-visible');
-      expect(html).toContain('.pkl-title:focus:not(:focus-visible)');
       expect(html).toContain('class="pkl-close"');
     }
+
+    /* KJEDEN SOM BINDER RINGEN TIL SKJERMEN.
+
+       Før sto reglene i en style-tag, og porten kunne kreve at de lå i
+       markupen: ÉN streng beviste at ringen nådde frem. Nå bor de i en
+       CSS-fil, og markupen inneholder dem selvsagt ikke — nettleseren
+       laster dem separat.
+
+       Beviset er derfor tre ledd, og alle tre står her. Ryker ett av dem,
+       ryker porten:
+         1. skjermen ber om filen        (import under)
+         2. filen definerer regelen      (test 7 måler dette)
+         3. markupen bærer klassen       (løkken over)
+
+       Uten ledd 1 ville test 7 vært en port på en fil ingen laster — grønn
+       CSS uten en skjerm. Det er nøyaktig samme feilklasse som stepperen
+       som var grønn på 36 av 36 og koblet til ingenting. */
+    const kilde = source(screenPath);
+    expect(
+      kilde.includes("import './paakledning.css'"),
+      'skjermen importerer ikke lenger paakledning.css. Fokusringen er '
+      + 'definert i en fil ingen laster — reglene finnes, men ingen '
+      + 'tastaturbruker ser dem.',
+    ).toBe(true);
+    expect(fokusCss()).toContain('.pkl-title:focus-visible');
+    expect(fokusCss()).toContain('.pkl-title:focus:not(:focus-visible)');
   });
 
   it('7 · HVER fokusring i filen måler ≥ 3:1 i begge temaer — uansett hvilket token', () => {
-    const screen = source(screenPath);
+    // Reglene bor i paakledning.css etter monter-migreringen 2026-08-06.
+    const screen = fokusCss();
 
     // FORUTSETNING 1: det finnes faktisk ringer å måle. Uten denne ville
     // porten passert på en fil der alle fokusringer var slettet.

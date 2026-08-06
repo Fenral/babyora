@@ -28,9 +28,9 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 | Familie (skall) | `src/screens/FamilieScreen.tsx` | 21 | — | 0 | 0 | App.tsx lazy()-register | nei | — |
 | Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1389 | 19 CSSProperties + 4 `style={{` | 59 | 0 | App.tsx lazy()-register | ja | 3 |
 | Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1257 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 11 | 22 | App.tsx lazy()-register | ja | 3 |
-| Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6301 | 190 CSSProperties + 51 `style={{` | 338 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
+| Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6305 | 190 CSSProperties + 51 `style={{` | 338 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
 | Onboarding | `src/screens/OnboardingScreen.tsx` | 1853 | 1 CSSProperties | 223 | 34 | App.tsx lazy()-register | ja | 3 |
-| Påkledning | `src/screens/PaakledningScreen.tsx` | 629 | 3 CSSProperties + 35 `style={{` | 16 | 9 | App.tsx lazy()-register | nei | 4 |
+| Påkledning | `src/screens/PaakledningScreen.tsx` | 523 | — | 0 | 0 | App.tsx lazy()-register | nei | 4 |
 | Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 921 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 102 | 5 | App.tsx lazy()-register | ja | 3 |
 | Tog-guide | `src/screens/TogGuideScreen.tsx` | 1180 | 55 CSSProperties + 3 `style={{` | 127 | 11 | App.tsx lazy()-register | ja | 3 |
 | Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1147 | `UkeScreen.css` + 1 CSSProperties | 111 | 0 | App.tsx lazy()-register | ja | 3 |
@@ -48,7 +48,7 @@ objekter og `style={{`-attributter. 10 av 11 skjermer har ingen CSS-fil.
 | Hjem (referanse) | umigrert (22 legacy-token, 0 rå hex, 11 `--dw-*`) |
 | Innstillinger | umigrert (5 legacy-token, 7 rå hex, 338 `--dw-*`) |
 | Onboarding | umigrert (34 legacy-token, 1 rå hex, 223 `--dw-*`) |
-| Påkledning | umigrert (9 legacy-token, 0 rå hex, 16 `--dw-*`) |
+| Påkledning | ingen stilflate — ingenting å migrere |
 | Plaggbibliotek | umigrert (5 legacy-token, 0 rå hex, 102 `--dw-*`) |
 | Tog-guide | umigrert (11 legacy-token, 0 rå hex, 127 `--dw-*`) |
 | Planlegg / Uke | migrert |

@@ -20,7 +20,8 @@
  * Tap på rad → PlaggDetailSheet (pros/cons + alternativer). Focus returneres
  * til rad-trigger ved lukk.
  */
-import { useEffect, useRef, type CSSProperties, type ReactElement } from 'react';
+import './paakledning.css';
+import { useEffect, useRef, type ReactElement } from 'react';
 import type { Recommendation } from '../lib/wool-layers/types';
 import {
   avatarPng,
@@ -83,7 +84,7 @@ export type PaakledningScreenProps = {
 
 function CloseIcon(): ReactElement {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--ink-800)" strokeWidth="2" strokeLinecap="round" aria-hidden="true" focusable="false">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" focusable="false">
       <path d="M4 4l8 8M12 4l-8 8" />
     </svg>
   );
@@ -154,89 +155,29 @@ function symbolToLabel(symbolCode: string | undefined): string {
    __tests__/PaakledningScreen.focus-ring.test.tsx.
 
    Selektorene er bevisst smale (.pkl-title / .pkl-close). En generell
-   `.pkl-dialog :focus-visible` ville hatt samme spesifisitet som
-   `.outfit-row:focus-visible` (Antrekkskart.css:12) og — fordi denne <style>-en
-   ligger i <body>, etter <head> — stille overtatt fokusringen til
-   OutfitTruthPanel, som er en annen agents flate.
+   «.pkl-dialog :focus-visible» ville hatt samme spesifisitet som
+   «.outfit-row:focus-visible» (Antrekkskart.css:12) og stille overtatt
+   fokusringen til OutfitTruthPanel, som er en annen agents flate.
+
+   FLYTTET 2026-08-06: reglene bor nå i paakledning.css, ikke i en
+   template-literal med en style-tag. Kravet om smale selektorer BLE IKKE
+   svakere av det — men begrunnelsen endret seg. Før lå style-taggen i
+   <body>, altså etter <head>, og en generell selektor ville vunnet på
+   rekkefølge. Nå går filen i <head> via Vite, så rekkefølgen taler ikke
+   lenger i min favør. Smale selektorer er fortsatt riktig, nå fordi de
+   sier hva de gjelder — ikke fordi de kom sist.
+
+   PklFocusRing-komponenten som sprøytet reglene inn er borte med dem. En
+   style-tag i JSX er et lag mellom regelen og nettleseren, og laget kunne
+   fjernes uten at noe ble rødt: porten leste konstanten, ikke skjermen.
+   Vite laster filen nå; ingen komponent må huske å be om den.
+
+   PLATENE OG LUKKEKNAPPEN sto som tre CSSProperties-objekter rett under.
+   De er nå .pkl-plate, .pkl-plate-myk og .pkl-close i samme CSS-fil.
+   Begrunnelsen for hver av dem står bevart i filhodet der — særlig at
+   lukkeknappen er en KONTROLL og ikke et materiale, og derfor ikke skal
+   bære hevet fyll.
    ────────────────────────────────────────────────────────────────────────── */
-const PKL_FOCUS_RING_CSS = `
-/* Programmatisk fokus tegner ingenting. Dette er den ENESTE lovlige
-   outline-slettingen i denne filen: erstatningen står rett under, i samme
-   regelsett, og slettingen gjelder kun tilstanden «fokusert uten at brukeren
-   navigerer med tastatur». */
-.pkl-title:focus:not(:focus-visible) { outline: none; }
-
-/* ERSTATNINGEN. */
-.pkl-title:focus-visible,
-.pkl-close:focus-visible {
-  outline: 2px solid var(--dw-accent, var(--accent-cta));
-  outline-offset: 3px;
-}
-
-/* Overskriften har ingen egen form; uten radius leser ringen som en boks rundt
-   teksten. Radiusen bor her og ikke i regelen over — der ville den endret
-   formen på hver flate som fikk fokus. */
-.pkl-title:focus-visible { border-radius: 5px; }
-
-/* Den runde lukkeknappen: outline arver formen, men en sirkel ligger visuelt
-   nærmere ringen enn et rektangel gjør og trenger et hakk mer luft. */
-.pkl-close:focus-visible { outline-offset: 4px; }
-`;
-
-function PklFocusRing(): ReactElement {
-  return <style>{PKL_FOCUS_RING_CSS}</style>;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   FLATENE — to svar på D2, ikke ett
-   ──────────────────────────────────────────────────────────────────────────
-
-   Åtte inline-objekter i denne filen bar hevet fyll uten lyslogikk. De er
-   ikke samme sak, og de får derfor ikke samme retting:
-
-   1) SEKSJONSPLATENE (fem stykker) ER gruppeflater. Hver samler et eget
-      innholdshierarki — situasjon, rekkefølge, hvorfor — på et lerret. At de
-      er hevet er riktig; det som manglet var lyset. De får husets kompatible
-      form: inset topplys + dybde i SAMME box-shadow. Fyllet står urørt
-      (--surface-pure/--surface-soft), så fargen på skjermen endres ikke.
-
-   2) LUKKEKNAPPEN (tre steder) er en KONTROLL, ikke et materiale. Den bar
-      pure-fyll og en hairline-kant, altså et lite hevet fat uten lys. Å pynte
-      det med --dw-depth-raised ville lagt en 56 px bred skygge under en 44 px
-      sirkel — dybden ville sagt «her ligger et lag» der det bare ligger en
-      knapp. Riktig retting er å FJERNE det hevede fyllet. Husets egen
-      lukkeknapp gjør nettopp dette (.kps-close i kle-paa-stepper.css:69:
-      transparent, ingen kant, 44×44). Trykkmålet og den designede
-      fokusringen (PKL_FOCUS_RING_CSS) står uendret; radius 999 blir igjen
-      slik at ringen fortsatt leser som en sirkel.
-   ────────────────────────────────────────────────────────────────────────── */
-
-/* Tallene som sto her (18 / 20 / 44 / 999) var råverdier som TILFELDIGVIS
-   traff skalaen. De går nå gjennom tokenet som eier verdien, med samme px:
-   --dw-space-18 = 18, --dw-r-panel = 20, --dw-size-touch = 44, --dw-r-pill
-   = 999. Ingen piksel flytter seg; verdien slutter bare å være en kopi. */
-const PKL_PLATE: CSSProperties = {
-  padding: 'var(--dw-space-18)',
-  borderRadius: 'var(--dw-r-panel)',
-  background: 'var(--surface-pure)',
-  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
-};
-
-const PKL_PLATE_SOFT: CSSProperties = {
-  padding: 'var(--dw-space-18)',
-  borderRadius: 'var(--dw-r-panel)',
-  background: 'var(--surface-soft)',
-  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised)',
-};
-
-const PKL_CLOSE: CSSProperties = {
-  width: 'var(--dw-size-touch)',
-  height: 'var(--dw-size-touch)',
-  borderRadius: 'var(--dw-r-pill)',
-  border: 0,
-  background: 'transparent',
-  color: 'var(--ink-900)',
-};
 
 /* ──────────────────────────────────────────────────────────────────────────
    Komponent
@@ -329,29 +270,14 @@ function PlannedPaakledningScreen({
         ref={dialogRef}
         className="pkl-dialog"
         aria-labelledby="planned-outfit-title"
-        style={{
-          position: 'fixed',
-          inset: 0,
-          width: '100%',
-          maxWidth: 'none',
-          height: '100%',
-          maxHeight: 'none',
-          margin: 0,
-          padding: 0,
-          border: 0,
-          background: 'var(--bg-canvas)',
-          color: 'var(--ink-900)',
-        }}
       >
-        <PklFocusRing />
-        <div style={{ maxWidth: 680, margin: '0 auto', padding: 'max(18px, env(safe-area-inset-top)) 18px 32px' }}>
-          <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <div className="pkl-spalte">
+          <header className="pkl-topp">
             <button
               type="button"
               className="pkl-close"
               onClick={onBack}
               aria-label="Lukk planlagt antrekk"
-              style={PKL_CLOSE}
             >
               <CloseIcon />
             </button>
@@ -363,12 +289,12 @@ function PlannedPaakledningScreen({
               // Ingen outline her. Fokustilstanden er designet i
               // PKL_FOCUS_RING_CSS: programmatisk fokus etter et trykk tegner
               // ingenting, tastatur/VoiceOver får amber ring med luft.
-              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
+
             >
               Planlagt antrekk er ikke tilgjengelig
             </h2>
           </header>
-          <p style={{ lineHeight: 1.55, color: 'var(--ink-700)' }}>
+          <p className="pkl-brodtekst-dempet">
             Tilgangen til fremtidige antrekk er ikke aktiv. Lukk og gå tilbake til Planlegg.
           </p>
         </div>
@@ -387,35 +313,19 @@ function PlannedPaakledningScreen({
         )}
         data-outfit-access-capability={plannedContext.access.capability}
         aria-labelledby="planned-outfit-title"
-        style={{
-          position: 'fixed',
-          inset: 0,
-          width: '100%',
-          maxWidth: 'none',
-          height: '100%',
-          maxHeight: 'none',
-          margin: 0,
-          padding: 0,
-          border: 0,
-          background: 'var(--bg-canvas)',
-          color: 'var(--ink-900)',
-          overflow: 'auto',
-        }}
       >
-        <PklFocusRing />
-        <div style={{ maxWidth: 680, margin: '0 auto', padding: 'max(18px, env(safe-area-inset-top)) 18px 32px' }}>
-          <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <div className="pkl-spalte">
+          <header className="pkl-topp">
             <button
               type="button"
               className="pkl-close"
               onClick={onBack}
               aria-label={isCurrentContext ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
-              style={PKL_CLOSE}
             >
               <CloseIcon />
             </button>
             <div>
-              <p style={{ margin: '0 0 3px', color: 'var(--ink-500)', fontSize: 13 }}>
+              <p className="pkl-etikett">
                 {isCurrentContext ? 'Dagens antrekk' : 'Planlagt antrekk'}
               </p>
               <h2
@@ -425,7 +335,7 @@ function PlannedPaakledningScreen({
                 tabIndex={-1}
                 // Ingen outline her — se PKL_FOCUS_RING_CSS for den designede
                 // fokustilstanden (:focus-visible, aldri :focus).
-                style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
+
               >
                 {plannedContext.child.name}
               </h2>
@@ -434,16 +344,16 @@ function PlannedPaakledningScreen({
 
           <section
             aria-label={isCurrentContext ? 'Dagens situasjon' : 'Planlagt situasjon'}
-            style={{ ...PKL_PLATE, marginBottom: 'var(--dw-space-16)' }}
+            className="pkl-plate"
           >
-            <p style={{ margin: '0 0 8px', fontWeight: 700, textTransform: 'capitalize' }}>
+            <p className="pkl-naa">
               {plannedDateTime}
             </p>
-            <p style={{ margin: '0 0 5px' }}>
+            <p className="pkl-linje">
               {plannedContext.place.label} · {activityLabel[plannedContext.activity]}
               {vognLabel ? ` · ${vognLabel}` : ''}
             </p>
-            <p style={{ margin: 0, color: 'var(--ink-700)' }}>
+            <p className="pkl-detalj">
               {plannedContext.child.ageMonths} mnd · {weatherLabel} ·{' '}
               {Math.round(plannedContext.weather.tempC)}° (føles som{' '}
               {Math.round(plannedContext.weather.feelsLikeC)}°)
@@ -460,10 +370,10 @@ function PlannedPaakledningScreen({
 
           <section
             aria-labelledby="planned-why-title"
-            style={{ ...PKL_PLATE_SOFT, marginTop: 'var(--dw-space-16)' }}
+            className="pkl-plate-myk pkl-luft"
           >
-            <h3 id="planned-why-title" style={{ margin: '0 0 8px' }}>Hvorfor dette antrekket?</h3>
-            <p style={{ margin: 0, lineHeight: 1.55 }}>
+            <h3 id="planned-why-title">Hvorfor dette antrekket?</h3>
+            <p className="pkl-brodtekst">
               {isCurrentContext ? 'Antrekket' : 'Planen'} er laget for {weatherLabel.toLocaleLowerCase('nb-NO')}, vind på{' '}
               {plannedContext.weather.windMs.toLocaleString('nb-NO')} m/s og nedbør på{' '}
               {plannedContext.weather.precipMmH.toLocaleString('nb-NO')} mm/t.
@@ -483,35 +393,19 @@ function PlannedPaakledningScreen({
         plannedContext.weather.tempC,
       )}
       aria-labelledby="planned-outfit-title"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        width: '100%',
-        maxWidth: 'none',
-        height: '100%',
-        maxHeight: 'none',
-        margin: 0,
-        padding: 0,
-        border: 0,
-        background: 'var(--bg-canvas)',
-        color: 'var(--ink-900)',
-        overflow: 'auto',
-      }}
     >
-      <PklFocusRing />
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: 'max(18px, env(safe-area-inset-top)) 18px 32px' }}>
-        <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+      <div className="pkl-spalte">
+        <header className="pkl-topp">
           <button
             type="button"
             className="pkl-close"
             onClick={onBack}
             aria-label={isCurrentContext ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
-            style={PKL_CLOSE}
           >
             <CloseIcon />
           </button>
           <div>
-            <p style={{ margin: '0 0 3px', color: 'var(--ink-500)', fontSize: 13 }}>
+            <p className="pkl-etikett">
               {isCurrentContext ? 'Dagens antrekk' : 'Planlagt antrekk'}
             </p>
             <h2
@@ -521,7 +415,7 @@ function PlannedPaakledningScreen({
               tabIndex={-1}
               // Ingen outline her — se PKL_FOCUS_RING_CSS for den designede
               // fokustilstanden (:focus-visible, aldri :focus).
-              style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 400 }}
+
             >
               {plannedContext.child.name}
             </h2>
@@ -530,16 +424,16 @@ function PlannedPaakledningScreen({
 
         <section
           aria-label={isCurrentContext ? 'Dagens situasjon' : 'Planlagt situasjon'}
-          style={{ ...PKL_PLATE, marginBottom: 'var(--dw-space-16)' }}
+          className="pkl-plate"
         >
-          <p style={{ margin: '0 0 8px', fontWeight: 700, textTransform: 'capitalize' }}>
+          <p className="pkl-naa">
             {plannedDateTime}
           </p>
-          <p style={{ margin: '0 0 5px' }}>
+          <p className="pkl-linje">
             {plannedContext.place.label} · {activityLabel[plannedContext.activity]}
             {vognLabel ? ` · ${vognLabel}` : ''}
           </p>
-          <p style={{ margin: 0, color: 'var(--ink-700)' }}>
+          <p className="pkl-detalj">
             {plannedContext.child.ageMonths} mnd · {weatherLabel} ·{' '}
             {Math.round(plannedContext.weather.tempC)}° (føles som{' '}
             {Math.round(plannedContext.weather.feelsLikeC)}°)
@@ -548,22 +442,22 @@ function PlannedPaakledningScreen({
 
         <section
           aria-labelledby="planned-garments-title"
-          style={{ ...PKL_PLATE, marginBottom: 'var(--dw-space-16)' }}
+          className="pkl-plate"
         >
-          <h3 id="planned-garments-title" style={{ margin: '0 0 12px' }}>
+          <h3 id="planned-garments-title" className="pkl-overskrift-liste">
             Påkledningsrekkefølge
           </h3>
-          <ol style={{ margin: 0, paddingLeft: 24 }}>
+          <ol className="pkl-liste">
             {plannedContext.recommendation.orderedGarments.map((garment) => (
-              <li key={garment} style={{ padding: '5px 0' }}>{garment}</li>
+              <li key={garment}>{garment}</li>
             ))}
           </ol>
           {plannedContext.recommendation.equipment.length > 0 && (
             <>
-              <h3 style={{ margin: '18px 0 8px' }}>Utstyr</h3>
-              <ul style={{ margin: 0, paddingLeft: 24 }}>
+              <h3 className="pkl-utstyr">Utstyr</h3>
+              <ul className="pkl-liste">
                 {plannedContext.recommendation.equipment.map((item) => (
-                  <li key={item} style={{ padding: '5px 0' }}>{item}</li>
+                  <li key={item}>{item}</li>
                 ))}
               </ul>
             </>
@@ -572,10 +466,10 @@ function PlannedPaakledningScreen({
 
         <section
           aria-labelledby="planned-why-title"
-          style={PKL_PLATE_SOFT}
+          className="pkl-plate-myk"
         >
-          <h3 id="planned-why-title" style={{ margin: '0 0 8px' }}>Hvorfor dette antrekket?</h3>
-          <p style={{ margin: 0, lineHeight: 1.55 }}>
+          <h3 id="planned-why-title">Hvorfor dette antrekket?</h3>
+          <p className="pkl-brodtekst">
             {isCurrentContext ? 'Antrekket' : 'Planen'} er laget for {weatherLabel.toLocaleLowerCase('nb-NO')}, vind på{' '}
             {plannedContext.weather.windMs.toLocaleString('nb-NO')} m/s og nedbør på{' '}
             {plannedContext.weather.precipMmH.toLocaleString('nb-NO')} mm/t.
