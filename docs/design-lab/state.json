@@ -29,7 +29,6 @@
   ],
   "pendingOwnerGates": [
     "Fase 8: endelig designretning",
-    "Fase 11: godkjenn representativ prototype",
     "Fase 13: lansering"
   ],
   "eierport1": {
@@ -62,5 +61,10 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "EIERPORT 3: eier godkjenner representativ prototype (web-loop PASS aea8c21). Deretter, i valgfri rekkefølge: native feasibility-spike (teknisk), foreldretest 5-8 deltakere (eiervendt), faglig validering P2-spenn (eiervendt). Retningsvalget (fase 12-grunnlag) tas først etter foreldretest-data."
+  "nextAction": "Native feasibility-spike (Sols avgrensning: én widgetfamilie, én deep link, én utløpstilstand — upolert): snapshot v2-felt + WidgetKit-timeline m/utløps-degradering (iOS) + Android-ekvivalent, bygges via Codemagic; eier tester på enhet. Parallelt: foreldretest-protokoll + rekrutteringsguide skrives.",
+  "eierport3": {
+    "dato": "2026-08-06",
+    "vedtak": "Prototypene GODKJENT som representativt grunnlag (web-loop PASS); mobilprøve (native spike) kjøres først, foreldretest forberedes parallelt",
+    "reversibelt": true
+  }
 }
