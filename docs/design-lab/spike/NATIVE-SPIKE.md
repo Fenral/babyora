@@ -176,6 +176,16 @@ nytt ved neste `onUpdate`/push, ikke ved boot), og selve brief-innholdet (P3s
 
 ## Eier-testprotokoll på enhet
 
+> **Gjelder build 83 (tag v1.0.12) — ikke senere bygg.** Den parallelle økten
+> holder på å slette `WidgetSpikePanel.tsx` og erstatte den med
+> `use-widget-snapshot.ts`, som mater widgeten fra ekte bruk i HjemScreen i
+> stedet for fra en testknapp. Det er riktig retning (kallstedet manglet —
+> widgeten ville stått i tomtilstand for alltid), men det betyr at
+> **testknappen under bare finnes i build 83**. Bygges det på nytt etter at
+> den endringen er landet, må steg 2 skrives om til «åpne appen og la den
+> hente vær», og utløpstiden kan ikke lenger settes til to minutter.
+> Kjør derfor protokollen på build 83 mens den står der.
+
 Forberedelse (begge plattformer): installer bygget, åpne appen én gang, gå til
 **Innstillinger** og finn den oransje, stiplede boksen «Widget-spike
 (testverktøy — fjernes)» nederst, over versjonslinjen.
