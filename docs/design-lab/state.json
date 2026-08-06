@@ -61,7 +61,19 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "VENTER PÅ EIER (to ting): (1) Aktiver App Groups-capability for no.klemeg.app + no.klemeg.app.widget på developer.apple.com (5 min, se docs/design-lab/spike/NATIVE-SPIKE.md) — deretter tagger Claude v1.0.12 så Codemagic bygger TestFlight m/widget; eier kjører enhetsprotokollen. (2) Rekrutter 5–8 foreldre per docs/design-lab/foreldretest/REKRUTTERING.md; kjør PROTOKOLL.md. Sperret til disse: retningsvalg (fase 12), fagvalidering P2 (eiervendt fagperson).",
+  "nextAction": "App Groups UTFØRT 2026-08-06 (widget-ID hadde capability men 0 grupper — fikset og verifisert etter omlasting, bevis i appendix/fase-spike-bevis/). Tag v1.0.12 pushet → Codemagic iOS-bygg skal gå til TestFlight. VENTER PÅ EIER (tre ting): (1) Logg inn på codemagic.io (e-post forhåndsutfylt i Playwright-vinduet, eller GitHub-knappen) så byggstatus kan leses og Android-workflow 'android-internal' trigges manuelt. (2) Kjør enhetsprotokollen i docs/design-lab/spike/NATIVE-SPIKE.md når TestFlight-bygget er nede. (3) Rekrutter 5–8 foreldre per foreldretest/REKRUTTERING.md; laben ligger nå på https://babyora-lab.vercel.app/ (ingen PC nødvendig). Sperret til disse: retningsvalg (fase 12), fagvalidering P2 (eiervendt fagperson).",
+  "labLenke": {
+    "url": "https://babyora-lab.vercel.app/",
+    "vercelProsjekt": "babyora-lab",
+    "noindex": true,
+    "verifisertMed": "tools/verifiser-lab-lenke.mjs (7 kontroller, inkl. mutasjonsbevis på ugyldig arm og kandidat-differanse)"
+  },
+  "appGroups": {
+    "dato": "2026-08-06",
+    "no.klemeg.app": "allerede korrekt (group.no.klemeg.app tilordnet)",
+    "no.klemeg.app.widget": "var 'Enabled App Groups (0)' med haken på — group.no.klemeg.app tilordnet og lagret, verifisert etter full omlasting",
+    "konsekvens": "provisioning-profiler for widget-ID-en invalidert av Apple; fetch-signing-files regenererer ved bygg"
+  },
   "eierport3": {
     "dato": "2026-08-06",
     "vedtak": "Prototypene GODKJENT som representativt grunnlag (web-loop PASS); mobilprøve (native spike) kjøres først, foreldretest forberedes parallelt",
