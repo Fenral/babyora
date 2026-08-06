@@ -57,12 +57,23 @@
   letter-spacing: -0.2px;
 }
 
+/* FINSTEGENE LIGGER I DENNE KOLONNEN, ØVERST OG NEDERST.
+
+   Rekkefølgen er [+] · maks-etikett · spor · min-etikett · [−]. Knappen
+   står der verdien går: pluss øverst er «opp», minus nederst er «ned».
+   Se hodekommentaren i VerticalGauge.tsx for hvorfor de flyttet hit fra
+   en vannrett rad under de tre sliderne.
+
+   Etikettene beholder plassen sin RETT VED sporet — de beskriver sporets
+   ender (30° / −20°), ikke knappene. Legger man knappene mellom sporet og
+   etiketten, slutter etiketten å peke på noe. */
 .fa-gauge-track-wrap {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
+  gap: var(--dw-space-6);
 }
 
 .fa-gauge-end-label {
@@ -77,7 +88,7 @@
 .fa-gauge-track {
   position: relative;
   width: 44px;
-  flex: 1;
+  flex: none;   /* hoyden settes na direkte, se VerticalGauge.tsx */
   border-radius: 22px;
   background: color-mix(in oklab, var(--dw-w-night) 70%, transparent);
   box-shadow:
@@ -221,13 +232,11 @@
   touch-action: none;
 }
 
-.fa-gauge-steps {
-  display: flex;
-  /* P10.1 (judge finding C7): 8px was a mis-tap risk with gloves — >=16px
-     between the two 44pt targets. */
-  gap: var(--dw-space-16);
-  margin-top: var(--dw-space-2);
-}
+/* .fa-gauge-steps er BORTE. Raden med seks knapper under sliderne er
+   erstattet av loddrette finsteg i hver kolonne (2026-08-06). Gapet paa
+   16px som sto her — dommerfunn C7, bomtrykk med votter — er ikke tapt:
+   knappene er na 44px hver med sporet (135-220px) imellom seg, altsa
+   langt mer enn 16px fra hverandre i den retningen fingeren beveger seg. */
 
 .fa-gauge-step {
   width: 44px;

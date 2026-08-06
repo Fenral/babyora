@@ -333,7 +333,19 @@ function ChevronDown({ expanded }: { expanded: boolean }): ReactElement {
 const FALLBACK_LAT = 60.8867;
 const FALLBACK_LON = 11.5614;
 
-const GAUGE_HEIGHT = 208;
+/* SPORETS HØYDE — 208 → 152 (2026-08-06).
+   Finstegene flyttet fra en rad under sliderne til loddrett i hver kolonne
+   (se VerticalGauge.tsx). Det la 88 px knapp + 24 px gap inn i kolonnen og
+   frigjorde 46 px under den — netto 66 px for mye. Målt utslag: mikroteksten
+   «Temperatur, vind og nedbør vurderes sammen» havnet 24 px BAK tab-baren,
+   og CTA-en hadde 4 px klaring.
+
+   Sporet gir derfor fra seg det knappene tok. Instrumentet som HELHET er
+   fortsatt like høyt som før — det er bare fordelt annerledes. Eierspecen
+   «~200–220 px» gjaldt sporet den gang det sto alene i kolonnen; nå deler
+   det kolonnen med to trykkflater, og tallet kan ikke gjelde uendret uten
+   å dytte skjermens eneste CTA under baren. */
+const GAUGE_HEIGHT = 152;
 
 /**
  * P10.1 (judge finding C5): a SINGLE shared petrol/instrument fill for all

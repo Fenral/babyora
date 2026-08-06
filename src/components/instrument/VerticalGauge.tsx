@@ -238,9 +238,40 @@ export function VerticalGauge({
     <div className="fa-gauge">
       <p className="fa-gauge-label">{label}</p>
       <p className="fa-gauge-value" aria-hidden="true">{valueLabel}</p>
-      <div className="fa-gauge-track-wrap" style={{ height }}>
+      {/* ═══ FINSTEGENE STÅR LODDRETT, IKKE I EN RAD UNDER ═══════════════════
+
+          Eierforslag 2026-08-06, og det løser to ting på én gang.
+
+          Før lå alle seks knappene i én vannrett rad under de tre sliderne.
+          Målt: 16 px mellom knappene INNI et par, 4–5 px MELLOM parene.
+          Grupperingen sa altså det motsatte av hva knappene gjorde — de leste
+          som én udifferensiert rad på seks.
+
+          Avstand kunne ikke løse det. De 16 px er et låst gulv (dommerfunn
+          C7: bomtrykk med votter), og regnestykket går ikke opp på 390 px:
+          6×44 + 3×16 = 312 av ~336 tilgjengelige. Det er 24 px igjen til to
+          mellomrom som måtte blitt større enn 16.
+
+          Loddrett trenger ingen avstand for å leses, fordi POSISJONEN BLIR
+          BETYDNINGEN: pluss øverst på en loddrett slider er «opp», minus
+          nederst er «ned». Knappen står der verdien går. Hvert par tilhører
+          synlig sin egen kolonne uten at noe mellomrom må bevise det.
+
+          Breddeskranken forsvinner også: hver kolonne trenger 44 px, ikke
+          104. Høyden er der prisen betales — se `.fa-gauge-track-wrap`.
+          ══════════════════════════════════════════════════════════════════ */}
+      <div className="fa-gauge-track-wrap">
+        <button
+          type="button"
+          className="fa-gauge-step"
+          aria-label={incrementLabel}
+          aria-disabled={atMax || disabled || undefined}
+          onClick={() => !atMax && stepBy(step)}
+        >
+          +
+        </button>
         <span className="fa-gauge-end-label" aria-hidden="true">{maxLabel}</span>
-        <div className="fa-gauge-track">
+        <div className="fa-gauge-track" style={{ height }}>
           <div aria-hidden="true" className={fillClassName} style={fillStyle} ref={fillRef}>
             {material === 'air' && (
               <>
@@ -287,8 +318,6 @@ export function VerticalGauge({
           <span id={baselineDescId} className="fa-gauge-sr-only">{baselineLabel}</span>
         )}
         <span className="fa-gauge-end-label" aria-hidden="true">{minLabel}</span>
-      </div>
-      <div className="fa-gauge-steps">
         <button
           type="button"
           className="fa-gauge-step"
@@ -297,15 +326,6 @@ export function VerticalGauge({
           onClick={() => !atMin && stepBy(-step)}
         >
           −
-        </button>
-        <button
-          type="button"
-          className="fa-gauge-step"
-          aria-label={incrementLabel}
-          aria-disabled={atMax || disabled || undefined}
-          onClick={() => !atMax && stepBy(step)}
-        >
-          +
         </button>
       </div>
     </div>

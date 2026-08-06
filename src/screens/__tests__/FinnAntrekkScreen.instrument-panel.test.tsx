@@ -43,13 +43,51 @@ describe('FinnAntrekkScreen — instrument panel (three vertical gauges, not the
     expect(html).not.toContain('finn-slider');
   });
 
-  it('every gauge column has the identical top-to-bottom structure: label → value → track → +/- steps', () => {
+  /* OMSKREVET 2026-08-06. Testen krevde `.fa-gauge-steps` × 3 — den delte
+     knapperaden under sliderne. Den finnes ikke lenger: finstegene står nå
+     loddrett i hver kolonne, pluss over sporet og minus under.
+
+     Men den skal ikke bare TELLE de nye klassene. I den gamle utgaven var
+     rekkefølgen likegyldig — begge knappene lå side om side under sporet, og
+     hvilken som kom først betydde ingenting utover lesretningen. Nå ER
+     rekkefølgen betydningen: pluss øverst på en loddrett slider er «opp».
+     Bytter noen om, peker knappen én vei og gjør det motsatte.
+
+     Testen måler derfor RENDRET rekkefølge, ikke bare antall. (Kilderekke-
+     følgen voktes i tillegg av finsteg-grupperes-av-posisjon.test.ts; denne
+     bekrefter at det faktisk kom ut slik i markupen.) */
+  it('every gauge column renders label → value → [+] → track → [−], in that order', () => {
     const html = renderScreen();
     expect(html.match(/class="fa-gauge-label"/gu)?.length).toBe(3);
     expect(html.match(/class="fa-gauge-value"/gu)?.length).toBe(3);
     expect(html.match(/class="fa-gauge-track"/gu)?.length).toBe(3);
-    expect(html.match(/class="fa-gauge-steps"/gu)?.length).toBe(3);
     expect(html.match(/class="fa-gauge-step"/gu)?.length).toBe(6); // 2 per gauge
+
+    // Den delte raden er borte, ikke bare tømt.
+    expect(html).not.toContain('class="fa-gauge-steps"');
+
+    /* Per kolonne: øk-knappen FØR sporet, reduser-knappen ETTER. Vi følger
+       de tre parene med etikettene som allerede er unike per instrument. */
+    const par: [string, string][] = [
+      ['Én grad varmere', 'Én grad kaldere'],
+      ['Sterkere vind', 'Svakere vind'],
+      ['Mer nedbør', 'Mindre nedbør'],
+    ];
+    const spor = [...html.matchAll(/class="fa-gauge-track"/gu)].map((m) => m.index ?? -1);
+    par.forEach(([opp, ned], i) => {
+      const iOpp = html.indexOf(`aria-label="${opp}"`);
+      const iNed = html.indexOf(`aria-label="${ned}"`);
+      expect(iOpp, `fant ikke «${opp}»`).toBeGreaterThan(-1);
+      expect(iNed, `fant ikke «${ned}»`).toBeGreaterThan(-1);
+      expect(
+        iOpp < spor[i] && spor[i] < iNed,
+        `Kolonne ${i + 1}: rekkefølgen er ikke [${opp}] · spor · [${ned}]. `
+        + 'På en loddrett slider er knappens plassering dens betydning — '
+        + 'pluss øverst er «opp». Er de snudd, lyver skjermen om hva '
+        + 'knappen gjør, og begge knappene virker fortsatt, så ingenting '
+        + 'annet blir rødt.',
+      ).toBe(true);
+    });
   });
 
   it('labels the three instruments Temperatur / Vind / Nedbør', () => {
