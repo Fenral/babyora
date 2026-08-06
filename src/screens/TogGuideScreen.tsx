@@ -418,17 +418,19 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     color: 'var(--dw-accent)',
   };
 
-  const heroSubStyle: CSSProperties = {
-    fontSize: '0.90625rem',
-    lineHeight: 1.5,
-    color: 'var(--dw-ink-mid)',
-    maxWidth: 280,
-    margin: '0 auto',
-  };
+  /* heroSubStyle er borte sammen med avsnittet det stylet — se JSX-en.
+     En ubrukt stil som blir staaende er en invitasjon til aa sette teksten
+     tilbake uten aa se paa plassregnskapet som gjorde at den maatte vekk. */
+
 
   const sceneStyle: CSSProperties = {
     position: 'relative',
-    height: 176,
+    /* 176 → 124 px (eierbeslutning B+A, 2026-08-06).
+       Den andre halvdelen av de ~90 pikslene skjermen manglet. Soveposen
+       er det som gjør rådet konkret — forelderen kjenner igjen plagget
+       før hun leser noe — så den krympes, ikke fjernes. 124 px holder
+       silhuetten lesbar; under ~100 begynner den å leses som et ikon. */
+    height: 124,
     margin: '8px -4px 0',
     display: 'flex',
     alignItems: 'center',
@@ -975,9 +977,21 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
           <h2 style={heroTitleStyle} id="hero-title">
             Riktig <em style={heroEmStyle}>varme</em> for natten
           </h2>
-          <p style={heroSubStyle}>
-            Skyv på guiden og finn anbefalt sovepose etter temperaturen på rommet.
-          </p>
+          {/* INTROTEKSTEN ER FJERNET (eierbeslutning B+A, 2026-08-06).
+
+              Den lød: «Skyv på guiden og finn anbefalt sovepose etter
+              temperaturen på rommet.» — tre linjer, ~72 px.
+
+              Skjermen manglet ~90 px: TOG-kortet (193 px) og skyveren fikk
+              ikke plass over tab-baren samtidig, så skyveren — skjermens
+              eneste betjeningselement — lå under folden og bak baren.
+              Ingen padding kunne skape den plassen; noe måtte gi.
+
+              Denne setningen var det billigste å miste, fordi den ikke
+              sier noe forelderen ikke får andre steder: «SETT
+              ROMTEMPERATUR · Skyv eller velg under» står rett over
+              skyveren, og skyveren viser TOG-verdien mens man drar.
+              Instruksjonen sto altså tre ganger. */}
           <div style={sceneStyle}>
             {soveposeClay && (
               <img

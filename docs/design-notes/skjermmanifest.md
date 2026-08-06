@@ -32,7 +32,7 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 | Onboarding | `src/screens/OnboardingScreen.tsx` | 1853 | 1 CSSProperties | 223 | 34 | App.tsx lazy()-register | ja | 3 |
 | Påkledning | `src/screens/PaakledningScreen.tsx` | 523 | — | 0 | 0 | App.tsx lazy()-register | nei | 4 |
 | Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 933 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 103 | 5 | App.tsx lazy()-register | ja | 3 |
-| Tog-guide | `src/screens/TogGuideScreen.tsx` | 1208 | 55 CSSProperties + 3 `style={{` | 128 | 11 | App.tsx lazy()-register | ja | 3 |
+| Tog-guide | `src/screens/TogGuideScreen.tsx` | 1222 | 54 CSSProperties + 3 `style={{` | 127 | 11 | App.tsx lazy()-register | ja | 3 |
 | Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1147 | `UkeScreen.css` + 1 CSSProperties | 111 | 0 | App.tsx lazy()-register | ja | 3 |
 | Varm eller kald | `src/screens/VarmEllerKaldScreen.tsx` | 796 | 1 `<style>` + 29 CSSProperties + 4 `style={{` | 96 | 3 | App.tsx lazy()-register | ja | 3 |
 | Vinterprogram | `src/screens/VinterprogramScreen.tsx` | 535 | 24 CSSProperties + 1 `style={{` | 64 | 3 | App.tsx lazy()-register | ja | 3 |
@@ -50,7 +50,7 @@ objekter og `style={{`-attributter. 10 av 11 skjermer har ingen CSS-fil.
 | Onboarding | umigrert (34 legacy-token, 1 rå hex, 223 `--dw-*`) |
 | Påkledning | ingen stilflate — ingenting å migrere |
 | Plaggbibliotek | umigrert (5 legacy-token, 0 rå hex, 103 `--dw-*`) |
-| Tog-guide | umigrert (11 legacy-token, 0 rå hex, 128 `--dw-*`) |
+| Tog-guide | umigrert (11 legacy-token, 0 rå hex, 127 `--dw-*`) |
 | Planlegg / Uke | migrert |
 | Varm eller kald | umigrert (3 legacy-token, 0 rå hex, 96 `--dw-*`) |
 | Vinterprogram | umigrert (3 legacy-token, 0 rå hex, 64 `--dw-*`) |
