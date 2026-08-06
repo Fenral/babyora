@@ -353,7 +353,15 @@ export function VarmEllerKaldScreen({
   // ── CTA ──
   const ctaBarStyle: CSSProperties = {
     flex: 'none',
-    padding: 'var(--dw-space-8) var(--dw-space-16) var(--dw-space-14)',
+    /* HOVEDHANDLINGEN LÅ 50 PX BAK TAB-BAREN.
+       Målt 2026-08-06 (verify-tabbar-klaring, hviletilstand): «Ferdig →»
+       ble tegnet oppå baren og smeltet sammen med «Planlegg» — begge
+       uleselige. Skjermens ENESTE utgang var praktisk talt borte.
+
+       CTA-linjen lå på 14 px bunn-padding, altså avstand til skjermkanten.
+       Men tab-baren FLYTER over innholdet. Klaringen må derfor være barens
+       egen høyde, ikke kantens. --dw-tabbar-clearance er husets tall. */
+    padding: 'var(--dw-space-8) var(--dw-space-16) var(--dw-tabbar-clearance, 90px)',
     background: 'var(--dw-canvas)',
   };
 

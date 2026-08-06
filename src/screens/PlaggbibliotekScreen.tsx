@@ -388,7 +388,19 @@ const styles = {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
+    /* FAB-EN LÅ OPPÅ TAB-BAREN OG DEKKET PLANLEGG-FANEN HELT.
+       Målt 2026-08-06 (verify-tabbar-klaring, hviletilstand): 56 px
+       overlapp, og pillen dekket Planlegg-fanens ikon og etikett.
+
+       Scroll-flaten under fikk --dw-tabbar-clearance i fase 6A, men denne
+       wrapperen er position: absolute — den ligger UTENFOR flyten og
+       arver ingenting av den paddingen. Å fikse scrollen fikset derfor
+       radene, ikke knappen. «Skjermen bruker tokenet» var sant og
+       utilstrekkelig; det er PER ELEMENT det gjelder.
+
+       max(safe-area, 20px) er avstand til skjermkanten. Tab-baren flyter
+       over innholdet, så klaringen må være barens, ikke kantens. */
+    bottom: 'var(--dw-tabbar-clearance, 90px)',
     display: 'flex',
     justifyContent: 'center',
     padding: '0 var(--dw-space-20)',

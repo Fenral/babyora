@@ -368,7 +368,15 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     // Husmønsteret (hjem-monter.css, sheet.css, kle-paa-stepper.css).
     WebkitMaskImage: 'var(--dw-fade-bunn)',
     maskImage: 'var(--dw-fade-bunn)',
-    padding: '8px 20px calc(40px + env(safe-area-inset-bottom, 0px))',
+    /* BUNN-LUFTEN MÅ KLARERE TAB-BAREN, IKKE BARE SAFE-AREA.
+       «40px + safe-area» er avstanden til skjermKANTEN. Tab-baren FLYTER
+       over innholdet og er ~76 px høy med sin egen klaring, så 40 px lot
+       innholdet gli under den. Målt 2026-08-06 med verify-tabbar-klaring:
+       «Sett romtemperatur» lå 11 px bak baren i hviletilstand.
+       --dw-tabbar-clearance er husets eget tall (barhøyde + gap +
+       safe-area + 14 px) og brukes allerede av Hjem, Juster,
+       Plaggbiblioteket og Vinterprogrammet. */
+    padding: '8px 20px var(--dw-tabbar-clearance, 90px)',
     display: 'flex',
     flexDirection: 'column',
     gap: 28,
