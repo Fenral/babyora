@@ -29,30 +29,38 @@
 
 ### 2.1 Utstyr
 
-- **Én telefon** til deltakeren (din egen, nyladet, forstyrrelser av).
-- **Én PC** (din) som kjører laben på samme Wi-Fi som telefonen.
+- **Én telefon** til deltakeren (din egen, nyladet, forstyrrelser av) med
+  nett — laben ligger på en nettadresse, ingen PC trengs på testdagen.
 - **Stoppeklokke** (bruk din egen mobil eller et armbåndsur — ikke
   deltaker-telefonen).
 - **Utskrifter:** ett skjema per deltaker (§8), kjøreplanen for
   deltakernummeret (§4), manuset (§6), samtykkeskjema (fra REKRUTTERING.md).
 - Penn, og gjerne en klype kontanter/gavekort som oppmerksomhet.
 
-### 2.2 Start laben
+### 2.2 Åpne laben
 
-1. Åpne terminal i `babyora/` og kjør:
-   ```
-   npm run dev:lab -- --host
-   ```
-2. Finn PC-ens IP-adresse (Windows: `ipconfig` → «IPv4 Address», f.eks.
-   `192.168.1.42`).
-3. På telefonen: åpne `http://<PC-IP>:5173/lab/` og sjekk at laben laster.
-   Basen i alle URL-er under er:
+Laben er lagt ut på nett (2026-08-06). Basen i alle URL-er under er:
 
-   ```
-   http://<PC-IP>:5173/lab/
-   ```
+```
+https://babyora-lab.vercel.app/
+```
 
-   (heretter kalt `LAB` — bytt ut med din faktiske adresse).
+(heretter kalt `LAB`). Siden er `noindex` og har ingen lenke inn fra
+noe annet sted — den finnes bare for den som har adressen.
+
+1. På telefonen: åpne `LAB` og sjekk at forskningsforbeholdet vises.
+2. Trykk «Jeg forstår» **én gang før deltakeren kommer**, slik at teksten
+   ikke stjeler tid fra første oppgave. (`&bekreftet=1` er fortsatt
+   forbudt under foreldretest — se §2.6.)
+
+**Faller nettet bort på testdagen** kjører du laben lokalt i stedet:
+`npm run dev:lab -- --host` i `babyora/`, finn PC-ens IP med `ipconfig`,
+og bruk `http://<PC-IP>:5173/lab/` som `LAB`. Alt annet i protokollen er
+uendret.
+
+Utlagt versjon er verifisert med `tools/verifiser-lab-lenke.mjs`: alle
+fire armene rendrer sitt eget bærende element, ugyldig arm gir *ikke*
+deltakerflate, og `&kandidat=kald` gir en annen flate enn P2s standard.
 
 ### 2.3 Legg URL-listen på telefonen
 
