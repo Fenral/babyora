@@ -107,7 +107,16 @@ workflows:
           # slik at serien fortsetter etter eksisterende bygg (157, 158, ...).
           NEXT_TESTFLIGHT_BUILD=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID") + 1))
           agvtool new-version -all "$NEXT_TESTFLIGHT_BUILD"
-          agvtool new-marketing-version 1.0.11
+          # Marketing-versjonen var hardkodet til 1.0.11 (2026-08-06: eieren
+          # lette etter «1.0.12» i TestFlight etter tag v1.0.12 og fant 1.0.11).
+          # Taggen er den bevisste handlingen — da må appen si det samme.
+          # CM_TAG finnes kun på tag-bygg; ellers beholdes forrige verdi.
+          VERSJON="${CM_TAG#v}"
+          if [ -n "$CM_TAG" ] && echo "$VERSJON" | grep -Eq '^[0-9]+\.[0-9]+(\.[0-9]+)?$'; then
+            agvtool new-marketing-version "$VERSJON"
+          else
+            echo "Ingen brukbar tag (CM_TAG='$CM_TAG') — beholder eksisterende marketing-versjon."
+          fi
       - name: Initialize keychain
         script: |
           # Uten dette feiler codesign med errSecInternalComponent
