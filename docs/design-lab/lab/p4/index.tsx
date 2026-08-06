@@ -12,6 +12,17 @@
  * Alt innhold (stegtekst, stoppkriterier, brieffelt, fallback) kommer
  * fra P1/P3/felles — P4 skriver kun overgangstekstene (P4_TEKST).
  *
+ * TIDSSTYRING OG LOGG ER OPERATØRUTSTYR (Sols fase 11 runde 2, P1):
+ * prototypen rendrer INGEN klokke, spoleknapper eller hendelseslogg.
+ * Operatør/automatisering spoler via Operatør-panelet eller
+ * window.__lab.spol(min) — begge utenfor deltakerens DOM.
+ *
+ * ÉN PRIMÆRHANDLING (Sols fase 11 runde 2, P1): briefen har nøyaktig
+ * ett visuelt primært neste steg («Neste steg: …», merket
+ * data-primaerhandling). Deltaet er sekundær OPPLYSNING («Endring senere
+ * i protokollen: …») — aldri et konkurrerende imperativ med lik vekt.
+ * Håndheves i __tests__/p4-primaerhandling.test.ts.
+ *
  * Systemfont, lys grunn, AA-kontrast, ≥48px treffmål, ingen animasjon,
  * ingen maskot. storTekst skalerer all tekst 1.4×.
  */
@@ -75,14 +86,11 @@ function klokkeslett(iso: string): string {
   return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(iso) ? iso.substring(11, 16) : iso;
 }
 
-type LoggLinje = { tid: string; tekst: string };
-
 function P4Sloyfe({ scenario, klokke, logg }: PrototypeProps) {
   const { steg: tidslinje } = useMemo(() => ambientTidslinje(scenario), [scenario]);
 
   const maskinRef = useRef<BriefTilstand>(START_TILSTAND);
   const stegRef = useRef(0);
-  const loggRef = useRef<LoggLinje[]>([]);
   const [, tving] = useState(0);
   const [protokollAapen, setProtokollAapen] = useState(false);
   const [kontrollBekreftetKl, setKontrollBekreftetKl] = useState<string | null>(null);
@@ -91,10 +99,10 @@ function P4Sloyfe({ scenario, klokke, logg }: PrototypeProps) {
     const naaISO = klokke.naaISO();
     const naaMs = Date.parse(naaISO);
     let t = maskinRef.current;
-    const skriv = (tidISO: string, tekst: string) =>
-      loggRef.current.push({ tid: klokkeslett(tidISO), tekst });
 
     // Spill av alle tidslinjesteg klokken har passert, i rekkefølge.
+    // Hendelsene logges KUN til selens logg (operatørflaten) — deltakeren
+    // ser bare brief-flatens tilstand.
     while (
       stegRef.current < tidslinje.length &&
       Date.parse(tidslinje[stegRef.current].tidISO) <= naaMs
@@ -103,20 +111,16 @@ function P4Sloyfe({ scenario, klokke, logg }: PrototypeProps) {
       stegRef.current += 1;
       const forrige = t;
       t = motta(t, steg.hendelse, { naaISO: steg.tidISO });
-      skriv(steg.tidISO, steg.etikett);
       logg?.('tidslinje-steg', { etikett: steg.etikett, tidISO: steg.tidISO });
 
       if (steg.hendelse.type === 'brief') {
         const brief = steg.hendelse.brief;
         if (t.forkastede.length > forrige.forkastede.length) {
           const f = t.forkastede[t.forkastede.length - 1];
-          skriv(steg.tidISO, `Forkastet: Brief #${f.versjon} — grunn: ${f.grunn}`);
           logg?.('brief-forkastet', f);
         } else if (t.status === 'maskert') {
-          skriv(steg.tidISO, `Brief #${brief.versjon} ankom etter egen gyldighet — maskert`);
           logg?.('maskert', { tidISO: steg.tidISO, briefId: brief.briefId });
         } else {
-          skriv(steg.tidISO, `Brief #${brief.versjon} er nå gjeldende`);
           logg?.('brief-akseptert', { versjon: brief.versjon, briefId: brief.briefId });
         }
       }
@@ -126,7 +130,6 @@ function P4Sloyfe({ scenario, klokke, logg }: PrototypeProps) {
     const forrige = t;
     t = motta(t, { type: 'klokke' }, { naaISO });
     if (t.status === 'maskert' && forrige.status !== 'maskert') {
-      skriv(naaISO, `Briefen utløp — maskert. ${P4_TEKST.maskert}.`);
       logg?.('maskert', { tidISO: naaISO });
     }
 
@@ -134,16 +137,12 @@ function P4Sloyfe({ scenario, klokke, logg }: PrototypeProps) {
     tving((v) => v + 1);
   }, [klokke, logg, tidslinje]);
 
+  // Selen eier klokka: spoling (Operatør-panel eller window.__lab.spol)
+  // varsler via onTick — prototypen har ingen egne tidskontroller.
   useEffect(() => {
     oppdater();
     return klokke.onTick(oppdater);
   }, [klokke, oppdater]);
-
-  const spol = (min: number) => {
-    logg?.('spol', { min });
-    klokke.spol(min);
-    oppdater();
-  };
 
   const t = maskinRef.current;
   const naaISO = klokke.naaISO();
@@ -180,21 +179,6 @@ function P4Sloyfe({ scenario, klokke, logg }: PrototypeProps) {
         margin: '0 auto',
       }}
     >
-      {/* Klokkepanel — spoling driver leveringen og utløpet. */}
-      <section aria-label="Virtuell klokke" style={{ marginBottom: '1em' }}>
-        <p style={{ margin: '0 0 0.5em', fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>
-          Simulert klokke: {klokkeslett(naaISO)}
-        </p>
-        <div style={{ display: 'flex', gap: '0.5em', flexWrap: 'wrap' }}>
-          <button type="button" style={knapp} onClick={() => spol(5)}>
-            Spol +5 min
-          </button>
-          <button type="button" style={knapp} onClick={() => spol(30)}>
-            Spol +30 min
-          </button>
-        </div>
-      </section>
-
       {/* Brief-flaten: protokollens steg 1 som handling + versjon/gyldighet. */}
       <section
         aria-label="Simulert brief-flate"
@@ -271,25 +255,6 @@ function P4Sloyfe({ scenario, klokke, logg }: PrototypeProps) {
             ))}
         </section>
       )}
-
-      {/* Hendelseslogg — forkastelser og maskeringer er alltid synlige. */}
-      <section aria-label="Hendelseslogg">
-        <p style={{ margin: '0 0 0.4em', fontWeight: 700, fontSize: '0.9em' }}>Hendelseslogg</p>
-        {loggRef.current.length === 0 ? (
-          <p style={{ margin: 0, fontSize: '0.9em', color: p.dus }}>
-            Ingen hendelser ennå — spol klokken frem.
-          </p>
-        ) : (
-          <ol style={{ margin: 0, paddingLeft: '1.4em', fontSize: '0.9em' }}>
-            {loggRef.current.map((linje, i) => (
-              <li key={`${i}-${linje.tid}`} style={{ marginBottom: '0.2em' }}>
-                <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>{linje.tid}</span>{' '}
-                {linje.tekst}
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
     </div>
   );
 }
@@ -314,7 +279,12 @@ function Stempellinje({ brief, utlopt, dus }: { brief: Brief; utlopt?: boolean; 
   );
 }
 
-function BriefFlate({
+/**
+ * Eksportert for __tests__/p4-primaerhandling.test.ts: testen rendrer
+ * brief-DOM-en statisk og FEILER hvis den har ≠ 1 element med
+ * data-primaerhandling (to konkurrerende imperativer er en P1-feil).
+ */
+export function BriefFlate({
   tilstand,
   brief,
   innhold,
@@ -368,8 +338,14 @@ function BriefFlate({
         </p>
       )}
 
-      {/* Handlingen — protokollens steg 1, størst i rangen. */}
-      <p style={{ margin: '0 0 0.2em', fontSize: '1.3em', fontWeight: 700 }}>{steg1.handling}</p>
+      {/* ÉN PRIMÆRHANDLING: protokollens steg 1, størst i rangen og eneste
+          element med primær handlingssemantikk (data-primaerhandling). */}
+      <p
+        data-primaerhandling="true"
+        style={{ margin: '0 0 0.2em', fontSize: '1.3em', fontWeight: 700 }}
+      >
+        {P4_TEKST.nesteSteg(steg1.handling)}
+      </p>
       <p style={{ margin: '0 0 0.4em', fontSize: '0.85em', color: p.dus }}>
         {P4_TEKST.stegEnAv(innhold.protokoll.steg.length)}
       </p>
@@ -379,9 +355,10 @@ function BriefFlate({
         </p>
       )}
 
-      {/* Endret vær: briefen uttrykker BÅDE deltaet (P3s innhold — værledd,
-          antrekksbaseline og konkret endring) OG første protokollhandling
-          over — ingen ny anbefaling introduseres (P4-P1). */}
+      {/* Endret vær: deltaet er sekundær OPPLYSNING — værledd, endringen
+          rammet inn som «Endring senere i protokollen», og baseline.
+          Aldri et andre imperativ med primær vekt (Sols runde 2, P1);
+          ingen ny anbefaling introduseres (P4-P1). */}
       {innhold.briefInnhold.delta && (
         <div style={{ margin: '0 0 0.4em' }}>
           <p style={{ margin: 0 }}>
@@ -389,8 +366,8 @@ function BriefFlate({
           </p>
           {innhold.briefInnhold.komfortHandling !== null &&
             innhold.briefInnhold.komfortHandling !== steg1.handling && (
-              <p style={{ margin: 0, fontWeight: 600 }}>
-                {innhold.briefInnhold.komfortHandling}
+              <p style={{ margin: 0, fontSize: '0.95em' }}>
+                {P4_TEKST.deltaSekundaer(innhold.briefInnhold.komfortHandling)}
               </p>
             )}
           <p style={{ margin: 0, fontSize: '0.85em', color: p.dus }}>

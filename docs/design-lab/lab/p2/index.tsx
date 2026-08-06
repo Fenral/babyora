@@ -11,7 +11,13 @@
  * storTekst-flagget skalerer all tekst 1.4× (em-basert).
  */
 
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import type { Scenario } from '../felles/scenarier';
 import { hentFakta, type BasePlagg } from '../felles/fakta';
 import { DEGRADERT_NESTE_HANDLING } from '../felles/tekst';
@@ -438,7 +444,7 @@ function HolderDette({
         {sisteEndring ?? 'Markøren flytter seg når du endrer klærne over.'}
       </p>
 
-      <SpennFigur spenn={spenn} domSetning={dom.setning} markorPosisjon={dom} pal={pal} />
+      <SpennFigur spenn={spenn} domSetning={dom.setning} posisjon={dom.posisjon} pal={pal} />
 
       {/* Fastkoblet respons — kanonisk setningsform (tekstparitet). */}
       <div
@@ -478,43 +484,88 @@ function HolderDette({
 
 /* ---------- den vertikale spennfiguren ---------- */
 
+/**
+ * RAD-BASERT figur (Sols fase 11 runde 2, P1-kollisjon): grenseetikett,
+ * terskellinje og kandidatmarkør har hver sin DEDIKERTE rad i normal
+ * blokkflyt — ingen absolutt posisjonering, ingen faste høyder som kan
+ * tvinge innhold oppå hverandre. Markøren rendres som egen rad INNE i
+ * sonen posisjonen tilhører (soner, ikke skala — ingen tall på aksen),
+ * så overlapp med etikett eller terskellinje er strukturelt umulig i
+ * kald- OG varmtilstand, ved standard OG storTekst. Strukturen håndheves
+ * i __tests__/p2-kollisjon.test.ts (data-spor-attributtene) og måles med
+ * bounding boxes i bevisskriptet.
+ */
 function SpennFigur({
   spenn,
   domSetning,
-  markorPosisjon,
+  posisjon,
   pal,
 }: {
   spenn: SpennOk;
   domSetning: string;
-  markorPosisjon: { posisjon: 'under-gulv' | 'i-spennet' | 'over-tak'; ekvivalentC: number };
+  posisjon: 'under-gulv' | 'i-spennet' | 'over-tak';
   pal: Palett;
 }) {
-  // Sonehøyder i % — soner, ikke skala (ingen tall på aksen).
-  const OVER = 22;
-  const SPENN = 56;
-  const UNDER = 22;
-
-  let markorTopp: number;
-  if (markorPosisjon.posisjon === 'over-tak') markorTopp = OVER / 2;
-  else if (markorPosisjon.posisjon === 'under-gulv') markorTopp = OVER + SPENN + UNDER / 2;
-  else {
-    const brok =
-      (spenn.varmetakC - markorPosisjon.ekvivalentC) /
-      (spenn.varmetakC - spenn.kaldgulvC);
-    markorTopp = OVER + Math.min(Math.max(brok, 0.05), 0.95) * SPENN;
-  }
-
   const hardKald = spenn.hardSide === 'kald';
-  // Hard grense: tykk strek. Myk grense: tynn. Hard terrengsone: skravur.
-  const takStrek = hardKald ? `2px solid ${pal.kant}` : `6px solid ${pal.ink}`;
-  const gulvStrek = hardKald ? `6px solid ${pal.ink}` : `2px solid ${pal.kant}`;
 
   const soneTekst: CSSProperties = {
     background: pal.grunn,
     padding: '0.1em 0.4em',
     fontSize: '0.85em',
     fontWeight: 700,
+    display: 'inline-block',
   };
+
+  /** Markørraden — alltid en egen rad, aldri lagt oppå tekst/linjer. */
+  const markorRad = (
+    <div
+      data-spor="kandidatmarkor"
+      style={{ display: 'flex', alignItems: 'center', gap: '0.4em' }}
+    >
+      <div style={{ flex: 1, borderTop: `3px dotted ${pal.ink}` }} />
+      <span
+        style={{
+          background: pal.ink,
+          color: pal.grunn,
+          fontWeight: 700,
+          fontSize: '0.85em',
+          padding: '0.2em 0.6em',
+          borderRadius: '0.3em',
+        }}
+      >
+        Deres antrekk
+      </span>
+    </div>
+  );
+
+  /** Terskellinjen — egen rad mellom sonene. Hard grense: tykk strek. */
+  const terskellinje = (hard: boolean) => (
+    <div
+      data-spor="terskellinje"
+      aria-hidden="true"
+      style={{ height: hard ? 6 : 2, background: hard ? pal.ink : pal.kant }}
+    />
+  );
+
+  /** Sonene er grid-rader: etikettrad + ev. markørrad, aldri samme rad. */
+  const sone = (
+    stil: CSSProperties,
+    etikett: ReactNode,
+    medMarkor: boolean,
+  ) => (
+    <div
+      style={{
+        display: 'grid',
+        gap: '0.3em',
+        alignContent: 'center',
+        padding: '0.5em 0.75em',
+        ...stil,
+      }}
+    >
+      <div>{etikett}</div>
+      {medMarkor && markorRad}
+    </div>
+  );
 
   return (
     <figure
@@ -522,95 +573,40 @@ function SpennFigur({
       aria-label={`${spennSetning(spenn)} ${domSetning}`}
       style={{ margin: 0 }}
     >
-      <div style={{ position: 'relative', height: 300, border: `1px solid ${pal.kant}`, borderRadius: '0.4em', overflow: 'hidden' }}>
-        {/* Over varmetaket */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: `${OVER}%`,
-            borderBottom: takStrek,
+      <div style={{ border: `1px solid ${pal.kant}`, borderRadius: '0.4em', overflow: 'hidden' }}>
+        {sone(
+          {
+            minHeight: 64,
             backgroundImage: hardKald ? undefined : SKRAVUR(pal.kant),
             backgroundColor: pal.flate,
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 0.75em',
-          }}
-        >
-          <span style={soneTekst}>
+          },
+          <span data-spor="grenseetikett" style={soneTekst}>
             Over varmetaket — for varmt{spenn.invertert ? ' (hard grense: barnet sover)' : ''}
-          </span>
-        </div>
+          </span>,
+          posisjon === 'over-tak',
+        )}
 
-        {/* Trygt spenn */}
-        <div
-          style={{
-            position: 'absolute',
-            top: `${OVER}%`,
-            left: 0,
-            right: 0,
-            height: `${SPENN}%`,
-            background: pal.grunn,
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 0.75em',
-          }}
-        >
-          <span style={{ ...soneTekst, fontWeight: 400 }}>Trygt spenn</span>
-        </div>
+        {terskellinje(!hardKald)}
 
-        {/* Under kaldgulvet */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: `${UNDER}%`,
-            borderTop: gulvStrek,
+        {sone(
+          { minHeight: 150, background: pal.grunn },
+          <span style={{ ...soneTekst, fontWeight: 400 }}>Trygt spenn</span>,
+          posisjon === 'i-spennet',
+        )}
+
+        {terskellinje(hardKald)}
+
+        {sone(
+          {
+            minHeight: 64,
             backgroundImage: hardKald ? SKRAVUR(pal.kant) : undefined,
             backgroundColor: pal.flate,
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 0.75em',
-          }}
-        >
-          <span style={soneTekst}>
+          },
+          <span data-spor="grenseetikett" style={soneTekst}>
             Under kaldgulvet — for kaldt{hardKald ? ' (hard grense)' : ''}
-          </span>
-        </div>
-
-        {/* Kandidat-markør */}
-        <div
-          style={{
-            position: 'absolute',
-            top: `${markorTopp}%`,
-            left: 0,
-            right: 0,
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4em',
-            pointerEvents: 'none',
-          }}
-        >
-          <div style={{ flex: 1, borderTop: `3px dotted ${pal.ink}` }} />
-          <span
-            style={{
-              background: pal.ink,
-              color: pal.grunn,
-              fontWeight: 700,
-              fontSize: '0.85em',
-              padding: '0.2em 0.6em',
-              borderRadius: '0.3em',
-              marginRight: '0.5em',
-            }}
-          >
-            Deres antrekk
-          </span>
-        </div>
+          </span>,
+          posisjon === 'under-gulv',
+        )}
       </div>
       {/* Tekstparitet: samme beslutning som figuren, alltid i tekst. */}
       <figcaption style={{ marginTop: '0.5em', fontSize: '0.9em' }}>{domSetning}</figcaption>

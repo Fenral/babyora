@@ -91,11 +91,13 @@ export const manifest: P4Manifest = {
       'Steg 1 er den konservative fallbacken («Kle etter årstid») — aldri gjettede plagg; ' +
       'brukeren identifiserer at grunnlaget mangler.',
     'endret-vaer':
-      'Leser BÅDE deltaet (værleddet + den konkrete, navngitte lagendringen mot ' +
-      'gårsdagens antrekksbaseline) OG første protokollhandling på brief-flaten; ' +
-      'utfører steg 1 uten å rekonstruere gårsdagens grunnlag. Etter V2 skal ' +
-      'deltakeren oppgi at handlingen ENDRET seg (samme antrekk holder → legg ' +
-      'det navngitte laget på riktig plass).',
+      'Utfører den ENE primære neste handlingen — «Neste steg» (protokollens ' +
+      'steg 1) — uten å rekonstruere gårsdagens grunnlag. Deltaet gjengis som ' +
+      'sekundær opplysning slik flaten rammer det inn («Endring senere i ' +
+      'protokollen: legg ull-jakke mellom …» mot gårsdagens antrekksbaseline) — ' +
+      'IKKE som en konkurrerende handling nå. Etter V2 skal deltakeren oppgi at ' +
+      'briefen ENDRET seg fra V1 (samme antrekk holdt → nytt lag senere i ' +
+      'protokollen).',
     'utlopt-raad':
       'Identifiserer den maskerte tilstanden som utløpt («må beregnes på nytt») — ikke som ' +
       'feil eller ødelagt app — og oppgir fallback-regelen. Aldri innhold fra maskert brief.',
@@ -111,6 +113,9 @@ export const manifest: P4Manifest = {
 
   farligeFeil: [
     'Brief-flaten viser en annen handling enn protokollens steg 1 (syntese-avvik).',
+    'Brief-flaten har mer enn ett element med primær handlingssemantikk — to ' +
+      'imperativer med lik vekt gjør neste handling tvetydig (håndheves med ' +
+      'data-primaerhandling-telling i p4-primaerhandling.test.ts).',
     'Åpnet protokoll har en annen versjon enn briefen (versjonsbrudd) — skal være ' +
       'umulig via brief-maskinen; én observasjon betyr at syntesen har feilet.',
     'Bruk av innhold fra maskert eller utløpt brief/protokoll i en beslutning.',
@@ -131,7 +136,8 @@ export const manifest: P4Manifest = {
     'brief-akseptert',
     'brief-forkastet',
     'maskert',
-    'spol',
+    // Spoling eies av selen (Operatør-panelet / window.__lab.spol) og
+    // logges der som sele:spol — prototypen har ingen tidskontroller.
     'protokoll-aapnet',
     'protokoll-lukket',
     'versjonsbrudd',

@@ -112,7 +112,8 @@ export const manifest: P3Manifest = {
     'brief-akseptert',
     'brief-forkastet',
     'maskert',
-    'spol',
+    // Spoling eies av selen (Operatør-panelet / window.__lab.spol) og
+    // logges der som sele:spol — prototypen har ingen tidskontroller.
     'aapne-app',
     'kvittering-aapnet',
   ],

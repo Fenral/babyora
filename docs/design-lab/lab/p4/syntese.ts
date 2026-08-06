@@ -183,6 +183,23 @@ export const P4_TEKST = {
   lukkProtokoll: 'Lukk protokollen',
   stegEnAv: (antallSteg: number) => `Steg 1 av ${antallSteg}`,
   /**
+   * Den ENE visuelt primære neste handlingen på brief-flaten (Sols
+   * fase 11 runde 2, P1): alltid protokollens steg 1, alltid med
+   * «Neste steg:»-prefiks — det finnes aldri et andre imperativ med
+   * primær vekt.
+   */
+  nesteSteg: (handling: string) => `Neste steg: ${handling}`,
+  /**
+   * Deltaets lagendring som SEKUNDÆR opplysning, aldri konkurrerende
+   * imperativ: en faktisk endring rammes inn som «Endring senere i
+   * protokollen: …» (liten forbokstav — opplysning, ikke kommando);
+   * «Samme antrekk …» er allerede en opplysning og står uendret.
+   */
+  deltaSekundaer: (komfortHandling: string) =>
+    /^Samme antrekk/.test(komfortHandling)
+      ? komfortHandling
+      : `Endring senere i protokollen: ${komfortHandling.charAt(0).toLowerCase()}${komfortHandling.slice(1)}`,
+  /**
    * Kontinuitetslinjen på protokollflaten: navngir BÅDE briefId og
    * versjon, slik at begge flater beviselig viser samme brief (P4-P0).
    */

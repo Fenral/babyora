@@ -4,10 +4,17 @@
  *
  * En simulert widget-ramme (merket «SIMULERT WIDGET — krever native
  * verifisering») viser gjeldende brief fra brief-maskinen. Klokkespoling
- * driver sekvensen: V1 → V2 ankommer → forsinket V1 ankommer (forkastes
- * synlig i hendelsesloggen) → utløp → maskert tilstand («Må beregnes på
- * nytt» + konservativ fallback). Maskering er alltid STRUKTURELL
+ * driver sekvensen: V1 → V2 ankommer → forsinket V1 ankommer (forkastes —
+ * logget i selens hendelseslogg) → utløp → maskert tilstand («Må beregnes
+ * på nytt» + konservativ fallback). Maskering er alltid STRUKTURELL
  * (innholdet fjernes, tekststempel + fallback vises) — aldri dimming.
+ *
+ * TIDSSTYRING OG LOGG ER OPERATØRUTSTYR (Sols fase 11 runde 2, P1):
+ * prototypen rendrer INGEN klokke, spoleknapper eller hendelseslogg.
+ * Klokka eies av selen (LabShell); operatør/automatisering spoler via
+ * Operatør-panelet eller window.__lab.spol(min) — begge utenfor
+ * deltakerens DOM. Alle hendelser sendes kun til selens logg via
+ * props.logg (synlig i Operatør-panelet, aldri i deltakerflaten).
  *
  * «Åpne appen»-fallbacken viser full plaggliste (basePlagg) med SAMME
  * versjonsstempel som widgeten. Kvittering heter «Åpnet», aldri noe
@@ -61,8 +68,6 @@ export function Prototype(props: PrototypeProps) {
   return <P3Tidslinje key={props.scenario.id} {...props} />;
 }
 
-type LoggLinje = { tid: string; tekst: string };
-
 function klokkeslett(iso: string): string {
   return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(iso) ? iso.substring(11, 16) : iso;
 }
@@ -72,7 +77,6 @@ function P3Tidslinje({ scenario, klokke, logg }: PrototypeProps) {
 
   const maskinRef = useRef<BriefTilstand>(START_TILSTAND);
   const stegRef = useRef(0);
-  const loggRef = useRef<LoggLinje[]>([]);
   const [, tving] = useState(0);
   const [visApp, setVisApp] = useState(false);
   const [kvittertKl, setKvittertKl] = useState<string | null>(null);
@@ -81,11 +85,10 @@ function P3Tidslinje({ scenario, klokke, logg }: PrototypeProps) {
     const naaISO = klokke.naaISO();
     const naaMs = Date.parse(naaISO);
     let t = maskinRef.current;
-    const linjer = loggRef.current;
-    const skriv = (tidISO: string, tekst: string) =>
-      linjer.push({ tid: klokkeslett(tidISO), tekst });
 
     // Spill av alle tidslinjesteg klokken har passert, i rekkefølge.
+    // Hendelsene logges KUN til selens logg (operatørflaten) — deltakeren
+    // ser bare widgetens tilstand.
     while (
       stegRef.current < tidslinje.length &&
       Date.parse(tidslinje[stegRef.current].tidISO) <= naaMs
@@ -94,26 +97,16 @@ function P3Tidslinje({ scenario, klokke, logg }: PrototypeProps) {
       stegRef.current += 1;
       const forrige = t;
       t = motta(t, steg.hendelse, { naaISO: steg.tidISO });
-      skriv(steg.tidISO, steg.etikett);
       logg?.('tidslinje-steg', { etikett: steg.etikett, tidISO: steg.tidISO });
 
       if (steg.hendelse.type === 'brief') {
         const brief = steg.hendelse.brief;
         if (t.forkastede.length > forrige.forkastede.length) {
           const f = t.forkastede[t.forkastede.length - 1];
-          skriv(
-            steg.tidISO,
-            `Forkastet: Brief #${f.versjon} (${f.briefId}) — grunn: ${f.grunn}`,
-          );
           logg?.('brief-forkastet', f);
         } else if (t.status === 'maskert') {
-          skriv(
-            steg.tidISO,
-            `Brief #${brief.versjon} ankom etter egen gyldighet — maskert umiddelbart`,
-          );
           logg?.('maskert', { tidISO: steg.tidISO, briefId: brief.briefId });
         } else {
-          skriv(steg.tidISO, `Brief #${brief.versjon} er nå gjeldende`);
           logg?.('brief-akseptert', {
             versjon: brief.versjon,
             briefId: brief.briefId,
@@ -126,7 +119,6 @@ function P3Tidslinje({ scenario, klokke, logg }: PrototypeProps) {
     const forrige = t;
     t = motta(t, { type: 'klokke' }, { naaISO });
     if (t.status === 'maskert' && forrige.status !== 'maskert') {
-      skriv(naaISO, 'Briefen utløp — maskert. Må beregnes på nytt.');
       logg?.('maskert', { tidISO: naaISO });
     }
 
@@ -134,16 +126,12 @@ function P3Tidslinje({ scenario, klokke, logg }: PrototypeProps) {
     tving((v) => v + 1);
   }, [klokke, logg, tidslinje]);
 
+  // Selen eier klokka: spoling (Operatør-panel eller window.__lab.spol)
+  // varsler via onTick — prototypen har ingen egne tidskontroller.
   useEffect(() => {
     oppdater();
     return klokke.onTick(oppdater);
   }, [klokke, oppdater]);
-
-  const spol = (min: number) => {
-    logg?.('spol', { min });
-    klokke.spol(min);
-    oppdater();
-  };
 
   const t = maskinRef.current;
   const naaISO = klokke.naaISO();
@@ -171,20 +159,6 @@ function P3Tidslinje({ scenario, klokke, logg }: PrototypeProps) {
     cursor: 'pointer',
   };
 
-  const minutterTilNeste = (): number | null => {
-    const kandidater: number[] = [];
-    for (let i = stegRef.current; i < tidslinje.length; i++) {
-      kandidater.push(Date.parse(tidslinje[i].tidISO));
-    }
-    if (t.gjeldende && t.status !== 'maskert') {
-      kandidater.push(Date.parse(t.gjeldende.expiresAtISO));
-    }
-    const naaMs = Date.parse(naaISO);
-    const frem = kandidater.filter((ms) => ms > naaMs);
-    return frem.length === 0 ? null : Math.ceil((Math.min(...frem) - naaMs) / 60000);
-  };
-  const tilNeste = minutterTilNeste();
-
   return (
     <div
       style={{
@@ -197,32 +171,6 @@ function P3Tidslinje({ scenario, klokke, logg }: PrototypeProps) {
         margin: '0 auto',
       }}
     >
-      {/* Klokkepanel — spoling driver hele sekvensen. */}
-      <section aria-label="Virtuell klokke" style={{ marginBottom: '1em' }}>
-        <p
-          style={{
-            margin: '0 0 0.5em',
-            fontVariantNumeric: 'tabular-nums',
-            fontWeight: 700,
-          }}
-        >
-          Simulert klokke: {klokkeslett(naaISO)}
-        </p>
-        <div style={{ display: 'flex', gap: '0.5em', flexWrap: 'wrap' }}>
-          <button type="button" style={knapp} onClick={() => spol(5)}>
-            Spol +5 min
-          </button>
-          <button type="button" style={knapp} onClick={() => spol(30)}>
-            Spol +30 min
-          </button>
-          {tilNeste !== null && (
-            <button type="button" style={knapp} onClick={() => spol(tilNeste)}>
-              Spol til neste hendelse ({tilNeste} min)
-            </button>
-          )}
-        </div>
-      </section>
-
       {/* Den simulerte widgeten. */}
       <section
         aria-label="Simulert widget"
@@ -309,29 +257,6 @@ function P3Tidslinje({ scenario, klokke, logg }: PrototypeProps) {
               )}
             </div>
           </div>
-        )}
-      </section>
-
-      {/* Hendelseslogg — forkastelser og maskeringer er alltid synlige. */}
-      <section aria-label="Hendelseslogg">
-        <p style={{ margin: '0 0 0.4em', fontWeight: 700, fontSize: '0.9em' }}>
-          Hendelseslogg
-        </p>
-        {loggRef.current.length === 0 ? (
-          <p style={{ margin: 0, fontSize: '0.9em', color: dus }}>
-            Ingen hendelser ennå — spol klokken frem.
-          </p>
-        ) : (
-          <ol style={{ margin: 0, paddingLeft: '1.4em', fontSize: '0.9em' }}>
-            {loggRef.current.map((linje, i) => (
-              <li key={`${i}-${linje.tid}`} style={{ marginBottom: '0.2em' }}>
-                <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
-                  {linje.tid}
-                </span>{' '}
-                {linje.tekst}
-              </li>
-            ))}
-          </ol>
         )}
       </section>
     </div>

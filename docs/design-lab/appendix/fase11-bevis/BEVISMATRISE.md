@@ -1,12 +1,17 @@
-# Bevismatrise — fase 11 runde 2 (deltakermodus)
+# Bevismatrise — fase 11 runde 3 (deltakermodus)
 
 Kobler hvert manifestkrav (`lab/p*/manifest.ts`: oppgaver + farlige feil)
 til skjermbevisene i denne mappen. Alle skudd er tatt i **låst
 deltakermodus** (`?modus=deltaker&arm=…&scenario=…&bekreftet=1`, 390×844,
 2× DPR) av `tools/lab-skjermbevis-r2.mjs`, som **verifiserer hver påstått
-tilstand i DOM-en før skuddet regnes som bevis** (58 verifiseringer, exit 1
-ved avvik). `01-forste-viewport--*.png` er rene viewport-skudd (første
-faktiske skjermhøyde); øvrige er fullPage.
+tilstand i DOM-en før skuddet regnes som bevis** (92 verifiseringer, 0
+feilet, exit 1 ved avvik). `01-forste-viewport--*.png` er rene
+viewport-skudd (første faktiske skjermhøyde); øvrige er fullPage.
+
+Runde 3-endringene (Sols runde 2-krav): P3/P4 er uten tidskontroller og
+hendelseslogg i deltaker-DOM (verifisert per skudd), P2-figuren er
+kollisjonsfri med bounding-box-målt vakt, og P4-briefen har nøyaktig én
+primærhandling («Neste steg: …») med deltaet som sekundær opplysning.
 
 Metodenotat (P2-kandidatene): `kandidatId` er selens prop (default
 `trygg`) og er ikke URL-eksponert. Kald/varm er derfor konstruert på
@@ -15,12 +20,22 @@ deltakerflaten med samme mutasjon som `forhaandsdefinertKandidat`
 og posisjonen er verifisert i figurens tekstparitet (figcaption). Ingen
 kandidat merkes som «riktig» i UI.
 
-Metodenotat (klokkespoling): Operatør-panelet finnes ikke i
-deltakermodus. P3/P4 bærer sin egen simulerte klokke som del av
-retningen («Simulert klokke» + spol-knapper) — utløpet i
-`06-p3-endret-vaer--3-utlopt-maskert.png` er drevet av den, og skriptet
-verifiserer at klokka står forbi gyldigTil (12:00 > 11:45) og at rådet
-er strukturelt fjernet før skuddet tas.
+Metodenotat (klokkespoling, runde 3): P3/P4 har INGEN egne
+tidskontroller eller hendelseslogg i deltakerflaten (Sols runde 2, P1).
+Spoling skjer via selens `window.__lab.spol(min)` (LabVinduAPI) —
+utenfor deltakerens DOM — og selens hendelseslogg leses via
+`window.__lab.hendelser()`. Utløpet i
+`06-p3-endret-vaer--3-utlopt-maskert.png` er drevet slik, og skriptet
+verifiserer at selens diskrete klokkemerke står forbi gyldigTil
+(12:00 > 11:45), at rådet er strukturelt fjernet, og at deltaker-DOM-en
+er uten «Simulert klokke», spoleknapper og hendelseslogg før skuddet tas.
+
+Metodenotat (P2-kollisjonsvakt, runde 3): grenseetikett, terskellinje og
+kandidatmarkør ligger i dedikerte rader (`data-spor`-attributter, ingen
+absolutt posisjonering). For hvert posisjonsbevis måler skriptet bounding
+boxes for alle spor-elementer og feiler ved parvis overlapp — inkludert
+storTekst (`05-p2-dynamic-type--*.png`). Strukturen håndheves i tillegg i
+`lab/__tests__/p2-kollisjon.test.ts`.
 
 ## Felles (Sols krav 1: deltakerbevis uten testsele)
 
@@ -48,9 +63,9 @@ er strukturelt fjernet før skuddet tas.
 
 | Manifestkrav | Skjerm før handling | Skjerm etter | Degradert tilstand | Forventet fasit | Web/native |
 |---|---|---|---|---|---|
-| Oppgave «Holder dette?» — kandidat **trygg** | `05-p2-normal-dag--trygg-i-spennet.png`, `05-p2-sovende-vognbarn--trygg-i-spennet.png` | — | — | Posisjon **i-spennet** (figcaption «i trygt spenn» verifisert) | Gyldig i web; detent-haptikk krever native |
-| Oppgave «Holder dette?» — kandidat **kald** | `05-p2-normal-dag--kald-under-gulv.png`, `05-p2-sovende-vognbarn--kald-under-gulv.png` | Fastkoblet respons «Legg til ett lag …» synlig i samme skudd | — | Posisjon **under-gulv** (verifisert «under kaldgulvet») | Gyldig i web |
-| Oppgave «Holder dette?» — kandidat **varm** | `05-p2-normal-dag--varm-over-tak.png`, `05-p2-sovende-vognbarn--varm-over-tak.png` (invertert: varmetaket hard grense verifisert) | Respons «Fjern ett lag …» i samme skudd | — | Posisjon **over-tak** (verifisert «over varmetaket») | Gyldig i web |
+| Oppgave «Holder dette?» — kandidat **trygg** | `05-p2-normal-dag--trygg-i-spennet.png`, `05-p2-sovende-vognbarn--trygg-i-spennet.png`, `05-p2-dynamic-type--trygg-i-spennet.png` | — | — | Posisjon **i-spennet** (figcaption «i trygt spenn» verifisert) + kollisjonsvakt målt | Gyldig i web; detent-haptikk krever native |
+| Oppgave «Holder dette?» — kandidat **kald** | `05-p2-normal-dag--kald-under-gulv.png`, `05-p2-sovende-vognbarn--kald-under-gulv.png`, `05-p2-dynamic-type--kald-under-gulv.png` (storTekst) | Fastkoblet respons «Legg til ett lag …» synlig i samme skudd | — | Posisjon **under-gulv** (verifisert «under kaldgulvet») + null kollisjon etikett/terskel/markør | Gyldig i web |
+| Oppgave «Holder dette?» — kandidat **varm** | `05-p2-normal-dag--varm-over-tak.png`, `05-p2-sovende-vognbarn--varm-over-tak.png` (invertert: varmetaket hard grense verifisert), `05-p2-dynamic-type--varm-over-tak.png` (storTekst) | Respons «Fjern ett lag …» i samme skudd | — | Posisjon **over-tak** (verifisert «over varmetaket») + null kollisjon etikett/terskel/markør | Gyldig i web |
 | Årsakskjeden (hva flyttet markøren) | `05-p2-normal-dag--trygg-i-spennet.png` | `05-p2--aarsakskjede.png` («Pluss ekstra teppe — markøren steg mot taket») | — | Endringsforklaring per chip | Gyldig i web |
 | Oppgave «Hva skal hen ha på?» (kontrast, ikke-scorbar) | `01-forste-viewport--p2.png` (oppgavevelgeren synlig) | — | — | Ren liste uten dom | Gyldig i web |
 | Farlig feil: «appen har målt barnet» | Hypotese-etiketten i alle P2-skudd | — | — | Hard stopp beholdt (Sols krav) | Krever deltakertest |
@@ -66,7 +81,7 @@ er strukturelt fjernet før skuddet tas.
 | Oppgave: oppdag V2-endringen | `06-p3-endret-vaer--1-v1-brief.png` | `06-p3-endret-vaer--2-v2-brief.png` (V2: «Legg ull-jakke mellom ull-mellomlag og vinterkjøredress.») — **handlingsendring tekstlig verifisert i skriptet** (Sols P3-P1) | — | V2 endrer handlingen reelt, med versjonert antrekksbaseline | Gyldig i web (leveringstid krever native) |
 | Oppgave: forklar maskert utløp | `06-p3-endret-vaer--2-v2-brief.png` | — | `06-p3-endret-vaer--3-utlopt-maskert.png` (klokke 12:00 > gyldigTil 11:45; «Må beregnes på nytt»; **verifisert at V2-handlingen er fjernet fra flaten**) | Strukturell maskering + fallback, aldri dimming | Gyldig i web (OS-drevet utløp krever native) |
 | Oppgave: app-fallback samme versjonsstempel + «Åpnet» | «Åpne appen (full liste)»-knappen synlig i alle P3-skudd | — | — | Samme Brief #N i app-fallback | Gyldig i web |
-| Farlig feil: forsinket V1 vises som gjeldende | — | `06-p3-endret-vaer--2-v2-brief.png` og hendelsesloggen i `--3` («10:30 Forkastet: Brief #1 — grunn: maskert-enveis») | — | I1/I2: eldre versjon forkastes synlig | Gyldig i web |
+| Farlig feil: forsinket V1 vises som gjeldende | — | `06-p3-endret-vaer--2-v2-brief.png` (V2 forblir gjeldende); forkastelsen av V1 er verifisert i SELENS logg via `window.__lab.hendelser()` (`brief-forkastet`, versjon 1, grunn maskert-enveis) og bekreftet FRAVÆRENDE i deltaker-DOM | — | I1/I2: eldre versjon forkastes strukturelt; loggen er operatørutstyr | Gyldig i web |
 | Farlig feil: innhold fra maskert brief brukt | — | — | `06-p3-endret-vaer--3-utlopt-maskert.png` | Kun fallback etter utløp | Gyldig i web |
 | Farlig feil: delta lest i feil retning | `06-p3-endret-vaer--2-v2-brief.png` («Kaldere enn i går» + «Legg …») | — | — | Retning ligger i handlingsteksten | Krever deltakertest |
 
@@ -74,10 +89,10 @@ er strukturelt fjernet før skuddet tas.
 
 | Manifestkrav | Skjerm før handling | Skjerm etter | Degradert tilstand | Forventet fasit | Web/native |
 |---|---|---|---|---|---|
-| Oppgave: utfør steg 1 fra briefen | `07-p4-normal-dag--1-brief.png` (steg 1 + «Steg 1 av N» + Brief #1 · normal-dag-b1) | — | — | Brief-handling == protokollens steg 1 | SIMULERT BRIEF-FLATE — krever native verifisering |
+| Oppgave: utfør steg 1 fra briefen | `07-p4-normal-dag--1-brief.png` («Neste steg: Ta på tykt ullsett» + «Steg 1 av N» + Brief #1 · normal-dag-b1) | — | — | Brief-handling == protokollens steg 1; **nøyaktig ÉN primærhandling** (`data-primaerhandling` telt = 1 i skriptet og i `p4-primaerhandling.test.ts`) | SIMULERT BRIEF-FLATE — krever native verifisering |
 | Oppgave: versjon+gyldighet fra stempellinjen | `07-p4-normal-dag--1-brief.png`, `07-p4-endret-vaer--1-brief.png` | — | — | briefId + versjon + utstedt + gyldig-til synlig | Gyldig i web |
 | Oppgave: åpne protokollen — samme versjon | `07-p4-normal-dag--1-brief.png` | `07-p4-normal-dag--2-protokoll.png` («Samme brief som flaten — normal-dag-b1 · Brief #1») → `07-p4-normal-dag--3-retur.png` — **briefId+versjon tekstlig verifisert lik på alle tre flater** (Sols P4-P0) | — | Kontinuitet brief↔protokoll↔retur | Gyldig i web |
-| Oppgave: endret vær — delta + første protokollhandling | `07-p4-endret-vaer--1-brief.png` (V2: delta «Kaldere enn i går», «Legg ull-jakke …», Referanse i går V1, + steg 1) | `07-p4-endret-vaer--2-protokoll.png` → `--3-retur.png` (Brief #2 · endret-vaer-b2 hele veien) | — | Delta OG første protokollhandling uten ny anbefaling (Sols P4-P1) | Gyldig i web |
+| Oppgave: endret vær — én primær + delta som sekundær opplysning | `07-p4-endret-vaer--1-brief.png` (V2: primær «Neste steg: Ta på tykt ullsett»; deltaet SEKUNDÆRT som «Kaldere enn i går …» + «Endring senere i protokollen: legg ull-jakke mellom …» + Referanse i går V1) | `07-p4-endret-vaer--2-protokoll.png` → `--3-retur.png` (Brief #2 · endret-vaer-b2 hele veien) | — | Én primærhandling (verifisert = 1); deltaet gjengis som senere endring, aldri konkurrerende imperativ (Sols runde 2-P1 + P4-P1) | Gyldig i web |
 | Oppgave: forklar maskert tilstand etter utløp | — | — | Samme brief-maskin som P3 (`06-p3-endret-vaer--3-utlopt-maskert.png`); P4s maskerte drakt deler P4_TEKST.maskert | Fallback, aldri gammelt innhold | Gyldig i web |
 | Farlig feil: versjonsbrudd ved åpning | — | `07-p4-*--2-protokoll.png` (match verifisert i skript; brudd ville vist feiltilstand) | — | Skal være umulig via brief-maskinen (property-testet) | Gyldig i web |
 | Farlig feil: HB-9 mangler i brief/protokoll | (bilstol-protokollen dokumentert i P1-sekvensen; P4 gjenbruker samme kompilat) | — | — | Semantikk-porten (snitt) håndhever | Gyldig i web (kodebevis + P1-skudd) |
@@ -94,10 +109,9 @@ er strukturelt fjernet før skuddet tas.
 
 - Nullarmene validering/handoff har egne prompts/sluttEvents i koden, men
   kun påkledningsarmen er skutt her (grunnlinjen for de fem armene).
-- P2-figurens sonetekst «Under kaldgulvet — for kaldt» overlappes delvis
-  av «Deres antrekk»-markøren når kandidaten står under gulvet (synlig i
-  `05-p2-*--kald-under-gulv.png`) — lesbarheten bæres av tekstpariteten
-  under figuren, men overlappen bør ryddes i neste UI-runde.
+- (Runde 2-begrensningen om markør/etikett-overlapp i
+  `05-p2-*--kald-under-gulv.png` er LUKKET i runde 3: figuren er
+  rad-basert, og kollisjonsvakten måler bounding boxes i hvert skudd.)
 - Alt P3/P4-bevis er per definisjon simulert flate (merket i selve
   skjermbildet); leveringstid, bakgrunnsutløp og låseskjerm er sperret
   til native spike.

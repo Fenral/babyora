@@ -70,6 +70,7 @@ import {
 import {
   lesLabParametre,
   oppgavePromptFraManifest,
+  type LabVinduAPI,
 } from './felles/sele/deltakermodus';
 import { Nullmodell } from './felles/sele/nullmodell';
 import { Disclaimer } from './felles/sele/disclaimer';
@@ -220,6 +221,27 @@ export function LabShell() {
     klokke.spol(min);
     seleLogg('sele:spol', { min, rute });
   }
+
+  /* -------------------------------------------------------------- *
+   * window.__lab — operatør-/automatiseringsstyring UTENFOR DOM-en
+   * (Sols fase 11 runde 2, P1): P3/P4 har ingen egne tidskontroller
+   * eller logg lenger. Skjermbevis-skriptet og operatøren spoler den
+   * virtuelle klokka og leser selens hendelseslogg via dette API-et —
+   * ingenting av det er synlig i deltakerens flate.
+   * -------------------------------------------------------------- */
+  useEffect(() => {
+    const vindu = window as typeof window & { __lab?: LabVinduAPI };
+    vindu.__lab = {
+      spol: (min: number) => spol(min),
+      naaISO: () => klokke.naaISO(),
+      hendelser: () => logg.innslag(),
+    };
+    return () => {
+      delete vindu.__lab;
+    };
+    // spol er stabil nok per (klokke, rute): den lukker kun over disse.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [klokke, logg, rute]);
 
   const modul = rute === 'felles' ? undefined : MODULER[rute as Arm];
 

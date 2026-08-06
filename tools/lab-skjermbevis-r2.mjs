@@ -11,20 +11,30 @@
 //  3. P1 normal-dag: hel sløyfe (faseliste → bekreft → nakkekontroll →
 //     Alt vel → kvittering).
 //  4. P1 utilgjengelig: «Rådet er utløpt» og «Kan ikke beregnes».
-//  5. P2: kald/trygg/varm kandidat i normal-dag og sovende-vognbarn,
+//  5. P2: kald/trygg/varm kandidat i normal-dag, sovende-vognbarn OG
+//     dynamic-type (storTekst — kollisjonsbevis i stor tekst),
 //     årsakskjeden, og «Kan ikke beregnes» med deaktiverte chips.
 //     NB: kandidatId er selens PROP (default 'trygg') og er ikke
 //     URL-eksponert — kald/varm konstrueres derfor via chip-interaksjon
 //     på deltakerflaten (samme mutasjon som forhaandsdefinertKandidat:
 //     fjern kritiske lag / legg til VARM_TILLEGG), og posisjonen
 //     VERIFISERES i figurens tekstparitet (figcaption).
+//     KOLLISJONSVAKT (Sols runde 2, P1): for hvert posisjonsbevis måles
+//     bounding boxes for figurens [data-spor]-elementer (grenseetikett,
+//     terskellinje, kandidatmarkør) — parvis overlapp er rødt.
 //  6. P3 endret-vaer: V1-brief, V2-brief (handlingen SKAL være endret —
-//     verifiseres tekstlig), og EKTE utløp (klokka spolt forbi gyldigTil
-//     med prototypens egen spol-kontroll — Operatør-panelet finnes ikke i
-//     deltakermodus) med verifisert maskering.
+//     verifiseres tekstlig), og EKTE utløp (klokka spolt forbi gyldigTil).
+//     SPOLING skjer via selens window.__lab.spol(min) — P3/P4 har ingen
+//     tidskontroller i deltaker-DOM-en lenger (Sols runde 2, P1), og det
+//     verifiseres eksplisitt at spoleknapper/klokkepanel/hendelseslogg
+//     IKKE finnes i deltakerens flate. Forkastet forsinket V1 verifiseres
+//     i selens logg (window.__lab.hendelser()), ikke i deltaker-DOM.
 //  7. P4: brief → «Åpne hele protokollen» → protokoll → retur, med
 //     tekstlig verifisert briefId+versjon-kontinuitet, i normal-dag og
 //     endret-vaer (delta + første protokollhandling verifisert).
+//     ÉN PRIMÆRHANDLING (Sols runde 2, P1): briefen skal ha nøyaktig ett
+//     [data-primaerhandling]-element («Neste steg: …»), og deltaet skal
+//     stå som sekundær opplysning («Endring senere i protokollen: …»).
 //  8. A11y: p1/p2 i dynamic-type (storTekst) og utendorslys (høykontrast).
 //
 // Sols P0 håndheves: hver påstått tilstand verifiseres i DOM-en før
@@ -98,7 +108,12 @@ async function kroppstekst(page) {
   return page.locator('body').innerText();
 }
 
-/** Deltakermodus-kontrakten: ingen operatørutstyr i deltakerens flate. */
+/**
+ * Deltakermodus-kontrakten: ingen operatørutstyr i deltakerens flate.
+ * Runde 3 (Sols P1): dekker også prototypenes tidligere egne kontroller —
+ * «Simulert klokke», spoleknapper og hendelseslogg skal IKKE finnes i
+ * deltaker-DOM-en (tidsstyring skjer via window.__lab, utenfor DOM-en).
+ */
 async function sjekkDeltakerRen(page, merkelapp) {
   const tekst = await kroppstekst(page);
   bekreft(
@@ -108,6 +123,71 @@ async function sjekkDeltakerRen(page, merkelapp) {
       !/Tøm logg|Last ned logg/.test(tekst) &&
       (await page.locator('select').count()) === 0,
     'operatørutstyr synlig i deltakermodus',
+  );
+  bekreft(
+    `${merkelapp}: ingen klokke-/spolekontroller eller logg i deltaker-DOM`,
+    !/Simulert klokke/.test(tekst) &&
+      !/Spol \+|Spol til neste/.test(tekst) &&
+      !/Hendelseslogg/.test(tekst) &&
+      (await page.getByRole('button', { name: /^Spol/ }).count()) === 0,
+    'spoleknapper/klokkepanel/hendelseslogg synlig i deltakermodus',
+  );
+}
+
+/**
+ * Spoling via selens window.__lab (LabVinduAPI) — operatør-/automatiserings-
+ * kanalen UTENFOR deltakerens DOM. Feiler hardt hvis API-et mangler.
+ */
+async function spolLab(page, min) {
+  await page.evaluate((m) => {
+    if (!window.__lab) throw new Error('window.__lab mangler — selen eksponerer ikke klokkestyring');
+    window.__lab.spol(m);
+  }, min);
+  await page.waitForTimeout(250);
+}
+
+/** Selens hendelseslogg lest utenfor DOM-en (window.__lab.hendelser()). */
+async function labHendelser(page) {
+  return page.evaluate(() => (window.__lab ? window.__lab.hendelser() : []));
+}
+
+/**
+ * KOLLISJONSVAKT (Sols runde 2, P1): måler bounding boxes for figurens
+ * [data-spor]-elementer og feiler ved parvis overlapp. Krever at alle
+ * tre sportyper faktisk er til stede (ikke-vakuøst: 2 grenseetiketter,
+ * 2 terskellinjer, 1 kandidatmarkør).
+ */
+async function sjekkKollisjonsfri(page, merkelapp) {
+  const rekter = await page.evaluate(() => {
+    const ut = [];
+    for (const el of document.querySelectorAll('figure [data-spor]')) {
+      const r = el.getBoundingClientRect();
+      ut.push({ spor: el.getAttribute('data-spor'), x: r.x, y: r.y, w: r.width, h: r.height });
+    }
+    return ut;
+  });
+  const antall = (spor) => rekter.filter((r) => r.spor === spor).length;
+  const overlapp = [];
+  for (let i = 0; i < rekter.length; i++) {
+    for (let j = i + 1; j < rekter.length; j++) {
+      const a = rekter[i];
+      const b = rekter[j];
+      const bredde = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+      const hoyde = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+      if (bredde > 0 && hoyde > 0) {
+        overlapp.push(`${a.spor}×${b.spor} (${Math.round(bredde)}×${Math.round(hoyde)} px)`);
+      }
+    }
+  }
+  bekreft(
+    `${merkelapp}: null kollisjon (etikett/terskel/markør i separate spor)`,
+    antall('grenseetikett') === 2 &&
+      antall('terskellinje') === 2 &&
+      antall('kandidatmarkor') === 1 &&
+      overlapp.length === 0,
+    overlapp.length > 0
+      ? `overlapp: ${overlapp.join('; ')}`
+      : `spor-elementer: ${rekter.map((r) => r.spor).join(', ') || 'ingen'}`,
   );
 }
 
@@ -342,10 +422,11 @@ async function p1Utilgjengelig(page) {
   await skudd(page, '04-p1-mangler--kan-ikke-beregnes');
 }
 
-/** 5) P2: tre kandidater × to scenarier + årsakskjede + maskert. */
+/** 5) P2: tre kandidater × tre scenarier (inkl. storTekst) + kollisjonsvakt
+ *     + årsakskjede + maskert. */
 async function p2Kandidater(page) {
-  console.log('\n[5] P2 — kald/trygg/varm, årsakskjede og maskert');
-  for (const scenario of ['normal-dag', 'sovende-vognbarn']) {
+  console.log('\n[5] P2 — kald/trygg/varm (inkl. storTekst), kollisjonsvakt, årsakskjede, maskert');
+  for (const scenario of ['normal-dag', 'sovende-vognbarn', 'dynamic-type']) {
     // TRYGG: selens default-kandidat (kandidatId='trygg') — anbefalingen.
     await aapne(page, 'p2', scenario);
     krev(
@@ -353,6 +434,7 @@ async function p2Kandidater(page) {
       /i trygt spenn/i.test(await figurtekst(page)),
       await figurtekst(page),
     );
+    await sjekkKollisjonsfri(page, `p2-${scenario}-trygg`);
     await skudd(page, `05-p2-${scenario}--trygg-i-spennet`);
 
     // VARM: + to mellomlag (VARM_TILLEGG) → over taket.
@@ -368,6 +450,7 @@ async function p2Kandidater(page) {
         await figurtekst(page),
       );
     }
+    await sjekkKollisjonsfri(page, `p2-${scenario}-varm`);
     await skudd(page, `05-p2-${scenario}--varm-over-tak`);
 
     // KALD: fjern kritiske lag til kandidaten står under gulvet.
@@ -377,6 +460,7 @@ async function p2Kandidater(page) {
       await lagKaldKandidat(page),
       await figurtekst(page),
     );
+    await sjekkKollisjonsfri(page, `p2-${scenario}-kald`);
     await skudd(page, `05-p2-${scenario}--kald-under-gulv`);
   }
 
@@ -412,10 +496,12 @@ async function p2Kandidater(page) {
   await skudd(page, '05-p2--manglende-vaerdata');
 }
 
-/** 6) P3: V1 → V2 (handlingsendring verifisert) → ekte utløp. */
+/** 6) P3: V1 → V2 (handlingsendring verifisert) → ekte utløp.
+ *     Spoling via window.__lab — deltaker-DOM-en er uten tidskontroller. */
 async function p3Tidslinje(page) {
-  console.log('\n[6] P3 endret-vaer — V1, V2 og ekte utløp');
+  console.log('\n[6] P3 endret-vaer — V1, V2 og ekte utløp (spolt via window.__lab)');
   await aapne(page, 'p3', 'endret-vaer');
+  await sjekkDeltakerRen(page, 'p3-v1');
 
   const v1Tekst = await seksjonstekst(page, 'Simulert widget');
   const handlingV1 = await widgetHandling(page, 'Simulert widget');
@@ -424,8 +510,9 @@ async function p3Tidslinje(page) {
   console.log(`  V1-handling: «${handlingV1}»`);
   await skudd(page, '06-p3-endret-vaer--1-v1-brief');
 
-  // Spol +30: V2 ankommer (10:20) og forsinket V1 forkastes (10:30).
-  await klikkKnapp(page, /^Spol \+30 min$/);
+  // Spol +30 via selens window-API: V2 ankommer (10:20) og forsinket V1
+  // forkastes (10:30) — ingen spoleknapp finnes i deltakerflaten.
+  await spolLab(page, 30);
   const v2Tekst = await seksjonstekst(page, 'Simulert widget');
   const handlingV2 = await widgetHandling(page, 'Simulert widget');
   krev('p3-v2: Brief #2 gjeldende', /Brief #2\b/.test(v2Tekst));
@@ -435,14 +522,23 @@ async function p3Tidslinje(page) {
     `V1=«${handlingV1}» V2=«${handlingV2}»`,
   );
   console.log(`  V2-handling: «${handlingV2}»`);
+  const hendelser = await labHendelser(page);
   bekreft(
-    'p3-v2: forsinket V1 forkastet synlig i hendelsesloggen',
-    /Forkastet: Brief #1/.test(await kroppstekst(page)),
+    'p3-v2: forsinket V1 forkastet — logget i SELENS logg (window.__lab), utenfor deltaker-DOM',
+    hendelser.some(
+      (h) => h.event === 'brief-forkastet' && h.detalj && h.detalj.versjon === 1,
+    ),
+    `sele-loggen har ${hendelser.length} innslag uten brief-forkastet v1`,
   );
+  bekreft(
+    'p3-v2: forkastelsen står IKKE i deltakerens flate',
+    !/Forkastet/.test(await kroppstekst(page)),
+  );
+  await sjekkDeltakerRen(page, 'p3-v2');
   await skudd(page, '06-p3-endret-vaer--2-v2-brief');
 
   // Ekte utløp: spol klokka forbi gyldigTil 11:45 (10:30 → 12:00).
-  for (let i = 0; i < 3; i++) await klikkKnapp(page, /^Spol \+30 min$/);
+  for (let i = 0; i < 3; i++) await spolLab(page, 30);
   const utloptTekst = await seksjonstekst(page, 'Simulert widget');
   krev(
     'p3-utlop: maskert ETTER at klokka passerte gyldigTil',
@@ -451,26 +547,29 @@ async function p3Tidslinje(page) {
   );
   krev(
     'p3-utlop: det aktive rådet er fjernet fra flaten',
-    !utloptTekst.includes(handlingV2 ?? ' '),
+    handlingV2 !== null && !utloptTekst.includes(handlingV2),
     'V2-handlingen vises fortsatt i widgeten',
   );
   bekreft(
-    'p3-utlop: klokka viser tid forbi 11:45',
-    /Simulert klokke: 1[2-9]:/.test(await kroppstekst(page)),
+    'p3-utlop: selens diskrete klokkemerke viser tid forbi 11:45',
+    /kl\. 1[2-9]:\d{2} · lab/.test(await kroppstekst(page)),
   );
+  await sjekkDeltakerRen(page, 'p3-utlop');
   await skudd(page, '06-p3-endret-vaer--3-utlopt-maskert');
 }
 
-/** 7) P4: overgang ende-til-ende med versjonskontinuitet. */
+/** 7) P4: overgang ende-til-ende med versjonskontinuitet + ÉN primærhandling.
+ *     Spoling via window.__lab — deltaker-DOM-en er uten tidskontroller. */
 async function p4Overgang(page) {
-  console.log('\n[7] P4 — brief → protokoll → retur');
+  console.log('\n[7] P4 — brief → protokoll → retur (spolt via window.__lab)');
   for (const { scenario, spolFoerst } of [
     { scenario: 'normal-dag', spolFoerst: false },
     { scenario: 'endret-vaer', spolFoerst: true },
   ]) {
     await aapne(page, 'p4', scenario);
     // endret-vaer: spol til V2 slik at deltaet + endret handling er aktive.
-    if (spolFoerst) await klikkKnapp(page, /^Spol \+30 min$/);
+    if (spolFoerst) await spolLab(page, 30);
+    await sjekkDeltakerRen(page, `p4-${scenario}`);
 
     const briefTekst = await seksjonstekst(page, 'Simulert brief-flate');
     const stempelBrief = briefTekst.match(STEMPEL_RE);
@@ -483,11 +582,42 @@ async function p4Overgang(page) {
       `p4-${scenario}: første protokollhandling («Steg 1 av …») på briefen`,
       /Steg 1 av \d+/.test(briefTekst),
     );
+
+    // ÉN PRIMÆRHANDLING (Sols runde 2, P1): nøyaktig ett
+    // [data-primaerhandling]-element, og det bærer «Neste steg: …».
+    const primaer = page.locator(
+      'section[aria-label="Simulert brief-flate"] [data-primaerhandling]',
+    );
+    krev(
+      `p4-${scenario}: nøyaktig ÉN primærhandling i brief-DOM`,
+      (await primaer.count()) === 1,
+      `fant ${await primaer.count()} elementer med data-primaerhandling`,
+    );
+    const primaerTekst = (await primaer.first().innerText()).trim();
+    krev(
+      `p4-${scenario}: primærhandlingen er «Neste steg: …»`,
+      /^Neste steg: .+/.test(primaerTekst),
+      primaerTekst,
+    );
+    console.log(`  Primærhandling: «${primaerTekst}»`);
+
     if (scenario === 'endret-vaer') {
       krev(
         'p4-endret-vaer: deltaet synlig (referanse til i går)',
         /i går/.test(briefTekst),
         briefTekst.slice(0, 200),
+      );
+      // Deltaet er SEKUNDÆR opplysning — innrammet, aldri et andre
+      // imperativ med primær vekt.
+      krev(
+        'p4-endret-vaer: deltaet står som «Endring senere i protokollen: …»',
+        briefTekst.includes('Endring senere i protokollen: legg ull-jakke'),
+        briefTekst.slice(0, 300),
+      );
+      bekreft(
+        'p4-endret-vaer: lagendringen er IKKE primærhandlingen',
+        !/^Neste steg: Legg ull-jakke/.test(primaerTekst),
+        primaerTekst,
       );
     }
     await skudd(page, `07-p4-${scenario}--1-brief`);

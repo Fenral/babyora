@@ -20,8 +20,25 @@
 
 import { ARMER, type Arm } from './rekkefolge';
 import { nullarmFraParam, type Nullarm } from './nullarmer';
+import type { LoggInnslag } from './logging';
 
 export type LabModus = 'operator' | 'deltaker';
+
+/**
+ * window.__lab — operatør-/automatiseringskontrakt UTENFOR deltakerens
+ * DOM (Sols fase 11 runde 2, P1): P3/P4 har ingen egne tidskontroller
+ * eller synlig hendelseslogg. Skjermbevis-skriptet (og operatøren via
+ * konsollen) spoler den virtuelle klokka og leser selens logg her —
+ * ingenting av det rendres i deltakerflaten. Monteres av LabShell.
+ */
+export type LabVinduAPI = {
+  /** Spol den virtuelle klokka `min` minutter frem (logges som sele:spol). */
+  spol(min: number): void;
+  /** Labklokkas nå-tidspunkt (labISO). */
+  naaISO(): string;
+  /** Selens hendelseslogg — samme innslag som Operatør-panelet viser. */
+  hendelser(): LoggInnslag[];
+};
 
 export type LabParametre = {
   modus: LabModus;
