@@ -1,7 +1,7 @@
 {
   "updated": "2026-08-06",
-  "activePhase": 10,
-  "phaseName": "Independent Visual Review",
+  "activePhase": 11,
+  "phaseName": "Review-loop AVSLUTTET med PASS — eierport 3 forestående",
   "completedPhases": [
     0,
     1,
@@ -12,7 +12,8 @@
     6,
     7,
     8,
-    9
+    9,
+    10
   ],
   "eierport2": {
     "dato": "2026-08-05",
@@ -61,5 +62,5 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "Fase 10: bevispakke sendt Sol (12 representative av 59 skjermbevis + 226/226 testresultat + avviklogg); deretter fase 11 review-loop til PASS -> eierport 3. Sperret til native-spike: leveringstid, cache, systemflate-a11y."
+  "nextAction": "EIERPORT 3: eier godkjenner representativ prototype (web-loop PASS aea8c21). Deretter, i valgfri rekkefølge: native feasibility-spike (teknisk), foreldretest 5-8 deltakere (eiervendt), faglig validering P2-spenn (eiervendt). Retningsvalget (fase 12-grunnlag) tas først etter foreldretest-data."
 }

@@ -2,6 +2,21 @@
 
 > Én seksjon per review-runde. Fullt svar fra Work arkiveres i `appendix/`.
 
+## Runde 8–11 — Fase 9-spec → fase 11-loop (2026-08-05 → 06)
+
+| Runde | Objekt | Verdikt |
+| --- | --- | --- |
+| 8 | Prototype-spec v1 (før-implementering) | REVIDER — beslutningssløyfer, semantikk≠presentasjon, testselen eier eksperimentet |
+| 9 | Spec v2 (klarsignal-sjekk) | **PASS** — byggeklarsignal m/rekkefølge og skjerpelser |
+| 10 | Fase 10-bevispakke (12 skudd) | REVIDER — deltakermodus, HB-9-bevis, P2-kandidater, P3-handlingskompletthet, P4-overgang, avvik a–e besvart |
+| 11a | Runde 2-bevis (42 skudd, 58 DOM-verifiseringer) | REVIDER — alle P0 verifisert løst; 3 P1 igjen |
+| 11b | Runde 3 (334/334 tester, 92 verifiseringer) | **PASS på webprototypeloopen** (`appendix/fase11-bevis/sol-PASS-runde3.md`) |
+
+**PASS-betingelser (bindende):** gjelder prototypeimplementasjon og testbarhet — IKKE
+medisinsk lanseringsklarhet, valg av vinnende retning eller native produksjonsklarhet.
+Tre separate, ikke-kompenserbare porter består: native feasibility-spike, faglig
+validering av P2s spenn, test med ekte foreldre.
+
 ## Runde 1 — Fase 1 problemformulerings-review (2026-08-05)
 
 **Reviewer:** ChatGPT Work, GPT-5.6 Sol / Ekstra høy.
