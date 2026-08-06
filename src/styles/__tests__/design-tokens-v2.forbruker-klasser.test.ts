@@ -99,6 +99,14 @@ const AVLEDNINGSPRIMITIV: Readonly<Record<string, string>> = {
  */
 const PRIMITIV: Readonly<Record<string, string>> = {
   zone: 'soneskalaen · Tog-guidens temperaturslider (DATA-farge, tema-konstant)',
+  /* PRIMITIV, ikke kontrakt: dette er en PALETT for en kategori-akse
+     (ull/bomull/vanntett), på linje med `zone`. Ingen portdom sier at
+     alle må bruke den — men den finnes fordi fraværet av en materialskala
+     fikk tre ulike familier lånt inn: --dw-edge-light (høylys) for ull,
+     --dw-w-rain og --dw-w-night (værscene-BAKGRUNNER) for de to andre.
+     Målt 1,01:1 og 1,10:1 mot chip-flaten. Se hovedkommentaren i
+     tokenfila. Skalaen veksler med temaet; skilles innbyrdes på HUE. */
+  mat: 'materialskalaen · plaggbibliotekets kategori-prikker (ull/bomull/vanntett)',
   kart: 'antrekkskartets forbindelseslinjer · tema- OG temperaturvariant',
   fade: 'D4s bunn-maske · én verdi, 31 kopier erstattet (2026-08-06)',
   canvas: 'valørstigen · nivå 0',

@@ -31,7 +31,7 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 | Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6341 | 190 CSSProperties + 51 `style={{` | 340 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
 | Onboarding | `src/screens/OnboardingScreen.tsx` | 1853 | 1 CSSProperties | 223 | 34 | App.tsx lazy()-register | ja | 3 |
 | Påkledning | `src/screens/PaakledningScreen.tsx` | 523 | — | 0 | 0 | App.tsx lazy()-register | nei | 4 |
-| Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 933 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 103 | 5 | App.tsx lazy()-register | ja | 3 |
+| Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 956 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 101 | 4 | App.tsx lazy()-register | ja | 3 |
 | Tog-guide | `src/screens/TogGuideScreen.tsx` | 1222 | 54 CSSProperties + 3 `style={{` | 127 | 11 | App.tsx lazy()-register | ja | 3 |
 | Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1147 | `UkeScreen.css` + 1 CSSProperties | 111 | 0 | App.tsx lazy()-register | ja | 3 |
 | Varm eller kald | `src/screens/VarmEllerKaldScreen.tsx` | 834 | 1 `<style>` + 29 CSSProperties + 4 `style={{` | 91 | 2 | App.tsx lazy()-register | ja | 3 |
@@ -49,7 +49,7 @@ objekter og `style={{`-attributter. 10 av 11 skjermer har ingen CSS-fil.
 | Innstillinger | umigrert (5 legacy-token, 7 rå hex, 340 `--dw-*`) |
 | Onboarding | umigrert (34 legacy-token, 1 rå hex, 223 `--dw-*`) |
 | Påkledning | ingen stilflate — ingenting å migrere |
-| Plaggbibliotek | umigrert (5 legacy-token, 0 rå hex, 103 `--dw-*`) |
+| Plaggbibliotek | umigrert (4 legacy-token, 0 rå hex, 101 `--dw-*`) |
 | Tog-guide | umigrert (11 legacy-token, 0 rå hex, 127 `--dw-*`) |
 | Planlegg / Uke | migrert |
 | Varm eller kald | umigrert (2 legacy-token, 0 rå hex, 91 `--dw-*`) |

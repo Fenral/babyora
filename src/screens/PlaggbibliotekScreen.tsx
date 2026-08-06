@@ -133,11 +133,29 @@ const TOKENS = {
   // ingen enkelt --dw-verdi er lik i begge tema, så aliaset står.
   orange200:       'var(--terracotta-200)',
   orange50:        'var(--dw-accent-surface)',
-  // Material-swatches → lag-alignerte tokens (ull=marigold/mellomlag, bomull=petrolgrå-nøytral, vanntett=dyppetrol/ytterst)
-  // --lag-marigold er TEMA-DELT (lys: --dw-accent, mørk: --dw-accent-300) — se over.
-  wool:            'var(--lag-marigold)',
-  cotton:          'var(--dw-w-cloudy)',
-  waterproof:      'var(--dw-panel)',
+  /* ═══ MATERIALPRIKKENE — EGEN SKALA, IKKE TRE LÅN ══════════════════════
+
+     Sto på --lag-marigold (lagfargen for mellomlag), --dw-w-cloudy og
+     --dw-panel. De to siste er PETROL-FLATER: værfamiliens egen kommentar
+     sier «KUN panelflaten», og --dw-panel er selve instrumentflaten.
+     Flater ment å ligge BAK innhold, brukt som prikker OPPÅ et mørkt kort.
+
+     Målt 2026-08-06: mot chip-flaten #382817 ga cotton (#1E3638) 1,11:1 og
+     waterproof (#113B3E) 1,20:1. Prikkene for Bomull og Vanntett var
+     usynlige. Ull var synlig — men den er tema-DELT, og i lyst tema er det
+     ULL som forsvinner (1,62:1 mot krem). Alle tre var tema-blinde; hvilke
+     som ryker avhenger av temaet, og revisjonen så bare mørkt.
+
+     Begrunnelsen for lag-aligningen var god: prikken skulle si noe om hvor
+     plagget hører hjemme i lagrekken. Men lagfargene er laget for å fylle
+     store flater i antrekkskartet, ikke for 8 px prikker på et kort — og
+     to av dem er ikke lagfarger i det hele tatt, bare petrol som lignet.
+
+     --dw-mat-* veksler med temaet og skilles innbyrdes på HUE. Se
+     hovedkommentaren i design-tokens-v2.css. */
+  wool:            'var(--dw-mat-ull)',
+  cotton:          'var(--dw-mat-bomull)',
+  waterproof:      'var(--dw-mat-vanntett)',
   fontSerif:       'var(--font-serif)',
   fontSans:        'var(--dw-font-ui)',
 } as const;
@@ -614,12 +632,18 @@ export function PlaggbibliotekScreen({
               f.mat === 'ull' ? TOKENS.wool :
               f.mat === 'bomull' ? TOKENS.cotton :
               f.mat === 'vanntett' ? TOKENS.waterproof : null;
-            // Chip-edge-token følger samme lag-aligning som swatch-fargen
-            // (ull=marigold, bomull=petrolgrå, vanntett=dyppetrol).
-            const swatchEdge =
-              f.mat === 'ull' ? 'var(--dw-edge-light)' :
-              f.mat === 'bomull' ? 'var(--dw-w-rain)' :
-              f.mat === 'vanntett' ? 'var(--dw-w-night)' : null;
+            /* KANTEN ER BORTE.
+
+               Her sto en egen kantfarge per materiale, hentet fra ENDA en
+               familie: --dw-edge-light (monterlysets kjerne) for ull,
+               --dw-w-rain og --dw-w-night (værscene-bakgrunner) for de to
+               andre. Tre lån til, oppå de tre i TOKENS over.
+
+               Kanten fantes fordi FYLLET var usynlig — en ring rundt en
+               usynlig prikk gjør prikken synlig igjen. Det er en lapp på et
+               symptom. Nå som fyllet er kalibrert (5,4–10,2:1 mot begge
+               flater), er kanten overflødig, og uten den er prikken det den
+               skal være: én farge som betyr ett materiale. */
 
             return (
               <li key={f.key} style={{ listStyle: 'none' }}>
@@ -660,7 +684,6 @@ export function PlaggbibliotekScreen({
                         height: 8,
                         borderRadius: '50%',
                         background: swatchColor,
-                        border: swatchEdge ? `1px solid ${swatchEdge}` : undefined,
                         boxShadow: isActive ? '0 0 0 2px var(--dw-overlay)' : 'none',
                         flex: 'none',
                       }}

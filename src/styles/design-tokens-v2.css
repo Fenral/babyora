@@ -191,6 +191,36 @@
   --dw-w-snow: #2C4040;    /* snø · lysere, diffus, ikke blå   */
   --dw-w-night: #0C272D;   /* natt · dypest og roligst         */
 
+  /* ============ MATERIALPRIKKENE — skalaen som manglet ============
+
+     Plaggbiblioteket merker hvert plagg med en liten farget prikk for
+     materialet. Fargene ble hentet fra TRE URELATERTE FAMILIER:
+       ull      → --dw-edge-light  (monterlysets kjerne, en høylys-farge)
+       bomull   → --dw-w-rain      (værscene-BAKGRUNN)
+       vanntett → --dw-w-night     (værscene-BAKGRUNN)
+
+     Værfamilien over sier det selv: «KUN panelflaten». Det er flater
+     ment å ligge BAK innhold, ikke prikker oppå et mørkt kort.
+
+     Målt 2026-08-06: mot chip-flaten #382817 gir --dw-w-rain 1,01:1 og
+     --dw-w-night 1,10:1. Prikkene for Bomull og Vanntett er usynlige.
+
+     OG DET ER TEMA-AVHENGIG HVILKE SOM RYKER. Ull (#F2C08A) måler 8,55:1
+     i mørkt tema og 1,62:1 i lyst. De to andre er motsatt: 1,0 i mørkt,
+     13–15 i lyst. Ingen av dem er ødelagt «for seg»; alle tre er
+     tema-blinde, og revisjonen så bare mørkt tema.
+
+     Ingen grep feil av slurv. Det fantes ingen materialskala, så hver
+     og en plukket det som lignet tematisk — samme feilklasse som da
+     manglende chip- og fade-tokens ga tre systemfeil 2026-08-05.
+
+     Skalaen veksler nå med temaet, som alt annet i huset. Innbyrdes
+     skilles de på HUE (varm amber / kremhvit / teal), ikke på lyshet —
+     en prikk skal skilles fra sine naboer, ikke leses som tekst. */
+  --dw-mat-ull: #E2A96B;       /* 6,8:1 chip · 7,7:1 kort      */
+  --dw-mat-bomull: #D9CDB4;    /* 9,0:1 chip · 10,2:1 kort     */
+  --dw-mat-vanntett: #6FA8B8;  /* 5,4:1 chip · 6,1:1 kort      */
+
 
   /* BUNN-FADEN — D4s egen form, endelig med et navn.
 
@@ -555,6 +585,12 @@
     --dw-ink-mid: #7A5B47;         /* 5.65:1 på canvas (var ~#9B7057/3.98 i mock) */
     --dw-ink-low: #6F5140;         /* 6.6:1 · små metadata */
     --dw-ink-demoted: #83624C;     /* utdatert svar · 4.8:1 på krem */
+    /* Materialprikkene, lys utgave. Se hovedkommentaren i :root: skalaen
+       veksler fordi alle tre var tema-blinde — den gamle ull-fargen malte
+       1,62:1 mot krem, de to andre 13–15:1. */
+    --dw-mat-ull: #8A5A2B;       /* 5,7:1 pa krem */
+    --dw-mat-bomull: #6B6152;    /* 5,9:1 pa krem */
+    --dw-mat-vanntett: #2E6A7A;  /* 5,9:1 pa krem */
 
     --dw-accent: #9E5529;          /* = accent-700 · krem på: 4.6:1 */
     --dw-accent-pressed: #8A4A24;
@@ -650,6 +686,12 @@
   --dw-ink-mid: #7A5B47;
   --dw-ink-low: #6F5140;
   --dw-ink-demoted: #83624C;
+  /* Materialprikkene, lys utgave. Se hovedkommentaren i :root: skalaen
+     veksler fordi alle tre var tema-blinde — den gamle ull-fargen malte
+     1,62:1 mot krem, de to andre 13–15:1. */
+  --dw-mat-ull: #8A5A2B;       /* 5,7:1 pa krem */
+  --dw-mat-bomull: #6B6152;    /* 5,9:1 pa krem */
+  --dw-mat-vanntett: #2E6A7A;  /* 5,9:1 pa krem */
 
   --dw-accent: #9E5529;
   --dw-accent-pressed: #8A4A24;
