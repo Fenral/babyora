@@ -242,6 +242,41 @@
      målplattformen. Et token gir verdien, ikke prefikset. */
   --dw-fade-bunn: linear-gradient(to bottom, black 92%, transparent 100%);
 
+  /* BUNN-FADE FOR FLATER SOM RULLER UNDER DEN FLYTENDE TAB-BAREN.
+
+     `--dw-fade-bunn` over slutter ved containerBUNNEN: den når full
+     gjennomsiktighet på 100 %, altså 0 px over kanten. Det er riktig for
+     ark, dialoger og onboarding — flater uten noe under seg. Det er FEIL
+     for de fem fanenivå-skjermene, der baren flyter oppå innholdet ~76 px
+     over containerbunnen med en gjennomskinnelig flate
+     (`--dw-tabbar-surface-blur` = `--dw-raised` ved 78 %). Innholdet
+     krysset barens overkant i full dekkevne og skinte gjennom.
+
+     FUNN 2026-08-06 (produksjonsrevisjonen): «Sove ute i vinter» lå oppå
+     hus-ikonet, og underteksten leste «...pnes om 35 dage...» fordi «Å» lå
+     bak hus-ikonet og «r» bak kalenderikonet. Samme mekanisme målt igjen
+     samme dag på TOG («Slik kler du på» under baren) og Plaggbiblioteket.
+
+     Denne varianten er ugjennomsiktig ned til uttoningen begynner og HELT
+     gjennomsiktig fra barens overkant og ned, regnet ut av barens egne
+     tokens. Innhold forsvinner under baren i stedet for å blande seg med
+     den. Klaringen (`--dw-tabbar-clearance`) er en annen skrue og gjelder
+     fortsatt: den holder siste element over baren I HVILE, mens denne
+     rydder opp UNDER RULLING. */
+  --dw-fade-over-tabbar: linear-gradient(
+    to bottom,
+    black
+      calc(
+        100% - var(--dw-tabbar-height) - var(--dw-tabbar-gap) -
+          env(safe-area-inset-bottom, 0px) - 28px
+      ),
+    transparent
+      calc(
+        100% - var(--dw-tabbar-height) - var(--dw-tabbar-gap) -
+          env(safe-area-inset-bottom, 0px)
+      )
+  );
+
   /* ============ Linjer, radier, skygger ============ */
   --dw-hairline: rgba(241, 233, 218, 0.12);
   --dw-r-panel: 20px;

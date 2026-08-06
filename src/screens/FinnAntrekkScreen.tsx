@@ -14,8 +14,10 @@
  *     buttons). See VerticalGauge.tsx. P10.2 (2026-08-01): each gauge now
  *     fills with its own MATERIAL (`material` prop) — Temperatur
  *     interpolates cold→warm colour from the live value itself (gauge-
- *     material.ts), Vind gets an airy fill (angled top + drag-only gust
- *     streaks), Nedbør gets a water-like fill (meniscus cap + one-shot
+ *     material.ts), Vind gets an airy fill (drag-only gust streaks — the
+ *     angled top edge was removed 2026-08-06: it made the fill's upper
+ *     edge disagree with the marker line it is supposed to meet),
+ *     Nedbør gets a water-like fill (meniscus cap + one-shot
  *     WAAPI slosh on value change). Geometry stays identical across all
  *     three — see VerticalGauge.tsx's own header for the full breakdown.
  *  2. CTA-DRIVEN SCAN: adjusting sliders no longer recomputes the answer

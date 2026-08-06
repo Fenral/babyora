@@ -7,6 +7,44 @@
 
 **46 funn: 4 blokkerende, 10 alvorlige, 32 mindre.**
 
+## Status 2026-08-06, andre økt: alle blokkerende og alle alvorlige er lukket
+
+Bekreftet mot produksjonsbygget, kjøring
+`tools/product-audit/runs/2026-08-06T18-08-01-470Z`.
+
+| Funn | Status |
+| --- | --- |
+| 4 blokkerende | Rettet i første økt, bekreftet i piksler nå |
+| Antrekk — svaret delt i 8 steg | **Ingen endring nødvendig.** Kritikeren fanget `KlePaaOverlay` isolert. `PaakledningScreen` viser hele antrekket som ring + nummerert `<ol>` (`PaakledningScreen.tsx:450`); stepperen er et overlegg man åpner FRA lista. Eierbeslutning står. |
+| Juster — nedbør motsier tallverdien | Rettet. Fyllet er reelt 0 px ved minimum, meniskusen portes på at det finnes fyll, markøren klemmes 10 px inn fra pilleendene. Bonus: vindens skrå overkant fjernet. |
+| Plan — «Dagslinjen» uten tidslinje | Rettet. Viser nå 19:00/20:00/21:00/22:00 med værikon, temperatur og antrekksmerke. Gjentakelsen og det løsrevne kulepunktet er borte. |
+| Plaggbiblioteket — materialprikker | Rettet i første økt, bekreftet: alle tre prikkene lesbare. |
+| Innstillinger — bryteren leste «på» | Rettet i første økt. |
+| TOG — overskrift kolliderer med baren | **Var allerede borte** etter eierbeslutning B+A (commit `e418354`). Nå bekreftet i piksler: ~118 px klaring. |
+| Varm eller kald — handlingsbrikkene | Rettet i første økt, bekreftet: rene etiketter uten pille. |
+| Første vinter — listen renner gjennom baren | Rettet, se nytt funn under. |
+| Første vinter — åpen leksjon lik de låste | Rettet. Anbefalt kort ligger på `--dw-accent-surface` med accent-kant og «ANBEFALT DENNE UKA». |
+| Første vinter — fem av seks tidslåst | Rettet. Låsene er rådgivende: «Anbefalt uke N» i stedet for «Åpnes om N dager», og ingressen sier «du bestemmer tempoet selv». Betalingsmuren er eneste lås igjen. |
+
+### Nytt funn samme dag, funnet i pikslene under etterprøvingen
+
+Bunn-faden var feil på ALLE fanenivå-flater, ikke bare Første vinter.
+`--dw-fade-bunn` er `linear-gradient(to bottom, black 92%, transparent 100%)`
+— den når full gjennomsiktighet først ved containerBUNNEN, altså 0 px over
+kanten, mens den flytende baren begynner ~76 px lenger opp og har en
+gjennomskinnelig flate. Innhold krysset barens overkant i full dekkevne.
+Målt på TOG («Slik kler du på · 2 LAG» lesbar under baren) og på
+Plaggbiblioteket (plaggrutenettet).
+
+Nytt token `--dw-fade-over-tabbar` stopper der baren begynner, forankret i
+barens egne mål. Tatt i bruk på Første vinter, TOG og Plaggbiblioteket.
+`--dw-fade-bunn` er urørt — ark, dialoger og onboarding har ikke noe under
+seg og bruker den fortsatt riktig.
+
+**Gjenstår:** 32 mindre funn, og betalingsmuren er fortsatt urevidert
+(fiksturet gir «Pluss aktiv», så det finnes ingen betalingsmur å fange —
+10 av 11 skjermer dekkes).
+
 > RETTET 2026-08-06: skjermen het «Garderobe» i denne rapporten. Det var
 > MITT navn — workflow-skriptet mitt kalte den det, og kritikeren gjentok
 > det. Skjermen heter **Plaggbiblioteket**. «Min garderobe»

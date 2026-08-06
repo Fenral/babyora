@@ -381,8 +381,11 @@ const styles = {
     // stedet for å tone det ut, og løgnen ble synlig i det øyeblikket noe
     // annet enn ren lerretsfarge lå bak. Formen er husets egen
     // (sheet.css:78, hjem-monter.css:892, kle-paa-stepper.css:164).
-    WebkitMaskImage: 'var(--dw-fade-bunn)',
-    maskImage: 'var(--dw-fade-bunn)',
+    // FUNN 2026-08-06: --dw-fade-bunn slutter ved containerBUNNEN, så
+    // plaggrutenettet rullet lesbart gjennom den flytende baren. Varianten
+    // under stopper der baren begynner — se design-tokens-v2.css.
+    WebkitMaskImage: 'var(--dw-fade-over-tabbar)',
+    maskImage: 'var(--dw-fade-over-tabbar)',
   } satisfies CSSProperties,
 
   // D2 (DoD): PLATEN ER GRIDET, IKKE CELLEN. Det hevede fyllet lå på hver

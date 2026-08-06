@@ -121,8 +121,8 @@
   /* No overflow:hidden here on purpose — the water variant's meniscus
      (below) deliberately pokes a few px ABOVE this box to read as a
      curved surface rather than a flat cut; the outer .fa-gauge-track
-     still clips at the track boundary. The air variant's clip-path
-     already clips itself (and its streak children) on its own. */
+     still clips at the track boundary. The air variant sets its own
+     `overflow: hidden` (below) to keep its streak children inside. */
 }
 
 /* ---- P10.2 material fills ------------------------------------------- */
@@ -131,13 +131,22 @@
    are computed per-value in VerticalGauge.tsx (gauge-material.ts). No
    extra class rules needed here beyond the shared .fa-gauge-fill above. */
 
-/* Vind ('air'): a slightly angled/gusty top edge instead of the flat
-   rounded top, plus 2-3 faint horizontal streak lines. Both are STATIC at
+/* Vind ('air'): 2-3 faint horizontal streak lines. They are STATIC at
    rest — the calm doctrine only lets the streaks move while the user is
    actively dragging (`.is-dragging`, applied by VerticalGauge.tsx on
    pointerdown/up), never idle. */
+/* OVERKANTEN ER VANNRETT (2026-08-06).
+   Den skrå kanten var `clip-path: polygon(0 7px, 100% 0, ...)`: fyllet
+   startet 7 px LENGER NED i venstre kant enn i høyre. Markørlinjen står
+   vannrett på `fraksjon × høyde`, så de to møttes bare helt til høyre, og
+   under venstre halvdel sto et mørkt gap. Ved 2 m/s er fyllet 14,3 px høyt
+   — gapet var halve fyllet.
+   Et instrument som viser en verdi kan ikke ha en overkant som betyr noe
+   annet i hver ende. Luft-materialet bæres av strekene under, ikke av at
+   nivået lyver. `overflow: hidden` overtok den ene jobben klippet også
+   gjorde: å holde strekene innenfor fyllets avrundede hjørner. */
 .fa-gauge-fill--air {
-  clip-path: polygon(0 7px, 100% 0, 100% 100%, 0 100%);
+  overflow: hidden;
 }
 
 .fa-gauge-streak {
@@ -196,10 +205,17 @@
    value (which may have drifted from live weather) and the actual reading
    never blur together — subtle, panel-text-ramp colour, never amber (that
    would read as an interactive affordance, not a reference mark). */
+/* SIDEINNRYKKET ER 6 px, IKKE 4 — samme innrykk som fyllet.
+   Markøren skal ligge nøyaktig så bred som fyllet den markerer nivået på,
+   og de 2 ekstra pikslene er det som gjør at 10 px loddrett innrykk
+   (GAUGE_MARKER_INSET_PX i VerticalGauge.tsx) holder hele bredden innenfor
+   pillens bunnkappe med 1,75 px klaring. sporets-ender-lyver-ikke.test.tsx
+   regner den geometrien fra disse verdiene — endres 6 px her, må testen
+   regne på nytt, og den blir rød hvis den nye verdien ikke går opp. */
 .fa-gauge-baseline {
   position: absolute;
-  left: 4px;
-  right: 4px;
+  left: 6px;
+  right: 6px;
   height: 2px;
   border-radius: 1px;
   background: var(--dw-ink-panel-mid);

@@ -340,6 +340,105 @@
   color: var(--dw-ink-hi);
 }
 
+/* ============ Dagslinjen: selve linjen ============
+   FUNN (ekstern kritikk 2026-08-06): overskriften «Dagslinjen» sto over
+   NØYAKTIG én tekstrad uten et eneste klokkeslett. Mekanismen lå ikke i CSS-en
+   men i radmodellen: uten endringsevents returnerer buildPlanningRailRows()
+   én 'unchanged'-rad (rail-rows.ts:335), og unchangedCopy() (rail-rows.ts:150)
+   faller til «Samme antrekk i de vurderte tidspunktene» fordi dagsrasteret er
+   kl. 06/10/14/18 (today-hours.ts:3) og altså ikke time-for-time. Tidspunktene
+   fantes i data hele tiden — de ble aldri vist.
+
+   Formen er en linjal, ikke enda et kort: ÉN sammenhengende hårstrek (gap: 0)
+   inne i den allerede hevede .planlegg-advice-flaten, med ett punkt per
+   vurdert tidspunkt under seg. Der antrekket faktisk endrer seg skifter
+   linjalsegmentet til aksent — samme §13-rolle som endringsmarkørene i
+   skinnen under. Ingen ny hevet flate: doktrinens D1 er allerede oppfylt av
+   modulflaten punktene ligger på. */
+.planlegg-dagslinje {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(62px, 1fr);
+  gap: 0;
+  margin: 0 0 var(--dw-space-16);
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.planlegg-dagslinje__punkt {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--dw-space-4);
+  padding: var(--dw-space-10) var(--dw-space-2) var(--dw-space-2);
+  border-top: 1px solid var(--dw-hairline);
+  text-align: center;
+}
+
+/* Endringspunktet er det eneste stedet forelderen må handle → aksent, og den
+   ligger på linjalen selv, ikke som enda en etikett. */
+.planlegg-dagslinje__punkt[data-endring='ja'] {
+  border-top-color: var(--dw-accent);
+}
+
+.planlegg-dagslinje__tid {
+  color: var(--dw-ink-mid);
+  font-size: var(--dw-text-meta);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.planlegg-dagslinje__vaer {
+  width: 24px;
+  height: auto;
+  filter: saturate(0.85);
+}
+
+.planlegg-dagslinje__temp {
+  color: var(--dw-ink-hi);
+  font-size: var(--dw-text-body);
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+/* Antrekksmerket: ytterste plagg på tidspunktet, samme vitrine-behandling
+   (D3) og samme stramme dybdestabel som plagg-stripen over — en 40 px brikke
+   skal ikke bære gruppeflatens slør. */
+.planlegg-dagslinje__merke {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--dw-plate);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected);
+}
+
+.planlegg-dagslinje__merke img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.planlegg-dagslinje__merke-bokstav {
+  color: var(--dw-ink-mid);
+  font-size: var(--dw-text-meta);
+  font-weight: 700;
+}
+
+.planlegg-dagslinje__endring {
+  color: var(--dw-accent);
+  font-size: var(--dw-text-meta);
+  font-weight: 640;
+  line-height: 1.2;
+}
+
 /* FJERNET 2026-08-05: `.planlegg-screen .plan-change-rail__preview img
    { background: var(--dw-interactive) }`. Den var en ORDRETT kopi av
    PlanChangeRail.css sin egen regel — ingen overstyring, bare den samme

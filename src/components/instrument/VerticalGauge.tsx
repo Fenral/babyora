@@ -40,11 +40,14 @@
  *    (pure, unit-tested there). This is the one place colour is DATA, not
  *    a `--dw-*` token — see that file's header for the exception + the
  *    explicit distance kept from `--dw-accent` (CTA amber).
- *  - `'air'` (Vind): unchanged petrol fill, plus a slightly angled top
- *    edge (clip-path) and 2-3 faint horizontal "streak" lines — CSS-only,
- *    static at rest. The streaks may shift ONLY while the user is
- *    actively dragging the track (pointer down) via the `.is-dragging`
- *    class below; never a perpetual/idle animation (calm doctrine).
+ *  - `'air'` (Vind): unchanged petrol fill, plus 2-3 faint horizontal
+ *    "streak" lines — CSS-only, static at rest. The streaks may shift ONLY
+ *    while the user is actively dragging the track (pointer down) via the
+ *    `.is-dragging` class below; never a perpetual/idle animation (calm
+ *    doctrine). Den skrå overkanten som sto her (clip-path) er FJERNET
+ *    2026-08-06 — se vertical-gauge.css sin egen kommentar på
+ *    `.fa-gauge-fill--air`: den lot fyllets overkant bety én ting i venstre
+ *    kant og noe annet i høyre, og møtte markørlinjen bare helt til høyre.
  *  - `'water'` (Nedbør): unchanged petrol fill, plus an SVG meniscus cap
  *    at the top edge, a darker-at-the-bottom shading overlay (CSS, not a
  *    new colour), and a ONE-SHOT ~300ms WAAPI "slosh" (slight spring
@@ -119,6 +122,44 @@ function clampFraction(value: number, min: number, max: number): number {
   if (max <= min) return 0;
   return Math.max(0, Math.min(1, (value - min) / (max - min)));
 }
+
+/* ═══ SPORETS ENDER LYVER IKKE (2026-08-06) ══════════════════════════════
+   Målt på Juster-skjermen, nedbørsporet på 0,0 mm/t:
+
+   1. FYLLET VAR IKKE NULL. Høyden sto som `calc(0% - 6px)`. Nettleseren
+      klipper et negativt resultat til 0, så selve fyllet forsvant — men
+      meniskus-SVG-en ble tegnet uansett, og den ligger `top: -4px` med
+      `height: 10px` UTENFOR fyllets boks (vertical-gauge.css sier
+      eksplisitt at den skal få stikke over). Resultatet var en teal kile
+      på ~6 px i bunnen av et spor som leste 0,0. Avlesningen og bildet sa
+      hver sin ting.
+   2. MARKØREN BLE KLIPPET BORT. Den sto `bottom: calc(0% - 1px)`, altså
+      med senter i sporets bunnkant. Sporet er en pille (44 px bredt,
+      22 px radius) med `overflow: hidden`: 1 px over bunnen er sporet bare
+      13,1 px bredt, så en 36 px markør ble redusert til en stubb på ~36 %
+      av bredden — nøyaktig «en tredjedel så bred» som kritikken målte.
+
+   Begge er nå regnet i PIKSLER, ikke i prosent-minus-piksler, fordi
+   `height`-propen gir den faktiske sporhøyden og calc-klippingen skjulte
+   regnestykket. Fyllet blir reelt null ved minimum, og markøren holdes
+   innenfor det avrundede endestykket av innrykket under.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/** Fyllets innrykk fra sporets kanter. MÅ være det samme tallet som
+ *  vertical-gauge.css sin `.fa-gauge-fill { left/right/bottom: 6px }` —
+ *  det er derfor høyden trekker fra nettopp 6 px: fyllets OVERKANT skal
+ *  lande på `fraksjon × høyde`, som er der markøren står.
+ *  sporets-ender-lyver-ikke.test.tsx leser CSS-en og holder de to like. */
+export const GAUGE_FILL_INSET_PX = 6;
+
+/** Markørens minste avstand fra hver sporende, i piksler.
+ *  MÅLT, ikke valgt: markøren er `44/2 − 6 = 16` px halvbred, og pillens
+ *  bunnkappe (radius 22) er først 16 px halvbred 6,9 px over bunnen. Med
+ *  senter på 10 px ligger underkanten på 9 px, der sporet er 17,75 px
+ *  halvbredt — 1,75 px klaring, i begge ender, likt i alle tre sporene.
+ *  Testen regner denne geometrien på nytt fra CSS-verdiene i stedet for å
+ *  gjenta tallet. 10 px er også et trinn på avstandsskalaen. */
+export const GAUGE_MARKER_INSET_PX = 10;
 
 export function VerticalGauge({
   label,
@@ -198,8 +239,15 @@ export function VerticalGauge({
     );
   }, [value, material, reducedMotion]);
 
+  // Se blokken «SPORETS ENDER LYVER IKKE» over: fyllets overkant skal
+  // ligge på `fraksjon × høyde`, og fordi fyllet starter 6 px over sporets
+  // bunn må de 6 pikslene trekkes fra høyden. Ved minimum blir det null —
+  // reelt null, ikke en negativ calc som nettleseren klipper i stillhet.
+  const fillHeightPx = Math.max(0, fraction * height - GAUGE_FILL_INSET_PX);
+  const harFyll = fillHeightPx > 0;
+
   const fillStyle: CSSProperties = {
-    height: `calc(${(fraction * 100).toFixed(2)}% - 6px)`,
+    height: `${fillHeightPx.toFixed(2)}px`,
     background: `linear-gradient(to top, ${gradientBottom}, ${gradientTop})`,
     // App-level reduced-motion override (not just the OS media query —
     // see the prop's own doc comment): fills resize instantly, no eased
@@ -218,9 +266,19 @@ export function VerticalGauge({
   const baselineFraction = baselineValue === null || baselineValue === undefined
     ? null
     : clampFraction(baselineValue, min, max);
+  // Markøren er 2 px høy, så `bottom` er senteret minus 1. Senteret klemmes
+  // inn fra begge ender (se GAUGE_MARKER_INSET_PX) slik at hele bredden
+  // holder seg innenfor pillens avrundede endestykke — før dette ble
+  // markøren spist av bunn-radiusen og sto igjen som en stubb.
+  const markerTop = Math.max(GAUGE_MARKER_INSET_PX, height - GAUGE_MARKER_INSET_PX);
   const baselineStyle: CSSProperties | undefined = baselineFraction === null
     ? undefined
-    : { bottom: `calc(${(baselineFraction * 100).toFixed(2)}% - 1px)` };
+    : {
+      bottom: `${(Math.min(
+        Math.max(baselineFraction * height, GAUGE_MARKER_INSET_PX),
+        markerTop,
+      ) - 1).toFixed(2)}px`,
+    };
   const baselineDescId = useId();
   const hasBaseline = baselineFraction !== null && Boolean(baselineLabel);
 
@@ -280,7 +338,11 @@ export function VerticalGauge({
                 <span className="fa-gauge-streak fa-gauge-streak--3" />
               </>
             )}
-            {material === 'water' && (
+            {/* Meniskusen krever et fyll å ligge på. Den er bevisst plassert
+                UTENFOR fyllets boks (`top: -4px`), så uten denne vakten ble
+                den tegnet også når fyllet var null — en teal kile i bunnen
+                av et spor som leste 0,0 mm/t. */}
+            {material === 'water' && harFyll && (
               <svg
                 className="fa-gauge-meniscus"
                 viewBox="0 0 100 10"

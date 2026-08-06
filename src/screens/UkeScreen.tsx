@@ -140,12 +140,41 @@ type Props = Readonly<{
   onConsumeRequestedPlanView: (token: number) => void;
 }>;
 
+/**
+ * Ett punkt i Dagslinjen — ett faktisk vurdert tidspunkt.
+ *
+ * FUNN (ekstern kritikk 2026-08-06): overskriften «Dagslinjen» sto over
+ * nøyaktig ÉN tekstrad uten et eneste klokkeslett. Mekanismen: når det ikke
+ * finnes endringsevents returnerer buildPlanningRailRows() én eneste
+ * 'unchanged'-rad (rail-rows.ts:335), og unchangedCopy() (rail-rows.ts:145-158)
+ * faller til «Samme antrekk i de vurderte tidspunktene» fordi rasteret vårt
+ * IKKE er time-for-time — selectTodayPlanningHours() velger kl. 06/10/14/18
+ * (today-hours.ts:3), så hasExactHourlyAdjacency() er usann.
+ *
+ * Rasteret finnes altså i data hele veien; det ble bare aldri vist. Hvert
+ * punkt her er ett element i viseModellens allerede kanoniserte forecast
+ * (plan-view-model.ts canonicalForecast → ett punkt per vurdert tidspunkt),
+ * koblet på fasen sitt ferdigstilte antrekk for det samme tidspunktet.
+ */
+type PlanningTimelinePoint = Readonly<{
+  atIso: string;
+  tempC: number;
+  symbolCode: string;
+  /** Ytterste plagg på tidspunktet — antrekksmerket i linjen. */
+  outerGarment: string | null;
+  /** Antall plagg (uten utstyr) på tidspunktet. */
+  garmentCount: number;
+  /** Er dette punktet et faktisk endringspunkt (har en PlanningChangeEvent)? */
+  changed: boolean;
+}>;
+
 type PlanningEvaluation = Readonly<{
   status: 'offline' | 'partial' | 'empty' | 'ready' | null;
   verdict: PlanningVerdictView | null;
   nextAction: string | null;
   events: readonly PlanningChangeEvent[];
   rows: readonly PlanChangeRailRow[];
+  timeline: readonly PlanningTimelinePoint[];
   candidateEventIds: readonly string[];
   forecast: readonly PlanningWeatherRow[];
   contextsByEventId: ReadonlyMap<string, PlannedOutfitContext>;
@@ -159,6 +188,7 @@ const EMPTY_PLANNING_EVALUATION: PlanningEvaluation = Object.freeze({
   nextAction: null,
   events: Object.freeze([]),
   rows: Object.freeze([]),
+  timeline: Object.freeze([]),
   candidateEventIds: Object.freeze([]),
   forecast: Object.freeze([]),
   contextsByEventId: Object.freeze(new Map<string, PlannedOutfitContext>()),
@@ -228,6 +258,22 @@ function shortTimeLabel(atIso: string | undefined): string | null {
   const instant = new Date(atIso);
   if (Number.isNaN(instant.getTime())) return null;
   return heroShortTimeFormatter.format(instant).replace('.', ':');
+}
+
+// Dagslinjens punktetikett. «I dag»-rasteret er klokkeslett (06:00/10:00/
+// 14:00/18:00 fra today-hours.ts), «Uke»-rasteret er ett punkt per døgn —
+// samme liste, to naturlige etiketter. Ingen ny planleggingslogikk, kun
+// formatering av atIso-en punktet allerede bærer.
+const timelineDayFormatter = new Intl.DateTimeFormat('nb-NO', {
+  timeZone: PLAN_TIME_ZONE,
+  weekday: 'short',
+});
+
+function timelinePointLabel(atIso: string, isToday: boolean): string {
+  if (isToday) return shortTimeLabel(atIso) ?? '';
+  const instant = new Date(atIso);
+  if (Number.isNaN(instant.getTime())) return '';
+  return capitalize(timelineDayFormatter.format(instant).replace(/\./gu, ''));
 }
 
 function formatHeroTemp(tempC: number | null | undefined): string {
@@ -608,7 +654,18 @@ function PlanleggData({
         cause: `${conditionLabel(phase.weather.symbolCode)} · føles som ${Math.round(phase.weather.feelsLikeC)}°`,
         transitionContextId: `planning-transition:${phase.weather.atIso}:${fingerprint}`,
       });
-      return [{ phase, point, fingerprint, orderedGarments, equipment }];
+      // Antrekksmerket i Dagslinjen skal vise plagget forelderen ser UTENPÅ
+      // barnet. orderedGarments er lagvis, men tilbehøret ('ekstra': lue,
+      // votter, hals, sokker) ligger ETTER yttertøyet i lista — .at(-1) hadde
+      // gitt et par sokker som «ytterste plagg». Vi går derfor på kategori,
+      // yttertøy først, med lagene innover som fallback.
+      const outerGarment = (['yttertoy', 'mellomlag', 'innerst'] as const)
+        .flatMap((category) => phase.recommendation.layers
+          .filter((layer) => layer.category === category)
+          .flatMap((layer) => layer.items))[0]
+        ?? orderedGarments[0]
+        ?? null;
+      return [{ phase, point, fingerprint, orderedGarments, equipment, outerGarment }];
     });
     if (facts.length < 2) return EMPTY_PLANNING_EVALUATION;
 
@@ -716,12 +773,37 @@ function PlanleggData({
       }];
     }));
 
+    // Dagslinjens raster. viewModel.forecast ER de vurderte tidspunktene
+    // (plan-view-model.ts canonicalForecast beholder kun punkter som ligger i
+    // dekningen, sortert og deduplisert på epoch). Koblingen mot fasen gjøres
+    // på EPOCH, ikke på ISO-strengen: dekningen bærer MET sin egen iso-form
+    // mens fasene bærer toISOString(), og de to strengene kan skrives ulikt
+    // for samme øyeblikk. En strengnøkkel her ville tømt hele linjen stille.
+    const factByEpoch = new Map(facts.map((fact) => [Date.parse(fact.point.atIso), fact]));
+    const changedEpochs = new Set(events.map((event) => Date.parse(event.atIso)));
+    const timeline = Object.freeze(
+      viewModel.forecast.flatMap((row): PlanningTimelinePoint[] => {
+        const epoch = Date.parse(row.atIso);
+        const fact = factByEpoch.get(epoch);
+        if (!fact) return [];
+        return [Object.freeze({
+          atIso: row.atIso,
+          tempC: row.tempC,
+          symbolCode: row.symbolCode,
+          outerGarment: fact.outerGarment,
+          garmentCount: fact.orderedGarments.length,
+          changed: changedEpochs.has(epoch),
+        })];
+      }),
+    );
+
     return Object.freeze({
       status: viewModel.status,
       verdict: viewModel.verdict,
       nextAction: viewModel.nextAction,
       events,
       rows,
+      timeline,
       candidateEventIds: viewModel.candidateEventIds,
       forecast: viewModel.forecast,
       contextsByEventId: Object.freeze(new Map(contextEntries)),
@@ -868,6 +950,17 @@ function PlanleggData({
     && !isSoonView
     && !isAccessGatedView
     && planningEvaluation.hasEvaluatedPlan;
+  // Skinnen viser fra nå KUN de faktiske endringene. 'unchanged'-radene sa
+  // det samme som setningen rett over dem, i systemspråk («Samme antrekk i de
+  // vurderte tidspunktene», rail-rows.ts:150) — og de tidspunktene er nå
+  // synlige, navngitte punkter i linjen under overskriften. Radene ville altså
+  // vært tredje gangs gjentakelse av samme faktum. Filtreringen ligger her og
+  // ikke i planleggingslaget: modellen skal fortsatt bære hele radlisten.
+  const railChangeRows = useMemo(
+    () => planningEvaluation.rows.filter((row) => row.type === 'change'),
+    [planningEvaluation.rows],
+  );
+  const timelinePoints = planningEvaluation.timeline;
   const forecastRows = planningEvaluation.hasEvaluatedPlan
     ? planningEvaluation.forecast
     : tab === 'tenday'
@@ -1092,15 +1185,84 @@ function PlanleggData({
             )}
           </div>
 
-          <section className="planlegg-screen__rail" aria-labelledby="planlegg-rail-title">
-            <h2 id="planlegg-rail-title" style={changeRailHeadStyle}>Dagslinjen</h2>
-            <PlanChangeRail
-              rows={planningEvaluation.rows}
-              selectedEventId={selectedEventId}
-              onSelect={setSelectedEventId}
-              onOpenOutfit={openPlannedOutfit}
-            />
-          </section>
+          {/* En overskrift som lover en linje MÅ vise en linje. Derfor er
+              hele seksjonen betinget av at rasteret faktisk finnes: uten
+              punkter står den presise setningen over («Ingen endringer frem
+              til kl. 18:00») alene, uten en overskrift som lover mer. */}
+          {(timelinePoints.length > 0 || railChangeRows.length > 0) && (
+            <section className="planlegg-screen__rail" aria-labelledby="planlegg-rail-title">
+              <h2 id="planlegg-rail-title" style={changeRailHeadStyle}>
+                {isTodayView ? 'Dagslinjen' : 'Dag for dag'}
+              </h2>
+              {timelinePoints.length > 0 && (
+                <ol
+                  className="planlegg-dagslinje"
+                  aria-label={isTodayView
+                    ? 'Tidspunktene Babyora har vurdert i dag'
+                    : 'Dagene Babyora har vurdert'}
+                >
+                  {timelinePoints.map((point) => {
+                    const label = timelinePointLabel(point.atIso, isTodayView);
+                    const weatherIcon = getWeatherIcon(point.symbolCode);
+                    const garmentName = point.outerGarment
+                      ? displayNameForDbString(point.outerGarment)
+                      : null;
+                    const garmentImage = point.outerGarment
+                      ? getGarmentImage(garmentIdFor(point.outerGarment))
+                      : null;
+                    return (
+                      <li
+                        key={point.atIso}
+                        className="planlegg-dagslinje__punkt"
+                        data-endring={point.changed ? 'ja' : undefined}
+                      >
+                        <time className="planlegg-dagslinje__tid" dateTime={point.atIso}>
+                          {label}
+                        </time>
+                        {weatherIcon && (
+                          <img
+                            className="planlegg-dagslinje__vaer"
+                            src={weatherIcon}
+                            alt=""
+                            draggable={false}
+                          />
+                        )}
+                        <span className="planlegg-dagslinje__temp">
+                          {`${formatHeroTemp(point.tempC)}°`}
+                        </span>
+                        <span className="planlegg-dagslinje__merke" title={garmentName ?? undefined}>
+                          {garmentImage ? (
+                            <img src={garmentImage} alt="" draggable={false} />
+                          ) : (
+                            <span className="planlegg-dagslinje__merke-bokstav" aria-hidden="true">
+                              {garmentName ? garmentName.charAt(0).toUpperCase() : '–'}
+                            </span>
+                          )}
+                        </span>
+                        {point.changed && (
+                          <span className="planlegg-dagslinje__endring">Endring</span>
+                        )}
+                        <span className="hjm-sr-only">
+                          {`${label}: ${formatHeroTemp(point.tempC)} grader, `
+                            + `${point.garmentCount} plagg`
+                            + (garmentName ? `, ytterst ${garmentName}` : '')
+                            + (point.changed ? ', antrekket endres her' : '')}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+              {railChangeRows.length > 0 && (
+                <PlanChangeRail
+                  rows={railChangeRows}
+                  selectedEventId={selectedEventId}
+                  onSelect={setSelectedEventId}
+                  onOpenOutfit={openPlannedOutfit}
+                />
+              )}
+            </section>
+          )}
         </section>
       )}
 

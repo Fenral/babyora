@@ -6,10 +6,20 @@
  * tables.ts/modifiers.ts) — se `kilde` per leksjon. Helsefaglige tall er
  * ALDRI oppfunnet; alle er sporet til kilde (Fable-QA 2026-07-11).
  *
- * Drip-modell: programmet starter automatisk første gang brukeren åpner
- * program-skjermen (start-dato i localStorage). Leksjon N låses opp
- * (N-1) uker etter start. Leksjon 1 er alltid gratis (teaser); leksjon 2-8
- * krever Babyora Pluss (gating i UI via useAccess — IKKE her; datalaget er
+ * Ukerytme: programmet starter automatisk første gang brukeren åpner
+ * program-skjermen (start-dato i localStorage), og foreslår én leksjon i uka.
+ *
+ * EIERVEDTAK 2026-08-06 — RYTMEN ER RÅDGIVENDE, IKKE SPERRENDE.
+ * Tidligere låste dette laget leksjon N til (N-1) uker etter start, og UI-et
+ * skrev «Åpnes om 35 dager» på innhold som lå ferdig i appen — inkludert den
+ * mest sikkerhetsnære leksjonen (Sjekk nakken, låst i 28 dager). Ingenting
+ * forelderen har tilgang til skal holdes tilbake på klokke. Derfor finnes det
+ * ikke lenger en funksjon her som svarer «låst»: `anbefaltUke()` sier hvor i
+ * det anbefalte tempoet forelderen er, og UI-et bruker det til å UTHEVE én
+ * leksjon — aldri til å stenge de andre.
+ *
+ * Leksjon 1 er alltid gratis (teaser); leksjon 2-8 krever Babyora Pluss
+ * (produktgrensen, gating i UI via useAccess — IKKE her; datalaget er
  * tilgangs-agnostisk).
  */
 import type { GuideTarget } from '../types/nav';
@@ -241,7 +251,7 @@ export const LESSONS: readonly Lesson[] = [
   },
 ] as const;
 
-/* ── Drip-modell ─────────────────────────────────────────────────────────── */
+/* ── Anbefalt tempo (rådgivende) ─────────────────────────────────────────── */
 
 const START_KEY = 'babyora:vinterprogram:start';
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -262,22 +272,16 @@ export function ensureProgramStart(): number {
   }
 }
 
-export type LessonAvailability =
-  | { state: 'open' }
-  | { state: 'drip'; opensInDays: number };
-
 /**
- * Drip-tilgjengelighet for en leksjon (uavhengig av Pluss-gating — den
- * håndteres i UI-laget): leksjon N åpner (N-1) uker etter program-start.
+ * Hvilken uke i programmet forelderen er i NÅ (1..8) etter det anbefalte
+ * tempoet på én leksjon i uka.
+ *
+ * Dette er den ENESTE tidsavhengige funksjonen i modulen, og den svarer
+ * «hvor er du», ikke «hva får du lov til». Skjermen bruker tallet til å
+ * utheve ett kort og til å skrive «Anbefalt uke N» på dem som ligger foran;
+ * ingen leksjon stenges. Se filhodet (eiervedtak 2026-08-06).
  */
-export function lessonAvailability(week: number, startedAt: number, now: number = Date.now()): LessonAvailability {
-  const opensAt = startedAt + (week - 1) * WEEK_MS;
-  if (now >= opensAt) return { state: 'open' };
-  const days = Math.max(1, Math.ceil((opensAt - now) / (24 * 60 * 60 * 1000)));
-  return { state: 'drip', opensInDays: days };
-}
-
-/** Antall leksjoner som er drip-åpne (til «Uke X av 8»-progresjonen). */
-export function openLessonCount(startedAt: number, now: number = Date.now()): number {
-  return LESSONS.filter((l) => lessonAvailability(l.week, startedAt, now).state === 'open').length;
+export function anbefaltUke(startedAt: number, now: number = Date.now()): number {
+  const uker = Math.floor((now - startedAt) / WEEK_MS);
+  return Math.min(LESSONS.length, Math.max(1, uker + 1));
 }

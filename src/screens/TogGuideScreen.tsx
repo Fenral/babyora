@@ -364,10 +364,15 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     overflowY: 'auto',
     overflowX: 'hidden',
     WebkitOverflowScrolling: 'touch',
-    // D4: scroll kommuniseres med bunn-fade, ikke med hardt klipp.
-    // Husmønsteret (hjem-monter.css, sheet.css, kle-paa-stepper.css).
-    WebkitMaskImage: 'var(--dw-fade-bunn)',
-    maskImage: 'var(--dw-fade-bunn)',
+    /* D4: scroll kommuniseres med bunn-fade, ikke med hardt klipp.
+       FUNN 2026-08-06 (skjermbilde fra produksjonsbygget): her sto
+       --dw-fade-bunn, som er ugjennomsiktig helt ned til containerBUNNEN.
+       Neste seksjonsoverskrift, «Slik kler du på … 2 LAG», rullet derfor
+       rett gjennom den flytende baren og lå lesbar under den. Klaringen
+       under holder siste element over baren I HVILE; denne masken rydder
+       opp UNDER RULLING. Se --dw-fade-over-tabbar i design-tokens-v2.css. */
+    WebkitMaskImage: 'var(--dw-fade-over-tabbar)',
+    maskImage: 'var(--dw-fade-over-tabbar)',
     /* BUNN-LUFTEN MÅ KLARERE TAB-BAREN, IKKE BARE SAFE-AREA.
        «40px + safe-area» er avstanden til skjermKANTEN. Tab-baren FLYTER
        over innholdet og er ~76 px høy med sin egen klaring, så 40 px lot
