@@ -1,6 +1,18 @@
 # EIERPORT 1 — beslutningsgrunnlag
 
-**Anbefaling:** Ta K3 og en kontraktreparert K0 videre. Ikke bruk penger eller tid på foto/Higgsfield før en målgruppetest viser at native-demoen mangler noe målbart.
+**Eierstatus 2026-08-07:** GODKJENT.
+
+Eier godkjente K3 + kontraktreparert K0 som finalister, reelt valgfritt navn og håndhevet 0–24 måneder. Foto og Higgsfield holdes ute av neste fase uten nye brukerbevis.
+
+## Siden som vises når appen åpnes
+
+Repoet har tre ulike åpningssituasjoner som ikke skal blandes:
+
+1. **System/launch:** dagens espresso-/kremflate med venstrejustert Babyora-ordmerke beholdes. Den har ingen CTA, maskot, foto eller video og slipper når første ekte React-frame er malt. Den skal ikke bli en intro- eller reklameside.
+2. **Ny bruker:** første interaktive side er finalisten K0 eller K3. K3 viser den native minidemonstrasjonen direkte på «Hvem kler vi på?»; det legges ikke inn et ekstra velkomststeg.
+3. **Returnerende bruker:** går direkte til Hjem. Onboarding eller K3-demo skal ikke vises igjen.
+
+Dermed er testforløpet: `launch → K0/K3 for ny bruker`, mens normal bruk er `launch → Hjem`.
 
 ## Repoet viser
 
@@ -44,10 +56,10 @@
 
 K3 86/100 (±8), K0 68 (±9), K2 63 (±12), K1 61 (±11). Dette er ekspertproxy; brukerdata kan flytte rekkefølgen. K0 kan fortsatt vinne dersom maskotens varme oppveier sen produktforklaring når kontrollfeilene er reparert.
 
-## Eierens beslutninger — maks tre
+## Eierens beslutninger — avgjort 2026-08-07
 
-1. **Godkjenn K3 + reparert K0 som finalister.** Anbefalt svar: ja.
-2. **Godkjenn at navn blir reelt valgfritt og at 0–24 måneder håndheves i begge testfinalister.** Anbefalt svar: ja.
-3. **Hold foto og Higgsfield ute av neste fase med mindre eieren bevisst overstyrer evidenskravet.** Anbefalt svar: ja.
+1. **K3 + reparert K0 som finalister:** GODKJENT.
+2. **Reelt valgfritt navn og 0–24 måneder i begge testfinalister:** GODKJENT.
+3. **Foto og Higgsfield ut uten nye brukerbevis:** GODKJENT.
 
-Videre arbeid stopper her til eieren har valgt.
+EIERPORT 1 er lukket. Videre arbeid kan avgrenses til K0/K3 uten produksjonsmedia.

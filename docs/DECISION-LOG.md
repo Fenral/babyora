@@ -2,6 +2,30 @@
 
 This log records current product decisions that override older exploratory material.
 
+## 2026-08-07
+
+### Onboarding EIERPORT 1: K0 og K3 er finalister
+
+**Decision:** Eier godkjenner K3 «Svaret først» og en kontraktreparert K0
+«Dagens kontroll» som onboarding-finalister. K3 viser en native
+minidemonstrasjon av vær + alder + situasjon → ordnet lagliste på første
+interaktive skjerm. K0 beholder dagens mediefrie maskotretning som kontroll.
+
+Navn skal være reelt valgfritt, og 0–24 måneder skal håndheves i begge
+testfinalister. Autentisk foto og Higgsfield holdes ute av neste fase med
+mindre nye brukerbevis viser en målbar mangel i K0/K3.
+
+Den eksisterende system-/launch-flaten er ikke en kandidat i bake-offen. Den
+beholdes som en kort espresso-/kremflate med ordmerke og uten CTA, maskot,
+foto, video eller kunstig venting. Ny bruker går derfra til K0/K3;
+returnerende bruker går direkte til Hjem.
+
+**Reason:** Repo-audit, 16 visuelt inspiserte Mobbin-referanser og den isolerte
+K0–K3-mocken ga ingen evidens for at foto eller generert motion slår en native
+produktdemo. K3 viser den faktiske produktmodellen tidligere, mens K0 er den
+nødvendige kontrollen. Launch-flaten har allerede én teknisk jobb: å hindre
+tom/hvit frame til appen har malt ekte UI.
+
 ## 2026-07-24
 
 ### Godkjent GSD-arbeidsliste gjennomføres autonomt
