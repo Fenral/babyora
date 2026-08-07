@@ -61,7 +61,7 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "SPIKEN BESTÅTT PÅ iOS (a+b+c). Ambient levering er teknisk mulig — P3/P4 kan ikke lenger avvises som ugjennomførbare. GJENSTÅR PÅ EIER: (1) steg 6 (send 15-min-brief, sjekk at nytt råd slår et utløpt) — liten sjekk, sperrer ingenting. (2) REKRUTTER 5-8 FORELDRE — dette er nå den ENESTE gjenstående blokkeringen for retningsvalget i fase 12. Laben: https://babyora-lab.vercel.app/, protokoll i docs/design-lab/foreldretest/. (3) EIERVALG Android-keystore (gjenbruk Ryddys eller ny) — sperrer ikke spiken. (4) Fortsatt åpent: PostHog-nøkkel, fagvalidering P2.",
+  "nextAction": "(a) og (c) bevist på iOS: widgeten degraderte av seg selv 02:12→02:14, og broen leverer («Sendt: spike-…»). GJENSTÅR: trykk på widgeten og se om panelet viser «Siste deep link inn: babyora://brief/spike-…» — står det fortsatt «(ingen mottatt)» etter et trykk, er deep link-ruting en reell feil å diagnostisere. Deretter: REKRUTTER 5-8 FORELDRE (eneste blokkering for retningsvalget), Android-keystore-valg, PostHog-nøkkel, fagvalidering P2.",
   "labLenke": {
     "url": "https://babyora-lab.vercel.app/",
     "vercelProsjekt": "babyora-lab",
@@ -126,18 +126,23 @@
       "resultat": "PASS — KJERNEBEVISET. Rådet gjaldt til 02:12; kl. 02:14 hadde begge widgetene selv skiftet til «Må beregnes på nytt» + «Rådet gjaldt til 02:12» + fallback-linje. Påstand (a) bevist på iOS."
     },
     {
-      "dato": "2026-08-07",
+      "dato": "2026-08-07 02:29",
+      "bygg": 85,
+      "steg": "3 (skjermbevis)",
+      "resultat": "PASS dokumentert: panelet viser «Sendt: spike-1786062553411 — utløper kl. 02:44:13» (build 83 sa «native bro utilgjengelig»)."
+    },
+    {
+      "dato": "2026-08-07 02:29",
       "bygg": 85,
       "steg": 5,
-      "resultat": "PASS (eierrapportert, ikke skjermbilde) — deep link fra widget fungerte. Påstand (b) bevist på iOS."
+      "resultat": "ÅPEN — panelet viser «Siste deep link inn: (ingen mottatt)». Claude loggførte først PASS basert på eierens «Funka»; skjermbildet motbeviste det. Rettet."
     }
   ],
   "spikeStatus": {
     "paastandA": "PASS på iOS — skjermbilde 02:14, råd utløpt 02:12, begge widgetfamilier",
-    "paastandB": "PASS på iOS — eierrapportert",
-    "paastandC": "PASS på iOS — snapshot-innhold i widgeten",
-    "android": "ikke prøvd; bygget stopper på manglende keystore (eierbeslutning)",
-    "konklusjon": "SPIKEN ER BESTÅTT PÅ iOS. Ambient levering (P3/P4) er teknisk mulig.",
-    "konsekvens": "P3/P4 kan ikke avvises som umulige i fase 12 — de må vurderes på om foreldre vil ha dem."
+    "paastandB": "ÅPEN — «(ingen mottatt)» kl. 02:29; avgjøres av ett trykk på widgeten",
+    "paastandC": "PASS på iOS — «Sendt: spike-…» + snapshot-innhold i widgeten",
+    "android": "ikke prøvd; manglende keystore (eierbeslutning)",
+    "konklusjon": "2 av 3 påstander bevist på iOS. (a) — det spiken fantes for — er inne. Spiken er IKKE formelt bestått før (b) er avklart."
   }
 }

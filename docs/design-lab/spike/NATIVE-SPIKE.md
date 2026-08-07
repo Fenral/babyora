@@ -183,10 +183,19 @@ nytt ved neste `onUpdate`/push, ikke ved boot), og selve brief-innholdet (P3s
 | 2026-08-07 01:39 | 3 · Sett test-snapshot (build 83) | **FAIL — reell feil funnet.** Panelet meldte «Bygget, men native bro utilgjengelig (web?)». Årsak: Capacitor 8 registrerer kun klasser fra `packageClassList`; app-lokale plugins må registreres eksplisitt. Rettet i build 85 (se under). |
 | 2026-08-07 ~02:10 | 3 · Sett test-snapshot (build 85) | **PASS.** Widgeten viste snapshot-innhold («Testbarn», antrekkslista) — det kan bare komme fra App Group-fila broen skrev. **Kontrakt (c) er dermed bevist**, og plugin-registreringen i build 85 virker. |
 | 2026-08-07 02:14 | 4 · Utløpsdegradering — **KJERNEBEVISET** | **PASS.** Rådet gjaldt til 02:12. Kl. 02:14 hadde BEGGE widgetene (small + medium) på egen hånd skiftet til «Må beregnes på nytt» + «Rådet gjaldt til 02:12» + «Sist: ullsett tynt, ull-mellomlag, kjøredress» + «Trykk for å oppdatere». **Påstand (a) bevist på iOS.** |
-| 2026-08-07 | 5 · Deep link | **PASS — eierrapportert.** Eier bekreftet at trykk på widgeten fungerte. Merk kildetypen: dette er eierens observasjon på enhet, ikke et skjermbilde i arkivet — svakere dokumentert enn steg 3 og 4, men det er nettopp det protokollen ber om av et menneske. **Påstand (b) bevist på iOS.** |
-| | 6 · Re-aktivering | venter (nytt råd skal slå et utløpt) |
+| 2026-08-07 02:29 | 3 · Sett test-snapshot (skjermbevis) | **PASS, nå dokumentert.** Panelet viser «Status: **Sendt:** spike-1786062553411 — utløper kl. 02:44:13». Sammenlign build 83, som sa «native bro utilgjengelig». Plugin-registreringen virker. |
+| 2026-08-07 02:29 | 5 · Deep link | **IKKE BESTÅTT ENNÅ.** Panelet viser «Siste deep link inn: **(ingen mottatt)**». |
+| | 6 · Re-aktivering | pågår (15-min-brief sendt 02:29, utløper 02:44) |
 
-### Spikens konklusjon
+> **Rettelse, ført opp fordi den er lærerik.** Claude loggførte først steg 5
+> som PASS på grunnlag av eierens ene ord «Funka», og skrev at spiken var
+> bestått. Skjermbildet like etter viste «(ingen mottatt)». Ordet gjaldt
+> sendingen (steg 3/6), ikke deep linken. Feilen var å behandle et
+> tvetydig ja som bevis for den påstanden Claude ønsket å lukke — nøyaktig
+> det bevisreglene i dette prosjektet finnes for å hindre. Eierrapport er
+> gyldig bevis, men bare når det er utvetydig hvilken påstand den gjelder.
+
+### Spikens status
 
 Tolkningsregelen: BESTÅTT hvis (a), (b) og (c) alle består på minst én
 plattform, og degraderingen i steg 4 skjedde uten app-åpning.
@@ -194,17 +203,19 @@ plattform, og degraderingen i steg 4 skjedde uten app-åpning.
 | Påstand | iOS | Grunnlag |
 |---------|-----|----------|
 | (a) degradering ved utløp uten app-åpning | **PASS** | Skjermbilde 02:14, råd utløpt 02:12, begge widgetfamilier |
-| (b) deep link lander riktig | **PASS** | Eierrapportert |
-| (c) app↔widget-kontrakten holder | **PASS** | Skjermbilde: snapshot-innhold i widgeten |
+| (b) deep link lander riktig | **ÅPEN** | Panelet: «(ingen mottatt)» kl. 02:29 |
+| (c) app↔widget-kontrakten holder | **PASS** | Skjermbilde: «Sendt: spike-…» + snapshot-innhold i widgeten |
 
-**SPIKEN ER BESTÅTT PÅ iOS.** Ambient levering (P3/P4) er teknisk mulig
-på den plattformen som betyr mest for målgruppa. Android er ikke prøvd —
-bygget stopper på en manglende keystore, som er en eierbeslutning, ikke en
-teknisk sperre.
+To av tre er inne, og det viktigste av dem — (a) — er det spiken fantes
+for. (b) er uavklart: enten er widgeten ikke trykket på ennå, eller så
+lander ikke `babyora://brief/<id>` i appen. Skillet avgjøres av ett trykk.
 
-Konsekvens for retningsvalget (fase 12): P3 og P4 kan ikke lenger avvises
-med «det lar seg ikke gjøre». De må vurderes på om foreldre faktisk vil ha
-dem — det er foreldretestens jobb, ikke spikens.
+Android er ikke prøvd — bygget stopper på en manglende keystore, som er en
+eierbeslutning, ikke en teknisk sperre.
+
+Konsekvens for retningsvalget (fase 12): P3 og P4 kan ikke avvises med at
+ambient levering ikke lar seg gjøre — (a) og (c) er bevist. Faller (b),
+rammer det navigasjonen fra widget til app, ikke leveringsmekanismen.
 
 Fortsatt utenfor spikens rekkevidde (Sols avgrensning, uendret): lock
 screen-widget, design, i18n, WorkManager-persistens over reboot på
