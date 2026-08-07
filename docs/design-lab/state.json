@@ -61,7 +61,7 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "iOS-bygget (v1.0.12, build 83) er PÅ TESTFLIGHT og maskinelt verifisert til widgetnivå. VENTER PÅ EIER: (1) kjør enhetsprotokollen i docs/design-lab/spike/NATIVE-SPIKE.md på iPhone — steg 3 (degradering ved utløp uten app-åpning) er kjernebeviset. (2) Rekrutter 5–8 foreldre; laben ligger på https://babyora-lab.vercel.app/. (3) EIERVALG for Android: keystore gjenbrukes fra Ryddy eller lages ny — sperrer ikke spiken. Sperret til (1)+(2): retningsvalg (fase 12).",
+  "nextAction": "Build 85 (1.0.14) er på TestFlight med broen registrert og verifisert i artefakten. VENTER PÅ EIER: (1) oppdater i TestFlight til 1.0.14 og GJENTA steg 3-6 i enhetsprotokollen — steg 4 (degradering ved utløp uten app-åpning) er kjernebeviset. (2) Rekrutter 5-8 foreldre; laben ligger på https://babyora-lab.vercel.app/. (3) EIERVALG Android-keystore. Sperret til (1)+(2): retningsvalg (fase 12).",
   "labLenke": {
     "url": "https://babyora-lab.vercel.app/",
     "vercelProsjekt": "babyora-lab",
@@ -80,11 +80,12 @@
     "reversibelt": true
   },
   "iosBygg": {
-    "bygg": "6a74e7f3052b204a9a5eb450",
-    "tag": "v1.0.12",
-    "buildnummer": 83,
-    "status": "finished — 19/19 steg, publisert til TestFlight",
-    "verifisert": "tools/ipa-bevis.ps1 mot nedlastet IPA: widget embeddet, begge profiler har group.no.klemeg.app, babyora-scheme i Info.plist"
+    "bygg": "6a751e80052b204a9a5f1afb",
+    "tag": "v1.0.14",
+    "buildnummer": 85,
+    "versjonsnavn": "1.0.14",
+    "status": "finished — publisert til TestFlight",
+    "verifisert": "ipa-bevis.ps1 6/6 + ipa-bro-bevis.ps1 7/7; sistnevnte feiler 2/7 mot build 83 (ikke-vakuøs)"
   },
   "androidBygg": {
     "bygg": "6a74ecea5fa8ce34a92f94aa",
@@ -92,5 +93,25 @@
     "aarsak": "No keystores with reference 'klemeg_keystore'",
     "sperrerSpiken": false,
     "eierbeslutning": "gjenbruk Ryddys keystore eller lag ny for Babyora — binder Play-identiteten permanent"
-  }
+  },
+  "enhetsfunn": [
+    {
+      "dato": "2026-08-07",
+      "bygg": 83,
+      "steg": "1-2",
+      "resultat": "PASS — widget i galleriet (small+medium), tomtilstand vises"
+    },
+    {
+      "dato": "2026-08-07",
+      "bygg": 83,
+      "steg": 3,
+      "resultat": "FAIL — «native bro utilgjengelig»; Capacitor 8 registrerer kun packageClassList, app-lokalt plugin manglet registerPluginInstance. Rettet i build 85 (22d4baa)."
+    },
+    {
+      "dato": "2026-08-07",
+      "bygg": 84,
+      "steg": "-",
+      "resultat": "Byggfeil: Apples sert-tak (2), opprydningen slettet bare ett. Rettet (028b843)."
+    }
+  ]
 }

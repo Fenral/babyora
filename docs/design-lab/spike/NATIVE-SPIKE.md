@@ -180,10 +180,33 @@ nytt ved neste `onUpdate`/push, ikke ved boot), og selve brief-innholdet (P3s
 |------|------|----------|
 | 2026-08-07 01:34 | 1 · Legg widget (iOS) | **PASS.** «Babyora» fantes i widgetgalleriet. Eier la på BÅDE small og medium på samme hjemskjerm — bredere enn protokollen ba om, og begge rendret. Bekrefter at `BabyoraWidgetExtension.appex` ble embeddet og at begge familiene i `supportedFamilies` faktisk vises. |
 | 2026-08-07 01:34 | 2 · Tomtilstand | **PASS.** Begge widgetene viser «Åpne Babyora for dagens antrekk». |
-| | 3 · Sett test-snapshot | venter |
+| 2026-08-07 01:39 | 3 · Sett test-snapshot (build 83) | **FAIL — reell feil funnet.** Panelet meldte «Bygget, men native bro utilgjengelig (web?)». Årsak: Capacitor 8 registrerer kun klasser fra `packageClassList`; app-lokale plugins må registreres eksplisitt. Rettet i build 85 (se under). |
+| | 3 · Sett test-snapshot (build 85) | venter — **kjør på nytt** |
 | | 4 · Utløpsdegradering (kjernebeviset) | venter |
 | | 5 · Deep link | venter |
 | | 6 · Re-aktivering | venter |
+
+### Build 85 (tag v1.0.14) — hva som er maskinelt verifisert før enheten
+
+Bygg 84 (v1.0.13) feilet på signering: sertifikatpoolen hos Apple sto på
+taket og opprydningen slettet bare ett cert. Rettet — se
+`tools/test-sertloop.sh`.
+
+Build 85 er grønn i alle steg, og artefakten er åpnet og kontrollert:
+
+- `tools/ipa-bevis.ps1` — 6/6: widget embeddet, `group.no.klemeg.app` i
+  BEGGE provisioning-profiler, `babyora`-scheme i Info.plist.
+- `tools/ipa-bro-bevis.ps1` (NY) — 7/7: `BabyoraViewController` og
+  `registerPluginInstance` er kompilert inn, og det **kompilerte**
+  storyboardet i bundlen peker på `BabyoraViewController`, ikke på
+  Capacitors egen klasse.
+
+Ikke-vakuøsitet: samme skript kjørt mot build 83s IPA feiler med 2 av 7 —
+nøyaktig de to påstandene som skiller det ødelagte bygget fra det rettede.
+Kontrollen kan altså se forskjell på de to, ikke bare si ja.
+
+Versjonsnavnet er også riktig for første gang: build 85 heter **1.0.14**
+(build 83 het 1.0.11 uansett tag, fordi versjonen var hardkodet).
 
 Merk til tolkningen: tomtilstanden i steg 2 beviser at widgeten kjører og
 tegner, men **ikke** at App Group-lesingen virker — den fallbacken vises
