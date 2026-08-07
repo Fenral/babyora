@@ -32,7 +32,12 @@ const PROXY =
   (import.meta.env as Record<string, string | undefined>).VITE_FORECAST_PROXY ?? '/api/forecast';
 
 const CACHE_KEY_PREFIX = 'metno:';
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 time per met.no-anbefaling
+/* Én time per met.no-anbefaling.
+   Eksportert 2026-08-07: widgetens utløp må bruke SAMME tall. Et råd er
+   gyldig nøyaktig så lenge værdataene det hviler på regnes som ferske —
+   to konstanter ville drevet fra hverandre. Se
+   src/lib/widget/use-widget-snapshot.ts. */
+export const CACHE_TTL_MS = 60 * 60 * 1000;
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const MAX_STALE_AGE_MS = 6 * 60 * 60 * 1000;
 const MAX_SOURCE_AGE_MS = 6 * 60 * 60 * 1000;

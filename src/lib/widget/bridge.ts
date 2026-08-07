@@ -85,8 +85,19 @@ export async function pushWidgetSnapshot(snapshot: WidgetSnapshot, nowMs: number
  * - Forrige snapshot > 60 min gammel
  * - Snapshot innhold har endret seg meningsfullt (layerCount,
  *   layerBadgeBand, conditionKey, activity, eller topGarments-set)
- * - v2 (native spike): brief-identiteten har endret seg (briefId,
- *   versjon eller expiresAtISO) — en ny/reutstedt brief skal alltid ut
+ * - v2: brief-IDENTITETEN har endret seg (briefId) — en ny brief skal ut.
+ *
+ *   ENDRET 2026-08-07: klausulen sammenlignet også `versjon` og
+ *   `expiresAtISO`. Begge er tidsstemplet ved utstedelse og flytter seg
+ *   derfor ved HVERT kall. Da så alle snapshots nye ut, strupingen var satt
+ *   ut av spill, og widgeten ville blitt skrevet på hver eneste
+ *   innholdssjekk. Et bevegelig utløp er ikke en grunn til å vekke
+ *   widgeten; en ny brief er. `briefId` utledes av innholdet, så den er
+ *   stabil så lenge forelderen ser det samme.
+ *
+ *   60-minutters ferskhetsregelen over sørger uansett for at utløpet
+ *   fornyes: en brief som varer én time kan ikke bli stående lenger enn
+ *   det uten at staleness-grenen fyrer.
  */
 export function shouldPushSnapshot(next: WidgetSnapshot, nowMs: number): boolean {
   const last = readLast();
@@ -100,8 +111,6 @@ export function shouldPushSnapshot(next: WidgetSnapshot, nowMs: number): boolean
     a.activity !== next.activity ||
     a.topGarments.join('|') !== next.topGarments.join('|') ||
     a.toppTilTaa.join('|') !== next.toppTilTaa.join('|') ||
-    a.briefId !== next.briefId ||
-    a.versjon !== next.versjon ||
-    a.expiresAtISO !== next.expiresAtISO
+    a.briefId !== next.briefId
   );
 }

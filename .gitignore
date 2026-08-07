@@ -72,3 +72,6 @@ tools/product-audit/runs/
 
 # Lokal output fra responsive onboarding-verifikasjon
 /verify/onboarding-responsive/
+
+# Playwright-profiler for butikk-konsollene (innlogging, aldri i git)
+.play-profile/

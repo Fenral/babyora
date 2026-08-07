@@ -31,7 +31,8 @@
 
 import { useEffect, useRef } from 'react';
 import type { Activity, Recommendation, WeatherInput } from '../wool-layers/types.js';
-import { buildSnapshot } from './snapshot.js';
+import { CACHE_TTL_MS } from '../met-no/client';
+import { buildSnapshot, withBriefFields } from './snapshot.js';
 import { pushWidgetSnapshot, shouldPushSnapshot } from './bridge.js';
 
 /** Alt widget-snapshotet trenger fra Hjem. `null` = ikke klar ennå. */
@@ -85,12 +86,48 @@ export async function sendWidgetSnapshotHvisEndret(
   try {
     const { childName, weather, rec, activity } = kilde;
     if (weather === null || rec === null) return 'mangler-data';
-    const snapshot = buildSnapshot({
-      childName,
-      weather,
-      rec,
-      activity,
-      nowISO: new Date(nowMs).toISOString(),
+    const nowISO = new Date(nowMs).toISOString();
+    const raatt = buildSnapshot({ childName, weather, rec, activity, nowISO });
+
+    /* UTLØPET ER IKKE ET VALGT TALL — det er værdataenes egen ferskhet.
+
+       Uten dette feltet visner widgeten aldri. Mekanismen er bevist på
+       enhet (to observasjoner, 7. august), men `withBriefFields` hadde
+       null kallere etter at spike-panelet ble slettet: widgeten fikk data
+       og viste samme råd for alltid.
+
+       `CACHE_TTL_MS` er appens egen definisjon av hvor lenge en met.no-
+       hentning regnes som fersk («1 time per met.no-anbefaling»). Et råd
+       kan ikke være ferskere enn været det hviler på, så utløpet arver
+       nøyaktig den grensen. To konstanter ville drevet fra hverandre.
+
+       `versjon` er utstedelsestidspunktet: et nyere råd slår alltid et
+       eldre, uansett rekkefølge på leveringen (I1 i brief-maskinen).
+       `briefId` gir deep link-en en stabil adresse. */
+    /* STRUPINGEN AVGJØRES PÅ INNHOLDET, IKKE PÅ METADATAEN.
+
+       Første utgave la brief-feltene på FØR `shouldPushSnapshot`. Da endret
+       `versjon` og `briefId` seg ved hvert kall, hvert snapshot så nytt ut,
+       og strupingen var satt ut av spill — testen «hopper over uendret
+       innhold» falt umiddelbart. Beslutningen om å sende hører til det
+       forelderen faktisk ser; utløp og id er merkelapper vi fester PÅ
+       sendingen etterpå. */
+    /* `briefId` UTLEDES AV INNHOLDET, ikke av klokka.
+
+       Er den tidsstemplet, får hvert kall en ny id, og identitetsklausulen
+       i `shouldPushSnapshot` fyrer hver gang — da er strupingen borte.
+       Innholdsnøkkelen er allerede den kanoniske beskrivelsen av «det
+       forelderen ser», så den er riktig anker. Samme råd ⇒ samme brief. */
+    const nokkel = widgetInnholdsnokkel(kilde) ?? '';
+    let h = 0;
+    for (let i = 0; i < nokkel.length; i += 1) h = (h * 31 + nokkel.charCodeAt(i)) | 0;
+    const briefId = `hjem-${(h >>> 0).toString(36)}`;
+
+    const snapshot = withBriefFields(raatt, {
+      expiresAtISO: new Date(nowMs + CACHE_TTL_MS).toISOString(),
+      // Utstedelsestidspunkt: et nyere råd slår alltid et eldre (I1).
+      versjon: nowMs,
+      briefId,
     });
     if (!shouldPushSnapshot(snapshot, nowMs)) return 'uendret';
     await pushWidgetSnapshot(snapshot, nowMs);

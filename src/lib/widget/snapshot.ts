@@ -64,7 +64,11 @@ export interface WidgetBriefFields {
   expiresAtISO: string;
   versjon: number;
   briefId: string;
-  deltaTekst: string;
+  /* Valgfri fra 2026-08-07. Feltet beskriver hva som ENDRET seg siden
+     forrige brief, og Hjem-kilden regner ikke ut noe slikt — den kjenner
+     bare dagens råd. Var den påkrevd, måtte kallstedet finne på en tom
+     streng, og widgeten kunne ikke skille «ingen endring» fra «vet ikke». */
+  deltaTekst?: string;
 }
 
 const HEAD_HANDS_NECK_RE = /(lue|votter|hals|balaklava|balaclava|hette|sokker)/i;

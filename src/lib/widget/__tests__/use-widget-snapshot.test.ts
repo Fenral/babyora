@@ -165,3 +165,65 @@ describe('sendWidgetSnapshotHvisEndret', () => {
     await expect(sendWidgetSnapshotHvisEndret(kilde, T0)).resolves.toBeTypeOf('string');
   });
 });
+describe('utløp — widgeten må kunne visne av seg selv', () => {
+  /* Mekanismen er bevist på enhet (to observasjoner 7. august): iOS bytter
+     til en degradert entry ved `expiresAt` uten at appen åpnes. Men den kan
+     ikke utløses uten feltet, og feltet ble satt av spike-panelet — som er
+     slettet. Testene her måler koblingen, ikke mekanismen. */
+
+  beforeEach(() => {
+    cap.erNative = true;
+    cap.updateSnapshot.mockClear();
+  });
+
+  function sendtSnapshot(): Record<string, unknown> {
+    const kall = cap.updateSnapshot.mock.calls.at(-1);
+    if (!kall) throw new Error('updateSnapshot ble aldri kalt');
+    return JSON.parse((kall[0] as { json: string }).json) as Record<string, unknown>;
+  }
+
+  it('setter utløp til nøyaktig værdataenes ferskhet — ikke et valgt tall', async () => {
+    expect(await sendWidgetSnapshotHvisEndret(kilde, T0)).toBe('sendt');
+    const snap = sendtSnapshot();
+
+    // CACHE_TTL_MS i met-no/client.ts: «1 time per met.no-anbefaling».
+    // Endres den, skal DENNE testen falle — det er hele poenget med at de
+    // to stedene deler konstant.
+    expect(snap.expiresAtISO).toBe(new Date(T0 + 60 * 60 * 1000).toISOString());
+    expect(snap.v).toBe(2);
+  });
+
+  it('utløpet ligger ETTER utstedelsen, aldri før', async () => {
+    await sendWidgetSnapshotHvisEndret(kilde, T0);
+    const snap = sendtSnapshot();
+    expect(Date.parse(snap.expiresAtISO as string)).toBeGreaterThan(
+      Date.parse(snap.updatedAtISO as string),
+    );
+  });
+
+  it('samme råd gir samme briefId — ellers ville strupingen vært borte', async () => {
+    await sendWidgetSnapshotHvisEndret(kilde, T0);
+    const forste = sendtSnapshot();
+    // 61 min senere: ferskhetsregelen tvinger en ny sending, men innholdet
+    // er det samme, så briefen er den samme briefen — bare fornyet.
+    await sendWidgetSnapshotHvisEndret(kilde, T0 + 61 * 60_000);
+    const andre = sendtSnapshot();
+
+    expect(forste.briefId).toBeTruthy();
+    expect(andre.briefId).toBe(forste.briefId);
+    // versjon = utstedelsestidspunkt, så et nyere råd slår alltid et eldre (I1).
+    expect(andre.versjon as number).toBeGreaterThan(forste.versjon as number);
+    // ...og utløpet er flyttet fram med fornyelsen.
+    expect(Date.parse(andre.expiresAtISO as string))
+      .toBeGreaterThan(Date.parse(forste.expiresAtISO as string));
+    expect(andre.deepLink).toBe(`babyora://brief/${andre.briefId as string}`);
+  });
+
+  it('ET ANNET råd gir en annen briefId', async () => {
+    await sendWidgetSnapshotHvisEndret(kilde, T0);
+    const forste = sendtSnapshot();
+    const annet = { ...kilde, activity: 'baeresele' as const };
+    await sendWidgetSnapshotHvisEndret(annet, T0 + 60_000);
+    expect(sendtSnapshot().briefId).not.toBe(forste.briefId);
+  });
+});
