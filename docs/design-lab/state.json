@@ -61,7 +61,7 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "KJERNEBEVISET ER INNE: widgeten degraderte av seg selv ved utløp (02:12→02:14), på begge widgetstørrelser. Påstand (a) og (c) bevist på iOS. GJENSTÅR PÅ EIER: steg 5 (trykk på widgeten → appen skal åpne og vise «Siste deep link inn: babyora://brief/spike-…») og steg 6 (send 15-min-brief → widgeten skal våkne igjen med ny gyldighet). Deretter: rekruttere 5-8 foreldre (babyora-lab.vercel.app), Android-keystore-valg, og så retningsvalg (fase 12).",
+  "nextAction": "SPIKEN BESTÅTT PÅ iOS (a+b+c). Ambient levering er teknisk mulig — P3/P4 kan ikke lenger avvises som ugjennomførbare. GJENSTÅR PÅ EIER: (1) steg 6 (send 15-min-brief, sjekk at nytt råd slår et utløpt) — liten sjekk, sperrer ingenting. (2) REKRUTTER 5-8 FORELDRE — dette er nå den ENESTE gjenstående blokkeringen for retningsvalget i fase 12. Laben: https://babyora-lab.vercel.app/, protokoll i docs/design-lab/foreldretest/. (3) EIERVALG Android-keystore (gjenbruk Ryddys eller ny) — sperrer ikke spiken. (4) Fortsatt åpent: PostHog-nøkkel, fagvalidering P2.",
   "labLenke": {
     "url": "https://babyora-lab.vercel.app/",
     "vercelProsjekt": "babyora-lab",
@@ -124,12 +124,20 @@
       "bygg": 85,
       "steg": 4,
       "resultat": "PASS — KJERNEBEVISET. Rådet gjaldt til 02:12; kl. 02:14 hadde begge widgetene selv skiftet til «Må beregnes på nytt» + «Rådet gjaldt til 02:12» + fallback-linje. Påstand (a) bevist på iOS."
+    },
+    {
+      "dato": "2026-08-07",
+      "bygg": 85,
+      "steg": 5,
+      "resultat": "PASS (eierrapportert, ikke skjermbilde) — deep link fra widget fungerte. Påstand (b) bevist på iOS."
     }
   ],
   "spikeStatus": {
-    "paastandA": "BEVIST på iOS (utløpsdegradering uten app-åpning)",
-    "paastandB": "venter (deep link, steg 5)",
-    "paastandC": "BEVIST på iOS (app→widget-kontrakt)",
-    "tolkning": "Spiken krever PASS på (a),(b),(c) på minst én plattform. To av tre er inne."
+    "paastandA": "PASS på iOS — skjermbilde 02:14, råd utløpt 02:12, begge widgetfamilier",
+    "paastandB": "PASS på iOS — eierrapportert",
+    "paastandC": "PASS på iOS — snapshot-innhold i widgeten",
+    "android": "ikke prøvd; bygget stopper på manglende keystore (eierbeslutning)",
+    "konklusjon": "SPIKEN ER BESTÅTT PÅ iOS. Ambient levering (P3/P4) er teknisk mulig.",
+    "konsekvens": "P3/P4 kan ikke avvises som umulige i fase 12 — de må vurderes på om foreldre vil ha dem."
   }
 }
