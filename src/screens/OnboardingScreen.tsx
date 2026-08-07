@@ -72,7 +72,7 @@ const AVATAR_COLOR_DEFAULT = '#C25450';
  * pointed at this same asset, see OnboardingBabyHero.tsx), and NOT the
  * hanging pose (`MascotPeek`/hjm-mascot — reserved for the Hjem panel).
  */
-const MASCOT_STANDING_SRC = `${import.meta.env.BASE_URL}monter/maskot-staaende-cut-360.png`;
+const MASCOT_STANDING_SRC = `${import.meta.env.BASE_URL}monter/maskot-staaende-cut-360.webp`;
 
 const MONTHS_NB = [
   'januar', 'februar', 'mars', 'april', 'mai', 'juni',

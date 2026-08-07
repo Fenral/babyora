@@ -10,7 +10,7 @@
  *      formatet (aldri ren småbokstav-streng).
  *  (b) katalog-illustrasjonen finnes som fil i public/illustrations/garments/.
  *  (c) monter-assets-oppslaget peker på en eksisterende
- *      public/monter/plagg-*.png (eller er bevisst null → nøytral
+ *      public/monter/plagg-*.webp (eller er bevisst null → nøytral
  *      plassholder — aldri en sti som 404-er).
  *  (d) skjemafeltene katalogen HAR (category/label/aliases/illustration/
  *      what/when) er utfylt og gyldige. Felter Bytt-kompatibilitet vil
@@ -99,24 +99,24 @@ describe('plagg-katalog-integritet (T1B)', () => {
 
   it('(b) katalog-illustrasjonen finnes i public/illustrations/garments/ for alle 60', () => {
     for (const item of katalog.items) {
-      const file = resolve(ROOT, 'public/illustrations/garments', `${item.id}.png`);
+      const file = resolve(ROOT, 'public/illustrations/garments', `${item.id}.webp`);
       expect(existsSync(file), `${item.id} → ${file}`).toBe(true);
       // garmentPng(id) skal peke på samme fil (via BASE_URL) — aldri en
       // plassholder for katalog-id-er (alle 60 har egen PNG).
-      expect(garmentPng(item.id), item.id).toContain(`illustrations/garments/${item.id}.png`);
+      expect(garmentPng(item.id), item.id).toContain(`illustrations/garments/${item.id}.webp`);
       // Katalogens egen illustration-URL skal referere samme filnavn.
-      expect(item.illustration, item.id).toContain(`/illustrations/garments/${item.id}.png`);
+      expect(item.illustration, item.id).toContain(`/illustrations/garments/${item.id}.webp`);
     }
   });
 
-  it('(c) monter-oppslaget peker på eksisterende public/monter/plagg-*.png (eller er bevisst null)', () => {
+  it('(c) monter-oppslaget peker på eksisterende public/monter/plagg-*.webp (eller er bevisst null)', () => {
     let mapped = 0;
     for (const item of katalog.items) {
       const path = getGarmentImage(item.id);
       if (path === null) continue; // nøytral plassholder — gyldig utfall
       mapped += 1;
       const fileName = path.split('/').at(-1)!;
-      expect(fileName, item.id).toMatch(/^plagg-[a-z0-9-]+\.png$/);
+      expect(fileName, item.id).toMatch(/^plagg-[a-z0-9-]+\.webp$/);
       const file = resolve(ROOT, 'public/monter', fileName);
       expect(existsSync(file), `${item.id} → ${path}`).toBe(true);
     }

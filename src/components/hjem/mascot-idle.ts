@@ -17,7 +17,7 @@
  * gjenbruke maskot-nysgjerrig.png (Del 3 sin scan-koreografi-pose) — den
  * posen er RESERVERT for «Babyora undersøker»-øyeblikket under selve
  * scanningen. Glimtet i hvile bruker i stedet sin EGEN, roligere
- * pose-asset (public/monter/maskot-glimt.png, MascotIdle.tsx). Samtidig
+ * pose-asset (public/monter/maskot-glimt.webp, MascotIdle.tsx). Samtidig
  * lagt til: flere kanselleringsvakter (dialog/sheet/paywall åpen, tastatur
  * oppe, 30s kjøletid etter at appen resumes fra bakgrunn) — se
  * `IdleGlanceEligibility`/`idleGlanceEligible` under.
@@ -96,7 +96,7 @@ export type IdleGlanceEligibility = Readonly<{
   keyboardOpen: boolean;
   /** Innenfor RESUME_COOLDOWN_MS etter siste bakgrunn→forgrunn-overgang. */
   withinResumeCooldown: boolean;
-  /** public/monter/maskot-glimt.png finnes og er klar til bruk — se MascotIdle.tsx sin egen GLANCE_ASSET_READY-kommentar. ALDRI fall tilbake til scan-koreografiens maskot-nysgjerrig.png hvis denne er false. */
+  /** public/monter/maskot-glimt.webp finnes og er klar til bruk — se MascotIdle.tsx sin egen GLANCE_ASSET_READY-kommentar. ALDRI fall tilbake til scan-koreografiens maskot-nysgjerrig.png hvis denne er false. */
   assetReady: boolean;
 }>;
 

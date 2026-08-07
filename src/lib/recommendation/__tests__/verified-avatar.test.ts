@@ -3,18 +3,18 @@ import { verifiedAvatarAsset } from '../verified-avatar';
 
 describe('verifiedAvatarAsset', () => {
   it('matcher ytterste plagg + positur til riktig varmenivå', () => {
-    expect(verifiedAvatarAsset('standing', 'kortermet body', 'solhatt')).toMatch(/std-1-sommer\.png$/);
-    expect(verifiedAvatarAsset('sitting', 'kortermet body', 'solhatt')).toMatch(/sit-1-sommer\.png$/);
-    expect(verifiedAvatarAsset('standing', 'isolert vinterdress', 'lue m/ ull')).toMatch(/std-5-vinter\.png$/);
-    expect(verifiedAvatarAsset('standing', 'kjøredress', 'lue m/ ull')).toMatch(/std-4-kald\.png$/);
-    expect(verifiedAvatarAsset('standing', 'regntøy / skall', 'lue')).toMatch(/std-7-regn\.png$/);
-    expect(verifiedAvatarAsset('standing', 'vindtett skall', 'lue')).toMatch(/std-8-vind\.png$/);
+    expect(verifiedAvatarAsset('standing', 'kortermet body', 'solhatt')).toMatch(/std-1-sommer\.webp$/);
+    expect(verifiedAvatarAsset('sitting', 'kortermet body', 'solhatt')).toMatch(/sit-1-sommer\.webp$/);
+    expect(verifiedAvatarAsset('standing', 'isolert vinterdress', 'lue m/ ull')).toMatch(/std-5-vinter\.webp$/);
+    expect(verifiedAvatarAsset('standing', 'kjøredress', 'lue m/ ull')).toMatch(/std-4-kald\.webp$/);
+    expect(verifiedAvatarAsset('standing', 'regntøy / skall', 'lue')).toMatch(/std-7-regn\.webp$/);
+    expect(verifiedAvatarAsset('standing', 'vindtett skall', 'lue')).toMatch(/std-8-vind\.webp$/);
   });
 
   it('snødress + balaklava løftes til ekstrem-varianten', () => {
-    expect(verifiedAvatarAsset('standing', 'isolert vinterdress', 'balaklava')).toMatch(/std-6-ekstrem\.png$/);
+    expect(verifiedAvatarAsset('standing', 'isolert vinterdress', 'balaklava')).toMatch(/std-6-ekstrem\.webp$/);
     // …men vanlig lue holder seg på vinter.
-    expect(verifiedAvatarAsset('standing', 'isolert vinterdress', 'lue m/ ull')).toMatch(/std-5-vinter\.png$/);
+    expect(verifiedAvatarAsset('standing', 'isolert vinterdress', 'lue m/ ull')).toMatch(/std-5-vinter\.webp$/);
   });
 
   it('ukjent/manglende ytterplagg → null (nøytral silhuett, aldri feil antrekk)', () => {

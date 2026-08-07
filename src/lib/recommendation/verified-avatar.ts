@@ -64,5 +64,5 @@ export function verifiedAvatarAsset(
   const name = LEVEL_NAME[level];
   if (!name) return null;
   const prefix = pose === 'standing' ? 'std' : 'sit';
-  return `${import.meta.env.BASE_URL}avatars/verified/${prefix}-${name}.png`;
+  return `${import.meta.env.BASE_URL}avatars/verified/${prefix}-${name}.webp`;
 }

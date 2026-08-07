@@ -9,7 +9,7 @@ function baseProps() {
     tempC: 4,
     feelsLikeC: 1,
     noteText: 'Lett yr i lufta, kjølig og fuktig.',
-    weatherIconSrc: '/monter/vaer-regn.png',
+    weatherIconSrc: '/monter/vaer-regn.webp',
     weatherIconAlt: 'Lett regn',
     freshnessLabel: 'Oppdatert nå',
     activity: 'utelek' as const,

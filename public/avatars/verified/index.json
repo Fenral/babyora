@@ -1,7 +1,7 @@
 [
   {
     "name": "std-1-sommer",
-    "asset": "/avatars/verified/std-1-sommer.png",
+    "asset": "/avatars/verified/std-1-sommer.webp",
     "pose": "standing",
     "garments": [
       "kortermet-body",
@@ -11,7 +11,7 @@
   },
   {
     "name": "std-2-mild",
-    "asset": "/avatars/verified/std-2-mild.png",
+    "asset": "/avatars/verified/std-2-mild.webp",
     "pose": "standing",
     "garments": [
       "langermet-body",
@@ -21,7 +21,7 @@
   },
   {
     "name": "std-3-kjolig",
-    "asset": "/avatars/verified/std-3-kjolig.png",
+    "asset": "/avatars/verified/std-3-kjolig.webp",
     "pose": "standing",
     "garments": [
       "ull-jakke",
@@ -32,7 +32,7 @@
   },
   {
     "name": "std-4-kald",
-    "asset": "/avatars/verified/std-4-kald.png",
+    "asset": "/avatars/verified/std-4-kald.webp",
     "pose": "standing",
     "garments": [
       "kjoredress",
@@ -42,7 +42,7 @@
   },
   {
     "name": "std-5-vinter",
-    "asset": "/avatars/verified/std-5-vinter.png",
+    "asset": "/avatars/verified/std-5-vinter.webp",
     "pose": "standing",
     "garments": [
       "vinterdress-isolert",
@@ -53,7 +53,7 @@
   },
   {
     "name": "std-6-ekstrem",
-    "asset": "/avatars/verified/std-6-ekstrem.png",
+    "asset": "/avatars/verified/std-6-ekstrem.webp",
     "pose": "standing",
     "garments": [
       "vinterdress-isolert",
@@ -65,7 +65,7 @@
   },
   {
     "name": "std-7-regn",
-    "asset": "/avatars/verified/std-7-regn.png",
+    "asset": "/avatars/verified/std-7-regn.webp",
     "pose": "standing",
     "garments": [
       "regntoy-skall",
@@ -75,7 +75,7 @@
   },
   {
     "name": "std-8-vind",
-    "asset": "/avatars/verified/std-8-vind.png",
+    "asset": "/avatars/verified/std-8-vind.webp",
     "pose": "standing",
     "garments": [
       "vindtett-skall",
@@ -85,7 +85,7 @@
   },
   {
     "name": "std-9-vinter-hals",
-    "asset": "/avatars/verified/std-9-vinter-hals.png",
+    "asset": "/avatars/verified/std-9-vinter-hals.webp",
     "pose": "standing",
     "garments": [
       "vinterdress-isolert",
@@ -97,7 +97,7 @@
   },
   {
     "name": "std-10-vindvotter",
-    "asset": "/avatars/verified/std-10-vindvotter.png",
+    "asset": "/avatars/verified/std-10-vindvotter.webp",
     "pose": "standing",
     "garments": [
       "vinterdress-isolert",
@@ -108,7 +108,7 @@
   },
   {
     "name": "std-11-mild-lue",
-    "asset": "/avatars/verified/std-11-mild-lue.png",
+    "asset": "/avatars/verified/std-11-mild-lue.webp",
     "pose": "standing",
     "garments": [
       "langermet-body",
@@ -118,7 +118,7 @@
   },
   {
     "name": "std-12-kald-sko",
-    "asset": "/avatars/verified/std-12-kald-sko.png",
+    "asset": "/avatars/verified/std-12-kald-sko.webp",
     "pose": "standing",
     "garments": [
       "kjoredress",
@@ -129,7 +129,7 @@
   },
   {
     "name": "sit-1-sommer",
-    "asset": "/avatars/verified/sit-1-sommer.png",
+    "asset": "/avatars/verified/sit-1-sommer.webp",
     "pose": "sitting",
     "garments": [
       "kortermet-body",
@@ -139,7 +139,7 @@
   },
   {
     "name": "sit-2-mild",
-    "asset": "/avatars/verified/sit-2-mild.png",
+    "asset": "/avatars/verified/sit-2-mild.webp",
     "pose": "sitting",
     "garments": [
       "langermet-body",
@@ -149,7 +149,7 @@
   },
   {
     "name": "sit-3-kjolig",
-    "asset": "/avatars/verified/sit-3-kjolig.png",
+    "asset": "/avatars/verified/sit-3-kjolig.webp",
     "pose": "sitting",
     "garments": [
       "ull-jakke",
@@ -160,7 +160,7 @@
   },
   {
     "name": "sit-4-kald",
-    "asset": "/avatars/verified/sit-4-kald.png",
+    "asset": "/avatars/verified/sit-4-kald.webp",
     "pose": "sitting",
     "garments": [
       "kjoredress",
@@ -170,7 +170,7 @@
   },
   {
     "name": "sit-5-vinter",
-    "asset": "/avatars/verified/sit-5-vinter.png",
+    "asset": "/avatars/verified/sit-5-vinter.webp",
     "pose": "sitting",
     "garments": [
       "vinterdress-isolert",
@@ -181,7 +181,7 @@
   },
   {
     "name": "sit-6-ekstrem",
-    "asset": "/avatars/verified/sit-6-ekstrem.png",
+    "asset": "/avatars/verified/sit-6-ekstrem.webp",
     "pose": "sitting",
     "garments": [
       "vinterdress-isolert",
@@ -193,7 +193,7 @@
   },
   {
     "name": "sit-7-regn",
-    "asset": "/avatars/verified/sit-7-regn.png",
+    "asset": "/avatars/verified/sit-7-regn.webp",
     "pose": "sitting",
     "garments": [
       "regntoy-skall",
@@ -203,7 +203,7 @@
   },
   {
     "name": "sit-8-vind",
-    "asset": "/avatars/verified/sit-8-vind.png",
+    "asset": "/avatars/verified/sit-8-vind.webp",
     "pose": "sitting",
     "garments": [
       "vindtett-skall",
@@ -213,7 +213,7 @@
   },
   {
     "name": "sit-9-vinter-hals",
-    "asset": "/avatars/verified/sit-9-vinter-hals.png",
+    "asset": "/avatars/verified/sit-9-vinter-hals.webp",
     "pose": "sitting",
     "garments": [
       "vinterdress-isolert",
@@ -225,7 +225,7 @@
   },
   {
     "name": "sit-10-vindvotter",
-    "asset": "/avatars/verified/sit-10-vindvotter.png",
+    "asset": "/avatars/verified/sit-10-vindvotter.webp",
     "pose": "sitting",
     "garments": [
       "vinterdress-isolert",
@@ -236,7 +236,7 @@
   },
   {
     "name": "sit-11-mild-lue",
-    "asset": "/avatars/verified/sit-11-mild-lue.png",
+    "asset": "/avatars/verified/sit-11-mild-lue.webp",
     "pose": "sitting",
     "garments": [
       "langermet-body",
@@ -246,7 +246,7 @@
   },
   {
     "name": "sit-12-kald-sko",
-    "asset": "/avatars/verified/sit-12-kald-sko.png",
+    "asset": "/avatars/verified/sit-12-kald-sko.webp",
     "pose": "sitting",
     "garments": [
       "kjoredress",

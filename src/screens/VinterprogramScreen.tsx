@@ -306,7 +306,7 @@ export function VinterprogramScreen({ onBack, onOpenTarget }: VinterprogramScree
      stille i stedet for broken-image-ikon. ── */
 
 function heroSrc(id: string): string {
-  return `${import.meta.env.BASE_URL}illustrations/vinterprogram/${id}.png`;
+  return `${import.meta.env.BASE_URL}illustrations/vinterprogram/${id}.webp`;
 }
 
 function hideOnError(e: { currentTarget: HTMLImageElement }): void {

@@ -200,7 +200,7 @@ const PLACEHOLDER_PNG: Record<GarmentId, GarmentId> = {
  *  en plassholder-PNG for plagg som ennå ikke er generert. */
 export function garmentPng(id: GarmentId): string {
   const file = PLACEHOLDER_PNG[id] ?? id;
-  return `${import.meta.env.BASE_URL}illustrations/garments/${file}.png`;
+  return `${import.meta.env.BASE_URL}illustrations/garments/${file}.webp`;
 }
 
 /** F80a: clay-versjonen (garments-clay/) — samme id-mapping. Brukes som
@@ -208,7 +208,7 @@ export function garmentPng(id: GarmentId): string {
  *  (9 alternativ-IDer + ev. batch-hull dekkes da av de gamle flate). */
 export function garmentClayPng(id: GarmentId): string {
   const file = PLACEHOLDER_PNG[id] ?? id;
-  return `${import.meta.env.BASE_URL}illustrations/garments-clay/${file}.png`;
+  return `${import.meta.env.BASE_URL}illustrations/garments-clay/${file}.webp`;
 }
 
 /**

@@ -154,10 +154,10 @@ describe('HjemMonter — phase-driven view switching', () => {
     // pose='normal' — the idle glance timer never fires during a static
     // render) PLUS its own dedicated (reserved) glance overlay, initially
     // invisible. Never the scan-reserved curious pose here.
-    expect(html).toContain('/monter/maskot.png');
+    expect(html).toContain('/monter/maskot.webp');
     expect(html).toContain('data-pose="normal"');
     expect(html).not.toContain('data-pose="curious"');
-    expect(html).toContain('/monter/maskot-glimt.png');
+    expect(html).toContain('/monter/maskot-glimt.webp');
     expect(html).toContain('data-glancing="false"');
   });
 
@@ -172,7 +172,7 @@ describe('HjemMonter — phase-driven view switching', () => {
     expect(html).not.toContain('Klar for en liten tur?');
     // Del 3: nysgjerrig maskot-pose under scanningen.
     expect(html).toContain('data-pose="curious"');
-    expect(html).toContain('/monter/maskot-nysgjerrig.png');
+    expect(html).toContain('/monter/maskot-nysgjerrig.webp');
   });
 
   it('recalculating: renders the same choreography with the "på nytt" copy', () => {

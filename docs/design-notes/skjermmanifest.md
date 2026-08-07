@@ -244,6 +244,8 @@ Ingen punkter i lanseringsstatusen.
 Filer lanseringsstatusen peker på som ikke lenger finnes. De er droppet fra
 punktlistene over — dette er beviset på at et håndskrevet register råtner.
 
+- `public/illustrations/sjekk-nakke.png`
+- `public/monter/plagg-sydvest.png`
 - `src/screens/MinGarderobeScreen.tsx`
 
 ## 7. Rutekildene som ble lest

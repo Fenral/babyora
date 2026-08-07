@@ -10,7 +10,7 @@
  * --dw-sh-tokenene) får aldri styre skyggen, fordi asseten har sin egen.
  *
  * DEFEKTEN denne testen lukker (målt 2026-08-03, før byttet): alle 42
- * `public/monter/plagg-*.png` hadde **0,000 %** gjennomsiktige piksler, mens
+ * `public/monter/plagg-*.webp` hadde **0,000 %** gjennomsiktige piksler, mens
  * de 11 andre assetene i SAMME mappe (maskot + værikoner) lå på 74–83 %.
  * Plaggene var det eneste som brøt kontrakten. Uten en test kunne en ny
  * generert batch trille inn med bakgrunn igjen uten at noen så det før på
@@ -118,17 +118,17 @@ function manuellListeFraCutter(): readonly string[] | null {
   if (start < 0) return null;
   const slutt = kilde.indexOf('};', start);
   if (slutt < 0) return null;
-  return [...kilde.slice(start, slutt).matchAll(/'(plagg-[a-z0-9-]+\.png)'\s*:/g)]
+  return [...kilde.slice(start, slutt).matchAll(/'(plagg-[a-z0-9-]+\.webp)'\s*:/g)]
     .map((treff) => treff[1]);
 }
 
 const plaggFiler = readdirSync(MONTER)
-  .filter((f) => f.startsWith('plagg-') && f.endsWith('.png'))
+  .filter((f) => f.startsWith('plagg-') && f.endsWith('.webp'))
   .sort();
 
 /** Allerede-korrekte utklipp i SAMME mappe — den positive kontrollen. */
 const KONTROLL_UTKLIPP = readdirSync(MONTER)
-  .filter((f) => f.endsWith('.png') && (f.startsWith('vaer-') || f.startsWith('maskot')))
+  .filter((f) => f.endsWith('.webp') && (f.startsWith('vaer-') || f.startsWith('maskot')))
   .sort();
 
 let maalt: readonly AlfaMaal[] = [];
@@ -150,7 +150,7 @@ describe('monter plagg-assets er rene utklipp', () => {
   it('FORUTSETNING 1: filsettet på disk er nøyaktig de slugene oppslaget peker på', () => {
     // Uten denne kan testen «bestå» ved å ikke finne noen filer i det hele tatt.
     expect(plaggFiler.length).toBeGreaterThan(0);
-    const forventet = MONTER_GARMENT_SLUGS.map((s) => `plagg-${s}.png`).sort();
+    const forventet = MONTER_GARMENT_SLUGS.map((s) => `plagg-${s}.webp`).sort();
     expect(plaggFiler).toEqual(forventet);
     expect(plaggFiler).toHaveLength(42);
   });

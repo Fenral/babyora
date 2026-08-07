@@ -24,10 +24,10 @@ const HEADWEAR_VARIANTS: Record<string, true> = {
  *  A2-A4 dekkes av stagene (+hodeplagg-varianter); disse fire er
  *  dedikerte antrekk generert via edit-kjeden (samme baby). */
 const TIER_FINALS: Partial<Record<string, string>> = {
-  A1: '/avatars/f79-poc/tier-A1-sommer.png',
-  A5: '/avatars/f79-poc/tier-A5-vinter.png',
-  A6: '/avatars/f79-poc/tier-A6-ekstrem.png',
-  A7: '/avatars/f79-poc/tier-A7-sovn.png',
+  A1: '/avatars/f79-poc/tier-A1-sommer.webp',
+  A5: '/avatars/f79-poc/tier-A5-vinter.webp',
+  A6: '/avatars/f79-poc/tier-A6-ekstrem.webp',
+  A7: '/avatars/f79-poc/tier-A7-sovn.webp',
 };
 
 export function stageSrc(
@@ -40,8 +40,8 @@ export function stageSrc(
     // Ytterpunkt-vær (sommer/vinter/ekstrem/sovn): dedikert tier-antrekk
     if (tier && TIER_FINALS[tier]) return TIER_FINALS[tier] as string;
     if (headwear !== 'none' && HEADWEAR_VARIANTS[`stage-${stageIdx}-${headwear}`]) {
-      return `/avatars/f79-poc/stage-${stageIdx}-${headwear}.png`;
+      return `/avatars/f79-poc/stage-${stageIdx}-${headwear}.webp`;
     }
   }
-  return `/avatars/f79-poc/stage-${stageIdx}.png`;
+  return `/avatars/f79-poc/stage-${stageIdx}.webp`;
 }

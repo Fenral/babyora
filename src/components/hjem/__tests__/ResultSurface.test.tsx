@@ -52,7 +52,7 @@ describe('ResultSurface', () => {
         onWhy={vi.fn()}
       />,
     );
-    expect(html).toContain('/monter/plagg-langermet-ullbody.png');
+    expect(html).toContain('/monter/plagg-langermet-ullbody.webp');
   });
 
   it('falls back to a neutral vitrine placeholder (initial letter, no <img>) when the garment has no image', () => {

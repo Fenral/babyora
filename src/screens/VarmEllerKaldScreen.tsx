@@ -557,11 +557,11 @@ export function VarmEllerKaldScreen({
             */}
             <picture className="sjekk-nakke-picture">
               <source
-                srcSet="/illustrations/sjekk-nakke-dark.png"
+                srcSet="/illustrations/sjekk-nakke-dark.webp"
                 media="(prefers-color-scheme: dark)"
               />
               <img
-                src="/illustrations/sjekk-nakke.png"
+                src="/illustrations/sjekk-nakke.webp"
                 alt=""
                 width={96}
                 height={128}
@@ -575,7 +575,7 @@ export function VarmEllerKaldScreen({
               />
             </picture>
             <img
-              src="/illustrations/sjekk-nakke-dark.png"
+              src="/illustrations/sjekk-nakke-dark.webp"
               alt=""
               width={96}
               height={128}

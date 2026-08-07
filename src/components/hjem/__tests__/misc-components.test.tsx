@@ -10,8 +10,8 @@ describe('MascotPeek', () => {
     // bildene beholder sin egen — dekorativ i alle ledd.
     expect(html.match(/aria-hidden="true"/gu)?.length).toBe(3);
     expect(html.match(/alt=""/gu)?.length).toBe(2);
-    expect(html).toContain('/monter/maskot.png');
-    expect(html).toContain('/monter/maskot-nysgjerrig.png');
+    expect(html).toContain('/monter/maskot.webp');
+    expect(html).toContain('/monter/maskot-nysgjerrig.webp');
     // anker + pose-lag (bildene trenger den ikke lenger — geometrien bor pa
     // ankeret, bevegelsen pa pose-laget)
     expect(html.match(/data-compact="false"/gu)?.length).toBe(2);

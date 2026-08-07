@@ -53,7 +53,7 @@ describe('OnboardingScreen — step 1 v2 (Monter re-skin)', () => {
   it('renders the standing mascot (not the hanging MascotPeek pose, not the old doll asset)', () => {
     const html = renderScreen();
     expect(html).toContain('class="ob-s1-mascot"');
-    expect(html).toContain('src="/monter/maskot-staaende-cut-360.png"');
+    expect(html).toContain('src="/monter/maskot-staaende-cut-360.webp"');
     expect(html).not.toContain('babyora-intro-v3');
     expect(html).not.toContain('hjm-mascot');
   });

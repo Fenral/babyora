@@ -787,7 +787,7 @@ export async function kjorAnalyse() {
   const kalibrering = [];
   for (const navn of KALIBRERINGSSETT) kalibrering.push(await malFil(join(PROOF_KATALOG, navn)));
 
-  const monterFiler = (await readdir(MONTER_KATALOG)).filter((f) => f.endsWith('.png')).sort();
+  const monterFiler = (await readdir(MONTER_KATALOG)).filter((f) => f.endsWith('.webp')).sort();
   const harKlippet = await finnesKatalog(KLIPPET_KATALOG);
   const klippetFiler = harKlippet
     ? new Set((await readdir(KLIPPET_KATALOG)).filter((f) => f.endsWith('.png')))

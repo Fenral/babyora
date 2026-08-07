@@ -40,8 +40,8 @@ export type MascotPeekProps = Readonly<{
   reducedMotion?: boolean;
 }>;
 
-const MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot.png`;
-const MASCOT_CURIOUS_SRC = `${import.meta.env.BASE_URL}monter/maskot-nysgjerrig.png`;
+const MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot.webp`;
+const MASCOT_CURIOUS_SRC = `${import.meta.env.BASE_URL}monter/maskot-nysgjerrig.webp`;
 
 export function MascotPeek({ compact = false, pose = 'normal', reducedMotion = false }: MascotPeekProps) {
   const compactAttr = compact ? 'true' : 'false';

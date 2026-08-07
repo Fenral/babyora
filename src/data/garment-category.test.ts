@@ -31,7 +31,7 @@ describe('garment-category', () => {
   it('hvert plagg har en (plassholder-)PNG-sti', () => {
     for (const cat of CATEGORY_ORDER) {
       for (const id of GARMENTS_BY_CATEGORY[cat]) {
-        expect(garmentPng(id)).toMatch(/illustrations\/garments\/.+\.png$/);
+        expect(garmentPng(id)).toMatch(/illustrations\/garments\/.+\.webp$/);
       }
     }
   });

@@ -56,10 +56,16 @@ async function render(): Promise<string> {
   return renderToStaticMarkup(<PlaggbibliotekScreen onBack={() => {}} />);
 }
 
-/** Leser bredde/høyde ut av en PNG-header (IHDR ligger alltid på byte 16-24). */
-function pngSize(file: string): { w: number; h: number } {
-  const buf = readFileSync(file);
-  return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+/**
+ * Bredde/høyde ut av en bildefil. Leste tidligere PNG-headeren direkte
+ * (IHDR på byte 16-24); da plaggene ble konvertert til WebP 2026-08-07 var
+ * den parseren plutselig feil format. sharp leser alle formatene huset
+ * bruker, og er allerede en avhengighet (se monter-assets.alfa.test.ts).
+ */
+async function bildeMaal(file: string): Promise<{ w: number; h: number }> {
+  const { default: sharp } = await import('sharp');
+  const m = await sharp(file).metadata();
+  return { w: m.width ?? 0, h: m.height ?? 0 };
 }
 
 /** Alle .ts/.tsx-filer under src/, rekursivt. */
@@ -129,8 +135,8 @@ describe('Plaggbiblioteket — bilderammen må ha plaggets sideforhold', () => {
     //    1024×1024, «vintersokker» 1376×768 og «varmepose-dun» 848×1264.
     //    Derfor måles hver enkelt fil, ikke et snitt: rammen må fungere for
     //    det verste tilfellet, og hvilket det er avhenger av rammens form.
-    const pngs = readdirSync(GARMENT_DIR).filter((f) => f.endsWith('.png'));
-    expect(pngs.length).toBeGreaterThan(50);
+    const bilder = readdirSync(GARMENT_DIR).filter((f) => f.endsWith('.webp'));
+    expect(bilder.length).toBeGreaterThan(50);
 
     // object-fit: contain. Boksen er fyllAndel × ramme bred og fyllAndel høy,
     // regnet i enheter av rammehøyden. Bildet begrenses av BREDDEN når det er
@@ -140,12 +146,13 @@ describe('Plaggbiblioteket — bilderammen må ha plaggets sideforhold', () => {
     const tegnetHoyde = (bildeforhold: number): number =>
       bildeforhold > boksBredde / boksHoyde ? boksBredde / bildeforhold : boksHoyde;
 
-    const verst = pngs
-      .map((f) => {
-        const { w, h } = pngSize(resolve(GARMENT_DIR, f));
+    const malt = await Promise.all(
+      bilder.map(async (f) => {
+        const { w, h } = await bildeMaal(resolve(GARMENT_DIR, f));
         return { f, andel: tegnetHoyde(w / h), w, h };
-      })
-      .sort((a, b) => a.andel - b.andel)[0];
+      }),
+    );
+    const verst = malt.sort((a, b) => a.andel - b.andel)[0]!;
 
     expect(
       verst.andel,

@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState, type ReactElement } from 'rea
  * the whole standing figure instead of cropping it like the old
  * pre-framed square illustration needed.
  */
-const POSTER_SRC = '/monter/maskot-staaende-cut-360.png';
+const POSTER_SRC = '/monter/maskot-staaende-cut-360.webp';
 const VIDEO_SRC = '/illustrations/onboarding/babyora-intro-v3.mp4';
 
 export type OnboardingBabyHeroProps = {

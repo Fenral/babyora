@@ -260,12 +260,12 @@ describe('OutfitTruthPanel', () => {
     const html = renderToStaticMarkup(
       <OutfitTruthPanel
         outfitBundle={bundle}
-        illustrativeAvatarAsset="/avatars/avatar-A3.png"
+        illustrativeAvatarAsset="/avatars/avatar-A3.webp"
       />,
     );
 
     expect(html).toContain('data-avatar-source="illustrative"');
-    expect(html).toContain('/avatars/avatar-A3.png');
+    expect(html).toContain('/avatars/avatar-A3.webp');
     expect(html).not.toMatch(/whole_body|torso|head|feet/u);
   });
 
@@ -438,13 +438,13 @@ describe('OutfitTruthPanel', () => {
     const trusted = renderToStaticMarkup(<VerifiedAvatarComposite snapshot={truth} avatarTruth={truth.avatar} />);
     const forged = renderToStaticMarkup(<VerifiedAvatarComposite snapshot={truth} avatarTruth={{ ...truth.avatar, verifiedAssetPath: '/forged.png' }} />);
     const legacy = renderToStaticMarkup(<VerifiedAvatarComposite stateKey={{ pose: 'sitting' } as never} outfitSummary="forged summary" assetOverride="/looks-real.png" />);
-    const verifiedLegacy = renderToStaticMarkup(<VerifiedAvatarComposite stateKey={{ pose: 'sitting' } as never} outfitSummary="ignored" assetOverride="/avatars/verified/sit-7-regn.png" />);
+    const verifiedLegacy = renderToStaticMarkup(<VerifiedAvatarComposite stateKey={{ pose: 'sitting' } as never} outfitSummary="ignored" assetOverride="/avatars/verified/sit-7-regn.webp" />);
     if (truth.avatar.verifiedAssetPath === null) expect(trusted).not.toContain('<img');
     else expect(trusted).toContain(`src="${truth.avatar.verifiedAssetPath}"`);
     expect(forged).not.toContain('<img');
     expect(legacy).not.toContain('<img');
     expect(legacy).not.toContain('forged summary');
-    expect(verifiedLegacy).toContain('src="/avatars/verified/sit-7-regn.png"');
+    expect(verifiedLegacy).toContain('src="/avatars/verified/sit-7-regn.webp"');
     expect(verifiedLegacy).toContain('data-avatar-source="legacy"');
   });
 
@@ -536,7 +536,7 @@ describe('OutfitTruthPanel', () => {
     const middle = hiddenMiddle.garments.find((item) => item.catalogGarmentId === 'ull-jakke')!;
     expect(hiddenMiddle.avatar.visibleGarmentIds).not.toContain(middle.itemId);
     const verified = renderToStaticMarkup(<VerifiedAvatarComposite snapshot={hiddenMiddle} avatarTruth={hiddenMiddle.avatar} />);
-    expect(verified).toContain('/avatars/verified/std-4-kald.png');
+    expect(verified).toContain('/avatars/verified/std-4-kald.webp');
     expect(verified).not.toContain(middle.label);
 
     const neutralCases = [

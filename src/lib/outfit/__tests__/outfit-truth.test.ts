@@ -77,7 +77,7 @@ describe('canonical outfit truth', () => {
     expect(directAvatar).toMatchObject({
       pose: 'sitting',
       stateKey: 'sit-1-sommer',
-      verifiedAssetPath: '/avatars/verified/sit-1-sommer.png',
+      verifiedAssetPath: '/avatars/verified/sit-1-sommer.webp',
     });
     expect(result.snapshot.avatar).toEqual(directAvatar);
     expect(result.snapshot.avatar.visibleGarmentIds).toEqual(

@@ -48,11 +48,11 @@ const MANIFEST = Object.freeze(
 // manifest. A string that merely resembles an avatar path must fail closed.
 const VERIFIED_ASSET_PATHS = new Set(MANIFEST.map((row) => row.asset));
 const ILLUSTRATIVE_ASSET_PATHS = new Set([
-  '/avatars/avatar-A1.png', '/avatars/avatar-A1-hat.png',
-  '/avatars/avatar-A2.png', '/avatars/avatar-A2-hat.png',
-  '/avatars/avatar-A3.png', '/avatars/avatar-A4.png',
-  '/avatars/avatar-A5.png', '/avatars/avatar-A6.png',
-  '/avatars/avatar-A7.png',
+  '/avatars/avatar-A1.webp', '/avatars/avatar-A1-hat.webp',
+  '/avatars/avatar-A2.webp', '/avatars/avatar-A2-hat.webp',
+  '/avatars/avatar-A3.webp', '/avatars/avatar-A4.webp',
+  '/avatars/avatar-A5.webp', '/avatars/avatar-A6.webp',
+  '/avatars/avatar-A7.webp',
 ]);
 
 export function isVerifiedAvatarAssetPath(value: unknown): value is string {

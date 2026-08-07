@@ -32,20 +32,20 @@ describe('MascotIdle — initial render (SSR-observable: no timer has fired yet)
 
   it('renders its own dedicated glance overlay (maskot-glimt.png), initially invisible (data-glancing="false")', () => {
     const html = renderToStaticMarkup(<MascotIdle reducedMotion={false} />);
-    expect(html).toContain('/monter/maskot-glimt.png');
+    expect(html).toContain('/monter/maskot-glimt.webp');
     expect(html).toContain('data-glancing="false"');
     expect(html).toContain('class="hjm-mascot hjm-mascot-glance"');
   });
 
   it('MascotPeek\'s curious-pose image (maskot-nysgjerrig.png) is present in the DOM (Del 3\'s two-always-mounted-images design) but pinned inactive (pose="normal"), never confused with the glance overlay above', () => {
     const html = renderToStaticMarkup(<MascotIdle reducedMotion={false} />);
-    expect(html).toContain('/monter/maskot-nysgjerrig.png');
+    expect(html).toContain('/monter/maskot-nysgjerrig.webp');
     expect(html).toContain('class="hjm-mascot hjm-mascot-curious"');
   });
 
   it('is otherwise structurally identical to a bare <MascotPeek/> (non-compact, both MascotPeek poses stamped in the DOM)', () => {
     const idle = renderToStaticMarkup(<MascotIdle reducedMotion={false} />);
-    expect(idle).toContain('/monter/maskot.png');
+    expect(idle).toContain('/monter/maskot.webp');
     expect(idle).toContain('data-compact="false"');
   });
 

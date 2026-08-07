@@ -11,9 +11,9 @@ import {
 
 describe('getGarmentImage', () => {
   it('resolves an exact-name katalog id to its Monter PNG', () => {
-    expect(getGarmentImage('kortermet-ullbody')).toBe('/monter/plagg-kortermet-ullbody.png');
-    expect(getGarmentImage('vinterdress')).toBe('/monter/plagg-vinterdress.png');
-    expect(getGarmentImage('ullsokker')).toBe('/monter/plagg-ullsokker.png');
+    expect(getGarmentImage('kortermet-ullbody')).toBe('/monter/plagg-kortermet-ullbody.webp');
+    expect(getGarmentImage('vinterdress')).toBe('/monter/plagg-vinterdress.webp');
+    expect(getGarmentImage('ullsokker')).toBe('/monter/plagg-ullsokker.webp');
   });
 
   it('reuses one image across thickness/tog variants of the same garment', () => {
@@ -43,7 +43,7 @@ describe('getGarmentImage', () => {
     for (const item of katalog.items) {
       const path = getGarmentImage(item.id);
       if (path === null) continue;
-      const slug = MONTER_GARMENT_SLUGS.find((s) => path === `/monter/plagg-${s}.png`);
+      const slug = MONTER_GARMENT_SLUGS.find((s) => path === `/monter/plagg-${s}.webp`);
       expect(slug, `${item.id} -> ${path} should match a shipped slug`).toBeDefined();
     }
   });
@@ -51,33 +51,33 @@ describe('getGarmentImage', () => {
   it('every shipped garment PNG referenced by the map actually exists in public/monter', () => {
     const files = new Set(readdirSync(resolve(process.cwd(), 'public/monter')));
     for (const slug of MONTER_GARMENT_SLUGS) {
-      expect(files.has(`plagg-${slug}.png`)).toBe(true);
+      expect(files.has(`plagg-${slug}.webp`)).toBe(true);
     }
   });
 });
 
 describe('getWeatherIcon', () => {
   it('maps clear/fair day codes to klarvaer', () => {
-    expect(getWeatherIcon('clearsky_day')).toBe('/monter/vaer-klarvaer.png');
-    expect(getWeatherIcon('fair_day')).toBe('/monter/vaer-delvis-skyet.png');
+    expect(getWeatherIcon('clearsky_day')).toBe('/monter/vaer-klarvaer.webp');
+    expect(getWeatherIcon('fair_day')).toBe('/monter/vaer-delvis-skyet.webp');
   });
 
   it('maps clear/fair NIGHT codes to the dedicated natt icon', () => {
-    expect(getWeatherIcon('clearsky_night')).toBe('/monter/vaer-natt.png');
-    expect(getWeatherIcon('fair_polartwilight')).toBe('/monter/vaer-natt.png');
+    expect(getWeatherIcon('clearsky_night')).toBe('/monter/vaer-natt.webp');
+    expect(getWeatherIcon('fair_polartwilight')).toBe('/monter/vaer-natt.webp');
   });
 
   it('keeps precipitation/fog icons even at night (condition beats clock)', () => {
-    expect(getWeatherIcon('lightrain_night')).toBe('/monter/vaer-regn.png');
-    expect(getWeatherIcon('snow_night')).toBe('/monter/vaer-sno.png');
-    expect(getWeatherIcon('fog')).toBe('/monter/vaer-taake.png');
+    expect(getWeatherIcon('lightrain_night')).toBe('/monter/vaer-regn.webp');
+    expect(getWeatherIcon('snow_night')).toBe('/monter/vaer-sno.webp');
+    expect(getWeatherIcon('fog')).toBe('/monter/vaer-taake.webp');
   });
 
   it('maps cloudy/partlycloudy/rain/snow families', () => {
-    expect(getWeatherIcon('cloudy')).toBe('/monter/vaer-skyet.png');
-    expect(getWeatherIcon('partlycloudy_day')).toBe('/monter/vaer-delvis-skyet.png');
-    expect(getWeatherIcon('heavyrainshowers_day')).toBe('/monter/vaer-regn.png');
-    expect(getWeatherIcon('sleetshowers_day')).toBe('/monter/vaer-sno.png');
+    expect(getWeatherIcon('cloudy')).toBe('/monter/vaer-skyet.webp');
+    expect(getWeatherIcon('partlycloudy_day')).toBe('/monter/vaer-delvis-skyet.webp');
+    expect(getWeatherIcon('heavyrainshowers_day')).toBe('/monter/vaer-regn.webp');
+    expect(getWeatherIcon('sleetshowers_day')).toBe('/monter/vaer-sno.webp');
   });
 
   it('returns null while weather has not loaded yet', () => {

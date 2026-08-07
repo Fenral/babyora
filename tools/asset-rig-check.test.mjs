@@ -278,7 +278,7 @@ describe('6 · vakten mot selvdom', () => {
 
   it('fyrer på det HISTORISKE tilfellet: maskoten i begge sett', async () => {
     const proofMaskot = await malFil(join(PROOF_KATALOG, 'maskot.png'));
-    const monterMaskot = await malFil(join(MONTER_KATALOG, 'maskot.png'));
+    const monterMaskot = await malFil(join(MONTER_KATALOG, 'maskot.webp'));
     // To filer på disk, ikke byte-identiske — men samme asset. Det var hullet.
     expect(erSammeAsset(proofMaskot, monterMaskot)).toBe(true);
     expect(() => vaktIngenSelvdom([proofMaskot], [monterMaskot])).toThrow(/både kalibrator og dømt/i);
@@ -289,7 +289,7 @@ describe('6 · vakten mot selvdom', () => {
     // monter/plagg-skallbukse er begge mørke og nesten nøytrale, og kollapset
     // til «samme asset». Fingeravtrykket skiller dem på silhuetten.
     const vinterdress = await malFil(join(PROOF_KATALOG, 'vinterdress.png'));
-    const skallbukse = await malFil(join(MONTER_KATALOG, 'plagg-skallbukse.png'));
+    const skallbukse = await malFil(join(MONTER_KATALOG, 'plagg-skallbukse.webp'));
     expect(Math.abs(vinterdress.middelLuminans - skallbukse.middelLuminans)).toBeLessThan(0.05);
     expect(erSammeAsset(vinterdress, skallbukse)).toBe(false);
     expect(fingeravtrykkAvstand(vinterdress.fingeravtrykk, skallbukse.fingeravtrykk).dAlfa)
@@ -393,7 +393,7 @@ function bakInnRom(utklipp, bakgrunn = [46, 34, 22]) {
 
 describe('10 · «ferdig utklipp» er en måling, ikke en påstand', () => {
   it('kjenner igjen et utklipp av SAMME rendering som den bakte filen', async () => {
-    const utklipp = await lesRaa(join(KLIPPET_KATALOG, 'plagg-votter.png'));
+    const utklipp = await lesRaa(join(KLIPPET_KATALOG, 'plagg-votter.webp'));
     const bakt = bakInnRom(utklipp);
     // Forutsetning for at saken betyr noe: den bakte varianten er faktisk bakt.
     expect(malRaadata(bakt).gjennomsiktigAndel).toBe(0);
@@ -407,7 +407,7 @@ describe('10 · «ferdig utklipp» er en måling, ikke en påstand', () => {
   }, 60_000);
 
   it('sier nei når RGB under masken er endret — da er det en ANNEN rendering', async () => {
-    const utklipp = await lesRaa(join(KLIPPET_KATALOG, 'plagg-votter.png'));
+    const utklipp = await lesRaa(join(KLIPPET_KATALOG, 'plagg-votter.webp'));
     const forskjøvet = bakInnRom(utklipp);
     for (let p = 0; p < forskjøvet.width * forskjøvet.height; p++) {
       const i = p * forskjøvet.channels;
@@ -418,8 +418,8 @@ describe('10 · «ferdig utklipp» er en måling, ikke en påstand', () => {
   }, 60_000);
 
   it('sier nei når kandidaten er et ANNET plagg', async () => {
-    const votter = await lesRaa(join(KLIPPET_KATALOG, 'plagg-votter.png'));
-    const feilUtklipp = await lesRaa(join(KLIPPET_KATALOG, 'plagg-stroempebukse.png'));
+    const votter = await lesRaa(join(KLIPPET_KATALOG, 'plagg-votter.webp'));
+    const feilUtklipp = await lesRaa(join(KLIPPET_KATALOG, 'plagg-stroempebukse.webp'));
     expect(bevisSammeRendering(bakInnRom(votter), feilUtklipp).sammeRendering).toBe(false);
   }, 60_000);
 

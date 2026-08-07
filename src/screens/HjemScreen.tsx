@@ -303,7 +303,7 @@ type WeatherIconStrategy =
 
 function weatherIconFor(symbolCode: string | undefined): WeatherIconStrategy {
   const base = (symbolCode ?? '').replace(/_(day|night|polartwilight)$/, '');
-  const png = (f: string): WeatherIconStrategy => ({ kind: 'png', src: `${import.meta.env.BASE_URL}weather-3d/${f}.png` });
+  const png = (f: string): WeatherIconStrategy => ({ kind: 'png', src: `${import.meta.env.BASE_URL}weather-3d/${f}.webp` });
   if (base === 'clearsky') return png('klarvaer');
   if (base === 'fair' || base === 'partlycloudy') return png('delvis-skyet');
   if (base.includes('snow') || base.includes('sleet')) return png('sno');

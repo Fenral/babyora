@@ -11,7 +11,7 @@
  * Ekstern review (2026-08-01, samme dag): maskot-nysgjerrig.png (Del 3 sin
  * scan-koreografi-pose) er RESERVERT for «Babyora undersøker»-øyeblikket
  * under selve scanningen — gjenbrukes IKKE her. Glimtet i hvile bruker sin
- * EGEN, roligere pose-asset (`public/monter/maskot-glimt.png`), lagt oppå
+ * EGEN, roligere pose-asset (`public/monter/maskot-glimt.webp`), lagt oppå
  * den ALLTID normal-poserte MascotPeek som et eget, uavhengig crossfadet
  * lag (IKKE via MascotPeek sin `pose`-prop — den forblir 'normal' her,
  * urørt av glimtet).
@@ -56,9 +56,9 @@ import {
   type IdleGlanceWindow,
 } from './mascot-idle.js';
 
-const GLANCE_SRC = `${import.meta.env.BASE_URL}monter/maskot-glimt.png`;
+const GLANCE_SRC = `${import.meta.env.BASE_URL}monter/maskot-glimt.webp`;
 /**
- * `public/monter/maskot-glimt.png` finnes (verifisert 512×512, alfa-kanal,
+ * `public/monter/maskot-glimt.webp` finnes (verifisert 512×512, alfa-kanal,
  * samme lerret som maskot.png — se PR-notatet). Flipp til `false` (og IKKE
  * fjern denne konstanten) hvis asset-filen noensinne fjernes/erstattes med
  * noe ubrukelig — se filhodet over for hvorfor systemet da skal gå inert

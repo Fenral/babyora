@@ -34,11 +34,11 @@
 const MONTER_BASE = `${import.meta.env.BASE_URL}monter/`;
 
 function garmentPath(slug: string): string {
-  return `${MONTER_BASE}plagg-${slug}.png`;
+  return `${MONTER_BASE}plagg-${slug}.webp`;
 }
 
 function weatherPath(slug: string): string {
-  return `${MONTER_BASE}vaer-${slug}.png`;
+  return `${MONTER_BASE}vaer-${slug}.webp`;
 }
 
 /** De 42 plagg-slug-ene som faktisk har en Monter-PNG i public/monter/. */
