@@ -32,6 +32,14 @@
 | Quarterly | `no.klemeg.app.quarterly` (`prod7f42136454`) | `klemeg_premium_quarterly:p3m` (`prod22782eec69`) |
 | Yearly | `no.klemeg.app.yearly` (`prod75f5cfc880`) | `klemeg_premium_yearly:p1y` (`prodcde25eb3d9`) |
 
+> ⚠ **Play-kolonnen peker på produkter som ikke finnes.** Verifisert i Play
+> Console 2026-08-08: kontoen har null abonnementer og null engangsprodukter
+> på app `4973788330869295535`. De tre `klemeg_premium_*` ble aldri
+> opprettet. Kanonisk navngivning er nå `babyora_premium_monthly`,
+> `babyora_premium_quarterly` og `babyora_premium_yearly` (base plans
+> `p1m` / `p3m` / `p1y`) — se `NEXT-STEPS.md`. RevenueCat-produktene over må
+> byttes ut når Play-produktene finnes.
+
 - ✅ Offering **`default`** (ID `ofrngceba064bd5`) med 3 packages:
   - `$rc_monthly` — Babyora Premium 1 måned — Apple monthly + Play monthly
   - `$rc_three_month` — Babyora Premium 3 måneder (pappaperm) — Apple quarterly + Play quarterly
@@ -98,15 +106,21 @@ Build-link: https://codemagic.io/app/6a217a089f41293842acfade
 
 Krever at .aab er uploaded først (vil skje ved første grønne Codemagic build, eller manuelt).
 
+Bekreftet 2026-08-08: Bundle Explorer er tom, og Play viser bare «Upload a
+new APK» på Subscriptions-siden. Ingen «Create subscription»-knapp før
+.aab-en er oppe.
+
 Når .aab er på Play Internal:
-1. https://play.google.com/console/u/0/developers/6701736013891341719/app/4973788330869295535/monetize/subscriptions
+1. https://play.google.com/console/u/0/developers/6701736013891341719/app/4973788330869295535/subscriptions
 2. Create subscription × 3:
 
-| Product ID | Base plan ID | Pris (NOK) | Periode |
-|---|---|---|---|
-| `klemeg_premium_monthly` | `p1m` | 39 | 1 måned |
-| `klemeg_premium_quarterly` | `p3m` | 99 | 3 måneder |
-| `klemeg_premium_yearly` | `p1y` | 299 | 1 år |
+| Product ID | Base plan ID | Pris (NOK) | Periode | Navn (no-NO) |
+|---|---|---|---|---|
+| `babyora_premium_monthly` | `p1m` | 39 | 1 måned | Babyora Pluss |
+| `babyora_premium_quarterly` | `p3m` | 99 | 3 måneder | Babyora Pluss 3 mnd |
+| `babyora_premium_yearly` | `p1y` | 299 | 1 år | Babyora Pluss 1 år |
+
+Årsplanen får Offer → Free trial · 7 dager.
 
 ### 5. Marketing-assets
 

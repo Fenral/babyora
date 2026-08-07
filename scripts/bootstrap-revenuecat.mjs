@@ -102,7 +102,7 @@ async function main() {
   console.log(`
     1. Entitlements → + New entitlement → ID: "premium"
     2. Products → + New product →
-       - "monthly" → link App Store-ID no.klemeg.app.monthly + Play SKU klemeg_premium_monthly
+       - "monthly" → link App Store-ID no.klemeg.app.monthly + Play SKU babyora_premium_monthly:p1m
        - "quarterly" → 3-måneds-IDene
        - "yearly" → års-IDene
     3. Tildel alle 3 products → entitlement "premium"

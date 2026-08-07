@@ -30,23 +30,32 @@ function banner(): void {
 ════════════════════════════════════════════════════════════════════
   1) Logg inn med Google-kontoen i vinduet (kun første gang).
 
-  STEG 1 — Opprett appen
+  STEG 1 — Appen (FERDIG, ikke gjør om)
   ------------------------------------------------------------------
-    • Create app
-    • Appnavn:      Babyora
-    • Språk:        norsk (bokmål) – no-NO
-    • App eller spill: App
-    • Gratis eller betalt: Gratis  (kjøp skjer i appen)
-    • Package name: no.klemeg.app
+    • App-ID:        4973788330869295535
+    • Utvikler-ID:   6701736013891341719  («Sivert apper»)
+    • Package name:  no.klemeg.app        (låst, kan ikke endres)
+    • Butikknavn:    Babyora              (konsollens interne etikett
+                     står fortsatt «Klemeg» til listingen publiseres)
+    • Status:        Draft. Kort og lang beskrivelse er TOMME.
 
   STEG 2 — Tre abonnementer
   ------------------------------------------------------------------
+    ⛔ PORTEN FØRST: Play viser ingen «Create subscription»-knapp før en
+    AAB/APK med BILLING-tillatelsen er lastet opp til et spor. Målt
+    2026-08-08 i Play Console: Subscriptions-siden tilbød bare «Upload a
+    new APK», og One-time products sa det rett ut — «To add one-time
+    products, you need to add the BILLING permission to your APK».
+    Bundle Explorer var tom. Rekkefølgen er altså:
+      keystore i Codemagic → grønt Android-bygg → .aab på Internal
+      testing → DERETTER abonnementene.
+
     Monetize → Products → Subscriptions → Create subscription
 
-    Product ID                  Base plan    Pris     Periode
-    klemeg_premium_monthly      monthly       39 NOK   1 mnd
-    klemeg_premium_quarterly    quarterly     99 NOK   3 mnd
-    klemeg_premium_yearly       yearly       299 NOK   1 år
+    Product ID                  Base plan   Pris     Periode
+    babyora_premium_monthly     p1m          39 NOK   1 mnd
+    babyora_premium_quarterly   p3m          99 NOK   3 mnd
+    babyora_premium_yearly      p1y         299 NOK   1 år
 
     Navn (no-NO), samme som App Store:
       monthly    → «Babyora Pluss»
@@ -54,6 +63,11 @@ function banner(): void {
       yearly     → «Babyora Pluss 1 år»
 
     ÅRLIG: legg på Offer → Free trial · 7 dager.
+
+    ⚠ Product-ID-er kan ALDRI gjenbrukes etter sletting. Skriv dem én
+    gang, riktig. RevenueCat har fortsatt de gamle Play-produktene
+    klemeg_premium_*:pXX registrert — de må erstattes med
+    babyora_premium_*:pXX når produktene finnes i Play.
 
   STEG 3 — Service account til RevenueCat
   ------------------------------------------------------------------

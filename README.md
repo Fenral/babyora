@@ -54,8 +54,9 @@ Disse stegene krever **Sivert manuelt** før første grønne mobil-build:
 ### 5. RevenueCat (for Premium i Fase 8)
 - Opprett Babyora-prosjekt i RevenueCat dashboard (har konto fra Ryddy)
 - Opprett IAP-produkter i ASC + Play Console:
-  - `klemeg_premium_monthly` — 39 NOK/mnd
-  - `klemeg_premium_yearly` — 299 NOK/år (med 7-dagers trial)
+  - `babyora_premium_monthly` — 39 NOK/mnd
+  - `babyora_premium_quarterly` — 99 NOK/3 mnd
+  - `babyora_premium_yearly` — 299 NOK/år (med 7-dagers trial)
 
 ### 6. Eksterne fagpersoner
 - Helsesøster-konsulent for ull-tabell-validering (~20–40k NOK budgetted)

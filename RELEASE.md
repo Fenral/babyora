@@ -64,18 +64,21 @@ Komplett steg-for-steg for å gå fra `npm run build` til levende app i begge bu
 3. **Set up your app**:
    - Content rating, target audience (0-3 år eller foreldre — foreldre)
    - Privacy policy URL (må opprette først — eks. på Vercel)
-4. **Monetize** → **Subscriptions** → **Create subscription**:
-   - Product ID: `klemeg_premium_monthly`
-   - Subscription name: Babyora Premium (1 måned)
-   - Base plan: monthly, 39 NOK
+4. **Monetize** → **Subscriptions** → **Create subscription**
+   (krever at en .aab med BILLING-tillatelsen er lastet opp først —
+   se porten i `NEXT-STEPS.md`):
+   - Product ID: `babyora_premium_monthly`
+   - Subscription name: Babyora Pluss
+   - Base plan: `p1m`, 39 NOK
 5. Gjenta:
-   - `klemeg_premium_quarterly` — 99 NOK — 3 måneder
-   - `klemeg_premium_yearly` — 299 NOK — 1 år
+   - `babyora_premium_quarterly` — base plan `p3m` — 99 NOK — 3 måneder
+   - `babyora_premium_yearly` — base plan `p1y` — 299 NOK — 1 år
+     (+ Offer → Free trial · 7 dager)
 
 ## 4. Koble products til RevenueCat
 
 1. RevenueCat dashboard → **Products** → **+ New**:
-   - Identifier: `monthly` → linker til iOS `no.klemeg.app.monthly` + Android `klemeg_premium_monthly`
+   - Identifier: `monthly` → linker til iOS `no.klemeg.app.monthly` + Android `babyora_premium_monthly`
    - Identifier: `quarterly` → linker til 3-måneds-produktene
    - Identifier: `yearly` → linker til års-produktene
 2. **Entitlements** → **+ New** → ID: `premium`

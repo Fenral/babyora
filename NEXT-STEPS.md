@@ -35,22 +35,66 @@ Subscription Group: **"Babyora Premium"** (samme for alle 3 — så bytte mellom
 
 5. Husk: norske + engelske localizations, både product display name og review-screenshot
 
-## 3. Play Console (30-45 min)
+## 3. Play Console — tre abonnementer (BLOKKERT, se porten)
 
-1. [Play Console](https://play.google.com/console/) → **Create app**
-2. Package: `no.klemeg.app`
-3. **Monetize** → **Products** → **Subscriptions** → **+ Create subscription**:
+Appen finnes allerede: App-ID **4973788330869295535**, utvikler-ID
+**6701736013891341719**, package `no.klemeg.app`, butikknavn **Babyora**,
+status Draft.
 
-| Product ID | Base plan | Pris | Periode |
-|---|---|---|---|
-| `klemeg_premium_monthly` | monthly | 39 NOK | 1 mnd |
-| `klemeg_premium_quarterly` | quarterly | 99 NOK | 3 mnd |
-| `klemeg_premium_yearly` | yearly | 299 NOK | 1 år |
+### ⛔ Porten: abonnementene kan ikke opprettes ennå
+
+Målt i Play Console 2026-08-08:
+
+- Subscriptions-siden sier *«Your app doesn't have any subscriptions yet»*
+  og tilbyr **bare** knappen «Upload a new APK». Ingen «Create
+  subscription».
+- One-time products sier det uten omskrivning: *«To add one-time products,
+  you need to add the BILLING permission to your APK.»* Samme port gjelder
+  abonnementer.
+- Bundle Explorer er tom — **ingen .aab er noen gang lastet opp**.
+
+Rekkefølgen er derfor låst:
+
+```
+klemeg_keystore i Codemagic  →  grønt Android-bygg  →  .aab på Internal
+testing  →  DERETTER de tre abonnementene
+```
+
+### Når porten er åpen
+
+**Monetize → Products → Subscriptions → Create subscription**
+
+| Product ID | Base plan | Pris | Periode | Navn (no-NO) |
+|---|---|---|---|---|
+| `babyora_premium_monthly` | `p1m` | 39 NOK | 1 mnd | Babyora Pluss |
+| `babyora_premium_quarterly` | `p3m` | 99 NOK | 3 mnd | Babyora Pluss 3 mnd |
+| `babyora_premium_yearly` | `p1y` | 299 NOK | 1 år | Babyora Pluss 1 år |
+
+Årsplanen får i tillegg **Offer → Free trial · 7 dager**.
+
+> **Product-ID-er kan aldri gjenbrukes etter sletting.** Skriv dem riktig
+> første gang. Ingen av dem finnes i kontoen i dag — verken
+> `babyora_premium_*` eller de gamle `klemeg_premium_*`.
+
+### Ryddejobb som følger med
+
+RevenueCat har fortsatt Play-produktene `klemeg_premium_monthly:p1m`,
+`klemeg_premium_quarterly:p3m` og `klemeg_premium_yearly:p1y` registrert
+(se `STATUS.md`). De peker på produkt-ID-er som aldri kommer til å finnes.
+Når Play-produktene er opprettet må RevenueCat-produktene erstattes med
+`babyora_premium_*:pXX` og kobles til `premium`-entitlementet på nytt.
+
+### Andre åpne punkter på samme app
+
+- Kort og lang beskrivelse i butikklistingen er tomme.
+- Betalingsprofilen står med varselet *«Submit your Ireland tax info»*.
+  Profilen fungerer (bankkonto NO…0538, siste utbetaling 15. juli 2024) —
+  varselet gjelder skattetrekk, ikke tilgang til abonnementene.
 
 ## 4. RevenueCat → products kobling (10 min)
 
 1. RevenueCat → **Products** → **+ New Product**:
-   - `monthly` → link iOS `no.klemeg.app.monthly` + Android `klemeg_premium_monthly`
+   - `monthly` → link iOS `no.klemeg.app.monthly` + Android `babyora_premium_monthly`
    - `quarterly` → link 3-måneds
    - `yearly` → link års
 2. **Entitlements** → **+ New** → ID: **`premium`**
