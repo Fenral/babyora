@@ -196,19 +196,27 @@ const PLACEHOLDER_PNG: Record<GarmentId, GarmentId> = {
   'tynne-sko': 'sko',
 };
 
-/** Bygg PNG-sti relativt til app-root (Vite BASE_URL). Faller tilbake til
- *  en plassholder-PNG for plagg som ennå ikke er generert. */
+/* ETT PLAGGSETT, IKKE TO (eierbeslutning 2026-08-07).
+
+   Her sto også `garmentClayPng()`, som pekte på `illustrations/garments-clay/`.
+   Begge settene var i bruk samtidig: Plaggbiblioteket, plaggdetaljarket og
+   Plan tegnet dette, mens antrekks-stepperen og TOG-guiden tegnet clay. Samme
+   plagg så altså ulikt ut avhengig av skjerm — vinterdressen var marineblå i
+   biblioteket og grønn i antrekket.
+
+   Art bible («Materialer», 2026-08-02) avgjør: «Ullplagg: ekte
+   strikkefiber-detalj (masker, fibre), ALDRI plastisk.» Clay-settet er
+   nettopp plastisk, og DESIGN.md krever ÉN materialfamilie for maskot,
+   plagg og værscener. Clay kom inn i F80a, altså før art bible ble skrevet.
+
+   `garments-clay/` er slettet. Mangler et plagg her, er svaret å RENDRE det
+   i riggen — ikke å hente det fra et annet materiale. */
+
+/** Bygg bildesti relativt til app-root (Vite BASE_URL). Faller tilbake til
+ *  en plassholder for plagg som ennå ikke er generert. */
 export function garmentPng(id: GarmentId): string {
   const file = PLACEHOLDER_PNG[id] ?? id;
   return `${import.meta.env.BASE_URL}illustrations/garments/${file}.webp`;
-}
-
-/** F80a: clay-versjonen (garments-clay/) — samme id-mapping. Brukes som
- *  primær-kilde i komposisjonen med <img onError>-fallback til garmentPng
- *  (9 alternativ-IDer + ev. batch-hull dekkes da av de gamle flate). */
-export function garmentClayPng(id: GarmentId): string {
-  const file = PLACEHOLDER_PNG[id] ?? id;
-  return `${import.meta.env.BASE_URL}illustrations/garments-clay/${file}.webp`;
 }
 
 /**

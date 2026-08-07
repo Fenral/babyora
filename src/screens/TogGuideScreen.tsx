@@ -28,7 +28,6 @@ import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
 import {
   garmentIdFor,
-  garmentClayPng,
   garmentPng,
   type GarmentId,
 } from '../data/garment-illustrations';
@@ -206,12 +205,22 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
 
   const rec = useMemo(() => tempToTog(tempC), [tempC]);
 
-  // Anbefalt sovepose som clay-render (erstatter den tegnede hero-SVG-en +
-  // gir «bildet av soveposen» Sivert ba om). Oppdateres med slideren.
-  const soveposeClay = useMemo(() => {
+  /* Anbefalt sovepose som bilde (erstatter den tegnede hero-SVG-en + gir
+     «bildet av soveposen» Sivert ba om). Oppdateres med slideren.
+
+     ETT MATERIALE (eierbeslutning 2026-08-07): hentet clay-settet før, mens
+     Plaggbiblioteket og plaggdetaljarket tegnet det flate. Art bible
+     («Materialer») sier «Ullplagg: ekte strikkefiber-detalj, ALDRI plastisk»,
+     og clay-settet er nettopp plastisk.
+
+     Byttet ventet på to bilder: motoren kan anbefale 1.5 og 2.0 TOG, og de
+     to soveposene fantes BARE i clay. De er nå laget i riggen fra art bible
+     (key 40° øvre venstre, 4000-4300 K, frontal, flytende) og normalisert
+     til settets eget lerret: 1408x768, plagget 0,938 av høyden, sentrert. */
+  const soveposeBilde = useMemo(() => {
     const layer = rec.layers.find((l) => /sovepose/i.test(l.dbString));
     const gid = layer ? garmentIdFor(layer.dbString) : null;
-    return gid ? { src: garmentClayPng(gid), fallback: garmentPng(gid) } : null;
+    return gid ? garmentPng(gid) : null;
   }, [rec]);
 
   // Aktivt barn — interpolert (tillits-bug: het før hardkodet «For Lo · 4 mnd»).
@@ -998,13 +1007,9 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
               skyveren, og skyveren viser TOG-verdien mens man drar.
               Instruksjonen sto altså tre ganger. */}
           <div style={sceneStyle}>
-            {soveposeClay && (
+            {soveposeBilde && (
               <img
-                src={soveposeClay.src}
-                onError={(e) => {
-                  const img = e.currentTarget;
-                  if (img.src !== soveposeClay.fallback) img.src = soveposeClay.fallback;
-                }}
+                src={soveposeBilde}
                 alt={`Anbefalt sovepose, ${rec.tog} TOG`}
                 style={{ display: 'block', height: '100%', width: 'auto', objectFit: 'contain' }}
               />
@@ -1154,12 +1159,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
                         if (!gid) return renderLayerIcon(layer.variant);
                         return (
                           <img
-                            src={garmentClayPng(gid)}
-                            onError={(e) => {
-                              const img = e.currentTarget;
-                              const flat = garmentPng(gid);
-                              if (img.src !== flat) img.src = flat;
-                            }}
+                            src={garmentPng(gid)}
                             alt=""
                             width={64}
                             height={64}

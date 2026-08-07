@@ -4,7 +4,7 @@
  * FUNN 2026-08-07: `du -sh android/app/src/main/assets/public` ga 311 MB.
  * Play tillater 200 MB nedlastingsstørrelse for basemodulen. Årsaken er
  * ikke mange filer, men at hver enkelt er en full-oppløsnings PNG:
- * garments-clay er 62 stykker à 1024x1024 og ~1,1 MB, tegnet på ~150 px.
+ * plaggsettet var 61 stykker à 1024x1024 og ~1,1 MB, tegnet på ~150 px.
  *
  * Målt på de faktiske filene: 512 px WebP q82 gir 17 KB per plagg mot
  * 1112 KB — 98,5 % lettere, og fortsatt skarpt på en 3x-skjerm.
@@ -28,8 +28,7 @@ const ROT = resolve(process.cwd(), 'public');
 
 /** @type {ReadonlyArray<{ mappe: string, maks: number, hvorfor: string }>} */
 const MAPPER = [
-  { mappe: 'illustrations/garments-clay', maks: 640, hvorfor: 'plaggkort ~150 px, TOG-guiden ~180 px' },
-  { mappe: 'illustrations/garments', maks: 640, hvorfor: 'samme flater som clay-settet' },
+  { mappe: 'illustrations/garments', maks: 640, hvorfor: 'plaggkort ~150 px, antrekks-stepper ~180 px' },
   { mappe: 'avatars', maks: 768, hvorfor: 'påkledningsringens figur er den største, ~240 px' },
   { mappe: 'illustrations/vinterprogram', maks: 640, hvorfor: 'leksjonsomslag 132 px' },
   { mappe: 'monter', maks: 768, hvorfor: 'maskoten henger over panelet, ~153 px, men asset heter -360' },
