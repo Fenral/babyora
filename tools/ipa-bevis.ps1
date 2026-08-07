@@ -49,7 +49,16 @@ $ip = Tekst "Payload/App.app/Info.plist"
 if ($null -eq $ip) {
   Sjekk "appens Info.plist finnes" $false $null
 } else {
-  Sjekk "deep link: babyora-scheme registrert i Info.plist" ($ip -like "*babyora*") $null
+  # Tidligere sto det bare "-like *babyora*". Det er for slapt: ordet
+  # forekommer flere steder i plisten (bl.a. ios.scheme fra Capacitor), saa
+  # kontrollen ville bestaatt selv med CFBundleURLTypes helt fjernet. Krever
+  # naa at BEGGE noeklene finnes OG at skjemanavnet staar etter dem.
+  $harTypes = $ip -like "*CFBundleURLTypes*"
+  $harSchemes = $ip -like "*CFBundleURLSchemes*"
+  $iSchemes = $ip.IndexOf("CFBundleURLSchemes")
+  $etterSchemes = if ($iSchemes -ge 0) { $ip.Substring($iSchemes, [Math]::Min(200, $ip.Length - $iSchemes)) } else { "" }
+  Sjekk "deep link: CFBundleURLTypes + CFBundleURLSchemes finnes" ($harTypes -and $harSchemes) $null
+  Sjekk "deep link: babyora staar registrert som scheme" ($etterSchemes -like "*babyora*") $null
 }
 
 # Mutasjonsbevis: en oppdiktet fil SKAL ikke finnes. Hvis denne "bestaar"

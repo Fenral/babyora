@@ -185,7 +185,45 @@ nytt ved neste `onUpdate`/push, ikke ved boot), og selve brief-innholdet (P3s
 | 2026-08-07 02:14 | 4 · Utløpsdegradering — **KJERNEBEVISET** | **PASS.** Rådet gjaldt til 02:12. Kl. 02:14 hadde BEGGE widgetene (small + medium) på egen hånd skiftet til «Må beregnes på nytt» + «Rådet gjaldt til 02:12» + «Sist: ullsett tynt, ull-mellomlag, kjøredress» + «Trykk for å oppdatere». **Påstand (a) bevist på iOS.** |
 | 2026-08-07 02:29 | 3 · Sett test-snapshot (skjermbevis) | **PASS, nå dokumentert.** Panelet viser «Status: **Sendt:** spike-1786062553411 — utløper kl. 02:44:13». Sammenlign build 83, som sa «native bro utilgjengelig». Plugin-registreringen virker. |
 | 2026-08-07 02:29 | 5 · Deep link | **IKKE BESTÅTT ENNÅ.** Panelet viser «Siste deep link inn: **(ingen mottatt)**». |
-| | 6 · Re-aktivering | pågår (15-min-brief sendt 02:29, utløper 02:44) |
+| 2026-08-07 ~02:45 | 6 · Re-aktivering | **PASS.** 15-min-briefen (sendt 02:29) overtok widgeten, og degraderte deretter selv: «Rådet gjaldt til 02:44». Et nytt råd slår altså et utløpt, og degraderingen skjedde for ANDRE gang på et uavhengig tidspunkt — (a) er observert to ganger, ikke én. |
+
+### Steg 5: hva vi vet, og den 20-sekunders testen som avgjør
+
+Observert: trykk på widgeten åpner appen, som lander på **Hjem**, mens
+panelet fortsatt viser «(ingen mottatt)».
+
+Gjennomgang av koden utelukker de nærliggende forklaringene:
+
+- Widgetens URL er riktig. Den degraderte entryen bærer `snapshot`
+  (`BabyoraWidget.swift:87`), `deepLink` er ikke-valgfri i
+  `WidgetSnapshot.swift:50`, og `withBriefFields` setter den til
+  `babyora://brief/<briefId>`. Trykket sender altså brief-URL-en, ikke
+  `babyora://hjem`.
+- Skjemaet er registrert i den bygde appen: `CFBundleURLTypes` +
+  `CFBundleURLSchemes` med `babyora` i Info.plist i IPA-en (verifisert).
+- `AppDelegate.application(_:open:)` videresender til
+  `ApplicationDelegateProxy` — Capacitors standard.
+
+**Hypotese (ikke bevist):** URL-en leveres, men panelet ser den ikke.
+`WidgetSpikePanel` lytter kun på `appUrlOpen` (`useEffect`, linje 65–73)
+og kaller aldri `App.getLaunchUrl()`. Ved kaldstart fyres `appUrlOpen` før
+React rekker å montere lytteren, og eventet køes ikke. At appen landet på
+**Hjem** og ikke på Innstillinger — der brukeren var minutter før — peker
+nettopp mot kaldstart. Appen har heller ingen ruting for
+`babyora://brief/<id>`, så selv en levert URL gir ingen synlig navigasjon;
+panelet er eneste observatør.
+
+**Testen som skiller de to forklaringene, uten nytt bygg:**
+åpne Babyora, bli stående i Innstillinger, sveip opp til hjemskjermen
+(ikke lukk appen), og trykk på widgeten mens appen fortsatt ligger i
+minnet. Da er lytteren allerede montert.
+
+- Linjen skifter til `babyora://brief/spike-…` → URL-en leveres.
+  Påstand (b) er bevist, og «(ingen mottatt)» var en mangel i
+  testpanelet, ikke i deep linken. Fiks: kall `getLaunchUrl()` i tillegg.
+- Linjen står fortsatt på «(ingen mottatt)» → URL-en leveres ikke i det
+  hele tatt. Da er (b) en reell feil i rutingen, og neste sted å lete er
+  om `widgetURL` overhodet blir respektert på denne widgetfamilien.
 
 > **Rettelse, ført opp fordi den er lærerik.** Claude loggførte først steg 5
 > som PASS på grunnlag av eierens ene ord «Funka», og skrev at spiken var

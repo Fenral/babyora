@@ -61,7 +61,7 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "(a) og (c) bevist på iOS: widgeten degraderte av seg selv 02:12→02:14, og broen leverer («Sendt: spike-…»). GJENSTÅR: trykk på widgeten og se om panelet viser «Siste deep link inn: babyora://brief/spike-…» — står det fortsatt «(ingen mottatt)» etter et trykk, er deep link-ruting en reell feil å diagnostisere. Deretter: REKRUTTER 5-8 FORELDRE (eneste blokkering for retningsvalget), Android-keystore-valg, PostHog-nøkkel, fagvalidering P2.",
+  "nextAction": "(a) BEVIST TO GANGER og (c) bevist på iOS; steg 6 PASS. GJENSTÅR (20 sek, ikke nytt bygg): åpne appen, bli i Innstillinger, sveip til hjemskjerm UTEN å lukke appen, trykk widgeten. Skifter linjen til babyora://brief/… var «(ingen mottatt)» en mangel i testpanelet (mangler getLaunchUrl), ikke i deep linken. Står den → reell rutingfeil. Deretter: REKRUTTER 5-8 FORELDRE (eneste blokkering for fase 12), Android-keystore, PostHog-nøkkel, fagvalidering P2.",
   "labLenke": {
     "url": "https://babyora-lab.vercel.app/",
     "vercelProsjekt": "babyora-lab",
@@ -136,11 +136,17 @@
       "bygg": 85,
       "steg": 5,
       "resultat": "ÅPEN — panelet viser «Siste deep link inn: (ingen mottatt)». Claude loggførte først PASS basert på eierens «Funka»; skjermbildet motbeviste det. Rettet."
+    },
+    {
+      "dato": "2026-08-07 ~02:45",
+      "bygg": 85,
+      "steg": 6,
+      "resultat": "PASS — 15-min-briefen overtok og degraderte selv («Rådet gjaldt til 02:44»). Nytt råd slår utløpt, og (a) er dermed observert to ganger på uavhengige tidspunkt."
     }
   ],
   "spikeStatus": {
-    "paastandA": "PASS på iOS — skjermbilde 02:14, råd utløpt 02:12, begge widgetfamilier",
-    "paastandB": "ÅPEN — «(ingen mottatt)» kl. 02:29; avgjøres av ett trykk på widgeten",
+    "paastandA": "PASS på iOS — observert TO ganger (02:12→02:14 og 02:44→02:45), begge widgetfamilier",
+    "paastandB": "ÅPEN — appen åpnes på Hjem, panelet sier «(ingen mottatt)». Kodegjennomgang utelukker feil URL, manglende scheme og manglende AppDelegate-videresending. Hypotese: panelet lytter kun på appUrlOpen og misser kaldstart-URL-en (getLaunchUrl kalles aldri). Avgjøres av varm-trykk-test.",
     "paastandC": "PASS på iOS — «Sendt: spike-…» + snapshot-innhold i widgeten",
     "android": "ikke prøvd; manglende keystore (eierbeslutning)",
     "konklusjon": "2 av 3 påstander bevist på iOS. (a) — det spiken fantes for — er inne. Spiken er IKKE formelt bestått før (b) er avklart."
