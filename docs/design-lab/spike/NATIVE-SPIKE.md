@@ -181,10 +181,29 @@ nytt ved neste `onUpdate`/push, ikke ved boot), og selve brief-innholdet (P3s
 | 2026-08-07 01:34 | 1 · Legg widget (iOS) | **PASS.** «Babyora» fantes i widgetgalleriet. Eier la på BÅDE small og medium på samme hjemskjerm — bredere enn protokollen ba om, og begge rendret. Bekrefter at `BabyoraWidgetExtension.appex` ble embeddet og at begge familiene i `supportedFamilies` faktisk vises. |
 | 2026-08-07 01:34 | 2 · Tomtilstand | **PASS.** Begge widgetene viser «Åpne Babyora for dagens antrekk». |
 | 2026-08-07 01:39 | 3 · Sett test-snapshot (build 83) | **FAIL — reell feil funnet.** Panelet meldte «Bygget, men native bro utilgjengelig (web?)». Årsak: Capacitor 8 registrerer kun klasser fra `packageClassList`; app-lokale plugins må registreres eksplisitt. Rettet i build 85 (se under). |
-| | 3 · Sett test-snapshot (build 85) | venter — **kjør på nytt** |
-| | 4 · Utløpsdegradering (kjernebeviset) | venter |
+| 2026-08-07 ~02:10 | 3 · Sett test-snapshot (build 85) | **PASS.** Widgeten viste snapshot-innhold («Testbarn», antrekkslista) — det kan bare komme fra App Group-fila broen skrev. **Kontrakt (c) er dermed bevist**, og plugin-registreringen i build 85 virker. |
+| 2026-08-07 02:14 | 4 · Utløpsdegradering — **KJERNEBEVISET** | **PASS.** Rådet gjaldt til 02:12. Kl. 02:14 hadde BEGGE widgetene (small + medium) på egen hånd skiftet til «Må beregnes på nytt» + «Rådet gjaldt til 02:12» + «Sist: ullsett tynt, ull-mellomlag, kjøredress» + «Trykk for å oppdatere». **Påstand (a) bevist på iOS.** |
 | | 5 · Deep link | venter |
 | | 6 · Re-aktivering | venter |
+
+### Hva steg 4 faktisk beviser — og hva det ikke gjør
+
+Bevist: WidgetKit-timelinen med en degradert entry datert nøyaktig
+`expiresAt` fungerer. Widgeten byttet tilstand uten at noen kode kjørte i
+mellomtiden — den degraderte entryen lå ferdig i timelinen fra utstedelses-
+tidspunktet. Det er hele mekanismen P3/P4 hviler på: et råd som mister
+gyldighet av seg selv, på en flate brukeren ikke har åpnet.
+
+Bevist samtidig, som bieffekt: fallback-linjen («Sist: …») og det
+selvforklarende «Trykk for å oppdatere» rendrer riktig i degradert
+tilstand, i begge widgetfamiliene.
+
+IKKE bevist av dette skjermbildet alene: at telefonen forble urørt i
+vinduet. Skjermbildet viser tilstanden 02:14, ikke historikken fra 02:10.
+Mekanismen krever imidlertid ikke app-åpning — timelinen var allerede
+levert — så et app-besøk ville ikke ha *skapt* degraderingen, bare
+eventuelt framskyndet en re-render. Presisjonen (02:12 → observert innen
+02:14) ligger innenfor WidgetKits ±1 min.
 
 ### Build 85 (tag v1.0.14) — hva som er maskinelt verifisert før enheten
 

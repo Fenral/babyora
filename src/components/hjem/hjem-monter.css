@@ -266,7 +266,15 @@
    den maalte panelhoyden (se .hjm-panel-slot) staar. */
 .hjm-loc {
   appearance: none;
-  border: 1px solid color-mix(in srgb, var(--dw-ink-panel-mid) 22%, transparent);
+  /* KANTEN ER EN INNFELT SKYGGE, IKKE EN BORDER — og det er malt.
+
+     Forste utgave brukte `border: 1px solid`. Den la 2 px paa radens hoyde,
+     og panelet under er MALT: verify-hjem port 2 («instrumentet hopper ikke
+     i hoyde») gikk fra 11/11 til 10/11 med «2 hoyder, andel 0.00». CI fanget
+     det jeg ikke kjorte lokalt. En ring tegnet med inset box-shadow ser
+     identisk ut og rorer ikke boksmodellen. */
+  border: 0;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dw-ink-panel-mid) 22%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--dw-ink-panel-mid) 10%, transparent);
   font: inherit;
