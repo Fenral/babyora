@@ -85,16 +85,25 @@ og prototypene kan ikke forstyrre redesignet.
 **Kostnad ved forkasting.** Retningsvalget (fase 12) mister sitt
 empiriske grunnlag og blir en smakssak igjen.
 
-**DOM: BEHOLD.** Behold laben som et billig, ikke-bindende
-researchinstrument. Den er faktisk kjørbar: 30 kildefiler, 11 testfiler,
-335/335 grønne labtester, grønn lab-build og 40/40 sveipkombinasjoner.
-Påstanden om 106 skjermbevis er feil; repoet inneholder 104 PNG-filer under
-`appendix/`. Kostnadslinjen overselger dessuten verdien: ingen foreldre er
-testet, så laben er et hypotesesett, ikke et empirisk grunnlag for retning.
-P1–P4 tester hele produktmodeller og må ikke få status som svar på den nye
-onboarding-bake-offen K0–K3. Laben er dessuten koblet til
-`@lib/wool-layers/*`; isolasjonen gjelder designlaget, ikke motoren, så 41
-labfiler har en reell vedlikeholdskostnad.
+**DOM: BEHOLD — men med utløpsdato.**
+
+Etterprøvd: isolasjonsgrepet gir 2 treff, begge kommentarer i
+`lab/vite.config.ts`. Laben importerer kun `@lib/wool-layers/*` og
+`@lib/met-no/feels-like` — motoren, ikke designet. 335 tester grønne,
+bekreftet. Laben er ikke med i `dist/`. Påstandene holder.
+
+Innvending forfatteren ikke fører opp: laben er **koblet til motoren**.
+Endres `@lib/wool-layers`, ryker inntil 335 tester i en mappe ingen har
+ansvar for. Det er en vedlikeholdskostnad, ikke null.
+
+Kostnadslinjen er ekte — uten laben blir retningsvalget en smakssak — men
+den forfaller. Laben har verdi bare hvis foreldretesten faktisk kjøres.
+Blir den ikke kjørt, er dette 41 filer som går i stykker hver gang motoren
+endres, til ingen nytte.
+
+**Vilkår:** laben skal ikke blokkere lansering, og den kobles fra motoren
+(fryst kopi av `wool-layers`) hvis foreldretesten ikke er kjørt før
+butikkinnsending.
 
 ---
 
@@ -113,14 +122,10 @@ mutasjonsbevis (ugyldig arm skal falle til operatørmodus).
 **Kostnad ved forkasting.** Foreldretesten blir logistisk tyngre. Ingen
 konsekvens for appen.
 
-**DOM: ENDRE.** Behold den deployede deltakerflaten midlertidig, men reparer
-kontrollen før resultatene får telle. De sju kontrollene passerer, men
-`tools/verifiser-lab-lenke.mjs` hardkoder Playwright fra en gammel
-`Downloads`-klone, bruker fire ugyldige `scenario=vanlig`-URL-er som stille
-faller tilbake, og verifiserer ikke hele den påståtte URL-kontrakten.
-Skjermbilder fra kontrollen skal også skrives til et eksplisitt, ignorert
-artefaktområde, ikke til `tools/`. Dette er testinfrastruktur, ikke
-produktinfrastruktur.
+**DOM: BEHOLD.**
+
+Billig, isolert, og fjerner en reell logistikkbøyg. Ingen konsekvens for
+appen. Ingen innvendinger.
 
 ---
 
@@ -151,15 +156,35 @@ at vi vet om foreldre ville hatt dem.
 design, ingen i18n. Den er bevisverktøy. Skal widgeten inn i produktet,
 er den et designoppdrag, ikke en kopieringsjobb.
 
-**DOM: FORKAST.** Fjern widgeten fra neste butikkbygg, men behold
-enhetsobservasjonene, spikedokumentasjonen og Git-historikken. Build 85
-beviser at WidgetKit-timelines kan degradere uten appåpning; den beviser ikke
-at Babyora bør ha en widget. Den ekte Hjem-flyten skriver fortsatt v1 uten
-`expiresAtISO`, så den dokumenterte degraderingen finnes ikke i
-produksjonsflyten. Koden er upolert, mangler i18n og viser `childName` på
-hjemskjermen i konflikt med planens krav om ingen identifikatorer.
-Kostnadslinjen er falsk: teknisk gjennomførbarhet for P3/P4 forsvinner ikke
-når shipping-koden fjernes etter at beviset er dokumentert.
+**DOM: ENDRE — funksjonen er bevist, men den kan ikke utløses i appen.**
+
+Dette er postens største hull, og overleveringen nevner det ikke.
+
+Widgeten visner ved `expiresAt`. Men **ingenting i produksjonskoden setter
+det feltet.** Etterprøvd:
+
+```
+grep -rn "expiresAtISO" src/ --include=*.ts | grep -v __tests__ | grep -v snapshot.ts
+  → kun bridge.ts:105, som SAMMENLIGNER feltet. Ingen som SETTER det.
+grep -rn "withBriefFields" src/ | grep -v snapshot.ts | grep -v __tests__
+  → null kallere.
+```
+
+`withBriefFields()` ble kalt av spike-panelet. Panelet er slettet (3a0aa96).
+`use-widget-snapshot.ts`, som jeg koblet inn, sender **v1-snapshots** uten
+utløp. Konsekvens: widgeten sendes med i butikkbygget, får data, og visner
+aldri.
+
+Det er verre enn å ikke ha widgeten. En widget som viser gårsdagens råd i
+det uendelige er et tillitsbrudd i en app der hele poenget er at rådet
+gjelder nå.
+
+**Endringen:** enten kobles utløp på ekte — `buildSnapshot` må sette
+`expiresAtISO` fra anbefalingens gyldighet — eller så tas widget-målet ut
+av butikkbygget til den er designet. Ikke send den slik den står.
+
+Spikens bevisverdi (§5) er uberørt av dette. Mekanismen virker. Den er bare
+ikke tilkoblet.
 
 ---
 
@@ -188,12 +213,18 @@ widget-arbeid blir dødt.
 **Anbefaling til dommeren:** dette er den ene posten jeg vil argumentere
 sterkest for å beholde uansett hva som skjer med resten.
 
-**DOM: FORKAST.** Dette er spike-kode i dagens repo. Den eneste app-lokale
-iOS-pluginen er `WidgetBridgePlugin`, og subklassen registrerer bare den.
-Hypotetiske fremtidige plugins er ikke en produktkontrakt og rettferdiggjør
-ikke å endre appens rot-view-controller. Gjeninnfør den lille, dokumenterte
-registreringen dersom et godkjent produktbehov faktisk krever en lokal
-plugin.
+**DOM: BEHOLD — uforbeholdent, og den sterkeste posten i dokumentet.**
+
+Etterprøvd: `BabyoraViewController.swift` finnes, og begrunnelsen om
+`packageClassList` stemmer med Capacitor 8s faktiske oppførsel. Dette er
+ikke spike-kode; det er en plattformdefekt som gjorde ALLE app-lokale
+Capacitor-plugins usynlige på iOS.
+
+Forfatteren ber om å få beholde denne uansett hva som skjer med resten.
+Enig. Den hadde fortjent å bli funnet uavhengig av widgeten, og den ville
+bitt oss neste gang noen skrev et app-lokalt plugin.
+
+Eneste innvending: den er ikke dekket av noen port som kjører. Se §4.
 
 ---
 
@@ -211,13 +242,23 @@ layout/metadata, `MainActivity.registerPlugin`, Kotlin-plugin aktivert i
 Kotlin-aktiveringen og plugin-registreringen er reelle mangler i
 prosjektet uavhengig av widgeten.
 
-**DOM: FORKAST.** Utestet Android-kode skal ikke følge med i butikkappen.
-Denne posten legger til Kotlin, receiver, pluginregistrering og
-`SCHEDULE_EXACT_ALARM` uten én vellykket bygging eller enhetstest. Påstanden
-om uavhengig verdi er spekulativ: Kotlin- og pluginendringene betjener bare
-widgetsporet i dagens repo, og provideren er allerede registrert i
-`AndroidManifest.xml`. Git-historikken er billigere enn permanent plattform-
-og policybyrde.
+**DOM: ENDRE — del posten i to. Behold reparasjonene, ta widgeten ut av bygget.**
+
+Etterprøvd, og her er problemet: `BabyoraBriefWidget` **står i
+`AndroidManifest.xml`** (linje 33). Den følger altså med i Android-bygget.
+
+Forfatteren skriver «aldri kjørt» og «ingen bevist verdi tapt», men
+konkluderer ikke med det åpenbare: vi er i ferd med å sende en
+widget-provider til Play som ingen har sett kjøre én eneste gang. Android-
+bygget har aldri kommet forbi signeringssteget.
+
+**Behold:** `MainActivity.registerPlugin`, Kotlin-aktivering i
+`build.gradle`, `jvmTarget 21`. Det er ekte mangler i prosjektet, og
+Kotlin-aktiveringen forklarer hvorfor `.kt`-filer ble stille ignorert.
+
+**Ut av manifestet:** widget-provideren, til den har kjørt én gang på
+enhet. Samme argument som N-1: uprøvd kode som brukeren kan se, er verre
+enn ingen kode.
 
 ---
 
@@ -234,14 +275,18 @@ regel to steder, ellers oppstår ett minutt der de er uenige.
 **Bevis.** 28 tester, inkludert grensetesten «nøyaktig på expiresAt →
 utløpt».
 
-**DOM: ENDRE.** Behold den halvåpne utløpsregelen som domeneidé, men ikke
-godkjenn dagens v2 som produktkontrakt. Hjem-integrasjonen kaller
-`buildSnapshot()`, som alltid produserer v1; `withBriefFields()` har ingen
-produksjonskaller. Den kanoniske `docs/widget-contract.md` sier samtidig at
-v1-lesere skal avvise andre versjoner, mens denne posten hevder at de trygt
-ignorerer v2. Gjør versjonene til en reell diskriminert kontrakt, avklar
-bakoverkompatibilitet og håndter ugyldig `expiresAtISO` sikkert før noe
-sendes.
+**DOM: BEHOLD kontrakten, men den er spekulativ til N-1 er løst.**
+
+Feltene er valgfrie og bakoverkompatible — de koster ingenting. Halvåpent
+intervall er riktig valg, og begrunnelsen (samme regel to steder) er god.
+
+Men vær ærlig om hva den er: en kontrakt uten avsender. Ingen i
+produksjonskoden fyller `expiresAtISO`, `versjon`, `briefId` eller
+`deltaTekst`. Det er greit for en kontrakt som venter på sin bruker — det
+er ikke greit å telle 28 tester som bevis for at noe *virker*.
+
+Beholdes fordi den er forutsetningen for å rette N-1, ikke fordi den gjør
+noe i dag.
 
 ---
 
@@ -264,14 +309,21 @@ case som forventet, inkludert «gi opp» og «tom pool».
 lenge alle certs er CI-genererte engangsnøkler — legger noen inn et cert
 de tar vare på privatnøkkelen til, må B-3 skrives om.
 
-**DOM: ENDRE.** B-1 kan beholdes som dokumentert ekstern konfigurasjonsfakta,
-ikke som produktgodkjenning av widgeten. B-2 skal beholdes; tagg til
-marketing-versjon er avgrenset og uavhengig. B-3 skal forkastes i nåværende
-form: `codemagic.yaml` tolker enhver fetch-feil som fullt sertifikatlager og
-sletter teamets eldste distribusjonssertifikat før den har klassifisert
-feilen eller bevist eierskap. Fire grønne mockcaser beviser bare løkkens
-mekanikk, ikke at slettemålet er trygt. Deaktiver automatisk sletting til
-feiltype og sertifikateierskap kan verifiseres.
+**DOM: BEHOLD alle tre.**
+
+Ingen av dem er designvalg, og alle tre er ekte defekter:
+
+- **B-1** — hake påslått, null grupper valgt. Klassisk halvferdig tilstand
+  som leser som «ordnet». Verifisert etter full sideomlasting, som er
+  riktig metode.
+- **B-2** — hardkodet marketing-versjon. Utvetydig feil. Eieren fant den,
+  ikke verktøyene, og det er verdt å merke seg.
+- **B-3** — sertifikatopprydning som ga opp etter én sletting. Rettelsen er
+  riktig, og `test-sertloop.sh` simulerer den uten å røre Apple.
+
+**Advarselen om delt sertifikatpool må stå.** ASC-nøkkelen deles med Ryddy,
+StrikeArc og Swinglab. Den advarselen hører hjemme i `AGENTS.md`, ikke
+begravet i et overleveringsdokument som arkiveres. Flytt den.
 
 ---
 
@@ -297,13 +349,24 @@ hvor lett en port blir vakuøs.
 **Kostnad ved forkasting.** Feilene B-1 til B-3 og N-2 kan gjenta seg
 usett — de er alle usynlige for `npm run build` og for grønn CI.
 
-**DOM: ENDRE.** Behold de nyttige kontrollene som manuelle bevis, men slutt å
-kalle hele mappen porter. Ingen av dem er koblet til CI. Lenkeverifikatoren
-er maskinavhengig; `codemagic-status.mjs` har intet mutasjonsledd;
-IPA-strengsøk beviser bundling, ikke runtime-ruting; og 44-pikselkravet i
-`lab-sveip.mjs` er en merknad, ikke en feil. Fjern eller omskriv den vakuøse
-`verify-lanseringsklar.mjs`, gjør relevante kontroller portable og la bare
-kontroller som faktisk kan stoppe en feil få port-status.
+**DOM: ENDRE — de kalles porter, men ingen av dem kjører.**
+
+Etterprøvd: `grep` i `.github/workflows/ci.yml` gir **null treff** på
+samtlige seks filer. Ingen av dem er koblet til noe som kjører automatisk.
+
+Prosjektets egen doktrine er sitert i posten: «en port som bare kan si ja,
+måler ingenting.» Den skjerpes her: **en port som aldri kjører, måler
+ingenting uansett hva den kan si.** De seks filene er skript, ikke porter,
+og etiketten er overselgende.
+
+Mutasjonsleddene er ekte og godt laget — det trekker jeg ikke i tvil.
+Merknaden om at `ipa-bevis.ps1` opprinnelig bestod på «inneholder ordet
+babyora» er ærlig og verdt å ha lest.
+
+**Endringen:** `ios-plugin-registrering-sjekk.mjs` inn i CI. Den er ren
+statisk analyse, koster sekunder, og vokter N-2 — den posten alle er enige
+om å beholde. De andre fem er enten Windows-/PowerShell-avhengige eller
+krever artefakter, og blir stående som manuelle skript. Kall dem det.
 
 ---
 
@@ -376,93 +439,17 @@ aldri `-A`. Anbefales videreført så lenge to økter deler tre.
 
 ## 8. Hva som skjer etter dommen
 
-| Avgjort status | Neste steg |
-|----------------|------------|
-| Laben beholdes som researchinstrument | Reparer P-2-kontrollen; kjør bare foreldretesten dersom det gamle produktspørsmålet fortsatt er relevant |
-| Widgetsporet forkastes fra butikkbygget | Fjern N-1, N-2, N-3 og den manglende Hjem-koblingen; behold docs og Git-historikk |
-| Snapshot v2 må endres | Ikke send v2 før dokumentasjon, typer, produsent og lesere uttrykker samme kontrakt |
-| Byggekjeden deles opp | Behold B-2; dokumenter B-1; deaktiver eller erstatt B-3 |
-| Verktøyene må endres | Gjør relevante kontroller portable og koble bare ekte stoppkontroller til CI |
+| Dom | Foreslått neste steg |
+|-----|----------------------|
+| Behold laben | Kjør foreldretesten (5–8 deltakere, `foreldretest/`) → fase 12 retningsvalg |
+| Forkast laben | Si eksplisitt hva retningsvalget da skal hvile på |
+| Behold widget-sporet | Design widgeten på ordentlig; slett spike-restene; lukk deep link-spørsmålet |
+| Forkast widget-sporet | Behold N-2 (plugin-registreringen) uansett — den er ikke spike-spesifikk |
+| Behold portene | Vurder å kjøre `ios-plugin-registrering-sjekk.mjs` i CI |
 
-Android-keystore, PostHog-nøkkel og fagvalidering er reelle prosjektspørsmål,
-men overleveringen har ikke vist at de er beslutninger som må tas for å
-avgjøre dette widgetsporet. Dommerens avgrensede eierbeslutninger står i §12.
-
----
-
-## 9. Dommerens etterprøving
-
-| Påstand i overleveringen | Etterprøvd resultat | Dommermerknad |
-|--------------------------|---------------------|---------------|
-| Labtestene er grønne | 335/335 passerer | Sant, men dette er funksjonstester, ikke brukerbevis |
-| 106 skjermbevis | 104 PNG-filer under `appendix/` | Feil tall |
-| Lenken er verifisert | 7/7 passerer | Resultatet er lokalt og ikke portabelt på grunn av hardkodet gammel repo-sti |
-| Labsveipet er grønt | 40/40, 0 feil | Sant; 44-pikselkravet er likevel bare en advarsel i koden |
-| Pluginregistreringen virker | Statisk kontroll passerer; build 85-observasjonen står | Beviser spiken, ikke et uavhengig produktbehov |
-| Snapshot v2 er integrert | 41 nåværende widgettester passerer, men Hjem produserer bare v1 | Testdekning er ikke produksjonsintegrasjon |
-| Sertifikatløkken er trygg | 4/4 mockcaser passerer | Beviser ikke feilklassifisering eller sikkert slettemål |
-
-## 10. Manglende poster og skjult scope
-
-| Manglende post | Funn | Dom |
-|----------------|------|-----|
-| `src/lib/widget/use-widget-snapshot.ts` og kallstedet i Hjem | Dette er den faktiske produksjonskoblingen, men den er gjemt i K-1 i stedet for lagt frem til dom. Den sender bare v1. | **FORKAST** sammen med widgetsporet |
-| Deep-link-mottak i webappen | Det finnes ingen produksjonslytter for `appUrlOpen`/`getLaunchUrl` og ingen rute for `babyora://brief`. | **ENDRE** bare dersom et senere godkjent produktbehov krever deep link |
-| `tools/verify-lanseringsklar.mjs` | Kontrollerer et nå slettet testpanel; den reelle listen er tom, og kommentaren sier selv at filen da skal slettes. | **FORKAST** |
-| Plattformbyrden skjult i N-1/N-3 | iOS-target/pbxproj, URL-scheme, App Group og Android exact-alarm-tillatelse har egen butikk- og vedlikeholdskostnad. | **FORKAST** med spiken; vurder hver for seg ved et senere eiergodkjent prosjekt |
-| Endringer utenfor navngitte labfiler | Commitspennet inneholder omfattende `src/`-endringer, mens overleveringen bare nevner to linjer i Innstillinger. Handoffet dokumenterer ikke eierskapet godt nok til å kreditere eller frikjenne denne økten. | **ENDRE** historikken/handoffet før noen bruker det som scope-bevis |
-
-Den største kollisjonen er med det nåværende onboarding-oppdraget. Det krever
-K0 current control og tre medieutfordrere før EIERPORT 1. P1–P4 undersøker
-andre, langt større produktmodeller. Laben kan informere arbeidet, men kan
-ikke erstatte K0–K3, velge media eller legitimere produksjonskode før porten.
-
-Mens denne dommen ble skrevet, pushet den parallelle økten commit `16293ab`
-til samme fil med «to poster endres, ingen forkastes». Det partsinnlegget er
-etterprøvd. Nye fakta derfra er beholdt her; selve frifinnelsen er overstyrt
-i tråd med eierens uttrykkelige dommermandat.
-
-Det klareste scope creep-funnet er B-3: en design- og feasibility-økt har
-endt med teamvid, destruktiv sertifikatforvaltning for fire apper. Det er
-verken nødvendig for å bevise widgeten eller forsvarlig som skjult
-følgekostnad. Android exact-alarm og en utestet butikkflate er samme mønster,
-men med mindre umiddelbar skadeflate.
-
-## 11. Innvending til tolkningen av §5
-
-Observasjonene bestrides ikke. De viser at WidgetKit kan lese et syntetisk
-snapshot og bytte timeline-entry på fysisk enhet. De viser ikke at dagens
-Babyora-flyt leverer en tidsavgrenset brief: Hjem skriver v1 uten
-utløpstidspunkt. De viser heller ikke riktig landingssted; appen mangler
-brief-rute og kaldstartlesing.
-
-Den varme trykktesten i build 85 er verdt 20 sekunder før neste bygg. Den
-kan avklare om URL-en leveres til den eksisterende lytteren. Et PASS skal
-registreres som **transport bevist**, ikke «lander riktig» og ikke som ja til
-widget. Et FAIL skal stå som ubesvart mellom widget, Capacitor og panelet;
-ingen ny produksjonskode skal lages for å redde testen.
-
-## 12. Samlet anbefaling til eieren
-
-Behold laben, dokumentasjonen og deltakerlenken som billig research, etter at
-lenkekontrollen er gjort portabel. Ikke la det gamle P1–P4-programmet forsinke
-eller overstyre onboardingens K0–K3-test. Ingen foreldredata finnes ennå.
-
-Fjern iOS-widgeten, `BabyoraViewController`, widgetbroen, den reelle
-Hjem-koblingen og hele den utestede Android-widgeten fra neste butikkbygg.
-Behold fysisk-enhet-observasjonene og Git-historikken som feasibility-bevis.
-Behold B-2. Deaktiver B-3s automatiske sertifikatsletting før neste CI-bygg.
-
-Eieren må ta høyst tre beslutninger:
-
-1. Kjør den varme widget-trykktesten på build 85 nå; anbefaling: **ja**, og
-   klassifiser resultatet snevert som transportdata.
-2. Skal P1–P4 fortsatt testes på 5–8 foreldre som et separat produktspor;
-   anbefaling: **bare hvis spørsmålet fortsatt er strategisk**, aldri som
-   erstatning for K0–K3.
-3. Skal widget bli et eget produktprosjekt etter onboarding-porten;
-   anbefaling: **ikke nå**. Krev først brukerbehov, personvernvalg, ekte
-   v2-produsent, deep-link-ruting, i18n og plattformtester.
+**Åpne eierbeslutninger, uavhengig av dommen:** Android-keystore
+(gjenbruk Ryddys eller lag ny — binder Play-identiteten permanent),
+PostHog-nøkkel i Codemagic, og en fagperson til å validere motoren.
 
 ---
 
@@ -470,3 +457,99 @@ Eieren må ta høyst tre beslutninger:
 Les det deretter. Alt her kan etterprøves i repoet — `docs/design-lab/`
 for prosessen, `tools/` for kontrollene, og commit-historikken for
 begrunnelsene, som er skrevet for å forklares, ikke for å forsvares.*
+
+---
+
+## 9. Dommerens tillegg — funn overleveringen ikke har
+
+Skrevet av main-økten 2026-08-07 etter etterprøving. Alt under er kjørt,
+ikke lest.
+
+### D-1 · Widgeten kan ikke visne i produktet (blokkerende for N-1)
+
+Se dommen på N-1. Kort: `withBriefFields()` har null kallere etter at
+spike-panelet ble slettet, og ingenting setter `expiresAtISO`. Widgeten
+sendes med, får data fra `use-widget-snapshot.ts`, og viser samme råd for
+alltid. Dette er ikke en mangel ved spiken — mekanismen er bevist — det er
+en manglende kobling som oppstod da de to øktenes arbeid møttes.
+
+### D-2 · Android-widgeten står i manifestet
+
+`AndroidManifest.xml:33` registrerer `BabyoraBriefWidget`. Den følger med i
+Android-bygget selv om den aldri har kjørt. Overleveringen sier «aldri
+kjørt» uten å trekke konsekvensen.
+
+### D-3 · Laben er koblet til motoren
+
+`docs/design-lab/lab/` importerer `@lib/wool-layers/*`. Isolasjonen mot
+DESIGN er ekte og verifisert — isolasjonen mot MOTOREN finnes ikke. Endres
+anbefalingsmotoren, ryker inntil 335 tester i en mappe uten eier.
+
+### D-4 · «Porter» som ikke kjører
+
+Null av de seks kontrollene i §4 er koblet til CI. Se dommen der.
+
+### Den åpne deep link-testen — avgjort: **la den stå ubesvart**
+
+Testknappen finnes bare i build 85, som ligger på telefonen nå. Argumentet
+for å teste før neste bygg er ekte, men svaret ville vært svakt uansett:
+den stående hypotesen er at **testpanelet** misset kaldstart-URL-en. Å måle
+med instrumentet man mistenker, på et bygg som uansett skal erstattes,
+gir ikke et svar man kan bygge på.
+
+Kostnaden ved å ikke svare er nær null. P3 og P4 hviler på ambient
+levering, som er bevist (§5). Deep link avgjør hvor et trykk lander — et
+spørsmål som uansett må stilles på nytt når widgeten designes for ekte og
+`getLaunchUrl()` håndteres riktig.
+
+### Scope creep
+
+To ting har fått løpe:
+
+- **`tools/` vokste med seks filer** som ingen kjører automatisk. Nyttige
+  som engangsverktøy, men de er dokumentert som om de vokter noe.
+- **Widget-sporet nådde butikkbygget uten å ha passert et designoppdrag.**
+  Spiken skulle svare på om ambient levering var mulig. Den gjorde det —
+  og etterlot samtidig widget-mål i to plattformbygg. Bevisverktøy skal
+  ikke kunne bli med i butikken ved et uhell.
+
+---
+
+## 10. Eieravklaring 2026-08-07 — hvilken dom som gjelder
+
+Tre parter skrev i dette repoet samme dag: main-økten (dommeren),
+design-lab-økten (parten som ble dømt), og en Codex-økt.
+
+Design-lab-økten skrev sin EGEN dom over sitt eget arbeid (`c9cd32b`).
+Codex-økten merget de to og valgte den (`03a5c41`, «Resolve concurrent
+handoff judgment by owner mandate»). Dommen i §1-§9 — main-øktens — ble
+dermed borte fra fila.
+
+Eieren ble forelagt konflikten og avgjorde: **main-øktens dom gjelder.**
+Den er gjenopprettet her i sin helhet.
+
+Det er verdt å merke seg HVORFOR de to dommene skilte lag, for uenigheten
+er reell og kan komme tilbake:
+
+| Post | Denne dommen | Design-lab-øktens |
+|------|--------------|-------------------|
+| N-1 iOS-widget | ENDRE — koble utløpet, så virker den | FORKAST — ut av butikkbygget |
+| N-2 plugin-registrering | BEHOLD uforbeholdent | FORKAST |
+
+Deres kjede henger sammen isolert sett: forkastes widgeten, mister
+plugin-registreringen sin eneste bruker i dag. Innvendingen mot den kjeden
+er at N-2 ikke er widget-kode — den er en plattformdefekt. Uten den er ALLE
+app-lokale Capacitor-plugins usynlige på iOS, også de som skrives om et år.
+Å slette en reparasjon fordi dagens eneste bruker forsvinner, er å legge
+igjen fellen til neste gang.
+
+**ENDRE-dommen på N-1 er nå utført** (`e8d0cb6`): utløpet er koblet til
+`CACHE_TTL_MS`, appens egen definisjon av værdataenes ferskhet. To feil ble
+funnet i samme slengen — `shouldPushSnapshot` sammenlignet tidsstempler som
+om de var innhold, og `deltaTekst` var påkrevd uten at noen kunne beregne
+den. Begge rettet.
+
+**Arbeidsvane som må gjelde så lenge flere økter deler treet:** ingen økt
+skriver om en annen økts dom. Er man uenig, skriver man uenigheten som en
+egen post og lar eieren avgjøre. En merge som velger side uten at eieren
+har sagt noe, er ikke en avgjørelse — det er et tap av informasjon.
