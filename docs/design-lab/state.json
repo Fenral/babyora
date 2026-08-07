@@ -61,7 +61,7 @@
     "driver": "C:\\Users\\siver\\AppData\\Local\\Temp\\claude\\c--Users-siver-Downloads-trainer-marketplace-master1\\caca9327-6879-43d6-984e-b51e369db631\\scratchpad\\chatgpt-driver\\",
     "driverSource": "tools/chatgpt-driver/daemon.mjs"
   },
-  "nextAction": "Build 85 (1.0.14) er på TestFlight med broen registrert og verifisert i artefakten. VENTER PÅ EIER: (1) oppdater i TestFlight til 1.0.14 og GJENTA steg 3-6 i enhetsprotokollen — steg 4 (degradering ved utløp uten app-åpning) er kjernebeviset. (2) Rekrutter 5-8 foreldre; laben ligger på https://babyora-lab.vercel.app/. (3) EIERVALG Android-keystore. Sperret til (1)+(2): retningsvalg (fase 12).",
+  "nextAction": "KJERNEBEVISET ER INNE: widgeten degraderte av seg selv ved utløp (02:12→02:14), på begge widgetstørrelser. Påstand (a) og (c) bevist på iOS. GJENSTÅR PÅ EIER: steg 5 (trykk på widgeten → appen skal åpne og vise «Siste deep link inn: babyora://brief/spike-…») og steg 6 (send 15-min-brief → widgeten skal våkne igjen med ny gyldighet). Deretter: rekruttere 5-8 foreldre (babyora-lab.vercel.app), Android-keystore-valg, og så retningsvalg (fase 12).",
   "labLenke": {
     "url": "https://babyora-lab.vercel.app/",
     "vercelProsjekt": "babyora-lab",
@@ -112,6 +112,24 @@
       "bygg": 84,
       "steg": "-",
       "resultat": "Byggfeil: Apples sert-tak (2), opprydningen slettet bare ett. Rettet (028b843)."
+    },
+    {
+      "dato": "2026-08-07",
+      "bygg": 85,
+      "steg": 3,
+      "resultat": "PASS — widgeten viste snapshot-innhold («Testbarn» + antrekksliste). Kontrakt (c) bevist: broen skriver, widgeten leser App Group-fila."
+    },
+    {
+      "dato": "2026-08-07",
+      "bygg": 85,
+      "steg": 4,
+      "resultat": "PASS — KJERNEBEVISET. Rådet gjaldt til 02:12; kl. 02:14 hadde begge widgetene selv skiftet til «Må beregnes på nytt» + «Rådet gjaldt til 02:12» + fallback-linje. Påstand (a) bevist på iOS."
     }
-  ]
+  ],
+  "spikeStatus": {
+    "paastandA": "BEVIST på iOS (utløpsdegradering uten app-åpning)",
+    "paastandB": "venter (deep link, steg 5)",
+    "paastandC": "BEVIST på iOS (app→widget-kontrakt)",
+    "tolkning": "Spiken krever PASS på (a),(b),(c) på minst én plattform. To av tre er inne."
+  }
 }
