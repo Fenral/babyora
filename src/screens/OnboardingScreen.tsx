@@ -14,7 +14,6 @@
  *  - useChildren().completeOnboarding(...) → persisterer barn i localStorage
  *  - useWeather (kun forhåndsvarming etter location-step, ikke kritisk)
  *  - useHapticSystem (selection/medium/success per step)
- *  - useNativeSettings (reducedMotion = ingen animasjoner)
  *
  * A11y:
  *  - <main> + <h1> per step
@@ -46,7 +45,6 @@ import {
 import { useChildren } from '../state/children-store';
 import { useWeather } from '../hooks/useWeather';
 import { useHapticSystem } from '../lib/haptics/system';
-import { useNativeSettings } from '../hooks/useNativeSettings';
 import { searchCities } from '../data/no-cities';
 import { searchAddress } from '../lib/geocode/nominatim';
 import { DISCLAIMER_FULL } from '../lib/copy/disclaimer';
@@ -231,9 +229,11 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   const { onComplete } = props;
   const { completeOnboarding } = useChildren();
   const { fire } = useHapticSystem();
-  const { reducedMotion } = useNativeSettings();
-  // reducedMotion: native Capacitor-flag + prefers-reduced-motion media query.
-  // Styrer den korte babyvideoen; CSS-overganger respekterer media query under.
+  /* `reducedMotion` er borte herfra 2026-08-07: den styrte KUN den korte
+     babyvideoen, som aldri spilte og nå er arkivert. Skjermens øvrige
+     bevegelse er CSS-overganger, og de respekterer
+     `prefers-reduced-motion` i stylesheetet — ikke via denne kroken.
+     Kommer det animasjon som må gates i JS, hentes den inn igjen. */
 
   // ─── Step + felt-state ───────────────────────────────────────────────────
   const [step, setStep] = useState<Step>(1);
@@ -565,8 +565,6 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
           {step === 2 && (
             <>
               <OnboardingBabyHero
-                reducedMotion={reducedMotion}
-                playMotion={false}
                 variant="compact"
                 context="birthday"
               />
@@ -614,8 +612,6 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
           {step === 3 && (
             <>
               <OnboardingBabyHero
-                reducedMotion={reducedMotion}
-                playMotion={false}
                 variant="compact"
                 context="location"
               />
@@ -706,8 +702,6 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
           {step === 4 && (
             <>
               <OnboardingBabyHero
-                reducedMotion={reducedMotion}
-                playMotion={false}
                 variant="compact"
                 context="ready"
               />
@@ -770,8 +764,6 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
           {step === 5 && (
             <>
               <OnboardingBabyHero
-                reducedMotion={reducedMotion}
-                playMotion={false}
                 variant="welcome"
                 context="ready"
               />

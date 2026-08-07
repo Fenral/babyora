@@ -1,6 +1,25 @@
-import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 
 /**
+ * INTROFILMEN ER ARKIVERT (2026-08-07).
+ *
+ * Komponenten hadde et komplett videomaskineri — `playMotion`, `onMotionDone`,
+ * `variant="signature"`, en `<video>` med autoplay og onEnded-fallback. Ingen
+ * av delene kjørte: ALLE fire kallsteder i OnboardingScreen sendte
+ * `playMotion={false}`, og `signature` ble aldri brukt. Filmen
+ * (`babyora-intro-v3.mp4`) lå i bundelen uten noensinne å bli avspilt.
+ *
+ * Den ble erstattet av den stående maskoten i P10/JOB5-redesignet, og
+ * maskineriet ble bare stående igjen. Kode som ser levende ut men ikke er
+ * det, er nøyaktig feilen som lot widgeten gå usammenkoblet til TestFlight
+ * samme uke — derfor er den fjernet i stedet for kommentert bort.
+ *
+ * Filmen og de fire gamle onboarding-illustrasjonene ligger i
+ * `docs/mocks/arkiv/illustrations-onboarding/`. Appens EKTE åpningsanimasjon
+ * er `#launch` i index.html: ordmerket toner inn over 520 ms med varmt lys
+ * fra øvre venstre. Skal filmen vekkes, er det en beslutning om at åpningen
+ * skal ha TO signaturøyeblikk — ikke en opprydding.
+ *
  * P10/JOB5 (2026-08-01): swapped from the old lilac sitting-doll
  * illustration (babyora-intro-v3.webp/mp4) to the standing Monter mascot —
  * "old doll asset" was one of the three named violations to sweep from
@@ -13,13 +32,9 @@ import { useCallback, useEffect, useRef, useState, type ReactElement } from 'rea
  * pre-framed square illustration needed.
  */
 const POSTER_SRC = '/monter/maskot-staaende-cut-360.webp';
-const VIDEO_SRC = '/illustrations/onboarding/babyora-intro-v3.mp4';
 
 export type OnboardingBabyHeroProps = {
-  reducedMotion: boolean;
-  playMotion?: boolean;
-  onMotionDone?: () => void;
-  variant?: 'signature' | 'compact' | 'welcome';
+  variant?: 'compact' | 'welcome';
   context?: 'birthday' | 'location' | 'ready';
 };
 
@@ -58,31 +73,11 @@ function ContextMark({ context }: { context: NonNullable<OnboardingBabyHeroProps
  * Videoen spilles én gang og fjernes etterpå, slik at skjemaet forblir rolig.
  */
 export function OnboardingBabyHero({
-  reducedMotion,
-  playMotion = true,
-  onMotionDone,
-  variant = 'signature',
+  variant = 'compact',
   context,
 }: OnboardingBabyHeroProps): ReactElement {
-  const [showVideo, setShowVideo] = useState(playMotion && !reducedMotion);
-  const shouldShowVideo = showVideo && !reducedMotion;
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  const finishMotion = useCallback(() => {
-    setShowVideo(false);
-    onMotionDone?.();
-  }, [onMotionDone]);
-
-  useEffect(() => {
-    if (!shouldShowVideo || !videoRef.current) return;
-    void videoRef.current.play().catch(finishMotion);
-  }, [finishMotion, shouldShowVideo]);
-
   return (
-    <div className={`ob-baby-hero ${variant}`} data-hero={variant === 'signature' ? 'logo' : undefined}>
-      {variant === 'signature' && (
-        <span className="ob-baby-wordmark" data-hero="wordmark">Babyora</span>
-      )}
+    <div className={`ob-baby-hero ${variant}`}>
       <img
         className="ob-baby-media ob-baby-poster"
         src={POSTER_SRC}
@@ -90,23 +85,6 @@ export function OnboardingBabyHero({
         aria-hidden="true"
         draggable={false}
       />
-      {shouldShowVideo && (
-        <video
-          ref={videoRef}
-          className="ob-baby-media ob-baby-video"
-          src={VIDEO_SRC}
-          poster={POSTER_SRC}
-          autoPlay
-          muted
-          playsInline
-          preload="metadata"
-          aria-hidden="true"
-          tabIndex={-1}
-          disablePictureInPicture
-          onEnded={finishMotion}
-          onError={finishMotion}
-        />
-      )}
       <span className="ob-baby-frame" aria-hidden="true" />
       {context && (
         <span className={`ob-baby-context ${context}`} aria-hidden="true">
