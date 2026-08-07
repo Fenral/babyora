@@ -1,7 +1,8 @@
 # Onboarding imagery — dagens flyt og baseline
 
-**Kandidat:** `03a5c410401f604f58bfd7dcf346a2518ff9b6bb`  
-**Viewport:** 390×844 CSS-piksler, DPR 2, Playwright Chromium  
+**Kandidat:** `03a5c410401f604f58bfd7dcf346a2518ff9b6bb`
+
+**Viewport:** 390×844 CSS-piksler, DPR 2, Playwright Chromium
 **Viktig avgrensning:** Dette er reproduserbar web-preview-evidens. Det er
 ikke fysisk-iPhone-timing, faktisk VoiceOver-test eller menneskelig oppgavetid.
 
@@ -90,4 +91,3 @@ MET-fixture og eksplisitt geolokasjon. Rådata ligger i
 Dagens flyt og bindende kontrakter er nå dokumentert. Konseptarbeidet kan
 starte, men kandidatene får ikke bruke baselinefeilene som «gevinst» uten å
 merke at forsøket da blander medieeffekt med generell flytforbedring.
-

@@ -1,0 +1,14 @@
+- 'region "Babyora K1: Situasjonen først"':
+  - text: 9:41 Babyora 1 av 4
+  - paragraph: Første antrekk
+  - heading "Hvem kler vi på?" [level=1]
+  - paragraph: Se hva du får, og gjør så rådet personlig.
+  - img "Foto er utilgjengelig. Teksten forklarer fortsatt Babyoras oppgave.":
+    - strong: Fra inne til ute.
+    - text: Vi gjør vær, alder og situasjon om til lag.
+  - text: Barnets navn
+  - textbox "Barnets navn Du kan endre dette senere.":
+    - /placeholder: Valgfritt
+  - text: Du kan endre dette senere.
+  - paragraph: Offline-test · meningen skal stå uten media
+  - button "Fortsett"

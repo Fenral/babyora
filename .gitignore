@@ -69,3 +69,6 @@ tools/avatar-gen/out/
 
 # Revisjonskjøringer er lokale artefakter (skjermbilder), ikke kildekode
 tools/product-audit/runs/
+
+# Lokal output fra responsive onboarding-verifikasjon
+/verify/onboarding-responsive/

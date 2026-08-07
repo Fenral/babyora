@@ -1,0 +1,61 @@
+{
+  "capturedAt": "2026-08-07T11:59:34.429Z",
+  "sourceCommit": "working-tree-after-d81a94d",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 2
+  },
+  "fixture": {
+    "location": "Oslo",
+    "temperatureC": 4,
+    "feelsLikeC": 1,
+    "ageMonths": 10,
+    "activity": "trilletur"
+  },
+  "flows": [
+    {
+      "arm": "k0",
+      "firstInteractiveMs": 374.1,
+      "firstActionToResultMs": 4819.3,
+      "finalCtaToResultMs": 3381.6,
+      "valueClaimVisibleAtFirstFrame": false,
+      "interactions": 6
+    },
+    {
+      "arm": "k1",
+      "firstInteractiveMs": 284.1,
+      "firstActionToResultMs": 5062.1,
+      "finalCtaToResultMs": 3331.6,
+      "valueClaimVisibleAtFirstFrame": false,
+      "interactions": 6
+    },
+    {
+      "arm": "k2",
+      "firstInteractiveMs": 151.5,
+      "firstActionToResultMs": 4340.9,
+      "finalCtaToResultMs": 3313.7,
+      "valueClaimVisibleAtFirstFrame": true,
+      "interactions": 6
+    },
+    {
+      "arm": "k3",
+      "firstInteractiveMs": 119.9,
+      "firstActionToResultMs": 4506.5,
+      "finalCtaToResultMs": 3328.3,
+      "valueClaimVisibleAtFirstFrame": true,
+      "interactions": 6
+    }
+  ],
+  "resume": {
+    "expectedFrame": 2,
+    "restoredFrame": 2,
+    "passed": true
+  },
+  "consoleErrors": [],
+  "caveats": [
+    "Headless Chromium-måling på lokal mock er ikke native enhetsytelse eller brukertest.",
+    "K2-videoen dokumenterer CSS-proxyen; ingen Higgsfield-generering er utført.",
+    "K1-fotoet er en Pexels-teststimulus, ikke en produksjonsgodkjent asset."
+  ]
+}

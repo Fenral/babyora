@@ -1,0 +1,10 @@
+- 'region "Babyora K0: Dagens kontroll"':
+  - text: 9:41 Babyora 1 av 4
+  - paragraph: Første antrekk
+  - heading "Hvem kler vi på?" [level=1]
+  - paragraph: Vi bruker navnet for å gjøre rådene litt mer personlige.
+  - text: Barnets navn
+  - textbox "Barnets navn Du kan endre dette senere.":
+    - /placeholder: Valgfritt
+  - text: Du kan endre dette senere.
+  - button "Fortsett"

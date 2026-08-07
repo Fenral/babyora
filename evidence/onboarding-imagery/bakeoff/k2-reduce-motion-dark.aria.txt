@@ -1,0 +1,12 @@
+- 'region "Babyora K2: Rådet blir til"':
+  - text: 9:41 Babyora 1 av 4
+  - paragraph: Første antrekk
+  - heading "Hvem kler vi på?" [level=1]
+  - paragraph: Se hva du får, og gjør så rådet personlig.
+  - img "Fire grader, ti måneder og trilletur blir til tre synlige kleslag. Bevegelsen forklarer sammenhengen.":
+    - paragraph: Vær + alder + situasjon → lag i riktig rekkefølge
+  - text: Barnets navn
+  - textbox "Barnets navn Du kan endre dette senere.":
+    - /placeholder: Valgfritt
+  - text: Du kan endre dette senere.
+  - button "Fortsett"

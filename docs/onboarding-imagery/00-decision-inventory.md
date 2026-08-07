@@ -1,7 +1,8 @@
 # Onboarding imagery — beslutningsinventar
 
-**Dato:** 2026-08-07  
-**Scope:** Fase 0–3, isolert mock, stopp ved EIERPORT 1  
+**Dato:** 2026-08-07
+
+**Scope:** Fase 0–3, isolert mock, stopp ved EIERPORT 1
 **Presedens:** `AGENTS.md` → `docs/CLAUDE-START-HERE.md` →
 `docs/DECISION-LOG.md` → øvrige aktive dokumenter → faktisk kode for hva
 produktet gjør nå.
@@ -64,4 +65,3 @@ Dagens onboarding er ikke en tom kontroll: den er raskt interaktiv, lokal,
 uten medieavhengighet og har en etablert Babyora-identitet. Utfordrerne må slå
 den på forståelse eller tillit uten å øke de allerede dokumenterte ni
 automatiserte handlingene og den separate 3,2-sekunders scannen.
-

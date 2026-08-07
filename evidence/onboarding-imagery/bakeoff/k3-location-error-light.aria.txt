@@ -1,0 +1,15 @@
+- 'region "Babyora K3: Svaret først"':
+  - text: 9:41
+  - button "Gå tilbake": ‹
+  - text: 3 av 4
+  - paragraph: Første antrekk
+  - heading "Hvor er hjemme?" [level=1]
+  - paragraph: Vi bruker stedet til å hente været der dere faktisk skal kle på.
+  - paragraph: Hvorfor vi spør
+  - paragraph:
+    - strong: "Oslo nå: 4°, føles som 1°."
+  - paragraph: Stedet lagres på profilen. Du kan skrive det inn uten posisjonstilgang.
+  - text: Hjemsted
+  - textbox "Hjemsted": Oslo
+  - alert: Vi fikk ikke hentet forslag. Skriv hele stedsnavnet og fortsett manuelt.
+  - button "Fortsett"

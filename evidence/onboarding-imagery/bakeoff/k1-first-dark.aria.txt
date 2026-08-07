@@ -1,0 +1,13 @@
+- 'region "Babyora K1: Situasjonen først"':
+  - text: 9:41 Babyora 1 av 4
+  - paragraph: Første antrekk
+  - heading "Hvem kler vi på?" [level=1]
+  - paragraph: Se hva du får, og gjør så rådet personlig.
+  - figure "En kjent start på dagen · ikke et antrekksråd":
+    - img "En forelder knepper en lys body på en baby hjemme. Bildet viser en hverdagssituasjon, ikke det anbefalte antrekket."
+    - text: En kjent start på dagen · ikke et antrekksråd
+  - text: Barnets navn
+  - textbox "Barnets navn Du kan endre dette senere.":
+    - /placeholder: Valgfritt
+  - text: Du kan endre dette senere.
+  - button "Fortsett"

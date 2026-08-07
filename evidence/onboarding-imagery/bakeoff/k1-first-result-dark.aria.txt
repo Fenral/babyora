@@ -1,0 +1,19 @@
+- 'region "Babyora K1: Situasjonen først"':
+  - text: 9:41
+  - button "Gå tilbake": ‹
+  - text: 4 av 4
+  - paragraph: Babyora
+  - heading "Dagens lag" [level=1]
+  - paragraph: Mina · 10 måneder · trilletur i Oslo
+  - strong: 4°
+  - text: føles som 1° lett vind
+  - paragraph: Innerst → ytterst
+  - list:
+    - listitem: 1 Ullbody
+    - listitem: 2 Ullstrømpebukse
+    - listitem: 3 Tynn fleecedress
+    - listitem: 4 Vindtett dress
+    - listitem: 5 Ullsokker
+    - listitem: 6 Tynn ullue
+  - paragraph: Kjenn etter i nakken etter 10–15 minutter. Juster ett lag av gangen.
+  - button "Ferdig"
