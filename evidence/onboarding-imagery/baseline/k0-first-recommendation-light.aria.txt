@@ -1,0 +1,24 @@
+- main:
+  - text: BABYORA
+  - button "Juster vær, sted eller aktivitet": 1° Føles som −2° · Delvis skyet Fast sted · Din posisjon · Utenfor vogn
+  - heading "Dagens antrekk" [level=1]
+  - paragraph: 8 plagg for Iver, innerst til ytterst
+  - list:
+    - listitem:
+      - button "Ullsett, tykt, Innerst. Detaljer.": Ullsett, tykt Innerst
+    - listitem:
+      - button "Ullsokker, Innerst. Detaljer.": Ullsokker Innerst
+    - listitem:
+      - button "Ull-mellomlag, Mellomlag. Detaljer.": Ull-mellomlag Mellomlag
+    - listitem:
+      - button "Vinterdress, Ytterst. Detaljer.": Vinterdress Ytterst
+    - listitem:
+      - button "Lue med ull, Tilbehør. Detaljer.": Lue med ull Tilbehør
+    - listitem:
+      - button "Votter, tykke, Tilbehør. Detaljer.": Votter, tykke Tilbehør
+    - listitem:
+      - button "Hals (buff), Tilbehør. Detaljer.": Hals (buff) Tilbehør
+    - listitem:
+      - button "Tykke ullsokker, Tilbehør. Detaljer.": Tykke ullsokker Tilbehør
+  - button "Kle på, steg for steg"
+  - button "Hvorfor akkurat dette?"

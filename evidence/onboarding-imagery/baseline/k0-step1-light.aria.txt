@@ -1,0 +1,12 @@
+- main "Hvem kler vi på?":
+  - text: BABYORA
+  - progressbar "Steg 1 av 4"
+  - region "Navn eller kallenavn":
+    - heading "Hvem kler vi på?" [level=1]
+    - paragraph: Bruk navn eller kallenavn hvis du vil gjøre rådene personlige.
+    - text: Navn eller kallenavn · Valgfritt
+    - textbox "Navn eller kallenavn · Valgfritt":
+      - /placeholder: F.eks. Iver
+    - text: Brukes bare i teksten og lagres bare på denne telefonen. Navnet brukes i rådene «Da er vi klare for babyen»
+  - text: Steg 1 av 4
+  - button "Fortsett"

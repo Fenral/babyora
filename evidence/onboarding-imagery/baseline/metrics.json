@@ -1,0 +1,45 @@
+{
+  "capturedAt": "2026-08-07T11:24:05.213Z",
+  "sourceCommit": "03a5c410401f604f58bfd7dcf346a2518ff9b6bb",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "measurementBoundary": "Playwright web-preview lower bound; not physical-iPhone timing and not human task time.",
+  "results": {
+    "light": {
+      "startedAt": 788.8258,
+      "firstInteractiveMs": 482.4,
+      "automatedInteractionToFirstResultMs": 5023.8,
+      "automatedInteractionToSettledResultMs": 6031.9,
+      "homeCtaToFirstResultMs": 3577.8,
+      "homeCtaToSettledResultMs": 4586,
+      "homeCtaLabel": "Finn dagens antrekk",
+      "homeCtaPath": "ceremony",
+      "requiredProfileFields": [
+        "fødselsdato",
+        "hjemsted",
+        "navn i faktisk fullføringsvakt"
+      ],
+      "automatedActions": 9
+    },
+    "dark": {
+      "startedAt": 8253.8247,
+      "firstInteractiveMs": 618,
+      "automatedInteractionToFirstResultMs": 5381.7,
+      "automatedInteractionToSettledResultMs": 6383.4,
+      "homeCtaToFirstResultMs": 3573.6,
+      "homeCtaToSettledResultMs": 4575.3,
+      "homeCtaLabel": "Finn dagens antrekk",
+      "homeCtaPath": "ceremony",
+      "requiredProfileFields": [
+        "fødselsdato",
+        "hjemsted",
+        "navn i faktisk fullføringsvakt"
+      ],
+      "automatedActions": 9
+    },
+    "noNameCompletionDisabled": true
+  },
+  "consoleErrors": []
+}
