@@ -85,7 +85,16 @@ og prototypene kan ikke forstyrre redesignet.
 **Kostnad ved forkasting.** Retningsvalget (fase 12) mister sitt
 empiriske grunnlag og blir en smakssak igjen.
 
-**DOM:** ____
+**DOM: BEHOLD.** Behold laben som et billig, ikke-bindende
+researchinstrument. Den er faktisk kjørbar: 30 kildefiler, 11 testfiler,
+335/335 grønne labtester, grønn lab-build og 40/40 sveipkombinasjoner.
+Påstanden om 106 skjermbevis er feil; repoet inneholder 104 PNG-filer under
+`appendix/`. Kostnadslinjen overselger dessuten verdien: ingen foreldre er
+testet, så laben er et hypotesesett, ikke et empirisk grunnlag for retning.
+P1–P4 tester hele produktmodeller og må ikke få status som svar på den nye
+onboarding-bake-offen K0–K3. Laben er dessuten koblet til
+`@lib/wool-layers/*`; isolasjonen gjelder designlaget, ikke motoren, så 41
+labfiler har en reell vedlikeholdskostnad.
 
 ---
 
@@ -104,7 +113,14 @@ mutasjonsbevis (ugyldig arm skal falle til operatørmodus).
 **Kostnad ved forkasting.** Foreldretesten blir logistisk tyngre. Ingen
 konsekvens for appen.
 
-**DOM:** ____
+**DOM: ENDRE.** Behold den deployede deltakerflaten midlertidig, men reparer
+kontrollen før resultatene får telle. De sju kontrollene passerer, men
+`tools/verifiser-lab-lenke.mjs` hardkoder Playwright fra en gammel
+`Downloads`-klone, bruker fire ugyldige `scenario=vanlig`-URL-er som stille
+faller tilbake, og verifiserer ikke hele den påståtte URL-kontrakten.
+Skjermbilder fra kontrollen skal også skrives til et eksplisitt, ignorert
+artefaktområde, ikke til `tools/`. Dette er testinfrastruktur, ikke
+produktinfrastruktur.
 
 ---
 
@@ -135,7 +151,15 @@ at vi vet om foreldre ville hatt dem.
 design, ingen i18n. Den er bevisverktøy. Skal widgeten inn i produktet,
 er den et designoppdrag, ikke en kopieringsjobb.
 
-**DOM:** ____
+**DOM: FORKAST.** Fjern widgeten fra neste butikkbygg, men behold
+enhetsobservasjonene, spikedokumentasjonen og Git-historikken. Build 85
+beviser at WidgetKit-timelines kan degradere uten appåpning; den beviser ikke
+at Babyora bør ha en widget. Den ekte Hjem-flyten skriver fortsatt v1 uten
+`expiresAtISO`, så den dokumenterte degraderingen finnes ikke i
+produksjonsflyten. Koden er upolert, mangler i18n og viser `childName` på
+hjemskjermen i konflikt med planens krav om ingen identifikatorer.
+Kostnadslinjen er falsk: teknisk gjennomførbarhet for P3/P4 forsvinner ikke
+når shipping-koden fjernes etter at beviset er dokumentert.
 
 ---
 
@@ -164,7 +188,12 @@ widget-arbeid blir dødt.
 **Anbefaling til dommeren:** dette er den ene posten jeg vil argumentere
 sterkest for å beholde uansett hva som skjer med resten.
 
-**DOM:** ____
+**DOM: FORKAST.** Dette er spike-kode i dagens repo. Den eneste app-lokale
+iOS-pluginen er `WidgetBridgePlugin`, og subklassen registrerer bare den.
+Hypotetiske fremtidige plugins er ikke en produktkontrakt og rettferdiggjør
+ikke å endre appens rot-view-controller. Gjeninnfør den lille, dokumenterte
+registreringen dersom et godkjent produktbehov faktisk krever en lokal
+plugin.
 
 ---
 
@@ -182,7 +211,13 @@ layout/metadata, `MainActivity.registerPlugin`, Kotlin-plugin aktivert i
 Kotlin-aktiveringen og plugin-registreringen er reelle mangler i
 prosjektet uavhengig av widgeten.
 
-**DOM:** ____
+**DOM: FORKAST.** Utestet Android-kode skal ikke følge med i butikkappen.
+Denne posten legger til Kotlin, receiver, pluginregistrering og
+`SCHEDULE_EXACT_ALARM` uten én vellykket bygging eller enhetstest. Påstanden
+om uavhengig verdi er spekulativ: Kotlin- og pluginendringene betjener bare
+widgetsporet i dagens repo, og provideren er allerede registrert i
+`AndroidManifest.xml`. Git-historikken er billigere enn permanent plattform-
+og policybyrde.
 
 ---
 
@@ -199,7 +234,14 @@ regel to steder, ellers oppstår ett minutt der de er uenige.
 **Bevis.** 28 tester, inkludert grensetesten «nøyaktig på expiresAt →
 utløpt».
 
-**DOM:** ____
+**DOM: ENDRE.** Behold den halvåpne utløpsregelen som domeneidé, men ikke
+godkjenn dagens v2 som produktkontrakt. Hjem-integrasjonen kaller
+`buildSnapshot()`, som alltid produserer v1; `withBriefFields()` har ingen
+produksjonskaller. Den kanoniske `docs/widget-contract.md` sier samtidig at
+v1-lesere skal avvise andre versjoner, mens denne posten hevder at de trygt
+ignorerer v2. Gjør versjonene til en reell diskriminert kontrakt, avklar
+bakoverkompatibilitet og håndter ugyldig `expiresAtISO` sikkert før noe
+sendes.
 
 ---
 
@@ -222,7 +264,14 @@ case som forventet, inkludert «gi opp» og «tom pool».
 lenge alle certs er CI-genererte engangsnøkler — legger noen inn et cert
 de tar vare på privatnøkkelen til, må B-3 skrives om.
 
-**DOM:** ____
+**DOM: ENDRE.** B-1 kan beholdes som dokumentert ekstern konfigurasjonsfakta,
+ikke som produktgodkjenning av widgeten. B-2 skal beholdes; tagg til
+marketing-versjon er avgrenset og uavhengig. B-3 skal forkastes i nåværende
+form: `codemagic.yaml` tolker enhver fetch-feil som fullt sertifikatlager og
+sletter teamets eldste distribusjonssertifikat før den har klassifisert
+feilen eller bevist eierskap. Fire grønne mockcaser beviser bare løkkens
+mekanikk, ikke at slettemålet er trygt. Deaktiver automatisk sletting til
+feiltype og sertifikateierskap kan verifiseres.
 
 ---
 
@@ -248,7 +297,13 @@ hvor lett en port blir vakuøs.
 **Kostnad ved forkasting.** Feilene B-1 til B-3 og N-2 kan gjenta seg
 usett — de er alle usynlige for `npm run build` og for grønn CI.
 
-**DOM:** ____
+**DOM: ENDRE.** Behold de nyttige kontrollene som manuelle bevis, men slutt å
+kalle hele mappen porter. Ingen av dem er koblet til CI. Lenkeverifikatoren
+er maskinavhengig; `codemagic-status.mjs` har intet mutasjonsledd;
+IPA-strengsøk beviser bundling, ikke runtime-ruting; og 44-pikselkravet i
+`lab-sveip.mjs` er en merknad, ikke en feil. Fjern eller omskriv den vakuøse
+`verify-lanseringsklar.mjs`, gjør relevante kontroller portable og la bare
+kontroller som faktisk kan stoppe en feil få port-status.
 
 ---
 
@@ -321,17 +376,93 @@ aldri `-A`. Anbefales videreført så lenge to økter deler tre.
 
 ## 8. Hva som skjer etter dommen
 
-| Dom | Foreslått neste steg |
-|-----|----------------------|
-| Behold laben | Kjør foreldretesten (5–8 deltakere, `foreldretest/`) → fase 12 retningsvalg |
-| Forkast laben | Si eksplisitt hva retningsvalget da skal hvile på |
-| Behold widget-sporet | Design widgeten på ordentlig; slett spike-restene; lukk deep link-spørsmålet |
-| Forkast widget-sporet | Behold N-2 (plugin-registreringen) uansett — den er ikke spike-spesifikk |
-| Behold portene | Vurder å kjøre `ios-plugin-registrering-sjekk.mjs` i CI |
+| Avgjort status | Neste steg |
+|----------------|------------|
+| Laben beholdes som researchinstrument | Reparer P-2-kontrollen; kjør bare foreldretesten dersom det gamle produktspørsmålet fortsatt er relevant |
+| Widgetsporet forkastes fra butikkbygget | Fjern N-1, N-2, N-3 og den manglende Hjem-koblingen; behold docs og Git-historikk |
+| Snapshot v2 må endres | Ikke send v2 før dokumentasjon, typer, produsent og lesere uttrykker samme kontrakt |
+| Byggekjeden deles opp | Behold B-2; dokumenter B-1; deaktiver eller erstatt B-3 |
+| Verktøyene må endres | Gjør relevante kontroller portable og koble bare ekte stoppkontroller til CI |
 
-**Åpne eierbeslutninger, uavhengig av dommen:** Android-keystore
-(gjenbruk Ryddys eller lag ny — binder Play-identiteten permanent),
-PostHog-nøkkel i Codemagic, og en fagperson til å validere motoren.
+Android-keystore, PostHog-nøkkel og fagvalidering er reelle prosjektspørsmål,
+men overleveringen har ikke vist at de er beslutninger som må tas for å
+avgjøre dette widgetsporet. Dommerens avgrensede eierbeslutninger står i §12.
+
+---
+
+## 9. Dommerens etterprøving
+
+| Påstand i overleveringen | Etterprøvd resultat | Dommermerknad |
+|--------------------------|---------------------|---------------|
+| Labtestene er grønne | 335/335 passerer | Sant, men dette er funksjonstester, ikke brukerbevis |
+| 106 skjermbevis | 104 PNG-filer under `appendix/` | Feil tall |
+| Lenken er verifisert | 7/7 passerer | Resultatet er lokalt og ikke portabelt på grunn av hardkodet gammel repo-sti |
+| Labsveipet er grønt | 40/40, 0 feil | Sant; 44-pikselkravet er likevel bare en advarsel i koden |
+| Pluginregistreringen virker | Statisk kontroll passerer; build 85-observasjonen står | Beviser spiken, ikke et uavhengig produktbehov |
+| Snapshot v2 er integrert | 41 nåværende widgettester passerer, men Hjem produserer bare v1 | Testdekning er ikke produksjonsintegrasjon |
+| Sertifikatløkken er trygg | 4/4 mockcaser passerer | Beviser ikke feilklassifisering eller sikkert slettemål |
+
+## 10. Manglende poster og skjult scope
+
+| Manglende post | Funn | Dom |
+|----------------|------|-----|
+| `src/lib/widget/use-widget-snapshot.ts` og kallstedet i Hjem | Dette er den faktiske produksjonskoblingen, men den er gjemt i K-1 i stedet for lagt frem til dom. Den sender bare v1. | **FORKAST** sammen med widgetsporet |
+| Deep-link-mottak i webappen | Det finnes ingen produksjonslytter for `appUrlOpen`/`getLaunchUrl` og ingen rute for `babyora://brief`. | **ENDRE** bare dersom et senere godkjent produktbehov krever deep link |
+| `tools/verify-lanseringsklar.mjs` | Kontrollerer et nå slettet testpanel; den reelle listen er tom, og kommentaren sier selv at filen da skal slettes. | **FORKAST** |
+| Plattformbyrden skjult i N-1/N-3 | iOS-target/pbxproj, URL-scheme, App Group og Android exact-alarm-tillatelse har egen butikk- og vedlikeholdskostnad. | **FORKAST** med spiken; vurder hver for seg ved et senere eiergodkjent prosjekt |
+| Endringer utenfor navngitte labfiler | Commitspennet inneholder omfattende `src/`-endringer, mens overleveringen bare nevner to linjer i Innstillinger. Handoffet dokumenterer ikke eierskapet godt nok til å kreditere eller frikjenne denne økten. | **ENDRE** historikken/handoffet før noen bruker det som scope-bevis |
+
+Den største kollisjonen er med det nåværende onboarding-oppdraget. Det krever
+K0 current control og tre medieutfordrere før EIERPORT 1. P1–P4 undersøker
+andre, langt større produktmodeller. Laben kan informere arbeidet, men kan
+ikke erstatte K0–K3, velge media eller legitimere produksjonskode før porten.
+
+Mens denne dommen ble skrevet, pushet den parallelle økten commit `16293ab`
+til samme fil med «to poster endres, ingen forkastes». Det partsinnlegget er
+etterprøvd. Nye fakta derfra er beholdt her; selve frifinnelsen er overstyrt
+i tråd med eierens uttrykkelige dommermandat.
+
+Det klareste scope creep-funnet er B-3: en design- og feasibility-økt har
+endt med teamvid, destruktiv sertifikatforvaltning for fire apper. Det er
+verken nødvendig for å bevise widgeten eller forsvarlig som skjult
+følgekostnad. Android exact-alarm og en utestet butikkflate er samme mønster,
+men med mindre umiddelbar skadeflate.
+
+## 11. Innvending til tolkningen av §5
+
+Observasjonene bestrides ikke. De viser at WidgetKit kan lese et syntetisk
+snapshot og bytte timeline-entry på fysisk enhet. De viser ikke at dagens
+Babyora-flyt leverer en tidsavgrenset brief: Hjem skriver v1 uten
+utløpstidspunkt. De viser heller ikke riktig landingssted; appen mangler
+brief-rute og kaldstartlesing.
+
+Den varme trykktesten i build 85 er verdt 20 sekunder før neste bygg. Den
+kan avklare om URL-en leveres til den eksisterende lytteren. Et PASS skal
+registreres som **transport bevist**, ikke «lander riktig» og ikke som ja til
+widget. Et FAIL skal stå som ubesvart mellom widget, Capacitor og panelet;
+ingen ny produksjonskode skal lages for å redde testen.
+
+## 12. Samlet anbefaling til eieren
+
+Behold laben, dokumentasjonen og deltakerlenken som billig research, etter at
+lenkekontrollen er gjort portabel. Ikke la det gamle P1–P4-programmet forsinke
+eller overstyre onboardingens K0–K3-test. Ingen foreldredata finnes ennå.
+
+Fjern iOS-widgeten, `BabyoraViewController`, widgetbroen, den reelle
+Hjem-koblingen og hele den utestede Android-widgeten fra neste butikkbygg.
+Behold fysisk-enhet-observasjonene og Git-historikken som feasibility-bevis.
+Behold B-2. Deaktiver B-3s automatiske sertifikatsletting før neste CI-bygg.
+
+Eieren må ta høyst tre beslutninger:
+
+1. Kjør den varme widget-trykktesten på build 85 nå; anbefaling: **ja**, og
+   klassifiser resultatet snevert som transportdata.
+2. Skal P1–P4 fortsatt testes på 5–8 foreldre som et separat produktspor;
+   anbefaling: **bare hvis spørsmålet fortsatt er strategisk**, aldri som
+   erstatning for K0–K3.
+3. Skal widget bli et eget produktprosjekt etter onboarding-porten;
+   anbefaling: **ikke nå**. Krev først brukerbehov, personvernvalg, ekte
+   v2-produsent, deep-link-ruting, i18n og plattformtester.
 
 ---
 
