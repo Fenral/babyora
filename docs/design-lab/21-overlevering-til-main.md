@@ -85,7 +85,25 @@ og prototypene kan ikke forstyrre redesignet.
 **Kostnad ved forkasting.** Retningsvalget (fase 12) mister sitt
 empiriske grunnlag og blir en smakssak igjen.
 
-**DOM:** ____
+**DOM: BEHOLD — men med utløpsdato.**
+
+Etterprøvd: isolasjonsgrepet gir 2 treff, begge kommentarer i
+`lab/vite.config.ts`. Laben importerer kun `@lib/wool-layers/*` og
+`@lib/met-no/feels-like` — motoren, ikke designet. 335 tester grønne,
+bekreftet. Laben er ikke med i `dist/`. Påstandene holder.
+
+Innvending forfatteren ikke fører opp: laben er **koblet til motoren**.
+Endres `@lib/wool-layers`, ryker inntil 335 tester i en mappe ingen har
+ansvar for. Det er en vedlikeholdskostnad, ikke null.
+
+Kostnadslinjen er ekte — uten laben blir retningsvalget en smakssak — men
+den forfaller. Laben har verdi bare hvis foreldretesten faktisk kjøres.
+Blir den ikke kjørt, er dette 41 filer som går i stykker hver gang motoren
+endres, til ingen nytte.
+
+**Vilkår:** laben skal ikke blokkere lansering, og den kobles fra motoren
+(fryst kopi av `wool-layers`) hvis foreldretesten ikke er kjørt før
+butikkinnsending.
 
 ---
 
@@ -104,7 +122,10 @@ mutasjonsbevis (ugyldig arm skal falle til operatørmodus).
 **Kostnad ved forkasting.** Foreldretesten blir logistisk tyngre. Ingen
 konsekvens for appen.
 
-**DOM:** ____
+**DOM: BEHOLD.**
+
+Billig, isolert, og fjerner en reell logistikkbøyg. Ingen konsekvens for
+appen. Ingen innvendinger.
 
 ---
 
@@ -135,7 +156,35 @@ at vi vet om foreldre ville hatt dem.
 design, ingen i18n. Den er bevisverktøy. Skal widgeten inn i produktet,
 er den et designoppdrag, ikke en kopieringsjobb.
 
-**DOM:** ____
+**DOM: ENDRE — funksjonen er bevist, men den kan ikke utløses i appen.**
+
+Dette er postens største hull, og overleveringen nevner det ikke.
+
+Widgeten visner ved `expiresAt`. Men **ingenting i produksjonskoden setter
+det feltet.** Etterprøvd:
+
+```
+grep -rn "expiresAtISO" src/ --include=*.ts | grep -v __tests__ | grep -v snapshot.ts
+  → kun bridge.ts:105, som SAMMENLIGNER feltet. Ingen som SETTER det.
+grep -rn "withBriefFields" src/ | grep -v snapshot.ts | grep -v __tests__
+  → null kallere.
+```
+
+`withBriefFields()` ble kalt av spike-panelet. Panelet er slettet (3a0aa96).
+`use-widget-snapshot.ts`, som jeg koblet inn, sender **v1-snapshots** uten
+utløp. Konsekvens: widgeten sendes med i butikkbygget, får data, og visner
+aldri.
+
+Det er verre enn å ikke ha widgeten. En widget som viser gårsdagens råd i
+det uendelige er et tillitsbrudd i en app der hele poenget er at rådet
+gjelder nå.
+
+**Endringen:** enten kobles utløp på ekte — `buildSnapshot` må sette
+`expiresAtISO` fra anbefalingens gyldighet — eller så tas widget-målet ut
+av butikkbygget til den er designet. Ikke send den slik den står.
+
+Spikens bevisverdi (§5) er uberørt av dette. Mekanismen virker. Den er bare
+ikke tilkoblet.
 
 ---
 
@@ -164,7 +213,18 @@ widget-arbeid blir dødt.
 **Anbefaling til dommeren:** dette er den ene posten jeg vil argumentere
 sterkest for å beholde uansett hva som skjer med resten.
 
-**DOM:** ____
+**DOM: BEHOLD — uforbeholdent, og den sterkeste posten i dokumentet.**
+
+Etterprøvd: `BabyoraViewController.swift` finnes, og begrunnelsen om
+`packageClassList` stemmer med Capacitor 8s faktiske oppførsel. Dette er
+ikke spike-kode; det er en plattformdefekt som gjorde ALLE app-lokale
+Capacitor-plugins usynlige på iOS.
+
+Forfatteren ber om å få beholde denne uansett hva som skjer med resten.
+Enig. Den hadde fortjent å bli funnet uavhengig av widgeten, og den ville
+bitt oss neste gang noen skrev et app-lokalt plugin.
+
+Eneste innvending: den er ikke dekket av noen port som kjører. Se §4.
 
 ---
 
@@ -182,7 +242,23 @@ layout/metadata, `MainActivity.registerPlugin`, Kotlin-plugin aktivert i
 Kotlin-aktiveringen og plugin-registreringen er reelle mangler i
 prosjektet uavhengig av widgeten.
 
-**DOM:** ____
+**DOM: ENDRE — del posten i to. Behold reparasjonene, ta widgeten ut av bygget.**
+
+Etterprøvd, og her er problemet: `BabyoraBriefWidget` **står i
+`AndroidManifest.xml`** (linje 33). Den følger altså med i Android-bygget.
+
+Forfatteren skriver «aldri kjørt» og «ingen bevist verdi tapt», men
+konkluderer ikke med det åpenbare: vi er i ferd med å sende en
+widget-provider til Play som ingen har sett kjøre én eneste gang. Android-
+bygget har aldri kommet forbi signeringssteget.
+
+**Behold:** `MainActivity.registerPlugin`, Kotlin-aktivering i
+`build.gradle`, `jvmTarget 21`. Det er ekte mangler i prosjektet, og
+Kotlin-aktiveringen forklarer hvorfor `.kt`-filer ble stille ignorert.
+
+**Ut av manifestet:** widget-provideren, til den har kjørt én gang på
+enhet. Samme argument som N-1: uprøvd kode som brukeren kan se, er verre
+enn ingen kode.
 
 ---
 
@@ -199,7 +275,18 @@ regel to steder, ellers oppstår ett minutt der de er uenige.
 **Bevis.** 28 tester, inkludert grensetesten «nøyaktig på expiresAt →
 utløpt».
 
-**DOM:** ____
+**DOM: BEHOLD kontrakten, men den er spekulativ til N-1 er løst.**
+
+Feltene er valgfrie og bakoverkompatible — de koster ingenting. Halvåpent
+intervall er riktig valg, og begrunnelsen (samme regel to steder) er god.
+
+Men vær ærlig om hva den er: en kontrakt uten avsender. Ingen i
+produksjonskoden fyller `expiresAtISO`, `versjon`, `briefId` eller
+`deltaTekst`. Det er greit for en kontrakt som venter på sin bruker — det
+er ikke greit å telle 28 tester som bevis for at noe *virker*.
+
+Beholdes fordi den er forutsetningen for å rette N-1, ikke fordi den gjør
+noe i dag.
 
 ---
 
@@ -222,7 +309,21 @@ case som forventet, inkludert «gi opp» og «tom pool».
 lenge alle certs er CI-genererte engangsnøkler — legger noen inn et cert
 de tar vare på privatnøkkelen til, må B-3 skrives om.
 
-**DOM:** ____
+**DOM: BEHOLD alle tre.**
+
+Ingen av dem er designvalg, og alle tre er ekte defekter:
+
+- **B-1** — hake påslått, null grupper valgt. Klassisk halvferdig tilstand
+  som leser som «ordnet». Verifisert etter full sideomlasting, som er
+  riktig metode.
+- **B-2** — hardkodet marketing-versjon. Utvetydig feil. Eieren fant den,
+  ikke verktøyene, og det er verdt å merke seg.
+- **B-3** — sertifikatopprydning som ga opp etter én sletting. Rettelsen er
+  riktig, og `test-sertloop.sh` simulerer den uten å røre Apple.
+
+**Advarselen om delt sertifikatpool må stå.** ASC-nøkkelen deles med Ryddy,
+StrikeArc og Swinglab. Den advarselen hører hjemme i `AGENTS.md`, ikke
+begravet i et overleveringsdokument som arkiveres. Flytt den.
 
 ---
 
@@ -248,7 +349,24 @@ hvor lett en port blir vakuøs.
 **Kostnad ved forkasting.** Feilene B-1 til B-3 og N-2 kan gjenta seg
 usett — de er alle usynlige for `npm run build` og for grønn CI.
 
-**DOM:** ____
+**DOM: ENDRE — de kalles porter, men ingen av dem kjører.**
+
+Etterprøvd: `grep` i `.github/workflows/ci.yml` gir **null treff** på
+samtlige seks filer. Ingen av dem er koblet til noe som kjører automatisk.
+
+Prosjektets egen doktrine er sitert i posten: «en port som bare kan si ja,
+måler ingenting.» Den skjerpes her: **en port som aldri kjører, måler
+ingenting uansett hva den kan si.** De seks filene er skript, ikke porter,
+og etiketten er overselgende.
+
+Mutasjonsleddene er ekte og godt laget — det trekker jeg ikke i tvil.
+Merknaden om at `ipa-bevis.ps1` opprinnelig bestod på «inneholder ordet
+babyora» er ærlig og verdt å ha lest.
+
+**Endringen:** `ios-plugin-registrering-sjekk.mjs` inn i CI. Den er ren
+statisk analyse, koster sekunder, og vokter N-2 — den posten alle er enige
+om å beholde. De andre fem er enten Windows-/PowerShell-avhengige eller
+krever artefakter, og blir stående som manuelle skript. Kall dem det.
 
 ---
 
@@ -339,3 +457,58 @@ PostHog-nøkkel i Codemagic, og en fagperson til å validere motoren.
 Les det deretter. Alt her kan etterprøves i repoet — `docs/design-lab/`
 for prosessen, `tools/` for kontrollene, og commit-historikken for
 begrunnelsene, som er skrevet for å forklares, ikke for å forsvares.*
+
+---
+
+## 9. Dommerens tillegg — funn overleveringen ikke har
+
+Skrevet av main-økten 2026-08-07 etter etterprøving. Alt under er kjørt,
+ikke lest.
+
+### D-1 · Widgeten kan ikke visne i produktet (blokkerende for N-1)
+
+Se dommen på N-1. Kort: `withBriefFields()` har null kallere etter at
+spike-panelet ble slettet, og ingenting setter `expiresAtISO`. Widgeten
+sendes med, får data fra `use-widget-snapshot.ts`, og viser samme råd for
+alltid. Dette er ikke en mangel ved spiken — mekanismen er bevist — det er
+en manglende kobling som oppstod da de to øktenes arbeid møttes.
+
+### D-2 · Android-widgeten står i manifestet
+
+`AndroidManifest.xml:33` registrerer `BabyoraBriefWidget`. Den følger med i
+Android-bygget selv om den aldri har kjørt. Overleveringen sier «aldri
+kjørt» uten å trekke konsekvensen.
+
+### D-3 · Laben er koblet til motoren
+
+`docs/design-lab/lab/` importerer `@lib/wool-layers/*`. Isolasjonen mot
+DESIGN er ekte og verifisert — isolasjonen mot MOTOREN finnes ikke. Endres
+anbefalingsmotoren, ryker inntil 335 tester i en mappe uten eier.
+
+### D-4 · «Porter» som ikke kjører
+
+Null av de seks kontrollene i §4 er koblet til CI. Se dommen der.
+
+### Den åpne deep link-testen — avgjort: **la den stå ubesvart**
+
+Testknappen finnes bare i build 85, som ligger på telefonen nå. Argumentet
+for å teste før neste bygg er ekte, men svaret ville vært svakt uansett:
+den stående hypotesen er at **testpanelet** misset kaldstart-URL-en. Å måle
+med instrumentet man mistenker, på et bygg som uansett skal erstattes,
+gir ikke et svar man kan bygge på.
+
+Kostnaden ved å ikke svare er nær null. P3 og P4 hviler på ambient
+levering, som er bevist (§5). Deep link avgjør hvor et trykk lander — et
+spørsmål som uansett må stilles på nytt når widgeten designes for ekte og
+`getLaunchUrl()` håndteres riktig.
+
+### Scope creep
+
+To ting har fått løpe:
+
+- **`tools/` vokste med seks filer** som ingen kjører automatisk. Nyttige
+  som engangsverktøy, men de er dokumentert som om de vokter noe.
+- **Widget-sporet nådde butikkbygget uten å ha passert et designoppdrag.**
+  Spiken skulle svare på om ambient levering var mulig. Den gjorde det —
+  og etterlot samtidig widget-mål i to plattformbygg. Bevisverktøy skal
+  ikke kunne bli med i butikken ved et uhell.
