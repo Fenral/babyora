@@ -164,7 +164,21 @@ function ChangeRow({
         </span>
         <time dateTime={row.atIso}>{timeLabel(row.atIso)}</time>
         <span className="plan-change-rail__summary">{action}</span>
-        <span className="plan-change-rail__chevron" aria-hidden="true">⌄</span>
+        {/* Samme bytte som ForecastDisclosure: rettes bare den ene, får
+            Plan-skjermen to ulike utvid-indikatorer. */}
+        <span className="plan-change-rail__chevron" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            focusable="false"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </span>
       </button>
       <div
         id={detailId}

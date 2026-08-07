@@ -143,8 +143,13 @@
 
 .hjm-top { flex: none; }
 /* Dekor skal ikke sta hoyere enn informasjon: ordmerket sto paa 15,00:1
-   mens barnelinjen (ekte data) star paa 6,54:1. */
-.hjm-brand { font-size: 13px; font-weight: 700; letter-spacing: 0.24em; color: var(--dw-ink-low); }
+   mens barnelinjen (ekte data) star paa 6,54:1.
+   MEN nedtoningen gikk for langt: --dw-ink-low mot bakgrunnsgloden
+   rgb(83,61,41) maler 3,67:1, under AA-grensen 4,5:1 — skjermens eneste
+   maaling under grensen (revisjonen 2026-08-06 malte 3,66:1).
+   --dw-ink-mid gir 5,67:1: over grensen, fortsatt under barnelinjens
+   6,54:1, saa rangeringen dekor-under-informasjon holder. */
+.hjm-brand { font-size: 13px; font-weight: 700; letter-spacing: 0.24em; color: var(--dw-ink-mid); }
 
 /* .hjm-mascot-slot fjernet: maskoten ankres direkte i .hjm-panel-slot (P9-eierfunn: grepet gled fra kanten via margin-kollaps gjennom det tomme ankeret) */
 /* Panelet ligger 106-130px ned for å gi rom til maskoten som henger over
@@ -250,10 +255,20 @@
   display: flex;
   align-items: center;
 }
+/* STEDSRADEN MAA SE TRYKKBAR UT, IKKE BARE VAERE DET.
+
+   Trykkflaten var allerede 44 px hoy (min-height + padding/margin), saa
+   doktrinekravet var oppfylt. Det som manglet var den VISUELLE
+   markeringen: eneste tegn paa at stedet kan byttes var en 8,5 px chevron
+   paa en rad med samme bakgrunn som resten av vaerkortet. Forelderen som
+   staar et annet sted enn vanlig kl. 07 maatte oppdage det.
+   Pillen legger ingen hoyde til raden — padding og margin er urort, saa
+   den maalte panelhoyden (se .hjm-panel-slot) staar. */
 .hjm-loc {
   appearance: none;
-  border: 0;
-  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--dw-ink-panel-mid) 22%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dw-ink-panel-mid) 10%, transparent);
   font: inherit;
   font-size: 14px;
   font-weight: 600;
@@ -271,7 +286,10 @@
   opacity: 0.55;
   pointer-events: none;
 }
-.hjm-loc svg { width: 13px; height: 13px; opacity: 0.8; }
+/* 13 px var for lite til aa lese som «trykk her» i darlig lys, og
+   opacity: 0.8 var hvilende demping — doktrinen (C5) forbyr det og
+   tools/opacity-detektor.mjs handhever det. Roligere farge, ikke alpha. */
+.hjm-loc svg { width: 16px; height: 16px; color: var(--dw-ink-panel-mid); }
 /* P9 (ekstern P8-review, funn A): egen venstrestilt linje UNDER hjm-loc-row
    (var tidligere høyrestilt inni loc-row, delvis skjult bak maskoten som
    henger over panelets øvre høyre hjørne i begge tema). */
@@ -309,7 +327,17 @@
   letter-spacing: -0.015em;
   font-variant-numeric: lining-nums tabular-nums;
 }
-.hjm-temp sup { font-size: 34px; font-weight: 400; vertical-align: 30%; margin-left: 2px; }
+/* GRADTEGNET SKAL STAA HEVET, IKKE MIDT PAA SIFFERET.
+
+   Sto paa vertical-align: 30%. Prosent maales mot elementets EGEN
+   line-height (34px x 0,94 = 32px), saa 30 % ga bare ~9,6 px loft mot
+   hero-tallets ~53,6 px versalhoyde — ringen havnet midt paa sifferet og
+   leses et halvsekund som «1 o». Malt 2026-08-06: ringens senter laa paa
+   y=557 mot sifferets topp 510, med 10 px gap mellom glyfene.
+   em maales mot sup-ens font-size og er det eneste leselige maalet her.
+   Samme konstant som Plan bruker (src/screens/UkeScreen.css) — forholdet
+   sup/hero er identisk: 34/74 = 0,459 mot Plans 22/48 = 0,458. */
+.hjm-temp sup { font-size: 34px; font-weight: 400; vertical-align: 0.94em; margin-left: 0; }
 .hjm-temp[data-dim='true'] { color: var(--dw-ink-panel-mid); }
 .hjm-wicon {
   width: 76px;

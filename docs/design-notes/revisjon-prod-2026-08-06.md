@@ -41,9 +41,56 @@ barens egne mål. Tatt i bruk på Første vinter, TOG og Plaggbiblioteket.
 `--dw-fade-bunn` er urørt — ark, dialoger og onboarding har ikke noe under
 seg og bruker den fortsatt riktig.
 
-**Gjenstår:** 32 mindre funn, og betalingsmuren er fortsatt urevidert
-(fiksturet gir «Pluss aktiv», så det finnes ingen betalingsmur å fange —
-10 av 11 skjermer dekkes).
+## Andre økt, del 2: 11/11 fanget, mindre funn lukket
+
+Kjøring `tools/product-audit/runs/2026-08-07T00-00-57-339Z`.
+
+### Betalingsmuren er endelig revidert
+
+Den manglet aldri et produkthåndtak — revisjonen brukte ikke det som fantes.
+`?seed=demo&entitlement=none` har ligget i `src/state/subscription-store.ts`
+hele tiden, dokumentert i filhodet, dekket av test og i aktiv bruk av
+`e2e/purchase-flow.ts`. `?seed=demo` alene seeder en mock-ABONNENT, og en som
+allerede betaler har ingen betalingsmur å vise.
+
+Muren selv er solid: hard og ikke-avvislig (ingen «Lukk»), tre likeverdige
+prisrader med «Best verdi» på Årlig og ekte månedspris per rad, syv
+gratisdager, og lenkeraden Gjenopprett kjøp · Personvern · Vilkår.
+
+**Til eier — én avveining, ikke en feil.** Ingen plan er forhåndsvalgt, og
+CTA-en hviler («Velg en plan for å starte gratis») til et aktivt valg er
+gjort. Det er en BEVISST beslutning, dokumentert i `PaywallDialog.tsx`
+(«ALDRI et forhåndsvalgt kort»), og den er etisk forsvarlig: en betalt plan
+skal ikke stå ferdig avkrysset. Prisen er konvertering — standardmønsteret
+forhåndsvelger den anbefalte planen så knappen er handlingsklar med én gang.
+Endres dette, er det en kommersiell beslutning, ikke en designrettelse.
+
+**Observert samtidig:** ~200 px død plass mellom gratisdager-linjen og
+CTA-en, og løftet om syv gratisdager — det som senker terskelen for å trykke
+— er skjermens minste og svakeste tekst.
+
+### Mindre funn
+
+Lukket i denne økta: nb-NO desimalkomma i Juster · AKTIVITET-velgerens valgte
+segment · trelinjers undertittel · ⌘K-badgen byttet mot en ekte tøm-knapp ·
+plaggrammen 11/6 så illustrasjonen fyller ≥80 % · «63» står ett sted ·
+sorteringsknappen fikk flate — og den SORTERER nå, den var haptikk uten
+handling · oransje frigjort fra «BEHOLD» så «Ferdig» er eneste aksent ·
+symmetrisk snøfnugg · «I dag» står ett sted på Plan · gradtegnet hevet på
+både Plan og Hjem · chevronene er strøkne ikoner, ikke bokstavglyfen «⌄» ·
+onboardingens venstrekant, «denne iPhonen» og tomrommet · bryterens form,
+hengende skilletegn, «Trondheim» ×3, orddelingen, bunn-faden og «Bytt
+barn»-ikonet i Innstillinger · ordmerket BABYORA 3,67:1 → 5,67:1 ·
+stedsraden fikk synlig pille · inaktive faner 3,93:1 → 6,07:1.
+
+Nytt token `--dw-fade-bunn-kort` for det tredje fade-tilfellet: containere
+som allerede klarerer baren via `--dw-tabbar-clearance`, der den
+prosentbaserte `--dw-fade-bunn` dimmet ekte innhold ~50 px oppe.
+
+**Gjenstår, til eier:** hjem-funnet «vis et hint om svaret før trykk» er
+IKKE gjort — eierbeslutningen «Hjem beholdes som den er (scan-seremonien er
+produktet)» står, og hintet ville tære på den. Plaggkortenes nye ramme
+(11/6) er verifisert matematisk, ikke med et blikk på hver av de 63.
 
 > RETTET 2026-08-06: skjermen het «Garderobe» i denne rapporten. Det var
 > MITT navn — workflow-skriptet mitt kalte den det, og kritikeren gjentok

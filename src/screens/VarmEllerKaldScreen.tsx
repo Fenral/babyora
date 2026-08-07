@@ -40,9 +40,12 @@ interface StatusRowSpec {
   iconBg: string;
   iconColor: string;
   dotColor: string;
-  actionColor: string;
+  /* actionColor er fjernet 2026-08-07 — se actionStyle. Feltet fantes for at
+     hver rad skulle kunne fargelegge sin egen handlingsetikett, og «Perfekt»
+     brukte den muligheten til å ta aksentfargen. Et felt som kan gjøre det
+     igjen, gjør det igjen. */
   /* actionBg er fjernet 2026-08-06 sammen med actionBorder — se
-     actionStyle. Fargekodingen bor i actionColor. */
+     actionStyle. */
   /* actionBorder er fjernet 2026-08-06 — se actionStyle for hvorfor.
      Et ubrukt felt som blir stående er en invitasjon til å sette kanten
      tilbake uten å lese begrunnelsen. */
@@ -60,7 +63,6 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
     iconBg: 'var(--dw-plate)',
     iconColor: 'var(--dw-danger)',
     dotColor: 'var(--dw-danger)',
-    actionColor: 'var(--dw-ink-mid)',
     iconStrokeWidth: 2,
     iconPaths: (
       <>
@@ -75,12 +77,16 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
     iconBg: 'var(--dw-plate)',
     iconColor: 'var(--dw-success)',
     dotColor: 'var(--dw-success)',
-    actionColor: 'var(--dw-accent)',
     /* Her sto en kant i --terracotta-200, med et notat om at aliaset ikke
        kunne migreres fordi det er tema-avhengig. Notatet var riktig og
        spørsmålet falt bort: kanten er borte, ikke migrert. «Perfekt»-raden
        hadde den sterkeste knappeformen av de tre — aksentkant OG
-       aksenttekst — og var derfor den som løy mest. */
+       aksenttekst — og var derfor den som løy mest.
+
+       AKSENTTEKSTEN OVERLEVDE DEN OPPRYDDINGEN. Her sto
+       `actionColor: 'var(--dw-accent)'`, og etter at kant og fyll forsvant
+       var den det ENESTE oransje på skjermen ved siden av «Ferdig». Se
+       actionStyle for hvorfor det var verre enn kanten. */
     iconStrokeWidth: 2.4,
     iconPaths: <path d="M5 12.5l4.5 4.5L19 7" />,
   },
@@ -90,13 +96,34 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
     iconBg: 'var(--dw-plate)',
     iconColor: 'var(--dw-warning)',
     dotColor: 'var(--dw-warning)',
-    actionColor: 'var(--dw-ink-mid)',
     iconStrokeWidth: 1.9,
+    /* ═══ SNØFNUGGET HADDE GRENER PÅ ÉN AV TRE AKSER ═══════════════════════
+
+       Her sto tre akser gjennom sentrum pluss FIRE korte streker — alle
+       fire på den loddrette aksen (`M12 3l-2 2 ...`). De to diagonalene var
+       glatte. Et kryss med pilhoder bare oppe og nede leser som
+       flytt/størrelse-håndtaket fra en editor, ikke som kulde. Revisjonen
+       målte nøyaktig det: «bare den loddrette aksen har pilhoder».
+
+       Nå har alle seks armene samme gren: to streker i ±45° bakover fra
+       spissen, lengde 2,83 enheter. Geometrien er speilsymmetrisk om både
+       x=12 og y=12, som et snøfnugg må være.
+
+       Spissene: (12,3) (19,8;7,5) (19,8;16,5) (12,21) (4,2;16,5) (4,2;7,5)
+       — seks armer 60° fra hverandre, radius 9 fra sentrum (12,12). */
     iconPaths: (
       <>
+        {/* Tre akser gjennom sentrum */}
         <path d="M12 3v18" />
-        <path d="M5 7l14 10M19 7L5 17" />
-        <path d="M12 3l-2 2M12 3l2 2M12 21l-2-2M12 21l2-2" />
+        <path d="M4.2 7.5L19.8 16.5" />
+        <path d="M19.8 7.5L4.2 16.5" />
+        {/* Seks like grener — én per arm */}
+        <path d="M10 5L12 3l2 2" />
+        <path d="M17.1 6.8l2.7.7L19.1 10.2" />
+        <path d="M19.1 13.8l.7 2.7-2.7.7" />
+        <path d="M10 19L12 21l2-2" />
+        <path d="M6.9 17.2L4.2 16.5l.7-2.7" />
+        <path d="M4.9 10.2L4.2 7.5l2.7-.7" />
       </>
     ),
   },
@@ -205,6 +232,17 @@ export function VarmEllerKaldScreen({
     WebkitOverflowScrolling: 'touch',
     // D4: bunn-fade i stedet for hardt klipp — husmønsteret fra
     // hjem-monter.css / sheet.css / kle-paa-stepper.css.
+    //
+    // VURDERT 2026-08-07 MOT --dw-fade-over-tabbar OG BEHOLDT SOM DEN ER.
+    // Den varianten finnes for flater der tab-baren FLYTER OPPÅ
+    // rullecontaineren; da må uttoningen være ferdig ved barens overkant, ikke
+    // ved containerbunnen. Her ruller ingenting under baren: `ctaBarStyle` er
+    // et flex-søsken med `flex: 'none'` UTENFOR denne containeren, og det er
+    // CTA-linjen som bærer --dw-tabbar-clearance. Rullecontaineren slutter
+    // altså over «Ferdig»-knappen, som igjen slutter over baren.
+    // Å bytte token her ville flyttet uttoningen ~76 px opp i innholdet og
+    // dempet fotnoten uten grunn. Plaggbiblioteket er motsatt tilfelle: der
+    // ligger rutenettet faktisk under baren.
     WebkitMaskImage: 'var(--dw-fade-bunn)',
     maskImage: 'var(--dw-fade-bunn)',
   };
@@ -258,7 +296,23 @@ export function VarmEllerKaldScreen({
     fontWeight: 700,
     letterSpacing: '1.2px',
     textTransform: 'uppercase',
-    color: 'var(--dw-accent)',
+    /* «2-FINGER-TEST» STO OGSÅ I AKSENTFARGEN.
+
+       Revisjonen fant oransje på «BEHOLD». Målepunktet som ble skrevet for
+       den retten teller aksentbruk i hele skjermen, og fant TO: BEHOLD og
+       denne eyebrow-en. Den var ikke nevnt i revisjonen — antakelig fordi
+       den ble lest som «flate» og dette er 11 px tekst — men den er samme
+       brudd: «2-finger-test» er en ETIKETT, ikke noe forelderen skal gjøre.
+
+       Oppdraget var å RESERVERE oransje til «Ferdig». Da holder det ikke å
+       ta den ene. Fargen er nå --dw-ink-mid, som er nøyaktig det
+       `sectionHeadingTextStyle` («TRE MULIGE SIGNALER») bruker — de to er
+       samme slags etikett og leser nå likt. Store bokstaver, vekt 700 og
+       sperringen skiller den fortsatt fra brødteksten.
+
+       Aksenten er etter dette to steder på skjermen, begge HANDLINGER:
+       nakke-orben (peker på det forelderen skal ta på) og «Ferdig». */
+    color: 'var(--dw-ink-mid)',
     // F67-B collision-fix: eyebrow→h2 ≥12px
     margin: '0 0 var(--dw-space-12)',
   };
@@ -689,7 +743,30 @@ export function VarmEllerKaldScreen({
               fontSize: '0.6875rem',
               fontWeight: 700,
               letterSpacing: '0.4px',
-              color: row.actionColor,
+              /* ═══ OG SÅ MÅTTE OGSÅ FARGEN GÅ ═══════════════════════════════
+
+                 Her sto `row.actionColor`: dempet / AKSENT / dempet. Etter at
+                 kant og fyll var fjernet var «BEHOLD» det eneste oransje på
+                 hele skjermen ved siden av «Ferdig»-knappen — og «Perfekt» er
+                 den ene raden der forelderen IKKE skal gjøre noe.
+
+                 Revisjonen målte det 2026-08-06: RGB 217,142,90 på «BEHOLD»,
+                 nøytral lys tekst på «TA AV» og «LEGG TIL», ingen andre
+                 oransje flater synlige. Blikket ble altså trukket til
+                 ikke-handlingen, mens skjermens ekte utgang konkurrerte om
+                 samme farge.
+
+                 DESIGN.md: «Use one accent role per screen.» Oransje er
+                 BRUKERHANDLING. På denne skjermen finnes nøyaktig én: Ferdig.
+
+                 De tre etikettene er nå like dempede. Fargekodingen
+                 varm/perfekt/kald forsvinner ikke — den ligger allerede tre
+                 steder i samme rad: tallsirkelen, ikonet i --dw-danger /
+                 --dw-success / --dw-warning, og den fargede prikken foran
+                 tittelen (dotColor). Etiketten trengte ikke å være den
+                 fjerde, og var den eneste av de fire som lånte handlingsfargen
+                 for å si det. */
+              color: 'var(--dw-ink-mid)',
               textTransform: 'uppercase',
               padding: 'var(--dw-space-4) var(--dw-space-8)',
               borderRadius: 6,

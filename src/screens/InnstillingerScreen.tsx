@@ -71,7 +71,6 @@ import { CareCircle } from '../components/family/CareCircle';
 import type { Caregiver } from '../components/family/care-circle-model';
 import { ToolsSection } from '../components/family/ToolsSection';
 import { DISCLAIMER_FULL } from '../lib/copy/disclaimer';
-import { WidgetSpikePanel } from '../lib/widget/WidgetSpikePanel';
 // BottomTabBar er nå global (mounted i App.tsx) — ikke importer/mount her.
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -229,23 +228,9 @@ const appTitleStyle: CSSProperties = {
   lineHeight: 1.05,
 };
 
-const metaPillStyle: CSSProperties = {
-  flex: 'none',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--dw-space-8)',
-  padding: 'var(--dw-space-8) var(--dw-space-12)',
-  borderRadius: 12,
-  background: 'var(--dw-raised)',
-  border: `1px solid ${C.hairline}`,
-  fontSize: '0.71875rem',
-  fontWeight: 600,
-  color: C.ink700,
-  letterSpacing: '.4px',
-  textTransform: 'uppercase',
-  backdropFilter: 'saturate(1.1) blur(4px)',
-  WebkitBackdropFilter: 'saturate(1.1) blur(4px)',
-};
+/* metaPillStyle er SLETTET 2026-08-06 sammen med stedspillen den kledde (se
+   headeren). En stil uten flate er død kode, og `noUnusedLocals` ville uansett
+   stoppet den — men poenget er at flaten skulle vekk, ikke bare bruken. */
 
 const scrollStyle: CSSProperties = {
   position: 'relative',
@@ -254,11 +239,32 @@ const scrollStyle: CSSProperties = {
   minHeight: 0,
   overflowY: 'auto',
   overflowX: 'hidden',
-  // D4: bunn-fade i stedet for hardt kutt — samme oppskrift som resten av
-  // appen (.dw-sheet-innhold, .hjm-result, Plaggbiblioteket). Uten den sier
-  // en skjerm som er lengre enn skjermen ingenting om at det er mer under.
-  WebkitMaskImage: 'var(--dw-fade-bunn)',
-  maskImage: 'var(--dw-fade-bunn)',
+  /* D4: bunn-fade i stedet for hardt kutt — samme oppskrift som resten av
+     appen (.dw-sheet-innhold, .hjm-result, Plaggbiblioteket). Uten den sier
+     en skjerm som er lengre enn skjermen ingenting om at det er mer under.
+
+     FUNN 2026-08-06 ([MINDRE] Innstillinger, «bunn-fade dimmer ekte innhold
+     langt over tab-baren»). MEKANISMEN: `--dw-fade-bunn` er
+     `linear-gradient(to bottom, black 92%, transparent 100%)` — en PROSENT
+     av containerens høyde. Denne containeren er ~628 px høy, så 8 % blir
+     ~50 px uttoning. Seksjonsetiketten «VARSLER» og kortet under lå i den
+     sonen I HVILE og leste som deaktivert, ikke som avskåret.
+
+     OG DET ER IKKE `--dw-fade-over-tabbar` SOM ER SVARET HER. Det tokenet
+     er bygget for containere som går HELT NED under den flytende baren, og
+     legger uttoningen 76 px over containerbunnen. Denne containeren slutter
+     allerede 14 px OVER barens overkant, fordi `rootStyle` bærer
+     `--dw-tabbar-clearance` som paddingBottom. Byttet ville flyttet
+     uttoningen ~90 px ENDA lenger opp og gjort funnet verre. Målt i
+     revisjonens tall: containerbunn y≈754, barens overkant y≈768.
+
+     Riktig svar er en uttoning forankret i containerBUNNEN med en FAST
+     rampe — 28 px, samme rampehøyde som `--dw-fade-over-tabbar` bruker — så
+     sonen ikke vokser med skjermhøyden. «VARSLER» (y≈717) står da i full
+     styrke, og de siste 28 px bærer fortsatt rulle-affordansen (doktrine 4).
+     Verdien hører hjemme som token; se delteFilerSomTrengs i overleveringen. */
+  WebkitMaskImage: 'var(--dw-fade-bunn-kort)',
+  maskImage: 'var(--dw-fade-bunn-kort)',
   padding: '14px 16px calc(env(safe-area-inset-bottom, 0px) + 110px)',
   display: 'flex',
   flexDirection: 'column',
@@ -702,11 +708,20 @@ function Chevron(): ReactElement {
 // Row icon SVG-er (16×16, currentColor)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/* FUNN 2026-08-06 ([MINDRE] Innstillinger, «Bytt barn bruker et tilbake-/
+   angre-pilikon»): ikonet var ÉN pil med hodet mot venstre og en hale som
+   svingte ned og tilbake — nøyaktig formen på en angre-/tilbakepil. Det leste
+   «gå tilbake», ikke «velg et annet barn», og ikonet er det blikket treffer
+   først i raden. Nå to motsatt rettede piler: den øvre går mot høyre, den
+   nedre mot venstre — den entydige veksle-formen, og symmetrisk slik at den
+   ikke kan forveksles med en retning. */
 function IconSwap(): ReactElement {
   return (
     <svg width={18} height={18} viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M6 4l-3 3 3 3" />
-      <path d="M3 7h9a3 3 0 010 6h-1" />
+      <path d="M3 6h12" />
+      <path d="M12 3l3 3-3 3" />
+      <path d="M15 12H3" />
+      <path d="M6 9l-3 3 3 3" />
     </svg>
   );
 }
@@ -864,17 +879,9 @@ function IconEdit(): ReactElement {
   );
 }
 
-function IconHeaderPin(): ReactElement {
-  // Bruker currentColor slik at <span style={{color: var(--dw-ink-mid)}}> rundt
-  // SVG-en automatisk fanger dark-mode-override. SVG-attributter (stroke/fill)
-  // godtar ikke var() direkte — currentColor er den portable broen.
-  return (
-    <svg width={11} height={14} viewBox="0 0 11 14" fill="none" aria-hidden="true" style={{ color: C.ink700 }}>
-      <path d="M5.5 13s4.5-4 4.5-7.5a4.5 4.5 0 10-9 0C1 9 5.5 13 5.5 13z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-      <circle cx="5.5" cy="5.5" r="1.6" fill="currentColor" />
-    </svg>
-  );
-}
+/* IconHeaderPin er SLETTET 2026-08-06 sammen med stedspillen i headeren.
+   `IconPin` (samme motiv, 16 px) står igjen og brukes av «Sted»-raden, som nå
+   er skjermens eneste sted-visning. */
 
 function ArrowLong(): ReactElement {
   return (
@@ -912,9 +919,43 @@ function TogglePill({
   ariaHaspopup,
   disabled = false,
 }: TogglePillProps): ReactElement {
+  /* ═══ TRYKKFLATEN ER IKKE SPORET ══════════════════════════════════════════
+     FUNN 2026-08-06 ([MINDRE] Innstillinger, «bryteren er nesten sirkulær»).
+
+     MEKANISMEN lå ikke i tallene her, men i design-tokens.css:507 —
+     `button { min-height: 44px }` (det globale WCAG-trykkmålet). `height: 28`
+     på en <button> kan ikke slå en `min-height` fra stilarket: min-height
+     KLEMMER høyden opp uansett hvor den kommer fra. Sporet ble derfor
+     46 × 44 px med `border-radius: 999` — altså en sirkel, forholdstall 1,05
+     — og knotten (24 px, `top: 2`) satt i ØVRE VENSTRE HJØRNE av en flate
+     som var 16 px høyere enn den trodde. «Skinne med to endestillinger»
+     forsvinner når skinnen er rund.
+
+     44 px-trykkmålet er RIKTIG og skal bli stående. Feilen var at
+     trykkmålet og den synlige flaten var samme element. <button> er nå den
+     usynlige trykkflaten (52 × 44), og sporet er et eget <span> med egne
+     mål: 52 × 29 = 1,79× høyden, knott 25 px = 86 % av sporhøyden — begge
+     endestillinger synlige. Kanten står ALLTID (gjennomsiktig i på-
+     tilstand) så geometrien ikke hopper 2 px når bryteren slås på. */
+  const hitAreaStyle: CSSProperties = {
+    width: 52,
+    minHeight: 44,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'transparent',
+    border: 'none',
+    padding: 0,
+    flex: 'none',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.55 : 1,
+    WebkitTapHighlightColor: 'transparent',
+    touchAction: 'manipulation',
+  };
+
   const trackStyle: CSSProperties = {
-    width: 46,
-    height: 28,
+    width: 52,
+    height: 29,
     borderRadius: 999,
     /* ═══ AV ER NEDSENKET, IKKE LYST ═══════════════════════════════════════
 
@@ -940,31 +981,31 @@ function TogglePill({
        nedsenket i lyst. Kanten holder den lesbar der forskjellen er liten
        — som er nettopp problemet P8 fant. */
     background: on ? C.orange500 : 'var(--dw-canvas)',
-    border: on ? 'none' : `1px solid ${C.hairline}`,
+    border: `1px solid ${on ? 'transparent' : C.hairline}`,
     boxShadow: on ? 'none' : 'inset 0 1px 2px rgba(0, 0, 0, 0.28)',
     position: 'relative',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.55 : 1,
+    display: 'block',
     flex: 'none',
     padding: 0,
     transition: reducedMotion ? 'none' : `background var(--dw-m-state) ${C.ease}`,
-    WebkitTapHighlightColor: 'transparent',
-    touchAction: 'manipulation',
   };
 
   const thumbStyle: CSSProperties = {
     position: 'absolute',
-    top: 2,
-    left: 2,
-    width: 24,
-    height: 24,
+    top: 1,
+    left: 1,
+    width: 25,
+    height: 25,
     borderRadius: '50%',
     background: '#FFF',
     // P8: la til en fast tynn ring (0 0 0 1px) i tillegg til løfteskyggen —
     // gir kula en synlig egen kant mot sporet UANSETT sporfarge/tema, i
     // stedet for å stole utelukkende på fyll-mot-fyll-kontrast.
     boxShadow: '0 0 0 1px rgba(0,0,0,.14), 0 1px 3px rgba(0,0,0,.18)',
-    transform: on ? 'translateX(18px)' : 'translateX(0)',
+    /* 23 px = sporets innvendige bredde (52 − 2 × 1 px kant = 50) minus
+       knotten (25) minus de 2 × 1 px luft den ligger med. Begge
+       endestillingene er dermed synlige som luft i motsatt ende. */
+    transform: on ? 'translateX(23px)' : 'translateX(0)',
     // F83: iOS-switch-fysikk — iosDrawer-kurven (ease-standard) + 320ms gir
     // den karakteristiske raskt-ut/myk-landing-følelsen fra native switches.
     transition: reducedMotion
@@ -983,9 +1024,11 @@ function TogglePill({
       aria-disabled={disabled || undefined}
       disabled={disabled}
       onClick={() => onChange(!on)}
-      style={trackStyle}
+      style={hitAreaStyle}
     >
-      <span aria-hidden="true" style={thumbStyle} />
+      <span aria-hidden="true" style={trackStyle}>
+        <span aria-hidden="true" style={thumbStyle} />
+      </span>
     </button>
   );
 }
@@ -1826,10 +1869,16 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
   const vibrationOn = hapticsPref === 'on';
   const motionReducedOn = motionPref === 'reduce' || (motionPref === 'system' && reducedMotion);
 
-  // Profil-meta (alder · sted · fødselsdato)
+  /* Profil-meta (alder · fødselsdato).
+     FUNN 2026-08-06 ([MINDRE] Innstillinger): stedet lå her som tredje ledd.
+     To ting fulgte av det. (1) «Trondheim» sto tre ganger på skjermen — se
+     kommentaren ved headeren. (2) Med tre ledd brakk linja, og fordi
+     skilletegnet ble rendret ETTER sitt eget ledd, ble «·» stående alene
+     ytterst på linje 1 og pekte mot noe som ikke sto der.
+     Stedet er ute, og skilletegnet henger nå FORAN sitt eget ledd, slik at
+     det aldri kan bli liggende igjen på en linje det ikke hører til. */
   const profileMetaItems: ReactNode[] = [];
   if (childMonths !== null) profileMetaItems.push(<span key="age">{`${childMonths} mnd`}</span>);
-  if (childCity !== '—') profileMetaItems.push(<span key="city">{childCity}</span>);
   if (childDob !== '—') profileMetaItems.push(<span key="dob">{childDob}</span>);
 
   return (
@@ -1860,12 +1909,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
           <span style={eyebrowTopStyle}>Babyora</span>
           <span aria-hidden="true" style={appTitleStyle}>Innstillinger</span>
         </div>
-        {childCity !== '—' ? (
-          <div style={metaPillStyle} aria-label={`Sted ${childCity}`}>
-            <IconHeaderPin />
-            <span>{childCity}</span>
-          </div>
-        ) : null}
+        {/* FUNN 2026-08-06 ([MINDRE] Innstillinger, «Trondheim står tre ganger»):
+            stedspillen sto her, stedet sto i barnekortets metalinje, og
+            «Sted»-raden under Vær & sted viser det samme. Tre visninger av
+            samme verdi leses som tre uavhengige innstillinger, og forelderen
+            må selv finne ut hvilken som faktisk styrer været. Pillen og
+            metalinjens sted er fjernet; «Sted»-raden er eneste kilde til
+            sannhet på denne skjermen. Stedspillen hører hjemme på Hjem og
+            Planlegg, der stedet ER konteksten. */}
       </header>
 
       {/* Scroll-area */}
@@ -1899,10 +1950,10 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                   <div style={profileMetaStyle}>
                     {profileMetaItems.map((item, i) => (
                       <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--dw-space-6)' }}>
-                        {item}
-                        {i < profileMetaItems.length - 1 ? (
+                        {i > 0 ? (
                           <span style={profileMetaDotStyle} aria-hidden="true" />
                         ) : null}
+                        {item}
                       </span>
                     ))}
                   </div>
@@ -2092,7 +2143,13 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               </span>
               <span style={rowBodyStyle}>
                 <span style={rowLabelStyle}>Referansetime</span>
-                <span style={rowSubStyle}>Hvilket klokkeslett vises på hjem-skjerm</span>
+                {/* FUNN 2026-08-06 ([MINDRE] Innstillinger): «Hvilket klokkeslett
+                    vises på hjem-skjerm» brakk i den ekte bindestreken i
+                    «hjem-skjerm» og la raden ut over tre linjer — nesten dobbelt
+                    så høy som naboradene, og orddeling tvinger bokstavlesing i
+                    stedet for ordgjenkjenning. Teksten er kortet ned og har
+                    ingen bindestrek å brekke i. */}
+                <span style={rowSubStyle}>Klokkeslettet hjemskjermen viser</span>
               </span>
               <span style={rowValueBoldStyle}>{formatHour(refHour)}</span>
               <Chevron />
@@ -2449,9 +2506,6 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
           <IconLogout />
           <span>Logg ut</span>
         </button>
-
-        {/* Native spike (2026-08-06): widget-testpanel — fjernes etter spiken. */}
-        <WidgetSpikePanel />
 
         <div
           style={footerMetaStyle}

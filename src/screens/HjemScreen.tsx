@@ -97,6 +97,10 @@ import type { OutfitTransitionCoordinatorState } from '../lib/outfit-transition/
 // force the legacy branch in tests without touching anything else here.
 import { HJEM_SCAN_UI_ENABLED } from '../components/hjem/flags';
 import { HjemMonter } from '../components/hjem/HjemMonter';
+// Widget-datakilden (2026-08-06): Hjem er stedet der både vær og en ferdig
+// anbefaling finnes samtidig, og er derfor det eneste riktige kallstedet.
+// Se src/lib/widget/use-widget-snapshot.ts for strupingen.
+import { useWidgetSnapshot } from '../lib/widget/use-widget-snapshot';
 import type { FinnAntrekkPrefill } from './finn-antrekk-prefill';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -491,6 +495,19 @@ export function HjemScreen({
     if (resolvedRecommendation === null) return;
     markFirstRecommendationSeen();
   }, [resolvedRecommendation, markFirstRecommendationSeen]);
+
+  // Widget-mating (2026-08-06). Hooken er en no-op til BÅDE været
+  // (engineInput.weather) og den swap-finaliserte anbefalingen finnes, og
+  // sender aldri per render — den strupes på innholdsnøkkel og deretter av
+  // shouldPushSnapshot. Den kaster aldri og blokkerer aldri renderingen.
+  // Merk at den må stå FØR den flag-gatede returen lenger nede, slik at
+  // hook-rekkefølgen er den samme i begge render-grener.
+  useWidgetSnapshot({
+    childName: active.name,
+    weather: engineInput?.weather ?? null,
+    rec: resolvedRecommendation,
+    activity,
+  });
 
   const currentOutfitContext = useMemo<PlannedOutfitContext | null>(() => {
     const now = weather.now;

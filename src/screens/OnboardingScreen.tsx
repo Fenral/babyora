@@ -540,7 +540,13 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                         aria-describedby="ob-name-hint"
                       />
                     </div>
-                    <div id="ob-name-hint" className="ob-hint">Brukes bare i teksten og lagres på denne iPhonen.</div>
+                    {/* FUNN 2026-08-06 ([MINDRE] Onboarding, personvernløftet):
+                        teksten sa «denne iPhonen». Appen distribueres også på
+                        Android (no.klemeg.app), og der er setningen synlig
+                        usann om enheten forelderen holder i hånden. En
+                        personvernpåstand er den dårligste å ta feil om, så
+                        formuleringen er enhetsnøytral nå. */}
+                    <div id="ob-name-hint" className="ob-hint">Brukes bare i teksten og lagres bare på denne telefonen.</div>
                   </div>
 
                   {/* §11: "tomrommet gjør arbeid" — dempet forhåndsvisning av
@@ -1216,7 +1222,15 @@ mask-image: var(--dw-fade-bunn);
   position:relative;
   display:flow-root;
   flex:none;
-  margin-top:var(--dw-space-14);
+  /* FUNN 2026-08-06 ([MINDRE] Onboarding, «nedre 28 % av skjermen er tom»):
+     ledig plass i .ob-body ble tidligere dumpet i ÉN blokk under kortet
+     (270 px), så knappen så ut til å sveve. Auto-marger på flex-elementet
+     fordeler det som er til overs likt over og under kortet i stedet.
+     Auto-marger er trygge i en rullecontainer: negativ ledig plass
+     behandles som 0, så kortet faller tilbake til toppen og RULLER på lave
+     skjermer — i motsetning til justify-content:center, som ville gjort
+     toppen av kortet uoppnåelig. */
+  margin-block:auto;
 }
 .ob-s1-mascot{
   position:absolute;
@@ -1286,10 +1300,16 @@ mask-image: var(--dw-fade-bunn);
   flex:none;margin-top:var(--dw-space-22);
   display:flex;flex-direction:column;gap:var(--dw-space-8);
 }
+/* FUNN 2026-08-06 ([MINDRE] Onboarding, tre venstrekanter): etiketten og
+   hjelpeteksten hadde padding-left:var(--dw-space-4) — 4 px, altså de 8
+   bildepikslene revisjonen målte ved 2x — mens inputfeltets ramme, H1-en og
+   forhåndsvisningen står på kortets egen venstrekant. Det ga tre ulike
+   venstrekanter i ETT kort på den aller første skjermen forelderen ser.
+   Feltgruppen deler nå kant med feltet den beskriver.
+   .ob-hint-center beholder sin padding-left:0 som eksplisitt vakt. */
 .ob-field label{
   font-size:11.5px;font-weight:700;letter-spacing:1.2px;
   text-transform:uppercase;color:var(--ob-ink-500);
-  padding-left:var(--dw-space-4);
 }
 .ob-input-shell{
   position:relative;display:flex;align-items:center;
@@ -1311,7 +1331,6 @@ mask-image: var(--dw-fade-bunn);
 .ob-input-shell input::placeholder{color:var(--ob-ink-400);font-weight:400;}
 .ob-hint{
   font-size:12.5px;color:var(--ob-ink-500);
-  padding-left:var(--dw-space-4);
 }
 .ob-hint-center{
   text-align:center;margin-top:var(--dw-space-14);padding-left:0;font-size:13px;
@@ -1572,6 +1591,21 @@ mask-image: var(--dw-fade-bunn);}
   min-height:100dvh;
   overflow:hidden;
   padding-top:max(12px, env(safe-area-inset-top, 0px));
+}
+/* FUNN 2026-08-06 ([MINDRE] Onboarding, «208 px tomrom under Fortsett»).
+   MEKANISMEN: onboarding rendres som main.ob-screen RETT under .app-shell
+   (App.tsx: naar onboardingDone er false returneres div.app-shell med
+   OnboardingScreen inni; Suspense lager ingen DOM-node). Dermed treffer
+   design-tokens.css sin regel .app-shell > main med
+   padding-bottom:var(--dw-tabbar-clearance, 90px) denne skjermen — en klaring
+   som er reservert for den flytende tab-baren. Onboarding HAR ingen tab-bar.
+   Klaringen er 60+16+env+14 = 90 px, og .ob-cta-zone legger sine egne 14 px
+   under knappen: 104 CSS-px = nøyaktig de 208 bildepikslene revisjonen målte.
+   .ob-screen sin egen padding-bottom har spesifisitet (0,1,0) og taper mot
+   .app-shell > main (0,1,1), så rettingen må stå med minst like høy
+   spesifisitet. Vi beholder trygg sone, ikke tab-bar-klaringen. */
+.app-shell > main.ob-screen{
+  padding-bottom:env(safe-area-inset-bottom, 0px);
 }
 .ob-screen > .ob-topbar{
   width:min(100%, 560px);

@@ -90,6 +90,7 @@ import type { GarmentId } from '../data/garment-illustrations';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
 import { VerticalGauge } from '../components/instrument/VerticalGauge';
 import {
+  formatEnDesimal,
   INSTRUMENT_MAX_C, INSTRUMENT_MIN_C, instrumentValueText, snapDegree,
 } from '../components/instrument/instrument-logic';
 import '../components/hjem/hjem-monter.css';
@@ -135,6 +136,43 @@ export type FinnAntrekkScreenProps = {
 
 function symbolCodeFromPrecip(mmH: number): string {
   return mmH > 0 ? 'rain' : 'clearsky_day';
+}
+
+/* ══ HEADEREN ER TO LINJER, IKKE ÉN FIREDELT STRENG ════════════════════════
+   MÅLT 2026-08-06: undertittelen sto som
+   «Lillian, 10 mnd · Fast sted · Trondheim · basert på været nå» — fire
+   fakta i én streng — og brakk over TRE linjer, med «været nå» alene på den
+   siste, rett over værkortet.
+
+   MEKANISMEN er at strengen ble satt sammen av tre uavhengige biter som
+   ingen målte samlet: `childName` + alder, `placeSuffix` (som selv er
+   todelt, se under) og en fast hale. Ingen av dem er lang alene, og ingen
+   av dem visste om de andre. Lengden var derfor et sammentreff.
+
+   HVORFOR STEDSMODUSEN FALLER BORT: `prefill.placeLabel` kommer fra Hjems
+   `cityLabel` (HjemScreen.tsx:414), som prefikser byen med hvilken
+   stedsmodus som er i bruk — «Fast sted · Trondheim» eller «Nåværende sted
+   · Trondheim». Modusen er Hjems og Innstillingers sak; på Juster er det
+   BYEN som forankrer tallene. Prefikset er derfor det som skal vike når
+   noe må vike — ikke barnets navn, og ikke tidspunktet.
+
+   Resultatet er to linjer med hvert sitt ansvar: HVEM (linje 1) og
+   HVOR/NÅR (linje 2), med høyst ett skilletegn i hver. */
+function stedsnavnUtenModus(placeLabel: string | undefined): string | null {
+  if (!placeLabel) return null;
+  const siste = placeLabel.split('·').pop()?.trim() ?? '';
+  return siste.length > 0 ? siste : null;
+}
+
+/** [hvem, hvor-og-når] — de to linjene under skjermtittelen. */
+function headerLinjer(
+  childName: string,
+  ageMonths: number | null,
+  placeLabel: string | undefined,
+): readonly [string, string] {
+  const hvem = ageMonths === null ? childName : `${childName}, ${ageMonths} mnd`;
+  const sted = stedsnavnUtenModus(placeLabel);
+  return [hvem, sted === null ? 'Været nå' : `${sted} · været nå`] as const;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -269,7 +307,7 @@ function buildWhyDetails(
   }
 
   if (precipMmH > 0) {
-    details.push(`${precipMmH.toFixed(1)} mm/t nedbør (${precipBandText(precipMmH)}) krever vanntett yttertøy.`);
+    details.push(`${formatEnDesimal(precipMmH)} mm/t nedbør (${precipBandText(precipMmH)}) krever vanntett yttertøy.`);
   }
 
   if (activityUi === 'vogn') {
@@ -719,12 +757,14 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
   // returnere til Hjems cachede resultat — se App.tsx sin Drill-union).
   const isDrillContext = prefill !== undefined;
   const screenTitle = isDrillContext ? 'Juster' : 'Finn antrekk';
-  const placeSuffix = prefill?.placeLabel ? ` · ${prefill.placeLabel}` : '';
   // P10/JOB4: "juster og se svaret endre seg" fjernet — CTA-en (ikke live
   // sliderdrag) er nå det som faktisk beregner svaret.
-  const subLine = needsOnboarding || !active.dob
-    ? `${childName}${placeSuffix} · basert på været nå`
-    : `${childName}, ${ageMonths} mnd${placeSuffix} · basert på været nå`;
+  // 2026-08-06: én firedelt streng brakk over tre linjer — se `headerLinjer`.
+  const [subLineHvem, subLineHvorNaar] = headerLinjer(
+    childName,
+    needsOnboarding || !active.dob ? null : ageMonths,
+    prefill?.placeLabel,
+  );
 
   const ctaLabel = ctaLabelFor(phase);
   const showCta = showCtaFor(phase);
@@ -756,7 +796,8 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
         </button>
         <div style={titleWrapStyle}>
           <p style={titleStyle}>{screenTitle}</p>
-          <p style={subtitleStyle}>{subLine}</p>
+          <p style={subtitleStyle}>{subLineHvem}</p>
+          <p style={subtitleMetaStyle}>{subLineHvorNaar}</p>
         </div>
       </header>
 
@@ -796,7 +837,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
               rows={[
                 { label: 'Temperatur', value: formatTemp(scanRows.tempC) },
                 { label: 'Vind', value: `${scanRows.windMs} m/s` },
-                { label: 'Nedbør', value: `${scanRows.precipMmH.toFixed(1)} mm/t` },
+                { label: 'Nedbør', value: `${formatEnDesimal(scanRows.precipMmH)} mm/t` },
               ] as const}
               spinningLabel="Lag for lag"
               spinningValue="setter sammen…"
@@ -875,14 +916,14 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
                 />
                 <VerticalGauge
                   label="Nedbør"
-                  valueLabel={`${precipMmH.toFixed(1)} mm/t`}
+                  valueLabel={`${formatEnDesimal(precipMmH)} mm/t`}
                   min={0}
                   max={10}
                   step={0.5}
                   value={precipMmH}
                   onChange={(v) => handleSliderChange('nedbor', precipBandText, setPrecipMmH, v)}
                   ariaLabel="Nedbør i millimeter per time"
-                  ariaValueText={`${precipMmH.toFixed(1)} millimeter per time, ${precipBandText(precipMmH)}`}
+                  ariaValueText={`${formatEnDesimal(precipMmH)} millimeter per time, ${precipBandText(precipMmH)}`}
                   minLabel="0"
                   maxLabel="10 mm/t"
                   fillBottomColor={GAUGE_FILL_BOTTOM}
@@ -893,7 +934,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
                   decrementLabel="Mindre nedbør"
                   height={GAUGE_HEIGHT}
                   baselineValue={weatherBaseline?.precipMmH ?? null}
-                  baselineLabel={weatherBaseline ? `Faktisk vær nå: ${weatherBaseline.precipMmH.toFixed(1)} mm/t` : undefined}
+                  baselineLabel={weatherBaseline ? `Faktisk vær nå: ${formatEnDesimal(weatherBaseline.precipMmH)} mm/t` : undefined}
                 />
               </div>
             </div>
@@ -1169,17 +1210,37 @@ const subtitleStyle: CSSProperties = {
   letterSpacing: 0.1,
 };
 
+/* Andre undertittellinje — HVOR og NÅR. Samme rampe som linjen over, ett
+   hakk stillere i vekt fordi den forankrer og ikke navngir. IKKE dempet med
+   opacity (tools/opacity-detektor.mjs): fargen er --dw-ink-mid, som allerede
+   er rampens sekundærnivå. */
+const subtitleMetaStyle: CSSProperties = {
+  ...subtitleStyle,
+  fontWeight: 400,
+};
+
 const scrollStyle: CSSProperties = {
   flex: 1,
   minHeight: 0,
   overflowY: 'auto',
   overflowX: 'hidden',
-  // D4: rulleflaten skal si at det er mer under, ikke kuttes hardt. Samme
-  // oppskrift som resten av appen (.dw-sheet-innhold, .hjm-result,
-  // Plaggbiblioteket). Flaten maler ingen egen bakgrunn, sa faden treffer
-  // bare innholdet.
-  WebkitMaskImage: 'var(--dw-fade-bunn)',
-  maskImage: 'var(--dw-fade-bunn)',
+  // D4: rulleflaten skal si at det er mer under, ikke kuttes hardt.
+  // Flaten maler ingen egen bakgrunn, sa faden treffer bare innholdet.
+  //
+  // MÅLT 2026-08-06: denne containeren er skjermens EGEN rulleflate, og den
+  // gaar helt til skjermbunnen. Roten er `minHeight: 100dvh` med bare
+  // topbaren over, saa containerens underkant ligger paa viewport-bunnen —
+  // mens den flytende BottomTabBar (App.tsx rendrer den over ALLE drills
+  // unntatt PaakledningScreens native modal) begynner ~76 px lenger opp og
+  // er gjennomskinnelig. `--dw-fade-bunn` naar full gjennomsiktighet foerst
+  // ved containerbunnen, altsaa 0 px over kanten: innhold krysset barens
+  // overkant i full dekkevne. Samme mekanisme som ble maalt paa TOG og
+  // Plaggbiblioteket samme dag.
+  // `--dw-fade-over-tabbar` stopper der baren begynner, regnet ut av barens
+  // egne tokens. `paddingBottom` under er en ANNEN skrue: den holder siste
+  // element over baren I HVILE, denne rydder UNDER RULLING.
+  WebkitMaskImage: 'var(--dw-fade-over-tabbar)',
+  maskImage: 'var(--dw-fade-over-tabbar)',
   padding: '0 var(--dw-space-16)',
   // P10 (Juster clearance, folded into JOB4): this screen owns its own
   // internal scroll container (like .hjem-monter, see hjem-monter.css's own
@@ -1328,6 +1389,35 @@ const activityRowStyle: CSSProperties = {
   border: `1px solid ${TOKENS.hairline}`,
 };
 
+/* ══ VALGT SEGMENT BÆRES AV FLATEN, IKKE AV SKRIFTVEKTEN ═══════════════════
+   MÅLT 2026-08-06: pillen sto på `--dw-overlay` (#382817) i et spor på
+   `--dw-raised` (#2C1F13). Det er 1,13:1 mellom de to flatene — under
+   terskelen der øyet i det hele tatt registrerer en kant. Valget ble derfor
+   båret av at «Utenfor vogn» var fet og «I vogn» normal, altså av å
+   SAMMENLIGNE to ord. «Utenfor vogn» mot «I vogn» endrer anbefalingen
+   vesentlig og må kunne avleses perifert.
+
+   I LYS MODUS var det verre og helt usynlig: der er `--dw-overlay` og
+   `--dw-raised` NØYAKTIG samme verdi (#FFFCF4, design-tokens-v2.css:609/616)
+   — 1,00:1. Pillen fantes bare som en skygge.
+
+   HVORFOR IKKE «litt lysere flate»: den varme mørkerampen har ~4 L* mellom
+   hvert nivå. Selv det lyseste nivået, `--dw-accent-surface` (#4A2F21), gir
+   bare 1,31:1 mot sporet. INGEN kombinasjon av dybdenivåer løser dette —
+   luminans alene kan ikke bære valget i dette fargesystemet.
+
+   HVORFOR IKKE AMBER: `--dw-accent` er brukerHANDLING, og handlingen på
+   denne skjermen er «Finn antrekk»-CTA-en rett under. To ambre flater over
+   hverandre gir to aksentansvar på samme skjerm (DESIGN.md l. 41).
+
+   SVARET ER APPENS EGEN KANONISKE SEGMENTKONTROLL: en INVERTERT krem-plate.
+   `SegmentedControl.css` (.segmented-control__segment.is-checked) og — mest
+   relevant — Hjems egen aktivitetsvelger for NØYAKTIG samme valg
+   (hjem-monter.css `.hjm-toggle button[aria-checked='true']`) gjør begge
+   dette: `background: --dw-ink-hi`, tekst i underlagets farge. Målt her:
+   13,26:1 mot sporet i mørk modus og 15,97:1 i lys, og fordi begge tokens
+   snur med temaet blir platen mørk-på-lys i lys modus av seg selv.
+   Samme valg så altså ut på to måter i appen; nå på én. */
 /** Dekorativ pill som glir under aktiv segment (aria-hidden). */
 function activityPillStyle(second: boolean, reduceMotion: boolean): CSSProperties {
   return {
@@ -1337,12 +1427,13 @@ function activityPillStyle(second: boolean, reduceMotion: boolean): CSSPropertie
     left: 'var(--dw-space-4)',
     width: 'calc(50% - 4px)',
     borderRadius: 10,
-    background: 'var(--dw-overlay)',
-    // D2 på en VALGT flate: pillen ER det valgte segmentet, så den bærer
-    // --dw-depth-selected (ikke -raised) pluss innfelt topplys. Den gamle
-    // `var(--shadow-1)` var legacy-arv utenfor dybdekontrakten og hadde
-    // verken lysretning eller temaflipp.
-    boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected)',
+    background: 'var(--dw-ink-hi)',
+    // Platen ligger OPPÅ sporet og kaster skygge ned i det. Det innfelte
+    // topplyset som sto her er borte med begrunnelse: `--dw-plate-kant` er
+    // en varm amber-hinne laget for å løfte MØRKE flater, og på en krem
+    // plate er den både usynlig og uten jobb. Kanten bæres nå av de 13,26:1
+    // flaten selv gir.
+    boxShadow: 'var(--dw-depth-selected)',
     transform: second ? 'translateX(100%)' : 'translateX(0)',
     // 280 ms var eksakt --dw-m-handoff: pillen gir valget videre fra ett
     // segment til det andre.
@@ -1364,9 +1455,14 @@ function activityButtonStyle(active: boolean, reduceMotion: boolean): CSSPropert
     borderRadius: 10,
     border: 'none',
     background: 'transparent',
-    color: active ? TOKENS.ink900 : TOKENS.ink700,
+    // Teksten står PÅ krem-platen når segmentet er valgt, og må derfor være
+    // lerretets farge — samme inversjon som `.hjm-toggle` og
+    // `.segmented-control__segment.is-checked`. Målt 15,0:1 i mørk modus og
+    // 15,0:1 i lys. Beholdt `--dw-ink-hi` her ville gitt krem på krem.
+    color: active ? 'var(--dw-canvas)' : TOKENS.ink700,
     fontFamily: 'inherit',
     fontSize: '0.875rem',
+    // Skriftvekten er nå FORSTERKNING, ikke bæreren av valget.
     fontWeight: active ? 700 : 600,
     letterSpacing: '-0.1px',
     textAlign: 'center',

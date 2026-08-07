@@ -74,7 +74,15 @@
   min-inline-size: 44px;
   min-block-size: 44px;
   padding: var(--dw-space-4) var(--dw-space-6);
-  color: var(--dw-ink-low, var(--dw-ink-mid));
+  /* Inaktive etiketter maalte 3,93:1 mot barens flate (revisjonen
+     2026-08-06) — under AA-grensen 4,5:1, saa «Hjem» og «Planlegg» ble
+     vanskelige aa lese i darlig morgenlys. Flaten er blur-varianten
+     --dw-tabbar-surface-blur over lerretet (L=0,0465), og terskelen for
+     4,5:1 mot den er L >= 0,384. --dw-ink-low er L=0,3293 og kan derfor
+     ikke reddes med en fallback — tokenet maa byttes. --dw-ink-mid
+     (L=0,5363) gir 6,07:1. Aktiv fane staar fortsatt paa --dw-ink-hi og
+     er tydelig lysere, saa skillet aktiv/inaktiv overlever. */
+  color: var(--dw-ink-mid, var(--dw-ink-low));
   font: inherit;
   cursor: pointer;
   touch-action: manipulation;

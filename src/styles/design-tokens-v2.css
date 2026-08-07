@@ -242,6 +242,23 @@
      målplattformen. Et token gir verdien, ikke prefikset. */
   --dw-fade-bunn: linear-gradient(to bottom, black 92%, transparent 100%);
 
+  /* BUNN-FADE MED FAST RAMPE, FOR CONTAINERE SOM ALLEREDE KLARERER BAREN.
+
+     Det tredje tilfellet. `--dw-fade-bunn` er prosentbasert (92 %), saa
+     uttoningen VOKSER med containerhoyden: paa en hoy rulleflate spiser
+     den ~60 px og dimmer ekte innhold langt over kanten. Malt 2026-08-06 i
+     Innstillinger: seksjonsetiketten «VARSLER» sto merkbart morkere enn
+     «BARN» og «VAER & STED» — samme rolle, samme stil — og kortet under
+     var nesten usynlig. Forelderen kunne tro at varsler var utilgjengelig
+     i stedet for at hun maatte rulle.
+
+     Bruk denne naar containeren allerede holder innholdet klar av baren
+     via `--dw-tabbar-clearance`, og faden bare skal antyde at det finnes
+     mer. Bruk `--dw-fade-over-tabbar` naar innhold faktisk ruller BAK den
+     flytende baren. Bruk `--dw-fade-bunn` paa ark og dialoger, som ikke
+     har noe under seg. */
+  --dw-fade-bunn-kort: linear-gradient(to bottom, black calc(100% - 28px), transparent 100%);
+
   /* BUNN-FADE FOR FLATER SOM RULLER UNDER DEN FLYTENDE TAB-BAREN.
 
      `--dw-fade-bunn` over slutter ved containerBUNNEN: den når full

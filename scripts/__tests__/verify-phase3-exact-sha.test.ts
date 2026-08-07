@@ -12,7 +12,20 @@ import {
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+/* SUBPROSESS-TESTER TRENGER MER ENN FEM SEKUNDER.
+
+   Denne filen starter ekte `git`- og `npm`-prosesser. Vitests standardgrense
+   er 5 000 ms, og det holder pa CI (ubuntu-latest) men ikke pa Windows, der
+   ett prosess-spawn alene koster sekunder — og verre nar 200 testfiler deler
+   maskinen. Malt 2026-08-06: `npm test` ga 35 rode her mens de samme testene
+   var gronne isolert og gronne i CI. En port som svinger med maskinlast er
+   ingen port; da slutter folk a lese den.
+
+   Grensen er hevet lokalt i stedet for globalt med vilje: de ovrige ~3 000
+   testene skal fortsatt ryke pa 5 sekunder, sa en ekte henging blir synlig. */
+vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
+
 import {
   isPathWithinResolvedRoot,
   parsePhase1CandidateSummary,
@@ -1688,7 +1701,7 @@ describe('candidate mode', () => {
       mutate(harness);
       expectFailure(runScript(harness, candidateArgs(harness)));
     }
-  }, 15_000);
+  }, 60_000);
 
   it('rejects a changed or missing validation bundle and malformed JSON', () => {
     for (const kind of ['changed', 'missing', 'malformed'] as const) {

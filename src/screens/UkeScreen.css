@@ -212,6 +212,14 @@
   margin-top: var(--dw-space-6);
 }
 
+/* I «I dag»-visningen skrives ikke dags-etiketten lenger (den gjentok bare
+   den aktive fanepillen — se UkeScreen.tsx sin showHeroDayLabel). Da er
+   hero-raden kortets første innhold og skal ikke bære luften som lå MELLOM
+   etiketten og tallet; ellers flyttes bare tomrommet opp. */
+.planlegg-weather__hero-row:first-child {
+  margin-top: 0;
+}
+
 /* Den ENE tillatte serif-rollen: hero-temperaturen. Wonk=0, sifre i faktisk
    størrelse (duell §5 — 7° skal aldri kunne leses som ?°). */
 .planlegg-weather__temp {
@@ -226,11 +234,30 @@
   font-variation-settings: 'WONK' 0;
 }
 
+/* Gradtegnet skal stå HEVET mot versalhøyden, ikke midt på sifferet.
+   FUNN (revisjon 2026-08-06, [MINDRE] Plan): ringen dekket y 441–454 mens
+   sifferet «1» dekket y 411–482 (bildepiksler, 2x). Ringens senter lå på
+   y≈447 og sifferets på y≈446 — altså nøyaktig midtstilt, så «1°» leses som
+   «1 o» i et halvsekunds blikk.
+
+   MEKANISMEN lå i enheten, ikke i verdien: `vertical-align` i PROSENT måles
+   mot elementets EGEN line-height, ikke mot sifferet det skal heves over.
+   Sup-en arver line-height 0.95 (unitless) fra .planlegg-weather__temp og har
+   font-size 1.375rem, så 28 % var 0,266em ≈ 6 CSS px løft — under en tidel av
+   sifferets ~35 px versalhøyde. Prosenten SÅ stor ut og var nesten ingenting.
+
+   En lengde i em måles mot sup-ens egen font-size og er derfor det eneste
+   leselige målet her. Regnestykket, med revisjonens egne målinger:
+     ringens egen topp over grunnlinjen  ≈ 0,646em (14,5 px i en 22,5 px sup)
+     versalhøyden på hero-tallet         ≈ 0,724 × 3rem = 2,17rem
+   Differansen er 0,94em, og det holder sup-ens inline-boks innenfor
+   hero-radens linjeboks, så løftet flytter ingenting. */
 .planlegg-weather__temp sup {
   font-size: 1.375rem;
   font-weight: 400;
-  vertical-align: 28%;
-  margin-left: 1px;
+  vertical-align: 0.94em;
+  /* Luften mellom tall og tegn strammes: ° har egen venstre sidebæring. */
+  margin-left: 0;
 }
 
 .planlegg-weather__icon {
@@ -465,6 +492,22 @@
 
 .planlegg-forecast__toggle span {
   transition: transform var(--dw-m-state) var(--dw-ease);
+}
+
+/* Chevronen er nå et strøket SVG-ikon, ikke bokstavglyfen «⌄». Den må ha
+   en egen boks for å nå de 20x20 px rapporten ber om — bokstavformen var
+   ca. 12 px høy ved siden av en 160 px bred etikett. Trykkflaten er
+   allerede ≥44 px via .planlegg-forecast__toggle sin min-height. */
+.planlegg-forecast__chevron {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+
+.planlegg-forecast__chevron svg {
+  width: 100%;
+  height: 100%;
 }
 
 .planlegg-forecast__toggle[aria-expanded="true"] span {

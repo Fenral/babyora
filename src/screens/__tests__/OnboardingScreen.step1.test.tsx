@@ -62,7 +62,9 @@ describe('OnboardingScreen — step 1 v2 (Monter re-skin)', () => {
     const html = renderScreen();
     expect(html).toContain('Navn eller kallenavn');
     expect(html).toContain('Valgfritt');
-    expect(html).toContain('Brukes bare i teksten og lagres på denne iPhonen.');
+    // FUNN 2026-08-06: enhetsnavnet er ute av personvernløftet, se
+    // OnboardingScreen.revisjon-2026-08-06.test.tsx for selve vakten.
+    expect(html).toContain('Brukes bare i teksten og lagres bare på denne telefonen.');
     expect(html).not.toContain('autofocus');
     // "Fortsett" CTA has no disabled/aria-disabled attribute on step 1.
     const ctaMatch = html.match(/<button class="ob-btn-primary" type="button">\s*Fortsett/);

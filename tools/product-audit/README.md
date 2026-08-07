@@ -58,9 +58,26 @@ Finalization creates:
 - `report.md`
 - `next-improvement-prompt.md`
 
+## Betalingsmuren
+
+Betalingsmuren var lenge den ellevte av elleve skjermer, og den eneste som
+ikke lot seg fange. Grunnen var ikke navigasjonen: `?seed=demo` seeder som
+default en mock-ABONNENT, og en som allerede betaler har ingen mur å se.
+
+Fangsten ber derfor produktet om den tilstanden det selv tilbyr —
+`?seed=demo&entitlement=none` (`src/state/subscription-store.ts`,
+`resolveDemoEntitlementOverride`, samme håndtak som `e2e/purchase-flow.ts`
+bruker). Katalogen sier dette per tilstand med `query`, og revisjonen fanger
+den ikke-avviselige `AppPaywallGate` — den muren en ikke-betalende forelder
+faktisk møter — ikke den lukkbare tilbudsdialogen fra Innstillinger.
+
 ## Safety boundary
 
 There is no `apply` command. Capture blocks purchases, restoration, deletion, invitations, notifications, and production writes. Run the tool against a local or dedicated preview build with fixtures. Product implementation is a separate, explicitly approved task.
+
+Revisjonen skriver aldri i produktets tilstand — heller ikke via URL-en.
+`assertReadOnlyQuery` holder `query` til en kort, låst liste: den kan be om
+MINDRE tilgang (`entitlement=none`), aldri mer.
 
 ## Tests
 

@@ -10,7 +10,20 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+/* SUBPROSESS-TESTER TRENGER MER ENN FEM SEKUNDER.
+
+   Denne filen starter ekte `git`- og `npm`-prosesser. Vitests standardgrense
+   er 5 000 ms, og det holder pa CI (ubuntu-latest) men ikke pa Windows, der
+   ett prosess-spawn alene koster sekunder — og verre nar 200 testfiler deler
+   maskinen. Malt 2026-08-06: `npm test` ga 35 rode her mens de samme testene
+   var gronne isolert og gronne i CI. En port som svinger med maskinlast er
+   ingen port; da slutter folk a lese den.
+
+   Grensen er hevet lokalt i stedet for globalt med vilje: de ovrige ~3 000
+   testene skal fortsatt ryke pa 5 sekunder, sa en ekte henging blir synlig. */
+vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
+
 import {
   ARTIFACT_NAMES,
   createFinalCommandMatrix,
@@ -135,7 +148,11 @@ afterEach(() => {
 });
 
 function filesystemIt(name: string, test: () => void): void {
-  it(name, test, 15_000);
+  // 15 s holdt paa CI (ubuntu) men ikke paa Windows: hvert filsystem-
+  // oppsett lager kataloger og starter ekte prosesser, og under full
+  // suite (209 filer) sultet de. Malt 2026-08-06: 22,5 s her, ~2 s
+  // isolert. Grensen folger vi.setConfig over.
+  it(name, test, 60_000);
 }
 
 describe('Phase 3 final runner contracts', () => {

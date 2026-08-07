@@ -37,6 +37,35 @@ export function assertReadOnlyAction(action: string): void {
   }
 }
 
+/**
+ * DEN LESE-ONLY GRENSEN, OGSÅ FOR URL-EN.
+ *
+ * Revisjonen trenger å se appen som en IKKE-betalende forelder ser den.
+ * Den skal likevel ikke skrive i produktets tilstand — ingen localStorage-
+ * planting, ingen simulerte kjøp. Veien inn er produktets EGET, dokumenterte
+ * test-håndtak: `?seed=demo&entitlement=none`
+ * (src/state/subscription-store.ts, resolveDemoEntitlementOverride).
+ *
+ * Listen er bevisst kort, og verdiene er låst. `entitlement` kan kun be om
+ * MINDRE tilgang («none») — revisjonen skal aldri kunne gi seg selv Pluss via
+ * URL-en, for da måler den igjen en app ingen forelder har.
+ */
+const ALLOWED_QUERY: ReadonlyMap<string, ReadonlySet<string>> = new Map([
+  ['entitlement', new Set(['none'])],
+]);
+
+export function assertReadOnlyQuery(query?: Readonly<Record<string, string>>): void {
+  for (const [key, value] of Object.entries(query ?? {})) {
+    const tillatteVerdier = ALLOWED_QUERY.get(key);
+    if (!tillatteVerdier) {
+      throw new Error(`Blocked by read-only audit boundary: query parameter ${key}`);
+    }
+    if (!tillatteVerdier.has(value)) {
+      throw new Error(`Blocked by read-only audit boundary: query ${key}=${value}`);
+    }
+  }
+}
+
 export interface CapturePlanItem {
   pageId: PageId;
   pageLabel: string;
@@ -45,6 +74,7 @@ export interface CapturePlanItem {
   required: boolean;
   actions: CaptureAction[];
   expectedText?: string;
+  query?: Readonly<Record<string, string>>;
 }
 
 export function buildCapturePlan(): CapturePlanItem[] {
@@ -56,12 +86,22 @@ export function buildCapturePlan(): CapturePlanItem[] {
     required: state.required,
     actions: [...state.actions],
     expectedText: state.expectedText,
+    query: state.query,
   })));
 }
 
-function seededUrl(baseUrl: string, onboarding: boolean): string {
+export function seededUrl(
+  baseUrl: string,
+  onboarding: boolean,
+  query?: Readonly<Record<string, string>>,
+): string {
+  assertReadOnlyQuery(query);
   const url = new URL(baseUrl);
   if (!onboarding) url.searchParams.set('seed', 'demo');
+  /* Tilstandens egne parametere legges på ETTER seed, fordi produktets
+     håndtak (entitlement=none) kun leses når `seed` finnes i det hele tatt
+     (resolveDemoEntitlementOverride returnerer null uten den). */
+  for (const [key, value] of Object.entries(query ?? {})) url.searchParams.set(key, value);
   return url.toString();
 }
 
@@ -236,11 +276,12 @@ export async function captureAudit(options: {
            før hver fangst. Skal en cachet tilstand revideres, må den være
            en DEKLARERT tilstand i katalogen — ikke et sideutslag av
            rekkefølgen. ══════════════════════════════════════════════════ */
-        await page.goto(seededUrl(options.baseUrl, item.pageId === 'onboarding'), { waitUntil: 'domcontentloaded', timeout: 30_000 });
+        const url = seededUrl(options.baseUrl, item.pageId === 'onboarding', item.query);
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
         await page.evaluate(() => {
           try { localStorage.clear(); sessionStorage.clear(); } catch { /* ikke tilgjengelig */ }
         });
-        await page.goto(seededUrl(options.baseUrl, item.pageId === 'onboarding'), { waitUntil: 'networkidle', timeout: 30_000 });
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
         await avvisUtviklingsserver(page, options.baseUrl);
         await page.waitForTimeout(1200);
         for (const action of item.actions) await performAction(page, action);

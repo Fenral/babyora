@@ -1002,6 +1002,21 @@ function PlanleggData({
     ?? fallbackPhase?.weather.atIso
     ?? (weather.now ? weather.now.observedAt.toISOString() : null);
   const heroDay = heroDayLabel(heroAtIso, isTodayView);
+  // FUNN (revisjon 2026-08-06, [MINDRE] Plan): «I dag» sto to ganger med ca.
+  // 40 px mellomrom — først som aktiv pille i visningsvelgeren (l. 1029, den
+  // hvite pillen y 193–285), så igjen som etikett øverst inne i værkortet
+  // (y 365–383). Andre forekomst kostet den øverste linjen på skjermens
+  // viktigste flate uten å svare på noe.
+  //
+  // MEKANISMEN: heroDayLabel() returnerer den faste strengen 'I dag' så snart
+  // isTodayView er sann (l. 249) — altså nøyaktig samme ord som segmentet som
+  // gjorde visningen aktiv. Segmentet «I dag» er låst i DESIGN.md («Locked
+  // structures» → Planlegg 1) og blir stående; det er etiketten som gjentar
+  // segmentet, ikke omvendt. Kortet skriver derfor datoen KUN når den sier noe
+  // velgeren ikke sier: den valgte dagen i Uke-visningen («Tirsdag 12. august»).
+  // Skjermleseren mister ingenting — seksjonens aria-label under sier fortsatt
+  // «Været I dag», og der finnes ingen fanepille å gjenta.
+  const showHeroDayLabel = !isTodayView && heroDay !== '';
   // Review item 7 (nyttig tomtilstand): "empty" har likevel et ekte
   // verdict.summary (plan-view-model.ts sin EvaluatedAdvice-gren dekker
   // 'empty' også) — det ble bare aldri lest ut i visningen. Bruker samme
@@ -1059,7 +1074,9 @@ function PlanleggData({
         >
           {heroWeather && (
             <>
-              <p className="planlegg-weather__day">{heroDay}</p>
+              {showHeroDayLabel && (
+                <p className="planlegg-weather__day">{heroDay}</p>
+              )}
               <div className="planlegg-weather__hero-row">
                 <span className="planlegg-weather__temp">
                   {formatHeroTemp(heroWeather.tempC)}

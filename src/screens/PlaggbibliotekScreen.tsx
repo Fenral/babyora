@@ -10,10 +10,12 @@
  * Plaggbiblioteket:
  *  - Eyebrow-meta (Oslo · 12°, lett vind · 49 plagg) i Fraunces italic
  *  - Editorial display-title "Plaggbiblioteket" 32px serif
- *  - Søk-felt (surface-glass) med ⌘K-kbd hint
+ *  - Søk-felt (surface-glass) med tøm-knapp når feltet har tekst
+ *    (⌘K-badgen er fjernet 2026-08-07 — snarveien fantes ikke, se styles)
  *  - Filter-chips (scroll-x) med material-swatches (ull/bomull/vanntett)
  *  - 2-col grid med hairline-divider GOAT-pattern, gruppert (Innerlag/Mellomlag/Ytterlag)
- *  - Square thumbnail med radial highlight + emoji fallback
+ *  - Thumbnail i plaggenes eget sideforhold (11:6) med radial highlight
+ *    + SVG-fallback
  *  - TOG-pill (warm/cool/neutral) top-right på hvert card
  *  - Floating Granmynte-FAB "Legg til plagg" med fade-mask over scroll
  *
@@ -47,6 +49,7 @@ import {
   GARMENTS_BY_CATEGORY,
 } from '../data/garment-category';
 import { titleFor, materialFor, type MaterialKey } from '../data/garment-catalog-helpers';
+import { sortGarmentItems, type PlaggSortMode } from './plaggbibliotek-sort';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -109,6 +112,7 @@ const FILTERS: ReadonlyArray<{ key: FilterKey; label: string; mat?: 'ull' | 'bom
 ];
 
 const TOTAL_COUNT = GROUPS.reduce((n, g) => n + g.items.length, 0);
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Styles
@@ -230,13 +234,30 @@ const styles = {
     margin: '0 var(--dw-space-6)',
   } satisfies CSSProperties,
 
+  /* ═══ SORTERINGSKNAPPEN VAR USYNLIG — OG DET VAR ÆRLIG ══════════════════
+
+     Her sto `background: 'transparent'` og `border: '1px solid transparent'`.
+     Revisjonen målte glyfen til ~35 px uten synlig flate, ved siden av en
+     tilbakeknapp med tydelig 88×88 px (device-piksler), og ba om samme flate
+     på begge.
+
+     Da jeg gikk for å gi den flaten, viste `handleSort` seg å være
+     `void fire('selection')` — haptikk og INGENTING annet. Knappen sorterte
+     ikke. Å gi en død kontroll den samme vekten som tilbakeknappen ville
+     gjort løgnen større, ikke mindre; det er nøyaktig feilen filhodet i
+     VarmEllerKaldScreen beskriver for statusradene (F80).
+
+     Så begge deler er gjort: knappen SORTERER nå (se sortMode /
+     `sortItems`), og først da fikk den platen. Flaten er den samme som
+     `backBtn` sin, med aria-pressed så tilstanden også er lesbar for
+     skjermleser. */
   topbarAction: {
     width: 44,
     height: 44,
     flex: 'none',
     borderRadius: 12,
-    background: 'transparent',
-    border: '1px solid transparent',
+    background: 'var(--dw-overlay)',
+    border: `1px solid ${TOKENS.hairline}`,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -262,16 +283,19 @@ const styles = {
     color: TOKENS.ink900,
   } satisfies CSSProperties,
 
-  displayCount: {
-    display: 'inline-block',
-    marginLeft: 'var(--dw-space-8)',
-    fontFamily: TOKENS.fontSans,
-    fontSize: '0.8125rem',
-    fontWeight: 500,
-    color: TOKENS.ink400,
-    verticalAlign: 8,
-    letterSpacing: '.2px',
-  } satisfies CSSProperties,
+  /* ═══ TALLET STO TO GANGER INNENFOR 100 PX ══════════════════════════════
+
+     Her sto `displayCount`: et lite «63» hevet ved siden av tittelen
+     «Plaggbiblioteket». Rett over står allerede «Hele katalogen · 63 plagg».
+     Revisjonen målte 100 px mellom dem.
+
+     Det som ble fjernet er dette ene, ikke det andre — og valget er ikke
+     tilfeldig. `eyebrowMeta` sier «63 plagg»: tall MED enhet, i en setning
+     som også sier hva utvalget er. Det hevede tallet sa bare «63» og lot
+     forelderen gjette enheten. Når to flater sier samme sak, skal den som
+     sier mest bli stående.
+
+     Stilen er fjernet, ikke bare ubrukt — se begrunnelsen ved `kbd`. */
 
   searchWrap: {
     flex: 'none',
@@ -305,17 +329,42 @@ const styles = {
     minWidth: 0,
   } satisfies CSSProperties,
 
-  kbd: {
-    display: 'inline-flex',
+  /* ═══ «⌘K»-BADGEN ER BORTE, OG DEN VAR IKKE BARE FEIL PÅ MOBIL ══════════
+
+     Her sto `kbd`: en liten pille med teksten ⌘K inne i søkefeltet.
+     Revisjonen kalte den en desktop-detalj som fulgte med til mobil, og
+     foreslo å skjule den ved `pointer: coarse`.
+
+     Observasjonen stemmer, men diagnosen var for snill. Et søk gjennom hele
+     src/ etter `metaKey`, `⌘` og en Cmd/Ctrl-K-lytter gir NULL treff utenom
+     badgen selv. Snarveien finnes ikke — heller ikke på en desktop-nettleser
+     med et fysisk tastatur. Å skjule den ved coarse pointer ville bevart
+     løgnen nøyaktig der den kunne prøves.
+
+     Plassen er brukt til noe som faktisk gjør noe: en tøm-knapp som dukker
+     opp når det står tekst i feltet (searchClear under). Det er handlingen
+     revisjonen sa hørte hjemme her.
+
+     `kbd`-stilen er FJERNET, ikke bare ubrukt. En stil som blir stående er en
+     invitasjon til å sette badgen tilbake uten å lese dette. */
+  searchClear: {
+    flex: 'none',
+    width: 44,
+    height: 44,
+    // Negativ marg: knappen skal måle 44×44 for fingeren uten å gjøre
+    // søkefeltet (minHeight 44) høyere enn det er.
+    margin: '-10px calc(-1 * var(--dw-space-6)) -10px 0',
+    borderRadius: 12,
+    background: 'transparent',
+    border: 0,
+    display: 'flex',
     alignItems: 'center',
-    gap: 'var(--dw-space-4)',
-    // 3px står utenfor 2-punktsskalaen og avrundes IKKE.
-    padding: '3px var(--dw-space-6)',
-    borderRadius: 6,
-    background: 'var(--dw-hairline)',
-    fontSize: '0.6875rem',
-    fontWeight: 600,
+    justifyContent: 'center',
+    padding: 0,
+    cursor: 'pointer',
     color: TOKENS.ink500,
+    touchAction: 'manipulation',
+    WebkitTapHighlightColor: 'transparent',
   } satisfies CSSProperties,
 
   filters: {
@@ -485,6 +534,7 @@ export function PlaggbibliotekScreen({
 
   const [filter, setFilter] = useState<FilterKey>('alle');
   const [query, setQuery] = useState('');
+  const [sortMode, setSortMode] = useState<PlaggSortMode>('katalog');
 
   // ── PlaggDetailSheet state (samme mønster som PaakledningScreen) ──
   // Når en plagg-card tappes setter vi triggerRef til den klikkede knappen +
@@ -519,9 +569,9 @@ export function PlaggbibliotekScreen({
           (g.materialLabel?.toLowerCase().includes(q) ?? false)
         );
       });
-      return { ...group, items };
+      return { ...group, items: sortGarmentItems(items, sortMode) };
     }).filter((g) => g.items.length > 0);
-  }, [query, filter]);
+  }, [query, filter, sortMode]);
 
   const handleBack = () => {
     void fire('light');
@@ -530,6 +580,12 @@ export function PlaggbibliotekScreen({
 
   const handleSort = () => {
     void fire('selection');
+    setSortMode((m) => (m === 'katalog' ? 'alfabetisk' : 'katalog'));
+  };
+
+  const handleClearQuery = () => {
+    void fire('light');
+    setQuery('');
   };
 
   const handleFilter = (key: FilterKey) => {
@@ -584,8 +640,22 @@ export function PlaggbibliotekScreen({
         <button
           type="button"
           onClick={handleSort}
-          aria-label="Sorter"
-          style={styles.topbarAction}
+          aria-pressed={sortMode === 'alfabetisk'}
+          aria-label={
+            sortMode === 'alfabetisk'
+              ? 'Sorter A–Å: på. Trykk for å gå tilbake til påkledningsrekkefølge'
+              : 'Sorter A–Å'
+          }
+          style={{
+            ...styles.topbarAction,
+            // Aktiv tilstand bruker ink900-fyll — samme veksling som
+            // filter-chipsene under, ikke aksentfargen. Oransje er
+            // brukerhandling, ikke «denne knappen står på» (DESIGN.md).
+            background:
+              sortMode === 'alfabetisk' ? TOKENS.ink900 : 'var(--dw-overlay)',
+            borderColor: sortMode === 'alfabetisk' ? TOKENS.ink900 : TOKENS.hairline,
+            color: sortMode === 'alfabetisk' ? 'var(--dw-overlay)' : TOKENS.ink700,
+          }}
           className="plaggbib-focus plaggbib-press"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -597,10 +667,7 @@ export function PlaggbibliotekScreen({
 
       {/* Editorial display title */}
       <header style={styles.display}>
-        <h2 style={styles.displayH2}>
-          Plaggbiblioteket
-          <span style={styles.displayCount}>{TOTAL_COUNT}</span>
-        </h2>
+        <h2 style={styles.displayH2}>Plaggbiblioteket</h2>
       </header>
 
       {/* Search */}
@@ -616,13 +683,26 @@ export function PlaggbibliotekScreen({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Søk i plagg"
             aria-label="Søk i plagg"
+            className="plaggbib-sok"
             style={styles.searchInput}
             inputMode="search"
             enterKeyHint="search"
             autoComplete="off"
             spellCheck={false}
           />
-          <span style={styles.kbd} aria-hidden="true">⌘K</span>
+          {query !== '' && (
+            <button
+              type="button"
+              onClick={handleClearQuery}
+              aria-label="Tøm søket"
+              style={styles.searchClear}
+              className="plaggbib-focus plaggbib-press"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
@@ -793,6 +873,18 @@ export function PlaggbibliotekScreen({
           border-radius: 4px;
         }
         .plaggbib-scroll-x::-webkit-scrollbar { display: none; }
+        /* Appen kjører i WKWebView gjennom Capacitor, og der tegner
+           input[type=search] sitt EGET tøm-kryss. Uten dette ville tøm-knappen
+           som erstattet hurtigtast-badgen stått ved siden av en nesten
+           identisk systemknapp — to kryss for én handling.
+           (Merk: denne kommentaren rendres faktisk ut i DOM-en, siden blokken
+           er en <style>-tag i markupen. Derfor står ikke tastesymbolet her —
+           porten leter etter det i markupen og har rett i det.) */
+        .plaggbib-sok::-webkit-search-cancel-button,
+        .plaggbib-sok::-webkit-search-decoration {
+          -webkit-appearance: none;
+          appearance: none;
+        }
         @media (prefers-reduced-motion: reduce) {
           .plaggbib-press, .plaggbib-fab, .plaggbib-card { transition: none !important; transform: none !important; }
         }
@@ -893,12 +985,44 @@ function GarmentLi({ garment, isRightCol, reducedMotion, onSelect, buttonRef }: 
           {garment.title}
         </p>
 
-        {/* Thumbnail */}
+        {/* ═══ RAMMEN VAR KVADRATISK, PLAGGET ER LIGGENDE ════════════════════
+
+            Revisjonen målte 538 px radavstand (269 CSS-px) for et plagg som
+            ble tegnet i ~150 px, og at bare fire kort av 63 var synlige.
+
+            Mekanismen er ren geometri, ikke smak. 53 av 61 plagg-PNG-er i
+            `public/illustrations/garments/` er LIGGENDE — 52 stk. 1408×768
+            (11:6 = 1,833) og «vintersokker» 1376×768. Rammen sto på
+            `aspectRatio: '1 / 1'` med `objectFit: 'contain'`, så de ble
+            begrenset av BREDDEN: tegnet høyde ble 0,78 × bredde / 1,833 =
+            42,6 % av rammehøyden. Nesten 6 av 10 rammepiksler var garantert
+            tomme — ikke av og til, men alltid, ved konstruksjon.
+
+            Rammen har nå 11:6, altså formen til de 53. De 8 øvrige (7 stk.
+            1024×1024 og «varmepose-dun» 848×1264) er smalere enn rammen og
+            begrenses derfor av HØYDEN — de fyller også 92 %. Med 11:6 er
+            hvert eneste plagg i katalogen høydebegrenset, så fyllgraden er
+            92 % for alle 61. Det var den kvadratiske rammen som var
+            særtilfellet, ikke de åtte.
+
+            Regnestykket for en 167 px bred celle, liggende plagg:
+              før:  ramme 167 px høy, bilde 130×71 px   → 42,6 % fylt
+              nå:   ramme  91 px høy, bilde 154×84 px   → 92 % fylt
+            Illustrasjonen ble altså STØRRE (71 → 84 px) i en ramme som er
+            76 px kortere. Kortets radavstand faller fra ~269 til ~188 CSS-px.
+
+            ÆRLIG OM PRISEN: de 8 kvadratiske/stående plaggene tegnes nå
+            mindre i absolutt høyde (130 → 84 px). Det er byttet funnet ber
+            om — dobbelt så mange kort på skjermen mot 8 illustrasjoner som
+            blir mindre — og de 8 mister ikke lesbarhet, bare størrelse. */}
         <div
           style={{
             width: '100%',
-            aspectRatio: '1 / 1',
-            margin: 'var(--dw-space-10) 0 var(--dw-space-12)',
+            // 11 / 6 = sideforholdet til de 53 liggende plagg-PNG-ene
+            // (1408 × 768). Det er også den bredeste formen i katalogen, så
+            // ingen av de øvrige åtte blir breddebegrenset. Se over.
+            aspectRatio: '11 / 6',
+            margin: 'var(--dw-space-8) 0 var(--dw-space-10)',
             borderRadius: 14,
             background:
               'radial-gradient(120% 80% at 50% 18%, var(--dw-overlay), color-mix(in srgb, var(--dw-overlay) 0%, transparent) 70%), linear-gradient(180deg, var(--dw-raised) 0%, var(--dw-raised) 100%)',
@@ -917,8 +1041,11 @@ function GarmentLi({ garment, isRightCol, reducedMotion, onSelect, buttonRef }: 
               if (imgSrc !== GENERIC_GARMENT_SVG) setImgSrc(GENERIC_GARMENT_SVG);
             }}
             style={{
-              width: '78%',
-              height: '78%',
+              // 92 %, ikke 78 %: se rammens begrunnelse over. Med riktig
+              // sideforhold på rammen er marginen rundt bildet nå ekte luft,
+              // ikke et biprodukt av contain-beskjæring.
+              width: '92%',
+              height: '92%',
               objectFit: 'contain',
               display: 'block',
             }}

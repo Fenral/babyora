@@ -134,7 +134,11 @@ describe('FinnAntrekkScreen — CTA-driven scan (idle/resting state, the only st
   it('the old live-update subline copy ("juster og se svaret endre seg") is gone', () => {
     const html = renderScreen();
     expect(html).not.toContain('juster og se svaret endre seg');
-    expect(html).toContain('basert på været nå');
+    /* 2026-08-06: undertittelen er delt i to linjer (HVEM · HVOR/NÅR) fordi
+       den firedelte strengen brakk over tre linjer — se `headerLinjer` i
+       skjermen og Juster.mindre-funn-2026-08-06.test.tsx for målingen.
+       Halen «basert på været nå» heter nå «Været nå» på egen linje. */
+    expect(html).toContain('Været nå');
   });
 });
 
@@ -221,7 +225,10 @@ describe('FinnAntrekkScreen — result-as-clothes wiring (source-text: only reac
     expect(scanBranch).toContain('<ScanOverlay');
     expect(scanBranch).toContain("{ label: 'Temperatur', value: formatTemp(scanRows.tempC) }");
     expect(scanBranch).toContain("{ label: 'Vind', value: `${scanRows.windMs} m/s` }");
-    expect(scanBranch).toContain("{ label: 'Nedbør', value: `${scanRows.precipMmH.toFixed(1)} mm/t` }");
+    /* `toFixed(1)` skrev engelsk punktum uansett språk — byttet til
+       `formatEnDesimal` (Intl, nb-NO) 2026-08-06. Seremonien og sporet må
+       vise SAMME tall skrevet på samme måte. */
+    expect(scanBranch).toContain("{ label: 'Nedbør', value: `${formatEnDesimal(scanRows.precipMmH)} mm/t` }");
     expect(scanBranch).toContain('spinningLabel="Lag for lag"');
     expect(scanBranch).toContain('totalDurationMs={FULL_SCAN_DURATION_MS}');
   });

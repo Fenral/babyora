@@ -32,7 +32,13 @@ describe('FinnAntrekkScreen — no prefill (standalone / generic GuideTarget ope
     expect(html).toContain('Finn antrekk for barnet ditt');
     expect(html).toContain('−4°');
     expect(html).toContain('3 m/s');
-    expect(html).toContain('0.0 mm/t');
+    /* Nedbørverdien måles på aria-valuetext, ikke på den synlige etiketten.
+       Etiketten er siden 2026-08-06 delt rundt desimalskillet
+       (`0<span class="fa-gauge-desimal">,</span>0 mm/t`) fordi tabular-nums
+       ga kommaet full sifferbredde — se verdiMedStrammetDesimalskille.
+       aria-valuetext bærer det samme tallet som én streng, og den er
+       dessuten det brukeren med skjermleser faktisk hører. */
+    expect(html).toContain('aria-valuetext="0,0 millimeter per time');
     // "Utenfor vogn" (first ACTIVITY_OPTIONS entry — P10.1 finding C1:
     // renamed from "Lek ute" to match Hjem's own vocabulary for the same
     // engine value) is the default-active radio.
@@ -55,7 +61,7 @@ describe('FinnAntrekkScreen — prefill given (the "Juster" drill, opened from H
     // Prefilled values are present …
     expect(html).toContain('−12°');
     expect(html).toContain('9 m/s');
-    expect(html).toContain('2.5 mm/t'); // 2.3 rounded to the nearest 0.5 step
+    expect(html).toContain('aria-valuetext="2,5 millimeter per time'); // 2.3 rounded to the nearest 0.5 step
     expect(html).toMatch(/aria-checked="true"[^>]*>I vogn/);
 
     // … and NONE of the internal defaults leak through anywhere (proves the
@@ -63,7 +69,7 @@ describe('FinnAntrekkScreen — prefill given (the "Juster" drill, opened from H
     // seeding from -4/3/0/lek and only later correcting).
     expect(html).not.toContain('−4°');
     expect(html).not.toContain('>3 m/s<');
-    expect(html).not.toContain('0.0 mm/t');
+    expect(html).not.toContain('0,0 millimeter per time');
     expect(html).not.toMatch(/aria-checked="true"[^>]*>Utenfor vogn/);
   });
 

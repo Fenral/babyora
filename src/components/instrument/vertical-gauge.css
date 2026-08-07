@@ -52,9 +52,22 @@
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
+  /* SIFRENE er tabulære med vilje: uten fast bredde hopper verdien
+     sidelengs mens brukeren drar (zero 1252 mot one 703 i fonten). */
   font-variant-numeric: tabular-nums;
   color: var(--dw-ink-panel-hi);
   letter-spacing: -0.2px;
+}
+
+/* SKILLETEGNET er IKKE et siffer og skal ikke ha sifferbredde.
+   `tabular-nums` bytter i Schibsted Grotesk også komma/punktum til
+   tabulære varianter (comma 543 → comma.tf 1300 av 2048 upm), altså
+   +7,4 px luft ved 20 px rundt et tegn som er ~2 px bredt. Det var hele
+   «0 . 0»-effekten kritikken målte 2026-08-06. Her settes egenskapen
+   tilbake til `normal` for det ene tegnet, så bare sifrene er tabulære.
+   Se `verdiMedStrammetDesimalskille` i VerticalGauge.tsx for målingen. */
+.fa-gauge-desimal {
+  font-variant-numeric: normal;
 }
 
 /* FINSTEGENE LIGGER I DENNE KOLONNEN, ØVERST OG NEDERST.

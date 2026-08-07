@@ -68,6 +68,7 @@ import {
 } from 'react';
 import { MOTION } from '../../styles/motion-grammar';
 import { temperatureFillColor, temperatureFillDeepColor, type GaugeMaterial } from './gauge-material';
+import { DESIMALSKILLE } from './instrument-logic';
 import './vertical-gauge.css';
 
 export type { GaugeMaterial };
@@ -121,6 +122,44 @@ export type VerticalGaugeProps = Readonly<{
 function clampFraction(value: number, min: number, max: number): number {
   if (max <= min) return 0;
   return Math.max(0, Math.min(1, (value - min) / (max - min)));
+}
+
+/* ═══ KOMMAET FÅR IKKE SIFFERBREDDE (2026-08-06) ═══════════════════════════
+   Kritikken: «0.0 mm/t» leses som «0 . 0» — luften på hver side av
+   skilletegnet er omtrent like bred som selve sifferet.
+
+   MEKANISMEN, målt i fontfilen (public/fonts/schibsted-grotesk-latin-wght-
+   normal.woff2, upm 2048): `.fa-gauge-value` har
+   `font-variant-numeric: tabular-nums`, som slår på OpenType-egenskapen
+   `tnum`. Schibsted Grotesk lar den ikke bare gjelde sifrene — den bytter
+   OGSÅ skilletegnene til tabulære varianter:
+
+       zero   1252 → zero.tf   1300
+       one     703 → one.tf    1300
+       period  574 → period.tf 1300      ← +726/2048 em = +7,1 px ved 20 px
+       comma   543 → comma.tf  1300      ← +757/2048 em = +7,4 px ved 20 px
+
+   Tegnet selv er ~2 px blekk i en 12,7 px celle. Det er den luften. Den kom
+   altså IKKE fra letter-spacing (som står på −0,2 px, altså strammer) og
+   ikke fra font-feature-settings, men fra tabular-nums — og et komma arver
+   nøyaktig samme bredde som punktumet hadde.
+
+   HVORFOR IKKE BARE SLÅ AV tabular-nums: da mister sifrene den faste
+   bredden også (zero 1252 mot one 703 — 27 % forskjell), og verdien
+   hopper sidelengs mens brukeren drar i sporet. Tabulære SIFRE er poenget.
+   Derfor skilles bare selve skilletegnet ut i sitt eget element, der
+   `.fa-gauge-desimal` setter font-variant-numeric tilbake til `normal`.
+   ════════════════════════════════════════════════════════════════════════ */
+function verdiMedStrammetDesimalskille(valueLabel: string): ReactElement {
+  const i = valueLabel.indexOf(DESIMALSKILLE);
+  if (i < 0) return <>{valueLabel}</>;
+  return (
+    <>
+      {valueLabel.slice(0, i)}
+      <span className="fa-gauge-desimal">{DESIMALSKILLE}</span>
+      {valueLabel.slice(i + 1)}
+    </>
+  );
 }
 
 /* ═══ SPORETS ENDER LYVER IKKE (2026-08-06) ══════════════════════════════
@@ -295,7 +334,9 @@ export function VerticalGauge({
   return (
     <div className="fa-gauge">
       <p className="fa-gauge-label">{label}</p>
-      <p className="fa-gauge-value" aria-hidden="true">{valueLabel}</p>
+      <p className="fa-gauge-value" aria-hidden="true">
+        {verdiMedStrammetDesimalskille(valueLabel)}
+      </p>
       {/* ═══ FINSTEGENE STÅR LODDRETT, IKKE I EN RAD UNDER ═══════════════════
 
           Eierforslag 2026-08-06, og det løser to ting på én gang.

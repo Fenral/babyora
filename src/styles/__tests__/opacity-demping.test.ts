@@ -44,7 +44,20 @@
  * stille slutter å se rapporterer «null brudd» og høres ut som en godkjenning.
  */
 import { execFileSync } from 'node:child_process';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+/* SUBPROSESS-TESTER TRENGER MER ENN FEM SEKUNDER.
+
+   Denne filen starter ekte `git`- og `npm`-prosesser. Vitests standardgrense
+   er 5 000 ms, og det holder pa CI (ubuntu-latest) men ikke pa Windows, der
+   ett prosess-spawn alene koster sekunder — og verre nar 200 testfiler deler
+   maskinen. Malt 2026-08-06: `npm test` ga 35 rode her mens de samme testene
+   var gronne isolert og gronne i CI. En port som svinger med maskinlast er
+   ingen port; da slutter folk a lese den.
+
+   Grensen er hevet lokalt i stedet for globalt med vilje: de ovrige ~3 000
+   testene skal fortsatt ryke pa 5 sekunder, sa en ekte henging blir synlig. */
+vi.setConfig({ testTimeout: 60_000, hookTimeout: 60_000 });
+
 
 type Funn = { fil: string; linje: number; verdi: number; tekst: string };
 
@@ -74,7 +87,10 @@ const REGISTER: Readonly<Record<string, string>> = {
 
   /* IKONER — piktogrammer, ikke lesetekst. Kontrastkravet for ikoner er 3:1
      (WCAG 1.4.11) og gjelder grafikkens egen form, ikke en tekstrampe. */
-  'src/components/hjem/hjem-monter.css::0.8': 'stedsikon',
+  /* Stedsikonet sto her på 0.8. RYDDET 2026-08-06: chevronen var eneste
+     tegn på at stedet kan byttes, og revisjonen målte den til 8,5 px —
+     dempet på toppen av det. Den står nå på 16 px i --dw-ink-panel-mid,
+     uten alpha, inne i en synlig pille. */
   'src/components/hjem/hjem-monter.css::0.75': 'værikon i dempet tilstand',
   'src/screens/OnboardingScreen.tsx::0.7': 'chevron i nedtrekk',
   'src/components/instrument/vertical-gauge.css::0.75': 'målestrek på instrumentet',

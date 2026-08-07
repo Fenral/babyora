@@ -13,13 +13,22 @@ import { BLOKKERINGER, finnBlokkeringer } from '../verify-lanseringsklar.mjs';
  * rødt, og da ville butikk-bygget passert på fravær.
  *
  * Denne testen kjører i den vanlige suiten og krever to ting:
- *   1. detektoren TREFFER på dagens kode — den ser panelet som faktisk står
- *      der (ikke-vakuøsitet),
- *   2. detektoren SLIPPER når panelet fjernes — ellers ville porten aldri
- *      kunne bli grønn, og da måtte noen skru den av for å lansere.
+ *   1. detektoren TREFFER når panelet er montert (ikke-vakuøsitet),
+ *   2. detektoren SLIPPER når panelet ikke er der — ellers ville porten
+ *      aldri kunne bli grønn, og da måtte noen skru den av for å lansere.
  *
  * Ledd 2 er det som gjør dette til en ekte to-beint kontrakt: en port som
  * bare kan si «nei» er like ubrukelig som en som bare kan si «ja».
+ *
+ * ENDRET 2026-08-06: panelet ER nå fjernet, og spiken er besvart (bygg 83
+ * beviste widget-appex-en i IPA-en). Ledd 1 leste tidligere dagens kode
+ * direkte og ble derfor rødt i samme øyeblikk som panelet forsvant. Det
+ * ville presset fram at hele blokkeringen ble slettet — og da står det
+ * ingenting igjen som fanger at panelet monteres på nytt.
+ * Ledd 1 er derfor snudd til et MUTASJONSBEVIS: den monterer panelet
+ * tilbake i en midlertidig kopi av skjermen og krever at detektoren ser
+ * det. Det er en sterkere påstand enn den gamle, fordi den holder uansett
+ * hva dagens kode tilfeldigvis inneholder.
  */
 const SKJERM = resolve(process.cwd(), 'src/screens/InnstillingerScreen.tsx');
 
@@ -47,14 +56,27 @@ describe('lanseringsporten kan både se og slippe', () => {
     }
   });
 
-  it('1 · detektoren SER widget-spike-panelet slik koden står i dag', () => {
+  it('1 · detektoren SER widget-spike-panelet hvis noen monterer det igjen', () => {
+    original = readFileSync(SKJERM, 'utf8');
+    expect(
+      original,
+      'Panelet står montert i dagens kode. Da er denne mutasjonen '
+      + 'meningsløs — les ledd 2 og fjern panelet før du lanserer.',
+    ).not.toContain('<WidgetSpikePanel />');
+
+    // Monter panelet tilbake der det sto før 2026-08-06: rett etter
+    // «Logg ut»-knappen. Regex, ikke bokstavelig streng — filen har CRLF.
+    const anker = /(<span>Logg ut<\/span>\s*<\/button>)/u;
+    expect(anker.test(original), 'fant ikke stedet panelet sto').toBe(true);
+    const med = original.replace(anker, '$1\n\n        <WidgetSpikePanel />');
+    writeFileSync(SKJERM, med, 'utf8');
+
     const funn = finnBlokkeringer().map((b) => b.id);
     expect(
       funn,
-      'Detektoren finner ikke widget-spike-panelet. Enten er panelet '
-      + 'fjernet — da skal blokkeringen ut av listen i samme endring — '
-      + 'eller så treffer ikke detektoren lenger, og butikk-bygget ville '
-      + 'passert på fravær.',
+      'Detektoren ser IKKE panelet selv når det er montert. Da treffer den '
+      + 'ikke lenger (filen flyttet, JSX-en skrevet om), og butikk-bygget '
+      + 'ville passert på fravær.',
     ).toContain('widget-spike-panel');
   });
 

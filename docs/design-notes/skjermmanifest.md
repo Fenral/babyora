@@ -26,15 +26,15 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 | Skjerm | Filsti | Linjer | Stilflate | `--dw-*` | legacy | Nås via | Migreres | Fase |
 |---|---|---:|---|---:|---:|---|---|---|
 | Familie (skall) | `src/screens/FamilieScreen.tsx` | 21 | — | 0 | 0 | App.tsx lazy()-register | nei | — |
-| Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1403 | 19 CSSProperties + 4 `style={{` | 59 | 0 | App.tsx lazy()-register | ja | 3 |
-| Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1257 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 11 | 22 | App.tsx lazy()-register | ja | 3 |
-| Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6341 | 190 CSSProperties + 51 `style={{` | 340 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
-| Onboarding | `src/screens/OnboardingScreen.tsx` | 1853 | 1 CSSProperties | 223 | 34 | App.tsx lazy()-register | ja | 3 |
+| Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1499 | 20 CSSProperties + 4 `style={{` | 59 | 0 | App.tsx lazy()-register | ja | 3 |
+| Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1274 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 11 | 22 | App.tsx lazy()-register | ja | 3 |
+| Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6395 | 190 CSSProperties + 50 `style={{` | 336 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
+| Onboarding | `src/screens/OnboardingScreen.tsx` | 1887 | 1 CSSProperties | 220 | 34 | App.tsx lazy()-register | ja | 3 |
 | Påkledning | `src/screens/PaakledningScreen.tsx` | 523 | — | 0 | 0 | App.tsx lazy()-register | nei | 4 |
-| Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 959 | 1 `<style>` + 1 CSSProperties + 11 `style={{` | 101 | 4 | App.tsx lazy()-register | ja | 3 |
+| Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 1086 | 1 `<style>` + 1 CSSProperties + 12 `style={{` | 101 | 4 | App.tsx lazy()-register | ja | 3 |
 | Tog-guide | `src/screens/TogGuideScreen.tsx` | 1227 | 54 CSSProperties + 3 `style={{` | 127 | 11 | App.tsx lazy()-register | ja | 3 |
-| Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1309 | `UkeScreen.css` + 1 CSSProperties | 129 | 0 | App.tsx lazy()-register | ja | 3 |
-| Varm eller kald | `src/screens/VarmEllerKaldScreen.tsx` | 834 | 1 `<style>` + 29 CSSProperties + 4 `style={{` | 91 | 2 | App.tsx lazy()-register | ja | 3 |
+| Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1326 | `UkeScreen.css` + 1 CSSProperties | 129 | 0 | App.tsx lazy()-register | ja | 3 |
+| Varm eller kald | `src/screens/VarmEllerKaldScreen.tsx` | 911 | 1 `<style>` + 29 CSSProperties + 4 `style={{` | 89 | 2 | App.tsx lazy()-register | ja | 3 |
 | Vinterprogram | `src/screens/VinterprogramScreen.tsx` | 640 | 29 CSSProperties + 2 `style={{` | 74 | 3 | App.tsx lazy()-register | ja | 3 |
 
 «legacy» = antall UNIKE `var(--…)` som ikke er `--dw-*`. «Stilflate» teller
@@ -46,13 +46,13 @@ objekter og `style={{`-attributter. 10 av 11 skjermer har ingen CSS-fil.
 | Familie (skall) | ingen stilflate — ingenting å migrere |
 | Finn antrekk / Juster | migrert |
 | Hjem (referanse) | umigrert (22 legacy-token, 0 rå hex, 11 `--dw-*`) |
-| Innstillinger | umigrert (5 legacy-token, 7 rå hex, 340 `--dw-*`) |
-| Onboarding | umigrert (34 legacy-token, 1 rå hex, 223 `--dw-*`) |
+| Innstillinger | umigrert (5 legacy-token, 7 rå hex, 336 `--dw-*`) |
+| Onboarding | umigrert (34 legacy-token, 1 rå hex, 220 `--dw-*`) |
 | Påkledning | ingen stilflate — ingenting å migrere |
 | Plaggbibliotek | umigrert (4 legacy-token, 0 rå hex, 101 `--dw-*`) |
 | Tog-guide | umigrert (11 legacy-token, 0 rå hex, 127 `--dw-*`) |
 | Planlegg / Uke | migrert |
-| Varm eller kald | umigrert (2 legacy-token, 0 rå hex, 91 `--dw-*`) |
+| Varm eller kald | umigrert (2 legacy-token, 0 rå hex, 89 `--dw-*`) |
 | Vinterprogram | umigrert (3 legacy-token, 0 rå hex, 74 `--dw-*`) |
 
 ## 3. Unntakene (håndskrevet)

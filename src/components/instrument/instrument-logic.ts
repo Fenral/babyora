@@ -36,6 +36,33 @@ export function bandAt(valueC: number): TempBand {
   return bandForTemp(snapDegree(valueC));
 }
 
+/* ═══ DESIMALSKILLET ER NORSK ══════════════════════════════════════════════
+   MÅLT 2026-08-06 på Juster: nedbørverdien sto «0.0 mm/t». Punktumet kom
+   fra `Number.toFixed(1)`, som ALLTID skriver engelsk desimalskille uansett
+   hvilket språk resten av flaten er på — den tar ingen lokalitet.
+
+   Intl.NumberFormat gjør det motsatte: skilletegnet KOMMER fra lokaliteten,
+   så det kan ikke drifte fra resten av appen (som allerede formaterer dato
+   og klokke med 'nb-NO', se f.eks. src/lib/planning/plan-view-model.ts).
+
+   Luften rundt tegnet er en ANNEN mekanisme og bor i vertical-gauge.css —
+   se `.fa-gauge-desimal` der. Å bytte punktum mot komma alene fjerner den
+   ikke: begge tegn får samme tabulære bredde av `tabular-nums`.
+   ═════════════════════════════════════════════════════════════════════════ */
+const EN_DESIMAL = new Intl.NumberFormat('nb-NO', {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+/** Ett desimaltall skrevet norsk: 0 → «0,0», 2.5 → «2,5». */
+export function formatEnDesimal(value: number): string {
+  return EN_DESIMAL.format(value);
+}
+
+/** Tegnet norsk bruker mellom hel og desimal. Én kilde, så CSS-en under
+ *  `.fa-gauge-desimal` og teksten aldri kan mene hvert sitt tegn. */
+export const DESIMALSKILLE = ',';
+
 /** Bånd-grensene som markørposisjoner (whole degrees der bandForTemp skifter). */
 export function bandBoundaries(): number[] {
   const out: number[] = [];

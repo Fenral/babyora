@@ -41,6 +41,16 @@ export interface CaptureStateDefinition {
   /* PAKREVD: teksten som beviser at fangsten traff riktig skjerm.
      Se katalogens hode i config.ts for hvorfor. */
   expectedText: string;
+  /**
+   * Ekstra spørringsparametere siden skal åpnes med — KUN test-håndtak som
+   * produktet selv definerer og leser (i dag `entitlement=none`, se
+   * src/state/subscription-store.ts sin resolveDemoEntitlementOverride).
+   *
+   * Dette er revisjonens eneste måte å be om en annen produkttilstand på.
+   * Den skriver aldri i tilstanden selv — capture.ts sin
+   * `assertReadOnlyQuery` holder listen kort og avviser alt annet.
+   */
+  query?: Readonly<Record<string, string>>;
 }
 
 export type CaptureAction =

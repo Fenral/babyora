@@ -21,6 +21,13 @@ const wait = { type: 'wait', milliseconds: 700 } as const;
  * knapp; den var en for utålmodig klokke.
  */
 const ventScan = { type: 'wait', milliseconds: 3900 } as const;
+/**
+ * Etter en `reload` starter appen på nytt UTEN fangstens egen 1200 ms
+ * oppstartspause (den kjøres bare før handlingslisten). Vi gir den samme
+ * pusterom her, slik at boot + rehydrering + første render er unnagjort før
+ * expectedText-vakten begynner å telle.
+ */
+const ventOppstart = { type: 'wait', milliseconds: 1200 } as const;
 const tab = (name: string) => ({ type: 'tab', name } as const);
 const text = (pattern: string) => ({ type: 'text', pattern } as const);
 const button = (pattern: string) => ({ type: 'button', pattern } as const);
@@ -143,7 +150,54 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
   {
     id: 'paywall', label: 'Betalingsvegg', appWeight: 14,
     role: 'Selge fremover, overalt og familie gjennom konkrete utfall, tydelig pris og lav opplevd risiko.',
-    states: [{ id: 'default', label: 'Standard Plus-tilbud', required: true, actions: [tab('Familie|Innst'), button('Plus|Premium|Oppgrader|Se abonnement'), wait], expectedText: 'Best verdi' }],
+    /* ═══ DEN ENESTE SKJERMEN AV ELLEVE SOM ALDRI BLE REVIDERT ════════════
+
+       FUNN 2026-08-06: 10 av 11 fangster. Feilen lå ikke i navigasjonen.
+       `?seed=demo` seeder som DEFAULT en mock-ABONNENT
+       (src/state/subscription-store.ts:56-61 — resolveDemoEntitlementOverride
+       returnerer true så snart `seed` finnes). En som allerede betaler har
+       ingen betalingsmur å vise: trykket på Pluss-kortet gikk til
+       plattformens abonnementsadministrasjon
+       (src/screens/InnstillingerScreen.tsx:1561-1573), og «Best verdi»
+       fantes ikke på skjermen fangsten sto igjen på.
+
+       Produktet hadde veien inn hele tiden: `?seed=demo&entitlement=none`
+       er et dokumentert test-håndtak (subscription-store.ts:38-61), allerede
+       i bruk av e2e/purchase-flow.ts:191. Revisjonen trengte derfor ikke å
+       skrive i produktets tilstand — den trengte å BE OM den tilstanden
+       produktet selv tilbyr. Det er grunnen til `query` og ikke en ny
+       action-type som planter localStorage: capture.ts er lese-only mot
+       produktet (assertReadOnlyAction / assertReadOnlyQuery).
+
+       VI FANGER MUREN, IKKE TILBUDS-DIALOGEN. En ikke-betalende forelder
+       møter AppPaywallGate: ikke-avviselig, uten «Lukk»-knapp
+       (src/components/AppPaywallGate.tsx:113-121). Den samme PaywallDialog
+       åpnet fra Innstillinger bærer en lukke-affordanse hun aldri får se — og
+       «lav opplevd risiko» er nettopp det rubrikken måler her. Å revidere
+       tilbudsvarianten ville vært samme feilklasse som å revidere dev-bygget:
+       ikke et svakere bevis, et bevis for en annen app.
+
+       MUREN ER ARMERT AV TRE TING (AppPaywallGate.tsx:76-85):
+         1. onboarding fullført — `seed=demo` gir barn,
+         2. første anbefaling sett — settes av HjemScreen.tsx:490-493 når
+            anbefalingen faktisk finnes, derfor scan-seremonien under,
+         3. «les ferdig»-vinduet lukket — det står åpent HELE den økten som
+            satte (2), og lukkes ved neste økt (subscription-store.ts:95-97
+            leser localStorage FØR storen opprettes). En `reload` ER en ny
+            økt: fersk modul-boot, samme lager, samme URL. Det er nøyaktig
+            det e2e/purchase-flow.ts:202 gjør for å nå den samme muren.
+       ═══════════════════════════════════════════════════════════════════ */
+    states: [{
+      id: 'default', label: 'Muren en ikke-betalende forelder faktisk møter',
+      required: true,
+      query: { entitlement: 'none' },
+      actions: [
+        tab('Hjem'), wait,
+        button('Finn dagens antrekk'), ventScan,
+        { type: 'reload' }, ventOppstart,
+      ],
+      expectedText: 'Best verdi',
+    }],
   },
 ] as const;
 

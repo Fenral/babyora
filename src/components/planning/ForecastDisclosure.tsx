@@ -53,7 +53,25 @@ export function ForecastDisclosure({ open, onToggle, rows }: Props) {
         onClick={onToggle}
       >
         {open ? 'Skjul full værprognose' : 'Vis full værprognose'}
-        <span aria-hidden="true">⌄</span>
+        {/* Sto som «⌄» (U+2304) tegnet i tekstfonten — en bokstavform med
+            flate avslutninger, ca. 12 px høy ved siden av en 160 px bred
+            etikett. Den leses som et tegn som har falt ut av teksten, ikke
+            som «trykk for å åpne», og den er den ENESTE affordansen som
+            sier at værkortet kan utvides. Husets strøkne chevron i stedet
+            (samme oppskrift som WeatherStrip og KlePaaStepper). */}
+        <span className="planlegg-forecast__chevron" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            focusable="false"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </span>
       </button>
       {open && (
         <ul id={contentId} className="planlegg-forecast__rows">
