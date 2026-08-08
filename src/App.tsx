@@ -107,6 +107,10 @@ const FANE_VARIANTER = {
     opacity: 1,
     transform: 'translate3d(0, 0, 0)',
     transition: { duration: BEVEGELSE.faneInn, ease: BEVEGELSE.kurve },
+    /* En transformert ancestor gjør position: fixed relativ til seg selv.
+       Hjem sin lyspool er fixed til viewporten, så wrapperen må slippe
+       transformen når sideskiftet har landet. Exit setter den på igjen. */
+    transitionEnd: { transform: 'none' },
   },
   exit: (retning: RouteDirection) => ({
     opacity: 0,
@@ -125,6 +129,7 @@ const DRILL_VARIANTER = {
     opacity: 1,
     transform: 'translate3d(0, 0, 0)',
     transition: { duration: BEVEGELSE.push, ease: BEVEGELSE.kurve },
+    transitionEnd: { transform: 'none' },
   },
   exit: (retning: RouteDirection) => ({
     opacity: 0,
