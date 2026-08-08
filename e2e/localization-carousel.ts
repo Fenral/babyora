@@ -536,6 +536,9 @@ async function assertHomeResultCarousel(
     '.hjm-journey-rail',
     { timeout: 3_000 },
   );
+  await page.waitForFunction(() => (
+    document.querySelector('.hjm-journey-dots i:first-child')?.getAttribute('data-active') === 'true'
+  ));
   const railContract = await rail.evaluate((element) => {
     const style = getComputedStyle(element);
     const first = element.children.item(0)?.getBoundingClientRect();
