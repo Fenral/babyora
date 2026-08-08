@@ -10,26 +10,16 @@ import { describe, expect, it } from 'vitest';
  * canvas: a hardcoded #33241674 gradient stop, and box-shadow rgba(0,0,0,*)
  * values tuned for a dark backdrop (too heavy once --dw-raised flips to a
  * light card in light mode). Both are now token-driven — this test guards
- * the regression, not the doctrine's explicit, intentional exceptions:
- *
- *  - #3A2A1A (the garment/thumb vitrine background) is deliberately
- *    theme-constant per DESIGN.md's depth doctrine ("asset vitrine
- *    treatment" — a lit-object thumb frame, not a themed surface).
- *  - The five --dw-w-* weather-nuance colors (panel fill) are deliberately
- *    theme-constant per DESIGN.md ("weather reactivity lives ONLY in the
- *    panel nuance... canvas and ink stay constant").
+ * the regression. Theme-constant weather nuances live in the shared token
+ * file; this component stylesheet has no reason to own a literal hex value.
  */
 
 async function hjemMonterCss(): Promise<string> {
   return readFile(fileURLToPath(new URL('../hjem-monter.css', import.meta.url)), 'utf8');
 }
 
-const ALLOWED_THEME_CONSTANT_HEX = new Set([
-  '#3a2a1a', // vitrine thumb bg — doctrine-documented theme-constant exception
-]);
-
 describe('hjem-monter.css — P8 light-mode token consumption', () => {
-  it('has no hardcoded dark-canvas/raised hex outside the documented theme-constant exception', async () => {
+  it('has no hardcoded dark-canvas/raised hex', async () => {
     const css = await hjemMonterCss();
     // Strip /* ... */ comments first — this guards actual rules, not the
     // file's own prose explaining WHY a token was chosen (which legitimately
@@ -38,8 +28,7 @@ describe('hjem-monter.css — P8 light-mode token consumption', () => {
     const hexLiterals = [...withoutComments.matchAll(/#[0-9A-Fa-f]{6}(?![0-9A-Fa-f])/gu)]
       .map((match) => match[0].toLowerCase());
 
-    const undeclared = hexLiterals.filter((hex) => !ALLOWED_THEME_CONSTANT_HEX.has(hex));
-    expect(undeclared, `unexpected hardcoded hex literal(s) in hjem-monter.css: ${undeclared.join(', ')}`).toEqual([]);
+    expect(hexLiterals, `unexpected hardcoded hex literal(s) in hjem-monter.css: ${hexLiterals.join(', ')}`).toEqual([]);
   });
 
   /**
@@ -102,6 +91,16 @@ describe('hjem-monter.css — P8 light-mode token consumption', () => {
     // scan, which is the authoritative "no stray hex" guard).
     expect(withoutComments).not.toMatch(/#332416/iu);
     expect(css).toMatch(/color-mix\(in srgb, var\(--dw-canvas-glow\)\s*45%,\s*transparent\)/u);
+  });
+
+  it('.hjm-strip explicitly consumes panel ink instead of inheriting canvas ink', async () => {
+    const css = await hjemMonterCss();
+    const withoutComments = css.replace(/\/\*[\s\S]*?\*\//gu, '');
+    const stripRule = withoutComments.match(/\.hjm-strip\s*\{[^}]*\}/u)?.[0] ?? '';
+
+    expect(stripRule, '.hjm-strip rule is missing').not.toBe('');
+    expect(stripRule).toMatch(/color:\s*var\(--dw-ink-panel-hi\);/u);
+    expect(stripRule).not.toMatch(/color:\s*inherit;/u);
   });
 
   it('.hjem-monter consumes the shared floating-tab-bar clearance token for its own bottom padding (it manages its own nested scroll)', async () => {

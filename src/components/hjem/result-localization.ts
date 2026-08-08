@@ -5,6 +5,7 @@ export type ResultLanguage = 'da' | 'en' | 'no' | 'sv';
 type ResultCopy = Readonly<{
   carouselLabel: string;
   title: string;
+  detailsTitle: string;
   hint: string;
   empty: string;
   progressLabel: string;
@@ -35,6 +36,7 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
   en: {
     carouselLabel: 'Dress step by step',
     title: "Today's outfit",
+    detailsTitle: 'Explore each garment',
     hint: 'Swipe sideways, from the base layer to the outer layer.',
     empty: 'No garments to show yet.',
     progressLabel: 'Dressing order',
@@ -56,6 +58,7 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
   sv: {
     carouselLabel: 'Klä på steg för steg',
     title: 'Dagens kläder',
+    detailsTitle: 'Se varje plagg',
     hint: 'Svep åt sidan, från innersta till yttersta lagret.',
     empty: 'Det finns inga plagg att visa ännu.',
     progressLabel: 'Påklädningsordning',
@@ -77,6 +80,7 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
   da: {
     carouselLabel: 'Giv tøjet på trin for trin',
     title: 'Dagens tøj',
+    detailsTitle: 'Se hvert stykke tøj',
     hint: 'Stryg til siden, fra det inderste til det yderste lag.',
     empty: 'Der er ingen beklædning at vise endnu.',
     progressLabel: 'Påklædningsrækkefølge',
@@ -98,6 +102,7 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
   no: {
     carouselLabel: 'Kle på, steg for steg',
     title: 'Dagens antrekk',
+    detailsTitle: 'Se hvert plagg',
     hint: 'Sveip bortover, fra innerst til ytterst.',
     empty: 'Ingen plagg å vise ennå.',
     progressLabel: 'Påkledningsrekkefølge',

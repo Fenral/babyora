@@ -89,7 +89,7 @@ export function MonterGarmentRow({
             <span className="hjm-g-role">{roleLabel}</span>
           </span>
           <span className="hjm-swap" aria-hidden="true">
-            {copy.details}
+            <span className="hjm-swap-label">{copy.details}</span>
             <InfoIcon />
           </span>
         </button>

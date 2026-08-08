@@ -33,6 +33,7 @@ type LocaleScenario = Readonly<{
   tomorrow: string;
   findOutfit: RegExp;
   oldResultCta: string;
+  detailHeading: string;
 }>;
 
 const SCENARIOS: readonly LocaleScenario[] = [
@@ -48,6 +49,7 @@ const SCENARIOS: readonly LocaleScenario[] = [
     tomorrow: 'I morgon',
     findOutfit: /^(Hitta|Visa) dagens kläder$/u,
     oldResultCta: 'Klä på steg för steg',
+    detailHeading: 'Se varje plagg',
   },
   {
     locale: 'da-DK',
@@ -61,6 +63,7 @@ const SCENARIOS: readonly LocaleScenario[] = [
     tomorrow: 'I morgen',
     findOutfit: /^(Find|Vis) dagens tøj$/u,
     oldResultCta: 'Giv tøjet på trin for trin',
+    detailHeading: 'Se hvert stykke tøj',
   },
   {
     locale: 'nb-NO',
@@ -74,6 +77,7 @@ const SCENARIOS: readonly LocaleScenario[] = [
     tomorrow: 'Tomorrow',
     findOutfit: /^(Find|Show) today’s outfit$/u,
     oldResultCta: 'Dress step by step',
+    detailHeading: 'Explore each garment',
   },
 ] as const;
 
@@ -289,6 +293,38 @@ async function assertLoadedGarmentImages(page: Page, scenario: LocaleScenario): 
   const count = await cards.count();
   assert(count > 1, `${scenario.locale}: result had ${count} garment cards; horizontal QA needs at least two`);
 
+  const overviewImages = page.locator('.hjm-rows .hjm-thumb img');
+  assert(
+    await overviewImages.count() === count,
+    `${scenario.locale}: compact overview and detail rail do not contain the same garments`,
+  );
+
+  const overviewPaths = await overviewImages.evaluateAll((images) => images.map((element) => (
+    new URL((element as HTMLImageElement).currentSrc || (element as HTMLImageElement).src).pathname
+  )));
+  const detailPaths = await cards.locator('.hjm-journey-image img').evaluateAll((images) => images.map((element) => (
+    new URL((element as HTMLImageElement).currentSrc || (element as HTMLImageElement).src).pathname
+  )));
+  assert(
+    JSON.stringify(overviewPaths) === JSON.stringify(detailPaths),
+    `${scenario.locale}: compact/detail garment order differs (${JSON.stringify({ overviewPaths, detailPaths })})`,
+  );
+
+  for (let index = 0; index < count; index += 1) {
+    const image = overviewImages.nth(index);
+    await image.waitFor({ state: 'visible', timeout: 5_000 });
+    const state = await image.evaluate((element) => ({
+      src: element.currentSrc || element.src,
+      complete: element.complete,
+      naturalWidth: element.naturalWidth,
+    }));
+    const pathname = state.src.startsWith('data:') ? state.src : new URL(state.src).pathname;
+    assert(
+      state.complete && state.naturalWidth >= 64 && /^\/illustrations\/garments\/[^/]+\.webp$/u.test(pathname),
+      `${scenario.locale}: compact garment ${index + 1} was missing or generic (${pathname})`,
+    );
+  }
+
   for (let index = 0; index < count; index += 1) {
     const card = cards.nth(index);
     await card.evaluate((element) => {
@@ -366,6 +402,20 @@ async function assertHomeResultCarousel(
   );
 
   const rail = result.locator('.hjm-journey-rail');
+  const overview = result.locator('.hjm-rows');
+  await overview.waitFor({ state: 'visible', timeout: 5_000 });
+  await result.getByRole('heading', { name: scenario.detailHeading, exact: true })
+    .waitFor({ state: 'visible', timeout: 5_000 });
+  assert(
+    await result.evaluate((element) => {
+      const overviewElement = element.querySelector('.hjm-rows');
+      const railElement = element.querySelector('.hjm-journey-rail');
+      return overviewElement !== null
+        && railElement !== null
+        && Boolean(overviewElement.compareDocumentPosition(railElement) & Node.DOCUMENT_POSITION_FOLLOWING);
+    }),
+    `${scenario.locale}: compact outfit overview does not come before the detail rail`,
+  );
   await rail.scrollIntoViewIfNeeded();
   const railContract = await rail.evaluate((element) => {
     const style = getComputedStyle(element);
@@ -411,11 +461,15 @@ async function assertHomeResultCarousel(
   );
 
   const avatarBox = await avatar.boundingBox();
+  const overviewBox = await overview.boundingBox();
   const railBox = await rail.boundingBox();
-  assert(avatarBox !== null && railBox !== null, `${scenario.locale}: avatar/rail geometry was unavailable`);
   assert(
-    avatarBox.y < railBox.y && avatarBox.y + avatarBox.height > railBox.y,
-    `${scenario.locale}: avatar does not visibly hang across the result seam`,
+    avatarBox !== null && overviewBox !== null && railBox !== null,
+    `${scenario.locale}: avatar/overview/rail geometry was unavailable`,
+  );
+  assert(
+    avatarBox.y < overviewBox.y && avatarBox.y + avatarBox.height > overviewBox.y,
+    `${scenario.locale}: avatar does not visibly hang across the compact result seam`,
   );
 
   const progress = result.locator('.hjm-journey-progress-copy > span').first();
@@ -442,7 +496,23 @@ async function assertHomeResultCarousel(
     `${scenario.locale}: horizontal garment gesture hijacked vertical scroll (${JSON.stringify({ verticalBefore, verticalAfter })})`,
   );
 
-  return assertLoadedGarmentImages(page, scenario);
+  const garmentCount = await assertLoadedGarmentImages(page, scenario);
+
+  await page.setViewportSize({ width: 320, height: VIEWPORT.height });
+  const compactRowsFit = await result.locator('.hjm-row').evaluateAll((rows) => rows.map((row) => {
+    const text = row.querySelector('.hjm-row-text')?.getBoundingClientRect();
+    const detail = row.querySelector('.hjm-swap')?.getBoundingClientRect();
+    return row.scrollWidth <= row.clientWidth + 1
+      && text !== undefined
+      && detail !== undefined
+      && text.right <= detail.left + 1;
+  }));
+  assert(
+    compactRowsFit.length === garmentCount && compactRowsFit.every(Boolean),
+    `${scenario.locale}: compact garment rows overlap at 320px (${JSON.stringify(compactRowsFit)})`,
+  );
+
+  return garmentCount;
 }
 
 async function runScenario(browser: Browser, scenario: LocaleScenario): Promise<void> {

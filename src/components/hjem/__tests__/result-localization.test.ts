@@ -12,12 +12,14 @@ const context = {
 
 describe('result localization', () => {
   it.each([
-    ['en-US', "Today's outfit", 'Base layer'],
-    ['sv-SE', 'Dagens kläder', 'Innerlager'],
-    ['da-DK', 'Dagens tøj', 'Inderste lag'],
-  ])('provides complete copy for %s', (language, title, role) => {
+    ['en-US', "Today's outfit", 'Explore each garment', 'Base layer'],
+    ['sv-SE', 'Dagens kläder', 'Se varje plagg', 'Innerlager'],
+    ['da-DK', 'Dagens tøj', 'Se hvert stykke tøj', 'Inderste lag'],
+    ['no-NO', 'Dagens antrekk', 'Se hvert plagg', 'Innerst'],
+  ])('provides complete copy for %s', (language, title, detailsTitle, role) => {
     const copy = resultCopyFor(language);
     expect(copy.title).toBe(title);
+    expect(copy.detailsTitle).toBe(detailsTitle);
     expect(copy.role('Innerst')).toBe(role);
     expect(copy.childSummary(5, 'Mira')).toContain('Mira');
     expect(copy.sourceNewWindow('Helsenorge')).toContain('Helsenorge');

@@ -9,9 +9,9 @@
  * kontrakten). Noen konkrete valg dette gir:
  *  - `.hjm-rows` bruker `var(--dw-r-panel)` (20px) — samme TALL som mocken,
  *    selv om navnet er "panel"; `--dw-r-raised` er 14px og ville avveket.
- *  - `.hjm-strip` (16px) og `.hjm-thumb` (13px) har ingen matchende token →
- *    hardkodet (thumb-vitrine-fargen #3A2A1A er DESIGN.md-doktrinen sin
- *    egen hardkodede verdi, ikke en --dw-*-token).
+ *  - `.hjm-strip` (16px) har ingen matchende token og er hardkodet.
+ *    `.hjm-thumb` bruker nå kontrollradiusen fordi den brede 11:6-vitrinen
+ *    har samme geometri som de øvrige bildeplatene.
  *  - `.hjm-loc`/`.hjm-fresh` bruker `var(--dw-ink-panel-mid)` (kanonisk
  *    #C6CFC4) i stedet for mockens lokale #DCD8C8 — kanonisk token vinner
  *    per oppgavens regel når begge finnes.
@@ -790,7 +790,7 @@
   font-family: inherit;
   text-align: left;
   cursor: pointer;
-  color: inherit;
+  color: var(--dw-ink-panel-hi);
   width: 100%;
   box-sizing: border-box;
   position: relative;
@@ -847,9 +847,9 @@
 .hjm-result h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.012em; margin: 0; }
 .hjm-result .hjm-sub { font-size: 14px; color: var(--dw-ink-low); margin-top: 4px; }
 
-/* Resultat-maskoten er en utskiftbar søm over reisen. Den beskriver ingen
-   antrekkssannhet og er derfor dekorativ i markupen; teksten ved siden av
-   forklarer sveipet. Neste asset kan byttes her uten å røre kortdataene. */
+/* Resultat-maskoten er en utskiftbar søm over oversiktslisten. Den beskriver
+   ingen antrekkssannhet og er derfor dekorativ i markupen. Neste asset kan
+   byttes her uten å røre kortdataene. */
 .hjm-journey-intro {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 116px;
@@ -857,13 +857,36 @@
   min-height: 104px;
 }
 .hjm-journey-copy { position: relative; z-index: 1; padding-bottom: 10px; }
+.hjm-journey-disclosure {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--dw-space-12);
+  margin: var(--dw-space-24) 2px var(--dw-space-8);
+}
+.hjm-journey-disclosure h2 {
+  margin: 0;
+  color: var(--dw-ink-hi);
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+}
 .hjm-journey-hint {
-  max-width: 26ch;
-  margin: 8px 0 0;
+  max-width: 30ch;
+  margin: var(--dw-space-4) 0 0;
   color: var(--dw-ink-mid);
   font-size: 13px;
   line-height: 1.4;
 }
+.hjm-journey-swipe-cue {
+  width: var(--dw-size-touch);
+  height: var(--dw-size-touch);
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--dw-ink-low);
+}
+.hjm-journey-swipe-cue svg { width: 30px; height: 22px; }
 .hjm-result-mascot-seam {
   position: relative;
   align-self: stretch;
@@ -936,8 +959,12 @@
   mask-composite: exclude;
 }
 .hjm-journey-image {
-  height: 158px;
+  position: relative;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 11 / 6;
   flex: none;
+  box-sizing: border-box;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -947,11 +974,13 @@
   box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected);
 }
 .hjm-journey-image img {
-  width: 100%;
-  height: 100%;
-  padding: 10px;
-  box-sizing: border-box;
+  position: absolute;
+  inset: 4%;
+  width: 92%;
+  height: 92%;
+  display: block;
   object-fit: contain;
+  object-position: center;
 }
 .hjm-journey-order {
   display: flex;
@@ -1101,18 +1130,8 @@
   background: var(--dw-raised);
   box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised);
 }
-.hjm-journey-rail[data-fresh='true'] .hjm-journey-card {
-  opacity: 0;
-  transform: translateY(10px);
-  animation: hjm-row-in var(--dw-m-bow-in) var(--dw-ease) forwards;
-}
 @media (prefers-reduced-motion: reduce) {
   .hjm-journey-rail { scroll-behavior: auto !important; }
-  .hjm-journey-rail[data-fresh='true'] .hjm-journey-card {
-    animation: none !important;
-    opacity: 1;
-    transform: none;
-  }
   .hjm-journey-detail { transition: none; }
 }
 
@@ -1198,11 +1217,12 @@
    1px topplyskant, myk løfteskygge. #3A2A1A er doktrinens egen hardkodede
    vitrine-verdi (ikke en --dw-*-token). */
 .hjm-thumb {
-  width: 56px;
-  height: 56px;
-  border-radius: 13px;
+  position: relative;
+  width: 68px;
+  height: auto;
+  aspect-ratio: 11 / 6;
+  border-radius: var(--dw-r-control);
   flex: none;
-  object-fit: cover;
   /* TEMA-BUNDET PLATE. Sto hardkodet #3A2A1A og var derfor mørk i BEGGE
      temaer — 12,64:1 mot lys canvas. Da de 41 plaggene ble klippet fri av sin
      innbakte bakgrunn, ble resultatet usynlig for eieren: garderoben marsjerte
@@ -1220,11 +1240,13 @@
   overflow: hidden;
 }
 .hjm-thumb img {
-  width: 100%;
-  height: 100%;
-  padding: 4px;
-  box-sizing: border-box;
+  position: absolute;
+  inset: 4%;
+  width: 92%;
+  height: 92%;
+  display: block;
   object-fit: contain;
+  object-position: center;
 }
 
 .hjm-row-text { flex: 1; min-width: 0; }
@@ -1232,6 +1254,14 @@
 .hjm-g-role { font-size: 12.5px; color: var(--dw-ink-low); display: block; margin-top: 1px; }
 .hjm-swap { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 650; color: var(--dw-ink-low); flex: none; }
 .hjm-swap svg { width: 15px; height: 15px; }
+
+@media (max-width: 359px) {
+  .hjm-rows { padding-inline: var(--dw-space-10); }
+  .hjm-row { gap: var(--dw-space-10); }
+  .hjm-thumb { width: 62px; }
+  .hjm-swap { width: 20px; justify-content: center; }
+  .hjm-swap-label { display: none; }
+}
 
 .hjm-why {
   display: block;
