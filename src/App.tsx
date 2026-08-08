@@ -42,10 +42,7 @@ import {
   type OutfitBundleProducerResult,
 } from './lib/outfit/outfit-bundle-producer';
 import {
-  consumeRequestedPlanningView,
-  issueRequestedPlanningView,
   shouldClosePlannedDrillOnAccess,
-  type RequestedPlanningViewState,
 } from './lib/planning/planning-interaction';
 import { decideAccess } from './lib/access/capabilities';
 import { useAccess } from './lib/premium/use-access';
@@ -53,7 +50,7 @@ import { resolveRuntimeCapabilityAccess } from './lib/premium/gating';
 import { PLUS_FEATURE_AVAILABILITY } from './lib/premium/plus-features';
 import { useSubscription } from './state/subscription-store';
 import { useLocationPref } from './state/location-pref-store';
-import { useSceneHeight } from './hooks/useSceneHeight';
+import { useNativeSettings } from './hooks/useNativeSettings';
 import { slippLaunch } from './lib/launch-handoff';
 import { klePaaKildeFor } from './components/klepaa/kle-paa-rute';
 
@@ -67,25 +64,74 @@ import { klePaaKildeFor } from './components/klepaa/kle-paa-rute';
 function lesMs(navn: string, fallback: number): number {
   if (typeof document === 'undefined') return fallback;
   const raa = getComputedStyle(document.documentElement).getPropertyValue(navn).trim();
-  const m = /^([d.]+)(ms|s)$/u.exec(raa);
+  const m = /^([\d.]+)(ms|s)$/u.exec(raa);
   if (!m) return fallback;
   return m[2] === 's' ? Number(m[1]) * 1000 : Number(m[1]);
 }
 
 const BEVEGELSE = {
-  /** Drill inn: ett nivaa NED i hierarkiet, altsaa opp paa skjermen. */
+  /** Drill inn: ett nivå ned i hierarkiet, fra høyre. */
   push: lesMs('--dw-m-push', 340) / 1000,
   /** Tilbake: raskere ut enn inn — bevegelseskontraktens egen regel. */
   pushTilbake: lesMs('--dw-m-push-back', 280) / 1000,
-  /** Hovedfaner er SIDESTILTE: crossfade, aldri push. */
-  faneInn: 0.14,
-  faneUt: 0.1,
+  /** Hovedfaner er sidestilte: kort shared-axis-bevegelse, ikke full push. */
+  faneInn: lesMs('--dw-m-state', 220) / 1000,
+  faneUt: lesMs('--dw-m-feedback', 120) / 1000,
+  sveipResetMs: lesMs('--dw-m-state', 220),
   /** En kurve for hele appen (--dw-ease). */
   kurve: [0.2, 0.7, 0.2, 1] as [number, number, number, number],
 };
 
 /** Hovedfane eller drill? Grammatikken er ulik, og det er hele poenget. */
 const erFane = (routeKey: string): boolean => routeKey.startsWith('tab:');
+
+type RouteDirection = -1 | 1;
+
+const TAB_REKKEFOLGE: Record<TabKey, number> = {
+  hjem: 0,
+  plan: 1,
+  familie: 2,
+};
+
+/**
+ * Hovedfaner deler én akse, men flytter bare 12–16 px. Det gir retning uten
+ * å late som de ligger i et hierarki. AnimatePresence sitt `custom`-felt
+ * leverer siste retning også til siden som er på vei ut.
+ */
+const FANE_VARIANTER = {
+  initial: (retning: RouteDirection) => ({
+    opacity: 0,
+    transform: `translate3d(${retning * 16}px, 0, 0)`,
+  }),
+  active: {
+    opacity: 1,
+    transform: 'translate3d(0, 0, 0)',
+    transition: { duration: BEVEGELSE.faneInn, ease: BEVEGELSE.kurve },
+  },
+  exit: (retning: RouteDirection) => ({
+    opacity: 0,
+    transform: `translate3d(${retning * -12}px, 0, 0)`,
+    transition: { duration: BEVEGELSE.faneUt, ease: BEVEGELSE.kurve },
+  }),
+};
+
+/** Drill er et ekte hierarkisk lag: full bredde inn, full bredde ut ved back. */
+const DRILL_VARIANTER = {
+  initial: (retning: RouteDirection) => ({
+    opacity: 0,
+    transform: retning > 0 ? 'translate3d(100%, 0, 0)' : 'translate3d(-18%, 0, 0)',
+  }),
+  active: {
+    opacity: 1,
+    transform: 'translate3d(0, 0, 0)',
+    transition: { duration: BEVEGELSE.push, ease: BEVEGELSE.kurve },
+  },
+  exit: (retning: RouteDirection) => ({
+    opacity: 0,
+    transform: retning < 0 ? 'translate3d(100%, 0, 0)' : 'translate3d(-18%, 0, 0)',
+    transition: { duration: BEVEGELSE.pushTilbake, ease: BEVEGELSE.kurve },
+  }),
+};
 
 const HjemScreen = lazy(() =>
   import('./screens/HjemScreen').then((m) => ({ default: m.HjemScreen })),
@@ -197,13 +243,6 @@ type Drill =
   // veien fra Første vinter sine leksjoner.
   | { kind: 'plaggbib' };
 
-function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return false;
-  }
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
 function useClosePlannedDrillOnAccess({
   isPlannedDrill,
   loading,
@@ -245,12 +284,10 @@ export default function App(): ReactElement {
   const locationMode = useLocationPref((state) => state.mode);
   const [tab, setTab] = useState<TabKey>('hjem');
   const [drill, setDrill] = useState<Drill>(null);
+  const [routeDirection, setRouteDirection] = useState<RouteDirection>(1);
   const outfitTransition = useOutfitTransitionCoordinator();
-  const [requestedPlanViewState, setRequestedPlanViewState] = useState<RequestedPlanningViewState>({
-    nextToken: 0,
-    requestedView: null,
-  });
   const mainRef = useRef<HTMLElement | null>(null);
+  const { reducedMotion } = useNativeSettings();
   const themeMode = useTheme((s) => s.mode);
   const { isPremium, loading: accessLoading } = useAccess();
   const automaticLocationAccess = useMemo(
@@ -312,22 +349,26 @@ export default function App(): ReactElement {
   // konsumert), se consumeRecommendationGraceWindow.
   const onNavigate = (next: TabKey) => {
     outfitTransition.abort('closed');
+    if (next !== tab) {
+      setRouteDirection(TAB_REKKEFOLGE[next] > TAB_REKKEFOLGE[tab] ? 1 : -1);
+    } else if (drill !== null) {
+      setRouteDirection(-1);
+    }
     setDrill(null);
     setTab(next);
     if (next === 'plan') useSubscription.getState().consumeRecommendationGraceWindow();
   };
 
+  const closeDrill = useCallback(() => {
+    setRouteDirection(-1);
+    setDrill(null);
+  }, []);
+
   // P1: navnet `onOpenGuideTarget` beholdes (fortsatt sendt til VinterprogramScreen
   // som onOpenTarget) — targets ruter nå til tre ulike drill-kinder i stedet for
   // ett samlet `guide`-kind, se Drill-unionen over.
   const onOpenGuideTarget = useCallback((target: GuideTarget) => {
-    if (target === 'snart') {
-      setDrill(null);
-      setTab('plan');
-      setRequestedPlanViewState((current) => issueRequestedPlanningView(current, 'snart'));
-      window.requestAnimationFrame(() => mainRef.current?.focus());
-      return;
-    }
+    setRouteDirection(1);
     if (target === 'finn-antrekk') {
       setDrill({ kind: 'finn-antrekk' });
       return;
@@ -340,6 +381,7 @@ export default function App(): ReactElement {
   }, []);
 
   const onOpenWarmColdGuide = useCallback(() => {
+    setRouteDirection(1);
     setDrill({ kind: 'familie-tool', target: 'varm-kald' });
   }, []);
 
@@ -358,6 +400,7 @@ export default function App(): ReactElement {
   // CurrentPaakledningScreen, which is unreachable dead code (every caller
   // supplies currentContext/plannedContext).
   const onOpenPlaggbib = useCallback(() => {
+    setRouteDirection(1);
     setDrill({ kind: 'plaggbib' });
   }, []);
 
@@ -367,6 +410,7 @@ export default function App(): ReactElement {
   // above, but carries a live-weather prefill so FinnAntrekkScreen's sliders
   // open already matching what Hjem just showed (PRODUCT.md, locked).
   const onOpenAdjust = useCallback((prefill: FinnAntrekkPrefill) => {
+    setRouteDirection(1);
     setDrill({ kind: 'finn-antrekk', prefill });
   }, []);
 
@@ -374,17 +418,8 @@ export default function App(): ReactElement {
   // drill-kind som onOpenWarmColdGuide/onOpenGuideTarget bruker for
   // tog/varm-kald/forste-vinter.
   const onOpenTool = useCallback((target: FamilieToolTarget) => {
+    setRouteDirection(1);
     setDrill({ kind: 'familie-tool', target });
-  }, []);
-
-  const onConsumeRequestedPlanView = useCallback((token: number) => {
-    setRequestedPlanViewState((current) => {
-      const { consumedView: _consumedView, ...next } = consumeRequestedPlanningView(
-        current,
-        token,
-      );
-      return next;
-    });
   }, []);
 
   const onOpenPlannedOutfit = (
@@ -398,6 +433,7 @@ export default function App(): ReactElement {
     ) {
       return;
     }
+    setRouteDirection(1);
     const outfitBundle = plannedContext.sourceKind === 'phase2-outfit-truth'
       ? produceOutfitBundle({
           seed: plannedContext.producerSeed,
@@ -439,6 +475,7 @@ export default function App(): ReactElement {
   ) => {
     if (!isPlannedOutfitContext(currentContext) || !origin.isConnected) return;
     outfitTransition.captureBeforeNavigation(outfitBundle);
+    setRouteDirection(1);
     setDrill({
       kind: 'paakledning',
       source: 'current',
@@ -448,17 +485,13 @@ export default function App(): ReactElement {
     });
   };
 
-  const reduceMotion = prefersReducedMotion();
-  /* Hvor langt en side skal skyves: SCENEN, ikke siden. Se
-     hooks/useSceneHeight.ts — 'y: 100%' ga 2348 px paa Soveguiden. */
-  const sceneHeight = useSceneHeight(mainRef);
-
   const onBackRef = useRef<(() => void) | null>(null);
 
   const closePaakledning = useCallback(() => {
     const origin = drill?.kind === 'paakledning' ? drill.origin : null;
     const source = drill?.kind === 'paakledning' ? drill.source : null;
     outfitTransition.abort('closed');
+    setRouteDirection(-1);
     setDrill(null);
     if (!origin) return;
     window.requestAnimationFrame(() => {
@@ -512,13 +545,14 @@ export default function App(): ReactElement {
         if (activeDrill.kind === 'paakledning') {
           closePaakledning();
         } else {
-          setDrill(null);
+          closeDrill();
         }
       } else {
+        setRouteDirection(-1);
         setTab('hjem');
       }
     };
-  }, [activeDrill, tab, canGoBack, closePaakledning]);
+  }, [activeDrill, tab, canGoBack, closeDrill, closePaakledning]);
 
   useEffect(() => {
     const el = mainRef.current;
@@ -526,7 +560,6 @@ export default function App(): ReactElement {
 
     const EDGE_TRIGGER_PX = 24;
     const COMMIT_THRESHOLD_PX = 60;
-    const reduce = prefersReducedMotion();
 
     let tracking = false;
     let startX = 0;
@@ -535,12 +568,12 @@ export default function App(): ReactElement {
     let committed = false;
 
     const resetTransform = () => {
-      if (reduce) return;
+      if (reducedMotion) return;
       el.style.transform = '';
-      el.style.transition = 'transform 200ms ease-out';
+      el.style.transition = 'transform var(--dw-m-state) var(--dw-ease)';
       window.setTimeout(() => {
         if (el) el.style.transition = '';
-      }, 220);
+      }, BEVEGELSE.sveipResetMs);
     };
 
     const onTouchStart = (ev: TouchEvent) => {
@@ -553,7 +586,7 @@ export default function App(): ReactElement {
       startX = t.clientX;
       startY = t.clientY;
       currentDx = 0;
-      if (!reduce) {
+      if (!reducedMotion) {
         el.style.transition = '';
       }
     };
@@ -570,11 +603,11 @@ export default function App(): ReactElement {
       }
       if (dx < 0) {
         currentDx = 0;
-        if (!reduce) el.style.transform = '';
+        if (!reducedMotion) el.style.transform = '';
         return;
       }
       currentDx = dx;
-      if (!reduce) {
+      if (!reducedMotion) {
         el.style.transform = `translate3d(${dx}px, 0, 0)`;
       }
       if (dx >= COMMIT_THRESHOLD_PX) {
@@ -612,12 +645,12 @@ export default function App(): ReactElement {
       el.removeEventListener('touchmove', onTouchMove);
       el.removeEventListener('touchend', onTouchEnd);
       el.removeEventListener('touchcancel', onTouchCancel);
-      if (!reduce) {
+      if (!reducedMotion) {
         el.style.transform = '';
         el.style.transition = '';
       }
     };
-  }, []);
+  }, [reducedMotion]);
 
   // Førstegangs-onboarding tar over hele skjermen (egen <main> + <h1>,
   // ingen BottomTabBar). onComplete melder ferdig etter velkomst-stegene.
@@ -702,22 +735,22 @@ export default function App(): ReactElement {
   if (activeDrill?.kind === 'finn-antrekk') {
     routeKey = 'drill:finn-antrekk';
     routeContent = (
-      <FinnAntrekkScreen onBack={() => setDrill(null)} prefill={activeDrill.prefill} />
+      <FinnAntrekkScreen onBack={closeDrill} prefill={activeDrill.prefill} />
     );
   } else if (activeDrill?.kind === 'plaggbib') {
     routeKey = 'drill:plaggbib';
-    routeContent = <PlaggbibliotekScreen onBack={() => setDrill(null)} />;
+    routeContent = <PlaggbibliotekScreen onBack={closeDrill} />;
   } else if (activeDrill?.kind === 'familie-tool' && activeDrill.target === 'tog') {
     routeKey = 'drill:familie-tool:tog';
-    routeContent = <TogGuideScreen onBack={() => setDrill(null)} />;
+    routeContent = <TogGuideScreen onBack={closeDrill} />;
   } else if (activeDrill?.kind === 'familie-tool' && activeDrill.target === 'varm-kald') {
     routeKey = 'drill:familie-tool:varm-kald';
-    routeContent = <VarmEllerKaldScreen onBack={() => setDrill(null)} />;
+    routeContent = <VarmEllerKaldScreen onBack={closeDrill} />;
   } else if (activeDrill?.kind === 'familie-tool' && activeDrill.target === 'forste-vinter') {
     routeKey = 'drill:familie-tool:forste-vinter';
     routeContent = (
       <VinterprogramScreen
-        onBack={() => setDrill(null)}
+        onBack={closeDrill}
         onOpenTarget={onOpenGuideTarget}
       />
     );
@@ -744,9 +777,6 @@ export default function App(): ReactElement {
         onNavigate={onNavigate}
         onOpenSheet={() => undefined}
         onOpenPlannedOutfit={onOpenPlannedOutfit}
-        requestedPlanView={requestedPlanViewState.requestedView?.view ?? null}
-        requestedPlanViewToken={requestedPlanViewState.requestedView?.token ?? null}
-        onConsumeRequestedPlanView={onConsumeRequestedPlanView}
       />
     );
   } else {
@@ -770,45 +800,34 @@ export default function App(): ReactElement {
       <AppPaywallGate onboardingDone={onboardingDone} />
       <a href="#main" className="skip-link">Hopp til hovedinnhold</a>
       <main id="main" tabIndex={-1} ref={mainRef}>
-        {reduceMotion ? (
+        {reducedMotion ? (
           <Suspense fallback={<RouteSkeleton />}>{routeContent}</Suspense>
         ) : (
           /* Rutenettcellen begge sidene deler, så de kan ligge oppå
              hverandre og bevege seg samtidig. Se .ba-sideskift i
              design-tokens.css. */
           <div className="ba-sideskift">
-            <AnimatePresence initial={false}>
+            <AnimatePresence initial={false} custom={routeDirection} mode="sync">
               {/* mode="wait" er BORTE, og det var kjernen i eierfunnet: den
                   lot den gamle siden bli FERDIG før den nye begynte. To
                   bevegelser etter hverandre leses som et bytte, ikke som at
                   noe flytter seg. Uten mode ligger begge i DOM-en samtidig,
                   stablet i .ba-sideskift, og beveger seg i takt.
 
-                  DRILLS pusher VERTIKALT en SKJERMHØYDE. Ikke `y: '100%'` —
-                  prosenter regnes av sidens EGEN høyde, og Soveguiden er
-                  2348 px. Da fikk hver skjerm sin egen fart, styrt av hvor
-                  mye tekst den tilfeldigvis har.
+                  DRILLS pusher HORISONTALT én full skjermbredde. Tilbake
+                  speiler retningen, slik at rommet oppleves stabilt.
 
-                  HOVEDFANER crossfader, aldri push: de er sidestilte, ikke
-                  over/under hverandre. */}
+                  HOVEDFANER bruker samme akse med bare 12–16 px og fade:
+                  nok retning til sammenheng, uten å late som fanene ligger
+                  inni hverandre. */}
               <motion.div
                 key={routeKey}
-                initial={erFane(routeKey) ? { opacity: 0 } : { opacity: 0, y: sceneHeight }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={
-                  erFane(routeKey)
-                    ? { opacity: 0, transition: { duration: BEVEGELSE.faneUt } }
-                    : {
-                      opacity: 0,
-                      y: -Math.round(sceneHeight * 0.3),
-                      transition: { duration: BEVEGELSE.pushTilbake },
-                    }
-                }
-                transition={
-                  erFane(routeKey)
-                    ? { duration: BEVEGELSE.faneInn, ease: 'easeOut' }
-                    : { duration: BEVEGELSE.push, ease: BEVEGELSE.kurve }
-                }
+                data-route-key={routeKey}
+                custom={routeDirection}
+                variants={erFane(routeKey) ? FANE_VARIANTER : DRILL_VARIANTER}
+                initial="initial"
+                animate="active"
+                exit="exit"
               >
                 {/* Lastegrensen bor HER, inne i siden. Lå den RUNDT
                     overgangen, ble hele laget byttet mot fallbacken når en
@@ -868,7 +887,7 @@ export default function App(): ReactElement {
         <OutfitTransitionOverlay
           snapshot={transitionSnapshot}
           presentations={transitionPresentation}
-          reducedMotion={reduceMotion}
+          reducedMotion={reducedMotion}
           onFinish={finishOutfitTransition}
           onAbort={abortOutfitTransitionOverlay}
         />

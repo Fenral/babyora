@@ -23,11 +23,6 @@
 import './paakledning.css';
 import { useEffect, useRef, type ReactElement } from 'react';
 import type { Recommendation } from '../lib/wool-layers/types';
-import {
-  avatarPng,
-  headwearFromGarmentLabels,
-  tierFromGarmentLabels,
-} from '../lib/avatar-tier';
 import { tempAxisFor } from '../lib/temp-axis';
 import type { PlannedOutfitContext } from '../lib/planning/planned-outfit-context';
 import type { OutfitBundleProducerResult } from '../lib/outfit/outfit-bundle-producer';
@@ -125,59 +120,9 @@ function symbolToLabel(symbolCode: string | undefined): string {
 
 
 
-/* ──────────────────────────────────────────────────────────────────────────
-   FOKUSRINGEN — en DESIGNET tilstand, ikke en slettet tilstand
-   ──────────────────────────────────────────────────────────────────────────
-
-   Historikk: WebKit tegnet sin blå standardring når `titleRef.current?.focus()`
-   flyttet fokus til overskriften (eier-funn TestFlight 2026-08-01). «Fiksen»
-   var `outline: 'none'` inline på de tre overskriftene. Det fjernet symptomet
-   OG tilstanden i samme slag: en inline outline gjelder alle fokusmodus og kan
-   ikke overstyres av et stilark, så tastatur- og VoiceOver-brukere mistet den
-   eneste indikatoren på hvor de var. Web Interface Guidelines: «Never
-   outline-none without focus replacement.»
-
-   Erstatningen står her, og skillet gjøres av :focus-visible — aldri :focus:
-     · trykk/museklikk (og programmatisk focus() rett etter et trykk) matcher
-       IKKE → overskriften får ingen ring, som var poenget med det opprinnelige
-       funnet;
-     · tastatur og VoiceOver matcher → ringen tegnes.
-
-   Ringens form følger b1-proofen (`b1-slice.template.html:494-496`): amber,
-   2 px strek, luft rundt via outline-offset slik at ringen leser som et EGET
-   LAG over flaten — ikke som en ny kant på komponenten.
-
-   Fargen er --dw-accent, altså nøyaktig CTA-ens aksentfarge (design-tokens.css
-   aliaserer `--accent-cta: var(--dw-accent)`). Den er tema-vekslende og bærer
-   derfor lys modus også: --dw-focus (#E8B98C) er kalibrert for espresso og
-   ligger på ~1,7:1 mot krem-lerretet — en ring ingen ser. --dw-accent gir
-   5,1-7,0:1 mot både lerret og dialogflate i BEGGE temaer. Håndhevet i
-   __tests__/PaakledningScreen.focus-ring.test.tsx.
-
-   Selektorene er bevisst smale (.pkl-title / .pkl-close). En generell
-   «.pkl-dialog :focus-visible» ville hatt samme spesifisitet som
-   «.outfit-row:focus-visible» (Antrekkskart.css:12) og stille overtatt
-   fokusringen til OutfitTruthPanel, som er en annen agents flate.
-
-   FLYTTET 2026-08-06: reglene bor nå i paakledning.css, ikke i en
-   template-literal med en style-tag. Kravet om smale selektorer BLE IKKE
-   svakere av det — men begrunnelsen endret seg. Før lå style-taggen i
-   <body>, altså etter <head>, og en generell selektor ville vunnet på
-   rekkefølge. Nå går filen i <head> via Vite, så rekkefølgen taler ikke
-   lenger i min favør. Smale selektorer er fortsatt riktig, nå fordi de
-   sier hva de gjelder — ikke fordi de kom sist.
-
-   PklFocusRing-komponenten som sprøytet reglene inn er borte med dem. En
-   style-tag i JSX er et lag mellom regelen og nettleseren, og laget kunne
-   fjernes uten at noe ble rødt: porten leste konstanten, ikke skjermen.
-   Vite laster filen nå; ingen komponent må huske å be om den.
-
-   PLATENE OG LUKKEKNAPPEN sto som tre CSSProperties-objekter rett under.
-   De er nå .pkl-plate, .pkl-plate-myk og .pkl-close i samme CSS-fil.
-   Begrunnelsen for hver av dem står bevart i filhodet der — særlig at
-   lukkeknappen er en KONTROLL og ikke et materiale, og derfor ikke skal
-   bære hevet fyll.
-   ────────────────────────────────────────────────────────────────────────── */
+/* Tittelen er bevisst statisk. Native dialog flytter fokus til første
+   kontroll (Lukk), så iOS tegner ikke lenger en felt-lignende ring rundt
+   barnets navn. Tastaturfokus på kontrollene er designet i stilarkene. */
 
 /* ──────────────────────────────────────────────────────────────────────────
    Komponent
@@ -202,7 +147,6 @@ function PlannedPaakledningScreen({
   contextKind: 'current' | 'planned';
 }): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
-  const titleRef = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -210,7 +154,6 @@ function PlannedPaakledningScreen({
     if (!dialog.open) {
       try { dialog.showModal(); } catch { /* older browsers degrade in place */ }
     }
-    titleRef.current?.focus();
     return () => {
       if (dialog.open) {
         try { dialog.close(); } catch { /* already closed */ }
@@ -257,10 +200,6 @@ function PlannedPaakledningScreen({
   const accessLabel = plannedContext.access.allowed
     ? isCurrentContext ? 'Dagens antrekk er tilgjengelig' : 'Planen er tilgjengelig'
     : `Planen er ikke tilgjengelig (${plannedContext.access.reason})`;
-  const illustrativeAvatarAsset = avatarPng(
-    tierFromGarmentLabels(plannedContext.recommendation.orderedGarments, plannedContext.activity),
-    headwearFromGarmentLabels(plannedContext.recommendation.orderedGarments),
-  );
 
   // Entitlement is a route boundary, not an Outfit-panel capability. It must
   // therefore win even when a caller also holds an exact process-local bundle.
@@ -284,12 +223,6 @@ function PlannedPaakledningScreen({
             <h2
               id="planned-outfit-title"
               className="pkl-title"
-              ref={titleRef}
-              tabIndex={-1}
-              // Ingen outline her. Fokustilstanden er designet i
-              // PKL_FOCUS_RING_CSS: programmatisk fokus etter et trykk tegner
-              // ingenting, tastatur/VoiceOver får amber ring med luft.
-
             >
               Planlagt antrekk er ikke tilgjengelig
             </h2>
@@ -331,11 +264,6 @@ function PlannedPaakledningScreen({
               <h2
                 id="planned-outfit-title"
                 className="pkl-title"
-                ref={titleRef}
-                tabIndex={-1}
-                // Ingen outline her — se PKL_FOCUS_RING_CSS for den designede
-                // fokustilstanden (:focus-visible, aldri :focus).
-
               >
                 {plannedContext.child.name}
               </h2>
@@ -365,7 +293,6 @@ function PlannedPaakledningScreen({
             registerOutfitRow={registerOutfitRow}
             transitionVisualState={transitionVisualState}
             onOpenWarmColdGuide={onOpenWarmColdGuide}
-            illustrativeAvatarAsset={illustrativeAvatarAsset}
           />
 
           <section
@@ -411,11 +338,6 @@ function PlannedPaakledningScreen({
             <h2
               id="planned-outfit-title"
               className="pkl-title"
-              ref={titleRef}
-              tabIndex={-1}
-              // Ingen outline her — se PKL_FOCUS_RING_CSS for den designede
-              // fokustilstanden (:focus-visible, aldri :focus).
-
             >
               {plannedContext.child.name}
             </h2>

@@ -165,9 +165,6 @@ function renderPlanlegg(hourly: readonly WeatherHourly[]): string {
       onNavigate={() => {}}
       onOpenSheet={() => {}}
       onOpenPlannedOutfit={() => {}}
-      requestedPlanView={null}
-      requestedPlanViewToken={null}
-      onConsumeRequestedPlanView={() => {}}
     />,
   );
 }
@@ -256,6 +253,8 @@ describe('Planlegg → Dagslinjen viser det faktiske vurderingsrasteret', () => 
 
     // Ikke-vakuøsitet: fixturen produserte faktisk en endringsrad i skinnen.
     expect(count(markup, 'class="plan-change-rail__disclosure"')).toBeGreaterThan(0);
+    expect(markup).toContain('Neste endring er kl. 14:00. Se detaljene i dagslinjen.');
+    expect(markup).not.toContain('<p class="planlegg-screen__action">Bytt fra');
 
     const punkter = timelineItems(markup);
     expect(punkter.map((punkt) => punkt.clock)).toEqual(['06:00', '10:00', '14:00', '18:00']);

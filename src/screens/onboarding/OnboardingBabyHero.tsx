@@ -27,9 +27,9 @@ import { type ReactElement } from 'react';
  * component at all — see OnboardingScreen.tsx's own step-1 markup). This
  * component is now only reached via the 'compact' (steps 2-4) and
  * 'welcome' (step 5) variants; `object-fit: contain` (hjem-monter.css-style
- * "vitrine" treatment, see .ob-baby-media in OnboardingScreen.tsx) shows
- * the whole standing figure instead of cropping it like the old
- * pre-framed square illustration needed.
+ * cutout treatment, see .ob-baby-media in OnboardingScreen.tsx) shows the
+ * whole standing figure without putting the identity mark inside another
+ * generic rounded card.
  */
 const POSTER_SRC = '/monter/maskot-staaende-cut-360.webp';
 
@@ -85,7 +85,6 @@ export function OnboardingBabyHero({
         aria-hidden="true"
         draggable={false}
       />
-      <span className="ob-baby-frame" aria-hidden="true" />
       {context && (
         <span className={`ob-baby-context ${context}`} aria-hidden="true">
           <ContextMark context={context} />

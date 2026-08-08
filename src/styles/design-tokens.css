@@ -623,9 +623,9 @@ img {
   padding-bottom: var(--dw-tabbar-clearance, 90px);
 }
 /* motion-wrapperen (route-transition) må videreføre høyden til skjermen */
-/* ============ SIDESKIFTET (fase 3B, 2026-08-05) ============
-   Eierfunn: «appen bytter skjerm uten bevegelse». Vedtak
-   `sideskift-er-fysiske`: begge flater skal bevege seg SAMTIDIG.
+/* ============ SIDESKIFTET (fase 3B, oppdatert 2026-08-08) ============
+   Eierfunn: «siden slider fra en side til en annen». Vedtak
+   `sideskift-er-fysiske`: begge flater skal bevege seg SAMTIDIG langs x.
 
    Foer laa de to sidene etter hverandre i TID (AnimatePresence
    mode="wait"), saa den nye startet foerst naar den gamle var ferdig.

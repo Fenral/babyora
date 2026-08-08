@@ -15,15 +15,11 @@
  *      animasjoner», og konkluderte med at ingenting animerte. Bildet ETTER
  *      viste 0,76 og én animasjon.
  *
- *   2. DEN MALTE FEIL OVERGANG. Familie -> Soveguiden er FANE -> DRILL.
- *      AnimatePresence fryser den avgaaende sidens props slik de var ved
- *      dens siste render (framer-motion/dist/es/components/AnimatePresence/
- *      index.mjs, linja som spleiser det gamle elementet tilbake inn). Den
- *      avgaaende var en FANE, og faner skal crossfade UTEN forflytning — med
- *      vilje. y = 0 var altsaa fasit, ikke feil. Ingen kode kunne bestaa den
- *      maalingen.
+ *   2. DEN MALTE BARE HIERARKIET. Eierens nyeste bestilling gjør også
+ *      hovedfanene retningsstyrte. Derfor måles nå Hjem -> Planlegg OG
+ *      Planlegg -> Hjem, i tillegg til drill inn/tilbake.
  *
- *   3. `yAv` HADDE UESCAPEDE PARENTESER og traff bare `matrix(...)`.
+ *   3. Transform-uttrekkeren hadde uescapede parenteser og traff bare `matrix(...)`.
  *      For `matrix3d(...)` ga den 0 — «ingen bevegelse» for noe som beveger
  *      seg.
  *
@@ -59,43 +55,56 @@ const browser = await chromium.launch();
 /**
  * OVERGANGENE, hver med sin FASIT.
  *
- * `beggeFlytter` er kjernen: for drill -> drill SKAL begge sider ha et
- * y-ledd ulik null i samme bilde. For fane -> drill skal bare den nye — en
- * fane som gaar ut crossfader, den skyves ikke.
+ * `retning` er fasiten på x-aksen: +1 betyr at ny side kommer fra høyre,
+ * -1 at den kommer fra venstre. Begge flater skal bevege seg samtidig.
  */
 const OVERGANGER = [
   {
+    navn: 'fane -> fane fram (Hjem -> Planlegg)',
+    vei: [{ fane: 'Planlegg' }],
+    retning: 1,
+    restrained: true,
+    hvorfor: 'ny fane kommer 16 px fra høyre, gammel går 12 px mot venstre',
+  },
+  {
+    navn: 'fane -> fane tilbake (Planlegg -> Hjem)',
+    vei: [{ fane: 'Planlegg' }, { fane: 'Hjem' }],
+    retning: -1,
+    restrained: true,
+    hvorfor: 'retningen speiles når brukeren går tilbake i fanerekken',
+  },
+  {
     navn: 'fane -> drill (Familie -> Soveguiden)',
     vei: [{ fane: 'Familie' }, { trykk: 'Soveguiden' }],
-    beggeFlytter: false,
-    hvorfor: 'den avgaaende er en FANE — den crossfader med vilje, uten forflytning',
+    retning: 1,
+    fullBredde: 'inngang',
+    hvorfor: 'drillen kommer inn fra høyre mens fanen gjør kort parallax mot venstre',
   },
   {
     navn: 'drill -> fane (tilbake fra Soveguiden)',
     vei: [{ fane: 'Familie' }, { trykk: 'Soveguiden' }, { tilbake: true }],
-    /* Her er den AVGAAENDE en drill, og det er den eneste overgangen i appen
-       som tester UTGANGS-pushen. */
-    utgangFlytter: true,
-    hvorfor: 'den avgaaende er en DRILL — den skal skyves ut mens fanen tones inn',
+    retning: -1,
+    fullBredde: 'utgang',
+    hvorfor: 'drillen går full bredde mot høyre mens fanen kommer kort inn fra venstre',
   },
 ];
 
 /* DRILL -> DRILL FINNES IKKE I APPEN, og det ble malt fram 2026-08-05:
-   hver drill-skjerm far bare `onBack={() => setDrill(null)}` (App.tsx), saa
+   hver drill-skjerm far bare `onBack={closeDrill}` (App.tsx), saa
    veien ut av en drill gaar alltid tilbake til en fane. Foerste utgave av
    dette verktoeyet hadde en fasit for drill -> drill og meldte AVVIK i det
    uendelige — en port som krever en overgang appen ikke har, kan aldri
    bestaa. Kommer en drill-til-drill-vei senere, skal den inn her. */
 
-/** y-leddet ut av en transform. Haandterer bade matrix og matrix3d. */
-function yAv(t) {
+/** x-leddet ut av en transform. Haandterer bade matrix og matrix3d. */
+function xAv(t) {
   if (!t || t === 'none') return 0;
   const m3 = /matrix3d\(([^)]+)\)/u.exec(t);
-  if (m3) { const d = m3[1].split(',').map(Number); return d.length === 16 ? d[13] : 0; }
+  if (m3) { const d = m3[1].split(',').map(Number); return d.length === 16 ? d[12] : 0; }
   const m = /matrix\(([^)]+)\)/u.exec(t);
   if (!m) return 0;
   const d = m[1].split(',').map(Number);
-  return d.length === 6 ? d[5] : 0;
+  return d.length === 6 ? d[4] : 0;
 }
 
 async function mål(overgang, reducedMotion) {
@@ -152,6 +161,7 @@ async function mål(overgang, reducedMotion) {
     };
     const skall = document.querySelector('nav, [class*="tabbar"], [class*="TabBar"]');
     const skallFør = skall ? Math.round(skall.getBoundingClientRect().top) : null;
+    const skallVenstreFør = skall ? Math.round(skall.getBoundingClientRect().left) : null;
 
     const knapp = erTilbake
       ? document.querySelector('[aria-label="Tilbake"]')
@@ -167,13 +177,15 @@ async function mål(overgang, reducedMotion) {
       serie.push({
         antall: s.length,
         transform: s.map((e) => getComputedStyle(e).transform),
+        routeKeys: s.map((e) => e.getAttribute('data-route-key')),
         opacity: s.map((e) => Number(getComputedStyle(e).opacity)),
         animasjoner: s.map((e) => (e.getAnimations ? e.getAnimations().length : -1)),
         skallTop: skall ? Math.round(skall.getBoundingClientRect().top) : null,
+        skallVenstre: skall ? Math.round(skall.getBoundingClientRect().left) : null,
       });
       await new Promise((res) => requestAnimationFrame(res));
     }
-    return { serie, skallFør };
+    return { serie, skallFør, skallVenstreFør };
   }, { tekst: siste.trykk || siste.fane || '', erTilbake: Boolean(siste.tilbake) });
 
   await p.close();
@@ -193,33 +205,48 @@ for (const o of OVERGANGER) {
     continue;
   }
 
-  const begge = to.filter((f) => f.transform.every((t) => Math.abs(yAv(t)) > 1));
-  const énFlytter = to.filter((f) => f.transform.some((t) => Math.abs(yAv(t)) > 1));
+  const begge = to.filter((f) => f.transform.every((t) => Math.abs(xAv(t)) > 1));
+  const retningsbilder = to.filter((f) => {
+    const x = f.transform.map(xAv);
+    return x[0] * o.retning < -1 && x[1] * o.retning > 1;
+  });
   const fadet = to.filter((f) => f.opacity.some((v) => v < 0.99));
   const animert = to.filter((f) => f.animasjoner.some((n) => n > 0));
-  const skallFlytt = r.serie.map((f) => f.skallTop).filter((v) => v !== null)
+  const skallFlyttY = r.serie.map((f) => f.skallTop).filter((v) => v !== null)
     .reduce((maks, v) => Math.max(maks, Math.abs(v - r.skallFør)), 0);
+  const skallFlyttX = r.serie.map((f) => f.skallVenstre).filter((v) => v !== null)
+    .reduce((maks, v) => Math.max(maks, Math.abs(v - r.skallVenstreFør)), 0);
+  const maksPerSide = [0, 1].map((indeks) => to.reduce(
+    (maks, f) => Math.max(maks, Math.abs(xAv(f.transform[indeks]))),
+    0,
+  ));
 
   console.log(`  bilder med to sider           : ${to.length}`);
-  console.log(`  y-serie (gammel/ny)           : ${to.slice(0, 10).map((f) => f.transform.map((t) => Math.round(yAv(t))).join('/')).join('  ')}`);
+  console.log(`  ruter (gammel/ny)             : ${to[0]?.routeKeys.join(' / ')}`);
+  console.log(`  x-serie (gammel/ny)           : ${to.slice(0, 10).map((f) => f.transform.map((t) => Math.round(xAv(t))).join('/')).join('  ')}`);
   console.log(`  opacity-serie                 : ${to.slice(0, 6).map((f) => f.opacity.map((v) => v.toFixed(2)).join('/')).join('  ')}`);
   console.log(`  bilder der BEGGE flytter seg  : ${begge.length}`);
-  console.log(`  bilder der minst EN flytter   : ${énFlytter.length}`);
+  console.log(`  bilder med riktig retning     : ${retningsbilder.length}`);
+  console.log(`  maks x, gammel/ny             : ${maksPerSide.map(Math.round).join(' / ')} px`);
   console.log(`  bilder med fade / animasjon   : ${fadet.length} / ${animert.length}`);
-  console.log(`  skallet flyttet seg maks      : ${skallFlytt} px`);
+  console.log(`  skallet flyttet seg maks x/y  : ${skallFlyttX} / ${skallFlyttY} px`);
 
-  /* For utgangs-testen holder det ikke at «minst én» flytter seg — det ville
-     den nye siden gjort uansett. Kravet er at den AVGÅENDE (indeks 0, den
-     som ble spleiset tilbake inn av AnimatePresence) har flyttet seg. */
-  const utgangFlyttet = to.filter((f) => Math.abs(yAv(f.transform[0])) > 1);
-  const ok = o.utgangFlytter
-    ? utgangFlyttet.length > 0
-    : (o.beggeFlytter ? begge.length > 0 : (énFlytter.length > 0 && begge.length === 0));
-  if (o.utgangFlytter) console.log(`  bilder der UTGANGEN flytter seg: ${utgangFlyttet.length}`);
+  const samtidigOgRiktig = begge.length > 0 && retningsbilder.length > 0;
+  const avstandOk = o.restrained
+    ? maksPerSide.every((x) => x >= 10 && x <= 18)
+    : o.fullBredde === 'inngang'
+      ? maksPerSide[1] >= 300
+      : o.fullBredde === 'utgang'
+        ? maksPerSide[0] >= 300
+        : true;
+  const ok = samtidigOgRiktig && avstandOk && fadet.length > 0 && animert.length > 0;
   console.log(`  FASIT: ${o.hvorfor}`);
   console.log(`  -> ${ok ? 'OK' : 'AVVIK'}`);
   if (!ok) stryk += 1;
-  if (skallFlytt > 1) { console.log('  -> AVVIK: skallet skal staa stille'); stryk += 1; }
+  if (skallFlyttX > 1 || skallFlyttY > 1) {
+    console.log('  -> AVVIK: tabbaren skal staa stille');
+    stryk += 1;
+  }
 }
 
 /* Redusert bevegelse: ingenting skal bevege seg. */
@@ -228,7 +255,7 @@ for (const o of OVERGANGER) {
   console.log('\n── redusert bevegelse ──');
   if (r.feil) { console.log(`  ${r.feil}`); }
   else {
-    const beveget = r.serie.filter((f) => f.transform.some((t) => Math.abs(yAv(t)) > 1));
+    const beveget = r.serie.filter((f) => f.transform.some((t) => Math.abs(xAv(t)) > 1));
     console.log(`  bilder med forflytning: ${beveget.length}`);
     console.log(`  -> ${beveget.length === 0 ? 'OK: direkte bytte' : 'AVVIK: noe beveger seg'}`);
     if (beveget.length > 0) stryk += 1;

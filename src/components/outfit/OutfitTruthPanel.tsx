@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { displayNameForDbString } from '../../data/garment-display-names.js';
 import { WARM_COLD_RECOVERY_COPY } from '../../lib/copy/warm-cold-recovery.js';
 import {
@@ -11,47 +10,16 @@ import type {
 } from '../../lib/outfit/outfit-transition-contract.js';
 import {
   isOutfitTruthSnapshot,
-  type OutfitTruthSnapshotV1,
 } from '../../lib/outfit/outfit-truth.js';
 import { tempAxisFor } from '../../lib/temp-axis.js';
-import {
-  useOutfitSelectionStore,
-  type OutfitSelectionSession,
-} from '../../state/outfit-selection-store.js';
 import { OutfitExperience } from './OutfitExperience.js';
-import { VerifiedAvatarComposite } from './VerifiedAvatarComposite.js';
 
 export type OutfitTruthPanelProps = Readonly<{
   outfitBundle: OutfitBundleProducerResult;
-  illustrativeAvatarAsset?: string | null;
   registerOutfitRow?: RegisterOutfitRow;
   transitionVisualState?: OutfitTransitionVisualState;
   onOpenWarmColdGuide?: () => void;
 }>;
-
-function resolveSelectedAvatarSnapshot(
-  base: OutfitTruthSnapshotV1,
-  options: Extract<OutfitBundleProducerResult, { kind: 'supported' }>['options'],
-  session: OutfitSelectionSession,
-): OutfitTruthSnapshotV1 | null {
-  if (!isOutfitTruthSnapshot(base)) return null;
-  if (
-    session.kind !== 'open'
-    || session.base !== base
-    || session.options !== options
-  ) {
-    return base;
-  }
-  if (session.selectedOptionId === null) {
-    return session.current === base ? base : null;
-  }
-  const matching = options.filter(
-    (option) => option.optionId === session.selectedOptionId,
-  );
-  return matching.length === 1 && matching[0]!.outcome === session.current
-    ? session.current
-    : null;
-}
 
 function RecoveryGuide({ onOpenWarmColdGuide }: Readonly<{
   onOpenWarmColdGuide?: () => void;
@@ -114,20 +82,13 @@ function SupportedPanel({
   registerOutfitRow,
   transitionVisualState,
   onOpenWarmColdGuide,
-  illustrativeAvatarAsset,
 }: Readonly<{
   outfitBundle: Extract<OutfitBundleProducerResult, { kind: 'supported' }>;
   registerOutfitRow?: RegisterOutfitRow;
   transitionVisualState: OutfitTransitionVisualState;
   onOpenWarmColdGuide?: () => void;
-  illustrativeAvatarAsset?: string | null;
 }>) {
-  const session = useOutfitSelectionStore((state) => state.session);
   const { base, options } = outfitBundle;
-  const avatarSnapshot = useMemo(
-    () => resolveSelectedAvatarSnapshot(base, options, session),
-    [base, options, session],
-  );
   const temp = tempAxisFor(
     outfitBundle.weather.feelsLikeC,
     outfitBundle.weather.tempC,
@@ -140,12 +101,9 @@ function SupportedPanel({
       className="outfit-truth-panel ba-temp-root"
       data-temp={temp}
       data-transition-visual-state={transitionVisualState}
+      data-outfit-presentation="monter-list"
+      aria-label="Hele antrekket"
     >
-      {avatarSnapshot === null ? (
-        <VerifiedAvatarComposite stateKey={{ pose: base.avatar.pose }} outfitSummary="" illustrativeAssetOverride={illustrativeAvatarAsset} decorative />
-      ) : (
-        <VerifiedAvatarComposite snapshot={avatarSnapshot} avatarTruth={avatarSnapshot.avatar} illustrativeAssetOverride={illustrativeAvatarAsset} decorative />
-      )}
       <OutfitExperience
         snapshot={base}
         options={options}
@@ -174,7 +132,6 @@ export function OutfitTruthPanel({
   registerOutfitRow,
   transitionVisualState = 'settled',
   onOpenWarmColdGuide,
-  illustrativeAvatarAsset,
 }: OutfitTruthPanelProps) {
   // This identity check must stay before any envelope or nested truth read.
   if (!isOutfitBundleProducerResult(outfitBundle)) return <UnavailablePanel />;
@@ -187,7 +144,6 @@ export function OutfitTruthPanel({
           registerOutfitRow={registerOutfitRow}
           transitionVisualState={transitionVisualState}
           onOpenWarmColdGuide={onOpenWarmColdGuide}
-          illustrativeAvatarAsset={illustrativeAvatarAsset}
         />
       );
     case 'unsupported-cardinality':

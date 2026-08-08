@@ -19,7 +19,7 @@ describe('Guide route migration', () => {
       'din-garderobe-din-anbefaling',
     ]);
     expect(program).toContain("tryDet: { label: 'Se ull og bomull i Plaggbiblioteket', target: 'plaggbib' }");
-    expect(program).toContain("tryDet: { label: 'Se historiske månedsnormaler', target: 'snart' }");
+    expect(program).toContain("tryDet: { label: 'Åpne plaggbiblioteket', target: 'plaggbib' }");
     expect(program).not.toContain("target: 'min-garderobe'");
     expect(program).not.toMatch(/Mine plagg|egne plagg|personliggjør/u);
   });

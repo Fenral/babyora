@@ -102,7 +102,7 @@ function TabButton({ active, label, Icon, reducedMotion, onSelect }: TabButtonPr
       className={className}
       aria-current={active ? 'page' : undefined}
       onClick={onSelect}
-      whileTap={{ scale: 0.9 }}
+      whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 500, damping: 25, mass: 0.5 }}
     >
       {children}

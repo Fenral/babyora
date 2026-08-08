@@ -240,12 +240,14 @@ describe('OutfitTruthPanel', () => {
     expect(source).not.toMatch(/localStorage|sessionStorage|import\.meta\.env|URLSearchParams|process\.env/u);
   });
 
-  it('renders supported factory truth with map, exact ordered rows, temperature axis and recovery callback', () => {
+  it('renders supported factory truth as an exact Monter list with temperature axis and recovery callback', () => {
     const bundle = supportedBundle();
     const html = renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} onOpenWarmColdGuide={() => undefined} />);
     expect(html).toContain('data-temp="kald"');
-    expect(html).toContain('data-outfit-map-node=');
-    expect(html).toContain('Ta på innerst først');
+    expect(html).toContain('data-outfit-presentation="monter-list"');
+    expect(html).toContain('Innerst til ytterst');
+    expect(html).not.toContain('data-outfit-map-node=');
+    expect(html).not.toContain('data-avatar-truth=');
     expect(html).toContain('Kjenn nakken');
     expect(html).toContain('Stikk to fingre under genseren bak i nakken');
     // T1A: panelet viser visningsnavn (displayNameForDbString), ikke rå
@@ -255,18 +257,15 @@ describe('OutfitTruthPanel', () => {
     }
   });
 
-  it('uses an approved illustrative avatar when the exact composite is unavailable, and never leaks engine region keys', () => {
+  it('keeps the retired avatar out of the presentation and never leaks engine region keys', () => {
     const bundle = supportedBundle();
     const html = renderToStaticMarkup(
-      <OutfitTruthPanel
-        outfitBundle={bundle}
-        illustrativeAvatarAsset="/avatars/avatar-A3.webp"
-      />,
+      <OutfitTruthPanel outfitBundle={bundle} />,
     );
 
-    expect(html).toContain('data-avatar-source="illustrative"');
-    expect(html).toContain('/avatars/avatar-A3.webp');
-    expect(html).not.toMatch(/whole_body|torso|head|feet/u);
+    expect(html).not.toContain('data-avatar-source=');
+    expect(html).not.toContain('/avatars/avatar-A3.webp');
+    expect(html).not.toMatch(/whole_body|>torso<|>head<|>feet</u);
   });
 
   it('keeps landing semantic content and row lifecycle eligible without hidden layers', () => {
@@ -560,14 +559,14 @@ describe('OutfitTruthPanel', () => {
     const option = bundle.options[0]!;
     try {
       useOutfitSelectionStore.getState().close();
-      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-avatar-snapshot="${bundle.base.snapshotId}"`);
+      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-outfit-snapshot="${bundle.base.snapshotId}"`);
 
       expect(useOutfitSelectionStore.getState().open(bundle.base, bundle.options).ok).toBe(true);
       expect(useOutfitSelectionStore.getState().select(option).ok).toBe(true);
-      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-avatar-snapshot="${option.outcome.snapshotId}"`);
+      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-outfit-snapshot="${option.outcome.snapshotId}"`);
 
       expect(useOutfitSelectionStore.getState().reset().ok).toBe(true);
-      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-avatar-snapshot="${bundle.base.snapshotId}"`);
+      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-outfit-snapshot="${bundle.base.snapshotId}"`);
 
       useOutfitSelectionStore.setState({
         session: Object.freeze({
@@ -579,7 +578,7 @@ describe('OutfitTruthPanel', () => {
           diagnostics: Object.freeze([]),
         }),
       });
-      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-avatar-snapshot="${bundle.base.snapshotId}"`);
+      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-outfit-snapshot="${bundle.base.snapshotId}"`);
 
       useOutfitSelectionStore.setState({
         session: Object.freeze({
@@ -591,7 +590,7 @@ describe('OutfitTruthPanel', () => {
           diagnostics: Object.freeze([]),
         }),
       });
-      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).not.toContain('data-avatar-snapshot=');
+      expect(renderToStaticMarkup(<OutfitTruthPanel outfitBundle={bundle} />)).toContain(`data-outfit-snapshot="${bundle.base.snapshotId}"`);
     } finally {
       useOutfitSelectionStore.getState().close();
     }

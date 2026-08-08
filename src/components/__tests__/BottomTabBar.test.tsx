@@ -55,6 +55,14 @@ describe('BottomTabBar root navigation', () => {
     expect(onCue).toHaveBeenCalledWith('selection');
   });
 
+  it('uses a restrained press scale and keeps reduced motion free of transforms', async () => {
+    const source = (await import('../BottomTabBar.tsx?raw') as { default: string }).default;
+
+    expect(source).toContain('whileTap={{ scale: 0.97 }}');
+    expect(source).toMatch(/if \(reducedMotion\) \{[\s\S]*?<button/su);
+    expect(source).not.toMatch(/navigator\.vibrate/u);
+  });
+
   it('keeps geometry and focus behavior in scoped CSS rather than component state', async () => {
     const css = await readFile(fileURLToPath(new URL('../BottomTabBar.css', import.meta.url)), 'utf8');
     const source = (await import('../BottomTabBar.tsx?raw') as { default: string }).default;

@@ -51,6 +51,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { dobToAgeMonths } from '../src/lib/utils/dob-to-age-months.js';
 import { feelsLikeC } from '../src/lib/met-no/feels-like.js';
 import { recommend } from '../src/lib/wool-layers/recommend.js';
+import { displayNameForDbString } from '../src/data/garment-display-names.js';
 
 const PORT = 4175;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -62,13 +63,12 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const DEMO_CHILD_DOB = '2025-10-03';
 const DEMO_ACTIVITY = 'utelek' as const;
 
-// Same-day two-regime forecast: mild for the next MILD_UNTIL_HOURS, then a
-// sharp drop to COLD_TEMP_C for the rest of the fixture. selectTodayPlanningHours
-// only looks at today's remaining hours, so this reliably produces exactly
-// one "Bytt fra ... til ..." (swap) event later today, regardless of what
-// wall-clock hour this script happens to run at (as long as there are at
-// least MILD_UNTIL_HOURS + 1 hours left before local midnight).
-const MILD_UNTIL_HOURS = 2;
+// Same-day two-regime forecast. Before 18:00 the selector evaluates the fixed
+// Oslo anchors 06/10/14/18, so the fixture changes between 10 and 14. From
+// 18:00 the selector uses the next four hourly points, so the fixture changes
+// after two hours. Both paths reliably produce one real swap event.
+const DAYTIME_TRANSITION_HOUR = 12;
+const EVENING_MILD_UNTIL_HOURS = 2;
 const MILD_TEMP_C = 12;
 const COLD_TEMP_C = -6;
 const WIND_MS = 2;
@@ -98,10 +98,22 @@ async function waitForServer(url: string, timeoutMs = 30_000): Promise<void> {
 function buildSameDayTransitionForecast(): unknown {
   const now = new Date();
   const start = new Date(now.getTime() - 60 * 60 * 1000);
-  const mildUntil = now.getTime() + MILD_UNTIL_HOURS * 60 * 60 * 1000;
+  const currentOsloHour = Number(now.toLocaleTimeString('en-GB', {
+    timeZone: 'Europe/Oslo',
+    hour: '2-digit',
+    hourCycle: 'h23',
+  }));
+  const eveningMildUntil = now.getTime() + EVENING_MILD_UNTIL_HOURS * 60 * 60 * 1000;
   const timeseries = Array.from({ length: 10 * 24 }, (_, index) => {
     const time = new Date(start.getTime() + index * 60 * 60 * 1000);
-    const isMild = time.getTime() < mildUntil;
+    const pointOsloHour = Number(time.toLocaleTimeString('en-GB', {
+      timeZone: 'Europe/Oslo',
+      hour: '2-digit',
+      hourCycle: 'h23',
+    }));
+    const isMild = currentOsloHour < 18
+      ? pointOsloHour < DAYTIME_TRANSITION_HOUR
+      : time.getTime() < eveningMildUntil;
     return {
       time: time.toISOString(),
       data: {
@@ -248,12 +260,14 @@ async function main(): Promise<void> {
       }
     }
 
-    for (const garment of EXACT_CONTEXT_EXPECTED_GARMENTS) {
+    for (const rawGarment of EXACT_CONTEXT_EXPECTED_GARMENTS) {
+      const garment = displayNameForDbString(rawGarment);
       if (!dialogText.includes(garment)) {
         fail(`EXACT_CONTEXT_EXPECTED_GARMENTS: «${garment}» manglet i dialogteksten`);
       }
     }
-    for (const item of EXACT_CONTEXT_EXPECTED_EQUIPMENT) {
+    for (const rawItem of EXACT_CONTEXT_EXPECTED_EQUIPMENT) {
+      const item = displayNameForDbString(rawItem);
       if (!dialogText.includes(item)) {
         fail(`EXACT_CONTEXT_EXPECTED_EQUIPMENT: «${item}» manglet i dialogteksten`);
       }

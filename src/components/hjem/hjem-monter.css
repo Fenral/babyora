@@ -156,13 +156,9 @@
    toppkanten (mock: mascot top:50px, panel margin-top:130px, komprimert til
    108px i innholdstunge tilstander). Uten maskot (resultat-stripen) trenger
    den bare mockens egen 14px toppmargin. */
-/* SLOTEN APNER SEG, den hopper ikke. Vartilstanden er 329 px og
-   scan-tilstanden 276 — 53 px forskjell som slo inn momentant i selve
-   trykkoyeblikket. Et instrument som endrer storrelse i det du trykker,
-   leser som en ny side; en malt, eased endring leser som samme apparat i
-   arbeid (portdom 24 om panelapningen).
-   min-height holder gulvet slik at ingenting KLIPPES, mens transitionen
-   gjor selve endringen synlig som bevegelse i stedet for et sprang.
+/* Instrumenttilstandene deler et fast målt gulv, så vær → scan ikke hopper.
+   Resultatet er en egen kompakt tilstand uten maskot og slipper gulvet helt;
+   høyden byttes direkte fordi layout-egenskaper ikke skal animeres.
 
    Gulvet er MALT, ikke gjettet: etter at portdom 23 slo vaertilstanden inn
    pa foles-som-linjen falt vaerpanelet fra 329 til 269 px, og scan-panelet
@@ -175,10 +171,17 @@
   flex: none;
   margin-top: 14px;
   min-height: 276px;
-  transition: min-height var(--dw-m-bow-in) var(--dw-ease);
 }
-@media (prefers-reduced-motion: reduce) {
-  .hjm-panel-slot { transition: none; }
+.hjm-panel-slot[data-with-mascot='false'] {
+  /* Resultatflaten har bare den kompakte WeatherStrip-en. Det gamle
+     instrumentgulvet på 276 px reserverte derfor rundt 200 px til innhold
+     som ikke eksisterte og leste som et tilfeldig hull i siden. */
+  min-height: 0;
+}
+.hjm-panel-slot[data-with-mascot='false'] + .hjm-body {
+  /* Ro mellom værkontekst og anbefaling, uten å gjøre avstanden til et
+     eget visuelt område. */
+  padding-top: var(--dw-space-24);
 }
 .hjm-panel-slot[data-with-mascot='true'] { margin-top: 130px; }
 .hjm-panel-slot[data-with-mascot='true'][data-compact='true'] { margin-top: 108px; }
@@ -522,7 +525,7 @@
 .hjm-mascot-normal { position: relative; }
 
 /* Del 3 (nysgjerrig maskot under scannen): MascotPeek.tsx rendrer to
-   stablede <img>, begge bærende .hjm-mascot (samme geometri/ankring som
+   stablede bildeelementer, begge bærende .hjm-mascot (samme geometri/ankring som
    over) pluss én av disse to klassene — crossfade via opacity, styrt av
    den delte `data-pose`-attributten begge bærer. RESERVERT for scanning/
    recalculating (HjemMonter.tsx) — MascotIdle bruker ALDRI `pose="curious"`,
@@ -539,7 +542,7 @@
 .hjm-mascot-normal[data-pose='curious'] { opacity: 0; }
 .hjm-mascot-curious[data-pose='curious'] { opacity: 1; }
 
-/* Lean-in flyttet til .hjm-mascot-pose over. Den lå på det SAMME <img> som
+/* Lean-in flyttet til .hjm-mascot-pose over. Den lå på det SAMME bildeelementet som
    fader inn fra opacity 0 — altså var elementet allerede i sluttvinkelen når
    det ble synlig, og øyet så aldri noen bevegelse. Målt: én eneste distinkt
    vinkel gjennom hele momentet. Pivoten var dessuten 79 % (fingertuppene) i
@@ -625,7 +628,7 @@
 .hjm-s-check[data-done='true'] { background: var(--dw-ink-panel-hi); }
 .hjm-s-check[data-done='true'] svg { color: var(--hjm-nuance, var(--dw-w-rain)); }
 .hjm-s-check[data-done='true'][data-animate='true'] svg {
-  animation: hjm-check-pop 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+  animation: hjm-check-pop var(--dw-m-marker) var(--dw-ease) backwards;
 }
 .hjm-s-spin { border: 2px solid rgba(241, 233, 218, 0.25); border-top-color: var(--dw-ink-panel-hi); }
 /* FULLFORINGSMARKOREN. Spinneren snurret `infinite` gjennom hele det

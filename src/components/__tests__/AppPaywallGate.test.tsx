@@ -133,8 +133,8 @@ describe('AppPaywallGate rendering', () => {
     // check is split accordingly too.
     expect(html).toContain('Dagens antrekk');
     expect(html).toContain(', klart hver eneste morgen');
-    expect(html).toContain('I morgen og hele neste uke');
-    expect(html).toContain(', ferdig planlagt');
+    expect(html).toContain('Morgendagens antrekk');
+    expect(html).toContain(', klart kvelden før');
     expect(html).toContain('Egen profil');
     expect(html).toContain(' for hvert av barna dine');
     // v2 (P10/JOB2 re-skin, docs/mocks/monter/paywall-v2.html): den gamle

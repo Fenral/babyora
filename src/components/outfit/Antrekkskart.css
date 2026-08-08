@@ -135,3 +135,342 @@
 @media (max-width: 28rem) { .outfit-row { align-items: flex-start; } .outfit-row__detail { flex-basis: calc(100% - 5.95rem); margin-inline-start: 5.95rem; text-align: start; } }
 @media (prefers-reduced-motion: reduce) { .outfit-experience *, .outfit-experience *::before, .outfit-experience *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 @media (forced-colors: active) { .outfit-experience { color: CanvasText; } .outfit-map__node, .outfit-row, .outfit-comparison { background: Canvas; border-color: ButtonText; color: CanvasText; } .outfit-map__connectors polyline { stroke: ButtonText; } .outfit-map__connectors polyline.is-highlighted { stroke: Highlight; stroke-dasharray: 8 4; } .outfit-map__node.is-highlighted, .outfit-row.is-highlighted { outline: 2px solid Highlight; } }
+
+/* ── Monter-listen ────────────────────────────────────────────────────────
+   Den levende Påkledning-flaten bruker ikke lenger kartet over. Listen er
+   selve svaret: én hevet gruppeflate, rolige hårstreksrader og eksplisitte
+   byttehandlinger. Kartreglene beholdes bare for den isolerte kartprimitiven. */
+.outfit-truth-panel[data-outfit-presentation='monter-list'] {
+  padding: var(--dw-space-20);
+}
+
+.outfit-list__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--dw-space-16);
+  padding-bottom: var(--dw-space-16);
+  border-bottom: 1px solid var(--dw-hairline);
+}
+
+.outfit-list__eyebrow,
+.outfit-comparison__eyebrow {
+  margin: 0 0 var(--dw-space-4);
+  color: var(--dw-ink-low);
+  font-size: var(--dw-text-meta);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.outfit-list__header h2 {
+  margin: 0;
+  font-size: var(--dw-text-heading);
+  line-height: 1.15;
+}
+
+.outfit-list__count {
+  flex: 0 0 auto;
+  margin: 0;
+  color: var(--dw-ink-mid);
+  font-size: var(--dw-text-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+.outfit-list__rows {
+  margin: 0;
+  padding: 0;
+}
+
+.outfit-list .outfit-row {
+  display: grid;
+  grid-template-columns: 30px 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--dw-space-12);
+  min-block-size: 82px;
+  margin: 0;
+  padding: var(--dw-space-12) 0;
+  border: 0;
+  border-bottom: 1px solid var(--dw-hairline);
+  border-radius: 0;
+  background: transparent;
+  list-style: none;
+}
+
+.outfit-list .outfit-row__ordinal {
+  display: grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border: 1px solid var(--dw-hairline);
+  border-radius: var(--dw-r-pill);
+  color: var(--dw-ink-mid);
+  font-size: var(--dw-text-meta);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.outfit-list .outfit-row__thumbnail {
+  display: grid;
+  place-items: center;
+  inline-size: 54px;
+  block-size: 54px;
+  overflow: hidden;
+  border-radius: var(--dw-r-control);
+  background: var(--dw-overlay);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-chip);
+}
+
+.outfit-list .outfit-row__thumbnail img {
+  inline-size: 46px;
+  block-size: 46px;
+  object-fit: contain;
+}
+
+.outfit-row__copy {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--dw-space-4);
+}
+
+.outfit-list .outfit-row__label {
+  min-inline-size: 0;
+  color: var(--dw-ink-hi);
+  font-size: var(--dw-text-body);
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.outfit-list .outfit-row__detail {
+  margin: 0;
+  color: var(--dw-ink-low);
+  font-size: var(--dw-text-meta);
+  line-height: 1.3;
+  text-align: start;
+}
+
+.outfit-row__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dw-space-6);
+  min-inline-size: 68px;
+  min-block-size: var(--dw-size-touch);
+  padding: 0 var(--dw-space-12);
+  border: 1px solid var(--dw-hairline);
+  border-radius: var(--dw-r-pill);
+  background: transparent;
+  color: var(--dw-accent);
+  font: inherit;
+  font-size: var(--dw-text-meta);
+  font-weight: 700;
+  transition:
+    transform var(--dw-m-feedback) var(--dw-ease),
+    border-color var(--dw-m-feedback) var(--dw-ease),
+    background-color var(--dw-m-feedback) var(--dw-ease);
+}
+
+.outfit-row__action svg {
+  inline-size: 16px;
+  block-size: 16px;
+}
+
+.outfit-row__action:active {
+  transform: scale(0.97);
+  background: var(--dw-accent-surface);
+}
+
+.outfit-row__action:focus-visible,
+.outfit-reset:focus-visible,
+.outfit-comparison button:focus-visible,
+.outfit-recovery-guide button:focus-visible {
+  outline: 2px solid var(--dw-focus);
+  outline-offset: 3px;
+}
+
+.outfit-equipment {
+  padding-top: var(--dw-space-18);
+}
+
+.outfit-equipment h3 {
+  margin: 0 0 var(--dw-space-8);
+  font-size: var(--dw-text-title);
+}
+
+.outfit-equipment ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dw-space-8);
+  margin: 0;
+  padding: 0;
+}
+
+.outfit-equipment li {
+  margin: 0;
+  padding: var(--dw-space-8) var(--dw-space-12);
+  border: 1px solid var(--dw-hairline);
+  border-radius: var(--dw-r-control);
+  color: var(--dw-ink-mid);
+  list-style: none;
+}
+
+.outfit-reset {
+  min-block-size: var(--dw-size-touch);
+  margin-top: var(--dw-space-14);
+  border: 0;
+  background: transparent;
+  color: var(--dw-accent);
+  font: inherit;
+  font-weight: 700;
+}
+
+.outfit-recovery-guide {
+  margin-top: var(--dw-space-18);
+  padding-top: var(--dw-space-18);
+  border-top: 1px solid var(--dw-hairline);
+}
+
+.outfit-recovery-guide h2 {
+  margin: 0 0 var(--dw-space-6);
+  font-size: var(--dw-text-title);
+}
+
+.outfit-recovery-guide p {
+  margin: 0;
+  color: var(--dw-ink-mid);
+  line-height: 1.5;
+}
+
+.outfit-recovery-guide button {
+  min-block-size: var(--dw-size-touch);
+  margin-top: var(--dw-space-10);
+  border: 0;
+  background: transparent;
+  color: var(--dw-accent);
+  font: inherit;
+  font-weight: 700;
+}
+
+.outfit-comparison {
+  inline-size: min(100%, 36rem);
+  margin: var(--dw-space-18) 0 0;
+  padding: var(--dw-space-20);
+  border: 1px solid var(--dw-hairline);
+  border-radius: var(--dw-r-panel);
+  background: var(--dw-overlay);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised);
+  color: var(--dw-ink-hi);
+}
+
+.outfit-comparison h2,
+.outfit-comparison h3,
+.outfit-comparison h4 {
+  margin-block-start: 0;
+}
+
+.outfit-comparison__tradeoffs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--dw-space-10);
+  margin: var(--dw-space-16) 0;
+}
+
+.outfit-comparison__tradeoffs p {
+  margin: 0;
+  padding: var(--dw-space-12);
+  border: 1px solid var(--dw-hairline);
+  border-radius: var(--dw-r-control);
+  color: var(--dw-ink-mid);
+}
+
+.outfit-comparison__tradeoffs strong {
+  display: block;
+  margin-bottom: var(--dw-space-4);
+  color: var(--dw-ink-hi);
+}
+
+.outfit-comparison__result ol,
+.outfit-comparison__result ul {
+  padding-inline-start: var(--dw-space-24);
+}
+
+.outfit-comparison__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--dw-space-10);
+  margin-top: var(--dw-space-18);
+}
+
+.outfit-comparison__actions button {
+  min-block-size: var(--dw-size-touch);
+  padding: 0 var(--dw-space-16);
+  border-radius: var(--dw-r-control);
+  font: inherit;
+  font-weight: 700;
+}
+
+.outfit-comparison__cancel {
+  border: 1px solid var(--dw-hairline);
+  background: transparent;
+  color: var(--dw-ink-hi);
+}
+
+.outfit-comparison__confirm {
+  border: 1px solid transparent;
+  background: var(--dw-accent);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-action);
+  color: var(--dw-ink-on-accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .outfit-row__action:hover {
+    border-color: var(--dw-accent);
+    background: var(--dw-accent-surface);
+  }
+}
+
+@media (max-width: 28rem) {
+  .outfit-truth-panel[data-outfit-presentation='monter-list'] {
+    padding: var(--dw-space-16);
+  }
+
+  .outfit-list .outfit-row {
+    grid-template-columns: 28px 50px minmax(0, 1fr);
+  }
+
+  .outfit-row__action {
+    grid-column: 2 / -1;
+    justify-self: stretch;
+  }
+
+  .outfit-comparison__tradeoffs {
+    grid-template-columns: 1fr;
+  }
+
+  .outfit-comparison__actions {
+    flex-direction: column-reverse;
+  }
+
+  .outfit-comparison__actions button {
+    inline-size: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .outfit-row__action {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .outfit-list .outfit-row__thumbnail,
+  .outfit-comparison {
+    border: 1px solid CanvasText;
+  }
+
+  .outfit-row__action,
+  .outfit-comparison__actions button {
+    border: 1px solid ButtonText;
+  }
+}

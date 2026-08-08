@@ -1900,14 +1900,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
           border: 0,
         }}
       >
-        Innstillinger
+        Familie
       </h1>
 
       {/* Header */}
       <header style={headerStyle}>
         <div style={titlesStyle}>
           <span style={eyebrowTopStyle}>Babyora</span>
-          <span aria-hidden="true" style={appTitleStyle}>Innstillinger</span>
+          <span aria-hidden="true" style={appTitleStyle}>Familie</span>
         </div>
         {/* FUNN 2026-08-06 ([MINDRE] Innstillinger, «Trondheim står tre ganger»):
             stedspillen sto her, stedet sto i barnekortets metalinje, og

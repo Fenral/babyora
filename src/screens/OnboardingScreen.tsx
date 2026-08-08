@@ -237,6 +237,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
   // ─── Step + felt-state ───────────────────────────────────────────────────
   const [step, setStep] = useState<Step>(1);
+  const [stepDirection, setStepDirection] = useState<'forward' | 'backward'>('forward');
 
   const [name, setName] = useState<string>('');
 
@@ -282,21 +283,24 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
   // ─── Step-navigasjon ─────────────────────────────────────────────────────
   const advanceStep = useCallback((lastStep: Step) => {
+    setStepDirection('forward');
     setStep((current) => (current < lastStep ? ((current + 1) as Step) : current));
   }, []);
 
   const goNext = useCallback(() => {
-    fire('medium').catch(() => {});
+    fire('selection').catch(() => {});
     advanceStep(5);
   }, [advanceStep, fire]);
 
   const goBack = useCallback(() => {
-    fire('light').catch(() => {});
+    setStepDirection('backward');
+    fire('selection').catch(() => {});
     setStep((s) => (s > 1 ? ((s - 1) as Step) : s));
   }, [fire]);
 
   const goEdit = useCallback(
     (target: Step) => {
+      setStepDirection('backward');
       fire('selection').catch(() => {});
       setStep(target);
     },
@@ -405,6 +409,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
       color: AVATAR_COLOR_DEFAULT,
     });
     fire('success').catch(() => {});
+    setStepDirection('forward');
     setStep(5); // velkomst-hero
   }, [nameOk, dobIsValid, locationConfirmed, nameTrim, dobISO, location, completeOnboarding, fire]);
 
@@ -436,6 +441,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
       <style>{STYLE_CSS}</style>
       <main
         className={`ob-screen step-${step}${step === 5 ? ' welcome' : ''}${step === 1 ? ' intro-hero' : ''}`}
+        data-step-direction={stepDirection}
         aria-labelledby="ob-title"
       >
         {/* ─── TOP BAR ─── */}
@@ -926,14 +932,8 @@ const STYLE_CSS = `
   --ob-feat-bg:color-mix(in srgb, var(--dw-overlay) 50%, transparent);
   --ob-loc-action-bg:var(--dw-hairline);
   --ob-cta-gradient-stop:color-mix(in srgb, var(--dw-canvas) 92%, transparent);
-  /* --ob-ease-standard er slettet: den var --dw-ease skrevet en gang til, og
-     et alias som vasker et token gjør bare tokenet usynlig for portene.
-     Bruksstedene henter nå var(--dw-ease) direkte.
-     --ob-ease-spring STÅR IGJEN, men er ikke lenger i bruk: den er navngitt
-     målprøve («variabel»-flaten) i design-tokens-v2.motion.test.ts. Slettes
-     den her alene, blir motion-porten TAUS i stedet for rød. Den skal ut
-     sammen med sin registerlinje, ikke før. */
-  --ob-ease-spring:cubic-bezier(.34,1.32,.64,1);
+  /* De gamle onboarding-spesifikke easing-aliasene er fjernet. Bevegelse
+     henter nå den delte kurven direkte fra var(--dw-ease). */
   --ob-font-sans:var(--dw-font-ui);
   --ob-font-serif:var(--font-serif);
 
@@ -1049,23 +1049,19 @@ mask-image: var(--dw-fade-bunn);
    the app in both themes. */
 .ob-baby-hero{
   flex:none;margin:var(--dw-space-10) auto 0;
-  width:min(100%, 300px);aspect-ratio:1;
-  position:relative;isolation:isolate;overflow:hidden;
-  border-radius:36px;
-  background:var(--ob-surface-raised);
-  border:1px solid var(--ob-line);
-  box-shadow:var(--ob-shadow-illu);
+  width:min(100%, 240px);aspect-ratio:4/5;
+  position:relative;isolation:isolate;overflow:visible;
+  background:transparent;
+  border:0;
+  box-shadow:none;
 }
 .ob-baby-hero.compact{
-  width:156px;
-  margin-top:var(--dw-space-8);
-  border-radius:28px;
-  box-shadow:0 16px 36px color-mix(in srgb, var(--dw-accent-pressed) 15%, transparent), 0 6px 14px color-mix(in srgb, var(--dw-ink-hi) 9%, transparent);
+  width:146px;
+  margin-top:var(--dw-space-4);
 }
 .ob-baby-hero.welcome{
-  width:min(58vw, 224px);
-  margin-top:var(--dw-space-14);
-  border-radius:34px;
+  width:min(54vw, 218px);
+  margin-top:var(--dw-space-8);
 }
 /* P10/JOB5: object-fit:contain (not cover) — the standing-mascot PNG now
    used here (compact/welcome variants, see OnboardingBabyHero.tsx) is a
@@ -1073,11 +1069,12 @@ mask-image: var(--dw-fade-bunn);
    illustration; contain shows the whole figure centered on the card
    instead of cropping its head/feet. */
 .ob-baby-media{
-  position:absolute;inset:0;width:100%;height:100%;
+  position:absolute;inset:1% 8% 3%;width:84%;height:96%;
   object-fit:contain;display:block;pointer-events:none;
   user-select:none;-webkit-user-drag:none;
+  filter:drop-shadow(0 10px 22px var(--dw-depth-image));
 }
-.ob-baby-poster{z-index:0;}
+.ob-baby-poster{z-index:1;}
 .ob-baby-video{z-index:1;}
 .ob-baby-wordmark{
   position:absolute;z-index:3;top:7%;left:14px;right:14px;
@@ -1091,23 +1088,24 @@ mask-image: var(--dw-fade-bunn);
   text-shadow:0 1px 18px color-mix(in srgb, var(--dw-raised) 78%, transparent);
   pointer-events:none;
 }
-.ob-baby-frame{
-  position:absolute;z-index:2;inset:0;pointer-events:none;
-  border-radius:inherit;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.42);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.13), transparent 28%),
-    radial-gradient(90% 42% at 50% 104%, rgba(35,27,50,.1), transparent 70%);
+.ob-baby-hero::before{
+  content:"";position:absolute;z-index:0;
+  inset:12% 2% 5%;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 58%, color-mix(in srgb, var(--dw-accent) 10%, transparent), transparent 68%);
+}
+.ob-baby-hero::after{
+  content:"";position:absolute;z-index:0;
+  left:20%;right:20%;bottom:3%;height:13%;pointer-events:none;
+  background:radial-gradient(ellipse, color-mix(in srgb, var(--dw-depth-image) 34%, transparent), transparent 70%);
 }
 .ob-baby-context{
-  position:absolute;z-index:4;right:10px;bottom:10px;
+  position:absolute;z-index:4;right:2px;bottom:8%;
   width:42px;height:42px;border-radius:50%;
   display:grid;place-items:center;
   color:var(--ob-terracotta-700);
-  background:color-mix(in srgb, var(--dw-overlay) 88%, transparent);
-  border:1px solid color-mix(in srgb, var(--dw-overlay) 72%, var(--ob-line));
-  box-shadow:0 7px 18px color-mix(in srgb, var(--dw-ink-hi) 16%, transparent);
-  backdrop-filter:blur(10px);
+  background:var(--dw-raised);
+  border:1px solid var(--dw-plate-kant);
+  box-shadow:inset 0 1px 0 var(--dw-edge-light), var(--dw-depth-chip);
 }
 .ob-baby-context svg{
   width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;
@@ -1691,40 +1689,50 @@ mask-image: var(--dw-fade-bunn);}
   scroll-padding-bottom:28px;
 }
 .ob-body > *{
-  animation:ob-content-in var(--dw-m-handoff) var(--dw-ease) both;
+  animation:ob-content-in-forward var(--dw-m-handoff) var(--dw-ease) both;
 }
-@keyframes ob-content-in{
-  from{opacity:0;transform:translateY(8px)}
-  to{opacity:1;transform:translateY(0)}
+.ob-screen[data-step-direction='backward'] .ob-body > *{
+  animation-name:ob-content-in-backward;
 }
+@keyframes ob-content-in-forward{
+  from{opacity:0;transform:translate3d(14px,0,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+}
+@keyframes ob-content-in-backward{
+  from{opacity:0;transform:translate3d(-14px,0,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+}
+.ob-screen.step-2 .ob-body > :first-child,
+.ob-screen.step-3 .ob-body > :first-child,
+.ob-screen.step-4 .ob-body > :first-child{margin-top:auto;}
+.ob-screen.step-2 .ob-body > :last-child,
+.ob-screen.step-3 .ob-body > :last-child,
+.ob-screen.step-4 .ob-body > :last-child{margin-bottom:auto;}
 .ob-baby-hero{
-  width:clamp(158px, 25dvh, 218px);
-  margin-top:var(--dw-space-6);
-  border-radius:28px;
-  box-shadow:0 16px 42px color-mix(in srgb, var(--dw-accent-pressed) 14%, transparent), 0 6px 16px color-mix(in srgb, var(--dw-ink-hi) 10%, transparent);
+  width:clamp(176px, 27dvh, 224px);
+  margin-top:var(--dw-space-4);
 }
 .ob-baby-hero.compact{
-  width:clamp(96px, 15dvh, 122px);
-  margin-top:var(--dw-space-8);
-  border-radius:24px;
-  box-shadow:0 10px 26px color-mix(in srgb, var(--dw-ink-hi) 12%, transparent);
+  width:clamp(128px, 18dvh, 152px);
+  margin-top:var(--dw-space-4);
 }
 .ob-baby-hero.welcome{
-  width:clamp(178px, 28dvh, 224px);
-  margin-top:var(--dw-space-14);
-  border-radius:30px;
+  width:clamp(184px, 28dvh, 224px);
+  margin-top:var(--dw-space-8);
 }
 .ob-baby-wordmark{
   top:6%;
   font-size:clamp(24px, 7vw, 32px);
 }
 .ob-baby-context{
-  right:7px;
-  bottom:7px;
+  right:2px;
+  bottom:8%;
   width:34px;
   height:34px;
 }
 .ob-baby-context svg{width:17px;height:17px;}
+.ob-baby-hero + .ob-copy{margin-top:var(--dw-space-10);}
+.ob-baby-hero + .ob-welcome-greet{margin-top:var(--dw-space-14);}
 .ob-copy{
   margin-top:var(--dw-space-16);
   gap:7px;
@@ -1834,8 +1842,8 @@ mask-image: var(--dw-fade-bunn);}
   .ob-screen > .ob-topbar{min-height:44px;}
   .ob-screen > .ob-body{padding-top:var(--dw-space-6);padding-bottom:var(--dw-space-12);}
   .ob-baby-hero{width:clamp(128px, 21dvh, 158px);}
-  .ob-baby-hero.compact{width:82px;margin-top:var(--dw-space-4);border-radius:19px;}
-  .ob-baby-hero.welcome{width:142px;margin-top:var(--dw-space-6);}
+  .ob-baby-hero.compact{width:96px;margin-top:var(--dw-space-2);}
+  .ob-baby-hero.welcome{width:142px;margin-top:var(--dw-space-4);}
   .ob-copy{margin-top:11px;gap:5px;}
   .ob-h2{font-size:28px;}
   .ob-h2-hero{font-size:32px;}
@@ -1857,7 +1865,7 @@ mask-image: var(--dw-fade-bunn);}
 }
 @media (orientation:landscape) and (max-height:560px){
   .ob-screen > .ob-body{padding-inline:28px;}
-  .ob-baby-hero,.ob-baby-hero.compact{width:72px;margin-top:var(--dw-space-2);border-radius:18px;}
+  .ob-baby-hero,.ob-baby-hero.compact{width:72px;margin-top:var(--dw-space-2);}
   .ob-baby-hero.welcome{width:90px;}
   .ob-copy{margin-top:var(--dw-space-8);}
   .ob-copy p{display:none;}

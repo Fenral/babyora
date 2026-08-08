@@ -34,6 +34,7 @@ export type FamilieToolTarget = 'tog' | 'varm-kald' | 'forste-vinter';
  * lever videre her siden App.tsx (`onOpenGuideTarget`), VinterprogramScreen
  * sin `onOpenTarget`-prop og data/vinterprogram.ts sine `tryDet.target`
  * fortsatt trenger et felles union for målene: de tre Familie-verktøyene
- * over + Hjem-drillene finn-antrekk/plaggbib + planlegg-viewet 'snart'.
+ * over + Hjem-drillene finn-antrekk/plaggbib. Planlegg har ikke lenger en
+ * egen Snart-destinasjon; flaten består kun av I dag og I morgen.
  */
-export type GuideTarget = FamilieToolTarget | 'finn-antrekk' | 'plaggbib' | 'snart';
+export type GuideTarget = FamilieToolTarget | 'finn-antrekk' | 'plaggbib';

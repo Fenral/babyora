@@ -146,16 +146,15 @@ function escapeTarget() {
 }
 
 describe('OutfitExperience', () => {
-  it('renders every garment once as an accessible numbered map node and once as ordered text', () => {
+  it('renders every garment once in the accessible Monter order, without the retired map', () => {
     const truth = snapshot();
     const html = renderToStaticMarkup(<OutfitExperience snapshot={truth} temp="mild" />);
-    expect(html).toContain('Ta på innerst først');
-    expect((html.match(/data-outfit-map-node=/g) ?? []).length).toBe(truth.garments.length);
+    expect(html).toContain('Innerst til ytterst');
     expect((html.match(/data-outfit-row=/g) ?? []).length).toBe(truth.garments.length);
-    expect((html.match(/data-outfit-connector=/g) ?? []).length).toBe(truth.garments.length);
-    expect((html.match(/outfit-map__thumbnail/g) ?? []).length).toBe(truth.garments.length);
     expect((html.match(/outfit-row__thumbnail/g) ?? []).length).toBe(truth.garments.length);
-    expect(html).toContain('aria-pressed="false"');
+    expect(html).toContain('<ol class="outfit-list__rows">');
+    expect(html).not.toContain('data-outfit-map-node=');
+    expect(html).not.toContain('data-outfit-connector=');
   });
 
   it('fails closed before exposing rejected or hostile alternative props', () => {
@@ -278,14 +277,14 @@ describe('OutfitExperience', () => {
     expect(html).not.toMatch(/<h4[^>]*>Utstyr<\/h4>/);
   });
 
-  it('renders the conservative 320px/200% layout geometry without a fixed 560px rail', () => {
+  it('uses the responsive list instead of a fixed-width map rail', () => {
     const truth = snapshot();
     const html = renderToStaticMarkup(
       <OutfitExperience snapshot={truth} temp="mild" />,
     );
-    expect(html).toContain('data-outfit-layout-width="320"');
-    expect(html).toContain('data-outfit-text-scale="2"');
-    expect(html).toMatch(/aspect-ratio:320\s*\/\s*\d+/);
+    expect(html).toContain('class="outfit-list"');
+    expect(html).not.toContain('data-outfit-layout-width=');
+    expect(html).not.toContain('data-outfit-text-scale=');
     const source = readFileSync(
       new URL('../Antrekkskart.tsx', import.meta.url),
       'utf8',

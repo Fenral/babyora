@@ -231,9 +231,9 @@ describe('skjermmanifestet genereres — kjerneporten', () => {
     expect(innst?.vei).toBe('rendres av FamilieScreen.tsx');
   });
 
-  it('«snart» blir ikke en falsk 12. skjerm', () => {
-    expect(m.naa.rute.guideTargets, 'GuideTarget skal fortsatt bære planlegg-viewet')
-      .toContain('snart');
+  it('«snart» er fjernet både som view og falsk 12. skjerm', () => {
+    expect(m.naa.rute.guideTargets, 'GuideTarget skal ikke bære den fjernede planlegg-visningen')
+      .not.toContain('snart');
     expect(stiene.some((s) => /snart/iu.test(s)), '«snart» er talt som skjerm').toBe(false);
   });
 });
