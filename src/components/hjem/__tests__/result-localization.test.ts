@@ -21,8 +21,21 @@ describe('result localization', () => {
     expect(copy.title).toBe(title);
     expect(copy.detailsTitle).toBe(detailsTitle);
     expect(copy.role('Innerst')).toBe(role);
+    expect(copy.factTitle).toMatch(/\S/u);
+    expect(copy.details).toMatch(/\S/u);
     expect(copy.childSummary(5, 'Mira')).toContain('Mira');
     expect(copy.sourceNewWindow('Helsenorge')).toContain('Helsenorge');
+  });
+
+  it.each([
+    ['en-US', 'Good to know', 'See details'],
+    ['sv-SE', 'Bra att veta', 'Visa detaljer'],
+    ['da-DK', 'Godt at vide', 'Se detaljer'],
+    ['no-NO', 'Kort fortalt', 'Se detaljer'],
+  ])('localizes the compact fact summary and detail action for %s', (language, factTitle, details) => {
+    const copy = resultCopyFor(language);
+    expect(copy.factTitle).toBe(factTitle);
+    expect(copy.details).toBe(details);
   });
 
   it('localizes contextual reasons instead of leaking Norwegian', () => {

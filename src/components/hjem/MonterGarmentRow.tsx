@@ -23,6 +23,24 @@ function ExternalLinkIcon() {
   );
 }
 
+function DetailChevronIcon({ expandable = false }: Readonly<{ expandable?: boolean }>) {
+  return (
+    <svg
+      className={expandable ? 'hjm-journey-disclosure-chevron' : undefined}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d={expandable ? 'm6 9 6 6 6-6' : 'm9 18 6-6-6-6'} />
+    </svg>
+  );
+}
+
 export type MonterGarmentRowProps = Readonly<{
   position: number;
   /** Når satt sammen med kortinnholdet under, rendres Hjem-reisens kort. */
@@ -130,19 +148,24 @@ export function MonterGarmentRow({
           <p>{why}</p>
         </section>
 
-        <section className="hjm-journey-fact" aria-label={copy.factAria}>
-          <h3>{copy.factTitle}</h3>
-          <p>{factText}</p>
-          <a
-            href={factSourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={copy.sourceNewWindow(factSourceLabel)}
-          >
-            {factSourceLabel}
-            <ExternalLinkIcon />
-          </a>
-        </section>
+        <details className="hjm-journey-fact">
+          <summary>
+            <span>{copy.factTitle}</span>
+            <DetailChevronIcon expandable />
+          </summary>
+          <div className="hjm-journey-fact-content">
+            <p>{factText}</p>
+            <a
+              href={factSourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={copy.sourceNewWindow(factSourceLabel)}
+            >
+              {factSourceLabel}
+              <ExternalLinkIcon />
+            </a>
+          </div>
+        </details>
 
         <button
           type="button"
@@ -151,7 +174,7 @@ export function MonterGarmentRow({
           aria-label={copy.detailAria(label, roleLabel)}
         >
           {copy.details}
-          <InfoIcon />
+          <DetailChevronIcon />
         </button>
       </article>
     </li>

@@ -34,12 +34,16 @@ type LocaleScenario = Readonly<{
   findOutfit: RegExp;
   oldResultCta: string;
   detailHeading: string;
+  factSummary: string;
+  detailAction: string;
 }>;
 
 const SCENARIOS: readonly LocaleScenario[] = [
   {
     locale: 'sv-SE',
     resolvedLanguage: 'sv',
+    factSummary: 'Bra att veta',
+    detailAction: 'Visa detaljer',
     onboardingHeading: 'Vem klär vi på?',
     mainNavigation: 'Huvudnavigering',
     home: 'Hem',
@@ -54,6 +58,8 @@ const SCENARIOS: readonly LocaleScenario[] = [
   {
     locale: 'da-DK',
     resolvedLanguage: 'da',
+    factSummary: 'Godt at vide',
+    detailAction: 'Se detaljer',
     onboardingHeading: 'Hvem klæder vi på?',
     mainNavigation: 'Hovednavigation',
     home: 'Hjem',
@@ -68,6 +74,8 @@ const SCENARIOS: readonly LocaleScenario[] = [
   {
     locale: 'nb-NO',
     resolvedLanguage: 'en',
+    factSummary: 'Good to know',
+    detailAction: 'See details',
     onboardingHeading: 'Who are we dressing?',
     mainNavigation: 'Main navigation',
     home: 'Home',
@@ -278,14 +286,18 @@ async function verticalScrollPosition(page: Page): Promise<ScrollPosition> {
   });
 }
 
-async function waitForHorizontalMovement(page: Page, minimum: number): Promise<void> {
+async function waitForHorizontalMovement(
+  page: Page,
+  initialLeft: number,
+  minimum: number,
+): Promise<void> {
   const deadline = Date.now() + 3_000;
   while (Date.now() < deadline) {
     const left = await page.locator('.hjm-journey-rail').evaluate((rail) => rail.scrollLeft);
-    if (left >= minimum) return;
+    if (Math.abs(left - initialLeft) >= minimum) return;
     await page.waitForTimeout(50);
   }
-  throw new Error(`Home result rail did not move at least ${minimum}px from a native horizontal wheel gesture`);
+  throw new Error(`Home result rail did not move at least ${minimum}px from its ${initialLeft}px start position`);
 }
 
 async function assertLoadedGarmentImages(page: Page, scenario: LocaleScenario): Promise<number> {
@@ -416,6 +428,61 @@ async function assertHomeResultCarousel(
     }),
     `${scenario.locale}: compact outfit overview does not come before the detail rail`,
   );
+
+  const cards = result.locator('[data-hjm-journey-card="true"]');
+  const cardCount = await cards.count();
+  assert(cardCount >= 3, `${scenario.locale}: Mobbin peek QA needs at least three garment cards, got ${cardCount}`);
+
+  const firstCard = cards.first();
+  const factDisclosure = firstCard.locator('details.hjm-journey-fact');
+  const factSummary = factDisclosure.locator('summary');
+  const factContent = factDisclosure.locator('.hjm-journey-fact-content');
+  const detailAction = firstCard.locator('button.hjm-journey-detail');
+  assert(await factDisclosure.count() === 1, `${scenario.locale}: first card has no native fact disclosure`);
+  assert(
+    !(await factDisclosure.evaluate((element) => element.hasAttribute('open'))),
+    `${scenario.locale}: Good to know is expanded by default`,
+  );
+  assert(
+    (await factSummary.innerText()).trim() === scenario.factSummary,
+    `${scenario.locale}: fact summary is not localized as ${scenario.factSummary}`,
+  );
+  assert(
+    (await detailAction.innerText()).trim() === scenario.detailAction,
+    `${scenario.locale}: direct detail action is not localized as ${scenario.detailAction}`,
+  );
+  const compactControls = await Promise.all([factSummary, detailAction].map(async (control) => {
+    const box = await control.boundingBox();
+    return box?.height ?? 0;
+  }));
+  assert(
+    compactControls.every((height) => height >= 43.5),
+    `${scenario.locale}: disclosure/detail controls are smaller than 44px (${JSON.stringify(compactControls)})`,
+  );
+  const collapsedCardBox = await firstCard.boundingBox();
+  assert(
+    collapsedCardBox !== null && collapsedCardBox.height < 480,
+    `${scenario.locale}: default garment card is not compact (${collapsedCardBox?.height ?? 0}px)`,
+  );
+  assert(!(await factContent.isVisible()), `${scenario.locale}: closed fact content is still visible`);
+  await factSummary.click();
+  assert(
+    await factDisclosure.evaluate((element) => element.hasAttribute('open')),
+    `${scenario.locale}: Good to know did not expand`,
+  );
+  await factContent.waitFor({ state: 'visible', timeout: 2_000 });
+  await factSummary.click();
+  assert(
+    !(await factDisclosure.evaluate((element) => element.hasAttribute('open'))),
+    `${scenario.locale}: Good to know did not collapse again`,
+  );
+
+  await detailAction.click();
+  const detailSheet = page.locator('dialog.plagg-detail-sheet[open]');
+  await detailSheet.waitFor({ state: 'visible', timeout: 5_000 });
+  await page.keyboard.press('Escape');
+  await detailSheet.waitFor({ state: 'hidden', timeout: 5_000 });
+
   await rail.scrollIntoViewIfNeeded();
   const railContract = await rail.evaluate((element) => {
     const style = getComputedStyle(element);
@@ -433,6 +500,9 @@ async function assertHomeResultCarousel(
       secondRight: second?.right ?? null,
       railLeft: box.left,
       railRight: box.right,
+      railCenter: box.left + box.width / 2,
+      firstCenter: first === undefined ? null : first.left + first.width / 2,
+      firstHeight: first?.height ?? 0,
       stride: first && second ? second.left - first.left : 0,
     };
   });
@@ -459,6 +529,54 @@ async function assertHomeResultCarousel(
       && railContract.secondRight > railContract.railRight + 12,
     `${scenario.locale}: the next garment is not partially visible as a swipe affordance`,
   );
+  assert(
+    railContract.firstCenter !== null
+      && Math.abs(railContract.firstCenter - railContract.railCenter) <= 2,
+    `${scenario.locale}: first garment is not centered (${JSON.stringify({
+      cardCenter: railContract.firstCenter,
+      railCenter: railContract.railCenter,
+    })})`,
+  );
+  assert(
+    railContract.firstHeight < 480,
+    `${scenario.locale}: collapsed card is ${railContract.firstHeight}px tall; expected under 480px`,
+  );
+
+  const progress = result.locator('.hjm-journey-progress .hjm-sr-only');
+  const dots = result.locator('.hjm-journey-dots i');
+  assert(await result.locator('.hjm-journey-nav-button').count() === 0, `${scenario.locale}: arrow pager is still rendered`);
+  assert(await dots.count() === cardCount, `${scenario.locale}: dots do not match the ${cardCount} garment cards`);
+  const progressAtFirst = (await progress.innerText()).trim();
+  await rail.focus();
+  await page.keyboard.press('ArrowRight');
+  await page.waitForFunction(
+    ([selector, initial]) => document.querySelector(selector)?.textContent?.trim() !== initial,
+    ['.hjm-journey-progress .hjm-sr-only', progressAtFirst],
+    { timeout: 3_000 },
+  );
+  const centeredPeek = await rail.evaluate((element) => {
+    const previous = element.children.item(0)?.getBoundingClientRect();
+    const active = element.children.item(1)?.getBoundingClientRect();
+    const next = element.children.item(2)?.getBoundingClientRect();
+    const box = element.getBoundingClientRect();
+    return {
+      activeCenter: active === undefined ? null : active.left + active.width / 2,
+      railCenter: box.left + box.width / 2,
+      leftPeek: previous === undefined ? 0 : previous.right - box.left,
+      rightPeek: next === undefined ? 0 : box.right - next.left,
+    };
+  });
+  assert(
+    centeredPeek.activeCenter !== null
+      && Math.abs(centeredPeek.activeCenter - centeredPeek.railCenter) <= 2,
+    `${scenario.locale}: keyboard paging did not center garment 2 (${JSON.stringify(centeredPeek)})`,
+  );
+  assert(
+    centeredPeek.leftPeek >= 12
+      && centeredPeek.rightPeek >= 12
+      && Math.abs(centeredPeek.leftPeek - centeredPeek.rightPeek) <= 3,
+    `${scenario.locale}: neighbor peeks are not symmetric (${JSON.stringify(centeredPeek)})`,
+  );
 
   const avatarBox = await avatar.boundingBox();
   const overviewBox = await overview.boundingBox();
@@ -472,16 +590,16 @@ async function assertHomeResultCarousel(
     `${scenario.locale}: avatar does not visibly hang across the compact result seam`,
   );
 
-  const progress = result.locator('.hjm-journey-progress-copy > span').first();
   const progressBefore = (await progress.innerText()).trim();
   const verticalBefore = await verticalScrollPosition(page);
+  const horizontalBefore = await rail.evaluate((element) => element.scrollLeft);
   assert(railBox.width > 0 && railBox.height > 0, `${scenario.locale}: result rail has zero geometry`);
   await page.mouse.move(
     railBox.x + Math.min(railBox.width / 2, railBox.width - 2),
     railBox.y + Math.min(railBox.height / 2, railBox.height - 2),
   );
   await page.mouse.wheel(Math.max(railContract.stride, 180), 0);
-  await waitForHorizontalMovement(page, Math.max(24, railContract.stride * 0.45));
+  await waitForHorizontalMovement(page, horizontalBefore, Math.max(24, railContract.stride * 0.45));
   await page.waitForTimeout(350);
 
   const progressAfter = (await progress.innerText()).trim();

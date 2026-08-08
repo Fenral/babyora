@@ -902,22 +902,26 @@
   filter: var(--hjm-mascot-shadow);
 }
 
-/* Nettleseren eier gesten. Kortene ligger i en ekte overflow-x-skinne med
-   snap; 84 %-bredden lar en tydelig del av neste kort stå synlig. */
+/* Nettleseren eier gesten. Det aktive kortet hviler midtstilt, med like
+   store glimt av naboene på begge sider etter samme mønster som Mobbin. */
 .hjm-journey-rail {
+  --hjm-journey-card-width: clamp(248px, 72vw, 280px);
   position: relative;
+  box-sizing: border-box;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: min(84%, 304px);
-  align-items: stretch;
+  grid-auto-columns: var(--hjm-journey-card-width);
+  align-items: start;
   gap: 12px;
-  margin: 0;
-  padding: 6px 16% 18px 2px;
+  width: calc(100% + 40px);
+  margin: 0 -20px;
+  padding-block: 6px 16px;
+  padding-inline: calc((100% - var(--hjm-journey-card-width)) / 2 + 20px);
   list-style: none;
   overflow-x: auto;
   overflow-y: hidden;
-  overscroll-behavior-inline: contain;
-  scroll-padding-inline-start: 2px;
+  overscroll-behavior-inline: auto;
+  scroll-padding-inline: calc((100% - var(--hjm-journey-card-width)) / 2 + 20px);
   scroll-snap-type: x mandatory;
   touch-action: pan-x pan-y;
   -webkit-overflow-scrolling: touch;
@@ -926,17 +930,17 @@
 .hjm-journey-rail::-webkit-scrollbar { display: none; }
 .hjm-journey-card {
   min-width: 0;
-  scroll-snap-align: start;
+  scroll-snap-align: center;
   scroll-snap-stop: always;
 }
 .hjm-journey-card-inner {
   position: relative;
   box-sizing: border-box;
-  height: 100%;
-  min-height: 500px;
+  height: auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 14px;
+  padding: 12px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--dw-plate-kant) 64%, transparent);
   border-radius: var(--dw-r-panel);
@@ -1005,14 +1009,12 @@
   line-height: 1.15;
   letter-spacing: -0.012em;
 }
-.hjm-journey-why,
-.hjm-journey-fact {
-  margin-top: 14px;
-  padding-top: 12px;
+.hjm-journey-why {
+  margin-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--dw-hairline);
 }
-.hjm-journey-why h3,
-.hjm-journey-fact h3 {
+.hjm-journey-why h3 {
   margin: 0;
   color: var(--dw-ink-low);
   font-size: 11px;
@@ -1021,12 +1023,43 @@
   text-transform: uppercase;
 }
 .hjm-journey-why p,
-.hjm-journey-fact p {
+.hjm-journey-fact-content p {
   margin: 5px 0 0;
   color: var(--dw-ink-mid);
   font-size: 13.5px;
   line-height: 1.45;
 }
+.hjm-journey-fact {
+  margin-top: 10px;
+  border-top: 1px solid var(--dw-hairline);
+}
+.hjm-journey-fact summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--dw-ink-hi);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.hjm-journey-fact summary::-webkit-details-marker { display: none; }
+.hjm-journey-fact summary::marker { content: ''; }
+.hjm-journey-fact summary svg,
+.hjm-journey-detail svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+.hjm-journey-disclosure-chevron {
+  transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.hjm-journey-fact[open] .hjm-journey-disclosure-chevron {
+  transform: rotate(180deg);
+}
+.hjm-journey-fact-content { padding: 0 0 8px; }
 .hjm-journey-fact a {
   width: fit-content;
   min-height: 44px;
@@ -1043,80 +1076,51 @@
   appearance: none;
   width: 100%;
   min-height: 44px;
-  margin-top: auto;
-  padding: 10px 13px;
+  margin-top: 0;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--dw-hairline);
-  border-radius: var(--dw-r-raised);
-  background: color-mix(in srgb, var(--dw-raised) 74%, transparent);
+  border: 0;
+  border-top: 1px solid var(--dw-hairline);
+  border-radius: 0;
+  background: transparent;
   color: var(--dw-ink-hi);
   font: inherit;
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
-  transition: background var(--dw-m-feedback) var(--dw-ease);
+  transition:
+    color 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 .hjm-journey-detail:active {
-  background: color-mix(in srgb, var(--dw-accent) 12%, var(--dw-raised));
+  color: var(--dw-accent);
+  transform: scale(0.985);
 }
-.hjm-journey-detail svg { width: 17px; height: 17px; }
 
 .hjm-journey-progress {
   min-height: 44px;
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
-  align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-}
-.hjm-journey-nav-button {
-  appearance: none;
-  width: 44px;
-  height: 44px;
-  display: grid;
   place-items: center;
-  border: 1px solid var(--dw-hairline);
-  border-radius: 50%;
-  background: var(--dw-raised);
-  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-raised);
-  color: var(--dw-ink-hi);
-  cursor: pointer;
-}
-.hjm-journey-nav-button:disabled {
-  background: transparent;
-  box-shadow: none;
-  color: var(--dw-ink-low);
-  cursor: default;
-}
-.hjm-journey-nav-button svg { width: 19px; height: 19px; }
-.hjm-journey-progress-copy {
-  min-width: 0;
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  color: var(--dw-ink-mid);
-  font-size: 12.5px;
-  font-weight: 700;
-  font-variant-numeric: lining-nums tabular-nums;
+  margin-top: -4px;
 }
 .hjm-journey-dots {
   max-width: 100%;
   display: flex;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
   overflow: hidden;
 }
 .hjm-journey-dots i {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   flex: none;
   border-radius: 50%;
   background: var(--dw-hairline);
 }
 .hjm-journey-dots i[data-active='true'] {
-  width: 17px;
+  width: 18px;
   border-radius: var(--dw-r-pill);
   background: var(--dw-accent);
 }
@@ -1132,7 +1136,8 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .hjm-journey-rail { scroll-behavior: auto !important; }
-  .hjm-journey-detail { transition: none; }
+  .hjm-journey-detail,
+  .hjm-journey-disclosure-chevron { transition: none; }
 }
 
 /* Dybdedoktrinen (D1/D2): HELE listen på Ã‰N hevet flate (nivÃ¥ 2), kantlys +

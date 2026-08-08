@@ -137,6 +137,21 @@ describe('ResultSurface — inline plaggreise', () => {
     expect(html).toContain('rel="noopener noreferrer"');
   });
 
+  it('keeps Good to know closed as a native disclosure and preserves the detail action', () => {
+    const copy = resultCopyFor(i18next.resolvedLanguage);
+    const html = renderResult([row({})]);
+    const card = html.slice(html.indexOf('<li class="hjm-journey-card"'));
+
+    expect(card).toContain('<details class="hjm-journey-fact">');
+    expect(card).not.toMatch(/<details class="hjm-journey-fact"[^>]*\sopen(?:=|\s|>)/u);
+    expect(card).toMatch(/<summary[^>]*>[\s\S]*?<\/summary>/u);
+    expect(card).toContain(`<span>${copy.factTitle}</span>`);
+    expect(card).toContain('Woolmark');
+    expect(card).toMatch(/<button[^>]*class="hjm-journey-detail"[^>]*>/u);
+    expect(card).toContain(copy.details);
+    expect(card).not.toContain('aria-expanded=');
+  });
+
   it('bruker den nye resultat-posen dekorativt i en eksplisitt assetsøm', () => {
     const html = renderResult([row({})]);
     expect(html).toContain('data-result-avatar-seam="true"');
@@ -176,7 +191,7 @@ describe('ResultSurface — inline plaggreise', () => {
     expect(reduced).not.toContain('animation-delay');
   });
 
-  it('keeps the detail disclosure and partial-next-card geometry visible', () => {
+  it('keeps the detail introduction and centered-card geometry visible', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
     const html = renderResult([row({})]);
     const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
@@ -188,22 +203,43 @@ describe('ResultSurface — inline plaggreise', () => {
     expect(html).toContain(`>${copy.hint}</p>`);
     expect(hintId).toBeDefined();
     expect(html).toContain(`aria-describedby="${hintId}"`);
-    expect(railRule).toMatch(/grid-auto-columns:\s*min\(84%,\s*304px\);/u);
-    expect(railRule).toMatch(/padding:\s*6px\s+16%\s+18px\s+2px;/u);
+    expect(railRule).toMatch(/grid-auto-columns:\s*(?:var\([^)]*\)|min\([^;]+\));/u);
+    expect(railRule).toMatch(/padding-inline:[^;]*calc\(/u);
+    expect(railRule).toMatch(/scroll-padding-inline:[^;]*calc\(/u);
   });
 
-  it('bruker native overflow/snap uten pointer-capture eller drag-transform', () => {
+  it('bruker native overflow og sentrert snap uten pointer-capture eller drag-transform', () => {
     const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
     const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
+    const cardRule = cssRuleFor(css, '.hjm-journey-card');
     expect(source).not.toContain('setPointerCapture');
     expect(source).not.toContain('onPointerMove');
     expect(source).not.toContain('scrollIntoView');
-    expect(source).toContain('rail.scrollTo({');
     expect(source).not.toContain('--kps-drag');
+    expect(source).not.toContain('card.offsetLeft - rail.scrollLeft - rail.clientLeft');
+    expect(source).toMatch(/rail\.scrollLeft\s*\+\s*rail\.clientWidth\s*\/\s*2/u);
+    expect(source).toMatch(/card\.offsetLeft\s*\+\s*card\.(?:offsetWidth|clientWidth)\s*\/\s*2/u);
     expect(css).toMatch(/\.hjm-journey-rail\s*\{[\s\S]*?overflow-x:\s*auto;/);
     expect(css).toMatch(/\.hjm-journey-rail\s*\{[\s\S]*?scroll-snap-type:\s*x mandatory;/);
     expect(css).toMatch(/\.hjm-journey-rail\s*\{[\s\S]*?touch-action:\s*pan-x pan-y;/);
     expect(css).toMatch(/\.hjm-journey-rail\s*\{[\s\S]*?-webkit-overflow-scrolling:\s*touch;/);
+    expect(cardRule).toMatch(/scroll-snap-align:\s*center;/u);
+  });
+
+  it('uses a compact default card and a dots-only pager', () => {
+    const rows = [
+      row({ key: 'r1', position: 1 }),
+      row({ key: 'r2', position: 2, label: 'ull-jakke', garmentId: 'ull-jakke' }),
+    ];
+    const html = renderResult(rows);
+    const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
+    const cardInnerRule = cssRuleFor(css, '.hjm-journey-card-inner');
+
+    expect(cardInnerRule).not.toMatch(/min-height:\s*500px;/u);
+    expect(cardInnerRule).not.toMatch(/height:\s*100%;/u);
+    expect(html).not.toContain('class="hjm-journey-nav-button"');
+    expect(html).toContain('class="hjm-sr-only"');
+    expect((html.match(/data-active="(?:true|false)"/gu) ?? [])).toHaveLength(rows.length);
   });
 
   it('uses matching 11/6 image frames with centered, contained 92% artwork', () => {
@@ -236,10 +272,9 @@ describe('ResultSurface — inline plaggreise', () => {
     expect(css).toMatch(/@media \(max-width:\s*359px\)[\s\S]*?\.hjm-swap-label\s*\{\s*display:\s*none;/u);
   });
 
-  it('gir navigasjon, detaljer og kildelenke minst 44 px trykkflate', () => {
+  it('gir disclosure-summary og detaljhandling minst 44 px trykkflate', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
-    expect(css).toMatch(/\.hjm-journey-nav-button\s*\{[\s\S]*?width:\s*44px;[\s\S]*?height:\s*44px;/);
     expect(css).toMatch(/\.hjm-journey-detail\s*\{[\s\S]*?min-height:\s*44px;/);
-    expect(css).toMatch(/\.hjm-journey-fact a\s*\{[\s\S]*?min-height:\s*44px;/);
+    expect(css).toMatch(/\.hjm-journey-fact summary\s*\{[\s\S]*?min-height:\s*44px;/);
   });
 });

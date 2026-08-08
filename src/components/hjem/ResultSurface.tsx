@@ -7,6 +7,7 @@
  */
 import i18next from 'i18next';
 import {
+  type KeyboardEvent,
   type MouseEvent,
   useCallback,
   useId,
@@ -30,23 +31,6 @@ const ROW_STAGGER_START_MS = 50;
 const RESULT_MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot-resultat-sveip.webp`;
 // Kept as a defensive SSR fallback; normal rendering always uses resultCopyFor.
 const NORWEGIAN_CAROUSEL_FALLBACK = 'Kle på, steg for steg';
-
-function ChevronIcon({ direction }: Readonly<{ direction: 'previous' | 'next' }>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path d={direction === 'previous' ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6'} />
-    </svg>
-  );
-}
 
 function SwipeCueIcon() {
   return (
@@ -99,9 +83,11 @@ export function ResultSurface({
 
     let nearestIndex = 0;
     let nearestDistance = Number.POSITIVE_INFINITY;
+    const viewportCenter = rail.scrollLeft + rail.clientWidth / 2;
     Array.from(rail.children).forEach((child, index) => {
       const card = child as HTMLElement;
-      const distance = Math.abs(card.offsetLeft - rail.scrollLeft - rail.clientLeft);
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const distance = Math.abs(cardCenter - viewportCenter);
       if (distance < nearestDistance) {
         nearestDistance = distance;
         nearestIndex = index;
@@ -118,10 +104,22 @@ export function ResultSurface({
     if (!(card instanceof HTMLElement)) return;
     setActiveIndex(clamped);
     rail.scrollTo({
-      left: card.offsetLeft - rail.clientLeft,
+      left: card.offsetLeft + card.offsetWidth / 2 - rail.clientWidth / 2,
       behavior: reducedMotion ? 'auto' : 'smooth',
     });
   }, [reducedMotion, rows.length]);
+
+  const handleRailKeyDown = useCallback((event: KeyboardEvent<HTMLOListElement>) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      scrollToCard(activeIndex - 1);
+    }
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      scrollToCard(activeIndex + 1);
+    }
+  }, [activeIndex, scrollToCard]);
 
   const presentedRows = rows.map((row) => ({
     row,
@@ -184,6 +182,8 @@ export function ResultSurface({
             ref={railRef}
             aria-label={copy.carouselLabel || NORWEGIAN_CAROUSEL_FALLBACK}
             aria-describedby={hintId}
+            tabIndex={0}
+            onKeyDown={handleRailKeyDown}
             onScroll={syncActiveCard}
           >
             {presentedRows.map(({ row, displayLabel, localizedRole, imageSrc }) => {
@@ -218,36 +218,18 @@ export function ResultSurface({
             })}
           </ol>
 
-          <nav className="hjm-journey-progress" aria-label={copy.progressLabel}>
-            <button
-              type="button"
-              className="hjm-journey-nav-button"
-              aria-label={copy.previous}
-              aria-controls={railId}
-              disabled={activeIndex === 0}
-              onClick={() => scrollToCard(activeIndex - 1)}
-            >
-              <ChevronIcon direction="previous" />
-            </button>
-            <div className="hjm-journey-progress-copy" aria-live="polite" aria-atomic="true">
-              <span>{copy.progress(activeIndex + 1, rows.length)}</span>
+          {rows.length > 1 ? (
+            <div className="hjm-journey-progress" aria-label={copy.progressLabel}>
+              <span className="hjm-sr-only" aria-live="polite" aria-atomic="true">
+                {copy.progress(activeIndex + 1, rows.length)}
+              </span>
               <span className="hjm-journey-dots" aria-hidden="true">
                 {rows.map((row, index) => (
                   <i key={row.key} data-active={index === activeIndex ? 'true' : 'false'} />
                 ))}
               </span>
             </div>
-            <button
-              type="button"
-              className="hjm-journey-nav-button"
-              aria-label={copy.next}
-              aria-controls={railId}
-              disabled={activeIndex === rows.length - 1}
-              onClick={() => scrollToCard(activeIndex + 1)}
-            >
-              <ChevronIcon direction="next" />
-            </button>
-          </nav>
+          ) : null}
         </>
       )}
 
