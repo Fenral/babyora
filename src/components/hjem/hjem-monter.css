@@ -972,7 +972,6 @@
 }
 .hjm-journey-overview-list.hjm-rows::before { display: none; }
 .hjm-journey-overview-list .hjm-row {
-  min-height: 52px;
   gap: 9px;
   padding: 5px 0;
 }
