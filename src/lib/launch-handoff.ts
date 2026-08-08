@@ -2,10 +2,10 @@
  * launch-handoff — når åpningsflaten skal slippe taket.
  *
  * ═══ HVA ÅPNINGSFLATEN ER ═════════════════════════════════════════════════
- * `#launch` i index.html: lerretsfarge + ordmerket, malt fra første frame med
- * inline CSS. Den finnes fordi `#root` er tom til React mounter, og et tomt
- * dokument er hvitt. Uten flaten ser en ny bruker et hvitt glimt før appens
- * mørke rom — nøyaktig det åpningskontrakten §8 forbyr.
+ * `#launch` i index.html: temariktig lerret + Babyoras sentrerte signatur
+ * (avatar, delvis skyet-vær og ordmerke), malt fra første frame med inline
+ * CSS. Den finnes fordi `#root` er tom til React mounter, og et tomt dokument
+ * er hvitt. Uten flaten ser en ny bruker et hvitt glimt før appens eget rom.
  *
  * ═══ NÅR DEN SLIPPER — OG HVORFOR IKKE PÅ EN TIMER ════════════════════════
  * Kontrakten er utvetydig: «Oppstart forsinkes ALDRI kunstig.» En timer på

@@ -15,10 +15,10 @@ import { type ReactElement } from 'react';
  * samme uke — derfor er den fjernet i stedet for kommentert bort.
  *
  * Filmen og de fire gamle onboarding-illustrasjonene ligger i
- * `docs/mocks/arkiv/illustrations-onboarding/`. Appens EKTE åpningsanimasjon
- * er `#launch` i index.html: ordmerket toner inn over 520 ms med varmt lys
- * fra øvre venstre. Skal filmen vekkes, er det en beslutning om at åpningen
- * skal ha TO signaturøyeblikk — ikke en opprydding.
+ * `docs/mocks/arkiv/illustrations-onboarding/`. Appens ekte åpningssignatur
+ * er `#launch` i index.html: avatar + delvis skyet-vær + ordmerke på et rolig
+ * lerret. Skal filmen vekkes, er det en beslutning om at åpningen skal ha TO
+ * signaturøyeblikk — ikke en opprydding.
  *
  * P10/JOB5 (2026-08-01): swapped from the old lilac sitting-doll
  * illustration (babyora-intro-v3.webp/mp4) to the standing Monter mascot —

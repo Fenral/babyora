@@ -23,10 +23,15 @@ export async function initNative(): Promise<void> {
     return;
   }
 
-  // Status-bar: mørk tekst/ikoner mot warm-grey bakgrunn (ink-on-warm-grey).
-  // Style.Dark = mørkt innhold (lyse backgrounds), Style.Light = lyst innhold.
+  // Status-bar: launch-flaten finnes i både lys og mørk variant. Les den
+  // synkront stemplede temamodusen før splash-faden starter, slik at ikonene
+  // aldri blir mørke mot espressoflaten. I auto følger vi operativsystemet.
+  // Style.Dark = mørkt innhold (lys bakgrunn), Style.Light = lyst innhold.
   try {
-    await StatusBar.setStyle({ style: Style.Dark });
+    const stampedTheme = document.documentElement.dataset.theme;
+    const usesDarkTheme = stampedTheme === 'dark'
+      || (stampedTheme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    await StatusBar.setStyle({ style: usesDarkTheme ? Style.Light : Style.Dark });
   } catch (err) {
     console.warn('[native-init] StatusBar.setStyle feilet', err);
   }

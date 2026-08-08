@@ -4,10 +4,6 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <!-- ÅPNINGSKONTRAKTEN §8: «ingen hvit, svart eller feil-tematisert
-         mellomframe». Sto som #DBD8D2 — en grå fra systemet FØR Monter, i
-         BEGGE temaer. Statuslinja var altså feil farge fra første frame.
-         Nå to metaer, én per tema, med lerretstokenets faktiske verdi. -->
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1E140C" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F9F5EB" />
     <meta name="robots" content="noindex,nofollow" />
@@ -18,10 +14,9 @@
     <meta name="apple-mobile-web-app-title" content="Babyora" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <!-- FOUC-guard: les persistert theme-mode FØR React/CSS laster og
-         sett data-theme="light|dark" på <html>. "auto" → ingen attributt,
-         media-query tar over. Wrappet i try/catch så korrupt JSON aldri
-         kræsjer initial render. Holdes synkront med theme-store.ts. -->
+
+    <!-- Les persistert tema før React og ekstern CSS laster. Holdes synkront
+         med theme-store.ts, slik at første frame får riktig lerretsfarge. -->
     <script>
       (function () {
         try {
@@ -33,95 +28,165 @@
             document.documentElement.setAttribute('data-theme', mode);
           }
         } catch (e) {
-          /* swallow — auto-mode er trygg default */
+          /* auto-tema er trygg fallback */
         }
       })();
     </script>
-    <!-- ÅPNINGSFLATEN (åpningskontrakt-2026-08-01 §1 + §8).
 
-         Kritisk CSS står HER, inline, med vilje: en ekstern stilfil laster
-         etter første maling, og da har brukeren allerede sett en hvit
-         skjerm. #root er tom til React mounter, så uten dette er det hvite
-         glimtet uunngåelig.
+    <!-- ÅPNINGSFLATEN — eier-override 2026-08-08.
 
-         Per §1: ren lerretsflate + ordmerket, VENSTREJUSTERT på det
-         globale gridet. Aldri panel, aldri maskot — Apple HIG «Launching».
-
-         Per §8: oppstart forsinkes ALDRI kunstig. Flaten har ingen timer;
-         den fjernes i det appen har malt sin første ekte frame. Er appen
-         rask, ser man den knapt — og det er riktig. -->
+         Avatar, delvis skyet-vær og Babyora-skilt danner én sentrert signatur
+         på et helt rolig lerret. Ingen ekstra slagord, lastingstekst eller
+         dekorativ bakgrunn. Flaten har ingen visningstimer og slipper så
+         snart React har malt sin første ekte frame. -->
     <style>
       #launch {
         position: fixed;
         inset: 0;
         z-index: 2147483647;
-        display: flex;
-        align-items: center;
-        /* Venstrejustert, ikke sentrert — samme ankring som ordmerket har
-           i onboarding og på Hjem, slik at det ikke hopper ved overlevering. */
-        padding-inline-start: max(24px, env(safe-area-inset-left, 0px) + 24px);
+        display: grid;
+        place-items: center;
+        box-sizing: border-box;
+        padding:
+          max(24px, env(safe-area-inset-top, 0px))
+          max(20px, env(safe-area-inset-right, 0px))
+          max(24px, env(safe-area-inset-bottom, 0px))
+          max(20px, env(safe-area-inset-left, 0px));
+        overflow: hidden;
         background: #1E140C;
-        color: #F1E9DA;
         transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
       }
-      @media (prefers-color-scheme: light) {
-        #launch { background: #F9F5EB; color: #2A1D12; }
-      }
-      /* Temavelgeren stemples på <html> av FOUC-vakten over, og må vinne
-         over medieforespørselen i BEGGE retninger. */
-      :root[data-theme="dark"] #launch { background: #1E140C; color: #F1E9DA; }
-      :root[data-theme="light"] #launch { background: #F9F5EB; color: #2A1D12; }
 
-      /* Ordmerket materialiserer seg rolig. Appen brukes ved sovende barn
-         (§3: lydløs oppstart) — åpningen skal være like stille visuelt.
-         Ingen sprett, ingen skalering: opacity og 6 px løft, samme verdi
-         som panelet setter seg med i §2. */
-      #launch svg {
-        width: min(58vw, 232px);
-        height: auto;
-        opacity: 0;
-        transform: translateY(6px);
-        animation: launch-inn 520ms cubic-bezier(0.22, 1, 0.36, 1) 60ms forwards;
+      .launch-signature {
+        --launch-optical-y: -1.74vmax;
+        width: min(38.07vmax, 88vw, 360px);
+        transform: translateY(var(--launch-optical-y));
       }
-      @keyframes launch-inn {
+
+      .launch-hero {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 980 / 860;
+        overflow: hidden;
+      }
+
+      .launch-signboard {
+        position: absolute;
+        z-index: 0;
+        left: 14.286%;
+        top: 70.93%;
+        width: 71.429%;
+        height: 29.07%;
+        opacity: 0;
+        animation: launch-signboard-in 360ms cubic-bezier(0.22, 1, 0.36, 1) 20ms both;
+      }
+
+      .launch-signboard::before {
+        content: '';
+        position: absolute;
+        left: 1.429%;
+        top: 1.6%;
+        width: 97.143%;
+        height: 88%;
+        box-sizing: border-box;
+        border: 1px solid rgb(242 192 138 / 42%);
+        border-radius: 5.3% / 16%;
+        background: #9E5529;
+        box-shadow:
+          0 8px 18px rgb(19 11 6 / 28%),
+          inset 0 1px 0 rgb(247 213 178 / 22%);
+      }
+
+      .launch-signboard img {
+        position: absolute;
+        z-index: 1;
+        left: 21.429%;
+        top: 42%;
+        display: block;
+        width: 57.143%;
+        height: auto;
+      }
+
+      .launch-avatar {
+        position: absolute;
+        z-index: 2;
+        left: 0;
+        top: 0;
+        width: 91.837%;
+        height: 83.605%;
+        opacity: 0;
+        animation: launch-avatar-in 480ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both;
+      }
+
+      .launch-avatar img {
+        position: absolute;
+        left: -8.598%;
+        top: -9.623%;
+        width: 115.888%;
+        height: auto;
+      }
+
+      /* Samme pikselgeometri som den native kompositten: skyens underside
+         lander i håndflaten, mens hånden males foran værmotivet. Rammene
+         tilsvarer de synlige alpha-flatene; originalenes transparente luft
+         korrigeres på de indre bildene. */
+      .launch-weather {
+        position: absolute;
+        z-index: 1;
+        left: 75%;
+        top: 51.744%;
+        width: 21.429%;
+        height: 18.256%;
+        pointer-events: none;
+        opacity: 0;
+        animation: launch-weather-in 420ms cubic-bezier(0.22, 1, 0.36, 1) 180ms both;
+      }
+
+      .launch-weather img {
+        position: absolute;
+        left: -23.21%;
+        top: -43.84%;
+        width: 146.74%;
+        height: auto;
+      }
+
+      @media (prefers-color-scheme: light) {
+        #launch { background: #F9F5EB; }
+      }
+
+      :root[data-theme="dark"] #launch { background: #1E140C; }
+      :root[data-theme="light"] #launch { background: #F9F5EB; }
+
+      @keyframes launch-signboard-in {
+        from { opacity: 0; transform: translateY(5px) scale(0.985); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      @keyframes launch-avatar-in {
+        from { opacity: 0; transform: translateY(-8px); }
         to { opacity: 1; transform: translateY(0); }
       }
 
-      /* Monter-lyset kommer fra øvre venstre — også her. En svak varm
-         glød i samme retning, så åpningen tilhører samme rom som Hjem.
-         Dekorativ og pekerfri; den skal aldri ta et trykk. */
-      #launch::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background: radial-gradient(72% 52% at 26% 16%,
-          rgba(242, 192, 138, 0.10) 0%, transparent 62%);
-        opacity: 0;
-        animation: launch-lys 900ms ease-out 120ms forwards;
+      @keyframes launch-weather-in {
+        from { opacity: 0; transform: translateY(-7px) scale(0.94); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
       }
-      @keyframes launch-lys { to { opacity: 1; } }
 
       #launch[data-ferdig="true"] { opacity: 0; pointer-events: none; }
 
-      /* Redusert bevegelse: ingen forflytning, ingen glød som toner inn.
-         Ordmerket er der med én gang, og flaten forsvinner med ren opacity. */
       @media (prefers-reduced-motion: reduce) {
-        #launch, #launch svg, #launch::before {
-          animation: none !important;
-          transition-duration: 100ms;
+        #launch { transition-duration: 100ms; }
+        .launch-signboard,
+        .launch-avatar,
+        .launch-weather {
+          animation: none;
+          opacity: 1;
+          transform: none;
         }
-        #launch svg { opacity: 1; transform: none; }
-        #launch::before { opacity: 1; }
       }
     </style>
     <title>Babyora</title>
-    <!-- T9A fontberedskap (aapningskontrakt §4): preload av NØYAKTIG de
-         woff2-filene appen bruker — variable latin-subset self-hostet i
-         public/fonts/ med stabile navn (deklarert i src/styles/fonts.css).
-         crossorigin er påkrevd for font-preload (anonym modus) — uten den
-         dobbeltlastes fonten. Dekker Schibsted Grotesk (alt UI, vekter
-         400–700+650) og Fraunces (temperatur-hero 550, arktitler 560). -->
+
     <link
       rel="preload"
       as="font"
@@ -136,41 +201,46 @@
       crossorigin
       href="/fonts/fraunces-latin-wght-normal.woff2"
     />
-    <!-- Native-feel #9 (2026-06-26): øvrige brand-fonter (DM Serif Display)
-         self-hostes via @fontsource i src/main.tsx. Google Fonts + Lottie
-         CDN er fjernet for raskere cold start + offline-feel (Capacitor). -->
+    <!-- Bildene ligger i HTTP-cachen før Capacitor skjuler native splash. -->
+    <link rel="preload" as="image" type="image/webp" href="/monter/maskot-resultat-sveip.webp" />
+    <link rel="preload" as="image" type="image/webp" href="/monter/vaer-delvis-skyet.webp" />
+    <link
+      rel="preload"
+      as="image"
+      type="image/svg+xml"
+      href="/brand/babyora-wordmark-reverse.svg"
+    />
   </head>
   <body>
-    <!-- CSS-AUDIT.A-2: byttet fra Tailwind-utility-skip-link (brukte
-         udefinert --accent → usynlig bg ved fokus) til den håndskrevne
-         .skip-link i index.css. -->
     <a href="#main" class="skip-link">Hopp til hovedinnhold</a>
-    <!-- Fjernes av src/lib/launch-handoff.ts når appen har malt sin
-         første ekte frame. Blir skriptet aldri kjørt, fjerner vakten der
-         den likevel etter et tak — en åpningsflate som blir stående er en
-         app som ser ut til å henge. -->
-    <div id="launch">
-      <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1260 260" >
-        
-        
-        <svg x="10" y="10" width="240" height="240" viewBox="620 640 760 760" aria-hidden="true">
-            <path fill="currentColor" d="M 991.369 683.269 C 994.987 682.962 998.617 682.803 1002.25 682.795 C 1059.88 682.301 1107.08 724.839 1106.76 783.509 C 1106.37 828.943 1076.53 868.864 1033.06 882.106 C 1020.91 885.925 1010.53 885.927 998.042 887.605 C 970.65 891.341 945.222 903.906 925.614 923.395 C 888.689 960.619 887.344 997.658 887.547 1046.18 L 887.809 1113.38 L 887.943 1348.29 C 871.353 1338.08 857.18 1328.16 841.478 1316.65 C 681.377 1196.58 640.24 983.024 763.902 820.984 C 816.492 752.073 905.069 695.449 991.369 683.269 z"/>
-            <path fill="currentColor" d="M 1255.54 936.405 C 1279.89 935.27 1303.77 943.383 1322.39 959.117 C 1342.75 976.319 1357.24 1006.06 1357.68 1032.64 C 1360.58 1209.26 1205.57 1354.59 1036.11 1366.83 C 1011.32 1367.58 987.058 1359.56 967.602 1344.17 C 946.818 1327.65 933.622 1303.41 931.034 1276.99 C 928.83 1256.02 933.544 1234.9 944.458 1216.85 C 972.154 1171.31 1010.17 1169.34 1057.28 1163.08 C 1085.88 1159.29 1108.65 1143.49 1128.94 1123.48 C 1174.77 1078.29 1146.45 1016.53 1186.35 970.837 C 1204.3 949.728 1228.34 938.649 1255.54 936.405 z"/>
-            <path fill="currentColor" d="M 1015.11 914.817 C 1076.79 909.102 1131.4 954.533 1137.01 1016.23 C 1142.62 1077.92 1097.09 1132.45 1035.39 1137.95 C 973.838 1143.44 919.468 1098.05 913.874 1036.51 C 908.28 974.966 953.576 920.517 1015.11 914.817 z"/>
-          </svg>
-        <svg x="280" y="43" width="940" height="174" viewBox="0 0 8075.00 2043.00" aria-hidden="true">
-            <g xmlns="http://www.w3.org/2000/svg" fill="currentColor" transform="translate(-64.00 1527.00) scale(1 -1)">
-          <path d="M1371 337Q1371 188 1242.5 94.0Q1114 0 857 0H164Q133 0 118.5 12.5Q104 25 104 46Q104 84 146 97L203 110Q228 117 240.5 131.0Q253 145 253 167V1233Q253 1255 240.5 1269.0Q228 1283 203 1290L146 1303Q104 1316 104 1354Q104 1376 118.5 1388.0Q133 1400 164 1400H704Q890 1400 1021.5 1349.0Q1153 1298 1222.0 1207.5Q1291 1117 1291 996Q1291 895 1234.5 816.0Q1178 737 1067.0 691.5Q956 646 793 646L849 677Q1008 677 1125.0 633.5Q1242 590 1306.5 513.5Q1371 437 1371 337ZM743 609H476V690H718Q807 690 869.0 723.5Q931 757 963.0 822.0Q995 887 995 980Q995 1079 955.5 1152.5Q916 1226 840.0 1267.0Q764 1308 654 1308H563V189Q563 140 593.5 116.0Q624 92 683 92H789Q878 92 938.5 123.0Q999 154 1030.0 211.5Q1061 269 1061 345Q1061 465 979.5 537.0Q898 609 743 609Z" transform="translate(0.00 0.00)" />
-          <path d="M685 127V148L666 152V749Q666 819 630.5 857.5Q595 896 530 896Q471 896 439.0 871.0Q407 846 407 809V721Q407 661 367.0 628.5Q327 596 254 596Q192 596 160.0 625.5Q128 655 128 706Q128 769 180.0 829.5Q232 890 333.0 929.5Q434 969 582 969Q766 969 855.5 894.5Q945 820 945 693V173Q945 145 956.5 131.0Q968 117 989 117Q1011 117 1022.0 127.5Q1033 138 1041 149Q1046 156 1052.0 160.5Q1058 165 1067 165Q1079 165 1085.0 156.0Q1091 147 1091 132Q1091 98 1067.5 62.0Q1044 26 997.5 0.5Q951 -25 881 -25Q792 -25 738.5 15.5Q685 56 685 127ZM86 209Q86 334 197.5 411.0Q309 488 509 488Q574 488 626.5 477.0Q679 466 717 447L695 383Q661 399 625.5 408.0Q590 417 549 417Q466 417 419.5 374.5Q373 332 373 257Q373 182 412.5 142.0Q452 102 515 102Q569 102 618.5 126.5Q668 151 702 195L724 138Q669 60 576.5 17.5Q484 -25 380 -25Q249 -25 167.5 40.0Q86 105 86 209Z" transform="translate(1418.00 0.00)" />
-          <path d="M430 1423V107L314 10Q264 -10 242.0 -16.5Q220 -23 200 -23Q177 -23 162.5 -10.0Q148 3 148 30V1255Q148 1280 140.5 1291.0Q133 1302 116 1305L63 1309Q45 1314 37.0 1323.0Q29 1332 29 1346Q29 1362 39.0 1372.0Q49 1382 75 1392L261 1460Q301 1475 323.5 1481.0Q346 1487 364 1487Q397 1487 413.5 1469.5Q430 1452 430 1423ZM373 652 328 709Q408 832 511.0 901.0Q614 970 739 970Q857 970 950.0 910.0Q1043 850 1096.5 743.5Q1150 637 1150 498Q1150 339 1086.5 221.5Q1023 104 914.0 39.5Q805 -25 670 -25Q551 -25 459.0 31.0Q367 87 307 193L376 251Q425 169 486.5 129.0Q548 89 619 89Q688 89 741.5 129.0Q795 169 826.0 253.5Q857 338 857 468Q857 590 827.0 670.0Q797 750 744.5 789.5Q692 829 625 829Q553 829 489.5 785.5Q426 742 373 652Z" transform="translate(2539.00 0.00)" />
-          <path d="M694 146 544 -124 135 783Q118 823 99.5 837.5Q81 852 42 863Q23 869 15.0 879.0Q7 889 7 905Q7 925 21.5 936.0Q36 947 60 947H508Q533 947 547.0 936.0Q561 925 561 905Q561 889 552.0 879.0Q543 869 520 864L483 857Q437 847 429.5 823.0Q422 799 447 739ZM504 -159 568 -4 603 66 867 727Q891 786 883.0 814.0Q875 842 829 852L788 861Q766 867 756.5 878.0Q747 889 747 905Q747 925 761.0 936.0Q775 947 799 947H1083Q1108 947 1122.0 936.0Q1136 925 1136 905Q1136 891 1127.5 880.5Q1119 870 1097 862Q1053 848 1029.0 824.5Q1005 801 983 745L626 -137Q570 -271 522.0 -345.0Q474 -419 419.0 -447.5Q364 -476 286 -476Q170 -476 102.5 -414.5Q35 -353 35 -263Q35 -198 66.5 -162.0Q98 -126 150 -126Q201 -126 228.5 -156.5Q256 -187 273 -239L286 -277Q294 -313 312.0 -331.0Q330 -349 353 -349Q378 -349 399.0 -334.5Q420 -320 445.5 -279.5Q471 -239 504 -159Z" transform="translate(3739.00 0.00)" />
-          <path d="M600 970Q755 970 872.0 907.0Q989 844 1054.5 731.5Q1120 619 1120 470Q1120 329 1052.5 217.0Q985 105 866.0 40.0Q747 -25 590 -25Q436 -25 319.5 39.0Q203 103 137.0 215.5Q71 328 71 475Q71 618 138.5 729.5Q206 841 325.0 905.5Q444 970 600 970ZM671 80Q739 90 780.5 142.5Q822 195 833.5 287.0Q845 379 821 508Q798 637 754.0 720.5Q710 804 650.0 841.0Q590 878 520 866Q451 855 409.5 802.5Q368 750 357.5 658.5Q347 567 370 437Q393 309 437.0 225.5Q481 142 541.0 105.0Q601 68 671 80Z" transform="translate(4860.00 0.00)" />
-          <path d="M436 530Q436 675 477.0 773.0Q518 871 585.0 920.5Q652 970 729 970Q824 970 876.0 916.0Q928 862 928 761Q928 671 891.0 627.0Q854 583 795 583Q735 583 704.0 615.0Q673 647 673 704V740Q672 772 658.0 787.5Q644 803 612 803Q577 803 544.5 774.0Q512 745 491.5 686.0Q471 627 471 535ZM455 901 471 674V161Q471 132 482.5 118.5Q494 105 524 100L610 87Q633 83 644.5 72.0Q656 61 656 42Q656 22 641.5 11.0Q627 0 600 0H133Q105 0 92.0 11.0Q79 22 79 41Q79 56 88.0 66.5Q97 77 116 84L155 94Q173 100 181.5 114.5Q190 129 190 160V731Q190 757 182.5 768.0Q175 779 158 782L105 786Q87 790 79.0 799.0Q71 808 71 822Q71 839 81.0 849.0Q91 859 117 869L299 935Q348 954 371.0 959.5Q394 965 407 965Q429 965 440.0 950.5Q451 936 455 901Z" transform="translate(6051.00 0.00)" />
-          <path d="M685 127V148L666 152V749Q666 819 630.5 857.5Q595 896 530 896Q471 896 439.0 871.0Q407 846 407 809V721Q407 661 367.0 628.5Q327 596 254 596Q192 596 160.0 625.5Q128 655 128 706Q128 769 180.0 829.5Q232 890 333.0 929.5Q434 969 582 969Q766 969 855.5 894.5Q945 820 945 693V173Q945 145 956.5 131.0Q968 117 989 117Q1011 117 1022.0 127.5Q1033 138 1041 149Q1046 156 1052.0 160.5Q1058 165 1067 165Q1079 165 1085.0 156.0Q1091 147 1091 132Q1091 98 1067.5 62.0Q1044 26 997.5 0.5Q951 -25 881 -25Q792 -25 738.5 15.5Q685 56 685 127ZM86 209Q86 334 197.5 411.0Q309 488 509 488Q574 488 626.5 477.0Q679 466 717 447L695 383Q661 399 625.5 408.0Q590 417 549 417Q466 417 419.5 374.5Q373 332 373 257Q373 182 412.5 142.0Q452 102 515 102Q569 102 618.5 126.5Q668 151 702 195L724 138Q669 60 576.5 17.5Q484 -25 380 -25Q249 -25 167.5 40.0Q86 105 86 209Z" transform="translate(7008.00 0.00)" />
-        </g>
-      
-          </svg>
-      </svg>
+    <!-- Fjernes av launch-handoff.ts når React har malt første ekte frame. -->
+    <div id="launch" aria-hidden="true">
+      <div class="launch-signature" data-launch-signature>
+        <div class="launch-hero" data-launch-hero>
+          <div class="launch-signboard" data-launch-signboard>
+            <img
+              src="/brand/babyora-wordmark-reverse.svg"
+              alt=""
+              draggable="false"
+              data-launch-wordmark
+            />
+          </div>
+          <div class="launch-weather" data-launch-weather>
+            <img
+              src="/monter/vaer-delvis-skyet.webp"
+              alt=""
+              draggable="false"
+            />
+          </div>
+          <div class="launch-avatar" data-launch-avatar>
+            <img
+              src="/monter/maskot-resultat-sveip.webp"
+              alt=""
+              draggable="false"
+            />
+          </div>
+        </div>
+      </div>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
