@@ -77,7 +77,7 @@ export function ResultSurface({
     setActiveIndex((current) => current === nearestIndex ? current : nearestIndex);
   }, []);
 
-  const scrollToCard = useCallback((nextIndex: number) => {
+  const scrollToCard = useCallback((nextIndex: number, moveFocus = false) => {
     const clamped = Math.min(Math.max(nextIndex, 0), Math.max(slideCount - 1, 0));
     const rail = railRef.current;
     const card = rail?.children.item(clamped);
@@ -88,6 +88,10 @@ export function ResultSurface({
       left: card.offsetLeft + card.offsetWidth / 2 - rail.clientWidth / 2,
       behavior: reducedMotion ? 'auto' : 'smooth',
     });
+    if (moveFocus) {
+      card.querySelector<HTMLButtonElement>('.hjm-journey-detail')
+        ?.focus({ preventScroll: true });
+    }
   }, [reducedMotion, slideCount]);
 
   const handleRailKeyDown = useCallback((event: KeyboardEvent<HTMLOListElement>) => {
@@ -163,7 +167,7 @@ export function ResultSurface({
                       roleLabel={localizedRole}
                       imageSrc={imageSrc}
                       compactDestinationLabel={copy.openGarment(displayLabel)}
-                      onSwap={() => scrollToCard(index + 1)}
+                      onSwap={(event) => scrollToCard(index + 1, event.detail === 0)}
                       animationDelayMs={animateRows ? ROW_STAGGER_START_MS + index * ROW_STAGGER_MS : null}
                     />
                   ))}

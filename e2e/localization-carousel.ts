@@ -476,6 +476,16 @@ async function assertHomeResultCarousel(
   );
 
   const firstCard = cards.first();
+  const firstOverviewRow = overview.locator('.hjm-row').first();
+  await firstOverviewRow.focus();
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => (
+    document.activeElement?.matches('[data-hjm-journey-card="true"] .hjm-journey-detail') === true
+  ));
+  assert(
+    await firstCard.locator('.hjm-journey-detail').evaluate((element) => element === document.activeElement),
+    `${scenario.locale}: keyboard activation left focus behind on the off-screen overview card`,
+  );
   assert(
     await result.locator('details.hjm-journey-fact, .hjm-journey-fact-content').count() === 0,
     `${scenario.locale}: inline Good-to-know disclosure is still rendered`,
