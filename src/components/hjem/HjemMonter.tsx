@@ -218,12 +218,7 @@ export type HjemMonterProps = Readonly<{
    * the weather-ready panel's place pill (both weather-ready sub-branches).
    */
   onOpenAdjust: (prefill: FinnAntrekkPrefill) => void;
-  /**
-   * P5: "Hvorfor akkurat dette?" (ResultSurface) — contextual entry into the
-   * Varm-eller-kald guide (PRODUCT.md, 2026-07-31 Familie IA decision: "the
-   * migrated guide tools ... get contextual entry points at their point of
-   * need"). Same callback App.tsx already threads into PaakledningScreen.
-   */
+  /** Kept in the Hjem contract while the guide remains available from other outfit surfaces. */
   onOpenWarmColdGuide: () => void;
   /** P5: manual weather-refetch trigger for the offline ask-block's "Prøv å hente været igjen". */
   onRetryWeather: () => void;
@@ -253,7 +248,6 @@ export function HjemMonter({
   reducedMotion,
   outfitTransitionStatus,
   onOpenAdjust,
-  onOpenWarmColdGuide,
   onRetryWeather,
   onOpenPlaggbib,
 }: HjemMonterProps) {
@@ -623,10 +617,9 @@ export function HjemMonter({
     else if (scan.state.phase === 'recalculating') completeRecalc(true);
   }, [clearTimer, clearHapticTimers, scan, completeScan, completeRecalc]);
 
-  // P5: Juster (WeatherStrip + vær-panelets sted-pille) → onOpenAdjust,
-  // Hvorfor akkurat dette? → onOpenWarmColdGuide, Prøv å hente været igjen →
-  // onRetryWeather (refreshKey inn i HjemScreen sin useWeather-kalling) er
-  // kablet, se under. Bytt fikk sin kabling i P6 (rett under).
+  // P5: Juster (WeatherStrip + vær-panelets sted-pille) → onOpenAdjust og
+  // Prøv å hente været igjen → onRetryWeather er kablet, se under. Plaggets
+  // Mer info fikk sin kabling i P6 (rett under).
   //
   // P9 tilstands-audit (bevisst FORTSATT no-op, ikke en glemt stub): «Vis
   // forrige antrekk» (result-stale) har ingen eksisterende drill å koble
@@ -780,7 +773,6 @@ export function HjemMonter({
               precipMmH: now.precipMmH,
             }}
             onSwapRow={handleSwapRow}
-            onWhy={onOpenWarmColdGuide}
           />
         </div>
         {detailGarmentId && (

@@ -14,7 +14,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { garmentFactFor } from '../../data/garment-facts.js';
 import type { WhyContext } from '../../data/garment-info.js';
 import { displayNameForDbString } from '../../data/garment-display-names.js';
 import { getGarmentImage } from '../../lib/monter-assets.js';
@@ -32,23 +31,6 @@ const RESULT_MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot-resultat-sve
 // Kept as a defensive SSR fallback; normal rendering always uses resultCopyFor.
 const NORWEGIAN_CAROUSEL_FALLBACK = 'Kle på, steg for steg';
 
-function SwipeCueIcon() {
-  return (
-    <svg
-      viewBox="0 0 32 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path d="m8 6-6 6 6 6M24 6l6 6-6 6M3 12h26" />
-    </svg>
-  );
-}
-
 export type ResultSurfaceProps = Readonly<{
   rows: readonly ResultRow[];
   childLabel: string;
@@ -56,7 +38,6 @@ export type ResultSurfaceProps = Readonly<{
   reducedMotion: boolean;
   whyContext: WhyContext | null;
   onSwapRow: (row: ResultRow, event: MouseEvent<HTMLButtonElement>) => void;
-  onWhy: () => void;
 }>;
 
 export function ResultSurface({
@@ -66,7 +47,6 @@ export function ResultSurface({
   reducedMotion,
   whyContext,
   onSwapRow,
-  onWhy,
 }: ResultSurfaceProps) {
   const copy = resultCopyFor(i18next.resolvedLanguage);
   const animateRows = isFresh && !reducedMotion;
@@ -75,7 +55,8 @@ export function ResultSurface({
   const hintId = useId();
   const titleId = useId();
   const [rawActiveIndex, setActiveIndex] = useState(0);
-  const activeIndex = Math.min(rawActiveIndex, Math.max(rows.length - 1, 0));
+  const slideCount = rows.length + 1;
+  const activeIndex = Math.min(rawActiveIndex, Math.max(slideCount - 1, 0));
 
   const syncActiveCard = useCallback(() => {
     const rail = railRef.current;
@@ -97,7 +78,7 @@ export function ResultSurface({
   }, []);
 
   const scrollToCard = useCallback((nextIndex: number) => {
-    const clamped = Math.min(Math.max(nextIndex, 0), Math.max(rows.length - 1, 0));
+    const clamped = Math.min(Math.max(nextIndex, 0), Math.max(slideCount - 1, 0));
     const rail = railRef.current;
     const card = rail?.children.item(clamped);
     if (rail === null) return;
@@ -107,7 +88,7 @@ export function ResultSurface({
       left: card.offsetLeft + card.offsetWidth / 2 - rail.clientWidth / 2,
       behavior: reducedMotion ? 'auto' : 'smooth',
     });
-  }, [reducedMotion, rows.length]);
+  }, [reducedMotion, slideCount]);
 
   const handleRailKeyDown = useCallback((event: KeyboardEvent<HTMLOListElement>) => {
     if (event.target !== event.currentTarget) return;
@@ -148,33 +129,7 @@ export function ResultSurface({
         <p className="hjm-journey-empty" role="status">{copy.empty}</p>
       ) : (
         <>
-          <ol
-            className="hjm-rows"
-            aria-label={copy.progressLabel}
-            data-fresh={animateRows ? 'true' : 'false'}
-          >
-            {presentedRows.map(({ row, displayLabel, localizedRole, imageSrc }, index) => (
-              <MonterGarmentRow
-                key={`overview-${row.key}`}
-                position={row.position}
-                label={displayLabel}
-                roleLabel={localizedRole}
-                imageSrc={imageSrc}
-                onSwap={(event) => onSwapRow(row, event)}
-                animationDelayMs={animateRows ? ROW_STAGGER_START_MS + index * ROW_STAGGER_MS : null}
-              />
-            ))}
-          </ol>
-
-          <div className="hjm-journey-disclosure" data-carousel-disclosure="true">
-            <div>
-              <h2>{copy.detailsTitle}</h2>
-              <p className="hjm-journey-hint" id={hintId}>{copy.hint}</p>
-            </div>
-            <span className="hjm-journey-swipe-cue" aria-hidden="true">
-              <SwipeCueIcon />
-            </span>
-          </div>
+          <p className="hjm-sr-only" id={hintId}>{copy.carouselHint}</p>
 
           <ol
             className="hjm-journey-rail"
@@ -186,11 +141,37 @@ export function ResultSurface({
             onKeyDown={handleRailKeyDown}
             onScroll={syncActiveCard}
           >
+            <li
+              className="hjm-journey-card hjm-journey-overview-card"
+              data-hjm-overview-card="true"
+            >
+              <article className="hjm-journey-card-inner hjm-journey-overview-inner">
+                <div className="hjm-journey-overview-heading">
+                  <h2>{copy.overviewTitle}</h2>
+                  <span>{rows.length}</span>
+                </div>
+                <ol
+                  className="hjm-rows hjm-journey-overview-list"
+                  aria-label={copy.progressLabel}
+                  data-fresh={animateRows ? 'true' : 'false'}
+                >
+                  {presentedRows.map(({ row, displayLabel, localizedRole, imageSrc }, index) => (
+                    <MonterGarmentRow
+                      key={`overview-${row.key}`}
+                      position={row.position}
+                      label={displayLabel}
+                      roleLabel={localizedRole}
+                      imageSrc={imageSrc}
+                      compactDestinationLabel={copy.openGarment(displayLabel)}
+                      onSwap={() => scrollToCard(index + 1)}
+                      animationDelayMs={animateRows ? ROW_STAGGER_START_MS + index * ROW_STAGGER_MS : null}
+                    />
+                  ))}
+                </ol>
+              </article>
+            </li>
+
             {presentedRows.map(({ row, displayLabel, localizedRole, imageSrc }) => {
-              const fact = garmentFactFor(
-                row.garmentId ?? 'unknown-garment',
-                i18next.resolvedLanguage,
-              );
               const why = row.garmentId !== null && whyContext !== null
                 ? localizedWhyForGarment(
                     row.garmentId,
@@ -208,9 +189,6 @@ export function ResultSurface({
                   roleLabel={localizedRole}
                   imageSrc={imageSrc}
                   why={why}
-                  factText={fact.text}
-                  factSourceLabel={fact.sourceLabel}
-                  factSourceUrl={fact.sourceUrl}
                   onSwap={(event) => onSwapRow(row, event)}
                   animationDelayMs={null}
                 />
@@ -218,26 +196,25 @@ export function ResultSurface({
             })}
           </ol>
 
-          {rows.length > 1 ? (
+          {slideCount > 1 ? (
             <div className="hjm-journey-progress" aria-label={copy.progressLabel}>
               <span className="hjm-sr-only" aria-live="polite" aria-atomic="true">
-                {copy.progress(activeIndex + 1, rows.length)}
+                {activeIndex === 0
+                  ? copy.overviewProgress
+                  : copy.progress(activeIndex, rows.length)}
               </span>
               <span className="hjm-journey-dots" aria-hidden="true">
-                {rows.map((row, index) => (
-                  <i key={row.key} data-active={index === activeIndex ? 'true' : 'false'} />
+                {Array.from({ length: slideCount }, (_, index) => (
+                  <i
+                    key={index === 0 ? 'overview' : rows[index - 1]?.key}
+                    data-active={index === activeIndex ? 'true' : 'false'}
+                  />
                 ))}
               </span>
             </div>
           ) : null}
         </>
       )}
-
-      <div className="hjm-result-tools">
-        <button type="button" className="hjm-why" onClick={onWhy}>
-          {copy.whyButton}
-        </button>
-      </div>
     </section>
   );
 }

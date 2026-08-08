@@ -14,19 +14,9 @@ function InfoIcon() {
   );
 }
 
-function ExternalLinkIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <path d="M14 5h5v5M19 5l-8 8" />
-      <path d="M18 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
-    </svg>
-  );
-}
-
-function DetailChevronIcon({ expandable = false }: Readonly<{ expandable?: boolean }>) {
+function DetailChevronIcon() {
   return (
     <svg
-      className={expandable ? 'hjm-journey-disclosure-chevron' : undefined}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -36,7 +26,7 @@ function DetailChevronIcon({ expandable = false }: Readonly<{ expandable?: boole
       aria-hidden="true"
       focusable="false"
     >
-      <path d={expandable ? 'm6 9 6 6 6-6' : 'm9 18 6-6-6-6'} />
+      <path d="m9 18 6-6-6-6" />
     </svg>
   );
 }
@@ -49,9 +39,7 @@ export type MonterGarmentRowProps = Readonly<{
   roleLabel: string;
   imageSrc: string;
   why?: string;
-  factText?: string;
-  factSourceLabel?: string;
-  factSourceUrl?: string;
+  compactDestinationLabel?: string;
   onSwap: (event: MouseEvent<HTMLButtonElement>) => void;
   animationDelayMs: number | null;
 }>;
@@ -63,9 +51,7 @@ export function MonterGarmentRow({
   roleLabel,
   imageSrc,
   why,
-  factText,
-  factSourceLabel,
-  factSourceUrl,
+  compactDestinationLabel,
   onSwap,
   animationDelayMs,
 }: MonterGarmentRowProps) {
@@ -76,17 +62,15 @@ export function MonterGarmentRow({
   if (
     total === undefined
     || why === undefined
-    || factText === undefined
-    || factSourceLabel === undefined
-    || factSourceUrl === undefined
   ) {
+    const navigatesInCarousel = compactDestinationLabel !== undefined;
     return (
       <li className="hjm-row-item">
         <button
           type="button"
           className="hjm-row"
           onClick={onSwap}
-          aria-label={copy.detailAria(label, roleLabel)}
+          aria-label={compactDestinationLabel ?? copy.detailAria(label, roleLabel)}
           style={animationDelayMs !== null ? { animationDelay: `${animationDelayMs}ms` } : undefined}
         >
           <span className="hjm-num" aria-hidden="true">{position}</span>
@@ -106,9 +90,18 @@ export function MonterGarmentRow({
             <span className="hjm-g-name">{label}</span>
             <span className="hjm-g-role">{roleLabel}</span>
           </span>
-          <span className="hjm-swap" aria-hidden="true">
-            <span className="hjm-swap-label">{copy.details}</span>
-            <InfoIcon />
+          <span
+            className={navigatesInCarousel ? 'hjm-swap hjm-row-next' : 'hjm-swap'}
+            aria-hidden="true"
+          >
+            {navigatesInCarousel ? (
+              <DetailChevronIcon />
+            ) : (
+              <>
+                <span className="hjm-swap-label">{copy.details}</span>
+                <InfoIcon />
+              </>
+            )}
           </span>
         </button>
       </li>
@@ -148,32 +141,13 @@ export function MonterGarmentRow({
           <p>{why}</p>
         </section>
 
-        <details className="hjm-journey-fact">
-          <summary>
-            <span>{copy.factTitle}</span>
-            <DetailChevronIcon expandable />
-          </summary>
-          <div className="hjm-journey-fact-content">
-            <p>{factText}</p>
-            <a
-              href={factSourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={copy.sourceNewWindow(factSourceLabel)}
-            >
-              {factSourceLabel}
-              <ExternalLinkIcon />
-            </a>
-          </div>
-        </details>
-
         <button
           type="button"
           className="hjm-journey-detail"
           onClick={onSwap}
           aria-label={copy.detailAria(label, roleLabel)}
         >
-          {copy.details}
+          {copy.moreInfo}
           <DetailChevronIcon />
         </button>
       </article>

@@ -44,14 +44,12 @@ describe('HjemMonter — P5 stub wiring', () => {
     expect(onAdjustLocationSites.length).toBe(2);
   });
 
-  it('"Hvorfor akkurat dette?" (ResultSurface.onWhy) opens the Varm-eller-kald guide via the same callback PaakledningScreen uses', () => {
+  it('keeps the simplified ResultSurface free of the retired global why callback while wiring garment details', () => {
     const contents = source(hjemMonterPath);
     const resultSurfaceStart = contents.indexOf('<ResultSurface');
     const resultSurfaceEnd = contents.indexOf('/>', resultSurfaceStart);
     const call = contents.slice(resultSurfaceStart, resultSurfaceEnd);
-    expect(call).toContain('onWhy={onOpenWarmColdGuide}');
-    // P6: "Bytt" (garment swap) is wired now — see the dedicated describe
-    // block below for the full resolveSwapTarget/PlaggDetailSheet wiring.
+    expect(call).not.toContain('onWhy=');
     expect(call).toContain('onSwapRow={handleSwapRow}');
   });
 

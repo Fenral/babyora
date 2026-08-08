@@ -43,7 +43,6 @@ function renderResult(
       reducedMotion={false}
       whyContext={WHY_CONTEXT}
       onSwapRow={vi.fn()}
-      onWhy={vi.fn()}
       {...overrides}
     />,
   );
@@ -51,56 +50,68 @@ function renderResult(
 
 function cssRuleFor(css: string, selector: string): string {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
-  return css.match(new RegExp(`${escapedSelector}\\s*\\{[^}]*\\}`, 'u'))?.[0] ?? '';
+  return css.match(new RegExp(`(?:^|\\n)\\s*${escapedSelector}\\s*\\{[^}]*\\}`, 'u'))?.[0] ?? '';
 }
 
-describe('ResultSurface — inline plaggreise', () => {
-  it('beholder ekte listestruktur og gjør resultatet til en navngitt karusell', () => {
+describe('ResultSurface — overview-first garment deck', () => {
+  it('renders the overview as rail card zero, followed by one card per garment', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
-    const html = renderResult([
+    const rows = [
       row({ key: 'r1', position: 1 }),
       row({ key: 'r2', position: 2, label: 'ull-jakke', displayLabel: 'Ulljakke', roleLabel: 'Mellomlag', garmentId: 'ull-jakke' }),
-    ]);
+    ];
+    const html = renderResult(rows);
+    const rail = html.slice(html.indexOf('<ol class="hjm-journey-rail"'));
+    const overviewIndex = rail.indexOf('data-hjm-overview-card="true"');
+    const firstGarmentIndex = rail.indexOf('data-hjm-journey-card="true"');
 
-    expect(html).toContain('<ol');
-    expect((html.match(/<li class="hjm-journey-card"/g) ?? []).length).toBe(2);
-    expect(html).toContain(`aria-label="${copy.carouselLabel}"`);
-    expect(html).toContain(copy.order(1, 2));
-    expect(html).toContain(copy.hint);
+    expect(overviewIndex).toBeGreaterThan(-1);
+    expect(firstGarmentIndex).toBeGreaterThan(overviewIndex);
+    expect((rail.match(/data-hjm-overview-card="true"/gu) ?? [])).toHaveLength(1);
+    expect((rail.match(/data-hjm-journey-card="true"/gu) ?? [])).toHaveLength(rows.length);
+    expect(rail).toContain(`aria-label="${copy.carouselLabel}"`);
   });
 
-  it('renders one compact row and one detail card per garment, with the overview first', () => {
+  it('keeps the same ordered garments in the overview and detail cards', () => {
     const rows = [
       row({ key: 'r1', position: 1 }),
       row({ key: 'r2', position: 2, label: 'ull-jakke', garmentId: 'ull-jakke' }),
       row({ key: 'r3', position: 3, label: 'regnjakke', garmentId: 'regnjakke' }),
     ];
     const html = renderResult(rows);
-    const overviewIndex = html.indexOf('class="hjm-rows"');
     const railIndex = html.indexOf('class="hjm-journey-rail"');
+    const overviewIndex = html.indexOf('data-hjm-overview-card="true"', railIndex);
+    const firstGarmentIndex = html.indexOf('data-hjm-journey-card="true"', overviewIndex);
 
     expect(overviewIndex).toBeGreaterThan(-1);
-    expect(railIndex).toBeGreaterThan(overviewIndex);
+    expect(overviewIndex).toBeGreaterThan(railIndex);
+    expect(firstGarmentIndex).toBeGreaterThan(overviewIndex);
     expect((html.match(/<li class="hjm-row-item"/gu) ?? []).length).toBe(rows.length);
-    expect((html.match(/<li class="hjm-journey-card"/gu) ?? []).length).toBe(rows.length);
+    expect((html.match(/data-hjm-journey-card="true"/gu) ?? []).length).toBe(rows.length);
 
-    const overview = html.slice(overviewIndex, railIndex);
-    const rail = html.slice(railIndex);
+    const overview = html.slice(overviewIndex, firstGarmentIndex);
+    const garmentCards = html.slice(firstGarmentIndex);
     const expectedPaths = [
       '/illustrations/garments/langermet-ullbody.webp',
       '/illustrations/garments/ull-jakke.webp',
     ];
-    for (const section of [overview, rail]) {
+    for (const section of [overview, garmentCards]) {
       expect(section.indexOf(expectedPaths[0])).toBeLessThan(section.indexOf(expectedPaths[1]));
     }
   });
 
-  it('er CTA-fri på Hjem, men beholder detalj- og varm/kald-flytene', () => {
+  it('has one More info action per garment and no global Why this outfit footer', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
-    const html = renderResult([row({})]);
+    const rows = [
+      row({ key: 'r1', position: 1 }),
+      row({ key: 'r2', position: 2, label: 'ull-jakke', garmentId: 'ull-jakke' }),
+    ];
+    const html = renderResult(rows);
     expect(html).not.toContain('class="hjm-cta"');
-    expect(html).toContain(copy.details);
-    expect(html).toContain(copy.whyButton);
+    expect((html.match(/class="hjm-journey-detail"/gu) ?? [])).toHaveLength(rows.length);
+    expect((html.match(new RegExp(`>${copy.moreInfo}<`, 'gu')) ?? [])).toHaveLength(rows.length);
+    expect(html).not.toContain('class="hjm-result-tools"');
+    expect(html).not.toContain('Why this outfit?');
   });
 
   it('viser ekte flat WebP også for et tidligere udekket katalogplagg', () => {
@@ -124,31 +135,30 @@ describe('ResultSurface — inline plaggreise', () => {
     expect(html).not.toContain('/illustrations/garments/ull-bukse.webp');
   });
 
-  it('gir hvert kort bilde, rekkefølge/rolle, kontekstuell hvorfor og kildebelagt fakta', () => {
+  it('keeps image, order, role, name and Why today on every garment card', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
     const html = renderResult([row({})]);
+    const card = html.slice(html.indexOf('data-hjm-journey-card="true"'));
+
     expect(html).toContain('/illustrations/garments/langermet-ullbody.webp');
-    expect(html).toContain(copy.order(1, 1));
-    expect(html).toContain(copy.role('Innerst'));
-    expect(html).toContain(copy.whyTitle);
-    expect(html).toContain('Lillian');
-    expect(html).toContain(copy.factTitle);
-    expect(html).toContain('Woolmark');
-    expect(html).toContain('rel="noopener noreferrer"');
+    expect(card).toContain(copy.order(1, 1));
+    expect(card).toContain(copy.role('Innerst'));
+    expect(card).toContain('Langermet ullbody');
+    expect(card).toContain(copy.whyTitle);
+    expect(card).toMatch(/class="hjm-journey-why"[\s\S]*?<p>\S[\s\S]*?<\/p>/u);
   });
 
-  it('keeps Good to know closed as a native disclosure and preserves the detail action', () => {
+  it('moves Good to know behind one localized More info button', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
     const html = renderResult([row({})]);
-    const card = html.slice(html.indexOf('<li class="hjm-journey-card"'));
+    const card = html.slice(html.indexOf('data-hjm-journey-card="true"'));
 
-    expect(card).toContain('<details class="hjm-journey-fact">');
-    expect(card).not.toMatch(/<details class="hjm-journey-fact"[^>]*\sopen(?:=|\s|>)/u);
-    expect(card).toMatch(/<summary[^>]*>[\s\S]*?<\/summary>/u);
-    expect(card).toContain(`<span>${copy.factTitle}</span>`);
-    expect(card).toContain('Woolmark');
+    expect(card).not.toContain('<details');
+    expect(card).not.toContain('hjm-journey-fact');
+    expect(card).not.toContain('Woolmark');
+    expect(card).not.toContain('rel="noopener noreferrer"');
     expect(card).toMatch(/<button[^>]*class="hjm-journey-detail"[^>]*>/u);
-    expect(card).toContain(copy.details);
+    expect(card).toContain(copy.moreInfo);
     expect(card).not.toContain('aria-expanded=');
   });
 
@@ -169,18 +179,16 @@ describe('ResultSurface — inline plaggreise', () => {
     expect(fresh).toContain('animation-delay:50ms');
     expect(fresh).toContain('animation-delay:130ms');
 
-    const freshOverview = fresh.slice(
-      fresh.indexOf('<ol class="hjm-rows"'),
-      fresh.indexOf('<div class="hjm-journey-disclosure"'),
-    );
-    const freshRail = fresh.slice(
-      fresh.indexOf('<ol class="hjm-journey-rail"'),
-      fresh.indexOf('<nav class="hjm-journey-progress"'),
+    const freshRail = fresh.slice(fresh.indexOf('<ol class="hjm-journey-rail"'));
+    const freshOverview = freshRail.slice(
+      freshRail.indexOf('data-hjm-overview-card="true"'),
+      freshRail.indexOf('data-hjm-journey-card="true"'),
     );
     expect(freshOverview).toContain('data-fresh="true"');
     expect((freshOverview.match(/animation-delay:/gu) ?? []).length).toBe(rows.length);
-    expect(freshRail).not.toContain('data-fresh');
-    expect(freshRail).not.toContain('animation-delay');
+    const freshGarments = freshRail.slice(freshRail.indexOf('data-hjm-journey-card="true"'));
+    expect(freshGarments).not.toContain('data-fresh');
+    expect(freshGarments).not.toContain('animation-delay');
 
     const cached = renderResult(rows, { isFresh: false });
     expect(cached).toContain('data-fresh="false"');
@@ -191,18 +199,18 @@ describe('ResultSurface — inline plaggreise', () => {
     expect(reduced).not.toContain('animation-delay');
   });
 
-  it('keeps the detail introduction and centered-card geometry visible', () => {
+  it('removes the visible swipe introduction while preserving an accessible hint and centered geometry', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
     const html = renderResult([row({})]);
     const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
-    const hintId = html.match(/<p class="hjm-journey-hint" id="([^"]+)"/u)?.[1];
     const railRule = cssRuleFor(css, '.hjm-journey-rail');
 
-    expect(html).toContain('class="hjm-journey-disclosure" data-carousel-disclosure="true"');
-    expect(html).toContain(`<h2>${copy.detailsTitle}</h2>`);
-    expect(html).toContain(`>${copy.hint}</p>`);
-    expect(hintId).toBeDefined();
-    expect(html).toContain(`aria-describedby="${hintId}"`);
+    expect(html).not.toContain('class="hjm-journey-disclosure"');
+    expect(html).not.toContain('class="hjm-journey-hint"');
+    expect(html).not.toContain('Explore each garment');
+    expect(html).not.toContain('Swipe sideways, from the base layer to the outer layer.');
+    expect(html).toContain('class="hjm-sr-only"');
+    expect(html).toContain(copy.carouselHint);
     expect(railRule).toMatch(/grid-auto-columns:\s*(?:var\([^)]*\)|min\([^;]+\));/u);
     expect(railRule).toMatch(/padding-inline:[^;]*calc\(/u);
     expect(railRule).toMatch(/scroll-padding-inline:[^;]*calc\(/u);
@@ -239,7 +247,7 @@ describe('ResultSurface — inline plaggreise', () => {
     expect(cardInnerRule).not.toMatch(/height:\s*100%;/u);
     expect(html).not.toContain('class="hjm-journey-nav-button"');
     expect(html).toContain('class="hjm-sr-only"');
-    expect((html.match(/data-active="(?:true|false)"/gu) ?? [])).toHaveLength(rows.length);
+    expect((html.match(/data-active="(?:true|false)"/gu) ?? [])).toHaveLength(rows.length + 1);
   });
 
   it('uses matching 11/6 image frames with centered, contained 92% artwork', () => {
@@ -264,17 +272,18 @@ describe('ResultSurface — inline plaggreise', () => {
     }
   });
 
-  it('collapses the decorative details label before compact rows can overlap at 320px', () => {
+  it('makes overview rows direct, named destinations for their garment cards', () => {
+    const copy = resultCopyFor(i18next.resolvedLanguage);
     const html = renderResult([row({})]);
-    const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
 
-    expect(html).toContain('class="hjm-swap-label"');
-    expect(css).toMatch(/@media \(max-width:\s*359px\)[\s\S]*?\.hjm-swap-label\s*\{\s*display:\s*none;/u);
+    expect(html).toContain(`aria-label="${copy.openGarment('Langermet ullbody')}"`);
+    expect(html).toContain('class="hjm-swap hjm-row-next"');
+    expect(html).not.toContain('class="hjm-swap-label"');
   });
 
-  it('gir disclosure-summary og detaljhandling minst 44 px trykkflate', () => {
+  it('gives the More info action at least a 44px touch target', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
     expect(css).toMatch(/\.hjm-journey-detail\s*\{[\s\S]*?min-height:\s*44px;/);
-    expect(css).toMatch(/\.hjm-journey-fact summary\s*\{[\s\S]*?min-height:\s*44px;/);
+    expect(css).not.toMatch(/\.hjm-journey-fact summary\s*\{[\s\S]*?min-height:\s*44px;/);
   });
 });

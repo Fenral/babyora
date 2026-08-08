@@ -856,37 +856,11 @@
   align-items: end;
   min-height: 104px;
 }
-.hjm-journey-copy { position: relative; z-index: 1; padding-bottom: 10px; }
-.hjm-journey-disclosure {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--dw-space-12);
-  margin: var(--dw-space-24) 2px var(--dw-space-8);
+.hjm-journey-copy {
+  position: relative;
+  z-index: 1;
+  padding: 0 var(--dw-space-16) 10px 0;
 }
-.hjm-journey-disclosure h2 {
-  margin: 0;
-  color: var(--dw-ink-hi);
-  font-size: 18px;
-  line-height: 1.2;
-  letter-spacing: -0.012em;
-}
-.hjm-journey-hint {
-  max-width: 30ch;
-  margin: var(--dw-space-4) 0 0;
-  color: var(--dw-ink-mid);
-  font-size: 13px;
-  line-height: 1.4;
-}
-.hjm-journey-swipe-cue {
-  width: var(--dw-size-touch);
-  height: var(--dw-size-touch);
-  flex: none;
-  display: grid;
-  place-items: center;
-  color: var(--dw-ink-low);
-}
-.hjm-journey-swipe-cue svg { width: 30px; height: 22px; }
 .hjm-result-mascot-seam {
   position: relative;
   align-self: stretch;
@@ -914,7 +888,7 @@
   align-items: start;
   gap: 12px;
   width: calc(100% + 40px);
-  margin: 0 -20px;
+  margin: var(--dw-space-12) -20px 0;
   padding-block: 6px 16px;
   padding-inline: calc((100% - var(--hjm-journey-card-width)) / 2 + 20px);
   list-style: none;
@@ -962,6 +936,52 @@
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
 }
+.hjm-journey-overview-heading {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dw-space-12);
+  padding: 0 2px 4px;
+}
+.hjm-journey-overview-heading h2 {
+  margin: 0;
+  color: var(--dw-ink-hi);
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+}
+.hjm-journey-overview-heading span {
+  min-width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--dw-r-pill);
+  background: color-mix(in srgb, var(--dw-accent) 14%, transparent);
+  color: var(--dw-ink-mid);
+  font-size: 12px;
+  font-weight: 750;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.hjm-journey-overview-list.hjm-rows {
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.hjm-journey-overview-list.hjm-rows::before { display: none; }
+.hjm-journey-overview-list .hjm-row {
+  min-height: 52px;
+  gap: 9px;
+  padding: 5px 0;
+}
+.hjm-journey-overview-list .hjm-thumb { width: 58px; }
+.hjm-journey-overview-list .hjm-row-next {
+  width: 24px;
+  justify-content: center;
+}
+.hjm-journey-overview-list .hjm-row-next svg { width: 18px; height: 18px; }
 .hjm-journey-image {
   position: relative;
   width: 100%;
@@ -1022,56 +1042,17 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-.hjm-journey-why p,
-.hjm-journey-fact-content p {
+.hjm-journey-why p {
   margin: 5px 0 0;
   color: var(--dw-ink-mid);
   font-size: 13.5px;
   line-height: 1.45;
 }
-.hjm-journey-fact {
-  margin-top: 10px;
-  border-top: 1px solid var(--dw-hairline);
-}
-.hjm-journey-fact summary {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  color: var(--dw-ink-hi);
-  font-size: 13.5px;
-  font-weight: 700;
-  cursor: pointer;
-  list-style: none;
-}
-.hjm-journey-fact summary::-webkit-details-marker { display: none; }
-.hjm-journey-fact summary::marker { content: ''; }
-.hjm-journey-fact summary svg,
 .hjm-journey-detail svg {
   width: 17px;
   height: 17px;
   flex: none;
 }
-.hjm-journey-disclosure-chevron {
-  transition: transform var(--dw-m-marker) var(--dw-ease);
-}
-.hjm-journey-fact[open] .hjm-journey-disclosure-chevron {
-  transform: rotate(180deg);
-}
-.hjm-journey-fact-content { padding: 0 0 8px; }
-.hjm-journey-fact a {
-  width: fit-content;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--dw-ink-low);
-  font-size: 12px;
-  font-weight: 650;
-  text-underline-offset: 3px;
-}
-.hjm-journey-fact a svg { width: 14px; height: 14px; }
 .hjm-journey-detail {
   appearance: none;
   width: 100%;
@@ -1124,7 +1105,6 @@
   border-radius: var(--dw-r-pill);
   background: var(--dw-accent);
 }
-.hjm-result-tools { padding-top: 2px; }
 .hjm-journey-empty {
   margin: 12px 0 0;
   padding: 20px;
@@ -1136,8 +1116,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .hjm-journey-rail { scroll-behavior: auto !important; }
-  .hjm-journey-detail,
-  .hjm-journey-disclosure-chevron { transition: none; }
+  .hjm-journey-detail { transition: none; }
 }
 
 /* Dybdedoktrinen (D1/D2): HELE listen på Ã‰N hevet flate (nivÃ¥ 2), kantlys +
@@ -1261,27 +1240,17 @@
 .hjm-swap svg { width: 15px; height: 15px; }
 
 @media (max-width: 359px) {
+  .hjm-journey-intro { grid-template-columns: minmax(0, 1fr) 94px; }
+  .hjm-result-mascot-seam img {
+    width: 148px;
+    right: -18px;
+    bottom: -18px;
+  }
   .hjm-rows { padding-inline: var(--dw-space-10); }
   .hjm-row { gap: var(--dw-space-10); }
   .hjm-thumb { width: 62px; }
   .hjm-swap { width: 20px; justify-content: center; }
   .hjm-swap-label { display: none; }
-}
-
-.hjm-why {
-  display: block;
-  margin: 9px auto 0;
-  background: none;
-  border: 0;
-  color: var(--dw-ink-low);
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  padding: 10px 16px;
-  min-height: 44px;
-  cursor: pointer;
 }
 
 /* ═══ SCROLL-AFFORDANCE (D4): BUNN-FADE I STEDET FOR HARDT KLIPP ═══════════

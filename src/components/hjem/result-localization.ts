@@ -4,21 +4,18 @@ export type ResultLanguage = 'da' | 'en' | 'no' | 'sv';
 
 type ResultCopy = Readonly<{
   carouselLabel: string;
+  carouselHint: string;
   title: string;
-  detailsTitle: string;
-  hint: string;
+  overviewTitle: string;
+  overviewProgress: string;
   empty: string;
   progressLabel: string;
-  previous: string;
-  next: string;
-  whyButton: string;
   whyTitle: string;
   whyAria: string;
-  factTitle: string;
-  factAria: string;
   details: string;
-  sourceNewWindow: (source: string) => string;
+  moreInfo: string;
   detailAria: (name: string, role: string) => string;
+  openGarment: (name: string) => string;
   order: (position: number, total: number) => string;
   progress: (position: number, total: number) => string;
   childSummary: (count: number, childName: string) => string;
@@ -35,21 +32,18 @@ const ROLE: Record<ResultLanguage, Record<string, string>> = {
 const COPY: Record<ResultLanguage, ResultCopy> = {
   en: {
     carouselLabel: 'Dress step by step',
+    carouselHint: 'Move horizontally between the outfit overview and each garment.',
     title: "Today's outfit",
-    detailsTitle: 'Explore each garment',
-    hint: 'Swipe sideways, from the base layer to the outer layer.',
+    overviewTitle: 'All garments',
+    overviewProgress: 'Outfit overview',
     empty: 'No garments to show yet.',
     progressLabel: 'Dressing order',
-    previous: 'Previous garment',
-    next: 'Next garment',
-    whyButton: 'Why this outfit?',
     whyTitle: 'Why today',
     whyAria: 'Why this garment',
-    factTitle: 'Good to know',
-    factAria: 'Garment fact',
     details: 'See details',
-    sourceNewWindow: (source) => `Source: ${source}. Opens in a new window.`,
+    moreInfo: 'More info',
     detailAria: (name, role) => `${name}, ${role}. Details.`,
+    openGarment: (name) => `Show ${name}`,
     order: (position, total) => `Garment ${position} of ${total}`,
     progress: (position, total) => `Garment ${position} of ${total}`,
     childSummary: (count, childName) => `${count} garments for ${childName}, base to outer layer`,
@@ -57,21 +51,18 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
   },
   sv: {
     carouselLabel: 'Klä på steg för steg',
+    carouselHint: 'Flytta i sidled mellan klädöversikten och varje plagg.',
     title: 'Dagens kläder',
-    detailsTitle: 'Se varje plagg',
-    hint: 'Svep åt sidan, från innersta till yttersta lagret.',
+    overviewTitle: 'Alla plagg',
+    overviewProgress: 'Klädöversikt',
     empty: 'Det finns inga plagg att visa ännu.',
     progressLabel: 'Påklädningsordning',
-    previous: 'Föregående plagg',
-    next: 'Nästa plagg',
-    whyButton: 'Varför just de här kläderna?',
     whyTitle: 'Varför i dag',
     whyAria: 'Varför det här plagget',
-    factTitle: 'Bra att veta',
-    factAria: 'Fakta om plagget',
     details: 'Visa detaljer',
-    sourceNewWindow: (source) => `Källa: ${source}. Öppnas i ett nytt fönster.`,
+    moreInfo: 'Mer info',
     detailAria: (name, role) => `${name}, ${role}. Detaljer.`,
+    openGarment: (name) => `Visa ${name}`,
     order: (position, total) => `Plagg ${position} av ${total}`,
     progress: (position, total) => `Plagg ${position} av ${total}`,
     childSummary: (count, childName) => `${count} plagg för ${childName}, innerst till ytterst`,
@@ -79,21 +70,18 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
   },
   da: {
     carouselLabel: 'Giv tøjet på trin for trin',
+    carouselHint: 'Bevæg dig sidelæns mellem tøjoversigten og hver beklædningsdel.',
     title: 'Dagens tøj',
-    detailsTitle: 'Se hvert stykke tøj',
-    hint: 'Stryg til siden, fra det inderste til det yderste lag.',
+    overviewTitle: 'Alt tøj',
+    overviewProgress: 'Tøjoversigt',
     empty: 'Der er ingen beklædning at vise endnu.',
     progressLabel: 'Påklædningsrækkefølge',
-    previous: 'Forrige beklædningsdel',
-    next: 'Næste beklædningsdel',
-    whyButton: 'Hvorfor netop dette tøj?',
     whyTitle: 'Hvorfor i dag',
     whyAria: 'Hvorfor denne beklædningsdel',
-    factTitle: 'Godt at vide',
-    factAria: 'Fakta om beklædningen',
     details: 'Se detaljer',
-    sourceNewWindow: (source) => `Kilde: ${source}. Åbnes i et nyt vindue.`,
+    moreInfo: 'Mere info',
     detailAria: (name, role) => `${name}, ${role}. Detaljer.`,
+    openGarment: (name) => `Vis ${name}`,
     order: (position, total) => `Del ${position} af ${total}`,
     progress: (position, total) => `Del ${position} af ${total}`,
     childSummary: (count, childName) => `${count} dele til ${childName}, inderst til yderst`,
@@ -101,21 +89,18 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
   },
   no: {
     carouselLabel: 'Kle på, steg for steg',
+    carouselHint: 'Flytt bortover mellom antrekksoversikten og hvert plagg.',
     title: 'Dagens antrekk',
-    detailsTitle: 'Se hvert plagg',
-    hint: 'Sveip bortover, fra innerst til ytterst.',
+    overviewTitle: 'Alle plagg',
+    overviewProgress: 'Antrekkoversikt',
     empty: 'Ingen plagg å vise ennå.',
     progressLabel: 'Påkledningsrekkefølge',
-    previous: 'Forrige plagg',
-    next: 'Neste plagg',
-    whyButton: 'Hvorfor akkurat dette?',
     whyTitle: 'Hvorfor i dag',
     whyAria: 'Hvorfor dette plagget',
-    factTitle: 'Kort fortalt',
-    factAria: 'Fakta om plagget',
     details: 'Se detaljer',
-    sourceNewWindow: (source) => `Kilde: ${source}. Åpnes i nytt vindu.`,
+    moreInfo: 'Mer info',
     detailAria: (name, role) => `${name}, ${role}. Detaljer.`,
+    openGarment: (name) => `Vis ${name}`,
     order: (position, total) => `Plagg ${position} av ${total}`,
     progress: (position, total) => `Plagg ${position} av ${total}`,
     childSummary: (count, childName) => `${count} plagg for ${childName}, innerst til ytterst`,

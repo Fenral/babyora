@@ -12,30 +12,35 @@ const context = {
 
 describe('result localization', () => {
   it.each([
-    ['en-US', "Today's outfit", 'Explore each garment', 'Base layer'],
-    ['sv-SE', 'Dagens kläder', 'Se varje plagg', 'Innerlager'],
-    ['da-DK', 'Dagens tøj', 'Se hvert stykke tøj', 'Inderste lag'],
-    ['no-NO', 'Dagens antrekk', 'Se hvert plagg', 'Innerst'],
-  ])('provides complete copy for %s', (language, title, detailsTitle, role) => {
+    ['en-US', "Today's outfit", 'All garments', 'Base layer'],
+    ['sv-SE', 'Dagens kläder', 'Alla plagg', 'Innerlager'],
+    ['da-DK', 'Dagens tøj', 'Alt tøj', 'Inderste lag'],
+    ['no-NO', 'Dagens antrekk', 'Alle plagg', 'Innerst'],
+  ])('provides complete overview copy for %s', (language, title, overviewTitle, role) => {
     const copy = resultCopyFor(language);
     expect(copy.title).toBe(title);
-    expect(copy.detailsTitle).toBe(detailsTitle);
+    expect(copy.overviewTitle).toBe(overviewTitle);
     expect(copy.role('Innerst')).toBe(role);
-    expect(copy.factTitle).toMatch(/\S/u);
+    expect(copy.carouselHint).toMatch(/\S/u);
+    expect(copy.overviewProgress).toMatch(/\S/u);
     expect(copy.details).toMatch(/\S/u);
     expect(copy.childSummary(5, 'Mira')).toContain('Mira');
-    expect(copy.sourceNewWindow('Helsenorge')).toContain('Helsenorge');
+    expect(copy.openGarment('Body')).toContain('Body');
   });
 
   it.each([
-    ['en-US', 'Good to know', 'See details'],
-    ['sv-SE', 'Bra att veta', 'Visa detaljer'],
-    ['da-DK', 'Godt at vide', 'Se detaljer'],
-    ['no-NO', 'Kort fortalt', 'Se detaljer'],
-  ])('localizes the compact fact summary and detail action for %s', (language, factTitle, details) => {
+    ['en-US', 'See details', 'More info'],
+    ['sv-SE', 'Visa detaljer', 'Mer info'],
+    ['da-DK', 'Se detaljer', 'Mere info'],
+    ['no-NO', 'Se detaljer', 'Mer info'],
+  ])('localizes sheet details and the More info action for %s', (
+    language,
+    details,
+    moreInfo,
+  ) => {
     const copy = resultCopyFor(language);
-    expect(copy.factTitle).toBe(factTitle);
     expect(copy.details).toBe(details);
+    expect(copy.moreInfo).toBe(moreInfo);
   });
 
   it('localizes contextual reasons instead of leaking Norwegian', () => {
