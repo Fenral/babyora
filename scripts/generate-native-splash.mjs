@@ -42,24 +42,24 @@ async function trimmedPng(input, width) {
 
 async function buildSign() {
   const wordmarkSvg = await readFile(WORDMARK_REVERSE);
-  const wordmark = await trimmedPng(wordmarkSvg, 400);
+  const wordmark = await trimmedPng(wordmarkSvg, 460);
   const shadow = await sharp(Buffer.from(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="700" height="250">
-      <rect x="20" y="12" width="660" height="214" rx="36" fill="#130B06" fill-opacity="0.34"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="980" height="250">
+      <rect x="18" y="12" width="944" height="214" rx="36" fill="#130B06" fill-opacity="0.34"/>
     </svg>
   `)).blur(10).png().toBuffer();
   const plate = Buffer.from(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="700" height="250">
-      <rect x="10" y="4" width="680" height="220" rx="36" fill="#9E5529"
+    <svg xmlns="http://www.w3.org/2000/svg" width="980" height="250">
+      <rect x="1" y="4" width="978" height="220" rx="36" fill="#9E5529"
         stroke="#F2C08A" stroke-opacity="0.42" stroke-width="2"/>
-      <path d="M48 6 H652" stroke="#F7D5B2" stroke-opacity="0.22" stroke-width="2"
+      <path d="M48 6 H932" stroke="#F7D5B2" stroke-opacity="0.22" stroke-width="2"
         stroke-linecap="round"/>
     </svg>
   `);
 
   return sharp({
     create: {
-      width: 700,
+      width: 980,
       height: 250,
       channels: 4,
       background: { r: 0, g: 0, b: 0, alpha: 0 },
@@ -68,7 +68,7 @@ async function buildSign() {
     .composite([
       { input: shadow, left: 0, top: 0 },
       { input: plate, left: 0, top: 0 },
-      { input: wordmark, left: 150, top: 105 },
+      { input: wordmark, left: 260, top: 95 },
     ])
     .png()
     .toBuffer();
@@ -82,6 +82,16 @@ async function buildHero() {
   const weather = await trimmedPng(WEATHER, 210);
   const sign = await buildSign();
   const avatarMeta = await sharp(avatar).metadata();
+  const avatarHeight = avatarMeta.height ?? 719;
+  const handMask = Buffer.from(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="900" height="${avatarHeight}">
+      <path d="M825 535 L900 510 L900 ${avatarHeight} L800 ${avatarHeight} L790 640 Z" fill="#fff"/>
+    </svg>
+  `);
+  const handForeground = await sharp(avatar)
+    .composite([{ input: handMask, left: 0, top: 0, blend: 'dest-in' }])
+    .png()
+    .toBuffer();
 
   const canvasWidth = 980;
   const canvasHeight = Math.max(860, avatarMeta.height ?? 0);
@@ -94,9 +104,10 @@ async function buildHero() {
     },
   })
     .composite([
-      { input: sign, left: 140, top: 610 },
-      { input: weather, left: 735, top: 445 },
+      { input: sign, left: 0, top: 610 },
       { input: avatar, left: 0, top: 0 },
+      { input: weather, left: 735, top: 445 },
+      { input: handForeground, left: 0, top: 0 },
     ])
     .png()
     .toBuffer();

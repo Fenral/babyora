@@ -9,12 +9,12 @@ der punktene er i konflikt.
 - Native launch og web-handoff bruker én sentrert Babyora-signatur på solid,
   temariktig lerret (`#F9F5EB` lyst / `#1E140C` mørkt).
 - `maskot-resultat-sveip.webp` er hovedmotivet. `vaer-delvis-skyet.webp` lander
-  i den åpne høyrehånden, med hånden malt foran skyen, slik at figur og vær
-  leses som ett motiv.
+  oppå den åpne høyrehånden, med de ytterste fingrene malt foran skyen, slik
+  at været leses som holdt i stedet for plassert bak armen.
 - BABYORA-ordmerket står i et varmt navneskilt barnet lener seg over. Skiltet
   bruker den offisielle reverse-SVG-en; ingen typesatt erstatning.
-- Den åpne hånden ligger foran værmotivet, slik at sky/sol leses som fysisk
-  holdt. Ingen ekstra slagord, gradient, lyd, haptikk eller kunstig vent.
+- Værmotivet ligger over armen og under fingertuppene, slik at sky/sol leses
+  som fysisk holdt. Ingen ekstra slagord, gradient, lyd, haptikk eller vent.
   Web viser skilt → barn → vær med 80 ms forskyvning; Reduce Motion er statisk.
 - Den gamle §1-regelen om venstrejustering, «aldri maskot» og maks 1 pt mellom
   ordmerkeposisjoner er dermed opphevet. Sentrum, rekkefølge og trygg beskjæring

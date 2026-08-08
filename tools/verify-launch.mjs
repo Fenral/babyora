@@ -129,7 +129,7 @@ try {
       await p.waitForLoadState('domcontentloaded');
       await p.waitForFunction(() => {
         const bilder = [...document.querySelectorAll('#launch img')];
-        return bilder.length >= 3 && bilder.every((img) => img.complete && img.naturalWidth > 0);
+        return bilder.length >= 4 && bilder.every((img) => img.complete && img.naturalWidth > 0);
       }, { timeout: 5000 });
 
       const geometri = await p.evaluate(() => {
@@ -154,6 +154,7 @@ try {
           .find((el) => getComputedStyle(el).display !== 'none') ?? null;
 
         const avatar = document.querySelector('[data-launch-avatar]');
+        const hand = document.querySelector('[data-launch-hand]');
         const weather = document.querySelector('[data-launch-weather]');
         const signboard = document.querySelector('[data-launch-signboard]');
         const hero = document.querySelector('[data-launch-hero]');
@@ -161,15 +162,22 @@ try {
           launchFinnes: document.getElementById('launch') !== null,
           hero: rect(hero),
           avatar: { rect: rect(avatar), lastet: lastet(avatar) },
+          hand: { rect: rect(hand), lastet: lastet(hand) },
           weather: { rect: rect(weather), lastet: lastet(weather) },
           signboard: { rect: rect(signboard), lastet: lastet(signboard) },
           wordmark: { rect: rect(synligOrdmerke), lastet: lastet(synligOrdmerke) },
+          layerOrder: {
+            avatar: Number(getComputedStyle(avatar).zIndex),
+            weather: Number(getComputedStyle(weather).zIndex),
+            hand: Number(getComputedStyle(hand).zIndex),
+          },
         };
       });
 
       meld(geometri.launchFinnes, `${scenario}: web-åpningsflaten finnes`);
       for (const [navn, element] of [
         ['avatar', geometri.avatar],
+        ['håndlag', geometri.hand],
         ['navneskilt', geometri.signboard],
         ['vær', geometri.weather],
         ['ordmerke', geometri.wordmark],
@@ -207,6 +215,12 @@ try {
         && weather.bottom <= avatar.top + avatar.height * 0.89;
       meld(weatherIHand, `${scenario}: vaermotivet lander geometrisk i den aapne haanden`);
 
+      const lag = geometri.layerOrder;
+      meld(
+        lag.avatar < lag.weather && lag.weather < lag.hand,
+        `${scenario}: vaeret ligger over armen og under fingertuppene`,
+      );
+
       const barnOverSkilt = avatar !== null && signboard !== null
         && signboard.top > avatar.top + avatar.height * 0.75
         && signboard.top < avatar.bottom
@@ -215,7 +229,7 @@ try {
 
       const vmax = Math.max(viewport.width, viewport.height);
       const ventetHero = Math.min(0.3807 * vmax, 0.88 * viewport.width, 360);
-      const ventetOrdmerke = ventetHero * (400 / 980);
+      const ventetOrdmerke = ventetHero * (460 / 980);
       const nativeParitet = geometri.hero !== null && merke !== null
         && Math.abs(geometri.hero.width - ventetHero) <= 1
         && Math.abs(merke.width - ventetOrdmerke) <= 1
