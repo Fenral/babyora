@@ -76,7 +76,7 @@ describe('BottomTabBar root navigation', () => {
     expect(source).not.toMatch(/useState|onFocus|onBlur|style=/u);
   });
 
-  it('P8: floats per duel §7 — fixed position, side inset, pill radius, warm shadow, one muted edge-light', async () => {
+  it('floats with Mineral Garden depth — fixed position, side inset, pill radius, shared shadow, one muted edge-light', async () => {
     const css = await readFile(fileURLToPath(new URL('../BottomTabBar.css', import.meta.url)), 'utf8');
 
     expect(css).toMatch(/\.bottom-tab-bar\s*\{[^}]*position:\s*fixed/su);
@@ -89,8 +89,10 @@ describe('BottomTabBar root navigation', () => {
     const edgeLightOpacities = [...css.matchAll(/\.bottom-tab-bar::before\s*\{[\s\S]*?opacity:\s*([\d.]+)/gu)];
     expect(edgeLightOpacities).toHaveLength(1);
     expect(Number(edgeLightOpacities[0]![1])).toBeLessThan(0.5);
-    // warm low shadow (not a neutral/cool tone).
-    expect(css).toMatch(/box-shadow:\s*0\s+18px\s+36px\s+-16px\s+rgba\(20,\s*12,\s*4,/u);
+    // The global depth token keeps the tab bar aligned with every other
+    // Mineral Garden raised surface instead of preserving the retired
+    // espresso-specific brown shadow.
+    expect(css).toMatch(/box-shadow:\s*var\(--dw-depth-raised\)/u);
   });
 
   it('P8: renders with a blur-fallback structure — opaque solid default, translucent+blur behind @supports', async () => {
