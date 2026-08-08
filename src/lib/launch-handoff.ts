@@ -19,8 +19,9 @@
  * Er appen rask, ses flaten knapt. Det er riktig.
  *
  * Én eksplisitt design-review finnes utenfor appflyten:
- * `?launch-preview=slow` beholder flaten og looper sekvensen sakte. Den er
- * query-gatet, brukes bare til vurdering og endrer aldri ordinær oppstart.
+ * `?launch-preview=slow` spiller sekvensen 5× saktere og slipper først når
+ * været faktisk har landet. Den er query-gatet, brukes bare til vurdering og
+ * endrer aldri ordinær oppstart.
  *
  * ═══ VAKTEN, OG HVORFOR DEN ER DER ════════════════════════════════════════
  * Om noe kaster før `slippLaunch()` blir kalt — en feil i en provider, en
@@ -36,7 +37,8 @@ const FRIST_MS = 4000;
 let alleredeSluppet = false;
 
 function erSakteDesignPreview(): boolean {
-  return document.documentElement.getAttribute('data-launch-preview') === 'slow';
+  return document.documentElement.getAttribute('data-launch-preview') === 'slow'
+    && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 function fjern(el: HTMLElement): void {
@@ -57,9 +59,6 @@ function fjern(el: HTMLElement): void {
  * for kallstedet kan bli montert på nytt under utvikling.
  */
 export function slippLaunch(): void {
-  /* Query-gatet design-review får spille ferdig og loope. Denne grenen er
-     aldri aktiv i ordinær appstart og legger derfor ikke til ventetid. */
-  if (erSakteDesignPreview()) return;
   if (alleredeSluppet) return;
   const el = document.getElementById('launch');
   if (el === null) return;
@@ -69,14 +68,29 @@ export function slippLaunch(): void {
      andre at nettleseren har rukket å male den. Slipper vi etter én, kan
      flaten forsvinne før det ligger noe under — og da ser brukeren et glimt
      av tomhet i stedet for et glimt av hvitt. Ingen forbedring. */
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => fjern(el));
-  });
+  const slippEtterMaling = (): void => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => fjern(el));
+    });
+  };
+
+  /* Design-reviewen venter på den faktiske væranimasjonen, ikke en parallell
+     timer som kan drive ut av takt. `finished` er allerede resolved dersom en
+     uvanlig treg app blir klar etter at animasjonen er ferdig. */
+  if (erSakteDesignPreview()) {
+    const weather = el.querySelector<HTMLElement>('[data-launch-weather]');
+    const animation = weather?.getAnimations()[0];
+    if (animation !== undefined) {
+      void animation.finished.then(slippEtterMaling, slippEtterMaling);
+      return;
+    }
+  }
+
+  slippEtterMaling();
 }
 
 /** Nødutgangen. Kalles én gang fra oppstarten. */
 export function armerLaunchFrist(): void {
-  if (erSakteDesignPreview()) return;
   window.setTimeout(() => {
     const el = document.getElementById('launch');
     if (el !== null && !alleredeSluppet) {

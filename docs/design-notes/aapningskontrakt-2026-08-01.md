@@ -16,8 +16,10 @@ der punktene er i konflikt.
 - Værmotivet ligger over armen og under fingertuppene, slik at sky/sol leses
   som fysisk holdt. Ingen ekstra slagord, gradient, lyd, haptikk eller vent.
   Web viser skilt → barn → vær med 80 ms forskyvning; Reduce Motion er statisk.
-- `?launch-preview=slow` er en query-gatet design-review: samme rekkefølge i
-  en 5,2 s loop som pauser i skjult fane. Den påvirker aldri vanlig appstart.
+- `?launch-preview=slow` er en query-gatet design-review: produksjonsbevegelsen
+  spilles 5× saktere, fullføres på 3 s og pauser i skjult fane. Flaten slipper
+  på vårets faktiske `animation.finished`, deretter 200 ms fade. Den påvirker
+  aldri vanlig appstart; Reduce Motion får normal statisk handoff.
 - Den gamle §1-regelen om venstrejustering, «aldri maskot» og maks 1 pt mellom
   ordmerkeposisjoner er dermed opphevet. Sentrum, rekkefølge og trygg beskjæring
   er kontinuitetsankeret nå. Øvrige deler av kontrakten gjelder fortsatt der de

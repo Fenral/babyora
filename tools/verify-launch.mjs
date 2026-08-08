@@ -277,8 +277,8 @@ try {
     await p.close();
   }
 
-  /* Query-gatet saktevisning: den skal holde launch-flaten, loope samme
-     rekkefølge deterministisk og aldri lekke inn i vanlig appstart. */
+  /* Query-gatet saktevisning: nøyaktig produksjonsbevegelse i 5× hastighet,
+     etterfulgt av vanlig handoff. Den skal aldri lekke inn i appstarten. */
   {
     const p = await browser.newPage({
       viewport: { width: 390, height: 844 },
@@ -301,8 +301,13 @@ try {
       return {
         mode: document.documentElement.getAttribute('data-launch-preview'),
         launchFinnes: launch !== null,
-        duration: style(sign).animationDuration,
-        iteration: style(sign).animationIterationCount,
+        durations: [style(sign).animationDuration, style(avatar).animationDuration, style(weather).animationDuration],
+        delays: [style(sign).animationDelay, style(avatar).animationDelay, style(weather).animationDelay],
+        iterations: [
+          style(sign).animationIterationCount,
+          style(avatar).animationIterationCount,
+          style(weather).animationIterationCount,
+        ],
         names: [style(sign).animationName, style(avatar).animationName, style(weather).animationName],
       };
     });
@@ -311,13 +316,15 @@ try {
       'saktevisning: query-modus holder launch-flaten etter at appen er klar',
     );
     meld(
-      previewKontrakt.duration === '5.2s' && previewKontrakt.iteration === 'infinite',
-      'saktevisning: sekvensen looper hver 5,2 s',
+      previewKontrakt.durations.join('|') === '1.8s|2.4s|2.1s'
+        && previewKontrakt.delays.join('|') === '0.1s|0.5s|0.9s'
+        && previewKontrakt.iterations.every((iteration) => iteration === '1'),
+      'saktevisning: produksjonens varighet og 80 ms stagger er skalert nøyaktig 5×',
     );
     meld(
       previewKontrakt.names.join('|')
-        === 'launch-preview-signboard|launch-preview-avatar|launch-preview-weather',
-      'saktevisning: skilt, barn og vær har egne faser',
+        === 'launch-signboard-in|launch-avatar-in|launch-weather-in',
+      'saktevisning: gjenbruker produksjonens keyframes uten ny koreografi',
     );
 
     const lesFase = async (time) => p.evaluate((currentTime) => {
@@ -334,27 +341,57 @@ try {
       };
     }, time);
 
-    const skiltFase = await lesFase(800);
+    const skiltFase = await lesFase(450);
     meld(
       skiltFase.sign > 0.5 && skiltFase.avatar < 0.05 && skiltFase.weather < 0.05,
       'saktevisning: skiltet kommer først',
     );
-    const barnFase = await lesFase(1700);
+    const barnFase = await lesFase(850);
     meld(
-      barnFase.sign > 0.95 && barnFase.avatar > 0.5 && barnFase.weather < 0.05,
+      barnFase.sign > 0.5 && barnFase.avatar > 0 && barnFase.weather < 0.05,
       'saktevisning: barnet lander på skiltet som fase to',
     );
-    const vaerFase = await lesFase(3000);
+    const vaerFase = await lesFase(2950);
     meld(
       vaerFase.sign > 0.95 && vaerFase.avatar > 0.95 && vaerFase.weather > 0.5,
       'saktevisning: været lander i hånden som fase tre',
     );
 
     const pauseVirker = await p.evaluate(() => {
-      document.documentElement.setAttribute('data-launch-preview-paused', 'true');
-      return getComputedStyle(document.querySelector('[data-launch-weather]')).animationPlayState;
+      let hidden = true;
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden });
+      document.dispatchEvent(new Event('visibilitychange'));
+      const paused = getComputedStyle(document.querySelector('[data-launch-weather]')).animationPlayState;
+      hidden = false;
+      document.dispatchEvent(new Event('visibilitychange'));
+      const running = getComputedStyle(document.querySelector('[data-launch-weather]')).animationPlayState;
+      return { paused, running };
     });
-    meld(pauseVirker === 'paused', 'saktevisning: loopen kan pauses i skjult fane');
+    meld(
+      pauseVirker.paused === 'paused' && pauseVirker.running !== 'paused',
+      'saktevisning: visibilitychange pauser og fortsetter avspillingen',
+    );
+    await p.close();
+  }
+
+  {
+    const p = await browser.newPage({
+      viewport: { width: 390, height: 844 },
+      deviceScaleFactor: 1,
+      colorScheme: 'dark',
+    });
+    await p.route('**/api/forecast*', (route) => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(forecastPartlyCloudy1C()),
+    }));
+    const start = Date.now();
+    await p.goto(`${BASE}/?launch-preview=slow`, { waitUntil: 'domcontentloaded' });
+    await p.waitForFunction(() => document.getElementById('launch') === null, { timeout: 8000 });
+    const elapsed = Date.now() - start;
+    meld(
+      elapsed >= 2800 && elapsed < 5000,
+      `saktevisning: slipper til appen etter faktisk væranimasjon og fade (${elapsed} ms)`,
+    );
     await p.close();
   }
 
@@ -378,6 +415,24 @@ try {
       redusert.animationName === 'none' && redusert.opacity === '1',
       'saktevisning: Reduce Motion viser ferdig, statisk signatur',
     );
+    await p.close();
+  }
+
+  {
+    const p = await browser.newPage({
+      viewport: { width: 390, height: 844 },
+      deviceScaleFactor: 1,
+      colorScheme: 'dark',
+      reducedMotion: 'reduce',
+    });
+    await p.route('**/api/forecast*', (route) => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(forecastPartlyCloudy1C()),
+    }));
+    await p.goto(`${BASE}/?launch-preview=slow`, { waitUntil: 'domcontentloaded' });
+    await p.waitForFunction(() => document.getElementById('launch') === null, { timeout: 8000 })
+      .then(() => meld(true, 'saktevisning: Reduce Motion bruker normal handoff og fanger ikke brukeren'))
+      .catch(() => meld(false, 'saktevisning: Reduce Motion ble stående over appen'));
     await p.close();
   }
 

@@ -207,20 +207,18 @@
       }
 
       /* Design-review, aldri vanlig appstart. `?launch-preview=slow` spiller
-         den samme lagrekkefølgen i en rolig 5,2 s loop: skilt → barn → vær. */
-      :root[data-launch-preview="slow"] #launch { transition: none; }
-
+         produksjonsbevegelsen i 5× sakte film: skilt → barn → vær. */
       :root[data-launch-preview="slow"] .launch-signboard {
-        animation: launch-preview-signboard 5200ms linear infinite both;
+        animation: launch-signboard-in 1800ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both;
       }
 
       :root[data-launch-preview="slow"] .launch-avatar,
       :root[data-launch-preview="slow"] .launch-hand {
-        animation: launch-preview-avatar 5200ms linear infinite both;
+        animation: launch-avatar-in 2400ms cubic-bezier(0.22, 1, 0.36, 1) 500ms both;
       }
 
       :root[data-launch-preview="slow"] .launch-weather {
-        animation: launch-preview-weather 5200ms linear infinite both;
+        animation: launch-weather-in 2100ms cubic-bezier(0.22, 1, 0.36, 1) 900ms both;
       }
 
       :root[data-launch-preview="slow"][data-launch-preview-paused="true"] .launch-signboard,
@@ -228,42 +226,6 @@
       :root[data-launch-preview="slow"][data-launch-preview-paused="true"] .launch-hand,
       :root[data-launch-preview="slow"][data-launch-preview-paused="true"] .launch-weather {
         animation-play-state: paused;
-      }
-
-      @keyframes launch-preview-signboard {
-        0%, 4% { opacity: 0; transform: translateY(10px) scale(0.98); }
-        4% { animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
-        22% { opacity: 1; transform: translateY(0) scale(1); }
-        84% {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-          animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
-        }
-        94%, 100% { opacity: 0; transform: translateY(0) scale(1); }
-      }
-
-      @keyframes launch-preview-avatar {
-        0%, 20% { opacity: 0; transform: translateY(-14px); }
-        20% { animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
-        44% { opacity: 1; transform: translateY(0); }
-        84% {
-          opacity: 1;
-          transform: translateY(0);
-          animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
-        }
-        94%, 100% { opacity: 0; transform: translateY(0); }
-      }
-
-      @keyframes launch-preview-weather {
-        0%, 43% { opacity: 0; transform: translateY(-18px) scale(0.88); }
-        43% { animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
-        66% { opacity: 1; transform: translateY(0) scale(1); }
-        84% {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-          animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
-        }
-        94%, 100% { opacity: 0; transform: translateY(0) scale(1); }
       }
 
       #launch[data-ferdig="true"] { opacity: 0; pointer-events: none; }
