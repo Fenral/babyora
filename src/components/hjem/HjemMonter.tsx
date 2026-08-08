@@ -18,12 +18,10 @@
  *                   ask-block (kontekstuell «Nytt antrekk for …?» / retry)
  *
  * ── Cachet gjenåpning vs. hvert CTA-trykk (eier-override 2026-08-01, v3) ──
- * Ved mount: `decideScanEntry` (scan-orchestration.ts, rent/testet) avgjør
- * om et EKSAKT cachet resultat (samme barn+dag+sted+aktivitet+motorversjon)
- * finnes → hopp rett til resultatet, ingen koreografi i det hele tatt.
- * Ellers venter skjermen på trykk på «Finn dagens antrekk»; åpningsklatringen
- * (OpeningSequence) er fjernet — Hjem er statisk til CTA-trykk (se
- * docs/design-notes/aapningssekvens-2026-08-01.md sin eier-override-notis).
+ * Ved mount: så snart værgrunnlag + anbefaling har gitt en deterministisk
+ * resultKey, viser Hjem resultatet direkte. Coordinator og cache synkroniseres
+ * idempotent i bakgrunnen, uten scan-koreografi, timer eller haptikk. Den
+ * eksplisitte scan-seremonien lever fortsatt i værkalkulatoren.
  *
  * ── Eier-override v4 (2026-08-03): FINGERPRINTET styrer seremonien ────────
  * v3-regelen «HVERT trykk spiller full 3,2s» er opphevet (PRODUCT.md,
@@ -235,6 +233,27 @@ export type HjemMonterProps = Readonly<{
   onOpenPlaggbib: () => void;
 }>;
 
+type DirectHomeResultPlan = Readonly<{
+  resultKey: string;
+  shouldCommit: boolean;
+}>;
+
+/**
+ * Ren inngangsbeslutning for Home. Det ferske motorresultatet er alltid
+ * autoritativt; en eksakt cache-slot brukes bare til å unngå en meningsløs
+ * ny persist-write når identitet + fingerprint allerede er lagret.
+ */
+function planDirectHomeResult(
+  currentResultKey: string | null,
+  exactSlot: ReturnType<typeof getSlotForIdentity>,
+): DirectHomeResultPlan | null {
+  if (currentResultKey === null) return null;
+  return Object.freeze({
+    resultKey: currentResultKey,
+    shouldCommit: exactSlot?.resultKey !== currentResultKey,
+  });
+}
+
 export function HjemMonter({
   cityLabel,
   lat,
@@ -347,6 +366,14 @@ export function HjemMonter({
   // ── Timer-håndtak for scan/recalc-fullføring ────────────────────────────
   const timerCancelRef = useRef<(() => void) | null>(null);
   const seenIdentityRef = useRef<ScanIdentity | null>(null);
+  // Beskytter den synkrone weather-ready → scanning → result-current-
+  // publiseringen mot et mellomrender fra cache-storen. Nullstilles igjen
+  // når coordinatoren har forlatt weather-ready, slik at en eksplisitt reset
+  // senere fortsatt kan publisere samme fingerprint på nytt.
+  const directEntryRef = useRef<Readonly<{
+    identity: ScanIdentity;
+    resultKey: string;
+  }> | null>(null);
   const [previousActivity, setPreviousActivity] = useState<MonterActivity | null>(null);
   const [previousResultCount, setPreviousResultCount] = useState<number | null>(null);
   /**
@@ -519,8 +546,45 @@ export function HjemMonter({
     const phase = scan.state.phase;
 
     if (phase === 'weather-ready') {
+      const exact = getSlotForIdentity(slots, identity);
+      const directPlan = planDirectHomeResult(currentResultKey, exact);
+      if (directPlan !== null) {
+        const alreadyPublished = directEntryRef.current !== null
+          && sameScanIdentity(directEntryRef.current.identity, identity)
+          && directEntryRef.current.resultKey === directPlan.resultKey;
+
+        // Sett begge refene FØR coordinator/store-events. Zustand og
+        // useSyncExternalStore kan varsle synkront; denne rekkefølgen gjør
+        // inngangen idempotent og hindrer en dobbel scanStarted.
+        seenIdentityRef.current = identity;
+        if (alreadyPublished) return;
+        directEntryRef.current = { identity, resultKey: directPlan.resultKey };
+
+        setAwaitingScanData(false);
+        setIsFresh(false);
+        scan.scanStarted(identity);
+        scan.scanCompleted(directPlan.resultKey);
+        rememberResultKey(
+          sessionResultKeys,
+          resultKeyMemoryScope,
+          directPlan.resultKey,
+        );
+
+        // Bevar slotens historiske full-scan-flagg. Direkte Home-åpning er
+        // uttrykkelig IKKE en scan og må derfor aldri sette flagget selv.
+        if (directPlan.shouldCommit) {
+          commitSlot({
+            identity,
+            resultKey: directPlan.resultKey,
+            completedAt: Date.now(),
+            scanPlayedInFullToday:
+              slots[identity.childId]?.scanPlayedInFullToday === true,
+          });
+        }
+        return;
+      }
+
       if (seenIdentityRef.current === null) {
-        const exact = getSlotForIdentity(slots, identity);
         const decision = decideScanEntry(exact);
         if (decision.kind === 'show-cached') {
           // isFresh er allerede false fra useState(false) — cachet
@@ -536,6 +600,8 @@ export function HjemMonter({
       return;
     }
 
+    directEntryRef.current = null;
+
     if (seenIdentityRef.current !== null && !sameScanIdentity(seenIdentityRef.current, identity)) {
       setPreviousActivity(seenIdentityRef.current.activity as MonterActivity);
       setPreviousResultCount(recommendation ? deriveResultRows(recommendation).length : null);
@@ -546,7 +612,18 @@ export function HjemMonter({
       scan.identityChanged(identity, { autoRecalculate: true });
       runTimer(QUICK_RECALC_DURATION_MS, completeRecalc);
     }
-  }, [identity, now, scan, slots, runTimer, completeRecalc, recommendation, resultKeyMemoryScope]);
+  }, [
+    identity,
+    now,
+    scan,
+    slots,
+    runTimer,
+    completeRecalc,
+    recommendation,
+    resultKeyMemoryScope,
+    currentResultKey,
+    commitSlot,
+  ]);
 
   /**
    * v4 «reveal»-veien: fingerprinten er kjent, altså holder appen allerede
@@ -748,12 +825,19 @@ export function HjemMonter({
     );
   }
 
-  if (phase === 'result-current') {
+  // Home skal aldri flashe den gamle CTA-/ask-siden mens coordinator-
+  // effekten over synkroniserer. Når motorens fingerprint finnes, er samme
+  // resultatsurface derfor autoritativ allerede i første render.
+  const directResultReady = phase === 'weather-ready'
+    && now !== null
+    && currentResultKey !== null;
+
+  if (phase === 'result-current' || directResultReady) {
     const rows = currentOutfitBundle?.kind === 'supported'
       ? deriveResultRowsFromTruth(currentOutfitBundle.base)
       : deriveResultRows(recommendation);
     return (
-      <div className="hjem-monter">
+      <div className="hjem-monter hjem-monter--result">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
         <div className="hjm-panel-slot" data-with-mascot="false">
           {now && (
@@ -777,14 +861,6 @@ export function HjemMonter({
             childLabel={resultCopyFor(activeLanguage).childSummary(rows.length, childName)}
             isFresh={isFresh}
             reducedMotion={reducedMotion}
-            whyContext={now === null ? null : {
-              childName,
-              activity,
-              tempC: now.tempC,
-              feelsLikeC: now.feelsLikeC,
-              windMs: now.windMs,
-              precipMmH: now.precipMmH,
-            }}
             onSwapRow={handleSwapRow}
             alternativeItemIds={alternativeItemIds}
           />

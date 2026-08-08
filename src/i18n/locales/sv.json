@@ -2,6 +2,7 @@
   "nav": {
     "home": "Hem",
     "plan": "Planera",
+    "tools": "Verktyg",
     "familie": "Familj",
     "mainNavigation": "Huvudnavigering",
     "guide": "Guide",
@@ -13,7 +14,32 @@
     "pageTitle": {
       "home": "Hem · Babyora",
       "plan": "Planera · Babyora",
+      "tools": "Verktyg · Babyora",
       "family": "Familj · Babyora"
+    }
+  },
+  "tools": {
+    "title": "Verktyg",
+    "intro": "Kalkylatorer och korta guider när väder, sömn eller temperatur skiftar.",
+    "open": "Öppna kalkylatorn",
+    "weatherCalculator": {
+      "kicker": "Ute i dag",
+      "title": "Väderkalkylator",
+      "description": "Testa temperatur, vind och regn och hitta en passande klädsel."
+    },
+    "guidesKicker": "Hemma och ute",
+    "guidesTitle": "Sömn och trygghet",
+    "sleepCalculator": {
+      "title": "Sömnkalkylator",
+      "description": "Hitta rätt TOG och lager efter rumstemperaturen."
+    },
+    "firstWinter": {
+      "title": "Första vintern",
+      "description": "En lugn vecka-för-vecka-guide genom den första kylan."
+    },
+    "temperatureGuide": {
+      "title": "För varm eller kall?",
+      "description": "Lär dig tecknen och använd nacktestet när du är osäker."
     }
   },
   "activity": {

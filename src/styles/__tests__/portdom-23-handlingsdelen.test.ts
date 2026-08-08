@@ -433,19 +433,12 @@ function tilTekst(html: string): string {
     .replace(/[ \t]+/gu, ' ');
 }
 
-/** Panelets eget undertre — der noteText/conditionText faktisk lander. */
-function panelHtml(html: string): string | null {
-  const start = html.indexOf('<section class="hjm-panel"');
+/** Resultatets værstripe — her lander føles-som- og condition-teksten nå. */
+function resultStripHtml(html: string): string | null {
+  const start = html.indexOf('<button type="button" class="hjm-strip"');
   if (start === -1) return null;
-  let dybde = 0;
-  const re = /<\/?section\b/gu;
-  re.lastIndex = start;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(html)) !== null) {
-    dybde += m[0].startsWith('</') ? -1 : 1;
-    if (dybde === 0) return html.slice(start, re.lastIndex + html.slice(re.lastIndex).indexOf('>') + 1);
-  }
-  return null;
+  const end = html.indexOf('</button>', start);
+  return end === -1 ? null : html.slice(start, end + '</button>'.length);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -543,23 +536,24 @@ describe('portdom 23 — handlingsdelen kan ikke komme tilbake', () => {
     rapport.assertions += 1;
   });
 
-  it('IKKE-VAKUØSITET B+C: hviletilstanden rendres, og injeksjonsflaten er LEVENDE', () => {
+  it('IKKE-VAKUØSITET B+C: resultattilstanden rendres, og injeksjonsflaten er LEVENDE', () => {
     for (const kode of VAERKODER) {
       const html = rendreHvile(kode);
       rapport.rendringer += 1;
 
-      // C — grenidentitet: dette MÅ være hvilegrenen. Bruk strukturelle
+      // C — grenidentitet: Home skal nå lande direkte på resultatet. Bruk strukturelle
       // ankre; synlig kopi er lokalisert og tilhører ikke denne porten.
-      expect(html, `${kode}: ikke hvilegrenen — ask-blokken mangler`).toContain('class="hjm-ask-block"');
-      expect(html, `${kode}: panelet mangler`).toContain('<section class="hjm-panel"');
-      expect(html, `${kode}: hvilegrenens CTA-fingerprint mangler`).toContain('data-cta-path=');
+      expect(html, `${kode}: resultatgrenen mangler`).toContain('class="hjem-monter hjem-monter--result"');
+      expect(html, `${kode}: værstripen mangler`).toContain('<button type="button" class="hjm-strip"');
+      expect(html, `${kode}: resultatflaten mangler`).toContain('class="hjm-result"');
       expect(html, `${kode}: landet i scan-grenen`).not.toContain('class="hjm-scan-overlay"');
-      expect(html, `${kode}: landet i resultat-grenen`).not.toContain('class="hjm-result"');
-      rapport.assertions += 5;
+      expect(html, `${kode}: den gamle ask-blokken er tilbake`).not.toContain('class="hjm-ask-block"');
+      expect(html, `${kode}: den gamle Home-CTA-en er tilbake`).not.toContain('data-cta-path=');
+      rapport.assertions += 6;
 
-      const panel = panelHtml(html);
-      expect(panel, `${kode}: fikk ikke ut panel-undertreet`).not.toBeNull();
-      const panelTekst = tilTekst(panel!);
+      const strip = resultStripHtml(html);
+      expect(strip, `${kode}: fikk ikke ut værstripe-undertreet`).not.toBeNull();
+      const panelTekst = tilTekst(strip!);
 
       // B — injeksjonsflaten lever: føles-som-linjen OG værteksten fra
       // strengkilden står faktisk i panelet. Slutter den å stå der, kan en
@@ -574,8 +568,7 @@ describe('portdom 23 — handlingsdelen kan ikke komme tilbake', () => {
       ).toContain(forventet);
       rapport.assertions += 2;
 
-      // Den åpne døra: hviletilstanden skal ikke ha noen fri notatlinje.
-      // (WeatherScene sin egen kontrakt: «hviletilstanden bruker conditionText».)
+      // Den åpne døra: resultatets værstripe skal ikke ha noen fri notatlinje.
       expect(
         html,
         `${kode}: <p class="hjm-note"> rendres i hviletilstanden. Den frie ekstralinja `
@@ -592,8 +585,8 @@ describe('portdom 23 — handlingsdelen kan ikke komme tilbake', () => {
     // Lag 1: rendret hviletilstand, hele skjermen og panelet for seg.
     for (const kode of VAERKODER) {
       const html = rendreHvile(kode);
-      const panel = panelHtml(html);
-      brudd.push(...finnBrudd(`rendret hvile [${kode}] · panel`, tilTekst(panel ?? '')));
+      const strip = resultStripHtml(html);
+      brudd.push(...finnBrudd(`rendret resultat [${kode}] · værstripe`, tilTekst(strip ?? '')));
       brudd.push(...finnBrudd(`rendret hvile [${kode}] · hele skjermen`, tilTekst(html)));
       rapport.assertions += 2;
     }
@@ -625,7 +618,7 @@ describe('portdom 23 — handlingsdelen kan ikke komme tilbake', () => {
     // showers-variantene kollapser til samme tekst). Færre = symbolCode når
     // ikke fram, og porten måler i praksis bare én tilstand om og om igjen.
     const forventetAntall = new Set(VAERKODER.map((k) => getConditionLabel(k))).size;
-    const tekster = new Set(VAERKODER.map((k) => tilTekst(panelHtml(rendreHvile(k)) ?? '')));
+    const tekster = new Set(VAERKODER.map((k) => tilTekst(resultStripHtml(rendreHvile(k)) ?? '')));
     expect(
       tekster.size,
       `strengkilden kan gi ${forventetAntall} distinkte værtekster, men panelet viste `

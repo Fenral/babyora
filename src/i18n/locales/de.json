@@ -2,6 +2,7 @@
   "nav": {
     "home": "Start",
     "plan": "Planen",
+    "tools": "Werkzeuge",
     "familie": "Familie",
     "mainNavigation": "Hauptnavigation",
     "guide": "Ratgeber",
@@ -13,7 +14,32 @@
     "pageTitle": {
       "home": "Start · Babyora",
       "plan": "Planen · Babyora",
+      "tools": "Werkzeuge · Babyora",
       "family": "Familie · Babyora"
+    }
+  },
+  "tools": {
+    "title": "Werkzeuge",
+    "intro": "Rechner und kurze Ratgeber für wechselndes Wetter, Schlaf und Temperatur.",
+    "open": "Rechner öffnen",
+    "weatherCalculator": {
+      "kicker": "Heute draußen",
+      "title": "Wetterrechner",
+      "description": "Teste Temperatur, Wind und Regen und finde ein passendes Outfit."
+    },
+    "guidesKicker": "Zu Hause und draußen",
+    "guidesTitle": "Schlaf und Wohlbefinden",
+    "sleepCalculator": {
+      "title": "Schlafrechner",
+      "description": "Finde den richtigen TOG-Wert und Lagen für die Raumtemperatur."
+    },
+    "firstWinter": {
+      "title": "Erster Winter",
+      "description": "Ein ruhiger Wochenplan durch die erste kalte Jahreszeit."
+    },
+    "temperatureGuide": {
+      "title": "Zu warm oder kalt?",
+      "description": "Lerne die Anzeichen und nutze den Nackentest, wenn du unsicher bist."
     }
   },
   "activity": {

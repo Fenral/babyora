@@ -1,5 +1,3 @@
-import type { WhyContext } from '../../data/garment-info';
-
 export type ResultLanguage = 'da' | 'en' | 'no' | 'sv';
 
 type ResultCopy = Readonly<{
@@ -10,8 +8,6 @@ type ResultCopy = Readonly<{
   overviewProgress: string;
   empty: string;
   progressLabel: string;
-  whyTitle: string;
-  whyAria: string;
   details: string;
   moreInfo: string;
   goodToKnow: string;
@@ -41,8 +37,6 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     overviewProgress: 'Outfit overview',
     empty: 'No garments to show yet.',
     progressLabel: 'Dressing order',
-    whyTitle: 'Why today',
-    whyAria: 'Why this garment',
     details: 'See details',
     moreInfo: 'More info',
     goodToKnow: 'Good to know',
@@ -63,8 +57,6 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     overviewProgress: 'Klädöversikt',
     empty: 'Det finns inga plagg att visa ännu.',
     progressLabel: 'Påklädningsordning',
-    whyTitle: 'Varför i dag',
-    whyAria: 'Varför det här plagget',
     details: 'Visa detaljer',
     moreInfo: 'Mer info',
     goodToKnow: 'Bra att veta',
@@ -85,8 +77,6 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     overviewProgress: 'Tøjoversigt',
     empty: 'Der er ingen beklædning at vise endnu.',
     progressLabel: 'Påklædningsrækkefølge',
-    whyTitle: 'Hvorfor i dag',
-    whyAria: 'Hvorfor denne beklædningsdel',
     details: 'Se detaljer',
     moreInfo: 'Mere info',
     goodToKnow: 'Godt at vide',
@@ -107,8 +97,6 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     overviewProgress: 'Antrekkoversikt',
     empty: 'Ingen plagg å vise ennå.',
     progressLabel: 'Påkledningsrekkefølge',
-    whyTitle: 'Hvorfor i dag',
-    whyAria: 'Hvorfor dette plagget',
     details: 'Se detaljer',
     moreInfo: 'Mer info',
     goodToKnow: 'Godt å vite',
@@ -131,57 +119,4 @@ export function resultLanguage(language: string | null | undefined): ResultLangu
 
 export function resultCopyFor(language: string | null | undefined): ResultCopy {
   return COPY[resultLanguage(language)];
-}
-
-const MID_IDS = /(ull-mellomlag|ull-jakke|ull-bukse|fleece)/i;
-const OUTER_IDS = /(dress|skall|regntoy|regnponcho)/i;
-const TARGETED_IDS = /(lue|balaklava|hals|vott|sko|sokk)/i;
-const SLEEP_IDS = /(sovepose|pyjamas)/i;
-
-export function localizedWhyForGarment(
-  id: string,
-  context: WhyContext,
-  language: string | null | undefined,
-  localizedRole: string,
-): string {
-  const lang = resultLanguage(language);
-  const feels = Math.round(context.feelsLikeC);
-  const rainy = context.precipMmH >= 0.2;
-  const windy = context.windMs >= 5;
-
-  if (OUTER_IDS.test(id) && rainy) {
-    if (lang === 'sv') return 'Regn väntas, så detta hjälper till att hålla lagren under torra.';
-    if (lang === 'da') return 'Der ventes regn, så dette hjælper med at holde lagene under tørt.';
-    if (lang === 'no') return 'Det er ventet regn, så dette bidrar til å holde lagene under tørre.';
-    return 'Rain is expected, so this helps keep the layers underneath dry.';
-  }
-  if (OUTER_IDS.test(id) && windy) {
-    if (lang === 'sv') return `Vinden är ${Math.round(context.windMs)} m/s, så detta skyddar de varma lagren under.`;
-    if (lang === 'da') return `Vinden er ${Math.round(context.windMs)} m/s, så dette beskytter de varme lag under.`;
-    if (lang === 'no') return `Vinden er ${Math.round(context.windMs)} m/s, så dette beskytter de varme lagene under.`;
-    return `The wind is ${Math.round(context.windMs)} m/s, so this protects the warm layers underneath.`;
-  }
-  if (SLEEP_IDS.test(id)) {
-    if (lang === 'sv') return `Vid ${feels} °C ingår detta i den valda lager-på-lager-lösningen för sömn.`;
-    if (lang === 'da') return `Ved ${feels} °C indgår dette i den valgte lag-på-lag-løsning til søvn.`;
-    if (lang === 'no') return `Ved ${feels} °C inngår dette i lagene som er valgt for søvn.`;
-    return `At ${feels}°C, this forms part of the selected sleep layering.`;
-  }
-  if (MID_IDS.test(id)) {
-    if (lang === 'sv') return `Vid ${feels} °C ger detta ${context.childName} ett mellanlager som är lätt att justera.`;
-    if (lang === 'da') return `Ved ${feels} °C giver dette ${context.childName} et mellemlag, som er let at justere.`;
-    if (lang === 'no') return `Ved ${feels} °C gir dette ${context.childName} et mellomlag som er lett å justere.`;
-    return `At ${feels}°C, this gives ${context.childName} an adjustable mid layer.`;
-  }
-  if (TARGETED_IDS.test(id)) {
-    if (lang === 'sv') return `Vid ${feels} °C ger detta riktad värme där den behövs.`;
-    if (lang === 'da') return `Ved ${feels} °C giver dette målrettet varme, hvor der er brug for den.`;
-    if (lang === 'no') return `Ved ${feels} °C gir dette ekstra varme der det trengs.`;
-    return `At ${feels}°C, this adds targeted warmth where it is needed.`;
-  }
-
-  if (lang === 'sv') return `Det här är lagret “${localizedRole.toLowerCase()}” som Babyora valt vid ${feels} °C.`;
-  if (lang === 'da') return `Dette er laget “${localizedRole.toLowerCase()}”, som Babyora har valgt ved ${feels} °C.`;
-  if (lang === 'no') return `Dette er laget «${localizedRole.toLowerCase()}» som Babyora har valgt ved ${feels} °C.`;
-  return `This is the ${localizedRole.toLowerCase()} Babyora chose at ${feels}°C.`;
 }

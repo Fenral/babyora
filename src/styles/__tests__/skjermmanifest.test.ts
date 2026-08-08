@@ -99,10 +99,10 @@ const ANKERSKJERMER = [
 
 /** De fem rutekildene, med det utvalget de MÅ gi for at lesningen skal telle. */
 const RUTEKILDER = {
-  lazyRegister: 10,
-  ruteNokler: 8,
+  lazyRegister: 11,
+  ruteNokler: 10,
   drillKinds: 4,
-  tabDefs: 3,
+  tabDefs: 4,
   familieToolTargets: 3,
 } as const;
 
@@ -249,9 +249,9 @@ describe('skjermmanifestet genereres — filen på disk', () => {
     ).toBe(generert);
   });
 
-  it('manifestet deler 11 skjermer i 9 som migreres + 2 unntatt', () => {
+  it('manifestet deler 12 skjermer i 10 som migreres + 2 unntatt', () => {
     expect(m.tall.skjermer).toBe(m.tall.migreres + m.tall.unntatt);
-    expect(m.tall.migreres, 'fase 3 er én runde over ni skjermer (DoD fase 3)').toBe(9);
+    expect(m.tall.migreres, 'fase 3 dekker alle ti stilbærende skjermer').toBe(10);
     expect(m.tall.unntatt, 'to skjermer er unntatt, med skriftlig grunn hver').toBe(2);
     for (const r of m.rader.filter((x) => !x.migreres)) {
       expect(r.unntaksgrunn, `${r.sti} er unntatt uten begrunnelse`).toBeTruthy();

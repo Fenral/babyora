@@ -52,7 +52,7 @@ beforeAll(async () => {
   await i18n.changeLanguage('no');
   html = renderToStaticMarkup(
     <ChildrenProvider>
-      <InnstillingerScreen onNavigate={() => {}} onOpenTool={() => {}} />
+      <InnstillingerScreen onNavigate={() => {}} />
     </ChildrenProvider>,
   );
 });

@@ -10,13 +10,13 @@ import {
 import { TAB_DEFS } from '../../types/nav.js';
 
 describe('BottomTabBar root navigation', () => {
-  it('renders the three canonical roots in order with exactly one current page', () => {
+  it('renders the four canonical roots in order with exactly one current page', () => {
     const markup = renderToStaticMarkup(
       <BottomTabBar active="plan" onNavigate={vi.fn()} />,
     );
 
-    expect(TAB_DEFS.map(({ label }) => label)).toEqual(['Hjem', 'Planlegg', 'Familie']);
-    expect(markup).toMatch(/Hjem.*Planlegg.*Familie/u);
+    expect(TAB_DEFS.map(({ label }) => label)).toEqual(['Hjem', 'Planlegg', 'Verktøy', 'Familie']);
+    expect(markup).toMatch(/Hjem.*Planlegg.*Verktøy.*Familie/u);
     expect((markup.match(/aria-current="page"/gu) ?? [])).toHaveLength(1);
     expect(markup).toContain('aria-current="page"');
     expect(markup).toContain('bottom-tab-bar__indicator');

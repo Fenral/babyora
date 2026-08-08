@@ -102,7 +102,7 @@ describe.each(Object.entries(expected) as Array<[TestLanguage, readonly string[]
       const html = renderToStaticMarkup(
         <I18nextProvider i18n={i18n}>
           <ChildrenProvider>
-            <InnstillingerScreen onNavigate={() => {}} onOpenTool={() => {}} />
+            <InnstillingerScreen onNavigate={() => {}} />
           </ChildrenProvider>
         </I18nextProvider>,
       );

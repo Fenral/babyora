@@ -2,6 +2,7 @@
   "nav": {
     "home": "Home",
     "plan": "Plan",
+    "tools": "Tools",
     "familie": "Family",
     "mainNavigation": "Main navigation",
     "guide": "Guide",
@@ -13,7 +14,32 @@
     "pageTitle": {
       "home": "Home · Babyora",
       "plan": "Plan · Babyora",
+      "tools": "Tools · Babyora",
       "family": "Family · Babyora"
+    }
+  },
+  "tools": {
+    "title": "Tools",
+    "intro": "Calculators and short guides for changing weather, sleep and temperature.",
+    "open": "Open calculator",
+    "weatherCalculator": {
+      "kicker": "Out today",
+      "title": "Weather calculator",
+      "description": "Test temperature, wind and rain to find an outfit that fits."
+    },
+    "guidesKicker": "At home and outside",
+    "guidesTitle": "Sleep and comfort",
+    "sleepCalculator": {
+      "title": "Sleep calculator",
+      "description": "Find the right TOG and layers for the room temperature."
+    },
+    "firstWinter": {
+      "title": "First winter",
+      "description": "A calm week-by-week guide through your baby's first cold season."
+    },
+    "temperatureGuide": {
+      "title": "Too hot or cold?",
+      "description": "Learn the signs and use the neck check when you are unsure."
     }
   },
   "activity": {

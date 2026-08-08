@@ -1,14 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { localizedWhyForGarment, resultCopyFor } from '../result-localization';
-
-const context = {
-  childName: 'Mira',
-  activity: 'vogn' as const,
-  tempC: 5,
-  feelsLikeC: 2,
-  windMs: 7,
-  precipMmH: 0,
-};
+import { resultCopyFor } from '../result-localization';
 
 describe('result localization', () => {
   it.each([
@@ -45,12 +36,4 @@ describe('result localization', () => {
     expect(copy.alternativesAria('Body')).toBe(alternativesAria);
   });
 
-  it('localizes contextual reasons instead of leaking Norwegian', () => {
-    expect(localizedWhyForGarment('ull-jakke', context, 'en', 'Mid layer'))
-      .toBe('At 2°C, this gives Mira an adjustable mid layer.');
-    expect(localizedWhyForGarment('ull-jakke', context, 'sv', 'Mellanlager'))
-      .toContain('mellanlager');
-    expect(localizedWhyForGarment('vinterdress', context, 'da', 'Yderlag'))
-      .toContain('Vinden er 7 m/s');
-  });
 });

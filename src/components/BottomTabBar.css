@@ -24,11 +24,11 @@
   display: flex;
   align-items: stretch;
   justify-content: space-around;
-  gap: var(--dw-space-4);
+  gap: var(--dw-space-2);
   box-sizing: border-box;
   min-inline-size: 44px;
   min-block-size: var(--dw-tabbar-height, 60px);
-  padding: var(--dw-space-6) var(--dw-space-8);
+  padding: var(--dw-space-6);
   border-radius: var(--dw-tabbar-radius, 28px);
   /* Solid fallback (no backdrop-filter support): opaque warm raised tint —
      never transparent enough to read content through it. */
@@ -73,7 +73,7 @@
   gap: var(--dw-space-2);
   min-inline-size: 44px;
   min-block-size: 44px;
-  padding: var(--dw-space-4) var(--dw-space-6);
+  padding: var(--dw-space-4) var(--dw-space-2);
   /* Inaktive etiketter maalte 3,93:1 mot barens flate (revisjonen
      2026-08-06) — under AA-grensen 4,5:1, saa «Hjem» og «Planlegg» ble
      vanskelige aa lese i darlig morgenlys. Flaten er blur-varianten

@@ -85,7 +85,7 @@ describe('App.tsx — P5 "Juster" drill wiring', () => {
 
   it('finn-antrekk still maps to the "hjem" tab in activeTabForBar (unchanged from P1)', () => {
     const app = source(appPath);
-    expect(app).toMatch(/if \(activeDrill === null\) \{\s*\n\s*activeTabForBar = tab;\s*\n\s*\} else if \(activeDrill\.kind === 'familie-tool'\) \{\s*\n\s*activeTabForBar = 'familie';\s*\n\s*\} else \{\s*\n\s*activeTabForBar = 'hjem';/u);
+    expect(app).toMatch(/activeDrill\.kind === 'verktoy-tool'[\s\S]*?activeTabForBar = 'verktoy';[\s\S]*?activeTabForBar = 'hjem';/u);
   });
 });
 

@@ -50,6 +50,7 @@ import { useHapticSystem } from '../lib/haptics/system';
 import { searchCities } from '../data/no-cities';
 import { searchAddress } from '../lib/geocode/nominatim';
 import { OnboardingBabyHero } from './onboarding/OnboardingBabyHero';
+import { resolveOnboardingPlace } from './onboarding/resolve-onboarding-place';
 import {
   OnboardingMaterialPreference,
 } from './onboarding/OnboardingMaterialPreference';
@@ -269,6 +270,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   const [locActive, setLocActive] = useState<number>(-1);
   const locDebounce = useRef<number | null>(null);
   const locReqId = useRef<number>(0);
+  const geoReqId = useRef<number>(0);
 
   // ─── Avledet ─────────────────────────────────────────────────────────────
   const dNum = parseInt(day, 10);
@@ -316,31 +318,50 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
   // ─── Geolocation ─────────────────────────────────────────────────────────
   const requestLocation = useCallback(() => {
+    const requestId = ++geoReqId.current;
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       setLocationStatus('error');
+      setLocationConfirmed(false);
+      setShowManual(true);
       return;
     }
     fire('selection').catch(() => {});
     setLocationStatus('loading');
+    setLocationConfirmed(false);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setLocation({
-          city: copy.step3.currentPosition,
-          lat: Number(pos.coords.latitude.toFixed(4)),
-          lon: Number(pos.coords.longitude.toFixed(4)),
-          accuracy: pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null,
+        void resolveOnboardingPlace(
+          pos.coords.latitude,
+          pos.coords.longitude,
+        ).then((place) => {
+          if (requestId !== geoReqId.current) return;
+          setLocation({
+            ...place,
+            accuracy: pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null,
+          });
+          setLocationStatus('ready');
+          setLocationConfirmed(true);
+          setShowManual(false);
+          fire('success').catch(() => {});
+        }).catch(() => {
+          if (requestId !== geoReqId.current) return;
+          // Never persist a translated placeholder such as "Current
+          // position" as the child's city. If reverse geocoding is offline or
+          // has no locality, the user must choose an actual place instead.
+          setLocationStatus('error');
+          setLocationConfirmed(false);
+          setShowManual(true);
         });
-        setLocationStatus('ready');
-        setLocationConfirmed(true);
-        fire('success').catch(() => {});
       },
       () => {
+        if (requestId !== geoReqId.current) return;
         setLocationStatus('error');
+        setLocationConfirmed(false);
         setShowManual(true);
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
     );
-  }, [copy.step3.currentPosition, fire]);
+  }, [fire]);
 
   const selectDate = useCallback((isoDate: string) => {
     const [y, m, d] = isoDate.split('-');
@@ -386,6 +407,9 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   }, [runLocSearch]);
 
   const pickLocation = useCallback((r: { city: string; lat: number; lon: number }) => {
+    // A deliberate manual choice wins over an in-flight GPS/reverse-geocode
+    // request, even if that older request resolves a moment later.
+    geoReqId.current += 1;
     setLocation({ city: r.city, lat: r.lat, lon: r.lon, accuracy: null });
     setLocQuery(r.city);
     setLocResults([]);

@@ -38,9 +38,9 @@ export type MonterGarmentRowProps = Readonly<{
   label: string;
   roleLabel: string;
   imageSrc: string;
-  why?: string;
   fact?: string | null;
   hasAlternatives?: boolean;
+  loopBand?: 'leading' | 'canonical' | 'trailing';
   compactDestinationLabel?: string;
   onSwap: (event: MouseEvent<HTMLButtonElement>) => void;
   animationDelayMs: number | null;
@@ -52,9 +52,9 @@ export function MonterGarmentRow({
   label,
   roleLabel,
   imageSrc,
-  why,
   fact = null,
   hasAlternatives = false,
+  loopBand = 'canonical',
   compactDestinationLabel,
   onSwap,
   animationDelayMs,
@@ -63,10 +63,7 @@ export function MonterGarmentRow({
   // Juster bruker fortsatt den kompakte, delte resultatlisten. Bare Hjem
   // sender den komplette kortkontrakten; dette holder den nye reisen lokalt
   // uten å endre en annen flyt.
-  if (
-    total === undefined
-    || why === undefined
-  ) {
+  if (total === undefined) {
     const navigatesInCarousel = compactDestinationLabel !== undefined;
     return (
       <li className="hjm-row-item">
@@ -115,7 +112,11 @@ export function MonterGarmentRow({
   return (
     <li
       className="hjm-journey-card"
-      data-hjm-journey-card="true"
+      data-hjm-journey-card={loopBand === 'canonical' ? 'true' : undefined}
+      data-loop-band={loopBand}
+      data-loop-clone={loopBand === 'canonical' ? undefined : 'true'}
+      aria-hidden={loopBand === 'canonical' ? undefined : true}
+      inert={loopBand === 'canonical' ? undefined : true}
       style={animationDelayMs !== null ? { animationDelay: `${animationDelayMs}ms` } : undefined}
     >
       <article className="hjm-journey-card-inner" data-hjm-card-focus tabIndex={-1}>
@@ -124,7 +125,7 @@ export function MonterGarmentRow({
             src={imageSrc}
             alt=""
             draggable={false}
-            loading={position === 1 ? undefined : 'lazy'}
+            loading={loopBand === 'canonical' && position === 1 ? undefined : 'lazy'}
             onError={(event) => {
               if (event.currentTarget.src !== GENERIC_GARMENT_SVG) {
                 event.currentTarget.src = GENERIC_GARMENT_SVG;
@@ -140,29 +141,26 @@ export function MonterGarmentRow({
         </p>
         <h2 className="hjm-journey-name">{label}</h2>
 
-        <section className="hjm-journey-why" aria-label={copy.whyAria}>
-          <h3>{copy.whyTitle}</h3>
-          <p>{why}</p>
-        </section>
+        <div className="hjm-journey-bottom">
+          {fact ? (
+            <section className="hjm-journey-fact">
+              <h3>{copy.goodToKnow}</h3>
+              <p>{fact}</p>
+            </section>
+          ) : null}
 
-        {fact ? (
-          <section className="hjm-journey-fact">
-            <h3>{copy.goodToKnow}</h3>
-            <p>{fact}</p>
-          </section>
-        ) : null}
-
-        {hasAlternatives ? (
-          <button
-            type="button"
-            className="hjm-journey-detail"
-            onClick={onSwap}
-            aria-label={copy.alternativesAria(label)}
-          >
-            {copy.alternatives}
-            <DetailChevronIcon />
-          </button>
-        ) : null}
+          {hasAlternatives ? (
+            <button
+              type="button"
+              className="hjm-journey-detail"
+              onClick={onSwap}
+              aria-label={copy.alternativesAria(label)}
+            >
+              {copy.alternatives}
+              <DetailChevronIcon />
+            </button>
+          ) : null}
+        </div>
       </article>
     </li>
   );

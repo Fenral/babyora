@@ -2,6 +2,7 @@
   "nav": {
     "home": "Hjem",
     "plan": "Planlæg",
+    "tools": "Værktøjer",
     "familie": "Familie",
     "mainNavigation": "Hovednavigation",
     "guide": "Guide",
@@ -13,7 +14,32 @@
     "pageTitle": {
       "home": "Hjem · Babyora",
       "plan": "Planlæg · Babyora",
+      "tools": "Værktøjer · Babyora",
       "family": "Familie · Babyora"
+    }
+  },
+  "tools": {
+    "title": "Værktøjer",
+    "intro": "Beregninger og korte guider, når vejr, søvn eller temperatur skifter.",
+    "open": "Åbn beregneren",
+    "weatherCalculator": {
+      "kicker": "Ude i dag",
+      "title": "Vejrberegner",
+      "description": "Test temperatur, vind og regn, og find et passende sæt tøj."
+    },
+    "guidesKicker": "Hjemme og ude",
+    "guidesTitle": "Søvn og tryghed",
+    "sleepCalculator": {
+      "title": "Søvnberegner",
+      "description": "Find den rette TOG og lag efter rumtemperaturen."
+    },
+    "firstWinter": {
+      "title": "Første vinter",
+      "description": "En rolig uge-for-uge-guide gennem den første kulde."
+    },
+    "temperatureGuide": {
+      "title": "For varm eller kold?",
+      "description": "Lær tegnene, og brug nakketesten, når du er i tvivl."
     }
   },
   "activity": {

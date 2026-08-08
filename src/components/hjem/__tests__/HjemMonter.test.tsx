@@ -139,29 +139,17 @@ afterEach(() => {
 });
 
 describe('HjemMonter — phase-driven view switching', () => {
-  it('weather-ready: renders the WeatherScene panel + "Klar for en liten tur?" ask screen, statisk (ingen OpeningSequence), MascotIdle i hvile', () => {
+  it('weather-ready + ferdig motorresultat: viser resultatet direkte uten CTA, scan eller haptikk-seremoni', () => {
     mockedState = { phase: 'weather-ready' };
     const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
-    expect(html).toContain('Klar for en liten tur?');
-    expect(html).toContain('Finn dagens antrekk');
-    expect(html).toContain('Lillian · 9 måneder · Utelek');
-    expect(html).toContain('data-nuance="rain"');
+    expect(html).toContain('Dagens antrekk');
+    expect(html).toContain('class="hjm-strip"');
+    expect(html).toContain('Kle på, steg for steg');
     expect(html).toContain('BABYORA');
-    // Eier-override v3: åpningsklatringen er fjernet — ingen ekstra
-    // body/hands-lag, ingen kantlys, ingen panel-lift-wrapper.
-    expect(html).not.toContain('hjm-opening-mascot-body');
-    expect(html).not.toContain('hjm-opening-mascot-hands');
-    expect(html).not.toContain('hjm-opening-edge-light');
-    expect(html).not.toContain('hjm-panel-lift-wrap');
-    // MascotIdle renders MascotPeek's normal-pose markup (SSR always shows
-    // pose='normal' — the idle glance timer never fires during a static
-    // render) PLUS its own dedicated (reserved) glance overlay, initially
-    // invisible. Never the scan-reserved curious pose here.
-    expect(html).toContain('/monter/maskot.webp');
-    expect(html).toContain('data-pose="normal"');
-    expect(html).not.toContain('data-pose="curious"');
-    expect(html).toContain('/monter/maskot-glimt.webp');
-    expect(html).toContain('data-glancing="false"');
+    expect(html).not.toContain('Klar for en liten tur?');
+    expect(html).not.toContain('Finn dagens antrekk');
+    expect(html).not.toContain('aria-label="Beregner antrekk"');
+    expect(html).not.toContain('class="hjm-cta"');
   });
 
   it('scanning: renders the ScanOverlay choreography + status block + the curious mascot pose, not the ask screen', () => {
@@ -336,19 +324,19 @@ describe('HjemMonter — complete garment imagery', () => {
 
 describe('HjemMonter localization', () => {
   it.each([
-    ['sv', 'Redo för en liten tur?', 'Hitta dagens kläder', 'Lillian · 9 månader · Utomhuslek'],
-    ['da', 'Klar til en lille tur?', 'Find dagens tøj', 'Lillian · 9 måneder · Udendørs leg'],
-    ['no', 'Klar for en liten tur?', 'Finn dagens antrekk', 'Lillian · 9 måneder · Utelek'],
-    ['de', 'Ready for a little trip?', 'Find today’s outfit', 'Lillian · 9 months · Outdoor play'],
-  ])('renders the ready phase in %s (German uses English)', async (language, title, cta, childLine) => {
+    ['sv', 'Dagens kläder'],
+    ['da', 'Dagens tøj'],
+    ['no', 'Dagens antrekk'],
+    ['de', "Today&#x27;s outfit"],
+  ])('renders the direct result in %s (German uses English)', async (language, title) => {
     await i18next.changeLanguage(language);
     mockedState = { phase: 'weather-ready' };
 
     const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
 
     expect(html).toContain(title);
-    expect(html).toContain(cta);
-    expect(html).toContain(childLine);
+    expect(html).toContain('class="hjm-strip"');
+    expect(html).not.toContain('class="hjm-cta"');
   });
 
   it('localizes scanning labels, status, age and aria-live copy in Swedish', async () => {

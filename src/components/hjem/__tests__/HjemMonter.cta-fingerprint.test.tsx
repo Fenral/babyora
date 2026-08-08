@@ -27,10 +27,6 @@ import { localDateKey } from '../../../lib/scan/types.js';
 import { computeScanResultKey } from '../../../lib/scan/result-key.js';
 import i18n from '../../../i18n/index.js';
 import {
-  CTA_CEREMONY_LINE,
-  CTA_REVEAL_LINE,
-  rememberResultKey,
-  resultKeyScope,
   sessionResultKeys,
 } from '../cta-fingerprint.js';
 
@@ -160,72 +156,23 @@ afterEach(() => {
   sessionResultKeys.clear();
 });
 
-describe('Hjem-CTA-en leser fingerprintet FØR trykket', () => {
-  it('tom cache → «Finn dagens antrekk», seremoni-linja og data-cta-path="ceremony"', () => {
+describe('Home publiserer ferdig motorresultat direkte', () => {
+  it('tom cache → resultat i første render, uten CTA eller scanflate', () => {
     const html = renderToStaticMarkup(<HjemMonter {...props()} />);
-    expect(html).toContain('Finn dagens antrekk');
-    expect(html).toContain(CTA_CEREMONY_LINE);
-    expect(html).toContain('data-cta-path="ceremony"');
-    expect(html).not.toContain('Vis dagens antrekk');
-  });
-
-  it('persistert slot med NØYAKTIG dagens fingerprint → «Vis dagens antrekk» + reveal-linja', () => {
-    const key = fingerprintFor('utelek');
-    mockedSlots = { [CHILD_ID]: slotWith(key, 'utelek') };
-    const html = renderToStaticMarkup(<HjemMonter {...props()} />);
-    expect(html).toContain('Vis dagens antrekk');
-    expect(html).toContain(CTA_REVEAL_LINE);
-    expect(html).toContain('data-cta-path="reveal"');
+    expect(html).toContain('Dagens antrekk');
+    expect(html).toContain('class="hjm-strip"');
     expect(html).not.toContain('Finn dagens antrekk');
+    expect(html).not.toContain('data-cta-path="ceremony"');
+    expect(html).not.toContain('aria-label="Beregner antrekk"');
   });
 
-  it('slot fra en ANNEN aktivitet, men samme utfall → reveal (nøkkeloppslag, ikke identitets-oppslag)', () => {
-    // Slotten ble beregnet for vogn; nøkkelen den bærer er likevel utelek sin
-    // fingerprint — altså ble antrekket identisk, og det finnes ikke noe nytt
-    // å vise fram. getSlotForIdentity ville ha forkastet denne slotten.
-    const key = fingerprintFor('utelek');
-    mockedSlots = { [CHILD_ID]: slotWith(key, 'vogn') };
-    const html = renderToStaticMarkup(<HjemMonter {...props('utelek')} />);
-    expect(html).toContain('Vis dagens antrekk');
-  });
-
-  it('slot med en ANNEN fingerprint → fortsatt seremoni (cachen får ikke lyve)', () => {
-    const utelek = fingerprintFor('utelek');
-    const vogn = fingerprintFor('vogn');
-    expect(vogn).not.toBe(utelek); // FORUTSETNING: nøklene skiller faktisk
-    mockedSlots = { [CHILD_ID]: slotWith(vogn, 'vogn') };
-    const html = renderToStaticMarkup(<HjemMonter {...props('utelek')} />);
-    expect(html).toContain('Finn dagens antrekk');
-    expect(html).toContain('data-cta-path="ceremony"');
-  });
-
-  it('slot fra en TIDLIGERE dag teller ikke, selv om nøkkelen skulle være lik', () => {
-    const key = fingerprintFor('utelek');
-    mockedSlots = {
-      [CHILD_ID]: { ...slotWith(key, 'utelek'), identity: { ...slotWith(key, 'utelek').identity, dateKey: '2000-01-01' } },
-    };
+  it('en cache med annen fingerprint får ikke overstyre det ferske resultatet', () => {
+    const currentKey = fingerprintFor('utelek');
+    mockedSlots = { [CHILD_ID]: slotWith(fingerprintFor('vogn'), 'vogn') };
     const html = renderToStaticMarkup(<HjemMonter {...props()} />);
-    expect(html).toContain('Finn dagens antrekk');
-  });
-
-  it('nøkkel appen landet tidligere i økten (tom slot) → reveal — dette er «fram og tilbake»-tilfellet', () => {
-    const key = fingerprintFor('utelek');
-    // FORUTSETNING: uten øktminnet er nøyaktig samme render seremoni-veien.
-    expect(renderToStaticMarkup(<HjemMonter {...props()} />)).toContain('data-cta-path="ceremony"');
-
-    rememberResultKey(sessionResultKeys, resultKeyScope(CHILD_ID, localDateKey()), key);
-    const html = renderToStaticMarkup(<HjemMonter {...props()} />);
-    expect(html).toContain('Vis dagens antrekk');
-    expect(html).toContain('data-cta-path="reveal"');
-  });
-
-  it('øktminnet for et ANNET barn smitter ikke over', () => {
-    rememberResultKey(
-      sessionResultKeys,
-      resultKeyScope('et-annet-barn', localDateKey()),
-      fingerprintFor('utelek'),
-    );
-    expect(renderToStaticMarkup(<HjemMonter {...props()} />)).toContain('Finn dagens antrekk');
+    expect(currentKey).not.toBe(mockedSlots[CHILD_ID]?.resultKey);
+    expect(html).toContain('Dagens antrekk');
+    expect(html).not.toContain('Finn dagens antrekk');
   });
 
   it('offline-grenen bruker samme plan — ingen nøkkel uten vær, altså aldri et «Vis»-løfte', () => {
@@ -258,6 +205,31 @@ describe('trykk-veien er kablet til den samme planen', () => {
     resolve(process.cwd(), 'src/components/hjem/HjemMonter.tsx'),
     'utf8',
   ).replace(/\r\n/gu, '\n');
+
+  const directHomeEntry = source.slice(
+    source.indexOf('const directPlan = planDirectHomeResult'),
+    source.indexOf('if (seenIdentityRef.current === null)'),
+  );
+
+  const directHomePlanner = source.slice(
+    source.indexOf('function planDirectHomeResult'),
+    source.indexOf('export function HjemMonter'),
+  );
+
+  it('direkte-planen venter på fingerprint og gjør eksakt cache idempotent', () => {
+    expect(directHomePlanner).toContain('if (currentResultKey === null) return null;');
+    expect(directHomePlanner).toContain('shouldCommit: exactSlot?.resultKey !== currentResultKey');
+  });
+
+  it('direkte Home-inngang publiserer og cacher uten timer, scan-haptikk eller fresh-animasjon', () => {
+    expect(directHomeEntry).toContain('scan.scanStarted(identity);');
+    expect(directHomeEntry).toContain('scan.scanCompleted(directPlan.resultKey);');
+    expect(directHomeEntry).toContain('if (directPlan.shouldCommit) {');
+    expect(directHomeEntry).toContain('setIsFresh(false);');
+    expect(directHomeEntry).not.toContain('runTimer(');
+    expect(directHomeEntry).not.toContain('haptic');
+    expect(directHomeEntry).not.toContain('completeScan(');
+  });
 
   const tapHandler = source.slice(
     source.indexOf('const handleFindOutfitTap = useCallback'),

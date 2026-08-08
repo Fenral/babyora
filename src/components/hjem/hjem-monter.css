@@ -28,7 +28,13 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  background: linear-gradient(var(--dw-lys-vinkel), var(--dw-rom-naer) 0%, var(--dw-rom-fjern) 46%);
+  /* Mineral Garden skal leses som et rolig, nøytralt lerret. Værkortet eier
+     den tydelige mintflaten; rommet bruker bare 22–25 % av atmosfærefargen. */
+  background: linear-gradient(
+    var(--dw-lys-vinkel),
+    color-mix(in srgb, var(--dw-rom-naer) 25%, var(--dw-canvas)) 0%,
+    color-mix(in srgb, var(--dw-rom-fjern) 22%, var(--dw-canvas)) 72%
+  );
   /* Lyspoolen tegnes i ::before under, ikke her — den ma ligge FAST i
      viewporten. isolation gir ::before sin egen stablingskontekst saa den
      aldri legger seg over innhold. */
@@ -138,6 +144,12 @@
     var(--dw-pool) at var(--dw-pool-x) var(--dw-pool-y),
     var(--dw-pool-farge),
     var(--dw-pool-ytre) var(--dw-pool-stopp));
+}
+.hjem-monter--result {
+  background: var(--dw-canvas);
+}
+.hjem-monter--result::before {
+  background: none;
 }
 .hjem-monter > * { position: relative; z-index: 1; }
 
@@ -899,7 +911,7 @@
    store glimt av naboene på begge sider etter samme mønster som Mobbin. */
 .hjm-journey-rail {
   --hjm-journey-card-width: clamp(250px, 78vw, 304px);
-  --hjm-detail-card-height: 359px;
+  --hjm-detail-card-height: 324px;
   position: relative;
   box-sizing: border-box;
   display: grid;
@@ -922,6 +934,7 @@
   scrollbar-width: none;
   transition: block-size var(--dw-m-state) var(--dw-ease);
 }
+.hjm-journey-rail[data-loop-ready='false'] { visibility: hidden; }
 .hjm-journey-rail[data-adaptive-height='true'] {
   block-size: calc(var(--hjm-active-card-height) + 22px);
 }
@@ -1014,7 +1027,7 @@
 .hjm-journey-image {
   position: relative;
   width: 100%;
-  height: 105px;
+  height: 92px;
   aspect-ratio: auto;
   flex: none;
   box-sizing: border-box;
@@ -1062,32 +1075,16 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-.hjm-journey-why {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--dw-hairline);
-}
-.hjm-journey-why h3 {
-  margin: 0;
-  color: var(--dw-ink-low);
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.hjm-journey-why p {
-  margin: 3px 0 0;
-  color: var(--dw-ink-mid);
-  font-size: 13.5px;
-  line-height: 1.45;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.hjm-journey-bottom {
+  min-height: 0;
+  margin-top: auto;
 }
 .hjm-journey-fact {
   min-height: 0;
-  margin-top: auto;
-  padding-top: 8px;
+  padding: 9px 10px 10px;
+  border: 1px solid color-mix(in srgb, var(--dw-ink-mid) 10%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--dw-interactive) 58%, var(--dw-raised));
 }
 .hjm-journey-fact h3 {
   margin: 0;
@@ -1101,7 +1098,7 @@
   margin: 3px 0 0;
   color: var(--dw-ink-mid);
   font-size: 12.5px;
-  line-height: 1.35;
+  line-height: 1.32;
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;

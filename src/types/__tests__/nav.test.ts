@@ -4,15 +4,15 @@
  * drills (se App.tsx sin Drill-union) i stedet for en egen root-tab.
  */
 import { describe, expect, it } from 'vitest';
-import { TAB_DEFS, type FamilieToolTarget, type TabKey } from '../nav.js';
+import { TAB_DEFS, type TabKey, type VerktoyTarget } from '../nav.js';
 
 describe('tre-rots-navigasjonen', () => {
   it('har nøyaktig tre røtter i riktig rekkefølge', () => {
-    expect(TAB_DEFS.map((t) => t.key)).toEqual(['hjem', 'plan', 'familie']);
+    expect(TAB_DEFS.map((t) => t.key)).toEqual(['hjem', 'plan', 'verktoy', 'familie']);
   });
 
   it('bruker mål-IA-labels — synlig tekst er tilgjengelig navn (WCAG 2.5.3)', () => {
-    expect(TAB_DEFS.map((t) => t.label)).toEqual(['Hjem', 'Planlegg', 'Familie']);
+    expect(TAB_DEFS.map((t) => t.label)).toEqual(['Hjem', 'Planlegg', 'Verktøy', 'Familie']);
   });
 
   it('guide er ikke lenger en rot', () => {
@@ -26,14 +26,14 @@ describe('tre-rots-navigasjonen', () => {
   });
 
   it('eksporterer FamilieToolTarget for de tidligere Guide-"kunnskap"-kortene', () => {
-    const targets: FamilieToolTarget[] = ['tog', 'varm-kald', 'forste-vinter'];
+    const targets: VerktoyTarget[] = ['finn-antrekk', 'tog', 'varm-kald', 'forste-vinter'];
     // Ren typesjekk (kompilerer kun hvis unionen fortsatt har nøyaktig disse
     // tre medlemmene) — assert på lengden for å ha én kjørbar forventning.
-    expect(targets).toHaveLength(3);
+    expect(targets).toHaveLength(4);
   });
 
   it('TabKey-unionen matcher TAB_DEFS sine nøkler 1:1', () => {
     const keys: TabKey[] = TAB_DEFS.map((t) => t.key);
-    expect(keys).toEqual(['hjem', 'plan', 'familie']);
+    expect(keys).toEqual(['hjem', 'plan', 'verktoy', 'familie']);
   });
 });

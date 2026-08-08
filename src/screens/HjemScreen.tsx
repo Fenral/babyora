@@ -411,11 +411,10 @@ export function HjemScreen({
   );
   const lat = effectivePlace?.lat ?? 0;
   const lon = effectivePlace?.lon ?? 0;
-  const cityLabel = effectivePlace === null
-    ? 'Sted mangler'
-    : effectivePlace.source === 'automatic'
-      ? `Nåværende sted · ${effectivePlace.city}`
-      : `Fast sted · ${effectivePlace.city}`;
+  // Værflaten viser selve stedet, ikke hvordan det ble valgt. Modusen
+  // (automatisk eller fast hjemsted) er en innstilling, mens byen er det
+  // brukeren trenger når anbefalingen skal vurderes.
+  const cityLabel = effectivePlace?.city ?? 'Sted mangler';
 
   // P5: manual weather-refetch trigger for the offline ask-block's "Prøv å
   // hente været igjen" (HjemMonter → onRetryWeather). useWeather's refreshKey

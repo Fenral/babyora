@@ -40,7 +40,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { FamilieToolTarget, TabKey } from '../types/nav';
+import type { TabKey } from '../types/nav';
 import { Capacitor } from '@capacitor/core';
 import { useChildren } from '../state/children-store';
 import { useHapticSystem } from '../lib/haptics/system';
@@ -72,7 +72,6 @@ import { APP_VERSION } from '../lib/app-version';
 import { PaywallDialog } from '../components/PaywallDialog';
 import { CareCircle } from '../components/family/CareCircle';
 import type { Caregiver } from '../components/family/care-circle-model';
-import { ToolsSection } from '../components/family/ToolsSection';
 import { MaterialPreferenceSheet } from '../components/profile/MaterialPreferenceSheet';
 import { clearLanguageOverride, setLanguageOverride } from '../i18n';
 import {
@@ -96,10 +95,6 @@ import {
 
 export interface InnstillingerScreenProps {
   onNavigate: (tab: TabKey) => void;
-  /** P1: åpner en av de tidligere Guide-"kunnskap"-skjermene (uendret) via
-   *  "Verktøy"-seksjonen under — se ToolsSection.tsx / App.tsx sin
-   *  familie-tool-drill. */
-  onOpenTool: (target: FamilieToolTarget) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1285,7 +1280,7 @@ const CARE_CIRCLE_PREVIEW: readonly Caregiver[] = [
   { id: 'onkel', name: 'Per', role: 'roleUncle', status: 'pending' },
 ];
 
-export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: InnstillingerScreenProps): ReactElement {
+export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerScreenProps): ReactElement {
   // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
   // siden BottomTabBar nå mountes globalt i App.tsx.
   void _onNavigate;
@@ -2374,13 +2369,6 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
             </div>
           </li>
         </Section>
-
-        {/* VERKTØY (P1, nav 4→3 skeleton): tidligere Guide-"kunnskap"-kortene
-            (TOG-guiden/"Soveguiden", Varm eller kald?, Første vinter) — Guide-
-            tab-roten er fjernet, se src/types/nav.ts. Skjermene bak er
-            uendret; kun entry-point flyttet hit. Ekstrahert til
-            ToolsSection.tsx (samme mønster som CareCircle.tsx). */}
-        <ToolsSection onOpenTool={onOpenTool} />
 
         {/* UTSEENDE */}
         <div aria-hidden="true" style={{ height: 1, background: C.hairline, margin: 'var(--dw-space-4) var(--dw-space-4) 0' }} />

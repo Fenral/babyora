@@ -66,17 +66,17 @@ const expectations: Record<LaunchLanguage, Readonly<{
   forbidden: readonly string[];
 }>> = {
   en: {
-    tabs: ['Home', 'Plan', 'Family'],
+    tabs: ['Home', 'Plan', 'Tools', 'Family'],
     family: ['Family', 'Children', 'Weather & location', 'Appearance', 'Language', 'Automatic (device)', 'About & support', 'Log out'],
     forbidden: ['>Planlegg<', '>Familie<', '>Vær & sted<', '>Utseende<', '>Logg ut<'],
   },
   sv: {
-    tabs: ['Hem', 'Planera', 'Familj'],
+    tabs: ['Hem', 'Planera', 'Verktyg', 'Familj'],
     family: ['Familj', 'Barn', 'Väder och plats', 'Utseende', 'Språk', 'Automatiskt (enhet)', 'Om och support', 'Logga ut'],
     forbidden: ['>Planlegg<', '>Familie<', '>Vær & sted<', '>Logg ut<'],
   },
   da: {
-    tabs: ['Hjem', 'Planlæg', 'Familie'],
+    tabs: ['Hjem', 'Planlæg', 'Værktøjer', 'Familie'],
     family: ['Familie', 'Børn', 'Vejr og sted', 'Udseende', 'Sprog', 'Automatisk (enhed)', 'Om og support', 'Log ud'],
     forbidden: ['>Planlegg<', '>Vær & sted<', '>Utseende<', '>Logg ut<'],
   },
@@ -107,7 +107,7 @@ describe.each(Object.entries(expectations) as Array<[LaunchLanguage, typeof expe
       const html = renderToStaticMarkup(
         <I18nextProvider i18n={i18n}>
           <ChildrenProvider>
-            <InnstillingerScreen onNavigate={() => {}} onOpenTool={() => {}} />
+            <InnstillingerScreen onNavigate={() => {}} />
           </ChildrenProvider>
         </I18nextProvider>,
       );
