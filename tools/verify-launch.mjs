@@ -277,6 +277,110 @@ try {
     await p.close();
   }
 
+  /* Query-gatet saktevisning: den skal holde launch-flaten, loope samme
+     rekkefølge deterministisk og aldri lekke inn i vanlig appstart. */
+  {
+    const p = await browser.newPage({
+      viewport: { width: 390, height: 844 },
+      deviceScaleFactor: 1,
+      colorScheme: 'dark',
+    });
+    await p.route('**/api/forecast*', (route) => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(forecastPartlyCloudy1C()),
+    }));
+    await p.goto(`${BASE}/?launch-preview=slow`, { waitUntil: 'domcontentloaded' });
+    await p.waitForFunction(() => document.querySelector('#root > *') !== null, { timeout: 8000 });
+
+    const previewKontrakt = await p.evaluate(() => {
+      const launch = document.getElementById('launch');
+      const sign = document.querySelector('[data-launch-signboard]');
+      const avatar = document.querySelector('[data-launch-avatar]');
+      const weather = document.querySelector('[data-launch-weather]');
+      const style = (el) => getComputedStyle(el);
+      return {
+        mode: document.documentElement.getAttribute('data-launch-preview'),
+        launchFinnes: launch !== null,
+        duration: style(sign).animationDuration,
+        iteration: style(sign).animationIterationCount,
+        names: [style(sign).animationName, style(avatar).animationName, style(weather).animationName],
+      };
+    });
+    meld(
+      previewKontrakt.mode === 'slow' && previewKontrakt.launchFinnes,
+      'saktevisning: query-modus holder launch-flaten etter at appen er klar',
+    );
+    meld(
+      previewKontrakt.duration === '5.2s' && previewKontrakt.iteration === 'infinite',
+      'saktevisning: sekvensen looper hver 5,2 s',
+    );
+    meld(
+      previewKontrakt.names.join('|')
+        === 'launch-preview-signboard|launch-preview-avatar|launch-preview-weather',
+      'saktevisning: skilt, barn og vær har egne faser',
+    );
+
+    const lesFase = async (time) => p.evaluate((currentTime) => {
+      const launch = document.getElementById('launch');
+      for (const animation of launch.getAnimations({ subtree: true })) {
+        animation.pause();
+        animation.currentTime = currentTime;
+      }
+      const opacity = (selector) => Number(getComputedStyle(document.querySelector(selector)).opacity);
+      return {
+        sign: opacity('[data-launch-signboard]'),
+        avatar: opacity('[data-launch-avatar]'),
+        weather: opacity('[data-launch-weather]'),
+      };
+    }, time);
+
+    const skiltFase = await lesFase(800);
+    meld(
+      skiltFase.sign > 0.5 && skiltFase.avatar < 0.05 && skiltFase.weather < 0.05,
+      'saktevisning: skiltet kommer først',
+    );
+    const barnFase = await lesFase(1700);
+    meld(
+      barnFase.sign > 0.95 && barnFase.avatar > 0.5 && barnFase.weather < 0.05,
+      'saktevisning: barnet lander på skiltet som fase to',
+    );
+    const vaerFase = await lesFase(3000);
+    meld(
+      vaerFase.sign > 0.95 && vaerFase.avatar > 0.95 && vaerFase.weather > 0.5,
+      'saktevisning: været lander i hånden som fase tre',
+    );
+
+    const pauseVirker = await p.evaluate(() => {
+      document.documentElement.setAttribute('data-launch-preview-paused', 'true');
+      return getComputedStyle(document.querySelector('[data-launch-weather]')).animationPlayState;
+    });
+    meld(pauseVirker === 'paused', 'saktevisning: loopen kan pauses i skjult fane');
+    await p.close();
+  }
+
+  {
+    const p = await browser.newPage({
+      viewport: { width: 390, height: 844 },
+      deviceScaleFactor: 1,
+      colorScheme: 'dark',
+      reducedMotion: 'reduce',
+    });
+    await p.route('**/*', (route) => {
+      if (route.request().resourceType() === 'script') return route.abort();
+      return route.continue();
+    });
+    await p.goto(`${BASE}/?launch-preview=slow`, { waitUntil: 'domcontentloaded' });
+    const redusert = await p.evaluate(() => {
+      const style = getComputedStyle(document.querySelector('[data-launch-weather]'));
+      return { animationName: style.animationName, opacity: style.opacity };
+    });
+    meld(
+      redusert.animationName === 'none' && redusert.opacity === '1',
+      'saktevisning: Reduce Motion viser ferdig, statisk signatur',
+    );
+    await p.close();
+  }
+
   /* En fast 600–3999 ms-timer ville vært kunstig merkevarevent. 4000 ms
      nødutgang og den korte DOM-oppryddingen regnes ikke som visningstid. */
   const kilde = readFileSync('src/lib/launch-handoff.ts', 'utf8');

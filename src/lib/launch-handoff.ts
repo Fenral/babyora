@@ -18,6 +18,10 @@
  * ramme er nok til at DOM-en finnes, men ikke til at den er på skjermen.
  * Er appen rask, ses flaten knapt. Det er riktig.
  *
+ * Én eksplisitt design-review finnes utenfor appflyten:
+ * `?launch-preview=slow` beholder flaten og looper sekvensen sakte. Den er
+ * query-gatet, brukes bare til vurdering og endrer aldri ordinær oppstart.
+ *
  * ═══ VAKTEN, OG HVORFOR DEN ER DER ════════════════════════════════════════
  * Om noe kaster før `slippLaunch()` blir kalt — en feil i en provider, en
  * modul som ikke laster — ville flaten blitt stående for alltid. Appen ville
@@ -30,6 +34,10 @@
 const FRIST_MS = 4000;
 
 let alleredeSluppet = false;
+
+function erSakteDesignPreview(): boolean {
+  return document.documentElement.getAttribute('data-launch-preview') === 'slow';
+}
 
 function fjern(el: HTMLElement): void {
   /* `data-ferdig` starter opacity-overgangen (200 ms, definert i index.html).
@@ -49,6 +57,9 @@ function fjern(el: HTMLElement): void {
  * for kallstedet kan bli montert på nytt under utvikling.
  */
 export function slippLaunch(): void {
+  /* Query-gatet design-review får spille ferdig og loope. Denne grenen er
+     aldri aktiv i ordinær appstart og legger derfor ikke til ventetid. */
+  if (erSakteDesignPreview()) return;
   if (alleredeSluppet) return;
   const el = document.getElementById('launch');
   if (el === null) return;
@@ -65,6 +76,7 @@ export function slippLaunch(): void {
 
 /** Nødutgangen. Kalles én gang fra oppstarten. */
 export function armerLaunchFrist(): void {
+  if (erSakteDesignPreview()) return;
   window.setTimeout(() => {
     const el = document.getElementById('launch');
     if (el !== null && !alleredeSluppet) {
