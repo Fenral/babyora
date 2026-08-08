@@ -376,6 +376,13 @@
     "rail": {
       "label": "Outfit changes through the day",
       "garments": "Garments in this change",
+      "takeOff": "Take off",
+      "putOn": "Put on",
+      "addLabel": "Add",
+      "bringLabel": "Bring",
+      "prepareLabel": "Prepare",
+      "readMore": "Read more",
+      "showLess": "Show less",
       "openOutfit": "See the full outfit",
       "add": "Put on {{garments}}",
       "remove": "Take off {{garments}}",

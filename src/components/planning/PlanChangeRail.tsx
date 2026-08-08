@@ -89,18 +89,6 @@ function KindIcon({ kind }: { kind: PlanningChangeKind }): ReactNode {
   }
 }
 
-function eventGarments(event: PlanningRailEvent): readonly string[] {
-  const transitionGarments = event.transition?.kind === 'rain'
-    || event.transition?.kind === 'prep'
-    ? event.transition.garments
-    : [];
-  return [...new Set([
-    ...event.removedGarments,
-    ...event.addedGarments,
-    ...transitionGarments,
-  ])];
-}
-
 function timeLabel(atIso: string, locale: string): string {
   const instant = new Date(atIso);
   if (Number.isNaN(instant.getTime())) return atIso;
@@ -108,7 +96,8 @@ function timeLabel(atIso: string, locale: string): string {
     timeZone: 'Europe/Oslo',
     hour: '2-digit',
     minute: '2-digit',
-  });
+    hourCycle: 'h23',
+  }).replace('.', ':');
 }
 
 function localizedGarmentList(
@@ -161,23 +150,96 @@ function localizedAction(
   return diffAction(event, t, language, locale);
 }
 
-function GarmentPreview({ garment, language }: { garment: string; language: string }) {
-  const source = garmentPngSafe(garmentIdFor(garment));
+type CompactChangeGroup = Readonly<{
+  id: 'removed' | 'added';
+  label: string;
+  garments: readonly string[];
+}>;
+
+function compactChangeGroups(
+  event: PlanningRailEvent,
+  t: TFunction,
+): readonly CompactChangeGroup[] {
+  const groups: CompactChangeGroup[] = [];
+  const transitionGarments = event.transition?.kind === 'rain'
+    || event.transition?.kind === 'prep'
+    ? event.transition.garments
+    : [];
+  const transitionSet = new Set(transitionGarments);
+  const incomingGarments = [...new Set([
+    ...event.addedGarments,
+    ...transitionGarments,
+  ])];
+
+  if (event.removedGarments.length > 0) {
+    groups.push({
+      id: 'removed',
+      label: t('plan.rail.takeOff'),
+      garments: event.removedGarments,
+    });
+  }
+
+  if (incomingGarments.length > 0) {
+    const hasNonTransitionAddition = event.addedGarments.some(
+      (garment) => !transitionSet.has(garment),
+    );
+    let label = t('plan.rail.putOn');
+    if (event.transition?.kind === 'rain' && event.transition.action === 'bring') {
+      label = hasNonTransitionAddition ? t('plan.rail.addLabel') : t('plan.rail.bringLabel');
+    } else if (event.transition?.kind === 'prep') {
+      label = hasNonTransitionAddition ? t('plan.rail.addLabel') : t('plan.rail.prepareLabel');
+    }
+    groups.push({
+      id: 'added',
+      label,
+      garments: incomingGarments,
+    });
+  }
+
+  return groups;
+}
+
+function CompactGarmentGroup({
+  group,
+  language,
+  locale,
+}: {
+  group: CompactChangeGroup;
+  language: string;
+  locale: string;
+}) {
+  const visibleGarments = group.garments.slice(0, 3);
+  const hiddenCount = Math.max(0, group.garments.length - visibleGarments.length);
+  const names = localizedGarmentList(group.garments, language, locale);
+
   return (
-    <figure className="plan-change-rail__preview">
-      <img
-        alt=""
-        src={source}
-        onError={(event) => {
-          if (event.currentTarget.src !== GENERIC_GARMENT_SVG) {
-            event.currentTarget.src = GENERIC_GARMENT_SVG;
-          }
-        }}
-      />
-      {/* T1A: synlig navn via visningsnavn-kilden (rå streng forblir
-          bilde-oppslagsnøkkel over). */}
-      <figcaption>{displayNameForDbString(garment, language)}</figcaption>
-    </figure>
+    <span
+      className="plan-change-rail__compact-group"
+      role="group"
+      aria-label={`${group.label}: ${names}`}
+    >
+      <span className="plan-change-rail__compact-label" aria-hidden="true">
+        {group.label}
+      </span>
+      <span className="plan-change-rail__compact-stack" aria-hidden="true">
+        {visibleGarments.map((garment, index) => (
+          <img
+            key={`${garment}-${index}`}
+            className="plan-change-rail__compact-thumb"
+            alt=""
+            src={garmentPngSafe(garmentIdFor(garment))}
+            onError={(event) => {
+              if (event.currentTarget.src !== GENERIC_GARMENT_SVG) {
+                event.currentTarget.src = GENERIC_GARMENT_SVG;
+              }
+            }}
+          />
+        ))}
+        {hiddenCount > 0 && (
+          <span className="plan-change-rail__compact-more">+{hiddenCount}</span>
+        )}
+      </span>
+    </span>
   );
 }
 
@@ -197,7 +259,7 @@ function ChangeRow({
   const locale = htmlLanguageFor(language);
   const detailId = `planning-rail-detail-${row.eventId}`;
   const action = localizedAction(row.event, t, language, locale);
-  const garments = eventGarments(row.event);
+  const overviewGroups = compactChangeGroups(row.event, t);
 
   return (
     <li className="plan-change-rail__change" data-kind={row.event.kind}>
@@ -216,23 +278,54 @@ function ChangeRow({
         >
           <KindIcon kind={row.event.kind} />
         </span>
-        <time dateTime={row.atIso}>{timeLabel(row.atIso, locale)}</time>
-        <span className="plan-change-rail__summary">{action}</span>
-        {/* Samme bytte som ForecastDisclosure: rettes bare den ene, får
-            Plan-skjermen to ulike utvid-indikatorer. */}
-        <span className="plan-change-rail__chevron" aria-hidden="true">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            focusable="false"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
+        <span className="plan-change-rail__header">
+          <time dateTime={row.atIso}>{timeLabel(row.atIso, locale)}</time>
+          <span className="plan-change-rail__read-more">
+            <span className="plan-change-rail__read-more-label">
+              {t(expanded ? 'plan.rail.showLess' : 'plan.rail.readMore')}
+            </span>
+            {/* Samme bytte som ForecastDisclosure: rettes bare den ene, får
+                Plan-skjermen to ulike utvid-indikatorer. */}
+            <span className="plan-change-rail__chevron" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                focusable="false"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </span>
+          </span>
         </span>
+        {overviewGroups.length > 0 ? (
+          <span className="plan-change-rail__overview">
+            {overviewGroups.map((group, index) => (
+              <span className="plan-change-rail__overview-part" key={group.id}>
+                {index > 0 && (
+                  <svg
+                    className="plan-change-rail__overview-arrow"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 12h14M14 7l5 5-5 5" />
+                  </svg>
+                )}
+                <CompactGarmentGroup group={group} language={language} locale={locale} />
+              </span>
+            ))}
+          </span>
+        ) : (
+          <span className="plan-change-rail__summary">{t('plan.change')}</span>
+        )}
       </button>
       <div
         id={detailId}
@@ -242,13 +335,6 @@ function ChangeRow({
         <div className="plan-change-rail__detail-inner">
           <p className="plan-change-rail__action">{action}</p>
           <p className="plan-change-rail__cause">{row.event.cause}</p>
-          {garments.length > 0 && (
-            <div className="plan-change-rail__previews" aria-label={t('plan.rail.garments')}>
-              {garments.slice(0, 3).map((garment) => (
-                <GarmentPreview key={garment} garment={garment} language={language} />
-              ))}
-            </div>
-          )}
           {row.hasOutfit && (
             <button
               type="button"

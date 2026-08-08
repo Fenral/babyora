@@ -7,8 +7,8 @@
  *    day-hero temperature (Fraunces, the one allowed serif moment) and the
  *    forecast disclosure nested inside it (review item 8 — the forecast no
  *    longer floats free at the bottom of the screen).
- *  - .planlegg-advice: ONE raised espresso surface for verdict + next
- *    action + the Dagslinjen timeline (review item 7/9).
+ *  - .planlegg-advice: ONE raised espresso surface for verdict + the
+ *    Dagslinjen timeline (review item 7/9).
  * Color roles preserved per sol-duel-2026-07-31.md §13: petrol=weather/date,
  * espresso surface=advice/preparation, amber=next action, cream=info.
  * Typography: Schibsted everywhere (var(--dw-font-ui)); Fraunces appears in
@@ -310,7 +310,7 @@
   color: var(--dw-ink-panel-mid);
 }
 
-/* ============ Rådgivnings-modulen (verdict + neste handling + tidslinje) ============
+/* ============ Rådgivnings-modulen (verdict + tidslinje) ============
    D1/D2: ÉN hevet espresso-flate, kantlys + tintet skygge — aldri rader
    direkte på canvas. */
 .planlegg-advice {
@@ -368,7 +368,6 @@
   color: var(--dw-ink-hi);
 }
 
-.planlegg-screen__action,
 .planlegg-screen__empty,
 .planlegg-screen__week-weather {
   color: var(--dw-ink-mid);

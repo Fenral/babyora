@@ -680,6 +680,15 @@ function PlanleggData({
       selectedEventId: eventId,
     }));
   }, [setPlanningSelection]);
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
+  const visibleExpandedEventId = expandedEventId !== null
+    && planningEventIds.includes(expandedEventId)
+    ? expandedEventId
+    : null;
+  const setRailExpandedEventId = useCallback((eventId: string | null) => {
+    setExpandedEventId(eventId);
+    if (eventId !== null) setSelectedEventId(eventId);
+  }, [setSelectedEventId]);
   const latestPlanningEvaluationRef = useRef(planningEvaluation);
   useLayoutEffect(() => {
     latestPlanningEvaluationRef.current = planningEvaluation;
@@ -784,12 +793,6 @@ function PlanleggData({
     () => planningEvaluation.rows.filter((row) => row.type === 'change'),
     [planningEvaluation.rows],
   );
-  const firstChangeTime = shortTimeLabel(railChangeRows[0]?.atIso, locale);
-  const summarizedNextAction = planningEvaluation.nextAction && firstChangeTime
-    ? isTodayView
-      ? t('plan.nextChangeToday', { time: firstChangeTime })
-      : t('plan.nextChangeTomorrow', { time: firstChangeTime })
-    : null;
   const timelinePoints = planningEvaluation.timeline;
   const forecastRows = planningEvaluation.hasEvaluatedPlan
     ? planningEvaluation.forecast
@@ -933,7 +936,7 @@ function PlanleggData({
         </section>
       )}
 
-      {/* Dybdedoktrinen D1: verdikt + neste handling + tidslinjen deler NÅ
+      {/* Dybdedoktrinen D1: verdikt + tidslinjen deler NÅ
           ÉN hevet espresso-flate (rådgivnings-modulen) i stedet for å stå
           direkte på canvas — det var nettopp "naked hairline rows on
           canvas"-funnet doktrinen forbyr. Review-item 7: tomtilstanden viser
@@ -1008,11 +1011,6 @@ function PlanleggData({
                     })}
                   </ul>
                 )}
-                {summarizedNextAction && (
-                  <p className="planlegg-screen__action">
-                    {summarizedNextAction}
-                  </p>
-                )}
               </>
             )}
           </div>
@@ -1085,8 +1083,8 @@ function PlanleggData({
               {railChangeRows.length > 0 && (
                 <PlanChangeRail
                   rows={railChangeRows}
-                  selectedEventId={selectedEventId}
-                  onSelect={setSelectedEventId}
+                  selectedEventId={visibleExpandedEventId}
+                  onSelect={setRailExpandedEventId}
                   onOpenOutfit={openPlannedOutfit}
                 />
               )}

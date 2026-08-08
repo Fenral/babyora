@@ -312,6 +312,13 @@
     "rail": {
       "label": "Antrekksendringer gjennom dagen",
       "garments": "Plagg i endringen",
+      "takeOff": "Ta av",
+      "putOn": "Ta på",
+      "addLabel": "Legg til",
+      "bringLabel": "Ta med",
+      "prepareLabel": "Gjør klar",
+      "readMore": "Les mer",
+      "showLess": "Vis mindre",
       "openOutfit": "Se hele antrekket",
       "add": "Ta på {{garments}}",
       "remove": "Ta av {{garments}}",

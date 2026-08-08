@@ -48,6 +48,7 @@
  */
 import { spawn, type ChildProcess } from 'node:child_process';
 import { chromium, type Browser, type Page } from 'playwright';
+import { LANGUAGE_OVERRIDE_STORAGE_KEY } from '../src/i18n/language-policy.js';
 import { dobToAgeMonths } from '../src/lib/utils/dob-to-age-months.js';
 import { feelsLikeC } from '../src/lib/met-no/feels-like.js';
 import { recommend } from '../src/lib/wool-layers/recommend.js';
@@ -97,7 +98,9 @@ async function waitForServer(url: string, timeoutMs = 30_000): Promise<void> {
 
 function buildSameDayTransitionForecast(): unknown {
   const now = new Date();
-  const start = new Date(now.getTime() - 60 * 60 * 1000);
+  // Keep a full day of history in the 48-hour extraction window so the
+  // fixed 06/10/14/18 checkpoints remain available regardless of run time.
+  const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const currentOsloHour = Number(now.toLocaleTimeString('en-GB', {
     timeZone: 'Europe/Oslo',
     hour: '2-digit',
@@ -204,6 +207,9 @@ async function main(): Promise<void> {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
     await installFixedForecastRoute(page);
+    await page.addInitScript((storageKey) => {
+      window.localStorage.setItem(storageKey, 'no');
+    }, LANGUAGE_OVERRIDE_STORAGE_KEY);
 
     await page.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
     await page.locator('text=Hjem').first().waitFor({ state: 'visible', timeout: 15_000 });
@@ -218,19 +224,59 @@ async function main(): Promise<void> {
       fail('Dagslinjen viste ingen endringsrad — same-day-fixturen produserte ingen event i tidslinjen');
     }
 
-    // The first candidate event is auto-expanded on load
-    // (planningSelection's initial repairPlanningSelection picks
-    // preferredEventId) — only click if it isn't already expanded, since
-    // clicking an already-expanded disclosure toggles it CLOSED.
-    const alreadyExpanded = (await changeRow.getAttribute('aria-expanded')) === 'true';
-    if (!alreadyExpanded) {
-      await changeRow.click();
-      try {
-        await page.locator('.plan-change-rail__disclosure[aria-expanded="true"]').first()
-          .waitFor({ state: 'visible', timeout: 5_000 });
-      } catch {
-        fail('endringsraden utvidet seg aldri (aria-expanded ble ikke true) etter klikk');
+    if (await changeRow.getAttribute('aria-expanded') !== 'false') {
+      fail('endringsraden skal starte lukket slik at Les mer styrer detaljene');
+    }
+    if (!await changeRow.locator('.plan-change-rail__read-more').getByText('Les mer', { exact: true }).count()) {
+      fail('den kompakte endringsraden mangler Les mer');
+    }
+    await page.setViewportSize({ width: 320, height: 844 });
+    const compactGeometry = await changeRow.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const overview = element.querySelector<HTMLElement>('.plan-change-rail__overview');
+      const groups = [...element.querySelectorAll<HTMLElement>('.plan-change-rail__compact-group')];
+      return {
+        viewportWidth: window.innerWidth,
+        left: rect.left,
+        right: rect.right,
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+        groupCount: groups.length,
+        overviewScrollWidth: overview?.scrollWidth ?? 0,
+        overviewClientWidth: overview?.clientWidth ?? 0,
+      };
+    });
+    if (
+      compactGeometry.left < -1
+      || compactGeometry.right > compactGeometry.viewportWidth + 1
+      || compactGeometry.scrollWidth > compactGeometry.clientWidth + 1
+      || compactGeometry.overviewScrollWidth > compactGeometry.overviewClientWidth + 1
+      || compactGeometry.groupCount !== 2
+    ) {
+      fail(`kompakt Ta av → Ta på-visning flyter over ved 320 px: ${JSON.stringify(compactGeometry)}`);
+    }
+    for (const rootFontSize of ['32px', '48px']) {
+      await page.evaluate((fontSize) => {
+        document.documentElement.style.fontSize = fontSize;
+      }, rootFontSize);
+      const adaptiveGeometry = await changeRow.evaluate((element) => ({
+        rowScrollWidth: element.scrollWidth,
+        rowClientWidth: element.clientWidth,
+      }));
+      if (adaptiveGeometry.rowScrollWidth > adaptiveGeometry.rowClientWidth + 1) {
+        fail(`endringsraden flyter over med ${rootFontSize} tekst: ${JSON.stringify(adaptiveGeometry)}`);
       }
+    }
+    await page.evaluate(() => {
+      document.documentElement.style.removeProperty('font-size');
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await changeRow.click();
+    try {
+      await page.locator('.plan-change-rail__disclosure[aria-expanded="true"]').first()
+        .waitFor({ state: 'visible', timeout: 5_000 });
+    } catch {
+      fail('endringsraden utvidet seg aldri (aria-expanded ble ikke true) etter klikk');
     }
 
     const outfitCta = page.getByRole('button', { name: 'Se hele antrekket' });

@@ -312,6 +312,13 @@
     "rail": {
       "label": "Outfit-Änderungen im Tagesverlauf",
       "garments": "Kleidung in dieser Änderung",
+      "takeOff": "Ausziehen",
+      "putOn": "Anziehen",
+      "addLabel": "Hinzufügen",
+      "bringLabel": "Mitnehmen",
+      "prepareLabel": "Vorbereiten",
+      "readMore": "Mehr lesen",
+      "showLess": "Weniger anzeigen",
       "openOutfit": "Vollständiges Outfit anzeigen",
       "add": "{{garments}} anziehen",
       "remove": "{{garments}} ausziehen",
