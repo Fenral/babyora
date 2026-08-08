@@ -129,7 +129,7 @@ try {
       await p.waitForLoadState('domcontentloaded');
       await p.waitForFunction(() => {
         const bilder = [...document.querySelectorAll('#launch img')];
-        return bilder.length >= 4 && bilder.every((img) => img.complete && img.naturalWidth > 0);
+        return bilder.length >= 3 && bilder.every((img) => img.complete && img.naturalWidth > 0);
       }, { timeout: 5000 });
 
       const geometri = await p.evaluate(() => {
@@ -162,14 +162,13 @@ try {
           launchFinnes: document.getElementById('launch') !== null,
           hero: rect(hero),
           avatar: { rect: rect(avatar), lastet: lastet(avatar) },
-          hand: { rect: rect(hand), lastet: lastet(hand) },
+          harEkstraHandlag: hand !== null,
           weather: { rect: rect(weather), lastet: lastet(weather) },
           signboard: { rect: rect(signboard), lastet: lastet(signboard) },
           wordmark: { rect: rect(synligOrdmerke), lastet: lastet(synligOrdmerke) },
           layerOrder: {
             avatar: Number(getComputedStyle(avatar).zIndex),
             weather: Number(getComputedStyle(weather).zIndex),
-            hand: Number(getComputedStyle(hand).zIndex),
           },
         };
       });
@@ -177,7 +176,6 @@ try {
       meld(geometri.launchFinnes, `${scenario}: web-åpningsflaten finnes`);
       for (const [navn, element] of [
         ['avatar', geometri.avatar],
-        ['håndlag', geometri.hand],
         ['navneskilt', geometri.signboard],
         ['vær', geometri.weather],
         ['ordmerke', geometri.wordmark],
@@ -192,6 +190,11 @@ try {
           `${scenario}: ${navn} er helt innenfor viewporten`,
         );
       }
+
+      meld(
+        !geometri.harEkstraHandlag,
+        `${scenario}: ingen duplisert haand kan males foran skyen`,
+      );
 
       const merke = geometri.wordmark.rect;
       const senterAvvik = merke === null
@@ -217,8 +220,8 @@ try {
 
       const lag = geometri.layerOrder;
       meld(
-        lag.avatar < lag.weather && lag.weather < lag.hand,
-        `${scenario}: vaeret ligger over armen og under fingertuppene`,
+        lag.avatar < lag.weather,
+        `${scenario}: skyen ligger foran tommelen`,
       );
 
       const barnOverSkilt = avatar !== null && signboard !== null
@@ -350,6 +353,11 @@ try {
     meld(
       barnFase.sign > 0.5 && barnFase.avatar > 0 && barnFase.weather < 0.05,
       'saktevisning: barnet lander på skiltet som fase to',
+    );
+    const landingsFase = await lesFase(1400);
+    meld(
+      landingsFase.weather > 0.999,
+      'saktevisning: skyen er ugjennomsiktig mens den lander foran tommelen',
     );
     const vaerFase = await lesFase(2950);
     meld(

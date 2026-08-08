@@ -9,12 +9,14 @@ der punktene er i konflikt.
 - Native launch og web-handoff bruker én sentrert Babyora-signatur på solid,
   temariktig lerret (`#F9F5EB` lyst / `#1E140C` mørkt).
 - `maskot-resultat-sveip.webp` er hovedmotivet. `vaer-delvis-skyet.webp` lander
-  oppå den åpne høyrehånden, med de ytterste fingrene malt foran skyen, slik
-  at været leses som holdt i stedet for plassert bak armen.
+  oppå den åpne høyrehånden. Skyen males sist og ligger foran tommelen der
+  formene overlapper, slik at ingen hud stikker gjennom værmotivet.
 - BABYORA-ordmerket står i et varmt navneskilt barnet lener seg over. Skiltet
   bruker den offisielle reverse-SVG-en; ingen typesatt erstatning.
-- Værmotivet ligger over armen og under fingertuppene, slik at sky/sol leses
-  som fysisk holdt. Ingen ekstra slagord, gradient, lyd, haptikk eller vent.
+- Værmotivet ligger over hele hånden i overlappsonen, slik at sky/sol leses
+  som fysisk lagt i den åpne hånden. Web-revealen bruker en ugjennomsiktig
+  `clip-path` fra håndflaten; huden kan derfor ikke skinne gjennom under
+  landingen. Ingen ekstra slagord, gradient, lyd, haptikk eller vent.
   Web viser skilt → barn → vær med 80 ms forskyvning; Reduce Motion er statisk.
 - `?launch-preview=slow` er en query-gatet design-review: produksjonsbevegelsen
   spilles 5× saktere, fullføres på 3 s og pauser i skjult fane. Flaten slipper

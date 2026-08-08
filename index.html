@@ -126,8 +126,7 @@
         height: auto;
       }
 
-      .launch-avatar,
-      .launch-hand {
+      .launch-avatar {
         position: absolute;
         left: 0;
         top: 0;
@@ -139,20 +138,7 @@
 
       .launch-avatar { z-index: 1; }
 
-      .launch-hand {
-        z-index: 3;
-        clip-path: polygon(
-          91.667% 74.409%,
-          100% 70.932%,
-          100% 100%,
-          88.889% 100%,
-          87.778% 89.013%
-        );
-        pointer-events: none;
-      }
-
-      .launch-avatar img,
-      .launch-hand img {
+      .launch-avatar img {
         position: absolute;
         left: -8.598%;
         top: -9.623%;
@@ -160,10 +146,10 @@
         height: auto;
       }
 
-      /* Samme pikselgeometri som den native kompositten: været males over
-         armen, mens et smalt håndlag legger fingertuppene tilbake foran.
-         Rammene tilsvarer synlige alpha-flater; originalenes transparente
-         luft korrigeres på de indre bildene. */
+      /* Samme pikselgeometri som den native kompositten: været males sist,
+         direkte over avatarens hånd, slik at skyen dekker tommelen der de
+         overlapper. Rammene tilsvarer synlige alpha-flater; originalenes
+         transparente luft korrigeres på de indre bildene. */
       .launch-weather {
         position: absolute;
         z-index: 2;
@@ -202,8 +188,17 @@
       }
 
       @keyframes launch-weather-in {
-        from { opacity: 0; transform: translateY(-7px) scale(0.94); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
+        0% {
+          opacity: 0;
+          clip-path: circle(0% at 50% 88%);
+          transform: translateY(-7px) scale(0.94);
+        }
+        0.1% { opacity: 1; }
+        100% {
+          opacity: 1;
+          clip-path: circle(75% at 50% 50%);
+          transform: translateY(0) scale(1);
+        }
       }
 
       /* Design-review, aldri vanlig appstart. `?launch-preview=slow` spiller
@@ -212,8 +207,7 @@
         animation: launch-signboard-in 1800ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both;
       }
 
-      :root[data-launch-preview="slow"] .launch-avatar,
-      :root[data-launch-preview="slow"] .launch-hand {
+      :root[data-launch-preview="slow"] .launch-avatar {
         animation: launch-avatar-in 2400ms cubic-bezier(0.22, 1, 0.36, 1) 500ms both;
       }
 
@@ -223,7 +217,6 @@
 
       :root[data-launch-preview="slow"][data-launch-preview-paused="true"] .launch-signboard,
       :root[data-launch-preview="slow"][data-launch-preview-paused="true"] .launch-avatar,
-      :root[data-launch-preview="slow"][data-launch-preview-paused="true"] .launch-hand,
       :root[data-launch-preview="slow"][data-launch-preview-paused="true"] .launch-weather {
         animation-play-state: paused;
       }
@@ -234,7 +227,6 @@
         #launch { transition-duration: 100ms; }
         .launch-signboard,
         .launch-avatar,
-        .launch-hand,
         .launch-weather {
           animation: none;
           opacity: 1;
@@ -243,7 +235,6 @@
 
         :root[data-launch-preview="slow"] .launch-signboard,
         :root[data-launch-preview="slow"] .launch-avatar,
-        :root[data-launch-preview="slow"] .launch-hand,
         :root[data-launch-preview="slow"] .launch-weather {
           animation: none;
           opacity: 1;
@@ -299,13 +290,6 @@
             />
           </div>
           <div class="launch-avatar" data-launch-avatar>
-            <img
-              src="/monter/maskot-resultat-sveip.webp"
-              alt=""
-              draggable="false"
-            />
-          </div>
-          <div class="launch-hand" data-launch-hand>
             <img
               src="/monter/maskot-resultat-sveip.webp"
               alt=""

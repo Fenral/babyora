@@ -76,23 +76,12 @@ async function buildSign() {
 
 async function buildHero() {
   // The sign is behind the child, so the lower arm hangs over its top edge.
-  // Weather is also painted first and pushed into the palm: the fingers and
-  // thumb become the foreground occlusion that makes the mark feel held.
+  // Weather is painted last, directly over the avatar: the cloud stays visibly
+  // in front of the thumb wherever their alpha shapes overlap.
   const avatar = await trimmedPng(AVATAR, 900);
   const weather = await trimmedPng(WEATHER, 210);
   const sign = await buildSign();
   const avatarMeta = await sharp(avatar).metadata();
-  const avatarHeight = avatarMeta.height ?? 719;
-  const handMask = Buffer.from(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="900" height="${avatarHeight}">
-      <path d="M825 535 L900 510 L900 ${avatarHeight} L800 ${avatarHeight} L790 640 Z" fill="#fff"/>
-    </svg>
-  `);
-  const handForeground = await sharp(avatar)
-    .composite([{ input: handMask, left: 0, top: 0, blend: 'dest-in' }])
-    .png()
-    .toBuffer();
-
   const canvasWidth = 980;
   const canvasHeight = Math.max(860, avatarMeta.height ?? 0);
   const hero = await sharp({
@@ -107,7 +96,6 @@ async function buildHero() {
       { input: sign, left: 0, top: 610 },
       { input: avatar, left: 0, top: 0 },
       { input: weather, left: 735, top: 445 },
-      { input: handForeground, left: 0, top: 0 },
     ])
     .png()
     .toBuffer();
