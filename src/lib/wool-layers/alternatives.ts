@@ -74,6 +74,7 @@ export const ITEM_ALTERNATIVES: ItemAlternatives[] = [
     cons: COTTON_CONS,
     alternatives: [
       { name: 'langermet ullbody', pros: WOOL_PROS, cons: WOOL_CONS },
+      { name: 'langermet ullbody tynn', pros: WOOL_PROS, cons: WOOL_CONS },
     ],
   },
   {
@@ -127,6 +128,22 @@ export const ITEM_ALTERNATIVES: ItemAlternatives[] = [
     ],
   },
   // ── Ull-varianter (typisk ved kjølig/kald) ───────────────────────────────
+  {
+    itemName: 'bomullssett',
+    pros: COTTON_PROS,
+    cons: COTTON_CONS,
+    alternatives: [
+      { name: 'tynt ullsett', pros: ['Bevegelsesfrihet i to deler', ...WOOL_PROS], cons: WOOL_CONS },
+    ],
+  },
+  {
+    itemName: 'bomullssokker',
+    pros: ['Rimelig', 'Maskinvask', 'Mykt mot huden'],
+    cons: ['Holder på fukt — kjøler når våt'],
+    alternatives: [
+      { name: 'ullsokker', pros: ['Holder varmen selv litt fuktig', 'Luktsvak'], cons: ['Dyrere', 'Skånsom vask'] },
+    ],
+  },
   {
     itemName: 'kortermet ullbody',
     pros: WOOL_PROS,
@@ -215,6 +232,49 @@ export const ITEM_ALTERNATIVES: ItemAlternatives[] = [
     cons: ['Dyrere', 'Strikk kan tøye seg over tid'],
     alternatives: [
       { name: 'fleecebukse', pros: ['Rimelig', 'Slitesterk', 'Enkel å vaske'], cons: ['Kjøligere når våt', 'Mindre pustende'] },
+    ],
+  },
+  // Fleece er et likeverdig, eksplisitt valg for disse mellomlagene. De
+  // motsatte radene gjør alternativet synlig uansett hvilket materiale som
+  // ble rangert først av barnets preferanse.
+  {
+    itemName: 'tynn fleece',
+    pros: FLEECE_PROS,
+    cons: [...FLEECE_CONS, 'Statisk'],
+    alternatives: [
+      { name: 'tynt ull-mellomlag', pros: WOOL_PROS, cons: WOOL_CONS },
+    ],
+  },
+  {
+    itemName: 'fleecedress',
+    pros: FLEECE_PROS,
+    cons: ['Mister mye varme når våt', 'Demper svette dårligere'],
+    alternatives: [
+      { name: 'ull-mellomlag', pros: ['Beste varme-til-vekt', ...WOOL_PROS], cons: WOOL_CONS },
+    ],
+  },
+  {
+    itemName: 'tykk fleece',
+    pros: ['Rimeligere', 'Robust og rask-tørkende'],
+    cons: ['Mindre pustende', 'Bygger volum'],
+    alternatives: [
+      { name: 'tykt ull-mellomlag', pros: ['Ekstra varme', ...WOOL_PROS], cons: WOOL_CONS },
+    ],
+  },
+  {
+    itemName: 'fleecejakke',
+    pros: ['Rimelig', 'Robust mot vask', 'Tørker raskt'],
+    cons: ['Mindre temperaturregulering', 'Klam ved høy aktivitet'],
+    alternatives: [
+      { name: 'ull-jakke', pros: ['Lett å regulere med glidelås', 'Varm og pustende'], cons: ['Dyrere enn fleece'] },
+    ],
+  },
+  {
+    itemName: 'fleecebukse',
+    pros: ['Rimelig', 'Slitesterk', 'Enkel å vaske'],
+    cons: ['Kjøligere når våt', 'Mindre pustende'],
+    alternatives: [
+      { name: 'ull-bukse', pros: ['Varmer beina jevnt', 'Puster godt'], cons: ['Dyrere', 'Strikk kan tøye seg over tid'] },
     ],
   },
   {

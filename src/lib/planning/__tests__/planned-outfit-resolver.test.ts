@@ -428,9 +428,10 @@ describe('Planned Outfit resolver', () => {
     expect(plannedBranch).not.toMatch(
       /\b(?:useWeather|useChildren|recommend|Date\.now|sessionStorage|localStorage|fetch)\b/u,
     );
-    expect(plannedBranch).toContain('tabIndex={-1}');
-    expect(plannedBranch).toContain('ref={titleRef}');
-    expect(plannedBranch).toContain('titleRef.current?.focus()');
+    expect(plannedBranch).toContain('dialog.showModal()');
+    expect(plannedBranch).not.toContain('tabIndex={-1}');
+    expect(plannedBranch).not.toContain('ref={titleRef}');
+    expect(plannedBranch).not.toContain('titleRef.current?.focus()');
   });
 
   it('RED_REVIEW_RESTART_ACCESS_AND_AGE_CONTRACTS', async () => {

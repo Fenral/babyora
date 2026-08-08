@@ -35,6 +35,7 @@
  * altså å beholde defekten. Eier bør vite om byttet.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import type { OutfitAlternativeOptionV1 } from '../../lib/outfit/alternative-options.js';
 import type { OutfitItemId } from '../../lib/outfit/outfit-truth.js';
@@ -44,6 +45,7 @@ import {
   createComparisonFocusLifecycle,
 } from '../outfit/OutfitExperience.js';
 import { KlePaaStepper, deriveKlePaaSteps, type KlePaaStep } from './KlePaaStepper.js';
+import { klePaaCopyFor, resolveKlePaaLanguage } from './kle-paa-copy.js';
 
 import './kle-paa-overlay.css';
 
@@ -59,6 +61,7 @@ export type KlePaaOverlayProps = Readonly<{
 }>;
 
 export function KlePaaOverlay({ bundle, onClose }: KlePaaOverlayProps) {
+  const { i18n } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const headingRef = useRef<HTMLHeadingElement | null>(null);
   const [compareId, setCompareId] = useState<OutfitItemId | null>(null);
@@ -66,6 +69,12 @@ export function KlePaaOverlay({ bundle, onClose }: KlePaaOverlayProps) {
 
   const snapshot = bundle.base;
   const options = bundle.options;
+  const htmlLanguage = typeof document === 'undefined' ? null : document.documentElement.lang;
+  const language = resolveKlePaaLanguage(
+    i18n.resolvedLanguage ?? i18n.language,
+    htmlLanguage,
+  );
+  const copy = klePaaCopyFor(language);
 
   const session = useOutfitSelectionStore((s) => s.session);
   const open = useOutfitSelectionStore((s) => s.open);
@@ -102,8 +111,8 @@ export function KlePaaOverlay({ bundle, onClose }: KlePaaOverlayProps) {
   /* Stegene avledes av den GJELDENDE snapshoten, ikke av bundelen: velger
      brukeren et alternativ, skal sekvensen vise det nye plagget umiddelbart. */
   const steps = useMemo<readonly KlePaaStep[]>(
-    () => deriveKlePaaSteps({ base: gjeldende, options: autoriserteValg }),
-    [gjeldende, autoriserteValg],
+    () => deriveKlePaaSteps({ base: gjeldende, options: autoriserteValg }, language),
+    [gjeldende, autoriserteValg, language],
   );
 
   const option = useMemo(
@@ -139,7 +148,7 @@ export function KlePaaOverlay({ bundle, onClose }: KlePaaOverlayProps) {
     <dialog
       ref={dialogRef}
       className="kle-paa-overlay"
-      aria-label="Kle på, steg for steg"
+      aria-label={copy.stepper.label}
       onCancel={onCancel}
       onClose={onClose}
     >

@@ -411,11 +411,10 @@ export function HjemScreen({
   );
   const lat = effectivePlace?.lat ?? 0;
   const lon = effectivePlace?.lon ?? 0;
-  const cityLabel = effectivePlace === null
-    ? 'Sted mangler'
-    : effectivePlace.source === 'automatic'
-      ? `Nåværende sted · ${effectivePlace.city}`
-      : `Fast sted · ${effectivePlace.city}`;
+  // Værflaten viser selve stedet, ikke hvordan det ble valgt. Modusen
+  // (automatisk eller fast hjemsted) er en innstilling, mens byen er det
+  // brukeren trenger når anbefalingen skal vurderes.
+  const cityLabel = effectivePlace?.city ?? 'Sted mangler';
 
   // P5: manual weather-refetch trigger for the offline ask-block's "Prøv å
   // hente været igjen" (HjemMonter → onRetryWeather). useWeather's refreshKey
@@ -455,9 +454,10 @@ export function HjemScreen({
       },
       child: { ageMonths },
       activity,
+      materialPreference: active.materialPreference,
       ...(activity === 'vogn' ? { vognMode } : {}),
     };
-  }, [weather.now, ageMonths, activity, vognMode]);
+  }, [weather.now, ageMonths, activity, active.materialPreference, vognMode]);
 
   const recommendation = useMemo<Recommendation | null>(() => {
     if (!engineInput) return null;
@@ -653,7 +653,7 @@ export function HjemScreen({
   const visibleAnchorLabels = allGarmentLabels.length > 0
     ? allGarmentLabels
     : sceneModel.anchors.map(({ label }) => label);
-  const visibleAnchorDisplayNames = visibleAnchorLabels.map(displayNameForDbString);
+  const visibleAnchorDisplayNames = visibleAnchorLabels.map((label) => displayNameForDbString(label));
 
   // Positur-nøkkel (brukt for silhuett-fallback + stabil data-key).
   const avatarPoseKey = useMemo(() => ({
@@ -1029,8 +1029,7 @@ export function HjemScreen({
         childName={active.name}
         ageMonths={ageMonths}
         recommendation={resolvedRecommendation}
-        onStartDressing={handleCta}
-        startDressingDisabled={currentOutfitContext === null}
+        currentOutfitBundle={currentOutfitBundle}
         reducedMotion={reducedMotion}
         outfitTransitionStatus={outfitTransitionStatus}
         onOpenAdjust={onOpenAdjust}

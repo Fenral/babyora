@@ -58,27 +58,34 @@ describe('App.tsx — P5 "Juster" drill wiring', () => {
     expect(hjemCall).toContain('onOpenWarmColdGuide={onOpenWarmColdGuide}');
   });
 
-  it('the finn-antrekk route passes the drill\'s prefill through and closes back to null (no tab change)', () => {
+  it('the finn-antrekk route passes the drill\'s prefill through and uses the direction-aware close callback', () => {
     const app = source(appPath);
     const branchStart = app.indexOf("activeDrill?.kind === 'finn-antrekk'");
     const branchEnd = app.indexOf('} else if', branchStart);
     const branch = app.slice(branchStart, branchEnd);
-    expect(branch).toContain('<FinnAntrekkScreen onBack={() => setDrill(null)} prefill={activeDrill.prefill} />');
+    expect(branch).toContain('<FinnAntrekkScreen onBack={closeDrill} prefill={activeDrill.prefill} />');
+
+    const closeStart = app.indexOf('const closeDrill = useCallback');
+    const closeEnd = app.indexOf('// P1:', closeStart);
+    const closeCallback = app.slice(closeStart, closeEnd);
+    expect(closeCallback).toContain('setRouteDirection(-1);');
+    expect(closeCallback).toContain('setDrill(null);');
+    expect(closeCallback).not.toContain('setTab(');
   });
 
   it('closing any drill never calls setTab — only onNavigate (tab bar) and the no-drill swipe-back fallback do', () => {
     const app = source(appPath);
     // Every setTab( call site in the file — there should be exactly the
-    // three known, drill-unrelated ones. If a fourth ever appears near
+    // two known, drill-unrelated ones. If another ever appears near
     // setDrill(null), that would mean closing a drill starts forcing tab
     // changes, which could route somewhere OTHER than Hjem's cached result.
     const setTabCallSites = app.match(/setTab\(/gu) ?? [];
-    expect(setTabCallSites.length).toBe(3);
+    expect(setTabCallSites.length).toBe(2);
   });
 
   it('finn-antrekk still maps to the "hjem" tab in activeTabForBar (unchanged from P1)', () => {
     const app = source(appPath);
-    expect(app).toMatch(/if \(activeDrill === null\) \{\s*\n\s*activeTabForBar = tab;\s*\n\s*\} else if \(activeDrill\.kind === 'familie-tool'\) \{\s*\n\s*activeTabForBar = 'familie';\s*\n\s*\} else \{\s*\n\s*activeTabForBar = 'hjem';/u);
+    expect(app).toMatch(/activeDrill\.kind === 'verktoy-tool'[\s\S]*?activeTabForBar = 'verktoy';[\s\S]*?activeTabForBar = 'hjem';/u);
   });
 });
 

@@ -138,8 +138,7 @@ const MAP: Record<string, GarmentId> = {
   // Ekstra · hud
   'ansiktskrem': 'ansiktskrem',
 
-  // Alternativer (ikke-ull) — PNG genereres lokalt (set=alternatives i
-  // generate-garments.mjs). Plassholder-bilde settes i PLACEHOLDER_PNG.
+  // Alternativer (ikke-ull) — egne flate WebP-er i samme katalog.
   'tynn fleece': 'tynn-fleece',
   'fleecedress': 'fleecedress',
   'fleecejakke': 'fleecejakke',
@@ -176,25 +175,10 @@ export function dbStringFor(id: GarmentId): string {
   return ID_TO_DB[id] ?? id;
 }
 
-/**
- * Plagg som ennå ikke har egen PNG → vis nærmeste eksisterende illustrasjon
- * som plassholder inntil den genereres (jf. `scripts/generate-garments.mjs`).
- * Brukes for nye alternativ-plagg og nye TOG-trinn.
- */
-const PLACEHOLDER_PNG: Record<GarmentId, GarmentId> = {
-  'sovepose-1-5-tog': 'sovepose-1-0-tog',
-  'sovepose-2-0-tog': 'sovepose-2-5-tog',
-  // Ikke-ull-alternativer — vis ull-/standard-varianten til ekte PNG finnes.
-  'tynn-fleece': 'tynn-ull-mellomlag',
-  'fleecedress': 'ull-mellomlag',
-  'fleecejakke': 'ull-jakke',
-  'fleecebukse': 'ull-bukse',
-  'tykk-fleece': 'ull-mellomlag-tykt',
-  'fleecevotter': 'votter',
-  'bomullssokker': 'ullsokker',
-  'bomullssett': 'ullsett-tynt',
-  'tynne-sko': 'sko',
-};
+/** Alle id-er som garmentIdFor kan returnere, én gang hver. */
+export const KNOWN_GARMENT_IDS: readonly GarmentId[] = Object.freeze(
+  Object.keys(ID_TO_DB),
+);
 
 /* ETT PLAGGSETT, IKKE TO (eierbeslutning 2026-08-07).
 
@@ -212,15 +196,28 @@ const PLACEHOLDER_PNG: Record<GarmentId, GarmentId> = {
    `garments-clay/` er slettet. Mangler et plagg her, er svaret å RENDRE det
    i riggen — ikke å hente det fra et annet materiale. */
 
-/** Bygg bildesti relativt til app-root (Vite BASE_URL). Faller tilbake til
- *  en plassholder for plagg som ennå ikke er generert. */
+/** Bygg den eksakte bildestien relativt til app-root (Vite BASE_URL). */
 export function garmentPng(id: GarmentId): string {
-  const file = PLACEHOLDER_PNG[id] ?? id;
-  return `${import.meta.env.BASE_URL}illustrations/garments/${file}.webp`;
+  return `${import.meta.env.BASE_URL}illustrations/garments/${id}.webp`;
 }
 
 /**
- * Generisk SVG-fallback for plagg uten egen PNG eller PLACEHOLDER_PNG-mapping.
+ * Returner den flate WebP-illustrasjonen bare når id-en finnes i det
+ * kjente plagg-vokabularet. Alle kjente id-er har sin egen eksakte WebP.
+ *
+ * Denne lille grensen lar delte UI-resolvere skille mellom «kjent plagg» og
+ * «framtidig/ukjent id» uten å gjette en filsti som kan 404-e.
+ */
+export function garmentPngForKnownId(
+  id: GarmentId | null | undefined,
+): string | null {
+  if (!id) return null;
+  if (!Object.hasOwn(ID_TO_DB, id)) return null;
+  return garmentPng(id);
+}
+
+/**
+ * Generisk SVG-fallback for ukjente plagg-id-er.
  * Inline data-URL (ingen ekstra fetch) — bruk i <img onError> eller som
  * `src`-fallback når `garmentPng(id)` returnerer en sti som kan 404.
  *
@@ -244,8 +241,8 @@ export const GENERIC_GARMENT_SVG = (() => {
 })();
 
 /**
- * Trygg PNG-resolver: returnerer PNG-sti hvis id-en har en kjent fil eller
- * placeholder-mapping, ellers den generiske SVG-fallback-data-URL-en.
+ * Trygg PNG-resolver: returnerer eksakt WebP-sti for en kjent id, ellers den
+ * generiske SVG-fallback-data-URL-en.
  *
  * Bruk denne i UI-komponenter der vi ikke kan vite om en framtidig id i
  * recommend()/modifiers vil ha en illustrasjon — den garanterer at det
@@ -253,12 +250,5 @@ export const GENERIC_GARMENT_SVG = (() => {
  * det helt OK å bruke `garmentPng(id)` direkte.
  */
 export function garmentPngSafe(id: GarmentId | null | undefined): string {
-  if (!id) return GENERIC_GARMENT_SVG;
-  // Hvis vi har en PLACEHOLDER_PNG-entry eller id matcher en kjent kanonisk
-  // streng (via ID_TO_DB), så har vi rimelig grad av sikkerhet for at PNG-en
-  // finnes. Ellers fall tilbake til SVG umiddelbart.
-  if (PLACEHOLDER_PNG[id] || ID_TO_DB[id]) {
-    return garmentPng(id);
-  }
-  return GENERIC_GARMENT_SVG;
+  return garmentPngForKnownId(id) ?? GENERIC_GARMENT_SVG;
 }

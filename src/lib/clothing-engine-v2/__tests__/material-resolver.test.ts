@@ -37,7 +37,7 @@ describe('Motor 2.0 materialresolver — preferanser', () => {
 
   it('prefer_wool beholder skall først i regn (skall påvirkes aldri av preferanse)', () => {
     const wet = intent({ weather: { precipMmH: 2 } });
-    for (const pref of ['best_for_conditions', 'prefer_wool', 'avoid_wool'] as const) {
+    for (const pref of ['best_for_conditions', 'prefer_wool', 'prefer_fleece', 'prefer_cotton', 'avoid_wool'] as const) {
       const shell = resolveMaterialFamilies(wet, pref).find((r) => r.role === 'shell_fullbody');
       expect(shell?.rankedMaterials[0], pref).toBe('shell');
     }
@@ -47,6 +47,31 @@ describe('Motor 2.0 materialresolver — preferanser', () => {
     const result = resolveMaterialFamilies(intent(), 'prefer_wool');
     expect(result.find((r) => r.role === 'base_fullbody')?.rankedMaterials[0]).toBe('wool');
     expect(result.find((r) => r.role === 'mid_fullbody')?.rankedMaterials[0]).toBe('wool');
+  });
+
+  it('prefer_fleece rangerer fleece først bare i roller der fleece er gyldig', () => {
+    const result = resolveMaterialFamilies(intent(), 'prefer_fleece');
+    expect(result.find((r) => r.role === 'mid_fullbody')?.rankedMaterials[0]).toBe('fleece');
+    expect(result.find((r) => r.role === 'base_fullbody')?.rankedMaterials[0]).toBe('wool');
+  });
+
+  it('prefer_cotton rangerer bomull først bare i det varme, tørre og rolige bomullsvinduet', () => {
+    const warm = intent({ weather: { feelsLikeC: 21, precipMmH: 0 }, situation: 'calm_outdoors' });
+    const warmBase = resolveMaterialFamilies(warm, 'prefer_cotton')
+      .find((r) => r.role.startsWith('base'));
+    expect(warmBase?.rankedMaterials[0]).toBe('cotton');
+
+    const coldWet = intent({ weather: { feelsLikeC: 2, precipMmH: 1 } });
+    const coldBase = resolveMaterialFamilies(coldWet, 'prefer_cotton')
+      .find((r) => r.role.startsWith('base'));
+    expect(coldBase?.rankedMaterials).not.toContain('cotton');
+  });
+
+  it('prefer_cotton overstyrer ikke fukttransporterende innerlag under aktiv lek', () => {
+    const active = intent({ situation: 'active_play', weather: { feelsLikeC: 18, precipMmH: 0 } });
+    const activeBase = resolveMaterialFamilies(active, 'prefer_cotton')
+      .find((r) => r.role.startsWith('base'));
+    expect(activeBase?.rankedMaterials[0]).toBe('synthetic_wicking');
   });
 });
 
@@ -81,7 +106,7 @@ describe('Motor 2.0 materialresolver — §5-matrisen', () => {
 
   it('våt/skiftende isolasjon: syntetisk isolasjon først, uansett preferanse', () => {
     const wetCold = intent({ weather: { feelsLikeC: -2, precipMmH: 1.5 } });
-    for (const pref of ['best_for_conditions', 'prefer_wool', 'avoid_wool'] as const) {
+    for (const pref of ['best_for_conditions', 'prefer_wool', 'prefer_fleece', 'prefer_cotton', 'avoid_wool'] as const) {
       const ins = resolveMaterialFamilies(wetCold, pref).find((r) => r.role === 'insulated_fullbody');
       expect(ins?.rankedMaterials[0], pref).toBe('synthetic_insulation');
     }

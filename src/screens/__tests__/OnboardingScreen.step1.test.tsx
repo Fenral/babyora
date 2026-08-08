@@ -11,9 +11,14 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import i18n from '../../i18n';
 import { OnboardingScreen } from '../OnboardingScreen';
 import { ChildrenProvider } from '../../state/children-provider';
+
+beforeAll(async () => {
+  await i18n.changeLanguage('no');
+});
 
 function renderScreen(): string {
   return renderToStaticMarkup(
@@ -61,7 +66,8 @@ describe('OnboardingScreen — step 1 v2 (Monter re-skin)', () => {
   it('name field: label, helper text, no autofocus, optional (Fortsett always active)', () => {
     const html = renderScreen();
     expect(html).toContain('Navn eller kallenavn');
-    expect(html).toContain('Valgfritt');
+    expect(html).toContain('Navn eller kallenavn');
+    expect(html).not.toContain('Valgfritt');
     // FUNN 2026-08-06: enhetsnavnet er ute av personvernløftet, se
     // OnboardingScreen.revisjon-2026-08-06.test.tsx for selve vakten.
     expect(html).toContain('Brukes bare i teksten og lagres bare på denne telefonen.');
@@ -83,15 +89,15 @@ describe('OnboardingScreen — step 1 v2 (Monter re-skin)', () => {
     expect(html).toContain('class="ob-s1-preview-named">babyen<');
   });
 
-  it('progress is a segment bar only — no duplicate "1 av 4" text, amber only on the active segment', () => {
+  it('progress is a five-step segment bar with only the current segment highlighted', () => {
     const html = renderScreen();
     expect(html).toContain('class="ob-seg-progress"');
     expect(html).toContain('role="progressbar"');
     expect(html).toContain('aria-valuenow="1"');
-    // Exactly 4 segments, only the first one active on step 1.
+    // Five setup steps, only the first one active on step 1.
     expect(html.match(/<i class="active"/gu)?.length).toBe(1);
-    expect(html.match(/<i class=""/gu)?.length).toBe(3);
-    expect(html).not.toMatch(/>1 av 4</);
+    expect(html.match(/<i class=""/gu)?.length).toBe(4);
+    expect(html).toContain('aria-valuemax="5"');
   });
 
   it('P10.1 (judge finding D3): the BABYORA brand row is present on step 1 (was previously suppressed entirely)', () => {

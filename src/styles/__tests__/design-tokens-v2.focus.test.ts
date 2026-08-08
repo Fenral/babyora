@@ -20,15 +20,11 @@
  * Denne testen måler i stedet WCAG-kontrast fra de faktiske hex-verdiene i
  * kilden — i BEGGE temaer, mot hver flate ringen kan tegnes på.
  *
- * HVORFOR TO TOKENS: petrol-instrumentet er TEMA-KONSTANT (art bible,
- * «Instrumentdoktrinen» + design-tokens-v2.css sin instrument-tekstrampe).
- * Én flat farge kan ikke klare 3:1 mot både #F9F5EB-krem og hele den mørke
- * værfamilien med margin — luminansvinduet der begge holder er 0,0030 bredt
- * (målt), og eneste farge i det vinduet er en neonrød-oransje som leser som
- * fare, ikke fokus. Portdom 25 («Lokale tokens der terskelen er lokal»)
- * peker på svaret: instrumentet får sin EGEN ring, `--dw-focus-panel`, som
- * er tema-konstant akkurat som flaten den ligger på. Uten den ville denne
- * fiksen DEGRADERT panelringen fra målte 6,8:1 til 3,2:1.
+ * HVORFOR TO TOKENS: værpanelet og leseflatene har ulike materialverdier i
+ * hvert tema. Portdom 25 («Lokale tokens der terskelen er lokal») peker på
+ * svaret: panelet får sin EGEN ring, `--dw-focus-panel`, kalibrert mot den
+ * lokale værfamilien. Mineral Garden gjør både panelet og ringen lysemodus-
+ * spesifikke; eksplisitt mørk beholder Monter-kalibreringen.
  *
  * Hver port har en FORUTSETNING i tillegg til kravet — en port som passerer
  * på fravær (tomt regex-treff, forsvunnet forbruker, tema-tabell som stille
@@ -238,20 +234,27 @@ describe('--dw-focus — MÅLT kontrast ≥ 3:1 i begge temaer', () => {
   );
 });
 
-describe('--dw-focus-panel — instrumentets egen ring er tema-konstant', () => {
-  it('værfamilien er reell: seks distinkte petrol-flater', () => {
+describe('--dw-focus-panel — værpanelets egen, temaoppløste ring', () => {
+  it('værfamilien er reell: seks distinkte flater i hvert tema', () => {
     // FORUTSETNING: måler vi mot en værfamilie som ikke finnes (eller som er
     // seks kopier av samme hex), sier «≥ 3:1 mot alle» ingenting.
-    const table = tokens('light');
-    const hexes = PETROL_SURFACES.map((s) => resolveHex(`var(${s})`, table));
-    expect(new Set(hexes).size, 'petrol-flatene er ikke distinkte').toBe(PETROL_SURFACES.length);
-    for (const hex of hexes) expect(relativeLuminance(hex)).toBeLessThan(0.1);
+    const dark = PETROL_SURFACES.map((s) => resolveHex(`var(${s})`, tokens('dark')));
+    const light = PETROL_SURFACES.map((s) => resolveHex(`var(${s})`, tokens('light')));
+    expect(new Set(dark).size, 'mørke værflater er ikke distinkte').toBe(PETROL_SURFACES.length);
+    expect(new Set(light).size, 'lyse værflater er ikke distinkte').toBe(PETROL_SURFACES.length);
+    for (let i = 0; i < PETROL_SURFACES.length; i += 1) {
+      expect(relativeLuminance(light[i]!)).toBeGreaterThan(relativeLuminance(dark[i]!));
+    }
   });
 
-  it('er deklarert NØYAKTIG én gang — flaten den ligger på flipper ikke', () => {
+  it('er deklarert i mørk + begge symmetriske lysblokker', () => {
     const occurrences = [...stripComments(V2).matchAll(/--dw-focus-panel\s*:/g)].length;
-    expect(occurrences, '--dw-focus-panel er tema-konstant og skal stå én gang').toBe(1);
-    expect(ROOT.get('--dw-focus-panel'), 'den ene deklarasjonen hører hjemme i :root').toBeDefined();
+    expect(occurrences, '--dw-focus-panel skal følge mørk + 2 lysblokker').toBe(3);
+    expect(ROOT.get('--dw-focus-panel'), 'mørk ring mangler').toBeDefined();
+    expect(AUTO_LIGHT.get('--dw-focus-panel'), 'auto-lys ring mangler').toBeDefined();
+    expect(EXPLICIT_LIGHT.get('--dw-focus-panel'), 'eksplisitt lys ring mangler').toBeDefined();
+    expect(AUTO_LIGHT.get('--dw-focus-panel')).toBe(EXPLICIT_LIGHT.get('--dw-focus-panel'));
+    expect(AUTO_LIGHT.get('--dw-focus-panel')).not.toBe(ROOT.get('--dw-focus-panel'));
   });
 
   it.each(['dark', 'light'] as const)(

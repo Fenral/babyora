@@ -41,7 +41,7 @@ describe('paywall-copy — hele-produktet-innhold (P2 hard paywall, PRODUCT.md 2
     const copy = buildCapabilityPaywallCopy();
     expect(copy.previewItems).toEqual([
       { key: 'today', label: 'Dagens antrekk, klart hver eneste morgen', lead: 'Dagens antrekk' },
-      { key: 'week', label: 'I morgen og hele neste uke, ferdig planlagt', lead: 'I morgen og hele neste uke' },
+      { key: 'tomorrow', label: 'Morgendagens antrekk, klart kvelden før', lead: 'Morgendagens antrekk' },
       { key: 'family', label: 'Egen profil for hvert av barna dine', lead: 'Egen profil' },
     ]);
     // P10.1 (judge finding B3): `lead` must always be an exact PREFIX of

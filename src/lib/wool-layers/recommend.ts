@@ -3,6 +3,7 @@ import { applyConflicts } from './conflicts.js';
 import { applySoftBlocks } from './softBlocks.js';
 import { applySafety } from './safety.js';
 import { finalizeSafety } from './finalize-safety.js';
+import { applyMaterialPreference } from './material-preference.js';
 import type { SafetyFlag, Severity } from './safety.js';
 import { bandForTemp, baseTable } from './tables.js';
 import type { LayerOverrides, Recommendation, RecommendInput } from './types.js';
@@ -59,13 +60,14 @@ export function recommend(
   const lookupActivity = isVognSleeping ? 'soevn' : input.activity;
   const base = baseTable[lookupActivity][band];
   const { layers: modLayers, structuredNotes: modNotes } = applyModifiers(base, input);
+  const preferredLayers = applyMaterialPreference(modLayers, input.materialPreference, input);
 
   // Iter 35 — OVERHEATING_SYSTEM_V1 pipeline:
   //   modifiers → CONFLICTS → SOFT_BLOCKS → HARD_BLOCKS (safety)
   // CONFLICTS løser kombinasjons-risiko (CK-1..CK-9).
   // SOFT_BLOCKS justerer for temp/aktivitet/alder (SB-1..SB-7).
   // SAFETY håndhever ufravikelige hard blocks (HB-1..HB-9).
-  const conflicted = applyConflicts(input, modLayers, modNotes);
+  const conflicted = applyConflicts(input, preferredLayers, modNotes);
   const softened = applySoftBlocks(input, conflicted.layers, conflicted.notes);
   const safe = applySafety(input, softened.layers, softened.notes);
   const allFlags = [...conflicted.flags, ...softened.flags, ...safe.flags];

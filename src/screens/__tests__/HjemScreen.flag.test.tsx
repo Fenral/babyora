@@ -72,7 +72,7 @@ describe('HjemScreen — P4 flag branch wiring', () => {
     for (const prop of [
       'cityLabel', 'lat', 'lon', 'now', 'weatherStatus', 'activity',
       'onActivityChange', 'childId', 'childName', 'ageMonths', 'recommendation',
-      'onStartDressing', 'startDressingDisabled', 'reducedMotion', 'outfitTransitionStatus',
+      'reducedMotion', 'outfitTransitionStatus',
     ]) {
       expect(monterCall, `expected <HjemMonter> call to pass ${prop}`).toContain(`${prop}=`);
     }

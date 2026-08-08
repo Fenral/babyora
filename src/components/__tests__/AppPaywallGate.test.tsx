@@ -11,6 +11,7 @@
  */
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it } from 'vitest';
+import i18n from '../../i18n/index.js';
 import { AppPaywallGate, HARD_PAYWALL_ENABLED, isHardPaywallDue } from '../AppPaywallGate';
 import { useSubscription } from '../../state/subscription-store';
 
@@ -98,7 +99,8 @@ describe('isHardPaywallDue', () => {
 });
 
 describe('AppPaywallGate rendering', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('no');
     useSubscription.setState({
       isPremium: false,
       lastSyncedAt: null,
@@ -133,8 +135,8 @@ describe('AppPaywallGate rendering', () => {
     // check is split accordingly too.
     expect(html).toContain('Dagens antrekk');
     expect(html).toContain(', klart hver eneste morgen');
-    expect(html).toContain('I morgen og hele neste uke');
-    expect(html).toContain(', ferdig planlagt');
+    expect(html).toContain('Morgendagens antrekk');
+    expect(html).toContain(', klart kvelden før');
     expect(html).toContain('Egen profil');
     expect(html).toContain(' for hvert av barna dine');
     // v2 (P10/JOB2 re-skin, docs/mocks/monter/paywall-v2.html): den gamle

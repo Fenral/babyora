@@ -46,6 +46,13 @@ export type RecommendInput = {
   weather: WeatherInput;
   child: ChildInput;
   activity: Activity;
+  /**
+   * Per-barn materialpreferanse. Dette er en myk rangering: bare kjente,
+   * funksjonelt likeverdige plagg byttes. Bomull brukes bare innerst i et
+   * mildt, tørt og rolig vindu. Vær- og sikkerhetsreglene kjøres fortsatt
+   * etter valget.
+   */
+  materialPreference?: import('../clothing-engine-v2/types.js').MaterialPreference;
   /** Planlagt eksponeringstid i minutter. Default 60. Brukes for kulde-warning. */
   exposureMin?: number;
   /** Kun for bæresele: barn under foreldrens jakke (foreldrekropp varmer). */

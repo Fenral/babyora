@@ -2,10 +2,10 @@
  * launch-handoff — når åpningsflaten skal slippe taket.
  *
  * ═══ HVA ÅPNINGSFLATEN ER ═════════════════════════════════════════════════
- * `#launch` i index.html: lerretsfarge + ordmerket, malt fra første frame med
- * inline CSS. Den finnes fordi `#root` er tom til React mounter, og et tomt
- * dokument er hvitt. Uten flaten ser en ny bruker et hvitt glimt før appens
- * mørke rom — nøyaktig det åpningskontrakten §8 forbyr.
+ * `#launch` i index.html: temariktig lerret + Babyoras sentrerte signatur
+ * (avatar, delvis skyet-vær og ordmerke), malt fra første frame med inline
+ * CSS. Den finnes fordi `#root` er tom til React mounter, og et tomt dokument
+ * er hvitt. Uten flaten ser en ny bruker et hvitt glimt før appens eget rom.
  *
  * ═══ NÅR DEN SLIPPER — OG HVORFOR IKKE PÅ EN TIMER ════════════════════════
  * Kontrakten er utvetydig: «Oppstart forsinkes ALDRI kunstig.» En timer på
@@ -17,6 +17,11 @@
  * rammer etter mount, så vi vet at nettleseren faktisk har tegnet noe — én
  * ramme er nok til at DOM-en finnes, men ikke til at den er på skjermen.
  * Er appen rask, ses flaten knapt. Det er riktig.
+ *
+ * Én eksplisitt design-review finnes utenfor appflyten:
+ * `?launch-preview=slow` holder barn og skilt statisk, spiller bare værets
+ * landing 5× saktere og slipper først når været faktisk har landet. Den er
+ * query-gatet, brukes bare til vurdering og endrer aldri ordinær oppstart.
  *
  * ═══ VAKTEN, OG HVORFOR DEN ER DER ════════════════════════════════════════
  * Om noe kaster før `slippLaunch()` blir kalt — en feil i en provider, en
@@ -30,6 +35,11 @@
 const FRIST_MS = 4000;
 
 let alleredeSluppet = false;
+
+function erSakteDesignPreview(): boolean {
+  return document.documentElement.getAttribute('data-launch-preview') === 'slow'
+    && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 function fjern(el: HTMLElement): void {
   /* `data-ferdig` starter opacity-overgangen (200 ms, definert i index.html).
@@ -58,9 +68,25 @@ export function slippLaunch(): void {
      andre at nettleseren har rukket å male den. Slipper vi etter én, kan
      flaten forsvinne før det ligger noe under — og da ser brukeren et glimt
      av tomhet i stedet for et glimt av hvitt. Ingen forbedring. */
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => fjern(el));
-  });
+  const slippEtterMaling = (): void => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => fjern(el));
+    });
+  };
+
+  /* Design-reviewen venter på den faktiske væranimasjonen, ikke en parallell
+     timer som kan drive ut av takt. `finished` er allerede resolved dersom en
+     uvanlig treg app blir klar etter at animasjonen er ferdig. */
+  if (erSakteDesignPreview()) {
+    const weather = el.querySelector<HTMLElement>('[data-launch-weather]');
+    const animation = weather?.getAnimations()[0];
+    if (animation !== undefined) {
+      void animation.finished.then(slippEtterMaling, slippEtterMaling);
+      return;
+    }
+  }
+
+  slippEtterMaling();
 }
 
 /** Nødutgangen. Kalles én gang fra oppstarten. */

@@ -17,6 +17,7 @@
  * slot branches in HjemMonter still exercise real logic.
  */
 import { renderToStaticMarkup } from 'react-dom/server';
+import i18next from '../../../i18n/index.js';
 import {
   afterEach,
   beforeEach,
@@ -31,6 +32,7 @@ import type { RecommendInput } from '../../../lib/wool-layers/types.js';
 import type { ScanCoordinatorState } from '../../../lib/scan/coordinator.js';
 import type { ScanCacheSlot } from '../../../lib/scan/types.js';
 import { localDateKey } from '../../../lib/scan/types.js';
+import { resultCopyFor } from '../result-localization.js';
 
 const scanMethods = {
   weatherReady: vi.fn(),
@@ -125,7 +127,8 @@ function baseProps() {
   };
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await i18next.changeLanguage('no');
   mockedSlots = {};
   commitSlot.mockClear();
   markFullScanPlayedEver.mockClear();
@@ -136,29 +139,17 @@ afterEach(() => {
 });
 
 describe('HjemMonter — phase-driven view switching', () => {
-  it('weather-ready: renders the WeatherScene panel + "Klar for en liten tur?" ask screen, statisk (ingen OpeningSequence), MascotIdle i hvile', () => {
+  it('weather-ready + ferdig motorresultat: viser resultatet direkte uten CTA, scan eller haptikk-seremoni', () => {
     mockedState = { phase: 'weather-ready' };
     const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
-    expect(html).toContain('Klar for en liten tur?');
-    expect(html).toContain('Finn dagens antrekk');
-    expect(html).toContain('Lillian · 9 måneder · Utelek');
-    expect(html).toContain('data-nuance="rain"');
+    expect(html).toContain('Dagens antrekk');
+    expect(html).toContain('class="hjm-strip"');
+    expect(html).toContain('Kle på, steg for steg');
     expect(html).toContain('BABYORA');
-    // Eier-override v3: åpningsklatringen er fjernet — ingen ekstra
-    // body/hands-lag, ingen kantlys, ingen panel-lift-wrapper.
-    expect(html).not.toContain('hjm-opening-mascot-body');
-    expect(html).not.toContain('hjm-opening-mascot-hands');
-    expect(html).not.toContain('hjm-opening-edge-light');
-    expect(html).not.toContain('hjm-panel-lift-wrap');
-    // MascotIdle renders MascotPeek's normal-pose markup (SSR always shows
-    // pose='normal' — the idle glance timer never fires during a static
-    // render) PLUS its own dedicated (reserved) glance overlay, initially
-    // invisible. Never the scan-reserved curious pose here.
-    expect(html).toContain('/monter/maskot.webp');
-    expect(html).toContain('data-pose="normal"');
-    expect(html).not.toContain('data-pose="curious"');
-    expect(html).toContain('/monter/maskot-glimt.webp');
-    expect(html).toContain('data-glancing="false"');
+    expect(html).not.toContain('Klar for en liten tur?');
+    expect(html).not.toContain('Finn dagens antrekk');
+    expect(html).not.toContain('aria-label="Beregner antrekk"');
+    expect(html).not.toContain('class="hjm-cta"');
   });
 
   it('scanning: renders the ScanOverlay choreography + status block + the curious mascot pose, not the ask screen', () => {
@@ -185,17 +176,24 @@ describe('HjemMonter — phase-driven view switching', () => {
     expect(html).toContain('Kler på Lillian på nytt…');
   });
 
-  it('result-current: renders the compact WeatherStrip + a full numbered ResultSurface, no mascot', () => {
+  it('result-current: renders the compact WeatherStrip + the inline garment journey and its result mascot', () => {
     mockedState = {
       phase: 'result-current',
       identity: { childId: 'child-1', dateKey: '2026-07-31', placeKey: 'place:63.430,10.390', activity: 'utelek', engineVersion: 'v' },
       resultKey: 'k',
     };
+    const copy = resultCopyFor(i18next.resolvedLanguage);
     const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
-    expect(html).toContain('Dagens antrekk');
-    expect(html).toContain('aria-label="Juster vær, sted eller aktivitet"');
-    expect(html).toContain('Kle på, steg for steg');
-    expect(html).not.toContain('hjm-mascot');
+    expect(html).toContain(copy.title.replace("'", '&#x27;'));
+    expect(html).toContain('class="hjm-strip"');
+    expect((html.match(/class="hjm-strip"/gu) ?? [])).toHaveLength(1);
+    expect(html).toContain('class="hjm-s-weather"');
+    expect(html).toContain('src="/monter/vaer-regn.webp"');
+    expect(html).toContain('alt="Lett regn"');
+    expect(html).not.toContain('class="hjm-s-adjust"');
+    expect(html).toContain(copy.carouselLabel);
+    expect(html).toContain('/monter/maskot-resultat-sveip.webp');
+    expect(html).not.toContain('class="hjm-cta"');
   });
 
   it('result-stale (recalc-failed): shows the "Beregn på nytt" affordance per the architecture note', () => {
@@ -307,8 +305,8 @@ describe('HjemMonter — mutual-exclusion guard against outfit-transition, at th
   });
 });
 
-describe('HjemMonter — garment fallback without images', () => {
-  it('the result list renders correctly (with vitrine placeholders where no image is mapped) even for an unusual recommendation', () => {
+describe('HjemMonter — complete garment imagery', () => {
+  it('the result journey renders flat garment imagery even for an unusual recommendation', () => {
     mockedState = {
       phase: 'result-current',
       identity: { childId: 'child-1', dateKey: '2026-07-31', placeKey: 'place:63.430,10.390', activity: 'utelek', engineVersion: 'v' },
@@ -319,6 +317,99 @@ describe('HjemMonter — garment fallback without images', () => {
       <HjemMonter {...baseProps()} recommendation={recommendation} />,
     );
     expect(html).toContain('<ol');
-    expect(html).toContain('hjm-thumb');
+    expect(html).toContain('hjm-journey-image');
+    expect(html).toContain('/illustrations/garments/');
+  });
+});
+
+describe('HjemMonter localization', () => {
+  it.each([
+    ['sv', 'Dagens kläder'],
+    ['da', 'Dagens tøj'],
+    ['no', 'Dagens antrekk'],
+    ['de', "Today&#x27;s outfit"],
+  ])('renders the direct result in %s (German uses English)', async (language, title) => {
+    await i18next.changeLanguage(language);
+    mockedState = { phase: 'weather-ready' };
+
+    const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
+
+    expect(html).toContain(title);
+    expect(html).toContain('class="hjm-strip"');
+    expect(html).not.toContain('class="hjm-cta"');
+  });
+
+  it('localizes scanning labels, status, age and aria-live copy in Swedish', async () => {
+    await i18next.changeLanguage('sv');
+    mockedState = {
+      phase: 'scanning',
+      identity: { childId: 'child-1', dateKey: '2026-07-31', placeKey: 'place:63.430,10.390', activity: 'utelek', engineVersion: 'v' },
+    };
+
+    const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
+
+    expect(html).toContain('aria-label="Beräknar kläder"');
+    expect(html).toContain('Vädret nu');
+    expect(html).toContain('Utanför barnvagnen');
+    expect(html).toContain('9 månader');
+    expect(html).toContain('Lager för lager');
+    expect(html).toContain('Sätter ihop kläder för Lillian…');
+    expect(html).toContain('Visa svaret direkt');
+    expect(html).not.toContain('Beregner antrekk');
+  });
+
+  it('localizes the stale phase and its controls in Danish', async () => {
+    await i18next.changeLanguage('da');
+    mockedState = {
+      phase: 'result-stale',
+      identity: { childId: 'child-1', dateKey: '2026-07-31', placeKey: 'place:63.430,10.390', activity: 'utelek', engineVersion: 'v' },
+      lastResultKey: 'old',
+      reason: 'weather-basis',
+    };
+
+    const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
+
+    expect(html).toContain('Vejrbaseret:');
+    expect(html).toContain('Vejret har ændret sig');
+    expect(html).toContain('Beregn igen');
+    expect(html).toContain('Vis forrige tøj');
+    expect(html).toContain('Uden for barnevognen');
+  });
+
+  it('localizes loading and offline/error recovery copy in English', async () => {
+    await i18next.changeLanguage('en');
+    mockedState = { phase: 'weather-ready' };
+
+    const loading = renderToStaticMarkup(
+      <HjemMonter {...baseProps()} weatherStatus="loading" now={null} />,
+    );
+    expect(loading).toContain('Fetching weather …');
+    expect(loading).toContain('Ready for a little trip?');
+
+    const offline = renderToStaticMarkup(
+      <HjemMonter {...baseProps()} weatherStatus="error" now={null} />,
+    );
+    expect(offline).toContain('Weather is unavailable right now.');
+    expect(offline).toContain('The last known weather is enough');
+    expect(offline).toContain('Try fetching the weather again');
+    expect(offline).not.toContain('Prøv å hente været igjen');
+  });
+
+  it('localizes every current-result weather control in Danish', async () => {
+    await i18next.changeLanguage('da');
+    mockedState = {
+      phase: 'result-current',
+      identity: { childId: 'child-1', dateKey: '2026-07-31', placeKey: 'place:63.430,10.390', activity: 'utelek', engineVersion: 'v' },
+      resultKey: 'current',
+    };
+
+    const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
+
+    expect(html).toContain('aria-label="Juster vejr, sted eller aktivitet"');
+    expect(html).toContain('Føles som 1°');
+    expect(html).toContain('Trondheim · Uden for barnevognen');
+    expect(html).toContain('class="hjm-s-weather"');
+    expect(html).toContain('src="/monter/vaer-regn.webp"');
+    expect(html).not.toContain('Utenfor vogn');
   });
 });

@@ -13,6 +13,9 @@ import viteConfig from './vite.config';
 export default mergeConfig(
   viteConfig,
   defineConfig({
+    test: {
+      setupFiles: ['./src/test/legacy-i18n-compat.ts'],
+    },
     resolve: {
       alias: {
         '@lib': resolve(__dirname, 'src/lib'),

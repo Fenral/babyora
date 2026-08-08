@@ -19,7 +19,7 @@ describe('Guide route migration', () => {
       'din-garderobe-din-anbefaling',
     ]);
     expect(program).toContain("tryDet: { label: 'Se ull og bomull i Plaggbiblioteket', target: 'plaggbib' }");
-    expect(program).toContain("tryDet: { label: 'Se historiske månedsnormaler', target: 'snart' }");
+    expect(program).toContain("tryDet: { label: 'Åpne plaggbiblioteket', target: 'plaggbib' }");
     expect(program).not.toContain("target: 'min-garderobe'");
     expect(program).not.toMatch(/Mine plagg|egne plagg|personliggjør/u);
   });
@@ -67,7 +67,7 @@ describe('Guide route migration', () => {
       const vinterprogram = source('src/data/vinterprogram.ts');
       const vinterprogramScreen = source('src/screens/VinterprogramScreen.tsx');
 
-      expect(app).toContain("import type { FamilieToolTarget, GuideTarget, TabKey } from './types/nav';");
+      expect(app).toContain("import type { GuideTarget, TabKey, VerktoyTarget } from './types/nav';");
       expect(vinterprogram).toContain("import type { GuideTarget } from '../types/nav';");
       expect(vinterprogramScreen).toContain("import type { GuideTarget } from '../types/nav';");
 
@@ -80,7 +80,7 @@ describe('Guide route migration', () => {
 
       expect(app).not.toContain("kind: 'guide'");
       expect(app).not.toContain("kind === 'guide'");
-      expect(app).toContain("| { kind: 'familie-tool'; target: FamilieToolTarget }");
+      expect(app).toContain("| { kind: 'verktoy-tool'; target: VerktoyTarget }");
       // P5: finn-antrekk carries an optional live-weather prefill now (the
       // "Juster" drill, opened from Hjem's result) — the plain guide-target
       // opener below still constructs it without one.
@@ -92,43 +92,44 @@ describe('Guide route migration', () => {
       const app = source('src/App.tsx');
 
       expect(app).toContain('const onOpenGuideTarget = useCallback((target: GuideTarget) => {');
-      expect(app).toContain("setDrill({ kind: 'finn-antrekk' });");
+      expect(app).toContain("setDrill({ kind: 'verktoy-tool', target });");
       expect(app).toContain("setDrill({ kind: 'plaggbib' });");
-      expect(app).toContain("setDrill({ kind: 'familie-tool', target });");
+      expect(app).toContain("setDrill({ kind: 'verktoy-tool', target });");
     });
 
-    it('VinterprogramScreen forblir mountet som familie-tool-drill med samme onOpenTarget-wiring', () => {
+    it('VinterprogramScreen remains a tools-owned drill with the same onOpenTarget wiring', () => {
       const app = source('src/App.tsx');
 
-      expect(app).toContain("activeDrill?.kind === 'familie-tool' && activeDrill.target === 'forste-vinter'");
+      expect(app).toContain("activeDrill?.kind === 'verktoy-tool' && activeDrill.target === 'forste-vinter'");
       expect(app).toContain('<VinterprogramScreen');
       expect(app).toContain('onOpenTarget={onOpenGuideTarget}');
     });
 
-    it('activeTabForBar mapper familie-tool til familie og finn-antrekk/plaggbib til hjem', () => {
+    it('maps tools drills to Verktøy while Home-owned drills remain on Home', () => {
       const app = source('src/App.tsx');
 
-      expect(app).toContain("activeDrill.kind === 'familie-tool'");
-      expect(app).toMatch(/activeTabForBar = 'familie';/u);
+      expect(app).toContain("activeDrill.kind === 'verktoy-tool'");
+      expect(app).toMatch(/activeTabForBar = 'verktoy';/u);
     });
 
-    it('Familie sin nye Verktøy-seksjon åpner de tre gjenværende Guide-skjermene', () => {
-      const tools = source('src/components/family/ToolsSection.tsx');
+    it('the Verktøy root opens all four calculator and guide screens', () => {
+      const tools = source('src/screens/VerktoyScreen.tsx');
       const familie = source('src/screens/FamilieScreen.tsx');
       const innstillinger = source('src/screens/InnstillingerScreen.tsx');
 
       expect(tools).toContain("target: 'tog'");
       expect(tools).toContain("target: 'varm-kald'");
       expect(tools).toContain("target: 'forste-vinter'");
-      expect(tools).toContain('onOpenTool(row.target)');
-      expect(familie).toContain('onOpenTool');
-      expect(innstillinger).toContain('<ToolsSection onOpenTool={onOpenTool} />');
+      expect(tools).toContain("openTool('finn-antrekk')");
+      expect(tools).toContain('onOpenTool(target)');
+      expect(familie).not.toContain('onOpenTool:');
+      expect(innstillinger).not.toContain('<ToolsSection');
     });
 
     it('nav.ts sin TabKey-union har ingen guide-medlem lenger', () => {
       const nav = source('src/types/nav.ts');
 
-      expect(nav).toContain("export type TabKey = 'hjem' | 'plan' | 'familie';");
+      expect(nav).toContain("export type TabKey = 'hjem' | 'plan' | 'verktoy' | 'familie';");
       expect(nav).toContain('FamilieToolTarget');
     });
   });

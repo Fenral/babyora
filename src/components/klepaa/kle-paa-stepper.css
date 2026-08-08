@@ -104,7 +104,7 @@
   border-radius: var(--dw-r-pill);
   background: color-mix(in srgb, var(--dw-ink-low) 45%, transparent);
   display: inline-block;
-  transition: background var(--dw-m-state) var(--dw-ease);
+  transition: background var(--dw-m-step) var(--dw-ease);
 }
 .kps-dot[data-active='true'] { background: var(--dw-accent); }
 
@@ -114,31 +114,24 @@
   flex: 1;
   min-height: 0;
   position: relative;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   margin-top: var(--dw-space-14);
-  /* pan-y: den vertikale rullingen tilhører fortsatt innholdet, den
-     horisontale tilhører oss. Uten dette slåss nettleseren og gesten om
-     samme finger. */
-  touch-action: pan-y;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
+.kps-viewport::-webkit-scrollbar { display: none; }
 
-/* ETT STEG = ÉN VIEWPORT-BREDDE. Sporet er selv 100 % bredt og lar barna
-   flyte utenfor, så `-100%` på transformen er nøyaktig ett steg — ikke en
-   andel av N steg, som ville endret betydning hver gang antallet endret seg.
-   Fingerens råe forskyvning legges til som ren px: 1:1, ingen demping.
-
-   SETTLINGEN bor HER, ikke i JS. `--dw-m-step` er 260 ms, innenfor
-   120-260-vinduet, og finnes dermed ett sted. Under dragingen skrus
-   transitionen AV (data-dragging), ellers ville sporet henge etter fingeren. */
+/* ETT STEG = ÉN VIEWPORT-BREDDE. Nettleseren eier selve gesten, tregheten og
+   avbrytelsen; sporet trenger derfor ingen syntetisk forskyvning. */
 .kps-track {
   display: flex;
   height: 100%;
   width: 100%;
-  will-change: transform;
-  transform: translate3d(calc(var(--kps-index, 0) * -100% + var(--kps-drag, 0px)), 0, 0);
-  transition: transform var(--dw-m-step) var(--dw-ease);
 }
-.kps-track[data-dragging='true'] { transition: none; }
 
 .kps-slide {
   flex: 0 0 100%;
@@ -146,6 +139,8 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 /* Scroll-affordance (doktrine D4): bunn-fade i stedet for hardt klipp, samme
@@ -262,7 +257,7 @@
   min-height: var(--dw-size-row);
   border-radius: var(--dw-r-raised);
   background: var(--dw-raised);
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-depth-raised);
+  box-shadow: inset 0 1px 0 var(--dw-kant-key), var(--dw-depth-raised);
   cursor: pointer;
   /* Kun transform og bakgrunn — aldri layout-egenskaper. Slippet skal
      SETTLE, ikke snappe, derfor ligger transitionen på grunnregelen og ikke
@@ -297,7 +292,7 @@
   overflow: hidden;
   background: var(--dw-plate);
   border: 1px solid var(--dw-plate-kant);
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-depth-selected);
+  box-shadow: inset 0 1px 0 var(--dw-kant-key), var(--dw-depth-selected);
 }
 .kps-alt-thumb + .kps-alt-thumb { margin-left: calc(var(--dw-space-12) * -1); }
 .kps-alt-thumb img { width: 100%; height: 100%; object-fit: cover; }
@@ -328,11 +323,10 @@
 }
 
 /* ═════════════════════════ REDUSERT BEVEGELSE ══════════════════════════════
-   DIREKTE BYTTE, INGEN FORFLYTNING. Dobbel vakt, som resten av appen:
-   JS-siden setter aldri --kps-drag, og denne blokken fjerner settlingen selv
-   om noe skulle sette den. */
+   DIREKTE BYTTE, UTEN GLIDENDE PROGRAMMATISK RULLING. Dobbel vakt, som resten
+   av appen: JS bruker behavior:auto og denne blokken gjør det samme i CSS. */
 @media (prefers-reduced-motion: reduce) {
-  .kps-track { transition: none; }
+  .kps-viewport { scroll-behavior: auto; }
   .kps-dot { transition: none; }
   .kps-swap-row { transition: none; }
   .kps-swap-row:active { transform: none; }

@@ -5,12 +5,11 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type CSSProperties,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ForecastDisclosure } from '../components/planning/ForecastDisclosure';
 import { PlanChangeRail, type PlanChangeRailRow, type PlanningRailEvent } from '../components/planning/PlanChangeRail';
-import { SnartPlan } from '../components/planning/SnartPlan';
 import {
   PlanleggStatusNotice,
   type PlanleggStatusState,
@@ -18,14 +17,13 @@ import {
 import { SegmentedControl } from '../components/controls/SegmentedControl';
 import { useWeather } from '../hooks/useWeather';
 import { useHapticSystem } from '../lib/haptics/system';
-import { extractDailyAtHour, extractHourly } from '../lib/met-no/client';
-import type { WeatherDayAtHour, WeatherHourly } from '../lib/met-no/types';
+import { extractHourly } from '../lib/met-no/client';
+import type { WeatherHourly } from '../lib/met-no/types';
 import {
   type PlanningChangeEvent,
   type PlanningPoint,
 } from '../lib/planning/change-events';
 import {
-  type RequestedPlanningView,
   decidePlanningInteraction,
   dispatchPlanningInteraction,
   repairPlanningSelection,
@@ -41,14 +39,10 @@ import {
   type PlanningVerdictView,
   type PlanningWeatherRow,
 } from '../lib/planning/plan-view-model';
-import { selectTodayPlanningHours } from '../lib/planning/today-hours';
-import { resolveSnartClimateProfile } from '../lib/planning/snart-climate';
-import { buildSnartDateWindow, isAgeEligibleForWholeWindow } from '../lib/planning/snart-date-window';
-import { buildSnartPlan, buildSnartUnavailable, type SnartPlan as SnartPlanResult } from '../lib/planning/snart';
 import {
-  createSnartSessionEvaluator,
-  resolveCommittedSnartHome,
-} from '../lib/planning/snart-session';
+  selectTodayPlanningHours,
+  selectTomorrowPlanningHours,
+} from '../lib/planning/today-hours';
 import {
   resolvePlanningViewAccess,
   resolveRuntimeCapabilityAccess,
@@ -60,7 +54,6 @@ import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
 import { recommend } from '../lib/wool-layers/recommend';
 import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import {
-  getConditionLabel,
   getGarmentImage,
   getWeatherIcon,
   getWeatherNuance,
@@ -71,43 +64,24 @@ import { useChildren } from '../state/children-store';
 import { useSwapOverride } from '../state/swap-override-store';
 import { resolveEffectivePlace, useLocationPref } from '../state/location-pref-store';
 import type { TabKey } from '../types/nav';
+import { htmlLanguageFor } from '../i18n/language-policy';
 import './UkeScreen.css';
 
 const DEFAULT_LAT = 60.8867;
 const DEFAULT_LON = 11.5614;
 const FALLBACK_REF_HOUR = 12;
 
-type ViewTab = 'today' | 'tenday' | 'soon';
+type ViewTab = 'today' | 'tomorrow';
 type Activity = 'utelek' | 'vogn';
 type VognMode = 'awake' | 'sleeping';
 type TempAxis = 'kald' | 'mild' | 'varm';
 
 type PlanleggE2EWindow = Window & {
   __BABYORA_PLANLEGG_E2E__?: Readonly<{
-    testOnlySoonAvailability?: boolean;
-    entitlement?: 'loading' | 'free' | 'plus';
     fixedHome?: Readonly<{ city: string; lat: number; lon: number }>;
     automatic?: Readonly<{ mode: 'auto'; place: Readonly<{ city: string; lat: number; lon: number }> }>;
-    climateProfile?: 'invalid-hash';
-    profileScope?: string;
-    windowLocalDate?: string;
   }>;
 };
-
-const PLANLEGG_E2E_SOON_AVAILABILITY = Object.freeze({
-  ...PLUS_FEATURE_AVAILABILITY,
-  soon_preparation: true,
-});
-
-function planningAvailability() {
-  if (
-    import.meta.env.VITE_PLANLEGG_E2E === 'true'
-    && (window as PlanleggE2EWindow).__BABYORA_PLANLEGG_E2E__?.testOnlySoonAvailability === true
-  ) {
-    return PLANLEGG_E2E_SOON_AVAILABILITY;
-  }
-  return PLUS_FEATURE_AVAILABILITY;
-}
 
 function planningE2EFixture(): PlanleggE2EWindow['__BABYORA_PLANLEGG_E2E__'] {
   return import.meta.env.VITE_PLANLEGG_E2E === 'true'
@@ -135,9 +109,6 @@ type Props = Readonly<{
     context: PlannedOutfitContext,
     trigger: HTMLElement,
   ) => void;
-  requestedPlanView: RequestedPlanningView | null;
-  requestedPlanViewToken: number | null;
-  onConsumeRequestedPlanView: (token: number) => void;
 }>;
 
 /**
@@ -209,71 +180,62 @@ function tempAxisFor(
   return 'mild';
 }
 
-function conditionLabel(symbolCode: string): string {
-  const normalized = symbolCode.toLocaleLowerCase('nb-NO');
-  if (normalized.includes('thunder')) return 'Torden';
-  if (normalized.includes('snow')) return 'Snø';
-  if (normalized.includes('sleet')) return 'Sludd';
-  if (normalized.includes('rain')) return 'Regn';
-  if (normalized.includes('fog')) return 'Tåke';
-  if (normalized.includes('cloud')) return 'Skyet';
-  if (normalized.includes('partly')) return 'Delvis skyet';
-  if (normalized.includes('fair')) return 'Lettskyet';
-  if (normalized.includes('clear')) return 'Klarvær';
-  return 'Vær';
+function conditionTranslationKey(symbolCode: string | undefined): string {
+  const normalized = symbolCode?.toLocaleLowerCase('en') ?? '';
+  if (normalized.includes('thunder')) return 'plan.weather.thunder';
+  if (normalized.includes('snow')) return 'plan.weather.snow';
+  if (normalized.includes('sleet')) return 'plan.weather.sleet';
+  if (normalized.includes('rain')) return 'plan.weather.rain';
+  if (normalized.includes('fog')) return 'plan.weather.fog';
+  if (normalized.includes('partly')) return 'plan.weather.partlyCloudy';
+  if (normalized.includes('cloud')) return 'plan.weather.cloudy';
+  if (normalized.includes('fair')) return 'plan.weather.fair';
+  if (normalized.includes('clear')) return 'plan.weather.clear';
+  return 'plan.weather.unknown';
 }
 
 // P8 (Monter re-skin): presentation-only date/time formatters for the day-
 // hero petrol panel and the improved empty-state line. Pure functions, no
 // planning-domain logic — same nb-NO/Europe/Oslo pattern already used by
 // PlanChangeRail's timeLabel() and ForecastDisclosure's timeLabel().
-const heroDayFormatter = new Intl.DateTimeFormat('nb-NO', {
-  timeZone: PLAN_TIME_ZONE,
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-});
-
-const heroShortTimeFormatter = new Intl.DateTimeFormat('nb-NO', {
-  timeZone: PLAN_TIME_ZONE,
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
-});
-
-function capitalize(value: string): string {
-  return value.length > 0 ? value.charAt(0).toLocaleUpperCase('nb-NO') + value.slice(1) : value;
+function capitalize(value: string, locale: string): string {
+  return value.length > 0 ? value.charAt(0).toLocaleUpperCase(locale) + value.slice(1) : value;
 }
 
-function heroDayLabel(atIso: string | null, isToday: boolean): string {
-  if (isToday) return 'I dag';
+function heroDayLabel(
+  atIso: string | null,
+  isToday: boolean,
+  locale: string,
+  todayLabel: string,
+): string {
+  if (isToday) return todayLabel;
   if (!atIso) return '';
   const instant = new Date(atIso);
   if (Number.isNaN(instant.getTime())) return '';
-  return capitalize(heroDayFormatter.format(instant));
+  const formatter = new Intl.DateTimeFormat(locale, {
+    timeZone: PLAN_TIME_ZONE,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  return capitalize(formatter.format(instant), locale);
 }
 
-function shortTimeLabel(atIso: string | undefined): string | null {
+function shortTimeLabel(atIso: string | undefined, locale: string): string | null {
   if (!atIso) return null;
   const instant = new Date(atIso);
   if (Number.isNaN(instant.getTime())) return null;
-  return heroShortTimeFormatter.format(instant).replace('.', ':');
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: PLAN_TIME_ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(instant).replace('.', ':');
 }
 
-// Dagslinjens punktetikett. «I dag»-rasteret er klokkeslett (06:00/10:00/
-// 14:00/18:00 fra today-hours.ts), «Uke»-rasteret er ett punkt per døgn —
-// samme liste, to naturlige etiketter. Ingen ny planleggingslogikk, kun
-// formatering av atIso-en punktet allerede bærer.
-const timelineDayFormatter = new Intl.DateTimeFormat('nb-NO', {
-  timeZone: PLAN_TIME_ZONE,
-  weekday: 'short',
-});
-
-function timelinePointLabel(atIso: string, isToday: boolean): string {
-  if (isToday) return shortTimeLabel(atIso) ?? '';
-  const instant = new Date(atIso);
-  if (Number.isNaN(instant.getTime())) return '';
-  return capitalize(timelineDayFormatter.format(instant).replace(/\./gu, ''));
+// Begge visningene bruker det samme ærlige dagsrasteret kl. 06/10/14/18.
+function timelinePointLabel(atIso: string, locale: string): string {
+  return shortTimeLabel(atIso, locale) ?? '';
 }
 
 function formatHeroTemp(tempC: number | null | undefined): string {
@@ -321,43 +283,6 @@ function phaseFromHourly(
   });
 }
 
-function phaseFromDay(
-  day: WeatherDayAtHour,
-  ageMonths: number,
-  activity: Activity,
-  vognMode: VognMode,
-): Phase {
-  const engineInput: RecommendInput = {
-    weather: {
-      tempC: day.tempC,
-      feelsLikeC: day.feelsLikeC,
-      windMs: day.windMs,
-      precipMmH: day.precipMmH,
-      symbolCode: day.symbolCode,
-    },
-    child: { ageMonths },
-    activity,
-    ...(activity === 'vogn' ? { vognMode } : {}),
-  };
-  return Object.freeze({
-    recommendation: recommend(engineInput),
-    engineInput,
-    weather: Object.freeze({
-      atIso: new Date(
-        day.date.getFullYear(),
-        day.date.getMonth(),
-        day.date.getDate(),
-        day.refHour,
-      ).toISOString(),
-      tempC: day.tempC,
-      feelsLikeC: day.feelsLikeC,
-      windMs: day.windMs,
-      precipMmH: day.precipMmH,
-      symbolCode: day.symbolCode,
-    }),
-  });
-}
-
 function currentPhase(
   phases: readonly Phase[],
   evaluatedAt: number,
@@ -369,16 +294,10 @@ function currentPhase(
 
 function PlanleggData({
   onOpenPlannedOutfit,
-  requestedPlanView,
-  requestedPlanViewToken,
-  onConsumeRequestedPlanView,
-}: Pick<
-  Props,
-  | 'onOpenPlannedOutfit'
-  | 'requestedPlanView'
-  | 'requestedPlanViewToken'
-  | 'onConsumeRequestedPlanView'
->) {
+}: Pick<Props, 'onOpenPlannedOutfit'>) {
+  const { t, i18n } = useTranslation();
+  const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const locale = htmlLanguageFor(activeLanguage);
   const { active } = useChildren();
   const e2eFixture = planningE2EFixture();
   const { fire } = useHapticSystem();
@@ -422,11 +341,11 @@ function PlanleggData({
   const lat = effectivePlace?.lat ?? 0;
   const lon = effectivePlace?.lon ?? 0;
   const city = effectivePlace === null
-    ? 'Sted mangler'
+    ? t('plan.locationMissing')
     : effectivePlace.source === 'automatic'
-      ? `Nåværende sted · ${effectivePlace.city}`
-      : `Fast sted · ${effectivePlace.city}`;
-  const childName = active?.name || 'barnet';
+      ? t('plan.currentLocation', { city: effectivePlace.city })
+      : t('plan.fixedLocation', { city: effectivePlace.city });
+  const childName = active?.name || t('plan.childFallback');
   const activeDob = active?.dob;
   const ageMonths = useMemo(
     () => (activeDob ? dobToAgeMonths(activeDob) : 12),
@@ -440,125 +359,36 @@ function PlanleggData({
     source: effectivePlace?.source ?? 'fixed-home',
   }, effectivePlace !== null);
   const [tab, setTab] = useState<ViewTab>('today');
-  const consumedRequestedPlanViewToken = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (
-      requestedPlanView !== 'snart'
-      || requestedPlanViewToken === null
-      || consumedRequestedPlanViewToken.current === requestedPlanViewToken
-    ) {
-      return;
-    }
-    consumedRequestedPlanViewToken.current = requestedPlanViewToken;
-    setTab('soon');
-    onConsumeRequestedPlanView(requestedPlanViewToken);
-  }, [onConsumeRequestedPlanView, requestedPlanView, requestedPlanViewToken]);
   const [forecastOpen, setForecastOpen] = useState(false);
-  const availability = planningAvailability();
-  const weekAccess = useMemo(() => resolvePlanningViewAccess('week', {
+  const tomorrowAccess = useMemo(() => resolvePlanningViewAccess('week', {
     isPlus: isPremium,
     authenticated: false,
     loading: accessLoading,
-  }, availability), [accessLoading, availability, isPremium]);
+  }, PLUS_FEATURE_AVAILABILITY), [accessLoading, isPremium]);
   const todayAccess = useMemo(() => resolvePlanningViewAccess('today', {
     isPlus: isPremium,
     authenticated: false,
     loading: false,
-  }, availability), [availability, isPremium]);
-  const soonAccess = useMemo(() => resolvePlanningViewAccess('soon', {
-    isPlus: e2eFixture?.entitlement === 'plus' ? true : e2eFixture?.entitlement === 'free' ? false : isPremium,
-    authenticated: false,
-    loading: e2eFixture?.entitlement === 'loading' ? true : accessLoading,
-  }, availability), [accessLoading, availability, e2eFixture?.entitlement, isPremium]);
-  const viewAccess = tab === 'today' ? todayAccess : tab === 'tenday' ? weekAccess : soonAccess;
-  const [snartEvaluator] = useState(() => createSnartSessionEvaluator({
-    resolveExactHome: resolveCommittedSnartHome,
-    lookupClimateProfile: (homePlaceKey) => {
-      if (e2eFixture?.climateProfile === 'invalid-hash') return null;
-      const climateProfileId = `snart-profile:v2:${homePlaceKey}`;
-      const climate = resolveSnartClimateProfile({
-        homePlaceKey,
-        climateProfileId,
-      });
-      return climate.status === 'available'
-        ? {
-            climateProfileId: climate.profile.profileId,
-            profileVersion: climate.packSha256,
-          }
-        : null;
-    },
-    buildModel: buildSnartPlan,
-    buildUnavailable: buildSnartUnavailable,
-  }));
-  const snartResult = useSyncExternalStore<SnartPlanResult | null>(
-    snartEvaluator.subscribe,
-    snartEvaluator.current,
-    () => null,
-  );
-  const snartProfileScope = active?.id ?? '__none__';
-  const effectiveSnartProfileScope = e2eFixture?.profileScope ?? snartProfileScope;
-  const snartWindow = e2eFixture?.windowLocalDate
-    ?? new Date().toLocaleDateString('en-CA', { timeZone: PLAN_TIME_ZONE });
-  useEffect(() => {
-    const generation = crypto.randomUUID();
-    if (!soonAccess.access.allowed) {
-      snartEvaluator.evaluate({
-        access: soonAccess.access,
-        generation,
-        window: snartWindow,
-        fixedHome: { city: '', lat: 0, lon: 0 },
-        ageEligibleForWholeWindow: false,
-      });
-      return () => snartEvaluator.teardown();
-    }
-    const targetWindow = buildSnartDateWindow(snartWindow, PLAN_TIME_ZONE);
-    const ageEligibleForWholeWindow = activeDob !== undefined
-      && targetWindow.status === 'available'
-      && isAgeEligibleForWholeWindow(activeDob, targetWindow.endLocalDate);
-    snartEvaluator.evaluate({
-      access: soonAccess.access,
-      generation,
-      window: snartWindow,
-      fixedHome: {
-        city: fixedHome.city,
-        lat: fixedHome.lat,
-        lon: fixedHome.lon,
-      },
-      ageEligibleForWholeWindow,
-    });
-    return () => snartEvaluator.teardown();
-  }, [
-    activeDob,
-    fixedHome.city,
-    fixedHome.lat,
-    fixedHome.lon,
-    snartEvaluator,
-    effectiveSnartProfileScope,
-    snartWindow,
-    soonAccess.access,
-  ]);
-  const markSnartAlreadyHave = useCallback((conceptId: string) => {
-    snartEvaluator.markAlreadyHave(conceptId);
-  }, [snartEvaluator]);
+  }, PLUS_FEATURE_AVAILABILITY), [isPremium]);
+  const viewAccess = tab === 'today' ? todayAccess : tomorrowAccess;
   // P2 hard paywall (PRODUCT.md, 2026-07-31): det finnes ikke lenger noen
   // kontekstuell paywall å åpne herfra — AppPaywallGate (App.tsx) er den
   // ENESTE håndhevingen av entitlement på appnivå. Denne skjermen bounser
   // bare vekk fra en Uke-visning som akkurat mistet levende tilgang (f.eks.
   // et entitlement som utløper mens brukeren står på fanen), slik at hun
   // ikke blir stående på en tom fane.
-  const lastResolvedWeekAccessRef = useRef<'allowed' | 'denied'>(
-    weekAccess.access.state === 'allowed' ? 'allowed' : 'denied',
+  const lastResolvedTomorrowAccessRef = useRef<'allowed' | 'denied'>(
+    tomorrowAccess.access.state === 'allowed' ? 'allowed' : 'denied',
   );
   useEffect(() => {
-    if (weekAccess.access.state === 'neutral') return;
-    const previous = lastResolvedWeekAccessRef.current;
-    lastResolvedWeekAccessRef.current = weekAccess.access.state;
-    if (previous === 'allowed' && weekAccess.access.state === 'denied') {
+    if (tomorrowAccess.access.state === 'neutral') return;
+    const previous = lastResolvedTomorrowAccessRef.current;
+    lastResolvedTomorrowAccessRef.current = tomorrowAccess.access.state;
+    if (previous === 'allowed' && tomorrowAccess.access.state === 'denied') {
       setForecastOpen(false);
       setTab('today');
     }
-  }, [weekAccess.access.state]);
+  }, [tomorrowAccess.access.state]);
   const changeRailHeadStyle: CSSProperties = {
     fontSize: '1.25rem',
     fontWeight: 640,
@@ -572,43 +402,31 @@ function PlanleggData({
     () => activeForecast ? extractHourly(activeForecast, 48) : weather.hourly,
     [activeForecast, weather.hourly],
   );
-  const activeDaily = useMemo(
-    () => activeForecast
-      ? extractDailyAtHour(activeForecast, FALLBACK_REF_HOUR, 10)
-      : weather.dailyAtHour,
-    [activeForecast, weather.dailyAtHour],
+  const evaluatedAt = weather.evidence?.metadata.evaluatedAt ?? 0;
+  const selectedPlanningHours = useMemo(
+    () => (tab === 'today'
+      ? selectTodayPlanningHours(activeHourly, evaluatedAt, PLAN_TIME_ZONE)
+      : selectTomorrowPlanningHours(activeHourly, evaluatedAt, PLAN_TIME_ZONE)),
+    [activeHourly, evaluatedAt, tab],
   );
 
   const phases = useMemo<readonly Phase[]>(() => {
     if (weather.status !== 'ready' && weather.status !== 'offline') return Object.freeze([]);
-    // P2 hard paywall: I dag og Uke gates likt nå (ingen gratis baseline) —
-    // begge trenger presentation === 'full' før vi beregner faser. Snart
-    // håndteres separat lenger ned (egen tab, aldri via phases).
-    if (tab !== 'soon' && viewAccess.presentation !== 'full') {
+    if (viewAccess.presentation !== 'full') {
       return Object.freeze([]);
     }
     if (!Number.isInteger(ageMonths) || ageMonths < 0 || ageMonths > 24) {
       return Object.freeze([]);
     }
-    if (tab === 'tenday') {
-      return Object.freeze(activeDaily.map(
-        (day) => phaseFromDay(day, ageMonths, activity, vognMode),
-      ));
-    }
-    const evaluatedAt = weather.evidence?.metadata.evaluatedAt ?? 0;
     return Object.freeze(
-      selectTodayPlanningHours(activeHourly, evaluatedAt, PLAN_TIME_ZONE)
-        .map((point) => phaseFromHourly(point, ageMonths, activity, vognMode)),
+      selectedPlanningHours.map((point) => phaseFromHourly(point, ageMonths, activity, vognMode)),
     );
   }, [
-    activeDaily,
-    activeHourly,
     activity,
     ageMonths,
-    tab,
+    selectedPlanningHours,
     viewAccess.presentation,
     vognMode,
-    weather.evidence?.metadata.evaluatedAt,
     weather.status,
   ]);
 
@@ -626,8 +444,7 @@ function PlanleggData({
 
   const planningEvaluation = useMemo<PlanningEvaluation>(() => {
     if (
-      tab === 'soon'
-      || viewAccess.presentation !== 'full'
+      viewAccess.presentation !== 'full'
       || !weather.evidence
       || effectivePlace === null
       || weather.evidence.coverage.status === 'unavailable'
@@ -651,7 +468,10 @@ function PlanleggData({
         finalizedFingerprint: fingerprint,
         orderedGarments: Object.freeze([...orderedGarments]),
         equipment: Object.freeze([...equipment]),
-        cause: `${conditionLabel(phase.weather.symbolCode)} · føles som ${Math.round(phase.weather.feelsLikeC)}°`,
+        cause: t('plan.weather.cause', {
+          condition: t(conditionTranslationKey(phase.weather.symbolCode)),
+          temp: Math.round(phase.weather.feelsLikeC),
+        }),
         transitionContextId: `planning-transition:${phase.weather.atIso}:${fingerprint}`,
       });
       // Antrekksmerket i Dagslinjen skal vise plagget forelderen ser UTENPÅ
@@ -820,7 +640,7 @@ function PlanleggData({
     lat,
     lon,
     resolvedPhases,
-    tab,
+    t,
     viewAccess.access.decision,
     viewAccess.capability,
     viewAccess.presentation,
@@ -860,6 +680,15 @@ function PlanleggData({
       selectedEventId: eventId,
     }));
   }, [setPlanningSelection]);
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
+  const visibleExpandedEventId = expandedEventId !== null
+    && planningEventIds.includes(expandedEventId)
+    ? expandedEventId
+    : null;
+  const setRailExpandedEventId = useCallback((eventId: string | null) => {
+    setExpandedEventId(eventId);
+    if (eventId !== null) setSelectedEventId(eventId);
+  }, [setSelectedEventId]);
   const latestPlanningEvaluationRef = useRef(planningEvaluation);
   useLayoutEffect(() => {
     latestPlanningEvaluationRef.current = planningEvaluation;
@@ -878,12 +707,15 @@ function PlanleggData({
     onOpenPlannedOutfit(context, trigger);
   }, [onOpenPlannedOutfit]);
 
-  const evaluatedAt = weather.evidence?.metadata.evaluatedAt ?? 0;
+  const isTodayView = tab === 'today';
+  const isTomorrowView = tab === 'tomorrow';
   const selectedContext = selectedEventId
     ? planningEvaluation.contextsByEventId.get(selectedEventId) ?? null
     : null;
   const fallbackPhase = currentPhase(resolvedPhases, evaluatedAt);
-  const temperatureContext = selectedContext?.weather ?? fallbackPhase?.weather ?? weather.now;
+  const temperatureContext = selectedContext?.weather
+    ?? fallbackPhase?.weather
+    ?? (isTodayView ? weather.now : null);
   const tempAxis = tempAxisFor(
     temperatureContext?.feelsLikeC,
     temperatureContext?.tempC,
@@ -892,19 +724,20 @@ function PlanleggData({
   const onRetry = useCallback(() => {
     setRefreshKey((current) => current + 1);
   }, [setRefreshKey]);
-  const isWeekView = tab === 'tenday';
-  const isTodayView = tab === 'today';
-  const isWeekFull = isWeekView && viewAccess.presentation === 'full';
-  const isWeekNeutral = isWeekView && viewAccess.presentation === 'neutral';
+  const isTomorrowFull = isTomorrowView && viewAccess.presentation === 'full';
+  const isTomorrowNeutral = isTomorrowView && viewAccess.presentation === 'neutral';
   const isTodayNeutral = isTodayView && viewAccess.presentation === 'neutral';
-  const isSoonView = tab === 'soon';
-  // P2 hard paywall: I dag og Uke gates likt nå — «access-gated» betyr her
+  // I dag og I morgen følger samme tilgangsmodell. «access-gated» betyr her
   // «denne planvisningen er ikke presentation:'full' akkurat nå» (enten
   // fordi entitlement-oppslaget fortsatt laster, eller fordi den er
   // avslått). Ingen egen teaser-tilstand lenger; en gated visning viser
   // ingenting ekstra her — AppPaywallGate (App.tsx) er den faktiske
   // håndhevingen på appnivå.
-  const isAccessGatedView = (isWeekView || isTodayView) && viewAccess.presentation !== 'full';
+  const isAccessGatedView = viewAccess.presentation !== 'full';
+  const isTomorrowPreparing = isTomorrowFull
+    && (weather.status === 'ready' || weather.status === 'offline')
+    && weather.evidence?.coverage.status !== 'unavailable'
+    && selectedPlanningHours.length < 2;
   if (weather.status === 'loading' || weather.status === 'idle') {
     statusState = { status: 'loading' };
   } else if (
@@ -913,6 +746,7 @@ function PlanleggData({
       (weather.status === 'ready' || weather.status === 'offline')
       && !planningEvaluation.hasEvaluatedPlan
       && !isAccessGatedView
+      && !isTomorrowPreparing
     )
   ) {
     statusState = { status: 'error', onRetry };
@@ -947,7 +781,6 @@ function PlanleggData({
 
   const showAdvice = statusState.status !== 'loading'
     && statusState.status !== 'error'
-    && !isSoonView
     && !isAccessGatedView
     && planningEvaluation.hasEvaluatedPlan;
   // Skinnen viser fra nå KUN de faktiske endringene. 'unchanged'-radene sa
@@ -963,24 +796,12 @@ function PlanleggData({
   const timelinePoints = planningEvaluation.timeline;
   const forecastRows = planningEvaluation.hasEvaluatedPlan
     ? planningEvaluation.forecast
-    : tab === 'tenday'
-      ? activeDaily.map((row) => ({
-        atIso: new Date(
-          row.date.getFullYear(),
-          row.date.getMonth(),
-          row.date.getDate(),
-          row.refHour,
-        ).toISOString(),
-        tempC: row.tempC,
-        feelsLikeC: row.feelsLikeC,
-        symbolCode: row.symbolCode,
-      }))
-      : activeHourly.map((row) => ({
-        atIso: row.time.toISOString(),
-        tempC: row.tempC,
-        feelsLikeC: row.feelsLikeC,
-        symbolCode: row.symbolCode,
-      }));
+    : selectedPlanningHours.map((row) => ({
+      atIso: row.time.toISOString(),
+      tempC: row.tempC,
+      feelsLikeC: row.feelsLikeC,
+      symbolCode: row.symbolCode,
+    }));
 
   // P8 (Monter re-skin, review items 7-9): ÉN petrol værmodul (dagens/valgt
   // dags hero + værprognosen nested inni, i stedet for at "Vis full
@@ -990,18 +811,18 @@ function PlanleggData({
   // verdiene under leser KUN presentation-laget sine allerede eksponerte
   // felter (temperatureContext/selectedContext/fallbackPhase/forecastRows) —
   // ingen nye selectors i src/lib/planning.
-  const showWeatherHero = !isSoonView
-    && !isAccessGatedView
+  const showWeatherHero = !isAccessGatedView
+    && !isTomorrowPreparing
     && statusState.status !== 'loading'
     && statusState.status !== 'error';
   const heroWeather = temperatureContext ?? null;
   const heroNuance = getWeatherNuance(heroWeather?.symbolCode);
-  const heroCondition = getConditionLabel(heroWeather?.symbolCode);
+  const heroCondition = t(conditionTranslationKey(heroWeather?.symbolCode));
   const heroIcon = getWeatherIcon(heroWeather?.symbolCode);
   const heroAtIso = selectedContext?.plannedForIso
     ?? fallbackPhase?.weather.atIso
     ?? (weather.now ? weather.now.observedAt.toISOString() : null);
-  const heroDay = heroDayLabel(heroAtIso, isTodayView);
+  const heroDay = heroDayLabel(heroAtIso, isTodayView, locale, t('plan.today'));
   // FUNN (revisjon 2026-08-06, [MINDRE] Plan): «I dag» sto to ganger med ca.
   // 40 px mellomrom — først som aktiv pille i visningsvelgeren (l. 1029, den
   // hvite pillen y 193–285), så igjen som etikett øverst inne i værkortet
@@ -1022,17 +843,24 @@ function PlanleggData({
   // 'empty' også) — det ble bare aldri lest ut i visningen. Bruker samme
   // allerede-eksponerte forecastRows til en "stabilt til HH:MM"-linje i
   // stedet for en generisk "ingen endringer"-tekst. Ingen ny selector.
-  const emptyStableUntil = shortTimeLabel(forecastRows.at(-1)?.atIso);
+  const emptyStableUntil = shortTimeLabel(forecastRows.at(-1)?.atIso, locale);
+  const verdictGarmentSummary = planningEvaluation.verdict
+    ? new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(
+      planningEvaluation.verdict.orderedGarments.map((garment) => (
+        displayNameForDbString(garment, activeLanguage)
+      )),
+    )
+    : '';
 
   return (
     <section
       className="planlegg-screen ba-temp-root"
       aria-labelledby="planlegg-title"
       data-temp={tempAxis}
-      data-planlegg-access={isWeekFull ? 'plus-week' : undefined}
+      data-planlegg-access={isTomorrowFull ? 'plus-tomorrow' : undefined}
     >
       <header className="planlegg-screen__header">
-        <h1 id="planlegg-title">Planlegg</h1>
+        <h1 id="planlegg-title">{t('plan.title')}</h1>
         <p className="planlegg-screen__context">{childName} · {city}</p>
       </header>
 
@@ -1042,25 +870,20 @@ function PlanleggData({
         inert={statusState.status === 'error' ? true : undefined}
       >
         <SegmentedControl
-          legend="Velg planvisning"
+          legend={t('plan.viewLegend')}
           options={[
-            { value: 'today', label: 'I dag' },
-            { value: 'tenday', label: 'Uke' },
-            ...(soonAccess.presentation === 'hidden'
-              ? []
-              : [{ value: 'soon' as const, label: 'Snart' }]),
+            { value: 'today', label: t('plan.today') },
+            { value: 'tomorrow', label: t('plan.tomorrow') },
           ]}
           value={tab}
           onChange={onViewChange}
         />
       </div>
 
-      {!isSoonView && (
-        <PlanleggStatusNotice
-          state={statusState}
-          subject={isAccessGatedView ? 'weather' : 'plan'}
-        />
-      )}
+      <PlanleggStatusNotice
+        state={statusState}
+        subject={isAccessGatedView ? 'weather' : 'plan'}
+      />
 
       {/* Petrol værmodul — dagens/valgt dags hero (kun når vi faktisk har et
           vurdert værpunkt) + værprognosen alltid nested inni, aldri fritt-
@@ -1070,7 +893,11 @@ function PlanleggData({
         <section
           className="planlegg-weather"
           data-nuance={heroNuance}
-          aria-label={heroWeather ? `Været ${heroDay || 'valgt dag'}`.trim() : 'Værprognose'}
+          aria-label={heroWeather
+            ? t('plan.weather.sectionToday', {
+              day: heroDay || t('plan.weather.selectedDay'),
+            })
+            : t('plan.weather.forecast')}
         >
           {heroWeather && (
             <>
@@ -1088,7 +915,9 @@ function PlanleggData({
               </div>
               <p className="planlegg-weather__condition">{heroCondition}</p>
               <p className="planlegg-weather__meta">
-                Føles som {formatHeroTemp(heroWeather.feelsLikeC)}° · Vind {Math.round(heroWeather.windMs)} m/s
+                {t('plan.weather.feelsLike', { temp: formatHeroTemp(heroWeather.feelsLikeC) })}
+                {' · '}
+                {t('plan.weather.wind', { wind: Math.round(heroWeather.windMs) })}
               </p>
             </>
           )}
@@ -1100,22 +929,14 @@ function PlanleggData({
         </section>
       )}
 
-      {isSoonView
-        && soonAccess.presentation === 'full'
-        && snartResult && (
-          <SnartPlan
-            result={snartResult}
-            onMarkAlreadyHave={markSnartAlreadyHave}
-          />
+      {isTomorrowPreparing && (
+        <section className="planlegg-advice planlegg-advice--preparing" aria-live="polite">
+          <h2>{t('plan.preparingTitle')}</h2>
+          <p>{t('plan.preparingBody')}</p>
+        </section>
       )}
 
-      {isSoonView && soonAccess.presentation === 'neutral' && (
-        <p className="planlegg-screen__week-weather" data-planlegg-access="neutral">
-          Sjekker tilgang til Snart.
-        </p>
-      )}
-
-      {/* Dybdedoktrinen D1: verdikt + neste handling + tidslinjen deler NÅ
+      {/* Dybdedoktrinen D1: verdikt + tidslinjen deler NÅ
           ÉN hevet espresso-flate (rådgivnings-modulen) i stedet for å stå
           direkte på canvas — det var nettopp "naked hairline rows on
           canvas"-funnet doktrinen forbyr. Review-item 7: tomtilstanden viser
@@ -1129,30 +950,29 @@ function PlanleggData({
             {/* Eierfunn (IMG_9105): plagglisten som løpende prosa i verdikt-
                 setningen ble «masse tekst uten å skjønne hva det er». Plagg
                 presenteres som plagg: kort dom + vitrine-thumbs (samme
-                bildesti som Hjem: garmentIdFor → getGarmentImage, bokstav-
-                fallback uten bilde). Full liste ligger for skjermlesere. */}
+                komplette, flate WebP-oppslag som Hjem). Full liste ligger
+                for skjermlesere. */}
             {planningEvaluation.status === 'empty' ? (
               <>
-                <p className="planlegg-screen__verdict">Antrekket holder</p>
+                <p className="planlegg-screen__verdict">
+                  {isTodayView ? t('plan.outfitHolds') : t('plan.prepareNightBefore')}
+                </p>
                 {planningEvaluation.verdict && (
                   <ul
                     className="planlegg-garments"
-                    aria-label={`Dagens antrekk: ${planningEvaluation.verdict.summary}`}
+                    aria-label={t(
+                      isTodayView ? 'plan.todayOutfitAria' : 'plan.tomorrowOutfitAria',
+                      { summary: verdictGarmentSummary },
+                    )}
                   >
                     {/* T1A: rå label beholdes som bilde-oppslagsnøkkel;
                         title/sr-tekst bruker visningsnavnet. */}
                     {planningEvaluation.verdict.orderedGarments.map((label) => {
                       const image = getGarmentImage(garmentIdFor(label));
-                      const displayName = displayNameForDbString(label);
+                      const displayName = displayNameForDbString(label, activeLanguage);
                       return (
                         <li key={label} className="planlegg-garments__item" title={displayName}>
-                          {image ? (
-                            <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
-                          ) : (
-                            <span className="planlegg-garments__thumb planlegg-garments__thumb--letter" aria-hidden="true">
-                              {displayName.charAt(0).toUpperCase()}
-                            </span>
-                          )}
+                          <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
                           <span className="hjm-sr-only">{displayName}</span>
                         </li>
                       );
@@ -1161,42 +981,35 @@ function PlanleggData({
                 )}
                 <p className="planlegg-screen__empty">
                   {emptyStableUntil
-                    ? `Ingen endringer frem til kl. ${emptyStableUntil}.`
-                    : 'Babyora fant ingen endringer i perioden som er vurdert.'}
+                    ? isTodayView
+                      ? t('plan.noChangesUntil', { time: emptyStableUntil })
+                      : t('plan.tomorrowHoldsUntil', { time: emptyStableUntil })
+                    : t('plan.noChanges')}
                 </p>
               </>
             ) : (
               <>
-                <p className="planlegg-screen__verdict">Planlagt antrekk</p>
+                <p className="planlegg-screen__verdict">
+                  {isTodayView ? t('plan.plannedOutfit') : t('plan.prepareNightBefore')}
+                </p>
                 {planningEvaluation.verdict && (
                   <ul
                     className="planlegg-garments"
-                    aria-label={`Planlagt antrekk: ${planningEvaluation.verdict.summary}`}
+                    aria-label={t('plan.plannedOutfitAria', { summary: verdictGarmentSummary })}
                   >
                     {/* T1A: rå label beholdes som bilde-oppslagsnøkkel;
                         title/sr-tekst bruker visningsnavnet. */}
                     {planningEvaluation.verdict.orderedGarments.map((label) => {
                       const image = getGarmentImage(garmentIdFor(label));
-                      const displayName = displayNameForDbString(label);
+                      const displayName = displayNameForDbString(label, activeLanguage);
                       return (
                         <li key={label} className="planlegg-garments__item" title={displayName}>
-                          {image ? (
-                            <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
-                          ) : (
-                            <span className="planlegg-garments__thumb planlegg-garments__thumb--letter" aria-hidden="true">
-                              {displayName.charAt(0).toUpperCase()}
-                            </span>
-                          )}
+                          <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
                           <span className="hjm-sr-only">{displayName}</span>
                         </li>
                       );
                     })}
                   </ul>
-                )}
-                {planningEvaluation.nextAction && (
-                  <p className="planlegg-screen__action">
-                    {planningEvaluation.nextAction}
-                  </p>
                 )}
               </>
             )}
@@ -1209,20 +1022,20 @@ function PlanleggData({
           {(timelinePoints.length > 0 || railChangeRows.length > 0) && (
             <section className="planlegg-screen__rail" aria-labelledby="planlegg-rail-title">
               <h2 id="planlegg-rail-title" style={changeRailHeadStyle}>
-                {isTodayView ? 'Dagslinjen' : 'Dag for dag'}
+                {t(isTodayView ? 'plan.timelineToday' : 'plan.timelineTomorrow')}
               </h2>
               {timelinePoints.length > 0 && (
                 <ol
                   className="planlegg-dagslinje"
                   aria-label={isTodayView
-                    ? 'Tidspunktene Babyora har vurdert i dag'
-                    : 'Dagene Babyora har vurdert'}
+                    ? t('plan.timelineAriaToday')
+                    : t('plan.timelineAriaTomorrow')}
                 >
                   {timelinePoints.map((point) => {
-                    const label = timelinePointLabel(point.atIso, isTodayView);
+                    const label = timelinePointLabel(point.atIso, locale);
                     const weatherIcon = getWeatherIcon(point.symbolCode);
                     const garmentName = point.outerGarment
-                      ? displayNameForDbString(point.outerGarment)
+                      ? displayNameForDbString(point.outerGarment, activeLanguage)
                       : null;
                     const garmentImage = point.outerGarment
                       ? getGarmentImage(garmentIdFor(point.outerGarment))
@@ -1248,22 +1061,19 @@ function PlanleggData({
                           {`${formatHeroTemp(point.tempC)}°`}
                         </span>
                         <span className="planlegg-dagslinje__merke" title={garmentName ?? undefined}>
-                          {garmentImage ? (
-                            <img src={garmentImage} alt="" draggable={false} />
-                          ) : (
-                            <span className="planlegg-dagslinje__merke-bokstav" aria-hidden="true">
-                              {garmentName ? garmentName.charAt(0).toUpperCase() : '–'}
-                            </span>
-                          )}
+                          {garmentImage && <img src={garmentImage} alt="" draggable={false} />}
                         </span>
                         {point.changed && (
-                          <span className="planlegg-dagslinje__endring">Endring</span>
+                          <span className="planlegg-dagslinje__endring">{t('plan.change')}</span>
                         )}
                         <span className="hjm-sr-only">
-                          {`${label}: ${formatHeroTemp(point.tempC)} grader, `
-                            + `${point.garmentCount} plagg`
-                            + (garmentName ? `, ytterst ${garmentName}` : '')
-                            + (point.changed ? ', antrekket endres her' : '')}
+                          {t('plan.timelinePoint', {
+                            time: label,
+                            temp: formatHeroTemp(point.tempC),
+                            count: point.garmentCount,
+                            outer: garmentName ? t('plan.outermost', { garment: garmentName }) : '',
+                            change: point.changed ? t('plan.changesHere') : '',
+                          })}
                         </span>
                       </li>
                     );
@@ -1273,8 +1083,8 @@ function PlanleggData({
               {railChangeRows.length > 0 && (
                 <PlanChangeRail
                   rows={railChangeRows}
-                  selectedEventId={selectedEventId}
-                  onSelect={setSelectedEventId}
+                  selectedEventId={visibleExpandedEventId}
+                  onSelect={setRailExpandedEventId}
                   onOpenOutfit={openPlannedOutfit}
                 />
               )}
@@ -1283,12 +1093,12 @@ function PlanleggData({
         </section>
       )}
 
-      {isWeekNeutral && (
+      {isTomorrowNeutral && (
         <p
           className="planlegg-screen__week-weather"
           data-planlegg-access="neutral"
         >
-          Sjekker tilgang til ukeplanen.
+          {t('plan.checkingTomorrow')}
         </p>
       )}
 
@@ -1297,7 +1107,7 @@ function PlanleggData({
           className="planlegg-screen__week-weather"
           data-planlegg-access="neutral"
         >
-          Sjekker tilgang til dagens plan.
+          {t('plan.checkingToday')}
         </p>
       )}
     </section>
@@ -1308,16 +1118,10 @@ export function UkeScreen({
   onOpenPlannedOutfit,
   onNavigate: _onNavigate,
   onOpenSheet: _onOpenSheet,
-  requestedPlanView,
-  requestedPlanViewToken,
-  onConsumeRequestedPlanView,
 }: Props) {
   return (
     <PlanleggData
       onOpenPlannedOutfit={onOpenPlannedOutfit}
-      requestedPlanView={requestedPlanView}
-      requestedPlanViewToken={requestedPlanViewToken}
-      onConsumeRequestedPlanView={onConsumeRequestedPlanView}
     />
   );
 }

@@ -49,6 +49,12 @@ describe('App.tsx — P6 "onOpenPlaggbib" wiring', () => {
   it('closing any drill still never calls setTab (onOpenPlaggbib follows the same setDrill-only pattern)', () => {
     const app = source(appPath);
     const setTabCallSites = app.match(/setTab\(/gu) ?? [];
-    expect(setTabCallSites.length).toBe(3);
+    expect(setTabCallSites.length).toBe(2);
+    const closeCallback = app.slice(
+      app.indexOf('const closeDrill = useCallback'),
+      app.indexOf('// P1:', app.indexOf('const closeDrill = useCallback')),
+    );
+    expect(closeCallback).toContain('setDrill(null);');
+    expect(closeCallback).not.toContain('setTab(');
   });
 });

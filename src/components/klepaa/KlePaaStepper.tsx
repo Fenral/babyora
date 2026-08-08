@@ -41,35 +41,32 @@
  * 3) MATERIALPOENGET GJETTES ALDRI. Se `materialPointFor()` under.
  *
  * ═══ BEVEGELSE ════════════════════════════════════════════════════════════
- * Sveipet følger fingeren 1:1 (ingen demping under dragingen), og slippet
- * SETTLER på `--dw-m-step` (260 ms) med `--dw-ease`. Ingen varighet står i
- * JS: settlingen er en CSS-transition som skrus av med `data-dragging`, slik
- * at det finnes ÉN kilde til tallet. Skallet (header, bunnrad, lyspool) står
- * helt stille — bare sporet flytter seg.
- * Redusert bevegelse: dragingen forflytter ingenting, og steget byttes
- * direkte. Doble vakter, som resten av appen: JS-siden (`reducedMotion`)
- * OG CSS-medieforespørselen.
+ * Sveipet er en ekte overflow-scroll med CSS scroll-snap. Nettleseren eier
+ * fingeren, tregheten, avbrytelsen og samspillet med vertikal rulling. JS
+ * observerer bare scrollLeft for å avlede aktivt steg; Prev/Neste bruker den
+ * samme native flaten. Redusert bevegelse bruker direkte programmatisk scroll
+ * og en egen CSS-vakt.
  */
 import {
   useCallback,
   useEffect,
   useId,
-  useMemo,
   useRef,
   useState,
-  type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
-  type PointerEvent as ReactPointerEvent,
+  type UIEvent as ReactUIEvent,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { ROLE_LABEL_BY_CATEGORY } from '../hjem/result-rows.js';
 import { displayNameForDbString } from '../../data/garment-display-names.js';
+import { localizedGarmentName } from '../../data/garment-display-names-localized.js';
+import { useNativeSettings } from '../../hooks/useNativeSettings.js';
 import { GARMENT_VARIANTS } from '../../lib/clothing-engine-v2/catalog.js';
-import type { MaterialFamily } from '../../lib/clothing-engine-v2/types.js';
 import type { OutfitAlternativeOptionV1 } from '../../lib/outfit/alternative-options.js';
 import type { OutfitTruthSnapshotV1 } from '../../lib/outfit/outfit-truth.js';
 import { Button } from '../controls/Button.js';
 import { GarmentThumbnail } from '../outfit/GarmentThumbnail.js';
+import { klePaaCopyFor, resolveKlePaaLanguage, type KlePaaCopy } from './kle-paa-copy.js';
 
 import './kle-paa-stepper.css';
 
@@ -114,17 +111,6 @@ export type KlePaaStep = Readonly<{
  * Aldri mer enn ett poeng per steg. Dette er en påkledningssekvens, ikke en
  * artikkel — brukeren står med et barn i den ene armen.
  */
-const MATERIAL_POINT: Readonly<Record<MaterialFamily, string>> = {
-  wool: 'Ull holder på varmen selv når den blir fuktig.',
-  synthetic_wicking: 'Teknisk fiber flytter svetten bort fra huden.',
-  fleece: 'Fleece er lett og tørker fort, men slipper vind gjennom.',
-  cotton: 'Bomull suger til seg fukt og tørker sakte — best når det er tørt.',
-  shell: 'Skallet stopper vind og vann, men varmer ikke i seg selv.',
-  synthetic_insulation: 'Syntetisk isolasjon varmer også når den er klam.',
-  down: 'Dun gir mest varme per gram, men tåler dårlig å bli vått.',
-  blend: 'Blandingsstoff — middels varme, tørker middels fort.',
-};
-
 /**
  * Materialet HENTES, det utledes ikke av navnet.
  *
@@ -144,12 +130,12 @@ const MATERIAL_POINT: Readonly<Record<MaterialFamily, string>> = {
  * ikke kjenner (~85 mot 42 varianter), og da står steget uten materiallinje.
  * Et tomt felt er ærlig; en gjettet setning er ikke det.
  */
-function materialPointFor(rawEngineLabel: string): string | null {
+function materialPointFor(rawEngineLabel: string, copy: KlePaaCopy): string | null {
   const needle = rawEngineLabel.trim();
   if (needle === '') return null;
   const variant = GARMENT_VARIANTS.find((v) => v.legacyNameNb === needle);
   if (variant === undefined) return null;
-  return MATERIAL_POINT[variant.material] ?? null;
+  return copy.materialPoints[variant.material] ?? null;
 }
 
 /* ──────────────────────────── AVLEDNINGEN ────────────────────────────────── */
@@ -178,13 +164,19 @@ export type KlePaaStepperSource = Readonly<{
    skal ikke måtte åpne to filer for å finne svaret. Samme unntak som
    OutfitExperience.tsx og BottomTabBar.tsx allerede bærer. */
 // eslint-disable-next-line react-refresh/only-export-components
-export function deriveKlePaaSteps(source: KlePaaStepperSource): readonly KlePaaStep[] {
+export function deriveKlePaaSteps(
+  source: KlePaaStepperSource,
+  language: string | null | undefined = 'no',
+): readonly KlePaaStep[] {
+  const copy = klePaaCopyFor(language);
   return source.base.garments.map((garment) => ({
     itemId: garment.itemId,
     label: garment.label,
-    displayLabel: displayNameForDbString(garment.label),
-    roleLabel: ROLE_LABEL_BY_CATEGORY[garment.category],
-    materialPoint: materialPointFor(garment.sourceLabel),
+    displayLabel:
+      localizedGarmentName(garment.catalogGarmentId ?? '', language)
+      ?? displayNameForDbString(garment.label),
+    roleLabel: copy.roles[garment.category],
+    materialPoint: materialPointFor(garment.sourceLabel, copy),
     alternatives: source.options
       /* FILTER, IKKE FIND. OutfitExperience.tsx:100 bruker `.find()` og viser
          derfor høyst ÉTT alternativ per plagg selv om arrayen kan bære
@@ -200,7 +192,9 @@ export function deriveKlePaaSteps(source: KlePaaStepperSource): readonly KlePaaS
       .map((option) => ({
         optionId: option.optionId,
         label: option.targetLabel,
-        displayLabel: displayNameForDbString(option.targetLabel),
+        displayLabel:
+          localizedGarmentName(option.targetCatalogGarmentId ?? '', language)
+          ?? displayNameForDbString(option.targetLabel),
       })),
   }));
 }
@@ -223,63 +217,19 @@ function ChevronIcon() {
   );
 }
 
-/* ─────────────────────────── BEVEGELSESVAKT ──────────────────────────────── */
+/* ──────────────────────── NATIVE RULLEPOSISJON ───────────────────────────── */
 
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState<boolean>(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  });
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const oppdater = (): void => setReduced(mq.matches);
-    mq.addEventListener('change', oppdater);
-    return () => mq.removeEventListener('change', oppdater);
-  }, []);
-  return reduced;
+/** Ren avledning brukt av den passive scroll-observatøren og regresjonstesten. */
+// eslint-disable-next-line react-refresh/only-export-components
+export function indexFromScrollPosition(
+  scrollLeft: number,
+  viewportWidth: number,
+  count: number,
+): number {
+  if (count <= 0 || viewportWidth <= 0) return 0;
+  const candidate = Math.round(Math.max(0, scrollLeft) / viewportWidth);
+  return Math.min(Math.max(candidate, 0), count - 1);
 }
-
-/* ───────────────────────────── GESTEN ────────────────────────────────────── */
-
-/**
- * DE FØRSTE 24 PIKSLENE FRA VENSTRE KANT TILHØRER IKKE OSS.
- * iOS starter sin interaktive tilbake-geste der. Fanger vi et sveip som
- * begynner i den sonen, konkurrerer to systemer om den samme fingeren, og
- * brukeren får verken tilbake eller neste steg. Sonen er en fast bredde fra
- * VIEWPORTENS venstre kant, ikke en andel — gesten er fysisk, ikke relativ.
- */
-const KANTSONE_PX = 24;
-
-/** Aksen låses først når fingeren har flyttet seg nok til å mene noe. */
-const AKSELAAS_PX = 8;
-
-/** Andel av bredden som må passeres for at slippet skal bytte steg. */
-const TERSKEL_ANDEL = 0.2;
-
-/** px/ms. Et raskt kast skal bytte steg selv om avstanden er kort. */
-const KAST_TERSKEL = 0.4;
-
-/**
- * ms. Hvor gammel den siste fartsmålingen får være når fingeren løftes.
- * Dette er GESTEGJENKJENNING, ikke animasjon — bevegelseskontrakten sier selv
- * at swipe-settlingen i Kle på ligger utenfor `--dw-m-*` (tokenfilen,
- * «IKKE herfra»). Selve settlingen står i CSS på `--dw-m-step`.
- */
-const KAST_VINDU_MS = 120;
-
-/** Motstand utenfor endene: sporet følger fortsatt fingeren, men gir etter. */
-const KANT_MOTSTAND = 0.35;
-
-type Drag = {
-  pointerId: number;
-  startX: number;
-  startY: number;
-  sisteX: number;
-  sisteTid: number;
-  fart: number;
-  akse: 'ukjent' | 'x' | 'y';
-};
 
 /* ──────────────────────────── KOMPONENTEN ────────────────────────────────── */
 
@@ -306,14 +256,18 @@ export function KlePaaStepper({
   onFinish,
   initialIndex = 0,
 }: KlePaaStepperProps) {
-  const reducedMotion = usePrefersReducedMotion();
+  const { i18n } = useTranslation();
+  const { reducedMotion } = useNativeSettings();
   const viewportRef = useRef<HTMLDivElement | null>(null);
-  const dragRef = useRef<Drag | null>(null);
+  const htmlLanguage = typeof document === 'undefined' ? null : document.documentElement.lang;
+  const language = resolveKlePaaLanguage(
+    i18n.resolvedLanguage ?? i18n.language,
+    htmlLanguage,
+  );
+  const copy = klePaaCopyFor(language);
 
   const antall = steps.length;
   const [raaIndex, setIndex] = useState<number>(() => Math.max(initialIndex, 0));
-  const [dragPx, setDragPx] = useState<number>(0);
-  const [drar, setDrar] = useState<boolean>(false);
   const statusId = useId();
 
   const sisteIndex = Math.max(antall - 1, 0);
@@ -325,102 +279,38 @@ export function KlePaaStepper({
 
   const gaaTil = useCallback(
     (neste: number) => {
-      setIndex((forrige) => {
-        const klemt = Math.min(Math.max(neste, 0), Math.max(antall - 1, 0));
-        return klemt === forrige ? forrige : klemt;
+      const klemt = Math.min(Math.max(neste, 0), Math.max(antall - 1, 0));
+      const viewport = viewportRef.current;
+      if (viewport === null || viewport.clientWidth <= 0) {
+        setIndex(klemt);
+        return;
+      }
+      viewport.scrollTo({
+        left: klemt * viewport.clientWidth,
+        behavior: reducedMotion ? 'auto' : 'smooth',
       });
     },
-    [antall],
+    [antall, reducedMotion],
   );
 
-  const avsluttDrag = useCallback(() => {
-    dragRef.current = null;
-    setDragPx(0);
-    setDrar(false);
-  }, []);
-
-  const onPointerDown = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (!event.isPrimary || antall < 2) return;
-      const rect = viewportRef.current?.getBoundingClientRect();
-      if (rect === undefined) return;
-      /* Kantsonen: se KANTSONE_PX. Vi tar ikke fingeren i det hele tatt her —
-         det er billigere enn å slippe den igjen midtveis. */
-      if (event.clientX - rect.left < KANTSONE_PX) return;
-      dragRef.current = {
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        sisteX: event.clientX,
-        sisteTid: event.timeStamp,
-        fart: 0,
-        akse: 'ukjent',
-      };
+  const onScroll = useCallback(
+    (event: ReactUIEvent<HTMLDivElement>) => {
+      const viewport = event.currentTarget;
+      if (viewport.clientWidth <= 0) return;
+      setIndex(indexFromScrollPosition(viewport.scrollLeft, viewport.clientWidth, antall));
     },
     [antall],
   );
 
-  const onPointerMove = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
-      const drag = dragRef.current;
-      if (drag === null || drag.pointerId !== event.pointerId) return;
-
-      const dx = event.clientX - drag.startX;
-      const dy = event.clientY - drag.startY;
-
-      if (drag.akse === 'ukjent') {
-        if (Math.abs(dx) < AKSELAAS_PX && Math.abs(dy) < AKSELAAS_PX) return;
-        if (Math.abs(dy) > Math.abs(dx)) {
-          /* Vertikalt: dette er scrolling i steget, ikke et sideskift. Slipp
-             fingeren helt, ellers stjeler stepperen en rulling brukeren mente
-             skulle treffe innholdet. */
-          dragRef.current = null;
-          return;
-        }
-        drag.akse = 'x';
-        event.currentTarget.setPointerCapture(event.pointerId);
-        if (!reducedMotion) setDrar(true);
-      }
-
-      const dt = event.timeStamp - drag.sisteTid;
-      if (dt > 0) drag.fart = (event.clientX - drag.sisteX) / dt;
-      drag.sisteX = event.clientX;
-      drag.sisteTid = event.timeStamp;
-
-      /* REDUSERT BEVEGELSE: gesten leses fortsatt, men INGENTING forflytter
-         seg mens fingeren er nede. Slippet bytter steg direkte. */
-      if (reducedMotion) return;
-
-      const utenforStart = index === 0 && dx > 0;
-      const utenforSlutt = index === sisteIndex && dx < 0;
-      setDragPx(utenforStart || utenforSlutt ? dx * KANT_MOTSTAND : dx);
-    },
-    [index, reducedMotion, sisteIndex],
-  );
-
-  const onPointerUp = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
-      const drag = dragRef.current;
-      if (drag === null || drag.pointerId !== event.pointerId) return;
-      if (drag.akse === 'x') {
-        const bredde = viewportRef.current?.getBoundingClientRect().width ?? 0;
-        const dx = event.clientX - drag.startX;
-        const passert = bredde > 0 && Math.abs(dx) > bredde * TERSKEL_ANDEL;
-        /* Farten er FERSK eller den er ikke fart. Stanser fingeren og blir
-           liggende før den løftes, kommer det ingen flere pointermove — og da
-           ville den siste målte farten kastet steget videre lenge etter at
-           brukeren hadde ombestemt seg. */
-        const fersk = event.timeStamp - drag.sisteTid < KAST_VINDU_MS;
-        const kastet = fersk && Math.abs(drag.fart) > KAST_TERSKEL;
-        /* Ved et kast bestemmer RETNINGEN PÅ FARTEN, ikke hvor fingeren endte:
-           drar du til høyre og kaster tilbake til venstre, mente du venstre. */
-        const retning = kastet ? (drag.fart < 0 ? 1 : -1) : dx < 0 ? 1 : -1;
-        if (passert || kastet) gaaTil(index + retning);
-      }
-      avsluttDrag();
-    },
-    [avsluttDrag, gaaTil, index],
-  );
+  /* Startposisjon og listekrymping synkroniseres direkte. Etter det er index
+     kun en avledning av nettleserens faktiske scrollLeft. */
+  useEffect(() => {
+    const klemt = Math.min(Math.max(initialIndex, 0), Math.max(antall - 1, 0));
+    const viewport = viewportRef.current;
+    if (viewport !== null && viewport.clientWidth > 0) {
+      viewport.scrollTo({ left: klemt * viewport.clientWidth, behavior: 'auto' });
+    }
+  }, [antall, initialIndex]);
 
   const onKeyDown = useCallback(
     (event: ReactKeyboardEvent<HTMLElement>) => {
@@ -435,25 +325,17 @@ export function KlePaaStepper({
     [gaaTil, index],
   );
 
-  /* Sporets posisjon: ett steg = én viewport-bredde (-100 %), pluss fingerens
-     råe forskyvning. Begge går inn som custom properties så SELVE tallet blir
-     i CSS — varigheten på settlingen står ett sted, i `--dw-m-step`. */
-  const sporStil = useMemo<CSSProperties>(
-    () => ({ ['--kps-index']: String(index), ['--kps-drag']: `${dragPx}px` } as CSSProperties),
-    [dragPx, index],
-  );
-
   if (antall === 0 || steg === undefined) {
     /* Ingen plagg = ingen sekvens. En stepper med null steg skal si det, ikke
        tegne et tomt spor med «Steg 1 av 0». */
     return (
-      <section className="kle-paa-stepper" aria-label="Kle på, steg for steg">
+      <section className="kle-paa-stepper" aria-label={copy.stepper.label}>
         <div className="kps-top">
-          <button type="button" className="kps-close" onClick={onClose} aria-label="Lukk">
+          <button type="button" className="kps-close" onClick={onClose} aria-label={copy.stepper.close}>
             <CloseIcon />
           </button>
         </div>
-        <p className="kps-tomt">Ingen plagg å vise.</p>
+        <p className="kps-tomt">{copy.stepper.empty}</p>
       </section>
     );
   }
@@ -464,15 +346,15 @@ export function KlePaaStepper({
     /* onKeyDown ligger på seksjonen, ikke på et eget tab-stopp: piltastene skal
        virke når fokus står hvor som helst inne i steget, uten at stepperen
        legger til en ekstra stopp i tabrekkefølgen. */
-    <section className="kle-paa-stepper" aria-label="Kle på, steg for steg" onKeyDown={onKeyDown}>
+    <section className="kle-paa-stepper" aria-label={copy.stepper.label} onKeyDown={onKeyDown}>
       {/* ── SKALLET. Står stille gjennom hele sekvensen: bare sporet under
              flytter seg. Et skall som glir med, leser som en ny side. ── */}
       <div className="kps-top">
-        <button type="button" className="kps-close" onClick={onClose} aria-label="Lukk">
+        <button type="button" className="kps-close" onClick={onClose} aria-label={copy.stepper.close}>
           <CloseIcon />
         </button>
         <span className="kps-count">
-          Steg {index + 1} av {antall}
+          {copy.stepper.step(index + 1, antall)}
         </span>
         {/* Prikkene er dekor for øyet; tellingen over er teksten som leses. */}
         <span className="kps-dots" aria-hidden="true">
@@ -485,16 +367,17 @@ export function KlePaaStepper({
       <div
         className="kps-viewport"
         ref={viewportRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={avsluttDrag}
+        onScroll={onScroll}
+        data-reduced-motion={reducedMotion ? 'true' : 'false'}
+        style={reducedMotion ? { scrollBehavior: 'auto' } : undefined}
       >
-        <div className="kps-track" data-dragging={drar ? 'true' : 'false'} style={sporStil}>
+        <div className="kps-track">
           {steps.map((s, i) => (
             <div
               className="kps-slide"
               key={s.itemId}
+              role="group"
+              aria-label={copy.stepper.step(i + 1, antall)}
               /* Bare det aktive steget er i skjermleserens tre og i
                  tabrekkefølgen. Ellers ville Bytt-knappen til plagg 6 kunne
                  nås med tabulator mens plagg 2 er på skjermen. */
@@ -532,7 +415,7 @@ export function KlePaaStepper({
                     /* Navnet bærer HANDLINGEN og plagget — ikke et antall.
                        Et tall i aria-label ville vært nøyaktig samme ubeviste
                        påstand som et tall på skjermen, bare usynlig. */
-                    aria-label={`Bytt plagg: ${s.displayLabel}`}
+                    aria-label={copy.stepper.swapAria(s.displayLabel)}
                   >
                     <span className="kps-alt-stack" aria-hidden="true">
                       {/* Høyst tre miniatyrer: stabelen skal antyde at det
@@ -543,7 +426,7 @@ export function KlePaaStepper({
                         </span>
                       ))}
                     </span>
-                    <span className="kps-swap-text">Bytt plagg</span>
+                    <span className="kps-swap-text">{copy.stepper.swap}</span>
                     <span className="kps-swap-chevron" aria-hidden="true">
                       <ChevronIcon />
                     </span>
@@ -558,7 +441,7 @@ export function KlePaaStepper({
       {/* Skjermleseren skal få vite at steget byttet — sveipet gir ingen
           fokusflytting å annonsere av seg selv. */}
       <p className="kps-sr-only" id={statusId} aria-live="polite">
-        Steg {index + 1} av {antall}. {steg.displayLabel}.
+        {copy.stepper.liveStep(index + 1, antall, steg.displayLabel)}
       </p>
 
       {/* `data-kps` er navigasjonens ANKER, ikke en stilkrok. Knappeprimitivet
@@ -577,7 +460,7 @@ export function KlePaaStepper({
           onClick={() => gaaTil(index - 1)}
           disabled={index === 0}
         >
-          Forrige
+          {copy.stepper.previous}
         </Button>
         <Button
           variant="primary"
@@ -589,7 +472,7 @@ export function KlePaaStepper({
             else gaaTil(index + 1);
           }}
         >
-          {paaSisteSteg ? 'Ferdig' : 'Neste'}
+          {paaSisteSteg ? copy.stepper.finish : copy.stepper.next}
         </Button>
       </div>
     </section>

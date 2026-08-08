@@ -15,10 +15,10 @@ import { type ReactElement } from 'react';
  * samme uke — derfor er den fjernet i stedet for kommentert bort.
  *
  * Filmen og de fire gamle onboarding-illustrasjonene ligger i
- * `docs/mocks/arkiv/illustrations-onboarding/`. Appens EKTE åpningsanimasjon
- * er `#launch` i index.html: ordmerket toner inn over 520 ms med varmt lys
- * fra øvre venstre. Skal filmen vekkes, er det en beslutning om at åpningen
- * skal ha TO signaturøyeblikk — ikke en opprydding.
+ * `docs/mocks/arkiv/illustrations-onboarding/`. Appens ekte åpningssignatur
+ * er `#launch` i index.html: avatar + delvis skyet-vær + ordmerke på et rolig
+ * lerret. Skal filmen vekkes, er det en beslutning om at åpningen skal ha TO
+ * signaturøyeblikk — ikke en opprydding.
  *
  * P10/JOB5 (2026-08-01): swapped from the old lilac sitting-doll
  * illustration (babyora-intro-v3.webp/mp4) to the standing Monter mascot —
@@ -27,9 +27,9 @@ import { type ReactElement } from 'react';
  * component at all — see OnboardingScreen.tsx's own step-1 markup). This
  * component is now only reached via the 'compact' (steps 2-4) and
  * 'welcome' (step 5) variants; `object-fit: contain` (hjem-monter.css-style
- * "vitrine" treatment, see .ob-baby-media in OnboardingScreen.tsx) shows
- * the whole standing figure instead of cropping it like the old
- * pre-framed square illustration needed.
+ * cutout treatment, see .ob-baby-media in OnboardingScreen.tsx) shows the
+ * whole standing figure without putting the identity mark inside another
+ * generic rounded card.
  */
 const POSTER_SRC = '/monter/maskot-staaende-cut-360.webp';
 
@@ -85,7 +85,6 @@ export function OnboardingBabyHero({
         aria-hidden="true"
         draggable={false}
       />
-      <span className="ob-baby-frame" aria-hidden="true" />
       {context && (
         <span className={`ob-baby-context ${context}`} aria-hidden="true">
           <ContextMark context={context} />

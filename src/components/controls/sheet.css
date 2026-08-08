@@ -44,7 +44,7 @@
      Skyggen alene gjor flaten flat — lyset er det som forteller at den er
      lofte fra lerretet. Samme varme kant som resten av appens hevede
      flater, og tema-konstant av samme grunn som panelets kantlys. */
-  box-shadow: var(--dw-depth-hero), inset 0 1px 0 rgba(242, 192, 138, 0.10);
+  box-shadow: var(--dw-depth-hero), inset 0 1px 0 var(--dw-kant-key);
   overflow: hidden;
   animation: dw-sheet-inn var(--dw-m-state) var(--dw-ease) both;
 }

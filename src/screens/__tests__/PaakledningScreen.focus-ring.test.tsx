@@ -219,7 +219,7 @@ afterEach(() => {
 });
 
 describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
-  it('1 · ingen av de programmatisk fokuserte overskriftene slår av outline inline', () => {
+  it('1 · tittelen er ikke lenger et programmatisk fokusmål på iOS', () => {
     // Denne testen leser JSX-en, ikke CSS-en: det er inline-attributter på
     // overskriftene den er bygget for å fange.
     const screen = source(screenPath);
@@ -228,13 +228,16 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
     // lovlig «erstattet» fokustilstand — uansett hva CSS-en under sier.
     expect(screen).not.toMatch(/style=\{\{[^}]*outline/u);
 
+    expect(screen).not.toContain('titleRef');
+    expect(screen).not.toContain('titleRef.current?.focus()');
     const headings = [...screen.matchAll(/<h2\b[\s\S]*?\n\s*>/gu)]
       .map((m) => m[0])
-      .filter((tag) => tag.includes('ref={titleRef}'));
+      .filter((tag) => tag.includes('className="pkl-title"'));
     expect(headings).toHaveLength(3);
     for (const tag of headings) {
-      expect(tag).toContain('tabIndex={-1}');
       expect(tag).toContain('className="pkl-title"');
+      expect(tag).not.toContain('tabIndex');
+      expect(tag).not.toContain('ref=');
       // Kommentarene i taggen omtaler outline; det er attributtene som teller.
       const attributes = tag.replace(/^\s*\/\/.*$/gmu, '');
       expect(attributes).not.toMatch(/outline/u);
@@ -303,7 +306,7 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
     }
   });
 
-  it('6 · alle tre dialogene rendrer overskriften uten outline, med ringens CSS på plass', async () => {
+  it('6 · alle tre dialogene rendrer en statisk tittel og en fokusert lukkekontroll', async () => {
     const allowed = plannedFixture(true);
     const denied = plannedFixture(false);
 
@@ -329,7 +332,7 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
     for (const html of markups) {
       const heading = /<h2[^>]*id="planned-outfit-title"[^>]*>/u.exec(html)?.[0];
       expect(heading).toBeDefined();
-      expect(heading).toContain('tabindex="-1"');
+      expect(heading).not.toContain('tabindex=');
       expect(heading).toContain('class="pkl-title"');
       expect(heading, 'overskriften har fått en inline outline tilbake').not.toMatch(/outline/u);
 
@@ -359,8 +362,9 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
       + 'definert i en fil ingen laster — reglene finnes, men ingen '
       + 'tastaturbruker ser dem.',
     ).toBe(true);
-    expect(fokusCss()).toContain('.pkl-title:focus-visible');
-    expect(fokusCss()).toContain('.pkl-title:focus:not(:focus-visible)');
+    expect(fokusCss()).not.toContain('.pkl-title:focus-visible');
+    expect(fokusCss()).not.toContain('.pkl-title:focus:not(:focus-visible)');
+    expect(fokusCss()).toContain('.pkl-close:focus-visible');
   });
 
   it('7 · HVER fokusring i filen måler ≥ 3:1 i begge temaer — uansett hvilket token', () => {
@@ -389,13 +393,11 @@ describe('PaakledningScreen — fokusringen er designet, ikke slettet', () => {
     expect(focusRingOutlines.length).toBeGreaterThanOrEqual(1);
 
     const ringSelektorer = focusRingOutlines.join('\n');
-    for (const flate of ['.pkl-title', '.pkl-close']) {
+    for (const flate of ['.pkl-close']) {
       expect(
         ringSelektorer.includes(flate),
-        `${flate} har ingen fokusring med outline. Begge er fokuserbare: `
-        + 'overskriften får programmatisk fokus ved åpning, lukkeknappen er '
-        + 'første tab-stopp. En av dem uten ring er en tastaturbruker som '
-        + 'ikke vet hvor de er.',
+        `${flate} har ingen fokusring med outline. Lukkeknappen er første `
+        + 'tab-stopp og må vise hvor tastaturfokuset er.',
       ).toBe(true);
     }
 

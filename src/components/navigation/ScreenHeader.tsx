@@ -11,6 +11,8 @@
  */
 
 import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import { deepFlowCopyFor } from '../../screens/deep-flow-copy';
 
 type Props = {
   title: string;
@@ -38,6 +40,8 @@ const titleStyle: CSSProperties = {
 };
 
 export function ScreenHeader({ title, onBack, action, autoFocusTitle = true }: Props) {
+  const { i18n } = useTranslation();
+  const copy = deepFlowCopyFor(i18n.resolvedLanguage ?? i18n.language);
   const h1Ref = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
@@ -47,7 +51,7 @@ export function ScreenHeader({ title, onBack, action, autoFocusTitle = true }: P
   return (
     <header style={bar}>
       <h1 ref={h1Ref} tabIndex={-1} style={{ ...titleStyle, order: 1 }}>{title}</h1>
-      <button type="button" aria-label="Tilbake" onClick={onBack} style={{ ...backBtn, order: 0 }}>
+      <button type="button" aria-label={copy.common.back} onClick={onBack} style={{ ...backBtn, order: 0 }}>
         <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M15 5l-7 7 7 7" />
         </svg>

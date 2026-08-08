@@ -12,10 +12,10 @@
  * komponenten rendres kun bak import.meta.env.DEV som en designforhåndsvisning.
  */
 import type { CSSProperties, ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   summarizeCareCircle,
   caregiverInitials,
-  caregiverStatusLabel,
   type Caregiver,
 } from './care-circle-model';
 
@@ -117,6 +117,7 @@ export function CareCircle({
   childName: string;
   caregivers: readonly Caregiver[];
 }): ReactElement {
+  const { t } = useTranslation();
   const { visible, overflowCount } = summarizeCareCircle(caregivers);
   const childInitial = caregiverInitials(childName);
 
@@ -171,12 +172,12 @@ export function CareCircle({
 
       {overflowCount > 0 && (
         <span style={overflowPillStyle} aria-hidden="true">
-          +{overflowCount} flere
+          {t('settings.family.moreCaregivers', { count: overflowCount })}
         </span>
       )}
 
       {/* Tilgjengelig innhold: navn + rolle + status (aldri tilstedeværelse). */}
-      <ul style={roleListStyle} aria-label={`De som passer ${childName}`}>
+      <ul style={roleListStyle} aria-label={t('settings.family.caregiversAria', { name: childName })}>
         {caregivers.map((c) => (
           <li key={c.id} style={roleRowStyle}>
             <span style={roleTokenStyle} aria-hidden="true">
@@ -186,7 +187,9 @@ export function CareCircle({
               <span style={roleNameStyle}>
                 {c.name} · {c.role}
               </span>
-              <span style={roleMetaStyle}>{caregiverStatusLabel(c.status)}</span>
+              <span style={roleMetaStyle}>
+                {t(c.status === 'active' ? 'settings.family.sharing' : 'settings.family.pending')}
+              </span>
             </span>
           </li>
         ))}

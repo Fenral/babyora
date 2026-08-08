@@ -1,38 +1,7 @@
-/**
- * MonterGarmentRow — én nummerert plaggrad på ResultSurface (P4).
- *
- * Navngitt «Monter»-prefiks bevisst (jf. arkitektur-notatet): unngår
- * navnekollisjon med den LOKALE `GarmentRow`-komponenten inne i
- * src/screens/MinGarderobeScreen.tsx (uendret, urelatert skjerm).
- *
- * Vitrine-fallback (DESIGN.md doktrine D3 + P4-oppgavens krav): mangler
- * `imageSrc` (ukjent/udekket plagg-id, se lib/monter-assets.ts) → tegner en
- * nøytral forbokstav på #3A2A1A i stedet for et <img>. Listen MÅ fungere
- * uten bilder — det er derfor `imageSrc` er `string | null`, ikke en
- * påkrevd streng.
- *
- * P6: `onSwap` mottar nå det native klikk-eventet (ikke bare et no-arg-kall)
- * slik at opperen (HjemMonter) kan fange `event.currentTarget` som
- * focus-retur-mål for PlaggDetailSheet — samme mønster som resten av appens
- * PlaggDetailSheet-åpnere (se PaakledningScreen/MinGarderobeScreen).
- * `aria-label` legges på hele rad-knappen siden den synlige chippen er
- * aria-hidden (dekorativ) — uten den hadde raden hatt et utydelig
- * tilgjengelig navn nå som trykk faktisk åpner noe.
- *
- * P10.1 (judge finding C10, "Bytt = ENDRE, always" — duel §12): denne raden
- * åpner PlaggDetailSheet, som er UTTALT informasjons-only (swap-row.ts sin
- * egen filhode-kommentar; håndhevet av warm-cold-recovery.test.ts — arket
- * skal ALDRI utføre selve byttet). Chippen het tidligere "Bytt" her — et
- * løfte arket ikke innfrir. Denne komponenten er DELT av BÅDE Hjem
- * (ResultSurface) og Juster (FinnAntrekkScreen) sin resultatliste, så
- * denne ene rettelsen holder begge skjermene ærlige OG innbyrdes
- * konsistente i samme slag (ingen risiko for at de to driver fra hverandre
- * igjen). "Detaljer" er ærlig om hva trykket faktisk gjør i dag; §12 sin
- * fulle Bytt=ENDRE-spesifikasjon (3–5 alternativer, konsekvensetikett,
- * ekte bytte) er en egen, betydelig fremtidig oppgave — ikke del av dette
- * rettelses-paknaget (rører ikke motor-koden byttet faktisk ville krevd).
- */
+import i18next from 'i18next';
 import type { MouseEvent } from 'react';
+import { GENERIC_GARMENT_SVG } from '../../data/garment-illustrations.js';
+import { resultCopyFor } from './result-localization.js';
 import './hjem-monter.css';
 
 function InfoIcon() {
@@ -40,52 +9,159 @@ function InfoIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
       <circle cx="12" cy="12" r="9" />
       <path d="M12 11v5" />
-      <path d="M12 8.2v.1" strokeLinecap="round" />
+      <path d="M12 8.2v.1" />
+    </svg>
+  );
+}
+
+function DetailChevronIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="m9 18 6-6-6-6" />
     </svg>
   );
 }
 
 export type MonterGarmentRowProps = Readonly<{
   position: number;
+  /** Når satt sammen med kortinnholdet under, rendres Hjem-reisens kort. */
+  total?: number;
   label: string;
   roleLabel: string;
-  imageSrc: string | null;
+  imageSrc: string;
+  fact?: string | null;
+  hasAlternatives?: boolean;
+  loopBand?: 'leading' | 'canonical' | 'trailing';
+  compactDestinationLabel?: string;
   onSwap: (event: MouseEvent<HTMLButtonElement>) => void;
-  /** ms — null når raden ikke skal animere inn (cachet åpning, ikke fersk). */
   animationDelayMs: number | null;
 }>;
 
 export function MonterGarmentRow({
   position,
+  total,
   label,
   roleLabel,
   imageSrc,
+  fact = null,
+  hasAlternatives = false,
+  loopBand = 'canonical',
+  compactDestinationLabel,
   onSwap,
   animationDelayMs,
 }: MonterGarmentRowProps) {
-  const initial = label.trim().charAt(0).toUpperCase() || '?';
+  const copy = resultCopyFor(i18next.resolvedLanguage);
+  // Juster bruker fortsatt den kompakte, delte resultatlisten. Bare Hjem
+  // sender den komplette kortkontrakten; dette holder den nye reisen lokalt
+  // uten å endre en annen flyt.
+  if (total === undefined) {
+    const navigatesInCarousel = compactDestinationLabel !== undefined;
+    return (
+      <li className="hjm-row-item">
+        <button
+          type="button"
+          className="hjm-row"
+          onClick={onSwap}
+          aria-label={compactDestinationLabel ?? copy.detailAria(label, roleLabel)}
+          style={animationDelayMs !== null ? { animationDelay: `${animationDelayMs}ms` } : undefined}
+        >
+          <span className="hjm-num" aria-hidden="true">{position}</span>
+          <span className="hjm-thumb" aria-hidden="true">
+            <img
+              src={imageSrc}
+              alt=""
+              draggable={false}
+              onError={(event) => {
+                if (event.currentTarget.src !== GENERIC_GARMENT_SVG) {
+                  event.currentTarget.src = GENERIC_GARMENT_SVG;
+                }
+              }}
+            />
+          </span>
+          <span className="hjm-row-text">
+            <span className="hjm-g-name">{label}</span>
+            <span className="hjm-g-role">{roleLabel}</span>
+          </span>
+          <span
+            className={navigatesInCarousel ? 'hjm-swap hjm-row-next' : 'hjm-swap'}
+            aria-hidden="true"
+          >
+            {navigatesInCarousel ? (
+              <DetailChevronIcon />
+            ) : (
+              <>
+                <span className="hjm-swap-label">{copy.details}</span>
+                <InfoIcon />
+              </>
+            )}
+          </span>
+        </button>
+      </li>
+    );
+  }
+
   return (
-    <li className="hjm-row-item">
-      <button
-        type="button"
-        className="hjm-row"
-        onClick={onSwap}
-        aria-label={`${label}, ${roleLabel}. Detaljer.`}
-        style={animationDelayMs !== null ? { animationDelay: `${animationDelayMs}ms` } : undefined}
-      >
-        <span className="hjm-num" aria-hidden="true">{position}</span>
-        <span className="hjm-thumb" aria-hidden="true">
-          {imageSrc ? <img src={imageSrc} alt="" draggable={false} /> : initial}
-        </span>
-        <span className="hjm-row-text">
-          <span className="hjm-g-name">{label}</span>
-          <span className="hjm-g-role">{roleLabel}</span>
-        </span>
-        <span className="hjm-swap" aria-hidden="true">
-          Detaljer
-          <InfoIcon />
-        </span>
-      </button>
+    <li
+      className="hjm-journey-card"
+      data-hjm-journey-card={loopBand === 'canonical' ? 'true' : undefined}
+      data-loop-band={loopBand}
+      data-loop-clone={loopBand === 'canonical' ? undefined : 'true'}
+      aria-hidden={loopBand === 'canonical' ? undefined : true}
+      inert={loopBand === 'canonical' ? undefined : true}
+      style={animationDelayMs !== null ? { animationDelay: `${animationDelayMs}ms` } : undefined}
+    >
+      <article className="hjm-journey-card-inner" data-hjm-card-focus tabIndex={-1}>
+        <div className="hjm-journey-image" aria-hidden="true">
+          <img
+            src={imageSrc}
+            alt=""
+            draggable={false}
+            loading={loopBand === 'canonical' && position === 1 ? undefined : 'lazy'}
+            onError={(event) => {
+              if (event.currentTarget.src !== GENERIC_GARMENT_SVG) {
+                event.currentTarget.src = GENERIC_GARMENT_SVG;
+              }
+            }}
+          />
+        </div>
+
+        <p className="hjm-journey-order">
+          <span>{copy.order(position, total)}</span>
+          <i aria-hidden="true" />
+          <span>{roleLabel}</span>
+        </p>
+        <h2 className="hjm-journey-name">{label}</h2>
+
+        <div className="hjm-journey-bottom">
+          {fact ? (
+            <section className="hjm-journey-fact">
+              <h3>{copy.goodToKnow}</h3>
+              <p>{fact}</p>
+            </section>
+          ) : null}
+
+          {hasAlternatives ? (
+            <button
+              type="button"
+              className="hjm-journey-detail"
+              onClick={onSwap}
+              aria-label={copy.alternativesAria(label)}
+            >
+              {copy.alternatives}
+              <DetailChevronIcon />
+            </button>
+          ) : null}
+        </div>
+      </article>
     </li>
   );
 }
