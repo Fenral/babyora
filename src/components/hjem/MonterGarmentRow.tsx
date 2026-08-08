@@ -41,6 +41,7 @@ export type MonterGarmentRowProps = Readonly<{
   fact?: string | null;
   hasAlternatives?: boolean;
   loopBand?: 'leading' | 'canonical' | 'trailing';
+  interactive?: boolean;
   compactDestinationLabel?: string;
   onSwap: (event: MouseEvent<HTMLButtonElement>) => void;
   animationDelayMs: number | null;
@@ -55,6 +56,7 @@ export function MonterGarmentRow({
   fact = null,
   hasAlternatives = false,
   loopBand = 'canonical',
+  interactive = true,
   compactDestinationLabel,
   onSwap,
   animationDelayMs,
@@ -70,7 +72,8 @@ export function MonterGarmentRow({
         <button
           type="button"
           className="hjm-row"
-          onClick={onSwap}
+          onClick={interactive ? onSwap : undefined}
+          tabIndex={interactive ? undefined : -1}
           aria-label={compactDestinationLabel ?? copy.detailAria(label, roleLabel)}
           style={animationDelayMs !== null ? { animationDelay: `${animationDelayMs}ms` } : undefined}
         >
@@ -153,7 +156,8 @@ export function MonterGarmentRow({
             <button
               type="button"
               className="hjm-journey-detail"
-              onClick={onSwap}
+              onClick={interactive ? onSwap : undefined}
+              tabIndex={interactive ? undefined : -1}
               aria-label={copy.alternativesAria(label)}
             >
               {copy.alternatives}

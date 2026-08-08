@@ -31,7 +31,8 @@ const ROW_STAGGER_START_MS = 50;
 const RESULT_MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot-resultat-sveip.webp`;
 // Kept as a defensive SSR fallback; normal rendering always uses resultCopyFor.
 const NORWEGIAN_CAROUSEL_FALLBACK = 'Kle på, steg for steg';
-const LOOP_SETTLE_FALLBACK_MS = 130;
+const LOOP_SETTLE_FALLBACK_MS = 240;
+const SNAP_CENTER_TOLERANCE_PX = 2;
 
 type LoopBand = 'leading' | 'canonical' | 'trailing';
 
@@ -57,6 +58,24 @@ function nearestPhysicalIndex(rail: HTMLElement): number {
     }
   });
   return nearestIndex;
+}
+
+function JourneyArrow({ backwards = false }: Readonly<{ backwards?: boolean }>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      data-direction={backwards ? 'backwards' : 'forwards'}
+    >
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
 }
 
 export type ResultSurfaceProps = Readonly<{
@@ -88,9 +107,11 @@ export function ResultSurface({
   const [loopReady, setLoopReady] = useState(false);
   const [activeLogicalIndex, setActiveLogicalIndex] = useState(0);
   const [activePhysicalIndex, setActivePhysicalIndex] = useState(0);
+  const [settledPhysicalIndex, setSettledPhysicalIndex] = useState(0);
   const [activeCardHeight, setActiveCardHeight] = useState<number | null>(null);
   const logicalCount = rows.length + 1;
   const physicalCount = logicalCount * 3;
+  const settledLogicalIndex = logicalIndexFor(settledPhysicalIndex, logicalCount);
 
   const measureCardHeight = useCallback((rail: HTMLOListElement, index: number) => {
     const card = rail.children.item(index);
@@ -102,6 +123,16 @@ export function ResultSurface({
     setActiveCardHeight((current) => current === nextHeight ? current : nextHeight);
   }, []);
 
+  const expandCardHeight = useCallback((rail: HTMLOListElement, index: number) => {
+    const card = rail.children.item(index);
+    if (!(card instanceof HTMLElement)) return;
+    const inner = card.querySelector<HTMLElement>('.hjm-journey-card-inner');
+    if (inner === null) return;
+    const nextHeight = Math.ceil(inner.getBoundingClientRect().height);
+    if (nextHeight <= 0) return;
+    setActiveCardHeight((current) => current === null || nextHeight > current ? nextHeight : current);
+  }, []);
+
   const jumpToPhysicalCard = useCallback((physicalIndex: number) => {
     const rail = railRef.current;
     const card = rail?.children.item(physicalIndex);
@@ -109,19 +140,35 @@ export function ResultSurface({
     rail.scrollLeft = centeredScrollLeft(rail, card);
     const logicalIndex = logicalIndexFor(physicalIndex, logicalCount);
     setActivePhysicalIndex(physicalIndex);
+    setSettledPhysicalIndex(physicalIndex);
     setActiveLogicalIndex(logicalIndex);
     measureCardHeight(rail, physicalIndex);
   }, [logicalCount, measureCardHeight]);
 
-  const normalizeLoopPosition = useCallback(() => {
+  const settleRail = useCallback(() => {
     const rail = railRef.current;
-    if (rail === null || rail.children.length === 0 || touchingRef.current) return;
+    if (rail === null || rail.children.length === 0 || touchingRef.current) return false;
     const nearestIndex = nearestPhysicalIndex(rail);
+    const nearestCard = rail.children.item(nearestIndex);
+    if (!(nearestCard instanceof HTMLElement)) return false;
+    const targetLeft = centeredScrollLeft(rail, nearestCard);
+    if (Math.abs(rail.scrollLeft - targetLeft) > SNAP_CENTER_TOLERANCE_PX) return false;
+
     const logicalIndex = logicalIndexFor(nearestIndex, logicalCount);
+    let settledIndex = nearestIndex;
     if (nearestIndex < logicalCount || nearestIndex >= logicalCount * 2) {
-      jumpToPhysicalCard(logicalCount + logicalIndex);
+      settledIndex = logicalCount + logicalIndex;
+      const canonicalCard = rail.children.item(settledIndex);
+      if (!(canonicalCard instanceof HTMLElement)) return false;
+      rail.scrollLeft = centeredScrollLeft(rail, canonicalCard);
     }
-  }, [jumpToPhysicalCard, logicalCount]);
+
+    setActivePhysicalIndex(settledIndex);
+    setSettledPhysicalIndex(settledIndex);
+    setActiveLogicalIndex(logicalIndex);
+    measureCardHeight(rail, settledIndex);
+    return true;
+  }, [logicalCount, measureCardHeight]);
 
   const scheduleLoopNormalization = useCallback(() => {
     if (loopSettleTimerRef.current !== null) {
@@ -129,9 +176,9 @@ export function ResultSurface({
     }
     loopSettleTimerRef.current = window.setTimeout(() => {
       loopSettleTimerRef.current = null;
-      normalizeLoopPosition();
+      settleRail();
     }, LOOP_SETTLE_FALLBACK_MS);
-  }, [normalizeLoopPosition]);
+  }, [settleRail]);
 
   const syncActiveCard = useCallback(() => {
     if (scrollFrameRef.current !== null) return;
@@ -141,12 +188,14 @@ export function ResultSurface({
       if (rail === null || rail.children.length === 0) return;
       const nearestIndex = nearestPhysicalIndex(rail);
       const logicalIndex = logicalIndexFor(nearestIndex, logicalCount);
+      // Grow early so a taller destination (especially the overview) is never
+      // clipped during the horizontal slide. Shrinking waits until settlement.
+      expandCardHeight(rail, nearestIndex);
       setActivePhysicalIndex((current) => current === nearestIndex ? current : nearestIndex);
       setActiveLogicalIndex((current) => current === logicalIndex ? current : logicalIndex);
-      measureCardHeight(rail, nearestIndex);
       if (!touchingRef.current) scheduleLoopNormalization();
     });
-  }, [logicalCount, measureCardHeight, scheduleLoopNormalization]);
+  }, [expandCardHeight, logicalCount, scheduleLoopNormalization]);
 
   useLayoutEffect(() => {
     if (rows.length === 0) return;
@@ -159,10 +208,13 @@ export function ResultSurface({
   useEffect(() => {
     const rail = railRef.current;
     if (rail === null) return undefined;
-    const handleScrollEnd = () => normalizeLoopPosition();
+    // iOS can emit `scrollend` between touch release and the final momentum
+    // frames. Reuse the quiet-period gate so height and loop normalization
+    // never run while the rail is still moving.
+    const handleScrollEnd = () => scheduleLoopNormalization();
     rail.addEventListener('scrollend', handleScrollEnd);
     return () => rail.removeEventListener('scrollend', handleScrollEnd);
-  }, [normalizeLoopPosition]);
+  }, [scheduleLoopNormalization]);
 
   useEffect(() => () => {
     if (loopSettleTimerRef.current !== null) window.clearTimeout(loopSettleTimerRef.current);
@@ -173,21 +225,21 @@ export function ResultSurface({
     const rail = railRef.current;
     if (rail === null) return undefined;
     const frame = window.requestAnimationFrame(() => {
-      measureCardHeight(rail, activePhysicalIndex);
+      measureCardHeight(rail, settledPhysicalIndex);
     });
-    const card = rail.children.item(activePhysicalIndex);
+    const card = rail.children.item(settledPhysicalIndex);
     const inner = card instanceof HTMLElement
       ? card.querySelector<HTMLElement>('.hjm-journey-card-inner')
       : null;
     const observer = inner !== null && typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(() => measureCardHeight(rail, activePhysicalIndex))
+      ? new ResizeObserver(() => measureCardHeight(rail, settledPhysicalIndex))
       : null;
     if (inner !== null) observer?.observe(inner);
     return () => {
       window.cancelAnimationFrame(frame);
       observer?.disconnect();
     };
-  }, [activePhysicalIndex, measureCardHeight, rows.length]);
+  }, [measureCardHeight, rows.length, settledPhysicalIndex]);
 
   const scrollToPhysicalCard = useCallback((nextIndex: number, moveFocus = false) => {
     const clamped = Math.min(Math.max(nextIndex, 0), Math.max(physicalCount - 1, 0));
@@ -196,18 +248,20 @@ export function ResultSurface({
     if (rail === null) return;
     if (!(card instanceof HTMLElement)) return;
     const logicalIndex = logicalIndexFor(clamped, logicalCount);
+    expandCardHeight(rail, clamped);
     setActivePhysicalIndex(clamped);
     setActiveLogicalIndex(logicalIndex);
     rail.scrollTo({
       left: centeredScrollLeft(rail, card),
       behavior: reducedMotion ? 'auto' : 'smooth',
     });
+    scheduleLoopNormalization();
     if (moveFocus) {
       const focusTarget = card.querySelector<HTMLElement>('.hjm-journey-detail')
         ?? card.querySelector<HTMLElement>('[data-hjm-card-focus]');
       focusTarget?.focus({ preventScroll: true });
     }
-  }, [logicalCount, physicalCount, reducedMotion]);
+  }, [expandCardHeight, logicalCount, physicalCount, reducedMotion, scheduleLoopNormalization]);
 
   const handleRailKeyDown = useCallback((event: KeyboardEvent<HTMLOListElement>) => {
     if (event.target !== event.currentTarget) return;
@@ -242,10 +296,6 @@ export function ResultSurface({
         inert={isCanonical ? undefined : true}
       >
         <article className="hjm-journey-card-inner hjm-journey-overview-inner">
-          <div className="hjm-journey-overview-heading">
-            <h2>{copy.overviewTitle}</h2>
-            <span>{rows.length}</span>
-          </div>
           <ol
             className="hjm-rows hjm-journey-overview-list"
             aria-label={copy.progressLabel}
@@ -258,6 +308,7 @@ export function ResultSurface({
                 label={displayLabel}
                 roleLabel={localizedRole}
                 imageSrc={imageSrc}
+                interactive={isCanonical}
                 compactDestinationLabel={copy.openGarment(displayLabel)}
                 onSwap={(event) => scrollToPhysicalCard(
                   logicalCount + index + 1,
@@ -280,6 +331,7 @@ export function ResultSurface({
     localizedRole,
     imageSrc,
   }) => {
+    const isCanonical = loopBand === 'canonical';
     const fact = row.garmentId === null
       ? null
       : garmentFactFor(row.garmentId, i18next.resolvedLanguage).text;
@@ -296,6 +348,7 @@ export function ResultSurface({
         fact={fact}
         hasAlternatives={hasAlternatives}
         loopBand={loopBand}
+        interactive={isCanonical}
         onSwap={(event) => onSwapRow(row, event)}
         animationDelayMs={null}
       />
@@ -362,10 +415,24 @@ export function ResultSurface({
           {logicalCount > 1 ? (
             <div className="hjm-journey-progress" aria-label={copy.progressLabel}>
               <span className="hjm-sr-only" aria-live="polite" aria-atomic="true">
-                {activeLogicalIndex === 0
+                {settledLogicalIndex === 0
                   ? copy.overviewProgress
-                  : copy.progress(activeLogicalIndex, rows.length)}
+                  : copy.progress(settledLogicalIndex, rows.length)}
               </span>
+              <span className="hjm-journey-progress-side hjm-journey-progress-side--start">
+                {settledLogicalIndex > 0 ? (
+                  <button
+                    type="button"
+                    className="hjm-journey-nav-button"
+                    aria-controls={railId}
+                    onClick={() => scrollToPhysicalCard(settledPhysicalIndex - 1)}
+                  >
+                    <JourneyArrow backwards />
+                    {settledLogicalIndex === 1 ? copy.overview : copy.previous}
+                  </button>
+                ) : null}
+              </span>
+
               <span className="hjm-journey-dots" aria-hidden="true">
                 {Array.from({ length: logicalCount }, (_, index) => (
                   <i
@@ -373,6 +440,22 @@ export function ResultSurface({
                     data-active={index === activeLogicalIndex ? 'true' : 'false'}
                   />
                 ))}
+              </span>
+
+              <span className="hjm-journey-progress-side hjm-journey-progress-side--end">
+                <button
+                  type="button"
+                  className="hjm-journey-nav-button"
+                  aria-controls={railId}
+                  onClick={() => scrollToPhysicalCard(settledPhysicalIndex + 1)}
+                >
+                  {settledLogicalIndex === 0
+                    ? copy.viewGarments
+                    : settledLogicalIndex === rows.length
+                      ? copy.overview
+                      : copy.next}
+                  <JourneyArrow />
+                </button>
               </span>
             </div>
           ) : null}

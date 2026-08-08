@@ -20,8 +20,10 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const require = createRequire(import.meta.url);
 const VITE_CLI = join(dirname(require.resolve('vite/package.json')), 'bin', 'vite.js');
 const VIEWPORT = { width: 390, height: 844 } as const;
-const DETAIL_CARD_HEIGHT = 324;
+const DETAIL_CARD_HEIGHT = 300;
 const DETAIL_STAGE_HEIGHT = 92;
+const RAIL_VERTICAL_PADDING = 17;
+const RAIL_SIDE_INSET = 20;
 
 type LocaleScenario = Readonly<{
   locale: 'sv-SE' | 'da-DK' | 'nb-NO';
@@ -38,6 +40,10 @@ type LocaleScenario = Readonly<{
   goodToKnow: string;
   alternatives: string;
   alternativesAriaPrefix: string;
+  previous: string;
+  next: string;
+  viewGarments: string;
+  overview: string;
   closeAlternatives: string;
   removedWhyToday: string;
   removedExploreHeading: string;
@@ -52,6 +58,10 @@ const SCENARIOS: readonly LocaleScenario[] = [
     goodToKnow: 'Bra att veta',
     alternatives: 'Alternativ',
     alternativesAriaPrefix: 'Jämför alternativ till ',
+    previous: 'Föregående',
+    next: 'Nästa',
+    viewGarments: 'Se plaggen',
+    overview: 'Översikt',
     closeAlternatives: 'Stäng alternativ',
     removedWhyToday: 'Varför i dag',
     removedExploreHeading: 'Se varje plagg',
@@ -73,6 +83,10 @@ const SCENARIOS: readonly LocaleScenario[] = [
     goodToKnow: 'Godt at vide',
     alternatives: 'Alternativer',
     alternativesAriaPrefix: 'Sammenlign alternativer til ',
+    previous: 'Forrige',
+    next: 'Næste',
+    viewGarments: 'Se tøjet',
+    overview: 'Oversigt',
     closeAlternatives: 'Luk alternativer',
     removedWhyToday: 'Hvorfor i dag',
     removedExploreHeading: 'Se hvert stykke tøj',
@@ -94,6 +108,10 @@ const SCENARIOS: readonly LocaleScenario[] = [
     goodToKnow: 'Good to know',
     alternatives: 'Alternatives',
     alternativesAriaPrefix: 'Compare alternatives to ',
+    previous: 'Previous',
+    next: 'Next',
+    viewGarments: 'View garments',
+    overview: 'Overview',
     closeAlternatives: 'Close alternatives',
     removedWhyToday: 'Why today',
     removedExploreHeading: 'Explore each garment',
@@ -491,7 +509,7 @@ async function assertHomeResultCarousel(
 
   const cards = result.locator('[data-hjm-journey-card="true"]');
   const cardCount = await cards.count();
-  assert(cardCount >= 3, `${scenario.locale}: Mobbin peek QA needs at least three garment cards, got ${cardCount}`);
+  assert(cardCount >= 3, `${scenario.locale}: full-width deck QA needs at least three garment cards, got ${cardCount}`);
   const railStructure = await rail.evaluate((element, logicalCount) => {
     const children = Array.from(element.children);
     const leading = children.filter((child) => child.getAttribute('data-loop-band') === 'leading');
@@ -509,6 +527,9 @@ async function assertHomeResultCarousel(
           && child.getAttribute('aria-hidden') === 'true'
           && (child as HTMLElement).inert
       )),
+      cloneButtonsAreUntabbable: clones.every((child) => (
+        Array.from(child.querySelectorAll('button')).every((button) => button.tabIndex === -1)
+      )),
       logicalCount,
     };
   }, cardCount + 1);
@@ -517,7 +538,8 @@ async function assertHomeResultCarousel(
       && railStructure.bandCounts.every((count) => count === railStructure.logicalCount)
       && railStructure.canonicalOverviewFirst
       && railStructure.canonicalDetailsAfterOverview
-      && railStructure.clonesAreInert,
+      && railStructure.clonesAreInert
+      && railStructure.cloneButtonsAreUntabbable,
     `${scenario.locale}: expected one semantic deck inside three inert loop bands (${JSON.stringify(railStructure)})`,
   );
   assert(
@@ -655,15 +677,17 @@ async function assertHomeResultCarousel(
   const overviewInnerHeight = await overview.locator('.hjm-journey-card-inner').evaluate(
     (element) => element.getBoundingClientRect().height,
   );
-  await page.waitForFunction((expectedInnerHeight) => {
+  await page.waitForFunction(({ expectedInnerHeight, railPadding }) => {
     const railElement = document.querySelector<HTMLElement>('.hjm-journey-rail');
     if (railElement === null) return false;
-    return Math.abs(railElement.getBoundingClientRect().height - (expectedInnerHeight + 22)) <= 2;
-  }, overviewInnerHeight);
+    return Math.abs(railElement.getBoundingClientRect().height - (expectedInnerHeight + railPadding)) <= 2;
+  }, { expectedInnerHeight: overviewInnerHeight, railPadding: RAIL_VERTICAL_PADDING });
   const railContract = await rail.evaluate((element) => {
     const style = getComputedStyle(element);
     const first = element.querySelector<HTMLElement>('[data-hjm-overview-card="true"]')?.getBoundingClientRect();
+    const firstElement = element.querySelector<HTMLElement>('[data-hjm-overview-card="true"]');
     const second = element.querySelector<HTMLElement>('[data-hjm-journey-card="true"]')?.getBoundingClientRect();
+    const previous = firstElement?.previousElementSibling?.getBoundingClientRect();
     const box = element.getBoundingClientRect();
     return {
       clientWidth: element.clientWidth,
@@ -672,6 +696,8 @@ async function assertHomeResultCarousel(
       scrollSnapType: style.scrollSnapType,
       touchAction: style.touchAction,
       firstLeft: first?.left ?? null,
+      firstRight: first?.right ?? null,
+      firstWidth: first?.width ?? 0,
       secondLeft: second?.left ?? null,
       secondRight: second?.right ?? null,
       railLeft: box.left,
@@ -679,6 +705,12 @@ async function assertHomeResultCarousel(
       railCenter: box.left + box.width / 2,
       firstCenter: first === undefined ? null : first.left + first.width / 2,
       firstHeight: first?.height ?? 0,
+      previousIntersection: previous
+        ? Math.max(0, Math.min(box.right, previous.right) - Math.max(box.left, previous.left))
+        : 0,
+      nextIntersection: second
+        ? Math.max(0, Math.min(box.right, second.right) - Math.max(box.left, second.left))
+        : 0,
       railHeight: box.height,
       transitionDuration: style.transitionDuration,
       stride: first && second ? second.left - first.left : 0,
@@ -701,11 +733,19 @@ async function assertHomeResultCarousel(
     `${scenario.locale}: result rail touch-action is ${railContract.touchAction}; one axis may trap the finger`,
   );
   assert(
-    railContract.secondLeft !== null
-      && railContract.secondRight !== null
-      && railContract.secondLeft < railContract.railRight - 12
-      && railContract.secondRight > railContract.railRight + 12,
-    `${scenario.locale}: the first garment is not partially visible beside the overview`,
+    railContract.firstLeft !== null
+      && railContract.firstRight !== null
+      && Math.abs(railContract.firstLeft - (railContract.railLeft + RAIL_SIDE_INSET)) <= 1
+      && Math.abs(railContract.firstRight - (railContract.railRight - RAIL_SIDE_INSET)) <= 1
+      && Math.abs(railContract.firstWidth - (railContract.clientWidth - RAIL_SIDE_INSET * 2)) <= 1,
+    `${scenario.locale}: overview is not full-width with ${RAIL_SIDE_INSET}px insets (${JSON.stringify(railContract)})`,
+  );
+  assert(
+    railContract.previousIntersection <= 1 && railContract.nextIntersection <= 1,
+    `${scenario.locale}: a neighboring card is visible beside the overview (${JSON.stringify({
+      previous: railContract.previousIntersection,
+      next: railContract.nextIntersection,
+    })})`,
   );
   assert(
     railContract.firstCenter !== null
@@ -716,7 +756,7 @@ async function assertHomeResultCarousel(
     })})`,
   );
   assert(
-    Math.abs(railContract.railHeight - (overviewInnerHeight + 22)) <= 2,
+    Math.abs(railContract.railHeight - (overviewInnerHeight + RAIL_VERTICAL_PADDING)) <= 2,
     `${scenario.locale}: rail did not adapt to the active overview height`,
   );
   assert(
@@ -726,7 +766,10 @@ async function assertHomeResultCarousel(
 
   const progress = result.locator('.hjm-journey-progress .hjm-sr-only');
   const dots = result.locator('.hjm-journey-dots i');
-  assert(await result.locator('.hjm-journey-nav-button').count() === 0, `${scenario.locale}: arrow pager is still rendered`);
+  assert(
+    await result.getByRole('button', { name: scenario.viewGarments, exact: true }).count() === 1,
+    `${scenario.locale}: overview is missing the explicit “${scenario.viewGarments}” control`,
+  );
   assert(
     await dots.count() === cardCount + 1,
     `${scenario.locale}: dots do not match overview + ${cardCount} garment cards`,
@@ -757,12 +800,17 @@ async function assertHomeResultCarousel(
     ['.hjm-journey-progress .hjm-sr-only', progressAtFirst],
     { timeout: 3_000 },
   );
-  await page.waitForFunction((expectedHeight) => {
+  await page.waitForFunction(({ expectedHeight, railPadding }) => {
     const railElement = document.querySelector<HTMLElement>('.hjm-journey-rail');
     return railElement !== null
-      && Math.abs(railElement.getBoundingClientRect().height - (expectedHeight + 22)) <= 2;
-  }, DETAIL_CARD_HEIGHT);
-  const centeredPeek = await rail.evaluate((element) => {
+      && Math.abs(railElement.getBoundingClientRect().height - (expectedHeight + railPadding)) <= 2;
+  }, { expectedHeight: DETAIL_CARD_HEIGHT, railPadding: RAIL_VERTICAL_PADDING });
+  assert(
+    await result.getByRole('button', { name: scenario.overview, exact: true }).count() === 1
+      && await result.getByRole('button', { name: scenario.next, exact: true }).count() === 1,
+    `${scenario.locale}: first detail is missing localized Overview/Next controls`,
+  );
+  const centeredCard = await rail.evaluate((element) => {
     const previous = element.querySelector<HTMLElement>('[data-hjm-overview-card="true"]')?.getBoundingClientRect();
     const canonicalCards = element.querySelectorAll<HTMLElement>('[data-hjm-journey-card="true"]');
     const active = canonicalCards.item(0).getBoundingClientRect();
@@ -770,26 +818,109 @@ async function assertHomeResultCarousel(
     const box = element.getBoundingClientRect();
     return {
       activeCenter: active === undefined ? null : active.left + active.width / 2,
+      activeLeft: active.left,
+      activeRight: active.right,
       railCenter: box.left + box.width / 2,
+      railLeft: box.left,
+      railRight: box.right,
       leftPeek: previous === undefined ? 0 : previous.right - box.left,
       rightPeek: next === undefined ? 0 : box.right - next.left,
       railHeight: box.height,
     };
   });
   assert(
-    centeredPeek.activeCenter !== null
-      && Math.abs(centeredPeek.activeCenter - centeredPeek.railCenter) <= 2,
-    `${scenario.locale}: keyboard paging did not move from overview to garment 1 (${JSON.stringify(centeredPeek)})`,
+    centeredCard.activeCenter !== null
+      && Math.abs(centeredCard.activeCenter - centeredCard.railCenter) <= 2
+      && Math.abs(centeredCard.activeLeft - (centeredCard.railLeft + RAIL_SIDE_INSET)) <= 1
+      && Math.abs(centeredCard.activeRight - (centeredCard.railRight - RAIL_SIDE_INSET)) <= 1,
+    `${scenario.locale}: keyboard paging did not center a full-width garment 1 (${JSON.stringify(centeredCard)})`,
   );
   assert(
-    centeredPeek.leftPeek >= 12
-      && centeredPeek.rightPeek >= 12
-      && Math.abs(centeredPeek.leftPeek - centeredPeek.rightPeek) <= 3,
-    `${scenario.locale}: neighbor peeks are not symmetric (${JSON.stringify(centeredPeek)})`,
+    centeredCard.leftPeek <= 1 && centeredCard.rightPeek <= 1,
+    `${scenario.locale}: neighboring cards remain visible (${JSON.stringify(centeredCard)})`,
   );
   assert(
-    Math.abs(centeredPeek.railHeight - (DETAIL_CARD_HEIGHT + 22)) <= 2,
-    `${scenario.locale}: active detail did not collapse the rail to the ${DETAIL_CARD_HEIGHT}px card (${centeredPeek.railHeight}px)`,
+    Math.abs(centeredCard.railHeight - (DETAIL_CARD_HEIGHT + RAIL_VERTICAL_PADDING)) <= 2,
+    `${scenario.locale}: active detail did not collapse the rail to the ${DETAIL_CARD_HEIGHT}px card (${centeredCard.railHeight}px)`,
+  );
+
+  await result.getByRole('button', { name: scenario.next, exact: true }).click();
+  await page.waitForFunction(() => (
+    document.querySelectorAll('.hjm-journey-dots i').item(2)?.getAttribute('data-active') === 'true'
+  ));
+  await page.waitForTimeout(300);
+  assert(
+    await result.getByRole('button', { name: scenario.previous, exact: true }).count() === 1,
+    `${scenario.locale}: middle detail is missing the localized “${scenario.previous}” control`,
+  );
+
+  const iosMomentum = await rail.evaluate(async (element, expectedQuietMs) => {
+    const cards = Array.from(element.children) as HTMLElement[];
+    const logicalCount = cards.length / 3;
+    const leadingOverview = cards[0];
+    const canonicalOverview = cards[logicalCount];
+    const leadingLeft = leadingOverview.offsetLeft
+      + leadingOverview.offsetWidth / 2
+      - element.clientWidth / 2;
+    const canonicalLeft = canonicalOverview.offsetLeft
+      + canonicalOverview.offsetWidth / 2
+      - element.clientWidth / 2;
+    const beforeHeight = element.getBoundingClientRect().height;
+
+    element.dispatchEvent(new TouchEvent('touchstart', { bubbles: true }));
+    element.scrollLeft = leadingLeft + 6;
+    element.dispatchEvent(new Event('scroll', { bubbles: true }));
+    element.dispatchEvent(new TouchEvent('touchend', { bubbles: true }));
+
+    const startedAt = performance.now();
+    for (const offset of [5, 6, 5]) {
+      await new Promise((resolve) => window.setTimeout(resolve, 55));
+      element.scrollLeft = leadingLeft + offset;
+      element.dispatchEvent(new Event('scroll', { bubbles: true }));
+    }
+    const continuedFor = performance.now() - startedAt;
+    const earlyLeft = element.scrollLeft;
+    const earlyHeight = element.getBoundingClientRect().height;
+
+    element.scrollLeft = leadingLeft;
+    element.dispatchEvent(new Event('scroll', { bubbles: true }));
+
+    return {
+      logicalCount,
+      continuedFor,
+      continuedBeyondOldFallback: continuedFor > expectedQuietMs,
+      earlyTeleported: Math.abs(earlyLeft - canonicalLeft) <= 2,
+      earlyShrank: earlyHeight < beforeHeight - 1,
+      heightBeforeMomentum: beforeHeight,
+      heightBeforeSettle: earlyHeight,
+    };
+  }, 130);
+  assert(
+    iosMomentum.continuedBeyondOldFallback
+      && !iosMomentum.earlyTeleported
+      && !iosMomentum.earlyShrank,
+    `${scenario.locale}: touchend momentum normalized or shrank before scrolling was quiet (${JSON.stringify(iosMomentum)})`,
+  );
+  await page.waitForFunction(({ logicalCount, expectedHeight, railPadding }) => {
+    const railElement = document.querySelector<HTMLElement>('.hjm-journey-rail');
+    if (railElement === null) return false;
+    const canonicalOverview = railElement.children.item(logicalCount);
+    if (!(canonicalOverview instanceof HTMLElement)) return false;
+    const target = canonicalOverview.offsetLeft
+      + canonicalOverview.offsetWidth / 2
+      - railElement.clientWidth / 2;
+    return Math.abs(railElement.scrollLeft - target) <= 2
+      && Math.abs(railElement.getBoundingClientRect().height - (expectedHeight + railPadding)) <= 2
+      && document.querySelector('.hjm-journey-dots i:first-child')?.getAttribute('data-active') === 'true';
+  }, {
+    logicalCount: iosMomentum.logicalCount,
+    expectedHeight: overviewInnerHeight,
+    railPadding: RAIL_VERTICAL_PADDING,
+  }, { timeout: 3_000 });
+
+  assert(
+    await result.getByRole('button', { name: scenario.viewGarments, exact: true }).count() === 1,
+    `${scenario.locale}: settled canonical overview did not restore “${scenario.viewGarments}”`,
   );
 
   const avatarBox = await avatar.boundingBox();

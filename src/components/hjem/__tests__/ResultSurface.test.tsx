@@ -80,6 +80,12 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect((rail.match(/data-loop-clone="true" aria-hidden="true" inert=""/gu) ?? []))
       .toHaveLength((rows.length + 1) * 2);
     expect(rail).toContain(`aria-label="${copy.carouselLabel}"`);
+
+    const cloneButtons = loopBandHtml(html, 'leading').match(/<button\b[^>]*>/gu) ?? [];
+    expect(cloneButtons.length).toBeGreaterThan(0);
+    expect(cloneButtons.every((button) => button.includes('tabindex="-1"'))).toBe(true);
+    const rowSource = readFileSync(resolve(process.cwd(), 'src/components/hjem/MonterGarmentRow.tsx'), 'utf8');
+    expect((rowSource.match(/tabIndex=\{interactive \? undefined : -1\}/gu) ?? [])).toHaveLength(2);
   });
 
   it('keeps the same ordered garments in the overview and detail cards', () => {
@@ -232,7 +238,7 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(reduced).not.toContain('animation-delay');
   });
 
-  it('removes the visible swipe introduction while preserving an accessible hint and centered geometry', () => {
+  it('uses one full-width card with 20px insets and no side-peek geometry', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
     const html = renderResult([row({})]);
     const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
@@ -245,8 +251,11 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(html).toContain('class="hjm-sr-only"');
     expect(html).toContain(copy.carouselHint);
     expect(railRule).toMatch(/grid-auto-columns:\s*(?:var\([^)]*\)|min\([^;]+\));/u);
-    expect(railRule).toMatch(/padding-inline:[^;]*calc\(/u);
-    expect(railRule).toMatch(/scroll-padding-inline:[^;]*calc\(/u);
+    expect(railRule).toMatch(/--hjm-journey-card-width:\s*100%;/u);
+    expect(railRule).toMatch(/width:\s*calc\(100% \+ 40px\);/u);
+    expect(railRule).toMatch(/margin:\s*0 -20px;/u);
+    expect(railRule).toMatch(/padding-inline:\s*20px;/u);
+    expect(railRule).toMatch(/scroll-padding-inline:\s*20px;/u);
   });
 
   it('bruker native overflow og sentrert snap uten pointer-capture eller drag-transform', () => {
@@ -268,7 +277,8 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(cardRule).toMatch(/scroll-snap-stop:\s*normal;/u);
   });
 
-  it('keeps the overview auto-height and every garment card at the compact 324px standard', () => {
+  it('keeps the overview auto-height and every garment card at the compact 300px standard', () => {
+    const copy = resultCopyFor(i18next.resolvedLanguage);
     const rows = [
       row({ key: 'r1', position: 1 }),
       row({ key: 'r2', position: 2, label: 'ull-jakke', garmentId: 'ull-jakke' }),
@@ -287,13 +297,14 @@ describe('ResultSurface — overview-first garment deck', () => {
     const overviewRowRule = cssRuleFor(css, '.hjm-journey-overview-list .hjm-row');
 
     expect(cardInnerRule).toMatch(/height:\s*auto;/u);
-    expect(cardInnerRule).toMatch(/padding:\s*12px;/u);
-    expect(railRule).toMatch(/--hjm-detail-card-height:\s*324px;/u);
+    expect(cardInnerRule).toMatch(/padding:\s*10px 12px;/u);
+    expect(railRule).toMatch(/--hjm-detail-card-height:\s*300px;/u);
     expect(detailCardRule).toMatch(/height:\s*var\(--hjm-detail-card-height\);/u);
-    expect(headingRule).toMatch(/min-height:\s*44px;/u);
-    expect(overviewRowRule).toMatch(/min-height:\s*72px;/u);
+    expect(overviewRowRule).toMatch(/min-height:\s*58px;/u);
     expect(html).toContain('data-hjm-overview-card="true" data-garment-count="4"');
-    expect(html).not.toContain('class="hjm-journey-nav-button"');
+    expect(headingRule).toBe('');
+    expect(html).toContain('class="hjm-journey-nav-button"');
+    expect(html).toContain(`>${copy.viewGarments}<`);
     expect(html).toContain('class="hjm-sr-only"');
     expect((html.match(/data-active="(?:true|false)"/gu) ?? [])).toHaveLength(rows.length + 1);
   });
@@ -306,10 +317,41 @@ describe('ResultSurface — overview-first garment deck', () => {
     const reducedHtml = renderResult([row({})], { reducedMotion: true });
 
     expect(reducedHtml).toContain('data-adaptive-height="false"');
-    expect(railRule).toMatch(/transition:\s*block-size\s+var\(--dw-m-state\)/u);
-    expect(adaptiveRule).toMatch(/block-size:\s*calc\(var\(--hjm-active-card-height\) \+ 22px\);/u);
+    expect(railRule).not.toMatch(/transition:\s*block-size/u);
+    expect(adaptiveRule).toMatch(/block-size:\s*calc\(var\(--hjm-active-card-height\) \+ 17px\);/u);
     expect(reducedRule).toMatch(/transition:\s*none;/u);
     expect(reducedHtml).toContain('data-reduced-motion="true"');
+  });
+
+  it('may expand for the incoming card but waits for a stable iOS snap before shrinking or normalizing', () => {
+    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
+    const syncStart = source.indexOf('const syncActiveCard = useCallback');
+    const syncEnd = source.indexOf('\n\n  useLayoutEffect', syncStart);
+    const syncBody = source.slice(syncStart, syncEnd);
+
+    expect(syncStart).toBeGreaterThan(-1);
+    expect(syncEnd).toBeGreaterThan(syncStart);
+    expect(source).toMatch(/const LOOP_SETTLE_FALLBACK_MS = 240;/u);
+    expect(source).toMatch(/const SNAP_CENTER_TOLERANCE_PX = 2;/u);
+    expect(source).toMatch(/Math\.abs\(rail\.scrollLeft - targetLeft\) > SNAP_CENTER_TOLERANCE_PX/u);
+    expect(source).toMatch(/const handleScrollEnd = \(\) => scheduleLoopNormalization\(\);/u);
+    expect(syncBody).toContain('scheduleLoopNormalization();');
+    expect(syncBody).toContain('expandCardHeight(rail, nearestIndex);');
+    expect(syncBody).not.toContain('measureCardHeight');
+    expect(source).toMatch(/current === null \|\| nextHeight > current \? nextHeight : current/u);
+  });
+
+  it('renders explicit localized overview and previous/next paging controls', () => {
+    const copy = resultCopyFor(i18next.resolvedLanguage);
+    const html = renderResult([row({}), row({ key: 'r2', position: 2 })]);
+    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
+
+    expect(html).toContain(`>${copy.viewGarments}<`);
+    expect(source).toContain('copy.previous');
+    expect(source).toContain('copy.next');
+    expect(source).toContain('copy.overview');
+    expect(source).toContain('copy.viewGarments');
+    expect(html).toContain('aria-controls=');
   });
 
   it('keeps the overview thumbnail ratio while the detail plate is a centered, contained 92px stage', () => {

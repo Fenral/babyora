@@ -12,6 +12,10 @@ type ResultCopy = Readonly<{
   moreInfo: string;
   goodToKnow: string;
   alternatives: string;
+  previous: string;
+  next: string;
+  viewGarments: string;
+  overview: string;
   alternativesAria: (name: string) => string;
   detailAria: (name: string, role: string) => string;
   openGarment: (name: string) => string;
@@ -41,12 +45,16 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     moreInfo: 'More info',
     goodToKnow: 'Good to know',
     alternatives: 'Alternatives',
+    previous: 'Previous',
+    next: 'Next',
+    viewGarments: 'View garments',
+    overview: 'Overview',
     alternativesAria: (name) => `Compare alternatives to ${name}`,
     detailAria: (name, role) => `${name}, ${role}. Details.`,
     openGarment: (name) => `Show ${name}`,
     order: (position, total) => `Garment ${position} of ${total}`,
     progress: (position, total) => `Garment ${position} of ${total}`,
-    childSummary: (count, childName) => `${count} garments for ${childName}, base to outer layer`,
+    childSummary: (count, childName) => `${count} garments for ${childName}`,
     role: (role) => ROLE.en[role] ?? role,
   },
   sv: {
@@ -61,12 +69,16 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     moreInfo: 'Mer info',
     goodToKnow: 'Bra att veta',
     alternatives: 'Alternativ',
+    previous: 'Föregående',
+    next: 'Nästa',
+    viewGarments: 'Se plaggen',
+    overview: 'Översikt',
     alternativesAria: (name) => `Jämför alternativ till ${name}`,
     detailAria: (name, role) => `${name}, ${role}. Detaljer.`,
     openGarment: (name) => `Visa ${name}`,
     order: (position, total) => `Plagg ${position} av ${total}`,
     progress: (position, total) => `Plagg ${position} av ${total}`,
-    childSummary: (count, childName) => `${count} plagg för ${childName}, innerst till ytterst`,
+    childSummary: (count, childName) => `${count} plagg för ${childName}`,
     role: (role) => ROLE.sv[role] ?? role,
   },
   da: {
@@ -81,12 +93,16 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     moreInfo: 'Mere info',
     goodToKnow: 'Godt at vide',
     alternatives: 'Alternativer',
+    previous: 'Forrige',
+    next: 'Næste',
+    viewGarments: 'Se tøjet',
+    overview: 'Oversigt',
     alternativesAria: (name) => `Sammenlign alternativer til ${name}`,
     detailAria: (name, role) => `${name}, ${role}. Detaljer.`,
     openGarment: (name) => `Vis ${name}`,
     order: (position, total) => `Del ${position} af ${total}`,
     progress: (position, total) => `Del ${position} af ${total}`,
-    childSummary: (count, childName) => `${count} dele til ${childName}, inderst til yderst`,
+    childSummary: (count, childName) => `${count} dele til ${childName}`,
     role: (role) => ROLE.da[role] ?? role,
   },
   no: {
@@ -101,12 +117,16 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     moreInfo: 'Mer info',
     goodToKnow: 'Godt å vite',
     alternatives: 'Alternativer',
+    previous: 'Forrige',
+    next: 'Neste',
+    viewGarments: 'Se plaggene',
+    overview: 'Oversikt',
     alternativesAria: (name) => `Sammenlign alternativer til ${name}`,
     detailAria: (name, role) => `${name}, ${role}. Detaljer.`,
     openGarment: (name) => `Vis ${name}`,
     order: (position, total) => `Plagg ${position} av ${total}`,
     progress: (position, total) => `Plagg ${position} av ${total}`,
-    childSummary: (count, childName) => `${count} plagg for ${childName}, innerst til ytterst`,
+    childSummary: (count, childName) => `${count} plagg for ${childName}`,
     role: (role) => ROLE.no[role] ?? role,
   },
 };

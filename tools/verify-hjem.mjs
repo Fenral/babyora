@@ -149,6 +149,9 @@ try {
       trailing: count('trailing'),
       total: cards.length,
       clonesHidden: clones.every((element) => element.getAttribute('aria-hidden') === 'true' && element.inert),
+      cloneButtonsUntabbable: clones.every((element) => (
+        Array.from(element.querySelectorAll('button')).every((button) => button.tabIndex === -1)
+      )),
       canonicalExposed: canonical.every((element) => element.getAttribute('aria-hidden') === null && !element.inert),
       overviewCount: rail.querySelectorAll('[data-hjm-overview-card="true"]').length,
       garmentCount: rail.querySelectorAll('[data-hjm-journey-card="true"]').length,
@@ -161,11 +164,11 @@ try {
     && bands.total === bands.canonical * 3;
   gate(
     '3. rail has three equal accessible loop bands',
-    equalBands && bands.clonesHidden && bands.canonicalExposed
+    equalBands && bands.clonesHidden && bands.cloneButtonsUntabbable && bands.canonicalExposed
       && bands.overviewCount === 1 && bands.garmentCount === bands.canonical - 1,
     bands === null
       ? 'rail is missing'
-      : `leading/canonical/trailing=${bands.leading}/${bands.canonical}/${bands.trailing} clones hidden=${bands.clonesHidden}`,
+      : `leading/canonical/trailing=${bands.leading}/${bands.canonical}/${bands.trailing} clones hidden=${bands.clonesHidden} clone buttons untabbable=${bands.cloneButtonsUntabbable}`,
   );
 
   const loop = await page.evaluate(async () => {
@@ -232,22 +235,28 @@ try {
       : 0;
     return {
       centerError: Math.abs((active.left + active.right) / 2 - (viewport.left + viewport.right) / 2),
+      leftInset: active.left - viewport.left,
+      rightInset: viewport.right - active.right,
+      cardWidth: active.width,
+      railWidth: viewport.width,
       previousPeek: intersectionWidth(previous),
       nextPeek: intersectionWidth(next),
       documentOverflow: document.documentElement.scrollWidth - window.innerWidth,
     };
   });
   gate(
-    '5. active card is centered with equal neighbour previews',
+    '5. active card is full-width with 20px insets and no neighbours',
     geometry !== null
       && geometry.centerError <= 2
-      && geometry.previousPeek >= 24
-      && geometry.nextPeek >= 24
-      && Math.abs(geometry.previousPeek - geometry.nextPeek) <= 2
+      && Math.abs(geometry.leftInset - 20) <= 1
+      && Math.abs(geometry.rightInset - 20) <= 1
+      && Math.abs(geometry.cardWidth - (geometry.railWidth - 40)) <= 1
+      && geometry.previousPeek <= 1
+      && geometry.nextPeek <= 1
       && geometry.documentOverflow <= 1,
     geometry === null
       ? 'rail is missing'
-      : `center error=${geometry.centerError.toFixed(1)} px peeks=${geometry.previousPeek.toFixed(1)}/${geometry.nextPeek.toFixed(1)} px document overflow=${geometry.documentOverflow}px`,
+      : `center error=${geometry.centerError.toFixed(1)} px insets=${geometry.leftInset.toFixed(1)}/${geometry.rightInset.toFixed(1)} px neighbours=${geometry.previousPeek.toFixed(1)}/${geometry.nextPeek.toFixed(1)} px document overflow=${geometry.documentOverflow}px`,
   );
 
   const depth = await page.evaluate(() => {
