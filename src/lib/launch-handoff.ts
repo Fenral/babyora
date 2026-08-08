@@ -19,9 +19,9 @@
  * Er appen rask, ses flaten knapt. Det er riktig.
  *
  * Én eksplisitt design-review finnes utenfor appflyten:
- * `?launch-preview=slow` spiller sekvensen 5× saktere og slipper først når
- * været faktisk har landet. Den er query-gatet, brukes bare til vurdering og
- * endrer aldri ordinær oppstart.
+ * `?launch-preview=slow` holder barn og skilt statisk, spiller bare værets
+ * landing 5× saktere og slipper først når været faktisk har landet. Den er
+ * query-gatet, brukes bare til vurdering og endrer aldri ordinær oppstart.
  *
  * ═══ VAKTEN, OG HVORFOR DEN ER DER ════════════════════════════════════════
  * Om noe kaster før `slippLaunch()` blir kalt — en feil i en provider, en

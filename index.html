@@ -96,8 +96,7 @@
         top: 70.93%;
         width: 100%;
         height: 29.07%;
-        opacity: 0;
-        animation: launch-signboard-in 360ms cubic-bezier(0.22, 1, 0.36, 1) 20ms both;
+        opacity: 1;
       }
 
       .launch-signboard::before {
@@ -132,8 +131,7 @@
         top: 0;
         width: 91.837%;
         height: 83.605%;
-        opacity: 0;
-        animation: launch-avatar-in 480ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both;
+        opacity: 1;
       }
 
       .launch-avatar { z-index: 1; }
@@ -177,16 +175,6 @@
       :root[data-theme="dark"] #launch { background: #1E140C; }
       :root[data-theme="light"] #launch { background: #F9F5EB; }
 
-      @keyframes launch-signboard-in {
-        from { opacity: 0; transform: translateY(5px) scale(0.985); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-      }
-
-      @keyframes launch-avatar-in {
-        from { opacity: 0; transform: translateY(-8px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
       @keyframes launch-weather-in {
         0% {
           opacity: 0;
@@ -201,22 +189,12 @@
         }
       }
 
-      /* Design-review, aldri vanlig appstart. `?launch-preview=slow` spiller
-         produksjonsbevegelsen i 5× sakte film: skilt → barn → vær. */
-      :root[data-launch-preview="slow"] .launch-signboard {
-        animation: launch-signboard-in 1800ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both;
-      }
-
-      :root[data-launch-preview="slow"] .launch-avatar {
-        animation: launch-avatar-in 2400ms cubic-bezier(0.22, 1, 0.36, 1) 500ms both;
-      }
-
+      /* Design-review, aldri vanlig appstart. Barnet og navneskiltet er
+         statiske; `?launch-preview=slow` spiller bare værets landing 5× sakte. */
       :root[data-launch-preview="slow"] .launch-weather {
         animation: launch-weather-in 2100ms cubic-bezier(0.22, 1, 0.36, 1) 900ms both;
       }
 
-      :root[data-launch-preview="slow"][data-launch-preview-paused="true"] .launch-signboard,
-      :root[data-launch-preview="slow"][data-launch-preview-paused="true"] .launch-avatar,
       :root[data-launch-preview="slow"][data-launch-preview-paused="true"] .launch-weather {
         animation-play-state: paused;
       }

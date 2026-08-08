@@ -16,10 +16,11 @@ der punktene er i konflikt.
 - Værmotivet ligger over hele hånden i overlappsonen, slik at sky/sol leses
   som fysisk lagt i den åpne hånden. Web-revealen bruker en ugjennomsiktig
   `clip-path` fra håndflaten; huden kan derfor ikke skinne gjennom under
-  landingen. Ingen ekstra slagord, gradient, lyd, haptikk eller vent.
-  Web viser skilt → barn → vær med 80 ms forskyvning; Reduce Motion er statisk.
+  landingen. Barnet og Babyora-skiltet er statiske fra første web-frame; bare
+  været lander, etter 180 ms. Ingen ekstra slagord, gradient, lyd, haptikk
+  eller vent. Reduce Motion viser hele signaturen statisk.
 - `?launch-preview=slow` er en query-gatet design-review: produksjonsbevegelsen
-  spilles 5× saktere, fullføres på 3 s og pauser i skjult fane. Flaten slipper
+  for været spilles 5× saktere, fullføres på 3 s og pauser i skjult fane. Flaten slipper
   på vårets faktiske `animation.finished`, deretter 200 ms fade. Den påvirker
   aldri vanlig appstart; Reduce Motion får normal statisk handoff.
 - Den gamle §1-regelen om venstrejustering, «aldri maskot» og maks 1 pt mellom

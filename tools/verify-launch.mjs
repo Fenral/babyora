@@ -304,14 +304,12 @@ try {
       return {
         mode: document.documentElement.getAttribute('data-launch-preview'),
         launchFinnes: launch !== null,
-        durations: [style(sign).animationDuration, style(avatar).animationDuration, style(weather).animationDuration],
-        delays: [style(sign).animationDelay, style(avatar).animationDelay, style(weather).animationDelay],
-        iterations: [
-          style(sign).animationIterationCount,
-          style(avatar).animationIterationCount,
-          style(weather).animationIterationCount,
-        ],
-        names: [style(sign).animationName, style(avatar).animationName, style(weather).animationName],
+        staticNames: [style(sign).animationName, style(avatar).animationName],
+        staticOpacity: [style(sign).opacity, style(avatar).opacity],
+        weatherDuration: style(weather).animationDuration,
+        weatherDelay: style(weather).animationDelay,
+        weatherIteration: style(weather).animationIterationCount,
+        weatherName: style(weather).animationName,
       };
     });
     meld(
@@ -319,15 +317,16 @@ try {
       'saktevisning: query-modus holder launch-flaten etter at appen er klar',
     );
     meld(
-      previewKontrakt.durations.join('|') === '1.8s|2.4s|2.1s'
-        && previewKontrakt.delays.join('|') === '0.1s|0.5s|0.9s'
-        && previewKontrakt.iterations.every((iteration) => iteration === '1'),
-      'saktevisning: produksjonens varighet og 80 ms stagger er skalert nøyaktig 5×',
+      previewKontrakt.staticNames.every((name) => name === 'none')
+        && previewKontrakt.staticOpacity.every((opacity) => opacity === '1'),
+      'saktevisning: barnet og Babyora-skiltet er fullt synlige og statiske',
     );
     meld(
-      previewKontrakt.names.join('|')
-        === 'launch-signboard-in|launch-avatar-in|launch-weather-in',
-      'saktevisning: gjenbruker produksjonens keyframes uten ny koreografi',
+      previewKontrakt.weatherDuration === '2.1s'
+        && previewKontrakt.weatherDelay === '0.9s'
+        && previewKontrakt.weatherIteration === '1'
+        && previewKontrakt.weatherName === 'launch-weather-in',
+      'saktevisning: bare værets produksjonsbevegelse spilles 5× saktere',
     );
 
     const lesFase = async (time) => p.evaluate((currentTime) => {
@@ -344,15 +343,10 @@ try {
       };
     }, time);
 
-    const skiltFase = await lesFase(450);
+    const statiskFase = await lesFase(850);
     meld(
-      skiltFase.sign > 0.5 && skiltFase.avatar < 0.05 && skiltFase.weather < 0.05,
-      'saktevisning: skiltet kommer først',
-    );
-    const barnFase = await lesFase(850);
-    meld(
-      barnFase.sign > 0.5 && barnFase.avatar > 0 && barnFase.weather < 0.05,
-      'saktevisning: barnet lander på skiltet som fase to',
+      statiskFase.sign > 0.999 && statiskFase.avatar > 0.999 && statiskFase.weather < 0.05,
+      'saktevisning: bare været mangler før landingen starter',
     );
     const landingsFase = await lesFase(1400);
     meld(
@@ -362,7 +356,7 @@ try {
     const vaerFase = await lesFase(2950);
     meld(
       vaerFase.sign > 0.95 && vaerFase.avatar > 0.95 && vaerFase.weather > 0.5,
-      'saktevisning: været lander i hånden som fase tre',
+      'saktevisning: været lander i den statiske hånden',
     );
 
     const pauseVirker = await p.evaluate(() => {
