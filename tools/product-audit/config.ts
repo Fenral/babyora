@@ -88,9 +88,9 @@ export const PAGE_CATALOG: ReadonlyArray<PageDefinition> = [
     }],
   },
   {
-    id: 'plan', label: 'Uke / Planlegg', appWeight: 10,
+    id: 'plan', label: 'Planlegg', appWeight: 10,
     role: 'Gjøre Plus-verdien fremover konkret uten å svekke dagens gratisverdi.',
-    states: [{ id: 'default', label: 'Dags- og ukeplan', required: true, actions: [tab('Uke|Plan'), wait], expectedText: 'Snart' }],
+    states: [{ id: 'default', label: 'I dag og i morgen', required: true, actions: [tab('Plan'), wait], expectedText: 'I morgen' }],
   },
   // P1 (nav 4→3 skeleton, 2026-07-30): Guide-tab-roten er fjernet (se
   // src/types/nav.ts). Guide-huben selv (id 'guide') hadde ingen egen

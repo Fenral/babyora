@@ -1,6 +1,11 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import {
+  GENERIC_GARMENT_SVG,
+  KNOWN_GARMENT_IDS,
+} from '../../data/garment-illustrations.js';
 import {
   getConditionLabel,
   getGarmentImage,
@@ -9,46 +14,100 @@ import {
   MONTER_GARMENT_SLUGS,
 } from '../monter-assets.js';
 
+function garmentAssetHash(id: string): string {
+  const file = resolve(
+    process.cwd(),
+    'public',
+    'illustrations',
+    'garments',
+    `${id}.webp`,
+  );
+  return createHash('sha256').update(readFileSync(file)).digest('hex');
+}
+
 describe('getGarmentImage', () => {
-  it('resolves an exact-name katalog id to its Monter PNG', () => {
-    expect(getGarmentImage('kortermet-ullbody')).toBe('/monter/plagg-kortermet-ullbody.webp');
-    expect(getGarmentImage('vinterdress')).toBe('/monter/plagg-vinterdress.webp');
-    expect(getGarmentImage('ullsokker')).toBe('/monter/plagg-ullsokker.webp');
+  it('resolves katalog ids to their exact flat WebP', () => {
+    expect(getGarmentImage('kortermet-ullbody')).toBe('/illustrations/garments/kortermet-ullbody.webp');
+    expect(getGarmentImage('vinterdress')).toBe('/illustrations/garments/vinterdress.webp');
+    expect(getGarmentImage('ullsokker')).toBe('/illustrations/garments/ullsokker.webp');
   });
 
-  it('reuses one image across thickness/tog variants of the same garment', () => {
-    expect(getGarmentImage('vinterkjoredress')).toBe(getGarmentImage('vinterdress'));
-    expect(getGarmentImage('vinterkjoredress-isolert')).toBe(getGarmentImage('vinterdress'));
-    expect(getGarmentImage('sovepose-0-5-tog')).toBe(getGarmentImage('sovepose-3-5-tog'));
+  it('keeps visually distinct variants on distinct catalog files', () => {
+    expect(getGarmentImage('vinterkjoredress')).not.toBe(getGarmentImage('vinterdress'));
+    expect(getGarmentImage('vinterkjoredress-isolert')).not.toBe(getGarmentImage('vinterdress'));
+    expect(getGarmentImage('sovepose-0-5-tog')).not.toBe(getGarmentImage('sovepose-3-5-tog'));
   });
 
-  it('returns null for ids with no confident visual match (neutral placeholder territory)', () => {
-    expect(getGarmentImage('bleie')).toBeNull();
-    expect(getGarmentImage('sko')).toBeNull();
-    expect(getGarmentImage('to-ullsett')).toBeNull();
-    expect(getGarmentImage('ansiktskrem')).toBeNull();
+  it('covers the ids that previously fell back to letter tiles', () => {
+    for (const id of ['bleie', 'sko', 'to-ullsett', 'ansiktskrem', 'sauekinn-i-vogn']) {
+      expect(getGarmentImage(id), id).toBe(`/illustrations/garments/${id}.webp`);
+    }
   });
 
-  it('returns null for unknown/missing ids without throwing', () => {
-    expect(getGarmentImage('helt-ukjent-id')).toBeNull();
-    expect(getGarmentImage(null)).toBeNull();
-    expect(getGarmentImage(undefined)).toBeNull();
-    expect(getGarmentImage('')).toBeNull();
+  it('uses the exact real art for fleece pieces and intermediate TOG bags', () => {
+    const exactArtIds = [
+      'fleecedress',
+      'fleecejakke',
+      'fleecebukse',
+      'sovepose-1-5-tog',
+      'sovepose-2-0-tog',
+    ] as const;
+
+    for (const id of exactArtIds) {
+      const path = getGarmentImage(id);
+      expect(path, id).toBe(`/illustrations/garments/${id}.webp`);
+      expect(existsSync(resolve(process.cwd(), 'public', path.slice(1))), id).toBe(true);
+    }
+
+    expect(getGarmentImage('fleecejakke')).not.toBe(getGarmentImage('ull-jakke'));
+    expect(getGarmentImage('fleecebukse')).not.toBe(getGarmentImage('ull-bukse'));
+    expect(getGarmentImage('sovepose-1-5-tog')).not.toBe(getGarmentImage('sovepose-1-0-tog'));
+    expect(getGarmentImage('sovepose-2-0-tog')).not.toBe(getGarmentImage('sovepose-2-5-tog'));
   });
 
-  it('every mapped path points at one of the 42 shipped garment slugs', () => {
+  it('keeps material, thickness, and garment variants byte-distinct', () => {
+    const distinctGroups = [
+      ['tynn-fleece', 'tykk-fleece', 'fleecejakke'],
+      ['bomullssokker', 'ullsokker'],
+      ['bomullssett', 'ullsett-tynt'],
+    ] as const;
+
+    for (const ids of distinctGroups) {
+      const hashes = ids.map(garmentAssetHash);
+      expect(new Set(hashes).size, `${ids.join(', ')} must not reuse image bytes`).toBe(ids.length);
+    }
+  });
+
+  it('uses the generic non-letter illustration for unknown/missing ids', () => {
+    expect(getGarmentImage('helt-ukjent-id')).toBe(GENERIC_GARMENT_SVG);
+    expect(getGarmentImage(null)).toBe(GENERIC_GARMENT_SVG);
+    expect(getGarmentImage(undefined)).toBe(GENERIC_GARMENT_SVG);
+    expect(getGarmentImage('')).toBe(GENERIC_GARMENT_SVG);
+  });
+
+  it('covers every catalog id with an existing, exact-name flat WebP', () => {
     const katalog = JSON.parse(
       readFileSync(resolve(process.cwd(), 'public/plagg-katalog.json'), 'utf8'),
     ) as { items: ReadonlyArray<{ id: string }> };
     for (const item of katalog.items) {
       const path = getGarmentImage(item.id);
-      if (path === null) continue;
-      const slug = MONTER_GARMENT_SLUGS.find((s) => path === `/monter/plagg-${s}.webp`);
-      expect(slug, `${item.id} -> ${path} should match a shipped slug`).toBeDefined();
+      expect(path, item.id).toBe(`/illustrations/garments/${item.id}.webp`);
+      const file = resolve(process.cwd(), 'public', path.replace(/^\//, ''));
+      expect(existsSync(file), `${item.id} -> ${file}`).toBe(true);
     }
   });
 
-  it('every shipped garment PNG referenced by the map actually exists in public/monter', () => {
+  it('covers every id garmentIdFor can return with its own exact-name WebP', () => {
+    expect(KNOWN_GARMENT_IDS.length).toBeGreaterThan(61);
+    for (const id of KNOWN_GARMENT_IDS) {
+      const path = getGarmentImage(id);
+      expect(path, id).toBe(`/illustrations/garments/${id}.webp`);
+      expect(path, id).not.toBe(GENERIC_GARMENT_SVG);
+      expect(existsSync(resolve(process.cwd(), 'public', path.slice(1))), id).toBe(true);
+    }
+  });
+
+  it('keeps the legacy Monter asset inventory internally complete for QA', () => {
     const files = new Set(readdirSync(resolve(process.cwd(), 'public/monter')));
     for (const slug of MONTER_GARMENT_SLUGS) {
       expect(files.has(`plagg-${slug}.webp`)).toBe(true);
@@ -135,5 +194,15 @@ describe('getConditionLabel', () => {
     expect(getConditionLabel(undefined)).toBe('Henter vær');
     expect(getConditionLabel(null)).toBe('Henter vær');
     expect(getConditionLabel('totally-unknown-code')).toBe('Vær');
+  });
+
+  it.each([
+    ['en', ['Loading weather', 'Clear', 'Cloudy', 'Rain', 'Snow', 'Fog']],
+    ['sv', ['Hämtar väder', 'Klart', 'Molnigt', 'Regn', 'Snö', 'Dimma']],
+    ['da', ['Henter vejret', 'Klart', 'Overskyet', 'Regn', 'Sne', 'Tåge']],
+    ['no', ['Henter vær', 'Klarvær', 'Skyet', 'Regn', 'Snø', 'Tåke']],
+  ] as const)('localizes common codes in %s', (language, expected) => {
+    const symbols = [undefined, 'clearsky_day', 'cloudy', 'rain', 'snow', 'fog'] as const;
+    expect(symbols.map((symbol) => getConditionLabel(symbol, language))).toEqual(expected);
   });
 });

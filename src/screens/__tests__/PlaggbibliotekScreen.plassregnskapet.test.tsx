@@ -105,7 +105,7 @@ describe('Plaggbiblioteket — ⌘K-badgen lovet en snarvei som ikke fantes', ()
       resolve(SRC, 'screens/PlaggbibliotekScreen.tsx'),
       'utf8',
     );
-    expect(kilde).toContain('aria-label="Tøm søket"');
+    expect(kilde).toContain('aria-label={copy.library.clearSearch}');
     // searchClear-blokken må beholde 44×44. Hentes ut som tekst fordi knappen
     // først rendres når feltet har innhold, og uten jsdom kan vi ikke skrive
     // i det.

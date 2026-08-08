@@ -496,15 +496,18 @@ describe('kontrastmatrisen — forutsetninger for at målingen betyr noe', () =>
     }
   });
 
-  it('petrol-familien er reell og TEMA-KONSTANT — seks distinkte flater', () => {
+  it('værfamilien er reell og temaoppløst — seks distinkte flater i hvert tema', () => {
     // Måler vi mot seks kopier av samme hex, sier «under kravet på alle»
-    // ingenting. Og flipper panelet, er hele instrumentdoktrinen brutt et
-    // annet sted enn her.
+    // ingenting. Mineral Garden krever en lys værfamilie, mens det eksplisitte
+    // mørktemaet beholder Monter-familien.
     const mork = PETROLFLATER.map((s) => hex(s, tabell('mork')));
     const lys = PETROLFLATER.map((s) => hex(s, tabell('lys')));
-    expect(new Set(mork).size, 'petrol-flatene er ikke distinkte').toBe(PETROLFLATER.length);
-    expect(lys, 'petrol-familien flipper med temaet — instrumentet skal være tema-konstant')
-      .toEqual(mork);
+    expect(new Set(mork).size, 'mørke værflater er ikke distinkte').toBe(PETROLFLATER.length);
+    expect(new Set(lys).size, 'lyse værflater er ikke distinkte').toBe(PETROLFLATER.length);
+    for (let i = 0; i < PETROLFLATER.length; i += 1) {
+      expect(luminans(lys[i]!), `${PETROLFLATER[i]} ble ikke lysere i Mineral Garden`)
+        .toBeGreaterThan(luminans(mork[i]!));
+    }
   });
 
   it('hvert par i REGISTERET blir fortsatt MÅLT av matrisen', () => {

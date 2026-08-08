@@ -7,6 +7,7 @@ import { WARM_COLD_RECOVERY_COPY } from '../warm-cold-recovery.js';
 import { PlaggDetailSheet } from '../../../components/PlaggDetailSheet.js';
 import { OutfitExperience } from '../../../components/outfit/OutfitExperience.js';
 import { VarmEllerKaldScreen } from '../../../screens/VarmEllerKaldScreen.js';
+import { deepFlowCopyFor } from '../../../screens/deep-flow-copy.js';
 
 const root = resolve(import.meta.dirname, '../../../..');
 
@@ -38,9 +39,10 @@ describe('warm/cold recovery copy and alternative ownership', () => {
     expect(Object.isFrozen(WARM_COLD_RECOVERY_COPY.statuses.cold)).toBe(true);
 
     const markup = renderToStaticMarkup(createElement(VarmEllerKaldScreen, { onBack: () => undefined }));
-    expect(markup).toContain(WARM_COLD_RECOVERY_COPY.title);
-    expect(markup).toContain(WARM_COLD_RECOVERY_COPY.instruction);
-    for (const status of Object.values(WARM_COLD_RECOVERY_COPY.statuses)) {
+    const localized = deepFlowCopyFor('no').warmCold;
+    expect(markup).toContain(localized.recoveryTitle);
+    expect(markup).toContain(localized.recoveryInstruction);
+    for (const status of localized.statuses) {
       expect(markup).toContain(status.title);
       expect(markup).toContain(status.signal);
       expect(markup).toContain(status.action);
@@ -53,7 +55,11 @@ describe('warm/cold recovery copy and alternative ownership', () => {
     const garmentListSource = source('src/components/outfit/OutfitGarmentList.tsx');
     expect(detailSource).not.toMatch(/swap-override-store|useSwapOverride|setSwap|handleSwap|Bytte til|Bytt til|SwapIcon|onClick=\{\(\) => handleSwap/);
     expect(detailSource).toContain('.plagg-detail-sheet .ba-press:focus-visible');
-    expect(garmentListSource).toContain('Se alternativ');
+    expect(garmentListSource).toContain('hasAlternative &&');
+    expect(garmentListSource).toContain('<span>{copy.outfit.swap}</span>');
+    expect(garmentListSource).toContain('copy.outfit.swapGarment(label)');
+    expect(garmentListSource).toContain('copy.outfit.noAlternatives(label)');
+    expect(garmentListSource).toContain('className="outfit-row"');
 
     const markup = renderToStaticMarkup(createElement(PlaggDetailSheet, {
       garmentId: 'ullsokker', isOpen: false, onClose: () => undefined, triggerRef: createRef<HTMLElement>(),

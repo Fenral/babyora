@@ -45,6 +45,9 @@ jobs:
       - name: E2E smoke
         run: npm run e2e
 
+      - name: E2E localization and result rail
+        run: npm run e2e:localization
+
       # Ni atferdsporter mot den BYGDE appen: maskoten star forankret gjennom
       # CTA-trykket, panelet hopper ikke, krysstoningen dekker, handgli under
       # 1 px, bevegelsen er interpolert, og det er stille for svaret kommer.

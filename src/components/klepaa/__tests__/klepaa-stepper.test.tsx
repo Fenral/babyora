@@ -72,7 +72,10 @@ import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+import i18n from '../../../i18n/index';
 import { KlePaaStepper, type KlePaaStep } from '../KlePaaStepper';
+
+await i18n.changeLanguage('no');
 
 const ROT = process.cwd();
 

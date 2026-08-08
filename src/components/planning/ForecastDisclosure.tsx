@@ -1,4 +1,6 @@
 import { useId } from 'react';
+import { useTranslation } from 'react-i18next';
+import { htmlLanguageFor } from '../../i18n/language-policy';
 
 export type ForecastDisclosureRow = Readonly<{
   atIso: string;
@@ -13,38 +15,38 @@ type Props = Readonly<{
   rows: readonly ForecastDisclosureRow[];
 }>;
 
-const timeFormatter = new Intl.DateTimeFormat('nb-NO', {
-  timeZone: 'Europe/Oslo',
-  weekday: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
-});
-
-function timeLabel(atIso: string): string {
+function timeLabel(atIso: string, locale: string): string {
   const instant = new Date(atIso);
   if (Number.isNaN(instant.getTime())) return atIso;
-  return timeFormatter.format(instant).replace('.', ':');
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: 'Europe/Oslo',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(instant).replace('.', ':');
 }
 
-function weatherLabel(symbolCode: string): string {
-  const normalized = symbolCode.toLocaleLowerCase('nb-NO');
-  if (normalized.includes('thunder')) return 'Torden';
-  if (normalized.includes('snow')) return 'Snø';
-  if (normalized.includes('sleet')) return 'Sludd';
-  if (normalized.includes('rain')) return 'Regn';
-  if (normalized.includes('fog')) return 'Tåke';
-  if (normalized.includes('cloud')) return 'Skyet';
-  if (normalized.includes('partly')) return 'Delvis skyet';
-  if (normalized.includes('fair')) return 'Lettskyet';
-  if (normalized.includes('clear')) return 'Klarvær';
-  return 'Vær';
+function weatherTranslationKey(symbolCode: string): string {
+  const normalized = symbolCode.toLocaleLowerCase('en');
+  if (normalized.includes('thunder')) return 'plan.weather.thunder';
+  if (normalized.includes('snow')) return 'plan.weather.snow';
+  if (normalized.includes('sleet')) return 'plan.weather.sleet';
+  if (normalized.includes('rain')) return 'plan.weather.rain';
+  if (normalized.includes('fog')) return 'plan.weather.fog';
+  if (normalized.includes('partly')) return 'plan.weather.partlyCloudy';
+  if (normalized.includes('cloud')) return 'plan.weather.cloudy';
+  if (normalized.includes('fair')) return 'plan.weather.fair';
+  if (normalized.includes('clear')) return 'plan.weather.clear';
+  return 'plan.weather.unknown';
 }
 
 export function ForecastDisclosure({ open, onToggle, rows }: Props) {
   const contentId = useId();
+  const { t, i18n } = useTranslation();
+  const locale = htmlLanguageFor(i18n.resolvedLanguage ?? i18n.language);
   return (
-    <section className="planlegg-forecast" aria-label="Værprognose">
+    <section className="planlegg-forecast" aria-label={t('plan.forecastDisclosure.label')}>
       <button
         type="button"
         className="planlegg-forecast__toggle"
@@ -52,7 +54,7 @@ export function ForecastDisclosure({ open, onToggle, rows }: Props) {
         aria-controls={contentId}
         onClick={onToggle}
       >
-        {open ? 'Skjul full værprognose' : 'Vis full værprognose'}
+        {t(open ? 'plan.forecastDisclosure.hide' : 'plan.forecastDisclosure.show')}
         {/* Sto som «⌄» (U+2304) tegnet i tekstfonten — en bokstavform med
             flate avslutninger, ca. 12 px høy ved siden av en 160 px bred
             etikett. Den leses som et tegn som har falt ut av teksten, ikke
@@ -77,10 +79,10 @@ export function ForecastDisclosure({ open, onToggle, rows }: Props) {
         <ul id={contentId} className="planlegg-forecast__rows">
           {rows.map((row) => (
             <li key={row.atIso}>
-              <time dateTime={row.atIso}>{timeLabel(row.atIso)}</time>
-              <span>{weatherLabel(row.symbolCode)}</span>
+              <time dateTime={row.atIso}>{timeLabel(row.atIso, locale)}</time>
+              <span>{t(weatherTranslationKey(row.symbolCode))}</span>
               <span>{Math.round(row.tempC)}°</span>
-              <span>Føles som {Math.round(row.feelsLikeC)}°</span>
+              <span>{t('plan.forecastDisclosure.feelsLike', { temp: Math.round(row.feelsLikeC) })}</span>
             </li>
           ))}
         </ul>

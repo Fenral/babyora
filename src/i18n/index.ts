@@ -1,5 +1,4 @@
 import i18next from 'i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
 
 import da from './locales/da.json';
@@ -7,42 +6,30 @@ import de from './locales/de.json';
 import en from './locales/en.json';
 import no from './locales/no.json';
 import sv from './locales/sv.json';
+import {
+  removeLanguageOverride,
+  resolveInitialLanguage,
+  SUPPORTED_LANGUAGES,
+  syncDocumentLanguage,
+  writeLanguageOverride,
+  type SupportedLanguage,
+} from './language-policy';
 
 /**
- * Babyora i18n-config.
+ * Babyora localization foundation.
  *
- * Språk-strategi (jun 2026):
- * - Norsk (no) = primært + fallback. Tone-of-voice etablert i wool-layers/modifiers.
- * - Engelsk (en) = sekundært. Britisk-norsk-vennlig, ikke amerikansk slang.
- * - Svensk (sv), dansk (da) = lett oversettelse, samme språk-familie som norsk.
- * - Tysk (de) = du-form (ikke Sie) for warm parenting.
- * - Finsk (fi) er DROPPET fra v1.0 — krever native reviewer Babyora ikke har
- *   ennå. Git-historikk (commit 3ae66e4) bevarer AI-utkastet for senere
- *   gjeninnføring sammen med native review.
+ * Initial-language precedence is deliberately synchronous:
+ * 1. explicit user choice in `babyora:languageOverride`;
+ * 2. first valid region in navigator.languages, then navigator.language;
+ * 3. SE maps to Swedish, DK maps to Danish, and everything else maps to English.
  *
- * Språk-deteksjon-rekkefølge:
- * 1. localStorage `babyora:lng` (bruker-valg fra Innstillinger)
- *    (Legacy-nøkkel `klemeg:lng` brukes fortsatt som fallback for å bevare
- *    eksisterende installasjoner — kan fjernes etter v1.1.)
- * 2. navigator.language (browser/OS-språk)
- * 3. Fallback: no
- *
- * BCP 47-noter (per a11y-spec):
- * - 'no' beholdes som locale-nøkkel for å unngå breaking change, men HTML
- *   `<html lang>`-attributtet settes til 'nb' (bokmål) ved språkskifte for
- *   korrekt screen-reader-stemme-valg.
- * - Alle andre språk: 2-letter primary subtag holder (sv/da/fi/de/en).
+ * Device-derived choices are never cached. Norwegian, English, Swedish,
+ * Danish, and German remain available as explicit resource languages.
  */
-const NO_TO_BCP47: Record<string, string> = {
-  no: 'nb', // norsk bokmål
-  en: 'en',
-  sv: 'sv',
-  da: 'da',
-  de: 'de',
-};
+
+i18next.on('languageChanged', syncDocumentLanguage);
 
 void i18next
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
@@ -52,37 +39,36 @@ void i18next
       da: { translation: da },
       de: { translation: de },
     },
-    fallbackLng: 'no',
-    supportedLngs: ['no', 'en', 'sv', 'da', 'de'],
-    nonExplicitSupportedLngs: true, // 'no-NO' → 'no', 'sv-SE' → 'sv'
-    returnEmptyString: false, // a11y: tomme strings til SR forbys, faller tilbake til key/fallbackLng
+    lng: resolveInitialLanguage(),
+    fallbackLng: 'en',
+    supportedLngs: [...SUPPORTED_LANGUAGES],
+    nonExplicitSupportedLngs: true,
+    returnEmptyString: false,
     interpolation: {
-      escapeValue: false, // React escaper allerede
-    },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
-      lookupLocalStorage: 'babyora:lng',
+      escapeValue: false,
     },
   });
 
-// Dynamisk HTML lang-attribute (a11y: SR observerer attribute-endringer
-// for å bytte tale-syntese ved språkskifte).
-function updateHtmlLang(lng: string): void {
-  if (typeof document !== 'undefined') {
-    const bcp47 = NO_TO_BCP47[lng] ?? lng;
-    document.documentElement.lang = bcp47;
-    document.documentElement.dir = 'ltr'; // alle 6 språk er LTR
-  }
+// The listener above handles every change. This also covers implementations
+// where initialization completes before the listener's event is observable.
+if (i18next.isInitialized) {
+  syncDocumentLanguage(i18next.resolvedLanguage ?? i18next.language);
+} else {
+  i18next.on('initialized', () => {
+    syncDocumentLanguage(i18next.resolvedLanguage ?? i18next.language);
+  });
 }
 
-i18next.on('languageChanged', updateHtmlLang);
+/** Persist and apply only a user-selected language override. */
+export async function setLanguageOverride(language: SupportedLanguage): Promise<void> {
+  writeLanguageOverride(language);
+  await i18next.changeLanguage(language);
+}
 
-// Initial sync etter i18next-init (deteksjon ferdig).
-if (i18next.isInitialized) {
-  updateHtmlLang(i18next.language);
-} else {
-  i18next.on('initialized', () => updateHtmlLang(i18next.language));
+/** Remove the explicit choice and immediately resume device-region selection. */
+export async function clearLanguageOverride(): Promise<void> {
+  removeLanguageOverride();
+  await i18next.changeLanguage(resolveInitialLanguage({ storage: null }));
 }
 
 export default i18next;

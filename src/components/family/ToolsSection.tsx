@@ -14,6 +14,7 @@
  * private lokale hjelpekomponenter (Section/NavRow er ikke eksportert der).
  */
 import type { CSSProperties, ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { FamilieToolTarget } from '../../types/nav';
 import { SettingsRow } from '../controls/SettingsRow';
 
@@ -23,14 +24,14 @@ export interface ToolsSectionProps {
 
 interface ToolRowDef {
   target: FamilieToolTarget;
-  label: string;
-  sub: string;
+  labelKey: string;
+  subKey: string;
 }
 
 const TOOL_ROWS: ReadonlyArray<ToolRowDef> = [
-  { target: 'tog', label: 'Soveguiden', sub: 'Riktig sovepose for romtemperatur' },
-  { target: 'varm-kald', label: 'Varm eller kald?', sub: 'Tre raske spørsmål om barnets temperatur' },
-  { target: 'forste-vinter', label: 'Første vinter', sub: 'Åtte korte leksjoner, én i uka' },
+  { target: 'tog', labelKey: 'settings.family.sleepGuide', subKey: 'settings.family.sleepGuideSub' },
+  { target: 'varm-kald', labelKey: 'settings.family.temperatureGuide', subKey: 'settings.family.temperatureGuideSub' },
+  { target: 'forste-vinter', labelKey: 'settings.family.firstWinter', subKey: 'settings.family.firstWinterSub' },
 ];
 
 const sectionStyle: CSSProperties = {
@@ -102,10 +103,12 @@ function ToolIcon(): ReactElement {
 }
 
 export function ToolsSection({ onOpenTool }: ToolsSectionProps): ReactElement {
+  const { t } = useTranslation();
+
   return (
     <section style={sectionStyle} aria-labelledby="sec-verktoy">
-      <h2 id="sec-verktoy" style={sectionEyebrowStyle}>Verktøy</h2>
-      <ul role="list" style={groupCardStyle} aria-label="Verktøy fra Guide">
+      <h2 id="sec-verktoy" style={sectionEyebrowStyle}>{t('settings.family.tools')}</h2>
+      <ul role="list" style={groupCardStyle} aria-label={t('settings.family.toolsAria')}>
         {/* Radene her var en ORDRETT kopi av Innstillingers seks stilobjekter,
             tegn for tegn. Nå samme primitiv, så en endring ett sted ikke lar
             det andre stedet drive fra hverandre i stillhet. */}
@@ -113,8 +116,8 @@ export function ToolsSection({ onOpenTool }: ToolsSectionProps): ReactElement {
           <li key={row.target} style={{ listStyle: 'none' }}>
             <SettingsRow
               icon={<ToolIcon />}
-              label={row.label}
-              sub={row.sub}
+              label={t(row.labelKey)}
+              sub={t(row.subKey)}
               trailing={<Chevron />}
               divider={i < TOOL_ROWS.length - 1}
               onClick={() => onOpenTool(row.target)}

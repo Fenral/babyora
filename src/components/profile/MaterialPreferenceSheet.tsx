@@ -15,19 +15,44 @@
  */
 
 import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
-import { useTranslation } from 'react-i18next';
 import { track } from '../../lib/analytics/track.js';
 import type { MaterialPreference } from '../../lib/clothing-engine-v2/types.js';
 import { Button } from '../controls/Button';
 import { Sheet } from '../controls/Sheet';
 
-const PREFERENCES: MaterialPreference[] = ['best_for_conditions', 'prefer_wool', 'avoid_wool'];
+type SelectableMaterialPreference = Exclude<MaterialPreference, 'avoid_wool'>;
+
+interface MaterialPreferenceSheetCopy {
+  readonly title: string;
+  readonly intro: string;
+  readonly done: string;
+  readonly close: string;
+  readonly options: Readonly<Record<SelectableMaterialPreference, Readonly<{
+    label: string;
+    description: string;
+  }>>>;
+}
+
+const SELECTABLE_MATERIAL_PREFERENCES = [
+  'best_for_conditions',
+  'prefer_wool',
+  'prefer_fleece',
+  'prefer_cotton',
+] as const satisfies readonly SelectableMaterialPreference[];
+
+/** Legacy avoid_wool meant fleece-first and stays readable without a fifth option. */
+function normalizedMaterialPreference(
+  value: MaterialPreference,
+): SelectableMaterialPreference {
+  return value === 'avoid_wool' ? 'prefer_fleece' : value;
+}
 
 type Props = {
   open: boolean;
   value: MaterialPreference;
   onChange: (next: MaterialPreference) => void;
   onClose: () => void;
+  copy: MaterialPreferenceSheetCopy;
   /** Fokus-retur-mål (repo-mønster fra PlaggDetailSheet). */
   triggerRef?: { current: HTMLElement | null };
 };
@@ -38,10 +63,10 @@ const optionRow: CSSProperties = {
 };
 const radioStyle: CSSProperties = { marginTop: 3, width: 20, height: 20, accentColor: 'var(--accent-cta)', flex: 'none' };
 
-export function MaterialPreferenceSheet({ open, value, onChange, onClose, triggerRef }: Props) {
-  const { t } = useTranslation();
+export function MaterialPreferenceSheet({ open, value, onChange, onClose, copy, triggerRef }: Props) {
   const initialValueRef = useRef(value);
   const sporetRef = useRef(false);
+  const selectedValue = normalizedMaterialPreference(value);
 
   useEffect(() => {
     if (open) {
@@ -69,36 +94,36 @@ export function MaterialPreferenceSheet({ open, value, onChange, onClose, trigge
       open={open}
       onClose={lukk}
       triggerRef={triggerRef}
-      title={t('engineV2.materialSheet.title')}
-      closeLabel={t('common.close', { defaultValue: 'Lukk' })}
-      footer={<Button full onClick={lukk}>{t('engineV2.materialSheet.done')}</Button>}
+      title={copy.title}
+      closeLabel={copy.close}
+      footer={<Button full onClick={lukk}>{copy.done}</Button>}
     >
       <p style={{ margin: '0 0 14px', color: 'var(--dw-ink-mid)', fontSize: 14 }}>
-        {t('engineV2.materialSheet.intro')}
+        {copy.intro}
       </p>
       <fieldset style={{ border: 0, margin: 0, padding: 0 }}>
         <legend style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
-          {t('engineV2.materialSheet.title')}
+          {copy.title}
         </legend>
-        {PREFERENCES.map((pref) => (
+        {SELECTABLE_MATERIAL_PREFERENCES.map((pref) => (
           <label key={pref} style={optionRow}>
             <input
               type="radio"
               name="material-preference"
               value={pref}
-              checked={value === pref}
+              checked={selectedValue === pref}
               /* Vinner over primitivens lukkeknapp fordi showModal() velger
                  elementet med autofocus foran det forste fokuserbare. */
-              autoFocus={value === pref}
+              autoFocus={selectedValue === pref}
               onChange={() => onChange(pref)}
               style={radioStyle}
             />
             <span>
               <span style={{ display: 'block', fontWeight: 650, fontSize: 15 }}>
-                {t(`engineV2.materialSheet.${pref}.label`)}
+                {copy.options[pref].label}
               </span>
               <span style={{ display: 'block', color: 'var(--dw-ink-mid)', fontSize: 13.5 }}>
-                {t(`engineV2.materialSheet.${pref}.description`)}
+                {copy.options[pref].description}
               </span>
             </span>
           </label>

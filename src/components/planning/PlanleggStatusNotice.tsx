@@ -10,20 +10,20 @@ type Props = Readonly<{
   subject?: 'plan' | 'weather';
 }>;
 
-const osloTimeFormatter = new Intl.DateTimeFormat('nb-NO', {
-  timeZone: 'Europe/Oslo',
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
-});
-
-function cachedTime(cachedAtIso: string): string {
+function cachedTime(cachedAtIso: string, locale: string, unknownTime: string): string {
   const instant = new Date(cachedAtIso);
-  if (Number.isNaN(instant.getTime())) return 'ukjent tidspunkt';
-  return osloTimeFormatter.format(instant).replace('.', ':');
+  if (Number.isNaN(instant.getTime())) return unknownTime;
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: 'Europe/Oslo',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(instant).replace('.', ':');
 }
 
 export function PlanleggStatusNotice({ state, subject = 'plan' }: Props) {
+  const { t, i18n } = useTranslation();
+  const locale = htmlLanguageFor(i18n.resolvedLanguage ?? i18n.language);
   if (state.status === 'ready') return null;
 
   if (state.status === 'loading') {
@@ -34,7 +34,7 @@ export function PlanleggStatusNotice({ state, subject = 'plan' }: Props) {
         aria-live="polite"
         aria-busy="true"
       >
-        <p>{subject === 'weather' ? 'Henter værprognosen …' : 'Henter dagens plan …'}</p>
+        <p>{t(subject === 'weather' ? 'plan.status.loadingWeather' : 'plan.status.loadingPlan')}</p>
         <div className="planlegg-status__skeleton" aria-hidden="true">
           <span className="planlegg-status__skeleton-verdict" />
           <span className="planlegg-status__skeleton-action" />
@@ -53,16 +53,16 @@ export function PlanleggStatusNotice({ state, subject = 'plan' }: Props) {
       <div className="planlegg-status" role="status" aria-live="polite">
         <h2>
           {subject === 'weather'
-            ? 'Vi fikk ikke oppdatert værprognosen'
-            : 'Vi fikk ikke oppdatert planen'}
+            ? t('plan.status.weatherErrorTitle')
+            : t('plan.status.planErrorTitle')}
         </h2>
         <p>
           {subject === 'weather'
-            ? 'Vi har ingen oppdatert værprognose å vise. Prøv å hente været på nytt.'
-            : 'Vi har ingen oppdatert plan å vise. Prøv å hente planen på nytt.'}
+            ? t('plan.status.weatherErrorBody')
+            : t('plan.status.planErrorBody')}
         </p>
         <button type="button" onClick={state.onRetry}>
-          {subject === 'weather' ? 'Prøv å hente været' : 'Prøv å hente planen'}
+          {t(subject === 'weather' ? 'plan.status.retryWeather' : 'plan.status.retryPlan')}
         </button>
       </div>
     );
@@ -72,11 +72,15 @@ export function PlanleggStatusNotice({ state, subject = 'plan' }: Props) {
     return (
       <div className="planlegg-status" role="status" aria-live="polite">
         <p>
-          Du er frakoblet · viser {subject === 'weather' ? 'værprognosen' : 'planen'} fra{' '}
-          {cachedTime(state.cachedAtIso)}
+          {t('plan.status.offline', {
+            subject: t(subject === 'weather'
+              ? 'plan.status.weatherSubject'
+              : 'plan.status.planSubject'),
+            time: cachedTime(state.cachedAtIso, locale, t('plan.status.unknownTime')),
+          })}
         </p>
         <button type="button" onClick={state.onRetry}>
-          {subject === 'weather' ? 'Prøv å hente været' : 'Prøv å hente planen'}
+          {t(subject === 'weather' ? 'plan.status.retryWeather' : 'plan.status.retryPlan')}
         </button>
       </div>
     );
@@ -85,10 +89,10 @@ export function PlanleggStatusNotice({ state, subject = 'plan' }: Props) {
   return (
     <div className="planlegg-status" role="status" aria-live="polite">
       <p>
-        {subject === 'weather'
-          ? 'Værprognosen viser bare tidspunktene Babyora har værdata for.'
-          : 'Planen viser bare tidspunktene Babyora har værdata for.'}
+        {t(subject === 'weather' ? 'plan.status.partialWeather' : 'plan.status.partialPlan')}
       </p>
     </div>
   );
 }
+import { useTranslation } from 'react-i18next';
+import { htmlLanguageFor } from '../../i18n/language-policy';

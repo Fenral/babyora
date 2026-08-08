@@ -22,6 +22,7 @@ import {
   FULL_SCAN_DURATION_MS,
   QUICK_RECALC_DURATION_MS,
 } from './scan-orchestration.js';
+import type { HjemCtaCopy } from './hjem-copy.js';
 
 /** Hvilken vei et CTA-trykk tar. */
 export type CtaPath =
@@ -57,6 +58,11 @@ const CEREMONY_PLAN: CtaPlan = Object.freeze({
 });
 const REVEAL_PLAN: CtaPlan = Object.freeze({
   path: 'reveal', label: CTA_REVEAL_LABEL, line: CTA_REVEAL_LINE,
+});
+
+const DEFAULT_CTA_COPY: HjemCtaCopy = Object.freeze({
+  ceremony: Object.freeze({ label: CTA_CEREMONY_LABEL, line: CTA_CEREMONY_LINE }),
+  reveal: Object.freeze({ label: CTA_REVEAL_LABEL, line: CTA_REVEAL_LINE }),
 });
 
 /**
@@ -123,10 +129,17 @@ export function planCta(
   persistedResultKey: string | null,
   memory: ReadonlyMap<string, ReadonlySet<string>>,
   scope: string,
+  copy: HjemCtaCopy = DEFAULT_CTA_COPY,
 ): CtaPlan {
-  if (currentResultKey === null) return CEREMONY_PLAN;
-  if (persistedResultKey === currentResultKey) return REVEAL_PLAN;
-  return knowsResultKey(memory, scope, currentResultKey) ? REVEAL_PLAN : CEREMONY_PLAN;
+  const ceremonyPlan = copy === DEFAULT_CTA_COPY
+    ? CEREMONY_PLAN
+    : Object.freeze({ path: 'ceremony', ...copy.ceremony } satisfies CtaPlan);
+  const revealPlan = copy === DEFAULT_CTA_COPY
+    ? REVEAL_PLAN
+    : Object.freeze({ path: 'reveal', ...copy.reveal } satisfies CtaPlan);
+  if (currentResultKey === null) return ceremonyPlan;
+  if (persistedResultKey === currentResultKey) return revealPlan;
+  return knowsResultKey(memory, scope, currentResultKey) ? revealPlan : ceremonyPlan;
 }
 
 export type RecalcPlan = Readonly<{ durationMs: number; ceremony: boolean }>;

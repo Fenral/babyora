@@ -35,6 +35,7 @@
  *  - prefers-reduced-motion respektert
  */
 import { useState, useMemo, useRef, useCallback, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
@@ -50,6 +51,7 @@ import {
 } from '../data/garment-category';
 import { titleFor, materialFor, type MaterialKey } from '../data/garment-catalog-helpers';
 import { sortGarmentItems, type PlaggSortMode } from './plaggbibliotek-sort';
+import { deepFlowCopyFor, localizedGarmentIdName } from './deep-flow-copy';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -529,6 +531,9 @@ export function PlaggbibliotekScreen({
   onBack,
   onOpenCategory,
 }: PlaggbibliotekScreenProps) {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const copy = deepFlowCopyFor(language);
   const { fire } = useHapticSystem();
   const { reducedMotion } = useNativeSettings();
 
@@ -543,6 +548,18 @@ export function PlaggbibliotekScreen({
   const detailTriggerRef = useRef<HTMLButtonElement | null>(null);
   const garmentBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
+  const localizedGroups = useMemo(() => GROUPS.map((group) => ({
+    ...group,
+    label: copy.library.groups[group.id] ?? group.label,
+    items: group.items.map((garment) => ({
+      ...garment,
+      title: localizedGarmentIdName(garment.id, language),
+      materialLabel: garment.material === null
+        ? null
+        : copy.library.materials[garment.material] ?? null,
+    })),
+  })), [copy, language]);
+
   const handleCloseDetail = useCallback(() => {
     setDetailGarmentId(null);
   }, []);
@@ -551,7 +568,7 @@ export function PlaggbibliotekScreen({
   const visibleGroups = useMemo(() => {
     const q = query.trim().toLowerCase();
 
-    return GROUPS.map((group) => {
+    return localizedGroups.map((group) => {
       const items = group.items.filter((g) => {
         // Material-filter
         if (filter === 'ull' && g.material !== 'ull') return false;
@@ -571,7 +588,7 @@ export function PlaggbibliotekScreen({
       });
       return { ...group, items: sortGarmentItems(items, sortMode) };
     }).filter((g) => g.items.length > 0);
-  }, [query, filter, sortMode]);
+  }, [query, filter, sortMode, localizedGroups]);
 
   const handleBack = () => {
     void fire('light');
@@ -613,14 +630,14 @@ export function PlaggbibliotekScreen({
 
   return (
     <main style={styles.main} aria-labelledby="plaggbib-h1">
-      <h1 id="plaggbib-h1" style={styles.srOnly}>Plaggbiblioteket</h1>
+      <h1 id="plaggbib-h1" style={styles.srOnly}>{copy.library.title}</h1>
 
       {/* Top bar */}
       <div style={styles.topbar}>
         <button
           type="button"
           onClick={handleBack}
-          aria-label="Tilbake"
+          aria-label={copy.common.back}
           style={styles.backBtn}
           className="plaggbib-focus plaggbib-press"
         >
@@ -631,9 +648,9 @@ export function PlaggbibliotekScreen({
 
         <div style={styles.eyebrow}>
           <span style={styles.eyebrowMeta}>
-            <em>Hele katalogen</em>
+            <em>{copy.library.fullCatalog}</em>
             <span style={styles.eyebrowDot} aria-hidden="true" />
-            <em>{TOTAL_COUNT} plagg</em>
+            <em>{copy.common.garments(TOTAL_COUNT)}</em>
           </span>
         </div>
 
@@ -643,8 +660,8 @@ export function PlaggbibliotekScreen({
           aria-pressed={sortMode === 'alfabetisk'}
           aria-label={
             sortMode === 'alfabetisk'
-              ? 'Sorter A–Å: på. Trykk for å gå tilbake til påkledningsrekkefølge'
-              : 'Sorter A–Å'
+              ? copy.library.sortAlphabeticalOn
+              : copy.library.sortAlphabetical
           }
           style={{
             ...styles.topbarAction,
@@ -667,7 +684,7 @@ export function PlaggbibliotekScreen({
 
       {/* Editorial display title */}
       <header style={styles.display}>
-        <h2 style={styles.displayH2}>Plaggbiblioteket</h2>
+        <h2 style={styles.displayH2}>{copy.library.title}</h2>
       </header>
 
       {/* Search */}
@@ -681,8 +698,8 @@ export function PlaggbibliotekScreen({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Søk i plagg"
-            aria-label="Søk i plagg"
+            placeholder={copy.library.search}
+            aria-label={copy.library.search}
             className="plaggbib-sok"
             style={styles.searchInput}
             inputMode="search"
@@ -694,7 +711,7 @@ export function PlaggbibliotekScreen({
             <button
               type="button"
               onClick={handleClearQuery}
-              aria-label="Tøm søket"
+              aria-label={copy.library.clearSearch}
               style={styles.searchClear}
               className="plaggbib-focus plaggbib-press"
             >
@@ -707,7 +724,7 @@ export function PlaggbibliotekScreen({
       </div>
 
       {/* Filter chips (scroll-x) */}
-      <nav style={styles.filters} aria-label="Filtrer plagg">
+      <nav style={styles.filters} aria-label={copy.library.filterAria}>
         <ul role="list" style={styles.filtersUl}>
           {FILTERS.map((f) => {
             const isActive = filter === f.key;
@@ -772,7 +789,7 @@ export function PlaggbibliotekScreen({
                       }}
                     />
                   )}
-                  {f.label}
+                  {copy.library.filters[f.key]}
                 </button>
               </li>
             );
@@ -793,14 +810,14 @@ export function PlaggbibliotekScreen({
               margin: 0,
             }}
           >
-            Fant ingen plagg{query ? ` som matcher «${query}»` : ''}.
+            {query ? copy.library.noResultsFor(query) : copy.library.noResults}
           </p>
         ) : (
           visibleGroups.map((group) => (
             <section key={group.id} aria-labelledby={`group-${group.id}`}>
               <div style={styles.groupHead}>
                 <h3 id={`group-${group.id}`} style={styles.groupHeadH3}>{group.label}</h3>
-                <span style={styles.groupCount}>{group.items.length} plagg</span>
+                <span style={styles.groupCount}>{copy.common.garments(group.items.length)}</span>
               </div>
               <ul role="list" style={styles.grid} aria-label={group.label}>
                 {group.items.map((g, idx) => {
@@ -833,14 +850,14 @@ export function PlaggbibliotekScreen({
         <button
           type="button"
           onClick={handleAddGarment}
-          aria-label="Legg til nytt plagg"
+          aria-label={copy.library.addAria}
           className="plaggbib-focus plaggbib-fab"
           style={styles.fab}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M12 5v14M5 12h14" />
           </svg>
-          <span>Legg til plagg</span>
+          <span>{copy.library.add}</span>
         </button>
       </div>
 
@@ -920,6 +937,8 @@ interface GarmentLiProps {
 }
 
 function GarmentLi({ garment, isRightCol, reducedMotion, onSelect, buttonRef }: GarmentLiProps) {
+  const { i18n } = useTranslation();
+  const copy = deepFlowCopyFor(i18n.resolvedLanguage ?? i18n.language);
   // Bilde faller tilbake til generisk SVG ved 404 (ingen emoji — konsistent
   // med PlaggDetailSheet). garmentPng gir alltid en sti.
   const [imgSrc, setImgSrc] = useState(garment.image);
@@ -948,7 +967,7 @@ function GarmentLi({ garment, isRightCol, reducedMotion, onSelect, buttonRef }: 
         ref={buttonRef}
         onClick={onSelect}
         className="plaggbib-card"
-        aria-label={`Vis detalj for ${garment.title}${garment.materialLabel ? ` — ${garment.materialLabel}` : ''}`}
+        aria-label={copy.library.detailsFor(garment.title, garment.materialLabel)}
         style={{
           display: 'flex',
           flexDirection: 'column',

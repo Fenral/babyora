@@ -14,6 +14,40 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { Keyboard, KeyboardResize } from '@capacitor/keyboard';
 import { App } from '@capacitor/app';
 
+export type RuntimeThemeMode = 'auto' | 'light' | 'dark';
+
+const THEME_CHROME = {
+  light: '#F2F5F1',
+  dark: '#1E140C',
+} as const;
+
+function usesDarkTheme(mode?: RuntimeThemeMode): boolean {
+  const resolvedMode = mode ?? (
+    document.documentElement.dataset.theme === 'dark'
+      ? 'dark'
+      : document.documentElement.dataset.theme === 'light'
+        ? 'light'
+        : 'auto'
+  );
+  return resolvedMode === 'dark'
+    || (resolvedMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+
+/** Holder nettleserkrom og native statusbar i samme tema som appflaten. */
+export async function syncThemeChrome(mode?: RuntimeThemeMode): Promise<void> {
+  const dark = usesDarkTheme(mode);
+  document.querySelector<HTMLMetaElement>('#babyora-theme-color')
+    ?.setAttribute('content', dark ? THEME_CHROME.dark : THEME_CHROME.light);
+
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    // Style.Dark = mørkt innhold (lys bakgrunn), Style.Light = lyst innhold.
+    await StatusBar.setStyle({ style: dark ? Style.Light : Style.Dark });
+  } catch (err) {
+    console.warn('[native-init] StatusBar.setStyle feilet', err);
+  }
+}
+
 /**
  * Initialiserer native plugins. Trygg å kalle på web — skipper alt
  * native-spesifikt hvis vi ikke kjører i en Capacitor-runtime.
@@ -23,13 +57,8 @@ export async function initNative(): Promise<void> {
     return;
   }
 
-  // Status-bar: mørk tekst/ikoner mot warm-grey bakgrunn (ink-on-warm-grey).
-  // Style.Dark = mørkt innhold (lyse backgrounds), Style.Light = lyst innhold.
-  try {
-    await StatusBar.setStyle({ style: Style.Dark });
-  } catch (err) {
-    console.warn('[native-init] StatusBar.setStyle feilet', err);
-  }
+  // Boot-scriptet har allerede stemplet standard eller lagret preferanse.
+  await syncThemeChrome();
 
   // Splash: vis til appen er klar, skjul deretter myk-fade.
   try {

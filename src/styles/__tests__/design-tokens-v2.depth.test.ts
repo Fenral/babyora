@@ -115,16 +115,16 @@ describe('dybdekontrakten — temaene overstyrer KUN farger', () => {
    *
    * Se vedtak `skygge-fortegn` i docs/design-notes/vedtak.json. */
 
-  it('lys modus bruker VARME skygger — aldri nesten-svart (leser som grått skitt på krem)', () => {
+  it('lys modus bruker MINERALGRØNNE skygger — aldri nøytralt svart', () => {
     for (const block of [1, 2]) {
       for (const token of ['--dw-sh-contact', '--dw-sh-mid', '--dw-sh-broad'] as const) {
         const value = declaredValue(token, block);
         const rgb = value.match(/rgba\((\d+),\s*(\d+),\s*(\d+)/);
         expect(rgb, `${token} i blokk ${block} er ikke rgba`).not.toBeNull();
         const [r, g, b] = [Number(rgb![1]), Number(rgb![2]), Number(rgb![3])];
-        expect(r, `${token}: for mørk til å være en varm romskygge`).toBeGreaterThan(60);
-        expect(r, `${token}: rødkanalen må dominere (varm tone)`).toBeGreaterThan(b);
-        expect(g, `${token}: grønnkanalen skal ligge mellom rød og blå`).toBeGreaterThan(b);
+        expect(g, `${token}: grønnkanalen må dominere i Mineral Garden-skyggen`).toBeGreaterThan(b);
+        expect(b, `${token}: blå må ligge mellom grønn og rød`).toBeGreaterThan(r);
+        expect(new Set([r, g, b]).size, `${token}: nøytral grå/svart er ikke tillatt`).toBeGreaterThan(1);
       }
     }
   });

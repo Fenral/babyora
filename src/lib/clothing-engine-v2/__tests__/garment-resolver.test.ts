@@ -10,7 +10,7 @@ import { resolveEquipment } from '../equipment-resolver.js';
 import { resolveMaterialFamilies } from '../material-resolver.js';
 import { calculateThermalIntent } from '../thermal-intent.js';
 import { validateRecommendInputV2 } from '../validation.js';
-import type { RecommendInputV2, ThermalIntent } from '../types.js';
+import type { MaterialPreference, RecommendInputV2, ThermalIntent } from '../types.js';
 
 type Overrides = Omit<Partial<RecommendInputV2>, 'weather'> & {
   weather?: Partial<RecommendInputV2['weather']>;
@@ -27,7 +27,7 @@ function makeIntent(partial?: Overrides): { intent: ThermalIntent; ageMonths: nu
   return { intent: calculateThermalIntent(input), ageMonths: input.ageMonths };
 }
 
-function parts(partial?: Overrides, preference: 'best_for_conditions' | 'prefer_wool' | 'avoid_wool' = 'best_for_conditions') {
+function parts(partial?: Overrides, preference: MaterialPreference = 'best_for_conditions') {
   const { intent, ageMonths } = makeIntent(partial);
   const policy = resolveMaterialFamilies(intent, preference);
   return resolveRecommendationParts(intent, policy, ageMonths);
@@ -54,6 +54,14 @@ describe('Motor 2.0 plaggresolver — grunnvalg', () => {
     const g = parts({ weather: { feelsLikeC: -4 } }, 'prefer_wool').garments;
     expect(g.find((i) => i.role === 'base_fullbody')?.material).toBe('wool');
     expect(g.find((i) => i.role === 'mid_fullbody')?.material).toBe('wool');
+  });
+
+  it('prefer_cotton: bomull velges innerst i varmt, tørt og rolig vær', () => {
+    const g = parts({
+      situation: 'calm_outdoors',
+      weather: { feelsLikeC: 21, tempC: 21, precipMmH: 0, windMs: 2 },
+    }, 'prefer_cotton').garments;
+    expect(g.find((i) => i.role.startsWith('base'))?.material).toBe('cotton');
   });
 
   it('regn: skall er med og er vanntett-varianten (G08)', () => {

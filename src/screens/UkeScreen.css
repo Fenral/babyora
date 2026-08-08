@@ -7,8 +7,8 @@
  *    day-hero temperature (Fraunces, the one allowed serif moment) and the
  *    forecast disclosure nested inside it (review item 8 — the forecast no
  *    longer floats free at the bottom of the screen).
- *  - .planlegg-advice: ONE raised espresso surface for verdict + next
- *    action + the Dagslinjen timeline (review item 7/9).
+ *  - .planlegg-advice: ONE raised espresso surface for verdict + the
+ *    Dagslinjen timeline (review item 7/9).
  * Color roles preserved per sol-duel-2026-07-31.md §13: petrol=weather/date,
  * espresso surface=advice/preparation, amber=next action, cream=info.
  * Typography: Schibsted everywhere (var(--dw-font-ui)); Fraunces appears in
@@ -56,6 +56,16 @@
 
 .planlegg-screen__views {
   margin-top: var(--dw-space-14);
+}
+
+.planlegg-screen__views .segmented-control__group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+}
+
+.planlegg-screen__views .segmented-control__segment {
+  width: 100%;
 }
 
 /* ============ Statusvarsler (PlanleggStatusNotice) ============
@@ -284,7 +294,7 @@
    instrument-tekstrampe, aldri canvas-tekstfarger. */
 .planlegg-weather .planlegg-forecast {
   margin-top: var(--dw-space-14);
-  border-top: 1px solid rgba(241, 233, 218, 0.16);
+  border-top: 1px solid var(--dw-hairline-panel);
 }
 
 .planlegg-weather .planlegg-forecast__toggle {
@@ -296,11 +306,11 @@
 }
 
 .planlegg-weather .planlegg-forecast__rows li {
-  border-top-color: rgba(241, 233, 218, 0.12);
+  border-top-color: var(--dw-hairline-panel);
   color: var(--dw-ink-panel-mid);
 }
 
-/* ============ Rådgivnings-modulen (verdict + neste handling + tidslinje) ============
+/* ============ Rådgivnings-modulen (verdict + tidslinje) ============
    D1/D2: ÉN hevet espresso-flate, kantlys + tintet skygge — aldri rader
    direkte på canvas. */
 .planlegg-advice {
@@ -324,6 +334,27 @@
   opacity: 0.55;
 }
 
+.planlegg-advice--preparing {
+  display: grid;
+  gap: var(--dw-space-8);
+  padding-block: var(--dw-space-20);
+}
+
+.planlegg-advice--preparing h2 {
+  color: var(--dw-ink-hi);
+  font-family: var(--dw-font-ui);
+  font-size: var(--dw-text-heading);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.planlegg-advice--preparing p {
+  color: var(--dw-ink-mid);
+  font-size: var(--dw-text-body);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
 .planlegg-screen__answer {
   display: grid;
   gap: var(--dw-space-6);
@@ -337,7 +368,6 @@
   color: var(--dw-ink-hi);
 }
 
-.planlegg-screen__action,
 .planlegg-screen__empty,
 .planlegg-screen__week-weather {
   color: var(--dw-ink-mid);
@@ -450,13 +480,9 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-}
-
-.planlegg-dagslinje__merke-bokstav {
-  color: var(--dw-ink-mid);
-  font-size: var(--dw-text-meta);
-  font-weight: 700;
+  padding: 3px;
+  box-sizing: border-box;
+  object-fit: contain;
 }
 
 .planlegg-dagslinje__endring {
@@ -591,7 +617,9 @@
   width: 44px;
   height: 44px;
   border-radius: 11px;
-  object-fit: cover;
+  padding: 3px;
+  box-sizing: border-box;
+  object-fit: contain;
   /* FUNN 2026-08-05 (DoD fase 6A): sto som hardkodet #3A2A1A og flippet
      derfor ikke — en mørk firkant midt i lys modus, målt 12,64:1 mot
      krem-lerretet. Verdien ER --dw-plate mørk; tokenet fantes hele tiden
@@ -604,11 +632,4 @@
      brikke; på små objekter er det den valgte flatens stabel som er den
      riktige fysikken, ikke gruppeflatens. */
   box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected);
-}
-.planlegg-garments__thumb--letter {
-  display: grid;
-  place-items: center;
-  font-size: var(--dw-text-body);
-  font-weight: 700;
-  color: var(--dw-ink-mid);
 }

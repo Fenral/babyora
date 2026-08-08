@@ -1,0 +1,317 @@
+.verktoy-screen {
+  box-sizing: border-box;
+  min-block-size: 100dvh;
+  padding: calc(env(safe-area-inset-top, 0px) + var(--dw-space-24)) var(--dw-space-16) calc(var(--dw-tabbar-clearance) + var(--dw-space-24));
+  color: var(--dw-ink-hi);
+  background:
+    radial-gradient(circle at 94% 5%, color-mix(in srgb, var(--dw-canvas-glow) 82%, transparent) 0, transparent 34%),
+    var(--dw-canvas);
+}
+
+.verktoy-screen__header {
+  max-inline-size: 34rem;
+  margin: 0 auto var(--dw-space-22);
+}
+
+.verktoy-screen__eyebrow,
+.verktoy-screen__kicker {
+  margin: 0;
+  color: var(--dw-ink-mid);
+  font-size: 0.6875rem;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.verktoy-screen__header h1 {
+  margin: var(--dw-space-10) 0 var(--dw-space-8);
+  font-size: clamp(2.25rem, 11vw, 3.25rem);
+  font-weight: 760;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.verktoy-screen__header > p:last-child {
+  max-inline-size: 29rem;
+  margin: 0;
+  color: var(--dw-ink-mid);
+  font-size: 1rem;
+  line-height: 1.48;
+}
+
+.verktoy-screen__weather {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  grid-template-rows: 1fr auto;
+  gap: var(--dw-space-14) var(--dw-space-10);
+  box-sizing: border-box;
+  inline-size: min(100%, 34rem);
+  min-block-size: 212px;
+  margin: 0 auto var(--dw-space-24);
+  padding: var(--dw-space-22);
+  overflow: hidden;
+  color: var(--dw-ink-panel-hi);
+  text-align: start;
+  cursor: pointer;
+  touch-action: manipulation;
+  background: var(--dw-panel);
+  border: 1px solid color-mix(in srgb, var(--dw-ink-panel-hi) 16%, transparent);
+  border-radius: var(--dw-r-panel);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--dw-edge-light) 52%, transparent), var(--dw-depth-hero);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.verktoy-screen__weather::after {
+  position: absolute;
+  inset: auto -42px -54px auto;
+  inline-size: 156px;
+  block-size: 156px;
+  content: '';
+  background: color-mix(in srgb, var(--dw-ink-panel-hi) 7%, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.verktoy-screen__weather-copy {
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  gap: var(--dw-space-8);
+  min-inline-size: 0;
+}
+
+.verktoy-screen__weather .verktoy-screen__kicker {
+  color: var(--dw-ink-panel-mid);
+}
+
+.verktoy-screen__weather-copy strong {
+  max-inline-size: 13rem;
+  font-size: 1.75rem;
+  font-weight: 740;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+}
+
+.verktoy-screen__weather-copy > span:last-child {
+  max-inline-size: 17rem;
+  color: var(--dw-ink-panel-mid);
+  font-size: 0.875rem;
+  line-height: 1.42;
+}
+
+.verktoy-screen__weather-art {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  inline-size: 92px;
+  block-size: 92px;
+  background: color-mix(in srgb, var(--dw-plate) 76%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dw-ink-panel-hi) 17%, transparent);
+  border-radius: 50%;
+  box-shadow: var(--dw-depth-chip);
+}
+
+.verktoy-screen__weather-art svg {
+  inline-size: 72px;
+  block-size: 72px;
+}
+
+.verktoy-screen__weather-sun {
+  fill: var(--dw-accent);
+}
+
+.verktoy-screen__weather-cloud {
+  fill: var(--dw-plate);
+  stroke: color-mix(in srgb, var(--dw-ink-mid) 28%, transparent);
+  stroke-width: 1.2;
+}
+
+.verktoy-screen__weather-action {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  min-block-size: 44px;
+  padding-block-start: var(--dw-space-10);
+  font-size: 0.875rem;
+  font-weight: 750;
+  border-block-start: 1px solid color-mix(in srgb, var(--dw-ink-panel-hi) 18%, transparent);
+}
+
+.verktoy-screen__weather-action svg,
+.verktoy-screen__guide-arrow svg {
+  inline-size: 20px;
+  block-size: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.verktoy-screen__guides {
+  inline-size: min(100%, 34rem);
+  margin: 0 auto;
+}
+
+.verktoy-screen__section-heading {
+  margin: 0 var(--dw-space-4) var(--dw-space-12);
+}
+
+.verktoy-screen__section-heading h2 {
+  margin: var(--dw-space-6) 0 0;
+  font-size: 1.375rem;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.verktoy-screen__guide-list {
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+  background: var(--dw-raised);
+  border: 1px solid var(--dw-plate-kant);
+  border-radius: var(--dw-r-panel);
+  box-shadow: inset 0 1px 0 var(--dw-edge-light), var(--dw-depth-raised);
+}
+
+.verktoy-screen__guide-list,
+.verktoy-screen__guide-list li {
+  margin: 0;
+}
+
+.verktoy-screen__guide-list li + li {
+  border-block-start: 1px solid var(--dw-plate-kant);
+}
+
+.verktoy-screen__guide-list button {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: var(--dw-space-12);
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: 92px;
+  padding: var(--dw-space-14) var(--dw-space-16);
+  color: var(--dw-ink-hi);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  touch-action: manipulation;
+  background: transparent;
+  border: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.verktoy-screen__guide-icon {
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  color: var(--dw-accent);
+  background: var(--dw-accent-surface);
+  border: 1px solid var(--dw-plate-kant);
+  border-radius: var(--dw-r-control);
+  box-shadow: var(--dw-depth-chip);
+}
+
+.verktoy-screen__guide-icon svg {
+  inline-size: 25px;
+  block-size: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.verktoy-screen__guide-icon--sleep svg path:last-child {
+  fill: currentColor;
+  stroke: none;
+}
+
+.verktoy-screen__guide-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dw-space-4);
+  min-inline-size: 0;
+}
+
+.verktoy-screen__guide-copy strong {
+  font-size: 1rem;
+  font-weight: 720;
+  line-height: 1.2;
+}
+
+.verktoy-screen__guide-copy > span {
+  color: var(--dw-ink-mid);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.verktoy-screen__guide-arrow {
+  display: grid;
+  place-items: center;
+  color: var(--dw-ink-mid);
+}
+
+.verktoy-screen button:focus-visible {
+  outline: 3px solid var(--dw-focus, var(--dw-accent));
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .verktoy-screen__weather:hover {
+    border-color: color-mix(in srgb, var(--dw-ink-panel-hi) 32%, transparent);
+  }
+
+  .verktoy-screen__guide-list button:hover {
+    background: color-mix(in srgb, var(--dw-accent-surface) 38%, transparent);
+  }
+}
+
+.verktoy-screen__weather:active,
+.verktoy-screen__guide-list button:active {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .verktoy-screen__weather:active,
+  .verktoy-screen__guide-list button:active {
+    transform: none;
+  }
+}
+
+@media (max-width: 350px) {
+  .verktoy-screen {
+    padding-inline: var(--dw-space-12);
+  }
+
+  .verktoy-screen__weather {
+    grid-template-columns: minmax(0, 1fr) 76px;
+    padding: var(--dw-space-18);
+  }
+
+  .verktoy-screen__weather-art {
+    inline-size: 76px;
+    block-size: 76px;
+  }
+
+  .verktoy-screen__weather-art svg {
+    inline-size: 60px;
+    block-size: 60px;
+  }
+}
+
+@media (forced-colors: active) {
+  .verktoy-screen__weather,
+  .verktoy-screen__guide-list,
+  .verktoy-screen__guide-icon,
+  .verktoy-screen__weather-art {
+    border: 1px solid CanvasText;
+  }
+}

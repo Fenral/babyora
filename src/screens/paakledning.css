@@ -91,33 +91,26 @@
 /* Etiketten over navnet. Se punkt 1 i filhodet: den var ikke dempet før. */
 .pkl-etikett {
   margin: 0 0 var(--dw-space-4);
-  color: var(--dw-ink-demoted);
+  color: var(--dw-ink-low);
   font-size: var(--pkl-etikett-str);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .pkl-title {
   margin: 0;
-  font-family: var(--dw-font-hero);
-  font-weight: 400;
+  font-family: var(--dw-font-ui);
+  font-size: var(--dw-text-heading);
+  font-weight: 700;
+  line-height: 1.15;
 }
 
-/* Programmatisk fokus tegner ingenting. Dette er den ENESTE lovlige
-   outline-slettingen i filen: erstatningen står rett under, i samme
-   regelsett, og slettingen gjelder kun tilstanden «fokusert uten at
-   brukeren navigerer med tastatur». */
-.pkl-title:focus:not(:focus-visible) { outline: none; }
-
-/* ERSTATNINGEN. */
-.pkl-title:focus-visible,
+/* Tittelen er statisk; lukkekontrollen er dialogens første fokusmål. */
 .pkl-close:focus-visible {
   outline: 2px solid var(--dw-accent);
   outline-offset: 3px;
 }
-
-/* Overskriften har ingen egen form; uten radius leser ringen som en boks
-   rundt teksten. Radiusen bor her og ikke i regelen over — der ville den
-   endret formen på hver flate som fikk fokus. */
-.pkl-title:focus-visible { border-radius: 5px; }
 
 /* Den runde lukkeknappen: outline arver formen, men en sirkel ligger
    visuelt nærmere ringen enn et rektangel og trenger et hakk mer luft. */

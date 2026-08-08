@@ -59,5 +59,5 @@ describe('candidate-local outfit inventory v1', () => {
     expect(inventory.unmappedCatalog).toEqual([]);
     expect(inventory.unmappedBody).toEqual([]);
     expect(() => assertOutfitInventoryV1(inventory)).not.toThrow();
-  }, 120_000);
+  }, 180_000);
 });

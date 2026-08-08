@@ -42,6 +42,7 @@
  *  - C6: ingen animasjoner utover Pressable-press (RM-gatet via inline).
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { useAccess } from '../lib/premium/use-access';
@@ -53,6 +54,8 @@ import {
   type Lesson,
 } from '../data/vinterprogram';
 import type { GuideTarget } from '../types/nav';
+import { deepFlowCopyFor } from './deep-flow-copy';
+import { localizedWinterLesson } from './vinterprogram-copy';
 
 export interface VinterprogramScreenProps {
   onBack: () => void;
@@ -71,6 +74,9 @@ type RowState =
   | { kind: 'pluss' };
 
 export function VinterprogramScreen({ onBack, onOpenTarget }: VinterprogramScreenProps): ReactElement {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const copy = deepFlowCopyFor(language);
   const { fire } = useHapticSystem();
   const { reducedMotion } = useNativeSettings();
   const { isPremium } = useAccess();
@@ -167,14 +173,15 @@ export function VinterprogramScreen({ onBack, onOpenTarget }: VinterprogramScree
 
   /* ── LEKSJONS-VISNING ── */
   if (activeLesson) {
+    const lessonCopy = localizedWinterLesson(activeLesson, language);
     return (
       <main style={rootStyle} aria-labelledby="vp-lesson-title">
         <header style={topbarStyle}>
-          <button type="button" onClick={handleLessonBack} aria-label="Tilbake til programoversikten" className="ba-press" style={backBtnStyle}>
+          <button type="button" onClick={handleLessonBack} aria-label={copy.winter.overviewBack} className="ba-press" style={backBtnStyle}>
             <BackIcon />
           </button>
           {/* Ekte kontekst (uke-nr) — hørbar, i motsetning til oversiktens dekor-crumb */}
-          <p style={crumbStyle}>Første vinter · uke {activeLesson.week}</p>
+          <p style={crumbStyle}>{copy.winter.lessonCrumb(activeLesson.week)}</p>
         </header>
         <div style={scrollStyle} className="ba-scroll-native">
           <img
@@ -186,10 +193,10 @@ export function VinterprogramScreen({ onBack, onOpenTarget }: VinterprogramScree
             onError={hideOnError}
           />
           <h1 id="vp-lesson-title" ref={h1Ref} tabIndex={-1} style={lessonTitleStyle}>
-            {activeLesson.title}
+            {lessonCopy.title}
           </h1>
-          <p style={leadStyle}>{activeLesson.lead}</p>
-          {activeLesson.sections.map((s, i) => (
+          <p style={leadStyle}>{lessonCopy.lead}</p>
+          {lessonCopy.sections.map((s, i) => (
             <section key={i} style={sectionCardStyle}>
               <h2 style={eyebrowH2Style}>{s.heading}</h2>
               <p style={sectionBodyStyle}>{s.body}</p>
@@ -201,7 +208,7 @@ export function VinterprogramScreen({ onBack, onOpenTarget }: VinterprogramScree
             className="ba-press-cta"
             style={ctaStyle}
           >
-            {activeLesson.tryDet.label}
+            {lessonCopy.tryLabel}
           </button>
         </div>
         {paywall}
@@ -213,10 +220,10 @@ export function VinterprogramScreen({ onBack, onOpenTarget }: VinterprogramScree
   return (
     <main style={rootStyle} aria-labelledby="vp-title">
       <header style={topbarStyle}>
-        <button type="button" onClick={handleBack} aria-label="Tilbake" className="ba-press" style={backBtnStyle}>
+        <button type="button" onClick={handleBack} aria-label={copy.common.back} className="ba-press" style={backBtnStyle}>
           <BackIcon />
         </button>
-        <p style={crumbStyle} aria-hidden="true">Guide · kunnskap</p>
+        <p style={crumbStyle} aria-hidden="true">{copy.winter.crumb}</p>
       </header>
       <div style={scrollStyle} className="ba-scroll-native">
         <img
@@ -228,35 +235,34 @@ export function VinterprogramScreen({ onBack, onOpenTarget }: VinterprogramScree
           onError={hideOnError}
         />
         <h1 id="vp-title" ref={h1Ref} tabIndex={-1} style={titleStyle}>
-          Første vinter med baby
+          {copy.winter.title}
         </h1>
         <p style={introStyle}>
-          Åtte korte leksjoner om vinterpåkledning. Programmet foreslår én i uka,
-          men du bestemmer tempoet selv. Bygget på de samme helsesøster-rådene
-          som anbefalingene i appen.
+          {copy.winter.intro}
         </p>
         <p style={progressStyle}>
           {isPremium
-            ? `Anbefalt uke ${programUke} av ${LESSONS.length} · åpne når du vil`
-            : `Anbefalt tempo: én i uka · uke 1 er gratis`}
+            ? copy.winter.premiumProgress(programUke, LESSONS.length)
+            : copy.winter.freeProgress}
         </p>
 
         <ol style={listStyle}>
           {LESSONS.map((lesson) => {
+            const lessonCopy = localizedWinterLesson(lesson, language);
             const state = rowStateFor(lesson);
             const erAnbefalt = state.kind === 'anbefalt';
             const erLast = state.kind === 'pluss';
             const stateText =
               state.kind === 'pluss'
-                ? 'Med Babyora Pluss'
+                ? copy.winter.plus
                 : state.kind === 'anbefalt'
                   ? isPremium
-                    ? 'Anbefalt denne uka'
-                    : 'Gratis smakebit'
+                    ? copy.winter.recommendedThisWeek
+                    : copy.winter.freeTaste
                   : state.foran
-                    ? `Anbefalt uke ${lesson.week}`
+                    ? copy.winter.recommendedWeek(lesson.week)
                     : null;
-            const ariaLabel = `Uke ${lesson.week}: ${lesson.title}.${stateText ? ` ${stateText}.` : ''}`;
+            const ariaLabel = copy.winter.weekAria(lesson.week, lessonCopy.title, stateText);
             return (
               <li key={lesson.id} style={liStyle}>
                 <button
@@ -283,7 +289,7 @@ export function VinterprogramScreen({ onBack, onOpenTarget }: VinterprogramScree
                     {erLast ? <LockIcon /> : lesson.week}
                   </span>
                   <span style={rowTextStyle}>
-                    <span style={erAnbefalt ? rowTitleAnbefaltStyle : rowTitleStyle}>{lesson.title}</span>
+                    <span style={erAnbefalt ? rowTitleAnbefaltStyle : rowTitleStyle}>{lessonCopy.title}</span>
                     {stateText ? (
                       <span style={erAnbefalt ? rowStateAnbefaltStyle : rowStateStyle}>{stateText}</span>
                     ) : null}

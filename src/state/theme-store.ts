@@ -1,6 +1,10 @@
 /**
  * theme-store — auto/light/dark theme-mode med persistens.
  *
+ * Mineral Garden (eier 2026-08-08): nye installasjoner starter i lys modus.
+ * Auto og mørk beholdes som eksplisitte brukervalg; en lagret preferanse
+ * vinner alltid over standarden.
+ *
  * Brukes av:
  *  - App.tsx (useEffect → setter data-theme på <html>)
  *  - InnstillingerScreen (theme-toggle)
@@ -26,7 +30,7 @@ export type ThemeState = {
 export const useTheme = create<ThemeState>()(
   persist(
     (set) => ({
-      mode: 'auto',
+      mode: 'light',
       setMode: (mode) => set({ mode }),
     }),
     { name: 'babyora.theme' },

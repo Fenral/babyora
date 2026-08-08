@@ -80,7 +80,7 @@
   background: var(--dw-raised);
   /* D2: en hevet flate skal ha lyslogikk, ikke bare fyll. Ikonboksen er
      liten, saa lyset er tilsvarende svakt — men det skal vaere der. */
-  box-shadow: inset 0 1px 0 rgba(242, 192, 138, 0.08);
+  box-shadow: inset 0 1px 0 var(--dw-kant-key);
   color: var(--dw-ink-mid);
 }
 

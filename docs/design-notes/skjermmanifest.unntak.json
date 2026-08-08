@@ -12,6 +12,7 @@
     "src/screens/TogGuideScreen.tsx": "Tog-guide",
     "src/screens/UkeScreen.tsx": "Planlegg / Uke",
     "src/screens/VarmEllerKaldScreen.tsx": "Varm eller kald",
+    "src/screens/VerktoyScreen.tsx": "Verktøy",
     "src/screens/VinterprogramScreen.tsx": "Vinterprogram"
   },
 

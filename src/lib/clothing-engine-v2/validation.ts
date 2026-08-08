@@ -16,6 +16,8 @@ import type {
 const MATERIAL_PREFERENCES: readonly MaterialPreference[] = [
   'best_for_conditions',
   'prefer_wool',
+  'prefer_fleece',
+  'prefer_cotton',
   'avoid_wool',
 ];
 

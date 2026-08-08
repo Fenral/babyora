@@ -29,6 +29,7 @@
  */
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import { deepFlowCopyFor } from '../deep-flow-copy';
 
 vi.mock('../../lib/haptics/system', () => ({
   useHapticSystem: () => ({ fire: () => Promise.resolve() }),
@@ -78,9 +79,9 @@ describe('Varm eller kald — oransje er brukerhandling, ikke statusdata', () =>
   it('gir de tre handlingsetikettene identisk vekt', async () => {
     const html = await render();
 
-    // Etikettene står i markupen med kildens små bokstaver
-    // (WARM_COLD_RECOVERY_COPY); versalene er text-transform.
-    const etiketter = ['Ta av', 'Behold', 'Legg til'].map((tekst) => {
+    // Les semantikken fra samme lokaliserte kontrakt som skjermen, slik at
+    // porten måler lik visuell vekt uten å låse gammel casing.
+    const etiketter = deepFlowCopyFor('no').warmCold.statuses.map(({ action: tekst }) => {
       const idx = html.indexOf(`>${tekst}<`);
       expect(idx, `fant ikke etiketten «${tekst}»`).toBeGreaterThan(-1);
       const foran = html.slice(0, idx);

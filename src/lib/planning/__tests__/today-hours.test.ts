@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WeatherHourly } from '../../met-no/types.js';
-import { selectTodayPlanningHours } from '../today-hours.js';
+import { selectTodayPlanningHours, selectTomorrowPlanningHours } from '../today-hours.js';
 
 const oslo = 'Europe/Oslo';
 
@@ -69,5 +69,66 @@ describe('selectTodayPlanningHours', () => {
     expect(selected).toHaveLength(4);
     expect(selected[0]!.time.toISOString()).toBe('2026-07-20T21:00:00.000Z');
     expect(selected.at(-1)!.time.toISOString()).toBe('2026-07-21T00:00:00.000Z');
+  });
+});
+
+describe('selectTomorrowPlanningHours', () => {
+  it('selects the four familiar checkpoints from the next local calendar day only', () => {
+    const hourly = [
+      hour('2026-07-20T16:00:00Z'),
+      hour('2026-07-21T04:00:00Z'),
+      hour('2026-07-21T08:00:00Z'),
+      hour('2026-07-21T12:00:00Z'),
+      hour('2026-07-21T16:00:00Z'),
+      hour('2026-07-22T04:00:00Z'),
+    ];
+    const selected = selectTomorrowPlanningHours(
+      hourly,
+      Date.parse('2026-07-20T10:30:00Z'),
+      oslo,
+    );
+    expect(selected.map((point) => point.time.toISOString())).toEqual([
+      '2026-07-21T04:00:00.000Z',
+      '2026-07-21T08:00:00.000Z',
+      '2026-07-21T12:00:00.000Z',
+      '2026-07-21T16:00:00.000Z',
+    ]);
+  });
+
+  it('uses the next local date across the spring DST shift instead of adding 24 hours', () => {
+    const selected = selectTomorrowPlanningHours([
+      hour('2026-03-29T04:00:00Z'),
+      hour('2026-03-29T08:00:00Z'),
+      hour('2026-03-29T12:00:00Z'),
+      hour('2026-03-29T16:00:00Z'),
+    ], Date.parse('2026-03-28T22:30:00Z'), oslo);
+
+    expect(selected.map((point) => point.time.toISOString())).toEqual([
+      '2026-03-29T04:00:00.000Z',
+      '2026-03-29T08:00:00.000Z',
+      '2026-03-29T12:00:00.000Z',
+      '2026-03-29T16:00:00.000Z',
+    ]);
+  });
+
+  it('does not jump to the day after tomorrow when tomorrow is missing', () => {
+    const selected = selectTomorrowPlanningHours([
+      hour('2026-07-22T04:00:00Z'),
+      hour('2026-07-22T08:00:00Z'),
+      hour('2026-07-22T12:00:00Z'),
+      hour('2026-07-22T16:00:00Z'),
+    ], Date.parse('2026-07-20T10:30:00Z'), oslo);
+
+    expect(selected).toEqual([]);
+  });
+
+  it('deduplicates repeated timestamps and rejects invalid time zones', () => {
+    const duplicate = hour('2026-07-21T04:00:00Z');
+    expect(selectTomorrowPlanningHours(
+      [duplicate, duplicate, hour('2026-07-21T08:00:00Z')],
+      Date.parse('2026-07-20T10:30:00Z'),
+      oslo,
+    )).toHaveLength(2);
+    expect(selectTomorrowPlanningHours([duplicate], Date.now(), 'Not/AZone')).toEqual([]);
   });
 });

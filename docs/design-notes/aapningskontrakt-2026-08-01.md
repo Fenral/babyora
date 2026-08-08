@@ -1,10 +1,37 @@
 # Åpningens kontinuitetskontrakt (Sol-runde 2, 2026-08-01)
 
-Status: VEDTATT som spesifikasjon i analysesløyfen (runde 2), ikke implementert.
-Erstatter klatre-sekvensen (fjernet ved eier-override — se
+Status: HISTORISK grunnkontrakt med eier-override 2026-08-08. Den opprinnelige
+beslutningen står urørt nedenfor for sporbarhet; overstyringen her har forrang
+der punktene er i konflikt.
+
+## Eier-override 2026-08-08 — ny åpningssignatur
+
+- Native launch og web-handoff bruker én sentrert Babyora-signatur på solid,
+  temariktig lerret (`#F9F5EB` lyst / `#1E140C` mørkt).
+- `maskot-resultat-sveip.webp` er hovedmotivet. `vaer-delvis-skyet.webp` lander
+  oppå den åpne høyrehånden. Skyen males sist og ligger foran tommelen der
+  formene overlapper, slik at ingen hud stikker gjennom værmotivet.
+- BABYORA-ordmerket står i et varmt navneskilt barnet lener seg over. Skiltet
+  bruker den offisielle reverse-SVG-en; ingen typesatt erstatning.
+- Værmotivet ligger over hele hånden i overlappsonen, slik at sky/sol leses
+  som fysisk lagt i den åpne hånden. Web-revealen bruker en ugjennomsiktig
+  `clip-path` fra håndflaten; huden kan derfor ikke skinne gjennom under
+  landingen. Barnet og Babyora-skiltet er statiske fra første web-frame; bare
+  været lander, etter 180 ms. Ingen ekstra slagord, gradient, lyd, haptikk
+  eller vent. Reduce Motion viser hele signaturen statisk.
+- `?launch-preview=slow` er en query-gatet design-review: produksjonsbevegelsen
+  for været spilles 5× saktere, fullføres på 3 s og pauser i skjult fane. Flaten slipper
+  på vårets faktiske `animation.finished`, deretter 200 ms fade. Den påvirker
+  aldri vanlig appstart; Reduce Motion får normal statisk handoff.
+- Den gamle §1-regelen om venstrejustering, «aldri maskot» og maks 1 pt mellom
+  ordmerkeposisjoner er dermed opphevet. Sentrum, rekkefølge og trygg beskjæring
+  er kontinuitetsankeret nå. Øvrige deler av kontrakten gjelder fortsatt der de
+  ikke strider mot denne overstyringen.
+
+Kontrakten erstattet klatre-sekvensen (fjernet ved tidligere eier-override — se
 `aapningssekvens-2026-08-01.md` som nå er historikk). Hjem er statisk til CTA;
-denne kontrakten styrer bare overgangen native launch → første web-frame og
-onboarding → Hjem.
+dokumentet styrer overgangen native launch → første web-frame og onboarding →
+Hjem.
 
 ## 1. Ordmerket er broen — med universell ankring
 

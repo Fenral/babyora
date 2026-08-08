@@ -32,6 +32,22 @@ describe('Motor 2.0 profilmigrering', () => {
     expect(parsed?.materialPreference).toBe('avoid_wool');
   });
 
+  it('bevarer den nye fleece-først-preferansen per barn', () => {
+    const parsed = parseStoredChild({
+      ...existingV2Child,
+      materialPreference: 'prefer_fleece',
+    });
+    expect(parsed?.materialPreference).toBe('prefer_fleece');
+  });
+
+  it('bevarer bomull-først-preferansen per barn', () => {
+    const parsed = parseStoredChild({
+      ...existingV2Child,
+      materialPreference: 'prefer_cotton',
+    });
+    expect(parsed?.materialPreference).toBe('prefer_cotton');
+  });
+
   it('faller tilbake KUN fra ukjent fremtidig preferanse — resten beholdes', () => {
     const parsed = parseStoredChild({ ...existingV2Child, materialPreference: 'future_value' });
     expect(parsed?.materialPreference).toBe('best_for_conditions');

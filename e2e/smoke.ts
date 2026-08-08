@@ -98,7 +98,11 @@ async function checkPage(
   label: string,
   inspect?: (page: Page) => Promise<void>,
 ): Promise<void> {
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const page = await browser.newPage({
+    viewport: { width: 390, height: 844 },
+    // Automatic policy: every region except SE/DK starts in English.
+    locale: 'en-US',
+  });
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(`pageerror: ${err.message}`));
   page.on('console', (msg) => {
@@ -155,24 +159,24 @@ async function main(): Promise<void> {
     // playMotion={false} — kompakt stillbilde, aldri video), så den er
     // fjernet herfra i stedet for å teste død funksjonalitet.
     await checkPage(browser, BASE, 'main h1', 'onboarding rendrer', async (page) => {
-      const cta = await page.getByRole('button', { name: /Fortsett/ }).boundingBox();
+      const cta = await page.getByRole('button', { name: /Continue/ }).boundingBox();
       const viewport = page.viewportSize();
       if (!cta || !viewport || cta.y + cta.height > viewport.height) {
-        fail('onboarding: Fortsett-knappen er ikke fullt synlig ved 390x844');
+        fail('onboarding: Continue-knappen er ikke fullt synlig ved 390x844');
       }
 
       await page.locator('.ob-s1-mascot').waitFor({ state: 'visible', timeout: 5_000 });
-      await page.getByRole('heading', { name: 'Hvem kler vi på?' }).waitFor();
+      await page.getByRole('heading', { name: 'Who are we dressing?' }).waitFor();
 
       await page.locator('#ob-name-input').fill('Test');
-      await page.getByRole('button', { name: /Fortsett/ }).click();
+      await page.getByRole('button', { name: /Continue/ }).click();
       await page.locator('.ob-baby-hero.compact .ob-baby-poster').waitFor({ state: 'visible' });
-      await page.getByRole('button', { name: 'Tilbake' }).click();
-      await page.getByRole('heading', { name: 'Hvem kler vi på?' }).waitFor();
+      await page.getByRole('button', { name: 'Back' }).click();
+      await page.getByRole('heading', { name: 'Who are we dressing?' }).waitFor();
     });
 
     // 2) Demo-seed → app-skall med bunn-nav
-    await checkPage(browser, `${BASE}/?seed=demo`, 'text=Hjem', 'app-skall (demo) rendrer');
+    await checkPage(browser, `${BASE}/?seed=demo`, 'text=Home', 'app-skall (demo) rendrer');
 
     console.log('SMOKE PASS: 2/2 scenarioer grønne');
   } finally {

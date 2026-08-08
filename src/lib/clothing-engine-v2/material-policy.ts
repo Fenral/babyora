@@ -7,6 +7,11 @@
  *    filtrerer alle roller; skall/isolasjon har uansett ikke ull).
  *  - prefer_wool er myk: ull løftes først der ull allerede er gyldig, men
  *    erstatter aldri funksjon (skall/isolasjon påvirkes ikke).
+ *  - prefer_fleece er tilsvarende myk: fleece løftes kun der fleece allerede
+ *    er en gyldig kandidat med samme rolle og varmebehov.
+ *  - prefer_cotton er kontekststyrt: resolveren slipper preferansen gjennom
+ *    kun for baseplagg i warmDryCalm-vinduet. Bomull kan fortsatt stå som et
+ *    senere alternativ ved aktivitet, men løftes aldri foran fukttransport.
  * Syntetisk presenteres aldri som dårligere bare fordi det er syntetisk.
  */
 
@@ -82,6 +87,18 @@ export function applyPreference(
     return {
       ranked: ['wool', ...ranked.filter((m) => m !== 'wool')],
       codes: ['WOOL_PREFERENCE_APPLIED'],
+    };
+  }
+  if (preference === 'prefer_fleece' && ranked.includes('fleece') && ranked[0] !== 'fleece') {
+    return {
+      ranked: ['fleece', ...ranked.filter((m) => m !== 'fleece')],
+      codes: [],
+    };
+  }
+  if (preference === 'prefer_cotton' && ranked.includes('cotton') && ranked[0] !== 'cotton') {
+    return {
+      ranked: ['cotton', ...ranked.filter((m) => m !== 'cotton')],
+      codes: [],
     };
   }
   return { ranked: [...ranked], codes: [] };

@@ -1,6 +1,6 @@
 # Babyora design direction
 
-Status: structural decisions are approved. Final palette, typography details and complete token values are intentionally not locked yet.
+Status: structural decisions and the Mineral Garden light palette are approved. Typography details and final production artwork remain open.
 
 ## Product experience
 
@@ -53,27 +53,40 @@ Babyora should feel like a calm, capable companion that briefly shows its reason
 - A transparent hanging mascot asset is required. Circular cropping is a mock-only fallback.
 - Standing and sitting mascot variants may be used in onboarding, empty states and Guide.
 
-## Locked 2026-07-31 (owner decisions)
+## Mineral Garden — light default (approved 2026-08-08)
 
-- Theme strategy: dark-first, warm. Deep petrol/espresso canvas, wool-cream ink, warm accent (saturation < 80 %), weather-reactive panel nuances. Never cold tech-slate. Light mode is a later calibrated secondary variant.
+This decision supersedes the earlier dark-first color direction below. Babyora opens in a calm, light garden room by default. Users who explicitly selected dark or automatic mode keep that preference; a new install starts light even when the operating system is dark.
+
+- Canvas: mineral mist `#F2F5F1`, with a restrained sage glow `#E0EBE4`.
+- Reading materials: warm porcelain `#FFFDF8`; borders and hairlines use `#D9E1DC`.
+- Weather and information panels: pale mineral sage `#DDEAE5`. Weather states remain distinct, light variants instead of turning into a dark instrument.
+- Primary ink: forest charcoal `#1F2926`; supporting ink `#53635D`; deep action green `#164B43`; pressed action `#0F3E37`; text on actions `#FAFFFD`.
+- Depth uses three restrained, down-right layers tinted from mineral green (`rgba(29,62,52,…)`). CTA shadows use the action green family. Light materials must read as physical layers, never as grey dirt or floating glass.
+- The native launch surface, web boot surface and application canvas share the same light default. This prevents a dark flash before the persisted preference has loaded.
+
+Canonical values live in `src/styles/design-tokens-v2.css`. Legacy aliases may mirror the same shadow hue, but must not introduce a competing palette.
+
+## Locked 2026-07-31 (historical owner decisions)
+
+- Historical theme strategy: dark-first, warm. Superseded by Mineral Garden on 2026-08-08; retained as the optional dark theme.
 - Navigation: 3 tabs (Hjem, Planlegg, Familie). Guide retired; see PRODUCT.md for redistribution.
 - Commercial model: hard paywall after onboarding + first shown recommendation; 7-day StoreKit intro trial on all plans.
 - Mascot: style decided via 3-way shootout (Laika puppet / matte 3D / current mock control) before asset production.
 
 ## Open decisions
 
-- Final color palette values and semantic color tokens (within the locked dark-warm strategy).
+- Optional dark-theme refinement. Mineral Garden light values and semantic roles are locked.
 - Final type scale and font assignments.
 - Illustrated versus softly photographic weather scenes.
 - Final mascot and garment asset production (pending shootout).
 - Haptic vocabulary.
 - Exact scan choreography and sound policy.
 
-## Color system locked 2026-07-31: S1 "Monter"
+## Historical dark color system, 2026-07-31: S1 "Monter"
 
 Chosen after the Steg 2a analysis (category evidence, figure/ground insight, three candidate systems, two generated Hjem mocks). Core idea: **two warm darks in layers** — espresso as the spatial canvas (the room), deep warm petrol as the instrument panel (the machine). Warm skin/cream separates maximally against the cool-leaning panel while the espresso canvas keeps the whole warm. Weather reactivity lives ONLY in the panel nuance (clear/cloudy/rain/snow/night within the petrol family); canvas and ink stay constant. A warm amber rim light along the panel's top edge ("monter-lys") is part of the system. Exact OKLCH token values are defined in Steg 2b and verified with a computed contrast matrix before implementation.
 
-## Tokens v2 "Monter" (approved 2026-07-31, Steg 2b)
+## Tokens v2 dark-theme foundation "Monter" (approved 2026-07-31, Steg 2b)
 
 Canonical file: `src/styles/design-tokens-v2.css` (new `--dw-*` vocabulary). New components consume only these names; legacy `design-tokens.css` gets an alias layer in implementation package P7 and its infrastructure CSS (.app-shell, .ba-press, reduced-motion killswitch, forced-colors) stays untouched.
 

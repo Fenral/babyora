@@ -1,6 +1,4 @@
-import { useMemo } from 'react';
-import { displayNameForDbString } from '../../data/garment-display-names.js';
-import { WARM_COLD_RECOVERY_COPY } from '../../lib/copy/warm-cold-recovery.js';
+import { useTranslation } from 'react-i18next';
 import {
   isOutfitBundleProducerResult,
   type OutfitBundleProducerResult,
@@ -11,58 +9,30 @@ import type {
 } from '../../lib/outfit/outfit-transition-contract.js';
 import {
   isOutfitTruthSnapshot,
-  type OutfitTruthSnapshotV1,
 } from '../../lib/outfit/outfit-truth.js';
 import { tempAxisFor } from '../../lib/temp-axis.js';
-import {
-  useOutfitSelectionStore,
-  type OutfitSelectionSession,
-} from '../../state/outfit-selection-store.js';
+import { deepFlowCopyFor, localizedGarmentDisplayName } from '../../screens/deep-flow-copy.js';
 import { OutfitExperience } from './OutfitExperience.js';
-import { VerifiedAvatarComposite } from './VerifiedAvatarComposite.js';
 
 export type OutfitTruthPanelProps = Readonly<{
   outfitBundle: OutfitBundleProducerResult;
-  illustrativeAvatarAsset?: string | null;
   registerOutfitRow?: RegisterOutfitRow;
   transitionVisualState?: OutfitTransitionVisualState;
   onOpenWarmColdGuide?: () => void;
 }>;
 
-function resolveSelectedAvatarSnapshot(
-  base: OutfitTruthSnapshotV1,
-  options: Extract<OutfitBundleProducerResult, { kind: 'supported' }>['options'],
-  session: OutfitSelectionSession,
-): OutfitTruthSnapshotV1 | null {
-  if (!isOutfitTruthSnapshot(base)) return null;
-  if (
-    session.kind !== 'open'
-    || session.base !== base
-    || session.options !== options
-  ) {
-    return base;
-  }
-  if (session.selectedOptionId === null) {
-    return session.current === base ? base : null;
-  }
-  const matching = options.filter(
-    (option) => option.optionId === session.selectedOptionId,
-  );
-  return matching.length === 1 && matching[0]!.outcome === session.current
-    ? session.current
-    : null;
-}
-
 function RecoveryGuide({ onOpenWarmColdGuide }: Readonly<{
   onOpenWarmColdGuide?: () => void;
 }>) {
+  const { i18n } = useTranslation();
+  const copy = deepFlowCopyFor(i18n.resolvedLanguage ?? i18n.language);
   return (
     <section className="outfit-recovery-guide" aria-labelledby="outfit-recovery-title">
-      <h2 id="outfit-recovery-title">{WARM_COLD_RECOVERY_COPY.title}</h2>
-      <p>{WARM_COLD_RECOVERY_COPY.instruction}</p>
+      <h2 id="outfit-recovery-title">{copy.outfit.recoveryTitle}</h2>
+      <p>{copy.outfit.recoveryInstruction}</p>
       {typeof onOpenWarmColdGuide === 'function' && (
         <button type="button" onClick={onOpenWarmColdGuide}>
-          Se varm eller kald-guiden
+          {copy.outfit.recoveryButton}
         </button>
       )}
     </section>
@@ -74,6 +44,9 @@ function UnsupportedCardinalityPanel({
 }: Readonly<{
   outfitBundle: Extract<OutfitBundleProducerResult, { kind: 'unsupported-cardinality' }>;
 }>) {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const copy = deepFlowCopyFor(language);
   const temp = tempAxisFor(
     outfitBundle.weather.feelsLikeC,
     outfitBundle.weather.tempC,
@@ -83,23 +56,23 @@ function UnsupportedCardinalityPanel({
     <section
       className="outfit-truth-panel ba-temp-root"
       data-temp={temp}
-      aria-label="Antrekksliste"
+      aria-label={copy.outfit.outfitList}
     >
-      <section className="outfit-list" aria-label="Antrekk">
-        <h2>Ta på innerst først</h2>
+      <section className="outfit-list" aria-label={copy.outfit.outfit}>
+        <h2>{copy.outfit.dressBaseFirst}</h2>
         <ol>
           {orderedGarments.map((garment) => (
             <li key={garment.itemId}>
-              <span>{garment.order}.</span> {displayNameForDbString(garment.label)}
+              <span>{garment.order}.</span> {localizedGarmentDisplayName(garment.label, language)}
             </li>
           ))}
         </ol>
         {equipment.length > 0 && (
-          <section aria-label="Utstyr">
-            <h3>Utstyr</h3>
+          <section aria-label={copy.outfit.equipment}>
+            <h3>{copy.outfit.equipment}</h3>
             <ul>
               {equipment.map((item) => (
-                <li key={item.itemId}>{displayNameForDbString(item.label)}</li>
+                <li key={item.itemId}>{localizedGarmentDisplayName(item.label, language)}</li>
               ))}
             </ul>
           </section>
@@ -114,20 +87,15 @@ function SupportedPanel({
   registerOutfitRow,
   transitionVisualState,
   onOpenWarmColdGuide,
-  illustrativeAvatarAsset,
 }: Readonly<{
   outfitBundle: Extract<OutfitBundleProducerResult, { kind: 'supported' }>;
   registerOutfitRow?: RegisterOutfitRow;
   transitionVisualState: OutfitTransitionVisualState;
   onOpenWarmColdGuide?: () => void;
-  illustrativeAvatarAsset?: string | null;
 }>) {
-  const session = useOutfitSelectionStore((state) => state.session);
+  const { i18n } = useTranslation();
+  const copy = deepFlowCopyFor(i18n.resolvedLanguage ?? i18n.language);
   const { base, options } = outfitBundle;
-  const avatarSnapshot = useMemo(
-    () => resolveSelectedAvatarSnapshot(base, options, session),
-    [base, options, session],
-  );
   const temp = tempAxisFor(
     outfitBundle.weather.feelsLikeC,
     outfitBundle.weather.tempC,
@@ -140,12 +108,9 @@ function SupportedPanel({
       className="outfit-truth-panel ba-temp-root"
       data-temp={temp}
       data-transition-visual-state={transitionVisualState}
+      data-outfit-presentation="monter-list"
+      aria-label={copy.outfit.completeOutfit}
     >
-      {avatarSnapshot === null ? (
-        <VerifiedAvatarComposite stateKey={{ pose: base.avatar.pose }} outfitSummary="" illustrativeAssetOverride={illustrativeAvatarAsset} decorative />
-      ) : (
-        <VerifiedAvatarComposite snapshot={avatarSnapshot} avatarTruth={avatarSnapshot.avatar} illustrativeAssetOverride={illustrativeAvatarAsset} decorative />
-      )}
       <OutfitExperience
         snapshot={base}
         options={options}
@@ -158,13 +123,15 @@ function SupportedPanel({
 }
 
 function UnavailablePanel() {
+  const { i18n } = useTranslation();
+  const copy = deepFlowCopyFor(i18n.resolvedLanguage ?? i18n.language);
   return (
     <section
       className="outfit-truth-panel ba-temp-root"
       data-temp="mild"
       aria-live="polite"
     >
-      <p>Antrekksanbefalingen er ikke tilgjengelig.</p>
+      <p>{copy.outfit.unavailable}</p>
     </section>
   );
 }
@@ -174,7 +141,6 @@ export function OutfitTruthPanel({
   registerOutfitRow,
   transitionVisualState = 'settled',
   onOpenWarmColdGuide,
-  illustrativeAvatarAsset,
 }: OutfitTruthPanelProps) {
   // This identity check must stay before any envelope or nested truth read.
   if (!isOutfitBundleProducerResult(outfitBundle)) return <UnavailablePanel />;
@@ -187,7 +153,6 @@ export function OutfitTruthPanel({
           registerOutfitRow={registerOutfitRow}
           transitionVisualState={transitionVisualState}
           onOpenWarmColdGuide={onOpenWarmColdGuide}
-          illustrativeAvatarAsset={illustrativeAvatarAsset}
         />
       );
     case 'unsupported-cardinality':

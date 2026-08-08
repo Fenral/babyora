@@ -50,7 +50,7 @@ describe('MascotPeek', () => {
 });
 
 describe('WeatherStrip', () => {
-  it('renders the exact mock copy and structure: temp, feels+condition, place+activity, Juster', () => {
+  it('renders temp, weather facts and the actual weather icon without visible Adjust copy', () => {
     const html = renderToStaticMarkup(
       <WeatherStrip
         nuance="rain"
@@ -59,6 +59,9 @@ describe('WeatherStrip', () => {
         conditionLabel="Lett yr"
         cityLabel="Trondheim"
         activityToggleLabel="Utenfor vogn"
+        weatherIconSrc="/monter/vaer-regn.webp"
+        weatherIconAlt="Lett yr"
+        language="no"
         onAdjust={vi.fn()}
       />,
     );
@@ -66,16 +69,75 @@ describe('WeatherStrip', () => {
     expect(html).toContain('4°');
     expect(html).toContain('Føles som 1° · Lett yr');
     expect(html).toContain('Trondheim · Utenfor vogn');
-    expect(html).toContain('Juster');
+    expect(html).toContain('class="hjm-s-weather"');
+    expect(html).toContain('src="/monter/vaer-regn.webp"');
+    expect(html).toContain('alt="Lett yr"');
+    expect(html).not.toContain('class="hjm-s-adjust"');
     expect(html).toContain('data-nuance="rain"');
   });
 
-  it('the whole strip is a single tappable button (the Juster affordance IS the strip)', () => {
+  it('keeps the whole strip as the one accessible Adjust button', () => {
     const html = renderToStaticMarkup(
-      <WeatherStrip nuance="snow" tempC={-2} feelsLikeC={-5} conditionLabel="Snø" cityLabel="Oslo" activityToggleLabel="I vogn" onAdjust={vi.fn()} />,
+      <WeatherStrip
+        nuance="snow"
+        tempC={-2}
+        feelsLikeC={-5}
+        conditionLabel="Snø"
+        cityLabel="Oslo"
+        activityToggleLabel="I vogn"
+        weatherIconSrc="/monter/vaer-sno.webp"
+        weatherIconAlt="Snø"
+        language="no"
+        onAdjust={vi.fn()}
+      />,
     );
     expect((html.match(/<button/g) ?? []).length).toBe(1);
+    expect(html).toContain('aria-label="Juster vær, sted eller aktivitet"');
     expect(html).toContain('−2°');
     expect(html).toContain('data-nuance="snow"');
+  });
+
+  it('localizes all of its own visible and accessible copy', () => {
+    const html = renderToStaticMarkup(
+      <WeatherStrip
+        nuance="cloudy"
+        tempC={7}
+        feelsLikeC={5}
+        conditionLabel="Cloudy"
+        cityLabel="Oslo"
+        activityToggleLabel="Outdoors"
+        weatherIconSrc="/monter/vaer-skyet.webp"
+        weatherIconAlt="Cloudy"
+        language="en-GB"
+        onAdjust={vi.fn()}
+      />,
+    );
+    expect(html).toContain('aria-label="Adjust weather, location or activity"');
+    expect(html).toContain('Feels like 5° · Cloudy');
+    expect(html).toContain('Oslo · Outdoors');
+    expect(html).toContain('src="/monter/vaer-skyet.webp"');
+    expect(html).toContain('alt="Cloudy"');
+    expect(html).not.toContain('Juster');
+    expect(html).not.toContain('Føles som');
+  });
+
+  it('preserves the weather slot and one Adjust button when no icon is available', () => {
+    const html = renderToStaticMarkup(
+      <WeatherStrip
+        nuance="cloudy"
+        tempC={7}
+        feelsLikeC={7}
+        conditionLabel="Unknown"
+        cityLabel="Oslo"
+        activityToggleLabel="Outdoors"
+        weatherIconSrc={null}
+        weatherIconAlt="Unknown"
+        language="en"
+        onAdjust={vi.fn()}
+      />,
+    );
+    expect((html.match(/<button/g) ?? [])).toHaveLength(1);
+    expect(html).toContain('<span class="hjm-s-weather" aria-hidden="true"></span>');
+    expect(html).not.toContain('<img');
   });
 });

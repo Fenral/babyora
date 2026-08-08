@@ -9,9 +9,8 @@
  *      ↔ plagg-katalog.json sitt label-felt) og er ULIKT rå db-streng-
  *      formatet (aldri ren småbokstav-streng).
  *  (b) katalog-illustrasjonen finnes som fil i public/illustrations/garments/.
- *  (c) monter-assets-oppslaget peker på en eksisterende
- *      public/monter/plagg-*.webp (eller er bevisst null → nøytral
- *      plassholder — aldri en sti som 404-er).
+ *  (c) det delte UI-oppslaget peker på katalogens eksakte, flate WebP for
+ *      alle plagg — ingen bokstavplassholder og ingen sti som 404-er.
  *  (d) skjemafeltene katalogen HAR (category/label/aliases/illustration/
  *      what/when) er utfylt og gyldige. Felter Bytt-kompatibilitet vil
  *      trenge, men som katalogen MANGLER (kroppsdekning, varmebidrag,
@@ -109,28 +108,21 @@ describe('plagg-katalog-integritet (T1B)', () => {
     }
   });
 
-  it('(c) monter-oppslaget peker på eksisterende public/monter/plagg-*.webp (eller er bevisst null)', () => {
-    let mapped = 0;
+  it('(c) UI-oppslaget dekker alle 61 med eksakt flat WebP', () => {
     for (const item of katalog.items) {
       const path = getGarmentImage(item.id);
-      if (path === null) continue; // nøytral plassholder — gyldig utfall
-      mapped += 1;
       const fileName = path.split('/').at(-1)!;
-      expect(fileName, item.id).toMatch(/^plagg-[a-z0-9-]+\.webp$/);
-      const file = resolve(ROOT, 'public/monter', fileName);
+      expect(path, item.id).toBe(`/illustrations/garments/${item.id}.webp`);
+      expect(fileName, item.id).toBe(`${item.id}.webp`);
+      const file = resolve(ROOT, 'public/illustrations/garments', fileName);
       expect(existsSync(file), `${item.id} → ${path}`).toBe(true);
     }
-    // Vitrinen skal fortsatt dekke en meningsfull andel av katalogen —
-    // fanger en regresjon der mappingen tømmes ved et uhell.
-    expect(mapped).toBeGreaterThanOrEqual(30);
   });
 
-  it('(c) T1A-mismatchene er fjernet: kjoredress/ullsett-tynt/lue/tynn-ull-mellomlag har nøytral plassholder', () => {
-    // Katalog-audit 1b–1e: disse fire viste tidligere et ANNET plagg.
-    expect(getGarmentImage('kjoredress')).toBeNull();
-    expect(getGarmentImage('ullsett-tynt')).toBeNull();
-    expect(getGarmentImage('lue')).toBeNull();
-    expect(getGarmentImage('tynn-ull-mellomlag')).toBeNull();
+  it('(c) tidligere mismatch-/placeholder-plagg bruker nå sine egne motiv', () => {
+    for (const id of ['kjoredress', 'ullsett-tynt', 'lue', 'tynn-ull-mellomlag']) {
+      expect(getGarmentImage(id), id).toBe(`/illustrations/garments/${id}.webp`);
+    }
   });
 
   it('(c) den sammensatte tøffel-sko-anbefalingen viser skoen, ikke bare sokken (audit 1a)', () => {

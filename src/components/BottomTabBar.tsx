@@ -1,5 +1,6 @@
 import { type ReactElement } from 'react';
 import { motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 import { TAB_DEFS, type TabKey } from '../types/nav';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
@@ -58,6 +59,16 @@ function IconWeek(): ReactElement {
   return <svg {...iconProps()}><rect x={3} y={5} width={18} height={16} rx={2} /><path d="M3 11h18M8 3v4M16 3v4" /></svg>;
 }
 
+function IconTools(): ReactElement {
+  return (
+    <svg {...iconProps()}>
+      <path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6" />
+      <circle cx={14} cy={7} r={2} />
+      <circle cx={8} cy={17} r={2} />
+    </svg>
+  );
+}
+
 function IconFamily(): ReactElement {
   return <svg {...iconProps()}><circle cx={9} cy={8} r={3} /><circle cx={17} cy={9.5} r={2.3} /><path d="M3.5 20c.5-3.6 2.7-5.5 5.5-5.5s5 1.9 5.5 5.5" /><path d="M14.5 20c.3-2.4 1.6-3.9 3.6-4.2" /></svg>;
 }
@@ -65,7 +76,15 @@ function IconFamily(): ReactElement {
 const TAB_ICONS: Record<TabKey, TabIcon> = {
   hjem: IconHome,
   plan: IconWeek,
+  verktoy: IconTools,
   familie: IconFamily,
+};
+
+const TAB_TRANSLATION_KEYS: Record<TabKey, string> = {
+  hjem: 'nav.home',
+  plan: 'nav.plan',
+  verktoy: 'nav.tools',
+  familie: 'nav.familie',
 };
 
 interface TabButtonProps {
@@ -102,7 +121,7 @@ function TabButton({ active, label, Icon, reducedMotion, onSelect }: TabButtonPr
       className={className}
       aria-current={active ? 'page' : undefined}
       onClick={onSelect}
-      whileTap={{ scale: 0.9 }}
+      whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 500, damping: 25, mass: 0.5 }}
     >
       {children}
@@ -113,6 +132,7 @@ function TabButton({ active, label, Icon, reducedMotion, onSelect }: TabButtonPr
 export function BottomTabBar({ active, onNavigate }: BottomTabBarProps): ReactElement {
   const { fire } = useHapticSystem();
   const { reducedMotion } = useNativeSettings();
+  const { t } = useTranslation();
 
   const handleSelect = (next: TabKey) => {
     dispatchRootChange(decideRootChange(active, next), {
@@ -122,12 +142,15 @@ export function BottomTabBar({ active, onNavigate }: BottomTabBarProps): ReactEl
   };
 
   return (
-    <nav className="bottom-tab-bar" aria-label="Hovednavigasjon">
+    <nav
+      className="bottom-tab-bar"
+      aria-label={t('nav.mainNavigation', { defaultValue: 'Main navigation' })}
+    >
       {TAB_DEFS.map(({ key, label }) => (
         <TabButton
           key={key}
           active={key === active}
-          label={label}
+          label={t(TAB_TRANSLATION_KEYS[key], { defaultValue: label })}
           Icon={TAB_ICONS[key]}
           reducedMotion={reducedMotion}
           onSelect={() => handleSelect(key)}

@@ -13,7 +13,7 @@
 export interface PlusFeatureAvailability {
   /** Dagens plan hjemme — komplett Free-kapabilitet. */
   today_home: boolean;
-  /** 10-dagers plan / «i morgen» — bygget (UkeScreen ten-day). */
+  /** Morgendagens plan — bygget med timegrunnlag i Planlegg. */
   future_plan: boolean;
   /** Automatisk sted — av til 01-12 integrerer og godkjenner hele livssyklusen. */
   automatic_location: boolean;
@@ -47,7 +47,7 @@ export interface PlusExpansion {
 
 // Fast rekkefølge = «Fremover, overalt og sammen» + kalibrering til slutt.
 const ALL_EXPANSIONS: readonly PlusExpansion[] = [
-  { key: 'future_plan', from: 'I dag', to: '10 dager fremover' },
+  { key: 'future_plan', from: 'I dag', to: 'I morgen' },
   { key: 'automatic_location', from: 'Ett fast sted', to: 'Der dere er' },
   { key: 'extra_children', from: 'Ett barn', to: 'Alle barna' },
   { key: 'family_sharing', from: 'Deg alene', to: 'Alle som passer' },

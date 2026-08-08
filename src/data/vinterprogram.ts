@@ -226,28 +226,28 @@ export const LESSONS: readonly Lesson[] = [
   {
     id: 'din-garderobe-din-anbefaling',
     week: 8,
-    title: 'Forbered neste periode',
-    lead: 'Snart viser hva det kan være greit å ha tilgjengelig, basert på månedlige normaler fra 1991–2020.',
+    title: 'Gjør morgendagen enkel',
+    lead: 'Planlegg viser antrekket for i dag og i morgen, så du kan gjøre klart det viktigste uten å gjette langt frem.',
     sections: [
       {
-        heading: 'Historiske mønstre, ikke værvarsel',
-        body: 'Snart bygger på historiske månedsnormaler for stedet ditt. Det beskriver et mønster for perioden, ikke hvordan været blir på en bestemt dag.',
+        heading: 'Se én dag frem',
+        body: 'Morgendagens plan bruker timevarselet for stedet ditt og vurderer de samme fire tidspunktene som dagens plan.',
       },
       {
-        heading: 'Se gjennom kategoriene',
-        body: 'Flaten fremhever plaggkategorier som kan være nyttige å sjekke for perioden. Den velger ikke produkter, materialer eller konkrete antrekk.',
+        heading: 'Legg frem plaggene',
+        body: 'Når antrekket er klart på forhånd, blir avreisen roligere. Bruk planen som støtte og kjenn alltid etter på barnet.',
       },
       {
-        heading: 'Marker det som allerede er klart',
-        body: 'Du kan markere et fremhevet handlingspunkt som klart for denne økten. Markeringen lagres ikke og starter på nytt når visningen nullstilles.',
+        heading: 'Finn det du allerede har',
+        body: 'Plaggbiblioteket gir en enkel oversikt over lagene og hva hvert plagg er ment å gjøre.',
       },
       {
-        heading: 'Sjekk nærmere datoen',
-        body: 'Bruk Snart til forberedelse, og sjekk dagens vær og egne behov nærmere datoen.',
+        heading: 'Sjekk igjen før dere går',
+        body: 'Værvarselet kan endre seg. Se på dagens plan rett før avreise og juster etter aktivitet, vind og hvordan barnet kjennes.',
       },
     ],
-    tryDet: { label: 'Se historiske månedsnormaler', target: 'snart' },
-    kilde: 'snart-copy.nb.ts, babyora-snart-heuristics@2, MET seNorge_2018 normaler 1991–2020',
+    tryDet: { label: 'Åpne plaggbiblioteket', target: 'plaggbib' },
+    kilde: 'Planlegg sitt timevarsel og Babyora sitt plaggbibliotek',
   },
 ] as const;
 

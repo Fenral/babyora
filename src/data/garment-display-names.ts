@@ -27,6 +27,7 @@
  */
 import DISPLAY_NAMES_JSON from './garment-display-names.json';
 import { dbStringFor, garmentIdFor, type GarmentId } from './garment-illustrations';
+import { localizedGarmentName } from './garment-display-names-localized';
 
 /** id → visningsnavn for alle 60 katalog-id-er. */
 export const GARMENT_DISPLAY_NAMES: Readonly<Record<string, string>> =
@@ -36,6 +37,12 @@ function sentenceCase(raw: string): string {
   const trimmed = raw.trim();
   if (trimmed.length === 0) return trimmed;
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+function activePresentationLanguage(): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const language = document.documentElement.lang.trim();
+  return language.length > 0 ? language : undefined;
 }
 
 /**
@@ -58,7 +65,9 @@ function humanizeId(id: string): string {
  * kjente ikke-katalog-id-er (alternativ-plagg) faller tilbake til pent
  * formatert db-streng, og helt ukjente id-er humaniseres fra id-formen.
  */
-export function garmentDisplayName(id: GarmentId): string {
+export function garmentDisplayName(id: GarmentId, language?: string): string {
+  const localized = localizedGarmentName(id, language ?? activePresentationLanguage());
+  if (localized !== null) return localized;
   const canonical = GARMENT_DISPLAY_NAMES[id];
   if (canonical !== undefined) return canonical;
   const db = dbStringFor(id);
@@ -72,11 +81,16 @@ export function garmentDisplayName(id: GarmentId): string {
  * filhodet. Brukes av alle flater som viser motor-output direkte
  * (Hjem-vitrinen, Kle på, Planlegg-thumbs, Finn antrekk, outfit-lister).
  */
-export function displayNameForDbString(raw: string): string {
+export function displayNameForDbString(raw: string, language?: string): string {
   const trimmed = raw.trim();
   const id = garmentIdFor(trimmed);
+  const presentationLanguage = language ?? activePresentationLanguage();
   if (id !== null && dbStringFor(id) === trimmed) {
-    return garmentDisplayName(id);
+    return garmentDisplayName(id, presentationLanguage);
+  }
+  if (id !== null) {
+    const localized = localizedGarmentName(id, presentationLanguage);
+    if (localized !== null) return localized;
   }
   return sentenceCase(trimmed);
 }

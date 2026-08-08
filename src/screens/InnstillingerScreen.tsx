@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/preserve-manual-memoization -- This legacy screen's callbacks intentionally omit React's stable state setters. Adding useTranslation made the compiler lint inspect those existing callbacks; exhaustive-deps still validates every reactive dependency. */
 /**
  * InnstillingerScreen — F60 skjerm "Innstillinger" (top-level tab).
  *
@@ -32,12 +33,14 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ChangeEvent as ReactChangeEvent,
   type FormEvent as ReactFormEvent,
   type MouseEvent as ReactMouseEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
-import type { FamilieToolTarget, TabKey } from '../types/nav';
+import { useTranslation } from 'react-i18next';
+import type { TabKey } from '../types/nav';
 import { Capacitor } from '@capacitor/core';
 import { useChildren } from '../state/children-store';
 import { useHapticSystem } from '../lib/haptics/system';
@@ -69,8 +72,21 @@ import { APP_VERSION } from '../lib/app-version';
 import { PaywallDialog } from '../components/PaywallDialog';
 import { CareCircle } from '../components/family/CareCircle';
 import type { Caregiver } from '../components/family/care-circle-model';
-import { ToolsSection } from '../components/family/ToolsSection';
-import { DISCLAIMER_FULL } from '../lib/copy/disclaimer';
+import { MaterialPreferenceSheet } from '../components/profile/MaterialPreferenceSheet';
+import { clearLanguageOverride, setLanguageOverride } from '../i18n';
+import {
+  htmlLanguageFor,
+  isSupportedLanguage,
+  readLanguageOverride,
+  SUPPORTED_LANGUAGES,
+  type SupportedLanguage,
+} from '../i18n/language-policy';
+import {
+  feedbackDivider,
+  getSettingsCopy,
+  materialPreferenceLabel,
+  type SettingsSecondaryCopy,
+} from './settings-copy';
 // BottomTabBar er nå global (mounted i App.tsx) — ikke importer/mount her.
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -79,21 +95,17 @@ import { DISCLAIMER_FULL } from '../lib/copy/disclaimer';
 
 export interface InnstillingerScreenProps {
   onNavigate: (tab: TabKey) => void;
-  /** P1: åpner en av de tidligere Guide-"kunnskap"-skjermene (uendret) via
-   *  "Verktøy"-seksjonen under — se ToolsSection.tsx / App.tsx sin
-   *  familie-tool-drill. */
-  onOpenTool: (target: FamilieToolTarget) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-function formatDob(dob: string): string {
+function formatDob(dob: string, locale: string): string {
   if (!dob) return '—';
   const d = new Date(dob);
   if (Number.isNaN(d.getTime())) return dob;
-  return d.toLocaleDateString('nb-NO', {
+  return d.toLocaleDateString(locale, {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -1082,8 +1094,13 @@ interface ToggleRowProps {
 }
 
 function ToggleRow({ icon, label, sub, on, onChange, reducedMotion }: ToggleRowProps): ReactElement {
+  const { t } = useTranslation();
   return (
-    <div style={rowStaticBase} role="group" aria-label={`${label} — ${on ? 'på' : 'av'}`}>
+    <div
+      style={rowStaticBase}
+      role="group"
+      aria-label={`${label} — ${t(on ? 'common.on' : 'common.off')}`}
+    >
       <span style={rowIconBase} aria-hidden="true">
         {icon}
       </span>
@@ -1128,8 +1145,23 @@ interface ThemeSegmentProps {
 
 interface ThemeOption {
   value: ThemeMode;
-  label: string;
+  labelKey: string;
   icon: ReactNode;
+}
+
+function IconMaterial(): ReactElement {
+  return (
+    <svg width={17} height={17} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 6.2 10 2.8l7 3.4-7 3.4-7-3.4Z" />
+      <path d="m3 10 7 3.4 7-3.4" />
+      <path d="m3 13.8 7 3.4 7-3.4" />
+    </svg>
+  );
+}
+
+function useSettingsSecondaryCopy(): SettingsSecondaryCopy {
+  const { i18n } = useTranslation();
+  return getSettingsCopy(i18n.resolvedLanguage ?? i18n.language);
 }
 
 function IconThemeAuto(): ReactElement {
@@ -1160,12 +1192,13 @@ function IconThemeDark(): ReactElement {
 }
 
 const THEME_OPTIONS: ThemeOption[] = [
-  { value: 'auto', label: 'Auto', icon: <IconThemeAuto /> },
-  { value: 'light', label: 'Lys', icon: <IconThemeLight /> },
-  { value: 'dark', label: 'Mørk', icon: <IconThemeDark /> },
+  { value: 'auto', labelKey: 'settings.family.themeAuto', icon: <IconThemeAuto /> },
+  { value: 'light', labelKey: 'settings.family.themeLight', icon: <IconThemeLight /> },
+  { value: 'dark', labelKey: 'settings.family.themeDark', icon: <IconThemeDark /> },
 ];
 
 function ThemeSegment({ mode, onChange, reducedMotion }: ThemeSegmentProps): ReactElement {
+  const { t } = useTranslation();
   const trackStyle: CSSProperties = {
     display: 'flex',
     gap: 'var(--dw-space-4)',
@@ -1208,7 +1241,7 @@ function ThemeSegment({ mode, onChange, reducedMotion }: ThemeSegmentProps): Rea
   return (
     <div
       role="radiogroup"
-      aria-label="Utseende-tema"
+      aria-label={t('settings.family.themeGroup')}
       style={trackStyle}
     >
       {THEME_OPTIONS.map((opt) => {
@@ -1219,12 +1252,12 @@ function ThemeSegment({ mode, onChange, reducedMotion }: ThemeSegmentProps): Rea
             type="button"
             role="radio"
             aria-checked={active}
-            aria-label={opt.label}
+            aria-label={t(opt.labelKey)}
             onClick={() => onChange(opt.value)}
             style={active ? segBtnActive : segBtnBase}
           >
             <span aria-hidden="true" style={{ display: 'flex' }}>{opt.icon}</span>
-            <span>{opt.label}</span>
+            <span>{t(opt.labelKey)}</span>
           </button>
         );
       })}
@@ -1240,20 +1273,35 @@ function ThemeSegment({ mode, onChange, reducedMotion }: ThemeSegmentProps): Rea
 // omsorgssirkelen. Ingen ekte deling skjer — familiedeling krever auth/RLS/
 // backend (R9) og er ikke aktivert. 5 personer → 4 tokens + «+1 flere».
 const CARE_CIRCLE_PREVIEW: readonly Caregiver[] = [
-  { id: 'mor', name: 'Mona', role: 'Mor', status: 'active' },
-  { id: 'far', name: 'Jonas', role: 'Far', status: 'active' },
-  { id: 'beste', name: 'Kari', role: 'Besteforelder', status: 'pending' },
-  { id: 'dag', name: 'Ida', role: 'Dagmamma', status: 'pending' },
-  { id: 'onkel', name: 'Per', role: 'Onkel', status: 'pending' },
+  { id: 'mor', name: 'Mona', role: 'roleMother', status: 'active' },
+  { id: 'far', name: 'Jonas', role: 'roleFather', status: 'active' },
+  { id: 'beste', name: 'Kari', role: 'roleGrandparent', status: 'pending' },
+  { id: 'dag', name: 'Ida', role: 'roleChildminder', status: 'pending' },
+  { id: 'onkel', name: 'Per', role: 'roleUncle', status: 'pending' },
 ];
 
-export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: InnstillingerScreenProps): ReactElement {
+export function InnstillingerScreen({ onNavigate: _onNavigate }: InnstillingerScreenProps): ReactElement {
   // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
   // siden BottomTabBar nå mountes globalt i App.tsx.
   void _onNavigate;
-  const { active, needsOnboarding, resetAll, children: allChildren, setActiveId, addChild } = useChildren();
+  const { t, i18n } = useTranslation();
+  const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const locale = htmlLanguageFor(activeLanguage);
+  const secondaryCopy = getSettingsCopy(activeLanguage);
+  const {
+    active,
+    needsOnboarding,
+    resetAll,
+    children: allChildren,
+    setActiveId,
+    addChild,
+    updateChild,
+  } = useChildren();
   const { hapticsPref, motionPref, reducedMotion } = useNativeSettings();
   const { fire } = useHapticSystem();
+  const [languageChoice, setLanguageChoice] = useState<'auto' | SupportedLanguage>(
+    () => readLanguageOverride() ?? 'auto',
+  );
   const themeMode = useTheme((s) => s.mode);
   const setThemeMode = useTheme((s) => s.setMode);
   const morningOn = useNotificationPref((s) => s.morning);
@@ -1279,6 +1327,13 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
     PLUS_FEATURE_AVAILABILITY,
   );
   const automaticLocationAllowed = automaticLocationAccess.allowed;
+  const careCirclePreview = useMemo<readonly Caregiver[]>(
+    () => CARE_CIRCLE_PREVIEW.map((caregiver) => ({
+      ...caregiver,
+      role: t(`settings.family.${caregiver.role}`),
+    })),
+    [t],
+  );
   const locationMode = useLocationPref((s) => s.mode);
   const setLocationMode = useLocationPref((s) => s.setMode);
   const autoLocationLiveRef = useRef({
@@ -1357,13 +1412,23 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
   const addChildRowRef = useRef<HTMLButtonElement | null>(null);
   const [addChildOpen, setAddChildOpen] = useState(false);
 
+  const materialPreferenceRowRef = useRef<HTMLButtonElement | null>(null);
+  const [materialPreferenceOpen, setMaterialPreferenceOpen] = useState(false);
+
   const handleOpenAddChild = useCallback(() => {
     void fire('light');
     setAddChildOpen(true);
   }, [fire]);
 
+  const handleOpenMaterialPreference = useCallback(() => {
+    if (needsOnboarding) return;
+    void fire('light');
+    setMaterialPreferenceOpen(true);
+  }, [fire, needsOnboarding]);
+
   const handleAddChildSubmit = useCallback(
     (payload: { name: string; dob: string; city: string }) => {
+      const actionCopy = getSettingsCopy(activeLanguage).actions;
       void fire('success');
       // Behold default-koordinater fra aktiv barn (best-effort) hvis tilgjengelig,
       // ellers fall tilbake til Trondheim (matcher OnboardingScreen DEFAULT_LOCATION).
@@ -1380,9 +1445,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
         color,
       });
       setAddChildOpen(false);
-      showToast(`${payload.name} er lagt til.`);
+      showToast(actionCopy.childAdded(payload.name));
     },
-    [active.lat, active.lon, addChild, allChildren.length, fire, needsOnboarding, showToast],
+    [active.lat, active.lon, activeLanguage, addChild, allChildren.length, fire, needsOnboarding, showToast],
   );
 
   // Tidspunkt-modal for morgenvarsel
@@ -1485,6 +1550,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
   }, [fire]);
 
   const handleConfirmRateApp = useCallback(async () => {
+    const actionCopy = getSettingsCopy(activeLanguage).actions;
     if (rateAppPending) return;
     void fire('medium');
     setRateAppPending(true);
@@ -1494,22 +1560,22 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
       if (result === 'native-prompt-shown') {
         void fire('success');
         // Apple/Google viser sin egen prompt — vi gir en mild bekreftelse.
-        showToast('Takk! Vi setter pris på vurderingen din.');
+        showToast(actionCopy.rateThanks);
       } else if (result === 'fallback-store-opened') {
-        showToast('Åpner butikken — gi oss gjerne en stjerne der.');
+        showToast(actionCopy.rateStoreOpened);
       } else if (result === 'fallback-web-opened') {
-        showToast('Åpner App Store i nettleseren.');
+        showToast(actionCopy.rateWebOpened);
       } else {
-        showToast('Kunne ikke åpne vurdering akkurat nå. Prøv igjen senere.');
+        showToast(actionCopy.rateUnavailable);
       }
     } catch (err) {
       console.warn('[Babyora] requestAppReview feilet', err);
       setRateAppOpen(false);
-      showToast('Kunne ikke åpne vurdering akkurat nå. Prøv igjen senere.');
+      showToast(actionCopy.rateUnavailable);
     } finally {
       setRateAppPending(false);
     }
-  }, [fire, rateAppPending, showToast]);
+  }, [activeLanguage, fire, rateAppPending, showToast]);
 
   // Værkilde-info-modal for "Vær & sted → Værkilde"
   // P2 fra audit: Værdata kommer fra met.no (Meteorologisk institutt) — CC BY 4.0
@@ -1539,15 +1605,16 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const handleExportData = useCallback(() => {
+    const actionCopy = getSettingsCopy(activeLanguage).actions;
     void fire('light');
     const result = downloadLocalDataExport(APP_VERSION);
     if (result.ok) {
       void fire('success');
-      showToast(`Data eksportert — ${result.filename}`);
+      showToast(actionCopy.exportSuccess(result.filename));
     } else {
-      showToast('Kunne ikke eksportere data. Prøv igjen.');
+      showToast(actionCopy.exportFailure);
     }
-  }, [fire, showToast]);
+  }, [activeLanguage, fire, showToast]);
 
   const handleOpenDeleteConfirm = useCallback(() => {
     void fire('medium');
@@ -1555,6 +1622,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
   }, [fire]);
 
   const handleConfirmDeleteData = useCallback(() => {
+    const actionCopy = getSettingsCopy(activeLanguage).actions;
     void fire('medium');
     const { removed } = deleteAllLocalData();
     // resetAll() tømmer barn-state og setter activeId='' → App.tsx ruter
@@ -1564,8 +1632,8 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
     // allerede har fjernet de samme nøklene fra localStorage).
     resetAll();
     setDeleteConfirmOpen(false);
-    showToast(`Alle lokale data er slettet (${removed} nøkler).`);
-  }, [fire, resetAll, showToast]);
+    showToast(actionCopy.deleteSuccess(removed));
+  }, [activeLanguage, fire, resetAll, showToast]);
 
   const handleOpenExternalUrl = useCallback(
     (url: string) => {
@@ -1578,19 +1646,20 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
   );
 
   const handleSendFeedbackMail = useCallback(() => {
+    const feedbackMailCopy = getSettingsCopy(activeLanguage).feedbackMail;
     void fire('medium');
     const platform = Capacitor.getPlatform();
     const version = APP_VERSION;
-    const subject = `Tilbakemelding Babyora v${version}`;
+    const subject = feedbackMailCopy.subject(version);
     const bodyLines = [
-      'Hei Babyora-teamet,',
+      feedbackMailCopy.greeting,
       '',
       '',
-      '— — — — — — — — — — — — — — — — — — —',
-      'Diagnostikk (la stå — hjelper oss å feilsøke):',
-      `App-versjon: ${version}`,
-      `Plattform: ${platform}`,
-      '— — — — — — — — — — — — — — — — — — —',
+      feedbackDivider(),
+      feedbackMailCopy.diagnostics,
+      feedbackMailCopy.appVersion(version),
+      feedbackMailCopy.platform(platform),
+      feedbackDivider(),
     ];
     const body = bodyLines.join('\n');
     const href = `mailto:hei@babyora.no?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -1598,7 +1667,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
       window.location.href = href;
     }
     setFeedbackOpen(false);
-  }, [fire]);
+  }, [activeLanguage, fire]);
 
   const handlePremiumCtaClick = useCallback(() => {
     void fire('light');
@@ -1657,6 +1726,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
   );
 
   const handleConfirmAutoLocation = useCallback(async () => {
+    const actionCopy = getSettingsCopy(activeLanguage).actions;
     if (!automaticLocationAllowed) {
       setAutoLocationDialogOpen(false);
       return;
@@ -1664,7 +1734,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
     void fire('medium');
     if (needsOnboarding) {
       setAutoLocationDialogOpen(false);
-      showToast('Fullfør onboarding først.');
+      showToast(actionCopy.finishOnboarding);
       return;
     }
     setAutoLocationPending(true);
@@ -1692,23 +1762,24 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
       if (outcome.status === 'success') {
         setLocationMode('auto');
         void fire('success');
-        showToast(`Posisjon oppdatert — vær hentes for ${outcome.placeLabel}.`);
+        showToast(actionCopy.locationUpdated(outcome.placeLabel));
         return;
       }
       setLocationMode('manual');
-      showToast('Kunne ikke hente posisjon. Prøv igjen.');
+      showToast(actionCopy.locationFailure);
     } catch {
       autoLocationActivationPendingRef.current = false;
       automaticLocationController.invalidate();
       setLocationMode('manual');
       setAutoLocationDialogOpen(false);
-      showToast('Kunne ikke hente posisjon. Prøv igjen.');
+      showToast(actionCopy.locationFailure);
     } finally {
       autoLocationActivationPendingRef.current = false;
       setAutoLocationPending(false);
     }
   }, [
     active.id,
+    activeLanguage,
     automaticLocationAccess,
     automaticLocationAllowed,
     fire,
@@ -1720,6 +1791,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
 
   const handleMorningToggle = useCallback(
     async (next: boolean) => {
+      const actionCopy = getSettingsCopy(activeLanguage).actions;
       void fire('selection');
       if (!next) {
         setMorningPref(false);
@@ -1734,17 +1806,17 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
       } else if (result === 'denied') {
         // Rull tilbake + vis veiledning
         setMorningPref(false);
-        showToast('Varsler er blokkert. Skru på i systeminnstillinger.');
+        showToast(actionCopy.notificationsBlocked);
       } else if (result === 'default') {
         setMorningPref(false);
-        showToast('Du må godta varsler for å skru på morgenvarsel.');
+        showToast(actionCopy.morningPermissionRequired);
       } else {
         // unsupported (gammel browser) — lagre likevel, men advar
         setMorningPref(true);
-        showToast('Varsler støttes ikke i denne enheten — preferansen er lagret.');
+        showToast(actionCopy.notificationUnsupported);
       }
     },
-    [fire, morningHour, setMorningPref, showToast, active.name],
+    [active.name, activeLanguage, fire, morningHour, setMorningPref, showToast],
   );
 
   // Toggle-entry: ON → åpne forklarings-dialog (samtykke-steg FØR permission-prompt).
@@ -1768,6 +1840,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
   // Caller (dialog) avbrytes hvis brukeren lukker mid-request — vi clearer pending
   // i finally slik at TogglePill og dialog ikke henger i "wait"-state.
   const handleConfirmWeatherChange = useCallback(async () => {
+    const actionCopy = getSettingsCopy(activeLanguage).actions;
     if (weatherChangePending) return;
     void fire('medium');
     setWeatherChangePending(true);
@@ -1778,30 +1851,30 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
         await enableWeatherChangeNotifications();
         setWeatherChangeDialogOpen(false);
         void fire('success');
-        showToast('Værendring-varsel er på.');
+        showToast(actionCopy.weatherChangeEnabled);
       } else if (result === 'denied') {
         setWeatherChangePref(false);
         setWeatherChangeDialogOpen(false);
-        showToast('Varsler er blokkert. Skru på i systeminnstillinger.');
+        showToast(actionCopy.notificationsBlocked);
       } else if (result === 'default') {
         setWeatherChangePref(false);
         setWeatherChangeDialogOpen(false);
-        showToast('Du må godta varsler for å skru på værendring.');
+        showToast(actionCopy.weatherPermissionRequired);
       } else {
         // unsupported (gammel browser / web) — lagre preferanse, men ikke wire native
         setWeatherChangePref(true);
         setWeatherChangeDialogOpen(false);
-        showToast('Varsler støttes ikke i denne enheten — preferansen er lagret.');
+        showToast(actionCopy.notificationUnsupported);
       }
     } catch (err) {
       console.warn('[Babyora] weatherChange permission feilet', err);
       setWeatherChangePref(false);
       setWeatherChangeDialogOpen(false);
-      showToast('Kunne ikke spørre om varsel-tillatelse. Prøv igjen.');
+      showToast(actionCopy.notificationRequestFailure);
     } finally {
       setWeatherChangePending(false);
     }
-  }, [fire, setWeatherChangePref, showToast, weatherChangePending]);
+  }, [activeLanguage, fire, setWeatherChangePref, showToast, weatherChangePending]);
 
   const handlePickMorningHour = useCallback(
     (next: number) => {
@@ -1830,12 +1903,18 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
   const childName = !needsOnboarding && active.name ? active.name : '—';
   const childCity = !needsOnboarding && active.city ? active.city : '—';
   const childDob = useMemo(
-    () => (!needsOnboarding && active.dob ? formatDob(active.dob) : '—'),
-    [active.dob, needsOnboarding],
+    () => (!needsOnboarding && active.dob ? formatDob(active.dob, locale) : '—'),
+    [active.dob, locale, needsOnboarding],
   );
   const childMonths = useMemo(
     () => (!needsOnboarding && active.dob ? ageInMonths(active.dob) : null),
     [active.dob, needsOnboarding],
+  );
+  const activeMaterialPreference = active.materialPreference ?? 'best_for_conditions';
+  const materialPreferenceCopy = secondaryCopy.materialPreference;
+  const activeMaterialPreferenceLabel = materialPreferenceLabel(
+    activeMaterialPreference,
+    materialPreferenceCopy.sheet,
   );
 
   const noop = () => {
@@ -1858,10 +1937,24 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
     setThemeMode(next);
   };
 
+  const handleLanguageChange = (event: ReactChangeEvent<HTMLSelectElement>) => {
+    const next = event.currentTarget.value;
+    if (next === 'auto') {
+      setLanguageChoice('auto');
+      void fire('selection');
+      void clearLanguageOverride();
+      return;
+    }
+    if (!isSupportedLanguage(next)) return;
+    setLanguageChoice(next);
+    void fire('selection');
+    void setLanguageOverride(next);
+  };
+
   const handleLogout = () => {
     void fire('medium');
     const ok = typeof window !== 'undefined'
-      ? window.confirm('Logg ut og slett lokale data?')
+      ? window.confirm(t('settings.family.logoutConfirm'))
       : true;
     if (ok) resetAll();
   };
@@ -1878,7 +1971,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
      Stedet er ute, og skilletegnet henger nå FORAN sitt eget ledd, slik at
      det aldri kan bli liggende igjen på en linje det ikke hører til. */
   const profileMetaItems: ReactNode[] = [];
-  if (childMonths !== null) profileMetaItems.push(<span key="age">{`${childMonths} mnd`}</span>);
+  if (childMonths !== null) {
+    profileMetaItems.push(<span key="age">{t('settings.family.ageMonths', { count: childMonths })}</span>);
+  }
   if (childDob !== '—') profileMetaItems.push(<span key="dob">{childDob}</span>);
 
   return (
@@ -1900,14 +1995,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
           border: 0,
         }}
       >
-        Innstillinger
+        {t('settings.family.title')}
       </h1>
 
       {/* Header */}
       <header style={headerStyle}>
         <div style={titlesStyle}>
           <span style={eyebrowTopStyle}>Babyora</span>
-          <span aria-hidden="true" style={appTitleStyle}>Innstillinger</span>
+          <span aria-hidden="true" style={appTitleStyle}>{t('settings.family.title')}</span>
         </div>
         {/* FUNN 2026-08-06 ([MINDRE] Innstillinger, «Trondheim står tre ganger»):
             stedspillen sto her, stedet sto i barnekortets metalinje, og
@@ -1923,15 +2018,15 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
       <div style={scrollStyle}>
         {/* BARN (R7 Task 7: Familie-rot-IA — barn-sentrert seksjon øverst) */}
         <section style={sectionStyle} aria-labelledby="sec-profil">
-          <h2 id="sec-profil" style={sectionEyebrowStyle}>Barn</h2>
+          <h2 id="sec-profil" style={sectionEyebrowStyle}>{t('settings.family.children')}</h2>
 
           {/* P6: én ytre flate for hele "Barn"-seksjonen (duel-notat §9) — se
               barnSectionSurfaceStyle sin filhode-kommentar. Profil-hero og
               handlings-listen under er nå INNHOLD på samme kort, ikke to
               stablede kort. */}
           <div style={barnSectionSurfaceStyle}>
-            <div style={profileHeroStyle} role="group" aria-label="Aktiv barn-profil">
-              <div style={profileAvatarStyle} role="img" aria-label={`Avatar: ${childName}`}>
+            <div style={profileHeroStyle} role="group" aria-label={t('settings.family.activeProfile')}>
+              <div style={profileAvatarStyle} role="img" aria-label={t('settings.family.avatar', { name: childName })}>
                 <span
                   aria-hidden="true"
                   style={{
@@ -1959,14 +2054,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                   </div>
                 ) : null}
               </div>
-              <button type="button" style={profileEditStyle} aria-label="Rediger profil" onClick={noop}>
+              <button type="button" style={profileEditStyle} aria-label={t('settings.family.editProfile')} onClick={noop}>
                 <IconEdit />
               </button>
             </div>
 
             <div aria-hidden="true" style={dividerStyle} />
 
-            <ul role="list" style={groupListBareStyle} aria-label="Barn-administrasjon">
+            <ul role="list" style={groupListBareStyle} aria-label={t('settings.family.childManagement')}>
               <li style={{ listStyle: 'none' }}>
                 <button
                   type="button"
@@ -1974,21 +2069,45 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                   style={rowBase}
                   onClick={handleOpenSwitchChild}
                   aria-haspopup="dialog"
-                  aria-label={`Bytt barn — ${allChildren.length} barn`}
+                  aria-label={t('settings.family.switchChildAria', { count: allChildren.length })}
                   disabled={needsOnboarding || allChildren.length < 2}
                 >
                   <span style={rowIconBase} aria-hidden="true">
                     <IconSwap />
                   </span>
                   <span style={rowBodyStyle}>
-                    <span style={rowLabelStyle}>Bytt barn</span>
+                    <span style={rowLabelStyle}>{t('settings.family.switchChild')}</span>
                     {childName !== '—' ? (
                       <span style={rowSubStyle}>{childName}</span>
                     ) : null}
                   </span>
                   <span style={rowValueStyle}>
-                    {`${allChildren.length} barn`}
+                    {t('settings.family.childCount', { count: allChildren.length })}
                   </span>
+                  <Chevron />
+                </button>
+              </li>
+              <li aria-hidden="true" style={{ listStyle: 'none' }}>
+                <div style={dividerStyle} />
+              </li>
+              <li style={{ listStyle: 'none' }}>
+                <button
+                  type="button"
+                  ref={materialPreferenceRowRef}
+                  style={rowBase}
+                  onClick={handleOpenMaterialPreference}
+                  aria-haspopup="dialog"
+                  aria-label={materialPreferenceCopy.rowAria(activeMaterialPreferenceLabel)}
+                  disabled={needsOnboarding}
+                >
+                  <span style={rowIconBase} aria-hidden="true">
+                    <IconMaterial />
+                  </span>
+                  <span style={rowBodyStyle}>
+                    <span style={rowLabelStyle}>{materialPreferenceCopy.rowLabel}</span>
+                    <span style={rowSubStyle}>{materialPreferenceCopy.rowDescription}</span>
+                  </span>
+                  <span style={rowValueStyle}>{activeMaterialPreferenceLabel}</span>
                   <Chevron />
                 </button>
               </li>
@@ -2002,14 +2121,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                   style={rowBase}
                   onClick={handleOpenAddChild}
                   aria-haspopup="dialog"
-                  aria-label="Legg til nytt barn — åpne dialog"
+                  aria-label={t('settings.family.addChildAria')}
                 >
                   <span style={rowIconAccent} aria-hidden="true">
                     <IconPlus />
                   </span>
                   <span style={rowBodyStyle}>
-                    <span style={rowLabelStyle}>Legg til nytt barn</span>
-                    <span style={rowSubStyle}>Egen profil for søsken</span>
+                    <span style={rowLabelStyle}>{t('settings.family.addChild')}</span>
+                    <span style={rowSubStyle}>{t('settings.family.siblingProfile')}</span>
                   </span>
                   <Chevron />
                 </button>
@@ -2024,7 +2143,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
             en live-funksjon. */}
         {import.meta.env.DEV && (
           <section style={sectionStyle} aria-labelledby="sec-care">
-            <h2 id="sec-care" style={sectionEyebrowStyle}>De som passer</h2>
+            <h2 id="sec-care" style={sectionEyebrowStyle}>{t('settings.family.caregivers')}</h2>
             <div style={groupCardStyle}>
               <p
                 style={{
@@ -2034,19 +2153,19 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                   lineHeight: 1.4,
                 }}
               >
-                Forhåndsvisning — kommer med familiedeling. Ikke aktiv ennå.
+                {t('settings.family.carePreview')}
               </p>
-              <CareCircle childName={childName} caregivers={CARE_CIRCLE_PREVIEW} />
+              <CareCircle childName={childName} caregivers={careCirclePreview} />
             </div>
           </section>
         )}
 
         {/* VÆR & STED */}
-        <Section eyebrow="Vær & sted" id="sec-vaer">
+        <Section eyebrow={t('settings.family.weatherLocation')} id="sec-vaer">
           <li style={{ listStyle: 'none' }}>
             <NavRow
               icon={<IconPin />}
-              label="Sted"
+              label={t('settings.family.location')}
               value={childCity}
               valueBold
               onClick={noop}
@@ -2059,32 +2178,32 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
             <div
               style={rowStaticBase}
               role="group"
-              aria-label={`Bruk posisjon automatisk — ${
+              aria-label={t('settings.family.automaticLocationAria', { state:
                 locationMode === 'auto'
                   ? automaticLocationAllowed
-                    ? 'på'
-                    : 'på, men utilgjengelig'
-                  : 'av'
-              }`}
+                    ? t('common.on')
+                    : t('settings.family.onUnavailable')
+                  : t('common.off'),
+              })}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconCrosshair />
               </span>
               <span style={rowBodyStyle}>
-                <span style={rowLabelStyle}>Bruk posisjon automatisk</span>
+                <span style={rowLabelStyle}>{t('settings.family.automaticLocation')}</span>
                 <span style={rowSubStyle}>
                   {autoLocationPending
-                    ? 'Henter posisjon …'
+                    ? t('settings.family.fetchingLocation')
                     : locationMode === 'auto'
                       ? automaticLocationAllowed
-                        ? 'Henter vær der du er'
-                        : 'Posisjon brukes ikke'
-                      : 'Bruker valgt sted'}
+                        ? t('settings.family.usesCurrentLocation')
+                        : t('settings.family.locationNotUsed')
+                      : t('settings.family.usesSelectedLocation')}
                 </span>
               </span>
               <TogglePill
                 on={locationMode === 'auto'}
-                ariaLabel="Bruk posisjon automatisk"
+                ariaLabel={t('settings.family.automaticLocation')}
                 onChange={handleAutoLocationToggle}
                 reducedMotion={reducedMotion}
                 buttonRef={autoLocationToggleRef}
@@ -2113,14 +2232,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               style={rowBase}
               onClick={handleOpenWeatherSource}
               aria-haspopup="dialog"
-              aria-label="Værkilde — met.no (vis info)"
+              aria-label={t('settings.family.weatherSourceAria')}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconCloud />
               </span>
               <span style={rowBodyStyle}>
-                <span style={rowLabelStyle}>Værkilde</span>
-                <span style={rowSubStyle}>Meteorologisk institutt</span>
+                <span style={rowLabelStyle}>{t('settings.family.weatherSource')}</span>
+                <span style={rowSubStyle}>{t('settings.family.weatherInstitute')}</span>
               </span>
               <span style={rowValueBoldStyle}>met.no</span>
               <Chevron />
@@ -2136,20 +2255,20 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               style={rowBase}
               onClick={handleOpenRefHourPicker}
               aria-haspopup="dialog"
-              aria-label={`Referansetime — nå kl. ${formatHour(refHour)}`}
+              aria-label={t('settings.family.referenceHourAria', { time: formatHour(refHour) })}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconClock />
               </span>
               <span style={rowBodyStyle}>
-                <span style={rowLabelStyle}>Referansetime</span>
+                <span style={rowLabelStyle}>{t('settings.family.referenceHour')}</span>
                 {/* FUNN 2026-08-06 ([MINDRE] Innstillinger): «Hvilket klokkeslett
                     vises på hjem-skjerm» brakk i den ekte bindestreken i
                     «hjem-skjerm» og la raden ut over tre linjer — nesten dobbelt
                     så høy som naboradene, og orddeling tvinger bokstavlesing i
                     stedet for ordgjenkjenning. Teksten er kortet ned og har
                     ingen bindestrek å brekke i. */}
-                <span style={rowSubStyle}>Klokkeslettet hjemskjermen viser</span>
+                <span style={rowSubStyle}>{t('settings.family.referenceHourSub')}</span>
               </span>
               <span style={rowValueBoldStyle}>{formatHour(refHour)}</span>
               <Chevron />
@@ -2158,12 +2277,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
         </Section>
 
         {/* VARSLER */}
-        <Section eyebrow="Varsler" id="sec-varsler">
+        <Section eyebrow={t('settings.family.notifications')} id="sec-varsler">
           <li style={{ listStyle: 'none' }}>
             <div
               style={rowStaticBase}
               role="group"
-              aria-label={`Morgenvarsel — ${morningOn ? 'på' : 'av'}`}
+              aria-label={t('settings.family.morningNotificationAria', {
+                state: t(morningOn ? 'common.on' : 'common.off'),
+              })}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconBell />
@@ -2179,8 +2300,8 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                 disabled={!morningOn}
                 aria-label={
                   morningOn
-                    ? `Endre tidspunkt — nå kl. ${formatHour(morningHour)}`
-                    : 'Tidspunkt utilgjengelig — skru på morgenvarsel først'
+                    ? t('settings.family.changeTime', { time: formatHour(morningHour) })
+                    : t('settings.family.timeUnavailable')
                 }
                 style={{
                   ...rowBodyStyle,
@@ -2197,17 +2318,17 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                 }}
               >
                 <span style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
-                  <span style={rowLabelStyle}>Morgenvarsel</span>
+                  <span style={rowLabelStyle}>{t('settings.family.morningNotification')}</span>
                 </span>
                 <span style={rowSubStyle}>
                   {morningOn
-                    ? `Kl. ${formatHour(morningHour)} · dagens påkledning`
-                    : 'Daglig påminnelse om dagens påkledning'}
+                    ? t('settings.family.scheduledOutfit', { time: formatHour(morningHour) })
+                    : t('settings.family.morningDescription')}
                 </span>
               </button>
               <TogglePill
                 on={morningOn}
-                ariaLabel="Morgenvarsel"
+                ariaLabel={t('settings.family.morningNotification')}
                 onChange={(next) => void handleMorningToggle(next)}
                 reducedMotion={reducedMotion}
                 buttonRef={morningToggleRef}
@@ -2221,24 +2342,26 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
             <div
               style={rowStaticBase}
               role="group"
-              aria-label={`Værendring-varsel — ${weatherChangeOn ? 'på' : 'av'}`}
+              aria-label={t('settings.family.weatherChangeAria', {
+                state: t(weatherChangeOn ? 'common.on' : 'common.off'),
+              })}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconTrend />
               </span>
               <span style={rowBodyStyle}>
-                <span style={rowLabelStyle}>Værendring</span>
+                <span style={rowLabelStyle}>{t('settings.family.weatherChange')}</span>
                 <span style={rowSubStyle}>
                   {weatherChangePending
-                    ? 'Spør om tillatelse …'
+                    ? t('settings.family.askingPermission')
                     : weatherChangeOn
-                      ? 'Varsler når temp. faller > 5°'
-                      : 'Når temp. faller > 5°'}
+                      ? t('settings.family.weatherChangeOn')
+                      : t('settings.family.weatherChangeOff')}
                 </span>
               </span>
               <TogglePill
                 on={weatherChangeOn}
-                ariaLabel="Værendring-varsel"
+                ariaLabel={t('settings.family.weatherChangeNotification')}
                 onChange={handleWeatherChangeToggle}
                 reducedMotion={reducedMotion}
                 buttonRef={weatherChangeToggleRef}
@@ -2247,30 +2370,23 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
           </li>
         </Section>
 
-        {/* VERKTØY (P1, nav 4→3 skeleton): tidligere Guide-"kunnskap"-kortene
-            (TOG-guiden/"Soveguiden", Varm eller kald?, Første vinter) — Guide-
-            tab-roten er fjernet, se src/types/nav.ts. Skjermene bak er
-            uendret; kun entry-point flyttet hit. Ekstrahert til
-            ToolsSection.tsx (samme mønster som CareCircle.tsx). */}
-        <ToolsSection onOpenTool={onOpenTool} />
-
         {/* UTSEENDE */}
         <div aria-hidden="true" style={{ height: 1, background: C.hairline, margin: 'var(--dw-space-4) var(--dw-space-4) 0' }} />
         <section style={sectionStyle} aria-labelledby="sec-utseende">
-          <h2 id="sec-utseende" style={sectionEyebrowStyle}>Utseende</h2>
+          <h2 id="sec-utseende" style={sectionEyebrowStyle}>{t('settings.family.appearance')}</h2>
           <div style={groupCardStyle}>
-            <div style={rowStaticBase} role="group" aria-label="Tema">
+            <div style={rowStaticBase} role="group" aria-label={t('settings.family.theme')}>
               <span style={rowIconBase} aria-hidden="true">
                 <IconThemeAuto />
               </span>
               <span style={rowBodyStyle}>
-                <span style={rowLabelStyle}>Tema</span>
+                <span style={rowLabelStyle}>{t('settings.family.theme')}</span>
                 <span style={rowSubStyle}>
                   {themeMode === 'auto'
-                    ? 'Følger systemet'
+                    ? t('settings.family.themeSystem')
                     : themeMode === 'light'
-                      ? 'Alltid lys'
-                      : 'Alltid mørk'}
+                      ? t('settings.family.themeAlwaysLight')
+                      : t('settings.family.themeAlwaysDark')}
                 </span>
               </span>
             </div>
@@ -2279,15 +2395,47 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               onChange={handleThemeChange}
               reducedMotion={reducedMotion}
             />
+            <div aria-hidden="true" style={dividerStyle} />
+            <label htmlFor="babyora-language" style={rowStaticBase}>
+              <span style={rowIconBase} aria-hidden="true">Aa</span>
+              <span style={rowBodyStyle}>
+                <span style={rowLabelStyle}>{t('settings.language')}</span>
+                <span style={rowSubStyle}>{t('settings.family.languageSelect')}</span>
+              </span>
+              <select
+                id="babyora-language"
+                value={languageChoice}
+                onChange={handleLanguageChange}
+                aria-label={t('settings.family.languageSelect')}
+                style={{
+                  maxWidth: 150,
+                  minHeight: 36,
+                  border: `1px solid ${C.hairline}`,
+                  borderRadius: 9,
+                  background: C.bgCanvasSoft,
+                  color: C.ink700,
+                  font: 'inherit',
+                  fontSize: '0.8125rem',
+                  padding: '0 var(--dw-space-8)',
+                }}
+              >
+                <option value="auto">{t('settings.family.languageAuto')}</option>
+                {SUPPORTED_LANGUAGES.map((language) => (
+                  <option key={language} value={language}>
+                    {t(`settings.languageOption.${language}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
         </section>
 
         {/* NATIVE-FØLELSE */}
-        <Section eyebrow="Native-følelse" id="sec-native">
+        <Section eyebrow={t('settings.family.nativeFeel')} id="sec-native">
           <li style={{ listStyle: 'none' }}>
             <ToggleRow
               icon={<IconVibrate />}
-              label="Vibrasjon"
+              label={t('settings.family.vibration')}
               on={vibrationOn}
               onChange={handleVibration}
               reducedMotion={reducedMotion}
@@ -2299,8 +2447,8 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
           <li style={{ listStyle: 'none' }}>
             <ToggleRow
               icon={<IconMotion />}
-              label="Reduser bevegelse"
-              sub="Følger systemet"
+              label={t('settings.family.reduceMotion')}
+              sub={t('settings.family.themeSystem')}
               on={motionReducedOn}
               onChange={handleReducedMotion}
               reducedMotion={reducedMotion}
@@ -2310,7 +2458,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
 
         {/* BABYORA PLUSS (R7 Task 7: Familie-rot-IA — Plus-seksjon) */}
         <section style={sectionStyle} aria-labelledby="sec-abo">
-          <h2 id="sec-abo" style={sectionEyebrowStyle}>Babyora Pluss</h2>
+          <h2 id="sec-abo" style={sectionEyebrowStyle}>{t('settings.family.plusHeading')}</h2>
           <button
             ref={premiumRowRef}
             type="button"
@@ -2318,8 +2466,8 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
             onClick={handlePremiumCtaClick}
             aria-label={
               isPremium
-                ? 'Babyora Pluss aktiv — administrer abonnement og fakturering'
-                : 'Ikke aktivert — start 7 dager gratis med Babyora Pluss'
+                ? t('settings.family.plusActiveAria')
+                : t('settings.family.plusInactiveAria')
             }
             aria-haspopup={isPremium ? undefined : 'dialog'}
           >
@@ -2330,13 +2478,13 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
                   ikke lenger et gratis-nivå å beskrive her. */}
               <span style={premiumEyebrowStyle}>
                 <span aria-hidden="true" style={premiumStatusDotStyle} />
-                {isPremium ? 'Babyora Pluss aktiv' : 'Ikke aktivert'}
+                {t(isPremium ? 'settings.family.plusActive' : 'settings.family.plusInactive')}
               </span>
-              <span style={premiumTitleStyle}>Babyora Pluss</span>
+              <span style={premiumTitleStyle}>{t('settings.family.plusHeading')}</span>
               <span style={premiumSubStyle}>
                 {isPremium
-                  ? 'Administrer abonnement og fakturering'
-                  : 'Dagens antrekk, planer fremover og egen profil for hvert barn'}
+                  ? t('settings.family.manageSubscription')
+                  : t('settings.family.plusDescription')}
               </span>
             </span>
             <span style={premiumArrowStyle}>
@@ -2346,7 +2494,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
         </section>
 
         {/* OM & STØTTE */}
-        <Section eyebrow="Om & støtte" id="sec-om">
+        <Section eyebrow={t('settings.family.aboutSupport')} id="sec-om">
           <li style={{ listStyle: 'none' }}>
             <button
               type="button"
@@ -2354,14 +2502,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               style={rowBase}
               onClick={handleOpenHelp}
               aria-haspopup="dialog"
-              aria-label="Hjelp og veiledning — åpne FAQ"
+              aria-label={t('settings.family.openDialogAria', { label: t('settings.family.help') })}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconHelp />
               </span>
               <span style={rowBodyStyle}>
-                <span style={rowLabelStyle}>Hjelp og veiledning</span>
-                <span style={rowSubStyle}>Vanlige spørsmål om Babyora</span>
+                <span style={rowLabelStyle}>{t('settings.family.help')}</span>
+                <span style={rowSubStyle}>{t('settings.family.helpSub')}</span>
               </span>
               <Chevron />
             </button>
@@ -2376,14 +2524,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               style={rowBase}
               onClick={handleOpenFeedback}
               aria-haspopup="dialog"
-              aria-label="Send tilbakemelding — åpne dialog"
+              aria-label={t('settings.family.openDialogAria', { label: t('settings.family.feedback') })}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconFeedback />
               </span>
               <span style={rowBodyStyle}>
-                <span style={rowLabelStyle}>Send tilbakemelding</span>
-                <span style={rowSubStyle}>Fortell oss hva du synes</span>
+                <span style={rowLabelStyle}>{t('settings.family.feedback')}</span>
+                <span style={rowSubStyle}>{t('settings.family.feedbackSub')}</span>
               </span>
               <Chevron />
             </button>
@@ -2400,14 +2548,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               style={rowBase}
               onClick={handleOpenRateApp}
               aria-haspopup="dialog"
-              aria-label="Vurder appen i App Store — åpne dialog"
+              aria-label={t('settings.family.openDialogAria', { label: t('settings.family.rate') })}
             >
               <span style={rowIconAccent} aria-hidden="true">
                 <IconStar />
               </span>
               <span style={rowBodyStyle}>
-                <span style={rowLabelStyle}>Vurder appen</span>
-                <span style={rowSubStyle}>Liker du Babyora? Gi oss en stjerne</span>
+                <span style={rowLabelStyle}>{t('settings.family.rate')}</span>
+                <span style={rowSubStyle}>{t('settings.family.rateSub')}</span>
               </span>
               <Chevron />
             </button>
@@ -2422,14 +2570,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               style={rowBase}
               onClick={handleOpenPrivacy}
               aria-haspopup="dialog"
-              aria-label="Personvern og vilkår — åpne dialog"
+              aria-label={t('settings.family.openDialogAria', { label: t('settings.family.privacy') })}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconShield />
               </span>
               <span style={rowBodyStyle}>
-                <span style={rowLabelStyle}>Personvern og vilkår</span>
-                <span style={rowSubStyle}>Personvern, vilkår og tredjeparter</span>
+                <span style={rowLabelStyle}>{t('settings.family.privacy')}</span>
+                <span style={rowSubStyle}>{t('settings.family.privacySub')}</span>
               </span>
               <Chevron />
             </button>
@@ -2444,14 +2592,14 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               ref={exportRowRef}
               style={rowBase}
               onClick={handleExportData}
-              aria-label="Eksporter mine data — last ned JSON-fil"
+              aria-label={t('settings.family.exportAria')}
             >
               <span style={rowIconBase} aria-hidden="true">
                 <IconDownload />
               </span>
               <span style={rowBodyStyle}>
-                <span style={rowLabelStyle}>Eksporter mine data</span>
-                <span style={rowSubStyle}>Last ned alt som JSON (GDPR)</span>
+                <span style={rowLabelStyle}>{t('settings.family.export')}</span>
+                <span style={rowSubStyle}>{t('settings.family.exportSub')}</span>
               </span>
               <Chevron />
             </button>
@@ -2467,7 +2615,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               style={{ ...rowBase, color: C.terracotta700 }}
               onClick={handleOpenDeleteConfirm}
               aria-haspopup="dialog"
-              aria-label="Slett mine data — åpne bekreftelses-dialog"
+              aria-label={t('settings.family.deleteAria')}
             >
               <span
                 style={{
@@ -2482,9 +2630,9 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
               </span>
               <span style={rowBodyStyle}>
                 <span style={{ ...rowLabelStyle, color: C.terracotta700 }}>
-                  Slett mine data
+                  {t('settings.family.delete')}
                 </span>
-                <span style={rowSubStyle}>Fjerner all lokal data (GDPR)</span>
+                <span style={rowSubStyle}>{t('settings.family.deleteSub')}</span>
               </span>
               <Chevron />
             </button>
@@ -2493,7 +2641,7 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
 
         {/* Veiledende-disclaimer (eierbeslutning 2026-07-15) — juridisk sone. */}
         <p style={{ margin: 'var(--dw-space-2) var(--dw-space-6) 0', fontSize: '0.75rem', lineHeight: 1.45, color: C.ink500 }}>
-          {DISCLAIMER_FULL}
+          {t('settings.family.disclaimer')}
         </p>
 
         {/* Logg ut */}
@@ -2501,18 +2649,18 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
           type="button"
           style={logoutBtnStyle}
           onClick={handleLogout}
-          aria-label="Logg ut og slett lokale data"
+          aria-label={t('settings.family.logoutAria')}
         >
           <IconLogout />
-          <span>Logg ut</span>
+          <span>{t('settings.family.logout')}</span>
         </button>
 
         <div
           style={footerMetaStyle}
-          aria-label={`App-info: Babyora versjon ${APP_VERSION}, laget i Trondheim`}
+          aria-label={t('settings.family.appInfo', { version: APP_VERSION })}
         >
           <span style={footerBrandStyle}>Babyora</span>
-          <span>versjon {APP_VERSION} · laget i Trondheim</span>
+          <span>{t('settings.family.appInfoVisible', { version: APP_VERSION })}</span>
         </div>
       </div>
 
@@ -2606,6 +2754,19 @@ export function InnstillingerScreen({ onNavigate: _onNavigate, onOpenTool }: Inn
         onClose={() => setAddChildOpen(false)}
         onSubmit={handleAddChildSubmit}
         triggerRef={addChildRowRef}
+      />
+
+      <MaterialPreferenceSheet
+        open={materialPreferenceOpen}
+        value={activeMaterialPreference}
+        copy={materialPreferenceCopy.sheet}
+        onChange={(next) => {
+          if (needsOnboarding) return;
+          void fire('selection');
+          updateChild(active.id, { materialPreference: next });
+        }}
+        onClose={() => setMaterialPreferenceOpen(false)}
+        triggerRef={materialPreferenceRowRef}
       />
 
       {/* Auto-posisjon-modal — forklarer permission FØR navigator.geolocation
@@ -2740,6 +2901,7 @@ function MorningHourDialog({
   triggerRef,
 }: MorningHourDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const copy = useSettingsSecondaryCopy();
 
   // Åpne/lukk det native <dialog>-elementet i takt med `open`
   useEffect(() => {
@@ -2896,11 +3058,11 @@ function MorningHourDialog({
     >
       <header style={headerStyle}>
         <h2 id="morning-hour-title" style={titleStyle}>
-          Tidspunkt for morgenvarsel
+          {copy.morningHour.title}
         </h2>
         <button
           type="button"
-          aria-label="Lukk"
+          aria-label={copy.common.close}
           onClick={() => dialogRef.current?.close()}
           style={closeBtnStyle}
         >
@@ -2909,7 +3071,7 @@ function MorningHourDialog({
       </header>
       <div style={bodyStyle}>
         <p id="morning-hour-desc" style={helpStyle}>
-          Velg når på morgenen Babyora skal sende dagens påkledningsforslag.
+          {copy.morningHour.description}
         </p>
         <div
           role="radiogroup"
@@ -2924,7 +3086,7 @@ function MorningHourDialog({
                 type="button"
                 role="radio"
                 aria-checked={active}
-                aria-label={`Kl. ${formatHour(h)}`}
+                aria-label={copy.common.hourAria(formatHour(h))}
                 onClick={() => onSelect(h)}
                 style={active ? optionActive : optionBase}
               >
@@ -2948,43 +3110,6 @@ function MorningHourDialog({
 // markdown-parser), men beholder en avsnitts-basert datamodell slik at vi kan
 // bytte til markdown senere uten endringer i call-site.
 
-interface HelpFaqItem {
-  q: string;
-  a: ReadonlyArray<string>;
-}
-
-const HELP_FAQ: ReadonlyArray<HelpFaqItem> = [
-  {
-    q: 'Hva er Babyora?',
-    a: [
-      'Babyora er en norsk påkledningsapp for barn 0–3 år. Vi anbefaler antall lag ull og bomull basert på været akkurat der du er, og barnets alder.',
-      'Appen er laget av norske foreldre i Trondheim — for norske vintre, høster og kalde sommermorgener.',
-    ],
-  },
-  {
-    q: 'Hvordan endrer jeg sted?',
-    a: [
-      'Gå til Innstillinger → Vær & sted → Sted, og skriv inn poststed eller kommune.',
-      'Du kan også slå på «Bruk posisjon automatisk» for at Babyora skal hente vær der enheten er akkurat nå. Da trenger vi tilgang til posisjon — du blir spurt første gang du slår det på.',
-    ],
-  },
-  {
-    q: 'Hvor henter dere vær fra?',
-    a: [
-      'Værdata kommer fra met.no (Meteorologisk institutt) — samme kilde som yr.no.',
-      'Du kan se og bytte kilde under Innstillinger → Vær & sted → Værkilde.',
-    ],
-  },
-  {
-    q: 'Hvordan slår jeg på varsler?',
-    a: [
-      'Gå til Innstillinger → Varsler og slå på «Morgenvarsel». Første gang blir du spurt om å tillate varsler — velg «Tillat».',
-      'Hvis varsler er blokkert fra før, må du skru dem på i systeminnstillingene til telefonen (Innstillinger → Babyora → Varsler).',
-      'Du kan også justere klokkeslett for morgenvarselet ved å trykke på rad-teksten når varselet er på.',
-    ],
-  },
-];
-
 interface HelpDialogProps {
   open: boolean;
   reducedMotion: boolean;
@@ -2999,6 +3124,8 @@ function HelpDialog({
   triggerRef,
 }: HelpDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const copy = useSettingsSecondaryCopy();
+  const dialogCopy = copy.help;
 
   // Åpne/lukk det native <dialog>-elementet i takt med `open`
   useEffect(() => {
@@ -3202,11 +3329,11 @@ function HelpDialog({
       <div style={innerSurfaceStyle}>
         <header style={headerStyle}>
           <h2 id="help-title" style={titleStyle}>
-            Hjelp og veiledning
+            {dialogCopy.title}
           </h2>
           <button
             type="button"
-            aria-label="Lukk"
+            aria-label={copy.common.close}
             onClick={() => dialogRef.current?.close()}
             style={closeBtnStyle}
           >
@@ -3216,12 +3343,11 @@ function HelpDialog({
 
         <div style={bodyStyle}>
           <p id="help-desc" style={introStyle}>
-            Vanlige spørsmål om Babyora. Finner du ikke svar her, send oss en
-            tilbakemelding fra Innstillinger.
+            {dialogCopy.description}
           </p>
 
-          <ul role="list" style={faqListStyle} aria-label="Vanlige spørsmål">
-            {HELP_FAQ.map((item, i) => (
+          <ul role="list" style={faqListStyle} aria-label={dialogCopy.faqAria}>
+            {dialogCopy.faq.map((item, i) => (
               <li
                 key={item.q}
                 style={{
@@ -3245,10 +3371,10 @@ function HelpDialog({
             type="button"
             style={doneBtnStyle}
             onClick={() => dialogRef.current?.close()}
-            aria-label="Lukk hjelp og veiledning"
+            aria-label={dialogCopy.closeAria}
             autoFocus
           >
-            Ferdig
+            {copy.common.done}
           </button>
         </footer>
       </div>
@@ -3282,6 +3408,8 @@ function FeedbackDialog({
   triggerRef,
 }: FeedbackDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const copy = useSettingsSecondaryCopy();
+  const dialogCopy = copy.feedback;
   const platform = useMemo(() => {
     try {
       return Capacitor.getPlatform();
@@ -3443,9 +3571,9 @@ function FeedbackDialog({
   };
 
   const metaItems: ReadonlyArray<{ label: string; value: string }> = [
-    { label: 'App-versjon', value: version },
-    { label: 'Plattform', value: platform },
-    { label: 'Mottaker', value: 'hei@babyora.no' },
+    { label: dialogCopy.appVersion, value: version },
+    { label: dialogCopy.platform, value: platform },
+    { label: dialogCopy.recipient, value: 'hei@babyora.no' },
   ];
 
   const footerStyle: CSSProperties = {
@@ -3506,11 +3634,11 @@ function FeedbackDialog({
       <div style={innerSurfaceStyle}>
         <header style={headerStyle}>
           <h2 id="feedback-title" style={titleStyle}>
-            Send tilbakemelding
+            {dialogCopy.title}
           </h2>
           <button
             type="button"
-            aria-label="Lukk"
+            aria-label={copy.common.close}
             onClick={() => dialogRef.current?.close()}
             style={closeBtnStyle}
           >
@@ -3520,18 +3648,14 @@ function FeedbackDialog({
 
         <div style={bodyStyle}>
           <p id="feedback-desc" style={introStyle}>
-            Vi leser alt og svarer så fort vi kan. Fortell hva du liker, hva som ikke
-            funker, eller hva du savner — vi er to foreldre i Trondheim som bygger
-            Babyora ved siden av jobb.
+            {dialogCopy.description}
           </p>
 
           <p style={helpStyle}>
-            Når du trykker «Åpne e-post» åpner vi e-postappen din med en ferdig
-            melding. Vi legger ved litt diagnostikk så vi kan feilsøke — du kan
-            redigere alt før du sender.
+            {dialogCopy.details}
           </p>
 
-          <ul role="list" style={metaCardStyle} aria-label="Diagnostikk som sendes">
+          <ul role="list" style={metaCardStyle} aria-label={dialogCopy.diagnosticsAria}>
             {metaItems.map((item, i) => (
               <li
                 key={item.label}
@@ -3556,18 +3680,18 @@ function FeedbackDialog({
             type="button"
             style={primaryBtnStyle}
             onClick={onSendMail}
-            aria-label="Åpne e-post med ferdig tilbakemelding"
+            aria-label={dialogCopy.openEmailAria}
             autoFocus
           >
-            Åpne e-post
+            {dialogCopy.openEmail}
           </button>
           <button
             type="button"
             style={secondaryBtnStyle}
             onClick={() => dialogRef.current?.close()}
-            aria-label="Avbryt — lukk dialog"
+            aria-label={dialogCopy.cancelAria}
           >
-            Avbryt
+            {copy.common.cancel}
           </button>
         </footer>
       </div>
@@ -3588,65 +3712,6 @@ function FeedbackDialog({
 // ESC + backdrop + X), focus-trap automatisk, focus-return til trigger-rad,
 // prefers-reduced-motion respektert, premium-card surface + hairline.
 
-interface PrivacySummaryItem {
-  q: string;
-  a: ReadonlyArray<string>;
-}
-
-const PRIVACY_SUMMARY: ReadonlyArray<PrivacySummaryItem> = [
-  {
-    q: 'Hva lagrer Babyora om barnet?',
-    a: [
-      'Vi lagrer kun det du selv skriver inn: navn, fødselsdato og poststed. Disse dataene blir værende på enheten din og blir aldri sendt til våre servere.',
-      'Hvis du logger inn med Premium-abonnement, lagrer vi i tillegg kjøpsstatus hos vår betalingsleverandør (RevenueCat) — ikke barnets navn eller alder.',
-    ],
-  },
-  {
-    q: 'Hvilke data deles med tredjeparter?',
-    a: [
-      'Værdata hentes anonymt fra met.no (Meteorologisk institutt) basert på posisjon eller poststed. Vi sender ikke barnets navn eller alder dit.',
-      'Hvis du har slått på «Bruk posisjon automatisk», sender vi koordinatene dine til met.no for å hente lokalt vær — koordinatene lagres ikke hos oss.',
-    ],
-  },
-  {
-    q: 'Hvordan slettes data?',
-    a: [
-      'Du sletter alle lokale data ved å trykke «Logg ut» nederst i Innstillinger, eller ved å avinstallere appen.',
-      'Hvis du har Premium, kan du i tillegg slette kontoen din ved å sende en e-post til hei@babyora.no.',
-    ],
-  },
-];
-
-interface PrivacyLink {
-  label: string;
-  sub: string;
-  href: string;
-}
-
-const PRIVACY_LINKS: ReadonlyArray<PrivacyLink> = [
-  {
-    label: 'Personvernerklæring',
-    sub: 'Full tekst på babyora.no',
-    href: 'https://babyora.no/personvern',
-  },
-  {
-    label: 'Vilkår for bruk',
-    sub: 'Vilkår, abonnement og angrerett',
-    href: 'https://babyora.no/vilkar',
-  },
-];
-
-interface ThirdPartyItem {
-  name: string;
-  purpose: string;
-}
-
-const THIRD_PARTIES: ReadonlyArray<ThirdPartyItem> = [
-  { name: 'met.no (Meteorologisk institutt)', purpose: 'Værdata · CC BY 4.0' },
-  { name: 'Capacitor', purpose: 'Native app-rammeverk' },
-  { name: 'RevenueCat', purpose: 'Premium-abonnement og kvitteringer' },
-];
-
 interface PrivacyDialogProps {
   open: boolean;
   reducedMotion: boolean;
@@ -3663,6 +3728,8 @@ function PrivacyDialog({
   triggerRef,
 }: PrivacyDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const copy = useSettingsSecondaryCopy();
+  const dialogCopy = copy.privacy;
 
   // Åpne/lukk det native <dialog>-elementet i takt med `open`
   useEffect(() => {
@@ -3933,11 +4000,11 @@ function PrivacyDialog({
       <div style={innerSurfaceStyle}>
         <header style={headerStyle}>
           <h2 id="privacy-title" style={titleStyle}>
-            Personvern og vilkår
+            {dialogCopy.title}
           </h2>
           <button
             type="button"
-            aria-label="Lukk"
+            aria-label={copy.common.close}
             onClick={() => dialogRef.current?.close()}
             style={closeBtnStyle}
           >
@@ -3947,14 +4014,12 @@ function PrivacyDialog({
 
         <div style={bodyStyle}>
           <p id="privacy-desc" style={introStyle}>
-            Babyora er laget i Norge og følger GDPR. Vi samler så lite data som
-            mulig — barnets profil ligger kun på enheten din. Under finner du et
-            kort sammendrag og lenker til den fulle teksten.
+            {dialogCopy.description}
           </p>
 
-          <h3 style={sectionEyebrowInDialogStyle}>Sammendrag</h3>
-          <ul role="list" style={summaryListStyle} aria-label="Sammendrag av personvern">
-            {PRIVACY_SUMMARY.map((item, i) => (
+          <h3 style={sectionEyebrowInDialogStyle}>{dialogCopy.summaryHeading}</h3>
+          <ul role="list" style={summaryListStyle} aria-label={dialogCopy.summaryAria}>
+            {dialogCopy.summary.map((item, i) => (
               <li
                 key={item.q}
                 style={{
@@ -3972,9 +4037,9 @@ function PrivacyDialog({
             ))}
           </ul>
 
-          <h3 style={sectionEyebrowInDialogStyle}>Full tekst</h3>
-          <ul role="list" style={linksCardStyle} aria-label="Eksterne lenker til full tekst">
-            {PRIVACY_LINKS.map((link, i) => (
+          <h3 style={sectionEyebrowInDialogStyle}>{dialogCopy.fullTextHeading}</h3>
+          <ul role="list" style={linksCardStyle} aria-label={dialogCopy.linksAria}>
+            {dialogCopy.links.map((link, i) => (
               <li
                 key={link.href}
                 style={{
@@ -3986,7 +4051,7 @@ function PrivacyDialog({
                   type="button"
                   style={externalLinkRowStyle}
                   onClick={() => onOpenExternal(link.href)}
-                  aria-label={`${link.label} — åpne i nettleser`}
+                  aria-label={dialogCopy.openLinkAria(link.label)}
                 >
                   <span style={externalLinkIconStyle} aria-hidden="true">
                     {ExternalIcon}
@@ -4001,9 +4066,9 @@ function PrivacyDialog({
             ))}
           </ul>
 
-          <h3 style={sectionEyebrowInDialogStyle}>Tredjepartsbiblioteker</h3>
-          <ul role="list" style={thirdPartyCardStyle} aria-label="Tredjepartstjenester">
-            {THIRD_PARTIES.map((item, i) => (
+          <h3 style={sectionEyebrowInDialogStyle}>{dialogCopy.thirdPartiesHeading}</h3>
+          <ul role="list" style={thirdPartyCardStyle} aria-label={dialogCopy.thirdPartiesAria}>
+            {dialogCopy.thirdParties.map((item, i) => (
               <li
                 key={item.name}
                 style={{
@@ -4040,10 +4105,10 @@ function PrivacyDialog({
             type="button"
             style={doneBtnStyle}
             onClick={() => dialogRef.current?.close()}
-            aria-label="Lukk personvern og vilkår"
+            aria-label={dialogCopy.closeAria}
             autoFocus
           >
-            Ferdig
+            {copy.common.done}
           </button>
         </footer>
       </div>
@@ -4085,6 +4150,7 @@ function SwitchChildDialog({
   onRequestUpgrade,
 }: SwitchChildDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const copy = useSettingsSecondaryCopy().switchChild;
 
   useEffect(() => {
     const dlg = dialogRef.current;
@@ -4229,11 +4295,11 @@ function SwitchChildDialog({
     >
       <header style={headerStyle}>
         <h2 id="switch-child-title" style={titleStyle}>
-          Bytt barn
+          {copy.title}
         </h2>
         <button
           type="button"
-          aria-label="Lukk Bytt barn-dialog"
+          aria-label={copy.closeAria}
           onClick={() => dialogRef.current?.close()}
           style={closeBtnStyle}
         >
@@ -4251,7 +4317,7 @@ function SwitchChildDialog({
           lineHeight: 1.4,
         }}
       >
-        Velg hvilket barn Babyora skal vise vær- og påkledningsforslag for.
+        {copy.description}
       </p>
       {!isPremium && children.length > 1 && (
         <p
@@ -4264,7 +4330,7 @@ function SwitchChildDialog({
             lineHeight: 1.4,
           }}
         >
-          Barn nr. 1 er gratis. Å bytte til flere barn krever Babyora Pluss.
+          {copy.plusNotice}
         </p>
       )}
       <div style={bodyStyle} role="radiogroup" aria-labelledby="switch-child-title">
@@ -4277,7 +4343,7 @@ function SwitchChildDialog({
               color: C.ink500,
             }}
           >
-            Ingen barn lagt til ennå.
+            {copy.empty}
           </p>
         ) : (
           children.map((child, index) => {
@@ -4286,11 +4352,12 @@ function SwitchChildDialog({
             // låses ALDRI ut selv om det er barn 2+ og bruker mistet Premium
             // (isActive utelukker gating — se VIKTIG-klausul i spec).
             const gated = isChildSwitchGated(index, isActive, isPremium);
+            const displayName = child.name || copy.unnamed;
             const label = isActive
-              ? `${child.name || 'Uten navn'} — aktivt barn`
+              ? copy.activeAria(displayName)
               : gated
-                ? `Bytt til ${child.name || 'uten navn'} — krever Babyora Pluss`
-                : `Bytt til ${child.name || 'uten navn'}`;
+                ? copy.gatedAria(displayName)
+                : copy.switchAria(displayName);
             return (
               <button
                 key={child.id}
@@ -4311,10 +4378,10 @@ function SwitchChildDialog({
                 <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                   {child.name || '—'}
                   {gated && (
-                    <span aria-hidden="true" style={plussChipStyle}>Pluss</span>
+                    <span aria-hidden="true" style={plussChipStyle}>{copy.plusLabel}</span>
                   )}
                 </span>
-                {isActive ? <span style={checkmarkStyle} aria-hidden="true">Aktiv</span> : null}
+                {isActive ? <span style={checkmarkStyle} aria-hidden="true">{copy.activeStatus}</span> : null}
               </button>
             );
           })
@@ -4348,6 +4415,7 @@ function RefHourPickerDialog({
   triggerRef,
 }: RefHourPickerDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const copy = useSettingsSecondaryCopy();
 
   useEffect(() => {
     const dlg = dialogRef.current;
@@ -4501,11 +4569,11 @@ function RefHourPickerDialog({
     >
       <header style={headerStyle}>
         <h2 id="ref-hour-title" style={titleStyle}>
-          Referansetime
+          {copy.referenceHour.title}
         </h2>
         <button
           type="button"
-          aria-label="Lukk"
+          aria-label={copy.common.close}
           onClick={() => dialogRef.current?.close()}
           style={closeBtnStyle}
         >
@@ -4514,7 +4582,7 @@ function RefHourPickerDialog({
       </header>
       <div style={bodyStyle}>
         <p id="ref-hour-desc" style={helpStyle}>
-          Velg hvilket klokkeslett værvarselet på hjem-skjermen skal hentes fra.
+          {copy.referenceHour.description}
         </p>
         <div role="radiogroup" aria-labelledby="ref-hour-title" style={optionsGridStyle}>
           {REF_HOUR_OPTIONS.map((h) => {
@@ -4525,7 +4593,7 @@ function RefHourPickerDialog({
                 type="button"
                 role="radio"
                 aria-checked={active}
-                aria-label={`Kl. ${formatHour(h)}`}
+                aria-label={copy.common.hourAria(formatHour(h))}
                 onClick={() => onSelect(h)}
                 style={active ? optionActive : optionBase}
               >
@@ -4568,6 +4636,8 @@ function AddChildDialog({
 }: AddChildDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const copy = useSettingsSecondaryCopy();
+  const dialogCopy = copy.addChild;
 
   const [name, setName] = useState('');
   const [dob, setDob] = useState('');
@@ -4846,11 +4916,11 @@ function AddChildDialog({
       <form onSubmit={handleSubmit} style={innerSurfaceStyle}>
         <header style={headerStyle}>
           <h2 id="add-child-title" style={titleStyle}>
-            Legg til nytt barn
+            {dialogCopy.title}
           </h2>
           <button
             type="button"
-            aria-label="Lukk Legg-til-nytt-barn-dialog"
+            aria-label={dialogCopy.closeAria}
             onClick={() => dialogRef.current?.close()}
             style={closeBtnStyle}
           >
@@ -4860,13 +4930,12 @@ function AddChildDialog({
 
         <div style={bodyStyle}>
           <p id="add-child-desc" style={introStyle}>
-            Babyora kan ha flere barn — søsken får hver sin profil med navn,
-            alder og sted. Du kan bytte mellom barna fra Innstillinger.
+            {dialogCopy.description}
           </p>
 
           <div style={fieldStyle}>
             <label htmlFor="add-child-name" style={labelStyle}>
-              Navn
+              {dialogCopy.name}
             </label>
             <input
               id="add-child-name"
@@ -4875,7 +4944,7 @@ function AddChildDialog({
               inputMode="text"
               autoComplete="off"
               autoCapitalize="words"
-              placeholder="F.eks. Iver"
+              placeholder={dialogCopy.namePlaceholder}
               value={name}
               onChange={(e) => setName(e.target.value)}
               onBlur={() => setTouched(true)}
@@ -4887,14 +4956,14 @@ function AddChildDialog({
             />
             {touched && !nameOk ? (
               <p id="add-child-name-err" style={errorStyle}>
-                Skriv inn et navn.
+                {dialogCopy.nameError}
               </p>
             ) : null}
           </div>
 
           <div style={fieldStyle}>
             <label htmlFor="add-child-dob" style={labelStyle}>
-              Fødselsdato
+              {dialogCopy.birthDate}
             </label>
             <input
               id="add-child-dob"
@@ -4911,14 +4980,14 @@ function AddChildDialog({
             />
             {touched && !dobIsValid ? (
               <p id="add-child-dob-err" style={errorStyle}>
-                Velg en gyldig fødselsdato (etter 1. januar 2018).
+                {dialogCopy.birthDateError}
               </p>
             ) : null}
           </div>
 
           <div style={fieldStyle}>
             <label htmlFor="add-child-city" style={labelStyle}>
-              Sted
+              {dialogCopy.location}
             </label>
             <input
               id="add-child-city"
@@ -4926,7 +4995,7 @@ function AddChildDialog({
               inputMode="text"
               autoComplete="address-level2"
               autoCapitalize="words"
-              placeholder="F.eks. Trondheim"
+              placeholder={dialogCopy.locationPlaceholder}
               value={city}
               onChange={(e) => setCity(e.target.value)}
               onBlur={() => setTouched(true)}
@@ -4938,7 +5007,7 @@ function AddChildDialog({
             />
             {touched && !cityOk ? (
               <p id="add-child-city-err" style={errorStyle}>
-                Skriv inn et stedsnavn.
+                {dialogCopy.locationError}
               </p>
             ) : null}
           </div>
@@ -4949,17 +5018,17 @@ function AddChildDialog({
             type="submit"
             style={primaryBtnStyle}
             disabled={!canSubmit}
-            aria-label="Lagre nytt barn"
+            aria-label={dialogCopy.submitAria}
           >
-            Legg til barn
+            {dialogCopy.submit}
           </button>
           <button
             type="button"
             style={secondaryBtnStyle}
             onClick={() => dialogRef.current?.close()}
-            aria-label="Avbryt — lukk dialog"
+            aria-label={dialogCopy.cancelAria}
           >
-            Avbryt
+            {copy.common.cancel}
           </button>
         </footer>
       </form>
@@ -5002,6 +5071,8 @@ function AutoLocationDialog({
   triggerRef,
 }: AutoLocationDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const copy = useSettingsSecondaryCopy();
+  const dialogCopy = copy.autoLocation;
 
   // Åpne/lukk det native <dialog>-elementet i takt med `open`
   useEffect(() => {
@@ -5200,11 +5271,11 @@ function AutoLocationDialog({
       <div style={innerSurfaceStyle}>
         <header style={headerStyle}>
           <h2 id="auto-location-title" style={titleStyle}>
-            Bruk posisjon automatisk
+            {dialogCopy.title}
           </h2>
           <button
             type="button"
-            aria-label="Lukk"
+            aria-label={copy.common.close}
             onClick={() => dialogRef.current?.close()}
             disabled={pending}
             style={closeBtnStyle}
@@ -5215,14 +5286,10 @@ function AutoLocationDialog({
 
         <div style={bodyStyle}>
           <p id="auto-location-desc" style={introStyle}>
-            Babyora kan hente lokalt vær basert på telefonens posisjon i stedet
-            for et fast sted. Det er praktisk når dere er på reise eller på
-            hytta.
+            {dialogCopy.description}
           </p>
           <p style={helpStyle}>
-            Når du trykker «Tillat posisjon» spør telefonen om tilgang. Vi
-            sender kun koordinatene anonymt til met.no — vi lagrer ikke
-            posisjonen din hos oss. Du kan skru det av igjen når som helst.
+            {dialogCopy.details}
           </p>
         </div>
 
@@ -5232,19 +5299,19 @@ function AutoLocationDialog({
             style={primaryBtnStyle}
             onClick={onConfirm}
             disabled={pending}
-            aria-label="Tillat posisjon — be telefonen om tilgang"
+            aria-label={dialogCopy.allowAria}
             autoFocus
           >
-            {pending ? 'Henter posisjon …' : 'Tillat posisjon'}
+            {pending ? dialogCopy.pending : dialogCopy.allow}
           </button>
           <button
             type="button"
             style={secondaryBtnStyle}
             onClick={() => dialogRef.current?.close()}
             disabled={pending}
-            aria-label="Avbryt — lukk dialog uten å spørre om posisjon"
+            aria-label={dialogCopy.cancelAria}
           >
-            Avbryt
+            {copy.common.cancel}
           </button>
         </footer>
       </div>
@@ -5287,6 +5354,8 @@ function WeatherChangeDialog({
   triggerRef,
 }: WeatherChangeDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const copy = useSettingsSecondaryCopy();
+  const dialogCopy = copy.weatherChange;
 
   // Åpne/lukk det native <dialog>-elementet i takt med `open`
   useEffect(() => {
@@ -5479,11 +5548,11 @@ function WeatherChangeDialog({
       <div style={innerSurfaceStyle}>
         <header style={headerStyle}>
           <h2 id="weather-change-title" style={titleStyle}>
-            Værendring-varsel
+            {dialogCopy.title}
           </h2>
           <button
             type="button"
-            aria-label="Lukk"
+            aria-label={copy.common.close}
             onClick={() => dialogRef.current?.close()}
             disabled={pending}
             style={closeBtnStyle}
@@ -5494,13 +5563,10 @@ function WeatherChangeDialog({
 
         <div style={bodyStyle}>
           <p id="weather-change-desc" style={introStyle}>
-            Babyora kan varsle deg når temperaturen faller mer enn 5° fra siste
-            sjekk — så slipper du å bli overrasket på vei ut med barnevogn.
+            {dialogCopy.description}
           </p>
           <p style={helpStyle}>
-            Når du trykker «Tillat varsler» spør telefonen om tilgang. Vi sender
-            kun korte påminnelser fra Babyora — ingen reklame. Du kan skru
-            varsler av igjen når som helst her i Innstillinger.
+            {dialogCopy.details}
           </p>
         </div>
 
@@ -5510,19 +5576,19 @@ function WeatherChangeDialog({
             style={primaryBtnStyle}
             onClick={onConfirm}
             disabled={pending}
-            aria-label="Tillat varsler — be telefonen om tilgang"
+            aria-label={dialogCopy.allowAria}
             autoFocus
           >
-            {pending ? 'Spør om tillatelse …' : 'Tillat varsler'}
+            {pending ? dialogCopy.pending : dialogCopy.allow}
           </button>
           <button
             type="button"
             style={secondaryBtnStyle}
             onClick={() => dialogRef.current?.close()}
             disabled={pending}
-            aria-label="Avbryt — lukk dialog uten å skru på værendring-varsel"
+            aria-label={dialogCopy.cancelAria}
           >
-            Avbryt
+            {copy.common.cancel}
           </button>
         </footer>
       </div>
@@ -5561,6 +5627,8 @@ function DeleteDataDialog({
   triggerRef,
 }: DeleteDataDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const copy = useSettingsSecondaryCopy();
+  const dialogCopy = copy.deleteData;
 
   // Åpne/lukk det native <dialog>-elementet i takt med `open`
   useEffect(() => {
@@ -5762,11 +5830,11 @@ function DeleteDataDialog({
       <div style={innerSurfaceStyle}>
         <header style={headerStyle}>
           <h2 id="delete-data-title" style={titleStyle}>
-            Slett alle mine data?
+            {dialogCopy.title}
           </h2>
           <button
             type="button"
-            aria-label="Lukk"
+            aria-label={copy.common.close}
             onClick={() => dialogRef.current?.close()}
             style={closeBtnStyle}
           >
@@ -5776,21 +5844,16 @@ function DeleteDataDialog({
 
         <div style={bodyStyle}>
           <p id="delete-data-desc" style={introStyle}>
-            Dette kan ikke angres.
+            {dialogCopy.irreversible}
           </p>
           <p style={helpStyle}>
-            Alle lokale data i Babyora blir slettet fra denne enheten:
+            {dialogCopy.description}
           </p>
-          <ul style={bulletListStyle} aria-label="Hva blir slettet">
-            <li>Barn-profiler (navn, fødselsdato, sted)</li>
-            <li>Innstillinger (varsler, tema, posisjon, referansetime)</li>
-            <li>Tilbakemelding-historikk og plagg-overstyringer</li>
-            <li>Tooltip- og onboarding-status</li>
+          <ul style={bulletListStyle} aria-label={dialogCopy.deletedItemsAria}>
+            {dialogCopy.items.map((item) => <li key={item}>{item}</li>)}
           </ul>
           <p style={helpStyle}>
-            Du blir sendt tilbake til oppstarten og må sette opp Babyora på
-            nytt. Vi anbefaler å eksportere dataene først hvis du vil ta vare
-            på dem.
+            {dialogCopy.aftermath}
           </p>
         </div>
 
@@ -5799,18 +5862,18 @@ function DeleteDataDialog({
             type="button"
             style={destructiveBtnStyle}
             onClick={onConfirm}
-            aria-label="Ja, slett alle mine data permanent"
+            aria-label={dialogCopy.confirmAria}
           >
-            Ja, slett alle data
+            {dialogCopy.confirm}
           </button>
           <button
             type="button"
             style={secondaryBtnStyle}
             onClick={() => dialogRef.current?.close()}
-            aria-label="Avbryt — behold dataene mine"
+            aria-label={dialogCopy.cancelAria}
             autoFocus
           >
-            Avbryt
+            {copy.common.cancel}
           </button>
         </footer>
       </div>
@@ -5851,6 +5914,8 @@ function WeatherSourceDialog({
   triggerRef,
 }: WeatherSourceDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const copy = useSettingsSecondaryCopy();
+  const dialogCopy = copy.weatherSource;
 
   // Åpne/lukk det native <dialog>-elementet i takt med `open`
   useEffect(() => {
@@ -6039,11 +6104,11 @@ function WeatherSourceDialog({
       <div style={innerSurfaceStyle}>
         <header style={dialogHeaderStyle}>
           <h2 id="weather-source-title" style={titleStyle}>
-            Værkilde
+            {dialogCopy.title}
           </h2>
           <button
             type="button"
-            aria-label="Lukk værkilde-info"
+            aria-label={dialogCopy.closeAria}
             onClick={() => dialogRef.current?.close()}
             style={closeBtnStyle}
           >
@@ -6053,13 +6118,10 @@ function WeatherSourceDialog({
 
         <div style={bodyStyle}>
           <p id="weather-source-desc" style={introStyle}>
-            Vi bruker met.no for vær-data.
+            {dialogCopy.description}
           </p>
           <p style={helpStyle}>
-            All værinformasjon i Babyora kommer fra Meteorologisk institutt
-            (met.no) — samme kilde som yr.no. Data leveres under lisensen
-            CC BY 4.0, og vi sender kun posisjon eller poststed anonymt for
-            å hente lokalt vær.
+            {dialogCopy.details}
           </p>
         </div>
 
@@ -6068,18 +6130,18 @@ function WeatherSourceDialog({
             type="button"
             style={primaryBtnStyle}
             onClick={onOpenLink}
-            aria-label="Les mer om met.no — åpner met.no/no/om i nettleseren"
+            aria-label={dialogCopy.readMoreAria}
             autoFocus
           >
-            Les mer på met.no
+            {dialogCopy.readMore}
           </button>
           <button
             type="button"
             style={secondaryBtnStyle}
             onClick={() => dialogRef.current?.close()}
-            aria-label="Lukk værkilde-info"
+            aria-label={dialogCopy.closeAria}
           >
-            Lukk
+            {copy.common.close}
           </button>
         </footer>
       </div>
@@ -6123,6 +6185,8 @@ function RateAppDialog({
   triggerRef,
 }: RateAppDialogProps): ReactElement {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const copy = useSettingsSecondaryCopy();
+  const dialogCopy = copy.rateApp;
 
   // Åpne/lukk det native <dialog>-elementet i takt med `open`
   useEffect(() => {
@@ -6325,11 +6389,11 @@ function RateAppDialog({
       <div style={innerSurfaceStyle}>
         <header style={dialogHeaderStyle}>
           <h2 id="rate-app-title" style={titleStyle}>
-            Vurder Babyora
+            {dialogCopy.title}
           </h2>
           <button
             type="button"
-            aria-label="Lukk vurder-appen-dialog"
+            aria-label={dialogCopy.closeAria}
             onClick={() => dialogRef.current?.close()}
             style={closeBtnStyle}
             disabled={pending}
@@ -6354,14 +6418,10 @@ function RateAppDialog({
             </svg>
           </div>
           <p id="rate-app-desc" style={introStyle}>
-            Liker du Babyora? En kort vurdering hjelper andre norske foreldre å
-            finne appen.
+            {dialogCopy.description}
           </p>
           <p style={helpStyle}>
-            Når du trykker «Gi en vurdering» åpner enheten din sitt eget
-            vurderings-vindu fra App Store eller Google Play. Du kan velge
-            antall stjerner og skrive en kort tekst — eller la være, helt opp
-            til deg.
+            {dialogCopy.details}
           </p>
         </div>
 
@@ -6371,19 +6431,19 @@ function RateAppDialog({
             style={primaryBtnStyle}
             onClick={onConfirm}
             disabled={pending}
-            aria-label="Gi en vurdering — åpner App Store eller Google Play sin vurderings-prompt"
+            aria-label={dialogCopy.confirmAria}
             autoFocus
           >
-            {pending ? 'Åpner …' : 'Gi en vurdering'}
+            {pending ? dialogCopy.pending : dialogCopy.confirm}
           </button>
           <button
             type="button"
             style={secondaryBtnStyle}
             onClick={() => dialogRef.current?.close()}
             disabled={pending}
-            aria-label="Ikke nå — lukk vurder-appen-dialog"
+            aria-label={dialogCopy.notNowAria}
           >
-            Ikke nå
+            {dialogCopy.notNow}
           </button>
         </footer>
       </div>

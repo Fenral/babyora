@@ -15,8 +15,8 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 
 | | |
 |---|---|
-| Shipping-skjermer på disk | **11** |
-| Migreres i fase 3 | **9** |
+| Shipping-skjermer på disk | **12** |
+| Migreres i fase 3 | **10** |
 | Unntatt fra fase 3 | **2** |
 | Av fase 3-kohorten: fortsatt umigrert | **7** |
 | Eierrapporterte punkter (ALDRI baselinet) | **2** |
@@ -25,17 +25,18 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 
 | Skjerm | Filsti | Linjer | Stilflate | `--dw-*` | legacy | Nås via | Migreres | Fase |
 |---|---|---:|---|---:|---:|---|---|---|
-| Familie (skall) | `src/screens/FamilieScreen.tsx` | 21 | — | 0 | 0 | App.tsx lazy()-register | nei | — |
-| Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1499 | 20 CSSProperties + 4 `style={{` | 59 | 0 | App.tsx lazy()-register | ja | 3 |
-| Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1274 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 11 | 22 | App.tsx lazy()-register | ja | 3 |
-| Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6395 | 190 CSSProperties + 50 `style={{` | 336 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
-| Onboarding | `src/screens/OnboardingScreen.tsx` | 1879 | 1 CSSProperties | 220 | 34 | App.tsx lazy()-register | ja | 3 |
-| Påkledning | `src/screens/PaakledningScreen.tsx` | 523 | — | 0 | 0 | App.tsx lazy()-register | nei | 4 |
-| Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 1086 | 1 `<style>` + 1 CSSProperties + 12 `style={{` | 101 | 4 | App.tsx lazy()-register | ja | 3 |
-| Tog-guide | `src/screens/TogGuideScreen.tsx` | 1227 | 54 CSSProperties + 3 `style={{` | 127 | 11 | App.tsx lazy()-register | ja | 3 |
-| Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1326 | `UkeScreen.css` + 1 CSSProperties | 129 | 0 | App.tsx lazy()-register | ja | 3 |
-| Varm eller kald | `src/screens/VarmEllerKaldScreen.tsx` | 911 | 1 `<style>` + 29 CSSProperties + 4 `style={{` | 89 | 2 | App.tsx lazy()-register | ja | 3 |
-| Vinterprogram | `src/screens/VinterprogramScreen.tsx` | 640 | 29 CSSProperties + 2 `style={{` | 74 | 3 | App.tsx lazy()-register | ja | 3 |
+| Familie (skall) | `src/screens/FamilieScreen.tsx` | 18 | — | 0 | 0 | App.tsx lazy()-register | nei | — |
+| Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1511 | 20 CSSProperties + 4 `style={{` | 62 | 0 | App.tsx lazy()-register | ja | 3 |
+| Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1273 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 11 | 22 | App.tsx lazy()-register | ja | 3 |
+| Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6455 | 190 CSSProperties + 53 `style={{` | 337 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
+| Onboarding | `src/screens/OnboardingScreen.tsx` | 2033 | 1 CSSProperties | 240 | 34 | App.tsx lazy()-register | ja | 3 |
+| Påkledning | `src/screens/PaakledningScreen.tsx` | 445 | — | 0 | 0 | App.tsx lazy()-register | nei | 4 |
+| Plaggbibliotek | `src/screens/PlaggbibliotekScreen.tsx` | 1105 | 1 `<style>` + 1 CSSProperties + 12 `style={{` | 101 | 4 | App.tsx lazy()-register | ja | 3 |
+| Tog-guide | `src/screens/TogGuideScreen.tsx` | 1236 | 53 CSSProperties + 3 `style={{` | 126 | 11 | App.tsx lazy()-register | ja | 3 |
+| Planlegg / Uke | `src/screens/UkeScreen.tsx` | 1130 | `UkeScreen.css` + 1 CSSProperties | 134 | 0 | App.tsx lazy()-register | ja | 3 |
+| Varm eller kald | `src/screens/VarmEllerKaldScreen.tsx` | 910 | 1 `<style>` + 29 CSSProperties + 4 `style={{` | 89 | 2 | App.tsx lazy()-register | ja | 3 |
+| Verktøy | `src/screens/VerktoyScreen.tsx` | 141 | `VerktoyScreen.css` | 61 | 0 | App.tsx lazy()-register | ja | 3 |
+| Vinterprogram | `src/screens/VinterprogramScreen.tsx` | 646 | 29 CSSProperties + 2 `style={{` | 74 | 3 | App.tsx lazy()-register | ja | 3 |
 
 «legacy» = antall UNIKE `var(--…)` som ikke er `--dw-*`. «Stilflate» teller
 kommentarstrippet kilde: egen `.css`-fil, `<style>{`-blokker, `CSSProperties`-
@@ -46,13 +47,14 @@ objekter og `style={{`-attributter. 10 av 11 skjermer har ingen CSS-fil.
 | Familie (skall) | ingen stilflate — ingenting å migrere |
 | Finn antrekk / Juster | migrert |
 | Hjem (referanse) | umigrert (22 legacy-token, 0 rå hex, 11 `--dw-*`) |
-| Innstillinger | umigrert (5 legacy-token, 7 rå hex, 336 `--dw-*`) |
-| Onboarding | umigrert (34 legacy-token, 1 rå hex, 220 `--dw-*`) |
+| Innstillinger | umigrert (5 legacy-token, 7 rå hex, 337 `--dw-*`) |
+| Onboarding | umigrert (34 legacy-token, 1 rå hex, 240 `--dw-*`) |
 | Påkledning | ingen stilflate — ingenting å migrere |
 | Plaggbibliotek | umigrert (4 legacy-token, 0 rå hex, 101 `--dw-*`) |
-| Tog-guide | umigrert (11 legacy-token, 0 rå hex, 127 `--dw-*`) |
+| Tog-guide | umigrert (11 legacy-token, 0 rå hex, 126 `--dw-*`) |
 | Planlegg / Uke | migrert |
 | Varm eller kald | umigrert (2 legacy-token, 0 rå hex, 89 `--dw-*`) |
+| Verktøy | migrert |
 | Vinterprogram | umigrert (3 legacy-token, 0 rå hex, 74 `--dw-*`) |
 
 ## 3. Unntakene (håndskrevet)
@@ -228,6 +230,10 @@ Ingen punkter i lanseringsstatusen.
 - [ ] **BØR RETTES** `src/screens/VarmEllerKaldScreen.tsx:402` — Varm/kald: `<picture>` velger mørk asset når bruker har valgt Lys på mørkt OS
 - [ ] **KOSMETISK** `src/screens/VarmEllerKaldScreen.tsx:373-376` — Død keyframe `varmkald-pulse` med F60-oransje som ikke finnes i paletten
 
+### Verktøy — `src/screens/VerktoyScreen.tsx`
+
+Ingen punkter i lanseringsstatusen.
+
 ### Vinterprogram — `src/screens/VinterprogramScreen.tsx`
 
 - [ ] **BØR RETTES** _(T-01)_ `src/screens/VinterprogramScreen.tsx` — Migrer legacy-tokens til `--dw-*` (T-01)
@@ -250,10 +256,10 @@ punktlistene over — dette er beviset på at et håndskrevet register råtner.
 
 ## 7. Rutekildene som ble lest
 
-- `lazy()`-registeret: 10 moduler
-- `routeKey`-tildelinger: 8 — `drill:finn-antrekk`, `drill:plaggbib`, `drill:familie-tool:tog`, `drill:familie-tool:varm-kald`, `drill:familie-tool:forste-vinter`, `tab:hjem`, `tab:plan`, `tab:familie`
-- `Drill`-unionens kinds: `familie-tool`, `finn-antrekk`, `paakledning`, `plaggbib`
-- `TAB_DEFS`: `hjem`, `plan`, `familie`
+- `lazy()`-registeret: 11 moduler
+- `routeKey`-tildelinger: 10 — `drill:finn-antrekk`, `drill:plaggbib`, `drill:verktoy-tool:finn-antrekk`, `drill:verktoy-tool:tog`, `drill:verktoy-tool:varm-kald`, `drill:verktoy-tool:forste-vinter`, `tab:hjem`, `tab:plan`, `tab:verktoy`, `tab:familie`
+- `Drill`-unionens kinds: `finn-antrekk`, `paakledning`, `plaggbib`, `verktoy-tool`
+- `TAB_DEFS`: `hjem`, `plan`, `verktoy`, `familie`
 - `FamilieToolTarget`: `tog`, `varm-kald`, `forste-vinter`
-- `GuideTarget`: `tog`, `varm-kald`, `forste-vinter`, `finn-antrekk`, `plaggbib`, `snart` — `snart` er et planlegg-view, ikke en skjerm
+- `GuideTarget`: `tog`, `varm-kald`, `forste-vinter`, `finn-antrekk`, `plaggbib` — `snart` er et planlegg-view, ikke en skjerm
 - Navn som KUN står i App.tsx sine kommentarer (strippet bort): `CurrentPaakledningScreen`, `GuideHubScreen`, `PlannedPaakledningScreen`

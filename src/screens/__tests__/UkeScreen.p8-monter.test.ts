@@ -23,6 +23,19 @@ async function ukeScreenCss(): Promise<string> {
 }
 
 describe('Planlegg (UkeScreen) — P8 Monter re-skin contracts', () => {
+  it('I dag og I morgen deler hele bredden i en to-kolonners kontroll', async () => {
+    const css = await ukeScreenCss();
+    const uke = await readFile(fileURLToPath(new URL('../UkeScreen.tsx', import.meta.url)), 'utf8');
+
+    expect(uke).toContain("{ value: 'today', label: t('plan.today') }");
+    expect(uke).toContain("{ value: 'tomorrow', label: t('plan.tomorrow') }");
+    expect(uke).not.toContain("label: 'Uke'");
+    expect(uke).not.toContain("label: 'Snart'");
+    expect(uke).toContain("t('plan.prepareNightBefore')");
+    expect(uke).toContain("t('plan.tomorrowHoldsUntil', { time: emptyStableUntil })");
+    expect(css).toMatch(/\.planlegg-screen__views \.segmented-control__group\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)[^}]*width:\s*100%/su);
+  });
+
   it('Fraunces/serif appears in exactly one rule: the day-hero temperature', async () => {
     const css = await ukeScreenCss();
 

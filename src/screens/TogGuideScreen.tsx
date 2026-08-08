@@ -21,6 +21,7 @@
  *  - safe-area-inset top + bottom
  */
 import { useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { useChildren } from '../state/children-store';
@@ -31,6 +32,7 @@ import {
   garmentPng,
   type GarmentId,
 } from '../data/garment-illustrations';
+import { deepFlowCopyFor, localizedGarmentDisplayName } from './deep-flow-copy';
 
 export interface TogGuideScreenProps {
   onBack: () => void;
@@ -196,6 +198,9 @@ const LAYER_STRIPE: Record<LayerItem['variant'], string> = {
 };
 
 export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const copy = deepFlowCopyFor(language);
   const { fire } = useHapticSystem();
   const { reducedMotion } = useNativeSettings();
   const { active, needsOnboarding } = useChildren();
@@ -229,15 +234,24 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
   const childName =
     !needsOnboarding && active.name && active.name.trim().length > 0
       ? active.name
-      : 'barnet';
+      : copy.common.childFallback;
   const childAgeMonths = useMemo(
     () => (!needsOnboarding ? dobToAgeMonths(active.dob) : 0),
     [active.dob, needsOnboarding],
   );
   const heroEyebrowText =
     !needsOnboarding && active.name && active.name.trim().length > 0
-      ? `For ${childName} · ${childAgeMonths} mnd`
-      : 'Anbefaling for natten';
+      ? copy.tog.forChild(childName, childAgeMonths)
+      : copy.tog.recommendationForNight;
+  const zoneLabel = tempC <= 17
+    ? copy.tog.zone(14, 17, null)
+    : tempC <= 19
+      ? copy.tog.zone(18, 19, null)
+      : tempC <= 21
+        ? copy.tog.zone(18, 21, null)
+        : tempC <= 23
+          ? copy.tog.zone(22, 24, null)
+          : copy.tog.zone(24, null, null);
 
   /* ── Detalj-sheet state (F62 PlaggDetailSheet) ──
      Tap på en plagg-rad → åpner eksisterende PlaggDetailSheet (pros/cons +
@@ -425,11 +439,6 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontWeight: 400,
     color: 'var(--dw-ink-hi)',
     margin: '0 0 var(--dw-space-8)',
-  };
-
-  const heroEmStyle: CSSProperties = {
-    fontStyle: 'italic',
-    color: 'var(--dw-accent)',
   };
 
   /* heroSubStyle er borte sammen med avsnittet det stylet — se JSX-en.
@@ -953,7 +962,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
         <button
           type="button"
           onClick={handleBack}
-          aria-label="Tilbake"
+          aria-label={copy.common.back}
           style={backBtnStyle}
           onFocus={(e) => {
             e.currentTarget.style.outline = '2px solid var(--dw-accent)';
@@ -978,7 +987,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
           </svg>
         </button>
         <h1 id="togguide-title" style={topbarTitleStyle}>
-          Soving innendørs
+          {copy.tog.title}
         </h1>
         <div style={topbarSpacerStyle} aria-hidden="true" />
       </header>
@@ -989,7 +998,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
         <section style={heroStyle} aria-labelledby="hero-title">
           <span style={heroEyebrowStyle}>{heroEyebrowText}</span>
           <h2 style={heroTitleStyle} id="hero-title">
-            Riktig <em style={heroEmStyle}>varme</em> for natten
+            {copy.tog.recommendationForNight}
           </h2>
           {/* INTROTEKSTEN ER FJERNET (eierbeslutning B+A, 2026-08-06).
 
@@ -1010,7 +1019,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
             {soveposeBilde && (
               <img
                 src={soveposeBilde}
-                alt={`Anbefalt sovepose, ${rec.tog} TOG`}
+                alt={`${copy.tog.recommended}: ${localizedGarmentDisplayName(rec.layers.at(-1)?.dbString ?? '', language)}, ${rec.tog} TOG`}
                 style={{ display: 'block', height: '100%', width: 'auto', objectFit: 'contain' }}
               />
             )}
@@ -1022,7 +1031,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
           <div style={togHeroRowStyle}>
             <div style={togHeroLeftStyle}>
               <span style={togHeroEyebrowStyle} id="tog-hero-label">
-                Anbefalt TOG
+                {copy.tog.recommended} TOG
               </span>
               <div>
                 <span
@@ -1036,7 +1045,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
               </div>
             </div>
             <div style={togHeroRightStyle}>
-              <span style={togHeroTempLabelStyle}>Romtemperatur</span>
+              <span style={togHeroTempLabelStyle}>{copy.tog.roomTemperature}</span>
               <div style={togHeroTempStyle}>
                 {tempC}
                 <em style={togHeroTempUnitStyle}>°C</em>
@@ -1045,7 +1054,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
           </div>
           <div style={togHeroZoneStyle}>
             <span style={togHeroZoneDotStyle} aria-hidden="true" />
-            <span>{rec.zoneLabel}</span>
+            <span>{zoneLabel}</span>
           </div>
         </section>
 
@@ -1053,9 +1062,9 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
         <section style={sliderSectionStyle} aria-labelledby="slider-label">
           <div style={sliderHeadStyle}>
             <span style={sliderLabelStyle} id="slider-label">
-              Sett romtemperatur
+              {copy.tog.setRoomTemperature}
             </span>
-            <span style={sliderHintStyle}>Skyv eller velg under</span>
+            <span style={sliderHintStyle}>{copy.tog.sliderHint}</span>
           </div>
           <div style={sliderTrackWrapStyle} role="group" aria-labelledby="slider-label">
             <div style={sliderTrackStyle} aria-hidden="true">
@@ -1075,14 +1084,14 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
                 value={tempC}
                 onChange={(e) => handleSliderChange(Number(e.target.value))}
                 aria-labelledby="slider-label"
-                aria-valuetext={`${tempC} grader celsius, anbefalt TOG ${rec.tog}`}
+                aria-valuetext={copy.tog.sliderValue(tempC, rec.tog)}
                 style={rangeInputStyle}
               />
             </div>
             <div
               style={stepLabelsStyle}
               role="radiogroup"
-              aria-label="Forhåndsvalgte temperatur-steg"
+              aria-label={copy.tog.presetsAria}
             >
               {STEPS.map((step) => {
                 const active = step.temp === tempC;
@@ -1116,15 +1125,16 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
         <section aria-labelledby="layers-title">
           <div style={sectionEyebrowStyle}>
             <h2 id="layers-title" style={sectionTitleStyle}>
-              Slik <em style={sectionEmStyle}>kler</em> du på
+              {copy.tog.dressHeadingStart} <em style={sectionEmStyle}>{copy.tog.dressHeadingEmphasis}</em>
             </h2>
             <span style={sectionCountStyle}>
-              {rec.layers.length} {rec.layers.length === 1 ? 'lag' : 'lag'}
+              {copy.tog.layerCount(rec.layers.length)}
             </span>
           </div>
           <ol style={layerListStyle} role="list">
             {rec.layers.map((layer, idx) => {
               const rowKey = `${layer.dbString}-${idx}`;
+              const layerName = localizedGarmentDisplayName(layer.dbString, language);
               return (
                 <li
                   key={rowKey}
@@ -1142,7 +1152,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
                       rowRefs.current[rowKey] = el;
                     }}
                     onClick={() => handleOpenLayer(rowKey, layer)}
-                    aria-label={`Vis detalj for ${layer.name}`}
+                    aria-label={copy.tog.detailFor(layerName)}
                     style={layerCardStyle(layer.variant)}
                     onFocus={(e) => {
                       e.currentTarget.style.outline =
@@ -1169,10 +1179,10 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
                       })()}
                     </div>
                     <div style={layerMetaStyle}>
-                      <span style={layerStepStyle}>{layer.step}</span>
-                      <span style={layerNameStyle}>{layer.name}</span>
+                      <span style={layerStepStyle}>{copy.tog.layerStep(idx + 1, layer.variant)}</span>
+                      <span style={layerNameStyle}>{layerName}</span>
                     </div>
-                    <span style={layerChipStyle}>{layer.chip}</span>
+                    <span style={layerChipStyle}>{layer.variant === 'inner' ? copy.tog.skin : layer.variant === 'mid' ? copy.tog.middle : layer.chip}</span>
                   </button>
                 </li>
               );
@@ -1181,7 +1191,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
         </section>
 
         {/* SAFETY */}
-        <aside style={safetyStyle} role="note" aria-label="Sikkerhet">
+        <aside style={safetyStyle} role="note" aria-label={copy.tog.safety}>
           <div style={safetyIconWrapStyle} aria-hidden="true">
             <svg
               width={20}
@@ -1198,10 +1208,9 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
             </svg>
           </div>
           <div style={safetyTextWrapStyle}>
-            <p style={safetyTitleStyle}>Trygg-natt-regel</p>
+            <p style={safetyTitleStyle}>{copy.tog.safetyTitle}</p>
             <p style={safetyBodyStyle}>
-              Bruk aldri dyne, pute eller løse tepper sammen med sovepose før
-              barnet er over 1 år.
+              {copy.tog.safetyBody}
             </p>
           </div>
         </aside>

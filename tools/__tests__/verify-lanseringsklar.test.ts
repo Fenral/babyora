@@ -64,9 +64,10 @@ describe('lanseringsporten kan både se og slippe', () => {
       + 'meningsløs — les ledd 2 og fjern panelet før du lanserer.',
     ).not.toContain('<WidgetSpikePanel />');
 
-    // Monter panelet tilbake der det sto før 2026-08-06: rett etter
-    // «Logg ut»-knappen. Regex, ikke bokstavelig streng — filen har CRLF.
-    const anker = /(<span>Logg ut<\/span>\s*<\/button>)/u;
+    // Monter panelet tilbake der det sto før 2026-08-06: rett etter den
+    // lokaliserte «Logg ut»-knappen. Regex, ikke bokstavelig streng — filen
+    // har CRLF, og den synlige teksten kommer nå fra i18n-nøkkelen.
+    const anker = /(<span>\{t\('settings\.family\.logout'\)\}<\/span>\s*<\/button>)/u;
     expect(anker.test(original), 'fant ikke stedet panelet sto').toBe(true);
     const med = original.replace(anker, '$1\n\n        <WidgetSpikePanel />');
     writeFileSync(SKJERM, med, 'utf8');

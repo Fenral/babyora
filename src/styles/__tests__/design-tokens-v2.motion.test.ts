@@ -46,7 +46,7 @@
  * pa at «apnet» ikke er «sett». Tre uttrekkere ga tre skrivemater; alt som
  * ble skrevet pa en fjerde mate passerte i stillhet, og kvitteringen
  * presenterte det de tre REKTE som om det var populasjonen. Fire konkrete
- * hull, alle med live forekomster i src:
+ * hull, alle med live forekomster i src da angrepet ble gjort:
  *
  *  1. TILORDNINGSFORM. `el.style.transition = 'transform 200ms ease-out'` i
  *     App.tsx:492 — DoD-ens egen navngitte klasse, skilt fra den fangede
@@ -59,9 +59,10 @@
  *  4. BEVEGELSE SKREVET I JS. Fem filer kjorer motion/react; fjaerer og
  *     bezier-arrayer gar aldri gjennom en CSS-verdi.
  *
- * Rettelsen er derfor SEKS flater, seks uttrekkere, og en malprove per
- * uttrekker (MALPROVER) sa en fremtidig regresjon i én av dem blir ROD i
- * stedet for stille. Gulvet ble malt pa nytt: 98 → 122. Det er en
+ * Rettelsen er derfor SEKS flater og seks uttrekkere. En flate med levende
+ * gjeld har en MALPROVE; en flate som er ryddet til null beholder en
+ * syntetisk injeksjonstest, så opprydding aldri krever ny gjeld. Gulvet ble
+ * malt pa nytt: 98 → 122. Det er en
  * KORREKSJON av en feilmaling, ikke slakk — se BASELINE for hele
  * regnskapet, linje for linje.
  *
@@ -909,12 +910,8 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
      ease-out. Ingen av dem er lik, saa et bytte ville endret bevegelsen.
      Gjelden er den samme kurven i ny linjeform; uten denne oppdateringen
      ville en FLYTTET gjeld sett ut som en NY. */
-  /* ── src/App.tsx — FORST MALT 2026-08-04 (fase 2-rettelsen).
-     Linje 492 er angrepets hovedfunn: appens rotfil skrev bade varighet og
-     kurve via tilordning (`=`), som ingen uttrekker sa. Linje 733–739 er
-     motion/react-overgangene mellom ruter. */
-  { fil: 'src/App.tsx', decl: "transition = 'transform 200ms ease-out'" }, // linje 492 [tilordning]
-  { fil: 'src/App.tsx', decl: "ease: 'easeOut'" }, // linje 733, 738 [js]
+  /* App.tsx betalte ned begge sine registrerte linjer 2026-08-08:
+     edge-sveipen bruker nå tokens, og rutevariantene bruker --dw-ease. */
   // ── src/components/BottomTabBar.tsx (fjaer nr. 2 — ulik App-fjaeren)
   { fil: 'src/components/BottomTabBar.tsx', decl: 'stiffness: 500' }, // linje 106 [js]
   { fil: 'src/components/BottomTabBar.tsx', decl: 'damping: 25' }, // linje 106 [js]
@@ -923,7 +920,6 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
   { fil: 'src/components/controls/SegmentedControl.css', decl: "transition: background-color 160ms ease, color 160ms ease" }, // linje 54
   // ── src/components/hjem/hjem-monter.css (referanseskjermen — Steg 6/8/9)
   { fil: 'src/components/hjem/hjem-monter.css', decl: "animation: hjm-scan-sweep var(--hjm-scan-duration, 2100ms) cubic-bezier(0.45, 0, 0.55, 1) 1 forwards" }, // linje 440
-  { fil: 'src/components/hjem/hjem-monter.css', decl: "animation: hjm-check-pop 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) backwards" }, // linje 474
   { fil: 'src/components/hjem/hjem-monter.css', decl: "animation: hjm-spin 1s linear infinite" }, // linje 483
   // ── src/components/instrument/TemperatureInstrument.tsx
   // ── src/components/instrument/vertical-gauge.css
@@ -966,12 +962,8 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
   { fil: 'src/screens/HjemScreen.tsx', decl: 'damping: 26' }, // linje 1202 [js]
   { fil: 'src/screens/HjemScreen.tsx', decl: 'mass: 0.6' }, // linje 1202 [js]
   // ── src/screens/InnstillingerScreen.tsx (6230 linjer, ingen CSS-fil)
-  /* ── src/screens/OnboardingScreen.tsx (egen ease-familie parallelt med --dw-ease)
-     De to forste er SELVE definisjonene av den parallelle familien, forst
-     malt 2026-08-04: verdiene ble vasket gjennom egne custom properties og
-     var derfor usynlige for bade deklarasjons- og bruksmonsteret.
-     `--ob-ease-standard` er --dw-ease skrevet en gang til for hand. */
-  { fil: 'src/screens/OnboardingScreen.tsx', decl: '--ob-ease-spring: cubic-bezier(.34,1.32,.64,1)' }, // linje 932 [variabel]
+  // ── src/screens/OnboardingScreen.tsx
+  // Egen easing-familie er nedbetalt; skjermen bruker nå --dw-ease direkte.
   /* SLETTET 2026-08-05: 14 oppforinger fra src/screens/PaakledningScreen.tsx.
      Alle la i CurrentPaakledningScreen — den unadde grenen som ble fjernet i
      fase 4. Gruppen bar allerede merknaden «slettes i fase 4», og gulvet
@@ -1035,8 +1027,8 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
  *
  * Kontrollen pa at dette faktisk er en korreksjon og ikke slakk er
  * mekanisk, ikke prosa: `sum(REGISTER) === BASELINE`, hver registerlinje ma
- * GJENFINNES i filen den navngir, og hver av de seks flatene ma gi treff.
- * En linje som ikke finnes lenger kan ikke bli staende og polstre gulvet.
+ * GJENFINNES i filen den navngir. En ren flate bevises med en syntetisk
+ * injeksjon; en linje som ikke finnes lenger kan ikke polstre gulvet.
  *
  * MERK om avviket mot kartleggingens 65: kartleggingen talte inline
  * CSSProperties bare der verdien var et rent strengliteral (8 stk). Denne
@@ -1044,7 +1036,7 @@ const KJENT_GJELD: readonly Gjeldslinje[] = [
  * den DOMINERENDE inline-formen i denne kodebasen (39 til). Grenen for
  * reduced motion er handtert, men varigheten og kurven er like hardkodet.
  */
-const BASELINE = 37;
+const BASELINE = 33;
 
 /** Nokkel: fil + normalisert deklarasjon. */
 const nokkel = (t: { fil: string; decl: string }): string => `${t.fil} :: ${t.decl}`;
@@ -1099,34 +1091,8 @@ const MALPROVER: ReadonlyArray<{ flate: Flate; fil: string; decl: string }> = [
      `inline`. Faller inline-støtten ut av uttrekkeren ved en fremtidig
      refaktorering, blir DEN rød. Den er dessuten sterkere enn en levende
      prøve: den er uavhengig av om det tilfeldigvis finnes gjeld å peke på. */
-  /* ── de tre formene angrepet 2026-08-04 slapp gjennom ─────────────────
-     Dette er den ENESTE rettelsen som stopper at samme feilklasse gjentar
-     seg: hver NY uttrekker far en navngitt, live forekomst her. Faller
-     uttrekkeren ut igjen ved en fremtidig refaktorering, blir porten ROD i
-     stedet for a melde «ingen nye funn». MALPROVER kan per konstruksjon
-     ikke oppdage en skriveform som ingen uttrekker kjenner — den kan bare
-     hindre at en form vi ALLEREDE har betalt for a oppdage, blir stille
-     igjen. */
-  {
-    // Angrepets hovedfunn: hardkodet varighet OG kurve i appens rotfil,
-    // skilt fra den fangede formen med ett tegn (`=` mot `:`).
-    flate: 'tilordning',
-    fil: 'src/App.tsx',
-    decl: "transition = 'transform 200ms ease-out'",
-  },
-  {
-    // Vaskingen gjennom egne custom properties.
-    // Var --ob-ease-standard, men den ble migrert bort av fase 3-sveipen
-    // 2026-08-05. Et anker som ikke finnes lenger gjor porten TAUS — den
-    // ville bestatt paa fravaer. Byttet til --ob-ease-spring, som fortsatt
-    // star og maler noyaktig samme flate.
-    flate: 'variabel',
-    fil: 'src/screens/OnboardingScreen.tsx',
-    // NB: utrekkeren normaliserer til mellomrom etter kolon, selv om kilden
-    // skriver `--ob-ease-spring:cubic-bezier(...)` uten. Ankeret må matche
-    // utrekkerens form, ikke kildens.
-    decl: '--ob-ease-spring: cubic-bezier(.34,1.32,.64,1)',
-  },
+  /* Levende målprøver for flater som fortsatt har gjeld. Rene flater
+     bevises av syntetiske injeksjoner lenger nede. */
   {
     // JS-bevegelsen: en kurve skrevet som tall-array, aldri innom CSS.
     flate: 'js',
@@ -1444,10 +1410,16 @@ describe('IKKE-VAKUØSITET — porten fant sine egne mål', () => {
     expect(MA_VAERE_LEST.filter((f) => !lest.has(f)), 'disse filene ble aldri åpnet').toEqual([]);
   });
 
-  it('alle SEKS flatene ga treff — en stille uttrekker er en blind port', () => {
+  it('alle gjeldsbærende flater ga treff — rene flater bevises syntetisk', () => {
     const perFlate: Record<Flate, number> = { css: 0, mal: 0, inline: 0, tilordning: 0, variabel: 0, js: 0 };
     for (const t of GJELD) perFlate[t.flate] += 1;
-    const dode = (Object.keys(perFlate) as Flate[]).filter((f) => perFlate[f] === 0);
+    /* App.tsx betalte ned den siste hardkodede tilordningen 2026-08-08.
+       Uttrekkeren er fortsatt bevist av den syntetiske injeksjonstesten
+       «flate (e)» under; null ekte gjeld skal ikke tvinge inn ny gjeld som
+       målprøve. Samme mønster brukes når en annen flate når null. */
+    const reneFlater: readonly Flate[] = ['tilordning'];
+    const dode = (Object.keys(perFlate) as Flate[])
+      .filter((f) => perFlate[f] === 0 && !reneFlater.includes(f));
     expect(
       dode,
       'Disse uttrekkerne fant ingenting. En uttrekker som ikke finner noe er ikke et bevis pa at flaten er ren — den er stille, og da har porten ikke bestått.',

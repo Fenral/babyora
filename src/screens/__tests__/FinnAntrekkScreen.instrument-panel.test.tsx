@@ -183,7 +183,7 @@ describe('FinnAntrekkScreen — result-as-clothes wiring (source-text: only reac
        må ordet måles, ikke bare dempingen. */
     const contents = source(screenPath);
     expect(
-      contents.includes("resultDemoted ? 'Utdatert · ' : ''"),
+      contents.includes('resultDemoted ? `${copy.finn.outdated} · ` : \'\''),
       'ordet «Utdatert» er borte fra metalinjen. Da er det ingen beskjed igjen '
       + 'om at svaret ikke gjelder parametrene på skjermen — verken for øyet '
       + 'eller for skjermleseren.',
@@ -223,13 +223,13 @@ describe('FinnAntrekkScreen — result-as-clothes wiring (source-text: only reac
     const scanBranchEnd = contents.indexOf(') : (', scanBranchStart);
     const scanBranch = contents.slice(scanBranchStart, scanBranchEnd);
     expect(scanBranch).toContain('<ScanOverlay');
-    expect(scanBranch).toContain("{ label: 'Temperatur', value: formatTemp(scanRows.tempC) }");
-    expect(scanBranch).toContain("{ label: 'Vind', value: `${scanRows.windMs} m/s` }");
+    expect(scanBranch).toContain('{ label: copy.finn.temperature, value: formatTemp(scanRows.tempC) }');
+    expect(scanBranch).toContain('{ label: copy.finn.wind, value: `${scanRows.windMs} m/s` }');
     /* `toFixed(1)` skrev engelsk punktum uansett språk — byttet til
        `formatEnDesimal` (Intl, nb-NO) 2026-08-06. Seremonien og sporet må
        vise SAMME tall skrevet på samme måte. */
-    expect(scanBranch).toContain("{ label: 'Nedbør', value: `${formatEnDesimal(scanRows.precipMmH)} mm/t` }");
-    expect(scanBranch).toContain('spinningLabel="Lag for lag"');
+    expect(scanBranch).toContain('{ label: copy.finn.precipitation, value: `${formatDecimal(scanRows.precipMmH)} mm/t` }');
+    expect(scanBranch).toContain('spinningLabel={copy.finn.layerByLayer}');
     expect(scanBranch).toContain('totalDurationMs={FULL_SCAN_DURATION_MS}');
   });
 

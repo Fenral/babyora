@@ -144,9 +144,6 @@ function renderPlanlegg(hourly: readonly WeatherHourly[]): string {
       onNavigate={() => {}}
       onOpenSheet={() => {}}
       onOpenPlannedOutfit={() => {}}
-      requestedPlanView={null}
-      requestedPlanViewToken={null}
-      onConsumeRequestedPlanView={() => {}}
     />,
   );
 }
@@ -174,6 +171,15 @@ describe('Planlegg → værkortets topp', () => {
     expect(valgtSegment).toHaveLength(1);
     expect(valgtSegment[0]).toContain('value="today"');
     expect(valgtSegment[0]).toContain('<span>I dag</span>');
+
+    // Planlegg er bevisst avgrenset til de to dagene det finnes et konkret
+    // timegrunnlag for. Uke og Snart skal ikke kunne dukke opp igjen via
+    // tilgangsflagg eller gamle deep links.
+    expect(count(markup, 'class="segmented-control__segment')).toBe(2);
+    expect(markup).toContain('value="tomorrow"');
+    expect(markup).toContain('<span>I morgen</span>');
+    expect(markup).not.toContain('<span>Uke</span>');
+    expect(markup).not.toContain('<span>Snart</span>');
 
     // Selve rettelsen: etiketten inne i kortet er borte, og ordet «I dag»
     // står nøyaktig én gang i hele skjermens markup.

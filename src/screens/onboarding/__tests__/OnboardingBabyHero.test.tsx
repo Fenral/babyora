@@ -30,6 +30,7 @@ describe('OnboardingBabyHero', () => {
 
     expect(html).toContain('ob-baby-hero compact');
     expect(html).toContain('/monter/maskot-staaende-cut-360.webp');
+    expect(html).not.toContain('ob-baby-frame');
     // Dekorativ: skal aldri annonseres av skjermleser.
     expect(html).toContain('aria-hidden="true"');
   });
