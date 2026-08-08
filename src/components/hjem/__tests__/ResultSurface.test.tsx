@@ -300,7 +300,7 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(cardInnerRule).toMatch(/padding:\s*10px 12px;/u);
     expect(railRule).toMatch(/--hjm-detail-card-height:\s*300px;/u);
     expect(detailCardRule).toMatch(/height:\s*var\(--hjm-detail-card-height\);/u);
-    expect(overviewRowRule).toMatch(/min-height:\s*58px;/u);
+    expect(overviewRowRule).toMatch(/min-height:\s*62px;/u);
     expect(html).toContain('data-hjm-overview-card="true" data-garment-count="4"');
     expect(headingRule).toBe('');
     expect(html).toContain('class="hjm-journey-nav-button"');

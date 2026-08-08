@@ -19,6 +19,6 @@ describe('HjemMonter resultatrytme', () => {
 
   it('beholder ro uten at vær og antrekk blir to adskilte områder', () => {
     expect(rule(".hjm-panel-slot[data-with-mascot='false'] + .hjm-body"))
-      .toContain('padding-top: var(--dw-space-16)');
+      .toContain('padding-top: var(--dw-space-12)');
   });
 });
