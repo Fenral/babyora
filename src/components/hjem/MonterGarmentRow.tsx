@@ -39,6 +39,8 @@ export type MonterGarmentRowProps = Readonly<{
   roleLabel: string;
   imageSrc: string;
   why?: string;
+  fact?: string | null;
+  hasAlternatives?: boolean;
   compactDestinationLabel?: string;
   onSwap: (event: MouseEvent<HTMLButtonElement>) => void;
   animationDelayMs: number | null;
@@ -51,6 +53,8 @@ export function MonterGarmentRow({
   roleLabel,
   imageSrc,
   why,
+  fact = null,
+  hasAlternatives = false,
   compactDestinationLabel,
   onSwap,
   animationDelayMs,
@@ -114,7 +118,7 @@ export function MonterGarmentRow({
       data-hjm-journey-card="true"
       style={animationDelayMs !== null ? { animationDelay: `${animationDelayMs}ms` } : undefined}
     >
-      <article className="hjm-journey-card-inner">
+      <article className="hjm-journey-card-inner" data-hjm-card-focus tabIndex={-1}>
         <div className="hjm-journey-image" aria-hidden="true">
           <img
             src={imageSrc}
@@ -141,15 +145,24 @@ export function MonterGarmentRow({
           <p>{why}</p>
         </section>
 
-        <button
-          type="button"
-          className="hjm-journey-detail"
-          onClick={onSwap}
-          aria-label={copy.detailAria(label, roleLabel)}
-        >
-          {copy.moreInfo}
-          <DetailChevronIcon />
-        </button>
+        {fact ? (
+          <section className="hjm-journey-fact">
+            <h3>{copy.goodToKnow}</h3>
+            <p>{fact}</p>
+          </section>
+        ) : null}
+
+        {hasAlternatives ? (
+          <button
+            type="button"
+            className="hjm-journey-detail"
+            onClick={onSwap}
+            aria-label={copy.alternativesAria(label)}
+          >
+            {copy.alternatives}
+            <DetailChevronIcon />
+          </button>
+        ) : null}
       </article>
     </li>
   );

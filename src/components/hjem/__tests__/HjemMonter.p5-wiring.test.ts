@@ -44,13 +44,14 @@ describe('HjemMonter — P5 stub wiring', () => {
     expect(onAdjustLocationSites.length).toBe(2);
   });
 
-  it('keeps the simplified ResultSurface free of the retired global why callback while wiring garment details', () => {
+  it('keeps ResultSurface free of the retired global why callback and passes the authorized alternative IDs', () => {
     const contents = source(hjemMonterPath);
     const resultSurfaceStart = contents.indexOf('<ResultSurface');
     const resultSurfaceEnd = contents.indexOf('/>', resultSurfaceStart);
     const call = contents.slice(resultSurfaceStart, resultSurfaceEnd);
     expect(call).not.toContain('onWhy=');
     expect(call).toContain('onSwapRow={handleSwapRow}');
+    expect(call).toContain('alternativeItemIds={alternativeItemIds}');
   });
 
   it('the offline ask-block\'s "Prøv å hente været igjen" calls the real retry handler', () => {
@@ -64,33 +65,32 @@ describe('HjemMonter — P5 stub wiring', () => {
   });
 });
 
-describe('HjemMonter — P6 "Bytt" wiring (garment swap → PlaggDetailSheet, no dead-end)', () => {
-  it('handleSwapRow resolves via the pure swap-row decision and opens the detail sheet, capturing the clicked row as the focus-return target', () => {
+describe('HjemMonter — authorized garment alternatives', () => {
+  it('derives allowed alternatives only from the authenticated outfit bundle', () => {
     const contents = source(hjemMonterPath);
-    expect(contents).toContain("import { resolveSwapTarget } from './swap-row.js';");
-    expect(contents).toContain("import { PlaggDetailSheet } from '../PlaggDetailSheet.js';");
-    expect(contents).toContain('const handleSwapRow = useCallback((row: ResultRow, event: MouseEvent<HTMLButtonElement>) => {');
-    expect(contents).toContain('const resolution = resolveSwapTarget(row);');
-    expect(contents).toContain('detailTriggerRef.current = event.currentTarget;');
-    expect(contents).toContain('setDetailGarmentId(resolution.garmentId);');
+    expect(contents).toContain('deriveHomeGarmentAlternativeGroups(currentOutfitBundle, activeLanguage)');
+    expect(contents).toContain('new Set(alternativeGroups.map((group) => group.source.itemId))');
   });
 
-  it('falls back to onOpenPlaggbib (never a dead end) when resolveSwapTarget cannot resolve a garmentId', () => {
+  it('fails closed for legacy, unapproved and equipment rows before opening the sheet', () => {
     const contents = source(hjemMonterPath);
     const handlerStart = contents.indexOf('const handleSwapRow = useCallback');
-    const handlerEnd = contents.indexOf('}, [onOpenPlaggbib]);', handlerStart);
+    const handlerEnd = contents.indexOf('}, [alternativeItemIds]);', handlerStart);
     const handler = contents.slice(handlerStart, handlerEnd);
-    expect(handler).toContain("if (resolution.kind === 'library') {");
-    expect(handler).toContain('onOpenPlaggbib();');
+    expect(handler).toContain('if (row.outfitItemId === null || !alternativeItemIds.has(row.outfitItemId)) return;');
+    expect(handler).toContain('setOpenAlternativeItemId(row.outfitItemId);');
+    expect(handler).not.toContain('onOpenPlaggbib');
+    expect(contents).not.toContain('resolveSwapTarget(row)');
   });
 
-  it('mounts PlaggDetailSheet in the result-current branch, wired to onOpenPlaggbib as the library affordance', () => {
+  it('mounts the dedicated Alternatives sheet and returns focus to the authorized trigger', () => {
     const contents = source(hjemMonterPath);
-    const sheetStart = contents.indexOf('<PlaggDetailSheet');
+    const sheetStart = contents.indexOf('<GarmentAlternativesSheet');
     const sheetEnd = contents.indexOf('/>', sheetStart);
     const sheetCall = contents.slice(sheetStart, sheetEnd);
-    expect(sheetCall).toContain('garmentId={detailGarmentId}');
-    expect(sheetCall).toContain('onClose={handleCloseDetail}');
-    expect(sheetCall).toContain('onOpenLibrary={onOpenPlaggbib}');
+    expect(sheetCall).toContain('group={openAlternativeGroup}');
+    expect(sheetCall).toContain('isOpen={openAlternativeGroup !== null}');
+    expect(sheetCall).toContain('onClose={handleCloseAlternatives}');
+    expect(sheetCall).toContain('triggerRef={alternativeTriggerRef}');
   });
 });

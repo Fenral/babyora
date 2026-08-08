@@ -1030,6 +1030,7 @@ export function HjemScreen({
         childName={active.name}
         ageMonths={ageMonths}
         recommendation={resolvedRecommendation}
+        currentOutfitBundle={currentOutfitBundle}
         reducedMotion={reducedMotion}
         outfitTransitionStatus={outfitTransitionStatus}
         onOpenAdjust={onOpenAdjust}

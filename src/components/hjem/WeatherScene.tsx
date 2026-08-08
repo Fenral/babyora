@@ -164,7 +164,7 @@ export function WeatherScene({
         </span>
       )}
 
-      <p className="hjm-feels" style={dimmed ? { color: 'var(--dw-ink-mid)' } : undefined}>
+      <p className="hjm-feels" style={dimmed ? { color: 'var(--dw-ink-panel-muted)' } : undefined}>
         {feelsLikeC === null ? (
           copy.weather.fetching
         ) : (

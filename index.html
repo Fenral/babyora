@@ -1,11 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1E140C" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F9F5EB" />
+    <meta id="babyora-theme-color" name="theme-color" content="#F2F5F1" />
     <meta name="robots" content="noindex,nofollow" />
     <meta
       name="description"
@@ -38,16 +37,35 @@
           /* query-preview er kun et designverktøy; normal launch fortsetter */
         }
 
+        var themeMode = 'light';
         try {
           var raw = localStorage.getItem('babyora.theme');
-          if (!raw) return;
-          var parsed = JSON.parse(raw);
-          var mode = parsed && parsed.state && parsed.state.mode;
-          if (mode === 'light' || mode === 'dark') {
-            document.documentElement.setAttribute('data-theme', mode);
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            var storedMode = parsed && parsed.state && parsed.state.mode;
+            if (storedMode === 'auto' || storedMode === 'light' || storedMode === 'dark') {
+              themeMode = storedMode;
+            }
           }
         } catch (e) {
-          /* auto-tema er trygg fallback */
+          /* Mineral Garden light er trygg fallback */
+        }
+
+        if (themeMode === 'auto') {
+          root.removeAttribute('data-theme');
+        } else {
+          root.setAttribute('data-theme', themeMode);
+        }
+
+        try {
+          var usesDarkChrome = themeMode === 'dark'
+            || (themeMode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var themeMeta = document.getElementById('babyora-theme-color');
+          if (themeMeta) {
+            themeMeta.setAttribute('content', usesDarkChrome ? '#1E140C' : '#F2F5F1');
+          }
+        } catch (e) {
+          /* nettleserkrom er ikke kritisk for appstart */
         }
       })();
     </script>
@@ -72,7 +90,7 @@
           max(24px, env(safe-area-inset-bottom, 0px))
           max(20px, env(safe-area-inset-left, 0px));
         overflow: hidden;
-        background: #1E140C;
+        background: #F2F5F1;
         transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
       }
 
@@ -107,12 +125,13 @@
         width: 99.796%;
         height: 88%;
         box-sizing: border-box;
-        border: 1px solid rgb(242 192 138 / 42%);
+        border: 1px solid rgb(201 221 213 / 72%);
         border-radius: 3.7% / 16%;
-        background: #9E5529;
+        background: #164B43;
         box-shadow:
-          0 8px 18px rgb(19 11 6 / 28%),
-          inset 0 1px 0 rgb(247 213 178 / 22%);
+          0 2px 5px rgb(29 62 52 / 18%),
+          0 12px 25px rgb(29 62 52 / 12%),
+          inset 0 1px 0 rgb(250 255 253 / 34%);
       }
 
       .launch-signboard img {
@@ -169,11 +188,15 @@
       }
 
       @media (prefers-color-scheme: light) {
-        #launch { background: #F9F5EB; }
+        #launch { background: #F2F5F1; }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) #launch { background: #1E140C; }
       }
 
       :root[data-theme="dark"] #launch { background: #1E140C; }
-      :root[data-theme="light"] #launch { background: #F9F5EB; }
+      :root[data-theme="light"] #launch { background: #F2F5F1; }
 
       @keyframes launch-weather-in {
         0% {

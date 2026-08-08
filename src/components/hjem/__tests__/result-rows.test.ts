@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import type { OutfitTruthSnapshotV1 } from '../../../lib/outfit/outfit-truth.js';
 import { recommend } from '../../../lib/wool-layers/recommend.js';
 import type { RecommendInput, Recommendation } from '../../../lib/wool-layers/types.js';
-import { deriveResultRows, ROLE_LABEL_BY_CATEGORY } from '../result-rows.js';
+import {
+  deriveResultRows,
+  deriveResultRowsFromTruth,
+  ROLE_LABEL_BY_CATEGORY,
+} from '../result-rows.js';
 
 function fixedInput(): RecommendInput {
   return {
@@ -52,6 +57,7 @@ describe('deriveResultRows', () => {
       expect(allLabels).toContain(row.label);
     }
     expect(rows.length).toBe(allLabels.length);
+    expect(rows.every((row) => row.outfitItemId === null)).toBe(true);
   });
 
   it('maps every LayerCategory to the exact mock copy (Innerst/Mellomlag/Ytterst/Tilbehør)', () => {
@@ -83,5 +89,72 @@ describe('deriveResultRows', () => {
       summary: '',
     };
     expect(deriveResultRows(empty)).toEqual([]);
+  });
+});
+
+describe('deriveResultRowsFromTruth', () => {
+  it('preserves authorized item identity while ordering garments and equipment by truth order', () => {
+    const itemId = (value: string) => value as OutfitTruthSnapshotV1['garments'][number]['itemId'];
+    const snapshot: OutfitTruthSnapshotV1 = {
+      contractVersion: 1,
+      snapshotId: 'snapshot:test' as OutfitTruthSnapshotV1['snapshotId'],
+      recommendationId: 'recommendation:test',
+      recommendationFingerprint: 'fingerprint:test',
+      transitionContextId: 'transition:test',
+      garments: [
+        {
+          itemId: itemId('item:mid'),
+          sourceLabel: 'ull-jakke',
+          label: 'ull-jakke',
+          catalogGarmentId: 'ull-jakke',
+          category: 'mellomlag',
+          order: 20,
+          bodyRegion: 'torso',
+          bodyAnchor: null,
+          avatarCoverage: null,
+          visibleOnAvatar: true,
+        },
+        {
+          itemId: itemId('item:base'),
+          sourceLabel: 'langermet ullbody',
+          label: 'langermet ullbody',
+          catalogGarmentId: 'langermet-ullbody',
+          category: 'innerst',
+          order: 10,
+          bodyRegion: 'torso',
+          bodyAnchor: null,
+          avatarCoverage: null,
+          visibleOnAvatar: true,
+        },
+      ],
+      equipment: [{
+        itemId: itemId('item:equipment'),
+        sourceLabel: 'regntrekk',
+        label: 'regntrekk',
+        catalogGarmentId: 'regntrekk',
+        order: 30,
+      }],
+      avatar: {
+        pose: 'standing',
+        stateKey: 'avatar:test',
+        verifiedAssetPath: null,
+        visibleGarmentIds: [itemId('item:base'), itemId('item:mid')],
+      },
+    };
+
+    const rows = deriveResultRowsFromTruth(snapshot);
+
+    expect(rows.map((row) => row.key)).toEqual([
+      'item:base',
+      'item:mid',
+      'item:equipment',
+    ]);
+    expect(rows.map((row) => row.outfitItemId)).toEqual([
+      'item:base',
+      'item:mid',
+      'item:equipment',
+    ]);
+    expect(rows.map((row) => row.position)).toEqual([1, 2, 3]);
+    expect(rows.map((row) => row.roleLabel)).toEqual(['Innerst', 'Mellomlag', 'Tilbehør']);
   });
 });

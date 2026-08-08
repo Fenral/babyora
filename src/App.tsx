@@ -54,6 +54,7 @@ import { useLocationPref } from './state/location-pref-store';
 import { useNativeSettings } from './hooks/useNativeSettings';
 import { slippLaunch } from './lib/launch-handoff';
 import { klePaaKildeFor } from './components/klepaa/kle-paa-rute';
+import { syncThemeChrome } from './lib/native-init';
 
 /**
  * SIDESKIFTETS VARIGHETER — LEST FRA KONTRAKTEN, IKKE SKREVET PAA NYTT.
@@ -330,16 +331,23 @@ export default function App(): ReactElement {
     return () => window.removeEventListener('storage', syncPersistedEntitlement);
   }, []);
 
-  // Theme-mode → data-theme på <html>. 'auto' fjerner attributtet slik at
-  // prefers-color-scheme styrer. Boot-scriptet i index.html setter samme
-  // attributt FØR React mounter for å unngå FOUC; denne useEffect-en
-  // synker bare etterfølgende endringer fra theme-toggle.
+  // Theme-mode → data-theme på <html>. Nye installasjoner er eksplisitt
+  // lyse; 'auto' er fortsatt et brukervalg og fjerner attributtet slik at
+  // prefers-color-scheme styrer. Boot-scriptet i index.html gjør samme jobb
+  // før React for å unngå FOUC. Her synkes også browser-/statusbar-krom.
   useEffect(() => {
     if (themeMode === 'auto') {
       document.documentElement.removeAttribute('data-theme');
     } else {
       document.documentElement.setAttribute('data-theme', themeMode);
     }
+    void syncThemeChrome(themeMode);
+
+    if (themeMode !== 'auto') return undefined;
+    const scheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const syncAutoChrome = () => { void syncThemeChrome('auto'); };
+    scheme.addEventListener('change', syncAutoChrome);
+    return () => scheme.removeEventListener('change', syncAutoChrome);
   }, [themeMode]);
 
   useEffect(() => {

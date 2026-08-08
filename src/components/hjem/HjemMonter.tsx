@@ -82,6 +82,7 @@ import {
 } from '../../lib/scan/types.js';
 import { computeScanResultKey } from '../../lib/scan/result-key.js';
 import type { Recommendation } from '../../lib/wool-layers/types.js';
+import type { OutfitBundleProducerResult } from '../../lib/outfit/outfit-bundle-producer.js';
 import type { WeatherNow } from '../../lib/met-no/types.js';
 import type { WeatherFreshness } from '../../hooks/useWeather.js';
 import {
@@ -102,7 +103,11 @@ import { ScanOverlay, ScanStatusBlock } from './ScanOverlay.js';
 import type { OutfitTransitionStatusLike } from './scan-overlay-guard.js';
 import { ResultSurface } from './ResultSurface.js';
 import { resultCopyFor } from './result-localization.js';
-import { deriveResultRows, type ResultRow } from './result-rows.js';
+import {
+  deriveResultRows,
+  deriveResultRowsFromTruth,
+  type ResultRow,
+} from './result-rows.js';
 import {
   activityChangeChip,
   decideScanEntry,
@@ -124,10 +129,12 @@ import {
 } from './cta-fingerprint.js';
 import { buildAdjustPrefill } from './adjust-prefill.js';
 import type { FinnAntrekkPrefill } from '../../screens/finn-antrekk-prefill.js';
-import { resolveSwapTarget } from './swap-row.js';
-import { PlaggDetailSheet } from '../PlaggDetailSheet.js';
-import type { GarmentId } from '../../data/garment-illustrations.js';
 import { hjemCopyFor, type HjemCopy } from './hjem-copy.js';
+import {
+  deriveHomeGarmentAlternativeGroups,
+  type HomeGarmentAlternativeGroup,
+} from '../../lib/outfit/home-garment-alternatives.js';
+import { GarmentAlternativesSheet } from './GarmentAlternativesSheet.js';
 
 function ArrowIcon() {
   return (
@@ -210,6 +217,8 @@ export type HjemMonterProps = Readonly<{
   childName: string;
   ageMonths: number;
   recommendation: Recommendation | null;
+  /** Autoritativ forekomstdata og sikkerhetsgodkjente alternativer for Hjem. */
+  currentOutfitBundle?: OutfitBundleProducerResult;
   reducedMotion: boolean;
   outfitTransitionStatus: OutfitTransitionStatusLike;
   /**
@@ -222,11 +231,7 @@ export type HjemMonterProps = Readonly<{
   onOpenWarmColdGuide: () => void;
   /** P5: manual weather-refetch trigger for the offline ask-block's "Prøv å hente været igjen". */
   onRetryWeather: () => void;
-  /**
-   * P6: opens the Plaggbibliotek drill — used both as PlaggDetailSheet's
-   * "Se alternativer i biblioteket" affordance and as the no-dead-end
-   * fallback when a "Bytt" row's garmentId never resolved (see swap-row.ts).
-   */
+  /** Beholdes i Hjem-kontrakten for Plaggbibliotek-ruten utenfor resultatkortene. */
   onOpenPlaggbib: () => void;
 }>;
 
@@ -245,11 +250,11 @@ export function HjemMonter({
   childName,
   ageMonths,
   recommendation,
+  currentOutfitBundle,
   reducedMotion,
   outfitTransitionStatus,
   onOpenAdjust,
   onRetryWeather,
-  onOpenPlaggbib,
 }: HjemMonterProps) {
   const { i18n } = useTranslation();
   const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
@@ -634,27 +639,31 @@ export function HjemMonter({
   // implementeringsdetalj som mangler.
   const noopStub = useCallback(() => {}, []);
 
-  // P6: "Bytt" (MonterGarmentRow, resultat-lista) → PlaggDetailSheet, samme
-  // datavei som den LEGACY resultatlisten (PaakledningScreen sin
-  // handleOpenNode) allerede bruker — se swap-row.ts sin filhode-kommentar.
-  // resolveSwapTarget() er den rene beslutningen (testet separat,
-  // swap-row.test.ts); onOpenPlaggbib er no-dead-end-fallbacket for en rad
-  // hvis garmentId aldri løste seg (ukjent/udekket etikett).
-  const [detailGarmentId, setDetailGarmentId] = useState<GarmentId | null>(null);
-  const detailTriggerRef = useRef<HTMLElement | null>(null);
+  const alternativeGroups = useMemo(
+    () => deriveHomeGarmentAlternativeGroups(currentOutfitBundle, activeLanguage),
+    [activeLanguage, currentOutfitBundle],
+  );
+  const alternativeItemIds = useMemo(
+    () => new Set(alternativeGroups.map((group) => group.source.itemId)),
+    [alternativeGroups],
+  );
+  const [openAlternativeItemId, setOpenAlternativeItemId] = useState<string | null>(null);
+  const alternativeTriggerRef = useRef<HTMLElement | null>(null);
+  const openAlternativeGroup: HomeGarmentAlternativeGroup | null = useMemo(
+    () => alternativeGroups.find(
+      (group) => group.source.itemId === openAlternativeItemId,
+    ) ?? null,
+    [alternativeGroups, openAlternativeItemId],
+  );
 
   const handleSwapRow = useCallback((row: ResultRow, event: MouseEvent<HTMLButtonElement>) => {
-    const resolution = resolveSwapTarget(row);
-    if (resolution.kind === 'library') {
-      onOpenPlaggbib();
-      return;
-    }
-    detailTriggerRef.current = event.currentTarget;
-    setDetailGarmentId(resolution.garmentId);
-  }, [onOpenPlaggbib]);
+    if (row.outfitItemId === null || !alternativeItemIds.has(row.outfitItemId)) return;
+    alternativeTriggerRef.current = event.currentTarget;
+    setOpenAlternativeItemId(row.outfitItemId);
+  }, [alternativeItemIds]);
 
-  const handleCloseDetail = useCallback(() => {
-    setDetailGarmentId(null);
+  const handleCloseAlternatives = useCallback(() => {
+    setOpenAlternativeItemId(null);
   }, []);
 
   // P5: bygger prefill-payloaden fra de samme rå ingrediensene HjemMonter
@@ -740,7 +749,9 @@ export function HjemMonter({
   }
 
   if (phase === 'result-current') {
-    const rows = deriveResultRows(recommendation);
+    const rows = currentOutfitBundle?.kind === 'supported'
+      ? deriveResultRowsFromTruth(currentOutfitBundle.base)
+      : deriveResultRows(recommendation);
     return (
       <div className="hjem-monter">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
@@ -753,6 +764,8 @@ export function HjemMonter({
               conditionLabel={conditionLabel}
               cityLabel={cityLabel}
               activityToggleLabel={copy.activity[activity].toggle}
+              weatherIconSrc={weatherIconSrc}
+              weatherIconAlt={conditionLabel}
               language={activeLanguage}
               onAdjust={handleOpenAdjust}
             />
@@ -773,17 +786,15 @@ export function HjemMonter({
               precipMmH: now.precipMmH,
             }}
             onSwapRow={handleSwapRow}
+            alternativeItemIds={alternativeItemIds}
           />
         </div>
-        {detailGarmentId && (
-          <PlaggDetailSheet
-            garmentId={detailGarmentId}
-            isOpen={detailGarmentId !== null}
-            onClose={handleCloseDetail}
-            triggerRef={detailTriggerRef}
-            onOpenLibrary={onOpenPlaggbib}
-          />
-        )}
+        <GarmentAlternativesSheet
+          group={openAlternativeGroup}
+          isOpen={openAlternativeGroup !== null}
+          onClose={handleCloseAlternatives}
+          triggerRef={alternativeTriggerRef}
+        />
       </div>
     );
   }

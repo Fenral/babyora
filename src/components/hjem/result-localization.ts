@@ -14,6 +14,9 @@ type ResultCopy = Readonly<{
   whyAria: string;
   details: string;
   moreInfo: string;
+  goodToKnow: string;
+  alternatives: string;
+  alternativesAria: (name: string) => string;
   detailAria: (name: string, role: string) => string;
   openGarment: (name: string) => string;
   order: (position: number, total: number) => string;
@@ -42,6 +45,9 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     whyAria: 'Why this garment',
     details: 'See details',
     moreInfo: 'More info',
+    goodToKnow: 'Good to know',
+    alternatives: 'Alternatives',
+    alternativesAria: (name) => `Compare alternatives to ${name}`,
     detailAria: (name, role) => `${name}, ${role}. Details.`,
     openGarment: (name) => `Show ${name}`,
     order: (position, total) => `Garment ${position} of ${total}`,
@@ -61,6 +67,9 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     whyAria: 'Varför det här plagget',
     details: 'Visa detaljer',
     moreInfo: 'Mer info',
+    goodToKnow: 'Bra att veta',
+    alternatives: 'Alternativ',
+    alternativesAria: (name) => `Jämför alternativ till ${name}`,
     detailAria: (name, role) => `${name}, ${role}. Detaljer.`,
     openGarment: (name) => `Visa ${name}`,
     order: (position, total) => `Plagg ${position} av ${total}`,
@@ -80,6 +89,9 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     whyAria: 'Hvorfor denne beklædningsdel',
     details: 'Se detaljer',
     moreInfo: 'Mere info',
+    goodToKnow: 'Godt at vide',
+    alternatives: 'Alternativer',
+    alternativesAria: (name) => `Sammenlign alternativer til ${name}`,
     detailAria: (name, role) => `${name}, ${role}. Detaljer.`,
     openGarment: (name) => `Vis ${name}`,
     order: (position, total) => `Del ${position} af ${total}`,
@@ -99,6 +111,9 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     whyAria: 'Hvorfor dette plagget',
     details: 'Se detaljer',
     moreInfo: 'Mer info',
+    goodToKnow: 'Godt å vite',
+    alternatives: 'Alternativer',
+    alternativesAria: (name) => `Sammenlign alternativer til ${name}`,
     detailAria: (name, role) => `${name}, ${role}. Detaljer.`,
     openGarment: (name) => `Vis ${name}`,
     order: (position, total) => `Plagg ${position} av ${total}`,

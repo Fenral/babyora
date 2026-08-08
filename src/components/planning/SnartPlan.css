@@ -17,7 +17,7 @@
   color: var(--dw-ink-hi);
   font-family: var(--dw-font-ui);
   overflow-wrap: anywhere;
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, 0 16px 32px -18px rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 1px 0 var(--dw-kant-key), var(--dw-depth-raised);
 }
 
 .snart-plan::before {

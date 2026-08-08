@@ -294,7 +294,7 @@
    instrument-tekstrampe, aldri canvas-tekstfarger. */
 .planlegg-weather .planlegg-forecast {
   margin-top: var(--dw-space-14);
-  border-top: 1px solid rgba(241, 233, 218, 0.16);
+  border-top: 1px solid var(--dw-hairline-panel);
 }
 
 .planlegg-weather .planlegg-forecast__toggle {
@@ -306,7 +306,7 @@
 }
 
 .planlegg-weather .planlegg-forecast__rows li {
-  border-top-color: rgba(241, 233, 218, 0.12);
+  border-top-color: var(--dw-hairline-panel);
   color: var(--dw-ink-panel-mid);
 }
 

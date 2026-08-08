@@ -250,7 +250,7 @@ const STYLE_CSS = `
   color: var(--dw-ink-low);
   margin-top: 5px;
   padding-top: 7px;
-  border-top: 1px solid rgba(241, 233, 218, 0.08);
+  border-top: 1px solid var(--dw-hairline);
   display: block;
 }
 /* Lukk-knappen ligger på canvas-bakgrunnen. */
@@ -455,8 +455,9 @@ const closeBtnStyle: CSSProperties = {
   width: 36,
   height: 36,
   borderRadius: 11,
-  border: '1px solid rgba(241, 233, 218, 0.16)',
-  background: 'rgba(241, 233, 218, 0.08)',
+  border: '1px solid var(--dw-hairline)',
+  background: 'var(--dw-interactive)',
+  boxShadow: 'inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-chip)',
   color: 'var(--dw-ink-hi)',
   cursor: 'pointer',
   display: 'flex',
@@ -617,7 +618,7 @@ function ctaBtnStyle(armed: boolean, pending: boolean): CSSProperties {
     padding: 'var(--dw-space-14) var(--dw-space-16)',
     borderRadius: 14,
     border: 'none',
-    background: armed ? 'var(--dw-accent)' : 'rgba(241, 233, 218, 0.10)',
+    background: armed ? 'var(--dw-accent)' : 'var(--dw-interactive)',
     color: armed ? 'var(--dw-ink-on-accent)' : 'var(--dw-ink-mid)',
     fontFamily: 'inherit',
     fontSize: '1rem',

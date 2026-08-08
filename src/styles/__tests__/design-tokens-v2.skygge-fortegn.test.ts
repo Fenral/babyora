@@ -105,7 +105,7 @@ const TEMAER = [
     navn: 'lys ([data-theme="light"])',
     // Lys arver alt som ikke er redeklarert.
     skygger: new Map([...skyggerI(rot), ...skyggerI(lys)]),
-    canvas: canvasI(lys, '#F9F5EB'),
+    canvas: canvasI(lys, '#F2F5F1'),
   },
 ];
 

@@ -12,14 +12,6 @@ import './hjem-monter.css';
 import type { WeatherNuance } from './WeatherScene.js';
 import { hjemCopyFor } from './hjem-copy.js';
 
-function AdjustChevron() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <path d="M9 6l6 6-6 6" />
-    </svg>
-  );
-}
-
 export type WeatherStripProps = Readonly<{
   nuance: WeatherNuance;
   tempC: number;
@@ -27,6 +19,8 @@ export type WeatherStripProps = Readonly<{
   conditionLabel: string;
   cityLabel: string;
   activityToggleLabel: string;
+  weatherIconSrc: string | null;
+  weatherIconAlt: string;
   language?: string | null;
   onAdjust: () => void;
 }>;
@@ -43,6 +37,8 @@ export function WeatherStrip({
   conditionLabel,
   cityLabel,
   activityToggleLabel,
+  weatherIconSrc,
+  weatherIconAlt,
   language,
   onAdjust,
 }: WeatherStripProps) {
@@ -61,9 +57,10 @@ export function WeatherStrip({
         <br />
         {`${cityLabel} · ${activityToggleLabel}`}
       </span>
-      <span className="hjm-s-adjust" aria-hidden="true">
-        {copy.weather.adjust}
-        <AdjustChevron />
+      <span className="hjm-s-weather" aria-hidden="true">
+        {weatherIconSrc ? (
+          <img src={weatherIconSrc} alt={weatherIconAlt} draggable={false} />
+        ) : null}
       </span>
     </button>
   );

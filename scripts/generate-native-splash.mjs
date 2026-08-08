@@ -14,8 +14,11 @@ import sharp from 'sharp';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE_SIZE = 2732;
-const LIGHT_BACKGROUND = '#F9F5EB';
-const DARK_BACKGROUND = '#1E140C';
+const LIGHT_BACKGROUND = '#F2F5F1';
+// Native splash velges av operativsystemet før appens lagrede temavalg kan
+// leses. Begge kilder bruker derfor produktets lyse standard, slik at en ny
+// installasjon på en mørk telefon ikke blinker espresso før Mineral Garden.
+const DARK_BACKGROUND = LIGHT_BACKGROUND;
 
 const AVATAR = path.join(ROOT, 'public/monter/maskot-resultat-sveip.webp');
 const WEATHER = path.join(ROOT, 'public/monter/vaer-delvis-skyet.webp');
@@ -45,14 +48,14 @@ async function buildSign() {
   const wordmark = await trimmedPng(wordmarkSvg, 460);
   const shadow = await sharp(Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" width="980" height="250">
-      <rect x="18" y="12" width="944" height="214" rx="36" fill="#130B06" fill-opacity="0.34"/>
+      <rect x="18" y="12" width="944" height="214" rx="36" fill="#1D3E34" fill-opacity="0.18"/>
     </svg>
   `)).blur(10).png().toBuffer();
   const plate = Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" width="980" height="250">
-      <rect x="1" y="4" width="978" height="220" rx="36" fill="#9E5529"
-        stroke="#F2C08A" stroke-opacity="0.42" stroke-width="2"/>
-      <path d="M48 6 H932" stroke="#F7D5B2" stroke-opacity="0.22" stroke-width="2"
+      <rect x="1" y="4" width="978" height="220" rx="36" fill="#164B43"
+        stroke="#C9DDD5" stroke-opacity="0.72" stroke-width="2"/>
+      <path d="M48 6 H932" stroke="#FAFFFD" stroke-opacity="0.34" stroke-width="2"
         stroke-linecap="round"/>
     </svg>
   `);

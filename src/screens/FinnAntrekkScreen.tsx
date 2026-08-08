@@ -1283,7 +1283,7 @@ const eyebrowStyle: CSSProperties = {
  *  this call-site's own spacing. */
 const gaugePanelStyle: CSSProperties = {
   position: 'relative',
-  boxShadow: '0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-shadow-raise)',
+  boxShadow: 'inset 0 1px 0 var(--dw-kant-key), var(--dw-shadow-raise)',
 };
 
 const gaugeRowStyle: CSSProperties = {
@@ -1305,7 +1305,7 @@ function whyToggleStyle(reduceMotion: boolean): CSSProperties {
     margin: 'var(--dw-space-10) auto 0',
     padding: 'var(--dw-space-10) var(--dw-space-16)',
     minHeight: 44,
-    border: '1px solid rgba(241, 233, 218, 0.16)',
+    border: '1px solid var(--dw-hairline)',
     borderRadius: 999,
     background: 'transparent',
     color: TOKENS.ink700,
@@ -1323,7 +1323,7 @@ const whyDetailsListStyle: CSSProperties = {
   listStyle: 'none',
   margin: 'var(--dw-space-12) 0 0',
   padding: 'var(--dw-space-12) var(--dw-space-2) 0',
-  borderTop: '1px solid rgba(241, 233, 218, 0.1)',
+  borderTop: '1px solid var(--dw-hairline)',
   display: 'flex',
   flexDirection: 'column',
   gap: 'var(--dw-space-8)',

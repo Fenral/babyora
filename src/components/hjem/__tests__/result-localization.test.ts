@@ -29,18 +29,20 @@ describe('result localization', () => {
   });
 
   it.each([
-    ['en-US', 'See details', 'More info'],
-    ['sv-SE', 'Visa detaljer', 'Mer info'],
-    ['da-DK', 'Se detaljer', 'Mere info'],
-    ['no-NO', 'Se detaljer', 'Mer info'],
-  ])('localizes sheet details and the More info action for %s', (
+    ['en-US', 'Good to know', 'Alternatives', 'Compare alternatives to Body'],
+    ['sv-SE', 'Bra att veta', 'Alternativ', 'Jämför alternativ till Body'],
+    ['da-DK', 'Godt at vide', 'Alternativer', 'Sammenlign alternativer til Body'],
+    ['no-NO', 'Godt å vite', 'Alternativer', 'Sammenlign alternativer til Body'],
+  ])('localizes the visible fact and authorized Alternatives action for %s', (
     language,
-    details,
-    moreInfo,
+    goodToKnow,
+    alternatives,
+    alternativesAria,
   ) => {
     const copy = resultCopyFor(language);
-    expect(copy.details).toBe(details);
-    expect(copy.moreInfo).toBe(moreInfo);
+    expect(copy.goodToKnow).toBe(goodToKnow);
+    expect(copy.alternatives).toBe(alternatives);
+    expect(copy.alternativesAria('Body')).toBe(alternativesAria);
   });
 
   it('localizes contextual reasons instead of leaking Norwegian', () => {

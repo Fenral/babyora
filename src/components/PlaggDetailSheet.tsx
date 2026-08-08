@@ -541,7 +541,7 @@ export function PlaggDetailSheet({
            animerer UT før close() (data-closing settes av requestClose).
            Backdrop fader i takt. RM → alt instant. */
         .plagg-detail-sheet::backdrop {
-          background: rgba(23, 16, 46, 0.35);
+          background: rgba(29, 62, 52, 0.28);
         }
         .plagg-detail-sheet[open] {
           animation: plagg-sheet-in 400ms cubic-bezier(0.32, 0.72, 0, 1);

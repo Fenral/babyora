@@ -16,6 +16,7 @@ function row(overrides: Partial<ResultRow>): ResultRow {
   // T1A: displayLabel speiler label når testen ikke sier noe annet.
   const base = {
     key: 'k1',
+    outfitItemId: null,
     position: 1,
     label: 'Ullsokker',
     roleLabel: 'Innerst',

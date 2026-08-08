@@ -17,8 +17,8 @@ describe('HjemMonter resultatrytme', () => {
     expect(rule(".hjm-panel-slot[data-with-mascot='false']")).toContain('min-height: 0');
   });
 
-  it('beholder én rolig gruppeavstand frem til antrekket', () => {
+  it('beholder ro uten at vær og antrekk blir to adskilte områder', () => {
     expect(rule(".hjm-panel-slot[data-with-mascot='false'] + .hjm-body"))
-      .toContain('padding-top: var(--dw-space-24)');
+      .toContain('padding-top: var(--dw-space-16)');
   });
 });

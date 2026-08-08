@@ -61,7 +61,7 @@ if (!serverKlar) {
 const browser = await chromium.launch();
 const { forecastPartlyCloudy1C } = await import('../e2e/fixtures/forecast-1c-partlycloudy.js');
 
-const LERRET = { dark: [30, 20, 12], light: [249, 245, 235] };
+const LERRET = { dark: [30, 20, 12], light: [242, 245, 241] };
 const VIEWPORTS = [
   { width: 320, height: 568 },
   { width: 390, height: 844 },
@@ -105,6 +105,16 @@ try {
         /* Mål sluttgeometri uten at 520 ms inngangen gjør tid til en variabel. */
         reducedMotion: 'reduce',
       });
+      await p.addInitScript((requestedTheme) => {
+        if (requestedTheme === 'dark') {
+          localStorage.setItem(
+            'babyora.theme',
+            JSON.stringify({ state: { mode: 'dark' }, version: 0 }),
+          );
+        } else {
+          localStorage.removeItem('babyora.theme');
+        }
+      }, tema);
       await p.route('**/*', (route) => {
         if (route.request().resourceType() === 'script') {
           return route.abort();
@@ -267,6 +277,16 @@ try {
       deviceScaleFactor: 1,
       colorScheme: tema,
     });
+    await p.addInitScript((requestedTheme) => {
+      if (requestedTheme === 'dark') {
+        localStorage.setItem(
+          'babyora.theme',
+          JSON.stringify({ state: { mode: 'dark' }, version: 0 }),
+        );
+      } else {
+        localStorage.removeItem('babyora.theme');
+      }
+    }, tema);
     await p.route('**/api/forecast*', (route) => route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify(forecastPartlyCloudy1C()),

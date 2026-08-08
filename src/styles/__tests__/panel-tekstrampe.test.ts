@@ -141,7 +141,7 @@ const ROT = process.cwd();
  * Fjernes ett av de vernene eller den hevede flaten, stiger tallet og porten
  * blir rød. Ingen av de fire kan altså «gjemme seg i baselinen».
  */
-const BASELINE = 3;
+const BASELINE = 0;
 
 /**
  * EIERRAPPORTERTE funn kan ALDRI baselines — de teller UTENFOR gulvet og
@@ -225,7 +225,7 @@ const FORVENTEDE_SKOPKLASSER = [
   // ScanOverlay (panel-delen)
   'hjm-scanline', 'hjm-scan-row', 'hjm-scan-val', 'hjm-s-check', 'hjm-s-marker',
   // WeatherStrip
-  'hjm-strip', 'hjm-s-temp', 'hjm-s-meta', 'hjm-s-adjust',
+  'hjm-strip', 'hjm-s-temp', 'hjm-s-meta', 'hjm-s-weather',
   // Planlegg sin petrol-modul
   'planlegg-weather', 'planlegg-weather__day', 'planlegg-weather__temp',
   'planlegg-weather__condition', 'planlegg-weather__meta',
@@ -242,7 +242,7 @@ const FORVENTEDE_SKOPKLASSER = [
  * IKKE-VAKUØSITET 7: hver panelrot MÅ bidra med minst så mange EGNE
  * skopklasser. Tallet er målt, ikke gjettet: den smaleste roten er
  * `WeatherStrip` med 4 (`hjm-strip`, `hjm-s-temp`, `hjm-s-meta`,
- * `hjm-s-adjust`). FinnAntrekk-roten bidro med ÉN (`hjm-panel` selv) fram
+ * `hjm-s-weather`). FinnAntrekk-roten bidro med ÉN (`hjm-panel` selv) fram
  * til filgrensekryssingen kom på plass — det var nettopp den stillheten
  * angrepet utnyttet.
  */
@@ -270,8 +270,8 @@ const FORVENTEDE_VERN = [
     base: '.planlegg-forecast__rows li',
     egenskap: 'border-top',
     vern: '.planlegg-weather .planlegg-forecast__rows li',
-    hvorfor: 'basens hairline flipper; inne i petrol overstyres border-top-color '
-      + 'av en tema-konstant rgba(241,233,218,.12).',
+    hvorfor: 'basens canvas-hairline overstyres inne i instrumentet av '
+      + 'den tema-tilpassede --dw-hairline-panel.',
   },
 ] as const;
 
@@ -1235,15 +1235,15 @@ describe('panel-tekstrampen — espresso-blekk hører ikke hjemme på petrol', (
     expect(utenPetrol, 'disse «panelrøttene» setter aldri en petrol-flate — de er ikke '
       + `instrumenter, og skopet utledet av dem er feil:\n  ${utenPetrol.join('\n  ')}`).toEqual([]);
 
-    /* …og premisset for HELE porten: petrol flipper ikke. Blir --dw-panel
-       tema-avhengig en dag, er forbudet under her feil formulert og skal
-       skrives om, ikke stå og måle noe som ikke lenger gjelder. */
+    /* …og premisset for HELE porten: værpanelet har én mørk og én lys
+       materialverdi. Begge bruker sin lokale --dw-ink-panel-rampe; derfor
+       er espresso-/papirblekk fortsatt feil navn inne i paneltreet. */
     const tokens = readFileSync(join(ROT, 'src/styles/design-tokens-v2.css'), 'utf8');
     const panelVerdier = new Set((tokens.match(/^\s*--dw-panel\s*:\s*([^;]+);/gmu) ?? [])
       .map((s) => s.split(':')[1]!.trim()));
-    expect(panelVerdier.size, 'premisset for porten er at --dw-panel er TEMA-KONSTANT. '
-      + `Den er nå deklarert med ${panelVerdier.size} forskjellige verdier: `
-      + `${[...panelVerdier].join(' / ')}`).toBe(1);
+    expect(panelVerdier.size, 'værpanelet skal ha nøyaktig mørk + Mineral Garden-verdi. '
+      + `Det er nå deklarert med ${panelVerdier.size} forskjellige verdier: `
+      + `${[...panelVerdier].join(' / ')}`).toBe(2);
   });
 
   it('IKKE-VAKUØSITET: fant klassene den er skrevet for å måle', () => {
@@ -1375,15 +1375,12 @@ describe('panel-tekstrampen — espresso-blekk hører ikke hjemme på petrol', (
   });
 
   it('allowlisten gir rett til SEMANTIKK, aldri til espresso-rampen', () => {
-    // Regresjonsvakt mot at allowlisten sklir ut til et generelt fritak:
-    // .hjm-stale-badge STÅR på lista og er brudd likevel (--dw-ink-mid,
-    // --dw-hairline). Blir den fritatt, er allowlisten blitt en bakdør.
+    // Stale-badgen er allowlistet for statussemantikk, men skal samtidig
+    // bruke instrumentets egen tekst- og linjerampe. Canvas-tokens skal ikke
+    // snike seg inn igjen via allowlisten.
     const badge = BRUDD.filter((b) => b.selektor.includes('hjm-stale-badge'));
-    expect(badge.length, 'allowlistet komponent slipper ikke unna espresso-rampen — '
-      + 'fant ingen brudd på .hjm-stale-badge, som skal ha to (--dw-ink-mid + --dw-hairline)')
-      .toBeGreaterThanOrEqual(2);
-    expect(badge.every((b) => b.grunn !== 'semantikk'), 'semantikk på allowlistet komponent skal ikke telles')
-      .toBe(true);
+    expect(badge.map(linje), 'stale-badgen bruker igjen canvas-rampen inne i instrumentet')
+      .toEqual([]);
 
     // …og motsatt: .hjm-fresh sin varselfarge SKAL gå gjennom. Er det brudd
     // her, er det fordi noen la espresso-rampe eller hairline på den — ikke

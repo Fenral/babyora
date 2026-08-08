@@ -257,7 +257,7 @@
   min-height: var(--dw-size-row);
   border-radius: var(--dw-r-raised);
   background: var(--dw-raised);
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-depth-raised);
+  box-shadow: inset 0 1px 0 var(--dw-kant-key), var(--dw-depth-raised);
   cursor: pointer;
   /* Kun transform og bakgrunn — aldri layout-egenskaper. Slippet skal
      SETTLE, ikke snappe, derfor ligger transitionen på grunnregelen og ikke
@@ -292,7 +292,7 @@
   overflow: hidden;
   background: var(--dw-plate);
   border: 1px solid var(--dw-plate-kant);
-  box-shadow: 0 1px 0 rgba(242, 192, 138, 0.14) inset, var(--dw-depth-selected);
+  box-shadow: inset 0 1px 0 var(--dw-kant-key), var(--dw-depth-selected);
 }
 .kps-alt-thumb + .kps-alt-thumb { margin-left: calc(var(--dw-space-12) * -1); }
 .kps-alt-thumb img { width: 100%; height: 100%; object-fit: cover; }

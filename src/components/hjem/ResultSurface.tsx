@@ -7,14 +7,17 @@
  */
 import i18next from 'i18next';
 import {
+  type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
   useCallback,
+  useEffect,
   useId,
   useRef,
   useState,
 } from 'react';
 import type { WhyContext } from '../../data/garment-info.js';
+import { garmentFactFor } from '../../data/garment-facts.js';
 import { displayNameForDbString } from '../../data/garment-display-names.js';
 import { getGarmentImage } from '../../lib/monter-assets.js';
 import { MonterGarmentRow } from './MonterGarmentRow.js';
@@ -38,6 +41,7 @@ export type ResultSurfaceProps = Readonly<{
   reducedMotion: boolean;
   whyContext: WhyContext | null;
   onSwapRow: (row: ResultRow, event: MouseEvent<HTMLButtonElement>) => void;
+  alternativeItemIds?: ReadonlySet<string>;
 }>;
 
 export function ResultSurface({
@@ -47,6 +51,7 @@ export function ResultSurface({
   reducedMotion,
   whyContext,
   onSwapRow,
+  alternativeItemIds = new Set<string>(),
 }: ResultSurfaceProps) {
   const copy = resultCopyFor(i18next.resolvedLanguage);
   const animateRows = isFresh && !reducedMotion;
@@ -55,8 +60,19 @@ export function ResultSurface({
   const hintId = useId();
   const titleId = useId();
   const [rawActiveIndex, setActiveIndex] = useState(0);
+  const [activeCardHeight, setActiveCardHeight] = useState<number | null>(null);
   const slideCount = rows.length + 1;
   const activeIndex = Math.min(rawActiveIndex, Math.max(slideCount - 1, 0));
+
+  const measureCardHeight = useCallback((rail: HTMLOListElement, index: number) => {
+    const card = rail.children.item(index);
+    if (!(card instanceof HTMLElement)) return;
+    const inner = card.querySelector<HTMLElement>('.hjm-journey-card-inner');
+    if (inner === null) return;
+    const nextHeight = Math.ceil(inner.getBoundingClientRect().height);
+    if (nextHeight <= 0) return;
+    setActiveCardHeight((current) => current === nextHeight ? current : nextHeight);
+  }, []);
 
   const syncActiveCard = useCallback(() => {
     const rail = railRef.current;
@@ -75,7 +91,28 @@ export function ResultSurface({
       }
     });
     setActiveIndex((current) => current === nearestIndex ? current : nearestIndex);
-  }, []);
+    measureCardHeight(rail, nearestIndex);
+  }, [measureCardHeight]);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (rail === null) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      measureCardHeight(rail, activeIndex);
+    });
+    const card = rail.children.item(activeIndex);
+    const inner = card instanceof HTMLElement
+      ? card.querySelector<HTMLElement>('.hjm-journey-card-inner')
+      : null;
+    const observer = inner !== null && typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => measureCardHeight(rail, activeIndex))
+      : null;
+    if (inner !== null) observer?.observe(inner);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer?.disconnect();
+    };
+  }, [activeIndex, measureCardHeight, rows.length]);
 
   const scrollToCard = useCallback((nextIndex: number, moveFocus = false) => {
     const clamped = Math.min(Math.max(nextIndex, 0), Math.max(slideCount - 1, 0));
@@ -89,8 +126,9 @@ export function ResultSurface({
       behavior: reducedMotion ? 'auto' : 'smooth',
     });
     if (moveFocus) {
-      card.querySelector<HTMLButtonElement>('.hjm-journey-detail')
-        ?.focus({ preventScroll: true });
+      const focusTarget = card.querySelector<HTMLElement>('.hjm-journey-detail')
+        ?? card.querySelector<HTMLElement>('[data-hjm-card-focus]');
+      focusTarget?.focus({ preventScroll: true });
     }
   }, [reducedMotion, slideCount]);
 
@@ -141,13 +179,19 @@ export function ResultSurface({
             ref={railRef}
             aria-label={copy.carouselLabel || NORWEGIAN_CAROUSEL_FALLBACK}
             aria-describedby={hintId}
+            data-adaptive-height={activeCardHeight === null ? 'false' : 'true'}
+            data-reduced-motion={reducedMotion ? 'true' : 'false'}
             tabIndex={0}
+            style={activeCardHeight === null ? undefined : {
+              '--hjm-active-card-height': `${activeCardHeight}px`,
+            } as CSSProperties}
             onKeyDown={handleRailKeyDown}
             onScroll={syncActiveCard}
           >
             <li
               className="hjm-journey-card hjm-journey-overview-card"
               data-hjm-overview-card="true"
+              data-garment-count={rows.length}
             >
               <article className="hjm-journey-card-inner hjm-journey-overview-inner">
                 <div className="hjm-journey-overview-heading">
@@ -184,6 +228,11 @@ export function ResultSurface({
                     localizedRole,
                   )
                 : localizedRole;
+              const fact = row.garmentId === null
+                ? null
+                : garmentFactFor(row.garmentId, i18next.resolvedLanguage).text;
+              const hasAlternatives = row.outfitItemId !== null
+                && alternativeItemIds.has(row.outfitItemId);
               return (
                 <MonterGarmentRow
                   key={row.key}
@@ -193,6 +242,8 @@ export function ResultSurface({
                   roleLabel={localizedRole}
                   imageSrc={imageSrc}
                   why={why}
+                  fact={fact}
+                  hasAlternatives={hasAlternatives}
                   onSwap={(event) => onSwapRow(row, event)}
                   animationDelayMs={null}
                 />

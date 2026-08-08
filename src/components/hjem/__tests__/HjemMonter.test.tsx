@@ -198,6 +198,11 @@ describe('HjemMonter — phase-driven view switching', () => {
     const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
     expect(html).toContain(copy.title.replace("'", '&#x27;'));
     expect(html).toContain('class="hjm-strip"');
+    expect((html.match(/class="hjm-strip"/gu) ?? [])).toHaveLength(1);
+    expect(html).toContain('class="hjm-s-weather"');
+    expect(html).toContain('src="/monter/vaer-regn.webp"');
+    expect(html).toContain('alt="Lett regn"');
+    expect(html).not.toContain('class="hjm-s-adjust"');
     expect(html).toContain(copy.carouselLabel);
     expect(html).toContain('/monter/maskot-resultat-sveip.webp');
     expect(html).not.toContain('class="hjm-cta"');
@@ -415,6 +420,8 @@ describe('HjemMonter localization', () => {
     expect(html).toContain('aria-label="Juster vejr, sted eller aktivitet"');
     expect(html).toContain('Føles som 1°');
     expect(html).toContain('Trondheim · Uden for barnevognen');
+    expect(html).toContain('class="hjm-s-weather"');
+    expect(html).toContain('src="/monter/vaer-regn.webp"');
     expect(html).not.toContain('Utenfor vogn');
   });
 });

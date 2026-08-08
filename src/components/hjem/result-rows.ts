@@ -12,11 +12,17 @@
  * lesing, samme mønster som HjemScreen selv allerede bruker).
  */
 import type { LayerCategory, Recommendation } from '../../lib/wool-layers/types.js';
+import type {
+  OutfitItemId,
+  OutfitTruthSnapshotV1,
+} from '../../lib/outfit/outfit-truth.js';
 import { garmentIdFor } from '../../data/garment-illustrations.js';
 import { displayNameForDbString } from '../../data/garment-display-names.js';
 
 export type ResultRow = Readonly<{
   key: string;
+  /** Forekomst-ID fra den sikkerhetsvaliderte antrekksbundelen. */
+  outfitItemId: OutfitItemId | null;
   position: number;
   /** Rå motor-streng ORDRETT (aldri parafrasert) — data-/oppslagsverdi. */
   label: string;
@@ -49,6 +55,7 @@ export function deriveResultRows(
     layer.items.forEach((label, indexInLayer) => {
       rows.push({
         key: `${category}:${indexInLayer}:${label}`,
+        outfitItemId: null,
         position: rows.length + 1,
         label,
         displayLabel: displayNameForDbString(label),
@@ -58,4 +65,40 @@ export function deriveResultRows(
     });
   }
   return rows;
+}
+
+/**
+ * Hjem bruker denne varianten når den autoritative antrekksbundelen finnes.
+ * Forekomst-ID-en gjør at to like plagg kan ha ulike, sikkerhetsgodkjente
+ * alternativer uten å kobles sammen via navn eller array-indeks.
+ */
+export function deriveResultRowsFromTruth(
+  snapshot: OutfitTruthSnapshotV1,
+): readonly ResultRow[] {
+  const garments = snapshot.garments.map((item) => ({
+    itemId: item.itemId,
+    label: item.label,
+    category: item.category,
+    order: item.order,
+    garmentId: item.catalogGarmentId ?? garmentIdFor(item.label),
+  }));
+  const equipment = snapshot.equipment.map((item) => ({
+    itemId: item.itemId,
+    label: item.label,
+    category: 'utstyr' as const,
+    order: item.order,
+    garmentId: item.catalogGarmentId ?? garmentIdFor(item.label),
+  }));
+
+  return [...garments, ...equipment]
+    .sort((left, right) => left.order - right.order)
+    .map((item, index) => ({
+      key: item.itemId,
+      outfitItemId: item.itemId,
+      position: index + 1,
+      label: item.label,
+      displayLabel: displayNameForDbString(item.label),
+      roleLabel: ROLE_LABEL_BY_CATEGORY[item.category],
+      garmentId: item.garmentId,
+    }));
 }
