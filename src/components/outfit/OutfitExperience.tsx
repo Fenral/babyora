@@ -133,6 +133,10 @@ export function OutfitExperience({
   registerOutfitRow,
 }: Props) {
   const [compareId, setCompareId] = useState<OutfitItemId | null>(null);
+  const [rowNotice, setRowNotice] = useState<Readonly<{
+    snapshotId: string;
+    message: string;
+  }> | null>(null);
   const session = useOutfitSelectionStore((state) => state.session);
   const open = useOutfitSelectionStore((state) => state.open);
   const select = useOutfitSelectionStore((state) => state.select);
@@ -192,11 +196,24 @@ export function OutfitExperience({
         snapshot={current}
         registerOutfitRow={registerOutfitRow}
         hasAlternative={(id) => authorizedOptions.some((candidate) => candidate.sourceItemId === id)}
-        onAlternative={(id, trigger) => {
+        onActivate={(id, trigger) => {
+          const available = authorizedOptions.some((candidate) => candidate.sourceItemId === id);
+          if (!available) {
+            const sourceLabel = current.garments.find((item) => item.itemId === id)?.label ?? '';
+            setRowNotice({
+              snapshotId: current.snapshotId,
+              message: `Ingen anbefalte alternativer for ${displayNameForDbString(sourceLabel)}.`,
+            });
+            return;
+          }
+          setRowNotice(null);
           comparisonFocusLifecycle.open(trigger);
           setCompareId(id);
         }}
       />
+      {rowNotice?.snapshotId === current.snapshotId && (
+        <p className="outfit-row-notice" role="status">{rowNotice.message}</p>
+      )}
       {current !== snapshot && (
         <button type="button" className="outfit-reset" onClick={() => { reset(); }}>
           Tilbakestill antrekk

@@ -182,6 +182,11 @@
   padding: 0;
 }
 
+.outfit-list .outfit-list__row {
+  margin: 0;
+  list-style: none;
+}
+
 .outfit-list .outfit-row {
   display: grid;
   grid-template-columns: 30px 54px minmax(0, 1fr) auto;
@@ -194,7 +199,14 @@
   border-bottom: 1px solid var(--dw-hairline);
   border-radius: 0;
   background: transparent;
-  list-style: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  inline-size: 100%;
+  text-align: start;
+  transition:
+    transform var(--dw-m-feedback) var(--dw-ease),
+    background-color var(--dw-m-feedback) var(--dw-ease);
 }
 
 .outfit-list .outfit-row__ordinal {
@@ -262,13 +274,8 @@
   border-radius: var(--dw-r-pill);
   background: transparent;
   color: var(--dw-accent);
-  font: inherit;
   font-size: var(--dw-text-meta);
   font-weight: 700;
-  transition:
-    transform var(--dw-m-feedback) var(--dw-ease),
-    border-color var(--dw-m-feedback) var(--dw-ease),
-    background-color var(--dw-m-feedback) var(--dw-ease);
 }
 
 .outfit-row__action svg {
@@ -276,17 +283,30 @@
   block-size: 16px;
 }
 
-.outfit-row__action:active {
+.outfit-row:active {
   transform: scale(0.97);
   background: var(--dw-accent-surface);
 }
 
-.outfit-row__action:focus-visible,
+.outfit-row:focus-visible,
 .outfit-reset:focus-visible,
 .outfit-comparison button:focus-visible,
 .outfit-recovery-guide button:focus-visible {
   outline: 2px solid var(--dw-focus);
   outline-offset: 3px;
+}
+
+.outfit-row-notice {
+  margin: var(--dw-space-12) 0 0;
+  color: var(--dw-ink-mid);
+  font-size: var(--dw-text-meta);
+  line-height: 1.4;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .outfit-row:hover {
+    background: color-mix(in srgb, var(--dw-overlay) 42%, transparent);
+  }
 }
 
 .outfit-equipment {
@@ -458,7 +478,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .outfit-row__action {
+  .outfit-row {
     transition: none;
   }
 }

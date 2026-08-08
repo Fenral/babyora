@@ -44,6 +44,7 @@ import {
 } from 'react';
 import { useChildren } from '../state/children-store';
 import { useWeather } from '../hooks/useWeather';
+import { useNativeSettings } from '../hooks/useNativeSettings';
 import { useHapticSystem } from '../lib/haptics/system';
 import { searchCities } from '../data/no-cities';
 import { searchAddress } from '../lib/geocode/nominatim';
@@ -228,12 +229,8 @@ function LayersIcon() {
 export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   const { onComplete } = props;
   const { completeOnboarding } = useChildren();
+  const { reducedMotion } = useNativeSettings();
   const { fire } = useHapticSystem();
-  /* `reducedMotion` er borte herfra 2026-08-07: den styrte KUN den korte
-     babyvideoen, som aldri spilte og nå er arkivert. Skjermens øvrige
-     bevegelse er CSS-overganger, og de respekterer
-     `prefers-reduced-motion` i stylesheetet — ikke via denne kroken.
-     Kommer det animasjon som må gates i JS, hentes den inn igjen. */
 
   // ─── Step + felt-state ───────────────────────────────────────────────────
   const [step, setStep] = useState<Step>(1);
@@ -288,13 +285,13 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   }, []);
 
   const goNext = useCallback(() => {
-    fire('selection').catch(() => {});
+    fire('medium').catch(() => {});
     advanceStep(5);
   }, [advanceStep, fire]);
 
   const goBack = useCallback(() => {
     setStepDirection('backward');
-    fire('selection').catch(() => {});
+    fire('light').catch(() => {});
     setStep((s) => (s > 1 ? ((s - 1) as Step) : s));
   }, [fire]);
 
@@ -442,6 +439,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
       <main
         className={`ob-screen step-${step}${step === 5 ? ' welcome' : ''}${step === 1 ? ' intro-hero' : ''}`}
         data-step-direction={stepDirection}
+        data-reduced-motion={reducedMotion ? 'true' : 'false'}
         aria-labelledby="ob-title"
       >
         {/* ─── TOP BAR ─── */}
@@ -1882,5 +1880,10 @@ mask-image: var(--dw-fade-bunn);}
   .ob-screen *,.ob-screen *::before,.ob-screen *::after{
     transition:none !important;animation:none !important;
   }
+}
+.ob-screen[data-reduced-motion='true'] *,
+.ob-screen[data-reduced-motion='true'] *::before,
+.ob-screen[data-reduced-motion='true'] *::after{
+  transition:none !important;animation:none !important;
 }
 `;

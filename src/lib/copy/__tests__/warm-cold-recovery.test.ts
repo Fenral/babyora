@@ -55,7 +55,8 @@ describe('warm/cold recovery copy and alternative ownership', () => {
     expect(detailSource).toContain('.plagg-detail-sheet .ba-press:focus-visible');
     expect(garmentListSource).toContain('hasAlternative &&');
     expect(garmentListSource).toContain('<span>Bytt</span>');
-    expect(garmentListSource).toContain('aria-label={`Bytt ${label}`}');
+    expect(garmentListSource).toContain("aria-label={hasAlternative ? `Bytt ${label}`");
+    expect(garmentListSource).toContain('className="outfit-row"');
 
     const markup = renderToStaticMarkup(createElement(PlaggDetailSheet, {
       garmentId: 'ullsokker', isOpen: false, onClose: () => undefined, triggerRef: createRef<HTMLElement>(),

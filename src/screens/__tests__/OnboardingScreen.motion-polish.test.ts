@@ -16,13 +16,20 @@ describe('Onboarding sidebevegelse og rytme', () => {
     expect(SOURCE).toContain('translate3d(-14px,0,0)');
   });
 
-  it('bruker den diskrete selection-pulsen for ordinære stegbytter', () => {
+  it('bruker det låste haptikkvokabularet for CTA, tilbake og eksplisitte valg', () => {
     const navigationBlock = SOURCE.slice(
       SOURCE.indexOf('const advanceStep'),
       SOURCE.indexOf('const requestLocation'),
     );
 
+    expect(navigationBlock).toContain("fire('medium')");
+    expect(navigationBlock).toContain("fire('light')");
     expect(navigationBlock).toContain("fire('selection')");
-    expect(navigationBlock).not.toContain("fire('medium')");
+  });
+
+  it('respekterer både OS og appens egen reduced-motion-innstilling', () => {
+    expect(SOURCE).toContain('useNativeSettings()');
+    expect(SOURCE).toContain("data-reduced-motion={reducedMotion ? 'true' : 'false'}");
+    expect(SOURCE).toContain(".ob-screen[data-reduced-motion='true'] *");
   });
 });

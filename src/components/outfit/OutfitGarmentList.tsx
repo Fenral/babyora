@@ -7,7 +7,7 @@ import { GarmentThumbnail } from './GarmentThumbnail.js';
 type Props = Readonly<{
   snapshot: OutfitTruthSnapshotV1;
   registerOutfitRow?: RegisterOutfitRow;
-  onAlternative: (id: OutfitItemId, trigger: HTMLButtonElement) => void;
+  onActivate: (id: OutfitItemId, trigger: HTMLButtonElement) => void;
   hasAlternative: (id: OutfitItemId) => boolean;
 }>;
 
@@ -31,7 +31,7 @@ function Row({ garment, props }: {
   garment: OutfitTruthSnapshotV1['garments'][number];
   props: Props;
 }) {
-  const ref = useRef<HTMLLIElement | null>(null);
+  const ref = useRef<HTMLButtonElement | null>(null);
   const { registerOutfitRow } = props;
   const label = displayNameForDbString(garment.label);
   const hasAlternative = props.hasAlternative(garment.itemId);
@@ -42,31 +42,31 @@ function Row({ garment, props }: {
   }, [garment.itemId, registerOutfitRow]);
 
   return (
-    <li
-      ref={ref}
-      className="outfit-row"
-      data-outfit-row={garment.itemId}
-      data-has-alternative={hasAlternative ? 'true' : 'false'}
-    >
-      <span className="outfit-row__ordinal" aria-hidden="true">{garment.order}</span>
-      <span className="outfit-row__thumbnail" aria-hidden="true">
-        <GarmentThumbnail label={garment.label} />
-      </span>
-      <span className="outfit-row__copy">
-        <span className="outfit-row__label">{label}</span>
-        <span className="outfit-row__detail">{CATEGORY_LABEL[garment.category]}</span>
-      </span>
-      {hasAlternative && (
-        <button
-          type="button"
-          className="outfit-row__action"
-          aria-label={`Bytt ${label}`}
-          onClick={(event) => props.onAlternative(garment.itemId, event.currentTarget)}
-        >
-          <span>Bytt</span>
-          <SwapIcon />
-        </button>
-      )}
+    <li className="outfit-list__row">
+      <button
+        ref={ref}
+        type="button"
+        className="outfit-row"
+        data-outfit-row={garment.itemId}
+        data-has-alternative={hasAlternative ? 'true' : 'false'}
+        aria-label={hasAlternative ? `Bytt ${label}` : `${label}. Ingen anbefalte alternativer`}
+        onClick={(event) => props.onActivate(garment.itemId, event.currentTarget)}
+      >
+        <span className="outfit-row__ordinal" aria-hidden="true">{garment.order}</span>
+        <span className="outfit-row__thumbnail" aria-hidden="true">
+          <GarmentThumbnail label={garment.label} />
+        </span>
+        <span className="outfit-row__copy">
+          <span className="outfit-row__label">{label}</span>
+          <span className="outfit-row__detail">{CATEGORY_LABEL[garment.category]}</span>
+        </span>
+        {hasAlternative && (
+          <span className="outfit-row__action" aria-hidden="true">
+            <span>Bytt</span>
+            <SwapIcon />
+          </span>
+        )}
+      </button>
     </li>
   );
 }

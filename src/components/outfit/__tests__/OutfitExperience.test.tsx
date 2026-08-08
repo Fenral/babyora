@@ -151,6 +151,7 @@ describe('OutfitExperience', () => {
     const html = renderToStaticMarkup(<OutfitExperience snapshot={truth} temp="mild" />);
     expect(html).toContain('Innerst til ytterst');
     expect((html.match(/data-outfit-row=/g) ?? []).length).toBe(truth.garments.length);
+    expect((html.match(/<button[^>]*class="outfit-row"/g) ?? []).length).toBe(truth.garments.length);
     expect((html.match(/outfit-row__thumbnail/g) ?? []).length).toBe(truth.garments.length);
     expect(html).toContain('<ol class="outfit-list__rows">');
     expect(html).not.toContain('data-outfit-map-node=');
