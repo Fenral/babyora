@@ -1,5 +1,4 @@
-import { displayNameForDbString } from '../../data/garment-display-names.js';
-import { WARM_COLD_RECOVERY_COPY } from '../../lib/copy/warm-cold-recovery.js';
+import { useTranslation } from 'react-i18next';
 import {
   isOutfitBundleProducerResult,
   type OutfitBundleProducerResult,
@@ -12,6 +11,7 @@ import {
   isOutfitTruthSnapshot,
 } from '../../lib/outfit/outfit-truth.js';
 import { tempAxisFor } from '../../lib/temp-axis.js';
+import { deepFlowCopyFor, localizedGarmentDisplayName } from '../../screens/deep-flow-copy.js';
 import { OutfitExperience } from './OutfitExperience.js';
 
 export type OutfitTruthPanelProps = Readonly<{
@@ -24,13 +24,15 @@ export type OutfitTruthPanelProps = Readonly<{
 function RecoveryGuide({ onOpenWarmColdGuide }: Readonly<{
   onOpenWarmColdGuide?: () => void;
 }>) {
+  const { i18n } = useTranslation();
+  const copy = deepFlowCopyFor(i18n.resolvedLanguage ?? i18n.language);
   return (
     <section className="outfit-recovery-guide" aria-labelledby="outfit-recovery-title">
-      <h2 id="outfit-recovery-title">{WARM_COLD_RECOVERY_COPY.title}</h2>
-      <p>{WARM_COLD_RECOVERY_COPY.instruction}</p>
+      <h2 id="outfit-recovery-title">{copy.outfit.recoveryTitle}</h2>
+      <p>{copy.outfit.recoveryInstruction}</p>
       {typeof onOpenWarmColdGuide === 'function' && (
         <button type="button" onClick={onOpenWarmColdGuide}>
-          Se varm eller kald-guiden
+          {copy.outfit.recoveryButton}
         </button>
       )}
     </section>
@@ -42,6 +44,9 @@ function UnsupportedCardinalityPanel({
 }: Readonly<{
   outfitBundle: Extract<OutfitBundleProducerResult, { kind: 'unsupported-cardinality' }>;
 }>) {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const copy = deepFlowCopyFor(language);
   const temp = tempAxisFor(
     outfitBundle.weather.feelsLikeC,
     outfitBundle.weather.tempC,
@@ -51,23 +56,23 @@ function UnsupportedCardinalityPanel({
     <section
       className="outfit-truth-panel ba-temp-root"
       data-temp={temp}
-      aria-label="Antrekksliste"
+      aria-label={copy.outfit.outfitList}
     >
-      <section className="outfit-list" aria-label="Antrekk">
-        <h2>Ta på innerst først</h2>
+      <section className="outfit-list" aria-label={copy.outfit.outfit}>
+        <h2>{copy.outfit.dressBaseFirst}</h2>
         <ol>
           {orderedGarments.map((garment) => (
             <li key={garment.itemId}>
-              <span>{garment.order}.</span> {displayNameForDbString(garment.label)}
+              <span>{garment.order}.</span> {localizedGarmentDisplayName(garment.label, language)}
             </li>
           ))}
         </ol>
         {equipment.length > 0 && (
-          <section aria-label="Utstyr">
-            <h3>Utstyr</h3>
+          <section aria-label={copy.outfit.equipment}>
+            <h3>{copy.outfit.equipment}</h3>
             <ul>
               {equipment.map((item) => (
-                <li key={item.itemId}>{displayNameForDbString(item.label)}</li>
+                <li key={item.itemId}>{localizedGarmentDisplayName(item.label, language)}</li>
               ))}
             </ul>
           </section>
@@ -88,6 +93,8 @@ function SupportedPanel({
   transitionVisualState: OutfitTransitionVisualState;
   onOpenWarmColdGuide?: () => void;
 }>) {
+  const { i18n } = useTranslation();
+  const copy = deepFlowCopyFor(i18n.resolvedLanguage ?? i18n.language);
   const { base, options } = outfitBundle;
   const temp = tempAxisFor(
     outfitBundle.weather.feelsLikeC,
@@ -102,7 +109,7 @@ function SupportedPanel({
       data-temp={temp}
       data-transition-visual-state={transitionVisualState}
       data-outfit-presentation="monter-list"
-      aria-label="Hele antrekket"
+      aria-label={copy.outfit.completeOutfit}
     >
       <OutfitExperience
         snapshot={base}
@@ -116,13 +123,15 @@ function SupportedPanel({
 }
 
 function UnavailablePanel() {
+  const { i18n } = useTranslation();
+  const copy = deepFlowCopyFor(i18n.resolvedLanguage ?? i18n.language);
   return (
     <section
       className="outfit-truth-panel ba-temp-root"
       data-temp="mild"
       aria-live="polite"
     >
-      <p>Antrekksanbefalingen er ikke tilgjengelig.</p>
+      <p>{copy.outfit.unavailable}</p>
     </section>
   );
 }

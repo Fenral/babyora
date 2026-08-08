@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   isIllustrativeAvatarAssetPath,
   isVerifiedAvatarAssetPath,
@@ -9,6 +10,7 @@ import {
   type OutfitAvatarPose,
   type OutfitTruthSnapshotV1,
 } from '../../lib/outfit/outfit-truth.js';
+import { deepFlowCopyFor } from '../../screens/deep-flow-copy.js';
 
 type SharedProps = Readonly<{
   decorative?: boolean;
@@ -80,6 +82,8 @@ function NeutralAvatar({
   size: number;
   snapshotId?: string;
 }>) {
+  const { i18n } = useTranslation();
+  const copy = deepFlowCopyFor(i18n.resolvedLanguage ?? i18n.language);
   const sitting = pose === 'sitting';
   const frame: CSSProperties = {
     width: size,
@@ -91,7 +95,7 @@ function NeutralAvatar({
   };
   const a11yProps = decorative
     ? { 'aria-hidden': true as const }
-    : { role: 'img' as const, 'aria-label': 'Nøytral barnefigur — antrekket står i listen' };
+    : { role: 'img' as const, 'aria-label': copy.outfit.neutralAvatar };
   return (
     <div style={frame} data-avatar-truth="neutral" data-avatar-snapshot={snapshotId} {...a11yProps}>
       <svg width={size * 0.9} height={size} viewBox="0 0 180 200" aria-hidden="true">
@@ -118,6 +122,8 @@ function VerifiedAvatarImage({
   snapshotId?: string;
   source: 'canonical' | 'legacy' | 'illustrative';
 }>) {
+  const { i18n } = useTranslation();
+  const copy = deepFlowCopyFor(i18n.resolvedLanguage ?? i18n.language);
   return (
     <div
       style={{ width: size, height: size * 1.05, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
@@ -127,7 +133,7 @@ function VerifiedAvatarImage({
     >
       <img
         src={assetPath}
-        alt={decorative ? '' : 'Verifisert antrekksillustrasjon'}
+        alt={decorative ? '' : copy.outfit.verifiedAvatar}
         aria-hidden={decorative || undefined}
         style={{ maxWidth: '100%', maxHeight: '100%', transition: reducedMotion ? 'none' : 'opacity 220ms ease' }}
       />

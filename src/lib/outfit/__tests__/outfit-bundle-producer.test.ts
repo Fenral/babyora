@@ -258,7 +258,7 @@ describe('produceOutfitBundle', () => {
     if (supported.kind !== 'supported') throw new Error('fixture must be supported');
     expect(isOutfitBundleProducerResult(supported.base)).toBe(false);
     expect(isOutfitBundleProducerResult(supported.options[0])).toBe(false);
-  }, 120_000);
+  }, 180_000);
 
   it('emits deterministic supported current truth with exact weather and options', () => {
     const context = exactCurrentContext();

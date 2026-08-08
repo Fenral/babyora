@@ -1,5 +1,6 @@
 import { type ReactElement } from 'react';
 import { motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 import { TAB_DEFS, type TabKey } from '../types/nav';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
@@ -68,6 +69,12 @@ const TAB_ICONS: Record<TabKey, TabIcon> = {
   familie: IconFamily,
 };
 
+const TAB_TRANSLATION_KEYS: Record<TabKey, string> = {
+  hjem: 'nav.home',
+  plan: 'nav.plan',
+  familie: 'nav.familie',
+};
+
 interface TabButtonProps {
   active: boolean;
   label: string;
@@ -113,6 +120,7 @@ function TabButton({ active, label, Icon, reducedMotion, onSelect }: TabButtonPr
 export function BottomTabBar({ active, onNavigate }: BottomTabBarProps): ReactElement {
   const { fire } = useHapticSystem();
   const { reducedMotion } = useNativeSettings();
+  const { t } = useTranslation();
 
   const handleSelect = (next: TabKey) => {
     dispatchRootChange(decideRootChange(active, next), {
@@ -122,12 +130,15 @@ export function BottomTabBar({ active, onNavigate }: BottomTabBarProps): ReactEl
   };
 
   return (
-    <nav className="bottom-tab-bar" aria-label="Hovednavigasjon">
+    <nav
+      className="bottom-tab-bar"
+      aria-label={t('nav.mainNavigation', { defaultValue: 'Main navigation' })}
+    >
       {TAB_DEFS.map(({ key, label }) => (
         <TabButton
           key={key}
           active={key === active}
-          label={label}
+          label={t(TAB_TRANSLATION_KEYS[key], { defaultValue: label })}
           Icon={TAB_ICONS[key]}
           reducedMotion={reducedMotion}
           onSelect={() => handleSelect(key)}

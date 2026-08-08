@@ -47,7 +47,7 @@ describe('Motor 2.0 globale invarianter (§8) — avgrenset kombinasjonssøk', (
   const AGES = [0, 2, 5, 6, 8, 11, 12, 15, 16, 20, 23, 24];
   const FEELS = [-21, -12, -6, -2, 2, 7, 12, 18, 24, 29];
   const SITUATIONS: Situation[] = ['stroller_awake', 'carrier', 'awake_low_mobility', 'active_play', 'calm_outdoors', 'mixed_day'];
-  const PREFS = ['best_for_conditions', 'prefer_wool', 'avoid_wool'] as const;
+  const PREFS = ['best_for_conditions', 'prefer_wool', 'prefer_fleece', 'prefer_cotton', 'avoid_wool'] as const;
 
   function tryRecommend(input: RecommendInputV2) {
     try {

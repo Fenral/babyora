@@ -66,6 +66,7 @@ import {
   type SyntheticEvent as ReactSyntheticEvent,
 } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { useTranslation } from 'react-i18next';
 import { useSubscription } from '../state/subscription-store';
 import {
   notifyError,
@@ -86,14 +87,9 @@ import {
   type ProductKey,
 } from '../lib/premium/products';
 import {
-  PAYWALL_COPY,
-  PLAN_ORDER,
-  buildArmedCtaLabel,
-  buildCapabilityPaywallCopy,
-  buildPlanAriaLabel,
-  buildPlanBreakdown,
-  buildPlanRowContent,
-} from '../lib/premium/paywall-copy';
+  LOCALIZED_PLAN_ORDER,
+  paywallCopyFor,
+} from './paywall-localization.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Props — W2 bygger mot denne kontrakten. IKKE avvik.
@@ -711,6 +707,9 @@ export function PaywallDialog({
   returnFocusTo,
   dismissable = true,
 }: PaywallDialogProps): ReactElement {
+  const { i18n } = useTranslation();
+  const paywall = paywallCopyFor(i18n.resolvedLanguage ?? i18n.language);
+  const copy = paywall.text;
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const ctaRef = useRef<HTMLButtonElement | null>(null);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -735,7 +734,7 @@ export function PaywallDialog({
   // slik at «I dag / <dato+7 dager>» er stabil gjennom hele den åpne økten.
   const [renewalBaseMs, setRenewalBaseMs] = useState(() => Date.now());
 
-  const capabilityCopy = buildCapabilityPaywallCopy();
+  const capabilityCopy = copy.capability;
 
   const clearAutoClose = useCallback(() => {
     if (autoCloseTimerRef.current) {
@@ -913,7 +912,7 @@ export function PaywallDialog({
     [],
   );
 
-  const handlePurchase = useCallback(async () => {
+  const handlePurchase = async () => {
     if (pending || selectedPlan === null) return;
     const plan = selectedPlan;
     // P9 (duel §3): INGEN haptikk på selve kjøpsknapp-trykket (forbudt —
@@ -921,13 +920,13 @@ export function PaywallDialog({
     // varsles KUN etter at StoreKit/RevenueCat faktisk har svart, under.
     setPending(true);
     setErrorMessage(null);
-    setStatusMessage(PAYWALL_COPY.statusProcessing);
+    setStatusMessage(copy.statusProcessing);
     try {
       if (!isRevenueCatConfigured() || !Capacitor.isNativePlatform()) {
         // Web/dev-mock: simuler vellykket kjøp slik at Premium-UI kan testes
         // uten et ekte RevenueCat-oppsett.
         setPremium(true);
-        setStatusMessage(PAYWALL_COPY.statusActivatedTestmode);
+        setStatusMessage(copy.statusActivatedTestmode);
         track({ type: 'paywall_converted', plan });
         if (plan === 'yearly') track({ type: 'trial_started', plan });
         void notifySuccess();
@@ -937,58 +936,58 @@ export function PaywallDialog({
       const result = await purchasePackage(PRODUCT_IDS[plan]);
       if (result.success) {
         setPremium(true);
-        setStatusMessage(PAYWALL_COPY.statusActivated);
+        setStatusMessage(copy.statusActivated);
         track({ type: 'paywall_converted', plan });
         if (plan === 'yearly') track({ type: 'trial_started', plan });
         void notifySuccess();
         scheduleAutoClose();
       } else {
         setStatusMessage('');
-        setErrorMessage(PAYWALL_COPY.errorPurchaseFailed);
+        setErrorMessage(copy.errorPurchaseFailed);
         void notifyError();
       }
     } catch (err) {
       console.error('[Babyora] PaywallDialog purchase feilet', err);
       setStatusMessage('');
-      setErrorMessage(PAYWALL_COPY.errorPurchaseException);
+      setErrorMessage(copy.errorPurchaseException);
       void notifyError();
     } finally {
       setPending(false);
     }
-  }, [pending, selectedPlan, setPremium, scheduleAutoClose]);
+  };
 
-  const handleRestore = useCallback(async () => {
+  const handleRestore = async () => {
     if (pending) return;
     // P9 (duel §3): samme regel som kjøpsknappen — ingen haptikk på selve
     // trykket, kun på et faktisk resultat (nedenfor).
     setPending(true);
     setErrorMessage(null);
-    setStatusMessage(PAYWALL_COPY.statusRestoreChecking);
+    setStatusMessage(copy.statusRestoreChecking);
     try {
       if (!isRevenueCatConfigured() || !Capacitor.isNativePlatform()) {
         setStatusMessage('');
-        setErrorMessage(PAYWALL_COPY.errorRestoreDevOnly);
+        setErrorMessage(copy.errorRestoreDevOnly);
         void notifyError();
         return;
       }
       const restored = await restorePurchases();
       if (restored) {
         setPremium(true);
-        setStatusMessage(PAYWALL_COPY.statusActivated);
+        setStatusMessage(copy.statusActivated);
         void notifySuccess();
         scheduleAutoClose();
       } else {
-        setStatusMessage(PAYWALL_COPY.statusNoRestore);
+        setStatusMessage(copy.statusNoRestore);
       }
     } catch (err) {
       console.error('[Babyora] PaywallDialog restore feilet', err);
       setStatusMessage('');
-      setErrorMessage(PAYWALL_COPY.errorRestoreException);
+      setErrorMessage(copy.errorRestoreException);
       void notifyError();
     } finally {
       setPending(false);
     }
-  }, [pending, setPremium, scheduleAutoClose]);
+  };
 
   const onCtaClick = () => {
     if (pending || selectedPlan === null) return;
@@ -1002,11 +1001,13 @@ export function PaywallDialog({
 
   const armed = selectedPlan !== null;
   const ctaLabel = pending
-    ? PAYWALL_COPY.ctaPending
+    ? copy.ctaPending
     : armed
-      ? buildArmedCtaLabel(selectedPlan)
-      : PAYWALL_COPY.ctaResting;
-  const breakdown = selectedPlan !== null ? buildPlanBreakdown(selectedPlan, renewalBaseMs) : null;
+      ? paywall.armedCtaLabel(selectedPlan)
+      : copy.ctaResting;
+  const breakdown = selectedPlan !== null
+    ? paywall.planBreakdown(selectedPlan, renewalBaseMs)
+    : null;
 
   return (
     <dialog
@@ -1027,7 +1028,7 @@ export function PaywallDialog({
               <button
                 type="button"
                 className="pw-close-btn"
-                aria-label={PAYWALL_COPY.closeLabel}
+                aria-label={copy.closeLabel}
                 onClick={requestClose}
                 style={closeBtnStyle}
               >
@@ -1036,7 +1037,7 @@ export function PaywallDialog({
             )}
           </div>
 
-          <section style={sheetStyle} aria-label={PAYWALL_COPY.sheetAriaLabel}>
+          <section style={sheetStyle} aria-label={copy.sheetAriaLabel}>
             <span aria-hidden="true" style={sheetEdgeLightStyle} />
             <div style={valueStyle}>
               <h2 id="paywall-title" style={vHeadStyle}>{capabilityCopy.heading}</h2>
@@ -1054,10 +1055,10 @@ export function PaywallDialog({
               </ul>
             </div>
 
-            <fieldset style={fieldsetStyle} role="radiogroup" aria-label={PAYWALL_COPY.legend}>
-              <legend style={srOnlyStyle}>{PAYWALL_COPY.legend}</legend>
-              {PLAN_ORDER.map((key) => {
-                const row = buildPlanRowContent(key);
+            <fieldset style={fieldsetStyle} role="radiogroup" aria-label={copy.legend}>
+              <legend style={srOnlyStyle}>{copy.legend}</legend>
+              {LOCALIZED_PLAN_ORDER.map((key) => {
+                const row = paywall.planRow(key);
                 const selected = selectedPlan === key;
                 return (
                   <label key={key} className="pw-plan-label">
@@ -1068,7 +1069,7 @@ export function PaywallDialog({
                       value={key}
                       checked={selected}
                       onChange={() => handleSelectPlan(key)}
-                      aria-label={buildPlanAriaLabel(key)}
+                      aria-label={paywall.planAriaLabel(key)}
                     />
                     <span className="pw-plan-unit">
                       <span className="pw-plan-row">
@@ -1089,7 +1090,7 @@ export function PaywallDialog({
                         <span
                           className="pw-breakdown"
                           role="group"
-                          aria-label={`${PAYWALL_COPY.breakdownAriaPrefix} ${row.name}`}
+                          aria-label={`${copy.breakdownAriaPrefix} ${row.name}`}
                         >
                           <span className="pw-bd-row">
                             <span>{breakdown.todayLabel}</span>
@@ -1110,7 +1111,7 @@ export function PaywallDialog({
           </section>
 
           <p style={chooseHintStyle}>
-            {armed ? PAYWALL_COPY.chooseHintSelected : PAYWALL_COPY.chooseHintDefault}
+            {armed ? copy.chooseHintSelected : copy.chooseHintDefault}
           </p>
 
           <p role="status" style={statusRegionStyle}>
@@ -1143,7 +1144,7 @@ export function PaywallDialog({
               onClick={onRestoreClick}
               aria-disabled={pending}
             >
-              {PAYWALL_COPY.restoreLabel}
+              {copy.restoreLabel}
             </button>
             <span aria-hidden="true" style={dotStyle}>·</span>
             <a
@@ -1151,10 +1152,10 @@ export function PaywallDialog({
               href="https://babyora.no/personvern"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={PAYWALL_COPY.privacyLinkAriaLabel}
+              aria-label={copy.privacyLinkAriaLabel}
               style={legalLinkStyle}
             >
-              {PAYWALL_COPY.privacyLinkLabel}
+              {copy.privacyLinkLabel}
             </a>
             <span aria-hidden="true" style={dotStyle}>·</span>
             <a
@@ -1162,10 +1163,10 @@ export function PaywallDialog({
               href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={PAYWALL_COPY.termsLinkAriaLabel}
+              aria-label={copy.termsLinkAriaLabel}
               style={legalLinkStyle}
             >
-              {PAYWALL_COPY.termsLinkLabel}
+              {copy.termsLinkLabel}
             </a>
           </div>
         </footer>

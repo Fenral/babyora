@@ -59,6 +59,7 @@ describe('WeatherStrip', () => {
         conditionLabel="Lett yr"
         cityLabel="Trondheim"
         activityToggleLabel="Utenfor vogn"
+        language="no"
         onAdjust={vi.fn()}
       />,
     );
@@ -72,10 +73,31 @@ describe('WeatherStrip', () => {
 
   it('the whole strip is a single tappable button (the Juster affordance IS the strip)', () => {
     const html = renderToStaticMarkup(
-      <WeatherStrip nuance="snow" tempC={-2} feelsLikeC={-5} conditionLabel="Snø" cityLabel="Oslo" activityToggleLabel="I vogn" onAdjust={vi.fn()} />,
+      <WeatherStrip nuance="snow" tempC={-2} feelsLikeC={-5} conditionLabel="Snø" cityLabel="Oslo" activityToggleLabel="I vogn" language="no" onAdjust={vi.fn()} />,
     );
     expect((html.match(/<button/g) ?? []).length).toBe(1);
     expect(html).toContain('−2°');
     expect(html).toContain('data-nuance="snow"');
+  });
+
+  it('localizes all of its own visible and accessible copy', () => {
+    const html = renderToStaticMarkup(
+      <WeatherStrip
+        nuance="cloudy"
+        tempC={7}
+        feelsLikeC={5}
+        conditionLabel="Cloudy"
+        cityLabel="Oslo"
+        activityToggleLabel="Outdoors"
+        language="en-GB"
+        onAdjust={vi.fn()}
+      />,
+    );
+    expect(html).toContain('aria-label="Adjust weather, location or activity"');
+    expect(html).toContain('Feels like 5° · Cloudy');
+    expect(html).toContain('Oslo · Outdoors');
+    expect(html).toContain('Adjust');
+    expect(html).not.toContain('Juster');
+    expect(html).not.toContain('Føles som');
   });
 });

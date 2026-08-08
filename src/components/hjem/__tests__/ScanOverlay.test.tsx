@@ -15,6 +15,7 @@ const ROWS = [
 function renderOverlay(outfitTransitionStatus: OutfitTransitionStatusLike) {
   return renderToStaticMarkup(
     <ScanOverlay
+      language="no"
       cityLabel="Trondheim"
       nuance="rain"
       rows={ROWS}
@@ -30,6 +31,7 @@ function renderOverlay(outfitTransitionStatus: OutfitTransitionStatusLike) {
 function renderStatus(outfitTransitionStatus: OutfitTransitionStatusLike) {
   return renderToStaticMarkup(
     <ScanStatusBlock
+      language="no"
       headline="Kler på Lillian i tankene…"
       subline="Tar bare et lite øyeblikk."
       onSkip={vi.fn()}
@@ -104,6 +106,7 @@ describe('ScanOverlay reduced motion', () => {
   it('does not mark the scanline/checks/spinner as animating when reducedMotion is true', () => {
     const html = renderToStaticMarkup(
       <ScanOverlay
+        language="no"
         cityLabel="Trondheim"
         nuance="rain"
         rows={ROWS}

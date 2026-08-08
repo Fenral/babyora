@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type Ref } from 'react';
-import { displayNameForDbString } from '../../data/garment-display-names.js';
+import { useTranslation } from 'react-i18next';
 import type { OutfitAlternativeOptionV1 } from '../../lib/outfit/alternative-options.js';
 import type { RegisterOutfitRow } from '../../lib/outfit/outfit-transition-contract.js';
 import type { OutfitItemId, OutfitTruthSnapshotV1 } from '../../lib/outfit/outfit-truth.js';
+import {
+  deepFlowCopyFor,
+  localizedGarmentDisplayName,
+  normalizeDeepFlowLanguage,
+} from '../../screens/deep-flow-copy.js';
 import { useOutfitSelectionStore } from '../../state/outfit-selection-store.js';
 import { OutfitGarmentList } from './OutfitGarmentList.js';
 import './Antrekkskart.css';
@@ -90,37 +95,49 @@ export function OutfitComparisonDialog({
   onConfirm,
   onCancel,
 }: OutfitComparisonDialogProps) {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const normalizedLanguage = normalizeDeepFlowLanguage(language);
+  const copy = deepFlowCopyFor(language);
+  const source = localizedGarmentDisplayName(sourceLabel, language);
+  const target = localizedGarmentDisplayName(option.targetLabel, language);
+  const advantages = normalizedLanguage === 'no'
+    ? option.comparison.advantages
+    : [copy.outfit.genericAdvantage];
+  const tradeoffs = normalizedLanguage === 'no'
+    ? option.comparison.tradeoffs
+    : [copy.outfit.genericTradeoff];
   return (
     <dialog open aria-labelledby="outfit-comparison-title" className="outfit-comparison">
-      <p className="outfit-comparison__eyebrow">Forslag til bytte</p>
+      <p className="outfit-comparison__eyebrow">{copy.outfit.swapSuggestion}</p>
       <h2 ref={headingRef} tabIndex={-1} id="outfit-comparison-title">
-        {displayNameForDbString(sourceLabel)} til {displayNameForDbString(option.targetLabel)}
+        {copy.outfit.swapTitle(source, target)}
       </h2>
       <div className="outfit-comparison__tradeoffs">
-        <p><strong>Fordeler</strong>{option.comparison.advantages.join(', ')}</p>
-        <p><strong>Avveininger</strong>{option.comparison.tradeoffs.join(', ')}</p>
+        <p><strong>{copy.outfit.advantages}</strong>{advantages.join(', ')}</p>
+        <p><strong>{copy.outfit.tradeoffs}</strong>{tradeoffs.join(', ')}</p>
       </div>
       <section className="outfit-comparison__result" aria-labelledby="outfit-comparison-result-title">
-        <h3 id="outfit-comparison-result-title">Slik blir antrekket</h3>
+        <h3 id="outfit-comparison-result-title">{copy.outfit.resultingOutfit}</h3>
         <ol data-outfit-comparison-garments>
           {option.outcome.garments.map((item) => (
-            <li key={item.itemId}>{item.order}. {displayNameForDbString(item.label)}</li>
+            <li key={item.itemId}>{item.order}. {localizedGarmentDisplayName(item.label, language)}</li>
           ))}
         </ol>
         {option.outcome.equipment.length > 0 && (
           <>
-            <h4>Utstyr</h4>
+            <h4>{copy.outfit.equipment}</h4>
             <ul data-outfit-comparison-equipment>
               {option.outcome.equipment.map((item) => (
-                <li key={item.itemId}>{displayNameForDbString(item.label)}</li>
+                <li key={item.itemId}>{localizedGarmentDisplayName(item.label, language)}</li>
               ))}
             </ul>
           </>
         )}
       </section>
       <div className="outfit-comparison__actions">
-        <button type="button" className="outfit-comparison__cancel" onClick={onCancel}>Avbryt</button>
-        <button type="button" className="outfit-comparison__confirm" onClick={onConfirm}>Velg dette antrekket</button>
+        <button type="button" className="outfit-comparison__cancel" onClick={onCancel}>{copy.outfit.cancel}</button>
+        <button type="button" className="outfit-comparison__confirm" onClick={onConfirm}>{copy.outfit.chooseOutfit}</button>
       </div>
     </dialog>
   );
@@ -132,6 +149,9 @@ export function OutfitExperience({
   temp,
   registerOutfitRow,
 }: Props) {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const copy = deepFlowCopyFor(language);
   const [compareId, setCompareId] = useState<OutfitItemId | null>(null);
   const [rowNotice, setRowNotice] = useState<Readonly<{
     snapshotId: string;
@@ -202,7 +222,7 @@ export function OutfitExperience({
             const sourceLabel = current.garments.find((item) => item.itemId === id)?.label ?? '';
             setRowNotice({
               snapshotId: current.snapshotId,
-              message: `Ingen anbefalte alternativer for ${displayNameForDbString(sourceLabel)}.`,
+              message: copy.outfit.noAlternatives(localizedGarmentDisplayName(sourceLabel, language)),
             });
             return;
           }
@@ -216,7 +236,7 @@ export function OutfitExperience({
       )}
       {current !== snapshot && (
         <button type="button" className="outfit-reset" onClick={() => { reset(); }}>
-          Tilbakestill antrekk
+          {copy.outfit.reset}
         </button>
       )}
       {option && (
@@ -234,7 +254,7 @@ export function OutfitExperience({
         />
       )}
       <p ref={updateStatusRef} tabIndex={-1} className="sr-only" aria-live="polite">
-        {current === snapshot ? 'Opprinnelig antrekk' : 'Antrekket er oppdatert'}
+        {current === snapshot ? copy.outfit.original : copy.outfit.updated}
       </p>
     </section>
   );

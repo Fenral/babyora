@@ -93,10 +93,17 @@ export function resolveMaterialFamilies(
   }
 
   return entries.map(({ role, ranked, extra }) => {
+    // Cotton is a comfort preference for base layers in warm, dry and calm
+    // conditions. It must never outrank wicking/warmth policy during active,
+    // cold or wet use, nor leak into unrelated garment roles.
+    const rolePreference =
+      preference === 'prefer_cotton' && (!role.startsWith('base_') || !ctx.warmDryCalm)
+        ? 'best_for_conditions'
+        : preference;
     // Skall er funksjon, ikke materialvalg — preferansen påvirker aldri skall.
     const applied = role.startsWith('shell_')
       ? { ranked, codes: [] as ExplanationCode[] }
-      : applyPreference(ranked, preference);
+      : applyPreference(ranked, rolePreference);
     return {
       role,
       rankedMaterials: applied.ranked,

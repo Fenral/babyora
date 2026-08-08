@@ -42,14 +42,23 @@ import {
   type CSSProperties,
   type ReactElement,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useChildren } from '../state/children-store';
 import { useWeather } from '../hooks/useWeather';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { useHapticSystem } from '../lib/haptics/system';
 import { searchCities } from '../data/no-cities';
 import { searchAddress } from '../lib/geocode/nominatim';
-import { DISCLAIMER_FULL } from '../lib/copy/disclaimer';
 import { OnboardingBabyHero } from './onboarding/OnboardingBabyHero';
+import {
+  OnboardingMaterialPreference,
+} from './onboarding/OnboardingMaterialPreference';
+import {
+  onboardingCopyFor,
+  materialPreferenceLabel,
+  type OnboardingCopy,
+  type SelectableMaterialPreference,
+} from './onboarding/onboarding-copy';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Konstanter
@@ -73,21 +82,18 @@ const AVATAR_COLOR_DEFAULT = '#C25450';
  */
 const MASCOT_STANDING_SRC = `${import.meta.env.BASE_URL}monter/maskot-staaende-cut-360.webp`;
 
-const MONTHS_NB = [
-  'januar', 'februar', 'mars', 'april', 'mai', 'juni',
-  'juli', 'august', 'september', 'oktober', 'november', 'desember',
-];
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Typer
 // ─────────────────────────────────────────────────────────────────────────────
 
+export type OnboardingStep = 1 | 2 | 3 | 4 | 5 | 6;
+
 export type OnboardingScreenProps = {
   /** Valgfri callback når onboarding er fullført (etter velkomst-skjerm). */
   onComplete?: () => void;
+  /** Deterministisk startsteg for server-renderte forhåndsvisninger og tester. */
+  initialStep?: OnboardingStep;
 };
-
-type Step = 1 | 2 | 3 | 4 | 5; // 5 = velkomst (post-complete) → inn i appen (første anbefaling før paywall, R7 Task 7)
 
 type LocationState = {
   city: string;
@@ -129,18 +135,18 @@ function ageInMonths(d: number, m: number, y: number): number | null {
   return Math.max(0, months);
 }
 
-function formatAge(months: number | null): string {
+function formatAge(months: number | null, copy: OnboardingCopy): string {
   if (months === null) return '';
-  if (months < 1) return 'under 1 mnd';
-  if (months < 24) return `${months} mnd`;
+  if (months < 1) return copy.age.underOneMonth;
+  if (months < 24) return copy.age.months(months);
   const years = Math.floor(months / 12);
   const rem = months % 12;
-  if (rem === 0) return `${years} år`;
-  return `${years} år ${rem} mnd`;
+  if (rem === 0) return copy.age.years(years);
+  return copy.age.yearsAndMonths(years, rem);
 }
 
-function formatDOBLong(d: number, m: number, y: number): string {
-  return `${d}. ${MONTHS_NB[m - 1] ?? ''} ${y}`.trim();
+function formatDOBLong(d: number, m: number, y: number, copy: OnboardingCopy): string {
+  return copy.formatLongDate(d, copy.months[m - 1] ?? '', y).trim();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -227,13 +233,15 @@ function LayersIcon() {
   );
 }
 export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
-  const { onComplete } = props;
+  const { onComplete, initialStep = 1 } = props;
   const { completeOnboarding } = useChildren();
   const { reducedMotion } = useNativeSettings();
   const { fire } = useHapticSystem();
+  const { i18n } = useTranslation();
+  const copy = onboardingCopyFor(i18n.resolvedLanguage ?? i18n.language);
 
   // ─── Step + felt-state ───────────────────────────────────────────────────
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<OnboardingStep>(initialStep);
   const [stepDirection, setStepDirection] = useState<'forward' | 'backward'>('forward');
 
   const [name, setName] = useState<string>('');
@@ -252,6 +260,8 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   });
   const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [locationConfirmed, setLocationConfirmed] = useState(false);
+  const [materialPreference, setMaterialPreference] =
+    useState<SelectableMaterialPreference>('best_for_conditions');
   // Sted-typeahead (full APG-combobox, a11y-clearance 2026-07-12)
   const [showManual, setShowManual] = useState<boolean>(false);
   const [locQuery, setLocQuery] = useState<string>('');
@@ -279,24 +289,24 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   useWeather(location.lat, location.lon);
 
   // ─── Step-navigasjon ─────────────────────────────────────────────────────
-  const advanceStep = useCallback((lastStep: Step) => {
+  const advanceStep = useCallback((lastStep: OnboardingStep) => {
     setStepDirection('forward');
-    setStep((current) => (current < lastStep ? ((current + 1) as Step) : current));
+    setStep((current) => (current < lastStep ? ((current + 1) as OnboardingStep) : current));
   }, []);
 
   const goNext = useCallback(() => {
     fire('medium').catch(() => {});
-    advanceStep(5);
+    advanceStep(6);
   }, [advanceStep, fire]);
 
   const goBack = useCallback(() => {
     setStepDirection('backward');
     fire('light').catch(() => {});
-    setStep((s) => (s > 1 ? ((s - 1) as Step) : s));
+    setStep((s) => (s > 1 ? ((s - 1) as OnboardingStep) : s));
   }, [fire]);
 
   const goEdit = useCallback(
-    (target: Step) => {
+    (target: OnboardingStep) => {
       setStepDirection('backward');
       fire('selection').catch(() => {});
       setStep(target);
@@ -315,7 +325,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocation({
-          city: 'Din posisjon',
+          city: copy.step3.currentPosition,
           lat: Number(pos.coords.latitude.toFixed(4)),
           lon: Number(pos.coords.longitude.toFixed(4)),
           accuracy: pos.coords.accuracy ? Math.round(pos.coords.accuracy) : null,
@@ -330,7 +340,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
     );
-  }, [fire]);
+  }, [copy.step3.currentPosition, fire]);
 
   const selectDate = useCallback((isoDate: string) => {
     const [y, m, d] = isoDate.split('-');
@@ -404,13 +414,14 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
       lat: location.lat,
       lon: location.lon,
       color: AVATAR_COLOR_DEFAULT,
+      materialPreference,
     });
     fire('success').catch(() => {});
     setStepDirection('forward');
-    setStep(5); // velkomst-hero
-  }, [nameOk, dobIsValid, locationConfirmed, nameTrim, dobISO, location, completeOnboarding, fire]);
+    setStep(6); // velkomst-hero
+  }, [nameOk, dobIsValid, locationConfirmed, nameTrim, dobISO, location, materialPreference, completeOnboarding, fire]);
 
-  // R7 Task 7: velkomst-steget (5) tar brukeren rett inn i appen — første
+  // R7 Task 7: velkomst-steget (6) tar brukeren rett inn i appen — første
   // ekte anbefaling vises FØR noen paywall. Plus introduseres kontekstuelt
   // inne i appen, ikke som et pre-verdi-steg i onboardingen.
   const handleEnterApp = useCallback(() => {
@@ -418,10 +429,10 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
     onComplete?.();
   }, [fire, onComplete]);
 
-  // ─── A11y: ESC tilbake (kun steg 2-4) ────────────────────────────────────
+  // ─── A11y: ESC tilbake (kun steg 2-5) ────────────────────────────────────
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape' && step > 1 && step < 5) {
+      if (ev.key === 'Escape' && step > 1 && step < 6) {
         goBack();
       }
     };
@@ -430,26 +441,32 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
   }, [step, goBack]);
 
   // ─── Render ──────────────────────────────────────────────────────────────
-  const totalSteps = 4;
+  const totalSteps = 5;
+  const childName = nameTrim || copy.childFallback;
+  const childNameCapitalized = nameTrim || copy.childFallbackCapitalized;
+  const formattedAge = formatAge(ageM, copy);
+  const step2Title = copy.step2.title(childName);
+  const step5Title = copy.step5.title(childName);
+  const step6Title = copy.step6.title(childName);
   const ariaLive: CSSProperties = { position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 };
 
   return (
     <>
       <style>{STYLE_CSS}</style>
       <main
-        className={`ob-screen step-${step}${step === 5 ? ' welcome' : ''}${step === 1 ? ' intro-hero' : ''}`}
+        className={`ob-screen step-${step}${step === 6 ? ' welcome' : ''}${step === 1 ? ' intro-hero' : ''}`}
         data-step-direction={stepDirection}
         data-reduced-motion={reducedMotion ? 'true' : 'false'}
         aria-labelledby="ob-title"
       >
         {/* ─── TOP BAR ─── */}
         <div className="ob-topbar">
-          {step === 1 || step === 5 ? (
+          {step === 1 || step === 6 ? (
             <button type="button" className="ob-top-back ghost" aria-hidden="true" tabIndex={-1}>
               <ChevronLeft />
             </button>
           ) : (
-            <button type="button" className="ob-top-back" onClick={goBack} aria-label="Tilbake">
+            <button type="button" className="ob-top-back" onClick={goBack} aria-label={copy.navigation.back}>
               <ChevronLeft />
             </button>
           )}
@@ -473,14 +490,14 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
             KUN på det aktive segmentet (docs/mocks/monter/
             onboarding-steg1-v2.html: kun segment[0] får .done ved steg 1),
             ikke en akkumulerende "fullført"-fylling. */}
-        {step < 5 && (
+        {step < 6 && (
           <div
             className="ob-seg-progress"
             role="progressbar"
             aria-valuenow={step}
             aria-valuemin={1}
             aria-valuemax={totalSteps}
-            aria-label={`Steg ${step} av ${totalSteps}`}
+            aria-label={copy.navigation.progress(step, totalSteps)}
           >
             {Array.from({ length: totalSteps }, (_, i) => (
               <i key={i} className={i === step - 1 ? 'active' : ''} aria-hidden="true" />
@@ -514,12 +531,12 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                   draggable={false}
                 />
 
-                <section className="ob-s1-card" aria-label="Navn eller kallenavn">
-                  <h1 id="ob-title" className="ob-s1-h1">Hvem kler vi på?</h1>
-                  <p className="ob-s1-sub">Bruk navn eller kallenavn hvis du vil gjøre rådene personlige.</p>
+                <section className="ob-s1-card" aria-label={copy.step1.cardAriaLabel}>
+                  <h1 id="ob-title" className="ob-s1-h1">{copy.step1.title}</h1>
+                  <p className="ob-s1-sub">{copy.step1.intro}</p>
 
                   <div className="ob-field ob-s1-field">
-                    <label htmlFor="ob-name-input">Navn eller kallenavn · Valgfritt</label>
+                    <label htmlFor="ob-name-input">{copy.step1.fieldLabel}</label>
                     {/* P10.1 (judge finding D4): the leading person-icon inside
                         the input is NOT in the contract (onboarding-steg1-v2.html's
                         `<input>` has no icon) — amber is action-only, and a
@@ -533,7 +550,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                         inputMode="text"
                         autoComplete="off"
                         autoCapitalize="words"
-                        placeholder="F.eks. Iver"
+                        placeholder={copy.step1.placeholder}
                         value={name}
                         // §11: feltet autofokuseres IKKE (tastaturet tvinges
                         // ikke opp) — ingen autoFocus-prop her, med vilje.
@@ -550,15 +567,17 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                         usann om enheten forelderen holder i hånden. En
                         personvernpåstand er den dårligste å ta feil om, så
                         formuleringen er enhetsnøytral nå. */}
-                    <div id="ob-name-hint" className="ob-hint">Brukes bare i teksten og lagres bare på denne telefonen.</div>
+                    <div id="ob-name-hint" className="ob-hint">{copy.step1.privacyHint}</div>
                   </div>
 
                   {/* §11: "tomrommet gjør arbeid" — dempet forhåndsvisning av
                       hva navnet faktisk påvirker, oppdatert live fra feltet. */}
                   <div className="ob-s1-preview">
-                    <span className="ob-s1-preview-tag">Navnet brukes i rådene</span>
+                    <span className="ob-s1-preview-tag">{copy.step1.previewLabel}</span>
                     <span className="ob-s1-preview-line">
-                      «Da er vi klare for <span className="ob-s1-preview-named">{nameTrim || 'babyen'}</span>»
+                      {copy.step1.previewBefore}
+                      <span className="ob-s1-preview-named">{childName}</span>
+                      {copy.step1.previewAfter}
                     </span>
                   </div>
                 </section>
@@ -574,19 +593,19 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               />
 
               <div className="ob-copy">
-                <p className="ob-eyebrow">Alder</p>
+                <p className="ob-eyebrow">{copy.step2.eyebrow}</p>
                 <h1 id="ob-title" className="ob-h2">
-                  Når er {nameTrim || 'babyen'} <em>født</em>?
+                  {step2Title.before}<em>{step2Title.emphasis}</em>{step2Title.after}
                 </h1>
-                <p>Alder påvirker hvor varmt barnet bør kles.</p>
+                <p>{copy.step2.intro}</p>
               </div>
 
               <label className={`ob-date-picker${dobIsValid ? ' selected' : ''}`} htmlFor="ob-birth-date">
                 <span className="ob-date-icon" aria-hidden="true"><CalendarIcon /></span>
                 <span className="ob-date-copy">
-                  <span className="ob-date-label">Fødselsdato</span>
+                  <span className="ob-date-label">{copy.step2.dateLabel}</span>
                   <span className="ob-date-value">
-                    {dobIsValid ? formatDOBLong(dNum, mNum, yNum) : 'Velg dato'}
+                    {dobIsValid ? formatDOBLong(dNum, mNum, yNum, copy) : copy.step2.chooseDate}
                   </span>
                 </span>
                 <ChevronRight />
@@ -604,10 +623,12 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               <div id="ob-age-hint" className="ob-hint ob-hint-center" aria-live="polite">
                 {dobIsValid ? (
                   <>
-                    {nameTrim || 'Babyen'} er <strong>{formatAge(ageM)}</strong> gammel
+                    {copy.step2.selectedAgePrefix(childNameCapitalized)}
+                    <strong>{formattedAge}</strong>
+                    {copy.step2.selectedAgeSuffix}
                   </>
                 ) : (
-                  <>Den vanlige datovelgeren på telefonen åpnes.</>
+                  <>{copy.step2.pickerHint}</>
                 )}
               </div>
             </>
@@ -621,11 +642,11 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               />
 
               <div className="ob-copy">
-                <p className="ob-eyebrow">Hjemsted</p>
+                <p className="ob-eyebrow">{copy.step3.eyebrow}</p>
                 <h1 id="ob-title" className="ob-h2">
-                  Hvor er dere <em>hjemme</em>?
+                  {copy.step3.title.before}<em>{copy.step3.title.emphasis}</em>{copy.step3.title.after}
                 </h1>
-                <p>Gratisversjonen gir dagens råd for ett fast hjemsted.</p>
+                <p>{copy.step3.intro}</p>
               </div>
 
               <div className="ob-loc-card">
@@ -634,18 +655,18 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                   <div className="ob-loc-id">
                     <div className="ob-loc-city">{location.city}</div>
                     <div className="ob-loc-coord">
-                      Brukes som hjemsted for dagens vær
+                      {copy.step3.homeWeatherHint}
                     </div>
                   </div>
                 </div>}
                 <div className="ob-loc-actions">
                   <button type="button" onClick={requestLocation} disabled={locationStatus === 'loading'}>
                     <PinIcon />
-                    {locationStatus === 'loading' ? 'Finner stedet…' : 'Bruk posisjonen min'}
+                    {locationStatus === 'loading' ? copy.step3.locating : copy.step3.useMyPosition}
                   </button>
                   <button type="button" onClick={() => setShowManual((v) => !v)}>
                     <SearchIcon />
-                    Søk etter sted
+                    {copy.step3.searchPlace}
                   </button>
                 </div>
 
@@ -659,14 +680,14 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                         aria-controls="ob-loc-listbox"
                         aria-activedescendant={locActive >= 0 ? `ob-loc-opt-${locActive}` : undefined}
                         aria-autocomplete="list"
-                        aria-label="Søk etter by eller sted"
-                        placeholder="Søk, f.eks. Trondheim"
+                        aria-label={copy.step3.searchInputLabel}
+                        placeholder={copy.step3.searchPlaceholder}
                         value={locQuery}
                         onChange={(e) => onLocInput(e.target.value)}
                         onKeyDown={onLocKeyDown}
                         autoComplete="off"
                       />
-                      <ul id="ob-loc-listbox" role="listbox" className="ob-combo-list" aria-label="Steder">
+                      <ul id="ob-loc-listbox" role="listbox" className="ob-combo-list" aria-label={copy.step3.placesLabel}>
                         {locResults.map((r, i) => (
                           <li
                             key={`${r.city}-${r.lat}`}
@@ -680,15 +701,15 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
                           </li>
                         ))}
                         {locQuery.trim().length >= 2 && locResults.length === 0 && (
-                          <li className="ob-combo-none" aria-hidden="true">Søker … skriv gjerne mer</li>
+                          <li className="ob-combo-none" aria-hidden="true">{copy.step3.searchMore}</li>
                         )}
                       </ul>
                     </div>
                     <div className="ob-sr-only" role="status" aria-live="polite">
                       {locResults.length > 0
-                        ? `${locResults.length} ${locResults.length === 1 ? 'treff' : 'treff'}`
+                        ? copy.step3.resultCount(locResults.length)
                         : locQuery.trim().length >= 2
-                          ? 'Ingen treff ennå'
+                          ? copy.step3.noResultsYet
                           : ''}
                     </div>
                   </div>
@@ -696,7 +717,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
                 {locationStatus === 'error' && (
                   <div className="ob-loc-error" role="status">
-                    Posisjon er ikke tilgjengelig. Søk etter hjemstedet i stedet.
+                    {copy.step3.error}
                   </div>
                 )}
               </div>
@@ -705,51 +726,89 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
           {step === 4 && (
             <>
+              <div className="ob-copy ob-material-copy">
+                <p className="ob-eyebrow">
+                  {copy.material.eyebrow}
+                </p>
+                <h1 id="ob-title" className="ob-h2">
+                  {copy.material.title}
+                </h1>
+                <p>{copy.material.intro}</p>
+              </div>
+
+              <OnboardingMaterialPreference
+                value={materialPreference}
+                onChange={(next) => {
+                  setMaterialPreference(next);
+                  fire('selection').catch(() => {});
+                }}
+              />
+
+              <p className="ob-material-reassurance">
+                {copy.material.reassurance}
+              </p>
+            </>
+          )}
+
+          {step === 5 && (
+            <>
               <OnboardingBabyHero
                 variant="compact"
                 context="ready"
               />
 
               <div className="ob-copy">
-                <p className="ob-eyebrow">Nesten ferdig</p>
+                <p className="ob-eyebrow">{copy.step5.eyebrow}</p>
                 <h1 id="ob-title" className="ob-h2">
-                  Alt er <em>klart</em> for {nameTrim || 'babyen'}
+                  {step5Title.before}<em>{step5Title.emphasis}</em>{step5Title.after}
                 </h1>
-                <p>Kontroller opplysningene før Babyora lager det første rådet.</p>
+                <p>{copy.step5.intro}</p>
               </div>
 
-              <ul className="ob-summary" aria-label="Sammendrag">
+              <ul className="ob-summary" aria-label={copy.step5.summaryLabel}>
                 <li className="ob-sum-row">
                   <span className="ob-sum-icon" aria-hidden="true"><UserIcon /></span>
                   <div className="ob-sum-text">
-                    <span className="ob-sum-label">Navn</span>
+                    <span className="ob-sum-label">{copy.step5.nameLabel}</span>
                     <span className="ob-sum-value">{nameTrim || '—'}</span>
                   </div>
-                  <button className="ob-sum-edit" type="button" onClick={() => goEdit(1)} aria-label="Endre navn">
+                  <button className="ob-sum-edit" type="button" onClick={() => goEdit(1)} aria-label={copy.step5.editName}>
                     <EditIcon />
                   </button>
                 </li>
                 <li className="ob-sum-row">
                   <span className="ob-sum-icon" aria-hidden="true"><CalendarIcon /></span>
                   <div className="ob-sum-text">
-                    <span className="ob-sum-label">Bursdag</span>
+                    <span className="ob-sum-label">{copy.step5.birthdayLabel}</span>
                     <span className="ob-sum-value">
                       {dobIsValid
-                        ? `${formatDOBLong(dNum, mNum, yNum)} · ${formatAge(ageM)}`
+                        ? `${formatDOBLong(dNum, mNum, yNum, copy)} · ${formattedAge}`
                         : '—'}
                     </span>
                   </div>
-                  <button className="ob-sum-edit" type="button" onClick={() => goEdit(2)} aria-label="Endre bursdag">
+                  <button className="ob-sum-edit" type="button" onClick={() => goEdit(2)} aria-label={copy.step5.editBirthday}>
                     <EditIcon />
                   </button>
                 </li>
                 <li className="ob-sum-row">
                   <span className="ob-sum-icon" aria-hidden="true"><PinIcon /></span>
                   <div className="ob-sum-text">
-                    <span className="ob-sum-label">Sted</span>
+                    <span className="ob-sum-label">{copy.step5.placeLabel}</span>
                     <span className="ob-sum-value">{location.city}</span>
                   </div>
-                  <button className="ob-sum-edit" type="button" onClick={() => goEdit(3)} aria-label="Endre sted">
+                  <button className="ob-sum-edit" type="button" onClick={() => goEdit(3)} aria-label={copy.step5.editPlace}>
+                    <EditIcon />
+                  </button>
+                </li>
+                <li className="ob-sum-row">
+                  <span className="ob-sum-icon" aria-hidden="true"><LayersIcon /></span>
+                  <div className="ob-sum-text">
+                    <span className="ob-sum-label">{copy.step5.materialLabel}</span>
+                    <span className="ob-sum-value">
+                      {materialPreferenceLabel(materialPreference, copy.material)}
+                    </span>
+                  </div>
+                  <button className="ob-sum-edit" type="button" onClick={() => goEdit(4)} aria-label={copy.step5.editMaterial}>
                     <EditIcon />
                   </button>
                 </li>
@@ -757,15 +816,15 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
               {/* R7 Task 7: eksplisitt lokal-først-forklaring før første bruk. */}
               <p className="ob-hint ob-hint-center">
-                Opplysningene lagres på enheten og kan endres når som helst.
+                {copy.step5.localStorageHint}
               </p>
 
               {/* Veiledende-disclaimer (eierbeslutning 2026-07-15). */}
-              <p className="ob-hint ob-hint-center">{DISCLAIMER_FULL}</p>
+              <p className="ob-hint ob-hint-center">{copy.step5.disclaimer}</p>
             </>
           )}
 
-          {step === 5 && (
+          {step === 6 && (
             <>
               <OnboardingBabyHero
                 variant="welcome"
@@ -773,29 +832,29 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               />
 
               <div className="ob-welcome-greet">
-                <p className="ob-eyebrow">Babyora er klar</p>
+                <p className="ob-eyebrow">{copy.step6.eyebrow}</p>
                 <h1 id="ob-title" className="ob-h2-hero">
-                  Dagens råd er klart for <em>{nameTrim || 'babyen'}</em>
+                  {step6Title.before}<em>{step6Title.emphasis}</em>{step6Title.after}
                 </h1>
                 <p>
-                  Basert på alder, hjemsted og været akkurat nå.
+                  {copy.step6.intro}
                 </p>
               </div>
 
-              <ul className="ob-feats" aria-label="Det vi gjør for deg">
+              <ul className="ob-feats" aria-label={copy.step6.featuresLabel}>
                 <li className="ob-feat">
                   <span className="ob-feat-icon sun" aria-hidden="true"><SunIcon /></span>
                   <div className="ob-feat-text">
-                    <div className="ob-feat-title">I dag · {location.city}</div>
-                    <div className="ob-feat-sub">Lokalt vær fra MET.</div>
+                    <div className="ob-feat-title">{copy.step6.todayAt(location.city)}</div>
+                    <div className="ob-feat-sub">{copy.step6.localWeather}</div>
                   </div>
                 </li>
                 <li className="ob-feat">
                   <span className="ob-feat-icon" aria-hidden="true"><LayersIcon /></span>
                   <div className="ob-feat-text">
-                    <div className="ob-feat-title">Plagg i riktig rekkefølge</div>
+                    <div className="ob-feat-title">{copy.step6.layersTitle}</div>
                     <div className="ob-feat-sub">
-                      Tilpasset {formatAge(ageM)} og dagens forhold.
+                      {copy.step6.layersDescription(formattedAge)}
                     </div>
                   </div>
                 </li>
@@ -807,9 +866,9 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
 
         {/* sr-only status for screen-readers */}
         <span aria-live="polite" style={ariaLive}>
-          {step === 5
-            ? 'Onboarding fullført. Velkommen.'
-            : `Steg ${step} av ${totalSteps}`}
+          {step === 6
+            ? copy.navigation.completed
+            : copy.navigation.progress(step, totalSteps)}
         </span>
 
         {/* ─── BOTTOM CTA ─── */}
@@ -829,7 +888,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               type="button"
               onClick={goNext}
             >
-              Fortsett <ChevronRight />
+              {copy.actions.continue} <ChevronRight />
             </button>
           )}
 
@@ -841,7 +900,7 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               disabled={!dobIsValid}
               aria-disabled={!dobIsValid}
             >
-              Fortsett <ChevronRight />
+              {copy.actions.continue} <ChevronRight />
             </button>
           )}
 
@@ -853,11 +912,24 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               disabled={!locationConfirmed}
               aria-disabled={!locationConfirmed}
             >
-              {locationConfirmed ? `Fortsett med ${location.city}` : 'Velg hjemsted'} <ChevronRight />
+              {locationConfirmed
+                ? copy.actions.continueWithPlace(location.city)
+                : copy.actions.chooseHome}{' '}
+              <ChevronRight />
             </button>
           )}
 
           {step === 4 && (
+            <button
+              className="ob-btn-primary"
+              type="button"
+              onClick={goNext}
+            >
+              {copy.actions.continue} <ChevronRight />
+            </button>
+          )}
+
+          {step === 5 && (
             <button
               className="ob-btn-primary giant"
               type="button"
@@ -865,14 +937,14 @@ export function OnboardingScreen(props: OnboardingScreenProps): ReactElement {
               disabled={!nameOk || !dobIsValid || !locationConfirmed}
               aria-disabled={!nameOk || !dobIsValid || !locationConfirmed}
             >
-              Lag første antrekk <ChevronRight />
+              {copy.actions.createFirstOutfit} <ChevronRight />
             </button>
           )}
 
-          {step === 5 && (
+          {step === 6 && (
             <>
               <button className="ob-btn-primary giant" type="button" onClick={handleEnterApp}>
-                Vis dagens antrekk <ChevronRight />
+                {copy.actions.showTodayOutfit} <ChevronRight />
               </button>
             </>
           )}
@@ -1455,6 +1527,61 @@ mask-image: var(--dw-fade-bunn);}
 .ob-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip:rect(0 0 0 0);white-space:nowrap;border:0;}
 
+/* ── MATERIALPREFERANSE ── */
+.ob-material-copy{margin-top:var(--dw-space-18);}
+.ob-material-options{
+  margin:var(--dw-space-18) 0 0;padding:0;border:0;
+  display:flex;flex-direction:column;gap:var(--dw-space-8);
+}
+.ob-material-option{
+  position:relative;
+  display:flex;align-items:flex-start;gap:var(--dw-space-12);
+  min-height:88px;padding:var(--dw-space-12) var(--dw-space-14);
+  border:1px solid var(--ob-line);border-radius:16px;
+  background:var(--ob-surface-raised);cursor:pointer;
+  box-shadow:inset 0 1px 0 var(--dw-plate-kant);
+  transition:border-color var(--dw-m-state) var(--dw-ease),
+    background var(--dw-m-state) var(--dw-ease);
+}
+.ob-material-option.selected{
+  border-color:var(--ob-terracotta-600);
+  background:color-mix(in srgb, var(--ob-terracotta-100) 46%, var(--ob-surface-raised));
+}
+.ob-material-option input{
+  position:absolute;inset:0;width:100%;height:100%;margin:0;
+  opacity:0;cursor:pointer;
+}
+.ob-material-marker{
+  position:relative;flex:none;width:20px;height:20px;margin:2px 0 0;
+  border:2px solid var(--ob-ink-500);border-radius:50%;
+  box-sizing:border-box;background:var(--ob-surface-raised);
+  pointer-events:none;
+}
+.ob-material-option.selected .ob-material-marker{
+  border-color:var(--ob-terracotta-600);
+}
+.ob-material-option.selected .ob-material-marker::after{
+  content:'';position:absolute;inset:4px;border-radius:50%;
+  background:var(--ob-terracotta-600);
+}
+.ob-material-option input:focus-visible + .ob-material-marker{
+  outline:3px solid var(--dw-focus);outline-offset:3px;
+}
+.ob-material-option-copy{min-width:0;display:flex;flex:1;flex-direction:column;gap:var(--dw-space-8);}
+.ob-material-option-heading{display:flex;flex-direction:column;gap:2px;}
+.ob-material-option-heading strong{font-size:15px;line-height:1.2;color:var(--ob-ink-900);}
+.ob-material-option-heading > span{font-size:12.5px;line-height:1.35;color:var(--ob-ink-700);}
+.ob-material-balance{display:grid;grid-template-columns:1fr 1fr;gap:var(--dw-space-10);}
+.ob-material-balance > span{font-size:11.5px;line-height:1.3;color:var(--ob-ink-500);}
+.ob-material-balance strong{
+  display:block;margin-bottom:1px;font-size:10px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ob-ink-700);
+}
+.ob-material-reassurance{
+  margin:var(--dw-space-12) auto 0;max-width:360px;text-align:center;
+  font-size:12.5px;line-height:1.4;color:var(--ob-ink-500);
+}
+
 /* ── SUMMARY ── */
 /* D1: .ob-sum-row + .ob-sum-row skiller radene med en hårstrek. Hårstreken
    forutsetter en hevet gruppeflate under seg — listen henter derfor fyllet
@@ -1846,6 +1973,9 @@ mask-image: var(--dw-fade-bunn);}
   .ob-h2{font-size:28px;}
   .ob-h2-hero{font-size:32px;}
   .ob-field,.ob-date-picker,.ob-loc-card,.ob-summary{margin-top:var(--dw-space-12);}
+  .ob-material-copy,.ob-material-options{margin-top:var(--dw-space-10);}
+  .ob-material-option{min-height:78px;padding:var(--dw-space-10) var(--dw-space-12);}
+  .ob-material-option-copy{gap:var(--dw-space-6);}
   .ob-hint-center{margin-top:var(--dw-space-8);}
   .ob-screen > .ob-cta-zone{padding-top:var(--dw-space-8);}
   .ob-screen.step-4 .ob-baby-hero{display:none;}

@@ -13,9 +13,13 @@
  */
 import type { ReactNode } from 'react';
 import './hjem-monter.css';
+import {
+  hjemCopyFor,
+  type HjemActivity,
+} from './hjem-copy.js';
 
 export type WeatherNuance = 'clear' | 'cloudy' | 'rain' | 'snow' | 'night';
-export type MonterActivity = 'utelek' | 'vogn';
+export type MonterActivity = HjemActivity;
 
 function ChevronIcon() {
   return (
@@ -34,12 +38,8 @@ function ClockIcon() {
   );
 }
 
-const ACTIVITY_TOGGLE_LABEL: Readonly<Record<MonterActivity, string>> = {
-  utelek: 'Utenfor vogn',
-  vogn: 'I vogn',
-};
-
 export type WeatherSceneProps = Readonly<{
+  language?: string | null;
   cityLabel: string;
   nuance: WeatherNuance;
   /** null → «henter vær»-tilstand (stiplet temperatur, ingen ikon). */
@@ -87,6 +87,7 @@ function formatTempDisplay(tempC: number | null): string {
 }
 
 export function WeatherScene({
+  language,
   cityLabel,
   nuance,
   tempC,
@@ -106,8 +107,9 @@ export function WeatherScene({
   onActivityChange,
   children,
 }: WeatherSceneProps) {
+  const copy = hjemCopyFor(language);
   return (
-    <section className="hjm-panel" data-nuance={nuance} aria-label={`Været nå i ${cityLabel}`}>
+    <section className="hjm-panel" data-nuance={nuance} aria-label={copy.weather.panelAria(cityLabel)}>
       <div className="hjm-loc-row">
         {locInteractive ? (
           <button
@@ -164,18 +166,18 @@ export function WeatherScene({
 
       <p className="hjm-feels" style={dimmed ? { color: 'var(--dw-ink-mid)' } : undefined}>
         {feelsLikeC === null ? (
-          'Henter vær …'
+          copy.weather.fetching
         ) : (
           <>
-            {`Føles som ${formatTempDisplay(feelsLikeC)}°`}
+            {copy.weather.feelsLike(formatTempDisplay(feelsLikeC))}
             {conditionText ? <span className="hjm-cond">{` · ${conditionText}`}</span> : null}
           </>
         )}
       </p>
       {noteText ? <p className="hjm-note">{noteText}</p> : null}
 
-      <div className="hjm-toggle" role="radiogroup" aria-label="Aktivitet">
-        {(Object.keys(ACTIVITY_TOGGLE_LABEL) as MonterActivity[]).map((value) => (
+      <div className="hjm-toggle" role="radiogroup" aria-label={copy.weather.activityAria}>
+        {(Object.keys(copy.activity) as MonterActivity[]).map((value) => (
           <button
             key={value}
             type="button"
@@ -183,7 +185,7 @@ export function WeatherScene({
             aria-checked={activity === value}
             onClick={() => onActivityChange(value)}
           >
-            {ACTIVITY_TOGGLE_LABEL[value]}
+            {copy.activity[value].toggle}
           </button>
         ))}
       </div>

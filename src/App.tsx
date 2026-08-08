@@ -23,6 +23,7 @@ import {
 } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { AnimatePresence, motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 import type { FamilieToolTarget, GuideTarget, TabKey } from './types/nav';
 import { useChildren } from './state/children-store';
 import { useTheme } from './state/theme-store';
@@ -183,6 +184,8 @@ const OnboardingScreen = lazy(() =>
  * uten å bryte prefers-reduced-motion (ingen animasjon).
  */
 function RouteSkeleton(): ReactElement {
+  const { t } = useTranslation();
+
   return (
     <div
       role="status"
@@ -193,15 +196,15 @@ function RouteSkeleton(): ReactElement {
         background: 'var(--bg-canvas)',
       }}
     >
-      <span className="sr-only">Laster skjerm …</span>
+      <span className="sr-only">{t('app.loadingScreen')}</span>
     </div>
   );
 }
 
-const TAB_TITLES: Record<TabKey, string> = {
-  hjem: 'Hjem · Babyora',
-  plan: 'Planlegg · Babyora',
-  familie: 'Familie · Babyora',
+const TAB_TITLE_KEYS: Record<TabKey, string> = {
+  hjem: 'app.pageTitle.home',
+  plan: 'app.pageTitle.plan',
+  familie: 'app.pageTitle.family',
 };
 
 /**
@@ -270,6 +273,8 @@ function useClosePlannedDrillOnAccess({
 }
 
 export default function App(): ReactElement {
+  const { t } = useTranslation();
+
   /* ÅPNINGSFLATEN slippes her, ikke i main.tsx. Forskjellen er reell:
      main.tsx kaller `render()`, men React har ikke MALT noe på det
      tidspunktet. Slipper man der, forsvinner flaten før det ligger noe under.
@@ -316,10 +321,6 @@ export default function App(): ReactElement {
   });
 
   useEffect(() => {
-    document.documentElement.lang = 'nb';
-  }, []);
-
-  useEffect(() => {
     if (Capacitor.isNativePlatform()) return;
     const syncPersistedEntitlement = (event: StorageEvent) => {
       if (event.key !== 'babyora.subscription') return;
@@ -342,8 +343,8 @@ export default function App(): ReactElement {
   }, [themeMode]);
 
   useEffect(() => {
-    document.title = TAB_TITLES[tab];
-  }, [tab]);
+    document.title = t(TAB_TITLE_KEYS[tab]);
+  }, [t, tab]);
 
   // P9 (duel §8 — paywall-armering): "Planlegg" (i morgen og resten av uken)
   // er den fremste låsemerkede verdihandlingen etter at gratis-vinduet er
@@ -803,7 +804,7 @@ export default function App(): ReactElement {
           overlay kun når onboarding er fullført + første anbefaling er vist
           + brukeren ikke er Premium — se AppPaywallGate.tsx. */}
       <AppPaywallGate onboardingDone={onboardingDone} />
-      <a href="#main" className="skip-link">Hopp til hovedinnhold</a>
+      <a href="#main" className="skip-link">{t('app.skipToMain')}</a>
       <main id="main" tabIndex={-1} ref={mainRef}>
         {reducedMotion ? (
           <Suspense fallback={<RouteSkeleton />}>{routeContent}</Suspense>

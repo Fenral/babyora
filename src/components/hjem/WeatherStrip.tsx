@@ -10,6 +10,7 @@
  */
 import './hjem-monter.css';
 import type { WeatherNuance } from './WeatherScene.js';
+import { hjemCopyFor } from './hjem-copy.js';
 
 function AdjustChevron() {
   return (
@@ -26,6 +27,7 @@ export type WeatherStripProps = Readonly<{
   conditionLabel: string;
   cityLabel: string;
   activityToggleLabel: string;
+  language?: string | null;
   onAdjust: () => void;
 }>;
 
@@ -41,24 +43,26 @@ export function WeatherStrip({
   conditionLabel,
   cityLabel,
   activityToggleLabel,
+  language,
   onAdjust,
 }: WeatherStripProps) {
+  const copy = hjemCopyFor(language);
   return (
     <button
       type="button"
       className="hjm-strip"
       data-nuance={nuance}
-      aria-label="Juster vær, sted eller aktivitet"
+      aria-label={copy.weather.adjustAria}
       onClick={onAdjust}
     >
       <span className="hjm-s-temp">{formatTempDisplay(tempC)}°</span>
       <span className="hjm-s-meta">
-        {`Føles som ${formatTempDisplay(feelsLikeC)}° · ${conditionLabel}`}
+        {`${copy.weather.feelsLike(formatTempDisplay(feelsLikeC))} · ${conditionLabel}`}
         <br />
         {`${cityLabel} · ${activityToggleLabel}`}
       </span>
       <span className="hjm-s-adjust" aria-hidden="true">
-        Juster
+        {copy.weather.adjust}
         <AdjustChevron />
       </span>
     </button>

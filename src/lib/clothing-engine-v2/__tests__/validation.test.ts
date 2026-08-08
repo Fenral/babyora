@@ -72,6 +72,22 @@ describe('Motor 2.0 input validation', () => {
     expect(validated.materialPreference).toBe('best_for_conditions');
   });
 
+  it('aksepterer prefer_fleece som en gyldig materialpreferanse', () => {
+    expect(
+      validateRecommendInputV2(
+        validInput({ materialPreference: 'prefer_fleece' }),
+      ).materialPreference,
+    ).toBe('prefer_fleece');
+  });
+
+  it('aksepterer prefer_cotton som en gyldig materialpreferanse', () => {
+    expect(
+      validateRecommendInputV2(
+        validInput({ materialPreference: 'prefer_cotton' }),
+      ).materialPreference,
+    ).toBe('prefer_cotton');
+  });
+
   it.each([
     ['feelsLikeC', { tempC: 4, feelsLikeC: Number.NaN, windMs: 3, precipMmH: 0 }],
     ['tempC', { tempC: Number.POSITIVE_INFINITY, feelsLikeC: 2, windMs: 3, precipMmH: 0 }],

@@ -72,6 +72,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactElement,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useChildren } from '../state/children-store';
 import { useWeather } from '../hooks/useWeather';
 import { useHapticSystem } from '../lib/haptics/system';
@@ -90,8 +91,7 @@ import type { GarmentId } from '../data/garment-illustrations';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
 import { VerticalGauge } from '../components/instrument/VerticalGauge';
 import {
-  formatEnDesimal,
-  INSTRUMENT_MAX_C, INSTRUMENT_MIN_C, instrumentValueText, snapDegree,
+  INSTRUMENT_MAX_C, INSTRUMENT_MIN_C, snapDegree,
 } from '../components/instrument/instrument-logic';
 import '../components/hjem/hjem-monter.css';
 import { MonterGarmentRow } from '../components/hjem/MonterGarmentRow';
@@ -104,7 +104,6 @@ import {
 } from '../components/hjem/scan-orchestration';
 import { seedFromPrefill, type FinnAntrekkPrefill } from './finn-antrekk-prefill';
 import {
-  ctaLabelFor,
   nextPhaseAfterParamChange,
   resultDemotedFor,
   showCtaFor,
@@ -112,6 +111,7 @@ import {
   type CalcPhase,
   type CommittedParams,
 } from './finn-antrekk-calc';
+import { deepFlowCopyFor, localeTagFor, localizedGarmentDisplayName } from './deep-flow-copy';
 
 export type { FinnAntrekkPrefill };
 
@@ -169,10 +169,11 @@ function headerLinjer(
   childName: string,
   ageMonths: number | null,
   placeLabel: string | undefined,
+  copy: ReturnType<typeof deepFlowCopyFor>,
 ): readonly [string, string] {
-  const hvem = ageMonths === null ? childName : `${childName}, ${ageMonths} mnd`;
+  const hvem = ageMonths === null ? childName : `${childName}, ${copy.common.months(ageMonths)}`;
   const sted = stedsnavnUtenModus(placeLabel);
-  return [hvem, sted === null ? 'Været nå' : `${sted} · været nå`] as const;
+  return [hvem, sted === null ? copy.finn.weatherNow : copy.finn.weatherAtPlace(sted)] as const;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -230,18 +231,6 @@ function formatTemp(c: number): string {
   return `${rounded}°`;
 }
 
-function tempBandHeadline(c: number): string {
-  const b = tempBandText(c);
-  switch (b) {
-    case 'frost': return 'frost';
-    case 'kjølig': return 'kald';
-    case 'mildt': return 'mild';
-    case 'varmt': return 'varm';
-    case 'tropisk': return 'tropisk';
-    default: return b;
-  }
-}
-
 /* ──────────────────────────────────────────────────────────────────────────
    Temp-akse (Sone 2 — samme terskler som HjemScreen: kald <5°, varm >18°).
    Kalkulatoren utforsker jo temperatur, så data-temp-hint er tillatt her.
@@ -268,21 +257,21 @@ function tempAxisFor(tempC: number): TempAxis {
    ────────────────────────────────────────────────────────────────────────── */
 
 /** Én alltid-synlig hvorfor-linje, f.eks. «Føles som −9° · vind krever vindtett ytterlag». */
-function buildWhyLine(tempC: number, windMs: number, precipMmH: number, activityUi: ActivityUi): string {
-  const parts: string[] = [`Føles som ${formatTemp(tempC)}`];
+function buildWhyLine(tempC: number, windMs: number, precipMmH: number, activityUi: ActivityUi, copy: ReturnType<typeof deepFlowCopyFor>): string {
+  const parts: string[] = [copy.finn.feelsLike(formatTemp(tempC))];
 
   if (windMs >= 6) {
-    parts.push('vind krever vindtett ytterlag');
+    parts.push(copy.finn.windNeedsShell);
   } else if (tempC < -10) {
-    parts.push('frost krever fullt ullsett');
+    parts.push(copy.finn.frostNeedsWool);
   }
 
   if (precipMmH > 0) {
-    parts.push('nedbør krever vanntett yttertøy');
+    parts.push(copy.finn.rainNeedsShell);
   }
 
   if (activityUi === 'vogn') {
-    parts.push('i vogn lager barnet ikke egen varme');
+    parts.push(copy.finn.strollerNoHeat);
   }
 
   return parts.join(' · ');
@@ -295,28 +284,33 @@ function buildWhyDetails(
   precipMmH: number,
   activityUi: ActivityUi,
   garmentCount: number,
+  copy: ReturnType<typeof deepFlowCopyFor>,
+  language: string,
 ): string[] {
+  const tempBandIndex = tempC < -10 ? 0 : tempC < 0 ? 1 : tempC < 10 ? 2 : tempC < 22 ? 3 : 4;
+  const windBandIndex = windMs <= 1 ? 0 : windMs <= 4 ? 1 : windMs <= 7 ? 2 : windMs <= 10 ? 3 : 4;
+  const precipitationBandIndex = precipMmH === 0 ? 0 : precipMmH <= 1 ? 1 : precipMmH <= 4 ? 2 : precipMmH <= 7 ? 3 : 4;
   const details: string[] = [
-    `Temperaturen føles som ${formatTemp(tempC)} (${tempBandText(tempC)}) — det avgjør hvor mange lag som trengs.`,
+    copy.finn.whyTemperature(formatTemp(tempC), copy.finn.tempBands[tempBandIndex]),
   ];
 
   if (windMs >= 6) {
-    details.push(`Vind på ${windMs} m/s (${windBandText(windMs)}) krever et vindtett ytterlag.`);
+    details.push(copy.finn.whyStrongWind(windMs, copy.finn.windBands[windBandIndex]));
   } else if (windMs > 1) {
-    details.push(`Vind på ${windMs} m/s (${windBandText(windMs)}) er tatt med i beregningen.`);
+    details.push(copy.finn.whyWindIncluded(windMs, copy.finn.windBands[windBandIndex]));
   }
 
   if (precipMmH > 0) {
-    details.push(`${formatEnDesimal(precipMmH)} mm/t nedbør (${precipBandText(precipMmH)}) krever vanntett yttertøy.`);
+    details.push(copy.finn.whyRain(new Intl.NumberFormat(localeTagFor(language), { maximumFractionDigits: 1 }).format(precipMmH), copy.finn.precipitationBands[precipitationBandIndex]));
   }
 
   if (activityUi === 'vogn') {
-    details.push('Barnet ligger stille i vogn og produserer ikke egen varme — det kompenseres med et ekstra lag.');
+    details.push(copy.finn.whyStroller);
   } else {
-    details.push('Barnet er i aktiv lek og lager egen varme — det er tatt med i beregningen.');
+    details.push(copy.finn.whyActive);
   }
 
-  details.push(`Til sammen gir dette ${garmentCount} ${garmentCount === 1 ? 'plagg' : 'plagg'}, tilpasset ${tempBandHeadline(tempC)} vær.`);
+  details.push(copy.finn.whySummary(garmentCount, copy.finn.weatherHeadlines[tempBandIndex]));
 
   return details;
 }
@@ -408,6 +402,9 @@ const GAUGE_FILL_BOTTOM = 'var(--dw-panel)';
 const GAUGE_FILL_TOP = 'var(--dw-w-clear)';
 
 export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): ReactElement {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const copy = deepFlowCopyFor(language);
   const { active, needsOnboarding } = useChildren();
   const { fire } = useHapticSystem();
   const { reducedMotion } = useNativeSettings();
@@ -674,17 +671,27 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
 
   // RESULT = THE CLOTHES — samme avledning/presentasjon som Hjems egen
   // resultatflate (deriveResultRows + MonterGarmentRow, se filhode).
-  const rows = useMemo(() => deriveResultRows(committedRecommendation), [committedRecommendation]);
+  const rows = useMemo(() => deriveResultRows(committedRecommendation).map((row) => ({
+    ...row,
+    displayLabel: localizedGarmentDisplayName(row.label, language),
+    roleLabel: row.roleLabel === 'Innerst'
+      ? copy.outfit.categories.innerst
+      : row.roleLabel === 'Mellomlag'
+        ? copy.outfit.categories.mellomlag
+        : row.roleLabel === 'Ytterst'
+          ? copy.outfit.categories.yttertoy
+          : copy.outfit.categories.ekstra,
+  })), [committedRecommendation, copy, language]);
 
   const committedWhyLine = useMemo(
-    () => (committed ? buildWhyLine(committed.tempC, committed.windMs, committed.precipMmH, committed.activityUi) : ''),
-    [committed],
+    () => (committed ? buildWhyLine(committed.tempC, committed.windMs, committed.precipMmH, committed.activityUi, copy) : ''),
+    [committed, copy],
   );
   const committedWhyDetails = useMemo(
     () => (committed
-      ? buildWhyDetails(committed.tempC, committed.windMs, committed.precipMmH, committed.activityUi, rows.length)
+      ? buildWhyDetails(committed.tempC, committed.windMs, committed.precipMmH, committed.activityUi, rows.length, copy, language)
       : []),
-    [committed, rows.length],
+    [committed, rows.length, copy, language],
   );
 
   /* ────── Handlers ────── */
@@ -750,13 +757,13 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
     }
   }
 
-  const childName = active.name && active.name.trim().length > 0 ? active.name : 'barnet';
+  const childName = active.name && active.name.trim().length > 0 ? active.name : copy.common.childFallback;
   // P5: drill-appropriate header — når skjermen er åpnet SOM "Juster"-
   // drillen (prefill gitt) heter den "Juster", ikke "Finn antrekk". Tilbake-
   // knappen selv er uendret (onBack er allerede satt opp av App.tsx til å
   // returnere til Hjems cachede resultat — se App.tsx sin Drill-union).
   const isDrillContext = prefill !== undefined;
-  const screenTitle = isDrillContext ? 'Juster' : 'Finn antrekk';
+  const screenTitle = isDrillContext ? copy.finn.adjust : copy.finn.findOutfit;
   // P10/JOB4: "juster og se svaret endre seg" fjernet — CTA-en (ikke live
   // sliderdrag) er nå det som faktisk beregner svaret.
   // 2026-08-06: én firedelt streng brakk over tre linjer — se `headerLinjer`.
@@ -764,9 +771,10 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
     childName,
     needsOnboarding || !active.dob ? null : ageMonths,
     prefill?.placeLabel,
+    copy,
   );
 
-  const ctaLabel = ctaLabelFor(phase);
+  const ctaLabel = phase === 'stale' ? copy.finn.calculateAgain : copy.finn.calculate;
   const showCta = showCtaFor(phase);
   const showResult = showResultFor(committed);
   const resultDemoted = resultDemotedFor(phase);
@@ -775,18 +783,22 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
   // handleFindOutfit. Fallbacken til de live verdiene er defensiv/aldri
   // reelt nådd (scanSnapshot settes alltid FØR phase blir 'scanning').
   const scanRows = scanSnapshot ?? { tempC, windMs, precipMmH, activityUi };
+  const formatDecimal = (value: number) => new Intl.NumberFormat(
+    localeTagFor(language),
+    { minimumFractionDigits: 1, maximumFractionDigits: 1 },
+  ).format(value);
 
   return (
     <main style={rootStyle} className="ba-temp-root" data-temp={tempAxis} aria-label={screenTitle}>
       <h1 style={srOnlyStyle}>
-        {isDrillContext ? 'Juster antrekket for barnet ditt' : 'Finn antrekk for barnet ditt'}
+        {isDrillContext ? copy.finn.adjustHeading : copy.finn.findHeading}
       </h1>
 
       <header style={topbarStyle}>
         <button
           type="button"
           onClick={handleBack}
-          aria-label="Tilbake"
+          aria-label={copy.common.back}
           className="ba-press"
           style={backButtonStyle(reducedMotion)}
         >
@@ -835,12 +847,12 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
               cityLabel={prefill?.placeLabel ?? childName}
               nuance="cloudy"
               rows={[
-                { label: 'Temperatur', value: formatTemp(scanRows.tempC) },
-                { label: 'Vind', value: `${scanRows.windMs} m/s` },
-                { label: 'Nedbør', value: `${formatEnDesimal(scanRows.precipMmH)} mm/t` },
+                { label: copy.finn.temperature, value: formatTemp(scanRows.tempC) },
+                { label: copy.finn.wind, value: `${scanRows.windMs} m/s` },
+                { label: copy.finn.precipitation, value: `${formatDecimal(scanRows.precipMmH)} mm/t` },
               ] as const}
-              spinningLabel="Lag for lag"
-              spinningValue="setter sammen…"
+              spinningLabel={copy.finn.layerByLayer}
+              spinningValue={copy.finn.assembling}
               totalDurationMs={FULL_SCAN_DURATION_MS}
               reducedMotion={reducedMotion}
               outfitTransitionStatus="idle"
@@ -853,15 +865,15 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
                 Samme komponent som Hjem, ikke en kopi: to seremonier som skal
                 være like, men vedlikeholdes hver for seg, blir ulike. */}
             <ScanStatusBlock
-              headline="Regner ut antrekket…"
-              subline="Tar bare et lite øyeblikk."
+              headline={copy.finn.calculating}
+              subline={copy.finn.calculatingSubline}
               onSkip={handleSkip}
               outfitTransitionStatus="idle"
             />
           </div>
         ) : (
           <section aria-labelledby="finn-instrument-label">
-            <h2 id="finn-instrument-label" style={srOnlyStyle}>Vær-instrumenter</h2>
+            <h2 id="finn-instrument-label" style={srOnlyStyle}>{copy.finn.weatherInstruments}</h2>
             {/* Reuses `.hjm-panel` (hjem-monter.css, already imported) for the
                 petrol background/radius/edge-light `::before` — box-shadow is
                 overridden inline since `.hjm-panel`'s own shadow token
@@ -871,70 +883,70 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
             <div className="hjm-panel" style={gaugePanelStyle}>
               <div style={gaugeRowStyle}>
                 <VerticalGauge
-                  label="Temperatur"
+                  label={copy.finn.temperature}
                   valueLabel={formatTemp(tempC)}
                   min={INSTRUMENT_MIN_C}
                   max={INSTRUMENT_MAX_C}
                   step={1}
                   value={snapDegree(tempC)}
                   onChange={(v) => handleSliderChange('temp', tempBandText, setTempC, v)}
-                  ariaLabel="Temperatur i celsius"
-                  ariaValueText={instrumentValueText(tempC, tempBandText(tempC))}
+                  ariaLabel={copy.finn.temperatureAria}
+                  ariaValueText={copy.finn.temperatureValue(formatTemp(tempC), copy.finn.tempBands[tempC < -10 ? 0 : tempC < 0 ? 1 : tempC < 10 ? 2 : tempC < 22 ? 3 : 4])}
                   minLabel={`${INSTRUMENT_MIN_C}°`}
                   maxLabel={`${INSTRUMENT_MAX_C}°`}
                   fillBottomColor={GAUGE_FILL_BOTTOM}
                   fillTopColor={GAUGE_FILL_TOP}
                   material="thermal"
                   reducedMotion={reducedMotion}
-                  incrementLabel="Én grad varmere"
-                  decrementLabel="Én grad kaldere"
+                  incrementLabel={copy.finn.oneDegreeWarmer}
+                  decrementLabel={copy.finn.oneDegreeColder}
                   height={GAUGE_HEIGHT}
                   baselineValue={weatherBaseline?.tempC ?? null}
-                  baselineLabel={weatherBaseline ? `Faktisk vær nå: ${formatTemp(weatherBaseline.tempC)}` : undefined}
+                  baselineLabel={weatherBaseline ? copy.finn.actualWeatherNow(formatTemp(weatherBaseline.tempC)) : undefined}
                 />
                 <VerticalGauge
-                  label="Vind"
+                  label={copy.finn.wind}
                   valueLabel={`${windMs} m/s`}
                   min={0}
                   max={15}
                   step={1}
                   value={windMs}
                   onChange={(v) => handleSliderChange('vind', windBandText, setWindMs, v)}
-                  ariaLabel="Vindstyrke i meter per sekund"
-                  ariaValueText={`${windMs} meter per sekund, ${windBandText(windMs)}`}
+                  ariaLabel={copy.finn.windAria}
+                  ariaValueText={copy.finn.windValue(windMs, copy.finn.windBands[windMs <= 1 ? 0 : windMs <= 4 ? 1 : windMs <= 7 ? 2 : windMs <= 10 ? 3 : 4])}
                   minLabel="0"
                   maxLabel="15 m/s"
                   fillBottomColor={GAUGE_FILL_BOTTOM}
                   fillTopColor={GAUGE_FILL_TOP}
                   material="air"
                   reducedMotion={reducedMotion}
-                  incrementLabel="Sterkere vind"
-                  decrementLabel="Svakere vind"
+                  incrementLabel={copy.finn.strongerWind}
+                  decrementLabel={copy.finn.weakerWind}
                   height={GAUGE_HEIGHT}
                   baselineValue={weatherBaseline?.windMs ?? null}
-                  baselineLabel={weatherBaseline ? `Faktisk vær nå: ${weatherBaseline.windMs} m/s` : undefined}
+                  baselineLabel={weatherBaseline ? copy.finn.actualWeatherNow(`${weatherBaseline.windMs} m/s`) : undefined}
                 />
                 <VerticalGauge
-                  label="Nedbør"
-                  valueLabel={`${formatEnDesimal(precipMmH)} mm/t`}
+                  label={copy.finn.precipitation}
+                  valueLabel={`${formatDecimal(precipMmH)} mm/t`}
                   min={0}
                   max={10}
                   step={0.5}
                   value={precipMmH}
                   onChange={(v) => handleSliderChange('nedbor', precipBandText, setPrecipMmH, v)}
-                  ariaLabel="Nedbør i millimeter per time"
-                  ariaValueText={`${formatEnDesimal(precipMmH)} millimeter per time, ${precipBandText(precipMmH)}`}
+                  ariaLabel={copy.finn.precipitationAria}
+                  ariaValueText={copy.finn.precipitationValue(formatDecimal(precipMmH), copy.finn.precipitationBands[precipMmH === 0 ? 0 : precipMmH <= 1 ? 1 : precipMmH <= 4 ? 2 : precipMmH <= 7 ? 3 : 4])}
                   minLabel="0"
                   maxLabel="10 mm/t"
                   fillBottomColor={GAUGE_FILL_BOTTOM}
                   fillTopColor={GAUGE_FILL_TOP}
                   material="water"
                   reducedMotion={reducedMotion}
-                  incrementLabel="Mer nedbør"
-                  decrementLabel="Mindre nedbør"
+                  incrementLabel={copy.finn.morePrecipitation}
+                  decrementLabel={copy.finn.lessPrecipitation}
                   height={GAUGE_HEIGHT}
                   baselineValue={weatherBaseline?.precipMmH ?? null}
-                  baselineLabel={weatherBaseline ? `Faktisk vær nå: ${formatEnDesimal(weatherBaseline.precipMmH)} mm/t` : undefined}
+                  baselineLabel={weatherBaseline ? copy.finn.actualWeatherNow(`${formatDecimal(weatherBaseline.precipMmH)} mm/t`) : undefined}
                 />
               </div>
             </div>
@@ -943,7 +955,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
 
         {/* AKTIVITET — 2-knapps radiogroup med roving-tabindex */}
         <section aria-labelledby="finn-aktivitet-label">
-          <p id="finn-aktivitet-label" style={eyebrowStyle}>Aktivitet</p>
+          <p id="finn-aktivitet-label" style={eyebrowStyle}>{copy.finn.activity}</p>
           <div
             role="radiogroup"
             aria-labelledby="finn-aktivitet-label"
@@ -968,7 +980,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
                   className="ba-press"
                   style={activityButtonStyle(isActive, reducedMotion)}
                 >
-                  {opt.label}
+                  {opt.ui === 'lek' ? copy.finn.outsideStroller : copy.finn.inStroller}
                 </button>
               );
             })}
@@ -994,7 +1006,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
             </button>
             <p className="hjm-trust">
               <CheckIcon />
-              Temperatur, vind og nedbør vurderes sammen
+              {copy.finn.trust}
             </p>
           </div>
         ) : null}
@@ -1017,7 +1029,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
                 id="finn-output-label"
                 style={{ ...outputTitleStyle, ...demotedTextStyle(resultDemoted, reducedMotion) }}
               >
-                Antrekket
+                {copy.finn.outfit}
               </h2>
               {/* IKKE aria-hidden lenger. Linjen bar før bare dekor (antall +
                   aktivitet), og demoteringen var ren opacity — altså usynlig
@@ -1025,8 +1037,8 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
                   informasjon: den eneste beskjeden om at svaret ikke gjelder
                   parametrene som står på skjermen. */}
               <span style={{ ...outputMetaStyle, ...demotedTextStyle(resultDemoted, reducedMotion) }}>
-                {resultDemoted ? 'Utdatert · ' : ''}
-                {rows.length} plagg · {(committedActivityOption ?? selectedActivity).label.toLowerCase()}
+                {resultDemoted ? `${copy.finn.outdated} · ` : ''}
+                {copy.common.garments(rows.length)} · {(committedActivityOption ?? selectedActivity).ui === 'lek' ? copy.finn.outsideStroller.toLocaleLowerCase(localeTagFor(language)) : copy.finn.inStroller.toLocaleLowerCase(localeTagFor(language))}
               </span>
             </div>
 
@@ -1045,7 +1057,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
             </ol>
 
             <div className="hjm-prev" style={explanationBoxStyle}>
-              <span className="hjm-p-label">HVORFOR</span>
+              <span className="hjm-p-label">{copy.finn.why}</span>
               <p className="hjm-p-text">{committedWhyLine}.</p>
 
               <button
@@ -1056,7 +1068,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
                 className="ba-press"
                 style={whyToggleStyle(reducedMotion)}
               >
-                {whyExpanded ? 'Skjul hvorfor' : 'Vis hvorfor'}
+                {whyExpanded ? copy.finn.hideWhy : copy.finn.showWhy}
                 <ChevronDown expanded={whyExpanded} />
               </button>
 
@@ -1071,7 +1083,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
               )}
 
               <p style={kildeLineStyle}>
-                Basert på norske helsesøster-råd · TOG-standarden · vær fra met.no
+                {copy.finn.sources}
               </p>
             </div>
           </section>

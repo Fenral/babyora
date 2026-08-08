@@ -22,6 +22,7 @@
  */
 import './paakledning.css';
 import { useEffect, useRef, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Recommendation } from '../lib/wool-layers/types';
 import { tempAxisFor } from '../lib/temp-axis';
 import type { PlannedOutfitContext } from '../lib/planning/planned-outfit-context';
@@ -32,6 +33,12 @@ import type {
   RegisterOutfitRow,
 } from '../lib/outfit/outfit-transition-contract';
 import { OutfitTruthPanel } from '../components/outfit/OutfitTruthPanel';
+import {
+  deepFlowCopyFor,
+  localeTagFor,
+  localizedGarmentDisplayName,
+  type DeepFlowCopy,
+} from './deep-flow-copy';
 
 /* ──────────────────────────────────────────────────────────────────────────
    Public props
@@ -91,31 +98,13 @@ function CloseIcon(): ReactElement {
    Værbasert «Hvorfor»-oppsummering
    ────────────────────────────────────────────────────────────────────────── */
 
-function symbolToLabel(symbolCode: string | undefined): string {
-  if (!symbolCode) return 'været i dag';
+function symbolToLabel(
+  symbolCode: string | undefined,
+  copy: DeepFlowCopy['planned'],
+): string {
+  if (!symbolCode) return copy.weatherFallback;
   const base = symbolCode.replace(/_(day|night|polartwilight)$/, '');
-  switch (base) {
-    case 'clearsky': return 'klarvær';
-    case 'fair': return 'lettskyet';
-    case 'partlycloudy': return 'delvis skyet';
-    case 'cloudy': return 'skyet';
-    case 'fog': return 'tåke';
-    case 'lightrain':
-    case 'lightrainshowers': return 'lett regn';
-    case 'rain':
-    case 'rainshowers': return 'regn';
-    case 'heavyrain':
-    case 'heavyrainshowers': return 'kraftig regn';
-    case 'lightsnow':
-    case 'lightsnowshowers': return 'lett snø';
-    case 'snow':
-    case 'snowshowers': return 'snø';
-    case 'heavysnow':
-    case 'heavysnowshowers': return 'kraftig snø';
-    case 'sleet':
-    case 'sleetshowers': return 'sludd';
-    default: return 'været i dag';
-  }
+  return copy.weather[base] ?? copy.weatherFallback;
 }
 
 
@@ -146,6 +135,10 @@ function PlannedPaakledningScreen({
   plannedContext: PlannedOutfitContext;
   contextKind: 'current' | 'planned';
 }): ReactElement {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const copy = deepFlowCopyFor(language);
+  const localeTag = localeTagFor(language);
   const dialogRef = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {
@@ -176,7 +169,7 @@ function PlannedPaakledningScreen({
   // enabled shell deliberately presents the same route-owned context as the
   // compatibility shell; it never derives weather, access, or garments from
   // the panel bundle.
-  const plannedDateTime = new Intl.DateTimeFormat('nb-NO', {
+  const plannedDateTime = new Intl.DateTimeFormat(localeTag, {
     timeZone: plannedContext.timeZone,
     weekday: 'long',
     day: 'numeric',
@@ -184,22 +177,17 @@ function PlannedPaakledningScreen({
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(plannedContext.plannedForIso));
-  const activityLabel: Record<PlannedOutfitContext['activity'], string> = {
-    vogn: 'Vogn',
-    baeresele: 'Bæresele',
-    utelek: 'Utelek',
-    soevn: 'Søvn',
-  };
+  const activityLabel = copy.planned.activities as Record<PlannedOutfitContext['activity'], string>;
   const vognLabel = plannedContext.vognMode === 'sleeping'
-    ? 'sovende'
+    ? copy.planned.sleeping
     : plannedContext.vognMode === 'awake'
-      ? 'våken'
+      ? copy.planned.awake
       : null;
-  const weatherLabel = symbolToLabel(plannedContext.weather.symbolCode);
+  const weatherLabel = symbolToLabel(plannedContext.weather.symbolCode, copy.planned);
   const isCurrentContext = contextKind === 'current';
   const accessLabel = plannedContext.access.allowed
-    ? isCurrentContext ? 'Dagens antrekk er tilgjengelig' : 'Planen er tilgjengelig'
-    : `Planen er ikke tilgjengelig (${plannedContext.access.reason})`;
+    ? isCurrentContext ? copy.planned.availableToday : copy.planned.availablePlan
+    : copy.planned.unavailablePlan;
 
   // Entitlement is a route boundary, not an Outfit-panel capability. It must
   // therefore win even when a caller also holds an exact process-local bundle.
@@ -216,7 +204,7 @@ function PlannedPaakledningScreen({
               type="button"
               className="pkl-close"
               onClick={onBack}
-              aria-label="Lukk planlagt antrekk"
+              aria-label={copy.planned.closePlanned}
             >
               <CloseIcon />
             </button>
@@ -224,11 +212,11 @@ function PlannedPaakledningScreen({
               id="planned-outfit-title"
               className="pkl-title"
             >
-              Planlagt antrekk er ikke tilgjengelig
+              {copy.planned.unavailableTitle}
             </h2>
           </header>
           <p className="pkl-brodtekst-dempet">
-            Tilgangen til fremtidige antrekk er ikke aktiv. Lukk og gå tilbake til Planlegg.
+            {copy.planned.unavailableBody}
           </p>
         </div>
       </dialog>
@@ -253,13 +241,13 @@ function PlannedPaakledningScreen({
               type="button"
               className="pkl-close"
               onClick={onBack}
-              aria-label={isCurrentContext ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
+              aria-label={isCurrentContext ? copy.planned.closeToday : copy.planned.closePlanned}
             >
               <CloseIcon />
             </button>
             <div>
               <p className="pkl-etikett">
-                {isCurrentContext ? 'Dagens antrekk' : 'Planlagt antrekk'}
+                {isCurrentContext ? copy.planned.todayOutfit : copy.planned.plannedOutfit}
               </p>
               <h2
                 id="planned-outfit-title"
@@ -271,7 +259,7 @@ function PlannedPaakledningScreen({
           </header>
 
           <section
-            aria-label={isCurrentContext ? 'Dagens situasjon' : 'Planlagt situasjon'}
+            aria-label={isCurrentContext ? copy.planned.todaySituation : copy.planned.plannedSituation}
             className="pkl-plate"
           >
             <p className="pkl-naa">
@@ -282,9 +270,12 @@ function PlannedPaakledningScreen({
               {vognLabel ? ` · ${vognLabel}` : ''}
             </p>
             <p className="pkl-detalj">
-              {plannedContext.child.ageMonths} mnd · {weatherLabel} ·{' '}
-              {Math.round(plannedContext.weather.tempC)}° (føles som{' '}
-              {Math.round(plannedContext.weather.feelsLikeC)}°)
+              {copy.planned.ageWeather(
+                plannedContext.child.ageMonths,
+                weatherLabel,
+                Math.round(plannedContext.weather.tempC),
+                Math.round(plannedContext.weather.feelsLikeC),
+              )}
             </p>
           </section>
 
@@ -299,11 +290,14 @@ function PlannedPaakledningScreen({
             aria-labelledby="planned-why-title"
             className="pkl-plate-myk pkl-luft"
           >
-            <h3 id="planned-why-title">Hvorfor dette antrekket?</h3>
+            <h3 id="planned-why-title">{copy.planned.whyTitle}</h3>
             <p className="pkl-brodtekst">
-              {isCurrentContext ? 'Antrekket' : 'Planen'} er laget for {weatherLabel.toLocaleLowerCase('nb-NO')}, vind på{' '}
-              {plannedContext.weather.windMs.toLocaleString('nb-NO')} m/s og nedbør på{' '}
-              {plannedContext.weather.precipMmH.toLocaleString('nb-NO')} mm/t.
+              {copy.planned.why(
+                isCurrentContext ? copy.planned.outfitSubject : copy.planned.planSubject,
+                weatherLabel.toLocaleLowerCase(localeTag),
+                plannedContext.weather.windMs.toLocaleString(localeTag),
+                plannedContext.weather.precipMmH.toLocaleString(localeTag),
+              )}
             </p>
           </section>
         </div>
@@ -327,13 +321,13 @@ function PlannedPaakledningScreen({
             type="button"
             className="pkl-close"
             onClick={onBack}
-            aria-label={isCurrentContext ? 'Lukk dagens antrekk' : 'Lukk planlagt antrekk'}
+            aria-label={isCurrentContext ? copy.planned.closeToday : copy.planned.closePlanned}
           >
             <CloseIcon />
           </button>
           <div>
             <p className="pkl-etikett">
-              {isCurrentContext ? 'Dagens antrekk' : 'Planlagt antrekk'}
+              {isCurrentContext ? copy.planned.todayOutfit : copy.planned.plannedOutfit}
             </p>
             <h2
               id="planned-outfit-title"
@@ -345,7 +339,7 @@ function PlannedPaakledningScreen({
         </header>
 
         <section
-          aria-label={isCurrentContext ? 'Dagens situasjon' : 'Planlagt situasjon'}
+          aria-label={isCurrentContext ? copy.planned.todaySituation : copy.planned.plannedSituation}
           className="pkl-plate"
         >
           <p className="pkl-naa">
@@ -356,9 +350,12 @@ function PlannedPaakledningScreen({
             {vognLabel ? ` · ${vognLabel}` : ''}
           </p>
           <p className="pkl-detalj">
-            {plannedContext.child.ageMonths} mnd · {weatherLabel} ·{' '}
-            {Math.round(plannedContext.weather.tempC)}° (føles som{' '}
-            {Math.round(plannedContext.weather.feelsLikeC)}°)
+            {copy.planned.ageWeather(
+              plannedContext.child.ageMonths,
+              weatherLabel,
+              Math.round(plannedContext.weather.tempC),
+              Math.round(plannedContext.weather.feelsLikeC),
+            )}
           </p>
         </section>
 
@@ -367,19 +364,19 @@ function PlannedPaakledningScreen({
           className="pkl-plate"
         >
           <h3 id="planned-garments-title" className="pkl-overskrift-liste">
-            Påkledningsrekkefølge
+            {copy.planned.dressingOrder}
           </h3>
           <ol className="pkl-liste">
             {plannedContext.recommendation.orderedGarments.map((garment) => (
-              <li key={garment}>{garment}</li>
+              <li key={garment}>{localizedGarmentDisplayName(garment, language)}</li>
             ))}
           </ol>
           {plannedContext.recommendation.equipment.length > 0 && (
             <>
-              <h3 className="pkl-utstyr">Utstyr</h3>
+              <h3 className="pkl-utstyr">{copy.planned.equipment}</h3>
               <ul className="pkl-liste">
                 {plannedContext.recommendation.equipment.map((item) => (
-                  <li key={item}>{item}</li>
+                  <li key={item}>{localizedGarmentDisplayName(item, language)}</li>
                 ))}
               </ul>
             </>
@@ -390,14 +387,17 @@ function PlannedPaakledningScreen({
           aria-labelledby="planned-why-title"
           className="pkl-plate-myk"
         >
-          <h3 id="planned-why-title">Hvorfor dette antrekket?</h3>
+          <h3 id="planned-why-title">{copy.planned.whyTitle}</h3>
           <p className="pkl-brodtekst">
-            {isCurrentContext ? 'Antrekket' : 'Planen'} er laget for {weatherLabel.toLocaleLowerCase('nb-NO')}, vind på{' '}
-            {plannedContext.weather.windMs.toLocaleString('nb-NO')} m/s og nedbør på{' '}
-            {plannedContext.weather.precipMmH.toLocaleString('nb-NO')} mm/t.
+            {copy.planned.why(
+              isCurrentContext ? copy.planned.outfitSubject : copy.planned.planSubject,
+              weatherLabel.toLocaleLowerCase(localeTag),
+              plannedContext.weather.windMs.toLocaleString(localeTag),
+              plannedContext.weather.precipMmH.toLocaleString(localeTag),
+            )}
           </p>
           <p className="sr-only">
-            {accessLabel}. Tilgang: {plannedContext.access.capability}.
+            {accessLabel}.
           </p>
         </section>
       </div>

@@ -61,9 +61,11 @@ describe('nedbørsverdien skrives norsk, og skilletegnet har ikke sifferbredde',
       'toFixed er tilbake på nedbørverdien. Den tar ingen lokalitet og skriver '
       + 'engelsk punktum uansett hvilket språk resten av flaten er på.',
     ).toBe(false);
-    expect(src).toContain('formatEnDesimal(precipMmH)');
-    expect(src).toContain('formatEnDesimal(scanRows.precipMmH)');
-    expect(src).toContain('formatEnDesimal(weatherBaseline.precipMmH)');
+    expect(src).toContain('localeTagFor(language)');
+    expect(src).toContain('minimumFractionDigits: 1, maximumFractionDigits: 1');
+    expect(src).toContain('formatDecimal(precipMmH)');
+    expect(src).toContain('formatDecimal(scanRows.precipMmH)');
+    expect(src).toContain('formatDecimal(weatherBaseline.precipMmH)');
   });
 
   it('den synlige avlesningen og skjermleserteksten sier begge «0,0»', () => {

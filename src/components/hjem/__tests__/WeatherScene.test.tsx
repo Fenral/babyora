@@ -4,6 +4,7 @@ import { WeatherScene } from '../WeatherScene.js';
 
 function baseProps() {
   return {
+    language: 'no',
     cityLabel: 'Trondheim',
     nuance: 'rain' as const,
     tempC: 4,

@@ -1,149 +1,150 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import type { ComponentProps } from 'react';
+import i18next from 'i18next';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import type { WhyContext } from '../../../data/garment-info.js';
 import { ResultSurface } from '../ResultSurface.js';
+import { resultCopyFor } from '../result-localization.js';
 import type { ResultRow } from '../result-rows.js';
 
 function row(overrides: Partial<ResultRow>): ResultRow {
-  // T1A: displayLabel er det UI faktisk viser (result-rows.ts avleder den
-  // fra visningsnavn-kilden); testen speiler label når intet annet er gitt.
   const base = {
-    key: 'k1', position: 1, label: 'Langermet ullbody', roleLabel: 'Innerst', garmentId: 'langermet-ullbody',
+    key: 'k1',
+    position: 1,
+    label: 'langermet ullbody',
+    roleLabel: 'Innerst',
+    garmentId: 'langermet-ullbody',
     ...overrides,
   };
   return { displayLabel: base.label, ...base };
 }
 
-describe('ResultSurface', () => {
-  it('renders a real <ol> with one <li> per row (a11y: visible numbering via list semantics)', () => {
-    const rows = [
-      row({ key: 'r1', position: 1, label: 'Langermet ullbody', roleLabel: 'Innerst', garmentId: 'langermet-ullbody' }),
-      row({ key: 'r2', position: 2, label: 'Ullgenser', roleLabel: 'Mellomlag', garmentId: null }),
-    ];
-    const html = renderToStaticMarkup(
-      <ResultSurface
-        rows={rows}
-        childLabel="7 plagg for Lillian, innerst til ytterst"
-        isFresh={false}
-        reducedMotion={false}
-        onSwapRow={vi.fn()}
-        onStartDressing={vi.fn()}
-        startDressingDisabled={false}
-        onWhy={vi.fn()}
-      />,
-    );
+const WHY_CONTEXT: WhyContext = {
+  childName: 'Lillian',
+  activity: 'utelek',
+  tempC: 4,
+  feelsLikeC: 1,
+  windMs: 3,
+  precipMmH: 0.3,
+};
+
+function renderResult(
+  rows: readonly ResultRow[],
+  overrides: Partial<ComponentProps<typeof ResultSurface>> = {},
+): string {
+  const copy = resultCopyFor(i18next.resolvedLanguage);
+  return renderToStaticMarkup(
+    <ResultSurface
+      rows={rows}
+      childLabel={copy.childSummary(rows.length, 'Lillian')}
+      isFresh={false}
+      reducedMotion={false}
+      whyContext={WHY_CONTEXT}
+      onSwapRow={vi.fn()}
+      onWhy={vi.fn()}
+      {...overrides}
+    />,
+  );
+}
+
+describe('ResultSurface — inline plaggreise', () => {
+  it('beholder ekte listestruktur og gjør resultatet til en navngitt karusell', () => {
+    const copy = resultCopyFor(i18next.resolvedLanguage);
+    const html = renderResult([
+      row({ key: 'r1', position: 1 }),
+      row({ key: 'r2', position: 2, label: 'ull-jakke', displayLabel: 'Ulljakke', roleLabel: 'Mellomlag', garmentId: 'ull-jakke' }),
+    ]);
+
     expect(html).toContain('<ol');
-    expect((html.match(/<li class="hjm-row-item"/g) ?? []).length).toBe(2);
-    expect(html).toContain('Dagens antrekk');
-    expect(html).toContain('7 plagg for Lillian, innerst til ytterst');
-    expect(html).toContain('Kle på, steg for steg');
-    expect(html).toContain('Hvorfor akkurat dette?');
+    expect((html.match(/<li class="hjm-journey-card"/g) ?? []).length).toBe(2);
+    expect(html).toContain(`aria-label="${copy.carouselLabel}"`);
+    expect(html).toContain(copy.order(1, 2));
+    expect(html).toContain(copy.hint);
   });
 
-  it('renders a real garment image when a garmentId resolves via monter-assets', () => {
-    const html = renderToStaticMarkup(
-      <ResultSurface
-        rows={[row({ garmentId: 'langermet-ullbody' })]}
-        childLabel="1 plagg"
-        isFresh={false}
-        reducedMotion={false}
-        onSwapRow={vi.fn()}
-        onStartDressing={vi.fn()}
-        startDressingDisabled={false}
-        onWhy={vi.fn()}
-      />,
-    );
-    expect(html).toContain('/monter/plagg-langermet-ullbody.webp');
+  it('er CTA-fri på Hjem, men beholder detalj- og varm/kald-flytene', () => {
+    const copy = resultCopyFor(i18next.resolvedLanguage);
+    const html = renderResult([row({})]);
+    expect(html).not.toContain('class="hjm-cta"');
+    expect(html).toContain(copy.details);
+    expect(html).toContain(copy.whyButton);
   });
 
-  it('falls back to a neutral vitrine placeholder (initial letter, no <img>) when the garment has no image', () => {
-    const html = renderToStaticMarkup(
-      <ResultSurface
-        rows={[row({ label: 'Saueskinn i vogn', garmentId: 'sauekinn-i-vogn' })]}
-        childLabel="1 plagg"
-        isFresh={false}
-        reducedMotion={false}
-        onSwapRow={vi.fn()}
-        onStartDressing={vi.fn()}
-        startDressingDisabled={false}
-        onWhy={vi.fn()}
-      />,
-    );
-    expect(html).not.toContain('<img');
-    expect(html).toMatch(/class="hjm-thumb"[^>]*>S</);
+  it('viser ekte flat WebP også for et tidligere udekket katalogplagg', () => {
+    const html = renderResult([
+      row({ label: 'saueskinn i vogn', displayLabel: 'Saueskinn i vogn', garmentId: 'sauekinn-i-vogn' }),
+    ]);
+    expect(html).toContain('/illustrations/garments/sauekinn-i-vogn.webp');
+    expect(html).not.toMatch(/hjm-thumb[^>]*>S</);
   });
 
-  it('falls back to a placeholder when garmentId itself is null (label not recognised at all)', () => {
-    const html = renderToStaticMarkup(
-      <ResultSurface
-        rows={[row({ label: 'Ukjent plagg', garmentId: null })]}
-        childLabel="1 plagg"
-        isFresh={false}
-        reducedMotion={false}
-        onSwapRow={vi.fn()}
-        onStartDressing={vi.fn()}
-        startDressingDisabled={false}
-        onWhy={vi.fn()}
-      />,
-    );
-    expect(html).not.toContain('<img');
-    expect(html).toContain('>U<');
+  it('viser materialpreferansens fleeceplagg med sine egne motiv', () => {
+    const html = renderResult([
+      row({ key: 'f1', position: 1, label: 'fleecedress', garmentId: 'fleecedress' }),
+      row({ key: 'f2', position: 2, label: 'fleecejakke', garmentId: 'fleecejakke' }),
+      row({ key: 'f3', position: 3, label: 'fleecebukse', garmentId: 'fleecebukse' }),
+    ]);
+    expect(html).toContain('/illustrations/garments/fleecedress.webp');
+    expect(html).toContain('/illustrations/garments/fleecejakke.webp');
+    expect(html).toContain('/illustrations/garments/fleecebukse.webp');
+    expect(html).not.toContain('/illustrations/garments/ull-jakke.webp');
+    expect(html).not.toContain('/illustrations/garments/ull-bukse.webp');
   });
 
-  it('the whole row is one tappable button containing the info affordance ("Detaljer") — never a nested interactive element', () => {
-    const html = renderToStaticMarkup(
-      <ResultSurface
-        rows={[row({})]}
-        childLabel="1 plagg"
-        isFresh={false}
-        reducedMotion={false}
-        onSwapRow={vi.fn()}
-        onStartDressing={vi.fn()}
-        startDressingDisabled={false}
-        onWhy={vi.fn()}
-      />,
-    );
-    expect((html.match(/<button/g) ?? []).length).toBe(3); // 1 row + Kle på + Hvorfor
-    // P10.1 (judge finding C10, "Bytt = ENDRE, always"): the chip opens
-    // PlaggDetailSheet, which is deliberately informational-only (never
-    // performs the swap itself) — "Bytt" was a false promise here.
-    expect(html).toContain('Detaljer');
-    expect(html).not.toContain('>Bytt<');
+  it('gir hvert kort bilde, rekkefølge/rolle, kontekstuell hvorfor og kildebelagt fakta', () => {
+    const copy = resultCopyFor(i18next.resolvedLanguage);
+    const html = renderResult([row({})]);
+    expect(html).toContain('/illustrations/garments/langermet-ullbody.webp');
+    expect(html).toContain(copy.order(1, 1));
+    expect(html).toContain(copy.role('Innerst'));
+    expect(html).toContain(copy.whyTitle);
+    expect(html).toContain('Lillian');
+    expect(html).toContain(copy.factTitle);
+    expect(html).toContain('Woolmark');
+    expect(html).toContain('rel="noopener noreferrer"');
   });
 
-  it('gates the .is-fresh row-in stagger animation on isFresh AND reducedMotion together', () => {
+  it('bruker den nye resultat-posen dekorativt i en eksplisitt assetsøm', () => {
+    const html = renderResult([row({})]);
+    expect(html).toContain('data-result-avatar-seam="true"');
+    expect(html).toContain('/monter/maskot-resultat-sveip.webp');
+    expect(html).toMatch(/maskot-resultat-sveip\.webp" alt=""/);
+  });
+
+  it('gater inngangskoreografien på isFresh og reducedMotion sammen', () => {
     const rows = [row({})];
-    const fresh = renderToStaticMarkup(
-      <ResultSurface rows={rows} childLabel="x" isFresh reducedMotion={false} onSwapRow={vi.fn()} onStartDressing={vi.fn()} startDressingDisabled={false} onWhy={vi.fn()} />,
-    );
+    const fresh = renderResult(rows, { isFresh: true });
     expect(fresh).toContain('data-fresh="true"');
     expect(fresh).toContain('animation-delay:50ms');
 
-    const cachedReopen = renderToStaticMarkup(
-      <ResultSurface rows={rows} childLabel="x" isFresh={false} reducedMotion={false} onSwapRow={vi.fn()} onStartDressing={vi.fn()} startDressingDisabled={false} onWhy={vi.fn()} />,
-    );
-    expect(cachedReopen).toContain('data-fresh="false"');
-    expect(cachedReopen).not.toContain('animation-delay');
+    const cached = renderResult(rows, { isFresh: false });
+    expect(cached).toContain('data-fresh="false"');
+    expect(cached).not.toContain('animation-delay');
 
-    const freshButReducedMotion = renderToStaticMarkup(
-      <ResultSurface rows={rows} childLabel="x" isFresh reducedMotion onSwapRow={vi.fn()} onStartDressing={vi.fn()} startDressingDisabled={false} onWhy={vi.fn()} />,
-    );
-    expect(freshButReducedMotion).toContain('data-fresh="false"');
-    expect(freshButReducedMotion).not.toContain('animation-delay');
+    const reduced = renderResult(rows, { isFresh: true, reducedMotion: true });
+    expect(reduced).toContain('data-fresh="false"');
+    expect(reduced).not.toContain('animation-delay');
   });
 
-  it('disables "Kle på, steg for steg" when startDressingDisabled is true', () => {
-    const html = renderToStaticMarkup(
-      <ResultSurface
-        rows={[row({})]}
-        childLabel="x"
-        isFresh={false}
-        reducedMotion={false}
-        onSwapRow={vi.fn()}
-        onStartDressing={vi.fn()}
-        startDressingDisabled
-        onWhy={vi.fn()}
-      />,
-    );
-    expect(html).toMatch(/class="hjm-cta" disabled=""/);
+  it('bruker native overflow/snap uten pointer-capture eller drag-transform', () => {
+    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
+    const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
+    expect(source).not.toContain('setPointerCapture');
+    expect(source).not.toContain('onPointerMove');
+    expect(source).not.toContain('scrollIntoView');
+    expect(source).toContain('rail.scrollTo({');
+    expect(source).not.toContain('--kps-drag');
+    expect(css).toMatch(/\.hjm-journey-rail\s*\{[\s\S]*?overflow-x:\s*auto;/);
+    expect(css).toMatch(/\.hjm-journey-rail\s*\{[\s\S]*?scroll-snap-type:\s*x mandatory;/);
+    expect(css).toContain('grid-auto-columns: min(84%, 304px)');
+  });
+
+  it('gir navigasjon, detaljer og kildelenke minst 44 px trykkflate', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
+    expect(css).toMatch(/\.hjm-journey-nav-button\s*\{[\s\S]*?width:\s*44px;[\s\S]*?height:\s*44px;/);
+    expect(css).toMatch(/\.hjm-journey-detail\s*\{[\s\S]*?min-height:\s*44px;/);
+    expect(css).toMatch(/\.hjm-journey-fact a\s*\{[\s\S]*?min-height:\s*44px;/);
   });
 });

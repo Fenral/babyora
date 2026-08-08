@@ -22,6 +22,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { InnstillingerScreen } from '../InnstillingerScreen';
 import { ChildrenProvider } from '../../state/children-provider';
+import i18n from '../../i18n';
 
 const FIKSTURBY = 'Trondheim';
 
@@ -46,8 +47,9 @@ function settOppVindu(): void {
 
 let html = '';
 
-beforeAll(() => {
+beforeAll(async () => {
   settOppVindu();
+  await i18n.changeLanguage('no');
   html = renderToStaticMarkup(
     <ChildrenProvider>
       <InnstillingerScreen onNavigate={() => {}} onOpenTool={() => {}} />

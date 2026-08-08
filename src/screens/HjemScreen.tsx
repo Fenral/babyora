@@ -455,9 +455,10 @@ export function HjemScreen({
       },
       child: { ageMonths },
       activity,
+      materialPreference: active.materialPreference,
       ...(activity === 'vogn' ? { vognMode } : {}),
     };
-  }, [weather.now, ageMonths, activity, vognMode]);
+  }, [weather.now, ageMonths, activity, active.materialPreference, vognMode]);
 
   const recommendation = useMemo<Recommendation | null>(() => {
     if (!engineInput) return null;
@@ -653,7 +654,7 @@ export function HjemScreen({
   const visibleAnchorLabels = allGarmentLabels.length > 0
     ? allGarmentLabels
     : sceneModel.anchors.map(({ label }) => label);
-  const visibleAnchorDisplayNames = visibleAnchorLabels.map(displayNameForDbString);
+  const visibleAnchorDisplayNames = visibleAnchorLabels.map((label) => displayNameForDbString(label));
 
   // Positur-nøkkel (brukt for silhuett-fallback + stabil data-key).
   const avatarPoseKey = useMemo(() => ({
@@ -1029,8 +1030,6 @@ export function HjemScreen({
         childName={active.name}
         ageMonths={ageMonths}
         recommendation={resolvedRecommendation}
-        onStartDressing={handleCta}
-        startDressingDisabled={currentOutfitContext === null}
         reducedMotion={reducedMotion}
         outfitTransitionStatus={outfitTransitionStatus}
         onOpenAdjust={onOpenAdjust}

@@ -7,6 +7,7 @@ import {
   useState,
   type CSSProperties,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ForecastDisclosure } from '../components/planning/ForecastDisclosure';
 import { PlanChangeRail, type PlanChangeRailRow, type PlanningRailEvent } from '../components/planning/PlanChangeRail';
 import {
@@ -53,7 +54,6 @@ import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
 import { recommend } from '../lib/wool-layers/recommend';
 import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import {
-  getConditionLabel,
   getGarmentImage,
   getWeatherIcon,
   getWeatherNuance,
@@ -64,6 +64,7 @@ import { useChildren } from '../state/children-store';
 import { useSwapOverride } from '../state/swap-override-store';
 import { resolveEffectivePlace, useLocationPref } from '../state/location-pref-store';
 import type { TabKey } from '../types/nav';
+import { htmlLanguageFor } from '../i18n/language-policy';
 import './UkeScreen.css';
 
 const DEFAULT_LAT = 60.8867;
@@ -179,60 +180,62 @@ function tempAxisFor(
   return 'mild';
 }
 
-function conditionLabel(symbolCode: string): string {
-  const normalized = symbolCode.toLocaleLowerCase('nb-NO');
-  if (normalized.includes('thunder')) return 'Torden';
-  if (normalized.includes('snow')) return 'Snø';
-  if (normalized.includes('sleet')) return 'Sludd';
-  if (normalized.includes('rain')) return 'Regn';
-  if (normalized.includes('fog')) return 'Tåke';
-  if (normalized.includes('cloud')) return 'Skyet';
-  if (normalized.includes('partly')) return 'Delvis skyet';
-  if (normalized.includes('fair')) return 'Lettskyet';
-  if (normalized.includes('clear')) return 'Klarvær';
-  return 'Vær';
+function conditionTranslationKey(symbolCode: string | undefined): string {
+  const normalized = symbolCode?.toLocaleLowerCase('en') ?? '';
+  if (normalized.includes('thunder')) return 'plan.weather.thunder';
+  if (normalized.includes('snow')) return 'plan.weather.snow';
+  if (normalized.includes('sleet')) return 'plan.weather.sleet';
+  if (normalized.includes('rain')) return 'plan.weather.rain';
+  if (normalized.includes('fog')) return 'plan.weather.fog';
+  if (normalized.includes('partly')) return 'plan.weather.partlyCloudy';
+  if (normalized.includes('cloud')) return 'plan.weather.cloudy';
+  if (normalized.includes('fair')) return 'plan.weather.fair';
+  if (normalized.includes('clear')) return 'plan.weather.clear';
+  return 'plan.weather.unknown';
 }
 
 // P8 (Monter re-skin): presentation-only date/time formatters for the day-
 // hero petrol panel and the improved empty-state line. Pure functions, no
 // planning-domain logic — same nb-NO/Europe/Oslo pattern already used by
 // PlanChangeRail's timeLabel() and ForecastDisclosure's timeLabel().
-const heroDayFormatter = new Intl.DateTimeFormat('nb-NO', {
-  timeZone: PLAN_TIME_ZONE,
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-});
-
-const heroShortTimeFormatter = new Intl.DateTimeFormat('nb-NO', {
-  timeZone: PLAN_TIME_ZONE,
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
-});
-
-function capitalize(value: string): string {
-  return value.length > 0 ? value.charAt(0).toLocaleUpperCase('nb-NO') + value.slice(1) : value;
+function capitalize(value: string, locale: string): string {
+  return value.length > 0 ? value.charAt(0).toLocaleUpperCase(locale) + value.slice(1) : value;
 }
 
-function heroDayLabel(atIso: string | null, isToday: boolean): string {
-  if (isToday) return 'I dag';
+function heroDayLabel(
+  atIso: string | null,
+  isToday: boolean,
+  locale: string,
+  todayLabel: string,
+): string {
+  if (isToday) return todayLabel;
   if (!atIso) return '';
   const instant = new Date(atIso);
   if (Number.isNaN(instant.getTime())) return '';
-  return capitalize(heroDayFormatter.format(instant));
+  const formatter = new Intl.DateTimeFormat(locale, {
+    timeZone: PLAN_TIME_ZONE,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  return capitalize(formatter.format(instant), locale);
 }
 
-function shortTimeLabel(atIso: string | undefined): string | null {
+function shortTimeLabel(atIso: string | undefined, locale: string): string | null {
   if (!atIso) return null;
   const instant = new Date(atIso);
   if (Number.isNaN(instant.getTime())) return null;
-  return heroShortTimeFormatter.format(instant).replace('.', ':');
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: PLAN_TIME_ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(instant).replace('.', ':');
 }
 
 // Begge visningene bruker det samme ærlige dagsrasteret kl. 06/10/14/18.
-function timelinePointLabel(atIso: string): string {
-  return shortTimeLabel(atIso) ?? '';
+function timelinePointLabel(atIso: string, locale: string): string {
+  return shortTimeLabel(atIso, locale) ?? '';
 }
 
 function formatHeroTemp(tempC: number | null | undefined): string {
@@ -292,6 +295,9 @@ function currentPhase(
 function PlanleggData({
   onOpenPlannedOutfit,
 }: Pick<Props, 'onOpenPlannedOutfit'>) {
+  const { t, i18n } = useTranslation();
+  const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const locale = htmlLanguageFor(activeLanguage);
   const { active } = useChildren();
   const e2eFixture = planningE2EFixture();
   const { fire } = useHapticSystem();
@@ -335,11 +341,11 @@ function PlanleggData({
   const lat = effectivePlace?.lat ?? 0;
   const lon = effectivePlace?.lon ?? 0;
   const city = effectivePlace === null
-    ? 'Sted mangler'
+    ? t('plan.locationMissing')
     : effectivePlace.source === 'automatic'
-      ? `Nåværende sted · ${effectivePlace.city}`
-      : `Fast sted · ${effectivePlace.city}`;
-  const childName = active?.name || 'barnet';
+      ? t('plan.currentLocation', { city: effectivePlace.city })
+      : t('plan.fixedLocation', { city: effectivePlace.city });
+  const childName = active?.name || t('plan.childFallback');
   const activeDob = active?.dob;
   const ageMonths = useMemo(
     () => (activeDob ? dobToAgeMonths(activeDob) : 12),
@@ -462,7 +468,10 @@ function PlanleggData({
         finalizedFingerprint: fingerprint,
         orderedGarments: Object.freeze([...orderedGarments]),
         equipment: Object.freeze([...equipment]),
-        cause: `${conditionLabel(phase.weather.symbolCode)} · føles som ${Math.round(phase.weather.feelsLikeC)}°`,
+        cause: t('plan.weather.cause', {
+          condition: t(conditionTranslationKey(phase.weather.symbolCode)),
+          temp: Math.round(phase.weather.feelsLikeC),
+        }),
         transitionContextId: `planning-transition:${phase.weather.atIso}:${fingerprint}`,
       });
       // Antrekksmerket i Dagslinjen skal vise plagget forelderen ser UTENPÅ
@@ -631,6 +640,7 @@ function PlanleggData({
     lat,
     lon,
     resolvedPhases,
+    t,
     viewAccess.access.decision,
     viewAccess.capability,
     viewAccess.presentation,
@@ -774,12 +784,12 @@ function PlanleggData({
     () => planningEvaluation.rows.filter((row) => row.type === 'change'),
     [planningEvaluation.rows],
   );
-  const firstChangeTime = shortTimeLabel(railChangeRows[0]?.atIso);
-  const summarizedNextAction = planningEvaluation.nextAction?.startsWith('Bytt fra') && firstChangeTime
+  const firstChangeTime = shortTimeLabel(railChangeRows[0]?.atIso, locale);
+  const summarizedNextAction = planningEvaluation.nextAction && firstChangeTime
     ? isTodayView
-      ? `Neste endring er kl. ${firstChangeTime}. Se detaljene i dagslinjen.`
-      : `Neste endring i morgen er kl. ${firstChangeTime}. Se dagslinjen.`
-    : planningEvaluation.nextAction;
+      ? t('plan.nextChangeToday', { time: firstChangeTime })
+      : t('plan.nextChangeTomorrow', { time: firstChangeTime })
+    : null;
   const timelinePoints = planningEvaluation.timeline;
   const forecastRows = planningEvaluation.hasEvaluatedPlan
     ? planningEvaluation.forecast
@@ -804,12 +814,12 @@ function PlanleggData({
     && statusState.status !== 'error';
   const heroWeather = temperatureContext ?? null;
   const heroNuance = getWeatherNuance(heroWeather?.symbolCode);
-  const heroCondition = getConditionLabel(heroWeather?.symbolCode);
+  const heroCondition = t(conditionTranslationKey(heroWeather?.symbolCode));
   const heroIcon = getWeatherIcon(heroWeather?.symbolCode);
   const heroAtIso = selectedContext?.plannedForIso
     ?? fallbackPhase?.weather.atIso
     ?? (weather.now ? weather.now.observedAt.toISOString() : null);
-  const heroDay = heroDayLabel(heroAtIso, isTodayView);
+  const heroDay = heroDayLabel(heroAtIso, isTodayView, locale, t('plan.today'));
   // FUNN (revisjon 2026-08-06, [MINDRE] Plan): «I dag» sto to ganger med ca.
   // 40 px mellomrom — først som aktiv pille i visningsvelgeren (l. 1029, den
   // hvite pillen y 193–285), så igjen som etikett øverst inne i værkortet
@@ -830,7 +840,14 @@ function PlanleggData({
   // 'empty' også) — det ble bare aldri lest ut i visningen. Bruker samme
   // allerede-eksponerte forecastRows til en "stabilt til HH:MM"-linje i
   // stedet for en generisk "ingen endringer"-tekst. Ingen ny selector.
-  const emptyStableUntil = shortTimeLabel(forecastRows.at(-1)?.atIso);
+  const emptyStableUntil = shortTimeLabel(forecastRows.at(-1)?.atIso, locale);
+  const verdictGarmentSummary = planningEvaluation.verdict
+    ? new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(
+      planningEvaluation.verdict.orderedGarments.map((garment) => (
+        displayNameForDbString(garment, activeLanguage)
+      )),
+    )
+    : '';
 
   return (
     <section
@@ -840,7 +857,7 @@ function PlanleggData({
       data-planlegg-access={isTomorrowFull ? 'plus-tomorrow' : undefined}
     >
       <header className="planlegg-screen__header">
-        <h1 id="planlegg-title">Planlegg</h1>
+        <h1 id="planlegg-title">{t('plan.title')}</h1>
         <p className="planlegg-screen__context">{childName} · {city}</p>
       </header>
 
@@ -850,10 +867,10 @@ function PlanleggData({
         inert={statusState.status === 'error' ? true : undefined}
       >
         <SegmentedControl
-          legend="Velg planvisning"
+          legend={t('plan.viewLegend')}
           options={[
-            { value: 'today', label: 'I dag' },
-            { value: 'tomorrow', label: 'I morgen' },
+            { value: 'today', label: t('plan.today') },
+            { value: 'tomorrow', label: t('plan.tomorrow') },
           ]}
           value={tab}
           onChange={onViewChange}
@@ -873,7 +890,11 @@ function PlanleggData({
         <section
           className="planlegg-weather"
           data-nuance={heroNuance}
-          aria-label={heroWeather ? `Været ${heroDay || 'valgt dag'}`.trim() : 'Værprognose'}
+          aria-label={heroWeather
+            ? t('plan.weather.sectionToday', {
+              day: heroDay || t('plan.weather.selectedDay'),
+            })
+            : t('plan.weather.forecast')}
         >
           {heroWeather && (
             <>
@@ -891,7 +912,9 @@ function PlanleggData({
               </div>
               <p className="planlegg-weather__condition">{heroCondition}</p>
               <p className="planlegg-weather__meta">
-                Føles som {formatHeroTemp(heroWeather.feelsLikeC)}° · Vind {Math.round(heroWeather.windMs)} m/s
+                {t('plan.weather.feelsLike', { temp: formatHeroTemp(heroWeather.feelsLikeC) })}
+                {' · '}
+                {t('plan.weather.wind', { wind: Math.round(heroWeather.windMs) })}
               </p>
             </>
           )}
@@ -905,11 +928,8 @@ function PlanleggData({
 
       {isTomorrowPreparing && (
         <section className="planlegg-advice planlegg-advice--preparing" aria-live="polite">
-          <h2>I morgen klargjøres</h2>
-          <p>
-            Værvarselet har ikke nok timepunkter for en trygg plan ennå.
-            Babyora viser morgendagens antrekk så snart grunnlaget er klart.
-          </p>
+          <h2>{t('plan.preparingTitle')}</h2>
+          <p>{t('plan.preparingBody')}</p>
         </section>
       )}
 
@@ -927,32 +947,29 @@ function PlanleggData({
             {/* Eierfunn (IMG_9105): plagglisten som løpende prosa i verdikt-
                 setningen ble «masse tekst uten å skjønne hva det er». Plagg
                 presenteres som plagg: kort dom + vitrine-thumbs (samme
-                bildesti som Hjem: garmentIdFor → getGarmentImage, bokstav-
-                fallback uten bilde). Full liste ligger for skjermlesere. */}
+                komplette, flate WebP-oppslag som Hjem). Full liste ligger
+                for skjermlesere. */}
             {planningEvaluation.status === 'empty' ? (
               <>
                 <p className="planlegg-screen__verdict">
-                  {isTodayView ? 'Antrekket holder' : 'Gjør klart kvelden før'}
+                  {isTodayView ? t('plan.outfitHolds') : t('plan.prepareNightBefore')}
                 </p>
                 {planningEvaluation.verdict && (
                   <ul
                     className="planlegg-garments"
-                    aria-label={`${isTodayView ? 'Dagens' : 'Morgendagens'} antrekk: ${planningEvaluation.verdict.summary}`}
+                    aria-label={t(
+                      isTodayView ? 'plan.todayOutfitAria' : 'plan.tomorrowOutfitAria',
+                      { summary: verdictGarmentSummary },
+                    )}
                   >
                     {/* T1A: rå label beholdes som bilde-oppslagsnøkkel;
                         title/sr-tekst bruker visningsnavnet. */}
                     {planningEvaluation.verdict.orderedGarments.map((label) => {
                       const image = getGarmentImage(garmentIdFor(label));
-                      const displayName = displayNameForDbString(label);
+                      const displayName = displayNameForDbString(label, activeLanguage);
                       return (
                         <li key={label} className="planlegg-garments__item" title={displayName}>
-                          {image ? (
-                            <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
-                          ) : (
-                            <span className="planlegg-garments__thumb planlegg-garments__thumb--letter" aria-hidden="true">
-                              {displayName.charAt(0).toUpperCase()}
-                            </span>
-                          )}
+                          <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
                           <span className="hjm-sr-only">{displayName}</span>
                         </li>
                       );
@@ -962,35 +979,29 @@ function PlanleggData({
                 <p className="planlegg-screen__empty">
                   {emptyStableUntil
                     ? isTodayView
-                      ? `Ingen endringer frem til kl. ${emptyStableUntil}.`
-                      : `Dette antrekket holder gjennom morgendagen frem til kl. ${emptyStableUntil}.`
-                    : 'Babyora fant ingen endringer i perioden som er vurdert.'}
+                      ? t('plan.noChangesUntil', { time: emptyStableUntil })
+                      : t('plan.tomorrowHoldsUntil', { time: emptyStableUntil })
+                    : t('plan.noChanges')}
                 </p>
               </>
             ) : (
               <>
                 <p className="planlegg-screen__verdict">
-                  {isTodayView ? 'Planlagt antrekk' : 'Gjør klart kvelden før'}
+                  {isTodayView ? t('plan.plannedOutfit') : t('plan.prepareNightBefore')}
                 </p>
                 {planningEvaluation.verdict && (
                   <ul
                     className="planlegg-garments"
-                    aria-label={`Planlagt antrekk: ${planningEvaluation.verdict.summary}`}
+                    aria-label={t('plan.plannedOutfitAria', { summary: verdictGarmentSummary })}
                   >
                     {/* T1A: rå label beholdes som bilde-oppslagsnøkkel;
                         title/sr-tekst bruker visningsnavnet. */}
                     {planningEvaluation.verdict.orderedGarments.map((label) => {
                       const image = getGarmentImage(garmentIdFor(label));
-                      const displayName = displayNameForDbString(label);
+                      const displayName = displayNameForDbString(label, activeLanguage);
                       return (
                         <li key={label} className="planlegg-garments__item" title={displayName}>
-                          {image ? (
-                            <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
-                          ) : (
-                            <span className="planlegg-garments__thumb planlegg-garments__thumb--letter" aria-hidden="true">
-                              {displayName.charAt(0).toUpperCase()}
-                            </span>
-                          )}
+                          <img className="planlegg-garments__thumb" src={image} alt="" draggable={false} />
                           <span className="hjm-sr-only">{displayName}</span>
                         </li>
                       );
@@ -1013,20 +1024,20 @@ function PlanleggData({
           {(timelinePoints.length > 0 || railChangeRows.length > 0) && (
             <section className="planlegg-screen__rail" aria-labelledby="planlegg-rail-title">
               <h2 id="planlegg-rail-title" style={changeRailHeadStyle}>
-                {isTodayView ? 'Dagslinjen' : 'Morgendagens dagslinje'}
+                {t(isTodayView ? 'plan.timelineToday' : 'plan.timelineTomorrow')}
               </h2>
               {timelinePoints.length > 0 && (
                 <ol
                   className="planlegg-dagslinje"
                   aria-label={isTodayView
-                    ? 'Tidspunktene Babyora har vurdert i dag'
-                    : 'Tidspunktene Babyora har vurdert i morgen'}
+                    ? t('plan.timelineAriaToday')
+                    : t('plan.timelineAriaTomorrow')}
                 >
                   {timelinePoints.map((point) => {
-                    const label = timelinePointLabel(point.atIso);
+                    const label = timelinePointLabel(point.atIso, locale);
                     const weatherIcon = getWeatherIcon(point.symbolCode);
                     const garmentName = point.outerGarment
-                      ? displayNameForDbString(point.outerGarment)
+                      ? displayNameForDbString(point.outerGarment, activeLanguage)
                       : null;
                     const garmentImage = point.outerGarment
                       ? getGarmentImage(garmentIdFor(point.outerGarment))
@@ -1052,22 +1063,19 @@ function PlanleggData({
                           {`${formatHeroTemp(point.tempC)}°`}
                         </span>
                         <span className="planlegg-dagslinje__merke" title={garmentName ?? undefined}>
-                          {garmentImage ? (
-                            <img src={garmentImage} alt="" draggable={false} />
-                          ) : (
-                            <span className="planlegg-dagslinje__merke-bokstav" aria-hidden="true">
-                              {garmentName ? garmentName.charAt(0).toUpperCase() : '–'}
-                            </span>
-                          )}
+                          {garmentImage && <img src={garmentImage} alt="" draggable={false} />}
                         </span>
                         {point.changed && (
-                          <span className="planlegg-dagslinje__endring">Endring</span>
+                          <span className="planlegg-dagslinje__endring">{t('plan.change')}</span>
                         )}
                         <span className="hjm-sr-only">
-                          {`${label}: ${formatHeroTemp(point.tempC)} grader, `
-                            + `${point.garmentCount} plagg`
-                            + (garmentName ? `, ytterst ${garmentName}` : '')
-                            + (point.changed ? ', antrekket endres her' : '')}
+                          {t('plan.timelinePoint', {
+                            time: label,
+                            temp: formatHeroTemp(point.tempC),
+                            count: point.garmentCount,
+                            outer: garmentName ? t('plan.outermost', { garment: garmentName }) : '',
+                            change: point.changed ? t('plan.changesHere') : '',
+                          })}
                         </span>
                       </li>
                     );
@@ -1092,7 +1100,7 @@ function PlanleggData({
           className="planlegg-screen__week-weather"
           data-planlegg-access="neutral"
         >
-          Sjekker tilgang til morgendagens plan.
+          {t('plan.checkingTomorrow')}
         </p>
       )}
 
@@ -1101,7 +1109,7 @@ function PlanleggData({
           className="planlegg-screen__week-weather"
           data-planlegg-access="neutral"
         >
-          Sjekker tilgang til dagens plan.
+          {t('plan.checkingToday')}
         </p>
       )}
     </section>

@@ -114,6 +114,12 @@ async function mål(overgang, reducedMotion) {
     colorScheme: 'dark',
     reducedMotion: reducedMotion ? 'reduce' : 'no-preference',
   });
+  /* Instrumentet bruker norske kontrollnavn som en fast test-fixture. SprÃ¥ket
+     settes eksplisitt fordi produksjonspolicyen med vilje velger engelsk for
+     enheter uten svensk/dansk region. */
+  await p.addInitScript(() => {
+    localStorage.setItem('babyora:languageOverride', 'no');
+  });
   await p.route('**/api/forecast*', (r) => r.fulfill({
     contentType: 'application/json', body: JSON.stringify(forecastPartlyCloudy1C()) }));
   await p.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });

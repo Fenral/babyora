@@ -12,8 +12,8 @@
  *  recalculating  → ScanOverlay (erstatter panelet helt) + MascotPeek(kompakt,
  *                   pose="curious" — bøyer seg ned mot scan-animasjonen, se
  *                   MascotPeek.tsx) + ScanStatusBlock
- *  result-current → WeatherStrip (komprimert) + ResultSurface (INGEN maskot —
- *                   hjem-result.html mangler den bevisst)
+ *  result-current → WeatherStrip (komprimert) + ResultSurface med en
+ *                   dekorativ, resultategnet sveip-pose over plaggreisen
  *  result-stale   → WeatherScene (full panel) + MascotPeek(kompakt) +
  *                   ask-block (kontekstuell «Nytt antrekk for …?» / retry)
  *
@@ -66,6 +66,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import './hjem-monter.css';
 import { useScanCoordinator } from '../../hooks/useScanCoordinator.js';
 import {
@@ -100,6 +101,7 @@ import { MascotIdle } from './MascotIdle.js';
 import { ScanOverlay, ScanStatusBlock } from './ScanOverlay.js';
 import type { OutfitTransitionStatusLike } from './scan-overlay-guard.js';
 import { ResultSurface } from './ResultSurface.js';
+import { resultCopyFor } from './result-localization.js';
 import { deriveResultRows, type ResultRow } from './result-rows.js';
 import {
   activityChangeChip,
@@ -125,9 +127,7 @@ import type { FinnAntrekkPrefill } from '../../screens/finn-antrekk-prefill.js';
 import { resolveSwapTarget } from './swap-row.js';
 import { PlaggDetailSheet } from '../PlaggDetailSheet.js';
 import type { GarmentId } from '../../data/garment-illustrations.js';
-
-const ACTIVITY_CHILD_LINE: Readonly<Record<MonterActivity, string>> = { utelek: 'Utelek', vogn: 'Vogn' };
-const ACTIVITY_TOGGLE_LABEL: Readonly<Record<MonterActivity, string>> = { utelek: 'Utenfor vogn', vogn: 'I vogn' };
+import { hjemCopyFor, type HjemCopy } from './hjem-copy.js';
 
 function ArrowIcon() {
   return (
@@ -170,22 +170,23 @@ function formatClock(epochMs: number): string {
 function freshnessLineFor(
   freshness: WeatherFreshness | undefined,
   hasNow: boolean,
+  copy: HjemCopy['weather'],
 ): Readonly<{ label: string; warn: boolean }> {
   if (freshness === undefined) {
-    return { label: hasNow ? 'Oppdatert nå' : 'Henter vær …', warn: false };
+    return { label: hasNow ? copy.freshNow : copy.fetching, warn: false };
   }
   switch (freshness.kind) {
     case 'fresh':
-      return { label: 'Oppdatert nå', warn: false };
+      return { label: copy.freshNow, warn: false };
     case 'stale':
-      return { label: `Sist oppdatert ${formatClock(freshness.fetchedAt)}`, warn: true };
+      return { label: copy.lastUpdated(formatClock(freshness.fetchedAt)), warn: true };
     case 'missing':
-      return { label: 'Henter vær …', warn: false };
+      return { label: copy.fetching, warn: false };
     case 'error':
       return {
         label: freshness.lastFetchedAt !== null
-          ? `Sist oppdatert ${formatClock(freshness.lastFetchedAt)}`
-          : 'Henter vær …',
+          ? copy.lastUpdated(formatClock(freshness.lastFetchedAt))
+          : copy.fetching,
         warn: true,
       };
   }
@@ -209,8 +210,6 @@ export type HjemMonterProps = Readonly<{
   childName: string;
   ageMonths: number;
   recommendation: Recommendation | null;
-  onStartDressing: (event: MouseEvent<HTMLButtonElement>) => void;
-  startDressingDisabled: boolean;
   reducedMotion: boolean;
   outfitTransitionStatus: OutfitTransitionStatusLike;
   /**
@@ -251,8 +250,6 @@ export function HjemMonter({
   childName,
   ageMonths,
   recommendation,
-  onStartDressing,
-  startDressingDisabled,
   reducedMotion,
   outfitTransitionStatus,
   onOpenAdjust,
@@ -260,6 +257,9 @@ export function HjemMonter({
   onRetryWeather,
   onOpenPlaggbib,
 }: HjemMonterProps) {
+  const { i18n } = useTranslation();
+  const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const copy = hjemCopyFor(activeLanguage);
   const scan = useScanCoordinator();
   const slots = useScanCache((state) => state.slots);
   const commitSlot = useScanCache((state) => state.commitSlot);
@@ -282,7 +282,10 @@ export function HjemMonter({
   /** v4: nøkkelminnet er scopet til barn+dag — aktivitet/sted er BEVISST
    *  utenfor, siden det er nettopp de to som kan bytte fram og tilbake og
    *  likevel lande på et svar appen allerede holder. */
-  const resultKeyMemoryScope = resultKeyScope(childId, identity.dateKey);
+  const resultKeyMemoryScope = useMemo(
+    () => resultKeyScope(childId, identity.dateKey),
+    [childId, identity.dateKey],
+  );
 
   const currentResultKey = useMemo(() => {
     if (recommendation === null || now === null) return null;
@@ -313,12 +316,13 @@ export function HjemMonter({
   const persistedResultKey = daySlot !== null && daySlot.identity.dateKey === identity.dateKey
     ? daySlot.resultKey
     : null;
-  const ctaPlan = planCta(
+  const ctaPlan = useMemo(() => planCta(
     currentResultKey,
     persistedResultKey,
     sessionResultKeys,
     resultKeyMemoryScope,
-  );
+    hjemCopyFor(activeLanguage).cta,
+  ), [activeLanguage, currentResultKey, persistedResultKey, resultKeyMemoryScope]);
 
   // Siste kjente værmåling — kun brukt til DISPLAY i offline-tilstanden.
   // Motorens uendrede engine-kjede får ALDRI denne (den ser bare det
@@ -674,12 +678,15 @@ export function HjemMonter({
   }, [adjustSource, activity, cityLabel, onOpenAdjust]);
 
   const nuance = getWeatherNuance(now?.symbolCode ?? lastKnownNow?.symbolCode);
-  const conditionLabel = getConditionLabel(now?.symbolCode ?? lastKnownNow?.symbolCode);
+  const conditionLabel = getConditionLabel(
+    now?.symbolCode ?? lastKnownNow?.symbolCode,
+    activeLanguage,
+  );
   const weatherIconSrc = getWeatherIcon(now?.symbolCode ?? lastKnownNow?.symbolCode);
-  const childLine = `${childName} · ${ageMonths} måneder · ${ACTIVITY_CHILD_LINE[activity]}`;
+  const childLine = `${childName} · ${copy.ageMonths(ageMonths)} · ${copy.activity[activity].context}`;
   const canScan = currentResultKey !== null;
   // T9A: sann friskhetslinje (erstatter hardkodet «Oppdatert nå»).
-  const freshnessLine = freshnessLineFor(weatherFreshness, now !== null);
+  const freshnessLine = freshnessLineFor(weatherFreshness, now !== null, copy.weather);
 
   const phase = scan.state.phase;
 
@@ -688,7 +695,9 @@ export function HjemMonter({
     // v4: omberegningen har to lengder (se recalcDurationMs) — overlayen må
     // få den som faktisk kjører, ikke en antatt konstant.
     const totalDurationMs = isFullScan ? FULL_SCAN_DURATION_MS : recalcDurationMs;
-    const tempLabel = now ? `${formatTemp(now.tempC)}°, ${conditionLabel.toLowerCase()}` : '–';
+    const tempLabel = now
+      ? `${formatTemp(now.tempC)}°, ${conditionLabel.toLocaleLowerCase(activeLanguage)}`
+      : '–';
     return (
       <div className="hjem-monter">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
@@ -704,15 +713,16 @@ export function HjemMonter({
               geometri midt i boyningen leser som at maskoten hopper. */}
           <MascotIdle pose="curious" reducedMotion={reducedMotion} />
           <ScanOverlay
+            language={activeLanguage}
             cityLabel={cityLabel}
             nuance={nuance}
             rows={[
-              { label: 'Været nå', value: tempLabel },
-              { label: 'Aktivitet', value: ACTIVITY_TOGGLE_LABEL[activity] },
-              { label: childName, value: `${ageMonths} måneder` },
+              { label: copy.scan.weatherNow, value: tempLabel },
+              { label: copy.scan.activity, value: copy.activity[activity].toggle },
+              { label: childName, value: copy.ageMonths(ageMonths) },
             ]}
-            spinningLabel="Lag for lag"
-            spinningValue="setter sammen…"
+            spinningLabel={copy.scan.layerByLayer}
+            spinningValue={copy.scan.assembling}
             totalDurationMs={totalDurationMs}
             reducedMotion={reducedMotion}
             outfitTransitionStatus={outfitTransitionStatus}
@@ -721,10 +731,13 @@ export function HjemMonter({
         </div>
         <div className="hjm-body">
           <ScanStatusBlock
+            language={activeLanguage}
             headline={markerDone
-              ? 'Antrekket er klart'
-              : isFullScan ? `Kler på ${childName} i tankene…` : `Kler på ${childName} på nytt…`}
-            subline="Tar bare et lite øyeblikk."
+              ? copy.scan.ready
+              : isFullScan
+                ? copy.scan.calculating(childName)
+                : copy.scan.recalculating(childName)}
+            subline={copy.scan.subline}
             onSkip={handleSkip}
             outfitTransitionStatus={outfitTransitionStatus}
           />
@@ -746,7 +759,8 @@ export function HjemMonter({
               feelsLikeC={now.feelsLikeC}
               conditionLabel={conditionLabel}
               cityLabel={cityLabel}
-              activityToggleLabel={ACTIVITY_TOGGLE_LABEL[activity]}
+              activityToggleLabel={copy.activity[activity].toggle}
+              language={activeLanguage}
               onAdjust={handleOpenAdjust}
             />
           )}
@@ -754,12 +768,18 @@ export function HjemMonter({
         <div className="hjm-body">
           <ResultSurface
             rows={rows}
-            childLabel={`${rows.length} plagg for ${childName}, innerst til ytterst`}
+            childLabel={resultCopyFor(activeLanguage).childSummary(rows.length, childName)}
             isFresh={isFresh}
             reducedMotion={reducedMotion}
+            whyContext={now === null ? null : {
+              childName,
+              activity,
+              tempC: now.tempC,
+              feelsLikeC: now.feelsLikeC,
+              windMs: now.windMs,
+              precipMmH: now.precipMmH,
+            }}
             onSwapRow={handleSwapRow}
-            onStartDressing={onStartDressing}
-            startDressingDisabled={startDressingDisabled}
             onWhy={onOpenWarmColdGuide}
           />
         </div>
@@ -779,7 +799,7 @@ export function HjemMonter({
   if (phase === 'result-stale') {
     const reason = scan.state.reason;
     const chip = reason === 'identity-changed'
-      ? activityChangeChip(previousActivity, activity)
+      ? activityChangeChip(previousActivity, activity, copy.stale)
       : null;
     return (
       <div className="hjem-monter">
@@ -787,11 +807,12 @@ export function HjemMonter({
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
           <MascotIdle compact reducedMotion={reducedMotion} />
           <WeatherScene
+            language={activeLanguage}
             cityLabel={cityLabel}
             nuance={nuance}
             tempC={now?.tempC ?? null}
             feelsLikeC={now?.feelsLikeC ?? null}
-            noteText={now ? `Værbasert: ${conditionLabel.toLowerCase()}.` : 'Henter vær…'}
+            noteText={now ? copy.weather.weatherBased(conditionLabel) : copy.weather.fetching}
             weatherIconSrc={weatherIconSrc}
             weatherIconAlt={conditionLabel}
             freshnessLabel={freshnessLine.label}
@@ -802,7 +823,7 @@ export function HjemMonter({
         </div>
         <div className="hjm-body">
           <div className="hjm-ask-block">
-            <h1 className="hjm-ask">{staleHeadline(reason, activity)}</h1>
+            <h1 className="hjm-ask">{staleHeadline(reason, activity, copy.stale)}</h1>
             {chip !== null && (
               <span className="hjm-change-chip">
                 <InfoIcon />
@@ -811,8 +832,8 @@ export function HjemMonter({
             )}
             {previousResultCount !== null && (
               <div className="hjm-prev">
-                <span className="hjm-p-label">FORRIGE ANTREKK</span>
-                <p className="hjm-p-text">{`${previousResultCount} plagg beregnet.`}</p>
+                <span className="hjm-p-label">{copy.stale.previousLabel}</span>
+                <p className="hjm-p-text">{copy.stale.previousCount(previousResultCount)}</p>
               </div>
             )}
             <button
@@ -821,11 +842,11 @@ export function HjemMonter({
               data-cta-path={planRecalc(reason).ceremony ? 'ceremony' : 'inline'}
               onClick={() => handleStaleCtaTap(reason)}
             >
-              {staleCtaLabel(reason, activity)}
+              {staleCtaLabel(reason, activity, copy.stale)}
               <ArrowIcon />
             </button>
             <button type="button" className="hjm-cta-ghost" onClick={noopStub}>
-              Vis forrige antrekk
+              {copy.stale.showPrevious}
             </button>
           </div>
         </div>
@@ -855,17 +876,22 @@ export function HjemMonter({
         <div className="hjm-panel-slot" data-with-mascot="true" data-compact="true">
           <MascotIdle compact reducedMotion={reducedMotion} />
           <WeatherScene
+            language={activeLanguage}
             cityLabel={cityLabel}
             nuance={nuance}
             tempC={lastKnownNow?.tempC ?? null}
             feelsLikeC={lastKnownNow?.feelsLikeC ?? null}
-            noteText="Får ikke tak i været akkurat nå."
+            noteText={copy.weather.unavailable}
             weatherIconSrc={weatherIconSrc}
             weatherIconAlt={conditionLabel}
-            freshnessLabel={lastKnownAt !== null ? `Sist oppdatert ${formatClock(lastKnownAt)}` : 'Henter vær'}
+            freshnessLabel={lastKnownAt !== null
+              ? copy.weather.lastUpdated(formatClock(lastKnownAt))
+              : copy.weather.fetching}
             freshnessWarn
             dimmed
-            staleBadgeLabel={lastKnownAt !== null ? `Sist kjente vær · ${formatClock(lastKnownAt)}` : null}
+            staleBadgeLabel={lastKnownAt !== null
+              ? copy.weather.lastKnownBadge(formatClock(lastKnownAt))
+              : null}
             activity={activity}
             onActivityChange={onActivityChange}
             onAdjustLocation={handleOpenAdjust}
@@ -873,11 +899,11 @@ export function HjemMonter({
         </div>
         <div className="hjm-body">
           <div className="hjm-ask-block">
-            <h1 className="hjm-ask">Vi klarer oss med sist kjente vær</h1>
+            <h1 className="hjm-ask">{copy.weather.offlineTitle}</h1>
             <p className="hjm-child">
               {lastKnownAt !== null
-                ? `Fra ${formatClock(lastKnownAt)} · endringer ute er som regel små på en time`
-                : 'Henter vær …'}
+                ? copy.weather.offlineAge(formatClock(lastKnownAt))
+                : copy.weather.fetching}
             </p>
             <button
               type="button"
@@ -890,7 +916,7 @@ export function HjemMonter({
               <ArrowIcon />
             </button>
             <button type="button" className="hjm-cta-ghost" onClick={onRetryWeather}>
-              Prøv å hente været igjen
+              {copy.weather.retry}
             </button>
           </div>
         </div>
@@ -908,6 +934,7 @@ export function HjemMonter({
             hvile, med et sjeldent nysgjerrig-glimt (se MascotIdle.tsx). */}
         <MascotIdle reducedMotion={reducedMotion} />
         <WeatherScene
+          language={activeLanguage}
           cityLabel={cityLabel}
           nuance={nuance}
           tempC={now?.tempC ?? null}
@@ -925,7 +952,7 @@ export function HjemMonter({
       </div>
       <div className="hjm-body">
         <div className="hjm-ask-block">
-          <h1 className="hjm-ask">Klar for en liten tur?</h1>
+          <h1 className="hjm-ask">{copy.weather.readyTitle}</h1>
           <p className="hjm-child">{childLine}</p>
           {/* v4: teksten OG veien kommer fra samme plan — en knapp som sier
               «Vis» men spiller 3,2 s ville vært den løgnen overrideen

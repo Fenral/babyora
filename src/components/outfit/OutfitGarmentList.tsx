@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { displayNameForDbString } from '../../data/garment-display-names.js';
+import { useTranslation } from 'react-i18next';
 import type { RegisterOutfitRow } from '../../lib/outfit/outfit-transition-contract.js';
 import type { OutfitItemId, OutfitTruthSnapshotV1 } from '../../lib/outfit/outfit-truth.js';
+import { deepFlowCopyFor, localizedGarmentDisplayName } from '../../screens/deep-flow-copy.js';
 import { GarmentThumbnail } from './GarmentThumbnail.js';
 
 type Props = Readonly<{
@@ -10,13 +11,6 @@ type Props = Readonly<{
   onActivate: (id: OutfitItemId, trigger: HTMLButtonElement) => void;
   hasAlternative: (id: OutfitItemId) => boolean;
 }>;
-
-const CATEGORY_LABEL: Readonly<Record<OutfitTruthSnapshotV1['garments'][number]['category'], string>> = {
-  innerst: 'Innerst',
-  mellomlag: 'Mellomlag',
-  yttertoy: 'Ytterst',
-  ekstra: 'Tilbehør',
-};
 
 function SwapIcon() {
   return (
@@ -31,9 +25,12 @@ function Row({ garment, props }: {
   garment: OutfitTruthSnapshotV1['garments'][number];
   props: Props;
 }) {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const copy = deepFlowCopyFor(language);
   const ref = useRef<HTMLButtonElement | null>(null);
   const { registerOutfitRow } = props;
-  const label = displayNameForDbString(garment.label);
+  const label = localizedGarmentDisplayName(garment.label, language);
   const hasAlternative = props.hasAlternative(garment.itemId);
 
   useEffect(() => {
@@ -49,7 +46,7 @@ function Row({ garment, props }: {
         className="outfit-row"
         data-outfit-row={garment.itemId}
         data-has-alternative={hasAlternative ? 'true' : 'false'}
-        aria-label={hasAlternative ? `Bytt ${label}` : `${label}. Ingen anbefalte alternativer`}
+        aria-label={hasAlternative ? copy.outfit.swapGarment(label) : copy.outfit.noAlternatives(label)}
         onClick={(event) => props.onActivate(garment.itemId, event.currentTarget)}
       >
         <span className="outfit-row__ordinal" aria-hidden="true">{garment.order}</span>
@@ -58,11 +55,11 @@ function Row({ garment, props }: {
         </span>
         <span className="outfit-row__copy">
           <span className="outfit-row__label">{label}</span>
-          <span className="outfit-row__detail">{CATEGORY_LABEL[garment.category]}</span>
+          <span className="outfit-row__detail">{copy.outfit.categories[garment.category]}</span>
         </span>
         {hasAlternative && (
           <span className="outfit-row__action" aria-hidden="true">
-            <span>Bytt</span>
+            <span>{copy.outfit.swap}</span>
             <SwapIcon />
           </span>
         )}
@@ -72,15 +69,18 @@ function Row({ garment, props }: {
 }
 
 export function OutfitGarmentList(props: Props) {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const copy = deepFlowCopyFor(language);
   const garmentCount = props.snapshot.garments.length;
   return (
     <section className="outfit-list" aria-labelledby="outfit-garments-title">
       <header className="outfit-list__header">
         <div>
-          <p className="outfit-list__eyebrow">Påkledningsrekkefølge</p>
-          <h2 id="outfit-garments-title">Innerst til ytterst</h2>
+          <p className="outfit-list__eyebrow">{copy.outfit.dressingOrder}</p>
+          <h2 id="outfit-garments-title">{copy.outfit.insideToOutside}</h2>
         </div>
-        <p className="outfit-list__count">{garmentCount} plagg</p>
+        <p className="outfit-list__count">{copy.common.garments(garmentCount)}</p>
       </header>
 
       <ol className="outfit-list__rows">
@@ -91,10 +91,10 @@ export function OutfitGarmentList(props: Props) {
 
       {props.snapshot.equipment.length > 0 && (
         <section className="outfit-equipment" aria-labelledby="outfit-equipment-title">
-          <h3 id="outfit-equipment-title">Ta med</h3>
+          <h3 id="outfit-equipment-title">{copy.outfit.bring}</h3>
           <ul>
             {props.snapshot.equipment.map((item) => (
-              <li key={item.itemId}>{displayNameForDbString(item.label)}</li>
+              <li key={item.itemId}>{localizedGarmentDisplayName(item.label, language)}</li>
             ))}
           </ul>
         </section>

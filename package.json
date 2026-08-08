@@ -19,6 +19,7 @@
     "audit:finalize": "tsx tools/product-audit/cli.ts finalize",
     "audit:test": "vitest run tools/product-audit",
     "e2e": "tsx e2e/smoke.ts",
+    "e2e:localization": "tsx e2e/localization-carousel.ts",
     "e2e:purchase": "tsx e2e/purchase-flow.ts",
     "engine:v2:review": "tsx scripts/export-engine-v2-review.ts",
     "verify:hjem": "npm run build && node tools/verify-hjem.mjs",

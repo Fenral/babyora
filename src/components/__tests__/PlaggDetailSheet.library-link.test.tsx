@@ -11,7 +11,10 @@
 import { createRef } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import i18n from '../../i18n/index.js';
 import { PlaggDetailSheet } from '../PlaggDetailSheet.js';
+
+await i18n.changeLanguage('no');
 
 describe('PlaggDetailSheet — "Se alternativer i biblioteket" (P6)', () => {
   it('renders the affordance when onOpenLibrary is provided (garment WITH alternatives, ullsokker)', () => {

@@ -43,6 +43,8 @@ export type SituationProfile = {
 export type MaterialPreference =
   | 'best_for_conditions'
   | 'prefer_wool'
+  | 'prefer_fleece'
+  | 'prefer_cotton'
   | 'avoid_wool';
 
 export type MaterialFamily =

@@ -26,6 +26,7 @@ import type { WeatherNuance } from './WeatherScene.js';
 import {
   SCANLINE_DURATION_MS, scanCheckDelaysMs } from './scan-orchestration.js';
 import { isScanOverlaySuppressed, type OutfitTransitionStatusLike } from './scan-overlay-guard.js';
+import { hjemCopyFor } from './hjem-copy.js';
 
 function CheckIcon() {
   return (
@@ -38,6 +39,7 @@ function CheckIcon() {
 type ScanRow = Readonly<{ label: string; value: string }>;
 
 export type ScanOverlayProps = Readonly<{
+  language?: string | null;
   cityLabel: string;
   nuance: WeatherNuance;
   rows: readonly [ScanRow, ScanRow, ScanRow];
@@ -52,6 +54,7 @@ export type ScanOverlayProps = Readonly<{
 
 /** Panel-interne delen: sted-rad (dempet) + skannelinje + 3 sjekk-rader + 1 spinnende rad. */
 export function ScanOverlay({
+  language,
   cityLabel,
   nuance,
   rows,
@@ -64,6 +67,7 @@ export function ScanOverlay({
 }: ScanOverlayProps) {
   if (isScanOverlaySuppressed(outfitTransitionStatus)) return null;
 
+  const copy = hjemCopyFor(language);
   const animate = !reducedMotion;
   const delays = scanCheckDelaysMs(totalDurationMs);
   /* Streken bruker sin EGEN lengde, ikke seremoniens. Sveipet den helt til
@@ -77,7 +81,7 @@ export function ScanOverlay({
     <section
       className="hjm-panel"
       data-nuance={nuance}
-      aria-label="Beregner antrekk"
+      aria-label={copy.scan.panelAria}
       aria-busy="true"
       style={scanDurationStyle}
     >
@@ -87,7 +91,7 @@ export function ScanOverlay({
       </div>
       {/* P9 (ekstern P8-review, funn A): se WeatherScene.tsx — samme flytting
          ut av mascot-sonen, aria/live-semantikk uendret. */}
-      <span className="hjm-fresh" data-warn="false"><i aria-hidden="true" />Oppdatert nå</span>
+      <span className="hjm-fresh" data-warn="false"><i aria-hidden="true" />{copy.weather.freshNow}</span>
       <div className="hjm-scan-rows">
         {rows.map((row, index) => (
           <div className="hjm-scan-row" key={row.label}>
@@ -126,6 +130,7 @@ export function ScanOverlay({
 }
 
 export type ScanStatusBlockProps = Readonly<{
+  language?: string | null;
   headline: string;
   subline: string;
   onSkip: () => void;
@@ -139,16 +144,23 @@ export type ScanStatusBlockProps = Readonly<{
  * antrekk» — separat fra den synlige (vennligere) mock-overskriften, samme
  * mønster som #temp-display i HjemScreen sin egen legacy-render.
  */
-export function ScanStatusBlock({ headline, subline, onSkip, outfitTransitionStatus }: ScanStatusBlockProps) {
+export function ScanStatusBlock({
+  language,
+  headline,
+  subline,
+  onSkip,
+  outfitTransitionStatus,
+}: ScanStatusBlockProps) {
   if (isScanOverlaySuppressed(outfitTransitionStatus)) return null;
 
+  const copy = hjemCopyFor(language);
   return (
     <div className="hjm-ask-block">
-      <span className="hjm-sr-only" role="status" aria-live="polite">Beregner antrekk</span>
+      <span className="hjm-sr-only" role="status" aria-live="polite">{copy.scan.panelAria}</span>
       <h1 className="hjm-scan-status" aria-hidden="true">{headline}</h1>
       <p className="hjm-scan-sub" aria-hidden="true">{subline}</p>
       <button type="button" className="hjm-skip" onClick={onSkip}>
-        Vis svaret med en gang
+        {copy.scan.skip}
       </button>
     </div>
   );

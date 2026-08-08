@@ -21,8 +21,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import i18n from '../../i18n/index.js';
 import { PaywallDialog } from '../PaywallDialog';
+
+beforeEach(async () => {
+  await i18n.changeLanguage('no');
+});
 
 function source(path: string): string {
   return readFileSync(resolve(process.cwd(), path), 'utf8').replace(/\r\n/g, '\n');
@@ -119,9 +124,9 @@ describe('PaywallDialog v2 — selected-state contract (CSS + source-text, no js
 
   it('the armed CTA and the breakdown block are wired from the selected plan (source-text — behaviour needs a real click)', () => {
     const contents = source(dialogPath);
-    expect(contents).toContain('buildArmedCtaLabel(selectedPlan)');
+    expect(contents).toContain('paywall.armedCtaLabel(selectedPlan)');
     expect(contents).toContain("selected && breakdown && (");
-    expect(contents).toContain('buildPlanBreakdown(selectedPlan, renewalBaseMs)');
+    expect(contents).toContain('paywall.planBreakdown(selectedPlan, renewalBaseMs)');
   });
 
   it('Fraunces WONK-0 is used ONLY on the price sums, never elsewhere in the dialog', () => {
@@ -192,5 +197,34 @@ describe('PaywallDialog v2 — behaviour preserved (entitlement/purchase/restore
     expect(contents).toContain('setPremium(true);');
     expect(contents).toContain("track({ type: 'paywall_converted', plan });");
     expect(contents).toContain("track({ type: 'trial_started', plan });");
+  });
+});
+
+describe('PaywallDialog localization', () => {
+  it.each([
+    ['sv', 'Stäng', 'Du har sett dagens kostnadsfria kläder', 'Årsvis', 'Återställ köp', 'Integritet'],
+    ['da', 'Luk', 'Du har set dagens gratis tøj', 'Årlig', 'Gendan køb', 'Privatliv'],
+    ['en', 'Close', 'You’ve seen today’s free outfit', 'Yearly', 'Restore purchases', 'Privacy'],
+    ['de', 'Close', 'You’ve seen today’s free outfit', 'Yearly', 'Restore purchases', 'Privacy'],
+  ])('renders %s copy (German intentionally falls back to English)', async (
+    language,
+    close,
+    heading,
+    yearly,
+    restore,
+    privacy,
+  ) => {
+    await i18n.changeLanguage(language);
+
+    const html = renderToStaticMarkup(
+      <PaywallDialog open trigger={null} onClose={vi.fn()} />,
+    );
+
+    expect(html).toContain(`aria-label="${close}"`);
+    expect(html).toContain(heading);
+    expect(html).toContain(`>${yearly}<span class="pw-p-badge">`);
+    expect(html).toContain(`>${restore}<`);
+    expect(html).toContain(`>${privacy}<`);
+    if (language !== 'no') expect(html).not.toContain('Gjenopprett kjøp');
   });
 });

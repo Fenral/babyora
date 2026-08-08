@@ -11,6 +11,7 @@
  */
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it } from 'vitest';
+import i18n from '../../i18n/index.js';
 import { AppPaywallGate, HARD_PAYWALL_ENABLED, isHardPaywallDue } from '../AppPaywallGate';
 import { useSubscription } from '../../state/subscription-store';
 
@@ -98,7 +99,8 @@ describe('isHardPaywallDue', () => {
 });
 
 describe('AppPaywallGate rendering', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('no');
     useSubscription.setState({
       isPremium: false,
       lastSyncedAt: null,

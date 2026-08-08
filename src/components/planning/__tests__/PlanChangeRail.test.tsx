@@ -192,7 +192,7 @@ describe('PlanChangeRail controlled semantic contract', () => {
       },
     ], event.id);
 
-    expect(markup).toContain('Ta på Langermet ullbody, Ull-mellomlag, Vinterdress, Ukjent testplagg');
+    expect(markup).toContain('Ta på Langermet ullbody, Ull-mellomlag, Vinterdress og Ukjent testplagg');
     expect(markup).toContain(event.cause);
     expect(markup.match(/<img\b/gu)).toHaveLength(3);
     expect(markup).toContain('alt=""');
@@ -222,7 +222,7 @@ describe('PlanChangeRail controlled semantic contract', () => {
     ['remove', 'circle-minus', 'Ta av Langermet ullbody'],
     ['swap', 'diamond-swap', 'Bytt fra Ull-mellomlag til Vinterdress'],
     ['rain', 'droplet-shield', 'Ta med Regntrekk på vognen'],
-    ['location', 'pin', 'Når dere kommer til Prøvested: ta på vindtett skall'],
+    ['location', 'pin', 'Når dere kommer til Prøvested: Endring'],
     ['prep', 'bag-check', 'Forbered Vognpose'],
   ] as const)('renders %s with redundant shape and verb grammar', (kind, shape, copy) => {
     const row = changeRow(kind);

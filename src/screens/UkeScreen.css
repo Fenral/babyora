@@ -481,13 +481,9 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-}
-
-.planlegg-dagslinje__merke-bokstav {
-  color: var(--dw-ink-mid);
-  font-size: var(--dw-text-meta);
-  font-weight: 700;
+  padding: 3px;
+  box-sizing: border-box;
+  object-fit: contain;
 }
 
 .planlegg-dagslinje__endring {
@@ -622,7 +618,9 @@
   width: 44px;
   height: 44px;
   border-radius: 11px;
-  object-fit: cover;
+  padding: 3px;
+  box-sizing: border-box;
+  object-fit: contain;
   /* FUNN 2026-08-05 (DoD fase 6A): sto som hardkodet #3A2A1A og flippet
      derfor ikke — en mørk firkant midt i lys modus, målt 12,64:1 mot
      krem-lerretet. Verdien ER --dw-plate mørk; tokenet fantes hele tiden
@@ -635,11 +633,4 @@
      brikke; på små objekter er det den valgte flatens stabel som er den
      riktige fysikken, ikke gruppeflatens. */
   box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-selected);
-}
-.planlegg-garments__thumb--letter {
-  display: grid;
-  place-items: center;
-  font-size: var(--dw-text-body);
-  font-weight: 700;
-  color: var(--dw-ink-mid);
 }

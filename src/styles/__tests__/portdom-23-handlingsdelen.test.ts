@@ -16,18 +16,17 @@
  * en regresjon. Portdom 23 trenger en FRAVÆRSTEST, og den må dekke alle
  * innganger til den samme <p>-en, ikke bare literalen forfatteren tenkte på.
  *
- * ── DE NI INNGANGENE (kartlagt 2026-08-04) ───────────────────────────────
- * Teksten i hviletilstandens panel kan gjeninnføres ni steder. Porten holder
+ * ── DE ÅTTE INNGANGENE (kartlagt 2026-08-04, oppdatert 2026-08-08) ───────
+ * Teksten i hviletilstandens panel kan gjeninnføres åtte steder. Porten holder
  * dem alle, med et navngitt anker per sted (se KILDESKOP under):
- *   1  WeatherScene.tsx  `Føles som ${…}°`        — selve én-linjen
+ *   1  WeatherScene.tsx  copy.weather.feelsLike() — selve én-linjen
  *   2  WeatherScene.tsx  <span class="hjm-cond">  — conditionText føyes på
  *   3  WeatherScene.tsx  <p class="hjm-note">     — den frie ekstralinja
  *   4  HjemMonter.tsx    conditionText={…}        — prop-inngang, hvile
  *   5  HjemMonter.tsx    noteText={…}             — prop-inngang, andre faser
  *   6  monter-assets.ts  getConditionLabel()      — STRENGKILDEN
- *   7  WeatherStrip.tsx  `Føles som … · …`        — den komprimerte tvillingen
+ *   7  WeatherStrip.tsx  copy.weather.feelsLike() — den komprimerte tvillingen
  *   8  cta-fingerprint.ts CTA_*_LABEL/_LINE       — «knappen rett under»
- *   9  ResultSurface.tsx «Kle på, steg for steg»  — knappens destinasjon
  *
  * Rettes bare literalen i WeatherScene, kommer teksten tilbake gjennom 4, 5,
  * 6 eller 7 uten at noe sier fra. Derfor er forbudsmønsteret SEMANTISK
@@ -56,7 +55,7 @@
  * «Er skopet stort nok» duger ikke — det ble prøvd i dag og godtok en
  * kommentarblokk. Denne porten beviser at den fant MÅLENE SINE:
  *
- *   A. Hvert av de ni stedene har et navngitt ANKER som må finnes i den
+ *   A. Hvert av de åtte stedene har et navngitt ANKER som må finnes i den
  *      strippede kilden. Forsvinner ankeret, vet ikke porten lenger hvor den
  *      leter → RØDT, ikke stille grønt.
  *   B. RENDER-LAGET beviser at INJEKSJONSFLATEN ER LEVENDE: for hver av de
@@ -290,7 +289,7 @@ function strippKommentarer(kilde: string): string {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   3. KILDESKOPET — de ni inngangene, hver med sitt anker
+   3. KILDESKOPET — de åtte inngangene, hver med sitt anker
    ══════════════════════════════════════════════════════════════════════════ */
 
 type Skopfil = { sti: string; sted: string; ankre: readonly string[] };
@@ -299,7 +298,7 @@ const KILDESKOP: readonly Skopfil[] = [
   {
     sti: 'src/components/hjem/WeatherScene.tsx',
     sted: '1–3: literalen, hjm-cond og den frie hjm-note',
-    ankre: ['Føles som ', 'hjm-cond', 'hjm-note', 'conditionText', 'noteText'],
+    ankre: ['copy.weather.feelsLike(', 'hjm-cond', 'hjm-note', 'conditionText', 'noteText'],
   },
   {
     sti: 'src/components/hjem/HjemMonter.tsx',
@@ -314,17 +313,12 @@ const KILDESKOP: readonly Skopfil[] = [
   {
     sti: 'src/components/hjem/WeatherStrip.tsx',
     sted: '7: den komprimerte tvillingen i result-current',
-    ankre: ['Føles som ', 'conditionLabel'],
+    ankre: ['copy.weather.feelsLike(', 'conditionLabel'],
   },
   {
     sti: 'src/components/hjem/cta-fingerprint.ts',
     sted: '8: «knappen rett under», som portdommen begrunnet fjerningen med',
     ankre: ['CTA_CEREMONY_LABEL', 'CTA_REVEAL_LABEL', 'CTA_CEREMONY_LINE', 'CTA_REVEAL_LINE'],
-  },
-  {
-    sti: 'src/components/hjem/ResultSurface.tsx',
-    sted: '9: knappens destinasjon',
-    ankre: ['Kle på, steg for steg'],
   },
 ];
 
@@ -510,7 +504,7 @@ describe('portdom 23 — handlingsdelen kan ikke komme tilbake', () => {
     }
   });
 
-  it('IKKE-VAKUØSITET A: hvert av de ni stedene finnes igjen i den strippede kilden', () => {
+  it('IKKE-VAKUØSITET A: hvert av de åtte stedene finnes igjen i den strippede kilden', () => {
     for (const f of LEST) {
       for (const anker of f.ankre) {
         expect(
@@ -523,7 +517,7 @@ describe('portdom 23 — handlingsdelen kan ikke komme tilbake', () => {
       }
       rapport.filer += 1;
     }
-    expect(rapport.mal, 'null mål funnet — porten måler ingenting').toBeGreaterThanOrEqual(16);
+    expect(rapport.mal, 'null mål funnet — porten måler ingenting').toBeGreaterThanOrEqual(15);
   });
 
   it('KOMMENTAR-FELLEN: minst én RÅ kilde treffer, og ingen gjør det etter stripping', () => {
@@ -554,12 +548,13 @@ describe('portdom 23 — handlingsdelen kan ikke komme tilbake', () => {
       const html = rendreHvile(kode);
       rapport.rendringer += 1;
 
-      // C — grenidentitet: dette MÅ være hvilegrenen (HjemMonter.tsx:901–948).
-      expect(html, `${kode}: ikke hvilegrenen — ask-blokken mangler`).toContain('Klar for en liten tur?');
+      // C — grenidentitet: dette MÅ være hvilegrenen. Bruk strukturelle
+      // ankre; synlig kopi er lokalisert og tilhører ikke denne porten.
+      expect(html, `${kode}: ikke hvilegrenen — ask-blokken mangler`).toContain('class="hjm-ask-block"');
       expect(html, `${kode}: panelet mangler`).toContain('<section class="hjm-panel"');
-      expect(html, `${kode}: landet i scan-grenen`).not.toContain('aria-label="Beregner antrekk"');
-      expect(html, `${kode}: landet i resultat-grenen`).not.toContain('Dagens antrekk');
-      expect(html, `${kode}: landet i offline-grenen`).not.toContain('Vi klarer oss med sist kjente vær');
+      expect(html, `${kode}: hvilegrenens CTA-fingerprint mangler`).toContain('data-cta-path=');
+      expect(html, `${kode}: landet i scan-grenen`).not.toContain('class="hjm-scan-overlay"');
+      expect(html, `${kode}: landet i resultat-grenen`).not.toContain('class="hjm-result"');
       rapport.assertions += 5;
 
       const panel = panelHtml(html);
@@ -570,7 +565,7 @@ describe('portdom 23 — handlingsdelen kan ikke komme tilbake', () => {
       // strengkilden står faktisk i panelet. Slutter den å stå der, kan en
       // mutasjon i getConditionLabel ikke lenger måles, og porten ville
       // bestått på fravær.
-      expect(panelTekst, `${kode}: «Føles som» mangler i panelet`).toContain('Føles som');
+      expect(panelTekst, `${kode}: føles-som-verdien mangler i panelet`).toContain('1°');
       const forventet = getConditionLabel(kode);
       expect(
         panelTekst,
@@ -603,7 +598,7 @@ describe('portdom 23 — handlingsdelen kan ikke komme tilbake', () => {
       rapport.assertions += 2;
     }
 
-    // Lag 2: kildene bak de ni inngangene, kommentarer strippet.
+    // Lag 2: kildene bak de åtte inngangene, kommentarer strippet.
     for (const f of LEST) {
       brudd.push(...finnBrudd(f.sti, f.strippet));
       rapport.assertions += 1;

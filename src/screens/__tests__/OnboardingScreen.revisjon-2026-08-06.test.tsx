@@ -16,9 +16,14 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import i18n from '../../i18n';
 import { OnboardingScreen } from '../OnboardingScreen';
 import { ChildrenProvider } from '../../state/children-provider';
+
+beforeAll(async () => {
+  await i18n.changeLanguage('no');
+});
 
 function kilde(sti: string): string {
   return readFileSync(resolve(process.cwd(), sti), 'utf8');

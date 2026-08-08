@@ -25,6 +25,7 @@ import type { ScanCoordinatorState } from '../../../lib/scan/coordinator.js';
 import type { ScanCacheSlot } from '../../../lib/scan/types.js';
 import { localDateKey } from '../../../lib/scan/types.js';
 import { computeScanResultKey } from '../../../lib/scan/result-key.js';
+import i18n from '../../../i18n/index.js';
 import {
   CTA_CEREMONY_LINE,
   CTA_REVEAL_LINE,
@@ -145,7 +146,8 @@ function slotWith(resultKey: string, activity: 'utelek' | 'vogn'): ScanCacheSlot
   };
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await i18n.changeLanguage('no');
   mockedState = { phase: 'weather-ready' };
   mockedSlots = {};
   sessionResultKeys.clear();

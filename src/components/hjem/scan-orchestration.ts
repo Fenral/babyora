@@ -22,6 +22,10 @@
  * timer-varighetene over.
  */
 import type { ScanCacheSlot, ScanStaleReason } from '../../lib/scan/types.js';
+import type {
+  HjemActivity,
+  HjemStaleCopy,
+} from './hjem-copy.js';
 
 /**
  * Eier-override v3: HVERT trykk (ikke bare «første gang noensinne»)
@@ -155,15 +159,30 @@ const LOWERCASE_ACTIVITY_LABEL: Readonly<Record<'utelek' | 'vogn', string>> = {
   vogn: 'vogn',
 };
 
+const DEFAULT_STALE_COPY: HjemStaleCopy = Object.freeze({
+  headline: (reason, activity) => {
+    if (reason === 'identity-changed') {
+      return `Nytt antrekk for ${LOWERCASE_ACTIVITY_LABEL[activity]}?`;
+    }
+    if (reason === 'weather-basis') return 'Været har endret seg';
+    return 'Fikk ikke beregnet antrekket';
+  },
+  cta: (reason, activity) => reason === 'identity-changed'
+    ? `Se antrekk for ${LOWERCASE_ACTIVITY_LABEL[activity]}`
+    : 'Beregn på nytt',
+  changeChip: (from, to) =>
+    `Du byttet fra ${LOWERCASE_ACTIVITY_LABEL[from]} til ${LOWERCASE_ACTIVITY_LABEL[to]}`,
+  previousLabel: 'FORRIGE ANTREKK',
+  previousCount: (count) => `${count} plagg beregnet.`,
+  showPrevious: 'Vis forrige antrekk',
+});
+
 export function staleHeadline(
   reason: ScanStaleReason,
-  activity: 'utelek' | 'vogn',
+  activity: HjemActivity,
+  copy: HjemStaleCopy = DEFAULT_STALE_COPY,
 ): string {
-  if (reason === 'identity-changed') {
-    return `Nytt antrekk for ${LOWERCASE_ACTIVITY_LABEL[activity]}?`;
-  }
-  if (reason === 'weather-basis') return 'Været har endret seg';
-  return 'Fikk ikke beregnet antrekket';
+  return copy.headline(reason, activity);
 }
 
 /** Jf. arkitektur-notatet: recalc-feil skal alltid tilby «Beregn på nytt» — den
@@ -171,18 +190,17 @@ export function staleHeadline(
  *  identitetsendring IKKE gikk via auto-rekalkulering. */
 export function staleCtaLabel(
   reason: ScanStaleReason,
-  activity: 'utelek' | 'vogn',
+  activity: HjemActivity,
+  copy: HjemStaleCopy = DEFAULT_STALE_COPY,
 ): string {
-  if (reason === 'identity-changed') {
-    return `Se antrekk for ${LOWERCASE_ACTIVITY_LABEL[activity]}`;
-  }
-  return 'Beregn på nytt';
+  return copy.cta(reason, activity);
 }
 
 export function activityChangeChip(
-  fromActivity: 'utelek' | 'vogn' | null,
-  toActivity: 'utelek' | 'vogn',
+  fromActivity: HjemActivity | null,
+  toActivity: HjemActivity,
+  copy: HjemStaleCopy = DEFAULT_STALE_COPY,
 ): string | null {
   if (fromActivity === null || fromActivity === toActivity) return null;
-  return `Du byttet fra ${LOWERCASE_ACTIVITY_LABEL[fromActivity]} til ${LOWERCASE_ACTIVITY_LABEL[toActivity]}`;
+  return copy.changeChip(fromActivity, toActivity);
 }

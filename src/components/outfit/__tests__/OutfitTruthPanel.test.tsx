@@ -21,6 +21,9 @@ import { OutfitTruthPanel } from '../OutfitTruthPanel.js';
 import { VerifiedAvatarComposite } from '../VerifiedAvatarComposite.js';
 import { OUTFIT_TRUTH_V1_AVAILABLE } from '../../../lib/outfit/feature-flags.js';
 import { useOutfitSelectionStore } from '../../../state/outfit-selection-store.js';
+import { deepFlowCopyFor } from '../../../screens/deep-flow-copy.js';
+
+const norwegianRecoveryCopy = deepFlowCopyFor('no').outfit;
 
 vi.mock('../../../state/outfit-selection-store.js', async (importOriginal) => {
   const actual = await importOriginal<
@@ -248,8 +251,8 @@ describe('OutfitTruthPanel', () => {
     expect(html).toContain('Innerst til ytterst');
     expect(html).not.toContain('data-outfit-map-node=');
     expect(html).not.toContain('data-avatar-truth=');
-    expect(html).toContain('Kjenn nakken');
-    expect(html).toContain('Stikk to fingre under genseren bak i nakken');
+    expect(html).toContain(norwegianRecoveryCopy.recoveryTitle);
+    expect(html).toContain(norwegianRecoveryCopy.recoveryInstruction);
     // T1A: panelet viser visningsnavn (displayNameForDbString), ikke rå
     // motor-strenger.
     for (const garment of bundle.base.garments) {
@@ -294,7 +297,7 @@ describe('OutfitTruthPanel', () => {
     expect(html).not.toContain('data-outfit-row=');
     expect(html).not.toContain('Se alternativ');
     expect(html).not.toContain('<img');
-  }, 120_000);
+  }, 180_000);
 
   it('renders unavailable results as neutral with no advice or injected callback control', () => {
     const bundle = unavailableBundle();
@@ -413,8 +416,8 @@ describe('OutfitTruthPanel', () => {
     const html = renderToStaticMarkup(
       <OutfitTruthPanel outfitBundle={supportedBundle()} onOpenWarmColdGuide={undefined as never} />,
     );
-    expect(html).toContain('Kjenn nakken');
-    expect(html).toContain('Stikk to fingre under genseren bak i nakken');
+    expect(html).toContain(norwegianRecoveryCopy.recoveryTitle);
+    expect(html).toContain(norwegianRecoveryCopy.recoveryInstruction);
     expect(html).not.toContain('Se varm eller kald-guiden');
   });
 

@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import {
   GENERIC_GARMENT_SVG,
   garmentIdFor,
@@ -7,15 +9,14 @@ import {
 import { displayNameForDbString } from '../../data/garment-display-names.js';
 import { useHapticSystem } from '../../lib/haptics/system.js';
 import type {
-  PlanningChangeEvent,
   PlanningChangeKind,
   PlanningTransition,
 } from '../../lib/planning/change-events.js';
-import { planningChangeActionSentence } from '../../lib/planning/change-sentence.js';
 import {
   decidePlanningInteraction,
   dispatchPlanningInteraction,
 } from '../../lib/planning/planning-interaction.js';
+import { htmlLanguageFor } from '../../i18n/language-policy.js';
 import './PlanChangeRail.css';
 
 export type PlanningRailEvent = Readonly<{
@@ -100,17 +101,67 @@ function eventGarments(event: PlanningRailEvent): readonly string[] {
   ])];
 }
 
-function timeLabel(atIso: string): string {
+function timeLabel(atIso: string, locale: string): string {
   const instant = new Date(atIso);
   if (Number.isNaN(instant.getTime())) return atIso;
-  return instant.toLocaleTimeString('nb-NO', {
+  return instant.toLocaleTimeString(locale, {
     timeZone: 'Europe/Oslo',
     hour: '2-digit',
     minute: '2-digit',
   });
 }
 
-function GarmentPreview({ garment }: { garment: string }) {
+function localizedGarmentList(
+  garments: readonly string[],
+  language: string,
+  locale: string,
+): string {
+  return new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' }).format(
+    garments.map((garment) => displayNameForDbString(garment, language)),
+  );
+}
+
+function diffAction(
+  event: PlanningRailEvent,
+  t: TFunction,
+  language: string,
+  locale: string,
+): string {
+  const added = localizedGarmentList(event.addedGarments, language, locale);
+  const removed = localizedGarmentList(event.removedGarments, language, locale);
+  if (added && removed) return t('plan.rail.swap', { removed, added });
+  if (added) return t('plan.rail.add', { garments: added });
+  if (removed) return t('plan.rail.remove', { garments: removed });
+  return t('plan.change');
+}
+
+function localizedAction(
+  event: PlanningRailEvent,
+  t: TFunction,
+  language: string,
+  locale: string,
+): string {
+  if (event.kind === 'rain' && event.transition?.kind === 'rain') {
+    const garments = localizedGarmentList(event.transition.garments, language, locale);
+    return t(event.transition.action === 'bring' ? 'plan.rail.bring' : 'plan.rail.wear', {
+      garments,
+    });
+  }
+  if (event.kind === 'prep' && event.transition?.kind === 'prep') {
+    return t('plan.rail.prepare', {
+      garments: localizedGarmentList(event.transition.garments, language, locale),
+    });
+  }
+  if (event.kind === 'location' && event.transition?.kind === 'location') {
+    return t('plan.rail.location', {
+      place: event.transition.placeLabel,
+      action: diffAction(event, t, language, locale),
+    });
+  }
+  return diffAction(event, t, language, locale);
+}
+
+function GarmentPreview({ garment, language }: { garment: string; language: string }) {
   const source = garmentPngSafe(garmentIdFor(garment));
   return (
     <figure className="plan-change-rail__preview">
@@ -125,7 +176,7 @@ function GarmentPreview({ garment }: { garment: string }) {
       />
       {/* T1A: synlig navn via visningsnavn-kilden (rå streng forblir
           bilde-oppslagsnøkkel over). */}
-      <figcaption>{displayNameForDbString(garment)}</figcaption>
+      <figcaption>{displayNameForDbString(garment, language)}</figcaption>
     </figure>
   );
 }
@@ -141,8 +192,11 @@ function ChangeRow({
   onToggle: (eventId: string) => void;
   onOpenOutfit: Props['onOpenOutfit'];
 }) {
+  const { t, i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const locale = htmlLanguageFor(language);
   const detailId = `planning-rail-detail-${row.eventId}`;
-  const action = planningChangeActionSentence(row.event as PlanningChangeEvent);
+  const action = localizedAction(row.event, t, language, locale);
   const garments = eventGarments(row.event);
 
   return (
@@ -162,7 +216,7 @@ function ChangeRow({
         >
           <KindIcon kind={row.event.kind} />
         </span>
-        <time dateTime={row.atIso}>{timeLabel(row.atIso)}</time>
+        <time dateTime={row.atIso}>{timeLabel(row.atIso, locale)}</time>
         <span className="plan-change-rail__summary">{action}</span>
         {/* Samme bytte som ForecastDisclosure: rettes bare den ene, får
             Plan-skjermen to ulike utvid-indikatorer. */}
@@ -189,9 +243,9 @@ function ChangeRow({
           <p className="plan-change-rail__action">{action}</p>
           <p className="plan-change-rail__cause">{row.event.cause}</p>
           {garments.length > 0 && (
-            <div className="plan-change-rail__previews" aria-label="Plagg i endringen">
+            <div className="plan-change-rail__previews" aria-label={t('plan.rail.garments')}>
               {garments.slice(0, 3).map((garment) => (
-                <GarmentPreview key={garment} garment={garment} />
+                <GarmentPreview key={garment} garment={garment} language={language} />
               ))}
             </div>
           )}
@@ -203,7 +257,7 @@ function ChangeRow({
               disabled={!expanded}
               onClick={(event) => onOpenOutfit(row.eventId, event.currentTarget)}
             >
-              Se hele antrekket
+              {t('plan.rail.openOutfit')}
             </button>
           )}
         </div>
@@ -219,6 +273,7 @@ export function PlanChangeRail({
   onOpenOutfit,
 }: Props) {
   const { fire } = useHapticSystem();
+  const { t } = useTranslation();
 
   const onToggle = (eventId: string) => {
     dispatchPlanningInteraction(
@@ -237,7 +292,7 @@ export function PlanChangeRail({
   };
 
   return (
-    <ol className="plan-change-rail" aria-label="Antrekksendringer gjennom dagen">
+    <ol className="plan-change-rail" aria-label={t('plan.rail.label')}>
       {rows.map((row) => (
         row.type === 'unchanged'
           ? (

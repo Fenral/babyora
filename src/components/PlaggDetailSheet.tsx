@@ -23,13 +23,16 @@
  * byttet, kun informere).
  */
 import { useCallback, useEffect, useRef, type JSX, type RefObject } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useNativeSettings } from '../hooks/useNativeSettings';
+import { garmentFactFor } from '../data/garment-facts';
 import { infoFor } from '../data/garment-info';
 import {
   displayNameForDbString,
   garmentDisplayName,
 } from '../data/garment-display-names';
+import { localizedGarmentName } from '../data/garment-display-names-localized';
 import {
   GENERIC_GARMENT_SVG,
   dbStringFor,
@@ -37,8 +40,9 @@ import {
   garmentPng,
   type GarmentId,
 } from '../data/garment-illustrations';
-import { categoryFor, CATEGORY_LABEL, type GarmentCategory } from '../data/garment-category';
+import { categoryFor, type GarmentCategory } from '../data/garment-category';
 import { getAlternatives } from '../lib/wool-layers/alternatives';
+import { klePaaCopyFor, resolveKlePaaLanguage } from './klepaa/kle-paa-copy';
 
 /* F84 (Sivert: «mer native og spennende» — dagens ark leste som nettside).
    Kategori → lag-triade farge (samme som PaakledningScreen/Plaggbiblioteket). */
@@ -71,8 +75,15 @@ export function PlaggDetailSheet({
   triggerRef,
   onOpenLibrary,
 }: PlaggDetailSheetProps): JSX.Element | null {
+  const { i18n } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const { reducedMotion } = useNativeSettings();
+  const htmlLanguage = typeof document === 'undefined' ? null : document.documentElement.lang;
+  const language = resolveKlePaaLanguage(
+    i18n.resolvedLanguage ?? i18n.language,
+    htmlLanguage,
+  );
+  const copy = klePaaCopyFor(language);
 
   /* F83 sheet-exit (a11y-preclearance vilkår 3):
      - requestClose() = ENESTE lukke-vei for X/backdrop/ESC.
@@ -174,13 +185,19 @@ export function PlaggDetailSheet({
   // matchet derfor ALDRI. dbStringFor() konverterer tilbake til riktig format.
   // T1A: dbStringFor beholdes HER kun som oppslagsnøkkel — aldri som visning.
   const alt = getAlternatives(dbStringFor(garmentId));
-  const pros = alt?.pros ?? [];
-  const cons = alt?.cons ?? [];
+  /* Alternativdatabasen har foreløpig bare norsk prosa. Behold den komplette
+     norske flaten, men ikke lekk den inn i andre språk. Der brukes den
+     kildebelagte, lokaliserte plaggfaktaen i stedet. */
+  const pros = language === 'no' ? alt?.pros ?? [] : [];
+  const cons = language === 'no' ? alt?.cons ?? [] : [];
   const alternatives = alt?.alternatives ?? [];
+  const fact = garmentFactFor(garmentId, language);
+  const description = language === 'no' ? info?.what ?? fact.text : fact.text;
+  const when = language === 'no' ? info?.when ?? null : null;
 
   // T1A: brukersynlig tittel kommer fra den kanoniske visningsnavn-kilden
   // (garment-display-names.ts), ikke rå db-streng («tykt ullsett»-mønsteret).
-  const title = garmentDisplayName(garmentId);
+  const title = localizedGarmentName(garmentId, language) ?? garmentDisplayName(garmentId);
 
   // F84: kategori → lag-farge (aldri eneste signal — CATEGORY_LABEL-teksten
   // følger alltid med badgen).
@@ -254,7 +271,7 @@ export function PlaggDetailSheet({
         >
           <button
             type="button"
-            aria-label="Lukk plagg-detalj"
+            aria-label={copy.detail.closeAria}
             onClick={requestClose}
             className="ba-press"
             style={{
@@ -365,31 +382,31 @@ export function PlaggDetailSheet({
                   color: catColor.edge,
                 }}
               >
-                {CATEGORY_LABEL[category]}
+                {copy.categories[category]}
               </span>
             ) : null}
           </div>
 
           {/* HVA → lead-avsnitt (ikke seksjon-boks — bryter monotonien) */}
-          {info?.what ? (
+          {description ? (
             <p
               className={reducedMotion ? undefined : 'plagg-stagger'}
               style={{ ...leadStyle, '--stagger-i': 1 } as React.CSSProperties}
             >
-              {info.what}
+              {description}
             </p>
           ) : null}
 
           {/* NÅR → fakta-kort med ikon */}
-          {info?.when ? (
+          {when ? (
             <section
               className={reducedMotion ? undefined : 'plagg-stagger'}
               style={{ ...factCardStyle, '--stagger-i': 2 } as React.CSSProperties}
             >
               <ClockIcon color={catColor.bg} />
               <div>
-                <h3 style={eyebrowStyle}>Når passer det</h3>
-                <p style={factBodyStyle}>{info.when}</p>
+                <h3 style={eyebrowStyle}>{copy.detail.whenTitle}</h3>
+                <p style={factBodyStyle}>{when}</p>
               </div>
             </section>
           ) : null}
@@ -402,7 +419,7 @@ export function PlaggDetailSheet({
             >
               {pros.length > 0 ? (
                 <div>
-                  <h3 style={eyebrowStyle}>Fordeler</h3>
+                  <h3 style={eyebrowStyle}>{copy.detail.advantages}</h3>
                   <ul role="list" style={traitListStyle}>
                     {pros.map((p, i) => (
                       <li key={i} style={traitRowStyle}>
@@ -415,7 +432,7 @@ export function PlaggDetailSheet({
               ) : null}
               {cons.length > 0 ? (
                 <div>
-                  <h3 style={eyebrowStyle}>Ulemper</h3>
+                  <h3 style={eyebrowStyle}>{copy.detail.disadvantages}</h3>
                   <ul role="list" style={traitListStyle}>
                     {cons.map((c, i) => (
                       <li key={i} style={traitRowStyle}>
@@ -435,7 +452,7 @@ export function PlaggDetailSheet({
               className={reducedMotion ? undefined : 'plagg-stagger'}
               style={{ marginBottom: 0, '--stagger-i': 4 } as React.CSSProperties}
             >
-              <h3 style={eyebrowStyle}>Alternative plagg</h3>
+              <h3 style={eyebrowStyle}>{copy.detail.alternatives}</h3>
               <ul role="list" style={alternativesGroupStyle}>
                 {alternatives.map((a, i) => {
                   // a.name kan være enten en database-streng (norsk) eller en
@@ -478,19 +495,19 @@ export function PlaggDetailSheet({
                             lineHeight: 1.25,
                           }}
                         >
-                          {displayNameForDbString(a.name)}
+                          {localizedGarmentName(altId, language) ?? displayNameForDbString(a.name)}
                         </div>
-                        {a.pros?.[0] ? (
+                        {language === 'no' && a.pros?.[0] ? (
                           <div style={miniProsStyle}>
                             <span aria-hidden="true" style={{ color: 'var(--dw-success)', fontWeight: 700 }}>+</span>{' '}
-                            <span className="sr-only">Fordel: </span>
+                            <span className="sr-only">{copy.detail.advantagePrefix}</span>
                             {a.pros[0]}
                           </div>
                         ) : null}
-                        {a.cons?.[0] ? (
+                        {language === 'no' && a.cons?.[0] ? (
                           <div style={miniConsStyle}>
                             <span aria-hidden="true" style={{ color: 'var(--dw-danger)', fontWeight: 700 }}>−</span>{' '}
-                            <span className="sr-only">Ulempe: </span>
+                            <span className="sr-only">{copy.detail.disadvantagePrefix}</span>
                             {a.cons[0]}
                           </div>
                         ) : null}
@@ -512,7 +529,7 @@ export function PlaggDetailSheet({
               style={{ ...libraryLinkStyle, '--stagger-i': 5 } as React.CSSProperties}
               onClick={onOpenLibrary}
             >
-              <span>Se alternativer i biblioteket</span>
+              <span>{copy.detail.libraryLink}</span>
               <ChevronRightIcon />
             </button>
           ) : null}

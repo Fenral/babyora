@@ -57,12 +57,12 @@ describe('HjemMonter — P5 stub wiring', () => {
 
   it('the offline ask-block\'s "Prøv å hente været igjen" calls the real retry handler', () => {
     const contents = source(hjemMonterPath);
-    expect(contents).toContain('<button type="button" className="hjm-cta-ghost" onClick={onRetryWeather}>\n              Prøv å hente været igjen');
+    expect(contents).toContain('<button type="button" className="hjm-cta-ghost" onClick={onRetryWeather}>\n              {copy.weather.retry}');
   });
 
   it('"Vis forrige antrekk" (result-stale) is still an explicit stub — no existing drill for it yet', () => {
     const contents = source(hjemMonterPath);
-    expect(contents).toContain('<button type="button" className="hjm-cta-ghost" onClick={noopStub}>\n              Vis forrige antrekk');
+    expect(contents).toContain('<button type="button" className="hjm-cta-ghost" onClick={noopStub}>\n              {copy.stale.showPrevious}');
   });
 });
 

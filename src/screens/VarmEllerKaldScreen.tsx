@@ -21,9 +21,10 @@
  *  - Status-rows bruker semantic colors + tekst (ikke kun farge)
  */
 import { useCallback, useState, type CSSProperties, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
-import { WARM_COLD_RECOVERY_COPY } from '../lib/copy/warm-cold-recovery';
+import { deepFlowCopyFor } from './deep-flow-copy';
 
 export interface VarmEllerKaldScreenProps {
   onBack: () => void;
@@ -34,9 +35,6 @@ type StatusKey = 'varm' | 'perfekt' | 'kald';
 interface StatusRowSpec {
   key: StatusKey;
   num: string;
-  title: string;
-  signal: string;
-  action: string;
   iconBg: string;
   iconColor: string;
   dotColor: string;
@@ -51,12 +49,11 @@ interface StatusRowSpec {
      tilbake uten å lese begrunnelsen. */
   iconPaths: ReactElement;
   iconStrokeWidth: number;
-  ariaLabel: string;
 }
 
 const STATUS_ROWS: readonly StatusRowSpec[] = [
   {
-    ...WARM_COLD_RECOVERY_COPY.statuses.warm,
+    key: 'varm',
     num: '1',
     // --dw-plate, ikke --dw-raised: ikonrammen ligger PÅ statuskortet, som
     // selv er --dw-raised. Se iconWrapStyle.
@@ -72,7 +69,7 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
     ),
   },
   {
-    ...WARM_COLD_RECOVERY_COPY.statuses.perfekt,
+    key: 'perfekt',
     num: '2',
     iconBg: 'var(--dw-plate)',
     iconColor: 'var(--dw-success)',
@@ -91,7 +88,7 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
     iconPaths: <path d="M5 12.5l4.5 4.5L19 7" />,
   },
   {
-    ...WARM_COLD_RECOVERY_COPY.statuses.cold,
+    key: 'kald',
     num: '3',
     iconBg: 'var(--dw-plate)',
     iconColor: 'var(--dw-warning)',
@@ -132,6 +129,8 @@ const STATUS_ROWS: readonly StatusRowSpec[] = [
 export function VarmEllerKaldScreen({
   onBack,
 }: VarmEllerKaldScreenProps): ReactElement {
+  const { i18n } = useTranslation();
+  const copy = deepFlowCopyFor(i18n.resolvedLanguage ?? i18n.language);
   const { fire } = useHapticSystem();
   const { reducedMotion } = useNativeSettings();
   // Status-radene (varm/perfekt/kald) er nå statisk info (tillits-bug-fix,
@@ -510,13 +509,13 @@ export function VarmEllerKaldScreen({
           border: 0,
         }}
       >
-        Varm eller kald — sjekkliste for foreldre
+        {copy.warmCold.pageTitle}
       </h1>
 
       <header style={topbarStyle}>
         <button
           type="button"
-          aria-label="Tilbake"
+          aria-label={copy.common.back}
           onClick={handleBack}
           onPointerDown={() => setPressedKey('back')}
           onPointerUp={() => setPressedKey(null)}
@@ -539,13 +538,13 @@ export function VarmEllerKaldScreen({
           </svg>
         </button>
         <h2 style={titleStyle} aria-hidden="true">
-          Varm eller kald?
+          {copy.warmCold.title}
         </h2>
       </header>
 
       <div style={scrollStyle}>
         {/* HERO — body diagram med neck-pin callout */}
-        <section style={heroStyle} aria-label="Kjenn på babyens nakke">
+        <section style={heroStyle} aria-label={copy.warmCold.heroAria}>
           <div style={heroFigureStyle} aria-hidden="true">
             {/*
               Theme-aware illustrasjon: <picture> bruker prefers-color-scheme
@@ -621,16 +620,16 @@ export function VarmEllerKaldScreen({
             </div>
           </div>
           <div style={heroTextStyle}>
-            <p style={heroEyebrowStyle}>2-finger-test</p>
-            <h3 style={heroTitleStyle}>{WARM_COLD_RECOVERY_COPY.title}</h3>
-            <p style={heroSubStyle}>{WARM_COLD_RECOVERY_COPY.instruction}</p>
+            <p style={heroEyebrowStyle}>{copy.warmCold.eyebrow}</p>
+            <h3 style={heroTitleStyle}>{copy.warmCold.recoveryTitle}</h3>
+            <p style={heroSubStyle}>{copy.warmCold.recoveryInstruction}</p>
           </div>
         </section>
 
         {/* Section heading */}
         <div style={sectionHeadingStyle} role="presentation">
           <h4 id="varm-kald-status-heading" style={sectionHeadingTextStyle}>
-            Tre mulige signaler
+            {copy.warmCold.signals}
           </h4>
           <span style={sectionRuleStyle} aria-hidden="true" />
         </div>
@@ -641,7 +640,8 @@ export function VarmEllerKaldScreen({
           style={statusCardStyle}
           aria-labelledby="varm-kald-status-heading"
         >
-          {STATUS_ROWS.map((row, idx) => {
+          {STATUS_ROWS.map((visual, idx) => {
+            const row = { ...visual, ...copy.warmCold.statuses[idx]! };
             // Tillits-bug-fix (F80 port): disse radene var tidligere <button>
             // med press-feedback og cursor:pointer, men onClick gjorde ingenting
             // synlig/funksjonelt (kun haptikk) — ingen nærliggende mål (ingen
@@ -869,8 +869,7 @@ export function VarmEllerKaldScreen({
             <path d="M12 8v4M12 16h.01" />
           </svg>
           <p style={footnoteTextStyle}>
-            Kalde hender og føtter er normalt og betyr <strong>ikke</strong> at
-            barnet fryser.
+            {copy.warmCold.footnoteBefore}<strong>{copy.warmCold.footnoteEmphasis}</strong>{copy.warmCold.footnoteAfter}
           </p>
         </div>
       </div>
@@ -879,7 +878,7 @@ export function VarmEllerKaldScreen({
       <div style={ctaBarStyle}>
         <button
           type="button"
-          aria-label="Ferdig — tilbake til oversikt"
+          aria-label={copy.warmCold.doneAria}
           onClick={handleCtaPress}
           onPointerDown={() => setPressedKey('cta')}
           onPointerUp={() => setPressedKey(null)}
@@ -887,7 +886,7 @@ export function VarmEllerKaldScreen({
           onPointerCancel={() => setPressedKey(null)}
           style={ctaStyle}
         >
-          Ferdig
+          {copy.warmCold.done}
           <svg
             width="16"
             height="16"
