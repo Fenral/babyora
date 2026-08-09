@@ -252,7 +252,8 @@
     "todayHourWindow": " kl. 08, 12, 16 og 20",
     "todayHourWindowToTomorrow": " fra kl. 08 i dag til kl. 20 i morgen",
     "tomorrowHourWindow": " kl. 08, 12, 16 og 20 i morgen",
-    "openDetails": "Tryk for detaljer."
+    "openDetails": "Tryk for detaljer.",
+    "disclaimerShort": "Vejledende råd — hold øje med barnet, og brug din egen vurdering."
   },
   "plan": {
     "title": "Planlæg",

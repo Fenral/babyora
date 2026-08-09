@@ -252,7 +252,8 @@
     "todayHourWindow": " kl 08, 12, 16 och 20",
     "todayHourWindowToTomorrow": " från 08 idag till 20 imorgon",
     "tomorrowHourWindow": " kl 08, 12, 16 och 20 imorgon",
-    "openDetails": "Tryck för detaljer."
+    "openDetails": "Tryck för detaljer.",
+    "disclaimerShort": "Vägledande råd — håll uppsikt över barnet och använd ditt eget omdöme."
   },
   "plan": {
     "title": "Planera",

@@ -252,7 +252,8 @@
     "todayHourWindow": " um 08, 12, 16 und 20 Uhr",
     "todayHourWindowToTomorrow": " von 08 Uhr heute bis 20 Uhr morgen",
     "tomorrowHourWindow": " um 08, 12, 16 und 20 Uhr morgen",
-    "openDetails": "Tippen für Details."
+    "openDetails": "Tippen für Details.",
+    "disclaimerShort": "Nur ein Richtwert — beobachte dein Kind und verlass dich auf dein Urteil."
   },
   "plan": {
     "title": "Planen",

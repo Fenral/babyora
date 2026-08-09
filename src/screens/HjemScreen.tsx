@@ -58,7 +58,8 @@ import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { recommend } from '../lib/wool-layers/recommend';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
-import { DISCLAIMER_SHORT } from '../lib/copy/disclaimer';
+import { DISCLAIMER_SHORT, DISCLAIMER_SHORT_KEY } from '../lib/copy/disclaimer';
+import { useTranslation } from 'react-i18next';
 import { verifiedAvatarAsset } from '../lib/recommendation/verified-avatar';
 import { avatarPng, headwearFromRecommendation, tierFromRecommendation } from '../lib/avatar-tier';
 import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
@@ -381,6 +382,9 @@ export function HjemScreen({
   // _onNavigate beholdes i signaturen (App passer den), men brukes ikke lokalt
   // siden BottomTabBar nå mountes globalt i App.tsx.
   void _onNavigate;
+  /* Kun for ansvarsfraskrivelsen nederst. Den var en hardkodet norsk konstant
+     og lekket derfor norsk til alle språk — se lib/copy/disclaimer.ts. */
+  const { t } = useTranslation();
   const { active, needsOnboarding } = useChildren();
   const { reducedMotion } = useNativeSettings();
   const { fire } = useHapticSystem();
@@ -1274,7 +1278,7 @@ export function HjemScreen({
                 textAlign: 'center',
               }}
             >
-              {DISCLAIMER_SHORT}
+              {t(DISCLAIMER_SHORT_KEY, { defaultValue: DISCLAIMER_SHORT })}
             </p>
 
           </div>

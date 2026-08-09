@@ -2,8 +2,22 @@ import type { Activity, Layer, TempBand } from './types.js';
 
 /**
  * Temperatur-bånd i grader Celsius (føles-som).
- * Disse er kalibrert mot Babyverden og Reima sine åpne anbefalinger.
- * MÅ valideres av helsesøster før produksjons-lansering.
+ * Kalibrert mot Babyverden og Reima sine åpne anbefalinger.
+ *
+ * EKSTERN FAGSIGNATUR ER BEVISST FRAVÆRENDE (eierbeslutning 2026-07-15,
+ * bekreftet 2026-08-09). Produktet lanseres på denne containede motoren
+ * uten helsesøster-validering, og ansvaret bæres i stedet av disclaimeren
+ * i `src/lib/copy/disclaimer.ts` — vist ved selve anbefalingen, i
+ * onboarding og i innstillingenes juridiske sone.
+ *
+ * Her sto tidligere «MÅ valideres av helsesøster før produksjons-lansering».
+ * Den setningen overlevde beslutningen i juli og gjorde koden til en påstand
+ * om egen kvalitet som ikke var dekket. Disclaimeren er den faktiske
+ * mekanismen; den setningen var et løfte uten eier.
+ *
+ * Følgen for endringer her: tallene under er ikke faglig signert, og skal
+ * derfor ikke justeres på magefølelse. Endres et bånd, endres et råd som
+ * går rett til en forelder.
  */
 export function bandForTemp(feelsLikeC: number): TempBand {
   if (feelsLikeC >= 28) return 'ekstrem_varme'; // iter 26: nytt bånd

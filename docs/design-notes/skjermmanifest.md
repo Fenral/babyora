@@ -27,7 +27,7 @@ Funnpunktene er løftet fra `docs/design-notes/lanseringsstatus-2026-08-03.md`.
 |---|---|---:|---|---:|---:|---|---|---|
 | Familie (skall) | `src/screens/FamilieScreen.tsx` | 18 | — | 0 | 0 | App.tsx lazy()-register | nei | — |
 | Finn antrekk / Juster | `src/screens/FinnAntrekkScreen.tsx` | 1511 | 20 CSSProperties + 4 `style={{` | 62 | 0 | App.tsx lazy()-register | ja | 3 |
-| Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1293 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 11 | 22 | App.tsx lazy()-register | ja | 3 |
+| Hjem (referanse) | `src/screens/HjemScreen.tsx` | 1297 | 1 `<style>` + 23 CSSProperties + 6 `style={{` | 11 | 22 | App.tsx lazy()-register | ja | 3 |
 | Innstillinger | `src/screens/InnstillingerScreen.tsx` | 6455 | 190 CSSProperties + 53 `style={{` | 337 | 5 | rendres av FamilieScreen.tsx | ja | 3 |
 | Onboarding | `src/screens/OnboardingScreen.tsx` | 2033 | 1 CSSProperties | 240 | 34 | App.tsx lazy()-register | ja | 3 |
 | Påkledning | `src/screens/PaakledningScreen.tsx` | 445 | — | 0 | 0 | App.tsx lazy()-register | nei | 4 |
