@@ -362,8 +362,12 @@ describe('finalized occurrence swap adapter', () => {
     expect(result.recommendation.safetyFlags).not.toBe(
       finalizedRecommendation.safetyFlags,
     );
-    expect(result.recommendation.summary).toBe(
+    expect(result.recommendation.summary).not.toBe(
       finalizedRecommendation.summary,
+    );
+    expect(result.recommendation.summary).toContain('vinterkjøredress');
+    expect(result.recommendation.summary).not.toContain(
+      'isolert vinterkjøredress',
     );
     expect(result.recommendation.structuredNotes).toContainEqual({
       category: 'sikkerhet',

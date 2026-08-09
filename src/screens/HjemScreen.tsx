@@ -56,13 +56,17 @@ import { useChildren } from '../state/children-store';
 import { useWeather } from '../hooks/useWeather';
 import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
-import { recommend } from '../lib/wool-layers/recommend';
+import {
+  canonicalizeSurfaceRecommendInput,
+  recommendForHomeSurface,
+  type SurfaceRecommendInput,
+} from '../lib/wool-layers/surface-recommendation';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
 import { DISCLAIMER_SHORT, DISCLAIMER_SHORT_KEY } from '../lib/copy/disclaimer';
 import { useTranslation } from 'react-i18next';
 import { verifiedAvatarAsset } from '../lib/recommendation/verified-avatar';
 import { avatarPng, headwearFromRecommendation, tierFromRecommendation } from '../lib/avatar-tier';
-import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
+import type { Recommendation } from '../lib/wool-layers/types';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { displayNameForDbString } from '../data/garment-display-names';
 // Gamle A1-A7-PNG-ene er byttet ut med clay-verdenen fra F79/F80.
@@ -466,7 +470,7 @@ export function HjemScreen({
 
   // R2 (2026-07-14): motor-input som eget memo slik at samme input kan gis
   // videre til den endelige sikkerhetsgrensen ved session-swaps.
-  const engineInput = useMemo<RecommendInput | null>(() => {
+  const surfaceEngineInput = useMemo<SurfaceRecommendInput | null>(() => {
     if (!weather.now) return null;
     return {
       weather: {
@@ -478,19 +482,26 @@ export function HjemScreen({
       },
       child: { ageMonths },
       activity,
-      materialPreference: active.materialPreference,
-      ...(activity === 'vogn' ? { vognMode } : {}),
+      materialPreference: active.materialPreference ?? null,
+      vognMode: activity === 'vogn' ? vognMode : null,
     };
   }, [weather.now, ageMonths, activity, active.materialPreference, vognMode]);
 
+  const engineInput = useMemo(
+    () => (surfaceEngineInput === null
+      ? null
+      : canonicalizeSurfaceRecommendInput(surfaceEngineInput)),
+    [surfaceEngineInput],
+  );
+
   const recommendation = useMemo<Recommendation | null>(() => {
-    if (!engineInput) return null;
+    if (!surfaceEngineInput) return null;
     try {
-      return recommend(engineInput);
+      return recommendForHomeSurface(surfaceEngineInput);
     } catch {
       return null;
     }
-  }, [engineInput]);
+  }, [surfaceEngineInput]);
 
   /**
    * Swap-resolved recommendation: items erstattes per session-swap-store.

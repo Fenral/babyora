@@ -30,6 +30,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Recommendation engine consistency
+        run: npm run verify:engine-consistency
+
       - name: Unit tests
         run: npm test
 

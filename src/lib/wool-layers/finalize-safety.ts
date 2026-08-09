@@ -20,6 +20,7 @@
 import { applyConflicts } from './conflicts.js';
 import { applySoftBlocks } from './softBlocks.js';
 import { applySafety } from './safety.js';
+import { buildRecommendationSummary } from './recommendation-summary.js';
 import type { SafetyFlag, Severity } from './safety.js';
 import type { Layer, Note, Recommendation, RecommendInput } from './types.js';
 
@@ -28,6 +29,20 @@ export type FinalizeResult = {
   notes: Note[];
   flags: SafetyFlag[];
 };
+
+function dedupeExactItems(layers: Layer[]): Layer[] {
+  const seen = new Set<string>();
+  return layers
+    .map((layer) => ({
+      category: layer.category,
+      items: layer.items.filter((item) => {
+        if (seen.has(item)) return false;
+        seen.add(item);
+        return true;
+      }),
+    }))
+    .filter((layer) => layer.items.length > 0);
+}
 
 /**
  * Kjør den godkjente sikkerhetskjeden på (potensielt muterte) lag.
@@ -56,7 +71,11 @@ export function finalizeSafety(
       flags.push(f);
     }
   }
-  return { layers: safe.layers, notes: safe.notes, flags };
+  // A removed final item must remove its category shell too. `recommend()`
+  // already normalized this shape, but swap consumers call the finalizer
+  // directly and must receive the same finalized-output invariant.
+  const nonEmptyLayers = safe.layers.filter((layer) => layer.items.length > 0);
+  return { layers: nonEmptyLayers, notes: safe.notes, flags };
 }
 
 const SEVERITY_RANK: Record<Severity, number> = {
@@ -77,9 +96,8 @@ function highestSeverity(flags: SafetyFlag[]): Severity {
  * sikkerhetsgrensen. Returnerer en ny Recommendation der layers, notes,
  * flags og severity reflekterer det finaliserte antrekket.
  *
- * `summary` beholdes uendret fra motoren — det matcher tidligere UI-adferd
- * (swap-mappingen i skjermene oppdaterte heller aldri summary) og unngår at
- * denne modulen dupliserer summarize()-formatet.
+ * `summary` bygges fra det endelig finaliserte laget, slik at tekst og lagliste
+ * aldri beskriver to forskjellige antrekk.
  */
 export function applySwapsFinalized(
   input: RecommendInput,
@@ -94,12 +112,17 @@ export function applySwapsFinalized(
   }));
 
   const finalized = finalizeSafety(input, mapped, rec.structuredNotes, rec.safetyFlags ?? []);
+  // A label-based swap map can collapse multiple different sources into one
+  // exact target. Preserve the first occurrence in existing layer/item order;
+  // this normalizes the swap output without changing safety rule semantics.
+  const normalizedLayers = dedupeExactItems(finalized.layers);
 
   return {
     ...rec,
-    layers: finalized.layers,
+    layers: normalizedLayers,
     notes: finalized.notes.map((n) => n.message),
     structuredNotes: finalized.notes,
+    summary: buildRecommendationSummary(input, normalizedLayers),
     safetyFlags: finalized.flags,
     severity: highestSeverity(finalized.flags),
   };

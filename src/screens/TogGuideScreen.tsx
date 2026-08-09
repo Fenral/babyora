@@ -26,6 +26,10 @@ import { useHapticSystem } from '../lib/haptics/system';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { useChildren } from '../state/children-store';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
+import {
+  buildTogGuideRecommendation,
+  type TogGuideLayer,
+} from '../lib/wool-layers/tog-recommendation';
 import { PlaggDetailSheet } from '../components/PlaggDetailSheet';
 import {
   garmentIdFor,
@@ -38,160 +42,11 @@ export interface TogGuideScreenProps {
   onBack: () => void;
 }
 
-interface LayerItem {
-  step: string;
-  name: string;
-  /**
-   * Lowercase database-streng for plagget — brukes som oppslags-nøkkel mot
-   * `garmentIdFor()` (samme MAP som PaakledningScreen). Frikoblet fra
-   * display-navnet (`name`) slik at vi kan vise norsk-typografisk navn
-   * («Bomullsbody med lang arm») men slå opp PNG-illustrasjonen og
-   * detalj-sheet via en eksisterende MAP-nøkkel («langermet body»).
-   */
-  dbString: string;
-  chip: string;
-  variant: 'inner' | 'mid' | 'outer';
-}
-
-interface TogRecommendation {
-  tog: string;
-  zoneLabel: string;
-  layers: LayerItem[];
-}
-
-/**
- * Map romtemperatur → anbefalt TOG + komfortsone + på-kledning.
- * Følger Lullaby Trust + norske barnesykepleier-anbefalinger.
- */
-function tempToTog(tempC: number): TogRecommendation {
-  if (tempC <= 17) {
-    return {
-      tog: '3.5',
-      zoneLabel: 'Komfortsone for ≤17° · trygg fra 14°',
-      layers: [
-        {
-          step: 'Lag 1 · Innerst',
-          name: 'Bomullsbody med lang arm',
-          dbString: 'langermet body',
-          chip: 'Hud',
-          variant: 'inner',
-        },
-        {
-          step: 'Lag 2 · Mellom',
-          name: 'Tynn pysjamas',
-          dbString: 'tynn pyjamas',
-          chip: 'Mellom',
-          variant: 'mid',
-        },
-        {
-          step: 'Lag 3 · Ytterst',
-          name: 'Sovepose 3.5 TOG',
-          dbString: 'sovepose 3.5 TOG',
-          chip: '3.5 TOG',
-          variant: 'outer',
-        },
-      ],
-    };
-  }
-  if (tempC <= 19) {
-    return {
-      tog: '2.5',
-      zoneLabel: 'Komfortsone for 18–19° · trygg fra 16°',
-      layers: [
-        {
-          step: 'Lag 1 · Innerst',
-          name: 'Bomullsbody med lang arm',
-          dbString: 'langermet body',
-          chip: 'Hud',
-          variant: 'inner',
-        },
-        {
-          step: 'Lag 2 · Ytterst',
-          name: 'Sovepose 2.5 TOG',
-          dbString: 'sovepose 2.5 TOG',
-          chip: '2.5 TOG',
-          variant: 'outer',
-        },
-      ],
-    };
-  }
-  if (tempC <= 21) {
-    return {
-      tog: '2.5',
-      zoneLabel: 'Komfortsone for 18–21° · trygg fra 16°',
-      layers: [
-        {
-          step: 'Lag 1 · Innerst',
-          name: 'Bomullsbody med kort arm',
-          dbString: 'kortermet body',
-          chip: 'Hud',
-          variant: 'inner',
-        },
-        {
-          step: 'Lag 2 · Ytterst',
-          name: 'Sovepose 2.5 TOG',
-          dbString: 'sovepose 2.5 TOG',
-          chip: '2.5 TOG',
-          variant: 'outer',
-        },
-      ],
-    };
-  }
-  if (tempC <= 23) {
-    return {
-      tog: '1.0',
-      zoneLabel: 'Komfortsone for 22–23° · trygg til 24°',
-      layers: [
-        {
-          step: 'Lag 1 · Innerst',
-          name: 'Bomullsbody med kort arm',
-          dbString: 'kortermet body',
-          chip: 'Hud',
-          variant: 'inner',
-        },
-        {
-          step: 'Lag 2 · Ytterst',
-          name: 'Sovepose 1.0 TOG',
-          dbString: 'sovepose 1.0 TOG',
-          chip: '1.0 TOG',
-          variant: 'outer',
-        },
-      ],
-    };
-  }
-  return {
-    tog: '0.5',
-    zoneLabel: 'Komfortsone for ≥24°',
-    layers: [
-      {
-        step: 'Lag 1 · Innerst',
-        name: 'Bomullsbody med kort arm',
-        dbString: 'kortermet body',
-        chip: 'Hud',
-        variant: 'inner',
-      },
-      {
-        step: 'Lag 2 · Ytterst',
-        name: 'Sovepose 0.5 TOG',
-        dbString: 'sovepose 0.5 TOG',
-        chip: '0.5 TOG',
-        variant: 'outer',
-      },
-    ],
-  };
-}
-
-/** Forhåndsvalgte steg vist under slideren. */
-const STEPS: ReadonlyArray<{ temp: number; togLabel: string }> = [
-  { temp: 16, togLabel: '3.5 tog' },
-  { temp: 18, togLabel: '2.5 tog' },
-  { temp: 20, togLabel: '2.5 tog' },
-  { temp: 22, togLabel: '1.0 tog' },
-  { temp: 24, togLabel: '0.5 tog' },
-];
+/** Presets own interaction positions only; every TOG value comes from the engine. */
+const STEP_TEMPERATURES = [16, 18, 20, 22, 24] as const;
 
 /** Farge per lag-stripe — Morgennatt lag-alignerte tokens (innerst/mellom/ytterst). */
-const LAYER_STRIPE: Record<LayerItem['variant'], string> = {
+const LAYER_STRIPE: Record<TogGuideLayer['variant'], string> = {
   inner: 'var(--layer-innerst)',
   mid: 'var(--layer-mellom)',
   outer: 'var(--layer-ytterst)',
@@ -207,8 +62,23 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
 
   // 20°C default per design.
   const [tempC, setTempC] = useState<number>(20);
-
-  const rec = useMemo(() => tempToTog(tempC), [tempC]);
+  const childAgeMonths = useMemo(
+    () => (!needsOnboarding ? dobToAgeMonths(active.dob) : 0),
+    [active.dob, needsOnboarding],
+  );
+  const rec = useMemo(() => buildTogGuideRecommendation({
+    roomTempC: tempC,
+    ageMonths: childAgeMonths,
+    materialPreference: active.materialPreference,
+  }), [active.materialPreference, childAgeMonths, tempC]);
+  const steps = useMemo(() => STEP_TEMPERATURES.map((temp) => ({
+    temp,
+    togLabel: `${buildTogGuideRecommendation({
+      roomTempC: temp,
+      ageMonths: childAgeMonths,
+      materialPreference: active.materialPreference,
+    }).tog} tog`,
+  })), [active.materialPreference, childAgeMonths]);
 
   /* Anbefalt sovepose som bilde (erstatter den tegnede hero-SVG-en + gir
      «bildet av soveposen» Sivert ba om). Oppdateres med slideren.
@@ -235,23 +105,14 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     !needsOnboarding && active.name && active.name.trim().length > 0
       ? active.name
       : copy.common.childFallback;
-  const childAgeMonths = useMemo(
-    () => (!needsOnboarding ? dobToAgeMonths(active.dob) : 0),
-    [active.dob, needsOnboarding],
-  );
   const heroEyebrowText =
     !needsOnboarding && active.name && active.name.trim().length > 0
       ? copy.tog.forChild(childName, childAgeMonths)
       : copy.tog.recommendationForNight;
-  const zoneLabel = tempC <= 17
-    ? copy.tog.zone(14, 17, null)
-    : tempC <= 19
-      ? copy.tog.zone(18, 19, null)
-      : tempC <= 21
-        ? copy.tog.zone(18, 21, null)
-        : tempC <= 23
-          ? copy.tog.zone(22, 24, null)
-          : copy.tog.zone(24, null, null);
+  const sleepLayer = rec.layers.find((layer) => /sovepose/i.test(layer.dbString));
+  const sleepLayerLabel = sleepLayer
+    ? localizedGarmentDisplayName(sleepLayer.dbString, language)
+    : copy.tog.recommendationForNight;
 
   /* ── Detalj-sheet state (F62 PlaggDetailSheet) ──
      Tap på en plagg-rad → åpner eksisterende PlaggDetailSheet (pros/cons +
@@ -261,7 +122,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
   const detailTriggerRef = useRef<HTMLButtonElement | null>(null);
   const rowRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  const handleOpenLayer = (rowKey: string, layer: LayerItem) => {
+  const handleOpenLayer = (rowKey: string, layer: TogGuideLayer) => {
     void fire('light');
     const gid = garmentIdFor(layer.dbString);
     if (!gid) {
@@ -407,7 +268,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     padding: '8px 20px var(--dw-tabbar-clearance, 90px)',
     display: 'flex',
     flexDirection: 'column',
-    gap: 28,
+    gap: 'var(--dw-space-24)',
     scrollbarWidth: 'none',
   };
 
@@ -568,7 +429,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     fontSize: '1.125rem',
     color: 'var(--dw-ink-mid)',
     verticalAlign: 6,
-    marginLeft: 1,
+    marginLeft: 'var(--dw-space-2)',
   };
 
   const togHeroZoneStyle: CSSProperties = {
@@ -773,7 +634,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
     gap: 'var(--dw-space-12)',
   };
 
-  const layerCardStyle = (variant: LayerItem['variant']): CSSProperties => ({
+  const layerCardStyle = (variant: TogGuideLayer['variant']): CSSProperties => ({
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
@@ -921,7 +782,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
 
   // Layer-ikon per variant — Morgennatt lag-alignerte tokens (samme
   // innerst/mellom/ytterst-familie som LAYER_STRIPE).
-  const renderLayerIcon = (variant: LayerItem['variant']) => {
+  const renderLayerIcon = (variant: TogGuideLayer['variant']) => {
     if (variant === 'inner') {
       return (
         <svg width={36} height={36} viewBox="0 0 36 36" fill="none" aria-hidden="true">
@@ -1054,7 +915,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
           </div>
           <div style={togHeroZoneStyle}>
             <span style={togHeroZoneDotStyle} aria-hidden="true" />
-            <span>{zoneLabel}</span>
+            <span>{sleepLayerLabel}</span>
           </div>
         </section>
 
@@ -1093,7 +954,7 @@ export function TogGuideScreen({ onBack }: TogGuideScreenProps) {
               role="radiogroup"
               aria-label={copy.tog.presetsAria}
             >
-              {STEPS.map((step) => {
+              {steps.map((step) => {
                 const active = step.temp === tempC;
                 return (
                   <button

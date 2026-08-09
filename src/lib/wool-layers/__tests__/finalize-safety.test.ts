@@ -219,6 +219,27 @@ describe('R2 guardrail-matrise — endelig grense (finalize-safety)', () => {
     expect(wool).toBeDefined();
     const swapped = applySwapsFinalized(input, rec, { [wool as string]: 'fleecesett' });
     expect(allItems(swapped)).toContain('fleecesett');
+    expect(swapped.summary).toContain('fleecesett');
+    expect(swapped.summary).not.toContain(wool as string);
+  });
+
+  it('G9b: two sources mapped to one target keep the first occurrence only', async () => {
+    const { applySwapsFinalized } = await import(FINALIZE_MODULE);
+    const input = makeInput({ activity: 'utelek', weather: { tempC: 4, feelsLikeC: 2 } });
+    const rec = recommend(input);
+    const firstSource = itemsIn(rec, 'innerst')[0];
+    const secondSource = itemsIn(rec, 'mellomlag')[0];
+    expect(firstSource).toBeDefined();
+    expect(secondSource).toBeDefined();
+
+    const swapped = applySwapsFinalized(input, rec, {
+      [firstSource as string]: 'fleecesett',
+      [secondSource as string]: 'fleecesett',
+    });
+
+    expect(allItems(swapped).filter((item) => item === 'fleecesett')).toHaveLength(1);
+    expect(swapped.layers.every((layer: Layer) => layer.items.length > 0)).toBe(true);
+    expect(swapped.summary.match(/fleecesett/g)).toHaveLength(1);
   });
 
   it('G11: grensen er idempotent på mutert output (finalize ∘ finalize = finalize)', async () => {

@@ -51,7 +51,11 @@ import { PLUS_FEATURE_AVAILABILITY } from '../lib/premium/plus-features';
 import { useAccess } from '../lib/premium/use-access';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
 import { applySwapsFinalized } from '../lib/wool-layers/finalize-safety';
-import { recommend } from '../lib/wool-layers/recommend';
+import {
+  canonicalizeSurfaceRecommendInput,
+  recommendForPlanSurface,
+  type SurfaceRecommendInput,
+} from '../lib/wool-layers/surface-recommendation';
 import type { Recommendation, RecommendInput } from '../lib/wool-layers/types';
 import {
   getGarmentImage,
@@ -256,8 +260,9 @@ function phaseFromHourly(
   ageMonths: number,
   activity: Activity,
   vognMode: VognMode,
+  materialPreference: RecommendInput['materialPreference'],
 ): Phase {
-  const engineInput: RecommendInput = {
+  const surfaceInput: SurfaceRecommendInput = {
     weather: {
       tempC: point.tempC,
       feelsLikeC: point.feelsLikeC,
@@ -267,10 +272,12 @@ function phaseFromHourly(
     },
     child: { ageMonths },
     activity,
-    ...(activity === 'vogn' ? { vognMode } : {}),
+    materialPreference: materialPreference ?? null,
+    vognMode: activity === 'vogn' ? vognMode : null,
   };
+  const engineInput = canonicalizeSurfaceRecommendInput(surfaceInput);
   return Object.freeze({
-    recommendation: recommend(engineInput),
+    recommendation: recommendForPlanSurface(surfaceInput),
     engineInput,
     weather: Object.freeze({
       atIso: point.time.toISOString(),
@@ -346,6 +353,8 @@ function PlanleggData({
       ? t('plan.currentLocation', { city: effectivePlace.city })
       : t('plan.fixedLocation', { city: effectivePlace.city });
   const childName = active?.name || t('plan.childFallback');
+  const activeChildId = active?.id ?? 'default-child';
+  const materialPreference = active?.materialPreference;
   const activeDob = active?.dob;
   const ageMonths = useMemo(
     () => (activeDob ? dobToAgeMonths(activeDob) : 12),
@@ -419,11 +428,18 @@ function PlanleggData({
       return Object.freeze([]);
     }
     return Object.freeze(
-      selectedPlanningHours.map((point) => phaseFromHourly(point, ageMonths, activity, vognMode)),
+      selectedPlanningHours.map((point) => phaseFromHourly(
+        point,
+        ageMonths,
+        activity,
+        vognMode,
+        materialPreference,
+      )),
     );
   }, [
     activity,
     ageMonths,
+    materialPreference,
     selectedPlanningHours,
     viewAccess.presentation,
     vognMode,
@@ -526,7 +542,7 @@ function PlanleggData({
         planningEventId: event.id,
         transitionContextId: event.transitionContextId,
         child: {
-          id: active?.id ?? 'default-child',
+          id: activeChildId,
           name: childName,
           ageMonths,
         },
@@ -631,7 +647,7 @@ function PlanleggData({
       hasEvaluatedPlan: true,
     });
   }, [
-    active?.id,
+    activeChildId,
     activity,
     ageMonths,
     childName,

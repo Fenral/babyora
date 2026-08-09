@@ -84,7 +84,7 @@ import {
 } from '../lib/haptics.js';
 import { useNativeSettings } from '../hooks/useNativeSettings';
 import { dobToAgeMonths } from '../lib/utils/dob-to-age-months';
-import { recommend } from '../lib/wool-layers/recommend';
+import { recommendForFindSurface } from '../lib/wool-layers/surface-recommendation';
 import { feelsLikeC as computeFeelsLikeC } from '../lib/met-no/feels-like';
 import type { Activity } from '../lib/wool-layers/types';
 import type { GarmentId } from '../data/garment-illustrations';
@@ -500,7 +500,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
   // (b) data-temp-canvashintet. Vises ALDRI direkte — se P10/JOB4 filhode.
   const liveRecommendation = useMemo(() => {
     try {
-      return recommend({
+      return recommendForFindSurface({
         weather: {
           tempC,
           // Sol-review P0-2 (2026-08-05): samme værkontrakt som Hjem — føles-som
@@ -513,11 +513,13 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
         },
         child: { ageMonths },
         activity: selectedActivity.engine,
+        materialPreference: active.materialPreference ?? null,
+        vognMode: selectedActivity.engine === 'vogn' ? 'awake' : null,
       });
     } catch {
       return null;
     }
-  }, [tempC, windMs, precipMmH, ageMonths, selectedActivity]);
+  }, [tempC, windMs, precipMmH, ageMonths, selectedActivity, active.materialPreference]);
 
   // Logget motor-feil — ikke en gyldig tom-tilstand (tiltak 5: motoren
   // dekker hele slider-domenet, recommendation er kun null ved faktisk
@@ -652,7 +654,7 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
   const committedRecommendation = useMemo(() => {
     if (!committed || !committedActivityOption) return null;
     try {
-      return recommend({
+      return recommendForFindSurface({
         weather: {
           tempC: committed.tempC,
           // P0-2: normalisert kontrakt — se liveRecommendation over.
@@ -663,11 +665,13 @@ export function FinnAntrekkScreen({ onBack, prefill }: FinnAntrekkScreenProps): 
         },
         child: { ageMonths },
         activity: committedActivityOption.engine,
+        materialPreference: active.materialPreference ?? null,
+        vognMode: committedActivityOption.engine === 'vogn' ? 'awake' : null,
       });
     } catch {
       return null;
     }
-  }, [committed, committedActivityOption, ageMonths]);
+  }, [committed, committedActivityOption, ageMonths, active.materialPreference]);
 
   // RESULT = THE CLOTHES — samme avledning/presentasjon som Hjems egen
   // resultatflate (deriveResultRows + MonterGarmentRow, se filhode).
@@ -1215,7 +1219,7 @@ const titleStyle: CSSProperties = {
 };
 
 const subtitleStyle: CSSProperties = {
-  margin: '1px 0 0',
+  margin: 'var(--dw-space-2) 0 0',
   fontSize: '0.75rem',
   fontWeight: 500,
   color: TOKENS.ink500,

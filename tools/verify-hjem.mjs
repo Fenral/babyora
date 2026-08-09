@@ -203,6 +203,11 @@ try {
         transform: getComputedStyle(image).transform,
       };
     };
+    // Measure only after intrinsic dimensions have entered layout. Without
+    // decode(), a cold image can move from 188x0 to 188x153 during this gate
+    // and look animated even though the mascot has zero running animations.
+    await image.decode();
+    await new Promise((resolve) => requestAnimationFrame(() => resolve()));
     const before = read();
     await new Promise((resolve) => setTimeout(resolve, 650));
     return {

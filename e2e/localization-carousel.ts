@@ -20,7 +20,7 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const require = createRequire(import.meta.url);
 const VITE_CLI = join(dirname(require.resolve('vite/package.json')), 'bin', 'vite.js');
 const VIEWPORT = { width: 390, height: 844 } as const;
-const DETAIL_CARD_HEIGHT = 300;
+const DETAIL_CARD_MIN_HEIGHT = 300;
 const DETAIL_STAGE_HEIGHT = 92;
 const RAIL_VERTICAL_PADDING = 17;
 const RAIL_SIDE_INSET = 20;
@@ -38,6 +38,7 @@ type LocaleScenario = Readonly<{
   findOutfit: RegExp;
   oldResultCta: string;
   goodToKnow: string;
+  moreInfo: string;
   alternatives: string;
   alternativesAriaPrefix: string;
   previous: string;
@@ -56,6 +57,7 @@ const SCENARIOS: readonly LocaleScenario[] = [
     locale: 'sv-SE',
     resolvedLanguage: 'sv',
     goodToKnow: 'Bra att veta',
+    moreInfo: 'Mer info',
     alternatives: 'Alternativ',
     alternativesAriaPrefix: 'Jämför alternativ till ',
     previous: 'Föregående',
@@ -81,6 +83,7 @@ const SCENARIOS: readonly LocaleScenario[] = [
     locale: 'da-DK',
     resolvedLanguage: 'da',
     goodToKnow: 'Godt at vide',
+    moreInfo: 'Mere info',
     alternatives: 'Alternativer',
     alternativesAriaPrefix: 'Sammenlign alternativer til ',
     previous: 'Forrige',
@@ -106,6 +109,7 @@ const SCENARIOS: readonly LocaleScenario[] = [
     locale: 'nb-NO',
     resolvedLanguage: 'en',
     goodToKnow: 'Good to know',
+    moreInfo: 'More info',
     alternatives: 'Alternatives',
     alternativesAriaPrefix: 'Compare alternatives to ',
     previous: 'Previous',
@@ -462,7 +466,9 @@ async function assertHomeResultCarousel(
     `${scenario.locale}: result weather icon was missing or generic (${JSON.stringify(weatherIconState)})`,
   );
 
-  const avatarSeam = result.locator('[data-result-avatar-seam="true"]');
+  // The avatar belongs to the shared result seam above ResultSurface, not to
+  // the horizontally scrollable garment section itself.
+  const avatarSeam = page.locator('.hjm-result-seam [data-result-avatar-seam="true"]');
   await avatarSeam.waitFor({ state: 'visible', timeout: 5_000 });
   const avatar = avatarSeam.locator('img');
   await page.waitForFunction(
@@ -596,7 +602,7 @@ async function assertHomeResultCarousel(
     factSurface.fact !== 'rgba(0, 0, 0, 0)' && factSurface.fact !== factSurface.card,
     `${scenario.locale}: Good-to-know content lost its tinted information bubble (${JSON.stringify(factSurface)})`,
   );
-  const alternativeActions = cards.locator('button.hjm-journey-detail');
+  const alternativeActions = cards.locator('button.hjm-journey-alternatives');
   const alternativeCount = await alternativeActions.count();
   assert(
     alternativeCount < cardCount,
@@ -618,16 +624,24 @@ async function assertHomeResultCarousel(
     await result.getByRole('button', { name: scenario.alternatives, exact: true }).count() === alternativeCount,
     `${scenario.locale}: inert loop copies leaked duplicate Alternatives controls to accessibility`,
   );
+  const moreInfoActions = cards.locator('button.hjm-journey-more-info');
   assert(
-    await result.getByText(/^(More info|Mer info|Mere info)$/u, { exact: true }).count() === 0,
-    `${scenario.locale}: retired More info action is still visible`,
+    await moreInfoActions.count() === cardCount,
+    `${scenario.locale}: expected one More info action per garment card`,
+  );
+  const moreInfoLabels = (await moreInfoActions.allTextContents()).map((label) => label.trim());
+  assert(
+    moreInfoLabels.every((label) => label === scenario.moreInfo),
+    `${scenario.locale}: More info labels were ${JSON.stringify(moreInfoLabels)}, expected ${scenario.moreInfo}`,
   );
   const cardHeights = await cards.evaluateAll((elements) => elements.map(
     (element) => element.getBoundingClientRect().height,
   ));
+  const shortestCard = Math.min(...cardHeights);
+  const tallestCard = Math.max(...cardHeights);
   assert(
-    cardHeights.every((height) => Math.abs(height - DETAIL_CARD_HEIGHT) <= 1.5),
-    `${scenario.locale}: detail cards are not standardized at ${DETAIL_CARD_HEIGHT}px (${JSON.stringify(cardHeights)})`,
+    shortestCard >= DETAIL_CARD_MIN_HEIGHT - 1.5 && tallestCard - shortestCard <= 1.5,
+    `${scenario.locale}: detail cards lost their standardized ${DETAIL_CARD_MIN_HEIGHT}px minimum (${JSON.stringify(cardHeights)})`,
   );
   const detailPlateHeights = await cards.locator('.hjm-journey-image').evaluateAll((elements) => elements.map(
     (element) => element.getBoundingClientRect().height,
@@ -804,7 +818,7 @@ async function assertHomeResultCarousel(
     const railElement = document.querySelector<HTMLElement>('.hjm-journey-rail');
     return railElement !== null
       && Math.abs(railElement.getBoundingClientRect().height - (expectedHeight + railPadding)) <= 2;
-  }, { expectedHeight: DETAIL_CARD_HEIGHT, railPadding: RAIL_VERTICAL_PADDING });
+  }, { expectedHeight: shortestCard, railPadding: RAIL_VERTICAL_PADDING });
   assert(
     await result.getByRole('button', { name: scenario.overview, exact: true }).count() === 1
       && await result.getByRole('button', { name: scenario.next, exact: true }).count() === 1,
@@ -840,8 +854,8 @@ async function assertHomeResultCarousel(
     `${scenario.locale}: neighboring cards remain visible (${JSON.stringify(centeredCard)})`,
   );
   assert(
-    Math.abs(centeredCard.railHeight - (DETAIL_CARD_HEIGHT + RAIL_VERTICAL_PADDING)) <= 2,
-    `${scenario.locale}: active detail did not collapse the rail to the ${DETAIL_CARD_HEIGHT}px card (${centeredCard.railHeight}px)`,
+    Math.abs(centeredCard.railHeight - (shortestCard + RAIL_VERTICAL_PADDING)) <= 2,
+    `${scenario.locale}: active detail did not collapse the rail to the measured card height (${centeredCard.railHeight}px)`,
   );
 
   await result.getByRole('button', { name: scenario.next, exact: true }).click();

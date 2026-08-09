@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "verify:engine-consistency": "vitest run src/lib/wool-layers/__tests__/consistency-contract.test.ts src/lib/wool-layers/__tests__/tog-recommendation.test.ts src/lib/wool-layers/__tests__/runtime-truth.test.ts src/lib/wool-layers/__tests__/finalize-safety.test.ts src/lib/wool-layers/__tests__/safety-mutation-matrix.test.ts src/lib/outfit/__tests__/alternative-options.test.ts",
     "generate:rules": "tsx scripts/generate-rules-docs.ts",
     "generate:splash": "node scripts/generate-native-splash.mjs && capacitor-assets generate --assetPath resources/native-splash --ios --android",
     "audit:prepare": "tsx tools/product-audit/cli.ts prepare",

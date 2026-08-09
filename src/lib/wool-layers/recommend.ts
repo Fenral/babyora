@@ -4,6 +4,7 @@ import { applySoftBlocks } from './softBlocks.js';
 import { applySafety } from './safety.js';
 import { finalizeSafety } from './finalize-safety.js';
 import { applyMaterialPreference } from './material-preference.js';
+import { buildRecommendationSummary } from './recommendation-summary.js';
 import type { SafetyFlag, Severity } from './safety.js';
 import { bandForTemp, baseTable } from './tables.js';
 import type { LayerOverrides, Recommendation, RecommendInput } from './types.js';
@@ -18,22 +19,6 @@ function highestSeverity(flags: SafetyFlag[]): Severity {
     if (SEVERITY_RANK[f.severity] > SEVERITY_RANK[max]) max = f.severity;
   }
   return max;
-}
-
-const ACTIVITY_LABEL: Record<RecommendInput['activity'], string> = {
-  vogn: 'Vogn',
-  baeresele: 'Bæresele',
-  utelek: 'Utelek',
-  soevn: 'Søvn',
-};
-
-function summarize(layers: Recommendation['layers']): string {
-  const parts: string[] = [];
-  for (const layer of layers) {
-    if (layer.items.length === 0) continue;
-    parts.push(layer.items.join(', '));
-  }
-  return parts.join(' • ');
 }
 
 /**
@@ -102,11 +87,10 @@ export function recommend(
     finalFlags = finalized.flags;
   }
 
-  const tempPrefix = input.activity === 'soevn' ? 'romtemp' : 'føles';
-  const activityLabel = isVognSleeping
-    ? 'Vogn (sover)'
-    : ACTIVITY_LABEL[input.activity];
-  const summary = `${activityLabel} (${input.weather.feelsLikeC.toFixed(0)} °C ${tempPrefix}): ${summarize(finalLayers)}`;
+  // Sikkerhetsregler kan fjerne siste item i en kategori. En tom kategori er
+  // ikke et lag og skal ikke lekke til noen svarflate.
+  finalLayers = finalLayers.filter((layer) => layer.items.length > 0);
+  const summary = buildRecommendationSummary(input, finalLayers);
 
   // Iter 36 — severity må aggregere conflicts + soft + safety, ikke bare safety.
   // Gammelt safe.severity reflekterte kun HB-flags, så CK-7/SB-3 HIGH ble usynlig.

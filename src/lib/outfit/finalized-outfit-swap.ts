@@ -1,4 +1,5 @@
 import { finalizeSafety } from '../wool-layers/finalize-safety.js';
+import { buildRecommendationSummary } from '../wool-layers/recommendation-summary.js';
 import type { SafetyFlag, Severity } from '../wool-layers/safety.js';
 import type {
   Layer,
@@ -142,6 +143,9 @@ function cloneInput(input: RecommendInput): RecommendInput {
     child: { ...input.child },
     activity: input.activity,
   };
+  if (Object.hasOwn(input, 'materialPreference')) {
+    cloned.materialPreference = input.materialPreference;
+  }
   if (Object.hasOwn(input, 'exposureMin')) {
     cloned.exposureMin = input.exposureMin;
   }
@@ -497,7 +501,7 @@ function finalizeOutfitOccurrenceSwapUnchecked(
     })),
     notes: finalized.notes.map((note) => note.message),
     structuredNotes: finalized.notes.map((note) => ({ ...note })),
-    summary: baseClone.summary,
+    summary: buildRecommendationSummary(inputClone, finalized.layers),
     safetyFlags: cloneFlags(finalized.flags),
     severity: highestSeverity(finalized.flags),
   });
