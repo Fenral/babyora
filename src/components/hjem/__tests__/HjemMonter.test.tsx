@@ -350,7 +350,7 @@ describe('HjemMonter localization', () => {
 
     expect(html).toContain('aria-label="Beräknar kläder"');
     expect(html).toContain('Vädret nu');
-    expect(html).toContain('Utanför barnvagnen');
+    expect(html).toContain('Utomhuslek');
     expect(html).toContain('9 månader');
     expect(html).toContain('Lager för lager');
     expect(html).toContain('Sätter ihop kläder för Lillian…');
@@ -373,7 +373,7 @@ describe('HjemMonter localization', () => {
     expect(html).toContain('Vejret har ændret sig');
     expect(html).toContain('Beregn igen');
     expect(html).toContain('Vis forrige tøj');
-    expect(html).toContain('Uden for barnevognen');
+    expect(html).toContain('Udendørs leg');
   });
 
   it('localizes loading and offline/error recovery copy in English', async () => {
@@ -407,7 +407,7 @@ describe('HjemMonter localization', () => {
 
     expect(html).toContain('aria-label="Juster vejr, sted eller aktivitet"');
     expect(html).toContain('Føles som 1°');
-    expect(html).toContain('Trondheim · Uden for barnevognen');
+    expect(html).toContain('Trondheim · Udendørs leg');
     expect(html).toContain('class="hjm-s-weather"');
     expect(html).toContain('src="/monter/vaer-regn.webp"');
     expect(html).not.toContain('Utenfor vogn');

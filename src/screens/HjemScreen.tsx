@@ -113,7 +113,10 @@ const ELVERUM = { lat: 60.8867, lon: 11.5614, city: 'Elverum' };
 // og src/lib/avatar-stage.ts (react-refresh: komponentfiler eksporterer kun
 // komponenter). Samme funksjoner, samme adferd.
 
-type Activity = 'utelek' | 'vogn';
+/* Var 'utelek' | 'vogn' og skygget motorens egen Activity. Bæresele finnes i
+   baseTable og velges der, men kunne ikke settes herfra. 'soevn' holdes utenfor
+   med vilje — den hører til søvnskjermen. */
+type Activity = 'utelek' | 'vogn' | 'baeresele';
 type VognMode = 'awake' | 'sleeping';
 
 /**

@@ -154,9 +154,13 @@ export function decideScanEntry(exactSlot: ScanCacheSlot | null): HjemMonterScan
 }
 
 /** Kort form, brukt i «endret fra X til Y»-chip og stale-CTA-en. */
-const LOWERCASE_ACTIVITY_LABEL: Readonly<Record<'utelek' | 'vogn', string>> = {
+/* Bundet til HjemActivity, ikke til en håndskrevet union. Da var den
+   'utelek' | 'vogn' og gled fra typen den skulle speile; nå tvinger
+   kompilatoren fram en etikett hver gang en kontekst legges til. */
+const LOWERCASE_ACTIVITY_LABEL: Readonly<Record<HjemActivity, string>> = {
   utelek: 'utelek',
   vogn: 'vogn',
+  baeresele: 'bæresele',
 };
 
 const DEFAULT_STALE_COPY: HjemStaleCopy = Object.freeze({

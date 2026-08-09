@@ -33,9 +33,13 @@ describe('WeatherScene', () => {
   it('renders the activity radiogroup with exact mock button labels and aria-checked wiring', () => {
     const html = renderToStaticMarkup(<WeatherScene {...baseProps()} activity="vogn" />);
     expect(html).toContain('role="radiogroup"');
-    expect(html).toContain('Utenfor vogn');
+    // Tre kontekster, ikke to: bæresele finnes i motoren og er nå valgbar.
+    expect(html).toContain('Utelek');
     expect(html).toContain('I vogn');
+    expect(html).toContain('I bæresele');
     expect(html).toMatch(/aria-checked="true"[^>]*>I vogn/);
+    // Non-vakuitet: nøyaktig én er valgt.
+    expect(html.match(/aria-checked="true"/gu)).toHaveLength(1);
   });
 
   it('uses the unicode minus for negative temperatures, matching legacy formatTemp convention', () => {

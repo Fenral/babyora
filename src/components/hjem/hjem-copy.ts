@@ -1,7 +1,11 @@
 import type { ScanStaleReason } from '../../lib/scan/types.js';
 
 export type HjemLanguage = 'da' | 'en' | 'no' | 'sv';
-export type HjemActivity = 'utelek' | 'vogn';
+/* Motoren (`src/lib/wool-layers/types.ts`) kan 'vogn' | 'baeresele' | 'utelek' |
+   'soevn'. Denne typen var 'utelek' | 'vogn', altså to av fire, og bæresele var
+   derfor aldri valgbar fra Hjem selv om baseTable.baeresele finnes og brukes.
+   'soevn' hører hjemme på søvnskjermen og holdes bevisst utenfor her. */
+export type HjemActivity = 'utelek' | 'vogn' | 'baeresele';
 
 type ActivityCopy = Readonly<{
   context: string;
@@ -60,23 +64,27 @@ export type HjemCopy = Readonly<{
 }>;
 
 const ENGLISH_ACTIVITY: Readonly<Record<HjemActivity, ActivityCopy>> = {
-  utelek: { context: 'Outdoor play', toggle: 'Out of stroller', lower: 'outdoor play' },
-  vogn: { context: 'Stroller', toggle: 'In stroller', lower: 'the stroller' },
+  utelek: { context: 'Outdoor play', toggle: 'Outdoor play', lower: 'outdoor play' },
+  vogn: { context: 'Stroller', toggle: 'In the stroller', lower: 'the stroller' },
+  baeresele: { context: 'Carrier', toggle: 'In the carrier', lower: 'the carrier' },
 };
 
 const SWEDISH_ACTIVITY: Readonly<Record<HjemActivity, ActivityCopy>> = {
-  utelek: { context: 'Utomhuslek', toggle: 'Utanför barnvagnen', lower: 'utomhuslek' },
+  utelek: { context: 'Utomhuslek', toggle: 'Utomhuslek', lower: 'utomhuslek' },
   vogn: { context: 'Barnvagn', toggle: 'I barnvagnen', lower: 'barnvagnen' },
+  baeresele: { context: 'Bärsele', toggle: 'I bärselen', lower: 'bärselen' },
 };
 
 const DANISH_ACTIVITY: Readonly<Record<HjemActivity, ActivityCopy>> = {
-  utelek: { context: 'Udendørs leg', toggle: 'Uden for barnevognen', lower: 'udendørs leg' },
+  utelek: { context: 'Udendørs leg', toggle: 'Udendørs leg', lower: 'udendørs leg' },
   vogn: { context: 'Barnevogn', toggle: 'I barnevognen', lower: 'barnevognen' },
+  baeresele: { context: 'Bæresele', toggle: 'I bæreselen', lower: 'bæreselen' },
 };
 
 const NORWEGIAN_ACTIVITY: Readonly<Record<HjemActivity, ActivityCopy>> = {
-  utelek: { context: 'Utelek', toggle: 'Utenfor vogn', lower: 'utelek' },
+  utelek: { context: 'Utelek', toggle: 'Utelek', lower: 'utelek' },
   vogn: { context: 'Vogn', toggle: 'I vogn', lower: 'vogn' },
+  baeresele: { context: 'Bæresele', toggle: 'I bæresele', lower: 'bæresele' },
 };
 
 function englishStale(
