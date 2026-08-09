@@ -2,8 +2,9 @@
  * Result-first Home verification against the built application.
  *
  * Run after `npm run build`: node tools/verify-hjem.mjs
- * The verifier deliberately does not click anything. Home must settle directly
- * on the result without exposing the retired CTA/scan experience there.
+ * Home must settle directly on the result without exposing the retired CTA/scan
+ * experience. The verifier only interacts with the result's progressive
+ * disclosure to prove that compact cards still expose their full fact.
  */
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -64,6 +65,7 @@ async function openHome(viewport) {
     body: JSON.stringify(forecastPartlyCloudy1C()),
   }));
   await page.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => document.fonts.ready);
   await page.locator('.hjm-result').waitFor({ state: 'visible', timeout: 8_000 });
   await page.locator('.hjm-journey-rail[data-loop-ready="true"]').waitFor({ state: 'visible', timeout: 3_000 });
   return page;
@@ -109,8 +111,8 @@ async function measureMascotSeam(page) {
       temperature: rangeRects('.hjm-s-temp'),
       metadata: rangeRects('.hjm-s-meta'),
       weatherIcon: [document.querySelector('.hjm-s-weather')?.getBoundingClientRect()].filter(Boolean),
-      title: rangeRects('.hjm-journey-copy h1'),
-      subtitle: rangeRects('.hjm-journey-copy .hjm-sub'),
+      title: rangeRects('.hjm-result-copy h1'),
+      subtitle: rangeRects('.hjm-result-copy .hjm-sub'),
       firstRow: [document.querySelector('[data-hjm-overview-card="true"] .hjm-row')?.getBoundingClientRect()].filter(Boolean),
     };
     const protectedHits = Object.fromEntries(Object.keys(protectedRects).map((name) => [name, 0]));
@@ -141,6 +143,9 @@ async function measureMascotSeam(page) {
 
     return {
       avatarCount: images.length,
+      expandedCopy: document.querySelector('.hjm-result-seam')?.getAttribute('data-expanded-copy'),
+      copyHeight: document.querySelector('[data-result-copy]')?.getBoundingClientRect().height ?? 0,
+      panelToCard: resultRect.top - stripRect.bottom,
       stripHeight: stripRect.height,
       weatherOverlap: stripRect.bottom - alphaTop,
       resultOverlap: alphaBottom - resultRect.top,
@@ -167,7 +172,7 @@ try {
     return {
       result: visible(result),
       strip: visible(strip),
-      title: result?.querySelector('h1')?.textContent?.trim() ?? '(missing)',
+      title: document.querySelector('[data-result-copy] h1')?.textContent?.trim() ?? '(missing)',
       resultCount: document.querySelectorAll('.hjm-result').length,
       stripCount: document.querySelectorAll('.hjm-strip').length,
       currentLegacy: document.querySelectorAll('.hjm-cta, .hjm-scan-overlay, .hjm-scanline').length,
@@ -240,7 +245,42 @@ try {
     seamMatrixPassed,
     seamMatrix.map(({ width, measurement }) => measurement === null
       ? `${width}px=missing`
-      : `${width}px weather/result=${measurement.weatherOverlap.toFixed(1)}/${measurement.resultOverlap.toFixed(1)}px hits=${JSON.stringify(measurement.protectedHits)} visible=${(measurement.visibleAlphaRatio * 100).toFixed(1)}%`).join('; '),
+      : `${width}px expanded=${measurement.expandedCopy} copy/gap=${measurement.copyHeight.toFixed(1)}/${measurement.panelToCard.toFixed(1)}px weather/result=${measurement.weatherOverlap.toFixed(1)}/${measurement.resultOverlap.toFixed(1)}px hits=${JSON.stringify(measurement.protectedHits)} visible=${(measurement.visibleAlphaRatio * 100).toFixed(1)}%`).join('; '),
+  );
+
+  const largeTextPage = await openHome({ width: 393, height: 852 });
+  await largeTextPage.addStyleTag({ content: `
+    .hjm-strip .hjm-s-meta{font-size:26px!important;line-height:1.32!important}
+    .hjm-strip .hjm-s-temp{font-size:60px!important}
+    .hjm-result-copy h1{font-size:56px!important;line-height:1.12!important}
+    .hjm-result-copy .hjm-sub{font-size:30px!important;line-height:1.4!important}
+    .hjm-journey-overview-list .hjm-g-name{font-size:30px!important;line-height:1.2!important}
+    .hjm-journey-overview-list .hjm-g-role{font-size:26px!important;line-height:1.2!important}
+  ` });
+  await largeTextPage.waitForFunction(() => (
+    document.querySelector('.hjm-result-seam')?.getAttribute('data-expanded-copy') === 'true'
+  ));
+  const largeTextMeasurement = await measureMascotSeam(largeTextPage);
+  const largeTextOrder = await largeTextPage.evaluate(() => {
+    const copy = document.querySelector('[data-result-copy]')?.getBoundingClientRect();
+    const strip = document.querySelector('.hjm-strip')?.getBoundingClientRect();
+    return copy && strip ? copy.bottom <= strip.top : false;
+  });
+  await largeTextPage.close();
+  const largeTextPassed = largeTextMeasurement !== null
+    && largeTextMeasurement.expandedCopy === 'true'
+    && largeTextOrder
+    && largeTextMeasurement.weatherOverlap >= 24
+    && largeTextMeasurement.weatherOverlap <= 56
+    && largeTextMeasurement.resultOverlap >= 6
+    && largeTextMeasurement.resultOverlap <= 16
+    && Object.values(largeTextMeasurement.protectedHits).every((hits) => hits === 0);
+  gate(
+    '2c. 200% text keeps the responsive mascot bridge and reading order',
+    largeTextPassed,
+    largeTextMeasurement === null
+      ? 'large-text seam is missing'
+      : `expanded=${largeTextMeasurement.expandedCopy} copy before weather=${largeTextOrder} strip=${largeTextMeasurement.stripHeight.toFixed(1)}px weather/result=${largeTextMeasurement.weatherOverlap.toFixed(1)}/${largeTextMeasurement.resultOverlap.toFixed(1)}px hits=${JSON.stringify(largeTextMeasurement.protectedHits)}`,
   );
 
   const bands = await page.evaluate(() => {
@@ -403,6 +443,88 @@ try {
       : `theme=${depth.theme} canvas=${depth.canvasColor} card=${depth.cardColor} gradient=${depth.canvasImage} inset=${depth.insetHighlight} lower-right shadow=${depth.lowerRightShadow}`,
   );
 
+  const disclosurePage = await openHome({ width: 393, height: 852 });
+  await disclosurePage.locator('.hjm-journey-progress-side--end .hjm-journey-nav-button').click();
+  await disclosurePage.waitForTimeout(700);
+  const disclosureBefore = await disclosurePage.evaluate(() => {
+    const rail = document.querySelector('.hjm-journey-rail');
+    if (!(rail instanceof HTMLElement)) return null;
+    const viewport = rail.getBoundingClientRect();
+    const center = (viewport.left + viewport.right) / 2;
+    const cards = Array.from(rail.querySelectorAll('.hjm-journey-card:not([aria-hidden])'));
+    let active = null;
+    let distance = Number.POSITIVE_INFINITY;
+    cards.forEach((card) => {
+      const rect = card.getBoundingClientRect();
+      const nextDistance = Math.abs((rect.left + rect.right) / 2 - center);
+      if (nextDistance < distance) {
+        active = card;
+        distance = nextDistance;
+      }
+    });
+    if (!(active instanceof HTMLElement)) return null;
+    active.setAttribute('data-verify-active-card', 'true');
+    const trigger = active.querySelector('.hjm-journey-more-info');
+    const preview = active.querySelector('.hjm-journey-fact p');
+    if (!(trigger instanceof HTMLButtonElement)) return null;
+    return {
+      railHeight: rail.getBoundingClientRect().height,
+      previewText: preview?.textContent?.trim() ?? '',
+      previewLineClamp: preview instanceof HTMLElement ? getComputedStyle(preview).webkitLineClamp : '',
+      triggerLabel: trigger.getAttribute('aria-label') ?? '',
+    };
+  });
+  const disclosureTrigger = disclosurePage.locator('[data-verify-active-card="true"] .hjm-journey-more-info');
+  await disclosureTrigger.click();
+  await disclosurePage.locator('.dw-sheet[open]').waitFor({ state: 'visible' });
+  await disclosurePage.waitForTimeout(450);
+  const disclosureOpen = await disclosurePage.evaluate(() => {
+    const rail = document.querySelector('.hjm-journey-rail');
+    const sheet = document.querySelector('.dw-sheet[open]');
+    const trigger = document.querySelector('[data-verify-active-card="true"] .hjm-journey-more-info');
+    const close = sheet?.querySelector('.dw-sheet-lukk');
+    const fullFact = sheet?.querySelector('.hjm-fact-sheet__text');
+    const source = sheet?.querySelector('.hjm-fact-sheet__source a');
+    const image = sheet?.querySelector('.hjm-fact-sheet__image img');
+    if (!(rail instanceof HTMLElement)
+      || !(sheet instanceof HTMLDialogElement)
+      || !(trigger instanceof HTMLButtonElement)
+      || !(close instanceof HTMLButtonElement)
+      || !(image instanceof HTMLImageElement)) return null;
+    const closeRect = close.getBoundingClientRect();
+    return {
+      railHeight: rail.getBoundingClientRect().height,
+      fullText: fullFact?.textContent?.trim() ?? '',
+      sourceHref: source instanceof HTMLAnchorElement ? source.href : '',
+      imageLoaded: image.complete && image.naturalWidth > 0,
+      closeSize: Math.min(closeRect.width, closeRect.height),
+      triggerLabel: trigger.getAttribute('aria-label') ?? '',
+    };
+  });
+  await disclosurePage.locator('.dw-sheet-lukk').click();
+  await disclosurePage.waitForFunction(() => !document.querySelector('.dw-sheet[open]'));
+  const disclosureFocusReturned = await disclosurePage.evaluate(() => (
+    document.activeElement === document.querySelector('[data-verify-active-card="true"] .hjm-journey-more-info')
+  ));
+  await disclosurePage.close();
+  const disclosurePassed = disclosureBefore !== null
+    && disclosureOpen !== null
+    && disclosureBefore.previewLineClamp === '2'
+    && disclosureOpen.fullText === disclosureBefore.previewText
+    && disclosureOpen.fullText.length > 0
+    && disclosureOpen.sourceHref.startsWith('http')
+    && disclosureOpen.imageLoaded
+    && disclosureOpen.closeSize >= 43.5
+    && Math.abs(disclosureOpen.railHeight - disclosureBefore.railHeight) <= 1
+    && disclosureFocusReturned;
+  gate(
+    '7. More info reveals the full fact without resizing the rail',
+    disclosurePassed,
+    disclosureBefore === null || disclosureOpen === null
+      ? 'active fact card or sheet is missing'
+      : `preview clamp=${disclosureBefore.previewLineClamp} full=${disclosureOpen.fullText.length} chars source=${Boolean(disclosureOpen.sourceHref)} image=${disclosureOpen.imageLoaded} close=${disclosureOpen.closeSize.toFixed(1)}px rail delta=${Math.abs(disclosureOpen.railHeight - disclosureBefore.railHeight).toFixed(1)}px focus returned=${disclosureFocusReturned}`,
+  );
+
   const compact = await openHome({ width: 375, height: 667 });
   const compactGeometry = await compact.evaluate(() => {
     const visibleRect = (selector) => document.querySelector(selector)?.getBoundingClientRect() ?? null;
@@ -423,7 +545,7 @@ try {
   });
   await compact.close();
   gate(
-    '7. result-first geometry remains usable at 375x667',
+    '8. result-first geometry remains usable at 375x667',
     compactGeometry.stripVisible
       && compactGeometry.resultStartsBeforeBar
       && compactGeometry.railStartsBeforeBar
@@ -433,8 +555,8 @@ try {
   );
 
   await page.close();
-  if (jsErrors.length) gate('8. no browser JavaScript errors', false, jsErrors.join('; '));
-  else gate('8. no browser JavaScript errors', true, '');
+  if (jsErrors.length) gate('9. no browser JavaScript errors', false, jsErrors.join('; '));
+  else gate('9. no browser JavaScript errors', true, '');
 } catch (error) {
   gate('verifier completed', false, String(error?.message ?? error));
 } finally {

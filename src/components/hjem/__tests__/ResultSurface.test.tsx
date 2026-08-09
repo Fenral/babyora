@@ -84,7 +84,7 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(cloneButtons.length).toBeGreaterThan(0);
     expect(cloneButtons.every((button) => button.includes('tabindex="-1"'))).toBe(true);
     const rowSource = readFileSync(resolve(process.cwd(), 'src/components/hjem/MonterGarmentRow.tsx'), 'utf8');
-    expect((rowSource.match(/tabIndex=\{interactive \? undefined : -1\}/gu) ?? [])).toHaveLength(2);
+    expect((rowSource.match(/tabIndex=\{interactive \? undefined : -1\}/gu) ?? [])).toHaveLength(3);
   });
 
   it('keeps the same ordered garments in the overview and detail cards', () => {
@@ -120,7 +120,7 @@ describe('ResultSurface — overview-first garment deck', () => {
     }
   });
 
-  it('renders Alternatives only for an explicitly authorized outfit item and never renders More info or a global CTA', () => {
+  it('renders More info for every fact and Alternatives only for an authorized outfit item', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
     const approvedId = outfitItemId('outfit:approved');
     const equipmentId = outfitItemId('outfit:equipment');
@@ -141,11 +141,13 @@ describe('ResultSurface — overview-first garment deck', () => {
     });
     const canonical = loopBandHtml(html, 'canonical');
     expect(html).not.toContain('class="hjm-cta"');
-    expect((canonical.match(/class="hjm-journey-detail"/gu) ?? [])).toHaveLength(1);
+    expect((canonical.match(/hjm-journey-more-info/gu) ?? [])).toHaveLength(rows.length);
+    expect((canonical.match(/hjm-journey-alternatives/gu) ?? [])).toHaveLength(1);
     expect((canonical.match(new RegExp(`>${copy.alternatives}[\\s<]`, 'gu')) ?? [])).toHaveLength(1);
     expect(canonical).toContain(`aria-label="${copy.alternativesAria('Langermet ullbody')}"`);
     expect(canonical).not.toContain(`aria-label="${copy.alternativesAria('Regntrekk')}"`);
-    expect(html).not.toContain(`>${copy.moreInfo}<`);
+    expect((canonical.match(new RegExp(`>${copy.moreInfo}[\\s<]`, 'gu')) ?? [])).toHaveLength(rows.length);
+    expect(canonical).toContain(`aria-label="${copy.moreInfoAria('Langermet ullbody')}"`);
     expect(html).not.toContain('class="hjm-result-tools"');
     expect(html).not.toContain('Why this outfit?');
   });
@@ -193,15 +195,18 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(card).toContain(`<h3>${copy.goodToKnow}</h3>`);
     expect(card).toMatch(/class="hjm-journey-fact"[\s\S]*?<p>\S[\s\S]*?<\/p>/u);
     expect(card).not.toContain('rel="noopener noreferrer"');
-    expect(card).not.toContain('class="hjm-journey-detail"');
-    expect(card).not.toContain(copy.moreInfo);
+    expect(card).toContain('hjm-journey-more-info');
+    expect(card).toContain(copy.moreInfo);
+    expect(card).toContain('aria-haspopup="dialog"');
   });
 
   it('bruker den nye resultat-posen dekorativt i en eksplisitt assetsøm', () => {
-    const html = renderResult([row({})]);
-    expect(html).toContain('data-result-avatar-seam="true"');
-    expect(html).toContain('/monter/maskot-resultat-sveip.webp');
-    expect(html).toMatch(/maskot-resultat-sveip\.webp" alt=""/);
+    const resultSource = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
+    const homeSource = readFileSync(resolve(process.cwd(), 'src/components/hjem/HjemMonter.tsx'), 'utf8');
+    expect(resultSource).not.toContain('data-result-avatar-seam');
+    expect(homeSource).toContain('data-result-avatar-seam');
+    expect(homeSource).toContain('/maskot-resultat-sveip.webp');
+    expect(homeSource).toMatch(/RESULT_MASCOT_SRC[^]*?alt=""/u);
   });
 
   it('gater inngangskoreografien på isFresh og reducedMotion sammen', () => {
@@ -399,12 +404,14 @@ describe('ResultSurface — overview-first garment deck', () => {
 
   it('falls back to the focusable card when a destination has no Alternatives action', () => {
     const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
-    expect(source).toMatch(/querySelector<HTMLElement>\('\.hjm-journey-detail'\)[\s\S]*?\?\?\s*card\.querySelector<HTMLElement>\('\[data-hjm-card-focus\]'\)/u);
+    expect(source).toMatch(/querySelector<HTMLElement>\('\.hjm-journey-more-info'\)[\s\S]*?\?\?\s*card\.querySelector<HTMLElement>\('\.hjm-journey-detail'\)[\s\S]*?\?\?\s*card\.querySelector<HTMLElement>\('\[data-hjm-card-focus\]'\)/u);
     expect(source).toContain('focusTarget?.focus({ preventScroll: true });');
   });
 
-  it('gives the conditional Alternatives action at least a 44px touch target', () => {
+  it('gives More info and conditional Alternatives a 44px action band', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
+    expect(css).toMatch(/\.hjm-journey-actions\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\);/);
+    expect(css).toMatch(/\.hjm-journey-actions\[data-two-actions='true'\]\s*\{[\s\S]*?repeat\(2,/);
     expect(css).toMatch(/\.hjm-journey-detail\s*\{[\s\S]*?min-height:\s*44px;/);
   });
 });

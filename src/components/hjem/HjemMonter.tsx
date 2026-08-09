@@ -287,6 +287,7 @@ export function HjemMonter({
   const resultTitleId = useId();
   const resultSeamRef = useRef<HTMLDivElement | null>(null);
   const [expandedResultCopy, setExpandedResultCopy] = useState(false);
+  const [expandedWeatherMeta, setExpandedWeatherMeta] = useState(false);
   const slots = useScanCache((state) => state.slots);
   const commitSlot = useScanCache((state) => state.commitSlot);
   // Eier-override v3 (2026-08-01): hvert CTA-trykk spiller nå den FULLE
@@ -296,30 +297,6 @@ export function HjemMonter({
   // stående ulest i scan-cache-store.ts (ingen migrasjonsstøy). Skriveren
   // (`markFullScanPlayedEver`) beholdes — se completeScan under.
   const markFullScanPlayedEver = useScanCache((state) => state.markFullScanPlayedEver);
-
-  useLayoutEffect(() => {
-    const seam = resultSeamRef.current;
-    if (seam === null) return undefined;
-    const resultCopy = seam.querySelector<HTMLElement>('[data-result-copy]');
-    const weatherMeta = seam.querySelector<HTMLElement>('.hjm-s-meta');
-    if (resultCopy === null || weatherMeta === null) return undefined;
-
-    const syncExpandedLayout = () => {
-      const next = resultCopy.getBoundingClientRect().height > 96
-        || weatherMeta.getBoundingClientRect().height > 44;
-      setExpandedResultCopy((current) => current === next ? current : next);
-    };
-    syncExpandedLayout();
-
-    if (typeof ResizeObserver === 'undefined') {
-      window.addEventListener('resize', syncExpandedLayout);
-      return () => window.removeEventListener('resize', syncExpandedLayout);
-    }
-    const observer = new ResizeObserver(syncExpandedLayout);
-    observer.observe(resultCopy);
-    observer.observe(weatherMeta);
-    return () => observer.disconnect();
-  }, [activeLanguage, childName, phase]);
 
   const identity = useMemo<ScanIdentity>(() => ({
     childId,
@@ -347,6 +324,33 @@ export function HjemMonter({
       symbolCode: now.symbolCode,
     });
   }, [recommendation, now]);
+
+  useLayoutEffect(() => {
+    const seam = resultSeamRef.current;
+    if (seam === null) return undefined;
+    const resultCopy = seam.querySelector<HTMLElement>('[data-result-copy]');
+    const weatherMeta = seam.querySelector<HTMLElement>('.hjm-s-meta');
+    if (resultCopy === null || weatherMeta === null) return undefined;
+
+    const syncExpandedLayout = () => {
+      const copyThreshold = window.innerWidth <= 359 ? 104 : 96;
+      const copyExpanded = resultCopy.getBoundingClientRect().height > copyThreshold;
+      const weatherExpanded = weatherMeta.getBoundingClientRect().height > 44;
+      const next = copyExpanded || weatherExpanded;
+      setExpandedResultCopy((current) => current === next ? current : next);
+      setExpandedWeatherMeta((current) => current === weatherExpanded ? current : weatherExpanded);
+    };
+    syncExpandedLayout();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', syncExpandedLayout);
+      return () => window.removeEventListener('resize', syncExpandedLayout);
+    }
+    const observer = new ResizeObserver(syncExpandedLayout);
+    observer.observe(resultCopy);
+    observer.observe(weatherMeta);
+    return () => observer.disconnect();
+  }, [activeLanguage, childName, currentResultKey, phase]);
   // react-hooks/refs: en ref kan ALDRI leses/skrives under selve render-et —
   // kun i effekter/handlers. Timer-callbacks (completeScan/completeRecalc)
   // trenger likevel den NYESTE nøkkelen når de fyrer (ofte lenge etter
@@ -880,6 +884,7 @@ export function HjemMonter({
         <div
           className="hjm-result-seam"
           data-expanded-copy={expandedResultCopy ? 'true' : 'false'}
+          data-expanded-weather={expandedWeatherMeta ? 'true' : 'false'}
           ref={resultSeamRef}
         >
           {expandedResultCopy ? resultHeader : null}

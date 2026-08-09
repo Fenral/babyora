@@ -23,12 +23,12 @@ describe('HjemMonter resultatrytme', () => {
   });
 
   it('beholder ro uten at vær og antrekk blir to adskilte områder', () => {
-    expect(rule(".hjm-panel-slot[data-with-mascot='false'] + .hjm-body"))
+    expect(rule('.hjm-result-seam > .hjm-body'))
       .toContain('padding-top: var(--dw-space-4)');
   });
 
   it('places weather, the static mascot and the result in one shared seam', () => {
-    const seamStart = HOME_SOURCE.indexOf('<div className="hjm-result-seam">');
+    const seamStart = HOME_SOURCE.indexOf('className="hjm-result-seam"');
     const weatherStart = HOME_SOURCE.indexOf('<WeatherStrip', seamStart);
     const resultStart = HOME_SOURCE.indexOf('<ResultSurface', seamStart);
 

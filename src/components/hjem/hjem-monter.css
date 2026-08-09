@@ -942,7 +942,7 @@
   top: calc(100% - 43px);
   filter: var(--hjm-mascot-shadow);
 }
-.hjm-result-seam[data-expanded-copy='true'] .hjm-strip {
+.hjm-result-seam[data-expanded-weather='true'] .hjm-strip {
   align-items: flex-start;
   padding-block: 10px 44px;
 }
@@ -1441,7 +1441,9 @@
 @media (max-width: 359px) {
   .hjem-monter { --hjm-page-gutter: 16px; }
   .hjm-strip { min-height: 82px; }
-  .hjm-result-copy { padding-right: 104px; }
+  .hjm-result-copy { min-height: 94px; padding-right: 104px; }
+  .hjm-result-copy h1,
+  .hjm-result-copy .hjm-sub { max-width: 142px; }
   .hjm-result-bridge-space { flex-basis: 95px; }
   .hjm-result-mascot-seam img {
     width: 200px;
