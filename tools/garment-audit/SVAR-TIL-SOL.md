@@ -5,13 +5,18 @@
 **Målt mot:** `feat/kontekstvalg-hjem` @ `19bea32`, avledet av tag `v1.0.18` (`9a72e9b`) — bygget som ligger i TestFlight
 **Vedlegg i repoet:** `tools/garment-audit/CURRENT-STATE-LEDGER.md`
 
+> **Behandlet 9. august 2026:** Svar og beslutninger ligger i
+> `tools/garment-audit/SOL-SVAR-TILBAKE.md`. Der korrigeres også påstanden om
+> `bandForTemp(NaN)`: direktekallet er svakt, men `recommend()` avviser
+> ikke-finite værverdier før tabelloppslaget.
+
 ---
 
 ## Kort
 
 Autoritetsrekkefølgen din er adoptert. Den er det beste i dokumentet, og den er mekanismen bak seks av de sju påstandene som falt.
 
-Jeg har etterprøvd to av tallene dine. **Du hadde rett på begge, og det ene avslørte en feil hos meg.** Jeg har også funnet ett P0 som mangler i listen din, ett problem ingen av oss visste om, og fire målte funn som ikke sto i noen av våre lister.
+Jeg har etterprøvd to av tallene dine. **Du hadde rett på begge, og det ene avslørte en feil hos meg.** Jeg fant også en latent høyrisikofeil, ett problem ingen av oss visste om, og fire målte funn som ikke sto i noen av våre lister.
 
 ---
 
@@ -44,7 +49,7 @@ Det flytter fase 2 i masterprompten din. Kravet ditt om «konsistent optisk skal
 
 **«0–24 måneder»** stemmer for `clothing-engine-v2` (`age.ts:12` avviser 25+ med `unsupported_age`).
 
-Men `wool-layers` — motoren som faktisk driver Hjem — har **ingen aldersgrense**, og `met-no/feels-like.ts:2` sier «0-3 år».
+Men `wool-layers` — motoren som faktisk driver Hjem — håndhever **0–60**, ikke produktgrensen 0–24 (`recommend.ts:205-208`), og `met-no/feels-like.ts:2` sier «0-3 år».
 
 Se punkt 4. Dette er ikke en tekstuenighet.
 
@@ -69,9 +74,9 @@ En port som melder grønt der er ikke mild. Den måler feil ting, og en grønn p
 
 ---
 
-## 4. Ett P0 som mangler i listen din
+## 4. En latent P1 og P0-port før aktivering
 
-Dine to P0 er (a) åtte kliniske funn åpne, (b) ingen sikkerhetskontrakt i Home-resultatet. Begge holder.
+Dine to P0 er (a) åtte kliniske funn åpne, (b) ingen sikkerhetskontrakt i Home-resultatet. Begge holder som auditfunn.
 
 Men det tredje er dette:
 
@@ -83,7 +88,7 @@ Målt: vogn + sovende beholder sovepose 1.0 TOG uendret ved 22, 24, 26 og 27 °C
 
 Ingen kilde i repoet dekker sovepose i vogn **utendørs** i det hele tatt. Den nærmeste, `LT-PRAM` sitert i `safety.ts:241`, gjelder temperaturøkning under kalesje.
 
-**Hvorfor dette må inn i listen din:** det er arkitektur, ikke en klinisk terskel. Det kan derfor ikke vente på helsesøster, og det er ikke dekket av regelen din om at ingen grense endres uten godkjenning. Å skille utetemperatur fra romtemperatur endrer ingen grense — det slutter å bruke feil tabell.
+**Hvorfor dette må inn i listen din:** det er arkitektur, ikke en klinisk terskel. Ny nåbarhetskontroll viser samtidig at produksjons-UI ikke kan sette vognsøvn: Hjem og Planlegg bruker `awake`, og Finn antrekk sender ikke `vognMode`. B-1 er derfor en latent P1 nå og en obligatorisk P0-port før vognsøvn kan aktiveres. Å skille utetemperatur fra romtemperatur krever fortsatt et eget høyrisikospår; vi skal ikke velge en ny utendørs søvnmodell uten autoritet.
 
 ---
 
@@ -160,7 +165,7 @@ Ditt krav i fase 1 punkt 6 — at HIGH/CRITICAL aldri bare skal ligge i et sheet
 
 ## 8. Sju påstander som falt
 
-Ledgeren tvinger 33 påstander fra tre kilder gjennom samme beviskrav. Fem falt:
+Ledgeren tvinger 32 påstander fra tre kilder gjennom samme beviskrav. Sju falt:
 
 | Påstand | Kilde | Virkelighet |
 |---|---|---|
@@ -182,7 +187,7 @@ Fem av sju falne påstander var mine. Fire av dem falt fordi jeg målte på nytt
 
 Disse hører hjemme i DoD-tabellen din, men ikke under noen av overskriftene så langt. Alle er målt.
 
-**`bandForTemp(NaN)` gir det kaldeste båndet.** Alle `>=`-sammenligninger er usanne mot NaN, så funksjonen faller gjennom til siste linje. Kjørt: `NaN → ekstrem`, `-Infinity → ekstrem`, `Infinity → ekstrem_varme`. Ødelagte eller manglende værdata gir altså maksimalt vinterantrekk, midt på sommeren, uten feiltilstand — mens appen allerede har en «været er utilgjengelig»-flate som ikke utløses her. Dette er robusthet, ikke klinikk, og kan fikses uten godkjenning.
+**Direkte `bandForTemp(NaN)` gir det kaldeste båndet.** Alle `>=`-sammenligninger er usanne mot NaN, så funksjonen faller gjennom til siste linje. Kjørt: `NaN → ekstrem`, `-Infinity → ekstrem`, `Infinity → ekstrem_varme`. Etter ny etterprøving er den opprinnelige bruker-konsekvensen trukket: produksjonsinngangen `recommend()` avviser ikke-finite værverdier i `recommend.ts:193-203` før tabelloppslaget. Restfunnet er API-hardening mot fremtidige direkte kall, ikke bevis på at dagens app viser vinterantrekk ved manglende værdata.
 
 **Appen motsier seg selv ved 21 °C.** Motoren kapper til 1.0 TOG fra 21 (`conflicts.ts:51`), mens TOG-guiden i samme app viser 2.5 til og med 21 (`TogGuideScreen.tsx:118`). Én grad, to svar, begge fra Babyora.
 
@@ -228,7 +233,7 @@ Det er også den eneste formuleringen som gjør disclaimeren nyttig i stedet for
 
 ## 11. Tre spørsmål tilbake
 
-1. **Vil du ta inn B-1 som tredje P0?** Utetemperatur i romtemperatur-tabell er arkitektur, ikke klinikk, og blokkerer derfor ikke på helsesøster. Jeg mener den må stå over de åtte kliniske funnene i rekkefølge, fordi den er årsaken bak minst to av dem.
+1. **Vil du ta inn B-1 som latent P1 og P0-port før aktivering?** Utetemperatur i romtemperatur-tabell er arkitektur, ikke klinikk. Produksjons-UI når ikke grenen nå, men vognsøvn skal ikke kunne aktiveres før den er erstattet av en eksplisitt utendørs søvnmodell.
 
 2. **Hvordan vil du at porter skal bevises?** Jeg foreslår at masterprompten krever at hver ny port demonstreres rød på en bevisst ødelagt tilstand før den regnes som gyldig. Uten det er «0 regelbrudd» ikke en måling.
 
@@ -248,6 +253,6 @@ Tre ting er rettet i kode på `feat/kontekstvalg-hjem`, alle med grønn tsc, bui
 
 Samtidig er ett løfte fjernet fra koden. `tables.ts` sa *«MÅ valideres av helsesøster før produksjons-lansering»*. Den setningen overlevde eierbeslutningen fra 2026-07-15 og gjorde koden til en påstand om egen kvalitet som ikke var dekket. Eieren har nå bekreftet beslutningen: **ingen ekstern fagsignatur, ansvaret bæres av disclaimeren.**
 
-Det flytter noe i masterprompten din. Fase 1 punkt 5 sier at en uavklart klinisk gren skal fail-closed og at release blokkeres. Med helsesøster-porten trukket er de åtte kliniske funnene ikke lenger «venter på godkjenning» — de er **akseptert risiko under disclaimer**. Det er en gyldig posisjon, men den bør stå eksplisitt i prompten, ellers vil en autonom agent blokkere release på en port eieren har fjernet.
+Det flytter noe i masterprompten din. Fase 1 punkt 5 sier at en uavklart klinisk gren skal fail-closed og at release blokkeres. Med helsesøster-porten trukket er de åtte kliniske funnene ikke lenger «venter på en obligatorisk v1-signatur». Ny etterprøving av `docs/DECISION-LOG.md:221-227` viser likevel at eieren aksepterte usignerte legacy-grenser generelt, ikke hvert av de åtte konkrete auditfunnene individuelt. De beholdes derfor som åpne safety-funn i et separat høyrisikospår; disclaimeren gjør dem ikke teknisk løst.
 
 ---

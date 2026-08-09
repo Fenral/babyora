@@ -1,13 +1,14 @@
 # Babyora — kritisk handoff-review og autonom agency-polish-masterprompt
 
-Dato: 2026-08-09  
+Dato: 2026-08-09
+
 Primærgrunnlag: `tools/garment-audit/HANDOFF.md`, dagens repository, referansebildet fra produkteier, Impeccable critique og avgrenset Mobbin-research.
 
 ## Kritisk konklusjon
 
-**Handoffens verdi er høy som historisk plagg-audit, men den kan ikke brukes som implementeringsbrief uten omskriving.** Impeccable-vurderingen er **12/40** på Nielsen-heuristikkene og **FAIL** som operativ agency-brief.
+**Handoffens verdi er høy som historisk plagg-audit, men den kan ikke brukes som implementeringsbrief uten omskriving.** Den uavhengige gjennomgangen ga **FAIL** som operativ agency-brief. Nielsen-heuristikkene brukes ikke som poengskala for et dokument.
 
-Det viktigste er ikke å starte mer designarbeid. Det viktigste er først å skille gammel dokumentasjon fra dagens produkt og å gjøre sikkerhetsstatus, visuell kvalitet og ferdigkriterier maskinelt etterprøvbare.
+Designarbeidet kan fortsette, men må skilles fra motor-/sikkerhetsarbeidet. Før en påstand brukes, skal gammel dokumentasjon skilles fra dagens produkt og ferdigkriterier gjøres etterprøvbare.
 
 ### Det handoffen gjør bra
 
@@ -19,14 +20,15 @@ Det viktigste er ikke å starte mer designarbeid. Det viktigste er først å ski
 
 | Prioritet | Avvik | Verifisert nå | Konsekvens |
 |---|---|---|---|
-| P0 | Åtte kliniske funn er fortsatt åpne | `HELSESOSTER-KRITISK.md` sier at ingen er faglig avklart. Dagens motor kan fortsatt gi blant annet `regntrekk` og `sauekinn-i-vogn` som ordinære resultatrader. | Ingen release kan kalles trygg eller ferdig mens dette er uavklart. Designarbeid kan fortsette, men risikoplagg må håndteres fail-closed. |
+| P1 latent / P0 før aktivering | Utetemperatur brukes mot en innendørs søvn-/TOG-tabell | `recommend.ts:59-61` velger `baseTable.soevn` for sovende barn i vogn med utendørs `weather.feelsLikeC`; `tables.ts:149-163` definerer tabellen som romtemperatur. Produksjons-UI holder vognmodus på `awake`. | Vognsøvn skal forbli utilgjengelig til et separat høyrisikospår er verifisert. Ikke løs med nye grenser på magefølelse. |
+| Høy restrisiko | Åtte konkrete safety-funn er ikke individuelt avgjort | `HELSESOSTER-KRITISK.md` dokumenterer funnene. `docs/DECISION-LOG.md:221-227` aksepterer usignerte legacy-grenser generelt, men navngir ikke hvert av de åtte funnene. | Beholdes som åpne safety-funn utenfor designpakken; disclaimeren gjør dem ikke teknisk løst. |
 | P0 | Sikkerhetsinformasjon har ingen kontrakt i aktivt Home-resultat | Resultatflaten mottar plagg, bevegelse og alternativer, men ingen eksplisitt severity-/safety-kontrakt. | En stresset forelder kan handle på første rad uten å se en relevant advarsel. |
-| P1 | Baseline er foreldet | Handoff sier Klemeg, 0–3 år, gammelt repo, PNG og død alternativkode. Dagens produkt er Babyora, 0–24 måneder, `Fenral/babyora`, WebP og en aktiv alternativflyt. | En autonom agent kan bygge samme funksjon to ganger, endre feil filer og regenerere bilder som allerede finnes. |
+| P1 | Baseline er foreldet | Handoff sier Klemeg, 0–3 år, gammelt repo, PNG og død alternativkode. Dagens produkt er Babyora, med 0–24 måneder som produktgrense, `Fenral/babyora`, WebP og en aktiv alternativflyt. Legacy-motoren tillater fortsatt 0–60 og onboarding fem år. | En autonom agent kan bygge samme funksjon to ganger, endre feil filer eller forveksle produktgrense med motorvalidering. |
 | P1 | UI-/UX-målet er ikke spesifisert | Ingen målbar kontrakt for hierarki, avataroverlapp, responsivitet, touch, Dynamic Type, kontrast, fokus, states eller haptikk. | Resultatet kan være «ferdig» teknisk og fortsatt se tilfeldig eller flatt ut. |
 | P1 | Den egentlige driftsfeilen er ikke løst | Manuelle `when`-tekster kan avvike fra motorens temperaturbånd. | Nye tekstfikser vil drive igjen hvis tekst og motor fortsetter som parallelle sannheter. |
 | P2 | Gammel asset-audit tester filtilstedeværelse mer enn visuell riktighet | Dagens katalog har 72 mappede WebP-er og ingen manglende mappet fil, men det beviser ikke riktig plagg, optisk skala, alpha, lys eller beskjæring. | Appen kan vise «et bilde» og likevel se uprofesjonell eller faglig feil ut. |
 
-Impeccable-detektoren ble kjørt én gang mot `src/components/hjem` og rapporterte **0 automatiske regelbrudd**. Det betyr bare at de generiske kodemønstrene var rene; de produktspesifikke avvikene over krever fortsatt eksplisitte tester og visuell vurdering.
+Impeccable-detektoren ble kjørt én gang mot `src/components/hjem` og rapporterte **0 automatiske regelbrudd**. Det er et diagnostisk funn, ikke en grønn port. En ny produktspesifikk port teller først når samme CI-kommando består på en gyldig fixture og beviselig feiler på en isolert, kjent ugyldig fixture eller midlertidig mutasjon.
 
 ### Avgjørelse om informasjonsarkitektur
 
@@ -49,6 +51,16 @@ Eldre PRODUCT/DESIGN-tekst omtaler en ren vertikal resultatliste. Senere, ekspli
 
 Dette er mønsterreferanser, ikke tillatelse til å kopiere skjermbilder, branding eller komponenter.
 
+### Etterprøving 2026-08-09
+
+`tools/garment-audit/SOL-SVAR-TILBAKE.md` svarer på den uavhengige etterprøvingen. Dokumentet låser tre presiseringer for denne prompten:
+
+- dagens eneste produksjonsmotor er `wool-layers`; Motor V2 forblir inaktiv;
+- B-1 håndteres som en latent P1 og P0-port før vognsøvn kan aktiveres, ikke som del av designpolish;
+- den pågående pakken er design-only. Motor-, TOG-, alders- og sikkerhetsendringer ligger utenfor scope.
+
+Ved motstrid vinner denne presiseringen over eldre formuleringer lenger ned i dokumentet.
+
 ---
 
 # KOPIER FRA HER — AUTONOM MASTERPROMPT
@@ -57,11 +69,13 @@ Dette er mønsterreferanser, ikke tillatelse til å kopiere skjermbilder, brandi
 
 Du er Babyoras autonome senior produktdesigner, design engineer, frontend engineer og QA-lead. Du arbeider i **Operate mode** og eier resultatet fra verifisert baseline til ferdig, testet implementasjon.
 
-Arbeid kontinuerlig gjennom alle faser. Ikke stopp for godkjenning mellom faser. Ikke lever en plan som sluttprodukt. Gjør endringene, kjør testene, inspiser resultatet og rett reelle avvik.
+Arbeid kontinuerlig gjennom alle faser som ligger i den autoriserte designpakken. Ikke lever en plan som sluttprodukt. Gjør designendringene, kjør testene, inspiser resultatet og rett reelle avvik. Rapporter høyrisikofunn uten å utvide scope til motorendringer.
 
 ## Oppdrag
 
 Løft dagens Home/resultat/plaggopplevelse til et profesjonelt designbyråprodukt uten å rive ut fungerende domene- og sikkerhetsarkitektur.
+
+**Aktivt scope:** Home/resultat, avatar-søm, plagg-rail, visuell art direction, disclosure, responsivitet, motion/haptikk og tilgjengelighet. Navigasjonsredesign, motorlogikk, TOG-tabeller, aldersvalidering og sikkerhetsgrenser er ikke del av pakken.
 
 Sluttresultatet skal gi en trøtt forelder dette svaret på få sekunder:
 
@@ -71,19 +85,21 @@ Opplevelsen skal være rolig, varm, presis og fysisk troverdig. Mineral Garden e
 
 ## Autoritetsrekkefølge
 
-Bruk denne rekkefølgen når kilder motsier hverandre:
+Bruk repositoryets faktiske presedens når kilder motsier hverandre:
 
-1. De låste produkteierbeslutningene i denne prompten.
-2. Nyeste daterte beslutning i `PRODUCT.md` og `DESIGN.md`.
-3. Dagens kjørbare kode, typer, tester og git-historikk.
-4. `tools/garment-audit/*` som audit-bevis, ikke som automatisk implementeringssannhet.
-5. Ekstern research som støtte, aldri som autoritet for Babyoras kliniske grenser.
+1. `AGENTS.md`.
+2. `docs/CLAUDE-START-HERE.md` og `docs/DECISION-LOG.md`.
+3. Nyeste eksplisitte produkteierbeslutning og aktivt scope i denne oppgaven.
+4. Nyeste daterte beslutning i `PRODUCT.md` og `DESIGN.md`.
+5. Dagens kjørbare kode, typer, tester og git-historikk.
+6. `tools/garment-audit/*` som audit-bevis, ikke som automatisk implementeringssannhet.
+7. Ekstern research som støtte, aldri som autoritet for Babyoras kliniske grenser.
 
 Ikke bruk gamle absolutte filbaner, gamle PNG-antakelser, antallet «60» eller påstanden om død alternativkode uten å verifisere dette mot HEAD.
 
 ## Låste produktbeslutninger
 
-1. Produktet heter **Babyora** og er for foreldre til barn **0–24 måneder**.
+1. Produktet heter **Babyora** og har **0–24 måneder** som produktgrense. Det er ikke det samme som at legacy-motoren eller dagens onboarding håndhever grensen konsekvent.
 2. **Mineral Garden** er lys standard. Bruk eksisterende semantiske tokens; ingen konkurrerende beige eller mørk redesign.
 3. Home viser dagens verifiserte resultat direkte. Ikke gjenåpne scan-/fingerprint-policy eller redesign navigasjonen i denne jobben.
 4. Resultatreisen er en native horisontal rail: komplett, nummerert oversikt først; ett standardisert plaggkort per plagg etterpå.
@@ -91,14 +107,16 @@ Ikke bruk gamle absolutte filbaner, gamle PNG-antakelser, antallet «60» eller 
 6. `Why today` og global resultat-CTA skal ikke tilbake. Kort bruker `Good to know`, `Mer info` og `Alternativer` bare der funksjonen finnes.
 7. Alternativer er i utgangspunktet informativ sammenligning. Ikke innfør bytte-/velg-tilstand uten en separat, fullverdig produktkontrakt med undo og ny sikkerhetsvalidering.
 8. Ingen temperatur-, TOG-, alders- eller sikkerhetsgrense endres uten dokumentert klinisk godkjenning.
+9. `wool-layers` er eneste produksjonsmotor i denne pakken. Motor V2 aktiveres eller wires ikke.
 
 ## Autonom arbeidsprotokoll
 
 - Begynn med `git status --short`, les gjeldende `AGENTS.md`, relevante prosjektfiler, package scripts og nylig git-historikk. Bevar alle eksisterende brukerendringer.
-- Lag en HEAD-ledger før første kodeendring. Klassifiser hvert handoff-funn som `OPEN`, `ALREADY_FIXED`, `OBSOLETE` eller `BLOCKED_PENDING_CLINICAL_VALIDATION`, med fil-/linjebevis.
+- Lag en HEAD-ledger før første kodeendring. Klassifiser hvert handoff-funn som `OPEN`, `ALREADY_FIXED`, `OBSOLETE`, `LATENT_HIGH_RISK` eller `OUT_OF_SCOPE_HIGH_RISK`, med fil-/linjebevis.
 - Ikke gjenbygg funksjoner som allerede finnes. Utvid minste eksisterende seam.
-- Klinisk blokkering stopper bare den risikable endringen, ikke resten av arbeidet. Fortsett alle uavhengige faser.
-- Ikke inventer medisinsk sannhet for å få grønn test. Dersom et kritisk plagg fortsatt kan anbefales uten godkjenning, håndter det fail-closed og marker release blokkert.
+- Et høyrisikofunn stopper bare den risikable endringen, ikke resten av designarbeidet. Fortsett alle uavhengige faser.
+- Ikke inventer medisinsk sannhet for å få grønn test. Dokumenter eierens generelle aksept av usignerte legacy-grenser uten å omtale de åtte konkrete funnene eller disclaimeren som en teknisk retting.
+- Hver ny produktspesifikk port skal ha én positiv og én isolert negativ kontroll i samme CI-kommando før den teller som gate.
 - Ikke commit, push, opprett PR, deploy eller last opp til TestFlight uten separat eksplisitt tillatelse.
 
 ## Avgrenset research
@@ -123,25 +141,27 @@ Utfør uten å endre produksjonskode:
 - ingen handoff-påstand brukes uten HEAD-bevis;
 - live antall katalogelementer er målt, ikke antatt;
 - eksisterende alternativ- og bildearkitektur er identifisert;
-- de åtte kliniske funnene har eksplisitt blokkstatus;
+- de åtte konkrete safety-funnene er merket `OPEN` og eksplisitt holdt utenfor designpakken, og B-1 er merket `LATENT_HIGH_RISK` med nåbarhetsbevis;
 - alle baseline-feil kan reproduseres med kommando eller skjermbilde.
 
-## Fase 1 — Sikkerhet, data og tekst↔logikk
+## Separat høyrisikospår — sikkerhet, data og tekst↔logikk
+
+**Ikke utfør punktene under som del av designpakken.** De beholdes som et separat oppgavegrunnlag. Designimplementasjonen skal bare dokumentere om den viser eksisterende safety-kontrakt korrekt; den skal ikke endre motoroutput.
 
 1. Verifiser hver motorstreng mot stabil ID. Fjern parallell matching på fritekst der den kan erstattes av ID.
 2. Gjør temperatur-/konteksttekst derivert fra den samme strukturerte sannheten som motoren, eller legg kontrakttester som feiler ved drift.
 3. Verifiser spesielt: `regntrekk`, `sauekinn-i-vogn`, `sovepose-1-0-tog`, `sovepose-2-5-tog`, `to-ullsett`, `tynt-teppe`, `pyjamas` og `tynn-pyjamas`.
 4. Uten klinisk sign-off: ikke endre terskler, ikke normaliser teksten til en mulig utrygg regel, og ikke kall alternativer «trygge» eller «validerte».
-5. Dersom en åpen kritisk gren kan vises i ordinært resultat, ekskluder den fra normal anbefaling/alternativer eller legg en eksplisitt safety/release-gate som feiler lukket. Dokumenter nøyaktig hva som er blokkert.
+5. Verifiser B-1 separat: utendørs vognsøvn skal ikke bruke en innendørs romtemperaturtabell uten en eksplisitt, dokumentert inputkontrakt. Ikke velg erstatningstabell eller nye grenser uten godkjent høyrisikooppgave.
 6. Den høyest relevante brukeradvarselen skal være synlig før plaggoversikten. Detaljer kan ligge på kortet, men HIGH/CRITICAL skal aldri bare ligge i et sheet.
 
-### Fase 1 er ferdig når
+### Høyrisikospåret er ferdig når
 
 - 100 % av live motoroutput har stabil item-ID;
 - 100 % av `when`/forklaring-til-motor-kontrakter er testet eller generert fra felles struktur;
-- ingen uavklart klinisk gren presenteres som ordinær, trygg anbefaling;
+- de åpne safety-funnene er navngitt uten absolutte trygghetspåstander;
 - ingen ny numerisk medisinsk påstand mangler kilde og godkjenning;
-- release-gaten er rød så lenge ett kritisk funn er uavklart.
+- B-1 har RED→GREEN-test og uavhengig høyrisikoreview på en egen kandidat-SHA.
 
 ## Fase 2 — Plaggbilder og art direction
 
@@ -284,8 +304,9 @@ Ingen «ser bra ut»-godkjenning er gyldig uten screenshot- og kommandobevis.
 
 | Område | PASS-kriterium |
 |---|---|
-| Baseline | Alle handoff-funn har `OPEN`, `ALREADY_FIXED`, `OBSOLETE` eller `BLOCKED_PENDING_CLINICAL_VALIDATION` med bevis. |
-| Klinisk | Alle åtte kritiske har godkjenning eller blokkstatus. Ingen uavklart gren fremstår som ordinær/trygg. Release forblir blokkert ved ett åpent kritisk funn. |
+| Baseline | Alle handoff-funn har `OPEN`, `ALREADY_FIXED`, `OBSOLETE`, `LATENT_HIGH_RISK` eller `OUT_OF_SCOPE_HIGH_RISK` med bevis. |
+| Klinisk | De åtte konkrete legacy-funnene er eksplisitt åpne i et separat høyrisikospår; ingen ny trygghetspåstand er innført. |
+| Latent motorfeil | B-1 står som `LATENT_HIGH_RISK`, produksjons-UI holder vognsøvn utilgjengelig, og designrapporten påstår ikke at feilen er løst. |
 | Datakjede | 100 % live motoroutput mapper til stabil ID, lokalisert navn, kategori/rolle, WebP og fakta. Ingen matching på tilfeldige labels. |
 | Bilder | 100 % kjente IDs har egen dekodbar WebP; 0 kjent fallback/bokstav/404/opaque rute; visuell kontaktarkreview bestått. |
 | Avatar | Én statisk avatar overlapper vær 24–56 px og resultatkant 6–16 px på 320/375/393/430; 0 innholdskollisjon; posisjonsdrift ≤1 px. |
@@ -326,7 +347,7 @@ Kjør i tillegg målrettede tester for:
 - touch/diagonal gesture og 30× sirkulær rail;
 - eksplisitte språkstrenger, ikke forventninger hentet fra samme produksjonsmap.
 
-Legg nye permanente porter i CI dersom de beskytter en låst DOD. En lokal grønn test som CI aldri kjører er ikke ferdig.
+Legg nye permanente porter i CI dersom de beskytter en låst DOD. En lokal grønn test som CI aldri kjører er ikke ferdig. Før en ny port får gate-status, skal samme kommando bestå på gyldig fixture og feile på en isolert, kjent ugyldig fixture eller midlertidig mutasjon.
 
 ## Anti-mål
 
@@ -337,7 +358,7 @@ Legg nye permanente porter i CI dersom de beskytter en låst DOD. En lokal grøn
 - Ikke fyll kort med generell tekst. Less is more: hvert element må hjelpe påkledning, trygghet eller neste handling.
 - Ikke skjul safety bak `Mer info`.
 - Ikke gjør medisinske endringer for å få en test grønn.
-- Ikke erklær releaseklar mens en klinisk P0 er åpen.
+- Ikke aktiver vognsøvn eller erklær den grenen klar mens B-1 er uløst; designpakken kan fortsatt få en avgrenset design-PASS.
 
 ## Sluttleveranse
 
@@ -348,9 +369,9 @@ Opprett `tools/garment-audit/AGENCY-POLISH-REPORT.md` med:
 3. DOD-tabellen med `PASS`, `FAIL` eller `BLOCKED_EXTERNAL` og lenke til bevis.
 4. Kommandoer og eksakte resultater.
 5. Screenshot-kontaktark for alle avtalte viewports/states.
-6. Klinisk blocker-ledger med eier og nødvendig godkjenning.
+6. Risk-ledger som skiller generell eieraksept av usignerte legacy-grenser fra konkrete `OPEN`/`LATENT_HIGH_RISK`/`OUT_OF_SCOPE_HIGH_RISK`-funn, med eier og neste handling.
 7. Git status og eksplisitt bekreftelse på at ingenting er pushet/deployet uten tillatelse.
 
-Du er ferdig først når alle ikke-klinisk blokkerte DOD-er er PASS, alle kliniske avvik er fail-closed og sannferdig merket, og det ikke finnes et reproduserbart, uløst P0/P1/P2 i implementert scope.
+Designpakken er ferdig når alle DOD-er i aktivt designscope er PASS, de åpne safety-funnene og B-1 er sannferdig merket, og det ikke finnes et reproduserbart, uløst P0/P1/P2 i implementert designscope. Dette er ikke det samme som motor- eller release-PASS.
 
 # SLUTT PÅ MASTERPROMPT

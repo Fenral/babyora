@@ -2,7 +2,9 @@
 
 **Formål:** tvinge hver påstand om denne kodebasen — uansett hvem som fremmet den — gjennom samme beviskrav før den brukes til noe.
 
-**Målt mot:** `feat/kontekstvalg-hjem` @ `19bea32`, avledet av tag `v1.0.18` (`9a72e9b`) — bygget som ligger i TestFlight.
+**Opprinnelig målt mot:** `feat/kontekstvalg-hjem` @ `19bea32`, avledet av tag `v1.0.18` (`9a72e9b`) — bygget som ligger i TestFlight.
+
+**Sentrale påstander re-sjekket mot:** `4c68a72` 2026-08-09; se `SOL-SVAR-TILBAKE.md`.
 **Dato:** 2026-08-09
 **Kilder som er vurdert:** `tools/garment-audit/HANDOFF.md`, motorrevisjonen av 2026-08-09 (fem parallelle lesninger), og `BABYORA-AGENCY-POLISH-MASTERPROMPT.md` (Sol 5.6).
 
@@ -15,6 +17,8 @@
 | `OBSOLETE` | Gjaldt en annen kodebase eller et annet tidspunkt |
 | `REFUTED` | Påstanden er feil — etterprøvd og avvist |
 | `BLOCKED_CLINICAL` | Reelt, men kan ikke løses uten medisinsk godkjenning |
+| `LATENT_HIGH_RISK` | Reell høyrisikofeil i en kodegren som dagens produksjons-UI ikke kan nå; må lukkes før grenen aktiveres |
+| `OUT_OF_SCOPE_HIGH_RISK` | Reelt høyrisikofunn som krever en separat autorisert oppgave og egen verifikasjon |
 
 **Beviskrav:** hver rad må ha fil:linje, en kjørt måling, eller eksplisitt `ikke verifisert`. Enighet mellom flere kilder teller ikke som bevis.
 
@@ -30,7 +34,7 @@
 | A-2 | 60 plagg i katalogen | `OBSOLETE` | Målt: 72 webp på v1.0.18, 63 på `main` |
 | A-3 | Plaggbilder er PNG | `OBSOLETE` | Alle 72 er webp, alle med alfakanal (målt) |
 | A-4 | `sauekinn-i-vogn` mangler aldersgate | `OPEN` | `tables.ts:56,62,68,74` uten gate; `garment-info.ts:248` lover forbehold ingen kode håndhever |
-| A-5 | 8 kliniske funn eskalert til KRITISK | `BLOCKED_CLINICAL` | Se seksjon D |
+| A-5 | 8 kliniske funn eskalert til KRITISK | `OPEN` | Se seksjon D. `docs/DECISION-LOG.md:221-227` aksepterer usignerte legacy-grenser generelt, men navngir ikke de åtte konkrete funnene individuelt |
 | A-6 | 12 tekstfikser i `garment-info.ts`, ikke committet | `ikke verifisert` | Ikke undersøkt i denne runden |
 | A-7 | Stadium A bommet på 3 «manglende PNG»-funn | `OBSOLETE` | Gjaldt PNG-æraen; alle 72 webp finnes i dag |
 
@@ -44,8 +48,8 @@ Gjelder `src/lib/wool-layers/`. `src/lib/clothing-engine-v2/` er nå revidert i 
 
 | # | Funn | Status | Bevis |
 |---|---|---|---|
-| B-1 | Utetemperatur mates inn i romtemperatur-TOG-tabell | `OPEN` | `recommend.ts:59-61` slår opp `soevn`-tabellen med `weather.feelsLikeC`. Målt: vogn+sovende beholder 1.0 TOG til og med 27 °C |
-| B-2 | `bandForTemp(NaN)` gir kaldeste bånd | `OPEN` | Kjørt: `NaN → ekstrem`, `-Infinity → ekstrem`. `tables.ts:8-18`, alle `>=` usanne mot NaN |
+| B-1 | Utetemperatur mates inn i romtemperatur-TOG-tabell | `LATENT_HIGH_RISK` | `recommend.ts:59-61` slår opp `soevn`-tabellen med utendørs `weather.feelsLikeC`; `tables.ts:149-163` definerer tabellen som innendørs. Målt: vogn+sovende beholder 1.0 TOG til og med 27 °C. Produksjons-UI holder Hjem/Planlegg på `awake`, og Finn antrekk sender ikke vognmodus; grenen er derfor ikke nåbar nå |
+| B-2 | Direkte `bandForTemp(NaN)` gir kaldeste bånd | `OPEN` som API-hardening; bruker-konsekvensen er `REFUTED` | Direkte kall gir `NaN → ekstrem`, men produksjonsinngangen `recommend()` avviser ikke-finitt `feelsLikeC` i `recommend.ts:193-195` før oppslaget. Det er ikke bevist at appen viser vinterantrekk ved manglende værdata |
 | B-3 | `src/lib/research/` importeres av null kjørende linjer | `OPEN` | Søkt: kun to prosakommentarer, `modifiers.ts:481` og `:495` |
 | B-4 | Ingen av de 14 kilde-ID-ene reglene siterer finnes i `sources.ts` | `OPEN` | Talt: 0 treff. Union i `safety.ts:26-29`, register i `sources.ts:24-102` |
 | B-5 | 19 av 24 regler i HB/CK/SB er døde eller uten effekt | `OPEN` | Per-regel fil:linje i motorrevisjonen |
@@ -71,11 +75,11 @@ Gjelder `src/lib/wool-layers/`. `src/lib/clothing-engine-v2/` er nå revidert i 
 |---|---|---|---|
 | C-1 | Handoffen kan ikke brukes som implementeringsbrief | `OPEN` — bekreftet | Sammenfaller med A-1 til A-3 |
 | C-2 | 72 mappede webp i dagens katalog | **Bekreftet** | Målt 72 på v1.0.18. Min egen tidligere telling på 63 var fra `main` og var feil gren |
-| C-3 | Produktet er for 0–24 måneder | **Delvis** | Gjelder `clothing-engine-v2` (`age.ts:12`). `wool-layers` har ingen aldersgrense; `feels-like.ts:2` sier «0-3 år». Se B-12 |
+| C-3 | Produktet er for 0–24 måneder | **Delvis** | Produktgrensen er låst i `AGENTS.md:14` og `docs/DECISION-LOG.md:313`. `clothing-engine-v2` håndhever den (`age.ts:12`), mens produksjonsmotoren `wool-layers` tillater 0–60 (`recommend.ts:205-208`) og onboarding fem år (`OnboardingScreen.tsx:283-286`) |
 | C-4 | Impeccable-detektor: 0 regelbrudd på `src/components/hjem` | `OPEN` som funn om porten | På samme flate er målt: innhold krysser tab-baren, ingen mørk modus, 21 slides for 6 plagg. En port som melder grønt der måler feil ting |
 | C-5 | 12/40 på Nielsen for handoffen | `REFUTED` som metode | Nielsens heuristikker scorer grensesnitt, ikke dokumenter. FAIL-dommen står; tallet bør strykes |
-| C-6 | Sols P0-liste | Ufullstendig | B-1 mangler. Det er arkitektur, ikke klinisk terskel, og kan derfor ikke vente på helsesøster |
-| C-7 | Autoritetsrekkefølgen (masterprompt l. 74–82) | **Anbefales adoptert** | Plasserer kjørende kode over audit-prosa — nøyaktig feilmekanismen bak A-1 og B-13/B-14 |
+| C-6 | Sols P0-liste | **Korrigert** | B-1 manglet, men produksjons-UI når ikke `vognMode='sleeping'`. Fører derfor `LATENT_HIGH_RISK` nå og P0-port før aktivering, ikke aktivt produksjons-P0 |
+| C-7 | Autoritetsrekkefølgen i masterprompten | **Adoptert og korrigert** | Følger nå repositoryets faktiske presedens fra `AGENTS.md` og plasserer kjørende kode over audit-prosa — nøyaktig feilmekanismen bak A-1 og B-13/B-14 |
 
 ---
 
@@ -85,20 +89,20 @@ De åtte fra handoffen. Ingen er faglig avklart; `HELSESOSTER-KRITISK.md` bekref
 
 | Plagg | Type | Status |
 |---|---|---|
-| `regntrekk` | Omgår varmefelle-regel | `BLOCKED_CLINICAL` |
-| `sauekinn-i-vogn` | Ingen aldersgate, mykt underlag | `BLOCKED_CLINICAL` |
-| `sovepose-2-5-tog` | Under-isolering | `BLOCKED_CLINICAL` |
-| `sovepose-1-0-tog` | Tekst på sikkerhetsfelt | `BLOCKED_CLINICAL` |
-| `tynt-teppe` | Tekst på sikkerhetsfelt | `BLOCKED_CLINICAL` |
-| `pyjamas` | Tekst på sikkerhetsfelt | `BLOCKED_CLINICAL` |
-| `tynn-pyjamas` | Tekst på sikkerhetsfelt | `BLOCKED_CLINICAL` |
-| `to-ullsett` | Tekst på sikkerhetsfelt | `BLOCKED_CLINICAL` |
+| `regntrekk` | Omgår varmefelle-regel | `OPEN` |
+| `sauekinn-i-vogn` | Ingen aldersgate, mykt underlag | `OPEN` |
+| `sovepose-2-5-tog` | Under-isolering | `OPEN` |
+| `sovepose-1-0-tog` | Tekst på sikkerhetsfelt | `OPEN` |
+| `tynt-teppe` | Tekst på sikkerhetsfelt | `OPEN` |
+| `pyjamas` | Tekst på sikkerhetsfelt | `OPEN` |
+| `tynn-pyjamas` | Tekst på sikkerhetsfelt | `OPEN` |
+| `to-ullsett` | Tekst på sikkerhetsfelt | `OPEN` |
 
-### Statusen er endret av eier, 2026-08-09
+### Rekkevidden av eierbeslutningen
 
 Helsesøster-porten er **trukket**. Eier har bekreftet beslutningen fra 2026-07-15: produktet lanseres på dagens containede motor uten ekstern fagsignatur, og ansvaret bæres av disclaimeren.
 
-Følgen for de åtte over: de er ikke lenger `BLOCKED_CLINICAL` i betydningen «venter på godkjenning». De er **akseptert risiko under disclaimer**. Det er en gyldig posisjon, men den må stå eksplisitt i enhver implementeringsbrief — ellers vil en autonom agent blokkere release på en port eier har fjernet.
+Følgen for de åtte over er smalere enn først skrevet: de er ikke `BLOCKED_CLINICAL` i betydningen «venter på en obligatorisk v1-signatur», men de er heller ikke individuelt lukket av eierbeslutningen. De forblir åpne safety-funn. Beslutningsloggen aksepterer den generelle risikoen ved usignerte legacy-grenser; den er ikke et blanket unntak for konkrete regex-, copy- eller rutingfeil funnet senere.
 
 Linja i `tables.ts:5-7` som sa «MÅ valideres av helsesøster før produksjons-lansering» er fjernet. Den overlevde beslutningen i juli og gjorde koden til en påstand om egen kvalitet som ikke var dekket.
 
@@ -130,11 +134,12 @@ De to nye lerretene kom med de ni filene v1.0.18 la til: `bomullssett`, `bomulls
 | Status | Antall |
 |---|---|
 | `OPEN` | 17 |
+| `LATENT_HIGH_RISK` | 1 (B-1) |
 | `REFUTED` | 6 |
 | `OBSOLETE` | 3 |
 | Bekreftet eller delvis | 4 |
 | `ikke verifisert` | 1 |
-| Akseptert risiko under disclaimer | 8 plagg, se D |
+| Åpne safety-plagg i A-5 | 8 plagg, se D |
 
 32 rader fra tre kilder. **Seks påstander falt ved etterprøving** — én fra handoffen, fire fra min egen runde, én fra Sols metode. To av mine falt fordi noen målte etter meg: C-2 (jeg talte 63 plagg på feil gren, riktig er 72) og B-12 (jeg beskrev to levende motorer; v2 er aldri skrudd på).
 
