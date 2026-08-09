@@ -87,23 +87,42 @@ Ingen kilde i repoet dekker sovepose i vogn **utendørs** i det hele tatt. Den n
 
 ---
 
-## 5. Noe ingen av oss visste
+## 5. Noe ingen av oss visste — og en korreksjon mot meg selv
 
-**Det finnes to motorer, begge lever, og de er uenige om hvem produktet er for.**
+Jeg meldte først at det finnes **to levende motorer** som gir ulikt svar avhengig av skjerm. En egen lesning av `clothing-engine-v2` har nå kjørt, og **den korrigerer meg på mekanismen.**
 
-| Motor | Brukes av | Alderskontrakt |
-|---|---|---|
-| `wool-layers/recommend` | HjemScreen, UkeScreen, FinnAntrekkScreen | ingen grense |
-| `clothing-engine-v2` | AgeAdaptiveSituationPicker, KlePaaStepper, MaterialPreferenceSheet | avviser 25+ mnd |
+### Det som faktisk er tilfelle
 
-Kjørt på et barn på 30 måneder: `wool-layers` svarer med åtte plagg uten å blunke. `clothing-engine-v2` kaster `unsupported_age`.
+`clothing-engine-v2` er en **komplett erstatningsmotor som aldri er skrudd på.** Alle tre visningsflaggene er `false` (`feature-flags.ts:22-26`), `selectEngine` returnerer alltid `'legacy'`, og ingen kaller den.
 
-Samme barn, samme app, to oppførsler avhengig av hvilken skjerm forelderen står på.
+Det eneste v2 gjør i appen i dag er å være **oppslagstabell**: `KlePaaStepper.tsx:64` importerer `GARMENT_VARIANTS` og matcher legacy-motorens norske plaggstrenger mot `legacyNameNb` for å hente et materialfelt. Ingen anbefaling beregnes.
 
-Det har to følger for masterprompten din:
+De to andre kallstedene mine holdt ikke:
 
-1. Den låste beslutningen «0–24 måneder» er ikke håndhevet i motoren som driver Home. Enten må `wool-layers` få grensen, eller så er beslutningen ikke låst.
-2. **Hele motorrevisjonen min dekker `wool-layers` alene.** `clothing-engine-v2` er urevidert. En egen lesning er satt i gang.
+- `AgeAdaptiveSituationPicker` er **aldri montert** — null referanser utenfor egen fil, og den er selverklært ikke wiret (`:5-6`)
+- `MaterialPreferenceSheet` importerer `MaterialPreference` som **type**, som slettes ved kompilering. Verdien forbrukes av legacy
+
+**Så et barn på 30 måneder krasjer ikke appen i dag** — men, som lesningen formulerer det: *fordi kastestien er utilgjengelig, ikke fordi den er håndtert.* `EngineV2Error` fanges ingen steder, og `src/` har ingen error boundary.
+
+### Hvorfor det likevel er et P1, og hvorfor det angår din masterprompt direkte
+
+Den umonterte komponenten heter `AgeAdaptiveSituationPicker`. Grenen jeg arbeider på heter `feat/kontekstvalg-hjem` og handler om nettopp aldersavhengig situasjonsvalg. **Om noen wirer den komponenten under dette arbeidet, blir en 25-måneders bruker en ufanget throw under render.**
+
+Legacy dokumenterer motsatt kontrakt: 25+ skal gi soft-warning, ikke hard block (`wool-layers/types.ts:29-35`). Din låste beslutning «0–24 måneder» matcher v2, ikke motoren som kjører.
+
+### To målte funn til
+
+**~58 % av plaggene mangler materiallinje.** Legacy produserer 69 distinkte plaggstrenger; v2s katalog kjenner 29 av dem. `materialPointFor` tier om resten — blant annet `sovepose 2.5 TOG`, `vinterdress`, `halsedisse`, `vognpose` og `saueskinn i vogn`.
+
+**De to sikkerhetsregelsettene gir motstridende råd på identisk input.** Målt: ved 30 °C for et barn på 20 måneder gir legacy **ingen flagg**, v2 gir `HB-V2-EXTREME-HEAT/HIGH`. Samme plagg, motsatt risikobudskap. Ved bilstol og −8 °C gir legacy 12 plagg med to flagg, v2 gir 5 med ett.
+
+### Retningen i koden
+
+15 sammenhengende `feat(engine-v2)`-commits stopper **2026-07-14**. Deretter 26 dager uten v2-arbeid. Siste berøring la materialpreferanser inn i v2s modell, men motivasjonen var *legacys* behov.
+
+Koden sier altså: **v2 er stoppet som motor og lever videre som datamodell for legacy.** Det er den dyreste tilstanden — to sikkerhetsregelsett som allerede er uenige, og en katalog som brukes som fasit for 42 % av plaggene og tier om resten.
+
+**Følgen for masterprompten:** «0–24 måneder» kan ikke låses før det er avgjort om v2 skrus på eller skrotes. Det er en eierbeslutning.
 
 ---
 
@@ -149,13 +168,67 @@ Ledgeren tvinger 33 påstander fra tre kilder gjennom samme beviskrav. Fem falt:
 | Bæresele mangler fotdekning under 5 °C | min runde | Fotplagg finnes når det ikke er heldress; kjøredressen overtar |
 | HB-2 lar teppet ligge i vogn | min runde | CK-1 fjerner alt teppe og kjører før safety |
 | `vognMode` hardkodes på :438 | min runde | :438 er kommentarstart; hardkodingen står på :456 |
+| 63 plagg i katalogen | min runde | 72 på v1.0.18 — jeg målte på feil gren |
+| To motorer gir ulikt svar til samme barn | min runde | v2 er aldri skrudd på; kastestien er utilgjengelig, ikke håndtert |
 | 12/40 på Nielsen | din review | Grensesnitt-skala brukt på et dokument |
 
-To fra handoffen, to fra meg, én fra deg. **Ingen av dem ville blitt fanget av at flere kilder var enige** — det er hele begrunnelsen for ledgeren.
+To fra handoffen, fire fra meg, én fra deg. **Ingen av dem ville blitt fanget av at flere kilder var enige** — det er hele begrunnelsen for ledgeren.
+
+Fire av mine egne seks falt fordi jeg målte, eller fordi noen målte etter meg. Det er ikke et argument for å måle mindre.
 
 ---
 
-## 9. Tre spørsmål tilbake
+## 11. Endret siden forrige melding
+
+Tre ting er rettet i kode på `feat/kontekstvalg-hjem`, alle med grønn tsc, build og 3407 tester:
+
+**Bæresele er valgbar.** Rotårsaken var tre uavhengige innsnevringer av samme begrep — `HjemActivity`, en lokal `Activity` i HjemScreen, og et håndskrevet `Record` i scan-orchestration. Motoren kunne alltid `baeresele`; UI-et kunne ikke sette den.
+
+**Hjem starter i familiens egen situasjon.** `preferredActivity` på barneprofilen, samme fallback-kontrakt som `materialPreference`.
+
+**Ansvarsfraskrivelsen snakket norsk til alle språk.** `DISCLAIMER_SHORT` var en hardkodet norsk konstant importert rett inn i HjemScreen uten språkgren. Siden v1.0.18 rendrer hele grensesnittet på engelsk, var den eneste norske setningen på hjemskjermen nettopp ansvarsfraskrivelsen. Den bor nå i `home.disclaimerShort` i alle fem locale-filer.
+
+Samtidig er ett løfte fjernet fra koden. `tables.ts` sa *«MÅ valideres av helsesøster før produksjons-lansering»*. Den setningen overlevde eierbeslutningen fra 2026-07-15 og gjorde koden til en påstand om egen kvalitet som ikke var dekket. Eieren har nå bekreftet beslutningen: **ingen ekstern fagsignatur, ansvaret bæres av disclaimeren.**
+
+Det flytter noe i masterprompten din. Fase 1 punkt 5 sier at en uavklart klinisk gren skal fail-closed og at release blokkeres. Med helsesøster-porten trukket er de åtte kliniske funnene ikke lenger «venter på godkjenning» — de er **akseptert risiko under disclaimer**. Det er en gyldig posisjon, men den bør stå eksplisitt i prompten, ellers vil en autonom agent blokkere release på en port eieren har fjernet.
+
+---
+
+## 9. Til den endelige disclaimeren — hva motoren faktisk ikke vet
+
+Eieren har bestemt at **du** skriver den fulle disclaimeren, som del av det endelige dokumentet. Dette er råmaterialet, slik at den kan bli spesifikk for Babyora i stedet for generisk.
+
+En generisk disclaimer sier «dette erstatter ikke medisinsk råd». Den er sann og nesten verdiløs. En Babyora-disclaimer kan si hva appen konkret er blind for — og det er dette, alt målt:
+
+**Den vet ikke hva som ligger i vogna.** Motoren har **ingen garderobemodell overhodet**. Den antar at forelderen eier alt den anbefaler, og lister varmepose, saueskinn og vognpose som plagg uten å spørre. Det er derfor tre isolasjonskilder kan stables oppå en full vinterkjøredress uten at noe protesterer.
+
+**Den ser ikke barnet.** Det finnes ingen tilbakemeldingssløyfe. Nakkesjekken er den eneste virkelige verifikasjonen, og den må forelderen gjøre selv.
+
+**Den kjenner ikke mikroklimaet.** Værdata kommer fra met.no for et valgt eller fast sted, ikke for skyggen under trærne, den vindutsatte broa eller sørveggen.
+
+**Den regner alltid med 60 minutter ute.** `exposureMin` settes aldri av noen skjerm.
+
+**Den bruker en innendørs skala utendørs.** TOG er kalibrert for soverom. Motoren mater føles-som ute inn i den samme tabellen.
+
+**Den teller vinden to ganger under 10 °C.** Én gang i føles-som, én gang som egne plagg.
+
+**Den har ingen aldersgrense i den motoren som faktisk kjører**, selv om produktet oppgis som 0–24 måneder.
+
+**Den kan ikke vite at barnet skal i bilstolen.** Sikkerhetsregelen for det finnes, men flagget settes aldri fra UI, så regelen kan ikke utløses.
+
+**Sikkerhetsreglene rundt søvn er i praksis ikke i drift.** 19 av 24 regler er døde. Appen bør derfor ikke leses som en sikkerhetssjekk for soving — den er en påkledningsguide.
+
+**Kildegrunnlaget er tynnere enn det ser ut.** Elleve kilder, hvorav to fagfellevurdert og fire produsenter som selger soveposer eller ull. Temperaturbåndene er kalibrert mot et nettmagasin og en klesprodusent.
+
+**Ingen ekstern fagsignatur.** Eierbeslutning, bevisst tatt.
+
+Jeg mener ikke at alt dette hører hjemme i disclaimeren — de fleste punktene er interne funn. Men de fire første er det forelderen faktisk trenger å vite for å bruke appen riktig: **den vet ikke hva du har, den ser ikke barnet ditt, den kjenner ikke akkurat din tur, og nakken er fasiten.**
+
+Det er også den eneste formuleringen som gjør disclaimeren nyttig i stedet for defensiv.
+
+---
+
+## 10. Tre spørsmål tilbake
 
 1. **Vil du ta inn B-1 som tredje P0?** Utetemperatur i romtemperatur-tabell er arkitektur, ikke klinikk, og blokkerer derfor ikke på helsesøster. Jeg mener den må stå over de åtte kliniske funnene i rekkefølge, fordi den er årsaken bak minst to av dem.
 
