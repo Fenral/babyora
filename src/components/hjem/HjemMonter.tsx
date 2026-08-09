@@ -60,6 +60,8 @@ import {
   type MouseEvent,
   useCallback,
   useEffect,
+  useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -133,6 +135,8 @@ import {
   type HomeGarmentAlternativeGroup,
 } from '../../lib/outfit/home-garment-alternatives.js';
 import { GarmentAlternativesSheet } from './GarmentAlternativesSheet.js';
+
+const RESULT_MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot-resultat-sveip.webp`;
 
 function ArrowIcon() {
   return (
@@ -279,6 +283,10 @@ export function HjemMonter({
   const activeLanguage = i18n.resolvedLanguage ?? i18n.language;
   const copy = hjemCopyFor(activeLanguage);
   const scan = useScanCoordinator();
+  const phase = scan.state.phase;
+  const resultTitleId = useId();
+  const resultSeamRef = useRef<HTMLDivElement | null>(null);
+  const [expandedResultCopy, setExpandedResultCopy] = useState(false);
   const slots = useScanCache((state) => state.slots);
   const commitSlot = useScanCache((state) => state.commitSlot);
   // Eier-override v3 (2026-08-01): hvert CTA-trykk spiller nå den FULLE
@@ -288,6 +296,30 @@ export function HjemMonter({
   // stående ulest i scan-cache-store.ts (ingen migrasjonsstøy). Skriveren
   // (`markFullScanPlayedEver`) beholdes — se completeScan under.
   const markFullScanPlayedEver = useScanCache((state) => state.markFullScanPlayedEver);
+
+  useLayoutEffect(() => {
+    const seam = resultSeamRef.current;
+    if (seam === null) return undefined;
+    const resultCopy = seam.querySelector<HTMLElement>('[data-result-copy]');
+    const weatherMeta = seam.querySelector<HTMLElement>('.hjm-s-meta');
+    if (resultCopy === null || weatherMeta === null) return undefined;
+
+    const syncExpandedLayout = () => {
+      const next = resultCopy.getBoundingClientRect().height > 96
+        || weatherMeta.getBoundingClientRect().height > 44;
+      setExpandedResultCopy((current) => current === next ? current : next);
+    };
+    syncExpandedLayout();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', syncExpandedLayout);
+      return () => window.removeEventListener('resize', syncExpandedLayout);
+    }
+    const observer = new ResizeObserver(syncExpandedLayout);
+    observer.observe(resultCopy);
+    observer.observe(weatherMeta);
+    return () => observer.disconnect();
+  }, [activeLanguage, childName, phase]);
 
   const identity = useMemo<ScanIdentity>(() => ({
     childId,
@@ -735,6 +767,7 @@ export function HjemMonter({
 
   const handleSwapRow = useCallback((row: ResultRow, event: MouseEvent<HTMLButtonElement>) => {
     if (row.outfitItemId === null || !alternativeItemIds.has(row.outfitItemId)) return;
+    void impactSoft();
     alternativeTriggerRef.current = event.currentTarget;
     setOpenAlternativeItemId(row.outfitItemId);
   }, [alternativeItemIds]);
@@ -766,8 +799,6 @@ export function HjemMonter({
   const canScan = currentResultKey !== null;
   // T9A: sann friskhetslinje (erstatter hardkodet «Oppdatert nå»).
   const freshnessLine = freshnessLineFor(weatherFreshness, now !== null, copy.weather);
-
-  const phase = scan.state.phase;
 
   if (phase === 'scanning' || phase === 'recalculating') {
     const isFullScan = phase === 'scanning';
@@ -836,34 +867,52 @@ export function HjemMonter({
     const rows = currentOutfitBundle?.kind === 'supported'
       ? deriveResultRowsFromTruth(currentOutfitBundle.base)
       : deriveResultRows(recommendation);
+    const resultCopy = resultCopyFor(activeLanguage);
+    const resultHeader = (
+      <div className="hjm-result-copy" data-result-copy>
+        <h1 id={resultTitleId}>{resultCopy.title}</h1>
+        <p className="hjm-sub">{resultCopy.childSummary(rows.length, childName)}</p>
+      </div>
+    );
     return (
       <div className="hjem-monter hjem-monter--result">
         <div className="hjm-top"><span className="hjm-brand">BABYORA</span></div>
-        <div className="hjm-panel-slot" data-with-mascot="false">
-          {now && (
-            <WeatherStrip
-              nuance={nuance}
-              tempC={now.tempC}
-              feelsLikeC={now.feelsLikeC}
-              conditionLabel={conditionLabel}
-              cityLabel={cityLabel}
-              activityToggleLabel={copy.activity[activity].toggle}
-              weatherIconSrc={weatherIconSrc}
-              weatherIconAlt={conditionLabel}
-              language={activeLanguage}
-              onAdjust={handleOpenAdjust}
+        <div
+          className="hjm-result-seam"
+          data-expanded-copy={expandedResultCopy ? 'true' : 'false'}
+          ref={resultSeamRef}
+        >
+          {expandedResultCopy ? resultHeader : null}
+          <div className="hjm-panel-slot" data-with-mascot="false">
+            {now && (
+              <WeatherStrip
+                nuance={nuance}
+                tempC={now.tempC}
+                feelsLikeC={now.feelsLikeC}
+                conditionLabel={conditionLabel}
+                cityLabel={cityLabel}
+                activityToggleLabel={copy.activity[activity].toggle}
+                weatherIconSrc={weatherIconSrc}
+                weatherIconAlt={conditionLabel}
+                language={activeLanguage}
+                onAdjust={handleOpenAdjust}
+              />
+            )}
+            <div className="hjm-result-mascot-seam" data-result-avatar-seam aria-hidden="true">
+              <img src={RESULT_MASCOT_SRC} alt="" draggable={false} />
+            </div>
+          </div>
+          {expandedResultCopy ? <div className="hjm-result-bridge-space" aria-hidden="true" /> : resultHeader}
+          <div className="hjm-body">
+            <ResultSurface
+              rows={rows}
+              headingId={resultTitleId}
+              isFresh={isFresh}
+              reducedMotion={reducedMotion}
+              onSwapRow={handleSwapRow}
+              alternativeItemIds={alternativeItemIds}
             />
-          )}
-        </div>
-        <div className="hjm-body">
-          <ResultSurface
-            rows={rows}
-            childLabel={resultCopyFor(activeLanguage).childSummary(rows.length, childName)}
-            isFresh={isFresh}
-            reducedMotion={reducedMotion}
-            onSwapRow={handleSwapRow}
-            alternativeItemIds={alternativeItemIds}
-          />
+          </div>
         </div>
         <GarmentAlternativesSheet
           group={openAlternativeGroup}

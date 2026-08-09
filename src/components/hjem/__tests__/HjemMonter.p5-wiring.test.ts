@@ -78,6 +78,7 @@ describe('HjemMonter — authorized garment alternatives', () => {
     const handlerEnd = contents.indexOf('}, [alternativeItemIds]);', handlerStart);
     const handler = contents.slice(handlerStart, handlerEnd);
     expect(handler).toContain('if (row.outfitItemId === null || !alternativeItemIds.has(row.outfitItemId)) return;');
+    expect(handler).toContain('void impactSoft();');
     expect(handler).toContain('setOpenAlternativeItemId(row.outfitItemId);');
     expect(handler).not.toContain('onOpenPlaggbib');
     expect(contents).not.toContain('resolveSwapTarget(row)');

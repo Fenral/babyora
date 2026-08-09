@@ -10,6 +10,10 @@ type ResultCopy = Readonly<{
   progressLabel: string;
   details: string;
   moreInfo: string;
+  moreInfoAria: (name: string) => string;
+  moreInfoTitle: (name: string) => string;
+  closeMoreInfo: string;
+  source: string;
   goodToKnow: string;
   alternatives: string;
   previous: string;
@@ -43,6 +47,10 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     progressLabel: 'Dressing order',
     details: 'See details',
     moreInfo: 'More info',
+    moreInfoAria: (name) => `More information about ${name}`,
+    moreInfoTitle: (name) => `More about ${name}`,
+    closeMoreInfo: 'Close more information',
+    source: 'Source',
     goodToKnow: 'Good to know',
     alternatives: 'Alternatives',
     previous: 'Previous',
@@ -67,6 +75,10 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     progressLabel: 'Påklädningsordning',
     details: 'Visa detaljer',
     moreInfo: 'Mer info',
+    moreInfoAria: (name) => `Mer information om ${name}`,
+    moreInfoTitle: (name) => `Mer om ${name}`,
+    closeMoreInfo: 'StÃ¤ng mer information',
+    source: 'KÃ¤lla',
     goodToKnow: 'Bra att veta',
     alternatives: 'Alternativ',
     previous: 'Föregående',
@@ -91,6 +103,10 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     progressLabel: 'Påklædningsrækkefølge',
     details: 'Se detaljer',
     moreInfo: 'Mere info',
+    moreInfoAria: (name) => `Mere information om ${name}`,
+    moreInfoTitle: (name) => `Mere om ${name}`,
+    closeMoreInfo: 'Luk mere information',
+    source: 'Kilde',
     goodToKnow: 'Godt at vide',
     alternatives: 'Alternativer',
     previous: 'Forrige',
@@ -115,6 +131,10 @@ const COPY: Record<ResultLanguage, ResultCopy> = {
     progressLabel: 'Påkledningsrekkefølge',
     details: 'Se detaljer',
     moreInfo: 'Mer info',
+    moreInfoAria: (name) => `Mer informasjon om ${name}`,
+    moreInfoTitle: (name) => `Mer om ${name}`,
+    closeMoreInfo: 'Lukk mer informasjon',
+    source: 'Kilde',
     goodToKnow: 'Godt å vite',
     alternatives: 'Alternativer',
     previous: 'Forrige',

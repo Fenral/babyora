@@ -20,15 +20,16 @@ import {
 } from 'react';
 import { garmentFactFor } from '../../data/garment-facts.js';
 import { displayNameForDbString } from '../../data/garment-display-names.js';
+import { impactSoft, selection as hapticSelection } from '../../lib/haptics.js';
 import { getGarmentImage } from '../../lib/monter-assets.js';
 import { MonterGarmentRow } from './MonterGarmentRow.js';
+import { GarmentFactSheet, type GarmentFactSheetItem } from './GarmentFactSheet.js';
 import { resultCopyFor } from './result-localization.js';
 import type { ResultRow } from './result-rows.js';
 import './hjem-monter.css';
 
 const ROW_STAGGER_MS = 80;
 const ROW_STAGGER_START_MS = 50;
-const RESULT_MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot-resultat-sveip.webp`;
 // Kept as a defensive SSR fallback; normal rendering always uses resultCopyFor.
 const NORWEGIAN_CAROUSEL_FALLBACK = 'Kle på, steg for steg';
 const LOOP_SETTLE_FALLBACK_MS = 240;
@@ -80,7 +81,7 @@ function JourneyArrow({ backwards = false }: Readonly<{ backwards?: boolean }>) 
 
 export type ResultSurfaceProps = Readonly<{
   rows: readonly ResultRow[];
-  childLabel: string;
+  headingId: string;
   isFresh: boolean;
   reducedMotion: boolean;
   onSwapRow: (row: ResultRow, event: MouseEvent<HTMLButtonElement>) => void;
@@ -89,7 +90,7 @@ export type ResultSurfaceProps = Readonly<{
 
 export function ResultSurface({
   rows,
-  childLabel,
+  headingId,
   isFresh,
   reducedMotion,
   onSwapRow,
@@ -100,13 +101,16 @@ export function ResultSurface({
   const railRef = useRef<HTMLOListElement | null>(null);
   const railId = useId();
   const hintId = useId();
-  const titleId = useId();
   const loopSettleTimerRef = useRef<number | null>(null);
   const scrollFrameRef = useRef<number | null>(null);
   const touchingRef = useRef(false);
+  const pendingUserPagingRef = useRef(false);
+  const lastSettledLogicalIndexRef = useRef(0);
+  const factTriggerRef = useRef<HTMLElement | null>(null);
   const [loopReady, setLoopReady] = useState(false);
   const [activeLogicalIndex, setActiveLogicalIndex] = useState(0);
   const [activePhysicalIndex, setActivePhysicalIndex] = useState(0);
+  const [openFactRowKey, setOpenFactRowKey] = useState<string | null>(null);
   const [settledPhysicalIndex, setSettledPhysicalIndex] = useState(0);
   const [activeCardHeight, setActiveCardHeight] = useState<number | null>(null);
   const logicalCount = rows.length + 1;
@@ -142,6 +146,8 @@ export function ResultSurface({
     setActivePhysicalIndex(physicalIndex);
     setSettledPhysicalIndex(physicalIndex);
     setActiveLogicalIndex(logicalIndex);
+    pendingUserPagingRef.current = false;
+    lastSettledLogicalIndexRef.current = logicalIndex;
     measureCardHeight(rail, physicalIndex);
   }, [logicalCount, measureCardHeight]);
 
@@ -166,6 +172,11 @@ export function ResultSurface({
     setActivePhysicalIndex(settledIndex);
     setSettledPhysicalIndex(settledIndex);
     setActiveLogicalIndex(logicalIndex);
+    const shouldSignalPaging = pendingUserPagingRef.current
+      && logicalIndex !== lastSettledLogicalIndexRef.current;
+    pendingUserPagingRef.current = false;
+    lastSettledLogicalIndexRef.current = logicalIndex;
+    if (shouldSignalPaging) void hapticSelection();
     measureCardHeight(rail, settledIndex);
     return true;
   }, [logicalCount, measureCardHeight]);
@@ -248,6 +259,7 @@ export function ResultSurface({
     if (rail === null) return;
     if (!(card instanceof HTMLElement)) return;
     const logicalIndex = logicalIndexFor(clamped, logicalCount);
+    pendingUserPagingRef.current = true;
     expandCardHeight(rail, clamped);
     setActivePhysicalIndex(clamped);
     setActiveLogicalIndex(logicalIndex);
@@ -257,7 +269,8 @@ export function ResultSurface({
     });
     scheduleLoopNormalization();
     if (moveFocus) {
-      const focusTarget = card.querySelector<HTMLElement>('.hjm-journey-detail')
+      const focusTarget = card.querySelector<HTMLElement>('.hjm-journey-more-info')
+        ?? card.querySelector<HTMLElement>('.hjm-journey-detail')
         ?? card.querySelector<HTMLElement>('[data-hjm-card-focus]');
       focusTarget?.focus({ preventScroll: true });
     }
@@ -280,7 +293,25 @@ export function ResultSurface({
     displayLabel: displayNameForDbString(row.label, i18next.resolvedLanguage),
     localizedRole: copy.role(row.roleLabel),
     imageSrc: getGarmentImage(row.garmentId),
+    fact: row.garmentId === null
+      ? null
+      : garmentFactFor(row.garmentId, i18next.resolvedLanguage),
   }));
+  const openFactRow = presentedRows.find(({ row }) => row.key === openFactRowKey) ?? null;
+  const openFactItem: GarmentFactSheetItem | null = openFactRow === null
+    || openFactRow.fact === null
+    ? null
+    : {
+      label: openFactRow.displayLabel,
+      imageSrc: openFactRow.imageSrc,
+      fact: openFactRow.fact,
+    };
+
+  const handleOpenFact = (rowKey: string, event: MouseEvent<HTMLButtonElement>) => {
+    void impactSoft();
+    factTriggerRef.current = event.currentTarget;
+    setOpenFactRowKey(rowKey);
+  };
 
   const renderOverviewCard = (loopBand: LoopBand) => {
     const isCanonical = loopBand === 'canonical';
@@ -330,11 +361,9 @@ export function ResultSurface({
     displayLabel,
     localizedRole,
     imageSrc,
+    fact,
   }) => {
     const isCanonical = loopBand === 'canonical';
-    const fact = row.garmentId === null
-      ? null
-      : garmentFactFor(row.garmentId, i18next.resolvedLanguage).text;
     const hasAlternatives = row.outfitItemId !== null
       && alternativeItemIds.has(row.outfitItemId);
     return (
@@ -350,6 +379,7 @@ export function ResultSurface({
         loopBand={loopBand}
         interactive={isCanonical}
         onSwap={(event) => onSwapRow(row, event)}
+        onOpenInfo={(event) => handleOpenFact(row.key, event)}
         animationDelayMs={null}
       />
     );
@@ -361,18 +391,8 @@ export function ResultSurface({
     <section
       className="hjm-result"
       data-scrollable="true"
-      aria-labelledby={titleId}
+      aria-labelledby={headingId}
     >
-      <div className="hjm-journey-intro">
-        <div className="hjm-journey-copy">
-          <h1 id={titleId}>{copy.title}</h1>
-          <p className="hjm-sub">{childLabel}</p>
-        </div>
-        <div className="hjm-result-mascot-seam" data-result-avatar-seam aria-hidden="true">
-          <img src={RESULT_MASCOT_SRC} alt="" draggable={false} />
-        </div>
-      </div>
-
       {rows.length === 0 ? (
         <p className="hjm-journey-empty" role="status">{copy.empty}</p>
       ) : (
@@ -394,7 +414,10 @@ export function ResultSurface({
             } as CSSProperties}
             onKeyDown={handleRailKeyDown}
             onScroll={syncActiveCard}
-            onTouchStart={() => { touchingRef.current = true; }}
+            onTouchStart={() => {
+              touchingRef.current = true;
+              pendingUserPagingRef.current = true;
+            }}
             onTouchEnd={() => {
               touchingRef.current = false;
               scheduleLoopNormalization();
@@ -459,6 +482,13 @@ export function ResultSurface({
               </span>
             </div>
           ) : null}
+
+          <GarmentFactSheet
+            item={openFactItem}
+            isOpen={openFactItem !== null}
+            onClose={() => setOpenFactRowKey(null)}
+            triggerRef={factTriggerRef}
+          />
         </>
       )}
     </section>

@@ -18,6 +18,7 @@
  */
 
 .hjem-monter {
+  --hjm-page-gutter: 20px;
   font-family: var(--dw-font-ui);
   color: var(--dw-ink-hi);
   -webkit-font-smoothing: antialiased;
@@ -42,7 +43,7 @@
   /* P8: bunn-padding matcher den flytende tab-baren sin klaring — dette
      skjermrotet kan eie sin egen interne scroll (overflow: hidden auto
      under), så den kan ikke stole på .app-shell > main sin padding alene. */
-  padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) 20px var(--dw-tabbar-clearance, 90px);
+  padding: max(24px, calc(env(safe-area-inset-top, 0px) + 12px)) var(--hjm-page-gutter) var(--dw-tabbar-clearance, 90px);
   overflow: hidden auto;
   /* D4 GJELDER IKKE HER, og det er MALT — ikke en unnlatelse.
 
@@ -163,10 +164,10 @@
    6,54:1, saa rangeringen dekor-under-informasjon holder. */
 .hjm-brand {
   font-family: var(--dw-font-ui);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
   line-height: 1.15;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.2em;
   color: var(--dw-ink-mid);
 }
 
@@ -200,11 +201,24 @@
 .hjm-panel-slot[data-with-mascot='false'] + .hjm-body {
   /* Ro mellom værkontekst og anbefaling, uten å gjøre avstanden til et
      eget visuelt område. */
-  padding-top: var(--dw-space-12);
+  padding-top: var(--dw-space-4);
 }
 .hjm-panel-slot[data-with-mascot='true'] { margin-top: 130px; }
 .hjm-panel-slot[data-with-mascot='true'][data-compact='true'] { margin-top: 108px; }
 .hjm-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.hjm-result-seam {
+  position: relative;
+  flex: 1 0 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.hjm-result-seam > .hjm-body {
+  padding-top: var(--dw-space-4);
+}
+.hjm-result-bridge-space {
+  flex: 0 0 80px;
+}
 
 .hjem-monter :focus-visible {
   outline: 2px solid var(--dw-focus);
@@ -819,7 +833,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 54px;
+  min-height: 74px;
   box-shadow: inset 0 1px 0 var(--dw-kant-key), var(--dw-depth-raised);
 }
 .hjm-strip[data-nuance='clear'] { background: var(--dw-w-clear); --hjm-nuance: var(--dw-w-clear); }
@@ -844,7 +858,7 @@
   font-weight: 550;
   font-variant-numeric: lining-nums tabular-nums;
 }
-.hjm-strip .hjm-s-meta { font-size: 12.5px; color: var(--dw-ink-panel-mid); line-height: 1.32; flex: 1; }
+.hjm-strip .hjm-s-meta { font-size: 13px; color: var(--dw-ink-panel-mid); line-height: 1.32; flex: 1; }
 .hjm-strip .hjm-s-weather {
   width: 38px;
   height: 38px;
@@ -882,26 +896,41 @@
   display: flex;
   flex-direction: column;
 }
-.hjm-result h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.012em; margin: 0; }
-.hjm-result .hjm-sub { font-size: 14px; line-height: 1.35; color: var(--dw-ink-low); margin-top: 4px; }
+.hjm-result-copy h1 {
+  max-width: 16ch;
+  margin: 0;
+  font-size: clamp(28px, 7.2vw, 30px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.hjm-result-copy .hjm-sub {
+  margin-top: 4px;
+  color: var(--dw-ink-low);
+  font-size: 15px;
+  line-height: 1.4;
+}
 
 /* Resultat-maskoten er en utskiftbar søm over oversiktslisten. Den beskriver
    ingen antrekkssannhet og er derfor dekorativ i markupen. Neste asset kan
    byttes her uten å røre kortdataene. */
-.hjm-journey-intro {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 116px;
-  align-items: end;
-  min-height: 70px;
-}
-.hjm-journey-copy {
+.hjm-result-copy {
   position: relative;
   z-index: 1;
-  padding: 0 var(--dw-space-12) 8px 0;
+  min-height: 80px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--dw-space-4) 116px var(--dw-space-8) 0;
 }
 .hjm-result-mascot-seam {
-  position: relative;
-  align-self: stretch;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 188px;
+  height: 100%;
   pointer-events: none;
   z-index: 3;
 }
@@ -910,8 +939,12 @@
   width: 188px;
   max-width: none;
   right: -18px;
-  bottom: -25px;
+  top: calc(100% - 43px);
   filter: var(--hjm-mascot-shadow);
+}
+.hjm-result-seam[data-expanded-copy='true'] .hjm-strip {
+  align-items: flex-start;
+  padding-block: 10px 44px;
 }
 
 /* Nettleseren eier gesten. Ett kort fyller innholdsbredden. 20px mellomrom
@@ -926,16 +959,16 @@
   grid-auto-flow: column;
   grid-auto-columns: var(--hjm-journey-card-width);
   align-items: start;
-  gap: 20px;
-  width: calc(100% + 40px);
-  margin: 0 -20px;
-  padding-block: 5px 12px;
-  padding-inline: 20px;
+  gap: max(20px, var(--hjm-page-gutter));
+  width: calc(100% + var(--hjm-page-gutter) + var(--hjm-page-gutter));
+  margin: 0 calc(0px - var(--hjm-page-gutter));
+  padding-block: 0 12px;
+  padding-inline: var(--hjm-page-gutter);
   list-style: none;
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-inline: auto;
-  scroll-padding-inline: 20px;
+  scroll-padding-inline: var(--hjm-page-gutter);
   scroll-snap-type: x mandatory;
   touch-action: pan-x pan-y;
   -webkit-overflow-scrolling: touch;
@@ -967,7 +1000,11 @@
   box-shadow: inset 0 1px 0 var(--dw-kant-key), var(--dw-depth-raised);
 }
 .hjm-journey-card:not(.hjm-journey-overview-card) .hjm-journey-card-inner {
-  height: var(--hjm-detail-card-height);
+  min-height: var(--hjm-detail-card-height);
+  height: auto;
+}
+.hjm-journey-overview-inner {
+  padding-top: 17px;
 }
 .hjm-journey-card-inner::before {
   content: '';
@@ -1003,12 +1040,12 @@
   border-radius: 13px;
 }
 .hjm-journey-overview-list .hjm-g-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   line-height: 1.2;
 }
 .hjm-journey-overview-list .hjm-g-role {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.2;
 }
 .hjm-journey-overview-list .hjm-row-next {
@@ -1051,7 +1088,7 @@
   gap: 7px;
   margin: 10px 0 0;
   color: var(--dw-ink-low);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   font-variant-numeric: lining-nums tabular-nums;
 }
@@ -1064,7 +1101,7 @@
 .hjm-journey-name {
   margin: 3px 0 0;
   color: var(--dw-ink-hi);
-  font-size: 21px;
+  font-size: 22px;
   line-height: 1.15;
   letter-spacing: -0.012em;
   display: -webkit-box;
@@ -1074,7 +1111,7 @@
 }
 .hjm-journey-bottom {
   min-height: 0;
-  margin-top: auto;
+  margin-top: 12px;
 }
 .hjm-journey-fact {
   min-height: 0;
@@ -1086,7 +1123,7 @@
 .hjm-journey-fact h3 {
   margin: 0;
   color: var(--dw-ink-low);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 750;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1094,8 +1131,8 @@
 .hjm-journey-fact p {
   margin: 3px 0 0;
   color: var(--dw-ink-mid);
-  font-size: 12.5px;
-  line-height: 1.32;
+  font-size: 15px;
+  line-height: 1.4;
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
@@ -1106,17 +1143,29 @@
   height: 17px;
   flex: none;
 }
+.hjm-journey-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 8px;
+  border-top: 1px solid var(--dw-hairline);
+}
+.hjm-journey-actions[data-two-actions='true'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.hjm-journey-actions[data-two-actions='true'] .hjm-journey-detail + .hjm-journey-detail {
+  border-left: 1px solid var(--dw-hairline);
+}
 .hjm-journey-detail {
   appearance: none;
   width: 100%;
+  min-width: 0;
   min-height: 44px;
-  margin-top: 8px;
-  padding: 0;
+  margin: 0;
+  padding: 0 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border: 0;
-  border-top: 1px solid var(--dw-hairline);
   border-radius: 0;
   background: transparent;
   color: var(--dw-ink-hi);
@@ -1131,6 +1180,66 @@
 .hjm-journey-detail:active {
   color: var(--dw-accent);
   transform: scale(0.985);
+}
+
+.hjm-fact-sheet {
+  display: grid;
+  gap: var(--dw-space-16);
+}
+.hjm-fact-sheet__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--dw-space-14);
+}
+.hjm-fact-sheet__identity h3,
+.hjm-fact-sheet__identity p,
+.hjm-fact-sheet__text,
+.hjm-fact-sheet__source p {
+  margin: 0;
+}
+.hjm-fact-sheet__identity h3 {
+  margin-top: var(--dw-space-4);
+  font: 700 1.125rem/1.2 var(--dw-font-ui);
+  letter-spacing: -0.015em;
+}
+.hjm-fact-sheet__image {
+  display: grid;
+  flex: 0 0 88px;
+  width: 88px;
+  height: 88px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--dw-plate-kant);
+  border-radius: var(--dw-r-control);
+  background: var(--dw-plate);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-chip);
+}
+.hjm-fact-sheet__image img {
+  width: 82px;
+  height: 82px;
+  object-fit: contain;
+}
+.hjm-fact-sheet__eyebrow {
+  color: var(--dw-ink-mid);
+  font: 750 0.75rem/1.2 var(--dw-font-ui);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.hjm-fact-sheet__text {
+  color: var(--dw-ink-mid);
+  font: 500 0.9375rem/1.5 var(--dw-font-ui);
+}
+.hjm-fact-sheet__source {
+  padding-top: var(--dw-space-12);
+  border-top: 1px solid var(--dw-hairline);
+}
+.hjm-fact-sheet__source a {
+  display: inline-flex;
+  min-height: var(--dw-size-touch);
+  align-items: center;
+  color: var(--dw-ink-hi);
+  font: 700 0.875rem/1.2 var(--dw-font-ui);
+  text-underline-offset: 3px;
 }
 
 .hjm-journey-progress {
@@ -1330,20 +1439,24 @@
 .hjm-swap svg { width: 15px; height: 15px; }
 
 @media (max-width: 359px) {
-  .hjm-journey-intro {
-    min-height: 68px;
-    grid-template-columns: minmax(0, 1fr) 104px;
-  }
+  .hjem-monter { --hjm-page-gutter: 16px; }
+  .hjm-strip { min-height: 82px; }
+  .hjm-result-copy { padding-right: 104px; }
+  .hjm-result-bridge-space { flex-basis: 95px; }
   .hjm-result-mascot-seam img {
-    width: 176px;
-    right: -38px;
-    bottom: -23px;
+    width: 200px;
+    right: -40px;
+    top: calc(100% - 38px);
   }
   .hjm-rows { padding-inline: var(--dw-space-10); }
   .hjm-row { gap: var(--dw-space-10); }
   .hjm-thumb { width: 62px; }
   .hjm-swap { width: 20px; justify-content: center; }
   .hjm-swap-label { display: none; }
+}
+
+@media (min-width: 420px) {
+  .hjem-monter { --hjm-page-gutter: 24px; }
 }
 
 /* ═══ SCROLL-AFFORDANCE (D4): BUNN-FADE I STEDET FOR HARDT KLIPP ═══════════

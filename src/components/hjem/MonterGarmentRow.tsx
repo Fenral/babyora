@@ -1,5 +1,6 @@
 import i18next from 'i18next';
 import type { MouseEvent } from 'react';
+import type { GarmentFact } from '../../data/garment-facts.js';
 import { GENERIC_GARMENT_SVG } from '../../data/garment-illustrations.js';
 import { resultCopyFor } from './result-localization.js';
 import './hjem-monter.css';
@@ -38,12 +39,13 @@ export type MonterGarmentRowProps = Readonly<{
   label: string;
   roleLabel: string;
   imageSrc: string;
-  fact?: string | null;
+  fact?: GarmentFact | null;
   hasAlternatives?: boolean;
   loopBand?: 'leading' | 'canonical' | 'trailing';
   interactive?: boolean;
   compactDestinationLabel?: string;
   onSwap: (event: MouseEvent<HTMLButtonElement>) => void;
+  onOpenInfo?: (event: MouseEvent<HTMLButtonElement>) => void;
   animationDelayMs: number | null;
 }>;
 
@@ -59,6 +61,7 @@ export function MonterGarmentRow({
   interactive = true,
   compactDestinationLabel,
   onSwap,
+  onOpenInfo,
   animationDelayMs,
 }: MonterGarmentRowProps) {
   const copy = resultCopyFor(i18next.resolvedLanguage);
@@ -148,21 +151,37 @@ export function MonterGarmentRow({
           {fact ? (
             <section className="hjm-journey-fact">
               <h3>{copy.goodToKnow}</h3>
-              <p>{fact}</p>
+              <p>{fact.text}</p>
             </section>
           ) : null}
 
-          {hasAlternatives ? (
-            <button
-              type="button"
-              className="hjm-journey-detail"
-              onClick={interactive ? onSwap : undefined}
-              tabIndex={interactive ? undefined : -1}
-              aria-label={copy.alternativesAria(label)}
-            >
-              {copy.alternatives}
-              <DetailChevronIcon />
-            </button>
+          {fact ? (
+            <div className="hjm-journey-actions" data-two-actions={hasAlternatives ? 'true' : 'false'}>
+              <button
+                type="button"
+                className="hjm-journey-detail hjm-journey-more-info"
+                onClick={interactive ? onOpenInfo : undefined}
+                tabIndex={interactive ? undefined : -1}
+                aria-label={copy.moreInfoAria(label)}
+                aria-haspopup="dialog"
+              >
+                {copy.moreInfo}
+                <InfoIcon />
+              </button>
+              {hasAlternatives ? (
+                <button
+                  type="button"
+                  className="hjm-journey-detail hjm-journey-alternatives"
+                  onClick={interactive ? onSwap : undefined}
+                  tabIndex={interactive ? undefined : -1}
+                  aria-label={copy.alternativesAria(label)}
+                  aria-haspopup="dialog"
+                >
+                  {copy.alternatives}
+                  <DetailChevronIcon />
+                </button>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </article>

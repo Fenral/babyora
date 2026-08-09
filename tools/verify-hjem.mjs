@@ -69,6 +69,87 @@ async function openHome(viewport) {
   return page;
 }
 
+async function measureMascotSeam(page) {
+  return page.evaluate(async () => {
+    const images = Array.from(document.querySelectorAll('[data-result-avatar-seam] img'));
+    const image = images[0];
+    const strip = document.querySelector('.hjm-strip');
+    const resultCard = document.querySelector('[data-hjm-overview-card="true"] .hjm-journey-card-inner');
+    if (!(image instanceof HTMLImageElement)
+      || !(strip instanceof HTMLElement)
+      || !(resultCard instanceof HTMLElement)) return null;
+
+    await image.decode();
+    const imageRect = image.getBoundingClientRect();
+    const stripRect = strip.getBoundingClientRect();
+    const resultRect = resultCard.getBoundingClientRect();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context === null) return null;
+    context.drawImage(image, 0, 0);
+    const rgba = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    const scaleX = imageRect.width / canvas.width;
+    const scaleY = imageRect.height / canvas.height;
+    const threshold = 8;
+    let alphaTop = Number.POSITIVE_INFINITY;
+    let alphaBottom = Number.NEGATIVE_INFINITY;
+    let weightedAlpha = 0;
+    let weightedVisibleAlpha = 0;
+
+    const rangeRects = (selector) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) return [];
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return Array.from(range.getClientRects());
+    };
+    const protectedRects = {
+      temperature: rangeRects('.hjm-s-temp'),
+      metadata: rangeRects('.hjm-s-meta'),
+      weatherIcon: [document.querySelector('.hjm-s-weather')?.getBoundingClientRect()].filter(Boolean),
+      title: rangeRects('.hjm-journey-copy h1'),
+      subtitle: rangeRects('.hjm-journey-copy .hjm-sub'),
+      firstRow: [document.querySelector('[data-hjm-overview-card="true"] .hjm-row')?.getBoundingClientRect()].filter(Boolean),
+    };
+    const protectedHits = Object.fromEntries(Object.keys(protectedRects).map((name) => [name, 0]));
+
+    for (let y = 0; y < canvas.height; y += 1) {
+      for (let x = 0; x < canvas.width; x += 1) {
+        const alpha = rgba[(y * canvas.width + x) * 4 + 3];
+        if (alpha <= threshold) continue;
+        const left = imageRect.left + x * scaleX;
+        const top = imageRect.top + y * scaleY;
+        const right = left + scaleX;
+        const bottom = top + scaleY;
+        const weight = alpha / 255;
+        alphaTop = Math.min(alphaTop, top);
+        alphaBottom = Math.max(alphaBottom, bottom);
+        weightedAlpha += weight;
+        if (right > 0 && left < window.innerWidth && bottom > 0 && top < window.innerHeight) {
+          weightedVisibleAlpha += weight;
+        }
+        for (const [name, rects] of Object.entries(protectedRects)) {
+          if (rects.some((rect) => (
+            Math.min(right, rect.right) > Math.max(left, rect.left)
+            && Math.min(bottom, rect.bottom) > Math.max(top, rect.top)
+          ))) protectedHits[name] += 1;
+        }
+      }
+    }
+
+    return {
+      avatarCount: images.length,
+      stripHeight: stripRect.height,
+      weatherOverlap: stripRect.bottom - alphaTop,
+      resultOverlap: alphaBottom - resultRect.top,
+      visibleAlphaRatio: weightedAlpha === 0 ? 0 : weightedVisibleAlpha / weightedAlpha,
+      protectedHits,
+    };
+  });
+}
+
 try {
   await waitForServer(BASE, server);
   browser = await chromium.launch();
@@ -134,6 +215,32 @@ try {
     mascot === null
       ? 'result mascot seam is missing'
       : `loaded=${mascot.loaded} running animations=${mascot.animations} legacy mascots=${mascot.legacyMascots} stable=${mascotStable}`,
+  );
+
+  const seamMatrix = [];
+  for (const width of [320, 375, 393, 430]) {
+    const matrixPage = width === 430 ? page : await openHome({ width, height: 932 });
+    seamMatrix.push({ width, measurement: await measureMascotSeam(matrixPage) });
+    if (matrixPage !== page) await matrixPage.close();
+  }
+  const seamMatrixPassed = seamMatrix.every(({ measurement }) => (
+    measurement !== null
+    && measurement.avatarCount === 1
+    && measurement.stripHeight >= 72
+    && measurement.stripHeight <= 84
+    && measurement.weatherOverlap >= 24
+    && measurement.weatherOverlap <= 56
+    && measurement.resultOverlap >= 6
+    && measurement.resultOverlap <= 16
+    && measurement.visibleAlphaRatio >= 0.98
+    && Object.values(measurement.protectedHits).every((hits) => hits === 0)
+  ));
+  gate(
+    '2b. mascot alpha bridges both surfaces without content collisions',
+    seamMatrixPassed,
+    seamMatrix.map(({ width, measurement }) => measurement === null
+      ? `${width}px=missing`
+      : `${width}px weather/result=${measurement.weatherOverlap.toFixed(1)}/${measurement.resultOverlap.toFixed(1)}px hits=${JSON.stringify(measurement.protectedHits)} visible=${(measurement.visibleAlphaRatio * 100).toFixed(1)}%`).join('; '),
   );
 
   const bands = await page.evaluate(() => {
@@ -245,12 +352,12 @@ try {
     };
   });
   gate(
-    '5. active card is full-width with 20px insets and no neighbours',
+    '5. active card is full-width with the 430px gutter and no neighbours',
     geometry !== null
       && geometry.centerError <= 2
-      && Math.abs(geometry.leftInset - 20) <= 1
-      && Math.abs(geometry.rightInset - 20) <= 1
-      && Math.abs(geometry.cardWidth - (geometry.railWidth - 40)) <= 1
+      && Math.abs(geometry.leftInset - 24) <= 1
+      && Math.abs(geometry.rightInset - 24) <= 1
+      && Math.abs(geometry.cardWidth - (geometry.railWidth - 48)) <= 1
       && geometry.previousPeek <= 1
       && geometry.nextPeek <= 1
       && geometry.documentOverflow <= 1,

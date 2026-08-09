@@ -29,11 +29,10 @@ function renderResult(
   rows: readonly ResultRow[],
   overrides: Partial<ComponentProps<typeof ResultSurface>> = {},
 ): string {
-  const copy = resultCopyFor(i18next.resolvedLanguage);
   return renderToStaticMarkup(
     <ResultSurface
       rows={rows}
-      childLabel={copy.childSummary(rows.length, 'Lillian')}
+      headingId="result-heading"
       isFresh={false}
       reducedMotion={false}
       onSwapRow={vi.fn()}
@@ -238,7 +237,7 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(reduced).not.toContain('animation-delay');
   });
 
-  it('uses one full-width card with 20px insets and no side-peek geometry', () => {
+  it('uses one full-width card with responsive insets and no side-peek geometry', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
     const html = renderResult([row({})]);
     const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
@@ -252,10 +251,10 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(html).toContain(copy.carouselHint);
     expect(railRule).toMatch(/grid-auto-columns:\s*(?:var\([^)]*\)|min\([^;]+\));/u);
     expect(railRule).toMatch(/--hjm-journey-card-width:\s*100%;/u);
-    expect(railRule).toMatch(/width:\s*calc\(100% \+ 40px\);/u);
-    expect(railRule).toMatch(/margin:\s*0 -20px;/u);
-    expect(railRule).toMatch(/padding-inline:\s*20px;/u);
-    expect(railRule).toMatch(/scroll-padding-inline:\s*20px;/u);
+    expect(railRule).toMatch(/width:\s*calc\(100% \+ var\(--hjm-page-gutter\) \+ var\(--hjm-page-gutter\)\);/u);
+    expect(railRule).toMatch(/margin:\s*0 calc\(0px - var\(--hjm-page-gutter\)\);/u);
+    expect(railRule).toMatch(/padding-inline:\s*var\(--hjm-page-gutter\);/u);
+    expect(railRule).toMatch(/scroll-padding-inline:\s*var\(--hjm-page-gutter\);/u);
   });
 
   it('bruker native overflow og sentrert snap uten pointer-capture eller drag-transform', () => {
@@ -275,6 +274,15 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(css).toMatch(/\.hjm-journey-rail\s*\{[\s\S]*?-webkit-overflow-scrolling:\s*touch;/);
     expect(cardRule).toMatch(/scroll-snap-align:\s*center;/u);
     expect(cardRule).toMatch(/scroll-snap-stop:\s*normal;/u);
+  });
+
+  it('signals selection only after a user-controlled page settles on a new item', () => {
+    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
+
+    expect(source).toContain('pendingUserPagingRef.current = true;');
+    expect(source).toContain('logicalIndex !== lastSettledLogicalIndexRef.current');
+    expect(source).toContain('pendingUserPagingRef.current = false;');
+    expect(source).toContain('if (shouldSignalPaging) void hapticSelection();');
   });
 
   it('keeps the overview auto-height and every garment card at the compact 300px standard', () => {
@@ -299,7 +307,8 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(cardInnerRule).toMatch(/height:\s*auto;/u);
     expect(cardInnerRule).toMatch(/padding:\s*10px 12px;/u);
     expect(railRule).toMatch(/--hjm-detail-card-height:\s*300px;/u);
-    expect(detailCardRule).toMatch(/height:\s*var\(--hjm-detail-card-height\);/u);
+    expect(detailCardRule).toMatch(/min-height:\s*var\(--hjm-detail-card-height\);/u);
+    expect(detailCardRule).toMatch(/height:\s*auto;/u);
     expect(overviewRowRule).toMatch(/min-height:\s*62px;/u);
     expect(html).toContain('data-hjm-overview-card="true" data-garment-count="4"');
     expect(headingRule).toBe('');
@@ -324,7 +333,8 @@ describe('ResultSurface — overview-first garment deck', () => {
   });
 
   it('may expand for the incoming card but waits for a stable iOS snap before shrinking or normalizing', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
+    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8')
+      .replace(/\r\n/gu, '\n');
     const syncStart = source.indexOf('const syncActiveCard = useCallback');
     const syncEnd = source.indexOf('\n\n  useLayoutEffect', syncStart);
     const syncBody = source.slice(syncStart, syncEnd);
