@@ -281,11 +281,11 @@ function useClosePlannedDrillOnAccess({
 export default function App(): ReactElement {
   const { t } = useTranslation();
 
-  /* ÅPNINGSFLATEN slippes her, ikke i main.tsx. Forskjellen er reell:
+  /* ÅPNINGSFLATEN meldes klar her, ikke i main.tsx. Forskjellen er reell:
      main.tsx kaller `render()`, men React har ikke MALT noe på det
-     tidspunktet. Slipper man der, forsvinner flaten før det ligger noe under.
-     En effekt i App kjører etter commit — da finnes det en skjerm å avsløre.
-     Se src/lib/launch-handoff.ts for hvorfor det ikke er en timer. */
+     tidspunktet. En effekt i App kjører etter commit — da finnes det en skjerm
+     å avsløre. Handoff-koden holder bare resten av 900 ms-vinduet fra første
+     inline boot-frame; sen readiness gir ingen ny vent. */
   useEffect(() => {
     slippLaunch();
   }, []);

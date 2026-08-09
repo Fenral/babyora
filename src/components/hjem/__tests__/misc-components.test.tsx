@@ -50,7 +50,7 @@ describe('MascotPeek', () => {
 });
 
 describe('WeatherStrip', () => {
-  it('renders temp, weather facts and the actual weather icon without visible Adjust copy', () => {
+  it('renders weather facts and city as content, with a separate situation selector', () => {
     const html = renderToStaticMarkup(
       <WeatherStrip
         nuance="rain"
@@ -65,18 +65,23 @@ describe('WeatherStrip', () => {
         onAdjust={vi.fn()}
       />,
     );
-    expect(html).toContain('aria-label="Juster vær, sted eller aktivitet"');
+    expect(html).toContain('<section class="hjm-strip"');
+    expect(html).toContain('aria-label="Været nå i Trondheim"');
     expect(html).toContain('4°');
     expect(html).toContain('Føles som 1° · Lett yr');
-    expect(html).toContain('Trondheim · Utenfor vogn');
+    expect(html).toContain('<span>Trondheim</span>');
+    expect(html).not.toContain('Trondheim · Utenfor vogn');
     expect(html).toContain('class="hjm-s-weather"');
     expect(html).toContain('src="/monter/vaer-regn.webp"');
     expect(html).toContain('alt="Lett yr"');
-    expect(html).not.toContain('class="hjm-s-adjust"');
+    expect(html).toContain('class="hjm-strip__situation ba-press"');
+    expect(html).toContain('aria-label="Juster vær, sted eller aktivitet: Utenfor vogn"');
+    expect(html).toContain('class="hjm-strip__situation-label">Situasjon</span>');
+    expect(html).toContain('<strong>Utenfor vogn</strong>');
     expect(html).toContain('data-nuance="rain"');
   });
 
-  it('keeps the whole strip as the one accessible Adjust button', () => {
+  it('keeps exactly one button, limited to the 44px situation row', () => {
     const html = renderToStaticMarkup(
       <WeatherStrip
         nuance="snow"
@@ -92,7 +97,9 @@ describe('WeatherStrip', () => {
       />,
     );
     expect((html.match(/<button/g) ?? []).length).toBe(1);
-    expect(html).toContain('aria-label="Juster vær, sted eller aktivitet"');
+    expect(html).not.toMatch(/^<button/u);
+    expect(html).toContain('aria-label="Juster vær, sted eller aktivitet: I vogn"');
+    expect(html).toContain('class="hjm-strip__situation ba-press"');
     expect(html).toContain('−2°');
     expect(html).toContain('data-nuance="snow"');
   });
@@ -112,16 +119,20 @@ describe('WeatherStrip', () => {
         onAdjust={vi.fn()}
       />,
     );
-    expect(html).toContain('aria-label="Adjust weather, location or activity"');
+    expect(html).toContain('aria-label="Weather now in Oslo"');
+    expect(html).toContain('aria-label="Adjust weather, location or activity: Outdoors"');
     expect(html).toContain('Feels like 5° · Cloudy');
-    expect(html).toContain('Oslo · Outdoors');
+    expect(html).toContain('<span>Oslo</span>');
+    expect(html).toContain('class="hjm-strip__situation-label">Situation</span>');
+    expect(html).toContain('<strong>Outdoors</strong>');
+    expect(html).not.toContain('Oslo · Outdoors');
     expect(html).toContain('src="/monter/vaer-skyet.webp"');
     expect(html).toContain('alt="Cloudy"');
     expect(html).not.toContain('Juster');
     expect(html).not.toContain('Føles som');
   });
 
-  it('preserves the weather slot and one Adjust button when no icon is available', () => {
+  it('preserves the weather slot and situation selector when no icon is available', () => {
     const html = renderToStaticMarkup(
       <WeatherStrip
         nuance="cloudy"
@@ -138,6 +149,7 @@ describe('WeatherStrip', () => {
     );
     expect((html.match(/<button/g) ?? [])).toHaveLength(1);
     expect(html).toContain('<span class="hjm-s-weather" aria-hidden="true"></span>');
+    expect(html).toContain('aria-label="Adjust weather, location or activity: Outdoors"');
     expect(html).not.toContain('<img');
   });
 });

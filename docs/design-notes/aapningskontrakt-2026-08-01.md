@@ -17,8 +17,12 @@ der punktene er i konflikt.
   som fysisk lagt i den åpne hånden. Web-revealen bruker en ugjennomsiktig
   `clip-path` fra håndflaten; huden kan derfor ikke skinne gjennom under
   landingen. Barnet og Babyora-skiltet er statiske fra første web-frame; bare
-  været lander, etter 180 ms. Ingen ekstra slagord, gradient, lyd, haptikk
-  eller vent. Reduce Motion viser hele signaturen statisk.
+  været lander, etter 180 ms. Ingen ekstra slagord, gradient, lyd eller
+  haptikk. Ved normal bevegelse holdes den allerede malte signaturen synlig
+  til 900 ms fra første inline boot-frame, etterfulgt av 200 ms fade. Er React
+  ikke klar før etter 900 ms, starter fade straks readiness/paint-barrieren er
+  passert — det legges aldri 900 nye millisekunder oppå en treg oppstart.
+  Reduce Motion viser hele signaturen statisk og har ingen minimumsvent.
 - `?launch-preview=slow` er en query-gatet design-review: produksjonsbevegelsen
   for været spilles 5× saktere, fullføres på 3 s og pauser i skjult fane. Flaten slipper
   på vårets faktiske `animation.finished`, deretter 200 ms fade. Den påvirker
@@ -113,6 +117,9 @@ Ingen layout-shift når værdata kommer (reserverte felt).
 - Ordmerket maks 1 pt forskyvning native↔web.
 - Ingen synlig font-/baseline-swap på fysisk iPhone.
 - Ingen layout-shift ved værdata-ankomst.
-- Oppstart forsinkes aldri kunstig.
+- Normal kaldstart har nøyaktig ett avgrenset merkevarevindu: minst 900 ms fra
+  første inline boot-frame, deretter 200 ms fade; sen React-readiness gir ingen
+  ekstra holdetid.
+- 4 s er fortsatt absolutt nødutgang dersom appen ikke blir klar.
 - Ny bruker ser onboarding direkte uten Hjem-glimt.
 - Reduce Motion erstatter 6 px-settling med ren fade.

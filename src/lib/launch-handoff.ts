@@ -7,16 +7,16 @@
  * CSS. Den finnes fordi `#root` er tom til React mounter, og et tomt dokument
  * er hvitt. Uten flaten ser en ny bruker et hvitt glimt før appens eget rom.
  *
- * ═══ NÅR DEN SLIPPER — OG HVORFOR IKKE PÅ EN TIMER ════════════════════════
- * Kontrakten er utvetydig: «Oppstart forsinkes ALDRI kunstig.» En timer på
- * f.eks. 1200 ms ville gjort det motsatte — den ville lagt til ventetid for
- * alle med rask telefon, for at de med treg skulle rekke å se merkevaren.
- * Det er å ta tid fra brukeren og gi den til seg selv.
+ * ═══ NÅR DEN SLIPPER ════════════════════════════════════════════════════════
+ * Eierkontrakten er en bevisst, avgrenset kaldstart: ved normal bevegelse er
+ * den allerede malte signaturen synlig i minst 900 ms regnet fra første
+ * inline boot-frame i index.html. Deretter kommer index.html sin 200 ms fade.
+ * Blir React klar etter 900 ms, legges ingen ny merkevarevent oppå; vi passerer
+ * bare den eksisterende paint-barrieren og starter fade med en gang.
  *
- * Derfor: flaten slipper når React har MALT sin første ekte frame. To
- * rammer etter mount, så vi vet at nettleseren faktisk har tegnet noe — én
- * ramme er nok til at DOM-en finnes, men ikke til at den er på skjermen.
- * Er appen rask, ses flaten knapt. Det er riktig.
+ * Reduce Motion får ingen minimumsvent. Hele signaturen er statisk, og flaten
+ * slipper straks appen under er malt. Barn og skilt er alltid statiske; bare
+ * været har inngangsbevegelse ved normal motion.
  *
  * Én eksplisitt design-review finnes utenfor appflyten:
  * `?launch-preview=slow` holder barn og skilt statisk, spiller bare værets
@@ -31,17 +31,37 @@
  * brukeren i det minste hva som faktisk er galt.
  */
 
+/** Normal kaldstart, målt fra index.html sin første inline boot-frame. */
+const MIN_SIGNATUR_MS = 900;
+
 /** Absolutt frist. Ikke en tidsplan — en nødutgang. */
 const FRIST_MS = 4000;
 
-let alleredeSluppet = false;
+let slippBestilt = false;
+let fjerningStartet = false;
+
+function bootStartMs(): number {
+  const raw = document.documentElement.getAttribute('data-launch-boot-at');
+  const parsed = raw === null ? Number.NaN : Number(raw);
+  return Number.isFinite(parsed) ? parsed : performance.now();
+}
+
+function tidSidenBootMs(): number {
+  return Math.max(0, performance.now() - bootStartMs());
+}
+
+function brukerRedusertBevegelse(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 function erSakteDesignPreview(): boolean {
   return document.documentElement.getAttribute('data-launch-preview') === 'slow'
-    && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    && !brukerRedusertBevegelse();
 }
 
 function fjern(el: HTMLElement): void {
+  if (fjerningStartet || !el.isConnected) return;
+  fjerningStartet = true;
   /* `data-ferdig` starter opacity-overgangen (200 ms, definert i index.html).
      Elementet tas ut av DOM-en etterpå, ikke før — fjerner man det med én
      gang, hopper appen fram i stedet for å tone. */
@@ -59,10 +79,10 @@ function fjern(el: HTMLElement): void {
  * for kallstedet kan bli montert på nytt under utvikling.
  */
 export function slippLaunch(): void {
-  if (alleredeSluppet) return;
+  if (slippBestilt || fjerningStartet) return;
   const el = document.getElementById('launch');
   if (el === null) return;
-  alleredeSluppet = true;
+  slippBestilt = true;
 
   /* TO rammer: den første garanterer at React har committet til DOM-en, den
      andre at nettleseren har rukket å male den. Slipper vi etter én, kan
@@ -86,16 +106,27 @@ export function slippLaunch(): void {
     }
   }
 
-  slippEtterMaling();
+  /* Appen er allerede senere enn minimumet: ingen ekstra vent. Reduce Motion
+     hopper alltid over minimumet. Ved rask normal kaldstart venter vi bare
+     resten av 900 ms-vinduet, aldri 900 ms fra React-readiness. */
+  const gjenstaar = brukerRedusertBevegelse()
+    ? 0
+    : Math.max(0, MIN_SIGNATUR_MS - tidSidenBootMs());
+  if (gjenstaar === 0) {
+    slippEtterMaling();
+    return;
+  }
+  window.setTimeout(slippEtterMaling, gjenstaar);
 }
 
 /** Nødutgangen. Kalles én gang fra oppstarten. */
 export function armerLaunchFrist(): void {
+  const gjenstaar = Math.max(0, FRIST_MS - tidSidenBootMs());
   window.setTimeout(() => {
     const el = document.getElementById('launch');
-    if (el !== null && !alleredeSluppet) {
-      alleredeSluppet = true;
+    if (el !== null && !fjerningStartet) {
+      slippBestilt = true;
       fjern(el);
     }
-  }, FRIST_MS);
+  }, gjenstaar);
 }

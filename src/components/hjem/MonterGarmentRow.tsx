@@ -34,7 +34,7 @@ function DetailChevronIcon() {
 
 export type MonterGarmentRowProps = Readonly<{
   position: number;
-  /** Når satt sammen med kortinnholdet under, rendres Hjem-reisens kort. */
+  /** Legacy kortvariant; aktiv Hjem og Finn antrekk bruker kompaktlisten. */
   total?: number;
   label: string;
   roleLabel: string;
@@ -65,11 +65,9 @@ export function MonterGarmentRow({
   animationDelayMs,
 }: MonterGarmentRowProps) {
   const copy = resultCopyFor(i18next.resolvedLanguage);
-  // Juster bruker fortsatt den kompakte, delte resultatlisten. Bare Hjem
-  // sender den komplette kortkontrakten; dette holder den nye reisen lokalt
-  // uten å endre en annen flyt.
+  // Både Hjem og Juster bruker den kompakte, delte resultatlisten.
   if (total === undefined) {
-    const navigatesInCarousel = compactDestinationLabel !== undefined;
+    const opensDetailSheet = compactDestinationLabel !== undefined;
     return (
       <li className="hjm-row-item">
         <button
@@ -98,10 +96,10 @@ export function MonterGarmentRow({
             <span className="hjm-g-role">{roleLabel}</span>
           </span>
           <span
-            className={navigatesInCarousel ? 'hjm-swap hjm-row-next' : 'hjm-swap'}
+            className={opensDetailSheet ? 'hjm-swap hjm-row-next' : 'hjm-swap'}
             aria-hidden="true"
           >
-            {navigatesInCarousel ? (
+            {opensDetailSheet ? (
               <DetailChevronIcon />
             ) : (
               <>

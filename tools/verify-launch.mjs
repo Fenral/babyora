@@ -7,7 +7,9 @@
  * - første frame har riktig temalerret;
  * - avatar, vær og ordmerke er lastet, synlige og innenfor små skjermer;
  * - ordmerket er sentrert og har samme geometri i lyst og mørkt tema;
- * - flaten slipper når React har malt, uten kunstig visningstid.
+ * - normal motion holder signaturen til 900 ms fra inline boot-frame, før
+ *   200 ms fade, uten å legge ny vent oppå sen React-readiness;
+ * - Reduce Motion slipper straks appen er klar, og 4 s-nødutgangen består.
  *
  * Kjør etter build: `npm run build && node tools/verify-launch.mjs`.
  */
@@ -76,6 +78,32 @@ const meld = (ok, tekst) => {
   if (!ok) feil += 1;
   funn.push(`  ${ok ? '✓' : '✗'} ${tekst}`);
 };
+
+const sporHandoff = async (page) => page.addInitScript(() => {
+  window.__babyoraLaunchTrace = {
+    rootReadyAt: null,
+    fadeAt: null,
+    removedAt: null,
+  };
+  const scan = () => {
+    const trace = window.__babyoraLaunchTrace;
+    const launch = document.getElementById('launch');
+    if (trace.rootReadyAt === null && document.querySelector('#root > *') !== null) {
+      trace.rootReadyAt = performance.now();
+    }
+    if (trace.fadeAt === null && launch?.getAttribute('data-ferdig') === 'true') {
+      trace.fadeAt = performance.now();
+    }
+    if (trace.fadeAt !== null && trace.removedAt === null && launch === null) {
+      trace.removedAt = performance.now();
+    }
+  };
+  new MutationObserver(scan).observe(document, {
+    attributes: true,
+    childList: true,
+    subtree: true,
+  });
+});
 
 const rektangelTekst = (r) => (
   r === null
@@ -269,8 +297,8 @@ try {
     meld(lik, `${nokkel}: ordmerkegeometrien er lik i lyst og mørkt tema`);
   }
 
-  /* Ekte handoff: med appskriptet aktivt skal flaten slippe når React har
-     malt. Vi legger ingen minimumstid på testen — raskest mulig er riktig. */
+  /* Ekte kaldstart: minimumet regnes fra inline boot-frame, ikke fra tidspunktet
+     React blir klart. Etter 900 ms starter en reell 200 ms opacity-fade. */
   for (const tema of TEMAER) {
     const p = await browser.newPage({
       viewport: { width: 390, height: 844 },
@@ -287,16 +315,63 @@ try {
         localStorage.removeItem('babyora.theme');
       }
     }, tema);
+    await sporHandoff(p);
     await p.route('**/api/forecast*', (route) => route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify(forecastPartlyCloudy1C()),
     }));
 
-    const start = Date.now();
     await p.goto(BASE, { waitUntil: 'commit' });
-    await p.waitForFunction(() => document.getElementById('launch') === null, { timeout: 8000 })
-      .then(() => meld(true, `${tema}: web-flaten slapp etter ${Date.now() - start} ms`))
-      .catch(() => meld(false, `${tema}: web-flaten ble stående — appen ser ut som den henger`));
+    try {
+      await p.waitForFunction(
+        () => window.__babyoraLaunchTrace?.removedAt !== null,
+        { timeout: 8000 },
+      );
+      const trace = await p.evaluate(() => window.__babyoraLaunchTrace);
+      const fadeVarighet = trace.removedAt - trace.fadeAt;
+      meld(
+        trace.fadeAt >= 880,
+        `${tema}: signaturen holdes til 900 ms-vinduet (fade ved ${trace.fadeAt.toFixed(0)} ms)`,
+      );
+      meld(
+        fadeVarighet >= 170 && fadeVarighet < 500,
+        `${tema}: opacity-handoff er 200 ms (målt ${fadeVarighet.toFixed(0)} ms)`,
+      );
+    } catch {
+      meld(false, `${tema}: web-flaten ble stående — appen ser ut som den henger`);
+    }
+    await p.close();
+  }
+
+  /* Sen app: 900 ms er et absolutt vindu fra boot, ikke en forsinkelse som
+     starter på nytt ved readiness. Vi holder hovedskriptet tilbake i 1100 ms
+     og krever at fade starter innen to paint-rammer etter første React-node. */
+  {
+    const p = await browser.newPage({
+      viewport: { width: 390, height: 844 },
+      deviceScaleFactor: 1,
+      colorScheme: 'light',
+    });
+    await sporHandoff(p);
+    await p.route('**/*.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+      await route.continue();
+    });
+    await p.route('**/api/forecast*', (route) => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(forecastPartlyCloudy1C()),
+    }));
+    await p.goto(BASE, { waitUntil: 'commit' });
+    await p.waitForFunction(
+      () => window.__babyoraLaunchTrace?.removedAt !== null,
+      { timeout: 8000 },
+    );
+    const trace = await p.evaluate(() => window.__babyoraLaunchTrace);
+    const readinessTilFade = trace.fadeAt - trace.rootReadyAt;
+    meld(
+      trace.rootReadyAt >= 1000 && readinessTilFade >= 0 && readinessTilFade < 100,
+      `sen app: ingen nytt 900 ms-hold etter readiness (målt ${readinessTilFade.toFixed(0)} ms)`,
+    );
     await p.close();
   }
 
@@ -447,25 +522,42 @@ try {
       colorScheme: 'dark',
       reducedMotion: 'reduce',
     });
+    await sporHandoff(p);
     await p.route('**/api/forecast*', (route) => route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify(forecastPartlyCloudy1C()),
     }));
     await p.goto(`${BASE}/?launch-preview=slow`, { waitUntil: 'domcontentloaded' });
-    await p.waitForFunction(() => document.getElementById('launch') === null, { timeout: 8000 })
-      .then(() => meld(true, 'saktevisning: Reduce Motion bruker normal handoff og fanger ikke brukeren'))
-      .catch(() => meld(false, 'saktevisning: Reduce Motion ble stående over appen'));
+    try {
+      await p.waitForFunction(
+        () => window.__babyoraLaunchTrace?.removedAt !== null,
+        { timeout: 8000 },
+      );
+      const trace = await p.evaluate(() => window.__babyoraLaunchTrace);
+      const readinessTilFade = trace.fadeAt - trace.rootReadyAt;
+      meld(
+        readinessTilFade >= 0 && readinessTilFade < 100 && trace.fadeAt < 900,
+        `saktevisning: Reduce Motion slipper prompt uten minimumsvent (${readinessTilFade.toFixed(0)} ms etter readiness)`,
+      );
+    } catch {
+      meld(false, 'saktevisning: Reduce Motion ble stående over appen');
+    }
     await p.close();
   }
 
-  /* En fast 600–3999 ms-timer ville vært kunstig merkevarevent. 4000 ms
-     nødutgang og den korte DOM-oppryddingen regnes ikke som visningstid. */
+  /* Den tidsbestemte delen er eksplisitt og versjonert: 900 ms fra inline
+     boot-frame, aldri fra readiness. 4000 ms er separat nødutgang. */
   const kilde = readFileSync('src/lib/launch-handoff.ts', 'utf8');
-  const timere = [...kilde.matchAll(/setTimeout\([^,]+,\s*(\d+)/gu)].map((m) => Number(m[1]));
-  const mistenkelige = timere.filter((ms) => ms >= 600 && ms < 4000);
+  const htmlKilde = readFileSync('index.html', 'utf8');
   meld(
-    mistenkelige.length === 0,
-    `ingen kunstig visningstid i web-handoff (fant timere: ${timere.join(', ') || 'ingen'})`,
+    /const MIN_SIGNATUR_MS = 900;/u.test(kilde)
+      && /data-launch-boot-at/u.test(htmlKilde)
+      && /MIN_SIGNATUR_MS - tidSidenBootMs\(\)/u.test(kilde),
+    'kildekontrakt: 900 ms måles fra første inline boot-frame, ikke fra readiness',
+  );
+  meld(
+    /const FRIST_MS = 4000;/u.test(kilde),
+    'kildekontrakt: absolutt 4 s-nødutgang er bevart',
   );
 } finally {
   await browser.close();

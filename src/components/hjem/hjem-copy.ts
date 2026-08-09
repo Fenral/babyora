@@ -44,6 +44,7 @@ export type HjemCopy = Readonly<{
     retry: string;
     readyTitle: string;
     activityAria: string;
+    situation: string;
     adjustAria: string;
     adjust: string;
   }>;
@@ -148,6 +149,7 @@ const ENGLISH = {
     retry: 'Try fetching the weather again',
     readyTitle: 'Ready for a little trip?',
     activityAria: 'Activity',
+    situation: 'Situation',
     adjustAria: 'Adjust weather, location or activity',
     adjust: 'Adjust',
   },
@@ -203,6 +205,7 @@ const SWEDISH = {
     retry: 'Försök hämta vädret igen',
     readyTitle: 'Redo för en liten tur?',
     activityAria: 'Aktivitet',
+    situation: 'Situation',
     adjustAria: 'Justera väder, plats eller aktivitet',
     adjust: 'Justera',
   },
@@ -258,6 +261,7 @@ const DANISH = {
     retry: 'Prøv at hente vejret igen',
     readyTitle: 'Klar til en lille tur?',
     activityAria: 'Aktivitet',
+    situation: 'Situation',
     adjustAria: 'Juster vejr, sted eller aktivitet',
     adjust: 'Juster',
   },
@@ -314,6 +318,7 @@ const NORWEGIAN = {
     retry: 'Prøv å hente været igjen',
     readyTitle: 'Klar for en liten tur?',
     activityAria: 'Aktivitet',
+    situation: 'Situasjon',
     adjustAria: 'Juster vær, sted eller aktivitet',
     adjust: 'Juster',
   },

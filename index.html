@@ -19,6 +19,10 @@
     <script>
       (function () {
         var root = document.documentElement;
+        /* Felles nullpunkt for den synlige web-signaturen. Handoff-koden
+           måler normal kaldstart fra denne aller første inline boot-framen,
+           ikke fra det senere tidspunktet React blir klart. */
+        root.setAttribute('data-launch-boot-at', String(performance.now()));
         try {
           var params = new URLSearchParams(window.location.search);
           if (params.get('launch-preview') === 'slow') {
@@ -74,8 +78,10 @@
 
          Avatar, delvis skyet-vær og Babyora-skilt danner én sentrert signatur
          på et helt rolig lerret. Ingen ekstra slagord, lastingstekst eller
-         dekorativ bakgrunn. Flaten har ingen visningstimer og slipper så
-         snart React har malt sin første ekte frame. -->
+         dekorativ bakgrunn. Ved normal bevegelse blir den allerede malte
+         signaturen stående til 900 ms fra første inline boot-frame, før en
+         200 ms fade. Er React senere klar enn dette, starter fade med en gang.
+         Reduce Motion legger ikke inn minimumsvent. -->
     <style>
       #launch {
         position: fixed;

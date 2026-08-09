@@ -818,22 +818,18 @@
 /* ============ Kompakt værstripe (WeatherStrip, etter resultat) ============ */
 
 .hjm-strip {
-  appearance: none;
   border: 1px solid var(--dw-plate-kant);
   font-family: inherit;
   text-align: left;
-  cursor: pointer;
   color: var(--dw-ink-panel-hi);
   width: 100%;
   box-sizing: border-box;
   position: relative;
   background: var(--dw-w-cloudy);
   border-radius: 16px; /* ingen matchende token — hardkodet, se filhode */
-  padding: 7px 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 74px;
+  padding: 0;
+  min-height: 108px;
+  overflow: hidden;
   box-shadow: inset 0 1px 0 var(--dw-kant-key), var(--dw-depth-raised);
 }
 .hjm-strip[data-nuance='clear'] { background: var(--dw-w-clear); --hjm-nuance: var(--dw-w-clear); }
@@ -852,13 +848,39 @@
   background: var(--dw-edge-light-gradient);
   opacity: 0.9;
 }
+.hjm-strip__forecast {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: var(--dw-space-12) var(--dw-space-14) var(--dw-space-6);
+}
 .hjm-strip .hjm-s-temp {
   font-family: var(--dw-font-hero);
   font-size: 30px;
   font-weight: 550;
   font-variant-numeric: lining-nums tabular-nums;
 }
-.hjm-strip .hjm-s-meta { font-size: 13px; color: var(--dw-ink-panel-mid); line-height: 1.32; flex: 1; }
+.hjm-strip .hjm-s-meta {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  color: var(--dw-ink-panel-mid);
+  font-size: 12.5px;
+  line-height: 1.25;
+}
+.hjm-strip .hjm-s-meta strong {
+  overflow: hidden;
+  color: var(--dw-ink-panel-hi);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hjm-strip .hjm-s-meta > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .hjm-strip .hjm-s-weather {
   width: 38px;
   height: 38px;
@@ -943,8 +965,7 @@
   filter: var(--hjm-mascot-shadow);
 }
 .hjm-result-seam[data-expanded-weather='true'] .hjm-strip {
-  align-items: flex-start;
-  padding-block: 10px 44px;
+  padding: 0;
 }
 
 /* Nettleseren eier gesten. Ett kort fyller innholdsbredden. 20px mellomrom
@@ -1219,6 +1240,59 @@
   height: 82px;
   object-fit: contain;
 }
+.hjm-strip__situation {
+  appearance: none;
+  width: calc(100% - 90px);
+  max-width: 250px;
+  min-height: 44px;
+  margin: 0 0 0 calc(var(--dw-space-20) * 2);
+  padding: 0 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--dw-ink-panel-hi) 14%, transparent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dw-ink-panel-mid);
+  font: 600 12.5px/1.2 var(--dw-font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+.hjm-strip__situation > svg:first-child {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.hjm-strip__situation-label { flex: none; }
+.hjm-strip__situation strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--dw-ink-panel-hi);
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hjm-strip__situation > svg:last-child {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-left: -2px;
+}
+.hjm-strip__situation:active {
+  color: var(--dw-ink-panel-hi);
+  transform: translateY(1px);
+}
+
+/* Maskoten ligger fysisk over høyresiden av værkortet. Under 400 px
+   reserverer vi derfor litt mer plass på den siden og trekker HELE
+   situasjonsfrasen samlet mot venstre. Caret blir fortsatt sittende tett ved
+   valgt verdi; den flyttes ikke ut som en separat navigasjonspil. */
+@media (max-width: 399px) {
+  .hjm-strip__situation { margin-left: var(--dw-space-24); }
+}
 .hjm-fact-sheet__eyebrow {
   color: var(--dw-ink-mid);
   font: 750 0.75rem/1.2 var(--dw-font-ui);
@@ -1438,23 +1512,87 @@
 .hjm-swap { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 650; color: var(--dw-ink-low); flex: none; }
 .hjm-swap svg { width: 15px; height: 15px; }
 
+/* Hjem: én skannbar liste, uten nestet horisontal gest. Den første raden
+   starter under maskotens håndkant; høyresiden er fortsatt helt trykkbar. */
+.hjm-result-list.hjm-rows {
+  margin: 0;
+  padding: 6px 12px;
+  overflow: hidden;
+}
+.hjm-result-list .hjm-row {
+  min-height: 68px;
+  gap: var(--dw-space-12);
+  padding: var(--dw-space-6) var(--dw-space-2);
+}
+.hjm-result-list .hjm-num {
+  min-width: 18px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.hjm-result-list .hjm-thumb {
+  width: 48px;
+  height: 48px;
+  aspect-ratio: 1;
+  border-radius: 13px;
+}
+.hjm-result-list .hjm-g-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.18;
+}
+.hjm-result-list .hjm-g-role {
+  margin-top: var(--dw-space-4);
+  font-size: 12.5px;
+  line-height: 1.15;
+}
+.hjm-result-list .hjm-row-next {
+  width: 26px;
+  min-width: 26px;
+  block-size: var(--dw-size-touch);
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.hjm-result-list .hjm-row-next svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.2;
+}
+
 @media (max-width: 359px) {
   .hjem-monter { --hjm-page-gutter: 16px; }
-  .hjm-strip { min-height: 82px; }
+  .hjm-strip { min-height: 108px; }
   .hjm-result-copy { min-height: 94px; padding-right: 104px; }
   .hjm-result-copy h1,
   .hjm-result-copy .hjm-sub { max-width: 142px; }
   .hjm-result-bridge-space { flex-basis: 95px; }
   .hjm-result-mascot-seam img {
-    width: 200px;
-    right: -40px;
+    width: 184px;
+    right: -32px;
     top: calc(100% - 38px);
   }
+  /* På 320 px er selve valget viktigere enn den repeterte etiketten.
+     Knappens aria-label beholder hele forklaringen. */
+  .hjm-strip__situation-label { display: none; }
   .hjm-rows { padding-inline: var(--dw-space-10); }
+  .hjm-result-list.hjm-rows { padding-inline: var(--dw-space-8); }
   .hjm-row { gap: var(--dw-space-10); }
   .hjm-thumb { width: 62px; }
   .hjm-swap { width: 20px; justify-content: center; }
   .hjm-swap-label { display: none; }
+}
+
+/* Dynamisk tekst kan gjøre både værmetadata og plaggnavn dobbelt så
+   høye. Da får motivet en mindre, høyrestilt variant og listen mer fysisk
+   klaring. Normalvisningen beholder den store, karakteristiske overlappingen. */
+.hjm-result-seam[data-expanded-weather='true'] .hjm-result-mascot-seam img {
+  width: 160px;
+  right: -30px;
+  top: calc(100% - 32px);
+}
+.hjm-result-seam[data-expanded-weather='true'] .hjm-result-bridge-space {
+  flex-basis: 120px;
 }
 
 @media (min-width: 420px) {

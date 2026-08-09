@@ -45,8 +45,8 @@ flowchart TB
   subgraph HOME["Hjem"]
     HS["Klar → skanner → resultat<br/>/ stale / offline / feil"]
     HA["Juster<br/>Finn antrekk med prefill"]
-    HF["Plaggfakta-sheet"]
-    HALT["Alternative plagg-sheet"]
+    HF["Plaggdetaljer<br/>native bottom sheet"]
+    HALT["Alternativer<br/>inline i samme sheet"]
     HC["Nå-antrekk<br/>Påkledning / Kle på"]
   end
 
@@ -98,7 +98,7 @@ flowchart TB
   H --> HS
   HS --> HA
   HS --> HF
-  HS --> HALT
+  HF --> HALT
   H -. "koblet i App, ingen aktiv trigger" .-> HC
 
   P --> PT
@@ -134,14 +134,14 @@ Kildene for ruterskallet er `src/main.tsx:17-63`, `src/App.tsx:223-258,369-440,7
 
 | # | Side/visning | Inngang | Utgang | Vilkår og faktisk atferd | Kilder |
 |---:|---|---|---|---|---|
-| 1 | Launch-flate | Lasting av hoveddokumentet | Fjernes to animation frames etter App-commit; 4 s nødfrist | `?launch-preview` holder launch-flaten synlig for forhåndsvisning. Vanlig lasting går videre til barnesjekken. | `index.html:17-38,273-303`; `src/lib/launch-handoff.ts:34-100`; `src/main.tsx:25-63`; `src/App.tsx:284-291` |
+| 1 | Launch-flate | Lasting av hoveddokumentet | Normal motion: minst 900 ms fra første inline boot-frame, så 200 ms fade; sen React-readiness gir ingen ny vent. Reduce Motion slipper prompt. 4 s nødfrist. | `?launch-preview=slow` holder launch-flaten til væranimasjonen er ferdig. Vanlig lasting går videre til barnesjekken. | `index.html`; `src/lib/launch-handoff.ts`; `src/main.tsx`; `src/App.tsx` |
 | 2 | Onboarding 1 — velkommen/navn | Barnesjekk finner tom barneliste | Neste til steg 2 | Navn beskrives som valgfritt og CTA er alltid aktiv, men steg 5 krever et ikke-tomt navn. Ingen tilbakeknapp. | `src/state/children-provider.tsx:25-50`; `src/screens/OnboardingScreen.tsx:236-291,488-529,900-916` |
 | 3 | Onboarding 2 — fødselsdato | Neste fra steg 1 | Tilbake til 1 eller neste til 3 | Gyldig fødselsdato kreves for neste. Escape går tilbake. | `src/screens/OnboardingScreen.tsx:236-317,456-465,917-928` |
 | 4 | Onboarding 3 — sted | Neste fra steg 2 | Tilbake til 2 eller neste til 4 | Krever bekreftet GPS- eller manuelt valgt sted. GPS kan åpne systemets posisjonstillatelse. | `src/screens/OnboardingScreen.tsx:319-430,456-465,929-940` |
 | 5 | Onboarding 4 — materialvalg | Neste fra steg 3 | Tilbake til 3 eller neste til 5 | Ingen ekstra validering; valget inngår i barnedata. | `src/screens/OnboardingScreen.tsx:236-317,456-465,941-952` |
 | 6 | Onboarding 5 — oppsummering | Neste fra steg 4 | Tilbake til 4 eller lagre barn og gå til steg 6 | Krever navn, fødselsdato og sted. CTA kan derfor bli blokkert etter at steg 1 tillot blankt navn. | `src/screens/OnboardingScreen.tsx:432-446,456-465,953-966` |
 | 7 | Onboarding 6 — ferdig | Vellykket lagring på steg 5 | «Gå til Babyora» åpner Hjem | Ingen tilbakeknapp. `onComplete` setter den lokale shell-gaten til åpen. | `src/screens/OnboardingScreen.tsx:448-454,967-974`; `src/App.tsx:711-719` |
-| 8 | Hjem | Standardfane etter oppstart/onboarding; Hjem-fanen | Andre faner; «Juster» til Finn antrekk; fakta/alternativer | Aktiv implementasjon er `HjemMonter`. Den viser klar, skanning, resultat, utdatert, offline eller feil. «Vis forrige antrekk» i utdatert tilstand er dokumentert no-op. | `src/components/hjem/flags.ts:1-13`; `src/screens/HjemScreen.tsx:510-521,643-651,1035-1064`; `src/components/hjem/HjemMonter.tsx:742-753,807-1110` |
+| 8 | Hjem | Standardfane etter oppstart/onboarding; Hjem-fanen | Andre faner; situasjonsvelger til Finn antrekk; plaggdetaljer | Aktiv implementasjon er `HjemMonter`. Resultatet viser en kompakt værflate der bare situasjonsraden er en handling, og en nummerert vertikal plagglist der hele raden er trykkbar. Maskoten binder vær og liste visuelt uten å dekke innhold. Andre tilstander er klar, skanning, utdatert, offline og feil; «Vis forrige antrekk» er fortsatt dokumentert no-op. | `src/components/hjem/HjemMonter.tsx`; `src/components/hjem/WeatherStrip.tsx`; `src/components/hjem/ResultSurface.tsx` |
 | 9 | Planlegg — I dag | Planlegg-fanen; standard intern segment | «I morgen», planlagt antrekk eller annen fane | Full planvisning er gratis. Hendelser kan åpne planlagt antrekk når kontekst og tilgang er gyldige. | `src/screens/UkeScreen.tsx:320-391,680-708,855-937,947-1112`; `src/lib/premium/gating.ts:60-99` |
 | 10 | Planlegg — I morgen | Segmentknapp fra I dag | I dag, planlagt antrekk eller annen fane | Segmentet kan velges, men rådene er bare synlige når fremtidstilgang og implementasjonsflagget tillater det. Ved nekt skjules innholdet uten lokal forklaring/paywall. | `src/screens/UkeScreen.tsx:320-391,710-785,855-1112`; `src/lib/premium/gating.ts:60-99` |
 | 11 | Verktøyrot | Verktøy-fanen | En av fire verktøydriller eller annen fane | Viser Finn antrekk, TOG-guide, Første vinter og Varm eller kald. | `src/screens/VerktoyScreen.tsx:7-37,80-137`; `src/App.tsx:801-803` |
@@ -159,8 +159,8 @@ Kildene for ruterskallet er `src/main.tsx:17-63`, `src/App.tsx:223-258,369-440,7
 | # | Presentasjon | Åpnes fra | Lukkes/fortsetter via | Vilkår og merknad | Kilder |
 |---:|---|---|---|---|---|
 | 1 | Hjem: skanne-/beregningsflate | «Finn antrekk» på Hjem | Automatisk til resultat; «Hopp over» | Egen fullflate over Hjem-innholdet mens anbefaling bygges. | `src/components/hjem/HjemMonter.tsx:807-860` |
-| 2 | Hjem: plaggfakta-sheet | Info på et plagg i resultatkarusellen | X, Escape eller backdrop | Generisk modal sheet; kan åpne ekstern faktakilde. | `src/components/hjem/ResultSurface.tsx:91-137,255-307,344-491`; `src/components/hjem/GarmentFactSheet.tsx:27-73`; `src/components/controls/Sheet.tsx:50-135` |
-| 3 | Hjem: alternative plagg-sheet | «Bytt» på et resultatplagg | X, Escape eller backdrop | Informativ liste uten velg-/bruk-handling. | `src/components/hjem/HjemMonter.tsx:922-927`; `src/components/hjem/GarmentAlternativesSheet.tsx:91-256` |
+| 2 | Hjem: plaggdetaljer | Trykk på en hel plaggrad i resultatlisten | X, Escape eller backdrop | Native bottom sheet med fokusretur, plaggillustrasjon, «Good to know» og kilde. | `src/components/hjem/ResultSurface.tsx`; `src/components/hjem/GarmentFactSheet.tsx`; `src/components/hjem/GarmentFactSheet.css` |
+| 3 | Hjem: alternativsammenligning | «Alternativer» i plaggdetaljene, bare når motoren har autoriserte alternativer | Trykk igjen eller lukk plaggdetaljene | Progressiv visning i samme bottom sheet. Sammenligner fordeler og hensyn; har med vilje ingen velg-/bruk-handling. | `src/components/hjem/GarmentFactSheet.tsx`; `src/lib/outfit/home-garment-alternatives.ts` |
 | 4 | Finn antrekk: skanne-/beregningsflate | Beregn-CTA | Automatisk til resultat; «Hopp over» | Resultatet opprettes først etter denne sekvensen. | `src/screens/FinnAntrekkScreen.tsx:760-789` |
 | 5 | Delt plaggdetalj-sheet | Plaggrad i Finn antrekk, TOG eller bibliotek | X, Escape eller backdrop | Samme detaljflate brukes av tre drill-sider. | `src/screens/FinnAntrekkScreen.tsx:791-1103`; `src/screens/TogGuideScreen.tsx:956-1230`; `src/screens/PlaggbibliotekScreen.tsx:910-920` |
 | 6 | Hard global paywall | Første Hjem-anbefaling er sett; eller Planlegg konsumerer sesjonsfristen | Kjøp/gjenopprett; ingen vanlig lukk | Ikke avvisbar: Escape og backdrop blokkeres. Vises når onboarding er ferdig, anbefaling er sett, frist er inaktiv, Plus mangler og tilgang er ferdig lastet. | `src/components/AppPaywallGate.tsx:52-120`; `src/App.tsx:362-379,816-820`; `src/components/PaywallDialog.tsx:747-803,847-905` |
@@ -228,7 +228,7 @@ Kildene for ruterskallet er `src/main.tsx:17-63`, `src/App.tsx:223-258,369-440,7
 |---|---|---|
 | Aktiv Hjem er låst til `HjemMonter`, men `HjemMonter` tar ikke imot nå-antrekk-callbacken. | Påkledning/Kle på for nå-antrekk og overgangsoverlayen er ferdig koblet i `App`, men kan ikke åpnes fra den synlige produksjonsflaten. | `src/components/hjem/flags.ts:1-13`; `src/screens/HjemScreen.tsx:1035-1064`; `src/components/hjem/HjemMonter.tsx:224-281`; `src/App.tsx:488-503,872-913` |
 | `onOpenWarmColdGuide` og `onOpenPlaggbib` sendes til `HjemScreen`/`HjemMonter`, men utelates i `HjemMonter`-destruktureringen. | Aktiv Hjem kan ikke åpne Varm eller kald eller biblioteket direkte. | `src/App.tsx:779-790`; `src/components/hjem/HjemMonter.tsx:224-281` |
-| Kommentarene i `App.tsx` beskriver PlaggDetailSheet → bibliotek, men Hjems aktive «Bytt»-flate er bare informativ. | Den kommenterte Hjem→bibliotek-ruten finnes ikke i synlig UI. Biblioteket nås via Første vinter. | `src/App.tsx:407-424`; `src/components/hjem/GarmentAlternativesSheet.tsx:91-256` |
+| Hjems alternativsammenligning er med vilje informativ og bruker bare motorautoriserte kandidater. | Brukeren kan sammenligne fordeler og hensyn, men kan ikke overstyre antrekket direkte fra Hjem. Biblioteket nås fortsatt via Første vinter. | `src/components/hjem/GarmentFactSheet.tsx`; `src/lib/outfit/home-garment-alternatives.ts` |
 | Bibliotekets «Legg til plagg» kaller valgfri `onOpenCategory`, men App mounter skjermen uten callback. | Den synlige FAB-en har ingen effekt. | `src/App.tsx:756-758`; `src/screens/PlaggbibliotekScreen.tsx:530-629` |
 | Bibliotek-drillen markeres som Hjem i fanemenyen selv når den kom fra en leksjon under Verktøy. | Hjem fremstår aktiv bak biblioteket; lukk returnerer likevel til lagret Verktøy-rot. | `src/App.tsx:724-739`; `src/screens/VinterprogramScreen.tsx:175-307` |
 | Planlegg «I morgen» skjuler nyttig innhold ved nekt uten lokal forklaring eller CTA. | I anbefalingsfristen kan segmentet åpnes som en nesten tom visning før den globale gaten blir due. | `src/screens/UkeScreen.tsx:710-785,855-1112`; `src/lib/premium/gating.ts:60-99` |

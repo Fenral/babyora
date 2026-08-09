@@ -435,10 +435,21 @@ function tilTekst(html: string): string {
 
 /** Resultatets værstripe — her lander føles-som- og condition-teksten nå. */
 function resultStripHtml(html: string): string | null {
-  const start = html.indexOf('<button type="button" class="hjm-strip"');
+  const start = html.indexOf('<section class="hjm-strip"');
   if (start === -1) return null;
-  const end = html.indexOf('</button>', start);
-  return end === -1 ? null : html.slice(start, end + '</button>'.length);
+  const end = html.indexOf('</section>', start);
+  return end === -1 ? null : html.slice(start, end + '</section>'.length);
+}
+
+/**
+ * Værtilstanden skal stå i hovedlinjen, ikke lekke inn fra situasjonsknappen
+ * eller andre tekster i stripen. Dette holder portens injeksjonsflate presis.
+ */
+function resultConditionHtml(stripHtml: string): string | null {
+  const match = stripHtml.match(
+    /<span\b[^>]*class="[^"]*\bhjm-s-meta\b[^"]*"[^>]*>\s*<strong\b[^>]*>([\s\S]*?)<\/strong>/u,
+  );
+  return match?.[1] ?? null;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -544,16 +555,37 @@ describe('portdom 23 — handlingsdelen kan ikke komme tilbake', () => {
       // C — grenidentitet: Home skal nå lande direkte på resultatet. Bruk strukturelle
       // ankre; synlig kopi er lokalisert og tilhører ikke denne porten.
       expect(html, `${kode}: resultatgrenen mangler`).toContain('class="hjem-monter hjem-monter--result"');
-      expect(html, `${kode}: værstripen mangler`).toContain('<button type="button" class="hjm-strip"');
+      expect(html, `${kode}: værstripen mangler`).toContain('<section class="hjm-strip"');
       expect(html, `${kode}: resultatflaten mangler`).toContain('class="hjm-result"');
+      expect(html, `${kode}: den vertikale plagglisten mangler`)
+        .toContain('class="hjm-rows hjm-result-list"');
+      expect(html, `${kode}: den gamle horisontale resultatbanen er tilbake`)
+        .not.toContain('class="hjm-journey-rail"');
       expect(html, `${kode}: landet i scan-grenen`).not.toContain('class="hjm-scan-overlay"');
       expect(html, `${kode}: den gamle ask-blokken er tilbake`).not.toContain('class="hjm-ask-block"');
       expect(html, `${kode}: den gamle Home-CTA-en er tilbake`).not.toContain('data-cta-path=');
-      rapport.assertions += 6;
+      rapport.assertions += 8;
 
       const strip = resultStripHtml(html);
       expect(strip, `${kode}: fikk ikke ut værstripe-undertreet`).not.toBeNull();
-      const panelTekst = tilTekst(strip!);
+      expect(strip, `${kode}: værstripen skal ha <section> som rot`)
+        .toMatch(/^<section class="hjm-strip"/u);
+
+      const situasjonsknapper = strip!.match(
+        /<button\b[^>]*class="[^"]*\bhjm-strip__situation\b[^"]*"[^>]*>/gu,
+      ) ?? [];
+      expect(
+        situasjonsknapper.length,
+        `${kode}: værstripen skal ha nøyaktig én .hjm-strip__situation-knapp`,
+      ).toBe(1);
+
+      const conditionHtml = resultConditionHtml(strip!);
+      expect(
+        conditionHtml,
+        `${kode}: fant ikke condition-linjen i .hjm-s-meta > strong`,
+      ).not.toBeNull();
+      const panelTekst = tilTekst(conditionHtml!);
+      rapport.assertions += 4;
 
       // B — injeksjonsflaten lever: føles-som-linjen OG værteksten fra
       // strengkilden står faktisk i panelet. Slutter den å stå der, kan en
@@ -618,7 +650,10 @@ describe('portdom 23 — handlingsdelen kan ikke komme tilbake', () => {
     // showers-variantene kollapser til samme tekst). Færre = symbolCode når
     // ikke fram, og porten måler i praksis bare én tilstand om og om igjen.
     const forventetAntall = new Set(VAERKODER.map((k) => getConditionLabel(k))).size;
-    const tekster = new Set(VAERKODER.map((k) => tilTekst(resultStripHtml(rendreHvile(k)) ?? '')));
+    const tekster = new Set(VAERKODER.map((k) => {
+      const strip = resultStripHtml(rendreHvile(k));
+      return tilTekst(strip ? (resultConditionHtml(strip) ?? '') : '');
+    }));
     expect(
       tekster.size,
       `strengkilden kan gi ${forventetAntall} distinkte værtekster, men panelet viste `

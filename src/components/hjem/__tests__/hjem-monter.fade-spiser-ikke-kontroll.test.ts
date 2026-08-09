@@ -24,10 +24,10 @@ describe('resultatet lar siden eie den vertikale scrollen', () => {
     expect(rule('.hjem-monter')).toContain('overflow: hidden auto');
   });
 
-  it('holder plaggskinnen horisontal uten å fange vertikale sveip', () => {
-    const rail = rule('.hjm-journey-rail');
-    expect(rail).toContain('overflow-x: auto');
-    expect(rail).toContain('overflow-y: hidden');
-    expect(rail).toContain('touch-action: pan-x pan-y');
+  it('gir plagglisten ingen nestet horisontal scroller', () => {
+    const list = rule('.hjm-result-list.hjm-rows');
+    expect(list).toContain('overflow: hidden');
+    expect(list).not.toContain('overflow-x: auto');
+    expect(list).not.toContain('touch-action: pan-x');
   });
 });

@@ -1,8 +1,8 @@
 /**
  * HjemMonter — P5: verifies the previously no-op TODO(P5) stubs are now
- * wired to real handlers. "Bytt" (onSwapRow) got its P6 wiring — see the
- * dedicated describe block below; "Vis forrige antrekk" is still an
- * explicit no-op (no existing drill for it yet).
+ * wired to real handlers. Garment rows now own their detail bottom sheet via
+ * ResultSurface; "Vis forrige antrekk" is still an explicit no-op (no
+ * existing drill for it yet).
  *
  * Source-text verification (not renderToStaticMarkup + a click): SSR never
  * runs click handlers, and this repo has no jsdom, so "does clicking X call
@@ -44,14 +44,15 @@ describe('HjemMonter — P5 stub wiring', () => {
     expect(onAdjustLocationSites.length).toBe(2);
   });
 
-  it('keeps ResultSurface free of the retired global why callback and passes the authorized alternative IDs', () => {
+  it('keeps ResultSurface free of retired callbacks and passes full authorized alternative groups', () => {
     const contents = source(hjemMonterPath);
     const resultSurfaceStart = contents.indexOf('<ResultSurface');
     const resultSurfaceEnd = contents.indexOf('/>', resultSurfaceStart);
     const call = contents.slice(resultSurfaceStart, resultSurfaceEnd);
     expect(call).not.toContain('onWhy=');
-    expect(call).toContain('onSwapRow={handleSwapRow}');
-    expect(call).toContain('alternativeItemIds={alternativeItemIds}');
+    expect(call).not.toContain('onSwapRow=');
+    expect(call).not.toContain('alternativeItemIds=');
+    expect(call).toContain('alternativeGroups={alternativeGroups}');
   });
 
   it('the offline ask-block\'s "Prøv å hente været igjen" calls the real retry handler', () => {
@@ -66,32 +67,17 @@ describe('HjemMonter — P5 stub wiring', () => {
 });
 
 describe('HjemMonter — authorized garment alternatives', () => {
-  it('derives allowed alternatives only from the authenticated outfit bundle', () => {
+  it('derives allowed alternatives only from the authenticated outfit bundle and active language', () => {
     const contents = source(hjemMonterPath);
     expect(contents).toContain('deriveHomeGarmentAlternativeGroups(currentOutfitBundle, activeLanguage)');
-    expect(contents).toContain('new Set(alternativeGroups.map((group) => group.source.itemId))');
+    expect(contents).toContain('[activeLanguage, currentOutfitBundle]');
   });
 
-  it('fails closed for legacy, unapproved and equipment rows before opening the sheet', () => {
+  it('delegates row matching and sheet ownership to ResultSurface without a second alternatives dialog', () => {
     const contents = source(hjemMonterPath);
-    const handlerStart = contents.indexOf('const handleSwapRow = useCallback');
-    const handlerEnd = contents.indexOf('}, [alternativeItemIds]);', handlerStart);
-    const handler = contents.slice(handlerStart, handlerEnd);
-    expect(handler).toContain('if (row.outfitItemId === null || !alternativeItemIds.has(row.outfitItemId)) return;');
-    expect(handler).toContain('void impactSoft();');
-    expect(handler).toContain('setOpenAlternativeItemId(row.outfitItemId);');
-    expect(handler).not.toContain('onOpenPlaggbib');
+    expect(contents).not.toContain('handleSwapRow');
+    expect(contents).not.toContain('openAlternativeItemId');
+    expect(contents).not.toContain('<GarmentAlternativesSheet');
     expect(contents).not.toContain('resolveSwapTarget(row)');
-  });
-
-  it('mounts the dedicated Alternatives sheet and returns focus to the authorized trigger', () => {
-    const contents = source(hjemMonterPath);
-    const sheetStart = contents.indexOf('<GarmentAlternativesSheet');
-    const sheetEnd = contents.indexOf('/>', sheetStart);
-    const sheetCall = contents.slice(sheetStart, sheetEnd);
-    expect(sheetCall).toContain('group={openAlternativeGroup}');
-    expect(sheetCall).toContain('isOpen={openAlternativeGroup !== null}');
-    expect(sheetCall).toContain('onClose={handleCloseAlternatives}');
-    expect(sheetCall).toContain('triggerRef={alternativeTriggerRef}');
   });
 });

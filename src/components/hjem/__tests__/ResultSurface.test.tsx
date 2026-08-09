@@ -3,12 +3,13 @@ import { resolve } from 'node:path';
 import type { ComponentProps } from 'react';
 import i18next from 'i18next';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import type { HomeGarmentAlternativeGroup } from '../../../lib/outfit/home-garment-alternatives.js';
 import { ResultSurface } from '../ResultSurface.js';
 import { resultCopyFor } from '../result-localization.js';
 import type { ResultRow } from '../result-rows.js';
 
-function row(overrides: Partial<ResultRow>): ResultRow {
+function row(overrides: Partial<ResultRow> = {}): ResultRow {
   const base = {
     key: 'k1',
     outfitItemId: null,
@@ -35,7 +36,6 @@ function renderResult(
       headingId="result-heading"
       isFresh={false}
       reducedMotion={false}
-      onSwapRow={vi.fn()}
       {...overrides}
     />,
   );
@@ -46,170 +46,111 @@ function cssRuleFor(css: string, selector: string): string {
   return css.match(new RegExp(`(?:^|\\n)\\s*${escapedSelector}\\s*\\{[^}]*\\}`, 'u'))?.[0] ?? '';
 }
 
-function loopBandHtml(html: string, band: 'leading' | 'canonical' | 'trailing'): string {
-  const marker = html.indexOf(`data-loop-band="${band}"`);
-  if (marker < 0) return '';
-  const start = html.lastIndexOf('<li', marker);
-  const nextBand = band === 'leading' ? 'canonical' : band === 'canonical' ? 'trailing' : null;
-  const nextMarker = nextBand === null ? -1 : html.indexOf(`data-loop-band="${nextBand}"`, marker + 1);
-  const end = nextMarker < 0 ? html.length : html.lastIndexOf('<li', nextMarker);
-  return html.slice(start, end < 0 ? html.length : end);
+function alternativeGroup(itemId: NonNullable<ResultRow['outfitItemId']>): HomeGarmentAlternativeGroup {
+  const fact = {
+    text: 'Ull jevner ut temperatur og håndterer fukt.',
+    sourceLabel: 'Woolmark',
+    sourceUrl: 'https://example.com/wool',
+  };
+  return {
+    source: {
+      itemId,
+      catalogGarmentId: 'langermet-ullbody',
+      name: 'Langermet ullbody',
+      imageSrc: '/illustrations/garments/langermet-ullbody.webp',
+      fact,
+      advantages: ['Jevner ut temperatur'],
+      tradeoffs: ['Krever skånsom vask'],
+    },
+    alternatives: [{
+      optionId: 'option:fleece',
+      sourceItemId: itemId,
+      targetCatalogGarmentId: 'fleecedress',
+      name: 'Fleecedress',
+      imageSrc: '/illustrations/garments/fleecedress.webp',
+      fact,
+      advantages: ['Tørker raskt'],
+      tradeoffs: ['Håndterer fukt annerledes enn ull'],
+    }],
+  };
 }
 
-describe('ResultSurface — overview-first garment deck', () => {
-  it('renders one semantic deck inside three physical loop bands', () => {
+describe('ResultSurface — vertical garment list', () => {
+  it('renders one ordered list in dressing order, with no horizontal carousel', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
     const rows = [
       row({ key: 'r1', position: 1 }),
-      row({ key: 'r2', position: 2, label: 'ull-jakke', displayLabel: 'Ulljakke', roleLabel: 'Mellomlag', garmentId: 'ull-jakke' }),
+      row({ key: 'r2', position: 2, label: 'ull-jakke', roleLabel: 'Mellomlag', garmentId: 'ull-jakke' }),
+      row({ key: 'r3', position: 3, label: 'regnjakke', roleLabel: 'Ytterst', garmentId: 'regnjakke' }),
     ];
     const html = renderResult(rows);
-    const rail = html.slice(html.indexOf('<ol class="hjm-journey-rail"'));
-    const overviewIndex = rail.indexOf('data-hjm-overview-card="true"');
-    const firstGarmentIndex = rail.indexOf('data-hjm-journey-card="true"');
 
-    expect(overviewIndex).toBeGreaterThan(-1);
-    expect(firstGarmentIndex).toBeGreaterThan(overviewIndex);
-    expect((rail.match(/data-hjm-overview-card="true"/gu) ?? [])).toHaveLength(1);
-    expect((rail.match(/data-hjm-journey-card="true"/gu) ?? [])).toHaveLength(rows.length);
-    expect((rail.match(/data-loop-band="(?:leading|canonical|trailing)"/gu) ?? []))
-      .toHaveLength((rows.length + 1) * 3);
-    expect((rail.match(/data-loop-clone="true"/gu) ?? []))
-      .toHaveLength((rows.length + 1) * 2);
-    expect((rail.match(/data-loop-clone="true" aria-hidden="true" inert=""/gu) ?? []))
-      .toHaveLength((rows.length + 1) * 2);
-    expect(rail).toContain(`aria-label="${copy.carouselLabel}"`);
-
-    const cloneButtons = loopBandHtml(html, 'leading').match(/<button\b[^>]*>/gu) ?? [];
-    expect(cloneButtons.length).toBeGreaterThan(0);
-    expect(cloneButtons.every((button) => button.includes('tabindex="-1"'))).toBe(true);
-    const rowSource = readFileSync(resolve(process.cwd(), 'src/components/hjem/MonterGarmentRow.tsx'), 'utf8');
-    expect((rowSource.match(/tabIndex=\{interactive \? undefined : -1\}/gu) ?? [])).toHaveLength(3);
+    expect(html).toContain('<ol class="hjm-rows hjm-result-list"');
+    expect(html).toContain(`aria-label="${copy.progressLabel}"`);
+    expect(html).toContain('data-garment-count="3"');
+    expect((html.match(/<li class="hjm-row-item"/gu) ?? [])).toHaveLength(3);
+    expect(html.indexOf('>Langermet ullbody<')).toBeLessThan(html.indexOf('>Ull-jakke<'));
+    expect(html.indexOf('>Ull-jakke<')).toBeLessThan(html.indexOf('>Regnjakke<'));
+    expect(html).not.toContain('hjm-journey-rail');
+    expect(html).not.toContain('data-loop-band');
+    expect(html).not.toContain(copy.carouselHint);
   });
 
-  it('keeps the same ordered garments in the overview and detail cards', () => {
-    const rows = [
-      row({ key: 'r1', position: 1 }),
-      row({ key: 'r2', position: 2, label: 'ull-jakke', garmentId: 'ull-jakke' }),
-      row({ key: 'r3', position: 3, label: 'regnjakke', garmentId: 'regnjakke' }),
-    ];
-    const html = renderResult(rows);
-    const railIndex = html.indexOf('class="hjm-journey-rail"');
-    const overviewIndex = html.indexOf('data-hjm-overview-card="true"', railIndex);
-    const firstGarmentIndex = html.indexOf('data-hjm-journey-card="true"', overviewIndex);
-
-    expect(overviewIndex).toBeGreaterThan(-1);
-    expect(overviewIndex).toBeGreaterThan(railIndex);
-    expect(firstGarmentIndex).toBeGreaterThan(overviewIndex);
-    expect((html.match(/<li class="hjm-row-item"/gu) ?? []).length).toBe(rows.length * 3);
-    expect((html.match(/data-hjm-journey-card="true"/gu) ?? []).length).toBe(rows.length);
-
-    const canonical = loopBandHtml(html, 'canonical');
-    const canonicalOverviewIndex = canonical.indexOf('data-hjm-overview-card="true"');
-    const canonicalFirstGarmentIndex = canonical.indexOf('data-hjm-journey-card="true"');
-    const overview = canonical.slice(canonicalOverviewIndex, canonicalFirstGarmentIndex);
-    const garmentCards = canonical.slice(canonicalFirstGarmentIndex);
-    expect((overview.match(/<li class="hjm-row-item"/gu) ?? [])).toHaveLength(rows.length);
-    expect((garmentCards.match(/data-hjm-journey-card="true"/gu) ?? [])).toHaveLength(rows.length);
-    const expectedPaths = [
-      '/illustrations/garments/langermet-ullbody.webp',
-      '/illustrations/garments/ull-jakke.webp',
-    ];
-    for (const section of [overview, garmentCards]) {
-      expect(section.indexOf(expectedPaths[0])).toBeLessThan(section.indexOf(expectedPaths[1]));
-    }
-  });
-
-  it('renders More info for every fact and Alternatives only for an authorized outfit item', () => {
+  it('makes the entire garment row a named button that opens details', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
-    const approvedId = outfitItemId('outfit:approved');
-    const equipmentId = outfitItemId('outfit:equipment');
-    const rows = [
-      row({ key: 'r1', outfitItemId: approvedId, position: 1 }),
-      row({
-        key: 'r2',
-        outfitItemId: equipmentId,
-        position: 2,
-        label: 'regntrekk',
-        displayLabel: 'Regntrekk',
-        roleLabel: 'Tilbehør',
-        garmentId: 'regntrekk',
-      }),
-    ];
-    const html = renderResult(rows, {
-      alternativeItemIds: new Set<string>([approvedId]),
-    });
-    const canonical = loopBandHtml(html, 'canonical');
+    const html = renderResult([row({})]);
+
+    expect(html).toContain('<button type="button" class="hjm-row"');
+    expect(html).toContain(`aria-label="${copy.openGarment('Langermet ullbody')}"`);
+    expect(html).toContain('class="hjm-swap hjm-row-next"');
+    expect(html).not.toContain('class="hjm-swap-label"');
     expect(html).not.toContain('class="hjm-cta"');
-    expect((canonical.match(/hjm-journey-more-info/gu) ?? [])).toHaveLength(rows.length);
-    expect((canonical.match(/hjm-journey-alternatives/gu) ?? [])).toHaveLength(1);
-    expect((canonical.match(new RegExp(`>${copy.alternatives}[\\s<]`, 'gu')) ?? [])).toHaveLength(1);
-    expect(canonical).toContain(`aria-label="${copy.alternativesAria('Langermet ullbody')}"`);
-    expect(canonical).not.toContain(`aria-label="${copy.alternativesAria('Regntrekk')}"`);
-    expect((canonical.match(new RegExp(`>${copy.moreInfo}[\\s<]`, 'gu')) ?? [])).toHaveLength(rows.length);
-    expect(canonical).toContain(`aria-label="${copy.moreInfoAria('Langermet ullbody')}"`);
-    expect(html).not.toContain('class="hjm-result-tools"');
-    expect(html).not.toContain('Why this outfit?');
   });
 
-  it('viser ekte flat WebP også for et tidligere udekket katalogplagg', () => {
+  it('keeps every row above 44px and uses a compact square garment plate', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
+    const listRule = cssRuleFor(css, '.hjm-result-list.hjm-rows');
+    const rowRule = cssRuleFor(css, '.hjm-result-list .hjm-row');
+    const thumbRule = cssRuleFor(css, '.hjm-result-list .hjm-thumb');
+    const chevronRule = cssRuleFor(css, '.hjm-result-list .hjm-row-next');
+
+    expect(listRule).toMatch(/margin:\s*0;/u);
+    expect(rowRule).toMatch(/min-height:\s*68px;/u);
+    expect(thumbRule).toMatch(/width:\s*48px;/u);
+    expect(thumbRule).toMatch(/height:\s*48px;/u);
+    expect(thumbRule).toMatch(/aspect-ratio:\s*1;/u);
+    expect(chevronRule).toMatch(/block-size:\s*var\(--dw-size-touch\);/u);
+  });
+
+  it('passes only engine-authorized alternative groups into the detail sheet contract', () => {
+    const approvedId = outfitItemId('outfit:approved');
+    const group = alternativeGroup(approvedId);
     const html = renderResult([
-      row({ label: 'saueskinn i vogn', displayLabel: 'Saueskinn i vogn', garmentId: 'sauekinn-i-vogn' }),
-    ]);
-    expect(html).toContain('/illustrations/garments/sauekinn-i-vogn.webp');
-    expect(html).not.toMatch(/hjm-thumb[^>]*>S</);
+      row({ outfitItemId: approvedId }),
+      row({ key: 'r2', position: 2, outfitItemId: outfitItemId('outfit:other') }),
+    ], { alternativeGroups: [group] });
+    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
+
+    expect(html).not.toContain('data-garment-detail-sheet');
+    expect(source).toContain('alternativeGroups.find');
+    expect(source).toContain('group.source.itemId === row.outfitItemId');
+    expect(source).toContain('alternativeGroup: openRow.alternativeGroup');
   });
 
-  it('viser materialpreferansens fleeceplagg med sine egne motiv', () => {
+  it('shows real flat garment assets for catalog and material-preference garments', () => {
     const html = renderResult([
       row({ key: 'f1', position: 1, label: 'fleecedress', garmentId: 'fleecedress' }),
       row({ key: 'f2', position: 2, label: 'fleecejakke', garmentId: 'fleecejakke' }),
-      row({ key: 'f3', position: 3, label: 'fleecebukse', garmentId: 'fleecebukse' }),
+      row({ key: 's1', position: 3, label: 'saueskinn i vogn', garmentId: 'sauekinn-i-vogn' }),
     ]);
+
     expect(html).toContain('/illustrations/garments/fleecedress.webp');
     expect(html).toContain('/illustrations/garments/fleecejakke.webp');
-    expect(html).toContain('/illustrations/garments/fleecebukse.webp');
-    expect(html).not.toContain('/illustrations/garments/ull-jakke.webp');
-    expect(html).not.toContain('/illustrations/garments/ull-bukse.webp');
+    expect(html).toContain('/illustrations/garments/sauekinn-i-vogn.webp');
+    expect(html).not.toMatch(/hjm-thumb[^>]*>S</u);
   });
 
-  it('keeps image, order, role and name while removing Why today from every card', () => {
-    const copy = resultCopyFor(i18next.resolvedLanguage);
-    const html = renderResult([row({})]);
-    const card = html.slice(html.indexOf('data-hjm-journey-card="true"'));
-
-    expect(html).toContain('/illustrations/garments/langermet-ullbody.webp');
-    expect(card).toContain(copy.order(1, 1));
-    expect(card).toContain(copy.role('Innerst'));
-    expect(card).toContain('Langermet ullbody');
-    expect(html).not.toContain('class="hjm-journey-why"');
-  });
-
-  it('shows a localized Good to know fact directly on the garment card', () => {
-    const copy = resultCopyFor(i18next.resolvedLanguage);
-    const html = renderResult([row({})]);
-    const card = html.slice(html.indexOf('data-hjm-journey-card="true"'));
-
-    expect(card).not.toContain('<details');
-    expect(card).toContain('class="hjm-journey-fact"');
-    expect(card).toContain(`<h3>${copy.goodToKnow}</h3>`);
-    expect(card).toMatch(/class="hjm-journey-fact"[\s\S]*?<p>\S[\s\S]*?<\/p>/u);
-    expect(card).not.toContain('rel="noopener noreferrer"');
-    expect(card).toContain('hjm-journey-more-info');
-    expect(card).toContain(copy.moreInfo);
-    expect(card).toContain('aria-haspopup="dialog"');
-  });
-
-  it('bruker den nye resultat-posen dekorativt i en eksplisitt assetsøm', () => {
-    const resultSource = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
-    const homeSource = readFileSync(resolve(process.cwd(), 'src/components/hjem/HjemMonter.tsx'), 'utf8');
-    expect(resultSource).not.toContain('data-result-avatar-seam');
-    expect(homeSource).toContain('data-result-avatar-seam');
-    expect(homeSource).toContain('/maskot-resultat-sveip.webp');
-    expect(homeSource).toMatch(/RESULT_MASCOT_SRC[^]*?alt=""/u);
-  });
-
-  it('gater inngangskoreografien på isFresh og reducedMotion sammen', () => {
+  it('gates the staggered entry animation with isFresh and reducedMotion', () => {
     const rows = [
       row({ key: 'r1', position: 1 }),
       row({ key: 'r2', position: 2, label: 'ull-jakke', garmentId: 'ull-jakke' }),
@@ -218,20 +159,6 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(fresh).toContain('data-fresh="true"');
     expect(fresh).toContain('animation-delay:50ms');
     expect(fresh).toContain('animation-delay:130ms');
-
-    const freshRail = fresh.slice(fresh.indexOf('<ol class="hjm-journey-rail"'));
-    const freshOverview = freshRail.slice(
-      freshRail.indexOf('data-hjm-overview-card="true"'),
-      freshRail.indexOf('data-hjm-journey-card="true"'),
-    );
-    expect(freshOverview).toContain('data-fresh="true"');
-    expect((freshOverview.match(/animation-delay:/gu) ?? []).length).toBe(rows.length);
-    const canonicalFreshBand = loopBandHtml(fresh, 'canonical');
-    const freshGarments = canonicalFreshBand.slice(
-      canonicalFreshBand.indexOf('data-hjm-journey-card="true"'),
-    );
-    expect(freshGarments).not.toContain('data-fresh');
-    expect(freshGarments).not.toContain('animation-delay');
 
     const cached = renderResult(rows, { isFresh: false });
     expect(cached).toContain('data-fresh="false"');
@@ -242,176 +169,21 @@ describe('ResultSurface — overview-first garment deck', () => {
     expect(reduced).not.toContain('animation-delay');
   });
 
-  it('uses one full-width card with responsive insets and no side-peek geometry', () => {
+  it('keeps the result avatar in HjemMonter rather than inside the list', () => {
+    const resultSource = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
+    const homeSource = readFileSync(resolve(process.cwd(), 'src/components/hjem/HjemMonter.tsx'), 'utf8');
+
+    expect(resultSource).not.toContain('data-result-avatar-seam');
+    expect(homeSource).toContain('data-result-avatar-seam');
+    expect(homeSource).toContain('/maskot-resultat-sveip.webp');
+  });
+
+  it('renders a localized empty state without mounting an empty dialog', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
-    const html = renderResult([row({})]);
-    const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
-    const railRule = cssRuleFor(css, '.hjm-journey-rail');
+    const html = renderResult([]);
 
-    expect(html).not.toContain('class="hjm-journey-disclosure"');
-    expect(html).not.toContain('class="hjm-journey-hint"');
-    expect(html).not.toContain('Explore each garment');
-    expect(html).not.toContain('Swipe sideways, from the base layer to the outer layer.');
-    expect(html).toContain('class="hjm-sr-only"');
-    expect(html).toContain(copy.carouselHint);
-    expect(railRule).toMatch(/grid-auto-columns:\s*(?:var\([^)]*\)|min\([^;]+\));/u);
-    expect(railRule).toMatch(/--hjm-journey-card-width:\s*100%;/u);
-    expect(railRule).toMatch(/width:\s*calc\(100% \+ var\(--hjm-page-gutter\) \+ var\(--hjm-page-gutter\)\);/u);
-    expect(railRule).toMatch(/margin:\s*0 calc\(0px - var\(--hjm-page-gutter\)\);/u);
-    expect(railRule).toMatch(/padding-inline:\s*var\(--hjm-page-gutter\);/u);
-    expect(railRule).toMatch(/scroll-padding-inline:\s*var\(--hjm-page-gutter\);/u);
-  });
-
-  it('bruker native overflow og sentrert snap uten pointer-capture eller drag-transform', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
-    const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
-    const cardRule = cssRuleFor(css, '.hjm-journey-card');
-    expect(source).not.toContain('setPointerCapture');
-    expect(source).not.toContain('onPointerMove');
-    expect(source).not.toContain('scrollIntoView');
-    expect(source).not.toContain('--kps-drag');
-    expect(source).not.toContain('card.offsetLeft - rail.scrollLeft - rail.clientLeft');
-    expect(source).toMatch(/rail\.scrollLeft\s*\+\s*rail\.clientWidth\s*\/\s*2/u);
-    expect(source).toMatch(/card\.offsetLeft\s*\+\s*card\.(?:offsetWidth|clientWidth)\s*\/\s*2/u);
-    expect(css).toMatch(/\.hjm-journey-rail\s*\{[\s\S]*?overflow-x:\s*auto;/);
-    expect(css).toMatch(/\.hjm-journey-rail\s*\{[\s\S]*?scroll-snap-type:\s*x mandatory;/);
-    expect(css).toMatch(/\.hjm-journey-rail\s*\{[\s\S]*?touch-action:\s*pan-x pan-y;/);
-    expect(css).toMatch(/\.hjm-journey-rail\s*\{[\s\S]*?-webkit-overflow-scrolling:\s*touch;/);
-    expect(cardRule).toMatch(/scroll-snap-align:\s*center;/u);
-    expect(cardRule).toMatch(/scroll-snap-stop:\s*normal;/u);
-  });
-
-  it('signals selection only after a user-controlled page settles on a new item', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
-
-    expect(source).toContain('pendingUserPagingRef.current = true;');
-    expect(source).toContain('logicalIndex !== lastSettledLogicalIndexRef.current');
-    expect(source).toContain('pendingUserPagingRef.current = false;');
-    expect(source).toContain('if (shouldSignalPaging) void hapticSelection();');
-  });
-
-  it('keeps the overview auto-height and every garment card at the compact 300px standard', () => {
-    const copy = resultCopyFor(i18next.resolvedLanguage);
-    const rows = [
-      row({ key: 'r1', position: 1 }),
-      row({ key: 'r2', position: 2, label: 'ull-jakke', garmentId: 'ull-jakke' }),
-      row({ key: 'r3', position: 3, label: 'ull-bukse', garmentId: 'ull-bukse' }),
-      row({ key: 'r4', position: 4, label: 'tynn-lue', garmentId: 'tynn-lue' }),
-    ];
-    const html = renderResult(rows);
-    const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
-    const cardInnerRule = cssRuleFor(css, '.hjm-journey-card-inner');
-    const detailCardRule = cssRuleFor(
-      css,
-      '.hjm-journey-card:not(.hjm-journey-overview-card) .hjm-journey-card-inner',
-    );
-    const railRule = cssRuleFor(css, '.hjm-journey-rail');
-    const headingRule = cssRuleFor(css, '.hjm-journey-overview-heading');
-    const overviewRowRule = cssRuleFor(css, '.hjm-journey-overview-list .hjm-row');
-
-    expect(cardInnerRule).toMatch(/height:\s*auto;/u);
-    expect(cardInnerRule).toMatch(/padding:\s*10px 12px;/u);
-    expect(railRule).toMatch(/--hjm-detail-card-height:\s*300px;/u);
-    expect(detailCardRule).toMatch(/min-height:\s*var\(--hjm-detail-card-height\);/u);
-    expect(detailCardRule).toMatch(/height:\s*auto;/u);
-    expect(overviewRowRule).toMatch(/min-height:\s*62px;/u);
-    expect(html).toContain('data-hjm-overview-card="true" data-garment-count="4"');
-    expect(headingRule).toBe('');
-    expect(html).toContain('class="hjm-journey-nav-button"');
-    expect(html).toContain(`>${copy.viewGarments}<`);
-    expect(html).toContain('class="hjm-sr-only"');
-    expect((html.match(/data-active="(?:true|false)"/gu) ?? [])).toHaveLength(rows.length + 1);
-  });
-
-  it('measures the active card to collapse the rail from a tall overview to a detail card without reduced-motion interpolation', () => {
-    const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
-    const railRule = cssRuleFor(css, '.hjm-journey-rail');
-    const adaptiveRule = cssRuleFor(css, ".hjm-journey-rail[data-adaptive-height='true']");
-    const reducedRule = cssRuleFor(css, ".hjm-journey-rail[data-reduced-motion='true']");
-    const reducedHtml = renderResult([row({})], { reducedMotion: true });
-
-    expect(reducedHtml).toContain('data-adaptive-height="false"');
-    expect(railRule).not.toMatch(/transition:\s*block-size/u);
-    expect(adaptiveRule).toMatch(/block-size:\s*calc\(var\(--hjm-active-card-height\) \+ 17px\);/u);
-    expect(reducedRule).toMatch(/transition:\s*none;/u);
-    expect(reducedHtml).toContain('data-reduced-motion="true"');
-  });
-
-  it('may expand for the incoming card but waits for a stable iOS snap before shrinking or normalizing', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8')
-      .replace(/\r\n/gu, '\n');
-    const syncStart = source.indexOf('const syncActiveCard = useCallback');
-    const syncEnd = source.indexOf('\n\n  useLayoutEffect', syncStart);
-    const syncBody = source.slice(syncStart, syncEnd);
-
-    expect(syncStart).toBeGreaterThan(-1);
-    expect(syncEnd).toBeGreaterThan(syncStart);
-    expect(source).toMatch(/const LOOP_SETTLE_FALLBACK_MS = 240;/u);
-    expect(source).toMatch(/const SNAP_CENTER_TOLERANCE_PX = 2;/u);
-    expect(source).toMatch(/Math\.abs\(rail\.scrollLeft - targetLeft\) > SNAP_CENTER_TOLERANCE_PX/u);
-    expect(source).toMatch(/const handleScrollEnd = \(\) => scheduleLoopNormalization\(\);/u);
-    expect(syncBody).toContain('scheduleLoopNormalization();');
-    expect(syncBody).toContain('expandCardHeight(rail, nearestIndex);');
-    expect(syncBody).not.toContain('measureCardHeight');
-    expect(source).toMatch(/current === null \|\| nextHeight > current \? nextHeight : current/u);
-  });
-
-  it('renders explicit localized overview and previous/next paging controls', () => {
-    const copy = resultCopyFor(i18next.resolvedLanguage);
-    const html = renderResult([row({}), row({ key: 'r2', position: 2 })]);
-    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
-
-    expect(html).toContain(`>${copy.viewGarments}<`);
-    expect(source).toContain('copy.previous');
-    expect(source).toContain('copy.next');
-    expect(source).toContain('copy.overview');
-    expect(source).toContain('copy.viewGarments');
-    expect(html).toContain('aria-controls=');
-  });
-
-  it('keeps the overview thumbnail ratio while the detail plate is a centered, contained 92px stage', () => {
-    const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
-    const thumbRule = cssRuleFor(css, '.hjm-thumb');
-    const detailRule = cssRuleFor(css, '.hjm-journey-image');
-
-    expect(thumbRule).toMatch(/aspect-ratio:\s*11\s*\/\s*6;/u);
-    expect(thumbRule).toMatch(/display:\s*grid;/u);
-    expect(thumbRule).toMatch(/place-items:\s*center;/u);
-    expect(detailRule).toMatch(/height:\s*92px;/u);
-    expect(detailRule).toMatch(/aspect-ratio:\s*auto;/u);
-    expect(detailRule).toMatch(/display:\s*grid;/u);
-    expect(detailRule).toMatch(/place-items:\s*center;/u);
-
-    for (const selector of ['.hjm-thumb img', '.hjm-journey-image img']) {
-      const imageRule = cssRuleFor(css, selector);
-      expect(imageRule, `${selector} rule is missing`).not.toBe('');
-      expect(imageRule).toMatch(/width:\s*92%;/u);
-      expect(imageRule).toMatch(/height:\s*92%;/u);
-      expect(imageRule).toMatch(/display:\s*block;/u);
-      expect(imageRule).toMatch(/object-fit:\s*contain;/u);
-      expect(imageRule).toMatch(/object-position:\s*center;/u);
-    }
-  });
-
-  it('makes overview rows direct, named destinations for their garment cards', () => {
-    const copy = resultCopyFor(i18next.resolvedLanguage);
-    const html = renderResult([row({})]);
-
-    expect(html).toContain(`aria-label="${copy.openGarment('Langermet ullbody')}"`);
-    expect(html).toContain('class="hjm-swap hjm-row-next"');
-    expect(html).not.toContain('class="hjm-swap-label"');
-  });
-
-  it('falls back to the focusable card when a destination has no Alternatives action', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/ResultSurface.tsx'), 'utf8');
-    expect(source).toMatch(/querySelector<HTMLElement>\('\.hjm-journey-more-info'\)[\s\S]*?\?\?\s*card\.querySelector<HTMLElement>\('\.hjm-journey-detail'\)[\s\S]*?\?\?\s*card\.querySelector<HTMLElement>\('\[data-hjm-card-focus\]'\)/u);
-    expect(source).toContain('focusTarget?.focus({ preventScroll: true });');
-  });
-
-  it('gives More info and conditional Alternatives a 44px action band', () => {
-    const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/hjem-monter.css'), 'utf8');
-    expect(css).toMatch(/\.hjm-journey-actions\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\);/);
-    expect(css).toMatch(/\.hjm-journey-actions\[data-two-actions='true'\]\s*\{[\s\S]*?repeat\(2,/);
-    expect(css).toMatch(/\.hjm-journey-detail\s*\{[\s\S]*?min-height:\s*44px;/);
+    expect(html).toContain(`<p class="hjm-journey-empty" role="status">${copy.empty}</p>`);
+    expect(html).not.toContain('<ol');
+    expect(html).not.toContain('<dialog');
   });
 });

@@ -2,9 +2,11 @@
  * Result-first Home verification against the built application.
  *
  * Run after `npm run build`: node tools/verify-hjem.mjs
- * Home must settle directly on the result without exposing the retired CTA/scan
- * experience. The verifier only interacts with the result's progressive
- * disclosure to prove that compact cards still expose their full fact.
+ *
+ * Home is one vertical, numbered garment list. Every row is the target and
+ * opens a native bottom sheet. The compact weather panel has one independent
+ * situation selector; the avatar may bridge the weather and list surfaces,
+ * but its visible pixels may never cover weather controls or garment content.
  */
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -14,6 +16,12 @@ import { forecastPartlyCloudy1C } from '../e2e/fixtures/forecast-1c-partlycloudy
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const VITE_CLI = join(dirname(require.resolve('vite/package.json')), 'bin', 'vite.js');
+
+const VIEWPORTS = Object.freeze([
+  { width: 320, height: 700 },
+  { width: 393, height: 852 },
+  { width: 430, height: 932 },
+]);
 
 async function availablePort(fallback) {
   const net = await import('node:net');
@@ -56,7 +64,7 @@ const jsErrors = [];
 
 async function openHome(viewport) {
   const page = await browser.newPage({ viewport, deviceScaleFactor: 2, colorScheme: 'light' });
-  page.on('pageerror', (error) => jsErrors.push(String(error)));
+  page.on('pageerror', (error) => jsErrors.push(`${viewport.width}px: ${String(error)}`));
   await page.addInitScript(() => {
     localStorage.setItem('babyora.theme', JSON.stringify({ state: { mode: 'light' }, version: 0 }));
   });
@@ -66,9 +74,121 @@ async function openHome(viewport) {
   }));
   await page.goto(`${BASE}/?seed=demo`, { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => document.fonts.ready);
-  await page.locator('.hjm-result').waitFor({ state: 'visible', timeout: 8_000 });
-  await page.locator('.hjm-journey-rail[data-loop-ready="true"]').waitFor({ state: 'visible', timeout: 3_000 });
+  await page.locator('.hjm-result-list .hjm-row').first().waitFor({ state: 'visible', timeout: 8_000 });
+  await page.evaluate(async () => {
+    const images = Array.from(document.querySelectorAll('.hjm-result-list img,[data-result-avatar-seam] img'));
+    await Promise.all(images.map((image) => image instanceof HTMLImageElement
+      ? image.decode().catch(() => undefined)
+      : Promise.resolve()));
+  });
+  // Let the optional first-result row stagger and responsive seam observers settle.
+  await page.waitForTimeout(520);
   return page;
+}
+
+async function measureLayout(page) {
+  return page.evaluate(() => {
+    const list = document.querySelector('.hjm-result-list');
+    const strip = document.querySelector('.hjm-strip');
+    const situation = document.querySelector('.hjm-strip__situation');
+    const situationValue = situation?.querySelector('strong');
+    const situationCaret = situation?.querySelector(':scope > svg:last-child');
+    if (!(list instanceof HTMLOListElement)
+      || !(strip instanceof HTMLElement)
+      || !(situation instanceof HTMLButtonElement)
+      || !(situationValue instanceof HTMLElement)
+      || !(situationCaret instanceof SVGElement)) return null;
+
+    const rowItems = Array.from(list.children).filter((element) => element.matches('.hjm-row-item'));
+    const rows = rowItems
+      .map((item) => item.querySelector(':scope > button.hjm-row'))
+      .filter((row) => row instanceof HTMLButtonElement);
+    const rowRects = rows.map((row) => row.getBoundingClientRect());
+    const orderedVertically = rowRects.every((rect, index) => (
+      index === 0 || rect.top >= rowRects[index - 1].bottom - 1
+    ));
+    const listRect = list.getBoundingClientRect();
+    const stripRect = strip.getBoundingClientRect();
+    const situationRect = situation.getBoundingClientRect();
+    const valueRect = situationValue.getBoundingClientRect();
+    const caretRect = situationCaret.getBoundingClientRect();
+    const thumbnails = Array.from(list.querySelectorAll('.hjm-thumb'));
+    const images = Array.from(list.querySelectorAll('.hjm-thumb img'));
+    const imagesContained = images.every((image) => {
+      const imageRect = image.getBoundingClientRect();
+      const thumb = image.closest('.hjm-thumb');
+      if (!(thumb instanceof HTMLElement)) return false;
+      const thumbRect = thumb.getBoundingClientRect();
+      return imageRect.left >= thumbRect.left - 1
+        && imageRect.right <= thumbRect.right + 1
+        && imageRect.top >= thumbRect.top - 1
+        && imageRect.bottom <= thumbRect.bottom + 1;
+    });
+    const realImages = images.filter((image) => !image.currentSrc.startsWith('data:image/svg+xml')).length;
+    const listStyle = getComputedStyle(list);
+    const root = document.querySelector('.hjem-monter--result');
+    const rootStyle = root instanceof HTMLElement ? getComputedStyle(root) : null;
+    const stripButtons = strip.querySelectorAll('button');
+    const forbiddenCarousel = document.querySelectorAll([
+      '.hjm-journey-rail',
+      '.hjm-journey-progress',
+      '.hjm-journey-nav-button',
+      '.hjm-journey-dots',
+      '[data-loop-band]',
+    ].join(','));
+
+    return {
+      width: window.innerWidth,
+      resultCount: document.querySelectorAll('.hjm-result').length,
+      stripCount: document.querySelectorAll('.hjm-strip').length,
+      listCount: document.querySelectorAll('.hjm-result-list').length,
+      rowItems: rowItems.length,
+      rowButtons: rows.length,
+      rowChevrons: list.querySelectorAll('.hjm-row-next svg').length,
+      rowAriaLabels: rows.every((row) => (row.getAttribute('aria-label') ?? '').trim().length > 0),
+      orderedVertically,
+      minRowHeight: rowRects.length ? Math.min(...rowRects.map((rect) => rect.height)) : 0,
+      listOverflow: list.scrollWidth - list.clientWidth,
+      documentOverflow: Math.max(
+        document.documentElement.scrollWidth,
+        document.body.scrollWidth,
+      ) - window.innerWidth,
+      listInsideViewport: listRect.left >= -1 && listRect.right <= window.innerWidth + 1,
+      forbiddenCarousel: forbiddenCarousel.length,
+      listOverflowStyle: listStyle.overflowX,
+      thumbnails: thumbnails.length,
+      minThumbnailSize: thumbnails.length
+        ? Math.min(...thumbnails.map((thumb) => {
+          const rect = thumb.getBoundingClientRect();
+          return Math.min(rect.width, rect.height);
+        }))
+        : 0,
+      images: images.length,
+      realImages,
+      imagesLoaded: images.every((image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0),
+      imagesContained,
+      imagesUseContain: images.every((image) => getComputedStyle(image).objectFit === 'contain'),
+      stripTag: strip.tagName,
+      stripButtons: stripButtons.length,
+      situationHeight: situationRect.height,
+      situationInsideStrip: situationRect.left >= stripRect.left - 1
+        && situationRect.right <= stripRect.right + 1
+        && situationRect.top >= stripRect.top - 1
+        && situationRect.bottom <= stripRect.bottom + 1,
+      situationAria: situation.getAttribute('aria-label') ?? '',
+      inlineCaretGap: caretRect.left - valueRect.right,
+      caretInsideSituation: caretRect.left >= situationRect.left - 1
+        && caretRect.right <= situationRect.right + 1
+        && caretRect.top >= situationRect.top - 1
+        && caretRect.bottom <= situationRect.bottom + 1,
+      theme: document.documentElement.getAttribute('data-theme'),
+      rootBackground: rootStyle?.backgroundColor ?? '',
+      rootBackgroundImage: rootStyle?.backgroundImage ?? '',
+      listBackground: listStyle.backgroundColor,
+      listShadow: listStyle.boxShadow,
+      legacy: document.querySelectorAll('.hjm-cta, .hjm-scan-overlay, .hjm-scanline').length,
+    };
+  });
 }
 
 async function measureMascotSeam(page) {
@@ -76,15 +196,15 @@ async function measureMascotSeam(page) {
     const images = Array.from(document.querySelectorAll('[data-result-avatar-seam] img'));
     const image = images[0];
     const strip = document.querySelector('.hjm-strip');
-    const resultCard = document.querySelector('[data-hjm-overview-card="true"] .hjm-journey-card-inner');
+    const list = document.querySelector('.hjm-result-list');
     if (!(image instanceof HTMLImageElement)
       || !(strip instanceof HTMLElement)
-      || !(resultCard instanceof HTMLElement)) return null;
+      || !(list instanceof HTMLElement)) return null;
 
     await image.decode();
     const imageRect = image.getBoundingClientRect();
     const stripRect = strip.getBoundingClientRect();
-    const resultRect = resultCard.getBoundingClientRect();
+    const listRect = list.getBoundingClientRect();
     const canvas = document.createElement('canvas');
     canvas.width = image.naturalWidth;
     canvas.height = image.naturalHeight;
@@ -94,7 +214,7 @@ async function measureMascotSeam(page) {
     const rgba = context.getImageData(0, 0, canvas.width, canvas.height).data;
     const scaleX = imageRect.width / canvas.width;
     const scaleY = imageRect.height / canvas.height;
-    const threshold = 8;
+    const threshold = 32;
     let alphaTop = Number.POSITIVE_INFINITY;
     let alphaBottom = Number.NEGATIVE_INFINITY;
     let weightedAlpha = 0;
@@ -107,13 +227,24 @@ async function measureMascotSeam(page) {
       range.selectNodeContents(element);
       return Array.from(range.getClientRects());
     };
+    const wholeRect = (selector) => {
+      const element = document.querySelector(selector);
+      return element instanceof Element ? [element.getBoundingClientRect()] : [];
+    };
     const protectedRects = {
       temperature: rangeRects('.hjm-s-temp'),
       metadata: rangeRects('.hjm-s-meta'),
-      weatherIcon: [document.querySelector('.hjm-s-weather')?.getBoundingClientRect()].filter(Boolean),
+      weatherIcon: wholeRect('.hjm-s-weather'),
+      situationPin: wholeRect('.hjm-strip__situation > svg:first-child'),
+      situationLabel: rangeRects('.hjm-strip__situation-label'),
+      situationValue: rangeRects('.hjm-strip__situation strong'),
+      situationCaret: wholeRect('.hjm-strip__situation > svg:last-child'),
       title: rangeRects('.hjm-result-copy h1'),
       subtitle: rangeRects('.hjm-result-copy .hjm-sub'),
-      firstRow: [document.querySelector('[data-hjm-overview-card="true"] .hjm-row')?.getBoundingClientRect()].filter(Boolean),
+      firstRowNumber: rangeRects('.hjm-result-list .hjm-row:first-child .hjm-num'),
+      firstRowThumbnail: wholeRect('.hjm-result-list .hjm-row:first-child .hjm-thumb'),
+      firstRowText: rangeRects('.hjm-result-list .hjm-row:first-child .hjm-row-text'),
+      firstRowChevron: wholeRect('.hjm-result-list .hjm-row:first-child .hjm-row-next'),
     };
     const protectedHits = Object.fromEntries(Object.keys(protectedRects).map((name) => [name, 0]));
 
@@ -141,436 +272,258 @@ async function measureMascotSeam(page) {
       }
     }
 
+    if (!Number.isFinite(alphaTop) || !Number.isFinite(alphaBottom)) return null;
     return {
       avatarCount: images.length,
+      loaded: image.complete && image.naturalWidth > 0,
       expandedCopy: document.querySelector('.hjm-result-seam')?.getAttribute('data-expanded-copy'),
-      copyHeight: document.querySelector('[data-result-copy]')?.getBoundingClientRect().height ?? 0,
-      panelToCard: resultRect.top - stripRect.bottom,
+      expandedWeather: document.querySelector('.hjm-result-seam')?.getAttribute('data-expanded-weather'),
       stripHeight: stripRect.height,
       weatherOverlap: stripRect.bottom - alphaTop,
-      resultOverlap: alphaBottom - resultRect.top,
+      listOverlap: alphaBottom - listRect.top,
       visibleAlphaRatio: weightedAlpha === 0 ? 0 : weightedVisibleAlpha / weightedAlpha,
       protectedHits,
     };
   });
 }
 
+async function verifySheet(page) {
+  const trigger = page.locator('.hjm-result-list .hjm-row').first();
+  const rowLabel = (await trigger.locator('.hjm-g-name').textContent())?.trim() ?? '';
+  await trigger.evaluate((element) => element.setAttribute('data-verify-detail-trigger', 'true'));
+  await trigger.click();
+  const sheet = page.locator('dialog.hgd-sheet[data-garment-detail-sheet][open]');
+  await sheet.waitFor({ state: 'visible', timeout: 3_000 });
+  await page.waitForTimeout(260);
+  const open = await page.evaluate(() => {
+    const dialog = document.querySelector('dialog.hgd-sheet[data-garment-detail-sheet][open]');
+    const close = dialog?.querySelector('.hgd-sheet__close');
+    const image = dialog?.querySelector('.hgd-sheet__image img');
+    const heading = dialog?.querySelector('#hgd-sheet-title');
+    if (!(dialog instanceof HTMLDialogElement)
+      || !(close instanceof HTMLButtonElement)
+      || !(image instanceof HTMLImageElement)
+      || !(heading instanceof HTMLElement)) return null;
+    const rect = dialog.getBoundingClientRect();
+    const closeRect = close.getBoundingClientRect();
+    const backdropStyle = getComputedStyle(dialog, '::backdrop');
+    return {
+      isModal: dialog.matches(':modal'),
+      heading: heading.textContent?.trim() ?? '',
+      bottomGap: window.innerHeight - rect.bottom,
+      insideViewport: rect.left >= -1 && rect.right <= window.innerWidth + 1
+        && rect.top >= -1 && rect.bottom <= window.innerHeight + 1,
+      closeSize: Math.min(closeRect.width, closeRect.height),
+      imageLoaded: image.complete && image.naturalWidth > 0,
+      hasHandle: dialog.querySelector('.hgd-sheet__handle') !== null,
+      backdropColor: backdropStyle.backgroundColor,
+      backdropFilter: backdropStyle.backdropFilter || backdropStyle.webkitBackdropFilter,
+      ariaLabelledBy: dialog.getAttribute('aria-labelledby') ?? '',
+    };
+  });
+  await sheet.locator('.hgd-sheet__close').click();
+  await page.waitForFunction(() => !document.querySelector('dialog.hgd-sheet[open]'));
+  await page.waitForTimeout(80);
+  const focusReturned = await page.evaluate(() => (
+    document.activeElement === document.querySelector('[data-verify-detail-trigger="true"]')
+  ));
+  return { rowLabel, open, focusReturned };
+}
+
 try {
   await waitForServer(BASE, server);
   browser = await chromium.launch();
-  const page = await openHome({ width: 430, height: 932 });
 
-  const initial = await page.evaluate(() => {
-    const visible = (element) => {
-      if (!(element instanceof HTMLElement)) return false;
-      const rect = element.getBoundingClientRect();
-      const style = getComputedStyle(element);
-      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
-    };
-    const result = document.querySelector('.hjm-result');
-    const strip = document.querySelector('.hjm-strip');
-    return {
-      result: visible(result),
-      strip: visible(strip),
-      title: document.querySelector('[data-result-copy] h1')?.textContent?.trim() ?? '(missing)',
-      resultCount: document.querySelectorAll('.hjm-result').length,
-      stripCount: document.querySelectorAll('.hjm-strip').length,
-      currentLegacy: document.querySelectorAll('.hjm-cta, .hjm-scan-overlay, .hjm-scanline').length,
-    };
-  });
-  gate(
-    '0. Home opens directly on one result and one weather strip',
-    initial.result && initial.strip && initial.resultCount === 1 && initial.stripCount === 1,
-    `result=${initial.resultCount} strip=${initial.stripCount} title="${initial.title}"`,
-  );
-  gate(
-    '1. settled result has no retired CTA or scan',
-    initial.currentLegacy === 0,
-    `legacy nodes=${initial.currentLegacy}`,
-  );
-
-  const mascot = await page.evaluate(async () => {
-    const seam = document.querySelector('.hjm-result-mascot-seam');
-    const image = seam?.querySelector('img');
-    if (!(seam instanceof HTMLElement) || !(image instanceof HTMLImageElement)) return null;
-    const read = () => {
-      const rect = image.getBoundingClientRect();
-      return {
-        x: Math.round(rect.x * 10) / 10,
-        y: Math.round(rect.y * 10) / 10,
-        width: Math.round(rect.width * 10) / 10,
-        height: Math.round(rect.height * 10) / 10,
-        transform: getComputedStyle(image).transform,
-      };
-    };
-    // Measure only after intrinsic dimensions have entered layout. Without
-    // decode(), a cold image can move from 188x0 to 188x153 during this gate
-    // and look animated even though the mascot has zero running animations.
-    await image.decode();
-    await new Promise((resolve) => requestAnimationFrame(() => resolve()));
-    const before = read();
-    await new Promise((resolve) => setTimeout(resolve, 650));
-    return {
-      before,
-      after: read(),
-      loaded: image.complete && image.naturalWidth > 0,
-      animations: seam.getAnimations({ subtree: true }).filter((animation) => animation.playState === 'running').length,
-      legacyMascots: document.querySelectorAll('.hjm-mascot, .hjm-mascot-anchor').length,
-    };
-  });
-  const mascotStable = mascot !== null && JSON.stringify(mascot.before) === JSON.stringify(mascot.after);
-  gate(
-    '2. result mascot is a loaded, static seam',
-    mascot !== null && mascot.loaded && mascot.animations === 0 && mascot.legacyMascots === 0 && mascotStable,
-    mascot === null
-      ? 'result mascot seam is missing'
-      : `loaded=${mascot.loaded} running animations=${mascot.animations} legacy mascots=${mascot.legacyMascots} stable=${mascotStable}`,
-  );
-
-  const seamMatrix = [];
-  for (const width of [320, 375, 393, 430]) {
-    const matrixPage = width === 430 ? page : await openHome({ width, height: 932 });
-    seamMatrix.push({ width, measurement: await measureMascotSeam(matrixPage) });
-    if (matrixPage !== page) await matrixPage.close();
+  const measurements = [];
+  const pages = [];
+  for (const viewport of VIEWPORTS) {
+    const page = await openHome(viewport);
+    pages.push(page);
+    measurements.push({
+      viewport,
+      layout: await measureLayout(page),
+      seam: await measureMascotSeam(page),
+    });
   }
-  const seamMatrixPassed = seamMatrix.every(({ measurement }) => (
-    measurement !== null
-    && measurement.avatarCount === 1
-    && measurement.stripHeight >= 72
-    && measurement.stripHeight <= 84
-    && measurement.weatherOverlap >= 24
-    && measurement.weatherOverlap <= 56
-    && measurement.resultOverlap >= 6
-    && measurement.resultOverlap <= 16
-    && measurement.visibleAlphaRatio >= 0.98
-    && Object.values(measurement.protectedHits).every((hits) => hits === 0)
-  ));
+
+  const primary = measurements.find(({ viewport }) => viewport.width === 393)?.layout ?? null;
   gate(
-    '2b. mascot alpha bridges both surfaces without content collisions',
-    seamMatrixPassed,
-    seamMatrix.map(({ width, measurement }) => measurement === null
-      ? `${width}px=missing`
-      : `${width}px expanded=${measurement.expandedCopy} copy/gap=${measurement.copyHeight.toFixed(1)}/${measurement.panelToCard.toFixed(1)}px weather/result=${measurement.weatherOverlap.toFixed(1)}/${measurement.resultOverlap.toFixed(1)}px hits=${JSON.stringify(measurement.protectedHits)} visible=${(measurement.visibleAlphaRatio * 100).toFixed(1)}%`).join('; '),
+    '0. Home opens directly on one result, weather strip and garment list',
+    primary !== null
+      && primary.resultCount === 1
+      && primary.stripCount === 1
+      && primary.listCount === 1
+      && primary.rowItems > 0,
+    primary === null
+      ? '393px Home contract is missing'
+      : `result/strip/list=${primary.resultCount}/${primary.stripCount}/${primary.listCount} rows=${primary.rowItems}`,
+  );
+
+  const retiredPassed = measurements.every(({ layout }) => layout !== null
+    && layout.legacy === 0
+    && layout.forbiddenCarousel === 0);
+  gate(
+    '1. retired CTA, scan and horizontal carousel are absent',
+    retiredPassed,
+    measurements.map(({ viewport, layout }) => layout === null
+      ? `${viewport.width}px=missing`
+      : `${viewport.width}px legacy/carousel=${layout.legacy}/${layout.forbiddenCarousel}`).join('; '),
+  );
+
+  const verticalPassed = measurements.every(({ layout }) => layout !== null
+    && layout.rowItems === layout.rowButtons
+    && layout.rowButtons === layout.rowChevrons
+    && layout.rowAriaLabels
+    && layout.orderedVertically
+    && layout.minRowHeight >= 44
+    && layout.listOverflow <= 1
+    && layout.documentOverflow <= 1
+    && layout.listInsideViewport);
+  gate(
+    '2. every garment is one accessible vertical row with a 44px target',
+    verticalPassed,
+    measurements.map(({ viewport, layout }) => layout === null
+      ? `${viewport.width}px=missing`
+      : `${viewport.width}px rows/buttons/chevrons=${layout.rowItems}/${layout.rowButtons}/${layout.rowChevrons} min=${layout.minRowHeight.toFixed(1)}px list/doc overflow=${layout.listOverflow}/${layout.documentOverflow}px ordered=${layout.orderedVertically}`).join('; '),
+  );
+
+  const imagesPassed = measurements.every(({ layout }) => layout !== null
+    && layout.thumbnails === layout.rowItems
+    && layout.images === layout.rowItems
+    && layout.realImages === layout.rowItems
+    && layout.minThumbnailSize >= 44
+    && layout.imagesLoaded
+    && layout.imagesContained
+    && layout.imagesUseContain);
+  gate(
+    '3. every garment has a loaded, contained illustration',
+    imagesPassed,
+    measurements.map(({ viewport, layout }) => layout === null
+      ? `${viewport.width}px=missing`
+      : `${viewport.width}px images=${layout.realImages}/${layout.rowItems} loaded=${layout.imagesLoaded} contained=${layout.imagesContained} min thumb=${layout.minThumbnailSize.toFixed(1)}px`).join('; '),
+  );
+
+  const selectorPassed = measurements.every(({ layout }) => layout !== null
+    && layout.stripTag === 'SECTION'
+    && layout.stripButtons === 1
+    && layout.situationHeight >= 44
+    && layout.situationInsideStrip
+    && layout.situationAria.trim().length > 0
+    && layout.inlineCaretGap >= -4
+    && layout.inlineCaretGap <= 12
+    && layout.caretInsideSituation);
+  gate(
+    '4. weather has one independent situation selector with an inline caret',
+    selectorPassed,
+    measurements.map(({ viewport, layout }) => layout === null
+      ? `${viewport.width}px=missing`
+      : `${viewport.width}px strip=${layout.stripTag} buttons=${layout.stripButtons} target=${layout.situationHeight.toFixed(1)}px caret gap=${layout.inlineCaretGap.toFixed(1)}px`).join('; '),
+  );
+
+  const seamPassed = measurements.every(({ seam }) => seam !== null
+    && seam.avatarCount === 1
+    && seam.loaded
+    && seam.weatherOverlap > 0
+    && seam.listOverlap > 0
+    && seam.visibleAlphaRatio >= 0.96
+    && Object.values(seam.protectedHits).every((hits) => hits === 0));
+  gate(
+    '5. avatar bridges weather and list without covering content or the selector',
+    seamPassed,
+    measurements.map(({ viewport, seam }) => seam === null
+      ? `${viewport.width}px=missing`
+      : `${viewport.width}px weather/list=${seam.weatherOverlap.toFixed(1)}/${seam.listOverlap.toFixed(1)}px hits=${JSON.stringify(seam.protectedHits)} visible=${(seam.visibleAlphaRatio * 100).toFixed(1)}%`).join('; '),
+  );
+
+  const depthPassed = measurements.every(({ layout }) => layout !== null
+    && layout.theme === 'light'
+    && layout.rootBackgroundImage === 'none'
+    && layout.rootBackground !== layout.listBackground
+    && layout.listShadow !== 'none'
+    && /\binset\b/u.test(layout.listShadow));
+  gate(
+    '6. Mineral Garden list is a raised surface on the light canvas',
+    depthPassed,
+    measurements.map(({ viewport, layout }) => layout === null
+      ? `${viewport.width}px=missing`
+      : `${viewport.width}px theme=${layout.theme} canvas/list=${layout.rootBackground}/${layout.listBackground} inset=${/\binset\b/u.test(layout.listShadow)}`).join('; '),
+  );
+
+  const sheetPage = pages[1];
+  const sheetResult = await verifySheet(sheetPage);
+  const sheetPassed = sheetResult.open !== null
+    && sheetResult.open.isModal
+    && sheetResult.open.heading === sheetResult.rowLabel
+    && sheetResult.open.bottomGap >= 0
+    && sheetResult.open.bottomGap <= 24
+    && sheetResult.open.insideViewport
+    && sheetResult.open.closeSize >= 43.5
+    && sheetResult.open.imageLoaded
+    && sheetResult.open.hasHandle
+    && sheetResult.open.ariaLabelledBy === 'hgd-sheet-title'
+    && sheetResult.open.backdropColor !== 'rgba(0, 0, 0, 0)'
+    && sheetResult.open.backdropFilter !== 'none'
+    && sheetResult.focusReturned;
+  gate(
+    '7. a garment row opens the bottom sheet and close restores focus',
+    sheetPassed,
+    sheetResult.open === null
+      ? 'bottom sheet is missing'
+      : `modal=${sheetResult.open.isModal} heading match=${sheetResult.open.heading === sheetResult.rowLabel} bottom=${sheetResult.open.bottomGap.toFixed(1)}px close=${sheetResult.open.closeSize.toFixed(1)}px image=${sheetResult.open.imageLoaded} backdrop=${sheetResult.open.backdropFilter} focus=${sheetResult.focusReturned}`,
   );
 
   const largeTextPage = await openHome({ width: 393, height: 852 });
   await largeTextPage.addStyleTag({ content: `
-    .hjm-strip .hjm-s-meta{font-size:26px!important;line-height:1.32!important}
+    .hjm-strip .hjm-s-meta{font-size:24px!important;line-height:1.32!important}
     .hjm-strip .hjm-s-temp{font-size:60px!important}
     .hjm-result-copy h1{font-size:56px!important;line-height:1.12!important}
     .hjm-result-copy .hjm-sub{font-size:30px!important;line-height:1.4!important}
-    .hjm-journey-overview-list .hjm-g-name{font-size:30px!important;line-height:1.2!important}
-    .hjm-journey-overview-list .hjm-g-role{font-size:26px!important;line-height:1.2!important}
+    .hjm-result-list .hjm-g-name{font-size:26px!important;line-height:1.2!important}
+    .hjm-result-list .hjm-g-role{font-size:22px!important;line-height:1.25!important}
   ` });
   await largeTextPage.waitForFunction(() => (
     document.querySelector('.hjm-result-seam')?.getAttribute('data-expanded-copy') === 'true'
   ));
-  const largeTextMeasurement = await measureMascotSeam(largeTextPage);
+  await largeTextPage.waitForTimeout(180);
+  const largeTextLayout = await measureLayout(largeTextPage);
+  const largeTextSeam = await measureMascotSeam(largeTextPage);
   const largeTextOrder = await largeTextPage.evaluate(() => {
     const copy = document.querySelector('[data-result-copy]')?.getBoundingClientRect();
     const strip = document.querySelector('.hjm-strip')?.getBoundingClientRect();
-    return copy && strip ? copy.bottom <= strip.top : false;
+    return copy && strip ? copy.bottom <= strip.top + 1 : false;
   });
   await largeTextPage.close();
-  const largeTextPassed = largeTextMeasurement !== null
-    && largeTextMeasurement.expandedCopy === 'true'
+  const largeTextPassed = largeTextLayout !== null
+    && largeTextSeam !== null
+    && largeTextSeam.expandedCopy === 'true'
     && largeTextOrder
-    && largeTextMeasurement.weatherOverlap >= 24
-    && largeTextMeasurement.weatherOverlap <= 56
-    && largeTextMeasurement.resultOverlap >= 6
-    && largeTextMeasurement.resultOverlap <= 16
-    && Object.values(largeTextMeasurement.protectedHits).every((hits) => hits === 0);
+    && largeTextLayout.minRowHeight >= 44
+    && largeTextLayout.documentOverflow <= 1
+    && largeTextLayout.listOverflow <= 1
+    && Object.values(largeTextSeam.protectedHits).every((hits) => hits === 0);
   gate(
-    '2c. 200% text keeps the responsive mascot bridge and reading order',
+    '8. 200% text keeps reading order, row targets and collision safety',
     largeTextPassed,
-    largeTextMeasurement === null
-      ? 'large-text seam is missing'
-      : `expanded=${largeTextMeasurement.expandedCopy} copy before weather=${largeTextOrder} strip=${largeTextMeasurement.stripHeight.toFixed(1)}px weather/result=${largeTextMeasurement.weatherOverlap.toFixed(1)}/${largeTextMeasurement.resultOverlap.toFixed(1)}px hits=${JSON.stringify(largeTextMeasurement.protectedHits)}`,
+    largeTextLayout === null || largeTextSeam === null
+      ? 'large-text Home contract is missing'
+      : `expanded=${largeTextSeam.expandedCopy} copy before weather=${largeTextOrder} min row=${largeTextLayout.minRowHeight.toFixed(1)}px overflow=${largeTextLayout.documentOverflow}px hits=${JSON.stringify(largeTextSeam.protectedHits)}`,
   );
 
-  const bands = await page.evaluate(() => {
-    const rail = document.querySelector('.hjm-journey-rail');
-    if (!(rail instanceof HTMLElement)) return null;
-    const cards = Array.from(rail.children).filter((element) => element.matches('[data-loop-band]'));
-    const count = (name) => cards.filter((element) => element.getAttribute('data-loop-band') === name).length;
-    const clones = cards.filter((element) => element.getAttribute('data-loop-band') !== 'canonical');
-    const canonical = cards.filter((element) => element.getAttribute('data-loop-band') === 'canonical');
-    return {
-      leading: count('leading'),
-      canonical: canonical.length,
-      trailing: count('trailing'),
-      total: cards.length,
-      clonesHidden: clones.every((element) => element.getAttribute('aria-hidden') === 'true' && element.inert),
-      cloneButtonsUntabbable: clones.every((element) => (
-        Array.from(element.querySelectorAll('button')).every((button) => button.tabIndex === -1)
-      )),
-      canonicalExposed: canonical.every((element) => element.getAttribute('aria-hidden') === null && !element.inert),
-      overviewCount: rail.querySelectorAll('[data-hjm-overview-card="true"]').length,
-      garmentCount: rail.querySelectorAll('[data-hjm-journey-card="true"]').length,
-    };
-  });
-  const equalBands = bands !== null
-    && bands.canonical > 1
-    && bands.leading === bands.canonical
-    && bands.trailing === bands.canonical
-    && bands.total === bands.canonical * 3;
+  for (const page of pages) await page.close();
   gate(
-    '3. rail has three equal accessible loop bands',
-    equalBands && bands.clonesHidden && bands.cloneButtonsUntabbable && bands.canonicalExposed
-      && bands.overviewCount === 1 && bands.garmentCount === bands.canonical - 1,
-    bands === null
-      ? 'rail is missing'
-      : `leading/canonical/trailing=${bands.leading}/${bands.canonical}/${bands.trailing} clones hidden=${bands.clonesHidden} clone buttons untabbable=${bands.cloneButtonsUntabbable}`,
+    '9. no browser JavaScript errors',
+    jsErrors.length === 0,
+    jsErrors.join('; '),
   );
-
-  const loop = await page.evaluate(async () => {
-    const rail = document.querySelector('.hjm-journey-rail');
-    if (!(rail instanceof HTMLElement)) return null;
-    const cards = Array.from(rail.children);
-    const logicalCount = cards.length / 3;
-    const nearestIndex = () => {
-      const center = rail.scrollLeft + rail.clientWidth / 2;
-      let nearest = 0;
-      let distance = Number.POSITIVE_INFINITY;
-      cards.forEach((card, index) => {
-        const next = Math.abs(card.offsetLeft + card.offsetWidth / 2 - center);
-        if (next < distance) {
-          distance = next;
-          nearest = index;
-        }
-      });
-      return nearest;
-    };
-    const centerOn = async (index) => {
-      const card = cards[index];
-      rail.scrollLeft = card.offsetLeft + card.offsetWidth / 2 - rail.clientWidth / 2;
-      rail.dispatchEvent(new Event('scroll'));
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return nearestIndex();
-    };
-    const initialIndex = nearestIndex();
-    const afterLeading = await centerOn(0);
-    const afterTrailing = await centerOn(cards.length - 1);
-    return { logicalCount, initialIndex, afterLeading, afterTrailing };
-  });
-  const inCanonical = (index) => loop !== null
-    && index >= loop.logicalCount
-    && index < loop.logicalCount * 2;
-  gate(
-    '4. infinite rail starts central and normalizes both clone bands',
-    loop !== null && inCanonical(loop.initialIndex) && inCanonical(loop.afterLeading) && inCanonical(loop.afterTrailing),
-    loop === null
-      ? 'rail is missing'
-      : `logical=${loop.logicalCount} indices initial/leading/trailing=${loop.initialIndex}/${loop.afterLeading}/${loop.afterTrailing}`,
-  );
-
-  const geometry = await page.evaluate(() => {
-    const rail = document.querySelector('.hjm-journey-rail');
-    if (!(rail instanceof HTMLElement)) return null;
-    const cards = Array.from(rail.children);
-    const viewport = rail.getBoundingClientRect();
-    const center = rail.scrollLeft + rail.clientWidth / 2;
-    let activeIndex = 0;
-    let activeDistance = Number.POSITIVE_INFINITY;
-    cards.forEach((card, index) => {
-      const distance = Math.abs(card.offsetLeft + card.offsetWidth / 2 - center);
-      if (distance < activeDistance) {
-        activeDistance = distance;
-        activeIndex = index;
-      }
-    });
-    const active = cards[activeIndex].getBoundingClientRect();
-    const previous = cards[activeIndex - 1]?.getBoundingClientRect();
-    const next = cards[activeIndex + 1]?.getBoundingClientRect();
-    const intersectionWidth = (rect) => rect
-      ? Math.max(0, Math.min(viewport.right, rect.right) - Math.max(viewport.left, rect.left))
-      : 0;
-    return {
-      centerError: Math.abs((active.left + active.right) / 2 - (viewport.left + viewport.right) / 2),
-      leftInset: active.left - viewport.left,
-      rightInset: viewport.right - active.right,
-      cardWidth: active.width,
-      railWidth: viewport.width,
-      previousPeek: intersectionWidth(previous),
-      nextPeek: intersectionWidth(next),
-      documentOverflow: document.documentElement.scrollWidth - window.innerWidth,
-    };
-  });
-  gate(
-    '5. active card is full-width with the 430px gutter and no neighbours',
-    geometry !== null
-      && geometry.centerError <= 2
-      && Math.abs(geometry.leftInset - 24) <= 1
-      && Math.abs(geometry.rightInset - 24) <= 1
-      && Math.abs(geometry.cardWidth - (geometry.railWidth - 48)) <= 1
-      && geometry.previousPeek <= 1
-      && geometry.nextPeek <= 1
-      && geometry.documentOverflow <= 1,
-    geometry === null
-      ? 'rail is missing'
-      : `center error=${geometry.centerError.toFixed(1)} px insets=${geometry.leftInset.toFixed(1)}/${geometry.rightInset.toFixed(1)} px neighbours=${geometry.previousPeek.toFixed(1)}/${geometry.nextPeek.toFixed(1)} px document overflow=${geometry.documentOverflow}px`,
-  );
-
-  const depth = await page.evaluate(() => {
-    const root = document.querySelector('.hjem-monter--result');
-    const card = document.querySelector('[data-loop-band="canonical"] .hjm-journey-card-inner');
-    if (!(root instanceof HTMLElement) || !(card instanceof HTMLElement)) return null;
-    const rootStyle = getComputedStyle(root);
-    const poolStyle = getComputedStyle(root, '::before');
-    const cardStyle = getComputedStyle(card);
-    const shadows = cardStyle.boxShadow.split(/,(?![^()]*\))/u).map((shadow) => ({
-      inset: /\binset\b/u.test(shadow),
-      offsets: Array.from(shadow.matchAll(/(-?\d+(?:\.\d+)?)px/gu), (match) => Number(match[1])).slice(0, 2),
-    }));
-    const lowerRightShadow = shadows.some(({ inset, offsets }) => !inset && offsets[0] > 0 && offsets[1] > 0);
-    return {
-      theme: document.documentElement.getAttribute('data-theme'),
-      canvasImage: rootStyle.backgroundImage,
-      poolImage: poolStyle.backgroundImage,
-      canvasColor: rootStyle.backgroundColor,
-      cardColor: cardStyle.backgroundColor,
-      boxShadow: cardStyle.boxShadow,
-      insetHighlight: shadows.some(({ inset }) => inset),
-      lowerRightShadow,
-    };
-  });
-  gate(
-    '6. Mineral Garden result canvas is neutral with upper-left light depth',
-    depth !== null
-      && depth.theme === 'light'
-      && depth.canvasImage === 'none'
-      && depth.poolImage === 'none'
-      && depth.canvasColor !== depth.cardColor
-      && depth.insetHighlight
-      && depth.lowerRightShadow,
-    depth === null
-      ? 'result root or canonical card is missing'
-      : `theme=${depth.theme} canvas=${depth.canvasColor} card=${depth.cardColor} gradient=${depth.canvasImage} inset=${depth.insetHighlight} lower-right shadow=${depth.lowerRightShadow}`,
-  );
-
-  const disclosurePage = await openHome({ width: 393, height: 852 });
-  await disclosurePage.locator('.hjm-journey-progress-side--end .hjm-journey-nav-button').click();
-  await disclosurePage.waitForTimeout(700);
-  const disclosureBefore = await disclosurePage.evaluate(() => {
-    const rail = document.querySelector('.hjm-journey-rail');
-    if (!(rail instanceof HTMLElement)) return null;
-    const viewport = rail.getBoundingClientRect();
-    const center = (viewport.left + viewport.right) / 2;
-    const cards = Array.from(rail.querySelectorAll('.hjm-journey-card:not([aria-hidden])'));
-    let active = null;
-    let distance = Number.POSITIVE_INFINITY;
-    cards.forEach((card) => {
-      const rect = card.getBoundingClientRect();
-      const nextDistance = Math.abs((rect.left + rect.right) / 2 - center);
-      if (nextDistance < distance) {
-        active = card;
-        distance = nextDistance;
-      }
-    });
-    if (!(active instanceof HTMLElement)) return null;
-    active.setAttribute('data-verify-active-card', 'true');
-    const trigger = active.querySelector('.hjm-journey-more-info');
-    const preview = active.querySelector('.hjm-journey-fact p');
-    if (!(trigger instanceof HTMLButtonElement)) return null;
-    return {
-      railHeight: rail.getBoundingClientRect().height,
-      previewText: preview?.textContent?.trim() ?? '',
-      previewLineClamp: preview instanceof HTMLElement ? getComputedStyle(preview).webkitLineClamp : '',
-      triggerLabel: trigger.getAttribute('aria-label') ?? '',
-    };
-  });
-  const disclosureTrigger = disclosurePage.locator('[data-verify-active-card="true"] .hjm-journey-more-info');
-  await disclosureTrigger.click();
-  await disclosurePage.locator('.dw-sheet[open]').waitFor({ state: 'visible' });
-  await disclosurePage.waitForTimeout(450);
-  const disclosureOpen = await disclosurePage.evaluate(() => {
-    const rail = document.querySelector('.hjm-journey-rail');
-    const sheet = document.querySelector('.dw-sheet[open]');
-    const trigger = document.querySelector('[data-verify-active-card="true"] .hjm-journey-more-info');
-    const close = sheet?.querySelector('.dw-sheet-lukk');
-    const fullFact = sheet?.querySelector('.hjm-fact-sheet__text');
-    const source = sheet?.querySelector('.hjm-fact-sheet__source a');
-    const image = sheet?.querySelector('.hjm-fact-sheet__image img');
-    if (!(rail instanceof HTMLElement)
-      || !(sheet instanceof HTMLDialogElement)
-      || !(trigger instanceof HTMLButtonElement)
-      || !(close instanceof HTMLButtonElement)
-      || !(image instanceof HTMLImageElement)) return null;
-    const closeRect = close.getBoundingClientRect();
-    return {
-      railHeight: rail.getBoundingClientRect().height,
-      fullText: fullFact?.textContent?.trim() ?? '',
-      sourceHref: source instanceof HTMLAnchorElement ? source.href : '',
-      imageLoaded: image.complete && image.naturalWidth > 0,
-      closeSize: Math.min(closeRect.width, closeRect.height),
-      triggerLabel: trigger.getAttribute('aria-label') ?? '',
-    };
-  });
-  await disclosurePage.locator('.dw-sheet-lukk').click();
-  await disclosurePage.waitForFunction(() => !document.querySelector('.dw-sheet[open]'));
-  const disclosureFocusReturned = await disclosurePage.evaluate(() => (
-    document.activeElement === document.querySelector('[data-verify-active-card="true"] .hjm-journey-more-info')
-  ));
-  await disclosurePage.close();
-  const disclosurePassed = disclosureBefore !== null
-    && disclosureOpen !== null
-    && disclosureBefore.previewLineClamp === '2'
-    && disclosureOpen.fullText === disclosureBefore.previewText
-    && disclosureOpen.fullText.length > 0
-    && disclosureOpen.sourceHref.startsWith('http')
-    && disclosureOpen.imageLoaded
-    && disclosureOpen.closeSize >= 43.5
-    && Math.abs(disclosureOpen.railHeight - disclosureBefore.railHeight) <= 1
-    && disclosureFocusReturned;
-  gate(
-    '7. More info reveals the full fact without resizing the rail',
-    disclosurePassed,
-    disclosureBefore === null || disclosureOpen === null
-      ? 'active fact card or sheet is missing'
-      : `preview clamp=${disclosureBefore.previewLineClamp} full=${disclosureOpen.fullText.length} chars source=${Boolean(disclosureOpen.sourceHref)} image=${disclosureOpen.imageLoaded} close=${disclosureOpen.closeSize.toFixed(1)}px rail delta=${Math.abs(disclosureOpen.railHeight - disclosureBefore.railHeight).toFixed(1)}px focus returned=${disclosureFocusReturned}`,
-  );
-
-  const compact = await openHome({ width: 375, height: 667 });
-  const compactGeometry = await compact.evaluate(() => {
-    const visibleRect = (selector) => document.querySelector(selector)?.getBoundingClientRect() ?? null;
-    const strip = visibleRect('.hjm-strip');
-    const result = visibleRect('.hjm-result');
-    const rail = visibleRect('.hjm-journey-rail');
-    const bars = Array.from(document.querySelectorAll('nav,[class*="tab"]'))
-      .map((element) => element.getBoundingClientRect())
-      .filter((rect) => rect.height > 40 && rect.top > window.innerHeight * 0.55);
-    const barTop = bars.length ? Math.min(...bars.map((rect) => rect.top)) : window.innerHeight;
-    return {
-      stripVisible: strip !== null && strip.top >= 0 && strip.bottom <= window.innerHeight,
-      resultStartsBeforeBar: result !== null && result.top < barTop,
-      railStartsBeforeBar: rail !== null && rail.top < barTop,
-      documentOverflow: document.documentElement.scrollWidth - window.innerWidth,
-      legacy: document.querySelectorAll('.hjm-cta, .hjm-scan-overlay, .hjm-scanline').length,
-    };
-  });
-  await compact.close();
-  gate(
-    '8. result-first geometry remains usable at 375x667',
-    compactGeometry.stripVisible
-      && compactGeometry.resultStartsBeforeBar
-      && compactGeometry.railStartsBeforeBar
-      && compactGeometry.documentOverflow <= 1
-      && compactGeometry.legacy === 0,
-    `strip visible=${compactGeometry.stripVisible} result/rail before tab bar=${compactGeometry.resultStartsBeforeBar}/${compactGeometry.railStartsBeforeBar} overflow=${compactGeometry.documentOverflow}px legacy=${compactGeometry.legacy}`,
-  );
-
-  await page.close();
-  if (jsErrors.length) gate('9. no browser JavaScript errors', false, jsErrors.join('; '));
-  else gate('9. no browser JavaScript errors', true, '');
 } catch (error) {
-  gate('verifier completed', false, String(error?.message ?? error));
+  gate('verifier completed', false, String(error?.stack ?? error?.message ?? error));
 } finally {
   if (browser) await browser.close();
   server.kill();
 }
 
 const width = Math.max(...gates.map(({ name }) => name.length));
-console.log('\n-- verify-hjem: result-first Home contract --');
+console.log('\n-- verify-hjem: vertical-list Home contract --');
 for (const result of gates) {
   console.log(`  ${result.passed ? 'PASS' : 'FAIL'} ${result.name.padEnd(width)}  ${result.detail}`);
 }

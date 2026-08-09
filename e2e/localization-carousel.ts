@@ -1,5 +1,5 @@
 /**
- * Focused browser QA for the region-language policy and the Home result rail.
+ * Focused browser QA for the region-language policy and the Home vertical result list.
  *
  * Runs directly against a local Vite server, so it exercises the current
  * source tree rather than a possibly stale dist/ build:
@@ -20,11 +20,6 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const require = createRequire(import.meta.url);
 const VITE_CLI = join(dirname(require.resolve('vite/package.json')), 'bin', 'vite.js');
 const VIEWPORT = { width: 390, height: 844 } as const;
-const DETAIL_CARD_MIN_HEIGHT = 300;
-const DETAIL_STAGE_HEIGHT = 92;
-const RAIL_VERTICAL_PADDING = 17;
-const RAIL_SIDE_INSET = 20;
-
 type LocaleScenario = Readonly<{
   locale: 'sv-SE' | 'da-DK' | 'nb-NO';
   resolvedLanguage: 'sv' | 'da' | 'en';
@@ -38,18 +33,14 @@ type LocaleScenario = Readonly<{
   findOutfit: RegExp;
   oldResultCta: string;
   goodToKnow: string;
-  moreInfo: string;
   alternatives: string;
-  alternativesAriaPrefix: string;
-  previous: string;
-  next: string;
-  viewGarments: string;
-  overview: string;
-  closeAlternatives: string;
   removedWhyToday: string;
   removedExploreHeading: string;
   removedSwipeHint: string;
   removedWhyFooter: string;
+  openGarment: RegExp;
+  detailOrder: RegExp;
+  closeGarmentDetails: RegExp;
 }>;
 
 const SCENARIOS: readonly LocaleScenario[] = [
@@ -57,14 +48,7 @@ const SCENARIOS: readonly LocaleScenario[] = [
     locale: 'sv-SE',
     resolvedLanguage: 'sv',
     goodToKnow: 'Bra att veta',
-    moreInfo: 'Mer info',
     alternatives: 'Alternativ',
-    alternativesAriaPrefix: 'Jämför alternativ till ',
-    previous: 'Föregående',
-    next: 'Nästa',
-    viewGarments: 'Se plaggen',
-    overview: 'Översikt',
-    closeAlternatives: 'Stäng alternativ',
     removedWhyToday: 'Varför i dag',
     removedExploreHeading: 'Se varje plagg',
     removedSwipeHint: 'Svep åt sidan, från innersta till yttersta lagret.',
@@ -78,19 +62,15 @@ const SCENARIOS: readonly LocaleScenario[] = [
     tomorrow: 'I morgon',
     findOutfit: /^(Hitta|Visa) dagens kläder$/u,
     oldResultCta: 'Klä på steg för steg',
+    openGarment: /^Visa .+/u,
+    detailOrder: /^Plagg 1 av \d+ .* Innerlager$/u,
+    closeGarmentDetails: /^St.ng plaggdetaljer$/u,
   },
   {
     locale: 'da-DK',
     resolvedLanguage: 'da',
     goodToKnow: 'Godt at vide',
-    moreInfo: 'Mere info',
     alternatives: 'Alternativer',
-    alternativesAriaPrefix: 'Sammenlign alternativer til ',
-    previous: 'Forrige',
-    next: 'Næste',
-    viewGarments: 'Se tøjet',
-    overview: 'Oversigt',
-    closeAlternatives: 'Luk alternativer',
     removedWhyToday: 'Hvorfor i dag',
     removedExploreHeading: 'Se hvert stykke tøj',
     removedSwipeHint: 'Stryg til siden, fra det inderste til det yderste lag.',
@@ -104,19 +84,15 @@ const SCENARIOS: readonly LocaleScenario[] = [
     tomorrow: 'I morgen',
     findOutfit: /^(Find|Vis) dagens tøj$/u,
     oldResultCta: 'Giv tøjet på trin for trin',
+    openGarment: /^Vis .+/u,
+    detailOrder: /^Del 1 af \d+ .* Inderste lag$/u,
+    closeGarmentDetails: /^Luk t.jdetaljer$/u,
   },
   {
     locale: 'nb-NO',
     resolvedLanguage: 'en',
     goodToKnow: 'Good to know',
-    moreInfo: 'More info',
     alternatives: 'Alternatives',
-    alternativesAriaPrefix: 'Compare alternatives to ',
-    previous: 'Previous',
-    next: 'Next',
-    viewGarments: 'View garments',
-    overview: 'Overview',
-    closeAlternatives: 'Close alternatives',
     removedWhyToday: 'Why today',
     removedExploreHeading: 'Explore each garment',
     removedSwipeHint: 'Swipe sideways, from the base layer to the outer layer.',
@@ -130,6 +106,9 @@ const SCENARIOS: readonly LocaleScenario[] = [
     tomorrow: 'Tomorrow',
     findOutfit: /^(Find|Show) today’s outfit$/u,
     oldResultCta: 'Dress step by step',
+    openGarment: /^Show .+/u,
+    detailOrder: /^Garment 1 of \d+ .* Base layer$/u,
+    closeGarmentDetails: /^Close garment details$/u,
   },
 ] as const;
 
@@ -305,125 +284,49 @@ async function assertPlanHasOnlyTodayAndTomorrow(
   assert(await tomorrow.isChecked(), `${scenario.locale}: Tomorrow could not be selected`);
 }
 
-type ScrollPosition = Readonly<{
-  nearestTop: number;
-  documentTop: number;
-}>;
-
-async function verticalScrollPosition(page: Page): Promise<ScrollPosition> {
-  return page.locator('.hjm-journey-rail').evaluate((rail) => {
-    let candidate = rail.parentElement;
-    while (candidate !== null) {
-      const style = getComputedStyle(candidate);
-      if (
-        /(auto|scroll|overlay)/u.test(style.overflowY)
-        && candidate.scrollHeight > candidate.clientHeight + 1
-      ) {
-        break;
-      }
-      candidate = candidate.parentElement;
-    }
-    return {
-      nearestTop: candidate?.scrollTop ?? document.scrollingElement?.scrollTop ?? 0,
-      documentTop: document.scrollingElement?.scrollTop ?? 0,
-    };
-  });
-}
-
-async function waitForHorizontalMovement(
+async function assertLoadedGarmentImages(
   page: Page,
-  initialLeft: number,
-  minimum: number,
-): Promise<void> {
-  const deadline = Date.now() + 3_000;
-  while (Date.now() < deadline) {
-    const left = await page.locator('.hjm-journey-rail').evaluate((rail) => rail.scrollLeft);
-    if (Math.abs(left - initialLeft) >= minimum) return;
-    await page.waitForTimeout(50);
-  }
-  throw new Error(`Home result rail did not move at least ${minimum}px from its ${initialLeft}px start position`);
-}
-
-async function assertLoadedGarmentImages(page: Page, scenario: LocaleScenario): Promise<number> {
-  const rail = page.locator('.hjm-journey-rail');
-  const overview = rail.locator(':scope > [data-hjm-overview-card="true"]');
-  const cards = page.locator('[data-hjm-journey-card="true"]');
-  const count = await cards.count();
-  assert(count > 1, `${scenario.locale}: result had ${count} garment cards; horizontal QA needs at least two`);
-
-  const overviewImages = overview.locator('.hjm-rows .hjm-thumb img');
-  assert(
-    await overviewImages.count() === count,
-    `${scenario.locale}: compact overview and detail rail do not contain the same garments`,
-  );
-
-  const overviewPaths = await overviewImages.evaluateAll((images) => images.map((element) => (
-    new URL((element as HTMLImageElement).currentSrc || (element as HTMLImageElement).src).pathname
-  )));
-  const detailPaths = await cards.locator('.hjm-journey-image img').evaluateAll((images) => images.map((element) => (
-    new URL((element as HTMLImageElement).currentSrc || (element as HTMLImageElement).src).pathname
-  )));
-  assert(
-    JSON.stringify(overviewPaths) === JSON.stringify(detailPaths),
-    `${scenario.locale}: compact/detail garment order differs (${JSON.stringify({ overviewPaths, detailPaths })})`,
-  );
+  list: ReturnType<Page['locator']>,
+  scenario: LocaleScenario,
+): Promise<number> {
+  const images = list.locator('.hjm-thumb img');
+  const count = await images.count();
+  assert(count > 1, scenario.locale + ': expected at least two garment images, got ' + count);
 
   for (let index = 0; index < count; index += 1) {
-    const image = overviewImages.nth(index);
-    await image.waitFor({ state: 'visible', timeout: 5_000 });
-    const state = await image.evaluate((element) => ({
-      src: element.currentSrc || element.src,
-      complete: element.complete,
-      naturalWidth: element.naturalWidth,
-    }));
-    const pathname = state.src.startsWith('data:') ? state.src : new URL(state.src).pathname;
-    assert(
-      state.complete && state.naturalWidth >= 64 && /^\/illustrations\/garments\/[^/]+\.webp$/u.test(pathname),
-      `${scenario.locale}: compact garment ${index + 1} was missing or generic (${pathname})`,
-    );
-  }
-
-  for (let index = 0; index < count; index += 1) {
-    const card = cards.nth(index);
-    await card.evaluate((child) => {
-      const element = child.parentElement;
-      if (element === null) return;
-      element.scrollTo({
-        left: child.offsetLeft + child.clientWidth / 2 - element.clientWidth / 2,
-        behavior: 'auto',
-      });
-    });
-    const image = card.locator('.hjm-journey-image img');
+    const image = images.nth(index);
     await image.waitFor({ state: 'visible', timeout: 5_000 });
     const handle = await image.elementHandle();
-    assert(handle !== null, `${scenario.locale}: garment ${index + 1} image element disappeared`);
+    assert(handle !== null, scenario.locale + ': garment image ' + (index + 1) + ' disappeared');
     await page.waitForFunction(
-      (element) => element instanceof HTMLImageElement && element.complete && element.naturalWidth > 0,
+      (element) => element instanceof HTMLImageElement
+        && element.complete
+        && element.naturalWidth > 0
+        && element.naturalHeight > 0,
       handle,
       { timeout: 5_000 },
     );
 
-    const imageState = await image.evaluate((element) => ({
+    const state = await image.evaluate((element) => ({
       src: element.currentSrc || element.src,
-      naturalWidth: element.naturalWidth,
-      naturalHeight: element.naturalHeight,
+      width: element.naturalWidth,
+      height: element.naturalHeight,
     }));
-    const pathname = imageState.src.startsWith('data:')
-      ? imageState.src
-      : new URL(imageState.src).pathname;
+    const pathname = state.src.startsWith('data:') ? state.src : new URL(state.src).pathname;
     assert(
       /^\/illustrations\/garments\/[^/]+\.webp$/u.test(pathname),
-      `${scenario.locale}: garment ${index + 1} used a generic/placeholder source: ${pathname}`,
+      scenario.locale + ': garment ' + (index + 1) + ' used a generic source: ' + pathname,
     );
     assert(
-      imageState.naturalWidth >= 64 && imageState.naturalHeight >= 64,
-      `${scenario.locale}: garment ${index + 1} image was too small or broken (${imageState.naturalWidth}x${imageState.naturalHeight})`,
+      state.width >= 64 && state.height >= 64,
+      scenario.locale + ': garment ' + (index + 1) + ' image was too small or broken ('
+        + state.width + 'x' + state.height + ')',
     );
   }
   return count;
 }
 
-async function assertHomeResultCarousel(
+async function assertHomeResultList(
   page: Page,
   scenario: LocaleScenario,
 ): Promise<number> {
@@ -436,22 +339,58 @@ async function assertHomeResultCarousel(
     await findButton.waitFor({ state: 'visible', timeout: 15_000 });
     assert(
       scenario.findOutfit.test((await findButton.innerText()).trim()),
-      `${scenario.locale}: Home outfit CTA was not localized`,
+      scenario.locale + ': Home outfit CTA was not localized',
     );
     await findButton.click();
   }
   await result.waitFor({ state: 'visible', timeout: 15_000 });
 
-  const strip = page.locator('button.hjm-strip');
-  assert(await strip.count() === 1, `${scenario.locale}: result must expose one weather Adjust button`);
+  const strip = page.locator('section.hjm-strip');
+  assert(await strip.count() === 1, scenario.locale + ': expected one weather information panel');
   assert(
-    await strip.getAttribute('aria-label') !== null,
-    `${scenario.locale}: weather strip lost its accessible Adjust name`,
+    await page.locator('button.hjm-strip').count() === 0,
+    scenario.locale + ': the whole weather panel is still an oversized button',
   );
   assert(
-    await strip.locator('.hjm-s-adjust').count() === 0,
-    `${scenario.locale}: retired visible Adjust affordance is still rendered`,
+    (await strip.getAttribute('aria-label'))?.trim().length,
+    scenario.locale + ': weather panel lost its localized accessible name',
   );
+
+  const situationButton = strip.locator('button.hjm-strip__situation');
+  assert(
+    await situationButton.count() === 1,
+    scenario.locale + ': weather panel must expose exactly one situation selector',
+  );
+  assert(
+    (await situationButton.getAttribute('aria-label'))?.trim().length,
+    scenario.locale + ': situation selector lost its localized accessible name',
+  );
+  const situationGeometry = await situationButton.evaluate((button) => {
+    const panel = button.closest('.hjm-strip')?.getBoundingClientRect();
+    const selected = button.querySelector('strong')?.getBoundingClientRect();
+    const caret = button.querySelector('svg:last-child')?.getBoundingClientRect();
+    const target = button.getBoundingClientRect();
+    return {
+      targetHeight: target.height,
+      rightReserve: panel ? panel.right - target.right : -1,
+      selectedToCaret: selected && caret ? caret.left - selected.right : -1,
+    };
+  });
+  assert(
+    situationGeometry.targetHeight >= 43.5,
+    scenario.locale + ': situation selector is smaller than 44px',
+  );
+  assert(
+    situationGeometry.rightReserve >= 48,
+    scenario.locale + ': situation selector enters the avatar safety zone ('
+      + situationGeometry.rightReserve + 'px reserve)',
+  );
+  assert(
+    situationGeometry.selectedToCaret >= 0 && situationGeometry.selectedToCaret <= 16,
+    scenario.locale + ': selector caret is detached from its value ('
+      + situationGeometry.selectedToCaret + 'px)',
+  );
+
   const weatherIcon = strip.locator('.hjm-s-weather img');
   await weatherIcon.waitFor({ state: 'visible', timeout: 5_000 });
   const weatherIconState = await weatherIcon.evaluate((element) => ({
@@ -463,17 +402,18 @@ async function assertHomeResultCarousel(
     weatherIconState.complete
       && weatherIconState.naturalWidth > 0
       && /^\/monter\/vaer-[^/]+\.webp$/u.test(weatherIconState.pathname),
-    `${scenario.locale}: result weather icon was missing or generic (${JSON.stringify(weatherIconState)})`,
+    scenario.locale + ': result weather icon was missing or generic ('
+      + JSON.stringify(weatherIconState) + ')',
   );
 
-  // The avatar belongs to the shared result seam above ResultSurface, not to
-  // the horizontally scrollable garment section itself.
   const avatarSeam = page.locator('.hjm-result-seam [data-result-avatar-seam="true"]');
   await avatarSeam.waitFor({ state: 'visible', timeout: 5_000 });
   const avatar = avatarSeam.locator('img');
+  const avatarHandle = await avatar.elementHandle();
+  assert(avatarHandle !== null, scenario.locale + ': result avatar disappeared');
   await page.waitForFunction(
     (element) => element instanceof HTMLImageElement && element.complete && element.naturalWidth > 0,
-    await avatar.elementHandle(),
+    avatarHandle,
     { timeout: 5_000 },
   );
   const avatarState = await avatar.evaluate((element) => ({
@@ -482,516 +422,205 @@ async function assertHomeResultCarousel(
   }));
   assert(
     avatarState.pathname === '/monter/maskot-resultat-sveip.webp' && avatarState.width >= 100,
-    `${scenario.locale}: hanging result avatar was missing or broken (${JSON.stringify(avatarState)})`,
+    scenario.locale + ': hanging result avatar was missing or broken ('
+      + JSON.stringify(avatarState) + ')',
   );
-  const avatarBoxBeforePaging = await avatar.boundingBox();
-  assert(avatarBoxBeforePaging !== null, `${scenario.locale}: avatar had no initial geometry`);
 
   assert(
     await result.getByRole('button', { name: scenario.oldResultCta, exact: true }).count() === 0,
-    `${scenario.locale}: removed main result CTA “${scenario.oldResultCta}” is still present`,
+    scenario.locale + ': removed main result CTA is still present',
+  );
+  assert(
+    await result.locator(
+      '.hjm-journey-rail, [data-hjm-overview-card], [data-hjm-journey-card], '
+        + '.hjm-journey-progress, .hjm-journey-dots, [data-carousel-disclosure]',
+    ).count() === 0,
+    scenario.locale + ': retired horizontal carousel markup is still rendered',
+  );
+  assert(
+    await result.getByText(scenario.removedExploreHeading, { exact: true }).count() === 0
+      && await result.getByText(scenario.removedSwipeHint, { exact: true }).count() === 0
+      && await result.getByText(scenario.removedWhyToday, { exact: true }).count() === 0
+      && await result.getByRole('button', { name: scenario.removedWhyFooter, exact: true }).count() === 0,
+    scenario.locale + ': retired carousel guidance or Why-today content is still visible',
   );
 
-  const rail = result.locator('.hjm-journey-rail');
-  const overview = rail.locator(':scope > [data-hjm-overview-card="true"]');
-  await overview.waitFor({ state: 'visible', timeout: 5_000 });
+  const list = result.locator('ol.hjm-result-list[data-garment-count]');
+  await list.waitFor({ state: 'visible', timeout: 5_000 });
+  const rowItems = list.locator(':scope > li.hjm-row-item');
+  const rowButtons = rowItems.locator(':scope > button.hjm-row');
+  const rowCount = await rowButtons.count();
+  assert(rowCount > 1, scenario.locale + ': vertical result list rendered ' + rowCount + ' rows');
   assert(
-    await result.locator('[data-carousel-disclosure="true"], .hjm-journey-hint').count() === 0,
-    `${scenario.locale}: retired carousel instruction block is still rendered`,
+    Number(await list.getAttribute('data-garment-count')) === rowCount,
+    scenario.locale + ': list count metadata does not match rendered rows',
   );
   assert(
-    await result.getByText(scenario.removedExploreHeading, { exact: true }).count() === 0,
-    `${scenario.locale}: separate Explore heading is still rendered`,
-  );
-  assert(
-    await result.getByText(scenario.removedSwipeHint, { exact: true }).count() === 0,
-    `${scenario.locale}: long swipe instruction is still rendered`,
-  );
-  assert(
-    await result.getByRole('button', { name: scenario.removedWhyFooter, exact: true }).count() === 0
-      && await result.locator('.hjm-result-tools').count() === 0,
-    `${scenario.locale}: global Why-this-outfit footer is still rendered`,
+    await rowItems.count() === rowCount,
+    scenario.locale + ': each garment must be represented by one semantic list item',
   );
 
-  const cards = result.locator('[data-hjm-journey-card="true"]');
-  const cardCount = await cards.count();
-  assert(cardCount >= 3, `${scenario.locale}: full-width deck QA needs at least three garment cards, got ${cardCount}`);
-  const railStructure = await rail.evaluate((element, logicalCount) => {
-    const children = Array.from(element.children);
-    const leading = children.filter((child) => child.getAttribute('data-loop-band') === 'leading');
-    const canonical = children.filter((child) => child.getAttribute('data-loop-band') === 'canonical');
-    const trailing = children.filter((child) => child.getAttribute('data-loop-band') === 'trailing');
-    const clones = [...leading, ...trailing];
-    return {
-      childCount: children.length,
-      bandCounts: [leading.length, canonical.length, trailing.length],
-      canonicalOverviewFirst: canonical[0]?.matches('[data-hjm-overview-card="true"]') === true,
-      canonicalDetailsAfterOverview: canonical.slice(1)
-        .every((child) => child.matches('[data-hjm-journey-card="true"]')),
-      clonesAreInert: clones.every((child) => (
-        child.getAttribute('data-loop-clone') === 'true'
-          && child.getAttribute('aria-hidden') === 'true'
-          && (child as HTMLElement).inert
-      )),
-      cloneButtonsAreUntabbable: clones.every((child) => (
-        Array.from(child.querySelectorAll('button')).every((button) => button.tabIndex === -1)
-      )),
-      logicalCount,
-    };
-  }, cardCount + 1);
+  const positions = (await rowItems.locator('.hjm-num').allInnerTexts()).map((value) => Number(value.trim()));
+  const expectedPositions = Array.from({ length: rowCount }, (_, index) => index + 1);
   assert(
-    railStructure.childCount === (cardCount + 1) * 3
-      && railStructure.bandCounts.every((count) => count === railStructure.logicalCount)
-      && railStructure.canonicalOverviewFirst
-      && railStructure.canonicalDetailsAfterOverview
-      && railStructure.clonesAreInert
-      && railStructure.cloneButtonsAreUntabbable,
-    `${scenario.locale}: expected one semantic deck inside three inert loop bands (${JSON.stringify(railStructure)})`,
-  );
-  assert(
-    await overview.locator('.hjm-row').count() === cardCount,
-    `${scenario.locale}: overview does not list all ${cardCount} garments`,
+    JSON.stringify(positions) === JSON.stringify(expectedPositions),
+    scenario.locale + ': dressing order was ' + JSON.stringify(positions)
+      + ', expected ' + JSON.stringify(expectedPositions),
   );
 
-  const firstCard = cards.first();
-  const firstOverviewRow = overview.locator('.hjm-row').first();
-  await firstOverviewRow.focus();
-  await page.keyboard.press('Enter');
-  await page.waitForFunction(() => (
-    document.activeElement?.matches(
-      '[data-hjm-journey-card="true"] .hjm-journey-detail, [data-hjm-journey-card="true"] [data-hjm-card-focus]',
-    ) === true
-  ));
-  assert(
-    await firstCard.evaluate((card) => card.contains(document.activeElement)),
-    `${scenario.locale}: keyboard activation left focus behind on the off-screen overview card`,
-  );
-  assert(
-    await firstCard.locator('.hjm-journey-image img').count() === 1
-      && await firstCard.locator('.hjm-journey-order').count() === 1
-      && await firstCard.locator('.hjm-journey-name').count() === 1,
-    `${scenario.locale}: garment card lost its image, order/role, or name`,
-  );
-  assert(
-    await cards.locator('.hjm-journey-why').count() === 0
-      && await result.getByText(scenario.removedWhyToday, { exact: true }).count() === 0,
-    `${scenario.locale}: retired Why-today content is still rendered`,
-  );
-  const facts = cards.locator('.hjm-journey-fact');
-  assert(
-    await facts.count() === cardCount,
-    `${scenario.locale}: expected one visible Good-to-know fact on each card`,
-  );
-  const factHeadings = (await facts.locator('h3').allTextContents()).map((label) => label.trim());
-  assert(
-    factHeadings.every((label) => label === scenario.goodToKnow),
-    `${scenario.locale}: Good-to-know headings were ${JSON.stringify(factHeadings)}, expected ${scenario.goodToKnow}`,
-  );
-  assert(
-    await facts.locator('p').evaluateAll((paragraphs) => paragraphs.every((paragraph) => (
-      (paragraph.textContent ?? '').trim().length > 0
-    ))),
-    `${scenario.locale}: a Good-to-know fact was empty`,
-  );
-  const factSurface = await facts.first().evaluate((element) => {
-    const factStyle = getComputedStyle(element);
-    const cardStyle = getComputedStyle(element.closest('.hjm-journey-card-inner') as Element);
-    return { fact: factStyle.backgroundColor, card: cardStyle.backgroundColor };
-  });
-  assert(
-    factSurface.fact !== 'rgba(0, 0, 0, 0)' && factSurface.fact !== factSurface.card,
-    `${scenario.locale}: Good-to-know content lost its tinted information bubble (${JSON.stringify(factSurface)})`,
-  );
-  const alternativeActions = cards.locator('button.hjm-journey-alternatives');
-  const alternativeCount = await alternativeActions.count();
-  assert(
-    alternativeCount < cardCount,
-    `${scenario.locale}: Alternatives must be conditional (${alternativeCount}/${cardCount} cards exposed an action)`,
-  );
-  const alternativeLabels = (await alternativeActions.allTextContents()).map((label) => label.trim());
-  assert(
-    alternativeLabels.every((label) => label === scenario.alternatives),
-    `${scenario.locale}: Alternatives labels were ${JSON.stringify(alternativeLabels)}, expected ${scenario.alternatives}`,
-  );
-  const alternativeAriaLabels = await alternativeActions.evaluateAll((buttons) => buttons.map(
+  const labels = (await rowItems.locator('.hjm-g-name').allInnerTexts()).map((value) => value.trim());
+  const roles = (await rowItems.locator('.hjm-g-role').allInnerTexts()).map((value) => value.trim());
+  const ariaLabels = await rowButtons.evaluateAll((buttons) => buttons.map(
     (button) => button.getAttribute('aria-label') ?? '',
   ));
   assert(
-    alternativeAriaLabels.every((label) => label.startsWith(scenario.alternativesAriaPrefix)),
-    `${scenario.locale}: Alternatives aria labels were not localized (${JSON.stringify(alternativeAriaLabels)})`,
+    labels.length === rowCount && labels.every((label) => label.length > 0),
+    scenario.locale + ': a garment row has no localized name',
   );
   assert(
-    await result.getByRole('button', { name: scenario.alternatives, exact: true }).count() === alternativeCount,
-    `${scenario.locale}: inert loop copies leaked duplicate Alternatives controls to accessibility`,
+    roles.length === rowCount && roles.every((role) => role.length > 0),
+    scenario.locale + ': a garment row has no localized role',
   );
-  const moreInfoActions = cards.locator('button.hjm-journey-more-info');
   assert(
-    await moreInfoActions.count() === cardCount,
-    `${scenario.locale}: expected one More info action per garment card`,
-  );
-  const moreInfoLabels = (await moreInfoActions.allTextContents()).map((label) => label.trim());
-  assert(
-    moreInfoLabels.every((label) => label === scenario.moreInfo),
-    `${scenario.locale}: More info labels were ${JSON.stringify(moreInfoLabels)}, expected ${scenario.moreInfo}`,
-  );
-  const cardHeights = await cards.evaluateAll((elements) => elements.map(
-    (element) => element.getBoundingClientRect().height,
-  ));
-  const shortestCard = Math.min(...cardHeights);
-  const tallestCard = Math.max(...cardHeights);
-  assert(
-    shortestCard >= DETAIL_CARD_MIN_HEIGHT - 1.5 && tallestCard - shortestCard <= 1.5,
-    `${scenario.locale}: detail cards lost their standardized ${DETAIL_CARD_MIN_HEIGHT}px minimum (${JSON.stringify(cardHeights)})`,
-  );
-  const detailPlateHeights = await cards.locator('.hjm-journey-image').evaluateAll((elements) => elements.map(
-    (element) => element.getBoundingClientRect().height,
-  ));
-  assert(
-    detailPlateHeights.every((height) => Math.abs(height - DETAIL_STAGE_HEIGHT) <= 1.5),
-    `${scenario.locale}: garment image plates are not ${DETAIL_STAGE_HEIGHT}px (${JSON.stringify(detailPlateHeights)})`,
+    ariaLabels.every((label) => scenario.openGarment.test(label)),
+    scenario.locale + ': garment row destinations were not localized ('
+      + JSON.stringify(ariaLabels) + ')',
   );
 
-  if (alternativeCount > 0) {
-    const detailAction = alternativeActions.first();
-    const detailActionBox = await detailAction.boundingBox();
+  const listContract = await list.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+    rowHeights: Array.from(element.querySelectorAll<HTMLElement>('button.hjm-row'))
+      .map((row) => row.getBoundingClientRect().height),
+  }));
+  assert(
+    listContract.scrollWidth <= listContract.clientWidth + 1,
+    scenario.locale + ': vertical garment list has horizontal overflow',
+  );
+  assert(
+    listContract.rowHeights.every((height) => height >= 43.5),
+    scenario.locale + ': a garment row is smaller than 44px ('
+      + JSON.stringify(listContract.rowHeights) + ')',
+  );
+
+  const garmentCount = await assertLoadedGarmentImages(page, list, scenario);
+  assert(garmentCount === rowCount, scenario.locale + ': a garment row has no loaded image');
+
+  const avatarBox = await avatar.boundingBox();
+  const listBox = await list.boundingBox();
+  assert(
+    avatarBox !== null && listBox !== null
+      && avatarBox.y < listBox.y
+      && avatarBox.y + avatarBox.height > listBox.y,
+    scenario.locale + ': avatar no longer hangs across the garment-list edge',
+  );
+
+  const firstRow = rowButtons.first();
+  const firstName = labels[0];
+  await firstRow.click();
+
+  const sheet = page.locator('dialog.hgd-sheet[data-garment-detail-sheet][open]');
+  await sheet.waitFor({ state: 'visible', timeout: 5_000 });
+  assert(
+    await sheet.getByRole('heading', { name: firstName, exact: true }).count() === 1,
+    scenario.locale + ': garment sheet title does not match the activated row',
+  );
+  assert(
+    scenario.detailOrder.test((await sheet.locator('.hgd-sheet__header > div > p').innerText()).trim()),
+    scenario.locale + ': sheet order/role was not localized',
+  );
+  assert(
+    await sheet.getByRole('heading', { name: scenario.goodToKnow, exact: true }).count() === 1,
+    scenario.locale + ': sheet is missing its localized Good-to-know heading',
+  );
+  assert(
+    (await sheet.locator('.hgd-sheet__fact > p').innerText()).trim().length > 0,
+    scenario.locale + ': garment fact is empty',
+  );
+  const source = sheet.locator('.hgd-sheet__fact > a');
+  assert(
+    await source.count() === 1
+      && (await source.getAttribute('href'))?.startsWith('http') === true
+      && (await source.getAttribute('target')) === '_blank',
+    scenario.locale + ': garment fact source link is missing or unsafe',
+  );
+
+  const sheetBox = await sheet.boundingBox();
+  assert(
+    sheetBox !== null && VIEWPORT.height - (sheetBox.y + sheetBox.height) <= 18,
+    scenario.locale + ': garment detail is not anchored as a bottom sheet',
+  );
+
+  const alternativeButton = sheet.locator('button.hgd-sheet__alternatives');
+  if (await alternativeButton.count() > 0) {
     assert(
-      detailActionBox !== null && detailActionBox.height >= 43.5,
-      `${scenario.locale}: Alternatives control is smaller than 44px (${detailActionBox?.height ?? 0}px)`,
+      (await alternativeButton.innerText()).trim() === scenario.alternatives,
+      scenario.locale + ': Alternatives action was not localized',
     );
-    await detailAction.click();
-    const detailSheet = page.locator('dialog.hga-sheet[data-home-garment-alternatives][open]');
-    await detailSheet.waitFor({ state: 'visible', timeout: 5_000 });
-    await detailSheet.getByRole('button', { name: scenario.closeAlternatives }).click();
-    await detailSheet.waitFor({ state: 'hidden', timeout: 5_000 });
-    await page.waitForFunction((selector) => (
-      document.querySelector(selector) === document.activeElement
-    ), '[data-hjm-journey-card="true"] button.hjm-journey-detail');
-  } else {
     assert(
-      await page.locator('dialog.hga-sheet[data-home-garment-alternatives]').count() === 0,
-      `${scenario.locale}: an Alternatives sheet was mounted without authorized options`,
+      await alternativeButton.getAttribute('aria-expanded') === 'false',
+      scenario.locale + ': Alternatives disclosure did not start collapsed',
+    );
+    await alternativeButton.click();
+    assert(
+      await alternativeButton.getAttribute('aria-expanded') === 'true'
+        && await sheet.locator('#hgd-alternative-comparison').count() === 1,
+      scenario.locale + ': Alternatives disclosure did not reveal its comparison',
     );
   }
 
-  await rail.scrollIntoViewIfNeeded();
-  await overview.evaluate((child) => {
-    const element = child.parentElement;
-    if (element === null) return;
-    element.scrollTo({
-      left: child.offsetLeft + child.clientWidth / 2 - element.clientWidth / 2,
-      behavior: 'auto',
-    });
-  });
+  const closeButton = sheet.getByRole('button', { name: scenario.closeGarmentDetails });
+  assert(
+    await closeButton.count() === 1,
+    scenario.locale + ': sheet close control was not localized',
+  );
+  await closeButton.click();
+  await sheet.waitFor({ state: 'hidden', timeout: 5_000 });
+  await page.locator('dialog.hgd-sheet[data-garment-detail-sheet]')
+    .waitFor({ state: 'detached', timeout: 5_000 });
   await page.waitForFunction(
-    () => document.querySelector('.hjm-journey-dots i:first-child')?.getAttribute('data-active') === 'true',
+    () => document.querySelector('ol.hjm-result-list button.hjm-row') === document.activeElement,
     undefined,
     { timeout: 3_000 },
   );
-  await page.waitForTimeout(200);
-  const overviewInnerHeight = await overview.locator('.hjm-journey-card-inner').evaluate(
-    (element) => element.getBoundingClientRect().height,
-  );
-  await page.waitForFunction(({ expectedInnerHeight, railPadding }) => {
-    const railElement = document.querySelector<HTMLElement>('.hjm-journey-rail');
-    if (railElement === null) return false;
-    return Math.abs(railElement.getBoundingClientRect().height - (expectedInnerHeight + railPadding)) <= 2;
-  }, { expectedInnerHeight: overviewInnerHeight, railPadding: RAIL_VERTICAL_PADDING });
-  const railContract = await rail.evaluate((element) => {
-    const style = getComputedStyle(element);
-    const first = element.querySelector<HTMLElement>('[data-hjm-overview-card="true"]')?.getBoundingClientRect();
-    const firstElement = element.querySelector<HTMLElement>('[data-hjm-overview-card="true"]');
-    const second = element.querySelector<HTMLElement>('[data-hjm-journey-card="true"]')?.getBoundingClientRect();
-    const previous = firstElement?.previousElementSibling?.getBoundingClientRect();
-    const box = element.getBoundingClientRect();
-    return {
-      clientWidth: element.clientWidth,
-      scrollWidth: element.scrollWidth,
-      overflowX: style.overflowX,
-      scrollSnapType: style.scrollSnapType,
-      touchAction: style.touchAction,
-      firstLeft: first?.left ?? null,
-      firstRight: first?.right ?? null,
-      firstWidth: first?.width ?? 0,
-      secondLeft: second?.left ?? null,
-      secondRight: second?.right ?? null,
-      railLeft: box.left,
-      railRight: box.right,
-      railCenter: box.left + box.width / 2,
-      firstCenter: first === undefined ? null : first.left + first.width / 2,
-      firstHeight: first?.height ?? 0,
-      previousIntersection: previous
-        ? Math.max(0, Math.min(box.right, previous.right) - Math.max(box.left, previous.left))
-        : 0,
-      nextIntersection: second
-        ? Math.max(0, Math.min(box.right, second.right) - Math.max(box.left, second.left))
-        : 0,
-      railHeight: box.height,
-      transitionDuration: style.transitionDuration,
-      stride: first && second ? second.left - first.left : 0,
-    };
-  });
-  assert(
-    railContract.scrollWidth > railContract.clientWidth + 40,
-    `${scenario.locale}: result rail has no real horizontal overflow`,
-  );
-  assert(
-    railContract.overflowX === 'auto' || railContract.overflowX === 'scroll',
-    `${scenario.locale}: result rail overflow-x is ${railContract.overflowX}, expected auto/scroll`,
-  );
-  assert(
-    /x.*mandatory/u.test(railContract.scrollSnapType),
-    `${scenario.locale}: result rail scroll-snap-type is ${railContract.scrollSnapType}`,
-  );
-  assert(
-    railContract.touchAction.includes('pan-x') && railContract.touchAction.includes('pan-y'),
-    `${scenario.locale}: result rail touch-action is ${railContract.touchAction}; one axis may trap the finger`,
-  );
-  assert(
-    railContract.firstLeft !== null
-      && railContract.firstRight !== null
-      && Math.abs(railContract.firstLeft - (railContract.railLeft + RAIL_SIDE_INSET)) <= 1
-      && Math.abs(railContract.firstRight - (railContract.railRight - RAIL_SIDE_INSET)) <= 1
-      && Math.abs(railContract.firstWidth - (railContract.clientWidth - RAIL_SIDE_INSET * 2)) <= 1,
-    `${scenario.locale}: overview is not full-width with ${RAIL_SIDE_INSET}px insets (${JSON.stringify(railContract)})`,
-  );
-  assert(
-    railContract.previousIntersection <= 1 && railContract.nextIntersection <= 1,
-    `${scenario.locale}: a neighboring card is visible beside the overview (${JSON.stringify({
-      previous: railContract.previousIntersection,
-      next: railContract.nextIntersection,
-    })})`,
-  );
-  assert(
-    railContract.firstCenter !== null
-      && Math.abs(railContract.firstCenter - railContract.railCenter) <= 2,
-    `${scenario.locale}: overview card is not centered (${JSON.stringify({
-      cardCenter: railContract.firstCenter,
-      railCenter: railContract.railCenter,
-    })})`,
-  );
-  assert(
-    Math.abs(railContract.railHeight - (overviewInnerHeight + RAIL_VERTICAL_PADDING)) <= 2,
-    `${scenario.locale}: rail did not adapt to the active overview height`,
-  );
-  assert(
-    Number.parseFloat(railContract.transitionDuration) <= 0.001,
-    `${scenario.locale}: reduced motion still animates adaptive rail height (${railContract.transitionDuration})`,
-  );
 
-  const progress = result.locator('.hjm-journey-progress .hjm-sr-only');
-  const dots = result.locator('.hjm-journey-dots i');
-  assert(
-    await result.getByRole('button', { name: scenario.viewGarments, exact: true }).count() === 1,
-    `${scenario.locale}: overview is missing the explicit “${scenario.viewGarments}” control`,
-  );
-  assert(
-    await dots.count() === cardCount + 1,
-    `${scenario.locale}: dots do not match overview + ${cardCount} garment cards`,
-  );
-  await rail.focus();
-  await page.keyboard.press('ArrowLeft');
-  await page.waitForFunction(() => (
-    document.querySelector('.hjm-journey-dots i:last-child')?.getAttribute('data-active') === 'true'
-  ));
-  await page.waitForTimeout(250);
-  assert(
-    await dots.last().getAttribute('data-active') === 'true',
-    `${scenario.locale}: ArrowLeft did not wrap from overview to the final garment`,
-  );
-  await page.keyboard.press('ArrowRight');
-  await page.waitForFunction(() => (
-    document.querySelector('.hjm-journey-dots i:first-child')?.getAttribute('data-active') === 'true'
-  ));
-  await page.waitForTimeout(250);
-  assert(
-    await dots.first().getAttribute('data-active') === 'true',
-    `${scenario.locale}: ArrowRight did not wrap from the final garment to overview`,
-  );
-  const progressAtFirst = (await progress.innerText()).trim();
-  await page.keyboard.press('ArrowRight');
+  await firstRow.press('Enter');
+  await page.locator('dialog.hgd-sheet[data-garment-detail-sheet][open]')
+    .waitFor({ state: 'visible', timeout: 5_000 });
+  await page.keyboard.press('Escape');
+  await page.locator('dialog.hgd-sheet[data-garment-detail-sheet][open]')
+    .waitFor({ state: 'hidden', timeout: 5_000 });
+  await page.locator('dialog.hgd-sheet[data-garment-detail-sheet]')
+    .waitFor({ state: 'detached', timeout: 5_000 });
   await page.waitForFunction(
-    ([selector, initial]) => document.querySelector(selector)?.textContent?.trim() !== initial,
-    ['.hjm-journey-progress .hjm-sr-only', progressAtFirst],
+    () => document.querySelector('ol.hjm-result-list button.hjm-row') === document.activeElement,
+    undefined,
     { timeout: 3_000 },
   );
-  await page.waitForFunction(({ expectedHeight, railPadding }) => {
-    const railElement = document.querySelector<HTMLElement>('.hjm-journey-rail');
-    return railElement !== null
-      && Math.abs(railElement.getBoundingClientRect().height - (expectedHeight + railPadding)) <= 2;
-  }, { expectedHeight: shortestCard, railPadding: RAIL_VERTICAL_PADDING });
-  assert(
-    await result.getByRole('button', { name: scenario.overview, exact: true }).count() === 1
-      && await result.getByRole('button', { name: scenario.next, exact: true }).count() === 1,
-    `${scenario.locale}: first detail is missing localized Overview/Next controls`,
-  );
-  const centeredCard = await rail.evaluate((element) => {
-    const previous = element.querySelector<HTMLElement>('[data-hjm-overview-card="true"]')?.getBoundingClientRect();
-    const canonicalCards = element.querySelectorAll<HTMLElement>('[data-hjm-journey-card="true"]');
-    const active = canonicalCards.item(0).getBoundingClientRect();
-    const next = canonicalCards.item(1).getBoundingClientRect();
-    const box = element.getBoundingClientRect();
-    return {
-      activeCenter: active === undefined ? null : active.left + active.width / 2,
-      activeLeft: active.left,
-      activeRight: active.right,
-      railCenter: box.left + box.width / 2,
-      railLeft: box.left,
-      railRight: box.right,
-      leftPeek: previous === undefined ? 0 : previous.right - box.left,
-      rightPeek: next === undefined ? 0 : box.right - next.left,
-      railHeight: box.height,
-    };
-  });
-  assert(
-    centeredCard.activeCenter !== null
-      && Math.abs(centeredCard.activeCenter - centeredCard.railCenter) <= 2
-      && Math.abs(centeredCard.activeLeft - (centeredCard.railLeft + RAIL_SIDE_INSET)) <= 1
-      && Math.abs(centeredCard.activeRight - (centeredCard.railRight - RAIL_SIDE_INSET)) <= 1,
-    `${scenario.locale}: keyboard paging did not center a full-width garment 1 (${JSON.stringify(centeredCard)})`,
-  );
-  assert(
-    centeredCard.leftPeek <= 1 && centeredCard.rightPeek <= 1,
-    `${scenario.locale}: neighboring cards remain visible (${JSON.stringify(centeredCard)})`,
-  );
-  assert(
-    Math.abs(centeredCard.railHeight - (shortestCard + RAIL_VERTICAL_PADDING)) <= 2,
-    `${scenario.locale}: active detail did not collapse the rail to the measured card height (${centeredCard.railHeight}px)`,
-  );
-
-  await result.getByRole('button', { name: scenario.next, exact: true }).click();
-  await page.waitForFunction(() => (
-    document.querySelectorAll('.hjm-journey-dots i').item(2)?.getAttribute('data-active') === 'true'
-  ));
-  await page.waitForTimeout(300);
-  assert(
-    await result.getByRole('button', { name: scenario.previous, exact: true }).count() === 1,
-    `${scenario.locale}: middle detail is missing the localized “${scenario.previous}” control`,
-  );
-
-  const iosMomentum = await rail.evaluate(async (element, expectedQuietMs) => {
-    const cards = Array.from(element.children) as HTMLElement[];
-    const logicalCount = cards.length / 3;
-    const leadingOverview = cards[0];
-    const canonicalOverview = cards[logicalCount];
-    const leadingLeft = leadingOverview.offsetLeft
-      + leadingOverview.offsetWidth / 2
-      - element.clientWidth / 2;
-    const canonicalLeft = canonicalOverview.offsetLeft
-      + canonicalOverview.offsetWidth / 2
-      - element.clientWidth / 2;
-    const beforeHeight = element.getBoundingClientRect().height;
-
-    element.dispatchEvent(new TouchEvent('touchstart', { bubbles: true }));
-    element.scrollLeft = leadingLeft + 6;
-    element.dispatchEvent(new Event('scroll', { bubbles: true }));
-    element.dispatchEvent(new TouchEvent('touchend', { bubbles: true }));
-
-    const startedAt = performance.now();
-    for (const offset of [5, 6, 5]) {
-      await new Promise((resolve) => window.setTimeout(resolve, 55));
-      element.scrollLeft = leadingLeft + offset;
-      element.dispatchEvent(new Event('scroll', { bubbles: true }));
-    }
-    const continuedFor = performance.now() - startedAt;
-    const earlyLeft = element.scrollLeft;
-    const earlyHeight = element.getBoundingClientRect().height;
-
-    element.scrollLeft = leadingLeft;
-    element.dispatchEvent(new Event('scroll', { bubbles: true }));
-
-    return {
-      logicalCount,
-      continuedFor,
-      continuedBeyondOldFallback: continuedFor > expectedQuietMs,
-      earlyTeleported: Math.abs(earlyLeft - canonicalLeft) <= 2,
-      earlyShrank: earlyHeight < beforeHeight - 1,
-      heightBeforeMomentum: beforeHeight,
-      heightBeforeSettle: earlyHeight,
-    };
-  }, 130);
-  assert(
-    iosMomentum.continuedBeyondOldFallback
-      && !iosMomentum.earlyTeleported
-      && !iosMomentum.earlyShrank,
-    `${scenario.locale}: touchend momentum normalized or shrank before scrolling was quiet (${JSON.stringify(iosMomentum)})`,
-  );
-  await page.waitForFunction(({ logicalCount, expectedHeight, railPadding }) => {
-    const railElement = document.querySelector<HTMLElement>('.hjm-journey-rail');
-    if (railElement === null) return false;
-    const canonicalOverview = railElement.children.item(logicalCount);
-    if (!(canonicalOverview instanceof HTMLElement)) return false;
-    const target = canonicalOverview.offsetLeft
-      + canonicalOverview.offsetWidth / 2
-      - railElement.clientWidth / 2;
-    return Math.abs(railElement.scrollLeft - target) <= 2
-      && Math.abs(railElement.getBoundingClientRect().height - (expectedHeight + railPadding)) <= 2
-      && document.querySelector('.hjm-journey-dots i:first-child')?.getAttribute('data-active') === 'true';
-  }, {
-    logicalCount: iosMomentum.logicalCount,
-    expectedHeight: overviewInnerHeight,
-    railPadding: RAIL_VERTICAL_PADDING,
-  }, { timeout: 3_000 });
-
-  assert(
-    await result.getByRole('button', { name: scenario.viewGarments, exact: true }).count() === 1,
-    `${scenario.locale}: settled canonical overview did not restore “${scenario.viewGarments}”`,
-  );
-
-  const avatarBox = await avatar.boundingBox();
-  const overviewBox = await overview.boundingBox();
-  const railBox = await rail.boundingBox();
-  assert(
-    avatarBox !== null && overviewBox !== null && railBox !== null,
-    `${scenario.locale}: avatar/overview/rail geometry was unavailable`,
-  );
-  assert(
-    avatarBox.y < overviewBox.y && avatarBox.y + avatarBox.height > overviewBox.y,
-    `${scenario.locale}: avatar does not visibly hang across the compact result seam`,
-  );
-  assert(
-    Math.abs(avatarBox.x - avatarBoxBeforePaging.x) <= 1
-      && Math.abs(avatarBox.y - avatarBoxBeforePaging.y) <= 1,
-    `${scenario.locale}: avatar moved with the garment rail instead of staying static`,
-  );
-
-  const progressBefore = (await progress.innerText()).trim();
-  const verticalBefore = await verticalScrollPosition(page);
-  const horizontalBefore = await rail.evaluate((element) => element.scrollLeft);
-  assert(railBox.width > 0 && railBox.height > 0, `${scenario.locale}: result rail has zero geometry`);
-  await page.mouse.move(
-    railBox.x + Math.min(railBox.width / 2, railBox.width - 2),
-    railBox.y + Math.min(railBox.height / 2, railBox.height - 2),
-  );
-  await page.mouse.wheel(Math.max(railContract.stride, 180), 0);
-  await waitForHorizontalMovement(page, horizontalBefore, Math.max(24, railContract.stride * 0.45));
-  await page.waitForTimeout(350);
-
-  const progressAfter = (await progress.innerText()).trim();
-  const verticalAfter = await verticalScrollPosition(page);
-  assert(
-    progressAfter !== progressBefore,
-    `${scenario.locale}: native horizontal scroll moved, but active garment progress stayed at ${progressBefore}`,
-  );
-  assert(
-    Math.abs(verticalAfter.nearestTop - verticalBefore.nearestTop) <= 3
-      && Math.abs(verticalAfter.documentTop - verticalBefore.documentTop) <= 3,
-    `${scenario.locale}: horizontal garment gesture hijacked vertical scroll (${JSON.stringify({ verticalBefore, verticalAfter })})`,
-  );
-
-  const garmentCount = await assertLoadedGarmentImages(page, scenario);
 
   await page.setViewportSize({ width: 320, height: VIEWPORT.height });
-  const compactRowsFit = await overview.locator('.hjm-row').evaluateAll((rows) => rows.map((row) => {
+  const compactRowsFit = await list.locator('.hjm-row').evaluateAll((rows) => rows.map((row) => {
     const text = row.querySelector('.hjm-row-text')?.getBoundingClientRect();
-    const detail = row.querySelector('.hjm-swap')?.getBoundingClientRect();
+    const destination = row.querySelector('.hjm-row-next')?.getBoundingClientRect();
     return row.scrollWidth <= row.clientWidth + 1
+      && row.getBoundingClientRect().height >= 43.5
       && text !== undefined
-      && detail !== undefined
-      && text.right <= detail.left + 1;
+      && destination !== undefined
+      && text.right <= destination.left + 1;
   }));
   assert(
     compactRowsFit.length === garmentCount && compactRowsFit.every(Boolean),
-    `${scenario.locale}: compact garment rows overlap at 320px (${JSON.stringify(compactRowsFit)})`,
+    scenario.locale + ': vertical garment rows overlap at 320px ('
+      + JSON.stringify(compactRowsFit) + ')',
+  );
+  const pageWidth = await page.evaluate(() => ({
+    client: document.documentElement.clientWidth,
+    scroll: document.documentElement.scrollWidth,
+  }));
+  assert(
+    pageWidth.scroll <= pageWidth.client + 1,
+    scenario.locale + ': Home creates horizontal page scrolling at 320px ('
+      + JSON.stringify(pageWidth) + ')',
   );
 
   return garmentCount;
@@ -1021,12 +650,12 @@ async function runScenario(browser: Browser, scenario: LocaleScenario): Promise<
       `${scenario.locale}: demo app did not keep the resolved device language`,
     );
     await assertPlanHasOnlyTodayAndTomorrow(page, scenario);
-    const garmentCount = await assertHomeResultCarousel(page, scenario);
+    const garmentCount = await assertHomeResultList(page, scenario);
 
     assert(pageErrors.length === 0, `${scenario.locale}: page errors:\n${pageErrors.join('\n')}`);
     assert(imageErrors.length === 0, `${scenario.locale}: image HTTP errors:\n${imageErrors.join('\n')}`);
     console.log(
-      `QA OK ${scenario.locale} -> ${scenario.resolvedLanguage}: onboarding, Plan 2/2, carousel, ${garmentCount} garment images`,
+      `QA OK ${scenario.locale} -> ${scenario.resolvedLanguage}: onboarding, Plan 2/2, vertical Home list, sheet, ${garmentCount} garment images`,
     );
     await page.close();
   } finally {
@@ -1046,10 +675,18 @@ async function main(): Promise<void> {
     await waitForServer(BASE, server);
     browser = await chromium.launch();
 
-    for (const scenario of SCENARIOS) {
+    const localeFilter = process.env.LOCALIZATION_LOCALE;
+    const scenarios = localeFilter
+      ? SCENARIOS.filter((scenario) => scenario.locale === localeFilter)
+      : SCENARIOS;
+    assert(scenarios.length > 0, 'No locale scenario matched ' + localeFilter);
+    for (const scenario of scenarios) {
       await runScenario(browser, scenario);
     }
-    console.log('LOCALIZATION/CAROUSEL PASS: 3/3 locale scenarios green');
+    console.log(
+      'LOCALIZATION/HOME-LIST PASS: ' + scenarios.length + '/' + scenarios.length
+        + ' locale scenarios green',
+    );
   } finally {
     try {
       await browser?.close();
@@ -1060,6 +697,8 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  console.error(`LOCALIZATION/CAROUSEL FAIL: ${error instanceof Error ? error.message : String(error)}`);
+  console.error(
+    `LOCALIZATION/HOME-LIST FAIL: ${error instanceof Error ? error.stack ?? error.message : String(error)}`,
+  );
   process.exitCode = 1;
 });

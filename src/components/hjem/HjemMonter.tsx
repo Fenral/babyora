@@ -13,7 +13,7 @@
  *                   pose="curious" — bøyer seg ned mot scan-animasjonen, se
  *                   MascotPeek.tsx) + ScanStatusBlock
  *  result-current → WeatherStrip (komprimert) + ResultSurface med en
- *                   dekorativ, resultategnet sveip-pose over plaggreisen
+ *                   dekorativ maskot over den nummererte plagglisten
  *  result-stale   → WeatherScene (full panel) + MascotPeek(kompakt) +
  *                   ask-block (kontekstuell «Nytt antrekk for …?» / retry)
  *
@@ -57,7 +57,6 @@
  * resten av appen).
  */
 import {
-  type MouseEvent,
   useCallback,
   useEffect,
   useId,
@@ -106,7 +105,6 @@ import { resultCopyFor } from './result-localization.js';
 import {
   deriveResultRows,
   deriveResultRowsFromTruth,
-  type ResultRow,
 } from './result-rows.js';
 import {
   activityChangeChip,
@@ -130,11 +128,7 @@ import {
 import { buildAdjustPrefill } from './adjust-prefill.js';
 import type { FinnAntrekkPrefill } from '../../screens/finn-antrekk-prefill.js';
 import { hjemCopyFor, type HjemCopy } from './hjem-copy.js';
-import {
-  deriveHomeGarmentAlternativeGroups,
-  type HomeGarmentAlternativeGroup,
-} from '../../lib/outfit/home-garment-alternatives.js';
-import { GarmentAlternativesSheet } from './GarmentAlternativesSheet.js';
+import { deriveHomeGarmentAlternativeGroups } from '../../lib/outfit/home-garment-alternatives.js';
 
 const RESULT_MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot-resultat-sveip.webp`;
 
@@ -756,29 +750,6 @@ export function HjemMonter({
     () => deriveHomeGarmentAlternativeGroups(currentOutfitBundle, activeLanguage),
     [activeLanguage, currentOutfitBundle],
   );
-  const alternativeItemIds = useMemo(
-    () => new Set(alternativeGroups.map((group) => group.source.itemId)),
-    [alternativeGroups],
-  );
-  const [openAlternativeItemId, setOpenAlternativeItemId] = useState<string | null>(null);
-  const alternativeTriggerRef = useRef<HTMLElement | null>(null);
-  const openAlternativeGroup: HomeGarmentAlternativeGroup | null = useMemo(
-    () => alternativeGroups.find(
-      (group) => group.source.itemId === openAlternativeItemId,
-    ) ?? null,
-    [alternativeGroups, openAlternativeItemId],
-  );
-
-  const handleSwapRow = useCallback((row: ResultRow, event: MouseEvent<HTMLButtonElement>) => {
-    if (row.outfitItemId === null || !alternativeItemIds.has(row.outfitItemId)) return;
-    void impactSoft();
-    alternativeTriggerRef.current = event.currentTarget;
-    setOpenAlternativeItemId(row.outfitItemId);
-  }, [alternativeItemIds]);
-
-  const handleCloseAlternatives = useCallback(() => {
-    setOpenAlternativeItemId(null);
-  }, []);
 
   // P5: bygger prefill-payloaden fra de samme rå ingrediensene HjemMonter
   // allerede har som props (buildAdjustPrefill er ren/testet separat,
@@ -914,17 +885,10 @@ export function HjemMonter({
               headingId={resultTitleId}
               isFresh={isFresh}
               reducedMotion={reducedMotion}
-              onSwapRow={handleSwapRow}
-              alternativeItemIds={alternativeItemIds}
+              alternativeGroups={alternativeGroups}
             />
           </div>
         </div>
-        <GarmentAlternativesSheet
-          group={openAlternativeGroup}
-          isOpen={openAlternativeGroup !== null}
-          onClose={handleCloseAlternatives}
-          triggerRef={alternativeTriggerRef}
-        />
       </div>
     );
   }

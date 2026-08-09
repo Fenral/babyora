@@ -144,7 +144,8 @@ describe('HjemMonter — phase-driven view switching', () => {
     const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
     expect(html).toContain('Dagens antrekk');
     expect(html).toContain('class="hjm-strip"');
-    expect(html).toContain('Kle på, steg for steg');
+    expect(html).toContain('aria-label="Påkledningsrekkefølge"');
+    expect(html).toContain('class="hjm-rows hjm-result-list"');
     expect(html).toContain('BABYORA');
     expect(html).not.toContain('Klar for en liten tur?');
     expect(html).not.toContain('Finn dagens antrekk');
@@ -176,7 +177,7 @@ describe('HjemMonter — phase-driven view switching', () => {
     expect(html).toContain('Kler på Lillian på nytt…');
   });
 
-  it('result-current: renders the compact WeatherStrip + the inline garment journey and its result mascot', () => {
+  it('result-current: renders the compact WeatherStrip + vertical garment list and its result mascot', () => {
     mockedState = {
       phase: 'result-current',
       identity: { childId: 'child-1', dateKey: '2026-07-31', placeKey: 'place:63.430,10.390', activity: 'utelek', engineVersion: 'v' },
@@ -191,7 +192,9 @@ describe('HjemMonter — phase-driven view switching', () => {
     expect(html).toContain('src="/monter/vaer-regn.webp"');
     expect(html).toContain('alt="Lett regn"');
     expect(html).not.toContain('class="hjm-s-adjust"');
-    expect(html).toContain(copy.carouselLabel);
+    expect(html).toContain(`aria-label="${copy.progressLabel}"`);
+    expect(html).toContain('class="hjm-rows hjm-result-list"');
+    expect(html).not.toContain('hjm-journey-rail');
     expect(html).toContain('/monter/maskot-resultat-sveip.webp');
     expect(html).not.toContain('class="hjm-cta"');
   });
@@ -317,7 +320,7 @@ describe('HjemMonter — complete garment imagery', () => {
       <HjemMonter {...baseProps()} recommendation={recommendation} />,
     );
     expect(html).toContain('<ol');
-    expect(html).toContain('hjm-journey-image');
+    expect(html).toContain('class="hjm-thumb"');
     expect(html).toContain('/illustrations/garments/');
   });
 });
@@ -405,9 +408,12 @@ describe('HjemMonter localization', () => {
 
     const html = renderToStaticMarkup(<HjemMonter {...baseProps()} />);
 
-    expect(html).toContain('aria-label="Juster vejr, sted eller aktivitet"');
+    expect(html).toContain('aria-label="Juster vejr, sted eller aktivitet: Udendørs leg"');
     expect(html).toContain('Føles som 1°');
-    expect(html).toContain('Trondheim · Udendørs leg');
+    expect(html).toContain('<span>Trondheim</span>');
+    expect(html).toContain('class="hjm-strip__situation-label">Situation</span>');
+    expect(html).toContain('<strong>Udendørs leg</strong>');
+    expect(html).not.toContain('Trondheim · Udendørs leg');
     expect(html).toContain('class="hjm-s-weather"');
     expect(html).toContain('src="/monter/vaer-regn.webp"');
     expect(html).not.toContain('Utenfor vogn');
