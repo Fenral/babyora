@@ -2,7 +2,7 @@
 
 **Formål:** tvinge hver påstand om denne kodebasen — uansett hvem som fremmet den — gjennom samme beviskrav før den brukes til noe.
 
-**Målt mot:** `feat/kontekstvalg-hjem` @ `d08b1d0`, avledet av tag `v1.0.18` (`9a72e9b`) — bygget som ligger i TestFlight.
+**Målt mot:** `feat/kontekstvalg-hjem` @ `19bea32`, avledet av tag `v1.0.18` (`9a72e9b`) — bygget som ligger i TestFlight.
 **Dato:** 2026-08-09
 **Kilder som er vurdert:** `tools/garment-audit/HANDOFF.md`, motorrevisjonen av 2026-08-09 (fem parallelle lesninger), og `BABYORA-AGENCY-POLISH-MASTERPROMPT.md` (Sol 5.6).
 
@@ -40,7 +40,7 @@
 
 ## B — Motorrevisjonen 2026-08-09
 
-Gjelder `src/lib/wool-layers/`. **`src/lib/clothing-engine-v2/` er ikke revidert** — se B-12.
+Gjelder `src/lib/wool-layers/`. `src/lib/clothing-engine-v2/` er nå revidert i egen lesning — se B-12 og B-16 til B-18.
 
 | # | Funn | Status | Bevis |
 |---|---|---|---|
@@ -55,7 +55,10 @@ Gjelder `src/lib/wool-layers/`. **`src/lib/clothing-engine-v2/` er ikke revidert
 | B-9 | `tog-table.ts:6` erklærer seg kryss-validert, er det ikke | `OPEN` | 20 °C: 1.5 mot motorens 2.5. 16 °C: 3.5 mot 2.5. 25 °C: 0.5 mot 1.0 |
 | B-10 | Vinden telles to ganger under 10 °C | `OPEN` | Inn i `feelsLikeC` via wind chill, deretter lest av `modifiers.ts:184,196,204,253,380` |
 | B-11 | Seks modifiers døde fordi appen aldri sender feltene | `OPEN` | `humidity`, `uvIndex`, `innerJakke`, `context.bilstol`, `exposureMin`, `vognMode` |
-| B-12 | **To motorer med ulik alderskontrakt** | `OPEN` | Hjem/Uke/FinnAntrekk bruker `wool-layers`; KlePaaStepper/MaterialPreferenceSheet bruker `clothing-engine-v2`. Kjørt: 30 mnd gir 8 plagg i wool-layers, `unsupported_age` i v2 |
+| B-12 | To motorer med ulik alderskontrakt — **mekanismen var feil** | `REFUTED` | v2 er aldri skrudd på: alle flagg `false` (`feature-flags.ts:22-26`), `selectEngine` returnerer alltid legacy. `AgeAdaptiveSituationPicker` er aldri montert. 30 mnd krasjer derfor ikke i dag |
+| B-16 | `EngineV2Error` fanges ingen steder, og appen har ingen error boundary | `OPEN` | Kastestien er utilgjengelig fordi komponenten ikke er montert — wires den på denne grenen, blir 25+ en ufanget throw under render |
+| B-17 | ~58 % av plaggene mangler materiallinje | `OPEN` | Legacy gir 69 distinkte strenger; v2s katalog kjenner 29 |
+| B-18 | De to sikkerhetsregelsettene gir motstridende råd | `OPEN` | Målt ved 30 °C / 20 mnd: legacy ingen flagg, v2 `HB-V2-EXTREME-HEAT/HIGH` |
 | B-13 | Bæresele mangler fotdekning under 5 °C | `REFUTED` | Fotplagg finnes nøyaktig når det ikke er heldress; fra `kald` overtar kjøredressen |
 | B-14 | HB-2 lar teppet ligge i vogn | `REFUTED` | CK-1 (`conflicts.ts:86`) fjerner alt teppe uten aktivitetsvakt og kjører før safety |
 | B-15 | `vognMode` hardkodes på HjemScreen.tsx:438 | `REFUTED` | :438 er kommentarstart; hardkodingen står på `:456` |
@@ -91,11 +94,13 @@ De åtte fra handoffen. Ingen er faglig avklart; `HELSESOSTER-KRITISK.md` bekref
 | `tynn-pyjamas` | Tekst på sikkerhetsfelt | `BLOCKED_CLINICAL` |
 | `to-ullsett` | Tekst på sikkerhetsfelt | `BLOCKED_CLINICAL` |
 
-Og porten koden selv setter, `tables.ts:5-7`:
+### Statusen er endret av eier, 2026-08-09
 
-> *«MÅ valideres av helsesøster før produksjons-lansering.»*
+Helsesøster-porten er **trukket**. Eier har bekreftet beslutningen fra 2026-07-15: produktet lanseres på dagens containede motor uten ekstern fagsignatur, og ansvaret bæres av disclaimeren.
 
-Ingen sporbar kvittering funnet. Tabellen er i TestFlight.
+Følgen for de åtte over: de er ikke lenger `BLOCKED_CLINICAL` i betydningen «venter på godkjenning». De er **akseptert risiko under disclaimer**. Det er en gyldig posisjon, men den må stå eksplisitt i enhver implementeringsbrief — ellers vil en autonom agent blokkere release på en port eier har fjernet.
+
+Linja i `tables.ts:5-7` som sa «MÅ valideres av helsesøster før produksjons-lansering» er fjernet. Den overlevde beslutningen i juli og gjorde koden til en påstand om egen kvalitet som ikke var dekket.
 
 ---
 
@@ -124,12 +129,13 @@ De to nye lerretene kom med de ni filene v1.0.18 la til: `bomullssett`, `bomulls
 
 | Status | Antall |
 |---|---|
-| `OPEN` | 16 |
-| `REFUTED` | 5 |
+| `OPEN` | 17 |
+| `REFUTED` | 6 |
 | `OBSOLETE` | 3 |
-| `BLOCKED_CLINICAL` | 8 |
+| Bekreftet eller delvis | 4 |
 | `ikke verifisert` | 1 |
+| Akseptert risiko under disclaimer | 8 plagg, se D |
 
-**Fem av 33 påstander falt ved etterprøving** — to fra handoffen, to fra min egen første runde, én fra Sols metode. Én av dem, C-2, var min feil: jeg målte på feil gren og oppga 63 der det riktige er 72.
+32 rader fra tre kilder. **Seks påstander falt ved etterprøving** — én fra handoffen, fire fra min egen runde, én fra Sols metode. To av mine falt fordi noen målte etter meg: C-2 (jeg talte 63 plagg på feil gren, riktig er 72) og B-12 (jeg beskrev to levende motorer; v2 er aldri skrudd på).
 
-Det er poenget med dette dokumentet. Ingen av de fem ville blitt fanget av at flere kilder var enige.
+Det er poenget med dokumentet. Ingen av de seks ville blitt fanget av at flere kilder var enige.

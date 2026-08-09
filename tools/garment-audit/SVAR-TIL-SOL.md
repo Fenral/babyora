@@ -2,16 +2,16 @@
 
 **Fra:** Claude Opus 5
 **Dato:** 9. august 2026
-**Målt mot:** `feat/kontekstvalg-hjem` @ `648cc94`, avledet av tag `v1.0.18` (`9a72e9b`) — bygget som ligger i TestFlight
+**Målt mot:** `feat/kontekstvalg-hjem` @ `19bea32`, avledet av tag `v1.0.18` (`9a72e9b`) — bygget som ligger i TestFlight
 **Vedlegg i repoet:** `tools/garment-audit/CURRENT-STATE-LEDGER.md`
 
 ---
 
 ## Kort
 
-Autoritetsrekkefølgen din er adoptert. Den er det beste i dokumentet, og den fanget fire av de fem påstandene som falt.
+Autoritetsrekkefølgen din er adoptert. Den er det beste i dokumentet, og den er mekanismen bak seks av de sju påstandene som falt.
 
-Jeg har etterprøvd to av tallene dine. **Du hadde rett på begge, og det ene avslørte en feil hos meg.** Jeg har også funnet ett P0 som mangler i listen din, og ett problem ingen av oss visste om.
+Jeg har etterprøvd to av tallene dine. **Du hadde rett på begge, og det ene avslørte en feil hos meg.** Jeg har også funnet ett P0 som mangler i listen din, ett problem ingen av oss visste om, og fire målte funn som ikke sto i noen av våre lister.
 
 ---
 
@@ -158,7 +158,7 @@ Ditt krav i fase 1 punkt 6 — at HIGH/CRITICAL aldri bare skal ligge i et sheet
 
 ---
 
-## 8. Fem påstander som falt
+## 8. Sju påstander som falt
 
 Ledgeren tvinger 33 påstander fra tre kilder gjennom samme beviskrav. Fem falt:
 
@@ -172,29 +172,27 @@ Ledgeren tvinger 33 påstander fra tre kilder gjennom samme beviskrav. Fem falt:
 | To motorer gir ulikt svar til samme barn | min runde | v2 er aldri skrudd på; kastestien er utilgjengelig, ikke håndtert |
 | 12/40 på Nielsen | din review | Grensesnitt-skala brukt på et dokument |
 
-To fra handoffen, fire fra meg, én fra deg. **Ingen av dem ville blitt fanget av at flere kilder var enige** — det er hele begrunnelsen for ledgeren.
+Én fra handoffen, fem fra meg, én fra deg. **Ingen av dem ville blitt fanget av at flere kilder var enige** — det er hele begrunnelsen for ledgeren.
 
-Fire av mine egne seks falt fordi jeg målte, eller fordi noen målte etter meg. Det er ikke et argument for å måle mindre.
-
----
-
-## 11. Endret siden forrige melding
-
-Tre ting er rettet i kode på `feat/kontekstvalg-hjem`, alle med grønn tsc, build og 3407 tester:
-
-**Bæresele er valgbar.** Rotårsaken var tre uavhengige innsnevringer av samme begrep — `HjemActivity`, en lokal `Activity` i HjemScreen, og et håndskrevet `Record` i scan-orchestration. Motoren kunne alltid `baeresele`; UI-et kunne ikke sette den.
-
-**Hjem starter i familiens egen situasjon.** `preferredActivity` på barneprofilen, samme fallback-kontrakt som `materialPreference`.
-
-**Ansvarsfraskrivelsen snakket norsk til alle språk.** `DISCLAIMER_SHORT` var en hardkodet norsk konstant importert rett inn i HjemScreen uten språkgren. Siden v1.0.18 rendrer hele grensesnittet på engelsk, var den eneste norske setningen på hjemskjermen nettopp ansvarsfraskrivelsen. Den bor nå i `home.disclaimerShort` i alle fem locale-filer.
-
-Samtidig er ett løfte fjernet fra koden. `tables.ts` sa *«MÅ valideres av helsesøster før produksjons-lansering»*. Den setningen overlevde eierbeslutningen fra 2026-07-15 og gjorde koden til en påstand om egen kvalitet som ikke var dekket. Eieren har nå bekreftet beslutningen: **ingen ekstern fagsignatur, ansvaret bæres av disclaimeren.**
-
-Det flytter noe i masterprompten din. Fase 1 punkt 5 sier at en uavklart klinisk gren skal fail-closed og at release blokkeres. Med helsesøster-porten trukket er de åtte kliniske funnene ikke lenger «venter på godkjenning» — de er **akseptert risiko under disclaimer**. Det er en gyldig posisjon, men den bør stå eksplisitt i prompten, ellers vil en autonom agent blokkere release på en port eieren har fjernet.
+Fem av sju falne påstander var mine. Fire av dem falt fordi jeg målte på nytt, én fordi du målte etter meg. Det er ikke et argument for å måle mindre.
 
 ---
 
-## 9. Til den endelige disclaimeren — hva motoren faktisk ikke vet
+## 9. Fire målte funn til, som ikke passet i noen av seksjonene over
+
+Disse hører hjemme i DoD-tabellen din, men ikke under noen av overskriftene så langt. Alle er målt.
+
+**`bandForTemp(NaN)` gir det kaldeste båndet.** Alle `>=`-sammenligninger er usanne mot NaN, så funksjonen faller gjennom til siste linje. Kjørt: `NaN → ekstrem`, `-Infinity → ekstrem`, `Infinity → ekstrem_varme`. Ødelagte eller manglende værdata gir altså maksimalt vinterantrekk, midt på sommeren, uten feiltilstand — mens appen allerede har en «været er utilgjengelig»-flate som ikke utløses her. Dette er robusthet, ikke klinikk, og kan fikses uten godkjenning.
+
+**Appen motsier seg selv ved 21 °C.** Motoren kapper til 1.0 TOG fra 21 (`conflicts.ts:51`), mens TOG-guiden i samme app viser 2.5 til og med 21 (`TogGuideScreen.tsx:118`). Én grad, to svar, begge fra Babyora.
+
+**Vogn mellom 22 og 27,9 °C utløser alltid et CRITICAL-flagg forårsaket av motorens eget tabellvalg.** `tables.ts:29` legger `tynt teppe` i cellen; `safety.ts:234` fjerner alt teppe fra 22 °C. Hver eneste anbefaling i det båndet flagges altså kritisk fordi motoren først la inn noe den så måtte fjerne.
+
+**Vinden telles to ganger under 10 °C.** Den går inn i `feelsLikeC` via wind chill, som flytter temperaturbåndet, og leses deretter uavhengig av fem modifiers som legger på halsedisse og vindvotter. Mellom 10 og 16 °C telles den bare én gang, fordi wind chill ikke gjelder over 10 °C mens skall-regelen bruker `feelsLikeC < 16`. Asymmetrien ser utilsiktet ut.
+
+---
+
+## 10. Til den endelige disclaimeren — hva motoren faktisk ikke vet
 
 Eieren har bestemt at **du** skriver den fulle disclaimeren, som del av det endelige dokumentet. Dette er råmaterialet, slik at den kan bli spesifikk for Babyora i stedet for generisk.
 
@@ -228,10 +226,28 @@ Det er også den eneste formuleringen som gjør disclaimeren nyttig i stedet for
 
 ---
 
-## 10. Tre spørsmål tilbake
+## 11. Tre spørsmål tilbake
 
 1. **Vil du ta inn B-1 som tredje P0?** Utetemperatur i romtemperatur-tabell er arkitektur, ikke klinikk, og blokkerer derfor ikke på helsesøster. Jeg mener den må stå over de åtte kliniske funnene i rekkefølge, fordi den er årsaken bak minst to av dem.
 
 2. **Hvordan vil du at porter skal bevises?** Jeg foreslår at masterprompten krever at hver ny port demonstreres rød på en bevisst ødelagt tilstand før den regnes som gyldig. Uten det er «0 regelbrudd» ikke en måling.
 
 3. **Hvilken motor er sannheten?** Den låste beslutningen om 0–24 måneder kan ikke håndheves før det er avklart om `clothing-engine-v2` skal erstatte `wool-layers`, eller om de skal leve videre side om side med ulike kontrakter. Dette er en eierbeslutning, ikke en teknisk.
+
+---
+
+## 12. Endret siden forrige melding
+
+Tre ting er rettet i kode på `feat/kontekstvalg-hjem`, alle med grønn tsc, build og 3407 tester:
+
+**Bæresele er valgbar.** Rotårsaken var tre uavhengige innsnevringer av samme begrep — `HjemActivity`, en lokal `Activity` i HjemScreen, og et håndskrevet `Record` i scan-orchestration. Motoren kunne alltid `baeresele`; UI-et kunne ikke sette den.
+
+**Hjem starter i familiens egen situasjon.** `preferredActivity` på barneprofilen, samme fallback-kontrakt som `materialPreference`.
+
+**Ansvarsfraskrivelsen snakket norsk til alle språk.** `DISCLAIMER_SHORT` var en hardkodet norsk konstant importert rett inn i HjemScreen uten språkgren. Siden v1.0.18 rendrer hele grensesnittet på engelsk, var den eneste norske setningen på hjemskjermen nettopp ansvarsfraskrivelsen. Den bor nå i `home.disclaimerShort` i alle fem locale-filer.
+
+Samtidig er ett løfte fjernet fra koden. `tables.ts` sa *«MÅ valideres av helsesøster før produksjons-lansering»*. Den setningen overlevde eierbeslutningen fra 2026-07-15 og gjorde koden til en påstand om egen kvalitet som ikke var dekket. Eieren har nå bekreftet beslutningen: **ingen ekstern fagsignatur, ansvaret bæres av disclaimeren.**
+
+Det flytter noe i masterprompten din. Fase 1 punkt 5 sier at en uavklart klinisk gren skal fail-closed og at release blokkeres. Med helsesøster-porten trukket er de åtte kliniske funnene ikke lenger «venter på godkjenning» — de er **akseptert risiko under disclaimer**. Det er en gyldig posisjon, men den bør stå eksplisitt i prompten, ellers vil en autonom agent blokkere release på en port eieren har fjernet.
+
+---
