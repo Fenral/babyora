@@ -39,6 +39,12 @@ export type Child = {
    * nøkkelen bumpes ikke og onboarding tvinges aldri.
    */
   materialPreference?: import('../lib/clothing-engine-v2/types.js').MaterialPreference;
+  /**
+   * Situasjonen Hjem starter i. Samme kontrakt som materialPreference:
+   * manglende/ukjent verdi faller til 'utelek' i parseStoredChild, ingen
+   * nøkkelbump og ingen tvungen onboarding for eksisterende profiler.
+   */
+  preferredActivity?: import('./child-profile.js').PreferredActivity;
 };
 
 export type ChildrenStore = {

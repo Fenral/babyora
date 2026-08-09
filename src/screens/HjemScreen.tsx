@@ -47,6 +47,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { motion } from 'motion/react';
@@ -434,7 +435,23 @@ export function HjemScreen({
   const handleRetryWeather = useCallback(() => {
     setWeatherRefreshKey((key) => key + 1);
   }, []);
-  const [activity, setActivity] = useState<Activity>('utelek');
+  /* Startet alltid på 'utelek' uansett hvordan familien faktisk er ute.
+     Bruker nå barnets egen preferanse (child-profile.ts), slik at en familie
+     som stort sett bærer får bæresele-svaret uten å måtte bytte hver morgen.
+     Dagens engangsbytte skjer fortsatt i toggelen og overstyrer preferansen
+     for økten — preferansen er utgangspunktet, ikke en lås. */
+  /* Feltet er valgfritt på Child (profiler lagret før det fantes), så
+     fallbacken gjentas her. 'utelek' er den gamle hardkodede oppførselen. */
+  const preferredActivity: Activity = active.preferredActivity ?? 'utelek';
+  const [activity, setActivity] = useState<Activity>(preferredActivity);
+  const preferredActivityRef = useRef(preferredActivity);
+  useEffect(() => {
+    /* Bytter forelderen barn, skal det nye barnets preferanse gjelde — ellers
+       ville søskenet arvet valget som ble gjort for det forrige. */
+    if (preferredActivityRef.current === preferredActivity) return;
+    preferredActivityRef.current = preferredActivity;
+    setActivity(preferredActivity);
+  }, [preferredActivity]);
   // Søvn/våken-toggle på vogn fjernet (Sivert: ikke viktig nok). Antar våken.
   const vognMode: VognMode = 'awake';
 

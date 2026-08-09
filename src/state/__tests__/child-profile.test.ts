@@ -24,7 +24,24 @@ describe('Motor 2.0 profilmigrering', () => {
     expect(parseStoredChild(existingV2Child)).toEqual({
       ...existingV2Child,
       materialPreference: 'best_for_conditions',
+      preferredActivity: 'utelek',
     });
+  });
+
+  it('defaulter preferredActivity til utelek for profiler lagret før feltet fantes', () => {
+    expect(parseStoredChild(existingV2Child)?.preferredActivity).toBe('utelek');
+  });
+
+  it('bevarer en gyldig lagret situasjonspreferanse', () => {
+    const parsed = parseStoredChild({ ...existingV2Child, preferredActivity: 'baeresele' });
+    expect(parsed?.preferredActivity).toBe('baeresele');
+  });
+
+  it('forkaster en ukjent situasjonspreferanse uten å miste resten av profilen', () => {
+    // 'soevn' er gyldig i motoren, men ikke et valg på Hjem — den skal falle ut.
+    const parsed = parseStoredChild({ ...existingV2Child, preferredActivity: 'soevn' });
+    expect(parsed?.preferredActivity).toBe('utelek');
+    expect(parsed?.name).toBe('Lillian');
   });
 
   it('bevarer en gyldig lagret materialpreferanse', () => {

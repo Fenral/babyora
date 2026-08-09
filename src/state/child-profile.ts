@@ -23,7 +23,22 @@ export type ChildProfile = {
   canRoll?: 'yes' | 'no' | 'unknown';
   /** Motor 2.0: gratis per-barn-innstilling. Default best_for_conditions. */
   materialPreference: MaterialPreference;
+  /**
+   * Situasjonen Hjem starter i hver dag. Var hardkodet 'utelek' i
+   * HjemScreen, slik at en familie som stort sett bruker bæresele fikk feil
+   * utgangspunkt hver morgen. 'soevn' hører til søvnskjermen og er ikke et
+   * gyldig valg her. Speiler HjemActivity i components/hjem/hjem-copy.ts.
+   */
+  preferredActivity: PreferredActivity;
 };
+
+export type PreferredActivity = 'utelek' | 'vogn' | 'baeresele';
+
+const PREFERRED_ACTIVITIES: readonly PreferredActivity[] = [
+  'utelek',
+  'vogn',
+  'baeresele',
+];
 
 const MATERIAL_PREFERENCES: readonly MaterialPreference[] = [
   'best_for_conditions',
@@ -51,7 +66,17 @@ export function parseStoredChild(raw: unknown): ChildProfile | null {
       ? (stored as MaterialPreference)
       : 'best_for_conditions';
 
-  return { ...(obj as object), materialPreference } as ChildProfile;
+  /* Samme fallback-kontrakt som materialPreference: en ukjent eller manglende
+     verdi (alle profiler lagret før dette feltet fantes) faller stille til
+     'utelek', som var den hardkodede oppførselen. Ingen migrasjon nødvendig. */
+  const storedActivity = obj.preferredActivity;
+  const preferredActivity: PreferredActivity =
+    typeof storedActivity === 'string'
+      && (PREFERRED_ACTIVITIES as readonly string[]).includes(storedActivity)
+      ? (storedActivity as PreferredActivity)
+      : 'utelek';
+
+  return { ...(obj as object), materialPreference, preferredActivity } as ChildProfile;
 }
 
 /** Parse hele den lagrede listen; ugyldige oppføringer filtreres stille. */
