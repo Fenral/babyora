@@ -546,7 +546,7 @@ try {
     && layout.listShadow !== 'none'
     && /\binset\b/u.test(layout.listShadow));
   gate(
-    '6. Mineral Garden list is a raised surface on the light canvas',
+    '6. Glass A list is a raised surface on the light canvas',
     depthPassed,
     measurements.map(({ viewport, layout }) => layout === null
       ? `${viewport.width}px=missing`

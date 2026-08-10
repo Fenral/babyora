@@ -586,7 +586,7 @@
   --dw-text-hero: 4.75rem;     /* 76 · kun temperatur */
 }
 
-/* ============ Lys modus — Mineral Garden (eier 2026-08-08).
+/* ============ Lys modus — Glass A (eier 2026-08-10).
    Lys er produktets standard. Den svakt kjølige mineralkremen lar hud- og
    plaggtoner stå frem, mens informasjon får en egen salvieflate og handling
    samles i dyp grønn. Værpanelet er også lyst i dette temaet; det beholder
@@ -602,13 +602,13 @@
    tilstander: auto-lys, auto-mørk, data-theme="light", data-theme="dark". */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --dw-canvas: #F2F5F1;
+    --dw-canvas: #F4F7F5;
     /* Malt 2026-08-04 paa eierfunn «den lyse gradienten, forsvant den?»:
        #F1E9DA mot #F9F5EB ga 1,019x — to prosent, under det oyet oppfatter.
        Gradienten fantes i koden og gjorde ingenting.
        #EFE4D2 gir 1,06x: fortsatt rolig, men den LESER som lys ovenfra i
        stedet for a vaere flatt papir. Mork modus staar paa 1,32x. */
-    --dw-canvas-glow: #E0EBE4;
+    --dw-canvas-glow: #E5F0EB;
     --dw-rom-naer: var(--dw-canvas);
     --dw-rom-fjern: var(--dw-canvas-glow);
     /* Poolen i lys modus: bredere og mykere, lav alfa. Morgen gjennom
@@ -620,26 +620,26 @@
      #F9F5EB; det finnes ingen lysstyrke igjen a gi. Paa papir leser lys som
      varme, ikke som luminans — samme verdi proofen bruker i sitt andre lag. */
     --dw-pool-farge: transparent;
-    --dw-pool-ytre: rgba(201, 221, 213, 0.38);
+    --dw-pool-ytre: rgba(93, 139, 131, 0.16);
     --dw-pool-x: 30%;
     /* P8 lys-kalibrering: varm off-white i stedet for rent #FFFFFF — hevede
        flater skal lese som "varmt papir", ikke som inverterte mørk-modus-
        kort. Kontrast uendret/bedre (ink-hi 15.97:1, ink-mid 6.0:1 på denne
        flaten — verifisert). */
-    --dw-raised: #FFFDF8;
+    --dw-raised: #FFFFFF;
     /* Lys plate: varm nær-hvit, ikke ren hvit (portdom 25: ingen ren hvit som
        flatefarge). Kremull mot krem er kanttilfellet lysriggen selv navngir,
        så kanten må bære separasjonen. */
-    --dw-plate: #FFFDF8;
-    --dw-plate-kant: #D9E1DC;
-    --dw-interactive: #DDEAE5;
-    --dw-overlay: #FFFDF8;
-    --dw-accent-surface: #DDEAE5;
+    --dw-plate: #FFFFFF;
+    --dw-plate-kant: #E0EBE6;
+    --dw-interactive: #EDF4F0;
+    --dw-overlay: #FFFFFF;
+    --dw-accent-surface: #E2EFEA;
 
-    --dw-ink-hi: #1F2926;
-    --dw-ink-mid: #53635D;
-    --dw-ink-low: #53635D;
-    --dw-ink-demoted: #5B6B65;
+    --dw-ink-hi: #1A2925;
+    --dw-ink-mid: #4B615A;
+    --dw-ink-low: #50675F;
+    --dw-ink-demoted: #50675F;
     /* Materialprikkene, lys utgave. Se hovedkommentaren i :root: skalaen
        veksler fordi alle tre var tema-blinde — den gamle ull-fargen malte
        1,62:1 mot krem, de to andre 13–15:1. */
@@ -647,8 +647,8 @@
     --dw-mat-bomull: #6B6152;    /* 5,9:1 pa krem */
     --dw-mat-vanntett: #2E6A7A;  /* 5,9:1 pa krem */
 
-    --dw-accent: #164B43;
-    --dw-accent-pressed: #0F3E37;
+    --dw-accent: #3F7067;
+    --dw-accent-pressed: #2E574F;
     /* FUNN 2026-08-05 (DoD fase 6A): --dw-accent-300 hadde INGEN lys-verdi,
        så lys modus arvet mørk-verdien #E7B087 og målte 1,59-1,87:1 mot
        kremflatene — under kravet 3:1 for ikke-tekst (WCAG 1.4.11).
@@ -656,8 +656,8 @@
        VERSTE lysflaten (glød, 3,05:1). Speiler --dw-accent sitt eget
        tema-bytte D98E5A → 9E5529. */
 
-    --dw-accent-300: #397A6E;
-    --dw-edge-light: #FFFDF8;
+    --dw-accent-300: #5D8B83;
+    --dw-edge-light: #FFFFFF;
 
 
     --dw-kart-linje: #5A514C;       /* mild · 7,10:1 krem · 7,54:1 node */
@@ -680,32 +680,32 @@
        samtidig (canvas 3,52 · canvas-glow 3,18 · raised 3,74 ·
        interactive 3,26 · overlay 3,74 · panel 3,18). Værnyansene inne i
        instrumentet dekkes av --dw-focus-panel, ikke av denne. */
-    --dw-focus: #397A6E;
-    --dw-focus-panel: #285D54;
+    --dw-focus: #3F7067;
+    --dw-focus-panel: #2F6159;
 
-    --dw-hairline: #D9E1DC;
-    --dw-shadow-raise: 0 2px 5px rgba(29, 62, 52, 0.12);
+    --dw-hairline: #E0EBE6;
+    --dw-shadow-raise: 0 2px 5px rgba(48, 91, 80, 0.10);
     /* Dybdekontrakten: KUN fargene flipper — strukturen (--dw-depth-*)
        er definert en gang i :root. Varme brune skygger; nesten-svart
        leser som gratt skitt pa krem. */
-    --dw-sh-contact: rgba(29, 62, 52, 0.18);
-    --dw-sh-mid: rgba(29, 62, 52, 0.12);
-    --dw-sh-broad: rgba(29, 62, 52, 0.12);
-    --dw-sh-contact-cta: rgba(22, 75, 67, 0.18);
-    --dw-sh-broad-cta: rgba(22, 75, 67, 0.1);
+    --dw-sh-contact: rgba(48, 91, 80, 0.16);
+    --dw-sh-mid: rgba(48, 91, 80, 0.10);
+    --dw-sh-broad: rgba(48, 91, 80, 0.08);
+    --dw-sh-contact-cta: rgba(63, 112, 103, 0.18);
+    --dw-sh-broad-cta: rgba(63, 112, 103, 0.10);
 
     /* Lys værfamilie. Hver nyanse er distinkt, men rolig nok til at selve
        værikonet — ikke en dramatisk bakgrunnsfarge — bærer tilstanden. */
-    --dw-panel: #DDEAE5;
-    --dw-w-clear: #E4F0E8;
-    --dw-w-cloudy: #D8E7E1;
-    --dw-w-rain: #D4E5DF;
-    --dw-w-snow: #EDF3EF;
-    --dw-w-night: #C9DDD5;
-    --dw-ink-panel-hi: #1F2926;
-    --dw-ink-panel-mid: #465851;
-    --dw-ink-panel-muted: #52605B;
-    --dw-hairline-panel: rgba(31, 41, 38, 0.16);
+    --dw-panel: #FFFFFF;
+    --dw-w-clear: #F5FAF7;
+    --dw-w-cloudy: #F1F7F4;
+    --dw-w-rain: #ECF5F1;
+    --dw-w-snow: #F9FCFA;
+    --dw-w-night: #E4F0EB;
+    --dw-ink-panel-hi: #1A2925;
+    --dw-ink-panel-mid: #49655E;
+    --dw-ink-panel-muted: #526C63;
+    --dw-hairline-panel: rgba(26, 41, 37, 0.12);
 
     /* P8 (ekstern designgjennomgang): semantikk-tokens hadde INGEN lys-
        variant — --dw-success #9DBF9A målt ~2.03:1 på hvit (paywall-forsøks-
@@ -726,12 +726,12 @@
      verdien og garderoben marsjerte nedover den kremfargede lista som morke
      firkanter — nettopp eierfunnet som ble rettet en gang for. Blokkens egen
      kommentar sier regelen: begge lys-inngangene skal gi NOYAKTIG det samme. */
-  --dw-plate: #FFFDF8;
-  --dw-plate-kant: #D9E1DC;
-  --dw-canvas: #F2F5F1;
+  --dw-plate: #FFFFFF;
+  --dw-plate-kant: #E0EBE6;
+  --dw-canvas: #F4F7F5;
   /* Se @media-lys over: samme retting, samme grunn. Begge lys-inngangene skal
      gi NOYAKTIG det samme. */
-  --dw-canvas-glow: #E0EBE4;
+  --dw-canvas-glow: #E5F0EB;
   --dw-rom-naer: var(--dw-canvas);
   --dw-rom-fjern: var(--dw-canvas-glow);
   /* Poolen i lys modus: bredere og mykere, lav alfa. Morgen gjennom
@@ -743,17 +743,17 @@
      #F9F5EB; det finnes ingen lysstyrke igjen a gi. Paa papir leser lys som
      varme, ikke som luminans — samme verdi proofen bruker i sitt andre lag. */
     --dw-pool-farge: transparent;
-    --dw-pool-ytre: rgba(201, 221, 213, 0.38);
+    --dw-pool-ytre: rgba(93, 139, 131, 0.16);
   --dw-pool-x: 30%;
-  --dw-raised: #FFFDF8;
-  --dw-interactive: #DDEAE5;
-  --dw-overlay: #FFFDF8;
-  --dw-accent-surface: #DDEAE5;
+  --dw-raised: #FFFFFF;
+  --dw-interactive: #EDF4F0;
+  --dw-overlay: #FFFFFF;
+  --dw-accent-surface: #E2EFEA;
 
-  --dw-ink-hi: #1F2926;
-  --dw-ink-mid: #53635D;
-  --dw-ink-low: #53635D;
-  --dw-ink-demoted: #5B6B65;
+  --dw-ink-hi: #1A2925;
+  --dw-ink-mid: #4B615A;
+  --dw-ink-low: #50675F;
+  --dw-ink-demoted: #50675F;
   /* Materialprikkene, lys utgave. Se hovedkommentaren i :root: skalaen
      veksler fordi alle tre var tema-blinde — den gamle ull-fargen malte
      1,62:1 mot krem, de to andre 13–15:1. */
@@ -761,11 +761,11 @@
   --dw-mat-bomull: #6B6152;    /* 5,9:1 pa krem */
   --dw-mat-vanntett: #2E6A7A;  /* 5,9:1 pa krem */
 
-  --dw-accent: #164B43;
-  --dw-accent-pressed: #0F3E37;
+  --dw-accent: #3F7067;
+  --dw-accent-pressed: #2E574F;
 
-  --dw-accent-300: #397A6E;
-  --dw-edge-light: #FFFDF8;
+  --dw-accent-300: #5D8B83;
+  --dw-edge-light: #FFFFFF;
 
 
   --dw-kart-linje: #5A514C;       /* mild · 7,10:1 krem · 7,54:1 node */
@@ -783,30 +783,30 @@
   /* Fokusringen: se begrunnelsen i @media-blokken over — begge lys-
      inngangene må gi NØYAKTIG samme ring, ellers avhenger tilgjengelighet
      av om brukeren valgte lys selv eller arvet den fra OS. */
-  --dw-focus: #397A6E;
-  --dw-focus-panel: #285D54;
+  --dw-focus: #3F7067;
+  --dw-focus-panel: #2F6159;
 
-  --dw-hairline: #D9E1DC;
-  --dw-shadow-raise: 0 2px 5px rgba(29, 62, 52, 0.12);
+  --dw-hairline: #E0EBE6;
+  --dw-shadow-raise: 0 2px 5px rgba(48, 91, 80, 0.10);
   /* Dybdekontrakten: KUN fargene flipper — strukturen (--dw-depth-*)
      er definert en gang i :root. Varme brune skygger; nesten-svart
      leser som gratt skitt pa krem. */
-  --dw-sh-contact: rgba(29, 62, 52, 0.18);
-  --dw-sh-mid: rgba(29, 62, 52, 0.12);
-  --dw-sh-broad: rgba(29, 62, 52, 0.12);
-  --dw-sh-contact-cta: rgba(22, 75, 67, 0.18);
-  --dw-sh-broad-cta: rgba(22, 75, 67, 0.1);
+  --dw-sh-contact: rgba(48, 91, 80, 0.16);
+  --dw-sh-mid: rgba(48, 91, 80, 0.10);
+  --dw-sh-broad: rgba(48, 91, 80, 0.08);
+  --dw-sh-contact-cta: rgba(63, 112, 103, 0.18);
+  --dw-sh-broad-cta: rgba(63, 112, 103, 0.10);
 
-  --dw-panel: #DDEAE5;
-  --dw-w-clear: #E4F0E8;
-  --dw-w-cloudy: #D8E7E1;
-  --dw-w-rain: #D4E5DF;
-  --dw-w-snow: #EDF3EF;
-  --dw-w-night: #C9DDD5;
-  --dw-ink-panel-hi: #1F2926;
-  --dw-ink-panel-mid: #465851;
-  --dw-ink-panel-muted: #52605B;
-  --dw-hairline-panel: rgba(31, 41, 38, 0.16);
+  --dw-panel: #FFFFFF;
+  --dw-w-clear: #F5FAF7;
+  --dw-w-cloudy: #F1F7F4;
+  --dw-w-rain: #ECF5F1;
+  --dw-w-snow: #F9FCFA;
+  --dw-w-night: #E4F0EB;
+  --dw-ink-panel-hi: #1A2925;
+  --dw-ink-panel-mid: #49655E;
+  --dw-ink-panel-muted: #526C63;
+  --dw-hairline-panel: rgba(26, 41, 37, 0.12);
 
   --dw-success: #2E6843;
   --dw-warning: #795307;

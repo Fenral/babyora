@@ -17,7 +17,7 @@ import { App } from '@capacitor/app';
 export type RuntimeThemeMode = 'auto' | 'light' | 'dark';
 
 const THEME_CHROME = {
-  light: '#F2F5F1',
+  light: '#F4F7F5',
   dark: '#1E140C',
 } as const;
 

@@ -1,6 +1,6 @@
 # Babyora design direction
 
-Status: structural decisions and the Mineral Garden light palette are approved. Typography details and final production artwork remain open.
+Status: structural decisions and the Glass A light palette are approved. Typography details and final production artwork remain open.
 
 ## Product experience
 
@@ -53,29 +53,29 @@ Babyora should feel like a calm, capable companion that briefly shows its reason
 - A transparent hanging mascot asset is required. Circular cropping is a mock-only fallback.
 - Standing and sitting mascot variants may be used in onboarding, empty states and Guide.
 
-## Mineral Garden — light default (approved 2026-08-08)
+## Glass A — light default (approved 2026-08-10)
 
-This decision supersedes the earlier dark-first color direction below. Babyora opens in a calm, light garden room by default. Users who explicitly selected dark or automatic mode keep that preference; a new install starts light even when the operating system is dark.
+This decision keeps the app calm and airy: pale mint for the room, white glass for information, and sage only for selected controls and focus. Users who explicitly selected dark or automatic mode keep that preference; a new install starts light even when the operating system is dark.
 
-- Canvas: mineral mist `#F2F5F1`, with a restrained sage glow `#E0EBE4`.
-- Reading materials: warm porcelain `#FFFDF8`; borders and hairlines use `#D9E1DC`.
-- Weather and information panels: pale mineral sage `#DDEAE5`. Weather states remain distinct, light variants instead of turning into a dark instrument.
-- Primary ink: forest charcoal `#1F2926`; supporting ink `#53635D`; deep action green `#164B43`; pressed action `#0F3E37`; text on actions `#FAFFFD`.
-- Depth uses three restrained, down-right layers tinted from mineral green (`rgba(29,62,52,…)`). CTA shadows use the action green family. Light materials must read as physical layers, never as grey dirt or floating glass.
+- Canvas: pale mint `#F4F7F5`, with a calm sage glow `#E5F0EB`.
+- Reading materials: white glass `#FFFFFF`; borders and hairlines use `#E0EBE6`.
+- Weather and information panels: white glass with quiet weather tints. Weather remains distinct without becoming a dark instrument.
+- Primary ink: crisp forest charcoal `#1A2925`; supporting ink `#536D66`; accessible action sage `#3F7067`; selected-surface sage `#5D8B83`; text on actions `#FAFFFD`.
+- Depth uses three restrained, down-right layers tinted from sage (`rgba(48,91,80,…)`). CTA shadows use the action sage family. Glass remains information architecture, not decoration.
 - The native launch surface, web boot surface and application canvas share the same light default. This prevents a dark flash before the persisted preference has loaded.
 
 Canonical values live in `src/styles/design-tokens-v2.css`. Legacy aliases may mirror the same shadow hue, but must not introduce a competing palette.
 
 ## Locked 2026-07-31 (historical owner decisions)
 
-- Historical theme strategy: dark-first, warm. Superseded by Mineral Garden on 2026-08-08; retained as the optional dark theme.
+- Historical theme strategy: dark-first, warm. Superseded by Glass A on 2026-08-10; retained as the optional dark theme.
 - Navigation: 3 tabs (Hjem, Planlegg, Familie). Guide retired; see PRODUCT.md for redistribution.
 - Commercial model: hard paywall after onboarding + first shown recommendation; 7-day StoreKit intro trial on all plans.
 - Mascot: style decided via 3-way shootout (Laika puppet / matte 3D / current mock control) before asset production.
 
 ## Open decisions
 
-- Optional dark-theme refinement. Mineral Garden light values and semantic roles are locked.
+- Optional dark-theme refinement. Glass A light values and semantic roles are locked.
 - Final type scale and font assignments.
 - Illustrated versus softly photographic weather scenes.
 - Final mascot and garment asset production (pending shootout).

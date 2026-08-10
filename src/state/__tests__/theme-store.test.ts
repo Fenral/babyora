@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useTheme } from '../theme-store';
 
-describe('Mineral Garden theme contract', () => {
+describe('Glass A theme contract', () => {
   beforeEach(() => {
     useTheme.setState({ mode: 'light' });
   });
@@ -25,6 +25,6 @@ describe('Mineral Garden theme contract', () => {
     expect(html).toContain("var themeMode = 'light';");
     expect(html).toContain("storedMode === 'auto'");
     expect(html).toContain("root.removeAttribute('data-theme')");
-    expect(html).toContain("content=\"#F2F5F1\"");
+    expect(html).toContain("content=\"#F4F7F5\"");
   });
 });
