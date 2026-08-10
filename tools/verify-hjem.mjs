@@ -330,6 +330,101 @@ async function verifySheet(page) {
   return { rowLabel, open, focusReturned };
 }
 
+async function verifySituationSheet(page) {
+  const trigger = page.locator('.hjm-strip__situation');
+  const before = await page.evaluate(() => {
+    const rectFor = (selector) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) return null;
+      const rect = element.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    };
+    return {
+      strip: rectFor('.hjm-strip'),
+      list: rectFor('.hjm-result-list'),
+      avatar: rectFor('[data-result-avatar-seam]'),
+    };
+  });
+  await trigger.click();
+  const sheet = page.locator('dialog.hcs-sheet[data-home-situation-sheet][open]');
+  await sheet.waitFor({ state: 'visible', timeout: 3_000 });
+  await page.waitForTimeout(48);
+  const opening = await page.evaluate(() => {
+    const dialog = document.querySelector('dialog.hcs-sheet[data-home-situation-sheet][open]');
+    if (!(dialog instanceof HTMLDialogElement)) return null;
+    const rect = dialog.getBoundingClientRect();
+    const close = dialog.querySelector('.hcs-sheet__close');
+    const focus = document.activeElement;
+    const runningMotion = dialog.getAnimations().some((animation) => (
+      animation.playState === 'running' || animation.currentTime !== null
+    ));
+    return {
+      isModal: dialog.matches(':modal'),
+      bottomGap: window.innerHeight - rect.bottom,
+      radioCount: dialog.querySelectorAll('[role="radio"]').length,
+      switchCount: dialog.querySelectorAll('[role="switch"]').length,
+      labelledBy: dialog.getAttribute('aria-labelledby') ?? '',
+      closeSize: close instanceof HTMLElement
+        ? Math.min(close.getBoundingClientRect().width, close.getBoundingClientRect().height)
+        : 0,
+      focusInside: focus instanceof Node && dialog.contains(focus),
+      runningMotion,
+    };
+  });
+  await page.waitForTimeout(420);
+  const settled = await page.evaluate(() => {
+    const dialog = document.querySelector('dialog.hcs-sheet[data-home-situation-sheet][open]');
+    if (!(dialog instanceof HTMLDialogElement)) return null;
+    const rect = dialog.getBoundingClientRect();
+    const close = dialog.querySelector('.hcs-sheet__close');
+    const focus = document.activeElement;
+    return {
+      isModal: dialog.matches(':modal'),
+      bottomGap: window.innerHeight - rect.bottom,
+      radioCount: dialog.querySelectorAll('[role="radio"]').length,
+      switchCount: dialog.querySelectorAll('[role="switch"]').length,
+      labelledBy: dialog.getAttribute('aria-labelledby') ?? '',
+      closeSize: close instanceof HTMLElement
+        ? Math.min(close.getBoundingClientRect().width, close.getBoundingClientRect().height)
+        : 0,
+      focusInside: focus instanceof Node && dialog.contains(focus),
+    };
+  });
+  const open = settled === null
+    ? null
+    : { ...settled, runningMotion: opening?.runningMotion ?? false };
+  const during = await page.evaluate(() => {
+    const rectFor = (selector) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) return null;
+      const rect = element.getBoundingClientRect();
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    };
+    return {
+      strip: rectFor('.hjm-strip'),
+      list: rectFor('.hjm-result-list'),
+      avatar: rectFor('[data-result-avatar-seam]'),
+    };
+  });
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('dialog.hcs-sheet[open]'));
+  await page.waitForTimeout(80);
+  const focusReturned = await page.evaluate(() => (
+    document.activeElement === document.querySelector('.hjm-strip__situation')
+  ));
+  const drift = Object.fromEntries(Object.entries(before).map(([key, beforeRect]) => {
+    const duringRect = during[key];
+    if (beforeRect === null || duringRect === null) return [key, Infinity];
+    return [key, Math.max(
+      Math.abs(beforeRect.x - duringRect.x),
+      Math.abs(beforeRect.y - duringRect.y),
+      Math.abs(beforeRect.width - duringRect.width),
+      Math.abs(beforeRect.height - duringRect.height),
+    )];
+  }));
+  return { open, focusReturned, drift };
+}
+
 try {
   await waitForServer(BASE, server);
   browser = await chromium.launch();
@@ -470,6 +565,27 @@ try {
     sheetResult.open === null
       ? 'bottom sheet is missing'
       : `modal=${sheetResult.open.isModal} heading match=${sheetResult.open.heading === sheetResult.rowLabel} bottom=${sheetResult.open.bottomGap.toFixed(1)}px close=${sheetResult.open.closeSize.toFixed(1)}px image=${sheetResult.open.imageLoaded} backdrop=${sheetResult.open.backdropFilter} focus=${sheetResult.focusReturned}`,
+  );
+
+  const situationResult = await verifySituationSheet(sheetPage);
+  const situationPassed = situationResult.open !== null
+    && situationResult.open.isModal
+    && situationResult.open.bottomGap >= 0
+    && situationResult.open.bottomGap <= 24
+    && situationResult.open.radioCount === 3
+    && situationResult.open.switchCount === 1
+    && situationResult.open.labelledBy === 'hcs-sheet-title'
+    && situationResult.open.closeSize >= 43.5
+    && situationResult.open.focusInside
+    && situationResult.open.runningMotion
+    && situationResult.focusReturned
+    && Object.values(situationResult.drift).every((value) => value <= 1);
+  gate(
+    '8. situation opens with the same bottom-sheet motion without moving Home',
+    situationPassed,
+    situationResult.open === null
+      ? 'situation sheet is missing'
+      : `modal=${situationResult.open.isModal} bottom=${situationResult.open.bottomGap.toFixed(1)}px radio/switch=${situationResult.open.radioCount}/${situationResult.open.switchCount} label=${situationResult.open.labelledBy} close=${situationResult.open.closeSize.toFixed(1)}px focus-in=${situationResult.open.focusInside} motion=${situationResult.open.runningMotion} focus-return=${situationResult.focusReturned} drift=${JSON.stringify(situationResult.drift)}`,
   );
 
   const largeTextPage = await openHome({ width: 393, height: 852 });

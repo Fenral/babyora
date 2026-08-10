@@ -452,6 +452,7 @@ export function HjemScreen({
      fallbacken gjentas her. 'utelek' er den gamle hardkodede oppførselen. */
   const preferredActivity: Activity = active.preferredActivity ?? 'utelek';
   const [activity, setActivity] = useState<Activity>(preferredActivity);
+  const [carSeat, setCarSeat] = useState(false);
   const preferredActivityRef = useRef(preferredActivity);
   useEffect(() => {
     /* Bytter forelderen barn, skal det nye barnets preferanse gjelde — ellers
@@ -484,8 +485,9 @@ export function HjemScreen({
       activity,
       materialPreference: active.materialPreference ?? null,
       vognMode: activity === 'vogn' ? vognMode : null,
+      context: { bilstol: carSeat },
     };
-  }, [weather.now, ageMonths, activity, active.materialPreference, vognMode]);
+  }, [weather.now, ageMonths, activity, active.materialPreference, vognMode, carSeat]);
 
   const engineInput = useMemo(
     () => (surfaceEngineInput === null
@@ -574,6 +576,7 @@ export function HjemScreen({
       now.windMs,
       now.precipMmH,
       now.symbolCode,
+      engineInput.context?.bilstol === true,
     ])}`;
     const evaluatedAtIso = new Date(evaluatedAt).toISOString();
     try {
@@ -648,6 +651,12 @@ export function HjemScreen({
   const handleActivityChange = (next: Activity) => {
     if (next === activity) return;
     setActivity(next);
+    void fire('selection');
+  };
+
+  const handleCarSeatChange = (next: boolean) => {
+    if (next === carSeat) return;
+    setCarSeat(next);
     void fire('selection');
   };
 
@@ -1060,6 +1069,8 @@ export function HjemScreen({
         weatherLastKnownAt={weather.lastKnownAt}
         activity={activity}
         onActivityChange={handleActivityChange}
+        carSeat={carSeat}
+        onCarSeatChange={handleCarSeatChange}
         childId={active.id}
         childName={active.name}
         ageMonths={ageMonths}

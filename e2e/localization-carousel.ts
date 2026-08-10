@@ -13,6 +13,7 @@ import {
   type Browser,
   type BrowserContext,
   type Page,
+  type Route,
 } from 'playwright';
 
 const PORT = Number(process.env.LOCALIZATION_CAROUSEL_PORT ?? 4177);
@@ -41,6 +42,8 @@ type LocaleScenario = Readonly<{
   openGarment: RegExp;
   detailOrder: RegExp;
   closeGarmentDetails: RegExp;
+  situationSheetTitle: string;
+  closeSituation: RegExp;
 }>;
 
 const SCENARIOS: readonly LocaleScenario[] = [
@@ -65,6 +68,8 @@ const SCENARIOS: readonly LocaleScenario[] = [
     openGarment: /^Visa .+/u,
     detailOrder: /^Plagg 1 av \d+ .* Innerlager$/u,
     closeGarmentDetails: /^St.ng plaggdetaljer$/u,
+    situationSheetTitle: 'Vart ska ni?',
+    closeSituation: /^St.ng situationsval$/u,
   },
   {
     locale: 'da-DK',
@@ -87,6 +92,8 @@ const SCENARIOS: readonly LocaleScenario[] = [
     openGarment: /^Vis .+/u,
     detailOrder: /^Del 1 af \d+ .* Inderste lag$/u,
     closeGarmentDetails: /^Luk t.jdetaljer$/u,
+    situationSheetTitle: 'Hvor skal I hen?',
+    closeSituation: /^Luk situationsvalg$/u,
   },
   {
     locale: 'nb-NO',
@@ -109,11 +116,20 @@ const SCENARIOS: readonly LocaleScenario[] = [
     openGarment: /^Show .+/u,
     detailOrder: /^Garment 1 of \d+ .* Base layer$/u,
     closeGarmentDetails: /^Close garment details$/u,
+    situationSheetTitle: 'Where are you going?',
+    closeSituation: /^Close situation picker$/u,
   },
 ] as const;
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
+}
+
+async function assertNoViteErrorOverlay(page: Page, locale: string): Promise<void> {
+  const overlay = page.locator('vite-error-overlay');
+  if (await overlay.count() === 0) return;
+  const message = await overlay.evaluate((element) => element.shadowRoot?.textContent?.trim() ?? 'unknown Vite error');
+  throw new Error(`${locale}: Vite runtime overlay:\n${message}`);
 }
 
 async function waitForServer(
@@ -208,13 +224,18 @@ function buildForecast(): unknown {
 }
 
 async function installForecast(page: Page): Promise<void> {
-  await page.route('**/api/forecast?**', async (route) => {
+  const fulfillForecast = async (route: Route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify(buildForecast()),
     });
-  });
+  };
+  await page.route('**/api/forecast?**', fulfillForecast);
+  // Vite's development fallback can append the source extension before the
+  // request reaches the route layer. Intercept both forms so browser QA is
+  // never coupled to the Vercel edge-function parser.
+  await page.route('**/api/forecast.ts?**', fulfillForecast);
 }
 
 async function createContext(browser: Browser, locale: LocaleScenario['locale']): Promise<BrowserContext> {
@@ -365,6 +386,10 @@ async function assertHomeResultList(
     (await situationButton.getAttribute('aria-label'))?.trim().length,
     scenario.locale + ': situation selector lost its localized accessible name',
   );
+  assert(
+    await situationButton.getAttribute('aria-haspopup') === 'dialog',
+    scenario.locale + ': situation selector does not advertise its dialog',
+  );
   const situationGeometry = await situationButton.evaluate((button) => {
     const panel = button.closest('.hjm-strip')?.getBoundingClientRect();
     const selected = button.querySelector('strong')?.getBoundingClientRect();
@@ -389,6 +414,48 @@ async function assertHomeResultList(
     situationGeometry.selectedToCaret >= 0 && situationGeometry.selectedToCaret <= 16,
     scenario.locale + ': selector caret is detached from its value ('
       + situationGeometry.selectedToCaret + 'px)',
+  );
+
+  await situationButton.click();
+  const situationSheet = page.locator('dialog.hcs-sheet[data-home-situation-sheet][open]');
+  await situationSheet.waitFor({ state: 'visible', timeout: 5_000 });
+  assert(
+    await situationSheet.getByRole('heading', { name: scenario.situationSheetTitle, exact: true }).count() === 1,
+    scenario.locale + ': situation sheet heading was not localized',
+  );
+  assert(
+    await situationSheet.locator('[role="radio"]').count() === 3
+      && await situationSheet.locator('[role="switch"]').count() === 1,
+    scenario.locale + ': situation sheet lost its activity or car-seat controls',
+  );
+  await page.keyboard.press('Escape');
+  await situationSheet.waitFor({ state: 'hidden', timeout: 5_000 });
+  await page.waitForFunction(
+    () => document.querySelector('button.hjm-strip__situation') === document.activeElement,
+    undefined,
+    { timeout: 3_000 },
+  );
+  await situationButton.press('Enter');
+  await situationSheet.waitFor({ state: 'visible', timeout: 5_000 });
+  assert(
+    await situationSheet.getByRole('button', { name: scenario.closeSituation }).count() === 1,
+    scenario.locale + ': situation sheet close control was not localized',
+  );
+  await page.keyboard.press('Escape');
+  await situationSheet.waitFor({ state: 'hidden', timeout: 5_000 });
+
+  const initialSituationValue = (await situationButton.locator('strong').innerText()).trim();
+  await situationButton.click();
+  await situationSheet.waitFor({ state: 'visible', timeout: 5_000 });
+  await situationSheet.locator('[role="radio"][aria-checked="false"]').first().click();
+  await situationSheet.waitFor({ state: 'hidden', timeout: 5_000 });
+  await page.waitForFunction(
+    (previousValue) => {
+      const value = document.querySelector('button.hjm-strip__situation strong')?.textContent?.trim();
+      return value !== undefined && value !== previousValue && !document.querySelector('dialog.hcs-sheet[open]');
+    },
+    initialSituationValue,
+    { timeout: 5_000 },
   );
 
   const weatherIcon = strip.locator('.hjm-s-weather img');
@@ -649,6 +716,7 @@ async function runScenario(browser: Browser, scenario: LocaleScenario): Promise<
       await page.locator('html').getAttribute('lang') === scenario.resolvedLanguage,
       `${scenario.locale}: demo app did not keep the resolved device language`,
     );
+    await assertNoViteErrorOverlay(page, scenario.locale);
     await assertPlanHasOnlyTodayAndTomorrow(page, scenario);
     const garmentCount = await assertHomeResultList(page, scenario);
 

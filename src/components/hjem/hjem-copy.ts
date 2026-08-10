@@ -45,6 +45,7 @@ export type HjemCopy = Readonly<{
     readyTitle: string;
     activityAria: string;
     situation: string;
+    carSeat: string;
     adjustAria: string;
     adjust: string;
   }>;
@@ -150,6 +151,7 @@ const ENGLISH = {
     readyTitle: 'Ready for a little trip?',
     activityAria: 'Activity',
     situation: 'Situation',
+    carSeat: 'Car seat',
     adjustAria: 'Adjust weather, location or activity',
     adjust: 'Adjust',
   },
@@ -206,6 +208,7 @@ const SWEDISH = {
     readyTitle: 'Redo för en liten tur?',
     activityAria: 'Aktivitet',
     situation: 'Situation',
+    carSeat: 'Bilstol',
     adjustAria: 'Justera väder, plats eller aktivitet',
     adjust: 'Justera',
   },
@@ -262,6 +265,7 @@ const DANISH = {
     readyTitle: 'Klar til en lille tur?',
     activityAria: 'Aktivitet',
     situation: 'Situation',
+    carSeat: 'Autostol',
     adjustAria: 'Juster vejr, sted eller aktivitet',
     adjust: 'Juster',
   },
@@ -319,6 +323,7 @@ const NORWEGIAN = {
     readyTitle: 'Klar for en liten tur?',
     activityAria: 'Aktivitet',
     situation: 'Situasjon',
+    carSeat: 'Bilstol',
     adjustAria: 'Juster vær, sted eller aktivitet',
     adjust: 'Juster',
   },

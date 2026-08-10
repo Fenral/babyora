@@ -76,6 +76,7 @@ export function MonterGarmentRow({
           onClick={interactive ? onSwap : undefined}
           tabIndex={interactive ? undefined : -1}
           aria-label={compactDestinationLabel ?? copy.detailAria(label, roleLabel)}
+          aria-haspopup={opensDetailSheet ? 'dialog' : undefined}
           style={animationDelayMs !== null ? { animationDelay: `${animationDelayMs}ms` } : undefined}
         >
           <span className="hjm-num" aria-hidden="true">{position}</span>

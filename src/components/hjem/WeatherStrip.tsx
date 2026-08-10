@@ -6,6 +6,7 @@
  * en navigasjonspil i maskotens nedre høyre overlappssone.
  */
 import './hjem-monter.css';
+import type { MouseEvent } from 'react';
 import type { WeatherNuance } from './WeatherScene.js';
 import { hjemCopyFor } from './hjem-copy.js';
 
@@ -19,7 +20,7 @@ export type WeatherStripProps = Readonly<{
   weatherIconSrc: string | null;
   weatherIconAlt: string;
   language?: string | null;
-  onAdjust: () => void;
+  onAdjust: (event: MouseEvent<HTMLButtonElement>) => void;
 }>;
 
 function formatTempDisplay(tempC: number): string {
@@ -79,6 +80,7 @@ export function WeatherStrip({
         type="button"
         className="hjm-strip__situation ba-press"
         aria-label={`${copy.weather.adjustAria}: ${activityToggleLabel}`}
+        aria-haspopup="dialog"
         onClick={onAdjust}
       >
         <LocationPinIcon />

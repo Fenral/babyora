@@ -31,11 +31,13 @@ describe('HjemMonter — P5 stub wiring', () => {
     expect(contents).toContain('if (prefill !== null) onOpenAdjust(prefill);');
   });
 
-  it('WeatherStrip\'s Juster button (result-current) is wired to handleOpenAdjust, not the no-op stub', () => {
+  it('WeatherStrip\'s result-current situation selector opens the shared Home sheet', () => {
     const contents = source(hjemMonterPath);
     const stripStart = contents.indexOf('<WeatherStrip');
     const stripEnd = contents.indexOf('/>', stripStart);
-    expect(contents.slice(stripStart, stripEnd)).toContain('onAdjust={handleOpenAdjust}');
+    expect(contents.slice(stripStart, stripEnd)).toContain('onAdjust={handleOpenSituation}');
+    expect(contents).toContain('<HomeSituationSheet');
+    expect(contents).toContain('onApply={handleApplySituation}');
   });
 
   it('the weather-ready panel\'s place pill opens the same drill in every sub-branch that renders it (normal + offline — eier-override v3 retired the micropass sub-branch that used to be the third)', () => {

@@ -1,7 +1,5 @@
 import i18next from 'i18next';
 import {
-  useEffect,
-  useRef,
   useState,
   type MouseEvent,
   type RefObject,
@@ -12,7 +10,9 @@ import { GENERIC_GARMENT_SVG } from '../../data/garment-illustrations.js';
 import { selection as hapticSelection } from '../../lib/haptics.js';
 import type { HomeGarmentAlternativeGroup } from '../../lib/outfit/home-garment-alternatives.js';
 import { resultCopyFor, resultLanguage, type ResultLanguage } from './result-localization.js';
+import { useOriginDialogTransition } from './useOriginDialogTransition.js';
 import './GarmentFactSheet.css';
+import './origin-dialog-transition.css';
 
 type DetailCopy = Readonly<{
   close: string;
@@ -76,6 +76,7 @@ export type GarmentFactSheetItem = Readonly<{
 export type GarmentFactSheetProps = Readonly<{
   item: GarmentFactSheetItem | null;
   isOpen: boolean;
+  reducedMotion?: boolean;
   onClose: () => void;
   triggerRef: RefObject<HTMLElement | null>;
 }>;
@@ -113,37 +114,27 @@ function ComparisonList({
 export function GarmentFactSheet({
   item,
   isOpen,
+  reducedMotion = false,
   onClose,
   triggerRef,
 }: GarmentFactSheetProps) {
-  const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [showAlternatives, setShowAlternatives] = useState(false);
   const language = resultLanguage(i18next.resolvedLanguage);
   const copy = resultCopyFor(language);
   const detailCopy = DETAIL_COPY[language];
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog === null) return;
-    if (isOpen && item !== null && !dialog.open) dialog.showModal();
-    if ((!isOpen || item === null) && dialog.open) dialog.close();
-  }, [isOpen, item]);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog === null) return undefined;
-    const handleClose = () => {
+  const { dialogRef, requestClose, handleCancel } = useOriginDialogTransition({
+    open: isOpen && item !== null,
+    reducedMotion,
+    triggerRef,
+    onAfterClose: () => {
       setShowAlternatives(false);
       onClose();
-      requestAnimationFrame(() => triggerRef.current?.focus());
-    };
-    dialog.addEventListener('close', handleClose);
-    return () => dialog.removeEventListener('close', handleClose);
-  }, [onClose, triggerRef]);
+    },
+  });
 
   if (item === null) return null;
 
-  const close = () => dialogRef.current?.close();
   const handleBackdropClick = (event: MouseEvent<HTMLDialogElement>) => {
     const dialog = dialogRef.current;
     if (dialog === null || event.target !== dialog) return;
@@ -152,30 +143,32 @@ export function GarmentFactSheet({
       && event.clientX <= bounds.right
       && event.clientY >= bounds.top
       && event.clientY <= bounds.bottom;
-    if (!inside) close();
+    if (!inside) requestClose();
   };
   const group = item.alternativeGroup;
 
   return (
     <dialog
       ref={dialogRef}
-      className="hgd-sheet"
+      className="home-origin-sheet hgd-sheet"
       aria-labelledby="hgd-sheet-title"
       onClick={handleBackdropClick}
+      onCancel={handleCancel}
       data-garment-detail-sheet
     >
-      <div className="hgd-sheet__handle" aria-hidden="true" />
-      <header className="hgd-sheet__header">
-        <div>
-          <p>{copy.order(item.position, item.total)} · {item.roleLabel}</p>
-          <h2 id="hgd-sheet-title">{item.label}</h2>
-        </div>
-        <button type="button" className="hgd-sheet__close ba-press" aria-label={detailCopy.close} onClick={close}>
-          <span aria-hidden="true">×</span>
-        </button>
-      </header>
+      <div className="home-origin-sheet__content">
+        <div className="hgd-sheet__handle" aria-hidden="true" />
+        <header className="hgd-sheet__header">
+          <div>
+            <p>{copy.order(item.position, item.total)} · {item.roleLabel}</p>
+            <h2 id="hgd-sheet-title">{item.label}</h2>
+          </div>
+          <button type="button" className="hgd-sheet__close ba-press" aria-label={detailCopy.close} onClick={requestClose}>
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
 
-      <div className="hgd-sheet__body">
+        <div className="hgd-sheet__body">
         <div className="hgd-sheet__identity">
           <span className="hgd-sheet__image" aria-hidden="true">
             <img src={item.imageSrc} alt="" width={132} height={132} onError={fallbackBrokenImage} />
@@ -241,6 +234,7 @@ export function GarmentFactSheet({
             ) : null}
           </>
         ) : null}
+        </div>
       </div>
     </dialog>
   );

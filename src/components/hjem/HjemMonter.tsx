@@ -42,9 +42,9 @@
  * spiller fortsatt full seremoni; inline omberegning beholder 220 ms.
  *
  * ── Aktivitets-toggle → auto-rekalkulering ───────────────────────────────
- * En identitetsendring MENS en fase allerede er etablert (kun aktivitet kan
- * faktisk endre seg i en levende sesjon — barn/dag/sted er stabile) trigger
- * `identityChanged(next, { autoRecalculate: true })` → kort 'recalculating'
+ * En identitetsendring MENS en fase allerede er etablert (aktivitet eller
+ * sikkerhetskontekst kan endre seg i en levende sesjon — barn/dag/sted er
+ * stabile) trigger `identityChanged(next, { autoRecalculate: true })` → kort 'recalculating'
  * med samme ScanOverlay-visning. Mislykkes rekalkuleringen (motoren har ikke
  * en anbefaling når timeren fyrer — f.eks. vær falt bort underveis) →
  * `recalcFailed()` → 'result-stale' med «Beregn på nytt».
@@ -64,6 +64,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type MouseEvent,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import './hjem-monter.css';
@@ -101,6 +102,7 @@ import { MascotIdle } from './MascotIdle.js';
 import { ScanOverlay, ScanStatusBlock } from './ScanOverlay.js';
 import type { OutfitTransitionStatusLike } from './scan-overlay-guard.js';
 import { ResultSurface } from './ResultSurface.js';
+import { HomeSituationSheet, type HomeSituationSelection } from './HomeSituationSheet.js';
 import { resultCopyFor } from './result-localization.js';
 import {
   deriveResultRows,
@@ -131,6 +133,7 @@ import { hjemCopyFor, type HjemCopy } from './hjem-copy.js';
 import { deriveHomeGarmentAlternativeGroups } from '../../lib/outfit/home-garment-alternatives.js';
 
 const RESULT_MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot-resultat-sveip.webp`;
+const noopCarSeatChange = () => {};
 
 function ArrowIcon() {
   return (
@@ -209,6 +212,9 @@ export type HjemMonterProps = Readonly<{
   weatherLastKnownAt?: number | null;
   activity: MonterActivity;
   onActivityChange: (next: MonterActivity) => void;
+  /** Bilstol er en sikkerhetskontekst på tvers av aktivitet (HB-9). */
+  carSeat?: boolean;
+  onCarSeatChange?: (next: boolean) => void;
   childId: string;
   childName: string;
   ageMonths: number;
@@ -263,6 +269,8 @@ export function HjemMonter({
   weatherLastKnownAt = null,
   activity,
   onActivityChange,
+  carSeat = false,
+  onCarSeatChange = noopCarSeatChange,
   childId,
   childName,
   ageMonths,
@@ -280,8 +288,10 @@ export function HjemMonter({
   const phase = scan.state.phase;
   const resultTitleId = useId();
   const resultSeamRef = useRef<HTMLDivElement | null>(null);
+  const situationTriggerRef = useRef<HTMLElement | null>(null);
   const [expandedResultCopy, setExpandedResultCopy] = useState(false);
   const [expandedWeatherMeta, setExpandedWeatherMeta] = useState(false);
+  const [isSituationOpen, setIsSituationOpen] = useState(false);
   const slots = useScanCache((state) => state.slots);
   const commitSlot = useScanCache((state) => state.commitSlot);
   // Eier-override v3 (2026-08-01): hvert CTA-trykk spiller nå den FULLE
@@ -297,8 +307,9 @@ export function HjemMonter({
     dateKey: localDateKey(),
     placeKey: `place:${lat.toFixed(3)},${lon.toFixed(3)}`,
     activity,
+    contextKey: carSeat ? 'car-seat' : 'standard',
     engineVersion: WOOL_LAYERS_ENGINE_VERSION,
-  }), [childId, lat, lon, activity]);
+  }), [childId, lat, lon, activity, carSeat]);
 
   /** v4: nøkkelminnet er scopet til barn+dag — aktivitet/sted er BEVISST
    *  utenfor, siden det er nettopp de to som kan bytte fram og tilbake og
@@ -764,12 +775,25 @@ export function HjemMonter({
     if (prefill !== null) onOpenAdjust(prefill);
   }, [adjustSource, activity, cityLabel, onOpenAdjust]);
 
+  const handleOpenSituation = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    situationTriggerRef.current = event.currentTarget;
+    setIsSituationOpen(true);
+  }, []);
+
+  const handleApplySituation = useCallback((selection: HomeSituationSelection) => {
+    if (selection.activity !== activity) onActivityChange(selection.activity);
+    if (selection.carSeat !== carSeat) onCarSeatChange(selection.carSeat);
+  }, [activity, carSeat, onActivityChange, onCarSeatChange]);
+
   const nuance = getWeatherNuance(now?.symbolCode ?? lastKnownNow?.symbolCode);
   const conditionLabel = getConditionLabel(
     now?.symbolCode ?? lastKnownNow?.symbolCode,
     activeLanguage,
   );
   const weatherIconSrc = getWeatherIcon(now?.symbolCode ?? lastKnownNow?.symbolCode);
+  const activityToggleLabel = carSeat
+    ? `${copy.activity[activity].toggle} · ${copy.weather.carSeat}`
+    : copy.activity[activity].toggle;
   const childLine = `${childName} · ${copy.ageMonths(ageMonths)} · ${copy.activity[activity].context}`;
   const canScan = currentResultKey !== null;
   // T9A: sann friskhetslinje (erstatter hardkodet «Oppdatert nå»).
@@ -803,7 +827,7 @@ export function HjemMonter({
             nuance={nuance}
             rows={[
               { label: copy.scan.weatherNow, value: tempLabel },
-              { label: copy.scan.activity, value: copy.activity[activity].toggle },
+              { label: copy.scan.activity, value: activityToggleLabel },
               { label: childName, value: copy.ageMonths(ageMonths) },
             ]}
             spinningLabel={copy.scan.layerByLayer}
@@ -867,11 +891,11 @@ export function HjemMonter({
                 feelsLikeC={now.feelsLikeC}
                 conditionLabel={conditionLabel}
                 cityLabel={cityLabel}
-                activityToggleLabel={copy.activity[activity].toggle}
+                activityToggleLabel={activityToggleLabel}
                 weatherIconSrc={weatherIconSrc}
                 weatherIconAlt={conditionLabel}
                 language={activeLanguage}
-                onAdjust={handleOpenAdjust}
+                onAdjust={handleOpenSituation}
               />
             )}
             <div className="hjm-result-mascot-seam" data-result-avatar-seam aria-hidden="true">
@@ -889,6 +913,16 @@ export function HjemMonter({
             />
           </div>
         </div>
+        <HomeSituationSheet
+          isOpen={isSituationOpen}
+          activity={activity}
+          carSeat={carSeat}
+          language={activeLanguage}
+          reducedMotion={reducedMotion}
+          triggerRef={situationTriggerRef}
+          onClose={() => setIsSituationOpen(false)}
+          onApply={handleApplySituation}
+        />
       </div>
     );
   }

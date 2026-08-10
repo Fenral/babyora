@@ -49,6 +49,8 @@ export type ScanIdentity = Readonly<{
   /** Opak nøkkel for stedet scanningen gjelder (kaller-beregnet, f.eks. avledet fra lat/lon/kilde). */
   placeKey: string;
   activity: Activity;
+  /** Sikkerhetskontekst som ikke er en aktivitet, f.eks. bilstol (HB-9). */
+  contextKey?: string;
   engineVersion: string;
 }>;
 
@@ -91,6 +93,7 @@ export function sameScanIdentity(a: ScanIdentity, b: ScanIdentity): boolean {
     && a.dateKey === b.dateKey
     && a.placeKey === b.placeKey
     && a.activity === b.activity
+    && (a.contextKey ?? 'standard') === (b.contextKey ?? 'standard')
     && a.engineVersion === b.engineVersion
   );
 }
@@ -121,6 +124,8 @@ export function isScanIdentity(value: unknown): value is ScanIdentity {
     && DATE_KEY_PATTERN.test(candidate.dateKey)
     && typeof candidate.placeKey === 'string' && candidate.placeKey.length > 0
     && isActivity(candidate.activity)
+    && (candidate.contextKey === undefined
+      || (typeof candidate.contextKey === 'string' && candidate.contextKey.length > 0))
     && typeof candidate.engineVersion === 'string'
     && candidate.engineVersion.length > 0
   );

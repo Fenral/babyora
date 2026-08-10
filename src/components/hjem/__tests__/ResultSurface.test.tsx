@@ -102,6 +102,7 @@ describe('ResultSurface — vertical garment list', () => {
 
     expect(html).toContain('<button type="button" class="hjm-row"');
     expect(html).toContain(`aria-label="${copy.openGarment('Langermet ullbody')}"`);
+    expect(html).toContain('aria-haspopup="dialog"');
     expect(html).toContain('class="hjm-swap hjm-row-next"');
     expect(html).not.toContain('class="hjm-swap-label"');
     expect(html).not.toContain('class="hjm-cta"');

@@ -12,6 +12,7 @@ function identity(overrides: Partial<{
   dateKey: string;
   placeKey: string;
   activity: 'vogn' | 'baeresele' | 'utelek' | 'soevn';
+  contextKey: string;
   engineVersion: string;
 }> = {}) {
   return {
@@ -73,7 +74,13 @@ describe('sameScanIdentity', () => {
     expect(sameScanIdentity(identity(), identity({ dateKey: '2026-07-31' }))).toBe(false);
     expect(sameScanIdentity(identity(), identity({ placeKey: 'place:60,11' }))).toBe(false);
     expect(sameScanIdentity(identity(), identity({ activity: 'vogn' }))).toBe(false);
+    expect(sameScanIdentity(identity(), identity({ contextKey: 'car-seat' }))).toBe(false);
     expect(sameScanIdentity(identity(), identity({ engineVersion: '2099-01' }))).toBe(false);
+  });
+
+  it('treats persisted identities without a context key as the standard context', () => {
+    const { contextKey: _contextKey, ...legacyIdentity } = identity();
+    expect(sameScanIdentity(legacyIdentity, identity({ contextKey: 'standard' }))).toBe(true);
   });
 });
 
@@ -103,6 +110,11 @@ describe('isScanIdentity', () => {
     expect(isScanIdentity(identity({ childId: '' }))).toBe(false);
     expect(isScanIdentity(identity({ placeKey: '' }))).toBe(false);
     expect(isScanIdentity(identity({ engineVersion: '' }))).toBe(false);
+  });
+
+  it('accepts an omitted context key for old cache slots and rejects an empty one', () => {
+    expect(isScanIdentity(identity())).toBe(true);
+    expect(isScanIdentity(identity({ contextKey: '' }))).toBe(false);
   });
 
   it('rejects a value missing required fields', () => {

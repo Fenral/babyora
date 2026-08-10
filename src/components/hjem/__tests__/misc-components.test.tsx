@@ -75,6 +75,7 @@ describe('WeatherStrip', () => {
     expect(html).toContain('src="/monter/vaer-regn.webp"');
     expect(html).toContain('alt="Lett yr"');
     expect(html).toContain('class="hjm-strip__situation ba-press"');
+    expect(html).toContain('aria-haspopup="dialog"');
     expect(html).toContain('aria-label="Juster vær, sted eller aktivitet: Utenfor vogn"');
     expect(html).toContain('class="hjm-strip__situation-label">Situasjon</span>');
     expect(html).toContain('<strong>Utenfor vogn</strong>');
@@ -100,6 +101,7 @@ describe('WeatherStrip', () => {
     expect(html).not.toMatch(/^<button/u);
     expect(html).toContain('aria-label="Juster vær, sted eller aktivitet: I vogn"');
     expect(html).toContain('class="hjm-strip__situation ba-press"');
+    expect(html).toContain('aria-haspopup="dialog"');
     expect(html).toContain('−2°');
     expect(html).toContain('data-nuance="snow"');
   });

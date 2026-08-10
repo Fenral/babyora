@@ -69,7 +69,7 @@ describe('GarmentFactSheet', () => {
     const html = renderSheet(item());
 
     expect(html).toContain('<dialog');
-    expect(html).toContain('class="hgd-sheet"');
+    expect(html).toContain('class="home-origin-sheet hgd-sheet"');
     expect(html).toContain('data-garment-detail-sheet="true"');
     expect(html).toContain('class="hgd-sheet__handle"');
     expect(html).toContain(copy.order(1, 4));
@@ -105,22 +105,28 @@ describe('GarmentFactSheet', () => {
     expect(html).not.toContain('Fleece alternative');
   });
 
-  it('uses modal semantics, backdrop close and focus return without a centered Sheet wrapper', () => {
+  it('uses the shared Home bottom-sheet lifecycle with backdrop close and focus return', () => {
     const source = readFileSync(resolve(process.cwd(), 'src/components/hjem/GarmentFactSheet.tsx'), 'utf8');
+    const motionSource = readFileSync(resolve(process.cwd(), 'src/components/hjem/useOriginDialogTransition.ts'), 'utf8');
 
-    expect(source).toContain('dialog.showModal()');
-    expect(source).toContain("dialog.addEventListener('close', handleClose)");
-    expect(source).toContain('triggerRef.current?.focus()');
+    expect(source).toContain('useOriginDialogTransition({');
+    expect(source).toContain('onCancel={handleCancel}');
+    expect(source).toContain('requestClose');
+    expect(motionSource).toContain('dialog.showModal()');
+    expect(motionSource).toContain("dialog.addEventListener('close', handleClose)");
+    expect(motionSource).toContain('triggerRef.current?.focus()');
     expect(source).toContain('event.target !== dialog');
     expect(source).not.toContain("from '../ui/Sheet");
   });
 
   it('anchors above the safe area with a 44px close target and reduced-motion fallback', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/GarmentFactSheet.css'), 'utf8');
+    const motionCss = readFileSync(resolve(process.cwd(), 'src/components/hjem/origin-dialog-transition.css'), 'utf8');
 
     expect(css).toMatch(/\.hgd-sheet\s*\{[\s\S]*?margin:\s*auto auto max\(8px, env\(safe-area-inset-bottom/u);
     expect(css).toMatch(/\.hgd-sheet::backdrop\s*\{[\s\S]*?backdrop-filter:\s*blur\(5px\)/u);
     expect(css).toMatch(/\.hgd-sheet__close\s*\{[\s\S]*?inline-size:\s*44px;[\s\S]*?block-size:\s*44px;/u);
-    expect(css).toMatch(/@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?animation:\s*none/u);
+    expect(motionCss).toMatch(/\[data-motion-disabled='true'\]::backdrop\s*\{\s*animation:\s*none;/u);
+    expect(motionCss).toMatch(/@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?animation:\s*none/u);
   });
 });

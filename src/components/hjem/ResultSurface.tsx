@@ -111,6 +111,7 @@ export function ResultSurface({
           <GarmentFactSheet
             item={openItem}
             isOpen={openItem !== null}
+            reducedMotion={reducedMotion}
             onClose={() => setOpenRowKey(null)}
             triggerRef={detailTriggerRef}
           />

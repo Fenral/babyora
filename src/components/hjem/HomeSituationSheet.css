@@ -1,0 +1,222 @@
+.hcs-sheet {
+  inline-size: min(calc(100% - 16px), 560px);
+  margin: auto auto max(8px, env(safe-area-inset-bottom, 0px));
+  padding: 0;
+  overflow: hidden;
+  color: var(--dw-ink-hi);
+  background: var(--dw-overlay);
+  border: 1px solid var(--dw-plate-kant);
+  border-radius: 24px;
+  box-shadow: inset 0 1px 0 var(--dw-kant-key), var(--dw-depth-hero);
+}
+
+.hcs-sheet::backdrop {
+  background: color-mix(in srgb, var(--dw-ink-hi) 31%, transparent);
+  -webkit-backdrop-filter: blur(5px) saturate(0.78);
+  backdrop-filter: blur(5px) saturate(0.78);
+}
+
+.hcs-sheet__handle {
+  inline-size: 40px;
+  block-size: 4px;
+  margin: var(--dw-space-8) auto 0;
+  border-radius: var(--dw-r-pill);
+  background: var(--dw-hairline);
+}
+
+.hcs-sheet__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--dw-space-16);
+  padding: var(--dw-space-12) var(--dw-space-20) var(--dw-space-16);
+}
+
+.hcs-sheet__header h2,
+.hcs-sheet__header p,
+.hcs-choice strong,
+.hcs-choice span,
+.hcs-car-seat strong,
+.hcs-car-seat span {
+  margin: 0;
+}
+
+.hcs-sheet__header h2 {
+  font: 750 1.35rem/1.16 var(--dw-font-ui);
+  letter-spacing: -0.025em;
+}
+
+.hcs-sheet__header p {
+  margin-block-start: var(--dw-space-4);
+  color: var(--dw-ink-mid);
+  font: 500 0.875rem/1.42 var(--dw-font-ui);
+}
+
+.hcs-sheet__close {
+  display: grid;
+  flex: 0 0 44px;
+  inline-size: 44px;
+  block-size: 44px;
+  place-items: center;
+  padding: 0;
+  color: var(--dw-ink-hi);
+  background: var(--dw-interactive);
+  border: 1px solid var(--dw-hairline);
+  border-radius: var(--dw-r-pill);
+  box-shadow: inset 0 1px 0 var(--dw-plate-kant), var(--dw-depth-chip);
+  cursor: pointer;
+}
+
+.hcs-sheet__close svg {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.hcs-sheet__body {
+  display: grid;
+  gap: var(--dw-space-10);
+  padding: 0 var(--dw-space-12) calc(var(--dw-space-16) + env(safe-area-inset-bottom, 0px));
+}
+
+.hcs-sheet__choices {
+  display: grid;
+  gap: var(--dw-space-4);
+}
+
+.hcs-choice,
+.hcs-car-seat {
+  display: grid;
+  inline-size: 100%;
+  min-block-size: 62px;
+  align-items: center;
+  padding: var(--dw-space-8) var(--dw-space-12);
+  border: 1px solid transparent;
+  border-radius: var(--dw-r-raised);
+  color: var(--dw-ink-hi);
+  background: transparent;
+  font-family: var(--dw-font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.hcs-choice {
+  grid-template-columns: 40px minmax(0, 1fr) 28px;
+  gap: var(--dw-space-10);
+}
+
+.hcs-choice[aria-checked='true'] {
+  border-color: color-mix(in srgb, var(--dw-accent) 16%, transparent);
+  background: var(--dw-accent-surface);
+}
+
+.hcs-choice__icon,
+.hcs-car-seat__icon {
+  display: grid;
+  inline-size: 40px;
+  block-size: 40px;
+  place-items: center;
+  border: 1px solid var(--dw-plate-kant);
+  border-radius: var(--dw-r-control);
+  background: var(--dw-interactive);
+  box-shadow: inset 0 1px 0 var(--dw-kant-key), var(--dw-depth-chip);
+}
+
+.hcs-choice[aria-checked='true'] .hcs-choice__icon {
+  color: var(--dw-ink-on-accent);
+  background: var(--dw-accent);
+}
+
+.hcs-choice__icon svg,
+.hcs-car-seat__icon svg {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.hcs-choice__copy,
+.hcs-car-seat__copy {
+  display: grid;
+  min-inline-size: 0;
+  gap: 2px;
+}
+
+.hcs-choice__copy strong,
+.hcs-car-seat__copy strong {
+  font: 750 0.9375rem/1.2 var(--dw-font-ui);
+}
+
+.hcs-choice__copy span,
+.hcs-car-seat__copy span {
+  color: var(--dw-ink-mid);
+  font: 500 0.78rem/1.32 var(--dw-font-ui);
+}
+
+.hcs-choice__check {
+  display: grid;
+  inline-size: 28px;
+  block-size: 28px;
+  place-items: center;
+  color: var(--dw-accent);
+  font: 800 1rem/1 var(--dw-font-ui);
+}
+
+.hcs-sheet__divider {
+  block-size: 1px;
+  margin: var(--dw-space-2) var(--dw-space-4);
+  background: var(--dw-hairline);
+}
+
+.hcs-car-seat {
+  grid-template-columns: 40px minmax(0, 1fr) 44px;
+  gap: var(--dw-space-10);
+  color: var(--dw-ink-hi);
+  background: color-mix(in srgb, var(--dw-w-clear) 38%, var(--dw-raised));
+}
+
+.hcs-car-seat[aria-checked='true'] {
+  background: var(--dw-accent-surface);
+}
+
+.hcs-car-seat__icon {
+  color: var(--dw-ink-mid);
+}
+
+.hcs-switch {
+  display: flex;
+  inline-size: 44px;
+  block-size: 26px;
+  align-items: center;
+  padding: 3px;
+  border-radius: var(--dw-r-pill);
+  background: var(--dw-hairline);
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--dw-ink-hi) 14%, transparent);
+}
+
+.hcs-car-seat[aria-checked='true'] .hcs-switch {
+  justify-content: flex-end;
+  background: var(--dw-accent);
+}
+
+.hcs-switch i {
+  display: block;
+  inline-size: 20px;
+  block-size: 20px;
+  border-radius: 50%;
+  background: var(--dw-raised);
+  box-shadow: inset 0 1px 0 var(--dw-kant-key), var(--dw-depth-chip);
+}
+
+.hcs-sheet :focus-visible {
+  outline: 3px solid var(--dw-focus);
+  outline-offset: 3px;
+}
+
+@media (max-width: 359px) {
+  .hcs-sheet__header { padding-inline: var(--dw-space-14); }
+  .hcs-sheet__body { padding-inline: var(--dw-space-8); }
+  .hcs-choice,
+  .hcs-car-seat { padding-inline: var(--dw-space-8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hcs-switch { transition: none; }
+}
