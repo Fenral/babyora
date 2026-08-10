@@ -214,6 +214,8 @@
   flex-direction: column;
 }
 .hjm-result-seam > .hjm-body {
+  position: relative;
+  z-index: 4;
   padding-top: var(--dw-space-4);
 }
 .hjm-result-bridge-space {
@@ -958,7 +960,7 @@
 }
 .hjm-result-mascot-seam img {
   position: absolute;
-  width: 188px;
+  width: 176px;
   max-width: none;
   right: -18px;
   top: calc(100% - 43px);
@@ -1569,7 +1571,7 @@
   .hjm-result-bridge-space { flex-basis: 95px; }
   .hjm-result-mascot-seam img {
     width: 184px;
-    right: -32px;
+    right: -18px;
     top: calc(100% - 38px);
   }
   /* På 320 px er selve valget viktigere enn den repeterte etiketten.

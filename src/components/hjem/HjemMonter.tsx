@@ -132,7 +132,9 @@ import type { FinnAntrekkPrefill } from '../../screens/finn-antrekk-prefill.js';
 import { hjemCopyFor, type HjemCopy } from './hjem-copy.js';
 import { deriveHomeGarmentAlternativeGroups } from '../../lib/outfit/home-garment-alternatives.js';
 
-const RESULT_MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot-resultat-sveip.webp`;
+// Den dekorative maskoten leder blikket ned mot antrekkslisten, i stedet for
+// ut av skjermen. Selve anbefalings- og værdataene skal aldri ligge i bildet.
+const RESULT_MASCOT_SRC = `${import.meta.env.BASE_URL}monter/maskot-resultat-presenterer-holder-ned-venstre.png`;
 const noopCarSeatChange = () => {};
 
 function ArrowIcon() {

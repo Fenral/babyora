@@ -64,7 +64,7 @@ function renderSheet(sheetItem: GarmentFactSheetItem): string {
 }
 
 describe('GarmentFactSheet', () => {
-  it('renders a native bottom-sheet contract with identity and complete sourced fact', () => {
+  it('renders the calculator-style native bottom sheet with identity and complete sourced fact', () => {
     const copy = resultCopyFor(i18next.resolvedLanguage);
     const html = renderSheet(item());
 
@@ -72,10 +72,9 @@ describe('GarmentFactSheet', () => {
     expect(html).toContain('class="home-origin-sheet hgd-sheet"');
     expect(html).toContain('data-garment-detail-sheet="true"');
     expect(html).toContain('class="hgd-sheet__handle"');
-    expect(html).toContain(copy.order(1, 4));
-    expect(html).toContain('Base layer');
     expect(html).toContain('<h2 id="hgd-sheet-title">Warm wool set</h2>');
     expect(html).toContain('/illustrations/garments/ullsett-tykt.webp');
+    expect(html).toContain('class="hgd-sheet__role">Base layer</p>');
     expect(html).toContain(copy.goodToKnow);
     expect(html).toContain('The complete garment fact stays available');
     expect(html).toContain('href="https://example.com/wool"');
@@ -94,15 +93,15 @@ describe('GarmentFactSheet', () => {
   });
 
   it('shows one collapsed Alternatives action only for an authorized group', () => {
-    const copy = resultCopyFor(i18next.resolvedLanguage);
     const html = renderSheet(item({ alternativeGroup: group() }));
 
+    expect(html).toContain('class="hgd-sheet__alternative-section"');
     expect(html).toContain('class="hgd-sheet__alternatives ba-press"');
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('aria-controls="hgd-alternative-comparison"');
-    expect(html).toContain(copy.alternatives);
+    expect(html).toContain('Fleece alternative');
+    expect(html).toContain('/illustrations/garments/fleecedress.webp');
     expect(html).not.toContain('id="hgd-alternative-comparison"');
-    expect(html).not.toContain('Fleece alternative');
   });
 
   it('uses the shared Home bottom-sheet lifecycle with backdrop close and focus return', () => {
@@ -119,13 +118,16 @@ describe('GarmentFactSheet', () => {
     expect(source).not.toContain("from '../ui/Sheet");
   });
 
-  it('anchors above the safe area with a 44px close target and reduced-motion fallback', () => {
+  it('uses the calculator sheet geometry with a 44px close target and reduced-motion fallback', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/components/hjem/GarmentFactSheet.css'), 'utf8');
     const motionCss = readFileSync(resolve(process.cwd(), 'src/components/hjem/origin-dialog-transition.css'), 'utf8');
 
-    expect(css).toMatch(/\.hgd-sheet\s*\{[\s\S]*?margin:\s*auto auto max\(8px, env\(safe-area-inset-bottom/u);
+    expect(css).toMatch(/\.hgd-sheet\s*\{[\s\S]*?margin:\s*auto auto max\(4px, env\(safe-area-inset-bottom/u);
+    expect(css).toMatch(/\.hgd-sheet\s*\{[\s\S]*?border-radius:\s*24px 24px 0 0;/u);
     expect(css).toMatch(/\.hgd-sheet::backdrop\s*\{[\s\S]*?backdrop-filter:\s*blur\(5px\)/u);
     expect(css).toMatch(/\.hgd-sheet__close\s*\{[\s\S]*?inline-size:\s*44px;[\s\S]*?block-size:\s*44px;/u);
+    expect(css).toMatch(/\.hgd-sheet__header h2\s*\{[\s\S]*?var\(--font-serif\)/u);
+    expect(css).toMatch(/\.hgd-sheet__image\s*\{[\s\S]*?inline-size:\s*min\(208px, 64vw\)/u);
     expect(motionCss).toMatch(/\[data-motion-disabled='true'\]::backdrop\s*\{\s*animation:\s*none;/u);
     expect(motionCss).toMatch(/@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?animation:\s*none/u);
   });

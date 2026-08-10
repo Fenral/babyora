@@ -151,6 +151,7 @@ describe('FinnAntrekkScreen — result-as-clothes wiring (source-text: only reac
     expect(contents).toContain("import '../components/hjem/hjem-monter.css';");
     expect(contents).toContain('<ol className="hjm-rows"');
     expect(contents).toContain('<MonterGarmentRow');
+    expect(contents).not.toContain('compactDestinationLabel=');
   });
 
   it('presents a small raised explanation box (--dw-raised / 14px radius via the shared .hjm-prev class, §6-compliant edge-light) with the engine-derived why-copy — never invented copy', () => {

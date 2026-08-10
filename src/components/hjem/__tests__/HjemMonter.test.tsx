@@ -195,7 +195,7 @@ describe('HjemMonter — phase-driven view switching', () => {
     expect(html).toContain(`aria-label="${copy.progressLabel}"`);
     expect(html).toContain('class="hjm-rows hjm-result-list"');
     expect(html).not.toContain('hjm-journey-rail');
-    expect(html).toContain('/monter/maskot-resultat-sveip.webp');
+    expect(html).toContain('/monter/maskot-resultat-presenterer-holder-ned-venstre.png');
     expect(html).not.toContain('class="hjm-cta"');
   });
 

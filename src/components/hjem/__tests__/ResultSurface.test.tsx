@@ -176,7 +176,7 @@ describe('ResultSurface — vertical garment list', () => {
 
     expect(resultSource).not.toContain('data-result-avatar-seam');
     expect(homeSource).toContain('data-result-avatar-seam');
-    expect(homeSource).toContain('/maskot-resultat-sveip.webp');
+    expect(homeSource).toContain('/maskot-resultat-presenterer-holder-ned-venstre.png');
   });
 
   it('renders a localized empty state without mounting an empty dialog', () => {

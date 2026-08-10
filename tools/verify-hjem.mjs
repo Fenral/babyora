@@ -244,7 +244,11 @@ async function measureMascotSeam(page) {
       firstRowNumber: rangeRects('.hjm-result-list .hjm-row:first-child .hjm-num'),
       firstRowThumbnail: wholeRect('.hjm-result-list .hjm-row:first-child .hjm-thumb'),
       firstRowText: rangeRects('.hjm-result-list .hjm-row:first-child .hjm-row-text'),
-      firstRowChevron: wholeRect('.hjm-result-list .hjm-row:first-child .hjm-row-next'),
+      // Bevar 44px trefflaten (målt separat i gate 2), men beskytt den
+      // synlige chevronen her. Maskoten er pointer-events:none og kan trygt
+      // henge over den usynlige delen av radens målflate uten å skjule en
+      // handling eller fange trykk.
+      firstRowChevron: wholeRect('.hjm-result-list .hjm-row:first-child .hjm-row-next svg'),
     };
     const protectedHits = Object.fromEntries(Object.keys(protectedRects).map((name) => [name, 0]));
 
@@ -294,7 +298,12 @@ async function verifySheet(page) {
   await trigger.click();
   const sheet = page.locator('dialog.hgd-sheet[data-garment-detail-sheet][open]');
   await sheet.waitFor({ state: 'visible', timeout: 3_000 });
-  await page.waitForTimeout(260);
+  // Arket bruker den delte, 400ms iOS-drawer-overgangen. Mål den ferdige
+  // native flaten, ikke en mellomframe på vei inn fra bunnen.
+  await page.waitForFunction(() => (
+    document.querySelector('dialog.hgd-sheet[data-garment-detail-sheet]')
+      ?.getAttribute('data-motion-phase') === 'settled'
+  ), undefined, { timeout: 1_000 });
   const open = await page.evaluate(() => {
     const dialog = document.querySelector('dialog.hgd-sheet[data-garment-detail-sheet][open]');
     const close = dialog?.querySelector('.hgd-sheet__close');

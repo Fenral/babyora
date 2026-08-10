@@ -22,6 +22,7 @@ type DetailCopy = Readonly<{
   tradeoffs: string;
   compareIntro: string;
   hideAlternatives: string;
+  alternativeGarments: string;
 }>;
 
 const DETAIL_COPY: Readonly<Record<ResultLanguage, DetailCopy>> = {
@@ -33,6 +34,7 @@ const DETAIL_COPY: Readonly<Record<ResultLanguage, DetailCopy>> = {
     tradeoffs: 'Vær oppmerksom på',
     compareIntro: 'Sammenlign andre plagg motoren tillater på samme plass i antrekket.',
     hideAlternatives: 'Skjul alternativer',
+    alternativeGarments: 'Alternative plagg',
   },
   en: {
     close: 'Close garment details',
@@ -42,6 +44,7 @@ const DETAIL_COPY: Readonly<Record<ResultLanguage, DetailCopy>> = {
     tradeoffs: 'Keep in mind',
     compareIntro: 'Compare other garments the engine allows in the same place in the outfit.',
     hideAlternatives: 'Hide alternatives',
+    alternativeGarments: 'Alternative garments',
   },
   sv: {
     close: 'Stäng plaggdetaljer',
@@ -51,6 +54,7 @@ const DETAIL_COPY: Readonly<Record<ResultLanguage, DetailCopy>> = {
     tradeoffs: 'Tänk på',
     compareIntro: 'Jämför andra plagg som motorn tillåter på samma plats i klädseln.',
     hideAlternatives: 'Dölj alternativ',
+    alternativeGarments: 'Alternativa plagg',
   },
   da: {
     close: 'Luk tøjdetaljer',
@@ -60,6 +64,7 @@ const DETAIL_COPY: Readonly<Record<ResultLanguage, DetailCopy>> = {
     tradeoffs: 'Vær opmærksom på',
     compareIntro: 'Sammenlign andet tøj, som motoren tillader på samme plads i påklædningen.',
     hideAlternatives: 'Skjul alternativer',
+    alternativeGarments: 'Alternative beklædningsdele',
   },
 };
 
@@ -146,6 +151,7 @@ export function GarmentFactSheet({
     if (!inside) requestClose();
   };
   const group = item.alternativeGroup;
+  const firstAlternative = group?.alternatives[0] ?? null;
 
   return (
     <dialog
@@ -159,23 +165,21 @@ export function GarmentFactSheet({
       <div className="home-origin-sheet__content">
         <div className="hgd-sheet__handle" aria-hidden="true" />
         <header className="hgd-sheet__header">
-          <div>
-            <p>{copy.order(item.position, item.total)} · {item.roleLabel}</p>
-            <h2 id="hgd-sheet-title">{item.label}</h2>
-          </div>
           <button type="button" className="hgd-sheet__close ba-press" aria-label={detailCopy.close} onClick={requestClose}>
             <span aria-hidden="true">×</span>
           </button>
+          <h2 id="hgd-sheet-title">{item.label}</h2>
         </header>
 
         <div className="hgd-sheet__body">
         <div className="hgd-sheet__identity">
           <span className="hgd-sheet__image" aria-hidden="true">
-            <img src={item.imageSrc} alt="" width={132} height={132} onError={fallbackBrokenImage} />
+            <img src={item.imageSrc} alt="" width={208} height={208} onError={fallbackBrokenImage} />
           </span>
+          <p className="hgd-sheet__role">{item.roleLabel}</p>
           {item.fact ? (
             <section className="hgd-sheet__fact">
-              <h3>{copy.goodToKnow}</h3>
+              <h3 className="sr-only">{copy.goodToKnow}</h3>
               <p>{item.fact.text}</p>
               <a href={item.fact.sourceUrl} target="_blank" rel="noreferrer">
                 {item.fact.sourceLabel}
@@ -186,21 +190,31 @@ export function GarmentFactSheet({
 
         {group ? (
           <>
-            <button
-              type="button"
-              className="hgd-sheet__alternatives ba-press"
-              aria-expanded={showAlternatives}
-              aria-controls="hgd-alternative-comparison"
-              onClick={() => {
-                void hapticSelection();
-                setShowAlternatives((current) => !current);
-              }}
-            >
-              <span>{showAlternatives ? detailCopy.hideAlternatives : copy.alternatives}</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-                <path d="m8 10 4 4 4-4" />
-              </svg>
-            </button>
+            <section className="hgd-sheet__alternative-section">
+              <h3>{detailCopy.alternativeGarments}</h3>
+              <button
+                type="button"
+                className="hgd-sheet__alternatives ba-press"
+                aria-expanded={showAlternatives}
+                aria-controls="hgd-alternative-comparison"
+                onClick={() => {
+                  void hapticSelection();
+                  setShowAlternatives((current) => !current);
+                }}
+              >
+                {firstAlternative ? (
+                  <span className="hgd-sheet__alternative-preview">
+                    <span className="hgd-sheet__alternative-thumb" aria-hidden="true">
+                      <img src={firstAlternative.imageSrc} alt="" width={56} height={56} onError={fallbackBrokenImage} />
+                    </span>
+                    <span>{firstAlternative.name}</span>
+                  </span>
+                ) : <span>{showAlternatives ? detailCopy.hideAlternatives : copy.alternatives}</span>}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </button>
+            </section>
 
             {showAlternatives ? (
               <section className="hgd-comparison" id="hgd-alternative-comparison">

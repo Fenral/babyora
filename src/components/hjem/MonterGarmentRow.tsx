@@ -67,7 +67,10 @@ export function MonterGarmentRow({
   const copy = resultCopyFor(i18next.resolvedLanguage);
   // Både Hjem og Juster bruker den kompakte, delte resultatlisten.
   if (total === undefined) {
-    const opensDetailSheet = compactDestinationLabel !== undefined;
+    // Juster åpner alltid det samme plaggarket som Hjem, men har ikke en
+    // egen destinationsetikett. En chevron er derfor den riktige, rolige
+    // affordancen i begge lister – aldri «See details» + et ekstra ikon.
+    const opensDetailSheet = compactDestinationLabel !== undefined || onOpenInfo === undefined;
     return (
       <li className="hjm-row-item">
         <button
