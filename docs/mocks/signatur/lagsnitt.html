@@ -1,0 +1,131 @@
+<script>var q=location.search;var d=document.documentElement;
+if(q.indexOf('naken')>-1)d.classList.add('naken');
+if(q.indexOf('gra')>-1)d.classList.add('gra');</script>
+<title>Lagsnitt</title>
+<style>
+  :root{
+    --petrol:#143A38;
+    --espresso:#2A211C;
+    --ullkrem:#F2EADD;
+    --ullkrem-lys:#FBF7F0;
+    --aksent:#C8794A;
+    --demp:#C9BBA8;
+    --easeOut:cubic-bezier(0.22,1,0.36,1);
+    --easeOutSoft:cubic-bezier(0.16,1,0.3,1);
+    --easeOutExpo:cubic-bezier(0.19,1,0.22,1);
+    --iosDrawer:cubic-bezier(0.32,0.72,0,1);
+  }
+  html,body{margin:0;padding:0;background:var(--ullkrem);}
+  body{width:600px;height:600px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  svg{display:block;}
+
+  /* kun tekst forsvinner i naken-varianten */
+  html.naken text{fill:transparent !important;}
+  html.naken .tekst{color:transparent !important;}
+  html.gra{filter:grayscale(1);}
+
+  .lag{opacity:0;transform:scale(.982);transform-origin:300px 300px;
+       animation:vokse 460ms var(--easeOutSoft) forwards;}
+  .l-kjerne{animation-delay:0ms;}
+  .l-ull{animation-delay:120ms;}
+  .l-fleece{animation-delay:280ms;}
+  .l-skall{animation-delay:440ms;}
+  .l-lue{animation-delay:600ms;}
+  .l-sokk{animation-delay:640ms;}
+
+  @keyframes vokse{to{opacity:1;transform:scale(1);}}
+
+  @media (prefers-reduced-motion: reduce){
+    .lag{opacity:1;transform:none;animation:none;}
+  }
+</style>
+
+<svg width="600" height="600" viewBox="0 0 600 600" role="img" aria-label="Lagsnitt">
+  <defs>
+    <!-- kroppen i snitt: hals, overkropp, armer, underkropp -->
+    <g id="kropp">
+      <rect x="284" y="208" width="32" height="40" rx="15"/>
+      <rect x="238" y="236" width="124" height="168" rx="54"/>
+      <rect x="216" y="260" width="40" height="118" rx="20" transform="rotate(5 236 266)"/>
+      <rect x="344" y="260" width="40" height="118" rx="20" transform="rotate(-5 364 266)"/>
+      <rect x="248" y="352" width="104" height="90" rx="45"/>
+    </g>
+    <g id="hode"><circle cx="300" cy="166" r="54"/></g>
+    <g id="armer">
+      <rect x="216" y="260" width="40" height="118" rx="20" transform="rotate(5 236 266)"/>
+      <rect x="344" y="260" width="40" height="118" rx="20" transform="rotate(-5 364 266)"/>
+    </g>
+    <g id="foetter">
+      <rect x="227" y="470" width="56" height="36" rx="18" transform="rotate(-5 255 488)"/>
+      <rect x="317" y="470" width="56" height="36" rx="18" transform="rotate(5 345 488)"/>
+    </g>
+    <path id="lue" d="M247.4 185.2 A56 56 0 0 1 352.6 185.2" fill="none"/>
+
+    <!-- ull: myk, uregelmessig kant -->
+    <filter id="ullkant" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.055" numOctaves="3" seed="9" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="ullkant-liten" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.075" numOctaves="3" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.8" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- ull-fiber: uregelmessig prikk -->
+    <pattern id="ullfiber" width="9" height="9" patternUnits="userSpaceOnUse">
+      <circle cx="2.2" cy="2.6" r="1.2" fill="#265653"/>
+      <circle cx="6.6" cy="6.2" r="0.9" fill="#265653"/>
+      <circle cx="7.6" cy="1.7" r="0.6" fill="#1e4341"/>
+    </pattern>
+    <!-- fleece-lo: tett og jevn -->
+    <pattern id="fleecelo" width="7" height="7" patternUnits="userSpaceOnUse">
+      <path d="M1.7 1.1 V5.9 M5.2 0.6 V5.4" stroke="#B2A28C" stroke-width="1.8" stroke-linecap="round"/>
+    </pattern>
+
+    <clipPath id="lueklipp"><rect x="60" y="40" width="480" height="132"/></clipPath>
+  </defs>
+
+  <g transform="translate(0,-7)">
+
+    <!-- 3: vinddress, ytterst: tynt og skarpt skall -->
+    <g class="lag l-skall">
+      <use href="#kropp" fill="#143A38" stroke="#143A38" stroke-width="84.2" stroke-linejoin="round"/>
+      <use href="#kropp" fill="#FBF7F0" stroke="#FBF7F0" stroke-width="81" stroke-linejoin="round"/>
+    </g>
+
+    <!-- 2: fleecesett, mellomlag: tykt og jevnt -->
+    <g class="lag l-fleece">
+      <use href="#kropp" fill="#C9BBA8" stroke="#C9BBA8" stroke-width="68" stroke-linejoin="round"/>
+      <use href="#kropp" fill="url(#fleecelo)" stroke="url(#fleecelo)" stroke-width="68" stroke-linejoin="round" opacity="0.5"/>
+    </g>
+
+    <!-- 1: tynt ullsett, innerst: myk uregelmessig kant -->
+    <g class="lag l-ull" filter="url(#ullkant)">
+      <use href="#kropp" fill="#143A38" stroke="#143A38" stroke-width="24" stroke-linejoin="round"/>
+      <use href="#kropp" fill="url(#ullfiber)" stroke="url(#ullfiber)" stroke-width="24" stroke-linejoin="round" opacity="0.85"/>
+    </g>
+
+    <!-- barnet i kjernen -->
+    <g class="lag l-kjerne">
+      <use href="#kropp" fill="#C8794A"/>
+      <use href="#hode" fill="#C8794A"/>
+      <use href="#foetter" fill="#C8794A"/>
+      <use href="#armer" fill="none" stroke="#143A38" stroke-width="2.2" opacity="0.5"/>
+    </g>
+
+    <!-- 4: tynn lue, eget noestet lag paa hodet -->
+    <g class="lag l-lue">
+      <g filter="url(#ullkant-liten)">
+        <use href="#lue" stroke="#143A38" stroke-width="23" stroke-linecap="round"/>
+        <use href="#lue" stroke="url(#ullfiber)" stroke-width="23" stroke-linecap="round" opacity="0.85"/>
+      </g>
+    </g>
+
+    <!-- 5: ullsokker, eget noestet lag paa foettene -->
+    <g class="lag l-sokk" filter="url(#ullkant-liten)">
+      <use href="#foetter" fill="none" stroke="#143A38" stroke-width="21"/>
+      <use href="#foetter" fill="none" stroke="url(#ullfiber)" stroke-width="21" opacity="0.85"/>
+    </g>
+
+  </g>
+</svg>
