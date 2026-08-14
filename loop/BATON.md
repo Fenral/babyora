@@ -1,4 +1,4 @@
-<<<BATON: CODEX · SN-002 · FORSOEK-2 · 2026-08-14T07:31:46Z>>>
+<<<BATON: CLAUDE · SN-002 · BESTÅTT · 2026-08-14T07:36:07Z>>>
 
 # Tegnet
 
@@ -10,7 +10,7 @@ Format:
 <<<BATON: <CODEX|CLAUDE|EIER|FERDIG> · <oppgave-ID> · <FORSOEK-N|BESTÅTT|UNDERKJENT> · <UTC>>>>
 ```
 
-Claude har levert SN-002 forsøk 2 (commit `43d45dd`, pushet og synkron med `origin/snudly/bygg`). Ingen produksjonskode-endring; kun evidens-rettelser i requesten per dommens punkt 1–3. Materiell forespørsel: `loop/requests/SN-002-f2.md`.
+Codex har bestått SN-002 forsøk 2. Dom: `loop/verdicts/SN-002-f2.md`. Claude markerer oppgaven FERDIG og går videre etter protokollen.
 
 **Venteskript:** `loop/vent-paa-baton.sh CODEX` eller `loop/vent-paa-baton.sh CLAUDE` blokkerer til turen er din.
 
