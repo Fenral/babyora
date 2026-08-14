@@ -19,10 +19,11 @@ mindre koden refererer dem eksplisitt. C4 forbyr konsollhandling fra
 byggeren, så konsollverifikasjon er eiers ansvar (se merknader nederst).
 
 Alle datoer under er skrevet 2026-08-14 (dagens dato per CLAUDE.md-kontekst).
-Loop-tidsstempler i LEDGER fra og med `loop/LEDGER.md:19` hentes med
-`date -u +%Y-%m-%dT%H:%M:%SZ` (unix) eller
-`(Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")` (PowerShell) —
-begge gir samme UTC-verdi, og hver linje oppgir kommandoen den brukte. Linjene
+Loop-tidsstempler i LEDGER skal være UTC. To kommandoer er i bruk:
+`date -u +%Y-%m-%dT%H:%M:%SZ` (unix) og
+`(Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")` (PowerShell).
+Flere LEDGER-linjer oppgir eksplisitt hvilken kommando de brukte; andre
+oppgir det ikke, uten at det er endret retroaktivt. Linjene
 `loop/LEDGER.md:10-11, 13-14, 18` bruker `07:30Z`, `08:30Z`, `08:35Z` som er
 lokal CEST-veggklokke (UTC+2 sommertid) med feilaktig `Z`-suffiks; deres
 faktiske UTC-tider er ikke verifisert. Feilklassifiseringen er dokumentert i
@@ -30,7 +31,7 @@ faktiske UTC-tider er ikke verifisert. Feilklassifiseringen er dokumentert i
 redigering av gamle linjer.», `loop/LEDGER.md:3`).
 
 **Linjenumre nedenfor er nåværende STATUS.md-linjer** (snapshotet starter på
-`STATUS.md:114` med `> Live-oppdatert 2026-06-04`). Snapshotet er ikke
+`STATUS.md:126` med `> Live-oppdatert 2026-06-04`). Snapshotet er ikke
 redigert; det er skjøvet ned av denne avstemmings-seksjonen.
 
 **Diff-scope (samlet SN-003, alle commits på tvers av f1 og f2):**
@@ -48,18 +49,22 @@ holdes utenfor alle SN-003-commits.
 
 | # | Påstand (nåværende STATUS.md-linjer) | Status | Kilde |
 |---|---|---|---|
-| 1 | `no.klemeg.app` som bundle-id / appId (STATUS.md:119, 248, 261) | VERIFISERT | `capacitor.config.ts:9` (`appId: 'no.klemeg.app'`) |
-| 2 | App-navn `Babyora` (STATUS.md:1, 121, 178–180) | VERIFISERT som gjeldende kode-tilstand | `capacitor.config.ts:10` (`appName: 'Babyora'`). Merk: SN-011 skal endre visningsnavnet til «Snudly»; bundle-id og produkt-IDer forblir. |
-| 3 | Apple IAP-IDer `no.klemeg.app.{monthly,quarterly,yearly}` (STATUS.md:123–125, 253–255) | VERIFISERT | `src/lib/premium/products.ts:24-26` (`PRODUCT_IDS`) |
-| 4 | RevenueCat SDK env-navn `VITE_REVENUECAT_PUBLIC_KEY_IOS/ANDROID` (koblet fra SDK-nøkler STATUS.md:160–161) | VERIFISERT | `.env.example:8-9` (`VITE_REVENUECAT_PUBLIC_KEY_IOS/ANDROID`), `src/lib/billing/revenuecat.ts:14-15`, `codemagic.yaml:30,73,243`. Snapshotet ramser opp nøkkelverdiene, ikke env-navnene; kildesannheten ligger i `.env.example` og `revenuecat.ts`. |
-| 5 | Codemagic env-gruppe `klemeg_revenuecat` inneholder RC-nøklene (STATUS.md:163, 168, 276) | VERIFISERT som referanse | `codemagic.yaml:30,243` refererer gruppa med nøklenavnene i kommentar. Gruppens faktiske innhold ligger i Codemagic-konsollen (ANTAKELSE for verdien; VERIFISERT for referansen) |
-| 6 | `codemagic.yaml` peker til `ryddy-asc-key` (ID `JQVPW4D944`) (STATUS.md:167, 277) | VERIFISERT | `codemagic.yaml:19` (`ryddy-asc-key # eksisterende key (JQVPW4D944), brukt av Ryddy/StrikeArc`), også `:168` |
-| 7 | `babyora_premium_{monthly,quarterly,yearly}` er kanonisk Play-navngiving (STATUS.md:149–151, 230–232) | VERIFISERT som plan-kilde | `NEXT-STEPS.md:69-71`, `RELEASE.md:70,74-75,81`, `README.md:57-59`, `tools/play/play-setup.ts:56-58`, `scripts/bootstrap-revenuecat.mjs:105`. Selve opprettelsen er SN-072 (EIER, irreversibel). |
-| 8a | Skriftlig avviklings-beslutning for `klemeg_premium_*` (STATUS.md:146–152 selv-erklærer avviklingen; kanonisk `babyora_premium_*`) | VERIFISERT som plan-kilde | `NEXT-STEPS.md:69-71`, `RELEASE.md:70,74-75,81`, `README.md:57-59`, `tools/play/play-setup.ts:56-58`, `scripts/bootstrap-revenuecat.mjs:105`. Beslutningen er dokumentert i klonen. |
-| 8b | `klemeg_premium_*` finnes ikke i Play Console (fravær bekreftet) | ANTAKELSE | Konsollfravær ikke verifiserbart fra klonen (C4). Kryssrefereres til K13. Faktisk RevenueCat-rekobling er SN-073 (EIER). |
-| 9a | Skriftlig konklusjon om provisioning-feil: `ryddy-asc-key` har rolle Developer og trenger App Manager (STATUS.md:191) | VERIFISERT som skriftlig konklusjon | `docs/APP-STORE-IAP-SETUP.md:19`, `docs/APP-STORE-ASC-CHECKLIST.md:8,17`, `docs/CURRENT-HANDOFF.md:168` — alle sier det samme. |
+| 1 | `no.klemeg.app` som bundle-id / appId (STATUS.md:131, 260, 273) | VERIFISERT | `capacitor.config.ts:9` (`appId: 'no.klemeg.app'`) |
+| 2 | App-navn `Babyora` (STATUS.md:1, 133, 190–192) | VERIFISERT som gjeldende kode-tilstand | `capacitor.config.ts:10` (`appName: 'Babyora'`). Merk: SN-011 skal endre visningsnavnet til «Snudly»; bundle-id og produkt-IDer forblir. |
+| 3 | Apple IAP-IDer `no.klemeg.app.{monthly,quarterly,yearly}` (STATUS.md:135–137, 265–267) | VERIFISERT | `src/lib/premium/products.ts:24-26` (`PRODUCT_IDS`) |
+| 4 | RevenueCat SDK env-navn `VITE_REVENUECAT_PUBLIC_KEY_IOS/ANDROID` (koblet fra SDK-nøkler STATUS.md:172–173) | VERIFISERT | `.env.example:8-9` (`VITE_REVENUECAT_PUBLIC_KEY_IOS/ANDROID`), `src/lib/billing/revenuecat.ts:14-15`, `codemagic.yaml:30,73,243`. Snapshotet ramser opp nøkkelverdiene, ikke env-navnene; kildesannheten ligger i `.env.example` og `revenuecat.ts`. |
+| 5a | `codemagic.yaml` refererer env-gruppa `klemeg_revenuecat` (STATUS.md:175, 180, 288) | VERIFISERT | `codemagic.yaml:30,243` (`klemeg_revenuecat` som `groups`-oppføring; nøklenavnene i kommentar). |
+| 5b | Env-gruppa `klemeg_revenuecat` inneholder faktisk RC-nøklene i Codemagic-konsollen | ANTAKELSE | Gruppens innhold ligger i Codemagic-konsollen; ikke verifiserbart fra klonen (C4). |
+| 6 | `codemagic.yaml` peker til `ryddy-asc-key` (ID `JQVPW4D944`) (STATUS.md:179, 289) | VERIFISERT | `codemagic.yaml:19` (`ryddy-asc-key # eksisterende key (JQVPW4D944), brukt av Ryddy/StrikeArc`), også `:168` |
+| 7a | `babyora_premium_{monthly,quarterly,yearly}` er skriftlig kanonisk Play-navngiving i klonen (STATUS.md:161–163, 242–244) | VERIFISERT | `NEXT-STEPS.md:69-71`, `RELEASE.md:70,74-75,81`, `README.md:57-59`, `tools/play/play-setup.ts:56-58`, `scripts/bootstrap-revenuecat.mjs:105`. |
+| 7b | `babyora_premium_*` faktisk opprettet i Play Console | ANTAKELSE | Konsollopprettelse er SN-072 (EIER, irreversibel). Ikke verifiserbart fra klonen (C4). |
+| 8a | Skriftlig avviklings-beslutning for `klemeg_premium_*` (STATUS.md:158–164 selv-erklærer avviklingen) | VERIFISERT | `NEXT-STEPS.md:69-71`, `RELEASE.md:70,74-75,81`, `README.md:57-59`, `tools/play/play-setup.ts:56-58`, `scripts/bootstrap-revenuecat.mjs:105`. Beslutningen er dokumentert i klonen. |
+| 8b | `babyora_premium_{monthly,quarterly,yearly}` er skriftlig kanonisk Play-navngiving som skal opprettes | VERIFISERT | Samme kilder som 8a: `NEXT-STEPS.md:69-71`, `RELEASE.md:70,74-75,81`, `README.md:57-59`, `tools/play/play-setup.ts:56-58`, `scripts/bootstrap-revenuecat.mjs:105`. Overlappende med rad 7a for skriftlig kanonisk navn; 8b uttaler seg om erstatningen for `klemeg_premium_*`. |
+| 8c | `klemeg_premium_*` finnes ikke i Play Console (fravær bekreftet) | ANTAKELSE | Konsollfravær ikke verifiserbart fra klonen (C4). Kryssrefereres til K13. Faktisk RevenueCat-rekobling er SN-073 (EIER). |
+| 9a | Skriftlig konklusjon om provisioning-feil: `ryddy-asc-key` har rolle Developer og trenger App Manager (STATUS.md:203) | VERIFISERT | `docs/APP-STORE-IAP-SETUP.md:19`, `docs/APP-STORE-ASC-CHECKLIST.md:8,17`, `docs/CURRENT-HANDOFF.md:168` — alle sier det samme skriftlig. |
 | 9b | Faktisk API-key-rolle i Apple-konsollen | ANTAKELSE | Konsoll-rolle er ikke verifiserbar fra klonen (C4). Retting krever eier-handling i App Store Connect Team-settings. |
-| 10 | Trial-modell (STATUS.md:234: «Årsplanen får Offer → Free trial · 7 dager.») | AVVIK dokumentert | Snapshotet begrenser trial til årsplanen. Faktisk kode: `src/lib/premium/products.ts:53,61,69` har `trialDays: 7` på alle tre. Eierbeslutning 2026-07-31 (SN-008 skal harmonisere kode, kommentarer og paywall-tekst). |
+| 10a | Kode-tilstand: `trialDays: 7` på alle tre planer (monthly, quarterly, yearly) | VERIFISERT | `src/lib/premium/products.ts:53,61,69` — `trialDays: 7` per plan. |
+| 10b | Snapshot-tekst STATUS.md:246: «Årsplanen får Offer → Free trial · 7 dager» begrenser trial til årsplanen | VERIFISERT | Direkte lesing av STATUS.md:246 (bekreftet 2026-08-14). Motstriden mot 10a er dokumentert i E3-tabellen; eierbeslutning 2026-07-31 (SN-008 harmoniserer kode, kommentarer og paywall-tekst). |
 
 ### Konsoll-forankrede påstander (ikke verifiserbare fra klonen)
 
@@ -70,42 +75,49 @@ fra byggeren for verifikasjon.
 
 | # | Påstand | Status | Grunn |
 |---|---|---|---|
-| K1 | App Store Connect App ID `6776416135` | ANTAKELSE | Kun i egne notater (STATUS.md:120,178; NEXT-STEPS-APPLE-REVENUECAT.md; docs/APP-STORE-IAP-SETUP.md; docs/CURRENT-HANDOFF.md). Ingen konsoll-eksport i git. |
-| K2 | Subscription Group ID `22131969` (STATUS.md:121, 252) | ANTAKELSE | Samme som K1. |
-| K3 | IAP Sub IDer `6776416692` / `6776418068` / `6776417937` (STATUS.md:123–125, 253–255) | ANTAKELSE | Samme som K1. |
-| K4 | ASC API Key ID `6KCX7DK2XF`, Issuer `202e9a0f-…` (STATUS.md:126) | ANTAKELSE | Samme som K1. Kobling til `.p8`-fil (K5) ikke verifisert. |
-| K5 | `.p8`-fil på `C:\Users\SkotvoldSivertSende\.playwright-mcp\…` (STATUS.md:127, 257) | ANTAKELSE (utenfor klon) | Filsti på annen brukers hjemmemappe (denne klonen er på `C:\Users\siver\…`). Kan ikke verifiseres. |
-| K6 | Play App ID `4973788330869295535`, package `no.klemeg.app` (STATUS.md:130) | ANTAKELSE | Samme som K1. Package-navnet stemmer med bundle-id (verifisert 1), men konsoll-tilstedeværelsen er ikke. |
-| K7 | Play service account `ryddy-revenuecat@ryddy-play-api.iam.gserviceaccount.com` med Admin (13) (STATUS.md:131, 262) | ANTAKELSE | Samme som K1. |
-| K8 | RevenueCat Project ID `4bd62d97`, Entitlement `entlf724c435c8`, Apple App `appcdc2cd86b2`, Play App `app820dc1a429`, Offering `ofrngceba064bd5`, per-produkt IDer (STATUS.md:134–137, 142–144, 154, 266–268) | ANTAKELSE | Samme som K1. RevenueCat-kall skjer fra native app via SDK; ingen konsoll-eksport i git. |
-| K9 | RevenueCat SDK-nøkler under env-navnene `VITE_REVENUECAT_PUBLIC_KEY_IOS/ANDROID` er lagt inn i klartekst i historisk snapshot (STATUS.md:160–161, 271–272) | ANTAKELSE for verdiens gyldighet i konsollen; VERIFISERT faktum at snapshotet inneholder klartekst-verdier (bekreftet ved lesing 2026-08-14) | Denne avstemmingen refererer ikke selve nøkkelverdiene — G7 er global og gjelder også SN-003, så nye kopier av verdiene skal ikke tilføyes. Retting av snapshot-klartekst er avhengig av SN-030 (native byggekonfig) og eier-rotasjon i RevenueCat-konsollen. Klartekst-linjene forblir historisk sporing. F1s påstand «G7 gjelder ikke SN-003» er trukket tilbake. |
-| K10 | Codemagic App ID `6a217a089f41293842acfade`, wool-app (STATUS.md:166) | ANTAKELSE | Samme som K1. `codemagic.yaml` finnes (verifisert), men konsoll-App-ID er ikke. |
-| K11 | Apple pris + localization ikke satt (STATUS.md:172–182) | ANTAKELSE | Samme som K1. Blir SN-061 (EIER). |
-| K12 | Første Codemagic-build feilet med provisioning-feil (STATUS.md:184–191) | ANTAKELSE med skriftlig beskrivelse | Feilmeldingen som er beskrevet i STATUS.md:188 er sannsynlig, men build-tilstanden i dag (2026-08-14, ~2 mnd etter 2026-06-04 per snapshotets datering STATUS.md:114) er ikke re-verifisert. Blokker for SN-054 (EIER, TestFlight-beta). |
-| K13 | Play Console subscriptions ikke opprettet (STATUS.md:220–222, bekreftet 2026-08-08) | ANTAKELSE med skriftlig bekreftelse | Bekreftelsesteksten dateres 2026-08-08 — konsistent med SN-072 (EIER, irreversibel opprettelse). |
-| K14 | `.env.local` inneholder begge SDK-nøklene (STATUS.md:162 påstår dette) | ANTAKELSE (gitignored — innhold ikke verifiserbart fra klonen) | `.gitignore:13` (mønsteret `*.local`) ekskluderer `.env*.local`, så filen er ikke i git og innholdet kan ikke verifiseres av byggeren. Env-navnene som *skal* ligge der er verifiserte i `.env.example:8-9`; hvorvidt eiers lokale fil faktisk inneholder verdiene er utenfor scope. |
-| K15 | Apple Team-ID `PL9G26C26C` (STATUS.md:247) | ANTAKELSE | Kun i egne notater (STATUS.md og `codemagic.yaml`-integrasjon). `codemagic.yaml` refererer ikke Team-ID-en som streng; bare via `ryddy-asc-key`-integrasjonen (VERIFISERT som referanse i rad 6). Konsoll-verifikasjon eies av eier. |
-| K16 | Play service-account JSON-sti `C:\Users\SkotvoldSivertSende\.ryddy-secrets\play-api-service-account.json` (STATUS.md:263) | ANTAKELSE (utenfor klon) | Filsti på annen brukers hjemmemappe (denne klonen er `C:\Users\siver\…`). Filen er ikke i git (hemmelighet) og kan ikke verifiseres; kryssrefereres til K5 og E3-motstriden om `wool-app`-stien. |
-| K17 | «16 / 16 må passere. Koden er trygg — det er kun store-konfig som krever oppgradering nå.» (STATUS.md:289) | ANTAKELSE (foreldet 2026-06-04) | Utsagnet er datert `Autonom session 2026-06-04` (STATUS.md:293) og er ikke re-verifisert som operasjonell konklusjon. G1–G4 er grønne 2026-08-14 (se f2-request), men «kun store-konfig gjenstår» motstrider `loop/ARBEIDSLISTE-SNUDLY.md` (45+ oppgaver) og dead-command `scripts/e2e-flows.mjs` behandles begge i E3-tabellen. |
+| K1 | App Store Connect App ID `6776416135` | ANTAKELSE | Kun i egne notater (STATUS.md:132,190; NEXT-STEPS-APPLE-REVENUECAT.md; docs/APP-STORE-IAP-SETUP.md; docs/CURRENT-HANDOFF.md). Ingen konsoll-eksport i git. |
+| K2 | Subscription Group ID `22131969` (STATUS.md:133, 264) | ANTAKELSE | Samme som K1. |
+| K3 | IAP Sub IDer `6776416692` / `6776418068` / `6776417937` (STATUS.md:135–137, 265–267) | ANTAKELSE | Samme som K1. |
+| K4 | ASC API Key ID `6KCX7DK2XF`, Issuer `202e9a0f-…` (STATUS.md:138) | ANTAKELSE | Samme som K1. Kobling til `.p8`-fil (K5) ikke verifisert. |
+| K5 | `.p8`-fil på `C:\Users\SkotvoldSivertSende\.playwright-mcp\…` (STATUS.md:139, 269) | ANTAKELSE (utenfor klon) | Filsti på annen brukers hjemmemappe (denne klonen er på `C:\Users\siver\…`). Kan ikke verifiseres. |
+| K6 | Play App ID `4973788330869295535`, package `no.klemeg.app` (STATUS.md:142) | ANTAKELSE | Samme som K1. Package-navnet stemmer med bundle-id (verifisert 1), men konsoll-tilstedeværelsen er ikke. |
+| K7 | Play service account `ryddy-revenuecat@ryddy-play-api.iam.gserviceaccount.com` med Admin (13) (STATUS.md:143, 274) | ANTAKELSE | Samme som K1. |
+| K8 | RevenueCat Project ID `4bd62d97`, Entitlement `entlf724c435c8`, Apple App `appcdc2cd86b2`, Play App `app820dc1a429`, Offering `ofrngceba064bd5`, per-produkt IDer (STATUS.md:146–149, 154–156, 166, 278–280) | ANTAKELSE | Samme som K1. RevenueCat-kall skjer fra native app via SDK; ingen konsoll-eksport i git. |
+| K9a | Historisk snapshot inneholder RC SDK-nøkler i klartekst (STATUS.md:172–173, 283–284) | VERIFISERT | Direkte lesing av STATUS.md:172–173 og :283–284 (bekreftet 2026-08-14). |
+| K9b | Klartekst-verdiene er fortsatt gyldige nøkler i RevenueCat-konsollen | ANTAKELSE | Konsollverifikasjon utenfor klonen (C4). Denne avstemmingen refererer ikke selve verdiene — G7 er global og gjelder også SN-003. Retting av snapshot-klartekst er avhengig av SN-030 (native byggekonfig) og eier-rotasjon i RevenueCat-konsollen. F1s påstand «G7 gjelder ikke SN-003» er trukket tilbake. |
+| K10 | Codemagic App ID `6a217a089f41293842acfade`, wool-app (STATUS.md:178) | ANTAKELSE | Samme som K1. `codemagic.yaml` finnes (verifisert), men konsoll-App-ID er ikke. |
+| K11 | Apple pris + localization ikke satt (STATUS.md:184–194) | ANTAKELSE | Samme som K1. Blir SN-061 (EIER). |
+| K12 | Første Codemagic-build feilet med provisioning-feil (STATUS.md:196–203) | ANTAKELSE med skriftlig beskrivelse | Feilmeldingen som er beskrevet i STATUS.md:200 er sannsynlig, men build-tilstanden i dag (2026-08-14, ~2 mnd etter 2026-06-04 per snapshotets datering STATUS.md:126) er ikke re-verifisert. Blokker for SN-054 (EIER, TestFlight-beta). |
+| K13 | Play Console subscriptions ikke opprettet (STATUS.md:232–234, bekreftet 2026-08-08) | ANTAKELSE med skriftlig bekreftelse | Bekreftelsesteksten dateres 2026-08-08 — konsistent med SN-072 (EIER, irreversibel opprettelse). |
+| K14 | `.env.local` inneholder begge SDK-nøklene (STATUS.md:174 påstår dette) | ANTAKELSE (gitignored — innhold ikke verifiserbart fra klonen) | `.gitignore:13` (mønsteret `*.local`) ekskluderer `.env*.local`, så filen er ikke i git og innholdet kan ikke verifiseres av byggeren. Env-navnene som *skal* ligge der er verifiserte i `.env.example:8-9`; hvorvidt eiers lokale fil faktisk inneholder verdiene er utenfor scope. |
+| K15 | Apple Team-ID `PL9G26C26C` (STATUS.md:259) | ANTAKELSE | Kun i egne notater (STATUS.md og `codemagic.yaml`-integrasjon). `codemagic.yaml` refererer ikke Team-ID-en som streng; bare via `ryddy-asc-key`-integrasjonen (VERIFISERT som referanse i rad 6). Konsoll-verifikasjon eies av eier. |
+| K16 | Play service-account JSON-sti `C:\Users\SkotvoldSivertSende\.ryddy-secrets\play-api-service-account.json` (STATUS.md:275) | ANTAKELSE (utenfor klon) | Filsti på annen brukers hjemmemappe (denne klonen er `C:\Users\siver\…`). Filen er ikke i git (hemmelighet) og kan ikke verifiseres; kryssrefereres til K5 og E3-motstriden om `wool-app`-stien. |
+| K17 | «16 / 16 må passere. Koden er trygg — det er kun store-konfig som krever oppgradering nå.» (STATUS.md:301) | ANTAKELSE (foreldet 2026-06-04) | Utsagnet er datert `Autonom session 2026-06-04` (STATUS.md:305) og er ikke re-verifisert som operasjonell konklusjon. G1–G4 er grønne 2026-08-14 (se f2-request), men «kun store-konfig gjenstår» motstrider `loop/ARBEIDSLISTE-SNUDLY.md` (45+ oppgaver) og dead-command `scripts/e2e-flows.mjs` behandles begge i E3-tabellen. |
+| K18a | IAP-capability aktivert på Apple-identifier (STATUS.md:131) | ANTAKELSE | Apple Developer-konsollstatus; ikke verifiserbar fra klonen (C4). Bundle-id `no.klemeg.app` selv er verifisert i rad 1. |
+| K18b | Subscription Group-navnet «Babyora Premium» i Apple (STATUS.md:133) | ANTAKELSE | App Store Connect-konsollstatus; ikke verifiserbar fra klonen (C4). Group-ID er dekket av K2. |
+| K18c | Play-app-klassifiseringen «Norwegian default, Free + IAP» (STATUS.md:142) | ANTAKELSE | Play Console-konsollstatus; ikke verifiserbar fra klonen (C4). Package-navnet stemmer med bundle-id (rad 1); klassifisering og Play App ID (K6) er ikke. |
+| K18d | RC-koblingsstatus «koblet med Key ID + Issuer + .p8» / «koblet med play-api-service-account.json» (STATUS.md:148–149) | ANTAKELSE | RevenueCat-konsollstatus; ikke verifiserbar fra klonen (C4). Kryssrefereres til K4, K5, K7 og K16. |
+| K18e | RC package-navn + mappinger `$rc_monthly`/`$rc_three_month`/`$rc_annual` mot Apple/Play-produkter (STATUS.md:166–169) | ANTAKELSE | RevenueCat-konsollstatus; ikke verifiserbar fra klonen (C4). RC-projekt/entitlement/offering-IDer selv er dekket av K8. |
 
 ### Feilfakta og motstrid (E3)
 
 | Sted | Problem |
 |---|---|
-| STATUS.md:138 (`✅ 6 Products … alle linket til premium-entitlement`) vs merknad STATUS.md:146–152 | Selvmotsigelse innenfor dokumentet: Play-kolonnen «peker på produkter som ikke finnes». Grønn hake er materiell feil; Play-siden er ikke fullført før SN-072/SN-073 er avklart. |
-| STATUS.md:116 (`## 🟢 100 % ferdig`) vs seksjon `🟡 Pending — krever Sivert` (STATUS.md:170+) | Overskriften er misvisende. «100 %» refererer bare til blokka umiddelbart under, men leseren tar det som statusflagg for hele appen. Loopens arbeidsliste dokumenterer 45+ gjenstående oppgaver (`loop/ARBEIDSLISTE-SNUDLY.md`). |
-| STATUS.md:286 (`node scripts/e2e-flows.mjs` … «16 / 16 må passere») | Filen finnes ikke: `ls scripts/e2e-flows.mjs` → «No such file or directory». Seksjonen «Hvis noe brekker» er død kode. Riktig fallback for byggeren er `npm run lint && npx tsc --noEmit && npm test && npm run build` (G1–G4). |
-| STATUS.md:284 (`cd C:\Users\SkotvoldSivertSende\wool-app`) | Klonen er nå på `C:\Users\siver\Documents\Snudly-bygg\snudly` (env-kontekst per CLAUDE-oppdrag). Sti er utdatert. |
-| STATUS.md:114 (`Live-oppdatert 2026-06-04`) og STATUS.md:293 («95 % … bare cert/profile + Apple-priser igjen») | Fem påstander som er blitt utdatert eller motstridende siden 2026-06-04: RevenueCat-mismatch avklart i SN-002, prøveperiode utvidet til 3 planer 2026-07-31, Snudly-omdøping vedtatt 2026-08-14 (SN-005/SN-011), Play-produkter navngivet om (`babyora_premium_*`, SN-072), og SN-073 må rekoble RevenueCat. «95 %» er ikke lenger sant. |
-| Bundle Explorer / Play-tilstand pr 2026-08-08 (STATUS.md:220–222) | Denne merknaden ble skrevet før SN-002. Konsistent med SN-071/SN-072-avhengighet, men bør re-verifiseres av eier ved SN-071. Utenfor SN-003s scope. |
-| RevenueCat-tabellen (STATUS.md:142–144) peker Play-kolonnen på `klemeg_premium_*` med `prod…`-IDer | Rekobling er SN-073 (EIER). Tabellen er teknisk sann for RevenueCat’s nåværende Play-App-oppsett (per notat), men peker på ikke-eksisterende Play-produkter (K13). Skal ikke re-brukes som fasit. |
-| Snudly vs Babyora som offentlig navn | `docs/DECISION-LOG.md:215-217` (2026-07-15) sier «Offentlig navn: Babyora — naming-porten lukket». Nyere eierkilder overstyrer: `loop/referanse/SNUDLY-DESIGNSYSTEM.md` («Navnebytte Babyora → Snudly er gjennomført i mocken», gjelder fra 13.08.2026), `loop/ARBEIDSLISTE-SNUDLY.md:21` (SN-005 «Registrer eierbeslutningene, Snudly-navnet»), byggegrenen `snudly/bygg`, `loop/notater/SN-005-kartlegging.md:22` (Snudly er visningsnavn; bundle-id `no.klemeg.app` og produkt-IDer `no.klemeg.app.*` endres aldri). SN-003 registrerer motstriden; harmonisering av `docs/DECISION-LOG.md` er SN-005s scope. |
+| STATUS.md:150 (`✅ 6 Products … alle linket til premium-entitlement`) vs merknad STATUS.md:158–164 | Selvmotsigelse innenfor dokumentet: Play-kolonnen «peker på produkter som ikke finnes». Grønn hake er materiell feil; Play-siden er ikke fullført før SN-072/SN-073 er avklart. |
+| STATUS.md:128 (`## 🟢 100 % ferdig`) vs seksjon `🟡 Pending — krever Sivert` (STATUS.md:182+) | Overskriften er misvisende. «100 %» refererer bare til blokka umiddelbart under, men leseren tar det som statusflagg for hele appen. Loopens arbeidsliste dokumenterer 45+ gjenstående oppgaver (`loop/ARBEIDSLISTE-SNUDLY.md`). |
+| STATUS.md:298 (`node scripts/e2e-flows.mjs` … «16 / 16 må passere») | Filen finnes ikke: `ls scripts/e2e-flows.mjs` → «No such file or directory». Seksjonen «Hvis noe brekker» er død kode. Riktig fallback for byggeren er `npm run lint && npx tsc --noEmit && npm test && npm run build` (G1–G4). |
+| STATUS.md:296 (`cd C:\Users\SkotvoldSivertSende\wool-app`) | Klonen er nå på `C:\Users\siver\Documents\Snudly-bygg\snudly` (env-kontekst per CLAUDE-oppdrag). Sti er utdatert. |
+| STATUS.md:126 (`Live-oppdatert 2026-06-04`) og STATUS.md:305 («95 % … bare cert/profile + Apple-priser igjen») | Fem påstander som er blitt utdatert eller motstridende siden 2026-06-04: RevenueCat-mismatch avklart i SN-002, prøveperiode utvidet til 3 planer 2026-07-31, Snudly-omdøping vedtatt 2026-08-14 (SN-005/SN-011), Play-produkter navngivet om (`babyora_premium_*`, SN-072), og SN-073 må rekoble RevenueCat. «95 %» er ikke lenger sant. |
+| Bundle Explorer / Play-tilstand pr 2026-08-08 (STATUS.md:232–234) | Denne merknaden ble skrevet før SN-002. Konsistent med SN-071/SN-072-avhengighet, men bør re-verifiseres av eier ved SN-071. Utenfor SN-003s scope. |
+| RevenueCat-tabellen (STATUS.md:154–156) peker Play-kolonnen på `klemeg_premium_*` med `prod…`-IDer | Rekobling er SN-073 (EIER). Tabellen er teknisk sann for RevenueCat’s nåværende Play-App-oppsett (per notat), men peker på ikke-eksisterende Play-produkter (K13). Skal ikke re-brukes som fasit. |
+| Snudly vs Babyora som offentlig navn | `docs/DECISION-LOG.md:215-217` (2026-07-15) sier «Offentlig navn: Babyora — naming-porten lukket». Nyere versjonerte eierkilder overstyrer: `loop/referanse/SNUDLY-LANSERINGSPLAN-V2.md:21` («Snudly besluttet av eier 13. august — uregistrert i repoet») og `:31` («Snudly-byttet skjer utelukkende i visningsnavn, butikktekst og UI; bundle-id `no.klemeg.app` og Apple produkt-IDene endres aldri»), `loop/referanse/SNUDLY-DESIGNSYSTEM.md` («Navnebytte Babyora → Snudly er gjennomført i mocken», gjelder fra 13.08.2026), `loop/ARBEIDSLISTE-SNUDLY.md:21` (SN-005 «Registrer eierbeslutningene, Snudly-navnet»), samt byggegrenen `snudly/bygg`. SN-003 registrerer motstriden; harmonisering av `docs/DECISION-LOG.md` er SN-005s scope. |
+| Trial-modell: kode vs snapshot-tekst | `src/lib/premium/products.ts:53,61,69` gir `trialDays: 7` på alle tre planer (monthly, quarterly, yearly), mens snapshotet STATUS.md:246 sier «Årsplanen får Offer → Free trial · 7 dager» og begrenser trial til årsplanen. Eierbeslutning 2026-07-31 utvidet til alle tre; SN-008 harmoniserer kode-kommentarer og paywall-tekst. Rader 10a/10b klassifiserer hver av de to påstandene som VERIFISERT; motstriden dokumenteres her. |
 
 ### Konklusjon
 
 - Alt kode- og konfigurasjonsforankret (bundle-id, Apple IAP-IDer, Codemagic-referanser, env-navn) er VERIFISERT mot klonen på dagens dato.
 - Alt konsoll-forankret (numeriske IDer i Apple, Play, RevenueCat, Codemagic; ASC API-key-detaljer; `.p8`-fil på annen maskin; SDK-nøkler i klartekst; `.env.local`; Apple Team-ID; JSON-sti) er ANTAKELSE og eies av eier for konsollverifikasjon. Ingen av dem er endret eller berørt av SN-003.
-- Fem klare feilfakta / motstrid: (a) grønn 6-produkt-hake for Play, (b) misvisende «100 %»-overskrift, (c) død kommando `scripts/e2e-flows.mjs`, (d) foreldet «95 %-ferdig»-signatur, (e) Snudly vs Babyora offentlig navn (SN-005 harmoniserer).
+- Seks klare feilfakta / motstrid: (a) grønn 6-produkt-hake for Play, (b) misvisende «100 %»-overskrift, (c) død kommando `scripts/e2e-flows.mjs`, (d) foreldet «95 %-ferdig»-signatur, (e) Snudly vs Babyora offentlig navn (SN-005 harmoniserer), (f) trial-modell kode vs snapshot-tekst (SN-008 harmoniserer).
 - SN-003 endrer ikke selve snapshotet; det ligger uendret nedenfor for sporing. Autoritativ status for hver enkelt påstand er tabellene over.
 - Naturlige oppfølginger utenfor SN-003s scope: SN-004 (`NEXT-STEPS-APPLE-REVENUECAT.md` og `docs/APP-STORE-IAP-SETUP.md` skal avstemmes tilsvarende), SN-005 (DECISION-LOG dokumenterer Snudly-navnet og loop-mandatet; harmoniserer motstriden mot `docs/DECISION-LOG.md:215-217`), SN-008 (prøveperiode-konsistens), SN-030 (RC-nøkler ut av klartekst inn i native byggekonfig), SN-072/SN-073 (Play-siden).
 
