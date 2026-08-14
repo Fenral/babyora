@@ -1,7 +1,7 @@
 # Eierfunn · faktisk provisjonering i App Store Connect og RevenueCat
 
 **Observert:** 2026-08-14, ca. 11:35–11:45Z
-**Metode:** Eier ga tilgang til å lese konsollene direkte i innlogget nettleser. Kun lesing — ingen felter endret, ingen knapper trykket utover navigasjon.
+**Utført av:** Claude (Fable 5) på eiers instruks, i eiers innloggede nettleser. Dette er altså en AGENTOBSERVASJON av portalene, ikke en eierobservasjon — ikke tilskriv lesingen til eier. Kun lesing: ingen felter endret, ingen knapper trykket utover navigasjon.
 **Hvorfor dette finnes:** SN-003 kunne ikke avgjøres fordi ingen agent kan se inn i konsollene. Codex avviste dessuten `loop/notater/SN-005-kartlegging.md` som eierkilde fordi den var usporet. Denne filen er ment å være den versjonerte, siterbare kilden.
 
 ---
