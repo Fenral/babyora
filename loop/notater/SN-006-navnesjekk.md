@@ -24,8 +24,9 @@ kategoriene, men lansering krever handling *før* App Store-innsending på tre o
    2026-08-14).
 2. **Sikre håndtakene** TikTok @snudly, GitHub org/snudly, og Instagram/YouTube «_app»-
    varianter (Instagram @snudly og YouTube @snudly er okkupert som tomme placeholder-
-   kontoer — kan ikke tas uten Instagrams/YouTubes varemerkeprosess, men driver ikke
-   konkurrerende virksomhet).
+   kontoer — kan ikke tas uten Instagrams/YouTubes varemerkeprosess. Ingen synlig
+   aktivitet observert utlogget, men eventuell konkurrerende virksomhet bak
+   innloggingsvegg er ikke bekreftet fraværende).
 3. **Bekrefte varemerkefravær** direkte i Patentstyret + EUIPO (min agent nådde ikke DB-ene
    direkte pga. CAPTCHA/SPA; alle «null treff»-utsagn hviler på Google-indeksering av
    tredjeparts-speilinger som Justia/Trademarkia). Anbefaler manuell sjekk før varemerke-
@@ -287,8 +288,10 @@ probing — låste plattformer (LinkedIn/Facebook uten cookies) merket USIKKER.
 - **Instagram @snudly** — okkupert av tom konto (0 posts, 0 followers). Ingen synlig
   aktivitet, men håndtaket er formelt tatt.
 - **YouTube @snudly** — okkupert av tom kanal med navn "snudly", ingen beskrivelse.
-- Ingen driver konkurrerende virksomhet i norsk barnefamilie-segment så langt vi kan se
-  utlogget, så forvirringsrisiko er lav — men merkevare-eierskap er svekket.
+- Basert på utlogget probing ser ingen av disse ut til å drive konkurrerende
+  virksomhet i norsk barnefamilie-segment — men innhold bak innloggingsvegg
+  (Instagram private story-arkiv, YouTube skjulte videoer o.l.) er ikke sjekket.
+  Merkevare-eierskap er svekket uavhengig av hva som ligger bak.
 
 ### Usikkerhet
 
@@ -326,6 +329,14 @@ probing — låste plattformer (LinkedIn/Facebook uten cookies) merket USIKKER.
   domenene er ledige. Kjernenavnet «Snudly» kan brukes i visningsnavn og markedsføring.
 - Bundle-id `no.klemeg.app` er urørt (per DECISION-LOG 2026-08-14 E-2), så tekniske
   identifikatorer i App Store og Play påvirkes ikke.
+
+**Lukking av åpen naming-port fra 2026-07-15:** `docs/DECISION-LOG.md:313` («Offentlig
+navn: Babyora») slår fast at «En formell tilgjengelighetssjekk (varemerke, `.no`-domene,
+App Store-navn, håndtak) anbefales fortsatt før innsending». Visningsnavn-delen av den
+entryen er superseded av E-2 2026-08-14, men tilgjengelighetssjekk-anbefalingen har
+stått åpen. Denne rapporten (SN-006) er den tilgjengelighetssjekken, nå gjennomført på
+det vedtatte navnet Snudly, og lukker den porten så langt indirekte kildesjekk rekker.
+Direkte-DB-verifikasjon i Patentstyret/EUIPO gjenstår (se seksjon 5).
 
 ---
 
