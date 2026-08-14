@@ -77,13 +77,12 @@ import { useNativeSettings } from '../hooks/useNativeSettings';
 import { track } from '../lib/analytics/track';
 import {
   isRevenueCatConfigured,
-  purchasePackage,
+  purchasePlan,
   restorePurchases,
 } from '../lib/billing/revenuecat';
 import {
-  PRODUCT_IDS,
   type PaywallTrigger,
-  type ProductKey,
+  type PlanKey,
 } from '../lib/premium/products';
 import {
   PAYWALL_COPY,
@@ -726,7 +725,7 @@ export function PaywallDialog({
 
   // v2 (§8): INGEN forhåndsvalgt plan — CTA hviler til et AKTIVT valg er
   // gjort. `null` = ingen rad valgt ennå.
-  const [selectedPlan, setSelectedPlan] = useState<ProductKey | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey | null>(null);
   const [pending, setPending] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -906,7 +905,7 @@ export function PaywallDialog({
 
   // P9 (duel §3): «Prisplan velges» — selection, samme språk som andre valg.
   const handleSelectPlan = useCallback(
-    (key: ProductKey) => {
+    (key: PlanKey) => {
       void fireSelection();
       setSelectedPlan(key);
     },
@@ -934,7 +933,7 @@ export function PaywallDialog({
         scheduleAutoClose();
         return;
       }
-      const result = await purchasePackage(PRODUCT_IDS[plan]);
+      const result = await purchasePlan(plan);
       if (result.success) {
         setPremium(true);
         setStatusMessage(PAYWALL_COPY.statusActivated);
@@ -943,9 +942,17 @@ export function PaywallDialog({
         void notifySuccess();
         scheduleAutoClose();
       } else {
+        // Eiervedtak V5: kj\u00f8p feiler aldri stille. Bruk den brukervendte
+        // teksten fra `purchasePlan`. `user_cancelled` er ikke en feil vi
+        // kjefter om — brukeren gjorde noe bevisst — s\u00e5 vi tilbakestiller
+        // bare statuslinjen uten et rødt alert-panel.
         setStatusMessage('');
-        setErrorMessage(PAYWALL_COPY.errorPurchaseFailed);
-        void notifyError();
+        if (result.reason === 'user_cancelled') {
+          setErrorMessage(null);
+        } else {
+          setErrorMessage(result.message);
+          void notifyError();
+        }
       }
     } catch (err) {
       console.error('[Babyora] PaywallDialog purchase feilet', err);

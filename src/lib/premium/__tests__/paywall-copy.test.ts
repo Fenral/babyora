@@ -70,10 +70,9 @@ describe('paywall-copy — hele-produktet-innhold (P2 hard paywall, PRODUCT.md 2
     expect(PAYWALL_COPY.cta).toBe('Start 7 dager gratis');
   });
 
-  it('alle tre produkter har trial (P2: 7 dager på alle planer, ikke bare årlig)', () => {
+  it('begge produkter har trial (P2: 7 dager på begge planer, eiervedtak 2026-08-14 V1 fjernet kvartal)', () => {
     expect(PRODUCTS.yearly.trialDays).toBeGreaterThan(0);
     expect(PRODUCTS.monthly.trialDays).toBeGreaterThan(0);
-    expect(PRODUCTS.quarterly.trialDays).toBeGreaterThan(0);
   });
 
   it('legacy trust-copy og statisk flaggskip-løfte er fjernet', () => {
@@ -99,10 +98,6 @@ describe('paywall-copy — hele-produktet-innhold (P2 hard paywall, PRODUCT.md 2
     expect(buildPlanAriaLabel('yearly')).toBe(
       'Årlig, 299 kroner per år, tilsvarer 24,90 kroner per måned, spar 36 prosent, 7 dager gratis først',
     );
-  });
-
-  it('kvartal aria-label nevner nå også trial (P2: trial på alle tre planer)', () => {
-    expect(buildPlanAriaLabel('quarterly')).toBe('3 måneder, 99 kroner per 3 måneder, 7 dager gratis først');
   });
 
   it('månedlig aria-label nevner nå også trial (P2: trial på alle tre planer)', () => {

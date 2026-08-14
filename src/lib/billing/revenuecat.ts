@@ -1,13 +1,26 @@
 /**
  * RevenueCat-wrapper.
  *
- * Kobler `useAccess` til faktiske abonnementer når RevenueCat API-keys er
- * konfigurert. Fallback: localStorage-mock (trial-modus). RevenueCat
- * Capacitor-plugin håndterer iOS + Android.
+ * Eiervedtak 2026-08-14 (loop/referanse/EIERVEDTAK-BETALING-2026-08-14.md):
+ *  V2: appen spør RevenueCat om PLANTYPE (månedlig/årlig), ikke Apples
+ *      produkt-ID. RevenueCat-tilbudet avgjør hvilket faktisk butikk-
+ *      produkt det er per plattform.
+ *  V5: kjøp skal aldri feile stille. Enhver ikke-suksess returnerer en
+ *      typet `reason` og en tekst kalleren kan vise brukeren; ingen
+ *      `false` uten forklaring.
+ *
+ * RevenueCat Capacitor-pluginen håndterer iOS + Android.
  */
 
 import { Capacitor } from '@capacitor/core';
-import { Purchases, LOG_LEVEL, type CustomerInfo } from '@revenuecat/purchases-capacitor';
+import {
+  Purchases,
+  LOG_LEVEL,
+  PACKAGE_TYPE,
+  type CustomerInfo,
+  type PurchasesPackage,
+} from '@revenuecat/purchases-capacitor';
+import { type PlanKey } from '../premium/products';
 
 const ENTITLEMENT_ID = 'premium';
 
@@ -62,30 +75,104 @@ export async function getOfferings() {
   }
 }
 
-/** Kjøp ett produkt — kalles fra PaywallScreen ved valg av plan. */
-export async function purchasePackage(packageId: string): Promise<{ success: boolean; customerInfo?: CustomerInfo }> {
+/**
+ * Feilgrunner et kjøp kan strande på — V5-krav: hver grunn har en typet
+ * kode PaywallDialog kan slå opp en brukervendt tekst for. Byggeren av
+ * `purchasePlan` skal aldri returnere `{ success: false }` uten en grunn.
+ */
+export type PurchaseFailureReason =
+  | 'not_configured'
+  | 'no_offering'
+  | 'plan_unavailable'
+  | 'no_entitlement'
+  | 'user_cancelled'
+  | 'store_error';
+
+export type PurchaseResult =
+  | { success: true; customerInfo: CustomerInfo }
+  | { success: false; reason: PurchaseFailureReason; message: string };
+
+const REASON_MESSAGE: Record<PurchaseFailureReason, string> = {
+  not_configured:
+    'Kjøp er ikke aktivert i denne versjonen. Åpne appen fra App Store eller Google Play for å kjøpe.',
+  no_offering:
+    'Kunne ikke hente prisene fra butikken. Sjekk nettilkoblingen og prøv igjen.',
+  plan_unavailable:
+    'Denne planen er ikke tilgjengelig i butikken akkurat nå. Prøv en annen plan, eller kom tilbake senere.',
+  no_entitlement:
+    'Kjøpet ble registrert, men vi fant ikke tilgangen din. Prøv å gjenopprette kjøp, eller kontakt support.',
+  user_cancelled: 'Kjøpet ble avbrutt.',
+  store_error:
+    'Noe gikk galt under kjøpet. Prøv igjen, eller sjekk nettilkoblingen din.',
+};
+
+function fail(reason: PurchaseFailureReason): PurchaseResult {
+  return { success: false, reason, message: REASON_MESSAGE[reason] };
+}
+
+/** Plan-nøkkel → RevenueCat package_type. Legges ikke til før eier har vedtatt en ny plan-type. */
+const PLAN_TO_PACKAGE_TYPE: Record<PlanKey, string> = {
+  yearly: PACKAGE_TYPE.ANNUAL,
+  monthly: PACKAGE_TYPE.MONTHLY,
+};
+
+/**
+ * Kjøp en plan (V2: plantype, ikke Apple-produkt-ID). Finner riktig pakke i
+ * det aktive tilbudet via `packageType` og gjennomfører kjøpet. Enhver ikke-
+ * suksess får en typet grunn og en brukervendt tekst.
+ */
+export async function purchasePlan(plan: PlanKey): Promise<PurchaseResult> {
   if (!initialized || !Capacitor.isNativePlatform()) {
-    return { success: false };
+    console.error('[Babyora] purchasePlan: RevenueCat ikke initialisert (native only)');
+    return fail('not_configured');
   }
+
+  let offering;
   try {
-    const offerings = await getOfferings();
-    if (!offerings) return { success: false };
+    offering = await getOfferings();
+  } catch (err) {
+    console.error('[Babyora] purchasePlan: no_offering (getOfferings kastet)', err);
+    return fail('no_offering');
+  }
+  if (!offering) {
+    console.error('[Babyora] purchasePlan: no_offering (intet aktivt tilbud i RevenueCat)');
+    return fail('no_offering');
+  }
 
-    const pkg = offerings.availablePackages.find(
-      (p) => p.identifier === packageId || p.product.identifier === packageId,
+  const wantedType = PLAN_TO_PACKAGE_TYPE[plan];
+  const pkg: PurchasesPackage | undefined = offering.availablePackages.find(
+    (p) => p.packageType === wantedType,
+  );
+
+  if (!pkg) {
+    console.error(
+      `[Babyora] purchasePlan: fant ingen pakke med packageType=${wantedType} for plan=${plan} i tilbud=${offering.identifier}`,
     );
-    if (!pkg) return { success: false };
+    return fail('plan_unavailable');
+  }
 
-    const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
-    return {
-      success: Boolean(customerInfo.entitlements.active[ENTITLEMENT_ID]),
-      customerInfo,
-    };
+  let customerInfo: CustomerInfo;
+  try {
+    const result = await Purchases.purchasePackage({ aPackage: pkg });
+    customerInfo = result.customerInfo;
   } catch (err: unknown) {
     const userCanceled = (err as { userCancelled?: boolean })?.userCancelled;
-    if (!userCanceled) console.error('[Babyora] purchasePackage feilet', err);
-    return { success: false };
+    if (userCanceled) {
+      return fail('user_cancelled');
+    }
+    console.error('[Babyora] purchasePlan: butikk-kall feilet', err);
+    return fail('store_error');
   }
+
+  if (!customerInfo.entitlements.active[ENTITLEMENT_ID]) {
+    console.error(
+      '[Babyora] purchasePlan: kjøp gjennomført, men entitlement mangler',
+      customerInfo,
+    );
+    return { success: false, reason: 'no_entitlement', message: REASON_MESSAGE.no_entitlement };
+  }
+
+  return { success: true, customerInfo };
 }
 
 /** Restore-funksjon — kalles fra paywall hvis bruker har kjøpt før. */

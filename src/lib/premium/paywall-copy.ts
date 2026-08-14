@@ -12,48 +12,31 @@
  * månedlig-ekvivalent-teksten som parses fra PRODUCTS.yearly.description
  * (samme godkjente tekst som F81.1 allerede har låst i products.test.ts).
  *
- * Eierbeslutning 2026-07-31 (PRODUCT.md, hard paywall): copyen er reframet
- * fra DELTA («I dag → 10 dager») til HELE PRODUKTET — det finnes ikke
- * lenger en gratis baseline å sammenligne mot, så paywallen selger alltid
- * det komplette produktet, uansett hvilken skjerm/trigger som åpnet den.
+ * Eiervedtak 2026-08-14 (loop/referanse/EIERVEDTAK-BETALING-2026-08-14.md V1):
+ * kvartalsplanen («pappaperm») utgår. Betalingsveggen viser nå TO likeverdige
+ * prisrader — Årlig og Månedlig.
  */
 import {
   PRODUCTS,
-  type ProductKey,
+  type PlanKey,
 } from './products';
 
-/**
- * Betalingsvegg v2 (docs/design-notes/sol-duel-2026-07-31.md §8, docs/mocks/
- * monter/paywall-v2*.html): TRE likeverdige prisrader — Årlig, Kvartal
- * («pappaperm»), Månedlig. Utvidet fra de to (Årlig+Månedlig) den forrige
- * hard-paywall-versjonen viste.
- */
-export const PLAN_ORDER: ReadonlyArray<ProductKey> = ['yearly', 'quarterly', 'monthly'];
+export const PLAN_ORDER: ReadonlyArray<PlanKey> = ['yearly', 'monthly'];
 
-/** Visningsnavn i selve plan-raden (paywall-v2.html: "Kvartal", ikke "3 måneder"). */
-export const PLAN_DISPLAY_NAME: Record<ProductKey, string> = {
+/** Visningsnavn i selve plan-raden. */
+export const PLAN_DISPLAY_NAME: Record<PlanKey, string> = {
   yearly: 'Årlig',
-  quarterly: 'Kvartal',
   monthly: 'Månedlig',
 };
 
-/**
- * Tilgjengelig-navn-varianten for buildPlanAriaLabel — HOLDT UTE fra
- * PLAN_DISPLAY_NAME bevisst: quarterly sin aria-label er en låst kontrakt
- * (paywall-copy.test.ts) som staver ut "3 måneder", selv om selve KORTET nå
- * viser "Kvartal" visuelt (v2-redesignet). Yearly/monthly er identiske i
- * begge kart, så kun quarterly faktisk avviker.
- */
-const PLAN_ARIA_NAME: Record<ProductKey, string> = {
+const PLAN_ARIA_NAME: Record<PlanKey, string> = {
   yearly: 'Årlig',
-  quarterly: '3 måneder',
   monthly: 'Månedlig',
 };
 
-/** "per år" / "per kvartal" / "per måned" — linjen UNDER prissummen i hver plan-rad (paywall-v2.html sin `.p-per`). */
-export const PLAN_PER_LABEL: Record<ProductKey, string> = {
+/** "per år" / "per måned" — linjen UNDER prissummen i hver plan-rad (paywall-v2.html sin `.p-per`). */
+export const PLAN_PER_LABEL: Record<PlanKey, string> = {
   yearly: 'per år',
-  quarterly: 'per kvartal',
   monthly: 'per måned',
 };
 
@@ -61,7 +44,7 @@ export const PLAN_PER_LABEL: Record<ProductKey, string> = {
  * Statisk, ikke-parametrisert brukervendt copy — én kilde for både
  * PaywallDialog-rendring og copy-lint-testen (paywall-copy.test.ts).
  *
- * `trialLine` MÅ være plan-agnostisk (P2 hard paywall-krav): alle tre planer
+ * `trialLine` MÅ være plan-agnostisk (P2 hard paywall-krav): begge planer
  * har 7 dagers gratis prøveperiode (StoreKit intro-trial, App Store
  * Connect-side), så teksten skal aldri antyde at prøveperioden kun gjelder
  * årsplanen.
@@ -106,6 +89,22 @@ export const PAYWALL_COPY = {
   termsLinkAriaLabel: 'Vilkår for bruk (åpnes i nettleser)',
   trialLine: 'Start med 7 gratisdager uansett plan, deretter prisen for planen du velger. Avslutt når som helst i App Store.',
 } as const;
+
+/**
+ * Eiervedtak 2026-08-14 V5: kjøp skal aldri feile stille. Denne tabellen
+ * gjør reason-koden fra `purchasePlan` om til en brukervendt setning slik at
+ * PaywallDialog kan vise noe konkret, aldri en «kjøp forsvant»-tilstand.
+ */
+export const PURCHASE_ERROR_MESSAGE: Record<
+  'not_configured' | 'no_offering' | 'plan_unavailable' | 'no_entitlement' | 'store_error',
+  string
+> = {
+  not_configured: 'Kjøp er ikke aktivert i denne versjonen. Åpne appen fra App Store eller Google Play for å kjøpe.',
+  no_offering: 'Kunne ikke hente prisene fra butikken. Sjekk nettilkoblingen og prøv igjen.',
+  plan_unavailable: 'Denne planen er ikke tilgjengelig i butikken akkurat nå. Prøv en annen plan, eller kom tilbake senere.',
+  no_entitlement: 'Kjøpet ble registrert, men vi fant ikke tilgangen din. Prøv å gjenopprette kjøp, eller kontakt support.',
+  store_error: 'Noe gikk galt under kjøpet. Prøv igjen, eller sjekk nettilkoblingen din.',
+};
 
 export type CapabilityPaywallPreviewItem = Readonly<{
   key: string;
@@ -175,7 +174,7 @@ export function extractMonthlyEquivalent(): string {
   return (PRODUCTS.yearly.anchorPriceNok / 12).toFixed(2).replace('.', ',');
 }
 
-export function formatPlanPrice(key: ProductKey): string {
+export function formatPlanPrice(key: PlanKey): string {
   const product = PRODUCTS[key];
   return `${product.anchorPriceNok} kr${product.periodLabel}`;
 }
@@ -184,11 +183,11 @@ export function formatPlanPrice(key: ProductKey): string {
  * Tilgjengelig navn (aria-label) for plan-kortet — må inneholde ALT som
  * vises visuelt i kortet (P2 a11y-krav, F81.5-W1-spec §Oppgave 3).
  *
- * Hard paywall: trial-suffikset er nå plan-agnostisk (alle tre planer har
+ * Hard paywall: trial-suffikset er nå plan-agnostisk (begge planer har
  * trialDays > 0) — aria-labelen sier derfor aldri at prøveperioden kun
  * gjelder årsplanen.
  */
-export function buildPlanAriaLabel(key: ProductKey): string {
+export function buildPlanAriaLabel(key: PlanKey): string {
   const product = PRODUCTS[key];
   const name = PLAN_ARIA_NAME[key];
   const trialSuffix = product.trialDays > 0 ? `, ${product.trialDays} dager gratis først` : '';
@@ -197,11 +196,7 @@ export function buildPlanAriaLabel(key: ProductKey): string {
     const savings = computeYearlySavingsPercent();
     return `${name}, ${product.anchorPriceNok} kroner per år, tilsvarer ${monthlyEq} kroner per måned, spar ${savings} prosent${trialSuffix}`;
   }
-  if (key === 'monthly') {
-    return `${name}, ${product.anchorPriceNok} kroner per måned${trialSuffix}`;
-  }
-  // quarterly
-  return `${name}, ${product.anchorPriceNok} kroner per 3 måneder${trialSuffix}`;
+  return `${name}, ${product.anchorPriceNok} kroner per måned${trialSuffix}`;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -224,24 +219,19 @@ export type PlanRowContent = Readonly<{
  *    AVRUNDET månedlig-ekvivalent (mock-tallet), atskilt fra den PRESISE
  *    24,90-verdien buildPlanAriaLabel/extractMonthlyEquivalent bruker (den
  *    er en LÅST a11y-kontrakt og skal ikke endres).
- *  - quarterly: «33 kr per måned» (99/3, avrundet).
  *  - monthly: «Fornyes månedlig» (statisk — ingen sammenligningstall å vise).
  */
-export function buildPlanNote(key: ProductKey): string {
+export function buildPlanNote(key: PlanKey): string {
   const product = PRODUCTS[key];
   if (key === 'yearly') {
     const monthlyRounded = Math.round(product.anchorPriceNok / 12);
     return `${monthlyRounded} kr per måned · spar ${computeYearlySavingsPercent()} % mot månedsplan`;
   }
-  if (key === 'quarterly') {
-    const monthlyRounded = Math.round(product.anchorPriceNok / 3);
-    return `${monthlyRounded} kr per måned`;
-  }
   return 'Fornyes månedlig';
 }
 
 /** Fullt plan-rad-innhold — PaywallDialog.tsx sin eneste kilde for hva som vises i en plan-rad. */
-export function buildPlanRowContent(key: ProductKey): PlanRowContent {
+export function buildPlanRowContent(key: PlanKey): PlanRowContent {
   const product = PRODUCTS[key];
   return {
     name: PLAN_DISPLAY_NAME[key],
@@ -253,18 +243,17 @@ export function buildPlanRowContent(key: ProductKey): PlanRowContent {
 }
 
 /** Armert CTA («Start gratis – deretter 299 kr/år») — vises kun når en plan faktisk er valgt (§8: ingen forhåndsvalgt plan). */
-export function buildArmedCtaLabel(key: ProductKey): string {
+export function buildArmedCtaLabel(key: PlanKey): string {
   return `Start gratis – deretter ${formatPlanPrice(key)}`;
 }
 
-const RENEWAL_CADENCE_LABEL: Record<ProductKey, string> = {
+const RENEWAL_CADENCE_LABEL: Record<PlanKey, string> = {
   yearly: 'årlig',
-  quarterly: 'hvert kvartal',
   monthly: 'månedlig',
 };
 
 /** «Fornyes deretter årlig til samme pris. Avsluttes i App Store.» — plan-spesifikk fornyelses-kadens. */
-export function buildRenewalNote(key: ProductKey): string {
+export function buildRenewalNote(key: PlanKey): string {
   return `Fornyes deretter ${RENEWAL_CADENCE_LABEL[key]} til samme pris. Avsluttes i App Store.`;
 }
 
@@ -298,7 +287,7 @@ export type PlanBreakdown = Readonly<{
  * ved åpne-overgangen — samme "adjusting state" mønster som resten av
  * dialogen, se PaywallDialog.tsx) — denne funksjonen selv leser aldri klokka.
  */
-export function buildPlanBreakdown(key: ProductKey, fromMs: number): PlanBreakdown {
+export function buildPlanBreakdown(key: PlanKey, fromMs: number): PlanBreakdown {
   const product = PRODUCTS[key];
   const renewalDate = computeRenewalDate(fromMs, product.trialDays);
   return {

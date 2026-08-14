@@ -1,42 +1,29 @@
 /**
- * RevenueCat product-IDs og prisanker — «Babyora Pluss».
+ * Abonnementsplaner og prisanker for «Babyora Pluss».
  *
- * IDene MÅ matche det som er provisjonert i App Store Connect + RevenueCat
- * (STATUS.md, juni 2026). Eierbeslutning 2026-07-15: behold juni-modellen
- * (39/99/299) — koden er alignet tilbake fra F81-forslaget (49/299/499).
+ * Eiervedtak 2026-08-14 (loop/referanse/EIERVEDTAK-BETALING-2026-08-14.md):
+ *  V1: To planer — måned og år. Kvartal utgår.
+ *  V2: Appen kjenner PLANTYPER, ikke Apples produkt-IDer. Butikk-navn løses
+ *      i RevenueCat-tilbudet via package_type (annual/monthly).
+ *  V3: Faktisk provisjonert hos Apple: `babyora_yearly_299`,
+ *      `babyora_monthly_49`. IDene håndteres i RevenueCat-portalen, aldri her.
+ *  V4: Ankerprisene under er fallback når butikken ikke har svart. SN-W03
+ *      eier verifisering mot App Store Connect før innsending.
  *
- * Ankerprisene er UI-fallback når StoreKit ikke har levert; RevenueCat-pris
- * vinner alltid når den finnes.
- *
- * Provisjonert (STATUS.md):
- * 39 kr/mnd · 99 kr/3 mnd («pappaperm») · 299 kr/år (HERO).
- * Alle tre auto-renewable, entitlement «premium», offering «default».
- *
- * Eierbeslutning 2026-07-31 (PRODUCT.md, hard paywall): 7 dagers gratis
- * prøveperiode via StoreKit intro-trial gjelder nå ALLE tre planene, ikke
- * bare årlig. Selve trial-konfigurasjonen skjer i App Store Connect, ikke i
- * kode — trialDays her er kun UI-signalet («X dager gratis»-merket per plan
- * + pristransparens-teksten), og må derfor aldri antyde at prøveperioden
- * kun gjelder årsplanen.
+ * Ankerprisene brukes kun som UI-fallback; RevenueCat-pris vinner alltid
+ * når den finnes.
  */
 
-export const PRODUCT_IDS = {
-  yearly: 'no.klemeg.app.yearly',
-  quarterly: 'no.klemeg.app.quarterly',
-  monthly: 'no.klemeg.app.monthly',
-} as const;
-
-export type ProductKey = keyof typeof PRODUCT_IDS;
+export type PlanKey = 'yearly' | 'monthly';
 
 export interface ProductDescriptor {
-  id: string;
   /** Ankerpris i NOK — fallback hvis StoreKit ikke har levert. */
   anchorPriceNok: number;
-  /** Periode-tekst som vises i UI («/år», «/3 mnd», «/mnd»). */
+  /** Periode-tekst som vises i UI («/år», «/mnd»). */
   periodLabel: string;
   /** Auto-fornyelse-flag — påvirker pristransparens-tekst. */
   autoRenews: boolean;
-  /** Trial-dager (kun yearly per plan; konfigureres i ASC). */
+  /** Trial-dager (konfigureres i ASC; verdien her er kun UI-signalet). */
   trialDays: number;
   /** Visningsnavn — kun satt der det avviker fra plan-typen. */
   name?: string;
@@ -44,25 +31,15 @@ export interface ProductDescriptor {
   description?: string;
 }
 
-export const PRODUCTS: Record<ProductKey, ProductDescriptor> = {
+export const PRODUCTS: Record<PlanKey, ProductDescriptor> = {
   yearly: {
-    id: PRODUCT_IDS.yearly,
     anchorPriceNok: 299,
     periodLabel: '/år',
     autoRenews: true,
     trialDays: 7,
     description: 'Tilsvarer 24,90 kr/mnd',
   },
-  quarterly: {
-    id: PRODUCT_IDS.quarterly,
-    anchorPriceNok: 99,
-    periodLabel: '/3 mnd',
-    autoRenews: true,
-    trialDays: 7,
-    description: 'Tilsvarer 33 kr/mnd · pappaperm',
-  },
   monthly: {
-    id: PRODUCT_IDS.monthly,
     anchorPriceNok: 39,
     periodLabel: '/mnd',
     autoRenews: true,
@@ -71,7 +48,7 @@ export const PRODUCTS: Record<ProductKey, ProductDescriptor> = {
 };
 
 /** Default-anker — årlig, forhåndsvalgt i paywall. */
-export const DEFAULT_PLAN: ProductKey = 'yearly';
+export const DEFAULT_PLAN: PlanKey = 'yearly';
 
 /**
  * Pristransparens-tekst som vises UNDER CTA-knappen.
@@ -79,7 +56,7 @@ export const DEFAULT_PLAN: ProductKey = 'yearly';
  *
  * Per Premium-plan: «Deretter 299 kr/år. Avslutt når som helst.»
  */
-export function priceTransparencyText(key: ProductKey, priceFromStore?: string): string {
+export function priceTransparencyText(key: PlanKey, priceFromStore?: string): string {
   const product = PRODUCTS[key];
   const priceStr = priceFromStore ?? `${product.anchorPriceNok} kr${product.periodLabel}`;
   if (product.trialDays > 0) {

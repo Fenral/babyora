@@ -74,20 +74,19 @@ describe('PaywallDialog v2 — no preselected plan, resting CTA (§8: "aktivt va
     expect(html).not.toContain('class="pw-breakdown"');
   });
 
-  it('renders exactly three equal plan rows: Årlig, Kvartal, Månedlig', () => {
+  it('renders exactly two equal plan rows: Årlig, Månedlig (eiervedtak 2026-08-14 V1)', () => {
     const html = renderToStaticMarkup(
       <PaywallDialog open trigger={null} onClose={vi.fn()} />,
     );
-    expect(html.match(/class="pw-plan-label"/gu)?.length).toBe(3);
+    expect(html.match(/class="pw-plan-label"/gu)?.length).toBe(2);
     expect(html).toContain('>Årlig<span class="pw-p-badge">Best verdi</span>');
-    expect(html).toContain('>Kvartal<');
     expect(html).toContain('>Månedlig<');
+    expect(html).not.toContain('>Kvartal<');
     expect(html).toContain('25 kr per måned · spar 36 % mot månedsplan');
-    expect(html).toContain('33 kr per måned');
     expect(html).toContain('Fornyes månedlig');
     expect(html).toContain('<span class="pw-p-sum">299 kr</span><span class="pw-p-per">per år</span>');
-    expect(html).toContain('<span class="pw-p-sum">99 kr</span><span class="pw-p-per">per kvartal</span>');
     expect(html).toContain('<span class="pw-p-sum">39 kr</span><span class="pw-p-per">per måned</span>');
+    expect(html).not.toContain('per kvartal');
   });
 
   it('the old serif-hero copy, green trial text, and glow-border design are gone', () => {

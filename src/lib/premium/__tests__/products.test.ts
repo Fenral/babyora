@@ -5,16 +5,13 @@ import {
   DEFAULT_PLAN,
   PAYWALL_TRIGGERS,
   PRODUCTS,
-  PRODUCT_IDS,
   VALUE_ANCHOR_COPY,
   priceTransparencyText,
 } from '../products';
 
-describe('PRODUCT_IDS (provisjonert — STATUS.md, juni 2026)', () => {
-  it('matcher de provisjonerte no.klemeg.app.*-IDene', () => {
-    expect(PRODUCT_IDS.yearly).toBe('no.klemeg.app.yearly');
-    expect(PRODUCT_IDS.quarterly).toBe('no.klemeg.app.quarterly');
-    expect(PRODUCT_IDS.monthly).toBe('no.klemeg.app.monthly');
+describe('PRODUCTS (eiervedtak 2026-08-14 V1: kun måned og år)', () => {
+  it('kun to plantyper — måned og år (kvartal utgår)', () => {
+    expect(Object.keys(PRODUCTS).sort()).toEqual(['monthly', 'yearly']);
   });
 
   it('DEFAULT_PLAN er yearly (anker)', () => {
@@ -27,15 +24,7 @@ describe('PRODUCT_IDS (provisjonert — STATUS.md, juni 2026)', () => {
     expect(PRODUCTS.yearly.description).toMatch(/24,90/);
   });
 
-  it('quarterly: 99 kr, 3 mnd (pappaperm), auto-renews, 7 dager trial (P2: trial på alle tre planer)', () => {
-    expect(PRODUCTS.quarterly.anchorPriceNok).toBe(99);
-    expect(PRODUCTS.quarterly.periodLabel).toBe('/3 mnd');
-    expect(PRODUCTS.quarterly.autoRenews).toBe(true);
-    expect(PRODUCTS.quarterly.trialDays).toBe(7);
-    expect(PRODUCTS.quarterly.description).toMatch(/pappaperm/);
-  });
-
-  it('monthly: 39 kr, 7 dager trial (P2: trial på alle tre planer, aldri kun årlig)', () => {
+  it('monthly: 39 kr, 7 dager trial (P2: trial på alle planer, ikke bare årlig)', () => {
     expect(PRODUCTS.monthly.trialDays).toBe(7);
     expect(PRODUCTS.monthly.anchorPriceNok).toBe(39);
   });
@@ -48,10 +37,6 @@ describe('priceTransparencyText', () => {
 
   it('monthly med trial (P2) — bruker også "Deretter X"', () => {
     expect(priceTransparencyText('monthly')).toBe('Deretter 39 kr/mnd. Avslutt når som helst.');
-  });
-
-  it('quarterly med trial (P2) — bruker også "Deretter X" per 3 mnd', () => {
-    expect(priceTransparencyText('quarterly')).toBe('Deretter 99 kr/3 mnd. Avslutt når som helst.');
   });
 
   it('respekterer pris fra StoreKit hvis levert', () => {
@@ -70,14 +55,8 @@ describe('Paywall trigger-strenger', () => {
     });
   });
 
-  it('Snart-triggeren endrer ikke produkt-ID, pris, trial eller RevenueCat-ankere', () => {
-    expect(PRODUCT_IDS).toEqual({
-      yearly: 'no.klemeg.app.yearly',
-      quarterly: 'no.klemeg.app.quarterly',
-      monthly: 'no.klemeg.app.monthly',
-    });
+  it('Snart-triggeren endrer ikke pris, trial eller RevenueCat-ankere', () => {
     expect(PRODUCTS.yearly).toMatchObject({ anchorPriceNok: 299, trialDays: 7 });
-    expect(PRODUCTS.quarterly).toMatchObject({ anchorPriceNok: 99, trialDays: 7 });
     expect(PRODUCTS.monthly).toMatchObject({ anchorPriceNok: 39, trialDays: 7 });
   });
 
@@ -99,5 +78,15 @@ describe('Copy-konstanter', () => {
     );
     expect(source).not.toContain('TRUST_LINE_COPY');
     expect(source).not.toMatch(/begge foreldre|alle som passer barnet|omsorgsperson/i);
+  });
+
+  it('kvartals-referanser er fjernet fra products.ts (eiervedtak V1)', () => {
+    const source = readFileSync(
+      fileURLToPath(new URL('../products.ts', import.meta.url)),
+      'utf8',
+    );
+    expect(source).not.toMatch(/quarterly|pappaperm|3 mnd/i);
+    expect(source).not.toContain('PRODUCT_IDS');
+    expect(source).not.toContain('no.klemeg.app');
   });
 });
