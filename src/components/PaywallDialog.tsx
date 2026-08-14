@@ -32,7 +32,7 @@
  * (Innstillinger, onboarding, feature-gates) kan åpne SAMME dialog med
  * samme copy/analytics/kjøpslogikk — kun `trigger` varierer.
  *
- * Eier hele kjøpsflyten selv (plan-valg, purchasePackage/restorePurchases,
+ * Eier hele kjøpsflyten selv (plan-valg, purchasePlan/restorePurchases,
  * subscription-store, analytics) — kall-steder trenger kun
  * open/trigger/onClose/returnFocusTo. Se PaywallDialogProps.
  *

@@ -90,22 +90,6 @@ export const PAYWALL_COPY = {
   trialLine: 'Start med 7 gratisdager uansett plan, deretter prisen for planen du velger. Avslutt når som helst i App Store.',
 } as const;
 
-/**
- * Eiervedtak 2026-08-14 V5: kjøp skal aldri feile stille. Denne tabellen
- * gjør reason-koden fra `purchasePlan` om til en brukervendt setning slik at
- * PaywallDialog kan vise noe konkret, aldri en «kjøp forsvant»-tilstand.
- */
-export const PURCHASE_ERROR_MESSAGE: Record<
-  'not_configured' | 'no_offering' | 'plan_unavailable' | 'no_entitlement' | 'store_error',
-  string
-> = {
-  not_configured: 'Kjøp er ikke aktivert i denne versjonen. Åpne appen fra App Store eller Google Play for å kjøpe.',
-  no_offering: 'Kunne ikke hente prisene fra butikken. Sjekk nettilkoblingen og prøv igjen.',
-  plan_unavailable: 'Denne planen er ikke tilgjengelig i butikken akkurat nå. Prøv en annen plan, eller kom tilbake senere.',
-  no_entitlement: 'Kjøpet ble registrert, men vi fant ikke tilgangen din. Prøv å gjenopprette kjøp, eller kontakt support.',
-  store_error: 'Noe gikk galt under kjøpet. Prøv igjen, eller sjekk nettilkoblingen din.',
-};
-
 export type CapabilityPaywallPreviewItem = Readonly<{
   key: string;
   label: string;

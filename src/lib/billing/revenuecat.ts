@@ -110,8 +110,12 @@ function fail(reason: PurchaseFailureReason): PurchaseResult {
   return { success: false, reason, message: REASON_MESSAGE[reason] };
 }
 
-/** Plan-nøkkel → RevenueCat package_type. Legges ikke til før eier har vedtatt en ny plan-type. */
-const PLAN_TO_PACKAGE_TYPE: Record<PlanKey, string> = {
+/**
+ * Plan-nøkkel → RevenueCat package_type. Legges ikke til før eier har vedtatt
+ * en ny plan-type. Eksportert slik at V1-testen kan bekrefte at kvartal er
+ * borte fra runtime-tabellen (ikke bare fra TS-unionen).
+ */
+export const PLAN_TO_PACKAGE_TYPE: Record<PlanKey, string> = {
   yearly: PACKAGE_TYPE.ANNUAL,
   monthly: PACKAGE_TYPE.MONTHLY,
 };
@@ -127,13 +131,8 @@ export async function purchasePlan(plan: PlanKey): Promise<PurchaseResult> {
     return fail('not_configured');
   }
 
-  let offering;
-  try {
-    offering = await getOfferings();
-  } catch (err) {
-    console.error('[Babyora] purchasePlan: no_offering (getOfferings kastet)', err);
-    return fail('no_offering');
-  }
+  // getOfferings() fanger sine egne feil og returnerer null — én sti holder.
+  const offering = await getOfferings();
   if (!offering) {
     console.error('[Babyora] purchasePlan: no_offering (intet aktivt tilbud i RevenueCat)');
     return fail('no_offering');

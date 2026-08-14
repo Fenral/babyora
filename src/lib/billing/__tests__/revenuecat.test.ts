@@ -125,16 +125,39 @@ beforeEach(() => {
 // ─── V1 · Bare to plantyper (måned/år). Kvartal er borte. ─────────────────
 
 describe('SN-W01 V1 · plantyper', () => {
-  it('purchasePlan aksepterer kun "monthly" og "yearly" som gyldige plantyper', async () => {
+  it('PLAN_TO_PACKAGE_TYPE inneholder KUN yearly og monthly (ingen quarterly)', async () => {
+    // V1: kvartal utgår. Runtime-verifikasjon at oppslagstabellen ikke
+    // rommer den utgåtte plantypen — TS-kompilatoren dekker unionen,
+    // denne testen fanger drift i verdien.
+    const mod = await importFresh();
+    const keys = Object.keys(mod.PLAN_TO_PACKAGE_TYPE).sort();
+    expect(keys).toEqual(['monthly', 'yearly']);
+  });
+
+  it('purchasePlan("yearly") ser etter PACKAGE_TYPE.ANNUAL i tilbudet (ikke kvartal)', async () => {
     const { purchasePlan } = await bootInitialized();
-    // Kompilator-nivået håndhever unionen; her tester vi at kall med
-    // begge lovlige verdier ikke kaster tidlig.
-    purchasesMock.getOfferings.mockResolvedValue({ current: null });
-    const yearly = await purchasePlan('yearly');
-    const monthly = await purchasePlan('monthly');
-    expect(['yearly', 'monthly']).toContain('yearly');
-    expect(yearly.success).toBe(false);
-    expect(monthly.success).toBe(false);
+    const captured: string[] = [];
+    const offering = makeOffering([
+      {
+        identifier: 'probe',
+        packageType: PACKAGE_TYPE.ANNUAL,
+        product: { identifier: 'probe-product' } as PurchasesPackage['product'],
+        offeringIdentifier: 'default',
+        presentedOfferingContext: {} as PurchasesPackage['presentedOfferingContext'],
+      } as PurchasesPackage,
+    ]);
+    // Spion på .find sitt predikat ved å legge en «probe»-pakke først;
+    // hvis oppslaget faktisk sjekker packageType, treffer det. Hvis noen
+    // fremtidig endring legger til en 'quarterly'-oppføring, må testen
+    // her oppdateres eksplisitt.
+    purchasesMock.getOfferings.mockResolvedValue({ current: offering });
+    purchasesMock.purchasePackage.mockImplementation((arg) => {
+      captured.push((arg as { aPackage: PurchasesPackage }).aPackage.identifier);
+      return Promise.resolve({ customerInfo: makeCustomerInfo(true) });
+    });
+    const result = await purchasePlan('yearly');
+    expect(result.success).toBe(true);
+    expect(captured).toEqual(['probe']);
   });
 });
 
