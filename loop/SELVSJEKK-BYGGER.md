@@ -89,6 +89,20 @@ G6-formatet håndheves nå også av en `commit-msg`-hook i klonen: en commit ute
 `SN-###: `-emne og begge trailerne blir avvist før den finnes. Ren loop-bokføring uten
 oppgave merkes `[admin]` i emnet.
 
+**Requesten beskriver MATERIALCOMMITEN — aldri «hele leveransen».** Dette er den
+enkeltfeilen som har kostet flest forsøk i denne loopen: SN-003, SN-005, SN-006 og
+SN-W02 brøt alle tre forsøk hver på den. Årsaken er strukturell, ikke slurv — i det du
+lagrer requesten, oppretter du en commit som endrer tallene requesten nettopp beskrev.
+Skriver du «full pakke: to commits», har kontrolløren fire når den ser etter.
+
+Formuler derfor alltid slik:
+
+> Materialcommit `<sha>`: N filer, +X/−Y.
+> Request-, evidens- og BATON-commits kommer etter denne målingen og er bokføring,
+> ikke innhold.
+
+Da måler du noe som står stille, og påstanden forblir sann etter at du har levert.
+
 **Regelen bak, som gjelder deg selv også:** hvert tall i en forespørsel skal være
 **limt inn fra kommandoutput kjørt etter siste commit** — aldri skrevet fra hukommelsen,
 aldri anslått, aldri regnet i hodet. Dette gjelder særlig:

@@ -37,7 +37,17 @@ else
 fi
 echo
 
-echo "--- diff mot forelder ---"
+echo "--- HVA REQUESTEN SKAL BESKRIVE ---"
+echo "Beskriv MATERIALCOMMITEN over. Ikke kall noe «full pakke»."
+echo "Etter at du har lest dette kommer minst to commits til — requesten selv og"
+echo "BATON-overleveringen — og de finnes ikke i tallene under. Kaller du dette"
+echo "«hele leveransen», blir påstanden usann i det du lagrer requesten."
+echo "Formuler i stedet: «Materialcommit <sha>: N filer, +X/-Y. Request-, evidens-"
+echo "og BATON-commits kommer etter denne målingen og er bokføring, ikke innhold.»"
+echo "Fire oppgaver har brutt tre forsøk hver på nettopp denne selvrefererende feilen."
+echo
+
+echo "--- diff mot forelder (MATERIALCOMMITEN) ---"
 git diff --stat 'HEAD^' HEAD 2>/dev/null | tail -1 || echo "(ingen forelder)"
 echo
 echo "--- per fil (numstat: eksakt, ikke skalert graf) ---"
