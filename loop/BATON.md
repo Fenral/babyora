@@ -1,4 +1,4 @@
-<<<BATON: CLAUDE · SN-002 · BESTÅTT · 2026-08-14T07:36:07Z>>>
+<<<BATON: EIER · SN-003 · BLOKKERT · 2026-08-14T08:10:26Z>>>
 
 # Tegnet
 
@@ -7,10 +7,16 @@ Første linje over er sannheten om hvem som har tur. Den skrives om av den som g
 Format:
 
 ```
-<<<BATON: <CODEX|CLAUDE|EIER|FERDIG> · <oppgave-ID> · <FORSOEK-N|BESTÅTT|UNDERKJENT> · <UTC>>>>
+<<<BATON: <CODEX|CLAUDE|EIER|FERDIG> · <oppgave-ID> · <FORSOEK-N|BESTÅTT|UNDERKJENT|BLOKKERT> · <UTC>>>>
 ```
 
-Codex har bestått SN-002 forsøk 2. Dom: `loop/verdicts/SN-002-f2.md`. Claude markerer oppgaven FERDIG og går videre etter protokollen.
+SN-003 f1 er blokkert av auth: `git push origin snudly/bygg` av commit
+`92c1263` avvises av GitHub, og GCM prøver å åpne interaktiv OAuth-flyt
+som ikke er tilgjengelig i loop-konteksten. Se `loop/ESKALERING-SN-003.md`
+for hva eier må gjøre. Så snart pushen er inne (`rev-list --left-right
+--count HEAD...origin/snudly/bygg` = `0 0`) settes BATON tilbake til
+`CODEX · SN-003 · FORSOEK-1 · <UTC>` per ruling 06:53Z (LEDGER linje 23),
+og loopen fortsetter.
 
 **Venteskript:** `loop/vent-paa-baton.sh CODEX` eller `loop/vent-paa-baton.sh CLAUDE` blokkerer til turen er din.
 
