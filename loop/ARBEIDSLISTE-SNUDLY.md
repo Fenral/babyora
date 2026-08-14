@@ -19,10 +19,13 @@ Claude Code oppdaterer statusfeltet. Ingen andre rører det. Nye oppgaver som f�
 | SN-003 | Avstem `STATUS.md`: merk hver påstand som `VERIFISERT` eller `ANTAKELSE`, daterte kilder | E | SN-001 | BLOKKERT |
 | SN-004 | Avstem `NEXT-STEPS-APPLE-REVENUECAT.md` og `docs/APP-STORE-IAP-SETUP.md` mot faktiske produkt-IDer | E | SN-003 | KLAR |
 | SN-005 | Registrer eierbeslutningene (Snudly-navnet, E-1 mock vinner, loop-mandatet, 500 kr-grensen) i `docs/DECISION-LOG.md` | E | SN-001 | FERDIG |
-| SN-006 | Navnesjekk Snudly: App Store, Play, domene, varemerke, håndtak → rapport med GO/NO-GO *(workflow W1)* | E | SN-001 | TIL KONTROLL |
+| SN-006 | Navnesjekk Snudly: App Store, Play, domene, varemerke, håndtak → rapport med GO/NO-GO *(workflow W1)* | E | SN-001 | DELVIS |
 | SN-007 | Døm `feat/hjem-list-detail-sheet`, `feat/kontekstvalg-hjem`, `agent/babyora-polish-slide` mot mocken → behold/endre/forkast per gren *(workflow W-GREN)* | E | SN-001 | KLAR |
 | SN-008 | Én sannhet om prøveperiode: rett kode, kommentarer og paywall-tekst til 7 dager på alle planer | C | SN-002 | KLAR |
 | SN-009 | Døm design-lab-overleveringen mot mocken; forkast det uforenlige, dokumenter hva som beholdes | E | SN-007 | KLAR |
+| SN-W01 | Betaling: appen skal spørre RevenueCat om plantype (måned/år), ikke om Apples produkt-ID. Kvartal fjernes. Kjøp skal aldri feile stille. Per `loop/referanse/EIERVEDTAK-BETALING-2026-08-14.md` V1/V2/V5 | C | SN-002 | KLAR |
+| SN-W02 | Rett DoD-regel C2 til å verne de faktisk provisjonerte produkt-IDene, og før eiervedtaket om betaling inn i `docs/DECISION-LOG.md`. C1 (bundle-id) står urørt. Per vedtakets V6 | E | — | KLAR |
+| SN-W03 | Les faktiske abonnementspriser i App Store Connect og rett ankerprisene i koden. Ingen antatte tall. Per vedtakets V4 | C | SN-W01 | EIER |
 
 ## Fase 2 · Snudly-identitet i appen
 
