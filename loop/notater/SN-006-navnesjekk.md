@@ -17,25 +17,40 @@ Google-indeksering. Der bare Google-indeksering finnes er dette merket i kildeko
 
 ## 1. Sammendrag og GO/NO-GO
 
-**Konklusjon:** **GO med caveats.** Ingen absolutt blokkering funnet i noen av de fem
-kategoriene, men lansering krever handling *før* App Store-innsending på tre områder:
+**Konklusjon:** **BETINGET GO — endelig ja avhenger av tre autoritative kontroller som
+ennå ikke er gjennomført.** Ingen absolutt blokkering er funnet i indekserte kilder, men
+bare én kategori (domener) har autoritativ bekreftelse; App Store-navnetilgjengelighet,
+varemerker og håndtak-reservering står med USIKKER-status inntil autoritativ kilde svarer.
+Handlinger *før* App Store-innsending:
 
 1. **Sikre domenene** snudly.no, snudly.com, snudly.app (alle bekreftet ledige via RDAP
-   2026-08-14).
-2. **Sikre håndtakene** TikTok @snudly, GitHub org/snudly, og Instagram/YouTube «_app»-
-   varianter (Instagram @snudly og YouTube @snudly er okkupert som tomme placeholder-
-   kontoer — kan ikke tas uten Instagrams/YouTubes varemerkeprosess. Ingen synlig
-   aktivitet observert utlogget, men eventuell konkurrerende virksomhet bak
-   innloggingsvegg er ikke bekreftet fraværende).
-3. **Bekrefte varemerkefravær** direkte i Patentstyret + EUIPO (min agent nådde ikke DB-ene
-   direkte pga. CAPTCHA/SPA; alle «null treff»-utsagn hviler på Google-indeksering av
-   tredjeparts-speilinger som Justia/Trademarkia). Anbefaler manuell sjekk før varemerke-
-   filing, eller kjøpt clearance search (NOK 5 000–15 000, ikke bekreftet pris).
+   2026-08-14). Dette er den eneste kategorien der GO-signalet er autoritativt.
+2. **Kontrollere App Store-navnetilgjengelighet** i App Store Connect ved oppretting av
+   app-record — Apples egen dokumentasjon oppgir dette som avgjørende kilde
+   (<https://developer.apple.com/help/app-store-connect/create-an-app-record/add-a-new-app/>).
+   Kan først gjøres når konsollhandling er autorisert (jf. DoD C4). Rapportens
+   søkeresultat viser bare fravær av indekserte offentlige treff, ikke fravær av navn
+   i Apples interne registre.
+3. **Reservere/bekrefte håndtakene** — HTTP-probing viser bare at ingen offentlig profil
+   ble funnet; autoritativ tilgjengelighet avgjøres ved forsøk på reservering. Instagram
+   @snudly og YouTube @snudly er okkupert som tomme placeholder-kontoer (formelt TATT).
+4. **Bekrefte varemerkefravær** direkte i Patentstyret + EUIPO + WIPO + USPTO (agenten
+   nådde ikke DB-ene direkte pga. CAPTCHA/SPA/410; alle «null treff»-utsagn hviler på
+   Google-indeksering av tredjeparts-speilinger som Justia/Trademarkia). Anbefaler
+   manuell sjekk før varemerkefiling, eller kjøpt clearance search (NOK 5 000–15 000,
+   ikke bekreftet pris).
 
-**Ingen absolutt NO-GO-funn:** Ingen app heter «Snudly» i App Store eller Play (bekreftet
-via norsk Play-storefront som eksplisitt sa «Ingen resultater for snudly», 2026-08-14).
-Ingen varemerkeregistrering for «Snudly» er funnet i indekserte kilder. Domener kritiske
-for lansering (.no, .com, .app) er ledige.
+**Ingen absolutt NO-GO-funn observert, men flere USIKKER-statuser gjenstår:** Ingen
+søketreff for «Snudly» i norsk Play-storefront (returnerte eksplisitt «Ingen resultater
+for snudly», 2026-08-14) eller i indekserte App Store-treff via Google. **Merk:** Apple
+opplyser (<https://developer.apple.com/help/app-store-connect/create-an-app-record/add-a-new-app/>)
+at faktisk appnavntilgjengelighet — også mot navn brukt av en annen utvikler — avgjøres
+først når app-record opprettes i App Store Connect; denne kontrollen er ikke gjort her
+(og skal ikke gjøres som del av SN-006, jf. C4). Ingen varemerkeregistrering for
+«Snudly» er funnet i indekserte kilder, men **direkte oppslag i Patentstyret, EUIPO,
+WIPO GBD og USPTO TESS er ikke fullført** (CAPTCHA/SPA/410); alle «null treff»-utsagn
+hviler på tredjeparts-speilinger. Domener kritiske for lansering (.no, .com, .app) er
+verifisert LEDIG via autoritativ RDAP 2026-08-14.
 
 **Absolutte usikkerheter (må lukkes før lansering, ikke før SN-006 godkjennes):**
 - snudly.se, snudly.dk, snudly.eu ikke verifisert (RDAP-endepunkt nådde ikke fra kloneen).
@@ -73,11 +88,20 @@ være uindeksert av Google — se usikkerhet.
 
 Ingen av variantene «Snuddly / Snuddley / Snuddli / Snudle» ga treff.
 
-**Kollisjonsvurdering: LAV.** Ingen bokstavelig kollisjon. Nærmeste fonetisk overlapp i
-familie/baby-segmentet er «Snuggly» (baby-hjertelyd) — annet formål.
+**Kollisjonsvurdering: USIKKER (indikert LAV).** Ingen bokstavelig «Snudly»-treff i
+indeksert Apple-materiale, og ingen bokstavelig kollisjon i variantsøkene over. Nærmeste
+fonetisk overlapp i familie/baby-segmentet er «Snuggly» (baby-hjertelyd) — annet formål.
+**Autoritativ navnetilgjengelighet er likevel ikke bekreftet:** Apple avgjør
+appnavntilgjengelighet ved oppretting av app-record i App Store Connect, også mot navn
+brukt av annen utvikler
+(<https://developer.apple.com/help/app-store-connect/create-an-app-record/add-a-new-app/>).
+Denne rapporten utfører ikke den kontrollen (jf. C4 «ingen konsollhandling») og kan
+derfor ikke konkludere med «ingen kollisjon» — kun «ingen indekserte offentlige treff».
 
 **Usikkerhet:**
 - iTunes Search API (`itunes.apple.com/search?term=snudly&country=no`) ikke kjørt.
+- App Store Connect-navnetilgjengelighet er ikke kontrollert; bare denne autoritative
+  kilden kan bekrefte at «Snudly» faktisk kan reserveres som appnavn.
 - Utviklernavn/sist-oppdatert-datoer for variantapper ikke verifisert per produktside.
 - Landstorefronts SE/DK/FI/DE ikke individuelt sjekket ut over Google-indeksering.
 
@@ -156,8 +180,11 @@ svar. Autoritative registry-RDAP-svar motsier dette entydig (404 = ikke registre
 Rapporten støtter seg på RDAP.
 
 **.no-særregler:** Registrering krever norsk kontaktadresse og må gå via Norid-godkjent
-registrar (f.eks. domeneshop.no, one.com, uniweb.no). Privatpersoner kan eie inntil 100
-.no-domener siden 2014.
+registrar (f.eks. domeneshop.no, one.com, uniweb.no). Norids regelverk skiller mellom
+søkertyper: **privatpersoner kan direkte under `.no` ha inntil 5 domenenavn** (regelverkets
+pkt 5.4), mens **organisasjoner kan ha inntil 100 domenenavn** direkte under `.no`
+(pkt 5.2). Kilde: <https://www.norid.no/no/om-domenenavn/regelverk-for-no/>
+(Regelverk for norske domenenavn under .no, versjon i kraft 2026-08-14).
 
 **Anbefalt sett å sikre (prioritet):**
 1. snudly.no — kjerneidentitet i det norske markedet.
@@ -214,10 +241,17 @@ viser ingen «Snudly»-post; Justia/Trademarkia (som speiler USPTO TESS) viser 0
   utvider til klær. Ikke relevant for app-lansering.
 - Kl. 42 (SaaS): ingen indekserte kollisjoner.
 
-**Vurdering:** **GO etter varemerkeregistrering, med caveat.** Ingen bevis for eksisterende
-«Snudly»-varemerke. Fonetisk nær «Snuggly» er utbredt; risiko for innsigelse i kl. 25 (US)
-er relevant kun ved klær-utvidelse. For app+SaaS i Norge/EU vurderes risikoen som lav
-basert på tilgjengelige indekseringer.
+**Vurdering:** **USIKKER — direkte DB-oppslag ikke gjennomført.** Ingen «Snudly»-
+varemerke er funnet i de indekseringene rapporten har greid å nå (Google-indeksering av
+Justia/Trademarkia som speiler USPTO TESS). **Dette er ikke en autoritativ bekreftelse
+på fravær** — Patentstyret (<https://www.patentstyret.no/sok-databaser>), EUIPO eSearch
+plus, WIPO GBD, USPTO TESS og TMview må sjekkes direkte (CAPTCHA/SPA/410 hindret det i
+denne økten). Rapportens egen regel (§ topp linje 11) sier at alt uverifisert skal
+merkes USIKKER; det gjelder også her. Fonetisk nær «Snuggly» er utbredt; risiko for
+innsigelse i kl. 25 (US) er relevant kun ved klær-utvidelse. For app+SaaS i Norge/EU
+er risikobildet basert på indekseringer alene, ikke autoritativt oppslag — konklusjon
+om GO/NO-GO for varemerke kan først tas etter manuell DB-verifisering (se «Anbefalt
+neste steg» nederst i seksjonen).
 
 **Anbefalt registrering (kostnad ANTAKELSE, ikke bekreftet):**
 - Norsk nasjonalt varemerke (Patentstyret) i kl. 9 + 42: NOK 2 900 basisgebyr + NOK 750 per
@@ -250,37 +284,53 @@ probing — låste plattformer (LinkedIn/Facebook uten cookies) merket USIKKER.
 
 ### Tabell
 
+**Statusordbok (etter dommens funn 3):** «TATT» brukes bare der en faktisk profil eller
+kanal er observert. «USIKKER» erstatter tidligere «LEDIG» for alle rader hvor grunnlaget
+er en HTTP-/HTML-probe uten autoritativ reserveringskontroll — signalet viser høyst at
+ingen offentlig profil ble funnet, ikke at plattformen vil tillate reservering.
+Autoritativ tilgjengelighet kan først bekreftes ved forsøk på reservering, som ikke er
+utført i denne rapporten.
+
 | Plattform | Håndtak | Status | Eier (hvis synlig) | URL / signal |
 |---|---|---|---|---|
 | Instagram | snudly | TATT | tom placeholder-konto — 0 followers, 3 following, 0 posts (og:description-uttrekk 2026-08-14) | https://www.instagram.com/snudly/ (200 + og:description "0 Followers, 3 Following, 0 Posts") |
-| Instagram | snudly_app | LEDIG | — | https://www.instagram.com/snudly_app/ (200 men Googlebot får generisk `<title>Instagram</title>`, ingen profil-meta) |
-| Instagram | snudlyapp | LEDIG | — | https://www.instagram.com/snudlyapp/ (200, generisk `<title>Instagram</title>`, ingen profil-meta) |
-| TikTok | snudly | LEDIG | — | https://www.tiktok.com/@snudly (200 + HTML inneholder "Couldn't find this account") |
-| TikTok | snudly_app | LEDIG | — | https://www.tiktok.com/@snudly_app ("Couldn't find this account") |
-| TikTok | snudlyapp | LEDIG | — | https://www.tiktok.com/@snudlyapp ("Couldn't find this account") |
+| Instagram | snudly_app | USIKKER (ingen offentlig profil funnet) | — | https://www.instagram.com/snudly_app/ (200 men Googlebot får generisk `<title>Instagram</title>`, ingen profil-meta) |
+| Instagram | snudlyapp | USIKKER (ingen offentlig profil funnet) | — | https://www.instagram.com/snudlyapp/ (200, generisk `<title>Instagram</title>`, ingen profil-meta) |
+| TikTok | snudly | USIKKER (ingen offentlig profil funnet) | — | https://www.tiktok.com/@snudly (200 + HTML inneholder "Couldn't find this account") |
+| TikTok | snudly_app | USIKKER (ingen offentlig profil funnet) | — | https://www.tiktok.com/@snudly_app ("Couldn't find this account") |
+| TikTok | snudlyapp | USIKKER (ingen offentlig profil funnet) | — | https://www.tiktok.com/@snudlyapp ("Couldn't find this account") |
 | X / Twitter | snudly | USIKKER | — | https://x.com/snudly — curl gikk gjennom med 200, men WebFetch fikk HTTP 402 (Twitter blokkerer scraping); ikke bekreftet visuelt |
-| X / Twitter | snudly_app | LEDIG | — | https://x.com/snudly_app (curl HTTP 404) |
-| X / Twitter | snudlyapp | LEDIG | — | https://x.com/snudlyapp (curl HTTP 404) |
+| X / Twitter | snudly_app | USIKKER (ingen offentlig profil funnet) | — | https://x.com/snudly_app (curl HTTP 404) |
+| X / Twitter | snudlyapp | USIKKER (ingen offentlig profil funnet) | — | https://x.com/snudlyapp (curl HTTP 404) |
 | Facebook side | snudly | USIKKER | — | https://www.facebook.com/snudly (Chrome-UA → 400; Googlebot-UA → 200 med `<title>Facebook</title>`. Kan være innloggingsvegg for både ledig og tatt håndtak — krever manuell/pålogget verifisering) |
 | Facebook side | snudlyapp | USIKKER | — | https://www.facebook.com/snudlyapp (samme signaler som over) |
 | YouTube-kanal | snudly | TATT | kanalnavn "snudly", tom kanal (ingen beskrivelse, ingen synlige videoer i HTML-dump) | https://www.youtube.com/@snudly (200 + `<title>snudly - YouTube</title>`, `itemprop="name" content="snudly"`, `"description":""`) |
-| YouTube-kanal | snudly_app | LEDIG | — | https://www.youtube.com/@snudly_app (HTTP 404) |
-| YouTube-kanal | snudlyapp | LEDIG | — | https://www.youtube.com/@snudlyapp (HTTP 404) |
-| LinkedIn selskap | snudly | LEDIG (indikert) | — | https://www.linkedin.com/company/snudly (HTTP 404 uten cookies — LinkedIn returnerer 404 for ikke-eksisterende, men også for auth-vegg; sannsynlig ledig) |
-| LinkedIn selskap | snudly-app | LEDIG (indikert) | — | https://www.linkedin.com/company/snudly-app (HTTP 404) |
-| LinkedIn selskap | snudlyapp | LEDIG (indikert) | — | https://www.linkedin.com/company/snudlyapp (HTTP 404) |
-| GitHub org/user | snudly | LEDIG | — | https://github.com/snudly (HTTP 404) |
-| GitHub org/user | snudly-app | LEDIG | — | https://github.com/snudly-app (HTTP 404) |
-| GitHub org/user | snudlyapp | LEDIG | — | https://github.com/snudlyapp (HTTP 404) |
+| YouTube-kanal | snudly_app | USIKKER (ingen offentlig profil funnet) | — | https://www.youtube.com/@snudly_app (HTTP 404) |
+| YouTube-kanal | snudlyapp | USIKKER (ingen offentlig profil funnet) | — | https://www.youtube.com/@snudlyapp (HTTP 404) |
+| LinkedIn selskap | snudly | USIKKER (ingen offentlig side funnet) | — | https://www.linkedin.com/company/snudly (HTTP 404 uten cookies — LinkedIn returnerer 404 for både ikke-eksisterende og auth-vegg) |
+| LinkedIn selskap | snudly-app | USIKKER (ingen offentlig side funnet) | — | https://www.linkedin.com/company/snudly-app (HTTP 404) |
+| LinkedIn selskap | snudlyapp | USIKKER (ingen offentlig side funnet) | — | https://www.linkedin.com/company/snudlyapp (HTTP 404) |
+| GitHub org/user | snudly | USIKKER (ingen offentlig profil funnet) | — | https://github.com/snudly (HTTP 404) |
+| GitHub org/user | snudly-app | USIKKER (ingen offentlig profil funnet) | — | https://github.com/snudly-app (HTTP 404) |
+| GitHub org/user | snudlyapp | USIKKER (ingen offentlig profil funnet) | — | https://github.com/snudlyapp (HTTP 404) |
 
 ### Anbefalt reserveringssett (kritiske først)
 
-1. **TikTok** `snudly`, `snudly_app`, `snudlyapp` — alle tre ledige; sikre `snudly` først.
-2. **GitHub** `snudly` — org-navnet er ledig; sikre først.
-3. **Instagram** `snudly_app` og `snudlyapp` — begge ledige. `snudly` er okkupert (tom).
-4. **YouTube** `@snudly_app` og `@snudlyapp` — begge ledige. `@snudly` er tatt (tom kanal).
-5. **LinkedIn Company** `snudly` — opprett; bekreftes ved opprettelse.
-6. **X/Twitter** `snudly_app` og `snudlyapp` — begge ledige (404). `snudly` uavklart.
+Ingen av håndtakene under er autoritativt bekreftet ledige — HTTP-probing viser bare at
+ingen offentlig profil ble funnet. Reservering er kontrollen som avgjør status. Rekkefølgen
+er prioritet, ikke tilgjengelighetsbekreftelse.
+
+1. **TikTok** `snudly`, `snudly_app`, `snudlyapp` — forsøk `snudly` først; alle tre står
+   som USIKKER inntil reservering avgjør.
+2. **GitHub** `snudly` — forsøk å registrere org-navnet; status USIKKER inntil bekreftet.
+3. **Instagram** `snudly_app` og `snudlyapp` — forsøk reservering; status USIKKER inntil
+   bekreftet. `snudly` er okkupert (tom placeholder).
+4. **YouTube** `@snudly_app` og `@snudlyapp` — forsøk reservering; status USIKKER inntil
+   bekreftet. `@snudly` er tatt (tom kanal).
+5. **LinkedIn Company** `snudly` — forsøk å opprette; status USIKKER inntil bekreftet
+   (LinkedIn returnerer HTTP 404 for både ledig og auth-vegg).
+6. **X/Twitter** `snudly_app` og `snudlyapp` — forsøk reservering; status USIKKER inntil
+   bekreftet. `snudly` uavklart.
 7. **Facebook Page** — må verifiseres manuelt innlogget før reservering.
 
 ### Blokkere (tredjepart eier håndtaket)
@@ -324,11 +374,29 @@ probing — låste plattformer (LinkedIn/Facebook uten cookies) merket USIKKER.
 3. Vurder å utfordre Instagram/YouTube @snudly hvis merkevaren blir sterk (varemerke-basert
    krav krever registrert varemerke først).
 
-**Ikke-blokkere for App Store-innsending nå:**
-- Ingen kollisjon i App Store, ingen kollisjon i Play, ingen kjent registrert varemerke,
-  domenene er ledige. Kjernenavnet «Snudly» kan brukes i visningsnavn og markedsføring.
-- Bundle-id `no.klemeg.app` er urørt (per DECISION-LOG 2026-08-14 E-2), så tekniske
-  identifikatorer i App Store og Play påvirkes ikke.
+**Status per 2026-08-14 (ikke «grønt lys», betinget):**
+- **App Store:** Ingen indekserte offentlige treff, men autoritativ navnetilgjengelighet
+  avgjøres først ved oppretting av app-record i App Store Connect (Apples egen
+  dokumentasjon). Denne kontrollen er ikke gjort i SN-006. Status: **USIKKER**.
+- **Play:** Ingen søketreff i norsk storefront 2026-08-14. Play håndhever ikke
+  appnavntilgjengelighet like strengt som Apple; risikoen ligger primært i package-id og
+  varemerke. Status: **INGEN KJENT KOLLISJON**, men package-id-kontrollen dekker bare det
+  som ble søkt.
+- **Varemerke:** Ingen indekserte «Snudly»-varemerker i tredjeparts-speilinger, men
+  direkte oppslag i Patentstyret/EUIPO/WIPO/USPTO er ikke gjennomført. Status:
+  **USIKKER — må lukkes ved manuell DB-sjekk før filing**.
+- **Domener:** .no, .com, .app **verifisert LEDIG** via autoritativ RDAP 2026-08-14 —
+  eneste kategori med et bekreftet grønt signal.
+- **Håndtak:** Instagram @snudly og YouTube @snudly er **TATT** (tomme placeholder-
+  kontoer). Alle andre håndtak i tabellen er **USIKKER** — HTTP-probing viser bare fravær
+  av offentlig profil.
+
+Kjernenavnet «Snudly» kan brukes videre i planlegging og for domenesikring, men et endelig
+GO for App Store-innsending forutsetter at App Store Connect-navnesjekken og
+Patentstyret/EUIPO-DB-oppslagene er gjennomført først.
+
+Bundle-id `no.klemeg.app` er urørt (per DECISION-LOG 2026-08-14 E-2), så tekniske
+identifikatorer i App Store og Play påvirkes ikke.
 
 **Lukking av åpen naming-port fra 2026-07-15:** `docs/DECISION-LOG.md:313` («Offentlig
 navn: Babyora») slår fast at «En formell tilgjengelighetssjekk (varemerke, `.no`-domene,
