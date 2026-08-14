@@ -34,11 +34,11 @@ Handlinger *før* App Store-innsending:
 3. **Reservere/bekrefte håndtakene** — HTTP-probing viser bare at ingen offentlig profil
    ble funnet; autoritativ tilgjengelighet avgjøres ved forsøk på reservering. Instagram
    @snudly og YouTube @snudly er okkupert som tomme placeholder-kontoer (formelt TATT).
-4. **Bekrefte varemerkefravær** direkte i Patentstyret + EUIPO + WIPO + USPTO (agenten
-   nådde ikke DB-ene direkte pga. CAPTCHA/SPA/410; alle «null treff»-utsagn hviler på
-   Google-indeksering av tredjeparts-speilinger som Justia/Trademarkia). Anbefaler
-   manuell sjekk før varemerkefiling, eller kjøpt clearance search (NOK 5 000–15 000,
-   ikke bekreftet pris).
+4. **Bekrefte varemerkefravær** direkte i Patentstyret og EUIPO (agenten nådde ikke
+   DB-ene direkte pga. CAPTCHA/SPA/410; WIPO GBD og USPTO TESS ble også forsøkt, se
+   §5). Alle «null treff»-utsagn hviler på Google-indeksering av tredjeparts-speilinger
+   som Justia/Trademarkia. Anbefaler manuell sjekk før varemerkefiling, eller kjøpt
+   clearance search (NOK 5 000–15 000, ikke bekreftet pris).
 
 **Ingen absolutt NO-GO-funn observert, men flere USIKKER-statuser gjenstår:** Ingen
 søketreff for «Snudly» i norsk Play-storefront (returnerte eksplisitt «Ingen resultater
@@ -137,14 +137,24 @@ Ingen søkevariant («Snuddly», «Snuddley», «Snudle», «Snudlee») ga egne 
 **Package-id-konflikt (`no.klemeg.app.*`):** Ingen funn. Ingen observert package-id starter
 med `no.klemeg`.
 
-**Kollisjonsvurdering: LAV.** Nærmeste i barnefamilie-segmentet er `SNUGL` (baby tracker,
-annen bokstav, annen funksjon) og `Snuggly: Bedtime Stories` (godnattfortellinger, ikke
-værbasert påkledning).
+**Kollisjonsvurdering: USIKKER (indikert LAV).** Nærmeste i barnefamilie-segmentet er
+`SNUGL` (baby tracker, annen bokstav, annen funksjon) og `Snuggly: Bedtime Stories`
+(godnattfortellinger, ikke værbasert påkledning). Ingen bokstavelig «Snudly»-app funnet
+i norsk Play-storefront (storefronten svarte eksplisitt «Ingen resultater for snudly»
+2026-08-14) eller i indekserte US-treff. **Autoritativ appnavntilgjengelighet er
+likevel ikke bekreftet:** Play håndhever appnavn primært via package-id og varemerke og
+ikke via en «reserver navn»-mekanisme som Apples, men verifikasjonen her hviler på
+Google-indeksering og storefront-søk — ikke på Play Console-oppslag. Rapporten kan
+derfor slå fast «ingen indekserte kollisjoner», men ikke uten videre «ingen
+kollisjon» (samme logikk som §2 for App Store, per dommens funn 2).
 
 **Usikkerhet:**
 - Installtall ikke synlige i søkelisten — ikke hentet per app-side.
 - Landstorefronts DE/UK/US spesifikt ikke enkeltsjekket ut over default + `hl=no,gl=no`.
 - «Snudly» som ord i norske dialekter/urban dictionary ikke undersøkt for uheldig betydning.
+- Play Console-oppslag ikke gjort (utenfor SN-006-scope, jf. DoD C4); autoritativ
+  verifisering av at ingen utvikler har reservert package-id-prefikset `no.klemeg.app.*`
+  utover det som er søkt i den offentlige storefronten forutsetter Play Console.
 
 ---
 
@@ -335,23 +345,33 @@ er prioritet, ikke tilgjengelighetsbekreftelse.
 
 ### Blokkere (tredjepart eier håndtaket)
 
-- **Instagram @snudly** — okkupert av tom konto (0 posts, 0 followers). Ingen synlig
-  aktivitet, men håndtaket er formelt tatt.
+- **Instagram @snudly** — okkupert av tom konto (0 posts, 0 followers). Ingen offentlig
+  aktivitet observert utlogget, men håndtaket er formelt tatt.
 - **YouTube @snudly** — okkupert av tom kanal med navn "snudly", ingen beskrivelse.
-- Basert på utlogget probing ser ingen av disse ut til å drive konkurrerende
-  virksomhet i norsk barnefamilie-segment — men innhold bak innloggingsvegg
-  (Instagram private story-arkiv, YouTube skjulte videoer o.l.) er ikke sjekket.
+- Utlogget probing viser bare fravær av offentlig innhold; det utelukker ikke
+  aktivitet bak innloggingsvegg (Instagram private story-arkiv, YouTube skjulte
+  videoer, kanal-tags, eiernavn i innsiden av kontoen). Konkurrerende virksomhet
+  bak innloggingsvegg er ikke bekreftet fraværende — kun ikke synlig utenfra.
   Merkevare-eierskap er svekket uavhengig av hva som ligger bak.
 
 ### Usikkerhet
 
+Alle rader i tabellen som står som USIKKER er det fordi HTTP-/HTML-probing kun viser
+fravær av offentlig profil, ikke bekrefter at plattformen vil tillate reservering.
+Autoritativ tilgjengelighet avgjøres først ved forsøk på reservering (som ikke er
+utført i denne rapporten, og ikke skal utføres som del av SN-006 — reservering skjer
+etter eierbeslutning). Særskilte forbehold utover den generelle regelen:
+
 - **X/Twitter @snudly**: curl HTTP 200, WebFetch HTTP 402 — kan ikke skille mellom
-  eksisterende profil og generisk landingsside uten innlogget probing.
+  eksisterende profil og generisk landingsside uten innlogget probing (sterkere
+  usikkerhet enn de andre X-radene, som ga HTTP 404).
 - **Facebook /snudly og /snudlyapp**: 400 uten UA, 200 med Googlebot-UA men bare
-  `<title>Facebook</title>`. Krever manuell innlogget sjekk.
-- **LinkedIn Company /snudly-varianter**: 404 kan bety både «ledig» og «auth-vegg».
-- **Instagram @snudly_app / @snudlyapp**: 200 + fravær av profil-meta er beste
-  tilgjengelige signal, ikke autoritativ bekreftelse.
+  `<title>Facebook</title>`. Krever manuell innlogget sjekk uansett grunnstatus.
+- **LinkedIn Company /snudly-varianter**: HTTP 404 kan bety både «ingen side»
+  og «auth-vegg» — LinkedIn skiller ikke i utlogget respons.
+- **Instagram @snudly_app / @snudlyapp** og **TikTok/GitHub-radene**: 200 + fravær
+  av profil-meta eller «Couldn't find this account» / HTTP 404 er beste tilgjengelige
+  signal, ikke autoritativ bekreftelse.
 - Ingen håndtakssjekk for varemerkekonflikt.
 
 ---
@@ -378,10 +398,13 @@ er prioritet, ikke tilgjengelighetsbekreftelse.
 - **App Store:** Ingen indekserte offentlige treff, men autoritativ navnetilgjengelighet
   avgjøres først ved oppretting av app-record i App Store Connect (Apples egen
   dokumentasjon). Denne kontrollen er ikke gjort i SN-006. Status: **USIKKER**.
-- **Play:** Ingen søketreff i norsk storefront 2026-08-14. Play håndhever ikke
-  appnavntilgjengelighet like strengt som Apple; risikoen ligger primært i package-id og
-  varemerke. Status: **INGEN KJENT KOLLISJON**, men package-id-kontrollen dekker bare det
-  som ble søkt.
+- **Play:** Ingen indekserte søketreff for «Snudly» i norsk storefront 2026-08-14 og
+  ingen observert `no.klemeg.app.*`-kollisjon i søkeresultatene. Play håndhever
+  appnavn primært via package-id og varemerke, ikke via en «reserver navn»-mekanisme
+  som Apples; men verifisering av at ingen utvikler har lagt beslag på navnet eller
+  package-id-prefikset utover det offentlige søket dekker forutsetter Play Console-
+  oppslag, som ikke er gjort her. Status: **USIKKER (indikert ingen kollisjon)** —
+  samme logikk som App Store.
 - **Varemerke:** Ingen indekserte «Snudly»-varemerker i tredjeparts-speilinger, men
   direkte oppslag i Patentstyret/EUIPO/WIPO/USPTO er ikke gjennomført. Status:
   **USIKKER — må lukkes ved manuell DB-sjekk før filing**.
