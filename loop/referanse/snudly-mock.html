@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f3f7f5" />
+  <title>Snudly · samlet app-flow</title>
+  <link rel="preload" as="image" href="./home-avatar.png" />
+  <link rel="preload" as="image" href="./avatar-a-home-gold.png" />
+  <link rel="preload" as="image" href="./avatar-a-profile-gold.png" />
+  <link rel="preload" as="image" href="./avatar-b-home-gold.png" />
+  <link rel="preload" as="image" href="./avatar-b-profile-gold.png" />
+  <link rel="preload" as="image" href="./tool-icons.png" />
+  <link rel="preload" as="image" href="./plagg-tykt-ullsett.webp" />
+  <link rel="preload" as="image" href="./plagg-ull-mellomlag.webp" />
+  <style>
+    @font-face { font-family: "Schibsted Local"; src: url("./schibsted-grotesk.woff2") format("woff2"); font-display: swap; }
+    @font-face { font-family: "Fraunces Local"; src: url("./fraunces.woff2") format("woff2"); font-display: swap; }
+
+    :root {
+      --canvas: #f3f7f5;
+      --canvas-deep: #e2eee9;
+      --plate: #fffdf9;
+      --plate-soft: #edf4f1;
+      --weather: #dcebe5;
+      --ink: #182720;
+      --ink-mid: #566b63;
+      --line: #d7e4df;
+      --sage: #396a60;
+      --sage-deep: #20594f;
+      --sage-light: #dcebe5;
+      --saffron: #d98443;
+      --saffron-soft: #f8e1cf;
+      --blue: #477f95;
+      --blue-soft: #dcebf1;
+      --focus: #0d685a;
+      --ease: cubic-bezier(.16, 1, .3, 1);
+      --ease-in: cubic-bezier(.7, 0, 1, 1);
+      --quick: 140ms;
+      --standard: 320ms;
+      --hero: 720ms;
+      --shadow-phone: 0 34px 80px rgba(25,55,47,.25), 0 10px 24px rgba(25,55,47,.14);
+      --shadow-card: 0 16px 34px rgba(45,80,70,.11), 0 3px 8px rgba(45,80,70,.06), inset 0 1px 0 rgba(255,255,255,.95);
+      --shadow-chip: 0 7px 16px rgba(42,78,69,.10), inset 0 1px 0 rgba(255,255,255,.9);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: radial-gradient(circle at 50% 8%, #fff 0, #e8f1ee 35rem, #d5e5df 100%);
+      color: var(--ink);
+      font-family: "Schibsted Local", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { color: inherit; font: inherit; -webkit-tap-highlight-color: transparent; }
+    button:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 70%, white); outline-offset: 2px; }
+    svg { display: block; }
+
+    .stage { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
+    .phone {
+      position: relative;
+      width: min(393px, 100%);
+      height: min(852px, calc(100dvh - 48px));
+      min-height: 690px;
+      overflow: hidden;
+      border: 7px solid #14201c;
+      border-radius: 52px;
+      background: var(--canvas);
+      box-shadow: var(--shadow-phone), inset 0 0 0 1px rgba(255,255,255,.7);
+    }
+    .phone::before {
+      content: "";
+      position: absolute;
+      z-index: 40;
+      top: 11px;
+      left: 50%;
+      width: 116px;
+      height: 31px;
+      translate: -50% 0;
+      border-radius: 99px;
+      background: #101614;
+    }
+    .statusbar {
+      position: absolute;
+      z-index: 39;
+      inset: 0 0 auto;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 21px;
+      font-size: 12px;
+      font-weight: 760;
+      pointer-events: none;
+    }
+    .status-icons { display: flex; align-items: center; gap: 6px; }
+    .app-shell {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 12% 14%, rgba(202,230,220,.72), transparent 17rem), linear-gradient(180deg, #fbfcfb 0%, var(--canvas) 56%, #e8f2ee 100%);
+    }
+    .topbar {
+      position: absolute;
+      z-index: 25;
+      top: 54px;
+      left: 0;
+      right: 0;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 19px;
+    }
+    .wordmark { font-size: 11px; font-weight: 780; letter-spacing: .27em; text-transform: uppercase; }
+    .top-actions { display: flex; gap: 8px; }
+    .icon-button {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(52,95,84,.14);
+      border-radius: 50%;
+      background: rgba(255,255,255,.78);
+      box-shadow: inset 0 1px 0 white, 0 6px 16px rgba(38,72,62,.07);
+      transition: transform var(--quick) var(--ease), background-color var(--standard) var(--ease);
+    }
+    .icon-button:active { transform: scale(.93); }
+    .icon-button svg { width: 19px; height: 19px; }
+    .context-button::after {
+      content: "";
+      position: absolute;
+      right: 4px;
+      top: 4px;
+      width: 7px;
+      height: 7px;
+      border: 2px solid white;
+      border-radius: 50%;
+      background: var(--saffron);
+      opacity: 0;
+      transition: opacity var(--standard) var(--ease);
+    }
+    .context-button.has-context::after { opacity: 1; }
+    .context-button.is-hidden { display: none; }
+
+    .views { position: absolute; inset: 112px 0 82px; overflow: hidden; }
+    .app-view {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 8px 17px 36px;
+      scrollbar-width: none;
+      background: transparent;
+    }
+    .app-view::-webkit-scrollbar { display: none; }
+    .app-view[hidden] { display: none; }
+    .app-view.enter-from-right { animation: view-from-right 420ms var(--ease) both; }
+    .app-view.enter-from-left { animation: view-from-left 420ms var(--ease) both; }
+    .app-view.exit-left { animation: view-exit-left 220ms var(--ease-in) both; }
+    .app-view.exit-right { animation: view-exit-right 220ms var(--ease-in) both; }
+    .page-heading { margin: 0 3px 17px; }
+    .page-heading h1 { margin: 0; font-size: 34px; font-weight: 770; line-height: 1; letter-spacing: -.038em; }
+    .page-heading p { max-width: 31ch; margin: 8px 0 0; color: var(--ink-mid); font-size: 14px; line-height: 1.42; }
+
+    /* Home */
+    .home-view { padding-top: 2px; }
+    .home-stack { position: relative; min-height: 510px; }
+    .home-weather {
+      position: relative;
+      min-height: 132px;
+      overflow: hidden;
+      padding: 18px 132px 15px 17px;
+      border: 1px solid rgba(54,101,89,.10);
+      border-radius: 17px;
+      background: linear-gradient(135deg, rgba(255,255,255,.34), transparent 45%), var(--weather);
+      box-shadow: var(--shadow-card);
+      isolation: isolate;
+    }
+    .weather-top { display: flex; align-items: flex-start; gap: 11px; }
+    .hero-temp { font-family: "Fraunces Local", Georgia, serif; font-size: 54px; font-weight: 470; line-height: .88; letter-spacing: -.06em; }
+    .weather-meta { min-width: 0; padding-top: 1px; }
+    .weather-meta strong { display: block; font-size: 13px; line-height: 1.25; }
+    .weather-meta span { display: block; margin-top: 3px; color: var(--ink-mid); font-size: 11px; }
+    .weather-facts { display: flex; gap: 13px; margin-top: 15px; color: var(--ink-mid); font-size: 10px; font-weight: 700; }
+    .weather-facts span { display: inline-flex; align-items: center; gap: 5px; }
+    .weather-facts svg { width: 14px; height: 14px; color: var(--sage-deep); }
+    .weather-symbol { position: absolute; top: 15px; right: 18px; width: 39px; height: 39px; filter: drop-shadow(0 7px 8px rgba(42,78,69,.12)); }
+    .weather-context { display: inline-flex; margin-top: 13px; }
+    .home-heading { position: relative; z-index: 3; min-height: 47px; margin: 18px 0 5px 3px; }
+    .home-title { margin: 0; font-size: 29px; line-height: 1; letter-spacing: -.036em; }
+    .home-subtitle { max-width: 56%; margin: 4px 0 0; color: var(--ink-mid); font-size: 10px; font-weight: 650; line-height: 1.3; }
+    .home-subtitle b { color: var(--sage-deep); font-weight: 740; }
+    .outfit-block { position: relative; }
+    .home-avatar {
+      position: absolute;
+      z-index: 8;
+      top: -82px;
+      right: -15px;
+      width: 196px;
+      pointer-events: none;
+      filter: drop-shadow(0 13px 14px rgba(38,72,62,.14));
+      transform-origin: 76% 88%;
+    }
+    .peek-go { display: inline-flex; align-items: center; gap: 3px; color: var(--sage-deep); font-size: 11px; font-weight: 750; white-space: nowrap; }
+    .peek-go svg { width: 14px; height: 14px; }
+    .next-peek {
+      width: 100%;
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 6px 3px;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      font-size: 11px;
+    }
+    .next-peek > svg { width: 15px; height: 15px; color: var(--sage-deep); flex: none; }
+    .next-peek .peek-copy { min-width: 0; flex: 1; color: var(--ink-mid); font-weight: 650; }
+    .next-peek .peek-copy b { color: var(--ink); font-weight: 740; }
+    .garment-list {
+      position: relative;
+      z-index: 5;
+      overflow: hidden;
+      border: 1px solid rgba(55,97,86,.10);
+      border-radius: 17px;
+      background: rgba(255,253,249,.96);
+      box-shadow: var(--shadow-card);
+    }
+    .garment-row {
+      width: 100%;
+      min-height: 67px;
+      display: grid;
+      grid-template-columns: 22px 48px minmax(0,1fr) 28px;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 10px 7px 8px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+      text-align: left;
+      transition: transform var(--quick) var(--ease), background-color var(--quick) var(--ease);
+    }
+    .garment-row:last-child { border-bottom: 0; }
+    .garment-row:active { transform: scale(.988); background: var(--plate-soft); }
+    .garment-index { color: var(--ink-mid); font-size: 10px; font-variant-numeric: tabular-nums; }
+    .garment-thumb { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 13px; background: #f0f4f1; box-shadow: var(--shadow-chip); }
+    .garment-thumb img { width: 43px; height: 43px; object-fit: contain; filter: drop-shadow(0 5px 6px rgba(45,80,70,.09)); }
+    .garment-copy strong, .garment-copy span { display: block; }
+    .garment-copy strong { font-size: 14px; line-height: 1.15; }
+    .garment-copy span { margin-top: 3px; color: var(--ink-mid); font-size: 10px; }
+    .row-arrow { display: grid; place-items: center; color: var(--sage-deep); }
+    .row-arrow svg { width: 19px; height: 19px; }
+    .home-view.replay .home-weather { animation: surface-in 480ms var(--ease) both; }
+    .home-view.replay .home-avatar { animation: avatar-in 640ms var(--ease) 70ms both; }
+    .home-view.replay .garment-row { animation: row-in 360ms var(--ease) both; }
+    .home-view.replay .garment-row:nth-child(1) { animation-delay: 120ms; }
+    .home-view.replay .garment-row:nth-child(2) { animation-delay: 155ms; }
+    .home-view.replay .garment-row:nth-child(3) { animation-delay: 190ms; }
+    .home-view.replay .garment-row:nth-child(4) { animation-delay: 225ms; }
+
+    /* Plan */
+    .plan-view { padding-top: 2px; }
+    .plan-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 0 3px 6px; }
+    .plan-tagline { margin: 0 3px 13px; max-width: 42ch; color: var(--ink-mid); font-size: 11px; font-weight: 650; line-height: 1.35; }
+    .day-hint { margin: 7px 0 0; color: #8A3D1C; font-size: 10px; font-weight: 720; }
+    .day-hint[hidden] { display: none; }
+    .plan-header h1 { margin: 0; font-size: 34px; line-height: 1; letter-spacing: -.038em; }
+    .day-switch { display: flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.66); box-shadow: inset 0 1px 0 white; }
+    .day-button { min-height: 36px; padding: 0 13px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-mid); font-size: 11px; font-weight: 750; }
+    .day-button[aria-pressed="true"] { background: var(--sage-deep); color: white; box-shadow: 0 5px 12px rgba(32,89,79,.18); }
+    .plan-surface { overflow: hidden; border: 1px solid rgba(55,97,86,.10); border-radius: 19px; background: rgba(255,253,249,.97); box-shadow: var(--shadow-card); }
+    .plan-intro { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 16px 11px; }
+    .plan-intro small { display: block; color: var(--sage-deep); font-size: 10px; font-weight: 780; letter-spacing: .08em; text-transform: uppercase; }
+    .plan-intro h2 { margin: 4px 0 0; max-width: 13ch; font-size: 22px; line-height: 1.05; letter-spacing: -.025em; }
+    .context-chip { display: inline-flex; align-items: center; gap: 5px; padding: 7px 10px; border: 0; border-radius: 999px; background: var(--sage-light); color: var(--sage-deep); font-size: 10px; font-weight: 760; white-space: nowrap; }
+    .context-chip svg { width: 13px; height: 13px; }
+    .context-chip.weather-context { background: rgba(255,253,249,.9); }
+    .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+    .metric-tabs { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; padding: 0 12px 12px; }
+    .metric-tab { min-height: 51px; padding: 7px 5px; border: 1px solid transparent; border-radius: 12px; background: var(--plate-soft); color: var(--ink-mid); text-align: left; transition: transform var(--quick) var(--ease), background-color var(--standard) var(--ease); }
+    .metric-tab:active { transform: scale(.96); }
+    .metric-tab[aria-pressed="true"] { border-color: rgba(32,89,79,.15); background: var(--sage-light); color: var(--ink); }
+    .metric-tab span, .metric-tab strong { display: block; }
+    .metric-tab span { font-size: 9px; font-weight: 700; }
+    .metric-tab strong { margin-top: 2px; font-size: 14px; }
+    .chart-wrap { position: relative; margin: 0 10px; padding: 4px 0 0; border-top: 1px solid var(--line); }
+    .chart { width: 100%; height: auto; overflow: visible; }
+    .chart-grid { stroke: #d8e4df; stroke-width: 1; stroke-dasharray: 2 5; }
+    .chart-axis { fill: var(--ink-mid); font: 9px "Schibsted Local"; }
+    .chart-area { fill: url(#areaFill); opacity: .8; transition: d var(--standard) var(--ease); }
+    .chart-line { fill: none; stroke: var(--sage-deep); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 4px 4px rgba(32,89,79,.12)); transition: d var(--standard) var(--ease), stroke var(--standard) var(--ease); }
+    .chart-point { fill: var(--plate); stroke: var(--sage-deep); stroke-width: 2; transition: cy var(--standard) var(--ease), stroke var(--standard) var(--ease); }
+    .change-line { stroke: var(--saffron); stroke-width: 1.5; stroke-dasharray: 4 4; }
+    .zone-before { fill: rgba(57,106,96,.08); }
+    .zone-after { fill: rgba(176,81,42,.08); }
+    .zone-label { font: 750 9px "Schibsted Local"; }
+    .zone-label--before { fill: var(--sage-deep); }
+    .zone-label--after { fill: #8A3D1C; }
+    .change-pill { fill: var(--saffron-soft); stroke: rgba(196,97,47,.15); }
+    .change-copy { fill: #8b4c28; font: 700 9px "Schibsted Local"; }
+    .change-group { cursor: pointer; pointer-events: bounding-box; }
+    .next-change.pulse { animation: change-pop 640ms var(--ease); }
+    .plan-view.replay .chart-line { animation: draw-chart 760ms var(--ease) 90ms both; }
+    .plan-view.replay .chart-area { animation: area-in 620ms var(--ease) 160ms both; }
+    .plan-view.replay .change-group { animation: change-pop 440ms var(--ease) 430ms both; transform-origin: 224px 88px; }
+    .next-change { margin: 11px 12px 12px; padding: 13px; border-radius: 14px; background: linear-gradient(135deg, var(--saffron-soft), #fff7ee); box-shadow: inset 0 1px 0 rgba(255,255,255,.9); }
+    .next-change-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .next-change small { color: #8b4c28; font-size: 9px; font-weight: 790; letter-spacing: .07em; text-transform: uppercase; }
+    .next-change time { color: #8b4c28; font-family: "Fraunces Local", Georgia, serif; font-size: 20px; }
+    .next-change strong { display: block; margin-top: 5px; font-size: 15px; }
+    .change-items { display: flex; align-items: center; gap: 7px; margin-top: 10px; }
+    .change-item { display: flex; align-items: center; gap: 6px; padding: 5px 8px 5px 5px; border-radius: 999px; background: rgba(255,255,255,.78); color: var(--ink-mid); font-size: 9px; font-weight: 720; }
+    .change-item img { width: 28px; height: 28px; object-fit: contain; }
+    .plan-caption { margin: 10px 3px 0; color: var(--ink-mid); font-size: 10px; line-height: 1.35; }
+
+    /* Tools */
+    .weather-hero {
+      position: relative;
+      width: 100%;
+      min-height: 230px;
+      display: grid;
+      grid-template-columns: minmax(0,1fr) 142px;
+      grid-template-rows: 1fr auto;
+      gap: 10px;
+      overflow: hidden;
+      padding: 21px 17px 15px 20px;
+      border: 1px solid rgba(55,97,86,.10);
+      border-radius: 16px;
+      background: rgba(255,253,249,.92);
+      box-shadow: var(--shadow-card);
+      text-align: left;
+      isolation: isolate;
+    }
+    .weather-copy strong { display: block; max-width: 8ch; font-size: 28px; line-height: 1.02; letter-spacing: -.034em; }
+    .weather-copy p { max-width: 20ch; margin: 9px 0 0; color: var(--ink-mid); font-size: 12px; line-height: 1.38; }
+    .weather-chip { display: inline-flex; margin-bottom: 13px; padding: 6px 9px; border-radius: 999px; background: rgba(255,255,255,.7); color: var(--sage-deep); font-size: 11px; font-weight: 720; }
+    .weather-art { position: relative; width: 148px; height: 148px; align-self: center; justify-self: end; margin: -10px -10px 0 0; transform-origin: 50% 70%; }
+    .sprite { background-image: url("./tool-icons.png"); background-repeat: no-repeat; background-size: 200% 200%; }
+    .sprite-weather { background-position: 0 0; }
+    .sprite-sleep { background-position: 100% 0; }
+    .sprite-winter { background-position: 0 100%; }
+    .sprite-temperature { background-position: 100% 100%; }
+    .weather-object { position: absolute; inset: 0; border-radius: 38px; filter: drop-shadow(0 13px 13px rgba(37,71,62,.15)); }
+    .hero-action { grid-column: 1/-1; min-height: 44px; display: flex; align-items: center; justify-content: space-between; padding-top: 11px; border-top: 1px solid rgba(48,91,80,.15); font-size: 13px; font-weight: 730; }
+    .hero-action svg, .tool-arrow svg, .settings-row svg { width: 20px; height: 20px; }
+    .tools-shelf { margin-top: 18px; overflow: hidden; border-radius: 16px; background: rgba(255,253,249,.92); box-shadow: var(--shadow-card); }
+    .tool-row { width: 100%; min-height: 76px; display: grid; grid-template-columns: 54px minmax(0,1fr) 28px; align-items: center; gap: 12px; padding: 10px 13px 10px 11px; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; }
+    .tool-row:last-child { border-bottom: 0; }
+    .tool-art { width: 54px; height: 54px; border-radius: 13px; background-color: #eaf3ef; box-shadow: var(--shadow-chip); transform-origin: center bottom; }
+    .tool-copy strong, .tool-copy span { display: block; }
+    .tool-copy strong { font-size: 15px; line-height: 1.18; }
+    .tool-copy span { margin-top: 4px; color: var(--ink-mid); font-size: 11px; }
+    .tool-arrow { display: grid; place-items: center; color: var(--sage-deep); }
+    .tools-last { width: 100%; min-height: 44px; display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 4px 6px; border: 0; background: transparent; color: var(--ink-mid); font-size: 11px; font-weight: 650; text-align: left; }
+    .tools-last > svg { width: 15px; height: 15px; color: var(--sage-deep); flex: none; }
+    .tools-last b { color: var(--ink); font-weight: 730; }
+    .tools-last .peek-go { margin-left: auto; }
+    .tools-note { margin: 4px 6px 0; color: var(--ink-mid); font-size: 10px; line-height: 1.35; }
+    .tools-view.replay .weather-hero { animation: surface-in 520ms var(--ease) both; }
+    .tools-view.replay .weather-object { animation: tool-settle 660ms var(--ease) 60ms both; }
+    .tools-view.replay .tool-row:nth-child(1) .tool-art { animation: tool-settle 420ms var(--ease) 170ms both; }
+    .tools-view.replay .tool-row:nth-child(2) .tool-art { animation: tool-settle 420ms var(--ease) 210ms both; }
+    .tools-view.replay .tool-row:nth-child(3) .tool-art { animation: tool-settle 420ms var(--ease) 250ms both; }
+
+    /* Family */
+    .family-hero { position: relative; min-height: 196px; overflow: hidden; padding: 21px 18px; border-radius: 16px; background: radial-gradient(circle at 81% 15%, rgba(250,205,153,.4), transparent 8rem), linear-gradient(135deg, #dcebe5, #f8fbf9 72%); box-shadow: var(--shadow-card); isolation: isolate; }
+    .family-copy { position: relative; z-index: 3; max-width: 54%; }
+    .family-label { display: block; margin-bottom: 6px; color: var(--ink-mid); font-size: 11px; font-weight: 700; }
+    .family-name { display: block; font-family: "Fraunces Local", Georgia, serif; font-size: 35px; font-weight: 470; line-height: 1; letter-spacing: -.035em; }
+    .family-meta { display: block; margin-top: 7px; color: var(--ink-mid); font-size: 12px; }
+    .child-switcher { position: absolute; z-index: 7; left: 17px; bottom: 17px; display: flex; gap: 5px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.78); box-shadow: var(--shadow-chip); }
+    .child-choice { min-height: 36px; display: inline-flex; align-items: center; gap: 6px; padding: 0 13px 0 6px; border: 0; border-radius: 999px; background: transparent; color: var(--ink-mid); font-size: 11px; font-weight: 720; }
+    .child-dot { width: 26px; height: 26px; overflow: hidden; border-radius: 50%; background: var(--saffron-soft); box-shadow: inset 0 0 0 1px rgba(48,91,80,.14); }
+    .child-dot img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+    .child-choice[aria-pressed="true"] { background: var(--sage-deep); color: white; }
+    .family-avatar { position: absolute; z-index: 4; right: -4px; bottom: -11px; width: 190px; filter: drop-shadow(0 12px 14px rgba(38,72,62,.14)); pointer-events: none; }
+    .family-section { margin-top: 17px; border-radius: 16px; background: rgba(255,253,249,.92); box-shadow: var(--shadow-card); }
+    .section-heading { padding: 16px 16px 9px; }
+    .section-heading h2 { margin: 0; font-size: 18px; line-height: 1.1; }
+    .section-heading p { margin: 4px 0 0; color: var(--ink-mid); font-size: 11px; }
+    .care-network { position: relative; height: 176px; margin: 0 12px; }
+    .care-ring { fill: none; stroke: #aac4ba; stroke-width: 1.4; stroke-dasharray: 4 7; }
+    .care-network svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+    .care-line { fill: none; stroke: #aac4ba; stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 160; }
+    .care-node { position: absolute; width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid rgba(48,91,80,.12); border-radius: 50%; background: var(--plate); color: var(--sage-deep); box-shadow: var(--shadow-chip); font-size: 12px; font-weight: 760; }
+    .care-node small { position: absolute; top: calc(100% + 5px); left: 50%; width: max-content; translate: -50% 0; color: var(--ink-mid); font-size: 9px; }
+    .care-node--child { left: 50%; top: 95px; width: 60px; height: 60px; translate: -50% -50%; overflow: hidden; border: 2px solid var(--sage-deep); background: var(--saffron-soft); color: white; font-family: "Fraunces Local"; font-size: 19px; }
+    .care-node--child img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+    .care-node--one { left: 50%; top: 33px; translate: -50% -50%; }
+    .care-node--one small { top: auto; bottom: calc(100% + 5px); }
+    .care-node--two { left: 66.8%; top: 126px; translate: -50% -50%; }
+    .care-node--three { left: 33.2%; top: 126px; translate: -50% -50%; }
+    .invite-secondary { width: calc(100% - 24px); min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 12px 10px; border: 1.5px solid rgba(32,89,79,.32); border-radius: 999px; background: transparent; color: var(--sage-deep); font-size: 12px; font-weight: 730; }
+    .invite-secondary svg { width: 18px; height: 18px; }
+    .care-action { width: calc(100% - 24px); min-height: 44px; margin: 2px 12px 12px; border: 0; border-radius: 12px; background: var(--plate-soft); color: var(--sage-deep); font-size: 12px; font-weight: 730; }
+    .material-options { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; padding: 5px 12px 10px; }
+    .material-choice { min-height: 78px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; border: 1px solid transparent; border-radius: 14px; background: var(--plate-soft); color: var(--ink-mid); font-size: 11px; font-weight: 720; }
+    .material-choice[aria-pressed="true"] { border-color: rgba(39,93,83,.16); background: var(--sage-light); color: var(--sage-deep); }
+    .material-swatch {
+      position: relative;
+      width: 42px;
+      height: 42px;
+      overflow: hidden;
+      border: 1px solid rgba(58,83,74,.10);
+      border-radius: 50%;
+      box-shadow: var(--shadow-chip);
+    }
+    .material-swatch::before,
+    .material-swatch::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+    .material-choice[data-material="wool"] .material-swatch {
+      background:
+        repeating-linear-gradient(118deg, rgba(139,104,72,.10) 0 2px, transparent 2px 7px),
+        linear-gradient(145deg, #f8ead7, #e7d3bb);
+    }
+    .material-choice[data-material="wool"] .material-swatch::before {
+      inset: 5px;
+      border: 2px solid rgba(130,91,58,.28);
+      border-top-color: transparent;
+      border-bottom-color: transparent;
+      border-radius: 48% 52% 44% 56%;
+      transform: rotate(-16deg);
+      box-shadow: 6px 4px 0 -3px rgba(130,91,58,.24), -5px -4px 0 -3px rgba(130,91,58,.20);
+    }
+    .material-choice[data-material="fleece"] .material-swatch {
+      background:
+        radial-gradient(circle at 29% 35%, #f8fbf8 0 13%, transparent 14%),
+        radial-gradient(circle at 62% 28%, #eef6f2 0 18%, transparent 19%),
+        radial-gradient(circle at 72% 66%, #f8fbf8 0 17%, transparent 18%),
+        radial-gradient(circle at 34% 72%, #e6f0eb 0 19%, transparent 20%),
+        #d5e5de;
+    }
+    .material-choice[data-material="fleece"] .material-swatch::after {
+      background: radial-gradient(circle, rgba(69,111,98,.15) 0 1px, transparent 1.5px);
+      background-size: 8px 8px;
+      opacity: .55;
+    }
+    .material-choice[data-material="cotton"] .material-swatch {
+      background:
+        repeating-linear-gradient(0deg, transparent 0 5px, rgba(87,104,112,.13) 5px 6px),
+        repeating-linear-gradient(90deg, transparent 0 5px, rgba(87,104,112,.12) 5px 6px),
+        linear-gradient(145deg, #f8fafb, #dfe7e9);
+    }
+    .material-choice[data-material="cotton"] .material-swatch::after {
+      background: linear-gradient(135deg, rgba(255,255,255,.8), transparent 45%);
+    }
+    .material-summary { margin: 0 14px 14px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--ink-mid); font-size: 11px; line-height: 1.4; }
+    .settings-row { width: 100%; min-height: 62px; display: grid; grid-template-columns: 40px minmax(0,1fr) 24px; align-items: center; gap: 11px; margin-top: 17px; padding: 10px 13px; border: 0; border-radius: 16px; background: rgba(255,253,249,.9); box-shadow: var(--shadow-card); text-align: left; }
+    .settings-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: var(--plate-soft); color: var(--sage-deep); }
+    .settings-copy strong, .settings-copy span { display: block; }
+    .settings-copy strong { font-size: 14px; } .settings-copy span { margin-top: 3px; color: var(--ink-mid); font-size: 10px; }
+    .avatar-settings-lead { margin: 0 0 13px !important; font-size: 12px !important; }
+    .avatar-style-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+    .avatar-style-choice { position: relative; min-height: 198px; overflow: hidden; padding: 12px 10px 11px; border: 1px solid var(--line); border-radius: 17px; background: var(--plate-soft); text-align: center; box-shadow: var(--shadow-chip); }
+    .avatar-style-choice[aria-pressed="true"] { border-color: var(--sage-deep); background: var(--sage-light); box-shadow: 0 0 0 2px rgba(32,89,79,.10), var(--shadow-chip); }
+    .avatar-style-preview { height: 139px; display: grid; place-items: end center; overflow: hidden; border-radius: 13px; background: linear-gradient(150deg, rgba(255,255,255,.78), rgba(220,235,229,.74)); }
+    .avatar-style-preview img { width: 142px; height: 142px; object-fit: contain; object-position: center bottom; }
+    .avatar-style-choice strong { display: block; margin-top: 8px; font-size: 13px; }
+    .avatar-style-choice small { display: block; margin-top: 2px; color: var(--ink-mid); font-size: 9px; }
+    .avatar-style-check { position: absolute; top: 9px; right: 9px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--sage-deep); color: white; opacity: 0; transform: scale(.8); transition: opacity var(--quick) ease, transform var(--quick) var(--ease); }
+    .avatar-style-choice[aria-pressed="true"] .avatar-style-check { opacity: 1; transform: none; }
+    .settings-note { margin: 13px 2px 0 !important; padding-top: 12px; border-top: 1px solid var(--line); font-size: 11px !important; }
+    .family-view.replay .care-ring { animation: ring-in 620ms var(--ease) 140ms both; }
+    @keyframes ring-in { from { opacity: 0; } to { opacity: 1; } }
+    .family-view.replay .family-avatar { animation: avatar-in 640ms var(--ease) 30ms both; }
+
+    /* Navigation + sheets */
+    .tabbar { position: absolute; z-index: 30; left: 14px; right: 14px; bottom: 10px; height: 66px; display: grid; grid-template-columns: repeat(4,1fr); align-items: center; padding: 6px; border: 1px solid rgba(59,103,92,.11); border-radius: 22px; background: rgba(255,253,249,.9); backdrop-filter: blur(18px) saturate(1.08); box-shadow: 0 14px 30px rgba(37,67,59,.15), inset 0 1px 0 white; }
+    .tab { min-width: 0; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 0; border-radius: 17px; background: transparent; color: var(--ink-mid); font-size: 9px; font-weight: 690; }
+    .tab[aria-current="page"] { background: var(--sage-light); color: var(--ink); }
+    .tab svg { width: 20px; height: 20px; }
+    .sheet { width: min(100%,393px); max-height: min(720px, calc(100dvh - 70px)); margin: auto auto 0; padding: 0; overflow: hidden auto; border: 0; border-radius: 25px 25px 0 0; background: var(--plate); color: var(--ink); box-shadow: 0 -20px 50px rgba(21,51,43,.2); }
+    .sheet[open] { animation: sheet-in 390ms var(--ease) both; }
+    .sheet::backdrop { background: rgba(21,33,29,.38); backdrop-filter: blur(6px); animation: backdrop-in 240ms ease-out both; }
+    .sheet-handle { width: 42px; height: 5px; margin: 9px auto 3px; border-radius: 99px; background: #cddbd6; }
+    .sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 17px 10px; border-bottom: 1px solid var(--line); }
+    .sheet-header strong { font-family: "Fraunces Local", Georgia, serif; font-size: 21px; font-weight: 530; }
+    .sheet-close { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--plate-soft); }
+    .sheet-body { padding: 16px 18px 20px; }
+    .sheet-art { width: 154px; height: 154px; display: grid; place-items: center; margin: 0 auto 13px; border-radius: 32px; background-color: #eaf3ef; filter: drop-shadow(0 14px 18px rgba(40,73,64,.12)); }
+    .sheet-art.sprite { background-repeat: no-repeat; background-size: 200% 200%; }
+    .sheet-art img { width: 138px; height: 138px; object-fit: contain; }
+    .sheet-body p { margin: 0; color: var(--ink-mid); font-size: 14px; line-height: 1.48; }
+    .sheet-primary { width: 100%; min-height: 50px; margin-top: 17px; border: 0; border-radius: 14px; background: var(--sage-deep); color: white; font-weight: 740; }
+    .context-sheet .sheet-body { padding-top: 12px; }
+    .context-lead { margin: 0 0 13px !important; font-size: 12px !important; }
+    .context-options { display: grid; gap: 7px; }
+    .context-option { width: 100%; min-height: 64px; display: grid; grid-template-columns: 47px minmax(0,1fr) 26px; align-items: center; gap: 10px; padding: 7px 10px 7px 7px; border: 1px solid transparent; border-radius: 15px; background: transparent; text-align: left; }
+    .context-option[aria-pressed="true"] { border-color: rgba(32,89,79,.12); background: var(--sage-light); }
+    .context-icon { width: 47px; height: 47px; display: grid; place-items: center; border-radius: 14px; background: var(--plate-soft); color: var(--sage-deep); box-shadow: var(--shadow-chip); }
+    .context-option[aria-pressed="true"] .context-icon { background: var(--sage-deep); color: white; }
+    .context-icon svg { width: 26px; height: 26px; }
+    .context-copy strong, .context-copy span { display: block; }
+    .context-copy strong { font-size: 14px; } .context-copy span { margin-top: 3px; color: var(--ink-mid); font-size: 10px; }
+    .context-check { color: var(--sage-deep); opacity: 0; }
+    .context-option[aria-pressed="true"] .context-check { opacity: 1; }
+    .car-toggle { min-height: 65px; display: grid; grid-template-columns: 47px minmax(0,1fr) 48px; align-items: center; gap: 10px; margin-top: 12px; padding: 7px; border: 1px solid #f0c9ad; border-radius: 15px; background: #fff0e5; }
+    .car-toggle .context-icon { background: #fff9f4; color: #a8582d; }
+    .switch { position: relative; width: 46px; height: 28px; border: 1px solid #d2ddd8; border-radius: 999px; background: white; box-shadow: inset 0 2px 5px rgba(42,78,69,.08); }
+    .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #c6d3ce; transition: translate var(--standard) var(--ease), background-color var(--standard) var(--ease); }
+    .switch[aria-pressed="true"] { background: var(--sage-deep); }
+    .switch[aria-pressed="true"]::after { translate: 18px 0; background: white; }
+    .toast { position: absolute; z-index: 60; left: 50%; bottom: 90px; max-width: calc(100% - 38px); padding: 10px 14px; border-radius: 999px; background: #17241f; color: white; box-shadow: 0 12px 28px rgba(17,39,32,.24); font-size: 11px; font-weight: 680; opacity: 0; transform: translate(-50%,12px) scale(.96); pointer-events: none; }
+    .toast.show { animation: toast-in-out 2200ms var(--ease) both; }
+
+    @keyframes surface-in { from { clip-path: inset(0 0 100% 0 round 17px); filter: blur(7px); } to { clip-path: inset(0 round 17px); filter: none; } }
+    @keyframes avatar-in { 0% { transform: translate3d(24px,18px,0) rotate(2.5deg) scale(.9); opacity: .58; } 72% { transform: translate3d(-2px,-2px,0) rotate(-.7deg) scale(1.012); opacity: 1; } 100% { transform: none; opacity: 1; } }
+    @keyframes row-in { from { transform: translateY(12px); opacity: 0; filter: blur(4px); } to { transform: none; opacity: 1; filter: none; } }
+    @keyframes tool-settle { 0% { transform: translateY(14px) rotate(5deg) scale(.9); opacity: .5; filter: blur(4px); } 75% { transform: translateY(-2px) rotate(-1deg) scale(1.02); opacity: 1; filter: none; } 100% { transform: none; opacity: 1; } }
+    @keyframes draw-chart { from { stroke-dasharray: 620; stroke-dashoffset: 620; } to { stroke-dasharray: 620; stroke-dashoffset: 0; } }
+    @keyframes area-in { from { opacity: 0; transform: translateY(12px); } to { opacity: .8; transform: none; } }
+    @keyframes change-pop { from { opacity: 0; transform: scale(.72) translateY(9px); } to { opacity: 1; transform: none; } }
+    @keyframes draw-line { from { stroke-dashoffset: 160; } to { stroke-dashoffset: 0; } }
+    @keyframes view-from-right { from { transform: translateX(24%); opacity: .72; } to { transform: none; opacity: 1; } }
+    @keyframes view-from-left { from { transform: translateX(-24%); opacity: .72; } to { transform: none; opacity: 1; } }
+    @keyframes view-exit-left { to { transform: translateX(-15%); opacity: 0; } }
+    @keyframes view-exit-right { to { transform: translateX(15%); opacity: 0; } }
+    @keyframes sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+    @keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes toast-in-out { 0% { opacity: 0; transform: translate(-50%,12px) scale(.96); } 12%,82% { opacity: 1; transform: translate(-50%,0) scale(1); } 100% { opacity: 0; transform: translate(-50%,-6px) scale(.98); } }
+
+    body.reduced *, body.reduced *::before, body.reduced *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    @media (max-width: 480px) { .stage { display: block; padding: 0; } .phone { width: 100%; height: 100dvh; min-height: 100dvh; border: 0; border-radius: 0; box-shadow: none; } .sheet { width: 100%; } }
+    @media (max-width: 350px) { .app-view { padding-inline: 13px; } .home-avatar { width: 178px; right: -22px; } .home-weather { padding-right: 116px; } .tool-row { grid-template-columns: 50px minmax(0,1fr) 24px; gap: 10px; } .tool-art { width: 50px; height: 50px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+  </style>
+<style id='identitet'>
+:root{--saffron:#B0512A;--saffron-soft:#F5E2D6;}
+.context-button::after{background:#B0512A;}
+.change-line{stroke:#B0512A;}
+.change-pill{fill:#F5E2D6;}
+.change-copy{fill:#8A3D1C;}
+.next-change{background:linear-gradient(135deg,#F5E2D6,#FBF0E8);}
+.next-change small,.next-change time{color:#8A3D1C;}
+.car-toggle{border-color:#E5C2AB;background:#FBF0E8;}
+.family-hero{background:radial-gradient(circle at 81% 15%, rgba(208,138,98,.30), transparent 8rem), linear-gradient(135deg,#dcebe5,#f8fbf9 72%);}
+.care-action{background:#B0512A;color:#FFFFFF;border:2px solid #8A3D1C;font-weight:750;}
+.hero-action{color:#8A3D1C;}
+.tab[aria-current="page"]{background:#F5E2D6;color:#8A3D1C;}
+.row-arrow,.tool-arrow{color:#B0512A;}
+.hero-action svg{color:#8A3D1C;}
+.weather-chip{color:#8A3D1C;}
+body[data-theme="dark"]{--canvas:#111C17;--canvas-deep:#16221C;--plate:#1C2B23;--plate-soft:#22332B;
+--weather:#0F3134;--ink:#F1E9DA;--ink-mid:#B9C4B3;--line:#3A4A41;
+--sage-light:#22332B;--sage:#B9C4B3;--saffron:#B0512A;--saffron-soft:#22332B;
+--shadow-card:0 16px 34px rgba(0,0,0,.45), 0 3px 8px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);
+--shadow-chip:0 7px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+--shadow-phone:0 34px 80px rgba(0,0,0,.6), 0 10px 24px rgba(0,0,0,.4);
+background:radial-gradient(circle at 50% 8%, #16221C 0, #111C17 40rem, #0C1511 100%);}
+body[data-theme="dark"] .app-shell{background:radial-gradient(circle at 12% 14%, rgba(34,51,43,.8), transparent 17rem), linear-gradient(180deg,#16221C 0%,#111C17 56%,#0C1511 100%);}
+body[data-theme="dark"] .day-button[aria-pressed="true"],body[data-theme="dark"] .child-choice[aria-pressed="true"]{background:#B9C4B3;color:#111C17;}
+body[data-theme="dark"] .tab[aria-current="page"]{background:#22332B;color:#F1E9DA;}
+body[data-theme="dark"] .change-line{stroke:#F1E9DA;}
+body[data-theme="dark"] .change-pill{fill:#22332B;}
+body[data-theme="dark"] .change-copy{fill:#F1E9DA;}
+body[data-theme="dark"] .next-change{background:linear-gradient(135deg,#22332B,#1C2B23);}
+body[data-theme="dark"] .next-change small,body[data-theme="dark"] .next-change time{color:#F1E9DA;}
+body[data-theme="dark"] .car-toggle{border-color:#3A4A41;background:#22332B;}
+body[data-theme="dark"] .weather-hero{background:rgba(28,43,35,.94);}
+body[data-theme="dark"] .family-hero{background:linear-gradient(135deg,#16221C,#1C2B23 72%);}
+body[data-theme="dark"] .care-action{background:#B0512A;color:#FFFFFF;border:2px solid #F1E9DA;}
+body[data-theme="dark"] .hero-action{color:#F1E9DA;border-top-color:rgba(241,233,218,.16);}
+body[data-theme="dark"] .hero-action svg{color:#F1E9DA;}
+body[data-theme="dark"] .context-chip,body[data-theme="dark"] .weather-chip{background:#22332B;color:#F1E9DA;}
+body[data-theme="dark"] .icon-button,body[data-theme="dark"] .context-button{background:#22332B;color:#F1E9DA;border-color:#3A4A41;box-shadow:none;}
+body[data-theme="dark"] .icon-button svg{stroke:#F1E9DA;}
+body[data-theme="dark"] .garment-list{background:rgba(28,43,35,.96);}
+body[data-theme="dark"] .garment-thumb{background:#22332B;}
+body[data-theme="dark"] .day-switch{background:rgba(28,43,35,.7);}
+body[data-theme="dark"] .plan-surface{background:rgba(28,43,35,.97);}
+body[data-theme="dark"] .change-item{background:rgba(34,51,43,.85);}
+body[data-theme="dark"] .tools-shelf{background:rgba(28,43,35,.94);}
+body[data-theme="dark"] .tool-art{background-color:#22332B;}
+body[data-theme="dark"] .child-switcher{background:rgba(34,51,43,.8);}
+body[data-theme="dark"] .family-section{background:rgba(28,43,35,.94);}
+body[data-theme="dark"] .settings-row{background:rgba(28,43,35,.92);}
+body[data-theme="dark"] .avatar-style-preview{background:linear-gradient(150deg,rgba(34,51,43,.85),rgba(15,49,52,.7));}
+body[data-theme="dark"] .tabbar{background:rgba(23,35,29,.94);}
+body[data-theme="dark"] .home-weather{background:linear-gradient(135deg,rgba(241,233,218,.06),transparent 45%),var(--weather);}
+body[data-theme="dark"] .car-toggle .context-icon{background:#1C2B23;}
+body[data-theme="dark"] .sheet-art{background-color:#22332B;}
+body[data-theme="dark"] .sheet{background:#1C2B23;}
+body[data-theme="dark"] .chart-line{stroke:#9DBF9A;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4));}
+body[data-theme="dark"] .chart-node{fill:#111C17;stroke:#9DBF9A;}
+body[data-theme="dark"] .care-line{stroke:#3A4A41;}
+body[data-theme="dark"] .care-node{background:#22332B;color:#F1E9DA;border-color:#3A4A41;}
+body[data-theme="dark"] .row-arrow,body[data-theme="dark"] .tool-arrow{color:#F1E9DA;}
+.peek-go{color:#8A3D1C;}
+.next-peek > svg,.tools-last > svg{color:#8A3D1C;}
+body[data-theme="dark"] .peek-go{color:#F1E9DA;}
+body[data-theme="dark"] .next-peek > svg,body[data-theme="dark"] .tools-last > svg{color:#F1E9DA;}
+body[data-theme="dark"] .day-delta{color:#E8B48F;}
+body[data-theme="dark"] .day-button[aria-pressed="true"] .day-delta{color:rgba(17,28,23,.72);}
+body[data-theme="dark"] .zone-band{fill:rgba(241,233,218,.05);}
+body[data-theme="dark"] .zone-divide{stroke:rgba(241,233,218,.24);}
+body[data-theme="dark"] .context-chip{border-color:#3A4A41;}
+body[data-theme="dark"] .care-ring{stroke:#3A4A41;}
+body[data-theme="dark"] .invite-secondary{border-color:rgba(241,233,218,.35);color:#F1E9DA;}
+body[data-theme="dark"] .day-hint{color:#E8B48F;}
+body[data-theme="dark"] .zone-before{fill:rgba(185,196,179,.07);}
+body[data-theme="dark"] .zone-after{fill:rgba(232,180,143,.08);}
+body[data-theme="dark"] .zone-label--before{fill:#B9C4B3;}
+body[data-theme="dark"] .zone-label--after{fill:#E8B48F;}
+body[data-theme="dark"] .home-subtitle b{color:#B9C4B3;}
+body[data-theme="dark"] .care-node--child{border-color:#B9C4B3;}
+body[data-theme="dark"] .child-dot{box-shadow:inset 0 0 0 1px rgba(241,233,218,.2);}
+
+body, .app-shell { transition: background 280ms var(--ease); }
+.theme-label{font-size:11px;font-weight:750;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mid);margin:16px 2px 10px;padding-top:15px;border-top:1px solid var(--line);}
+.theme-switch{display:flex;gap:8px;margin:0 2px;}
+.theme-opt{flex:1;min-height:48px;border-radius:14px;border:1.5px solid var(--line);background:transparent;
+ color:var(--ink);font-size:14px;font-weight:700;font-family:inherit;}
+.theme-opt[aria-pressed="true"]{background:var(--sage-deep);color:#fff;border-color:var(--sage-deep);}
+body[data-theme="dark"] .theme-opt[aria-pressed="true"]{background:#B9C4B3;color:#111C17;border-color:#B9C4B3;}
+.theme-note{font-size:12px;color:var(--ink-mid);margin:10px 2px 0;line-height:1.5;}
+[hidden]{display:none !important;}
+</style></head>
+<body>
+  <div class="stage">
+    <article class="phone" aria-label="iPhone 15 Pro-prototype av Snudly">
+      <div class="statusbar" aria-hidden="true">
+        <span>09:41</span>
+        <span class="status-icons">
+          <svg width="17" height="12" viewBox="0 0 17 12"><path d="M1 11V8h2v3H1Zm4 0V6h2v5H5Zm4 0V3h2v8H9Zm4 0V0h2v11h-2Z" fill="currentColor"/></svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M1 4.5A10 10 0 0 1 15 4.5M3.5 7a6.4 6.4 0 0 1 9 0M6.2 9.4a2.6 2.6 0 0 1 3.6 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <svg width="23" height="11" viewBox="0 0 23 11" fill="none"><rect x=".5" y=".5" width="19" height="10" rx="3" stroke="currentColor"/><rect x="2.5" y="2.5" width="15" height="6" rx="1.5" fill="currentColor"/><path d="M21 4v3" stroke="currentColor" stroke-linecap="round"/></svg>
+        </span>
+      </div>
+
+      <div class="app-shell">
+        <header class="topbar">
+          <span class="wordmark">Snudly</span>
+          <div class="top-actions">
+            <button class="icon-button context-button" id="context-button" type="button" aria-label="Velg situasjon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="7" r="2.2" fill="currentColor"/><circle cx="15" cy="17" r="2.2" fill="currentColor"/></svg></button>
+          </div>
+        </header>
+
+        <main class="views">
+          <section class="app-view home-view" id="home-view" data-view="home">
+            <div class="home-stack">
+              <section class="home-weather" aria-label="Været i Trondheim">
+                <div class="weather-top"><strong class="hero-temp" id="home-temp">7°</strong><div class="weather-meta"><strong id="home-condition">Føles som 6° · Delvis skyet</strong><span>Trondheim</span></div></div>
+                <div class="weather-facts"><span><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h10a3 3 0 1 0-3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 13h14a2.5 2.5 0 1 1-2.5 2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><b id="home-wind">Vind 3 m/s</b></span><span><svg viewBox="0 0 24 24" fill="none"><path d="M12 3c3 4 5 6.7 5 10a5 5 0 0 1-10 0c0-3.3 2-6 5-10Z" stroke="currentColor" stroke-width="1.8"/></svg><b id="home-rain">Regn 0,4 mm</b></span></div>
+                <svg class="weather-symbol" viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="sun" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd76a"/><stop offset="1" stop-color="#e8913e"/></linearGradient></defs><circle cx="31" cy="17" r="9" fill="url(#sun)"/><path d="M12 36h23a8 8 0 0 0 .7-16 11 11 0 0 0-20.7 2.2A7 7 0 0 0 12 36Z" fill="#fffdf9" stroke="#cbd9d4"/><ellipse cx="24" cy="39" rx="16" ry="3" fill="#6d897e" opacity=".12"/></svg>
+                <span class="context-chip weather-context"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9" r="2.2" fill="currentColor"/></svg><span class="sr-only">Situasjon: </span><span id="home-context-label">Utelek</span></span>
+              </section>
+              <div class="outfit-block">
+                <img class="home-avatar" id="home-avatar" src="./avatar-a-home-gold.png" alt="" aria-hidden="true" decoding="sync" fetchpriority="high" />
+                <div class="home-heading"><h1 class="home-title">Dagens antrekk</h1><p class="home-subtitle" id="home-outfit-context">4 plagg for Lillian · Utelek</p></div>
+                <section class="garment-list" id="garment-list" aria-label="Fire anbefalte plagg"></section>
+              </div>
+              <button class="next-peek" id="next-peek" type="button"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v4.2l2.8 1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span class="peek-copy" id="next-peek-copy">Neste klesbytte <b>14:00</b> · Ta av jakke</span><span class="peek-go">Planlegg<svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            </div>
+          </section>
+
+          <section class="app-view plan-view" id="plan-view" data-view="plan" hidden>
+            <header class="plan-header">
+              <h1>Planlegg</h1>
+              <div class="day-switch" aria-label="Velg dag"><button class="day-button" data-day="today" aria-pressed="true">I dag</button><button class="day-button" data-day="tomorrow" aria-pressed="false">I morgen</button></div>
+            </header>
+            <p class="plan-tagline">Været er bare tidslinjen. Plaggbyttet er beslutningen.</p>
+            <section class="plan-surface">
+              <header class="plan-intro"><div><small id="plan-place">Trondheim · tirsdag</small><h2 id="plan-question">Hva trenger vi senere?</h2><p class="day-hint" id="day-hint">I morgen: 1° kaldere tidlig → ett lag mer</p></div><span class="context-chip"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9" r="2.2" fill="currentColor"/></svg><span class="sr-only">Situasjon: </span><span id="plan-context-label">Utelek</span></span></header>
+              <div class="metric-tabs" role="group" aria-label="Velg værgraf">
+                <button class="metric-tab" data-metric="temp" aria-pressed="true"><span>Temperatur</span><strong id="metric-temp">7–12°</strong></button>
+                <button class="metric-tab" data-metric="wind" aria-pressed="false"><span>Vind</span><strong id="metric-wind">2–5 m/s</strong></button>
+                <button class="metric-tab" data-metric="rain" aria-pressed="false"><span>Regn</span><strong id="metric-rain">0–1,2 mm</strong></button>
+              </div>
+              <div class="chart-wrap">
+                <svg class="chart" viewBox="0 0 340 226" role="img" aria-labelledby="chart-title chart-description">
+                  <title id="chart-title">Temperatur fra klokken fem til tjue</title><desc id="chart-description">Grafen viser lag-soner og når klærne bør endres.</desc>
+                  <defs><linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#7caa9c" stop-opacity=".38"/><stop offset="1" stop-color="#7caa9c" stop-opacity=".02"/></linearGradient></defs>
+                  <g class="y-grid"><line class="chart-grid" x1="26" y1="34" x2="330" y2="34"/><line class="chart-grid" x1="26" y1="91" x2="330" y2="91"/><line class="chart-grid" x1="26" y1="148" x2="330" y2="148"/><text class="chart-axis y-label" x="2" y="37">12°</text><text class="chart-axis y-label" x="6" y="94">8°</text><text class="chart-axis y-label" x="6" y="151">4°</text></g>
+                  <g id="layer-zones"><rect class="zone-before" id="zone-before" x="26" y="32" width="182" height="164" rx="6"/><rect class="zone-after" id="zone-after" x="208" y="32" width="122" height="164" rx="6"/><text class="zone-label zone-label--before" id="zone-label-before" x="117" y="50" text-anchor="middle">3 lag</text><text class="zone-label zone-label--after" id="zone-label-after" x="269" y="50" text-anchor="middle">2 lag</text></g>
+                  <path class="chart-area" id="chart-area" d="M30 148 C54 148, 65 119, 89 119 C113 119, 124 88, 148 88 C172 88, 184 57, 208 57 C232 57, 243 77, 267 77 C291 77, 302 102, 326 102 L326 196 L30 196 Z"/>
+                  <path class="chart-line" id="chart-line" d="M30 148 C54 148, 65 119, 89 119 C113 119, 124 88, 148 88 C172 88, 184 57, 208 57 C232 57, 243 77, 267 77 C291 77, 302 102, 326 102"/>
+                  <g id="chart-points"></g>
+                  <g class="change-group" id="change-group"><line class="change-line" id="change-line" x1="208" x2="208" y1="4" y2="196"/><rect class="change-pill" id="change-pill" x="186" y="4" width="44" height="23" rx="11.5"/><text class="change-copy" id="change-copy" x="208" y="19" text-anchor="middle">14:00</text></g>
+                  <g class="x-axis"><text class="chart-axis" x="30" y="216" text-anchor="middle">05</text><text class="chart-axis" x="89" y="216" text-anchor="middle">08</text><text class="chart-axis" x="148" y="216" text-anchor="middle">11</text><text class="chart-axis" x="208" y="216" text-anchor="middle">14</text><text class="chart-axis" x="267" y="216" text-anchor="middle">17</text><text class="chart-axis" x="326" y="216" text-anchor="middle">20</text></g>
+                </svg>
+              </div>
+              <article class="next-change" id="next-change"><div class="next-change-head"><small>Neste klesbytte · <span id="change-time">14:00</span></small></div><strong id="change-title">Ta av ulljakken når det blir mildere</strong><div class="change-items" id="change-items"></div></article>
+            </section>
+          </section>
+
+          <section class="app-view tools-view" id="tools-view" data-view="tools" hidden>
+            <header class="page-heading"><h1>Verktøy</h1><p>Kalkulatorer og korte guider når forholdene skifter.</p></header>
+            <button class="weather-hero" type="button" data-tool="weather" data-title="Værkalkulator" data-description="Test temperatur, vind, nedbør og situasjon. Illustrasjonen reagerer før kalkulatoren åpnes."><span class="weather-copy"><span class="weather-chip" id="tools-chip">7° · Føles som 6°</span><strong>Vær-kalkulator</strong><p>Se hvordan forholdene påvirker klærne.</p></span><span class="weather-art"><span class="weather-object sprite sprite-weather"></span></span><span class="hero-action">Prøv med dagens forhold<svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <section class="tools-shelf">
+              <button class="tool-row" data-tool="sleep" data-title="Sovekalkulator" data-description="Finn riktig TOG og lag etter romtemperaturen."><span class="tool-art sprite sprite-sleep"></span><span class="tool-copy"><strong>Sovekalkulator</strong><span>TOG og lag for rommet</span></span><span class="tool-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+              <button class="tool-row" data-tool="winter" data-title="Første vinter" data-description="En rolig uke-for-uke-guide gjennom den første kulden."><span class="tool-art sprite sprite-winter"></span><span class="tool-copy"><strong>Første vinter</strong><span>Åtte korte leksjoner</span></span><span class="tool-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+              <button class="tool-row" data-tool="temperature" data-title="For varm eller kald?" data-description="Lær tegnene og bruk nakketesten når du er usikker."><span class="tool-art sprite sprite-temperature"></span><span class="tool-copy"><strong>For varm eller kald?</strong><span>Nakketesten, forklart enkelt</span></span><span class="tool-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            </section>
+            <button class="tools-last" type="button" data-tool="sleep" data-title="Sovekalkulator" data-description="Finn riktig TOG og lag etter romtemperaturen."><svg viewBox="0 0 24 24" fill="none"><path d="M4.5 8.2A8 8 0 1 1 4 14M4.5 8.2V3.5m0 4.7H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Sist brukt: <b>Sovekalkulator</b> · i går kveld</span><span class="peek-go">Åpne<svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+            <p class="tools-note">Dagens antrekk på Hjem beregnes med Værkalkulatoren.</p>
+          </section>
+
+          <section class="app-view family-view" id="family-view" data-view="family" hidden>
+            <header class="page-heading"><h1>Familie</h1><p>Barn, omsorgspersoner og det Snudly lærer om dere.</p></header>
+            <section class="family-hero"><div class="family-copy"><span class="family-label">Aktiv profil</span><strong class="family-name" id="family-name">Lillian</strong><span class="family-meta" id="family-meta">10 måneder · Trondheim</span></div><img class="family-avatar" id="family-avatar" src="./avatar-a-profile-gold.png" alt="" decoding="sync" /><div class="child-switcher"><button class="child-choice" data-child="lillian" aria-pressed="true"><span class="child-dot"><img src="./avatar-a-profile-gold.png" alt="" /></span>Lillian</button><button class="child-choice" data-child="sivert" aria-pressed="false"><span class="child-dot"><img src="./avatar-b-profile-gold.png" alt="" /></span>Sivert</button></div></section>
+            <section class="family-section"><header class="section-heading"><h2>De som passer</h2><p>Hvem som kan bruke barnets profil</p></header><div class="care-network"><svg viewBox="0 0 320 176"><circle class="care-ring" cx="160" cy="95" r="62"/></svg><span class="care-node care-node--child"><img id="care-child-img" src="./avatar-a-profile-gold.png" alt="" /></span><span class="care-node care-node--one">M<small>Mamma</small></span><span class="care-node care-node--two">P<small>Pappa</small></span><span class="care-node care-node--three">B<small>Bestemor</small></span></div><button class="invite-secondary" id="invite-caregiver" type="button"><svg viewBox="0 0 24 24" fill="none"><circle cx="10" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c.6-4 2.7-6 6-6 1.6 0 2.9.5 3.9 1.4M18 12v6M15 15h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Inviter en omsorgsperson</button></section>
+            <section class="family-section"><header class="section-heading"><h2>Materialpreferanse</h2><p>Prioriteres når forholdene tillater det</p></header><div class="material-options"><button class="material-choice" data-material="wool" aria-pressed="true" aria-label="Ull, strikket og temperaturregulerende"><span class="material-swatch" aria-hidden="true"></span>Ull</button><button class="material-choice" data-material="fleece" aria-pressed="false" aria-label="Fleece, myk og isolerende lugg"><span class="material-swatch" aria-hidden="true"></span>Fleece</button><button class="material-choice" data-material="cotton" aria-pressed="false" aria-label="Bomull, glatt vevd struktur"><span class="material-swatch" aria-hidden="true"></span>Bomull</button></div><p class="material-summary" id="material-summary"><strong>Ull først.</strong> Alternativer vises når de passer forholdene.</p></section>
+            <button class="settings-row" id="open-settings"><span class="settings-icon"><svg width="20" viewBox="0 0 24 24" fill="none"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="7" r="2" stroke="currentColor" stroke-width="1.8"/><circle cx="8" cy="17" r="2" stroke="currentColor" stroke-width="1.8"/></svg></span><span class="settings-copy"><strong>Appinnstillinger</strong><span>Værkilde, varsler, språk og utseende</span></span><svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+          </section>
+        </main>
+
+        <nav class="tabbar" aria-label="Hovedmeny">
+          <button class="tab" data-tab="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none"><path d="m4 10 8-6 8 6v10h-5v-6H9v6H4V10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Hjem</button>
+          <button class="tab" data-tab="plan"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5.5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 3v5M16 3v5M4 10h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Planlegg</button>
+          <button class="tab" data-tab="tools"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 17h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="9" cy="7" r="2" fill="currentColor"/><circle cx="15" cy="17" r="2" fill="currentColor"/></svg>Verktøy</button>
+          <button class="tab" data-tab="family"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><circle cx="17" cy="10" r="2.3" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 20c.5-4 2.4-6 5.5-6s5 2 5.5 6M14.5 15c3.2-.7 5.2 1 6 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Familie</button>
+        </nav>
+
+        <dialog class="sheet context-sheet" id="context-sheet" aria-labelledby="context-title"><div class="sheet-handle"></div><header class="sheet-header"><strong id="context-title">Hvor skal dere?</strong><button class="sheet-close" data-close="context" aria-label="Lukk"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></header><div class="sheet-body"><p class="context-lead">Antrekket og grafen tilpasses barnets aktivitet og skjerming.</p><div class="context-options" id="context-options"></div><div class="car-toggle"><span class="context-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M7 11V8a5 5 0 0 1 10 0v3M6 11h12v8H6v-8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 15h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="context-copy"><strong>Skal rett i bilstolen</strong><span>Fjerner tykke ytterlag</span></span><button class="switch" id="car-switch" aria-pressed="false" aria-label="Skal rett i bilstolen"></button></div></div></dialog>
+
+        <dialog class="sheet" id="detail-sheet" aria-labelledby="detail-title"><div class="sheet-handle"></div><header class="sheet-header"><strong id="detail-title">Detaljer</strong><button class="sheet-close" data-close="detail" aria-label="Lukk"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></header><div class="sheet-body"><div class="sheet-art" id="detail-art"></div><p id="detail-description"></p><button class="sheet-primary" id="detail-primary">Lukk</button></div></dialog>
+        <dialog class="sheet avatar-settings-sheet" id="settings-sheet" aria-labelledby="settings-title"><div class="sheet-handle"></div><header class="sheet-header"><strong id="settings-title">Appinnstillinger</strong><button class="sheet-close" data-close="settings" aria-label="Lukk Appinnstillinger"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></header><div class="sheet-body"><p class="avatar-settings-lead">Avatarfigur for <strong id="settings-child-name">Lillian</strong></p><div class="avatar-style-options"><button class="avatar-style-choice" data-avatar-style="a" aria-pressed="true"><span class="avatar-style-preview"><img src="./avatar-a-profile-gold.png" alt="" /></span><strong>Avatar 1</strong><small>Snudly-gull</small><span class="avatar-style-check">✓</span></button><button class="avatar-style-choice" data-avatar-style="b" aria-pressed="false"><span class="avatar-style-preview"><img src="./avatar-b-profile-gold.png" alt="" /></span><strong>Avatar 2</strong><small>Snudly-gull</small><span class="avatar-style-check">✓</span></button></div><p class="settings-note">Begge figurene bruker Snudly-gull. Valget påvirker aldri klesanbefalingene.</p><p class="theme-label">Utseende</p><div class="theme-switch" role="group" aria-label="Utseende"><button type="button" class="theme-opt" data-thm="light" aria-pressed="true">Lys</button><button type="button" class="theme-opt" data-thm="dark" aria-pressed="false">Mørk</button></div><p class="theme-note">Lys er standard. I appen vil valget også kunne følge systemet.</p></div></dialog>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div>
+    </article>
+  </div>
+
+  <script>
+    const asset = (name) => `./${name}`;
+    const contexts = {
+      outdoor: { label: 'Utelek', sub: 'Barnet beveger seg selv', temp: '7°', feels: 'Føles som 6° · Delvis skyet', wind: 'Vind 3 m/s', rain: 'Regn 0,4 mm', changeTime: '14:00', change: 'Ta av ulljakken når det blir mildere', why: 'føles som 6° med litt vind', zoneBefore: '3 lag', zoneAfter: '2 lag' },
+      stroller: { label: 'I vogn', sub: 'Ligger stille og er mer skjermet', temp: '7°', feels: 'Føles som 4° · Delvis skyet', wind: 'Vind 1 m/s', rain: 'Regn 0,2 mm', changeTime: '12:00', change: 'Åpne varmeposen når solen kommer frem', why: 'stille i vogn føles kaldere', zoneBefore: 'Pose lukket', zoneAfter: 'Pose åpen' },
+      carrier: { label: 'I bæresele', sub: 'Kroppsvarmen bidrar også', temp: '7°', feels: 'Føles som 8° · Delvis skyet', wind: 'Vind 2 m/s', rain: 'Regn 0,3 mm', changeTime: '17:00', change: 'Legg til den tynne luen når vinden øker', why: 'kroppsvarmen din teller med', zoneBefore: 'Uten lue', zoneAfter: 'Med lue' },
+    };
+    const garments = {
+      outdoor: [
+        ['01','Tykt ullsett','Innerst','plagg-tykt-ullsett.webp','Et varmt ullag nærmest kroppen gir jevn varme når barnet leker ute.'],
+        ['02','Ulljakke','Mellomlag','plagg-ull-mellomlag.webp','Mellomlaget kan tas av når temperaturen stiger utover dagen.'],
+        ['03','Lue med ull','Tilbehør','plagg-lue-med-ull.webp','Luen beskytter ører og hode når det er kjølig og vindfullt.'],
+        ['04','Tøffelsko','Tilbehør','plagg-toffelsko.webp','Myke sko holder føttene lune uten et tungt ytterlag.'],
+      ],
+      stroller: [
+        ['01','Tykt ullsett','Innerst','plagg-tykt-ullsett.webp','Ullaget håndterer temperaturendringer når barnet ligger stille.'],
+        ['02','Ulljakke','Mellomlag','plagg-ull-mellomlag.webp','Et ekstra mellomlag kompenserer for mindre egenbevegelse.'],
+        ['03','Lue med ull','Tilbehør','plagg-lue-med-ull.webp','Luen skjermer hodet i trekk rundt vognen.'],
+        ['04','Varmepose','I vogn','plagg-sovepose.webp','Varmeposen gir isolasjon som enkelt kan åpnes når været blir mildere.'],
+      ],
+      carrier: [
+        ['01','Tykt ullsett','Innerst','plagg-tykt-ullsett.webp','Ull regulerer godt sammen med kroppsvarmen fra den som bærer.'],
+        ['02','Ullbukse','Mellomlag','plagg-ullbukse.webp','Et lett lag på beina uten å bygge for mye under selen.'],
+        ['03','Lue med ull','Tilbehør','plagg-lue-med-ull.webp','Luen kan legges til når vinden øker senere.'],
+        ['04','Tøffelsko','Tilbehør','plagg-toffelsko.webp','Føttene er eksponert og trenger et mykt, varmt lag.'],
+      ],
+    };
+    const chartData = {
+      today: {
+        temp: { labels:['12°','8°','4°'], values:[148,119,88,57,77,102], range:'7–12°', color:'#20594f' },
+        wind: { labels:['6','3','0'], values:[126,111,93,102,66,48], range:'2–5 m/s', color:'#477f95' },
+        rain: { labels:['1,2','0,6','0'], values:[145,134,124,76,102,140], range:'0–1,2 mm', color:'#477f95' },
+      },
+      tomorrow: {
+        temp: { labels:['13°','9°','5°'], values:[151,132,108,79,61,82], range:'6–13°', color:'#20594f' },
+        wind: { labels:['7','4','1'], values:[142,119,89,56,75,96], range:'1–7 m/s', color:'#477f95' },
+        rain: { labels:['1,0','0,5','0'], values:[139,117,91,68,113,147], range:'0–1,0 mm', color:'#477f95' },
+      }
+    };
+    const contextIcons = {
+      outdoor: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+      stroller: '<svg viewBox="0 0 24 24" fill="none"><path d="M7 6h3l1 7h7l2-5H10M7 6 6 3H3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="18" r="2" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="18" r="2" stroke="currentColor" stroke-width="1.8"/></svg>',
+      carrier: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" stroke="currentColor" stroke-width="1.8"/><path d="M8 21v-8a4 4 0 0 1 8 0v8M9 10h6M6 8l3 3M18 8l-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    };
+    const views = Object.fromEntries([...document.querySelectorAll('[data-view]')].map(view => [view.dataset.view, view]));
+    const order = { home:0, plan:1, tools:2, family:3 };
+    const avatarAssets = {
+      a: { home:'avatar-a-home-gold.png', profile:'avatar-a-profile-gold.png' },
+      b: { home:'avatar-b-home-gold.png', profile:'avatar-b-profile-gold.png' },
+    };
+    const profiles = {
+      lillian: { name:'Lillian', meta:'10 måneder · Trondheim', style:'a' },
+      sivert: { name:'Sivert', meta:'18 måneder · Trondheim', style:'b' },
+    };
+    let activeView = 'home';
+    let activeContext = 'outdoor';
+    let activeMetric = 'temp';
+    let activeDay = 'today';
+    let activeChild = 'lillian';
+    let lastTrigger = null;
+
+    const showToast = (message) => { const toast=document.querySelector('#toast'); toast.textContent=message; toast.classList.remove('show'); void toast.offsetWidth; toast.classList.add('show'); };
+    const replay = () => { const view=views[activeView]; view.classList.remove('replay'); void view.offsetWidth; view.classList.add('replay'); };
+    const updateTopAction = () => document.querySelector('#context-button').classList.toggle('is-hidden', !['home','plan'].includes(activeView));
+    const updateProfileUI = () => {
+      const profile=profiles[activeChild], avatars=avatarAssets[profile.style];
+      document.querySelector('#home-avatar').src=asset(avatars.home);
+      document.querySelector('#family-avatar').src=asset(avatars.profile);
+      document.querySelector('#family-name').textContent=profile.name;
+      document.querySelector('#family-meta').textContent=profile.meta;
+      document.querySelector('#care-child-img').src=asset(avatars.profile);
+      document.querySelectorAll('.child-choice .child-dot img').forEach(img=>{ const key=img.closest('.child-choice').dataset.child; img.src=asset(avatarAssets[profiles[key].style].profile); });
+      document.querySelector('#settings-child-name').textContent=profile.name;
+      document.querySelector('#home-outfit-context').innerHTML=`4 plagg for ${profile.name} · ${contexts[activeContext].label} — <b>fordi det ${contexts[activeContext].why}</b>`;
+      document.querySelectorAll('.child-choice').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.child===activeChild)));
+      document.querySelectorAll('.avatar-style-choice').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.avatarStyle===profile.style)));
+    };
+    const switchView = (next) => {
+      if (next===activeView) return replay();
+      const previous=activeView, forward=order[next]>order[previous];
+      views[previous].classList.add(forward?'exit-left':'exit-right');
+      views[next].hidden=false; views[next].classList.add(forward?'enter-from-right':'enter-from-left');
+      document.querySelectorAll('.tab').forEach(tab => tab.toggleAttribute('aria-current', tab.dataset.tab===next));
+      activeView=next; updateTopAction(); views[next].scrollTop=0; replay();
+      setTimeout(()=>{ views[previous].hidden=true; views[previous].classList.remove('exit-left','exit-right','replay'); views[next].classList.remove('enter-from-right','enter-from-left'); },440);
+    };
+    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click',()=>switchView(tab.dataset.tab)));
+    document.querySelectorAll('.child-choice').forEach(button=>button.addEventListener('click',()=>{ activeChild=button.dataset.child; updateProfileUI(); replay(); }));
+
+    const renderContextOptions = () => {
+      document.querySelector('#context-options').innerHTML = Object.entries(contexts).map(([key,value]) => `<button class="context-option" data-context="${key}" aria-pressed="${key===activeContext}"><span class="context-icon">${contextIcons[key]}</span><span class="context-copy"><strong>${value.label}</strong><span>${value.sub}</span></span><svg class="context-check" width="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4L19 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`).join('');
+      document.querySelectorAll('[data-context]').forEach(button => button.addEventListener('click',()=>{ activeContext=button.dataset.context; updateContext(); setTimeout(()=>{ closeDialog(document.querySelector('#context-sheet')); replay(); },160); }));
+    };
+    const renderGarments = () => {
+      document.querySelector('#garment-list').innerHTML = garments[activeContext].map(item => `<button class="garment-row" data-name="${item[1]}" data-role="${item[2]}" data-image="${item[3]}" data-description="${item[4]}"><span class="garment-index">${item[0]}</span><span class="garment-thumb"><img src="${asset(item[3])}" alt="" /></span><span class="garment-copy"><strong>${item[1]}</strong><span>${item[2]}</span></span><span class="row-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>`).join('');
+      document.querySelectorAll('.garment-row').forEach(button => button.addEventListener('click',()=>openDetail(button)));
+    };
+    const updateContext = () => {
+      const data=contexts[activeContext];
+      document.querySelector('#home-temp').textContent=data.temp;
+      document.querySelector('#home-condition').textContent=data.feels;
+      document.querySelector('#home-wind').textContent=data.wind;
+      document.querySelector('#home-rain').textContent=data.rain;
+      document.querySelector('#home-context-label').textContent=data.label;
+      document.querySelector('#home-outfit-context').innerHTML=`4 plagg for ${profiles[activeChild].name} · ${data.label} — <b>fordi det ${data.why}</b>`;
+      document.querySelector('#plan-context-label').textContent=data.label;
+      document.querySelector('#change-time').textContent=data.changeTime;
+      document.querySelector('#change-title').textContent=data.change;
+      const changes = activeContext==='stroller' ? [['plagg-sovepose.webp','Åpne pose']] : activeContext==='carrier' ? [['plagg-lue-med-ull.webp','Legg til lue']] : [['plagg-ull-mellomlag.webp','Ta av jakke']];
+      document.querySelector('#change-items').innerHTML=changes.map(change=>`<span class="change-item"><img src="${asset(change[0])}" alt=""/>${change[1]}</span>`).join('');
+      document.querySelector('#next-peek-copy').innerHTML=`Neste klesbytte <b>${data.changeTime}</b> · ${changes[0][1]}`;
+      document.querySelector('#tools-chip').textContent=`${data.temp} · ${data.feels.split(' · ')[0]} → 4 plagg`;
+      document.querySelector('#context-button').classList.toggle('has-context', activeContext!=='outdoor');
+      const changeHour=parseInt(data.changeTime,10), markerX=CHART_LEFT+(changeHour-5)*((CHART_RIGHT-CHART_LEFT)/15);
+      document.querySelector('#change-line').setAttribute('x1',String(markerX));
+      document.querySelector('#change-line').setAttribute('x2',String(markerX));
+      document.querySelector('#change-pill').setAttribute('x',String(markerX-22));
+      const changeCopy=document.querySelector('#change-copy');
+      changeCopy.setAttribute('x',String(markerX));
+      changeCopy.textContent=data.changeTime;
+      document.querySelector('#change-group').style.transformOrigin=`${markerX}px 88px`;
+      document.querySelector('#zone-before').setAttribute('width',String(markerX-BAND_LEFT));
+      document.querySelector('#zone-after').setAttribute('x',String(markerX));
+      document.querySelector('#zone-after').setAttribute('width',String(BAND_RIGHT-markerX));
+      document.querySelector('#zone-label-before').setAttribute('x',String((BAND_LEFT+markerX)/2));
+      document.querySelector('#zone-label-after').setAttribute('x',String((markerX+BAND_RIGHT)/2));
+      document.querySelector('#zone-label-before').textContent=data.zoneBefore;
+      document.querySelector('#zone-label-after').textContent=data.zoneAfter;
+      renderGarments(); renderContextOptions(); updateChart();
+    };
+
+    const CHART_X=[30,89,148,208,267,326], CHART_LEFT=30, CHART_RIGHT=326, CHART_BOTTOM=196;
+    const BAND_LEFT=26, BAND_RIGHT=330;
+    const buildPath = (values) => {
+      const xs=CHART_X;
+      return `M${xs[0]} ${values[0]} ` + values.slice(1).map((y,i)=>`C${xs[i]+24} ${values[i]}, ${xs[i+1]-24} ${y}, ${xs[i+1]} ${y}`).join(' ');
+    };
+    const updateChart = () => {
+      const data=chartData[activeDay][activeMetric];
+      const path=buildPath(data.values);
+      const line=document.querySelector('#chart-line'), area=document.querySelector('#chart-area');
+      line.setAttribute('d',path); line.style.stroke=data.color;
+      area.setAttribute('d',`${path} L${CHART_RIGHT} ${CHART_BOTTOM} L${CHART_LEFT} ${CHART_BOTTOM} Z`);
+      document.querySelectorAll('.y-label').forEach((label,index)=>label.textContent=data.labels[index]);
+      document.querySelector('#metric-temp').textContent=chartData[activeDay].temp.range;
+      document.querySelector('#metric-wind').textContent=chartData[activeDay].wind.range;
+      document.querySelector('#metric-rain').textContent=chartData[activeDay].rain.range;
+      document.querySelector('#chart-title').textContent=`${activeMetric==='temp'?'Temperatur':activeMetric==='wind'?'Vind':'Regn'} fra klokken fem til tjue`;
+      document.querySelector('#chart-points').innerHTML=data.values.map((y,i)=>`<circle class="chart-point" cx="${CHART_X[i]}" cy="${y}" r="3.5" style="stroke:${data.color}"/>`).join('');
+      document.querySelector('#plan-place').textContent=activeDay==='today'?'Trondheim · tirsdag':'Trondheim · onsdag';
+      document.querySelector('#plan-question').textContent=activeDay==='today'?'Hva trenger vi senere?':'Dette bør ligge klart';
+    };
+    document.querySelectorAll('.metric-tab').forEach(tab=>tab.addEventListener('click',()=>{ activeMetric=tab.dataset.metric; document.querySelectorAll('.metric-tab').forEach(t=>t.setAttribute('aria-pressed',String(t===tab))); updateChart(); replay(); }));
+    document.querySelectorAll('.day-button').forEach(button=>button.addEventListener('click',()=>{ activeDay=button.dataset.day; document.querySelectorAll('.day-button').forEach(t=>t.setAttribute('aria-pressed',String(t===button))); document.querySelector('#day-hint').hidden=activeDay!=='today'; updateChart(); replay(); }));
+    document.querySelector('#change-group').addEventListener('click',()=>{ const card=document.querySelector('#next-change'); card.classList.remove('pulse'); void card.offsetWidth; card.classList.add('pulse'); card.scrollIntoView({behavior:'smooth',block:'nearest'}); });
+
+    const contextSheet=document.querySelector('#context-sheet');
+    document.querySelector('#context-button').addEventListener('click',(event)=>{ lastTrigger=event.currentTarget; contextSheet.showModal(); });
+    document.querySelector('#next-peek').addEventListener('click',()=>switchView('plan'));
+    const closeDialog = (dialog) => { dialog.close(); lastTrigger?.focus(); };
+    document.querySelectorAll('[data-close="context"]').forEach(button=>button.addEventListener('click',()=>closeDialog(contextSheet)));
+    contextSheet.addEventListener('cancel',event=>{ event.preventDefault(); closeDialog(contextSheet); });
+    contextSheet.addEventListener('click',event=>{ if(event.target===contextSheet) closeDialog(contextSheet); });
+    document.querySelector('#car-switch').addEventListener('click',event=>{ const button=event.currentTarget; const active=button.getAttribute('aria-pressed')!=='true'; button.setAttribute('aria-pressed',String(active)); showToast(active?'Bilstol: tykke ytterlag fjernes.':'Vanlig anbefaling er tilbake.'); });
+
+    const detailSheet=document.querySelector('#detail-sheet');
+    const openDetail = (button) => {
+      lastTrigger=button;
+      document.querySelector('#detail-title').textContent=button.dataset.title||button.dataset.name||'Detaljer';
+      document.querySelector('#detail-description').textContent=button.dataset.description;
+      const art=document.querySelector('#detail-art');
+      art.className='sheet-art'; art.innerHTML='';
+      if(button.dataset.image) art.innerHTML=`<img src="${asset(button.dataset.image)}" alt=""/>`;
+      else { art.className=`sheet-art sprite ${button.dataset.tool==='weather'?'sprite-weather':button.dataset.tool==='sleep'?'sprite-sleep':button.dataset.tool==='winter'?'sprite-winter':'sprite-temperature'}`; }
+      detailSheet.showModal();
+    };
+    document.querySelectorAll('[data-tool]').forEach(button=>button.addEventListener('click',()=>openDetail(button)));
+    document.querySelectorAll('[data-close="detail"]').forEach(button=>button.addEventListener('click',()=>closeDialog(detailSheet)));
+    document.querySelector('#detail-primary').addEventListener('click',()=>closeDialog(detailSheet));
+    detailSheet.addEventListener('cancel',event=>{ event.preventDefault(); closeDialog(detailSheet); });
+    detailSheet.addEventListener('click',event=>{ if(event.target===detailSheet) closeDialog(detailSheet); });
+
+    const settingsSheet=document.querySelector('#settings-sheet');
+    document.querySelector('#open-settings').addEventListener('click',event=>{ lastTrigger=event.currentTarget; updateProfileUI(); settingsSheet.showModal(); });
+    document.querySelectorAll('[data-close="settings"]').forEach(button=>button.addEventListener('click',()=>closeDialog(settingsSheet)));
+    settingsSheet.addEventListener('cancel',event=>{ event.preventDefault(); closeDialog(settingsSheet); });
+    settingsSheet.addEventListener('click',event=>{ if(event.target===settingsSheet) closeDialog(settingsSheet); });
+    document.querySelectorAll('.avatar-style-choice').forEach(button=>button.addEventListener('click',()=>{ profiles[activeChild].style=button.dataset.avatarStyle; updateProfileUI(); showToast(`Avatarfigur oppdatert for ${profiles[activeChild].name}.`); }));
+
+    document.querySelectorAll('.material-choice').forEach(button=>button.addEventListener('click',()=>{ document.querySelectorAll('.material-choice').forEach(choice=>choice.setAttribute('aria-pressed',String(choice===button))); const label={wool:'Ull først.',fleece:'Fleece først.',cotton:'Bomull når det er mildt.'}[button.dataset.material]; document.querySelector('#material-summary').innerHTML=`<strong>${label}</strong> Alternativer vises når de passer forholdene.`; }));
+    document.querySelector('#invite-caregiver').addEventListener('click',()=>showToast('Invitasjon åpnes herfra.'));
+
+    renderContextOptions(); updateProfileUI(); updateContext(); updateChart(); updateTopAction(); requestAnimationFrame(replay);
+  </script>
+
+<script>
+(function(){
+  document.querySelectorAll('.theme-opt').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var dark = btn.dataset.thm==='dark';
+      if(dark){ document.body.setAttribute('data-theme','dark'); }
+      else{ document.body.removeAttribute('data-theme'); }
+      document.querySelectorAll('.theme-opt').forEach(function(b){
+        b.setAttribute('aria-pressed', String(b===btn));
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
