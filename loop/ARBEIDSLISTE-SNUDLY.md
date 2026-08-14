@@ -18,7 +18,7 @@ Claude Code oppdaterer statusfeltet. Ingen andre rører det. Nye oppgaver som f�
 | SN-002 | Fjern den utdaterte mismatch-kommentaren i `src/lib/billing/revenuecat.ts`; bekreft at `src/lib/premium/products.ts` bruker `no.klemeg.app.*` | C | SN-001 | FERDIG |
 | SN-003 | Avstem `STATUS.md`: merk hver påstand som `VERIFISERT` eller `ANTAKELSE`, daterte kilder | E | SN-001 | BLOKKERT |
 | SN-004 | Avstem `NEXT-STEPS-APPLE-REVENUECAT.md` og `docs/APP-STORE-IAP-SETUP.md` mot faktiske produkt-IDer | E | SN-003 | KLAR |
-| SN-005 | Registrer eierbeslutningene (Snudly-navnet, E-1 mock vinner, loop-mandatet, 500 kr-grensen) i `docs/DECISION-LOG.md` | E | SN-001 | KLAR |
+| SN-005 | Registrer eierbeslutningene (Snudly-navnet, E-1 mock vinner, loop-mandatet, 500 kr-grensen) i `docs/DECISION-LOG.md` | E | SN-001 | TIL KONTROLL |
 | SN-006 | Navnesjekk Snudly: App Store, Play, domene, varemerke, håndtak → rapport med GO/NO-GO *(workflow W1)* | E | SN-001 | KLAR |
 | SN-007 | Døm `feat/hjem-list-detail-sheet`, `feat/kontekstvalg-hjem`, `agent/babyora-polish-slide` mot mocken → behold/endre/forkast per gren *(workflow W-GREN)* | E | SN-001 | KLAR |
 | SN-008 | Én sannhet om prøveperiode: rett kode, kommentarer og paywall-tekst til 7 dager på alle planer | C | SN-002 | KLAR |
