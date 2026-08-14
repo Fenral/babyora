@@ -8,7 +8,7 @@
 
  Test Files  209 passed (209)
       Tests  3156 passed | 1 todo (3157)
-   Start at  16:08:10
-   Duration  134.17s (transform 8.13s, setup 0ms, import 27.81s, tests 375.33s, environment 30ms)
+   Start at  16:20:38
+   Duration  149.33s (transform 8.46s, setup 0ms, import 28.80s, tests 408.45s, environment 30ms)
 
 EXIT=0
