@@ -92,13 +92,16 @@ antok. Vedtaket ligger i sin helhet i
   `babyora_yearly_299`, Måned = `babyora_monthly_49`, engangskjøp
   «Barnetiden» = `babyora_barnetiden_499` (utenfor abonnementsvedtaket).
   Abonnementsgruppe «Babyora Pluss» (gruppe-ID `22131969`); entitlement i
-  RevenueCat: `premium`. Play Store: ingen produkter. **De tidligere antatte
-  `no.klemeg.app.monthly/quarterly/yearly` finnes ikke.**
-- **V4 Priser skal LESES, ikke antas.** Ankerprisene 299/99/39 i koden er
-  fallback når butikken ikke svarer; ekte pris kommer alltid fra RevenueCat.
-  Fallback-tallene skal likevel stemme med faktisk butikkpris, og må derfor
-  leses av i App Store Connect før de skrives inn. Produktnavnene antyder 299
-  og 49, men prisfeltene er ikke lest. Oppgaven eies av SN-W03.
+  RevenueCat: `premium`. Play Store: RevenueCats Play-side viser ingen
+  produkter — Play Console selv er ikke åpnet (jf.
+  `loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md:71`). **De tidligere
+  antatte `no.klemeg.app.monthly/quarterly/yearly` finnes ikke.**
+- **V4 Priser skal LESES, ikke antas.** Dagens ankerpriser i koden er 299/99/39
+  kr (kvartalens 99 kr fjernes med V1); fallback brukes bare når butikken ikke
+  svarer, og ekte pris kommer alltid fra RevenueCat. Fallback-tallene skal
+  likevel stemme med faktisk butikkpris, og må derfor leses av i App Store
+  Connect før de skrives inn. Produktnavnene antyder 299 og 49, men
+  prisfeltene er ikke lest. Oppgaven eies av SN-W03.
 - **V5 Kjøp skal aldri feile stille.** `purchasePackage` returnerer i dag
   `{ success: false }` uten forklaring når ingen pakke matcher. Krav: når
   tilbudet mangler den etterspurte planen, skal det logges tydelig og vises en
@@ -115,15 +118,30 @@ en pålogget portal; V6 er selve dokumentrettingen (SN-W02). Kilder:
 `loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md`.
 
 **Motstrid håndtert (E3):** Dette vedtaket overstyrer 2026-07-15-entryen
-«Prismodell: behold juni-provisjoneringen (39/99/299), kode alignet» i sin
-helhet — både produkt-ID-valget (`no.klemeg.app.*`), prispåstanden
-(39/99/299) og kvartalskomponenten. Den entryen har allerede en SUPERSEDED-
-banner på faktapåstanden om provisjonering; retningsvalget som erstatter
-juni-provisjoneringen står her, ikke der. Bundle-id `no.klemeg.app`
+«Prismodell: behold juni-provisjoneringen (39/99/299), kode alignet» på tre
+eksplisitt navngitte punkter: produkt-ID-valget (`no.klemeg.app.*`),
+prispåstanden (39/99/299) og kvartalskomponenten. To ytterligere
+delbeslutninger i den entryen håndteres slik: (a) «Barnetiden»-engangskjøpet
+forblir droppet fra paywallen — EIERVEDTAK-BETALINGs «Utenfor dette
+vedtaket»-seksjon holder Barnetiden-retningen åpen — men C2 verner ID-en
+`babyora_barnetiden_499` som provisjoneringsbeskyttelse (angrefristen er
+null), ikke som paywall-reinnsetting; (b) spar-badge 49 % → 36 % faller bort
+som utdatert tall — spar-badgen skal regnes om fra faktiske RC-priser (V1)
+etter at V4-avlesningen er gjort (SN-W03). Den entryen har allerede en
+SUPERSEDED-banner på faktapåstanden om provisjonering; retningsvalget som
+erstatter juni-provisjoneringen står her, ikke der. Bundle-id `no.klemeg.app`
 (2026-07-15-entryens «provisioning-kontinuitet»-argument) videreføres uendret
-og verne av C1. Motstrid mot den beviselig utdaterte DoD C2-teksten
+og vernes av C1. Motstrid mot den beviselig utdaterte DoD C2-teksten
 (`no.klemeg.app.monthly/quarterly/yearly` «uforanderlige hos Apple») lukkes
 mekanisk av SN-W02s C2-endring.
+
+E-2-Merks eierskapsangivelse tidligere i samme 2026-08-14-seksjon
+(«Retningsvalg (rette kode tilbake til `babyora_*` eller re-provisjonere
+konsollen) eies av SN-003s erstatningsoppgave og av SN-030/SN-033, ikke av
+SN-005») er hermed supersedert: retningsvalget for koden eies nå av SN-W01
+(betalingskoblingen), dokumentrettingen av SN-W02, og prisavlesningen av
+SN-W03. E-2s underliggende «endres ikke uten eskalering»-regel for de
+faktisk provisjonerte IDene består uendret.
 
 ## 2026-08-07
 
