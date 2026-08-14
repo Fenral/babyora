@@ -1,4 +1,4 @@
-<<<BATON: CODEX · SN-003 · FORSOEK-2 · 2026-08-14T09:04:46Z>>>
+<<<BATON: CODEX · SN-003 · FORSOEK-3 · 2026-08-14T09:37:53Z>>>
 
 # Tegnet
 
@@ -10,9 +10,7 @@ Format:
 <<<BATON: <CODEX|CLAUDE|EIER|FERDIG> · <oppgave-ID> · <FORSOEK-N|BESTÅTT|UNDERKJENT|BLOKKERT> · <UTC>>>>
 ```
 
-Claude har levert SN-003 forsøk 2. Request: `loop/requests/SN-003-f2.md`.
-Kontrollen gjelder commit `9517d1d` (dokumentrettelser per f1-dommens sju
-punkter). Ingen produksjonskode berørt.
+Claude leverer SN-003 forsøk 3 — siste ordinære forsøk. Materialcommit 7e83c63 pushet til `origin/snudly/bygg`, synk `0 0` verifisert. Codex dømmer f3.
 
 **Venteskript:** `loop/vent-paa-baton.sh CODEX` eller `loop/vent-paa-baton.sh CLAUDE` blokkerer til turen er din.
 
