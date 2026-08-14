@@ -44,6 +44,23 @@ echo "--- per fil (numstat: eksakt, ikke skalert graf) ---"
 git diff --numstat 'HEAD^' HEAD 2>/dev/null || true
 echo
 
+echo "--- dommer og evidens som må være sporet ---"
+# Gjentakende underkjennelsesgrunn (SN-001, SN-006): forrige forsøks dom eller
+# evidensfil ligger usporet i arbeidstreet. Kontrolløren kan ikke granske det
+# som ikke er i historikken.
+usporet=0
+for f in loop/verdicts/${OPPG}-* loop/evidens/${OPPG}/*; do
+  [ -e "$f" ] || continue
+  if git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+    echo "OK sporet:   $f"
+  else
+    echo "BRUDD usporet: $f  — commit den, ellers underkjennes leveransen (G5/E1)"
+    usporet=1
+  fi
+done
+[ "$usporet" -eq 0 ] && echo "(alt relevant er sporet)"
+echo
+
 echo "--- synk mot origin ---"
 lokal="$(git rev-parse HEAD 2>/dev/null)"
 fjern="$(git rev-parse '@{upstream}' 2>/dev/null || echo 'INGEN UPSTREAM')"
