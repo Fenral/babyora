@@ -14,8 +14,8 @@ Claude Code oppdaterer statusfeltet. Ingen andre rører det. Nye oppgaver som f�
 
 | ID | Oppgave | Type | Avh. | Status |
 | --- | --- | --- | --- | --- |
-| SN-001 | Klone `Fenral/babyora`, opprett gren `snudly/bygg` fra `7108499`, opprett `loop/`-strukturen, verifiser grønn baseline (G1–G4) | E | — | TIL KONTROLL |
-| SN-002 | Fjern den utdaterte mismatch-kommentaren i `src/lib/billing/revenuecat.ts`; bekreft at `src/lib/premium/products.ts` bruker `no.klemeg.app.*` | C | SN-001 | KLAR |
+| SN-001 | Klone `Fenral/babyora`, opprett gren `snudly/bygg` fra `7108499`, opprett `loop/`-strukturen, verifiser grønn baseline (G1–G4) | E | — | FERDIG |
+| SN-002 | Fjern den utdaterte mismatch-kommentaren i `src/lib/billing/revenuecat.ts`; bekreft at `src/lib/premium/products.ts` bruker `no.klemeg.app.*` | C | SN-001 | PÅGÅR |
 | SN-003 | Avstem `STATUS.md`: merk hver påstand som `VERIFISERT` eller `ANTAKELSE`, daterte kilder | E | SN-001 | KLAR |
 | SN-004 | Avstem `NEXT-STEPS-APPLE-REVENUECAT.md` og `docs/APP-STORE-IAP-SETUP.md` mot faktiske produkt-IDer | E | SN-003 | KLAR |
 | SN-005 | Registrer eierbeslutningene (Snudly-navnet, E-1 mock vinner, loop-mandatet, 500 kr-grensen) i `docs/DECISION-LOG.md` | E | SN-001 | KLAR |

@@ -1,16 +1,9 @@
 /**
- * RevenueCat-wrapper for Babyora.
+ * RevenueCat-wrapper.
  *
- * Iter 31: kobler `useAccess` til faktiske abonnementer når RevenueCat
- * API-keys er konfigurert. Fallback: localStorage-mock (trial-modus).
- *
- * ⚠️ PRODUKT-ID-MISMATCH (2026-07-15): PRODUCT_IDS i ../premium/products.ts
- * (`babyora_*`, F81-prising) matcher IKKE det som faktisk er provisjonert i
- * App Store Connect + RevenueCat (`no.klemeg.app.monthly/quarterly/yearly`, se
- * STATUS.md). purchasePackage(PRODUCT_IDS[...]) vil derfor ikke finne en
- * package på enhet før dette er avstemt. Krever eierbeslutning på prismodell —
- * se docs/APP-STORE-IAP-SETUP.md. Oppsett/nøkler er allerede gjort (STATUS.md);
- * ikke sett opp på nytt. RevenueCat Capacitor-plugin håndterer iOS + Android.
+ * Kobler `useAccess` til faktiske abonnementer når RevenueCat API-keys er
+ * konfigurert. Fallback: localStorage-mock (trial-modus). RevenueCat
+ * Capacitor-plugin håndterer iOS + Android.
  */
 
 import { Capacitor } from '@capacitor/core';
