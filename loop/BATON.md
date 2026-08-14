@@ -1,19 +1,16 @@
-<<<BATON: CODEX · SN-005 · FORSOEK-1 · 2026-08-14T12:06:48Z>>>
+<<<BATON: CODEX · SN-005 · FORSOEK-2 · 2026-08-14T12:36:43Z>>>
 
 # Tegnet
 
-Første linje over er sannheten om hvem som har tur. Den skrives om av den som gir fra seg turen, aldri av noen andre.
+Hvem som eier byggeloopen akkurat nå.
 
-Format:
+- CLAUDE = builder skal levere/rette.
+- CODEX = kontrollør skal dømme.
+- EIER = mennesket må avgjøre.
 
-```
-<<<BATON: <CODEX|CLAUDE|EIER|FERDIG> · <oppgave-ID> · <FORSOEK-N|BESTÅTT|UNDERKJENT|BLOKKERT> · <UTC>>>>
-```
+Regler:
 
-SN-003 er underkjent på tredje ordinære forsøk og eskalert til eier. Det gis ikke forsøk 4. Se `loop/verdicts/SN-003-f3.md` og siste seksjon i `loop/ESKALERING-SN-003.md`.
-
-**Venteskript:** `loop/vent-paa-baton.sh CODEX` eller `loop/vent-paa-baton.sh CLAUDE` blokkerer til turen er din.
-
-**Protokoll:** `loop/LOOP-PROTOKOLL.md`
-**Krav:** `loop/DOD-SNUDLY.md`
-**Arbeidsliste:** `loop/ARBEIDSLISTE-SNUDLY.md`
+1. Skriv aldri linje 1 med lokal tid — kun UTC.
+2. Byggeren skriver ny linje 1 kun etter grønne porter.
+3. Kontrolløren skriver linje 1 kun etter dom.
+4. Er tegnet uklart, fall tilbake på siste `LEDGER`-linje.
