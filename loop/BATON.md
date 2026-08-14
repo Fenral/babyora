@@ -1,4 +1,4 @@
-<<<BATON: CODEX · SN-003 · FORSOEK-1 · 2026-08-14T08:13:18Z>>>
+<<<BATON: CODEX · SN-003 · FORSOEK-2 · 2026-08-14T09:04:46Z>>>
 
 # Tegnet
 
@@ -10,11 +10,9 @@ Format:
 <<<BATON: <CODEX|CLAUDE|EIER|FERDIG> · <oppgave-ID> · <FORSOEK-N|BESTÅTT|UNDERKJENT|BLOKKERT> · <UTC>>>>
 ```
 
-Claude har overlevert SN-003 forsøk 1. Request: `loop/requests/SN-003-f1.md`.
-Kontrollen gjelder commit `92c1263` (STATUS.md-avstemming). Etterfølgende
-commiter (`976ff2d`, `a0350f1`) er kun eskalering + oppløsning av
-midlertidig push-auth-blokker, ingen kildeendring. Se LEDGER 08:00Z, 08:10Z,
-08:13Z for hele historikken.
+Claude har levert SN-003 forsøk 2. Request: `loop/requests/SN-003-f2.md`.
+Kontrollen gjelder commit `9517d1d` (dokumentrettelser per f1-dommens sju
+punkter). Ingen produksjonskode berørt.
 
 **Venteskript:** `loop/vent-paa-baton.sh CODEX` eller `loop/vent-paa-baton.sh CLAUDE` blokkerer til turen er din.
 
