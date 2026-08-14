@@ -8,13 +8,30 @@ Rekkefølgen er fast: **egne porter → rødt lag → ærlighetsblokk → overle
 
 ---
 
-## 1. Egne porter (G1–G4) — ingen unntak
+## 1. Egne porter (G1–G4) — fang output, ikke gjenfortell den
 
-Kjør dem, i denne rekkefølgen, og lim inn faktisk output. Feiler én, er du ikke ferdig — da retter du, og kjører alle fire på nytt fra toppen.
+Lagt om 2026-08-14 etter at SN-003 f2 ble underkjent for en «rå output»-blokk som ikke
+kom fra den overleverte committen: den oppga 2410 moduler og `dist/index.html` 0,62 kB,
+mens kontrollørens kjøring på samme tilstand ga 672 moduler og 14,47 kB. En gjenfortalt
+transkripsjon er ikke evidens — den er en påstand forkledd som måling.
+
+**Kjør portene ETTER siste commit, og fang dem til fil i samme kommando:**
 
 ```bash
-npm run lint && npx tsc --noEmit && npm test && npm run build
+mkdir -p loop/evidens/SN-###
+{ npm run lint; echo "EXIT=$?"; } > loop/evidens/SN-###/g1-lint.txt 2>&1
+{ npx tsc --noEmit; echo "EXIT=$?"; } > loop/evidens/SN-###/g2-tsc.txt 2>&1
+{ npm test; echo "EXIT=$?"; } > loop/evidens/SN-###/g3-test.txt 2>&1
+{ npm run build; echo "EXIT=$?"; } > loop/evidens/SN-###/g4-build.txt 2>&1
 ```
+
+Requesten siterer **fra disse filene** — `tail -n 20 loop/evidens/SN-###/g4-build.txt` —
+og filene committes med oppgaven. Da kan kontrolløren sammenligne ordrett, og du kan
+ikke huske feil. Skriver du et tall i requesten som ikke står i en av filene, er det
+per definisjon udekket.
+
+Feiler én port, er du ikke ferdig: rett, commit på nytt, og **fang alle fire på nytt**.
+Evidens fra en tidligere kjøring gjelder ikke for en ny commit.
 
 Tell testene før og etter. Færre tester etter enn før er en regresjon du skal forklare, ikke et tall du skal la stå.
 
@@ -27,10 +44,47 @@ Dette er kjernen i selvsjekken. Send ut en **fersk** kontrolleragent (Task/Agent
 Krav til det røde laget:
 - Det ser diffen og DoD-en, ikke resonnementet ditt om hvorfor arbeidet er riktig.
 - «Ser bra ut» er ikke et svar. Enten et funn med filreferanse, eller en liste over hva som ble kontrollert.
+- Det **anbefaler ikke godkjenning**. Et rødt lag som konkluderer med «anbefaler godkjent»
+  har byttet rolle fra motstander til sertifiserer, og da er kontrollen verdiløs. Dets
+  eneste to lovlige utfall er funn eller en liste over hva det faktisk kontrollerte.
 - For type A: minst én agent som *bare* sammenligner mot `loop/referanse/snudly-mock.html`, og én som *bare* måler kontrast og trykkflater.
 - For type B: minst én agent som forsøker å konstruere et moteksempel mot B2/B3/B4, ikke bare lese testene.
 
 Finner det røde laget noe, retter du det **før** overlevering. Da har det kostet deg fem minutter i stedet for et forsøk.
+
+## 2b. Påstandsrevisjon — det rødt lag ikke fanger
+
+Lagt til 2026-08-14 etter at tre underkjennelser på rad hadde samme form: **koden var
+riktig, forespørselen var ikke det.** SN-001 f1/f2 og SN-002 f1 falt alle på tall og
+påstander i requesten, mens diffen besto. Det røde laget meldte «ingen funn» hver gang,
+fordi det gransket arbeidet — ingen gransket rapporten om arbeidet.
+
+Send derfor ut en **andre** kontrolleragent med et helt annet mandat:
+
+> «Her er `loop/requests/SN-###-f<N>.md`. Ikke vurder om arbeidet er godt. Verifiser at
+> hver eneste faktapåstand i dokumentet er sann akkurat nå. Kjør kommandoen som beviser
+> hver påstand, og sammenlign tegn for tegn. Rapporter hver uoverensstemmelse med
+> linjenummer i requesten og den faktiske verdien.»
+
+Den agenten leser ikke koden. Den leser dokumentet mot virkeligheten.
+
+**Regelen bak, som gjelder deg selv også:** hvert tall i en forespørsel skal være
+**limt inn fra kommandoutput kjørt etter siste commit** — aldri skrevet fra hukommelsen,
+aldri anslått, aldri regnet i hodet. Dette gjelder særlig:
+
+| Påstand | Kommandoen som eier sannheten |
+| --- | --- |
+| Diffomfang, antall filer, +/- linjer | `git diff --stat <forrige>..<HEAD>` |
+| Testtall | faktisk `npm test`-hale, ikke «alle grønne» |
+| Build | faktisk `npm run build`-hale — «exit 0» er en påstand, ikke evidens |
+| Filstatus i arbeidslisten | `git show HEAD:loop/ARBEIDSLISTE-SNUDLY.md` |
+| Commit-SHA og trailere | `git log -1 --format='%H%n%b'` |
+| Tidspunkt | `date -u +%Y-%m-%dT%H:%M:%SZ` |
+
+Og for **type C** (betaling og butikk): requesten skal si eksplisitt at det ikke er gjort
+endringer i App Store Connect, Play Console eller RevenueCat. Ingen diff kan bevise
+fravær av en handling utenfor repoet — derfor må fraværet erklæres. Er en slik endring
+faktisk gjort, er det en eskalering, ikke en linje i requesten.
 
 ## 3. De faste spørsmålene
 

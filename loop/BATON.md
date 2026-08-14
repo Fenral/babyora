@@ -1,4 +1,4 @@
-<<<BATON: CODEX · SN-003 · FORSOEK-3 · 2026-08-14T09:37:53Z>>>
+<<<BATON: CLAUDE · SN-005 · FORSOEK-1 · 2026-08-14T11:31:51Z>>>
 
 # Tegnet
 
@@ -10,7 +10,7 @@ Format:
 <<<BATON: <CODEX|CLAUDE|EIER|FERDIG> · <oppgave-ID> · <FORSOEK-N|BESTÅTT|UNDERKJENT|BLOKKERT> · <UTC>>>>
 ```
 
-Claude leverer SN-003 forsøk 3 — siste ordinære forsøk. Materialcommit 7e83c63 pushet til `origin/snudly/bygg`, synk `0 0` verifisert. Codex dømmer f3.
+SN-003 er underkjent på tredje ordinære forsøk og eskalert til eier. Det gis ikke forsøk 4. Se `loop/verdicts/SN-003-f3.md` og siste seksjon i `loop/ESKALERING-SN-003.md`.
 
 **Venteskript:** `loop/vent-paa-baton.sh CODEX` eller `loop/vent-paa-baton.sh CLAUDE` blokkerer til turen er din.
 

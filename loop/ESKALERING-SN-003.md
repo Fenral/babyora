@@ -74,3 +74,35 @@ HEAD...origin/snudly/bygg` = `0 0`), settes BATON tilbake til
 - LEDGER-linje appendes med samme UTC.
 - BATON.md settes til `EIER · SN-003 · BLOKKERT · 2026-08-14T08:10:26Z`.
 - Commit `92c1263` ligger klar til å pushes så snart auth er fikset.
+
+---
+
+# Endelig eiereskalering · SN-003 · tredje ordinære underkjennelse
+
+**Tidspunkt:** 2026-08-14T09:43:15Z (`(Get-Date).ToUniversalTime()`)
+**BATON:** `EIER · SN-003 · UNDERKJENT`
+**Materialcommit:** `7e83c63b7f82fd1c48af30681dbd8a8ff9b54d0c`
+**Dom:** `loop/verdicts/SN-003-f3.md`
+
+Den tidligere auth-blokkeringen over er løst. Denne seksjonen er den gjeldende eskaleringen.
+
+## Hva som er prøvd
+
+1. **F1:** La inn en autoritativ avstemming i `STATUS.md`. Underkjent for nye SDK-nøkkelverdier i diffen, rekonstruert build-evidens, ufullstendig/uklar påstandsklassifisering, feil UTC-påstand og manglende eksplisitt navnekonflikt.
+2. **F2:** Fjernet nøkkelverdiene fra ny tekst, forsøkte rå G1–G4-output, splittet flere påstander, korrigerte UTC og la inn E3. Underkjent fordi build-output og diffdata ikke stammet fra sluttgrunnlaget, klassifiseringen fortsatt ikke var atomisk, og en usporet lokal fil ble brukt som eierkilde.
+3. **F3:** Kjørte portene på nytt, rettet hovedtallene, splittet flere rader og byttet til versjonert Snudly-kilde. G1–G10, G7 og kildepunktet er nå grønne. E1–E3 feiler fortsatt på selvmotsigende sluttdata, en «overlevert»-hendelse før commit/push, ufullstendig atomisk dekning og en uadressert provisjoneringsmotstrid mot `DECISION-LOG.md`.
+
+## Egentlig hindring
+
+Hindringen er ikke produksjonskoden; alle fire tekniske porter har vært grønne. SN-003 forsøker å gjøre ett historisk snapshot, en uttømmende faktarevisjon og selve kontroll-evidensen autoritative samtidig. Requesten og linjereferansene blir målt før dokumentet er stabilt, mens «hver enkelt påstand» gir et åpent dekningskrav som den manuelle tabellen fortsatt ikke oppfyller. Resultatet er at hver retting flytter eller introduserer nye målbare faktafeil.
+
+I tillegg finnes en reell eierkonflikt: `docs/DECISION-LOG.md:211-213` sier at Apple/RevenueCat-provisjoneringen finnes, mens SN-003 klassifiserer konsolltilstanden som udokumentert antakelse. Kontrolløren kan ikke avgjøre hvilken virkelighetsbeskrivelse eier vil stå inne for.
+
+## Eierbeslutning som trengs
+
+SN-003 får ikke et fjerde forsøk. Eier må opprette en ny, avgrenset oppgave etter å ha valgt begge punktene:
+
+1. Fastslå om provisjoneringspåstanden i `DECISION-LOG.md:211-213` fortsatt er sann, eller om den skal merkes historisk/ubekreftet.
+2. Erstatt det åpne «hver påstand»-opplegget med en eksplisitt, endelig liste over atomiske påstander, eller flytt det historiske snapshotet til et ikke-autoritativt vedlegg og la én stabil matrise eie status.
+
+Ny oppgave må ha eget ID og nytt grunnlag. Den skal ikke kalles SN-003 forsøk 4.
