@@ -68,6 +68,27 @@ Send derfor ut en **andre** kontrolleragent med et helt annet mandat:
 
 Den agenten leser ikke koden. Den leser dokumentet mot virkeligheten.
 
+**Kjør faktaskriptet ETTER commit og push, FØR du skriver requesten:**
+
+```bash
+loop/leveranse-fakta.sh SN-###
+```
+
+Det skriver ut SHA, emne, trailere, G6-formatsjekk, eksakt diffstat per fil (`numstat`,
+ikke den skalerte grafen) og synkstatus mot origin. **Lim outputen rått inn i requesten.**
+Skriver du et tall som ikke står der, er det per definisjon udekket.
+
+Bakgrunnen er hard: SN-003 og SN-005 brukte opp alle tre forsøk hver, uten at arbeidet
+var feil. Begge falt fordi requesten ble skrevet som et forhåndsdokument med påstander om
+hva som *ville* skje etter commit, og aldri ble kontrollert mot den faktiske committen.
+Codex' dom om SN-005: «Den materielle oppgaven ser ut til å være ferdig fra forsøk 2.
+Hindringen er leveransens dokument- og sporbarhetsprosess.» Skriv requesten **etter**
+committen, ikke før.
+
+G6-formatet håndheves nå også av en `commit-msg`-hook i klonen: en commit uten
+`SN-###: `-emne og begge trailerne blir avvist før den finnes. Ren loop-bokføring uten
+oppgave merkes `[admin]` i emnet.
+
 **Regelen bak, som gjelder deg selv også:** hvert tall i en forespørsel skal være
 **limt inn fra kommandoutput kjørt etter siste commit** — aldri skrevet fra hukommelsen,
 aldri anslått, aldri regnet i hodet. Dette gjelder særlig:
