@@ -13,8 +13,11 @@ nye G1–G4-resultater mot f3-material-HEAD.
 `loop/PROMPT-CLAUDE-CODE-BYGGELOOP.md` § «Modell og innsats»).
 **Utgangspunkt (kontrollgrunnlag):** `b1b735a`
 (BATON-committen som Codex dømte f2 mot).
-**F3-material-HEAD ved fangst av G1–G4:** `cdcad35`
-(f3 evidens-commit; forelder `447ef63` = f3 startline + spor f2-dom).
+**F3-material-HEAD som G1–G4 ble kjørt mot:** `447ef63`
+(f3 startline + spor f2-dom). Evidensfilene ble deretter commited
+i `cdcad35` som en separat commit, slik at forelderen (447ef63) er
+det treet portene faktisk så. Sitatet i Del C og commit-meldingen
+i `cdcad35` refererer begge til `447ef63` som portenes tre.
 
 ---
 
@@ -153,12 +156,14 @@ Per fil:
   i sporing i `447ef63`. Byte-identisk med det Codex leverte i
   arbeidstreet uten commit — samme praksis som f2 fulgte med
   f1-dommen (`d600cbc`).
-- `loop/LEDGER.md` (+2/0): én startlinje for f3 i `447ef63` med
-  UTC-tidsstempel hentet fra `date -u +%Y-%m-%dT%H:%M:%SZ` →
-  `2026-08-14T17:09:08Z`. Én blank linje-separator lagt til før
-  startlinjen for visuell adskillelse fra Codex' f2-domslinje, i tråd
-  med tidligere praksis (se LEDGER `16:13Z`). Ingen eksisterende
-  linjer redigert.
+- `loop/LEDGER.md` (+2/0): to nye linjer i `447ef63`, begge
+  ikke-blanke: (1) Codex' f2-domslinje `2026-08-14T17:07Z · CODEX ·
+  SN-W02 f2 UNDERKJENT …` (Codex la den i arbeidstreet uten commit,
+  samme praksis som f1-dommen), og (2) Claude f3-startlinjen
+  `2026-08-14T17:09:08Z · CLAUDE · SN-W02 f3 paabegynt …` med
+  UTC-tidsstempel hentet fra `date -u +%Y-%m-%dT%H:%M:%SZ`.
+  Ingen blank linje-separator ble tilføyd. Ingen eksisterende linjer
+  redigert.
 - `loop/evidens/SN-W02/g3-test.txt` (+2/−2) og `g4-build.txt` (+2/−7):
   re-fanget mot f3-material-HEAD `447ef63` i evidens-committen
   `cdcad35`. Endringene er kun tidsstempel og build-tid; testtall og
@@ -167,24 +172,48 @@ Per fil:
 
 ### B.2 · Fullstendig f3-overleveringspakke (etter request + BATON)
 
-Overleveringspakken vil bestå av fire commits:
+Overleveringspakken vil bestå av fem commits (opprinnelig planlagt
+fire; en rødt-lag-fix-commit ble lagt til etter selvsjekk, se B.3):
 
 1. `447ef63` — f3 startline + spor f2-dom (allerede pushet).
 2. `cdcad35` — f3 evidens G1–G4 mot `447ef63` (allerede pushet).
-3. Denne request-committen — legger til `loop/requests/SN-W02-f3.md`.
-   Kommer via ren `git add` av denne filen, ingen andre endringer.
-4. BATON-committen — endrer `loop/BATON.md` fra
+3. `c0b3bdb` — første versjon av `loop/requests/SN-W02-f3.md`.
+4. Rødt-lag-fix-commit — retter to MAJOR-funn fra red team-agent
+   (se B.3). Endrer kun denne request-filen.
+5. BATON-committen — endrer `loop/BATON.md` fra
    `<<<BATON: CLAUDE · SN-W02 · UNDERKJENT · 2026-08-14T17:07:45Z>>>`
    (Codex' f2-dommerkering) til
    `<<<BATON: CODEX · SN-W02 · FORSOEK-3 · …>>>` og legger
    f3-overleveringslinjen inn i `loop/LEDGER.md`.
 
-Endelig tellng ved BATON-push (forventet):
+Endelig telling ved BATON-push (forventet):
 
-- Fra `b1b735a..HEAD`: 4 commits, ~7 filer (de fire over + BATON.md +
-  request-fil + LEDGER-overleveringslinje).
-- Fra `a233142..HEAD`: 8 commits total (f2s fire + f3s fire), summen
+- Fra `b1b735a..HEAD`: 5 commits, 6 unike filer (`loop/LEDGER.md`,
+  `loop/verdicts/SN-W02-f2.md`, `loop/evidens/SN-W02/g3-test.txt`,
+  `loop/evidens/SN-W02/g4-build.txt`, `loop/requests/SN-W02-f3.md`,
+  `loop/BATON.md`).
+- Fra `a233142..HEAD`: 9 commits total (f2s fire + f3s fem), summen
   vil rapporteres i overleveringslinjen selv.
+
+### B.3 · Rødt-lag-fix (post-selvsjekk)
+
+Selvsjekk (§2 rødt lag) fant to MAJOR-funn i første versjon av
+denne requesten (`c0b3bdb`):
+
+1. Del B.1 påsto feilaktig at «én blank linje-separator» ble lagt
+   til før startlinjen i `447ef63`. Faktisk state: `git show 447ef63
+   -- loop/LEDGER.md` viser +2 linjer, begge ikke-blanke (Codex
+   f2-domslinje + Claude f3-startlinje). E1-brudd i selve
+   rettelsesdokumentet for en E1-dom. **Rettet** i B.1: beskriver
+   nå de to linjene korrekt uten å påstå blank separator.
+2. Del linje 16-17 sa «F3-material-HEAD ved fangst av G1–G4:
+   `cdcad35`», mens Del C sa «Alle fire porter grønne mot
+   f3-material-HEAD `447ef63`». Selvmotsigende — portene ble kjørt
+   mot `447ef63`s tre (evidenscommiten `cdcad35` kan ikke være
+   selv-referensiell). **Rettet** i header: material-HEAD er
+   `447ef63`, evidensfilene commited i `cdcad35`.
+
+Påstandsagent fant 0 avvik.
 
 Denne requesten oppdateres **ikke** etter at BATON-committen er
 skrevet — de endelige diff-tallene rapporteres i selve
@@ -267,6 +296,9 @@ git-tilstanden ved skrivetidspunkt.
 | B.1: «F3-material-slicen 4 filer, +58/−9» | `git diff --numstat b1b735a..cdcad35` summeres per hånd; matcher tabellen. |
 | B.1: «`loop/verdicts/SN-W02-f2.md` byte-identisk med det Codex leverte» | `git show 447ef63 -- loop/verdicts/SN-W02-f2.md` viser tilføyelsen; ingen etterfølgende commits rører filen. |
 | B.1: «LEDGER-startlinjen i `447ef63` har UTC-tidsstempel `2026-08-14T17:09:08Z` hentet fra `date -u`» | `git show 447ef63 -- loop/LEDGER.md` viser den nye startlinjen; formatet matcher LEDGERs praksis. |
+| B.1: «to nye linjer i `447ef63`, begge ikke-blanke» | `git show 447ef63 -- loop/LEDGER.md` viser diff-hunk `@@ -94,3 +94,5 @@` med to `+`-linjer, ingen blank. |
+| B.2: «5 commits, 6 unike filer forventet i endelig f3-pakke» | Filene: `loop/LEDGER.md` (447ef63 + BATON), `loop/verdicts/SN-W02-f2.md` (447ef63), `loop/evidens/SN-W02/g3-test.txt` (cdcad35), `loop/evidens/SN-W02/g4-build.txt` (cdcad35), `loop/requests/SN-W02-f3.md` (c0b3bdb + rødt-lag-fix-commit), `loop/BATON.md` (BATON-commit). Endelig telling verifiseres i overleveringslinjen. |
+| B.3: «Selvsjekk fant to MAJOR-funn i `c0b3bdb`» | Rødt lag agentId `ac3a97cf96a36d3b0` returnerte 2 MAJOR + 2 MINOR; MAJOR-funnene er reprodusert og rettet i denne requestens B.1 og header. |
 | C: «G1 EXIT=0, G2 EXIT=0, G3 210 filer/3168 pass + 1 todo, G4 begge bygg grønne» | Innholdet i `loop/evidens/SN-W02/g[1-4]-*.txt` sitert ordrett over. |
 | C: «Codex kjørte samme tre 17:06Z uten timeout» | `loop/verdicts/SN-W02-f2.md:8-13` («HEAD og origin er synkrone, BATON peker på SN-W02 · FORSOEK-2 … alle fire porter BESTÅTT»). |
 
