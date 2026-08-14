@@ -2,6 +2,69 @@
 
 This log records current product decisions that override older exploratory material.
 
+## 2026-08-14
+
+### E-1 designkonflikten avgjort: mock er fasit (V3)
+
+**Decision:** `loop/referanse/snudly-mock.html` er fasit for redesignet:
+**fire faner** (Hjem, Planlegg, Verktøy, Familie) og **lys modus som standard**.
+Design-lab-artefaktene dømmes mot mocken i SN-009 og forkastes der de er
+uforenlige.
+
+**Reason:** Overstyrer repoets design-lab-beslutninger 31.07.2026 om tre faner,
+dark-first og retning B «Scenen». Kilde: `loop/EIERVEDTAK-LOOP-2026-08-14.md`
+V3 («Designkonflikten E-1 er avgjort»).
+
+### Autonomi og kostnadsgrense (V4)
+
+**Decision:** Byggeloopen har fullt mandat i byggegrenen `snudly/bygg`,
+inkludert commit og push, uten nye eiergodkjenninger mellom oppgaver.
+
+**Kostnadsgrense:** NOK 500. Ethvert steg som koster mer, avklares med eier
+først; estimatet skrives i eskaleringsfilen.
+
+**Irreversible handlinger som krever eskalering** (Fable-tillegg, eier kan
+stryke): opprettelse av Play-produkt-IDer, innsending til App Store, sletting
+av data eller grener, og endring av bundle-id eller Apple-produkt-IDer.
+Begrunnelsen er at angrefristen er null.
+
+**Ytterligere stoppgrunn:** tre underkjente forsøk på samme oppgave.
+
+**Reason:** Overstyrer GSD-fullmakten 24.07.2026 med kostnadstak NOK 1 000.
+Eier ønsker et reelt unattended arbeidsløp, men vil sikre at både penger og
+irreversible portalhandlinger holdes hos eier. Kilde:
+`loop/EIERVEDTAK-LOOP-2026-08-14.md` V4 («Autonomi og kostnadsgrense»).
+
+### Visningsnavn Snudly (E-2)
+
+**Decision:** **Snudly** er visningsnavn i alle brukersynlige flater — appens
+UI-tekst, App Store-listing og Play-listing. Bundle-id `no.klemeg.app` er den
+provisjonerte og korrekte identifikatoren (jf.
+`loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md` §1) og skal ikke
+endres uten eier-eskalering. De **faktisk provisjonerte** Apple-produkt-IDene
+— hva de i dag måtte hete, se Merk-avsnittet under — skal heller ikke endres
+uten eier-eskalering. Angrefristen er null.
+
+**Reason:** Snudly-byttet skjer kun i visningsnavn og butikktekst; teknisk
+identitet består. Kilder: `loop/PROMPT-CLAUDE-CODE-BYGGELOOP.md` §«Låst
+grunnlag» og `loop/referanse/SNUDLY-DESIGNSYSTEM.md` («Navnebytte Babyora →
+Snudly er gjennomført i mocken», gjelder fra 13.08.2026). Overstyrer
+visningsnavn-delen av 2026-07-15-entryen «Offentlig navn: Babyora»; den
+entryen har fått egen SUPERSEDED-banner.
+
+**Merk — åpen provisjoneringsmotstrid:**
+`loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md` (eier leste App Store
+Connect og RevenueCat 11:35–11:45Z 2026-08-14) dokumenterer at faktisk
+provisjonerte produkt-IDer er `babyora_yearly_299`, `babyora_monthly_49` og
+`babyora_barnetiden_499`. Det motsier både 2026-07-15-entryen «Prismodell:
+behold juni-provisjoneringen» (som sier `no.klemeg.app.monthly/quarterly/yearly`
+med priser 39/99/299) og koden i `src/lib/premium/products.ts:24-26`.
+Retningsvalg (rette kode tilbake til `babyora_*` eller re-provisjonere
+konsollen) eies av SN-003s erstatningsoppgave og av SN-030/SN-033, ikke av
+SN-005. E-2s «endres ikke uten eskalering»-regel gjelder de faktisk
+provisjonerte IDene uansett hvilken vei eier velger; den beskytter ikke
+strengverdien `no.klemeg.app.*` som sådan.
+
 ## 2026-08-07
 
 ### Onboarding EIERPORT 1: K0 og K3 er finalister
@@ -63,6 +126,12 @@ for den publiseringen er grønne.
 mekanisk flaskehals. Automatisering skal erstatte eierporter med deterministiske
 kontroller og fresh-context AI-review, uten å svekke sannhet, rollback eller
 kostnadskontroll.
+
+> **SUPERSEDED 2026-08-14** — kostnadsgrensen NOK 1 000 er overstyrt av V4
+> (NOK 500) i 2026-08-14-seksjonen over, sammen med et eksplisitt sett
+> irreversible handlinger som krever eskalering. Autonomi-mandatet er videreført
+> og skjerpet (byggeloop, byggegren `snudly/bygg`, tre-underkjennelser-regel).
+> Se `loop/EIERVEDTAK-LOOP-2026-08-14.md` V4.
 
 ### Snart avgrenses fra helsecopy og manuell personvernport
 
@@ -212,11 +281,27 @@ måle-loop (§14) for å justere løypene empirisk.
 
 **Reason:** Ekte kjøp feilet fordi `purchasePackage('babyora_yearly_299')` ikke fant en RevenueCat-package (kun `no.klemeg.app.*` finnes). Å endre koden er raskest til fungerende kjøp; alternativet (re-provisjonere ASC/RC) ga mer portal-arbeid + ny IAP-review. `no.klemeg.app`-bundle beholdes uansett (provisioning-kontinuitet).
 
+> **SUPERSEDED 2026-08-14** — faktapåstanden om at
+> `no.klemeg.app.monthly/quarterly/yearly` er provisjonert i App Store Connect
+> og RevenueCat er motbevist av `loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md`
+> (eier leste konsollene 11:35–11:45Z 2026-08-14): faktisk provisjonerte IDer
+> er `babyora_yearly_299`, `babyora_monthly_49` og `babyora_barnetiden_499`.
+> Koden i `src/lib/premium/products.ts:24-26` er dermed alignet mot IDer som
+> ikke finnes i butikken; kjøp kan ikke fungere i denne tilstanden. Retning
+> (rette kode til `babyora_*` eller re-provisjonere konsollen) eies av SN-003s
+> erstatningsoppgave og SN-030/SN-033. Se E-2-Merk i 2026-08-14-seksjonen.
+
 ### Offentlig navn: Babyora (naming-porten lukket)
 
 **Decision:** Eier beholder **Babyora** som endelig offentlig navn («Behold navn», 2026-07-15). Den åpne naming-porten er dermed lukket. `Vaerni`, `Klarune` og `Uteklar` er avvist underveis. Ingen kode-endring nødvendig — appen bruker allerede «Babyora» i UI-copy og assets. En formell tilgjengelighetssjekk (varemerke, `.no`-domene, App Store-navn, håndtak) anbefales fortsatt før innsending, men blokkerer ikke videre arbeid.
 
 **Reason:** Fjerner den største åpne v1-blokkeren (App Store-tittel, domene). AGENTS.md oppdatert tilsvarende.
+
+> **SUPERSEDED 2026-08-14** — visningsnavn-delen er overstyrt av E-2 «Visningsnavn
+> Snudly» i 2026-08-14-seksjonen: brukersynlige flater (UI, App Store-listing,
+> Play-listing) viser Snudly. Bundle-id `no.klemeg.app` er urørt og
+> beholder Babyora-arven som teknisk identitet. SN-006 (navnesjekk Snudly) og
+> SN-011/SN-012 (visningsnavn-implementering) håndterer den nye retningen.
 
 ### v1 lanseres på dagens motor med veiledende-disclaimer (uten fagsignatur)
 
@@ -259,6 +344,11 @@ måle-loop (§14) for å justere løypene empirisk.
 **Utestående evidens:** Fem-foreldre-forståelsestesten (alle fem gjengir antrekk + hovedårsak, median ≤ 5 s) gjenstår og kreves fortsatt som dokumentert evidens før avatarproduksjon (R8) og release (R12) — eiers retningsvalg erstatter valg-delen av porten, ikke test-delen.
 
 **Reason:** B er den eneste retningen som forener de to allerede låste signaturene (avatar som identitetsbærer + temperatur-reaktiv atmosfære) til én scene, leder med følelse for målgruppen (den nysgjerrige forelderen), og gir delbare flater for image-first-markedsføringen.
+
+> **SUPERSEDED 2026-08-14** — retning B «Scenen» er overstyrt av V3
+> «E-1 designkonflikten avgjort» i 2026-08-14-seksjonen over: `snudly-mock.html`
+> er fasit (fire faner, lys standard). Design-lab-artefaktene dømmes mot mocken
+> i SN-009. Se `loop/EIERVEDTAK-LOOP-2026-08-14.md` V3.
 
 ### Fem-foreldre-porten frafalt av eier (2026-07-14 kveld)
 
