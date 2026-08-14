@@ -1,0 +1,14 @@
+
+> babyora@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.8 C:/Users/siver/Documents/Snudly-bygg/snudly
+
+
+ Test Files  209 passed (209)
+      Tests  3156 passed | 1 todo (3157)
+   Start at  15:41:53
+   Duration  142.24s (transform 8.67s, setup 0ms, import 29.66s, tests 392.65s, environment 32ms)
+
+EXIT=0
