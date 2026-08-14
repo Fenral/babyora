@@ -53,17 +53,19 @@ visningsnavn-delen av 2026-07-15-entryen «Offentlig navn: Babyora»; den
 entryen har fått egen SUPERSEDED-banner.
 
 **Merk — åpen provisjoneringsmotstrid:**
-`loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md` (eier leste App Store
-Connect og RevenueCat 11:35–11:45Z 2026-08-14) dokumenterer at faktisk
-provisjonerte produkt-IDer er `babyora_yearly_299`, `babyora_monthly_49` og
-`babyora_barnetiden_499`. Det motsier både 2026-07-15-entryen «Prismodell:
-behold juni-provisjoneringen» (som sier `no.klemeg.app.monthly/quarterly/yearly`
-med priser 39/99/299) og koden i `src/lib/premium/products.ts:24-26`.
-Retningsvalg (rette kode tilbake til `babyora_*` eller re-provisjonere
-konsollen) eies av SN-003s erstatningsoppgave og av SN-030/SN-033, ikke av
-SN-005. E-2s «endres ikke uten eskalering»-regel gjelder de faktisk
-provisjonerte IDene uansett hvilken vei eier velger; den beskytter ikke
-strengverdien `no.klemeg.app.*` som sådan.
+`loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md` (agent leste
+konsollene i eiers innloggede nettleser 11:35–11:45Z 2026-08-14 — primærkildens
+linje 4 merker lesingen eksplisitt som AGENTOBSERVASJON og forbyr å tilskrive
+den eier) dokumenterer at faktisk provisjonerte produkt-IDer er
+`babyora_yearly_299`, `babyora_monthly_49` og `babyora_barnetiden_499`. Det
+motsier både 2026-07-15-entryen «Prismodell: behold juni-provisjoneringen» (som
+sier `no.klemeg.app.monthly/quarterly/yearly` med priser 39/99/299) og koden i
+`src/lib/premium/products.ts:24-26`. Portalprisene 39/99/299 er heller ikke
+verifisert av samme agentobservasjon (§5 linje 68-70). Retningsvalg (rette
+kode tilbake til `babyora_*` eller re-provisjonere konsollen) eies av SN-003s
+erstatningsoppgave og av SN-030/SN-033, ikke av SN-005. E-2s «endres ikke uten
+eskalering»-regel gjelder de faktisk provisjonerte IDene uansett hvilken vei
+eier velger; den beskytter ikke strengverdien `no.klemeg.app.*` som sådan.
 
 ## 2026-08-07
 
@@ -284,12 +286,27 @@ måle-loop (§14) for å justere løypene empirisk.
 > **SUPERSEDED 2026-08-14** — faktapåstanden om at
 > `no.klemeg.app.monthly/quarterly/yearly` er provisjonert i App Store Connect
 > og RevenueCat er motbevist av `loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md`
-> (eier leste konsollene 11:35–11:45Z 2026-08-14): faktisk provisjonerte IDer
-> er `babyora_yearly_299`, `babyora_monthly_49` og `babyora_barnetiden_499`.
+> (agent leste konsollene i eiers innloggede nettleser 11:35–11:45Z
+> 2026-08-14 — primærkildens linje 4 merker lesingen eksplisitt som
+> AGENTOBSERVASJON og forbyr å tilskrive den eier): faktisk provisjonerte
+> IDer er `babyora_yearly_299`, `babyora_monthly_49` og `babyora_barnetiden_499`.
 > Koden i `src/lib/premium/products.ts:24-26` er dermed alignet mot IDer som
-> ikke finnes i butikken; kjøp kan ikke fungere i denne tilstanden. Retning
-> (rette kode til `babyora_*` eller re-provisjonere konsollen) eies av SN-003s
-> erstatningsoppgave og SN-030/SN-033. Se E-2-Merk i 2026-08-14-seksjonen.
+> ikke finnes i butikken; kjøp kan ikke fungere i denne tilstanden.
+>
+> **Prisdelen (39/99/299) er heller ikke verifisert som App Store-priser.**
+> Samme primærkilde §5 linje 68-70 sier eksplisitt at portalprisene ikke er
+> lest fra prisfeltene i konsollen. Tallene 49/299/499 fra primærkildens §1/§2-
+> produkt-tabeller er utledet fra produkt-ID-navnene (`babyora_monthly_49`,
+> `babyora_yearly_299`, `babyora_barnetiden_499`) — ikke fra prisfelter — og
+> 39/99/299 fra denne entryen er ikke uavhengig bekreftet mot konsollen.
+> Tallene 39/99/299 står i dag som kode-/UI-fallback i
+> `src/lib/premium/products.ts:47-71` (PRODUCTS-blokken, `anchorPriceNok`
+> 299/99/39); de kan derfor beskrives som gjeldende UI-fallback, men ikke som
+> bekreftede App Store-priser.
+>
+> Retning (rette kode til `babyora_*` eller re-provisjonere konsollen) eies
+> av SN-003s erstatningsoppgave og SN-030/SN-033. Se E-2-Merk i
+> 2026-08-14-seksjonen.
 
 ### Offentlig navn: Babyora (naming-porten lukket)
 
@@ -298,10 +315,18 @@ måle-loop (§14) for å justere løypene empirisk.
 **Reason:** Fjerner den største åpne v1-blokkeren (App Store-tittel, domene). AGENTS.md oppdatert tilsvarende.
 
 > **SUPERSEDED 2026-08-14** — visningsnavn-delen er overstyrt av E-2 «Visningsnavn
-> Snudly» i 2026-08-14-seksjonen: brukersynlige flater (UI, App Store-listing,
-> Play-listing) viser Snudly. Bundle-id `no.klemeg.app` er urørt og
-> beholder Babyora-arven som teknisk identitet. SN-006 (navnesjekk Snudly) og
-> SN-011/SN-012 (visningsnavn-implementering) håndterer den nye retningen.
+> Snudly» i 2026-08-14-seksjonen: vedtatt måltilstand er at brukersynlige
+> flater (UI-tekst og App Store-listing) **skal vise** Snudly. Dagens tilstand
+> er ikke Snudly overalt: SN-011 (visningsnavn i `Info.plist`, `strings.xml`,
+> `capacitor.config.ts` og i18n) og SN-012 (navnesveip i all brukersynlig
+> tekst) står `KLAR` i `loop/ARBEIDSLISTE-SNUDLY.md:32-33`, ikke `FERDIG`, og
+> `loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md:9,19` viser at App
+> Store Connect-appen fortsatt heter «Klemeg» / «Babyora». Play Console er
+> ikke kontrollert (primærkildens §5 linje 71), så Play-listingens navn er
+> ikke observert av loopen — hverken bekreftet Snudly eller bekreftet noe
+> annet. Bundle-id `no.klemeg.app` er urørt og beholder Babyora-arven som
+> teknisk identitet. SN-006 (navnesjekk Snudly) og SN-011/SN-012 håndterer
+> implementeringen.
 
 ### v1 lanseres på dagens motor med veiledende-disclaimer (uten fagsignatur)
 
