@@ -67,6 +67,64 @@ erstatningsoppgave og av SN-030/SN-033, ikke av SN-005. E-2s «endres ikke uten
 eskalering»-regel gjelder de faktisk provisjonerte IDene uansett hvilken vei
 eier velger; den beskytter ikke strengverdien `no.klemeg.app.*` som sådan.
 
+### Betaling og abonnement (V1–V6)
+
+**Decision:** Eier har vedtatt seks punkter for hvordan appen skal håndtere
+abonnement, i lys av at portalen viser en annen tilstand enn
+`docs/DECISION-LOG.md` 2026-07-15 «Prismodell: behold juni-provisjoneringen»
+antok. Vedtaket ligger i sin helhet i
+`loop/referanse/EIERVEDTAK-BETALING-2026-08-14.md`; sammenfattet:
+
+- **V1 To planer.** Månedsabonnement og årsabonnement. Kvartalsplanen
+  («pappaperm», 99 kr / 3 mnd) fjernes — den finnes ikke hos Apple, og eier
+  har besluttet ikke å opprette den. `PLAN_ORDER`, `PRODUCT_IDS` og
+  paywall-visningen skal ikke lenger ha en kvartalsvariant. Spar-badgen mellom
+  måned og år regnes om fra faktiske priser.
+- **V2 RevenueCat er fasit.** Appen spør etter **plantype** (månedlig / årlig),
+  ikke etter et butikkproduktnavn. RevenueCat-tilbudet avgjør hvilket faktisk
+  produkt det er, per plattform. Da kan produkter, priser og butikker endres
+  uten kodeendring, og Android kobles senere uten å røre appen. Ikke en
+  omskriving av integrasjonen — RevenueCat beholdes; det er å bruke den slik
+  den er ment.
+- **V3 Faktisk butikktilstand.** Verifisert i portalene 14.08.2026 av agent
+  på eiers instruks (se
+  `loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md`): År =
+  `babyora_yearly_299`, Måned = `babyora_monthly_49`, engangskjøp
+  «Barnetiden» = `babyora_barnetiden_499` (utenfor abonnementsvedtaket).
+  Abonnementsgruppe «Babyora Pluss» (gruppe-ID `22131969`); entitlement i
+  RevenueCat: `premium`. Play Store: ingen produkter. **De tidligere antatte
+  `no.klemeg.app.monthly/quarterly/yearly` finnes ikke.**
+- **V4 Priser skal LESES, ikke antas.** Ankerprisene 299/99/39 i koden er
+  fallback når butikken ikke svarer; ekte pris kommer alltid fra RevenueCat.
+  Fallback-tallene skal likevel stemme med faktisk butikkpris, og må derfor
+  leses av i App Store Connect før de skrives inn. Produktnavnene antyder 299
+  og 49, men prisfeltene er ikke lest. Oppgaven eies av SN-W03.
+- **V5 Kjøp skal aldri feile stille.** `purchasePackage` returnerer i dag
+  `{ success: false }` uten forklaring når ingen pakke matcher. Krav: når
+  tilbudet mangler den etterspurte planen, skal det logges tydelig og vises en
+  ærlig feiltilstand til brukeren.
+- **V6 Loop-dokumenter rettes.** DoD-regel C2 i `loop/DOD-SNUDLY.md` skal verne
+  om de faktisk provisjonerte IDene i stedet for de ikke-eksisterende
+  `no.klemeg.app.*` (håndtert av SN-W02). Bundle-id `no.klemeg.app` (C1) står
+  urørt.
+
+**Reason:** V1/V2/V5 er implementeringsretning for SN-W01; V3 er sannhet
+arbeidet måles mot; V4 er en eieroppgave (SN-W03) fordi prisene må avleses i
+en pålogget portal; V6 er selve dokumentrettingen (SN-W02). Kilder:
+`loop/referanse/EIERVEDTAK-BETALING-2026-08-14.md`, primærobservasjon
+`loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md`.
+
+**Motstrid håndtert (E3):** Dette vedtaket overstyrer 2026-07-15-entryen
+«Prismodell: behold juni-provisjoneringen (39/99/299), kode alignet» i sin
+helhet — både produkt-ID-valget (`no.klemeg.app.*`), prispåstanden
+(39/99/299) og kvartalskomponenten. Den entryen har allerede en SUPERSEDED-
+banner på faktapåstanden om provisjonering; retningsvalget som erstatter
+juni-provisjoneringen står her, ikke der. Bundle-id `no.klemeg.app`
+(2026-07-15-entryens «provisioning-kontinuitet»-argument) videreføres uendret
+og verne av C1. Motstrid mot den beviselig utdaterte DoD C2-teksten
+(`no.klemeg.app.monthly/quarterly/yearly` «uforanderlige hos Apple») lukkes
+mekanisk av SN-W02s C2-endring.
+
 ## 2026-08-07
 
 ### Onboarding EIERPORT 1: K0 og K3 er finalister

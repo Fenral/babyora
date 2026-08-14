@@ -66,7 +66,7 @@ For klesmotor, beregninger og alt som avgjør hva barnet skal ha på seg.
 | ID | Krav | Hvordan det måles |
 | --- | --- | --- |
 | C1 | Bundle-id urørt | `no.klemeg.app` er uendret i alle filer. |
-| C2 | Apple-produkt-IDer urørt | `no.klemeg.app.monthly/quarterly/yearly` er uendret. De er uforanderlige hos Apple. |
+| C2 | Faktisk provisjonerte Apple-produkt-IDer urørt | `babyora_yearly_299`, `babyora_monthly_49` og `babyora_barnetiden_499` er uendret. Dette er ID-ene som faktisk finnes i App Store Connect og RevenueCat per `loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md`; endring krever eier-eskalering fordi angrefristen er null. **Merk:** de tidligere navngitte `no.klemeg.app.monthly/quarterly/yearly` finnes ikke i noen butikk (samme kilde, §3) og skal derfor ikke lenger vernes av denne regelen. Historisk kode-referanse til dem er ikke en Apple-forpliktelse. |
 | C3 | Én sannhet om prøveperiode | Omfanget er identisk i kode, i paywall-tekst og i det som er dokumentert konfigurert i App Store Connect. Avvik er underkjent. |
 | C4 | Ingen konsollhandling | Agenten har ikke utført endringer i App Store Connect, Play Console eller RevenueCat. Slikt eskaleres. |
 | C5 | Kjøpspåstander krever enhet | Påstand om at kjøp virker godtas kun med bevis fra fysisk enhet. Mock og e2e beviser at koden kaller riktig, ikke at kjøp går gjennom. |
