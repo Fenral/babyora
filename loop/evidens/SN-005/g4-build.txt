@@ -55,7 +55,12 @@ dist/assets/FamilieScreen-0Qa3J6hZ.js                             105.61 kB │ 
 dist/assets/UkeScreen-o7yUY3ub.js                                 598.15 kB │ gzip:  98.66 kB
 dist/assets/index-DsPVqYZ5.js                                     605.06 kB │ gzip: 186.69 kB
 
-[32m✓ built in 1.73s[39m
+[32m✓ built in 1.91s[39m
+[33m[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
 
 > babyora@0.1.0 build:bare
 > vite build --config apps/bare/vite.config.ts
@@ -67,5 +72,5 @@ computing gzip size...
 dist/bare/index.html                  0.54 kB │ gzip:  0.35 kB
 dist/bare/assets/index-NIgpWZ0E.js  281.23 kB │ gzip: 87.18 kB
 
-[32m✓ built in 114ms[39m
+[32m✓ built in 155ms[39m
 EXIT=0
