@@ -96,16 +96,32 @@ antok. Vedtaket ligger i sin helhet i
   produkter — Play Console selv er ikke åpnet (jf.
   `loop/referanse/EIER-FUNN-PROVISJONERING-2026-08-14.md:71`). **De tidligere
   antatte `no.klemeg.app.monthly/quarterly/yearly` finnes ikke.**
-- **V4 Priser skal LESES, ikke antas.** Dagens ankerpriser i koden er 299/99/39
-  kr (kvartalens 99 kr fjernes med V1); fallback brukes bare når butikken ikke
-  svarer, og ekte pris kommer alltid fra RevenueCat. Fallback-tallene skal
-  likevel stemme med faktisk butikkpris, og må derfor leses av i App Store
-  Connect før de skrives inn. Produktnavnene antyder 299 og 49, men
-  prisfeltene er ikke lest. Oppgaven eies av SN-W03.
-- **V5 Kjøp skal aldri feile stille.** `purchasePackage` returnerer i dag
-  `{ success: false }` uten forklaring når ingen pakke matcher. Krav: når
-  tilbudet mangler den etterspurte planen, skal det logges tydelig og vises en
-  ærlig feiltilstand til brukeren.
+- **V4 Priser skal LESES, ikke antas.** Ankerprisene i koden ved
+  vedtakstidspunktet var 299/99/39 kr (år/kvartal/måned) — det var
+  førtilstanden vedtaket bestemte over. SN-W01 f1 (materialcommit `a438a54`,
+  `src/lib/premium/products.ts:34-48`) fjernet kvartalsvarianten og 99-ankeret
+  per V1, slik at live branch nå har kun 299 (år) og 39 (måned). Både 299 og
+  39 er fortsatt uverifiserte fallbacks — produktnavnene `babyora_yearly_299`
+  og `babyora_monthly_49` antyder 299 og 49, men prisfeltene i App Store
+  Connect er ikke lest. Ekte pris kommer alltid fra RevenueCat i runtime;
+  fallback brukes bare når butikken ikke svarer. Avlesning og korreksjon av
+  ankertallene mot faktisk butikkpris eies av SN-W03. SN-W01 er merket
+  underkjent/EIER av andre grunner (se `loop/ESKALERING-SN-W01.md`) —
+  V1-endringen av `PLAN_ORDER`/`PRODUCTS` er likevel del av live branch og
+  utgjør kontrollgrunnlaget for denne V4-teksten.
+- **V5 Kjøp skal aldri feile stille.** Defekten ved vedtakstidspunktet:
+  `purchasePackage` returnerte `{ success: false }` uten forklaring når ingen
+  pakke matchet. Krav: når tilbudet mangler den etterspurte planen, skal det
+  logges tydelig og vises en ærlig feiltilstand til brukeren. SN-W01 f1
+  (materialcommit `a438a54`) erstattet `purchasePackage`-hjelperen med
+  `purchasePlan` og en typet `PurchaseFailureReason`-union med brukervendte
+  meldinger (`src/lib/billing/revenuecat.ts:83-111,128-152`), og la til en
+  synlig feilregion i paywall-dialogen (`src/components/PaywallDialog.tsx`).
+  V5 er likevel **ikke ferdig**: SN-W01 f1 er UNDERKJENT/EIER fordi den
+  native snarveien i `src/components/PaywallDialog.tsx:915-934` fortsatt kan
+  gi falsk suksess uten RevenueCat-konfig — den grenen omgår den nye
+  typede feilstien. Endelig lukking av V5 skjer først når SN-W01 er
+  gjennomført med den snarveien fjernet.
 - **V6 Loop-dokumenter rettes.** DoD-regel C2 i `loop/DOD-SNUDLY.md` skal verne
   om de faktisk provisjonerte IDene i stedet for de ikke-eksisterende
   `no.klemeg.app.*` (håndtert av SN-W02). Bundle-id `no.klemeg.app` (C1) står
