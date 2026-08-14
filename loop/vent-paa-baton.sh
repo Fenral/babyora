@@ -36,6 +36,39 @@ while [ "$ventet" -lt "$TIMEOUT" ]; do
     *"BATON: EIER"*)
       echo "$linje"; echo "EIER"; exit 2 ;;
     *"BATON: $MEG"*)
+      # Kappløpsvakt (lagt inn 2026-08-14 etter to falske BLOKKERT på SN-001):
+      # byggeren skriver tegnet inntil halvannet minutt FØR den committer og
+      # pusher. En kontrollør som leser HEAD i det vinduet ser forrige forsøk
+      # og erklærer «levert uten commit». Vakten holder igjen til committen
+      # tegnet peker på faktisk er synlig og pushet.
+      #
+      # FAIL-OPEN: etter SYNK_TIMEOUT returnerer den uansett, slik at adferden
+      # i verste fall er nøyaktig som før vakten fantes. Den kan aldri låse.
+      if [ "$MEG" = "CODEX" ]; then
+        oppgave="$(printf '%s' "$linje" | sed -n 's/.*BATON: CODEX · \([^ ]*\) · FORSOEK-\([0-9]*\).*/\1/p')"
+        forsok="$(printf '%s' "$linje" | sed -n 's/.*BATON: CODEX · \([^ ]*\) · FORSOEK-\([0-9]*\).*/\2/p')"
+        if [ -n "$oppgave" ] && [ -n "$forsok" ]; then
+          SYNK_TIMEOUT="${SYNK_TIMEOUT:-120}"
+          synk=0
+          while [ "$synk" -lt "$SYNK_TIMEOUT" ]; do
+            melding="$(git log -1 --format=%B 2>/dev/null || true)"
+            lokal="$(git rev-parse HEAD 2>/dev/null || true)"
+            fjern="$(git rev-parse '@{upstream}' 2>/dev/null || true)"
+            case "$melding" in
+              *"Review-Request: $oppgave"*)
+                case "$melding" in
+                  *"Forsoek: $forsok"*)
+                    if [ -n "$lokal" ] && [ "$lokal" = "$fjern" ]; then
+                      echo "$linje"; exit 0
+                    fi ;;
+                esac ;;
+            esac
+            sleep 5
+            synk=$(( synk + 5 ))
+          done
+          echo "SYNK-TIMEOUT: committen for $oppgave forsøk $forsok ble ikke synlig og pushet innen ${SYNK_TIMEOUT}s — kontrollerer likevel" >&2
+        fi
+      fi
       echo "$linje"; exit 0 ;;
   esac
 
