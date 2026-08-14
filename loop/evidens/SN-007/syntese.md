@@ -51,10 +51,10 @@ forskjellige tupper.
 | **Design-tokens-v2 tester** | `src/styles/__tests__/*` i gren 1 | ENDRE | ~600 endrede testlinjer i motion/depth/focus/kontrastmatrise. Kalibrering er sannsynligvis mot Mineral Garden, ikke Snudly K2b. | Ta med tokens-endringene bare der de kobles til BEHOLD-konsepter; auditer resten mot Snudly-tokens under SN-010. |
 | **Glass A light-palett** | `9df6a74` i gren 3 | ENDRE | Alle `--dw-*`-tokens er definert. Feilen ligger i CSS-fallback: `:root` gir mørk (espresso `#1E140C`), og lys aktiveres av `@media [data-theme="light"]`. Snudly-mocken og SNUDLY-DESIGNSYSTEM.md §8 låser **lys som standard**. Nye brukere uten lagret tema treffer i dag mørk. | Cherry-pick tokens-verdiene; snu fallback-ordenen slik at `:root` er lys og mørk aktiveres av `[data-theme="dark"]` eller `prefers-color-scheme: dark`. Hører til SN-010. |
 | **Mineral Garden-adopsjon** | `3092fdd`, `d6a3999` i gren 1 | FORKAST | Dark-first-overstyring innført 2026-08-08 uten sanksjon fra eier. Eier 14.08 låste Snudly-mocken (lys, K2b) som fasit; design-lab-beslutningen om dark-first er eksplisitt overstyrt. DESIGN.md- og canvas-endringene (`#F2F5F1` mot Snudly `#f3f7f5`) skal ikke inn. | Ekskluder disse commits ved cherry-pick. |
-| **Signaturgrep blind-dom** | `216518b` (`docs/mocks/signatur/`) i gren 3 | FORKAST | Design-lab-eksperiment: PNG-er + `RESULTAT.md`. Ikke `.tsx/.ts`-kode. Laterale beslutninger krever eiergodkjenning, ikke merge. | Utelates fra cherry-pick-sett. |
-| **tools/garment-audit + BABYORA-AGENCY-POLISH-MASTERPROMPT.md** | gren 3 | FORKAST | Design-lab-arkiv (Impeccable-scan, agency-prompt) fra før Snudly-navnebytte. Bruker «Babyora»-språk gjennomgående. Ikke produktkode. | Utelates. |
+| **Signaturgrep blind-dom** | `216518b` (`docs/mocks/signatur/`) i gren 3 | FORKAST fra Home-cherry-pick | Design-eksperiment (PNG-er + `RESULTAT.md`) forfattet av eier selv (`Sivert Skotvold`, `sivertskotvold@gmail.com`, 2026-08-11). Ikke `.tsx/.ts`-kode og ikke direkte relevant for byggegrenens vei mot App Store. Å merge det med SN-W04-cherry-picket kobler produktkode til et design-lab-spor uten grunn. Selve eksperimentet er eierens eiendom og kan videreføres på egen gren om eier vil. | Utelates fra Home-cherry-pick-settet i SN-W04. Ikke slett; grenen forblir tilgjengelig for eier. |
+| **tools/garment-audit + BABYORA-AGENCY-POLISH-MASTERPROMPT.md** | gren 3 | FORKAST fra Home-cherry-pick | Audit-/prompt-arkiv fra før Snudly-navnebytte, forfattet av eier og Fenral. Bruker «Babyora»-språk gjennomgående. Ikke produktkode. Samme resonnement som over: å merge inn i Home-cherry-picket blander arkivmateriale med produkt. | Utelates fra Home-cherry-pick. Kan bevares på gren 3 for referanse. |
 | **tools/verify-hjem.mjs, tools/verify-launch.mjs endringer** | gren 2 og 3 | ENDRE | 1000+ linjers omskrivning per fil. Verify-skriptene brukes av W-VERIFY. De kan være kalibrert mot Mineral Garden/Glass A, og må avstemmes mot Snudly-tokens etter valg av palett. | Cherry-pick sammen med Home-redesignet, men kjør skriptene mot Snudly-mocken før de tas i bruk som verifikasjon. |
-| **Merkevare-artefakter i index.html og /public/brand/** | felles for alle tre grener | ENDRE | Alle tre grener beholder `<title>Babyora</title>`, `<meta apple-mobile-web-app-title>`, `babyora-theme-color`, `localStorage.getItem('babyora.theme')`, og `href="/brand/babyora-wordmark-reverse.svg"`. Det samme finnes delvis i `origin/main` (title + meta). SN-011 «Visningsnavn til Snudly» dekker skiftet av visningsnavn, men wordmark-assetet er en separat operasjon. Merk: gren 3-agentens spesifikke påstand om `<span className="hjm-brand">BABYORA</span>` i `index.html:1276` verifiserer ikke — filen er 306 linjer på alle tre grener og har ingen slik tag. Grunnmerket for A7-brudd holder likevel via wordmark-assetet og title-taggen, som er synlige. | Ikke SN-007s ansvar å fikse. SN-011 og SN-012 (navnesveip) rydder dette; SN-011 må også bytte wordmark-asset og `localStorage`-nøkkel. Se «Nye oppgaver» nedenfor. |
+| **Merkevare-artefakter i index.html og /public/brand/** | felles for alle tre grener | ENDRE | Alle tre grener beholder `<title>Babyora</title>`, `<meta apple-mobile-web-app-title>`, `babyora-theme-color`, `localStorage.getItem('babyora.theme')` og `href="/brand/babyora-wordmark-reverse.svg"`. Delvis også i `origin/main` (title + meta). `public/brand/` inneholder `babyora-wordmark-reverse.svg` + åtte andre `babyora-*.svg`-assets på main og alle tre grener. Wordmark-assetet er A7-relevant fordi det rendres i UI (referert av `<img src>` og `<link>` i index.html). **Korreksjon av gren-3-dommens funn 1:** agenten oppga `<span className="hjm-brand">BABYORA</span>` i `index.html:1276`. Filen er 306 linjer på alle tre grener; ingen `hjm-brand`- eller `>BABYORA<`-tag finnes. Den spesifikke påstanden verifiserer ikke. A7-eksponering er reell, men gjennom title-tag og wordmark-asset, ikke gjennom en HTML-span. Se kontroll-notat nederst i `gren-agent-babyora-polish-slide.md`. | Ikke SN-007s ansvar å fikse. SN-011 (visningsnavn til Snudly) må utvides til å bytte wordmark-assets, `<title>`, `<meta apple-mobile-web-app-title>` og `localStorage`-nøkkel `babyora.theme` → `snudly.theme` (migrer eksisterende verdier). Foreslått som SN-W11 nedenfor. |
 
 ## 3. Anbefaling per gren
 
@@ -121,9 +121,41 @@ strengt en visningsnavn-forbedring uten C-implikasjon.
 
 Denne oppgaven produserer ingen kode-endring på byggegrenen. Utfallet er:
 
-- Denne synteselinjen + tre gren-dommer i `loop/evidens/SN-007/`.
-- Nye oppgaver SN-W04..SN-W11 legges til `loop/ARBEIDSLISTE-SNUDLY.md`.
+- Denne syntesen + tre gren-dommer + G1-G4-evidens i `loop/evidens/SN-007/`.
+- **Forslag** til nye oppgaver SN-W04..SN-W11 (seksjon 4 over). Selve innleggelsen i
+  `loop/ARBEIDSLISTE-SNUDLY.md` er en oppfølgingsbeslutning som ligger UTENFOR SN-007s
+  material. Rasjonalen: SN-007 er type E og skal levere dommen, ikke bestemme hvordan
+  arbeidslisten bygges. En [admin]-bokføring etter Codex' BESTÅTT-dom kan innføre
+  oppgavene hvis eier ikke overstyrer forslaget.
 - SN-007 settes `TIL KONTROLL`.
 
 Ingen av de tre grenene endrer status i git (de forblir uleste tupp-referanser). Cherry-picks
 og faktiske merger utføres av SN-W04..SN-W10 senere.
+
+---
+
+## Vedlegg · rødt-lag-fix 2026-08-14T18:14Z
+
+Kontrolleragent `ac534639af342504e` fant tre punkter som denne syntesen adresserer før
+overlevering:
+
+1. **Eierskaps-attribuering korrigert** — `docs/mocks/signatur/` og `tools/garment-audit/`
+   ble opprinnelig kalt «design-lab uten sanksjon fra eier». Verifisert med
+   `git log --format='%an %ae' -- <sti>`: begge forfattet av eier (Sivert Skotvold) selv,
+   `garment-audit` også av Fenral (repo-eierens org-håndtak). Ny FORKAST-begrunnelse: ikke
+   «uten sanksjon», men «hører ikke til Home-cherry-pick-settet». Se seksjon 2, radene
+   «Signaturgrep» og «tools/garment-audit».
+2. **Motstrid mellom gren-3-dommen og syntesens korreksjon eksplisitt** —
+   `<span className="hjm-brand">BABYORA</span>`-påstanden er markert som ikke-verifisert
+   både i syntesen (seksjon 2, siste rad) og i et kontroll-notat nederst i
+   `gren-agent-babyora-polish-slide.md`. A7-eksponering står, men via title-tag og
+   wordmark-asset — ikke via HTML-span.
+3. **SN-W04..SN-W11-innleggelse ryddet** — syntesen lovte tidligere å legge oppgavene inn
+   i arbeidslisten. Det motsa material-diffen (som ikke gjorde det). Seksjon 7 er
+   omskrevet: forslaget står, innleggelsen er en [admin]-oppfølging etter dom, ikke en
+   handling internt i SN-007.
+
+Kontrollerte uten funn: G1-G4 EXIT-koder, testantall (3168 pass + 1 todo), diff-omfang
+(kun `loop/`), kaskade-tallene (A=23, B=35, C=40; B\A=12; C\(A∪B)=5), Mineral Garden-
+commits på alle tre grener, commit-metadata på bbf9c24 og 12a6dce, hemmeligheter,
+konsoll-rester, nye avhengigheter, evidensfiler sporet i git.

@@ -50,3 +50,19 @@ Grenen samler arkitektoniske endringer (launch signature, Mineral Garden palett,
 - Design-tokens-v2 tester: må audites fullt (ikke lest hver test)
 - Mineral Garden-omfang: grep ga deler av det, kan være flere filer
 - G1–G4 kjøring: ikke utført (stor grep, mange feil antatt)
+
+---
+
+## Kontroll-notat 2026-08-14T18:14Z (fra syntesen)
+
+Nøkkelfunn 1 over påstår at `<span className="hjm-brand">BABYORA</span>` finnes i
+`index.html:~1276`. Verifisert i etterkant med
+`git show origin/agent/babyora-polish-slide:index.html | wc -l` og `grep -n "hjm-brand\|>BABYORA<"`:
+filen er 306 linjer på alle tre grener, og ingen `hjm-brand`- eller `>BABYORA<`-tag finnes.
+Den spesifikke påstanden verifiserer ikke og skal ikke brukes som A7-brudd-referanse.
+
+A7-eksponeringen agenten mener er reell — men gjennom `<title>Babyora</title>`
+(index.html linje 246), `<meta apple-mobile-web-app-title content="Babyora">` (linje 13),
+og wordmark-assetet `href="/brand/babyora-wordmark-reverse.svg"` (linje 269/280). Disse
+tre finnes på alle tre grener OG delvis på `origin/main` — det er ikke unikt for denne
+grenen. Håndtering ligger i SN-011 (visningsnavn) og foreslått SN-W11.

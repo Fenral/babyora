@@ -1,0 +1,53 @@
+=== LEVERANSEFAKTA SN-007 ===
+generert: 2026-08-14T18:11:09Z  (date -u)
+
+--- HEAD ---
+sha:      12a6dce8c14e94c3b74e3b09ec6130c27b50535e
+emne:     SN-007: evidens G1-G4 mot bbf9c24
+forfatter:2026-08-14T20:10:59+02:00
+
+--- trailere ---
+Review-Request: SN-007
+Forsoek: 1
+
+--- G6-format ---
+OK: emnet starter med 'SN-007: '
+
+--- HVA REQUESTEN SKAL BESKRIVE ---
+Beskriv MATERIALCOMMITEN over. Ikke kall noe «full pakke».
+Etter at du har lest dette kommer minst to commits til — requesten selv og
+BATON-overleveringen — og de finnes ikke i tallene under. Kaller du dette
+«hele leveransen», blir påstanden usann i det du lagrer requesten.
+Formuler i stedet: «Materialcommit <sha>: N filer, +X/-Y. Request-, evidens-
+og BATON-commits kommer etter denne målingen og er bokføring, ikke innhold.»
+Fire oppgaver har brutt tre forsøk hver på nettopp denne selvrefererende feilen.
+
+--- diff mot forelder (MATERIALCOMMITEN) ---
+ 4 files changed, 96 insertions(+)
+
+--- per fil (numstat: eksakt, ikke skalert graf) ---
+5	0	loop/evidens/SN-007/g1-lint.txt
+1	0	loop/evidens/SN-007/g2-tsc.txt
+14	0	loop/evidens/SN-007/g3-test.txt
+76	0	loop/evidens/SN-007/g4-build.txt
+
+--- dommer og evidens som må være sporet ---
+OK sporet:   loop/evidens/SN-007/g1-lint.txt
+OK sporet:   loop/evidens/SN-007/g2-tsc.txt
+OK sporet:   loop/evidens/SN-007/g3-test.txt
+OK sporet:   loop/evidens/SN-007/g4-build.txt
+OK sporet:   loop/evidens/SN-007/gren-agent-babyora-polish-slide.md
+OK sporet:   loop/evidens/SN-007/gren-feat-hjem-list-detail-sheet.md
+OK sporet:   loop/evidens/SN-007/gren-feat-kontekstvalg-hjem.md
+BRUDD usporet: loop/evidens/SN-007/leveranse-fakta.txt  — commit den, ellers underkjennes leveransen (G5/E1)
+OK sporet:   loop/evidens/SN-007/syntese.md
+
+--- synk mot origin ---
+HEAD:     12a6dce8c14e94c3b74e3b09ec6130c27b50535e
+upstream: 12a6dce8c14e94c3b74e3b09ec6130c27b50535e
+OK: pushet og synkron
+
+rev-list --left-right --count HEAD...@{upstream}:
+0	0
+
+=== SLUTT SN-007 ===
