@@ -134,27 +134,44 @@ derfor ikke konkludere med «ingen kollisjon» — kun «ingen indekserte offent
 
 Ingen søkevariant («Snuddly», «Snuddley», «Snudle», «Snudlee») ga egne apper på Play.
 
-**Package-id-konflikt (`no.klemeg.app.*`):** Ingen funn. Ingen observert package-id starter
-med `no.klemeg`.
+**Merknad om identifikatorer (skille tre ulike verdier — per f2-dommens funn 2):**
+Rapporten skiller heretter eksplisitt mellom (a) **visningsnavnet** som skal
+markedsføres på Play — «Snudly»; (b) **Androids `applicationId`** — verdien
+`no.klemeg.app` (eksakt), definert i `android/app/build.gradle:13` og deklarativt
+også som `namespace` på :6; og (c) **Apples in-app-produkt-IDer** —
+`no.klemeg.app.yearly`, `no.klemeg.app.quarterly`, `no.klemeg.app.monthly` (Apple
+StoreKit-IDer) i `src/lib/premium/products.ts:24-26`. Apple-produkt-IDene er ikke
+Android package-navn og har ingen forbindelse til Google Play-namespacet.
 
-**Kollisjonsvurdering: USIKKER (indikert LAV).** Nærmeste i barnefamilie-segmentet er
-`SNUGL` (baby tracker, annen bokstav, annen funksjon) og `Snuggly: Bedtime Stories`
-(godnattfortellinger, ikke værbasert påkledning). Ingen bokstavelig «Snudly»-app funnet
-i norsk Play-storefront (storefronten svarte eksplisitt «Ingen resultater for snudly»
-2026-08-14) eller i indekserte US-treff. **Autoritativ appnavntilgjengelighet er
-likevel ikke bekreftet:** Play håndhever appnavn primært via package-id og varemerke og
-ikke via en «reserver navn»-mekanisme som Apples, men verifikasjonen her hviler på
-Google-indeksering og storefront-søk — ikke på Play Console-oppslag. Rapporten kan
-derfor slå fast «ingen indekserte kollisjoner», men ikke uten videre «ingen
-kollisjon» (samme logikk som §2 for App Store, per dommens funn 2).
+**Package-navn-observasjon (Google Play offentlig storefront):** Ingen av søketreffene
+i tabellen over har et Android-`applicationId` som starter med `no.klemeg`. Google
+Play tildeler package-navn eksakt og permanent (kilde:
+<https://support.google.com/googleplay/android-developer/answer/9859152>), og
+har ingen søkbar/reserverbar «prefiks»-mekanisme; en tidligere formulering i denne
+rapporten som antydet at `no.klemeg.app.*` kunne «reserveres som prefiks» eller
+«sjekkes for prefikskonflikt i Play Console» var feil og er fjernet.
+
+**Kollisjonsvurdering: USIKKER (indikert ingen synlig kollisjon på tittelnivå).**
+Nærmeste i barnefamilie-segmentet er `SNUGL` (baby tracker, annen bokstav, annen
+funksjon) og `Snuggly: Bedtime Stories` (godnattfortellinger, ikke værbasert
+påkledning). Ingen bokstavelig «Snudly»-app funnet i norsk Play-storefront
+(storefronten svarte eksplisitt «Ingen resultater for snudly» 2026-08-14) eller i
+indekserte US-treff. **Dette er ikke bevis for varemerkeklarering** og heller ikke
+bevis for at det eksakte package-navnet `no.klemeg.app` er ledig — det er utelukkende
+et signal om at ingen app med den eksakte tittelen «Snudly» er offentlig indeksert i
+storefronten på observasjonstidspunktet. Autoritativ verifisering av at ingen annen
+utvikler allerede har publisert appen med et Snudly-lignende navn eller registrert et
+sammenfallende varemerke krever direkte Play Console-oppslag og separat
+varemerke-DB-sjekk (§5) — ikke gjort i SN-006 per DoD C4.
 
 **Usikkerhet:**
 - Installtall ikke synlige i søkelisten — ikke hentet per app-side.
 - Landstorefronts DE/UK/US spesifikt ikke enkeltsjekket ut over default + `hl=no,gl=no`.
 - «Snudly» som ord i norske dialekter/urban dictionary ikke undersøkt for uheldig betydning.
-- Play Console-oppslag ikke gjort (utenfor SN-006-scope, jf. DoD C4); autoritativ
-  verifisering av at ingen utvikler har reservert package-id-prefikset `no.klemeg.app.*`
-  utover det som er søkt i den offentlige storefronten forutsetter Play Console.
+- Play Console-oppslag ikke gjort (utenfor SN-006-scope, jf. DoD C4). Play Console
+  bekrefter unikhet for et eksakt `applicationId` ved forsøk på opplasting; det finnes
+  ingen offentlig eller Play Console-basert måte å søke etter eller reservere et
+  «prefiks».
 
 ---
 
@@ -398,13 +415,14 @@ etter eierbeslutning). Særskilte forbehold utover den generelle regelen:
 - **App Store:** Ingen indekserte offentlige treff, men autoritativ navnetilgjengelighet
   avgjøres først ved oppretting av app-record i App Store Connect (Apples egen
   dokumentasjon). Denne kontrollen er ikke gjort i SN-006. Status: **USIKKER**.
-- **Play:** Ingen indekserte søketreff for «Snudly» i norsk storefront 2026-08-14 og
-  ingen observert `no.klemeg.app.*`-kollisjon i søkeresultatene. Play håndhever
-  appnavn primært via package-id og varemerke, ikke via en «reserver navn»-mekanisme
-  som Apples; men verifisering av at ingen utvikler har lagt beslag på navnet eller
-  package-id-prefikset utover det offentlige søket dekker forutsetter Play Console-
-  oppslag, som ikke er gjort her. Status: **USIKKER (indikert ingen kollisjon)** —
-  samme logikk som App Store.
+- **Play:** Ingen synlig app med den eksakte tittelen «Snudly» funnet i norsk Play-
+  storefront 2026-08-14 («Ingen resultater for snudly»). Dette er kun et
+  storefront-signal og ikke bevis for varemerkeklarering. Google Play tildeler
+  `applicationId` eksakt og permanent og har ingen søkbar/reserverbar
+  «prefiks»-mekanisme; unikhet for et eksakt `applicationId` (her Androids
+  `no.klemeg.app`) bekreftes først når en `.aab` med det ID-et lastes opp mot
+  Play Console. Den kontrollen er utenfor SN-006-scope (DoD C4). Status:
+  **USIKKER**.
 - **Varemerke:** Ingen indekserte «Snudly»-varemerker i tredjeparts-speilinger, men
   direkte oppslag i Patentstyret/EUIPO/WIPO/USPTO er ikke gjennomført. Status:
   **USIKKER — må lukkes ved manuell DB-sjekk før filing**.
