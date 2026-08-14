@@ -1,0 +1,5 @@
+# Plassholder for evidens-katalogen
+
+Skjermbilder og annet evidensmateriale legges i undermapper per oppgave:
+`loop/evidens/SN-###/`. Denne filen finnes kun for at Git skal spore katalogen
+selv når den ellers er tom.

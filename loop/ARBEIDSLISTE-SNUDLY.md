@@ -83,7 +83,6 @@ Claude Code oppdaterer statusfeltet. Ingen andre rører det. Nye oppgaver som f�
 | SN-060 | Release-kandidat: merge godkjente grener, tag, kodefrys-regel | E | SN-054 | KLAR |
 | SN-061 | App Store Connect: priser, lokalisering og review-informasjon per abonnement | C | SN-060 | EIER |
 | SN-062 | Innsending med gradvis utrulling | C | SN-061 | EIER |
-| SN-FINAL | Bred sluttgjennomgang av hele grenen mot sluttporten i `DOD-SNUDLY.md` | E | SN-062 | KLAR |
 
 ## Fase 7 · Android, etter iOS
 
@@ -94,6 +93,12 @@ Claude Code oppdaterer statusfeltet. Ingen andre rører det. Nye oppgaver som f�
 | SN-072 | Opprett de tre Play-abonnementene med endelig prefiks — irreversibelt, staves én gang | C | SN-071 | EIER |
 | SN-073 | Rekoble RevenueCats Play-produkter fra døde `klemeg_premium_*` | C | SN-072 | EIER |
 | SN-074 | Play-butikktekst og skjermbilder | D | SN-073 | KLAR |
+
+## Fase 8 · Sluttdom
+
+| ID | Oppgave | Type | Avh. | Status |
+| --- | --- | --- | --- | --- |
+| SN-FINAL | Bred sluttgjennomgang av hele grenen mot sluttporten i `DOD-SNUDLY.md` — kjøres etter at hver rad over står `FERDIG` | E | SN-074 | KLAR |
 
 ---
 

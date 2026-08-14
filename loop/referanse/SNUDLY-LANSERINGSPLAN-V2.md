@@ -16,7 +16,7 @@
 
 ## 0. Hva kartleggingen endret
 
-V1 antok nybygg. Virkeligheten: appen er **langt mer ferdig enn antatt** — komplett onboarding (1878 linjer, testet), paywall med RevenueCat-wrapper, met.no ende-til-ende med edge-proxy, 12 skjermer, 182 testfiler med ~1856 caser, iOS CI/CD som har levert TestFlight-bygg opp til #157–158, og full Apple-provisjonering (App ID 6776416135, tre abonnementer, RevenueCat koblet).
+V1 antok nybygg. Virkeligheten: appen er **langt mer ferdig enn antatt** — komplett onboarding (1878 linjer, testet), paywall med RevenueCat-wrapper, met.no ende-til-ende med edge-proxy, 12 skjermer, 209 testfiler med 3156 bestått + 1 todo (3157 totalt) — kilde `npm test` på `71084992fecb3722c7f900b80ae7152050eeec0e` 14.08.2026, iOS CI/CD som har levert TestFlight-bygg opp til #157–158, og full Apple-provisjonering (App ID 6776416135, tre abonnementer, RevenueCat koblet).
 
 Men også **messier enn antatt**: tre navn i omløp (Klemeg i bundle-id og UI-spor, Babyora låst i DECISION-LOG 15. juli, Snudly besluttet av eier 13. august — uregistrert i repoet), **to parallelle designprosesser** som motsier hverandre (repoets design-lab: 3 faner, dark-first, retning B «Scenen» — vår discussion-prosess: 4 faner, lys standard, K2b/K5-mocken), tre grener foran main uten merge-plan, en udømt design-lab-overlevering, og dokumentasjon som motsier både seg selv og koden (trial-omfang, produkt-IDer, TestFlight-status).
 
