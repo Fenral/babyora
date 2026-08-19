@@ -12,9 +12,9 @@
 - TASK-004 verification: `docs/evidence/task-004-verification.md` against candidate `0d55118`.
 - Three title-blind visual candidates: `docs/design-options.md` and `design-lab/task-005/`.
 - TASK-005 verification: `docs/evidence/task-005-verification.md` against candidate `a632aa8`.
-- **Human gate / next action:** TASK-006 requires five real target dads to view the title-blind sheets and answer the same five questions in `docs/design-exploration.md`. Do not invent, proxy, or infer these responses and do not select a direction before they exist.
+- **Human gate / next action:** TASK-006 requires five real target dads to view the title-blind sheets and answer the same five questions in `docs/design-exploration.md`. Their responses select visual-language principles, not a replacement page structure. Do not invent, proxy, or infer these responses.
 - Open source-of-truth conflict: `AGENTS.md` says Babyora and free today-at-home; the newer product documents say Snudly and specify a later-session core paywall. Do not implement identity or monetization changes until reconciled.
-- Design boundary: preserve the approved four-tab information architecture as the starting structure; current colors, typography, spacing, component styling, imagery, and page layout are not locked.
+- **Owner layout decision (2026-08-19):** use the current live Snudly layout, information order, and four-tab structure as the base for the new TASK-007 design system. Colors, typography, spacing tokens, component styling, imagery, and motion treatment remain open. The three TASK-005 candidates are visual-language probes, not competing production page structures.
 - Preserve the unrelated local loop/SN-007 changes already present in the worktree.
 
 All entries below this point are dated history. When they conflict with the
