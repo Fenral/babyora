@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 2/56 tasks complete
+> **Roadmap status:** 3/56 tasks complete
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -39,7 +39,7 @@
   Files: `docs/evidence/implementation-matrix.md`, `docs/prd.md`
   Notes: Mark every `FR-001`–`FR-016` as verified, partial, missing, or conflicting and cite concrete files/tests. Verify: every requirement has exactly one status and one evidence link.
 
-- [ ] **TASK-003** — Separate reusable product foundations from replaceable prototype UI.
+- [x] **TASK-003** — Separate reusable product foundations from replaceable prototype UI.
   Files: `docs/evidence/prototype-inventory.md`, `src/`
   Notes: Inventory domain logic, weather, state, billing, analytics, navigation, screens, components, and styles; label each preserve, adapt, replace, or investigate. Verify: no visual asset or token is labeled mandatory solely because it already exists.
 
