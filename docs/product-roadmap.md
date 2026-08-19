@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 4/56 tasks complete
+> **Roadmap status:** 5/56 tasks complete
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -47,7 +47,7 @@
   Files: `docs/design-exploration.md`, `docs/product-vision.md`
   Notes: Define audience, emotion, accessibility, trust, magic moment, exclusions, and evaluation questions without selecting colors or a style. Verify: the brief permits at least three meaningfully different visual directions.
 
-- [ ] **TASK-005** — Produce three distinct low-cost visual directions from external references.
+- [x] **TASK-005** — Produce three distinct low-cost visual directions from external references.
   Files: `docs/design-options.md`, `design-lab/`
   Notes: Create one representative onboarding/home/result concept per direction; vary color, type, density, imagery, and component character rather than making palette swaps. Verify: a reviewer can distinguish each direction without reading its title.
 
