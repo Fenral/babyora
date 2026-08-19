@@ -1,15 +1,16 @@
 # Current handoff
 
 **Updated:** 2026-08-19
-**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-003 are complete.
+**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-004 are complete.
 
 ## 2026-08-19: Product roadmap execution
 
 - Technical baseline: `docs/evidence/baseline.md`.
 - PRD implementation coverage: `docs/evidence/implementation-matrix.md`.
 - Prototype foundation inventory: `docs/evidence/prototype-inventory.md`.
-- TASK-004 candidate brief under verification: `docs/design-exploration.md`.
-- Next action: finish TASK-004 verification, then produce TASK-005's three distinct low-cost visual directions from external references.
+- Open visual exploration brief: `docs/design-exploration.md`.
+- TASK-004 verification: `docs/evidence/task-004-verification.md` against candidate `0d55118`.
+- Next action: TASK-005, produce three distinct low-cost visual directions from external references.
 - Open source-of-truth conflict: `AGENTS.md` says Babyora and free today-at-home; the newer product documents say Snudly and specify a later-session core paywall. Do not implement identity or monetization changes until reconciled.
 - Design boundary: preserve the approved four-tab information architecture as the starting structure; current colors, typography, spacing, component styling, imagery, and page layout are not locked.
 - Preserve the unrelated local loop/SN-007 changes already present in the worktree.

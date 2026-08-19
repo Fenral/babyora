@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 3/56 tasks complete
+> **Roadmap status:** 4/56 tasks complete
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -43,7 +43,7 @@
   Files: `docs/evidence/prototype-inventory.md`, `src/`
   Notes: Inventory domain logic, weather, state, billing, analytics, navigation, screens, components, and styles; label each preserve, adapt, replace, or investigate. Verify: no visual asset or token is labeled mandatory solely because it already exists.
 
-- [ ] **TASK-004** — Write the open visual exploration brief.
+- [x] **TASK-004** — Write the open visual exploration brief.
   Files: `docs/design-exploration.md`, `docs/product-vision.md`
   Notes: Define audience, emotion, accessibility, trust, magic moment, exclusions, and evaluation questions without selecting colors or a style. Verify: the brief permits at least three meaningfully different visual directions.
 
