@@ -1,7 +1,7 @@
-# Start here: Babyora (working name)
+# Start here: product repository
 
-**Updated:** 2026-07-13  
-**Status:** Planning is ready for review. Implementation is not authorized by this document.
+**Updated:** 2026-08-19
+**Status:** The owner authorized this product roadmap on 2026-08-19; execution follows `AGENTS.md`, while unresolved identity and monetization conflicts remain gated.
 
 This file is the authoritative entry point when the repository is opened from another computer, Claude, Codex, or GitHub.
 
@@ -9,7 +9,7 @@ This file is the authoritative entry point when the repository is opened from an
 
 - Product model: **Free = today at home. Plus = future, everywhere, and shared with family.**
 - Quality ambition: 90+ for the core screens and journeys, measured against the verification protocol rather than declared from visual impressions alone.
-- The existing design system is evolved, not replaced with a generic redesign.
+- The existing app is a functional foundation, not a locked visual system. Preserve verified behavior and the approved four-tab information architecture as the starting structure; colors, typography, spacing, component styling, imagery, and page layout remain open for documented exploration and target-user testing.
 - UX and motion work follows `docs/BABYORA-UX-MOTION-BIBLE.md` within the
   document precedence and approved implementation plans below.
 - Engine 2.0 v1 is limited to ages 0-24 months. Ages 25-71 are deferred to a later product phase. Synthetic materials are valid functional options alongside wool, cotton, fleece, shell fabrics, and relevant blends.
@@ -18,10 +18,10 @@ This file is the authoritative entry point when the repository is opened from an
 
 ## Naming and identity
 
-- **Vaerni is rejected.** The intended clothing association did not sound natural enough.
-- The public name remains open. Trademark, domains, app stores, and social handles require a current formal check after a new direction is approved.
-- `Klarune` was considered and then rejected because of similarity risk, pronunciation ambiguity, and rune/fantasy associations.
-- Selected logo concept: **Beskyttet kjerne / Protected core**. Existing symbol assets are concept-quality and name-neutral; a final wordmark waits for the naming gate.
+- `Vaerni`, `Klarune`, and `Uteklar` are rejected.
+- Repository identity sources currently conflict: `AGENTS.md` names Babyora, while the newer 2026-08-14 owner decision and product-roadmap documents name Snudly. Do not implement a rename until the governing files are reconciled.
+- Trademark, domains, app stores, and social handles require a current formal check before submission.
+- Selected logo concept: **Beskyttet kjerne / Protected core**. Existing symbol assets remain concept-quality until the identity conflict is resolved.
 
 ## Document precedence
 
@@ -55,7 +55,11 @@ Older files may still use Babyora or Klarune. That historical wording does not o
 12. `docs/superpowers/plans/2026-07-13-babyora-notifications-widgets-plan.md`
 13. `docs/superpowers/plans/2026-07-13-babyora-verification-protocol.md`
 
-Before implementing, summarize the current direction, identify contradictions, and ask the owner to confirm the first implementation package. Do not interpret repository access as permission to code.
+Before implementing, summarize the current direction and identify contradictions.
+The 2026-08-19 roadmap authorization permits automatic progress through
+`docs/product-roadmap.md`; stop at its human gates and at the risk, cost, safety,
+credential, and irreversible-action gates in `AGENTS.md` and the decision log.
+Repository access by itself is still not authorization for work outside that scope.
 
 ## Safe opening prompt for Claude
 
@@ -66,9 +70,11 @@ Before changing anything, report:
 1. the current product direction;
 2. approved decisions and unresolved gates;
 3. what must not be changed;
-4. the proposed first implementation package;
+4. the next unchecked authorized roadmap task;
 5. tests and acceptance evidence required for that package;
 6. any contradictions between documents.
 
-Do not modify code until I explicitly approve the implementation package.
+Continue the authorized roadmap automatically. Stop only when owner input,
+credentials, a physical action, an external reviewer, or another documented
+human gate is required.
 ```

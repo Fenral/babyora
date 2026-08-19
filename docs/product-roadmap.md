@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 1/56 tasks complete
+> **Roadmap status:** 2/56 tasks complete
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -35,7 +35,7 @@
   Files: `docs/evidence/baseline.md`, `package.json`
   Notes: Record install, test, lint, build, and smoke commands plus current pass/fail output; do not fix unrelated failures in this task. Verify: another session can reproduce every recorded command.
 
-- [ ] **TASK-002** — Map current implementation against the PRD requirements.
+- [x] **TASK-002** — Map current implementation against the PRD requirements.
   Files: `docs/evidence/implementation-matrix.md`, `docs/prd.md`
   Notes: Mark every `FR-001`–`FR-016` as verified, partial, missing, or conflicting and cite concrete files/tests. Verify: every requirement has exactly one status and one evidence link.
 

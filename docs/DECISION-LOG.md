@@ -2,6 +2,34 @@
 
 This log records current product decisions that override older exploratory material.
 
+## 2026-08-19
+
+### Product-roadmap execution authorized
+
+**Decision:** Start `TASK-001` in `docs/product-roadmap.md`, then continue the
+roadmap automatically without requiring a new owner message between tasks. Stop
+when genuine owner input, a credential, a physical action, an external reviewer,
+or another documented human gate is required. Existing `AGENTS.md` risk,
+cost, safety, irreversibility, verification, commit, and push rules still apply.
+
+**Reason:** Sivert explicitly instructed Codex to start `TASK-001` and asked to
+skip the need for a new message to start each following task, preferring the
+workflow to stop only when input is actually needed.
+
+### Existing app is a functional foundation, not a locked visual system
+
+**Decision:** Reuse verified behavior, domain logic, integrations, and the approved
+four-tab information architecture from the existing app. Colors, typography,
+spacing, component styling, imagery, and page layout remain open for exploration;
+the current design system and the light-mode presentation in the 2026-08-14 mock
+are reference material, not mandatory production styling.
+
+**Reason:** Sivert explicitly chose to provide the existing app as a functional
+starting point while declining to be locked to its colors or design system. This
+narrows the 2026-08-14 E-1 decision: its four-tab product structure remains the
+starting constraint, while its visual treatment may be replaced after external
+reference exploration and target-dad testing.
+
 ## 2026-08-14
 
 ### E-1 designkonflikten avgjort: mock er fasit (V3)

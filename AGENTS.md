@@ -20,6 +20,7 @@
 
 - **Governing process:** `docs/PROSESS-PLAN-TIL-KODE.md` (owner-approved 2026-07-15) is the authoritative plan→code process. Control scales with risk (lett/standard/høy lanes). It supersedes the old uniform `docs/superpowers/plans/2026-07-13-babyora-verification-protocol.md`, which is now subordinate.
 - **Active authorization (2026-07-24):** The owner has authorized autonomous planning, implementation, testing, independent review, documentation, commits, and green GitHub pushes for the current approved GSD worklist. No repeated owner approval is required while scope, truth constraints, and technical gates remain intact.
+- **Product-roadmap authorization (2026-08-19):** The owner explicitly authorized `docs/product-roadmap.md` TASK-001 through TASK-056 and asked that work continue automatically without a new message between tasks. Stop when owner input, a credential, a physical action, an external reviewer, a cost/irreversibility gate, or another documented human gate is required. This authorization does not resolve recorded identity or monetization conflicts and does not waive safety, privacy, verification, or source-of-truth rules.
 - Phase 2 and the independent foundation of Phase 3 may run in isolated branches/worktrees while Phase 1 finishes. Home-to-Outfit integration waits for the frozen Phase 2 interface contract.
 - During implementation, use one scoped task and one intentional commit at a time.
 - Do not push secrets, local `.env` files, credentials, private keys, generated dependency folders, or build output.

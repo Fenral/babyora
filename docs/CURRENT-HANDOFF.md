@@ -1,7 +1,20 @@
 # Current handoff
 
-**Updated:** 2026-07-22
-**Phase:** UX- og motionlæren er formalisert. Babyora-babyen er gjennomgående i onboarding, og Planlegg/Dagslinjen forblir en separat arbeidsstrøm.
+**Updated:** 2026-08-19
+**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 and TASK-002 are complete.
+
+## 2026-08-19: Product roadmap execution
+
+- Technical baseline: `docs/evidence/baseline.md`.
+- PRD implementation coverage: `docs/evidence/implementation-matrix.md`.
+- Next action: TASK-003, inventory reusable foundations versus replaceable prototype UI.
+- Open source-of-truth conflict: `AGENTS.md` says Babyora and free today-at-home; the newer product documents say Snudly and specify a later-session core paywall. Do not implement identity or monetization changes until reconciled.
+- Design boundary: preserve the approved four-tab information architecture as the starting structure; current colors, typography, spacing, component styling, imagery, and page layout are not locked.
+- Preserve the unrelated local loop/SN-007 changes already present in the worktree.
+
+All entries below this point are dated history. When they conflict with the
+2026-08-19 handoff above or `docs/CLAUDE-START-HERE.md`, they are not the current
+instruction.
 
 ## 2026-07-22: UX & Motion Bible godkjent
 
@@ -172,7 +185,7 @@ rettet i STORE-LISTING.md / APP-STORE-IAP-SETUP.md.)
 5. **Task 8 manuell evidens** — VoiceOver, haptikk, tekstskalering (enhet).
 6. **Fagsignatur** (fast-follow) — låser Motor V2 + R8-visning. Ikke v1-blokker.
 
-## Completed
+## Historical repository-initialization snapshot: completed (2026-07-13; superseded)
 
 - Product and architecture review.
 - Screen-by-screen UX/UI analysis and interactive HTML report.
@@ -185,14 +198,14 @@ rettet i STORE-LISTING.md / APP-STORE-IAP-SETUP.md.)
 - Full re-analysis and prioritized action summary, including the constrained avatar production direction.
 - Consolidated revision plan plus revised master, Motor V2, UI, family, calibration, notifications/widget, verification and governing design specifications.
 
-## Not completed or not approved
+## Historical repository-initialization snapshot: not completed (2026-07-13; superseded)
 
 - No public product name is approved. Vaerni is rejected.
 - The logo symbol and wordmark are not final production identity assets.
 - External professional review of safety-sensitive recommendation scenarios is outstanding.
 - No implementation phase has been authorized by the repository setup itself.
 
-## Repository baseline verification
+## Historical repository baseline verification (2026-07-13; superseded)
 
 Recorded during repository initialization on 2026-07-13:
 
@@ -201,7 +214,7 @@ Recorded during repository initialization on 2026-07-13:
 - `npm run build`: **passed** — application and bare build completed.
 - `npm run lint`: **failed on the existing baseline** — 17 errors and 2 warnings. No lint fixes were made because repository setup did not authorize code changes. The implementation plans require this baseline to be resolved as a separate behavior-preserving task.
 
-## Next decision
+## Historical next decision (2026-07-13; superseded)
 
 Claude should first review `docs/superpowers/plans/2026-07-13-babyora-analysis-and-action-summary.md` and `docs/superpowers/plans/2026-07-13-babyora-consolidated-revision-plan.md`. Together they lock 0–24 months, legacy safety containment first, one avatar identity, sitting/standing poses, outermost visible garments only, 24 target composites, NOK 1,000 direct generation budget, the five-parent North-Star gate, and the required model/effort for every implementation package. This is still planning; no app-code implementation is authorized.
 
@@ -217,7 +230,7 @@ After that review, choose and explicitly approve the first implementation packag
 
 ---
 
-# Superseding design handoff
+# Historical design handoff (superseded by decisions dated 2026-08-14 and later)
 
 For the current Hjem, scan, clothing-result and Planlegg direction, start with:
 
