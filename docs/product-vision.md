@@ -353,4 +353,18 @@ Most products in this category either stop at “feels like” temperature or ad
 
 ## 5. Visual Design
 
-Visual direction is intentionally open. The existing app, root `DESIGN.md`, CSS, and design-lab artifacts are reference material only; none locks the product to its current colors, typography, components, or layout. Before production styling, run a short design-exploration session with 2–5 external references, compare at least three distinct directions, and record the chosen **provisional** direction in `docs/design.md`. Treat that document as versioned guidance that may evolve after user testing—not as a permanent constraint.
+Visual direction is intentionally open. The active neutral contract is
+[`docs/design-exploration.md`](design-exploration.md): it asks how a tired
+first-time dad can understand and trust one outfit within five seconds, then
+defines the functional, safety, trust, and accessibility boundaries that every
+option must satisfy. It deliberately selects no color, typography, component
+character, imagery, density, theme, or design system.
+
+The existing app, root `DESIGN.md`, CSS, mockups, assets, and design-lab
+artifacts are reference material only. None is the control direction or locks
+the product to a current visual choice because it already exists. Before
+production styling, use external references to create at least three materially
+different directions, test the same onboarding/home/result scenario with five
+target dads, and record only the evidence-supported **provisional** direction
+in `docs/design.md`. Treat that document as versioned guidance that may evolve
+after user testing—not as a permanent constraint.

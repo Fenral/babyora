@@ -8,7 +8,8 @@
 - Technical baseline: `docs/evidence/baseline.md`.
 - PRD implementation coverage: `docs/evidence/implementation-matrix.md`.
 - Prototype foundation inventory: `docs/evidence/prototype-inventory.md`.
-- Next action: TASK-004, write the open visual exploration brief.
+- TASK-004 candidate brief under verification: `docs/design-exploration.md`.
+- Next action: finish TASK-004 verification, then produce TASK-005's three distinct low-cost visual directions from external references.
 - Open source-of-truth conflict: `AGENTS.md` says Babyora and free today-at-home; the newer product documents say Snudly and specify a later-session core paywall. Do not implement identity or monetization changes until reconciled.
 - Design boundary: preserve the approved four-tab information architecture as the starting structure; current colors, typography, spacing, component styling, imagery, and page layout are not locked.
 - Preserve the unrelated local loop/SN-007 changes already present in the worktree.
