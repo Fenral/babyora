@@ -125,9 +125,9 @@ const expectedHeadings = [
 const headings = [...md.matchAll(/^## (.+)$/gmu)].map((match) => match[1]);
 assert.deepEqual(headings, expectedHeadings, "Canonical prose headings must be unique and ordered");
 assert.equal(new Set(headings).size, headings.length, "Duplicate level-two headings are forbidden");
-assert.match(md, /TASK-006 target-dad testing is still deferred/u);
+assert.match(md, /owner waived TASK-006 target-dad testing on 2026-08-22/u);
 assert.match(md, /preserves the owner-supplied live deployment's result-first layout/u);
-assert.match(md, /Open until TASK-006 and implementation review:/u);
+assert.match(md, /Open after the TASK-006 waiver and through implementation review:/u);
 assert.match(md, /local source currently contains a three-root-tab variant/u);
 assert.match(md, /recorded in `docs\/evidence\/live-layout-audit\.md`/u);
 for (const screen of ["home", "planlegg", "verktoy", "familie", "dark-home", "dark-settings"]) {
@@ -135,7 +135,8 @@ for (const screen of ["home", "planlegg", "verktoy", "familie", "dark-home", "da
   await readFile(new URL(`./screenshots/live-${screen}.png`, import.meta.url));
 }
 assert.match(html, /id="theme-toggle"/u);
-assert.match(html, /Open until TASK-006/u);
+assert.match(html, /Open after TASK-006 waiver/u);
+assert.match(html, /TASK-006 waived by owner/u);
 assert.match(html, /live visual reference has four slots; local source has three root tabs/u);
 assert.match(html, /class="type-list" lang="no"/u);
 assert.match(html, /class="component-grid" lang="no"/u);

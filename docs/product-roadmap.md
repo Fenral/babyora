@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 6/56 tasks complete
+> **Roadmap status:** 7/56 tasks closed — 6 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -51,9 +51,9 @@
   Files: `docs/design-options.md`, `design-lab/`
   Notes: Create one representative onboarding/home/result concept per direction; vary color, type, density, imagery, and component character rather than making palette swaps. Verify: a reviewer can distinguish each direction without reading its title.
 
-- [ ] **TASK-006** — Test visual directions with five target dads.
+- [x] **TASK-006 — WAIVED BY OWNER 2026-08-22** — Test visual directions with five target dads.
   Files: `docs/evidence/design-test.md`, `docs/design-options.md`
-  Notes: Ask the same trust, clarity, speed, and preference questions; record observations separately from interpretation. Use responses to choose visual-language principles, not a replacement page structure: owner direction on 2026-08-19 keeps the current live layout as the production base. Verify: five responses and a short decision table are present.
+  Notes: The owner explicitly skipped this test after confirming it required five real people. Participant evidence remains 0/5; close this task only as waived, never passed or validated. The current live layout remains the production base and visual choices remain reversible because preference evidence was not collected.
 
 - [x] **TASK-007** — Record a provisional, versioned design direction.
   Files: `docs/design.md`, `docs/evidence/design-test.md`

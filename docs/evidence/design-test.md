@@ -1,6 +1,6 @@
 # TASK-006 design-test status
 
-**Status:** DEFERRED — no participant evidence has been collected.
+**Status:** WAIVED BY OWNER on 2026-08-22 — not tested and not passed.
 
 ## Owner direction
 
@@ -14,13 +14,18 @@ decision rather than silently changing the owner's selected visual reference. On
 design system, the owner said “Kjør på,” explicitly advancing design-system
 work without waiting for the five target-dad responses.
 
+Later on 2026-08-22, after confirming that the dad-test meant testing with five
+real people, the owner explicitly decided to skip the test. This closes the
+roadmap gate as an owner waiver; it does not create participant evidence or a
+positive test result.
+
 ## Evidence boundary
 
 - Participants completed: **0/5**.
 - Responses, observations, preference votes, and comprehension scores: **none**.
 - No response has been invented, proxied, inferred from the owner, or generated
   by an AI reviewer.
-- TASK-006 remains open and must not be represented as passed.
+- TASK-006 is closed as **waived**, never as passed or validated.
 - `docs/design.md` v0.1 is therefore provisional and reversible. Its evidence is
   limited to the owner layout decision, the live-app visual audit, existing
   product constraints, deterministic contrast checks, and implementation
@@ -29,9 +34,10 @@ work without waiting for the five target-dad responses.
   `docs/evidence/live-layout-audit.md` and
   `design-lab/task-007/screenshots/live-*.png`.
 
-## Deferred test
+## Waiver consequence
 
-When five target dads become available, use the counterbalanced order and five
-questions in `docs/design-exploration.md`. Use the results to refine visual
-language and trust cues; the current page structure remains the owner-selected
-base unless a later explicit decision reopens it.
+The roadmap may continue to TASK-008 without five target-dad responses. Visual
+preference confidence remains absent, so palette, type, component character,
+imagery, and motion stay reversible until real product use supplies better
+evidence. If the owner later reopens the test, use the counterbalanced order and
+five questions in `docs/design-exploration.md`.

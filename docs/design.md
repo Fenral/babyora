@@ -240,7 +240,7 @@ components:
 
 ## Overview
 
-Snudly Ro is a provisional v0.1 system for first-time Scandinavian dads making a quick clothing decision with one hand and limited attention. It preserves the owner-supplied live deployment's result-first layout, information order, 18 px mobile gutter, large working surfaces, and four-slot navigation by owner decision on 2026-08-19 and 2026-08-22. The reference was visually audited at `https://snudly.vercel.app/` on 2026-08-22 and recorded in `docs/evidence/live-layout-audit.md`. The local source currently contains a three-root-tab variant; that information-architecture difference is not silently resolved by this visual system and must be confirmed before implementation. The intended feeling is calm, warm, direct, and competent: an everyday decision aid, not a medical instrument and not generic pastel baby branding. The first visual priority is always the complete outfit answer and its short reason. TASK-006 target-dad testing is still deferred, so this system is explicitly reversible rather than a final brand lock.
+Snudly Ro is a provisional v0.1 system for first-time Scandinavian dads making a quick clothing decision with one hand and limited attention. It preserves the owner-supplied live deployment's result-first layout, information order, 18 px mobile gutter, large working surfaces, and four-slot navigation by owner decision on 2026-08-19 and 2026-08-22. The reference was visually audited at `https://snudly.vercel.app/` on 2026-08-22 and recorded in `docs/evidence/live-layout-audit.md`. The local source currently contains a three-root-tab variant; that information-architecture difference is not silently resolved by this visual system and must be confirmed before implementation. The intended feeling is calm, warm, direct, and competent: an everyday decision aid, not a medical instrument and not generic pastel baby branding. The first visual priority is always the complete outfit answer and its short reason. The owner waived TASK-006 target-dad testing on 2026-08-22. Because no preference evidence was collected, this system remains explicitly reversible rather than becoming a final brand lock.
 
 Evidence-locked for v0.1:
 
@@ -248,10 +248,10 @@ Evidence-locked for v0.1:
 - Keep the complete canonical outfit in dressing order; imagery supports the answer but never replaces its text.
 - Keep safety, weather age, stale data, offline state, and recovery actions explicit in words.
 
-Open until TASK-006 and implementation review:
+Open after the TASK-006 waiver and through implementation review:
 
 - Palette values, font personality, serif use, radii, elevation, and illustration style may change while semantic contrast roles remain.
-- Component density and motion timing may change after target-dad observation; reading order and reduced-motion behavior may not.
+- Component density and motion timing may change after observed product use or explicit owner review; reading order and reduced-motion behavior may not.
 - The live deployment has four navigation slots while local source has three root tabs. Confirm the destination model with the owner before changing navigation code; do not infer it from this styling reference.
 
 ## Colors

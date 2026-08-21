@@ -1,10 +1,13 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-005 and TASK-007 are complete. TASK-006 remains deferred and open.
+**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-007 are closed. TASK-006 was waived by owner, not passed. TASK-008 is next.
 
 ## 2026-08-22: Provisional Snudly Ro v0.1
 
+- **Owner waiver:** after confirming TASK-006 required testing with five real
+  dads, the owner explicitly decided to skip it. Record 0/5 participants and
+  continue to TASK-008; never describe the visual direction as user-tested.
 - Owner said “Kjør på” after the dad-test → visual language → design-system
   sequence was restated. TASK-007 was therefore completed without fabricating
   TASK-006 evidence; participant count remains 0/5.
@@ -17,8 +20,8 @@
 - Verified candidate: `b2aefbf`. Independent Sonnet/high exact-commit review:
   PASS with no P0–P3 findings. Full gate: 210/210 test files, 3,168 tests,
   lint, main+bare build, and 2/2 E2E scenarios PASS.
-- Verification record: `docs/evidence/task-007-verification.md`. Human gate:
-  TASK-006 still needs five real target dads; do not infer or proxy answers.
+- Verification record: `docs/evidence/task-007-verification.md`. TASK-006 is
+  closed only by owner waiver; visual choices stay reversible.
 - Preserve the unrelated local loop/SN-007 changes already present in the
   worktree.
 
@@ -31,7 +34,7 @@
 - TASK-004 verification: `docs/evidence/task-004-verification.md` against candidate `0d55118`.
 - Three title-blind visual candidates: `docs/design-options.md` and `design-lab/task-005/`.
 - TASK-005 verification: `docs/evidence/task-005-verification.md` against candidate `a632aa8`.
-- **Human gate / next action:** TASK-006 requires five real target dads to view the title-blind sheets and answer the same five questions in `docs/design-exploration.md`. Their responses select visual-language principles, not a replacement page structure. Do not invent, proxy, or infer these responses.
+- **Historical human gate — WAIVED 2026-08-22:** TASK-006 would have required five real target dads. No responses were collected or inferred.
 - Open source-of-truth conflict: `AGENTS.md` says Babyora and free today-at-home; the newer product documents say Snudly and specify a later-session core paywall. Do not implement identity or monetization changes until reconciled.
 - **Owner layout decision (2026-08-19):** use the current live Snudly layout, information order, and four-tab structure as the base for the new TASK-007 design system. Colors, typography, spacing tokens, component styling, imagery, and motion treatment remain open. The three TASK-005 candidates are visual-language probes, not competing production page structures.
 - Preserve the unrelated local loop/SN-007 changes already present in the worktree.

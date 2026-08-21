@@ -87,3 +87,10 @@ TASK-006 remains open. Five real target dads must still answer the same trust,
 clarity, speed, and preference questions before v0.1 can be treated as tested
 visual-language evidence. Their results may revise the open visual choices
 without replacing the preserved result-first product hierarchy.
+
+## Post-verification owner decision — 2026-08-22
+
+After candidate `b2aefbf` was verified, the owner explicitly waived TASK-006.
+The statement above records the gate at verification time; the current status
+is **closed as waived with 0/5 participants**, not passed or user-validated.
+Current status source: `docs/evidence/design-test.md`.
