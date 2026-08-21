@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Human-readable mirror of the Snudly Ro v0.1 design system." />
+    <title>Snudly Ro · Design System v0.1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,100..900&family=Schibsted+Grotesk:wght@400..900&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: light;
+
+        /* Colors — exact mirror of docs/design.md. */
+        --color-canvas: #EEF6F2;
+        --color-surface: #FFFDF8;
+        --color-surface-subtle: #DCEDE7;
+        --color-primary: #165B4C;
+        --color-on-primary: #FFFFFF;
+        --color-accent: #A64724;
+        --color-accent-pressed: #863A20;
+        --color-accent-soft: #F6E1D5;
+        --color-on-accent: #FFFFFF;
+        --color-on-surface: #15251F;
+        --color-on-surface-muted: #596B64;
+        --color-border: #CCDAD4;
+        --color-focus: #005FCC;
+        --color-success: #2F6B45;
+        --color-warning: #8C5A00;
+        --color-warning-surface: #FFF1D2;
+        --color-error: #B43A2A;
+        --color-info: #2F668C;
+        --color-disabled-surface: #D9E1DC;
+        --color-disabled-ink: #56665F;
+        --color-shadow: #274138;
+        --color-dark-canvas: #0C1B16;
+        --color-dark-surface: #142820;
+        --color-dark-surface-subtle: #1B332A;
+        --color-dark-primary: #A7D7C2;
+        --color-dark-on-primary: #0C1B16;
+        --color-dark-accent: #E89B74;
+        --color-dark-accent-pressed: #F0AE8B;
+        --color-dark-accent-soft: #3B291F;
+        --color-dark-on-accent: #2C160C;
+        --color-dark-on-surface: #F4EFE4;
+        --color-dark-on-surface-muted: #B8C6BE;
+        --color-dark-border: #355047;
+        --color-dark-focus: #FFD166;
+        --color-dark-success: #9DBF9A;
+        --color-dark-warning: #E0B45C;
+        --color-dark-warning-surface: #3A2D12;
+        --color-dark-error: #E58A72;
+        --color-dark-info: #8FB9D1;
+        --color-dark-disabled-surface: #243A32;
+        --color-dark-disabled-ink: #A8B8B0;
+        --color-dark-shadow: #000000;
+
+        /* Typography — every property mirrors the YAML scale. */
+        --type-wordmark-family: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, sans-serif;
+        --type-wordmark-size: 11px;
+        --type-wordmark-weight: 700;
+        --type-wordmark-leading: 1;
+        --type-wordmark-tracking: 0.24em;
+        --type-display-family: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, sans-serif;
+        --type-display-size: 36px;
+        --type-display-weight: 720;
+        --type-display-leading: 0.98;
+        --type-display-tracking: -0.04em;
+        --type-h1-family: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, sans-serif;
+        --type-h1-size: 32px;
+        --type-h1-weight: 700;
+        --type-h1-leading: 1.05;
+        --type-h1-tracking: -0.035em;
+        --type-h2-family: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, sans-serif;
+        --type-h2-size: 24px;
+        --type-h2-weight: 700;
+        --type-h2-leading: 1.15;
+        --type-h2-tracking: -0.025em;
+        --type-h3-family: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, sans-serif;
+        --type-h3-size: 18px;
+        --type-h3-weight: 680;
+        --type-h3-leading: 1.25;
+        --type-h3-tracking: -0.01em;
+        --type-body-family: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, sans-serif;
+        --type-body-size: 16px;
+        --type-body-weight: 450;
+        --type-body-leading: 1.5;
+        --type-body-strong-family: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, sans-serif;
+        --type-body-strong-size: 16px;
+        --type-body-strong-weight: 650;
+        --type-body-strong-leading: 1.4;
+        --type-label-family: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, sans-serif;
+        --type-label-size: 13px;
+        --type-label-weight: 650;
+        --type-label-leading: 1.3;
+        --type-caption-family: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, sans-serif;
+        --type-caption-size: 12px;
+        --type-caption-weight: 500;
+        --type-caption-leading: 1.4;
+        --type-data-large-family: 'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, sans-serif;
+        --type-data-large-size: 52px;
+        --type-data-large-weight: 680;
+        --type-data-large-leading: 0.92;
+        --type-data-large-tracking: -0.06em;
+        --type-profile-display-family: 'Fraunces', 'Fraunces Fallback', Georgia, serif;
+        --type-profile-display-size: 38px;
+        --type-profile-display-weight: 550;
+        --type-profile-display-leading: 1;
+        --type-profile-display-tracking: -0.025em;
+
+        /* Shape and spacing tokens. */
+        --rounded-none: 0px;
+        --rounded-small: 8px;
+        --rounded-control: 12px;
+        --rounded-card: 18px;
+        --rounded-panel: 20px;
+        --rounded-navigation: 28px;
+        --rounded-pill: 999px;
+        --space-micro: 2px;
+        --space-xsmall: 4px;
+        --space-small: 8px;
+        --space-medium: 12px;
+        --space-large: 16px;
+        --space-gutter: 18px;
+        --space-xlarge: 20px;
+        --space-xxlarge: 24px;
+        --space-section: 32px;
+        --space-spacious: 40px;
+        --space-screen: 48px;
+
+        /* Runtime theme aliases; token values above never change. */
+        --theme-canvas: var(--color-canvas);
+        --theme-surface: var(--color-surface);
+        --theme-surface-subtle: var(--color-surface-subtle);
+        --theme-primary: var(--color-primary);
+        --theme-on-primary: var(--color-on-primary);
+        --theme-accent: var(--color-accent);
+        --theme-accent-pressed: var(--color-accent-pressed);
+        --theme-accent-soft: var(--color-accent-soft);
+        --theme-on-accent: var(--color-on-accent);
+        --theme-on-surface: var(--color-on-surface);
+        --theme-on-surface-muted: var(--color-on-surface-muted);
+        --theme-border: var(--color-border);
+        --theme-focus: var(--color-focus);
+        --theme-success: var(--color-success);
+        --theme-warning: var(--color-warning);
+        --theme-warning-surface: var(--color-warning-surface);
+        --theme-error: var(--color-error);
+        --theme-info: var(--color-info);
+        --theme-disabled-surface: var(--color-disabled-surface);
+        --theme-disabled-ink: var(--color-disabled-ink);
+        --theme-shadow: var(--color-shadow);
+
+        /* Component tokens — exact semantic references from docs/design.md. */
+        --component-button-primary-bg: var(--theme-accent);
+        --component-button-primary-ink: var(--theme-on-accent);
+        --component-button-primary-pressed-bg: var(--theme-accent-pressed);
+        --component-button-disabled-bg: var(--theme-disabled-surface);
+        --component-button-disabled-ink: var(--theme-disabled-ink);
+        --component-button-secondary-bg: var(--theme-surface);
+        --component-button-secondary-ink: var(--theme-primary);
+        --component-button-height: 52px;
+        --component-weather-bg: var(--theme-surface-subtle);
+        --component-card-bg: var(--theme-surface);
+        --component-garment-row-height: 68px;
+        --component-chip-height: 44px;
+        --component-input-height: 52px;
+        --component-safety-bg: var(--theme-warning-surface);
+        --component-safety-ink: var(--theme-warning);
+        --component-nav-bg: var(--theme-surface);
+        --component-nav-height: 64px;
+        --component-nav-active-bg: var(--theme-accent-soft);
+        --component-nav-active-ink: var(--theme-accent);
+        --component-sheet-bg: var(--theme-surface);
+      }
+
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+        --theme-canvas: var(--color-dark-canvas);
+        --theme-surface: var(--color-dark-surface);
+        --theme-surface-subtle: var(--color-dark-surface-subtle);
+        --theme-primary: var(--color-dark-primary);
+        --theme-on-primary: var(--color-dark-on-primary);
+        --theme-accent: var(--color-dark-accent);
+        --theme-accent-pressed: var(--color-dark-accent-pressed);
+        --theme-accent-soft: var(--color-dark-accent-soft);
+        --theme-on-accent: var(--color-dark-on-accent);
+        --theme-on-surface: var(--color-dark-on-surface);
+        --theme-on-surface-muted: var(--color-dark-on-surface-muted);
+        --theme-border: var(--color-dark-border);
+        --theme-focus: var(--color-dark-focus);
+        --theme-success: var(--color-dark-success);
+        --theme-warning: var(--color-dark-warning);
+        --theme-warning-surface: var(--color-dark-warning-surface);
+        --theme-error: var(--color-dark-error);
+        --theme-info: var(--color-dark-info);
+        --theme-disabled-surface: var(--color-dark-disabled-surface);
+        --theme-disabled-ink: var(--color-dark-disabled-ink);
+        --theme-shadow: var(--color-dark-shadow);
+      }
+
+      * { box-sizing: border-box; }
+      html { background: var(--theme-canvas); scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        color: var(--theme-on-surface);
+        background: var(--theme-canvas);
+        font: var(--type-body-weight) var(--type-body-size) / var(--type-body-leading) var(--type-body-family);
+        transition: color 160ms ease, background 160ms ease;
+      }
+      button, input { font: inherit; }
+      button { cursor: pointer; }
+      button:focus-visible, input:focus-visible { outline: 3px solid var(--theme-focus); outline-offset: 3px; }
+      .wrap { width: min(1160px, calc(100% - (var(--space-gutter) * 2))); margin-inline: auto; }
+      .guide-header { padding: var(--space-screen) 0 var(--space-spacious); border-bottom: 1px solid var(--theme-border); }
+      .header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-xxlarge); }
+      .kicker { margin: 0 0 var(--space-small); color: var(--theme-accent); font: var(--type-wordmark-weight) var(--type-wordmark-size) / var(--type-wordmark-leading) var(--type-wordmark-family); letter-spacing: var(--type-wordmark-tracking); text-transform: uppercase; }
+      h1 { max-width: 700px; margin: 0; font: var(--type-display-weight) var(--type-display-size) / var(--type-display-leading) var(--type-display-family); letter-spacing: var(--type-display-tracking); }
+      .description { max-width: 680px; margin: var(--space-large) 0 0; color: var(--theme-on-surface-muted); }
+      .mirror-note { margin: var(--space-medium) 0 0; color: var(--theme-on-surface-muted); font: var(--type-caption-weight) var(--type-caption-size) / var(--type-caption-leading) var(--type-caption-family); }
+      .theme-toggle { min-width: 132px; min-height: 44px; padding: var(--space-small) var(--space-medium); color: var(--theme-on-surface); background: var(--theme-surface); border: 1px solid var(--theme-border); border-radius: var(--rounded-pill); }
+      main section { padding: var(--space-screen) 0; border-bottom: 1px solid var(--theme-border); }
+      .section-heading { display: grid; grid-template-columns: minmax(180px, 280px) 1fr; gap: var(--space-section); margin-bottom: var(--space-section); }
+      h2 { margin: 0; font: var(--type-h2-weight) var(--type-h2-size) / var(--type-h2-leading) var(--type-h2-family); letter-spacing: var(--type-h2-tracking); }
+      h3 { margin: 0; font: var(--type-h3-weight) var(--type-h3-size) / var(--type-h3-leading) var(--type-h3-family); letter-spacing: var(--type-h3-tracking); }
+      .section-heading p { max-width: 720px; margin: 0; color: var(--theme-on-surface-muted); }
+      .subheading { margin: var(--space-section) 0 var(--space-large); }
+      code { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.85em; }
+
+      .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--space-medium); }
+      .swatch { overflow: hidden; background: var(--theme-surface); border: 1px solid var(--theme-border); border-radius: var(--rounded-control); }
+      .swatch-color { display: flex; align-items: flex-end; min-height: 108px; padding: var(--space-medium); }
+      .swatch-color span { padding: var(--space-xsmall) var(--space-small); background: color-mix(in srgb, var(--theme-surface) 90%, transparent); border-radius: var(--rounded-small); color: var(--theme-on-surface); font: var(--type-caption-weight) var(--type-caption-size) / var(--type-caption-leading) var(--type-caption-family); }
+      .swatch-meta { padding: var(--space-medium); }
+      .swatch-meta strong, .swatch-meta code { display: block; }
+      .swatch-meta code { margin-top: var(--space-xsmall); color: var(--theme-on-surface-muted); }
+      .semantic-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-medium); }
+      .semantic { padding: var(--space-large); color: var(--theme-surface); border-radius: var(--rounded-control); }
+      .semantic strong { display: block; }
+
+      .type-list { display: grid; gap: var(--space-small); }
+      .type-row { display: grid; grid-template-columns: 190px 1fr; gap: var(--space-large); align-items: baseline; padding: var(--space-large); background: var(--theme-surface); border: 1px solid var(--theme-border); border-radius: var(--rounded-control); }
+      .type-spec { color: var(--theme-on-surface-muted); font: var(--type-caption-weight) var(--type-caption-size) / var(--type-caption-leading) var(--type-caption-family); }
+      .sample-wordmark { font: var(--type-wordmark-weight) var(--type-wordmark-size) / var(--type-wordmark-leading) var(--type-wordmark-family); letter-spacing: var(--type-wordmark-tracking); }
+      .sample-display { font: var(--type-display-weight) var(--type-display-size) / var(--type-display-leading) var(--type-display-family); letter-spacing: var(--type-display-tracking); }
+      .sample-h1 { font: var(--type-h1-weight) var(--type-h1-size) / var(--type-h1-leading) var(--type-h1-family); letter-spacing: var(--type-h1-tracking); }
+      .sample-h2 { font: var(--type-h2-weight) var(--type-h2-size) / var(--type-h2-leading) var(--type-h2-family); letter-spacing: var(--type-h2-tracking); }
+      .sample-h3 { font: var(--type-h3-weight) var(--type-h3-size) / var(--type-h3-leading) var(--type-h3-family); letter-spacing: var(--type-h3-tracking); }
+      .sample-body { font: var(--type-body-weight) var(--type-body-size) / var(--type-body-leading) var(--type-body-family); }
+      .sample-body-strong { font: var(--type-body-strong-weight) var(--type-body-strong-size) / var(--type-body-strong-leading) var(--type-body-strong-family); }
+      .sample-label { font: var(--type-label-weight) var(--type-label-size) / var(--type-label-leading) var(--type-label-family); }
+      .sample-caption { font: var(--type-caption-weight) var(--type-caption-size) / var(--type-caption-leading) var(--type-caption-family); }
+      .sample-data { font: var(--type-data-large-weight) var(--type-data-large-size) / var(--type-data-large-leading) var(--type-data-large-family); letter-spacing: var(--type-data-large-tracking); }
+      .sample-profile { font: var(--type-profile-display-weight) var(--type-profile-display-size) / var(--type-profile-display-leading) var(--type-profile-display-family); letter-spacing: var(--type-profile-display-tracking); }
+
+      .layout-grid { display: grid; grid-template-columns: 1fr 390px; gap: var(--space-section); align-items: start; }
+      .spacing-list { display: grid; gap: var(--space-medium); }
+      .spacing-row { display: grid; grid-template-columns: 90px 1fr 60px; gap: var(--space-medium); align-items: center; }
+      .spacing-bar { min-height: 10px; background: var(--theme-accent); border-radius: var(--rounded-small); }
+      .phone-map { width: 390px; max-width: 100%; padding: var(--space-gutter); background: var(--theme-canvas); border: 1px solid var(--theme-border); border-radius: var(--rounded-navigation); box-shadow: 0 18px 44px -24px color-mix(in srgb, var(--theme-shadow) 45%, transparent); }
+      .phone-map__weather { height: 132px; background: var(--theme-surface-subtle); border-radius: var(--rounded-panel); }
+      .phone-map__title { width: 62%; height: 24px; margin: var(--space-xlarge) 0 var(--space-small); background: var(--theme-on-surface); border-radius: var(--rounded-small); }
+      .phone-map__line { height: 68px; background: var(--theme-surface); border-bottom: 1px solid var(--theme-border); }
+      .phone-map__line:first-of-type { border-radius: var(--rounded-card) var(--rounded-card) 0 0; }
+      .phone-map__line:last-of-type { border: 0; border-radius: 0 0 var(--rounded-card) var(--rounded-card); }
+      .phone-map__nav { height: 64px; margin-top: var(--space-screen); background: var(--theme-surface); border-radius: var(--rounded-navigation); }
+      .radius-grid, .elevation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: var(--space-large); }
+      .radius-sample { min-height: 128px; padding: var(--space-medium); background: var(--theme-surface-subtle); border: 1px solid var(--theme-border); }
+      .radius-sample code { display: block; margin-top: var(--space-screen); }
+      .elevation { min-height: 150px; padding: var(--space-large); background: var(--theme-surface); border: 1px solid var(--theme-border); border-radius: var(--rounded-card); }
+      .elevation--low { box-shadow: 0 8px 24px -16px color-mix(in srgb, var(--theme-shadow) 34%, transparent); }
+      .elevation--medium { box-shadow: 0 18px 42px -20px color-mix(in srgb, var(--theme-shadow) 48%, transparent); }
+
+      .component-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-xxlarge); }
+      .component-demo { min-width: 0; padding: var(--space-xlarge); background: var(--theme-surface); border: 1px solid var(--theme-border); border-radius: var(--rounded-card); }
+      .component-demo > h3 { margin-bottom: var(--space-large); }
+      .demo-stack { display: grid; gap: var(--space-medium); }
+      .button-row { display: flex; flex-wrap: wrap; gap: var(--space-small); }
+      .btn { display: inline-flex; align-items: center; justify-content: center; min-width: 128px; height: var(--component-button-height); padding: var(--space-medium) var(--space-xlarge); border: 0; border-radius: var(--rounded-control); font: var(--type-body-strong-weight) var(--type-body-strong-size) / var(--type-body-strong-leading) var(--type-body-strong-family); }
+      .btn--primary { color: var(--component-button-primary-ink); background: var(--component-button-primary-bg); }
+      .btn--pressed { color: var(--component-button-primary-ink); background: var(--component-button-primary-pressed-bg); transform: translateY(1px); }
+      .btn--disabled { color: var(--component-button-disabled-ink); background: var(--component-button-disabled-bg); cursor: default; }
+      .btn--secondary { color: var(--component-button-secondary-ink); background: var(--component-button-secondary-bg); border: 1px solid var(--theme-border); }
+      .is-focused { outline: 3px solid var(--theme-focus); outline-offset: 3px; }
+      .weather-panel { display: grid; grid-template-columns: 1fr auto; min-height: 154px; padding: var(--space-large); color: var(--theme-on-surface); background: var(--component-weather-bg); border: 1px solid var(--theme-border); border-radius: var(--rounded-panel); }
+      .weather-panel__temperature { font: var(--type-data-large-weight) var(--type-data-large-size) / var(--type-data-large-leading) var(--type-data-large-family); letter-spacing: var(--type-data-large-tracking); }
+      .weather-panel__art { display: grid; width: 82px; height: 82px; place-items: center; color: var(--theme-primary); background: color-mix(in srgb, var(--theme-primary) 10%, transparent); border-radius: 50%; font-size: 36px; }
+      .card { padding: var(--space-large); background: var(--component-card-bg); border: 1px solid var(--theme-border); border-radius: var(--rounded-card); box-shadow: 0 8px 24px -16px color-mix(in srgb, var(--theme-shadow) 34%, transparent); }
+      .card p { margin: var(--space-xsmall) 0 0; color: var(--theme-on-surface-muted); }
+      .garment-list { overflow: hidden; background: var(--component-card-bg); border: 1px solid var(--theme-border); border-radius: var(--rounded-card); }
+      .garment-row { display: grid; grid-template-columns: 28px 44px 1fr auto; align-items: center; min-height: var(--component-garment-row-height); padding: var(--space-medium) var(--space-large); border-bottom: 1px solid var(--theme-border); }
+      .garment-row:last-child { border-bottom: 0; }
+      .garment-thumb { display: grid; width: 40px; height: 40px; place-items: center; background: var(--theme-surface-subtle); border-radius: var(--rounded-control); }
+      .garment-row small { display: block; color: var(--theme-on-surface-muted); }
+      .chips { display: flex; flex-wrap: wrap; gap: var(--space-small); }
+      .chip { min-height: var(--component-chip-height); padding: var(--space-small) var(--space-medium); color: var(--theme-primary); background: var(--theme-surface); border: 1px solid var(--theme-border); border-radius: var(--rounded-pill); font: var(--type-label-weight) var(--type-label-size) / var(--type-label-leading) var(--type-label-family); }
+      .chip--selected { color: var(--theme-on-primary); background: var(--theme-primary); border-color: var(--theme-primary); }
+      .input-wrap label { display: block; margin-bottom: var(--space-xsmall); color: var(--theme-on-surface-muted); font: var(--type-label-weight) var(--type-label-size) / var(--type-label-leading) var(--type-label-family); }
+      .input-wrap input { width: 100%; height: var(--component-input-height); padding: var(--space-medium) var(--space-large); color: var(--theme-on-surface); background: var(--theme-surface); border: 1px solid var(--theme-border); border-radius: var(--rounded-control); }
+      .safety { padding: var(--space-medium) var(--space-large); color: var(--component-safety-ink); background: var(--component-safety-bg); border-left: 4px solid var(--theme-warning); border-radius: var(--rounded-control); }
+      .safety strong, .safety span { display: block; }
+      .safety span { margin-top: var(--space-xsmall); color: var(--theme-on-surface); }
+      .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); min-height: var(--component-nav-height); padding: var(--space-small); background: var(--component-nav-bg); border: 1px solid var(--theme-border); border-radius: var(--rounded-navigation); box-shadow: 0 18px 36px -22px color-mix(in srgb, var(--theme-shadow) 48%, transparent); }
+      .nav-item { display: grid; min-height: 48px; place-items: center; color: var(--theme-on-surface-muted); border-radius: var(--rounded-card); font: var(--type-caption-weight) var(--type-caption-size) / var(--type-caption-leading) var(--type-caption-family); }
+      .nav-item--active { color: var(--component-nav-active-ink); background: var(--component-nav-active-bg); font-weight: 700; }
+      .sheet-stage { padding: var(--space-spacious) var(--space-large) 0; background: color-mix(in srgb, var(--theme-on-surface) 12%, transparent); border-radius: var(--rounded-card); }
+      .bottom-sheet { padding: var(--space-xlarge); color: var(--theme-on-surface); background: var(--component-sheet-bg); border-radius: var(--rounded-panel) var(--rounded-panel) 0 0; box-shadow: 0 -12px 36px -24px color-mix(in srgb, var(--theme-shadow) 48%, transparent); }
+      .sheet-handle { width: 40px; height: 4px; margin: 0 auto var(--space-large); background: var(--theme-border); border-radius: var(--rounded-pill); }
+      .sheet-actions { display: flex; gap: var(--space-small); margin-top: var(--space-large); }
+      .recovery-state { display: grid; grid-template-columns: auto 1fr; gap: var(--space-medium); align-items: start; padding: var(--space-large); color: var(--theme-on-surface); background: var(--theme-warning-surface); border: 1px solid var(--theme-warning); border-radius: var(--rounded-card); }
+      .recovery-state strong, .recovery-state span { display: block; }
+      .recovery-state span { margin-top: var(--space-xsmall); }
+      .rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xxlarge); }
+      .rule-column { padding: var(--space-xlarge); background: var(--theme-surface); border: 1px solid var(--theme-border); border-radius: var(--rounded-card); }
+      .rule-column h3 { display: flex; align-items: center; gap: var(--space-small); }
+      .rule-column ul { padding-left: var(--space-xlarge); margin: var(--space-large) 0 0; }
+      .rule-column li + li { margin-top: var(--space-small); }
+      .do h3 { color: var(--theme-success); }
+      .dont h3 { color: var(--theme-error); }
+      footer { padding: var(--space-section) 0 var(--space-screen); color: var(--theme-on-surface-muted); font: var(--type-caption-weight) var(--type-caption-size) / var(--type-caption-leading) var(--type-caption-family); }
+
+      @media (max-width: 760px) {
+        .header-row, .section-heading, .layout-grid, .component-grid, .rules-grid { grid-template-columns: 1fr; }
+        .header-row { flex-direction: column; }
+        .type-row { grid-template-columns: 1fr; }
+        .semantic-row { grid-template-columns: 1fr 1fr; }
+        .phone-map { width: 100%; }
+      }
+      @media (max-width: 430px) {
+        .wrap { width: calc(100% - (var(--space-gutter) * 2)); }
+        .swatch-grid, .semantic-row { grid-template-columns: 1fr; }
+        .button-row, .sheet-actions { flex-direction: column; }
+        .btn { width: 100%; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { transition: none !important; animation: none !important; }
+      }
+      @media (forced-colors: active) {
+        .card, .component-demo, .swatch, .bottom-nav, .phone-map, .garment-list { border: 1px solid CanvasText; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="guide-header">
+      <div class="wrap header-row">
+        <div>
+          <p class="kicker">Snudly · Design system · v0.1.0</p>
+          <h1>Snudly Ro</h1>
+          <p class="description">A calm Nordic care system that preserves Snudly's result-first mobile layout while making every decision faster to scan and easier to trust.</p>
+          <p class="mirror-note">Human-readable mirror of <code>docs/design.md</code>. The Markdown file is the source of truth.</p>
+        </div>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">Use dark theme</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="direction">
+        <div class="wrap">
+          <div class="section-heading"><h2>Direction contract</h2><p>v0.1 separates evidence-locked product behavior from visual choices that target-dad testing may still change.</p></div>
+          <div class="rules-grid">
+            <div class="rule-column do"><h3>Evidence-locked</h3><ul><li>Result before explanation and the observed information order.</li><li>18 px mobile gutter, one dominant region, and 44 px controls.</li><li>Complete canonical outfit in dressing order.</li><li>Safety, weather age, stale data, offline state, and recovery actions stated in words.</li></ul></div>
+            <div class="rule-column"><h3>Open until TASK-006</h3><ul><li>Palette values, font personality, serif use, radii, elevation, and illustration style.</li><li>Component density and motion timing, without changing reading order or reduced-motion behavior.</li><li>Root destinations: the live visual reference has four slots; local source has three root tabs. Confirm before implementation.</li></ul></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="colors">
+        <div class="wrap">
+          <div class="section-heading"><h2>Colors</h2><p>Pale Nordic green creates the room; warm-white surfaces hold decisions. Evergreen owns structure, terracotta owns genuine action, and semantic colors always pair with words or icons. Dark mode is a companion palette, not an inversion.</p></div>
+          <h3 class="subheading">Light tokens</h3>
+          <div class="swatch-grid">
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-canvas)"><span>Calm room</span></div><div class="swatch-meta"><strong>canvas</strong><code>#EEF6F2</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-surface)"><span>Decision paper</span></div><div class="swatch-meta"><strong>surface</strong><code>#FFFDF8</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-surface-subtle)"><span>Weather context</span></div><div class="swatch-meta"><strong>surface-subtle</strong><code>#DCEDE7</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-primary);color:var(--color-on-primary)"><span>Structure</span></div><div class="swatch-meta"><strong>primary</strong><code>#165B4C</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-on-primary)"><span>On primary</span></div><div class="swatch-meta"><strong>on-primary</strong><code>#FFFFFF</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-accent);color:var(--color-on-accent)"><span>Act now</span></div><div class="swatch-meta"><strong>accent</strong><code>#A64724</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-accent-pressed);color:var(--color-on-accent)"><span>Pressed</span></div><div class="swatch-meta"><strong>accent-pressed</strong><code>#863A20</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-accent-soft)"><span>Selected surface</span></div><div class="swatch-meta"><strong>accent-soft</strong><code>#F6E1D5</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-on-accent)"><span>On accent</span></div><div class="swatch-meta"><strong>on-accent</strong><code>#FFFFFF</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-on-surface);color:var(--color-surface)"><span>Primary ink</span></div><div class="swatch-meta"><strong>on-surface</strong><code>#15251F</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-on-surface-muted);color:var(--color-surface)"><span>Secondary ink</span></div><div class="swatch-meta"><strong>on-surface-muted</strong><code>#596B64</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-border)"><span>Boundaries</span></div><div class="swatch-meta"><strong>border</strong><code>#CCDAD4</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-focus);color:var(--color-on-primary)"><span>Keyboard focus</span></div><div class="swatch-meta"><strong>focus</strong><code>#005FCC</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-warning-surface)"><span>Safety surface</span></div><div class="swatch-meta"><strong>warning-surface</strong><code>#FFF1D2</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-disabled-surface)"><span style="color:var(--color-disabled-ink)">Unavailable</span></div><div class="swatch-meta"><strong>disabled-surface</strong><code>#D9E1DC</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-disabled-ink);color:var(--color-surface)"><span>Disabled ink</span></div><div class="swatch-meta"><strong>disabled-ink</strong><code>#56665F</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-shadow);color:var(--color-surface)"><span>Warm depth</span></div><div class="swatch-meta"><strong>shadow</strong><code>#274138</code></div></div>
+          </div>
+
+          <h3 class="subheading">Light semantic states</h3>
+          <div class="semantic-row">
+            <div class="semantic" style="background:var(--color-success)"><strong>success</strong><code>#2F6B45</code></div>
+            <div class="semantic" style="background:var(--color-warning)"><strong>warning</strong><code>#8C5A00</code></div>
+            <div class="semantic" style="background:var(--color-error)"><strong>error</strong><code>#B43A2A</code></div>
+            <div class="semantic" style="background:var(--color-info)"><strong>info</strong><code>#2F668C</code></div>
+          </div>
+
+          <h3 class="subheading">Dark tokens</h3>
+          <div class="swatch-grid">
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-canvas);color:var(--color-dark-on-surface)"><span>Night room</span></div><div class="swatch-meta"><strong>dark-canvas</strong><code>#0C1B16</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-surface);color:var(--color-dark-on-surface)"><span>Night paper</span></div><div class="swatch-meta"><strong>dark-surface</strong><code>#142820</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-surface-subtle);color:var(--color-dark-on-surface)"><span>Context</span></div><div class="swatch-meta"><strong>dark-surface-subtle</strong><code>#1B332A</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-primary);color:var(--color-dark-on-primary)"><span>Structure</span></div><div class="swatch-meta"><strong>dark-primary</strong><code>#A7D7C2</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-on-primary);color:var(--color-dark-on-surface)"><span>On primary</span></div><div class="swatch-meta"><strong>dark-on-primary</strong><code>#0C1B16</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-accent);color:var(--color-dark-on-accent)"><span>Act now</span></div><div class="swatch-meta"><strong>dark-accent</strong><code>#E89B74</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-accent-pressed);color:var(--color-dark-on-accent)"><span>Pressed</span></div><div class="swatch-meta"><strong>dark-accent-pressed</strong><code>#F0AE8B</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-accent-soft);color:var(--color-dark-on-surface)"><span>Selected surface</span></div><div class="swatch-meta"><strong>dark-accent-soft</strong><code>#3B291F</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-on-accent);color:var(--color-dark-on-surface)"><span>On accent</span></div><div class="swatch-meta"><strong>dark-on-accent</strong><code>#2C160C</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-on-surface);color:var(--color-dark-canvas)"><span>Primary ink</span></div><div class="swatch-meta"><strong>dark-on-surface</strong><code>#F4EFE4</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-on-surface-muted);color:var(--color-dark-canvas)"><span>Secondary ink</span></div><div class="swatch-meta"><strong>dark-on-surface-muted</strong><code>#B8C6BE</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-border);color:var(--color-dark-on-surface)"><span>Boundaries</span></div><div class="swatch-meta"><strong>dark-border</strong><code>#355047</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-focus);color:var(--color-dark-on-primary)"><span>Keyboard focus</span></div><div class="swatch-meta"><strong>dark-focus</strong><code>#FFD166</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-warning-surface);color:var(--color-dark-on-surface)"><span>Safety surface</span></div><div class="swatch-meta"><strong>dark-warning-surface</strong><code>#3A2D12</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-disabled-surface);color:var(--color-dark-disabled-ink)"><span>Unavailable</span></div><div class="swatch-meta"><strong>dark-disabled-surface</strong><code>#243A32</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-disabled-ink);color:var(--color-dark-canvas)"><span>Disabled ink</span></div><div class="swatch-meta"><strong>dark-disabled-ink</strong><code>#A8B8B0</code></div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--color-dark-shadow);color:var(--color-dark-on-surface)"><span>Night depth</span></div><div class="swatch-meta"><strong>dark-shadow</strong><code>#000000</code></div></div>
+          </div>
+
+          <h3 class="subheading">Dark semantic states</h3>
+          <div class="semantic-row">
+            <div class="semantic" style="background:var(--color-dark-success);color:var(--color-dark-on-primary)"><strong>dark-success</strong><code>#9DBF9A</code></div>
+            <div class="semantic" style="background:var(--color-dark-warning);color:var(--color-dark-on-primary)"><strong>dark-warning</strong><code>#E0B45C</code></div>
+            <div class="semantic" style="background:var(--color-dark-error);color:var(--color-dark-on-primary)"><strong>dark-error</strong><code>#E58A72</code></div>
+            <div class="semantic" style="background:var(--color-dark-info);color:var(--color-dark-on-primary)"><strong>dark-info</strong><code>#8FB9D1</code></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="typography">
+        <div class="wrap">
+          <div class="section-heading"><h2>Typography</h2><p>Schibsted Grotesk carries every decision and action. Fraunces appears only in human profile moments—never in weather, safety, prices, or garment instructions.</p></div>
+          <div class="type-list" lang="no">
+            <div class="type-row"><div class="type-spec"><code>wordmark</code><br />11 / 700 / 1 / .24em</div><div class="sample-wordmark">SNUDLY</div></div>
+            <div class="type-row"><div class="type-spec"><code>display</code><br />36 / 720 / .98</div><div class="sample-display">Dagens antrekk</div></div>
+            <div class="type-row"><div class="type-spec"><code>h1</code><br />32 / 700 / 1.05</div><div class="sample-h1">Hva trenger vi senere?</div></div>
+            <div class="type-row"><div class="type-spec"><code>h2</code><br />24 / 700 / 1.15</div><div class="sample-h2">De som passer</div></div>
+            <div class="type-row"><div class="type-spec"><code>h3</code><br />18 / 680 / 1.25</div><div class="sample-h3">Ta av ulljakken</div></div>
+            <div class="type-row"><div class="type-spec"><code>body</code><br />16 / 450 / 1.5</div><div class="sample-body">Været er bare tidslinjen. Plaggbyttet er beslutningen.</div></div>
+            <div class="type-row"><div class="type-spec"><code>body-strong</code><br />16 / 650 / 1.4</div><div class="sample-body-strong">Tykt ullsett</div></div>
+            <div class="type-row"><div class="type-spec"><code>label</code><br />13 / 650 / 1.3</div><div class="sample-label">NESTE KLESBYTTE · 14:00</div></div>
+            <div class="type-row"><div class="type-spec"><code>caption</code><br />12 / 500 / 1.4</div><div class="sample-caption">Føles som 6° · Oppdatert 08:10</div></div>
+            <div class="type-row"><div class="type-spec"><code>data-large</code><br />52 / 680 / .92</div><div class="sample-data">7°</div></div>
+            <div class="type-row"><div class="type-spec"><code>profile-display</code><br />38 / 550 / 1</div><div class="sample-profile">Lillian</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="spacing">
+        <div class="wrap">
+          <div class="section-heading"><h2>Spacing & layout</h2><p>The 2-pixel rhythm and 18 px gutter are derived from the owner-supplied live deployment audited on 22 August 2026 and recorded in <code>docs/evidence/live-layout-audit.md</code>. Its four-slot shell remains the visual reference; local source currently has three root tabs, so destination mapping requires owner confirmation before implementation.</p></div>
+          <div class="layout-grid">
+            <div class="spacing-list">
+              <div class="spacing-row"><code>micro</code><div class="spacing-bar" style="width:var(--space-micro)"></div><span>2px</span></div>
+              <div class="spacing-row"><code>xsmall</code><div class="spacing-bar" style="width:var(--space-xsmall)"></div><span>4px</span></div>
+              <div class="spacing-row"><code>small</code><div class="spacing-bar" style="width:var(--space-small)"></div><span>8px</span></div>
+              <div class="spacing-row"><code>medium</code><div class="spacing-bar" style="width:var(--space-medium)"></div><span>12px</span></div>
+              <div class="spacing-row"><code>large</code><div class="spacing-bar" style="width:var(--space-large)"></div><span>16px</span></div>
+              <div class="spacing-row"><code>gutter</code><div class="spacing-bar" style="width:var(--space-gutter)"></div><span>18px</span></div>
+              <div class="spacing-row"><code>xlarge</code><div class="spacing-bar" style="width:var(--space-xlarge)"></div><span>20px</span></div>
+              <div class="spacing-row"><code>xxlarge</code><div class="spacing-bar" style="width:var(--space-xxlarge)"></div><span>24px</span></div>
+              <div class="spacing-row"><code>section</code><div class="spacing-bar" style="width:var(--space-section)"></div><span>32px</span></div>
+              <div class="spacing-row"><code>spacious</code><div class="spacing-bar" style="width:var(--space-spacious)"></div><span>40px</span></div>
+              <div class="spacing-row"><code>screen</code><div class="spacing-bar" style="width:var(--space-screen)"></div><span>48px</span></div>
+            </div>
+            <div class="phone-map" aria-label="Preserved Home layout map">
+              <div class="phone-map__weather"></div>
+              <div class="phone-map__title"></div>
+              <div class="phone-map__line"></div><div class="phone-map__line"></div><div class="phone-map__line"></div><div class="phone-map__line"></div>
+              <div class="phone-map__nav"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="radius">
+        <div class="wrap">
+          <div class="section-heading"><h2>Radius</h2><p>Mixed but disciplined: controls are compact, content cards are warm, major panels are calm, and pills are reserved for choices.</p></div>
+          <div class="radius-grid">
+            <div class="radius-sample" style="border-radius:var(--rounded-none)"><strong>none</strong><code>0px</code></div>
+            <div class="radius-sample" style="border-radius:var(--rounded-small)"><strong>small</strong><code>8px</code></div>
+            <div class="radius-sample" style="border-radius:var(--rounded-control)"><strong>control</strong><code>12px</code></div>
+            <div class="radius-sample" style="border-radius:var(--rounded-card)"><strong>card</strong><code>18px</code></div>
+            <div class="radius-sample" style="border-radius:var(--rounded-panel)"><strong>panel</strong><code>20px</code></div>
+            <div class="radius-sample" style="border-radius:var(--rounded-navigation)"><strong>navigation</strong><code>28px</code></div>
+            <div class="radius-sample" style="border-radius:var(--rounded-pill)"><strong>pill</strong><code>999px</code></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="elevation">
+        <div class="wrap">
+          <div class="section-heading"><h2>Elevation & depth</h2><p>Warm, quiet shadows support grouping. Hairlines do most of the structural work; dark mode leans further on borders.</p></div>
+          <div class="elevation-grid">
+            <div class="elevation"><h3>Flat</h3><p>Garment rows share a parent surface and use hairline separation.</p></div>
+            <div class="elevation elevation--low"><h3>Low</h3><p>Cards, weather panels, and the floating navigation.</p></div>
+            <div class="elevation elevation--medium"><h3>Medium</h3><p>Modal and bottom-sheet separation only.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="components">
+        <div class="wrap">
+          <div class="section-heading"><h2>Components</h2><p>One primary action, honest states, 44 px minimum targets, and canonical garment text. Motion connects Home to the result but never delays or reorders the answer.</p></div>
+          <div class="component-grid" lang="no">
+            <article class="component-demo"><h3>Knapper</h3><div class="button-row"><button class="btn btn--primary">Hovedvalg</button><button class="btn btn--pressed">Aktiv</button><button class="btn btn--disabled" disabled>Deaktivert</button><button class="btn btn--secondary">Sekundær</button><button class="btn btn--secondary is-focused">Fokus</button></div></article>
+            <article class="component-demo"><h3>Værpanel</h3><div class="weather-panel"><div><span class="sample-caption">TRONDHEIM</span><div class="weather-panel__temperature">7°</div><strong>Føles som 6°</strong><div class="sample-caption">Vind 3 m/s · Regn 0,4 mm</div></div><div class="weather-panel__art" aria-hidden="true">☁</div></div></article>
+            <article class="component-demo"><h3>Innholdskort</h3><div class="card"><h3>Hva trenger vi senere?</h3><p>I morgen blir det én grad kaldere tidlig. Legg til ett lag.</p></div></article>
+            <article class="component-demo"><h3>Plaggrader</h3><div class="garment-list"><div class="garment-row"><span>01</span><span class="garment-thumb">♧</span><span><strong>Tykt ullsett</strong><small>Innerst</small></span><span>›</span></div><div class="garment-row"><span>02</span><span class="garment-thumb">◇</span><span><strong>Ulljakke</strong><small>Mellomlag</small></span><span>›</span></div></div></article>
+            <article class="component-demo"><h3>Valg</h3><div class="chips"><button class="chip chip--selected" aria-pressed="true">Utelek</button><button class="chip" aria-pressed="false">I vogn</button><button class="chip" aria-pressed="false">Bæresele</button></div></article>
+            <article class="component-demo"><h3>Inndata</h3><div class="input-wrap"><label for="child-name">Barnets navn</label><input id="child-name" value="Lillian" /></div></article>
+            <article class="component-demo"><h3>Sikkerhetsvarsel</h3><div class="safety"><strong>Viktig i vogn</strong><span>Ikke dekk til vognåpningen. Kjenn i nakken etter 10 minutter.</span></div></article>
+            <article class="component-demo"><h3>Datastatus</h3><div class="recovery-state"><span aria-hidden="true">↻</span><div><strong>Været er ikke oppdatert</strong><span>Sist hentet for 34 minutter siden.</span><button class="btn btn--secondary">Prøv igjen</button></div></div></article>
+            <article class="component-demo"><h3>Bunnavigasjon</h3><nav class="bottom-nav" aria-label="Eksempel på bunnavigasjon"><span class="nav-item nav-item--active">⌂<small>Hjem</small></span><span class="nav-item">□<small>Planlegg</small></span><span class="nav-item">＋<small>Verktøy</small></span><span class="nav-item">○<small>Familie</small></span></nav></article>
+            <article class="component-demo"><h3>Bunnark</h3><div class="sheet-stage"><div class="bottom-sheet"><div class="sheet-handle"></div><h3>Velg situasjon</h3><p class="sample-caption">Aktiviteten endrer hvor mye varme barnet trenger.</p><div class="sheet-actions"><button class="btn btn--primary">I vogn</button><button class="btn btn--secondary">Utelek</button></div></div></div></article>
+          </div>
+        </div>
+      </section>
+
+      <section id="rules">
+        <div class="wrap">
+          <div class="section-heading"><h2>Do's and don'ts</h2><p>Specific guardrails keep the system useful when new screens and agents extend it.</p></div>
+          <div class="rules-grid">
+            <div class="rule-column do"><h3>✓ Do</h3><ul><li>Keep the answer before explanation.</li><li>Use the audited four-slot live shell as the visual reference; confirm root destinations before implementation.</li><li>Use one emphasized action.</li><li>Show weather age, reason, and safety boundary in text.</li><li>Let imagery support canonical garment names.</li><li>Allow layout to grow vertically with larger text.</li></ul></div>
+            <div class="rule-column dont"><h3>✗ Don't</h3><ul><li>Turn Home into a weather dashboard.</li><li>Use cuteness as evidence.</li><li>Spread terracotta across decoration.</li><li>Place serif on instructions or safety.</li><li>Create a card for every line.</li><li>Use color, opacity, animation, or a baby character as the only carrier of meaning.</li></ul></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer><div class="wrap">Snudly Ro v0.1.0 · Provisional until target-dad testing · Source of truth: <code>docs/design.md</code></div></footer>
+
+    <script>
+      const button = document.querySelector('#theme-toggle');
+      button.addEventListener('click', () => {
+        const isDark = document.documentElement.dataset.theme === 'dark';
+        document.documentElement.dataset.theme = isDark ? 'light' : 'dark';
+        button.setAttribute('aria-pressed', String(!isDark));
+        button.textContent = isDark ? 'Use dark theme' : 'Use light theme';
+      });
+    </script>
+  </body>
+</html>
