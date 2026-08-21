@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 5/56 tasks complete
+> **Roadmap status:** 6/56 tasks complete
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -55,7 +55,7 @@
   Files: `docs/evidence/design-test.md`, `docs/design-options.md`
   Notes: Ask the same trust, clarity, speed, and preference questions; record observations separately from interpretation. Use responses to choose visual-language principles, not a replacement page structure: owner direction on 2026-08-19 keeps the current live layout as the production base. Verify: five responses and a short decision table are present.
 
-- [ ] **TASK-007** — Record a provisional, versioned design direction.
+- [x] **TASK-007** — Record a provisional, versioned design direction.
   Files: `docs/design.md`, `docs/evidence/design-test.md`
   Notes: Build a new v0.1 design system on the current live layout, information order, and four-tab structure; replace visual tokens and component styling only where supported by evidence. Document tokens and interaction rules, explicitly listing what remains open and how the direction may change. Verify: `docs/design.md` contains a version, decision date, evidence, preserved-layout contract, and reversible assumptions.
 

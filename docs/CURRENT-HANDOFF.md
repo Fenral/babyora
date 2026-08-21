@@ -1,7 +1,26 @@
 # Current handoff
 
-**Updated:** 2026-08-19
-**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-005 are complete.
+**Updated:** 2026-08-22
+**Phase:** Product roadmap Phase 0 is active on `codex/phase-0/baseline-and-design-exploration`; TASK-001 through TASK-005 and TASK-007 are complete. TASK-006 remains deferred and open.
+
+## 2026-08-22: Provisional Snudly Ro v0.1
+
+- Owner said “Kjør på” after the dad-test → visual language → design-system
+  sequence was restated. TASK-007 was therefore completed without fabricating
+  TASK-006 evidence; participant count remains 0/5.
+- Machine source of truth: `docs/design.md`. Human visual mirror:
+  `docs/design.html`. Both preserve the owner-supplied live result-first layout
+  while keeping visual choices reversible.
+- Live reference record: `docs/evidence/live-layout-audit.md` plus six captured
+  light/dark screens. The live four-slot shell and local three-root-tab source
+  divergence require owner confirmation before navigation implementation.
+- Verified candidate: `b2aefbf`. Independent Sonnet/high exact-commit review:
+  PASS with no P0–P3 findings. Full gate: 210/210 test files, 3,168 tests,
+  lint, main+bare build, and 2/2 E2E scenarios PASS.
+- Verification record: `docs/evidence/task-007-verification.md`. Human gate:
+  TASK-006 still needs five real target dads; do not infer or proxy answers.
+- Preserve the unrelated local loop/SN-007 changes already present in the
+  worktree.
 
 ## 2026-08-19: Product roadmap execution
 
