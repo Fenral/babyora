@@ -1,7 +1,24 @@
 # Current handoff
 
 **Updated:** 2026-08-22
-**Phase:** Product roadmap Phases 0 and 1 are closed. Phase 2 is active on `codex/phase-2/subscription-and-observability`. TASK-021 waits for owner-authenticated sandbox evidence; owner authorized independent local work, and TASK-022 is complete.
+**Phase:** Product roadmap Phases 0 and 1 are closed. Phase 2 is active on `codex/phase-2/subscription-and-observability`. TASK-021 waits for owner-authenticated sandbox evidence; owner authorized independent local work, and TASK-022–023 are complete.
+
+## 2026-08-22: TASK-023 complete first-value paywall gate
+
+- The first recommendation timestamp persists, but the current-session grace
+  flag has an explicit non-persisted contract. Blocked or corrupt browser
+  storage fails open to another first-result session instead of crashing or
+  showing a premature paywall.
+- A locked Planlegg action cannot consume grace before a genuine result exists.
+  After the result, both primary and programmatic Planlegg entry points close
+  grace; a later action or the next app session can then open the hard paywall.
+- Only the exact `?seed=demo` test URL can override the entitlement; unrelated
+  query parameters cannot activate demo Premium state.
+- Verification passed 33/33 focused tests, full lint/typecheck/build, 217/217
+  test files with 3,327 passing and 1 todo, and 4/4 browser purchase-gate
+  scenarios including session-one free reading and session-two paywall.
+  Record: `docs/evidence/task-023-verification.md`. **Next local task:**
+  TASK-024. TASK-021 remains open for owner sandbox evidence.
 
 ## 2026-08-22: TASK-022 complete typed purchase contract
 

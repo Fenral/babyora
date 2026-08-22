@@ -324,6 +324,7 @@ export default function App(): ReactElement {
     if (target === 'snart') {
       setDrill(null);
       setTab('plan');
+      useSubscription.getState().consumeRecommendationGraceWindow();
       setRequestedPlanViewState((current) => issueRequestedPlanningView(current, 'snart'));
       window.requestAnimationFrame(() => mainRef.current?.focus());
       return;

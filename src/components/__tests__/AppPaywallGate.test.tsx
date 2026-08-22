@@ -15,6 +15,37 @@ import { AppPaywallGate, HARD_PAYWALL_ENABLED, isHardPaywallDue } from '../AppPa
 import { useSubscription } from '../../state/subscription-store';
 
 describe('isHardPaywallDue', () => {
+  it('full sekvens: tidlig Planlegg-trykk kan ikke stjele første resultat; neste trykk kan gate', () => {
+    useSubscription.setState({
+      firstRecommendationSeenAt: null,
+      recommendationGraceWindowActive: true,
+      isPremium: false,
+    });
+
+    useSubscription.getState().consumeRecommendationGraceWindow();
+    useSubscription.getState().markFirstRecommendationSeen();
+    const afterFirstResult = useSubscription.getState();
+    expect(isHardPaywallDue({
+      enabled: true,
+      onboardingDone: true,
+      firstRecommendationSeenAt: afterFirstResult.firstRecommendationSeenAt,
+      recommendationGraceWindowActive: afterFirstResult.recommendationGraceWindowActive,
+      isPremium: false,
+      loading: false,
+    })).toBe(false);
+
+    useSubscription.getState().consumeRecommendationGraceWindow();
+    const afterApprovedNextAction = useSubscription.getState();
+    expect(isHardPaywallDue({
+      enabled: true,
+      onboardingDone: true,
+      firstRecommendationSeenAt: afterApprovedNextAction.firstRecommendationSeenAt,
+      recommendationGraceWindowActive: afterApprovedNextAction.recommendationGraceWindowActive,
+      isPremium: false,
+      loading: false,
+    })).toBe(true);
+  });
+
   it('onboarding ikke fullført → ingen gate, uansett andre felt', () => {
     expect(isHardPaywallDue({
       enabled: true,

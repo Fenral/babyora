@@ -55,7 +55,7 @@ import { persist } from 'zustand/middleware';
  */
 export function resolveDemoEntitlementOverride(search: string): boolean | null {
   const params = new URLSearchParams(search);
-  if (!params.has('seed')) return null;
+  if (params.get('seed') !== 'demo') return null;
   if (params.get('entitlement') === 'none') return false;
   return true;
 }
@@ -63,6 +63,8 @@ export function resolveDemoEntitlementOverride(search: string): boolean | null {
 const DEMO_ENTITLEMENT_OVERRIDE = typeof window === 'undefined'
   ? null
   : resolveDemoEntitlementOverride(window.location.search);
+
+const PERSIST_KEY = 'babyora.subscription';
 
 /**
  * P9 (duel §8) — ren funksjon: fantes det ALLEREDE et
@@ -76,13 +78,23 @@ export function hadFirstRecommendationBeforeBoot(persistedRawJson: string | null
   try {
     const parsed = JSON.parse(persistedRawJson) as { state?: { firstRecommendationSeenAt?: unknown } };
     const value = parsed?.state?.firstRecommendationSeenAt;
-    return typeof value === 'number' && Number.isFinite(value);
+    return typeof value === 'number' && Number.isInteger(value) && value > 0;
   } catch {
     return false;
   }
 }
 
-const PERSIST_KEY = 'babyora.subscription';
+/** Leser boot-signalet uten at blokkert/korrupt browser-storage kan krasje appen. */
+export function readFirstRecommendationBeforeBoot(
+  storage: Pick<Storage, 'getItem'> | null,
+): boolean {
+  if (storage === null) return false;
+  try {
+    return hadFirstRecommendationBeforeBoot(storage.getItem(PERSIST_KEY));
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Avledet ÉN gang ved modul-last (samme mønster som DEMO_ENTITLEMENT_OVERRIDE
@@ -94,7 +106,9 @@ const PERSIST_KEY = 'babyora.subscription';
  */
 const HAD_FIRST_RECOMMENDATION_BEFORE_THIS_BOOT = typeof window === 'undefined'
   ? false
-  : hadFirstRecommendationBeforeBoot(window.localStorage.getItem(PERSIST_KEY));
+  : readFirstRecommendationBeforeBoot({
+      getItem: (key) => window.localStorage.getItem(key),
+    });
 
 export type SubscriptionState = {
   /** Aktiv Premium-entitlement (cachet siste kjente verdi). */
@@ -115,8 +129,8 @@ export type SubscriptionState = {
    * `firstRecommendationSeenAt` ikke allerede var satt FØR økten startet —
    * brukeren får lese den ene første anbefalingen ferdig uten at gaten
    * auto-overlayer. Flippes usann av `consumeRecommendationGraceWindow()`
-   * (en låst verdihandling — «Planlegg»-fanen, aktivitetsendring, Juster —
-   * ble tatt DENNE økten) ELLER er allerede usann fra økt-start hvis
+   * (den godkjente låste verdihandlingen i «Planlegg»-fanen ble tatt DENNE
+   * økten) ELLER er allerede usann fra økt-start hvis
    * anbefalingen ble sett en TIDLIGERE økt (neste kalde app-åpning viser
    * veggen direkte, uten noe klikk).
    */
@@ -127,6 +141,22 @@ export type SubscriptionState = {
   /** No-op hvis vinduet allerede er lukket. Se recommendationGraceWindowActive. */
   consumeRecommendationGraceWindow: () => void;
 };
+
+export type PersistedSubscriptionState = Pick<
+  SubscriptionState,
+  'isPremium' | 'lastSyncedAt' | 'firstRecommendationSeenAt'
+>;
+
+/** Session-grace er med vilje ikke del av den persisterte kontrakten. */
+export function selectPersistedSubscriptionState(
+  state: SubscriptionState,
+): PersistedSubscriptionState {
+  return {
+    isPremium: state.isPremium,
+    lastSyncedAt: state.lastSyncedAt,
+    firstRecommendationSeenAt: state.firstRecommendationSeenAt,
+  };
+}
 
 export const useSubscription = create<SubscriptionState>()(
   persist(
@@ -141,7 +171,11 @@ export const useSubscription = create<SubscriptionState>()(
         set({ firstRecommendationSeenAt: Date.now() });
       },
       consumeRecommendationGraceWindow: () => {
-        if (!get().recommendationGraceWindowActive) return;
+        const state = get();
+        if (
+          !state.recommendationGraceWindowActive
+          || state.firstRecommendationSeenAt === null
+        ) return;
         set({ recommendationGraceWindowActive: false });
       },
     }),
@@ -150,11 +184,7 @@ export const useSubscription = create<SubscriptionState>()(
       // P9: recommendationGraceWindowActive er BEVISST utelatt — den skal
       // regnes ut på nytt hver økt (se HAD_FIRST_RECOMMENDATION_BEFORE_THIS_BOOT),
       // aldri gjenbrukes fra en tidligere persistert verdi.
-      partialize: (state) => ({
-        isPremium: state.isPremium,
-        lastSyncedAt: state.lastSyncedAt,
-        firstRecommendationSeenAt: state.firstRecommendationSeenAt,
-      }),
+      partialize: selectPersistedSubscriptionState,
     },
   ),
 );

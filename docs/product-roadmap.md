@@ -1,6 +1,6 @@
 # Product Roadmap — Snudly
 
-> **Roadmap status:** 21/56 tasks closed — 20 complete, 1 waived
+> **Roadmap status:** 22/56 tasks closed — 21 complete, 1 waived
 >
 > **Primary launch:** Norwegian iOS validation and release
 >
@@ -147,7 +147,7 @@
   Files: `src/lib/billing/revenuecat.ts`, `src/lib/billing/revenuecat.test.ts`
   Notes: Distinguish success, cancellation, pending, unavailable, entitlement-missing, and error; guard duplicate taps. Verify: adapter tests cover every outcome without real billing calls.
 
-- [ ] **TASK-023** — Gate the paywall until after the first genuine recommendation.
+- [x] **TASK-023** — Gate the paywall until after the first genuine recommendation.
   Files: `src/state/subscription.ts`, `src/components/PaywallDialog.tsx`, `src/state/subscription.test.ts`
   Notes: Persist first-value state safely and define the approved next value action/session that may open the paywall. Verify: a new user reads one full result before any paywall can appear.
 
